@@ -18,6 +18,26 @@
       "type": "chrome",
       "request": "launch",
       "file": "${workspaceFolder}/for-organic-growth.html"
+    },
+    {
+      "name": "Start HTTP server",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "python3 -m http.server 8080",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Open Blog (via HTTP server)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:8080/blog/index.html"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Serve + Open Blog",
+      "configurations": ["Start HTTP server", "Open Blog (via HTTP server)"],
+      "stopAll": true
     }
   ]
 }
