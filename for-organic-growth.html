@@ -4,27 +4,65 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Duct for Organic Growth — Coming Soon</title>
+<title>Duct for Organic Growth — Cross-tool SEO and content intelligence</title>
 <link rel="canonical" href="https://getduct.ai/for-organic-growth"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="assets/duct.css"/>
+<style>
+  /* Green accent overrides — warm sage tuned to match the orange tone weight */
+  :root {
+    --green: #2e9e6b;
+    --green-h: #228055;
+  }
+  .tag { color: var(--green); }
+  .tag::before { background: var(--green); }
+  h2 em { color: var(--green); }
+  h1 em { color: var(--green); }
+  .hero-pill { border-color: var(--green); color: var(--green); }
+  .hero-pill-dot { background: var(--green); }
+  .logo-mark { background: var(--green); }
+  .btn-orange { background: var(--green); }
+  .btn-orange:hover { background: var(--green-h); box-shadow: 0 8px 24px rgba(46,158,107,.28); }
+  .email-in:focus { border-color: var(--green); }
+  .pain-item:hover { border-color: var(--green); }
+  .how .tag { color: var(--green); }
+  .how .tag::before { background: var(--green); }
+  .how h2 em { color: var(--green); }
+  .step-num { color: var(--green); }
+  .feat-label { color: var(--green); }
+  .aud-card.hi { border-color: var(--green); }
+  .aud-card:hover { border-color: var(--green); }
+  .aud-badge { color: var(--green); border-color: var(--green); }
+  .qmark { color: var(--green); }
+  .stats { background: var(--green); }
+  .diag-result { background: var(--green); }
+  @keyframes pop { 0%,100% { transform: scale(1); } 50% { transform: scale(1.5); } }
+</style>
 </head>
 <body>
 
 <!-- NAV -->
 
 <nav id="nav">
-<a href="/for-product-managers" class="logo">duct <span class="logo-mark"></span></a>
+<div style="display:flex;align-items:center;gap:10px">
+<a href="#" class="logo">duct <span class="logo-mark"></span></a>
+<span style="font-size:12px;font-weight:500;color:var(--navy-3);letter-spacing:.02em">for organic growth</span>
+</div>
+<div class="nav-links">
+<a href="#how" class="nav-link">How it works</a>
+<a href="#features" class="nav-link">Features</a>
+<a href="#who" class="nav-link">Who it's for</a>
+</div>
 </nav>
 
-<!-- HERO (placeholder) -->
+<!-- HERO -->
 
 <section class="hero">
-<div class="hero-pill"><span class="hero-pill-dot"></span> Coming soon</div>
-<h1>Organic growth,<br/><em>connected.</em></h1>
-<p class="hero-sub">This page is under construction. In the meantime, get early access to Duct.</p>
+<div class="hero-pill"><span class="hero-pill-dot"></span> Early access · 14 spots remaining</div>
+<h1>Stop publishing blind.<br/>Start <em>compounding.</em></h1>
+<p class="hero-sub">Duct connects your Search Console, Ahrefs, GA4, and content tools — and shows you exactly which actions will move organic growth this week.</p>
 <div class="hero-form">
 <input type="email" id="heroEmail" class="email-in" placeholder="you@company.com"/>
 <button class="btn btn-orange btn-lg"
@@ -32,13 +70,229 @@
   data-entry-id="entry.276669450"
   onclick="submitForm('heroEmail', this)">Get early access →</button>
 </div>
-<p class="hero-footnote">Free during beta · No credit card required</p>
+<p class="hero-footnote">Free during beta · No credit card · For growth teams at 20–200 person companies</p>
+</section>
+
+<!-- TOOL STRIP -->
+
+<div class="strip">
+<p class="strip-label">Connects to the tools you already use</p>
+<div class="marquee">
+<span>Google Search Console</span><span>Ahrefs</span><span>GA4</span><span>Semrush</span>
+<span>Notion</span><span>LinkedIn Analytics</span><span>HubSpot</span><span>Slack</span><span>Mixpanel</span>
+<span>Google Search Console</span><span>Ahrefs</span><span>GA4</span><span>Semrush</span>
+<span>Notion</span><span>LinkedIn Analytics</span><span>HubSpot</span><span>Slack</span><span>Mixpanel</span>
+</div>
+</div>
+
+<!-- PROBLEM -->
+
+<section class="problem">
+<div class="reveal">
+<p class="tag">The Problem</p>
+<h2>You're producing content.<br/>But no one <em>connected it</em><br/>to growth.</h2>
+<ul class="pain-list">
+<li class="pain-item"><span class="pi-icon">📉</span> Search Console shows impressions up. GA4 says trial signups are flat. You don't know which content is actually converting.</li>
+<li class="pain-item"><span class="pi-icon">🕳️</span> Ahrefs flagged a keyword opportunity three weeks ago. It's still sitting in a tab. The blog calendar doesn't reflect it.</li>
+<li class="pain-item"><span class="pi-icon">⏱️</span> You spend Monday mornings pulling rank data, session stats, and content metrics from five different tools just to decide what to work on.</li>
+</ul>
+</div>
+<div class="diag reveal">
+<div class="diag-header">
+<span class="diag-dot" style="background:#ff5f57"></span>
+<span class="diag-dot" style="background:#febc2e"></span>
+<span class="diag-dot" style="background:#28c840"></span>
+</div>
+<div class="diag-body">
+<div class="diag-tool">
+<span class="diag-chip" style="background:#e6f4ec">🔍</span>
+<div class="diag-info"><b>Search Console</b><s>"ai interior design" — position 14, rising</s></div>
+</div>
+<div class="diag-divider">no connection</div>
+<div class="diag-tool dim">
+<span class="diag-chip" style="background:#eef5e0">📊</span>
+<div class="diag-info"><b>Ahrefs</b><s>KD 28 · high-intent cluster — not yet targeted</s></div>
+</div>
+<div class="diag-divider">no connection</div>
+<div class="diag-tool dim">
+<span class="diag-chip" style="background:#fff0e5">📝</span>
+<div class="diag-info"><b>Notion (content calendar)</b><s>Q1 plan — none of these keywords present</s></div>
+</div>
+<div class="diag-divider">no connection</div>
+<div class="diag-tool dim">
+<span class="diag-chip" style="background:#e8f4ff">📈</span>
+<div class="diag-info"><b>GA4</b><s>Blog → trial CVR dropped to 1.4% this month</s></div>
+</div>
+<div class="diag-result">
+<strong>✦ After Duct</strong>
+Rising keyword → low-KD gap → missing content → conversion drop. One story, automatically connected.
+</div>
+</div>
+</div>
+</section>
+
+<!-- HOW IT WORKS -->
+
+<section class="how" id="how">
+<div class="how-inner">
+<p class="tag">How It Works</p>
+<h2>Clarity in <em>three steps</em></h2>
+<div class="steps">
+<div class="step reveal">
+<span class="step-num">01</span>
+<span class="step-icon">🔌</span>
+<p class="step-title">Connect your stack</p>
+<p class="step-body">One-click integrations to Search Console, Ahrefs, GA4, and your content tools. Duct reads — it never writes or modifies anything. Under 5 minutes to set up.</p>
+</div>
+<div class="step reveal" style="transition-delay:.1s">
+<span class="step-num">02</span>
+<span class="step-icon" style="filter:none;display:block;margin-bottom:18px">
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle cx="16" cy="16" r="14" stroke="white" stroke-width="2"/>
+<circle cx="16" cy="16" r="8" stroke="white" stroke-width="2"/>
+<circle cx="16" cy="16" r="3" fill="white"/>
+</svg>
+</span>
+<p class="step-title">Define your north star</p>
+<p class="step-body">Tell Duct your growth goal — organic signups, keyword cluster ownership, channel growth — and it tracks only what moves those numbers, not everything.</p>
+</div>
+<div class="step reveal" style="transition-delay:.2s">
+<span class="step-num">03</span>
+<span class="step-icon">✦</span>
+<p class="step-title">Get a weekly action brief</p>
+<p class="step-body">Every Monday: ranked actions tied to your current milestone, keyword gaps, conversion signals, and plain-English summaries. Ready before you open a single tab.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- FEATURES -->
+
+<section class="features" id="features">
+<div class="reveal">
+<p class="tag">Features</p>
+<h2>Built for growth teams who <em>move fast</em></h2>
+</div>
+<div class="feat-grid">
+<div class="feat reveal">
+<span class="feat-label">🔗 Connect</span>
+<p class="feat-title">Cross-tool correlation</p>
+<p class="feat-body">Automatically link rank changes, traffic shifts, and conversion signals across Search Console, Ahrefs, and GA4. See what's actually driving organic — without a spreadsheet.</p>
+</div>
+<div class="feat reveal" style="transition-delay:.08s">
+<span class="feat-label">📬 Brief</span>
+<p class="feat-title">Weekly action brief</p>
+<p class="feat-body">A prioritised list of this week's highest-impact organic actions — tied to your current milestone. Not a report. A to-do list that's already sorted by what moves the needle.</p>
+</div>
+<div class="feat reveal" style="transition-delay:.14s">
+<span class="feat-label">🚨 Alerts</span>
+<p class="feat-title">Keyword and traffic alerts</p>
+<p class="feat-body">Get a Slack ping when a keyword breaks into the top 10, traffic from a channel drops, or a conversion gap opens up — before it costs you a month of compounding.</p>
+</div>
+<div class="feat reveal" style="transition-delay:.2s">
+<span class="feat-label">🗣️ Ask</span>
+<p class="feat-title">Plain-English queries</p>
+<p class="feat-body">"Which blog posts drove the most trials last month?" Just ask. Duct queries your connected tools and returns a clear answer. No dashboards, no data exports.</p>
+</div>
+</div>
+</section>
+
+<!-- AUDIENCE -->
+
+<section class="audience" id="who">
+<div class="aud-inner">
+<div class="reveal">
+<p class="tag">Who It's For</p>
+<h2>The growth lead who owns <em>organic</em> without a dedicated SEO team</h2>
+<p class="sub" style="margin-top:16px">You don't have a content ops team. You don't have time for weekly rank reports. You need the full organic picture, fast — and you need it to tell you what to do next.</p>
+<a href="#cta" class="btn btn-orange" style="margin-top:30px">That's me — get early access →</a>
+</div>
+<div class="aud-cards reveal">
+<div class="aud-card hi">
+<span class="aud-av" style="background:#e6f4ec">🌱</span>
+<div><span class="aud-name">Growth Marketer</span><span class="aud-role">20–200 person SaaS</span></div>
+<span class="aud-badge">Perfect fit</span>
+</div>
+<div class="aud-card">
+<span class="aud-av" style="background:#eef5e0">✍️</span>
+<div><span class="aud-name">Content Strategist</span><span class="aud-role">Owns SEO + content pipeline</span></div>
+<span class="aud-badge">Great fit</span>
+</div>
+<div class="aud-card">
+<span class="aud-av" style="background:#fff0e5">🚀</span>
+<div><span class="aud-name">Founding Marketer</span><span class="aud-role">Wearing many hats</span></div>
+<span class="aud-badge">Great fit</span>
+</div>
+<div class="aud-card" style="opacity:.45">
+<span class="aud-av" style="background:#f5f5f5">🏢</span>
+<div><span class="aud-name">Enterprise SEO Team</span><span class="aud-role">500+ with dedicated analysts</span></div>
+<span class="aud-badge off">Not yet</span>
+</div>
+</div>
+</div>
+</section>
+
+<!-- TESTIMONIALS -->
+
+<section class="quotes">
+<div class="reveal">
+<p class="tag">Early Signals</p>
+<h2>What beta users are <em>saying</em></h2>
+</div>
+<div class="q-grid">
+<div class="qcard reveal">
+<span class="qmark">"</span>
+<p class="qtext">I used to spend Mondays pulling rank data, GA4, and Ahrefs into a spreadsheet. Now Duct sends me a brief at 7am and I already know what to work on.</p>
+<div class="qauthor"><span class="qav">👩‍💻</span><div><span class="qname">Emma T.</span><span class="qrole">Growth Lead · 55 employees</span></div></div>
+</div>
+<div class="qcard reveal" style="transition-delay:.1s">
+<span class="qmark">"</span>
+<p class="qtext">Duct surfaced a connection between our blog CVR drop and a CTA placement issue I never would have found manually. That one fix lifted signups 18%.</p>
+<div class="qauthor"><span class="qav">👨‍💼</span><div><span class="qname">James L.</span><span class="qrole">Head of Content · 90 employees</span></div></div>
+</div>
+<div class="qcard reveal" style="transition-delay:.2s">
+<span class="qmark">"</span>
+<p class="qtext">We'd been doing SEO for 6 months with nothing to show for it. Duct diagnosed the problem in week one — wrong keyword clusters for our stage. Month 3 after the pivot, we rank for 11 target terms.</p>
+<div class="qauthor"><span class="qav">🧑‍🚀</span><div><span class="qname">Priya S.</span><span class="qrole">Founding Marketer · Series A · 35 employees</span></div></div>
+</div>
+</div>
+</section>
+
+<!-- STATS -->
+
+<section class="stats">
+<div class="stats-inner">
+<div class="reveal"><span class="stat-n">9+</span><span class="stat-l">Integrations at launch</span></div>
+<div class="reveal" style="transition-delay:.1s"><span class="stat-n">~4h</span><span class="stat-l">Saved per week on reporting</span></div>
+<div class="reveal" style="transition-delay:.2s"><span class="stat-n">10min</span><span class="stat-l">To first insight after setup</span></div>
+<div class="reveal" style="transition-delay:.3s"><span class="stat-n">0</span><span class="stat-l">Manual data exports needed</span></div>
+</div>
+</section>
+
+<!-- CTA -->
+
+<section class="cta" id="cta">
+<div class="cta-inner">
+<div class="reveal">
+<p class="tag" style="justify-content:center;display:flex">Early Access</p>
+<h2>Join the first <em>25 teams</em></h2>
+<p class="sub">Free during beta. We're onboarding personally — every team gets a setup call and direct access to the founders.</p>
+<div class="cta-form">
+<input type="email" id="ctaEmail" class="email-in" placeholder="you@company.com"/>
+<button class="btn btn-orange btn-lg"
+  data-form-url="https://docs.google.com/forms/d/e/1FAIpQLSfm7QgovGGHE38CsOPqj5O_XVBtnjbRhkf16rNJhdvkd-rddg/formResponse"
+  data-entry-id="entry.276669450"
+  onclick="submitForm('ctaEmail', this)">Join waitlist →</button>
+</div>
+<p class="cta-note">14 spots remaining · No spam · Unsubscribe anytime</p>
+</div>
+</div>
 </section>
 
 <!-- FOOTER -->
 
 <footer>
-<a href="/for-product-managers" class="logo" style="font-size:18px">duct <span class="logo-mark"></span></a>
+<a href="#" class="logo" style="font-size:18px">duct <span class="logo-mark"></span></a>
 <a href="mailto:hello@getduct.ai" class="footer-email">hello@getduct.ai</a>
 <span class="footer-copy">© 2025 Duct · getduct.ai</span>
 </footer>
