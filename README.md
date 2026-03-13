@@ -1,35 +1,40 @@
-# Duct Landing Pages
+# Duct
 
-Static multi-variant landing site for [getduct.ai](https://getduct.ai). No build tools — pure HTML/CSS/JS.
+**The intelligence layer for product and growth teams.**
 
-## URL → File mapping
+Duct connects your entire tool stack — Mixpanel, Intercom, Linear, Salesforce, GA4, Ahrefs, Google Ads — and automatically synthesises cross-tool insights into a weekly decision brief and real-time alerts. No dashboards to check. No SQL to write. No tab-switching.
 
-| URL | File |
-|-----|------|
-| `/` | `index.html` (redirects to `/for-product-managers`) |
-| `/for-product-managers` | `for-product-managers.html` |
-| `/for-organic-growth` | `for-organic-growth.html` |
+Most teams have the data. What they lack is the synthesis. Every tool speaks its own language. Duct is the layer that reads across all of them and tells you what they mean together — delivered to your inbox every Monday morning.
 
-## Shared assets
+> **One-liner:** Duct connects your product and marketing stack and automatically generates the cross-tool insights your team needs to make faster, better decisions.
 
-- `assets/duct.css` — brand styles shared across all variants
-- `assets/duct.js` — scroll reveal, nav shadow, form submit logic
+---
 
-## Local dev
+## Pages
 
-```
-python3 -m http.server 8080
-```
+| URL | File | Audience |
+|-----|------|----------|
+| `/` | `index.html` | Redirects to `/for-product-intelligence` |
+| `/for-product-intelligence` | `for-product-intelligence.html` | PMs and product teams |
+| `/for-organic-growth` | `for-organic-growth.html` | Growth and content teams |
 
-Then open `http://localhost:8080/for-product-managers.html`.
+## Assets
 
-## Deploy
+| File | Purpose |
+|------|---------|
+| `assets/duct.css` | Shared brand styles |
+| `assets/duct.js` | Scroll reveal, nav shadow, form submit, GTM init |
+| `assets/config.js` | Analytics config — GTM container ID lives here |
 
-Push to `main`. Netlify/Vercel/Cloudflare Pages auto-deploys and serves `.html` files at clean URLs (e.g. `for-product-managers.html` → `/for-product-managers`).
+## Analytics
 
-## Add a new variant
+GTM container `GTM-PKL589SW` is loaded via `assets/duct.js`. All tags (GA4, Google Ads, X pixel) are configured inside the GTM dashboard — no code changes needed to add or modify tracking.
 
-1. Copy `for-product-managers.html` → `for-new-audience.html`
-2. Update `<title>`, `<link rel="canonical">`, and hero copy
-3. Update the Google Forms `data-form-url` / `data-entry-id` on both submit buttons if using a separate form
-4. Add the new URL to `sitemap.xml`
+To update the GTM ID, edit the single line in `assets/config.js`.
+
+## Add a new page
+
+1. Copy `for-product-intelligence.html` → `for-new-audience.html`
+2. Update `<title>`, `<link rel="canonical">`, and the nav subtitle
+3. Update hero copy and audience cards for the new segment
+4. GTM and config are inherited automatically via `duct.js`
