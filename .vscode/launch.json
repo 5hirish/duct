@@ -2,10 +2,16 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Open PM landing page",
+      "name": "Open Home page",
       "type": "chrome",
       "request": "launch",
-      "file": "${workspaceFolder}/for-product-managers.html"
+      "file": "${workspaceFolder}/index.html"
+    },
+    {
+      "name": "Open Product Intelligence page",
+      "type": "chrome",
+      "request": "launch",
+      "file": "${workspaceFolder}/for-product-intelligence.html"
     },
     {
       "name": "Open Organic Growth page",
