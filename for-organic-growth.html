@@ -55,19 +55,30 @@
   .qmark { color: var(--green); }
   .stats { background: var(--green); }
   .diag-result { background: var(--green); }
+  /* Skip to content */
+  .skip-link {
+    position: absolute; top: -100%; left: 16px; z-index: 300;
+    padding: 10px 20px; background: var(--navy); color: #fff;
+    font-size: 14px; font-weight: 500; border-radius: var(--r);
+    text-decoration: none; transition: top .15s;
+  }
+  .skip-link:focus { top: 16px; }
   @keyframes pop { 0%,100% { transform: scale(1); } 50% { transform: scale(1.5); } }
 </style>
 </head>
 <body>
+
+<a href="#main-content" class="skip-link">Skip to content</a>
+
 <!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 
 <!-- NAV -->
 
-<nav id="nav">
+<nav id="nav" aria-label="Main navigation">
 <div style="display:flex;align-items:center;gap:10px">
-<a href="index.html" class="logo">duct <span class="logo-mark"></span></a>
+<a href="index.html" class="logo">duct <span class="logo-mark" aria-hidden="true"></span></a>
 <span style="font-size:12px;font-weight:500;color:var(--navy-3);letter-spacing:.02em">for organic growth</span>
 </div>
 <div class="nav-links">
@@ -78,14 +89,16 @@
 </div>
 </nav>
 
+<main id="main-content">
+
 <!-- HERO -->
 
 <section class="hero">
-<div class="hero-pill"><span class="hero-pill-dot"></span> Early access · 14 spots remaining</div>
+<div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Early access · 14 spots remaining</div>
 <h1>Stop publishing blind.<br/>Start <em>compounding.</em></h1>
 <p class="hero-sub">Duct connects your Search Console, Ahrefs, GA4, and content tools — and shows you exactly which actions will move organic growth this week.</p>
 <div class="hero-form">
-<input type="email" id="heroEmail" class="email-in" placeholder="you@company.com"/>
+<input type="email" id="heroEmail" class="email-in" placeholder="you@company.com" aria-label="Email address"/>
 <button class="btn btn-orange btn-lg"
   data-form-url="https://docs.google.com/forms/d/e/1FAIpQLSfm7QgovGGHE38CsOPqj5O_XVBtnjbRhkf16rNJhdvkd-rddg/formResponse"
   data-entry-id="entry.276669450"
@@ -98,7 +111,7 @@
 
 <div class="strip">
 <p class="strip-label">Connects to the tools you already use</p>
-<div class="marquee">
+<div class="marquee" aria-hidden="true">
 <span>Google Search Console</span><span>Ahrefs</span><span>GA4</span><span>Semrush</span>
 <span>Notion</span><span>LinkedIn Analytics</span><span>HubSpot</span><span>Slack</span><span>Mixpanel</span>
 <span>Google Search Console</span><span>Ahrefs</span><span>GA4</span><span>Semrush</span>
@@ -113,36 +126,36 @@
 <p class="tag">The Problem</p>
 <h2>You're producing content.<br/>But no one <em>connected it</em><br/>to growth.</h2>
 <ul class="pain-list">
-<li class="pain-item"><span class="pi-icon">📉</span> Search Console shows impressions up. GA4 says trial signups are flat. You don't know which content is actually converting.</li>
-<li class="pain-item"><span class="pi-icon">🕳️</span> Ahrefs flagged a keyword opportunity three weeks ago. It's still sitting in a tab. The blog calendar doesn't reflect it.</li>
-<li class="pain-item"><span class="pi-icon">⏱️</span> You spend Monday mornings pulling rank data, session stats, and content metrics from five different tools just to decide what to work on.</li>
+<li class="pain-item"><span class="pi-icon" aria-hidden="true">📉</span> Search Console shows impressions up. GA4 says trial signups are flat. You don't know which content is actually converting.</li>
+<li class="pain-item"><span class="pi-icon" aria-hidden="true">🕳️</span> Ahrefs flagged a keyword opportunity three weeks ago. It's still sitting in a tab. The blog calendar doesn't reflect it.</li>
+<li class="pain-item"><span class="pi-icon" aria-hidden="true">⏱️</span> You spend Monday mornings pulling rank data, session stats, and content metrics from five different tools just to decide what to work on.</li>
 </ul>
 </div>
 <div class="diag reveal">
-<div class="diag-header">
+<div class="diag-header" aria-hidden="true">
 <span class="diag-dot" style="background:#ff5f57"></span>
 <span class="diag-dot" style="background:#febc2e"></span>
 <span class="diag-dot" style="background:#28c840"></span>
 </div>
 <div class="diag-body">
 <div class="diag-tool">
-<span class="diag-chip" style="background:#e6f4ec">🔍</span>
-<div class="diag-info"><b>Search Console</b><s>"ai interior design" — position 14, rising</s></div>
+<span class="diag-chip" style="background:#e6f4ec" aria-hidden="true">🔍</span>
+<div class="diag-info"><b>Search Console</b><s aria-hidden="true">"ai interior design" — position 14, rising</s></div>
 </div>
-<div class="diag-divider">no connection</div>
+<div class="diag-divider" aria-hidden="true">no connection</div>
 <div class="diag-tool dim">
-<span class="diag-chip" style="background:#eef5e0">📊</span>
-<div class="diag-info"><b>Ahrefs</b><s>KD 28 · high-intent cluster — not yet targeted</s></div>
+<span class="diag-chip" style="background:#eef5e0" aria-hidden="true">📊</span>
+<div class="diag-info"><b>Ahrefs</b><s aria-hidden="true">KD 28 · high-intent cluster — not yet targeted</s></div>
 </div>
-<div class="diag-divider">no connection</div>
+<div class="diag-divider" aria-hidden="true">no connection</div>
 <div class="diag-tool dim">
-<span class="diag-chip" style="background:#fff0e5">📝</span>
-<div class="diag-info"><b>Notion (content calendar)</b><s>Q1 plan — none of these keywords present</s></div>
+<span class="diag-chip" style="background:#fff0e5" aria-hidden="true">📝</span>
+<div class="diag-info"><b>Notion (content calendar)</b><s aria-hidden="true">Q1 plan — none of these keywords present</s></div>
 </div>
-<div class="diag-divider">no connection</div>
+<div class="diag-divider" aria-hidden="true">no connection</div>
 <div class="diag-tool dim">
-<span class="diag-chip" style="background:#e8f4ff">📈</span>
-<div class="diag-info"><b>GA4</b><s>Blog → trial CVR dropped to 1.4% this month</s></div>
+<span class="diag-chip" style="background:#e8f4ff" aria-hidden="true">📈</span>
+<div class="diag-info"><b>GA4</b><s aria-hidden="true">Blog → trial CVR dropped to 1.4% this month</s></div>
 </div>
 <div class="diag-result">
 <strong>✦ After Duct</strong>
@@ -161,14 +174,14 @@ Rising keyword → low-KD gap → missing content → conversion drop. One story
 <div class="steps">
 <div class="step reveal">
 <span class="step-num">01</span>
-<span class="step-icon">🔌</span>
+<span class="step-icon" aria-hidden="true">🔌</span>
 <p class="step-title">Connect your stack</p>
 <p class="step-body">One-click integrations to Search Console, Ahrefs, GA4, and your content tools. Duct reads — it never writes or modifies anything. Under 5 minutes to set up.</p>
 </div>
 <div class="step reveal" style="transition-delay:.1s">
 <span class="step-num">02</span>
 <span class="step-icon" style="filter:none;display:block;margin-bottom:18px">
-<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
 <circle cx="16" cy="16" r="14" stroke="white" stroke-width="2"/>
 <circle cx="16" cy="16" r="8" stroke="white" stroke-width="2"/>
 <circle cx="16" cy="16" r="3" fill="white"/>
@@ -179,7 +192,7 @@ Rising keyword → low-KD gap → missing content → conversion drop. One story
 </div>
 <div class="step reveal" style="transition-delay:.2s">
 <span class="step-num">03</span>
-<span class="step-icon">✦</span>
+<span class="step-icon" aria-hidden="true">✦</span>
 <p class="step-title">Get a weekly action brief</p>
 <p class="step-body">Every Monday: ranked actions tied to your current milestone, keyword gaps, conversion signals, and plain-English summaries. Ready before you open a single tab.</p>
 </div>
@@ -230,22 +243,22 @@ Rising keyword → low-KD gap → missing content → conversion drop. One story
 </div>
 <div class="aud-cards reveal">
 <div class="aud-card hi">
-<span class="aud-av" style="background:#e6f4ec">🌱</span>
+<span class="aud-av" style="background:#e6f4ec" aria-hidden="true">🌱</span>
 <div><span class="aud-name">Growth Marketer</span><span class="aud-role">20–200 person SaaS</span></div>
 <span class="aud-badge">Perfect fit</span>
 </div>
 <div class="aud-card">
-<span class="aud-av" style="background:#eef5e0">✍️</span>
+<span class="aud-av" style="background:#eef5e0" aria-hidden="true">✍️</span>
 <div><span class="aud-name">Content Strategist</span><span class="aud-role">Owns SEO + content pipeline</span></div>
 <span class="aud-badge">Great fit</span>
 </div>
 <div class="aud-card">
-<span class="aud-av" style="background:#fff0e5">🚀</span>
+<span class="aud-av" style="background:#fff0e5" aria-hidden="true">🚀</span>
 <div><span class="aud-name">Founding Marketer</span><span class="aud-role">Wearing many hats</span></div>
 <span class="aud-badge">Great fit</span>
 </div>
 <div class="aud-card" style="opacity:.45">
-<span class="aud-av" style="background:#f5f5f5">🏢</span>
+<span class="aud-av" style="background:#f5f5f5" aria-hidden="true">🏢</span>
 <div><span class="aud-name">Enterprise SEO Team</span><span class="aud-role">500+ with dedicated analysts</span></div>
 <span class="aud-badge off">Not yet</span>
 </div>
@@ -262,19 +275,19 @@ Rising keyword → low-KD gap → missing content → conversion drop. One story
 </div>
 <div class="q-grid">
 <div class="qcard reveal">
-<span class="qmark">"</span>
+<span class="qmark" aria-hidden="true">"</span>
 <p class="qtext">I used to spend Mondays pulling rank data, GA4, and Ahrefs into a spreadsheet. Now Duct sends me a brief at 7am and I already know what to work on.</p>
-<div class="qauthor"><span class="qav">👩‍💻</span><div><span class="qname">Emma T.</span><span class="qrole">Growth Lead · 55 employees</span></div></div>
+<div class="qauthor"><span class="qav" aria-hidden="true">👩‍💻</span><div><span class="qname">Emma T.</span><span class="qrole">Growth Lead · 55 employees</span></div></div>
 </div>
 <div class="qcard reveal" style="transition-delay:.1s">
-<span class="qmark">"</span>
+<span class="qmark" aria-hidden="true">"</span>
 <p class="qtext">Duct surfaced a connection between our blog CVR drop and a CTA placement issue I never would have found manually. That one fix lifted signups 18%.</p>
-<div class="qauthor"><span class="qav">👨‍💼</span><div><span class="qname">James L.</span><span class="qrole">Head of Content · 90 employees</span></div></div>
+<div class="qauthor"><span class="qav" aria-hidden="true">👨‍💼</span><div><span class="qname">James L.</span><span class="qrole">Head of Content · 90 employees</span></div></div>
 </div>
 <div class="qcard reveal" style="transition-delay:.2s">
-<span class="qmark">"</span>
+<span class="qmark" aria-hidden="true">"</span>
 <p class="qtext">We'd been doing SEO for 6 months with nothing to show for it. Duct diagnosed the problem in week one — wrong keyword clusters for our stage. Month 3 after the pivot, we rank for 11 target terms.</p>
-<div class="qauthor"><span class="qav">🧑‍🚀</span><div><span class="qname">Priya S.</span><span class="qrole">Founding Marketer · Series A · 35 employees</span></div></div>
+<div class="qauthor"><span class="qav" aria-hidden="true">🧑‍🚀</span><div><span class="qname">Priya S.</span><span class="qrole">Founding Marketer · Series A · 35 employees</span></div></div>
 </div>
 </div>
 </section>
@@ -299,7 +312,7 @@ Rising keyword → low-KD gap → missing content → conversion drop. One story
 <h2>Join the first <em>25 teams</em></h2>
 <p class="sub">Free during beta. We're onboarding personally — every team gets a setup call and direct access to the founders.</p>
 <div class="cta-form">
-<input type="email" id="ctaEmail" class="email-in" placeholder="you@company.com"/>
+<input type="email" id="ctaEmail" class="email-in" placeholder="you@company.com" aria-label="Email address"/>
 <button class="btn btn-orange btn-lg"
   data-form-url="https://docs.google.com/forms/d/e/1FAIpQLSfm7QgovGGHE38CsOPqj5O_XVBtnjbRhkf16rNJhdvkd-rddg/formResponse"
   data-entry-id="entry.276669450"
@@ -310,10 +323,12 @@ Rising keyword → low-KD gap → missing content → conversion drop. One story
 </div>
 </section>
 
+</main>
+
 <!-- FOOTER -->
 
 <footer>
-<a href="index.html" class="logo" style="font-size:18px">duct <span class="logo-mark"></span></a>
+<a href="index.html" class="logo" style="font-size:18px">duct <span class="logo-mark" aria-hidden="true"></span></a>
 <a href="blog/index.html" class="footer-email">Blog</a>
 <a href="mailto:hello@getduct.ai" class="footer-email">hello@getduct.ai</a>
 <span class="footer-copy">© 2025 Duct · getduct.ai</span>
