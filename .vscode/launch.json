@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Open PM landing page",
+      "type": "chrome",
+      "request": "launch",
+      "file": "${workspaceFolder}/for-product-managers.html"
+    },
+    {
+      "name": "Open Organic Growth page",
+      "type": "chrome",
+      "request": "launch",
+      "file": "${workspaceFolder}/for-organic-growth.html"
+    }
+  ]
+}
