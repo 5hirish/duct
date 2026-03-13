@@ -39,9 +39,13 @@
 .nav-dropdown { position: relative; }
 .nav-dropdown > .nav-link::after { content: ' ↓'; font-size: 10px; opacity: .5; }
 .dropdown-menu {
-  display: none; position: absolute; top: calc(100% + 10px); left: 0;
+  display: none; position: absolute; top: 100%; left: 0;
+  padding-top: 10px; background: transparent;
+  min-width: 260px;
+}
+.dropdown-menu-inner {
   background: var(--white); border: 1px solid var(--border);
-  border-radius: var(--r-lg); padding: 8px; min-width: 260px;
+  border-radius: var(--r-lg); padding: 8px;
   box-shadow: 0 20px 60px rgba(0,0,0,.1);
 }
 .nav-dropdown:hover .dropdown-menu { display: block; }
@@ -199,6 +203,7 @@
 <div class="nav-dropdown">
   <a href="#use-cases" class="nav-link">Solutions</a>
   <div class="dropdown-menu">
+  <div class="dropdown-menu-inner">
     <a href="for-product-intelligence.html" class="dm-item">
       <span class="dm-icon" aria-hidden="true">📊</span>
       <span class="dm-text"><strong>Product Intelligence</strong><span>Weekly brief for PMs &amp; growth teams</span></span>
@@ -224,17 +229,18 @@
       <span class="tag-soon">Soon</span>
     </span>
   </div>
+  </div>
 </div>
 <a href="#how" class="nav-link">How it works</a>
 <a href="blog/index.html" class="nav-link">Blog</a>
-<a href="#use-cases" class="btn btn-orange" style="padding:8px 18px;font-size:13px">Get early access →</a>
+<a href="#hero" class="btn btn-orange" style="padding:8px 18px;font-size:13px">Get early access →</a>
 </div>
 </nav>
 
 <main id="main-content">
 
 <!-- HERO -->
-<section class="hero">
+<section class="hero" id="hero">
 <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Now in private beta</div>
 <h1>Your tools have the answers.<br/><em>None of them talk<br/>to each other.</em></h1>
 <p class="hero-sub">Duct reads across your entire product, marketing, and sales stack — then delivers the cross-tool insights your team needs to make faster, better decisions. Automatically. Every week.</p>
@@ -495,26 +501,23 @@
 <a href="/" class="logo" style="font-size:20px">duct <span class="logo-mark" aria-hidden="true"></span></a>
 <p>Automated intelligence across your entire tool stack. Delivered every Monday.</p>
 </div>
-<nav class="footer-cols" aria-label="Footer navigation">
+<div class="footer-cols" role="navigation" aria-label="Footer navigation">
 <div class="footer-col">
 <h4>Use Cases</h4>
 <a href="for-product-intelligence.html">Product Intelligence</a>
 <a href="for-organic-growth.html">Organic Growth</a>
-<a href="#use-cases">Sales / RevOps</a>
-<a href="#use-cases">E-commerce / DTC</a>
-<a href="#use-cases">Customer Success</a>
 </div>
 <div class="footer-col">
 <h4>Product</h4>
 <a href="#how">How it works</a>
-<a href="blog/index.html">Insights</a>
-<a href="#use-cases">Get early access</a>
+<a href="blog/index.html">Blog</a>
+<a href="#hero">Get early access</a>
 </div>
 <div class="footer-col">
 <h4>Company</h4>
 <a href="mailto:hello@getduct.ai">hello@getduct.ai</a>
 </div>
-</nav>
+</div>
 </div>
 <div class="footer-bottom-row">
 <span>© 2026 Duct · getduct.ai</span>

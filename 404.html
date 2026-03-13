@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>404 — Duct</title>
+<meta name="robots" content="noindex"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="assets/duct.css"/>
+<script src="assets/config.js"></script>
+<style>
+.error-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 52px 24px;
+}
+.error-code {
+  font-family: var(--serif);
+  font-size: clamp(96px, 18vw, 180px);
+  line-height: 1;
+  letter-spacing: -6px;
+  color: var(--border);
+  margin-bottom: 0;
+  user-select: none;
+}
+.error-page h1 {
+  font-family: var(--serif);
+  font-size: clamp(28px, 4vw, 44px);
+  letter-spacing: -1px;
+  color: var(--navy);
+  margin: 8px 0 16px;
+  animation: none;
+}
+.error-page p {
+  font-size: 16px;
+  font-weight: 300;
+  color: var(--navy-3);
+  max-width: 380px;
+  line-height: 1.72;
+  margin-bottom: 36px;
+}
+.error-diag {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 auto 40px;
+  max-width: 320px;
+  font-size: 12px;
+  color: var(--navy-3);
+}
+.error-diag-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: var(--off);
+}
+.error-diag-row span:first-child { opacity: .4; }
+.error-diag-row .label { flex: 1; text-align: left; }
+.error-diag-row .val { color: #c94040; font-weight: 500; }
+.error-diag-result {
+  padding: 10px 14px;
+  background: var(--orange);
+  border-radius: var(--r);
+  font-size: 12px;
+  color: #fff;
+  text-align: left;
+  line-height: 1.5;
+}
+.error-diag-result strong { display: block; margin-bottom: 2px; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav" aria-label="Main navigation">
+<div style="display:flex;align-items:center;gap:10px">
+<a href="/" class="logo">duct <span class="logo-mark" aria-hidden="true"></span></a>
+</div>
+</nav>
+
+<main class="error-page">
+
+  <p class="error-code" aria-hidden="true">404</p>
+
+  <h1>Your tools have the answer.<br/><em>This page doesn't.</em></h1>
+
+  <p>We checked across all connected sources. Zero results. The URL you're looking for hasn't been indexed, shipped, or synthesised — yet.</p>
+
+  <div class="error-diag" aria-hidden="true">
+    <div class="error-diag-row">
+      <span>🔍</span>
+      <span class="label">URL lookup</span>
+      <span class="val">not found</span>
+    </div>
+    <div class="error-diag-row">
+      <span>📊</span>
+      <span class="label">Cross-tool search</span>
+      <span class="val">0 results</span>
+    </div>
+    <div class="error-diag-row">
+      <span>🤖</span>
+      <span class="label">Duct intelligence</span>
+      <span class="val">no signal</span>
+    </div>
+    <div class="error-diag-result">
+      <strong>✦ Recommended action</strong>
+      Head back home. We'll surface what actually matters.
+    </div>
+  </div>
+
+  <a href="/" class="btn btn-orange btn-lg">Back to home →</a>
+
+</main>
+
+<script src="assets/duct.js" defer></script>
+
+</body>
+</html>
