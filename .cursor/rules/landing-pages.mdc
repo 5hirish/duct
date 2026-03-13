@@ -1,0 +1,12 @@
+---
+description: Conventions for Duct landing pages and shared assets
+globs: ["*.html", "assets/**"]
+alwaysApply: false
+---
+
+When editing landing pages or shared assets:
+
+- Set `<link rel="canonical">` to the production URL (`https://getduct.ai/...`).
+- Keep shared CSS and JS in `assets/duct.css` and `assets/duct.js`; do not inline or duplicate.
+- When adding a new page, add its URL to `sitemap.xml`.
+- Form actions use Google Forms: set `data-form-url` and `data-entry-id` on submit buttons as in existing pages (e.g. `for-product-intelligence.html`, `for-organic-growth.html`).

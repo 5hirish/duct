@@ -1,0 +1,6 @@
+# Cursor: additional exclusions (Cursor already respects .gitignore)
+# Future-proof: build output and env files if added later
+dist/
+build/
+.env
+.env.*
