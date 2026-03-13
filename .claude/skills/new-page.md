@@ -241,11 +241,29 @@ Only update if this audience has different proof priorities. Keep 4 stats and th
 
 ---
 
-## Step 12 — Accent colour (optional)
+## Step 12 — Accent colour
 
-Only add this when the colour change meaningfully signals a different context for the audience. Follow the `<style>` block pattern in `for-organic-growth.html` — it overrides CSS variables, not individual properties.
+Every page gets a colour. It should match the emotional register of the audience's domain — the way orange reads as energy/urgency and green reads as growth/nature for the existing pages.
 
-Don't add it by default. The orange default is the Duct brand. Override only when the audience warrants a distinct signal.
+**Existing pages (for consistency reference):**
+- `for-product-intelligence` → orange `#FF5C00` / hover `#e05000` — intensity, speed, analytical fire
+- `for-organic-growth` → sage green `#2e9e6b` / hover `#228055` — growth, compounding, nature
+
+**Pre-decided palette for common audience types — pick the best match:**
+
+| Audience type | Colour | Hex | Hover hex | Rationale |
+|---|---|---|---|---|
+| Engineering / infrastructure | Indigo | `#4F46E5` | `#3730A3` | Precision, reliability, technical depth |
+| Sales / revenue | Teal | `#0891B2` | `#0E7490` | Pipeline, momentum, professional energy |
+| Founders / operators | Amber | `#D97706` | `#B45309` | Decisiveness, warmth, early-stage grit |
+| Data / analytics | Slate blue | `#3B5BDB` | `#2F4AC5` | Structured thinking, intelligence, clarity |
+| Marketing / brand | Violet | `#7C3AED` | `#6D28D9` | Creativity, differentiation, attention |
+| Customer success / support | Sky | `#0284C7` | `#0369A1` | Trust, calm, reliability |
+| Finance / ops | Cool grey-blue | `#475569` | `#334155` | Professionalism, precision, control |
+
+If the audience doesn't fit any row, choose based on tone: warm colours (orange, amber) = urgency/action; cool colours (indigo, slate, teal) = precision/trust; mid colours (green, violet) = growth/creativity.
+
+**How to add it:** Add a `<style>` block at the bottom of `<head>` — copy the pattern from `for-organic-growth.html`. Replace `--green` and `--green-h` with your chosen colour variables. The block overrides CSS variables, not individual selectors.
 
 ---
 
@@ -293,6 +311,7 @@ Review at 375px width. The hero must be fully legible without horizontal scroll.
 - [ ] Correct section order: Hero → Strip → Problem → How → Features → Audience → Stats → CTA → Footer
 
 **Technical**
+- [ ] Accent colour chosen from palette and `<style>` block added to `<head>`
 - [ ] Canonical URL correct and unique
 - [ ] All `og:` and `twitter:` tags written fresh (not copied from base)
 - [ ] Nav subtitle updated to new audience label
