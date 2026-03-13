@@ -1,5 +1,7 @@
 # Duct
 
+[![Site](https://img.shields.io/badge/site-getduct.ai-orange?style=flat-square&logo=google-chrome&logoColor=white)](https://getduct.ai)
+
 **The intelligence layer for product and growth teams.**
 
 Duct connects your entire tool stack — Mixpanel, Intercom, Linear, Salesforce, GA4, Ahrefs, Google Ads — and automatically synthesises cross-tool insights into a weekly decision brief and real-time alerts. No dashboards to check. No SQL to write. No tab-switching.
