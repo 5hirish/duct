@@ -2,6 +2,16 @@
 
 Static marketing site for [getduct.ai](https://getduct.ai). Pure HTML/CSS/JS.
 
+## Site strategy
+
+Two content types, two jobs:
+- **Landing pages** (`for-*.html`) — paid ad experiments. Each page targets a specific audience/solution angle. Fast to create, easy to A/B via URL. Goal: validate conversion before investing in a channel or audience.
+- **Blog** (`blog/posts/`) — organic SEO. Written for keyword clusters, not just announcements. Goal: compound traffic from search.
+
+When adding either, ask: *what's the hypothesis being tested?* Name it in a `<!-- EXPERIMENT: hypothesis here -->` comment at the top of the file's `<body>`.
+
+When creating a variant LP for the same audience, name it `for-<audience>-v2.html` etc. Stale variants that lost should be removed, not left to accumulate.
+
 ## Stack constraints
 
 - **NO build tools.** No npm, Vite, Webpack, Rollup, or any package manager.
@@ -84,6 +94,21 @@ See skill: `/add-blog-post`. Posts are Markdown files in `blog/posts/<slug>.md` 
 ## Deploy
 
 Push `main`. Netlify/Vercel/Cloudflare Pages auto-deploys. No build command. Publish directory: `/` (repo root). The platform strips `.html` from URLs automatically.
+
+## Performance constraints
+
+Every page must load fast on mobile. This means:
+- No web fonts beyond the system stack already in `duct.css`
+- Images: WebP only, explicit `width`/`height` attributes, `loading="lazy"` below the fold
+- No third-party scripts except GTM (already deferred)
+- Hero must be fully legible at 375px with no horizontal scroll
+
+## Conversion hygiene
+
+- Every LP needs exactly one primary CTA above the fold and one at the bottom
+- CTA button copy must be action-specific (`Get early access →`, `Reserve your spot →`) — never "Submit" or "Learn more"
+- Every CTA must have trust signals nearby: free/no credit card/unsubscribe copy
+- The `.hero-footnote` anchors who this is *for* — keep it honest to reduce wrong-fit signups
 
 ## What NOT to do
 
