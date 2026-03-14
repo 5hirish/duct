@@ -1,0 +1,21 @@
+# Duct
+
+> Duct is a B2B SaaS tool that synthesizes data across product, marketing, and sales tools into weekly intelligence briefs and real-time alerts — no SQL, no dashboards required.
+
+Duct is designed for product managers, growth leads, and marketing teams at 20–200 person SaaS companies who need cross-tool insights without manual work or data engineering.
+
+## Core pages
+
+- [Home](https://getduct.ai/): Overview of Duct — what it does, who it's for, and how to join the early access waitlist.
+- [For Product Intelligence](https://getduct.ai/for-product-intelligence): How Duct connects Mixpanel, Intercom, Linear, and Salesforce into a daily PM brief with cross-tool correlations and anomaly alerts.
+- [For Organic Growth](https://getduct.ai/for-organic-growth): How Duct surfaces SEO and content performance signals from Search Console, Ahrefs, and GA4 into a weekly action brief.
+- [Blog](https://getduct.ai/blog): Articles on product intelligence, SEO strategy, and growth analytics for SaaS teams.
+
+## Blog posts
+
+- [Why Your SEO Metrics Aren't Telling You the Full Story](https://getduct.ai/blog/post.html?slug=why-your-seo-metrics-arent-telling-you-the-full-story)
+- [Keyword Gap Analysis Without a Spreadsheet](https://getduct.ai/blog/post.html?slug=keyword-gap-analysis-without-a-spreadsheet)
+
+## Optional
+
+- [Sitemap](https://getduct.ai/sitemap.xml)
