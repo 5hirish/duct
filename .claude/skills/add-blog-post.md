@@ -186,10 +186,13 @@ Gradient and emoji should match the topic mood. Existing reference:
 ```xml
 <url>
   <loc>https://getduct.ai/blog/post.html?slug=<slug></loc>
+  <lastmod><date in YYYY-MM-DD format></lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.7</priority>
 </url>
 ```
+
+Convert the front matter `date` field to ISO 8601 (`YYYY-MM-DD`) for `<lastmod>`. Example: `Mar 20 2026` → `2026-03-20`.
 
 ---
 
@@ -218,5 +221,5 @@ Gradient and emoji should match the topic mood. Existing reference:
 - [ ] Front matter has all six required keys with correct types
 - [ ] Slug is consistent across: filename, blog card `href`, sitemap `<loc>`
 - [ ] Blog card added to `blog/index.html`, ordered newest first
-- [ ] Added to `sitemap.xml`
+- [ ] Added to `sitemap.xml` with `<lastmod>` in `YYYY-MM-DD` format
 - [ ] No `<script>` tags in the Markdown body
