@@ -18,6 +18,21 @@ window.addEventListener('scroll', function() {
 document.getElementById('nav').style.boxShadow = window.scrollY > 10 ? '0 2px 20px rgba(0,0,0,.07)' : 'none';
 });
 
+// UTM params — persist to sessionStorage and attach to dataLayer on pageload
+(function() {
+var params = new URLSearchParams(window.location.search);
+var utmKeys = ['utm_source','utm_medium','utm_campaign','utm_term','utm_content'];
+var utms = {};
+utmKeys.forEach(function(k) {
+  var v = params.get(k) || sessionStorage.getItem(k);
+  if (v) { utms[k] = v; sessionStorage.setItem(k, v); }
+});
+if (Object.keys(utms).length) {
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push(Object.assign({ event: 'utm_data' }, utms));
+}
+})();
+
 // Shared submit function — reads form URL and entry ID from data- attributes on the button
 function submitForm(inputId, btn) {
 var input = document.getElementById(inputId);
@@ -43,11 +58,15 @@ btn.style.background = '#1a9e5c';
 btn.style.boxShadow = '0 8px 24px rgba(26,158,92,.25)';
 btn.disabled = false;
 input.disabled = true;
+window.dataLayer = window.dataLayer || [];
+window.dataLayer.push({ event: 'form_submit', page: window.location.pathname });
 })
 .catch(function() {
 btn.textContent = 'You are on the list!';
 btn.style.background = '#1a9e5c';
 btn.disabled = false;
 input.disabled = true;
+window.dataLayer = window.dataLayer || [];
+window.dataLayer.push({ event: 'form_submit', page: window.location.pathname });
 });
 }
