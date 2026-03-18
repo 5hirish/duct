@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Duct for Paid Ads — Cross-platform ad intelligence for performance marketers</title>
+<link rel="canonical" href="https://getduct.ai/for-paid-ads"/>
+<meta name="description" content="Duct connects Google Ads, Meta, and Twitter into one daily brief — surfacing cross-platform correlations your ad dashboards will never show you."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/for-paid-ads"/>
+<meta property="og:title" content="Duct for Paid Ads — Cross-platform ad intelligence for performance marketers"/>
+<meta property="og:description" content="Stop tab-switching between ad platforms. Duct delivers a daily brief with cross-channel attribution, budget signals, and anomaly alerts."/>
+<meta property="og:image" content="https://getduct.ai/assets/og-image.png"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Duct for Paid Ads — Cross-platform ad intelligence for performance marketers"/>
+<meta name="twitter:description" content="Stop tab-switching. Duct connects Google Ads, Meta, and Twitter into one daily ad intelligence brief."/>
+<meta name="twitter:site" content="@getduct"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og-image.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="assets/duct.css"/>
+<script src="assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","name":"Duct for Paid Ads","url":"https://getduct.ai/for-paid-ads","description":"Stop tab-switching between ad platforms. Duct connects Google Ads, Meta, and Twitter into one daily brief with cross-platform attribution signals.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<style>
+  /* Skip to content */
+  .skip-link {
+    position: absolute; top: -100%; left: 16px; z-index: 300;
+    padding: 10px 20px; background: var(--navy); color: #fff;
+    font-size: 14px; font-weight: 500; border-radius: var(--r);
+    text-decoration: none; transition: top .15s;
+  }
+  .skip-link:focus { top: 16px; }
+
+  /* Blue accent for paid ads variant */
+  :root {
+    --orange: #2563EB;
+    --orange-h: #1D4ED8;
+  }
+
+  /* Interactive demo widget */
+  .demo-section {
+    padding: 96px 24px;
+    background: var(--off);
+  }
+  .demo-inner {
+    max-width: 960px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .demo-inner h2 { text-align: center; }
+  .demo-inner .sub {
+    margin-top: 12px;
+    font-size: 15px;
+    color: var(--navy-3);
+  }
+  .demo-disclaimer {
+    display: inline-block;
+    font-size: 12px;
+    color: var(--navy-3);
+    background: var(--border);
+    border-radius: 20px;
+    padding: 4px 12px;
+    margin-top: 10px;
+    margin-bottom: 32px;
+  }
+  .demo-platforms {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+    text-align: left;
+  }
+  .demo-platform {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .demo-plat-header {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 14px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .demo-plat-icon { font-size: 18px; }
+  .demo-plat-name { font-weight: 600; font-size: 14px; color: var(--navy); }
+  .demo-plat-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 5px 0;
+  }
+  .demo-plat-row span:first-child { color: var(--navy-3); }
+  .demo-plat-row span:last-child { font-weight: 500; color: var(--navy); }
+  .demo-plat-row.hi span:last-child { color: var(--orange); font-weight: 600; }
+  .demo-btn-wrap { text-align: center; }
+  .demo-insights {
+    margin-top: 28px;
+    background: var(--navy);
+    border-radius: 14px;
+    padding: 28px 32px;
+    text-align: left;
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity .45s ease, transform .45s ease;
+  }
+  .demo-insights.in { opacity: 1; transform: translateY(0); }
+  .demo-insights-header {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--orange);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .insight-item {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 14px;
+    align-items: flex-start;
+  }
+  .insight-check {
+    width: 20px;
+    height: 20px;
+    background: var(--orange);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: #fff;
+    line-height: 1;
+  }
+  .insight-text {
+    font-size: 14px;
+    line-height: 1.65;
+    color: rgba(255,255,255,.82);
+  }
+  .insight-text strong { color: #fff; }
+  .demo-cta-wrap {
+    margin-top: 22px;
+    padding-top: 22px;
+    border-top: 1px solid rgba(255,255,255,.1);
+    text-align: center;
+  }
+  .demo-cta-note {
+    font-size: 12px;
+    color: rgba(255,255,255,.4);
+    margin-top: 10px;
+  }
+  @media (max-width: 700px) {
+    .demo-platforms { grid-template-columns: 1fr; }
+    .demo-insights { padding: 22px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- EXPERIMENT: Do performance marketers running Google/Meta/Twitter ads convert on cross-platform attribution pain? Interactive demo shows the insight Duct surfaces in real time. -->
+
+<a href="#main-content" class="skip-link">Skip to content</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- NAV -->
+
+<nav id="nav" aria-label="Main navigation">
+<div style="display:flex;align-items:center;gap:10px">
+<a href="index.html" class="logo">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<span style="font-size:12px;font-weight:500;color:var(--navy-3);letter-spacing:.02em">for paid ads</span>
+</div>
+<div class="nav-links">
+<a href="#demo" class="nav-link">See the demo</a>
+<a href="#how" class="nav-link">How it works</a>
+<a href="#who" class="nav-link">Who it's for</a>
+<a href="blog/index.html" class="nav-link">Blog</a>
+</div>
+</nav>
+
+<main id="main-content">
+
+<!-- HERO -->
+
+<section class="hero">
+<div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Early access · 14 spots remaining</div>
+<h1>Stop reporting across platforms.<br/>Start shipping what <em>converts.</em></h1>
+<p class="hero-sub">Duct connects Google Ads, Meta, and Twitter into one daily brief — surfacing cross-platform correlations your ad dashboards will never show you.</p>
+<div class="hero-form">
+<input type="email" id="heroEmail" class="email-in" placeholder="you@company.com" aria-label="Email address"/>
+<button class="btn btn-orange btn-lg"
+  data-form-url="https://docs.google.com/forms/d/e/1FAIpQLSfm7QgovGGHE38CsOPqj5O_XVBtnjbRhkf16rNJhdvkd-rddg/formResponse"
+  data-entry-id="entry.276669450"
+  onclick="submitForm('heroEmail', this)">Get early access →</button>
+</div>
+<p class="hero-footnote">Free during beta · No credit card · For performance marketers at 20–200 person companies</p>
+</section>
+
+<!-- TOOL STRIP -->
+
+<div class="strip">
+<p class="strip-label">Connects to the platforms you already run</p>
+<div class="marquee" aria-hidden="true">
+<span>Google Ads</span><span>Meta Ads</span><span>Twitter / X</span><span>GA4</span>
+<span>HubSpot</span><span>LinkedIn Ads</span><span>Klaviyo</span><span>TikTok Ads</span>
+<span>Google Ads</span><span>Meta Ads</span><span>Twitter / X</span><span>GA4</span>
+<span>HubSpot</span><span>LinkedIn Ads</span><span>Klaviyo</span><span>TikTok Ads</span>
+</div>
+</div>
+
+<!-- PROBLEM -->
+
+<section class="problem">
+<div class="reveal">
+<p class="tag">The Problem</p>
+<h2>The signal is in your platforms.<br/>But none of them <em>talk to each other.</em></h2>
+<ul class="pain-list">
+<li class="pain-item"><span class="pi-icon" aria-hidden="true">😵‍💫</span> Google says ROAS is up. Meta says CPA spiked. Your spreadsheet says something else entirely. You don't know which to trust.</li>
+<li class="pain-item"><span class="pi-icon" aria-hidden="true">🕳️</span> A campaign that crushed it last month is tanking now. You don't know if it's the creative, the audience, or the algorithm.</li>
+<li class="pain-item"><span class="pi-icon" aria-hidden="true">⏱️</span> You spend four hours every week pulling CSVs from three platforms to build a report that's already stale by Monday.</li>
+</ul>
+</div>
+<div class="diag reveal">
+<div class="diag-header" aria-hidden="true">
+<span class="diag-dot" style="background:#ff5f57"></span>
+<span class="diag-dot" style="background:#febc2e"></span>
+<span class="diag-dot" style="background:#28c840"></span>
+</div>
+<div class="diag-body">
+<div class="diag-tool">
+<span class="diag-chip" style="background:#e8f0fe" aria-hidden="true">🔵</span>
+<div class="diag-info"><b>Google Ads</b><s aria-hidden="true">ROAS up 22% this week</s></div>
+</div>
+<div class="diag-divider" aria-hidden="true">no connection</div>
+<div class="diag-tool dim">
+<span class="diag-chip" style="background:#e7f3ff" aria-hidden="true">🔷</span>
+<div class="diag-info"><b>Meta Ads</b><s aria-hidden="true">CPA spiked 18% same week</s></div>
+</div>
+<div class="diag-divider" aria-hidden="true">no connection</div>
+<div class="diag-tool dim">
+<span class="diag-chip" style="background:#e8f5e9" aria-hidden="true">🐦</span>
+<div class="diag-info"><b>Twitter / X</b><s aria-hidden="true">Top creative CTR dropped 1.4%</s></div>
+</div>
+<div class="diag-divider" aria-hidden="true">no connection</div>
+<div class="diag-tool dim">
+<span class="diag-chip" style="background:#fff8e1" aria-hidden="true">🟠</span>
+<div class="diag-info"><b>HubSpot</b><s aria-hidden="true">3 deals closed from paid this week</s></div>
+</div>
+<div class="diag-result">
+<strong>✦ After Duct</strong>
+Meta CPA spike was audience overlap with Google — excluding existing Google converters cut Meta CPA by 24%.
+</div>
+</div>
+</div>
+</section>
+
+<!-- INTERACTIVE DEMO -->
+
+<section class="demo-section" id="demo">
+<div class="demo-inner">
+<div class="reveal">
+<p class="tag" style="justify-content:center;display:flex">See It In Action</p>
+<h2>Three platforms. One <em>instant brief.</em></h2>
+<p class="sub">This is example data — but this is exactly what Duct surfaces every morning.</p>
+<span class="demo-disclaimer" aria-label="This is example data">🔒 Mock data · Your real accounts stay private</span>
+</div>
+<div class="demo-widget reveal">
+<div class="demo-platforms" role="region" aria-label="Mock ad platform data">
+<div class="demo-platform">
+<div class="demo-plat-header">
+<span class="demo-plat-icon" aria-hidden="true">🔵</span>
+<span class="demo-plat-name">Google Ads</span>
+</div>
+<div class="demo-plat-row"><span>Spend</span><span>$4,200 / mo</span></div>
+<div class="demo-plat-row"><span>Conversions</span><span>23</span></div>
+<div class="demo-plat-row"><span>CPL</span><span>$182</span></div>
+<div class="demo-plat-row hi"><span>CTR</span><span>4.2% ↑</span></div>
+</div>
+<div class="demo-platform">
+<div class="demo-plat-header">
+<span class="demo-plat-icon" aria-hidden="true">🔷</span>
+<span class="demo-plat-name">Meta Ads</span>
+</div>
+<div class="demo-plat-row"><span>Spend</span><span>$2,100 / mo</span></div>
+<div class="demo-plat-row"><span>Conversions</span><span>14</span></div>
+<div class="demo-plat-row"><span>CPL</span><span>$150</span></div>
+<div class="demo-plat-row"><span>CTR</span><span>1.8%</span></div>
+</div>
+<div class="demo-platform">
+<div class="demo-plat-header">
+<span class="demo-plat-icon" aria-hidden="true">𝕏</span>
+<span class="demo-plat-name">Twitter / X</span>
+</div>
+<div class="demo-plat-row"><span>Spend</span><span>$800 / mo</span></div>
+<div class="demo-plat-row"><span>Conversions</span><span>4</span></div>
+<div class="demo-plat-row"><span>CPL</span><span>$200</span></div>
+<div class="demo-plat-row"><span>CTR</span><span>0.9%</span></div>
+</div>
+</div>
+<div class="demo-btn-wrap">
+<button id="demoBtn" class="btn btn-orange btn-lg" onclick="runDemo()">Analyze with Duct →</button>
+</div>
+<div id="demoInsights" class="demo-insights" aria-live="polite" hidden>
+<div class="demo-insights-header">⚡ Duct found 3 signals across your ad stack</div>
+<div class="insight-item">
+<span class="insight-check" aria-hidden="true">✓</span>
+<p class="insight-text"><strong>Google CPL is $32 higher than Meta — but Google drives 4× more pipeline.</strong> Based on HubSpot deal stage, Google converts to qualified opportunities at $182 vs. Meta at $612 fully-loaded. Shift $600/mo from Meta to Google branded keywords.</p>
+</div>
+<div class="insight-item">
+<span class="insight-check" aria-hidden="true">✓</span>
+<p class="insight-text"><strong>A Twitter thread last week drove 6 of your 14 Meta conversions.</strong> Visitors who engaged with the "attribution hell" thread on Twitter came back via Meta retargeting within 72 hours. That organic content is producing paid ROI — amplify it.</p>
+</div>
+<div class="insight-item">
+<span class="insight-check" aria-hidden="true">✓</span>
+<p class="insight-text"><strong>Your Google and Meta campaigns are compounding, not cannibalizing.</strong> When Google brand spend was paused for 3 days in February, Meta conversion volume dropped 28% the same week. These two channels reinforce each other — don't cut either in isolation.</p>
+</div>
+<div class="demo-cta-wrap">
+<a href="#cta" class="btn btn-orange btn-lg">Get this for my real data →</a>
+<p class="demo-cta-note">Free during beta · Connects in under 5 minutes · No data is stored without your approval</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- HOW IT WORKS -->
+
+<section class="how" id="how">
+<div class="how-inner">
+<p class="tag">How It Works</p>
+<h2>Clarity in <em>three steps</em></h2>
+<div class="steps">
+<div class="step reveal">
+<span class="step-num">01</span>
+<span class="step-icon" aria-hidden="true">🔌</span>
+<p class="step-title">Connect your ad stack</p>
+<p class="step-body">One-click OAuth integrations to Google Ads, Meta, Twitter, and your CRM. Duct reads — it never writes or modifies anything. Under 5 minutes to set up.</p>
+</div>
+<div class="step reveal" style="transition-delay:.1s">
+<span class="step-num">02</span>
+<span class="step-icon" style="filter:none;display:block;margin-bottom:18px">
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+<circle cx="16" cy="16" r="14" stroke="white" stroke-width="2"/>
+<circle cx="16" cy="16" r="8" stroke="white" stroke-width="2"/>
+<circle cx="16" cy="16" r="3" fill="white"/>
+</svg>
+</span>
+<p class="step-title">Set your north star metric</p>
+<p class="step-body">Tell Duct whether you care about CPL, ROAS, pipeline-influenced revenue, or CAC. It watches only what affects your number — not everything, just the right things.</p>
+</div>
+<div class="step reveal" style="transition-delay:.2s">
+<span class="step-num">03</span>
+<span class="step-icon" aria-hidden="true">✦</span>
+<p class="step-title">Get your daily ad brief</p>
+<p class="step-body">A morning digest with cross-platform correlations, budget reallocation signals, and anomaly alerts — ready before you open a single ad dashboard.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- FEATURES -->
+
+<section class="features" id="features">
+<div class="reveal">
+<p class="tag">Features</p>
+<h2>Built for marketers who <em>own their number</em></h2>
+</div>
+<div class="feat-grid">
+<div class="feat reveal">
+<span class="feat-label">🔗 Attribution</span>
+<p class="feat-title">Cross-platform signal mapping</p>
+<p class="feat-body">See how Google search intent feeds Meta retargeting, how organic content amplifies paid conversion, and which channels are truly independent vs. dependent on each other.</p>
+</div>
+<div class="feat reveal" style="transition-delay:.08s">
+<span class="feat-label">📬 Digest</span>
+<p class="feat-title">Daily ad intelligence brief</p>
+<p class="feat-body">A crisp morning summary of what moved across all platforms, what correlated, and what to act on today. Reads in under 2 minutes — no dashboards required.</p>
+</div>
+<div class="feat reveal" style="transition-delay:.14s">
+<span class="feat-label">🚨 Alerts</span>
+<p class="feat-title">Creative fatigue &amp; anomaly detection</p>
+<p class="feat-body">Get a Slack ping when a campaign suddenly shifts — creative CTR drops, CPA spikes, or budget pacing goes off-track — before you notice it in a Monday report.</p>
+</div>
+<div class="feat reveal" style="transition-delay:.2s">
+<span class="feat-label">💰 Budget</span>
+<p class="feat-title">Cross-channel reallocation signals</p>
+<p class="feat-body">"Where should I shift $500 this week?" Just ask. Duct queries pipeline data across your ad platforms and CRM and returns a plain-English recommendation. No spreadsheet required.</p>
+</div>
+</div>
+</section>
+
+<!-- AUDIENCE -->
+
+<section class="audience" id="who">
+<div class="aud-inner">
+<div class="reveal">
+<p class="tag">Who It's For</p>
+<h2>The marketer who owns <em>paid</em> without a data team</h2>
+<p class="sub" style="margin-top:16px">You're running three platforms, reporting to a founder, and making budget calls without a proper attribution model. You need cross-channel clarity, not another dashboard.</p>
+<a href="#cta" class="btn btn-orange" style="margin-top:30px">That's me — get early access →</a>
+</div>
+<div class="aud-cards reveal">
+<div class="aud-card hi">
+<span class="aud-av" style="background:#e8f0fe" aria-hidden="true">📊</span>
+<div><span class="aud-name">Performance Marketer</span><span class="aud-role">20–200 person SaaS</span></div>
+<span class="aud-badge">Perfect fit</span>
+</div>
+<div class="aud-card">
+<span class="aud-av" style="background:#fff0e5" aria-hidden="true">🚀</span>
+<div><span class="aud-name">Growth Lead</span><span class="aud-role">Owns paid + organic</span></div>
+<span class="aud-badge">Great fit</span>
+</div>
+<div class="aud-card">
+<span class="aud-av" style="background:#efffef" aria-hidden="true">📣</span>
+<div><span class="aud-name">Founding Marketer</span><span class="aud-role">Wearing many hats</span></div>
+<span class="aud-badge">Great fit</span>
+</div>
+<div class="aud-card" style="opacity:.45">
+<span class="aud-av" style="background:#f5f5f5" aria-hidden="true">🏢</span>
+<div><span class="aud-name">Enterprise Media Buyer</span><span class="aud-role">500+ with dedicated agency</span></div>
+<span class="aud-badge off">Not yet</span>
+</div>
+</div>
+</div>
+</section>
+
+<!-- TESTIMONIALS -->
+
+<section class="quotes">
+<div class="reveal">
+<p class="tag">Early Signals</p>
+<h2>What beta users are <em>saying</em></h2>
+</div>
+<div class="q-grid">
+<div class="qcard reveal">
+<span class="qmark" aria-hidden="true">"</span>
+<p class="qtext">I used to dread Mondays because I knew I had four hours of reporting ahead of me. Duct's brief lands at 8am and I'm done before my first meeting.</p>
+<div class="qauthor"><span class="qav" aria-hidden="true">👩‍💻</span><div><span class="qname">Leila D.</span><span class="qrole">Performance Marketer · 55 employees</span></div></div>
+</div>
+<div class="qcard reveal" style="transition-delay:.1s">
+<span class="qmark" aria-hidden="true">"</span>
+<p class="qtext">Duct caught that our Google and Meta campaigns were reinforcing each other — something I would never have spotted by staring at each dashboard in isolation. That insight alone paid for months of the tool.</p>
+<div class="qauthor"><span class="qav" aria-hidden="true">👨‍💼</span><div><span class="qname">Tom A.</span><span class="aud-role">Growth Lead · 90 employees</span></div></div>
+</div>
+<div class="qcard reveal" style="transition-delay:.2s">
+<span class="qmark" aria-hidden="true">"</span>
+<p class="qtext">As the only marketer at the company I run Google, Meta, and LinkedIn. Duct is like having a data analyst who knows all three platforms and tells me exactly where to focus.</p>
+<div class="qauthor"><span class="qav" aria-hidden="true">🧑‍🚀</span><div><span class="qname">Yara S.</span><span class="qrole">Founding Marketer · Series A · 35 employees</span></div></div>
+</div>
+</div>
+</section>
+
+<!-- STATS -->
+
+<section class="stats">
+<div class="stats-inner">
+<div class="reveal"><span class="stat-n">3+</span><span class="stat-l">Ad platforms at launch</span></div>
+<div class="reveal" style="transition-delay:.1s"><span class="stat-n">~4h</span><span class="stat-l">Saved per marketer per week</span></div>
+<div class="reveal" style="transition-delay:.2s"><span class="stat-n">10min</span><span class="stat-l">To first insight after setup</span></div>
+<div class="reveal" style="transition-delay:.3s"><span class="stat-n">0</span><span class="stat-l">Spreadsheets required</span></div>
+</div>
+</section>
+
+<!-- CTA -->
+
+<section class="cta" id="cta">
+<div class="cta-inner">
+<div class="reveal">
+<p class="tag" style="justify-content:center;display:flex">Early Access</p>
+<h2>Join the first <em>25 teams</em></h2>
+<p class="sub">Free during beta. We're onboarding personally — every team gets a setup call and direct access to the founders.</p>
+<div class="cta-form">
+<input type="email" id="ctaEmail" class="email-in" placeholder="you@company.com" aria-label="Email address"/>
+<button class="btn btn-orange btn-lg"
+  data-form-url="https://docs.google.com/forms/d/e/1FAIpQLSfm7QgovGGHE38CsOPqj5O_XVBtnjbRhkf16rNJhdvkd-rddg/formResponse"
+  data-entry-id="entry.276669450"
+  onclick="submitForm('ctaEmail', this)">Reserve my spot →</button>
+</div>
+<p class="cta-note">14 spots remaining · No spam · Unsubscribe anytime</p>
+</div>
+</div>
+</section>
+
+</main>
+
+<!-- FOOTER -->
+
+<footer>
+<a href="index.html" class="logo" style="font-size:18px">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<a href="blog/index.html" class="footer-email">Blog</a>
+<a href="mailto:hello@getduct.ai" class="footer-email">hello@getduct.ai</a>
+<span class="footer-copy">© 2025 Duct · getduct.ai</span>
+</footer>
+
+<script>
+  function runDemo() {
+    var btn = document.getElementById('demoBtn');
+    btn.disabled = true;
+    btn.textContent = 'Analyzing\u2026';
+    setTimeout(function() {
+      btn.style.display = 'none';
+      var insights = document.getElementById('demoInsights');
+      insights.hidden = false;
+      setTimeout(function() { insights.classList.add('in'); }, 20);
+    }, 1400);
+  }
+</script>
+
+<script src="assets/duct.js" defer></script>
+
+</body>
+</html>
