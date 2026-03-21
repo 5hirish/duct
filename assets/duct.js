@@ -1,10 +1,36 @@
-// ─── Google Tag Manager ───────────────────────────────────────────────────────
-(function(w,d,s,l,i){
-  w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});
-  var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';
-  j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
-  f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer',(window.DUCT_CONFIG||{}).gtm||'');
+// ─── Google Tag Manager (deferred) ───────────────────────────────────────────
+(function(w, d, s, l, i) {
+  var loaded = false;
+  if (!i) return;
+
+  function loadGtm() {
+    if (loaded) return;
+    loaded = true;
+    w[l] = w[l] || [];
+    w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+    var f = d.getElementsByTagName(s)[0];
+    var j = d.createElement(s);
+    var dl = l !== 'dataLayer' ? '&l=' + l : '';
+    j.async = true;
+    j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+    f.parentNode.insertBefore(j, f);
+  }
+
+  // Load GTM after first interaction or when browser is idle.
+  function bindInteractionTriggers() {
+    ['pointerdown', 'keydown', 'scroll', 'touchstart'].forEach(function(evt) {
+      w.addEventListener(evt, loadGtm, { once: true, passive: true });
+    });
+  }
+
+  bindInteractionTriggers();
+
+  if ('requestIdleCallback' in w) {
+    w.requestIdleCallback(loadGtm, { timeout: 3000 });
+  } else {
+    w.setTimeout(loadGtm, 3000);
+  }
+})(window, document, 'script', 'dataLayer', (window.DUCT_CONFIG || {}).gtm || '');
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Scroll reveal
@@ -13,10 +39,23 @@ entries.forEach(function(e) { if (e.isIntersecting) e.target.classList.add('in')
 }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
 document.querySelectorAll('.reveal').forEach(function(el) { obs.observe(el); });
 
-// Nav shadow
+// Nav shadow (passive + rAF throttled)
+(function() {
+var nav = document.getElementById('nav');
+if (!nav) return;
+
+var ticking = false;
+function updateNavShadow() {
+  nav.style.boxShadow = window.scrollY > 10 ? '0 2px 20px rgba(0,0,0,.07)' : 'none';
+  ticking = false;
+}
+
 window.addEventListener('scroll', function() {
-document.getElementById('nav').style.boxShadow = window.scrollY > 10 ? '0 2px 20px rgba(0,0,0,.07)' : 'none';
-});
+  if (ticking) return;
+  ticking = true;
+  window.requestAnimationFrame(updateNavShadow);
+}, { passive: true });
+})();
 
 // UTM params — persist to sessionStorage and attach to dataLayer on pageload
 (function() {
