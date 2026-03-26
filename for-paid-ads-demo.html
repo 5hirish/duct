@@ -135,7 +135,7 @@
     background: #eff6ff;
   }
   .plat-btn.selected .plat-check { opacity: 1; }
-  .plat-icon { font-size: 20px; flex-shrink: 0; }
+  .plat-icon { flex-shrink: 0; }
   .plat-check {
     margin-left: auto;
     width: 18px;
@@ -324,6 +324,14 @@
     margin-left: auto;
   }
 
+  .wt-restart-btn {
+    background: none; border: none; cursor: pointer;
+    color: var(--navy-3); font-size: 13px; font-family: inherit;
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 0; margin-top: 2px;
+  }
+  .wt-restart-btn:hover { color: var(--navy); }
+
   @media (max-width: 560px) {
     .plat-grid { grid-template-columns: 1fr; }
     .wt-card { padding: 24px 20px; }
@@ -407,22 +415,22 @@
 <p class="wt-step-sub">Select all that apply — Duct correlates signals across everything you pick.</p>
 <div class="plat-grid">
 <button class="plat-btn" id="plat-google" onclick="wtTogglePlatform('Google Ads', this)" aria-pressed="false">
-  <span class="plat-icon" aria-hidden="true">🔵</span>
+  <img class="plat-icon" src="assets/icons/google-ads.svg" width="20" height="20" alt="" aria-hidden="true"/>
   <span>Google Ads</span>
   <span class="plat-check" aria-hidden="true">✓</span>
 </button>
 <button class="plat-btn" id="plat-meta" onclick="wtTogglePlatform('Meta', this)" aria-pressed="false">
-  <span class="plat-icon" aria-hidden="true">🔷</span>
+  <img class="plat-icon" src="assets/icons/meta.svg" width="20" height="20" alt="" aria-hidden="true"/>
   <span>Meta Ads</span>
   <span class="plat-check" aria-hidden="true">✓</span>
 </button>
 <button class="plat-btn" id="plat-twitter" onclick="wtTogglePlatform('Twitter / X', this)" aria-pressed="false">
-  <span class="plat-icon" aria-hidden="true">𝕏</span>
+  <img class="plat-icon" src="assets/icons/x-twitter.svg" width="20" height="20" alt="" aria-hidden="true"/>
   <span>Twitter / X</span>
   <span class="plat-check" aria-hidden="true">✓</span>
 </button>
 <button class="plat-btn" id="plat-linkedin" onclick="wtTogglePlatform('LinkedIn Ads', this)" aria-pressed="false">
-  <span class="plat-icon" aria-hidden="true">💼</span>
+  <img class="plat-icon" src="assets/icons/linkedin.svg" width="20" height="20" alt="" aria-hidden="true"/>
   <span>LinkedIn Ads</span>
   <span class="plat-check" aria-hidden="true">✓</span>
 </button>
@@ -514,6 +522,12 @@
 <div class="wt-nav" style="flex-direction:column;align-items:stretch;gap:10px">
 <a href="#cta" class="btn btn-orange btn-lg" style="text-align:center">Get this for my real data →</a>
 <p style="font-size:12px;color:var(--navy-3);text-align:center;margin:0">Free during beta · Connects in under 5 minutes · No data stored without your approval</p>
+<div style="text-align:center">
+  <button onclick="wtRestart()" class="wt-restart-btn" aria-label="Restart demo">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+    Restart demo
+  </button>
+</div>
 </div>
 </div>
 
@@ -670,7 +684,7 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
 
 <!-- QUOTES -->
 
-<section class="quotes">
+<section class="quotes" style="display:none">
 <div class="reveal">
 <p class="tag">Early Signals</p>
 <h2>What beta users are <em>saying</em></h2>
@@ -847,6 +861,28 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
     document.getElementById('bi-text-2').innerHTML = fillInsight(bank[1]);
     document.getElementById('bi-text-3').innerHTML = fillInsight(bank[2]);
   }
+  window.wtRestart = function() {
+    state.step = 1;
+    state.platforms = [];
+    state.metric = null;
+    document.querySelectorAll('.plat-btn').forEach(function(b) {
+      b.classList.remove('selected'); b.setAttribute('aria-pressed', 'false');
+    });
+    document.querySelectorAll('.metric-card').forEach(function(c) {
+      c.classList.remove('selected'); c.setAttribute('aria-pressed', 'false');
+    });
+    document.querySelectorAll('.analyzing-line').forEach(function(l) {
+      l.classList.remove('visible', 'done');
+    });
+    document.getElementById('wt-next-1').disabled = true;
+    document.getElementById('wt-next-2').disabled = true;
+    document.getElementById('plat-hint').style.opacity = '1';
+    document.querySelectorAll('.wt-step').forEach(function(s) {
+      s.classList.remove('active');
+    });
+    document.getElementById('wt-step-1').classList.add('active');
+    updateProgress();
+  };
 })();
 </script>
 
