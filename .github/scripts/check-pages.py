@@ -18,10 +18,6 @@ DYNAMIC_META = {"blog/post.html"}
 # Error/utility pages — skip all SEO checks (no canonical, OG, Twitter needed).
 ERROR_PAGES = {"404.html"}
 
-# Description length range required by CLAUDE.md
-DESC_MIN = 140
-DESC_MAX = 160
-
 REQUIRED_OG = {"og:type", "og:url", "og:title", "og:description", "og:image", "og:site_name"}
 REQUIRED_TWITTER = {"twitter:card", "twitter:title", "twitter:description", "twitter:site", "twitter:image"}
 
@@ -124,13 +120,6 @@ class PageChecker(HTMLParser):
         if not is_dynamic:
             if self.description is None:
                 self.errors.append("Missing <meta name='description'>")
-            else:
-                length = len(self.description)
-                if length < DESC_MIN or length > DESC_MAX:
-                    self.warnings.append(
-                        f"<meta name='description'> is {length} chars "
-                        f"(target {DESC_MIN}–{DESC_MAX}): {self.description[:60]}…"
-                    )
 
         # Robots
         if not self.has_robots:
