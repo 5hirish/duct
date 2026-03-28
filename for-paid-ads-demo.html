@@ -1051,6 +1051,91 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
 <span class="footer-copy">© 2025 Duct · getduct.ai</span>
 </footer>
 
+<!-- REPORT MODAL -->
+<div id="report-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal-inner">
+    <div class="modal-topbar">
+      <span class="modal-topbar-title" id="modal-title">Paid Ads Performance Report</span>
+      <button class="modal-close" onclick="closeReportModal()" aria-label="Close report">&times;</button>
+    </div>
+
+    <div class="rpt-header">
+      <p class="rpt-title">Paid Ads Performance Report</p>
+      <p class="rpt-meta" id="modal-rpt-meta"></p>
+      <div class="rpt-verdict" id="modal-rpt-verdict"></div>
+    </div>
+
+    <p class="rpt-section-label">Key Metrics</p>
+    <div class="kpi-strip">
+      <div class="kpi-chip">
+        <p class="kpi-label">CAC</p>
+        <p class="kpi-value" id="modal-kpi-cac-val"></p>
+        <div class="kpi-delta"><span class="kpi-dot" id="modal-kpi-cac-dot"></span><span id="modal-kpi-cac-delta"></span></div>
+      </div>
+      <div class="kpi-chip">
+        <p class="kpi-label">ROAS</p>
+        <p class="kpi-value" id="modal-kpi-roas-val"></p>
+        <div class="kpi-delta"><span class="kpi-dot" id="modal-kpi-roas-dot"></span><span id="modal-kpi-roas-delta"></span></div>
+      </div>
+      <div class="kpi-chip">
+        <p class="kpi-label">Spend</p>
+        <p class="kpi-value" id="modal-kpi-spend-val"></p>
+        <div class="kpi-delta"><span class="kpi-dot" id="modal-kpi-spend-dot"></span><span id="modal-kpi-spend-delta"></span></div>
+      </div>
+      <div class="kpi-chip">
+        <p class="kpi-label">Conversions</p>
+        <p class="kpi-value" id="modal-kpi-conv-val"></p>
+        <div class="kpi-delta"><span class="kpi-dot" id="modal-kpi-conv-dot"></span><span id="modal-kpi-conv-delta"></span></div>
+      </div>
+    </div>
+
+    <p class="rpt-section-label">Signals</p>
+    <div id="modal-rpt-signals"></div>
+
+    <p class="rpt-section-label">Campaign Performance</p>
+    <div class="camp-table-wrap">
+      <table class="camp-table">
+        <thead>
+          <tr>
+            <th>Campaign</th>
+            <th>Spend</th>
+            <th>CPA</th>
+            <th>ROAS</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="modal-camp-tbody"></tbody>
+      </table>
+    </div>
+
+    <p class="rpt-section-label">Unit Economics</p>
+    <div class="unit-econ">
+      <p class="unit-econ-title">Cost Efficiency</p>
+      <div class="unit-econ-row">
+        <span>Cost per new subscriber</span>
+        <span class="unit-econ-val" id="modal-ue-cps"></span>
+      </div>
+      <div class="unit-econ-row">
+        <span>LTV:CAC ratio <span style="color:#6b6f82">(Target: 3.0x)</span></span>
+        <span class="unit-econ-val" id="modal-ue-ltv"></span>
+      </div>
+      <div class="unit-econ-row">
+        <span>Verdict</span>
+        <span class="unit-econ-val" id="modal-ue-verdict"></span>
+      </div>
+    </div>
+
+    <p class="rpt-sources" id="modal-rpt-sources"></p>
+
+  </div>
+
+  <div class="modal-cta-bar">
+    <a href="#cta" class="btn btn-orange btn-lg" onclick="closeReportModal()">Get this for my real data &rarr;</a>
+    <p class="modal-cta-note">Free during beta &middot; Connects in under 5 minutes &middot; No data stored without your approval</p>
+  </div>
+</div>
+<!-- END REPORT MODAL -->
+
 <script>
 (function() {
   var state = { step: 1, platforms: [], metric: null };
