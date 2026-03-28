@@ -332,9 +332,291 @@
   }
   .wt-restart-btn:hover { color: var(--navy); }
 
+  /* ---- Report preview (Step 4) ---- */
+  .report-preview {
+    position: relative;
+    margin-bottom: 20px;
+  }
+  .report-preview-inner {
+    background: var(--navy);
+    border-radius: 12px;
+    padding: 20px 20px 0;
+    max-height: 340px;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
+  }
+  .rpt-header { margin-bottom: 14px; }
+  .rpt-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .rpt-meta { font-size: 11px; color: #6b6f82; }
+  .rpt-verdict {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 6px;
+    margin-top: 10px;
+  }
+  .rpt-verdict.red    { background: rgba(239,68,68,.15);  color: #fca5a5; }
+  .rpt-verdict.yellow { background: rgba(234,179,8,.15);  color: #fde68a; }
+  .rpt-verdict.green  { background: rgba(34,197,94,.15);  color: #86efac; }
+
+  /* KPI strip */
+  .kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .kpi-chip {
+    background: #1a1d2e;
+    border-radius: 8px;
+    padding: 10px 10px 8px;
+  }
+  .kpi-label {
+    font-size: 10px;
+    color: #6b6f82;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: 4px;
+  }
+  .kpi-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .kpi-delta {
+    font-size: 10px;
+    color: #6b6f82;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .kpi-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .kpi-dot.red    { background: #ef4444; }
+  .kpi-dot.yellow { background: #eab308; }
+  .kpi-dot.green  { background: #22c55e; }
+  .kpi-dot.grey   { background: #6b6f82; }
+
+  /* Signal blocks */
+  .signal-block {
+    background: #1a1d2e;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+  }
+  .signal-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-bottom: 7px;
+  }
+  .signal-pill.red    { background: rgba(239,68,68,.2);  color: #fca5a5; }
+  .signal-pill.yellow { background: rgba(234,179,8,.2);  color: #fde68a; }
+  .signal-pill.green  { background: rgba(34,197,94,.2);  color: #86efac; }
+  .signal-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 4px;
+    line-height: 1.35;
+  }
+  .signal-body {
+    font-size: 12px;
+    color: rgba(255,255,255,.65);
+    line-height: 1.5;
+  }
+  .signal-owner {
+    font-size: 11px;
+    color: var(--orange);
+    margin-top: 5px;
+    font-weight: 500;
+  }
+
+  /* Campaign table */
+  .camp-table-wrap {
+    overflow-x: auto;
+    margin-bottom: 16px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .camp-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    color: rgba(255,255,255,.8);
+    min-width: 340px;
+  }
+  .camp-table th {
+    text-align: left;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: #6b6f82;
+    padding: 0 10px 8px 0;
+    font-weight: 600;
+    border-bottom: 1px solid #2a2d3e;
+  }
+  .camp-table td {
+    padding: 9px 10px 9px 0;
+    border-bottom: 1px solid #1e2133;
+    vertical-align: top;
+  }
+  .camp-table tr:last-child td { border-bottom: none; }
+  .camp-status-scale   { color: #86efac; font-weight: 600; }
+  .camp-status-pause   { color: #fca5a5; font-weight: 600; }
+  .camp-status-monitor { color: #fde68a; font-weight: 600; }
+
+  /* Unit economics */
+  .unit-econ {
+    background: #1a1d2e;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+  }
+  .unit-econ-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: #6b6f82;
+    margin-bottom: 10px;
+  }
+  .unit-econ-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: rgba(255,255,255,.75);
+    padding: 4px 0;
+    border-bottom: 1px solid #2a2d3e;
+  }
+  .unit-econ-row:last-child { border-bottom: none; }
+  .unit-econ-val { font-weight: 600; color: #fff; }
+
+  /* Section label */
+  .rpt-section-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: #6b6f82;
+    margin: 18px 0 10px;
+  }
+
+  /* Data sources */
+  .rpt-sources {
+    font-size: 10px;
+    color: #6b6f82;
+    border-top: 1px solid #2a2d3e;
+    padding: 12px 0 20px;
+    line-height: 1.6;
+  }
+
+  /* View full report button */
+  .view-report-btn {
+    display: block;
+    width: 100%;
+    padding: 13px;
+    background: var(--navy);
+    border: 1.5px solid var(--orange);
+    color: var(--orange);
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    text-align: center;
+    margin-bottom: 14px;
+    transition: background .15s, color .15s;
+  }
+  .view-report-btn:hover { background: var(--orange); color: #fff; }
+
+  /* ---- Report Modal ---- */
+  #report-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: var(--navy);
+    overflow-y: auto;
+  }
+  .modal-inner {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 24px 24px 0;
+  }
+  .modal-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .modal-topbar-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b6f82;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+  .modal-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #6b6f82;
+    font-size: 22px;
+    line-height: 1;
+    padding: 4px 6px;
+    font-family: inherit;
+    border-radius: 6px;
+    transition: color .15s, background .15s;
+  }
+  .modal-close:hover { color: #fff; background: #2a2d3e; }
+  .modal-cta-bar {
+    position: sticky;
+    bottom: 0;
+    background: var(--navy);
+    border-top: 1px solid #2a2d3e;
+    padding: 16px 24px;
+    text-align: center;
+  }
+  .modal-cta-bar .btn-orange {
+    display: block;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto 8px;
+    text-align: center;
+  }
+  .modal-cta-note {
+    font-size: 11px;
+    color: #6b6f82;
+    margin: 0;
+  }
+
   @media (max-width: 560px) {
     .plat-grid { grid-template-columns: 1fr; }
     .wt-card { padding: 24px 20px; }
+    .kpi-strip { grid-template-columns: repeat(2, 1fr); }
   }
 </style>
 </head>
@@ -524,7 +806,7 @@
 <p style="font-size:12px;color:var(--navy-3);text-align:center;margin:0">Free during beta · Connects in under 5 minutes · No data stored without your approval</p>
 <div style="text-align:center">
   <button onclick="wtRestart()" class="wt-restart-btn" aria-label="Restart demo">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.49-3.5"/></svg>
     Restart demo
   </button>
 </div>
