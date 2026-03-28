@@ -784,32 +784,51 @@
 <!-- STEP 4: Brief -->
 <div class="wt-step" id="wt-step-4">
 <p class="wt-step-label">Step 4 of 4</p>
-<p class="wt-step-title">Your morning brief is ready</p>
+<p class="wt-step-title">Your report is ready</p>
 <p class="wt-step-sub" id="wt-brief-sub">Here's what Duct found across your ad stack.</p>
-<div class="brief-shell">
-<p class="brief-header" id="wt-brief-header">⚡ Duct found 3 signals across your stack</p>
-<div class="brief-insight" id="wt-insight-1">
-  <span class="bi-check" aria-hidden="true">✓</span>
-  <p class="bi-text" id="bi-text-1"></p>
+
+<div class="report-preview">
+  <div class="report-preview-inner">
+    <div class="rpt-header">
+      <p class="rpt-title">Paid Ads Performance Report</p>
+      <p class="rpt-meta" id="rpt-meta"></p>
+      <div class="rpt-verdict" id="rpt-verdict"></div>
+    </div>
+    <p class="rpt-section-label">Key Metrics</p>
+    <div class="kpi-strip">
+      <div class="kpi-chip">
+        <p class="kpi-label">CAC</p>
+        <p class="kpi-value" id="kpi-cac-val"></p>
+        <div class="kpi-delta"><span class="kpi-dot" id="kpi-cac-dot"></span><span id="kpi-cac-delta"></span></div>
+      </div>
+      <div class="kpi-chip">
+        <p class="kpi-label">ROAS</p>
+        <p class="kpi-value" id="kpi-roas-val"></p>
+        <div class="kpi-delta"><span class="kpi-dot" id="kpi-roas-dot"></span><span id="kpi-roas-delta"></span></div>
+      </div>
+      <div class="kpi-chip">
+        <p class="kpi-label">Spend</p>
+        <p class="kpi-value" id="kpi-spend-val"></p>
+        <div class="kpi-delta"><span class="kpi-dot" id="kpi-spend-dot"></span><span id="kpi-spend-delta"></span></div>
+      </div>
+      <div class="kpi-chip">
+        <p class="kpi-label">Conversions</p>
+        <p class="kpi-value" id="kpi-conv-val"></p>
+        <div class="kpi-delta"><span class="kpi-dot" id="kpi-conv-dot"></span><span id="kpi-conv-delta"></span></div>
+      </div>
+    </div>
+    <p class="rpt-section-label">Signals</p>
+    <div id="rpt-signals"></div>
+  </div>
 </div>
-<div class="brief-insight" id="wt-insight-2">
-  <span class="bi-check" aria-hidden="true">✓</span>
-  <p class="bi-text" id="bi-text-2"></p>
-</div>
-<div class="brief-insight" id="wt-insight-3">
-  <span class="bi-check" aria-hidden="true">✓</span>
-  <p class="bi-text" id="bi-text-3"></p>
-</div>
-</div>
-<div class="wt-nav" style="flex-direction:column;align-items:stretch;gap:10px">
-<a href="#cta" class="btn btn-orange btn-lg" style="text-align:center">Get this for my real data →</a>
-<p style="font-size:12px;color:var(--navy-3);text-align:center;margin:0">Free during beta · Connects in under 5 minutes · No data stored without your approval</p>
-<div style="text-align:center">
+
+<button class="view-report-btn" onclick="openReportModal()">View full report &#8594;</button>
+<div style="text-align:center;margin-bottom:10px">
+  <p style="font-size:12px;color:var(--navy-3);margin:0 0 8px">Free during beta &middot; Connects in under 5 minutes &middot; No data stored without your approval</p>
   <button onclick="wtRestart()" class="wt-restart-btn" aria-label="Restart demo">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.49-3.5"/></svg>
     Restart demo
   </button>
-</div>
 </div>
 </div>
 
