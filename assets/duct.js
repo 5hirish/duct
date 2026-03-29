@@ -59,7 +59,7 @@ btn.style.boxShadow = '0 8px 24px rgba(26,158,92,.25)';
 btn.disabled = false;
 input.disabled = true;
 window.dataLayer = window.dataLayer || [];
-window.dataLayer.push({ event: 'form_submit', page: window.location.pathname });
+window.dataLayer.push({ event: 'form_submit', page: window.location.pathname + window.location.search + (window.location.hash || '') });
 })
 .catch(function() {
 btn.textContent = 'You are on the list!';
@@ -67,6 +67,6 @@ btn.style.background = '#1a9e5c';
 btn.disabled = false;
 input.disabled = true;
 window.dataLayer = window.dataLayer || [];
-window.dataLayer.push({ event: 'form_submit', page: window.location.pathname });
+window.dataLayer.push({ event: 'form_submit', page: window.location.pathname + window.location.search + (window.location.hash || '') });
 });
 }

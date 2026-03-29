@@ -46,7 +46,8 @@
   .btn-orange:hover { box-shadow: 0 8px 24px rgba(37,99,235,.28); }
 
   /* Disabled state for walkthrough CTAs */
-  .btn-orange:disabled {
+  .btn-orange:disabled,
+  .btn-orange:disabled:hover {
     background: #cbd5e1;
     color: #94a3b8;
     cursor: not-allowed;
@@ -56,8 +57,24 @@
 
   /* ─── Walkthrough section ─── */
   .wt-section {
+    position: relative;
     padding: 80px 24px 96px;
     background: var(--off);
+    scroll-margin-top: 80px;
+  }
+  /* In-page target for #demo-report (scroll + shareable URL); modal overlays visually */
+  .demo-fragment-target {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
   .wt-outer {
     max-width: 680px;
@@ -93,8 +110,26 @@
     padding: 36px 32px;
     text-align: left;
   }
-  .wt-step { display: none; }
-  .wt-step.active { display: block; }
+  /* Step height follows content; JS animates .wt-steps-stage height between steps.
+     overflow:hidden clips descendants — leave padding so .btn-orange hover shadow (blur ~24px) isn’t boxed off */
+  .wt-steps-stage {
+    overflow: hidden;
+    padding: 0 10px 40px 10px;
+    margin: 0 -10px;
+    width: calc(100% + 20px);
+    max-width: calc(100% + 20px);
+    box-sizing: border-box;
+    transition: height 0.42s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .wt-steps-stage { transition: none; }
+  }
+  .wt-step {
+    display: none;
+  }
+  .wt-step.active {
+    display: block;
+  }
 
   /* Step headings */
   .wt-step-label {
@@ -349,174 +384,364 @@
     position: relative;
     margin-bottom: 20px;
   }
+  /* One fold + fade: full report DOM still lives here until modal open; modal shows entire sheet */
   .report-preview-inner {
     background: var(--off);
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 20px 20px 0;
-    max-height: 320px;
+    max-height: min(360px, 52vh);
     overflow: hidden;
-    -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
-    mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 58%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 58%, transparent 100%);
   }
-  .rpt-header { margin-bottom: 14px; }
+  .rpt-header { margin-bottom: 16px; }
+  .rpt-header--modal { margin-bottom: 16px; }
+  .rpt-header--modal .rpt-meta { margin-top: 0; }
   .rpt-title {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     color: var(--navy-3);
     letter-spacing: .08em;
     text-transform: uppercase;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
   }
-  .rpt-meta { font-size: 11px; color: var(--navy-3); }
+  .rpt-meta { font-size: 12px; color: #4b5563; line-height: 1.5; }
   .rpt-verdict {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
-    padding: 5px 10px;
+    padding: 6px 12px;
     border-radius: 6px;
-    margin-top: 8px;
+    margin-top: 10px;
   }
   .rpt-verdict.red    { background: #fee2e2; color: #b91c1c; }
   .rpt-verdict.yellow { background: #fef9c3; color: #854d0e; }
   .rpt-verdict.green  { background: #dcfce7; color: #166534; }
 
+  .rpt-section-heading {
+    margin: 22px 0 12px;
+  }
+  .rpt-section-heading .rpt-section-label {
+    margin: 0 0 4px;
+  }
+  .rpt-section-hint {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.45;
+    margin: 0;
+    max-width: 52ch;
+  }
+
   /* KPI strip */
   .kpi-strip {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-    margin-bottom: 16px;
+    gap: 10px;
+    margin-bottom: 20px;
   }
   .kpi-chip {
+    position: relative;
     background: #fff;
     border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 12px 10px;
+    border-left: 3px solid #cbd5e1;
+    box-shadow: 0 1px 2px rgba(13, 15, 26, 0.04);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .kpi-chip--accent-red {
+    border-left-color: #f87171;
+    background: linear-gradient(180deg, #fffefb 0%, #fff 40%, #fef2f2 100%);
+  }
+  .kpi-chip--accent-yellow {
+    border-left-color: #eab308;
+    background: linear-gradient(180deg, #fffefb 0%, #fff 40%, #fefce8 100%);
+  }
+  .kpi-chip--accent-green {
+    border-left-color: #4ade80;
+    background: linear-gradient(180deg, #fffefb 0%, #fff 40%, #f0fdf4 100%);
+  }
+  .kpi-chip--accent-grey {
+    border-left-color: #94a3b8;
+    background: linear-gradient(180deg, #fafafa 0%, #fff 45%, #f8fafc 100%);
+  }
+  .kpi-chip:hover {
+    border-color: #e2e8f0;
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.07);
+  }
+  .kpi-chip-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .kpi-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
     border-radius: 8px;
-    padding: 10px 10px 8px;
+    background: #eff6ff;
+    color: #2563eb;
+    flex-shrink: 0;
+  }
+  .kpi-icon svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
   .kpi-label {
-    font-size: 10px;
-    color: var(--navy-3);
+    font-size: 11px;
+    color: #4b5563;
     text-transform: uppercase;
     letter-spacing: .06em;
-    margin-bottom: 4px;
+    margin: 0;
+    line-height: 1.2;
   }
   .kpi-value {
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 700;
     color: var(--navy);
     line-height: 1;
-    margin-bottom: 4px;
+    margin-bottom: 5px;
   }
   .kpi-delta {
-    font-size: 10px;
-    color: var(--navy-3);
+    font-size: 11px;
+    color: #4b5563;
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
+    line-height: 1.35;
   }
-  .kpi-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
+  .kpi-trend {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
+    width: 18px;
+    height: 18px;
   }
-  .kpi-dot.red    { background: #ef4444; }
-  .kpi-dot.yellow { background: #eab308; }
-  .kpi-dot.green  { background: #22c55e; }
-  .kpi-dot.grey   { background: #6b6f82; }
+  .kpi-trend svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2.25;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .kpi-trend.tone-red    { color: #dc2626; }
+  .kpi-trend.tone-yellow { color: #ca8a04; }
+  .kpi-trend.tone-green  { color: #16a34a; }
+  .kpi-trend.tone-grey   { color: #64748b; }
 
   /* Section label */
   .rpt-section-label {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: .08em;
-    color: var(--navy-3);
-    margin: 16px 0 8px;
+    color: #4b5563;
+    margin: 22px 0 12px;
   }
-
   /* Signal blocks - light (preview) */
   .signal-block {
     background: #fff;
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 14px;
-    margin-bottom: 8px;
+    border-radius: 10px;
+    padding: 14px 16px 14px 15px;
+    margin-bottom: 12px;
+    border-left: 3px solid transparent;
+    box-shadow: 0 1px 2px rgba(13, 15, 26, 0.04);
   }
+  .signal-block.signal-level-red    { border-left-color: #f87171; }
+  .signal-block.signal-level-yellow { border-left-color: #eab308; }
+  .signal-block.signal-level-green  { border-left-color: #4ade80; }
   .signal-pill {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: .07em;
-    padding: 3px 8px;
-    border-radius: 4px;
-    margin-bottom: 7px;
+    padding: 4px 9px;
+    border-radius: 5px;
+    margin-bottom: 8px;
   }
   .signal-pill.red    { background: #fee2e2; color: #b91c1c; }
   .signal-pill.yellow { background: #fef9c3; color: #854d0e; }
   .signal-pill.green  { background: #dcfce7; color: #166534; }
   .signal-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 8px;
+    line-height: 1.38;
+  }
+  .signal-body {
+    font-size: 13px;
+    color: #4b5563;
+    line-height: 1.58;
+    max-width: 54ch;
+  }
+  .signal-action {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid #e5e7eb;
+  }
+  .signal-action-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 28px;
+    align-items: flex-start;
+  }
+  .signal-action-cell {
+    flex: 1 1 140px;
+    min-width: 0;
+  }
+  .signal-action-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: #64748b;
+    margin-bottom: 3px;
+  }
+  .signal-action-value {
+    display: block;
     font-size: 13px;
     font-weight: 600;
     color: var(--navy);
-    margin-bottom: 4px;
     line-height: 1.35;
   }
-  .signal-body {
-    font-size: 12px;
-    color: var(--navy-3);
-    line-height: 1.5;
+  .signal-owner-block {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-top: 2px;
   }
-  .signal-owner {
-    font-size: 11px;
-    color: var(--orange);
-    margin-top: 5px;
+  .signal-owner-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: #e2e8f0;
+    border: 1px solid #e2e8f0;
+  }
+  .signal-owner-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .signal-owner-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--navy);
+    line-height: 1.25;
+  }
+  .signal-owner-role {
+    font-size: 12px;
     font-weight: 500;
+    color: #64748b;
+    line-height: 1.3;
+  }
+  .signal-owner-legacy {
+    font-size: 12px;
+    color: #4b5563;
+    margin: 0;
+    line-height: 1.45;
   }
 
   /* Campaign table */
   .camp-table-wrap {
     overflow-x: auto;
-    margin-bottom: 16px;
+    margin-bottom: 18px;
     -webkit-overflow-scrolling: touch;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
   }
   .camp-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 12px;
+    font-size: 13px;
     color: var(--navy);
     min-width: 340px;
+  }
+  .camp-table thead tr {
+    background: #f1f5f9;
   }
   .camp-table th {
     text-align: left;
     font-size: 10px;
     text-transform: uppercase;
-    letter-spacing: .06em;
-    color: var(--navy-3);
-    padding: 0 10px 8px 0;
-    font-weight: 600;
-    border-bottom: 1px solid var(--border);
+    letter-spacing: .08em;
+    color: var(--navy);
+    padding: 10px 10px 10px 12px;
+    font-weight: 800;
+    border-bottom: 2px solid #e2e8f0;
   }
-  #report-modal .camp-table th { border-bottom-color: #2a2d3e; }
+  .camp-table th:first-child {
+    border-radius: 8px 0 0 0;
+    padding-left: 14px;
+  }
+  .camp-table th:last-child {
+    border-radius: 0 8px 0 0;
+    padding-right: 14px;
+  }
   .camp-table td {
-    padding: 9px 10px 9px 0;
-    border-bottom: 1px solid var(--border);
+    padding: 12px 10px 12px 12px;
+    border-bottom: 1px solid #eef2f7;
     vertical-align: top;
+    line-height: 1.45;
+    background: #fff;
+    transition: background 0.15s ease;
   }
-  #report-modal .camp-table td { border-bottom-color: #1e2133; }
-  .camp-table tr:last-child td { border-bottom: none; }
+  .camp-table td:last-child {
+    padding-right: 14px;
+  }
+  .camp-table tbody tr.camp-row--alt td {
+    background: #f8fafc;
+  }
+  .camp-table tbody tr:hover td {
+    background: #eff6ff;
+  }
+  .camp-table tbody tr.camp-row--alt:hover td {
+    background: #e0f2fe;
+  }
+  .camp-table td:first-child {
+    white-space: normal;
+    overflow-wrap: break-word;
+    max-width: 220px;
+    padding-left: 14px;
+  }
+  @media (min-width: 560px) {
+    .camp-table td:first-child { max-width: 280px; }
+  }
+  .camp-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+  .camp-table tbody tr:last-child td:first-child {
+    border-radius: 0 0 0 8px;
+  }
+  .camp-table tbody tr:last-child td:last-child {
+    border-radius: 0 0 8px 0;
+  }
   .camp-status-scale   { color: #166534; font-weight: 600; }
   .camp-status-pause   { color: #b91c1c; font-weight: 600; }
   .camp-status-monitor { color: #854d0e; font-weight: 600; }
-  #report-modal .camp-status-scale   { color: #86efac; }
-  #report-modal .camp-status-pause   { color: #fca5a5; }
-  #report-modal .camp-status-monitor { color: #fde68a; }
-
   /* Unit economics */
   .unit-econ {
     background: var(--off);
@@ -525,40 +750,38 @@
     padding: 14px 16px;
     margin-bottom: 16px;
   }
-  #report-modal .unit-econ { background: #1a1d2e; border: none; }
   .unit-econ-title {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: .07em;
-    color: var(--navy-3);
-    margin-bottom: 10px;
+    color: #4b5563;
+    margin-bottom: 12px;
   }
   .unit-econ-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 12px;
-    color: var(--navy-3);
-    padding: 4px 0;
+    font-size: 13px;
+    color: #4b5563;
+    padding: 6px 0;
     border-bottom: 1px solid var(--border);
+    line-height: 1.45;
+    gap: 12px;
   }
-  #report-modal .unit-econ-row { color: rgba(255,255,255,.75); border-bottom-color: #2a2d3e; }
   .unit-econ-row:last-child { border-bottom: none; }
   .unit-econ-val { font-weight: 600; color: var(--navy); }
-  #report-modal .unit-econ-val { color: #fff; }
 
   /* Data sources */
   .rpt-sources {
-    font-size: 10px;
-    color: var(--navy-3);
+    font-size: 12px;
+    color: #575a6b;
     border-top: 1px solid var(--border);
-    padding: 12px 0 20px;
-    line-height: 1.6;
+    padding: 18px 0 22px;
+    line-height: 1.55;
+    margin-top: 8px;
   }
-  #report-modal .rpt-sources { border-top-color: #2a2d3e; }
-
-  /* View full report button */
+  /* View full report — anchor needs explicit hover/focus colors (WebKit link fill can ignore color) */
   .view-report-btn {
     display: block;
     width: 100%;
@@ -566,6 +789,7 @@
     background: transparent;
     border: 1.5px solid var(--orange);
     color: var(--orange);
+    -webkit-text-fill-color: var(--orange);
     border-radius: var(--pill);
     font-size: 14px;
     font-weight: 600;
@@ -573,92 +797,351 @@
     cursor: pointer;
     text-align: center;
     margin-bottom: 14px;
-    transition: background .15s, color .15s;
+    text-decoration: none;
+    box-sizing: border-box;
+    transition: background .15s, color .15s, border-color .15s, -webkit-text-fill-color .15s;
   }
-  .view-report-btn:hover { background: var(--orange); color: #fff; }
+  .view-report-btn:hover,
+  .view-report-btn:focus-visible {
+    background: var(--orange);
+    color: #fff;
+    -webkit-text-fill-color: #fff;
+    border-color: var(--orange);
+  }
 
-  /* ---- Report Modal - dark full-screen ---- */
+  /* ---- Report Modal: light scrim + sheet (matches preview / LP) ---- */
   #report-modal {
     display: none;
     position: fixed;
     inset: 0;
     z-index: 200;
-    background: var(--navy);
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background: rgba(13, 15, 26, 0.45);
+    padding: 20px 16px max(28px, env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
   }
-  .modal-inner {
-    max-width: 680px;
+  .modal-sheet {
+    max-width: 720px;
+    width: 100%;
     margin: 0 auto;
-    padding: 24px 24px 0;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 24px 56px rgba(13, 15, 26, 0.14);
+    max-height: calc(100vh - 32px - env(safe-area-inset-bottom, 0px));
+    max-height: calc(100dvh - 32px - env(safe-area-inset-bottom, 0px));
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .modal-body-scroll {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+    padding: 12px 24px 20px;
   }
   .modal-topbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 20px;
+    padding: 20px 24px 12px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+    background: #fff;
+    border-radius: 16px 16px 0 0;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    border-bottom: 1px solid transparent;
+  }
+  .modal-topbar.modal-topbar--scrolled {
+    border-bottom-color: #e2e8f0;
+    box-shadow: 0 6px 16px rgba(13, 15, 26, 0.08);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .modal-topbar { transition: none; }
   }
   .modal-topbar-title {
-    font-size: 12px;
+    margin: 0;
+    font-size: 13px;
     font-weight: 600;
-    color: #6b6f82;
+    color: #4b5563;
     text-transform: uppercase;
     letter-spacing: .08em;
+    font-family: inherit;
+    line-height: 1.3;
   }
-  #report-modal .rpt-title { color: #fff; }
-  #report-modal .rpt-meta  { color: #6b6f82; }
-  #report-modal .rpt-section-label { color: #6b6f82; }
-  #report-modal .kpi-label { color: #6b6f82; }
-  #report-modal .kpi-delta { color: #6b6f82; }
   .modal-close {
     background: none;
     border: none;
     cursor: pointer;
-    color: #6b6f82;
+    color: var(--navy-3);
     font-size: 22px;
     line-height: 1;
-    padding: 4px 6px;
+    padding: 4px 8px;
     font-family: inherit;
-    border-radius: 6px;
+    border-radius: 8px;
     transition: color .15s, background .15s;
   }
-  .modal-close:hover { color: #fff; background: #2a2d3e; }
+  .modal-close:hover { color: var(--navy); background: var(--off); }
+  .modal-close:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+
+  .rpt-verdict--modal {
+    font-size: 15px;
+    font-weight: 600;
+    padding: 9px 14px;
+    margin-top: 12px;
+    line-height: 1.38;
+  }
+
+  /* Hero KPI + sparkline */
+  .rpt-hero-visual {
+    display: grid;
+    grid-template-columns: 1fr minmax(100px, 130px);
+    gap: 16px;
+    align-items: end;
+    margin-bottom: 22px;
+    padding: 18px;
+    background: var(--off);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .kpi-hero-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: #4b5563;
+    margin-bottom: 5px;
+  }
+  .kpi-hero-value {
+    font-family: var(--serif, Georgia, serif);
+    font-size: clamp(28px, 6vw, 36px);
+    font-weight: 400;
+    color: var(--navy);
+    line-height: 1;
+    margin-bottom: 6px;
+    letter-spacing: -.02em;
+  }
+  .kpi-hero-delta {
+    font-size: 13px;
+    color: #4b5563;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    line-height: 1.4;
+  }
+  .kpi-hero-delta .kpi-trend {
+    width: 20px;
+    height: 20px;
+  }
+  .kpi-hero-delta .kpi-trend svg {
+    width: 16px;
+    height: 16px;
+  }
+  .kpi-sparkline-block {
+    text-align: right;
+  }
+  .kpi-sparkline-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: #4b5563;
+    margin-bottom: 6px;
+  }
+  .kpi-sparkline-svg svg {
+    display: block;
+    width: 100%;
+    max-width: 130px;
+    height: 44px;
+    margin-left: auto;
+  }
+  .kpi-sparkline-svg .spark-fill { fill: url(#sparkGrad); opacity: .35; }
+  .kpi-sparkline-svg .spark-line { fill: none; stroke: var(--orange); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ROAS comparison bars */
+  .rpt-bar-block {
+    margin-bottom: 22px;
+  }
+  .rpt-bar-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: #4b5563;
+    margin-bottom: 12px;
+  }
+  .rpt-bar-row {
+    margin-bottom: 12px;
+    font-size: 12px;
+    color: var(--navy);
+  }
+  .rpt-bar-row:last-child { margin-bottom: 0; }
+  .rpt-bar-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .rpt-bar-name { font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rpt-bar-track {
+    height: 8px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .rpt-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #93c5fd, var(--orange));
+    min-width: 4px;
+    transition: width .35s ease;
+  }
+  .rpt-bar-val { font-weight: 600; color: #4b5563; text-align: right; }
+
+  /* Hide hero metric duplicate in modal strip */
+  .kpi-chip.kpi-chip--modal-hidden { display: none !important; }
+
+  /* Progressive disclosure */
+  .rpt-disclosure { margin-bottom: 12px; }
+  .rpt-disclosure-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 48px;
+    padding: 13px 16px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--navy);
+    cursor: pointer;
+    text-align: left;
+    transition: border-color .15s, background .15s;
+  }
+  .rpt-disclosure-btn:hover { border-color: var(--orange); background: var(--off); }
+  .rpt-disclosure-btn:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+  .rpt-disclosure-btn .rpt-disclosure-meta {
+    font-size: 12px;
+    font-weight: 500;
+    color: #4b5563;
+    margin-left: 8px;
+  }
+  .rpt-disclosure-chevron {
+    font-size: 10px;
+    color: var(--navy-3);
+    transition: transform .2s ease;
+  }
+  .rpt-disclosure-btn[aria-expanded="true"] .rpt-disclosure-chevron { transform: rotate(180deg); }
+  .rpt-disclosure-panel {
+    padding: 14px 0 6px;
+  }
+  .rpt-disclosure-panel[hidden] { display: none !important; }
+
+  /* Space after entire signals column (incl. show more) before accordions */
+  #rpt-signals {
+    margin-bottom: 20px;
+  }
+
+  .rpt-show-more-signals {
+    display: block;
+    width: 100%;
+    margin-top: 12px;
+    margin-bottom: 0;
+    padding: 12px 14px;
+    background: #fafafa;
+    border: 1px dashed #cbd5e1;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--orange);
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+  }
+  .rpt-show-more-signals:hover { background: #eff6ff; border-color: var(--orange); }
+  .rpt-show-more-signals:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+  .rpt-signal-extra-wrap[hidden] { display: none !important; }
+  .rpt-signal-extra-wrap {
+    margin-bottom: 0;
+  }
+
   .modal-cta-bar {
-    position: sticky;
-    bottom: 0;
-    background: var(--navy);
-    border-top: 1px solid #2a2d3e;
-    padding: 16px 24px;
+    flex-shrink: 0;
+    background: #f1f5f9;
+    border-top: 1px solid #e2e8f0;
+    box-shadow: 0 -6px 18px rgba(13, 15, 26, 0.06);
+    padding: 10px 20px max(12px, env(safe-area-inset-bottom, 0px));
     text-align: center;
   }
   .modal-cta-bar .btn-orange {
     display: block;
     width: 100%;
     max-width: 400px;
-    margin: 0 auto 8px;
+    margin: 0 auto 5px;
     text-align: center;
+    min-height: 44px;
+    padding-top: 11px;
+    padding-bottom: 11px;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
   }
   .modal-cta-note {
-    font-size: 11px;
-    color: #6b6f82;
+    font-size: 10px;
+    color: #64748b;
     margin: 0;
+    line-height: 1.4;
+    max-width: 32em;
+    margin-left: auto;
+    margin-right: auto;
   }
   .modal-cta-form {
     display: flex;
-    gap: 8px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    width: 100%;
     max-width: 400px;
-    margin: 0 auto 8px;
+    margin: 0 auto 5px;
+    text-align: left;
   }
   .modal-cta-form .email-in {
-    flex: 1;
-    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 44px;
+    padding: 10px 14px;
+    font-size: 16px;
     background: #fff;
-    border: 1.5px solid rgba(255,255,255,.15);
+    border: 1.5px solid #cbd5e1;
     color: var(--navy);
+    border-radius: 10px;
   }
   .modal-cta-form .email-in::placeholder { color: #94a3b8; }
   .modal-cta-form .email-in:focus { border-color: var(--orange); outline: none; }
+  a.view-report-btn:visited {
+    color: var(--orange);
+    -webkit-text-fill-color: var(--orange);
+  }
+  a.view-report-btn:visited:hover,
+  a.view-report-btn:visited:focus-visible {
+    color: #fff;
+    -webkit-text-fill-color: #fff;
+  }
   @media (max-width: 480px) {
-    .modal-cta-form { flex-direction: column; }
+    .rpt-hero-visual { grid-template-columns: 1fr; }
+    .kpi-sparkline-block { text-align: left; }
+    .kpi-sparkline-svg svg { margin-left: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rpt-bar-fill { transition: none; }
+    .rpt-disclosure-chevron { transition: none; }
   }
 
   @media (max-width: 560px) {
@@ -686,7 +1169,7 @@
 <span style="font-size:12px;font-weight:500;color:var(--navy-3);letter-spacing:.02em">for paid ads · demo</span>
 </div>
 <div class="nav-links">
-<a href="#demo" class="nav-link">Try the demo</a>
+<a href="#demo-step-1" class="nav-link">Try the demo</a>
 <a href="#how" class="nav-link">How it works</a>
 <a href="#who" class="nav-link">Who it's for</a>
 <a href="blog/index.html" class="nav-link">Blog</a>
@@ -702,7 +1185,7 @@
 <h1>See the brief Duct would<br/>generate for your <em>ad stack.</em></h1>
 <p class="hero-sub">Pick your platforms, set your metric, and watch Duct surface the cross-channel signals your dashboards will never show you. No signup required.</p>
 <div style="display:flex;justify-content:center;margin-top:32px">
-<a href="#demo" class="btn btn-orange btn-lg">Try the demo →</a>
+<a href="#demo-step-1" class="btn btn-orange btn-lg">Try the demo →</a>
 </div>
 <p class="hero-footnote">Takes 60 seconds · No signup · For performance marketers at 20–200 person companies</p>
 </section>
@@ -722,6 +1205,7 @@
 <!-- WALKTHROUGH DEMO -->
 
 <section class="wt-section" id="demo">
+<span id="demo-report" class="demo-fragment-target" tabindex="-1" aria-hidden="true"></span>
 <div class="wt-outer">
 <div class="reveal">
 <p class="tag" style="justify-content:center;display:flex">Interactive Demo</p>
@@ -738,10 +1222,12 @@
 
 <div class="wt-card reveal" aria-live="polite">
 
+<div class="wt-steps-stage">
+
 <!-- STEP 1: Platform selection -->
-<div class="wt-step active" id="wt-step-1">
+<div class="wt-step active" id="demo-step-1" role="region" aria-labelledby="demo-step-1-title">
 <p class="wt-step-label">Step 1 of 4</p>
-<p class="wt-step-title">Which platforms do you run ads on?</p>
+<p class="wt-step-title" id="demo-step-1-title">Which platforms do you run ads on?</p>
 <p class="wt-step-sub">Select all that apply — Duct correlates signals across everything you pick.</p>
 <div class="plat-grid">
 <button class="plat-btn" id="plat-google" onclick="wtTogglePlatform('Google Ads', this)" aria-pressed="false">
@@ -772,9 +1258,9 @@
 </div>
 
 <!-- STEP 2: Metric selection -->
-<div class="wt-step" id="wt-step-2">
+<div class="wt-step" id="demo-step-2" role="region" aria-labelledby="demo-step-2-title" inert>
 <p class="wt-step-label">Step 2 of 4</p>
-<p class="wt-step-title">What are you optimising for?</p>
+<p class="wt-step-title" id="demo-step-2-title">What are you optimising for?</p>
 <p class="wt-step-sub">Duct watches only what moves your number — not everything, just the right things.</p>
 <div class="metric-grid">
 <button class="metric-card" onclick="wtSelectMetric('cac', this)" aria-pressed="false">
@@ -809,9 +1295,9 @@
 </div>
 
 <!-- STEP 3: Analysing -->
-<div class="wt-step" id="wt-step-3">
+<div class="wt-step" id="demo-step-3" role="region" aria-labelledby="demo-step-3-title" inert>
 <p class="wt-step-label">Step 3 of 4</p>
-<p class="wt-step-title">Duct is analysing your stack…</p>
+<p class="wt-step-title" id="demo-step-3-title">Duct is analysing your stack…</p>
 <p class="wt-step-sub" style="margin-bottom:0">Using 90 days of example data from your selected platforms.</p>
 <div class="analyzing-lines" id="al-lines">
 <div class="analyzing-line" id="al-1">
@@ -830,11 +1316,11 @@
 </div>
 
 <!-- STEP 4: Brief -->
-<div class="wt-step" id="wt-step-4">
+<div class="wt-step" id="demo-step-4" role="region" aria-labelledby="demo-step-4-title" inert>
 <p class="wt-step-label">Step 4 of 4</p>
 <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:24px">
   <div>
-    <p class="wt-step-title" style="margin-bottom:4px">Your report is ready</p>
+    <p class="wt-step-title" id="demo-step-4-title" style="margin-bottom:4px">Your report is ready</p>
     <p class="wt-step-sub" id="wt-brief-sub" style="margin-bottom:0">Here's what Duct found across your ad stack.</p>
   </div>
   <button onclick="wtRestart()" class="wt-restart-btn" aria-label="Restart demo" style="flex-shrink:0;margin-top:2px">
@@ -844,43 +1330,130 @@
 </div>
 
 <div class="report-preview">
-  <div class="report-preview-inner">
-    <div class="rpt-header">
-      <p class="rpt-title">Paid Ads Performance Report</p>
+  <div class="report-preview-inner" id="report-preview-host">
+    <!-- Same report DOM as modal; clipped + fade here, full scroll in modal -->
+    <div id="duct-report-root">
+    <div class="rpt-header rpt-header--modal">
       <p class="rpt-meta" id="rpt-meta"></p>
-      <div class="rpt-verdict" id="rpt-verdict"></div>
+      <div class="rpt-verdict rpt-verdict--modal" id="rpt-verdict"></div>
     </div>
-    <p class="rpt-section-label">Key Metrics</p>
-    <div class="kpi-strip">
-      <div class="kpi-chip">
-        <p class="kpi-label">CAC</p>
-        <p class="kpi-value" id="kpi-cac-val"></p>
-        <div class="kpi-delta"><span class="kpi-dot" id="kpi-cac-dot"></span><span id="kpi-cac-delta"></span></div>
+
+    <div class="rpt-hero-visual" id="rpt-hero-visual">
+      <div class="kpi-hero-block">
+        <p class="kpi-hero-label" id="rpt-hero-label"></p>
+        <p class="kpi-hero-value" id="rpt-hero-val"></p>
+        <div class="kpi-hero-delta" id="rpt-hero-delta-row"></div>
       </div>
-      <div class="kpi-chip">
-        <p class="kpi-label">ROAS</p>
-        <p class="kpi-value" id="kpi-roas-val"></p>
-        <div class="kpi-delta"><span class="kpi-dot" id="kpi-roas-dot"></span><span id="kpi-roas-delta"></span></div>
-      </div>
-      <div class="kpi-chip">
-        <p class="kpi-label">Spend</p>
-        <p class="kpi-value" id="kpi-spend-val"></p>
-        <div class="kpi-delta"><span class="kpi-dot" id="kpi-spend-dot"></span><span id="kpi-spend-delta"></span></div>
-      </div>
-      <div class="kpi-chip">
-        <p class="kpi-label">Conversions</p>
-        <p class="kpi-value" id="kpi-conv-val"></p>
-        <div class="kpi-delta"><span class="kpi-dot" id="kpi-conv-dot"></span><span id="kpi-conv-delta"></span></div>
+      <div class="kpi-sparkline-block">
+        <p class="kpi-sparkline-label">7-day spend (indexed)</p>
+        <div class="kpi-sparkline-svg" id="rpt-sparkline" aria-hidden="true"></div>
       </div>
     </div>
+
+    <div class="rpt-bar-block" id="rpt-roas-bars-wrap">
+      <p class="rpt-bar-label">ROAS by campaign</p>
+      <div id="rpt-roas-bars"></div>
+    </div>
+
+    <div class="rpt-section-heading">
+      <p class="rpt-section-label">Also tracking</p>
+      <p class="rpt-section-hint" id="rpt-kpi-hint"></p>
+    </div>
+    <div class="kpi-strip" role="group" aria-label="Supporting metrics">
+      <div class="kpi-chip" data-kpi-key="cac">
+        <div class="kpi-chip-head">
+          <span class="kpi-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+          <p class="kpi-label">CAC</p>
+        </div>
+        <p class="kpi-value" id="rpt-kpi-cac-val"></p>
+        <div class="kpi-delta"><span class="kpi-trend" id="rpt-kpi-cac-trend" aria-hidden="true"></span><span id="rpt-kpi-cac-delta"></span></div>
+      </div>
+      <div class="kpi-chip" data-kpi-key="roas">
+        <div class="kpi-chip-head">
+          <span class="kpi-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 7L13.5 15.5 8.5 10.5 2 17"/><path d="M16 7h6v6"/></svg></span>
+          <p class="kpi-label">ROAS</p>
+        </div>
+        <p class="kpi-value" id="rpt-kpi-roas-val"></p>
+        <div class="kpi-delta"><span class="kpi-trend" id="rpt-kpi-roas-trend" aria-hidden="true"></span><span id="rpt-kpi-roas-delta"></span></div>
+      </div>
+      <div class="kpi-chip" data-kpi-key="spend">
+        <div class="kpi-chip-head">
+          <span class="kpi-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M12 6v12"/><path d="M15.5 9.25a3.25 3.25 0 0 0-6.5 0c0 1.5 1.36 2.03 2.72 2.55 1.5.58 3.78 1.32 3.78 3.7a3.25 3.25 0 0 1-6.5 0"/></svg></span>
+          <p class="kpi-label">Spend</p>
+        </div>
+        <p class="kpi-value" id="rpt-kpi-spend-val"></p>
+        <div class="kpi-delta"><span class="kpi-trend" id="rpt-kpi-spend-trend" aria-hidden="true"></span><span id="rpt-kpi-spend-delta"></span></div>
+      </div>
+      <div class="kpi-chip" data-kpi-key="conv">
+        <div class="kpi-chip-head">
+          <span class="kpi-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+          <p class="kpi-label">Conversions</p>
+        </div>
+        <p class="kpi-value" id="rpt-kpi-conv-val"></p>
+        <div class="kpi-delta"><span class="kpi-trend" id="rpt-kpi-conv-trend" aria-hidden="true"></span><span id="rpt-kpi-conv-delta"></span></div>
+      </div>
+    </div>
+
     <p class="rpt-section-label">Signals</p>
     <div id="rpt-signals"></div>
+
+    <div class="rpt-disclosure">
+      <button type="button" class="rpt-disclosure-btn" id="rpt-camp-toggle" aria-expanded="false" aria-controls="rpt-camp-panel">
+        <span>Campaign breakdown<span class="rpt-disclosure-meta" id="rpt-camp-meta"></span></span>
+        <span class="rpt-disclosure-chevron" aria-hidden="true">&#9660;</span>
+      </button>
+      <div class="rpt-disclosure-panel" id="rpt-camp-panel" hidden>
+        <div class="camp-table-wrap">
+          <table class="camp-table">
+            <thead>
+              <tr>
+                <th>Campaign</th>
+                <th>Spend</th>
+                <th>CPA</th>
+                <th>ROAS</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="rpt-camp-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="rpt-disclosure">
+      <button type="button" class="rpt-disclosure-btn" id="rpt-ue-toggle" aria-expanded="false" aria-controls="rpt-ue-panel">
+        <span>Unit economics<span class="rpt-disclosure-meta" id="rpt-ue-summary"></span></span>
+        <span class="rpt-disclosure-chevron" aria-hidden="true">&#9660;</span>
+      </button>
+      <div class="rpt-disclosure-panel" id="rpt-ue-panel" hidden>
+        <div class="unit-econ">
+          <p class="unit-econ-title">Cost efficiency</p>
+          <div class="unit-econ-row">
+            <span>Cost per new subscriber</span>
+            <span class="unit-econ-val" id="rpt-ue-cps"></span>
+          </div>
+          <div class="unit-econ-row">
+            <span>LTV:CAC ratio <span style="color:#6b6f82">(Target: 3.0x)</span></span>
+            <span class="unit-econ-val" id="rpt-ue-ltv"></span>
+          </div>
+          <div class="unit-econ-row">
+            <span>Verdict</span>
+            <span class="unit-econ-val" id="rpt-ue-verdict"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="rpt-sources" id="rpt-footer-sources"></p>
+    </div><!-- /#duct-report-root -->
   </div>
 </div>
 
-<button class="view-report-btn" onclick="openReportModal()">View full report &#8594;</button>
+<a href="#demo-report" class="view-report-btn" id="view-full-report-link">View full report &#8594;</a>
 <p style="font-size:12px;color:var(--navy-3);margin:0 0 10px;text-align:center">Free during beta &middot; Connects in under 5 minutes &middot; No data stored without your approval</p>
 </div>
+
+</div><!-- /.wt-steps-stage -->
 
 </div><!-- /.wt-card -->
 </div><!-- /.wt-outer -->
@@ -1102,99 +1675,123 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
 </footer>
 
 <!-- REPORT MODAL -->
-<div id="report-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-  <div class="modal-inner">
+<div id="report-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="rpt-meta">
+  <div class="modal-sheet">
     <div class="modal-topbar">
-      <span class="modal-topbar-title" id="modal-title">Paid Ads Performance Report</span>
-      <button class="modal-close" onclick="closeReportModal()" aria-label="Close report">&times;</button>
+      <h2 class="modal-topbar-title" id="modal-title">Paid Ads Performance Report</h2>
+      <button type="button" class="modal-close" id="modal-close-btn" onclick="closeReportModal()" aria-label="Close report">&times;</button>
     </div>
 
-    <div class="rpt-header">
-      <p class="rpt-title">Paid Ads Performance Report</p>
-      <p class="rpt-meta" id="modal-rpt-meta"></p>
-      <div class="rpt-verdict" id="modal-rpt-verdict"></div>
-    </div>
-
-    <p class="rpt-section-label">Key Metrics</p>
-    <div class="kpi-strip">
-      <div class="kpi-chip">
-        <p class="kpi-label">CAC</p>
-        <p class="kpi-value" id="modal-kpi-cac-val"></p>
-        <div class="kpi-delta"><span class="kpi-dot" id="modal-kpi-cac-dot"></span><span id="modal-kpi-cac-delta"></span></div>
-      </div>
-      <div class="kpi-chip">
-        <p class="kpi-label">ROAS</p>
-        <p class="kpi-value" id="modal-kpi-roas-val"></p>
-        <div class="kpi-delta"><span class="kpi-dot" id="modal-kpi-roas-dot"></span><span id="modal-kpi-roas-delta"></span></div>
-      </div>
-      <div class="kpi-chip">
-        <p class="kpi-label">Spend</p>
-        <p class="kpi-value" id="modal-kpi-spend-val"></p>
-        <div class="kpi-delta"><span class="kpi-dot" id="modal-kpi-spend-dot"></span><span id="modal-kpi-spend-delta"></span></div>
-      </div>
-      <div class="kpi-chip">
-        <p class="kpi-label">Conversions</p>
-        <p class="kpi-value" id="modal-kpi-conv-val"></p>
-        <div class="kpi-delta"><span class="kpi-dot" id="modal-kpi-conv-dot"></span><span id="modal-kpi-conv-delta"></span></div>
-      </div>
-    </div>
-
-    <p class="rpt-section-label">Signals</p>
-    <div id="modal-rpt-signals"></div>
-
-    <p class="rpt-section-label">Campaign Performance</p>
-    <div class="camp-table-wrap">
-      <table class="camp-table">
-        <thead>
-          <tr>
-            <th>Campaign</th>
-            <th>Spend</th>
-            <th>CPA</th>
-            <th>ROAS</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="modal-camp-tbody"></tbody>
-      </table>
-    </div>
-
-    <p class="rpt-section-label">Unit Economics</p>
-    <div class="unit-econ">
-      <p class="unit-econ-title">Cost Efficiency</p>
-      <div class="unit-econ-row">
-        <span>Cost per new subscriber</span>
-        <span class="unit-econ-val" id="modal-ue-cps"></span>
-      </div>
-      <div class="unit-econ-row">
-        <span>LTV:CAC ratio <span style="color:#6b6f82">(Target: 3.0x)</span></span>
-        <span class="unit-econ-val" id="modal-ue-ltv"></span>
-      </div>
-      <div class="unit-econ-row">
-        <span>Verdict</span>
-        <span class="unit-econ-val" id="modal-ue-verdict"></span>
-      </div>
-    </div>
-
-    <p class="rpt-sources" id="modal-rpt-sources"></p>
-
-  </div>
+    <div class="modal-body-scroll" id="modal-report-scroll-host"></div>
 
   <div class="modal-cta-bar">
     <div class="modal-cta-form">
-      <input type="email" id="modalCtaEmail" class="email-in" placeholder="you@company.com" aria-label="Email address"/>
-      <button class="btn btn-orange"
+      <input type="email" id="modalCtaEmail" name="email" class="email-in" placeholder="you@company.com" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" aria-label="Email address for early access"/>
+      <button type="button" class="btn btn-orange"
         data-form-url="https://docs.google.com/forms/d/e/1FAIpQLSfm7QgovGGHE38CsOPqj5O_XVBtnjbRhkf16rNJhdvkd-rddg/formResponse"
         data-entry-id="entry.276669450"
         onclick="submitForm('modalCtaEmail', this)">Get early access &rarr;</button>
     </div>
     <p class="modal-cta-note">Free during beta &middot; No credit card &middot; Connects in under 5 minutes</p>
   </div>
+  </div><!-- /.modal-sheet -->
 </div>
 <!-- END REPORT MODAL -->
 
 <script>
 (function() {
   var state = { step: 1, platforms: [], metric: null };
+  var skipWalkthroughHeightAnimOnce = false;
+
+  function demoUrlBase() {
+    return window.location.pathname + window.location.search;
+  }
+
+  function replaceDemoFragment(fragment) {
+    var next = demoUrlBase() + '#' + fragment;
+    if (window.location.hash === '#' + fragment) {
+      return;
+    }
+    history.replaceState(null, '', next);
+    pushDemoDataLayer(fragment);
+  }
+
+  function pushDemoDataLayer(fragment) {
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: 'demo_fragment_view',
+      demo_fragment: fragment,
+      page_location: demoUrlBase() + '#' + fragment
+    });
+  }
+
+  function mountReportToPreview() {
+    var host = document.getElementById('report-preview-host');
+    var root = document.getElementById('duct-report-root');
+    if (host && root && root.parentNode !== host) {
+      host.appendChild(root);
+    }
+  }
+
+  function mountReportToModal() {
+    var host = document.getElementById('modal-report-scroll-host');
+    var root = document.getElementById('duct-report-root');
+    if (host && root && root.parentNode !== host) {
+      host.appendChild(root);
+    }
+  }
+
+  function syncReportModalTopbarElevation() {
+    var scrollEl = document.getElementById('modal-report-scroll-host');
+    var topbar = document.querySelector('#report-modal .modal-topbar');
+    if (!scrollEl || !topbar) {
+      return;
+    }
+    topbar.classList.toggle('modal-topbar--scrolled', scrollEl.scrollTop > 2);
+  }
+
+  function ensureReportModalTopbarScrollListener() {
+    var scrollEl = document.getElementById('modal-report-scroll-host');
+    if (!scrollEl || scrollEl._ductTopbarScrollBound) {
+      return;
+    }
+    scrollEl._ductTopbarScrollBound = true;
+    scrollEl.addEventListener('scroll', syncReportModalTopbarElevation, { passive: true });
+  }
+
+  function hideReportModalDOM() {
+    mountReportToPreview();
+    var modal = document.getElementById('report-modal');
+    var topbar = modal && modal.querySelector('.modal-topbar');
+    if (topbar) {
+      topbar.classList.remove('modal-topbar--scrolled');
+    }
+    if (!modal) {
+      return;
+    }
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  function showReportModalDOM() {
+    mountReportToModal();
+    var modal = document.getElementById('report-modal');
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+    modal.scrollTop = 0;
+    var scrollBody = document.getElementById('modal-report-scroll-host');
+    if (scrollBody) {
+      scrollBody.scrollTop = 0;
+    }
+    ensureReportModalTopbarScrollListener();
+    requestAnimationFrame(function() {
+      syncReportModalTopbarElevation();
+    });
+    var cb = document.getElementById('modal-close-btn');
+    if (cb) {
+      setTimeout(function() { cb.focus(); }, 10);
+    }
+  }
 
   /* ── Insight copy bank, keyed by metric ── */
   var INSIGHTS = {
@@ -1221,32 +1818,40 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
       verdictClass: 'red',
       verdictText: '\uD83D\uDD34 Spend up 42%, CAC 43% over target \u2014 pause Meta Prospecting',
       kpis: {
-        cac:   { val: '$312',   delta: '\u254243% vs $218 target', dot: 'red' },
-        roas:  { val: '4.2x',   delta: '\u254212% WoW',           dot: 'green' },
-        spend: { val: '$24.8K', delta: '\u254242% MoM',           dot: 'grey' },
-        conv:  { val: '79',     delta: '\u25BC8% WoW',            dot: 'red' }
+        cac:   { val: '$312',   delta: '43% vs $218 target', dot: 'red',    trend: 'down' },
+        roas:  { val: '4.2x',   delta: '12% WoW',           dot: 'green',  trend: 'up' },
+        spend: { val: '$24.8K', delta: '42% MoM',           dot: 'grey',   trend: 'up' },
+        conv:  { val: '79',     delta: '8% WoW',            dot: 'red',    trend: 'down' }
       },
       signals: [
         { level: 'red',
           pill: '\uD83D\uDD34 Critical',
           title: 'Meta Prospecting CAC at $312 \u2014 43% over your $218 target',
           body:  'Spend increased 38% MoM but conversions fell 8%. Pause or cut Meta Prospecting budget by 30% until creative is refreshed.',
-          owner: '\u2192 Paid team \u00B7 action this week' },
+          ownerName: 'Marcus Chen',
+          assignee: 'Paid media',
+          followUp: 'This week — pause or trim Meta Prospecting' },
         { level: 'yellow',
           pill: '\uD83D\uDFE1 Watch',
           title: 'LinkedIn CTR down 38% WoW \u2014 creative fatigue setting in',
           body:  'Top 3 LinkedIn ads have been running 6+ weeks. Frequency is rising. Refresh creative before CTR decline hits CPA.',
-          owner: '\u2192 Creative team \u00B7 action next sprint' },
+          ownerName: 'Priya Shah',
+          assignee: 'Creative',
+          followUp: 'Next sprint — refresh top LinkedIn ads' },
         { level: 'green',
           pill: '\uD83D\uDFE2 Win',
           title: 'Google Brand ROAS at 4.2x \u2014 room to scale',
           body:  'Brand campaign is significantly outperforming target (3.0x). Increasing budget by 20% could add 15\u201320 conversions at current efficiency.',
-          owner: '\u2192 Paid team \u00B7 increase budget' }
+          ownerName: 'Elena Voss',
+          assignee: 'Paid media',
+          followUp: 'Increase Google Brand budget ~20%' }
       ],
+      spendSparkline: [0.22, 0.28, 0.31, 0.42, 0.55, 0.68, 0.94],
+      unitEconSummary: ' · 1.4x LTV:CAC · losing money',
       campaigns: [
-        { name: 'Google Brand',     spend: '$8.2K',  cpa: '$98',  roas: '4.2x', status: 'Scale \u2191', cls: 'camp-status-scale' },
-        { name: 'Meta Prospecting', spend: '$11.4K', cpa: '$312', roas: '0.8x', status: 'Pause',        cls: 'camp-status-pause' },
-        { name: 'LinkedIn Brand',   spend: '$5.2K',  cpa: '$187', roas: '1.9x', status: 'Monitor',      cls: 'camp-status-monitor' }
+        { name: 'Google Ads · Search · Brand (exact match)',       spend: '$8.2K',  cpa: '$98',  roas: '4.2x', status: 'Scale \u2191', cls: 'camp-status-scale' },
+        { name: 'Meta · Prospecting · Advantage+ shopping (US)',   spend: '$11.4K', cpa: '$312', roas: '0.8x', status: 'Pause',        cls: 'camp-status-pause' },
+        { name: 'LinkedIn · Sponsored content · ABM retargeting', spend: '$5.2K',  cpa: '$187', roas: '1.9x', status: 'Monitor',      cls: 'camp-status-monitor' }
       ],
       unitEcon: { cps: '$218', ltv: '1.4x', verdict: '\uD83D\uDD34 Losing money' }
     },
@@ -1254,32 +1859,40 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
       verdictClass: 'yellow',
       verdictText: '\uD83D\uDFE1 Blended ROAS 2.1x \u2014 Meta Prospecting dragging the average down',
       kpis: {
-        cac:   { val: '$231',   delta: '\u25426% vs target', dot: 'yellow' },
-        roas:  { val: '2.1x',   delta: '\u25BC18% WoW',     dot: 'red' },
-        spend: { val: '$24.8K', delta: '\u254242% MoM',      dot: 'grey' },
-        conv:  { val: '79',     delta: '\u25BC8% WoW',       dot: 'red' }
+        cac:   { val: '$231',   delta: '6% vs target', dot: 'yellow', trend: 'down' },
+        roas:  { val: '2.1x',   delta: '18% WoW',     dot: 'red',    trend: 'down' },
+        spend: { val: '$24.8K', delta: '42% MoM',      dot: 'grey',   trend: 'up' },
+        conv:  { val: '79',     delta: '8% WoW',       dot: 'red',    trend: 'down' }
       },
       signals: [
         { level: 'red',
           pill: '\uD83D\uDD34 Critical',
           title: 'Meta Prospecting ROAS at 0.8x \u2014 losing $1.25 for every $1 spent',
           body:  'This campaign alone is pulling blended ROAS from 3.1x to 2.1x. Pause immediately or shift budget to Google Brand which is at 4.2x.',
-          owner: '\u2192 Paid team \u00B7 action this week' },
+          ownerName: 'James Okonkwo',
+          assignee: 'Paid media',
+          followUp: 'This week — pause Meta Prospecting or reallocate' },
         { level: 'yellow',
           pill: '\uD83D\uDFE1 Watch',
           title: 'Google Display ROAS dropped to 1.2x \u2014 impressions up 80%, conversions flat',
           body:  'Audience expansion appears to be broadening reach without improving conversion quality. Review targeting before scaling further.',
-          owner: '\u2192 Paid team \u00B7 review targeting' },
+          ownerName: 'Sofia Alvarez',
+          assignee: 'Paid media',
+          followUp: 'Review Display targeting before more spend' },
         { level: 'green',
           pill: '\uD83D\uDFE2 Win',
           title: 'Google Brand ROAS at 4.2x with headroom to scale',
           body:  'Brand campaign is capped by budget, not performance. Reallocating $2K from Meta Prospecting to Google Brand would improve blended ROAS immediately.',
-          owner: '\u2192 Paid team \u00B7 reallocate budget' }
+          ownerName: 'Daniel Kim',
+          assignee: 'Paid media',
+          followUp: 'Shift ~$2K from Meta Prospecting to Brand' }
       ],
+      spendSparkline: [0.75, 0.72, 0.78, 0.65, 0.58, 0.52, 0.48],
+      unitEconSummary: ' · 1.9x LTV:CAC · breakeven',
       campaigns: [
-        { name: 'Google Brand',     spend: '$8.2K',  cpa: '$98',  roas: '4.2x', status: 'Scale \u2191', cls: 'camp-status-scale' },
-        { name: 'Google Display',   spend: '$4.1K',  cpa: '$201', roas: '1.2x', status: 'Monitor',      cls: 'camp-status-monitor' },
-        { name: 'Meta Prospecting', spend: '$12.5K', cpa: '$312', roas: '0.8x', status: 'Pause',        cls: 'camp-status-pause' }
+        { name: 'Google Ads · Search · Brand (exact match)',          spend: '$8.2K',  cpa: '$98',  roas: '4.2x', status: 'Scale \u2191', cls: 'camp-status-scale' },
+        { name: 'Google Ads · Display · In-market SaaS (tCPA)',       spend: '$4.1K',  cpa: '$201', roas: '1.2x', status: 'Monitor',      cls: 'camp-status-monitor' },
+        { name: 'Meta · Prospecting · LAL 1% · 180d high-AOV buyers', spend: '$12.5K', cpa: '$312', roas: '0.8x', status: 'Pause',        cls: 'camp-status-pause' }
       ],
       unitEcon: { cps: '$231', ltv: '1.9x', verdict: '\uD83D\uDFE1 Breakeven' }
     },
@@ -1287,32 +1900,40 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
       verdictClass: 'yellow',
       verdictText: '\uD83D\uDFE1 79 conversions this week \u2014 MQL\u2192deal rate dropped to 18%',
       kpis: {
-        cac:   { val: '$231',    delta: '\u25426% WoW',  dot: 'yellow' },
-        roas:  { val: '2.8x',    delta: '\u25BC4% WoW',  dot: 'yellow' },
-        spend: { val: '$24.8K',  delta: '\u254242% MoM', dot: 'grey' },
-        conv:  { val: '79 MQLs', delta: '\u25BC8% WoW',  dot: 'red' }
+        cac:   { val: '$231',    delta: '6% WoW',  dot: 'yellow', trend: 'down' },
+        roas:  { val: '2.8x',    delta: '4% WoW',  dot: 'yellow', trend: 'down' },
+        spend: { val: '$24.8K',  delta: '42% MoM', dot: 'grey',   trend: 'up' },
+        conv:  { val: '79 MQLs', delta: '8% WoW',  dot: 'red',    trend: 'down' }
       },
       signals: [
         { level: 'red',
           pill: '\uD83D\uDD34 Critical',
           title: 'LinkedIn ad-attributed deals stalled \u2014 0 new deals in 14 days',
           body:  'LinkedIn is generating MQLs but none are progressing past initial call. Review ICP alignment on LinkedIn targeting and check sales follow-up cadence.',
-          owner: '\u2192 Marketing + Sales \u00B7 align this week' },
+          ownerName: 'Amara Osei',
+          assignee: 'Marketing + Sales',
+          followUp: 'This week — align ICP, targeting, and sales follow-up' },
         { level: 'yellow',
           pill: '\uD83D\uDFE1 Watch',
           title: 'Google Brand driving highest MQL quality (32% deal rate) but under-budgeted',
           body:  'Brand keywords convert MQLs to deals 2x faster than any other channel. Budget is $8.2K vs $12.5K on Meta which has a 9% deal rate.',
-          owner: '\u2192 Paid team \u00B7 rebalance budget' },
+          ownerName: 'Nina Park',
+          assignee: 'Paid media',
+          followUp: 'Rebalance budget toward Google Brand' },
         { level: 'green',
           pill: '\uD83D\uDFE2 Win',
           title: 'Meta retargeting driving 3x more pipeline per dollar than prospecting',
           body:  'Retargeting audiences (site visitors + email list) converting at $68 CPL vs $312 for cold prospecting. Increasing retargeting budget by $2K would add ~29 MQLs.',
-          owner: '\u2192 Paid team \u00B7 increase retargeting' }
+          ownerName: 'Alex Rivera',
+          assignee: 'Paid media',
+          followUp: 'Increase Meta retargeting budget ~$2K' }
       ],
+      spendSparkline: [0.55, 0.58, 0.52, 0.54, 0.48, 0.44, 0.4],
+      unitEconSummary: ' · 2.4x LTV:CAC · breakeven',
       campaigns: [
-        { name: 'Google Brand',     spend: '$8.2K',  cpa: '$98',  roas: '4.2x', status: 'Scale \u2191', cls: 'camp-status-scale' },
-        { name: 'Meta Retargeting', spend: '$4.8K',  cpa: '$68',  roas: '3.8x', status: 'Scale \u2191', cls: 'camp-status-scale' },
-        { name: 'LinkedIn Ads',     spend: '$11.8K', cpa: '$287', roas: '1.1x', status: 'Monitor',      cls: 'camp-status-monitor' }
+        { name: 'Google Ads · Search · Brand + competitor conquest', spend: '$8.2K',  cpa: '$98',  roas: '4.2x', status: 'Scale \u2191', cls: 'camp-status-scale' },
+        { name: 'Meta · Retargeting · 30d site + video 75% viewers', spend: '$4.8K',  cpa: '$68',  roas: '3.8x', status: 'Scale \u2191', cls: 'camp-status-scale' },
+        { name: 'LinkedIn · Lead gen · MQL demo requests (NA English)', spend: '$11.8K', cpa: '$287', roas: '1.1x', status: 'Monitor',      cls: 'camp-status-monitor' }
       ],
       unitEcon: { cps: '$231', ltv: '2.4x', verdict: '\uD83D\uDFE1 Breakeven' }
     }
@@ -1328,22 +1949,184 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
       .replace(/\{p1\}/g, getPlatLabel(1));
   }
 
-  /* ── Step navigation ── */
-  window.wtGoTo = function(n) {
-    document.getElementById('wt-step-' + state.step).classList.remove('active');
-    state.step = n;
-    document.getElementById('wt-step-' + n).classList.add('active');
-    updateProgress();
-    if (n === 3) { runAnalysis(); }
-    if (n === 4) { populateBrief(); }
-  };
-
   function updateProgress() {
     for (var i = 1; i <= 4; i++) {
       var dot = document.getElementById('prog-' + i);
       dot.className = 'wt-dot';
       if (i < state.step) dot.classList.add('done');
       if (i === state.step) dot.classList.add('active');
+    }
+  }
+
+  function walkthroughStageVerticalPadding(stage) {
+    var cs = window.getComputedStyle(stage);
+    return parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+  }
+
+  function walkthroughPrepareHeightTransition() {
+    var stage = document.querySelector('.wt-steps-stage');
+    if (!stage || skipWalkthroughHeightAnimOnce) {
+      return;
+    }
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
+    var h = stage.offsetHeight;
+    if (h < 1) {
+      return;
+    }
+    stage.style.height = h + 'px';
+  }
+
+  function walkthroughRunHeightTransition() {
+    var stage = document.querySelector('.wt-steps-stage');
+    if (!stage) {
+      return;
+    }
+    if (skipWalkthroughHeightAnimOnce || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      stage.style.height = '';
+      return;
+    }
+    var active = document.getElementById('demo-step-' + state.step);
+    if (!active) {
+      stage.style.height = '';
+      return;
+    }
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        var padY = walkthroughStageVerticalPadding(stage);
+        var endH = active.offsetHeight + padY;
+        if (endH < 1) {
+          stage.style.height = '';
+          return;
+        }
+        var startH = parseFloat(stage.style.height, 10);
+        if (startH !== startH) {
+          startH = stage.offsetHeight;
+        }
+        if (Math.abs(startH - endH) < 2) {
+          stage.style.height = 'auto';
+          return;
+        }
+        var done = false;
+        function finish() {
+          if (done) {
+            return;
+          }
+          done = true;
+          clearTimeout(fallbackTimer);
+          stage.removeEventListener('transitionend', onEnd);
+          stage.style.transition = 'none';
+          stage.style.height = 'auto';
+          void stage.offsetHeight;
+          stage.style.transition = '';
+        }
+        function onEnd(e) {
+          if (e.propertyName !== 'height') {
+            return;
+          }
+          finish();
+        }
+        var fallbackTimer = setTimeout(finish, 500);
+        stage.addEventListener('transitionend', onEnd);
+        stage.style.height = endH + 'px';
+      });
+    });
+  }
+
+  function syncWizardStepClasses(stepNum) {
+    var i;
+    for (i = 1; i <= 4; i++) {
+      var el = document.getElementById('demo-step-' + i);
+      if (!el) {
+        continue;
+      }
+      var on = i === stepNum;
+      el.classList.toggle('active', on);
+      if (on) {
+        el.removeAttribute('inert');
+      } else {
+        el.setAttribute('inert', '');
+      }
+    }
+  }
+
+  function syncStepTo(n, skipHashReplace) {
+    if (n < 1 || n > 4) {
+      return;
+    }
+    var prev = state.step;
+    if (n !== state.step) {
+      walkthroughPrepareHeightTransition();
+      state.step = n;
+      syncWizardStepClasses(n);
+      updateProgress();
+    }
+    if (!skipHashReplace) {
+      replaceDemoFragment('demo-step-' + n);
+    }
+    if (n === 3 && prev !== 3) {
+      runAnalysis();
+    }
+    if (n === 4) {
+      populateBrief();
+    }
+    if (prev !== n) {
+      walkthroughRunHeightTransition();
+    }
+  }
+
+  /* Step navigation — updates #demo-step-N for sharing and GTM */
+  window.wtGoTo = function(n) {
+    syncStepTo(n, false);
+  };
+
+  function parseDemoStepHash(raw) {
+    var prefix = 'demo-step-';
+    if (raw.indexOf(prefix) !== 0) {
+      return null;
+    }
+    var num = parseInt(raw.slice(prefix.length), 10);
+    if (num >= 1 && num <= 4) {
+      return num;
+    }
+    return null;
+  }
+
+  function onDemoHashChange() {
+    var raw = window.location.hash.replace(/^#/, '');
+    if (raw === 'demo-report') {
+      syncStepTo(4, true);
+      showReportModalDOM();
+      pushDemoDataLayer('demo-report');
+      return;
+    }
+    hideReportModalDOM();
+    var stepNum = parseDemoStepHash(raw);
+    if (stepNum !== null) {
+      syncStepTo(stepNum, true);
+    }
+  }
+
+  function applyInitialDemoHash() {
+    var raw = window.location.hash.replace(/^#/, '');
+    if (!raw) {
+      return;
+    }
+    skipWalkthroughHeightAnimOnce = true;
+    try {
+      if (raw === 'demo-report') {
+        syncStepTo(4, true);
+        showReportModalDOM();
+        pushDemoDataLayer('demo-report');
+        return;
+      }
+      var sn = parseDemoStepHash(raw);
+      if (sn !== null) {
+        syncStepTo(sn, true);
+      }
+    } finally {
+      skipWalkthroughHeightAnimOnce = false;
     }
   }
 
@@ -1396,25 +2179,182 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
   }
 
   /* ---- Report helpers ---- */
-  function buildSignalsHTML(signals) {
+  function escapeReportHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  /* DiceBear (free): https://www.dicebear.com — Notionists style, deterministic per name */
+  function ownerAvatarSrc(s) {
+    var seed = s.ownerName || s.assignee || 'Duct';
+    return 'https://api.dicebear.com/9.x/notionists/svg?seed=' + encodeURIComponent(seed);
+  }
+
+  function signalActionHTML(s) {
+    if (s.assignee && s.followUp) {
+      var displayName = escapeReportHtml(s.ownerName || s.assignee);
+      var roleLine = s.ownerName ? escapeReportHtml(s.assignee) : '';
+      var ownerRow = '<div class="signal-owner-block">' +
+        '<img class="signal-owner-avatar" src="' + ownerAvatarSrc(s) + '" width="40" height="40" alt="" loading="lazy" decoding="async"/>' +
+        '<div class="signal-owner-text">' +
+        '<span class="signal-owner-name">' + displayName + '</span>';
+      if (roleLine) {
+        ownerRow += '<span class="signal-owner-role">' + roleLine + '</span>';
+      }
+      ownerRow += '</div></div>';
+      return '<div class="signal-action">' +
+        '<div class="signal-action-row">' +
+        '<div class="signal-action-cell">' +
+        '<span class="signal-action-label">Who owns it</span>' +
+        ownerRow +
+        '</div>' +
+        '<div class="signal-action-cell">' +
+        '<span class="signal-action-label">Follow-up</span>' +
+        '<span class="signal-action-value">' + escapeReportHtml(s.followUp) + '</span>' +
+        '</div>' +
+        '</div></div>';
+    }
+    if (s.owner) {
+      return '<div class="signal-action"><p class="signal-owner-legacy">' + s.owner + '</p></div>';
+    }
+    return '';
+  }
+
+  function signalBlockHTML(s) {
+    return '<div class="signal-block signal-level-' + s.level + '">' +
+      '<span class="signal-pill ' + s.level + '">' + s.pill + '</span>' +
+      '<p class="signal-title">' + s.title + '</p>' +
+      '<p class="signal-body">' + s.body + '</p>' +
+      signalActionHTML(s) +
+      '</div>';
+  }
+
+  function buildSignalsHTMLModal(signals) {
     var html = '';
-    for (var i = 0; i < signals.length; i++) {
-      var s = signals[i];
-      html += '<div class="signal-block">' +
-        '<span class="signal-pill ' + s.level + '">' + s.pill + '</span>' +
-        '<p class="signal-title">' + s.title + '</p>' +
-        '<p class="signal-body">' + s.body + '</p>' +
-        '<p class="signal-owner">' + s.owner + '</p>' +
+    var i;
+    for (i = 0; i < signals.length && i < 2; i++) {
+      html += signalBlockHTML(signals[i]);
+    }
+    if (signals.length > 2) {
+      html += '<div id="modal-signal-extra" class="rpt-signal-extra-wrap" hidden>';
+      html += signalBlockHTML(signals[2]);
+      html += '</div>';
+      html += '<button type="button" class="rpt-show-more-signals" id="modal-signal-more">Show 1 more signal</button>';
+    }
+    return html;
+  }
+
+  function buildSparklineSVG(points) {
+    var w = 130;
+    var h = 44;
+    var padX = 4;
+    var padY = 6;
+    var n = points.length;
+    if (n < 2) {
+      return '';
+    }
+    var min = Math.min.apply(null, points);
+    var max = Math.max.apply(null, points);
+    var rng = (max - min) || 1;
+    var linePts = [];
+    var j;
+    for (j = 0; j < n; j++) {
+      var x = padX + (j / (n - 1)) * (w - 2 * padX);
+      var y = h - padY - ((points[j] - min) / rng) * (h - 2 * padY);
+      linePts.push(x.toFixed(1) + ',' + y.toFixed(1));
+    }
+    var line = linePts.join(' ');
+    var first = linePts[0].split(',');
+    var last = linePts[n - 1].split(',');
+    var dFill = 'M ' + linePts[0];
+    for (j = 1; j < linePts.length; j++) {
+      dFill += ' L ' + linePts[j];
+    }
+    dFill += ' L ' + last[0] + ',' + (h - padY) + ' L ' + first[0] + ',' + (h - padY) + ' Z';
+    return '<svg viewBox="0 0 ' + w + ' ' + h + '" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">' +
+      '<defs><linearGradient id="sparkGradModal" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#2563eb" stop-opacity="0.4"/>' +
+      '<stop offset="100%" stop-color="#2563eb" stop-opacity="0"/></linearGradient></defs>' +
+      '<path class="spark-fill" d="' + dFill + '" fill="url(#sparkGradModal)"/>' +
+      '<polyline class="spark-line" points="' + line + '"/>' +
+      '</svg>';
+  }
+
+  function parseRoasNum(str) {
+    return parseFloat(String(str).replace(/x/gi, '').trim(), 10) || 0;
+  }
+
+  function buildRoasBarsHTML(campaigns) {
+    var nums = [];
+    var i;
+    for (i = 0; i < campaigns.length; i++) {
+      nums.push(parseRoasNum(campaigns[i].roas));
+    }
+    var maxR = Math.max.apply(null, nums);
+    if (maxR <= 0) {
+      maxR = 1;
+    }
+    var html = '';
+    for (i = 0; i < campaigns.length; i++) {
+      var pct = Math.round((nums[i] / maxR) * 100);
+      html += '<div class="rpt-bar-row">' +
+        '<div class="rpt-bar-top"><span class="rpt-bar-name">' + campaigns[i].name + '</span>' +
+        '<span class="rpt-bar-val">' + campaigns[i].roas + '</span></div>' +
+        '<div class="rpt-bar-track"><div class="rpt-bar-fill" style="width:' + pct + '%"></div></div>' +
         '</div>';
     }
     return html;
+  }
+
+  function setupModalSignalToggle() {
+    var btn = document.getElementById('modal-signal-more');
+    var extra = document.getElementById('modal-signal-extra');
+    if (!btn || !extra) {
+      return;
+    }
+    extra.setAttribute('hidden', '');
+    btn.textContent = 'Show 1 more signal';
+    btn.onclick = function() {
+      var isHidden = extra.hasAttribute('hidden');
+      if (isHidden) {
+        extra.removeAttribute('hidden');
+        btn.textContent = 'Show less';
+      } else {
+        extra.setAttribute('hidden', '');
+        btn.textContent = 'Show 1 more signal';
+      }
+    };
+  }
+
+  function setupDisclosure(btnId, panelId) {
+    var btn = document.getElementById(btnId);
+    var panel = document.getElementById(panelId);
+    if (!btn || !panel) {
+      return;
+    }
+    if (!btn._rptDiscBound) {
+      btn._rptDiscBound = true;
+      btn.addEventListener('click', function() {
+        var open = panel.hasAttribute('hidden');
+        if (open) {
+          panel.removeAttribute('hidden');
+          btn.setAttribute('aria-expanded', 'true');
+        } else {
+          panel.setAttribute('hidden', '');
+          btn.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
   }
 
   function buildCampRowsHTML(campaigns) {
     var html = '';
     for (var i = 0; i < campaigns.length; i++) {
       var c = campaigns[i];
-      html += '<tr>' +
+      var rowClass = 'camp-row' + (i % 2 === 1 ? ' camp-row--alt' : '');
+      html += '<tr class="' + rowClass + '">' +
         '<td>' + c.name + '</td>' +
         '<td>' + c.spend + '</td>' +
         '<td>' + c.cpa + '</td>' +
@@ -1425,16 +2365,41 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
     return html;
   }
 
+  var KPI_TREND_SVG_UP = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></svg>';
+  var KPI_TREND_SVG_DOWN = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>';
+  var KPI_TREND_SVG_FLAT = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5 12h14"/></svg>';
+
+  function applyKpiTrendSpan(el, k) {
+    if (!el || !k) {
+      return;
+    }
+    var trend = k.trend || 'flat';
+    var tone = k.dot || 'grey';
+    var dir = trend === 'up' ? 'is-up' : trend === 'down' ? 'is-down' : 'is-flat';
+    el.className = 'kpi-trend ' + dir + ' tone-' + tone;
+    el.innerHTML = trend === 'up' ? KPI_TREND_SVG_UP : trend === 'down' ? KPI_TREND_SVG_DOWN : KPI_TREND_SVG_FLAT;
+  }
+
   function setKPIChips(idPrefix, kpis) {
-    /* idPrefix: 'kpi-' for preview, 'modal-kpi-' for modal */
+    /* idPrefix e.g. 'rpt-kpi-' — chips live under #duct-report-root */
     var keys = ['cac', 'roas', 'spend', 'conv'];
+    var accentClasses = ['kpi-chip--accent-red', 'kpi-chip--accent-yellow', 'kpi-chip--accent-green', 'kpi-chip--accent-grey'];
     for (var i = 0; i < keys.length; i++) {
       var key = keys[i];
       var k   = kpis[key];
       var base = idPrefix + key;
-      document.getElementById(base + '-val').textContent   = k.val;
+      var valEl = document.getElementById(base + '-val');
+      valEl.textContent   = k.val;
       document.getElementById(base + '-delta').textContent = k.delta;
-      document.getElementById(base + '-dot').className     = 'kpi-dot ' + k.dot;
+      applyKpiTrendSpan(document.getElementById(base + '-trend'), k);
+      var chip = valEl.closest('.kpi-chip');
+      if (chip) {
+        var ac;
+        for (ac = 0; ac < accentClasses.length; ac++) {
+          chip.classList.remove(accentClasses[ac]);
+        }
+        chip.classList.add('kpi-chip--accent-' + k.dot);
+      }
     }
   }
 
@@ -1445,10 +2410,11 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
     var end = new Date(now);
     var start = new Date(now);
     start.setDate(start.getDate() - 6);
-    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    var startStr = months[start.getMonth()] + ' ' + start.getDate();
-    var endStr = months[end.getMonth()] + ' ' + end.getDate() + ', ' + end.getFullYear();
-    return startStr + '\u2013' + endStr;
+    var dow = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    var startStr = dow[start.getDay()] + ', ' + months[start.getMonth()] + ' ' + start.getDate();
+    var endStr = dow[end.getDay()] + ', ' + months[end.getMonth()] + ' ' + end.getDate() + ', ' + end.getFullYear();
+    return startStr + ' \u2013 ' + endStr + ' · 7-day window';
   }
 
   function populateBrief() {
@@ -1467,38 +2433,88 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
 
     document.getElementById('wt-brief-sub').textContent = 'Optimised for ' + metricLabel + ' \u00B7 ' + platList;
 
-    /* Preview */
-    document.getElementById('rpt-meta').textContent = meta;
-    var pv = document.getElementById('rpt-verdict');
-    pv.className = 'rpt-verdict ' + d.verdictClass;
-    pv.textContent = d.verdictText;
-    setKPIChips('kpi-', d.kpis);
-    document.getElementById('rpt-signals').innerHTML = buildSignalsHTML(d.signals);
+    var kpiHintEl = document.getElementById('rpt-kpi-hint');
+    if (kpiHintEl) {
+      kpiHintEl.textContent = metricKey === 'pipeline'
+        ? 'Cross-platform snapshot plus CRM funnel (example data). WoW = this 7-day window vs the prior week; MoM = calendar month.'
+        : 'Cross-platform snapshot from your connected accounts. WoW = this 7-day window vs the prior week; MoM = calendar month.';
+    }
 
-    /* Modal */
-    document.getElementById('modal-rpt-meta').textContent = meta;
-    var mv = document.getElementById('modal-rpt-verdict');
-    mv.className = 'rpt-verdict ' + d.verdictClass;
-    mv.textContent = d.verdictText;
-    setKPIChips('modal-kpi-', d.kpis);
-    document.getElementById('modal-rpt-signals').innerHTML = buildSignalsHTML(d.signals);
-    document.getElementById('modal-camp-tbody').innerHTML = buildCampRowsHTML(d.campaigns);
-    document.getElementById('modal-ue-cps').textContent     = d.unitEcon.cps;
-    document.getElementById('modal-ue-ltv').textContent     = d.unitEcon.ltv;
-    document.getElementById('modal-ue-verdict').textContent = d.unitEcon.verdict;
-    document.getElementById('modal-rpt-sources').textContent = sources;
+    document.getElementById('rpt-meta').textContent = meta;
+    var v = document.getElementById('rpt-verdict');
+    v.className = 'rpt-verdict rpt-verdict--modal ' + d.verdictClass;
+    v.textContent = d.verdictText;
+
+    var heroKpiKey = { cac: 'cac', roas: 'roas', pipeline: 'conv' }[metricKey];
+    var heroKpi = d.kpis[heroKpiKey];
+    var heroLabels = { cac: 'CAC', roas: 'ROAS', spend: 'Spend', conv: 'Conversions' };
+    document.getElementById('rpt-hero-label').textContent = heroLabels[heroKpiKey];
+    document.getElementById('rpt-hero-val').textContent = heroKpi.val;
+    var heroDelta = document.getElementById('rpt-hero-delta-row');
+    heroDelta.innerHTML = '';
+    var heroTrend = document.createElement('span');
+    applyKpiTrendSpan(heroTrend, heroKpi);
+    heroDelta.appendChild(heroTrend);
+    var heroDeltaText = document.createElement('span');
+    heroDeltaText.textContent = heroKpi.delta;
+    heroDelta.appendChild(heroDeltaText);
+
+    var sparkEl = document.getElementById('rpt-sparkline');
+    sparkEl.innerHTML = buildSparklineSVG(d.spendSparkline || [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]);
+
+    document.getElementById('rpt-roas-bars').innerHTML = buildRoasBarsHTML(d.campaigns);
+
+    setKPIChips('rpt-kpi-', d.kpis);
+    var chips = document.querySelectorAll('#duct-report-root .kpi-chip[data-kpi-key]');
+    for (var ci = 0; ci < chips.length; ci++) {
+      chips[ci].classList.remove('kpi-chip--modal-hidden');
+      if (chips[ci].getAttribute('data-kpi-key') === heroKpiKey) {
+        chips[ci].classList.add('kpi-chip--modal-hidden');
+      }
+    }
+
+    document.getElementById('rpt-signals').innerHTML = buildSignalsHTMLModal(d.signals);
+    setupModalSignalToggle();
+
+    document.getElementById('rpt-camp-tbody').innerHTML = buildCampRowsHTML(d.campaigns);
+    document.getElementById('rpt-camp-meta').textContent = ' · ' + d.campaigns.length + ' campaigns';
+
+    document.getElementById('rpt-ue-cps').textContent = d.unitEcon.cps;
+    document.getElementById('rpt-ue-ltv').textContent = d.unitEcon.ltv;
+    document.getElementById('rpt-ue-verdict').textContent = d.unitEcon.verdict;
+    document.getElementById('rpt-ue-summary').textContent = d.unitEconSummary || '';
+
+    document.getElementById('rpt-footer-sources').textContent = sources;
+
+    var campPanel = document.getElementById('rpt-camp-panel');
+    var campBtn = document.getElementById('rpt-camp-toggle');
+    if (campPanel && campBtn) {
+      campPanel.setAttribute('hidden', '');
+      campBtn.setAttribute('aria-expanded', 'false');
+    }
+    var uePanel = document.getElementById('rpt-ue-panel');
+    var ueBtn = document.getElementById('rpt-ue-toggle');
+    if (uePanel && ueBtn) {
+      uePanel.setAttribute('hidden', '');
+      ueBtn.setAttribute('aria-expanded', 'false');
+    }
   }
-  /* ---- Modal open / close ---- */
+  /* ---- Modal open / close (#demo-report fragment) ---- */
   window.openReportModal = function() {
-    var modal = document.getElementById('report-modal');
-    modal.style.display = 'block';
-    document.body.style.overflow = 'hidden';
-    modal.scrollTop = 0;
+    if (window.location.hash !== '#demo-report') {
+      window.location.hash = 'demo-report';
+    } else {
+      syncStepTo(4, true);
+      showReportModalDOM();
+      pushDemoDataLayer('demo-report');
+    }
   };
 
   window.closeReportModal = function() {
-    document.getElementById('report-modal').style.display = 'none';
-    document.body.style.overflow = '';
+    hideReportModalDOM();
+    if (window.location.hash === '#demo-report') {
+      history.replaceState(null, '', demoUrlBase() + '#demo-step-4');
+    }
   };
 
   document.addEventListener('keydown', function(e) {
@@ -1506,6 +2522,7 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
   });
 
   window.wtRestart = function() {
+    walkthroughPrepareHeightTransition();
     state.step = 1;
     state.platforms = [];
     state.metric = null;
@@ -1521,13 +2538,20 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
     document.getElementById('wt-next-1').disabled = true;
     document.getElementById('wt-next-2').disabled = true;
     document.getElementById('plat-hint').style.opacity = '1';
-    document.querySelectorAll('.wt-step').forEach(function(s) {
-      s.classList.remove('active');
-    });
-    document.getElementById('wt-step-1').classList.add('active');
+    syncWizardStepClasses(1);
     updateProgress();
-    closeReportModal();
+    walkthroughRunHeightTransition();
+    hideReportModalDOM();
+    document.body.style.overflow = '';
+    replaceDemoFragment('demo-step-1');
   };
+
+  window.addEventListener('hashchange', onDemoHashChange);
+
+  setupDisclosure('rpt-camp-toggle', 'rpt-camp-panel');
+  setupDisclosure('rpt-ue-toggle', 'rpt-ue-panel');
+
+  applyInitialDemoHash();
 })();
 </script>
 
