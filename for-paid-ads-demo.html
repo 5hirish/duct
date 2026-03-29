@@ -767,7 +767,7 @@
 </div>
 <p class="wt-min-note" id="plat-hint">Select at least 2 to see cross-channel signals</p>
 <div class="wt-nav">
-<button class="btn btn-orange wt-next" id="wt-next-1" onclick="wtGoTo(2)" disabled>Next: set your goal →</button>
+<button class="btn btn-orange wt-next" id="wt-next-1" onclick="wtGoTo(2)" disabled>Set your goal →</button>
 </div>
 </div>
 
@@ -804,7 +804,7 @@
 </div>
 <div class="wt-nav">
 <button class="wt-back visible" onclick="wtGoTo(1)">← Back</button>
-<button class="btn btn-orange wt-next" id="wt-next-2" onclick="wtGoTo(3)" disabled>Next: analyse →</button>
+<button class="btn btn-orange wt-next" id="wt-next-2" onclick="wtGoTo(3)" disabled>Analyse →</button>
 </div>
 </div>
 
@@ -1357,9 +1357,9 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
       btn.classList.remove('selected');
       btn.setAttribute('aria-pressed', 'false');
     }
-    var enough = state.platforms.length >= 2;
+    var enough = state.platforms.length >= 1;
     document.getElementById('wt-next-1').disabled = !enough;
-    document.getElementById('plat-hint').style.opacity = enough ? '0' : '1';
+    document.getElementById('plat-hint').style.opacity = (state.platforms.length >= 2) ? '0' : '1';
   };
 
   /* ── Metric selection ── */
@@ -1423,16 +1423,16 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
     return html;
   }
 
-  function setKPIChips(prefix, kpis) {
-    var pairs = [
-      ['cac', kpis.cac], ['roas', kpis.roas], ['spend', kpis.spend], ['conv', kpis.conv]
-    ];
-    for (var i = 0; i < pairs.length; i++) {
-      var key = pairs[i][0];
-      var k   = pairs[i][1];
-      document.getElementById(prefix + 'kpi-' + key + '-val').textContent   = k.val;
-      document.getElementById(prefix + 'kpi-' + key + '-delta').textContent = k.delta;
-      document.getElementById(prefix + 'kpi-' + key + '-dot').className     = 'kpi-dot ' + k.dot;
+  function setKPIChips(idPrefix, kpis) {
+    /* idPrefix: 'kpi-' for preview, 'modal-kpi-' for modal */
+    var keys = ['cac', 'roas', 'spend', 'conv'];
+    for (var i = 0; i < keys.length; i++) {
+      var key = keys[i];
+      var k   = kpis[key];
+      var base = idPrefix + key;
+      document.getElementById(base + '-val').textContent   = k.val;
+      document.getElementById(base + '-delta').textContent = k.delta;
+      document.getElementById(base + '-dot').className     = 'kpi-dot ' + k.dot;
     }
   }
 
@@ -1470,7 +1470,7 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
     var pv = document.getElementById('rpt-verdict');
     pv.className = 'rpt-verdict ' + d.verdictClass;
     pv.textContent = d.verdictText;
-    setKPIChips('', d.kpis);
+    setKPIChips('kpi-', d.kpis);
     document.getElementById('rpt-signals').innerHTML = buildSignalsHTML(d.signals);
 
     /* Modal */
