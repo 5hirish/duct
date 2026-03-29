@@ -42,6 +42,18 @@
     --orange-h: #1D4ED8;
   }
 
+  /* Fix hover shadow to match blue accent (overrides global orange shadow) */
+  .btn-orange:hover { box-shadow: 0 8px 24px rgba(37,99,235,.28); }
+
+  /* Disabled state for walkthrough CTAs */
+  .btn-orange:disabled {
+    background: #cbd5e1;
+    color: #94a3b8;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
   /* ─── Walkthrough section ─── */
   .wt-section {
     padding: 80px 24px 96px;
@@ -370,9 +382,6 @@
   .rpt-verdict.red    { background: #fee2e2; color: #b91c1c; }
   .rpt-verdict.yellow { background: #fef9c3; color: #854d0e; }
   .rpt-verdict.green  { background: #dcfce7; color: #166534; }
-  #report-modal .rpt-verdict.red    { background: rgba(239,68,68,.15);  color: #fca5a5; }
-  #report-modal .rpt-verdict.yellow { background: rgba(234,179,8,.15);  color: #fde68a; }
-  #report-modal .rpt-verdict.green  { background: rgba(34,197,94,.15);  color: #86efac; }
 
   /* KPI strip */
   .kpi-strip {
@@ -387,7 +396,6 @@
     border-radius: 8px;
     padding: 10px 10px 8px;
   }
-  #report-modal .kpi-chip { background: #1a1d2e; border: none; }
   .kpi-label {
     font-size: 10px;
     color: var(--navy-3);
@@ -402,7 +410,6 @@
     line-height: 1;
     margin-bottom: 4px;
   }
-  #report-modal .kpi-value { color: #fff; }
   .kpi-delta {
     font-size: 10px;
     color: var(--navy-3);
@@ -438,7 +445,6 @@
     padding: 12px 14px;
     margin-bottom: 8px;
   }
-  #report-modal .signal-block { background: #1a1d2e; border: none; }
   .signal-pill {
     display: inline-flex;
     align-items: center;
@@ -454,9 +460,6 @@
   .signal-pill.red    { background: #fee2e2; color: #b91c1c; }
   .signal-pill.yellow { background: #fef9c3; color: #854d0e; }
   .signal-pill.green  { background: #dcfce7; color: #166534; }
-  #report-modal .signal-pill.red    { background: rgba(239,68,68,.2);  color: #fca5a5; }
-  #report-modal .signal-pill.yellow { background: rgba(234,179,8,.2);  color: #fde68a; }
-  #report-modal .signal-pill.green  { background: rgba(34,197,94,.2);  color: #86efac; }
   .signal-title {
     font-size: 13px;
     font-weight: 600;
@@ -464,13 +467,11 @@
     margin-bottom: 4px;
     line-height: 1.35;
   }
-  #report-modal .signal-title { color: #fff; }
   .signal-body {
     font-size: 12px;
     color: var(--navy-3);
     line-height: 1.5;
   }
-  #report-modal .signal-body { color: rgba(255,255,255,.65); }
   .signal-owner {
     font-size: 11px;
     color: var(--orange);
@@ -491,7 +492,6 @@
     color: var(--navy);
     min-width: 340px;
   }
-  #report-modal .camp-table { color: rgba(255,255,255,.8); }
   .camp-table th {
     text-align: left;
     font-size: 10px;
@@ -651,11 +651,11 @@
   .modal-cta-form .email-in {
     flex: 1;
     min-width: 0;
-    background: #1a1d2e;
-    border-color: #2a2d3e;
-    color: #fff;
+    background: #fff;
+    border: 1.5px solid rgba(255,255,255,.15);
+    color: var(--navy);
   }
-  .modal-cta-form .email-in::placeholder { color: #6b6f82; }
+  .modal-cta-form .email-in::placeholder { color: #94a3b8; }
   .modal-cta-form .email-in:focus { border-color: var(--orange); outline: none; }
   @media (max-width: 480px) {
     .modal-cta-form { flex-direction: column; }
@@ -832,8 +832,16 @@
 <!-- STEP 4: Brief -->
 <div class="wt-step" id="wt-step-4">
 <p class="wt-step-label">Step 4 of 4</p>
-<p class="wt-step-title">Your report is ready</p>
-<p class="wt-step-sub" id="wt-brief-sub">Here's what Duct found across your ad stack.</p>
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:24px">
+  <div>
+    <p class="wt-step-title" style="margin-bottom:4px">Your report is ready</p>
+    <p class="wt-step-sub" id="wt-brief-sub" style="margin-bottom:0">Here's what Duct found across your ad stack.</p>
+  </div>
+  <button onclick="wtRestart()" class="wt-restart-btn" aria-label="Restart demo" style="flex-shrink:0;margin-top:2px">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.49-3.5"/></svg>
+    Restart
+  </button>
+</div>
 
 <div class="report-preview">
   <div class="report-preview-inner">
@@ -871,13 +879,7 @@
 </div>
 
 <button class="view-report-btn" onclick="openReportModal()">View full report &#8594;</button>
-<div style="text-align:center;margin-bottom:10px">
-  <p style="font-size:12px;color:var(--navy-3);margin:0 0 8px">Free during beta &middot; Connects in under 5 minutes &middot; No data stored without your approval</p>
-  <button onclick="wtRestart()" class="wt-restart-btn" aria-label="Restart demo">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.49-3.5"/></svg>
-    Restart demo
-  </button>
-</div>
+<p style="font-size:12px;color:var(--navy-3);margin:0 0 10px;text-align:center">Free during beta &middot; Connects in under 5 minutes &middot; No data stored without your approval</p>
 </div>
 
 </div><!-- /.wt-card -->
