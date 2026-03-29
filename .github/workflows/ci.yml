@@ -1,0 +1,49 @@
+name: CI
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+  push:
+    branches:
+      - main
+  workflow_call:
+
+jobs:
+  validate:
+    name: Validate HTML pages & sitemap
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: "☁️ Checkout repository"
+        uses: actions/checkout@v4
+
+      - name: "🔎 Check HTML page requirements"
+        run: python3 .github/scripts/check-pages.py
+
+      - name: "📋 Validate sitemap.xml"
+        run: |
+          python3 - <<'EOF'
+          import xml.etree.ElementTree as ET, os, sys
+
+          tree = ET.parse('sitemap.xml')
+          root = tree.getroot()
+          ns = {'sm': 'http://www.sitemaps.org/schemas/sitemap/0.9'}
+          urls = [u.find('sm:loc', ns).text for u in root.findall('sm:url', ns)]
+          print(f'sitemap.xml: valid XML, {len(urls)} URLs')
+
+          # Every entry should have a non-empty <loc>
+          bad = [u for u in urls if not u or not u.startswith('https://getduct.ai')]
+          if bad:
+              print('ERROR: bad <loc> entries:', bad)
+              sys.exit(1)
+
+          print('All sitemap <loc> values look correct.')
+          EOF
