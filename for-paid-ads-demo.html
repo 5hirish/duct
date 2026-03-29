@@ -332,30 +332,31 @@
   }
   .wt-restart-btn:hover { color: var(--navy); }
 
-  /* ---- Report preview (Step 4) ---- */
+  /* ---- Report preview (Step 4) - light, matches page design ---- */
   .report-preview {
     position: relative;
     margin-bottom: 20px;
   }
   .report-preview-inner {
-    background: var(--navy);
+    background: var(--off);
+    border: 1px solid var(--border);
     border-radius: 12px;
     padding: 20px 20px 0;
-    max-height: 340px;
+    max-height: 320px;
     overflow: hidden;
-    -webkit-mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
-    mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
   }
   .rpt-header { margin-bottom: 14px; }
   .rpt-title {
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 700;
-    color: #fff;
-    letter-spacing: .04em;
+    color: var(--navy-3);
+    letter-spacing: .08em;
     text-transform: uppercase;
     margin-bottom: 4px;
   }
-  .rpt-meta { font-size: 11px; color: #6b6f82; }
+  .rpt-meta { font-size: 11px; color: var(--navy-3); }
   .rpt-verdict {
     display: inline-flex;
     align-items: center;
@@ -364,11 +365,14 @@
     font-weight: 600;
     padding: 5px 10px;
     border-radius: 6px;
-    margin-top: 10px;
+    margin-top: 8px;
   }
-  .rpt-verdict.red    { background: rgba(239,68,68,.15);  color: #fca5a5; }
-  .rpt-verdict.yellow { background: rgba(234,179,8,.15);  color: #fde68a; }
-  .rpt-verdict.green  { background: rgba(34,197,94,.15);  color: #86efac; }
+  .rpt-verdict.red    { background: #fee2e2; color: #b91c1c; }
+  .rpt-verdict.yellow { background: #fef9c3; color: #854d0e; }
+  .rpt-verdict.green  { background: #dcfce7; color: #166534; }
+  #report-modal .rpt-verdict.red    { background: rgba(239,68,68,.15);  color: #fca5a5; }
+  #report-modal .rpt-verdict.yellow { background: rgba(234,179,8,.15);  color: #fde68a; }
+  #report-modal .rpt-verdict.green  { background: rgba(34,197,94,.15);  color: #86efac; }
 
   /* KPI strip */
   .kpi-strip {
@@ -378,13 +382,15 @@
     margin-bottom: 16px;
   }
   .kpi-chip {
-    background: #1a1d2e;
+    background: #fff;
+    border: 1px solid var(--border);
     border-radius: 8px;
     padding: 10px 10px 8px;
   }
+  #report-modal .kpi-chip { background: #1a1d2e; border: none; }
   .kpi-label {
     font-size: 10px;
-    color: #6b6f82;
+    color: var(--navy-3);
     text-transform: uppercase;
     letter-spacing: .06em;
     margin-bottom: 4px;
@@ -392,13 +398,14 @@
   .kpi-value {
     font-size: 18px;
     font-weight: 700;
-    color: #fff;
+    color: var(--navy);
     line-height: 1;
     margin-bottom: 4px;
   }
+  #report-modal .kpi-value { color: #fff; }
   .kpi-delta {
     font-size: 10px;
-    color: #6b6f82;
+    color: var(--navy-3);
     display: flex;
     align-items: center;
     gap: 4px;
@@ -413,13 +420,25 @@
   .kpi-dot.green  { background: #22c55e; }
   .kpi-dot.grey   { background: #6b6f82; }
 
-  /* Signal blocks */
+  /* Section label */
+  .rpt-section-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--navy-3);
+    margin: 16px 0 8px;
+  }
+
+  /* Signal blocks - light (preview) */
   .signal-block {
-    background: #1a1d2e;
+    background: #fff;
+    border: 1px solid var(--border);
     border-radius: 8px;
     padding: 12px 14px;
     margin-bottom: 8px;
   }
+  #report-modal .signal-block { background: #1a1d2e; border: none; }
   .signal-pill {
     display: inline-flex;
     align-items: center;
@@ -432,21 +451,26 @@
     border-radius: 4px;
     margin-bottom: 7px;
   }
-  .signal-pill.red    { background: rgba(239,68,68,.2);  color: #fca5a5; }
-  .signal-pill.yellow { background: rgba(234,179,8,.2);  color: #fde68a; }
-  .signal-pill.green  { background: rgba(34,197,94,.2);  color: #86efac; }
+  .signal-pill.red    { background: #fee2e2; color: #b91c1c; }
+  .signal-pill.yellow { background: #fef9c3; color: #854d0e; }
+  .signal-pill.green  { background: #dcfce7; color: #166534; }
+  #report-modal .signal-pill.red    { background: rgba(239,68,68,.2);  color: #fca5a5; }
+  #report-modal .signal-pill.yellow { background: rgba(234,179,8,.2);  color: #fde68a; }
+  #report-modal .signal-pill.green  { background: rgba(34,197,94,.2);  color: #86efac; }
   .signal-title {
     font-size: 13px;
     font-weight: 600;
-    color: #fff;
+    color: var(--navy);
     margin-bottom: 4px;
     line-height: 1.35;
   }
+  #report-modal .signal-title { color: #fff; }
   .signal-body {
     font-size: 12px;
-    color: rgba(255,255,255,.65);
+    color: var(--navy-3);
     line-height: 1.5;
   }
+  #report-modal .signal-body { color: rgba(255,255,255,.65); }
   .signal-owner {
     font-size: 11px;
     color: var(--orange);
@@ -464,42 +488,50 @@
     width: 100%;
     border-collapse: collapse;
     font-size: 12px;
-    color: rgba(255,255,255,.8);
+    color: var(--navy);
     min-width: 340px;
   }
+  #report-modal .camp-table { color: rgba(255,255,255,.8); }
   .camp-table th {
     text-align: left;
     font-size: 10px;
     text-transform: uppercase;
     letter-spacing: .06em;
-    color: #6b6f82;
+    color: var(--navy-3);
     padding: 0 10px 8px 0;
     font-weight: 600;
-    border-bottom: 1px solid #2a2d3e;
+    border-bottom: 1px solid var(--border);
   }
+  #report-modal .camp-table th { border-bottom-color: #2a2d3e; }
   .camp-table td {
     padding: 9px 10px 9px 0;
-    border-bottom: 1px solid #1e2133;
+    border-bottom: 1px solid var(--border);
     vertical-align: top;
   }
+  #report-modal .camp-table td { border-bottom-color: #1e2133; }
   .camp-table tr:last-child td { border-bottom: none; }
-  .camp-status-scale   { color: #86efac; font-weight: 600; }
-  .camp-status-pause   { color: #fca5a5; font-weight: 600; }
-  .camp-status-monitor { color: #fde68a; font-weight: 600; }
+  .camp-status-scale   { color: #166534; font-weight: 600; }
+  .camp-status-pause   { color: #b91c1c; font-weight: 600; }
+  .camp-status-monitor { color: #854d0e; font-weight: 600; }
+  #report-modal .camp-status-scale   { color: #86efac; }
+  #report-modal .camp-status-pause   { color: #fca5a5; }
+  #report-modal .camp-status-monitor { color: #fde68a; }
 
   /* Unit economics */
   .unit-econ {
-    background: #1a1d2e;
+    background: var(--off);
+    border: 1px solid var(--border);
     border-radius: 8px;
     padding: 14px 16px;
     margin-bottom: 16px;
   }
+  #report-modal .unit-econ { background: #1a1d2e; border: none; }
   .unit-econ-title {
     font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: .07em;
-    color: #6b6f82;
+    color: var(--navy-3);
     margin-bottom: 10px;
   }
   .unit-econ-row {
@@ -507,41 +539,34 @@
     justify-content: space-between;
     align-items: center;
     font-size: 12px;
-    color: rgba(255,255,255,.75);
+    color: var(--navy-3);
     padding: 4px 0;
-    border-bottom: 1px solid #2a2d3e;
+    border-bottom: 1px solid var(--border);
   }
+  #report-modal .unit-econ-row { color: rgba(255,255,255,.75); border-bottom-color: #2a2d3e; }
   .unit-econ-row:last-child { border-bottom: none; }
-  .unit-econ-val { font-weight: 600; color: #fff; }
-
-  /* Section label */
-  .rpt-section-label {
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .08em;
-    color: #6b6f82;
-    margin: 18px 0 10px;
-  }
+  .unit-econ-val { font-weight: 600; color: var(--navy); }
+  #report-modal .unit-econ-val { color: #fff; }
 
   /* Data sources */
   .rpt-sources {
     font-size: 10px;
-    color: #6b6f82;
-    border-top: 1px solid #2a2d3e;
+    color: var(--navy-3);
+    border-top: 1px solid var(--border);
     padding: 12px 0 20px;
     line-height: 1.6;
   }
+  #report-modal .rpt-sources { border-top-color: #2a2d3e; }
 
   /* View full report button */
   .view-report-btn {
     display: block;
     width: 100%;
     padding: 13px;
-    background: var(--navy);
+    background: transparent;
     border: 1.5px solid var(--orange);
     color: var(--orange);
-    border-radius: 10px;
+    border-radius: var(--pill);
     font-size: 14px;
     font-weight: 600;
     font-family: inherit;
@@ -552,7 +577,7 @@
   }
   .view-report-btn:hover { background: var(--orange); color: #fff; }
 
-  /* ---- Report Modal ---- */
+  /* ---- Report Modal - dark full-screen ---- */
   #report-modal {
     display: none;
     position: fixed;
@@ -579,6 +604,11 @@
     text-transform: uppercase;
     letter-spacing: .08em;
   }
+  #report-modal .rpt-title { color: #fff; }
+  #report-modal .rpt-meta  { color: #6b6f82; }
+  #report-modal .rpt-section-label { color: #6b6f82; }
+  #report-modal .kpi-label { color: #6b6f82; }
+  #report-modal .kpi-delta { color: #6b6f82; }
   .modal-close {
     background: none;
     border: none;
@@ -611,6 +641,24 @@
     font-size: 11px;
     color: #6b6f82;
     margin: 0;
+  }
+  .modal-cta-form {
+    display: flex;
+    gap: 8px;
+    max-width: 400px;
+    margin: 0 auto 8px;
+  }
+  .modal-cta-form .email-in {
+    flex: 1;
+    min-width: 0;
+    background: #1a1d2e;
+    border-color: #2a2d3e;
+    color: #fff;
+  }
+  .modal-cta-form .email-in::placeholder { color: #6b6f82; }
+  .modal-cta-form .email-in:focus { border-color: var(--orange); outline: none; }
+  @media (max-width: 480px) {
+    .modal-cta-form { flex-direction: column; }
   }
 
   @media (max-width: 560px) {
@@ -1130,8 +1178,14 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
   </div>
 
   <div class="modal-cta-bar">
-    <a href="#cta" class="btn btn-orange btn-lg" onclick="closeReportModal()">Get this for my real data &rarr;</a>
-    <p class="modal-cta-note">Free during beta &middot; Connects in under 5 minutes &middot; No data stored without your approval</p>
+    <div class="modal-cta-form">
+      <input type="email" id="modalCtaEmail" class="email-in" placeholder="you@company.com" aria-label="Email address"/>
+      <button class="btn btn-orange"
+        data-form-url="https://docs.google.com/forms/d/e/1FAIpQLSfm7QgovGGHE38CsOPqj5O_XVBtnjbRhkf16rNJhdvkd-rddg/formResponse"
+        data-entry-id="entry.276669450"
+        onclick="submitForm('modalCtaEmail', this)">Get early access &rarr;</button>
+    </div>
+    <p class="modal-cta-note">Free during beta &middot; No credit card &middot; Connects in under 5 minutes</p>
   </div>
 </div>
 <!-- END REPORT MODAL -->
@@ -1332,11 +1386,11 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
         }, d);
         setTimeout(function() {
           line.classList.add('done');
-        }, d + 600);
+        }, d + 380);
       })(lines[i], delay);
-      delay += 700;
+      delay += 450;
     }
-    setTimeout(function() { wtGoTo(4); }, delay + 300);
+    setTimeout(function() { wtGoTo(4); }, delay + 200);
   }
 
   /* ---- Report helpers ---- */
@@ -1384,13 +1438,30 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
 
   /* ---- Populate report (preview + modal) ---- */
   /* All innerHTML below is safe: content is from hardcoded REPORT_DATA constant, never user input */
+  function formatReportDate() {
+    var now = new Date();
+    var end = new Date(now);
+    var start = new Date(now);
+    start.setDate(start.getDate() - 6);
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var startStr = months[start.getMonth()] + ' ' + start.getDate();
+    var endStr = months[end.getMonth()] + ' ' + end.getDate() + ', ' + end.getFullYear();
+    return startStr + '\u2013' + endStr;
+  }
+
   function populateBrief() {
     var metricKey = state.metric || 'cac';
     var d = REPORT_DATA[metricKey];
     var platList = state.platforms.join(' \u00B7 ');
     var metricLabel = { cac: 'lower CAC', roas: 'higher ROAS', pipeline: 'more pipeline' }[metricKey];
-    var meta = 'Mar 21\u201328, 2026 \u00B7 ' + platList;
-    var sources = 'Data: Google Ads API \u00B7 Meta Ads Manager \u00B7 LinkedIn Campaign Manager \u00B7 as of Mar 28, 2026 \u00B7 Optimised for ' + metricLabel;
+    var dateRange = formatReportDate();
+    var today = (function() {
+      var now = new Date();
+      var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return months[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear();
+    })();
+    var meta = dateRange + ' \u00B7 ' + platList;
+    var sources = 'Data: Google Ads API \u00B7 Meta Ads Manager \u00B7 LinkedIn Campaign Manager \u00B7 as of ' + today + ' \u00B7 Optimised for ' + metricLabel;
 
     document.getElementById('wt-brief-sub').textContent = 'Optimised for ' + metricLabel + ' \u00B7 ' + platList;
 
@@ -1399,7 +1470,7 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
     var pv = document.getElementById('rpt-verdict');
     pv.className = 'rpt-verdict ' + d.verdictClass;
     pv.textContent = d.verdictText;
-    setKPIChips('kpi-', d.kpis);
+    setKPIChips('', d.kpis);
     document.getElementById('rpt-signals').innerHTML = buildSignalsHTML(d.signals);
 
     /* Modal */
