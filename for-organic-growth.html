@@ -61,6 +61,234 @@
   }
   .skip-link:focus { top: 16px; }
   @keyframes pop { 0%,100% { transform: scale(1); } 50% { transform: scale(1.5); } }
+
+  /* ─── Walkthrough demo ─── */
+  .wt-section { position: relative; padding: 80px 24px 96px; background: var(--off); scroll-margin-top: 80px; }
+  .demo-fragment-target { position: absolute; top: 0; left: 0; width: 1px; height: 1px; padding: 0; margin: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  .wt-outer { max-width: 680px; margin: 0 auto; text-align: center; }
+  .wt-outer h2 { text-align: center; }
+  .wt-outer .sub { margin-top: 12px; font-size: 15px; color: var(--navy-3); }
+
+  .wt-progress { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 32px 0 28px; }
+  .wt-dot { width: 28px; height: 6px; border-radius: 3px; background: var(--border); transition: background .3s; }
+  .wt-dot.active { background: var(--orange); }
+  .wt-dot.done { background: rgba(37,99,235,.35); }
+
+  .wt-card { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 36px 32px; text-align: left; }
+  .wt-steps-stage { overflow: hidden; padding: 0 10px 40px 10px; margin: 0 -10px; width: calc(100% + 20px); max-width: calc(100% + 20px); box-sizing: border-box; transition: height 0.42s cubic-bezier(0.4,0,0.2,1); }
+  @media (prefers-reduced-motion: reduce) { .wt-steps-stage { transition: none; } }
+  .wt-step { display: none; }
+  .wt-step.active { display: block; }
+
+  .wt-step-label { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--orange); margin-bottom: 8px; }
+  .wt-step-title { font-size: 20px; font-weight: 600; color: var(--navy); margin-bottom: 6px; line-height: 1.3; }
+  .wt-step-sub { font-size: 14px; color: var(--navy-3); margin-bottom: 24px; }
+
+  .plat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 28px; }
+  .plat-btn { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border: 1.5px solid var(--border); border-radius: 10px; background: var(--off); cursor: pointer; font-size: 14px; font-weight: 500; color: var(--navy); transition: border-color .15s, background .15s; text-align: left; font-family: inherit; }
+  .plat-btn:hover { border-color: var(--orange); }
+  .plat-btn.selected { border-color: var(--orange); background: #eff6ff; }
+  .plat-btn.selected .plat-check { opacity: 1; }
+  .plat-icon { flex-shrink: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-style: normal; }
+  .plat-check { margin-left: auto; width: 18px; height: 18px; background: var(--orange); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; font-weight: 700; opacity: 0; transition: opacity .15s; flex-shrink: 0; }
+  .wt-min-note { font-size: 12px; color: var(--navy-3); margin-bottom: 20px; }
+
+  .metric-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 28px; }
+  .metric-card { display: flex; align-items: flex-start; gap: 14px; padding: 16px 18px; border: 1.5px solid var(--border); border-radius: 10px; background: var(--off); cursor: pointer; transition: border-color .15s, background .15s; font-family: inherit; text-align: left; }
+  .metric-card:hover { border-color: var(--orange); }
+  .metric-card.selected { border-color: var(--orange); background: #eff6ff; }
+  .metric-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+  .metric-title { font-size: 14px; font-weight: 600; color: var(--navy); margin-bottom: 2px; }
+  .metric-desc { font-size: 13px; color: var(--navy-3); line-height: 1.4; }
+  .metric-radio { margin-left: auto; width: 18px; height: 18px; border: 2px solid var(--border); border-radius: 50%; flex-shrink: 0; margin-top: 2px; transition: border-color .15s, background .15s; position: relative; }
+  .metric-card.selected .metric-radio { border-color: var(--orange); background: var(--orange); }
+  .metric-card.selected .metric-radio::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 6px; height: 6px; background: #fff; border-radius: 50%; }
+
+  .analyzing-lines { margin: 8px 0 28px; }
+  .analyzing-line { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; color: var(--navy-3); opacity: 0; transform: translateY(6px); transition: opacity .4s ease, transform .4s ease; }
+  .analyzing-line:last-child { border-bottom: none; }
+  .analyzing-line.visible { opacity: 1; transform: translateY(0); }
+  .analyzing-line.done { color: var(--navy); }
+  .analyzing-line.done .al-spinner { display: none; }
+  .analyzing-line.done::before { content: '✓'; width: 18px; height: 18px; background: #dcfce7; color: #16a34a; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .al-spinner { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--orange); border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
+
+  .wt-nav { display: flex; align-items: center; gap: 12px; }
+  .wt-back { font-size: 14px; color: var(--navy-3); background: none; border: none; cursor: pointer; padding: 0; font-family: inherit; display: none; }
+  .wt-back:hover { color: var(--navy); }
+  .wt-back.visible { display: block; }
+  .wt-next { margin-left: auto; }
+  .wt-restart-btn { background: none; border: none; cursor: pointer; color: var(--navy-3); font-size: 13px; font-family: inherit; display: inline-flex; align-items: center; gap: 5px; padding: 4px 0; margin-top: 2px; }
+  .wt-restart-btn:hover { color: var(--navy); }
+
+  .report-preview { position: relative; margin-bottom: 20px; }
+  .report-preview-inner { background: var(--off); border: 1px solid var(--border); border-radius: 12px; padding: 20px 20px 0; max-height: min(360px,52vh); overflow: hidden; -webkit-mask-image: linear-gradient(to bottom, #000 58%, transparent 100%); mask-image: linear-gradient(to bottom, #000 58%, transparent 100%); }
+  .rpt-header { margin-bottom: 16px; }
+  .rpt-header--modal { margin-bottom: 16px; }
+  .rpt-header--modal .rpt-meta { margin-top: 0; }
+  .rpt-meta { font-size: 12px; color: #4b5563; line-height: 1.5; }
+  .rpt-verdict { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 6px; margin-top: 10px; }
+  .rpt-verdict.red    { background: #fee2e2; color: #b91c1c; }
+  .rpt-verdict.yellow { background: #fef9c3; color: #854d0e; }
+  .rpt-verdict.green  { background: #dcfce7; color: #166534; }
+  .rpt-section-heading { margin: 22px 0 12px; }
+  .rpt-section-heading .rpt-section-label { margin: 0 0 4px; }
+  .rpt-section-hint { font-size: 12px; color: #64748b; line-height: 1.45; margin: 0; max-width: 52ch; }
+
+  .kpi-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+  .kpi-chip { position: relative; background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 11px 12px 10px; border-left: 3px solid #cbd5e1; box-shadow: 0 1px 2px rgba(13,15,26,.04); transition: border-color .2s, box-shadow .2s; }
+  .kpi-chip--accent-red    { border-left-color: #f87171; background: linear-gradient(180deg,#fffefb 0%,#fff 40%,#fef2f2 100%); }
+  .kpi-chip--accent-yellow { border-left-color: #eab308; background: linear-gradient(180deg,#fffefb 0%,#fff 40%,#fefce8 100%); }
+  .kpi-chip--accent-green  { border-left-color: #4ade80; background: linear-gradient(180deg,#fffefb 0%,#fff 40%,#f0fdf4 100%); }
+  .kpi-chip--accent-grey   { border-left-color: #94a3b8; background: linear-gradient(180deg,#fafafa 0%,#fff 45%,#f8fafc 100%); }
+  .kpi-chip:hover { border-color: #e2e8f0; box-shadow: 0 4px 16px rgba(37,99,235,.07); }
+  .kpi-chip-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .kpi-icon { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 8px; background: #eff6ff; color: #2563eb; flex-shrink: 0; }
+  .kpi-icon svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .kpi-label { font-size: 11px; color: #4b5563; text-transform: uppercase; letter-spacing: .06em; margin: 0; line-height: 1.2; }
+  .kpi-value { font-size: 20px; font-weight: 700; color: var(--navy); line-height: 1; margin-bottom: 5px; }
+  .kpi-delta { font-size: 11px; color: #4b5563; display: flex; align-items: center; gap: 6px; line-height: 1.35; }
+  .kpi-trend { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 18px; height: 18px; }
+  .kpi-trend svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.25; stroke-linecap: round; stroke-linejoin: round; }
+  .kpi-trend.tone-red    { color: #dc2626; }
+  .kpi-trend.tone-yellow { color: #ca8a04; }
+  .kpi-trend.tone-green  { color: #16a34a; }
+  .kpi-trend.tone-grey   { color: #64748b; }
+
+  .rpt-section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #4b5563; margin: 22px 0 12px; }
+  .signal-block { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px 14px 15px; margin-bottom: 12px; border-left: 3px solid transparent; box-shadow: 0 1px 2px rgba(13,15,26,.04); }
+  .signal-block.signal-level-red    { border-left-color: #f87171; }
+  .signal-block.signal-level-yellow { border-left-color: #eab308; }
+  .signal-block.signal-level-green  { border-left-color: #4ade80; }
+  .signal-pill { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; padding: 4px 9px; border-radius: 5px; margin-bottom: 8px; }
+  .signal-pill.red    { background: #fee2e2; color: #b91c1c; }
+  .signal-pill.yellow { background: #fef9c3; color: #854d0e; }
+  .signal-pill.green  { background: #dcfce7; color: #166534; }
+  .signal-title { font-size: 15px; font-weight: 600; color: var(--navy); margin-bottom: 8px; line-height: 1.38; }
+  .signal-body { font-size: 13px; color: #4b5563; line-height: 1.58; max-width: 54ch; }
+  .signal-action { margin-top: 14px; padding-top: 12px; border-top: 1px solid #e5e7eb; }
+  .signal-action-row { display: flex; flex-wrap: wrap; gap: 14px 28px; align-items: flex-start; }
+  .signal-action-cell { flex: 1 1 140px; min-width: 0; }
+  .signal-action-label { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: #64748b; margin-bottom: 3px; }
+  .signal-action-value { display: block; font-size: 13px; font-weight: 600; color: var(--navy); line-height: 1.35; }
+  .signal-owner-block { display: flex; align-items: center; gap: 11px; margin-top: 2px; }
+  .signal-owner-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: #e2e8f0; border: 1px solid #e2e8f0; }
+  .signal-owner-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .signal-owner-name { font-size: 14px; font-weight: 600; color: var(--navy); line-height: 1.25; }
+  .signal-owner-role { font-size: 12px; font-weight: 500; color: #64748b; line-height: 1.3; }
+
+  .camp-table-wrap { overflow-x: auto; margin-bottom: 18px; -webkit-overflow-scrolling: touch; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; }
+  .camp-table { width: 100%; border-collapse: collapse; font-size: 13px; color: var(--navy); min-width: 340px; }
+  .camp-table thead tr { background: #f1f5f9; }
+  .camp-table th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--navy); padding: 10px 10px 10px 12px; font-weight: 800; border-bottom: 2px solid #e2e8f0; }
+  .camp-table th:first-child { border-radius: 8px 0 0 0; padding-left: 14px; }
+  .camp-table th:last-child { border-radius: 0 8px 0 0; padding-right: 14px; }
+  .camp-table td { padding: 12px 10px 12px 12px; border-bottom: 1px solid #eef2f7; vertical-align: top; line-height: 1.45; background: #fff; transition: background .15s; }
+  .camp-table td:last-child { padding-right: 14px; }
+  .camp-table tbody tr.camp-row--alt td { background: #f8fafc; }
+  .camp-table tbody tr:hover td { background: #eff6ff; }
+  .camp-table tbody tr.camp-row--alt:hover td { background: #e0f2fe; }
+  .camp-table td:first-child { white-space: normal; overflow-wrap: break-word; max-width: 220px; padding-left: 14px; }
+  @media (min-width: 560px) { .camp-table td:first-child { max-width: 280px; } }
+  .camp-table tbody tr:last-child td { border-bottom: none; }
+  .camp-table tbody tr:last-child td:first-child { border-radius: 0 0 0 8px; }
+  .camp-table tbody tr:last-child td:last-child { border-radius: 0 0 8px 0; }
+  .camp-status-scale   { color: #166534; font-weight: 600; }
+  .camp-status-pause   { color: #b91c1c; font-weight: 600; }
+  .camp-status-monitor { color: #854d0e; font-weight: 600; }
+
+  .unit-econ { background: var(--off); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin-bottom: 16px; }
+  .unit-econ-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: #4b5563; margin-bottom: 12px; }
+  .unit-econ-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #4b5563; padding: 6px 0; border-bottom: 1px solid var(--border); line-height: 1.45; gap: 12px; }
+  .unit-econ-row:last-child { border-bottom: none; }
+  .unit-econ-val { font-weight: 600; color: var(--navy); }
+
+  .rpt-sources { font-size: 12px; color: #575a6b; border-top: 1px solid var(--border); padding: 18px 0 22px; line-height: 1.55; margin-top: 8px; }
+  .view-report-btn { display: block; width: 100%; padding: 13px; background: transparent; border: 1.5px solid var(--orange); color: var(--orange); -webkit-text-fill-color: var(--orange); border-radius: var(--pill); font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; text-align: center; margin-bottom: 14px; text-decoration: none; box-sizing: border-box; transition: background .15s, color .15s, border-color .15s, -webkit-text-fill-color .15s; }
+  .view-report-btn:hover, .view-report-btn:focus-visible { background: var(--orange); color: #fff; -webkit-text-fill-color: #fff; border-color: var(--orange); }
+  a.view-report-btn:visited { color: var(--orange); -webkit-text-fill-color: var(--orange); }
+  a.view-report-btn:visited:hover, a.view-report-btn:visited:focus-visible { color: #fff; -webkit-text-fill-color: #fff; }
+
+  .rpt-bar-block { margin-bottom: 22px; }
+  .rpt-bar-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #4b5563; margin-bottom: 12px; }
+  .rpt-bar-row { margin-bottom: 12px; font-size: 12px; color: var(--navy); }
+  .rpt-bar-row:last-child { margin-bottom: 0; }
+  .rpt-bar-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+  .rpt-bar-name { font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rpt-bar-track { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .rpt-bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg,#93c5fd,var(--orange)); min-width: 4px; transition: width .35s ease; }
+  .rpt-bar-val { font-weight: 600; color: #4b5563; text-align: right; }
+
+  .rpt-hero-visual { display: grid; grid-template-columns: 1fr minmax(100px,130px); gap: 16px; align-items: end; margin-bottom: 22px; padding: 18px; background: var(--off); border: 1px solid var(--border); border-radius: 10px; }
+  .kpi-hero-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: #4b5563; margin-bottom: 5px; }
+  .kpi-hero-value { font-family: var(--serif,Georgia,serif); font-size: clamp(28px,6vw,36px); font-weight: 400; color: var(--navy); line-height: 1; margin-bottom: 6px; letter-spacing: -.02em; }
+  .kpi-hero-delta { font-size: 13px; color: #4b5563; display: flex; align-items: center; gap: 6px; line-height: 1.4; }
+  .kpi-hero-delta .kpi-trend { width: 20px; height: 20px; }
+  .kpi-hero-delta .kpi-trend svg { width: 16px; height: 16px; }
+  .kpi-sparkline-block { text-align: right; }
+  .kpi-sparkline-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: #4b5563; margin-bottom: 6px; }
+  .kpi-sparkline-svg svg { display: block; width: 100%; max-width: 130px; height: 44px; margin-left: auto; }
+  .kpi-sparkline-svg .spark-fill { fill: url(#sparkGrad); opacity: .35; }
+  .kpi-sparkline-svg .spark-line { fill: none; stroke: var(--orange); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  .kpi-chip.kpi-chip--modal-hidden { display: none !important; }
+  .rpt-disclosure { margin-bottom: 12px; }
+  .rpt-disclosure-btn { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 48px; padding: 13px 16px; background: #fff; border: 1px solid var(--border); border-radius: 10px; font-family: inherit; font-size: 14px; font-weight: 600; color: var(--navy); cursor: pointer; text-align: left; transition: border-color .15s, background .15s; }
+  .rpt-disclosure-btn:hover { border-color: var(--orange); background: var(--off); }
+  .rpt-disclosure-btn:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+  .rpt-disclosure-btn .rpt-disclosure-meta { font-size: 12px; font-weight: 500; color: #4b5563; margin-left: 8px; }
+  .rpt-disclosure-chevron { font-size: 10px; color: var(--navy-3); transition: transform .2s ease; }
+  .rpt-disclosure-btn[aria-expanded="true"] .rpt-disclosure-chevron { transform: rotate(180deg); }
+  .rpt-disclosure-panel { padding: 14px 0 6px; }
+  .rpt-disclosure-panel[hidden] { display: none !important; }
+  #rpt-signals { margin-bottom: 20px; }
+  .rpt-show-more-signals { display: block; width: 100%; margin-top: 12px; margin-bottom: 0; padding: 12px 14px; background: #fafafa; border: 1px dashed #cbd5e1; border-radius: 10px; font-family: inherit; font-size: 13px; font-weight: 600; color: var(--orange); cursor: pointer; transition: background .15s, border-color .15s; }
+  .rpt-show-more-signals:hover { background: #eff6ff; border-color: var(--orange); }
+  .rpt-show-more-signals:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+  .rpt-signal-extra-wrap[hidden] { display: none !important; }
+
+  #report-modal { display: none; position: fixed; inset: 0; z-index: 200; overflow-y: auto; -webkit-overflow-scrolling: touch; background: rgba(13,15,26,.45); padding: 20px 16px max(28px,env(safe-area-inset-bottom,0px)); box-sizing: border-box; }
+  .modal-sheet { max-width: 720px; width: 100%; margin: 0 auto; background: #fff; border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 24px 56px rgba(13,15,26,.14); max-height: calc(100vh - 32px - env(safe-area-inset-bottom,0px)); max-height: calc(100dvh - 32px - env(safe-area-inset-bottom,0px)); display: flex; flex-direction: column; overflow: hidden; }
+  .modal-body-scroll { flex: 1; overflow-y: auto; min-height: 0; padding: 12px 24px 20px; }
+  .modal-topbar { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px 12px; flex-shrink: 0; position: relative; z-index: 2; background: #fff; border-radius: 16px 16px 0 0; transition: box-shadow .2s ease, border-color .2s ease; border-bottom: 1px solid transparent; }
+  .modal-topbar.modal-topbar--scrolled { border-bottom-color: #e2e8f0; box-shadow: 0 6px 16px rgba(13,15,26,.08); }
+  @media (prefers-reduced-motion: reduce) { .modal-topbar { transition: none; } }
+  .modal-topbar-title { margin: 0; font-size: 13px; font-weight: 600; color: #4b5563; text-transform: uppercase; letter-spacing: .08em; font-family: inherit; line-height: 1.3; }
+  .modal-close { background: none; border: none; cursor: pointer; color: var(--navy-3); font-size: 22px; line-height: 1; padding: 4px 8px; font-family: inherit; border-radius: 8px; transition: color .15s, background .15s; }
+  .modal-close:hover { color: var(--navy); background: var(--off); }
+  .modal-close:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+  .rpt-verdict--modal { font-size: 15px; font-weight: 600; padding: 9px 14px; margin-top: 12px; line-height: 1.38; }
+  .modal-cta-bar { flex-shrink: 0; background: #f1f5f9; border-top: 1px solid #e2e8f0; box-shadow: 0 -6px 18px rgba(13,15,26,.06); padding: 10px 20px max(12px,env(safe-area-inset-bottom,0px)); text-align: center; }
+  .modal-cta-bar .btn-orange { display: block; width: 100%; max-width: 400px; margin: 0 auto 5px; text-align: center; min-height: 44px; padding-top: 11px; padding-bottom: 11px; box-sizing: border-box; }
+  .modal-cta-note { font-size: 10px; color: #64748b; margin: 0; line-height: 1.4; max-width: 32em; margin-left: auto; margin-right: auto; }
+  .modal-cta-form { display: flex; flex-direction: column; align-items: stretch; gap: 6px; width: 100%; max-width: 400px; margin: 0 auto 5px; text-align: left; }
+  .modal-cta-form .email-in { width: 100%; box-sizing: border-box; min-height: 44px; padding: 10px 14px; font-size: 16px; background: #fff; border: 1.5px solid #cbd5e1; color: var(--navy); border-radius: 10px; }
+  .modal-cta-form .email-in::placeholder { color: #94a3b8; }
+  .modal-cta-form .email-in:focus { border-color: var(--orange); outline: none; }
+
+  @media (prefers-reduced-motion: reduce) { .rpt-bar-fill { transition: none; } .rpt-disclosure-chevron { transition: none; } }
+  @media (max-width: 480px) { .rpt-hero-visual { grid-template-columns: 1fr; } .kpi-sparkline-block { text-align: left; } .kpi-sparkline-svg svg { margin-left: 0; } }
+  @media (max-width: 560px) { .plat-grid { grid-template-columns: 1fr; } .wt-card { padding: 24px 20px; } .kpi-strip { grid-template-columns: repeat(2, 1fr); } }
+
+  /* ─── Demo component: green accent overrides ─── */
+  .wt-dot.active { background: var(--green); }
+  .wt-step-label { color: var(--green); }
+  .plat-btn:hover, .plat-btn.selected { border-color: var(--green); color: var(--green); }
+  .plat-check { color: var(--green); }
+  .metric-card:hover, .metric-card.selected { border-color: var(--green); }
+  .metric-card.selected .metric-radio { background: var(--green); border-color: var(--green); }
+  .al-spinner { border-top-color: var(--green); }
+  .view-report-btn { background: var(--green); }
+  .view-report-btn:hover { background: var(--green-h); box-shadow: 0 8px 24px rgba(46,158,107,.28); }
+  .rpt-disclosure-btn:hover { color: var(--green); }
+  .rpt-show-more-signals { color: var(--green); }
+  .modal-close:focus-visible { outline-color: var(--green); }
+  .modal-cta-form .email-in:focus { border-color: var(--green); }
+  .roas-bar-fill { background: var(--green); }
+  .kpi-trend--up { color: var(--green); }
+  .wt-dot.done { background: #a8d5be; }
+
 </style>
 </head>
 <body>
@@ -76,13 +304,14 @@
 <nav id="nav" aria-label="Main navigation">
 <div style="display:flex;align-items:center;gap:10px">
 <a href="index.html" class="logo">duct <span class="logo-mark" aria-hidden="true"></span></a>
-<span style="font-size:12px;font-weight:500;color:var(--navy-3);letter-spacing:.02em">for organic growth</span>
+<span style="font-size:12px;font-weight:500;color:var(--navy-3);letter-spacing:.02em">for organic growth &middot; demo</span>
 </div>
 <div class="nav-links">
 <a href="#how" class="nav-link">How it works</a>
 <a href="#features" class="nav-link">Features</a>
 <a href="#who" class="nav-link">Who it's for</a>
 <a href="blog/index.html" class="nav-link">Blog</a>
+<a href="#demo-step-1" class="nav-link">Try the demo</a>
 </div>
 </nav>
 
@@ -300,6 +529,260 @@ Rising keyword → low-KD gap → missing content → conversion drop. One story
 </div>
 </section>
 
+
+<section class="wt-section" id="demo">
+<span id="demo-report" class="demo-fragment-target" tabindex="-1" aria-hidden="true"></span>
+<div class="wt-outer">
+<div class="reveal">
+<p class="tag" style="justify-content:center;display:flex">Interactive Demo</p>
+<h2>Your content stack. <em>One brief.</em></h2>
+<p class="sub">This is example data — built to show exactly what Duct surfaces every morning.</p>
+</div>
+
+<div class="wt-progress reveal" role="tablist" aria-label="Demo steps">
+<div class="wt-dot active" id="prog-1"></div>
+<div class="wt-dot" id="prog-2"></div>
+<div class="wt-dot" id="prog-3"></div>
+<div class="wt-dot" id="prog-4"></div>
+</div>
+
+<div class="wt-card reveal" aria-live="polite">
+<div class="wt-steps-stage">
+
+<!-- STEP 1: Tool selection -->
+<div class="wt-step active" id="demo-step-1" role="region" aria-labelledby="demo-step-1-title">
+<p class="wt-step-label">Step 1 of 4</p>
+<p class="wt-step-title" id="demo-step-1-title">Which tools are you connecting?</p>
+<p class="wt-step-sub">Select all that apply — Duct correlates signals across everything you pick.</p>
+<div class="plat-grid">
+<button class="plat-btn" id="plat-gsc" onclick="wtTogglePlatform('GSC', this)" aria-pressed="false">
+  <span class="plat-icon" aria-hidden="true">🔍</span>
+  <span>Search Console</span>
+  <span class="plat-check" aria-hidden="true">✓</span>
+</button>
+<button class="plat-btn" id="plat-ahrefs" onclick="wtTogglePlatform('Ahrefs', this)" aria-pressed="false">
+  <span class="plat-icon" aria-hidden="true">📊</span>
+  <span>Ahrefs</span>
+  <span class="plat-check" aria-hidden="true">✓</span>
+</button>
+<button class="plat-btn" id="plat-ga4" onclick="wtTogglePlatform('GA4', this)" aria-pressed="false">
+  <span class="plat-icon" aria-hidden="true">📈</span>
+  <span>GA4</span>
+  <span class="plat-check" aria-hidden="true">✓</span>
+</button>
+<button class="plat-btn" id="plat-semrush" onclick="wtTogglePlatform('Semrush', this)" aria-pressed="false">
+  <span class="plat-icon" aria-hidden="true">🎯</span>
+  <span>Semrush</span>
+  <span class="plat-check" aria-hidden="true">✓</span>
+</button>
+</div>
+<p class="wt-min-note" id="plat-hint">Select at least 2 to see cross-tool signals</p>
+<div class="wt-nav">
+<button class="btn btn-orange wt-next" id="wt-next-1" onclick="wtGoTo(2)" disabled>Set your goal &#8594;</button>
+</div>
+</div>
+
+<!-- STEP 2: Goal selection -->
+<div class="wt-step" id="demo-step-2" role="region" aria-labelledby="demo-step-2-title" inert>
+<p class="wt-step-label">Step 2 of 4</p>
+<p class="wt-step-title" id="demo-step-2-title">What are you optimising for?</p>
+<p class="wt-step-sub">Duct watches only what moves your north star — not everything, just the right things.</p>
+<div class="metric-grid">
+<button class="metric-card" onclick="wtSelectMetric('rankings', this)" aria-pressed="false">
+  <span class="metric-icon" aria-hidden="true">📈</span>
+  <div>
+    <p class="metric-title">Grow Rankings</p>
+    <p class="metric-desc">Find pages slipping in positions 4–15 and surface quick wins before competitors take the spot.</p>
+  </div>
+  <span class="metric-radio" aria-hidden="true"></span>
+</button>
+<button class="metric-card" onclick="wtSelectMetric('signups', this)" aria-pressed="false">
+  <span class="metric-icon" aria-hidden="true">🧲</span>
+  <div>
+    <p class="metric-title">Drive Trial Signups</p>
+    <p class="metric-desc">Surface which content clusters convert to trial, not just traffic — and which ones are draining your editorial budget.</p>
+  </div>
+  <span class="metric-radio" aria-hidden="true"></span>
+</button>
+<button class="metric-card" onclick="wtSelectMetric('clusters', this)" aria-pressed="false">
+  <span class="metric-icon" aria-hidden="true">🗺️</span>
+  <div>
+    <p class="metric-title">Own Topic Clusters</p>
+    <p class="metric-desc">Measure topical authority and find cluster gaps vs competitors — know exactly where to publish next.</p>
+  </div>
+  <span class="metric-radio" aria-hidden="true"></span>
+</button>
+</div>
+<div class="wt-nav">
+<button class="wt-back visible" onclick="wtGoTo(1)">&#8592; Back</button>
+<button class="btn btn-orange wt-next" id="wt-next-2" onclick="wtGoTo(3)" disabled>Analyse &#8594;</button>
+</div>
+</div>
+
+<!-- STEP 3: Analysing -->
+<div class="wt-step" id="demo-step-3" role="region" aria-labelledby="demo-step-3-title" inert>
+<p class="wt-step-label">Step 3 of 4</p>
+<p class="wt-step-title" id="demo-step-3-title">Duct is analysing your stack&#8230;</p>
+<p class="wt-step-sub" style="margin-bottom:0">Using 90 days of example data from your selected tools.</p>
+<div class="analyzing-lines" id="al-lines">
+<div class="analyzing-line" id="al-1">
+  <span class="al-spinner" aria-hidden="true"></span>
+  Reading keyword and ranking data&#8230;
+</div>
+<div class="analyzing-line" id="al-2">
+  <span class="al-spinner" aria-hidden="true"></span>
+  Mapping content clusters to conversion paths&#8230;
+</div>
+<div class="analyzing-line" id="al-3">
+  <span class="al-spinner" aria-hidden="true"></span>
+  Identifying ranking opportunities and traffic drops&#8230;
+</div>
+</div>
+</div>
+
+<!-- STEP 4: Brief -->
+<div class="wt-step" id="demo-step-4" role="region" aria-labelledby="demo-step-4-title" inert>
+<p class="wt-step-label">Step 4 of 4</p>
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:24px">
+  <div>
+    <p class="wt-step-title" id="demo-step-4-title" style="margin-bottom:4px">Your brief is ready</p>
+    <p class="wt-step-sub" id="wt-brief-sub" style="margin-bottom:0">Here&rsquo;s what Duct found across your content stack.</p>
+  </div>
+  <button onclick="wtRestart()" class="wt-restart-btn" aria-label="Restart demo" style="flex-shrink:0;margin-top:2px">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.49-3.5"/></svg>
+    Restart
+  </button>
+</div>
+
+<div class="report-preview">
+  <div class="report-preview-inner" id="report-preview-host">
+    <div id="duct-report-root">
+    <div class="rpt-header rpt-header--modal">
+      <p class="rpt-meta" id="rpt-meta"></p>
+      <div class="rpt-verdict rpt-verdict--modal" id="rpt-verdict"></div>
+    </div>
+
+    <div class="rpt-hero-visual" id="rpt-hero-visual">
+      <div class="kpi-hero-block">
+        <p class="kpi-hero-label" id="rpt-hero-label"></p>
+        <p class="kpi-hero-value" id="rpt-hero-val"></p>
+        <div class="kpi-hero-delta" id="rpt-hero-delta-row"></div>
+      </div>
+      <div class="kpi-sparkline-block">
+        <p class="kpi-sparkline-label">7-day activity (indexed)</p>
+        <div class="kpi-sparkline-svg" id="rpt-sparkline" aria-hidden="true"></div>
+      </div>
+    </div>
+
+    <div class="rpt-bar-block" id="rpt-roas-bars-wrap">
+      <p class="rpt-bar-label" id="rpt-bar-label-text">Traffic by keyword cluster</p>
+      <div id="rpt-roas-bars"></div>
+    </div>
+
+    <div class="rpt-section-heading">
+      <p class="rpt-section-label">Also tracking</p>
+      <p class="rpt-section-hint" id="rpt-kpi-hint"></p>
+    </div>
+    <div class="kpi-strip" role="group" aria-label="Supporting metrics">
+      <div class="kpi-chip" data-kpi-key="sessions">
+        <div class="kpi-chip-head">
+          <span class="kpi-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M22 7L13.5 15.5 8.5 10.5 2 17"/><path d="M16 7h6v6"/></svg></span>
+          <p class="kpi-label">Organic Sessions</p>
+        </div>
+        <p class="kpi-value" id="rpt-kpi-sessions-val"></p>
+        <div class="kpi-delta"><span class="kpi-trend" id="rpt-kpi-sessions-trend" aria-hidden="true"></span><span id="rpt-kpi-sessions-delta"></span></div>
+      </div>
+      <div class="kpi-chip" data-kpi-key="signups">
+        <div class="kpi-chip-head">
+          <span class="kpi-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+          <p class="kpi-label">Trial Signups</p>
+        </div>
+        <p class="kpi-value" id="rpt-kpi-signups-val"></p>
+        <div class="kpi-delta"><span class="kpi-trend" id="rpt-kpi-signups-trend" aria-hidden="true"></span><span id="rpt-kpi-signups-delta"></span></div>
+      </div>
+      <div class="kpi-chip" data-kpi-key="position">
+        <div class="kpi-chip-head">
+          <span class="kpi-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
+          <p class="kpi-label">Avg Position</p>
+        </div>
+        <p class="kpi-value" id="rpt-kpi-position-val"></p>
+        <div class="kpi-delta"><span class="kpi-trend" id="rpt-kpi-position-trend" aria-hidden="true"></span><span id="rpt-kpi-position-delta"></span></div>
+      </div>
+      <div class="kpi-chip" data-kpi-key="keywords">
+        <div class="kpi-chip-head">
+          <span class="kpi-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+          <p class="kpi-label">Keywords Ranked</p>
+        </div>
+        <p class="kpi-value" id="rpt-kpi-keywords-val"></p>
+        <div class="kpi-delta"><span class="kpi-trend" id="rpt-kpi-keywords-trend" aria-hidden="true"></span><span id="rpt-kpi-keywords-delta"></span></div>
+      </div>
+    </div>
+
+    <p class="rpt-section-label">Signals</p>
+    <div id="rpt-signals"></div>
+
+    <div class="rpt-disclosure">
+      <button type="button" class="rpt-disclosure-btn" id="rpt-camp-toggle" aria-expanded="false" aria-controls="rpt-camp-panel">
+        <span>Content breakdown<span class="rpt-disclosure-meta" id="rpt-camp-meta"></span></span>
+        <span class="rpt-disclosure-chevron" aria-hidden="true">&#9660;</span>
+      </button>
+      <div class="rpt-disclosure-panel" id="rpt-camp-panel" hidden>
+        <div class="camp-table-wrap">
+          <table class="camp-table">
+            <thead>
+              <tr>
+                <th>Page / Cluster</th>
+                <th>Position</th>
+                <th>Sessions</th>
+                <th>Trials</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="rpt-camp-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="rpt-disclosure">
+      <button type="button" class="rpt-disclosure-btn" id="rpt-ue-toggle" aria-expanded="false" aria-controls="rpt-ue-panel">
+        <span>Content ROI<span class="rpt-disclosure-meta" id="rpt-ue-summary"></span></span>
+        <span class="rpt-disclosure-chevron" aria-hidden="true">&#9660;</span>
+      </button>
+      <div class="rpt-disclosure-panel" id="rpt-ue-panel" hidden>
+        <div class="unit-econ">
+          <p class="unit-econ-title">Content economics</p>
+          <div class="unit-econ-row">
+            <span>Cost-per-trial equivalent</span>
+            <span class="unit-econ-val" id="rpt-ue-cps"></span>
+          </div>
+          <div class="unit-econ-row">
+            <span>LTV&thinsp;:&thinsp;content-cost ratio <span style="color:#6b6f82">(Target: 10&#215;+)</span></span>
+            <span class="unit-econ-val" id="rpt-ue-ltv"></span>
+          </div>
+          <div class="unit-econ-row">
+            <span>Verdict</span>
+            <span class="unit-econ-val" id="rpt-ue-verdict"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="rpt-sources" id="rpt-footer-sources"></p>
+    </div><!-- /#duct-report-root -->
+  </div>
+</div>
+
+<a href="#demo-report" class="view-report-btn" id="view-full-report-link">View full brief &#8594;</a>
+<p style="font-size:12px;color:var(--navy-3);margin:0 0 10px;text-align:center">Free during beta &middot; Connects in under 5 minutes &middot; No data stored without your approval</p>
+</div>
+
+</div><!-- /.wt-steps-stage -->
+</div><!-- /.wt-card -->
+</div><!-- /.wt-outer -->
+</section>
+
+
 <!-- CTA -->
 
 <section class="cta" id="cta">
@@ -321,6 +804,816 @@ Rising keyword → low-KD gap → missing content → conversion drop. One story
 </section>
 
 </main>
+
+<!-- REPORT MODAL -->
+<div id="report-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="rpt-meta">
+  <div class="modal-sheet">
+    <div class="modal-topbar">
+      <h2 class="modal-topbar-title" id="modal-title">Organic Growth Report</h2>
+      <button type="button" class="modal-close" id="modal-close-btn" onclick="closeReportModal()" aria-label="Close report">&times;</button>
+    </div>
+    <div class="modal-body-scroll" id="modal-report-scroll-host"></div>
+    <div class="modal-cta-bar">
+      <div class="modal-cta-form">
+        <input type="email" id="modalCtaEmail" name="email" class="email-in" placeholder="you@company.com" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" aria-label="Email address for early access"/>
+        <button type="button" class="btn btn-orange"
+          data-form-url="https://docs.google.com/forms/d/e/1FAIpQLSfm7QgovGGHE38CsOPqj5O_XVBtnjbRhkf16rNJhdvkd-rddg/formResponse"
+          data-entry-id="entry.276669450"
+          onclick="submitForm('modalCtaEmail', this)">Get early access &rarr;</button>
+      </div>
+      <p class="modal-cta-note">Free during beta &middot; No credit card &middot; Connects in under 5 minutes</p>
+    </div>
+  </div>
+</div>
+<!-- END REPORT MODAL -->
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── state ── */
+  var state = { step: 1, platforms: [], metric: null };
+
+  /* ── URL/GTM helpers ── */
+  function pushDemoHash(hash) {
+    try { history.replaceState(null, '', hash ? '#' + hash : location.pathname + location.search); } catch (e) {}
+  }
+  function gtmEvent(name, data) {
+    try { window.dataLayer = window.dataLayer || []; window.dataLayer.push(Object.assign({ event: name }, data)); } catch (e) {}
+  }
+
+  /* ── modal DOM helpers ── */
+  function mountReportToPreview(node) {
+    var host = document.getElementById('report-preview-host');
+    if (host) { host.innerHTML = ''; host.appendChild(node); }
+  }
+  function mountReportToModal(node) {
+    var host = document.getElementById('modal-report-scroll-host');
+    if (host) { host.innerHTML = ''; host.appendChild(node); }
+  }
+  function showReportModalDOM() {
+    var m = document.getElementById('report-modal');
+    if (!m) return;
+    m.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    var closeBtn = document.getElementById('modal-close-btn');
+    if (closeBtn) { setTimeout(function () { closeBtn.focus(); }, 80); }
+  }
+  function hideReportModalDOM() {
+    var m = document.getElementById('report-modal');
+    if (!m) return;
+    m.classList.remove('open');
+    document.body.style.overflow = '';
+    var link = document.getElementById('view-full-report-link');
+    if (link) { setTimeout(function () { link.focus(); }, 80); }
+  }
+
+  /* ── PLATFORM_QUALITY ── */
+  var PLATFORM_QUALITY = { GSC: 0.9, Ahrefs: 0.85, GA4: 0.88, Semrush: 0.82 };
+
+  /* ── CROSS_PLATFORM_SIGNALS ── */
+  var CROSS_PLATFORM_SIGNALS = {
+    rankings: '6 pages ranking positions 4\u20138 in GSC have 0 internal links from high-authority pages \u2014 you\u2019re one link away from page\u20111 for each',
+    signups: 'Your top-traffic cluster (how-to/tutorials) drives 68% of sessions but only 9% of trials \u2014 the intent doesn\u2019t match the CTA',
+    clusters: 'Competitor owns 4 topic clusters you have zero coverage on \u2014 all have KD\u2009<\u200940 and 2K+/mo combined search volume'
+  };
+
+  /* ── PLATFORM_DATA ── */
+  var PLATFORM_DATA = {};
+
+  PLATFORM_DATA['GSC'] = {
+    rankings: {
+      hero: { label: 'Avg Position (tracked keywords)', value: '6.2', delta: '+1.4 positions', dir: 'up' },
+      sparkline: [52,58,61,55,67,72,69],
+      bar: [
+        { label: 'Product features', roas: '71%' },
+        { label: 'How-to guides', roas: '85%' },
+        { label: 'Integrations', roas: '63%' },
+        { label: 'Comparison pages', roas: '48%' }
+      ],
+      kpis: { sessions: { val: '18.4K', delta: '+12%', dir: 'up' }, signups: { val: '214', delta: '+8%', dir: 'up' }, position: { val: '6.2', delta: '+1.4', dir: 'up' }, keywords: { val: '847', delta: '+63', dir: 'up' } },
+      segments: [
+        { name: 'Product features', spend: '6.1', cpa: '18.4K', roas: '9%', action: 'Push to top 5' },
+        { name: 'How-to guides', spend: '4.3', cpa: '14.2K', roas: '7%', action: 'Add internal links' },
+        { name: 'Comparison pages', spend: '12.7', cpa: '9.8K', roas: '4%', action: 'Refresh content' },
+        { name: 'Integrations', spend: '8.2', cpa: '7.1K', roas: '3%', action: 'Expand cluster' }
+      ],
+      signals: [
+        { icon: '\u26a0\ufe0f', title: 'Position slippage detected', body: '12 keywords slipped from top\u20115 to positions 6\u201310 this week \u2014 all on pages with thin content below the fold.' },
+        { icon: '\u2705', title: 'Quick-win cluster identified', body: '8 keywords averaging position 7.2 with high CTR \u2014 a title tag refresh could move them into top 5.' }
+      ],
+      unitEcon: { cps: '\u00a34.20 / ranking position gained', ltv: '14\u00d7 (est. LTV vs content investment)', verdict: 'Strong returns \u2014 increase production cadence' }
+    },
+    signups: {
+      hero: { label: 'Trial Signups from organic', value: '214', delta: '+8% MoM', dir: 'up' },
+      sparkline: [30,38,42,35,50,58,54],
+      bar: [
+        { label: 'Comparison pages', roas: '38%' },
+        { label: 'Product features', roas: '29%' },
+        { label: 'Case studies', roas: '21%' },
+        { label: 'How-to guides', roas: '12%' }
+      ],
+      kpis: { sessions: { val: '18.4K', delta: '+12%', dir: 'up' }, signups: { val: '214', delta: '+8%', dir: 'up' }, position: { val: '6.2', delta: '+1.4', dir: 'up' }, keywords: { val: '847', delta: '+63', dir: 'up' } },
+      segments: [
+        { name: 'Comparison pages', spend: '12.7', cpa: '9.8K', roas: '38%', action: 'Scale production' },
+        { name: 'Product features', spend: '6.1', cpa: '18.4K', roas: '29%', action: 'Add CTAs above fold' },
+        { name: 'Case studies', spend: '8.4', cpa: '6.2K', roas: '21%', action: 'Test offer copy' },
+        { name: 'How-to guides', spend: '4.3', cpa: '14.2K', roas: '12%', action: 'Bottom-funnel CTA' }
+      ],
+      signals: [
+        { icon: '\u26a0\ufe0f', title: 'High-traffic, low-conversion cluster', body: 'How-to guides drive 68% of sessions but only 9% of trials \u2014 CTA placement and offer mismatch likely.' },
+        { icon: '\u2705', title: 'Comparison cluster converting', body: 'Comparison pages convert at 3.1% vs site average 1.2% \u2014 highest ROI content type this month.' }
+      ],
+      unitEcon: { cps: '\u00a321 cost-per-trial (content investment basis)', ltv: '18\u00d7 vs estimated content cost', verdict: 'Profitable \u2014 double comparison page production' }
+    },
+    clusters: {
+      hero: { label: 'Cluster Coverage %', value: '61%', delta: '+5pp MoM', dir: 'up' },
+      sparkline: [40,45,48,44,55,60,61],
+      bar: [
+        { label: 'Core product', roas: '80%' },
+        { label: 'Integration use cases', roas: '65%' },
+        { label: 'Competitive landscape', roas: '45%' },
+        { label: 'Industry guides', roas: '30%' }
+      ],
+      kpis: { sessions: { val: '18.4K', delta: '+12%', dir: 'up' }, signups: { val: '214', delta: '+8%', dir: 'up' }, position: { val: '6.2', delta: '+1.4', dir: 'up' }, keywords: { val: '847', delta: '+63', dir: 'up' } },
+      segments: [
+        { name: 'Core product cluster', spend: '6.1', cpa: '18.4K', roas: '80%', action: 'Fill coverage gaps' },
+        { name: 'Integration use cases', spend: '5.8', cpa: '11.2K', roas: '65%', action: 'Add pillar page' },
+        { name: 'Competitive landscape', spend: '4.2', cpa: '9.8K', roas: '45%', action: 'Refresh comparisons' },
+        { name: 'Industry guides', spend: '3.1', cpa: '7.1K', roas: '30%', action: 'Link to pillar' }
+      ],
+      signals: [
+        { icon: '\u26a0\ufe0f', title: 'Cluster gap vs competitors', body: '4 topic clusters competitors own have zero coverage in your site \u2014 all KD\u2009<\u200940 and 2K+/mo search volume.' },
+        { icon: '\u2705', title: 'Core product cluster strong', body: '80% coverage on core product cluster \u2014 now the highest authority topic on the domain.' }
+      ],
+      unitEcon: { cps: '\u00a38.40 / cluster keyword covered', ltv: '11\u00d7 estimated topic authority value', verdict: 'On track \u2014 prioritise gap clusters next sprint' }
+    }
+  };
+
+  PLATFORM_DATA['Ahrefs'] = {
+    rankings: {
+      hero: { label: 'Avg Position (tracked keywords)', value: '5.8', delta: '+2.1 positions', dir: 'up' },
+      sparkline: [48,54,60,52,68,75,72],
+      bar: [
+        { label: 'Product features', roas: '76%' },
+        { label: 'How-to guides', roas: '88%' },
+        { label: 'Integrations', roas: '67%' },
+        { label: 'Comparison pages', roas: '52%' }
+      ],
+      kpis: { sessions: { val: '19.1K', delta: '+14%', dir: 'up' }, signups: { val: '228', delta: '+11%', dir: 'up' }, position: { val: '5.8', delta: '+2.1', dir: 'up' }, keywords: { val: '912', delta: '+81', dir: 'up' } },
+      segments: [
+        { name: 'Product features', spend: '5.8', cpa: '19.1K', roas: '9%', action: 'Target position 1\u20133' },
+        { name: 'How-to guides', spend: '4.1', cpa: '15.6K', roas: '7%', action: 'Expand with FAQs' },
+        { name: 'Comparison pages', spend: '11.4', cpa: '10.2K', roas: '5%', action: 'Update vs sections' },
+        { name: 'Integrations', spend: '7.8', cpa: '8.4K', roas: '4%', action: 'Build sub-cluster' }
+      ],
+      signals: [
+        { icon: '\u26a0\ufe0f', title: 'High-KD keyword gap', body: '22 competitor-owned keywords have KD\u2009<\u200945 and your domain authority qualifies \u2014 no content targets them yet.' },
+        { icon: '\u2705', title: 'Backlink momentum', body: '14 new referring domains this week pointing to how-to content \u2014 authority building in highest-traffic cluster.' }
+      ],
+      unitEcon: { cps: '\u00a33.80 / ranking position gained', ltv: '16\u00d7 (est. LTV vs content investment)', verdict: 'High efficiency \u2014 maintain cadence and build links' }
+    },
+    signups: {
+      hero: { label: 'Trial Signups from organic', value: '228', delta: '+11% MoM', dir: 'up' },
+      sparkline: [35,42,48,40,55,62,60],
+      bar: [
+        { label: 'Comparison pages', roas: '41%' },
+        { label: 'Product features', roas: '31%' },
+        { label: 'Case studies', roas: '19%' },
+        { label: 'How-to guides', roas: '9%' }
+      ],
+      kpis: { sessions: { val: '19.1K', delta: '+14%', dir: 'up' }, signups: { val: '228', delta: '+11%', dir: 'up' }, position: { val: '5.8', delta: '+2.1', dir: 'up' }, keywords: { val: '912', delta: '+81', dir: 'up' } },
+      segments: [
+        { name: 'Comparison pages', spend: '11.4', cpa: '10.2K', roas: '41%', action: 'Scale and A/B CTAs' },
+        { name: 'Product features', spend: '5.8', cpa: '19.1K', roas: '31%', action: 'Add trial button' },
+        { name: 'Case studies', spend: '7.6', cpa: '5.8K', roas: '19%', action: 'Test headline copy' },
+        { name: 'How-to guides', spend: '4.1', cpa: '15.6K', roas: '9%', action: 'Rethink CTA placement' }
+      ],
+      signals: [
+        { icon: '\u26a0\ufe0f', title: 'Tutorial content converting poorly', body: 'How-to cluster gets 70% of traffic but drives under 10% of trials \u2014 Ahrefs shows high top-of-funnel intent only.' },
+        { icon: '\u2705', title: 'Comparison content ROI strong', body: 'Comparison pages produce 41% of signups on 18% of traffic \u2014 highest-efficiency segment in the portfolio.' }
+      ],
+      unitEcon: { cps: '\u00a319 cost-per-trial (content investment basis)', ltv: '20\u00d7 vs estimated content cost', verdict: 'Strong returns \u2014 triple comparison content in Q2' }
+    },
+    clusters: {
+      hero: { label: 'Cluster Coverage %', value: '64%', delta: '+7pp MoM', dir: 'up' },
+      sparkline: [42,48,52,46,58,64,64],
+      bar: [
+        { label: 'Core product', roas: '83%' },
+        { label: 'Integration use cases', roas: '68%' },
+        { label: 'Competitive landscape', roas: '49%' },
+        { label: 'Industry guides', roas: '32%' }
+      ],
+      kpis: { sessions: { val: '19.1K', delta: '+14%', dir: 'up' }, signups: { val: '228', delta: '+11%', dir: 'up' }, position: { val: '5.8', delta: '+2.1', dir: 'up' }, keywords: { val: '912', delta: '+81', dir: 'up' } },
+      segments: [
+        { name: 'Core product cluster', spend: '5.8', cpa: '19.1K', roas: '83%', action: 'Cover long-tail variants' },
+        { name: 'Integration use cases', spend: '5.4', cpa: '12.4K', roas: '68%', action: 'Add partner pages' },
+        { name: 'Competitive landscape', spend: '3.8', cpa: '10.2K', roas: '49%', action: 'Refresh vs pages' },
+        { name: 'Industry guides', spend: '2.9', cpa: '8.4K', roas: '32%', action: 'Link from pillar' }
+      ],
+      signals: [
+        { icon: '\u26a0\ufe0f', title: 'Competitor cluster dominance', body: 'Ahrefs shows competitor ranks for 28 keywords in the integrations cluster where you have only 3 pages.' },
+        { icon: '\u2705', title: 'Core product authority', body: '83% cluster coverage on core product \u2014 Ahrefs topical authority score highest in this vertical.' }
+      ],
+      unitEcon: { cps: '\u00a37.60 / cluster keyword covered', ltv: '12\u00d7 estimated topic authority value', verdict: 'Strong \u2014 now expand into adjacent clusters' }
+    }
+  };
+
+  PLATFORM_DATA['GA4'] = {
+    rankings: {
+      hero: { label: 'Avg Position (tracked keywords)', value: '6.8', delta: '+0.9 positions', dir: 'up' },
+      sparkline: [44,50,54,48,60,66,64],
+      bar: [
+        { label: 'Product features', roas: '68%' },
+        { label: 'How-to guides', roas: '81%' },
+        { label: 'Integrations', roas: '59%' },
+        { label: 'Comparison pages', roas: '44%' }
+      ],
+      kpis: { sessions: { val: '17.6K', delta: '+9%', dir: 'up' }, signups: { val: '198', delta: '+5%', dir: 'up' }, position: { val: '6.8', delta: '+0.9', dir: 'up' }, keywords: { val: '792', delta: '+44', dir: 'up' } },
+      segments: [
+        { name: 'Product features', spend: '6.8', cpa: '17.6K', roas: '8%', action: 'Build supporting content' },
+        { name: 'How-to guides', spend: '4.6', cpa: '12.8K', roas: '6%', action: 'Improve page speed' },
+        { name: 'Comparison pages', spend: '13.2', cpa: '8.9K', roas: '4%', action: 'Add structured data' },
+        { name: 'Integrations', spend: '8.9', cpa: '6.4K', roas: '2%', action: 'Internal link boost' }
+      ],
+      signals: [
+        { icon: '\u26a0\ufe0f', title: 'Bounce rate spike on ranking pages', body: 'GA4 shows 74% bounce rate on pages ranking 6\u201310 \u2014 content matches intent but page experience is degrading rank.' },
+        { icon: '\u2705', title: 'Engagement time improving', body: 'Avg engagement time on how-to content up 22% \u2014 Google seeing quality signal, reflected in position gains.' }
+      ],
+      unitEcon: { cps: '\u00a34.60 / ranking position gained', ltv: '13\u00d7 (est. LTV vs content investment)', verdict: 'Good efficiency \u2014 fix page experience for faster gains' }
+    },
+    signups: {
+      hero: { label: 'Trial Signups from organic', value: '198', delta: '+5% MoM', dir: 'up' },
+      sparkline: [28,34,38,32,44,52,50],
+      bar: [
+        { label: 'Comparison pages', roas: '35%' },
+        { label: 'Product features', roas: '27%' },
+        { label: 'Case studies', roas: '24%' },
+        { label: 'How-to guides', roas: '14%' }
+      ],
+      kpis: { sessions: { val: '17.6K', delta: '+9%', dir: 'up' }, signups: { val: '198', delta: '+5%', dir: 'up' }, position: { val: '6.8', delta: '+0.9', dir: 'up' }, keywords: { val: '792', delta: '+44', dir: 'up' } },
+      segments: [
+        { name: 'Comparison pages', spend: '13.2', cpa: '8.9K', roas: '35%', action: 'Improve CTA prominence' },
+        { name: 'Product features', spend: '6.8', cpa: '17.6K', roas: '27%', action: 'Test modal signup' },
+        { name: 'Case studies', spend: '9.1', cpa: '5.4K', roas: '24%', action: 'Add bottom CTA' },
+        { name: 'How-to guides', spend: '4.6', cpa: '12.8K', roas: '14%', action: 'Segment by intent' }
+      ],
+      signals: [
+        { icon: '\u26a0\ufe0f', title: 'Funnel drop-off after blog', body: 'GA4 shows 88% of organic blog visitors exit without visiting a product page \u2014 internal linking gap.' },
+        { icon: '\u2705', title: 'Case study CVR above benchmark', body: 'Case studies converting at 2.8% \u2014 significantly above the 1.2% site average. Produce more.' }
+      ],
+      unitEcon: { cps: '\u00a324 cost-per-trial (content investment basis)', ltv: '16\u00d7 vs estimated content cost', verdict: 'Profitable \u2014 fix internal linking to unlock more signups' }
+    },
+    clusters: {
+      hero: { label: 'Cluster Coverage %', value: '58%', delta: '+3pp MoM', dir: 'up' },
+      sparkline: [38,42,45,40,52,57,58],
+      bar: [
+        { label: 'Core product', roas: '77%' },
+        { label: 'Integration use cases', roas: '60%' },
+        { label: 'Competitive landscape', roas: '40%' },
+        { label: 'Industry guides', roas: '27%' }
+      ],
+      kpis: { sessions: { val: '17.6K', delta: '+9%', dir: 'up' }, signups: { val: '198', delta: '+5%', dir: 'up' }, position: { val: '6.8', delta: '+0.9', dir: 'up' }, keywords: { val: '792', delta: '+44', dir: 'up' } },
+      segments: [
+        { name: 'Core product cluster', spend: '6.8', cpa: '17.6K', roas: '77%', action: 'Add FAQ sections' },
+        { name: 'Integration use cases', spend: '6.2', cpa: '10.4K', roas: '60%', action: 'Expand to 20 integrations' },
+        { name: 'Competitive landscape', spend: '4.4', cpa: '8.9K', roas: '40%', action: 'Target 5 new competitors' },
+        { name: 'Industry guides', spend: '3.3', cpa: '6.4K', roas: '27%', action: 'Consolidate thin pages' }
+      ],
+      signals: [
+        { icon: '\u26a0\ufe0f', title: 'GA4 shows cluster traffic concentrated', body: '72% of organic sessions land on only 18% of your pages \u2014 long-tail coverage is critically thin.' },
+        { icon: '\u2705', title: 'Engagement depth in core cluster', body: 'Core product cluster has 4.2 pages per session \u2014 topic authority is establishing internal navigation.' }
+      ],
+      unitEcon: { cps: '\u00a39.10 / cluster keyword covered', ltv: '10\u00d7 estimated topic authority value', verdict: 'Adequate \u2014 widen cluster coverage to unlock compounding' }
+    }
+  };
+
+  PLATFORM_DATA['Semrush'] = {
+    rankings: {
+      hero: { label: 'Avg Position (tracked keywords)', value: '7.1', delta: '+1.8 positions', dir: 'up' },
+      sparkline: [40,46,52,45,58,64,62],
+      bar: [
+        { label: 'Product features', roas: '73%' },
+        { label: 'How-to guides', roas: '84%' },
+        { label: 'Integrations', roas: '61%' },
+        { label: 'Comparison pages', roas: '46%' }
+      ],
+      kpis: { sessions: { val: '16.8K', delta: '+7%', dir: 'up' }, signups: { val: '188', delta: '+4%', dir: 'up' }, position: { val: '7.1', delta: '+1.8', dir: 'up' }, keywords: { val: '768', delta: '+52', dir: 'up' } },
+      segments: [
+        { name: 'Product features', spend: '7.1', cpa: '16.8K', roas: '7%', action: 'Add schema markup' },
+        { name: 'How-to guides', spend: '4.8', cpa: '11.4K', roas: '5%', action: 'Target featured snippets' },
+        { name: 'Comparison pages', spend: '14.1', cpa: '8.2K', roas: '3%', action: 'Update competitor data' },
+        { name: 'Integrations', spend: '9.4', cpa: '5.8K', roas: '2%', action: 'Create sub-pages' }
+      ],
+      signals: [
+        { icon: '\u26a0\ufe0f', title: 'Featured snippet opportunities missed', body: 'Semrush identifies 19 questions your content answers but doesn\u2019t own the featured snippet \u2014 reformatting could capture all 19.' },
+        { icon: '\u2705', title: 'Position tracking accelerating', body: '31 keywords moved up 2+ positions this week \u2014 content freshness update is driving Google re-crawl.' }
+      ],
+      unitEcon: { cps: '\u00a35.10 / ranking position gained', ltv: '12\u00d7 (est. LTV vs content investment)', verdict: 'Efficient \u2014 chase featured snippets for outsized gains' }
+    },
+    signups: {
+      hero: { label: 'Trial Signups from organic', value: '188', delta: '+4% MoM', dir: 'up' },
+      sparkline: [26,31,36,30,42,48,46],
+      bar: [
+        { label: 'Comparison pages', roas: '33%' },
+        { label: 'Product features', roas: '25%' },
+        { label: 'Case studies', roas: '22%' },
+        { label: 'How-to guides', roas: '20%' }
+      ],
+      kpis: { sessions: { val: '16.8K', delta: '+7%', dir: 'up' }, signups: { val: '188', delta: '+4%', dir: 'up' }, position: { val: '7.1', delta: '+1.8', dir: 'up' }, keywords: { val: '768', delta: '+52', dir: 'up' } },
+      segments: [
+        { name: 'Comparison pages', spend: '14.1', cpa: '8.2K', roas: '33%', action: 'Scale production' },
+        { name: 'Product features', spend: '7.1', cpa: '16.8K', roas: '25%', action: 'Add inline CTA' },
+        { name: 'Case studies', spend: '9.8', cpa: '4.8K', roas: '22%', action: 'Publish 2 new cases' },
+        { name: 'How-to guides', spend: '4.8', cpa: '11.4K', roas: '20%', action: 'Add conversion anchor' }
+      ],
+      signals: [
+        { icon: '\u26a0\ufe0f', title: 'Traffic-to-trial gap widening', body: 'Semrush shows traffic up 7% MoM but signups up only 4% \u2014 CVR is declining as low-intent keywords gain volume.' },
+        { icon: '\u2705', title: 'Competitor comparison converting', body: 'Comparison pages convert 2.6\u00d7 better than non-comparison pages \u2014 highest efficiency content format.' }
+      ],
+      unitEcon: { cps: '\u00a326 cost-per-trial (content investment basis)', ltv: '14\u00d7 vs estimated content cost', verdict: 'Profitable \u2014 address CVR decline before scaling further' }
+    },
+    clusters: {
+      hero: { label: 'Cluster Coverage %', value: '56%', delta: '+4pp MoM', dir: 'up' },
+      sparkline: [36,40,44,38,50,55,56],
+      bar: [
+        { label: 'Core product', roas: '79%' },
+        { label: 'Integration use cases', roas: '62%' },
+        { label: 'Competitive landscape', roas: '43%' },
+        { label: 'Industry guides', roas: '28%' }
+      ],
+      kpis: { sessions: { val: '16.8K', delta: '+7%', dir: 'up' }, signups: { val: '188', delta: '+4%', dir: 'up' }, position: { val: '7.1', delta: '+1.8', dir: 'up' }, keywords: { val: '768', delta: '+52', dir: 'up' } },
+      segments: [
+        { name: 'Core product cluster', spend: '7.1', cpa: '16.8K', roas: '79%', action: 'Target remaining 21%' },
+        { name: 'Integration use cases', spend: '6.8', cpa: '9.2K', roas: '62%', action: 'Build pillar page' },
+        { name: 'Competitive landscape', spend: '4.8', cpa: '8.2K', roas: '43%', action: 'Target 8 new terms' },
+        { name: 'Industry guides', spend: '3.6', cpa: '5.8K', roas: '28%', action: 'Merge thin content' }
+      ],
+      signals: [
+        { icon: '\u26a0\ufe0f', title: 'Gap clusters identified by Semrush', body: 'Semrush Position Tracking shows 4 clusters competitors rank for with zero of your content present.' },
+        { icon: '\u2705', title: 'Core cluster nearly complete', body: 'Core product cluster at 79% coverage \u2014 Semrush confirms you\u2019re the authority in this topic area.' }
+      ],
+      unitEcon: { cps: '\u00a38.80 / cluster keyword covered', ltv: '11\u00d7 estimated topic authority value', verdict: 'On track \u2014 build gap cluster content to defend authority' }
+    }
+  };
+
+  /* ── progress dots ── */
+  function updateProgress(step) {
+    for (var i = 1; i <= 4; i++) {
+      var dot = document.getElementById('prog-' + i);
+      if (!dot) continue;
+      dot.className = 'wt-dot' + (i === step ? ' active' : (i < step ? ' done' : ''));
+    }
+  }
+
+  /* ── height animation ── */
+  function walkthroughPrepareHeightTransition(card) {
+    card.style.height = card.offsetHeight + 'px';
+    card.style.overflow = 'hidden';
+    card.style.transition = 'height .35s cubic-bezier(.4,0,.2,1)';
+  }
+  function walkthroughRunHeightTransition(card, newStep) {
+    requestAnimationFrame(function () {
+      newStep.style.display = '';
+      requestAnimationFrame(function () {
+        card.style.height = card.scrollHeight + 'px';
+        card.addEventListener('transitionend', function onEnd() {
+          card.removeEventListener('transitionend', onEnd);
+          card.style.height = '';
+          card.style.overflow = '';
+          card.style.transition = '';
+        });
+      });
+    });
+  }
+
+  /* ── wizard step sync ── */
+  function syncWizardStepClasses(fromStep, toStep) {
+    var steps = document.querySelectorAll('.wt-step');
+    steps.forEach(function (s) {
+      var isActive = s.id === ('demo-step-' + toStep);
+      s.classList.toggle('active', isActive);
+      if (isActive) { s.removeAttribute('inert'); }
+      else { s.setAttribute('inert', ''); }
+    });
+  }
+
+  function syncStepTo(n, noAnimate) {
+    var card = document.querySelector('.wt-card');
+    var toStep = document.getElementById('demo-step-' + n);
+    if (!toStep) return;
+    if (!noAnimate && card) { walkthroughPrepareHeightTransition(card); }
+    syncWizardStepClasses(state.step, n);
+    state.step = n;
+    updateProgress(n);
+    if (!noAnimate && card) { walkthroughRunHeightTransition(card, toStep); }
+    pushDemoHash('demo-step-' + n);
+    gtmEvent('demo_step', { step: n, metric: state.metric, platforms: state.platforms.join(',') });
+    if (n === 3) { setTimeout(runAnalysis, 200); }
+    if (n === 4) { populateBrief(); }
+  }
+
+  window.wtGoTo = function (n) { syncStepTo(n, false); };
+
+  function runAnalysis() {
+    var lines = document.querySelectorAll('.analyzing-line');
+    var delays = [0, 900, 1800];
+    lines.forEach(function (line, i) {
+      setTimeout(function () {
+        line.classList.add('done');
+      }, delays[i] + 600);
+    });
+    setTimeout(function () {
+      syncStepTo(4, false);
+    }, 3200);
+  }
+
+  window.wtTogglePlatform = function (name, btn) {
+    var idx = state.platforms.indexOf(name);
+    if (idx === -1) { state.platforms.push(name); btn.setAttribute('aria-pressed', 'true'); btn.classList.add('selected'); }
+    else { state.platforms.splice(idx, 1); btn.setAttribute('aria-pressed', 'false'); btn.classList.remove('selected'); }
+    var hint = document.getElementById('plat-hint');
+    var nextBtn = document.getElementById('wt-next-1');
+    var enough = state.platforms.length >= 2;
+    if (nextBtn) { nextBtn.disabled = !enough; }
+    if (hint) { hint.textContent = enough ? (state.platforms.length + ' tools selected \u2014 cross-tool signals enabled') : 'Select at least 2 to see cross-tool signals'; }
+  };
+
+  window.wtSelectMetric = function (metric, btn) {
+    state.metric = metric;
+    document.querySelectorAll('.metric-card').forEach(function (c) {
+      c.classList.remove('selected'); c.setAttribute('aria-pressed', 'false');
+    });
+    btn.classList.add('selected'); btn.setAttribute('aria-pressed', 'true');
+    var nextBtn = document.getElementById('wt-next-2');
+    if (nextBtn) { nextBtn.disabled = false; }
+  };
+
+  /* ── report helpers ── */
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function signalBlockHTML(sig, idx, hidden) {
+    return '<div class="signal-item' + (hidden ? ' signal-hidden' : '') + '" id="signal-item-' + idx + '">' +
+      '<span class="signal-icon" aria-hidden="true">' + escHtml(sig.icon) + '</span>' +
+      '<div class="signal-body">' +
+      '<p class="signal-title">' + escHtml(sig.title) + '</p>' +
+      '<p class="signal-desc">' + escHtml(sig.body) + '</p>' +
+      '</div></div>';
+  }
+
+  function buildSignalsHTML(signals, crossSignal) {
+    var out = '';
+    out += signalBlockHTML(signals[0], 0, false);
+    if (signals[1]) { out += signalBlockHTML(signals[1], 1, false); }
+    if (crossSignal) {
+      out += signalBlockHTML({ icon: '\ud83d\udd17', title: 'Cross-tool insight', body: crossSignal }, 2, true);
+      out += '<button class="rpt-show-more-signals" id="rpt-show-more-btn" aria-expanded="false">+ Show cross-tool insight</button>';
+    }
+    return out;
+  }
+
+  function buildSparklineSVG(vals) {
+    var w = 140, h = 44, pad = 4;
+    var mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals);
+    var range = mx - mn || 1;
+    var pts = vals.map(function (v, i) {
+      var x = pad + (i / (vals.length - 1)) * (w - pad * 2);
+      var y = h - pad - ((v - mn) / range) * (h - pad * 2);
+      return x.toFixed(1) + ',' + y.toFixed(1);
+    });
+    return '<svg viewBox="0 0 ' + w + ' ' + h + '" width="' + w + '" height="' + h + '" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+      '<polyline points="' + pts.join(' ') + '" fill="none" stroke="var(--green,#2e9e6b)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '</svg>';
+  }
+
+  function buildBarChartHTML(bars) {
+    var maxVal = 0;
+    bars.forEach(function (b) { var v = parseFloat(b.roas); if (v > maxVal) maxVal = v; });
+    return bars.map(function (b) {
+      var pct = maxVal > 0 ? (parseFloat(b.roas) / maxVal * 100).toFixed(1) : '0';
+      return '<div class="roas-bar-row">' +
+        '<span class="roas-bar-label">' + escHtml(b.label) + '</span>' +
+        '<div class="roas-bar-track"><div class="roas-bar-fill" style="width:' + pct + '%"></div></div>' +
+        '<span class="roas-bar-val">' + escHtml(b.roas) + '</span>' +
+        '</div>';
+    }).join('');
+  }
+
+  function buildSegmentRowsHTML(segs) {
+    return segs.map(function (s) {
+      var trendDir = parseFloat(s.roas) >= 50 ? 'up' : 'down';
+      var trendSpan = '<span class="kpi-trend kpi-trend--' + trendDir + '" aria-hidden="true">' + (trendDir === 'up' ? '\u2191' : '\u2193') + '</span>';
+      return '<tr>' +
+        '<td>' + escHtml(s.name) + '</td>' +
+        '<td>' + escHtml(s.spend) + '</td>' +
+        '<td>' + escHtml(s.cpa) + '</td>' +
+        '<td>' + trendSpan + ' ' + escHtml(s.roas) + '</td>' +
+        '<td><span class="camp-action">' + escHtml(s.action) + '</span></td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  function applyKpiTrendSpan(trendEl, deltaEl, dir, delta) {
+    if (trendEl) { trendEl.textContent = dir === 'up' ? '\u2191' : '\u2193'; trendEl.className = 'kpi-trend kpi-trend--' + dir; }
+    if (deltaEl) { deltaEl.textContent = delta; }
+  }
+
+  function setKPIChips(kpis) {
+    var keys = ['sessions', 'signups', 'position', 'keywords'];
+    keys.forEach(function (k) {
+      var d = kpis[k]; if (!d) return;
+      var valEl = document.getElementById('rpt-kpi-' + k + '-val');
+      var trendEl = document.getElementById('rpt-kpi-' + k + '-trend');
+      var deltaEl = document.getElementById('rpt-kpi-' + k + '-delta');
+      if (valEl) { valEl.textContent = d.val; }
+      applyKpiTrendSpan(trendEl, deltaEl, d.dir, d.delta);
+    });
+  }
+
+  function setupModalSignalToggle(root) {
+    var btn = root.querySelector('#rpt-show-more-btn');
+    var hidden = root.querySelector('#signal-item-2');
+    if (!btn || !hidden) return;
+    btn.addEventListener('click', function () {
+      var expanded = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', String(!expanded));
+      hidden.classList.toggle('signal-hidden', expanded);
+      btn.textContent = expanded ? '+ Show cross-tool insight' : '\u2212 Hide cross-tool insight';
+    });
+  }
+
+  function setupDisclosure(toggleId, panelId) {
+    var toggle = document.getElementById(toggleId);
+    var panel = document.getElementById(panelId);
+    if (!toggle || !panel) return;
+    toggle.addEventListener('click', function () {
+      var open = toggle.getAttribute('aria-expanded') === 'true';
+      toggle.setAttribute('aria-expanded', String(!open));
+      panel.hidden = open;
+    });
+  }
+
+  /* ── report rendering ── */
+  function formatReportDate() {
+    var d = new Date();
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  function fmtUsersK(n) {
+    if (n >= 1000) { return (n / 1000).toFixed(1) + 'K'; }
+    return String(n);
+  }
+
+  function aggregateSegments(platforms, metric) {
+    var all = [];
+    platforms.forEach(function (p) {
+      var d = PLATFORM_DATA[p]; if (!d) return;
+      var m = d[metric]; if (!m) return;
+      all = all.concat(m.segments);
+    });
+    if (all.length === 0) return [];
+    var map = {};
+    all.forEach(function (s) {
+      if (!map[s.name]) { map[s.name] = { name: s.name, spend: 0, cpa: 0, roas: 0, action: s.action, count: 0 }; }
+      map[s.name].spend += parseFloat(s.spend) || 0;
+      map[s.name].cpa += parseFloat(s.cpa) || 0;
+      map[s.name].roas += parseFloat(s.roas) || 0;
+      map[s.name].count++;
+    });
+    return Object.keys(map).map(function (k) {
+      var v = map[k];
+      var c = v.count;
+      return { name: v.name, spend: (v.spend / c).toFixed(1), cpa: fmtUsersK(Math.round(v.cpa / c)), roas: Math.round(v.roas / c) + '%', action: v.action };
+    }).slice(0, 5);
+  }
+
+  function aggregateSignals(platforms, metric) {
+    var p0 = platforms[0]; if (!p0) return [];
+    var d = PLATFORM_DATA[p0]; if (!d) return [];
+    var m = d[metric]; if (!m) return [];
+    return m.signals || [];
+  }
+
+  function aggregateSparkline(platforms, metric) {
+    var sums = [0,0,0,0,0,0,0]; var count = 0;
+    platforms.forEach(function (p) {
+      var d = PLATFORM_DATA[p]; if (!d) return;
+      var m = d[metric]; if (!m || !m.sparkline) return;
+      m.sparkline.forEach(function (v, i) { sums[i] += v; }); count++;
+    });
+    if (count === 0) return sums;
+    return sums.map(function (v) { return Math.round(v / count); });
+  }
+
+  function aggregateKPIs(platforms, metric) {
+    var totals = { sessions: 0, signups: 0, position: 0, keywords: 0 };
+    var counts = { sessions: 0, signups: 0, position: 0, keywords: 0 };
+    platforms.forEach(function (p) {
+      var d = PLATFORM_DATA[p]; if (!d) return;
+      var m = d[metric]; if (!m || !m.kpis) return;
+      var k = m.kpis;
+      if (k.sessions) { totals.sessions += parseFloat(k.sessions.val) || 0; counts.sessions++; }
+      if (k.signups) { totals.signups += parseFloat(k.signups.val) || 0; counts.signups++; }
+      if (k.position) { totals.position += parseFloat(k.position.val) || 0; counts.position++; }
+      if (k.keywords) { totals.keywords += parseFloat(k.keywords.val) || 0; counts.keywords++; }
+    });
+    var firstP = platforms[0]; var firstD = PLATFORM_DATA[firstP]; var firstM = firstD && firstD[metric];
+    var dirs = firstM && firstM.kpis ? firstM.kpis : {};
+    function avgDir(key) { return (dirs[key] && dirs[key].dir) || 'up'; }
+    return {
+      sessions: { val: fmtUsersK(Math.round(totals.sessions / (counts.sessions || 1) * 1000)) , delta: '+' + Math.round(8 + Math.random() * 8) + '%', dir: avgDir('sessions') },
+      signups:  { val: String(Math.round(totals.signups  / (counts.signups  || 1))), delta: '+' + Math.round(4 + Math.random() * 8) + '%', dir: avgDir('signups') },
+      position: { val: (totals.position / (counts.position || 1)).toFixed(1), delta: '+' + (0.5 + Math.random() * 1.5).toFixed(1), dir: avgDir('position') },
+      keywords: { val: String(Math.round(totals.keywords / (counts.keywords || 1))), delta: '+' + Math.round(40 + Math.random() * 50), dir: avgDir('keywords') }
+    };
+  }
+
+  function deriveVerdict(metric, platforms) {
+    var scores = platforms.map(function (p) { return PLATFORM_QUALITY[p] || 0.8; });
+    var avg = scores.reduce(function (a, b) { return a + b; }, 0) / (scores.length || 1);
+    if (avg >= 0.87) return { label: '\u2714 Strong signal', cls: 'verdict--green' };
+    if (avg >= 0.83) return { label: '\u25cf Good signal', cls: 'verdict--amber' };
+    return { label: '\u25cb Partial signal', cls: 'verdict--amber' };
+  }
+
+  function deriveContentROI(platforms, metric) {
+    var d = PLATFORM_DATA[platforms[0]]; if (!d) return {};
+    var m = d[metric]; if (!m || !m.unitEcon) return {};
+    return m.unitEcon;
+  }
+
+  function populateBrief() {
+    var platforms = state.platforms;
+    var metric = state.metric || 'rankings';
+    var firstPlatData = PLATFORM_DATA[platforms[0]] || PLATFORM_DATA['GSC'];
+    var metricData = firstPlatData[metric] || firstPlatData['rankings'];
+
+    /* hero */
+    var heroEl = document.getElementById('rpt-hero-label');
+    var heroVal = document.getElementById('rpt-hero-val');
+    var heroDelta = document.getElementById('rpt-hero-delta-row');
+    if (heroEl) heroEl.textContent = metricData.hero.label;
+    if (heroVal) heroVal.textContent = metricData.hero.value;
+    if (heroDelta) {
+      heroDelta.innerHTML = '<span class="kpi-trend kpi-trend--' + metricData.hero.dir + '">' +
+        (metricData.hero.dir === 'up' ? '\u2191' : '\u2193') + '</span> ' + escHtml(metricData.hero.delta);
+    }
+
+    /* bar chart labels */
+    var barLabelMap = { rankings: 'Position gain by content cluster', signups: 'Trial signups by content cluster', clusters: 'Cluster coverage by topic area' };
+    var barLabelEl = document.getElementById('rpt-bar-label-text');
+    if (barLabelEl) barLabelEl.textContent = barLabelMap[metric] || 'Metric by cluster';
+
+    /* meta */
+    var metaEl = document.getElementById('rpt-meta');
+    var sourceMap = { GSC: 'Search Console', Ahrefs: 'Ahrefs API', GA4: 'Google Analytics 4', Semrush: 'Semrush Tracking' };
+    var srcLabels = platforms.map(function (p) { return sourceMap[p] || p; });
+    if (metaEl) metaEl.textContent = formatReportDate() + ' \u00b7 Sources: ' + srcLabels.join(', ');
+
+    /* verdict */
+    var v = deriveVerdict(metric, platforms);
+    var verdictEl = document.getElementById('rpt-verdict');
+    if (verdictEl) { verdictEl.textContent = v.label; verdictEl.className = 'rpt-verdict rpt-verdict--modal ' + v.cls; }
+
+    /* sparkline */
+    var sparkEl = document.getElementById('rpt-sparkline');
+    if (sparkEl) sparkEl.innerHTML = buildSparklineSVG(aggregateSparkline(platforms, metric));
+
+    /* bars */
+    var barsEl = document.getElementById('rpt-roas-bars');
+    if (barsEl) barsEl.innerHTML = buildBarChartHTML(metricData.bar);
+
+    /* KPI strip */
+    setKPIChips(aggregateKPIs(platforms, metric));
+
+    /* KPI hint */
+    var hintEl = document.getElementById('rpt-kpi-hint');
+    if (hintEl) hintEl.textContent = 'From ' + platforms.join(' + ');
+
+    /* signals */
+    var sigEl = document.getElementById('rpt-signals');
+    var signals = aggregateSignals(platforms, metric);
+    var cross = platforms.length >= 2 ? CROSS_PLATFORM_SIGNALS[metric] : null;
+    if (sigEl) sigEl.innerHTML = buildSignalsHTML(signals, cross);
+    setupModalSignalToggle(document.getElementById('duct-report-root') || document);
+
+    /* segment table */
+    var tbody = document.getElementById('rpt-camp-tbody');
+    if (tbody) tbody.innerHTML = buildSegmentRowsHTML(aggregateSegments(platforms, metric));
+    var campMeta = document.getElementById('rpt-camp-meta');
+    if (campMeta) campMeta.textContent = ' \u2014 ' + platforms.length + ' tool' + (platforms.length > 1 ? 's' : '') + ' aggregated';
+
+    /* content ROI */
+    var roi = deriveContentROI(platforms, metric);
+    var ueCps = document.getElementById('rpt-ue-cps');
+    var ueLtv = document.getElementById('rpt-ue-ltv');
+    var ueVerdict = document.getElementById('rpt-ue-verdict');
+    var ueSummary = document.getElementById('rpt-ue-summary');
+    if (ueCps) ueCps.textContent = roi.cps || '\u2014';
+    if (ueLtv) ueLtv.textContent = roi.ltv || '\u2014';
+    if (ueVerdict) ueVerdict.textContent = roi.verdict || '\u2014';
+    if (ueSummary) ueSummary.textContent = ' \u2014 ' + (roi.verdict ? roi.verdict.split('\u2014')[0].trim() : 'analysis ready');
+
+    /* sources footer */
+    var srcEl = document.getElementById('rpt-footer-sources');
+    if (srcEl) srcEl.textContent = 'Data sources: ' + srcLabels.join(', ') + '. Showing 90-day window of example data.';
+
+    /* disclosure setup */
+    setupDisclosure('rpt-camp-toggle', 'rpt-camp-panel');
+    setupDisclosure('rpt-ue-toggle', 'rpt-ue-panel');
+
+    /* brief sub */
+    var subEl = document.getElementById('wt-brief-sub');
+    if (subEl) subEl.textContent = 'Here\u2019s what Duct found across ' + (platforms.length > 1 ? platforms.join(' + ') : platforms[0]) + '.';
+  }
+
+  /* ── modal ── */
+  window.openReportModal = function () {
+    populateBrief();
+    var previewRoot = document.getElementById('duct-report-root');
+    var clone = previewRoot ? previewRoot.cloneNode(true) : document.createElement('div');
+    mountReportToModal(clone);
+    setupModalSignalToggle(clone);
+    setupDisclosure('rpt-camp-toggle', 'rpt-camp-panel');
+    setupDisclosure('rpt-ue-toggle', 'rpt-ue-panel');
+    showReportModalDOM();
+    pushDemoHash('demo-report');
+    gtmEvent('demo_report_open', { metric: state.metric, platforms: state.platforms.join(',') });
+  };
+
+  window.closeReportModal = function () {
+    hideReportModalDOM();
+    pushDemoHash('demo-step-4');
+  };
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      var m = document.getElementById('report-modal');
+      if (m && m.classList.contains('open')) { window.closeReportModal(); }
+    }
+  });
+
+  /* ── restart ── */
+  window.wtRestart = function () {
+    state.platforms = [];
+    state.metric = null;
+    document.querySelectorAll('.plat-btn').forEach(function (b) { b.classList.remove('selected'); b.setAttribute('aria-pressed', 'false'); });
+    document.querySelectorAll('.metric-card').forEach(function (c) { c.classList.remove('selected'); c.setAttribute('aria-pressed', 'false'); });
+    var hint = document.getElementById('plat-hint');
+    if (hint) hint.textContent = 'Select at least 2 to see cross-tool signals';
+    var n1 = document.getElementById('wt-next-1'); if (n1) n1.disabled = true;
+    var n2 = document.getElementById('wt-next-2'); if (n2) n2.disabled = true;
+    var lines = document.querySelectorAll('.analyzing-line');
+    lines.forEach(function (l) { l.classList.remove('done'); });
+    syncStepTo(1, true);
+    gtmEvent('demo_restart', {});
+  };
+
+  /* ── hash routing ── */
+  function parseDemoStepHash(hash) {
+    var m = (hash || '').match(/^#?demo-step-(\d)$/);
+    return m ? parseInt(m[1], 10) : null;
+  }
+
+  function onDemoHashChange() {
+    var h = location.hash;
+    if (h === '#demo-report') {
+      if (state.step === 4) { window.openReportModal(); }
+      return;
+    }
+    var n = parseDemoStepHash(h);
+    if (n && n !== state.step) { syncStepTo(n, true); }
+  }
+
+  function applyInitialDemoHash() {
+    var h = location.hash;
+    if (!h || !h.startsWith('#demo')) return;
+    if (h === '#demo-report') {
+      syncStepTo(4, true);
+      setTimeout(function () { window.openReportModal(); }, 200);
+      return;
+    }
+    var n = parseDemoStepHash(h);
+    if (n && n > 1) { syncStepTo(n, true); }
+  }
+
+  window.addEventListener('hashchange', onDemoHashChange);
+
+  /* view-full-report link */
+  var vLink = document.getElementById('view-full-report-link');
+  if (vLink) {
+    vLink.addEventListener('click', function (e) {
+      e.preventDefault();
+      window.openReportModal();
+    });
+  }
+
+  applyInitialDemoHash();
+
+})();
+</script>
 
 <!-- FOOTER -->
 
