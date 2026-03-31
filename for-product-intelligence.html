@@ -257,7 +257,7 @@
 <nav id="nav" aria-label="Main navigation">
 <div style="display:flex;align-items:center;gap:10px">
 <a href="index.html" class="logo">duct <span class="logo-mark" aria-hidden="true"></span></a>
-<span style="font-size:12px;font-weight:500;color:var(--navy-3);letter-spacing:.02em">for product intelligence · demo</span>
+<span style="font-size:12px;font-weight:500;color:var(--navy-3);letter-spacing:.02em">for product intelligence</span>
 </div>
 <div class="nav-links">
 <a href="#demo-step-1" class="nav-link">Try the demo</a>
@@ -274,8 +274,8 @@
 
 <section class="hero">
 <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Early access · 14 spots remaining</div>
-<h1>Stop guessing what to build next.<br/>Start shipping what <em>matters.</em></h1>
-<p class="hero-sub">Duct connects your Mixpanel, Intercom, Linear, and Salesforce — and surfaces the product story they're collectively trying to tell you.</p>
+<h1>See what is blocking adoption.<br/>Ship what <em>moves the metric.</em></h1>
+<p class="hero-sub">Duct connects your product, support, and revenue stack so you can spot the issue, the upstream cause, and the next action before the team loses another week.</p>
 <div class="hero-form">
 <input type="email" id="heroEmail" class="email-in" placeholder="you@company.com" aria-label="Email address"/>
 <button class="btn btn-orange btn-lg"
@@ -284,6 +284,7 @@
   onclick="submitForm('heroEmail', this)">Get early access →</button>
 </div>
 <p class="hero-footnote">Free during beta · No credit card · For PMs at 20--200 person companies</p>
+<p style="margin-top:16px;font-size:13px;color:var(--navy-3)">or <a href="#demo" style="color:var(--orange);text-decoration:underline;text-underline-offset:3px">try the live demo ↓</a> — no signup required</p>
 </section>
 
 <!-- TOOL STRIP -->
@@ -298,190 +299,6 @@
 </div>
 </div>
 
-<!-- PROBLEM -->
-
-<section class="problem">
-<div class="reveal">
-<p class="tag">The Problem</p>
-<h2>The answer is in your tools.<br/>But no one <em>connected them.</em></h2>
-<ul class="pain-list">
-<li class="pain-item"><span class="pi-icon" aria-hidden="true">😵‍💫</span> Analytics says adoption is up. Intercom says users are confused. You don't know which to trust.</li>
-<li class="pain-item"><span class="pi-icon" aria-hidden="true">🕳️</span> Engineering closed the ticket. Customer success says it's still broken. Product has no idea.</li>
-<li class="pain-item"><span class="pi-icon" aria-hidden="true">⏱️</span> You spend 3 hours a week manually aggregating data that should take 10 minutes.</li>
-</ul>
-</div>
-<div class="diag reveal">
-<div class="diag-header" aria-hidden="true">
-<span class="diag-dot" style="background:#ff5f57"></span>
-<span class="diag-dot" style="background:#febc2e"></span>
-<span class="diag-dot" style="background:#28c840"></span>
-</div>
-<div class="diag-body">
-<div class="diag-tool">
-<span class="diag-chip" style="background:#fff0e5" aria-hidden="true">📊</span>
-<div class="diag-info"><b>Mixpanel</b><s aria-hidden="true">Retention dropped 4% this week</s></div>
-</div>
-<div class="diag-divider" aria-hidden="true">no connection</div>
-<div class="diag-tool dim">
-<span class="diag-chip" style="background:#e8f4ff" aria-hidden="true">💬</span>
-<div class="diag-info"><b>Intercom</b><s aria-hidden="true">32 tickets about onboarding friction</s></div>
-</div>
-<div class="diag-divider" aria-hidden="true">no connection</div>
-<div class="diag-tool dim">
-<span class="diag-chip" style="background:#eef0ff" aria-hidden="true">🔧</span>
-<div class="diag-info"><b>Linear</b><s aria-hidden="true">Onboarding bug fix — shipped Tuesday</s></div>
-</div>
-<div class="diag-divider" aria-hidden="true">no connection</div>
-<div class="diag-tool dim">
-<span class="diag-chip" style="background:#efffef" aria-hidden="true">💼</span>
-<div class="diag-info"><b>Salesforce</b><s aria-hidden="true">3 churned accounts this month</s></div>
-</div>
-<div class="diag-result">
-<strong>✦ After Duct</strong>
-Retention drop → Intercom spike → bug fix timing → churn. One story, automatically connected.
-</div>
-</div>
-</div>
-</section>
-
-<!-- HOW IT WORKS -->
-
-<section class="how" id="how">
-<div class="how-inner">
-<p class="tag">How It Works</p>
-<h2>Clarity in <em>three steps</em></h2>
-<div class="steps">
-<div class="step reveal">
-<span class="step-num">01</span>
-<span class="step-icon" aria-hidden="true">🔌</span>
-<p class="step-title">Connect your stack</p>
-<p class="step-body">One-click OAuth integrations to the tools you already use. Duct reads — it never writes or modifies anything. Under 5 minutes to set up.</p>
-</div>
-<div class="step reveal" style="transition-delay:.1s">
-<span class="step-num">02</span>
-<span class="step-icon" style="filter:none;display:block;margin-bottom:18px">
-<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-<circle cx="16" cy="16" r="14" stroke="white" stroke-width="2"/>
-<circle cx="16" cy="16" r="8" stroke="white" stroke-width="2"/>
-<circle cx="16" cy="16" r="3" fill="white"/>
-</svg>
-</span>
-<p class="step-title">Define what matters</p>
-<p class="step-body">Tell Duct your north star metric and the features you're watching. It tracks only what affects them — not everything, just the right things.</p>
-</div>
-<div class="step reveal" style="transition-delay:.2s">
-<span class="step-num">03</span>
-<span class="step-icon" aria-hidden="true">✦</span>
-<p class="step-title">Get clear intelligence</p>
-<p class="step-body">A daily digest with cross-tool correlations, anomaly alerts, and plain-English summaries — ready before your morning standup.</p>
-</div>
-</div>
-</div>
-</section>
-
-<!-- FEATURES -->
-
-<section class="features" id="features">
-<div class="reveal">
-<p class="tag">Features</p>
-<h2>Built for PMs who <em>move fast</em></h2>
-</div>
-<div class="feat-grid">
-<div class="feat reveal">
-<span class="feat-label">🔗 Connect</span>
-<p class="feat-title">Cross-tool correlation</p>
-<p class="feat-body">Automatically link events across Mixpanel, Intercom, and Linear. See when a ticket spike preceded a retention drop — without a single spreadsheet.</p>
-</div>
-<div class="feat reveal" style="transition-delay:.08s">
-<span class="feat-label">📬 Digest</span>
-<p class="feat-title">Daily PM briefing</p>
-<p class="feat-body">A crisp morning summary of what moved, what correlated, and what needs your attention. Reads in under 2 minutes.</p>
-</div>
-<div class="feat reveal" style="transition-delay:.14s">
-<span class="feat-label">🚨 Alerts</span>
-<p class="feat-title">Anomaly detection</p>
-<p class="feat-body">Get a Slack ping when something unusual happens — before your engineering lead notices and asks why product did not catch it.</p>
-</div>
-<div class="feat reveal" style="transition-delay:.2s">
-<span class="feat-label">🗣️ Ask</span>
-<p class="feat-title">Plain-English queries</p>
-<p class="feat-body">"Why did DAU drop on Thursday?" Just ask. Duct queries your connected tools and returns a clear answer. No SQL, no dashboards.</p>
-</div>
-</div>
-</section>
-
-<!-- AUDIENCE -->
-
-<section class="audience" id="who">
-<div class="aud-inner">
-<div class="reveal">
-<p class="tag">Who It's For</p>
-<h2>The PM who owns <em>growth</em> without a data team</h2>
-<p class="sub" style="margin-top:16px">You don't have analysts to lean on. You don't have time for SQL. You need the full picture, fast — and you need it to be right.</p>
-<a href="#cta" class="btn btn-orange" style="margin-top:30px">That's me — get early access →</a>
-</div>
-<div class="aud-cards reveal">
-<div class="aud-card hi">
-<span class="aud-av" style="background:#fff0e5" aria-hidden="true">🚀</span>
-<div><span class="aud-name">Growth PM</span><span class="aud-role">20--200 person SaaS</span></div>
-<span class="aud-badge">Perfect fit</span>
-</div>
-<div class="aud-card">
-<span class="aud-av" style="background:#e8f4ff" aria-hidden="true">📣</span>
-<div><span class="aud-name">Product Marketer</span><span class="aud-role">Tracking feature launches</span></div>
-<span class="aud-badge">Great fit</span>
-</div>
-<div class="aud-card">
-<span class="aud-av" style="background:#efffef" aria-hidden="true">📈</span>
-<div><span class="aud-name">Founding PM</span><span class="aud-role">Wearing many hats</span></div>
-<span class="aud-badge">Great fit</span>
-</div>
-<div class="aud-card" style="opacity:.45">
-<span class="aud-av" style="background:#f5f5f5" aria-hidden="true">🏢</span>
-<div><span class="aud-name">Enterprise Data Team</span><span class="aud-role">500+ with dedicated analysts</span></div>
-<span class="aud-badge off">Not yet</span>
-</div>
-</div>
-</div>
-</section>
-
-<!-- TESTIMONIALS -->
-
-<section class="quotes">
-<div class="reveal">
-<p class="tag">Early Signals</p>
-<h2>What beta users are <em>saying</em></h2>
-</div>
-<div class="q-grid">
-<div class="qcard reveal">
-<span class="qmark" aria-hidden="true">"</span>
-<p class="qtext">I used to spend Monday mornings pulling data from five different places. Now I get Duct's digest before 9am and I'm actually ready for planning.</p>
-<div class="qauthor"><span class="qav" aria-hidden="true">👩‍💻</span><div><span class="qname">Sarah K.</span><span class="qrole">Growth PM · 45 employees</span></div></div>
-</div>
-<div class="qcard reveal" style="transition-delay:.1s">
-<span class="qmark" aria-hidden="true">"</span>
-<p class="qtext">The cross-tool correlation caught a connection between a Mixpanel drop and an Intercom spike I would never have spotted manually. That is real leverage.</p>
-<div class="qauthor"><span class="qav" aria-hidden="true">👨‍💼</span><div><span class="qname">Marcus R.</span><span class="qrole">Product Lead · 80 employees</span></div></div>
-</div>
-<div class="qcard reveal" style="transition-delay:.2s">
-<span class="qmark" aria-hidden="true">"</span>
-<p class="qtext">As a founding PM I am supposed to be everywhere. Duct acts like my data analyst — it just tells me what I need to know and why.</p>
-<div class="qauthor"><span class="qav" aria-hidden="true">🧑‍🚀</span><div><span class="qname">Priya M.</span><span class="qrole">Founding PM · Series A · 30 employees</span></div></div>
-</div>
-</div>
-</section>
-
-<!-- STATS -->
-
-<section class="stats">
-<div class="stats-inner">
-<div class="reveal"><span class="stat-n">7+</span><span class="stat-l">Integrations at launch</span></div>
-<div class="reveal" style="transition-delay:.1s"><span class="stat-n">~3h</span><span class="stat-l">Saved per PM per week</span></div>
-<div class="reveal" style="transition-delay:.2s"><span class="stat-n">10min</span><span class="stat-l">To first insight after setup</span></div>
-<div class="reveal" style="transition-delay:.3s"><span class="stat-n">0</span><span class="stat-l">SQL queries required</span></div>
-</div>
-</section>
-
 <!-- WALKTHROUGH DEMO -->
 
 <!-- EXPERIMENT: Does an interactive tool-selection → goal → analysis walkthrough (pick your stack → pick your metric → see a realistic product brief) drive more qualified signups than a static feature list for PM-targeted traffic? -->
@@ -492,7 +309,7 @@ Retention drop → Intercom spike → bug fix timing → churn. One story, autom
 <div class="reveal">
 <p class="tag" style="justify-content:center;display:flex">Interactive Demo</p>
 <h2>Your product stack. <em>One brief.</em></h2>
-<p class="sub">This is example data — built to show exactly what Duct surfaces every morning.</p>
+<p class="sub">Try the workflow your team would use to turn scattered signals into one operator-ready product brief.</p>
 </div>
 
 <div class="wt-progress reveal" role="tablist" aria-label="Demo steps">
@@ -738,20 +555,178 @@ Retention drop → Intercom spike → bug fix timing → churn. One story, autom
 </div><!-- /.wt-outer -->
 </section>
 
+<!-- PROBLEM -->
+
+<section class="problem">
+<div class="reveal">
+<p class="tag">The Problem</p>
+<h2>The answer is already in your tools.<br/>But no one is <em>connecting the dots.</em></h2>
+<ul class="pain-list">
+<li class="pain-item"><span class="pi-icon" aria-hidden="true">😵‍💫</span> Analytics says adoption is up. Intercom says users are confused. You don't know which to trust.</li>
+<li class="pain-item"><span class="pi-icon" aria-hidden="true">🕳️</span> Engineering closed the ticket. Customer success says it's still broken. Product has no idea.</li>
+<li class="pain-item"><span class="pi-icon" aria-hidden="true">⏱️</span> You spend 3 hours a week manually aggregating data that should take 10 minutes.</li>
+</ul>
+</div>
+<div class="diag reveal">
+<div class="diag-header" aria-hidden="true">
+<span class="diag-dot" style="background:#ff5f57"></span>
+<span class="diag-dot" style="background:#febc2e"></span>
+<span class="diag-dot" style="background:#28c840"></span>
+</div>
+<div class="diag-body">
+<div class="diag-tool">
+<span class="diag-chip" style="background:#fff0e5" aria-hidden="true">📊</span>
+<div class="diag-info"><b>Mixpanel</b><s aria-hidden="true">Retention dropped 4% this week</s></div>
+</div>
+<div class="diag-divider" aria-hidden="true">no connection</div>
+<div class="diag-tool dim">
+<span class="diag-chip" style="background:#e8f4ff" aria-hidden="true">💬</span>
+<div class="diag-info"><b>Intercom</b><s aria-hidden="true">32 tickets about onboarding friction</s></div>
+</div>
+<div class="diag-divider" aria-hidden="true">no connection</div>
+<div class="diag-tool dim">
+<span class="diag-chip" style="background:#eef0ff" aria-hidden="true">🔧</span>
+<div class="diag-info"><b>Linear</b><s aria-hidden="true">Onboarding bug fix — shipped Tuesday</s></div>
+</div>
+<div class="diag-divider" aria-hidden="true">no connection</div>
+<div class="diag-tool dim">
+<span class="diag-chip" style="background:#efffef" aria-hidden="true">💼</span>
+<div class="diag-info"><b>Salesforce</b><s aria-hidden="true">3 churned accounts this month</s></div>
+</div>
+<div class="diag-result">
+<strong>✦ After Duct</strong>
+Retention drop → Intercom spike → bug fix timing → churn. One story, automatically connected.
+</div>
+</div>
+</div>
+</section>
+
+<!-- HOW IT WORKS -->
+
+<section class="how" id="how">
+<div class="how-inner">
+<p class="tag">How It Works</p>
+<h2>Clarity in <em>three steps</em></h2>
+<div class="steps">
+<div class="step reveal">
+<span class="step-num">01</span>
+<span class="step-icon" aria-hidden="true">🔌</span>
+<p class="step-title">Connect your stack</p>
+<p class="step-body">One-click OAuth integrations to the tools you already use. Duct reads — it never writes or modifies anything. Under 5 minutes to set up.</p>
+</div>
+<div class="step reveal" style="transition-delay:.1s">
+<span class="step-num">02</span>
+<span class="step-icon" style="filter:none;display:block;margin-bottom:18px">
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+<circle cx="16" cy="16" r="14" stroke="white" stroke-width="2"/>
+<circle cx="16" cy="16" r="8" stroke="white" stroke-width="2"/>
+<circle cx="16" cy="16" r="3" fill="white"/>
+</svg>
+</span>
+<p class="step-title">Define what matters</p>
+<p class="step-body">Tell Duct your north star metric and the features you're watching. It tracks only what affects them — not everything, just the right things.</p>
+</div>
+<div class="step reveal" style="transition-delay:.2s">
+<span class="step-num">03</span>
+<span class="step-icon" aria-hidden="true">✦</span>
+<p class="step-title">Get clear intelligence</p>
+<p class="step-body">A daily digest with cross-tool correlations, anomaly alerts, and plain-English summaries — ready before your morning standup.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- FEATURES -->
+
+<section class="features" id="features">
+<div class="reveal">
+<p class="tag">Features</p>
+<h2>Built for PMs who <em>move fast</em></h2>
+</div>
+<div class="feat-grid">
+<div class="feat reveal">
+<span class="feat-label">🔗 Connect</span>
+<p class="feat-title">Cross-tool correlation</p>
+<p class="feat-body">Automatically link events across Mixpanel, Intercom, and Linear. See when a ticket spike preceded a retention drop — without a single spreadsheet.</p>
+</div>
+<div class="feat reveal" style="transition-delay:.08s">
+<span class="feat-label">📬 Digest</span>
+<p class="feat-title">Daily PM briefing</p>
+<p class="feat-body">A crisp morning summary of what moved, what correlated, and what needs your attention. Reads in under 2 minutes.</p>
+</div>
+<div class="feat reveal" style="transition-delay:.14s">
+<span class="feat-label">🚨 Alerts</span>
+<p class="feat-title">Anomaly detection</p>
+<p class="feat-body">Get a Slack ping when something unusual happens — before your engineering lead notices and asks why product did not catch it.</p>
+</div>
+<div class="feat reveal" style="transition-delay:.2s">
+<span class="feat-label">🗣️ Ask</span>
+<p class="feat-title">Plain-English queries</p>
+<p class="feat-body">"Why did DAU drop on Thursday?" Just ask. Duct queries your connected tools and returns a clear answer. No SQL, no dashboards.</p>
+</div>
+</div>
+</section>
+
+<!-- AUDIENCE -->
+
+<section class="audience" id="who">
+<div class="aud-inner">
+<div class="reveal">
+<p class="tag">Who It's For</p>
+<h2>The PM who owns <em>growth</em> without a data team</h2>
+<p class="sub" style="margin-top:16px">You don't have analysts to lean on. You don't have time for SQL. You need the full picture, fast — and you need it to be right.</p>
+<a href="#cta" class="btn btn-orange" style="margin-top:30px">That's me — get early access →</a>
+</div>
+<div class="aud-cards reveal">
+<div class="aud-card hi">
+<span class="aud-av" style="background:#fff0e5" aria-hidden="true">🚀</span>
+<div><span class="aud-name">Growth PM</span><span class="aud-role">20--200 person SaaS</span></div>
+<span class="aud-badge">Perfect fit</span>
+</div>
+<div class="aud-card">
+<span class="aud-av" style="background:#e8f4ff" aria-hidden="true">📣</span>
+<div><span class="aud-name">Product Marketer</span><span class="aud-role">Tracking feature launches</span></div>
+<span class="aud-badge">Great fit</span>
+</div>
+<div class="aud-card">
+<span class="aud-av" style="background:#efffef" aria-hidden="true">📈</span>
+<div><span class="aud-name">Founding PM</span><span class="aud-role">Wearing many hats</span></div>
+<span class="aud-badge">Great fit</span>
+</div>
+<div class="aud-card" style="opacity:.45">
+<span class="aud-av" style="background:#f5f5f5" aria-hidden="true">🏢</span>
+<div><span class="aud-name">Enterprise Data Team</span><span class="aud-role">500+ with dedicated analysts</span></div>
+<span class="aud-badge off">Not yet</span>
+</div>
+</div>
+</div>
+</section>
+
+<!-- STATS -->
+
+<section class="stats">
+<div class="stats-inner">
+<div class="reveal"><span class="stat-n">7+</span><span class="stat-l">Integrations at launch</span></div>
+<div class="reveal" style="transition-delay:.1s"><span class="stat-n">~3h</span><span class="stat-l">Saved per PM per week</span></div>
+<div class="reveal" style="transition-delay:.2s"><span class="stat-n">10min</span><span class="stat-l">To first insight after setup</span></div>
+<div class="reveal" style="transition-delay:.3s"><span class="stat-n">0</span><span class="stat-l">SQL queries required</span></div>
+</div>
+</section>
+
 <!-- CTA -->
 
 <section class="cta" id="cta">
 <div class="cta-inner">
 <div class="reveal">
 <p class="tag" style="justify-content:center;display:flex">Early Access</p>
-<h2>Join the first <em>25 teams</em></h2>
-<p class="sub">Free during beta. We're onboarding personally — every team gets a setup call and direct access to the founders.</p>
+<h2>Reserve one of the first <em>25 product team slots</em></h2>
+<p class="sub">Free during beta. We'll onboard your stack with you, tune the first brief around your north star metric, and keep the rollout hands-on.</p>
 <div class="cta-form">
 <input type="email" id="ctaEmail" class="email-in" placeholder="you@company.com" aria-label="Email address"/>
 <button class="btn btn-orange btn-lg"
   data-form-url="https://docs.google.com/forms/d/e/1FAIpQLSfm7QgovGGHE38CsOPqj5O_XVBtnjbRhkf16rNJhdvkd-rddg/formResponse"
   data-entry-id="entry.276669450"
-  onclick="submitForm('ctaEmail', this)">Join waitlist →</button>
+  onclick="submitForm('ctaEmail', this)">Reserve my spot →</button>
 </div>
 <p class="cta-note">14 spots remaining · No spam · Unsubscribe anytime</p>
 </div>
