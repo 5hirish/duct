@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Duct for Product Intelligence — Cross-tool product intelligence</title>
 <link rel="canonical" href="https://getduct.ai/for-product-intelligence"/>
-<meta name="description" content="Duct connects Mixpanel, Intercom, Linear, and Salesforce and surfaces the product story they're collectively trying to tell you. No SQL, no dashboards."/>
+<meta name="description" content="Duct connects Mixpanel, Intercom, Linear, and FullStory and surfaces the product story they're collectively trying to tell you. No SQL, no dashboards."/>
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
 <meta property="og:type" content="website"/>
 <meta property="og:url" content="https://getduct.ai/for-product-intelligence"/>
@@ -16,7 +16,7 @@
 <meta property="og:site_name" content="Duct"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="Duct for Product Intelligence — Cross-tool product intelligence"/>
-<meta name="twitter:description" content="Stop tab-switching. Duct connects Mixpanel, Intercom, Linear, and Salesforce into one daily PM brief."/>
+<meta name="twitter:description" content="Stop tab-switching. Duct connects Mixpanel, Intercom, Linear, and FullStory into one daily PM brief."/>
 <meta name="twitter:site" content="@getduct"/>
 <meta name="twitter:image" content="https://getduct.ai/assets/og-image.png"/>
 <link rel="stylesheet" href="assets/duct.css"/>
@@ -257,10 +257,10 @@
 <nav id="nav" aria-label="Main navigation">
 <div style="display:flex;align-items:center;gap:10px">
 <a href="index.html" class="logo">duct <span class="logo-mark" aria-hidden="true"></span></a>
-<span style="font-size:12px;font-weight:500;color:var(--navy-3);letter-spacing:.02em">for product intelligence · demo</span>
+<span style="font-size:12px;font-weight:500;color:var(--navy-3);letter-spacing:.02em">for product intelligence</span>
 </div>
 <div class="nav-links">
-<a href="#demo-step-1" class="nav-link">Try the demo</a>
+<a href="#demo" class="nav-link">Try the demo</a>
 <a href="#how" class="nav-link">How it works</a>
 <a href="#features" class="nav-link">Features</a>
 <a href="#who" class="nav-link">Who it's for</a>
@@ -274,8 +274,8 @@
 
 <section class="hero">
 <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Early access · 14 spots remaining</div>
-<h1>Stop guessing what to build next.<br/>Start shipping what <em>matters.</em></h1>
-<p class="hero-sub">Duct connects your Mixpanel, Intercom, Linear, and Salesforce — and surfaces the product story they're collectively trying to tell you.</p>
+<h1>See what is blocking adoption.<br/>Ship what <em>moves the metric.</em></h1>
+<p class="hero-sub">Duct connects your product, support, and revenue stack so you can spot the issue, the upstream cause, and the next action before the team loses another week.</p>
 <div class="hero-form">
 <input type="email" id="heroEmail" class="email-in" placeholder="you@company.com" aria-label="Email address"/>
 <button class="btn btn-orange btn-lg"
@@ -284,6 +284,7 @@
   onclick="submitForm('heroEmail', this)">Get early access →</button>
 </div>
 <p class="hero-footnote">Free during beta · No credit card · For PMs at 20--200 person companies</p>
+<p style="margin-top:16px;font-size:13px;color:var(--navy-3)">or <a href="#demo" style="color:var(--orange);text-decoration:underline;text-underline-offset:3px">try the live demo ↓</a> — no signup required</p>
 </section>
 
 <!-- TOOL STRIP -->
@@ -291,196 +292,12 @@
 <div class="strip">
 <p class="strip-label">Connects to the tools you already use</p>
 <div class="marquee" aria-hidden="true">
-<span>Mixpanel</span><span>Intercom</span><span>Linear</span><span>Salesforce</span>
+<span>Mixpanel</span><span>Intercom</span><span>Linear</span><span>FullStory</span>
 <span>Amplitude</span><span>Slack</span><span>Jira</span><span>HubSpot</span><span>Segment</span>
-<span>Mixpanel</span><span>Intercom</span><span>Linear</span><span>Salesforce</span>
+<span>Mixpanel</span><span>Intercom</span><span>Linear</span><span>FullStory</span>
 <span>Amplitude</span><span>Slack</span><span>Jira</span><span>HubSpot</span><span>Segment</span>
 </div>
 </div>
-
-<!-- PROBLEM -->
-
-<section class="problem">
-<div class="reveal">
-<p class="tag">The Problem</p>
-<h2>The answer is in your tools.<br/>But no one <em>connected them.</em></h2>
-<ul class="pain-list">
-<li class="pain-item"><span class="pi-icon" aria-hidden="true">😵‍💫</span> Analytics says adoption is up. Intercom says users are confused. You don't know which to trust.</li>
-<li class="pain-item"><span class="pi-icon" aria-hidden="true">🕳️</span> Engineering closed the ticket. Customer success says it's still broken. Product has no idea.</li>
-<li class="pain-item"><span class="pi-icon" aria-hidden="true">⏱️</span> You spend 3 hours a week manually aggregating data that should take 10 minutes.</li>
-</ul>
-</div>
-<div class="diag reveal">
-<div class="diag-header" aria-hidden="true">
-<span class="diag-dot" style="background:#ff5f57"></span>
-<span class="diag-dot" style="background:#febc2e"></span>
-<span class="diag-dot" style="background:#28c840"></span>
-</div>
-<div class="diag-body">
-<div class="diag-tool">
-<span class="diag-chip" style="background:#fff0e5" aria-hidden="true">📊</span>
-<div class="diag-info"><b>Mixpanel</b><s aria-hidden="true">Retention dropped 4% this week</s></div>
-</div>
-<div class="diag-divider" aria-hidden="true">no connection</div>
-<div class="diag-tool dim">
-<span class="diag-chip" style="background:#e8f4ff" aria-hidden="true">💬</span>
-<div class="diag-info"><b>Intercom</b><s aria-hidden="true">32 tickets about onboarding friction</s></div>
-</div>
-<div class="diag-divider" aria-hidden="true">no connection</div>
-<div class="diag-tool dim">
-<span class="diag-chip" style="background:#eef0ff" aria-hidden="true">🔧</span>
-<div class="diag-info"><b>Linear</b><s aria-hidden="true">Onboarding bug fix — shipped Tuesday</s></div>
-</div>
-<div class="diag-divider" aria-hidden="true">no connection</div>
-<div class="diag-tool dim">
-<span class="diag-chip" style="background:#efffef" aria-hidden="true">💼</span>
-<div class="diag-info"><b>Salesforce</b><s aria-hidden="true">3 churned accounts this month</s></div>
-</div>
-<div class="diag-result">
-<strong>✦ After Duct</strong>
-Retention drop → Intercom spike → bug fix timing → churn. One story, automatically connected.
-</div>
-</div>
-</div>
-</section>
-
-<!-- HOW IT WORKS -->
-
-<section class="how" id="how">
-<div class="how-inner">
-<p class="tag">How It Works</p>
-<h2>Clarity in <em>three steps</em></h2>
-<div class="steps">
-<div class="step reveal">
-<span class="step-num">01</span>
-<span class="step-icon" aria-hidden="true">🔌</span>
-<p class="step-title">Connect your stack</p>
-<p class="step-body">One-click OAuth integrations to the tools you already use. Duct reads — it never writes or modifies anything. Under 5 minutes to set up.</p>
-</div>
-<div class="step reveal" style="transition-delay:.1s">
-<span class="step-num">02</span>
-<span class="step-icon" style="filter:none;display:block;margin-bottom:18px">
-<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-<circle cx="16" cy="16" r="14" stroke="white" stroke-width="2"/>
-<circle cx="16" cy="16" r="8" stroke="white" stroke-width="2"/>
-<circle cx="16" cy="16" r="3" fill="white"/>
-</svg>
-</span>
-<p class="step-title">Define what matters</p>
-<p class="step-body">Tell Duct your north star metric and the features you're watching. It tracks only what affects them — not everything, just the right things.</p>
-</div>
-<div class="step reveal" style="transition-delay:.2s">
-<span class="step-num">03</span>
-<span class="step-icon" aria-hidden="true">✦</span>
-<p class="step-title">Get clear intelligence</p>
-<p class="step-body">A daily digest with cross-tool correlations, anomaly alerts, and plain-English summaries — ready before your morning standup.</p>
-</div>
-</div>
-</div>
-</section>
-
-<!-- FEATURES -->
-
-<section class="features" id="features">
-<div class="reveal">
-<p class="tag">Features</p>
-<h2>Built for PMs who <em>move fast</em></h2>
-</div>
-<div class="feat-grid">
-<div class="feat reveal">
-<span class="feat-label">🔗 Connect</span>
-<p class="feat-title">Cross-tool correlation</p>
-<p class="feat-body">Automatically link events across Mixpanel, Intercom, and Linear. See when a ticket spike preceded a retention drop — without a single spreadsheet.</p>
-</div>
-<div class="feat reveal" style="transition-delay:.08s">
-<span class="feat-label">📬 Digest</span>
-<p class="feat-title">Daily PM briefing</p>
-<p class="feat-body">A crisp morning summary of what moved, what correlated, and what needs your attention. Reads in under 2 minutes.</p>
-</div>
-<div class="feat reveal" style="transition-delay:.14s">
-<span class="feat-label">🚨 Alerts</span>
-<p class="feat-title">Anomaly detection</p>
-<p class="feat-body">Get a Slack ping when something unusual happens — before your engineering lead notices and asks why product did not catch it.</p>
-</div>
-<div class="feat reveal" style="transition-delay:.2s">
-<span class="feat-label">🗣️ Ask</span>
-<p class="feat-title">Plain-English queries</p>
-<p class="feat-body">"Why did DAU drop on Thursday?" Just ask. Duct queries your connected tools and returns a clear answer. No SQL, no dashboards.</p>
-</div>
-</div>
-</section>
-
-<!-- AUDIENCE -->
-
-<section class="audience" id="who">
-<div class="aud-inner">
-<div class="reveal">
-<p class="tag">Who It's For</p>
-<h2>The PM who owns <em>growth</em> without a data team</h2>
-<p class="sub" style="margin-top:16px">You don't have analysts to lean on. You don't have time for SQL. You need the full picture, fast — and you need it to be right.</p>
-<a href="#cta" class="btn btn-orange" style="margin-top:30px">That's me — get early access →</a>
-</div>
-<div class="aud-cards reveal">
-<div class="aud-card hi">
-<span class="aud-av" style="background:#fff0e5" aria-hidden="true">🚀</span>
-<div><span class="aud-name">Growth PM</span><span class="aud-role">20--200 person SaaS</span></div>
-<span class="aud-badge">Perfect fit</span>
-</div>
-<div class="aud-card">
-<span class="aud-av" style="background:#e8f4ff" aria-hidden="true">📣</span>
-<div><span class="aud-name">Product Marketer</span><span class="aud-role">Tracking feature launches</span></div>
-<span class="aud-badge">Great fit</span>
-</div>
-<div class="aud-card">
-<span class="aud-av" style="background:#efffef" aria-hidden="true">📈</span>
-<div><span class="aud-name">Founding PM</span><span class="aud-role">Wearing many hats</span></div>
-<span class="aud-badge">Great fit</span>
-</div>
-<div class="aud-card" style="opacity:.45">
-<span class="aud-av" style="background:#f5f5f5" aria-hidden="true">🏢</span>
-<div><span class="aud-name">Enterprise Data Team</span><span class="aud-role">500+ with dedicated analysts</span></div>
-<span class="aud-badge off">Not yet</span>
-</div>
-</div>
-</div>
-</section>
-
-<!-- TESTIMONIALS -->
-
-<section class="quotes">
-<div class="reveal">
-<p class="tag">Early Signals</p>
-<h2>What beta users are <em>saying</em></h2>
-</div>
-<div class="q-grid">
-<div class="qcard reveal">
-<span class="qmark" aria-hidden="true">"</span>
-<p class="qtext">I used to spend Monday mornings pulling data from five different places. Now I get Duct's digest before 9am and I'm actually ready for planning.</p>
-<div class="qauthor"><span class="qav" aria-hidden="true">👩‍💻</span><div><span class="qname">Sarah K.</span><span class="qrole">Growth PM · 45 employees</span></div></div>
-</div>
-<div class="qcard reveal" style="transition-delay:.1s">
-<span class="qmark" aria-hidden="true">"</span>
-<p class="qtext">The cross-tool correlation caught a connection between a Mixpanel drop and an Intercom spike I would never have spotted manually. That is real leverage.</p>
-<div class="qauthor"><span class="qav" aria-hidden="true">👨‍💼</span><div><span class="qname">Marcus R.</span><span class="qrole">Product Lead · 80 employees</span></div></div>
-</div>
-<div class="qcard reveal" style="transition-delay:.2s">
-<span class="qmark" aria-hidden="true">"</span>
-<p class="qtext">As a founding PM I am supposed to be everywhere. Duct acts like my data analyst — it just tells me what I need to know and why.</p>
-<div class="qauthor"><span class="qav" aria-hidden="true">🧑‍🚀</span><div><span class="qname">Priya M.</span><span class="qrole">Founding PM · Series A · 30 employees</span></div></div>
-</div>
-</div>
-</section>
-
-<!-- STATS -->
-
-<section class="stats">
-<div class="stats-inner">
-<div class="reveal"><span class="stat-n">7+</span><span class="stat-l">Integrations at launch</span></div>
-<div class="reveal" style="transition-delay:.1s"><span class="stat-n">~3h</span><span class="stat-l">Saved per PM per week</span></div>
-<div class="reveal" style="transition-delay:.2s"><span class="stat-n">10min</span><span class="stat-l">To first insight after setup</span></div>
-<div class="reveal" style="transition-delay:.3s"><span class="stat-n">0</span><span class="stat-l">SQL queries required</span></div>
-</div>
-</section>
 
 <!-- WALKTHROUGH DEMO -->
 
@@ -492,7 +309,7 @@ Retention drop → Intercom spike → bug fix timing → churn. One story, autom
 <div class="reveal">
 <p class="tag" style="justify-content:center;display:flex">Interactive Demo</p>
 <h2>Your product stack. <em>One brief.</em></h2>
-<p class="sub">This is example data — built to show exactly what Duct surfaces every morning.</p>
+<p class="sub">Try the workflow your team would use to turn scattered signals into one operator-ready product brief.</p>
 </div>
 
 <div class="wt-progress reveal" role="tablist" aria-label="Demo steps">
@@ -512,23 +329,23 @@ Retention drop → Intercom spike → bug fix timing → churn. One story, autom
 <p class="wt-step-sub">Select all that apply — Duct correlates signals across everything you pick.</p>
 <div class="plat-grid">
 <button class="plat-btn" id="plat-mixpanel" onclick="wtTogglePlatform('Mixpanel', this)" aria-pressed="false">
-  <span class="plat-icon" aria-hidden="true">📊</span>
+  <img class="plat-icon" src="https://cdn.simpleicons.org/mixpanel" width="20" height="20" alt="" aria-hidden="true"/>
   <span>Mixpanel</span>
   <span class="plat-check" aria-hidden="true">✓</span>
 </button>
 <button class="plat-btn" id="plat-intercom" onclick="wtTogglePlatform('Intercom', this)" aria-pressed="false">
-  <span class="plat-icon" aria-hidden="true">💬</span>
+  <img class="plat-icon" src="https://cdn.simpleicons.org/intercom" width="20" height="20" alt="" aria-hidden="true"/>
   <span>Intercom</span>
   <span class="plat-check" aria-hidden="true">✓</span>
 </button>
 <button class="plat-btn" id="plat-linear" onclick="wtTogglePlatform('Linear', this)" aria-pressed="false">
-  <span class="plat-icon" aria-hidden="true">📋</span>
+  <img class="plat-icon" src="https://cdn.simpleicons.org/linear" width="20" height="20" alt="" aria-hidden="true"/>
   <span>Linear</span>
   <span class="plat-check" aria-hidden="true">✓</span>
 </button>
-<button class="plat-btn" id="plat-salesforce" onclick="wtTogglePlatform('Salesforce', this)" aria-pressed="false">
-  <span class="plat-icon" aria-hidden="true">☁️</span>
-  <span>Salesforce</span>
+<button class="plat-btn" id="plat-fullstory" onclick="wtTogglePlatform('FullStory', this)" aria-pressed="false">
+  <img class="plat-icon" src="https://www.vectorlogo.zone/logos/fullstory/fullstory-icon.svg" width="20" height="20" alt="" aria-hidden="true"/>
+  <span>FullStory</span>
   <span class="plat-check" aria-hidden="true">✓</span>
 </button>
 </div>
@@ -738,20 +555,178 @@ Retention drop → Intercom spike → bug fix timing → churn. One story, autom
 </div><!-- /.wt-outer -->
 </section>
 
+<!-- PROBLEM -->
+
+<section class="problem">
+<div class="reveal">
+<p class="tag">The Problem</p>
+<h2>The answer is already in your tools.<br/>But no one is <em>connecting the dots.</em></h2>
+<ul class="pain-list">
+<li class="pain-item"><span class="pi-icon" aria-hidden="true">😵‍💫</span> Mixpanel says feature use is steady. FullStory shows users rage-clicking through setup. You do not know which signal deserves priority.</li>
+<li class="pain-item"><span class="pi-icon" aria-hidden="true">🕳️</span> Linear says the fix shipped. Intercom says confusion continues. FullStory shows users still getting stuck in the same flow.</li>
+<li class="pain-item"><span class="pi-icon" aria-hidden="true">⏱️</span> You spend 3 hours a week manually aggregating data that should take 10 minutes.</li>
+</ul>
+</div>
+<div class="diag reveal">
+<div class="diag-header" aria-hidden="true">
+<span class="diag-dot" style="background:#ff5f57"></span>
+<span class="diag-dot" style="background:#febc2e"></span>
+<span class="diag-dot" style="background:#28c840"></span>
+</div>
+<div class="diag-body">
+<div class="diag-tool">
+<span class="diag-chip" style="background:#fff0e5"><img src="https://cdn.simpleicons.org/mixpanel" width="18" height="18" alt="Mixpanel"/></span>
+<div class="diag-info"><b>Mixpanel</b><s aria-hidden="true">Retention dropped 4% this week</s></div>
+</div>
+<div class="diag-divider" aria-hidden="true">no connection</div>
+<div class="diag-tool dim">
+<span class="diag-chip" style="background:#e8f4ff"><img src="https://cdn.simpleicons.org/intercom" width="18" height="18" alt="Intercom"/></span>
+<div class="diag-info"><b>Intercom</b><s aria-hidden="true">32 tickets about onboarding friction</s></div>
+</div>
+<div class="diag-divider" aria-hidden="true">no connection</div>
+<div class="diag-tool dim">
+<span class="diag-chip" style="background:#eef0ff"><img src="https://cdn.simpleicons.org/linear" width="18" height="18" alt="Linear"/></span>
+<div class="diag-info"><b>Linear</b><s aria-hidden="true">Onboarding bug fix — shipped Tuesday</s></div>
+</div>
+<div class="diag-divider" aria-hidden="true">no connection</div>
+<div class="diag-tool dim">
+<span class="diag-chip" style="background:#efffef"><img src="https://www.vectorlogo.zone/logos/fullstory/fullstory-icon.svg" width="18" height="18" alt="FullStory"/></span>
+<div class="diag-info"><b>FullStory</b><s aria-hidden="true">Replay shows 41% of users stall on teammate invite</s></div>
+</div>
+<div class="diag-result">
+<strong>✦ After Duct</strong>
+Retention drop → support spike → replay friction → release timing. One story, automatically connected.
+</div>
+</div>
+</div>
+</section>
+
+<!-- HOW IT WORKS -->
+
+<section class="how" id="how">
+<div class="how-inner">
+<p class="tag">How It Works</p>
+<h2>Clarity in <em>three steps</em></h2>
+<div class="steps">
+<div class="step reveal">
+<span class="step-num">01</span>
+<span class="step-icon" aria-hidden="true">🔌</span>
+<p class="step-title">Connect your stack</p>
+<p class="step-body">One-click OAuth integrations to the tools you already use. Duct reads — it never writes or modifies anything. Under 5 minutes to set up.</p>
+</div>
+<div class="step reveal" style="transition-delay:.1s">
+<span class="step-num">02</span>
+<span class="step-icon" style="filter:none;display:block;margin-bottom:18px">
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+<circle cx="16" cy="16" r="14" stroke="white" stroke-width="2"/>
+<circle cx="16" cy="16" r="8" stroke="white" stroke-width="2"/>
+<circle cx="16" cy="16" r="3" fill="white"/>
+</svg>
+</span>
+<p class="step-title">Define what matters</p>
+<p class="step-body">Tell Duct your north star metric and the features you're watching. It tracks only what affects them — not everything, just the right things.</p>
+</div>
+<div class="step reveal" style="transition-delay:.2s">
+<span class="step-num">03</span>
+<span class="step-icon" aria-hidden="true">✦</span>
+<p class="step-title">Get clear intelligence</p>
+<p class="step-body">A daily digest with cross-tool correlations, anomaly alerts, and plain-English summaries — ready before your morning standup.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- FEATURES -->
+
+<section class="features" id="features">
+<div class="reveal">
+<p class="tag">Features</p>
+<h2>Built for PMs who <em>move fast</em></h2>
+</div>
+<div class="feat-grid">
+<div class="feat reveal">
+<span class="feat-label">🔗 Connect</span>
+<p class="feat-title">Cross-tool correlation</p>
+<p class="feat-body">Automatically link analytics, conversations, issue history, and replay evidence across Mixpanel, Intercom, Linear, and FullStory. See exactly where friction started — without a single spreadsheet.</p>
+</div>
+<div class="feat reveal" style="transition-delay:.08s">
+<span class="feat-label">📬 Digest</span>
+<p class="feat-title">Daily PM briefing</p>
+<p class="feat-body">A crisp morning summary of what moved, what correlated, and what needs your attention. Reads in under 2 minutes.</p>
+</div>
+<div class="feat reveal" style="transition-delay:.14s">
+<span class="feat-label">🚨 Alerts</span>
+<p class="feat-title">Anomaly detection</p>
+<p class="feat-body">Get a Slack ping when something unusual happens — before your engineering lead notices and asks why product did not catch it.</p>
+</div>
+<div class="feat reveal" style="transition-delay:.2s">
+<span class="feat-label">🗣️ Ask</span>
+<p class="feat-title">Plain-English queries</p>
+<p class="feat-body">"Why did DAU drop on Thursday?" Just ask. Duct queries your connected tools and returns a clear answer. No SQL, no dashboards.</p>
+</div>
+</div>
+</section>
+
+<!-- AUDIENCE -->
+
+<section class="audience" id="who">
+<div class="aud-inner">
+<div class="reveal">
+<p class="tag">Who It's For</p>
+<h2>The PM who owns <em>growth</em> without a data team</h2>
+<p class="sub" style="margin-top:16px">You don't have analysts to lean on. You don't have time for SQL. You need the full picture, fast — and you need it to be right.</p>
+<a href="#cta" class="btn btn-orange" style="margin-top:30px">That's me — get early access →</a>
+</div>
+<div class="aud-cards reveal">
+<div class="aud-card hi">
+<span class="aud-av" style="background:#fff0e5" aria-hidden="true">🚀</span>
+<div><span class="aud-name">Growth PM</span><span class="aud-role">20--200 person SaaS</span></div>
+<span class="aud-badge">Perfect fit</span>
+</div>
+<div class="aud-card">
+<span class="aud-av" style="background:#e8f4ff" aria-hidden="true">📣</span>
+<div><span class="aud-name">Product Marketer</span><span class="aud-role">Tracking feature launches</span></div>
+<span class="aud-badge">Great fit</span>
+</div>
+<div class="aud-card">
+<span class="aud-av" style="background:#efffef" aria-hidden="true">📈</span>
+<div><span class="aud-name">Founding PM</span><span class="aud-role">Wearing many hats</span></div>
+<span class="aud-badge">Great fit</span>
+</div>
+<div class="aud-card" style="opacity:.45">
+<span class="aud-av" style="background:#f5f5f5" aria-hidden="true">🏢</span>
+<div><span class="aud-name">Enterprise Data Team</span><span class="aud-role">500+ with dedicated analysts</span></div>
+<span class="aud-badge off">Not yet</span>
+</div>
+</div>
+</div>
+</section>
+
+<!-- STATS -->
+
+<section class="stats">
+<div class="stats-inner">
+<div class="reveal"><span class="stat-n">7+</span><span class="stat-l">Integrations at launch</span></div>
+<div class="reveal" style="transition-delay:.1s"><span class="stat-n">~3h</span><span class="stat-l">Saved per PM per week</span></div>
+<div class="reveal" style="transition-delay:.2s"><span class="stat-n">10min</span><span class="stat-l">To first insight after setup</span></div>
+<div class="reveal" style="transition-delay:.3s"><span class="stat-n">0</span><span class="stat-l">SQL queries required</span></div>
+</div>
+</section>
+
 <!-- CTA -->
 
 <section class="cta" id="cta">
 <div class="cta-inner">
 <div class="reveal">
 <p class="tag" style="justify-content:center;display:flex">Early Access</p>
-<h2>Join the first <em>25 teams</em></h2>
-<p class="sub">Free during beta. We're onboarding personally — every team gets a setup call and direct access to the founders.</p>
+<h2>Reserve one of the first <em>25 product team slots</em></h2>
+<p class="sub">Free during beta. We'll onboard your stack with you, tune the first brief around your north star metric, and keep the rollout hands-on.</p>
 <div class="cta-form">
 <input type="email" id="ctaEmail" class="email-in" placeholder="you@company.com" aria-label="Email address"/>
 <button class="btn btn-orange btn-lg"
   data-form-url="https://docs.google.com/forms/d/e/1FAIpQLSfm7QgovGGHE38CsOPqj5O_XVBtnjbRhkf16rNJhdvkd-rddg/formResponse"
   data-entry-id="entry.276669450"
-  onclick="submitForm('ctaEmail', this)">Join waitlist →</button>
+  onclick="submitForm('ctaEmail', this)">Reserve my spot →</button>
 </div>
 <p class="cta-note">14 spots remaining · No spam · Unsubscribe anytime</p>
 </div>
@@ -793,8 +768,8 @@ Retention drop → Intercom spike → bug fix timing → churn. One story, autom
 
 <script>
 (function(){
-var CFG={min:2,src:{Mixpanel:'Mixpanel Events API',Intercom:'Intercom Conversations API',Linear:'Linear Issues API',Salesforce:'Salesforce Reports API'},defs:{retention:{hero:'D30 Retention',fmt:'p1',label:'retention health',bar:'Retention by cohort',ths:['Segment','Active Users','Adoption','Trend','Action'],hide:'retention'},adoption:{hero:'Feature Activation Rate',fmt:'p0',label:'feature adoption',bar:'Adoption by feature',ths:['Feature','DAU','Adoption','Trend','Action'],hide:'adoption'},tickets:{hero:'Ticket Deflection Rate',fmt:'p0',label:'support-to-product signals',bar:'Ticket volume by issue type',ths:['Issue','Open Tickets','Affected Users','Trend','Action'],hide:'tickets'}},cross:{retention:{level:'yellow',pill:'Cross-tool',title:'Linear ticket velocity and Intercom escalations spiked before retention dropped.',body:'Duct stitched the release window, support spike, and cohort decay into one narrative.',ownerName:'Morgan Lee',assignee:'Product + Eng',followUp:'Compare the release window against churned cohorts'},adoption:{level:'yellow',pill:'Cross-tool',title:'Only 12% of activated users reach the aha moment.',body:'Intercom churn notes and Mixpanel events point to setup-depth failure, not awareness.',ownerName:'Avery Shah',assignee:'Growth PM',followUp:'Shorten the path from first use to third key event'},tickets:{level:'red',pill:'Cross-tool',title:'Ticket volume spikes 48 hours after each cohort refresh.',body:'The refresh is creating confusion instead of confidence.',ownerName:'Jordan Cruz',assignee:'Support + Product',followUp:'Rewrite the refresh UX and add guidance before the next rollout'}}};
-var D={Mixpanel:{retention:{hero:[31.4,'Down 4.2 pts vs goal','down','red'],k:{retention:[31.4,'Down 4.2 pts vs goal','down','red'],dau:[12600,'6% WoW','down','yellow'],adoption:[41,'8 pts below target','down','yellow'],tickets:[58,'18% WoW','up','yellow']},r:[['New workspace owners',31.4,'31.4%','7.1K','42%','Down 6%','Fix onboarding handoff'],['Power users',58.7,'58.7%','1.6K','78%','Up 3%','Protect with SLA outreach']],s:[['red','Critical','New workspace retention is decaying faster after the April release.','The drop starts after the first collaboration event, which points to setup friction.','Jamie Patel','Product','Audit the first-team invite flow']],sp:[0.74,0.71,0.68,0.64,0.58,0.54,0.49],u:['21%','1.8x','Needs work',' · 1.8x health score · fragile']},adoption:{hero:[41,'8 pts below target','down','yellow'],k:{retention:[33.8,'3.4 pts vs goal','down','yellow'],dau:[13200,'4% WoW','up','green'],adoption:[41,'8 pts below target','down','yellow'],tickets:[64,'12% WoW','up','yellow']},r:[['Checklist builder',41,'41%','8.6K','41%','Down 5%','Shorten setup checklist'],['Auto-routing rules',57,'57%','5.4K','57%','Up 2%','Promote during week 1']],s:[['red','Critical','Checklist builder activation stalls after the first save.','Users start setup but do not complete the second key step.','Lena Ortiz','PM','Simplify step two of builder setup']],sp:[0.36,0.41,0.46,0.49,0.52,0.48,0.45],u:['24%','2.1x','Healthy',' · 2.1x health score · promising']},tickets:{hero:[34,'Below 40% target','down','yellow'],k:{retention:[30.2,'5.1 pts vs goal','down','red'],dau:[11800,'5% WoW','down','yellow'],adoption:[38,'11 pts below target','down','red'],tickets:[86,'21% WoW','up','red']},r:[['Permissions confusion',86,'86','86','3.2K','Up 21%','Clarify role settings'],['Workspace refresh',54,'54','54','2.1K','Up 14%','Add release notes inline']],s:[['red','Critical','Permissions confusion now drives the largest support queue.','The spike is concentrated in multi-seat accounts, so expansion is now at risk.','Samir Gupta','Support','Ship role-permission copy updates']],sp:[0.32,0.38,0.41,0.47,0.55,0.61,0.68],u:['19%','1.6x','Breakeven',' · 1.6x health score · watch closely']}},Intercom:{retention:{hero:[29.8,'Support-led churn risk up','down','red'],k:{retention:[29.8,'Support-led churn risk up','down','red'],dau:[9800,'3% WoW','down','yellow'],adoption:[36,'10 pts below target','down','red'],tickets:[74,'16% WoW','up','red']},r:[['Onboarding help requests',28.9,'28.9%','2.9K','34%','Down 8%','Rewrite setup guidance'],['Billing-related accounts',35.4,'35.4%','1.8K','39%','Flat','Escalate pricing objections']],s:[['red','Critical','Accounts opening 2+ onboarding chats churn at nearly double the baseline.','Threads point to teammate setup and ownership transfer confusion.','Rory Hall','Success','Create an onboarding rescue sequence']],sp:[0.69,0.67,0.63,0.59,0.56,0.52,0.50],u:['20%','1.7x','Needs work',' · 1.7x health score · support-heavy']},adoption:{hero:[34,'Support friction is suppressing setup','down','red'],k:{retention:[31.1,'4.9 pts vs goal','down','yellow'],dau:[10100,'2% WoW','up','grey'],adoption:[34,'Support friction is suppressing setup','down','red'],tickets:[79,'18% WoW','up','red']},r:[['Guided setup bot',34,'34%','4.7K','34%','Down 7%','Reduce handoff confusion'],['Template gallery',48,'48%','3.3K','48%','Up 1%','Push as first-week nudge']],s:[['red','Critical','The guided setup bot creates more follow-up tickets than successful activations.','It behaves like a deflection layer, not an activation assist.','Ella Morris','Support PM','Cut steps from the setup bot']],sp:[0.28,0.31,0.34,0.39,0.45,0.42,0.40],u:['22%','1.9x','Breakeven',' · 1.9x health score · recoverable']},tickets:{hero:[31,'Deflection lagging target','down','red'],k:{retention:[28.7,'Churn risk elevated','down','red'],dau:[9400,'4% WoW','down','yellow'],adoption:[33,'12 pts below target','down','red'],tickets:[97,'24% WoW','up','red']},r:[['Activation blockers',97,'97','97','3.6K','Up 24%','Patch onboarding docs'],['Refresh questions',61,'61','61','2.4K','Up 15%','Add contextual education']],s:[['red','Critical','Activation blockers now dominate ticket volume and expansion risk.','Most are not bugs; users are failing to understand setup requirements quickly enough.','Kira Benson','Support','Add proactive setup messaging']],sp:[0.34,0.40,0.44,0.49,0.55,0.63,0.71],u:['18%','1.5x','Breakeven',' · 1.5x health score · brittle']}},Linear:{retention:{hero:[33.9,'Release quality is stabilising','up','green'],k:{retention:[33.9,'Release quality is stabilising','up','green'],dau:[8700,'2% WoW','up','grey'],adoption:[44,'5 pts below target','down','yellow'],tickets:[41,'9% WoW','up','yellow']},r:[['Release 4.2 impacted accounts',27.1,'27.1%','1.9K','31%','Down 9%','Hotfix the role bug'],['Post-hotfix cohorts',39.8,'39.8%','2.6K','47%','Up 4%','Expand rollout']],s:[['yellow','Watch','One release window explains most of the retention dip.','The Linear issue history shows the problem was contained and fixable.','Parker Long','Engineering','Backport the permissions fix']],sp:[0.58,0.56,0.53,0.49,0.50,0.55,0.61],u:['25%','2.0x','Healthy',' · 2.0x health score · improving']},adoption:{hero:[46,'Activation improving after fix','up','green'],k:{retention:[34.5,'3.8 pts vs goal','down','yellow'],dau:[9100,'3% WoW','up','green'],adoption:[46,'Activation improving after fix','up','green'],tickets:[37,'7% WoW','down','green']},r:[['Collaborative templates',46,'46%','3.7K','46%','Up 5%','Roll into onboarding'],['Task routing',52,'52%','2.8K','52%','Up 3%','Promote in upgrades']],s:[['green','Win','Task routing rebounded quickly once the setup bug closed.','Demand was real; the leak was execution quality, not positioning.','Sasha Cole','PM','Feature task routing earlier']],sp:[0.33,0.36,0.39,0.43,0.48,0.53,0.57],u:['26%','2.2x','Healthy',' · 2.2x health score · strong']},tickets:{hero:[43,'Back near deflection target','up','green'],k:{retention:[32.2,'4.1 pts vs goal','down','yellow'],dau:[8800,'2% WoW','up','grey'],adoption:[41,'7 pts below target','down','yellow'],tickets:[52,'11% WoW','down','green']},r:[['Role-permission regressions',52,'52','52','1.9K','Down 12%','Finish patch rollout'],['Template sync delays',26,'26','26','1.1K','Flat','Improve sync notice']],s:[['green','Win','Role-permission tickets are dropping after the patch landed.','Support noise was tied to a specific engineering issue, not a broad UX collapse.','Chris Vega','Engineering','Complete the rollout']],sp:[0.51,0.47,0.43,0.39,0.36,0.33,0.31],u:['23%','2.0x','Healthy',' · 2.0x health score · steady']}},Salesforce:{retention:{hero:[30.7,'Expansion accounts wobbling','down','yellow'],k:{retention:[30.7,'Expansion accounts wobbling','down','yellow'],dau:[6500,'1% WoW','down','grey'],adoption:[39,'9 pts below target','down','yellow'],tickets:[35,'8% WoW','up','yellow']},r:[['Renewal-risk accounts',26.4,'26.4%','1.2K','33%','Down 7%','Flag for success outreach'],['Expansion pipeline accounts',37.1,'37.1%','980','45%','Flat','Protect rollout quality']],s:[['yellow','Watch','Renewal-risk accounts show the weakest retention and highest confusion tags.','The issue is now visible in revenue-bearing segments.','Harper Kent','RevOps','Sync the at-risk account list with CSM outreach']],sp:[0.62,0.59,0.57,0.54,0.50,0.47,0.45],u:['22%','1.9x','Breakeven',' · 1.9x health score · revenue-sensitive']},adoption:{hero:[38,'Sales-assisted teams under-adopting','down','yellow'],k:{retention:[31.8,'4.5 pts vs goal','down','yellow'],dau:[6900,'1% WoW','up','grey'],adoption:[38,'Sales-assisted teams under-adopting','down','yellow'],tickets:[32,'6% WoW','up','yellow']},r:[['Admin setup bundle',38,'38%','2.4K','38%','Down 4%','Trim admin handoff'],['Manager dashboards',44,'44%','1.7K','44%','Up 1%','Highlight during onboarding']],s:[['yellow','Watch','Sales-assisted teams still stall in the admin setup bundle.','Too many accounts rely on a single admin to finish the initial workflow.','Gia Flores','Onboarding','Reduce admin-only steps']],sp:[0.31,0.33,0.35,0.38,0.41,0.43,0.44],u:['23%','2.0x','Healthy',' · 2.0x health score · steady']},tickets:{hero:[39,'Deflection near baseline','up','yellow'],k:{retention:[30.4,'5.0 pts vs goal','down','yellow'],dau:[6300,'1% WoW','down','grey'],adoption:[37,'10 pts below target','down','yellow'],tickets:[44,'9% WoW','up','yellow']},r:[['Permissions for managed accounts',44,'44','44','1.4K','Up 9%','Tighten admin docs'],['Salesforce sync mismatches',21,'21','21','900','Flat','Add sync diagnostics']],s:[['yellow','Watch','Managed-account permission questions remain the top commercial support theme.','The issue is smaller than onboarding volume, but it touches high-value accounts.','Drew Ellis','RevOps','Improve managed-account permission guidance']],sp:[0.45,0.46,0.44,0.42,0.40,0.39,0.37],u:['22%','1.9x','Breakeven',' · 1.9x health score · manageable']}}};
+var CFG={min:2,src:{Mixpanel:'Mixpanel Events API',Intercom:'Intercom Conversations API',Linear:'Linear Issues API',FullStory:'FullStory Session Replay API'},defs:{retention:{hero:'D30 Retention',fmt:'p1',label:'retention health',bar:'Retention by cohort',ths:['Segment','Active Users','Adoption','Trend','Action'],hide:'retention'},adoption:{hero:'Feature Activation Rate',fmt:'p0',label:'feature adoption',bar:'Adoption by feature',ths:['Feature','DAU','Adoption','Trend','Action'],hide:'adoption'},tickets:{hero:'Ticket Deflection Rate',fmt:'p0',label:'support-to-product signals',bar:'Ticket volume by issue type',ths:['Issue','Open Tickets','Affected Users','Trend','Action'],hide:'tickets'}},cross:{retention:{level:'yellow',pill:'Cross-tool',title:'Linear ticket velocity and Intercom escalations spiked before retention dropped.',body:'Duct stitched the release window, support spike, and cohort decay into one narrative.',ownerName:'Morgan Lee',assignee:'Product + Eng',followUp:'Compare the release window against churned cohorts'},adoption:{level:'yellow',pill:'Cross-tool',title:'Only 12% of activated users reach the aha moment.',body:'Intercom churn notes and Mixpanel events point to setup-depth failure, not awareness.',ownerName:'Avery Shah',assignee:'Growth PM',followUp:'Shorten the path from first use to third key event'},tickets:{level:'red',pill:'Cross-tool',title:'Ticket volume spikes 48 hours after each cohort refresh.',body:'The refresh is creating confusion instead of confidence.',ownerName:'Jordan Cruz',assignee:'Support + Product',followUp:'Rewrite the refresh UX and add guidance before the next rollout'}}};
+var D={Mixpanel:{retention:{hero:[31.4,'Down 4.2 pts vs goal','down','red'],k:{retention:[31.4,'Down 4.2 pts vs goal','down','red'],dau:[12600,'6% WoW','down','yellow'],adoption:[41,'8 pts below target','down','yellow'],tickets:[58,'18% WoW','up','yellow']},r:[['New workspace owners',31.4,'31.4%','7.1K','42%','Down 6%','Fix onboarding handoff'],['Power users',58.7,'58.7%','1.6K','78%','Up 3%','Protect with SLA outreach']],s:[['red','Critical','New workspace retention is decaying faster after the April release.','The drop starts after the first collaboration event, which points to setup friction.','Jamie Patel','Product','Audit the first-team invite flow']],sp:[0.74,0.71,0.68,0.64,0.58,0.54,0.49],u:['21%','1.8x','Needs work',' · 1.8x health score · fragile']},adoption:{hero:[41,'8 pts below target','down','yellow'],k:{retention:[33.8,'3.4 pts vs goal','down','yellow'],dau:[13200,'4% WoW','up','green'],adoption:[41,'8 pts below target','down','yellow'],tickets:[64,'12% WoW','up','yellow']},r:[['Checklist builder',41,'41%','8.6K','41%','Down 5%','Shorten setup checklist'],['Auto-routing rules',57,'57%','5.4K','57%','Up 2%','Promote during week 1']],s:[['red','Critical','Checklist builder activation stalls after the first save.','Users start setup but do not complete the second key step.','Lena Ortiz','PM','Simplify step two of builder setup']],sp:[0.36,0.41,0.46,0.49,0.52,0.48,0.45],u:['24%','2.1x','Healthy',' · 2.1x health score · promising']},tickets:{hero:[34,'Below 40% target','down','yellow'],k:{retention:[30.2,'5.1 pts vs goal','down','red'],dau:[11800,'5% WoW','down','yellow'],adoption:[38,'11 pts below target','down','red'],tickets:[86,'21% WoW','up','red']},r:[['Permissions confusion',86,'86','86','3.2K','Up 21%','Clarify role settings'],['Workspace refresh',54,'54','54','2.1K','Up 14%','Add release notes inline']],s:[['red','Critical','Permissions confusion now drives the largest support queue.','The spike is concentrated in multi-seat accounts, so expansion is now at risk.','Samir Gupta','Support','Ship role-permission copy updates']],sp:[0.32,0.38,0.41,0.47,0.55,0.61,0.68],u:['19%','1.6x','Breakeven',' · 1.6x health score · watch closely']}},Intercom:{retention:{hero:[29.8,'Support-led churn risk up','down','red'],k:{retention:[29.8,'Support-led churn risk up','down','red'],dau:[9800,'3% WoW','down','yellow'],adoption:[36,'10 pts below target','down','red'],tickets:[74,'16% WoW','up','red']},r:[['Onboarding help requests',28.9,'28.9%','2.9K','34%','Down 8%','Rewrite setup guidance'],['Billing-related accounts',35.4,'35.4%','1.8K','39%','Flat','Escalate pricing objections']],s:[['red','Critical','Accounts opening 2+ onboarding chats churn at nearly double the baseline.','Threads point to teammate setup and ownership transfer confusion.','Rory Hall','Success','Create an onboarding rescue sequence']],sp:[0.69,0.67,0.63,0.59,0.56,0.52,0.50],u:['20%','1.7x','Needs work',' · 1.7x health score · support-heavy']},adoption:{hero:[34,'Support friction is suppressing setup','down','red'],k:{retention:[31.1,'4.9 pts vs goal','down','yellow'],dau:[10100,'2% WoW','up','grey'],adoption:[34,'Support friction is suppressing setup','down','red'],tickets:[79,'18% WoW','up','red']},r:[['Guided setup bot',34,'34%','4.7K','34%','Down 7%','Reduce handoff confusion'],['Template gallery',48,'48%','3.3K','48%','Up 1%','Push as first-week nudge']],s:[['red','Critical','The guided setup bot creates more follow-up tickets than successful activations.','It behaves like a deflection layer, not an activation assist.','Ella Morris','Support PM','Cut steps from the setup bot']],sp:[0.28,0.31,0.34,0.39,0.45,0.42,0.40],u:['22%','1.9x','Breakeven',' · 1.9x health score · recoverable']},tickets:{hero:[31,'Deflection lagging target','down','red'],k:{retention:[28.7,'Churn risk elevated','down','red'],dau:[9400,'4% WoW','down','yellow'],adoption:[33,'12 pts below target','down','red'],tickets:[97,'24% WoW','up','red']},r:[['Activation blockers',97,'97','97','3.6K','Up 24%','Patch onboarding docs'],['Refresh questions',61,'61','61','2.4K','Up 15%','Add contextual education']],s:[['red','Critical','Activation blockers now dominate ticket volume and expansion risk.','Most are not bugs; users are failing to understand setup requirements quickly enough.','Kira Benson','Support','Add proactive setup messaging']],sp:[0.34,0.40,0.44,0.49,0.55,0.63,0.71],u:['18%','1.5x','Breakeven',' · 1.5x health score · brittle']}},Linear:{retention:{hero:[33.9,'Release quality is stabilising','up','green'],k:{retention:[33.9,'Release quality is stabilising','up','green'],dau:[8700,'2% WoW','up','grey'],adoption:[44,'5 pts below target','down','yellow'],tickets:[41,'9% WoW','up','yellow']},r:[['Release 4.2 impacted accounts',27.1,'27.1%','1.9K','31%','Down 9%','Hotfix the role bug'],['Post-hotfix cohorts',39.8,'39.8%','2.6K','47%','Up 4%','Expand rollout']],s:[['yellow','Watch','One release window explains most of the retention dip.','The Linear issue history shows the problem was contained and fixable.','Parker Long','Engineering','Backport the permissions fix']],sp:[0.58,0.56,0.53,0.49,0.50,0.55,0.61],u:['25%','2.0x','Healthy',' · 2.0x health score · improving']},adoption:{hero:[46,'Activation improving after fix','up','green'],k:{retention:[34.5,'3.8 pts vs goal','down','yellow'],dau:[9100,'3% WoW','up','green'],adoption:[46,'Activation improving after fix','up','green'],tickets:[37,'7% WoW','down','green']},r:[['Collaborative templates',46,'46%','3.7K','46%','Up 5%','Roll into onboarding'],['Task routing',52,'52%','2.8K','52%','Up 3%','Promote in upgrades']],s:[['green','Win','Task routing rebounded quickly once the setup bug closed.','Demand was real; the leak was execution quality, not positioning.','Sasha Cole','PM','Feature task routing earlier']],sp:[0.33,0.36,0.39,0.43,0.48,0.53,0.57],u:['26%','2.2x','Healthy',' · 2.2x health score · strong']},tickets:{hero:[43,'Back near deflection target','up','green'],k:{retention:[32.2,'4.1 pts vs goal','down','yellow'],dau:[8800,'2% WoW','up','grey'],adoption:[41,'7 pts below target','down','yellow'],tickets:[52,'11% WoW','down','green']},r:[['Role-permission regressions',52,'52','52','1.9K','Down 12%','Finish patch rollout'],['Template sync delays',26,'26','26','1.1K','Flat','Improve sync notice']],s:[['green','Win','Role-permission tickets are dropping after the patch landed.','Support noise was tied to a specific engineering issue, not a broad UX collapse.','Chris Vega','Engineering','Complete the rollout']],sp:[0.51,0.47,0.43,0.39,0.36,0.33,0.31],u:['23%','2.0x','Healthy',' · 2.0x health score · steady']}},FullStory:{retention:{hero:[28.9,'Replay friction rising in setup','down','red'],k:{retention:[28.9,'Replay friction rising in setup','down','red'],dau:[7200,'2% WoW','down','grey'],adoption:[37,'10 pts below target','down','red'],tickets:[46,'11% WoW','up','yellow']},r:[['Invite flow stalls',28.9,'28.9%','1.8K','37%','Down 8%','Shorten teammate invite path'],['Recovered cohorts',36.8,'36.8%','1.2K','49%','Up 4%','Roll out simplified invite flow']],s:[['red','Critical','Session replay shows most retention loss starts inside teammate invite and role setup.','Users hesitate, backtrack, and abandon before reaching first-team activation.','Nina Park','Product Ops','Replay the top 20 failed invite sessions']],sp:[0.66,0.63,0.59,0.54,0.50,0.46,0.42],u:['20%','1.7x','Needs work',' · 1.7x health score · replay-backed']},adoption:{hero:[35,'Users discover value too late','down','red'],k:{retention:[30.6,'5.0 pts vs goal','down','yellow'],dau:[7600,'2% WoW','up','grey'],adoption:[35,'Users discover value too late','down','red'],tickets:[43,'9% WoW','up','yellow']},r:[['Checklist builder replays',35,'35%','3.1K','35%','Down 6%','Reduce blank-state friction'],['Template-first path',49,'49%','2.2K','49%','Up 3%','Promote template-first onboarding']],s:[['red','Critical','Replay clusters show users opening the feature but failing to reach the second success moment.','The product explains capability too late, after confusion has already started.','Mia Chen','Growth PM','Move the aha moment earlier in onboarding']],sp:[0.34,0.37,0.39,0.43,0.47,0.44,0.41],u:['21%','1.8x','Breakeven',' · 1.8x health score · fixable']},tickets:{hero:[33,'Replay confirms support root cause','down','yellow'],k:{retention:[29.7,'5.6 pts vs goal','down','red'],dau:[7000,'3% WoW','down','yellow'],adoption:[36,'11 pts below target','down','red'],tickets:[62,'17% WoW','up','red']},r:[['Role-permission confusion',62,'62','62','2.2K','Up 17%','Add inline invite guidance'],['Empty-state dead ends',38,'38','38','1.5K','Up 10%','Instrument the dead-end path']],s:[['yellow','Watch','Replay confirms that the highest-volume tickets begin in the same two dead-end screens.','Support is seeing the symptom; FullStory shows the exact moment users lose confidence.','Omar Lewis','Support PM','Pair ticket tags with replay segments weekly']],sp:[0.39,0.44,0.48,0.54,0.60,0.66,0.70],u:['19%','1.6x','Breakeven',' · 1.6x health score · evidence-rich']}}};
 var S={step:1,platforms:[],metric:null},skip=false,last=null,sev={red:0,yellow:1,green:2,grey:3},svg={up:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></svg>',down:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>',flat:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5 12h14"/></svg>'};
 function fmt(v,t){if(t==='p1')return v.toFixed(1)+'%';if(t==='p0')return Math.round(v)+'%';if(t==='k')return v>=1000?(v/1000).toFixed(1)+'K':String(Math.round(v));return String(Math.round(v));}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
