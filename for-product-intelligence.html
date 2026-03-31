@@ -791,6 +791,577 @@ Retention drop → Intercom spike → bug fix timing → churn. One story, autom
 <span class="footer-copy">© 2025 Duct · getduct.ai</span>
 </footer>
 
+<script>
+(function() {
+  var state = { step: 1, platforms: [], metric: null };
+  var skipWalkthroughHeightAnimOnce = false;
+
+  function demoUrlBase() { return window.location.pathname + window.location.search; }
+  function replaceDemoFragment(f) {
+    var next = demoUrlBase() + '#' + f;
+    if (window.location.hash === '#' + f) return;
+    history.replaceState(null, '', next);
+    pushDemoDataLayer(f);
+  }
+  function pushDemoDataLayer(f) {
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ event: 'demo_fragment_view', demo_fragment: f, page_location: demoUrlBase() + '#' + f });
+  }
+  function mountReportToPreview() {
+    var host = document.getElementById('report-preview-host');
+    var root = document.getElementById('duct-report-root');
+    if (host && root && root.parentNode !== host) host.appendChild(root);
+  }
+  function mountReportToModal() {
+    var host = document.getElementById('modal-report-scroll-host');
+    var root = document.getElementById('duct-report-root');
+    if (host && root && root.parentNode !== host) host.appendChild(root);
+  }
+  function syncTopbarElevation() {
+    var s = document.getElementById('modal-report-scroll-host');
+    var t = document.querySelector('#report-modal .modal-topbar');
+    if (s && t) t.classList.toggle('modal-topbar--scrolled', s.scrollTop > 2);
+  }
+  function ensureTopbarScrollListener() {
+    var s = document.getElementById('modal-report-scroll-host');
+    if (!s || s._ductTopbarBound) return;
+    s._ductTopbarBound = true;
+    s.addEventListener('scroll', syncTopbarElevation, { passive: true });
+  }
+  function hideReportModalDOM() {
+    mountReportToPreview();
+    var m = document.getElementById('report-modal');
+    if (!m) return;
+    var t = m.querySelector('.modal-topbar');
+    if (t) t.classList.remove('modal-topbar--scrolled');
+    m.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+  function showReportModalDOM() {
+    mountReportToModal();
+    var m = document.getElementById('report-modal');
+    m.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+    var sb = document.getElementById('modal-report-scroll-host');
+    if (sb) sb.scrollTop = 0;
+    ensureTopbarScrollListener();
+    requestAnimationFrame(function() { syncTopbarElevation(); });
+    var cb = document.getElementById('modal-close-btn');
+    if (cb) setTimeout(function() { cb.focus(); }, 10);
+  }
+
+  var PLATFORM_QUALITY = { 'Mixpanel': 1.0, 'Intercom': 0.9, 'Linear': 0.7, 'Salesforce': 1.1 };
+
+  var CROSS_PLATFORM_SIGNALS = {
+    retention: { level: 'red', pill: '\uD83D\uDD34 Cross-tool', title: 'Three tools confirm the same root cause \u2014 the v2.4.1 export bug is your retention drop', body: 'Mixpanel: D7 retention dropped from 61% to 47% starting March 18. Linear: P1 bug in the export flow shipped in v2.4.1 (March 18). Intercom: 143 export-related tickets opened since March 18. Salesforce: 12 at-risk accounts citing export. One fix closes all four signals.', ownerName: 'Sam Park', assignee: 'Engineering \u00B7 Product', followUp: 'Deploy export hotfix as P0; verify retention recovers within 7 days' },
+    adoption: { level: 'yellow', pill: '\uD83D\uDFE1 Cross-tool', title: 'Export adoption gap confirmed across Mixpanel, Intercom, and Salesforce', body: 'Mixpanel: 71% of users who open Export never complete it. Intercom: 44% of feature announcement recipients have not tried it. Salesforce: Growth-tier accounts adopt at 32% vs 58% for Enterprise. Consistent pattern across all three tools: discoverability is the blocker, not feature quality.', ownerName: 'Alex Kim', assignee: 'Product \u00B7 Design', followUp: 'Ship Export discoverability fix (nav entry + step 2 tooltip) in next sprint' },
+    tickets: { level: 'red', pill: '\uD83D\uDD34 Cross-tool', title: 'One P1 bug is the source of 94% of this week's support load across all tools', body: 'Mixpanel: 312 export_failed events. Intercom: 143 open tickets. Salesforce: 18 open cases, 4 in renewal window. Linear: P1 open 9 days, no ETA. All four tools, same root cause. Fixing this single bug eliminates the majority of the support queue this sprint.', ownerName: 'Jordan Ellis', assignee: 'Engineering \u00B7 Support \u00B7 CS', followUp: 'Treat export bug as business emergency, not backlog item' }
+  };
+
+  var PLATFORM_DATA = {
+    'Mixpanel': {
+      retention: {
+        campaigns: [
+          { name: 'Mixpanel \u00B7 Cohort \u00B7 New users (last 30d)', spend: '2,140', spendRaw: 2140, cpa: '28%', roas: '54%', roasRaw: 54, conversions: 1156, revenue: 54000, status: 'Monitor', cls: 'camp-status-monitor' },
+          { name: 'Mixpanel \u00B7 Cohort \u00B7 Power users (5+ events/wk)', spend: '840', spendRaw: 840, cpa: '91%', roas: '88%', roasRaw: 88, conversions: 739, revenue: 88000, status: 'Scale \u2191', cls: 'camp-status-scale' }
+        ],
+        signals: [
+          { level: 'red', pill: '\uD83D\uDD34 Critical', title: 'D7 retention dropped 61% \u2192 47% \u2014 three-day window starting March 18', body: 'Drop correlates with the v2.4.1 deployment. New users who installed after March 18 are reaching the core event 31% less often. This is an onboarding regression, not a market signal.', ownerName: 'Jamie Chen', assignee: 'Product \u00B7 Engineering', followUp: 'Review v2.4.1 onboarding changes; check new user activation flow' },
+          { level: 'green', pill: '\uD83D\uDFE2 Win', title: 'Power users retaining at 88% \u2014 best cohort in 6 months', body: 'Users who trigger the export feature within 7 days retain at 2.2\u00D7 the rate of those who don't. This is the activation moment to optimise toward.', ownerName: 'Sam Rivera', assignee: 'Product', followUp: 'Push new users to the export feature earlier in onboarding' }
+        ],
+        spendRaw: 2980, conversions: 1895, revenue: 71000, sparkline: [0.62, 0.60, 0.55, 0.47, 0.44, 0.48, 0.51]
+      },
+      adoption: {
+        campaigns: [
+          { name: 'Mixpanel \u00B7 Feature \u00B7 Export (power feature)', spend: '2,140', spendRaw: 2140, cpa: '29%', roas: '29%', roasRaw: 29, conversions: 621, revenue: 29000, status: 'Monitor', cls: 'camp-status-monitor' },
+          { name: 'Mixpanel \u00B7 Feature \u00B7 Onboarding wizard (step 1+)', spend: '2,140', spendRaw: 2140, cpa: '74%', roas: '74%', roasRaw: 74, conversions: 1584, revenue: 74000, status: 'Scale \u2191', cls: 'camp-status-scale' }
+        ],
+        signals: [
+          { level: 'red', pill: '\uD83D\uDD34 Critical', title: '71% of users who open Export never complete the first export', body: 'Users abandon Export at step 2 of 3 (column mapping). No error is thrown but 43% of sessions end within 8 seconds of reaching step 2. A tooltip or helper copy is missing at the drop-off step.', ownerName: 'Alex Kim', assignee: 'Product \u00B7 Design', followUp: 'Add inline guidance to Export column-mapping step' },
+          { level: 'green', pill: '\uD83D\uDFE2 Win', title: 'Onboarding wizard 74% completion \u2014 up from 58% last sprint', body: 'Users who complete the wizard hit the core event within 24h at 2.4\u00D7 the rate of those who skip it. The two-step simplification in v2.4.0 is working.', ownerName: 'Morgan Lee', assignee: 'Product', followUp: 'Consider making wizard non-skippable for free tier' }
+        ],
+        spendRaw: 2140, conversions: 621, revenue: 62000, sparkline: [0.24, 0.26, 0.27, 0.28, 0.29, 0.29, 0.29]
+      },
+      tickets: {
+        campaigns: [
+          { name: 'Mixpanel \u00B7 Error \u00B7 export_failed (last 7d)', spend: '312', spendRaw: 312, cpa: '100%', roas: '0%', roasRaw: 0, conversions: 0, revenue: 0, status: 'Pause', cls: 'camp-status-pause' },
+          { name: 'Mixpanel \u00B7 Funnel \u00B7 Onboarding step 2 drop-off', spend: '2,140', spendRaw: 2140, cpa: '26%', roas: '74%', roasRaw: 74, conversions: 1584, revenue: 74000, status: 'Monitor', cls: 'camp-status-monitor' }
+        ],
+        signals: [
+          { level: 'red', pill: '\uD83D\uDD34 Critical', title: '312 export_failed events this week \u2014 none are surfaced to users', body: 'The export pipeline silently fails for users with >10K rows. No error toast is shown; users see a blank download. Generating an estimated 80\u2013120 untracked support contacts per week.', ownerName: 'Chris Park', assignee: 'Engineering', followUp: 'Fix export error handling; add user-facing error state with retry option' },
+          { level: 'yellow', pill: '\uD83D\uDFE1 Watch', title: 'Step 2 drop-off correlates with 38% of "how do I" tickets', body: 'Users who abandon onboarding at step 2 are 3\u00D7 more likely to open a support ticket within 48 hours. Fixing the drop-off could deflect ~40 tickets/week.', ownerName: 'Taylor Moss', assignee: 'Product \u00B7 Support', followUp: 'Add step 2 inline guidance; measure ticket deflection after launch' }
+        ],
+        spendRaw: 2452, conversions: 1584, revenue: 74000, sparkline: [0.38, 0.42, 0.48, 0.55, 0.58, 0.55, 0.52]
+      }
+    },
+
+    'Intercom': {
+      retention: {
+        campaigns: [
+          { name: 'Intercom \u00B7 Conversation \u00B7 Churn signals (last 30d)', spend: '94', spendRaw: 94, cpa: '12%', roas: '0%', roasRaw: 0, conversions: 0, revenue: 0, status: 'Pause', cls: 'camp-status-pause' },
+          { name: 'Intercom \u00B7 Campaign \u00B7 Retention nudge (D14 inactive)', spend: '420', spendRaw: 420, cpa: '68%', roas: '72%', roasRaw: 72, conversions: 302, revenue: 72000, status: 'Scale \u2191', cls: 'camp-status-scale' }
+        ],
+        signals: [
+          { level: 'yellow', pill: '\uD83D\uDFE1 Watch', title: '94 conversations tagged "thinking of leaving" \u2014 82% cite one missing feature', body: 'The missing feature is bulk export. This is the same gap flagged in Mixpanel drop-off data. Two tools, same root cause. This is roadmap-ready evidence.', ownerName: 'Dana Osei', assignee: 'Product \u00B7 CS', followUp: 'Add bulk CSV export to roadmap; reference Intercom + Mixpanel data as justification' },
+          { level: 'green', pill: '\uD83D\uDFE2 Win', title: 'D14 re-engagement: 68% open rate, 72% still active at D30', body: 'The personalised "here's what you built" nudge outperforms generic drip significantly. Expand to D7 inactive users.', ownerName: 'Riley Gupta', assignee: 'Growth \u00B7 Product', followUp: 'Expand Intercom D14 retention campaign to D7 inactive users' }
+        ],
+        spendRaw: 514, conversions: 302, revenue: 30200, sparkline: [0.68, 0.70, 0.72, 0.71, 0.73, 0.74, 0.75]
+      },
+      adoption: {
+        campaigns: [
+          { name: 'Intercom \u00B7 Message \u00B7 Feature announcement: export v2.4.0', spend: '1,840', spendRaw: 1840, cpa: '44%', roas: '44%', roasRaw: 44, conversions: 810, revenue: 44000, status: 'Monitor', cls: 'camp-status-monitor' },
+          { name: 'Intercom \u00B7 Tour \u00B7 New user guided tour (3 steps)', spend: '620', spendRaw: 620, cpa: '81%', roas: '81%', roasRaw: 81, conversions: 502, revenue: 81000, status: 'Scale \u2191', cls: 'camp-status-scale' }
+        ],
+        signals: [
+          { level: 'yellow', pill: '\uD83D\uDFE1 Watch', title: 'Feature announcement 44% open rate \u2014 56% of users never saw the export update', body: 'The in-app announcement was sent to all active users but 56% dismissed or missed it. Add a persistent UI badge on the feature itself to lift awareness beyond the message.', ownerName: 'Alex Kim', assignee: 'Product \u00B7 Growth', followUp: 'Add in-app badge on Export feature; resurface to non-openers' },
+          { level: 'green', pill: '\uD83D\uDFE2 Win', title: 'Guided tour 81% completion \u2014 users 2.8\u00D7 more likely to return on day 3', body: 'The 3-step product tour is the single strongest predictor of D3 return. Users who complete it reach the core event 2\u00D7 faster than skippers.', ownerName: 'Morgan Lee', assignee: 'Product', followUp: 'Consider making the guided tour opt-out rather than opt-in' }
+        ],
+        spendRaw: 2460, conversions: 810, revenue: 62500, sparkline: [0.40, 0.41, 0.43, 0.44, 0.44, 0.45, 0.46]
+      },
+      tickets: {
+        campaigns: [
+          { name: 'Intercom \u00B7 Tag \u00B7 "export not working" (open)', spend: '143', spendRaw: 143, cpa: '100%', roas: '0%', roasRaw: 0, conversions: 0, revenue: 0, status: 'Pause', cls: 'camp-status-pause' },
+          { name: 'Intercom \u00B7 Tag \u00B7 "how do I" questions (open)', spend: '218', spendRaw: 218, cpa: '100%', roas: '0%', roasRaw: 0, conversions: 0, revenue: 0, status: 'Monitor', cls: 'camp-status-monitor' }
+        ],
+        signals: [
+          { level: 'red', pill: '\uD83D\uDD34 Critical', title: '143 open "export not working" tickets \u2014 median response time 18h, CSAT 2.1/5', body: 'All 143 trace to the same >10K row export failure. One engineering fix eliminates 143 support contacts this sprint. Estimated support cost at current rep rate: $4.3K.', ownerName: 'Jordan Ellis', assignee: 'Engineering \u00B7 Support', followUp: 'P0: Fix export row limit bug; auto-close impacted tickets with resolution note' },
+          { level: 'yellow', pill: '\uD83D\uDFE1 Watch', title: '218 "how do I" tickets \u2014 74% answered by existing help articles, none linked in-app', body: 'Users are opening tickets for questions already answered in your help center. Adding contextual help links at the 3 most common friction points would deflect ~160 tickets/month.', ownerName: 'Taylor Moss', assignee: 'Support \u00B7 Product', followUp: 'Add contextual help links at export step 2 and onboarding wizard' }
+        ],
+        spendRaw: 361, conversions: 0, revenue: 0, sparkline: [0.58, 0.64, 0.70, 0.78, 0.76, 0.74, 0.72]
+      }
+    },
+    'Linear': {
+      retention: {
+        campaigns: [
+          { name: 'Linear \u00B7 Cycle \u00B7 v2.4.1 shipped Mar 18 (3 open bugs)', spend: '24', spendRaw: 24, cpa: 'N/A', roas: '0%', roasRaw: 0, conversions: 0, revenue: 0, status: 'Pause', cls: 'camp-status-pause' },
+          { name: 'Linear \u00B7 Cycle \u00B7 v2.4.0 shipped Mar 11 (0 retention bugs)', spend: '18', spendRaw: 18, cpa: 'N/A', roas: '100%', roasRaw: 100, conversions: 18, revenue: 100000, status: 'Scale \u2191', cls: 'camp-status-scale' }
+        ],
+        signals: [
+          { level: 'red', pill: '\uD83D\uDD34 Critical', title: 'v2.4.1 correlated with D7 retention drop \u2014 P1 bug in activation flow', body: 'The "welcome_step_2_skip" P1 bug affects ~18% of new users, skipping a key onboarding step. Hotfix is in progress but not yet deployed. This is the upstream cause of the Mixpanel drop.', ownerName: 'Sam Park', assignee: 'Engineering', followUp: 'Deploy hotfix for welcome_step_2_skip; verify activation flow post-deploy' },
+          { level: 'yellow', pill: '\uD83D\uDFE1 Watch', title: 'v2.4.0 had 0 retention-related bugs \u2014 baseline for post-hotfix comparison', body: 'The previous cycle was clean. Retention was stable at 61%. This confirms the regression is from v2.4.1, not a market change.', ownerName: 'Jamie Chen', assignee: 'Product', followUp: 'Use v2.4.0 activation metrics as baseline for post-hotfix comparison' }
+        ],
+        spendRaw: 42, conversions: 18, revenue: 100000, sparkline: [0.90, 0.88, 0.85, 0.70, 0.62, 0.58, 0.55]
+      },
+      adoption: {
+        campaigns: [
+          { name: 'Linear \u00B7 Feature \u00B7 Export enhancement (v2.4.0)', spend: '8', spendRaw: 8, cpa: '29%', roas: '29%', roasRaw: 29, conversions: 3, revenue: 29000, status: 'Monitor', cls: 'camp-status-monitor' },
+          { name: 'Linear \u00B7 Bug \u00B7 Onboarding step 2 skip (v2.4.1, P1)', spend: '1', spendRaw: 1, cpa: '0%', roas: '0%', roasRaw: 0, conversions: 0, revenue: 0, status: 'Pause', cls: 'camp-status-pause' }
+        ],
+        signals: [
+          { level: 'yellow', pill: '\uD83D\uDFE1 Watch', title: 'Export enhancement shipped clean \u2014 adoption at 29% means discoverability is the blocker', body: 'Zero Linear bugs on the export feature. Mixpanel confirms users aren't finding it. The gap is UI discoverability, not feature quality.', ownerName: 'Alex Kim', assignee: 'Product \u00B7 Design', followUp: 'Add Export entry point to nav or dashboard; A/B test placement' },
+          { level: 'red', pill: '\uD83D\uDD34 Critical', title: 'Onboarding P1 bug affecting 18% of new users \u2014 hotfix ETA 48h', body: 'P1 bug skips onboarding column-mapping step for 18% of new users. Explains the Mixpanel step 2 drop-off data. Hotfix ETA per current Linear timeline is 48 hours.', ownerName: 'Sam Park', assignee: 'Engineering', followUp: 'Confirm hotfix deployment timeline; add post-deploy monitoring for step 2 completion' }
+        ],
+        spendRaw: 9, conversions: 3, revenue: 29000, sparkline: [0.30, 0.28, 0.25, 0.24, 0.24, 0.24, 0.29]
+      },
+      tickets: {
+        campaigns: [
+          { name: 'Linear \u00B7 Bug \u00B7 export_row_limit (P1, open 9 days)', spend: '1', spendRaw: 1, cpa: '0%', roas: '0%', roasRaw: 0, conversions: 0, revenue: 0, status: 'Pause', cls: 'camp-status-pause' },
+          { name: 'Linear \u00B7 Feature \u00B7 Help tooltips (onboarding)', spend: '1', spendRaw: 1, cpa: '0%', roas: '0%', roasRaw: 0, conversions: 0, revenue: 0, status: 'Monitor', cls: 'camp-status-monitor' }
+        ],
+        signals: [
+          { level: 'yellow', pill: '\uD83D\uDFE1 Watch', title: 'export_row_limit P1 open 9 days \u2014 no ETA, 143 Intercom tickets linked', body: 'This single Linear ticket is the root cause of 143 Intercom support tickets. Setting a ship date and communicating proactively to affected users would close the queue.', ownerName: 'Jordan Ellis', assignee: 'Engineering \u00B7 Support', followUp: 'Set ETA for export_row_limit; send proactive update to affected users via Intercom' },
+          { level: 'green', pill: '\uD83D\uDFE2 Win', title: 'Help tooltip ticket scoped \u2014 2-day estimate, would deflect ~160 tickets/month', body: 'The feature is in the backlog, eng estimate is 2 days, and Intercom data already quantifies the deflection impact. Ready to prioritise.', ownerName: 'Taylor Moss', assignee: 'Product', followUp: 'Prioritise help tooltip ticket into next sprint' }
+        ],
+        spendRaw: 2, conversions: 0, revenue: 0, sparkline: [0.10, 0.12, 0.14, 0.18, 0.20, 0.22, 0.24]
+      }
+    },
+    'Salesforce': {
+      retention: {
+        campaigns: [
+          { name: 'Salesforce \u00B7 Account \u00B7 At-risk (health score < 60)', spend: '42', spendRaw: 42, cpa: '0%', roas: '0%', roasRaw: 0, conversions: 0, revenue: 0, status: 'Pause', cls: 'camp-status-pause' },
+          { name: 'Salesforce \u00B7 Account \u00B7 Healthy (health score 80+)', spend: '128', spendRaw: 128, cpa: '14%', roas: '94%', roasRaw: 94, conversions: 120, revenue: 94000, status: 'Scale \u2191', cls: 'camp-status-scale' }
+        ],
+        signals: [
+          { level: 'red', pill: '\uD83D\uDD34 Critical', title: '42 at-risk accounts \u2014 12 have active churn conversations citing export', body: '9 of 12 churning accounts cite missing bulk export in their churn notes. Same root cause as Mixpanel drop-off and Intercom tickets. One fix addresses all three signals.', ownerName: 'Dana Osei', assignee: 'CS \u00B7 Product', followUp: 'Surface export fix ETA to CS; update at-risk account outreach with timeline' },
+          { level: 'green', pill: '\uD83D\uDFE2 Win', title: 'Healthy accounts (80+ score) show 94% renewal and 18% expansion QoQ', body: 'Pattern for healthy accounts: high Mixpanel event frequency, Intercom onboarding interactions in week 1, 3+ active seats. Use as CS prioritisation playbook.', ownerName: 'Riley Gupta', assignee: 'CS \u00B7 Product', followUp: 'Document ICP engagement pattern; use as CS playbook for new accounts' }
+        ],
+        spendRaw: 170, conversions: 120, revenue: 94000, sparkline: [0.88, 0.85, 0.82, 0.78, 0.76, 0.74, 0.72]
+      },
+      adoption: {
+        campaigns: [
+          { name: 'Salesforce \u00B7 Tier \u00B7 Enterprise (50+ seats)', spend: '38', spendRaw: 38, cpa: '58%', roas: '58%', roasRaw: 58, conversions: 22, revenue: 58000, status: 'Monitor', cls: 'camp-status-monitor' },
+          { name: 'Salesforce \u00B7 Tier \u00B7 Growth (10\u201349 seats)', spend: '94', spendRaw: 94, cpa: '32%', roas: '32%', roasRaw: 32, conversions: 30, revenue: 32000, status: 'Monitor', cls: 'camp-status-monitor' }
+        ],
+        signals: [
+          { level: 'yellow', pill: '\uD83D\uDFE1 Watch', title: 'Enterprise adopts Export at 58%, Growth tier only 32%', body: 'Enterprise teams have dedicated admins who explore features. Growth tier sticks to defaults. Targeted in-app guidance for Growth could close the adoption gap.', ownerName: 'Dana Osei', assignee: 'CS \u00B7 Product', followUp: 'Create Growth-tier targeted in-app guidance for Export feature' },
+          { level: 'green', pill: '\uD83D\uDFE2 Win', title: 'Accounts with a CS setup call adopt 2.3\u00D7 more features in 30 days', body: 'The CS onboarding call is the strongest adoption lever in the data. Accounts with a setup call adopt 3+ features within 30 days at 2.3\u00D7 the rate of self-serve accounts.', ownerName: 'Riley Gupta', assignee: 'CS', followUp: 'Expand CS setup call programme to Growth tier (currently enterprise-only)' }
+        ],
+        spendRaw: 132, conversions: 52, revenue: 45000, sparkline: [0.32, 0.34, 0.35, 0.36, 0.37, 0.38, 0.40]
+      },
+      tickets: {
+        campaigns: [
+          { name: 'Salesforce \u00B7 Case \u00B7 "export broken" (P1, open)', spend: '18', spendRaw: 18, cpa: '100%', roas: '0%', roasRaw: 0, conversions: 0, revenue: 0, status: 'Pause', cls: 'camp-status-pause' },
+          { name: 'Salesforce \u00B7 Account \u00B7 Health impacted by tickets (3+ in 30d)', spend: '42', spendRaw: 42, cpa: '40%', roas: '60%', roasRaw: 60, conversions: 25, revenue: 60000, status: 'Monitor', cls: 'camp-status-monitor' }
+        ],
+        signals: [
+          { level: 'red', pill: '\uD83D\uDD34 Critical', title: '18 Salesforce cases cite export failures \u2014 4 are in their renewal window', body: '4 of 18 open cases are accounts in their renewal window. Churn probability for unresolved cases before renewal is 74% based on CS scoring. Fix prevents revenue loss, not just support cost.', ownerName: 'Dana Osei', assignee: 'CS \u00B7 Engineering', followUp: 'Escalate export fix to 4 renewal-window accounts; offer manual export workaround immediately' },
+          { level: 'yellow', pill: '\uD83D\uDFE1 Watch', title: 'Accounts with 3+ tickets in 30d show 48% higher churn probability', body: 'Ticket volume is a leading churn indicator. CS should proactively reach out to any account crossing the 3-ticket threshold in 30 days.', ownerName: 'Dana Osei', assignee: 'CS', followUp: 'Set up Salesforce alert for accounts crossing 3-ticket threshold; add to CS playbook' }
+        ],
+        spendRaw: 60, conversions: 25, revenue: 60000, sparkline: [0.40, 0.45, 0.52, 0.58, 0.62, 0.65, 0.68]
+      }
+    }
+  };
+
+  function updateProgress() {
+    for (var i = 1; i <= 4; i++) {
+      var d = document.getElementById('prog-' + i);
+      if (!d) continue;
+      d.className = 'wt-dot';
+      if (i < state.step) d.classList.add('done');
+      if (i === state.step) d.classList.add('active');
+    }
+  }
+  function walkthroughStageVerticalPadding(s) {
+    var cs = window.getComputedStyle(s);
+    return parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+  }
+  function walkthroughPrepareHeightTransition() {
+    var s = document.querySelector('.wt-steps-stage');
+    if (!s || skipWalkthroughHeightAnimOnce) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var h = s.offsetHeight;
+    if (h < 1) return;
+    s.style.height = h + 'px';
+  }
+  function walkthroughRunHeightTransition() {
+    var s = document.querySelector('.wt-steps-stage');
+    if (!s) return;
+    if (skipWalkthroughHeightAnimOnce || window.matchMedia('(prefers-reduced-motion: reduce)').matches) { s.style.height = ''; return; }
+    var active = document.getElementById('demo-step-' + state.step);
+    if (!active) { s.style.height = ''; return; }
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        var padY = walkthroughStageVerticalPadding(s);
+        var endH = active.offsetHeight + padY;
+        if (endH < 1) { s.style.height = ''; return; }
+        var startH = parseFloat(s.style.height) || s.offsetHeight;
+        if (Math.abs(startH - endH) < 2) { s.style.height = 'auto'; return; }
+        var done = false;
+        function finish() {
+          if (done) return; done = true;
+          clearTimeout(fb); s.removeEventListener('transitionend', onEnd);
+          s.style.transition = 'none'; s.style.height = 'auto';
+          void s.offsetHeight; s.style.transition = '';
+        }
+        function onEnd(e) { if (e.propertyName === 'height') finish(); }
+        var fb = setTimeout(finish, 500);
+        s.addEventListener('transitionend', onEnd);
+        s.style.height = endH + 'px';
+      });
+    });
+  }
+  function syncWizardStepClasses(n) {
+    for (var i = 1; i <= 4; i++) {
+      var el = document.getElementById('demo-step-' + i);
+      if (!el) continue;
+      el.classList.toggle('active', i === n);
+      if (i === n) el.removeAttribute('inert'); else el.setAttribute('inert', '');
+    }
+  }
+  function syncStepTo(n, skipHash) {
+    if (n < 1 || n > 4) return;
+    var prev = state.step;
+    if (n !== state.step) {
+      walkthroughPrepareHeightTransition();
+      state.step = n;
+      syncWizardStepClasses(n);
+      updateProgress();
+    }
+    if (!skipHash) replaceDemoFragment('demo-step-' + n);
+    if (n === 3 && prev !== 3) runAnalysis();
+    if (n === 4) populateBrief();
+    if (prev !== n) walkthroughRunHeightTransition();
+  }
+  window.wtGoTo = function(n) { syncStepTo(n, false); };
+
+  function runAnalysis() {
+    var lines = document.querySelectorAll('.analyzing-line');
+    var delay = 0;
+    for (var i = 0; i < lines.length; i++) {
+      (function(line, d) {
+        setTimeout(function() { line.classList.add('visible'); }, d);
+        setTimeout(function() { line.classList.add('done'); }, d + 380);
+      })(lines[i], delay);
+      delay += 450;
+    }
+    setTimeout(function() { wtGoTo(4); }, delay + 200);
+  }
+
+  window.wtTogglePlatform = function(name, btn) {
+    var idx = state.platforms.indexOf(name);
+    if (idx >= 0) { state.platforms.splice(idx, 1); btn.classList.remove('selected'); btn.setAttribute('aria-pressed', 'false'); }
+    else { state.platforms.push(name); btn.classList.add('selected'); btn.setAttribute('aria-pressed', 'true'); }
+    var nb = document.getElementById('wt-next-1');
+    if (nb) nb.disabled = state.platforms.length < 2;
+    var hint = document.getElementById('plat-hint');
+    if (hint) hint.textContent = state.platforms.length >= 2 ? 'Cross-tool signals ready \u2713' : 'Select at least 2 to see cross-tool signals';
+  };
+
+  window.wtSelectMetric = function(key, card) {
+    state.metric = key;
+    var cards = document.querySelectorAll('.metric-card');
+    for (var i = 0; i < cards.length; i++) { cards[i].classList.remove('selected'); cards[i].setAttribute('aria-pressed', 'false'); }
+    card.classList.add('selected'); card.setAttribute('aria-pressed', 'true');
+    document.getElementById('wt-next-2').disabled = false;
+  };
+
+  function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+  function ownerAvatarSrc(s) { return 'https://api.dicebear.com/9.x/notionists/svg?seed=' + encodeURIComponent(s.ownerName || 'Duct'); }
+  function signalActionHTML(s) {
+    if (s.assignee && s.followUp) {
+      var dn = escHtml(s.ownerName || s.assignee), role = s.ownerName ? escHtml(s.assignee) : '';
+      var row = '<div class="signal-owner-block"><img class="signal-owner-avatar" src="' + ownerAvatarSrc(s) + '" width="40" height="40" alt="" loading="lazy"/><div class="signal-owner-text"><span class="signal-owner-name">' + dn + '</span>' + (role ? '<span class="signal-owner-role">' + role + '</span>' : '') + '</div></div>';
+      return '<div class="signal-action"><div class="signal-action-row"><div class="signal-action-cell"><span class="signal-action-label">Who owns it</span>' + row + '</div><div class="signal-action-cell"><span class="signal-action-label">Follow-up</span><span class="signal-action-value">' + escHtml(s.followUp) + '</span></div></div></div>';
+    }
+    return '';
+  }
+  function signalBlockHTML(s) {
+    return '<div class="signal-block signal-level-' + s.level + '"><span class="signal-pill ' + s.level + '">' + s.pill + '</span><p class="signal-title">' + s.title + '</p><p class="signal-body">' + s.body + '</p>' + signalActionHTML(s) + '</div>';
+  }
+  function buildSignalsHTML(signals) {
+    var html = '', i;
+    for (i = 0; i < signals.length && i < 2; i++) html += signalBlockHTML(signals[i]);
+    if (signals.length > 2) {
+      html += '<div id="modal-signal-extra" class="rpt-signal-extra-wrap" hidden>' + signalBlockHTML(signals[2]) + '</div>';
+      html += '<button type="button" class="rpt-show-more-signals" id="modal-signal-more">Show 1 more signal</button>';
+    }
+    return html;
+  }
+  function buildSparklineSVG(pts) {
+    var w=130,h=44,px=4,py=6,n=pts.length;
+    if (n<2) return '';
+    var mn=Math.min.apply(null,pts), mx=Math.max.apply(null,pts), rng=(mx-mn)||1, lp=[], j;
+    for(j=0;j<n;j++){var x=px+(j/(n-1))*(w-2*px),y=h-py-((pts[j]-mn)/rng)*(h-2*py);lp.push(x.toFixed(1)+','+y.toFixed(1));}
+    var fl=lp[0].split(','), ll=lp[n-1].split(',');
+    var df='M '+lp[0]; for(j=1;j<lp.length;j++) df+=' L '+lp[j];
+    df+=' L '+ll[0]+','+(h-py)+' L '+fl[0]+','+(h-py)+' Z';
+    return '<svg viewBox="0 0 '+w+' '+h+'" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2563eb" stop-opacity="0.4"/><stop offset="100%" stop-color="#2563eb" stop-opacity="0"/></linearGradient></defs><path class="spark-fill" d="'+df+'"/><polyline class="spark-line" points="'+lp.join(' ')+'"/></svg>';
+  }
+  function parseBarNum(s) { return parseFloat(String(s).replace(/[^0-9.]/g,'')) || 0; }
+  function buildBarChartHTML(items) {
+    var nums=items.map(function(c){return parseBarNum(c.roas);}), mx=Math.max.apply(null,nums)||1, html='';
+    for(var i=0;i<items.length;i++){
+      var pct=Math.round((nums[i]/mx)*100);
+      html+='<div class="rpt-bar-row"><div class="rpt-bar-top"><span class="rpt-bar-name">'+items[i].name+'</span><span class="rpt-bar-val">'+items[i].roas+'</span></div><div class="rpt-bar-track"><div class="rpt-bar-fill" style="width:'+pct+'%"></div></div></div>';
+    }
+    return html;
+  }
+  function buildSegmentRowsHTML(items) {
+    var html='';
+    for(var i=0;i<items.length;i++){
+      var c=items[i], rc='camp-row'+(i%2===1?' camp-row--alt':'');
+      html+='<tr class="'+rc+'"><td>'+c.name+'</td><td>'+c.spend+'</td><td>'+c.cpa+'</td><td>'+c.roas+'</td><td class="'+c.cls+'">'+c.status+'</td></tr>';
+    }
+    return html;
+  }
+  var SVG_UP='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></svg>';
+  var SVG_DOWN='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>';
+  var SVG_FLAT='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5 12h14"/></svg>';
+  function applyKpiTrendSpan(el, k) {
+    if (!el||!k) return;
+    var t=k.trend||'flat', tone=k.dot||'grey';
+    el.className='kpi-trend '+(t==='up'?'is-up':t==='down'?'is-down':'is-flat')+' tone-'+tone;
+    el.innerHTML=t==='up'?SVG_UP:t==='down'?SVG_DOWN:SVG_FLAT;
+  }
+  function setKPIChips(kpis) {
+    var keys=['retention','dau','adoption','tickets'];
+    var acc=['kpi-chip--accent-red','kpi-chip--accent-yellow','kpi-chip--accent-green','kpi-chip--accent-grey'];
+    for(var i=0;i<keys.length;i++){
+      var key=keys[i], k=kpis[key];
+      if(!k) continue;
+      var ve=document.getElementById('rpt-kpi-'+key+'-val');
+      if(!ve) continue;
+      ve.textContent=k.val;
+      document.getElementById('rpt-kpi-'+key+'-delta').textContent=k.delta;
+      applyKpiTrendSpan(document.getElementById('rpt-kpi-'+key+'-trend'),k);
+      var chip=ve.closest('.kpi-chip');
+      if(chip){for(var a=0;a<acc.length;a++) chip.classList.remove(acc[a]); chip.classList.add('kpi-chip--accent-'+k.dot);}
+    }
+  }
+  function setupModalSignalToggle() {
+    var btn=document.getElementById('modal-signal-more'), ex=document.getElementById('modal-signal-extra');
+    if(!btn||!ex) return;
+    ex.setAttribute('hidden',''); btn.textContent='Show 1 more signal';
+    btn.onclick=function(){var h=ex.hasAttribute('hidden');if(h){ex.removeAttribute('hidden');btn.textContent='Show less';}else{ex.setAttribute('hidden','');btn.textContent='Show 1 more signal';}};
+  }
+  function setupDisclosure(bId,pId) {
+    var btn=document.getElementById(bId), panel=document.getElementById(pId);
+    if(!btn||!panel||btn._disc) return;
+    btn._disc=true;
+    btn.addEventListener('click',function(){
+      var open=panel.hasAttribute('hidden');
+      if(open){panel.removeAttribute('hidden');btn.setAttribute('aria-expanded','true');}
+      else{panel.setAttribute('hidden','');btn.setAttribute('aria-expanded','false');}
+    });
+  }
+
+  function formatReportDate() {
+    var now=new Date(), end=new Date(now), start=new Date(now);
+    start.setDate(start.getDate()-6);
+    var dow=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],mon=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return dow[start.getDay()]+', '+mon[start.getMonth()]+' '+start.getDate()+' \u2013 '+dow[end.getDay()]+', '+mon[end.getMonth()]+' '+end.getDate()+', '+end.getFullYear()+' \u00B7 7-day window';
+  }
+  function fmtUsersK(n) { if(n>=1000) return (n/1000).toFixed(1)+'K'; return String(Math.round(n)); }
+
+  function aggregateSegments(mk) {
+    var r=[];
+    for(var i=0;i<state.platforms.length;i++){var pd=PLATFORM_DATA[state.platforms[i]]; if(pd&&pd[mk]) r=r.concat(pd[mk].campaigns);}
+    return r;
+  }
+  function aggregateSignals(mk) {
+    var all=[];
+    for(var i=0;i<state.platforms.length;i++){var pd=PLATFORM_DATA[state.platforms[i]]; if(pd&&pd[mk]) all=all.concat(pd[mk].signals);}
+    var pri={red:0,yellow:1,green:2};
+    all.sort(function(a,b){return (pri[a.level]||0)-(pri[b.level]||0);});
+    if(state.platforms.length>=2&&CROSS_PLATFORM_SIGNALS[mk]) return all.slice(0,2).concat([CROSS_PLATFORM_SIGNALS[mk]]);
+    return all.slice(0,3);
+  }
+  function aggregateSparkline(mk) {
+    var sums=[0,0,0,0,0,0,0],cnt=0;
+    for(var i=0;i<state.platforms.length;i++){var pd=PLATFORM_DATA[state.platforms[i]]; if(pd&&pd[mk]&&pd[mk].sparkline){var sp=pd[mk].sparkline; for(var j=0;j<7;j++) sums[j]+=sp[j]||0; cnt++;}}
+    if(!cnt) return [0.5,0.5,0.5,0.5,0.5,0.5,0.5];
+    var mn=Math.min.apply(null,sums), mx=Math.max.apply(null,sums), rng=mx-mn||1;
+    return sums.map(function(v){return parseFloat(((v-mn)/rng).toFixed(3));});
+  }
+  function aggregateKPIs(mk) {
+    var totalU=0, totalC=0, totalR=0;
+    for(var i=0;i<state.platforms.length;i++){var pd=PLATFORM_DATA[state.platforms[i]]; if(pd&&pd[mk]){totalU+=pd[mk].spendRaw||0; totalC+=pd[mk].conversions||0; totalR+=pd[mk].revenue||0;}}
+    var dauStr=fmtUsersK(totalU);
+    if(mk==='retention'){
+      var rr=totalU>0?Math.round(totalC/totalU*100):0, tgt=65, diff=rr-tgt;
+      var dot=diff>=0?'green':Math.abs(diff)<10?'yellow':'red', trend=diff>=0?'up':'down';
+      var delta=diff<0?Math.abs(diff)+'% below '+tgt+'% target':'+'+diff+'% vs '+tgt+'% target';
+      return {totalU:totalU,totalC:totalC,kpis:{retention:{val:rr+'%',delta:delta,dot:dot,trend:trend},dau:{val:dauStr,delta:'6% WoW',dot:'grey',trend:'up'},adoption:{val:'34%',delta:'2% WoW',dot:'yellow',trend:'up'},tickets:{val:String(Math.round(totalU*0.05)),delta:'14% WoW \u2191',dot:'red',trend:'up'}}};
+    }
+    if(mk==='adoption'){
+      var ar=totalU>0?Math.round(totalC/totalU*100):0, at=45, ad=ar-at;
+      var adot=ad>=0?'green':Math.abs(ad)<15?'yellow':'red', atr=ad>=0?'up':'down';
+      var adelta=ad<0?Math.abs(ad)+'% below '+at+'% target':'+'+ad+'% vs '+at+'% target';
+      return {totalU:totalU,totalC:totalC,kpis:{retention:{val:'64%',delta:'3% WoW',dot:'yellow',trend:'down'},dau:{val:dauStr,delta:'4% WoW',dot:'grey',trend:'up'},adoption:{val:ar+'%',delta:adelta,dot:adot,trend:atr},tickets:{val:String(Math.round(totalU*0.04)),delta:'8% WoW \u2191',dot:'yellow',trend:'up'}}};
+    }
+    var tk=totalU>0?Math.round(totalU*0.072):247;
+    return {totalU:totalU,totalC:totalC,kpis:{retention:{val:'62%',delta:'4% WoW',dot:'red',trend:'down'},dau:{val:dauStr,delta:'3% WoW',dot:'grey',trend:'up'},adoption:{val:'32%',delta:'1% WoW',dot:'yellow',trend:'flat'},tickets:{val:String(tk),delta:'22% WoW \u2191 \u2014 action needed',dot:'red',trend:'up'}}};
+  }
+  function deriveVerdict(signals) {
+    if(!signals||!signals.length) return {cls:'yellow',txt:'No signals'};
+    var e={red:'\uD83D\uDD34',yellow:'\uD83D\uDFE1',green:'\uD83D\uDFE2'};
+    return {cls:signals[0].level,txt:(e[signals[0].level]||'')+' '+signals[0].title};
+  }
+  function deriveProductHealth(mk) {
+    var totalU=0,totalC=0;
+    for(var i=0;i<state.platforms.length;i++){var pd=PLATFORM_DATA[state.platforms[i]]; if(pd&&pd[mk]){totalU+=pd[mk].spendRaw||0; totalC+=pd[mk].conversions||0;}}
+    var rate=totalU>0?totalC/totalU:0.65, stick, nps, verdict, summary;
+    if(mk==='retention'){stick=(rate*0.6).toFixed(2);nps=Math.round(rate*80-20);}
+    else if(mk==='adoption'){stick=(rate*0.8).toFixed(2);nps=Math.round(rate*100-10);}
+    else{stick='0.38';nps=24;}
+    verdict=nps>=40?'\uD83D\uDFE2 Healthy':nps>=20?'\uD83D\uDFE1 Developing':'\uD83D\uDD34 At risk';
+    summary=' \u00B7 NPS ~'+nps+' \u00B7 '+(nps>=40?'healthy':nps>=20?'developing':'at risk');
+    return {stick:stick,nps:'Est. '+nps,verdict:verdict,summary:summary};
+  }
+
+  function populateBrief() {
+    var mk=state.metric||'retention';
+    var segs=aggregateSegments(mk), sigs=aggregateSignals(mk), spark=aggregateSparkline(mk);
+    var agg=aggregateKPIs(mk), verdict=deriveVerdict(sigs), ph=deriveProductHealth(mk);
+    var platList=state.platforms.join(' \u00B7 ');
+    var mlabel={retention:'retention health',adoption:'feature adoption',tickets:'support signals'}[mk];
+    var today=(function(){var n=new Date(),mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return mo[n.getMonth()]+' '+n.getDate()+', '+n.getFullYear();})();
+    var srcMap={'Mixpanel':'Mixpanel Events API','Intercom':'Intercom Conversations API','Linear':'Linear GraphQL API','Salesforce':'Salesforce Reports API'};
+    var srcParts=state.platforms.map(function(p){return srcMap[p]||p;});
+    var barLabels={retention:'Retention rate by segment',adoption:'Feature adoption by segment',tickets:'Ticket volume by segment'};
+
+    document.getElementById('wt-brief-sub').textContent='Optimised for '+mlabel+' \u00B7 '+platList;
+    document.getElementById('rpt-meta').textContent=formatReportDate()+' \u00B7 '+platList;
+    var ve=document.getElementById('rpt-verdict');
+    ve.className='rpt-verdict rpt-verdict--modal '+verdict.cls; ve.textContent=verdict.txt;
+
+    var barLabelEl=document.getElementById('rpt-bar-label-text');
+    if(barLabelEl) barLabelEl.textContent=barLabels[mk]||'Metric by segment';
+
+    var heroKeys={retention:'retention',adoption:'adoption',tickets:'tickets'};
+    var heroKey=heroKeys[mk], heroKpi=agg.kpis[heroKey];
+    var heroLabels={retention:'D30 Retention Rate',adoption:'Feature Activation Rate',tickets:'Open Tickets'};
+    document.getElementById('rpt-hero-label').textContent=heroLabels[heroKey];
+    document.getElementById('rpt-hero-val').textContent=heroKpi.val;
+    var hd=document.getElementById('rpt-hero-delta-row'); hd.innerHTML='';
+    var ht=document.createElement('span'); applyKpiTrendSpan(ht,heroKpi); hd.appendChild(ht);
+    var hdtxt=document.createElement('span'); hdtxt.textContent=heroKpi.delta; hd.appendChild(hdtxt);
+
+    document.getElementById('rpt-sparkline').innerHTML=buildSparklineSVG(spark);
+    document.getElementById('rpt-roas-bars').innerHTML=buildBarChartHTML(segs);
+
+    var hint=document.getElementById('rpt-kpi-hint');
+    if(hint) hint.textContent='Cross-tool snapshot from your connected accounts. WoW = this 7-day window vs the prior week.';
+    setKPIChips(agg.kpis);
+    var chips=document.querySelectorAll('#duct-report-root .kpi-chip[data-kpi-key]');
+    for(var ci=0;ci<chips.length;ci++){
+      chips[ci].classList.remove('kpi-chip--modal-hidden');
+      if(chips[ci].getAttribute('data-kpi-key')===heroKey) chips[ci].classList.add('kpi-chip--modal-hidden');
+    }
+    document.getElementById('rpt-signals').innerHTML=buildSignalsHTML(sigs);
+    setupModalSignalToggle();
+    document.getElementById('rpt-camp-tbody').innerHTML=buildSegmentRowsHTML(segs);
+    document.getElementById('rpt-camp-meta').textContent=' \u00B7 '+segs.length+' segments';
+    document.getElementById('rpt-ue-cps').textContent=ph.stick;
+    document.getElementById('rpt-ue-ltv').textContent=ph.nps;
+    document.getElementById('rpt-ue-verdict').textContent=ph.verdict;
+    document.getElementById('rpt-ue-summary').textContent=ph.summary||'';
+    document.getElementById('rpt-footer-sources').textContent='Data: '+srcParts.join(' \u00B7 ')+' \u00B7 as of '+today+' \u00B7 Optimised for '+mlabel;
+
+    var cp=document.getElementById('rpt-camp-panel'),cb=document.getElementById('rpt-camp-toggle');
+    if(cp&&cb){cp.setAttribute('hidden','');cb.setAttribute('aria-expanded','false');}
+    var up=document.getElementById('rpt-ue-panel'),ub=document.getElementById('rpt-ue-toggle');
+    if(up&&ub){up.setAttribute('hidden','');ub.setAttribute('aria-expanded','false');}
+    setupDisclosure('rpt-camp-toggle','rpt-camp-panel');
+    setupDisclosure('rpt-ue-toggle','rpt-ue-panel');
+  }
+
+  window.openReportModal=function(){
+    if(window.location.hash!=='#demo-report') window.location.hash='demo-report';
+    else{syncStepTo(4,true);showReportModalDOM();pushDemoDataLayer('demo-report');}
+  };
+  window.closeReportModal=function(){
+    hideReportModalDOM();
+    if(window.location.hash==='#demo-report') history.replaceState(null,'',demoUrlBase()+'#demo-step-4');
+  };
+  document.addEventListener('keydown',function(e){if(e.key==='Escape') closeReportModal();});
+
+  window.wtRestart=function(){
+    walkthroughPrepareHeightTransition();
+    state.step=1; state.platforms=[]; state.metric=null;
+    document.querySelectorAll('.plat-btn').forEach(function(b){b.classList.remove('selected');b.setAttribute('aria-pressed','false');});
+    document.querySelectorAll('.metric-card').forEach(function(c){c.classList.remove('selected');c.setAttribute('aria-pressed','false');});
+    document.querySelectorAll('.analyzing-line').forEach(function(l){l.classList.remove('visible','done');});
+    var nb=document.getElementById('wt-next-1'); if(nb) nb.disabled=true;
+    var hint=document.getElementById('plat-hint'); if(hint) hint.textContent='Select at least 2 to see cross-tool signals';
+    syncWizardStepClasses(1); updateProgress(); walkthroughRunHeightTransition();
+    replaceDemoFragment('demo-step-1');
+  };
+
+  function parseDemoStepHash(raw){
+    var p='demo-step-'; if(raw.indexOf(p)!==0) return null;
+    var n=parseInt(raw.slice(p.length),10); return(n>=1&&n<=4)?n:null;
+  }
+  function onDemoHashChange(){
+    var raw=window.location.hash.replace(/^#/,'');
+    if(raw==='demo-report'){syncStepTo(4,true);showReportModalDOM();pushDemoDataLayer('demo-report');return;}
+    hideReportModalDOM();
+    var sn=parseDemoStepHash(raw); if(sn!==null) syncStepTo(sn,true);
+  }
+  function applyInitialDemoHash(){
+    var raw=window.location.hash.replace(/^#/,'');
+    if(!raw) return;
+    skipWalkthroughHeightAnimOnce=true;
+    try{
+      if(raw==='demo-report'){syncStepTo(4,true);showReportModalDOM();pushDemoDataLayer('demo-report');return;}
+      var sn=parseDemoStepHash(raw); if(sn!==null) syncStepTo(sn,true);
+    }finally{skipWalkthroughHeightAnimOnce=false;}
+  }
+  window.addEventListener('hashchange',onDemoHashChange);
+  document.addEventListener('DOMContentLoaded',function(){if(window.location.hash) applyInitialDemoHash();});
+})();
+</script>
+
 <script src="assets/duct.js" defer></script>
 
 </body>
