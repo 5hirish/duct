@@ -1,5 +1,41 @@
 # Plan: Add Interactive Demo to `for-product-intelligence.html` and `for-organic-growth.html`
 
+---
+
+## Progress Tracker
+
+**Last updated:** 2026-03-31  
+**Branch:** `claude/add-demo-component-EIi65`
+
+### `for-product-intelligence.html`
+
+| Item | Status |
+|---|---|
+| Demo CSS block (~200 lines inline `<style>`) | ✅ Done — committed |
+| Nav: "Try the demo" link + subtitle suffix `· demo` | ✅ Done — committed |
+| 4-step wizard HTML (tool selection, goal, analysis, report preview) | ✅ Done — committed |
+| Report modal HTML | ✅ Done — committed |
+| JS script block (PLATFORM_DATA + wizard logic + report rendering) | ⏳ Pending |
+
+### `for-organic-growth.html`
+
+| Item | Status |
+|---|---|
+| Demo CSS block + green accent overrides | ⏳ Pending |
+| Nav: "Try the demo" link + subtitle suffix `· demo` | ⏳ Pending |
+| 4-step wizard HTML (SEO tool selection, goal, analysis, report preview) | ⏳ Pending |
+| Report modal HTML | ⏳ Pending |
+| JS script block (PLATFORM_DATA + wizard logic + report rendering) | ⏳ Pending |
+
+### Known blocker
+
+The JS script block is large (~600 lines per page). A tool parameter-size issue was hit during
+the initial session — large `command`/`content` parameters were being dropped silently.
+Working around this by writing JS via Python heredoc injections in Bash. The structure and
+mock data are fully designed (see JS Architecture section below); only the write step remains.
+
+---
+
 ## Context
 `for-paid-ads.html` has a 4-step interactive walkthrough demo that lets visitors pick their tool stack, set a goal, watch a mock analysis animation, and see a realistic report preview. This has strong conversion value. The goal is to replicate the same level of interaction, simplicity, and sophistication on the other two landing pages, adapted to each page's audience and domain.
 
@@ -174,10 +210,42 @@ The `setKPIChips` function is adapted to use these domain-specific keys.
 
 ---
 
-## Verification
+## Verification Checklist
 
-1. `python3 -m http.server 8080` → open each page
-2. For each page: select 2+ tools → select a goal → confirm analysis animation plays → confirm report preview renders → confirm "View full report" opens modal → confirm modal close works → confirm Restart works
-3. Deep link test: open `for-product-intelligence.html#demo-step-2` directly — should land on step 2
-4. For organic growth: confirm all orange accents in the demo (dots, buttons, borders, spinner) are green
-5. Mobile: check 375px width — `.plat-grid` should stack to 1 column, `.kpi-strip` should 2-column
+### Functional
+- [ ] Select 2+ tools → "Set your goal" button unlocks
+- [ ] Select 1 tool only → button stays disabled, hint text reads "Select at least 2 to see cross-tool signals"
+- [ ] Complete all 4 steps → report preview renders with correct data
+- [ ] "View full brief →" opens the modal
+- [ ] Modal close button (×) and Escape key both close the modal
+- [ ] "Restart" button resets all selections and returns to step 1
+- [ ] Deep link: `#demo-step-2` lands on step 2 without animation
+- [ ] Deep link: `#demo-report` opens modal directly
+
+### Visual
+- [ ] Step progress dots update correctly (active = filled, done = muted blue, future = grey)
+- [ ] Height animation plays smoothly between steps (no jump)
+- [ ] Report preview fades out at the bottom (mask-image gradient)
+- [ ] Organic growth page: all demo orange accents are green (dots, button, borders, spinner, bar fill)
+
+### Mobile (375px)
+- [ ] `.plat-grid` collapses to 1 column
+- [ ] `.kpi-strip` collapses to 2 columns
+- [ ] Hero KPI + sparkline stacks vertically
+- [ ] No horizontal scroll
+
+### Accessibility
+- [ ] Tab order through wizard is logical
+- [ ] `inert` attribute prevents focus on inactive steps
+- [ ] Modal traps focus when open
+- [ ] `aria-pressed` toggles correctly on platform buttons
+- [ ] `aria-live="polite"` on the card announces step changes to screen readers
+
+---
+
+## Commit History
+
+| Commit | Description |
+|---|---|
+| `863833d` | Add interactive demo scaffold to for-product-intelligence.html |
+| `ecdf1c1` | Add demo component implementation plan to docs |
