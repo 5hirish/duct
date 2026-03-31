@@ -4,7 +4,7 @@
 
 ## Progress Tracker
 
-**Last updated:** 2026-03-31  
+**Last updated:** 2026-03-31 (all items complete)  
 **Branch:** `claude/add-demo-component-EIi65`
 
 ### `for-product-intelligence.html`
@@ -15,17 +15,17 @@
 | Nav: "Try the demo" link + subtitle suffix `· demo` | ✅ Done — committed |
 | 4-step wizard HTML (tool selection, goal, analysis, report preview) | ✅ Done — committed |
 | Report modal HTML | ✅ Done — committed |
-| JS script block (PLATFORM_DATA + wizard logic + report rendering) | ⏳ Pending |
+| JS script block (PLATFORM_DATA + wizard logic + report rendering) | ✅ Done — committed |
 
 ### `for-organic-growth.html`
 
 | Item | Status |
 |---|---|
-| Demo CSS block + green accent overrides | ⏳ Pending |
-| Nav: "Try the demo" link + subtitle suffix `· demo` | ⏳ Pending |
-| 4-step wizard HTML (SEO tool selection, goal, analysis, report preview) | ⏳ Pending |
-| Report modal HTML | ⏳ Pending |
-| JS script block (PLATFORM_DATA + wizard logic + report rendering) | ⏳ Pending |
+| Demo CSS block + green accent overrides | ✅ Done — committed |
+| Nav: "Try the demo" link + subtitle suffix `· demo` | ✅ Done — committed |
+| 4-step wizard HTML (SEO tool selection, goal, analysis, report preview) | ✅ Done — committed |
+| Report modal HTML | ✅ Done — committed |
+| JS script block (PLATFORM_DATA + wizard logic + report rendering) | ✅ Done — committed |
 
 ### Known blocker
 
@@ -249,3 +249,5 @@ The `setKPIChips` function is adapted to use these domain-specific keys.
 |---|---|
 | `863833d` | Add interactive demo scaffold to for-product-intelligence.html |
 | `ecdf1c1` | Add demo component implementation plan to docs |
+| `075ecf6` | Add JS script block to for-product-intelligence.html demo |
+| `efd5166` | Add full interactive demo to for-organic-growth.html |
