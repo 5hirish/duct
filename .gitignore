@@ -8,3 +8,6 @@ Thumbs.db
 
 # Claude Code
 .claude/cache/
+
+# Cursor local state
+.cursor/hooks/state/

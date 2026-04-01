@@ -21,6 +21,10 @@ Most teams have the data. What they lack is the synthesis. Every tool speaks its
 | `backend/` | Python reporting and synthesis MVP |
 | `docs/` | Product, MVP, and implementation plans |
 
+Directory-local agent docs live inside the main code areas:
+- `site/AGENTS.md` and `site/CLAUDE.md`
+- `backend/AGENTS.md` and `backend/CLAUDE.md`
+
 ## Pages
 
 | URL | File | Audience |
