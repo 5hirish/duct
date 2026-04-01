@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<!-- Title and meta set dynamically by JS from front matter -->
+<title>Duct Insights</title>
+<meta name="description" content=""/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="article"/>
+<meta property="og:url" content=""/>
+<meta property="og:title" content=""/>
+<meta property="og:description" content=""/>
+<meta property="og:image" content="https://getduct.ai/assets/og-image.png"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content=""/>
+<meta name="twitter:description" content=""/>
+<meta name="twitter:site" content="@getduct"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og-image.png"/>
+<link rel="stylesheet" href="../assets/duct.css"/>
+<script src="../assets/config.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+/* Skip to content */
+.skip-link {
+  position: absolute; top: -100%; left: 16px; z-index: 300;
+  padding: 10px 20px; background: var(--navy); color: #fff;
+  font-size: 14px; font-weight: 500; border-radius: var(--r);
+  text-decoration: none; transition: top .15s;
+}
+.skip-link:focus { top: 16px; }
+
+/* Reading progress bar */
+#reading-progress {
+  position: fixed; top: 0; left: 0; width: 0%; height: 3px;
+  background: var(--orange); z-index: 200; transition: width .1s linear;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<a href="#prose" class="skip-link">Skip to content</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- READING PROGRESS BAR -->
+<div id="reading-progress" role="progressbar" aria-label="Reading progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+
+<!-- NAV -->
+
+<nav id="nav" aria-label="Site navigation">
+<div style="display:flex;align-items:center;gap:10px">
+<a href="../index.html" class="logo">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<a href="index.html" style="font-size:12px;font-weight:500;color:var(--navy-3);letter-spacing:.02em;text-decoration:none">blog</a>
+</div>
+<div class="nav-links">
+<a href="../for-product-intelligence.html" class="nav-link">Product Intelligence</a>
+<a href="../for-organic-growth.html" class="nav-link">Organic Growth</a>
+<a href="../index.html#cta" class="nav-link">Get early access</a>
+</div>
+</nav>
+
+<!-- LOADER -->
+
+<div id="post-loader" style="display:flex;align-items:center;justify-content:center;padding:120px 0" aria-label="Loading article" role="status">
+<div style="width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--orange);border-radius:50%;animation:spin .7s linear infinite"></div>
+</div>
+
+<!-- ARTICLE HEADER -->
+
+<header class="article-header" id="post-content" style="display:none">
+<p id="article-category" class="tag"></p>
+<h1 id="article-title"></h1>
+<div id="article-meta" class="article-meta"></div>
+</header>
+
+<!-- HERO IMAGE (hidden if no image) -->
+
+<div id="article-hero-wrap" class="article-hero-img" style="display:none">
+<img id="article-hero-img" src="" alt=""/>
+</div>
+
+<!-- ARTICLE BODY -->
+
+<main>
+<article id="prose" class="prose" style="display:none" aria-labelledby="article-title"></article>
+<div id="article-nav" style="display:none;max-width:700px;margin:0 auto;padding:0 24px 64px;display:none;justify-content:space-between">
+  <a id="prev-article-anchor" href="#" style="font-size:14px;font-weight:500;color:var(--navy-3);text-decoration:none;transition:color .2s;display:none" onmouseover="this.style.color='var(--navy)'" onmouseout="this.style.color='var(--navy-3)'">← Previous article</a>
+  <a id="next-article-anchor" href="#" style="font-size:14px;font-weight:500;color:var(--navy-3);text-decoration:none;transition:color .2s;margin-left:auto;display:none" onmouseover="this.style.color='var(--navy)'" onmouseout="this.style.color='var(--navy-3)'">Next article →</a>
+</div>
+</main>
+
+<!-- INLINE CTA -->
+
+<section class="blog-cta">
+<h2>Stop reading tools.<br/><em>Start reading signals.</em></h2>
+<p>Duct connects your tools and surfaces what actually matters — delivered before your Monday standup.</p>
+<div class="cta-form" style="max-width:460px;margin:0 auto">
+<input type="email" id="ctaEmail" class="email-in" placeholder="you@company.com" aria-label="Email address"/>
+<button class="btn btn-orange btn-lg"
+  data-form-url="https://docs.google.com/forms/d/e/1FAIpQLSfm7QgovGGHE38CsOPqj5O_XVBtnjbRhkf16rNJhdvkd-rddg/formResponse"
+  data-entry-id="entry.276669450"
+  onclick="submitForm('ctaEmail', this)">Get early access →</button>
+</div>
+</section>
+
+<!-- FOOTER -->
+
+<footer>
+<a href="../index.html" class="logo" style="font-size:18px">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<a href="mailto:hello@getduct.ai" class="footer-email">hello@getduct.ai</a>
+<span class="footer-copy">© 2025 Duct · getduct.ai</span>
+</footer>
+
+<script src="../assets/duct.js" defer></script>
+<script>
+// Reading progress bar
+(function () {
+  var bar = document.getElementById('reading-progress');
+  function updateProgress() {
+    var scrollTop = window.scrollY || document.documentElement.scrollTop;
+    var docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    var pct = docHeight > 0 ? Math.round((scrollTop / docHeight) * 100) : 0;
+    bar.style.width = pct + '%';
+    bar.setAttribute('aria-valuenow', pct);
+  }
+  window.addEventListener('scroll', updateProgress, { passive: true });
+})();
+
+// Post loader
+(function () {
+  function parseFrontMatter(raw) {
+    var match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
+    if (!match) return { body: raw };
+    var meta = {};
+    match[1].split('\n').forEach(function (line) {
+      var idx = line.indexOf(':');
+      if (idx === -1) return;
+      var k = line.slice(0, idx).trim();
+      var v = line.slice(idx + 1).trim().replace(/^"|"$/g, '');
+      if (k) meta[k] = v;
+    });
+    return Object.assign(meta, { body: match[2] });
+  }
+
+  function setMeta(name, content) {
+    var el = document.querySelector('meta[name="' + name + '"]') ||
+             document.querySelector('meta[property="' + name + '"]');
+    if (el && content) el.setAttribute('content', content);
+  }
+
+  // All blog posts — update when adding new posts
+  var ALL_POSTS = [
+    { slug: 'why-your-seo-metrics-arent-telling-you-the-full-story' },
+    { slug: 'keyword-gap-analysis-without-a-spreadsheet' }
+  ];
+
+  function showContent() {
+    document.getElementById('post-loader').style.display = 'none';
+    document.getElementById('post-content').style.display = '';
+    document.getElementById('prose').style.display = '';
+  }
+
+  var slug = new URLSearchParams(location.search).get('slug');
+  if (!slug) {
+    document.getElementById('prose').innerHTML = '<p>No article specified.</p>';
+    return;
+  }
+
+  fetch('posts/' + slug + '.md')
+    .then(function (r) {
+      if (!r.ok) throw new Error('Not found');
+      return r.text();
+    })
+    .then(function (raw) {
+      var fm = parseFrontMatter(raw);
+
+      // Title
+      if (fm.title) {
+        document.title = fm.title + ' — Duct Insights';
+        document.getElementById('article-title').textContent = fm.title;
+        setMeta('og:title', fm.title + ' — Duct Insights');
+        setMeta('twitter:title', fm.title + ' — Duct Insights');
+      }
+
+      // Category
+      if (fm.category) {
+        document.getElementById('article-category').textContent = fm.category;
+      }
+
+      // Meta line: date + read time
+      var metaParts = [];
+      if (fm.date) metaParts.push(fm.date);
+      if (fm.readTime) metaParts.push(fm.readTime + ' min read');
+      if (fm.author) metaParts.push('By ' + fm.author);
+      document.getElementById('article-meta').textContent = metaParts.join(' · ');
+
+      // Excerpt → description
+      if (fm.excerpt) {
+        setMeta('description', fm.excerpt);
+        setMeta('og:description', fm.excerpt);
+        setMeta('twitter:description', fm.excerpt);
+      }
+
+      // Canonical URL
+      var canonical = document.querySelector('link[rel="canonical"]');
+      if (!canonical) {
+        canonical = document.createElement('link');
+        canonical.rel = 'canonical';
+        document.head.appendChild(canonical);
+      }
+      canonical.href = 'https://getduct.ai/blog/post.html?slug=' + slug;
+      setMeta('og:url', canonical.href);
+
+      // Hero image
+      if (fm.heroImage) {
+        var wrap = document.getElementById('article-hero-wrap');
+        var img = document.getElementById('article-hero-img');
+        img.src = fm.heroImage;
+        img.alt = fm.title || '';
+        wrap.style.display = 'block';
+      }
+
+      // Article body
+      document.getElementById('prose').innerHTML = marked.parse(fm.body || '');
+
+      // Show content, hide loader
+      showContent();
+
+      // Article navigation
+      var idx = ALL_POSTS.findIndex(function (p) { return p.slug === slug; });
+      var hasPrev = idx > 0;
+      var hasNext = idx !== -1 && idx + 1 < ALL_POSTS.length;
+      if (hasPrev || hasNext) {
+        var nav = document.getElementById('article-nav');
+        nav.style.display = 'flex';
+        if (hasPrev) {
+          var prev = document.getElementById('prev-article-anchor');
+          prev.href = 'post.html?slug=' + ALL_POSTS[idx - 1].slug;
+          prev.style.display = '';
+        }
+        if (hasNext) {
+          var next = document.getElementById('next-article-anchor');
+          next.href = 'post.html?slug=' + ALL_POSTS[idx + 1].slug;
+          next.style.display = '';
+        }
+      }
+
+      // JSON-LD
+      var ld = {
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        headline: fm.title || '',
+        description: fm.excerpt || '',
+        datePublished: fm.date || '',
+        author: { '@type': 'Organization', name: fm.author || 'Duct Team' },
+        publisher: { '@type': 'Organization', name: 'Duct', url: 'https://getduct.ai' },
+        mainEntityOfPage: canonical.href
+      };
+      var script = document.createElement('script');
+      script.type = 'application/ld+json';
+      script.textContent = JSON.stringify(ld);
+      document.head.appendChild(script);
+    })
+    .catch(function () {
+      showContent();
+      document.getElementById('article-title').textContent = 'Article not found';
+      document.getElementById('prose').innerHTML = '<p>Sorry, this article could not be loaded.</p>';
+    });
+})();
+</script>
+
+</body>
+</html>

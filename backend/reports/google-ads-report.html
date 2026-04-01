@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Google Ads MVP Report</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #475569;
+      --border: #dbe4f0;
+      --accent: #2563eb;
+      --danger: #b91c1c;
+      --success: #166534;
+      --warning: #92400e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 32px 20px 48px;
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .hero, .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 6px 24px rgba(15, 23, 42, 0.05);
+    }
+    .hero {
+      padding: 28px;
+      margin-bottom: 20px;
+    }
+    .grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin: 20px 0;
+    }
+    .metric {
+      padding: 16px;
+      background: #f8fbff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    .metric-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .metric-value {
+      font-size: 24px;
+      font-weight: 700;
+    }
+    .metric-delta {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+    .section-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .card {
+      padding: 24px;
+    }
+    h1, h2, h3 {
+      margin: 0 0 10px;
+      line-height: 1.25;
+    }
+    p { margin: 0 0 12px; }
+    .eyebrow {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .muted { color: var(--muted); }
+    .finding-card {
+      padding: 14px 0;
+      border-top: 1px solid var(--border);
+    }
+    .finding-card:first-child {
+      border-top: none;
+      padding-top: 0;
+    }
+    .impact {
+      color: var(--muted);
+    }
+    .confidence {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    ul, ol {
+      margin: 0 0 12px 20px;
+      padding: 0;
+    }
+    .meta {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    th, td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    th {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+    pre {
+      white-space: pre-wrap;
+      background: #eff6ff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      overflow-x: auto;
+      font-size: 13px;
+    }
+    @media (max-width: 900px) {
+      .grid, .section-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    @media (max-width: 640px) {
+      .grid, .section-grid {
+        grid-template-columns: 1fr;
+      }
+      body {
+        padding: 16px 12px 32px;
+      }
+      .hero, .card {
+        padding: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <div class="eyebrow">Google Ads MVP Report</div>
+      <h1>Duct Demo Account</h1>
+      <p>Mixed performance: efficient campaigns are being diluted by weaker spend.</p>
+      <p class="muted">Blended ROAS moved from 2.38x to 2.30x. Brand Search is the strongest campaign, while Competitor Search is the clearest budget risk.</p>
+      <div class="grid">
+        <div class="metric">
+          <div class="metric-label">Spend</div>
+          <div class="metric-value">$9,800.00</div>
+          <div class="metric-delta">+$690.00 (+7.6%)</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Conversions</div>
+          <div class="metric-value">83</div>
+          <div class="metric-delta">+3 (+3.8%)</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">CPA</div>
+          <div class="metric-value">$118.07</div>
+          <div class="metric-delta">+$4.20 (+3.7%)</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">ROAS</div>
+          <div class="metric-value">2.30x</div>
+          <div class="metric-delta">-0.08x (-3.5%)</div>
+        </div>
+      </div>
+      <p><strong>Operator takeaway:</strong> Protect spend behind Brand Search and cut or rework Competitor Search before adding net-new budget.</p>
+    </section>
+
+    <div class="section-grid">
+      <section class="card">
+        <h2>Top Wins</h2>
+        <article class='finding-card'><h3>Brand Search is outperforming the account baseline</h3><p class='impact'>This campaign is producing efficient conversions and can absorb more budget than weaker campaigns.</p><ul><li>ROAS is 5.89x</li><li>CPA is $56.32</li><li>38 conversions this period</li></ul><p><strong>Action:</strong> Increase budget on Brand Search in controlled increments.</p><p class='confidence'>Confidence: high</p></article><article class='finding-card'><h3>Retargeting Display is outperforming the account baseline</h3><p class='impact'>This campaign is producing efficient conversions and can absorb more budget than weaker campaigns.</p><ul><li>ROAS is 3.65x</li><li>CPA is $65.71</li><li>14 conversions this period</li></ul><p><strong>Action:</strong> Increase budget on Retargeting Display in controlled increments.</p><p class='confidence'>Confidence: high</p></article>
+      </section>
+      <section class="card">
+        <h2>Top Risks</h2>
+        <article class='finding-card'><h3>Competitor Search is underperforming</h3><p class='impact'>Budget is being consumed by campaigns that are not returning enough value.</p><ul><li>ROAS is 0.64x</li><li>CPA is $264.29</li><li>Low ROAS and expensive conversions are wasting budget.</li></ul><p><strong>Action:</strong> Pause Competitor Search this week.</p><p class='confidence'>Confidence: high</p></article><article class='finding-card'><h3>Non-Brand Search is underperforming</h3><p class='impact'>Budget is being consumed by campaigns that are not returning enough value.</p><ul><li>ROAS is 1.10x</li><li>CPA is $203.75</li><li>Returns are weak enough to justify audience or query tightening.</li></ul><p><strong>Action:</strong> Tighten Non-Brand Search this week.</p><p class='confidence'>Confidence: medium</p></article>
+      </section>
+    </div>
+
+    <section class="card">
+      <h2>Recommended Actions</h2>
+      <ol><li><strong>Pause Competitor Search</strong> - Low ROAS and expensive conversions are wasting budget. <span class='meta'>P1 | paid team</span></li><li><strong>Scale Brand Search</strong> - High ROAS with meaningful conversion volume. <span class='meta'>P1 | paid team</span></li><li><strong>Scale Retargeting Display</strong> - High ROAS with meaningful conversion volume. <span class='meta'>P1 | paid team</span></li><li><strong>Tighten Non-Brand Search</strong> - Returns are weak enough to justify audience or query tightening. <span class='meta'>P2 | paid team</span></li></ol>
+    </section>
+
+    <section class="card" style="margin-top:20px">
+      <h2>Campaign Table</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Campaign</th>
+            <th>Action</th>
+            <th>ROAS</th>
+            <th>CPA</th>
+            <th>CTR</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+        <tbody><tr><td>Competitor Search</td><td>pause</td><td>ROAS 0.64x</td><td>CPA 264.29</td><td>CTR 5.5%</td><td>Low ROAS and expensive conversions are wasting budget.</td></tr><tr><td>Non-Brand Search</td><td>tighten</td><td>ROAS 1.10x</td><td>CPA 203.75</td><td>CTR 5.6%</td><td>Returns are weak enough to justify audience or query tightening.</td></tr><tr><td>Brand Search</td><td>scale</td><td>ROAS 5.89x</td><td>CPA 56.32</td><td>CTR 13.3%</td><td>High ROAS with meaningful conversion volume.</td></tr><tr><td>Retargeting Display</td><td>scale</td><td>ROAS 3.65x</td><td>CPA 65.71</td><td>CTR 1.7%</td><td>High ROAS with meaningful conversion volume.</td></tr></tbody>
+      </table>
+    </section>
+
+    <section class="card" style="margin-top:20px">
+      <h2>Source Metadata</h2>
+      <pre>{
+  "source": "google_ads_manual_export",
+  "export_type": "campaign_performance",
+  "generated_at": "2026-04-01T04:27:18.940929+00:00",
+  "window_current": "last_7_days",
+  "window_previous": "previous_7_days",
+  "currency_code": "USD",
+  "account_name": "Duct Demo Account",
+  "account_id": "123-456-7890",
+  "source_file": "demo://google_ads_campaign_export.csv",
+  "notes": [
+    "Demo data for MVP validation"
+  ]
+}</pre>
+    </section>
+  </div>
+</body>
+</html>
