@@ -112,12 +112,12 @@ render --> review[OperatorReview]
 | File | Purpose |
 |---|---|
 | `docs/google-ads-mvp-plan.md` | Product + engineering plan for this MVP slice |
-| `briefs/templates/google_ads_weekly_brief.md` | Prompt template and brief-writing contract |
-| `briefs/schemas/google_ads_brief.py` | Typed schema for payload, findings, and actions |
-| `scripts/google_ads_fetch.py` | Convert manual export CSV/JSON into raw structured JSON |
-| `scripts/google_ads_brief.py` | Normalize data, score findings, and render report artifacts |
-| `reports/google-ads-report.json` | Example normalized payload for debugging |
-| `reports/google-ads-report.html` | Example rendered report artifact |
+| `backend/briefs/templates/google_ads_weekly_brief.md` | Prompt template and brief-writing contract |
+| `backend/briefs/schemas/google_ads_brief.py` | Typed schema for payload, findings, and actions |
+| `backend/scripts/google_ads_fetch.py` | Convert manual export CSV/JSON into raw structured JSON |
+| `backend/scripts/google_ads_brief.py` | Normalize data, score findings, and render report artifacts |
+| `backend/reports/google-ads-report.json` | Example normalized payload for debugging |
+| `backend/reports/google-ads-report.html` | Example rendered report artifact |
 
 ---
 

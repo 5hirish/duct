@@ -1,6 +1,6 @@
 ---
 description: Conventions for Duct landing pages and shared assets
-globs: ["*.html", "assets/**", "blog/**"]
+globs: ["site/*.html", "site/assets/**", "site/blog/**"]
 ---
 
 ## Canonical links
@@ -12,15 +12,15 @@ globs: ["*.html", "assets/**", "blog/**"]
 
 ## Shared CSS and JS
 
-- All styles go in `assets/duct.css`. Never add a `<link>` to a separate page CSS file.
+- All styles go in `site/assets/duct.css`. Never add a `<link>` to a separate page CSS file.
 - Page-specific overrides (e.g. accent colour) go in an inline `<style>` block at the bottom of `<head>`. Keep it minimal.
-- `assets/config.js` must load **before** `assets/duct.js` — config.js sets `DUCT_CONFIG` that duct.js reads.
-- `assets/duct.js` always loads with `defer` at the bottom of `<body>`.
+- `site/assets/config.js` must load **before** `site/assets/duct.js` — config.js sets `DUCT_CONFIG` that duct.js reads.
+- `site/assets/duct.js` always loads with `defer` at the bottom of `<body>`.
 - Asset path: root-level pages use `assets/`, blog pages use `../assets/`.
 
 ## Sitemap
 
-- Every new page or blog post requires a `<url>` entry in `sitemap.xml`.
+- Every new page or blog post requires a `<url>` entry in `site/sitemap.xml`.
 - Use production URLs. No `.html` extensions for landing pages.
 - Blog post entries: `https://getduct.ai/blog/post.html?slug=SLUG`
 - Landing pages: `<priority>0.9</priority>`, `<changefreq>weekly</changefreq>`
@@ -31,7 +31,7 @@ globs: ["*.html", "assets/**", "blog/**"]
 - Form submit buttons must have `data-form-url` and `data-entry-id` attributes.
 - Always use `onclick="submitForm('INPUT_ID', this)"` — never handle submission inline.
 - Do not add a `<form>` element. The pattern uses a plain `<input>` + `<button>`.
-- Copy `data-form-url` and `data-entry-id` from `for-product-intelligence.html` unless the new page needs a distinct form.
+- Copy `data-form-url` and `data-entry-id` from `site/for-product-intelligence.html` unless the new page needs a distinct form.
 
 ## Google Tag Manager
 
@@ -42,20 +42,20 @@ globs: ["*.html", "assets/**", "blog/**"]
 ## New landing page variant pattern
 
 - File name: `for-<audience-slug>.html` (lowercase, hyphens only).
-- Copy `for-product-intelligence.html` as the base — it has the fullest section structure.
+- Copy `site/for-product-intelligence.html` as the base — it has the fullest section structure.
 - Update in order: `<title>`, canonical, `og:url`, `og:title`, `og:description`, nav subtitle, hero headline, hero subtext, form IDs (if new form), audience cards, `<style>` overrides.
 - Add the new URL to `sitemap.xml` before committing.
 
 ## Blog posts
 
-- Post files: `blog/posts/<slug>.md`
+- Post files: `site/blog/posts/<slug>.md`
 - Slug rules: lowercase, hyphens only, no special characters, descriptive of the title.
 - Required front matter keys: `title`, `date`, `author`, `category`, `excerpt`, `readTime`.
 - `date` format: `Mon DD YYYY` (e.g. `Mar 15 2026`).
 - `readTime` is a bare integer (minutes), no quotes.
 - After adding a post, also update:
-  1. `blog/index.html` — new `<a class="blog-card reveal">` entry (follow existing markup exactly, newest card first)
-  2. `sitemap.xml` — new `<url>` entry
+  1. `site/blog/index.html` — new `<a class="blog-card reveal">` entry (follow existing markup exactly, newest card first)
+  2. `site/sitemap.xml` — new `<url>` entry
 
 ## SEO quality bar
 

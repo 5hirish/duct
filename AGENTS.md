@@ -1,29 +1,22 @@
-# Duct — Agent instructions
+# Duct — Monorepo agent instructions
 
-Static multi-variant landing site for [getduct.ai](https://getduct.ai). Follow these conventions when editing this project.
-
-## Stack
-
-- **Static site only:** Pure HTML, CSS, and JavaScript. No build tools, no bundler, no framework.
-- Do not suggest adding npm, Vite, Webpack, or similar unless explicitly asked.
+Monorepo for [getduct.ai](https://getduct.ai).
 
 ## Structure
 
-- **URL → file mapping:** Each path corresponds to one HTML file (e.g. `/for-product-managers` → `for-product-managers.html`). Root `/` is `index.html` and redirects to `/for-product-managers`.
-- **Shared assets:** Use `assets/duct.css` for brand styles and `assets/duct.js` for scroll reveal, nav shadow, and form submit logic. Do not duplicate these in page-specific files.
+- `site/` contains the static marketing site and blog.
+- `backend/` contains Python reporting and synthesis code.
+- `app/` is reserved for the future authenticated Duct app.
+- `docs/` contains product, MVP, and implementation plans.
 
-## Adding a new variant
+## Monorepo rules
 
-1. Copy an existing `for-*.html` (e.g. `for-product-managers.html`) → `for-new-audience.html`.
-2. Update `<title>`, `<link rel="canonical">` (use production URL `https://getduct.ai/...`), and hero copy.
-3. If using a separate form, update the Google Forms `data-form-url` and `data-entry-id` on both submit buttons.
-4. Add the new URL to `sitemap.xml`.
+- Keep changes scoped to the correct top-level area.
+- Do not mix backend product code into `site/`.
+- Do not introduce build tools into `site/` unless explicitly asked.
+- Prefer directory-specific instruction files when working inside a subdirectory.
 
-## Deploy
+## Directory-specific guidance
 
-Push to `main`. Netlify, Vercel, or Cloudflare Pages auto-deploy and serve `.html` files at clean URLs (e.g. `for-product-managers.html` → `/for-product-managers`).
-
-## Local dev
-
-- `python3 -m http.server 8080` then open e.g. `http://localhost:8080/for-product-managers.html`.
-- Or use the Live Server extension (see `.vscode/settings.json`, port 5500).
+- When working in `site/`, follow `site/AGENTS.md`.
+- When working in `site/`, also follow `site/CLAUDE.md` for the marketing-site conventions.

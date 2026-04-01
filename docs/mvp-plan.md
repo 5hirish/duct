@@ -141,7 +141,7 @@ Duct's positioning: no dashboard to log into — briefs come to you. Visualisati
 
 Validate the brief format before automating anything. Customer shares read-only DB credentials. Run PyAirbyte manually to pull GA4 or HubSpot data. Feed to Claude with the PM brief prompt template. Send via Resend. Target ~2 hours per customer per week. Do not automate until 3 pilots confirm the brief format is right.
 
-Add `briefs/templates/` to this repo with the vertical prompt templates — versioned alongside the product thinking.
+Add `backend/briefs/templates/` to this repo with the vertical prompt templates — versioned alongside the product thinking.
 
 ### Week 1–2 — Core loop
 

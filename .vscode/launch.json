@@ -5,26 +5,26 @@
       "name": "Open Home page",
       "type": "chrome",
       "request": "launch",
-      "file": "${workspaceFolder}/index.html"
+      "file": "${workspaceFolder}/site/index.html"
     },
     {
       "name": "Open Product Intelligence page",
       "type": "chrome",
       "request": "launch",
-      "file": "${workspaceFolder}/for-product-intelligence.html"
+      "file": "${workspaceFolder}/site/for-product-intelligence.html"
     },
     {
       "name": "Open Organic Growth page",
       "type": "chrome",
       "request": "launch",
-      "file": "${workspaceFolder}/for-organic-growth.html"
+      "file": "${workspaceFolder}/site/for-organic-growth.html"
     },
     {
       "name": "Start HTTP server",
       "type": "node-terminal",
       "request": "launch",
       "command": "python3 -m http.server 8080",
-      "cwd": "${workspaceFolder}"
+      "cwd": "${workspaceFolder}/site"
     },
     {
       "name": "Open Blog (via HTTP server)",
