@@ -2,19 +2,25 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "App: dev server",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev",
+      "cwd": "${workspaceFolder}/app"
+    },
+    {
       "name": "Backend: Google Ads brief (demo)",
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/backend/scripts/google_ads_brief.py",
       "cwd": "${workspaceFolder}/backend",
       "console": "integratedTerminal",
-      "postDebugTask": "Open Google Ads report in Chrome (demo)",
       "args": [
         "--demo",
+        "--theme",
+        "paid_ads",
         "--output-json",
-        "reports/google-ads-report.json",
-        "--output-html",
-        "reports/google-ads-report.html"
+        "reports/google-ads-report.json"
       ]
     },
     {
@@ -24,14 +30,13 @@
       "program": "${workspaceFolder}/backend/scripts/google_ads_brief.py",
       "cwd": "${workspaceFolder}/backend",
       "console": "integratedTerminal",
-      "postDebugTask": "Open Google Ads report in Chrome (client brief)",
       "args": [
         "--input",
         "${input:googleAdsRawJson}",
+        "--theme",
+        "${input:googleAdsTheme}",
         "--output-json",
-        "reports/client-brief.json",
-        "--output-html",
-        "reports/client-brief.html"
+        "reports/client-brief.json"
       ]
     },
     {
@@ -87,6 +92,13 @@
       "type": "promptString",
       "description": "Raw JSON path (relative to backend/ or absolute)",
       "default": "reports/client-raw.json"
+    },
+    {
+      "id": "googleAdsTheme",
+      "type": "pickString",
+      "description": "Theme key",
+      "options": ["paid_ads", "product_intelligence", "organic_growth"],
+      "default": "paid_ads"
     },
     {
       "id": "googleAdsCsv",

@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
-"""Normalize Google Ads raw data into a brief payload and static HTML report."""
+"""Normalize Google Ads raw data into a brief payload (JSON only).
+
+The web app owns HTML rendering. This script is a pure data pipeline:
+  raw source → normalize → typed brief → JSON artifact
+
+Usage:
+  python backend/scripts/google_ads_brief.py --demo --theme paid_ads \
+      --output-json backend/reports/google-ads-report.json
+"""
 
 from __future__ import annotations
 
@@ -32,11 +40,15 @@ from briefs.schemas.google_ads_brief import (
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Generate Google Ads MVP brief artifacts.")
+    parser = argparse.ArgumentParser(description="Generate Google Ads MVP brief JSON.")
     parser.add_argument("--input", help="Raw JSON from google_ads_fetch.py")
     parser.add_argument("--output-json", required=True, help="Normalized payload path")
-    parser.add_argument("--output-html", required=True, help="HTML report path")
     parser.add_argument("--demo", action="store_true", help="Use built-in demo data")
+    parser.add_argument(
+        "--theme",
+        default="paid_ads",
+        help="Theme key embedded in output JSON (e.g. paid_ads, product_intelligence, organic_growth)",
+    )
     return parser.parse_args()
 
 
@@ -406,7 +418,7 @@ def build_narrative(
     return BriefNarrative(verdict=verdict, summary=summary, operator_takeaway=operator_takeaway)
 
 
-def build_brief(raw_payload: Dict[str, Any]) -> GoogleAdsBrief:
+def build_brief(raw_payload: Dict[str, Any], theme: str = "paid_ads") -> GoogleAdsBrief:
     metadata = raw_payload["source_metadata"]
     rows = raw_payload["rows"]
     currency_code = metadata.get("currency_code", "USD")
@@ -428,7 +440,10 @@ def build_brief(raw_payload: Dict[str, Any]) -> GoogleAdsBrief:
     narrative = build_narrative(current_totals, previous_totals, campaigns, currency_code)
 
     brief = GoogleAdsBrief(
-        source_metadata=SourceMetadata(**metadata),
+        source_metadata=SourceMetadata(
+            **metadata,
+            theme=theme,
+        ),
         account_summary=AccountSummary(
             spend=metric_value(current_totals["spend"], "money", currency_code),
             clicks=metric_value(current_totals["clicks"], "number", currency_code),
@@ -459,288 +474,6 @@ def build_brief(raw_payload: Dict[str, Any]) -> GoogleAdsBrief:
     return brief
 
 
-def render_list(items: List[str]) -> str:
-    return "".join(f"<li>{item}</li>" for item in items)
-
-
-def render_findings(findings: List[Finding], empty_copy: str) -> str:
-    if not findings:
-        return f"<p>{empty_copy}</p>"
-    parts = []
-    for finding in findings:
-        parts.append(
-            "<article class='finding-card'>"
-            f"<h3>{finding.title}</h3>"
-            f"<p class='impact'>{finding.impact}</p>"
-            f"<ul>{render_list(finding.evidence)}</ul>"
-            f"<p><strong>Action:</strong> {finding.recommended_action}</p>"
-            f"<p class='confidence'>Confidence: {finding.confidence}</p>"
-            "</article>"
-        )
-    return "".join(parts)
-
-
-def render_actions(actions: List[RecommendedAction]) -> str:
-    return "".join(
-        "<li>"
-        f"<strong>{action.title}</strong> - {action.detail} "
-        f"<span class='meta'>{action.priority.upper()} | {action.owner}</span>"
-        "</li>"
-        for action in actions
-    )
-
-
-def render_campaign_rows(campaigns: List[CampaignPerformance]) -> str:
-    rows = []
-    for campaign in campaigns:
-        rows.append(
-            "<tr>"
-            f"<td>{campaign.campaign_name}</td>"
-            f"<td>{campaign.action}</td>"
-            f"<td>{campaign.evidence[0]}</td>"
-            f"<td>{campaign.evidence[1]}</td>"
-            f"<td>{campaign.evidence[2]}</td>"
-            f"<td>{campaign.action_reason}</td>"
-            "</tr>"
-        )
-    return "".join(rows)
-
-
-def render_html(brief: GoogleAdsBrief) -> str:
-    payload = asdict(brief)
-    return f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Google Ads MVP Report</title>
-  <style>
-    :root {{
-      --bg: #f8fafc;
-      --card: #ffffff;
-      --text: #0f172a;
-      --muted: #475569;
-      --border: #dbe4f0;
-      --accent: #2563eb;
-      --danger: #b91c1c;
-      --success: #166534;
-      --warning: #92400e;
-    }}
-    * {{ box-sizing: border-box; }}
-    body {{
-      margin: 0;
-      padding: 32px 20px 48px;
-      background: var(--bg);
-      color: var(--text);
-      font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }}
-    .wrap {{
-      max-width: 1100px;
-      margin: 0 auto;
-    }}
-    .hero, .card {{
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      box-shadow: 0 6px 24px rgba(15, 23, 42, 0.05);
-    }}
-    .hero {{
-      padding: 28px;
-      margin-bottom: 20px;
-    }}
-    .grid {{
-      display: grid;
-      gap: 16px;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      margin: 20px 0;
-    }}
-    .metric {{
-      padding: 16px;
-      background: #f8fbff;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-    }}
-    .metric-label {{
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      color: var(--muted);
-      margin-bottom: 6px;
-    }}
-    .metric-value {{
-      font-size: 24px;
-      font-weight: 700;
-    }}
-    .metric-delta {{
-      font-size: 13px;
-      color: var(--muted);
-      margin-top: 6px;
-    }}
-    .section-grid {{
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      margin-bottom: 20px;
-    }}
-    .card {{
-      padding: 24px;
-    }}
-    h1, h2, h3 {{
-      margin: 0 0 10px;
-      line-height: 1.25;
-    }}
-    p {{ margin: 0 0 12px; }}
-    .eyebrow {{
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      color: var(--accent);
-      font-weight: 700;
-      margin-bottom: 8px;
-    }}
-    .muted {{ color: var(--muted); }}
-    .finding-card {{
-      padding: 14px 0;
-      border-top: 1px solid var(--border);
-    }}
-    .finding-card:first-child {{
-      border-top: none;
-      padding-top: 0;
-    }}
-    .impact {{
-      color: var(--muted);
-    }}
-    .confidence {{
-      font-size: 13px;
-      color: var(--muted);
-    }}
-    ul, ol {{
-      margin: 0 0 12px 20px;
-      padding: 0;
-    }}
-    .meta {{
-      color: var(--muted);
-      font-size: 13px;
-    }}
-    table {{
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14px;
-    }}
-    th, td {{
-      text-align: left;
-      padding: 10px 12px;
-      border-bottom: 1px solid var(--border);
-      vertical-align: top;
-    }}
-    th {{
-      font-size: 12px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: .06em;
-    }}
-    pre {{
-      white-space: pre-wrap;
-      background: #eff6ff;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px;
-      overflow-x: auto;
-      font-size: 13px;
-    }}
-    @media (max-width: 900px) {{
-      .grid, .section-grid {{
-        grid-template-columns: 1fr 1fr;
-      }}
-    }}
-    @media (max-width: 640px) {{
-      .grid, .section-grid {{
-        grid-template-columns: 1fr;
-      }}
-      body {{
-        padding: 16px 12px 32px;
-      }}
-      .hero, .card {{
-        padding: 18px;
-      }}
-    }}
-  </style>
-</head>
-<body>
-  <div class="wrap">
-    <section class="hero">
-      <div class="eyebrow">Google Ads MVP Report</div>
-      <h1>{payload['source_metadata']['account_name']}</h1>
-      <p>{payload['narrative']['verdict']}</p>
-      <p class="muted">{payload['narrative']['summary']}</p>
-      <div class="grid">
-        <div class="metric">
-          <div class="metric-label">Spend</div>
-          <div class="metric-value">{payload['account_summary']['spend']['formatted']}</div>
-          <div class="metric-delta">{payload['period_comparison']['spend']['delta']['formatted']}</div>
-        </div>
-        <div class="metric">
-          <div class="metric-label">Conversions</div>
-          <div class="metric-value">{payload['account_summary']['conversions']['formatted']}</div>
-          <div class="metric-delta">{payload['period_comparison']['conversions']['delta']['formatted']}</div>
-        </div>
-        <div class="metric">
-          <div class="metric-label">CPA</div>
-          <div class="metric-value">{payload['account_summary']['cost_per_conversion']['formatted']}</div>
-          <div class="metric-delta">{payload['period_comparison']['cost_per_conversion']['delta']['formatted']}</div>
-        </div>
-        <div class="metric">
-          <div class="metric-label">ROAS</div>
-          <div class="metric-value">{payload['account_summary']['roas']['formatted']}</div>
-          <div class="metric-delta">{payload['period_comparison']['roas']['delta']['formatted']}</div>
-        </div>
-      </div>
-      <p><strong>Operator takeaway:</strong> {payload['narrative']['operator_takeaway']}</p>
-    </section>
-
-    <div class="section-grid">
-      <section class="card">
-        <h2>Top Wins</h2>
-        {render_findings(brief.highlights, "No strong wins surfaced in this run.")}
-      </section>
-      <section class="card">
-        <h2>Top Risks</h2>
-        {render_findings(brief.risks, "No major risks surfaced in this run.")}
-      </section>
-    </div>
-
-    <section class="card">
-      <h2>Recommended Actions</h2>
-      <ol>{render_actions(brief.recommended_actions)}</ol>
-    </section>
-
-    <section class="card" style="margin-top:20px">
-      <h2>Campaign Table</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Campaign</th>
-            <th>Action</th>
-            <th>ROAS</th>
-            <th>CPA</th>
-            <th>CTR</th>
-            <th>Reason</th>
-          </tr>
-        </thead>
-        <tbody>{render_campaign_rows(brief.campaigns)}</tbody>
-      </table>
-    </section>
-
-    <section class="card" style="margin-top:20px">
-      <h2>Source Metadata</h2>
-      <pre>{json.dumps(payload['source_metadata'], indent=2)}</pre>
-    </section>
-  </div>
-</body>
-</html>
-"""
-
-
 def write_json(path: Path, payload: Dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as handle:
@@ -748,19 +481,14 @@ def write_json(path: Path, payload: Dict[str, Any]) -> None:
         handle.write("\n")
 
 
-def write_text(path: Path, content: str) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(content, encoding="utf-8")
-
-
 def main() -> None:
     args = parse_args()
     if not args.demo and not args.input:
         raise SystemExit("Provide --input or use --demo.")
     raw_payload = demo_raw_payload() if args.demo else load_raw(Path(args.input))
-    brief = build_brief(raw_payload)
+    brief = build_brief(raw_payload, theme=args.theme)
     write_json(Path(args.output_json), brief.to_dict())
-    write_text(Path(args.output_html), render_html(brief))
+    print(f"Wrote {args.output_json}")
 
 
 if __name__ == "__main__":

@@ -21,30 +21,6 @@
           "endsPattern": "Serving HTTP on"
         }
       }
-    },
-    {
-      "label": "Open Google Ads report in Chrome (demo)",
-      "type": "shell",
-      "command": "open",
-      "args": [
-        "-a",
-        "Google Chrome",
-        "${workspaceFolder}/backend/reports/google-ads-report.html"
-      ],
-      "presentation": { "reveal": "silent", "panel": "shared", "showReuseMessage": false },
-      "problemMatcher": []
-    },
-    {
-      "label": "Open Google Ads report in Chrome (client brief)",
-      "type": "shell",
-      "command": "open",
-      "args": [
-        "-a",
-        "Google Chrome",
-        "${workspaceFolder}/backend/reports/client-brief.html"
-      ],
-      "presentation": { "reveal": "silent", "panel": "shared", "showReuseMessage": false },
-      "problemMatcher": []
     }
   ]
 }

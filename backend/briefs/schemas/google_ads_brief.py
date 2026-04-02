@@ -58,6 +58,7 @@ class SourceMetadata:
     account_id: Optional[str] = None
     source_file: Optional[str] = None
     notes: List[str] = field(default_factory=list)
+    theme: Optional[str] = None
 
 
 @dataclass

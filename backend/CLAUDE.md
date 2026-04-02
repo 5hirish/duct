@@ -10,10 +10,9 @@ Per `docs/mvp-plan.md`, this backend is the actual product engine:
 - normalize data into typed internal models
 - compute signals and comparisons
 - synthesize findings into structured output
-- render customer-facing delivery artifacts
 - deliver via email and alerts
 
-The web app is not the primary product surface. The backend is.
+The web app owns HTML rendering. The backend produces JSON payloads only — it does not render HTML.
 
 ## MVP architecture
 
@@ -39,14 +38,25 @@ The current and planned backend stack is:
 - `scripts/` — MVP entry points
 - `briefs/schemas/` — typed internal and output schemas
 - `briefs/templates/` — prompt contracts and brief templates
-- `reports/` — generated artifacts and debug outputs
+- `reports/` — generated JSON artifacts (no HTML files)
+
+## Artifact contract
+
+Scripts write JSON to `reports/`. The app reads those files directly (filesystem today, API later).
+
+The JSON contract:
+- `source_metadata.theme` — theme key (`paid_ads`, `product_intelligence`, `organic_growth`); the app resolves accent colors from this
+- `source_metadata.generated_at` — ISO 8601 timestamp
+- All other fields follow the typed schemas in `briefs/schemas/`
+
+Do not write HTML from the backend. Do not reference `themes.json` or HTML templates — those have moved to the app.
 
 ## Code design rules
 
 - Normalize first, synthesize second.
 - Keep typed schemas central and explicit.
-- Keep renderers downstream of normalized payloads, not raw source data.
-- Separate ingestion, normalization, synthesis, rendering, and delivery concerns.
+- The backend is a data pipeline, not a renderer. Output JSON; let the app handle presentation.
+- Separate ingestion, normalization, synthesis, and delivery concerns.
 - Prefer extensible evidence models so future tools can enrich the same findings.
 
 ## Sequencing rules from the plans

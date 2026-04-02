@@ -2,7 +2,7 @@
   "source_metadata": {
     "source": "google_ads_manual_export",
     "export_type": "campaign_performance",
-    "generated_at": "2026-04-02T06:11:21.476674+00:00",
+    "generated_at": "2026-04-02T15:17:30.695891+00:00",
     "window_current": "last_7_days",
     "window_previous": "previous_7_days",
     "currency_code": "USD",
@@ -11,7 +11,8 @@
     "source_file": "demo://google_ads_campaign_export.csv",
     "notes": [
       "Demo data for MVP validation"
-    ]
+    ],
+    "theme": "paid_ads"
   },
   "account_summary": {
     "spend": {
