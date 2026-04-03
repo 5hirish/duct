@@ -16,3 +16,16 @@ Thumbs.db
 
 # Cursor local state
 .cursor/hooks/state/
+
+# Environment and local secrets
+.env
+.env.*
+**/.env
+**/.env.*
+!**/.env.example
+client_secret_*.json
+
+# Node / Playwright
+**/node_modules/
+site/playwright-report/
+site/test-results/

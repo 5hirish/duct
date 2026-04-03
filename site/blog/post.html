@@ -55,13 +55,13 @@
 
 <nav id="nav" aria-label="Site navigation">
 <div style="display:flex;align-items:center;gap:10px">
-<a href="../index.html" class="logo">duct <span class="logo-mark" aria-hidden="true"></span></a>
-<a href="index.html" style="font-size:12px;font-weight:500;color:var(--navy-3);letter-spacing:.02em;text-decoration:none">blog</a>
+<a href="/" class="logo">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<a href="/blog" style="font-size:12px;font-weight:500;color:var(--navy-3);letter-spacing:.02em;text-decoration:none">blog</a>
 </div>
 <div class="nav-links">
-<a href="../for-product-intelligence.html" class="nav-link">Product Intelligence</a>
-<a href="../for-organic-growth.html" class="nav-link">Organic Growth</a>
-<a href="../index.html#cta" class="nav-link">Get early access</a>
+<a href="/for-product-intelligence" class="nav-link">Product Intelligence</a>
+<a href="/for-organic-growth" class="nav-link">Organic Growth</a>
+<a href="/#cta" class="nav-link">Get early access</a>
 </div>
 </nav>
 
@@ -112,7 +112,7 @@
 <!-- FOOTER -->
 
 <footer>
-<a href="../index.html" class="logo" style="font-size:18px">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<a href="/" class="logo" style="font-size:18px">duct <span class="logo-mark" aria-hidden="true"></span></a>
 <a href="mailto:hello@getduct.ai" class="footer-email">hello@getduct.ai</a>
 <span class="footer-copy">© 2025 Duct · getduct.ai</span>
 </footer>
@@ -214,7 +214,7 @@
         canonical.rel = 'canonical';
         document.head.appendChild(canonical);
       }
-      canonical.href = 'https://getduct.ai/blog/post.html?slug=' + slug;
+      canonical.href = 'https://getduct.ai/blog/post?slug=' + slug;
       setMeta('og:url', canonical.href);
 
       // Hero image
@@ -241,12 +241,12 @@
         nav.style.display = 'flex';
         if (hasPrev) {
           var prev = document.getElementById('prev-article-anchor');
-          prev.href = 'post.html?slug=' + ALL_POSTS[idx - 1].slug;
+          prev.href = '/blog/post?slug=' + ALL_POSTS[idx - 1].slug;
           prev.style.display = '';
         }
         if (hasNext) {
           var next = document.getElementById('next-article-anchor');
-          next.href = 'post.html?slug=' + ALL_POSTS[idx + 1].slug;
+          next.href = '/blog/post?slug=' + ALL_POSTS[idx + 1].slug;
           next.style.display = '';
         }
       }

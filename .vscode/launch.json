@@ -36,6 +36,24 @@
       "request": "launch",
       "url": "http://localhost:8080/blog/index.html",
       "preLaunchTask": "Serve site on :8080"
+    },
+    {
+      "name": "Site: Playwright smoke tests",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run test:e2e",
+      "cwd": "${workspaceFolder}/site"
+    },
+    {
+      "name": "Backend: Pytest (all)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["tests", "-v", "--tb=short"],
+      "cwd": "${workspaceFolder}/backend",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "python": "${workspaceFolder}/backend/.venv/bin/python"
     }
   ]
 }

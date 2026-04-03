@@ -14,6 +14,16 @@ google-genai = "^1.0"
 python-dotenv = "^1.0"
 pydantic = "^2.0"
 
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3"
+ruff = "^0.6.9"
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    # Starlette form parser; third-party until FastAPI/Starlette adopts python_multipart import.
+    "ignore:Please use `import python_multipart` instead\\.:PendingDeprecationWarning",
+]
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

@@ -30,7 +30,7 @@ Static multi-variant marketing site for [getduct.ai](https://getduct.ai). Follow
 - `/for-organic-growth` -> `site/for-organic-growth.html`
 - `/for-paid-ads` -> `site/for-paid-ads.html`
 - `/blog` -> `site/blog/index.html`
-- `/blog/post.html?slug=SLUG` -> `site/blog/post.html`
+- `/blog/post?slug=SLUG` -> `site/blog/post.html`
 
 ## Adding a new landing page
 
