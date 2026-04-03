@@ -4,7 +4,7 @@ const cleanRoutes = [
   "/for-product-intelligence",
   "/for-organic-growth",
   "/for-paid-ads",
-  "/blog",
+  "/blog/",
 ];
 
 test("home page navigation uses clean links", async ({ page }) => {
@@ -41,7 +41,7 @@ test.describe("clean routes render", () => {
 });
 
 test("blog list navigates to post with slug", async ({ page }) => {
-  await page.goto("/blog");
+  await page.goto("/blog/");
   const firstPostLink = page.locator('a[href^="/blog/post?slug="]').first();
   await expect(firstPostLink).toBeVisible();
   const href = await firstPostLink.getAttribute("href");
