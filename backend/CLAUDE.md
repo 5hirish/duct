@@ -38,6 +38,8 @@ The current and planned backend stack is:
 - `service/google/brief.py` — Google Ads brief normalization (loads demo from `data/<connector_id>/`, default `google_ads`)
 - `briefs/schemas/` — typed internal and output schemas
 - `agents/reporter/prompts.py` — synthesis system + user prompts (e.g. Google Ads weekly brief)
+- `routes/auth.py` — OAuth by connector (`/auth/connectors/{connector_id}/oauth/...`)
+- `routes/report.py` — `POST /api/report/{connector_id}` (e.g. `google_ads` or `google-ads` in the path segment)
 - `reports/` — generated JSON artifacts (no HTML files)
 
 ## Artifact contract

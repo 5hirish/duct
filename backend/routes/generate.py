@@ -12,7 +12,7 @@ from config import get_configs
 from service.google.fetch import fetch_campaigns
 from service.google.brief import build_brief
 
-from routes.google_ads_helpers import resolve_ads_credentials, resolve_customer_id
+from service.google.credentials import resolve_ads_credentials, resolve_customer_id
 from routes.schemas import GenerateRequest, ReportRequest
 
 if TYPE_CHECKING:
@@ -54,8 +54,8 @@ async def generate(req: GenerateRequest) -> dict:
         refresh_token=req.refresh_token,
         login_customer_id=req.login_customer_id,
     )
-    customer_id = resolve_customer_id(shim)
-    dt, cid, secret, rt = resolve_ads_credentials(shim)
+    customer_id = resolve_customer_id(request_customer_id=shim.customer_id)
+    dt, cid, secret, rt = resolve_ads_credentials(request_refresh_token=shim.refresh_token)
     login = (req.login_customer_id or get_configs().google_ads_login_customer_id).strip()
 
     try:

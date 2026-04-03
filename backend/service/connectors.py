@@ -48,3 +48,8 @@ def register_connector(meta: ConnectorMeta, adapter: ConnectorAdapter) -> None:
 def get_connector(connector_id: str) -> tuple[ConnectorMeta, ConnectorAdapter]:
     """Return metadata and adapter, or raise KeyError if unknown."""
     return CONNECTOR_REGISTRY[connector_id]
+
+
+def normalize_connector_id(connector_id: str) -> str:
+    """Normalize path or form values: ``google-ads`` → ``google_ads``."""
+    return connector_id.strip().lower().replace("-", "_")

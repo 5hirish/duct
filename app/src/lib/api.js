@@ -24,7 +24,7 @@ export async function fetchGoogleAdsAccounts(refreshToken) {
 }
 
 export async function runGoogleAdsReport(params) {
-  const res = await fetch(`${BASE}/api/report/google-ads`, {
+  const res = await fetch(`${BASE}/api/report/google_ads`, {
     method: "POST",
     headers: backendApiHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify(params),

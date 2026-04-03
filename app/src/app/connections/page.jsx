@@ -183,7 +183,10 @@ export default function ConnectionsPage() {
                 Disconnect
               </button>
             ) : (
-              <a className="app-button" href={`${BASE}/auth/google/authorize`}>
+              <a
+                className="app-button"
+                href={`${BASE}/auth/connectors/google_ads/oauth/authorize`}
+              >
                 Connect
               </a>
             )}

@@ -1,4 +1,4 @@
-"""Report JSON artifacts and Google Ads report generation."""
+"""Report JSON artifacts and connector-keyed report generation."""
 
 from __future__ import annotations
 
@@ -7,12 +7,14 @@ from datetime import date
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
+from starlette.status import HTTP_404_NOT_FOUND, HTTP_501_NOT_IMPLEMENTED
 
 from config import get_configs
+from service.connectors import CAP_CAMPAIGN_REPORT, get_connector, normalize_connector_id
+from service.google.constants import GOOGLE_ADS_CONNECTOR_ID
+from service.google.credentials import report_basename, resolve_ads_credentials, resolve_customer_id
 from service.google.fetch import fetch_campaigns
 from service.google.brief import build_brief, demo_raw_payload, synthesize_with_gemini_dict
-
-from routes.google_ads_helpers import report_basename, resolve_ads_credentials, resolve_customer_id
 from routes.schemas import ReportRequest
 
 router = APIRouter(tags=["report"])
@@ -35,20 +37,19 @@ def report_latest() -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-@router.post("/google-ads")
-def report_google_ads(req: ReportRequest) -> dict:
+def _persisted_report_google_ads(req: ReportRequest) -> dict:
     if req.use_demo:
         raw_payload = demo_raw_payload()
         date_to = req.date_to.strip() or date.today().isoformat()
         customer_stripped = "demo"
     else:
-        customer_id = resolve_customer_id(req)
+        customer_id = resolve_customer_id(request_customer_id=req.customer_id)
         customer_stripped = customer_id.replace("-", "")
         date_from = req.date_from.strip()
         date_to = req.date_to.strip()
         if not date_from or not date_to:
             raise HTTPException(status_code=422, detail="date_from and date_to are required.")
-        dt, cid, secret, rt = resolve_ads_credentials(req)
+        dt, cid, secret, rt = resolve_ads_credentials(request_refresh_token=req.refresh_token)
         login = (req.login_customer_id or get_configs().google_ads_login_customer_id).strip()
         try:
             raw_payload = fetch_campaigns(
@@ -82,3 +83,35 @@ def report_google_ads(req: ReportRequest) -> dict:
     out_path.write_text(json.dumps(brief_dict, indent=2) + "\n", encoding="utf-8")
 
     return brief_dict
+
+
+def post_persisted_report(connector_id: str, req: ReportRequest) -> dict:
+    """Validate connector and capability, then build and write report JSON."""
+    cid = normalize_connector_id(connector_id)
+    try:
+        meta, _ = get_connector(cid)
+    except KeyError as exc:
+        raise HTTPException(
+            status_code=HTTP_404_NOT_FOUND,
+            detail="Unknown connector",
+        ) from exc
+
+    if CAP_CAMPAIGN_REPORT not in meta.capabilities:
+        raise HTTPException(
+            status_code=HTTP_501_NOT_IMPLEMENTED,
+            detail=f"Connector {cid!r} does not support persisted campaign reports.",
+        )
+
+    if cid == GOOGLE_ADS_CONNECTOR_ID:
+        return _persisted_report_google_ads(req)
+
+    raise HTTPException(
+        status_code=HTTP_501_NOT_IMPLEMENTED,
+        detail=f"Report generation for connector {cid!r} is not implemented yet.",
+    )
+
+
+@router.post("/{connector_id}")
+def post_report(connector_id: str, req: ReportRequest) -> dict:
+    """Build a report for a connector (e.g. ``google_ads``) and write JSON to ``reports/``."""
+    return post_persisted_report(connector_id, req)

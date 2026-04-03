@@ -1,4 +1,4 @@
-"""Shared Google Ads credential and path helpers for route handlers."""
+"""Google Ads credential and artifact naming helpers (shared by API routes)."""
 
 from __future__ import annotations
 
@@ -6,15 +6,14 @@ from fastapi import HTTPException
 
 from config import get_configs
 
-from routes.schemas import ReportRequest
 
-
-def resolve_ads_credentials(req: ReportRequest) -> tuple[str, str, str, str]:
+def resolve_ads_credentials(*, request_refresh_token: str | None) -> tuple[str, str, str, str]:
+    """Resolve developer token, OAuth client, and refresh token from env + request."""
     cfg = get_configs()
     dt = cfg.google_ads_developer_token
     cid = cfg.google_oauth_client_id or cfg.google_ads_client_id
     secret = cfg.google_oauth_client_secret or cfg.google_ads_client_secret
-    rt = req.refresh_token or cfg.google_ads_refresh_token
+    rt = (request_refresh_token or "").strip() or cfg.google_ads_refresh_token
     if not all([dt, cid, secret, rt]):
         raise HTTPException(
             status_code=422,
@@ -26,14 +25,16 @@ def resolve_ads_credentials(req: ReportRequest) -> tuple[str, str, str, str]:
     return dt, cid, secret, rt
 
 
-def resolve_customer_id(req: ReportRequest) -> str:
-    cid = (req.customer_id or get_configs().google_ads_customer_id).strip()
+def resolve_customer_id(*, request_customer_id: str | None) -> str:
+    """Customer ID from request body or server default."""
+    cid = (request_customer_id or get_configs().google_ads_customer_id).strip()
     if not cid:
         raise HTTPException(status_code=422, detail="Missing customer_id.")
     return cid
 
 
 def report_basename(customer_stripped: str, date_to: str, *, demo: bool) -> str:
+    """Filename for a persisted report JSON under ``reports/``."""
     if demo:
         return f"demo-{date_to}.json"
     return f"{customer_stripped}-{date_to}.json"

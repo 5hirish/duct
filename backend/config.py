@@ -22,7 +22,7 @@ class Configs(BaseSettings):
     google_oauth_client_id: str = ""
     google_oauth_client_secret: str = ""
     google_oauth_redirect_uri: str = Field(
-        default="http://localhost:8000/auth/google/callback",
+        default="http://localhost:8000/auth/connectors/google_ads/oauth/callback",
     )
 
     # Google Ads API

@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends
 
-from routes import connectors, generate, google_auth, health, report
+from routes import auth, connectors, generate, health, report
 from service.auth import validate_api_key
 
 router = APIRouter()
 
 router.include_router(health.router)
-router.include_router(google_auth.router)
+router.include_router(auth.router)
 router.include_router(
     report.router,
     prefix="/api/report",
