@@ -51,7 +51,7 @@ No testimonials section — this is an MVP/early-stage product. The `.quotes` se
 
 ## Step 1 — Copy the base template
 
-Copy `for-product-intelligence.html` → `for-<audience-slug>.html` at the repo root.
+Copy `site/for-product-intelligence.html` → `site/for-<audience-slug>.html`.
 Remove the entire `<!-- TESTIMONIALS -->` section (`.quotes`) from the copy.
 
 ---

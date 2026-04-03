@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Validates every HTML page against the Duct <head> checklist (see CLAUDE.md).
+Validates every marketing HTML page under site/ against the Duct <head> checklist
+(see CLAUDE.md).
 
 Exits non-zero if any required element is missing or out of spec.
 """
@@ -154,8 +155,8 @@ class PageChecker(HTMLParser):
 
 # ── Runner ────────────────────────────────────────────────────────────────────
 
-def check_file(filepath):
-    rel = os.path.relpath(filepath)
+def check_file(filepath, site_root):
+    rel = os.path.relpath(filepath, site_root)
     with open(filepath, encoding="utf-8") as f:
         content = f.read()
 
@@ -166,18 +167,19 @@ def check_file(filepath):
 
 
 def main():
-    root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    site_root = os.path.join(repo_root, "site")
     html_files = sorted(
-        glob.glob(os.path.join(root, "*.html")) +
-        glob.glob(os.path.join(root, "blog", "*.html"))
+        glob.glob(os.path.join(site_root, "*.html")) +
+        glob.glob(os.path.join(site_root, "blog", "*.html"))
     )
 
     total_errors = 0
     total_warnings = 0
 
     for filepath in html_files:
-        rel = os.path.relpath(filepath, root)
-        errors, warnings = check_file(filepath)
+        rel = os.path.relpath(filepath, site_root)
+        errors, warnings = check_file(filepath, site_root)
 
         if errors or warnings:
             print(f"\n{'─' * 60}")

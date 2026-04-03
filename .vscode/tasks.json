@@ -1,0 +1,59 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Backend: uvicorn",
+      "type": "shell",
+      "command": "poetry run uvicorn server:app --reload --host 127.0.0.1 --port 8000",
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "duct-stack",
+        "showReuseMessage": false
+      },
+      "problemMatcher": {
+        "owner": "uvicorn",
+        "pattern": { "regexp": "^$" },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".",
+          "endsPattern": "Uvicorn running"
+        }
+      }
+    },
+    {
+      "label": "Serve site on :8080",
+      "type": "shell",
+      "command": "python3 -m http.server 8080",
+      "options": { "cwd": "${workspaceFolder}/site" },
+      "isBackground": true,
+      "presentation": {
+        "reveal": "silent",
+        "panel": "dedicated",
+        "showReuseMessage": false
+      },
+      "problemMatcher": {
+        "owner": "site",
+        "pattern": { "regexp": "^$" },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".",
+          "endsPattern": "Serving HTTP on"
+        }
+      }
+    },
+    {
+      "label": "Backend: stop uvicorn (8000)",
+      "type": "shell",
+      "command": "if command -v lsof >/dev/null 2>&1; then pids=$(lsof -t -i :8000 2>/dev/null || true); if [ -n \"$pids\" ]; then kill -9 $pids >/dev/null 2>&1 || true; fi; fi; pkill -f \"uvicorn server:app\" >/dev/null 2>&1 || true",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "dedicated",
+        "showReuseMessage": false
+      },
+      "problemMatcher": []
+    }
+  ]
+}

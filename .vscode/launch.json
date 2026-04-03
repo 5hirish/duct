@@ -2,42 +2,40 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Duct: App + API (API first)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev",
+      "cwd": "${workspaceFolder}/app",
+      "preLaunchTask": "Backend: uvicorn",
+      "postDebugTask": "Backend: stop uvicorn (8000)"
+    },
+    {
+      "name": "Backend: FastAPI (uvicorn)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "poetry run uvicorn server:app --reload --host 127.0.0.1 --port 8000",
+      "cwd": "${workspaceFolder}/backend"
+    },
+    {
+      "name": "App: dev server",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev",
+      "cwd": "${workspaceFolder}/app"
+    },
+    {
       "name": "Open Home page",
       "type": "chrome",
       "request": "launch",
-      "file": "${workspaceFolder}/index.html"
+      "file": "${workspaceFolder}/site/index.html"
     },
     {
-      "name": "Open Product Intelligence page",
+      "name": "Open Blog page",
       "type": "chrome",
       "request": "launch",
-      "file": "${workspaceFolder}/for-product-intelligence.html"
-    },
-    {
-      "name": "Open Organic Growth page",
-      "type": "chrome",
-      "request": "launch",
-      "file": "${workspaceFolder}/for-organic-growth.html"
-    },
-    {
-      "name": "Start HTTP server",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "python3 -m http.server 8080",
-      "cwd": "${workspaceFolder}"
-    },
-    {
-      "name": "Open Blog (via HTTP server)",
-      "type": "chrome",
-      "request": "launch",
-      "url": "http://localhost:8080/blog/index.html"
-    }
-  ],
-  "compounds": [
-    {
-      "name": "Serve + Open Blog",
-      "configurations": ["Start HTTP server", "Open Blog (via HTTP server)"],
-      "stopAll": true
+      "url": "http://localhost:8080/blog/index.html",
+      "preLaunchTask": "Serve site on :8080"
     }
   ]
 }

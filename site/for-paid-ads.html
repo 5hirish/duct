@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Duct for Paid Ads — Cross-platform ad intelligence for performance marketers</title>
+<link rel="canonical" href="https://getduct.ai/for-paid-ads"/>
+<meta name="description" content="Duct connects Google Ads, Meta, and LinkedIn into one daily brief — surfacing cross-platform correlations your ad dashboards will never show you."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/for-paid-ads"/>
+<meta property="og:title" content="Duct for Paid Ads — Cross-platform ad intelligence for performance marketers"/>
+<meta property="og:description" content="Stop tab-switching between ad platforms. Duct delivers a daily brief with cross-channel attribution, budget signals, and anomaly alerts."/>
+<meta property="og:image" content="https://getduct.ai/assets/og-image.png"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Duct for Paid Ads — Cross-platform ad intelligence for performance marketers"/>
+<meta name="twitter:description" content="Stop tab-switching. Duct connects Google Ads, Meta, and LinkedIn into one daily ad intelligence brief."/>
+<meta name="twitter:site" content="@getduct"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og-image.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="assets/duct.css"/>
+<link rel="stylesheet" href="assets/demo.css"/>
+<script src="assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","name":"Duct for Paid Ads","url":"https://getduct.ai/for-paid-ads","description":"Stop tab-switching between ad platforms. Duct connects Google Ads, Meta, and LinkedIn into one daily brief with cross-platform attribution signals.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<style>
+  .skip-link {
+    position: absolute; top: -100%; left: 16px; z-index: 300;
+    padding: 10px 20px; background: var(--navy); color: #fff;
+    font-size: 14px; font-weight: 500; border-radius: var(--r);
+    text-decoration: none; transition: top .15s;
+  }
+  .skip-link:focus { top: 16px; }
+
+  /* Blue accent for paid ads variant */
+  :root {
+    --orange: #2563EB;
+    --orange-h: #1D4ED8;
+  }
+
+  /* Fix hover shadow to match blue accent (overrides global orange shadow) */
+  .btn-orange:hover { box-shadow: 0 8px 24px rgba(37,99,235,.28); }
+</style>
+</head>
+<body>
+
+<!-- EXPERIMENT: Does leading with strong problem framing (hero + problem section) before an interactive demo walkthrough (pick platforms → pick metric → see real brief) produce higher quality signups than a demo-first page for paid-ads traffic? -->
+
+<a href="#main-content" class="skip-link">Skip to content</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- NAV -->
+
+<nav id="nav" aria-label="Main navigation">
+<div style="display:flex;align-items:center;gap:10px">
+<a href="index.html" class="logo">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<span style="font-size:12px;font-weight:500;color:var(--navy-3);letter-spacing:.02em">for paid ads</span>
+</div>
+<div class="nav-links">
+<a href="#demo" class="nav-link">Try the demo</a>
+<a href="#how" class="nav-link">How it works</a>
+<a href="#who" class="nav-link">Who it's for</a>
+<a href="blog/index.html" class="nav-link">Blog</a>
+</div>
+</nav>
+
+<main id="main-content">
+
+<!-- HERO -->
+
+<section class="hero">
+<div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Early access · 14 spots remaining</div>
+<h1>Stop reporting across platforms.<br/>Start shipping what <em>converts.</em></h1>
+<p class="hero-sub">Duct connects Google Ads, Meta, LinkedIn, and Twitter into one daily brief — surfacing cross-platform correlations your ad dashboards will never show you.</p>
+<div class="hero-form">
+<input type="email" id="heroEmail" class="email-in" placeholder="you@company.com" aria-label="Email address"/>
+<button class="btn btn-orange btn-lg"
+  data-form-url="https://docs.google.com/forms/d/e/1FAIpQLSfm7QgovGGHE38CsOPqj5O_XVBtnjbRhkf16rNJhdvkd-rddg/formResponse"
+  data-entry-id="entry.276669450"
+  onclick="submitForm('heroEmail', this)">Get early access →</button>
+</div>
+<p class="hero-footnote">Free during beta · No credit card · For performance marketers at 20–200 person companies</p>
+<p style="margin-top:16px;font-size:13px;color:var(--navy-3)">or <a href="#demo" style="color:var(--orange);text-decoration:underline;text-underline-offset:3px">try the live demo ↓</a> — no signup required</p>
+</section>
+
+<!-- TOOL STRIP -->
+
+<div class="strip">
+<p class="strip-label">Connects to the platforms you already run</p>
+<div class="marquee" aria-hidden="true">
+<span>Google Ads</span><span>Meta Ads</span><span>Twitter / X</span><span>GA4</span>
+<span>HubSpot</span><span>LinkedIn Ads</span><span>Klaviyo</span><span>TikTok Ads</span>
+<span>Google Ads</span><span>Meta Ads</span><span>Twitter / X</span><span>GA4</span>
+<span>HubSpot</span><span>LinkedIn Ads</span><span>Klaviyo</span><span>TikTok Ads</span>
+</div>
+</div>
+
+<!-- WALKTHROUGH DEMO -->
+
+<section class="wt-section" id="demo">
+<span id="demo-report" class="demo-fragment-target" tabindex="-1" aria-hidden="true"></span>
+<div class="wt-outer">
+<div class="reveal">
+<p class="tag" style="justify-content:center;display:flex">Interactive Demo</p>
+<h2>Your ad stack. <em>One brief.</em></h2>
+<p class="sub">This is example data — built to show exactly what Duct surfaces every morning.</p>
+</div>
+
+<div class="wt-progress reveal" role="tablist" aria-label="Demo steps">
+<div class="wt-dot active" id="prog-1"></div>
+<div class="wt-dot" id="prog-2"></div>
+<div class="wt-dot" id="prog-3"></div>
+<div class="wt-dot" id="prog-4"></div>
+</div>
+
+<div class="wt-card reveal" aria-live="polite">
+
+<div class="wt-steps-stage">
+
+<!-- STEP 1: Platform selection -->
+<div class="wt-step active" id="demo-step-1" role="region" aria-labelledby="demo-step-1-title">
+<p class="wt-step-label">Step 1 of 4</p>
+<p class="wt-step-title" id="demo-step-1-title">Which platforms do you run ads on?</p>
+<p class="wt-step-sub">Select all that apply — Duct correlates signals across everything you pick.</p>
+<div class="plat-grid">
+<button class="plat-btn" id="plat-google" onclick="wtTogglePlatform('Google Ads', this)" aria-pressed="false">
+  <img class="plat-icon" src="assets/icons/google-ads.svg" width="20" height="20" alt="" aria-hidden="true"/>
+  <span>Google Ads</span>
+  <span class="plat-check" aria-hidden="true">✓</span>
+</button>
+<button class="plat-btn" id="plat-meta" onclick="wtTogglePlatform('Meta', this)" aria-pressed="false">
+  <img class="plat-icon" src="assets/icons/meta.svg" width="20" height="20" alt="" aria-hidden="true"/>
+  <span>Meta Ads</span>
+  <span class="plat-check" aria-hidden="true">✓</span>
+</button>
+<button class="plat-btn" id="plat-twitter" onclick="wtTogglePlatform('Twitter / X', this)" aria-pressed="false">
+  <img class="plat-icon" src="assets/icons/x-twitter.svg" width="20" height="20" alt="" aria-hidden="true"/>
+  <span>Twitter / X</span>
+  <span class="plat-check" aria-hidden="true">✓</span>
+</button>
+<button class="plat-btn" id="plat-linkedin" onclick="wtTogglePlatform('LinkedIn Ads', this)" aria-pressed="false">
+  <img class="plat-icon" src="assets/icons/linkedin.svg" width="20" height="20" alt="" aria-hidden="true"/>
+  <span>LinkedIn Ads</span>
+  <span class="plat-check" aria-hidden="true">✓</span>
+</button>
+</div>
+<p class="wt-min-note" id="plat-hint">Select at least 2 to see cross-channel signals</p>
+<div class="wt-nav">
+<button class="btn btn-orange wt-next" id="wt-next-1" onclick="wtGoTo(2)" disabled>Set your goal →</button>
+</div>
+</div>
+
+<!-- STEP 2: Metric selection -->
+<div class="wt-step" id="demo-step-2" role="region" aria-labelledby="demo-step-2-title" inert>
+<p class="wt-step-label">Step 2 of 4</p>
+<p class="wt-step-title" id="demo-step-2-title">What are you optimising for?</p>
+<p class="wt-step-sub">Duct watches only what moves your number — not everything, just the right things.</p>
+<div class="metric-grid">
+<button class="metric-card" onclick="wtSelectMetric('cac', this)" aria-pressed="false">
+  <span class="metric-icon" aria-hidden="true">📉</span>
+  <div>
+    <p class="metric-title">Lower CAC</p>
+    <p class="metric-desc">Acquire customers for less — find which channels deliver the cheapest qualified pipeline.</p>
+  </div>
+  <span class="metric-radio" aria-hidden="true"></span>
+</button>
+<button class="metric-card" onclick="wtSelectMetric('roas', this)" aria-pressed="false">
+  <span class="metric-icon" aria-hidden="true">💰</span>
+  <div>
+    <p class="metric-title">Higher ROAS</p>
+    <p class="metric-desc">Squeeze more return from every ad dollar — see which creative and audience combos over-deliver.</p>
+  </div>
+  <span class="metric-radio" aria-hidden="true"></span>
+</button>
+<button class="metric-card" onclick="wtSelectMetric('pipeline', this)" aria-pressed="false">
+  <span class="metric-icon" aria-hidden="true">🚀</span>
+  <div>
+    <p class="metric-title">More pipeline</p>
+    <p class="metric-desc">Grow qualified deals in CRM — correlate ad signals with HubSpot or Salesforce deal stage.</p>
+  </div>
+  <span class="metric-radio" aria-hidden="true"></span>
+</button>
+</div>
+<div class="wt-nav">
+<button class="wt-back visible" onclick="wtGoTo(1)">← Back</button>
+<button class="btn btn-orange wt-next" id="wt-next-2" onclick="wtGoTo(3)" disabled>Analyse →</button>
+</div>
+</div>
+
+<!-- STEP 3: Analysing -->
+<div class="wt-step" id="demo-step-3" role="region" aria-labelledby="demo-step-3-title" inert>
+<p class="wt-step-label">Step 3 of 4</p>
+<p class="wt-step-title" id="demo-step-3-title">Duct is analysing your stack…</p>
+<p class="wt-step-sub" style="margin-bottom:0">Using 90 days of example data from your selected platforms.</p>
+<div class="analyzing-lines" id="al-lines">
+<div class="analyzing-line" id="al-1">
+  <span class="al-spinner" aria-hidden="true"></span>
+  Reading campaign performance data…
+</div>
+<div class="analyzing-line" id="al-2">
+  <span class="al-spinner" aria-hidden="true"></span>
+  Mapping cross-channel conversion paths…
+</div>
+<div class="analyzing-line" id="al-3">
+  <span class="al-spinner" aria-hidden="true"></span>
+  Surfacing cross-platform signals…
+</div>
+</div>
+</div>
+
+<!-- STEP 4: Brief -->
+<div class="wt-step" id="demo-step-4" role="region" aria-labelledby="demo-step-4-title" inert>
+<p class="wt-step-label">Step 4 of 4</p>
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:24px">
+  <div>
+    <p class="wt-step-title" id="demo-step-4-title" style="margin-bottom:4px">Your report is ready</p>
+    <p class="wt-step-sub" id="wt-brief-sub" style="margin-bottom:0">Here's what Duct found across your ad stack.</p>
+  </div>
+  <button onclick="wtRestart()" class="wt-restart-btn" aria-label="Restart demo" style="flex-shrink:0;margin-top:2px">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.49-3.5"/></svg>
+    Restart
+  </button>
+</div>
+
+<div class="report-preview">
+  <div class="report-preview-inner" id="report-preview-host">
+    <!-- Same report DOM as modal; clipped + fade here, full scroll in modal -->
+    <div id="duct-report-root">
+    <div class="rpt-header rpt-header--modal">
+      <p class="rpt-meta" id="rpt-meta"></p>
+      <div class="rpt-verdict rpt-verdict--modal" id="rpt-verdict"></div>
+    </div>
+
+    <div class="rpt-hero-visual" id="rpt-hero-visual">
+      <div class="kpi-hero-block">
+        <p class="kpi-hero-label" id="rpt-hero-label"></p>
+        <p class="kpi-hero-value" id="rpt-hero-val"></p>
+        <div class="kpi-hero-delta" id="rpt-hero-delta-row"></div>
+      </div>
+      <div class="kpi-sparkline-block">
+        <p class="kpi-sparkline-label">7-day spend (indexed)</p>
+        <div class="kpi-sparkline-svg" id="rpt-sparkline" aria-hidden="true"></div>
+      </div>
+    </div>
+
+    <div class="rpt-bar-block" id="rpt-roas-bars-wrap">
+      <p class="rpt-bar-label">ROAS by campaign</p>
+      <div id="rpt-roas-bars"></div>
+    </div>
+
+    <div class="rpt-section-heading">
+      <p class="rpt-section-label">Also tracking</p>
+      <p class="rpt-section-hint" id="rpt-kpi-hint"></p>
+    </div>
+    <div class="kpi-strip" role="group" aria-label="Supporting metrics">
+      <div class="kpi-chip" data-kpi-key="cac">
+        <div class="kpi-chip-head">
+          <span class="kpi-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+          <p class="kpi-label">CAC</p>
+        </div>
+        <p class="kpi-value" id="rpt-kpi-cac-val"></p>
+        <div class="kpi-delta"><span class="kpi-trend" id="rpt-kpi-cac-trend" aria-hidden="true"></span><span id="rpt-kpi-cac-delta"></span></div>
+      </div>
+      <div class="kpi-chip" data-kpi-key="roas">
+        <div class="kpi-chip-head">
+          <span class="kpi-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 7L13.5 15.5 8.5 10.5 2 17"/><path d="M16 7h6v6"/></svg></span>
+          <p class="kpi-label">ROAS</p>
+        </div>
+        <p class="kpi-value" id="rpt-kpi-roas-val"></p>
+        <div class="kpi-delta"><span class="kpi-trend" id="rpt-kpi-roas-trend" aria-hidden="true"></span><span id="rpt-kpi-roas-delta"></span></div>
+      </div>
+      <div class="kpi-chip" data-kpi-key="spend">
+        <div class="kpi-chip-head">
+          <span class="kpi-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M12 6v12"/><path d="M15.5 9.25a3.25 3.25 0 0 0-6.5 0c0 1.5 1.36 2.03 2.72 2.55 1.5.58 3.78 1.32 3.78 3.7a3.25 3.25 0 0 1-6.5 0"/></svg></span>
+          <p class="kpi-label">Spend</p>
+        </div>
+        <p class="kpi-value" id="rpt-kpi-spend-val"></p>
+        <div class="kpi-delta"><span class="kpi-trend" id="rpt-kpi-spend-trend" aria-hidden="true"></span><span id="rpt-kpi-spend-delta"></span></div>
+      </div>
+      <div class="kpi-chip" data-kpi-key="conv">
+        <div class="kpi-chip-head">
+          <span class="kpi-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+          <p class="kpi-label">Conversions</p>
+        </div>
+        <p class="kpi-value" id="rpt-kpi-conv-val"></p>
+        <div class="kpi-delta"><span class="kpi-trend" id="rpt-kpi-conv-trend" aria-hidden="true"></span><span id="rpt-kpi-conv-delta"></span></div>
+      </div>
+    </div>
+
+    <p class="rpt-section-label">Signals</p>
+    <div id="rpt-signals"></div>
+
+    <div class="rpt-disclosure">
+      <button type="button" class="rpt-disclosure-btn" id="rpt-camp-toggle" aria-expanded="false" aria-controls="rpt-camp-panel">
+        <span>Campaign breakdown<span class="rpt-disclosure-meta" id="rpt-camp-meta"></span></span>
+        <span class="rpt-disclosure-chevron" aria-hidden="true">&#9660;</span>
+      </button>
+      <div class="rpt-disclosure-panel" id="rpt-camp-panel" hidden>
+        <div class="camp-table-wrap">
+          <table class="camp-table">
+            <thead>
+              <tr>
+                <th>Campaign</th>
+                <th>Spend</th>
+                <th>CPA</th>
+                <th>ROAS</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="rpt-camp-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="rpt-disclosure">
+      <button type="button" class="rpt-disclosure-btn" id="rpt-ue-toggle" aria-expanded="false" aria-controls="rpt-ue-panel">
+        <span>Unit economics<span class="rpt-disclosure-meta" id="rpt-ue-summary"></span></span>
+        <span class="rpt-disclosure-chevron" aria-hidden="true">&#9660;</span>
+      </button>
+      <div class="rpt-disclosure-panel" id="rpt-ue-panel" hidden>
+        <div class="unit-econ">
+          <p class="unit-econ-title">Cost efficiency</p>
+          <div class="unit-econ-row">
+            <span>Cost per new subscriber</span>
+            <span class="unit-econ-val" id="rpt-ue-cps"></span>
+          </div>
+          <div class="unit-econ-row">
+            <span>LTV:CAC ratio <span style="color:#6b6f82">(Target: 3.0x)</span></span>
+            <span class="unit-econ-val" id="rpt-ue-ltv"></span>
+          </div>
+          <div class="unit-econ-row">
+            <span>Verdict</span>
+            <span class="unit-econ-val" id="rpt-ue-verdict"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="rpt-sources" id="rpt-footer-sources"></p>
+    </div><!-- /#duct-report-root -->
+  </div>
+</div>
+
+<a href="#demo-report" class="view-report-btn" id="view-full-report-link">View full report &#8594;</a>
+<p style="font-size:12px;color:var(--navy-3);margin:0 0 10px;text-align:center">Free during beta &middot; Connects in under 5 minutes &middot; No data stored without your approval</p>
+</div>
+
+</div><!-- /.wt-steps-stage -->
+
+</div><!-- /.wt-card -->
+</div><!-- /.wt-outer -->
+</section>
+
+<!-- PROBLEM -->
+
+<section class="problem">
+<div class="reveal">
+<p class="tag">The Problem</p>
+<h2>The signal is in your platforms.<br/>But none of them <em>talk to each other.</em></h2>
+<ul class="pain-list">
+<li class="pain-item"><span class="pi-icon" aria-hidden="true">😵‍💫</span> Google says ROAS is up. Meta says CPA spiked. Your spreadsheet says something else entirely. You don't know which to trust.</li>
+<li class="pain-item"><span class="pi-icon" aria-hidden="true">🕳️</span> A campaign that crushed it last month is tanking now. You don't know if it's the creative, the audience, or the algorithm.</li>
+<li class="pain-item"><span class="pi-icon" aria-hidden="true">⏱️</span> You spend four hours every week pulling CSVs from three platforms to build a report that's already stale by Monday.</li>
+</ul>
+</div>
+<div class="diag reveal">
+<div class="diag-header" aria-hidden="true">
+<span class="diag-dot" style="background:#ff5f57"></span>
+<span class="diag-dot" style="background:#febc2e"></span>
+<span class="diag-dot" style="background:#28c840"></span>
+</div>
+<div class="diag-body">
+<div class="diag-tool">
+<span class="diag-chip" style="background:#e8f0fe"><img src="assets/icons/google-ads.svg" width="18" height="18" alt="Google Ads"/></span>
+<div class="diag-info"><b>Google Ads</b><s aria-hidden="true">ROAS up 22% this week</s></div>
+</div>
+<div class="diag-divider" aria-hidden="true">no connection</div>
+<div class="diag-tool dim">
+<span class="diag-chip" style="background:#e7f3ff"><img src="assets/icons/meta.svg" width="18" height="18" alt="Meta Ads"/></span>
+<div class="diag-info"><b>Meta Ads</b><s aria-hidden="true">CPA spiked 18% same week</s></div>
+</div>
+<div class="diag-divider" aria-hidden="true">no connection</div>
+<div class="diag-tool dim">
+<span class="diag-chip" style="background:#f0f0f0"><img src="assets/icons/x-twitter.svg" width="18" height="18" alt="X / Twitter"/></span>
+<div class="diag-info"><b>Twitter / X</b><s aria-hidden="true">Top creative CTR dropped 1.4%</s></div>
+</div>
+<div class="diag-divider" aria-hidden="true">no connection</div>
+<div class="diag-tool dim">
+<span class="diag-chip" style="background:#fff1eb"><img src="assets/icons/hubspot.svg" width="18" height="18" alt="HubSpot"/></span>
+<div class="diag-info"><b>HubSpot</b><s aria-hidden="true">3 deals closed from paid this week</s></div>
+</div>
+<div class="diag-result">
+<strong>✦ After Duct</strong>
+Meta CPA spike was audience overlap with Google — excluding existing Google converters cut Meta CPA by 24%.
+</div>
+</div>
+</div>
+</section>
+
+<!-- HOW IT WORKS -->
+
+<section class="how" id="how">
+<div class="how-inner">
+<p class="tag">How It Works</p>
+<h2>Clarity in <em>three steps</em></h2>
+<div class="steps">
+<div class="step reveal">
+<span class="step-num">01</span>
+<span class="step-icon" aria-hidden="true">🔌</span>
+<p class="step-title">Connect your ad stack</p>
+<p class="step-body">One-click OAuth integrations to Google Ads, Meta, Twitter, and your CRM. Duct reads — it never writes or modifies anything. Under 5 minutes to set up.</p>
+</div>
+<div class="step reveal" style="transition-delay:.1s">
+<span class="step-num">02</span>
+<span class="step-icon" style="filter:none;display:block;margin-bottom:18px">
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+<circle cx="16" cy="16" r="14" stroke="white" stroke-width="2"/>
+<circle cx="16" cy="16" r="8" stroke="white" stroke-width="2"/>
+<circle cx="16" cy="16" r="3" fill="white"/>
+</svg>
+</span>
+<p class="step-title">Set your north star metric</p>
+<p class="step-body">Tell Duct whether you care about CPL, ROAS, pipeline-influenced revenue, or CAC. It watches only what affects your number — not everything, just the right things.</p>
+</div>
+<div class="step reveal" style="transition-delay:.2s">
+<span class="step-num">03</span>
+<span class="step-icon" aria-hidden="true">✦</span>
+<p class="step-title">Get your daily ad brief</p>
+<p class="step-body">A morning digest with cross-platform correlations, budget reallocation signals, and anomaly alerts — ready before you open a single ad dashboard.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- FEATURES -->
+
+<section class="features" id="features">
+<div class="reveal">
+<p class="tag">Features</p>
+<h2>Built for marketers who <em>own their number</em></h2>
+</div>
+<div class="feat-grid">
+<div class="feat reveal">
+<span class="feat-label">🔗 Attribution</span>
+<p class="feat-title">Cross-platform signal mapping</p>
+<p class="feat-body">See how Google search intent feeds Meta retargeting, how organic content amplifies paid conversion, and which channels compound vs. cannibalise each other.</p>
+</div>
+<div class="feat reveal" style="transition-delay:.08s">
+<span class="feat-label">📬 Digest</span>
+<p class="feat-title">Daily ad intelligence brief</p>
+<p class="feat-body">A crisp morning summary of what moved across all platforms, what correlated, and what to act on today. Reads in under 2 minutes — no dashboards required.</p>
+</div>
+<div class="feat reveal" style="transition-delay:.14s">
+<span class="feat-label">🚨 Alerts</span>
+<p class="feat-title">Creative fatigue &amp; anomaly detection</p>
+<p class="feat-body">Get a Slack ping when a campaign suddenly shifts — CTR drops, CPA spikes, or budget pacing goes off-track — before you notice it in a Monday report.</p>
+</div>
+<div class="feat reveal" style="transition-delay:.2s">
+<span class="feat-label">💰 Budget</span>
+<p class="feat-title">Cross-channel reallocation signals</p>
+<p class="feat-body">"Where should I shift $500 this week?" Just ask. Duct queries pipeline data across your ad platforms and CRM and returns a plain-English recommendation.</p>
+</div>
+</div>
+</section>
+
+<!-- AUDIENCE -->
+
+<section class="audience" id="who">
+<div class="aud-inner">
+<div class="reveal">
+<p class="tag">Who It's For</p>
+<h2>The marketer who owns <em>paid</em> without a data team</h2>
+<p class="sub" style="margin-top:16px">You're running three platforms, reporting to a founder, and making budget calls without a proper attribution model. You need cross-channel clarity, not another dashboard.</p>
+<a href="#cta" class="btn btn-orange" style="margin-top:30px">That's me — get early access →</a>
+</div>
+<div class="aud-cards reveal">
+<div class="aud-card hi">
+<span class="aud-av" style="background:#e8f0fe" aria-hidden="true">📊</span>
+<div><span class="aud-name">Performance Marketer</span><span class="aud-role">20–200 person SaaS</span></div>
+<span class="aud-badge">Perfect fit</span>
+</div>
+<div class="aud-card">
+<span class="aud-av" style="background:#fff0e5" aria-hidden="true">🚀</span>
+<div><span class="aud-name">Growth Lead</span><span class="aud-role">Owns paid + organic</span></div>
+<span class="aud-badge">Great fit</span>
+</div>
+<div class="aud-card">
+<span class="aud-av" style="background:#efffef" aria-hidden="true">📣</span>
+<div><span class="aud-name">Founding Marketer</span><span class="aud-role">Wearing many hats</span></div>
+<span class="aud-badge">Great fit</span>
+</div>
+<div class="aud-card" style="opacity:.45">
+<span class="aud-av" style="background:#f5f5f5" aria-hidden="true">🏢</span>
+<div><span class="aud-name">Enterprise Media Buyer</span><span class="aud-role">500+ with dedicated agency</span></div>
+<span class="aud-badge off">Not yet</span>
+</div>
+</div>
+</div>
+</section>
+
+<!-- STATS -->
+
+<section class="stats">
+<div class="stats-inner">
+<div class="reveal"><span class="stat-n">3+</span><span class="stat-l">Ad platforms at launch</span></div>
+<div class="reveal" style="transition-delay:.1s"><span class="stat-n">~4h</span><span class="stat-l">Saved per marketer per week</span></div>
+<div class="reveal" style="transition-delay:.2s"><span class="stat-n">10min</span><span class="stat-l">To first insight after setup</span></div>
+<div class="reveal" style="transition-delay:.3s"><span class="stat-n">0</span><span class="stat-l">Spreadsheets required</span></div>
+</div>
+</section>
+
+<!-- CTA -->
+
+<section class="cta" id="cta">
+<div class="cta-inner">
+<div class="reveal">
+<p class="tag" style="justify-content:center;display:flex">Early Access</p>
+<h2>Join the first <em>25 teams</em></h2>
+<p class="sub">Free during beta. We're onboarding personally — every team gets a setup call and direct access to the founders.</p>
+<div class="cta-form">
+<input type="email" id="ctaEmail" class="email-in" placeholder="you@company.com" aria-label="Email address"/>
+<button class="btn btn-orange btn-lg"
+  data-form-url="https://docs.google.com/forms/d/e/1FAIpQLSfm7QgovGGHE38CsOPqj5O_XVBtnjbRhkf16rNJhdvkd-rddg/formResponse"
+  data-entry-id="entry.276669450"
+  onclick="submitForm('ctaEmail', this)">Reserve my spot →</button>
+</div>
+<p class="cta-note">14 spots remaining · No spam · Unsubscribe anytime</p>
+</div>
+</div>
+</section>
+
+</main>
+
+<!-- FOOTER -->
+
+<footer>
+<a href="index.html" class="logo" style="font-size:18px">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<a href="blog/index.html" class="footer-email">Blog</a>
+<a href="mailto:hello@getduct.ai" class="footer-email">hello@getduct.ai</a>
+<span class="footer-copy">© 2025 Duct · getduct.ai</span>
+</footer>
+
+<!-- REPORT MODAL -->
+<div id="report-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="rpt-meta">
+  <div class="modal-sheet">
+    <div class="modal-topbar">
+      <h2 class="modal-topbar-title" id="modal-title">Paid Ads Performance Report</h2>
+      <button type="button" class="modal-close" id="modal-close-btn" onclick="closeReportModal()" aria-label="Close report">&times;</button>
+    </div>
+
+    <div class="modal-body-scroll" id="modal-report-scroll-host"></div>
+
+  <div class="modal-cta-bar">
+    <div class="modal-cta-form">
+      <input type="email" id="modalCtaEmail" name="email" class="email-in" placeholder="you@company.com" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" aria-label="Email address for early access"/>
+      <button type="button" class="btn btn-orange"
+        data-form-url="https://docs.google.com/forms/d/e/1FAIpQLSfm7QgovGGHE38CsOPqj5O_XVBtnjbRhkf16rNJhdvkd-rddg/formResponse"
+        data-entry-id="entry.276669450"
+        onclick="submitForm('modalCtaEmail', this)">Get early access &rarr;</button>
+    </div>
+    <p class="modal-cta-note">Free during beta &middot; No credit card &middot; Connects in under 5 minutes</p>
+  </div>
+  </div><!-- /.modal-sheet -->
+</div>
+<!-- END REPORT MODAL -->
+
+<script src="assets/demo-paid-ads.js"></script>
+<script src="assets/demo.js"></script>
+
+<script src="assets/duct.js" defer></script>
+
+</body>
+</html>

@@ -23,11 +23,11 @@ grep -r 'rel="canonical"' --include="*.html" . | grep -v 'https://getduct.ai'
 
 Expected: empty output. Any match means a local URL or wrong domain is set.
 
-### 3. No broken relative asset paths in blog/
+### 3. No broken relative asset paths in `site/blog/`
 
 ```bash
-grep -rn 'href="assets/' --include="*.html" blog/
-grep -rn 'src="assets/' --include="*.html" blog/
+grep -rn 'href="assets/' --include="*.html" site/blog/
+grep -rn 'src="assets/' --include="*.html" site/blog/
 ```
 
 Expected: empty output. Blog pages must use `../assets/`, not `assets/`.
@@ -35,7 +35,7 @@ Expected: empty output. Blog pages must use `../assets/`, not `assets/`.
 ### 4. config.js loaded before duct.js on all pages
 
 ```bash
-grep -n 'config\.js\|duct\.js' index.html for-product-intelligence.html for-organic-growth.html blog/index.html
+grep -n 'config\.js\|duct\.js' site/index.html site/for-product-intelligence.html site/for-organic-growth.html site/blog/index.html
 ```
 
 Verify the `config.js` line number is lower than the `duct.js` line number in each file.
@@ -51,12 +51,12 @@ Expected: empty output. Any file listed is missing the GTM noscript iframe.
 ### 6. All blog post slugs appear in blog/index.html and sitemap.xml
 
 ```bash
-ls blog/posts/*.md
+ls site/blog/posts/*.md
 ```
 
 For each `.md` filename (slug), verify:
-- A `href="post.html?slug=<slug>"` exists in `blog/index.html`
-- A `<loc>` containing `?slug=<slug>` exists in `sitemap.xml`
+- A `href="post.html?slug=<slug>"` exists in `site/blog/index.html`
+- A `<loc>` containing `?slug=<slug>` exists in `site/sitemap.xml`
 
 ### 7. No npm artifacts committed
 
@@ -68,7 +68,7 @@ ls -d node_modules 2>/dev/null && echo "FAIL: node_modules present" || echo "OK:
 ### 8. Sitemap URLs use production domain
 
 ```bash
-grep '<loc>' sitemap.xml | grep -v 'https://getduct.ai'
+grep '<loc>' site/sitemap.xml | grep -v 'https://getduct.ai'
 ```
 
 Expected: empty output.

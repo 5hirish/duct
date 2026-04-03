@@ -1,5 +1,10 @@
 .DS_Store
 Thumbs.db
+
+# Python
+**/__pycache__/
+**/*.pyc
+**/*.pyo
 *.swp
 *.swo
 .idea/
@@ -8,3 +13,6 @@ Thumbs.db
 
 # Claude Code
 .claude/cache/
+
+# Cursor local state
+.cursor/hooks/state/
