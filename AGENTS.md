@@ -15,4 +15,4 @@
 - The backend no longer renders HTML or writes themes.json — it embeds `source_metadata.theme` (e.g. `paid_ads`) into the JSON payload.
 - Theme accent colors live in `app/src/lib/themes.js`. The app resolves them from the theme key in the payload.
 - The `app/` area is a Next.js App Router report viewer. `app/src/components/GoogleAdsReport.js` renders the full report from the JSON payload.
-- Backend CLI: `python backend/scripts/google_ads_brief.py --demo --theme paid_ads --output-json backend/reports/google-ads-report.json`
+- Demo raw payloads live under `backend/data/<connector_id>/` (e.g. `backend/data/google_ads/demo_raw_payload.json`); `POST /api/report/google-ads` with `use_demo: true` writes `backend/reports/*.json` (run the FastAPI server from `backend/` with API key configured).

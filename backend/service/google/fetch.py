@@ -1,14 +1,9 @@
-#!/usr/bin/env python3
 """Fetch Google Ads campaign rows via the API (same shape as demo_raw_payload)."""
 
 from __future__ import annotations
 
-import argparse
-import json
-import sys
 from collections import defaultdict
 from datetime import date, datetime, timedelta, timezone
-from pathlib import Path
 from typing import Any, DefaultDict, Dict, List, Tuple
 
 from google.ads.googleads.client import GoogleAdsClient
@@ -209,56 +204,3 @@ def fetch_campaigns(
         },
         "rows": rows,
     }
-
-
-def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Fetch Google Ads campaigns via API → raw JSON.")
-    p.add_argument("--customer-id", required=True)
-    p.add_argument("--date-from", required=True, help="YYYY-MM-DD")
-    p.add_argument("--date-to", required=True, help="YYYY-MM-DD")
-    p.add_argument("--account-name", default="")
-    p.add_argument("--currency-code", default="USD")
-    p.add_argument("--login-customer-id", default="", help="MCC / manager account ID")
-    p.add_argument("--output", type=Path, help="Write raw JSON to this path")
-    return p.parse_args()
-
-
-def main() -> None:
-    import os
-
-    args = parse_args()
-    token = os.environ.get("GOOGLE_ADS_DEVELOPER_TOKEN", "")
-    client_id = os.environ.get("GOOGLE_ADS_CLIENT_ID", "")
-    client_secret = os.environ.get("GOOGLE_ADS_CLIENT_SECRET", "")
-    refresh_token = os.environ.get("GOOGLE_ADS_REFRESH_TOKEN", "")
-    login_customer_id = os.environ.get("GOOGLE_ADS_LOGIN_CUSTOMER_ID", "")
-
-    if not all([token, client_id, client_secret, refresh_token]):
-        raise SystemExit(
-            "Set GOOGLE_ADS_DEVELOPER_TOKEN, GOOGLE_ADS_CLIENT_ID, "
-            "GOOGLE_ADS_CLIENT_SECRET, GOOGLE_ADS_REFRESH_TOKEN in the environment."
-        )
-
-    payload = fetch_campaigns(
-        customer_id=args.customer_id,
-        developer_token=token,
-        client_id=client_id,
-        client_secret=client_secret,
-        refresh_token=refresh_token,
-        date_from=args.date_from,
-        date_to=args.date_to,
-        account_name=args.account_name,
-        currency_code=args.currency_code,
-        login_customer_id=args.login_customer_id or login_customer_id,
-    )
-    text = json.dumps(payload, indent=2) + "\n"
-    if args.output:
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(text, encoding="utf-8")
-        print(f"Wrote {args.output}")
-    else:
-        print(text)
-
-
-if __name__ == "__main__":
-    main()

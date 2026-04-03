@@ -35,14 +35,14 @@ The current and planned backend stack is:
 
 ## Current directory structure
 
-- `scripts/` — MVP entry points
+- `service/google/brief.py` — Google Ads brief normalization (loads demo from `data/<connector_id>/`, default `google_ads`)
 - `briefs/schemas/` — typed internal and output schemas
-- `briefs/templates/` — prompt contracts and brief templates
+- `agents/reporter/prompts.py` — synthesis system + user prompts (e.g. Google Ads weekly brief)
 - `reports/` — generated JSON artifacts (no HTML files)
 
 ## Artifact contract
 
-Scripts write JSON to `reports/`. The app reads those files directly (filesystem today, API later).
+The report API writes JSON to `reports/`. The app reads those files directly (filesystem today, API later).
 
 The JSON contract:
 - `source_metadata.theme` — theme key (`paid_ads`, `product_intelligence`, `organic_growth`); the app resolves accent colors from this

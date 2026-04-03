@@ -1,41 +1,80 @@
-"""Dynamic prompt builders for the generate agent.
-
-Follows the nomadtools messages.py pattern: functions accept parameters
-and return formatted prompt strings.
-"""
+"""Prompt strings and builders for the generate agent and Gemini synthesis."""
 
 from __future__ import annotations
 
 import json
-from pathlib import Path
 from typing import Any, Dict
 
-_BRIEF_TEMPLATE_PATH = (
-    Path(__file__).resolve().parents[2] / "briefs" / "templates" / "google_ads_weekly_brief.md"
-)
+# Google Ads weekly brief — system instructions (shared by LangChain + Gemini paths).
+GOOGLE_ADS_WEEKLY_BRIEF_SYSTEM = """# Google Ads Weekly Brief Template
+
+Use this template after the raw Google Ads data has already been normalized into
+the `GoogleAdsBrief` schema contract.
+
+## Job
+
+Turn the structured Google Ads payload into a concise operator report.
+
+The report must answer:
+
+1. What changed?
+2. Why does it matter?
+3. What should the operator do next?
+
+## Rules
+
+- Use only the normalized payload provided.
+- Do not invent platform data.
+- Prefer concrete operator language over abstract marketing language.
+- Make recommendations specific: scale, pause, monitor, refresh, tighten, or investigate.
+- Focus on campaign-level decisions, not generic PPC advice.
+- If evidence is weak, say so with lower confidence.
+
+## Output Contract
+
+Return:
+
+- `narrative.verdict`
+- `narrative.summary`
+- `narrative.operator_takeaway`
+- `highlights[]`
+- `risks[]`
+- `recommended_actions[]`
+
+## Finding Style
+
+Each finding should include:
+
+- a short title
+- 1-3 pieces of evidence from the data
+- why it matters commercially
+- a clear recommended action
+- a confidence level
+
+## Example Tone
+
+Good:
+
+- Brand search is carrying efficiency while two non-brand campaigns are burning spend without enough conversion value to justify their budget.
+- Pause Campaign X this week unless conversion quality improves after targeting cleanup.
+- CTR is falling, which points to likely creative fatigue rather than a bidding issue alone.
+
+Bad:
+
+- Performance was mixed overall.
+- Consider optimizing campaigns.
+- Some campaigns may need improvement.
+"""
 
 
 def get_system_prompt(goal: str = "", context: str = "") -> str:
-    """Build the system instruction from the brief template + goal/context.
-
-    Goal and context are prepended so the LLM weights its analysis
-    toward the user's intent.
-    """
-    try:
-        base_template = _BRIEF_TEMPLATE_PATH.read_text(encoding="utf-8")
-    except OSError:
-        base_template = (
-            "You are a paid-ads analyst. Turn the provided Google Ads data "
-            "into a concise operator report with narrative, highlights, risks, "
-            "and recommended actions."
-        )
-
+    """System instruction: weekly brief contract + optional goal/context."""
     sections: list[str] = []
     if goal:
         sections.append(f"## User Goal\n{goal}")
     if context:
         sections.append(f"## Additional Context\n{context}")
-    sections.append(base_template)
+    sections.append(GOOGLE_ADS_WEEKLY_BRIEF_SYSTEM)
     return "\n\n".join(sections)
 
 
@@ -43,7 +82,7 @@ def get_synthesis_user_prompt(
     brief_dict: Dict[str, Any],
     raw_payload: Dict[str, Any],
 ) -> str:
-    """Build the user message containing the data payloads for synthesis."""
+    """User message with compact JSON payloads for synthesis."""
     compact_brief = json.dumps(brief_dict, separators=(",", ":"), default=str)[:120_000]
     compact_raw = json.dumps(raw_payload, separators=(",", ":"), default=str)[:120_000]
     return (

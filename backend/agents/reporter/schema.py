@@ -2,7 +2,7 @@
 
 Uses extra='forbid' for OpenAI Structured Outputs compatibility.
 These schemas are shared between the LangChain agent and the legacy
-Gemini synthesis path in google_ads_brief.py.
+Gemini synthesis path in service.google.brief.
 """
 
 from __future__ import annotations

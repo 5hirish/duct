@@ -1,4 +1,4 @@
-"""List Google Ads accounts available for an OAuth refresh token."""
+"""Google Ads connector: account listing and registry registration."""
 
 from __future__ import annotations
 
@@ -6,6 +6,16 @@ from typing import Any
 
 from google.ads.googleads.client import GoogleAdsClient
 from google.ads.googleads.errors import GoogleAdsException
+
+from config import get_configs
+from service.google.constants import GOOGLE_ADS_CONNECTOR_ID
+from service.connectors import (
+    CAP_ACCOUNTS,
+    CAP_CAMPAIGN_REPORT,
+    ConnectorAuthContext,
+    ConnectorMeta,
+    register_connector,
+)
 
 
 def _norm_customer_id(customer_id: str) -> str:
@@ -18,6 +28,7 @@ def list_accessible_accounts(
     client_secret: str,
     refresh_token: str,
 ) -> list[dict[str, Any]]:
+    """List Google Ads customer accounts for OAuth credentials."""
     creds: dict[str, Any] = {
         "developer_token": developer_token,
         "client_id": client_id,
@@ -61,8 +72,34 @@ def list_accessible_accounts(
                 }
             )
         except Exception:
-            # Some accessible accounts can still fail per-account reads; skip those.
             continue
 
     results.sort(key=lambda item: item["descriptive_name"].lower())
     return results
+
+
+class GoogleAdsConnector:
+    """Interactive Google Ads operations (accounts, etc.)."""
+
+    def list_accounts(self, auth: ConnectorAuthContext) -> list[dict[str, Any]]:
+        cfg = get_configs()
+        rt = (auth.refresh_token or "").strip() or cfg.google_ads_refresh_token
+        dt = cfg.google_ads_developer_token
+        cid = cfg.google_oauth_client_id or cfg.google_ads_client_id
+        secret = cfg.google_oauth_client_secret or cfg.google_ads_client_secret
+        if not all([dt, cid, secret, rt]):
+            raise ValueError(
+                "Missing Google Ads credentials. Set GOOGLE_ADS_DEVELOPER_TOKEN, "
+                "GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET and provide refresh_token."
+            )
+        return list_accessible_accounts(dt, cid, secret, rt)
+
+
+GOOGLE_ADS_META = ConnectorMeta(
+    id=GOOGLE_ADS_CONNECTOR_ID,
+    label="Google Ads",
+    oauth_scope="https://www.googleapis.com/auth/adwords",
+    capabilities=frozenset({CAP_ACCOUNTS, CAP_CAMPAIGN_REPORT}),
+)
+
+register_connector(GOOGLE_ADS_META, GoogleAdsConnector())

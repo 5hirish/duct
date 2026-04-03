@@ -12,7 +12,9 @@ This directory contains the Python reporting and synthesis side of Duct.
 
 ## Current scope
 
-- `scripts/` — entry points and MVP flows
+- `service/` — connectors and Google Ads fetch/brief
+- `data/<connector_id>/` — static demo source payloads per connector
+- `utils/` — formatting and metric helpers
 - `briefs/` — typed schemas and prompt templates
 - `reports/` — generated artifacts for review
 

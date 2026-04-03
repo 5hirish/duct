@@ -1,16 +1,16 @@
 {
   "source_metadata": {
-    "source": "google_ads_manual_export",
+    "source": "google_ads_demo",
     "export_type": "campaign_performance",
-    "generated_at": "2026-04-03T21:54:38.786856+00:00",
+    "generated_at": "2026-04-03T22:49:16.237954+00:00",
     "window_current": "last_7_days",
     "window_previous": "previous_7_days",
     "currency_code": "USD",
     "account_name": "Duct Demo Account",
     "account_id": "123-456-7890",
-    "source_file": "demo://google_ads_campaign_export.csv",
+    "source_file": "data/google_ads/demo_raw_payload.json",
     "notes": [
-      "Demo data for MVP validation"
+      "Static demo payload for MVP validation"
     ],
     "theme": "paid_ads"
   },

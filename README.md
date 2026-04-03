@@ -46,8 +46,9 @@ Directory-local agent docs live inside the main code areas:
 
 | Path | Purpose |
 |------|---------|
-| `backend/scripts/google_ads_fetch.py` | Convert manual Google Ads exports into raw JSON |
-| `backend/scripts/google_ads_brief.py` | Normalize Google Ads data and render report artifacts |
+| `backend/data/<connector_id>/demo_raw_payload.json` | Static demo raw payload per connector (e.g. `google_ads`) |
+| `backend/service/google/brief.py` | Normalize Google Ads JSON into typed brief payloads |
+| `backend/service/google/fetch.py` | Google Ads API campaign fetch (used by API routes) |
 | `backend/briefs/` | Typed schemas and prompt templates |
 | `backend/reports/` | Generated report artifacts |
 
