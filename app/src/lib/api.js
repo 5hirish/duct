@@ -24,3 +24,16 @@ export async function runGoogleAdsReport(params) {
   }
   return res.json();
 }
+
+export async function generateReport(params) {
+  const res = await fetch(`${BASE}/api/generate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(params),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || `Server error ${res.status}`);
+  }
+  return res.json();
+}

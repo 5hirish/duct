@@ -63,6 +63,19 @@ class ReportRequest(BaseModel):
     use_demo: bool = False
 
 
+class GenerateRequest(BaseModel):
+    connections: list[str] = Field(default_factory=list)  # e.g. ["google_ads"]
+    goal: str = ""
+    context: str = ""
+    date_from: str = ""
+    date_to: str = ""
+    refresh_token: str = ""
+    customer_id: str = ""
+    account_name: str = ""
+    currency_code: str = "USD"
+    login_customer_id: str = ""
+
+
 class HealthResponse(BaseModel):
     status: str = Field(default="ok")
 
@@ -193,6 +206,63 @@ def google_ads_accounts(refresh_token: str = Query(default="")) -> dict:
         refresh_token=rt,
     )
     return {"accounts": accounts}
+
+
+@app.post("/api/generate")
+def generate(req: GenerateRequest) -> dict:
+    """Interactive generate flow: fetch data for selected connections, build brief,
+    synthesize with goal/context, and return JSON (no disk write)."""
+    if not req.connections:
+        raise HTTPException(status_code=422, detail="At least one connection is required.")
+    if "google_ads" not in req.connections:
+        raise HTTPException(
+            status_code=422,
+            detail="Only google_ads is supported for now.",
+        )
+    if not req.date_from or not req.date_to:
+        raise HTTPException(status_code=422, detail="date_from and date_to are required.")
+
+    # Resolve credentials using a ReportRequest shim
+    shim = ReportRequest(
+        customer_id=req.customer_id,
+        refresh_token=req.refresh_token,
+        login_customer_id=req.login_customer_id,
+    )
+    customer_id = _resolve_customer_id(shim)
+    dt, cid, secret, rt = _resolve_ads_credentials(shim)
+    login = (req.login_customer_id or os.environ.get("GOOGLE_ADS_LOGIN_CUSTOMER_ID", "")).strip()
+
+    try:
+        raw_payload = fetch_campaigns(
+            customer_id=customer_id,
+            developer_token=dt,
+            client_id=cid,
+            client_secret=secret,
+            refresh_token=rt,
+            date_from=req.date_from,
+            date_to=req.date_to,
+            account_name=req.account_name,
+            currency_code=req.currency_code,
+            login_customer_id=login,
+        )
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    if not raw_payload.get("rows"):
+        raise HTTPException(
+            status_code=422,
+            detail="No campaigns returned for this customer and date range.",
+        )
+
+    brief = build_brief(raw_payload, theme="paid_ads")
+    brief_dict = brief.to_dict()
+
+    if os.environ.get("GEMINI_API_KEY"):
+        brief_dict = synthesize_with_gemini_dict(
+            brief_dict, raw_payload, goal=req.goal, context=req.context
+        )
+
+    return brief_dict
 
 
 @app.post("/api/report/google-ads")

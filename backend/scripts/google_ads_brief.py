@@ -528,10 +528,16 @@ def build_brief(raw_payload: Dict[str, Any], theme: str = "paid_ads") -> GoogleA
 def synthesize_with_gemini_dict(
     brief_dict: Dict[str, Any],
     raw_payload: Dict[str, Any],
+    *,
+    goal: str = "",
+    context: str = "",
 ) -> Dict[str, Any]:
     """
     Replace narrative, highlights, risks, recommended_actions in brief_dict
     with Gemini 2.5 Flash output. Falls back silently to input dict on any error.
+
+    When goal/context are provided (from the generate flow), they are prepended
+    to the system instruction so the synthesis is targeted to the user's intent.
     """
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
@@ -547,6 +553,11 @@ def synthesize_with_gemini_dict(
         system_instruction = _BRIEF_TEMPLATE_PATH.read_text(encoding="utf-8")
     except OSError:
         return brief_dict
+
+    if goal or context:
+        goal_section = f"## User Goal\n{goal}\n\n" if goal else ""
+        context_section = f"## Additional Context\n{context}\n\n" if context else ""
+        system_instruction = goal_section + context_section + system_instruction
 
     compact_brief = json.dumps(brief_dict, separators=(",", ":"), default=str)[:120_000]
     compact_raw = json.dumps(raw_payload, separators=(",", ":"), default=str)[:120_000]
