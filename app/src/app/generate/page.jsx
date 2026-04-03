@@ -318,12 +318,6 @@ export default function GeneratePage() {
     );
   }
 
-  function resolvedGoal() {
-    if (goal === "custom") return customGoal;
-    const found = GOALS.find((g) => g.key === goal);
-    return found ? found.label : goal;
-  }
-
   async function handleGenerate() {
     setStep(3);
     setStatus("loading");
@@ -335,7 +329,8 @@ export default function GeneratePage() {
     try {
       const data = await generateReport({
         connections: selectedConnections,
-        goal: resolvedGoal(),
+        goal: goal === "custom" ? "custom" : goal,
+        custom_goal: goal === "custom" ? customGoal.trim() : "",
         context,
         date_from: dateFrom,
         date_to: dateTo,

@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from typing import Annotated, Self
+
+from pydantic import BaseModel, BeforeValidator, Field, model_validator
+
+from agents.reporter.goals import ReportGenerationGoal, parse_goal_value
 
 
 class ReportRequest(BaseModel):
@@ -22,7 +26,11 @@ class ReportRequest(BaseModel):
 
 class GenerateRequest(BaseModel):
     connections: list[str] = Field(default_factory=list)  # e.g. ["google_ads"]
-    goal: str = ""
+    goal: Annotated[ReportGenerationGoal, BeforeValidator(parse_goal_value)]
+    custom_goal: str = Field(
+        default="",
+        description='Required when goal is "custom": free-text objective for the report.',
+    )
     context: str = ""
     date_from: str = ""
     date_to: str = ""
@@ -31,6 +39,12 @@ class GenerateRequest(BaseModel):
     account_name: str = ""
     currency_code: str = "USD"
     login_customer_id: str = ""
+
+    @model_validator(mode="after")
+    def _custom_goal_required(self) -> Self:
+        if self.goal == ReportGenerationGoal.CUSTOM and not self.custom_goal.strip():
+            raise ValueError('custom_goal is required when goal is "custom"')
+        return self
 
 
 class HealthResponse(BaseModel):

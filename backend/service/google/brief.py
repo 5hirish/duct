@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
+from agents.reporter.goals import ReportGenerationGoal
 from agents.reporter.prompts import get_synthesis_user_prompt, get_system_prompt
 from agents.reporter.schema import SynthesisSchema as _SynthesisSchema
 from briefs.schemas.google_ads_brief import (
@@ -24,8 +25,8 @@ from briefs.schemas.google_ads_brief import (
 )
 
 from service.google.constants import GOOGLE_ADS_CONNECTOR_ID
+from service.google.metrics import comparison_metric, metric_value
 from utils.formatting import money, safe_divide
-from utils.google_ads_metrics import comparison_metric, metric_value
 _BACKEND_ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -294,7 +295,8 @@ def synthesize_with_gemini_dict(
     brief_dict: Dict[str, Any],
     raw_payload: Dict[str, Any],
     *,
-    goal: str = "",
+    goal: ReportGenerationGoal | None = None,
+    custom_goal: str = "",
     context: str = "",
 ) -> Dict[str, Any]:
     """Gemini synthesis for narrative / highlights / risks / actions; no-op if no API key or error."""
@@ -308,7 +310,7 @@ def synthesize_with_gemini_dict(
     except ImportError:
         return brief_dict
 
-    system_instruction = get_system_prompt(goal=goal, context=context)
+    system_instruction = get_system_prompt(goal=goal, custom_goal=custom_goal, context=context)
     user_text = get_synthesis_user_prompt(brief_dict, raw_payload)
 
     try:

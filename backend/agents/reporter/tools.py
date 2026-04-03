@@ -15,6 +15,8 @@ from typing import Any, Callable, Dict, List
 from langchain_core.tools import StructuredTool
 from pydantic import BaseModel, Field
 
+from agents.reporter.goals import ReportGenerationGoal
+
 
 # ---------------------------------------------------------------------------
 # Shared input schema — all supplementary tools take the same params
@@ -144,42 +146,30 @@ def create_ad_group_performance_tool(
 
 # Tool names that should be offered for each goal. The agent decides which
 # to actually call based on the data it already has and what it needs.
-GOAL_TOOL_NAMES: Dict[str, List[str]] = {
-    "lower_cac": [
+GOAL_TOOL_NAMES: Dict[ReportGenerationGoal, List[str]] = {
+    ReportGenerationGoal.LOWER_CAC: [
         "fetch_search_terms",
         "fetch_device_performance",
     ],
-    "maximize_roas": [
+    ReportGenerationGoal.MAXIMIZE_ROAS: [
         "fetch_ad_group_performance",
         "fetch_device_performance",
     ],
-    "scale_conversions": [
+    ReportGenerationGoal.SCALE_CONVERSIONS: [
         "fetch_device_performance",
         "fetch_geo_performance",
     ],
-    "audit_spend": [
+    ReportGenerationGoal.AUDIT_SPEND: [
         "fetch_search_terms",
         "fetch_ad_group_performance",
         "fetch_geo_performance",
     ],
-    # Custom / unknown goals get ad group detail as a sensible default
-    "custom": [
+    ReportGenerationGoal.CUSTOM: [
         "fetch_ad_group_performance",
     ],
 }
 
 
-def get_tool_names_for_goal(goal: str) -> List[str]:
-    """Return supplementary tool names for a goal string.
-
-    Normalises the goal to a key (lowercase, spaces→underscores) and falls
-    back to 'custom' if no exact match.
-    """
-    key = goal.lower().strip().replace(" ", "_").replace("-", "_")
-    # Try exact match first, then prefix match, then default
-    if key in GOAL_TOOL_NAMES:
-        return GOAL_TOOL_NAMES[key]
-    for known_key in GOAL_TOOL_NAMES:
-        if known_key in key or key in known_key:
-            return GOAL_TOOL_NAMES[known_key]
-    return GOAL_TOOL_NAMES["custom"]
+def get_tool_names_for_goal(goal: ReportGenerationGoal) -> List[str]:
+    """Return supplementary tool names registered for this goal."""
+    return GOAL_TOOL_NAMES[goal]

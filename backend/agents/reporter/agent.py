@@ -19,6 +19,7 @@ from langchain.chat_models import init_chat_model
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
 
 from agents.models import ModelName, Provider, get_api_key_kwargs
+from agents.reporter.goals import ReportGenerationGoal, goal_heading_text
 from agents.reporter.prompts import get_synthesis_user_prompt, get_system_prompt
 from agents.reporter.schema import SynthesisSchema
 from agents.reporter.tools import (
@@ -48,9 +49,23 @@ class GenerateAgent:
     Usage::
 
         agent = GenerateAgent(api_key="...", provider=Provider.OPENAI, model=ModelName.GPT_5_MINI)
-        agent.setup_tools_for_goal(goal="lower_cac", fetch_fns={...})
-        supplementary = await agent.fetch_supplementary_data(customer_id, date_from, date_to, goal)
-        result = await agent.synthesize(goal, context, brief_dict, raw_payload, supplementary)
+        agent.setup_tools_for_goal(goal=ReportGenerationGoal.LOWER_CAC, fetch_fns={...})
+        supplementary = await agent.fetch_supplementary_data(
+            customer_id,
+            date_from,
+            date_to,
+            goal=ReportGenerationGoal.LOWER_CAC,
+            custom_goal="",
+            context="",
+        )
+        result = await agent.synthesize(
+            goal=ReportGenerationGoal.LOWER_CAC,
+            custom_goal="",
+            context="",
+            brief_dict=brief_dict,
+            raw_payload=raw_payload,
+            supplementary=supplementary,
+        )
     """
 
     def __init__(
@@ -86,7 +101,7 @@ class GenerateAgent:
 
     def setup_tools_for_goal(
         self,
-        goal: str,
+        goal: ReportGenerationGoal,
         fetch_fns: Dict[str, Callable[..., Dict[str, Any]]],
     ) -> List[str]:
         """Register supplementary tools based on the user's goal.
@@ -110,7 +125,7 @@ class GenerateAgent:
             self.llm_with_tools = self.llm.bind_tools(self.tools)
 
         registered = list(self.tools_by_name.keys())
-        logger.info("Registered %d tools for goal '%s': %s", len(registered), goal, registered)
+        logger.info("Registered %d tools for goal '%s': %s", len(registered), goal.value, registered)
         return registered
 
     async def fetch_supplementary_data(
@@ -118,7 +133,8 @@ class GenerateAgent:
         customer_id: str,
         date_from: str,
         date_to: str,
-        goal: str,
+        goal: ReportGenerationGoal,
+        custom_goal: str = "",
         context: str = "",
     ) -> Dict[str, Any]:
         """Phase 1: Let the LLM decide which supplementary data to fetch.
@@ -144,8 +160,9 @@ class GenerateAgent:
             f"Available tools:\n{tool_descriptions}"
         )
 
+        goal_line = goal_heading_text(goal, custom_goal=custom_goal)
         user_msg = (
-            f"Goal: {goal}\n"
+            f"Goal: {goal_line}\n"
             f"Context: {context or 'None provided'}\n"
             f"Customer ID: {customer_id}\n"
             f"Date range: {date_from} to {date_to}\n\n"
@@ -210,7 +227,8 @@ class GenerateAgent:
 
     async def synthesize(
         self,
-        goal: str,
+        goal: ReportGenerationGoal,
+        custom_goal: str,
         context: str,
         brief_dict: Dict[str, Any],
         raw_payload: Dict[str, Any],
@@ -220,7 +238,7 @@ class GenerateAgent:
 
         Returns a validated SynthesisSchema instance.
         """
-        system_prompt = get_system_prompt(goal=goal, context=context)
+        system_prompt = get_system_prompt(goal=goal, custom_goal=custom_goal, context=context)
         user_prompt = get_synthesis_user_prompt(brief_dict, raw_payload, supplementary=supplementary)
 
         messages = [

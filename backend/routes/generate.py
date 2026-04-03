@@ -134,18 +134,20 @@ async def generate(req: GenerateRequest) -> dict:
         registered = agent.setup_tools_for_goal(goal=req.goal, fetch_fns=fetch_fns)
         supplementary = {}
         if registered:
-            logger.info("Phase 1: fetching supplementary data for goal '%s'", req.goal)
+            logger.info("Phase 1: fetching supplementary data for goal '%s'", req.goal.value)
             supplementary = await agent.fetch_supplementary_data(
                 customer_id=customer_id,
                 date_from=req.date_from,
                 date_to=req.date_to,
                 goal=req.goal,
+                custom_goal=req.custom_goal,
                 context=req.context,
             )
 
         # Phase 2: Synthesis with all collected data
         synthesis = await agent.synthesize(
             goal=req.goal,
+            custom_goal=req.custom_goal,
             context=req.context,
             brief_dict=brief_dict,
             raw_payload=raw_payload,

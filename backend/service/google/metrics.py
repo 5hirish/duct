@@ -1,4 +1,4 @@
-"""Metric / delta helpers for Google Ads brief payloads."""
+"""Build ``MetricValue`` / ``ComparisonMetric`` instances for Google Ads brief payloads."""
 
 from __future__ import annotations
 
