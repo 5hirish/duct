@@ -4,16 +4,22 @@ from __future__ import annotations
 
 import json
 import os
+import secrets
+import time
 from datetime import date
 from pathlib import Path
+from urllib.parse import quote
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
+from google_auth_oauthlib.flow import Flow
 from pydantic import BaseModel, Field
 
 load_dotenv()
 
+from scripts.google_ads_accounts import list_accessible_accounts
 from scripts.google_ads_api_fetch import fetch_campaigns
 from scripts.google_ads_brief import (
     build_brief,
@@ -22,11 +28,20 @@ from scripts.google_ads_brief import (
 )
 
 REPORTS_DIR = Path(__file__).resolve().parent / "reports"
+GOOGLE_OAUTH_CLIENT_ID = os.environ.get("GOOGLE_OAUTH_CLIENT_ID", "").strip()
+GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get("GOOGLE_OAUTH_CLIENT_SECRET", "").strip()
+GOOGLE_OAUTH_REDIRECT_URI = os.environ.get(
+    "GOOGLE_OAUTH_REDIRECT_URI", "http://localhost:8000/auth/google/callback"
+).strip()
+FRONTEND_ORIGIN = os.environ.get("FRONTEND_ORIGIN", "http://localhost:3000").strip()
+GOOGLE_ADS_DEVELOPER_TOKEN = os.environ.get("GOOGLE_ADS_DEVELOPER_TOKEN", "").strip()
+OAUTH_STATE_TTL_SECONDS = 300
+_oauth_states: dict[str, float] = {}
 
 app = FastAPI(title="Duct backend")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[FRONTEND_ORIGIN],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -35,16 +50,16 @@ app.add_middleware(
 
 class ReportRequest(BaseModel):
     customer_id: str = ""
-    developer_token: str = ""
-    client_id: str = ""
-    client_secret: str = ""
+    developer_token: str = ""  # deprecated; token now resolves from backend env
+    client_id: str = ""  # deprecated; client id now resolves from backend env
+    client_secret: str = ""  # deprecated; secret now resolves from backend env
     refresh_token: str = ""
     date_from: str = ""
     date_to: str = ""
     account_name: str = ""
     currency_code: str = "USD"
     theme: str = "paid_ads"
-    login_customer_id: str = ""
+    login_customer_id: str = ""  # optional MCC override
     use_demo: bool = False
 
 
@@ -53,14 +68,17 @@ class HealthResponse(BaseModel):
 
 
 def _resolve_ads_credentials(req: ReportRequest) -> tuple[str, str, str, str]:
-    dt = req.developer_token or os.environ.get("GOOGLE_ADS_DEVELOPER_TOKEN", "")
-    cid = req.client_id or os.environ.get("GOOGLE_ADS_CLIENT_ID", "")
-    secret = req.client_secret or os.environ.get("GOOGLE_ADS_CLIENT_SECRET", "")
+    dt = GOOGLE_ADS_DEVELOPER_TOKEN
+    cid = GOOGLE_OAUTH_CLIENT_ID or os.environ.get("GOOGLE_ADS_CLIENT_ID", "")
+    secret = GOOGLE_OAUTH_CLIENT_SECRET or os.environ.get("GOOGLE_ADS_CLIENT_SECRET", "")
     rt = req.refresh_token or os.environ.get("GOOGLE_ADS_REFRESH_TOKEN", "")
     if not all([dt, cid, secret, rt]):
         raise HTTPException(
             status_code=422,
-            detail="Missing Google Ads credentials (body or GOOGLE_ADS_* env vars).",
+            detail=(
+                "Missing Google Ads credentials. Set GOOGLE_ADS_DEVELOPER_TOKEN, "
+                "GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET and provide refresh_token."
+            ),
         )
     return dt, cid, secret, rt
 
@@ -76,6 +94,35 @@ def _report_basename(customer_stripped: str, date_to: str, *, demo: bool) -> str
     if demo:
         return f"demo-{date_to}.json"
     return f"{customer_stripped}-{date_to}.json"
+
+
+def _flow_from_env(*, state: str | None = None) -> Flow:
+    if not GOOGLE_OAUTH_CLIENT_ID or not GOOGLE_OAUTH_CLIENT_SECRET:
+        raise HTTPException(
+            status_code=500,
+            detail="Missing GOOGLE_OAUTH_CLIENT_ID / GOOGLE_OAUTH_CLIENT_SECRET backend env vars.",
+        )
+    flow = Flow.from_client_config(
+        {
+            "web": {
+                "client_id": GOOGLE_OAUTH_CLIENT_ID,
+                "client_secret": GOOGLE_OAUTH_CLIENT_SECRET,
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+            }
+        },
+        scopes=["https://www.googleapis.com/auth/adwords"],
+        state=state,
+    )
+    flow.redirect_uri = GOOGLE_OAUTH_REDIRECT_URI
+    return flow
+
+
+def _is_valid_oauth_state(state: str) -> bool:
+    issued_at = _oauth_states.pop(state, None)
+    if issued_at is None:
+        return False
+    return (time.time() - issued_at) <= OAUTH_STATE_TTL_SECONDS
 
 
 @app.get("/health", response_model=HealthResponse)
@@ -96,6 +143,56 @@ def report_latest() -> dict:
         raise HTTPException(status_code=404, detail="No report files.")
     path = json_files[0]
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+@app.get("/auth/google/authorize")
+def google_authorize() -> RedirectResponse:
+    state = secrets.token_urlsafe(32)
+    _oauth_states[state] = time.time()
+    flow = _flow_from_env(state=state)
+    auth_url, _ = flow.authorization_url(
+        access_type="offline",
+        include_granted_scopes="true",
+        prompt="consent",
+    )
+    return RedirectResponse(url=auth_url, status_code=307)
+
+
+@app.get("/auth/google/callback")
+def google_callback(code: str = Query(default=""), state: str = Query(default="")) -> RedirectResponse:
+    if not code:
+        raise HTTPException(status_code=400, detail="Missing OAuth code.")
+    if not state or not _is_valid_oauth_state(state):
+        raise HTTPException(status_code=400, detail="Invalid or expired OAuth state.")
+
+    flow = _flow_from_env(state=state)
+    try:
+        flow.fetch_token(code=code)
+    except Exception as exc:  # pragma: no cover - upstream oauth errors vary
+        raise HTTPException(status_code=502, detail=f"OAuth token exchange failed: {exc}") from exc
+
+    refresh_token = (flow.credentials.refresh_token or "").strip()
+    if not refresh_token:
+        raise HTTPException(
+            status_code=502,
+            detail="No refresh token returned by Google. Re-consent is required.",
+        )
+
+    redirect_url = f"{FRONTEND_ORIGIN}/connections#refresh_token={quote(refresh_token, safe='')}"
+    return RedirectResponse(url=redirect_url, status_code=307)
+
+
+@app.get("/api/google-ads/accounts")
+def google_ads_accounts(refresh_token: str = Query(default="")) -> dict:
+    req = ReportRequest(refresh_token=refresh_token)
+    dt, cid, secret, rt = _resolve_ads_credentials(req)
+    accounts = list_accessible_accounts(
+        developer_token=dt,
+        client_id=cid,
+        client_secret=secret,
+        refresh_token=rt,
+    )
+    return {"accounts": accounts}
 
 
 @app.post("/api/report/google-ads")

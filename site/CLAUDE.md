@@ -33,7 +33,7 @@ Then open `http://localhost:8080/`.
 | `https://getduct.ai/for-organic-growth` | `site/for-organic-growth.html` |
 | `https://getduct.ai/for-paid-ads` | `site/for-paid-ads.html` |
 | `https://getduct.ai/blog` | `site/blog/index.html` |
-| `https://getduct.ai/blog/post.html?slug=SLUG` | `site/blog/post.html` |
+| `https://getduct.ai/blog/post?slug=SLUG` | `site/blog/post.html` |
 
 ## Shared assets
 

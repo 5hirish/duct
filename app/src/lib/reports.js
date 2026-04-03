@@ -21,6 +21,13 @@ async function readPayload(jsonPath) {
   }
 }
 
+function getConnectionsFromPayload(payload) {
+  const source = payload?.source_metadata?.source;
+  if (!source) return [];
+  if (source.includes("google_ads")) return ["google_ads"];
+  return [source];
+}
+
 export async function listReports() {
   const entries = await fs.readdir(REPORTS_DIR, { withFileTypes: true });
   const jsonFiles = entries
@@ -37,8 +44,18 @@ export async function listReports() {
       const themeKey = payload.source_metadata?.theme ?? null;
       const theme = resolveTheme(themeKey);
       const generatedAt = payload.source_metadata?.generated_at ?? null;
+      const keyInsight = payload.narrative?.verdict ?? payload.narrative?.summary ?? "";
+      const connections = getConnectionsFromPayload(payload);
 
-      return { slug, title: formatTitle(slug), themeKey, themeLabel: theme.label, generatedAt };
+      return {
+        slug,
+        title: formatTitle(slug),
+        themeKey,
+        themeLabel: theme.label,
+        generatedAt,
+        keyInsight,
+        connections,
+      };
     })
   );
 
