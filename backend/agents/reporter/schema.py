@@ -7,14 +7,23 @@ Gemini synthesis path in google_ads_brief.py.
 
 from __future__ import annotations
 
-from typing import List, Literal
+from typing import List
 
 from pydantic import BaseModel, Field
 
+from agents.reporter.entities import (
+    SynActionPriority,
+    SynActionType,
+    SynConfidenceLevel,
+    SynDataSource,
+    SynEntityType,
+    SynFindingType,
+)
+
 
 class SynEvidenceSource(BaseModel, extra="forbid"):
-    source: str = "google_ads"
-    entity_type: str = "campaign"
+    source: SynDataSource = SynDataSource.GOOGLE_ADS
+    entity_type: SynEntityType = SynEntityType.CAMPAIGN
     entity_name: str = ""
     metric: str = ""
     note: str = ""
@@ -22,22 +31,22 @@ class SynEvidenceSource(BaseModel, extra="forbid"):
 
 class SynFinding(BaseModel, extra="forbid"):
     finding_id: str
-    type: Literal["win", "risk", "watch"]
+    type: SynFindingType
     title: str
     evidence: List[str] = Field(default_factory=list)
     impact: str = ""
     recommended_action: str = ""
-    confidence: Literal["low", "medium", "high"] = "medium"
+    confidence: SynConfidenceLevel = SynConfidenceLevel.MEDIUM
     related_campaigns: List[str] = Field(default_factory=list)
     evidence_sources: List[SynEvidenceSource] = Field(default_factory=list)
 
 
 class SynRecommendedAction(BaseModel, extra="forbid"):
     action_id: str
-    type: Literal["scale", "monitor", "pause", "refresh", "tighten", "investigate"]
+    type: SynActionType
     title: str
     detail: str = ""
-    priority: Literal["p1", "p2", "p3"] = "p2"
+    priority: SynActionPriority = SynActionPriority.P2
     owner: str = "paid team"
     related_campaigns: List[str] = Field(default_factory=list)
     evidence: List[str] = Field(default_factory=list)

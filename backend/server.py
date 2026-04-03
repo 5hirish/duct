@@ -214,7 +214,7 @@ def _resolve_agent_config() -> tuple[str, "Provider", "ModelName"]:
     Reads GENERATE_PROVIDER, GENERATE_MODEL env vars. Falls back to
     google_genai / gemini-2.5-flash / GEMINI_API_KEY.
     """
-    from agents.models import ModelName, Provider, resolve_model, resolve_provider
+    from agents.reporter.models import ModelName, Provider, resolve_model, resolve_provider
 
     provider = resolve_provider(os.environ.get("GENERATE_PROVIDER"))
     model = resolve_model(os.environ.get("GENERATE_MODEL"), provider)
@@ -281,7 +281,7 @@ async def generate(req: GenerateRequest) -> dict:
     # Use the LangChain agent for synthesis (provider-agnostic)
     api_key, provider, model = _resolve_agent_config()
     if api_key:
-        from agents.generate_agent import GenerateAgent
+        from agents.reporter.generate_agent import GenerateAgent
 
         agent = GenerateAgent(
             api_key=api_key,

@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any, Dict
 
 _BRIEF_TEMPLATE_PATH = (
-    Path(__file__).resolve().parents[1] / "briefs" / "templates" / "google_ads_weekly_brief.md"
+    Path(__file__).resolve().parents[2] / "briefs" / "templates" / "google_ads_weekly_brief.md"
 )
 
 

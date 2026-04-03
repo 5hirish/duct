@@ -25,7 +25,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from agents.schema import (
+from agents.reporter.schema import (
     SynEvidenceSource as _SynEvidenceSource,
     SynFinding as _SynFinding,
     SynNarrative as _SynNarrative,
