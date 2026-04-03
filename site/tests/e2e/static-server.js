@@ -11,6 +11,7 @@ const routeMap = {
   "/for-organic-growth": "for-organic-growth.html",
   "/for-paid-ads": "for-paid-ads.html",
   "/blog": "blog/index.html",
+  "/blog/": "blog/index.html",
   "/blog/post": "blog/post.html",
 };
 
