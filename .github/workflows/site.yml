@@ -31,13 +31,20 @@ jobs:
       - name: "📋 Validate sitemap.xml"
         run: |
           python3 - <<'EOF'
-          import xml.etree.ElementTree as ET, os, sys
+          import xml.etree.ElementTree as ET
+          import pathlib
+          import sys
 
-          tree = ET.parse('sitemap.xml')
+          sitemap_path = pathlib.Path('site/sitemap.xml')
+          if not sitemap_path.exists():
+              print(f'ERROR: missing sitemap at {sitemap_path}')
+              sys.exit(1)
+
+          tree = ET.parse(sitemap_path)
           root = tree.getroot()
           ns = {'sm': 'http://www.sitemaps.org/schemas/sitemap/0.9'}
           urls = [u.find('sm:loc', ns).text for u in root.findall('sm:url', ns)]
-          print(f'sitemap.xml: valid XML, {len(urls)} URLs')
+          print(f'{sitemap_path}: valid XML, {len(urls)} URLs')
 
           # Every entry should have a non-empty <loc>
           bad = [u for u in urls if not u or not u.startswith('https://getduct.ai')]
