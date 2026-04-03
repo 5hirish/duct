@@ -269,7 +269,7 @@ export default function ConnectionsPage() {
                 ))}
             </select>
           </label>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div className="connections-date-row">
             <label style={{ display: "grid", gap: 4 }}>
               <span className="app-subtle">Date from</span>
               <input

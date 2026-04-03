@@ -17,8 +17,6 @@ from fastapi.responses import RedirectResponse
 from google_auth_oauthlib.flow import Flow
 from pydantic import BaseModel, Field
 
-load_dotenv()
-
 from scripts.google_ads_accounts import list_accessible_accounts
 from scripts.google_ads_api_fetch import fetch_campaigns
 from scripts.google_ads_brief import (
@@ -26,6 +24,8 @@ from scripts.google_ads_brief import (
     demo_raw_payload,
     synthesize_with_gemini_dict,
 )
+
+load_dotenv()
 
 REPORTS_DIR = Path(__file__).resolve().parent / "reports"
 GOOGLE_OAUTH_CLIENT_ID = os.environ.get("GOOGLE_OAUTH_CLIENT_ID", "").strip()

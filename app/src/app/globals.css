@@ -35,6 +35,10 @@ body {
   color: var(--navy);
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  padding-top: env(safe-area-inset-top);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
 }
 
 a {
@@ -275,6 +279,12 @@ h1 {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
+}
+
+.connections-date-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
 }
 
 .connection-card {
@@ -847,6 +857,9 @@ h1 {
   .rpt-hero-visual { grid-template-columns: 1fr; }
   .kpi-strip { grid-template-columns: 1fr 1fr; }
   .rpt-header, .rpt-body { padding-left: 16px; padding-right: 16px; }
+  .connections-date-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 860px) {

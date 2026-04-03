@@ -11,6 +11,16 @@ export const metadata = {
   description:
     "Duct synthesizes data across your product, marketing, and sales tools into weekly intelligence briefs and real-time alerts. Stop tab-switching. Start deciding.",
   applicationName: "Duct App",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/icon.svg",
+    apple: "/apple-icon.svg",
+  },
+  appleWebApp: {
+    capable: true,
+    title: "Duct App",
+    statusBarStyle: "default",
+  },
   openGraph: {
     title: "Duct App",
     description:
@@ -29,6 +39,13 @@ export const metadata = {
     index: false,
     follow: false,
   },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#0d0f1a",
 };
 
 export default function RootLayout({ children }) {

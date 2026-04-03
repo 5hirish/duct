@@ -45,23 +45,15 @@
       "cwd": "${workspaceFolder}/site"
     },
     {
-      "name": "Site: Playwright test (debug current file)",
-      "type": "node",
+      "name": "Backend: Pytest (all)",
+      "type": "debugpy",
       "request": "launch",
-      "cwd": "${workspaceFolder}/site",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "playwright",
-        "test",
-        "${file}",
-        "--config=playwright.config.js",
-        "--headed",
-        "--workers=1"
-      ],
+      "module": "pytest",
+      "args": ["tests", "-v", "--tb=short"],
+      "cwd": "${workspaceFolder}/backend",
       "console": "integratedTerminal",
-      "skipFiles": [
-        "<node_internals>/**"
-      ]
+      "justMyCode": true,
+      "python": "${workspaceFolder}/backend/.venv/bin/python"
     }
   ]
 }
