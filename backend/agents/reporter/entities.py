@@ -15,6 +15,10 @@ class SynEntityType(StrEnum):
     """Entity granularity for evidence attribution."""
 
     CAMPAIGN = "campaign"
+    AD_GROUP = "ad_group"
+    SEARCH_TERM = "search_term"
+    DEVICE = "device"
+    GEO = "geo"
 
 
 class SynFindingType(StrEnum):

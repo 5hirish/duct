@@ -1,15 +1,23 @@
-"""Interactive brief generation (fetch + LLM synthesis, no disk write)."""
+"""Interactive brief generation (fetch + goal-driven tools + LLM synthesis)."""
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import logging
+from functools import partial
+from typing import TYPE_CHECKING, Any, Callable, Dict
 
 from fastapi import APIRouter, HTTPException
 
 from agents.models import Provider, resolve_model, resolve_provider
 from agents.reporter.agent import GenerateAgent
 from config import get_configs
-from service.google.fetch import fetch_campaigns
+from service.google.fetch import (
+    fetch_ad_group_performance,
+    fetch_campaigns,
+    fetch_device_performance,
+    fetch_geo_performance,
+    fetch_search_terms,
+)
 from service.google.brief import build_brief
 
 from service.google.credentials import resolve_ads_credentials, resolve_customer_id
@@ -17,6 +25,8 @@ from routes.schemas import GenerateRequest, ReportRequest
 
 if TYPE_CHECKING:
     from agents.models import ModelName
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["generate"])
 
@@ -36,9 +46,36 @@ def _resolve_agent_config() -> tuple[str, Provider, "ModelName"]:
     return api_key, provider, model
 
 
+def _build_fetch_fns(
+    developer_token: str,
+    client_id: str,
+    client_secret: str,
+    refresh_token: str,
+    login_customer_id: str,
+) -> Dict[str, Callable[..., Dict[str, Any]]]:
+    """Build pre-credentialed fetch functions for each supplementary tool.
+
+    Each function only needs customer_id, date_from, date_to — credentials
+    are baked in via partial.
+    """
+    cred_kwargs = dict(
+        developer_token=developer_token,
+        client_id=client_id,
+        client_secret=client_secret,
+        refresh_token=refresh_token,
+        login_customer_id=login_customer_id,
+    )
+    return {
+        "fetch_search_terms": partial(fetch_search_terms, **cred_kwargs),
+        "fetch_device_performance": partial(fetch_device_performance, **cred_kwargs),
+        "fetch_geo_performance": partial(fetch_geo_performance, **cred_kwargs),
+        "fetch_ad_group_performance": partial(fetch_ad_group_performance, **cred_kwargs),
+    }
+
+
 @router.post("/generate")
 async def generate(req: GenerateRequest) -> dict:
-    """Fetch data for selected connections, build brief, optional LangChain synthesis."""
+    """Fetch data for selected connections, build brief, goal-driven LangChain synthesis."""
     if not req.connections:
         raise HTTPException(status_code=422, detail="At least one connection is required.")
     if "google_ads" not in req.connections:
@@ -91,11 +128,28 @@ async def generate(req: GenerateRequest) -> dict:
             model=model,
             temperature=0.3,
         )
+
+        # Phase 1: Register goal-driven tools and fetch supplementary data
+        fetch_fns = _build_fetch_fns(dt, cid, secret, rt, login)
+        registered = agent.setup_tools_for_goal(goal=req.goal, fetch_fns=fetch_fns)
+        supplementary = {}
+        if registered:
+            logger.info("Phase 1: fetching supplementary data for goal '%s'", req.goal)
+            supplementary = await agent.fetch_supplementary_data(
+                customer_id=customer_id,
+                date_from=req.date_from,
+                date_to=req.date_to,
+                goal=req.goal,
+                context=req.context,
+            )
+
+        # Phase 2: Synthesis with all collected data
         synthesis = await agent.synthesize(
             goal=req.goal,
             context=req.context,
             brief_dict=brief_dict,
             raw_payload=raw_payload,
+            supplementary=supplementary or None,
         )
         brief_dict = agent.merge_synthesis(brief_dict, synthesis)
 

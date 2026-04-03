@@ -1,13 +1,21 @@
-"""Fetch Google Ads campaign rows via the API (same shape as demo_raw_payload)."""
+"""Fetch Google Ads data via the API.
+
+Base fetch (campaign performance) is always used. Supplementary fetches
+(search terms, device, geo, ad group) are goal-driven — registered as
+LangChain tools so the agent picks which to call based on the user's goal.
+"""
 
 from __future__ import annotations
 
+import logging
 from collections import defaultdict
 from datetime import date, datetime, timedelta, timezone
 from typing import Any, DefaultDict, Dict, List, Tuple
 
 from google.ads.googleads.client import GoogleAdsClient
 from google.ads.googleads.errors import GoogleAdsException
+
+logger = logging.getLogger(__name__)
 
 
 def _norm_customer_id(customer_id: str) -> str:
@@ -202,5 +210,347 @@ def fetch_campaigns(
                 "Metrics aggregated per campaign over date range",
             ],
         },
+        "rows": rows,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Supplementary GAQL fetches — goal-driven, called via agent tools
+# ---------------------------------------------------------------------------
+
+def _build_client(
+    developer_token: str,
+    client_id: str,
+    client_secret: str,
+    refresh_token: str,
+    login_customer_id: str = "",
+) -> GoogleAdsClient:
+    """Build a GoogleAdsClient from explicit credentials."""
+    creds: Dict[str, Any] = {
+        "developer_token": developer_token,
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "refresh_token": refresh_token,
+        "use_proto_plus": True,
+    }
+    if login_customer_id and login_customer_id.strip():
+        creds["login_customer_id"] = _norm_customer_id(login_customer_id)
+    return GoogleAdsClient.load_from_dict(creds)
+
+
+def _safe_micros(micros: int) -> float:
+    return micros / 1_000_000.0
+
+
+def _run_query(
+    client: GoogleAdsClient, customer_id: str, query: str
+) -> List[Any]:
+    """Execute a GAQL query and return all result rows."""
+    ga_service = client.get_service("GoogleAdsService")
+    cid = _norm_customer_id(customer_id)
+    try:
+        stream = ga_service.search_stream(customer_id=cid, query=query)
+    except GoogleAdsException as exc:
+        msg = exc.failure.errors[0].message if exc.failure.errors else str(exc)
+        raise RuntimeError(msg) from exc
+    results = []
+    for batch in stream:
+        results.extend(batch.results)
+    return results
+
+
+# -- Search terms ------------------------------------------------------
+
+_SEARCH_TERMS_GAQL = """
+SELECT
+  campaign.id,
+  campaign.name,
+  search_term_view.search_term,
+  segments.search_term_match_type,
+  metrics.clicks,
+  metrics.impressions,
+  metrics.cost_micros,
+  metrics.conversions,
+  metrics.conversions_value
+FROM search_term_view
+WHERE segments.date BETWEEN '{date_from}' AND '{date_to}'
+ORDER BY metrics.cost_micros DESC
+LIMIT 100
+""".strip()
+
+
+def fetch_search_terms(
+    customer_id: str,
+    date_from: str,
+    date_to: str,
+    *,
+    developer_token: str,
+    client_id: str,
+    client_secret: str,
+    refresh_token: str,
+    login_customer_id: str = "",
+) -> Dict[str, Any]:
+    """Fetch top search terms by spend. Useful for CAC and spend-audit goals."""
+    client = _build_client(developer_token, client_id, client_secret, refresh_token, login_customer_id)
+    query = _SEARCH_TERMS_GAQL.format(date_from=date_from, date_to=date_to)
+    raw = _run_query(client, customer_id, query)
+
+    rows: List[Dict[str, Any]] = []
+    for r in raw:
+        spend = _safe_micros(r.metrics.cost_micros)
+        clicks = int(r.metrics.clicks)
+        impressions = int(r.metrics.impressions)
+        conversions = float(r.metrics.conversions)
+        conv_value = float(r.metrics.conversions_value)
+        rows.append({
+            "search_term": r.search_term_view.search_term,
+            "match_type": _enum_name(r.segments.search_term_match_type),
+            "campaign_name": r.campaign.name,
+            "campaign_id": str(r.campaign.id),
+            "clicks": clicks,
+            "impressions": impressions,
+            "spend": spend,
+            "ctr": (clicks / impressions) if impressions else 0.0,
+            "conversions": conversions,
+            "cost_per_conversion": (spend / conversions) if conversions else 0.0,
+            "conversion_value": conv_value,
+            "roas": (conv_value / spend) if spend else 0.0,
+        })
+    return {
+        "report_type": "search_terms",
+        "date_range": f"{date_from} to {date_to}",
+        "row_count": len(rows),
+        "rows": rows,
+    }
+
+
+# -- Device performance ------------------------------------------------
+
+_DEVICE_GAQL = """
+SELECT
+  campaign.id,
+  campaign.name,
+  segments.device,
+  metrics.clicks,
+  metrics.impressions,
+  metrics.cost_micros,
+  metrics.conversions,
+  metrics.conversions_value
+FROM campaign
+WHERE segments.date BETWEEN '{date_from}' AND '{date_to}'
+  AND campaign.status != 'REMOVED'
+""".strip()
+
+
+def fetch_device_performance(
+    customer_id: str,
+    date_from: str,
+    date_to: str,
+    *,
+    developer_token: str,
+    client_id: str,
+    client_secret: str,
+    refresh_token: str,
+    login_customer_id: str = "",
+) -> Dict[str, Any]:
+    """Fetch campaign performance segmented by device (MOBILE, DESKTOP, TABLET)."""
+    client = _build_client(developer_token, client_id, client_secret, refresh_token, login_customer_id)
+    query = _DEVICE_GAQL.format(date_from=date_from, date_to=date_to)
+    raw = _run_query(client, customer_id, query)
+
+    # Aggregate by (campaign_id, device)
+    agg: DefaultDict[tuple, Dict[str, Any]] = defaultdict(
+        lambda: {"clicks": 0, "impressions": 0, "cost_micros": 0, "conversions": 0.0, "conversions_value": 0.0,
+                 "campaign_name": "", "device": ""}
+    )
+    for r in raw:
+        key = (int(r.campaign.id), _enum_name(r.segments.device))
+        bucket = agg[key]
+        bucket["clicks"] += r.metrics.clicks
+        bucket["impressions"] += r.metrics.impressions
+        bucket["cost_micros"] += r.metrics.cost_micros
+        bucket["conversions"] += r.metrics.conversions
+        bucket["conversions_value"] += r.metrics.conversions_value
+        if not bucket["campaign_name"]:
+            bucket["campaign_name"] = r.campaign.name
+            bucket["device"] = _enum_name(r.segments.device)
+
+    rows: List[Dict[str, Any]] = []
+    for (cid, device), bucket in sorted(agg.items(), key=lambda x: x[1]["cost_micros"], reverse=True):
+        spend = _safe_micros(bucket["cost_micros"])
+        clicks = int(bucket["clicks"])
+        impressions = int(bucket["impressions"])
+        conversions = float(bucket["conversions"])
+        conv_value = float(bucket["conversions_value"])
+        rows.append({
+            "campaign_name": bucket["campaign_name"],
+            "campaign_id": str(cid),
+            "device": device,
+            "clicks": clicks,
+            "impressions": impressions,
+            "spend": spend,
+            "ctr": (clicks / impressions) if impressions else 0.0,
+            "conversions": conversions,
+            "cost_per_conversion": (spend / conversions) if conversions else 0.0,
+            "conversion_value": conv_value,
+            "roas": (conv_value / spend) if spend else 0.0,
+        })
+    return {
+        "report_type": "device_performance",
+        "date_range": f"{date_from} to {date_to}",
+        "row_count": len(rows),
+        "rows": rows,
+    }
+
+
+# -- Geographic performance -------------------------------------------
+
+_GEO_GAQL = """
+SELECT
+  campaign.id,
+  campaign.name,
+  geographic_view.country_criterion_id,
+  geographic_view.location_type,
+  metrics.clicks,
+  metrics.impressions,
+  metrics.cost_micros,
+  metrics.conversions,
+  metrics.conversions_value
+FROM geographic_view
+WHERE segments.date BETWEEN '{date_from}' AND '{date_to}'
+ORDER BY metrics.cost_micros DESC
+LIMIT 100
+""".strip()
+
+
+def fetch_geo_performance(
+    customer_id: str,
+    date_from: str,
+    date_to: str,
+    *,
+    developer_token: str,
+    client_id: str,
+    client_secret: str,
+    refresh_token: str,
+    login_customer_id: str = "",
+) -> Dict[str, Any]:
+    """Fetch geographic performance data. Useful for scaling and spend-audit goals."""
+    client = _build_client(developer_token, client_id, client_secret, refresh_token, login_customer_id)
+    query = _GEO_GAQL.format(date_from=date_from, date_to=date_to)
+    raw = _run_query(client, customer_id, query)
+
+    rows: List[Dict[str, Any]] = []
+    for r in raw:
+        spend = _safe_micros(r.metrics.cost_micros)
+        clicks = int(r.metrics.clicks)
+        impressions = int(r.metrics.impressions)
+        conversions = float(r.metrics.conversions)
+        conv_value = float(r.metrics.conversions_value)
+        rows.append({
+            "campaign_name": r.campaign.name,
+            "campaign_id": str(r.campaign.id),
+            "country_criterion_id": str(r.geographic_view.country_criterion_id),
+            "location_type": _enum_name(r.geographic_view.location_type),
+            "clicks": clicks,
+            "impressions": impressions,
+            "spend": spend,
+            "ctr": (clicks / impressions) if impressions else 0.0,
+            "conversions": conversions,
+            "cost_per_conversion": (spend / conversions) if conversions else 0.0,
+            "conversion_value": conv_value,
+            "roas": (conv_value / spend) if spend else 0.0,
+        })
+    return {
+        "report_type": "geo_performance",
+        "date_range": f"{date_from} to {date_to}",
+        "row_count": len(rows),
+        "rows": rows,
+    }
+
+
+# -- Ad group performance ---------------------------------------------
+
+_AD_GROUP_GAQL = """
+SELECT
+  campaign.id,
+  campaign.name,
+  ad_group.id,
+  ad_group.name,
+  ad_group.status,
+  metrics.clicks,
+  metrics.impressions,
+  metrics.cost_micros,
+  metrics.conversions,
+  metrics.conversions_value
+FROM ad_group
+WHERE segments.date BETWEEN '{date_from}' AND '{date_to}'
+  AND campaign.status != 'REMOVED'
+  AND ad_group.status != 'REMOVED'
+ORDER BY metrics.cost_micros DESC
+LIMIT 100
+""".strip()
+
+
+def fetch_ad_group_performance(
+    customer_id: str,
+    date_from: str,
+    date_to: str,
+    *,
+    developer_token: str,
+    client_id: str,
+    client_secret: str,
+    refresh_token: str,
+    login_customer_id: str = "",
+) -> Dict[str, Any]:
+    """Fetch ad group level performance. Deeper than campaign for spend audit and ROAS goals."""
+    client = _build_client(developer_token, client_id, client_secret, refresh_token, login_customer_id)
+    query = _AD_GROUP_GAQL.format(date_from=date_from, date_to=date_to)
+    raw = _run_query(client, customer_id, query)
+
+    # Aggregate by ad_group.id across date segments
+    agg: DefaultDict[int, Dict[str, Any]] = defaultdict(
+        lambda: {"clicks": 0, "impressions": 0, "cost_micros": 0, "conversions": 0.0, "conversions_value": 0.0,
+                 "campaign_name": "", "campaign_id": 0, "ad_group_name": "", "status": ""}
+    )
+    for r in raw:
+        agid = int(r.ad_group.id)
+        bucket = agg[agid]
+        bucket["clicks"] += r.metrics.clicks
+        bucket["impressions"] += r.metrics.impressions
+        bucket["cost_micros"] += r.metrics.cost_micros
+        bucket["conversions"] += r.metrics.conversions
+        bucket["conversions_value"] += r.metrics.conversions_value
+        if not bucket["ad_group_name"]:
+            bucket["campaign_name"] = r.campaign.name
+            bucket["campaign_id"] = int(r.campaign.id)
+            bucket["ad_group_name"] = r.ad_group.name
+            bucket["status"] = _enum_name(r.ad_group.status)
+
+    rows: List[Dict[str, Any]] = []
+    for agid, bucket in sorted(agg.items(), key=lambda x: x[1]["cost_micros"], reverse=True):
+        spend = _safe_micros(bucket["cost_micros"])
+        clicks = int(bucket["clicks"])
+        impressions = int(bucket["impressions"])
+        conversions = float(bucket["conversions"])
+        conv_value = float(bucket["conversions_value"])
+        rows.append({
+            "campaign_name": bucket["campaign_name"],
+            "campaign_id": str(bucket["campaign_id"]),
+            "ad_group_name": bucket["ad_group_name"],
+            "ad_group_id": str(agid),
+            "status": bucket["status"],
+            "clicks": clicks,
+            "impressions": impressions,
+            "spend": spend,
+            "ctr": (clicks / impressions) if impressions else 0.0,
+            "conversions": conversions,
+            "cost_per_conversion": (spend / conversions) if conversions else 0.0,
+            "conversion_value": conv_value,
+            "roas": (conv_value / spend) if spend else 0.0,
+        })
+    return {
+        "report_type": "ad_group_performance",
+        "date_range": f"{date_from} to {date_to}",
+        "row_count": len(rows),
         "rows": rows,
     }
