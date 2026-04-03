@@ -41,8 +41,8 @@ export default async function ReportsPage() {
     <section>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
         <h1 style={{ marginTop: 0, marginBottom: 0 }}>Reports</h1>
-        <Link className="btn btn-ghost" href="/connections">
-          Connect
+        <Link className="btn btn-ghost" href="/generate">
+          Generate
         </Link>
       </div>
       <p className="app-subtle" style={{ marginTop: 0, marginBottom: 18 }}>

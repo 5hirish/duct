@@ -54,6 +54,19 @@
         "showReuseMessage": false
       },
       "problemMatcher": []
+    },
+    {
+      "label": "Site: Playwright smoke tests",
+      "type": "shell",
+      "command": "npm run test:e2e",
+      "options": { "cwd": "${workspaceFolder}/site" },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "site-qa",
+        "showReuseMessage": false
+      },
+      "problemMatcher": []
     }
   ]
 }

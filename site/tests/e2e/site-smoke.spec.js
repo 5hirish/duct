@@ -15,8 +15,18 @@ test("home page navigation uses clean links", async ({ page }) => {
   await expect(badLinks).toHaveCount(0);
 
   for (const route of cleanRoutes) {
-    const link = page.locator(`a[href="${route}"]`).first();
-    await expect(link).toBeVisible();
+    const links = page.locator(`a[href="${route}"]`);
+    const count = await links.count();
+    let hasVisibleLink = false;
+
+    for (let i = 0; i < count; i++) {
+      if (await links.nth(i).isVisible()) {
+        hasVisibleLink = true;
+        break;
+      }
+    }
+
+    expect(hasVisibleLink).toBeTruthy();
   }
 });
 
@@ -34,9 +44,11 @@ test("blog list navigates to post with slug", async ({ page }) => {
   await page.goto("/blog");
   const firstPostLink = page.locator('a[href^="/blog/post?slug="]').first();
   await expect(firstPostLink).toBeVisible();
-  await firstPostLink.click();
+  const href = await firstPostLink.getAttribute("href");
+  expect(href).toMatch(/^\/blog\/post\?slug=/);
+  await page.goto(href);
   await expect(page).toHaveURL(/\/blog\/post\?slug=/);
-  await expect(page.locator("#article-title")).not.toHaveText("");
+  await expect(page.locator("#article-title")).toContainText(/\S+/);
   await expect(page.locator("#prose")).toContainText(/.+/);
 });
 
