@@ -403,7 +403,7 @@ export default function GoogleAdsReport({ payload }) {
             </div>
           </div>
           <div style={{ textAlign: "right" }}>
-            <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em", color: "#4b5563", margin: "0 0 6px" }}>
+            <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em", color: "var(--navy-3)", margin: "0 0 6px" }}>
               {meta.window_current} vs previous (indexed)
             </p>
             <div className="kpi-sparkline-svg" aria-hidden="true">

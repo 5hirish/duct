@@ -13,11 +13,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
-from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Literal, Tuple
+
+from pydantic import BaseModel, Field
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -37,6 +39,55 @@ from briefs.schemas.google_ads_brief import (
     RecommendedAction,
     SourceMetadata,
 )
+
+_BRIEF_TEMPLATE_PATH = (
+    Path(__file__).resolve().parents[1] / "briefs" / "templates" / "google_ads_weekly_brief.md"
+)
+
+
+class _SynEvidenceSource(BaseModel):
+    source: str = "google_ads"
+    entity_type: str = "campaign"
+    entity_name: str = ""
+    metric: str = ""
+    note: str = ""
+
+
+class _SynFinding(BaseModel):
+    finding_id: str
+    type: Literal["win", "risk", "watch"]
+    title: str
+    evidence: List[str] = Field(default_factory=list)
+    impact: str = ""
+    recommended_action: str = ""
+    confidence: Literal["low", "medium", "high"] = "medium"
+    related_campaigns: List[str] = Field(default_factory=list)
+    evidence_sources: List[_SynEvidenceSource] = Field(default_factory=list)
+
+
+class _SynRecommendedAction(BaseModel):
+    action_id: str
+    type: Literal["scale", "monitor", "pause", "refresh", "tighten", "investigate"]
+    title: str
+    detail: str = ""
+    priority: Literal["p1", "p2", "p3"] = "p2"
+    owner: str = "paid team"
+    related_campaigns: List[str] = Field(default_factory=list)
+    evidence: List[str] = Field(default_factory=list)
+    evidence_sources: List[_SynEvidenceSource] = Field(default_factory=list)
+
+
+class _SynNarrative(BaseModel):
+    verdict: str
+    summary: str
+    operator_takeaway: str
+
+
+class _SynthesisSchema(BaseModel):
+    narrative: _SynNarrative
+    highlights: List[_SynFinding] = Field(default_factory=list)
+    risks: List[_SynFinding] = Field(default_factory=list)
+    recommended_actions: List[_SynRecommendedAction] = Field(default_factory=list)
 
 
 def parse_args() -> argparse.Namespace:
@@ -472,6 +523,70 @@ def build_brief(raw_payload: Dict[str, Any], theme: str = "paid_ads") -> GoogleA
         narrative=narrative,
     )
     return brief
+
+
+def synthesize_with_gemini_dict(
+    brief_dict: Dict[str, Any],
+    raw_payload: Dict[str, Any],
+) -> Dict[str, Any]:
+    """
+    Replace narrative, highlights, risks, recommended_actions in brief_dict
+    with Gemini 2.5 Flash output. Falls back silently to input dict on any error.
+    """
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        return brief_dict
+
+    try:
+        from google import genai
+        from google.genai import types
+    except ImportError:
+        return brief_dict
+
+    try:
+        system_instruction = _BRIEF_TEMPLATE_PATH.read_text(encoding="utf-8")
+    except OSError:
+        return brief_dict
+
+    compact_brief = json.dumps(brief_dict, separators=(",", ":"), default=str)[:120_000]
+    compact_raw = json.dumps(raw_payload, separators=(",", ":"), default=str)[:120_000]
+    user_text = (
+        "You output ONLY fields: narrative (verdict, summary, operator_takeaway), "
+        "highlights, risks, recommended_actions. Match the JSON schema exactly. "
+        "Use only data from the payloads; do not invent metrics.\n\n"
+        f"Deterministic brief JSON:\n{compact_brief}\n\nRaw campaign payload:\n{compact_raw}"
+    )
+
+    try:
+        client = genai.Client(api_key=api_key)
+        config = types.GenerateContentConfig(
+            system_instruction=system_instruction,
+            response_mime_type="application/json",
+            response_schema=_SynthesisSchema,
+            thinking_config=types.ThinkingConfig(thinking_budget=1024),
+            temperature=0.3,
+        )
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=user_text,
+            config=config,
+        )
+        raw_text = (response.text or "").strip()
+        if not raw_text:
+            return brief_dict
+        synthesis = json.loads(raw_text)
+        validated = _SynthesisSchema.model_validate(synthesis)
+        out = validated.model_dump()
+    except Exception:
+        return brief_dict
+
+    brief_dict["narrative"] = out.get("narrative", brief_dict.get("narrative", {}))
+    brief_dict["highlights"] = out.get("highlights", brief_dict.get("highlights", []))
+    brief_dict["risks"] = out.get("risks", brief_dict.get("risks", []))
+    brief_dict["recommended_actions"] = out.get(
+        "recommended_actions", brief_dict.get("recommended_actions", [])
+    )
+    return brief_dict
 
 
 def write_json(path: Path, payload: Dict[str, Any]) -> None:

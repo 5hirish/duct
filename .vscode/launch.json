@@ -2,56 +2,27 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Duct: App + API (API first)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev",
+      "cwd": "${workspaceFolder}/app",
+      "preLaunchTask": "Backend: uvicorn",
+      "postDebugTask": "Backend: stop uvicorn (8000)"
+    },
+    {
+      "name": "Backend: FastAPI (uvicorn)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "poetry run uvicorn server:app --reload --host 127.0.0.1 --port 8000",
+      "cwd": "${workspaceFolder}/backend"
+    },
+    {
       "name": "App: dev server",
       "type": "node-terminal",
       "request": "launch",
       "command": "npm run dev",
       "cwd": "${workspaceFolder}/app"
-    },
-    {
-      "name": "Backend: Google Ads brief (demo)",
-      "type": "debugpy",
-      "request": "launch",
-      "program": "${workspaceFolder}/backend/scripts/google_ads_brief.py",
-      "cwd": "${workspaceFolder}/backend",
-      "console": "integratedTerminal",
-      "args": [
-        "--demo",
-        "--theme",
-        "paid_ads",
-        "--output-json",
-        "reports/google-ads-report.json"
-      ]
-    },
-    {
-      "name": "Backend: Google Ads brief (from raw JSON)",
-      "type": "debugpy",
-      "request": "launch",
-      "program": "${workspaceFolder}/backend/scripts/google_ads_brief.py",
-      "cwd": "${workspaceFolder}/backend",
-      "console": "integratedTerminal",
-      "args": [
-        "--input",
-        "${input:googleAdsRawJson}",
-        "--theme",
-        "${input:googleAdsTheme}",
-        "--output-json",
-        "reports/client-brief.json"
-      ]
-    },
-    {
-      "name": "Backend: Google Ads fetch (CSV → raw JSON)",
-      "type": "debugpy",
-      "request": "launch",
-      "program": "${workspaceFolder}/backend/scripts/google_ads_fetch.py",
-      "cwd": "${workspaceFolder}/backend",
-      "console": "integratedTerminal",
-      "args": [
-        "--input-csv",
-        "${input:googleAdsCsv}",
-        "--output",
-        "${input:googleAdsFetchOut}"
-      ]
     },
     {
       "name": "Open Home page",
@@ -60,57 +31,11 @@
       "file": "${workspaceFolder}/site/index.html"
     },
     {
-      "name": "Open Product Intelligence page",
-      "type": "chrome",
-      "request": "launch",
-      "file": "${workspaceFolder}/site/for-product-intelligence.html"
-    },
-    {
-      "name": "Open Organic Growth page",
-      "type": "chrome",
-      "request": "launch",
-      "file": "${workspaceFolder}/site/for-organic-growth.html"
-    },
-    {
-      "name": "Start HTTP server",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "python3 -m http.server 8080",
-      "cwd": "${workspaceFolder}/site"
-    },
-    {
       "name": "Open Blog page",
       "type": "chrome",
       "request": "launch",
       "url": "http://localhost:8080/blog/index.html",
       "preLaunchTask": "Serve site on :8080"
-    },
-  ],
-  "inputs": [
-    {
-      "id": "googleAdsRawJson",
-      "type": "promptString",
-      "description": "Raw JSON path (relative to backend/ or absolute)",
-      "default": "reports/client-raw.json"
-    },
-    {
-      "id": "googleAdsTheme",
-      "type": "pickString",
-      "description": "Theme key",
-      "options": ["paid_ads", "product_intelligence", "organic_growth"],
-      "default": "paid_ads"
-    },
-    {
-      "id": "googleAdsCsv",
-      "type": "promptString",
-      "description": "Google Ads campaign export CSV",
-      "default": "reports/sample-export.csv"
-    },
-    {
-      "id": "googleAdsFetchOut",
-      "type": "promptString",
-      "description": "Output path for raw JSON (relative to backend/ or absolute)",
-      "default": "reports/client-raw.json"
     }
   ]
 }
