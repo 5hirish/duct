@@ -6,7 +6,7 @@ Monorepo for [getduct.ai](https://getduct.ai).
 
 - `site/` — static marketing site
 - `backend/` — Python reporting and synthesis MVP
-- `app/` — reserved for future authenticated app
+- `app/` — Next.js App Router report viewer (no-auth shell)
 - `docs/` — strategy and implementation plans
 
 ## Monorepo guidance
@@ -15,4 +15,4 @@ Monorepo for [getduct.ai](https://getduct.ai).
 - Prefer directory-level `CLAUDE.md` files in monorepo areas with different stacks or workflows.
 - When editing files under `site/`, follow `site/CLAUDE.md`.
 - When editing files under `site/`, also follow `site/AGENTS.md`.
-- Do not assume site conventions apply to `backend/` or future `app/`.
+- Do not assume site conventions apply to `backend/` or `app/`.

@@ -17,7 +17,7 @@ Most teams have the data. What they lack is the synthesis. Every tool speaks its
 | Path | Purpose |
 |------|---------|
 | `site/` | Static marketing site, landing pages, blog, shared assets |
-| `app/` | Reserved for the future authenticated Duct web app |
+| `app/` | Next.js report viewer app (current no-auth shell) |
 | `backend/` | Python reporting and synthesis MVP |
 | `docs/` | Product, MVP, and implementation plans |
 
