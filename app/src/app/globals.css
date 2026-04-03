@@ -939,23 +939,24 @@ h1 {
   cursor: not-allowed;
 }
 
-/* Goal selector */
+/* Goal selector — mirrors demo .metric-card pattern */
 
 .goal-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 10px;
 }
 
 .goal-card {
-  padding: 12px 16px;
-  border: 2px solid var(--border);
-  border-radius: var(--r);
-  background: var(--white);
-  font-family: var(--sans);
-  font-size: 0.9rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: var(--off);
   cursor: pointer;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.15s, background 0.15s;
+  font-family: var(--sans);
   text-align: left;
 }
 
@@ -965,9 +966,55 @@ h1 {
 
 .goal-card--selected {
   border-color: var(--orange);
-  box-shadow: 0 0 0 2px rgba(255, 92, 0, 0.12);
-  background: rgba(255, 92, 0, 0.02);
+  background: rgba(255, 92, 0, 0.03);
+}
+
+.goal-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.goal-title {
+  font-size: 14px;
   font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 2px;
+}
+
+.goal-desc {
+  font-size: 13px;
+  color: var(--navy-3);
+  line-height: 1.4;
+}
+
+.goal-radio {
+  margin-left: auto;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 2px;
+  transition: border-color 0.15s, background 0.15s;
+  position: relative;
+}
+
+.goal-card--selected .goal-radio {
+  border-color: var(--orange);
+  background: var(--orange);
+}
+
+.goal-card--selected .goal-radio::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 6px;
+  height: 6px;
+  background: #fff;
+  border-radius: 50%;
 }
 
 /* Analyzing animation */

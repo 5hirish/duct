@@ -8,10 +8,36 @@ import { generateReport } from "../../lib/api";
 import { saveLocalReport, generateSlug } from "../../lib/localReports";
 
 const GOALS = [
-  { key: "weekly_review", label: "Weekly performance review" },
-  { key: "budget_optimization", label: "Budget optimization" },
-  { key: "campaign_audit", label: "Campaign audit" },
-  { key: "custom", label: "Custom" },
+  {
+    key: "lower_cac",
+    icon: "\u{1F4C9}",
+    label: "Lower CAC",
+    description: "Find which campaigns and audiences deliver the cheapest conversions \u2014 cut waste, keep quality.",
+  },
+  {
+    key: "maximize_roas",
+    icon: "\u{1F4B0}",
+    label: "Maximize ROAS",
+    description: "Identify top-returning campaigns and reallocate budget away from underperformers.",
+  },
+  {
+    key: "scale_conversions",
+    icon: "\u{1F680}",
+    label: "Scale conversions",
+    description: "Grow conversion volume while keeping cost efficiency in check \u2014 find headroom to spend more.",
+  },
+  {
+    key: "audit_spend",
+    icon: "\u{1F50D}",
+    label: "Audit spend efficiency",
+    description: "Spot wasted budget, flag underperformers, and surface reallocation opportunities across campaigns.",
+  },
+  {
+    key: "custom",
+    icon: "\u{270F}\u{FE0F}",
+    label: "Custom goal",
+    description: "Describe your own analysis goal \u2014 the AI agent will tailor the report to your intent.",
+  },
 ];
 
 function defaultDateTo() {
@@ -107,7 +133,12 @@ function StepGoal({ goal, onGoalChange, customGoal, onCustomGoalChange, context,
             onClick={() => onGoalChange(g.key)}
             aria-pressed={goal === g.key}
           >
-            {g.label}
+            <span className="goal-icon" aria-hidden="true">{g.icon}</span>
+            <div>
+              <p className="goal-title">{g.label}</p>
+              <p className="goal-desc">{g.description}</p>
+            </div>
+            <span className="goal-radio" aria-hidden="true" />
           </button>
         ))}
       </div>
