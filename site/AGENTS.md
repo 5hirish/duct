@@ -29,7 +29,7 @@ Static multi-variant marketing site for [getduct.ai](https://getduct.ai). Follow
 - `/for-product-intelligence` -> `site/for-product-intelligence.html`
 - `/for-organic-growth` -> `site/for-organic-growth.html`
 - `/for-paid-ads` -> `site/for-paid-ads.html`
-- `/blog` -> `site/blog/index.html`
+- `/blog/` -> `site/blog/index.html` (use trailing slash in links; bare `/blog` may 404 on static hosts)
 - `/blog/post?slug=SLUG` -> `site/blog/post.html`
 
 ## Adding a new landing page
