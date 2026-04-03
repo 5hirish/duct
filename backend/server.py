@@ -208,10 +208,31 @@ def google_ads_accounts(refresh_token: str = Query(default="")) -> dict:
     return {"accounts": accounts}
 
 
+def _resolve_agent_config() -> tuple[str, "Provider", "ModelName"]:
+    """Resolve which LLM provider/model/key to use for the generate agent.
+
+    Reads GENERATE_PROVIDER, GENERATE_MODEL env vars. Falls back to
+    google_genai / gemini-2.5-flash / GEMINI_API_KEY.
+    """
+    from agents.models import ModelName, Provider, resolve_model, resolve_provider
+
+    provider = resolve_provider(os.environ.get("GENERATE_PROVIDER"))
+    model = resolve_model(os.environ.get("GENERATE_MODEL"), provider)
+
+    # Resolve API key for the chosen provider
+    key_map = {
+        Provider.OPENAI: "OPENAI_API_KEY",
+        Provider.GOOGLE_GENAI: "GEMINI_API_KEY",
+        Provider.ANTHROPIC: "ANTHROPIC_API_KEY",
+    }
+    api_key = os.environ.get(key_map.get(provider, "GEMINI_API_KEY"), "")
+    return api_key, provider, model
+
+
 @app.post("/api/generate")
-def generate(req: GenerateRequest) -> dict:
+async def generate(req: GenerateRequest) -> dict:
     """Interactive generate flow: fetch data for selected connections, build brief,
-    synthesize with goal/context, and return JSON (no disk write)."""
+    synthesize with LangChain agent, and return JSON (no disk write)."""
     if not req.connections:
         raise HTTPException(status_code=422, detail="At least one connection is required.")
     if "google_ads" not in req.connections:
@@ -257,10 +278,24 @@ def generate(req: GenerateRequest) -> dict:
     brief = build_brief(raw_payload, theme="paid_ads")
     brief_dict = brief.to_dict()
 
-    if os.environ.get("GEMINI_API_KEY"):
-        brief_dict = synthesize_with_gemini_dict(
-            brief_dict, raw_payload, goal=req.goal, context=req.context
+    # Use the LangChain agent for synthesis (provider-agnostic)
+    api_key, provider, model = _resolve_agent_config()
+    if api_key:
+        from agents.generate_agent import GenerateAgent
+
+        agent = GenerateAgent(
+            api_key=api_key,
+            provider=provider,
+            model=model,
+            temperature=0.3,
         )
+        synthesis = await agent.synthesize(
+            goal=req.goal,
+            context=req.context,
+            brief_dict=brief_dict,
+            raw_payload=raw_payload,
+        )
+        brief_dict = agent.merge_synthesis(brief_dict, synthesis)
 
     return brief_dict
 

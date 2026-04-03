@@ -25,6 +25,14 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from agents.schema import (
+    SynEvidenceSource as _SynEvidenceSource,
+    SynFinding as _SynFinding,
+    SynNarrative as _SynNarrative,
+    SynRecommendedAction as _SynRecommendedAction,
+    SynthesisSchema as _SynthesisSchema,
+)
+
 from briefs.schemas.google_ads_brief import (
     AccountSummary,
     BriefNarrative,
@@ -43,51 +51,6 @@ from briefs.schemas.google_ads_brief import (
 _BRIEF_TEMPLATE_PATH = (
     Path(__file__).resolve().parents[1] / "briefs" / "templates" / "google_ads_weekly_brief.md"
 )
-
-
-class _SynEvidenceSource(BaseModel):
-    source: str = "google_ads"
-    entity_type: str = "campaign"
-    entity_name: str = ""
-    metric: str = ""
-    note: str = ""
-
-
-class _SynFinding(BaseModel):
-    finding_id: str
-    type: Literal["win", "risk", "watch"]
-    title: str
-    evidence: List[str] = Field(default_factory=list)
-    impact: str = ""
-    recommended_action: str = ""
-    confidence: Literal["low", "medium", "high"] = "medium"
-    related_campaigns: List[str] = Field(default_factory=list)
-    evidence_sources: List[_SynEvidenceSource] = Field(default_factory=list)
-
-
-class _SynRecommendedAction(BaseModel):
-    action_id: str
-    type: Literal["scale", "monitor", "pause", "refresh", "tighten", "investigate"]
-    title: str
-    detail: str = ""
-    priority: Literal["p1", "p2", "p3"] = "p2"
-    owner: str = "paid team"
-    related_campaigns: List[str] = Field(default_factory=list)
-    evidence: List[str] = Field(default_factory=list)
-    evidence_sources: List[_SynEvidenceSource] = Field(default_factory=list)
-
-
-class _SynNarrative(BaseModel):
-    verdict: str
-    summary: str
-    operator_takeaway: str
-
-
-class _SynthesisSchema(BaseModel):
-    narrative: _SynNarrative
-    highlights: List[_SynFinding] = Field(default_factory=list)
-    risks: List[_SynFinding] = Field(default_factory=list)
-    recommended_actions: List[_SynRecommendedAction] = Field(default_factory=list)
 
 
 def parse_args() -> argparse.Namespace:

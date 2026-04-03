@@ -2,7 +2,7 @@
 name = "duct-backend"
 version = "0.1.0"
 description = "Duct reporting backend"
-packages = [{ include = "briefs" }, { include = "scripts" }]
+packages = [{ include = "briefs" }, { include = "scripts" }, { include = "agents" }]
 
 [tool.poetry.dependencies]
 # google-ads is not yet compatible with Python 3.13+
@@ -13,6 +13,10 @@ google-ads = "^24.0"
 google-genai = "^1.0"
 python-dotenv = "^1.0"
 pydantic = "^2.0"
+langchain = "^1.0"
+langchain-openai = "^1.0"
+langchain-google-genai = "^2.1"
+langchain-anthropic = "^0.3"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3"
