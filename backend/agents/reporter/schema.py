@@ -44,6 +44,7 @@ class SynEvidenceSource(BaseModel, extra="forbid"):
     entity_name: str = ""
     metric: str = ""
     note: str = ""
+    connector_entity_id: str = ""
 
 
 class SynFinding(BaseModel, extra="forbid"):

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Self
+from typing import Annotated, Any, Dict, List, Optional, Self
 
 from pydantic import BaseModel, BeforeValidator, Field, model_validator
 
@@ -56,6 +56,30 @@ class GenerateRequest(BaseModel):
         if self.goal == ReportGenerationGoal.CUSTOM and not self.custom_goal.strip():
             raise ValueError('custom_goal is required when goal is "custom"')
         return self
+
+
+class ReportMetadata(BaseModel):
+    """Envelope-level metadata for a unified report."""
+
+    generated_at: str = ""
+    goal: str = ""
+    connectors_used: List[str] = Field(default_factory=list)
+
+
+class UnifiedReport(BaseModel):
+    """Envelope wrapping one or more connector briefs plus a synthesis layer.
+
+    ``briefs`` maps connector_id → connector-specific brief dict.
+    ``synthesis`` holds the LLM-produced analysis (narrative, findings, actions).
+    When no LLM is configured, ``synthesis`` is ``None`` and the frontend
+    falls back to the deterministic narrative/highlights/risks inside each brief.
+    """
+
+    version: str = "2"
+    connectors_used: List[str] = Field(default_factory=list)
+    briefs: Dict[str, Any] = Field(default_factory=dict)
+    synthesis: Optional[Dict[str, Any]] = None
+    metadata: ReportMetadata = Field(default_factory=ReportMetadata)
 
 
 class HealthResponse(BaseModel):

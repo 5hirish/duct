@@ -33,9 +33,10 @@ export function getLocalReports() {
 export function saveLocalReport(slug, payload) {
   const reports = readStore();
 
-  // Mark as locally stored
-  if (payload.source_metadata) {
-    payload.source_metadata._local = true;
+  // Mark as locally stored (support both envelope and legacy flat format)
+  const meta = payload.briefs?.google_ads?.source_metadata ?? payload.source_metadata;
+  if (meta) {
+    meta._local = true;
   }
 
   // Remove existing entry with same slug (update case)

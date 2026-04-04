@@ -118,6 +118,7 @@ class EvidenceSource:
     entity_name: str
     metric: str
     note: str
+    connector_entity_id: str = ""
 
 
 @dataclass

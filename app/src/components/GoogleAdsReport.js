@@ -346,11 +346,18 @@ function CampaignTable({ campaigns, currency }) {
 
 // ─── Root component ───────────────────────────────────────────────────────────
 
-export default function GoogleAdsReport({ payload }) {
-  const theme = resolveTheme(payload.source_metadata?.theme);
+export default function GoogleAdsReport({ brief, synthesis, payload: legacyPayload }) {
+  // Support both envelope (brief+synthesis) and legacy flat payload
+  const data = brief ?? legacyPayload;
+  const theme = resolveTheme(data.source_metadata?.theme);
   const accent = theme.accent;
 
-  const { source_metadata: meta, account_summary, period_comparison, campaigns, highlights, risks, narrative } = payload;
+  const { source_metadata: meta, account_summary, period_comparison, campaigns } = data;
+
+  // Prefer synthesis layer when available, fall back to brief's deterministic output
+  const narrative = synthesis?.narrative ?? data.narrative;
+  const highlights = synthesis?.highlights ?? data.highlights;
+  const risks = synthesis?.risks ?? data.risks;
 
   const roasValue = account_summary.roas.value;
   const verdictTone = toneForRoas(roasValue);

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import datetime, timezone
 from functools import partial
 from typing import TYPE_CHECKING, Any, Callable, Dict
 
@@ -21,7 +22,7 @@ from service.google.fetch import (
 from service.google.brief import build_brief
 
 from service.google.credentials import resolve_ads_credentials, resolve_customer_id
-from routes.schemas import GenerateRequest, ReportRequest
+from routes.schemas import GenerateRequest, ReportMetadata, ReportRequest, UnifiedReport
 
 if TYPE_CHECKING:
     from agents.models import ModelName
@@ -120,6 +121,7 @@ async def generate(req: GenerateRequest) -> dict:
     brief = build_brief(raw_payload, theme="paid_ads")
     brief_dict = brief.to_dict()
 
+    synthesis_dict = None
     api_key, provider, model = _resolve_agent_config()
     if api_key:
         agent = GenerateAgent(
@@ -155,6 +157,20 @@ async def generate(req: GenerateRequest) -> dict:
             supplementary=supplementary or None,
             business_context=biz_ctx,
         )
-        brief_dict = agent.merge_synthesis(brief_dict, synthesis)
 
-    return brief_dict
+        # Apply LLM overrides to campaign actions, extract synthesis layer
+        agent.apply_classification_overrides(brief_dict, synthesis)
+        synthesis_dict = agent.extract_synthesis(synthesis)
+
+    # Build unified envelope
+    envelope = UnifiedReport(
+        connectors_used=["google_ads"],
+        briefs={"google_ads": brief_dict},
+        synthesis=synthesis_dict,
+        metadata=ReportMetadata(
+            generated_at=datetime.now(timezone.utc).isoformat(),
+            goal=req.goal.value,
+            connectors_used=["google_ads"],
+        ),
+    )
+    return envelope.model_dump()

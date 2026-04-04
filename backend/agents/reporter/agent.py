@@ -278,15 +278,52 @@ class GenerateAgent:
         )
         return result
 
+    def apply_classification_overrides(
+        self,
+        brief_dict: Dict[str, Any],
+        synthesis: Optional[SynthesisSchema],
+    ) -> None:
+        """Apply LLM classification overrides to campaign action fields in-place.
+
+        Mutates ``brief_dict["campaigns"]`` so the connector brief reflects
+        the LLM's judgment on action/action_reason.  Does nothing when
+        synthesis is None or has no overrides.
+        """
+        if synthesis is None:
+            return
+
+        overrides = synthesis.model_dump().get("classification_overrides", [])
+        if not overrides or "campaigns" not in brief_dict:
+            return
+
+        override_map = {o["campaign_name"]: o for o in overrides}
+        for campaign in brief_dict["campaigns"]:
+            name = campaign.get("campaign_name", "")
+            if name in override_map:
+                ovr = override_map[name]
+                campaign["action"] = ovr["override_action"]
+                campaign["action_reason"] = ovr["reasoning"]
+
+    @staticmethod
+    def extract_synthesis(synthesis: Optional[SynthesisSchema]) -> Optional[Dict[str, Any]]:
+        """Convert SynthesisSchema to a plain dict for the envelope.
+
+        Returns None when synthesis failed or was skipped.
+        """
+        if synthesis is None:
+            return None
+        return synthesis.model_dump()
+
+    # ── legacy convenience (kept for backwards compat) ──────────────────
     def merge_synthesis(
         self,
         brief_dict: Dict[str, Any],
         synthesis: Optional[SynthesisSchema],
     ) -> Dict[str, Any]:
-        """Merge synthesis results into the brief dict.
+        """Merge synthesis results into the brief dict (legacy flat format).
 
-        If synthesis is None (LLM failed), returns the original brief unchanged.
-        Applies classification overrides to campaign action/action_reason fields.
+        Prefer ``apply_classification_overrides`` + ``extract_synthesis`` for
+        the envelope format.
         """
         if synthesis is None:
             return brief_dict
@@ -299,15 +336,5 @@ class GenerateAgent:
         brief_dict["classification_overrides"] = out.get("classification_overrides", [])
         brief_dict["analysis_notes"] = out.get("analysis_notes", "")
 
-        # Apply classification overrides to campaign action fields
-        overrides = out.get("classification_overrides", [])
-        if overrides and "campaigns" in brief_dict:
-            override_map = {o["campaign_name"]: o for o in overrides}
-            for campaign in brief_dict["campaigns"]:
-                name = campaign.get("campaign_name", "")
-                if name in override_map:
-                    ovr = override_map[name]
-                    campaign["action"] = ovr["override_action"]
-                    campaign["action_reason"] = ovr["reasoning"]
-
+        self.apply_classification_overrides(brief_dict, synthesis)
         return brief_dict

@@ -46,9 +46,16 @@ export default function LocalReportDetail({ slug }) {
     );
   }
 
+  // Detect envelope (v2) vs legacy flat format
+  const isEnvelope = Boolean(payload.briefs);
+  const brief = isEnvelope ? payload.briefs.google_ads : payload;
+  const synthesis = isEnvelope ? payload.synthesis : null;
+
   const title = formatTitle(slug);
-  const theme = payload.source_metadata?.theme === "paid_ads" ? "Paid Ads" : "Report";
-  const generatedAt = payload.source_metadata?.generated_at || "";
+  const theme = brief?.source_metadata?.theme === "paid_ads" ? "Paid Ads" : "Report";
+  const generatedAt = isEnvelope
+    ? payload.metadata?.generated_at || brief?.source_metadata?.generated_at || ""
+    : payload.source_metadata?.generated_at || "";
 
   return (
     <section>
@@ -63,7 +70,7 @@ export default function LocalReportDetail({ slug }) {
         {generatedAt ? ` \u00B7 Generated: ${generatedAt}` : ""}
       </p>
 
-      <GoogleAdsReport payload={payload} />
+      <GoogleAdsReport brief={brief} synthesis={synthesis} />
     </section>
   );
 }
