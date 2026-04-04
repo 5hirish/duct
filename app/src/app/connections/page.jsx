@@ -1,58 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import GoogleAdsReport from "../../components/GoogleAdsReport";
-import { BASE, fetchGoogleAdsAccounts, runGoogleAdsReport } from "../../lib/api";
-
-function defaultDateTo() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function defaultDateFrom() {
-  const d = new Date();
-  d.setDate(d.getDate() - 7);
-  return d.toISOString().slice(0, 10);
-}
+import { useEffect, useState } from "react";
+import { BASE, fetchGoogleAdsAccounts } from "../../lib/api";
 
 export default function ConnectionsPage() {
   /** False until client mount — keeps SSR + first client paint identical (avoids hydration mismatch). */
   const [mounted, setMounted] = useState(false);
   const [authState, setAuthState] = useState("checking");
-  const [refreshToken, setRefreshToken] = useState("");
-  const [accounts, setAccounts] = useState([]);
-  const [selectedAccountId, setSelectedAccountId] = useState("");
-  /** Set in useEffect so SSR/first paint never embed `new Date()` (avoids hydration drift). */
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-  const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
-  const [report, setReport] = useState(null);
-
-  const busy = status === "loading";
-
-  const selectedAccount = useMemo(
-    () => accounts.find((item) => item.customer_id === selectedAccountId) ?? null,
-    [accounts, selectedAccountId]
-  );
-
-  const payloadParams = useMemo(() => {
-    if (!selectedAccount || !refreshToken) return null;
-    return {
-      customer_id: selectedAccount.customer_id,
-      refresh_token: refreshToken,
-      date_from: dateFrom,
-      date_to: dateTo,
-      account_name: selectedAccount.descriptive_name,
-      currency_code: selectedAccount.currency_code || "USD",
-      theme: "paid_ads",
-    };
-  }, [selectedAccount, refreshToken, dateFrom, dateTo]);
 
   useEffect(() => {
     setMounted(true);
-    setDateFrom(defaultDateFrom());
-    setDateTo(defaultDateTo());
 
     const hash = window.location.hash;
     if (hash.startsWith("#refresh_token=")) {
@@ -69,22 +28,13 @@ export default function ConnectionsPage() {
       return;
     }
 
-    async function loadAccounts() {
+    async function verifyConnection() {
       try {
         setError("");
-        setRefreshToken(token);
         const items = await fetchGoogleAdsAccounts(token);
-        setAccounts(items);
         if (items.length > 0) {
-          const storedAccountId = sessionStorage.getItem("gads_customer_id");
-          const initialId =
-            storedAccountId && items.some((item) => item.customer_id === storedAccountId)
-              ? storedAccountId
-              : items[0].customer_id;
-          setSelectedAccountId(initialId);
           setAuthState("ready");
         } else {
-          setSelectedAccountId("");
           setAuthState("selecting_account");
         }
       } catch (err) {
@@ -93,44 +43,13 @@ export default function ConnectionsPage() {
       }
     }
 
-    loadAccounts();
+    verifyConnection();
   }, []);
-
-  async function onSubmit(e) {
-    e.preventDefault();
-    if (!payloadParams) return;
-    setError("");
-    setStatus("loading");
-    try {
-      const data = await runGoogleAdsReport(payloadParams);
-      setReport(data);
-      setStatus("success");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-      setStatus("error");
-    }
-  }
 
   function signOut() {
     sessionStorage.removeItem("gads_refresh_token");
     sessionStorage.removeItem("gads_customer_id");
-    setRefreshToken("");
-    setAccounts([]);
-    setSelectedAccountId("");
-    setReport(null);
-    setStatus("idle");
     setAuthState("unauthenticated");
-  }
-
-  function onAccountChange(value) {
-    setSelectedAccountId(value);
-    if (value) {
-      sessionStorage.setItem("gads_customer_id", value);
-      setAuthState("ready");
-    } else {
-      sessionStorage.removeItem("gads_customer_id");
-      setAuthState("selecting_account");
-    }
   }
 
   const isConnected = authState === "ready" || authState === "selecting_account";
@@ -141,7 +60,6 @@ export default function ConnectionsPage() {
       : isConnected
         ? "green"
         : "grey";
-  /** Pre-mount label matches legacy SSR output so cached RSC HTML hydrates cleanly. */
   const statusPillLabel = !mounted
     ? "Not connected"
     : authState === "checking"
@@ -173,7 +91,11 @@ export default function ConnectionsPage() {
         <h1 style={{ marginTop: 0, marginBottom: 0 }}>Connections</h1>
       </div>
       <p className="app-subtle" style={{ marginTop: 0, marginBottom: 18 }}>
-        Manage data source connections for reports.
+        Manage data source connections for reports. Choose your Google Ads account when you{" "}
+        <Link href="/generate" className="app-link">
+          generate a report
+        </Link>
+        .
       </p>
 
       <div className="connection-grid">
@@ -203,9 +125,9 @@ export default function ConnectionsPage() {
                 &nbsp;
               </span>
             ) : authState === "checking" ? (
-              <span className="app-subtle">Loading accounts…</span>
+              <span className="app-subtle">Verifying access…</span>
             ) : isConnected ? (
-              <button type="button" className="app-button app-button--ghost" onClick={signOut} disabled={busy}>
+              <button type="button" className="app-button app-button--ghost" onClick={signOut}>
                 Disconnect
               </button>
             ) : (
@@ -270,72 +192,10 @@ export default function ConnectionsPage() {
         </article>
       </div>
 
-      {(authState === "selecting_account" || authState === "ready") && (
-        <form
-          onSubmit={onSubmit}
-          style={{
-            display: "grid",
-            gap: 14,
-            maxWidth: 640,
-            margin: "24px 0",
-          }}
-        >
-          <label style={{ display: "grid", gap: 4 }}>
-            <span className="app-subtle">Google Ads account</span>
-            <select
-              className="app-input"
-              value={selectedAccountId}
-              onChange={(e) => onAccountChange(e.target.value)}
-              disabled={busy}
-            >
-              {accounts.length === 0 && <option value="">No accessible accounts found</option>}
-              {accounts.length > 0 &&
-                accounts.map((account) => (
-                  <option key={account.customer_id} value={account.customer_id}>
-                    {account.descriptive_name} ({account.customer_id})
-                    {account.manager ? " - MCC" : ""}
-                  </option>
-                ))}
-            </select>
-          </label>
-          <div className="connections-date-row">
-            <label style={{ display: "grid", gap: 4 }}>
-              <span className="app-subtle">Date from</span>
-              <input
-                type="date"
-                className="app-input"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-                disabled={busy}
-              />
-            </label>
-            <label style={{ display: "grid", gap: 4 }}>
-              <span className="app-subtle">Date to</span>
-              <input
-                type="date"
-                className="app-input"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-                disabled={busy}
-              />
-            </label>
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-            <button type="submit" className="app-button" disabled={busy || !selectedAccountId}>
-              Run report
-            </button>
-          </div>
-        </form>
-      )}
-
-      {busy && (
-        <p className="app-subtle" style={{ marginBottom: 20 }}>
-          Fetching campaign data… Generating AI insights…
-        </p>
-      )}
-      {status === "error" && error && (
+      {error && authState === "unauthenticated" && (
         <pre
           style={{
+            marginTop: 20,
             padding: 12,
             borderRadius: 8,
             background: "rgba(180, 40, 40, 0.12)",
@@ -347,7 +207,13 @@ export default function ConnectionsPage() {
           {error}
         </pre>
       )}
-      {report && <GoogleAdsReport payload={report} />}
+
+      {authState === "selecting_account" && (
+        <p className="app-subtle" style={{ marginTop: 20 }}>
+          Google Ads authorized, but no accessible customer accounts were returned. Check account access in Google Ads
+          or try another Google user.
+        </p>
+      )}
     </section>
   );
 }

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import GoogleAdsReport from "../../components/GoogleAdsReport";
-import { generateReport } from "../../lib/api";
+import { fetchGoogleAdsAccounts, generateReport } from "../../lib/api";
 import { saveLocalReport, generateSlug } from "../../lib/localReports";
 
 const GOALS = [
@@ -124,6 +124,47 @@ const INDUSTRIES = [
   { value: "agency", label: "Agency / multi-client" },
   { value: "other", label: "Other" },
 ];
+
+function StepAdsAccount({ accounts, loading, fetchError, selectedId, onChange }) {
+  if (loading) {
+    return <p className="app-subtle" style={{ marginBottom: 16 }}>Loading Google Ads accounts…</p>;
+  }
+  if (fetchError) {
+    return (
+      <pre className="generate-error" style={{ marginBottom: 16 }}>
+        {fetchError}
+      </pre>
+    );
+  }
+  if (!accounts.length) {
+    return (
+      <p className="app-subtle" style={{ marginBottom: 16 }}>
+        No accessible Google Ads accounts.{" "}
+        <Link href="/connections" className="app-link">
+          Check your connection
+        </Link>{" "}
+        or Google Ads access.
+      </p>
+    );
+  }
+  return (
+    <label className="generate-field" style={{ marginBottom: 16 }}>
+      <span className="app-subtle">Google Ads account</span>
+      <select
+        className="app-input"
+        value={selectedId}
+        onChange={(e) => onChange(e.target.value)}
+      >
+        {accounts.map((account) => (
+          <option key={account.customer_id} value={account.customer_id}>
+            {account.descriptive_name} ({account.customer_id})
+            {account.manager ? " — MCC" : ""}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
 
 function StepGoal({ goal, onGoalChange, customGoal, onCustomGoalChange, context, onContextChange, dateFrom, dateTo, onDateFromChange, onDateToChange, businessContext, onBusinessContextChange }) {
   const [showBizCtx, setShowBizCtx] = useState(false);
@@ -346,18 +387,23 @@ export default function GeneratePage() {
   const [saved, setSaved] = useState(false);
   const [businessContext, setBusinessContext] = useState({ industry: "", target_cpa: 0, target_roas: 0 });
 
-  // Detect connected sources
+  // Google Ads account (loaded on step 2 when Google Ads is selected)
+  const [adsAccounts, setAdsAccounts] = useState([]);
+  const [adsAccountsLoading, setAdsAccountsLoading] = useState(false);
+  const [adsAccountsError, setAdsAccountsError] = useState(null);
+  const [selectedAdsCustomerId, setSelectedAdsCustomerId] = useState("");
+
+  // Detect connected sources (Google Ads = OAuth token only; account chosen in generate flow)
   const [connections, setConnections] = useState([]);
   useEffect(() => {
     const hasGadsToken = !!sessionStorage.getItem("gads_refresh_token");
-    const hasGadsAccount = !!sessionStorage.getItem("gads_customer_id");
     setConnections([
       {
         id: "google_ads",
         name: "Google Ads",
         description: "Campaign performance, spend, conversions, ROAS.",
         logo: "https://upload.wikimedia.org/wikipedia/commons/c/c7/Google_Ads_logo.svg",
-        connected: hasGadsToken && hasGadsAccount,
+        connected: hasGadsToken,
         comingSoon: false,
       },
       {
@@ -379,6 +425,47 @@ export default function GeneratePage() {
     ]);
   }, []);
 
+  useEffect(() => {
+    if (step !== 2 || !selectedConnections.includes("google_ads")) return undefined;
+    const token = sessionStorage.getItem("gads_refresh_token");
+    if (!token) return undefined;
+
+    let cancelled = false;
+    setAdsAccountsLoading(true);
+    setAdsAccountsError(null);
+
+    fetchGoogleAdsAccounts(token)
+      .then((items) => {
+        if (cancelled) return;
+        setAdsAccounts(items);
+        const stored = sessionStorage.getItem("gads_customer_id");
+        const pick =
+          stored && items.some((a) => a.customer_id === stored)
+            ? stored
+            : items[0]?.customer_id ?? "";
+        setSelectedAdsCustomerId(pick);
+        if (pick) sessionStorage.setItem("gads_customer_id", pick);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setAdsAccountsError(err instanceof Error ? err.message : String(err));
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setAdsAccountsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [step, selectedConnections]);
+
+  function onAdsAccountChange(customerId) {
+    setSelectedAdsCustomerId(customerId);
+    if (customerId) sessionStorage.setItem("gads_customer_id", customerId);
+    else sessionStorage.removeItem("gads_customer_id");
+  }
+
   function toggleConnection(id) {
     setSelectedConnections((prev) =>
       prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
@@ -391,7 +478,7 @@ export default function GeneratePage() {
     setError(null);
 
     const refreshToken = sessionStorage.getItem("gads_refresh_token") || "";
-    const customerId = sessionStorage.getItem("gads_customer_id") || "";
+    const account = adsAccounts.find((a) => a.customer_id === selectedAdsCustomerId);
 
     try {
       const data = await generateReport({
@@ -402,9 +489,9 @@ export default function GeneratePage() {
         date_from: dateFrom,
         date_to: dateTo,
         refresh_token: refreshToken,
-        customer_id: customerId,
-        account_name: "",
-        currency_code: "USD",
+        customer_id: selectedAdsCustomerId,
+        account_name: account?.descriptive_name ?? "",
+        currency_code: account?.currency_code || "USD",
         business_context: businessContext,
       });
       setReport(data);
@@ -418,8 +505,7 @@ export default function GeneratePage() {
 
   function handleSave() {
     if (!report) return;
-    const customerId = sessionStorage.getItem("gads_customer_id") || "";
-    const slug = generateSlug(customerId, dateTo);
+    const slug = generateSlug(selectedAdsCustomerId || sessionStorage.getItem("gads_customer_id") || "", dateTo);
     saveLocalReport(slug, report);
     setSaved(true);
     setTimeout(() => router.push("/reports"), 400);
@@ -438,6 +524,9 @@ export default function GeneratePage() {
     setReport(null);
     setSaved(false);
     setBusinessContext({ industry: "", target_cpa: 0, target_roas: 0 });
+    setAdsAccounts([]);
+    setSelectedAdsCustomerId("");
+    setAdsAccountsError(null);
   }
 
   function handleRetry() {
@@ -445,8 +534,19 @@ export default function GeneratePage() {
   }
 
   const canProceedStep1 = selectedConnections.length > 0;
+  const needsAdsAccount = selectedConnections.includes("google_ads");
+  const adsAccountOk =
+    !needsAdsAccount ||
+    (!adsAccountsLoading &&
+      !adsAccountsError &&
+      !!selectedAdsCustomerId &&
+      adsAccounts.some((a) => a.customer_id === selectedAdsCustomerId));
   const canProceedStep2 =
-    goal && (goal !== "custom" || customGoal.trim()) && dateFrom && dateTo;
+    goal &&
+    (goal !== "custom" || customGoal.trim()) &&
+    dateFrom &&
+    dateTo &&
+    adsAccountOk;
 
   return (
     <section>
@@ -495,6 +595,15 @@ export default function GeneratePage() {
 
       {step === 2 && (
         <>
+          {selectedConnections.includes("google_ads") && (
+            <StepAdsAccount
+              accounts={adsAccounts}
+              loading={adsAccountsLoading}
+              fetchError={adsAccountsError}
+              selectedId={selectedAdsCustomerId}
+              onChange={onAdsAccountChange}
+            />
+          )}
           <StepGoal
             goal={goal}
             onGoalChange={setGoal}
