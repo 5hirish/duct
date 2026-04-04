@@ -43,6 +43,8 @@ Already in the tree:
 | [`app/open-next.config.ts`](../../app/open-next.config.ts) | R2 incremental cache for OpenNext |
 | [`app/package.json`](../../app/package.json) | `preview:cf`, `deploy:cf` scripts; devDependencies `@opennextjs/cloudflare`, `wrangler` |
 | [`app/public/_headers`](../../app/public/_headers) | Long cache for `/_next/static/*` |
+| [`.github/workflows/deploy-cloudflare-app.yml`](../../.github/workflows/deploy-cloudflare-app.yml) | Push to `main` (paths under `app/`) or manual dispatch: OpenNext build + `wrangler-action` deploy |
+| [`backend/railway.json`](../../backend/railway.json) | Railway config-as-code: `RAILPACK`, watch patterns, uvicorn start, `/health` check |
 
 **R2:** Create bucket `duct-next-cache` in Cloudflare (or change `bucket_name` in `wrangler.jsonc` to match).
 
@@ -83,7 +85,7 @@ Avoid `NEXT_PUBLIC_DUCT_API_KEY` in production if possible (key is exposed to ev
 1. New Railway project → deploy from GitHub; **root directory** `backend`.
 2. **No `Dockerfile`** under `backend/` — Railway [uses a Dockerfile if present](https://docs.railway.com/reference/config-as-code); without it, **Railpack** + Poetry applies to `pyproject.toml` / `poetry.lock`.
 3. **Start command:** `poetry run uvicorn server:app --host 0.0.0.0 --port $PORT` (Railway sets `PORT`).
-4. **Python:** match `>=3.11,<3.13` from [`backend/pyproject.toml`](../../backend/pyproject.toml) (e.g. 3.12 in Railway UI / docs).
+4. **Python:** match `>=3.12,<3.14` from [`backend/pyproject.toml`](../../backend/pyproject.toml) (use **3.12** in Railway / CI; 3.13 is allowed locally if compatible).
 
 ### Railway environment
 
@@ -91,33 +93,35 @@ Mirror [`backend/config.py`](../../backend/config.py): `FRONTEND_ORIGIN`, `DUCT_
 
 Ephemeral disk: `backend/data/` is not durable for multi-instance production; plan object storage or a DB if you scale beyond one instance.
 
-### Optional: `railway.toml`
+### `backend/railway.json`
 
-See [Config as code](https://docs.railway.com/reference/config-as-code). Example shape:
-
-- `build.builder` = `RAILPACK` (explicit)
-- `deploy.startCommand` = uvicorn command above
-- `build.watchPatterns` relative to service root — e.g. `**/*.py`, `pyproject.toml`, `poetry.lock` so `app/` changes do not redeploy the API
+Checked in as [config-as-code](https://docs.railway.com/reference/config-as-code): `RAILPACK` builder, `watchPatterns` for Python and Poetry lockfiles (service root should still be **`backend`** in Railway), start command `poetry run uvicorn server:app --host 0.0.0.0 --port $PORT`, and `healthcheckPath` `/health`.
 
 ---
 
 ## Part 3 — CI/CD (GitHub)
 
-### Cloudflare: chosen approach — GitHub Actions
+### Cloudflare: GitHub Actions (implemented)
 
-Use [`cloudflare/wrangler-action@v3`](https://github.com/cloudflare/wrangler-action) (not Cloudflare dashboard Git Builds for the same Worker, to avoid double deploys).
+Workflow: [`.github/workflows/deploy-cloudflare-app.yml`](../../.github/workflows/deploy-cloudflare-app.yml). Uses [`cloudflare/wrangler-action@v3`](https://github.com/cloudflare/wrangler-action). Do **not** also wire the same Worker to Cloudflare dashboard Git Builds, or you risk double deploys.
 
-GitHub **repository secrets:**
+**Repository secrets** (Settings → Secrets and variables → Actions → Secrets):
 
-- `CLOUDFLARE_API_TOKEN` — Workers + **R2** for the cache bucket
-- `CLOUDFLARE_ACCOUNT_ID`
+| Secret | Purpose |
+|--------|---------|
+| `CLOUDFLARE_API_TOKEN` | Workers deploy + **R2** for the OpenNext cache bucket |
+| `CLOUDFLARE_ACCOUNT_ID` | Account ID ([find in dashboard](https://developers.cloudflare.com/fundamentals/account/find-account-and-zone-ids/)) |
 
-Workflow sketch:
+**Repository variables** (Settings → Secrets and variables → Actions → **Variables**):
 
-1. `on.push` to default branch with `paths:` under `app/**` (and lockfile / `wrangler.jsonc` / `open-next.config.ts` as needed).
-2. `actions/checkout@v4`, setup Node (match `app/package.json` `engines`).
-3. In `app/`: `npm ci`, `npx opennextjs-cloudflare build`.
-4. `wrangler-action` with `workingDirectory: app`, `apiToken`, `accountId` (default command deploys).
+| Variable | Purpose |
+|----------|---------|
+| `NEXT_PUBLIC_API_BASE` | Public Railway API URL (`https://…`) — inlined at **build** time |
+| `NEXT_PUBLIC_APP_URL` | Canonical Worker or custom domain URL for the app — inlined at **build** time |
+
+Set both variables before the first successful deploy; empty values produce an app build without correct API/metadata URLs.
+
+Triggers: `push` to **`main`** when paths match `app/**` or this workflow file; **`workflow_dispatch`** for manual runs.
 
 Docs: [GitHub Actions for Workers](https://developers.cloudflare.com/workers/ci-cd/external-cicd/github-actions/).
 
@@ -145,5 +149,5 @@ When URLs are final, update authorized **redirect URIs** and **JavaScript origin
 - [ ] Railway service: root `backend`, Railpack, start command, env vars
 - [ ] `FRONTEND_ORIGIN` = Cloudflare app URL; `NEXT_PUBLIC_API_BASE` = Railway URL
 - [ ] Google OAuth redirect URI matches Railway
-- [ ] GitHub secrets + workflow for Cloudflare (when you add `.github/workflows/…`)
+- [ ] GitHub secrets + variables for Cloudflare deploy workflow
 - [ ] End-to-end: `/`, `/reports`, API calls from deployed app

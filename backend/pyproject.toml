@@ -10,8 +10,8 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-# google-ads is not yet compatible with Python 3.13+
-python = ">=3.11,<3.13"
+# Minimum 3.12 for project standard; <3.14 keeps supported set to 3.12–3.13 (CI uses 3.12).
+python = ">=3.12,<3.14"
 fastapi = "^0.135"
 uvicorn = {version = "^0.43", extras = ["standard"]}
 google-ads = "^30.0"

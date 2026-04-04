@@ -16,12 +16,15 @@ function defaultDateFrom() {
 }
 
 export default function ConnectionsPage() {
+  /** False until client mount — keeps SSR + first client paint identical (avoids hydration mismatch). */
+  const [mounted, setMounted] = useState(false);
   const [authState, setAuthState] = useState("checking");
   const [refreshToken, setRefreshToken] = useState("");
   const [accounts, setAccounts] = useState([]);
   const [selectedAccountId, setSelectedAccountId] = useState("");
-  const [dateFrom, setDateFrom] = useState(defaultDateFrom);
-  const [dateTo, setDateTo] = useState(defaultDateTo);
+  /** Set in useEffect so SSR/first paint never embed `new Date()` (avoids hydration drift). */
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
   const [report, setReport] = useState(null);
@@ -47,6 +50,10 @@ export default function ConnectionsPage() {
   }, [selectedAccount, refreshToken, dateFrom, dateTo]);
 
   useEffect(() => {
+    setMounted(true);
+    setDateFrom(defaultDateFrom());
+    setDateTo(defaultDateTo());
+
     const hash = window.location.hash;
     if (hash.startsWith("#refresh_token=")) {
       const token = decodeURIComponent(hash.slice("#refresh_token=".length));
@@ -127,6 +134,21 @@ export default function ConnectionsPage() {
   }
 
   const isConnected = authState === "ready" || authState === "selecting_account";
+  const statusPillClass = !mounted
+    ? "grey"
+    : authState === "checking"
+      ? "grey"
+      : isConnected
+        ? "green"
+        : "grey";
+  /** Pre-mount label matches legacy SSR output so cached RSC HTML hydrates cleanly. */
+  const statusPillLabel = !mounted
+    ? "Not connected"
+    : authState === "checking"
+      ? "Checking…"
+      : isConnected
+        ? "Connected"
+        : "Not connected";
 
   return (
     <section>
@@ -173,11 +195,15 @@ export default function ConnectionsPage() {
             </div>
           </div>
           <div className="connection-status-row">
-            <span className={`status-pill ${isConnected ? "green" : "grey"}`}>
-              {isConnected ? "Connected" : "Not connected"}
+            <span className={`status-pill ${statusPillClass}`} suppressHydrationWarning>
+              {statusPillLabel}
             </span>
-            {authState === "checking" ? (
-              <span className="app-subtle">Checking status...</span>
+            {!mounted ? (
+              <span className="app-subtle" aria-hidden="true">
+                &nbsp;
+              </span>
+            ) : authState === "checking" ? (
+              <span className="app-subtle">Loading accounts…</span>
             ) : isConnected ? (
               <button type="button" className="app-button app-button--ghost" onClick={signOut} disabled={busy}>
                 Disconnect

@@ -21,7 +21,7 @@ Open: `http://localhost:3000/reports`
 
 ## Production (Cloudflare Workers)
 
-OpenNext + Wrangler live in this directory (`wrangler.jsonc`, `open-next.config.ts`). Full architecture, env vars, and GitHub Actions are documented in [`docs/engineering/deployment-cloudflare-railway.md`](../docs/engineering/deployment-cloudflare-railway.md).
+OpenNext + Wrangler live in this directory (`wrangler.jsonc`, `open-next.config.ts`). Full architecture, env vars, and GitHub Actions are documented in [`docs/engineering/deployment-cloudflare-railway.md`](../docs/engineering/deployment-cloudflare-railway.md). CI deploy: [`.github/workflows/deploy-cloudflare-app.yml`](../.github/workflows/deploy-cloudflare-app.yml).
 
 - Local prod-like: `npm run preview:cf`
 - Deploy: `npm run deploy:cf` (after `wrangler login`)

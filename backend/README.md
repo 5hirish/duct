@@ -52,7 +52,10 @@ This is the product core described in `docs/mvp/mvp-plan.md`.
 
 Railway + Railpack (Poetry) is the intended API host; pairing with the Next app on Cloudflare Workers is documented in [`docs/engineering/deployment-cloudflare-railway.md`](../docs/engineering/deployment-cloudflare-railway.md).
 
+Service root in Railway should be **`backend`** so [`railway.json`](railway.json) applies.
+
 ## Local guidance
 
+- **Python:** 3.12 or 3.13 (`>=3.12,<3.14` in `pyproject.toml`). A `backend/.python-version` file pins **3.12** for pyenv; CI uses 3.12.
 - Cursor instructions: `backend/AGENTS.md`
 - Claude Code instructions: `backend/CLAUDE.md`

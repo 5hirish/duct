@@ -304,7 +304,7 @@ Using tags or Markdown helps the model distinguish between instructions, context
 
     # Constraints
     - No external libraries allowed.
-    - Python 3.11+ syntax only.
+    - Python 3.12+ syntax only.
 
     # Output format
     Return a single code block.

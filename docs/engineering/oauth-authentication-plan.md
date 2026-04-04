@@ -231,7 +231,7 @@ The existing `GOOGLE_ADS_CLIENT_ID`, `GOOGLE_ADS_CLIENT_SECRET`, `GOOGLE_ADS_REF
 | `list_accessible_customers()` may include MCC manager accounts (can't query directly for campaigns) | Include `customer.manager` in GAQL, label MCCs in the dropdown |
 | `sessionStorage` is tab-scoped — second tab requires re-auth | Acceptable for MVP single-operator use; fix with Supabase in Phase 3 |
 | Token briefly visible in URL bar via `#fragment` | Acceptable for internal tool; swap to server-side session pattern for production |
-| Python 3.11/3.12 constraint from `google-ads` | Already handled in `pyproject.toml` — `google-ads ^24.0` includes `list_accessible_customers()` |
+| Python 3.12+ in `pyproject.toml` (`>=3.12,<3.14`) | CI on 3.12; `google-ads` and other deps resolved via Poetry |
 | Future multi-provider OAuth (HubSpot, Meta) | Use Nango (already in roadmap, deferred). Do not add `authlib` now — wait until provider #2. |
 
 ---

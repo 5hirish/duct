@@ -64,7 +64,7 @@ Gemini 2.5 Flash handles only the synthesis fields: `highlights`, `risks`, `reco
 
 ### 1. `backend/pyproject.toml`
 
-Poetry project. Python ≥ 3.11.
+Poetry project. Python ≥ 3.12.
 
 ```toml
 [tool.poetry]
@@ -74,7 +74,7 @@ description = "Duct reporting backend"
 packages = [{ include = "briefs" }, { include = "scripts" }]
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = ">=3.12,<3.14"
 fastapi = "^0.111"
 uvicorn = { version = "^0.29", extras = ["standard"] }
 google-ads = "^24.0"
