@@ -24,6 +24,16 @@ class ReportRequest(BaseModel):
     use_demo: bool = False
 
 
+class BusinessContext(BaseModel):
+    """Optional business context for goal-aware LLM reasoning."""
+
+    industry: str = ""           # "ecommerce", "saas", "lead_gen", "agency"
+    monthly_budget: float = 0.0
+    target_cpa: float = 0.0
+    target_roas: float = 0.0
+    notes: str = ""
+
+
 class GenerateRequest(BaseModel):
     connections: list[str] = Field(default_factory=list)  # e.g. ["google_ads"]
     goal: Annotated[ReportGenerationGoal, BeforeValidator(parse_goal_value)]
@@ -39,6 +49,7 @@ class GenerateRequest(BaseModel):
     account_name: str = ""
     currency_code: str = "USD"
     login_customer_id: str = ""
+    business_context: BusinessContext = Field(default_factory=BusinessContext)
 
     @model_validator(mode="after")
     def _custom_goal_required(self) -> Self:

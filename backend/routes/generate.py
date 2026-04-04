@@ -144,7 +144,8 @@ async def generate(req: GenerateRequest) -> dict:
                 context=req.context,
             )
 
-        # Phase 2: Synthesis with all collected data
+        # Phase 2: Synthesis with all collected data + business context
+        biz_ctx = req.business_context.model_dump() if req.business_context else None
         synthesis = await agent.synthesize(
             goal=req.goal,
             custom_goal=req.custom_goal,
@@ -152,6 +153,7 @@ async def generate(req: GenerateRequest) -> dict:
             brief_dict=brief_dict,
             raw_payload=raw_payload,
             supplementary=supplementary or None,
+            business_context=biz_ctx,
         )
         brief_dict = agent.merge_synthesis(brief_dict, synthesis)
 

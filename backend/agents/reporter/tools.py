@@ -144,9 +144,17 @@ def create_ad_group_performance_tool(
 # Goal → tool mapping
 # ---------------------------------------------------------------------------
 
-# Tool names that should be offered for each goal. The agent decides which
-# to actually call based on the data it already has and what it needs.
-GOAL_TOOL_NAMES: Dict[ReportGenerationGoal, List[str]] = {
+# All supplementary tools available to any goal. The LLM decides which to call.
+ALL_TOOL_NAMES: List[str] = [
+    "fetch_search_terms",
+    "fetch_device_performance",
+    "fetch_geo_performance",
+    "fetch_ad_group_performance",
+]
+
+# Priority hints per goal — marked [PRIORITY] in the Phase 1 prompt so the
+# LLM knows which tools are most likely useful, but it can call any tool.
+GOAL_TOOL_PRIORITIES: Dict[ReportGenerationGoal, List[str]] = {
     ReportGenerationGoal.LOWER_CAC: [
         "fetch_search_terms",
         "fetch_device_performance",
@@ -171,5 +179,5 @@ GOAL_TOOL_NAMES: Dict[ReportGenerationGoal, List[str]] = {
 
 
 def get_tool_names_for_goal(goal: ReportGenerationGoal) -> List[str]:
-    """Return supplementary tool names registered for this goal."""
-    return GOAL_TOOL_NAMES[goal]
+    """Return ALL supplementary tool names. The LLM decides which to call."""
+    return list(ALL_TOOL_NAMES)

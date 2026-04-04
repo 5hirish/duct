@@ -116,7 +116,17 @@ function StepConnections({ connections, selected, onToggle }) {
   );
 }
 
-function StepGoal({ goal, onGoalChange, customGoal, onCustomGoalChange, context, onContextChange, dateFrom, dateTo, onDateFromChange, onDateToChange }) {
+const INDUSTRIES = [
+  { value: "", label: "Select industry..." },
+  { value: "ecommerce", label: "E-commerce" },
+  { value: "saas", label: "SaaS / B2B" },
+  { value: "lead_gen", label: "Lead generation" },
+  { value: "agency", label: "Agency / multi-client" },
+  { value: "other", label: "Other" },
+];
+
+function StepGoal({ goal, onGoalChange, customGoal, onCustomGoalChange, context, onContextChange, dateFrom, dateTo, onDateFromChange, onDateToChange, businessContext, onBusinessContextChange }) {
+  const [showBizCtx, setShowBizCtx] = useState(false);
   return (
     <div className="generate-step">
       <h2 className="generate-step-title">What do you want to analyze?</h2>
@@ -166,6 +176,58 @@ function StepGoal({ goal, onGoalChange, customGoal, onCustomGoalChange, context,
           onChange={(e) => onContextChange(e.target.value)}
         />
       </label>
+
+      <button
+        type="button"
+        className="btn btn-ghost"
+        style={{ marginTop: 14, fontSize: 13, padding: "6px 10px" }}
+        onClick={() => setShowBizCtx((prev) => !prev)}
+      >
+        {showBizCtx ? "Hide" : "Show"} business context (optional)
+      </button>
+
+      {showBizCtx && (
+        <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 10 }}>
+          <label className="generate-field">
+            <span className="app-subtle">Industry</span>
+            <select
+              className="app-input"
+              value={businessContext.industry}
+              onChange={(e) => onBusinessContextChange({ ...businessContext, industry: e.target.value })}
+            >
+              {INDUSTRIES.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </label>
+          <div className="connections-date-row">
+            <label className="generate-field">
+              <span className="app-subtle">Target CPA ($)</span>
+              <input
+                type="number"
+                className="app-input"
+                min="0"
+                step="0.01"
+                placeholder="e.g. 50"
+                value={businessContext.target_cpa || ""}
+                onChange={(e) => onBusinessContextChange({ ...businessContext, target_cpa: parseFloat(e.target.value) || 0 })}
+              />
+            </label>
+            <label className="generate-field">
+              <span className="app-subtle">Target ROAS (x)</span>
+              <input
+                type="number"
+                className="app-input"
+                min="0"
+                step="0.1"
+                placeholder="e.g. 3.0"
+                value={businessContext.target_roas || ""}
+                onChange={(e) => onBusinessContextChange({ ...businessContext, target_roas: parseFloat(e.target.value) || 0 })}
+              />
+            </label>
+          </div>
+        </div>
+      )}
 
       <div className="connections-date-row" style={{ marginTop: 14 }}>
         <label className="generate-field">
@@ -278,6 +340,7 @@ export default function GeneratePage() {
   const [error, setError] = useState(null);
   const [report, setReport] = useState(null);
   const [saved, setSaved] = useState(false);
+  const [businessContext, setBusinessContext] = useState({ industry: "", target_cpa: 0, target_roas: 0 });
 
   // Detect connected sources
   const [connections, setConnections] = useState([]);
@@ -338,6 +401,7 @@ export default function GeneratePage() {
         customer_id: customerId,
         account_name: "",
         currency_code: "USD",
+        business_context: businessContext,
       });
       setReport(data);
       setStatus("success");
@@ -369,6 +433,7 @@ export default function GeneratePage() {
     setError(null);
     setReport(null);
     setSaved(false);
+    setBusinessContext({ industry: "", target_cpa: 0, target_roas: 0 });
   }
 
   function handleRetry() {
@@ -437,6 +502,8 @@ export default function GeneratePage() {
             dateTo={dateTo}
             onDateFromChange={setDateFrom}
             onDateToChange={setDateTo}
+            businessContext={businessContext}
+            onBusinessContextChange={setBusinessContext}
           />
           <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
             <button type="button" className="btn btn-ghost" onClick={() => setStep(1)}>

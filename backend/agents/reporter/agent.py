@@ -23,6 +23,7 @@ from agents.reporter.goals import ReportGenerationGoal, goal_heading_text
 from agents.reporter.prompts import get_synthesis_user_prompt, get_system_prompt
 from agents.reporter.schema import SynthesisSchema
 from agents.reporter.tools import (
+    GOAL_TOOL_PRIORITIES,
     create_ad_group_performance_tool,
     create_campaign_performance_tool,
     create_device_performance_tool,
@@ -146,17 +147,22 @@ class GenerateAgent:
         if not self.llm_with_tools or not self.tools:
             return {}
 
-        tool_descriptions = "\n".join(
-            f"- {t.name}: {t.description}" for t in self.tools
-        )
+        priority_names = set(GOAL_TOOL_PRIORITIES.get(goal, []))
+        tool_lines = []
+        for t in self.tools:
+            tag = " [PRIORITY]" if t.name in priority_names else ""
+            tool_lines.append(f"- {t.name}{tag}: {t.description}")
+        tool_descriptions = "\n".join(tool_lines)
 
         system_msg = (
             "You are a Google Ads analyst preparing data for a report. "
             "The user's goal and context are provided below. "
             "You have access to supplementary data tools. Call the tools "
             "that will provide the most actionable data for this goal. "
-            "You do NOT need to call every tool — only the ones that are "
-            "relevant to the user's specific goal and context.\n\n"
+            "Tools marked [PRIORITY] are most likely useful for this goal, "
+            "but call any tool you believe will provide actionable data. "
+            "You do NOT need to call every tool — only the ones relevant "
+            "to the specific goal and context.\n\n"
             f"Available tools:\n{tool_descriptions}"
         )
 
@@ -233,12 +239,18 @@ class GenerateAgent:
         brief_dict: Dict[str, Any],
         raw_payload: Dict[str, Any],
         supplementary: Optional[Dict[str, Any]] = None,
+        business_context: Optional[Dict[str, Any]] = None,
     ) -> SynthesisSchema:
         """Phase 2: Structured output from brief + raw data + supplementary.
 
         Returns a validated SynthesisSchema instance.
         """
-        system_prompt = get_system_prompt(goal=goal, custom_goal=custom_goal, context=context)
+        system_prompt = get_system_prompt(
+            goal=goal,
+            custom_goal=custom_goal,
+            context=context,
+            business_context=business_context,
+        )
         user_prompt = get_synthesis_user_prompt(brief_dict, raw_payload, supplementary=supplementary)
 
         messages = [
@@ -274,6 +286,7 @@ class GenerateAgent:
         """Merge synthesis results into the brief dict.
 
         If synthesis is None (LLM failed), returns the original brief unchanged.
+        Applies classification overrides to campaign action/action_reason fields.
         """
         if synthesis is None:
             return brief_dict
@@ -283,4 +296,18 @@ class GenerateAgent:
         brief_dict["highlights"] = out["highlights"]
         brief_dict["risks"] = out["risks"]
         brief_dict["recommended_actions"] = out["recommended_actions"]
+        brief_dict["classification_overrides"] = out.get("classification_overrides", [])
+        brief_dict["analysis_notes"] = out.get("analysis_notes", "")
+
+        # Apply classification overrides to campaign action fields
+        overrides = out.get("classification_overrides", [])
+        if overrides and "campaigns" in brief_dict:
+            override_map = {o["campaign_name"]: o for o in overrides}
+            for campaign in brief_dict["campaigns"]:
+                name = campaign.get("campaign_name", "")
+                if name in override_map:
+                    ovr = override_map[name]
+                    campaign["action"] = ovr["override_action"]
+                    campaign["action_reason"] = ovr["reasoning"]
+
         return brief_dict
