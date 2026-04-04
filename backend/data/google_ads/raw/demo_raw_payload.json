@@ -8,7 +8,7 @@
     "currency_code": "USD",
     "account_name": "Duct Demo Account",
     "account_id": "123-456-7890",
-    "source_file": "data/google_ads/demo_raw_payload.json",
+    "source_file": "data/google_ads/raw/demo_raw_payload.json",
     "notes": ["Static demo payload for MVP validation"]
   },
   "rows": [

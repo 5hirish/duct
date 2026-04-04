@@ -10,7 +10,7 @@ from starlette.status import HTTP_404_NOT_FOUND, HTTP_501_NOT_IMPLEMENTED
 
 from config import get_configs
 from service.connectors import CAP_CAMPAIGN_REPORT, get_connector, normalize_connector_id
-from service.google.constants import GOOGLE_ADS_CONNECTOR_ID, GOOGLE_ADS_DATA_DIR
+from service.google.constants import GOOGLE_ADS_CONNECTOR_ID, GOOGLE_ADS_REPORTS_GENERATED_DIR
 from service.google.credentials import report_basename, resolve_ads_credentials, resolve_customer_id
 from service.google.fetch import fetch_campaigns
 from service.google.brief import build_brief, demo_raw_payload, synthesize_with_gemini_dict
@@ -18,15 +18,12 @@ from routes.schemas import ReportRequest
 
 router = APIRouter(tags=["report"])
 
-REPORTS_DIR = GOOGLE_ADS_DATA_DIR
-
-
 @router.get("/latest")
 def report_latest() -> dict:
-    if not REPORTS_DIR.is_dir():
-        raise HTTPException(status_code=404, detail="No Google Ads data directory.")
+    if not GOOGLE_ADS_REPORTS_GENERATED_DIR.is_dir():
+        raise HTTPException(status_code=404, detail="No generated reports directory.")
     json_files = sorted(
-        REPORTS_DIR.glob("*.json"),
+        GOOGLE_ADS_REPORTS_GENERATED_DIR.glob("*.json"),
         key=lambda p: p.stat().st_mtime,
         reverse=True,
     )
@@ -76,9 +73,9 @@ def _persisted_report_google_ads(req: ReportRequest) -> dict:
     if get_configs().gemini_api_key:
         brief_dict = synthesize_with_gemini_dict(brief_dict, raw_payload)
 
-    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    GOOGLE_ADS_REPORTS_GENERATED_DIR.mkdir(parents=True, exist_ok=True)
     out_name = report_basename(customer_stripped, date_to, demo=req.use_demo)
-    out_path = REPORTS_DIR / out_name
+    out_path = GOOGLE_ADS_REPORTS_GENERATED_DIR / out_name
     out_path.write_text(json.dumps(brief_dict, indent=2) + "\n", encoding="utf-8")
 
     return brief_dict
@@ -112,5 +109,5 @@ def post_persisted_report(connector_id: str, req: ReportRequest) -> dict:
 
 @router.post("/{connector_id}")
 def post_report(connector_id: str, req: ReportRequest) -> dict:
-    """Build a report for a connector (e.g. ``google_ads``) and write JSON under ``data/google_ads/``."""
+    """Build a report for a connector (e.g. ``google_ads``) and write JSON under ``data/google_ads/generated/``."""
     return post_persisted_report(connector_id, req)

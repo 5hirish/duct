@@ -31,15 +31,17 @@ from service.google.schema import (
     SourceMetadata,
 )
 
-from service.google.constants import GOOGLE_ADS_CONNECTOR_ID
+from service.google.constants import GOOGLE_ADS_CONNECTOR_ID, GOOGLE_ADS_RAW_PAYLOAD_PATH
 from service.google.metrics import comparison_metric, metric_value
 from utils.formatting import money, safe_divide
 _BACKEND_ROOT = Path(__file__).resolve().parents[2]
 
 
 def demo_raw_payload_path(connector_id: str) -> Path:
-    """Path to static demo raw JSON: ``data/<connector_id>/demo_raw_payload.json``."""
-    return _BACKEND_ROOT / "data" / connector_id / "demo_raw_payload.json"
+    """Path to static demo raw JSON: ``data/<connector_id>/raw/demo_raw_payload.json``."""
+    if connector_id == GOOGLE_ADS_CONNECTOR_ID:
+        return GOOGLE_ADS_RAW_PAYLOAD_PATH
+    return _BACKEND_ROOT / "data" / connector_id / "raw" / "demo_raw_payload.json"
 
 
 def demo_raw_payload(connector_id: str | None = None) -> Dict[str, Any]:

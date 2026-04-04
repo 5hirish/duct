@@ -23,7 +23,7 @@ Open: `http://localhost:3000/reports`
 
 The app reads report artifacts produced by the backend API:
 
-- `backend/data/google_ads/*.json` (brief outputs; `demo_raw_payload.json` is the raw input shape)
+- Report list reads `backend/data/google_ads/*.json` at the top level only — keep a single demo brief there (`google-ads-report.json`). Raw demo input lives in `raw/`; API output goes to `generated/` (ignored by the list).
 
 With the backend running from `backend/` (see `backend/README.md`), generate a demo report, for example:
 

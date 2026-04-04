@@ -28,6 +28,18 @@ function getConnectionsFromPayload(payload) {
   return [source];
 }
 
+/** True if JSON looks like a normalized brief (not raw fetch / rows-only). */
+function isBriefPayload(payload) {
+  return Boolean(
+    payload &&
+      typeof payload.narrative === "object" &&
+      payload.narrative !== null &&
+      typeof payload.account_summary === "object" &&
+      payload.account_summary !== null &&
+      Array.isArray(payload.campaigns)
+  );
+}
+
 export async function listReports() {
   const entries = await fs.readdir(REPORTS_DIR, { withFileTypes: true });
   const jsonFiles = entries
@@ -39,7 +51,7 @@ export async function listReports() {
       const slug = name.replace(/\.json$/i, "");
       const jsonPath = path.join(REPORTS_DIR, name);
       const payload = await readPayload(jsonPath);
-      if (!payload) return null;
+      if (!payload || !isBriefPayload(payload)) return null;
 
       const themeKey = payload.source_metadata?.theme ?? null;
       const theme = resolveTheme(themeKey);
@@ -73,7 +85,7 @@ export async function listReports() {
 export async function getReportBySlug(slug) {
   const jsonPath = path.join(REPORTS_DIR, `${slug}.json`);
   const payload = await readPayload(jsonPath);
-  if (!payload) return null;
+  if (!payload || !isBriefPayload(payload)) return null;
 
   const themeKey = payload.source_metadata?.theme ?? null;
   const theme = resolveTheme(themeKey);

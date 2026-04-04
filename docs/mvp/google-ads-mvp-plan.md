@@ -116,8 +116,9 @@ render --> review[OperatorReview]
 | `backend/service/google/schema.py` | Typed brief payload (`StrEnum`s + dataclasses) |
 | `backend/service/google/brief.py` | Normalize raw rows → brief; optional Gemini synthesis |
 | `backend/service/google/fetch.py` | Google Ads API → raw campaign JSON |
-| `backend/data/google_ads/demo_raw_payload.json` | Static demo raw input |
-| `backend/data/google_ads/google-ads-report.json` | Example normalized brief JSON for debugging |
+| `backend/data/google_ads/raw/demo_raw_payload.json` | Static demo raw input |
+| `backend/data/google_ads/google-ads-report.json` | Example normalized brief JSON (app demo list) |
+| `backend/data/google_ads/generated/` | API-persisted brief JSON |
 | `app/src/components/GoogleAdsReport.js` | Renders brief JSON in the Next.js app |
 
 ---

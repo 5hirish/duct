@@ -46,11 +46,11 @@ Directory-local agent docs live inside the main code areas:
 
 | Path | Purpose |
 |------|---------|
-| `backend/data/<connector_id>/demo_raw_payload.json` | Static demo raw payload per connector (e.g. `google_ads`) |
+| `backend/data/<connector_id>/raw/demo_raw_payload.json` | Static demo raw payload (Google Ads) |
 | `backend/service/google/brief.py` | Normalize Google Ads JSON into typed brief payloads |
 | `backend/service/google/fetch.py` | Google Ads API campaign fetch (used by API routes) |
 | `backend/service/google/schema.py` | Google Ads brief payload types (dataclasses) |
-| `backend/data/google_ads/` | Demo raw payload + generated Google Ads brief JSON |
+| `backend/data/google_ads/` | `google-ads-report.json` (demo brief), `raw/`, `generated/` |
 
 ## Analytics
 

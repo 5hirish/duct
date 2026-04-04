@@ -34,7 +34,7 @@ def resolve_customer_id(*, request_customer_id: str | None) -> str:
 
 
 def report_basename(customer_stripped: str, date_to: str, *, demo: bool) -> str:
-    """Filename for a persisted report JSON under ``data/google_ads/``."""
+    """Filename for a persisted report JSON under ``data/google_ads/generated/``."""
     if demo:
         return f"demo-{date_to}.json"
     return f"{customer_stripped}-{date_to}.json"
