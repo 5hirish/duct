@@ -40,23 +40,47 @@ const GOALS = [
   },
 ];
 
-function defaultDateTo() {
-  return new Date().toISOString().slice(0, 10);
+function formatLocalYmd(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
-function defaultDateFrom() {
-  const d = new Date();
-  d.setDate(d.getDate() - 7);
-  return d.toISOString().slice(0, 10);
+/** Rolling window ending today: `daysBack` is subtracted from start (matches prior default: 7 → from = today − 7). */
+function rangeEndingToday(daysBack) {
+  const to = new Date();
+  const from = new Date();
+  from.setDate(from.getDate() - daysBack);
+  return { from: formatLocalYmd(from), to: formatLocalYmd(to) };
+}
+
+function defaultDateRange() {
+  return rangeEndingToday(7);
+}
+
+/** Google Ads customer IDs must be compared as strings — API JSON may use numbers, <select> values are strings. */
+function normalizeCustomerId(id) {
+  if (id === null || id === undefined) return "";
+  return String(id).replace(/\D/g, "") || String(id);
+}
+
+/** Map wizard step (1–5) to one of four progress phases: sources → configure → generating → report. */
+function progressPhase(step) {
+  if (step <= 1) return 1;
+  if (step <= 3) return 2;
+  if (step === 4) return 3;
+  return 4;
 }
 
 function ProgressDots({ step }) {
+  const phase = progressPhase(step);
   return (
     <div className="generate-progress">
       {[1, 2, 3, 4].map((n) => (
         <span
           key={n}
-          className={`generate-dot${n < step ? " done" : ""}${n === step ? " active" : ""}`}
+          className={`generate-dot${n < phase ? " done" : ""}${n === phase ? " active" : ""}`}
         />
       ))}
     </div>
@@ -127,24 +151,58 @@ const INDUSTRIES = [
 
 function StepAdsAccount({ accounts, loading, fetchError, selectedId, onChange }) {
   if (loading) {
-    return <p className="app-subtle" style={{ marginBottom: 16 }}>Loading Google Ads accounts…</p>;
+    return (
+      <div className="generate-field" style={{ marginBottom: 20 }}>
+        <span className="app-subtle">Google Ads accounts</span>
+        <p className="app-subtle" style={{ marginTop: 8, marginBottom: 0 }}>
+          Loading accounts…
+        </p>
+      </div>
+    );
   }
   if (fetchError) {
     return (
-      <pre className="generate-error" style={{ marginBottom: 16 }}>
-        {fetchError}
-      </pre>
+      <div className="generate-alert generate-alert--error" role="alert" style={{ marginBottom: 20 }}>
+        <h3 className="generate-alert-title">Could not load Google Ads accounts</h3>
+        <pre className="generate-alert-detail">{fetchError}</pre>
+        <p className="generate-alert-help">
+          Check that the backend can reach the Google Ads API, your developer token is configured, and your
+          refresh token is still valid.
+        </p>
+        <Link href="/connections" className="app-link generate-alert-link">
+          Review Google Ads connection
+        </Link>
+      </div>
     );
   }
   if (!accounts.length) {
     return (
-      <p className="app-subtle" style={{ marginBottom: 16 }}>
-        No accessible Google Ads accounts.{" "}
-        <Link href="/connections" className="app-link">
-          Check your connection
-        </Link>{" "}
-        or Google Ads access.
-      </p>
+      <div className="generate-alert generate-alert--error" role="alert" style={{ marginBottom: 20 }}>
+        <h3 className="generate-alert-title">No Google Ads accounts returned</h3>
+        <p className="generate-alert-help">
+          The API responded with an empty account list (
+          <code className="generate-alert-code">{"{ \"accounts\": [] }"}</code>
+          ). You can still see accounts in the Google Ads UI while the API returns nothing.
+        </p>
+        <ul className="generate-alert-list">
+          <li>
+            Developer token is still in <strong>Test</strong> access (production accounts are often blocked until
+            the token is approved).
+          </li>
+          <li>
+            Sub-accounts under a manager may need <code className="generate-alert-code">GOOGLE_ADS_LOGIN_CUSTOMER_ID</code>{" "}
+            set to your MCC ID on the server.
+          </li>
+          <li>You completed OAuth with a different Google user than the one that owns those Ads accounts.</li>
+        </ul>
+        <p className="generate-alert-help">
+          <Link href="/connections" className="app-link generate-alert-link">
+            Reconnect Google Ads
+          </Link>
+          {" · "}
+          Check backend logs for warnings when listing accounts.
+        </p>
+      </div>
     );
   }
   return (
@@ -156,7 +214,7 @@ function StepAdsAccount({ accounts, loading, fetchError, selectedId, onChange })
         onChange={(e) => onChange(e.target.value)}
       >
         {accounts.map((account) => (
-          <option key={account.customer_id} value={account.customer_id}>
+          <option key={normalizeCustomerId(account.customer_id)} value={normalizeCustomerId(account.customer_id)}>
             {account.descriptive_name} ({account.customer_id})
             {account.manager ? " — MCC" : ""}
           </option>
@@ -166,8 +224,42 @@ function StepAdsAccount({ accounts, loading, fetchError, selectedId, onChange })
   );
 }
 
-function StepGoal({ goal, onGoalChange, customGoal, onCustomGoalChange, context, onContextChange, dateFrom, dateTo, onDateFromChange, onDateToChange, businessContext, onBusinessContextChange }) {
-  const [showBizCtx, setShowBizCtx] = useState(false);
+const DATE_PRESET_OPTIONS = [
+  { key: "7", label: "Last 7 days", daysBack: 7 },
+  { key: "30", label: "Last 30 days", daysBack: 30 },
+  { key: "90", label: "Last 90 days", daysBack: 90 },
+  { key: "custom", label: "Custom", daysBack: null },
+];
+
+function goalDisplayLabel(goalKey, customGoalText) {
+  if (goalKey === "custom") return customGoalText.trim() || "Custom goal";
+  return GOALS.find((g) => g.key === goalKey)?.label ?? goalKey;
+}
+
+function dateRangeSummary(datePreset, dateFrom, dateTo) {
+  const preset = DATE_PRESET_OPTIONS.find((o) => o.key === datePreset);
+  if (datePreset !== "custom" && preset) {
+    return `${preset.label} (${dateFrom} → ${dateTo})`;
+  }
+  return `${dateFrom} → ${dateTo}`;
+}
+
+function StepGoal({
+  goal,
+  onGoalChange,
+  customGoal,
+  onCustomGoalChange,
+  context,
+  onContextChange,
+  dateFrom,
+  dateTo,
+  onDateFromChange,
+  onDateToChange,
+  datePreset,
+  onDatePresetChange,
+  businessContext,
+  onBusinessContextChange,
+}) {
   return (
     <div className="generate-step">
       <h2 className="generate-step-title">What do you want to analyze?</h2>
@@ -207,28 +299,11 @@ function StepGoal({ goal, onGoalChange, customGoal, onCustomGoalChange, context,
         </label>
       )}
 
-      <label className="generate-field" style={{ marginTop: 14 }}>
-        <span className="app-subtle">Additional context (optional)</span>
-        <textarea
-          className="app-input app-textarea"
-          rows={3}
-          placeholder="e.g. We just launched a new campaign last Monday, focus on early signals..."
-          value={context}
-          onChange={(e) => onContextChange(e.target.value)}
-        />
-      </label>
-
-      <button
-        type="button"
-        className="btn btn-ghost"
-        style={{ marginTop: 14, fontSize: 13, padding: "6px 10px" }}
-        onClick={() => setShowBizCtx((prev) => !prev)}
-      >
-        {showBizCtx ? "Hide" : "Show"} business context (optional)
-      </button>
-
-      {showBizCtx && (
-        <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ marginTop: 18 }}>
+        <span className="app-subtle" style={{ display: "block", marginBottom: 8 }}>
+          Business context (optional)
+        </span>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <label className="generate-field">
             <span className="app-subtle">Industry</span>
             <select
@@ -268,27 +343,112 @@ function StepGoal({ goal, onGoalChange, customGoal, onCustomGoalChange, context,
             </label>
           </div>
         </div>
-      )}
+      </div>
 
-      <div className="connections-date-row" style={{ marginTop: 14 }}>
-        <label className="generate-field">
-          <span className="app-subtle">Date from</span>
-          <input
-            type="date"
-            className="app-input"
-            value={dateFrom}
-            onChange={(e) => onDateFromChange(e.target.value)}
-          />
-        </label>
-        <label className="generate-field">
-          <span className="app-subtle">Date to</span>
-          <input
-            type="date"
-            className="app-input"
-            value={dateTo}
-            onChange={(e) => onDateToChange(e.target.value)}
-          />
-        </label>
+      <label className="generate-field" style={{ marginTop: 14 }}>
+        <span className="app-subtle">Additional context (optional)</span>
+        <textarea
+          className="app-input app-textarea"
+          rows={3}
+          placeholder="e.g. We just launched a new campaign last Monday, focus on early signals..."
+          value={context}
+          onChange={(e) => onContextChange(e.target.value)}
+        />
+      </label>
+
+      <div style={{ marginTop: 18 }}>
+        <span className="app-subtle" style={{ display: "block", marginBottom: 8 }}>
+          Date range
+        </span>
+        <div className="date-preset-row" role="group" aria-label="Date range preset">
+          {DATE_PRESET_OPTIONS.map((opt) => (
+            <button
+              key={opt.key}
+              type="button"
+              className={`date-preset-chip${datePreset === opt.key ? " date-preset-chip--selected" : ""}`}
+              aria-pressed={datePreset === opt.key}
+              onClick={() => onDatePresetChange(opt.key)}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        {datePreset === "custom" && (
+          <div className="connections-date-row" style={{ marginTop: 12 }}>
+            <label className="generate-field">
+              <span className="app-subtle">Start date</span>
+              <input
+                type="date"
+                className="app-input"
+                value={dateFrom}
+                onChange={(e) => onDateFromChange(e.target.value)}
+              />
+            </label>
+            <label className="generate-field">
+              <span className="app-subtle">End date</span>
+              <input
+                type="date"
+                className="app-input"
+                value={dateTo}
+                onChange={(e) => onDateToChange(e.target.value)}
+              />
+            </label>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function StepReview({
+  selectedConnectionIds,
+  connections,
+  needsAdsAccount,
+  accountDescriptiveName,
+  accountCustomerId,
+  goalKey,
+  customGoal,
+  dateFrom,
+  dateTo,
+  datePreset,
+}) {
+  const sourceNames = selectedConnectionIds
+    .map((id) => connections.find((c) => c.id === id)?.name)
+    .filter(Boolean);
+  const accountLine =
+    needsAdsAccount && accountCustomerId
+      ? `${accountDescriptiveName || "Account"} (${accountCustomerId})`
+      : needsAdsAccount
+        ? "—"
+        : null;
+
+  return (
+    <div className="generate-step">
+      <h2 className="generate-step-title">Review and generate</h2>
+      <p className="app-subtle" style={{ marginTop: 0, marginBottom: 16 }}>
+        Confirm the details below. This starts fetching data and building your report.
+      </p>
+      <div className="generate-review">
+        <div>
+          <span className="generate-review-label">Data sources</span>
+          <p className="generate-review-value">
+            {sourceNames.length ? sourceNames.join(", ") : "—"}
+          </p>
+        </div>
+        {accountLine !== null && (
+          <div>
+            <span className="generate-review-label">Google Ads account</span>
+            <p className="generate-review-value">{accountLine}</p>
+          </div>
+        )}
+        <div>
+          <span className="generate-review-label">Goal</span>
+          <p className="generate-review-value">{goalDisplayLabel(goalKey, customGoal)}</p>
+        </div>
+        <div>
+          <span className="generate-review-label">Date range</span>
+          <p className="generate-review-value">{dateRangeSummary(datePreset, dateFrom, dateTo)}</p>
+        </div>
       </div>
     </div>
   );
@@ -379,8 +539,10 @@ export default function GeneratePage() {
   const [goal, setGoal] = useState("");
   const [customGoal, setCustomGoal] = useState("");
   const [context, setContext] = useState("");
-  const [dateFrom, setDateFrom] = useState(defaultDateFrom);
-  const [dateTo, setDateTo] = useState(defaultDateTo);
+  const initialRange = defaultDateRange();
+  const [dateFrom, setDateFrom] = useState(initialRange.from);
+  const [dateTo, setDateTo] = useState(initialRange.to);
+  const [datePreset, setDatePreset] = useState("7");
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState(null);
   const [report, setReport] = useState(null);
@@ -392,6 +554,7 @@ export default function GeneratePage() {
   const [adsAccountsLoading, setAdsAccountsLoading] = useState(false);
   const [adsAccountsError, setAdsAccountsError] = useState(null);
   const [selectedAdsCustomerId, setSelectedAdsCustomerId] = useState("");
+  const [analyzingKey, setAnalyzingKey] = useState(0);
 
   // Detect connected sources (Google Ads = OAuth token only; account chosen in generate flow)
   const [connections, setConnections] = useState([]);
@@ -438,11 +601,10 @@ export default function GeneratePage() {
       .then((items) => {
         if (cancelled) return;
         setAdsAccounts(items);
-        const stored = sessionStorage.getItem("gads_customer_id");
-        const pick =
-          stored && items.some((a) => a.customer_id === stored)
-            ? stored
-            : items[0]?.customer_id ?? "";
+        const storedRaw = sessionStorage.getItem("gads_customer_id");
+        const stored = normalizeCustomerId(storedRaw);
+        const match = stored && items.find((a) => normalizeCustomerId(a.customer_id) === stored);
+        const pick = match ? normalizeCustomerId(match.customer_id) : normalizeCustomerId(items[0]?.customer_id);
         setSelectedAdsCustomerId(pick);
         if (pick) sessionStorage.setItem("gads_customer_id", pick);
       })
@@ -461,8 +623,9 @@ export default function GeneratePage() {
   }, [step, selectedConnections]);
 
   function onAdsAccountChange(customerId) {
-    setSelectedAdsCustomerId(customerId);
-    if (customerId) sessionStorage.setItem("gads_customer_id", customerId);
+    const id = normalizeCustomerId(customerId);
+    setSelectedAdsCustomerId(id);
+    if (id) sessionStorage.setItem("gads_customer_id", id);
     else sessionStorage.removeItem("gads_customer_id");
   }
 
@@ -472,13 +635,25 @@ export default function GeneratePage() {
     );
   }
 
+  function applyDatePreset(preset) {
+    setDatePreset(preset);
+    if (preset !== "custom") {
+      const days = preset === "7" ? 7 : preset === "30" ? 30 : 90;
+      const { from, to } = rangeEndingToday(days);
+      setDateFrom(from);
+      setDateTo(to);
+    }
+  }
+
   async function handleGenerate() {
-    setStep(3);
+    setAnalyzingKey((k) => k + 1);
+    setStep(4);
     setStatus("loading");
     setError(null);
 
     const refreshToken = sessionStorage.getItem("gads_refresh_token") || "";
-    const account = adsAccounts.find((a) => a.customer_id === selectedAdsCustomerId);
+    const cid = normalizeCustomerId(selectedAdsCustomerId);
+    const account = adsAccounts.find((a) => normalizeCustomerId(a.customer_id) === cid);
 
     try {
       const data = await generateReport({
@@ -489,14 +664,14 @@ export default function GeneratePage() {
         date_from: dateFrom,
         date_to: dateTo,
         refresh_token: refreshToken,
-        customer_id: selectedAdsCustomerId,
+        customer_id: cid,
         account_name: account?.descriptive_name ?? "",
         currency_code: account?.currency_code || "USD",
         business_context: businessContext,
       });
       setReport(data);
       setStatus("success");
-      setStep(4);
+      setStep(5);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
       setStatus("error");
@@ -517,8 +692,10 @@ export default function GeneratePage() {
     setGoal("");
     setCustomGoal("");
     setContext("");
-    setDateFrom(defaultDateFrom());
-    setDateTo(defaultDateTo());
+    const r = defaultDateRange();
+    setDateFrom(r.from);
+    setDateTo(r.to);
+    setDatePreset("7");
     setStatus("idle");
     setError(null);
     setReport(null);
@@ -527,6 +704,7 @@ export default function GeneratePage() {
     setAdsAccounts([]);
     setSelectedAdsCustomerId("");
     setAdsAccountsError(null);
+    setAnalyzingKey(0);
   }
 
   function handleRetry() {
@@ -535,18 +713,33 @@ export default function GeneratePage() {
 
   const canProceedStep1 = selectedConnections.length > 0;
   const needsAdsAccount = selectedConnections.includes("google_ads");
+  const selectedIdNorm = normalizeCustomerId(selectedAdsCustomerId);
   const adsAccountOk =
     !needsAdsAccount ||
     (!adsAccountsLoading &&
       !adsAccountsError &&
-      !!selectedAdsCustomerId &&
-      adsAccounts.some((a) => a.customer_id === selectedAdsCustomerId));
-  const canProceedStep2 =
+      !!selectedIdNorm &&
+      adsAccounts.some((a) => normalizeCustomerId(a.customer_id) === selectedIdNorm));
+  const canProceedConfigure =
     goal &&
     (goal !== "custom" || customGoal.trim()) &&
     dateFrom &&
     dateTo &&
     adsAccountOk;
+
+  function configureBlockedReason() {
+    if (!goal) return "Select an analysis goal above to continue.";
+    if (goal === "custom" && !customGoal.trim()) return "Enter a short description for your custom goal.";
+    if (!dateFrom || !dateTo) return "Choose a date range (or pick Custom and set dates).";
+    if (needsAdsAccount && adsAccountsLoading) return "Wait for Google Ads accounts to finish loading.";
+    if (needsAdsAccount && adsAccountsError) return "Fix the Google Ads account error above, then try again.";
+    if (needsAdsAccount && !adsAccounts.length) return "No Google Ads accounts available — connect or fix access first.";
+    if (needsAdsAccount && !adsAccountOk) return "Select a Google Ads account from the dropdown.";
+    return "";
+  }
+
+  const cidForReview = normalizeCustomerId(selectedAdsCustomerId);
+  const accountForReview = adsAccounts.find((a) => normalizeCustomerId(a.customer_id) === cidForReview);
 
   return (
     <section>
@@ -615,6 +808,8 @@ export default function GeneratePage() {
             dateTo={dateTo}
             onDateFromChange={setDateFrom}
             onDateToChange={setDateTo}
+            datePreset={datePreset}
+            onDatePresetChange={applyDatePreset}
             businessContext={businessContext}
             onBusinessContextChange={setBusinessContext}
           />
@@ -625,18 +820,58 @@ export default function GeneratePage() {
             <button
               type="button"
               className="btn btn-orange"
-              disabled={!canProceedStep2}
+              disabled={!canProceedConfigure}
+              onClick={() => setStep(3)}
+            >
+              Next
+            </button>
+          </div>
+          {!canProceedConfigure && (
+            <p className="app-subtle generate-step-hint" role="status">
+              {configureBlockedReason()}
+            </p>
+          )}
+        </>
+      )}
+
+      {step === 3 && (
+        <>
+          <StepReview
+            selectedConnectionIds={selectedConnections}
+            connections={connections}
+            needsAdsAccount={needsAdsAccount}
+            accountDescriptiveName={accountForReview?.descriptive_name ?? ""}
+            accountCustomerId={cidForReview}
+            goalKey={goal}
+            customGoal={customGoal}
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            datePreset={datePreset}
+          />
+          <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+            <button type="button" className="btn btn-ghost" onClick={() => setStep(2)}>
+              Back
+            </button>
+            <button
+              type="button"
+              className="btn btn-orange"
+              disabled={!canProceedConfigure}
               onClick={handleGenerate}
             >
               Generate
             </button>
           </div>
+          {!canProceedConfigure && (
+            <p className="app-subtle generate-step-hint" role="status">
+              {configureBlockedReason()}
+            </p>
+          )}
         </>
       )}
 
-      {step === 3 && <StepAnalyzing error={error} onRetry={handleRetry} />}
+      {step === 4 && <StepAnalyzing key={analyzingKey} error={error} onRetry={handleRetry} />}
 
-      {step === 4 && report && (
+      {step === 5 && report && (
         <StepReport
           report={report}
           onSave={handleSave}
