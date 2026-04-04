@@ -128,7 +128,7 @@ async def generate(req: GenerateRequest) -> dict:
             api_key=api_key,
             provider=provider,
             model=model,
-            temperature=0.3,
+            temperature=1.0,
         )
 
         # Phase 1: Register goal-driven tools and fetch supplementary data

@@ -74,7 +74,7 @@ class GenerateAgent:
         api_key: str,
         provider: Provider = Provider.GOOGLE_GENAI,
         model: ModelName = ModelName.GEMINI_2_5_FLASH,
-        temperature: float = 0.3,
+        temperature: float = 1.0,
     ) -> None:
         self.provider = provider
         self.model = model
