@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { REPORT_NAV_TRANSITION_TYPES } from "../../../lib/reportNavTransition";
 import { getReportBySlug } from "../../../lib/reports";
 import GoogleAdsReport from "../../../components/GoogleAdsReport";
 import LocalReportDetail from "../../../components/LocalReportDetail";
@@ -7,7 +8,7 @@ import LocalReportDetail from "../../../components/LocalReportDetail";
 export const dynamic = "force-dynamic";
 
 export default async function ReportDetailPage({ params }) {
-  const { slug } = params;
+  const { slug } = await params;
 
   // Local reports (stored in localStorage) are handled client-side
   if (slug.startsWith("local-")) {
@@ -22,7 +23,9 @@ export default async function ReportDetailPage({ params }) {
   return (
     <section>
       <p style={{ marginTop: 0, marginBottom: 10 }}>
-        <Link href="/reports">&larr; Back to reports</Link>
+        <Link href="/reports" transitionTypes={REPORT_NAV_TRANSITION_TYPES}>
+          &larr; Back to reports
+        </Link>
       </p>
       <h1 style={{ marginTop: 0, marginBottom: 6 }}>{report.title}</h1>
       <p className="report-meta" style={{ marginTop: 0, marginBottom: 14 }}>

@@ -7,7 +7,7 @@ Planning and reference material for Duct. **Start here** to find the right doc b
 | [`strategy/`](strategy/) | Founders, PM, architects | Product direction, architecture principles |
 | [`gtm/`](gtm/) | Marketing, growth | Paid and organic GTM plans |
 | [`mvp/`](mvp/) | Product + eng shipping a slice | MVP scope and vertical plans (e.g. Google Ads) |
-| [`engineering/`](engineering/) | Engineers | Implementation plans, integrations, feature specs |
+| [`engineering/`](engineering/) | Engineers | Implementation plans, integrations, feature specs ([Cloudflare + Railway deploy](engineering/deployment-cloudflare-railway.md)) |
 | [`engineering/history/`](engineering/history/) | Reference | Dated execution narratives (superseded when shipped) |
 | [`design/`](design/) | Design + eng | UX/product design specs |
 | [`guides/`](guides/) | Anyone prompting LLMs | Evergreen model prompting notes (not roadmap) |

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import GoogleAdsReport from "./GoogleAdsReport";
 import { getLocalReportBySlug } from "../lib/localReports";
+import { REPORT_NAV_TRANSITION_TYPES } from "../lib/reportNavTransition";
 
 function formatTitle(slug) {
   return slug
@@ -30,7 +31,9 @@ export default function LocalReportDetail({ slug }) {
     return (
       <section>
         <p style={{ marginTop: 0, marginBottom: 10 }}>
-          <Link href="/reports">&larr; Back to reports</Link>
+          <Link href="/reports" transitionTypes={REPORT_NAV_TRANSITION_TYPES}>
+            &larr; Back to reports
+          </Link>
         </p>
         <h1 style={{ marginTop: 0, marginBottom: 6 }}>Report not found</h1>
         <p>This locally-stored report may have been cleared from your browser.</p>
@@ -60,7 +63,9 @@ export default function LocalReportDetail({ slug }) {
   return (
     <section>
       <p style={{ marginTop: 0, marginBottom: 10 }}>
-        <Link href="/reports">&larr; Back to reports</Link>
+        <Link href="/reports" transitionTypes={REPORT_NAV_TRANSITION_TYPES}>
+          &larr; Back to reports
+        </Link>
       </p>
       <h1 style={{ marginTop: 0, marginBottom: 6 }}>
         {title} <span className="report-badge-local">Local</span>

@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { getLocalReports } from "../lib/localReports";
+import { useEffect, useEffectEvent, useState } from "react";
+import { getLocalReports, LOCAL_REPORTS_STORAGE_KEY } from "../lib/localReports";
+import { REPORT_NAV_TRANSITION_TYPES } from "../lib/reportNavTransition";
 
 function formatTimeAgo(iso) {
   if (!iso) return "";
@@ -57,26 +58,38 @@ function getConnectionsFromPayload(payload) {
   return [source];
 }
 
+function mapStoredEntriesToReports(stored) {
+  return stored.map((entry) => {
+    const brief = unwrapBrief(entry.payload);
+    const synthesis = entry.payload?.synthesis;
+    const narrative = synthesis?.narrative ?? brief?.narrative;
+    return {
+      slug: entry.slug,
+      title: formatTitle(entry.slug),
+      themeLabel: brief?.source_metadata?.theme === "paid_ads" ? "Paid Ads" : "Report",
+      generatedAt: entry.payload?.metadata?.generated_at || brief?.source_metadata?.generated_at || entry.savedAt,
+      keyInsight: narrative?.verdict || narrative?.summary || "",
+      connections: getConnectionsFromPayload(entry.payload),
+      isLocal: true,
+    };
+  });
+}
+
 export default function ReportsList({ serverReports }) {
   const [localReports, setLocalReports] = useState([]);
 
+  const syncLocalReportsFromStorage = useEffectEvent(() => {
+    setLocalReports(mapStoredEntriesToReports(getLocalReports()));
+  });
+
   useEffect(() => {
-    const stored = getLocalReports();
-    const mapped = stored.map((entry) => {
-      const brief = unwrapBrief(entry.payload);
-      const synthesis = entry.payload?.synthesis;
-      const narrative = synthesis?.narrative ?? brief?.narrative;
-      return {
-        slug: entry.slug,
-        title: formatTitle(entry.slug),
-        themeLabel: brief?.source_metadata?.theme === "paid_ads" ? "Paid Ads" : "Report",
-        generatedAt: entry.payload?.metadata?.generated_at || brief?.source_metadata?.generated_at || entry.savedAt,
-        keyInsight: narrative?.verdict || narrative?.summary || "",
-        connections: getConnectionsFromPayload(entry.payload),
-        isLocal: true,
-      };
-    });
-    setLocalReports(mapped);
+    syncLocalReportsFromStorage();
+    function onStorage(event) {
+      if (event.key !== null && event.key !== LOCAL_REPORTS_STORAGE_KEY) return;
+      syncLocalReportsFromStorage();
+    }
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
 
   const allReports = [...localReports, ...serverReports.map((r) => ({ ...r, isLocal: false }))];
@@ -98,6 +111,7 @@ export default function ReportsList({ serverReports }) {
           key={report.slug}
           href={`/reports/${report.slug}`}
           className="report-card"
+          transitionTypes={REPORT_NAV_TRANSITION_TYPES}
         >
           <div className="report-card-body">
             <strong>

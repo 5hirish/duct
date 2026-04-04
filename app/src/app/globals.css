@@ -1084,3 +1084,50 @@ h1 {
   letter-spacing: 0.04em;
 }
 
+/* View Transitions — paired with next.config experimental.viewTransition + Link transitionTypes */
+@supports (view-transition-name: none) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.32s;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  ::view-transition-old(root) {
+    animation-name: duct-vt-fade-out;
+  }
+
+  ::view-transition-new(root) {
+    animation-name: duct-vt-fade-in;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @supports (view-transition-name: none) {
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+      animation-duration: 0.01ms !important;
+      animation-name: none !important;
+    }
+  }
+}
+
+@keyframes duct-vt-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes duct-vt-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+

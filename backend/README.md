@@ -48,6 +48,10 @@ This is the product core described in `docs/mvp/mvp-plan.md`.
 - Marketing lives in `site/`.
 - Future product UI lives in `app/`.
 
+## Production deploy
+
+Railway + Railpack (Poetry) is the intended API host; pairing with the Next app on Cloudflare Workers is documented in [`docs/engineering/deployment-cloudflare-railway.md`](../docs/engineering/deployment-cloudflare-railway.md).
+
 ## Local guidance
 
 - Cursor instructions: `backend/AGENTS.md`

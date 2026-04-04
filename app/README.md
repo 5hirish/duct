@@ -19,6 +19,13 @@ npm run dev
 
 Open: `http://localhost:3000/reports`
 
+## Production (Cloudflare Workers)
+
+OpenNext + Wrangler live in this directory (`wrangler.jsonc`, `open-next.config.ts`). Full architecture, env vars, and GitHub Actions are documented in [`docs/engineering/deployment-cloudflare-railway.md`](../docs/engineering/deployment-cloudflare-railway.md).
+
+- Local prod-like: `npm run preview:cf`
+- Deploy: `npm run deploy:cf` (after `wrangler login`)
+
 ## Data source
 
 The app reads report artifacts produced by the backend API:

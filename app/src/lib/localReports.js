@@ -6,7 +6,8 @@
  * Capped at MAX_REPORTS; oldest are pruned on save.
  */
 
-const STORAGE_KEY = "duct_local_reports";
+export const LOCAL_REPORTS_STORAGE_KEY = "duct_local_reports";
+const STORAGE_KEY = LOCAL_REPORTS_STORAGE_KEY;
 const MAX_REPORTS = 50;
 
 function readStore() {
