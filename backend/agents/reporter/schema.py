@@ -7,9 +7,7 @@ Gemini synthesis path in service.google.brief.
 
 from __future__ import annotations
 
-from typing import List
-
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from agents.reporter.entities import (
     SynActionPriority,
@@ -21,16 +19,20 @@ from agents.reporter.entities import (
 )
 
 
-class SynEvidenceChain(BaseModel, extra="forbid"):
+class SynEvidenceChain(BaseModel):
     """Multi-source evidence linking supplementary data to a finding."""
 
+    model_config = ConfigDict(extra="forbid")
+
     primary_metric: str = ""
-    contributing_factors: List[str] = Field(default_factory=list)
-    data_sources_used: List[str] = Field(default_factory=list)
+    contributing_factors: list[str] = Field(default_factory=list)
+    data_sources_used: list[str] = Field(default_factory=list)
 
 
-class SynClassificationOverride(BaseModel, extra="forbid"):
+class SynClassificationOverride(BaseModel):
     """LLM override of a deterministic campaign classification."""
+
+    model_config = ConfigDict(extra="forbid")
 
     campaign_name: str
     baseline_action: str
@@ -38,7 +40,9 @@ class SynClassificationOverride(BaseModel, extra="forbid"):
     reasoning: str
 
 
-class SynEvidenceSource(BaseModel, extra="forbid"):
+class SynEvidenceSource(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     source: SynDataSource = SynDataSource.GOOGLE_ADS
     entity_type: SynEntityType = SynEntityType.CAMPAIGN
     entity_name: str = ""
@@ -47,43 +51,51 @@ class SynEvidenceSource(BaseModel, extra="forbid"):
     connector_entity_id: str = ""
 
 
-class SynFinding(BaseModel, extra="forbid"):
+class SynFinding(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     finding_id: str
     type: SynFindingType
     title: str
-    evidence: List[str] = Field(default_factory=list)
+    evidence: list[str] = Field(default_factory=list)
     impact: str = ""
     recommended_action: str = ""
     confidence: SynConfidenceLevel = SynConfidenceLevel.MEDIUM
-    related_campaigns: List[str] = Field(default_factory=list)
-    evidence_sources: List[SynEvidenceSource] = Field(default_factory=list)
+    related_campaigns: list[str] = Field(default_factory=list)
+    evidence_sources: list[SynEvidenceSource] = Field(default_factory=list)
     evidence_chain: SynEvidenceChain = Field(default_factory=SynEvidenceChain)
 
 
-class SynRecommendedAction(BaseModel, extra="forbid"):
+class SynRecommendedAction(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     action_id: str
     type: SynActionType
     title: str
     detail: str = ""
     priority: SynActionPriority = SynActionPriority.MEDIUM
     owner: str = "paid team"
-    related_campaigns: List[str] = Field(default_factory=list)
-    evidence: List[str] = Field(default_factory=list)
-    evidence_sources: List[SynEvidenceSource] = Field(default_factory=list)
+    related_campaigns: list[str] = Field(default_factory=list)
+    evidence: list[str] = Field(default_factory=list)
+    evidence_sources: list[SynEvidenceSource] = Field(default_factory=list)
 
 
-class SynNarrative(BaseModel, extra="forbid"):
+class SynNarrative(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     verdict: str
     summary: str
     operator_takeaway: str
 
 
-class SynthesisSchema(BaseModel, extra="forbid"):
+class SynthesisSchema(BaseModel):
     """Top-level structured output for the generate agent synthesis phase."""
 
+    model_config = ConfigDict(extra="forbid")
+
     narrative: SynNarrative
-    highlights: List[SynFinding] = Field(default_factory=list)
-    risks: List[SynFinding] = Field(default_factory=list)
-    recommended_actions: List[SynRecommendedAction] = Field(default_factory=list)
-    classification_overrides: List[SynClassificationOverride] = Field(default_factory=list)
+    highlights: list[SynFinding] = Field(default_factory=list)
+    risks: list[SynFinding] = Field(default_factory=list)
+    recommended_actions: list[SynRecommendedAction] = Field(default_factory=list)
+    classification_overrides: list[SynClassificationOverride] = Field(default_factory=list)
     analysis_notes: str = ""

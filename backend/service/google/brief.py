@@ -7,7 +7,7 @@ import json
 import os
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 from agents.reporter.goals import ReportGenerationGoal
 from agents.reporter.prompts import get_synthesis_user_prompt, get_system_prompt
@@ -44,7 +44,7 @@ def demo_raw_payload_path(connector_id: str) -> Path:
     return _BACKEND_ROOT / "data" / connector_id / "raw" / "demo_raw_payload.json"
 
 
-def demo_raw_payload(connector_id: str | None = None) -> Dict[str, Any]:
+def demo_raw_payload(connector_id: str | None = None) -> dict[str, Any]:
     """Load static demo raw payload for a connector (default: Google Ads)."""
     cid = connector_id or GOOGLE_ADS_CONNECTOR_ID
     path = demo_raw_payload_path(cid)
@@ -56,7 +56,7 @@ def demo_raw_payload(connector_id: str | None = None) -> Dict[str, Any]:
     return out
 
 
-def summarize_rows(rows: List[Dict[str, Any]]) -> Tuple[Dict[str, float], Dict[str, float]]:
+def summarize_rows(rows: list[dict[str, Any]]) -> tuple[dict[str, float], dict[str, float]]:
     current_totals = {
         "spend": 0.0,
         "clicks": 0.0,
@@ -80,7 +80,7 @@ def summarize_rows(rows: List[Dict[str, Any]]) -> Tuple[Dict[str, float], Dict[s
     return current_totals, previous_totals
 
 
-def classify_action(row: Dict[str, Any]) -> Tuple[ActionType, str]:
+def classify_action(row: dict[str, Any]) -> tuple[ActionType, str]:
     row_roas = row.get("roas", 0.0)
     cpa = row.get("cost_per_conversion", 0.0)
     ctr = row.get("ctr", 0.0)
@@ -99,7 +99,7 @@ def classify_action(row: Dict[str, Any]) -> Tuple[ActionType, str]:
     return ActionType.MONITOR, "Performance is serviceable but not strong enough to scale yet."
 
 
-def build_campaign(row: Dict[str, Any]) -> CampaignPerformance:
+def build_campaign(row: dict[str, Any]) -> CampaignPerformance:
     action, reason = classify_action(row)
     evidence = [
         f"ROAS {row.get('roas', 0.0):.2f}x",
@@ -143,9 +143,9 @@ def build_campaign(row: Dict[str, Any]) -> CampaignPerformance:
     )
 
 
-def build_findings(campaigns: List[CampaignPerformance], currency_code: str) -> Tuple[List[Finding], List[Finding]]:
-    wins: List[Finding] = []
-    risks: List[Finding] = []
+def build_findings(campaigns: list[CampaignPerformance], currency_code: str) -> tuple[list[Finding], list[Finding]]:
+    wins: list[Finding] = []
+    risks: list[Finding] = []
     for campaign in campaigns:
         if campaign.action == ActionType.SCALE:
             wins.append(
@@ -188,8 +188,8 @@ def build_findings(campaigns: List[CampaignPerformance], currency_code: str) -> 
     return wins[:3], risks[:3]
 
 
-def build_actions(campaigns: List[CampaignPerformance]) -> List[RecommendedAction]:
-    priority_map: Dict[ActionType, ActionPriority] = {
+def build_actions(campaigns: list[CampaignPerformance]) -> list[RecommendedAction]:
+    priority_map: dict[ActionType, ActionPriority] = {
         ActionType.PAUSE: ActionPriority.URGENT,
         ActionType.SCALE: ActionPriority.HIGH,
         ActionType.REFINE: ActionPriority.MEDIUM,
@@ -197,7 +197,7 @@ def build_actions(campaigns: List[CampaignPerformance]) -> List[RecommendedActio
         ActionType.MONITOR: ActionPriority.LOW,
         ActionType.INVESTIGATE: ActionPriority.MEDIUM,
     }
-    owner_map: Dict[ActionType, str] = {
+    owner_map: dict[ActionType, str] = {
         ActionType.PAUSE: "paid team",
         ActionType.SCALE: "paid team",
         ActionType.REFINE: "paid team",
@@ -205,7 +205,7 @@ def build_actions(campaigns: List[CampaignPerformance]) -> List[RecommendedActio
         ActionType.MONITOR: "paid team",
         ActionType.INVESTIGATE: "paid team",
     }
-    actions: List[RecommendedAction] = []
+    actions: list[RecommendedAction] = []
     for index, campaign in enumerate(campaigns[:5], start=1):
         actions.append(
             RecommendedAction(
@@ -232,9 +232,9 @@ def build_actions(campaigns: List[CampaignPerformance]) -> List[RecommendedActio
 
 
 def build_narrative(
-    current_totals: Dict[str, float],
-    previous_totals: Dict[str, float],
-    campaigns: List[CampaignPerformance],
+    current_totals: dict[str, float],
+    previous_totals: dict[str, float],
+    campaigns: list[CampaignPerformance],
     _currency_code: str,
 ) -> BriefNarrative:
     account_roas = safe_divide(current_totals["conversion_value"], current_totals["spend"])
@@ -258,7 +258,7 @@ def build_narrative(
     return BriefNarrative(verdict=verdict, summary=summary, operator_takeaway=operator_takeaway)
 
 
-def build_brief(raw_payload: Dict[str, Any], theme: str = "paid_ads") -> GoogleAdsBrief:
+def build_brief(raw_payload: dict[str, Any], theme: str = "paid_ads") -> GoogleAdsBrief:
     metadata = raw_payload["source_metadata"]
     rows = raw_payload["rows"]
     currency_code = metadata.get("currency_code", "USD")
@@ -348,13 +348,13 @@ def build_brief(raw_payload: Dict[str, Any], theme: str = "paid_ads") -> GoogleA
 
 
 def synthesize_with_gemini_dict(
-    brief_dict: Dict[str, Any],
-    raw_payload: Dict[str, Any],
+    brief_dict: dict[str, Any],
+    raw_payload: dict[str, Any],
     *,
     goal: ReportGenerationGoal | None = None,
     custom_goal: str = "",
     context: str = "",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Gemini synthesis for narrative / highlights / risks / actions; no-op if no API key or error."""
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:

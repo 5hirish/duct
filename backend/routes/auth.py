@@ -18,19 +18,24 @@ from service.google.oauth import create_google_oauth_flow
 router = APIRouter(tags=["auth"])
 
 OAUTH_STATE_TTL_SECONDS = 300
-_oauth_states: dict[str, float] = {}
+# state -> (issued_at, pkce code_verifier). Verifier must be reused on token exchange
+# when the auth URL was built with PKCE (google_auth_oauthlib default).
+_oauth_states: dict[str, tuple[float, str | None]] = {}
 
 
-def _is_valid_oauth_state(state: str) -> bool:
-    issued_at = _oauth_states.pop(state, None)
-    if issued_at is None:
-        return False
-    return (time.time() - issued_at) <= OAUTH_STATE_TTL_SECONDS
+def _consume_oauth_state(state: str) -> tuple[bool, str | None]:
+    """Pop OAuth state. Returns (True, code_verifier) if valid and fresh; else (False, None)."""
+    entry = _oauth_states.pop(state, None)
+    if entry is None:
+        return False, None
+    issued_at, code_verifier = entry
+    if (time.time() - issued_at) > OAUTH_STATE_TTL_SECONDS:
+        return False, None
+    return True, code_verifier
 
 
 def _google_ads_authorize() -> RedirectResponse:
     state = secrets.token_urlsafe(32)
-    _oauth_states[state] = time.time()
     try:
         meta, _ = get_connector(GOOGLE_ADS_CONNECTOR_ID)
         scope = meta.oauth_scope or "https://www.googleapis.com/auth/adwords"
@@ -48,19 +53,25 @@ def _google_ads_authorize() -> RedirectResponse:
         include_granted_scopes="true",
         prompt="consent",
     )
+    _oauth_states[state] = (time.time(), flow.code_verifier)
     return RedirectResponse(url=auth_url, status_code=307)
 
 
 def _google_ads_callback(code: str, state: str) -> RedirectResponse:
     if not code:
         raise HTTPException(status_code=400, detail="Missing OAuth code.")
-    if not state or not _is_valid_oauth_state(state):
+    if not state:
+        raise HTTPException(status_code=400, detail="Invalid or expired OAuth state.")
+    ok, code_verifier = _consume_oauth_state(state)
+    if not ok:
         raise HTTPException(status_code=400, detail="Invalid or expired OAuth state.")
 
     try:
         meta, _ = get_connector(GOOGLE_ADS_CONNECTOR_ID)
         scope = meta.oauth_scope or "https://www.googleapis.com/auth/adwords"
         flow = create_google_oauth_flow(state=state, scopes=[scope])
+        if code_verifier is not None:
+            flow.code_verifier = code_verifier
     except KeyError as exc:
         raise HTTPException(
             status_code=HTTP_404_NOT_FOUND,
@@ -136,3 +147,12 @@ def connector_oauth_callback(
         status_code=HTTP_501_NOT_IMPLEMENTED,
         detail=f"Connector {cid!r} does not support OAuth yet.",
     )
+
+
+@router.get("/auth/google/callback")
+def google_oauth_callback_short_path(
+    code: str = Query(default=""),
+    state: str = Query(default=""),
+) -> RedirectResponse:
+    """Same handler as ``/auth/connectors/google_ads/oauth/callback`` for shorter redirect URIs."""
+    return _google_ads_callback(code, state)

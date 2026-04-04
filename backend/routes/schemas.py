@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Any, Dict, List, Optional, Self
+from typing import Annotated, Any, Self
 
 from pydantic import BaseModel, BeforeValidator, Field, model_validator
 
@@ -63,7 +63,7 @@ class ReportMetadata(BaseModel):
 
     generated_at: str = ""
     goal: str = ""
-    connectors_used: List[str] = Field(default_factory=list)
+    connectors_used: list[str] = Field(default_factory=list)
 
 
 class UnifiedReport(BaseModel):
@@ -76,9 +76,9 @@ class UnifiedReport(BaseModel):
     """
 
     version: str = "2"
-    connectors_used: List[str] = Field(default_factory=list)
-    briefs: Dict[str, Any] = Field(default_factory=dict)
-    synthesis: Optional[Dict[str, Any]] = None
+    connectors_used: list[str] = Field(default_factory=list)
+    briefs: dict[str, Any] = Field(default_factory=dict)
+    synthesis: dict[str, Any] | None = None
     metadata: ReportMetadata = Field(default_factory=ReportMetadata)
 
 

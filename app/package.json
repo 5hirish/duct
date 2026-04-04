@@ -17,5 +17,9 @@
   },
   "engines": {
     "node": ">=18.17.0"
+  },
+  "devDependencies": {
+    "@opennextjs/cloudflare": "^1.15.1",
+    "wrangler": "^4.80.0"
   }
 }

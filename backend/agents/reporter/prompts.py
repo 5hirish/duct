@@ -16,7 +16,7 @@ References:
 from __future__ import annotations
 
 import json
-from typing import Any, Dict, Optional
+from typing import Any
 
 from agents.reporter.goals import GOAL_DIRECTIVES, ReportGenerationGoal, goal_heading_text
 
@@ -141,7 +141,7 @@ Before producing your final output, verify:
 # signal architecture, KlientBoost audit patterns).
 # ---------------------------------------------------------------------------
 
-SUPPLEMENTARY_ANALYSIS_GUIDES: Dict[str, str] = {
+SUPPLEMENTARY_ANALYSIS_GUIDES: dict[str, str] = {
     "search_terms": (
         "ANALYZE search terms by:\n"
         "- Identify terms consuming >5% of campaign spend with 0 conversions — negative keyword candidates\n"
@@ -190,7 +190,7 @@ SUPPLEMENTARY_ANALYSIS_GUIDES: Dict[str, str] = {
 # Prompt builders
 # ---------------------------------------------------------------------------
 
-def _format_business_context(biz_ctx: Dict[str, Any] | None) -> str:
+def _format_business_context(biz_ctx: dict[str, Any] | None) -> str:
     """Format business context into a prompt section. Omits empty/zero fields."""
     if not biz_ctx:
         return ""
@@ -217,7 +217,7 @@ def get_system_prompt(
     goal: ReportGenerationGoal | None = None,
     custom_goal: str = "",
     context: str = "",
-    business_context: Dict[str, Any] | None = None,
+    business_context: dict[str, Any] | None = None,
 ) -> str:
     """System instruction: analysis protocol + business context + goal directive.
 
@@ -245,10 +245,10 @@ def get_system_prompt(
 
 
 def get_synthesis_user_prompt(
-    brief_dict: Dict[str, Any],
-    raw_payload: Dict[str, Any],
+    brief_dict: dict[str, Any],
+    raw_payload: dict[str, Any],
     *,
-    supplementary: Optional[Dict[str, Any]] = None,
+    supplementary: dict[str, Any] | None = None,
 ) -> str:
     """User message with data payloads for synthesis.
 

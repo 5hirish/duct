@@ -12,8 +12,9 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import Callable
 from time import perf_counter
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
@@ -88,7 +89,7 @@ class GenerateAgent:
         )
 
         self.tools: list = []
-        self.tools_by_name: Dict[str, Any] = {}
+        self.tools_by_name: dict[str, Any] = {}
         self.llm_with_tools = None
         self.llm_structured = self._setup_structured_output()
 
@@ -103,8 +104,8 @@ class GenerateAgent:
     def setup_tools_for_goal(
         self,
         goal: ReportGenerationGoal,
-        fetch_fns: Dict[str, Callable[..., Dict[str, Any]]],
-    ) -> List[str]:
+        fetch_fns: dict[str, Callable[..., dict[str, Any]]],
+    ) -> list[str]:
         """Register supplementary tools based on the user's goal.
 
         ``fetch_fns`` maps tool name → pre-credentialed fetch function.
@@ -137,7 +138,7 @@ class GenerateAgent:
         goal: ReportGenerationGoal,
         custom_goal: str = "",
         context: str = "",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Phase 1: Let the LLM decide which supplementary data to fetch.
 
         The LLM sees which tools are available and decides which to call
@@ -180,7 +181,7 @@ class GenerateAgent:
             HumanMessage(content=user_msg),
         ]
 
-        supplementary: Dict[str, Any] = {}
+        supplementary: dict[str, Any] = {}
         start = perf_counter()
 
         try:
@@ -236,10 +237,10 @@ class GenerateAgent:
         goal: ReportGenerationGoal,
         custom_goal: str,
         context: str,
-        brief_dict: Dict[str, Any],
-        raw_payload: Dict[str, Any],
-        supplementary: Optional[Dict[str, Any]] = None,
-        business_context: Optional[Dict[str, Any]] = None,
+        brief_dict: dict[str, Any],
+        raw_payload: dict[str, Any],
+        supplementary: dict[str, Any] | None = None,
+        business_context: dict[str, Any] | None = None,
     ) -> SynthesisSchema:
         """Phase 2: Structured output from brief + raw data + supplementary.
 
@@ -280,8 +281,8 @@ class GenerateAgent:
 
     def apply_classification_overrides(
         self,
-        brief_dict: Dict[str, Any],
-        synthesis: Optional[SynthesisSchema],
+        brief_dict: dict[str, Any],
+        synthesis: SynthesisSchema | None,
     ) -> None:
         """Apply LLM classification overrides to campaign action fields in-place.
 
@@ -305,7 +306,7 @@ class GenerateAgent:
                 campaign["action_reason"] = ovr["reasoning"]
 
     @staticmethod
-    def extract_synthesis(synthesis: Optional[SynthesisSchema]) -> Optional[Dict[str, Any]]:
+    def extract_synthesis(synthesis: SynthesisSchema | None) -> dict[str, Any] | None:
         """Convert SynthesisSchema to a plain dict for the envelope.
 
         Returns None when synthesis failed or was skipped.
@@ -317,9 +318,9 @@ class GenerateAgent:
     # ── legacy convenience (kept for backwards compat) ──────────────────
     def merge_synthesis(
         self,
-        brief_dict: Dict[str, Any],
-        synthesis: Optional[SynthesisSchema],
-    ) -> Dict[str, Any]:
+        brief_dict: dict[str, Any],
+        synthesis: SynthesisSchema | None,
+    ) -> dict[str, Any]:
         """Merge synthesis results into the brief dict (legacy flat format).
 
         Prefer ``apply_classification_overrides`` + ``extract_synthesis`` for

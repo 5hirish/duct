@@ -16,4 +16,6 @@
 - The backend no longer renders HTML or writes themes.json — it embeds `source_metadata.theme` (e.g. `paid_ads`) into the JSON payload.
 - Theme accent colors live in `app/src/lib/themes.js`. The app resolves them from the theme key in the payload.
 - The `app/` area is a Next.js App Router report viewer. `app/src/components/GoogleAdsReport.js` renders the full report from the JSON payload.
-- Demo raw payloads for Google Ads: `backend/data/google_ads/raw/demo_raw_payload.json`. Run the FastAPI server from `backend/` with API key configured. Google OAuth: `GET /auth/connectors/google_ads/oauth/authorize` and `/oauth/callback` — set `GOOGLE_OAUTH_REDIRECT_URI` to match the callback URL registered in Google Cloud.
+- Run the FastAPI API from `backend/` with `DUCT_API_KEY` set for `/api/*`. Google Ads OAuth: `GET /auth/connectors/google_ads/oauth/authorize`; callbacks are `/auth/connectors/google_ads/oauth/callback` and alias `/auth/google/callback` (same handler). Set `GOOGLE_OAUTH_REDIRECT_URI` to exactly match the authorized redirect URI in Google Cloud. `google_auth_oauthlib` enables PKCE by default; the backend stores the PKCE code verifier with OAuth state between authorize and callback so token exchange succeeds.
+- Application settings load from `backend/config.py` via class `Configs` and `get_configs()` (pydantic-settings; optional `backend/.env`).
+- LangChain-based report synthesis lives under `backend/agents/reporter/` (e.g. `generate_agent.py`, `schema.py`, `entities.py`).

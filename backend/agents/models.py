@@ -7,7 +7,6 @@ model initialization via LangChain's init_chat_model().
 from __future__ import annotations
 
 from enum import Enum
-from typing import Optional
 
 
 class Provider(str, Enum):
@@ -51,7 +50,7 @@ def get_api_key_kwargs(provider: Provider, api_key: str) -> dict:
     return {}
 
 
-def resolve_provider(name: Optional[str]) -> Provider:
+def resolve_provider(name: str | None) -> Provider:
     """Resolve a string to a Provider enum, defaulting to GOOGLE_GENAI."""
     if not name:
         return Provider.GOOGLE_GENAI
@@ -61,7 +60,7 @@ def resolve_provider(name: Optional[str]) -> Provider:
         return Provider.GOOGLE_GENAI
 
 
-def resolve_model(name: Optional[str], provider: Provider) -> ModelName:
+def resolve_model(name: str | None, provider: Provider) -> ModelName:
     """Resolve a string to a ModelName enum, defaulting per provider."""
     if not name:
         return DEFAULT_MODELS.get(provider, ModelName.GEMINI_2_5_FLASH)

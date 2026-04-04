@@ -10,7 +10,8 @@ the LLM.
 
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, List
+from collections.abc import Callable
+from typing import Any
 
 from langchain_core.tools import StructuredTool
 from pydantic import BaseModel, Field
@@ -35,13 +36,13 @@ class GoogleAdsFetchInput(BaseModel):
 # ---------------------------------------------------------------------------
 
 def _make_tool(
-    fetch_fn: Callable[..., Dict[str, Any]],
+    fetch_fn: Callable[..., dict[str, Any]],
     name: str,
     description: str,
 ) -> StructuredTool:
     """Wrap a pre-credentialed fetch function as a LangChain StructuredTool."""
 
-    def _wrapper(**kwargs: Any) -> Dict[str, Any]:
+    def _wrapper(**kwargs: Any) -> dict[str, Any]:
         validated = GoogleAdsFetchInput(**kwargs)
         return fetch_fn(
             customer_id=validated.customer_id,
@@ -62,7 +63,7 @@ def _make_tool(
 # ---------------------------------------------------------------------------
 
 def create_campaign_performance_tool(
-    fetch_fn: Callable[..., Dict[str, Any]],
+    fetch_fn: Callable[..., dict[str, Any]],
 ) -> StructuredTool:
     """Campaign-level performance (base data, always available)."""
     return _make_tool(
@@ -77,7 +78,7 @@ def create_campaign_performance_tool(
 
 
 def create_search_terms_tool(
-    fetch_fn: Callable[..., Dict[str, Any]],
+    fetch_fn: Callable[..., dict[str, Any]],
 ) -> StructuredTool:
     """Search term report — reveals which queries trigger ads."""
     return _make_tool(
@@ -93,7 +94,7 @@ def create_search_terms_tool(
 
 
 def create_device_performance_tool(
-    fetch_fn: Callable[..., Dict[str, Any]],
+    fetch_fn: Callable[..., dict[str, Any]],
 ) -> StructuredTool:
     """Campaign x device segmentation (MOBILE, DESKTOP, TABLET)."""
     return _make_tool(
@@ -109,7 +110,7 @@ def create_device_performance_tool(
 
 
 def create_geo_performance_tool(
-    fetch_fn: Callable[..., Dict[str, Any]],
+    fetch_fn: Callable[..., dict[str, Any]],
 ) -> StructuredTool:
     """Geographic performance by country/region."""
     return _make_tool(
@@ -125,7 +126,7 @@ def create_geo_performance_tool(
 
 
 def create_ad_group_performance_tool(
-    fetch_fn: Callable[..., Dict[str, Any]],
+    fetch_fn: Callable[..., dict[str, Any]],
 ) -> StructuredTool:
     """Ad group level detail — deeper than campaign."""
     return _make_tool(
@@ -145,7 +146,7 @@ def create_ad_group_performance_tool(
 # ---------------------------------------------------------------------------
 
 # All supplementary tools available to any goal. The LLM decides which to call.
-ALL_TOOL_NAMES: List[str] = [
+ALL_TOOL_NAMES: list[str] = [
     "fetch_search_terms",
     "fetch_device_performance",
     "fetch_geo_performance",
@@ -154,7 +155,7 @@ ALL_TOOL_NAMES: List[str] = [
 
 # Priority hints per goal — marked [PRIORITY] in the Phase 1 prompt so the
 # LLM knows which tools are most likely useful, but it can call any tool.
-GOAL_TOOL_PRIORITIES: Dict[ReportGenerationGoal, List[str]] = {
+GOAL_TOOL_PRIORITIES: dict[ReportGenerationGoal, list[str]] = {
     ReportGenerationGoal.LOWER_CAC: [
         "fetch_search_terms",
         "fetch_device_performance",
@@ -178,6 +179,6 @@ GOAL_TOOL_PRIORITIES: Dict[ReportGenerationGoal, List[str]] = {
 }
 
 
-def get_tool_names_for_goal(goal: ReportGenerationGoal) -> List[str]:
+def get_tool_names_for_goal(goal: ReportGenerationGoal) -> list[str]:
     """Return ALL supplementary tool names. The LLM decides which to call."""
     return list(ALL_TOOL_NAMES)

@@ -1,0 +1,666 @@
+{
+  "source_metadata": {
+    "source": "google_ads_demo",
+    "export_type": "campaign_performance",
+    "generated_at": "2026-04-04T13:35:08.632977+00:00",
+    "window_current": "last_7_days",
+    "window_previous": "previous_7_days",
+    "currency_code": "USD",
+    "account_name": "Duct Demo Account",
+    "account_id": "123-456-7890",
+    "source_file": "data/google_ads/raw/demo_raw_payload.json",
+    "notes": [
+      "Static demo payload for MVP validation"
+    ],
+    "theme": "paid_ads"
+  },
+  "account_summary": {
+    "spend": {
+      "value": 9800.0,
+      "formatted": "$9,800.00"
+    },
+    "clicks": {
+      "value": 1550.0,
+      "formatted": "1,550"
+    },
+    "impressions": {
+      "value": 36170.0,
+      "formatted": "36,170"
+    },
+    "ctr": {
+      "value": 0.042853193254077965,
+      "formatted": "4.3%"
+    },
+    "average_cpc": {
+      "value": 6.32258064516129,
+      "formatted": "$6.32"
+    },
+    "conversions": {
+      "value": 83.0,
+      "formatted": "83"
+    },
+    "cost_per_conversion": {
+      "value": 118.07228915662651,
+      "formatted": "$118.07"
+    },
+    "conversion_value": {
+      "value": 22550.0,
+      "formatted": "$22,550.00"
+    },
+    "roas": {
+      "value": 2.3010204081632653,
+      "formatted": "2.30x"
+    }
+  },
+  "period_comparison": {
+    "spend": {
+      "current": {
+        "value": 9800.0,
+        "formatted": "$9,800.00"
+      },
+      "previous": {
+        "value": 9110.0,
+        "formatted": "$9,110.00"
+      },
+      "delta": {
+        "absolute": 690.0,
+        "percent": 0.07574094401756312,
+        "direction": "up",
+        "formatted": "+$690.00 (+7.6%)"
+      }
+    },
+    "conversions": {
+      "current": {
+        "value": 83.0,
+        "formatted": "83"
+      },
+      "previous": {
+        "value": 80.0,
+        "formatted": "80"
+      },
+      "delta": {
+        "absolute": 3.0,
+        "percent": 0.0375,
+        "direction": "up",
+        "formatted": "+3 (+3.8%)"
+      }
+    },
+    "cost_per_conversion": {
+      "current": {
+        "value": 118.07228915662651,
+        "formatted": "$118.07"
+      },
+      "previous": {
+        "value": 113.875,
+        "formatted": "$113.88"
+      },
+      "delta": {
+        "absolute": 4.1972891566265105,
+        "percent": 0.03685874122174762,
+        "direction": "up",
+        "formatted": "+$4.20 (+3.7%)"
+      }
+    },
+    "conversion_value": {
+      "current": {
+        "value": 22550.0,
+        "formatted": "$22,550.00"
+      },
+      "previous": {
+        "value": 21720.0,
+        "formatted": "$21,720.00"
+      },
+      "delta": {
+        "absolute": 830.0,
+        "percent": 0.03821362799263352,
+        "direction": "up",
+        "formatted": "+$830.00 (+3.8%)"
+      }
+    },
+    "roas": {
+      "current": {
+        "value": 2.3010204081632653,
+        "formatted": "2.30x"
+      },
+      "previous": {
+        "value": 2.3841931942919867,
+        "formatted": "2.38x"
+      },
+      "delta": {
+        "absolute": -0.08317278612872148,
+        "percent": -0.0348850866313376,
+        "direction": "down",
+        "formatted": "-0.08x (-3.5%)"
+      }
+    },
+    "clicks": {
+      "current": {
+        "value": 1550.0,
+        "formatted": "1,550"
+      },
+      "previous": {
+        "value": 1560.0,
+        "formatted": "1,560"
+      },
+      "delta": {
+        "absolute": -10.0,
+        "percent": -0.00641025641025641,
+        "direction": "down",
+        "formatted": "-10 (-0.6%)"
+      }
+    },
+    "impressions": {
+      "current": {
+        "value": 36170.0,
+        "formatted": "36,170"
+      },
+      "previous": {
+        "value": 35255.0,
+        "formatted": "35,255"
+      },
+      "delta": {
+        "absolute": 915.0,
+        "percent": 0.025953765423344207,
+        "direction": "up",
+        "formatted": "+915 (+2.6%)"
+      }
+    },
+    "ctr": {
+      "current": {
+        "value": 0.042853193254077965,
+        "formatted": "4.3%"
+      },
+      "previous": {
+        "value": 0.044249042688980285,
+        "formatted": "4.4%"
+      },
+      "delta": {
+        "absolute": -0.00139584943490232,
+        "percent": -0.031545302453513654,
+        "direction": "down",
+        "formatted": "-0.1% (-3.2%)"
+      }
+    }
+  },
+  "campaigns": [
+    {
+      "campaign_name": "Competitor Search",
+      "campaign_id": "cmp_3",
+      "channel_type": "SEARCH",
+      "status": "ENABLED",
+      "clicks": 220,
+      "impressions": 4020,
+      "spend": 1850.0,
+      "ctr": 0.0547,
+      "average_cpc": 8.41,
+      "conversions": 7.0,
+      "cost_per_conversion": 264.29,
+      "conversion_value": 1190.0,
+      "roas": 0.64,
+      "action": "pause",
+      "action_reason": "Low ROAS and expensive conversions are wasting budget.",
+      "evidence": [
+        "ROAS 0.64x",
+        "CPA 264.29",
+        "CTR 5.5%"
+      ],
+      "evidence_sources": [
+        {
+          "source": "google_ads",
+          "entity_type": "campaign",
+          "entity_name": "Competitor Search",
+          "metric": "roas",
+          "note": "ROAS 0.64x",
+          "connector_entity_id": ""
+        },
+        {
+          "source": "google_ads",
+          "entity_type": "campaign",
+          "entity_name": "Competitor Search",
+          "metric": "cost_per_conversion",
+          "note": "CPA 264.29",
+          "connector_entity_id": ""
+        }
+      ],
+      "extra": {
+        "previous": {
+          "clicks": 245,
+          "impressions": 4155,
+          "spend": 1740.0,
+          "conversions": 9.0,
+          "conversion_value": 1620.0
+        }
+      }
+    },
+    {
+      "campaign_name": "Non-Brand Search",
+      "campaign_id": "cmp_2",
+      "channel_type": "SEARCH",
+      "status": "ENABLED",
+      "clicks": 600,
+      "impressions": 10800,
+      "spend": 4890.0,
+      "ctr": 0.0556,
+      "average_cpc": 8.15,
+      "conversions": 24.0,
+      "cost_per_conversion": 203.75,
+      "conversion_value": 5400.0,
+      "roas": 1.1,
+      "action": "refine",
+      "action_reason": "Returns are weak enough to justify refining audience, queries, or keyword themes.",
+      "evidence": [
+        "ROAS 1.10x",
+        "CPA 203.75",
+        "CTR 5.6%"
+      ],
+      "evidence_sources": [
+        {
+          "source": "google_ads",
+          "entity_type": "campaign",
+          "entity_name": "Non-Brand Search",
+          "metric": "roas",
+          "note": "ROAS 1.10x",
+          "connector_entity_id": ""
+        },
+        {
+          "source": "google_ads",
+          "entity_type": "campaign",
+          "entity_name": "Non-Brand Search",
+          "metric": "cost_per_conversion",
+          "note": "CPA 203.75",
+          "connector_entity_id": ""
+        }
+      ],
+      "extra": {
+        "previous": {
+          "clicks": 640,
+          "impressions": 11120,
+          "spend": 4500.0,
+          "conversions": 29.0,
+          "conversion_value": 6900.0
+        }
+      }
+    },
+    {
+      "campaign_name": "Brand Search",
+      "campaign_id": "cmp_1",
+      "channel_type": "SEARCH",
+      "status": "ENABLED",
+      "clicks": 420,
+      "impressions": 3150,
+      "spend": 2140.0,
+      "ctr": 0.1333,
+      "average_cpc": 5.1,
+      "conversions": 38.0,
+      "cost_per_conversion": 56.32,
+      "conversion_value": 12600.0,
+      "roas": 5.89,
+      "action": "scale",
+      "action_reason": "High ROAS with meaningful conversion volume.",
+      "evidence": [
+        "ROAS 5.89x",
+        "CPA 56.32",
+        "CTR 13.3%"
+      ],
+      "evidence_sources": [
+        {
+          "source": "google_ads",
+          "entity_type": "campaign",
+          "entity_name": "Brand Search",
+          "metric": "roas",
+          "note": "ROAS 5.89x",
+          "connector_entity_id": ""
+        },
+        {
+          "source": "google_ads",
+          "entity_type": "campaign",
+          "entity_name": "Brand Search",
+          "metric": "cost_per_conversion",
+          "note": "CPA 56.32",
+          "connector_entity_id": ""
+        }
+      ],
+      "extra": {
+        "previous": {
+          "clicks": 395,
+          "impressions": 2900,
+          "spend": 2010.0,
+          "conversions": 32.0,
+          "conversion_value": 10800.0
+        }
+      }
+    },
+    {
+      "campaign_name": "Retargeting Display",
+      "campaign_id": "cmp_4",
+      "channel_type": "DISPLAY",
+      "status": "ENABLED",
+      "clicks": 310,
+      "impressions": 18200,
+      "spend": 920.0,
+      "ctr": 0.017,
+      "average_cpc": 2.97,
+      "conversions": 14.0,
+      "cost_per_conversion": 65.71,
+      "conversion_value": 3360.0,
+      "roas": 3.65,
+      "action": "scale",
+      "action_reason": "High ROAS with meaningful conversion volume.",
+      "evidence": [
+        "ROAS 3.65x",
+        "CPA 65.71",
+        "CTR 1.7%"
+      ],
+      "evidence_sources": [
+        {
+          "source": "google_ads",
+          "entity_type": "campaign",
+          "entity_name": "Retargeting Display",
+          "metric": "roas",
+          "note": "ROAS 3.65x",
+          "connector_entity_id": ""
+        },
+        {
+          "source": "google_ads",
+          "entity_type": "campaign",
+          "entity_name": "Retargeting Display",
+          "metric": "cost_per_conversion",
+          "note": "CPA 65.71",
+          "connector_entity_id": ""
+        }
+      ],
+      "extra": {
+        "previous": {
+          "clicks": 280,
+          "impressions": 17080,
+          "spend": 860.0,
+          "conversions": 10.0,
+          "conversion_value": 2400.0
+        }
+      }
+    }
+  ],
+  "highlights": [
+    {
+      "finding_id": "win-cmp_1",
+      "type": "win",
+      "title": "Brand Search is outperforming the account baseline",
+      "evidence": [
+        "ROAS is 5.89x",
+        "CPA is $56.32",
+        "38 conversions this period"
+      ],
+      "impact": "This campaign is producing efficient conversions and can absorb more budget than weaker campaigns.",
+      "recommended_action": "Increase budget on Brand Search in controlled increments.",
+      "confidence": "high",
+      "related_campaigns": [
+        "Brand Search"
+      ],
+      "evidence_sources": [
+        {
+          "source": "google_ads",
+          "entity_type": "campaign",
+          "entity_name": "Brand Search",
+          "metric": "roas",
+          "note": "ROAS 5.89x",
+          "connector_entity_id": ""
+        },
+        {
+          "source": "google_ads",
+          "entity_type": "campaign",
+          "entity_name": "Brand Search",
+          "metric": "cost_per_conversion",
+          "note": "CPA 56.32",
+          "connector_entity_id": ""
+        }
+      ]
+    },
+    {
+      "finding_id": "win-cmp_4",
+      "type": "win",
+      "title": "Retargeting Display is outperforming the account baseline",
+      "evidence": [
+        "ROAS is 3.65x",
+        "CPA is $65.71",
+        "14 conversions this period"
+      ],
+      "impact": "This campaign is producing efficient conversions and can absorb more budget than weaker campaigns.",
+      "recommended_action": "Increase budget on Retargeting Display in controlled increments.",
+      "confidence": "high",
+      "related_campaigns": [
+        "Retargeting Display"
+      ],
+      "evidence_sources": [
+        {
+          "source": "google_ads",
+          "entity_type": "campaign",
+          "entity_name": "Retargeting Display",
+          "metric": "roas",
+          "note": "ROAS 3.65x",
+          "connector_entity_id": ""
+        },
+        {
+          "source": "google_ads",
+          "entity_type": "campaign",
+          "entity_name": "Retargeting Display",
+          "metric": "cost_per_conversion",
+          "note": "CPA 65.71",
+          "connector_entity_id": ""
+        }
+      ]
+    }
+  ],
+  "risks": [
+    {
+      "finding_id": "risk-cmp_3",
+      "type": "risk",
+      "title": "Competitor Search is underperforming",
+      "evidence": [
+        "ROAS is 0.64x",
+        "CPA is $264.29",
+        "Low ROAS and expensive conversions are wasting budget."
+      ],
+      "impact": "Budget is being consumed by campaigns that are not returning enough value.",
+      "recommended_action": "Pause Competitor Search this week.",
+      "confidence": "high",
+      "related_campaigns": [
+        "Competitor Search"
+      ],
+      "evidence_sources": [
+        {
+          "source": "google_ads",
+          "entity_type": "campaign",
+          "entity_name": "Competitor Search",
+          "metric": "roas",
+          "note": "ROAS 0.64x",
+          "connector_entity_id": ""
+        },
+        {
+          "source": "google_ads",
+          "entity_type": "campaign",
+          "entity_name": "Competitor Search",
+          "metric": "cost_per_conversion",
+          "note": "CPA 264.29",
+          "connector_entity_id": ""
+        }
+      ]
+    },
+    {
+      "finding_id": "risk-cmp_2",
+      "type": "risk",
+      "title": "Non-Brand Search is underperforming",
+      "evidence": [
+        "ROAS is 1.10x",
+        "CPA is $203.75",
+        "Returns are weak enough to justify refining audience, queries, or keyword themes."
+      ],
+      "impact": "Budget is being consumed by campaigns that are not returning enough value.",
+      "recommended_action": "Refine Non-Brand Search this week.",
+      "confidence": "medium",
+      "related_campaigns": [
+        "Non-Brand Search"
+      ],
+      "evidence_sources": [
+        {
+          "source": "google_ads",
+          "entity_type": "campaign",
+          "entity_name": "Non-Brand Search",
+          "metric": "roas",
+          "note": "ROAS 1.10x",
+          "connector_entity_id": ""
+        },
+        {
+          "source": "google_ads",
+          "entity_type": "campaign",
+          "entity_name": "Non-Brand Search",
+          "metric": "cost_per_conversion",
+          "note": "CPA 203.75",
+          "connector_entity_id": ""
+        }
+      ]
+    }
+  ],
+  "recommended_actions": [
+    {
+      "action_id": "action-1",
+      "type": "pause",
+      "title": "Pause Competitor Search",
+      "detail": "Low ROAS and expensive conversions are wasting budget.",
+      "priority": "urgent",
+      "owner": "paid team",
+      "related_campaigns": [
+        "Competitor Search"
+      ],
+      "evidence": [
+        "ROAS 0.64x",
+        "CPA 264.29",
+        "CTR 5.5%"
+      ],
+      "evidence_sources": [
+        {
+          "source": "google_ads",
+          "entity_type": "campaign",
+          "entity_name": "Competitor Search",
+          "metric": "roas",
+          "note": "ROAS 0.64x",
+          "connector_entity_id": ""
+        },
+        {
+          "source": "google_ads",
+          "entity_type": "campaign",
+          "entity_name": "Competitor Search",
+          "metric": "cost_per_conversion",
+          "note": "CPA 264.29",
+          "connector_entity_id": ""
+        }
+      ]
+    },
+    {
+      "action_id": "action-3",
+      "type": "scale",
+      "title": "Scale Brand Search",
+      "detail": "High ROAS with meaningful conversion volume.",
+      "priority": "high",
+      "owner": "paid team",
+      "related_campaigns": [
+        "Brand Search"
+      ],
+      "evidence": [
+        "ROAS 5.89x",
+        "CPA 56.32",
+        "CTR 13.3%"
+      ],
+      "evidence_sources": [
+        {
+          "source": "google_ads",
+          "entity_type": "campaign",
+          "entity_name": "Brand Search",
+          "metric": "roas",
+          "note": "ROAS 5.89x",
+          "connector_entity_id": ""
+        },
+        {
+          "source": "google_ads",
+          "entity_type": "campaign",
+          "entity_name": "Brand Search",
+          "metric": "cost_per_conversion",
+          "note": "CPA 56.32",
+          "connector_entity_id": ""
+        }
+      ]
+    },
+    {
+      "action_id": "action-4",
+      "type": "scale",
+      "title": "Scale Retargeting Display",
+      "detail": "High ROAS with meaningful conversion volume.",
+      "priority": "high",
+      "owner": "paid team",
+      "related_campaigns": [
+        "Retargeting Display"
+      ],
+      "evidence": [
+        "ROAS 3.65x",
+        "CPA 65.71",
+        "CTR 1.7%"
+      ],
+      "evidence_sources": [
+        {
+          "source": "google_ads",
+          "entity_type": "campaign",
+          "entity_name": "Retargeting Display",
+          "metric": "roas",
+          "note": "ROAS 3.65x",
+          "connector_entity_id": ""
+        },
+        {
+          "source": "google_ads",
+          "entity_type": "campaign",
+          "entity_name": "Retargeting Display",
+          "metric": "cost_per_conversion",
+          "note": "CPA 65.71",
+          "connector_entity_id": ""
+        }
+      ]
+    },
+    {
+      "action_id": "action-2",
+      "type": "refine",
+      "title": "Refine Non-Brand Search",
+      "detail": "Returns are weak enough to justify refining audience, queries, or keyword themes.",
+      "priority": "medium",
+      "owner": "paid team",
+      "related_campaigns": [
+        "Non-Brand Search"
+      ],
+      "evidence": [
+        "ROAS 1.10x",
+        "CPA 203.75",
+        "CTR 5.6%"
+      ],
+      "evidence_sources": [
+        {
+          "source": "google_ads",
+          "entity_type": "campaign",
+          "entity_name": "Non-Brand Search",
+          "metric": "roas",
+          "note": "ROAS 1.10x",
+          "connector_entity_id": ""
+        },
+        {
+          "source": "google_ads",
+          "entity_type": "campaign",
+          "entity_name": "Non-Brand Search",
+          "metric": "cost_per_conversion",
+          "note": "CPA 203.75",
+          "connector_entity_id": ""
+        }
+      ]
+    }
+  ],
+  "narrative": {
+    "verdict": "Mixed performance: efficient campaigns are being diluted by weaker spend.",
+    "summary": "Blended ROAS moved from 2.38x to 2.30x. Brand Search is the strongest campaign, while Competitor Search is the clearest budget risk.",
+    "operator_takeaway": "Protect spend behind Brand Search and cut or rework Competitor Search before adding net-new budget."
+  }
+}

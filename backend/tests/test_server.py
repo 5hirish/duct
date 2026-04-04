@@ -63,6 +63,17 @@ def test_connector_callback_invalid_state_returns_400():
     assert "Invalid or expired OAuth state" in res.text
 
 
+def test_google_short_callback_path_invalid_state_returns_400():
+    server = _load_server_with_env()
+    client = TestClient(server.app)
+    res = client.get(
+        "/auth/google/callback",
+        params={"code": "abc", "state": "bad"},
+    )
+    assert res.status_code == 400
+    assert "Invalid or expired OAuth state" in res.text
+
+
 def test_unknown_connector_oauth_authorize_returns_404():
     server = _load_server_with_env()
     client = TestClient(server.app)
@@ -86,7 +97,7 @@ def test_accounts_missing_refresh_token_returns_422():
     res = client.get("/api/connectors/google_ads/accounts", headers=headers)
     assert res.status_code == 422
     detail = res.json().get("detail", "")
-    assert "Missing Google Ads credentials" in (detail if isinstance(detail, str) else str(detail))
+    assert "refresh_token" in (detail if isinstance(detail, str) else str(detail)).lower()
 
 
 def test_unknown_connector_accounts_returns_404():

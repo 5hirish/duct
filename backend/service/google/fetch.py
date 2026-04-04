@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 from collections import defaultdict
 from datetime import date, datetime, timedelta, timezone
-from typing import Any, DefaultDict, Dict, List, Tuple
+from typing import Any
 
 from google.ads.googleads.client import GoogleAdsClient
 from google.ads.googleads.errors import GoogleAdsException
@@ -26,7 +26,7 @@ def _parse_ymd(value: str) -> date:
     return datetime.strptime(value.strip(), "%Y-%m-%d").date()
 
 
-def _previous_window(date_from: str, date_to: str) -> Tuple[str, str]:
+def _previous_window(date_from: str, date_to: str) -> tuple[str, str]:
     d0 = _parse_ymd(date_from)
     d1 = _parse_ymd(date_to)
     days = (d1 - d0).days + 1
@@ -63,12 +63,12 @@ def _enum_name(value: Any) -> str:
     return str(value)
 
 
-def _aggregate_rows(client: GoogleAdsClient, customer_id: str, date_from: str, date_to: str) -> Dict[int, Dict[str, Any]]:
+def _aggregate_rows(client: GoogleAdsClient, customer_id: str, date_from: str, date_to: str) -> dict[int, dict[str, Any]]:
     ga_service = client.get_service("GoogleAdsService")
     query = _gaql(date_from, date_to)
     cid_norm = _norm_customer_id(customer_id)
 
-    agg: DefaultDict[int, Dict[str, Any]] = defaultdict(
+    agg: defaultdict[int, dict[str, Any]] = defaultdict(
         lambda: {
             "clicks": 0,
             "impressions": 0,
@@ -104,7 +104,7 @@ def _aggregate_rows(client: GoogleAdsClient, customer_id: str, date_from: str, d
     return dict(agg)
 
 
-def _bucket_to_row(cid: int, bucket: Dict[str, Any], previous: Dict[str, float]) -> Dict[str, Any]:
+def _bucket_to_row(cid: int, bucket: dict[str, Any], previous: dict[str, float]) -> dict[str, Any]:
     clicks = int(bucket["clicks"])
     impressions = int(bucket["impressions"])
     spend = bucket["cost_micros"] / 1_000_000.0
@@ -133,7 +133,7 @@ def _bucket_to_row(cid: int, bucket: Dict[str, Any], previous: Dict[str, float])
     }
 
 
-def _previous_slice(prev_bucket: Dict[str, Any] | None) -> Dict[str, float]:
+def _previous_slice(prev_bucket: dict[str, Any] | None) -> dict[str, float]:
     if not prev_bucket:
         return {
             "clicks": 0.0,
@@ -167,7 +167,7 @@ def fetch_campaigns(
     """Return raw payload dict matching ``demo_raw_payload()`` shape."""
     prev_from, prev_to = _previous_window(date_from, date_to)
 
-    creds: Dict[str, Any] = {
+    creds: dict[str, Any] = {
         "developer_token": developer_token,
         "client_id": client_id,
         "client_secret": client_secret,
@@ -182,7 +182,7 @@ def fetch_campaigns(
     current = _aggregate_rows(client, customer_id, date_from, date_to)
     previous = _aggregate_rows(client, customer_id, prev_from, prev_to)
 
-    rows: List[Dict[str, Any]] = []
+    rows: list[dict[str, Any]] = []
     for cid, bucket in sorted(
         current.items(),
         key=lambda item: item[1]["cost_micros"],
@@ -226,7 +226,7 @@ def _build_client(
     login_customer_id: str = "",
 ) -> GoogleAdsClient:
     """Build a GoogleAdsClient from explicit credentials."""
-    creds: Dict[str, Any] = {
+    creds: dict[str, Any] = {
         "developer_token": developer_token,
         "client_id": client_id,
         "client_secret": client_secret,
@@ -244,7 +244,7 @@ def _safe_micros(micros: int) -> float:
 
 def _run_query(
     client: GoogleAdsClient, customer_id: str, query: str
-) -> List[Any]:
+) -> list[Any]:
     """Execute a GAQL query and return all result rows."""
     ga_service = client.get_service("GoogleAdsService")
     cid = _norm_customer_id(customer_id)
@@ -289,13 +289,13 @@ def fetch_search_terms(
     client_secret: str,
     refresh_token: str,
     login_customer_id: str = "",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Fetch top search terms by spend. Useful for CAC and spend-audit goals."""
     client = _build_client(developer_token, client_id, client_secret, refresh_token, login_customer_id)
     query = _SEARCH_TERMS_GAQL.format(date_from=date_from, date_to=date_to)
     raw = _run_query(client, customer_id, query)
 
-    rows: List[Dict[str, Any]] = []
+    rows: list[dict[str, Any]] = []
     for r in raw:
         spend = _safe_micros(r.metrics.cost_micros)
         clicks = int(r.metrics.clicks)
@@ -352,14 +352,14 @@ def fetch_device_performance(
     client_secret: str,
     refresh_token: str,
     login_customer_id: str = "",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Fetch campaign performance segmented by device (MOBILE, DESKTOP, TABLET)."""
     client = _build_client(developer_token, client_id, client_secret, refresh_token, login_customer_id)
     query = _DEVICE_GAQL.format(date_from=date_from, date_to=date_to)
     raw = _run_query(client, customer_id, query)
 
     # Aggregate by (campaign_id, device)
-    agg: DefaultDict[tuple, Dict[str, Any]] = defaultdict(
+    agg: defaultdict[tuple, dict[str, Any]] = defaultdict(
         lambda: {"clicks": 0, "impressions": 0, "cost_micros": 0, "conversions": 0.0, "conversions_value": 0.0,
                  "campaign_name": "", "device": ""}
     )
@@ -375,7 +375,7 @@ def fetch_device_performance(
             bucket["campaign_name"] = r.campaign.name
             bucket["device"] = _enum_name(r.segments.device)
 
-    rows: List[Dict[str, Any]] = []
+    rows: list[dict[str, Any]] = []
     for (cid, device), bucket in sorted(agg.items(), key=lambda x: x[1]["cost_micros"], reverse=True):
         spend = _safe_micros(bucket["cost_micros"])
         clicks = int(bucket["clicks"])
@@ -433,13 +433,13 @@ def fetch_geo_performance(
     client_secret: str,
     refresh_token: str,
     login_customer_id: str = "",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Fetch geographic performance data. Useful for scaling and spend-audit goals."""
     client = _build_client(developer_token, client_id, client_secret, refresh_token, login_customer_id)
     query = _GEO_GAQL.format(date_from=date_from, date_to=date_to)
     raw = _run_query(client, customer_id, query)
 
-    rows: List[Dict[str, Any]] = []
+    rows: list[dict[str, Any]] = []
     for r in raw:
         spend = _safe_micros(r.metrics.cost_micros)
         clicks = int(r.metrics.clicks)
@@ -501,14 +501,14 @@ def fetch_ad_group_performance(
     client_secret: str,
     refresh_token: str,
     login_customer_id: str = "",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Fetch ad group level performance. Deeper than campaign for spend audit and ROAS goals."""
     client = _build_client(developer_token, client_id, client_secret, refresh_token, login_customer_id)
     query = _AD_GROUP_GAQL.format(date_from=date_from, date_to=date_to)
     raw = _run_query(client, customer_id, query)
 
     # Aggregate by ad_group.id across date segments
-    agg: DefaultDict[int, Dict[str, Any]] = defaultdict(
+    agg: defaultdict[int, dict[str, Any]] = defaultdict(
         lambda: {"clicks": 0, "impressions": 0, "cost_micros": 0, "conversions": 0.0, "conversions_value": 0.0,
                  "campaign_name": "", "campaign_id": 0, "ad_group_name": "", "status": ""}
     )
@@ -526,7 +526,7 @@ def fetch_ad_group_performance(
             bucket["ad_group_name"] = r.ad_group.name
             bucket["status"] = _enum_name(r.ad_group.status)
 
-    rows: List[Dict[str, Any]] = []
+    rows: list[dict[str, Any]] = []
     for agid, bucket in sorted(agg.items(), key=lambda x: x[1]["cost_micros"], reverse=True):
         spend = _safe_micros(bucket["cost_micros"])
         clicks = int(bucket["clicks"])

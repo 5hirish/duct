@@ -87,10 +87,20 @@ class GoogleAdsConnector:
         dt = cfg.google_ads_developer_token
         cid = cfg.google_oauth_client_id or cfg.google_ads_client_id
         secret = cfg.google_oauth_client_secret or cfg.google_ads_client_secret
-        if not all([dt, cid, secret, rt]):
+        gaps: list[str] = []
+        if not rt:
+            gaps.append("refresh_token (query param or GOOGLE_ADS_REFRESH_TOKEN env)")
+        if not dt:
+            gaps.append("GOOGLE_ADS_DEVELOPER_TOKEN")
+        if not cid:
+            gaps.append("GOOGLE_OAUTH_CLIENT_ID or GOOGLE_ADS_CLIENT_ID")
+        if not secret:
+            gaps.append("GOOGLE_OAUTH_CLIENT_SECRET or GOOGLE_ADS_CLIENT_SECRET")
+        if gaps:
             raise ValueError(
-                "Missing Google Ads credentials. Set GOOGLE_ADS_DEVELOPER_TOKEN, "
-                "GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET and provide refresh_token."
+                "Missing Google Ads API credentials: "
+                + "; ".join(gaps)
+                + ". OAuth alone is not enough — the Ads API requires a developer token."
             )
         return list_accessible_accounts(dt, cid, secret, rt)
 

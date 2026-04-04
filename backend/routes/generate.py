@@ -5,7 +5,8 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timezone
 from functools import partial
-from typing import TYPE_CHECKING, Any, Callable, Dict
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, HTTPException
 
@@ -32,7 +33,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["generate"])
 
 
-def _resolve_agent_config() -> tuple[str, Provider, "ModelName"]:
+def _resolve_agent_config() -> tuple[str, Provider, ModelName]:
     """Resolve LLM provider/model/API key from config."""
     cfg = get_configs()
     provider = resolve_provider(cfg.generate_provider or None)
@@ -53,7 +54,7 @@ def _build_fetch_fns(
     client_secret: str,
     refresh_token: str,
     login_customer_id: str,
-) -> Dict[str, Callable[..., Dict[str, Any]]]:
+) -> dict[str, Callable[..., dict[str, Any]]]:
     """Build pre-credentialed fetch functions for each supplementary tool.
 
     Each function only needs customer_id, date_from, date_to — credentials

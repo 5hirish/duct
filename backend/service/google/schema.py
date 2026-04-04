@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from utils.helpers import json_safe
 
@@ -130,18 +130,18 @@ class SourceMetadata:
     window_previous: str
     currency_code: str
     account_name: str
-    account_id: Optional[str] = None
-    source_file: Optional[str] = None
-    notes: List[str] = field(default_factory=list)
-    theme: Optional[str] = None
+    account_id: str | None = None
+    source_file: str | None = None
+    notes: list[str] = field(default_factory=list)
+    theme: str | None = None
 
 
 @dataclass
 class CampaignPerformance:
     campaign_name: str
-    campaign_id: Optional[str]
-    channel_type: Optional[str]
-    status: Optional[str]
+    campaign_id: str | None
+    channel_type: str | None
+    status: str | None
     clicks: int
     impressions: int
     spend: float
@@ -153,9 +153,9 @@ class CampaignPerformance:
     roas: float
     action: ActionType
     action_reason: str
-    evidence: List[str] = field(default_factory=list)
-    evidence_sources: List[EvidenceSource] = field(default_factory=list)
-    extra: Dict[str, Any] = field(default_factory=dict)
+    evidence: list[str] = field(default_factory=list)
+    evidence_sources: list[EvidenceSource] = field(default_factory=list)
+    extra: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -163,12 +163,12 @@ class Finding:
     finding_id: str
     type: FindingType
     title: str
-    evidence: List[str]
+    evidence: list[str]
     impact: str
     recommended_action: str
     confidence: ConfidenceLevel
-    related_campaigns: List[str] = field(default_factory=list)
-    evidence_sources: List[EvidenceSource] = field(default_factory=list)
+    related_campaigns: list[str] = field(default_factory=list)
+    evidence_sources: list[EvidenceSource] = field(default_factory=list)
 
 
 @dataclass
@@ -179,9 +179,9 @@ class RecommendedAction:
     detail: str
     priority: ActionPriority
     owner: str
-    related_campaigns: List[str] = field(default_factory=list)
-    evidence: List[str] = field(default_factory=list)
-    evidence_sources: List[EvidenceSource] = field(default_factory=list)
+    related_campaigns: list[str] = field(default_factory=list)
+    evidence: list[str] = field(default_factory=list)
+    evidence_sources: list[EvidenceSource] = field(default_factory=list)
 
 
 @dataclass
@@ -221,11 +221,11 @@ class GoogleAdsBrief:
     source_metadata: SourceMetadata
     account_summary: AccountSummary
     period_comparison: PeriodComparison
-    campaigns: List[CampaignPerformance]
-    highlights: List[Finding]
-    risks: List[Finding]
-    recommended_actions: List[RecommendedAction]
+    campaigns: list[CampaignPerformance]
+    highlights: list[Finding]
+    risks: list[Finding]
+    recommended_actions: list[RecommendedAction]
     narrative: BriefNarrative
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return json_safe(asdict(self))
