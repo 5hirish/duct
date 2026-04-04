@@ -111,13 +111,14 @@ render --> review[OperatorReview]
 
 | File | Purpose |
 |---|---|
-| `docs/google-ads-mvp-plan.md` | Product + engineering plan for this MVP slice |
-| `backend/briefs/templates/google_ads_weekly_brief.md` | Prompt template and brief-writing contract |
-| `backend/briefs/schemas/google_ads_brief.py` | Typed schema for payload, findings, and actions |
-| `backend/scripts/google_ads_fetch.py` | Convert manual export CSV/JSON into raw structured JSON |
-| `backend/scripts/google_ads_brief.py` | Normalize data, score findings, and render report artifacts |
-| `backend/data/google_ads/google-ads-report.json` | Example normalized payload for debugging |
-| Next.js `GoogleAdsReport.js` | Renders brief JSON (no static HTML artifact) |
+| `docs/mvp/google-ads-mvp-plan.md` | Product + engineering plan for this MVP slice |
+| `backend/agents/reporter/prompts.py` | Synthesis system/user prompts (LangChain + Gemini) |
+| `backend/service/google/schema.py` | Typed brief payload (`StrEnum`s + dataclasses) |
+| `backend/service/google/brief.py` | Normalize raw rows → brief; optional Gemini synthesis |
+| `backend/service/google/fetch.py` | Google Ads API → raw campaign JSON |
+| `backend/data/google_ads/demo_raw_payload.json` | Static demo raw input |
+| `backend/data/google_ads/google-ads-report.json` | Example normalized brief JSON for debugging |
+| `app/src/components/GoogleAdsReport.js` | Renders brief JSON in the Next.js app |
 
 ---
 

@@ -19,7 +19,7 @@ Most teams have the data. What they lack is the synthesis. Every tool speaks its
 | `site/` | Static marketing site, landing pages, blog, shared assets |
 | `app/` | Next.js report viewer app (current no-auth shell) |
 | `backend/` | Python reporting and synthesis MVP |
-| `docs/` | Product, MVP, and implementation plans |
+| `docs/` | Strategy, GTM, MVP, engineering plans, design specs, and LLM guides ([index](docs/README.md)) |
 
 Directory-local agent docs live inside the main code areas:
 - `site/AGENTS.md` and `site/CLAUDE.md`

@@ -4,7 +4,7 @@ Python reporting and synthesis backend for Duct.
 
 ## Product role
 
-Per `docs/mvp-plan.md`, this backend is the actual product engine:
+Per `docs/mvp/mvp-plan.md`, this backend is the actual product engine:
 
 - read from client-owned destinations with read-only access
 - normalize data into typed internal models

@@ -12,7 +12,7 @@ This directory contains the Python reporting and synthesis side of Duct.
 
 ## Product role
 
-This is the product core described in `docs/mvp-plan.md`.
+This is the product core described in `docs/mvp/mvp-plan.md`.
 
 - read from client-owned data destinations
 - normalize data into stable internal payloads

@@ -167,10 +167,14 @@ duct/
 │   ├── seed.sql
 │   └── config.toml
 │
-├── docs/                       # Planning docs (already exists)
-│   ├── mvp-plan.md
-│   ├── product-plan.md
-│   └── ...
+├── docs/                       # Planning docs (see docs/README.md)
+│   ├── README.md
+│   ├── strategy/
+│   ├── gtm/
+│   ├── mvp/
+│   ├── engineering/
+│   ├── design/
+│   └── guides/
 │
 ├── package.json                # Root — workspace config (pnpm/npm workspaces)
 ├── pnpm-workspace.yaml         # Workspace definition

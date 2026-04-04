@@ -4,7 +4,7 @@
 **Status:** Approved · March 2026
 **Authors:** Marvin, Shirish
 
-> This document covers the technical stack decisions, OSS tool choices, and build sequence for the Duct MVP. It is the companion to `product-plan.md` — that document covers the what and why, this one covers the how.
+> This document covers the technical stack decisions, OSS tool choices, and build sequence for the Duct MVP. It is the companion to [`../strategy/product-plan.md`](../strategy/product-plan.md) — that document covers the what and why, this one covers the how.
 
 ---
 
