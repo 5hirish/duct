@@ -31,7 +31,7 @@ Gemini 2.5 Flash handles only the synthesis fields: `highlights`, `risks`, `reco
 [backend/scripts/google_ads_brief.py — add one function]
   build_brief() → deterministic: account_summary, period_comparison, campaigns[]
   synthesize_with_gemini_dict() → Gemini 2.5 Flash: highlights, risks, actions, narrative
-  → saved to backend/reports/{customer_id}-{date_to}.json
+  → saved to backend/data/google_ads/{customer_id}-{date_to}.json
   ↓
 [Next.js → GoogleAdsReport.js renders — zero changes]
 ```
@@ -249,11 +249,11 @@ class ReportRequest(BaseModel):
 2. Else: call `fetch_campaigns()` from `google_ads_api_fetch.py`
 3. `build_brief(raw_payload, theme=theme)` → `brief.to_dict()`
 4. If `GEMINI_API_KEY` set: `synthesize_with_gemini_dict(brief_dict, raw_payload)`
-5. Save to `backend/reports/{customer_id}-{date_to}.json`
+5. Save to `backend/data/google_ads/{customer_id}-{date_to}.json`
 6. Return dict
 
 **Other endpoints:**
-- `GET /api/report/latest` — most recent file from `backend/reports/`
+- `GET /api/report/latest` — most recent `*.json` brief from `backend/data/google_ads/`
 - `GET /health` — `{"status": "ok"}`
 
 **CORS:** `http://localhost:3000`
@@ -371,7 +371,7 @@ PORT=8000
 5. Go to `http://localhost:3000/run`
 6. Click "Demo mode" — verify report renders end-to-end without credentials
 7. Fill in real Google Ads credentials + date range → submit
-8. Confirm `backend/reports/{customer_id}-{date_to}.json` written
+8. Confirm `backend/data/google_ads/{customer_id}-{date_to}.json` written
 9. Confirm report in main list at `/`
 10. Check `narrative.verdict` — Gemini output is prose, rule-based fallback is template string
 

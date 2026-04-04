@@ -3,7 +3,6 @@ name = "duct-backend"
 version = "0.1.0"
 description = "Duct reporting backend"
 packages = [
-    { include = "briefs" },
     { include = "agents" },
     { include = "routes" },
     { include = "service" },

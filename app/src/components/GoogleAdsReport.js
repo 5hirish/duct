@@ -22,7 +22,7 @@ function trendToneForMetric(metric, delta) {
 function actionTone(action) {
   if (action === "scale") return "green";
   if (action === "pause") return "red";
-  if (["tighten", "refresh", "investigate"].includes(action)) return "yellow";
+  if (["refine", "refresh", "investigate"].includes(action)) return "yellow";
   return "grey";
 }
 

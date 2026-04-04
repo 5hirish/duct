@@ -1,5 +1,22 @@
 import json
 from datetime import datetime
+from enum import Enum
+from typing import Any
+
+
+def json_safe(value: Any) -> Any:
+    """Recursively normalize values for JSON-ready structures (e.g. after ``dataclasses.asdict``).
+
+    Maps ``Enum`` members to their ``.value``; recurses into ``dict`` and ``list``.
+    """
+
+    if isinstance(value, Enum):
+        return value.value
+    if isinstance(value, dict):
+        return {key: json_safe(val) for key, val in value.items()}
+    if isinstance(value, list):
+        return [json_safe(item) for item in value]
+    return value
 
 
 def safe_get(obj, *keys):

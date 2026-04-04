@@ -1,4 +1,4 @@
-// Theme definitions — migrated from backend/reports/themes.json.
+// Theme definitions — accent keys align with `source_metadata.theme` in brief JSON.
 // The backend embeds the theme key in source_metadata.theme; the app
 // resolves it here to get accent colors for rendering.
 

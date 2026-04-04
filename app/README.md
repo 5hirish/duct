@@ -7,7 +7,7 @@ Minimal Next.js app shell for rendering backend-generated reports.
 - app layout shell
 - report list page (`/reports`)
 - report detail viewer (`/reports/[slug]`)
-- file-based artifact loading from `../backend/reports`
+- file-based artifact loading from `../backend/data/google_ads`
 
 ## Local run
 
@@ -23,7 +23,7 @@ Open: `http://localhost:3000/reports`
 
 The app reads report artifacts produced by the backend API:
 
-- `backend/reports/*.json`
+- `backend/data/google_ads/*.json` (brief outputs; `demo_raw_payload.json` is the raw input shape)
 
 With the backend running from `backend/` (see `backend/README.md`), generate a demo report, for example:
 

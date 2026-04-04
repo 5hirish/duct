@@ -16,7 +16,8 @@ def percent(value: float) -> str:
     return f"{value * 100:.1f}%"
 
 
-def roas(value: float) -> str:
+def multiplier(value: float) -> str:
+    """Format a unitless ratio as ``N.NNx`` (ROAS, MER, and similar multipliers)."""
     return f"{value:.2f}x"
 
 

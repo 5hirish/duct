@@ -1,16 +1,16 @@
 {
   "source_metadata": {
-    "source": "google_ads_manual_export",
+    "source": "google_ads_demo",
     "export_type": "campaign_performance",
-    "generated_at": "2026-04-03T21:54:38.786856+00:00",
+    "generated_at": "2026-04-04T05:36:57.879062+00:00",
     "window_current": "last_7_days",
     "window_previous": "previous_7_days",
     "currency_code": "USD",
     "account_name": "Duct Demo Account",
     "account_id": "123-456-7890",
-    "source_file": "demo://google_ads_campaign_export.csv",
+    "source_file": "data/google_ads/demo_raw_payload.json",
     "notes": [
-      "Demo data for MVP validation"
+      "Static demo payload for MVP validation"
     ],
     "theme": "paid_ads"
   },
@@ -244,8 +244,8 @@
       "cost_per_conversion": 203.75,
       "conversion_value": 5400.0,
       "roas": 1.1,
-      "action": "tighten",
-      "action_reason": "Returns are weak enough to justify audience or query tightening.",
+      "action": "refine",
+      "action_reason": "Returns are weak enough to justify refining audience, queries, or keyword themes.",
       "evidence": [
         "ROAS 1.10x",
         "CPA 203.75",
@@ -478,10 +478,10 @@
       "evidence": [
         "ROAS is 1.10x",
         "CPA is $203.75",
-        "Returns are weak enough to justify audience or query tightening."
+        "Returns are weak enough to justify refining audience, queries, or keyword themes."
       ],
       "impact": "Budget is being consumed by campaigns that are not returning enough value.",
-      "recommended_action": "Tighten Non-Brand Search this week.",
+      "recommended_action": "Refine Non-Brand Search this week.",
       "confidence": "medium",
       "related_campaigns": [
         "Non-Brand Search"
@@ -510,7 +510,7 @@
       "type": "pause",
       "title": "Pause Competitor Search",
       "detail": "Low ROAS and expensive conversions are wasting budget.",
-      "priority": "p1",
+      "priority": "urgent",
       "owner": "paid team",
       "related_campaigns": [
         "Competitor Search"
@@ -542,7 +542,7 @@
       "type": "scale",
       "title": "Scale Brand Search",
       "detail": "High ROAS with meaningful conversion volume.",
-      "priority": "p1",
+      "priority": "high",
       "owner": "paid team",
       "related_campaigns": [
         "Brand Search"
@@ -574,7 +574,7 @@
       "type": "scale",
       "title": "Scale Retargeting Display",
       "detail": "High ROAS with meaningful conversion volume.",
-      "priority": "p1",
+      "priority": "high",
       "owner": "paid team",
       "related_campaigns": [
         "Retargeting Display"
@@ -603,10 +603,10 @@
     },
     {
       "action_id": "action-2",
-      "type": "tighten",
-      "title": "Tighten Non-Brand Search",
-      "detail": "Returns are weak enough to justify audience or query tightening.",
-      "priority": "p2",
+      "type": "refine",
+      "title": "Refine Non-Brand Search",
+      "detail": "Returns are weak enough to justify refining audience, queries, or keyword themes.",
+      "priority": "medium",
       "owner": "paid team",
       "related_campaigns": [
         "Non-Brand Search"

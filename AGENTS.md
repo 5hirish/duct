@@ -11,8 +11,9 @@
 - The marketing demos are modularized into shared `site/assets/demo.css` and `site/assets/demo.js` plus variant data files.
 - The static marketing site (`site/`) is deployed on Cloudflare Pages; internal navigation should use extensionless paths (e.g. `/blog`, `/for-paid-ads`) rather than hardcoded `.html` URLs so production routing stays consistent.
 - Playwright smoke tests for the marketing site live under `site/tests/e2e/` (see `site/playwright.config.js`).
-- Google Ads report artifacts are generated as JSON only under `backend/reports/` (`google-ads-report.json`).
+- Google Ads report JSON artifacts (demo and generated) live under `backend/data/google_ads/` next to `demo_raw_payload.json` (e.g. `google-ads-report.json`, `demo-<date>.json`).
+- The typed Google Ads brief payload (dataclasses / JSON contract and reporting `StrEnum`s) lives in `backend/service/google/schema.py`; `backend/service/google/brief.py` builds it and `backend/service/google/metrics.py` formats comparison metrics.
 - The backend no longer renders HTML or writes themes.json — it embeds `source_metadata.theme` (e.g. `paid_ads`) into the JSON payload.
 - Theme accent colors live in `app/src/lib/themes.js`. The app resolves them from the theme key in the payload.
 - The `app/` area is a Next.js App Router report viewer. `app/src/components/GoogleAdsReport.js` renders the full report from the JSON payload.
-- Demo raw payloads live under `backend/data/<connector_id>/` (e.g. `backend/data/google_ads/demo_raw_payload.json`); `POST /api/report/google_ads` with `use_demo: true` writes `backend/reports/*.json` (run the FastAPI server from `backend/` with API key configured). Google OAuth: `GET /auth/connectors/google_ads/oauth/authorize` and `/oauth/callback` — set `GOOGLE_OAUTH_REDIRECT_URI` to match the callback URL registered in Google Cloud.
+- Demo raw payloads live under `backend/data/<connector_id>/` (e.g. `backend/data/google_ads/demo_raw_payload.json`); `POST /api/report/google_ads` with `use_demo: true` writes brief JSON into the same folder (e.g. `demo-<date>.json`). Run the FastAPI server from `backend/` with API key configured. Google OAuth: `GET /auth/connectors/google_ads/oauth/authorize` and `/oauth/callback` — set `GOOGLE_OAUTH_REDIRECT_URI` to match the callback URL registered in Google Cloud.

@@ -41,7 +41,7 @@ jobs:
         run: poetry install --with dev
 
       - name: Ruff
-        run: poetry run ruff check server.py agents briefs routes service tests utils
+        run: poetry run ruff check server.py agents routes service tests utils
 
       - name: Pytest
         run: poetry run pytest -q tests

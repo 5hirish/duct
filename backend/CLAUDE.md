@@ -36,20 +36,20 @@ The current and planned backend stack is:
 ## Current directory structure
 
 - `service/google/brief.py` — Google Ads brief normalization (loads demo from `data/<connector_id>/`, default `google_ads`)
-- `briefs/schemas/` — typed internal and output schemas
+- `service/google/schema.py` — typed Google Ads brief payload (dataclasses / JSON contract)
 - `agents/reporter/prompts.py` — synthesis system + user prompts (e.g. Google Ads weekly brief)
 - `routes/auth.py` — OAuth by connector (`/auth/connectors/{connector_id}/oauth/...`)
 - `routes/report.py` — `POST /api/report/{connector_id}` (e.g. `google_ads` or `google-ads` in the path segment)
-- `reports/` — generated JSON artifacts (no HTML files)
+- `data/google_ads/` — demo raw payload + generated brief JSON artifacts (no HTML)
 
 ## Artifact contract
 
-The report API writes JSON to `reports/`. The app reads those files directly (filesystem today, API later).
+The report API writes Google Ads brief JSON to `data/google_ads/`. The app reads those files directly (filesystem today, API later).
 
 The JSON contract:
 - `source_metadata.theme` — theme key (`paid_ads`, `product_intelligence`, `organic_growth`); the app resolves accent colors from this
 - `source_metadata.generated_at` — ISO 8601 timestamp
-- All other fields follow the typed schemas in `briefs/schemas/`
+- All other fields follow the typed models in `service/google/schema.py`
 
 Do not write HTML from the backend. Do not reference `themes.json` or HTML templates — those have moved to the app.
 

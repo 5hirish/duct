@@ -4,7 +4,7 @@ import { resolveTheme } from "./themes";
 
 const REPORTS_DIR =
   process.env.REPORTS_DIR ??
-  path.resolve(process.cwd(), "..", "backend", "reports");
+  path.resolve(process.cwd(), "..", "backend", "data", "google_ads");
 
 function formatTitle(slug) {
   return slug

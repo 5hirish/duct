@@ -4,14 +4,13 @@ from __future__ import annotations
 
 import json
 from datetime import date
-from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
 from starlette.status import HTTP_404_NOT_FOUND, HTTP_501_NOT_IMPLEMENTED
 
 from config import get_configs
 from service.connectors import CAP_CAMPAIGN_REPORT, get_connector, normalize_connector_id
-from service.google.constants import GOOGLE_ADS_CONNECTOR_ID
+from service.google.constants import GOOGLE_ADS_CONNECTOR_ID, GOOGLE_ADS_DATA_DIR
 from service.google.credentials import report_basename, resolve_ads_credentials, resolve_customer_id
 from service.google.fetch import fetch_campaigns
 from service.google.brief import build_brief, demo_raw_payload, synthesize_with_gemini_dict
@@ -19,13 +18,13 @@ from routes.schemas import ReportRequest
 
 router = APIRouter(tags=["report"])
 
-REPORTS_DIR = Path(__file__).resolve().parents[1] / "reports"
+REPORTS_DIR = GOOGLE_ADS_DATA_DIR
 
 
 @router.get("/latest")
 def report_latest() -> dict:
     if not REPORTS_DIR.is_dir():
-        raise HTTPException(status_code=404, detail="No reports directory.")
+        raise HTTPException(status_code=404, detail="No Google Ads data directory.")
     json_files = sorted(
         REPORTS_DIR.glob("*.json"),
         key=lambda p: p.stat().st_mtime,
@@ -113,5 +112,5 @@ def post_persisted_report(connector_id: str, req: ReportRequest) -> dict:
 
 @router.post("/{connector_id}")
 def post_report(connector_id: str, req: ReportRequest) -> dict:
-    """Build a report for a connector (e.g. ``google_ads``) and write JSON to ``reports/``."""
+    """Build a report for a connector (e.g. ``google_ads``) and write JSON under ``data/google_ads/``."""
     return post_persisted_report(connector_id, req)

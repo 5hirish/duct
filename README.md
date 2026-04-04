@@ -49,8 +49,8 @@ Directory-local agent docs live inside the main code areas:
 | `backend/data/<connector_id>/demo_raw_payload.json` | Static demo raw payload per connector (e.g. `google_ads`) |
 | `backend/service/google/brief.py` | Normalize Google Ads JSON into typed brief payloads |
 | `backend/service/google/fetch.py` | Google Ads API campaign fetch (used by API routes) |
-| `backend/briefs/` | Typed schemas and prompt templates |
-| `backend/reports/` | Generated report artifacts |
+| `backend/service/google/schema.py` | Google Ads brief payload types (dataclasses) |
+| `backend/data/google_ads/` | Demo raw payload + generated Google Ads brief JSON |
 
 ## Analytics
 

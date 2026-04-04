@@ -1,19 +1,93 @@
-"""Typed schema for the Google Ads MVP brief.
+"""Typed Google Ads brief payload (JSON contract for normalize → synthesis → app).
 
-The normalized payload is the contract between fetch/normalize logic, any future
-LLM synthesis step, and the HTML renderer. Keep this file stable and extend by
-adding optional fields instead of reshaping existing sections.
+The normalized payload is the contract between fetch/normalize logic, any LLM
+synthesis step, and the report renderer. Keep this module stable; extend with
+optional fields instead of reshaping existing sections.
+
+Closed vocabularies are ``StrEnum``s so the brief builder, metrics, and synthesis
+schemas share one reporting vocabulary while JSON values stay unchanged.
 """
 
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
-from typing import Any, Dict, List, Literal, Optional
+from enum import StrEnum
+from typing import Any, Dict, List, Optional
+
+from utils.helpers import json_safe
 
 
-FindingType = Literal["win", "risk", "watch"]
-ActionType = Literal["scale", "monitor", "pause", "refresh", "tighten", "investigate"]
-ConfidenceLevel = Literal["low", "medium", "high"]
+class EvidenceDataSource(StrEnum):
+    """Upstream connector named on evidence (wire: ``source``)."""
+
+    GOOGLE_ADS = "google_ads"
+
+
+class EvidenceEntityType(StrEnum):
+    """Entity granularity for evidence attribution."""
+
+    CAMPAIGN = "campaign"
+    AD_GROUP = "ad_group"
+    SEARCH_TERM = "search_term"
+    DEVICE = "device"
+    GEO = "geo"
+
+
+class FindingType(StrEnum):
+    """Finding classification for highlights and risks."""
+
+    WIN = "win"
+    RISK = "risk"
+    WATCH = "watch"
+
+
+class ConfidenceLevel(StrEnum):
+    """Confidence attached to a finding."""
+
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+
+
+class ActionType(StrEnum):
+    """Recommended action / campaign disposition category."""
+
+    SCALE = "scale"
+    MONITOR = "monitor"
+    PAUSE = "pause"
+    REFRESH = "refresh"
+    REFINE = "refine"
+    INVESTIGATE = "investigate"
+
+
+class ActionPriority(StrEnum):
+    """Priority tier for a recommended action (sort order: urgent → high → medium → low)."""
+
+    URGENT = "urgent"
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
+
+
+class DeltaDirection(StrEnum):
+    """Signed change bucket for period-over-period metrics."""
+
+    UP = "up"
+    DOWN = "down"
+    FLAT = "flat"
+
+
+class MetricFormatKind(StrEnum):
+    """How raw metric floats are formatted into ``MetricValue.formatted`` / delta text.
+
+    ``CURRENCY`` uses the account currency code (see ``utils.formatting.money``).
+    ``MULTIPLIER`` is for unitless ratios (e.g. ROAS as revenue/spend), not a metric name.
+    """
+
+    CURRENCY = "currency"
+    PERCENT = "percent"
+    NUMBER = "number"
+    MULTIPLIER = "multiplier"
 
 
 @dataclass
@@ -26,7 +100,7 @@ class MetricValue:
 class DeltaValue:
     absolute: float
     percent: float
-    direction: Literal["up", "down", "flat"]
+    direction: DeltaDirection
     formatted: str
 
 
@@ -39,8 +113,8 @@ class ComparisonMetric:
 
 @dataclass
 class EvidenceSource:
-    source: str
-    entity_type: str
+    source: EvidenceDataSource
+    entity_type: EvidenceEntityType
     entity_name: str
     metric: str
     note: str
@@ -102,7 +176,7 @@ class RecommendedAction:
     type: ActionType
     title: str
     detail: str
-    priority: Literal["p1", "p2", "p3"]
+    priority: ActionPriority
     owner: str
     related_campaigns: List[str] = field(default_factory=list)
     evidence: List[str] = field(default_factory=list)
@@ -153,5 +227,4 @@ class GoogleAdsBrief:
     narrative: BriefNarrative
 
     def to_dict(self) -> Dict[str, Any]:
-        return asdict(self)
-
+        return json_safe(asdict(self))

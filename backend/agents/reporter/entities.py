@@ -1,56 +1,26 @@
-"""Closed vocabularies for synthesis structured output (JSON schema / LLM)."""
+"""Closed vocabularies for synthesis structured output (JSON schema / LLM).
+
+Canonical enum definitions live in ``service.google.schema`` so the brief
+payload, metrics builders, and Pydantic synthesis schema share the same
+reporting vocabulary. This module keeps ``Syn*`` names for the agent layer.
+"""
 
 from __future__ import annotations
 
-from enum import StrEnum
+from service.google.schema import (
+    ActionPriority as SynActionPriority,
+    ActionType as SynActionType,
+    ConfidenceLevel as SynConfidenceLevel,
+    EvidenceDataSource as SynDataSource,
+    EvidenceEntityType as SynEntityType,
+    FindingType as SynFindingType,
+)
 
-
-class SynDataSource(StrEnum):
-    """Upstream data source named in evidence."""
-
-    GOOGLE_ADS = "google_ads"
-
-
-class SynEntityType(StrEnum):
-    """Entity granularity for evidence attribution."""
-
-    CAMPAIGN = "campaign"
-    AD_GROUP = "ad_group"
-    SEARCH_TERM = "search_term"
-    DEVICE = "device"
-    GEO = "geo"
-
-
-class SynFindingType(StrEnum):
-    """Finding classification for highlights and risks."""
-
-    WIN = "win"
-    RISK = "risk"
-    WATCH = "watch"
-
-
-class SynConfidenceLevel(StrEnum):
-    """Confidence attached to a finding."""
-
-    LOW = "low"
-    MEDIUM = "medium"
-    HIGH = "high"
-
-
-class SynActionType(StrEnum):
-    """Recommended action category."""
-
-    SCALE = "scale"
-    MONITOR = "monitor"
-    PAUSE = "pause"
-    REFRESH = "refresh"
-    TIGHTEN = "tighten"
-    INVESTIGATE = "investigate"
-
-
-class SynActionPriority(StrEnum):
-    """Priority tier for a recommended action."""
-
-    P1 = "p1"
-    P2 = "p2"
-    P3 = "p3"
+__all__ = [
+    "SynActionPriority",
+    "SynActionType",
+    "SynConfidenceLevel",
+    "SynDataSource",
+    "SynEntityType",
+    "SynFindingType",
+]

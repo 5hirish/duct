@@ -28,20 +28,9 @@ The report must answer:
 - Use only the normalized payload provided.
 - Do not invent platform data.
 - Prefer concrete operator language over abstract marketing language.
-- Make recommendations specific: scale, pause, monitor, refresh, tighten, or investigate.
+- Make recommendations specific: scale, pause, monitor, refresh, refine (narrow audience/queries/themes), or investigate.
 - Focus on campaign-level decisions, not generic PPC advice.
 - If evidence is weak, say so with lower confidence.
-
-## Output Contract
-
-Return:
-
-- `narrative.verdict`
-- `narrative.summary`
-- `narrative.operator_takeaway`
-- `highlights[]`
-- `risks[]`
-- `recommended_actions[]`
 
 ## Finding Style
 
@@ -105,8 +94,6 @@ def get_synthesis_user_prompt(
     compact_raw = json.dumps(raw_payload, separators=(",", ":"), default=str)[:120_000]
 
     parts = [
-        "You output ONLY fields: narrative (verdict, summary, operator_takeaway), "
-        "highlights, risks, recommended_actions. Match the JSON schema exactly. "
         "Use only data from the payloads; do not invent metrics.\n",
         f"Deterministic brief JSON:\n{compact_brief}\n",
         f"Raw campaign payload:\n{compact_raw}",

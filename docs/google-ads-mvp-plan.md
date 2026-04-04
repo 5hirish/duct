@@ -116,8 +116,8 @@ render --> review[OperatorReview]
 | `backend/briefs/schemas/google_ads_brief.py` | Typed schema for payload, findings, and actions |
 | `backend/scripts/google_ads_fetch.py` | Convert manual export CSV/JSON into raw structured JSON |
 | `backend/scripts/google_ads_brief.py` | Normalize data, score findings, and render report artifacts |
-| `backend/reports/google-ads-report.json` | Example normalized payload for debugging |
-| `backend/reports/google-ads-report.html` | Example rendered report artifact |
+| `backend/data/google_ads/google-ads-report.json` | Example normalized payload for debugging |
+| Next.js `GoogleAdsReport.js` | Renders brief JSON (no static HTML artifact) |
 
 ---
 
@@ -179,7 +179,7 @@ The HTML report should include:
 5. **Top risks**
    - campaigns wasting spend, declining CTR, worsening CPA, low ROAS
 6. **Recommended actions**
-   - scale, monitor, pause, refresh creative, tighten query/theme targeting
+   - scale, monitor, pause, refresh creative, refine query/theme targeting
 7. **Campaign table**
    - campaign metrics plus recommended action
 8. **Source metadata**

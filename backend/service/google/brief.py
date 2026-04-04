@@ -12,13 +12,20 @@ from typing import Any, Dict, List, Tuple
 from agents.reporter.goals import ReportGenerationGoal
 from agents.reporter.prompts import get_synthesis_user_prompt, get_system_prompt
 from agents.reporter.schema import SynthesisSchema as _SynthesisSchema
-from briefs.schemas.google_ads_brief import (
+from service.google.schema import (
     AccountSummary,
+    ActionPriority,
+    ActionType,
     BriefNarrative,
     CampaignPerformance,
+    ConfidenceLevel,
+    EvidenceDataSource,
+    EvidenceEntityType,
     EvidenceSource,
     Finding,
+    FindingType,
     GoogleAdsBrief,
+    MetricFormatKind,
     PeriodComparison,
     RecommendedAction,
     SourceMetadata,
@@ -71,20 +78,23 @@ def summarize_rows(rows: List[Dict[str, Any]]) -> Tuple[Dict[str, float], Dict[s
     return current_totals, previous_totals
 
 
-def classify_action(row: Dict[str, Any]) -> Tuple[str, str]:
+def classify_action(row: Dict[str, Any]) -> Tuple[ActionType, str]:
     row_roas = row.get("roas", 0.0)
     cpa = row.get("cost_per_conversion", 0.0)
     ctr = row.get("ctr", 0.0)
     conversions = row.get("conversions", 0.0)
     if row_roas >= 3.0 and conversions >= 10:
-        return "scale", "High ROAS with meaningful conversion volume."
+        return ActionType.SCALE, "High ROAS with meaningful conversion volume."
     if row_roas < 1.0 and cpa > 200:
-        return "pause", "Low ROAS and expensive conversions are wasting budget."
+        return ActionType.PAUSE, "Low ROAS and expensive conversions are wasting budget."
     if ctr < 0.025 and conversions < 10:
-        return "refresh", "Low engagement suggests creative or query fatigue."
+        return ActionType.REFRESH, "Low engagement suggests creative or query fatigue."
     if 1.0 <= row_roas < 2.0:
-        return "tighten", "Returns are weak enough to justify audience or query tightening."
-    return "monitor", "Performance is serviceable but not strong enough to scale yet."
+        return (
+            ActionType.REFINE,
+            "Returns are weak enough to justify refining audience, queries, or keyword themes.",
+        )
+    return ActionType.MONITOR, "Performance is serviceable but not strong enough to scale yet."
 
 
 def build_campaign(row: Dict[str, Any]) -> CampaignPerformance:
@@ -113,15 +123,15 @@ def build_campaign(row: Dict[str, Any]) -> CampaignPerformance:
         evidence=evidence,
         evidence_sources=[
             EvidenceSource(
-                source="google_ads",
-                entity_type="campaign",
+                source=EvidenceDataSource.GOOGLE_ADS,
+                entity_type=EvidenceEntityType.CAMPAIGN,
                 entity_name=row.get("campaign_name", "Unnamed Campaign"),
                 metric="roas",
                 note=f"ROAS {row.get('roas', 0.0):.2f}x",
             ),
             EvidenceSource(
-                source="google_ads",
-                entity_type="campaign",
+                source=EvidenceDataSource.GOOGLE_ADS,
+                entity_type=EvidenceEntityType.CAMPAIGN,
                 entity_name=row.get("campaign_name", "Unnamed Campaign"),
                 metric="cost_per_conversion",
                 note=f"CPA {row.get('cost_per_conversion', 0.0):.2f}",
@@ -135,11 +145,11 @@ def build_findings(campaigns: List[CampaignPerformance], currency_code: str) -> 
     wins: List[Finding] = []
     risks: List[Finding] = []
     for campaign in campaigns:
-        if campaign.action == "scale":
+        if campaign.action == ActionType.SCALE:
             wins.append(
                 Finding(
                     finding_id=f"win-{campaign.campaign_id or campaign.campaign_name.lower().replace(' ', '-')}",
-                    type="win",
+                    type=FindingType.WIN,
                     title=f"{campaign.campaign_name} is outperforming the account baseline",
                     evidence=[
                         f"ROAS is {campaign.roas:.2f}x",
@@ -148,16 +158,16 @@ def build_findings(campaigns: List[CampaignPerformance], currency_code: str) -> 
                     ],
                     impact="This campaign is producing efficient conversions and can absorb more budget than weaker campaigns.",
                     recommended_action=f"Increase budget on {campaign.campaign_name} in controlled increments.",
-                    confidence="high",
+                    confidence=ConfidenceLevel.HIGH,
                     related_campaigns=[campaign.campaign_name],
                     evidence_sources=campaign.evidence_sources,
                 )
             )
-        elif campaign.action in {"pause", "refresh", "tighten"}:
+        elif campaign.action in {ActionType.PAUSE, ActionType.REFRESH, ActionType.REFINE}:
             risks.append(
                 Finding(
                     finding_id=f"risk-{campaign.campaign_id or campaign.campaign_name.lower().replace(' ', '-')}",
-                    type="risk",
+                    type=FindingType.RISK,
                     title=f"{campaign.campaign_name} is underperforming",
                     evidence=[
                         f"ROAS is {campaign.roas:.2f}x",
@@ -166,7 +176,9 @@ def build_findings(campaigns: List[CampaignPerformance], currency_code: str) -> 
                     ],
                     impact="Budget is being consumed by campaigns that are not returning enough value.",
                     recommended_action=f"{campaign.action.title()} {campaign.campaign_name} this week.",
-                    confidence="high" if campaign.action == "pause" else "medium",
+                    confidence=ConfidenceLevel.HIGH
+                    if campaign.action == ActionType.PAUSE
+                    else ConfidenceLevel.MEDIUM,
                     related_campaigns=[campaign.campaign_name],
                     evidence_sources=campaign.evidence_sources,
                 )
@@ -175,14 +187,21 @@ def build_findings(campaigns: List[CampaignPerformance], currency_code: str) -> 
 
 
 def build_actions(campaigns: List[CampaignPerformance]) -> List[RecommendedAction]:
-    priority_map = {"pause": "p1", "scale": "p1", "tighten": "p2", "refresh": "p2", "monitor": "p3"}
-    owner_map = {
-        "pause": "paid team",
-        "scale": "paid team",
-        "tighten": "paid team",
-        "refresh": "creative + paid team",
-        "monitor": "paid team",
-        "investigate": "paid team",
+    priority_map: Dict[ActionType, ActionPriority] = {
+        ActionType.PAUSE: ActionPriority.URGENT,
+        ActionType.SCALE: ActionPriority.HIGH,
+        ActionType.REFINE: ActionPriority.MEDIUM,
+        ActionType.REFRESH: ActionPriority.MEDIUM,
+        ActionType.MONITOR: ActionPriority.LOW,
+        ActionType.INVESTIGATE: ActionPriority.MEDIUM,
+    }
+    owner_map: Dict[ActionType, str] = {
+        ActionType.PAUSE: "paid team",
+        ActionType.SCALE: "paid team",
+        ActionType.REFINE: "paid team",
+        ActionType.REFRESH: "creative + paid team",
+        ActionType.MONITOR: "paid team",
+        ActionType.INVESTIGATE: "paid team",
     }
     actions: List[RecommendedAction] = []
     for index, campaign in enumerate(campaigns[:5], start=1):
@@ -192,14 +211,21 @@ def build_actions(campaigns: List[CampaignPerformance]) -> List[RecommendedActio
                 type=campaign.action,
                 title=f"{campaign.action.title()} {campaign.campaign_name}",
                 detail=campaign.action_reason,
-                priority=priority_map.get(campaign.action, "p3"),
+                priority=priority_map.get(campaign.action, ActionPriority.LOW),
                 owner=owner_map.get(campaign.action, "paid team"),
                 related_campaigns=[campaign.campaign_name],
                 evidence=campaign.evidence,
                 evidence_sources=campaign.evidence_sources,
             )
         )
-    actions.sort(key=lambda item: item.priority)
+    order = (
+        ActionPriority.URGENT,
+        ActionPriority.HIGH,
+        ActionPriority.MEDIUM,
+        ActionPriority.LOW,
+    )
+    rank = {p: i for i, p in enumerate(order)}
+    actions.sort(key=lambda item: rank[item.priority])
     return actions
 
 
@@ -245,7 +271,7 @@ def build_brief(raw_payload: Dict[str, Any], theme: str = "paid_ads") -> GoogleA
     previous_roas = safe_divide(previous_totals["conversion_value"], previous_totals["spend"])
 
     campaigns = [build_campaign(row) for row in rows]
-    campaigns.sort(key=lambda campaign: (campaign.action != "pause", -campaign.spend))
+    campaigns.sort(key=lambda campaign: (campaign.action != ActionType.PAUSE, -campaign.spend))
     wins, risks = build_findings(campaigns, currency_code)
     actions = build_actions(campaigns)
     narrative = build_narrative(current_totals, previous_totals, campaigns, currency_code)
@@ -256,31 +282,59 @@ def build_brief(raw_payload: Dict[str, Any], theme: str = "paid_ads") -> GoogleA
             theme=theme,
         ),
         account_summary=AccountSummary(
-            spend=metric_value(current_totals["spend"], "money", currency_code),
-            clicks=metric_value(current_totals["clicks"], "number", currency_code),
-            impressions=metric_value(current_totals["impressions"], "number", currency_code),
-            ctr=metric_value(current_ctr, "percent", currency_code),
-            average_cpc=metric_value(current_cpc, "money", currency_code),
-            conversions=metric_value(current_totals["conversions"], "number", currency_code),
-            cost_per_conversion=metric_value(current_cpa, "money", currency_code),
-            conversion_value=metric_value(current_totals["conversion_value"], "money", currency_code),
-            roas=metric_value(current_roas, "roas", currency_code),
+            spend=metric_value(current_totals["spend"], MetricFormatKind.CURRENCY, currency_code),
+            clicks=metric_value(current_totals["clicks"], MetricFormatKind.NUMBER, currency_code),
+            impressions=metric_value(
+                current_totals["impressions"], MetricFormatKind.NUMBER, currency_code
+            ),
+            ctr=metric_value(current_ctr, MetricFormatKind.PERCENT, currency_code),
+            average_cpc=metric_value(current_cpc, MetricFormatKind.CURRENCY, currency_code),
+            conversions=metric_value(
+                current_totals["conversions"], MetricFormatKind.NUMBER, currency_code
+            ),
+            cost_per_conversion=metric_value(current_cpa, MetricFormatKind.CURRENCY, currency_code),
+            conversion_value=metric_value(
+                current_totals["conversion_value"], MetricFormatKind.CURRENCY, currency_code
+            ),
+            roas=metric_value(current_roas, MetricFormatKind.MULTIPLIER, currency_code),
         ),
         period_comparison=PeriodComparison(
-            spend=comparison_metric(current_totals["spend"], previous_totals["spend"], "money", currency_code),
+            spend=comparison_metric(
+                current_totals["spend"], previous_totals["spend"], MetricFormatKind.CURRENCY, currency_code
+            ),
             conversions=comparison_metric(
-                current_totals["conversions"], previous_totals["conversions"], "number", currency_code
+                current_totals["conversions"],
+                previous_totals["conversions"],
+                MetricFormatKind.NUMBER,
+                currency_code,
             ),
-            cost_per_conversion=comparison_metric(current_cpa, previous_cpa, "money", currency_code),
+            cost_per_conversion=comparison_metric(
+                current_cpa, previous_cpa, MetricFormatKind.CURRENCY, currency_code
+            ),
             conversion_value=comparison_metric(
-                current_totals["conversion_value"], previous_totals["conversion_value"], "money", currency_code
+                current_totals["conversion_value"],
+                previous_totals["conversion_value"],
+                MetricFormatKind.CURRENCY,
+                currency_code,
             ),
-            roas=comparison_metric(current_roas, previous_roas, "roas", currency_code),
-            clicks=comparison_metric(current_totals["clicks"], previous_totals["clicks"], "number", currency_code),
+            roas=comparison_metric(
+                current_roas, previous_roas, MetricFormatKind.MULTIPLIER, currency_code
+            ),
+            clicks=comparison_metric(
+                current_totals["clicks"],
+                previous_totals["clicks"],
+                MetricFormatKind.NUMBER,
+                currency_code,
+            ),
             impressions=comparison_metric(
-                current_totals["impressions"], previous_totals["impressions"], "number", currency_code
+                current_totals["impressions"],
+                previous_totals["impressions"],
+                MetricFormatKind.NUMBER,
+                currency_code,
             ),
-            ctr=comparison_metric(current_ctr, previous_ctr, "percent", currency_code),
+            ctr=comparison_metric(
+                current_ctr, previous_ctr, MetricFormatKind.PERCENT, currency_code
+            ),
         ),
         campaigns=campaigns,
         highlights=wins,

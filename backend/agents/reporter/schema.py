@@ -46,7 +46,7 @@ class SynRecommendedAction(BaseModel, extra="forbid"):
     type: SynActionType
     title: str
     detail: str = ""
-    priority: SynActionPriority = SynActionPriority.P2
+    priority: SynActionPriority = SynActionPriority.MEDIUM
     owner: str = "paid team"
     related_campaigns: List[str] = Field(default_factory=list)
     evidence: List[str] = Field(default_factory=list)
