@@ -43,8 +43,15 @@ function formatTitle(slug) {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
+function unwrapBrief(payload) {
+  // Extract the Google Ads brief from envelope or legacy flat format
+  return payload?.briefs?.google_ads ?? payload;
+}
+
 function getConnectionsFromPayload(payload) {
-  const source = payload?.source_metadata?.source;
+  // Envelope format: connectors_used is explicit
+  if (payload?.connectors_used) return payload.connectors_used;
+  const source = unwrapBrief(payload)?.source_metadata?.source;
   if (!source) return [];
   if (source.includes("google_ads")) return ["google_ads"];
   return [source];
@@ -55,18 +62,20 @@ export default function ReportsList({ serverReports }) {
 
   useEffect(() => {
     const stored = getLocalReports();
-    const mapped = stored.map((entry) => ({
-      slug: entry.slug,
-      title: formatTitle(entry.slug),
-      themeLabel: entry.payload?.source_metadata?.theme === "paid_ads" ? "Paid Ads" : "Report",
-      generatedAt: entry.payload?.source_metadata?.generated_at || entry.savedAt,
-      keyInsight:
-        entry.payload?.narrative?.verdict ||
-        entry.payload?.narrative?.summary ||
-        "",
-      connections: getConnectionsFromPayload(entry.payload),
-      isLocal: true,
-    }));
+    const mapped = stored.map((entry) => {
+      const brief = unwrapBrief(entry.payload);
+      const synthesis = entry.payload?.synthesis;
+      const narrative = synthesis?.narrative ?? brief?.narrative;
+      return {
+        slug: entry.slug,
+        title: formatTitle(entry.slug),
+        themeLabel: brief?.source_metadata?.theme === "paid_ads" ? "Paid Ads" : "Report",
+        generatedAt: entry.payload?.metadata?.generated_at || brief?.source_metadata?.generated_at || entry.savedAt,
+        keyInsight: narrative?.verdict || narrative?.summary || "",
+        connections: getConnectionsFromPayload(entry.payload),
+        isLocal: true,
+      };
+    });
     setLocalReports(mapped);
   }, []);
 

@@ -305,6 +305,10 @@ function StepAnalyzing({ error, onRetry }) {
 }
 
 function StepReport({ report, onSave, onRestart, saved }) {
+  // Unwrap envelope: brief from connector slot, synthesis alongside
+  const brief = report.briefs?.google_ads ?? report;
+  const synthesis = report.synthesis ?? null;
+
   return (
     <div className="generate-step">
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
@@ -320,7 +324,7 @@ function StepReport({ report, onSave, onRestart, saved }) {
           Generate another
         </button>
       </div>
-      <GoogleAdsReport payload={report} />
+      <GoogleAdsReport brief={brief} synthesis={synthesis} />
     </div>
   );
 }
