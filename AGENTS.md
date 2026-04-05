@@ -7,6 +7,9 @@
 - For third-party service logos in the app UI, prefers official brand marks with authentic colors (e.g. Simple Icons), not improvised or single-hue substitutes.
 - Prefers LangChain reporter prompts kept in `backend/agents/reporter/prompts.py` rather than split across extra template directories.
 - Prefers not repeating structured-output schema in natural-language prompts when the LangChain structured API already defines it.
+- Prefers Railway/Railpack-style backend deployment over Docker-centric container workflows when choosing how to ship the FastAPI API.
+- Wants the static marketing site (`site/`) to use the same favicon as the Next.js app for consistent branding.
+- For Google Ads report generation, prefers account selection and date range in the generate flow (not duplicated on the connections page), business-context inputs visible upfront, preset ranges (last 7 / 30 / 90 days plus custom), and step actions labeled Next until the final step (Generate only on the last step).
 
 ## Learned Workspace Facts
 
