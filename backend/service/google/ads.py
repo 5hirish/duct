@@ -8,10 +8,7 @@ from typing import Any
 from google.ads.googleads.client import GoogleAdsClient
 from google.ads.googleads.errors import GoogleAdsException
 
-logger = logging.getLogger(__name__)
-
 from config import get_configs
-from service.google.constants import GOOGLE_ADS_CONNECTOR_ID
 from service.connectors import (
     CAP_ACCOUNTS,
     CAP_CAMPAIGN_REPORT,
@@ -19,6 +16,9 @@ from service.connectors import (
     ConnectorMeta,
     register_connector,
 )
+from service.google.constants import GOOGLE_ADS_CONNECTOR_ID
+
+logger = logging.getLogger(__name__)
 
 
 def _norm_customer_id(customer_id: str) -> str:

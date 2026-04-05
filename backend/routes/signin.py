@@ -6,7 +6,7 @@ import logging
 import secrets
 import time
 from datetime import datetime, timezone
-from urllib.parse import quote, urlencode
+from urllib.parse import quote
 
 import httpx
 import jwt
