@@ -72,7 +72,7 @@ Configure in the Cloudflare dashboard (or Wrangler) for the Worker:
 | Variable | Purpose |
 |----------|---------|
 | `NEXT_PUBLIC_API_BASE` | Railway API URL (`https://…`) |
-| `NEXT_PUBLIC_APP_URL` | Canonical app URL (`metadataBase` in [`app/src/app/layout.js`](../../app/src/app/layout.js)) |
+| `NEXT_PUBLIC_APP_URL` | Canonical app URL (`metadataBase` in [`app/src/app/layout.js`](../../app/src/app/layout.js)). Must be a real absolute URL (e.g. `https://duct-app.youraccount.workers.dev` or your custom domain). Placeholder text like `https://duct-app.<subdomain>.workers.dev` is **invalid** and used to fail the OpenNext build. |
 | `NEXT_PUBLIC_GTM_ID` | Optional. Google Tag Manager container (e.g. `GTM-PKL589SW`); deferred load in [`app/src/lib/analytics-client.js`](../../app/src/lib/analytics-client.js). GA4 and other tags are configured in GTM, not in app code. |
 
 Avoid `NEXT_PUBLIC_DUCT_API_KEY` in production if possible (key is exposed to every browser); prefer a server-side API proxy later ([`app/README.md`](../../app/README.md)).
@@ -100,7 +100,39 @@ Ephemeral disk: `backend/data/` is not durable for multi-instance production; pl
 
 ### `backend/railway.json`
 
-Checked in as [config-as-code](https://docs.railway.com/reference/config-as-code): `RAILPACK` builder, `watchPatterns` for Python and Poetry lockfiles (service root should still be **`backend`** in Railway), start command `poetry run uvicorn server:app --host 0.0.0.0 --port $PORT`, and `healthcheckPath` `/health`.
+Checked in as [config-as-code](https://docs.railway.com/reference/config-as-code): `RAILPACK` builder, `watchPatterns` for Python and Poetry lockfiles, start command `poetry run uvicorn server:app --host 0.0.0.0 --port $PORT`, and `healthcheckPath` `/health`.
+
+**Replica CPU / memory** can be set in the same file via `deploy.limitOverride.containers` (see [Railway `railway.schema.json`](https://railway.com/railway.schema.json)): `cpu` is a number (vCPU), `memoryBytes` is bytes (e.g. `1073741824` = 1 GiB). The repo pins **`numReplicas`: 1** and **1 GiB** RAM for MVP; raise `memoryBytes` if the process OOMs during heavy reports or LLM calls. Dashboard **Replica Limits** can still apply; config-as-code overrides per Railway’s merge rules—confirm on the deployment detail page which values won.
+
+### Monorepo: Root Directory is required
+
+This repo is a monorepo (`app/`, `backend/`, `site/`, …). Railway must build **only** `backend/` for the API service.
+
+1. Open the **API service** → **Settings**.
+2. Set **Root Directory** to **`backend`** (exactly that string).
+3. Redeploy.
+
+If **Root Directory** is empty, the build uses the **repository root**. Then:
+
+- Logs may show: `skipping 'railway.json' at 'backend/railway.json' as it is not rooted at a valid path` with `root_dir=`.
+- **Railpack** sees the whole tree and may fail with **“could not determine how to build the app”** because there is no single `pyproject.toml` at the repo root.
+
+Per Railway’s [monorepo guide](https://docs.railway.com/guides/monorepo): set the service **root directory** so Railway only uses that folder for the deployment. If you ever keep the service root at the repo root instead, their docs note you may need an **absolute** path to config (e.g. `/backend/railway.toml`) because **“The Railway Config File does not follow the Root Directory path”** in that setup. With **Root Directory = `backend`**, [`backend/railway.json`](../../backend/railway.json) is at the root of the build context and should be detected without extra path settings.
+
+### Watch paths (when to redeploy the API)
+
+[Watch paths](https://docs.railway.com/builds/build-configuration#configure-watch-paths) are **gitignore-style** patterns. Important: **even if Root Directory is `backend`, patterns are still evaluated from the repository root** (`/` in their docs = repo root). So use a **`backend/`** prefix, not bare `**/*.py` (that would match Python files anywhere in the monorepo and redeploy the API on unrelated changes).
+
+Recommended patterns (one per line in the Railway UI **Watch Paths** field, or use [`backend/railway.json`](../../backend/railway.json) `build.watchPatterns`):
+
+```gitignore
+backend/**/*.py
+backend/pyproject.toml
+backend/poetry.lock
+backend/railway.json
+```
+
+If you leave Watch Paths **empty**, every push to the connected branch can trigger a deploy (behavior depends on Railway’s defaults). Scoped patterns avoid redeploying the API when only `app/`, `site/`, or docs change.
 
 ---
 
