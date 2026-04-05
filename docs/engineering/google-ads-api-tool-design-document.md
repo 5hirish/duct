@@ -1,5 +1,6 @@
 # Google Ads API — Tool Design Document
 
+**Company:** Alleviate Lab  
 **Product:** Duct (https://getduct.ai)  
 **Document version:** 1.0  
 **Last updated:** April 2026  
@@ -10,7 +11,7 @@ Word copy (with embedded prototype image): [`google-ads-api-tool-design-document
 
 ## 1. Company Name
 
-**Duct** (public site: https://getduct.ai)
+**Alleviate Lab** (product: Duct — https://getduct.ai)
 
 ---
 
