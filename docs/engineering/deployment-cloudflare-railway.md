@@ -45,6 +45,10 @@ Already in the tree:
 | [`app/public/_headers`](../../app/public/_headers) | Long cache for `/_next/static/*` |
 | [`.github/workflows/deploy-cloudflare-app.yml`](../../.github/workflows/deploy-cloudflare-app.yml) | Push to `main` (paths under `app/`) or manual dispatch: OpenNext build + `wrangler-action` deploy |
 | [`backend/railway.json`](../../backend/railway.json) | Railway config-as-code: `RAILPACK`, watch patterns, uvicorn start, `/health` check |
+| [`scripts/bootstrap_env_test.sh`](../../scripts/bootstrap_env_test.sh) | Copy `backend/.env` → `backend/.env.test`, `app/.env.local` → `app/.env.test` (gitignored) |
+| [`scripts/push_env_to_github.py`](../../scripts/push_env_to_github.py) | Allowlisted keys from `.env.test` → `gh secret` / `gh variable` |
+| [`scripts/push_env_to_railway.py`](../../scripts/push_env_to_railway.py) | Full `backend/.env.test` → Railway variables + redeploy |
+| [`scripts/push_app_env_to_cloudflare.py`](../../scripts/push_app_env_to_cloudflare.py) | Load `app/.env.test`, `npm ci`, OpenNext build, `wrangler deploy` |
 
 **R2:** Create bucket `duct-next-cache` in Cloudflare (or change `bucket_name` in `wrangler.jsonc` to match).
 
@@ -134,6 +138,76 @@ Connect the repo in Railway; pick the production branch. Optional **Wait for CI*
 ### OAuth (Google Cloud Console)
 
 When URLs are final, update authorized **redirect URIs** and **JavaScript origins** to match Railway + Cloudflare hosts.
+
+---
+
+## Local env sync (bootstrap + push)
+
+Use this when you want to refresh **gitignored** `.env.test` files from local dev envs, then push to **GitHub** (CI), **Railway**, and **Cloudflare** without hand-typing the dashboards.
+
+**Never commit** `backend/.env.test`, `app/.env.test`, or `.env.prod`. [`.gitignore`](../../.gitignore) already ignores `.env.*`; do not add `!.env.test`.
+
+### 1. Bootstrap `.env.test` from dev files
+
+From repo root:
+
+```bash
+./scripts/bootstrap_env_test.sh
+```
+
+- Copies `backend/.env` → `backend/.env.test`
+- Copies `app/.env.local` → `app/.env.test`
+- Refuses to overwrite unless you pass **`--force`**
+
+Edit the `.env.test` files afterward for production URLs if they differ from local dev.
+
+### 2. Push allowlisted keys to GitHub (Actions)
+
+Requires [`gh`](https://cli.github.com/) and `gh auth login` with permission to set secrets/variables on this repo.
+
+```bash
+python3 scripts/push_env_to_github.py
+```
+
+- Reads **both** `backend/.env.test` and `app/.env.test` (later file wins on duplicate keys).
+- **Secrets** (`gh secret set`): `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `NEXT_PUBLIC_DUCT_API_KEY`
+- **Variables** (`gh variable set`): every other `NEXT_PUBLIC_*` key present (e.g. `NEXT_PUBLIC_API_BASE`, `NEXT_PUBLIC_APP_URL`)
+
+All other keys (e.g. `DUCT_API_KEY`, Google, LLM) are **not** sent to GitHub.
+
+Use **`--dry-run`** to print what would happen without calling `gh`.
+
+### 3. Push full backend env to Railway
+
+Requires [Railway CLI](https://docs.railway.com/guides/cli) and `railway link` from the **`backend/`** service context.
+
+```bash
+python3 scripts/push_env_to_railway.py
+```
+
+- Default file: `backend/.env.test` (override with `--file`)
+- Sets each key with `railway variable set KEY --stdin --skip-deploys`, then runs **`railway redeploy -y`** (skip redeploy with `--no-redeploy`, preview with `--dry-run`)
+
+### 4. Build and deploy the app to Cloudflare (local)
+
+Requires Node, `wrangler login` (or `CLOUDFLARE_API_TOKEN` in your environment), and the R2 bucket.
+
+```bash
+python3 scripts/push_app_env_to_cloudflare.py
+```
+
+- Default file: `app/.env.test`
+- Runs `npm ci`, `npx opennextjs-cloudflare build`, `npx wrangler deploy` under **`app/`** with env vars from the file merged into the process (so `NEXT_PUBLIC_*` are inlined at build time).
+
+Use **`--dry-run`** to list keys and commands only.
+
+### Suggested order
+
+1. Bootstrap `.env.test`
+2. Adjust values for production
+3. `push_env_to_railway.py` (API URL stable for `NEXT_PUBLIC_API_BASE`)
+4. `push_env_to_github.py` then push `main` or run **Deploy Cloudflare App** workflow (CI build uses GitHub Variables)
+5. Either rely on CI for the Worker, or `push_app_env_to_cloudflare.py` for a direct Wrangler deploy from your machine
 
 ---
 
