@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import GoogleAdsReport from "../../components/GoogleAdsReport";
-import { fetchGoogleAdsAccounts, generateReport } from "../../lib/api";
-import { saveLocalReport, generateSlug } from "../../lib/localReports";
+import GoogleAdsReport from "../../../components/GoogleAdsReport";
+import { fetchGoogleAdsAccounts, generateReport } from "../../../lib/api";
+import { saveLocalReport, generateSlug } from "../../../lib/localReports";
 
 const GOALS = [
   {

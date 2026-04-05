@@ -33,6 +33,16 @@ class Configs(BaseSettings):
     google_ads_customer_id: str = ""
     google_ads_login_customer_id: str = ""
 
+    # Google Sign-In (user identity, separate from connector OAuth)
+    google_signin_redirect_uri: str = Field(
+        default="http://localhost:8000/auth/signin/google/callback",
+    )
+    jwt_secret: str = ""
+
+    # Cloudflare Turnstile (bot protection)
+    turnstile_site_key: str = ""
+    turnstile_secret_key: str = ""
+
     # Protects /api/* routes (header X-API-Key). Same value the Next app sends as X-API-Key.
     duct_api_key: str = ""
 

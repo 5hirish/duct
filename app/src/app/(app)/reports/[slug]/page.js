@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { REPORT_NAV_TRANSITION_TYPES } from "../../../lib/reportNavTransition";
-import { getReportBySlug } from "../../../lib/reports";
-import GoogleAdsReport from "../../../components/GoogleAdsReport";
-import LocalReportDetail from "../../../components/LocalReportDetail";
+import { REPORT_NAV_TRANSITION_TYPES } from "../../../../lib/reportNavTransition";
+import { getReportBySlug } from "../../../../lib/reports";
+import GoogleAdsReport from "../../../../components/GoogleAdsReport";
+import LocalReportDetail from "../../../../components/LocalReportDetail";
 
 export const dynamic = "force-dynamic";
 

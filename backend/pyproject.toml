@@ -23,6 +23,8 @@ langchain = "^1.0"
 langchain-openai = "^1.0"
 langchain-google-genai = "^4.2"
 langchain-anthropic = "^1.4"
+pyjwt = "^2.8"
+httpx = "^0.28"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^9"

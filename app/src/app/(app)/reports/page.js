@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { listReports } from "../../lib/reports";
-import ReportsList from "../../components/ReportsList";
+import { listReports } from "../../../lib/reports";
+import ReportsList from "../../../components/ReportsList";
 
 export const dynamic = "force-dynamic";
 
