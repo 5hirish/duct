@@ -4,8 +4,19 @@ import { ProductAnalytics } from "../components/ProductAnalytics";
 
 const gtmId = process.env.NEXT_PUBLIC_GTM_ID;
 
+/** CI must not use placeholder hosts (e.g. `<subdomain>`); `new URL()` throws and breaks `next build`. */
+function metadataBaseUrl() {
+  const raw = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (!raw) return "https://getduct.ai";
+  try {
+    return new URL(raw).toString();
+  } catch {
+    return "https://getduct.ai";
+  }
+}
+
 export const metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://getduct.ai"),
+  metadataBase: new URL(metadataBaseUrl()),
   title: {
     default: "Duct App",
     template: "%s | Duct App",
@@ -71,4 +82,3 @@ export default function RootLayout({ children }) {
     </html>
   );
 }
-
