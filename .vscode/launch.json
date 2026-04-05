@@ -1,15 +1,17 @@
 {
   "version": "0.2.0",
-  "configurations": [
+  "compounds": [
     {
-      "name": "Duct: App + API (API first)",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "npm run dev",
-      "cwd": "${workspaceFolder}/app",
-      "preLaunchTask": "Backend: uvicorn",
+      "name": "Duct: App + API",
+      "configurations": [
+        "Backend: FastAPI (uvicorn)",
+        "App: dev server"
+      ],
+      "stopAll": true,
       "postDebugTask": "Backend: stop uvicorn (8000)"
-    },
+    }
+  ],
+  "configurations": [
     {
       "name": "Backend: FastAPI (uvicorn)",
       "type": "node-terminal",

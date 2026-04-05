@@ -1,21 +1,63 @@
 .DS_Store
 Thumbs.db
+ehthumbs.db
+Desktop.ini
 
 # Python
 **/__pycache__/
 **/*.pyc
 **/*.pyo
+**/.pytest_cache/
+**/.ruff_cache/
+**/.mypy_cache/
+*.egg-info/
+.eggs/
+dist/
+build/
+htmlcov/
+.coverage
+.coverage.*
+*.cover
 *.swp
 *.swo
+
+# Virtual environments
+.venv/
+venv/
+**/.venv/
+**/venv/
+
+# Node / Next.js
+**/node_modules/
+**/.next/
+**/out/
+*.log
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-debug.log*
+
+# Playwright (site e2e; any package)
+**/playwright-report/
+**/test-results/
+**/blob-report/
+**/playwright/.cache/
+
+# Deploy / local tooling
+.vercel/
+
+# IDEs and editors
 .idea/
 .history/
-.playwright-mcp/
 
 # Claude Code
 .claude/cache/
 
 # Cursor local state
 .cursor/hooks/state/
+.playwright-mcp/
 
 # Environment and local secrets
 .env
@@ -24,8 +66,3 @@ Thumbs.db
 **/.env.*
 !**/.env.example
 client_secret_*.json
-
-# Node / Playwright
-**/node_modules/
-site/playwright-report/
-site/test-results/

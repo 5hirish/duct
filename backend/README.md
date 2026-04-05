@@ -4,13 +4,15 @@ This directory contains the Python reporting and synthesis side of Duct.
 
 ## What lives here now
 
-- `scripts/` — report-generation entry points
-- `briefs/` — typed schemas and prompt templates
-- `reports/` — generated report artifacts
+- `service/` — connectors, Google Ads fetch/brief pipeline
+- `data/<connector_id>/raw/demo_raw_payload.json` — static raw demo input (Google Ads)
+- `utils/` — shared formatting and metric helpers
+- `service/google/schema.py` — Google Ads brief payload types
+- `data/google_ads/google-ads-report.json` — checked-in demo brief; `raw/` + `generated/` for input / API output
 
 ## Product role
 
-This is the product core described in `docs/mvp-plan.md`.
+This is the product core described in `docs/mvp/mvp-plan.md`.
 
 - read from client-owned data destinations
 - normalize data into stable internal payloads
@@ -46,7 +48,14 @@ This is the product core described in `docs/mvp-plan.md`.
 - Marketing lives in `site/`.
 - Future product UI lives in `app/`.
 
+## Production deploy
+
+Railway + Railpack (Poetry) is the intended API host; pairing with the Next app on Cloudflare Workers is documented in [`docs/engineering/deployment-cloudflare-railway.md`](../docs/engineering/deployment-cloudflare-railway.md).
+
+Service root in Railway should be **`backend`** so [`railway.json`](railway.json) applies.
+
 ## Local guidance
 
+- **Python:** 3.12 or 3.13 (`>=3.12,<3.14` in `pyproject.toml`). A `backend/.python-version` file pins **3.12** for pyenv; CI uses 3.12.
 - Cursor instructions: `backend/AGENTS.md`
 - Claude Code instructions: `backend/CLAUDE.md`

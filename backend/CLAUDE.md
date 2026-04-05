@@ -4,7 +4,7 @@ Python reporting and synthesis backend for Duct.
 
 ## Product role
 
-Per `docs/mvp-plan.md`, this backend is the actual product engine:
+Per `docs/mvp/mvp-plan.md`, this backend is the actual product engine:
 
 - read from client-owned destinations with read-only access
 - normalize data into typed internal models
@@ -35,19 +35,21 @@ The current and planned backend stack is:
 
 ## Current directory structure
 
-- `scripts/` — MVP entry points
-- `briefs/schemas/` — typed internal and output schemas
-- `briefs/templates/` — prompt contracts and brief templates
-- `reports/` — generated JSON artifacts (no HTML files)
+- `service/google/brief.py` — Google Ads brief normalization (loads demo from `data/<connector_id>/`, default `google_ads`)
+- `service/google/schema.py` — typed Google Ads brief payload (dataclasses / JSON contract)
+- `agents/reporter/prompts.py` — synthesis system + user prompts (e.g. Google Ads weekly brief)
+- `routes/auth.py` — OAuth by connector (`/auth/connectors/{connector_id}/oauth/...`)
+- `routes/report.py` — `POST /api/report/{connector_id}` (e.g. `google_ads` or `google-ads` in the path segment)
+- `data/google_ads/` — `google-ads-report.json` (demo brief), `raw/demo_raw_payload.json`, `generated/` for API writes
 
 ## Artifact contract
 
-Scripts write JSON to `reports/`. The app reads those files directly (filesystem today, API later).
+The report API writes Google Ads brief JSON to `data/google_ads/generated/`. The app lists top-level `*.json` briefs in `data/google_ads/` (e.g. `google-ads-report.json`).
 
 The JSON contract:
 - `source_metadata.theme` — theme key (`paid_ads`, `product_intelligence`, `organic_growth`); the app resolves accent colors from this
 - `source_metadata.generated_at` — ISO 8601 timestamp
-- All other fields follow the typed schemas in `briefs/schemas/`
+- All other fields follow the typed models in `service/google/schema.py`
 
 Do not write HTML from the backend. Do not reference `themes.json` or HTML templates — those have moved to the app.
 

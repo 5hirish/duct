@@ -19,7 +19,7 @@ Most teams have the data. What they lack is the synthesis. Every tool speaks its
 | `site/` | Static marketing site, landing pages, blog, shared assets |
 | `app/` | Next.js report viewer app (current no-auth shell) |
 | `backend/` | Python reporting and synthesis MVP |
-| `docs/` | Product, MVP, and implementation plans |
+| `docs/` | Strategy, GTM, MVP, engineering plans, design specs, and LLM guides ([index](docs/README.md)) |
 
 Directory-local agent docs live inside the main code areas:
 - `site/AGENTS.md` and `site/CLAUDE.md`
@@ -46,10 +46,11 @@ Directory-local agent docs live inside the main code areas:
 
 | Path | Purpose |
 |------|---------|
-| `backend/scripts/google_ads_fetch.py` | Convert manual Google Ads exports into raw JSON |
-| `backend/scripts/google_ads_brief.py` | Normalize Google Ads data and render report artifacts |
-| `backend/briefs/` | Typed schemas and prompt templates |
-| `backend/reports/` | Generated report artifacts |
+| `backend/data/<connector_id>/raw/demo_raw_payload.json` | Static demo raw payload (Google Ads) |
+| `backend/service/google/brief.py` | Normalize Google Ads JSON into typed brief payloads |
+| `backend/service/google/fetch.py` | Google Ads API campaign fetch (used by API routes) |
+| `backend/service/google/schema.py` | Google Ads brief payload types (dataclasses) |
+| `backend/data/google_ads/` | `google-ads-report.json` (demo brief), `raw/`, `generated/` |
 
 ## Analytics
 

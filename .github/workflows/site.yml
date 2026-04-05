@@ -16,10 +16,10 @@ on:
   workflow_call:
 
 jobs:
-  validate:
-    name: Validate HTML pages & sitemap
+  site:
+    name: Validate HTML, sitemap, and Playwright smoke
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 20
 
     steps:
       - name: "☁️ Checkout repository"
@@ -55,16 +55,6 @@ jobs:
           print('All sitemap <loc> values look correct.')
           EOF
 
-  playwright-smoke:
-    name: Playwright smoke tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    needs: validate
-
-    steps:
-      - name: "☁️ Checkout repository"
-        uses: actions/checkout@v4
-
       - name: "🟢 Setup Node.js"
         uses: actions/setup-node@v4
         with:
@@ -90,4 +80,3 @@ jobs:
             site/playwright-report/
             site/test-results/
           if-no-files-found: ignore
-

@@ -20,7 +20,7 @@ DYNAMIC_META = {"blog/post.html"}
 ERROR_PAGES = {"404.html"}
 
 REQUIRED_OG = {"og:type", "og:url", "og:title", "og:description", "og:image", "og:site_name"}
-REQUIRED_TWITTER = {"twitter:card", "twitter:title", "twitter:description", "twitter:site", "twitter:image"}
+REQUIRED_TWITTER = {"twitter:card", "twitter:title", "twitter:description", "twitter:image"}
 
 CANONICAL_BASE = "https://getduct.ai"
 
