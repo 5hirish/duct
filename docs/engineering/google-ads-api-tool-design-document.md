@@ -4,7 +4,7 @@
 **Document version:** 1.0  
 **Last updated:** April 2026  
 
-This document follows the structure Google’s token application materials use as a reference. **Word copies (with embedded prototype image):** [`google-ads-api-tool-design-document.docx`](google-ads-api-tool-design-document.docx) (recommended) and [`google-ads-api-tool-design-document.doc`](google-ads-api-tool-design-document.doc) (legacy Word format for uploaders that require `.doc`). Regenerate with `python scripts/build_google_ads_design_docx.py` after `pip install python-docx`. If your tool is **externally accessible**, include **screenshots or mock-ups** (see §7).
+This document follows the structure Google’s token application materials use as a reference. **Word copies (with embedded prototype image):** [`google-ads-api-tool-design-document.docx`](google-ads-api-tool-design-document.docx) (recommended) and [`google-ads-api-tool-design-document.doc`](google-ads-api-tool-design-document.doc) (legacy Word format for uploaders that require `.doc`). If your tool is **externally accessible**, include **screenshots or mock-ups** (see §7).
 
 ---
 
