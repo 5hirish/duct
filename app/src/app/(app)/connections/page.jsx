@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { BASE, fetchGoogleAdsAccounts } from "../../lib/api";
+import { BASE, fetchGoogleAdsAccounts } from "../../../lib/api";
 
 export default function ConnectionsPage() {
   /** False until client mount — keeps SSR + first client paint identical (avoids hydration mismatch). */
