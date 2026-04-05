@@ -66,3 +66,6 @@ pnpm-debug.log*
 **/.env.*
 !**/.env.example
 client_secret_*.json
+
+.venv-docx/
+.vendor/
