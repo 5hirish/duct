@@ -73,6 +73,7 @@ Configure in the Cloudflare dashboard (or Wrangler) for the Worker:
 |----------|---------|
 | `NEXT_PUBLIC_API_BASE` | Railway API URL (`https://…`) |
 | `NEXT_PUBLIC_APP_URL` | Canonical app URL (`metadataBase` in [`app/src/app/layout.js`](../../app/src/app/layout.js)) |
+| `NEXT_PUBLIC_GTM_ID` | Optional. Google Tag Manager container (e.g. `GTM-PKL589SW`); deferred load in [`app/src/lib/analytics-client.js`](../../app/src/lib/analytics-client.js). GA4 and other tags are configured in GTM, not in app code. |
 
 Avoid `NEXT_PUBLIC_DUCT_API_KEY` in production if possible (key is exposed to every browser); prefer a server-side API proxy later ([`app/README.md`](../../app/README.md)).
 

@@ -1,5 +1,9 @@
 import "./globals.css";
 
+import { ProductAnalytics } from "../components/ProductAnalytics";
+
+const gtmId = process.env.NEXT_PUBLIC_GTM_ID;
+
 export const metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://getduct.ai"),
   title: {
@@ -49,7 +53,21 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {gtmId ? (
+          <noscript>
+            <iframe
+              src={`https://www.googletagmanager.com/ns.html?id=${gtmId}`}
+              height="0"
+              width="0"
+              style={{ display: "none", visibility: "hidden" }}
+              title="Google Tag Manager"
+            />
+          </noscript>
+        ) : null}
+        <ProductAnalytics />
+        {children}
+      </body>
     </html>
   );
 }

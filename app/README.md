@@ -23,6 +23,8 @@ Open: `http://localhost:3000/reports`
 
 OpenNext + Wrangler live in this directory (`wrangler.jsonc`, `open-next.config.ts`). Full architecture, env vars, and GitHub Actions are documented in [`docs/engineering/deployment-cloudflare-railway.md`](../docs/engineering/deployment-cloudflare-railway.md). CI deploy: [`.github/workflows/deploy-cloudflare-app.yml`](../.github/workflows/deploy-cloudflare-app.yml).
 
+Optional: `NEXT_PUBLIC_GTM_ID` for Google Tag Manager (GA4 etc. live in the GTM container). See [`src/lib/analytics-client.js`](src/lib/analytics-client.js).
+
 - Local prod-like: `npm run preview:cf`
 - Deploy: `npm run deploy:cf` (after `wrangler login`)
 

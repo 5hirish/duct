@@ -2,6 +2,7 @@
 # Requires GitHub repo secrets: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
 # Requires GitHub repo Variables (Settings → Secrets and variables → Actions → Variables):
 #   NEXT_PUBLIC_API_BASE, NEXT_PUBLIC_APP_URL (inlined at build time)
+# Optional: NEXT_PUBLIC_GTM_ID (GA4 and other tags configured in GTM)
 #
 # Docs: docs/engineering/deployment-cloudflare-railway.md
 
@@ -54,6 +55,7 @@ jobs:
         env:
           NEXT_PUBLIC_API_BASE: ${{ vars.NEXT_PUBLIC_API_BASE }}
           NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
+          NEXT_PUBLIC_GTM_ID: ${{ vars.NEXT_PUBLIC_GTM_ID }}
         run: |
           npm ci
           npx opennextjs-cloudflare build
