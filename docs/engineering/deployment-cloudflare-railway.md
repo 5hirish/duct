@@ -1,13 +1,32 @@
-# Deployment: Cloudflare Workers (app) + Railway (backend)
+# Runbook: Cloudflare Workers (app) + Railway (API)
 
-Production shape for this monorepo:
+**What this doc is for:** Day-to-day **redeploys**, **env / secret updates**, and **sanity checks**. Production wiring for this monorepo is already in place; treat the sections below as the single place to come back to when you need commands or variable names—not a one-time tutorial.
 
-- **[`app/`](../../app/)** — Next.js report viewer on **Cloudflare Workers** via [OpenNext for Cloudflare](https://opennext.js.org/cloudflare) (`@opennextjs/cloudflare`).
-- **[`backend/`](../../backend/)** — FastAPI API on **Railway** using **Railpack + Poetry** (no Docker in `backend/` so Railway does not auto-pick a Dockerfile).
+**Stack (unchanged):**
 
-Official references:
+- **[`app/`](../../app/)** — Next.js on **Cloudflare Workers** ([OpenNext for Cloudflare](https://opennext.js.org/cloudflare)).
+- **[`backend/`](../../backend/)** — FastAPI on **Railway** (Railpack + Poetry; no `backend/Dockerfile` so Railway does not auto-pick Docker).
 
-- Cloudflare Workers + GitHub Actions: [External CI/CD](https://developers.cloudflare.com/workers/wrangler/ci-cd/) → [GitHub Actions](https://developers.cloudflare.com/workers/ci-cd/external-cicd/github-actions/)
+---
+
+## Quick reference (redeploy & env)
+
+| Goal | What to do |
+|------|------------|
+| **Ship new app code** (Git is connected) | Push to the branch Workers Builds watches; Cloudflare runs build + deploy. Avoid a second pipeline (e.g. Actions `wrangler deploy`) for the same Worker—**double deploys**. |
+| **Ship new app code** (from your laptop) | `python3 scripts/push_app_env_to_cloudflare.py --file app/.env.prod` (or `.env.test`). Requires Node, `wrangler login` (or API token), R2; put **`CLOUDFLARE_ACCOUNT_ID`** in that file if Wrangler can see multiple accounts. |
+| **Ship new API code** (Git is connected) | Push to the branch Railway watches (`backend/**` patterns in [`backend/railway.json`](../../backend/railway.json)). |
+| **Refresh API env vars only** | `cd` repo root → `python3 scripts/push_env_to_railway.py --file backend/.env.prod`. Needs [Railway CLI](https://docs.railway.com/guides/cli), `railway login`, **`railway link`** from [`backend/`](../../backend/). Adds `--no-redeploy` to set vars without redeploy; `--dry-run` to preview. |
+| **Refresh app build-time env** (`NEXT_PUBLIC_*`) | Same as “from your laptop” row: OpenNext **inlines** those at build, so you **rebuild + deploy** via `push_app_env_to_cloudflare.py` (or update **Workers Builds → build variables** and push). Runtime **Variables and secrets** on the Worker often stay empty—see [Worker environment](#worker-environment). |
+| **Copy local dev → gitignored `.env.test`** | `./scripts/bootstrap_env_test.sh` ([details](#local-env-sync-bootstrap--push)). |
+
+**Smoke checks:** deployed app loads; on the API host **`GET /health`** → `200` and **`GET /`** returns JSON metadata. OAuth redirect URIs in Google Cloud must match final Railway/Cloudflare URLs ([OAuth](#oauth-google-cloud-console)).
+
+---
+
+## Official references
+
+- Cloudflare Workers Builds (Git): [Builds](https://developers.cloudflare.com/workers/ci-cd/builds/) → [Configuration](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/) (optional: [GitHub Actions](https://developers.cloudflare.com/workers/ci-cd/external-cicd/github-actions/) for external CI)
 - Railway Git deploys: [GitHub autodeploys](https://docs.railway.com/guides/github-autodeploys)
 - Railway config as code: [railway.toml / railway.json](https://docs.railway.com/reference/config-as-code)
 
@@ -43,18 +62,18 @@ Already in the tree:
 | [`app/open-next.config.ts`](../../app/open-next.config.ts) | R2 incremental cache for OpenNext |
 | [`app/package.json`](../../app/package.json) | `preview:cf`, `deploy:cf` scripts; devDependencies `@opennextjs/cloudflare`, `wrangler` |
 | [`app/public/_headers`](../../app/public/_headers) | Long cache for `/_next/static/*` |
-| [`.github/workflows/deploy-cloudflare-app.yml`](../../.github/workflows/deploy-cloudflare-app.yml) | Push to `main` (paths under `app/`) or manual dispatch: OpenNext build + `wrangler-action` deploy |
+| Cloudflare **Workers Builds** (dashboard) | Connect Git repo; **root directory** `app`; build `npm ci && npx opennextjs-cloudflare build`; deploy `npx wrangler deploy`; set **build variables** for `NEXT_PUBLIC_*`. Optional [build watch paths](https://developers.cloudflare.com/workers/ci-cd/builds/build-watch-paths/) e.g. `app/**` |
 | [`backend/railway.json`](../../backend/railway.json) | Railway config-as-code: `RAILPACK`, watch patterns, uvicorn start, `/health` check |
 | [`scripts/bootstrap_env_test.sh`](../../scripts/bootstrap_env_test.sh) | Copy `backend/.env` → `backend/.env.test`, `app/.env.local` → `app/.env.test` (gitignored) |
 | [`scripts/push_env_to_github.py`](../../scripts/push_env_to_github.py) | Allowlisted keys from `.env.test` → `gh secret` / `gh variable` |
 | [`scripts/push_env_to_railway.py`](../../scripts/push_env_to_railway.py) | Full `backend/.env.test` → Railway variables + redeploy |
-| [`scripts/push_app_env_to_cloudflare.py`](../../scripts/push_app_env_to_cloudflare.py) | Load `app/.env.test`, `npm ci`, OpenNext build, `wrangler deploy` |
+| [`scripts/push_app_env_to_cloudflare.py`](../../scripts/push_app_env_to_cloudflare.py) | Load `app/.env.test` (or `--file`), `npm ci`, OpenNext build, `wrangler deploy`; include **`CLOUDFLARE_ACCOUNT_ID`** in that file when Wrangler has multiple accounts |
 
 **R2:** Create bucket `duct-next-cache` in Cloudflare (or change `bucket_name` in `wrangler.jsonc` to match).
 
 ---
 
-## Part 1 — Cloudflare Worker (manual or CI)
+## Part 1 — Cloudflare Worker (Workers Builds, manual, or local)
 
 ### One-off / local
 
@@ -67,7 +86,14 @@ From `app/`:
 
 ### Worker environment
 
-Configure in the Cloudflare dashboard (or Wrangler) for the Worker:
+**Why “Variables and secrets” looks empty:** In the dashboard, **Settings → Variables and secrets** configures **runtime** values (`env` on each request). For `duct-app`, almost everything you care about is **`NEXT_PUBLIC_*`**, which Next.js **inlines into the JavaScript bundle at build time**. After `opennextjs-cloudflare build` + `wrangler deploy`, those values already live inside the uploaded Worker/assets—they are **not** shown as separate runtime variables, so that section often stays **empty** and that is normal.
+
+- **Deploy from your machine** (`push_app_env_to_cloudflare.py` or `npm run deploy:cf`): put `NEXT_PUBLIC_*` and `CLOUDFLARE_ACCOUNT_ID` (for Wrangler account selection) in the env file you use **during the build**; nothing extra is required in the runtime Variables UI.
+- **Workers Builds (Git)** below: add the same keys as **build** variables / build secrets so the build step sees them.
+
+Other Worker config (R2 bucket, self-reference service) lives under **Bindings** in `wrangler.jsonc`, not as plain text vars.
+
+Reference — what those build-time vars mean:
 
 | Variable | Purpose |
 |----------|---------|
@@ -77,7 +103,7 @@ Configure in the Cloudflare dashboard (or Wrangler) for the Worker:
 
 Avoid `NEXT_PUBLIC_DUCT_API_KEY` in production if possible (key is exposed to every browser); prefer a server-side API proxy later ([`app/README.md`](../../app/README.md)).
 
-**Build-time note:** `NEXT_PUBLIC_*` is inlined at **Next/OpenNext build time**. In **GitHub Actions**, pass these as `env` on the build step (or non-secret `vars` in `wrangler.jsonc` for safe values only).
+**Build-time note:** `NEXT_PUBLIC_*` is inlined at **Next/OpenNext build time**. With **Workers Builds**, define them under the Worker’s **build variables / secrets** (dashboard), not only runtime vars. Do not commit secrets into `wrangler.jsonc` `vars` for production.
 
 ### CORS
 
@@ -94,9 +120,29 @@ Avoid `NEXT_PUBLIC_DUCT_API_KEY` in production if possible (key is exposed to ev
 
 ### Railway environment
 
-Mirror [`backend/config.py`](../../backend/config.py): `FRONTEND_ORIGIN`, `DUCT_API_KEY`, Google OAuth and Ads, LLM keys, etc. **`GOOGLE_OAUTH_REDIRECT_URI`** must use the **Railway public host** for the OAuth callback path you expose.
+Mirror [`backend/config.py`](../../backend/config.py): `FRONTEND_ORIGIN`, **`API_PUBLIC_URL`** (public API origin, e.g. `https://api.getduct.ai`), `DUCT_API_KEY`, Google OAuth and Ads, LLM keys, etc. Local dev: the backend loads **`backend/.env`** then **`backend/.env.local`** (later wins). Railway/production variables are the process environment only (no dotenv files on the host unless you add them). If **`GOOGLE_OAUTH_REDIRECT_URI`** / **`GOOGLE_SIGNIN_REDIRECT_URI`** are omitted, they default to `{API_PUBLIC_URL}/auth/google/callback` and `{API_PUBLIC_URL}/auth/signin/google/callback`. Google Cloud **authorized redirect URIs** must list the **full** URLs you use (Google does not accept path-only values). Override the env vars if you need non-default paths.
 
 Ephemeral disk: `backend/data/` is not durable for multi-instance production; plan object storage or a DB if you scale beyond one instance.
+
+### Public API routes (root, health, OpenAPI)
+
+- **`GET /`** — Returns public JSON: `service`, `version`, and `links`. `links.health` is always `/health`. `links.openapi` and `links.docs` appear only when OpenAPI is enabled (see below).
+- **`GET /health`** — Used by Railway as `healthcheckPath` in [`backend/railway.json`](../../backend/railway.json).
+
+**OpenAPI / Swagger UI** — Off by default. The app does not register `/openapi.json`, `/docs`, or `/redoc` unless you opt in:
+
+| Variable | Purpose |
+|----------|---------|
+| `EXPOSE_OPENAPI_DOCS` | Set to `true` to serve OpenAPI and Swagger/ReDoc. Leave unset or `false` in production unless you have a specific need. |
+
+If you enable docs in any shared or public environment, protect them with HTTP Basic auth (otherwise anyone with the URL can read your full route surface):
+
+| Variable | Purpose |
+|----------|---------|
+| `OPENAPI_DOCS_BASIC_USER` | Optional; default `docs`. Same as **`DUCT_OPENAPI_DOCS_BASIC_USER`** if you prefer a `DUCT_` prefix. |
+| `OPENAPI_DOCS_BASIC_PASSWORD` | When non-empty, `/docs`, `/redoc`, `/openapi.json`, and paths under `/docs/` require **HTTP Basic** auth (browser login prompt; `curl -u docs:PASSWORD …`). Uses `secrets.compare_digest` for credentials. Alias: **`DUCT_OPENAPI_DOCS_BASIC_PASSWORD`**. |
+
+**Cloudflare (optional extra layer):** On the API hostname you can add [Cloudflare Access](https://developers.cloudflare.com/cloudflare-one/policies/access/) or WAF/custom rules for `/docs*`, `/redoc*`, and `/openapi.json` (e.g. team login, IP allowlist) in addition to app-level Basic auth.
 
 ### `backend/railway.json`
 
@@ -136,31 +182,26 @@ If you leave Watch Paths **empty**, every push to the connected branch can trigg
 
 ---
 
-## Part 3 — CI/CD (GitHub)
+## Part 3 — CI/CD
 
-### Cloudflare: GitHub Actions (implemented)
+### Cloudflare: Workers Builds (Git) — primary app deploy
 
-Workflow: [`.github/workflows/deploy-cloudflare-app.yml`](../../.github/workflows/deploy-cloudflare-app.yml). Uses [`cloudflare/wrangler-action@v3`](https://github.com/cloudflare/wrangler-action). Do **not** also wire the same Worker to Cloudflare dashboard Git Builds, or you risk double deploys.
+The Next.js Worker is built and deployed from **Cloudflare** when you push to the connected branch (see [Workers Builds](https://developers.cloudflare.com/workers/ci-cd/builds/)). Do **not** re-add a second pipeline (e.g. GitHub Actions `wrangler deploy`) for the same Worker, or you risk **double deploys**.
 
-**Repository secrets** (Settings → Secrets and variables → Actions → Secrets):
+**In the Worker → Settings → Builds (and build variables):**
 
-| Secret | Purpose |
-|--------|---------|
-| `CLOUDFLARE_API_TOKEN` | Workers deploy + **R2** for the OpenNext cache bucket |
-| `CLOUDFLARE_ACCOUNT_ID` | Account ID ([find in dashboard](https://developers.cloudflare.com/fundamentals/account/find-account-and-zone-ids/)) |
+| Setting | Typical value |
+|---------|----------------|
+| Root directory | `app` |
+| Build command | `npm ci && npx opennextjs-cloudflare build` |
+| Deploy command | `npx wrangler deploy` |
+| Build variables | `NEXT_PUBLIC_API_BASE`, `NEXT_PUBLIC_APP_URL`, optional `NEXT_PUBLIC_GTM_ID` |
 
-**Repository variables** (Settings → Secrets and variables → Actions → **Variables**):
+Workers Builds can use an auto-created API token for deploy; R2 for OpenNext cache must be allowed for that token.
 
-| Variable | Purpose |
-|----------|---------|
-| `NEXT_PUBLIC_API_BASE` | Public Railway API URL (`https://…`) — inlined at **build** time |
-| `NEXT_PUBLIC_APP_URL` | Canonical Worker or custom domain URL for the app — inlined at **build** time |
+**Optional:** [Build watch paths](https://developers.cloudflare.com/workers/ci-cd/builds/build-watch-paths/) (e.g. `app/**`) so pushes that only touch `backend/` or `site/` do not rebuild the app.
 
-Set both variables before the first successful deploy; empty values produce an app build without correct API/metadata URLs.
-
-Triggers: `push` to **`main`** when paths match `app/**` or this workflow file; **`workflow_dispatch`** for manual runs.
-
-Docs: [GitHub Actions for Workers](https://developers.cloudflare.com/workers/ci-cd/external-cicd/github-actions/).
+**Optional GitHub mirror:** [`scripts/push_env_to_github.py`](../../scripts/push_env_to_github.py) can still push `NEXT_PUBLIC_*` to repo **Variables** for documentation or other automation; it is **not** required for Workers Builds.
 
 ### Railway: Git autodeploy
 
@@ -176,7 +217,7 @@ When URLs are final, update authorized **redirect URIs** and **JavaScript origin
 
 ## Local env sync (bootstrap + push)
 
-Use this when you want to refresh **gitignored** `.env.test` files from local dev envs, then push to **GitHub** (CI), **Railway**, and **Cloudflare** without hand-typing the dashboards.
+Use this when you want to refresh **gitignored** `.env.test` files from local dev envs, then push to **GitHub** (optional vars), **Railway**, and **Cloudflare** (local Wrangler or dashboard) without retyping everything.
 
 **Never commit** `backend/.env.test`, `app/.env.test`, or `.env.prod`. [`.gitignore`](../../.gitignore) already ignores `.env.*`; do not add `!.env.test`.
 
@@ -194,7 +235,7 @@ From repo root:
 
 Edit the `.env.test` files afterward for production URLs if they differ from local dev.
 
-### 2. Push allowlisted keys to GitHub (Actions)
+### 2. Push allowlisted keys to GitHub (optional)
 
 Requires [`gh`](https://cli.github.com/) and `gh auth login` with permission to set secrets/variables on this repo.
 
@@ -223,14 +264,14 @@ python3 scripts/push_env_to_railway.py
 
 ### 4. Build and deploy the app to Cloudflare (local)
 
-Requires Node, `wrangler login` (or `CLOUDFLARE_API_TOKEN` in your environment), and the R2 bucket.
+Requires Node, `wrangler login` (or `CLOUDFLARE_API_TOKEN` in your environment), the R2 bucket, and **`CLOUDFLARE_ACCOUNT_ID`** in the app env file when your credentials can access more than one Cloudflare account (otherwise Wrangler may prompt interactively). Optional: `--cloudflare-account-id`.
 
 ```bash
 python3 scripts/push_app_env_to_cloudflare.py
 ```
 
-- Default file: `app/.env.test`
-- Runs `npm ci`, `npx opennextjs-cloudflare build`, `npx wrangler deploy` under **`app/`** with env vars from the file merged into the process (so `NEXT_PUBLIC_*` are inlined at build time).
+- Default file: `app/.env.test` (override with `--file`, e.g. `app/.env.prod`)
+- Runs `npm ci`, `npx opennextjs-cloudflare build`, `npx wrangler deploy` under **`app/`** with env vars from the file merged into the process (so `NEXT_PUBLIC_*` and `CLOUDFLARE_ACCOUNT_ID` are available at build/deploy time).
 
 Use **`--dry-run`** to list keys and commands only.
 
@@ -239,8 +280,8 @@ Use **`--dry-run`** to list keys and commands only.
 1. Bootstrap `.env.test`
 2. Adjust values for production
 3. `push_env_to_railway.py` (API URL stable for `NEXT_PUBLIC_API_BASE`)
-4. `push_env_to_github.py` then push `main` or run **Deploy Cloudflare App** workflow (CI build uses GitHub Variables)
-5. Either rely on CI for the Worker, or `push_app_env_to_cloudflare.py` for a direct Wrangler deploy from your machine
+4. Set **`NEXT_PUBLIC_*`** on the Worker’s **Workers Builds** build variables in the Cloudflare dashboard (or run `push_env_to_github.py` only if you still want repo Variables as a mirror)
+5. Push `main` to trigger **Workers Builds**, or run `push_app_env_to_cloudflare.py` for a direct Wrangler deploy from your machine
 
 ---
 
@@ -250,11 +291,14 @@ Use **`--dry-run`** to list keys and commands only.
 
 ---
 
-## Checklist
+## Verification checklist
 
-- [ ] R2 bucket exists and matches `wrangler.jsonc`
-- [ ] Railway service: root `backend`, Railpack, start command, env vars
-- [ ] `FRONTEND_ORIGIN` = Cloudflare app URL; `NEXT_PUBLIC_API_BASE` = Railway URL
+Use after **greenfield setup**, **domain changes**, or when something looks off—not necessarily every deploy.
+
+- [ ] R2 bucket exists and matches [`app/wrangler.jsonc`](../../app/wrangler.jsonc) `bucket_name`
+- [ ] Railway service: **Root Directory** `backend`, Railpack, start command, env vars
+- [ ] `FRONTEND_ORIGIN` = Cloudflare app origin; `NEXT_PUBLIC_API_BASE` = public Railway API URL
 - [ ] Google OAuth redirect URI matches Railway
-- [ ] GitHub secrets + variables for Cloudflare deploy workflow
-- [ ] End-to-end: `/`, `/reports`, API calls from deployed app
+- [ ] OpenAPI: production should leave **`EXPOSE_OPENAPI_DOCS` unset/false**; if enabled, set **`OPENAPI_DOCS_BASIC_PASSWORD`** (and optionally Cloudflare Access on those paths)
+- [ ] Cloudflare Workers Builds: repo connected, root `app`, build/deploy commands, **build** variables for `NEXT_PUBLIC_*`
+- [ ] End-to-end: Worker `/`, `/reports`, API calls from deployed app; **`GET /`** and **`GET /health`** on API

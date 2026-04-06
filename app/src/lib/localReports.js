@@ -1,6 +1,9 @@
 /**
  * Client-side localStorage CRUD for generated reports.
  *
+ * Primary persistence for the /generate flow: JSON from POST /api/generate is saved here.
+ * Replace with a real store when accounts exist.
+ *
  * Reports are stored as an array in localStorage under STORAGE_KEY.
  * Each entry: { slug, payload, savedAt }
  * Capped at MAX_REPORTS; oldest are pruned on save.

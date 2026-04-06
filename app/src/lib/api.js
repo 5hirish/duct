@@ -23,19 +23,6 @@ export async function fetchGoogleAdsAccounts(refreshToken) {
   return payload.accounts ?? [];
 }
 
-export async function runGoogleAdsReport(params) {
-  const res = await fetch(`${BASE}/api/report/google_ads`, {
-    method: "POST",
-    headers: backendApiHeaders({ "Content-Type": "application/json" }),
-    body: JSON.stringify(params),
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || `Server error ${res.status}`);
-  }
-  return res.json();
-}
-
 export async function generateReport(params) {
   const res = await fetch(`${BASE}/api/generate`, {
     method: "POST",

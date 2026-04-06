@@ -1,5 +1,7 @@
 # Plan: Dynamic Account Data Fetching + Gemini 2.5 Flash Synthesis
 
+> **Archived (April 2026).** Early `/run`-era spec; implementation diverged (see [`README.md`](README.md) in this folder).
+
 ## Context
 
 The Duct backend currently generates Google Ads reports from hardcoded demo data or manually exported CSVs — neither works for real client demos or daily use. This plan adds a live data path: a form in the Next.js app where you input a Google Ads account ID + OAuth credentials + date range, a FastAPI backend fetches real campaign data via the Google Ads API, Gemini 2.5 Flash synthesizes the findings into structured JSON, and the existing `GoogleAdsReport.js` renderer displays it unchanged.

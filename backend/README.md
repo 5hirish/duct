@@ -8,7 +8,7 @@ This directory contains the Python reporting and synthesis side of Duct.
 - `data/<connector_id>/raw/demo_raw_payload.json` — static raw demo input (Google Ads)
 - `utils/` — shared formatting and metric helpers
 - `service/google/schema.py` — Google Ads brief payload types
-- `data/google_ads/google-ads-report.json` — checked-in demo brief; `raw/` + `generated/` for input / API output
+- `data/google_ads/google-ads-report.json` — checked-in demo brief; `raw/` for demo input
 
 ## Product role
 
@@ -57,5 +57,8 @@ Service root in Railway should be **`backend`** so [`railway.json`](railway.json
 ## Local guidance
 
 - **Python:** 3.12 or 3.13 (`>=3.12,<3.14` in `pyproject.toml`). A `backend/.python-version` file pins **3.12** for pyenv; CI uses 3.12.
+- **HTTP:** `GET /` returns public API metadata JSON; `GET /health` is the liveness check. OpenAPI (`/docs`, `/openapi.json`) is **disabled** unless `EXPOSE_OPENAPI_DOCS=true` in `.env`. With docs on, set `OPENAPI_DOCS_BASIC_PASSWORD` (and optional `OPENAPI_DOCS_BASIC_USER`) to require Basic auth on those routes.
 - Cursor instructions: `backend/AGENTS.md`
 - Claude Code instructions: `backend/CLAUDE.md`
+
+Deployment and env details: [`docs/engineering/deployment-cloudflare-railway.md`](../docs/engineering/deployment-cloudflare-railway.md) (Railway variables, checklist).

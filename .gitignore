@@ -47,6 +47,7 @@ pnpm-debug.log*
 
 # Deploy / local tooling
 .vercel/
+.wrangler/
 
 # IDEs and editors
 .idea/

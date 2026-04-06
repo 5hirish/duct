@@ -84,3 +84,17 @@ class UnifiedReport(BaseModel):
 
 class HealthResponse(BaseModel):
     status: str = Field(default="ok")
+
+
+class RootLinks(BaseModel):
+    """Public entrypoints for humans and tooling hitting the API host root."""
+
+    health: str = "/health"
+    openapi: str | None = Field(default=None, description="OpenAPI schema URL when exposed")
+    docs: str | None = Field(default=None, description="Swagger UI when exposed")
+
+
+class RootResponse(BaseModel):
+    service: str = "Duct API"
+    version: str
+    links: RootLinks = Field(default_factory=RootLinks)

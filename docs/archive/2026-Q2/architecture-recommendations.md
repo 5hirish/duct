@@ -1,5 +1,7 @@
 # Duct Architecture & Stack Recommendations
 
+> **Archived (April 2026).** Contradicts the current shipped stack (Python FastAPI + Next.js). See [`README.md`](README.md) in this folder.
+
 ## Context
 
 **Nomadtools** is a multi-agent platform built with Python/FastAPI/LangChain/SQLModel/Supabase. It has a well-established architecture with abstract base agents, streaming events, per-agent service layers, and a Streamlit UI.

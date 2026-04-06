@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
-"""Push allowlisted keys from gitignored .env.test files to GitHub Actions secrets/variables.
+"""Push allowlisted keys from gitignored .env.test files to GitHub repo secrets/variables.
 
 Reads: backend/.env.test, app/.env.test (later file wins on duplicate keys).
 
-Does NOT bulk-upload backend secrets (DUCT_API_KEY, Google, LLM, etc.) — only keys used for
-Cloudflare deploy CI. Requires: gh auth login, repo checkout as cwd.
+Does NOT bulk-upload backend secrets (DUCT_API_KEY, Google, LLM, etc.). Pushes optional
+`NEXT_PUBLIC_*` variables and `CLOUDFLARE_*` secrets for tooling or legacy workflows — the
+primary app deploy uses Cloudflare Workers Builds **build variables** in the dashboard, not GitHub.
+
+Requires: gh auth login, repo checkout as cwd.
 
 See: docs/engineering/deployment-cloudflare-railway.md
 """
@@ -22,7 +25,7 @@ sys.path.insert(0, str(SCRIPTS))
 
 from envfile import merge_dotenv_files  # noqa: E402
 
-# Match .github/workflows/deploy-cloudflare-app.yml — secrets vs vars.
+# Secrets vs repo variables (optional mirror; Workers Builds uses Cloudflare build vars).
 GITHUB_SECRETS = frozenset(
     {
         "CLOUDFLARE_API_TOKEN",

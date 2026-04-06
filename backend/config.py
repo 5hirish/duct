@@ -1,29 +1,47 @@
-"""Application configuration from environment and optional `.env` file."""
+"""Application configuration from environment and optional `.env` / `.env.local` files."""
 
 from __future__ import annotations
 
+import os
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Self
+from typing import Any
 
-from pydantic import Field, model_validator
+from pydantic import AliasChoices, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _BACKEND_DIR = Path(__file__).resolve().parent
 
 
+def _settings_env_files() -> tuple[Path, ...] | None:
+    """Under pytest, skip dotenv so tests are not affected by developer `.env` / `.env.local`."""
+    if os.environ.get("PYTEST_VERSION"):
+        return None
+    return (
+        _BACKEND_DIR / ".env",
+        _BACKEND_DIR / ".env.local",
+    )
+
+
 class Configs(BaseSettings):
-    """Backend settings; all keys optional with defaults so imports work without a full `.env`."""
+    """Backend settings; all keys optional with defaults so imports work without a full `.env`.
+
+    Loads `backend/.env` then `backend/.env.local` (later overrides; missing files are ignored).
+    Dotenv files are skipped when `PYTEST_VERSION` is set (pytest run).
+    """
 
     # CORS / OAuth redirect target
     frontend_origin: str = Field(default="http://localhost:3000")
 
-    # Google OAuth (same app can back Google Ads API)
+    # Public origin of this API (scheme + host [+ port], no path). Used to build OAuth redirect
+    # URIs when GOOGLE_OAUTH_REDIRECT_URI / GOOGLE_SIGNIN_REDIRECT_URI are unset.
+    api_public_url: str = Field(default="http://localhost:8000")
+
+    # Google OAuth (same app can back Google Ads API). If unset/empty, derived as
+    # {api_public_url}/auth/google/callback (alias for the Google Ads connector callback).
     google_oauth_client_id: str = ""
     google_oauth_client_secret: str = ""
-    google_oauth_redirect_uri: str = Field(
-        default="http://localhost:8000/auth/connectors/google_ads/oauth/callback",
-    )
+    google_oauth_redirect_uri: str = Field(default="")
 
     # Google Ads API
     google_ads_developer_token: str = ""
@@ -33,10 +51,9 @@ class Configs(BaseSettings):
     google_ads_customer_id: str = ""
     google_ads_login_customer_id: str = ""
 
-    # Google Sign-In (user identity, separate from connector OAuth)
-    google_signin_redirect_uri: str = Field(
-        default="http://localhost:8000/auth/signin/google/callback",
-    )
+    # Google Sign-In (user identity, separate from connector OAuth). If unset/empty, derived as
+    # {api_public_url}/auth/signin/google/callback.
+    google_signin_redirect_uri: str = Field(default="")
     jwt_secret: str = ""
 
     # Cloudflare Turnstile (bot protection)
@@ -46,6 +63,26 @@ class Configs(BaseSettings):
     # Protects /api/* routes (header X-API-Key). Same value the Next app sends as X-API-Key.
     duct_api_key: str = ""
 
+    # When false (default), FastAPI does not serve /openapi.json, /docs, or /redoc.
+    expose_openapi_docs: bool = False
+
+    # When expose_openapi_docs is true and this password is non-empty, /docs, /redoc, and
+    # /openapi.json require HTTP Basic auth (username defaults to openapi_docs_basic_user).
+    openapi_docs_basic_user: str = Field(
+        default="docs",
+        validation_alias=AliasChoices(
+            "OPENAPI_DOCS_BASIC_USER",
+            "DUCT_OPENAPI_DOCS_BASIC_USER",
+        ),
+    )
+    openapi_docs_basic_password: str = Field(
+        default="",
+        validation_alias=AliasChoices(
+            "OPENAPI_DOCS_BASIC_PASSWORD",
+            "DUCT_OPENAPI_DOCS_BASIC_PASSWORD",
+        ),
+    )
+
     # LLM synthesis (see agents.reporter.models for provider / model strings)
     generate_provider: str = ""
     generate_model: str = ""
@@ -54,23 +91,36 @@ class Configs(BaseSettings):
     anthropic_api_key: str = ""
 
     model_config = SettingsConfigDict(
-        env_file=_BACKEND_DIR / ".env",
+        env_file=_settings_env_files(),
         env_file_encoding="utf-8",
         extra="ignore",
     )
 
-    @model_validator(mode="after")
-    def _strip_string_fields(self) -> Self:
-        updates: dict[str, Any] = {}
-        for name in type(self).model_fields:
-            val = getattr(self, name)
+    @model_validator(mode="before")
+    @classmethod
+    def _strip_strings_and_derive_oauth_redirects(cls, data: Any) -> Any:
+        """Strip string inputs; fill OAuth redirect URIs from api_public_url when unset."""
+        if not isinstance(data, dict):
+            return data
+        out: dict[str, Any] = {}
+        for key, val in data.items():
             if isinstance(val, str):
-                stripped = val.strip()
-                if stripped != val:
-                    updates[name] = stripped
-        if updates:
-            return self.model_copy(update=updates)
-        return self
+                out[key] = val.strip()
+            else:
+                out[key] = val
+        base_default = cls.model_fields["api_public_url"].default
+        if not isinstance(base_default, str):
+            base_default = "http://localhost:8000"
+        raw_base = out.get("api_public_url")
+        base = (raw_base if isinstance(raw_base, str) and raw_base else base_default).rstrip("/")
+        out["api_public_url"] = base
+        gor = out.get("google_oauth_redirect_uri")
+        if not isinstance(gor, str) or not gor:
+            out["google_oauth_redirect_uri"] = f"{base}/auth/google/callback"
+        gsr = out.get("google_signin_redirect_uri")
+        if not isinstance(gsr, str) or not gsr:
+            out["google_signin_redirect_uri"] = f"{base}/auth/signin/google/callback"
+        return out
 
 
 @lru_cache
