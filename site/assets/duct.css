@@ -281,10 +281,21 @@ border: 1px solid var(--border); border-radius: var(--r); font-size: 13px;
 .cta-note { font-size: 12px; color: var(--navy-3); margin-top: 16px; }
 
 /* ── FOOTER ── */
-footer { padding: 44px 52px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; }
+footer:not(.footer-expanded) { padding: 44px 52px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; }
 .footer-copy { font-size: 12px; color: var(--navy-3); }
 .footer-email { font-size: 13px; color: var(--navy-3); text-decoration: none; transition: color .2s; }
 .footer-email:hover { color: var(--navy); }
+
+/* Expanded footer (home, legal pages) */
+.footer-expanded { padding: 64px 52px 32px; border-top: 1px solid var(--border); }
+.footer-top { max-width: 1160px; margin: 0 auto; display: flex; align-items: flex-start; justify-content: space-between; gap: 48px; flex-wrap: wrap; padding-bottom: 40px; border-bottom: 1px solid var(--border); }
+.footer-brand p { font-size: 13px; font-weight: 300; color: var(--navy-3); margin-top: 10px; max-width: 220px; line-height: 1.65; }
+.footer-cols { display: flex; gap: 52px; flex-wrap: wrap; }
+.footer-col h4 { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); margin-bottom: 14px; }
+.footer-col a { display: block; font-size: 13px; font-weight: 300; color: var(--navy-3); text-decoration: none; margin-bottom: 9px; transition: color .2s; }
+.footer-col a:hover { color: var(--navy); }
+.footer-bottom-row { max-width: 1160px; margin: 28px auto 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.footer-bottom-row span { font-size: 12px; color: var(--navy-3); }
 
 /* ── ANIMATIONS ── */
 @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -309,7 +320,9 @@ nav { padding: 0 24px; }
 .stats-inner { grid-template-columns: repeat(2, 1fr); }
 .how, .features, .audience, .quotes, .cta { padding-left: 24px; padding-right: 24px; }
 .cta-form { flex-direction: column; }
-footer { flex-direction: column; align-items: flex-start; padding: 32px 24px; }
+footer:not(.footer-expanded) { flex-direction: column; align-items: flex-start; padding: 32px 24px; }
+.footer-expanded { padding: 40px 24px 24px; }
+.footer-cols { gap: 32px; }
 }
 
 /* ── BLOG ── */
