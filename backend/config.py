@@ -39,6 +39,9 @@ class Configs(BaseSettings):
 
     # Primary relational store for auth-first persistence.
     database_url: str = ""
+    # Safety default for deployed environments: rely on Alembic migrations, not SQLModel create_all.
+    # Set INIT_DB_ON_STARTUP=true only for local/dev bootstrap workflows.
+    init_db_on_startup: bool = False
 
     # Google OAuth (same app can back Google Ads API). If unset/empty, derived as
     # {api_public_url}/auth/google/callback (alias for the Google Ads connector callback).
@@ -57,7 +60,10 @@ class Configs(BaseSettings):
     # Google Sign-In (user identity, separate from connector OAuth). If unset/empty, derived as
     # {api_public_url}/auth/signin/google/callback.
     google_signin_redirect_uri: str = Field(default="")
-    jwt_secret: str = ""
+    jwt_secret: str = Field(
+        default="",
+        validation_alias=AliasChoices("JWT_SECRET", "DUCT_JWT_SECRET"),
+    )
 
     # Cloudflare Turnstile (bot protection)
     turnstile_site_key: str = ""
