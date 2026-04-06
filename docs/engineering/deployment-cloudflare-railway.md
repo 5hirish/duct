@@ -1,11 +1,30 @@
-# Deployment: Cloudflare Workers (app) + Railway (backend)
+# Runbook: Cloudflare Workers (app) + Railway (API)
 
-Production shape for this monorepo:
+**What this doc is for:** Day-to-day **redeploys**, **env / secret updates**, and **sanity checks**. Production wiring for this monorepo is already in place; treat the sections below as the single place to come back to when you need commands or variable names—not a one-time tutorial.
 
-- **[`app/`](../../app/)** — Next.js report viewer on **Cloudflare Workers** via [OpenNext for Cloudflare](https://opennext.js.org/cloudflare) (`@opennextjs/cloudflare`).
-- **[`backend/`](../../backend/)** — FastAPI API on **Railway** using **Railpack + Poetry** (no Docker in `backend/` so Railway does not auto-pick a Dockerfile).
+**Stack (unchanged):**
 
-Official references:
+- **[`app/`](../../app/)** — Next.js on **Cloudflare Workers** ([OpenNext for Cloudflare](https://opennext.js.org/cloudflare)).
+- **[`backend/`](../../backend/)** — FastAPI on **Railway** (Railpack + Poetry; no `backend/Dockerfile` so Railway does not auto-pick Docker).
+
+---
+
+## Quick reference (redeploy & env)
+
+| Goal | What to do |
+|------|------------|
+| **Ship new app code** (Git is connected) | Push to the branch Workers Builds watches; Cloudflare runs build + deploy. Avoid a second pipeline (e.g. Actions `wrangler deploy`) for the same Worker—**double deploys**. |
+| **Ship new app code** (from your laptop) | `python3 scripts/push_app_env_to_cloudflare.py --file app/.env.prod` (or `.env.test`). Requires Node, `wrangler login` (or API token), R2; put **`CLOUDFLARE_ACCOUNT_ID`** in that file if Wrangler can see multiple accounts. |
+| **Ship new API code** (Git is connected) | Push to the branch Railway watches (`backend/**` patterns in [`backend/railway.json`](../../backend/railway.json)). |
+| **Refresh API env vars only** | `cd` repo root → `python3 scripts/push_env_to_railway.py --file backend/.env.prod`. Needs [Railway CLI](https://docs.railway.com/guides/cli), `railway login`, **`railway link`** from [`backend/`](../../backend/). Adds `--no-redeploy` to set vars without redeploy; `--dry-run` to preview. |
+| **Refresh app build-time env** (`NEXT_PUBLIC_*`) | Same as “from your laptop” row: OpenNext **inlines** those at build, so you **rebuild + deploy** via `push_app_env_to_cloudflare.py` (or update **Workers Builds → build variables** and push). Runtime **Variables and secrets** on the Worker often stay empty—see [Worker environment](#worker-environment). |
+| **Copy local dev → gitignored `.env.test`** | `./scripts/bootstrap_env_test.sh` ([details](#local-env-sync-bootstrap--push)). |
+
+**Smoke checks:** deployed app loads; on the API host **`GET /health`** → `200` and **`GET /`** returns JSON metadata. OAuth redirect URIs in Google Cloud must match final Railway/Cloudflare URLs ([OAuth](#oauth-google-cloud-console)).
+
+---
+
+## Official references
 
 - Cloudflare Workers Builds (Git): [Builds](https://developers.cloudflare.com/workers/ci-cd/builds/) → [Configuration](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/) (optional: [GitHub Actions](https://developers.cloudflare.com/workers/ci-cd/external-cicd/github-actions/) for external CI)
 - Railway Git deploys: [GitHub autodeploys](https://docs.railway.com/guides/github-autodeploys)
@@ -48,7 +67,7 @@ Already in the tree:
 | [`scripts/bootstrap_env_test.sh`](../../scripts/bootstrap_env_test.sh) | Copy `backend/.env` → `backend/.env.test`, `app/.env.local` → `app/.env.test` (gitignored) |
 | [`scripts/push_env_to_github.py`](../../scripts/push_env_to_github.py) | Allowlisted keys from `.env.test` → `gh secret` / `gh variable` |
 | [`scripts/push_env_to_railway.py`](../../scripts/push_env_to_railway.py) | Full `backend/.env.test` → Railway variables + redeploy |
-| [`scripts/push_app_env_to_cloudflare.py`](../../scripts/push_app_env_to_cloudflare.py) | Load `app/.env.test`, `npm ci`, OpenNext build, `wrangler deploy` |
+| [`scripts/push_app_env_to_cloudflare.py`](../../scripts/push_app_env_to_cloudflare.py) | Load `app/.env.test` (or `--file`), `npm ci`, OpenNext build, `wrangler deploy`; include **`CLOUDFLARE_ACCOUNT_ID`** in that file when Wrangler has multiple accounts |
 
 **R2:** Create bucket `duct-next-cache` in Cloudflare (or change `bucket_name` in `wrangler.jsonc` to match).
 
@@ -67,7 +86,14 @@ From `app/`:
 
 ### Worker environment
 
-Configure in the Cloudflare dashboard (or Wrangler) for the Worker:
+**Why “Variables and secrets” looks empty:** In the dashboard, **Settings → Variables and secrets** configures **runtime** values (`env` on each request). For `duct-app`, almost everything you care about is **`NEXT_PUBLIC_*`**, which Next.js **inlines into the JavaScript bundle at build time**. After `opennextjs-cloudflare build` + `wrangler deploy`, those values already live inside the uploaded Worker/assets—they are **not** shown as separate runtime variables, so that section often stays **empty** and that is normal.
+
+- **Deploy from your machine** (`push_app_env_to_cloudflare.py` or `npm run deploy:cf`): put `NEXT_PUBLIC_*` and `CLOUDFLARE_ACCOUNT_ID` (for Wrangler account selection) in the env file you use **during the build**; nothing extra is required in the runtime Variables UI.
+- **Workers Builds (Git)** below: add the same keys as **build** variables / build secrets so the build step sees them.
+
+Other Worker config (R2 bucket, self-reference service) lives under **Bindings** in `wrangler.jsonc`, not as plain text vars.
+
+Reference — what those build-time vars mean:
 
 | Variable | Purpose |
 |----------|---------|
@@ -238,14 +264,14 @@ python3 scripts/push_env_to_railway.py
 
 ### 4. Build and deploy the app to Cloudflare (local)
 
-Requires Node, `wrangler login` (or `CLOUDFLARE_API_TOKEN` in your environment), and the R2 bucket.
+Requires Node, `wrangler login` (or `CLOUDFLARE_API_TOKEN` in your environment), the R2 bucket, and **`CLOUDFLARE_ACCOUNT_ID`** in the app env file when your credentials can access more than one Cloudflare account (otherwise Wrangler may prompt interactively). Optional: `--cloudflare-account-id`.
 
 ```bash
 python3 scripts/push_app_env_to_cloudflare.py
 ```
 
-- Default file: `app/.env.test`
-- Runs `npm ci`, `npx opennextjs-cloudflare build`, `npx wrangler deploy` under **`app/`** with env vars from the file merged into the process (so `NEXT_PUBLIC_*` are inlined at build time).
+- Default file: `app/.env.test` (override with `--file`, e.g. `app/.env.prod`)
+- Runs `npm ci`, `npx opennextjs-cloudflare build`, `npx wrangler deploy` under **`app/`** with env vars from the file merged into the process (so `NEXT_PUBLIC_*` and `CLOUDFLARE_ACCOUNT_ID` are available at build/deploy time).
 
 Use **`--dry-run`** to list keys and commands only.
 
@@ -265,12 +291,14 @@ Use **`--dry-run`** to list keys and commands only.
 
 ---
 
-## Checklist
+## Verification checklist
 
-- [ ] R2 bucket exists and matches `wrangler.jsonc`
-- [ ] Railway service: root `backend`, Railpack, start command, env vars
-- [ ] `FRONTEND_ORIGIN` = Cloudflare app URL; `NEXT_PUBLIC_API_BASE` = Railway URL
+Use after **greenfield setup**, **domain changes**, or when something looks off—not necessarily every deploy.
+
+- [ ] R2 bucket exists and matches [`app/wrangler.jsonc`](../../app/wrangler.jsonc) `bucket_name`
+- [ ] Railway service: **Root Directory** `backend`, Railpack, start command, env vars
+- [ ] `FRONTEND_ORIGIN` = Cloudflare app origin; `NEXT_PUBLIC_API_BASE` = public Railway API URL
 - [ ] Google OAuth redirect URI matches Railway
-- [ ] OpenAPI: production should leave **`EXPOSE_OPENAPI_DOCS` unset/false**; if you ever enable it, set a strong **`OPENAPI_DOCS_BASIC_PASSWORD`** (and optionally Cloudflare Access on those paths)
-- [ ] Cloudflare Workers Builds: repo connected, root `app`, build/deploy commands, build variables for `NEXT_PUBLIC_*`
-- [ ] End-to-end: Worker `/`, `/reports`, and API calls from the deployed app; optional sanity check **`GET`** API root (`/`) returns JSON and **`GET /health`** is `200`
+- [ ] OpenAPI: production should leave **`EXPOSE_OPENAPI_DOCS` unset/false**; if enabled, set **`OPENAPI_DOCS_BASIC_PASSWORD`** (and optionally Cloudflare Access on those paths)
+- [ ] Cloudflare Workers Builds: repo connected, root `app`, build/deploy commands, **build** variables for `NEXT_PUBLIC_*`
+- [ ] End-to-end: Worker `/`, `/reports`, API calls from deployed app; **`GET /`** and **`GET /health`** on API

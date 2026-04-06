@@ -7,7 +7,7 @@ Planning and reference material for Duct. **Start here** to find the right doc b
 | [`strategy/`](strategy/) | Founders, PM, architects | Product direction, architecture principles |
 | [`gtm/`](gtm/) | Marketing, growth | Paid and organic GTM plans |
 | [`mvp/`](mvp/) | Product + eng shipping a slice | MVP scope and vertical plans (e.g. Google Ads) |
-| [`engineering/`](engineering/) | Engineers | Active implementation plans and deploy reference ([Cloudflare + Railway](engineering/deployment-cloudflare-railway.md)), [Google Ads API tool design](engineering/google-ads-api-tool-design-document.md) |
+| [`engineering/`](engineering/) | Engineers | Active implementation plans and ops runbook ([Cloudflare + Railway](engineering/deployment-cloudflare-railway.md)), [Google Ads API tool design](engineering/google-ads-api-tool-design-document.md) |
 | [`archive/2026-Q2/`](archive/2026-Q2/) | Reference | Superseded plans and one-off agent runbooks (read [`archive/2026-Q2/README.md`](archive/2026-Q2/README.md) first) |
 | [`engineering/history/`](engineering/history/) | Reference | Reserved for short-lived notes; most dated narratives moved to [`archive/`](archive/2026-Q2/) |
 | [`design/`](design/) | Design + eng | Design index; historical UX specs live in [`archive/2026-Q2/`](archive/2026-Q2/) |

@@ -2,7 +2,7 @@
 
 Feature and system implementation plans (living documents until shipped).
 
-- [`deployment-cloudflare-railway.md`](deployment-cloudflare-railway.md) — production deploy (Next.js on Cloudflare, API on Railway)
+- [`deployment-cloudflare-railway.md`](deployment-cloudflare-railway.md) — **runbook:** redeploy, env pushes, verification (Next.js on Cloudflare, API on Railway)
 - [`oauth-authentication-plan.md`](oauth-authentication-plan.md) — Google Ads connector OAuth (updated with current routes)
 - **Google Ads API (token application):** [`google-ads-api-tool-design-document.md`](google-ads-api-tool-design-document.md) — canonical text; add `.docx` / `.doc` locally if needed for Google submissions (not tracked in repo).
 
