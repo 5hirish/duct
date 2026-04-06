@@ -42,5 +42,8 @@
         ]
       }
     ]
+  },
+  "enabledPlugins": {
+    "feature-dev@claude-code-plugins": true
   }
 }

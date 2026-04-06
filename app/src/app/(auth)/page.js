@@ -2,9 +2,8 @@
 
 import { Suspense, useEffect, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { BASE } from "../../lib/api";
 
-const BACKEND_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
 const TOKEN_KEY = "duct_auth_token";
 
@@ -84,7 +83,7 @@ function SignInContent() {
   }, [ready]);
 
   const handleSignIn = useCallback(() => {
-    let url = `${BACKEND_URL}/auth/signin/google/authorize`;
+    let url = `${BASE}/auth/signin/google/authorize`;
     if (turnstileToken) {
       url += `?turnstile_token=${encodeURIComponent(turnstileToken)}`;
     }
