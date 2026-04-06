@@ -50,7 +50,7 @@ Directory-local agent docs live inside the main code areas:
 | `backend/service/google/brief.py` | Normalize Google Ads JSON into typed brief payloads |
 | `backend/service/google/fetch.py` | Google Ads API campaign fetch (used by API routes) |
 | `backend/service/google/schema.py` | Google Ads brief payload types (dataclasses) |
-| `backend/data/google_ads/` | `google-ads-report.json` (demo brief), `raw/`, `generated/` |
+| `backend/data/google_ads/` | `google-ads-report.json` (demo brief), `raw/` |
 
 ## Analytics
 

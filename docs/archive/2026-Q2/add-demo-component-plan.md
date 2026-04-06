@@ -1,5 +1,7 @@
 # Plan: Add Interactive Demo to `for-product-intelligence.html` and `for-organic-growth.html`
 
+> **Archived (April 2026).** Work completed; retained as a record. See [`README.md`](README.md) in this folder.
+
 ---
 
 ## Progress Tracker
@@ -26,13 +28,6 @@
 | 4-step wizard HTML (SEO tool selection, goal, analysis, report preview) | ✅ Done — committed |
 | Report modal HTML | ✅ Done — committed |
 | JS script block (PLATFORM_DATA + wizard logic + report rendering) | ✅ Done — committed |
-
-### Known blocker
-
-The JS script block is large (~600 lines per page). A tool parameter-size issue was hit during
-the initial session — large `command`/`content` parameters were being dropped silently.
-Working around this by writing JS via Python heredoc injections in Bash. The structure and
-mock data are fully designed (see JS Architecture section below); only the write step remains.
 
 ---
 

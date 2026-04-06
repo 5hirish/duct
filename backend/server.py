@@ -9,8 +9,16 @@ import service.google.ads  # noqa: F401 — registers connectors before routes i
 
 from config import get_configs
 from routes.namespace import router as api_router
+from utils.openapi_docs_auth import OpenapiDocsBasicAuthMiddleware
 
-app = FastAPI(title="Duct API")
+_cfg = get_configs()
+_openapi = "/openapi.json" if _cfg.expose_openapi_docs else None
+app = FastAPI(
+    title="Duct API",
+    openapi_url=_openapi,
+    docs_url="/docs" if _cfg.expose_openapi_docs else None,
+    redoc_url="/redoc" if _cfg.expose_openapi_docs else None,
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -19,5 +27,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(OpenapiDocsBasicAuthMiddleware)
 
 app.include_router(api_router)

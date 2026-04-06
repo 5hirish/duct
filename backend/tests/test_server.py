@@ -40,6 +40,72 @@ def test_health_ok():
     assert res.json() == {"status": "ok"}
 
 
+def test_root_ok():
+    server = _load_server_with_env()
+    client = TestClient(server.app)
+    res = client.get("/")
+    assert res.status_code == 200
+    body = res.json()
+    assert body["service"] == "Duct API"
+    assert body["version"] == "0.1.0"
+    assert body["links"] == {"health": "/health"}
+    assert client.get("/docs").status_code == 404
+    assert client.get("/openapi.json").status_code == 404
+
+
+def test_root_and_openapi_when_expose_docs_enabled():
+    os.environ["EXPOSE_OPENAPI_DOCS"] = "true"
+    try:
+        server = _load_server_with_env()
+        client = TestClient(server.app)
+        res = client.get("/")
+        assert res.status_code == 200
+        assert res.json()["links"] == {
+            "health": "/health",
+            "openapi": "/openapi.json",
+            "docs": "/docs",
+        }
+        assert client.get("/docs").status_code == 200
+        assert client.get("/openapi.json").status_code == 200
+    finally:
+        os.environ.pop("EXPOSE_OPENAPI_DOCS", None)
+
+
+def test_duct_prefixed_openapi_basic_auth_env_names():
+    import config
+
+    os.environ["DUCT_OPENAPI_DOCS_BASIC_USER"] = "shirish"
+    os.environ["DUCT_OPENAPI_DOCS_BASIC_PASSWORD"] = "duct-secret"
+    try:
+        config.get_configs.cache_clear()
+        cfg = config.Configs()
+        assert cfg.openapi_docs_basic_user == "shirish"
+        assert cfg.openapi_docs_basic_password == "duct-secret"
+    finally:
+        os.environ.pop("DUCT_OPENAPI_DOCS_BASIC_USER", None)
+        os.environ.pop("DUCT_OPENAPI_DOCS_BASIC_PASSWORD", None)
+        config.get_configs.cache_clear()
+
+
+def test_openapi_docs_require_basic_auth_when_password_set():
+    os.environ["EXPOSE_OPENAPI_DOCS"] = "true"
+    os.environ["OPENAPI_DOCS_BASIC_PASSWORD"] = "secret-docs-pass"
+    try:
+        server = _load_server_with_env()
+        client = TestClient(server.app)
+        assert client.get("/docs").status_code == 401
+        assert client.get("/openapi.json").status_code == 401
+        ok = client.get("/docs", auth=("docs", "secret-docs-pass"))
+        assert ok.status_code == 200
+        assert (
+            client.get("/openapi.json", auth=("docs", "secret-docs-pass")).status_code
+            == 200
+        )
+    finally:
+        os.environ.pop("EXPOSE_OPENAPI_DOCS", None)
+        os.environ.pop("OPENAPI_DOCS_BASIC_PASSWORD", None)
+
+
 def test_connector_oauth_authorize_redirects_to_google():
     server = _load_server_with_env()
     client = TestClient(server.app)
@@ -105,34 +171,5 @@ def test_unknown_connector_accounts_returns_404():
     client = TestClient(server.app)
     headers = {"X-API-Key": TEST_DUCT_API_KEY}
     res = client.get("/api/connectors/unknown_source/accounts", headers=headers)
-    assert res.status_code == 404
-    assert res.json().get("detail") == "Unknown connector"
-
-
-def test_report_demo_payload_shape():
-    server = _load_server_with_env()
-    client = TestClient(server.app)
-    headers = {"X-API-Key": TEST_DUCT_API_KEY}
-    res = client.post(
-        "/api/report/google_ads",
-        json={"use_demo": True, "theme": "paid_ads"},
-        headers=headers,
-    )
-    assert res.status_code == 200
-    payload = res.json()
-    assert "source_metadata" in payload
-    assert "narrative" in payload
-    assert "campaigns" in payload
-
-
-def test_report_unknown_connector_returns_404():
-    server = _load_server_with_env()
-    client = TestClient(server.app)
-    headers = {"X-API-Key": TEST_DUCT_API_KEY}
-    res = client.post(
-        "/api/report/unknown_source",
-        json={"use_demo": True},
-        headers=headers,
-    )
     assert res.status_code == 404
     assert res.json().get("detail") == "Unknown connector"

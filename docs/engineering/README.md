@@ -2,11 +2,12 @@
 
 Feature and system implementation plans (living documents until shipped).
 
-- [`dynamic-data-fetching-plan.md`](dynamic-data-fetching-plan.md)
-- [`oauth-authentication-plan.md`](oauth-authentication-plan.md)
-- [`add-demo-component-plan.md`](add-demo-component-plan.md)
-- **Google Ads API (token application):** [`google-ads-api-tool-design-document.md`](google-ads-api-tool-design-document.md) — source; Word: [`google-ads-api-tool-design-document.docx`](google-ads-api-tool-design-document.docx), [`google-ads-api-tool-design-document.doc`](google-ads-api-tool-design-document.doc). Prototype image: [`assets/google-ads-report-prototype.png`](assets/google-ads-report-prototype.png).
+- [`deployment-cloudflare-railway.md`](deployment-cloudflare-railway.md) — production deploy (Next.js on Cloudflare, API on Railway)
+- [`oauth-authentication-plan.md`](oauth-authentication-plan.md) — Google Ads connector OAuth (updated with current routes)
+- **Google Ads API (token application):** [`google-ads-api-tool-design-document.md`](google-ads-api-tool-design-document.md) — canonical text; add `.docx` / `.doc` locally if needed for Google submissions (not tracked in repo).
+
+Superseded specs live under [`../archive/2026-Q2/`](../archive/2026-Q2/) (dynamic fetch plan, completed demo rollout, old stack recommendation, paid-ads agent checklist).
 
 ## History
 
-[`history/`](history/) holds dated narratives (e.g. agent execution plans). Prefer updating active docs in this folder when behavior changes.
+[`history/`](history/) is for ephemeral notes. Prefer [`../archive/`](../archive/2026-Q2/) for dated, completed execution plans.

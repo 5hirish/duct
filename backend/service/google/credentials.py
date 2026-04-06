@@ -1,4 +1,4 @@
-"""Google Ads credential and artifact naming helpers (shared by API routes)."""
+"""Google Ads credential resolution for API routes (shared by generate + connectors)."""
 
 from __future__ import annotations
 
@@ -31,10 +31,3 @@ def resolve_customer_id(*, request_customer_id: str | None) -> str:
     if not cid:
         raise HTTPException(status_code=422, detail="Missing customer_id.")
     return cid
-
-
-def report_basename(customer_stripped: str, date_to: str, *, demo: bool) -> str:
-    """Filename for a persisted report JSON under ``data/google_ads/generated/``."""
-    if demo:
-        return f"demo-{date_to}.json"
-    return f"{customer_stripped}-{date_to}.json"

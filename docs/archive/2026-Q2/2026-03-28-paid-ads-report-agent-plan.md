@@ -1,5 +1,8 @@
 # Paid Ads Demo — World-Class Report Implementation Plan
 
+> **Archived (April 2026).** Agent execution plan for `for-paid-ads-demo.html`; marketing demos now live under `site/` (e.g. `for-paid-ads.html`). See [`README.md`](README.md) in this folder.
+
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Replace the basic 3-bullet brief in Step 4 of the interactive demo with a world-class 1-pager report (preview with fade + full modal), data-driven by the metric goal selected in Step 2.

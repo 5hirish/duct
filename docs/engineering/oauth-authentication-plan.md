@@ -1,8 +1,19 @@
 # OAuth Authentication for Google Ads — Implementation Plan
 
-## Context
+## Current implementation (April 2026)
 
-The current `/run` page requires users to manually enter 5+ credentials (developer token, OAuth client ID, OAuth client secret, refresh token, customer ID). This is a high-friction experience that will block client onboarding. The goal is to replace this with a standard "Sign in with Google Ads" OAuth 2.0 flow, so users authorize once and the app handles the rest.
+Shipped behavior (differs from the original sketch below in URLs and app surface):
+
+- **Authorize:** `GET /auth/connectors/google_ads/oauth/authorize` (starts Google consent; PKCE via `google_auth_oauthlib`).
+- **Callback:** `GET /auth/connectors/google_ads/oauth/callback` (alias: `/auth/google/callback`). Redirect URI must match `GOOGLE_OAUTH_REDIRECT_URI` / Google Cloud console (see `backend/config.py`).
+- **App:** Connections + multi-step **`/generate`** flow in the Next.js app (not `/run`). Report generation uses API routes guarded by `DUCT_API_KEY` (`X-API-Key`).
+- **Fetch path:** `backend/service/google/fetch.py` (not `google_ads_api_fetch.py`); brief build in `backend/service/google/brief.py`.
+
+The sections below remain useful for **decisions** (e.g. PyAirbyte defer, developer token on server). Treat flow diagrams and file paths as historical unless they match the list above.
+
+## Context (original)
+
+The earlier `/run` page required users to manually enter multiple credentials (developer token, OAuth client ID, OAuth client secret, refresh token, customer ID). The goal was a standard Google Ads OAuth 2.0 flow so users authorize once and the app handles the rest. That goal is implemented via the connector OAuth routes and `/generate`.
 
 ---
 
@@ -10,9 +21,9 @@ The current `/run` page requires users to manually enter 5+ credentials (develop
 
 ### PyAirbyte — DEFER
 
-PyAirbyte is **not** the right tool for this change. It would replace `google_ads_api_fetch.py`, but:
+PyAirbyte is **not** the right tool for this change. It would replace the Google Ads fetch layer (`service/google/fetch.py` today; this doc originally referenced `google_ads_api_fetch.py`), but:
 
-- The current fetch script already returns exactly the schema `build_brief()` expects (`source_metadata` + `rows[]` with `previous` comparison data)
+- The current fetch path already returns exactly the schema `build_brief()` expects (`source_metadata` + `rows[]` with `previous` comparison data)
 - PyAirbyte's `source-google-ads` returns flat records per stream — you'd need to re-implement the two-window aggregation and merge logic that already exists
 - That is more code, not less
 - Add PyAirbyte when expanding to a second connector (GA4, HubSpot) — not before
@@ -54,7 +65,7 @@ User clicks "Connect Google Ads"
     → Fetch /api/google-ads/accounts?refresh_token=...
     → Render account selector dropdown
   → User selects account, picks dates, clicks "Run report"
-    → POST /api/report/google-ads with { customer_id, refresh_token, date_from, date_to }
+    → POST /api/generate with { connections, customer_id, refresh_token, date_from, date_to, goal, … }
     → Backend: fetch_campaigns() — unchanged
     → Report renders as before
 ```

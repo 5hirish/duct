@@ -10,5 +10,3 @@ _BACKEND_ROOT = Path(__file__).resolve().parents[2]
 GOOGLE_ADS_DATA_DIR = _BACKEND_ROOT / "data" / GOOGLE_ADS_CONNECTOR_ID
 # Raw fetch-shaped demo input (not a brief; kept out of the app report list).
 GOOGLE_ADS_RAW_PAYLOAD_PATH = GOOGLE_ADS_DATA_DIR / "raw" / "demo_raw_payload.json"
-# API-persisted brief JSON (demo-{date}.json, {customer}-{date}.json).
-GOOGLE_ADS_REPORTS_GENERATED_DIR = GOOGLE_ADS_DATA_DIR / "generated"

@@ -21,7 +21,7 @@ Open: `http://localhost:3000/reports`
 
 ## Production (Cloudflare Workers)
 
-OpenNext + Wrangler live in this directory (`wrangler.jsonc`, `open-next.config.ts`). Full architecture, env vars, and GitHub Actions are documented in [`docs/engineering/deployment-cloudflare-railway.md`](../docs/engineering/deployment-cloudflare-railway.md). CI deploy: [`.github/workflows/deploy-cloudflare-app.yml`](../.github/workflows/deploy-cloudflare-app.yml).
+OpenNext + Wrangler live in this directory (`wrangler.jsonc`, `open-next.config.ts`). Full architecture, env vars, and production deploy (Cloudflare **Workers Builds** from Git) are documented in [`docs/engineering/deployment-cloudflare-railway.md`](../docs/engineering/deployment-cloudflare-railway.md).
 
 Optional: `NEXT_PUBLIC_GTM_ID` for Google Tag Manager (GA4 etc. live in the GTM container). See [`src/lib/analytics-client.js`](src/lib/analytics-client.js).
 
@@ -30,18 +30,9 @@ Optional: `NEXT_PUBLIC_GTM_ID` for Google Tag Manager (GA4 etc. live in the GTM 
 
 ## Data source
 
-The app reads report artifacts produced by the backend API:
+**Product path (generate flow):** The interactive wizard calls `POST /api/generate` and persists the returned JSON in the **browser** via [`src/lib/localReports.js`](src/lib/localReports.js) (`localStorage`). Do not rely on the API host filesystem for user reports in production; when you add accounts, move persistence to a real backend store.
 
-- Report list reads `backend/data/google_ads/*.json` at the top level only — keep a single demo brief there (`google-ads-report.json`). Raw demo input lives in `raw/`; API output goes to `generated/` (ignored by the list).
-
-With the backend running from `backend/` (see `backend/README.md`), generate a demo report, for example:
-
-```bash
-curl -sS -X POST "http://127.0.0.1:8000/api/report/google_ads" \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: $DUCT_API_KEY" \
-  -d '{"use_demo": true, "theme": "paid_ads", "date_to": "2026-04-03"}'
-```
+**Dev / demo list:** The reports page also merges in **top-level** JSON files from `backend/data/google_ads/*.json` (e.g. `google-ads-report.json`). The `raw/` subdir is not listed.
 
 ## Boundary
 

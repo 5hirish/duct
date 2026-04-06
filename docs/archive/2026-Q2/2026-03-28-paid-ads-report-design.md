@@ -1,7 +1,10 @@
 # Paid Ads Demo — World-Class Report Design
 
+> **Archived (April 2026).** UX spec for the marketing demo Step 4; implementation lives under `site/`. See [`README.md`](README.md) in this folder.
+
+
 **Date:** 2026-03-28 (updated 2026-03-29 — light modal, disclosure, charts)
-**File:** `for-paid-ads-demo.html`
+**File:** `for-paid-ads-demo.html` (historical name; marketing paid-ads page is now `site/for-paid-ads.html` with shared demo assets under `site/assets/`.)
 **Section:** Step 4 of the interactive walkthrough demo
 
 ---

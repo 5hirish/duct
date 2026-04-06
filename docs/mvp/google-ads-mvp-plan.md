@@ -1,10 +1,10 @@
 # Duct — Google Ads MVP Plan
 
-**Version:** v0.1
-**Status:** Approved for implementation
+**Version:** v0.2 (scope note)
+**Status:** Core contract active · product surface extended April 2026
 **Date:** April 2026
 
-> This document defines the smallest useful MVP for `for-paid-ads`: a lightweight, semi-manual Google Ads reporting flow that produces a decision-ready web report. It is intentionally narrow so the team can shape the report format before adding more tools or automation.
+> This document defines the Google Ads reporting slice: normalized JSON → decision-ready report. **Original v0.1** targeted a static HTML artifact only, with OAuth and a hosted app explicitly out of scope. **As shipped**, the same payload drives the Next.js report viewer, connector OAuth, and `/generate` — while the **data contract, metrics, and section model** below remain the source of truth.
 
 ---
 
@@ -16,7 +16,7 @@ Build a lightweight reporting MVP for paid ads that starts with **Google Ads onl
 2. What likely matters?
 3. What should the operator do next?
 
-The product surface is a **single static HTML report** generated from a normalized JSON payload. The report is operator-first, not customer-self-serve.
+The **canonical artifact** is the normalized JSON brief (rendered in the app today; static HTML was the first iteration). The report stays operator-first, not a full self-serve analytics product.
 
 ---
 
@@ -59,27 +59,30 @@ The product surface is a **single static HTML report** generated from a normaliz
   - recommended actions
   - short narrative summary
 
-### Explicitly out of scope
+### Out of scope (unchanged)
 
 - Cross-platform intelligence
 - Real-time anomaly alerts
-- User onboarding or OAuth setup
-- Live hosted app/dashboard
 - Scheduling or background jobs
-- Customer-facing permissions/auth
+- Customer-facing permissions / multi-tenant workspace product
+
+### Originally out of scope · now in the slice
+
+- **OAuth** for Google Ads (connector flow; see `docs/engineering/oauth-authentication-plan.md`)
+- **Hosted app** — Next.js report list, `/generate`, `/connections` (deploy: `docs/engineering/deployment-cloudflare-railway.md`)
 
 ---
 
 ## Product Surface
 
-The first MVP output is a static HTML report intended for internal review or pilot delivery.
+**Today:** the Next.js app renders the same brief JSON as `GoogleAdsReport.js` (and related routes). **Historical:** static HTML was the fastest first pass.
 
-### Why HTML first
+### Why a strong report surface (HTML or app)
 
 - Fast to iterate
-- Easy to share
+- Easy to share (URL + JSON artifact)
 - Easy to inspect visually
-- Matches Duct's core product philosophy: a delivered brief, not a dashboard to operate
+- Matches Duct's philosophy: a delivered brief, not a dashboard to operate
 
 The report should feel like a concise analyst memo, not a BI tool.
 
@@ -93,7 +96,7 @@ exportData[ManualGoogleAdsExport] --> fetch[google_ads_fetch.py]
 fetch --> rawJson[RawExportJSON]
 rawJson --> normalize[google_ads_brief.py]
 normalize --> payload[NormalizedPayloadJSON]
-payload --> render[StaticHTMLReport]
+payload --> render[AppOrStaticReport]
 render --> review[OperatorReview]
 ```
 
@@ -118,7 +121,6 @@ render --> review[OperatorReview]
 | `backend/service/google/fetch.py` | Google Ads API → raw campaign JSON |
 | `backend/data/google_ads/raw/demo_raw_payload.json` | Static demo raw input |
 | `backend/data/google_ads/google-ads-report.json` | Example normalized brief JSON (app demo list) |
-| `backend/data/google_ads/generated/` | API-persisted brief JSON |
 | `app/src/components/GoogleAdsReport.js` | Renders brief JSON in the Next.js app |
 
 ---
@@ -265,12 +267,11 @@ They should not require a new report renderer.
 
 ## What Not To Build Yet
 
-- no app shell
-- no login
+- no full multi-tenant product auth / workspace model (beyond connector OAuth + API key for the app)
 - no scheduler
 - no webhook alerts
-- no warehouse
-- no OAuth UX
+- no warehouse / Airbyte-in-Duct for this slice
 - no multi-touch attribution model
+- no cross-platform joins in the same brief
 
-The fastest route to learning is a single report artifact with a strong schema underneath it.
+The fastest route to learning remains a single-source report with a strong schema underneath it; the **delivery shell** (static vs app) can evolve without changing the contract.
