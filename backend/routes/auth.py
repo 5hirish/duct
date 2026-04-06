@@ -21,6 +21,15 @@ OAUTH_STATE_TTL_SECONDS = 300
 CONNECTOR_FLOW = "connector_google_ads"
 
 
+def _no_store_redirect(url: str, status_code: int = 307) -> RedirectResponse:
+    """Build a redirect response that disables client/proxy caching."""
+    response = RedirectResponse(url=url, status_code=status_code)
+    response.headers["Cache-Control"] = "no-store, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
+
+
 def _google_ads_authorize() -> RedirectResponse:
     state = secrets.token_urlsafe(32)
     try:
@@ -42,7 +51,7 @@ def _google_ads_authorize() -> RedirectResponse:
     )
     cleanup_expired_states()
     save_state(state, flow.code_verifier, CONNECTOR_FLOW, OAUTH_STATE_TTL_SECONDS)
-    return RedirectResponse(url=auth_url, status_code=307)
+    return _no_store_redirect(auth_url, status_code=307)
 
 
 def _google_ads_callback(code: str, state: str) -> RedirectResponse:
@@ -83,7 +92,7 @@ def _google_ads_callback(code: str, state: str) -> RedirectResponse:
     redirect_url = (
         f"{get_configs().frontend_origin}/connections#refresh_token={quote(refresh_token, safe='')}"
     )
-    return RedirectResponse(url=redirect_url, status_code=307)
+    return _no_store_redirect(redirect_url, status_code=307)
 
 
 @router.get("/auth/connectors/{connector_id}/oauth/authorize")

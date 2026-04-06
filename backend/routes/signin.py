@@ -26,6 +26,16 @@ SIGNIN_FLOW = "signin_google"
 
 JWT_EXPIRY_SECONDS = 7 * 24 * 60 * 60  # 7 days
 
+
+def _no_store_redirect(url: str, status_code: int = 307) -> RedirectResponse:
+    """Build a redirect response that disables client/proxy caching."""
+    response = RedirectResponse(url=url, status_code=status_code)
+    response.headers["Cache-Control"] = "no-store, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
+
+
 async def _verify_turnstile(token: str, remote_ip: str) -> bool:
     """Verify a Cloudflare Turnstile token. Returns True if valid."""
     cfg = get_configs()
@@ -86,7 +96,7 @@ async def signin_google_authorize(
     )
     cleanup_expired_states()
     save_state(state, flow.code_verifier, SIGNIN_FLOW, OAUTH_STATE_TTL_SECONDS)
-    return RedirectResponse(url=auth_url, status_code=307)
+    return _no_store_redirect(auth_url, status_code=307)
 
 
 @router.get("/auth/signin/google/callback")
@@ -166,4 +176,4 @@ def signin_google_callback(
 
     cfg = get_configs()
     redirect_url = f"{cfg.frontend_origin}/?token={quote(token, safe='')}"
-    return RedirectResponse(url=redirect_url, status_code=307)
+    return _no_store_redirect(redirect_url, status_code=307)
