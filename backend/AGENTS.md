@@ -48,3 +48,4 @@ This directory contains the Python reporting and synthesis side of Duct.
 - Prefer small, inspectable JSON payloads over opaque pipeline steps.
 - Keep rendering separate from ingestion and normalization.
 - Optimize for one strong brief or report, not a broad dashboard.
+- Always create Alembic revisions with autogenerate (`alembic revision --autogenerate` or `python scripts/migrations.py revision ...`); do not hand-write migration revisions.

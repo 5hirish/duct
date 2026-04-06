@@ -8,6 +8,8 @@ from fastapi.middleware.cors import CORSMiddleware
 import service.google.ads  # noqa: F401 — registers connectors before routes import
 
 from config import get_configs
+from db.session import init_db
+import models  # noqa: F401 - registers SQLModel metadata
 from routes.namespace import router as api_router
 from utils.openapi_docs_auth import OpenapiDocsBasicAuthMiddleware
 
@@ -28,5 +30,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.add_middleware(OpenapiDocsBasicAuthMiddleware)
+
+
+@app.on_event("startup")
+def _startup_init_db() -> None:
+    init_db()
+
 
 app.include_router(api_router)

@@ -4,6 +4,8 @@ version = "0.1.0"
 description = "Duct reporting backend"
 packages = [
     { include = "agents" },
+    { include = "db" },
+    { include = "models" },
     { include = "routes" },
     { include = "service" },
     { include = "utils" },
@@ -25,6 +27,9 @@ langchain-google-genai = "^4.2"
 langchain-anthropic = "^1.4"
 pyjwt = "^2.8"
 httpx = "^0.28"
+sqlmodel = "^0.0.24"
+alembic = "^1.17"
+psycopg = {version = "^3.2", extras = ["binary"]}
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^9"

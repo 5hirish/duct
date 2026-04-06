@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import secrets
-import time
 from urllib.parse import quote
 
 from fastapi import APIRouter, HTTPException, Query
@@ -14,24 +13,21 @@ from config import get_configs
 from service.connectors import get_connector, normalize_connector_id
 from service.google.constants import GOOGLE_ADS_CONNECTOR_ID
 from service.google.oauth import create_google_oauth_flow
+from service.oauth_state_store import cleanup_expired_states, consume_state, save_state
 
 router = APIRouter(tags=["auth"])
 
 OAUTH_STATE_TTL_SECONDS = 300
-# state -> (issued_at, pkce code_verifier). Verifier must be reused on token exchange
-# when the auth URL was built with PKCE (google_auth_oauthlib default).
-_oauth_states: dict[str, tuple[float, str | None]] = {}
+CONNECTOR_FLOW = "connector_google_ads"
 
 
-def _consume_oauth_state(state: str) -> tuple[bool, str | None]:
-    """Pop OAuth state. Returns (True, code_verifier) if valid and fresh; else (False, None)."""
-    entry = _oauth_states.pop(state, None)
-    if entry is None:
-        return False, None
-    issued_at, code_verifier = entry
-    if (time.time() - issued_at) > OAUTH_STATE_TTL_SECONDS:
-        return False, None
-    return True, code_verifier
+def _no_store_redirect(url: str, status_code: int = 307) -> RedirectResponse:
+    """Build a redirect response that disables client/proxy caching."""
+    response = RedirectResponse(url=url, status_code=status_code)
+    response.headers["Cache-Control"] = "no-store, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 
 def _google_ads_authorize() -> RedirectResponse:
@@ -53,8 +49,9 @@ def _google_ads_authorize() -> RedirectResponse:
         include_granted_scopes="true",
         prompt="consent",
     )
-    _oauth_states[state] = (time.time(), flow.code_verifier)
-    return RedirectResponse(url=auth_url, status_code=307)
+    cleanup_expired_states()
+    save_state(state, flow.code_verifier, CONNECTOR_FLOW, OAUTH_STATE_TTL_SECONDS)
+    return _no_store_redirect(auth_url, status_code=307)
 
 
 def _google_ads_callback(code: str, state: str) -> RedirectResponse:
@@ -62,7 +59,7 @@ def _google_ads_callback(code: str, state: str) -> RedirectResponse:
         raise HTTPException(status_code=400, detail="Missing OAuth code.")
     if not state:
         raise HTTPException(status_code=400, detail="Invalid or expired OAuth state.")
-    ok, code_verifier = _consume_oauth_state(state)
+    ok, code_verifier = consume_state(state, CONNECTOR_FLOW, OAUTH_STATE_TTL_SECONDS)
     if not ok:
         raise HTTPException(status_code=400, detail="Invalid or expired OAuth state.")
 
@@ -95,7 +92,7 @@ def _google_ads_callback(code: str, state: str) -> RedirectResponse:
     redirect_url = (
         f"{get_configs().frontend_origin}/connections#refresh_token={quote(refresh_token, safe='')}"
     )
-    return RedirectResponse(url=redirect_url, status_code=307)
+    return _no_store_redirect(redirect_url, status_code=307)
 
 
 @router.get("/auth/connectors/{connector_id}/oauth/authorize")

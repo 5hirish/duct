@@ -37,6 +37,9 @@ class Configs(BaseSettings):
     # URIs when GOOGLE_OAUTH_REDIRECT_URI / GOOGLE_SIGNIN_REDIRECT_URI are unset.
     api_public_url: str = Field(default="http://localhost:8000")
 
+    # Primary relational store for auth-first persistence.
+    database_url: str = ""
+
     # Google OAuth (same app can back Google Ads API). If unset/empty, derived as
     # {api_public_url}/auth/google/callback (alias for the Google Ads connector callback).
     google_oauth_client_id: str = ""

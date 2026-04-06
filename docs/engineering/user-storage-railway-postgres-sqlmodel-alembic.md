@@ -1,6 +1,6 @@
 # User storage: Railway Postgres + SQLModel + Alembic
 
-**Summary:** Persist users and related data in Railway Postgres. Implement with SQLModel (SQLAlchemy 2 + Pydantic) and Alembic migrations from day one so schema evolution stays explicit and safe. Cloudflare remains for edge and R2; FastAPI on Railway owns the database connection and migrations.
+**Summary:** Persist only authenticated users (Google sign-in) in Railway Postgres for now. Implement with SQLModel (SQLAlchemy 2 + Pydantic) and Alembic migrations from day one so schema evolution stays explicit and safe. Cloudflare remains for edge and R2; FastAPI on Railway owns the database connection and migrations.
 
 ## Checklist (implementation)
 
@@ -8,9 +8,10 @@
 - [ ] **Dependencies + config:** Add `sqlmodel`, `alembic`, `psycopg[binary]` (or `asyncpg` if standardizing on async DB) + `database_url` in `backend/config.py`
 - [ ] **Layout + Alembic:** Add `backend/db` (engine, `SessionLocal`, `get_session`) + `backend/models` (SQLModel tables) + `alembic.ini` and `alembic/env.py` wired to `SQLModel.metadata`; register new packages in `backend/pyproject.toml`
 - [ ] **First migration:** Initial Alembic revision (empty baseline or first tables once models exist); document local workflow (`alembic upgrade head`)
-- [ ] **Schema v1:** Design tables: user identity, workspace, connector credentials (encrypted), report index + optional R2 key
-- [ ] **OAuth state:** Replace in-memory OAuth state in `backend/routes/auth.py` with DB or KV before horizontal scale
-- [ ] **Report storage:** Plan migration from `backend/data/` filesystem to DB + R2 for multi-tenant production
+- [ ] **Schema v1 (auth-only):** Design tables for Google user identity and durable OAuth state (`users`, `auth_identities`, `oauth_states`)
+- [ ] **Sign-in persistence:** On `/auth/signin/google/callback`, upsert user + identity before issuing JWT
+- [ ] **OAuth state:** Replace in-memory OAuth state in `backend/routes/auth.py` and `backend/routes/signin.py` with Postgres-backed state
+- [ ] **Deferred domains:** Keep connectors/report persistence out of this first DB milestone
 
 ## Decision (locked)
 
@@ -86,6 +87,48 @@ When FastAPI and Alembic are wired up:
 - **Alembic** gives reproducible environments (local, CI, Railway deploy) and safe roll-forward/rollback discipline as you add users, connectors, reports, and context.
 - **Railway Postgres + Python** is the same proven path as any other Postgres host; you are not locked in—only the connection string changes if you ever move hosts.
 
+## Auth-first schema (Supabase-inspired, minimal)
+
+Supabase’s `auth.users`/`identities` split is a good pattern: keep a stable internal user row, and keep provider-specific identity details separate. For Duct today, we only need Google sign-in, so we keep this lean.
+
+### Tables for phase 1
+
+1. **`users`** (internal user record)
+   - `id` UUID PK
+   - `email` text unique not null
+   - `full_name` text null
+   - `avatar_url` text null
+   - `created_at` timestamptz not null default now()
+   - `updated_at` timestamptz not null default now()
+   - `last_sign_in_at` timestamptz null
+
+2. **`auth_identities`** (provider mapping, Supabase-style)
+   - `id` UUID PK
+   - `user_id` UUID FK -> `users.id` (cascade delete)
+   - `provider` text not null (`google` only for now)
+   - `provider_user_id` text not null (Google `sub`)
+   - `provider_email` text null
+   - `raw_profile` JSONB null (small subset of Google claims if needed)
+   - `created_at` timestamptz not null default now()
+   - `updated_at` timestamptz not null default now()
+   - unique index on (`provider`, `provider_user_id`)
+
+3. **`oauth_states`** (durable anti-CSRF + PKCE state)
+   - `state` text PK
+   - `flow` text not null (`signin_google`, `connector_google_ads`)
+   - `code_verifier` text null
+   - `issued_at` timestamptz not null default now()
+   - `expires_at` timestamptz not null
+   - `consumed_at` timestamptz null
+   - index on `expires_at`
+
+### What we intentionally do not add yet
+
+- No workspaces/organizations table yet.
+- No connector credential storage yet.
+- No report metadata/artifacts tables yet.
+- No refresh-token session store (JWT remains stateless for now).
+
 ## Current repo constraints
 
 - `backend/pyproject.toml` may not yet list `sqlmodel`, `sqlalchemy`, `alembic`, or a Postgres driver—add them when implementing.
@@ -116,15 +159,24 @@ Pick one style for new DB access and avoid mixing both in the same codebase long
 1. **Railway:** Create Postgres, wire `DATABASE_URL` into the backend service.
 2. **Dependencies:** Add `sqlmodel`, `alembic`, and a Postgres driver (e.g. `psycopg[binary]` for sync SQLAlchemy URLs).
 3. **Scaffold:** `db/` + `models/` + `alembic init` under `backend/`, wire `env.py` to `SQLModel.metadata`.
-4. **First migration:** Either an empty initial revision to establish the chain, or the first real tables once minimal models exist (`alembic revision --autogenerate -m "..."` then review by hand).
+4. **First migration:** Create the first real tables with **autogenerate only** (`alembic revision --autogenerate -m "..."` then review by hand). Do not hand-write revision files.
 5. **CI / deploy:** Run `alembic upgrade head` as part of the Railway release command or a one-off migration job; document in `docs/engineering/deployment-cloudflare-railway.md` when added.
+
+## Migration workflow policy (always)
+
+- Revisions must be machine-generated with Alembic autogenerate.
+- Human review is still required before merge/deploy.
+- Recommended command wrapper in this repo:
+  - `python backend/scripts/migrations.py revision -m "<message>"`
+  - `python backend/scripts/migrations.py upgrade`
+  - `python backend/scripts/migrations.py check-pending`
 
 ## Domain sequencing
 
-1. Tables: `users` (or Google `sub`), `workspaces`, `connector_accounts`, optional `reports` / `report_artifacts`.
-2. Replace in-memory OAuth state in `backend/routes/auth.py` with a durable store (Postgres table with TTL is fine initially).
-3. Server-side **encrypted** connector tokens; never return refresh tokens to the browser.
-4. Report metadata in Postgres; optional large JSON in **R2** with a pointer column.
+1. Ship auth-only tables: `users`, `auth_identities`, `oauth_states`.
+2. Update sign-in callback to upsert user/identity from Google claims (`sub`, `email`, `name`, `picture`).
+3. Replace in-memory OAuth state in both auth routes with `oauth_states` and enforce expiry + one-time consume semantics.
+4. After sign-in persistence is stable, add connector credentials (encrypted), then report metadata/artifacts.
 
 ## Security note (connectors)
 

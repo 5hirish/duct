@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 import secrets
-import time
 from datetime import datetime, timezone
 from urllib.parse import quote
 
@@ -15,25 +14,26 @@ from fastapi.responses import RedirectResponse
 
 from config import get_configs
 from service.google.oauth import create_google_signin_flow
+from service.oauth_state_store import cleanup_expired_states, consume_state, save_state
+from service.user_store import upsert_google_user
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["signin"])
 
 OAUTH_STATE_TTL_SECONDS = 300
-_signin_states: dict[str, tuple[float, str | None]] = {}
+SIGNIN_FLOW = "signin_google"
 
 JWT_EXPIRY_SECONDS = 7 * 24 * 60 * 60  # 7 days
 
 
-def _consume_state(state: str) -> tuple[bool, str | None]:
-    entry = _signin_states.pop(state, None)
-    if entry is None:
-        return False, None
-    issued_at, code_verifier = entry
-    if (time.time() - issued_at) > OAUTH_STATE_TTL_SECONDS:
-        return False, None
-    return True, code_verifier
+def _no_store_redirect(url: str, status_code: int = 307) -> RedirectResponse:
+    """Build a redirect response that disables client/proxy caching."""
+    response = RedirectResponse(url=url, status_code=status_code)
+    response.headers["Cache-Control"] = "no-store, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 
 async def _verify_turnstile(token: str, remote_ip: str) -> bool:
@@ -94,8 +94,9 @@ async def signin_google_authorize(
         include_granted_scopes="false",
         prompt="select_account",
     )
-    _signin_states[state] = (time.time(), flow.code_verifier)
-    return RedirectResponse(url=auth_url, status_code=307)
+    cleanup_expired_states()
+    save_state(state, flow.code_verifier, SIGNIN_FLOW, OAUTH_STATE_TTL_SECONDS)
+    return _no_store_redirect(auth_url, status_code=307)
 
 
 @router.get("/auth/signin/google/callback")
@@ -106,7 +107,7 @@ def signin_google_callback(
     """Google OAuth callback for user sign-in. Exchanges code, creates JWT, redirects to app."""
     if not code or not state:
         raise HTTPException(status_code=400, detail="Missing OAuth code or state.")
-    ok, code_verifier = _consume_state(state)
+    ok, code_verifier = consume_state(state, SIGNIN_FLOW, OAUTH_STATE_TTL_SECONDS)
     if not ok:
         raise HTTPException(status_code=400, detail="Invalid or expired OAuth state.")
 
@@ -144,18 +145,35 @@ def signin_google_callback(
                 status_code=502, detail=f"Failed to verify ID token: {exc}"
             ) from exc
 
+    provider_user_id = id_info.get("sub", "")
     email = id_info.get("email", "")
     name = id_info.get("name", "")
     picture = id_info.get("picture", "")
 
-    if not email:
-        raise HTTPException(status_code=502, detail="No email in Google ID token.")
+    if not provider_user_id or not email:
+        raise HTTPException(
+            status_code=502, detail="Google ID token missing required identity fields."
+        )
+    normalized_email = email.strip().lower()
+
+    upsert_google_user(
+        provider_user_id=provider_user_id,
+        email=normalized_email,
+        name=name,
+        picture=picture,
+        raw_profile={
+            "sub": provider_user_id,
+            "email": normalized_email,
+            "name": name,
+            "picture": picture,
+        },
+    )
 
     try:
-        token = _create_jwt(email, name, picture)
+        token = _create_jwt(normalized_email, name, picture)
     except ValueError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
     cfg = get_configs()
     redirect_url = f"{cfg.frontend_origin}/?token={quote(token, safe='')}"
-    return RedirectResponse(url=redirect_url, status_code=307)
+    return _no_store_redirect(redirect_url, status_code=307)
