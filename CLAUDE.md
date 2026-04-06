@@ -16,3 +16,4 @@ Monorepo for [getduct.ai](https://getduct.ai).
 - When editing files under `site/`, follow `site/CLAUDE.md`.
 - When editing files under `site/`, also follow `site/AGENTS.md`.
 - Do not assume site conventions apply to `backend/` or `app/`.
+- Cursor Agent Skills live under `.cursor/skills/<name>/SKILL.md` as symlinks to `.claude/skills/<name>.md`; change the `.claude` file to update both tools.
