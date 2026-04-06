@@ -48,18 +48,18 @@ function signalLevel(finding) {
 function TrendIcon({ direction }) {
   if (direction === "up")
     return (
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
         <path d="m18 15-6-6-6 6" />
       </svg>
     );
   if (direction === "down")
     return (
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
         <path d="m6 9 6 6 6-6" />
       </svg>
     );
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
       <path d="M5 12h14" />
     </svg>
   );

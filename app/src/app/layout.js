@@ -1,6 +1,20 @@
 import "./globals.css";
 
+import { DM_Sans, JetBrains_Mono } from "next/font/google";
+
 import { ProductAnalytics } from "../components/ProductAnalytics";
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  variable: "--font-dm-sans",
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-jetbrains-mono",
+  display: "swap",
+});
 
 const gtmId = process.env.NEXT_PUBLIC_GTM_ID;
 
@@ -63,8 +77,14 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body>
+    <html
+      lang="en"
+      className={`${dmSans.variable} ${jetbrainsMono.variable}`}
+    >
+      <body className="min-h-dvh bg-background font-sans text-foreground antialiased">
+        <a href="#main-content" className="skip-link">
+          Skip to main content
+        </a>
         {gtmId ? (
           <noscript>
             <iframe

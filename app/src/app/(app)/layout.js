@@ -9,7 +9,7 @@ export default function AppLayout({ children }) {
     <AuthProvider>
       <AuthGuard>
         <div className="app-shell">
-          <header className="app-header">
+          <header className="app-header border-border/70 bg-background/85 shadow-sm ring-1 ring-border/40 backdrop-blur-xl supports-[backdrop-filter]:bg-background/70">
             <div className="app-header-inner">
               <div className="app-header-left">
                 <Link className="logo" href="/reports">
@@ -21,7 +21,9 @@ export default function AppLayout({ children }) {
               <AppNav />
             </div>
           </header>
-          <main className="app-main">{children}</main>
+          <main id="main-content" className="app-main" tabIndex={-1}>
+            {children}
+          </main>
         </div>
       </AuthGuard>
     </AuthProvider>

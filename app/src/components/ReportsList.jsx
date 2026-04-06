@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useEffectEvent, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { getLocalReports, LOCAL_REPORTS_STORAGE_KEY } from "../lib/localReports";
 import { REPORT_NAV_TRANSITION_TYPES } from "../lib/reportNavTransition";
 
@@ -23,7 +24,7 @@ function formatTimeAgo(iso) {
 function ConnectionIcons({ connections }) {
   if (!connections?.length) return null;
   return (
-    <div className="report-connection-icons" aria-label="Connections">
+    <div className="report-connection-icons" aria-hidden="true">
       {connections.includes("google_ads") && (
         <img
           src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Google_Ads_logo.svg"
@@ -56,6 +57,17 @@ function getConnectionsFromPayload(payload) {
   if (!source) return [];
   if (source.includes("google_ads")) return ["google_ads"];
   return [source];
+}
+
+/** Accessible name for report cards (link `aria-label`); keeps SR context without reading only a truncated line. */
+function reportCardAriaLabel(report, maxInsightLen = 160) {
+  const localNote = report.isLocal ? " Stored in this browser." : "";
+  const raw = (report.keyInsight || "").trim();
+  if (!raw) {
+    return `${report.title}.${localNote} View report.`;
+  }
+  const clipped = raw.length > maxInsightLen ? `${raw.slice(0, maxInsightLen).trim()}…` : raw;
+  return `${report.title}. ${clipped}${localNote}`;
 }
 
 function mapStoredEntriesToReports(stored) {
@@ -101,7 +113,17 @@ export default function ReportsList({ serverReports }) {
   });
 
   if (allReports.length === 0) {
-    return <p>No reports yet. Generate your first report to get started.</p>;
+    return (
+      <div className="empty-reports">
+        <p style={{ marginTop: 0, marginBottom: 8 }}>No reports yet.</p>
+        <p className="app-subtle" style={{ marginTop: 0, marginBottom: 16, maxWidth: 420 }}>
+          Generate an intelligence brief from your connected sources. Reports you save appear here.
+        </p>
+        <Button asChild>
+          <Link href="/generate">Generate a report</Link>
+        </Button>
+      </div>
+    );
   }
 
   return (
@@ -111,6 +133,7 @@ export default function ReportsList({ serverReports }) {
           key={report.slug}
           href={`/reports/${report.slug}`}
           className="report-card"
+          aria-label={reportCardAriaLabel(report)}
           transitionTypes={REPORT_NAV_TRANSITION_TYPES}
         >
           <div className="report-card-body">

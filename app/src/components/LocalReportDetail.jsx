@@ -35,7 +35,9 @@ export default function LocalReportDetail({ slug }) {
             &larr; Back to reports
           </Link>
         </p>
-        <h1 style={{ marginTop: 0, marginBottom: 6 }}>Report not found</h1>
+        <h1 className="report-detail-title" style={{ marginTop: 0, marginBottom: 6 }}>
+          Report not found
+        </h1>
         <p>This locally-stored report may have been cleared from your browser.</p>
       </section>
     );
@@ -44,7 +46,9 @@ export default function LocalReportDetail({ slug }) {
   if (!payload) {
     return (
       <section>
-        <p className="app-subtle">Loading report...</p>
+        <p className="app-subtle" role="status" aria-live="polite">
+          Loading report…
+        </p>
       </section>
     );
   }
@@ -67,7 +71,7 @@ export default function LocalReportDetail({ slug }) {
           &larr; Back to reports
         </Link>
       </p>
-      <h1 style={{ marginTop: 0, marginBottom: 6 }}>
+      <h1 className="report-detail-title" style={{ marginTop: 0, marginBottom: 6 }}>
         {title} <span className="report-badge-local">Local</span>
       </h1>
       <p className="report-meta" style={{ marginTop: 0, marginBottom: 14 }}>

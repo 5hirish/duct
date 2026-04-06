@@ -3,6 +3,17 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "../lib/auth";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+function navPillClass(active) {
+  return cn(
+    "rounded-full shadow-none",
+    active
+      ? "bg-primary/15 font-semibold text-primary hover:bg-primary/22 hover:text-primary"
+      : "text-muted-foreground hover:bg-muted/70 hover:text-primary"
+  );
+}
 
 export default function AppNav() {
   const pathname = usePathname();
@@ -12,16 +23,18 @@ export default function AppNav() {
   const isReports = pathname.startsWith("/reports");
 
   return (
-    <div className="nav-links">
-      <Link className={`nav-link ${isConnections ? "nav-link--active" : ""}`} href="/connections">
-        Connections
-      </Link>
-      <Link className={`nav-link ${isGenerate ? "nav-link--active" : ""}`} href="/generate">
-        Generate
-      </Link>
-      <Link className={`nav-link ${isReports ? "nav-link--active" : ""}`} href="/reports">
-        Reports
-      </Link>
+    <div className="nav-links flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+      <div className="flex items-center gap-0.5 rounded-full bg-muted/80 p-1 ring-1 ring-border/70 sm:gap-1">
+        <Button variant="ghost" size="sm" className={navPillClass(isConnections)} asChild>
+          <Link href="/connections">Connections</Link>
+        </Button>
+        <Button variant="ghost" size="sm" className={navPillClass(isGenerate)} asChild>
+          <Link href="/generate">Generate</Link>
+        </Button>
+        <Button variant="ghost" size="sm" className={navPillClass(isReports)} asChild>
+          <Link href="/reports">Reports</Link>
+        </Button>
+      </div>
       {user && (
         <div className="nav-user">
           {user.picture ? (
@@ -38,9 +51,15 @@ export default function AppNav() {
               {(user.name || user.email || "U").charAt(0).toUpperCase()}
             </span>
           )}
-          <button type="button" className="nav-signout" onClick={signOut}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-auto px-2 font-medium text-muted-foreground hover:text-primary"
+            onClick={signOut}
+          >
             Sign out
-          </button>
+          </Button>
         </div>
       )}
     </div>

@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BASE } from "../../lib/api";
+import { Button } from "@/components/ui/button";
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
 const TOKEN_KEY = "duct_auth_token";
@@ -26,7 +27,7 @@ function isTokenValid(token) {
 /* Google "G" logo as inline SVG */
 function GoogleLogo() {
   return (
-    <svg width="18" height="18" viewBox="0 0 48 48">
+    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
       <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
       <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
       <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
@@ -35,9 +36,22 @@ function GoogleLogo() {
   );
 }
 
+function SignInSuspenseFallback() {
+  return (
+    <div
+      className="flex min-h-dvh items-center justify-center bg-background"
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <p className="text-sm text-muted-foreground">Loading…</p>
+    </div>
+  );
+}
+
 export default function SignInPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<SignInSuspenseFallback />}>
       <SignInContent />
     </Suspense>
   );
@@ -90,10 +104,21 @@ function SignInContent() {
     window.location.href = url;
   }, [turnstileToken]);
 
-  if (!ready) return null;
+  if (!ready) {
+    return (
+      <div
+        className="flex min-h-dvh items-center justify-center bg-background"
+        role="status"
+        aria-live="polite"
+        aria-busy="true"
+      >
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="signin-split">
+    <main id="main-content" className="signin-split" aria-labelledby="signin-heading" tabIndex={-1}>
       {/* ── Left: Hero ── */}
       <div className="signin-hero">
         <div className="signin-hero-inner">
@@ -126,7 +151,7 @@ function SignInContent() {
       {/* ── Right: Sign-In Form ── */}
       <div className="signin-form-side">
         <div className="signin-form">
-          <h2>Sign in to Duct</h2>
+          <h2 id="signin-heading">Sign in to Duct</h2>
           <p className="signin-form-sub">
             Get started with your Google account
           </p>
@@ -137,17 +162,20 @@ function SignInContent() {
               data-sitekey={TURNSTILE_SITE_KEY}
               data-callback="onTurnstileVerify"
               data-theme="light"
+              aria-label="Security verification"
             />
           )}
 
-          <button
+          <Button
             type="button"
-            className="google-signin-btn"
+            variant="outline"
+            size="lg"
+            className="h-12 w-full justify-center gap-3 rounded-4xl border-border bg-card font-medium shadow-sm hover:bg-muted/60"
             onClick={handleSignIn}
           >
             <GoogleLogo />
-            <span>Sign in with Google</span>
-          </button>
+            Sign in with Google
+          </Button>
 
           <p className="signin-legal">
             By signing in, you agree to our{" "}
@@ -161,6 +189,6 @@ function SignInContent() {
           </p>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

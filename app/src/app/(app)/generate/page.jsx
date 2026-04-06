@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import GoogleAdsReport from "../../../components/GoogleAdsReport";
 import { fetchGoogleAdsAccounts, generateReport } from "../../../lib/api";
 import { saveLocalReport, generateSlug } from "../../../lib/localReports";
+import { Button } from "@/components/ui/button";
 
 const GOALS = [
   {
@@ -496,9 +497,9 @@ function StepAnalyzing({ error, onRetry }) {
       {error && (
         <div style={{ marginTop: 20 }}>
           <pre className="generate-error">{error}</pre>
-          <button type="button" className="btn btn-ghost" onClick={onRetry} style={{ marginTop: 10 }}>
+          <Button type="button" variant="outline" onClick={onRetry} style={{ marginTop: 10 }}>
             Try again
-          </button>
+          </Button>
         </div>
       )}
     </div>
@@ -513,17 +514,12 @@ function StepReport({ report, onSave, onRestart, saved }) {
   return (
     <div className="generate-step">
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
-        <button
-          type="button"
-          className="btn btn-orange"
-          onClick={onSave}
-          disabled={saved}
-        >
+        <Button type="button" onClick={onSave} disabled={saved}>
           {saved ? "Saved to Reports" : "Save to Reports"}
-        </button>
-        <button type="button" className="btn btn-ghost" onClick={onRestart}>
+        </Button>
+        <Button type="button" variant="outline" onClick={onRestart}>
           Generate another
-        </button>
+        </Button>
       </div>
       <GoogleAdsReport brief={brief} synthesis={synthesis} />
     </div>
@@ -743,25 +739,27 @@ export default function GeneratePage() {
 
   return (
     <section>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
-        <Link
-          className="btn btn-ghost connection-back-btn"
-          href="/reports"
-          aria-label="Back to Reports"
-          title="Back to Reports"
+      <div className="page-toolbar-back">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="connection-back-btn shrink-0 rounded-full"
+          asChild
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-            <path
-              d="M15 18 9 12l6-6"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </Link>
-        <h1 style={{ marginTop: 0, marginBottom: 0 }}>Generate Report</h1>
+          <Link href="/reports" aria-label="Back to Reports" title="Back to Reports">
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M15 18 9 12l6-6"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </Link>
+        </Button>
+        <h1 className="page-toolbar-title">Generate Report</h1>
       </div>
 
       <ProgressDots step={step} />
@@ -774,14 +772,9 @@ export default function GeneratePage() {
             onToggle={toggleConnection}
           />
           <div style={{ marginTop: 16 }}>
-            <button
-              type="button"
-              className="btn btn-orange"
-              disabled={!canProceedStep1}
-              onClick={() => setStep(2)}
-            >
+            <Button type="button" disabled={!canProceedStep1} onClick={() => setStep(2)}>
               Next
-            </button>
+            </Button>
           </div>
         </>
       )}
@@ -814,17 +807,12 @@ export default function GeneratePage() {
             onBusinessContextChange={setBusinessContext}
           />
           <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
-            <button type="button" className="btn btn-ghost" onClick={() => setStep(1)}>
+            <Button type="button" variant="outline" onClick={() => setStep(1)}>
               Back
-            </button>
-            <button
-              type="button"
-              className="btn btn-orange"
-              disabled={!canProceedConfigure}
-              onClick={() => setStep(3)}
-            >
+            </Button>
+            <Button type="button" disabled={!canProceedConfigure} onClick={() => setStep(3)}>
               Next
-            </button>
+            </Button>
           </div>
           {!canProceedConfigure && (
             <p className="app-subtle generate-step-hint" role="status">
@@ -849,17 +837,12 @@ export default function GeneratePage() {
             datePreset={datePreset}
           />
           <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
-            <button type="button" className="btn btn-ghost" onClick={() => setStep(2)}>
+            <Button type="button" variant="outline" onClick={() => setStep(2)}>
               Back
-            </button>
-            <button
-              type="button"
-              className="btn btn-orange"
-              disabled={!canProceedConfigure}
-              onClick={handleGenerate}
-            >
+            </Button>
+            <Button type="button" disabled={!canProceedConfigure} onClick={handleGenerate}>
               Generate
-            </button>
+            </Button>
           </div>
           {!canProceedConfigure && (
             <p className="app-subtle generate-step-hint" role="status">
