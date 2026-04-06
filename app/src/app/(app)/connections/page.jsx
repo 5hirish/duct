@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { BASE, fetchGoogleAdsAccounts } from "../../../lib/api";
+import { Button } from "@/components/ui/button";
 
 export default function ConnectionsPage() {
   /** False until client mount — keeps SSR + first client paint identical (avoids hydration mismatch). */
@@ -70,25 +71,27 @@ export default function ConnectionsPage() {
 
   return (
     <section>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
-        <Link
-          className="btn btn-ghost connection-back-btn"
-          href="/reports"
-          aria-label="Back to Reports"
-          title="Back to Reports"
+      <div className="page-toolbar-back">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="connection-back-btn shrink-0 rounded-full"
+          asChild
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-            <path
-              d="M15 18 9 12l6-6"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </Link>
-        <h1 style={{ marginTop: 0, marginBottom: 0 }}>Connections</h1>
+          <Link href="/reports" aria-label="Back to Reports" title="Back to Reports">
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M15 18 9 12l6-6"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </Link>
+        </Button>
+        <h1 className="page-toolbar-title">Connections</h1>
       </div>
       <p className="app-subtle" style={{ marginTop: 0, marginBottom: 18 }}>
         Manage data source connections for reports. Choose your Google Ads account when you{" "}
@@ -127,16 +130,13 @@ export default function ConnectionsPage() {
             ) : authState === "checking" ? (
               <span className="app-subtle">Verifying access…</span>
             ) : isConnected ? (
-              <button type="button" className="app-button app-button--ghost" onClick={signOut}>
+              <Button type="button" variant="outline" size="sm" onClick={signOut}>
                 Disconnect
-              </button>
+              </Button>
             ) : (
-              <a
-                className="app-button"
-                href={`${BASE}/auth/connectors/google_ads/oauth/authorize`}
-              >
-                Connect
-              </a>
+              <Button size="sm" asChild>
+                <a href={`${BASE}/auth/connectors/google_ads/oauth/authorize`}>Connect</a>
+              </Button>
             )}
           </div>
         </article>
@@ -160,9 +160,9 @@ export default function ConnectionsPage() {
           </div>
           <div className="connection-status-row">
             <span className="status-pill yellow">Coming soon</span>
-            <button type="button" className="app-button app-button--ghost" disabled>
+            <Button type="button" variant="secondary" size="sm" disabled>
               Coming soon
-            </button>
+            </Button>
           </div>
         </article>
 
@@ -185,9 +185,9 @@ export default function ConnectionsPage() {
           </div>
           <div className="connection-status-row">
             <span className="status-pill yellow">Coming soon</span>
-            <button type="button" className="app-button app-button--ghost" disabled>
+            <Button type="button" variant="secondary" size="sm" disabled>
               Coming soon
-            </button>
+            </Button>
           </div>
         </article>
       </div>

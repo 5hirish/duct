@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { listReports } from "../../../lib/reports";
 import ReportsList from "../../../components/ReportsList";
+import { ReportsGenerateCta } from "./ReportsGenerateCta";
 
 export const dynamic = "force-dynamic";
 
@@ -9,14 +9,12 @@ export default async function ReportsPage() {
 
   return (
     <section>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
-        <h1 style={{ marginTop: 0, marginBottom: 0 }}>Reports</h1>
-        <Link className="btn btn-ghost" href="/generate">
-          Generate
-        </Link>
+      <div className="page-toolbar">
+        <h1 className="page-toolbar-title">Reports</h1>
+        <ReportsGenerateCta />
       </div>
       <p className="app-subtle" style={{ marginTop: 0, marginBottom: 18 }}>
-        Generated report artifacts from backend renderer.
+        Open a brief to view insights, or generate a new one from your connected data.
       </p>
 
       <ReportsList serverReports={reports} />

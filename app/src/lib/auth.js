@@ -62,6 +62,19 @@ export function useAuth() {
   return ctx;
 }
 
+function AuthLoadingMessage({ message }) {
+  return (
+    <div
+      className="flex min-h-dvh items-center justify-center bg-background px-4"
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <p className="text-sm text-muted-foreground">{message}</p>
+    </div>
+  );
+}
+
 export function AuthGuard({ children }) {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -72,6 +85,11 @@ export function AuthGuard({ children }) {
     }
   }, [loading, user, router]);
 
-  if (loading || !user) return null;
+  if (loading) {
+    return <AuthLoadingMessage message="Loading…" />;
+  }
+  if (!user) {
+    return <AuthLoadingMessage message="Redirecting to sign in…" />;
+  }
   return <>{children}</>;
 }
