@@ -58,6 +58,8 @@ Service root in Railway should be **`backend`** so [`railway.json`](railway.json
 
 - **Python:** 3.12 or 3.13 (`>=3.12,<3.14` in `pyproject.toml`). A `backend/.python-version` file pins **3.12** for pyenv; CI uses 3.12.
 - **HTTP:** `GET /` returns public API metadata JSON; `GET /health` is the liveness check. OpenAPI (`/docs`, `/openapi.json`) is **disabled** unless `EXPOSE_OPENAPI_DOCS=true` in `.env`. With docs on, set `OPENAPI_DOCS_BASIC_PASSWORD` (and optional `OPENAPI_DOCS_BASIC_USER`) to require Basic auth on those routes.
+- **Migrations policy:** always generate migrations with Alembic autogenerate; do not hand-write revision files.
+- **Migration manager:** use `python scripts/migrations.py revision -m "..."`, `python scripts/migrations.py upgrade`, and `python scripts/migrations.py check-pending`.
 - Cursor instructions: `backend/AGENTS.md`
 - Claude Code instructions: `backend/CLAUDE.md`
 
