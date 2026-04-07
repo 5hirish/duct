@@ -51,6 +51,7 @@ p.sub { font-size: 16px; font-weight: 300; color: var(--navy-3); line-height: 1.
 display: inline-flex; align-items: center; gap: 8px;
 padding: 12px 26px; border-radius: var(--pill);
 font-family: var(--sans); font-size: 14px; font-weight: 500;
+white-space: nowrap;
 cursor: pointer; text-decoration: none; border: none; transition: all .2s;
 }
 .btn-orange { background: var(--orange); color: #fff; }
