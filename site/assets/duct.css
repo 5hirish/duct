@@ -371,10 +371,24 @@ footer:not(.footer-expanded) { flex-direction: column; align-items: flex-start; 
 .blog-cta p { font-size: 15px; font-weight: 300; color: var(--navy-3); margin-bottom: 28px; }
 .blog-cta .cta-form { max-width: 460px; margin: 0 auto; }
 
+/* FAQ */
+.faq { padding: 96px 52px; background: var(--off); }
+.faq-inner { max-width: 760px; margin: 0 auto; }
+.faq-inner h2 { margin-bottom: 48px; }
+.faq-list { border-top: 1px solid var(--border); }
+.faq-item { border-bottom: 1px solid var(--border); }
+.faq-q { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; cursor: pointer; font-size: 17px; font-weight: 500; line-height: 1.4; color: var(--navy); list-style: none; gap: 16px; }
+.faq-q::-webkit-details-marker { display: none; }
+.faq-q::after { content: '+'; font-size: 22px; font-weight: 300; color: var(--navy-3); flex-shrink: 0; transition: transform .25s ease; }
+details[open] > .faq-q::after { transform: rotate(45deg); }
+.faq-a { padding: 0 32px 24px 0; font-size: 15px; font-weight: 300; line-height: 1.75; color: var(--navy-3); }
+
 @media (max-width: 860px) {
   .blog-hero { padding: 96px 24px 40px; }
   .blog-grid { grid-template-columns: 1fr; padding: 40px 24px 64px; }
   .article-header { padding: 72px 24px 0; }
   .article-hero-img { padding: 0 24px; }
   .blog-cta { padding: 60px 24px; }
+  .faq { padding: 64px 24px; }
+  .faq-q { font-size: 16px; }
 }
