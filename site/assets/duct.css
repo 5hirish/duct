@@ -17,6 +17,16 @@
 }
 
 html { scroll-behavior: smooth; }
+
+/* Skip to content (shared; used on marketing + blog pages) */
+.skip-link {
+  position: absolute; top: -100%; left: 16px; z-index: 300;
+  padding: 10px 20px; background: var(--navy); color: #fff;
+  font-size: 14px; font-weight: 500; border-radius: var(--r);
+  text-decoration: none; transition: top .15s;
+}
+.skip-link:focus { top: 16px; }
+
 body {
 font-family: var(--sans);
 background: var(--white);
@@ -80,6 +90,38 @@ display: flex; align-items: center; gap: 5px;
 .nav-links { display: flex; align-items: center; gap: 32px; }
 .nav-link { font-size: 14px; color: var(--navy-3); text-decoration: none; transition: color .2s; }
 .nav-link:hover { color: var(--navy); }
+.nav-link[aria-current="page"] { color: var(--navy); font-weight: 500; }
+.nav-dropdown { position: relative; }
+.nav-dropdown > .nav-link::after { content: ' ↓'; font-size: 10px; opacity: .5; }
+.dropdown-menu {
+display: none; position: absolute; top: 100%; left: 0;
+padding-top: 10px; background: transparent;
+min-width: 260px;
+}
+.dropdown-menu-inner {
+background: var(--white); border: 1px solid var(--border);
+border-radius: var(--r-lg); padding: 8px;
+box-shadow: 0 20px 60px rgba(0,0,0,.1);
+}
+.nav-dropdown:hover .dropdown-menu { display: block; }
+.dm-item {
+display: flex; align-items: flex-start; gap: 12px;
+padding: 10px 12px; border-radius: var(--r);
+text-decoration: none; color: var(--navy-3);
+font-size: 13px; transition: background .15s, color .15s;
+}
+.dm-item:hover { background: var(--off); color: var(--navy); }
+.dm-item.disabled { opacity: .4; pointer-events: none; }
+.dm-icon { font-size: 17px; flex-shrink: 0; margin-top: 1px; }
+.dm-text strong { display: block; font-size: 13px; font-weight: 500; color: var(--navy); margin-bottom: 1px; }
+.dm-text span { font-size: 11px; color: var(--navy-3); }
+.dm-sep { height: 1px; background: var(--border); margin: 6px 4px; }
+.tag-soon {
+font-size: 10px; font-weight: 600; padding: 2px 7px;
+border-radius: 4px; background: #fff7e6; color: #c9a84c;
+border: 1px solid rgba(201,168,76,.3);
+margin-left: auto; flex-shrink: 0; align-self: center;
+}
 .nav-toggle {
 display: none; align-items: center; justify-content: center;
 width: 42px; height: 42px; border-radius: 999px;

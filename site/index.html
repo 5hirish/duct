@@ -24,51 +24,111 @@
 <style>
 /* ── INDEX-ONLY STYLES ── */
 
-/* Skip to content */
-.skip-link {
-  position: absolute; top: -100%; left: 16px; z-index: 300;
-  padding: 10px 20px; background: var(--navy); color: #fff;
-  font-size: 14px; font-weight: 500; border-radius: var(--r);
-  text-decoration: none; transition: top .15s;
-}
-.skip-link:focus { top: 16px; }
-
-/* Nav dropdown */
-.nav-dropdown { position: relative; }
-.nav-dropdown > .nav-link::after { content: ' ↓'; font-size: 10px; opacity: .5; }
-.dropdown-menu {
-  display: none; position: absolute; top: 100%; left: 0;
-  padding-top: 10px; background: transparent;
-  min-width: 260px;
-}
-.dropdown-menu-inner {
-  background: var(--white); border: 1px solid var(--border);
-  border-radius: var(--r-lg); padding: 8px;
-  box-shadow: 0 20px 60px rgba(0,0,0,.1);
-}
-.nav-dropdown:hover .dropdown-menu { display: block; }
-.dm-item {
-  display: flex; align-items: flex-start; gap: 12px;
-  padding: 10px 12px; border-radius: var(--r);
-  text-decoration: none; color: var(--navy-3);
-  font-size: 13px; transition: background .15s, color .15s;
-}
-.dm-item:hover { background: var(--off); color: var(--navy); }
-.dm-item.disabled { opacity: .4; pointer-events: none; }
-.dm-icon { font-size: 17px; flex-shrink: 0; margin-top: 1px; }
-.dm-text strong { display: block; font-size: 13px; font-weight: 500; color: var(--navy); margin-bottom: 1px; }
-.dm-text span { font-size: 11px; color: var(--navy-3); }
-.dm-sep { height: 1px; background: var(--border); margin: 6px 4px; }
-.tag-soon {
-  font-size: 10px; font-weight: 600; padding: 2px 7px;
-  border-radius: 4px; background: #fff7e6; color: #c9a84c;
-  border: 1px solid rgba(201,168,76,.3);
-  margin-left: auto; flex-shrink: 0; align-self: center;
-}
-
 /* Hero tool strip */
 .hero-tools { margin-top: 60px; animation: fadeUp .5s .4s ease both; }
 .hero-tools p { font-size: 11px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); margin-bottom: 16px; }
+.hero-proof {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.hero-proof-pill {
+  font-size: 12px;
+  color: var(--navy-3);
+  border: 1px solid var(--border);
+  padding: 5px 12px;
+  border-radius: var(--pill);
+  background: var(--white);
+}
+.hero-layout {
+  width: 100%;
+  max-width: 1160px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+  gap: 36px;
+  align-items: center;
+}
+.hero-copy { text-align: left; }
+.hero-copy h1 { max-width: 700px; margin-bottom: 20px; font-size: clamp(42px, 6.2vw, 78px); }
+.hero-copy .hero-sub { margin: 0 0 28px; max-width: 560px; }
+.hero-copy .hero-form { justify-content: flex-start; }
+.hero-copy .hero-proof { justify-content: flex-start; }
+.hero-mini {
+  width: 100%;
+  animation: fadeUp .5s .2s ease both;
+  text-align: left;
+}
+.hero-mini-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--off);
+}
+.hero-mini-label {
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--navy-3);
+  font-weight: 600;
+}
+.hero-mini-chip {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--orange);
+  border: 1px solid rgba(255,92,0,.25);
+  background: #fff0e5;
+  border-radius: var(--pill);
+  padding: 3px 8px;
+}
+.hero-demo-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 10px 0;
+  margin-bottom: 10px;
+  background: transparent;
+}
+.hero-demo-tab {
+  font-size: 11px;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  background: var(--off);
+  color: var(--navy-3);
+  border-radius: var(--pill);
+  padding: 6px 10px;
+  cursor: pointer;
+}
+.hero-demo-tab.is-active {
+  color: var(--orange);
+  border-color: rgba(255,92,0,.25);
+  background: #fff0e5;
+}
+.hero-demo-body { padding: 0; }
+.hero-demo-body .brief-card,
+.hero-demo-body .brief-body,
+.hero-demo-body .brief-meta,
+.hero-demo-body .brief-sec,
+.hero-demo-body .finding,
+.hero-demo-body .finding p,
+.hero-demo-body .brief-action,
+.hero-demo-body .brief-action p,
+.hero-demo-body .brief-foot {
+  text-align: left;
+}
+.hero-demo-body .brief-foot { align-items: center; }
+.hero-demo-body .brief-foot a {
+  font-size: 11px;
+  color: var(--orange);
+  font-weight: 500;
+  text-decoration: none;
+}
+.hero-demo-body .brief-foot a:hover { text-decoration: underline; }
+.cta-form .btn { white-space: nowrap; }
 .tool-strip { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
 .tool-pill {
   font-size: 12px; color: var(--navy-3); border: 1px solid var(--border);
@@ -166,6 +226,27 @@
   .preview-inner { grid-template-columns: 1fr; gap: 40px; }
   .problem-full, .usecases, .preview { padding-left: 24px; padding-right: 24px; }
 }
+
+@media (max-width: 700px) {
+  .hero-layout {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .hero-copy {
+    text-align: center;
+  }
+  .hero-copy .hero-sub {
+    margin: 0 auto 28px;
+  }
+  .hero-copy .hero-form,
+  .hero-copy .hero-proof {
+    justify-content: center;
+  }
+  .hero-demo-tabs {
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
 </style>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":"Duct","url":"https://getduct.ai","description":"Automated intelligence across your entire tool stack.","publisher":{"@type":"Organization","name":"Duct","url":"https://getduct.ai","contactPoint":{"@type":"ContactPoint","email":"hello@getduct.ai"}}}
@@ -179,60 +260,18 @@
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 
-<!-- NAV -->
-<nav id="nav" aria-label="Main navigation">
-<div style="display:flex;align-items:center;gap:10px">
-<a href="/" class="logo">duct <span class="logo-mark" aria-hidden="true"></span></a>
-</div>
-<div class="nav-links">
-<div class="nav-dropdown">
-  <a href="#use-cases" class="nav-link">Solutions</a>
-  <div class="dropdown-menu">
-  <div class="dropdown-menu-inner">
-    <a href="/for-product-intelligence" class="dm-item">
-      <span class="dm-icon" aria-hidden="true">📊</span>
-      <span class="dm-text"><strong>Product Intelligence</strong><span>Weekly brief for PMs &amp; growth teams</span></span>
-    </a>
-    <a href="/for-organic-growth" class="dm-item">
-      <span class="dm-icon" aria-hidden="true">🌱</span>
-      <span class="dm-text"><strong>Organic Growth</strong><span>Automated SEO &amp; content intelligence</span></span>
-    </a>
-    <a href="/for-paid-ads" class="dm-item">
-      <span class="dm-icon" aria-hidden="true">📣</span>
-      <span class="dm-text"><strong>Paid Ads Intelligence</strong><span>Cross-platform brief for performance marketers</span></span>
-    </a>
-    <div class="dm-sep" aria-hidden="true"></div>
-    <span class="dm-item disabled" aria-disabled="true">
-      <span class="dm-icon" aria-hidden="true">💼</span>
-      <span class="dm-text"><strong>Sales / RevOps</strong><span>Pipeline &amp; revenue intelligence</span></span>
-      <span class="tag-soon">Soon</span>
-    </span>
-    <span class="dm-item disabled" aria-disabled="true">
-      <span class="dm-icon" aria-hidden="true">🛒</span>
-      <span class="dm-text"><strong>E-commerce / DTC</strong><span>ROAS, LTV &amp; retention synthesis</span></span>
-      <span class="tag-soon">Soon</span>
-    </span>
-    <span class="dm-item disabled" aria-disabled="true">
-      <span class="dm-icon" aria-hidden="true">🤝</span>
-      <span class="dm-text"><strong>Customer Success</strong><span>Early churn &amp; health score signals</span></span>
-      <span class="tag-soon">Soon</span>
-    </span>
-  </div>
-  </div>
-</div>
-<a href="#how" class="nav-link">How it works</a>
-<a href="/blog/" class="nav-link">Blog</a>
-<a href="#hero" class="btn btn-orange" style="padding:8px 18px;font-size:13px">Get early access →</a>
-</div>
-</nav>
+<!-- NAV (shared: site/partials/nav-home.html) -->
+<div data-duct-partial="/partials/nav-home.html"></div>
 
 <main id="main-content">
 
 <!-- HERO -->
 <section class="hero" id="hero">
+<div class="hero-layout">
+<div class="hero-copy">
 <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Now in private beta</div>
-<h1>Your tools have the answers.<br/><em>None of them talk<br/>to each other.</em></h1>
-<p class="hero-sub">Duct reads across your entire product, marketing, and sales stack — then delivers the cross-tool insights your team needs to make faster, better decisions. Automatically. Every week.</p>
+<h1>Stop checking dashboards.<br/><em>Start shipping decisions.</em></h1>
+<p class="hero-sub">Get one weekly cross-tool intelligence brief with what changed, why it matters, and what to do next.</p>
 <div class="hero-form">
 <input type="email" id="heroEmail" class="email-in" placeholder="you@company.com" aria-label="Email address"/>
 <button class="btn btn-orange btn-lg"
@@ -240,7 +279,54 @@
   data-entry-id="entry.276669450"
   onclick="submitForm('heroEmail', this)">Get early access →</button>
 </div>
-<p class="hero-footnote">Free during beta · No credit card · 10 minutes to first insight</p>
+<p class="hero-footnote">Free during beta · No credit card · 10 minutes to connect · First full brief in your inbox</p>
+<div class="hero-proof" aria-label="Proof points">
+<span class="hero-proof-pill">9+ integrations</span>
+<span class="hero-proof-pill">~4h saved per team/week</span>
+<span class="hero-proof-pill">10 min setup</span>
+</div>
+</div>
+<aside class="hero-mini" aria-label="Mini use case demo preview">
+<div class="hero-demo-tabs" role="tablist" aria-label="Use case demos">
+<button class="hero-demo-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="hero-demo-shared" id="hero-tab-paid" data-hero-demo-tab="paid">Paid Ads</button>
+<button class="hero-demo-tab" type="button" role="tab" aria-selected="false" aria-controls="hero-demo-shared" id="hero-tab-product" data-hero-demo-tab="product">Product</button>
+<button class="hero-demo-tab" type="button" role="tab" aria-selected="false" aria-controls="hero-demo-shared" id="hero-tab-seo" data-hero-demo-tab="seo">SEO</button>
+</div>
+<div class="hero-demo-body">
+<div class="brief-card" id="hero-demo-shared" role="tabpanel" aria-labelledby="hero-tab-paid" aria-live="polite" aria-label="Hero demo brief">
+<div class="brief-bar" aria-hidden="true">
+<div class="brief-dot" style="background:#ff5f57"></div>
+<div class="brief-dot" style="background:#febc2e"></div>
+<div class="brief-dot" style="background:#28c840"></div>
+<span class="brief-bar-label" id="hero-demo-bar-label">Paid Ads Brief</span>
+</div>
+<div class="brief-body">
+<p class="brief-meta" id="hero-demo-meta">This week · 4 tools connected · 3 critical signals</p>
+<p class="brief-sec">Critical Signals</p>
+<div id="hero-demo-findings">
+<div class="finding">
+<span class="sev sev-high">HIGH</span>
+<p><strong>ROAS up 12%, retention down 18%.</strong> Top-spend campaign is driving lower-quality cohorts.</p>
+</div>
+<div class="finding">
+<span class="sev sev-med">MED</span>
+<p><strong>Creative fatigue rising.</strong> Frequency and CTR trend indicates ad fatigue in top campaign.</p>
+</div>
+</div>
+<div class="brief-action">
+<div class="brief-action-label">↳ Top recommended action</div>
+<p id="hero-demo-action-text">Shift 15% budget to stable campaigns and refresh top creatives this week.</p>
+</div>
+</div>
+<div class="brief-foot">
+<span>Generated automatically by Duct</span>
+<a id="hero-demo-link" href="/for-paid-ads">See full demo →</a>
+</div>
+</div>
+</div>
+</div>
+</aside>
+</div>
 <div class="hero-tools">
 <p>Works with tools you already use</p>
 <div class="tool-strip" aria-label="Supported integrations">
@@ -260,101 +346,34 @@
 </div>
 </section>
 
-<!-- USE CASES -->
-<section class="usecases" id="use-cases">
-<div class="usecases-inner">
-<div class="reveal">
-<p class="tag">Use Cases</p>
-<h2>Built for the role that<br/><em>owns</em> the decisions</h2>
-<p class="sub" style="margin-top:14px;max-width:520px">Each vertical gets a purpose-built intelligence layer — same automation, same synthesis, tuned to the signals that actually matter for your role.</p>
-</div>
-<div class="uc-grid">
-<a href="/for-product-intelligence" class="uc-card reveal" style="transition-delay:.05s">
-<div class="uc-card-top">
-<span class="uc-icon" aria-hidden="true">📊</span>
-<span class="uc-badge live">Live Beta</span>
-</div>
-<h3>Product &amp; Growth Intelligence</h3>
-<p>For PMs and growth teams at startups and scale-ups. Synthesises your analytics, ads, and session data into one weekly decision brief. No more tab-switching before standup.</p>
-<div class="uc-link">Explore this use case <span class="uc-arrow" aria-hidden="true">→</span></div>
-</a>
-<a href="/for-organic-growth" class="uc-card reveal" style="transition-delay:.1s">
-<div class="uc-card-top">
-<span class="uc-icon" aria-hidden="true">🌱</span>
-<span class="uc-badge live">Live Beta</span>
-</div>
-<h3>Organic Growth &amp; SEO</h3>
-<p>For content and SEO teams. Tracks rankings, content performance, and channel signals across GSC, Ahrefs, and GA4 — then delivers a weekly action brief ranked by growth impact.</p>
-<div class="uc-link">Explore this use case <span class="uc-arrow" aria-hidden="true">→</span></div>
-</a>
-<a href="/for-paid-ads" class="uc-card reveal" style="transition-delay:.15s">
-<div class="uc-card-top">
-<span class="uc-icon" aria-hidden="true">📣</span>
-<span class="uc-badge live">Live Beta</span>
-</div>
-<h3>Paid Ads Intelligence</h3>
-<p>For performance marketers running Google Ads, Meta, LinkedIn, and Twitter. Surfaces cross-channel attribution gaps, budget reallocation signals, and creative fatigue alerts — daily.</p>
-<div class="uc-link">Explore this use case <span class="uc-arrow" aria-hidden="true">→</span></div>
-</a>
-<div class="uc-card disabled reveal" style="transition-delay:.2s" aria-disabled="true">
-<div class="uc-card-top">
-<span class="uc-icon" aria-hidden="true">💼</span>
-<span class="uc-badge soon">Coming Soon</span>
-</div>
-<h3>Sales &amp; RevOps Intelligence</h3>
-<p>For RevOps leads and VP Sales. Synthesises CRM, call intelligence, email sequences, and product usage to surface pipeline risk and conversion patterns you're missing.</p>
-<div class="uc-link" style="color:var(--navy-3)">Join waitlist <span class="uc-arrow" aria-hidden="true">→</span></div>
-</div>
-<div class="uc-card disabled reveal" style="transition-delay:.2s" aria-disabled="true">
-<div class="uc-card-top">
-<span class="uc-icon" aria-hidden="true">🛒</span>
-<span class="uc-badge soon">Coming Soon</span>
-</div>
-<h3>E-commerce &amp; DTC</h3>
-<p>For DTC operators. Connects Shopify, Meta Ads, and Klaviyo to surface the LTV-vs-ROAS blind spots that are silently killing your margins.</p>
-<div class="uc-link" style="color:var(--navy-3)">Join waitlist <span class="uc-arrow" aria-hidden="true">→</span></div>
-</div>
-<div class="uc-card disabled reveal" style="transition-delay:.25s" aria-disabled="true">
-<div class="uc-card-top">
-<span class="uc-icon" aria-hidden="true">🤝</span>
-<span class="uc-badge soon">Coming Soon</span>
-</div>
-<h3>Customer Success</h3>
-<p>For CS teams at SaaS companies. Identifies accounts going at-risk weeks before they tell you — by reading NPS signals, usage trends, and support activity together.</p>
-<div class="uc-link" style="color:var(--navy-3)">Join waitlist <span class="uc-arrow" aria-hidden="true">→</span></div>
-</div>
-</div>
-</div>
-</section>
-
 <!-- PROBLEM -->
 <section class="problem-full">
 <div class="problem-full-inner">
 <div class="reveal">
 <p class="tag">The Problem</p>
 <h2>You have the data.<br/>You just can't read all of it <em>at once.</em></h2>
-<p class="sub" style="margin-top:14px;max-width:540px">Every tool you use generates signal. The insight that drives real decisions only appears when you read across all of them together — and nobody has time for that.</p>
+<p class="sub" style="margin-top:14px;max-width:540px">The most important insight appears across tools, but teams rarely have time to connect it.</p>
 </div>
 <div class="pain-grid reveal" style="transition-delay:.1s">
 <div class="pain-card">
 <span class="pain-card-icon" aria-hidden="true">🗂️</span>
 <h3>Five tabs, zero synthesis</h3>
-<p>Google Ads, GA4, Mixpanel, Hotjar, and HubSpot all open. Each tells its own story. None of them tell you what they mean together. That translation is all on you.</p>
+<p>Each platform tells a different story, but no tool tells you what they mean together.</p>
 </div>
 <div class="pain-card">
 <span class="pain-card-icon" aria-hidden="true">📉</span>
 <h3>The signal you miss is the one that hurts</h3>
-<p>Your ROAS is up. Your retention is down. The two are connected — but you won't know that until you do the manual cross-reference, probably weeks from now.</p>
+<p>ROAS can rise while retention falls, and that connection is often missed until weeks later.</p>
 </div>
 <div class="pain-card">
 <span class="pain-card-icon" aria-hidden="true">⏳</span>
 <h3>3–5 hours gone before the week starts</h3>
-<p>Before every standup, someone pulls numbers, copies them into a doc, and tries to construct a narrative. It's one of the most expensive hours a growth team spends.</p>
+<p>Teams spend hours pulling metrics into docs before they can even start making decisions.</p>
 </div>
 <div class="pain-card">
 <span class="pain-card-icon" aria-hidden="true">🔧</span>
 <h3>Individual platforms won't fix this</h3>
-<p>Google Ads has no incentive to tell you your best campaign drives your worst cohort. No single platform will build the synthesis layer. It's structurally orphaned — until now.</p>
+<p>No single platform is built to surface cross-tool trade-offs like high ROAS but low retention.</p>
 </div>
 </div>
 </div>
@@ -370,7 +389,7 @@
 <span class="step-num">01</span>
 <span class="step-icon" aria-hidden="true">🔌</span>
 <p class="step-title">Connect your tools</p>
-<p class="step-body">One-click OAuth integrations for every tool in your stack. No API keys. No developer time. Under 10 minutes to set up.</p>
+<p class="step-body">Connect your stack with OAuth in about 10 minutes, no API keys or engineering help required.</p>
 </div>
 <div class="step reveal" style="transition-delay:.08s">
 <span class="step-num">02</span>
@@ -382,13 +401,13 @@
 </svg>
 </span>
 <p class="step-title">Configure your context</p>
-<p class="step-body">Define your KPIs, funnel stages, and role once. Duct learns what matters to you and filters out the noise.</p>
+<p class="step-body">Set KPIs and funnel context once so Duct can prioritize the signals your team cares about.</p>
 </div>
 <div class="step reveal" style="transition-delay:.16s">
 <span class="step-num">03</span>
 <span class="step-icon" aria-hidden="true">✦</span>
 <p class="step-title">Get synthesised intelligence</p>
-<p class="step-body">Weekly briefs every Monday. Real-time alerts when something breaks or spikes. Always cross-tool. Always decision-ready.</p>
+<p class="step-body">Receive weekly inbox briefs plus real-time alerts when key metrics break or spike.</p>
 </div>
 </div>
 </div>
@@ -399,13 +418,13 @@
 <div class="preview-inner">
 <div class="reveal">
 <p class="tag">What you receive</p>
-<h2>The brief your team actually<br/>uses on <em>Monday morning</em></h2>
-<p class="sub" style="margin-top:14px">Not a report. Not a dashboard. A decision-ready brief that reads across every connected tool and tells you what moved, why it moved, and what to do about it.</p>
+<h2>The brief your team actually<br/>uses from your <em>inbox</em></h2>
+<p class="sub" style="margin-top:14px">A decision-ready brief that shows what changed, why it matters, and what to do next.</p>
 <ul class="preview-list">
-<li>Cross-tool signals that no single platform surfaces</li>
-<li>Findings ranked by business impact, not data volume</li>
-<li>Specific recommended actions with estimated impact</li>
-<li>Real-time anomaly alerts before they become problems</li>
+<li>Cross-tool signals no single platform can show alone</li>
+<li>Findings ranked by business impact</li>
+<li>Recommended actions with estimated impact</li>
+<li>Real-time alerts before issues escalate</li>
 </ul>
 </div>
 <div class="brief-card reveal" style="transition-delay:.15s" aria-label="Example weekly intelligence brief">
@@ -413,7 +432,7 @@
 <div class="brief-dot" style="background:#ff5f57"></div>
 <div class="brief-dot" style="background:#febc2e"></div>
 <div class="brief-dot" style="background:#28c840"></div>
-<span class="brief-bar-label">Weekly Intelligence Brief — Monday, 9:00 AM</span>
+<span class="brief-bar-label">Weekly Intelligence Brief — In your inbox, 9:00 AM</span>
 </div>
 <div class="brief-body">
 <p class="brief-meta">Week of Mar 10–16 · 4 tools connected · 3 critical signals</p>
@@ -443,18 +462,69 @@
 </div>
 </section>
 
-<!-- INSIGHTS -->
-<section class="usecases" id="insights" style="background:var(--off);border-top:1px solid var(--border)">
+<!-- USE CASES -->
+<section class="usecases" id="use-cases">
 <div class="usecases-inner">
 <div class="reveal">
-<p class="tag">Insights</p>
-<h2>Intelligence, not just <em>information</em></h2>
-<p class="sub" style="margin-top:14px;max-width:520px">Deep dives on cross-tool synthesis, product intelligence frameworks, and growth case studies. Coming soon.</p>
+<p class="tag">Use Cases</p>
+<h2>Built for the role that<br/><em>owns</em> the decisions</h2>
+<p class="sub" style="margin-top:14px;max-width:520px">Purpose-built intelligence for each team, tuned to the signals that matter most.</p>
 </div>
-<div style="margin-top:44px;border:1.5px dashed var(--border);border-radius:var(--r-lg);padding:60px 40px;text-align:center;" class="reveal" style="transition-delay:.1s">
-<p style="font-family:var(--serif);font-size:22px;color:var(--navy);margin-bottom:10px">The Duct blog is coming soon</p>
-<p style="font-size:14px;font-weight:300;color:var(--navy-3);max-width:400px;margin:0 auto 28px;line-height:1.72">We're building the content layer — case studies, synthesis frameworks, and growth intelligence deep-dives from our beta customers.</p>
-<a href="#cta" class="btn btn-orange">Notify me when we publish →</a>
+<div class="uc-grid">
+<a href="/for-product-intelligence" class="uc-card reveal" style="transition-delay:.05s">
+<div class="uc-card-top">
+<span class="uc-icon" aria-hidden="true">📊</span>
+<span class="uc-badge live">Live Beta</span>
+</div>
+<h3>Product &amp; Growth Intelligence</h3>
+<p>For PMs and growth teams: one weekly brief from analytics, ads, and session signals.</p>
+<div class="uc-link">See it in action <span class="uc-arrow" aria-hidden="true">→</span></div>
+</a>
+<a href="/for-organic-growth" class="uc-card reveal" style="transition-delay:.1s">
+<div class="uc-card-top">
+<span class="uc-icon" aria-hidden="true">🌱</span>
+<span class="uc-badge live">Live Beta</span>
+</div>
+<h3>Organic Growth &amp; SEO</h3>
+<p>For SEO and content teams: one weekly action brief from GSC, Ahrefs, and GA4.</p>
+<div class="uc-link">See it in action <span class="uc-arrow" aria-hidden="true">→</span></div>
+</a>
+<a href="/for-paid-ads" class="uc-card reveal" style="transition-delay:.15s">
+<div class="uc-card-top">
+<span class="uc-icon" aria-hidden="true">📣</span>
+<span class="uc-badge live">Live Beta</span>
+</div>
+<h3>Paid Ads Intelligence</h3>
+<p>For performance marketers: attribution gaps, budget shifts, and creative fatigue in one view.</p>
+<div class="uc-link">See it in action <span class="uc-arrow" aria-hidden="true">→</span></div>
+</a>
+<div class="uc-card disabled reveal" style="transition-delay:.2s" aria-disabled="true">
+<div class="uc-card-top">
+<span class="uc-icon" aria-hidden="true">💼</span>
+<span class="uc-badge soon">Coming Soon</span>
+</div>
+<h3>Sales &amp; RevOps Intelligence</h3>
+<p>For RevOps leaders: pipeline risk and conversion signals from CRM, calls, and product usage.</p>
+<div class="uc-link" style="color:var(--navy-3)">Join waitlist <span class="uc-arrow" aria-hidden="true">→</span></div>
+</div>
+<div class="uc-card disabled reveal" style="transition-delay:.2s" aria-disabled="true">
+<div class="uc-card-top">
+<span class="uc-icon" aria-hidden="true">🛒</span>
+<span class="uc-badge soon">Coming Soon</span>
+</div>
+<h3>E-commerce &amp; DTC</h3>
+<p>For DTC teams: expose LTV-vs-ROAS blind spots across Shopify, Meta Ads, and Klaviyo.</p>
+<div class="uc-link" style="color:var(--navy-3)">Join waitlist <span class="uc-arrow" aria-hidden="true">→</span></div>
+</div>
+<div class="uc-card disabled reveal" style="transition-delay:.25s" aria-disabled="true">
+<div class="uc-card-top">
+<span class="uc-icon" aria-hidden="true">🤝</span>
+<span class="uc-badge soon">Coming Soon</span>
+</div>
+<h3>Customer Success</h3>
+<p>For CS teams: identify at-risk accounts early from NPS, usage, and support signals.</p>
+<div class="uc-link" style="color:var(--navy-3)">Join waitlist <span class="uc-arrow" aria-hidden="true">→</span></div>
+</div>
 </div>
 </div>
 </section>
@@ -474,13 +544,13 @@
 <div class="cta-inner reveal">
 <p class="tag" style="justify-content:center;display:flex">Early Access</p>
 <h2>Stop reading tools.<br/><em>Start reading signals.</em></h2>
-<p class="sub" style="margin-top:14px">Join the beta. Connect your first tools in 10 minutes. Receive your first intelligence brief on Monday.</p>
+<p class="sub" style="margin-top:14px">Connect your first tools in 10 minutes and get your first intelligence brief in your inbox.</p>
 <div class="cta-form" style="margin-top:36px">
 <input type="email" id="ctaEmail" class="email-in" placeholder="you@company.com" aria-label="Email address"/>
 <button class="btn btn-orange btn-lg"
   data-form-url="https://docs.google.com/forms/d/e/1FAIpQLSfm7QgovGGHE38CsOPqj5O_XVBtnjbRhkf16rNJhdvkd-rddg/formResponse"
   data-entry-id="entry.276669450"
-  onclick="submitForm('ctaEmail', this)">Join waitlist →</button>
+  onclick="submitForm('ctaEmail', this)">Get early access →</button>
 </div>
 <p class="cta-note">Free during beta · No credit card · Takes 10 minutes to set up</p>
 </div>
@@ -488,40 +558,156 @@
 
 </main>
 
-<!-- FOOTER -->
-<footer class="footer-expanded">
-<div class="footer-top">
-<div class="footer-brand">
-<a href="/" class="logo" style="font-size:20px">duct <span class="logo-mark" aria-hidden="true"></span></a>
-<p>Automated intelligence across your entire tool stack. Delivered every Monday.</p>
-</div>
-<div class="footer-cols" role="navigation" aria-label="Footer navigation">
-<div class="footer-col">
-<h4>Use Cases</h4>
-<a href="/for-product-intelligence">Product Intelligence</a>
-<a href="/for-organic-growth">Organic Growth</a>
-<a href="/for-paid-ads">Paid Ads Intelligence</a>
-</div>
-<div class="footer-col">
-<h4>Product</h4>
-<a href="#how">How it works</a>
-<a href="/blog/">Blog</a>
-<a href="#hero">Get early access</a>
-</div>
-<div class="footer-col">
-<h4>Company</h4>
-<a href="mailto:hello@getduct.ai">hello@getduct.ai</a>
-<a href="/privacy">Privacy Policy</a>
-<a href="/terms">Terms of Service</a>
-</div>
-</div>
-</div>
-<div class="footer-bottom-row">
-<span>© 2026 Duct · getduct.ai</span>
-<span>The intelligence layer your stack was missing.</span>
-</div>
-</footer>
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/partials/footer-expanded.html"></div>
 
+<script src="assets/duct-partials.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var tabs = document.querySelectorAll('[data-hero-demo-tab]');
+  var barLabelEl = document.getElementById('hero-demo-bar-label');
+  var metaEl = document.getElementById('hero-demo-meta');
+  var findingsEl = document.getElementById('hero-demo-findings');
+  var actionEl = document.getElementById('hero-demo-action-text');
+  var linkEl = document.getElementById('hero-demo-link');
+  var sharedPanel = document.getElementById('hero-demo-shared');
+  if (!tabs.length || !barLabelEl || !metaEl || !findingsEl || !actionEl || !linkEl || !sharedPanel) return;
+
+  var heroDemoData = {
+    paid: {
+      barLabel: 'Weekly Intelligence Brief — In your inbox, 9:00 AM',
+      meta: 'Week of Mar 10–16 · 4 tools connected · 3 critical signals',
+      findings: [
+        {
+          severity: 'HIGH',
+          severityClass: 'sev-high',
+          title: 'ROAS up 14% but Android 7-day retention down 2.4×.',
+          body: 'Top-performing campaign is driving cohorts that churn significantly faster than organic.'
+        },
+        {
+          severity: 'MED',
+          severityClass: 'sev-med',
+          title: '3 rage-click clusters on upload screen (Hotjar).',
+          body: 'Correlates with the activation drop for the same ad cohort.'
+        },
+        {
+          severity: 'INFO',
+          severityClass: 'sev-info',
+          title: 'Organic impressions up 23% (GSC).',
+          body: 'Content cluster expansion opportunity.'
+        }
+      ],
+      action: 'Pause the top-ROAS campaign and audit the mobile upload screen for the Android cohort before re-activating.',
+      href: '/for-paid-ads'
+    },
+    product: {
+      barLabel: 'Weekly Intelligence Brief — In your inbox, 9:00 AM',
+      meta: 'Week of Mar 10–16 · 4 tools connected · 3 critical signals',
+      findings: [
+        {
+          severity: 'HIGH',
+          severityClass: 'sev-high',
+          title: 'Activation up 9% but week-2 retention down 11%.',
+          body: 'The pricing-page win improved starts, but cohorts are dropping off post-onboarding.'
+        },
+        {
+          severity: 'MED',
+          severityClass: 'sev-med',
+          title: 'Step-three onboarding friction cluster detected.',
+          body: 'Session data shows repeated hesitation on the same form field sequence.'
+        },
+        {
+          severity: 'INFO',
+          severityClass: 'sev-info',
+          title: 'Trial-to-paid conversion up 6% on desktop.',
+          body: 'Mobile conversion remains flat and is now the biggest improvement lever.'
+        }
+      ],
+      action: 'Prioritize fixing step-three onboarding friction before scaling acquisition spend across new channels.',
+      href: '/for-product-intelligence'
+    },
+    seo: {
+      barLabel: 'Weekly Intelligence Brief — In your inbox, 9:00 AM',
+      meta: 'Week of Mar 10–16 · 4 tools connected · 3 critical signals',
+      findings: [
+        {
+          severity: 'HIGH',
+          severityClass: 'sev-high',
+          title: 'Two target keywords reached page one, CTR still below benchmark.',
+          body: 'Titles and snippets are underperforming search intent on key pages.'
+        },
+        {
+          severity: 'MED',
+          severityClass: 'sev-med',
+          title: 'Crawl blockers detected on high-priority templates.',
+          body: 'Indexation delays are preventing momentum from recent ranking gains.'
+        },
+        {
+          severity: 'INFO',
+          severityClass: 'sev-info',
+          title: 'Content cluster impressions up 23% week-over-week.',
+          body: 'Internal link distribution can further compound this trend.'
+        }
+      ],
+      action: 'Update page-one metadata first, then resolve crawl blockers on the highest-value landing pages.',
+      href: '/for-organic-growth'
+    }
+  };
+
+  function renderFindings(findings) {
+    while (findingsEl.firstChild) {
+      findingsEl.removeChild(findingsEl.firstChild);
+    }
+
+    for (var i = 0; i < findings.length; i += 1) {
+      var finding = findings[i];
+      var findingEl = document.createElement('div');
+      findingEl.className = 'finding';
+
+      var severityEl = document.createElement('span');
+      severityEl.className = 'sev ' + finding.severityClass;
+      severityEl.textContent = finding.severity;
+      findingEl.appendChild(severityEl);
+
+      var textEl = document.createElement('p');
+      var strongEl = document.createElement('strong');
+      strongEl.textContent = finding.title;
+      textEl.appendChild(strongEl);
+      textEl.appendChild(document.createTextNode(' ' + finding.body));
+      findingEl.appendChild(textEl);
+
+      findingsEl.appendChild(findingEl);
+    }
+  }
+
+  function setActiveDemo(target) {
+    var demo = heroDemoData[target];
+    if (!demo) return;
+
+    barLabelEl.textContent = demo.barLabel;
+    metaEl.textContent = demo.meta;
+    renderFindings(demo.findings);
+    actionEl.textContent = demo.action;
+    linkEl.setAttribute('href', demo.href);
+    sharedPanel.setAttribute('aria-labelledby', 'hero-tab-' + target);
+
+    for (var i = 0; i < tabs.length; i += 1) {
+      var tab = tabs[i];
+      var isActive = tab.getAttribute('data-hero-demo-tab') === target;
+      tab.classList.toggle('is-active', isActive);
+      tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    }
+  }
+
+  for (var k = 0; k < tabs.length; k += 1) {
+    tabs[k].addEventListener('click', function (event) {
+      setActiveDemo(event.currentTarget.getAttribute('data-hero-demo-tab'));
+    });
+  }
+
+  setActiveDemo('paid');
+});
+</script>
 <script src="assets/duct.js" defer></script>
 
 </body>
