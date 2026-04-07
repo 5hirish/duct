@@ -26,6 +26,9 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebPage","name":"Duct for Product Intelligence","url":"https://getduct.ai/for-product-intelligence","description":"Stop tab-switching. Duct connects your product stack and surfaces the cross-tool insights PMs need — automatically.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
 </script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is Duct for product intelligence?","acceptedAnswer":{"@type":"Answer","text":"Duct is a cross-tool product intelligence platform that connects Mixpanel, Intercom, Linear, FullStory, and the rest of your stack into one daily PM briefing. It surfaces cross-tool correlations, detects anomalies, and lets you ask plain-English questions like \u201cWhy did DAU drop Thursday?\u201d without writing SQL or building dashboards. Designed for growth PMs at 20\u2013200 person SaaS companies."}},{"@type":"Question","name":"What tools does Duct connect to, and how hard is setup?","acceptedAnswer":{"@type":"Answer","text":"Duct connects to Mixpanel, Amplitude, Intercom, Linear, FullStory, Jira, HubSpot, Segment, and Slack through one-click OAuth. Setup takes under five minutes with no API keys or engineering support needed. Duct reads your data in strict read-only mode, and your first cross-tool PM briefing arrives the next morning, already correlated around your north star metric."}},{"@type":"Question","name":"Is my product data safe with Duct?","acceptedAnswer":{"@type":"Answer","text":"Yes. Duct uses read-only API access through official OAuth integrations \u2014 it never writes to, modifies, or deletes anything in Mixpanel, Intercom, Linear, or any connected tool. All data in transit is encrypted via TLS, OAuth tokens are stored server-side and never exposed to the browser, and no data is stored without your explicit approval."}},{"@type":"Question","name":"How is Duct different from using Mixpanel or Amplitude dashboards directly?","acceptedAnswer":{"@type":"Answer","text":"Single-tool dashboards show you metrics in isolation. Duct connects your analytics, support, engineering, and revenue tools to surface correlations between them. When a feature launch in Linear coincides with a spike in Intercom tickets and a drop in Mixpanel retention, Duct connects those signals automatically \u2014 no dashboard switching, no manual correlation, no SQL."}},{"@type":"Question","name":"Does Duct for product intelligence cost anything?","acceptedAnswer":{"@type":"Answer","text":"Duct is completely free during the beta period. No credit card, no usage limits. We are onboarding the first 25 product teams personally \u2014 each team gets a hands-on setup call where we tune your daily brief around your north star metric. Paid pricing will be published after beta, with early adopters receiving grandfathered rates."}},{"@type":"Question","name":"What does the daily PM briefing actually contain?","acceptedAnswer":{"@type":"Answer","text":"The daily briefing surfaces what changed across your product stack overnight: anomalies in activation or retention from Mixpanel, spikes in support volume from Intercom, blocked tickets in Linear, and session replay patterns from FullStory. Duct cross-correlates these signals and delivers plain-English explanations of what is blocking adoption and what to ship next."}}]}
+</script>
 <style>
   .skip-link {
     position: absolute; top: -100%; left: 16px; z-index: 300;
@@ -502,6 +505,43 @@ Retention drop → support spike → replay friction → release timing. One sto
 <div class="reveal" style="transition-delay:.1s"><span class="stat-n">~3h</span><span class="stat-l">Saved per PM per week</span></div>
 <div class="reveal" style="transition-delay:.2s"><span class="stat-n">10min</span><span class="stat-l">To first insight after setup</span></div>
 <div class="reveal" style="transition-delay:.3s"><span class="stat-n">0</span><span class="stat-l">SQL queries required</span></div>
+</div>
+</section>
+
+<!-- FAQ -->
+
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+<p class="tag">FAQ</p>
+<h2>Frequently asked <em>questions</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.1s">
+<details class="faq-item">
+<summary class="faq-q">What is Duct for product intelligence?</summary>
+<p class="faq-a">Duct is a cross-tool product intelligence platform that connects Mixpanel, Intercom, Linear, FullStory, and the rest of your stack into one daily PM briefing. It surfaces cross-tool correlations, detects anomalies, and lets you ask plain-English questions like "Why did DAU drop Thursday?" without writing SQL or building dashboards. Designed for growth PMs at 20–200 person SaaS companies.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">What tools does Duct connect to, and how hard is setup?</summary>
+<p class="faq-a">Duct connects to Mixpanel, Amplitude, Intercom, Linear, FullStory, Jira, HubSpot, Segment, and Slack through one-click OAuth. Setup takes under five minutes with no API keys or engineering support needed. Duct reads your data in strict read-only mode, and your first cross-tool PM briefing arrives the next morning, already correlated around your north star metric.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Is my product data safe with Duct?</summary>
+<p class="faq-a">Yes. Duct uses read-only API access through official OAuth integrations — it never writes to, modifies, or deletes anything in Mixpanel, Intercom, Linear, or any connected tool. All data in transit is encrypted via TLS, OAuth tokens are stored server-side and never exposed to the browser, and no data is stored without your explicit approval.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">How is Duct different from using Mixpanel or Amplitude dashboards directly?</summary>
+<p class="faq-a">Single-tool dashboards show you metrics in isolation. Duct connects your analytics, support, engineering, and revenue tools to surface correlations between them. When a feature launch in Linear coincides with a spike in Intercom tickets and a drop in Mixpanel retention, Duct connects those signals automatically — no dashboard switching, no manual correlation, no SQL.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Does Duct for product intelligence cost anything?</summary>
+<p class="faq-a">Duct is completely free during the beta period. No credit card, no usage limits. We are onboarding the first 25 product teams personally — each team gets a hands-on setup call where we tune your daily brief around your north star metric. Paid pricing will be published after beta, with early adopters receiving grandfathered rates.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">What does the daily PM briefing actually contain?</summary>
+<p class="faq-a">The daily briefing surfaces what changed across your product stack overnight: anomalies in activation or retention from Mixpanel, spikes in support volume from Intercom, blocked tickets in Linear, and session replay patterns from FullStory. Duct cross-correlates these signals and delivers plain-English explanations of what is blocking adoption and what to ship next.</p>
+</details>
+</div>
 </div>
 </section>
 
