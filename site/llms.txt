@@ -9,6 +9,7 @@ Duct is designed for product managers, growth leads, and marketing teams at 20â€
 - [Home](https://getduct.ai/): Overview of Duct â€” what it does, who it's for, and how to join the early access waitlist.
 - [For Product Intelligence](https://getduct.ai/for-product-intelligence): How Duct connects Mixpanel, Intercom, Linear, and Salesforce into a daily PM brief with cross-tool correlations and anomaly alerts.
 - [For Organic Growth](https://getduct.ai/for-organic-growth): How Duct surfaces SEO and content performance signals from Search Console, Ahrefs, and GA4 into a weekly action brief.
+- [For Paid Ads](https://getduct.ai/for-paid-ads): How Duct unifies Google Ads, Meta, LinkedIn, and X signals into one paid performance brief with cross-channel recommendations.
 - [Blog](https://getduct.ai/blog/): Articles on product intelligence, SEO strategy, and growth analytics for SaaS teams.
 
 ## Blog posts

@@ -1,0 +1,31 @@
+{
+  "company": {
+    "name": "Alleviate Lab",
+    "brand": "Duct",
+    "website": "https://getduct.ai",
+    "email": "hello@getduct.ai"
+  },
+  "product": {
+    "name": "Duct",
+    "category": "B2B SaaS",
+    "type": "Cross-tool intelligence platform",
+    "tagline": "The intelligence layer your stack was missing.",
+    "description": "Duct synthesizes data across product, marketing, and sales tools into decision-ready briefs and alerts."
+  },
+  "audience": {
+    "primary": [
+      "Product teams",
+      "Growth teams",
+      "Marketing teams"
+    ],
+    "company_size": "20-200 person SaaS companies"
+  },
+  "links": {
+    "home": "https://getduct.ai/",
+    "product_intelligence": "https://getduct.ai/for-product-intelligence",
+    "organic_growth": "https://getduct.ai/for-organic-growth",
+    "paid_ads": "https://getduct.ai/for-paid-ads",
+    "blog": "https://getduct.ai/blog/"
+  },
+  "updated_at": "2026-04-08"
+}
