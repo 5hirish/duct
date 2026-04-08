@@ -13,7 +13,7 @@ from config import get_configs
 from service.connectors import get_connector, normalize_connector_id
 from service.google.constants import GOOGLE_ADS_CONNECTOR_ID
 from service.google.oauth import create_google_oauth_flow
-from service.oauth_state_store import cleanup_expired_states, consume_state, save_state
+from service.oauthstate import cleanup_expired_states, consume_state, save_state
 
 router = APIRouter(tags=["auth"])
 

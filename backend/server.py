@@ -34,7 +34,8 @@ app.add_middleware(OpenapiDocsBasicAuthMiddleware)
 
 @app.on_event("startup")
 def _startup_init_db() -> None:
-    init_db()
+    if _cfg.init_db_on_startup:
+        init_db()
 
 
 app.include_router(api_router)

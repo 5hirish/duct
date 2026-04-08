@@ -14,7 +14,7 @@ from fastapi.responses import RedirectResponse
 
 from config import get_configs
 from service.google.oauth import create_google_signin_flow
-from service.oauth_state_store import cleanup_expired_states, consume_state, save_state
+from service.oauthstate import cleanup_expired_states, consume_state, save_state
 from service.user_store import upsert_google_user
 
 logger = logging.getLogger(__name__)
@@ -132,13 +132,13 @@ def signin_google_callback(
     # id_token is already decoded by google-auth when fetched via the flow
     id_info = creds.id_token if isinstance(creds.id_token, dict) else {}
     if not id_info:
-        # Fallback: decode from the raw token
+        # Fallback: verify/decode the raw OIDC ID token string.
         try:
             from google.oauth2 import id_token as google_id_token
             from google.auth.transport import requests as google_requests
 
             id_info = google_id_token.verify_oauth2_token(
-                creds.token, google_requests.Request(), get_configs().google_oauth_client_id
+                str(creds.id_token), google_requests.Request(), get_configs().google_oauth_client_id
             )
         except Exception as exc:
             raise HTTPException(
