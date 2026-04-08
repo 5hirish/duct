@@ -49,6 +49,37 @@
 
   /* Fix hover shadow to match blue accent (overrides global orange shadow) */
   .btn-orange:hover { box-shadow: 0 8px 24px rgba(37,99,235,.28); }
+
+  .nav-dropdown { position: relative; }
+  .nav-dropdown > .nav-link::after { content: ' ↓'; font-size: 10px; opacity: .5; }
+  .dropdown-menu {
+    display: none; position: absolute; top: 100%; left: 0;
+    padding-top: 10px; background: transparent; min-width: 260px;
+  }
+  .dropdown-menu-inner {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--r-lg); padding: 8px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.1);
+  }
+  .nav-dropdown:hover .dropdown-menu { display: block; }
+  .dm-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 10px 12px; border-radius: var(--r);
+    text-decoration: none; color: var(--navy-3);
+    font-size: 13px; transition: background .15s, color .15s;
+  }
+  .dm-item:hover { background: var(--off); color: var(--navy); }
+  .dm-item.disabled { opacity: .4; pointer-events: none; }
+  .dm-icon { font-size: 17px; flex-shrink: 0; margin-top: 1px; }
+  .dm-text strong { display: block; font-size: 13px; font-weight: 500; color: var(--navy); margin-bottom: 1px; }
+  .dm-text span { font-size: 11px; color: var(--navy-3); }
+  .dm-sep { height: 1px; background: var(--border); margin: 6px 4px; }
+  .tag-soon {
+    font-size: 10px; font-weight: 600; padding: 2px 7px;
+    border-radius: 4px; background: #fff7e6; color: #c9a84c;
+    border: 1px solid rgba(201,168,76,.3);
+    margin-left: auto; flex-shrink: 0; align-self: center;
+  }
 </style>
 </head>
 <body>
@@ -69,10 +100,37 @@
 <span style="font-size:12px;font-weight:500;color:var(--navy-3);letter-spacing:.02em">for paid ads</span>
 </div>
 <div class="nav-links">
+<div class="nav-dropdown">
+  <a href="/" class="nav-link">Solutions</a>
+  <div class="dropdown-menu">
+    <div class="dropdown-menu-inner">
+      <a href="/for-product-intelligence" class="dm-item">
+        <span class="dm-icon" aria-hidden="true">📊</span>
+        <span class="dm-text"><strong>Product Intelligence</strong><span>Weekly brief for PMs &amp; growth teams</span></span>
+      </a>
+      <a href="/for-organic-growth" class="dm-item">
+        <span class="dm-icon" aria-hidden="true">🌱</span>
+        <span class="dm-text"><strong>Organic Growth</strong><span>Automated SEO &amp; content intelligence</span></span>
+      </a>
+      <a href="/for-paid-ads" class="dm-item">
+        <span class="dm-icon" aria-hidden="true">📣</span>
+        <span class="dm-text"><strong>Paid Ads Intelligence</strong><span>Cross-platform brief for performance marketers</span></span>
+      </a>
+      <div class="dm-sep" aria-hidden="true"></div>
+      <span class="dm-item disabled" aria-disabled="true">
+        <span class="dm-icon" aria-hidden="true">💼</span>
+        <span class="dm-text"><strong>Sales / RevOps</strong><span>Pipeline &amp; revenue intelligence</span></span>
+        <span class="tag-soon">Soon</span>
+      </span>
+    </div>
+  </div>
+</div>
 <a href="#demo" class="nav-link">Try the demo</a>
 <a href="#how" class="nav-link">How it works</a>
+<a href="#features" class="nav-link">Features</a>
 <a href="#who" class="nav-link">Who it's for</a>
 <a href="/blog/" class="nav-link">Blog</a>
+<a href="#cta" class="btn btn-orange" style="padding:8px 18px;font-size:13px">Get&nbsp;early&nbsp;access&nbsp;→</a>
 </div>
 </nav>
 
@@ -81,15 +139,15 @@
 <!-- HERO -->
 
 <section class="hero">
-<div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Early access · 14 spots remaining</div>
-<h1>Stop reporting across platforms.<br/>Start shipping what <em>converts.</em></h1>
-<p class="hero-sub">Duct connects Google Ads, Meta, LinkedIn, and Twitter into one daily brief — surfacing cross-platform correlations your ad dashboards will never show you.</p>
+<div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Early access · Paid ads beta</div>
+<h1>Stop stitching ad reports.<br/>Start making better budget <em>decisions.</em></h1>
+<p class="hero-sub">Duct connects Google Ads, Meta, LinkedIn, and X into one daily intelligence brief with cross-channel signals and clear next actions.</p>
 <div class="hero-form">
 <input type="email" id="heroEmail" class="email-in" placeholder="you@company.com" aria-label="Email address"/>
 <button class="btn btn-orange btn-lg"
   data-form-url="https://docs.google.com/forms/d/e/1FAIpQLSfm7QgovGGHE38CsOPqj5O_XVBtnjbRhkf16rNJhdvkd-rddg/formResponse"
   data-entry-id="entry.276669450"
-  onclick="submitForm('heroEmail', this)">Get early access →</button>
+  onclick="submitForm('heroEmail', this)">Get&nbsp;early&nbsp;access&nbsp;→</button>
 </div>
 <p class="hero-footnote">Free during beta · No credit card · For performance marketers at 20–200 person companies</p>
 <p style="margin-top:16px;font-size:13px;color:var(--navy-3)">or <a href="#demo" style="color:var(--orange);text-decoration:underline;text-underline-offset:3px">try the live demo ↓</a> — no signup required</p>
@@ -106,6 +164,52 @@
 <span>HubSpot</span><span>LinkedIn Ads</span><span>Klaviyo</span><span>TikTok Ads</span>
 </div>
 </div>
+
+<!-- PROBLEM -->
+
+<section class="problem">
+<div class="reveal">
+<p class="tag">The Problem</p>
+<h2>The signal is in your platforms.<br/>But none of them <em>talk to each other.</em></h2>
+<ul class="pain-list">
+<li class="pain-item"><span class="pi-icon" aria-hidden="true">😵‍💫</span> Google says ROAS is up. Meta says CPA spiked. Your spreadsheet says something else entirely. You don't know which to trust.</li>
+<li class="pain-item"><span class="pi-icon" aria-hidden="true">🕳️</span> A campaign that crushed it last month is tanking now. You don't know if it's the creative, the audience, or the algorithm.</li>
+<li class="pain-item"><span class="pi-icon" aria-hidden="true">⏱️</span> You spend four hours every week pulling CSVs from three platforms to build a report that's already stale by Monday.</li>
+</ul>
+</div>
+<div class="diag reveal">
+<div class="diag-header" aria-hidden="true">
+<span class="diag-dot" style="background:#ff5f57"></span>
+<span class="diag-dot" style="background:#febc2e"></span>
+<span class="diag-dot" style="background:#28c840"></span>
+</div>
+<div class="diag-body">
+<div class="diag-tool">
+<span class="diag-chip" style="background:#e8f0fe"><img src="assets/icons/google-ads.svg" width="18" height="18" alt="Google Ads"/></span>
+<div class="diag-info"><b>Google Ads</b><s aria-hidden="true">ROAS up 22% this week</s></div>
+</div>
+<div class="diag-divider" aria-hidden="true">no connection</div>
+<div class="diag-tool dim">
+<span class="diag-chip" style="background:#e7f3ff"><img src="assets/icons/meta.svg" width="18" height="18" alt="Meta Ads"/></span>
+<div class="diag-info"><b>Meta Ads</b><s aria-hidden="true">CPA spiked 18% same week</s></div>
+</div>
+<div class="diag-divider" aria-hidden="true">no connection</div>
+<div class="diag-tool dim">
+<span class="diag-chip" style="background:#f0f0f0"><img src="assets/icons/x-twitter.svg" width="18" height="18" alt="X / Twitter"/></span>
+<div class="diag-info"><b>Twitter / X</b><s aria-hidden="true">Top creative CTR dropped 1.4%</s></div>
+</div>
+<div class="diag-divider" aria-hidden="true">no connection</div>
+<div class="diag-tool dim">
+<span class="diag-chip" style="background:#fff1eb"><img src="assets/icons/hubspot.svg" width="18" height="18" alt="HubSpot"/></span>
+<div class="diag-info"><b>HubSpot</b><s aria-hidden="true">3 deals closed from paid this week</s></div>
+</div>
+<div class="diag-result">
+<strong>✦ After Duct</strong>
+Meta CPA spike was audience overlap with Google — excluding existing Google converters cut Meta CPA by 24%.
+</div>
+</div>
+</div>
+</section>
 
 <!-- WALKTHROUGH DEMO -->
 
@@ -364,52 +468,6 @@
 </div><!-- /.wt-outer -->
 </section>
 
-<!-- PROBLEM -->
-
-<section class="problem">
-<div class="reveal">
-<p class="tag">The Problem</p>
-<h2>The signal is in your platforms.<br/>But none of them <em>talk to each other.</em></h2>
-<ul class="pain-list">
-<li class="pain-item"><span class="pi-icon" aria-hidden="true">😵‍💫</span> Google says ROAS is up. Meta says CPA spiked. Your spreadsheet says something else entirely. You don't know which to trust.</li>
-<li class="pain-item"><span class="pi-icon" aria-hidden="true">🕳️</span> A campaign that crushed it last month is tanking now. You don't know if it's the creative, the audience, or the algorithm.</li>
-<li class="pain-item"><span class="pi-icon" aria-hidden="true">⏱️</span> You spend four hours every week pulling CSVs from three platforms to build a report that's already stale by Monday.</li>
-</ul>
-</div>
-<div class="diag reveal">
-<div class="diag-header" aria-hidden="true">
-<span class="diag-dot" style="background:#ff5f57"></span>
-<span class="diag-dot" style="background:#febc2e"></span>
-<span class="diag-dot" style="background:#28c840"></span>
-</div>
-<div class="diag-body">
-<div class="diag-tool">
-<span class="diag-chip" style="background:#e8f0fe"><img src="assets/icons/google-ads.svg" width="18" height="18" alt="Google Ads"/></span>
-<div class="diag-info"><b>Google Ads</b><s aria-hidden="true">ROAS up 22% this week</s></div>
-</div>
-<div class="diag-divider" aria-hidden="true">no connection</div>
-<div class="diag-tool dim">
-<span class="diag-chip" style="background:#e7f3ff"><img src="assets/icons/meta.svg" width="18" height="18" alt="Meta Ads"/></span>
-<div class="diag-info"><b>Meta Ads</b><s aria-hidden="true">CPA spiked 18% same week</s></div>
-</div>
-<div class="diag-divider" aria-hidden="true">no connection</div>
-<div class="diag-tool dim">
-<span class="diag-chip" style="background:#f0f0f0"><img src="assets/icons/x-twitter.svg" width="18" height="18" alt="X / Twitter"/></span>
-<div class="diag-info"><b>Twitter / X</b><s aria-hidden="true">Top creative CTR dropped 1.4%</s></div>
-</div>
-<div class="diag-divider" aria-hidden="true">no connection</div>
-<div class="diag-tool dim">
-<span class="diag-chip" style="background:#fff1eb"><img src="assets/icons/hubspot.svg" width="18" height="18" alt="HubSpot"/></span>
-<div class="diag-info"><b>HubSpot</b><s aria-hidden="true">3 deals closed from paid this week</s></div>
-</div>
-<div class="diag-result">
-<strong>✦ After Duct</strong>
-Meta CPA spike was audience overlap with Google — excluding existing Google converters cut Meta CPA by 24%.
-</div>
-</div>
-</div>
-</section>
-
 <!-- HOW IT WORKS -->
 
 <section class="how" id="how">
@@ -484,7 +542,7 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
 <p class="tag">Who It's For</p>
 <h2>The marketer who owns <em>paid</em> without a data team</h2>
 <p class="sub" style="margin-top:16px">You're running three platforms, reporting to a founder, and making budget calls without a proper attribution model. You need cross-channel clarity, not another dashboard.</p>
-<a href="#cta" class="btn btn-orange" style="margin-top:30px">That's me — get early access →</a>
+<a href="#cta" class="btn btn-orange" style="margin-top:30px">That's me — get&nbsp;early&nbsp;access&nbsp;→</a>
 </div>
 <div class="aud-cards reveal">
 <div class="aud-card hi">
@@ -565,32 +623,24 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
 <div class="cta-inner">
 <div class="reveal">
 <p class="tag" style="justify-content:center;display:flex">Early Access</p>
-<h2>Join the first <em>25 teams</em></h2>
+<h2>Join paid ads <em>beta</em></h2>
 <p class="sub">Free during beta. We're onboarding personally — every team gets a setup call and direct access to the founders.</p>
 <div class="cta-form">
 <input type="email" id="ctaEmail" class="email-in" placeholder="you@company.com" aria-label="Email address"/>
 <button class="btn btn-orange btn-lg"
   data-form-url="https://docs.google.com/forms/d/e/1FAIpQLSfm7QgovGGHE38CsOPqj5O_XVBtnjbRhkf16rNJhdvkd-rddg/formResponse"
   data-entry-id="entry.276669450"
-  onclick="submitForm('ctaEmail', this)">Reserve my spot →</button>
+  onclick="submitForm('ctaEmail', this)">Get&nbsp;early&nbsp;access&nbsp;→</button>
 </div>
-<p class="cta-note">14 spots remaining · No spam · Unsubscribe anytime</p>
+<p class="cta-note">No spam · Unsubscribe anytime</p>
 </div>
 </div>
 </section>
 
 </main>
 
-<!-- FOOTER -->
-
-<footer>
-<a href="index.html" class="logo" style="font-size:18px">duct <span class="logo-mark" aria-hidden="true"></span></a>
-<a href="/blog/" class="footer-email">Blog</a>
-<a href="mailto:hello@getduct.ai" class="footer-email">hello@getduct.ai</a>
-<a href="/privacy" class="footer-email">Privacy</a>
-<a href="/terms" class="footer-email">Terms</a>
-<span class="footer-copy">&copy; 2026 Duct &middot; getduct.ai</span>
-</footer>
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/partials/footer-expanded.html"></div>
 
 <!-- REPORT MODAL -->
 <div id="report-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="rpt-meta">
@@ -608,7 +658,7 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
       <button type="button" class="btn btn-orange"
         data-form-url="https://docs.google.com/forms/d/e/1FAIpQLSfm7QgovGGHE38CsOPqj5O_XVBtnjbRhkf16rNJhdvkd-rddg/formResponse"
         data-entry-id="entry.276669450"
-        onclick="submitForm('modalCtaEmail', this)">Get early access &rarr;</button>
+        onclick="submitForm('modalCtaEmail', this)">Get&nbsp;early&nbsp;access&nbsp;&rarr;</button>
     </div>
     <p class="modal-cta-note">Free during beta &middot; No credit card &middot; Connects in under 5 minutes</p>
   </div>
@@ -618,7 +668,7 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
 
 <script src="assets/demo-paid-ads.js"></script>
 <script src="assets/demo.js"></script>
-
+<script src="assets/duct-partials.js"></script>
 <script src="assets/duct.js" defer></script>
 
 </body>

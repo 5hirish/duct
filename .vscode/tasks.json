@@ -26,7 +26,7 @@
     {
       "label": "Serve site on :8080",
       "type": "shell",
-      "command": "python3 -m http.server 8080",
+      "command": "python3 dev_server.py --port 8080",
       "options": { "cwd": "${workspaceFolder}/site" },
       "isBackground": true,
       "presentation": {
@@ -40,7 +40,7 @@
         "background": {
           "activeOnStart": true,
           "beginsPattern": ".",
-          "endsPattern": "Serving HTTP on"
+          "endsPattern": "Serving Cloudflare-style site routes on"
         }
       }
     },

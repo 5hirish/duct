@@ -27,16 +27,10 @@
       "cwd": "${workspaceFolder}/app"
     },
     {
-      "name": "Open Home page",
+      "name": "Site: dev server",
       "type": "chrome",
       "request": "launch",
-      "file": "${workspaceFolder}/site/index.html"
-    },
-    {
-      "name": "Open Blog page",
-      "type": "chrome",
-      "request": "launch",
-      "url": "http://localhost:8080/blog/index.html",
+      "url": "http://localhost:8080/",
       "preLaunchTask": "Serve site on :8080"
     },
     {
