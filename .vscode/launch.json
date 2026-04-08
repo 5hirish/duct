@@ -41,7 +41,7 @@
       "cwd": "${workspaceFolder}/site"
     },
     {
-      "name": "Backend: Pytest (all)",
+      "name": "Backend: Pytest (all)", 
       "type": "debugpy",
       "request": "launch",
       "module": "pytest",
