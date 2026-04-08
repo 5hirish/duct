@@ -97,6 +97,12 @@ function SignInContent() {
   }, [ready]);
 
   const handleSignIn = useCallback(() => {
+    if (!BASE) {
+      window.alert(
+        "Sign-in is temporarily unavailable: API endpoint is not configured. Please set NEXT_PUBLIC_API_BASE for this deployment."
+      );
+      return;
+    }
     let url = `${BASE}/auth/signin/google/authorize`;
     if (turnstileToken) {
       url += `?turnstile_token=${encodeURIComponent(turnstileToken)}`;
