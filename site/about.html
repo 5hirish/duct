@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="assets/apple-icon.svg"/>
+<title>About Duct — The Intelligence Layer Your Stack Was Missing</title>
+<link rel="canonical" href="https://getduct.ai/about"/>
+<meta name="description" content="Duct is built by Alleviate Lab in Valencia, Spain. We connect your tools and deliver the intelligence they were collectively trying to tell you."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/about"/>
+<meta property="og:title" content="About Duct — The Intelligence Layer Your Stack Was Missing"/>
+<meta property="og:description" content="Built by Alleviate Lab in Valencia, Spain. We connect your tools and deliver the intelligence they were collectively trying to tell you."/>
+<meta property="og:image" content="https://getduct.ai/assets/og-image.png"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="About Duct — The Intelligence Layer Your Stack Was Missing"/>
+<meta name="twitter:description" content="Built by Alleviate Lab in Valencia, Spain. We connect your tools and deliver the intelligence they were collectively trying to tell you."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og-image.png"/>
+<link rel="stylesheet" href="assets/duct.css"/>
+<script src="assets/config.js" defer></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "AboutPage",
+  "name": "About Duct",
+  "url": "https://getduct.ai/about",
+  "publisher": {
+    "@type": "Organization",
+    "name": "Alleviate Lab",
+    "url": "https://getduct.ai",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Valencia",
+      "addressCountry": "ES"
+    }
+  }
+}
+</script>
+<style>
+/* ── ABOUT-ONLY STYLES ── */
+.about-hero {
+  min-height: 80vh;
+  display: flex; align-items: center; justify-content: center; flex-direction: column;
+  text-align: center; padding: 140px 52px 80px;
+}
+.about-hero h1 {
+  font-family: var(--serif);
+  font-size: clamp(44px, 7vw, 82px);
+  line-height: 1.04; letter-spacing: -2px; color: var(--navy);
+  max-width: 800px; margin-bottom: 28px;
+  animation: fadeUp .5s .08s ease both;
+}
+.about-hero h1 em { font-style: italic; color: var(--orange); }
+.about-hero-sub {
+  font-size: 19px; font-weight: 300; color: var(--navy-3);
+  max-width: 560px; line-height: 1.75; margin: 0 auto;
+  animation: fadeUp .5s .16s ease both;
+}
+
+/* Manifesto */
+.manifesto { padding: 0 52px 100px; max-width: 720px; margin: 0 auto; }
+.manifesto-block {
+  position: relative;
+  padding: 40px 0;
+  border-top: 1px solid var(--border);
+}
+.manifesto-block:last-child { border-bottom: 1px solid var(--border); }
+.manifesto-num {
+  font-family: var(--serif); font-size: 11px; font-weight: 400;
+  color: var(--orange); letter-spacing: .08em; margin-bottom: 16px; display: block;
+}
+.manifesto-title {
+  font-family: var(--serif); font-size: clamp(22px, 3vw, 30px);
+  color: var(--navy); line-height: 1.2; margin-bottom: 14px; letter-spacing: -.3px;
+}
+.manifesto-body {
+  font-size: 16px; font-weight: 300; color: var(--navy-3); line-height: 1.8;
+}
+
+/* What we build */
+.what-we-build {
+  padding: 96px 52px; background: var(--navy);
+}
+.what-inner { max-width: 1160px; margin: 0 auto; }
+.what-we-build .tag { color: var(--orange); }
+.what-we-build .tag::before { background: var(--orange); }
+.what-we-build h2 { color: #fff; margin-bottom: 20px; }
+.what-we-build h2 em { color: var(--orange); }
+.what-sub { font-size: 16px; font-weight: 300; color: rgba(255,255,255,.5); line-height: 1.75; max-width: 560px; margin-bottom: 56px; }
+.what-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px;
+}
+.what-card {
+  padding: 36px 32px;
+  border-right: 1px solid rgba(255,255,255,.08);
+  transition: background .25s;
+}
+.what-card:last-child { border-right: none; }
+.what-card:hover { background: rgba(255,255,255,.03); }
+.what-card-icon { font-size: 32px; margin-bottom: 18px; display: block; }
+.what-card-title {
+  font-family: var(--serif); font-size: 20px; color: #fff;
+  margin-bottom: 10px; letter-spacing: -.2px;
+}
+.what-card-body {
+  font-size: 14px; font-weight: 300; color: rgba(255,255,255,.5); line-height: 1.72;
+}
+
+/* Values */
+.values { padding: 100px 52px; max-width: 1160px; margin: 0 auto; }
+.values h2 { margin-bottom: 52px; }
+.val-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr);
+  gap: 1px; border: 1px solid var(--border); border-radius: var(--r-lg);
+  overflow: hidden; background: var(--border);
+}
+.val-card {
+  padding: 36px; background: var(--white); transition: background .2s; cursor: default;
+}
+.val-card:hover { background: var(--off); }
+.val-label {
+  font-size: 11px; font-weight: 600; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--orange); margin-bottom: 14px; display: block;
+}
+.val-title {
+  font-family: var(--serif); font-size: 22px; color: var(--navy);
+  margin-bottom: 10px; letter-spacing: -.2px;
+}
+.val-body {
+  font-size: 14px; font-weight: 300; color: var(--navy-3); line-height: 1.72;
+}
+
+/* Company info strip */
+.company-strip {
+  padding: 64px 52px; background: var(--off); border-top: 1px solid var(--border);
+}
+.company-inner {
+  max-width: 1160px; margin: 0 auto;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; text-align: center;
+}
+.company-item-label {
+  font-size: 11px; font-weight: 600; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--navy-3); margin-bottom: 10px;
+}
+.company-item-value {
+  font-family: var(--serif); font-size: 20px; color: var(--navy); letter-spacing: -.2px;
+}
+.company-item-value a { color: var(--orange); text-decoration: none; }
+.company-item-value a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* CTA */
+.about-cta { padding: 120px 52px; text-align: center; border-top: 1px solid var(--border); }
+.about-cta-inner { max-width: 560px; margin: 0 auto; }
+.about-cta h2 { font-size: clamp(32px, 5vw, 52px); margin-bottom: 18px; }
+.about-cta .sub { max-width: 420px; margin: 0 auto 36px; }
+
+@media (max-width: 860px) {
+  .about-hero { padding: 110px 24px 60px; }
+  .manifesto { padding: 0 24px 64px; }
+  .what-we-build { padding: 64px 24px; }
+  .what-grid { grid-template-columns: 1fr; }
+  .what-card { border-right: none; border-bottom: 1px solid rgba(255,255,255,.08); }
+  .what-card:last-child { border-bottom: none; }
+  .values { padding: 64px 24px; }
+  .val-grid { grid-template-columns: 1fr; background: none; border: none; gap: 16px; }
+  .val-card { border: 1px solid var(--border); border-radius: var(--r-lg); }
+  .company-strip { padding: 48px 24px; }
+  .company-inner { grid-template-columns: 1fr; gap: 24px; }
+  .about-cta { padding: 80px 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+
+<!-- NAV -->
+<nav id="nav" aria-label="Main navigation">
+<div style="display:flex;align-items:center;gap:10px">
+<a href="/" class="logo">duct <span class="logo-mark" aria-hidden="true"></span></a>
+</div>
+<div class="nav-links">
+<a href="/" class="nav-link">Home</a>
+<a href="/blog/" class="nav-link">Blog</a>
+<a href="/#hero" class="btn btn-orange" style="padding:8px 18px;font-size:13px">Get early access &rarr;</a>
+</div>
+</nav>
+
+<main id="main-content">
+
+<!-- HERO -->
+<section class="about-hero">
+  <h1>We built Duct because<br/>your tools won't <em>talk</em></h1>
+  <p class="about-hero-sub">Every SaaS team runs 8&ndash;12 tools. Each one sees a sliver of the picture. Nobody sees the whole thing. We thought that was kind of absurd &mdash; so we&rsquo;re fixing it.</p>
+</section>
+
+<!-- MANIFESTO -->
+<section class="manifesto">
+  <div class="manifesto-block reveal">
+    <span class="manifesto-num">01</span>
+    <h2 class="manifesto-title">The problem nobody talks about</h2>
+    <p class="manifesto-body">Your analytics tool knows what happened. Your support tool knows who's upset. Your project tracker knows what shipped. Your ad platform knows what you spent. But none of them talk to each other &mdash; so you spend hours every week playing translator between tabs, trying to piece together a story that already exists if only someone would connect the dots.</p>
+  </div>
+  <div class="manifesto-block reveal">
+    <span class="manifesto-num">02</span>
+    <h2 class="manifesto-title">We&rsquo;re that someone</h2>
+    <p class="manifesto-body">Duct connects to your existing tools &mdash; read-only, zero config &mdash; and synthesizes the cross-tool intelligence that&rsquo;s been hiding in plain sight. Not another dashboard. Not another data warehouse project you'll abandon in Q3. Just the story your tools are collectively trying to tell you, delivered in plain English, on a schedule that actually works.</p>
+  </div>
+  <div class="manifesto-block reveal">
+    <span class="manifesto-num">03</span>
+    <h2 class="manifesto-title">Small team, big conviction</h2>
+    <p class="manifesto-body">We&rsquo;re Alleviate Lab, a small product studio based in Valencia, Spain. We believe the best intelligence tools are the ones you forget are running &mdash; they just work, quietly, and surface what matters before you think to ask. Duct is our first product, and we&rsquo;re building it for teams like ours: lean, fast-moving, and allergic to busywork.</p>
+  </div>
+</section>
+
+<!-- WHAT WE BUILD -->
+<section class="what-we-build">
+  <div class="what-inner">
+    <span class="tag reveal">What Duct Does</span>
+    <h2 class="reveal">Connect everything.<br/><em>Understand</em> everything.</h2>
+    <p class="what-sub reveal">Duct reads data from your advertising, analytics, support, SEO, and project management tools &mdash; then delivers structured intelligence briefs with cross-tool signals and clear next actions.</p>
+    <div class="what-grid">
+      <div class="what-card reveal">
+        <span class="what-card-icon" aria-hidden="true">&#x1F4CA;</span>
+        <h3 class="what-card-title">Cross-tool reports</h3>
+        <p class="what-card-body">On-demand and scheduled reports that pull data from every connected tool. Campaign performance, product metrics, search rankings, support trends &mdash; correlated in one view.</p>
+      </div>
+      <div class="what-card reveal">
+        <span class="what-card-icon" aria-hidden="true">&#x26A1;</span>
+        <h3 class="what-card-title">Anomaly detection</h3>
+        <p class="what-card-body">When something spikes, drops, or breaks pattern, Duct flags it immediately and cross-references other tools to explain why &mdash; before you even notice.</p>
+      </div>
+      <div class="what-card reveal">
+        <span class="what-card-icon" aria-hidden="true">&#x1F4AC;</span>
+        <h3 class="what-card-title">Plain-English synthesis</h3>
+        <p class="what-card-body">No more decoding dashboards at 8am. Duct delivers narrative briefs that explain what happened, what it means, and what to do next &mdash; in language your whole team understands.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VALUES -->
+<section class="values">
+  <span class="tag reveal">How We Work</span>
+  <h2 class="reveal">Principles, not <em>platitudes</em></h2>
+  <div class="val-grid">
+    <div class="val-card reveal">
+      <span class="val-label">Read-only by default</span>
+      <h3 class="val-title">We look, never touch</h3>
+      <p class="val-body">Duct connects to your tools with read-only access. We never create, modify, or delete anything in your accounts. Your data, your control &mdash; always.</p>
+    </div>
+    <div class="val-card reveal">
+      <span class="val-label">Substance over ceremony</span>
+      <h3 class="val-title">Ship the insight, skip the noise</h3>
+      <p class="val-body">We don&rsquo;t build features to pad a changelog. Every report, every signal, every alert exists because it saves a real team real time on a real decision.</p>
+    </div>
+    <div class="val-card reveal">
+      <span class="val-label">Underdog energy</span>
+      <h3 class="val-title">Small enough to care, fast enough to matter</h3>
+      <p class="val-body">We&rsquo;re not backed by a megacorp or staffed by hundreds. We&rsquo;re a tiny crew that builds with urgency, listens obsessively, and ships every single week. That&rsquo;s the advantage.</p>
+    </div>
+    <div class="val-card reveal">
+      <span class="val-label">Transparent by design</span>
+      <h3 class="val-title">You see what we see</h3>
+      <p class="val-body">Every data source, every API call, every piece of logic that generates a signal &mdash; it&rsquo;s documented and inspectable. No black boxes, no &ldquo;trust us&rdquo; handwaving.</p>
+    </div>
+  </div>
+</section>
+
+<!-- COMPANY STRIP -->
+<section class="company-strip">
+  <div class="company-inner">
+    <div class="reveal">
+      <p class="company-item-label">Company</p>
+      <p class="company-item-value">Alleviate Lab</p>
+    </div>
+    <div class="reveal">
+      <p class="company-item-label">Location</p>
+      <p class="company-item-value">Valencia, Spain</p>
+    </div>
+    <div class="reveal">
+      <p class="company-item-label">Contact</p>
+      <p class="company-item-value"><a href="mailto:hello@getduct.ai">hello@getduct.ai</a></p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="about-cta">
+  <div class="about-cta-inner">
+    <span class="tag reveal">Join the Beta</span>
+    <h2 class="reveal">Ready to stop <em>tab-switching?</em></h2>
+    <p class="sub reveal">We&rsquo;re onboarding the first teams personally. Free during beta, no credit card required.</p>
+    <div class="hero-form reveal">
+      <input type="email" class="email-in" id="about-email" placeholder="you@company.com" aria-label="Work email"/>
+      <button class="btn btn-orange btn-lg"
+        data-form-url="https://docs.google.com/forms/d/e/1FAIpQLSfCYgfd-XkSRHJdWbzAJCPwBOTCFpWn3HZSX4Akf3MfDLMxzQ/formResponse"
+        data-entry-id="entry.1791572614"
+        onclick="submitForm('about-email', this)">Get early access &rarr;</button>
+    </div>
+    <p class="hero-footnote">Free during beta &middot; No credit card &middot; Setup in under 5 minutes</p>
+  </div>
+</section>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/partials/footer-expanded.html"></div>
+
+<script src="assets/duct-partials.js"></script>
+<script src="assets/duct.js" defer></script>
+</body>
+</html>

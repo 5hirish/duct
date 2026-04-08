@@ -1,4 +1,13 @@
-export const BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
+const configuredBase = process.env.NEXT_PUBLIC_API_BASE?.trim();
+const normalizedConfiguredBase = configuredBase?.replace(/\/+$/, "");
+const isProduction = process.env.NODE_ENV === "production";
+
+/**
+ * In production, require an explicit API base URL.
+ * This prevents silently sending real users to localhost when env vars are missing.
+ */
+export const BASE =
+  normalizedConfiguredBase || (isProduction ? "" : "http://localhost:8000");
 
 /** Must match backend DUCT_API_KEY. Prefer a Next server proxy in production so this is not public. */
 function backendApiHeaders(extra = {}) {

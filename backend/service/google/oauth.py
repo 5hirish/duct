@@ -6,6 +6,14 @@ from google_auth_oauthlib.flow import Flow
 
 from config import get_configs
 
+# Use canonical URLs so token response scopes match (avoids "Scope has changed" from
+# google-auth when Google returns userinfo.* URLs vs short "email"/"profile" names).
+_GOOGLE_SIGNIN_SCOPES_DEFAULT: tuple[str, ...] = (
+    "openid",
+    "https://www.googleapis.com/auth/userinfo.email",
+    "https://www.googleapis.com/auth/userinfo.profile",
+)
+
 
 def create_google_oauth_flow(*, state: str | None, scopes: list[str]) -> Flow:
     """Build a Google OAuth web flow; ``redirect_uri`` comes from config."""
@@ -46,7 +54,7 @@ def create_google_signin_flow(*, state: str | None, scopes: list[str] | None = N
                 "token_uri": "https://oauth2.googleapis.com/token",
             }
         },
-        scopes=scopes or ["openid", "email", "profile"],
+        scopes=scopes or list(_GOOGLE_SIGNIN_SCOPES_DEFAULT),
         state=state,
     )
     flow.redirect_uri = cfg.google_signin_redirect_uri

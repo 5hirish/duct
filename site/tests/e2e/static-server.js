@@ -7,12 +7,6 @@ const root = path.resolve(__dirname, "..", "..");
 
 const routeMap = {
   "/": "index.html",
-  "/for-product-intelligence": "for-product-intelligence.html",
-  "/for-organic-growth": "for-organic-growth.html",
-  "/for-paid-ads": "for-paid-ads.html",
-  "/blog": "blog/index.html",
-  "/blog/": "blog/index.html",
-  "/blog/post": "blog/post.html",
 };
 
 const mimeTypes = {
@@ -31,17 +25,35 @@ const mimeTypes = {
   ".md": "text/markdown; charset=utf-8",
 };
 
+function toSafePath(relativePath) {
+  const normalized = path.normalize(relativePath).replace(/^(\.\.(\/|\\|$))+/, "");
+  return path.join(root, normalized);
+}
+
 function resolvePath(urlPath) {
-  if (routeMap[urlPath]) {
-    return path.join(root, routeMap[urlPath]);
+  const mapped = routeMap[urlPath];
+  if (mapped) {
+    return toSafePath(mapped);
   }
 
   const clean = decodeURIComponent(urlPath.replace(/^\/+/, ""));
   if (!clean) {
-    return path.join(root, "index.html");
+    return toSafePath("index.html");
   }
 
-  return path.join(root, clean);
+  const hasExtension = path.extname(clean) !== "";
+  const candidates = hasExtension
+    ? [clean]
+    : [clean, `${clean}.html`, path.join(clean, "index.html")];
+
+  for (const candidate of candidates) {
+    const fullPath = toSafePath(candidate);
+    if (fs.existsSync(fullPath)) {
+      return fullPath;
+    }
+  }
+
+  return toSafePath(clean);
 }
 
 const server = http.createServer((req, res) => {
