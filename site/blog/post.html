@@ -8,17 +8,27 @@
 <!-- Title and meta set dynamically by JS from front matter -->
 <title>Duct Insights</title>
 <meta name="description" content=""/>
+<meta name="keywords" content="SaaS growth, SEO, product intelligence, analytics reporting"/>
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:locale" content="en_US"/>
 <meta property="og:type" content="article"/>
 <meta property="og:url" content=""/>
 <meta property="og:title" content=""/>
 <meta property="og:description" content=""/>
 <meta property="og:image" content="https://getduct.ai/assets/og-image.png"/>
+<meta property="og:image:alt" content="Duct insights article cover"/>
 <meta property="og:site_name" content="Duct"/>
+<meta property="article:published_time" content=""/>
+<meta property="article:modified_time" content=""/>
+<meta property="article:section" content=""/>
+<meta property="article:author" content="Duct Team"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content=""/>
 <meta name="twitter:description" content=""/>
 <meta name="twitter:image" content="https://getduct.ai/assets/og-image.png"/>
+<meta name="twitter:image:alt" content="Duct insights article cover"/>
+<link rel="canonical" href="https://getduct.ai/blog/post"/>
 <link rel="stylesheet" href="../assets/duct.css"/>
 <script src="../assets/config.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -111,6 +121,13 @@
 
 // Post loader
 (function () {
+  function toIsoDate(input) {
+    if (!input) return '';
+    var parsed = new Date(input);
+    if (isNaN(parsed.getTime())) return '';
+    return parsed.toISOString();
+  }
+
   function parseFrontMatter(raw) {
     var match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
     if (!match) return { body: raw };
@@ -145,6 +162,8 @@
 
   var slug = new URLSearchParams(location.search).get('slug');
   if (!slug) {
+    setMeta('robots', 'noindex, follow');
+    setMeta('googlebot', 'noindex, follow');
     document.getElementById('prose').innerHTML = '<p>No article specified.</p>';
     return;
   }
@@ -163,11 +182,14 @@
         document.getElementById('article-title').textContent = fm.title;
         setMeta('og:title', fm.title + ' — Duct Insights');
         setMeta('twitter:title', fm.title + ' — Duct Insights');
+        setMeta('og:image:alt', fm.title + ' — Duct insights article');
+        setMeta('twitter:image:alt', fm.title + ' — Duct insights article');
       }
 
       // Category
       if (fm.category) {
         document.getElementById('article-category').textContent = fm.category;
+        setMeta('article:section', fm.category);
       }
 
       // Meta line: date + read time
@@ -193,6 +215,13 @@
       }
       canonical.href = 'https://getduct.ai/blog/post?slug=' + slug;
       setMeta('og:url', canonical.href);
+      setMeta('article:author', fm.author || 'Duct Team');
+
+      var publishedIso = toIsoDate(fm.date);
+      if (publishedIso) {
+        setMeta('article:published_time', publishedIso);
+        setMeta('article:modified_time', publishedIso);
+      }
 
       // Hero image
       if (fm.heroImage) {
@@ -234,9 +263,12 @@
         '@type': 'Article',
         headline: fm.title || '',
         description: fm.excerpt || '',
-        datePublished: fm.date || '',
+        datePublished: publishedIso || fm.date || '',
+        dateModified: publishedIso || fm.date || '',
+        articleSection: fm.category || '',
         author: { '@type': 'Organization', name: fm.author || 'Duct Team' },
         publisher: { '@type': 'Organization', name: 'Duct', url: 'https://getduct.ai' },
+        image: fm.heroImage || 'https://getduct.ai/assets/og-image.png',
         mainEntityOfPage: canonical.href
       };
       var script = document.createElement('script');
@@ -245,6 +277,8 @@
       document.head.appendChild(script);
     })
     .catch(function () {
+      setMeta('robots', 'noindex, follow');
+      setMeta('googlebot', 'noindex, follow');
       showContent();
       document.getElementById('article-title').textContent = 'Article not found';
       document.getElementById('prose').innerHTML = '<p>Sorry, this article could not be loaded.</p>';
