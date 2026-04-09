@@ -219,11 +219,38 @@
   border-left: 1px solid var(--border);
 }
 
+.nav-user-menu {
+  position: relative;
+}
+
+.nav-avatar-trigger {
+  padding: 2px !important;
+  border-radius: 999px !important;
+}
+
+.nav-avatar-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .nav-avatar {
   width: 28px;
   height: 28px;
   border-radius: 50%;
   object-fit: cover;
+}
+
+.nav-avatar-progress-dot {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--orange);
+  border: 1.5px solid var(--white);
 }
 
 .nav-avatar-fallback {
@@ -236,19 +263,41 @@
   font-weight: 600;
 }
 
-.nav-signout {
-  font-size: 12px;
+.nav-profile-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  min-width: 220px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 10px 28px rgba(13, 15, 26, 0.12);
+  padding: 6px;
+  z-index: 20;
+}
+
+.nav-profile-menu-item {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
   font-weight: 500;
-  color: var(--navy-3);
+  color: var(--navy-2);
+}
+
+.nav-profile-menu-item:hover {
+  background: var(--off);
+  color: var(--navy);
+}
+
+.nav-profile-menu-item-button {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px 0;
+  text-align: left;
   font-family: var(--sans);
-}
-
-.nav-signout:hover {
-  color: var(--orange);
 }
 
 /* Shared button (mirrors landing `.btn` helpers) */
