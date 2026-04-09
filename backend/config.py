@@ -101,6 +101,18 @@ class Configs(BaseSettings):
     openai_api_key: str = ""
     anthropic_api_key: str = ""
 
+    # Sentry observability
+    app_env: str = Field(
+        default="local",
+        validation_alias=AliasChoices("APP_ENV", "ENVIRONMENT"),
+    )
+    sentry_dsn: str = ""
+    sentry_send_default_pii: bool = True
+    sentry_enable_logs: bool = True
+    sentry_traces_sample_rate: float = 1.0
+    sentry_profile_session_sample_rate: float = 1.0
+    sentry_profile_lifecycle: str = "trace"
+
     model_config = SettingsConfigDict(
         env_file=_settings_env_files(),
         env_file_encoding="utf-8",
