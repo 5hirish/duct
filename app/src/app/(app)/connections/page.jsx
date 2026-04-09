@@ -91,7 +91,7 @@ export default function ConnectionsPage() {
             </svg>
           </Link>
         </Button>
-        <h1 className="page-toolbar-title">Connections</h1>
+        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">Connections</h1>
       </div>
       <p className="app-subtle" style={{ marginTop: 0, marginBottom: 18 }}>
         Manage data source connections for reports. Choose your Google Ads account when you{" "}

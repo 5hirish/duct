@@ -2,10 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../lib/auth";
 import { getBusinessProfileCompletion } from "../lib/businessProfile";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
 function navPillClass(active) {
@@ -20,9 +27,7 @@ function navPillClass(active) {
 export default function AppNav() {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
-  const [menuOpen, setMenuOpen] = useState(false);
   const [profilePercent, setProfilePercent] = useState(0);
-  const menuRef = useRef(null);
   const isConnections = pathname.startsWith("/connections");
   const isGenerate = pathname.startsWith("/generate");
   const isReports = pathname.startsWith("/reports");
@@ -31,31 +36,8 @@ export default function AppNav() {
     setProfilePercent(getBusinessProfileCompletion().percent);
   }, [pathname]);
 
-  useEffect(() => {
-    function handlePointerDown(event) {
-      if (!menuRef.current) return;
-      if (!menuRef.current.contains(event.target)) {
-        setMenuOpen(false);
-      }
-    }
-
-    function handleEscape(event) {
-      if (event.key === "Escape") {
-        setMenuOpen(false);
-      }
-    }
-
-    window.addEventListener("pointerdown", handlePointerDown);
-    window.addEventListener("keydown", handleEscape);
-
-    return () => {
-      window.removeEventListener("pointerdown", handlePointerDown);
-      window.removeEventListener("keydown", handleEscape);
-    };
-  }, []);
-
   return (
-    <div className="nav-links flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+    <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
       <div className="flex items-center gap-0.5 rounded-full bg-muted/80 p-1 ring-1 ring-border/70 sm:gap-1">
         <Button variant="ghost" size="sm" className={navPillClass(isConnections)} asChild>
           <Link href="/connections">Connections</Link>
@@ -67,56 +49,50 @@ export default function AppNav() {
           <Link href="/reports">Reports</Link>
         </Button>
       </div>
+
       {user && (
-        <div className="nav-user nav-user-menu" ref={menuRef}>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="nav-avatar-trigger"
-            aria-haspopup="menu"
-            aria-expanded={menuOpen}
-            onClick={() => setMenuOpen((open) => !open)}
-          >
-            <span className="nav-avatar-wrap">
-              {user.picture ? (
-                <img
-                  className="nav-avatar"
-                  src={user.picture}
-                  alt={user.name || user.email}
-                  width={28}
-                  height={28}
-                  referrerPolicy="no-referrer"
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="relative rounded-full p-0.5 focus-visible:ring-2 focus-visible:ring-ring/50"
+              aria-label="Profile menu"
+            >
+              <span className="relative inline-flex items-center justify-center">
+                {user.picture ? (
+                  <img
+                    className="size-7 rounded-full object-cover"
+                    src={user.picture}
+                    alt={user.name || user.email}
+                    width={28}
+                    height={28}
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <span className="flex size-7 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">
+                    {(user.name || user.email || "U").charAt(0).toUpperCase()}
+                  </span>
+                )}
+                <span
+                  aria-hidden="true"
+                  className="absolute -bottom-0.5 -right-0.5 size-2 rounded-full border-[1.5px] border-background bg-primary"
                 />
-              ) : (
-                <span className="nav-avatar nav-avatar-fallback">
-                  {(user.name || user.email || "U").charAt(0).toUpperCase()}
-                </span>
-              )}
-              <span className="nav-avatar-progress-dot" aria-hidden="true" />
-            </span>
-          </Button>
-          {menuOpen && (
-            <div className="nav-profile-menu" role="menu" aria-label="Profile menu">
-              <Link
-                href="/onboarding"
-                className="nav-profile-menu-item"
-                role="menuitem"
-                onClick={() => setMenuOpen(false)}
-              >
+              </span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-52">
+            <DropdownMenuItem asChild>
+              <Link href="/onboarding">
                 Profile ({profilePercent}% complete)
               </Link>
-              <button
-                type="button"
-                className="nav-profile-menu-item nav-profile-menu-item-button"
-                role="menuitem"
-                onClick={signOut}
-              >
-                Log out
-              </button>
-            </div>
-          )}
-        </div>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={signOut}>
+              Log out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       )}
     </div>
   );

@@ -10,7 +10,7 @@ export default async function ReportsPage() {
   return (
     <section>
       <div className="page-toolbar">
-        <h1 className="page-toolbar-title">Reports</h1>
+        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">Reports</h1>
         <ReportsGenerateCta />
       </div>
       <p className="app-subtle" style={{ marginTop: 0, marginBottom: 18 }}>

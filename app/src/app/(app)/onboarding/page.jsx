@@ -4,6 +4,17 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 import {
   getBusinessProfileDraft,
   saveBusinessProfileDraft,
@@ -170,37 +181,26 @@ export default function OnboardingPage() {
   if (!ready) {
     return (
       <section>
-        <h1>Profile setup</h1>
-        <p className="app-subtle">Loading your saved progress...</p>
+        <h1 className="text-2xl font-semibold tracking-tight mb-2">Profile setup</h1>
+        <p className="text-sm text-muted-foreground">Loading your saved progress...</p>
       </section>
     );
   }
 
   return (
     <section>
+      {/* Sticky progress shell */}
       <div className="onboarding-progress-shell">
         <div className="page-toolbar" style={{ marginBottom: 8 }}>
-          <h1 className="page-toolbar-title">Profile setup</h1>
-          <span className="app-subtle">{inputProgressPercent}% complete</span>
+          <h1 className="page-toolbar-title text-lg font-semibold tracking-tight">Profile setup</h1>
+          <span className="text-sm text-muted-foreground">{inputProgressPercent}% complete</span>
         </div>
 
-        <div className="onboarding-progress-track-wrap">
-          <div
-            className="onboarding-progress-track"
-            role="progressbar"
-            aria-label="Onboarding completion progress"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={inputProgressPercent}
-          >
-            <span
-              className="onboarding-progress-fill"
-              style={{ width: `${inputProgressPercent}%` }}
-            />
-          </div>
+        <div className="mb-3">
+          <Progress value={inputProgressPercent} className="h-1.5" />
         </div>
 
-        <div className="onboarding-stepper-minimal" role="list" aria-label="Onboarding steps">
+        <div className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-thin" role="list" aria-label="Onboarding steps">
           {stepProgress.map((stepItem, index) => {
             const stepNumber = index + 1;
             const isActive = step === stepNumber;
@@ -209,350 +209,327 @@ export default function OnboardingPage() {
               <div
                 key={stepItem.shortLabel}
                 role="listitem"
-                className={`onboarding-step-inline${isActive ? " active" : ""}${isDone ? " done" : ""}`}
+                className="inline-flex items-center gap-1.5 whitespace-nowrap"
               >
                 <button
                   type="button"
-                  className="onboarding-step-inline-button"
                   disabled={stepNumber > maxVisitedStep}
                   onClick={() => goToStep(stepNumber)}
+                  className={cn(
+                    "rounded-xl border px-2.5 py-1.5 text-xs font-medium transition-colors disabled:cursor-default disabled:opacity-60",
+                    isActive
+                      ? "border-primary/30 bg-primary/8 text-foreground font-semibold"
+                      : "border-transparent bg-white/70 text-muted-foreground hover:border-border hover:bg-white"
+                  )}
                 >
-                  <span className="onboarding-step-inline-title">{stepItem.shortLabel}</span>
+                  {stepItem.shortLabel}
                 </button>
-                {isDone && <Check className="onboarding-step-check" aria-hidden="true" />}
+                {isDone && <Check className="size-3.5 text-primary" aria-hidden="true" />}
+                {index < TOTAL_STEPS - 1 && (
+                  <span className="inline-block h-px w-3 bg-border" aria-hidden="true" />
+                )}
               </div>
             );
           })}
         </div>
       </div>
 
+      {/* Step 1: Company */}
       {step === 1 && (
-        <div>
-          <div style={{ display: "grid", gap: 12 }}>
-            <label className="generate-field">
-              <span className="app-subtle">Company name</span>
-              <input
-                className="app-input onboarding-input"
-                value={profile.company.name}
-                onChange={(event) =>
-                  setProfile((prev) => ({
-                    ...prev,
-                    company: { ...prev.company, name: event.target.value },
-                  }))
-                }
-                placeholder="Acme Inc."
-              />
-            </label>
-            <label className="generate-field">
-              <span className="app-subtle">Industry</span>
-              <select
-                className="app-input onboarding-input"
-                value={profile.company.industry}
-                onChange={(event) =>
-                  setProfile((prev) => ({
-                    ...prev,
-                    company: { ...prev.company, industry: event.target.value },
-                  }))
-                }
-              >
-                <option value="">Select industry...</option>
+        <div className="grid gap-4">
+          <div className="grid gap-1.5">
+            <Label htmlFor="company-name">Company name</Label>
+            <Input
+              id="company-name"
+              value={profile.company.name}
+              onChange={(e) =>
+                setProfile((prev) => ({ ...prev, company: { ...prev.company, name: e.target.value } }))
+              }
+              placeholder="Acme Inc."
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="company-industry">Industry</Label>
+            <Select
+              value={profile.company.industry}
+              onValueChange={(val) =>
+                setProfile((prev) => ({ ...prev, company: { ...prev.company, industry: val } }))
+              }
+            >
+              <SelectTrigger id="company-industry">
+                <SelectValue placeholder="Select industry..." />
+              </SelectTrigger>
+              <SelectContent>
                 {INDUSTRIES.map((industry) => (
-                  <option key={industry} value={industry}>
-                    {industry}
-                  </option>
+                  <SelectItem key={industry} value={industry}>{industry}</SelectItem>
                 ))}
-              </select>
-            </label>
-            <label className="generate-field">
-              <span className="app-subtle">Website (optional)</span>
-              <input
-                className="app-input onboarding-input"
-                value={profile.company.website_url}
-                onChange={(event) =>
-                  setProfile((prev) => ({
-                    ...prev,
-                    company: { ...prev.company, website_url: event.target.value },
-                  }))
-                }
-                placeholder="https://example.com"
-              />
-            </label>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="company-website">Website <span className="text-muted-foreground">(optional)</span></Label>
+            <Input
+              id="company-website"
+              value={profile.company.website_url}
+              onChange={(e) =>
+                setProfile((prev) => ({ ...prev, company: { ...prev.company, website_url: e.target.value } }))
+              }
+              placeholder="https://example.com"
+            />
           </div>
         </div>
       )}
 
+      {/* Step 2: Targets */}
       {step === 2 && (
-        <div>
-          <div style={{ display: "grid", gap: 12 }}>
-            <label className="generate-field">
-              <span className="app-subtle">Primary KPI</span>
-              <select
-                className="app-input onboarding-input"
-                value={profile.targets.primary_kpi}
-                onChange={(event) =>
-                  setProfile((prev) => ({
-                    ...prev,
-                    targets: { ...prev.targets, primary_kpi: event.target.value },
-                  }))
-                }
-              >
-                <option value="">Select KPI...</option>
+        <div className="grid gap-4">
+          <div className="grid gap-1.5">
+            <Label htmlFor="primary-kpi">Primary KPI</Label>
+            <Select
+              value={profile.targets.primary_kpi}
+              onValueChange={(val) =>
+                setProfile((prev) => ({ ...prev, targets: { ...prev.targets, primary_kpi: val } }))
+              }
+            >
+              <SelectTrigger id="primary-kpi">
+                <SelectValue placeholder="Select KPI..." />
+              </SelectTrigger>
+              <SelectContent>
                 {KPI_OPTIONS.map((kpi) => (
-                  <option key={kpi} value={kpi}>
-                    {kpi}
-                  </option>
+                  <SelectItem key={kpi} value={kpi}>{kpi}</SelectItem>
                 ))}
-              </select>
-            </label>
-            <div className="connections-date-row">
-              <label className="generate-field">
-                <span className="app-subtle">Monthly budget</span>
-                <input
-                  className="app-input onboarding-input"
-                  type="number"
-                  min="0"
-                  value={profile.targets.monthly_budget}
-                  onChange={(event) =>
-                    setProfile((prev) => ({
-                      ...prev,
-                      targets: { ...prev.targets, monthly_budget: event.target.value },
-                    }))
-                  }
-                  placeholder="5000"
-                />
-              </label>
-              <label className="generate-field">
-                <span className="app-subtle">Target CPA</span>
-                <input
-                  className="app-input onboarding-input"
-                  type="number"
-                  min="0"
-                  value={profile.targets.target_cpa}
-                  onChange={(event) =>
-                    setProfile((prev) => ({
-                      ...prev,
-                      targets: { ...prev.targets, target_cpa: event.target.value },
-                    }))
-                  }
-                  placeholder="50"
-                />
-              </label>
-            </div>
-            <label className="generate-field">
-              <span className="app-subtle">Target ROAS</span>
-              <input
-                className="app-input onboarding-input"
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-1.5">
+              <Label htmlFor="monthly-budget">Monthly budget</Label>
+              <Input
+                id="monthly-budget"
                 type="number"
                 min="0"
-                step="0.1"
-                value={profile.targets.target_roas}
-                onChange={(event) =>
-                  setProfile((prev) => ({
-                    ...prev,
-                    targets: { ...prev.targets, target_roas: event.target.value },
-                  }))
+                value={profile.targets.monthly_budget}
+                onChange={(e) =>
+                  setProfile((prev) => ({ ...prev, targets: { ...prev.targets, monthly_budget: e.target.value } }))
                 }
-                placeholder="3.0"
+                placeholder="5000"
               />
-            </label>
-          </div>
-        </div>
-      )}
-
-      {step === 3 && (
-        <div>
-          <div style={{ display: "grid", gap: 12 }}>
-            <label className="generate-field">
-              <span className="app-subtle">Primary persona name</span>
-              <input
-                className="app-input onboarding-input"
-                value={profile.audience.personas[0]?.name || ""}
-                onChange={(event) =>
-                  setProfile((prev) => ({
-                    ...prev,
-                    audience: {
-                      personas: [
-                        {
-                          ...(prev.audience.personas[0] || {}),
-                          name: event.target.value,
-                          description: prev.audience.personas[0]?.description || "",
-                          priority: prev.audience.personas[0]?.priority || "primary",
-                        },
-                      ],
-                    },
-                  }))
-                }
-                placeholder="Marketing managers at SaaS startups"
-              />
-            </label>
-            <label className="generate-field">
-              <span className="app-subtle">Persona description</span>
-              <textarea
-                className="app-input app-textarea onboarding-input onboarding-textarea"
-                rows={3}
-                value={profile.audience.personas[0]?.description || ""}
-                onChange={(event) =>
-                  setProfile((prev) => ({
-                    ...prev,
-                    audience: {
-                      personas: [
-                        {
-                          ...(prev.audience.personas[0] || {}),
-                          description: event.target.value,
-                          name: prev.audience.personas[0]?.name || "",
-                          priority: prev.audience.personas[0]?.priority || "primary",
-                        },
-                      ],
-                    },
-                  }))
-                }
-                placeholder="Pain points, goals, motivations..."
-              />
-            </label>
-          </div>
-        </div>
-      )}
-
-      {step === 4 && (
-        <div>
-          <div style={{ display: "grid", gap: 12 }}>
-            <label className="generate-field">
-              <span className="app-subtle">Top competitor</span>
-              <input
-                className="app-input onboarding-input"
-                value={profile.competition.competitors[0]?.name || ""}
-                onChange={(event) =>
-                  setProfile((prev) => ({
-                    ...prev,
-                    competition: {
-                      ...prev.competition,
-                      competitors: [
-                        {
-                          ...(prev.competition.competitors[0] || {}),
-                          name: event.target.value,
-                          differentiator: prev.competition.competitors[0]?.differentiator || "",
-                        },
-                      ],
-                    },
-                  }))
-                }
-                placeholder="Competitor name"
-              />
-            </label>
-            <label className="generate-field">
-              <span className="app-subtle">Your differentiator</span>
-              <input
-                className="app-input onboarding-input"
-                value={profile.competition.competitors[0]?.differentiator || ""}
-                onChange={(event) =>
-                  setProfile((prev) => ({
-                    ...prev,
-                    competition: {
-                      ...prev.competition,
-                      competitors: [
-                        {
-                          ...(prev.competition.competitors[0] || {}),
-                          differentiator: event.target.value,
-                          name: prev.competition.competitors[0]?.name || "",
-                        },
-                      ],
-                    },
-                  }))
-                }
-                placeholder="What makes you different?"
-              />
-            </label>
-            <label className="generate-field">
-              <span className="app-subtle">Positioning statement</span>
-              <textarea
-                className="app-input app-textarea onboarding-input onboarding-textarea"
-                rows={2}
-                value={profile.competition.positioning_statement}
-                onChange={(event) =>
-                  setProfile((prev) => ({
-                    ...prev,
-                    competition: { ...prev.competition, positioning_statement: event.target.value },
-                  }))
-                }
-                placeholder="One-line value proposition"
-              />
-            </label>
-          </div>
-        </div>
-      )}
-
-      {step === 5 && (
-        <div>
-          <div style={{ display: "grid", gap: 12 }}>
-            <label className="generate-field">
-              <span className="app-subtle">Brand voice</span>
-              <select
-                className="app-input onboarding-input"
-                value={profile.brand_channels.brand_voice}
-                onChange={(event) =>
-                  setProfile((prev) => ({
-                    ...prev,
-                    brand_channels: { ...prev.brand_channels, brand_voice: event.target.value },
-                  }))
-                }
-              >
-                <option value="">Select voice...</option>
-                {BRAND_VOICES.map((voice) => (
-                  <option key={voice} value={voice}>
-                    {voice}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <div className="generate-field">
-              <span className="app-subtle">Active channels</span>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                {CHANNELS.map((channel) => {
-                  const active = profile.brand_channels.active_channels.includes(channel);
-                  return (
-                    <Button
-                      key={channel}
-                      type="button"
-                      variant={active ? "default" : "outline"}
-                      size="sm"
-                      onClick={() =>
-                        setProfile((prev) => ({
-                          ...prev,
-                          brand_channels: {
-                            ...prev.brand_channels,
-                            active_channels: active
-                              ? prev.brand_channels.active_channels.filter((item) => item !== channel)
-                              : [...prev.brand_channels.active_channels, channel],
-                          },
-                        }))
-                      }
-                    >
-                      {channel}
-                    </Button>
-                  );
-                })}
-              </div>
             </div>
-
-            <label className="generate-field">
-              <span className="app-subtle">Seasonality notes</span>
-              <textarea
-                className="app-input app-textarea onboarding-input onboarding-textarea"
-                rows={2}
-                value={profile.brand_channels.seasonality_notes}
-                onChange={(event) =>
-                  setProfile((prev) => ({
-                    ...prev,
-                    brand_channels: { ...prev.brand_channels, seasonality_notes: event.target.value },
-                  }))
+            <div className="grid gap-1.5">
+              <Label htmlFor="target-cpa">Target CPA</Label>
+              <Input
+                id="target-cpa"
+                type="number"
+                min="0"
+                value={profile.targets.target_cpa}
+                onChange={(e) =>
+                  setProfile((prev) => ({ ...prev, targets: { ...prev.targets, target_cpa: e.target.value } }))
                 }
-                placeholder="Any seasonal pattern to keep in mind?"
+                placeholder="50"
               />
-            </label>
+            </div>
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="target-roas">Target ROAS</Label>
+            <Input
+              id="target-roas"
+              type="number"
+              min="0"
+              step="0.1"
+              value={profile.targets.target_roas}
+              onChange={(e) =>
+                setProfile((prev) => ({ ...prev, targets: { ...prev.targets, target_roas: e.target.value } }))
+              }
+              placeholder="3.0"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Step 3: Audience */}
+      {step === 3 && (
+        <div className="grid gap-4">
+          <div className="grid gap-1.5">
+            <Label htmlFor="persona-name">Primary persona name</Label>
+            <Input
+              id="persona-name"
+              value={profile.audience.personas[0]?.name || ""}
+              onChange={(e) =>
+                setProfile((prev) => ({
+                  ...prev,
+                  audience: {
+                    personas: [{
+                      ...(prev.audience.personas[0] || {}),
+                      name: e.target.value,
+                      description: prev.audience.personas[0]?.description || "",
+                      priority: prev.audience.personas[0]?.priority || "primary",
+                    }],
+                  },
+                }))
+              }
+              placeholder="Marketing managers at SaaS startups"
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="persona-desc">Persona description</Label>
+            <textarea
+              id="persona-desc"
+              className="flex min-h-[80px] w-full rounded-3xl border border-input bg-input/50 px-4 py-2.5 text-sm transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
+              rows={3}
+              value={profile.audience.personas[0]?.description || ""}
+              onChange={(e) =>
+                setProfile((prev) => ({
+                  ...prev,
+                  audience: {
+                    personas: [{
+                      ...(prev.audience.personas[0] || {}),
+                      description: e.target.value,
+                      name: prev.audience.personas[0]?.name || "",
+                      priority: prev.audience.personas[0]?.priority || "primary",
+                    }],
+                  },
+                }))
+              }
+              placeholder="Pain points, goals, motivations..."
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Step 4: Competition */}
+      {step === 4 && (
+        <div className="grid gap-4">
+          <div className="grid gap-1.5">
+            <Label htmlFor="competitor-name">Top competitor</Label>
+            <Input
+              id="competitor-name"
+              value={profile.competition.competitors[0]?.name || ""}
+              onChange={(e) =>
+                setProfile((prev) => ({
+                  ...prev,
+                  competition: {
+                    ...prev.competition,
+                    competitors: [{
+                      ...(prev.competition.competitors[0] || {}),
+                      name: e.target.value,
+                      differentiator: prev.competition.competitors[0]?.differentiator || "",
+                    }],
+                  },
+                }))
+              }
+              placeholder="Competitor name"
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="differentiator">Your differentiator</Label>
+            <Input
+              id="differentiator"
+              value={profile.competition.competitors[0]?.differentiator || ""}
+              onChange={(e) =>
+                setProfile((prev) => ({
+                  ...prev,
+                  competition: {
+                    ...prev.competition,
+                    competitors: [{
+                      ...(prev.competition.competitors[0] || {}),
+                      differentiator: e.target.value,
+                      name: prev.competition.competitors[0]?.name || "",
+                    }],
+                  },
+                }))
+              }
+              placeholder="What makes you different?"
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="positioning">Positioning statement</Label>
+            <textarea
+              id="positioning"
+              className="flex min-h-[80px] w-full rounded-3xl border border-input bg-input/50 px-4 py-2.5 text-sm transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
+              rows={2}
+              value={profile.competition.positioning_statement}
+              onChange={(e) =>
+                setProfile((prev) => ({
+                  ...prev,
+                  competition: { ...prev.competition, positioning_statement: e.target.value },
+                }))
+              }
+              placeholder="One-line value proposition"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Step 5: Brand & channels */}
+      {step === 5 && (
+        <div className="grid gap-4">
+          <div className="grid gap-1.5">
+            <Label htmlFor="brand-voice">Brand voice</Label>
+            <Select
+              value={profile.brand_channels.brand_voice}
+              onValueChange={(val) =>
+                setProfile((prev) => ({ ...prev, brand_channels: { ...prev.brand_channels, brand_voice: val } }))
+              }
+            >
+              <SelectTrigger id="brand-voice">
+                <SelectValue placeholder="Select voice..." />
+              </SelectTrigger>
+              <SelectContent>
+                {BRAND_VOICES.map((voice) => (
+                  <SelectItem key={voice} value={voice}>{voice}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          <div style={{ marginTop: 20, display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <div className="grid gap-1.5">
+            <Label>Active channels</Label>
+            <div className="flex flex-wrap gap-2">
+              {CHANNELS.map((channel) => {
+                const active = profile.brand_channels.active_channels.includes(channel);
+                return (
+                  <Button
+                    key={channel}
+                    type="button"
+                    variant={active ? "default" : "outline"}
+                    size="sm"
+                    onClick={() =>
+                      setProfile((prev) => ({
+                        ...prev,
+                        brand_channels: {
+                          ...prev.brand_channels,
+                          active_channels: active
+                            ? prev.brand_channels.active_channels.filter((item) => item !== channel)
+                            : [...prev.brand_channels.active_channels, channel],
+                        },
+                      }))
+                    }
+                  >
+                    {channel}
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="grid gap-1.5">
+            <Label htmlFor="seasonality">Seasonality notes</Label>
+            <textarea
+              id="seasonality"
+              className="flex min-h-[80px] w-full rounded-3xl border border-input bg-input/50 px-4 py-2.5 text-sm transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
+              rows={2}
+              value={profile.brand_channels.seasonality_notes}
+              onChange={(e) =>
+                setProfile((prev) => ({
+                  ...prev,
+                  brand_channels: { ...prev.brand_channels, seasonality_notes: e.target.value },
+                }))
+              }
+              placeholder="Any seasonal pattern to keep in mind?"
+            />
+          </div>
+
+          <div className="mt-2 flex flex-wrap gap-2">
             <Button type="button" asChild>
               <Link href="/generate">Go to Generate</Link>
             </Button>

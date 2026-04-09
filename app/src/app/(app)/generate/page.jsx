@@ -759,7 +759,7 @@ export default function GeneratePage() {
             </svg>
           </Link>
         </Button>
-        <h1 className="page-toolbar-title">Generate Report</h1>
+        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">Generate Report</h1>
       </div>
 
       <ProgressDots step={step} />

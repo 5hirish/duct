@@ -92,7 +92,7 @@ export default function AppErrorPanel({ error, reset, showHtmlShell = false }) {
         <p className="app-subtle" style={{ marginBottom: 10 }}>
           This page could not be loaded.
         </p>
-        <h1 style={{ marginBottom: 10 }}>Something went wrong</h1>
+        <h1 className="text-2xl font-semibold tracking-tight" style={{ marginBottom: 10 }}>Something went wrong</h1>
         <p className="app-subtle" style={{ fontSize: 14, lineHeight: 1.55 }}>
           We logged this issue. Share the details below so we can trace it quickly.
         </p>
@@ -107,22 +107,30 @@ export default function AppErrorPanel({ error, reset, showHtmlShell = false }) {
           <strong>Digest:</strong> {error?.digest ?? "Unavailable"}
         </div>
 
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 14 }}>
-          <button type="button" className="app-button" onClick={reset}>
+        <div className="mt-4 flex flex-wrap gap-2.5">
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 rounded-4xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/80"
+            onClick={reset}
+          >
             Try again
           </button>
-          <button type="button" className="app-button app-button--ghost" onClick={handleCopyDebugInfo}>
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 rounded-4xl border border-border bg-background px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
+            onClick={handleCopyDebugInfo}
+          >
             {copyState === "copied"
               ? "Copied debug info"
               : copyState === "failed"
                 ? "Copy failed"
                 : "Copy debug info"}
           </button>
-          <Link href="/" className="app-button app-button--ghost" data-slot="button">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 rounded-4xl border border-border bg-background px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
+          >
             Go to home
-          </Link>
-          <Link href="/" className="app-button app-button--ghost" data-slot="button">
-            Go to sign in
           </Link>
         </div>
       </section>
