@@ -62,6 +62,8 @@ function SignInContent() {
   const searchParams = useSearchParams();
   const [turnstileToken, setTurnstileToken] = useState("");
   const [ready, setReady] = useState(false);
+  const [isSigningIn, setIsSigningIn] = useState(false);
+  const requiresTurnstile = Boolean(TURNSTILE_SITE_KEY);
 
   useEffect(() => {
     // Handle token from OAuth callback
@@ -86,6 +88,9 @@ function SignInContent() {
   // Load Turnstile script
   useEffect(() => {
     if (!TURNSTILE_SITE_KEY || !ready) return;
+    window.onTurnstileVerify = (token) => setTurnstileToken(token);
+    window.onTurnstileExpired = () => setTurnstileToken("");
+    window.onTurnstileError = () => setTurnstileToken("");
     if (document.getElementById("cf-turnstile-script")) return;
     const script = document.createElement("script");
     script.id = "cf-turnstile-script";
@@ -93,22 +98,26 @@ function SignInContent() {
     script.async = true;
     script.defer = true;
     document.head.appendChild(script);
-    window.onTurnstileVerify = (token) => setTurnstileToken(token);
   }, [ready]);
 
   const handleSignIn = useCallback(() => {
+    if (isSigningIn) return;
     if (!BASE) {
       window.alert(
         "Sign-in is temporarily unavailable: API endpoint is not configured. Please set NEXT_PUBLIC_API_BASE for this deployment."
       );
       return;
     }
+    if (requiresTurnstile && !turnstileToken) {
+      return;
+    }
+    setIsSigningIn(true);
     let url = `${BASE}/auth/signin/google/authorize`;
     if (turnstileToken) {
       url += `?turnstile_token=${encodeURIComponent(turnstileToken)}`;
     }
     window.location.href = url;
-  }, [turnstileToken]);
+  }, [isSigningIn, requiresTurnstile, turnstileToken]);
 
   if (!ready) {
     return (
@@ -167,6 +176,8 @@ function SignInContent() {
               className="cf-turnstile"
               data-sitekey={TURNSTILE_SITE_KEY}
               data-callback="onTurnstileVerify"
+              data-expired-callback="onTurnstileExpired"
+              data-error-callback="onTurnstileError"
               data-theme="light"
               aria-label="Security verification"
             />
@@ -178,10 +189,16 @@ function SignInContent() {
             size="lg"
             className="h-12 w-full justify-center gap-3 rounded-4xl border-border bg-card font-medium shadow-sm hover:bg-muted/60"
             onClick={handleSignIn}
+            disabled={isSigningIn || (requiresTurnstile && !turnstileToken)}
           >
             <GoogleLogo />
-            Sign in with Google
+            {isSigningIn ? "Signing in..." : "Sign in with Google"}
           </Button>
+          {requiresTurnstile && !turnstileToken && (
+            <p className="mt-2 text-center text-xs text-muted-foreground">
+              Complete security check to continue.
+            </p>
+          )}
 
           <p className="signin-legal">
             By signing in, you agree to our{" "}
