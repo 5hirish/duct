@@ -7,6 +7,23 @@
     "shadcn": {
       "command": "npx",
       "args": ["-y", "shadcn@latest", "mcp"]
+    },
+    "Railway": {
+      "command": "npx -y @railway/mcp-server",
+      "env": {},
+      "args": []
+    },
+    "Figma": {
+      "url": "https://mcp.figma.com/mcp",
+      "headers": {}
+    },
+    "Cloudflare": {
+      "command": "npx -y @cloudflare/mcp-server-cloudflare",
+      "env": {
+        "CLOUDFLARE_API_TOKEN": "",
+        "CLOUDFLARE_ACCOUNT_ID": ""
+      },
+      "args": []
     }
   }
 }
