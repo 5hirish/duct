@@ -64,6 +64,10 @@ Analyze supplementary data against campaign performance. Look for CROSS-DIMENSIO
 - Device × search term: do high-CPA terms perform differently by device?
 - Geo × campaign: geographic concentration issues or untapped expansion opportunities?
 - Ad group × campaign: is one ad group dragging the parent campaign classification?
+- GA4 landing pages × campaign: which paid campaigns send traffic to high-bounce pages?
+- GA4 conversion paths × campaign ROAS: where assisted conversions are hidden by last-click?
+- GSC queries × search terms: where are you paying for terms with strong organic coverage?
+- GSC pages × landing pages: where should paid/organic page strategy be aligned?
 - Look for KEYWORD CANNIBALIZATION: same high-intent terms across multiple campaigns causing self-competition
 - Look for NETWORK BLEED: campaigns spending on Search Partners or Display without the advertiser realizing
 
@@ -182,6 +186,39 @@ SUPPLEMENTARY_ANALYSIS_GUIDES: dict[str, str] = {
         "- Cross-reference: would pausing one ad group change the campaign-level classification?\n"
         "- Look for ad groups with declining CTR period-over-period — creative fatigue indicator\n"
         "- MARGINAL RETURNS: within a campaign, which ad groups have the best marginal CPA?"
+    ),
+    "ga4_landing_pages": (
+        "ANALYZE GA4 landing page data by:\n"
+        "- Cross-reference with campaigns: which campaigns drive paid traffic to high-bounce pages?\n"
+        "- Identify landing pages with >60% bounce rate receiving significant paid sessions\n"
+        "- Compare engagement rates across landing pages; low engagement + high CPC implies waste\n"
+        "- Flag campaigns where average session duration is short (<30s)\n"
+        "- Look for pages with strong engagement but weak conversions (funnel friction)\n"
+        "- Quantify potential wasted spend tied to poor landing-page behavior"
+    ),
+    "ga4_conversion_paths": (
+        "ANALYZE GA4 conversion path context by:\n"
+        "- Identify channels that assist conversions but get little last-click credit\n"
+        "- Cross-reference campaign ROAS against assisted-conversion context before cutting budget\n"
+        "- Flag channels/campaigns that appear early in high-converting paths\n"
+        "- Compare conversion efficiency between channel groups\n"
+        "- Look for multi-channel combinations with stronger conversion outcomes"
+    ),
+    "gsc_query_performance": (
+        "ANALYZE GSC organic query data by:\n"
+        "- Cross-reference organic queries with paid search terms for overlap/cannibalization\n"
+        "- Flag queries with strong organic position/CTR where paid spend may be redundant\n"
+        "- Identify high-impression organic queries with weak CTR as paid amplification opportunities\n"
+        "- Estimate savings opportunities where paid clicks overlap strong organic coverage\n"
+        "- Find high-volume queries that depend entirely on paid traffic (weak/no organic presence)"
+    ),
+    "gsc_page_performance": (
+        "ANALYZE GSC organic page data by:\n"
+        "- Cross-reference with GA4 landing-page behavior for full page-level context\n"
+        "- Identify pages with strong organic performance that could reduce paid dependency\n"
+        "- Flag pages with declining organic traction where paid support might need adjustment\n"
+        "- Surface pages with organic traction that are not currently used as paid landing pages\n"
+        "- Compare organic and paid page performance to spot messaging or UX mismatches"
     ),
 }
 

@@ -56,6 +56,8 @@ class Configs(BaseSettings):
     google_ads_refresh_token: str = ""
     google_ads_customer_id: str = ""
     google_ads_login_customer_id: str = ""
+    ga4_property_id: str = ""
+    gsc_site_url: str = ""
 
     # Google Sign-In (user identity, separate from connector OAuth). If unset/empty, derived as
     # {api_public_url}/auth/signin/google/callback.

@@ -21,6 +21,8 @@ from service.google.fetch import (
     fetch_search_terms,
 )
 from service.google.brief import build_brief
+from service.google.ga4 import fetch_ga4_conversion_paths, fetch_ga4_landing_pages
+from service.google.gsc import fetch_gsc_page_performance, fetch_gsc_query_performance
 
 from service.google.credentials import resolve_ads_credentials, resolve_customer_id
 from routes.schemas import GenerateRequest, ReportMetadata, ReportRequest, UnifiedReport
@@ -54,6 +56,11 @@ def _build_fetch_fns(
     client_secret: str,
     refresh_token: str,
     login_customer_id: str,
+    connections: set[str],
+    ga4_property_id: str,
+    gsc_site_url: str,
+    ga4_refresh_token: str,
+    gsc_refresh_token: str,
 ) -> dict[str, Callable[..., dict[str, Any]]]:
     """Build pre-credentialed fetch functions for each supplementary tool.
 
@@ -67,12 +74,29 @@ def _build_fetch_fns(
         refresh_token=refresh_token,
         login_customer_id=login_customer_id,
     )
-    return {
+    fetch_fns: dict[str, Callable[..., dict[str, Any]]] = {
         "fetch_search_terms": partial(fetch_search_terms, **cred_kwargs),
         "fetch_device_performance": partial(fetch_device_performance, **cred_kwargs),
         "fetch_geo_performance": partial(fetch_geo_performance, **cred_kwargs),
         "fetch_ad_group_performance": partial(fetch_ad_group_performance, **cred_kwargs),
     }
+    if "ga4" in connections and ga4_property_id:
+        ga4_cred_kwargs = dict(
+            refresh_token=ga4_refresh_token or refresh_token,
+            client_id=client_id,
+            client_secret=client_secret,
+        )
+        fetch_fns["fetch_ga4_landing_pages"] = partial(fetch_ga4_landing_pages, **ga4_cred_kwargs)
+        fetch_fns["fetch_ga4_conversion_paths"] = partial(fetch_ga4_conversion_paths, **ga4_cred_kwargs)
+    if "gsc" in connections and gsc_site_url:
+        gsc_cred_kwargs = dict(
+            refresh_token=gsc_refresh_token or refresh_token,
+            client_id=client_id,
+            client_secret=client_secret,
+        )
+        fetch_fns["fetch_gsc_query_performance"] = partial(fetch_gsc_query_performance, **gsc_cred_kwargs)
+        fetch_fns["fetch_gsc_page_performance"] = partial(fetch_gsc_page_performance, **gsc_cred_kwargs)
+    return fetch_fns
 
 
 @router.post("/generate")
@@ -80,10 +104,15 @@ async def generate(req: GenerateRequest) -> dict:
     """Fetch data for selected connections, build brief, goal-driven LangChain synthesis."""
     if not req.connections:
         raise HTTPException(status_code=422, detail="At least one connection is required.")
-    if "google_ads" not in req.connections:
+    connections = {c.strip().lower().replace("-", "_") for c in req.connections if c.strip()}
+    allowed_connections = {"google_ads", "ga4", "gsc"}
+    unsupported = sorted(connections - allowed_connections)
+    if unsupported:
+        raise HTTPException(status_code=422, detail=f"Unsupported connections: {', '.join(unsupported)}")
+    if "google_ads" not in connections:
         raise HTTPException(
             status_code=422,
-            detail="Only google_ads is supported for now.",
+            detail="google_ads is required as the primary report source.",
         )
     if not req.date_from or not req.date_to:
         raise HTTPException(status_code=422, detail="date_from and date_to are required.")
@@ -95,7 +124,10 @@ async def generate(req: GenerateRequest) -> dict:
     )
     customer_id = resolve_customer_id(request_customer_id=shim.customer_id)
     dt, cid, secret, rt = resolve_ads_credentials(request_refresh_token=shim.refresh_token)
-    login = (req.login_customer_id or get_configs().google_ads_login_customer_id).strip()
+    cfg = get_configs()
+    login = (req.login_customer_id or cfg.google_ads_login_customer_id).strip()
+    ga4_property_id = (req.ga4_property_id or cfg.ga4_property_id).strip()
+    gsc_site_url = (req.gsc_site_url or cfg.gsc_site_url).strip()
 
     try:
         raw_payload = fetch_campaigns(
@@ -133,7 +165,18 @@ async def generate(req: GenerateRequest) -> dict:
         )
 
         # Phase 1: Register goal-driven tools and fetch supplementary data
-        fetch_fns = _build_fetch_fns(dt, cid, secret, rt, login)
+        fetch_fns = _build_fetch_fns(
+            dt,
+            cid,
+            secret,
+            rt,
+            login,
+            connections,
+            ga4_property_id,
+            gsc_site_url,
+            req.ga4_refresh_token.strip(),
+            req.gsc_refresh_token.strip(),
+        )
         registered = agent.setup_tools_for_goal(goal=req.goal, fetch_fns=fetch_fns)
         supplementary = {}
         if registered:
@@ -143,6 +186,8 @@ async def generate(req: GenerateRequest) -> dict:
                 date_from=req.date_from,
                 date_to=req.date_to,
                 goal=req.goal,
+                ga4_property_id=ga4_property_id,
+                gsc_site_url=gsc_site_url,
                 custom_goal=req.custom_goal,
                 context=req.context,
             )
@@ -164,14 +209,15 @@ async def generate(req: GenerateRequest) -> dict:
         synthesis_dict = agent.extract_synthesis(synthesis)
 
     # Build unified envelope
+    connectors_used = [cid for cid in ("google_ads", "ga4", "gsc") if cid in connections]
     envelope = UnifiedReport(
-        connectors_used=["google_ads"],
+        connectors_used=connectors_used,
         briefs={"google_ads": brief_dict},
         synthesis=synthesis_dict,
         metadata=ReportMetadata(
             generated_at=datetime.now(timezone.utc).isoformat(),
             goal=req.goal.value,
-            connectors_used=["google_ads"],
+            connectors_used=connectors_used,
         ),
     )
     return envelope.model_dump()

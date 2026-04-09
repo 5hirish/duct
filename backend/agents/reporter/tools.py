@@ -31,6 +31,22 @@ class GoogleAdsFetchInput(BaseModel):
     date_to: str = Field(description="End date in YYYY-MM-DD format")
 
 
+class GA4FetchInput(BaseModel):
+    """Input schema for GA4 fetch tools."""
+
+    property_id: str = Field(description="GA4 property ID (digits only, e.g. '123456789')")
+    date_from: str = Field(description="Start date in YYYY-MM-DD format")
+    date_to: str = Field(description="End date in YYYY-MM-DD format")
+
+
+class GSCFetchInput(BaseModel):
+    """Input schema for GSC fetch tools."""
+
+    site_url: str = Field(description="Search Console site URL (e.g. 'https://example.com')")
+    date_from: str = Field(description="Start date in YYYY-MM-DD format")
+    date_to: str = Field(description="End date in YYYY-MM-DD format")
+
+
 # ---------------------------------------------------------------------------
 # Tool factory helper
 # ---------------------------------------------------------------------------
@@ -55,6 +71,52 @@ def _make_tool(
         name=name,
         description=description,
         args_schema=GoogleAdsFetchInput,
+    )
+
+
+def _make_ga4_tool(
+    fetch_fn: Callable[..., dict[str, Any]],
+    name: str,
+    description: str,
+) -> StructuredTool:
+    """Wrap a pre-credentialed GA4 fetch function as a LangChain StructuredTool."""
+
+    def _wrapper(**kwargs: Any) -> dict[str, Any]:
+        validated = GA4FetchInput(**kwargs)
+        return fetch_fn(
+            property_id=validated.property_id,
+            date_from=validated.date_from,
+            date_to=validated.date_to,
+        )
+
+    return StructuredTool.from_function(
+        func=_wrapper,
+        name=name,
+        description=description,
+        args_schema=GA4FetchInput,
+    )
+
+
+def _make_gsc_tool(
+    fetch_fn: Callable[..., dict[str, Any]],
+    name: str,
+    description: str,
+) -> StructuredTool:
+    """Wrap a pre-credentialed GSC fetch function as a LangChain StructuredTool."""
+
+    def _wrapper(**kwargs: Any) -> dict[str, Any]:
+        validated = GSCFetchInput(**kwargs)
+        return fetch_fn(
+            site_url=validated.site_url,
+            date_from=validated.date_from,
+            date_to=validated.date_to,
+        )
+
+    return StructuredTool.from_function(
+        func=_wrapper,
+        name=name,
+        description=description,
+        args_schema=GSCFetchInput,
     )
 
 
@@ -141,6 +203,63 @@ def create_ad_group_performance_tool(
     )
 
 
+def create_ga4_landing_pages_tool(
+    fetch_fn: Callable[..., dict[str, Any]],
+) -> StructuredTool:
+    """GA4 landing page behavior for paid traffic."""
+    return _make_ga4_tool(
+        fetch_fn,
+        name="fetch_ga4_landing_pages",
+        description=(
+            "Fetch GA4 landing page behavior for paid traffic (google / cpc), "
+            "including sessions, bounce rate, engagement rate, session duration, "
+            "conversions, and revenue."
+        ),
+    )
+
+
+def create_ga4_conversion_paths_tool(
+    fetch_fn: Callable[..., dict[str, Any]],
+) -> StructuredTool:
+    """GA4 channel-level conversion context."""
+    return _make_ga4_tool(
+        fetch_fn,
+        name="fetch_ga4_conversion_paths",
+        description=(
+            "Fetch GA4 conversion path context by source/medium and channel group "
+            "to evaluate assisted-conversion dynamics beyond last-click."
+        ),
+    )
+
+
+def create_gsc_query_performance_tool(
+    fetch_fn: Callable[..., dict[str, Any]],
+) -> StructuredTool:
+    """GSC organic query performance."""
+    return _make_gsc_tool(
+        fetch_fn,
+        name="fetch_gsc_query_performance",
+        description=(
+            "Fetch Google Search Console organic query performance with clicks, "
+            "impressions, CTR, and position for overlap analysis against paid terms."
+        ),
+    )
+
+
+def create_gsc_page_performance_tool(
+    fetch_fn: Callable[..., dict[str, Any]],
+) -> StructuredTool:
+    """GSC organic page performance."""
+    return _make_gsc_tool(
+        fetch_fn,
+        name="fetch_gsc_page_performance",
+        description=(
+            "Fetch Google Search Console organic page performance with clicks, "
+            "impressions, CTR, and position for page-level organic/paid alignment."
+        ),
+    )
+
+
 # ---------------------------------------------------------------------------
 # Goal → tool mapping
 # ---------------------------------------------------------------------------
@@ -151,6 +270,10 @@ ALL_TOOL_NAMES: list[str] = [
     "fetch_device_performance",
     "fetch_geo_performance",
     "fetch_ad_group_performance",
+    "fetch_ga4_landing_pages",
+    "fetch_ga4_conversion_paths",
+    "fetch_gsc_query_performance",
+    "fetch_gsc_page_performance",
 ]
 
 # Priority hints per goal — marked [PRIORITY] in the Phase 1 prompt so the
@@ -159,19 +282,26 @@ GOAL_TOOL_PRIORITIES: dict[ReportGenerationGoal, list[str]] = {
     ReportGenerationGoal.LOWER_CAC: [
         "fetch_search_terms",
         "fetch_device_performance",
+        "fetch_ga4_landing_pages",
+        "fetch_gsc_query_performance",
     ],
     ReportGenerationGoal.MAXIMIZE_ROAS: [
         "fetch_ad_group_performance",
         "fetch_device_performance",
+        "fetch_ga4_conversion_paths",
     ],
     ReportGenerationGoal.SCALE_CONVERSIONS: [
         "fetch_device_performance",
         "fetch_geo_performance",
+        "fetch_ga4_landing_pages",
+        "fetch_gsc_query_performance",
     ],
     ReportGenerationGoal.AUDIT_SPEND: [
         "fetch_search_terms",
         "fetch_ad_group_performance",
         "fetch_geo_performance",
+        "fetch_gsc_query_performance",
+        "fetch_ga4_landing_pages",
     ],
     ReportGenerationGoal.CUSTOM: [
         "fetch_ad_group_performance",

@@ -6,6 +6,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 import service.google.ads  # noqa: F401 — registers connectors before routes import
+import service.google.ga4  # noqa: F401 — registers connectors before routes import
+import service.google.gsc  # noqa: F401 — registers connectors before routes import
 
 from config import get_configs
 from db.session import init_db

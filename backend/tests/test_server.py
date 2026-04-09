@@ -5,7 +5,6 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
@@ -118,11 +117,57 @@ def test_connector_oauth_authorize_redirects_to_google():
     assert "accounts.google.com" in location
 
 
+def test_ga4_connector_oauth_authorize_redirects_to_google():
+    server = _load_server_with_env()
+    client = TestClient(server.app)
+    res = client.get(
+        "/auth/connectors/ga4/oauth/authorize",
+        follow_redirects=False,
+    )
+    assert res.status_code == 307
+    location = res.headers.get("location", "")
+    assert "accounts.google.com" in location
+
+
+def test_gsc_connector_oauth_authorize_redirects_to_google():
+    server = _load_server_with_env()
+    client = TestClient(server.app)
+    res = client.get(
+        "/auth/connectors/gsc/oauth/authorize",
+        follow_redirects=False,
+    )
+    assert res.status_code == 307
+    location = res.headers.get("location", "")
+    assert "accounts.google.com" in location
+
+
 def test_connector_callback_invalid_state_returns_400():
     server = _load_server_with_env()
     client = TestClient(server.app)
     res = client.get(
         "/auth/connectors/google_ads/oauth/callback",
+        params={"code": "abc", "state": "bad"},
+    )
+    assert res.status_code == 400
+    assert "Invalid or expired OAuth state" in res.text
+
+
+def test_ga4_connector_callback_invalid_state_returns_400():
+    server = _load_server_with_env()
+    client = TestClient(server.app)
+    res = client.get(
+        "/auth/connectors/ga4/oauth/callback",
+        params={"code": "abc", "state": "bad"},
+    )
+    assert res.status_code == 400
+    assert "Invalid or expired OAuth state" in res.text
+
+
+def test_gsc_connector_callback_invalid_state_returns_400():
+    server = _load_server_with_env()
+    client = TestClient(server.app)
+    res = client.get(
+        "/auth/connectors/gsc/oauth/callback",
         params={"code": "abc", "state": "bad"},
     )
     assert res.status_code == 400
@@ -146,6 +191,16 @@ def test_unknown_connector_oauth_authorize_returns_404():
     res = client.get("/auth/connectors/unknown/oauth/authorize", follow_redirects=False)
     assert res.status_code == 404
     assert res.json().get("detail") == "Unknown connector"
+
+
+def test_ga4_and_gsc_connectors_registered():
+    from service.connectors import get_connector
+
+    _load_server_with_env()
+    ga4_meta, _ = get_connector("ga4")
+    gsc_meta, _ = get_connector("gsc")
+    assert ga4_meta.id == "ga4"
+    assert gsc_meta.id == "gsc"
 
 
 def test_accounts_missing_api_key_returns_403():
