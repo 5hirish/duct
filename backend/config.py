@@ -112,6 +112,7 @@ class Configs(BaseSettings):
     sentry_traces_sample_rate: float = 1.0
     sentry_profile_session_sample_rate: float = 1.0
     sentry_profile_lifecycle: str = "trace"
+    sentry_enable_localhost: bool = False
 
     model_config = SettingsConfigDict(
         env_file=_settings_env_files(),

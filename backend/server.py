@@ -26,7 +26,9 @@ def _is_localhost_url(url: str) -> bool:
     return hostname in {"localhost", "127.0.0.1", "::1"}
 
 
-if _cfg.sentry_dsn and not _is_localhost_url(_cfg.api_public_url):
+if _cfg.sentry_dsn and (
+    _cfg.sentry_enable_localhost or not _is_localhost_url(_cfg.api_public_url)
+):
     sentry_sdk.init(
         dsn=_cfg.sentry_dsn,
         environment=_cfg.app_env,
