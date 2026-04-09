@@ -3,6 +3,7 @@ import "./globals.css";
 import { DM_Sans, JetBrains_Mono } from "next/font/google";
 
 import { ProductAnalytics } from "../components/ProductAnalytics";
+import { ThemeProvider } from "../components/ThemeProvider";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -72,7 +73,10 @@ export const viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#0d0f1a",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0d0f1a" },
+  ],
 };
 
 export default function RootLayout({ children }) {
@@ -80,24 +84,27 @@ export default function RootLayout({ children }) {
     <html
       lang="en"
       className={`${dmSans.variable} ${jetbrainsMono.variable}`}
+      suppressHydrationWarning
     >
       <body className="min-h-dvh bg-background font-sans text-foreground antialiased">
-        <a href="#main-content" className="skip-link">
-          Skip to main content
-        </a>
-        {gtmId ? (
-          <noscript>
-            <iframe
-              src={`https://www.googletagmanager.com/ns.html?id=${gtmId}`}
-              height="0"
-              width="0"
-              style={{ display: "none", visibility: "hidden" }}
-              title="Google Tag Manager"
-            />
-          </noscript>
-        ) : null}
-        <ProductAnalytics />
-        {children}
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="duct-theme">
+          <a href="#main-content" className="skip-link">
+            Skip to main content
+          </a>
+          {gtmId ? (
+            <noscript>
+              <iframe
+                src={`https://www.googletagmanager.com/ns.html?id=${gtmId}`}
+                height="0"
+                width="0"
+                style={{ display: "none", visibility: "hidden" }}
+                title="Google Tag Manager"
+              />
+            </noscript>
+          ) : null}
+          <ProductAnalytics />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

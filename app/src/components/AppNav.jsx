@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "./ThemeToggle";
 
 function navPillClass(active) {
   return cn(
@@ -49,6 +50,8 @@ export default function AppNav() {
           <Link href="/reports">Reports</Link>
         </Button>
       </div>
+
+      <ThemeToggle />
 
       {user && (
         <DropdownMenu>
