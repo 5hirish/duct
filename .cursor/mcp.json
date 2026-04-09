@@ -8,6 +8,23 @@
       "command": "npx",
       "args": ["-y", "shadcn@latest", "mcp"]
     },
+    "GitHub": {
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer "
+      }
+    },
+    "Playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
+    },
+    "Sentry": {
+      "command": "npx",
+      "args": ["-y", "@sentry/mcp-server@latest"],
+      "env": {
+        "SENTRY_AUTH_TOKEN": ""
+      }
+    },
     "Railway": {
       "command": "npx -y @railway/mcp-server",
       "env": {},
@@ -24,6 +41,28 @@
         "CLOUDFLARE_ACCOUNT_ID": ""
       },
       "args": []
+    },
+    "Cloudflare Docs": {
+      "url": "https://docs.mcp.cloudflare.com/mcp",
+      "headers": {}
+    },
+    "Cloudflare Builds": {
+      "url": "https://builds.mcp.cloudflare.com/mcp",
+      "headers": {
+        "Authorization": "Bearer "
+      }
+    },
+    "Cloudflare Bindings": {
+      "url": "https://bindings.mcp.cloudflare.com/mcp",
+      "headers": {
+        "Authorization": "Bearer "
+      }
+    },
+    "Cloudflare Observability": {
+      "url": "https://observability.mcp.cloudflare.com/mcp",
+      "headers": {
+        "Authorization": "Bearer "
+      }
     }
   }
 }
