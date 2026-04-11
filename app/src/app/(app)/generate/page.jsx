@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import GoogleAdsReport from "../../../components/GoogleAdsReport";
-import { fetchGoogleAdsAccounts, generateReport } from "../../../lib/api";
+import { fetchGoogleAdsAccounts, generateReportStream } from "../../../lib/api";
 import { saveLocalReport, generateSlug } from "../../../lib/localReports";
 import { Button } from "@/components/ui/button";
 
@@ -455,45 +455,117 @@ function StepReview({
   );
 }
 
-const ANALYZING_LINES = [
-  "Connecting to Google Ads...",
-  "Fetching campaign data...",
-  "Analyzing performance...",
-  "Generating insights...",
+const PIPELINE_STEPS = [
+  { id: "collect_source_data", label: "Collecting source data", connectorScoped: true },
+  { id: "normalize_connector_outputs", label: "Normalizing connector outputs", connectorScoped: true },
+  { id: "supplementary_fetch", label: "Fetching supplementary insights", connectorScoped: false },
+  { id: "synthesize_report", label: "Synthesizing recommendations", connectorScoped: false },
+  { id: "assemble_report", label: "Finalizing report", connectorScoped: false },
 ];
 
-function StepAnalyzing({ error, onRetry }) {
-  const [visibleLines, setVisibleLines] = useState([]);
-  const timersRef = useRef([]);
+const STEP_STATUS = {
+  pending: "pending",
+  running: "running",
+  success: "success",
+  error: "error",
+};
 
-  useEffect(() => {
-    setVisibleLines([]);
-    const timers = [];
-    ANALYZING_LINES.forEach((_, i) => {
-      timers.push(
-        setTimeout(() => {
-          setVisibleLines((prev) => [...prev, i]);
-        }, i * 600)
-      );
+function stepStatusKey(stepId, connectorId = "__group") {
+  return `${stepId}:${connectorId}`;
+}
+
+function statusPriority(status) {
+  if (status === STEP_STATUS.error) return 4;
+  if (status === STEP_STATUS.running) return 3;
+  if (status === STEP_STATUS.success) return 2;
+  return 1;
+}
+
+function bestStatus(statuses) {
+  if (!statuses.length) return STEP_STATUS.pending;
+  return statuses
+    .slice()
+    .sort((a, b) => statusPriority(b) - statusPriority(a))[0];
+}
+
+function StepStatusIcon({ status }) {
+  if (status === STEP_STATUS.running) {
+    return <span className="pipeline-step-icon pipeline-step-icon--spinner" aria-hidden="true" />;
+  }
+  if (status === STEP_STATUS.success) {
+    return <span className="pipeline-step-icon pipeline-step-icon--success" aria-hidden="true">✓</span>;
+  }
+  if (status === STEP_STATUS.error) {
+    return <span className="pipeline-step-icon pipeline-step-icon--error" aria-hidden="true">!</span>;
+  }
+  return <span className="pipeline-step-icon pipeline-step-icon--pending" aria-hidden="true" />;
+}
+
+function connectorLabel(connectorId, connections) {
+  return connections.find((c) => c.id === connectorId)?.name ?? connectorId;
+}
+
+function createInitialPipelineStatus(selectedConnectorIds) {
+  const base = {};
+  PIPELINE_STEPS.forEach((step) => {
+    base[stepStatusKey(step.id)] = STEP_STATUS.pending;
+    selectedConnectorIds.forEach((connectorId) => {
+      base[stepStatusKey(step.id, connectorId)] = STEP_STATUS.pending;
     });
-    timersRef.current = timers;
-    return () => timers.forEach(clearTimeout);
-  }, []);
+  });
+  return base;
+}
+
+function StepAnalyzing({
+  error,
+  onRetry,
+  statusByKey,
+  selectedConnections,
+  connections,
+}) {
+  const multiConnector = selectedConnections.length > 1;
 
   return (
     <div className="generate-step generate-step--analyzing">
       <h2 className="generate-step-title">Generating your report...</h2>
-      <div className="analyzing-lines">
-        {ANALYZING_LINES.map((line, i) => (
-          <div
-            key={i}
-            className={`analyzing-line${visibleLines.includes(i) ? " visible" : ""}`}
-          >
-            <span className="analyzing-spinner" />
-            {line}
-          </div>
-        ))}
+      <div className="pipeline-steps">
+        {PIPELINE_STEPS.map((step) => {
+          const connectorStatuses = selectedConnections.map((connectorId) => ({
+            connectorId,
+            status: statusByKey[stepStatusKey(step.id, connectorId)] || STEP_STATUS.pending,
+          }));
+          const groupStatus = step.connectorScoped
+            ? bestStatus(connectorStatuses.map((item) => item.status))
+            : (statusByKey[stepStatusKey(step.id)] || STEP_STATUS.pending);
+
+          return (
+            <div key={step.id} className="pipeline-step-group">
+              <div className={`pipeline-step-row status-${groupStatus}`}>
+                <StepStatusIcon status={groupStatus} />
+                <span>{step.label}</span>
+              </div>
+              {step.connectorScoped && multiConnector && (
+                <div className="pipeline-step-children">
+                  {connectorStatuses.map((item) => (
+                    <div
+                      key={`${step.id}-${item.connectorId}`}
+                      className={`pipeline-step-row pipeline-step-row--child status-${item.status}`}
+                    >
+                      <StepStatusIcon status={item.status} />
+                      <span>{connectorLabel(item.connectorId, connections)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
+      {!error && (
+        <p className="app-subtle" style={{ marginTop: 14, marginBottom: 0 }}>
+          Running live pipeline checks across your selected data sources.
+        </p>
+      )}
       {error && (
         <div style={{ marginTop: 20 }}>
           <pre className="generate-error">{error}</pre>
@@ -508,8 +580,9 @@ function StepAnalyzing({ error, onRetry }) {
 
 function StepReport({ report, onSave, onRestart, saved }) {
   // Unwrap envelope: brief from connector slot, synthesis alongside
-  const brief = report.briefs?.google_ads ?? report;
+  const brief = report.briefs?.google_ads ?? null;
   const synthesis = report.synthesis ?? null;
+  const connectorsUsed = report.connectors_used ?? [];
 
   return (
     <div className="generate-step">
@@ -521,7 +594,20 @@ function StepReport({ report, onSave, onRestart, saved }) {
           Generate another
         </Button>
       </div>
-      <GoogleAdsReport brief={brief} synthesis={synthesis} />
+      {brief ? (
+        <GoogleAdsReport brief={brief} synthesis={synthesis} />
+      ) : (
+        <div className="generate-alert" role="status">
+          <h3 className="generate-alert-title">Report generated</h3>
+          <p className="generate-alert-help" style={{ marginBottom: 10 }}>
+            A Google Ads brief was not included in this run, so the standard report view is unavailable.
+          </p>
+          <p className="generate-alert-help" style={{ marginBottom: 10 }}>
+            Connectors used: {connectorsUsed.length ? connectorsUsed.join(", ") : "—"}
+          </p>
+          <pre className="generate-error">{JSON.stringify(report, null, 2)}</pre>
+        </div>
+      )}
     </div>
   );
 }
@@ -550,12 +636,14 @@ export default function GeneratePage() {
   const [adsAccountsLoading, setAdsAccountsLoading] = useState(false);
   const [adsAccountsError, setAdsAccountsError] = useState(null);
   const [selectedAdsCustomerId, setSelectedAdsCustomerId] = useState("");
-  const [analyzingKey, setAnalyzingKey] = useState(0);
+  const [pipelineStatusByKey, setPipelineStatusByKey] = useState({});
 
   // Detect connected sources (Google Ads = OAuth token only; account chosen in generate flow)
   const [connections, setConnections] = useState([]);
   useEffect(() => {
     const hasGadsToken = !!sessionStorage.getItem("gads_refresh_token");
+    const hasGa4Token = !!sessionStorage.getItem("ga4_refresh_token");
+    const hasGscToken = !!sessionStorage.getItem("gsc_refresh_token");
     setConnections([
       {
         id: "google_ads",
@@ -566,18 +654,42 @@ export default function GeneratePage() {
         comingSoon: false,
       },
       {
-        id: "search_console",
+        id: "gsc",
         name: "Google Search Console",
         description: "Organic search queries, clicks, impressions.",
-        logo: "https://upload.wikimedia.org/wikipedia/commons/d/dc/Google_Search_Console_logo.svg",
+        logo: "/icons/google-search-console.png",
+        connected: hasGscToken,
+        comingSoon: false,
+      },
+      {
+        id: "ga4",
+        name: "Google Analytics",
+        description: "Website traffic, sessions, engagement.",
+        logo: "https://upload.wikimedia.org/wikipedia/commons/7/77/GAnalytics.svg",
+        connected: hasGa4Token,
+        comingSoon: false,
+      },
+      {
+        id: "meta_ads",
+        name: "Meta Ads",
+        description: "Facebook and Instagram campaign performance, spend, and conversion outcomes.",
+        logo: "/icons/meta-ads.svg",
         connected: false,
         comingSoon: true,
       },
       {
-        id: "analytics",
-        name: "Google Analytics",
-        description: "Website traffic, sessions, engagement.",
-        logo: "https://upload.wikimedia.org/wikipedia/commons/7/77/GAnalytics.svg",
+        id: "stripe",
+        name: "Stripe",
+        description: "Revenue, subscriptions, and billing outcomes for marketing-to-revenue visibility.",
+        logo: "https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg",
+        connected: false,
+        comingSoon: true,
+      },
+      {
+        id: "hubspot",
+        name: "HubSpot",
+        description: "CRM lifecycle and pipeline outcomes to connect acquisition to revenue quality.",
+        logo: "/icons/hubspot.svg",
         connected: false,
         comingSoon: true,
       },
@@ -641,18 +753,33 @@ export default function GeneratePage() {
     }
   }
 
+  function applyPipelineEvent(event) {
+    if (event.event !== "step_started" && event.event !== "step_finished") return;
+    const stepId = event.step_id;
+    if (!stepId) return;
+    const connectorId = event.connector_id || "__group";
+    const status = event.status || STEP_STATUS.pending;
+    setPipelineStatusByKey((prev) => ({
+      ...prev,
+      [stepStatusKey(stepId, connectorId)]: status,
+      ...(connectorId !== "__group" ? { [stepStatusKey(stepId)]: status } : {}),
+    }));
+  }
+
   async function handleGenerate() {
-    setAnalyzingKey((k) => k + 1);
     setStep(4);
     setStatus("loading");
     setError(null);
+    setPipelineStatusByKey(createInitialPipelineStatus(selectedConnections));
 
     const refreshToken = sessionStorage.getItem("gads_refresh_token") || "";
+    const ga4RefreshToken = sessionStorage.getItem("ga4_refresh_token") || "";
+    const gscRefreshToken = sessionStorage.getItem("gsc_refresh_token") || "";
     const cid = normalizeCustomerId(selectedAdsCustomerId);
     const account = adsAccounts.find((a) => normalizeCustomerId(a.customer_id) === cid);
 
     try {
-      const data = await generateReport({
+      const data = await generateReportStream({
         connections: selectedConnections,
         goal: goal === "custom" ? "custom" : goal,
         custom_goal: goal === "custom" ? customGoal.trim() : "",
@@ -660,10 +787,14 @@ export default function GeneratePage() {
         date_from: dateFrom,
         date_to: dateTo,
         refresh_token: refreshToken,
+        ga4_refresh_token: ga4RefreshToken,
+        gsc_refresh_token: gscRefreshToken,
         customer_id: cid,
         account_name: account?.descriptive_name ?? "",
         currency_code: account?.currency_code || "USD",
         business_context: businessContext,
+      }, {
+        onEvent: applyPipelineEvent,
       });
       setReport(data);
       setStatus("success");
@@ -700,7 +831,7 @@ export default function GeneratePage() {
     setAdsAccounts([]);
     setSelectedAdsCustomerId("");
     setAdsAccountsError(null);
-    setAnalyzingKey(0);
+    setPipelineStatusByKey({});
   }
 
   function handleRetry() {
@@ -852,7 +983,15 @@ export default function GeneratePage() {
         </>
       )}
 
-      {step === 4 && <StepAnalyzing key={analyzingKey} error={error} onRetry={handleRetry} />}
+      {step === 4 && (
+        <StepAnalyzing
+          error={error}
+          onRetry={handleRetry}
+          statusByKey={pipelineStatusByKey}
+          selectedConnections={selectedConnections}
+          connections={connections}
+        />
+      )}
 
       {step === 5 && report && (
         <StepReport

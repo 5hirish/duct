@@ -86,6 +86,10 @@ function mapStoredEntriesToReports(stored) {
   });
 }
 
+function isDemoReport(report) {
+  return report.slug === "google-ads-report";
+}
+
 export default function ReportsList({ serverReports }) {
   const [localReports, setLocalReports] = useState([]);
 
@@ -131,10 +135,18 @@ export default function ReportsList({ serverReports }) {
         <Link
           key={report.slug}
           href={`/reports/${report.slug}`}
-          className="group flex flex-col justify-between min-h-24 rounded-3xl border border-border bg-card p-4 text-sm shadow-sm ring-1 ring-foreground/5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+          className="group relative overflow-hidden flex flex-col justify-between min-h-24 rounded-3xl border border-border bg-card p-4 text-sm shadow-sm ring-1 ring-foreground/5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
           aria-label={reportCardAriaLabel(report)}
           transitionTypes={REPORT_NAV_TRANSITION_TYPES}
         >
+          {isDemoReport(report) && (
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute -right-10 top-4 w-36 rotate-45 bg-primary py-1 text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-primary-foreground shadow-sm"
+            >
+              Demo
+            </span>
+          )}
           <div className="flex flex-col gap-1">
             <div className="flex items-start justify-between gap-2">
               <strong className="font-semibold leading-tight text-foreground">

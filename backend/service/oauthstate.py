@@ -45,16 +45,36 @@ def save_state(state: str, code_verifier: str | None, flow: str, ttl_seconds: in
         _memory_states[state] = (time.time(), code_verifier, flow)
 
 
+def _consume_memory_state(
+    state: str, flow: str, ttl_seconds: int
+) -> tuple[bool, str | None]:
+    entry = _memory_states.get(state)
+    if entry is None:
+        return False, None
+    issued_at, code_verifier, stored_flow = entry
+    if stored_flow != flow or (time.time() - issued_at) > ttl_seconds:
+        return False, None
+    _memory_states.pop(state, None)
+    return True, code_verifier
+
+
+def _consume_memory_state_for_flows(
+    state: str, flows: set[str], ttl_seconds: int
+) -> tuple[str | None, str | None]:
+    entry = _memory_states.get(state)
+    if entry is None:
+        return None, None
+    issued_at, code_verifier, stored_flow = entry
+    if stored_flow not in flows or (time.time() - issued_at) > ttl_seconds:
+        return None, None
+    _memory_states.pop(state, None)
+    return stored_flow, code_verifier
+
+
 def consume_state(state: str, flow: str, ttl_seconds: int) -> tuple[bool, str | None]:
     engine = get_engine()
     if engine is None:
-        entry = _memory_states.pop(state, None)
-        if entry is None:
-            return False, None
-        issued_at, code_verifier, stored_flow = entry
-        if stored_flow != flow or (time.time() - issued_at) > ttl_seconds:
-            return False, None
-        return True, code_verifier
+        return _consume_memory_state(state, flow, ttl_seconds)
 
     now = _utcnow()
     try:
@@ -77,13 +97,42 @@ def consume_state(state: str, flow: str, ttl_seconds: int) -> tuple[bool, str | 
             return True, code_verifier
     except SQLAlchemyError:
         logger.warning("OAuth state DB unavailable while consuming state.")
-        entry = _memory_states.pop(state, None)
-        if entry is None:
-            return False, None
-        issued_at, code_verifier, stored_flow = entry
-        if stored_flow != flow or (time.time() - issued_at) > ttl_seconds:
-            return False, None
-        return True, code_verifier
+        return _consume_memory_state(state, flow, ttl_seconds)
+
+
+def consume_state_for_flows(
+    state: str, allowed_flows: tuple[str, ...], ttl_seconds: int
+) -> tuple[str | None, str | None]:
+    allowed = set(allowed_flows)
+    if not allowed:
+        return None, None
+
+    engine = get_engine()
+    if engine is None:
+        return _consume_memory_state_for_flows(state, allowed, ttl_seconds)
+
+    now = _utcnow()
+    try:
+        with Session(engine) as session:
+            stmt = select(OAuthState).where(OAuthState.state == state)
+            oauth_state = session.execute(stmt).scalars().first()
+            if oauth_state is None:
+                return None, None
+            if oauth_state.flow not in allowed:
+                return None, None
+            if oauth_state.consumed_at is not None:
+                return None, None
+            if oauth_state.expires_at <= now:
+                return None, None
+
+            code_verifier = oauth_state.code_verifier
+            oauth_state.consumed_at = now
+            session.add(oauth_state)
+            session.commit()
+            return oauth_state.flow, code_verifier
+    except SQLAlchemyError:
+        logger.warning("OAuth state DB unavailable while consuming state for allowed flows.")
+        return _consume_memory_state_for_flows(state, allowed, ttl_seconds)
 
 
 def cleanup_expired_states() -> int:

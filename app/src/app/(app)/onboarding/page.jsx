@@ -219,7 +219,7 @@ export default function OnboardingPage() {
                     "rounded-xl border px-2.5 py-1.5 text-xs font-medium transition-colors disabled:cursor-default disabled:opacity-60",
                     isActive
                       ? "border-primary/30 bg-primary/8 text-foreground font-semibold"
-                      : "border-transparent bg-white/70 text-muted-foreground hover:border-border hover:bg-white"
+                      : "border-transparent bg-muted/70 text-muted-foreground hover:border-border hover:bg-muted"
                   )}
                 >
                   {stepItem.shortLabel}

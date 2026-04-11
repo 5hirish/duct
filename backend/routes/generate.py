@@ -2,17 +2,23 @@
 
 from __future__ import annotations
 
+import asyncio
+import json
 import logging
+from collections.abc import Awaitable, Callable
 from datetime import datetime, timezone
 from functools import partial
-from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import StreamingResponse
 
 from agents.models import Provider, resolve_model, resolve_provider
 from agents.reporter.agent import GenerateAgent
-from config import get_configs
+from config import Configs, get_configs
+from routes.schemas import GenerateRequest, ReportMetadata, ReportRequest, UnifiedReport
+from service.google.brief import build_brief
+from service.google.credentials import resolve_ads_credentials, resolve_customer_id
 from service.google.fetch import (
     fetch_ad_group_performance,
     fetch_campaigns,
@@ -20,12 +26,8 @@ from service.google.fetch import (
     fetch_geo_performance,
     fetch_search_terms,
 )
-from service.google.brief import build_brief
 from service.google.ga4 import fetch_ga4_conversion_paths, fetch_ga4_landing_pages
 from service.google.gsc import fetch_gsc_page_performance, fetch_gsc_query_performance
-
-from service.google.credentials import resolve_ads_credentials, resolve_customer_id
-from routes.schemas import GenerateRequest, ReportMetadata, ReportRequest, UnifiedReport
 
 if TYPE_CHECKING:
     from agents.models import ModelName
@@ -33,6 +35,24 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["generate"])
+
+STEP_COLLECT = "collect_source_data"
+STEP_NORMALIZE = "normalize_connector_outputs"
+STEP_SUPPLEMENTARY = "supplementary_fetch"
+STEP_SYNTHESIZE = "synthesize_report"
+STEP_ASSEMBLE = "assemble_report"
+
+STEP_LABELS = {
+    STEP_COLLECT: "Collecting source data",
+    STEP_NORMALIZE: "Normalizing connector outputs",
+    STEP_SUPPLEMENTARY: "Fetching supplementary insights",
+    STEP_SYNTHESIZE: "Synthesizing recommendations",
+    STEP_ASSEMBLE: "Finalizing report",
+}
+
+SUPPORTED_CONNECTORS = {"google_ads", "ga4", "gsc"}
+
+EmitFn = Callable[[dict[str, Any]], Awaitable[None]]
 
 
 def _resolve_agent_config() -> tuple[str, Provider, ModelName]:
@@ -48,6 +68,358 @@ def _resolve_agent_config() -> tuple[str, Provider, ModelName]:
     }
     api_key = key_map.get(provider, cfg.gemini_api_key) or ""
     return api_key, provider, model
+
+
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+async def _emit(
+    emit_event: EmitFn | None,
+    *,
+    event: str,
+    step_id: str | None = None,
+    status: str | None = None,
+    label: str | None = None,
+    connector_id: str | None = None,
+    error: str | None = None,
+    payload: dict[str, Any] | None = None,
+) -> None:
+    if emit_event is None:
+        return
+    body: dict[str, Any] = {"event": event, "ts": _now_iso()}
+    if step_id is not None:
+        body["step_id"] = step_id
+    if status is not None:
+        body["status"] = status
+    if label is not None:
+        body["label"] = label
+    if connector_id is not None:
+        body["connector_id"] = connector_id
+    if error is not None:
+        body["error"] = error
+    if payload is not None:
+        body["payload"] = payload
+    await emit_event(body)
+
+
+async def _step_started(emit_event: EmitFn | None, step_id: str, *, connector_id: str | None = None) -> None:
+    await _emit(
+        emit_event,
+        event="step_started",
+        step_id=step_id,
+        label=STEP_LABELS[step_id],
+        status="running",
+        connector_id=connector_id,
+    )
+
+
+async def _step_finished(
+    emit_event: EmitFn | None,
+    step_id: str,
+    *,
+    connector_id: str | None = None,
+    status: str = "success",
+    error: str | None = None,
+) -> None:
+    await _emit(
+        emit_event,
+        event="step_finished",
+        step_id=step_id,
+        label=STEP_LABELS[step_id],
+        status=status,
+        connector_id=connector_id,
+        error=error,
+    )
+
+
+def _normalize_connections(req: GenerateRequest) -> list[str]:
+    if not req.connections:
+        raise HTTPException(status_code=422, detail="At least one connection is required.")
+    connections = sorted({c.strip().lower().replace("-", "_") for c in req.connections if c.strip()})
+    unsupported = sorted(set(connections) - SUPPORTED_CONNECTORS)
+    if unsupported:
+        raise HTTPException(status_code=422, detail=f"Unsupported connections: {', '.join(unsupported)}")
+    return connections
+
+
+def _resolve_ga_credentials(cfg: Configs) -> tuple[str, str]:
+    client_id = (cfg.google_oauth_client_id or cfg.google_ads_client_id).strip()
+    client_secret = (cfg.google_oauth_client_secret or cfg.google_ads_client_secret).strip()
+    return client_id, client_secret
+
+
+def _build_connector_brief(
+    *,
+    connector_id: str,
+    raw_data: dict[str, Any],
+    date_from: str,
+    date_to: str,
+) -> dict[str, Any]:
+    if connector_id == "google_ads":
+        brief = build_brief(raw_data, theme="paid_ads")
+        return brief.to_dict()
+
+    theme = "product_intelligence" if connector_id == "ga4" else "organic_growth"
+    return {
+        "source_metadata": {
+            "source": connector_id,
+            "generated_at": _now_iso(),
+            "window_current": f"{date_from} to {date_to}",
+            "theme": theme,
+        },
+        "summary": {
+            "connector": connector_id,
+            "datasets": list(raw_data.keys()),
+        },
+        "data": raw_data,
+    }
+
+
+async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | None = None) -> dict[str, Any]:
+    await _emit(
+        emit_event,
+        event="pipeline_started",
+        status="running",
+        payload={"connections": req.connections},
+    )
+
+    connections = _normalize_connections(req)
+    if not req.date_from or not req.date_to:
+        raise HTTPException(status_code=422, detail="date_from and date_to are required.")
+
+    cfg = get_configs()
+    ga4_property_id = (req.ga4_property_id or cfg.ga4_property_id).strip()
+    gsc_site_url = (req.gsc_site_url or cfg.gsc_site_url).strip()
+    ga4_refresh_token = (req.ga4_refresh_token or req.refresh_token).strip()
+    gsc_refresh_token = (req.gsc_refresh_token or req.refresh_token).strip()
+    ga_client_id, ga_client_secret = _resolve_ga_credentials(cfg)
+
+    if "ga4" in connections and not ga4_property_id:
+        raise HTTPException(status_code=422, detail="ga4_property_id is required when GA4 is selected.")
+    if "ga4" in connections and not ga4_refresh_token:
+        raise HTTPException(status_code=422, detail="ga4_refresh_token is required when GA4 is selected.")
+    if "gsc" in connections and not gsc_site_url:
+        raise HTTPException(status_code=422, detail="gsc_site_url is required when GSC is selected.")
+    if "gsc" in connections and not gsc_refresh_token:
+        raise HTTPException(status_code=422, detail="gsc_refresh_token is required when GSC is selected.")
+    if ("ga4" in connections or "gsc" in connections) and (not ga_client_id or not ga_client_secret):
+        raise HTTPException(
+            status_code=422,
+            detail="Google OAuth client credentials are required for GA4/GSC connectors.",
+        )
+
+    shim = ReportRequest(
+        customer_id=req.customer_id,
+        refresh_token=req.refresh_token,
+        login_customer_id=req.login_customer_id,
+    )
+    login_customer_id = (req.login_customer_id or cfg.google_ads_login_customer_id).strip()
+
+    async def fetch_connector(connector_id: str) -> tuple[str, dict[str, Any]]:
+        await _step_started(emit_event, STEP_COLLECT, connector_id=connector_id)
+        try:
+            if connector_id == "google_ads":
+                customer_id = resolve_customer_id(request_customer_id=shim.customer_id)
+                dt, cid, secret, rt = resolve_ads_credentials(request_refresh_token=shim.refresh_token)
+                data = await asyncio.to_thread(
+                    fetch_campaigns,
+                    customer_id=customer_id,
+                    developer_token=dt,
+                    client_id=cid,
+                    client_secret=secret,
+                    refresh_token=rt,
+                    date_from=req.date_from,
+                    date_to=req.date_to,
+                    account_name=req.account_name,
+                    currency_code=req.currency_code,
+                    login_customer_id=login_customer_id,
+                )
+                if not data.get("rows"):
+                    raise RuntimeError("No campaigns returned for this customer and date range.")
+                await _step_finished(emit_event, STEP_COLLECT, connector_id=connector_id)
+                return connector_id, data
+
+            if connector_id == "ga4":
+                landing_task = asyncio.to_thread(
+                    fetch_ga4_landing_pages,
+                    property_id=ga4_property_id,
+                    date_from=req.date_from,
+                    date_to=req.date_to,
+                    refresh_token=ga4_refresh_token,
+                    client_id=ga_client_id,
+                    client_secret=ga_client_secret,
+                )
+                paths_task = asyncio.to_thread(
+                    fetch_ga4_conversion_paths,
+                    property_id=ga4_property_id,
+                    date_from=req.date_from,
+                    date_to=req.date_to,
+                    refresh_token=ga4_refresh_token,
+                    client_id=ga_client_id,
+                    client_secret=ga_client_secret,
+                )
+                landing_pages, conversion_paths = await asyncio.gather(landing_task, paths_task)
+                await _step_finished(emit_event, STEP_COLLECT, connector_id=connector_id)
+                return connector_id, {
+                    "landing_pages": landing_pages,
+                    "conversion_paths": conversion_paths,
+                }
+
+            if connector_id == "gsc":
+                queries_task = asyncio.to_thread(
+                    fetch_gsc_query_performance,
+                    site_url=gsc_site_url,
+                    date_from=req.date_from,
+                    date_to=req.date_to,
+                    refresh_token=gsc_refresh_token,
+                    client_id=ga_client_id,
+                    client_secret=ga_client_secret,
+                )
+                pages_task = asyncio.to_thread(
+                    fetch_gsc_page_performance,
+                    site_url=gsc_site_url,
+                    date_from=req.date_from,
+                    date_to=req.date_to,
+                    refresh_token=gsc_refresh_token,
+                    client_id=ga_client_id,
+                    client_secret=ga_client_secret,
+                )
+                query_perf, page_perf = await asyncio.gather(queries_task, pages_task)
+                await _step_finished(emit_event, STEP_COLLECT, connector_id=connector_id)
+                return connector_id, {
+                    "query_performance": query_perf,
+                    "page_performance": page_perf,
+                }
+
+            raise RuntimeError(f"Unsupported connector: {connector_id}")
+        except Exception as exc:  # noqa: BLE001
+            message = str(exc)
+            await _step_finished(
+                emit_event,
+                STEP_COLLECT,
+                connector_id=connector_id,
+                status="error",
+                error=message,
+            )
+            raise RuntimeError(f"{connector_id}: {message}") from exc
+
+    fetched_rows = await asyncio.gather(*(fetch_connector(c) for c in connections), return_exceptions=True)
+    fetch_failures = [item for item in fetched_rows if isinstance(item, Exception)]
+    if fetch_failures:
+        detail = "; ".join(str(err) for err in fetch_failures)
+        raise HTTPException(status_code=502, detail=detail)
+    raw_by_connector = {cid: payload for cid, payload in fetched_rows}
+
+    async def normalize_connector(connector_id: str, raw_data: dict[str, Any]) -> tuple[str, dict[str, Any]]:
+        await _step_started(emit_event, STEP_NORMALIZE, connector_id=connector_id)
+        try:
+            brief_dict = await asyncio.to_thread(
+                _build_connector_brief,
+                connector_id=connector_id,
+                raw_data=raw_data,
+                date_from=req.date_from,
+                date_to=req.date_to,
+            )
+            await _step_finished(emit_event, STEP_NORMALIZE, connector_id=connector_id)
+            return connector_id, brief_dict
+        except Exception as exc:  # noqa: BLE001
+            message = str(exc)
+            await _step_finished(
+                emit_event,
+                STEP_NORMALIZE,
+                connector_id=connector_id,
+                status="error",
+                error=message,
+            )
+            raise RuntimeError(f"{connector_id}: {message}") from exc
+
+    normalized_rows = await asyncio.gather(
+        *(normalize_connector(connector_id, raw_data) for connector_id, raw_data in raw_by_connector.items()),
+        return_exceptions=True,
+    )
+    normalize_failures = [item for item in normalized_rows if isinstance(item, Exception)]
+    if normalize_failures:
+        detail = "; ".join(str(err) for err in normalize_failures)
+        raise HTTPException(status_code=500, detail=detail)
+    briefs = {cid: payload for cid, payload in normalized_rows}
+
+    synthesis_dict = None
+    google_ads_brief = briefs.get("google_ads")
+    google_ads_raw = raw_by_connector.get("google_ads")
+    api_key, provider, model = _resolve_agent_config()
+
+    if api_key and google_ads_brief and google_ads_raw:
+        await _step_started(emit_event, STEP_SUPPLEMENTARY)
+        agent = GenerateAgent(
+            api_key=api_key,
+            provider=provider,
+            model=model,
+            temperature=1.0,
+        )
+        ads_customer_id = resolve_customer_id(request_customer_id=shim.customer_id)
+        dt, cid, secret, rt = resolve_ads_credentials(request_refresh_token=shim.refresh_token)
+        fetch_fns = _build_fetch_fns(
+            dt,
+            cid,
+            secret,
+            rt,
+            login_customer_id,
+            set(connections),
+            ga4_property_id,
+            gsc_site_url,
+            ga4_refresh_token,
+            gsc_refresh_token,
+        )
+        registered = agent.setup_tools_for_goal(goal=req.goal, fetch_fns=fetch_fns)
+        supplementary = {}
+        if registered:
+            logger.info("Phase 1: fetching supplementary data for goal '%s'", req.goal.value)
+            supplementary = await agent.fetch_supplementary_data(
+                customer_id=ads_customer_id,
+                date_from=req.date_from,
+                date_to=req.date_to,
+                goal=req.goal,
+                ga4_property_id=ga4_property_id,
+                gsc_site_url=gsc_site_url,
+                custom_goal=req.custom_goal,
+                context=req.context,
+            )
+        await _step_finished(emit_event, STEP_SUPPLEMENTARY)
+
+        await _step_started(emit_event, STEP_SYNTHESIZE)
+        biz_ctx = req.business_context.model_dump() if req.business_context else None
+        synthesis = await agent.synthesize(
+            goal=req.goal,
+            custom_goal=req.custom_goal,
+            context=req.context,
+            brief_dict=google_ads_brief,
+            raw_payload=google_ads_raw,
+            supplementary=supplementary or None,
+            business_context=biz_ctx,
+        )
+        agent.apply_classification_overrides(google_ads_brief, synthesis)
+        synthesis_dict = agent.extract_synthesis(synthesis)
+        await _step_finished(emit_event, STEP_SYNTHESIZE)
+    else:
+        await _step_started(emit_event, STEP_SUPPLEMENTARY)
+        await _step_finished(emit_event, STEP_SUPPLEMENTARY)
+        await _step_started(emit_event, STEP_SYNTHESIZE)
+        await _step_finished(emit_event, STEP_SYNTHESIZE)
+
+    await _step_started(emit_event, STEP_ASSEMBLE)
+    envelope = UnifiedReport(
+        connectors_used=connections,
+        briefs=briefs,
+        synthesis=synthesis_dict,
+        metadata=ReportMetadata(
+            generated_at=_now_iso(),
+            goal=req.goal.value,
+            connectors_used=connections,
+        ),
+    )
+    await _step_finished(emit_event, STEP_ASSEMBLE)
+    return envelope.model_dump()
 
 
 def _build_fetch_fns(
@@ -101,123 +473,68 @@ def _build_fetch_fns(
 
 @router.post("/generate")
 async def generate(req: GenerateRequest) -> dict:
-    """Fetch data for selected connections, build brief, goal-driven LangChain synthesis."""
-    if not req.connections:
-        raise HTTPException(status_code=422, detail="At least one connection is required.")
-    connections = {c.strip().lower().replace("-", "_") for c in req.connections if c.strip()}
-    allowed_connections = {"google_ads", "ga4", "gsc"}
-    unsupported = sorted(connections - allowed_connections)
-    if unsupported:
-        raise HTTPException(status_code=422, detail=f"Unsupported connections: {', '.join(unsupported)}")
-    if "google_ads" not in connections:
-        raise HTTPException(
-            status_code=422,
-            detail="google_ads is required as the primary report source.",
-        )
-    if not req.date_from or not req.date_to:
-        raise HTTPException(status_code=422, detail="date_from and date_to are required.")
+    """Fetch data for selected connections, build briefs, and optional synthesis."""
+    return await _run_generate_pipeline(req)
 
-    shim = ReportRequest(
-        customer_id=req.customer_id,
-        refresh_token=req.refresh_token,
-        login_customer_id=req.login_customer_id,
-    )
-    customer_id = resolve_customer_id(request_customer_id=shim.customer_id)
-    dt, cid, secret, rt = resolve_ads_credentials(request_refresh_token=shim.refresh_token)
-    cfg = get_configs()
-    login = (req.login_customer_id or cfg.google_ads_login_customer_id).strip()
-    ga4_property_id = (req.ga4_property_id or cfg.ga4_property_id).strip()
-    gsc_site_url = (req.gsc_site_url or cfg.gsc_site_url).strip()
 
-    try:
-        raw_payload = fetch_campaigns(
-            customer_id=customer_id,
-            developer_token=dt,
-            client_id=cid,
-            client_secret=secret,
-            refresh_token=rt,
-            date_from=req.date_from,
-            date_to=req.date_to,
-            account_name=req.account_name,
-            currency_code=req.currency_code,
-            login_customer_id=login,
-        )
-    except RuntimeError as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
+@router.post("/generate/stream")
+async def generate_stream(req: GenerateRequest) -> StreamingResponse:
+    """Stream real pipeline progress events and final payload over SSE."""
 
-    if not raw_payload.get("rows"):
-        raise HTTPException(
-            status_code=422,
-            detail="No campaigns returned for this customer and date range.",
-        )
+    queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
+    finished = asyncio.Event()
 
-    brief = build_brief(raw_payload, theme="paid_ads")
-    brief_dict = brief.to_dict()
+    async def emit_event(event_payload: dict[str, Any]) -> None:
+        await queue.put(event_payload)
 
-    synthesis_dict = None
-    api_key, provider, model = _resolve_agent_config()
-    if api_key:
-        agent = GenerateAgent(
-            api_key=api_key,
-            provider=provider,
-            model=model,
-            temperature=1.0,
-        )
-
-        # Phase 1: Register goal-driven tools and fetch supplementary data
-        fetch_fns = _build_fetch_fns(
-            dt,
-            cid,
-            secret,
-            rt,
-            login,
-            connections,
-            ga4_property_id,
-            gsc_site_url,
-            req.ga4_refresh_token.strip(),
-            req.gsc_refresh_token.strip(),
-        )
-        registered = agent.setup_tools_for_goal(goal=req.goal, fetch_fns=fetch_fns)
-        supplementary = {}
-        if registered:
-            logger.info("Phase 1: fetching supplementary data for goal '%s'", req.goal.value)
-            supplementary = await agent.fetch_supplementary_data(
-                customer_id=customer_id,
-                date_from=req.date_from,
-                date_to=req.date_to,
-                goal=req.goal,
-                ga4_property_id=ga4_property_id,
-                gsc_site_url=gsc_site_url,
-                custom_goal=req.custom_goal,
-                context=req.context,
+    async def worker() -> None:
+        try:
+            report = await _run_generate_pipeline(req, emit_event=emit_event)
+            await _emit(
+                emit_event,
+                event="pipeline_finished",
+                status="success",
+                payload=report,
             )
+        except HTTPException as exc:
+            await _emit(
+                emit_event,
+                event="pipeline_failed",
+                status="error",
+                error=str(exc.detail),
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("Unhandled generate stream failure")
+            await _emit(
+                emit_event,
+                event="pipeline_failed",
+                status="error",
+                error=str(exc),
+            )
+        finally:
+            finished.set()
 
-        # Phase 2: Synthesis with all collected data + business context
-        biz_ctx = req.business_context.model_dump() if req.business_context else None
-        synthesis = await agent.synthesize(
-            goal=req.goal,
-            custom_goal=req.custom_goal,
-            context=req.context,
-            brief_dict=brief_dict,
-            raw_payload=raw_payload,
-            supplementary=supplementary or None,
-            business_context=biz_ctx,
-        )
+    task = asyncio.create_task(worker())
 
-        # Apply LLM overrides to campaign actions, extract synthesis layer
-        agent.apply_classification_overrides(brief_dict, synthesis)
-        synthesis_dict = agent.extract_synthesis(synthesis)
+    async def stream() -> Any:
+        try:
+            while not finished.is_set() or not queue.empty():
+                try:
+                    event_payload = await asyncio.wait_for(queue.get(), timeout=15)
+                    yield f"data: {json.dumps(event_payload)}\n\n"
+                except asyncio.TimeoutError:
+                    # Keep connection alive behind proxies.
+                    yield ": ping\n\n"
+        finally:
+            if not task.done():
+                task.cancel()
 
-    # Build unified envelope
-    connectors_used = [cid for cid in ("google_ads", "ga4", "gsc") if cid in connections]
-    envelope = UnifiedReport(
-        connectors_used=connectors_used,
-        briefs={"google_ads": brief_dict},
-        synthesis=synthesis_dict,
-        metadata=ReportMetadata(
-            generated_at=datetime.now(timezone.utc).isoformat(),
-            goal=req.goal.value,
-            connectors_used=connectors_used,
-        ),
+    return StreamingResponse(
+        stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
     )
-    return envelope.model_dump()

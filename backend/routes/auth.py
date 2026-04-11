@@ -13,7 +13,12 @@ from config import get_configs
 from service.connectors import get_connector, normalize_connector_id
 from service.google.constants import GA4_CONNECTOR_ID, GOOGLE_ADS_CONNECTOR_ID, GSC_CONNECTOR_ID
 from service.google.oauth import create_google_oauth_flow
-from service.oauthstate import cleanup_expired_states, consume_state, save_state
+from service.oauthstate import (
+    cleanup_expired_states,
+    consume_state,
+    consume_state_for_flows,
+    save_state,
+)
 
 router = APIRouter(tags=["auth"])
 
@@ -21,6 +26,16 @@ OAUTH_STATE_TTL_SECONDS = 300
 CONNECTOR_FLOW_GOOGLE_ADS = "connector_google_ads"
 CONNECTOR_FLOW_GA4 = "connector_ga4"
 CONNECTOR_FLOW_GSC = "connector_gsc"
+GOOGLE_CONNECTOR_FLOWS = (
+    CONNECTOR_FLOW_GOOGLE_ADS,
+    CONNECTOR_FLOW_GA4,
+    CONNECTOR_FLOW_GSC,
+)
+FLOW_TO_CALLBACK = {
+    CONNECTOR_FLOW_GOOGLE_ADS: (GOOGLE_ADS_CONNECTOR_ID, "refresh_token"),
+    CONNECTOR_FLOW_GA4: (GA4_CONNECTOR_ID, "ga4_refresh_token"),
+    CONNECTOR_FLOW_GSC: (GSC_CONNECTOR_ID, "gsc_refresh_token"),
+}
 
 
 def _no_store_redirect(url: str, status_code: int = 307) -> RedirectResponse:
@@ -50,7 +65,7 @@ def _google_connector_authorize(connector_id: str, flow_key: str) -> RedirectRes
 
     auth_url, _ = flow.authorization_url(
         access_type="offline",
-        include_granted_scopes="true",
+        include_granted_scopes="false",
         prompt="consent",
     )
     cleanup_expired_states()
@@ -73,7 +88,23 @@ def _google_connector_callback(
     ok, code_verifier = consume_state(state, flow_key, OAUTH_STATE_TTL_SECONDS)
     if not ok:
         raise HTTPException(status_code=400, detail="Invalid or expired OAuth state.")
+    return _google_connector_callback_with_state(
+        connector_id=connector_id,
+        code=code,
+        state=state,
+        token_fragment_key=token_fragment_key,
+        code_verifier=code_verifier,
+    )
 
+
+def _google_connector_callback_with_state(
+    *,
+    connector_id: str,
+    code: str,
+    state: str,
+    token_fragment_key: str,
+    code_verifier: str | None,
+) -> RedirectResponse:
     try:
         meta, _ = get_connector(connector_id)
         scope = meta.oauth_scope
@@ -214,5 +245,21 @@ def google_oauth_callback_short_path(
     code: str = Query(default=""),
     state: str = Query(default=""),
 ) -> RedirectResponse:
-    """Same handler as ``/auth/connectors/google_ads/oauth/callback`` for shorter redirect URIs."""
-    return _google_ads_callback(code, state)
+    """Shared callback that routes GA4/GSC/Google Ads by stored OAuth flow state."""
+    if not code:
+        raise HTTPException(status_code=400, detail="Missing OAuth code.")
+    if not state:
+        raise HTTPException(status_code=400, detail="Invalid or expired OAuth state.")
+    matched_flow, code_verifier = consume_state_for_flows(
+        state, GOOGLE_CONNECTOR_FLOWS, OAUTH_STATE_TTL_SECONDS
+    )
+    if matched_flow is None:
+        raise HTTPException(status_code=400, detail="Invalid or expired OAuth state.")
+    connector_id, token_fragment_key = FLOW_TO_CALLBACK[matched_flow]
+    return _google_connector_callback_with_state(
+        connector_id=connector_id,
+        code=code,
+        state=state,
+        token_fragment_key=token_fragment_key,
+        code_verifier=code_verifier,
+    )
