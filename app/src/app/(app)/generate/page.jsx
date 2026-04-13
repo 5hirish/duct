@@ -272,6 +272,11 @@ function businessContextFromProfileDraft() {
     monthly_budget: toPositiveNumber(draft.targets?.monthly_budget),
     target_cpa: toPositiveNumber(draft.targets?.target_cpa),
     target_roas: toPositiveNumber(draft.targets?.target_roas),
+    primary_conversion_action: "",
+    target_payback_days: 0,
+    gross_margin_percent: 0,
+    qualified_lead_value: 0,
+    period_changes: "",
   };
 }
 
@@ -388,6 +393,16 @@ function StepGoal({
           {showPaidTargets && (
             <>
               <label className="generate-field">
+                <span className="app-subtle">Primary conversion action</span>
+                <input
+                  type="text"
+                  className="app-input"
+                  placeholder="e.g. Demo booked, Trial started, Purchase"
+                  value={businessContext.primary_conversion_action || ""}
+                  onChange={(e) => onBusinessContextChange({ ...businessContext, primary_conversion_action: e.target.value })}
+                />
+              </label>
+              <label className="generate-field">
                 <span className="app-subtle">Monthly budget ($)</span>
                 <input
                   type="number"
@@ -425,6 +440,58 @@ function StepGoal({
                   />
                 </label>
               </div>
+              <div className="connections-date-row">
+                <label className="generate-field">
+                  <span className="app-subtle">Target payback (days)</span>
+                  <input
+                    type="number"
+                    className="app-input"
+                    min="0"
+                    step="1"
+                    placeholder="e.g. 90"
+                    value={businessContext.target_payback_days || ""}
+                    onChange={(e) => onBusinessContextChange({ ...businessContext, target_payback_days: parseFloat(e.target.value) || 0 })}
+                  />
+                </label>
+                <label className="generate-field">
+                  <span className="app-subtle">Gross margin (%)</span>
+                  <input
+                    type="number"
+                    className="app-input"
+                    min="0"
+                    max="100"
+                    step="1"
+                    placeholder="e.g. 70"
+                    value={businessContext.gross_margin_percent || ""}
+                    onChange={(e) => onBusinessContextChange({ ...businessContext, gross_margin_percent: parseFloat(e.target.value) || 0 })}
+                  />
+                </label>
+                <label className="generate-field">
+                  <span className="app-subtle">Qualified lead value ($)</span>
+                  <input
+                    type="number"
+                    className="app-input"
+                    min="0"
+                    step="1"
+                    placeholder="e.g. 1200"
+                    value={businessContext.qualified_lead_value || ""}
+                    onChange={(e) => onBusinessContextChange({ ...businessContext, qualified_lead_value: parseFloat(e.target.value) || 0 })}
+                  />
+                </label>
+              </div>
+              <p className="app-subtle" style={{ marginTop: 2, marginBottom: 0 }}>
+                Add at least one economic guardrail above to improve ROI recommendations.
+              </p>
+              <label className="generate-field">
+                <span className="app-subtle">What changed during this period? (optional)</span>
+                <textarea
+                  className="app-input app-textarea"
+                  rows={2}
+                  placeholder="e.g. Switched bid strategy, launched new offer, changed landing pages, tracking updates."
+                  value={businessContext.period_changes || ""}
+                  onChange={(e) => onBusinessContextChange({ ...businessContext, period_changes: e.target.value })}
+                />
+              </label>
             </>
           )}
         </div>
@@ -925,6 +992,12 @@ export default function GeneratePage() {
   const canProceedStep1 = selectedConnections.length > 0;
   const needsAdsAccount = selectedConnections.includes("google_ads");
   const showPaidTargets = selectedConnections.includes("google_ads");
+  const hasEconomicGuardrail =
+    Number(businessContext.target_payback_days) > 0 ||
+    Number(businessContext.gross_margin_percent) > 0 ||
+    Number(businessContext.qualified_lead_value) > 0;
+  const hasPrimaryConversionAction = String(businessContext.primary_conversion_action || "").trim().length > 0;
+  const adsBusinessContextOk = !showPaidTargets || (hasPrimaryConversionAction && hasEconomicGuardrail);
   const selectedIdNorm = normalizeCustomerId(selectedAdsCustomerId);
   const adsAccountOk =
     !needsAdsAccount ||
@@ -937,12 +1010,15 @@ export default function GeneratePage() {
     (goal !== "custom" || customGoal.trim()) &&
     dateFrom &&
     dateTo &&
+    adsBusinessContextOk &&
     adsAccountOk;
 
   function configureBlockedReason() {
     if (!goal) return "Select an analysis goal above to continue.";
     if (goal === "custom" && !customGoal.trim()) return "Enter a short description for your custom goal.";
     if (!dateFrom || !dateTo) return "Choose a date range (or pick Custom and set dates).";
+    if (showPaidTargets && !hasPrimaryConversionAction) return "Enter your primary conversion action for this ads analysis.";
+    if (showPaidTargets && !hasEconomicGuardrail) return "Add at least one economic guardrail (payback days, gross margin, or qualified lead value).";
     if (needsAdsAccount && adsAccountsLoading) return "Wait for Google Ads accounts to finish loading.";
     if (needsAdsAccount && adsAccountsError) return "Fix the Google Ads account error above, then try again.";
     if (needsAdsAccount && !adsAccounts.length) return "No Google Ads accounts available — connect or fix access first.";

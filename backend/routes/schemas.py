@@ -31,6 +31,11 @@ class BusinessContext(BaseModel):
     monthly_budget: float = 0.0
     target_cpa: float = 0.0
     target_roas: float = 0.0
+    primary_conversion_action: str = ""
+    target_payback_days: float = 0.0
+    gross_margin_percent: float = 0.0
+    qualified_lead_value: float = 0.0
+    period_changes: str = ""
     notes: str = ""
 
 

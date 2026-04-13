@@ -241,6 +241,16 @@ def _format_business_context(biz_ctx: dict[str, Any] | None) -> str:
         lines.append(f"- Target CPA: ${biz_ctx['target_cpa']:,.2f}")
     if biz_ctx.get("target_roas"):
         lines.append(f"- Target ROAS: {biz_ctx['target_roas']:.1f}x")
+    if biz_ctx.get("primary_conversion_action"):
+        lines.append(f"- Primary conversion action: {biz_ctx['primary_conversion_action']}")
+    if biz_ctx.get("target_payback_days"):
+        lines.append(f"- Target payback window: {biz_ctx['target_payback_days']:,.0f} days")
+    if biz_ctx.get("gross_margin_percent"):
+        lines.append(f"- Gross margin: {biz_ctx['gross_margin_percent']:,.0f}%")
+    if biz_ctx.get("qualified_lead_value"):
+        lines.append(f"- Qualified lead value: ${biz_ctx['qualified_lead_value']:,.0f}")
+    if biz_ctx.get("period_changes"):
+        lines.append(f"- Period changes: {biz_ctx['period_changes']}")
     if biz_ctx.get("notes"):
         lines.append(f"- Notes: {biz_ctx['notes']}")
 
