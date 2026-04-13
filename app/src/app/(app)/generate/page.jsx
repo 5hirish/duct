@@ -4,7 +4,12 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import GoogleAdsReport from "../../../components/GoogleAdsReport";
-import { fetchGoogleAdsAccounts, generateReportStream } from "../../../lib/api";
+import {
+  fetchGa4Properties,
+  fetchGoogleAdsAccounts,
+  fetchGscSites,
+  generateReportStream,
+} from "../../../lib/api";
 import { saveLocalReport, generateSlug } from "../../../lib/localReports";
 import { getBusinessProfileDraft } from "../../../lib/businessProfile";
 import { Button } from "@/components/ui/button";
@@ -67,11 +72,21 @@ function normalizeCustomerId(id) {
   return String(id).replace(/\D/g, "") || String(id);
 }
 
-/** Map wizard step (1–5) to one of four progress phases: sources → configure → generating → report. */
+function normalizeGa4PropertyId(id) {
+  if (id === null || id === undefined) return "";
+  return String(id).trim();
+}
+
+function normalizeGscSiteUrl(url) {
+  if (url === null || url === undefined) return "";
+  return String(url).trim();
+}
+
+/** Map wizard step (1–6) to one of four progress phases: sources → configure → generating → report. */
 function progressPhase(step) {
   if (step <= 1) return 1;
-  if (step <= 3) return 2;
-  if (step === 4) return 3;
+  if (step <= 4) return 2;
+  if (step === 5) return 3;
   return 4;
 }
 
@@ -219,6 +234,113 @@ function StepAdsAccount({ accounts, loading, fetchError, selectedId, onChange })
           <option key={normalizeCustomerId(account.customer_id)} value={normalizeCustomerId(account.customer_id)}>
             {account.descriptive_name} ({account.customer_id})
             {account.manager ? " — MCC" : ""}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function StepGa4Property({ properties, loading, fetchError, selectedId, onChange }) {
+  if (loading) {
+    return (
+      <div className="generate-field" style={{ marginBottom: 20 }}>
+        <span className="app-subtle">GA4 properties</span>
+        <p className="app-subtle" style={{ marginTop: 8, marginBottom: 0 }}>
+          Loading properties…
+        </p>
+      </div>
+    );
+  }
+  if (fetchError) {
+    return (
+      <div className="generate-alert generate-alert--error" role="alert" style={{ marginBottom: 20 }}>
+        <h3 className="generate-alert-title">Could not load GA4 properties</h3>
+        <pre className="generate-alert-detail">{fetchError}</pre>
+        <Link href="/connections" className="app-link generate-alert-link">
+          Review Google Analytics connection
+        </Link>
+      </div>
+    );
+  }
+  if (!properties.length) {
+    return (
+      <div className="generate-alert generate-alert--error" role="alert" style={{ marginBottom: 20 }}>
+        <h3 className="generate-alert-title">No GA4 properties returned</h3>
+        <p className="generate-alert-help">
+          We could not find any GA4 properties for this Google user. Confirm this account has Analytics access.
+        </p>
+        <Link href="/connections" className="app-link generate-alert-link">
+          Reconnect Google Analytics
+        </Link>
+      </div>
+    );
+  }
+  return (
+    <label className="generate-field" style={{ marginBottom: 16 }}>
+      <span className="app-subtle">GA4 property</span>
+      <select
+        className="app-input"
+        value={selectedId}
+        onChange={(e) => onChange(e.target.value)}
+      >
+        {properties.map((property) => (
+          <option key={normalizeGa4PropertyId(property.property_id)} value={normalizeGa4PropertyId(property.property_id)}>
+            {property.property_name} ({property.property_id}) — {property.account_name}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function StepGscSite({ sites, loading, fetchError, selectedUrl, onChange }) {
+  if (loading) {
+    return (
+      <div className="generate-field" style={{ marginBottom: 20 }}>
+        <span className="app-subtle">Search Console sites</span>
+        <p className="app-subtle" style={{ marginTop: 8, marginBottom: 0 }}>
+          Loading sites…
+        </p>
+      </div>
+    );
+  }
+  if (fetchError) {
+    return (
+      <div className="generate-alert generate-alert--error" role="alert" style={{ marginBottom: 20 }}>
+        <h3 className="generate-alert-title">Could not load Search Console sites</h3>
+        <pre className="generate-alert-detail">{fetchError}</pre>
+        <Link href="/connections" className="app-link generate-alert-link">
+          Review Search Console connection
+        </Link>
+      </div>
+    );
+  }
+  if (!sites.length) {
+    return (
+      <div className="generate-alert generate-alert--error" role="alert" style={{ marginBottom: 20 }}>
+        <h3 className="generate-alert-title">No Search Console sites returned</h3>
+        <p className="generate-alert-help">
+          We could not find any verified Search Console properties for this Google user.
+        </p>
+        <Link href="/connections" className="app-link generate-alert-link">
+          Reconnect Search Console
+        </Link>
+      </div>
+    );
+  }
+  return (
+    <label className="generate-field" style={{ marginBottom: 16 }}>
+      <span className="app-subtle">Search Console site</span>
+      <select
+        className="app-input"
+        value={selectedUrl}
+        onChange={(e) => onChange(e.target.value)}
+      >
+        {sites.map((site) => (
+          <option key={normalizeGscSiteUrl(site.site_url)} value={normalizeGscSiteUrl(site.site_url)}>
+            {site.site_url}
+            {site.permission_level ? ` — ${site.permission_level}` : ""}
           </option>
         ))}
       </select>
@@ -556,8 +678,13 @@ function StepReview({
   selectedConnectionIds,
   connections,
   needsAdsAccount,
+  needsGa4Property,
+  needsGscSite,
   accountDescriptiveName,
   accountCustomerId,
+  ga4PropertyName,
+  ga4PropertyId,
+  gscSiteUrl,
   goalKey,
   customGoal,
   dateFrom,
@@ -573,6 +700,13 @@ function StepReview({
       : needsAdsAccount
         ? "—"
         : null;
+  const ga4Line =
+    needsGa4Property && ga4PropertyId
+      ? `${ga4PropertyName || "Property"} (${ga4PropertyId})`
+      : needsGa4Property
+        ? "—"
+        : null;
+  const gscLine = needsGscSite ? (gscSiteUrl || "—") : null;
 
   return (
     <div className="generate-step">
@@ -591,6 +725,18 @@ function StepReview({
           <div>
             <span className="generate-review-label">Google Ads account</span>
             <p className="generate-review-value">{accountLine}</p>
+          </div>
+        )}
+        {ga4Line !== null && (
+          <div>
+            <span className="generate-review-label">GA4 property</span>
+            <p className="generate-review-value">{ga4Line}</p>
+          </div>
+        )}
+        {gscLine !== null && (
+          <div>
+            <span className="generate-review-label">Search Console site</span>
+            <p className="generate-review-value">{gscLine}</p>
           </div>
         )}
         <div>
@@ -782,11 +928,19 @@ export default function GeneratePage() {
   const [saved, setSaved] = useState(false);
   const [businessContext, setBusinessContext] = useState(() => businessContextFromProfileDraft());
 
-  // Google Ads account (loaded on step 2 when Google Ads is selected)
+  // Connector target selections (loaded on step 2 when connector is selected)
   const [adsAccounts, setAdsAccounts] = useState([]);
   const [adsAccountsLoading, setAdsAccountsLoading] = useState(false);
   const [adsAccountsError, setAdsAccountsError] = useState(null);
   const [selectedAdsCustomerId, setSelectedAdsCustomerId] = useState("");
+  const [ga4Properties, setGa4Properties] = useState([]);
+  const [ga4PropertiesLoading, setGa4PropertiesLoading] = useState(false);
+  const [ga4PropertiesError, setGa4PropertiesError] = useState(null);
+  const [selectedGa4PropertyId, setSelectedGa4PropertyId] = useState("");
+  const [gscSites, setGscSites] = useState([]);
+  const [gscSitesLoading, setGscSitesLoading] = useState(false);
+  const [gscSitesError, setGscSitesError] = useState(null);
+  const [selectedGscSiteUrl, setSelectedGscSiteUrl] = useState("");
   const [pipelineStatusByKey, setPipelineStatusByKey] = useState({});
 
   // Detect connected sources (Google Ads = OAuth token only; account chosen in generate flow)
@@ -848,34 +1002,120 @@ export default function GeneratePage() {
   }, []);
 
   useEffect(() => {
-    if (step !== 2 || !selectedConnections.includes("google_ads")) return undefined;
-    const token = sessionStorage.getItem("gads_refresh_token");
-    if (!token) return undefined;
+    if (step !== 2) return undefined;
 
     let cancelled = false;
-    setAdsAccountsLoading(true);
-    setAdsAccountsError(null);
+    const tasks = [];
 
-    fetchGoogleAdsAccounts(token)
-      .then((items) => {
-        if (cancelled) return;
-        setAdsAccounts(items);
-        const storedRaw = sessionStorage.getItem("gads_customer_id");
-        const stored = normalizeCustomerId(storedRaw);
-        const match = stored && items.find((a) => normalizeCustomerId(a.customer_id) === stored);
-        const pick = match ? normalizeCustomerId(match.customer_id) : normalizeCustomerId(items[0]?.customer_id);
-        setSelectedAdsCustomerId(pick);
-        if (pick) sessionStorage.setItem("gads_customer_id", pick);
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setAdsAccountsError(err instanceof Error ? err.message : String(err));
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setAdsAccountsLoading(false);
-      });
+    if (selectedConnections.includes("google_ads")) {
+      const adsToken = sessionStorage.getItem("gads_refresh_token");
+      if (!adsToken) {
+        setAdsAccounts([]);
+        setAdsAccountsLoading(false);
+        setSelectedAdsCustomerId("");
+        setAdsAccountsError("Google Ads is selected, but no refresh token is available.");
+      } else {
+        setAdsAccountsLoading(true);
+        setAdsAccountsError(null);
+        tasks.push(
+          fetchGoogleAdsAccounts(adsToken)
+            .then((items) => {
+              if (cancelled) return;
+              setAdsAccounts(items);
+              const stored = normalizeCustomerId(sessionStorage.getItem("gads_customer_id"));
+              const match = stored && items.find((a) => normalizeCustomerId(a.customer_id) === stored);
+              const pick = match
+                ? normalizeCustomerId(match.customer_id)
+                : normalizeCustomerId(items[0]?.customer_id);
+              setSelectedAdsCustomerId(pick);
+              if (pick) sessionStorage.setItem("gads_customer_id", pick);
+              else sessionStorage.removeItem("gads_customer_id");
+            })
+            .catch((err) => {
+              if (!cancelled) {
+                setAdsAccountsError(err instanceof Error ? err.message : String(err));
+              }
+            })
+            .finally(() => {
+              if (!cancelled) setAdsAccountsLoading(false);
+            })
+        );
+      }
+    }
 
+    if (selectedConnections.includes("ga4")) {
+      const ga4Token = sessionStorage.getItem("ga4_refresh_token");
+      if (!ga4Token) {
+        setGa4Properties([]);
+        setGa4PropertiesLoading(false);
+        setSelectedGa4PropertyId("");
+        setGa4PropertiesError("Google Analytics is selected, but no refresh token is available.");
+      } else {
+        setGa4PropertiesLoading(true);
+        setGa4PropertiesError(null);
+        tasks.push(
+          fetchGa4Properties(ga4Token)
+            .then((items) => {
+              if (cancelled) return;
+              setGa4Properties(items);
+              const stored = normalizeGa4PropertyId(sessionStorage.getItem("ga4_property_id"));
+              const match = stored && items.find((item) => normalizeGa4PropertyId(item.property_id) === stored);
+              const pick = match
+                ? normalizeGa4PropertyId(match.property_id)
+                : normalizeGa4PropertyId(items[0]?.property_id);
+              setSelectedGa4PropertyId(pick);
+              if (pick) sessionStorage.setItem("ga4_property_id", pick);
+              else sessionStorage.removeItem("ga4_property_id");
+            })
+            .catch((err) => {
+              if (!cancelled) {
+                setGa4PropertiesError(err instanceof Error ? err.message : String(err));
+              }
+            })
+            .finally(() => {
+              if (!cancelled) setGa4PropertiesLoading(false);
+            })
+        );
+      }
+    }
+
+    if (selectedConnections.includes("gsc")) {
+      const gscToken = sessionStorage.getItem("gsc_refresh_token");
+      if (!gscToken) {
+        setGscSites([]);
+        setGscSitesLoading(false);
+        setSelectedGscSiteUrl("");
+        setGscSitesError("Search Console is selected, but no refresh token is available.");
+      } else {
+        setGscSitesLoading(true);
+        setGscSitesError(null);
+        tasks.push(
+          fetchGscSites(gscToken)
+            .then((items) => {
+              if (cancelled) return;
+              setGscSites(items);
+              const stored = normalizeGscSiteUrl(sessionStorage.getItem("gsc_site_url"));
+              const match = stored && items.find((item) => normalizeGscSiteUrl(item.site_url) === stored);
+              const pick = match
+                ? normalizeGscSiteUrl(match.site_url)
+                : normalizeGscSiteUrl(items[0]?.site_url);
+              setSelectedGscSiteUrl(pick);
+              if (pick) sessionStorage.setItem("gsc_site_url", pick);
+              else sessionStorage.removeItem("gsc_site_url");
+            })
+            .catch((err) => {
+              if (!cancelled) {
+                setGscSitesError(err instanceof Error ? err.message : String(err));
+              }
+            })
+            .finally(() => {
+              if (!cancelled) setGscSitesLoading(false);
+            })
+        );
+      }
+    }
+
+    Promise.allSettled(tasks);
     return () => {
       cancelled = true;
     };
@@ -886,6 +1126,20 @@ export default function GeneratePage() {
     setSelectedAdsCustomerId(id);
     if (id) sessionStorage.setItem("gads_customer_id", id);
     else sessionStorage.removeItem("gads_customer_id");
+  }
+
+  function onGa4PropertyChange(propertyId) {
+    const id = normalizeGa4PropertyId(propertyId);
+    setSelectedGa4PropertyId(id);
+    if (id) sessionStorage.setItem("ga4_property_id", id);
+    else sessionStorage.removeItem("ga4_property_id");
+  }
+
+  function onGscSiteChange(siteUrl) {
+    const url = normalizeGscSiteUrl(siteUrl);
+    setSelectedGscSiteUrl(url);
+    if (url) sessionStorage.setItem("gsc_site_url", url);
+    else sessionStorage.removeItem("gsc_site_url");
   }
 
   function toggleConnection(id) {
@@ -918,7 +1172,7 @@ export default function GeneratePage() {
   }
 
   async function handleGenerate() {
-    setStep(4);
+    setStep(5);
     setStatus("loading");
     setError(null);
     setPipelineStatusByKey(createInitialPipelineStatus(selectedConnections));
@@ -927,6 +1181,8 @@ export default function GeneratePage() {
     const ga4RefreshToken = sessionStorage.getItem("ga4_refresh_token") || "";
     const gscRefreshToken = sessionStorage.getItem("gsc_refresh_token") || "";
     const cid = normalizeCustomerId(selectedAdsCustomerId);
+    const ga4PropertyId = normalizeGa4PropertyId(selectedGa4PropertyId);
+    const gscSiteUrl = normalizeGscSiteUrl(selectedGscSiteUrl);
     const account = adsAccounts.find((a) => normalizeCustomerId(a.customer_id) === cid);
 
     try {
@@ -940,6 +1196,8 @@ export default function GeneratePage() {
         refresh_token: refreshToken,
         ga4_refresh_token: ga4RefreshToken,
         gsc_refresh_token: gscRefreshToken,
+        ga4_property_id: ga4PropertyId,
+        gsc_site_url: gscSiteUrl,
         customer_id: cid,
         account_name: account?.descriptive_name ?? "",
         currency_code: account?.currency_code || "USD",
@@ -949,7 +1207,7 @@ export default function GeneratePage() {
       });
       setReport(data);
       setStatus("success");
-      setStep(5);
+      setStep(6);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
       setStatus("error");
@@ -980,8 +1238,17 @@ export default function GeneratePage() {
     setSaved(false);
     setBusinessContext(businessContextFromProfileDraft());
     setAdsAccounts([]);
+    setAdsAccountsLoading(false);
     setSelectedAdsCustomerId("");
     setAdsAccountsError(null);
+    setGa4Properties([]);
+    setGa4PropertiesError(null);
+    setGa4PropertiesLoading(false);
+    setSelectedGa4PropertyId("");
+    setGscSites([]);
+    setGscSitesError(null);
+    setGscSitesLoading(false);
+    setSelectedGscSiteUrl("");
     setPipelineStatusByKey({});
   }
 
@@ -991,6 +1258,8 @@ export default function GeneratePage() {
 
   const canProceedStep1 = selectedConnections.length > 0;
   const needsAdsAccount = selectedConnections.includes("google_ads");
+  const needsGa4Property = selectedConnections.includes("ga4");
+  const needsGscSite = selectedConnections.includes("gsc");
   const showPaidTargets = selectedConnections.includes("google_ads");
   const hasEconomicGuardrail =
     Number(businessContext.target_payback_days) > 0 ||
@@ -1005,13 +1274,43 @@ export default function GeneratePage() {
       !adsAccountsError &&
       !!selectedIdNorm &&
       adsAccounts.some((a) => normalizeCustomerId(a.customer_id) === selectedIdNorm));
+  const selectedGa4PropertyIdNorm = normalizeGa4PropertyId(selectedGa4PropertyId);
+  const ga4PropertyOk =
+    !needsGa4Property ||
+    (!ga4PropertiesLoading &&
+      !ga4PropertiesError &&
+      !!selectedGa4PropertyIdNorm &&
+      ga4Properties.some((item) => normalizeGa4PropertyId(item.property_id) === selectedGa4PropertyIdNorm));
+  const selectedGscSiteUrlNorm = normalizeGscSiteUrl(selectedGscSiteUrl);
+  const gscSiteOk =
+    !needsGscSite ||
+    (!gscSitesLoading &&
+      !gscSitesError &&
+      !!selectedGscSiteUrlNorm &&
+      gscSites.some((item) => normalizeGscSiteUrl(item.site_url) === selectedGscSiteUrlNorm));
+  const canProceedTargets = adsAccountOk && ga4PropertyOk && gscSiteOk;
   const canProceedConfigure =
     goal &&
     (goal !== "custom" || customGoal.trim()) &&
     dateFrom &&
     dateTo &&
-    adsBusinessContextOk &&
-    adsAccountOk;
+    adsBusinessContextOk;
+
+  function targetBlockedReason() {
+    if (needsAdsAccount && adsAccountsLoading) return "Wait for Google Ads accounts to finish loading.";
+    if (needsAdsAccount && adsAccountsError) return "Fix the Google Ads account error above, then try again.";
+    if (needsAdsAccount && !adsAccounts.length) return "No Google Ads accounts available — connect or fix access first.";
+    if (needsAdsAccount && !adsAccountOk) return "Select a Google Ads account from the dropdown.";
+    if (needsGa4Property && ga4PropertiesLoading) return "Wait for GA4 properties to finish loading.";
+    if (needsGa4Property && ga4PropertiesError) return "Fix the GA4 property error above, then try again.";
+    if (needsGa4Property && !ga4Properties.length) return "No GA4 properties available — connect or fix access first.";
+    if (needsGa4Property && !ga4PropertyOk) return "Select a GA4 property from the dropdown.";
+    if (needsGscSite && gscSitesLoading) return "Wait for Search Console sites to finish loading.";
+    if (needsGscSite && gscSitesError) return "Fix the Search Console site error above, then try again.";
+    if (needsGscSite && !gscSites.length) return "No Search Console sites available — connect or fix access first.";
+    if (needsGscSite && !gscSiteOk) return "Select a Search Console site from the dropdown.";
+    return "";
+  }
 
   function configureBlockedReason() {
     if (!goal) return "Select an analysis goal above to continue.";
@@ -1019,15 +1318,17 @@ export default function GeneratePage() {
     if (!dateFrom || !dateTo) return "Choose a date range (or pick Custom and set dates).";
     if (showPaidTargets && !hasPrimaryConversionAction) return "Enter your primary conversion action for this ads analysis.";
     if (showPaidTargets && !hasEconomicGuardrail) return "Add at least one economic guardrail (payback days, gross margin, or qualified lead value).";
-    if (needsAdsAccount && adsAccountsLoading) return "Wait for Google Ads accounts to finish loading.";
-    if (needsAdsAccount && adsAccountsError) return "Fix the Google Ads account error above, then try again.";
-    if (needsAdsAccount && !adsAccounts.length) return "No Google Ads accounts available — connect or fix access first.";
-    if (needsAdsAccount && !adsAccountOk) return "Select a Google Ads account from the dropdown.";
     return "";
   }
 
   const cidForReview = normalizeCustomerId(selectedAdsCustomerId);
   const accountForReview = adsAccounts.find((a) => normalizeCustomerId(a.customer_id) === cidForReview);
+  const ga4ForReview = ga4Properties.find(
+    (item) => normalizeGa4PropertyId(item.property_id) === selectedGa4PropertyIdNorm
+  );
+  const gscForReview = gscSites.find(
+    (item) => normalizeGscSiteUrl(item.site_url) === selectedGscSiteUrlNorm
+  );
 
   return (
     <section>
@@ -1073,15 +1374,57 @@ export default function GeneratePage() {
 
       {step === 2 && (
         <>
-          {selectedConnections.includes("google_ads") && (
-            <StepAdsAccount
-              accounts={adsAccounts}
-              loading={adsAccountsLoading}
-              fetchError={adsAccountsError}
-              selectedId={selectedAdsCustomerId}
-              onChange={onAdsAccountChange}
-            />
+          <div className="generate-step">
+            <h2 className="generate-step-title">Select account/property/site</h2>
+            <p className="app-subtle" style={{ marginTop: 0, marginBottom: 16 }}>
+              Pick the specific targets for each selected connector.
+            </p>
+            {selectedConnections.includes("google_ads") && (
+              <StepAdsAccount
+                accounts={adsAccounts}
+                loading={adsAccountsLoading}
+                fetchError={adsAccountsError}
+                selectedId={selectedAdsCustomerId}
+                onChange={onAdsAccountChange}
+              />
+            )}
+            {selectedConnections.includes("ga4") && (
+              <StepGa4Property
+                properties={ga4Properties}
+                loading={ga4PropertiesLoading}
+                fetchError={ga4PropertiesError}
+                selectedId={selectedGa4PropertyId}
+                onChange={onGa4PropertyChange}
+              />
+            )}
+            {selectedConnections.includes("gsc") && (
+              <StepGscSite
+                sites={gscSites}
+                loading={gscSitesLoading}
+                fetchError={gscSitesError}
+                selectedUrl={selectedGscSiteUrl}
+                onChange={onGscSiteChange}
+              />
+            )}
+          </div>
+          <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+            <Button type="button" variant="outline" onClick={() => setStep(1)}>
+              Back
+            </Button>
+            <Button type="button" disabled={!canProceedTargets} onClick={() => setStep(3)}>
+              Next
+            </Button>
+          </div>
+          {!canProceedTargets && (
+            <p className="app-subtle generate-step-hint" role="status">
+              {targetBlockedReason()}
+            </p>
           )}
+        </>
+      )}
+
+      {step === 3 && (
+        <>
           <StepGoal
             goal={goal}
             onGoalChange={setGoal}
@@ -1100,10 +1443,10 @@ export default function GeneratePage() {
             onBusinessContextChange={setBusinessContext}
           />
           <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
-            <Button type="button" variant="outline" onClick={() => setStep(1)}>
+            <Button type="button" variant="outline" onClick={() => setStep(2)}>
               Back
             </Button>
-            <Button type="button" disabled={!canProceedConfigure} onClick={() => setStep(3)}>
+            <Button type="button" disabled={!canProceedConfigure} onClick={() => setStep(4)}>
               Next
             </Button>
           </div>
@@ -1115,14 +1458,19 @@ export default function GeneratePage() {
         </>
       )}
 
-      {step === 3 && (
+      {step === 4 && (
         <>
           <StepReview
             selectedConnectionIds={selectedConnections}
             connections={connections}
             needsAdsAccount={needsAdsAccount}
+            needsGa4Property={needsGa4Property}
+            needsGscSite={needsGscSite}
             accountDescriptiveName={accountForReview?.descriptive_name ?? ""}
             accountCustomerId={cidForReview}
+            ga4PropertyName={ga4ForReview?.property_name ?? ""}
+            ga4PropertyId={selectedGa4PropertyIdNorm}
+            gscSiteUrl={gscForReview?.site_url ?? selectedGscSiteUrlNorm}
             goalKey={goal}
             customGoal={customGoal}
             dateFrom={dateFrom}
@@ -1130,7 +1478,7 @@ export default function GeneratePage() {
             datePreset={datePreset}
           />
           <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
-            <Button type="button" variant="outline" onClick={() => setStep(2)}>
+            <Button type="button" variant="outline" onClick={() => setStep(3)}>
               Back
             </Button>
             <Button type="button" disabled={!canProceedConfigure} onClick={handleGenerate}>
@@ -1145,7 +1493,7 @@ export default function GeneratePage() {
         </>
       )}
 
-      {step === 4 && (
+      {step === 5 && (
         <StepAnalyzing
           error={error}
           onRetry={handleRetry}
@@ -1155,7 +1503,7 @@ export default function GeneratePage() {
         />
       )}
 
-      {step === 5 && report && (
+      {step === 6 && report && (
         <StepReport
           report={report}
           onSave={handleSave}

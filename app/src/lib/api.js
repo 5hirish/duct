@@ -19,9 +19,9 @@ function backendApiHeaders(extra = {}) {
   return headers;
 }
 
-export async function fetchGoogleAdsAccounts(refreshToken) {
+export async function fetchConnectorAccounts(connectorId, refreshToken) {
   const res = await fetch(
-    `${BASE}/api/connectors/google_ads/accounts?refresh_token=${encodeURIComponent(refreshToken)}`,
+    `${BASE}/api/connectors/${encodeURIComponent(connectorId)}/accounts?refresh_token=${encodeURIComponent(refreshToken)}`,
     { headers: backendApiHeaders() }
   );
   if (!res.ok) {
@@ -30,6 +30,18 @@ export async function fetchGoogleAdsAccounts(refreshToken) {
   }
   const payload = await res.json();
   return payload.accounts ?? [];
+}
+
+export async function fetchGoogleAdsAccounts(refreshToken) {
+  return fetchConnectorAccounts("google_ads", refreshToken);
+}
+
+export async function fetchGa4Properties(refreshToken) {
+  return fetchConnectorAccounts("ga4", refreshToken);
+}
+
+export async function fetchGscSites(refreshToken) {
+  return fetchConnectorAccounts("gsc", refreshToken);
 }
 
 export async function generateReport(params) {
