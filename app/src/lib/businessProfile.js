@@ -6,6 +6,7 @@ const DEFAULT_PROFILE = {
   company: {
     name: "",
     industry: "",
+    business_model: "",
     website_url: "",
   },
   targets: {
@@ -13,16 +14,25 @@ const DEFAULT_PROFILE = {
     target_cpa: "",
     target_roas: "",
     primary_kpi: "",
+    north_star_metric: "",
+    north_star_goal_window: "",
+    north_star_constraints: "",
+    growth_stage_milestone: "",
+    growth_stage_context: "",
   },
   audience: {
+    primary_segment: "",
     personas: [],
   },
   competition: {
+    compare_against: "",
     competitors: [],
     positioning_statement: "",
   },
   brand_channels: {
     brand_voice: "",
+    growth_motions: [],
+    context_notes: "",
     active_channels: [],
     seasonality_notes: "",
   },
@@ -32,17 +42,6 @@ const TOTAL_SECTIONS = 5;
 
 function isNonEmptyString(value) {
   return typeof value === "string" && value.trim().length > 0;
-}
-
-function hasMeaningfulNumber(value) {
-  if (typeof value === "number") return Number.isFinite(value) && value > 0;
-  if (typeof value === "string") {
-    const trimmed = value.trim();
-    if (!trimmed) return false;
-    const parsed = Number(trimmed);
-    return Number.isFinite(parsed) && parsed > 0;
-  }
-  return false;
 }
 
 function toObject(value) {
@@ -70,6 +69,9 @@ function mergeProfile(base, incoming) {
     brand_channels: {
       ...base.brand_channels,
       ...toObject(incoming.brand_channels),
+      growth_motions: clampArray(
+        toObject(incoming.brand_channels).growth_motions ?? base.brand_channels.growth_motions
+      ),
       active_channels: clampArray(
         toObject(incoming.brand_channels).active_channels ?? base.brand_channels.active_channels
       ),
@@ -108,31 +110,30 @@ export function clearBusinessProfileDraft() {
 }
 
 function sectionCompletion(profile) {
-  const companyDone = isNonEmptyString(profile.company.name) && isNonEmptyString(profile.company.industry);
+  const companyDone =
+    isNonEmptyString(profile.company.name) &&
+    isNonEmptyString(profile.company.industry) &&
+    isNonEmptyString(profile.company.business_model);
 
   const targetsDone =
-    isNonEmptyString(profile.targets.primary_kpi) ||
-    hasMeaningfulNumber(profile.targets.monthly_budget) ||
-    hasMeaningfulNumber(profile.targets.target_cpa) ||
-    hasMeaningfulNumber(profile.targets.target_roas);
+    isNonEmptyString(profile.targets.north_star_metric) &&
+    isNonEmptyString(profile.targets.north_star_goal_window) &&
+    isNonEmptyString(profile.targets.growth_stage_milestone);
 
-  const audienceDone = profile.audience.personas.some(
-    (persona) =>
-      persona &&
-      (isNonEmptyString(persona.name) || isNonEmptyString(persona.description) || isNonEmptyString(persona.priority))
-  );
-
-  const competitionDone =
-    isNonEmptyString(profile.competition.positioning_statement) ||
-    profile.competition.competitors.some(
-      (competitor) =>
-        competitor && (isNonEmptyString(competitor.name) || isNonEmptyString(competitor.differentiator))
+  const audienceDone =
+    isNonEmptyString(profile.audience.primary_segment) &&
+    profile.audience.personas.some(
+      (persona) =>
+        persona &&
+        (isNonEmptyString(persona.name) || isNonEmptyString(persona.description) || isNonEmptyString(persona.priority))
     );
+
+  const competitionDone = isNonEmptyString(profile.competition.compare_against);
 
   const brandChannelsDone =
     isNonEmptyString(profile.brand_channels.brand_voice) ||
-    profile.brand_channels.active_channels.length > 0 ||
-    isNonEmptyString(profile.brand_channels.seasonality_notes);
+    profile.brand_channels.growth_motions.length > 0 ||
+    isNonEmptyString(profile.brand_channels.context_notes);
 
   return [companyDone, targetsDone, audienceDone, competitionDone, brandChannelsDone];
 }

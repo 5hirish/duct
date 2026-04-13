@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { Check } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
@@ -32,11 +33,41 @@ const INDUSTRIES = [
   "Travel & Hospitality",
   "Other",
 ];
+const BUSINESS_MODELS = ["B2B", "B2C", "Marketplace", "PLG", "Agency", "Hybrid"];
+const PRIMARY_SEGMENTS = ["Consumer", "SMB", "Mid-market", "Enterprise", "Public sector", "Non-profit", "Other"];
 
-const KPI_OPTIONS = ["Revenue", "Signups", "Leads", "Purchases", "Bookings", "Calls"];
+const NORTH_STAR_OPTIONS = [
+  "Weekly active users",
+  "Monthly active customers",
+  "Qualified leads",
+  "Pipeline created",
+  "Net new revenue",
+  "Retention rate",
+  "Bookings",
+  "Custom",
+];
+const GROWTH_STAGE_OPTIONS = [
+  { value: "0_pre_customer", label: "No customers or active users yet" },
+  { value: "1_first_users", label: "First active users/customers (1-10)" },
+  { value: "2_early_revenue", label: "Early repeat usage or revenue (10-100 customers)" },
+  { value: "3_repeatable_growth", label: "Repeatable growth motion (100+ customers or steady MoM growth)" },
+  { value: "4_scaling", label: "Scaling across channels or segments with predictable performance" },
+];
 const BRAND_VOICES = ["Professional", "Friendly", "Bold", "Technical", "Playful"];
-const CHANNELS = ["Paid Search", "Paid Social", "SEO", "Email", "Content", "Display", "Video", "Referral"];
+const GROWTH_MOTIONS = ["Organic", "Paid", "Product-led", "Sales-led", "Partnerships", "Community", "Lifecycle/CRM"];
 const TOTAL_STEPS = 5;
+
+function parseComparisonItems(rawValue) {
+  return Array.from(
+    new Set(
+      String(rawValue || "")
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean)
+    )
+  );
+}
+
 const STEP_DEFINITIONS = [
   {
     label: "Company basics",
@@ -44,6 +75,7 @@ const STEP_DEFINITIONS = [
     fields: [
       { weight: 3, check: (profile) => profile.company.name.trim().length > 0 },
       { weight: 3, check: (profile) => profile.company.industry.trim().length > 0 },
+      { weight: 2, check: (profile) => profile.company.business_model.trim().length > 0 },
       { weight: 1, check: (profile) => profile.company.website_url.trim().length > 0 },
     ],
   },
@@ -51,16 +83,16 @@ const STEP_DEFINITIONS = [
     label: "Targets",
     shortLabel: "Targets",
     fields: [
-      { weight: 3, check: (profile) => profile.targets.primary_kpi.trim().length > 0 },
-      { weight: 2, check: (profile) => Number(profile.targets.monthly_budget) > 0 },
-      { weight: 2, check: (profile) => Number(profile.targets.target_cpa) > 0 },
-      { weight: 2, check: (profile) => Number(profile.targets.target_roas) > 0 },
+      { weight: 2, check: (profile) => profile.targets.north_star_metric.trim().length > 0 },
+      { weight: 2, check: (profile) => profile.targets.north_star_goal_window.trim().length > 0 },
+      { weight: 2, check: (profile) => profile.targets.growth_stage_milestone.trim().length > 0 },
     ],
   },
   {
     label: "Audience",
     shortLabel: "Audience",
     fields: [
+      { weight: 2, check: (profile) => profile.audience.primary_segment.trim().length > 0 },
       { weight: 3, check: (profile) => (profile.audience.personas[0]?.name || "").trim().length > 0 },
       { weight: 2, check: (profile) => (profile.audience.personas[0]?.description || "").trim().length > 0 },
     ],
@@ -69,21 +101,16 @@ const STEP_DEFINITIONS = [
     label: "Competition",
     shortLabel: "Competition",
     fields: [
-      { weight: 2, check: (profile) => (profile.competition.competitors[0]?.name || "").trim().length > 0 },
-      {
-        weight: 2,
-        check: (profile) => (profile.competition.competitors[0]?.differentiator || "").trim().length > 0,
-      },
-      { weight: 1, check: (profile) => profile.competition.positioning_statement.trim().length > 0 },
+      { weight: 1, check: (profile) => profile.competition.compare_against.trim().length > 0 },
     ],
   },
   {
-    label: "Brand & channels",
-    shortLabel: "Brand",
+    label: "Business context",
+    shortLabel: "Context",
     fields: [
       { weight: 2, check: (profile) => profile.brand_channels.brand_voice.trim().length > 0 },
-      { weight: 2, check: (profile) => profile.brand_channels.active_channels.length > 0 },
-      { weight: 1, check: (profile) => profile.brand_channels.seasonality_notes.trim().length > 0 },
+      { weight: 2, check: (profile) => profile.brand_channels.growth_motions.length > 0 },
+      { weight: 1, check: (profile) => profile.brand_channels.context_notes.trim().length > 0 },
     ],
   },
 ];
@@ -91,13 +118,28 @@ const STEP_DEFINITIONS = [
 export default function OnboardingPage() {
   const [ready, setReady] = useState(false);
   const [step, setStep] = useState(1);
-  const [maxVisitedStep, setMaxVisitedStep] = useState(1);
   const [profile, setProfile] = useState({
-    company: { name: "", industry: "", website_url: "" },
-    targets: { monthly_budget: "", target_cpa: "", target_roas: "", primary_kpi: "" },
-    audience: { personas: [{ name: "", description: "", priority: "primary" }] },
-    competition: { competitors: [{ name: "", differentiator: "" }], positioning_statement: "" },
-    brand_channels: { brand_voice: "", active_channels: [], seasonality_notes: "" },
+    company: { name: "", industry: "", business_model: "", website_url: "" },
+    targets: {
+      monthly_budget: "",
+      target_cpa: "",
+      target_roas: "",
+      primary_kpi: "",
+      north_star_metric: "",
+      north_star_goal_window: "",
+      north_star_constraints: "",
+      growth_stage_milestone: "",
+      growth_stage_context: "",
+    },
+    audience: { primary_segment: "", personas: [{ name: "", description: "", priority: "primary" }] },
+    competition: { compare_against: "", competitors: [{ name: "", differentiator: "" }], positioning_statement: "" },
+    brand_channels: {
+      brand_voice: "",
+      growth_motions: [],
+      context_notes: "",
+      active_channels: [],
+      seasonality_notes: "",
+    },
   });
 
   useEffect(() => {
@@ -105,18 +147,34 @@ export default function OnboardingPage() {
     setProfile((prev) => ({
       ...prev,
       ...draft,
+      company: {
+        ...prev.company,
+        ...(draft.company || {}),
+      },
+      targets: {
+        ...prev.targets,
+        ...(draft.targets || {}),
+      },
       audience: {
+        ...prev.audience,
+        ...(draft.audience || {}),
         personas:
           Array.isArray(draft.audience?.personas) && draft.audience.personas.length
             ? draft.audience.personas
             : prev.audience.personas,
       },
       competition: {
+        ...prev.competition,
+        ...(draft.competition || {}),
         competitors:
           Array.isArray(draft.competition?.competitors) && draft.competition.competitors.length
             ? draft.competition.competitors
             : prev.competition.competitors,
         positioning_statement: draft.competition?.positioning_statement ?? prev.competition.positioning_statement,
+      },
+      brand_channels: {
+        ...prev.brand_channels,
+        ...(draft.brand_channels || {}),
       },
     }));
     setReady(true);
@@ -145,13 +203,14 @@ export default function OnboardingPage() {
     const totalWeight = stepProgress.reduce((sum, item) => sum + item.totalWeight, 0);
     return Math.round((completedWeight / totalWeight) * 100);
   }, [stepProgress]);
+  const comparisonItems = useMemo(
+    () => parseComparisonItems(profile.competition.compare_against),
+    [profile.competition.compare_against]
+  );
+  const [comparisonInput, setComparisonInput] = useState("");
 
   function goNext() {
-    setStep((current) => {
-      const nextStep = Math.min(current + 1, TOTAL_STEPS);
-      setMaxVisitedStep((visited) => Math.max(visited, nextStep));
-      return nextStep;
-    });
+    setStep((current) => Math.min(current + 1, TOTAL_STEPS));
   }
 
   function goBack() {
@@ -164,19 +223,38 @@ export default function OnboardingPage() {
 
   function goToStep(targetStep) {
     if (targetStep < 1 || targetStep > TOTAL_STEPS) return;
-    if (targetStep <= maxVisitedStep) {
-      setStep(targetStep);
-    }
+    setStep(targetStep);
   }
 
-  useEffect(() => {
-    if (!ready) return;
-    const highestTouched = stepProgress.reduce(
-      (highest, item, index) => (item.percent > 0 ? Math.max(highest, index + 1) : highest),
-      1
-    );
-    setMaxVisitedStep((current) => Math.max(current, highestTouched));
-  }, [ready, stepProgress]);
+  function addCompetitionItems(rawValue) {
+    const incoming = parseComparisonItems(rawValue);
+    if (!incoming.length) return;
+    setProfile((prev) => {
+      const existing = parseComparisonItems(prev.competition.compare_against);
+      const merged = Array.from(new Set([...existing, ...incoming]));
+      return {
+        ...prev,
+        competition: {
+          ...prev.competition,
+          compare_against: merged.join(", "),
+        },
+      };
+    });
+    setComparisonInput("");
+  }
+
+  function removeCompetitionItem(itemToRemove) {
+    setProfile((prev) => {
+      const next = parseComparisonItems(prev.competition.compare_against).filter((item) => item !== itemToRemove);
+      return {
+        ...prev,
+        competition: {
+          ...prev.competition,
+          compare_against: next.join(", "),
+        },
+      };
+    });
+  }
 
   if (!ready) {
     return (
@@ -213,10 +291,9 @@ export default function OnboardingPage() {
               >
                 <button
                   type="button"
-                  disabled={stepNumber > maxVisitedStep}
                   onClick={() => goToStep(stepNumber)}
                   className={cn(
-                    "rounded-xl border px-2.5 py-1.5 text-xs font-medium transition-colors disabled:cursor-default disabled:opacity-60",
+                    "rounded-xl border px-2.5 py-1.5 text-xs font-medium transition-colors",
                     isActive
                       ? "border-primary/30 bg-primary/8 text-foreground font-semibold"
                       : "border-transparent bg-muted/70 text-muted-foreground hover:border-border hover:bg-muted"
@@ -267,6 +344,24 @@ export default function OnboardingPage() {
             </Select>
           </div>
           <div className="grid gap-1.5">
+            <Label htmlFor="company-business-model">Business model</Label>
+            <Select
+              value={profile.company.business_model}
+              onValueChange={(val) =>
+                setProfile((prev) => ({ ...prev, company: { ...prev.company, business_model: val } }))
+              }
+            >
+              <SelectTrigger id="company-business-model">
+                <SelectValue placeholder="Select business model..." />
+              </SelectTrigger>
+              <SelectContent>
+                {BUSINESS_MODELS.map((model) => (
+                  <SelectItem key={model} value={model}>{model}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-1.5">
             <Label htmlFor="company-website">Website <span className="text-muted-foreground">(optional)</span></Label>
             <Input
               id="company-website"
@@ -283,64 +378,82 @@ export default function OnboardingPage() {
       {/* Step 2: Targets */}
       {step === 2 && (
         <div className="grid gap-4">
+          <p className="text-sm text-muted-foreground">
+            Define your North Star metric and current growth stage. Channel-specific KPIs stay in report generation.
+          </p>
           <div className="grid gap-1.5">
-            <Label htmlFor="primary-kpi">Primary KPI</Label>
+            <Label htmlFor="north-star-metric">North Star metric</Label>
             <Select
-              value={profile.targets.primary_kpi}
+              value={profile.targets.north_star_metric}
               onValueChange={(val) =>
-                setProfile((prev) => ({ ...prev, targets: { ...prev.targets, primary_kpi: val } }))
+                setProfile((prev) => ({ ...prev, targets: { ...prev.targets, north_star_metric: val } }))
               }
             >
-              <SelectTrigger id="primary-kpi">
-                <SelectValue placeholder="Select KPI..." />
+              <SelectTrigger id="north-star-metric">
+                <SelectValue placeholder="Select North Star metric..." />
               </SelectTrigger>
               <SelectContent>
-                {KPI_OPTIONS.map((kpi) => (
-                  <SelectItem key={kpi} value={kpi}>{kpi}</SelectItem>
+                {NORTH_STAR_OPTIONS.map((metric) => (
+                  <SelectItem key={metric} value={metric}>{metric}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="grid gap-1.5">
-              <Label htmlFor="monthly-budget">Monthly budget</Label>
-              <Input
-                id="monthly-budget"
-                type="number"
-                min="0"
-                value={profile.targets.monthly_budget}
-                onChange={(e) =>
-                  setProfile((prev) => ({ ...prev, targets: { ...prev.targets, monthly_budget: e.target.value } }))
-                }
-                placeholder="5000"
-              />
-            </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="target-cpa">Target CPA</Label>
-              <Input
-                id="target-cpa"
-                type="number"
-                min="0"
-                value={profile.targets.target_cpa}
-                onChange={(e) =>
-                  setProfile((prev) => ({ ...prev, targets: { ...prev.targets, target_cpa: e.target.value } }))
-                }
-                placeholder="50"
-              />
-            </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="north-star-goal-window">What does success look like in the next 90 days?</Label>
+            <textarea
+              id="north-star-goal-window"
+              className="flex min-h-[80px] w-full rounded-3xl border border-input bg-input/50 px-4 py-2.5 text-sm transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
+              rows={3}
+              value={profile.targets.north_star_goal_window}
+              onChange={(e) =>
+                setProfile((prev) => ({ ...prev, targets: { ...prev.targets, north_star_goal_window: e.target.value } }))
+              }
+              placeholder="e.g. Reach 500 weekly active users with at least 40% week-4 retention."
+            />
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor="target-roas">Target ROAS</Label>
-            <Input
-              id="target-roas"
-              type="number"
-              min="0"
-              step="0.1"
-              value={profile.targets.target_roas}
-              onChange={(e) =>
-                setProfile((prev) => ({ ...prev, targets: { ...prev.targets, target_roas: e.target.value } }))
+            <Label htmlFor="growth-stage-milestone">Current growth stage (milestone-based)</Label>
+            <Select
+              value={profile.targets.growth_stage_milestone}
+              onValueChange={(val) =>
+                setProfile((prev) => ({ ...prev, targets: { ...prev.targets, growth_stage_milestone: val } }))
               }
-              placeholder="3.0"
+            >
+              <SelectTrigger id="growth-stage-milestone">
+                <SelectValue placeholder="Select your current milestone..." />
+              </SelectTrigger>
+              <SelectContent>
+                {GROWTH_STAGE_OPTIONS.map((stage) => (
+                  <SelectItem key={stage.value} value={stage.value}>{stage.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="north-star-constraints">What currently limits this metric most? <span className="text-muted-foreground">(optional)</span></Label>
+            <textarea
+              id="north-star-constraints"
+              className="flex min-h-[80px] w-full rounded-3xl border border-input bg-input/50 px-4 py-2.5 text-sm transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
+              rows={3}
+              value={profile.targets.north_star_constraints}
+              onChange={(e) =>
+                setProfile((prev) => ({ ...prev, targets: { ...prev.targets, north_star_constraints: e.target.value } }))
+              }
+              placeholder="e.g. Limited sales capacity, high onboarding drop-off, or long implementation cycles."
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="growth-stage-context">Growth stage context or constraints <span className="text-muted-foreground">(optional)</span></Label>
+            <textarea
+              id="growth-stage-context"
+              className="flex min-h-[80px] w-full rounded-3xl border border-input bg-input/50 px-4 py-2.5 text-sm transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
+              rows={2}
+              value={profile.targets.growth_stage_context}
+              onChange={(e) =>
+                setProfile((prev) => ({ ...prev, targets: { ...prev.targets, growth_stage_context: e.target.value } }))
+              }
+              placeholder="e.g. Team of 3, founder-led sales, runway for 8 months."
             />
           </div>
         </div>
@@ -349,6 +462,24 @@ export default function OnboardingPage() {
       {/* Step 3: Audience */}
       {step === 3 && (
         <div className="grid gap-4">
+          <div className="grid gap-1.5">
+            <Label htmlFor="primary-segment">Primary segment</Label>
+            <Select
+              value={profile.audience.primary_segment}
+              onValueChange={(val) =>
+                setProfile((prev) => ({ ...prev, audience: { ...prev.audience, primary_segment: val } }))
+              }
+            >
+              <SelectTrigger id="primary-segment">
+                <SelectValue placeholder="Select primary segment..." />
+              </SelectTrigger>
+              <SelectContent>
+                {PRIMARY_SEGMENTS.map((segment) => (
+                  <SelectItem key={segment} value={segment}>{segment}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="grid gap-1.5">
             <Label htmlFor="persona-name">Primary persona name</Label>
             <Input
@@ -400,69 +531,52 @@ export default function OnboardingPage() {
       {step === 4 && (
         <div className="grid gap-4">
           <div className="grid gap-1.5">
-            <Label htmlFor="competitor-name">Top competitor</Label>
+            <Label htmlFor="compare-against">Who do customers compare you against most often?</Label>
             <Input
-              id="competitor-name"
-              value={profile.competition.competitors[0]?.name || ""}
-              onChange={(e) =>
-                setProfile((prev) => ({
-                  ...prev,
-                  competition: {
-                    ...prev.competition,
-                    competitors: [{
-                      ...(prev.competition.competitors[0] || {}),
-                      name: e.target.value,
-                      differentiator: prev.competition.competitors[0]?.differentiator || "",
-                    }],
-                  },
-                }))
-              }
-              placeholder="Competitor name"
+              id="compare-against"
+              value={comparisonInput}
+              onChange={(e) => setComparisonInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === ",") {
+                  e.preventDefault();
+                  addCompetitionItems(comparisonInput);
+                }
+              }}
+              onBlur={() => addCompetitionItems(comparisonInput)}
+              placeholder="e.g. Notion, HubSpot, in-house spreadsheets"
             />
-          </div>
-          <div className="grid gap-1.5">
-            <Label htmlFor="differentiator">Your differentiator</Label>
-            <Input
-              id="differentiator"
-              value={profile.competition.competitors[0]?.differentiator || ""}
-              onChange={(e) =>
-                setProfile((prev) => ({
-                  ...prev,
-                  competition: {
-                    ...prev.competition,
-                    competitors: [{
-                      ...(prev.competition.competitors[0] || {}),
-                      differentiator: e.target.value,
-                      name: prev.competition.competitors[0]?.name || "",
-                    }],
-                  },
-                }))
-              }
-              placeholder="What makes you different?"
-            />
-          </div>
-          <div className="grid gap-1.5">
-            <Label htmlFor="positioning">Positioning statement</Label>
-            <textarea
-              id="positioning"
-              className="flex min-h-[80px] w-full rounded-3xl border border-input bg-input/50 px-4 py-2.5 text-sm transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
-              rows={2}
-              value={profile.competition.positioning_statement}
-              onChange={(e) =>
-                setProfile((prev) => ({
-                  ...prev,
-                  competition: { ...prev.competition, positioning_statement: e.target.value },
-                }))
-              }
-              placeholder="One-line value proposition"
-            />
+            <p className="text-xs text-muted-foreground">
+              Add one or more names, separated by commas.
+            </p>
+            {comparisonItems.length > 0 && (
+              <div className="flex flex-wrap gap-2 pt-1">
+                {comparisonItems.map((item) => (
+                  <Badge key={item} variant="secondary" className="inline-flex items-center gap-1 pr-1">
+                    <span>{item}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="size-4 rounded-full"
+                      onClick={() => removeCompetitionItem(item)}
+                      aria-label={`Remove ${item}`}
+                    >
+                      <X className="size-3" />
+                    </Button>
+                  </Badge>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* Step 5: Brand & channels */}
+      {/* Step 5: Business context */}
       {step === 5 && (
         <div className="grid gap-4">
+          <p className="text-sm text-muted-foreground">
+            Capture durable business context that applies across paid, organic, and product intelligence use cases.
+          </p>
           <div className="grid gap-1.5">
             <Label htmlFor="brand-voice">Brand voice</Label>
             <Select
@@ -483,13 +597,13 @@ export default function OnboardingPage() {
           </div>
 
           <div className="grid gap-1.5">
-            <Label>Active channels</Label>
+            <Label>Primary growth motions</Label>
             <div className="flex flex-wrap gap-2">
-              {CHANNELS.map((channel) => {
-                const active = profile.brand_channels.active_channels.includes(channel);
+              {GROWTH_MOTIONS.map((motion) => {
+                const active = profile.brand_channels.growth_motions.includes(motion);
                 return (
                   <Button
-                    key={channel}
+                    key={motion}
                     type="button"
                     variant={active ? "default" : "outline"}
                     size="sm"
@@ -498,14 +612,14 @@ export default function OnboardingPage() {
                         ...prev,
                         brand_channels: {
                           ...prev.brand_channels,
-                          active_channels: active
-                            ? prev.brand_channels.active_channels.filter((item) => item !== channel)
-                            : [...prev.brand_channels.active_channels, channel],
+                          growth_motions: active
+                            ? prev.brand_channels.growth_motions.filter((item) => item !== motion)
+                            : [...prev.brand_channels.growth_motions, motion],
                         },
                       }))
                     }
                   >
-                    {channel}
+                    {motion}
                   </Button>
                 );
               })}
@@ -513,19 +627,19 @@ export default function OnboardingPage() {
           </div>
 
           <div className="grid gap-1.5">
-            <Label htmlFor="seasonality">Seasonality notes</Label>
+            <Label htmlFor="context-notes">Additional business context</Label>
             <textarea
-              id="seasonality"
+              id="context-notes"
               className="flex min-h-[80px] w-full rounded-3xl border border-input bg-input/50 px-4 py-2.5 text-sm transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
               rows={2}
-              value={profile.brand_channels.seasonality_notes}
+              value={profile.brand_channels.context_notes}
               onChange={(e) =>
                 setProfile((prev) => ({
                   ...prev,
-                  brand_channels: { ...prev.brand_channels, seasonality_notes: e.target.value },
+                  brand_channels: { ...prev.brand_channels, context_notes: e.target.value },
                 }))
               }
-              placeholder="Any seasonal pattern to keep in mind?"
+              placeholder="e.g. Strong Q4 seasonality, long enterprise sales cycle, or limited engineering bandwidth."
             />
           </div>
 

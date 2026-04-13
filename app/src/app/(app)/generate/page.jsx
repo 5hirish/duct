@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import GoogleAdsReport from "../../../components/GoogleAdsReport";
 import { fetchGoogleAdsAccounts, generateReportStream } from "../../../lib/api";
 import { saveLocalReport, generateSlug } from "../../../lib/localReports";
+import { getBusinessProfileDraft } from "../../../lib/businessProfile";
 import { Button } from "@/components/ui/button";
 
 const GOALS = [
@@ -245,6 +246,72 @@ function dateRangeSummary(datePreset, dateFrom, dateTo) {
   return `${dateFrom} → ${dateTo}`;
 }
 
+function toPositiveNumber(value) {
+  if (typeof value === "number") return Number.isFinite(value) && value > 0 ? value : 0;
+  if (typeof value === "string") {
+    const parsed = Number(value.trim());
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+  }
+  return 0;
+}
+
+function normalizeIndustryValue(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  if (!normalized) return "";
+  if (normalized === "ecommerce" || normalized.includes("retail")) return "ecommerce";
+  if (normalized === "saas" || normalized.includes("software")) return "saas";
+  if (normalized.includes("lead")) return "lead_gen";
+  if (normalized.includes("agency")) return "agency";
+  return "other";
+}
+
+function businessContextFromProfileDraft() {
+  const draft = getBusinessProfileDraft();
+  return {
+    industry: normalizeIndustryValue(draft.company?.industry),
+    monthly_budget: toPositiveNumber(draft.targets?.monthly_budget),
+    target_cpa: toPositiveNumber(draft.targets?.target_cpa),
+    target_roas: toPositiveNumber(draft.targets?.target_roas),
+  };
+}
+
+function profileContextFromDraft() {
+  const draft = getBusinessProfileDraft();
+  const growthStage = String(draft.targets?.growth_stage_milestone || "").replaceAll("_", " ");
+  const lines = [];
+  if (draft.company?.business_model) {
+    lines.push(`Business model: ${draft.company.business_model}`);
+  }
+  if (draft.audience?.primary_segment) {
+    lines.push(`Primary segment: ${draft.audience.primary_segment}`);
+  }
+  if (draft.targets?.north_star_metric) {
+    lines.push(`North Star metric: ${draft.targets.north_star_metric}`);
+  }
+  if (draft.targets?.north_star_goal_window) {
+    lines.push(`90-day success definition: ${draft.targets.north_star_goal_window}`);
+  }
+  if (growthStage) {
+    lines.push(`Growth stage milestone: ${growthStage}`);
+  }
+  if (draft.targets?.north_star_constraints) {
+    lines.push(`Primary constraints: ${draft.targets.north_star_constraints}`);
+  }
+  if (draft.targets?.growth_stage_context) {
+    lines.push(`Stage context: ${draft.targets.growth_stage_context}`);
+  }
+  if (draft.competition?.compare_against) {
+    lines.push(`Often compared against: ${draft.competition.compare_against}`);
+  }
+  if (draft.brand_channels?.growth_motions?.length) {
+    lines.push(`Primary growth motions: ${draft.brand_channels.growth_motions.join(", ")}`);
+  }
+  if (draft.brand_channels?.context_notes) {
+    lines.push(`Business context notes: ${draft.brand_channels.context_notes}`);
+  }
+  return lines.join("\n");
+}
+
 function StepGoal({
   goal,
   onGoalChange,
@@ -258,6 +325,7 @@ function StepGoal({
   onDateToChange,
   datePreset,
   onDatePresetChange,
+  showPaidTargets,
   businessContext,
   onBusinessContextChange,
 }) {
@@ -317,32 +385,48 @@ function StepGoal({
               ))}
             </select>
           </label>
-          <div className="connections-date-row">
-            <label className="generate-field">
-              <span className="app-subtle">Target CPA ($)</span>
-              <input
-                type="number"
-                className="app-input"
-                min="0"
-                step="0.01"
-                placeholder="e.g. 50"
-                value={businessContext.target_cpa || ""}
-                onChange={(e) => onBusinessContextChange({ ...businessContext, target_cpa: parseFloat(e.target.value) || 0 })}
-              />
-            </label>
-            <label className="generate-field">
-              <span className="app-subtle">Target ROAS (x)</span>
-              <input
-                type="number"
-                className="app-input"
-                min="0"
-                step="0.1"
-                placeholder="e.g. 3.0"
-                value={businessContext.target_roas || ""}
-                onChange={(e) => onBusinessContextChange({ ...businessContext, target_roas: parseFloat(e.target.value) || 0 })}
-              />
-            </label>
-          </div>
+          {showPaidTargets && (
+            <>
+              <label className="generate-field">
+                <span className="app-subtle">Monthly budget ($)</span>
+                <input
+                  type="number"
+                  className="app-input"
+                  min="0"
+                  step="0.01"
+                  placeholder="e.g. 5000"
+                  value={businessContext.monthly_budget || ""}
+                  onChange={(e) => onBusinessContextChange({ ...businessContext, monthly_budget: parseFloat(e.target.value) || 0 })}
+                />
+              </label>
+              <div className="connections-date-row">
+                <label className="generate-field">
+                  <span className="app-subtle">Target CPA ($)</span>
+                  <input
+                    type="number"
+                    className="app-input"
+                    min="0"
+                    step="0.01"
+                    placeholder="e.g. 50"
+                    value={businessContext.target_cpa || ""}
+                    onChange={(e) => onBusinessContextChange({ ...businessContext, target_cpa: parseFloat(e.target.value) || 0 })}
+                  />
+                </label>
+                <label className="generate-field">
+                  <span className="app-subtle">Target ROAS (x)</span>
+                  <input
+                    type="number"
+                    className="app-input"
+                    min="0"
+                    step="0.1"
+                    placeholder="e.g. 3.0"
+                    value={businessContext.target_roas || ""}
+                    onChange={(e) => onBusinessContextChange({ ...businessContext, target_roas: parseFloat(e.target.value) || 0 })}
+                  />
+                </label>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -620,7 +704,7 @@ export default function GeneratePage() {
   const [selectedConnections, setSelectedConnections] = useState([]);
   const [goal, setGoal] = useState("");
   const [customGoal, setCustomGoal] = useState("");
-  const [context, setContext] = useState("");
+  const [context, setContext] = useState(() => profileContextFromDraft());
   const initialRange = defaultDateRange();
   const [dateFrom, setDateFrom] = useState(initialRange.from);
   const [dateTo, setDateTo] = useState(initialRange.to);
@@ -629,7 +713,7 @@ export default function GeneratePage() {
   const [error, setError] = useState(null);
   const [report, setReport] = useState(null);
   const [saved, setSaved] = useState(false);
-  const [businessContext, setBusinessContext] = useState({ industry: "", target_cpa: 0, target_roas: 0 });
+  const [businessContext, setBusinessContext] = useState(() => businessContextFromProfileDraft());
 
   // Google Ads account (loaded on step 2 when Google Ads is selected)
   const [adsAccounts, setAdsAccounts] = useState([]);
@@ -818,7 +902,7 @@ export default function GeneratePage() {
     setSelectedConnections([]);
     setGoal("");
     setCustomGoal("");
-    setContext("");
+    setContext(profileContextFromDraft());
     const r = defaultDateRange();
     setDateFrom(r.from);
     setDateTo(r.to);
@@ -827,7 +911,7 @@ export default function GeneratePage() {
     setError(null);
     setReport(null);
     setSaved(false);
-    setBusinessContext({ industry: "", target_cpa: 0, target_roas: 0 });
+    setBusinessContext(businessContextFromProfileDraft());
     setAdsAccounts([]);
     setSelectedAdsCustomerId("");
     setAdsAccountsError(null);
@@ -840,6 +924,7 @@ export default function GeneratePage() {
 
   const canProceedStep1 = selectedConnections.length > 0;
   const needsAdsAccount = selectedConnections.includes("google_ads");
+  const showPaidTargets = selectedConnections.includes("google_ads");
   const selectedIdNorm = normalizeCustomerId(selectedAdsCustomerId);
   const adsAccountOk =
     !needsAdsAccount ||
@@ -934,6 +1019,7 @@ export default function GeneratePage() {
             onDateToChange={setDateTo}
             datePreset={datePreset}
             onDatePresetChange={applyDatePreset}
+            showPaidTargets={showPaidTargets}
             businessContext={businessContext}
             onBusinessContextChange={setBusinessContext}
           />
