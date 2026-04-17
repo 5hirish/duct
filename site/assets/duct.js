@@ -118,6 +118,7 @@ if (navEl) {
 // Render related tools link chips from one config map
 (function() {
 var tools = [
+  { slug: 'utm-builder', title: 'UTM Builder', href: '/tools/utm-builder' },
   { slug: 'saas-metrics-calculator', title: 'SaaS Metrics Benchmark Calculator', href: '/tools/saas-metrics-calculator' },
   { slug: 'weekly-brief-template', title: 'Weekly Marketing Brief Generator', href: '/tools/weekly-brief-template' },
   { slug: 'cac-ltv-calculator', title: 'CAC / LTV Calculator', href: '/tools/cac-ltv-calculator' },
@@ -131,6 +132,7 @@ var tools = [
 ];
 
 var relatedByTool = {
+  'utm-builder': ['ads-budget-calculator', 'cpc-calculator', 'marketing-roi-calculator', 'cpa-calculator', 'ctr-calculator', 'cpm-calculator', 'saas-metrics-calculator', 'weekly-brief-template', 'cac-ltv-calculator'],
   'saas-metrics-calculator': ['cac-ltv-calculator', 'mrr-growth-calculator', 'engagement-rate-calculator', 'ctr-calculator', 'cpm-calculator', 'cpc-calculator', 'cpa-calculator', 'marketing-roi-calculator', 'weekly-brief-template'],
   'weekly-brief-template': ['saas-metrics-calculator', 'cac-ltv-calculator', 'engagement-rate-calculator', 'ctr-calculator', 'cpm-calculator', 'cpc-calculator', 'cpa-calculator', 'marketing-roi-calculator', 'mrr-growth-calculator'],
   'cac-ltv-calculator': ['saas-metrics-calculator', 'mrr-growth-calculator', 'engagement-rate-calculator', 'ctr-calculator', 'cpm-calculator', 'cpc-calculator', 'cpa-calculator', 'marketing-roi-calculator', 'weekly-brief-template'],
