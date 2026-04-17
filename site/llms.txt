@@ -4,6 +4,12 @@
 
 Duct is designed for product managers, growth leads, and marketing teams at 20–200 person SaaS companies who need cross-tool insights without manual work or data engineering.
 
+## Free Tools
+
+- [SaaS Metrics Benchmark Calculator](https://getduct.ai/tools/saas-metrics-calculator): Free interactive calculator that benchmarks your SaaS metrics — monthly churn, LTV:CAC ratio, CAC payback period, and trial-to-paid conversion rate — against industry medians from OpenView 2024 and ChartMogul 2023. Enter MRR, churn rate, CAC, and LTV (or auto-calculate from ARPU and churn). Results are colour-coded green/amber/red. For B2B SaaS founders, growth leads, and CFOs.
+- [Weekly Marketing Brief Template Generator](https://getduct.ai/tools/weekly-brief-template): Free multi-step generator that builds a customised weekly marketing report template based on your role (Growth PM, Performance Marketer, or SEO Lead) and tool stack (GA4, Mixpanel, HubSpot, Google Ads, Ahrefs, Search Console, Meta Ads, LinkedIn Ads). Outputs the right metric slots and section headers per tool. Copy with one click.
+- [CAC / LTV Calculator](https://getduct.ai/tools/cac-ltv-calculator): Free SaaS unit economics calculator. Enter monthly new customers, total sales and marketing spend, ARPU, and customer lifespan. Instantly calculates CAC, LTV, LTV:CAC ratio, and CAC payback period with health scores and one-line interpretations. Benchmarks from OpenView, SaaStr, and Bessemer Venture Partners.
+
 ## Core pages
 
 - [Home](https://getduct.ai/): Overview of Duct — what it does, who it's for, and how to join the early access waitlist.

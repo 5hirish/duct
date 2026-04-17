@@ -219,12 +219,31 @@
 .brief-foot { border-top: 1px solid var(--border); padding: 10px 18px; display: flex; justify-content: space-between; }
 .brief-foot span { font-size: 11px; color: var(--navy-3); }
 
+/* Free Tools section */
+.free-tools { padding: 100px 52px; border-top: 1px solid var(--border); }
+.free-tools-inner { max-width: 1160px; margin: 0 auto; }
+.ft-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 52px; }
+.ft-card {
+  border: 1.5px solid var(--border); border-radius: var(--r-lg);
+  padding: 32px 28px; text-decoration: none;
+  display: flex; flex-direction: column; gap: 12px;
+  transition: border-color .2s, transform .2s, box-shadow .2s;
+  background: var(--white);
+}
+.ft-card:hover { border-color: #2563EB; transform: translateY(-3px); box-shadow: 0 12px 36px rgba(37,99,235,.1); }
+.ft-icon { font-size: 28px; }
+.ft-card h3 { font-family: var(--serif); font-size: 19px; color: var(--navy); line-height: 1.25; letter-spacing: -.2px; margin: 0; }
+.ft-card p { font-size: 13px; font-weight: 300; color: var(--navy-3); line-height: 1.7; flex: 1; margin: 0; }
+.ft-link { font-size: 13px; font-weight: 500; color: #2563EB; display: flex; align-items: center; gap: 4px; margin-top: 4px; }
+.ft-badge { font-size: 10px; font-weight: 600; letter-spacing: .06em; padding: 3px 10px; border-radius: var(--pill); background: #eff6ff; color: #2563EB; border: 1px solid rgba(37,99,235,.2); align-self: flex-start; }
+
 /* Responsive */
 @media (max-width: 860px) {
   .pain-grid { grid-template-columns: 1fr; }
   .uc-grid { grid-template-columns: 1fr; }
+  .ft-grid { grid-template-columns: 1fr; }
   .preview-inner { grid-template-columns: 1fr; gap: 40px; }
-  .problem-full, .usecases, .preview { padding-left: 24px; padding-right: 24px; }
+  .problem-full, .usecases, .preview, .free-tools { padding-left: 24px; padding-right: 24px; }
 }
 
 @media (max-width: 700px) {
@@ -531,6 +550,40 @@
 <p>For CS teams: identify at-risk accounts early from NPS, usage, and support signals.</p>
 <div class="uc-link" style="color:var(--navy-3)">Join waitlist <span class="uc-arrow" aria-hidden="true">→</span></div>
 </div>
+</div>
+</div>
+</section>
+
+<!-- FREE TOOLS -->
+<section class="free-tools" id="free-tools">
+<div class="free-tools-inner">
+<div class="reveal">
+<p class="tag">Free Tools</p>
+<h2>Free tools for<br/><em>SaaS growth teams</em></h2>
+<p class="sub" style="margin-top:14px;max-width:520px">Interactive calculators and generators. No signup required. Built so you can see the value before you commit.</p>
+</div>
+<div class="ft-grid">
+<a href="/tools/saas-metrics-calculator" class="ft-card reveal" style="transition-delay:.05s">
+<span class="ft-badge">Free</span>
+<span class="ft-icon" aria-hidden="true">🧮</span>
+<h3>SaaS Metrics Benchmark Calculator</h3>
+<p>Benchmark your churn, LTV:CAC ratio, CAC payback, and trial-to-paid rate against industry medians. Colour-coded scores instantly.</p>
+<span class="ft-link">Try the calculator →</span>
+</a>
+<a href="/tools/weekly-brief-template" class="ft-card reveal" style="transition-delay:.1s">
+<span class="ft-badge">Free</span>
+<span class="ft-icon" aria-hidden="true">📋</span>
+<h3>Weekly Marketing Brief Generator</h3>
+<p>Select your role and tool stack. Get a structured weekly report template with the right metric slots per tool. Copy with one click.</p>
+<span class="ft-link">Generate your template →</span>
+</a>
+<a href="/tools/cac-ltv-calculator" class="ft-card reveal" style="transition-delay:.15s">
+<span class="ft-badge">Free</span>
+<span class="ft-icon" aria-hidden="true">📊</span>
+<h3>CAC / LTV Calculator</h3>
+<p>Calculate your Customer Acquisition Cost, Lifetime Value, LTV:CAC ratio, and payback period. Instant health scores benchmarked to SaaS norms.</p>
+<span class="ft-link">Calculate now →</span>
+</a>
 </div>
 </div>
 </section>
