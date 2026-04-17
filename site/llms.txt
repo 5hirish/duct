@@ -11,6 +11,7 @@ Duct is designed for product managers, growth leads, and marketing teams at 20â€
 - [CAC / LTV Calculator](https://getduct.ai/tools/cac-ltv-calculator): Free SaaS unit economics calculator. Enter monthly new customers, total sales and marketing spend, ARPU, and customer lifespan. Instantly calculates CAC, LTV, LTV:CAC ratio, and CAC payback period with health scores and one-line interpretations. Benchmarks from OpenView, SaaStr, and Bessemer Venture Partners.
 - [MRR Growth Rate Calculator](https://getduct.ai/tools/mrr-growth-calculator): Free SaaS growth calculator for tracking net MRR growth and compound monthly growth rate (CMGR) across any period. Enter starting MRR, ending MRR, and months to get growth diagnostics, plus optional required CMGR to reach a target MRR.
 - [Engagement Rate Calculator](https://getduct.ai/tools/engagement-rate-calculator): Free engagement rate calculator for content and growth teams. Compute engagement rate by followers, reach, and impressions, plus average engagements per post, with practical interpretation bands for weak/healthy/high-performing content.
+- [CTR Calculator](https://getduct.ai/tools/ctr-calculator): Free click-through rate calculator for paid and organic channels. Enter impressions and clicks to calculate CTR, then model projected clicks at target CTR and required CTR to hit click goals.
 
 ## Core pages
 
