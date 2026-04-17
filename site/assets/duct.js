@@ -123,16 +123,18 @@ var tools = [
   { slug: 'cac-ltv-calculator', title: 'CAC / LTV Calculator', href: '/tools/cac-ltv-calculator' },
   { slug: 'mrr-growth-calculator', title: 'MRR Growth Rate Calculator', href: '/tools/mrr-growth-calculator' },
   { slug: 'engagement-rate-calculator', title: 'Engagement Rate Calculator', href: '/tools/engagement-rate-calculator' },
-  { slug: 'ctr-calculator', title: 'CTR Calculator', href: '/tools/ctr-calculator' }
+  { slug: 'ctr-calculator', title: 'CTR Calculator', href: '/tools/ctr-calculator' },
+  { slug: 'cpm-calculator', title: 'CPM Calculator', href: '/tools/cpm-calculator' }
 ];
 
 var relatedByTool = {
-  'saas-metrics-calculator': ['cac-ltv-calculator', 'mrr-growth-calculator', 'engagement-rate-calculator', 'ctr-calculator', 'weekly-brief-template'],
-  'weekly-brief-template': ['saas-metrics-calculator', 'cac-ltv-calculator', 'engagement-rate-calculator', 'ctr-calculator', 'mrr-growth-calculator'],
-  'cac-ltv-calculator': ['saas-metrics-calculator', 'mrr-growth-calculator', 'engagement-rate-calculator', 'ctr-calculator', 'weekly-brief-template'],
-  'mrr-growth-calculator': ['saas-metrics-calculator', 'cac-ltv-calculator', 'engagement-rate-calculator', 'ctr-calculator', 'weekly-brief-template'],
-  'engagement-rate-calculator': ['ctr-calculator', 'saas-metrics-calculator', 'weekly-brief-template', 'mrr-growth-calculator', 'cac-ltv-calculator'],
-  'ctr-calculator': ['engagement-rate-calculator', 'saas-metrics-calculator', 'weekly-brief-template', 'mrr-growth-calculator', 'cac-ltv-calculator']
+  'saas-metrics-calculator': ['cac-ltv-calculator', 'mrr-growth-calculator', 'engagement-rate-calculator', 'ctr-calculator', 'cpm-calculator', 'weekly-brief-template'],
+  'weekly-brief-template': ['saas-metrics-calculator', 'cac-ltv-calculator', 'engagement-rate-calculator', 'ctr-calculator', 'cpm-calculator', 'mrr-growth-calculator'],
+  'cac-ltv-calculator': ['saas-metrics-calculator', 'mrr-growth-calculator', 'engagement-rate-calculator', 'ctr-calculator', 'cpm-calculator', 'weekly-brief-template'],
+  'mrr-growth-calculator': ['saas-metrics-calculator', 'cac-ltv-calculator', 'engagement-rate-calculator', 'ctr-calculator', 'cpm-calculator', 'weekly-brief-template'],
+  'engagement-rate-calculator': ['ctr-calculator', 'cpm-calculator', 'saas-metrics-calculator', 'weekly-brief-template', 'mrr-growth-calculator', 'cac-ltv-calculator'],
+  'ctr-calculator': ['cpm-calculator', 'engagement-rate-calculator', 'saas-metrics-calculator', 'weekly-brief-template', 'mrr-growth-calculator', 'cac-ltv-calculator'],
+  'cpm-calculator': ['ctr-calculator', 'engagement-rate-calculator', 'saas-metrics-calculator', 'weekly-brief-template', 'mrr-growth-calculator', 'cac-ltv-calculator']
 };
 
 function findToolBySlug(slug) {
