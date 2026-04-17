@@ -79,12 +79,8 @@
 </head>
 <body>
 
-<!-- NAV -->
-<nav id="nav" aria-label="Main navigation">
-<div style="display:flex;align-items:center;gap:10px">
-<a href="/" class="logo">duct <span class="logo-mark" aria-hidden="true"></span></a>
-</div>
-</nav>
+<!-- NAV (shared: site/partials/nav-simple.html) -->
+<div data-duct-partial="/partials/nav-simple.html"></div>
 
 <main class="error-page">
 
@@ -120,6 +116,10 @@
 
 </main>
 
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/partials/footer-expanded.html"></div>
+
+<script src="assets/duct-partials.js"></script>
 <script src="assets/duct.js" defer></script>
 
 </body>

@@ -45,30 +45,6 @@
   }
   .btn-orange:hover { box-shadow: 0 8px 24px rgba(37,99,235,.28); }
 
-  .nav-dropdown { position: relative; }
-  .nav-dropdown > .nav-link::after { content: ' ↓'; font-size: 10px; opacity: .5; }
-  .dropdown-menu {
-    display: none; position: absolute; top: 100%; left: 0;
-    padding-top: 10px; background: transparent; min-width: 260px;
-  }
-  .dropdown-menu-inner {
-    background: var(--white); border: 1px solid var(--border);
-    border-radius: var(--r-lg); padding: 8px;
-    box-shadow: 0 20px 60px rgba(0,0,0,.1);
-  }
-  .nav-dropdown:hover .dropdown-menu { display: block; }
-  .dm-item {
-    display: flex; align-items: flex-start; gap: 12px;
-    padding: 10px 12px; border-radius: var(--r);
-    text-decoration: none; color: var(--navy-3);
-    font-size: 13px; transition: background .15s, color .15s;
-  }
-  .dm-item:hover { background: var(--off); color: var(--navy); }
-  .dm-icon { font-size: 17px; flex-shrink: 0; margin-top: 1px; }
-  .dm-text strong { display: block; font-size: 13px; font-weight: 500; color: var(--navy); margin-bottom: 1px; }
-  .dm-text span { font-size: 11px; color: var(--navy-3); }
-  .dm-sep { height: 1px; background: var(--border); margin: 6px 4px; }
-
   .tool-hero {
     padding: 80px 24px 48px;
     text-align: center;
@@ -201,59 +177,7 @@
 <a href="#main-content" class="skip-link">Skip to content</a>
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
 
-<nav id="nav" aria-label="Main navigation">
-<div style="display:flex;align-items:center;gap:10px">
-  <a href="/" class="logo">duct <span class="logo-mark" aria-hidden="true"></span></a>
-  <span style="font-size:12px;font-weight:500;color:var(--navy-3);letter-spacing:.02em">free tools</span>
-</div>
-<div class="nav-links">
-  <div class="nav-dropdown">
-    <a href="/" class="nav-link">Solutions</a>
-    <div class="dropdown-menu">
-      <div class="dropdown-menu-inner">
-        <a href="/for-product-intelligence" class="dm-item">
-          <span class="dm-icon" aria-hidden="true">📊</span>
-          <span class="dm-text"><strong>Product Intelligence</strong><span>Weekly brief for PMs &amp; growth teams</span></span>
-        </a>
-        <a href="/for-organic-growth" class="dm-item">
-          <span class="dm-icon" aria-hidden="true">🌱</span>
-          <span class="dm-text"><strong>Organic Growth</strong><span>Automated SEO &amp; content intelligence</span></span>
-        </a>
-        <a href="/for-paid-ads" class="dm-item">
-          <span class="dm-icon" aria-hidden="true">📣</span>
-          <span class="dm-text"><strong>Paid Ads Intelligence</strong><span>Cross-platform brief for performance marketers</span></span>
-        </a>
-        <div class="dm-sep" aria-hidden="true"></div>
-        <span class="dm-item" style="opacity:.4;pointer-events:none" aria-disabled="true">
-          <span class="dm-icon" aria-hidden="true">💼</span>
-          <span class="dm-text"><strong>Sales / RevOps</strong><span>Pipeline &amp; revenue intelligence</span></span>
-        </span>
-      </div>
-    </div>
-  </div>
-  <div class="nav-dropdown">
-    <a href="/tools/saas-metrics-calculator" class="nav-link" aria-current="page">Free Tools</a>
-    <div class="dropdown-menu">
-      <div class="dropdown-menu-inner">
-        <a href="/tools/saas-metrics-calculator" class="dm-item">
-          <span class="dm-icon" aria-hidden="true">🧮</span>
-          <span class="dm-text"><strong>SaaS Metrics Calculator</strong><span>Benchmark churn, LTV:CAC and more</span></span>
-        </a>
-        <a href="/tools/weekly-brief-template" class="dm-item">
-          <span class="dm-icon" aria-hidden="true">📋</span>
-          <span class="dm-text"><strong>Weekly Brief Generator</strong><span>Build your weekly report template</span></span>
-        </a>
-        <a href="/tools/cac-ltv-calculator" class="dm-item">
-          <span class="dm-icon" aria-hidden="true">📊</span>
-          <span class="dm-text"><strong>CAC / LTV Calculator</strong><span>Calculate SaaS unit economics</span></span>
-        </a>
-      </div>
-    </div>
-  </div>
-  <a href="/blog/" class="nav-link">Blog</a>
-  <a href="https://getduct.ai" class="btn btn-orange" style="padding:8px 18px;font-size:13px">Get&nbsp;early&nbsp;access&nbsp;→</a>
-</div>
-</nav>
+<div data-duct-partial="/partials/nav-tools.html"></div>
 
 <main id="main-content">
 
@@ -314,9 +238,6 @@
 <div id="insight-panel" class="insight-panel" hidden aria-live="polite">
         <p class="insight-label">What this means</p>
         <div id="insight-body"></div>
-        <div class="insight-links">
-          <a href="/tools/cac-ltv-calculator" class="insight-link">CAC / LTV Calculator →</a>
-        </div>
       </div>
       <div class="tool-cta">
         <div class="tool-cta-text">
@@ -348,6 +269,15 @@
     <li>All calculations happen in your browser — no data is sent or stored.</li>
   </ul>
 </div>
+
+<section class="related-tools-banner reveal" id="related-tools" aria-labelledby="related-tools-heading">
+  <div class="related-tools-banner-inner">
+    <p class="tag">Also free</p>
+    <h2 id="related-tools-heading">Explore related <em>tools</em></h2>
+    <p class="related-tools-banner-desc">Stress-test churn and LTV against benchmarks, model CAC payback, or build a weekly brief—no accounts, no data leaving your device.</p>
+    <div class="insight-links related-tools" data-related-tools data-current-tool="saas-metrics-calculator" data-related-limit="3"></div>
+  </div>
+</section>
 
 <section class="faq" id="faq">
 <div class="faq-inner">
@@ -400,38 +330,7 @@
 
 </main>
 
-<footer class="footer-expanded">
-<div class="footer-top">
-  <div class="footer-brand">
-    <a href="/" class="logo" style="font-size:20px">duct <span class="logo-mark" aria-hidden="true"></span></a>
-    <p>Automated intelligence across your entire tool stack. Delivered to your inbox.</p>
-  </div>
-  <div class="footer-cols" role="navigation" aria-label="Footer navigation">
-    <div class="footer-col">
-      <h4>Use Cases</h4>
-      <a href="/for-product-intelligence">Product Intelligence</a>
-      <a href="/for-organic-growth">Organic Growth</a>
-      <a href="/for-paid-ads">Paid Ads Intelligence</a>
-    </div>
-    <div class="footer-col">
-      <h4>Free Tools</h4>
-      <a href="/tools/saas-metrics-calculator" aria-current="page">SaaS Metrics Calculator</a>
-      <a href="/tools/weekly-brief-template">Weekly Brief Generator</a>
-      <a href="/tools/cac-ltv-calculator">CAC / LTV Calculator</a>
-    </div>
-    <div class="footer-col">
-      <h4>Company</h4>
-      <a href="/about">About</a>
-      <a href="/privacy">Privacy Policy</a>
-      <a href="/terms">Terms of Service</a>
-    </div>
-  </div>
-</div>
-<div class="footer-bottom-row">
-  <span>© 2026 Alleviate Lab · Valencia, Spain · getduct.ai</span>
-  <span>The intelligence layer your stack was missing.</span>
-</div>
-</footer>
+<div data-duct-partial="/partials/footer-expanded.html"></div>
 
 <script>
 (function () {
@@ -627,6 +526,7 @@
 }());
 </script>
 
+<script src="../assets/duct-partials.js"></script>
 <script src="../assets/duct.js" defer></script>
 </body>
 </html>

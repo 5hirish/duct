@@ -72,36 +72,6 @@
   .al-spinner { border-top-color: var(--green); }
   .rpt-bar-fill { background: linear-gradient(90deg,#a7f3d0,var(--green)); }
   .kpi-sparkline-svg .spark-line { stroke: var(--green); }
-  .nav-dropdown { position: relative; }
-  .nav-dropdown > .nav-link::after { content: ' ↓'; font-size: 10px; opacity: .5; }
-  .dropdown-menu {
-    display: none; position: absolute; top: 100%; left: 0;
-    padding-top: 10px; background: transparent; min-width: 260px;
-  }
-  .dropdown-menu-inner {
-    background: var(--white); border: 1px solid var(--border);
-    border-radius: var(--r-lg); padding: 8px;
-    box-shadow: 0 20px 60px rgba(0,0,0,.1);
-  }
-  .nav-dropdown:hover .dropdown-menu { display: block; }
-  .dm-item {
-    display: flex; align-items: flex-start; gap: 12px;
-    padding: 10px 12px; border-radius: var(--r);
-    text-decoration: none; color: var(--navy-3);
-    font-size: 13px; transition: background .15s, color .15s;
-  }
-  .dm-item:hover { background: var(--off); color: var(--navy); }
-  .dm-item.disabled { opacity: .4; pointer-events: none; }
-  .dm-icon { font-size: 17px; flex-shrink: 0; margin-top: 1px; }
-  .dm-text strong { display: block; font-size: 13px; font-weight: 500; color: var(--navy); margin-bottom: 1px; }
-  .dm-text span { font-size: 11px; color: var(--navy-3); }
-  .dm-sep { height: 1px; background: var(--border); margin: 6px 4px; }
-  .tag-soon {
-    font-size: 10px; font-weight: 600; padding: 2px 7px;
-    border-radius: 4px; background: #fff7e6; color: #c9a84c;
-    border: 1px solid rgba(201,168,76,.3);
-    margin-left: auto; flex-shrink: 0; align-self: center;
-  }
 </style>
 </head>
 <body>
@@ -112,66 +82,8 @@
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 
-<!-- NAV -->
-
-<nav id="nav" aria-label="Main navigation">
-<div style="display:flex;align-items:center;gap:10px">
-<a href="/" class="logo">duct <span class="logo-mark" aria-hidden="true"></span></a>
-<span style="font-size:12px;font-weight:500;color:var(--navy-3);letter-spacing:.02em">for organic growth</span>
-</div>
-<div class="nav-links">
-<div class="nav-dropdown">
-  <a href="/" class="nav-link">Solutions</a>
-  <div class="dropdown-menu">
-    <div class="dropdown-menu-inner">
-      <a href="/for-product-intelligence" class="dm-item">
-        <span class="dm-icon" aria-hidden="true">📊</span>
-        <span class="dm-text"><strong>Product Intelligence</strong><span>Weekly brief for PMs &amp; growth teams</span></span>
-      </a>
-      <a href="/for-organic-growth" class="dm-item">
-        <span class="dm-icon" aria-hidden="true">🌱</span>
-        <span class="dm-text"><strong>Organic Growth</strong><span>Automated SEO &amp; content intelligence</span></span>
-      </a>
-      <a href="/for-paid-ads" class="dm-item">
-        <span class="dm-icon" aria-hidden="true">📣</span>
-        <span class="dm-text"><strong>Paid Ads Intelligence</strong><span>Cross-platform brief for performance marketers</span></span>
-      </a>
-      <div class="dm-sep" aria-hidden="true"></div>
-      <span class="dm-item disabled" aria-disabled="true">
-        <span class="dm-icon" aria-hidden="true">💼</span>
-        <span class="dm-text"><strong>Sales / RevOps</strong><span>Pipeline &amp; revenue intelligence</span></span>
-        <span class="tag-soon">Soon</span>
-      </span>
-    </div>
-  </div>
-</div>
-<div class="nav-dropdown">
-  <a href="/tools/saas-metrics-calculator" class="nav-link">Free Tools</a>
-  <div class="dropdown-menu">
-    <div class="dropdown-menu-inner">
-      <a href="/tools/saas-metrics-calculator" class="dm-item">
-        <span class="dm-icon" aria-hidden="true">🧮</span>
-        <span class="dm-text"><strong>SaaS Metrics Calculator</strong><span>Benchmark churn, LTV:CAC and more</span></span>
-      </a>
-      <a href="/tools/weekly-brief-template" class="dm-item">
-        <span class="dm-icon" aria-hidden="true">📋</span>
-        <span class="dm-text"><strong>Weekly Brief Generator</strong><span>Build your weekly report template</span></span>
-      </a>
-      <a href="/tools/cac-ltv-calculator" class="dm-item">
-        <span class="dm-icon" aria-hidden="true">📊</span>
-        <span class="dm-text"><strong>CAC / LTV Calculator</strong><span>Calculate SaaS unit economics</span></span>
-      </a>
-    </div>
-  </div>
-</div>
-<a href="#demo" class="nav-link">Try the demo</a>
-<a href="#how" class="nav-link">How it works</a>
-<a href="#features" class="nav-link">Features</a>
-<a href="#who" class="nav-link">Who it's for</a>
-<a href="/blog/" class="nav-link">Blog</a>
-<a href="#cta" class="btn btn-orange" style="padding:8px 18px;font-size:13px">Get&nbsp;early&nbsp;access&nbsp;→</a>
-</div>
-</nav>
+<!-- NAV (shared: site/partials/nav-for-pages.html) -->
+<div data-duct-partial="/partials/nav-for-pages.html"></div>
 
 <main id="main-content">
 

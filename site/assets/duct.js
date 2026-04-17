@@ -33,6 +33,10 @@
 })(window, document, 'script', 'dataLayer', (window.DUCT_CONFIG || {}).gtm || '');
 // ─────────────────────────────────────────────────────────────────────────────
 
+function initDuct() {
+  if (window.__ductInitDone) return;
+  window.__ductInitDone = true;
+
 // Scroll reveal
 const obs = new IntersectionObserver(function(entries) {
 entries.forEach(function(e) { if (e.isIntersecting) e.target.classList.add('in'); });
@@ -55,6 +59,133 @@ window.addEventListener('scroll', function() {
   ticking = true;
   window.requestAnimationFrame(updateNavShadow);
 }, { passive: true });
+})();
+
+// Mark active nav/footer links for partial-based pages
+(function() {
+var currentPath = window.location.pathname;
+if (!currentPath) return;
+if (currentPath.length > 1 && currentPath.slice(-1) === '/') {
+  currentPath = currentPath.slice(0, -1);
+}
+
+function normalizePath(href) {
+  if (!href) return '';
+  if (href.indexOf('#') === 0) return '';
+  var url;
+  try {
+    url = new URL(href, window.location.origin);
+  } catch (e) {
+    return '';
+  }
+  if (url.origin !== window.location.origin) return '';
+  var path = url.pathname || '';
+  if (path.length > 1 && path.slice(-1) === '/') path = path.slice(0, -1);
+  return path || '/';
+}
+
+document.querySelectorAll('#nav a[href], .footer-expanded a[href]').forEach(function(anchor) {
+  var path = normalizePath(anchor.getAttribute('href'));
+  if (!path) return;
+  if (path === currentPath) anchor.setAttribute('aria-current', 'page');
+});
+
+var navEl = document.getElementById('nav');
+if (navEl) {
+  navEl.querySelectorAll('.nav-dropdown').forEach(function(drop) {
+    var menu = drop.querySelector('.dropdown-menu-inner');
+    if (!menu) return;
+    var links = menu.querySelectorAll('a.dm-item[href]');
+    var isSolutionsMenu = false;
+    var isToolsMenu = false;
+    for (var j = 0; j < links.length; j++) {
+      var mp = normalizePath(links[j].getAttribute('href'));
+      if (mp.indexOf('/for-') === 0) isSolutionsMenu = true;
+      if (mp.indexOf('/tools/') === 0) isToolsMenu = true;
+    }
+    var trigger = drop.querySelector(':scope > a.nav-link');
+    if (!trigger) return;
+    if (isSolutionsMenu && currentPath.indexOf('/for-') === 0) {
+      trigger.classList.add('nav-link--active-section');
+    }
+    if (isToolsMenu && currentPath.indexOf('/tools/') === 0) {
+      trigger.classList.add('nav-link--active-section');
+    }
+  });
+}
+})();
+
+// Render related tools link chips from one config map
+(function() {
+var tools = [
+  { slug: 'saas-metrics-calculator', title: 'SaaS Metrics Benchmark Calculator', href: '/tools/saas-metrics-calculator' },
+  { slug: 'weekly-brief-template', title: 'Weekly Marketing Brief Generator', href: '/tools/weekly-brief-template' },
+  { slug: 'cac-ltv-calculator', title: 'CAC / LTV Calculator', href: '/tools/cac-ltv-calculator' },
+  { slug: 'mrr-growth-calculator', title: 'MRR Growth Rate Calculator', href: '/tools/mrr-growth-calculator' }
+];
+
+var relatedByTool = {
+  'saas-metrics-calculator': ['cac-ltv-calculator', 'mrr-growth-calculator', 'weekly-brief-template'],
+  'weekly-brief-template': ['saas-metrics-calculator', 'cac-ltv-calculator', 'mrr-growth-calculator'],
+  'cac-ltv-calculator': ['saas-metrics-calculator', 'mrr-growth-calculator', 'weekly-brief-template'],
+  'mrr-growth-calculator': ['saas-metrics-calculator', 'cac-ltv-calculator', 'weekly-brief-template']
+};
+
+function findToolBySlug(slug) {
+  for (var i = 0; i < tools.length; i++) {
+    if (tools[i].slug === slug) return tools[i];
+  }
+  return null;
+}
+
+function getDefaultCandidates(currentSlug) {
+  var list = [];
+  for (var i = 0; i < tools.length; i++) {
+    if (tools[i].slug !== currentSlug) list.push(tools[i]);
+  }
+  return list;
+}
+
+document.querySelectorAll('[data-related-tools]').forEach(function(container) {
+  var current = container.getAttribute('data-current-tool') || '';
+  var strategy = (container.getAttribute('data-related-strategy') || 'relevant').toLowerCase();
+  var customSlugs = (container.getAttribute('data-related-slugs') || '').split(',').map(function(s) {
+    return s.trim();
+  }).filter(Boolean);
+  var limit = parseInt(container.getAttribute('data-related-limit') || '', 10);
+  var candidates = [];
+
+  if (strategy === 'custom' && customSlugs.length) {
+    customSlugs.forEach(function(slug) {
+      if (slug === current) return;
+      var tool = findToolBySlug(slug);
+      if (tool) candidates.push(tool);
+    });
+  } else if (strategy === 'all') {
+    candidates = getDefaultCandidates(current);
+  } else {
+    var relatedSlugs = relatedByTool[current] || [];
+    relatedSlugs.forEach(function(slug) {
+      var tool = findToolBySlug(slug);
+      if (tool && tool.slug !== current) candidates.push(tool);
+    });
+    if (!candidates.length) candidates = getDefaultCandidates(current);
+  }
+
+  if (isNaN(limit) || limit <= 0) limit = candidates.length;
+
+  var count = 0;
+  for (var i = 0; i < candidates.length; i++) {
+    var tool = candidates[i];
+    if (count >= limit) break;
+    var link = document.createElement('a');
+    link.href = tool.href;
+    link.className = 'insight-link';
+    link.textContent = tool.title + ' →';
+    container.appendChild(link);
+    count++;
+  }
+});
 })();
 
 // Mobile nav drawer
@@ -131,20 +262,24 @@ function appendGroupLabel(label) {
 
 var seen = {};
 
-var dropdownLinks = linksHost.querySelectorAll('.dropdown-menu a[href]');
-if (dropdownLinks.length) {
+linksHost.querySelectorAll('.nav-dropdown').forEach(function(drop) {
+  var dropdownLinks = drop.querySelectorAll('.dropdown-menu a[href]');
+  if (!dropdownLinks.length) return;
   hasDropdownItems = true;
-  appendGroupLabel('Solutions');
-}
-
-dropdownLinks.forEach(function(anchor) {
-  var href = anchor.getAttribute('href');
-  var labelNode = anchor.querySelector('.dm-text strong');
-  var label = labelNode ? labelNode.textContent.trim() : anchor.textContent.trim();
-  var key = href + '|' + label;
-  if (seen[key]) return;
-  seen[key] = true;
-  appendLink(href, label, 'nav-mobile-link');
+  var firstHref = dropdownLinks[0].getAttribute('href') || '';
+  var groupLabel = firstHref.indexOf('/tools/') === 0 ? 'Free Tools' : 'Solutions';
+  appendGroupLabel(groupLabel);
+  dropdownLinks.forEach(function(anchor) {
+    var href = anchor.getAttribute('href');
+    var labelNode = anchor.querySelector('.dm-text strong');
+    var label = labelNode ? labelNode.textContent.trim() : anchor.textContent.trim();
+    var key = href + '|' + label;
+    if (seen[key]) return;
+    seen[key] = true;
+    var mCls = 'nav-mobile-link';
+    if (anchor.getAttribute('aria-current') === 'page') mCls += ' nav-mobile-link--current';
+    appendLink(href, label, mCls);
+  });
 });
 
 linksHost.querySelectorAll('a[href]').forEach(function(anchor) {
@@ -159,6 +294,9 @@ linksHost.querySelectorAll('a[href]').forEach(function(anchor) {
   var className = anchor.classList.contains('btn')
     ? 'nav-mobile-link btn btn-orange nav-mobile-link--cta'
     : 'nav-mobile-link';
+  if (!anchor.classList.contains('btn') && anchor.getAttribute('aria-current') === 'page') {
+    className += ' nav-mobile-link--current';
+  }
   appendLink(href, label, className);
 });
 
@@ -297,4 +435,15 @@ input.disabled = true;
 window.dataLayer = window.dataLayer || [];
 window.dataLayer.push({ event: 'form_submit', page: window.location.pathname + window.location.search + (window.location.hash || '') });
 });
+}
+
+window.submitForm = submitForm;
+}
+
+if (window.__DUCT_PARTIALS_READY) {
+  initDuct();
+} else if (window.__DUCT_PARTIALS_LOADING || document.querySelector('[data-duct-partial]')) {
+  document.addEventListener('duct-partials-ready', initDuct, { once: true });
+} else {
+  initDuct();
 }
