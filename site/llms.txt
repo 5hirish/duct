@@ -13,6 +13,7 @@ Duct is designed for product managers, growth leads, and marketing teams at 20â€
 - [Engagement Rate Calculator](https://getduct.ai/tools/engagement-rate-calculator): Free engagement rate calculator for content and growth teams. Compute engagement rate by followers, reach, and impressions, plus average engagements per post, with practical interpretation bands for weak/healthy/high-performing content.
 - [CTR Calculator](https://getduct.ai/tools/ctr-calculator): Free click-through rate calculator for paid and organic channels. Enter impressions and clicks to calculate CTR, then model projected clicks at target CTR and required CTR to hit click goals.
 - [CPM Calculator](https://getduct.ai/tools/cpm-calculator): Free cost-per-mille calculator for campaign planning. Enter spend and impressions to calculate CPM, projected spend at target CPM, and required CPM to stay inside budget.
+- [CPC Calculator](https://getduct.ai/tools/cpc-calculator): Free cost-per-click calculator for campaign planning. Enter spend and clicks to calculate CPC, projected spend at target CPC, and required CPC to stay inside budget.
 
 ## Core pages
 
