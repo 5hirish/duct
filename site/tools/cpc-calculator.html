@@ -109,6 +109,7 @@
       <button class="btn btn-orange btn-lg" id="calc-btn" aria-controls="results-section">Calculate CPC →</button>
       <button class="btn btn-ghost" id="reset-btn" style="display:none">Reset</button>
     </div>
+    <div id="calc-form-error" class="tool-form-error" role="alert" aria-live="assertive"></div>
     <div class="tool-results" id="results-section" role="region" aria-live="polite">
       <p style="font-size:13px;font-weight:500;color:var(--navy-3);margin:0 0 20px;letter-spacing:.02em;text-transform:uppercase">Your Results</p>
       <div class="results-row" id="results-row"></div>
@@ -131,8 +132,13 @@
 <div data-duct-partial="/partials/cta-tools.html"></div>
 </main>
 <div data-duct-partial="/partials/footer-expanded.html"></div>
+<script src="../assets/tool-validation.js"></script>
 <script>
 (function () {
+  var ERR = 'calc-form-error';
+  var fieldIds = ['inp-spend', 'inp-clicks', 'inp-target-cpc', 'inp-budget'];
+  DuctToolFormError.bindClear(ERR, fieldIds);
+
   function money(v) { return '$' + (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v.toFixed(2)); }
   function num(v) { return v >= 1000000 ? (v / 1000000).toFixed(2) + 'm' : (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v.toFixed(0)); }
   function card(label, display, level, badge, context) {
@@ -146,11 +152,24 @@
   function val(id) { var raw = document.getElementById(id).value; return raw === '' ? NaN : parseFloat(raw); }
   function addP(node, text) { var p = document.createElement('p'); p.textContent = text; node.appendChild(p); }
   document.getElementById('calc-btn').addEventListener('click', function () {
+    DuctToolFormError.clear(ERR, fieldIds);
     var spend = val('inp-spend');
     var clicks = val('inp-clicks');
     var targetCpc = val('inp-target-cpc');
     var budget = val('inp-budget');
-    if (isNaN(spend) || spend < 0 || isNaN(clicks) || clicks <= 0) { alert('Please enter valid spend and clicks.'); return; }
+    var spendBad = isNaN(spend) || spend < 0;
+    var clicksBad = isNaN(clicks) || clicks <= 0;
+    if (spendBad || clicksBad) {
+      if (spendBad && clicksBad) {
+        DuctToolFormError.show(ERR, 'Enter spend (zero or greater) and clicks greater than zero.', ['inp-spend', 'inp-clicks']);
+      } else if (spendBad) {
+        DuctToolFormError.show(ERR, 'Enter a valid spend amount (zero or greater).', ['inp-spend']);
+      } else {
+        DuctToolFormError.show(ERR, 'Enter clicks greater than zero.', ['inp-clicks']);
+      }
+      document.getElementById(spendBad ? 'inp-spend' : 'inp-clicks').focus();
+      return;
+    }
     var cpc = spend / clicks;
     var row = document.getElementById('results-row');
     while (row.firstChild) row.removeChild(row.firstChild);
@@ -175,6 +194,7 @@
     document.getElementById('reset-btn').style.display = '';
   });
   document.getElementById('reset-btn').addEventListener('click', function () {
+    DuctToolFormError.clear(ERR, fieldIds);
     ['inp-spend','inp-clicks','inp-target-cpc','inp-budget'].forEach(function (id) { document.getElementById(id).value = ''; });
     document.getElementById('results-section').classList.remove('visible');
     document.getElementById('reset-btn').style.display = 'none';

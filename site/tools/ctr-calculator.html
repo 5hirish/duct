@@ -152,6 +152,7 @@
       <button class="btn btn-orange btn-lg" id="calc-btn" aria-controls="results-section">Calculate CTR →</button>
       <button class="btn btn-ghost" id="reset-btn" style="display:none">Reset</button>
     </div>
+    <div id="calc-form-error" class="tool-form-error" role="alert" aria-live="assertive"></div>
 
     <div class="tool-results" id="results-section" role="region" aria-label="CTR results" aria-live="polite">
       <p style="font-size:13px;font-weight:500;color:var(--navy-3);margin:0 0 20px;letter-spacing:.02em;text-transform:uppercase">Your Results</p>
@@ -240,8 +241,13 @@
 
 <div data-duct-partial="/partials/footer-expanded.html"></div>
 
+<script src="../assets/tool-validation.js"></script>
 <script>
 (function () {
+  var ERR = 'calc-form-error';
+  var fieldIds = ['inp-impressions', 'inp-clicks', 'inp-target-ctr', 'inp-target-clicks'];
+  DuctToolFormError.bindClear(ERR, fieldIds);
+
   function rateState(v) {
     if (v >= 3) return { level: 'green', badge: '✓ Strong', context: 'Strong click attraction for many channels and intents.' };
     if (v >= 1) return { level: 'amber', badge: '⚠ Average', context: 'Decent performance; test hooks and targeting for lift.' };
@@ -278,17 +284,28 @@
   }
 
   document.getElementById('calc-btn').addEventListener('click', function () {
+    DuctToolFormError.clear(ERR, fieldIds);
     var impressions = val('inp-impressions');
     var clicks = val('inp-clicks');
     var targetCtr = val('inp-target-ctr');
     var targetClicks = val('inp-target-clicks');
 
-    if (isNaN(impressions) || impressions <= 0 || isNaN(clicks) || clicks < 0) {
-      alert('Please enter valid impressions and clicks.');
+    var impBad = isNaN(impressions) || impressions <= 0;
+    var clicksBad = isNaN(clicks) || clicks < 0;
+    if (impBad || clicksBad) {
+      if (impBad && clicksBad) {
+        DuctToolFormError.show(ERR, 'Enter impressions greater than zero and clicks (zero or greater).', ['inp-impressions', 'inp-clicks']);
+      } else if (impBad) {
+        DuctToolFormError.show(ERR, 'Enter impressions greater than zero.', ['inp-impressions']);
+      } else {
+        DuctToolFormError.show(ERR, 'Enter clicks (zero or greater).', ['inp-clicks']);
+      }
+      document.getElementById(impBad ? 'inp-impressions' : 'inp-clicks').focus();
       return;
     }
     if (clicks > impressions) {
-      alert('Clicks cannot be greater than impressions.');
+      DuctToolFormError.show(ERR, 'Clicks cannot be greater than impressions.', ['inp-impressions', 'inp-clicks']);
+      document.getElementById('inp-clicks').focus();
       return;
     }
 
@@ -306,8 +323,11 @@
       var lift = projected - clicks;
       var lvl = targetCtr <= ctr ? 'green' : (targetCtr <= ctr * 1.35 ? 'amber' : 'red');
       var badge = lvl === 'green' ? '✓ Within reach' : (lvl === 'amber' ? '⚠ Stretch' : '✗ Aggressive');
+      var liftContext = lift >= 0
+        ? 'Additional clicks needed versus current performance to hit your target CTR at this impression volume.'
+        : 'You are above target CTR; this is how many fewer clicks you could have at the target rate with the same impressions.';
       row.appendChild(makeCard('Projected Clicks', num(projected), lvl, badge, 'Expected clicks at your target CTR with the same impression volume.'));
-      row.appendChild(makeCard('Click Lift Needed', num(lift), lvl, badge, 'Additional clicks required versus current performance.'));
+      row.appendChild(makeCard('Click gap vs target', num(lift), lvl, badge, liftContext));
     }
 
     if (!isNaN(targetClicks) && targetClicks > 0) {
@@ -332,6 +352,7 @@
   });
 
   document.getElementById('reset-btn').addEventListener('click', function () {
+    DuctToolFormError.clear(ERR, fieldIds);
     ['inp-impressions', 'inp-clicks', 'inp-target-ctr', 'inp-target-clicks'].forEach(function (id) { document.getElementById(id).value = ''; });
     document.getElementById('results-section').classList.remove('visible');
     document.getElementById('reset-btn').style.display = 'none';

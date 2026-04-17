@@ -212,6 +212,11 @@
         <input type="number" id="inp-arpu" placeholder="e.g. 120" min="0" inputmode="numeric"/>
       </div>
       <div class="field">
+        <label for="inp-gross-margin">Gross margin % <span style="font-weight:400;color:var(--navy-3)">(optional)</span></label>
+        <span class="field-hint">Leave blank for revenue payback (CAC ÷ ARPU). Enter margin for contribution payback: CAC ÷ (ARPU × margin).</span>
+        <input type="number" id="inp-gross-margin" placeholder="e.g. 75" min="0" max="100" step="0.1" inputmode="decimal"/>
+      </div>
+      <div class="field">
         <label for="inp-ltv">LTV — optional, auto-calculated</label>
         <span class="field-hint">Leave blank to calculate from ARPU ÷ churn</span>
         <input type="number" id="inp-ltv" placeholder="auto-calculated" min="0" inputmode="numeric"/>
@@ -231,6 +236,8 @@
         Reset
       </button>
     </div>
+
+    <div id="calc-form-error" class="tool-form-error" role="alert" aria-live="assertive"></div>
 
     <div class="tool-results" id="results-section" role="region" aria-label="Benchmark results" aria-live="polite">
       <p style="font-size:13px;font-weight:500;color:var(--navy-3);margin:0 0 20px;letter-spacing:.02em;text-transform:uppercase">Your Results</p>
@@ -258,13 +265,13 @@
   <h2 style="margin-top:40px">What each metric <em>means</em></h2>
   <p><strong>Monthly churn rate</strong> is the percentage of your customer base (or revenue) that cancels each month. It's the single most important metric in SaaS because it determines the ceiling on your LTV. At 4% monthly churn you're losing ~40% of your base annually — new growth just refills the leaking bucket.</p>
   <p><strong>LTV:CAC ratio</strong> tells you how efficient your growth is. For every unit you spend acquiring a customer, how many units do you recover over their lifetime? Below 3:1, you're not building durable economics. Above 5:1 may signal underinvestment in growth.</p>
-  <p><strong>CAC payback period</strong> is how many months it takes to recover your acquisition cost from a customer's revenue. In a world where customers can churn before you've broken even, payback period matters as much as LTV:CAC.</p>
+  <p><strong>CAC payback period</strong> is how many months it takes to recover acquisition cost from monthly revenue (revenue payback), or from gross profit if you enter gross margin % (contribution payback).</p>
   <p><strong>Trial-to-paid conversion</strong> measures how much of your top-of-funnel interest converts to real customers. Below 15% usually indicates onboarding or product-market fit issues. Above 25% is healthy for most B2B SaaS.</p>
 
   <h2 style="margin-top:40px">Limitations</h2>
   <ul>
     <li>Benchmarks are based on industry averages and may not reflect your specific vertical or go-to-market motion.</li>
-    <li>LTV auto-calculation assumes constant churn and does not account for expansion revenue or gross margin.</li>
+    <li>LTV auto-calculation assumes constant churn and does not account for expansion revenue. Payback can use optional gross margin for contribution-based months to recover CAC.</li>
     <li>Trial-to-paid benchmarks vary between product-led and sales-led models.</li>
     <li>All calculations happen in your browser — no data is sent or stored.</li>
   </ul>
@@ -317,6 +324,7 @@
 
 <div data-duct-partial="/partials/footer-expanded.html"></div>
 
+<script src="../assets/tool-validation.js"></script>
 <script>
 (function () {
   var BENCHMARKS = {
@@ -368,7 +376,7 @@
     return ths[ths.length - 1];
   }
 
-  function makeCard(key, value) {
+  function makeCard(key, value, contextExtra) {
     var m = BENCHMARKS[key];
     var t = getThreshold(key, value);
 
@@ -389,7 +397,7 @@
 
     var ctx = document.createElement('p');
     ctx.className = 'result-context';
-    ctx.textContent = t.context;
+    ctx.textContent = contextExtra ? t.context + ' ' + contextExtra : t.context;
 
     var src = document.createElement('p');
     src.className = 'result-source';
@@ -422,15 +430,22 @@
     var ltvcac  = values.ltvcac;
     var trial   = values.trial;
 
-    var annualLoss = Math.round(churn * 12);
-    var halfLifeMonths = Math.round(50 / churn);
+    var churnDec = churn / 100;
+    var annualRetentionPct = Math.round(Math.pow(1 - churnDec, 12) * 100);
+    var annualNetChurnPct = Math.round(100 - annualRetentionPct);
+    var halfLifeMonths = churnDec > 0 && churnDec < 1
+      ? Math.round(Math.log(0.5) / Math.log(1 - churnDec))
+      : null;
 
     if (churn < 2) {
-      addP('Your ' + churn.toFixed(1) + '% monthly churn is top-quartile for B2B SaaS. At this rate you retain around ' + Math.round(100 - churn * 12) + '% of customers annually — strong retention gives you leverage to invest more confidently in acquisition.');
+      addP('Your ' + churn.toFixed(1) + '% monthly churn is top-quartile for B2B SaaS. With compounding churn, about ' + annualRetentionPct + '% of a starting cohort remains after 12 months — strong retention gives you leverage to invest more confidently in acquisition.');
     } else if (churn <= 4) {
-      addP('Your ' + churn.toFixed(1) + '% monthly churn is near the B2B SaaS median. You\'re losing roughly ' + annualLoss + '% of your base annually. Churn and activation are almost always correlated — improving onboarding is typically the highest-leverage fix before scaling spend.');
+      addP('Your ' + churn.toFixed(1) + '% monthly churn is near the B2B SaaS median. At this compound rate, roughly ' + annualNetChurnPct + '% of a starting cohort churns out over a full year. Churn and activation are almost always correlated — improving onboarding is typically the highest-leverage fix before scaling spend.');
     } else {
-      addP('At ' + churn.toFixed(1) + '% monthly churn you\'re replacing roughly half your customer base every ' + halfLifeMonths + ' months. Sustainable acquisition economics are difficult at this level — diagnosing fit, onboarding, or product gaps is worth prioritising before increasing spend.');
+      var halfLifePhrase = halfLifeMonths != null
+        ? ' cohort retention halves about every ' + halfLifeMonths + ' months.'
+        : '';
+      addP('At ' + churn.toFixed(1) + '% monthly churn, sustainable acquisition economics are difficult.' + halfLifePhrase + ' Diagnosing fit, onboarding, or product gaps is worth prioritising before increasing spend.');
     }
 
     if (!isNaN(ltvcac)) {
@@ -456,15 +471,40 @@
     panel.removeAttribute('hidden');
   }
 
+  var ERR = 'calc-form-error';
+  var requiredFields = ['inp-churn', 'inp-cac'];
+  var clearFields = ['inp-churn', 'inp-cac', 'inp-arpu', 'inp-gross-margin', 'inp-ltv', 'inp-trial', 'inp-mrr'];
+  DuctToolFormError.bindClear(ERR, clearFields);
+
   document.getElementById('calc-btn').addEventListener('click', function () {
+    DuctToolFormError.clear(ERR, clearFields);
+
     var churn = getVal('inp-churn');
     var cac   = getVal('inp-cac');
     var arpu  = getVal('inp-arpu');
     var ltv   = getVal('inp-ltv');
     var trial = getVal('inp-trial');
+    var gmRaw = document.getElementById('inp-gross-margin').value;
+    var gmPct = gmRaw === '' ? NaN : parseFloat(gmRaw);
 
-    if (isNaN(churn) || churn <= 0 || isNaN(cac) || cac <= 0) {
-      alert('Please enter at least your Monthly Churn Rate and CAC to calculate.');
+    var churnBad = isNaN(churn) || churn <= 0;
+    var cacBad = isNaN(cac) || cac <= 0;
+
+    if (churnBad || cacBad) {
+      if (churnBad && cacBad) {
+        DuctToolFormError.show(ERR, 'Enter your Monthly Churn Rate and CAC above — both must be greater than zero.', ['inp-churn', 'inp-cac']);
+      } else if (churnBad) {
+        DuctToolFormError.show(ERR, 'Enter a Monthly Churn Rate greater than zero.', ['inp-churn']);
+      } else {
+        DuctToolFormError.show(ERR, 'Enter a Customer Acquisition Cost (CAC) greater than zero.', ['inp-cac']);
+      }
+      document.getElementById(churnBad ? 'inp-churn' : 'inp-cac').focus();
+      return;
+    }
+
+    if (!isNaN(gmPct) && gmRaw !== '' && (gmPct <= 0 || gmPct > 100)) {
+      DuctToolFormError.show(ERR, 'Gross margin must be greater than zero and at most 100 when provided.', ['inp-gross-margin']);
+      document.getElementById('inp-gross-margin').focus();
       return;
     }
 
@@ -480,7 +520,13 @@
     if (!isNaN(ltv) && ltv > 0) {
       grid.appendChild(makeCard('ltvcac', ltv / cac));
       if (!isNaN(arpu) && arpu > 0) {
-        grid.appendChild(makeCard('payback', cac / arpu));
+        var useContribution = !isNaN(gmPct) && gmRaw !== '' && gmPct > 0 && gmPct <= 100;
+        var monthlyForPayback = useContribution ? arpu * (gmPct / 100) : arpu;
+        var paybackVal = cac / monthlyForPayback;
+        var payExtra = useContribution
+          ? 'Contribution-based payback uses ARPU × ' + gmPct.toFixed(1) + '% gross margin per month.'
+          : 'Revenue-based payback uses full ARPU; add gross margin % for contribution payback.';
+        grid.appendChild(makeCard('payback', paybackVal, payExtra));
       }
     }
 
@@ -498,7 +544,8 @@
   });
 
   document.getElementById('reset-btn').addEventListener('click', function () {
-    ['inp-mrr','inp-churn','inp-cac','inp-arpu','inp-ltv','inp-trial'].forEach(function (id) {
+    DuctToolFormError.clear(ERR, clearFields);
+    ['inp-mrr','inp-churn','inp-cac','inp-arpu','inp-gross-margin','inp-ltv','inp-trial'].forEach(function (id) {
       document.getElementById(id).value = '';
     });
     var section = document.getElementById('results-section');

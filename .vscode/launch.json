@@ -31,7 +31,8 @@
       "type": "chrome",
       "request": "launch",
       "url": "http://localhost:8080/",
-      "preLaunchTask": "Serve site on :8080"
+      "preLaunchTask": "Serve site on :8080",
+      "postDebugTask": "Site: stop dev server (8080)"
     },
     {
       "name": "Site: Playwright smoke tests",

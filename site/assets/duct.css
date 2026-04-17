@@ -452,7 +452,55 @@ footer:not(.footer-expanded) { flex-direction: column; align-items: flex-start; 
   margin: 0 0 20px;
   max-width: 52ch;
 }
-.related-tools-banner .insight-links { margin-top: 0; }
+
+/* Inline validation — tool calculators (see assets/tool-validation.js) */
+.tool-card > .tool-form-error {
+  display: none;
+  margin: -8px 40px 28px;
+  padding: 12px 16px;
+  border-radius: var(--r);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  background: #fef2f2;
+  font-size: 14px;
+  font-weight: 500;
+  color: #991b1b;
+  line-height: 1.45;
+}
+.tool-card > .tool-form-error.show {
+  display: block;
+}
+.field input.field-invalid,
+.field textarea.field-invalid {
+  border-color: #ef4444;
+}
+@media (max-width: 600px) {
+  .tool-card > .tool-form-error {
+    margin: -8px 24px 22px;
+  }
+}
+/* #related-tools: ID bumps specificity so pills win without per-page .insight-link rules (matches tools/saas-metrics-calculator.html) */
+#related-tools .insight-links {
+  margin-top: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+#related-tools .insight-link {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--orange);
+  text-decoration: none;
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  padding: 6px 12px;
+  border-radius: var(--pill);
+  background: var(--white);
+  transition: background 0.15s;
+  display: inline-flex;
+  align-items: center;
+}
+#related-tools .insight-link:hover {
+  background: #dbeafe;
+}
 @media (max-width: 640px) {
   .related-tools-banner-inner { padding: 28px 22px 32px; }
 }

@@ -195,6 +195,11 @@
         <span class="field-hint">How long a typical customer stays — use 1 ÷ churn rate if unsure</span>
         <input type="number" id="inp-lifespan" placeholder="e.g. 36" min="1" inputmode="numeric" aria-required="true"/>
       </div>
+      <div class="field">
+        <label for="inp-gross-margin">Gross margin % <span style="font-weight:400;color:var(--navy-3)">(optional)</span></label>
+        <span class="field-hint">Leave blank for revenue payback (CAC ÷ ARPU). Enter margin to use contribution payback: CAC ÷ (ARPU × margin).</span>
+        <input type="number" id="inp-gross-margin" placeholder="e.g. 75" min="0" max="100" step="0.1" inputmode="decimal"/>
+      </div>
     </div>
 
     <div class="tool-action">
@@ -205,6 +210,8 @@
         Reset
       </button>
     </div>
+
+    <div id="calc-form-error" class="tool-form-error" role="alert" aria-live="assertive"></div>
 
     <div class="tool-results" id="results-section" role="region" aria-label="CAC and LTV results" aria-live="polite">
       <p style="font-size:13px;font-weight:500;color:var(--navy-3);margin:0 0 20px;letter-spacing:.02em;text-transform:uppercase">Your Results</p>
@@ -234,7 +241,7 @@
     <li><strong>CAC</strong> = Total Monthly Sales &amp; Marketing Spend ÷ Monthly New Customers</li>
     <li><strong>LTV</strong> = Average Monthly Revenue per Customer × Average Customer Lifespan</li>
     <li><strong>LTV:CAC ratio</strong> = LTV ÷ CAC</li>
-    <li><strong>CAC Payback Period</strong> = CAC ÷ Average Monthly Revenue per Customer</li>
+    <li><strong>CAC Payback Period</strong> = CAC ÷ Average Monthly Revenue per Customer (revenue-based). Optional gross margin % switches to contribution payback: CAC ÷ (ARPU × Gross Margin %).</li>
   </ul>
   <p>Results are benchmarked against widely-cited SaaS standards: a healthy LTV:CAC above 3:1 (David Skok / OpenView), and a payback period under 12 months (OpenView SaaS Benchmarks 2024).</p>
 
@@ -246,7 +253,7 @@
   <ul>
     <li>CAC calculation uses blended spend — it does not separate new business from expansion.</li>
     <li>LTV calculation assumes linear churn. Actual LTV may differ if churn varies by cohort.</li>
-    <li>This calculator does not account for gross margin — adjust LTV by gross margin % for a more conservative estimate.</li>
+    <li>LTV here is revenue-based; for margin-adjusted LTV, multiply by gross margin % manually. Payback can use optional gross margin for contribution-based months to recover CAC.</li>
     <li>All calculations run in your browser. No data is sent or stored.</li>
   </ul>
 </div>
@@ -298,8 +305,13 @@
 
 <div data-duct-partial="/partials/footer-expanded.html"></div>
 
+<script src="../assets/tool-validation.js"></script>
 <script>
 (function () {
+  var ERR = 'calc-form-error';
+  var fieldIds = ['inp-customers', 'inp-spend', 'inp-arpu', 'inp-lifespan', 'inp-gross-margin'];
+  DuctToolFormError.bindClear(ERR, fieldIds);
+
   var THRESHOLDS = {
     ltvcac: [
       { min: 3,   level: 'green', badge: '✓ Healthy',     context: 'Above 3:1. Strong unit economics.' },
@@ -307,7 +319,7 @@
       { min: 0,   level: 'red',   badge: '✗ Unsustainable', context: 'Below 2:1. Not viable at scale.' }
     ],
     payback: [
-      { max: 12,  level: 'green', badge: '✓ Healthy',     context: 'Under 12 months. Break even quickly.' },
+      { max: 12,  level: 'green', badge: '✓ Healthy',     context: 'Under 12 months to recover CAC.' },
       { max: 18,  level: 'amber', badge: '⚠ Marginal',    context: '12–18 months. Watch early churn.' },
       { max: 999, level: 'red',   badge: '✗ High risk',   context: 'Over 18 months. May not recoup before churn.' }
     ]
@@ -359,20 +371,36 @@
   function getVal(id) { return parseFloat(document.getElementById(id).value); }
 
   document.getElementById('calc-btn').addEventListener('click', function () {
+    DuctToolFormError.clear(ERR, fieldIds);
     var customers = getVal('inp-customers');
     var spend     = getVal('inp-spend');
     var arpu      = getVal('inp-arpu');
     var lifespan  = getVal('inp-lifespan');
+    var gmRaw     = document.getElementById('inp-gross-margin').value;
+    var gmPct     = gmRaw === '' ? NaN : parseFloat(gmRaw);
 
-    if ([customers, spend, arpu, lifespan].some(function (v) { return isNaN(v) || v <= 0; })) {
-      alert('Please fill in all four fields with values greater than zero.');
+    var bad = [];
+    if (isNaN(customers) || customers <= 0) bad.push('inp-customers');
+    if (isNaN(spend) || spend <= 0) bad.push('inp-spend');
+    if (isNaN(arpu) || arpu <= 0) bad.push('inp-arpu');
+    if (isNaN(lifespan) || lifespan <= 0) bad.push('inp-lifespan');
+    if (bad.length) {
+      DuctToolFormError.show(ERR, 'Fill in monthly new customers, spend, ARPU, and lifespan — each must be greater than zero.', bad);
+      document.getElementById(bad[0]).focus();
+      return;
+    }
+    if (!isNaN(gmPct) && gmRaw !== '' && (gmPct <= 0 || gmPct > 100)) {
+      DuctToolFormError.show(ERR, 'Gross margin must be greater than zero and at most 100 when provided.', ['inp-gross-margin']);
+      document.getElementById('inp-gross-margin').focus();
       return;
     }
 
     var cac     = spend / customers;
     var ltv     = arpu * lifespan;
     var ltvcac  = ltv / cac;
-    var payback = cac / arpu;
+    var useContribution = !isNaN(gmPct) && gmRaw !== '' && gmPct > 0 && gmPct <= 100;
+    var monthlyForPayback = useContribution ? arpu * (gmPct / 100) : arpu;
+    var payback = cac / monthlyForPayback;
 
     var row = document.getElementById('results-row');
     while (row.firstChild) { row.removeChild(row.firstChild); }
@@ -389,9 +417,15 @@
 
     // Payback — benchmarked
     var r2 = getLevel('payback', payback);
-    row.appendChild(makeCard('CAC Payback', payback.toFixed(1) + ' mo', r2.level, r2.badge, r2.context));
+    var paybackCtx = r2.context;
+    if (useContribution) {
+      paybackCtx += ' Contribution payback uses ARPU × ' + gmPct.toFixed(1) + '% gross margin per month.';
+    } else {
+      paybackCtx += ' Revenue payback uses full ARPU per month (enter gross margin % for contribution payback).';
+    }
+    row.appendChild(makeCard('CAC Payback', payback.toFixed(1) + ' mo', r2.level, r2.badge, paybackCtx));
 
-    buildInsight({ ltvcac: ltvcac, payback: payback });
+    buildInsight({ ltvcac: ltvcac, payback: payback, useContribution: useContribution });
 
     var section = document.getElementById('results-section');
     section.classList.add('visible');
@@ -412,6 +446,7 @@
 
     var ltvcac  = values.ltvcac;
     var payback = values.payback;
+    var useContribution = values.useContribution;
 
     if (ltvcac >= 3) {
       addP('Your ' + ltvcac.toFixed(1) + ':1 LTV:CAC is healthy. Watch for compression as CAC rises with scale — ratios typically tighten 20–30% in later growth phases.');
@@ -421,12 +456,13 @@
       addP('An LTV:CAC of ' + ltvcac.toFixed(1) + ':1 means you may be spending close to what you earn per customer. Sustainable SaaS growth typically requires 3:1 or above. The two levers: reduce CAC or improve retention.');
     }
 
+    var paybackBasis = useContribution ? 'contribution-based' : 'revenue-based';
     if (payback <= 12) {
-      addP('Your ' + payback.toFixed(1) + '-month payback is strong — you\'re recovering acquisition spend faster than the SaaS median of 15–18 months. This gives flexibility to reinvest in growth without cash flow pressure.');
+      addP('Your ' + payback.toFixed(1) + '-month ' + paybackBasis + ' payback is strong — you\'re recovering acquisition spend faster than the SaaS median of 15–18 months. This gives flexibility to reinvest in growth without cash flow pressure.');
     } else if (payback <= 18) {
-      addP('Your ' + payback.toFixed(1) + '-month payback is within the acceptable range for growth-stage SaaS. Venture-backed companies often target sub-12 months at scale — reducing CAC or increasing ARPU are the direct levers.');
+      addP('Your ' + payback.toFixed(1) + '-month ' + paybackBasis + ' payback is within the acceptable range for growth-stage SaaS. Venture-backed companies often target sub-12 months at scale — reducing CAC or increasing ARPU are the direct levers.');
     } else {
-      addP('An ' + payback.toFixed(1) + '-month payback puts pressure on cash flow and limits how aggressively you can invest in acquisition. A 10% increase in average contract value meaningfully shortens payback at fixed CAC.');
+      addP('An ' + payback.toFixed(1) + '-month ' + paybackBasis + ' payback puts pressure on cash flow and limits how aggressively you can invest in acquisition. A 10% increase in average contract value meaningfully shortens payback at fixed CAC.');
     }
 
     addP('CAC payback and LTV:CAC measure unit economics at a point in time. What matters is the trend — whether these ratios are improving or degrading week over week.');
@@ -435,7 +471,8 @@
   }
 
   document.getElementById('reset-btn').addEventListener('click', function () {
-    ['inp-customers','inp-spend','inp-arpu','inp-lifespan'].forEach(function (id) {
+    DuctToolFormError.clear(ERR, fieldIds);
+    ['inp-customers','inp-spend','inp-arpu','inp-lifespan','inp-gross-margin'].forEach(function (id) {
       document.getElementById(id).value = '';
     });
     var section = document.getElementById('results-section');

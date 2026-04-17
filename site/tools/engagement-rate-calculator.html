@@ -202,6 +202,8 @@
       </button>
     </div>
 
+    <div id="calc-form-error" class="tool-form-error" role="alert" aria-live="assertive"></div>
+
     <div class="tool-results" id="results-section" role="region" aria-label="Engagement rate results" aria-live="polite">
       <p style="font-size:13px;font-weight:500;color:var(--navy-3);margin:0 0 20px;letter-spacing:.02em;text-transform:uppercase">Your Results</p>
       <div class="results-row" id="results-row"></div>
@@ -294,8 +296,13 @@
 
 <div data-duct-partial="/partials/footer-expanded.html"></div>
 
+<script src="../assets/tool-validation.js"></script>
 <script>
 (function () {
+  var ERR = 'calc-form-error';
+  var fieldIds = ['inp-engagements', 'inp-followers', 'inp-reach', 'inp-impressions', 'inp-posts'];
+  DuctToolFormError.bindClear(ERR, fieldIds);
+
   function levelForRate(value) {
     if (value >= 6) return { level: 'green', badge: '✓ Strong', context: 'High engagement quality relative to audience size.' };
     if (value >= 3) return { level: 'amber', badge: '⚠ Healthy', context: 'Good engagement. Keep testing hooks and creative variations.' };
@@ -347,6 +354,7 @@
   }
 
   document.getElementById('calc-btn').addEventListener('click', function () {
+    DuctToolFormError.clear(ERR, fieldIds);
     var engagements = getVal('inp-engagements');
     var followers = getVal('inp-followers');
     var reach = getVal('inp-reach');
@@ -354,7 +362,8 @@
     var posts = getVal('inp-posts');
 
     if (isNaN(engagements) || engagements <= 0) {
-      alert('Please enter valid total engagements.');
+      DuctToolFormError.show(ERR, 'Enter total engagements greater than zero.', ['inp-engagements']);
+      document.getElementById('inp-engagements').focus();
       return;
     }
 
@@ -362,7 +371,8 @@
     var hasReach = !isNaN(reach) && reach > 0;
     var hasImpressions = !isNaN(impressions) && impressions > 0;
     if (!hasFollowers && !hasReach && !hasImpressions) {
-      alert('Please enter at least one denominator: followers, reach, or impressions.');
+      DuctToolFormError.show(ERR, 'Enter at least one denominator greater than zero: followers, reach, or impressions.', ['inp-followers', 'inp-reach', 'inp-impressions']);
+      document.getElementById('inp-followers').focus();
       return;
     }
 
@@ -417,6 +427,7 @@
   });
 
   document.getElementById('reset-btn').addEventListener('click', function () {
+    DuctToolFormError.clear(ERR, fieldIds);
     ['inp-engagements', 'inp-followers', 'inp-reach', 'inp-impressions', 'inp-posts'].forEach(function (id) {
       document.getElementById(id).value = '';
     });

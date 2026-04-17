@@ -219,31 +219,41 @@
 .brief-foot { border-top: 1px solid var(--border); padding: 10px 18px; display: flex; justify-content: space-between; }
 .brief-foot span { font-size: 11px; color: var(--navy-3); }
 
-/* Free Tools section */
-.free-tools { padding: 100px 52px; border-top: 1px solid var(--border); }
-.free-tools-inner { max-width: 1160px; margin: 0 auto; }
-.ft-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 52px; }
-.ft-card {
-  border: 1.5px solid var(--border); border-radius: var(--r-lg);
-  padding: 32px 28px; text-decoration: none;
-  display: flex; flex-direction: column; gap: 12px;
-  transition: border-color .2s, transform .2s, box-shadow .2s;
+/* Homepage tools teaser → full index at /tools/ */
+.tools-teaser { padding: 100px 52px; border-top: 1px solid var(--border); background: var(--off); }
+.tools-teaser-inner { max-width: 1160px; margin: 0 auto; }
+.tools-teaser-card {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 36px 40px;
   background: var(--white);
 }
-.ft-card:hover { border-color: #2563EB; transform: translateY(-3px); box-shadow: 0 12px 36px rgba(37,99,235,.1); }
-.ft-icon { font-size: 28px; }
-.ft-card h3 { font-family: var(--serif); font-size: 19px; color: var(--navy); line-height: 1.25; letter-spacing: -.2px; margin: 0; }
-.ft-card p { font-size: 13px; font-weight: 300; color: var(--navy-3); line-height: 1.7; flex: 1; margin: 0; }
-.ft-link { font-size: 13px; font-weight: 500; color: #2563EB; display: flex; align-items: center; gap: 4px; margin-top: 4px; }
-.ft-badge { font-size: 10px; font-weight: 600; letter-spacing: .06em; padding: 3px 10px; border-radius: var(--pill); background: #eff6ff; color: #2563EB; border: 1px solid rgba(37,99,235,.2); align-self: flex-start; }
+.tools-teaser-card .tag { margin-bottom: 12px; }
+.tools-teaser-card h2 { font-family: var(--serif); font-size: clamp(26px, 3.5vw, 36px); color: var(--navy); line-height: 1.2; letter-spacing: -.3px; margin: 0 0 14px; }
+.tools-teaser-card h2 em { color: var(--orange); font-style: italic; }
+.tools-teaser-card .sub { margin: 0 0 20px; max-width: 62em; font-size: 15px; font-weight: 300; color: var(--navy-3); line-height: 1.65; }
+.tools-teaser-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--orange);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255,92,0,.35);
+  padding-bottom: 2px;
+  transition: color .2s, border-color .2s;
+}
+.tools-teaser-link:hover { color: var(--orange-h); border-bottom-color: rgba(224,80,0,.55); }
 
 /* Responsive */
 @media (max-width: 860px) {
   .pain-grid { grid-template-columns: 1fr; }
   .uc-grid { grid-template-columns: 1fr; }
-  .ft-grid { grid-template-columns: 1fr; }
   .preview-inner { grid-template-columns: 1fr; gap: 40px; }
-  .problem-full, .usecases, .preview, .free-tools { padding-left: 24px; padding-right: 24px; }
+  .problem-full, .usecases, .preview, .tools-teaser { padding-left: 24px; padding-right: 24px; }
 }
 
 @media (max-width: 700px) {
@@ -554,85 +564,14 @@
 </div>
 </section>
 
-<!-- FREE TOOLS -->
-<section class="free-tools" id="free-tools">
-<div class="free-tools-inner">
-<div class="reveal">
-<p class="tag">Free Tools</p>
-<h2>Free tools for<br/><em>SaaS growth teams</em></h2>
-<p class="sub" style="margin-top:14px;max-width:520px">Interactive calculators and generators. No signup required. Built so you can see the value before you commit.</p>
-</div>
-<div class="ft-grid">
-<a href="/tools/saas-metrics-calculator" class="ft-card reveal" style="transition-delay:.05s">
-<span class="ft-badge">Free</span>
-<span class="ft-icon" aria-hidden="true">🧮</span>
-<h3>SaaS Metrics Benchmark Calculator</h3>
-<p>Benchmark your churn, LTV:CAC ratio, CAC payback, and trial-to-paid rate against industry medians. Colour-coded scores instantly.</p>
-<span class="ft-link">Try the calculator →</span>
-</a>
-<a href="/tools/weekly-brief-template" class="ft-card reveal" style="transition-delay:.1s">
-<span class="ft-badge">Free</span>
-<span class="ft-icon" aria-hidden="true">📋</span>
-<h3>Weekly Marketing Brief Generator</h3>
-<p>Select your role and tool stack. Get a structured weekly report template with the right metric slots per tool. Copy with one click.</p>
-<span class="ft-link">Generate your template →</span>
-</a>
-<a href="/tools/cac-ltv-calculator" class="ft-card reveal" style="transition-delay:.15s">
-<span class="ft-badge">Free</span>
-<span class="ft-icon" aria-hidden="true">📊</span>
-<h3>CAC / LTV Calculator</h3>
-<p>Calculate your Customer Acquisition Cost, Lifetime Value, LTV:CAC ratio, and payback period. Instant health scores benchmarked to SaaS norms.</p>
-<span class="ft-link">Calculate now →</span>
-</a>
-<a href="/tools/mrr-growth-calculator" class="ft-card reveal" style="transition-delay:.2s">
-<span class="ft-badge">Free</span>
-<span class="ft-icon" aria-hidden="true">📈</span>
-<h3>MRR Growth Rate Calculator</h3>
-<p>Measure net MRR growth and CMGR from any period. Add a target MRR to see the monthly growth rate required to hit your plan.</p>
-<span class="ft-link">Calculate growth →</span>
-</a>
-<a href="/tools/engagement-rate-calculator" class="ft-card reveal" style="transition-delay:.25s">
-<span class="ft-badge">Free</span>
-<span class="ft-icon" aria-hidden="true">💬</span>
-<h3>Engagement Rate Calculator</h3>
-<p>Calculate engagement rate by followers, reach, or impressions in seconds. Benchmark post quality and compare campaign performance reliably.</p>
-<span class="ft-link">Calculate engagement →</span>
-</a>
-<a href="/tools/ctr-calculator" class="ft-card reveal" style="transition-delay:.3s">
-<span class="ft-badge">Free</span>
-<span class="ft-icon" aria-hidden="true">🎯</span>
-<h3>CTR Calculator</h3>
-<p>Calculate click-through rate (CTR), projected click volume at target CTR, and required CTR to hit click goals across channels.</p>
-<span class="ft-link">Calculate CTR →</span>
-</a>
-<a href="/tools/cpm-calculator" class="ft-card reveal" style="transition-delay:.35s">
-<span class="ft-badge">Free</span>
-<span class="ft-icon" aria-hidden="true">💸</span>
-<h3>CPM Calculator</h3>
-<p>Calculate cost per 1,000 impressions (CPM), projected spend at target CPM, and required efficiency to stay within budget.</p>
-<span class="ft-link">Calculate CPM →</span>
-</a>
-<a href="/tools/cpc-calculator" class="ft-card reveal" style="transition-delay:.4s">
-<span class="ft-badge">Free</span>
-<span class="ft-icon" aria-hidden="true">🖱️</span>
-<h3>CPC Calculator</h3>
-<p>Calculate cost per click (CPC), projected spend at target CPC, and required CPC to stay within budget caps.</p>
-<span class="ft-link">Calculate CPC →</span>
-</a>
-<a href="/tools/cpa-calculator" class="ft-card reveal" style="transition-delay:.45s">
-<span class="ft-badge">Free</span>
-<span class="ft-icon" aria-hidden="true">📌</span>
-<h3>CPA Calculator</h3>
-<p>Calculate cost per acquisition (CPA), projected conversions at target CPA, and required CPA to stay on budget.</p>
-<span class="ft-link">Calculate CPA →</span>
-</a>
-<a href="/tools/marketing-roi-calculator" class="ft-card reveal" style="transition-delay:.5s">
-<span class="ft-badge">Free</span>
-<span class="ft-icon" aria-hidden="true">📉</span>
-<h3>Marketing ROI Calculator</h3>
-<p>Calculate marketing ROI, net profit, and target-revenue scenarios to evaluate campaign profitability quickly.</p>
-<span class="ft-link">Calculate ROI →</span>
-</a>
+<!-- FREE TOOLS (teaser → /tools/) -->
+<section class="tools-teaser" id="free-tools">
+<div class="tools-teaser-inner">
+<div class="tools-teaser-card reveal">
+<p class="tag">Free tools</p>
+<h2>Calculators &amp; generators for <em>growth teams</em></h2>
+<p class="sub">Benchmark SaaS metrics, model paid spend, build UTMs — no signup. When you want that same rigour across your whole stack automatically, that is what Duct is for.</p>
+<a href="/tools/" class="tools-teaser-link">Explore free tools →</a>
 </div>
 </div>
 </section>

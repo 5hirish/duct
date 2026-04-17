@@ -108,7 +108,7 @@ if (navEl) {
     if (isSolutionsMenu && currentPath.indexOf('/for-') === 0) {
       trigger.classList.add('nav-link--active-section');
     }
-    if (isToolsMenu && currentPath.indexOf('/tools/') === 0) {
+    if (isToolsMenu && (currentPath.indexOf('/tools/') === 0 || currentPath === '/tools')) {
       trigger.classList.add('nav-link--active-section');
     }
   });
@@ -132,7 +132,7 @@ var tools = [
 ];
 
 var relatedByTool = {
-  'utm-builder': ['ads-budget-calculator', 'cpc-calculator', 'marketing-roi-calculator', 'cpa-calculator', 'ctr-calculator', 'cpm-calculator', 'saas-metrics-calculator', 'weekly-brief-template', 'cac-ltv-calculator'],
+  'utm-builder': ['cpc-calculator', 'marketing-roi-calculator', 'cpa-calculator', 'ctr-calculator', 'cpm-calculator', 'saas-metrics-calculator', 'weekly-brief-template', 'cac-ltv-calculator'],
   'saas-metrics-calculator': ['cac-ltv-calculator', 'mrr-growth-calculator', 'engagement-rate-calculator', 'ctr-calculator', 'cpm-calculator', 'cpc-calculator', 'cpa-calculator', 'marketing-roi-calculator', 'weekly-brief-template'],
   'weekly-brief-template': ['saas-metrics-calculator', 'cac-ltv-calculator', 'engagement-rate-calculator', 'ctr-calculator', 'cpm-calculator', 'cpc-calculator', 'cpa-calculator', 'marketing-roi-calculator', 'mrr-growth-calculator'],
   'cac-ltv-calculator': ['saas-metrics-calculator', 'mrr-growth-calculator', 'engagement-rate-calculator', 'ctr-calculator', 'cpm-calculator', 'cpc-calculator', 'cpa-calculator', 'marketing-roi-calculator', 'weekly-brief-template'],

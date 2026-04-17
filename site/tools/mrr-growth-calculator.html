@@ -205,6 +205,8 @@
       </button>
     </div>
 
+    <div id="calc-form-error" class="tool-form-error" role="alert" aria-live="assertive"></div>
+
     <div class="tool-results" id="results-section" role="region" aria-label="MRR growth results" aria-live="polite">
       <p style="font-size:13px;font-weight:500;color:var(--navy-3);margin:0 0 20px;letter-spacing:.02em;text-transform:uppercase">Your Results</p>
       <div class="results-row" id="results-row"></div>
@@ -296,8 +298,13 @@
 
 <div data-duct-partial="/partials/footer-expanded.html"></div>
 
+<script src="../assets/tool-validation.js"></script>
 <script>
 (function () {
+  var ERR = 'calc-form-error';
+  var fieldIds = ['inp-start-mrr', 'inp-end-mrr', 'inp-months', 'inp-target'];
+  DuctToolFormError.bindClear(ERR, fieldIds);
+
   var THRESHOLDS = {
     netGrowth: [
       { min: 40, level: 'green', badge: '✓ Strong', context: 'High momentum across the full period.' },
@@ -371,18 +378,25 @@
   }
 
   document.getElementById('calc-btn').addEventListener('click', function () {
+    DuctToolFormError.clear(ERR, fieldIds);
     var start = getVal('inp-start-mrr');
     var end = getVal('inp-end-mrr');
     var months = getVal('inp-months');
     var targetRaw = document.getElementById('inp-target').value;
     var target = targetRaw === '' ? NaN : parseFloat(targetRaw);
 
-    if (isNaN(start) || start <= 0 || isNaN(end) || end < 0 || isNaN(months) || months <= 0) {
-      alert('Please enter valid values for Starting MRR, Ending MRR, and Period Length.');
+    var bad = [];
+    if (isNaN(start) || start <= 0) bad.push('inp-start-mrr');
+    if (isNaN(end) || end < 0) bad.push('inp-end-mrr');
+    if (isNaN(months) || months <= 0) bad.push('inp-months');
+    if (bad.length) {
+      DuctToolFormError.show(ERR, 'Enter starting MRR greater than zero, ending MRR (zero or greater), and period length in months (at least 1).', bad);
+      document.getElementById(bad[0]).focus();
       return;
     }
     if (!isNaN(target) && target <= 0) {
-      alert('Target MRR must be greater than zero when provided.');
+      DuctToolFormError.show(ERR, 'Target MRR must be greater than zero when provided.', ['inp-target']);
+      document.getElementById('inp-target').focus();
       return;
     }
 
@@ -416,14 +430,30 @@
     var requiredCmgrPct = null;
     if (!isNaN(target)) {
       requiredCmgrPct = (Math.pow(target / end, 1 / months) - 1) * 100;
-      var reqLevel = requiredCmgrPct <= cmgrPct ? 'green' : (requiredCmgrPct <= cmgrPct * 1.5 ? 'amber' : 'red');
-      var reqBadge = reqLevel === 'green' ? '✓ Within reach' : (reqLevel === 'amber' ? '⚠ Stretch' : '✗ Aggressive');
+      var targetBelowCurrent = target < end;
+      var reachOk = targetBelowCurrent
+        ? (cmgrPct <= requiredCmgrPct)
+        : (requiredCmgrPct <= cmgrPct);
+      var reqLevel = 'amber';
+      if (reachOk) {
+        reqLevel = 'green';
+      } else if (!targetBelowCurrent && requiredCmgrPct > cmgrPct * 1.5) {
+        reqLevel = 'red';
+      } else if (targetBelowCurrent && cmgrPct > 0 && requiredCmgrPct < 0) {
+        reqLevel = 'red';
+      }
+      var reqBadge = reqLevel === 'green'
+        ? '✓ Within reach'
+        : (reqLevel === 'amber' ? '⚠ Stretch' : '✗ Aggressive');
+      var reqCardContext = targetBelowCurrent
+        ? 'Compound monthly rate from current MRR to reach the lower target in the same number of months. Negative CMGR means contraction each month.'
+        : 'Monthly growth needed from current MRR to hit target in the same number of months.';
       row.appendChild(makeCard(
         'Required CMGR',
         fmtPercent(requiredCmgrPct),
         reqLevel,
         reqBadge,
-        'Monthly growth needed from current MRR to hit target in the same number of months.'
+        reqCardContext
       ));
     }
 
@@ -441,7 +471,9 @@
     }
 
     if (requiredCmgrPct !== null) {
-      if (requiredCmgrPct <= cmgrPct) {
+      if (target < end) {
+        addP(body, 'Your target MRR is below current MRR, so the required CMGR is negative (compound contraction). Compare it to your actual CMGR: you may need to accelerate downsell/churn discipline or reduce spend to reach the lower figure on schedule.');
+      } else if (requiredCmgrPct <= cmgrPct) {
         addP(body, 'Your current growth pace is enough to hit the target if maintained. Focus on consistency and reducing variance across months.');
       } else {
         addP(body, 'Your target requires faster compounding than your current pace. Close the gap by improving either new logo throughput, expansion MRR, or churn control.');
@@ -457,6 +489,7 @@
   });
 
   document.getElementById('reset-btn').addEventListener('click', function () {
+    DuctToolFormError.clear(ERR, fieldIds);
     ['inp-start-mrr', 'inp-end-mrr', 'inp-months', 'inp-target'].forEach(function (id) {
       document.getElementById(id).value = '';
     });
