@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="../assets/apple-icon.svg"/>
+<title>Engagement Rate Calculator — Free Tool by Duct</title>
+<link rel="canonical" href="https://getduct.ai/tools/engagement-rate-calculator"/>
+<meta name="description" content="Free engagement rate calculator for social and growth teams. Calculate engagement rate by followers, reach, and impressions with instant interpretation."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/tools/engagement-rate-calculator"/>
+<meta property="og:title" content="Engagement Rate Calculator — Free Tool by Duct"/>
+<meta property="og:description" content="Measure engagement rate by followers, reach, or impressions and benchmark content performance instantly."/>
+<meta property="og:image" content="https://getduct.ai/assets/og-image.png"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Engagement Rate Calculator — Free Tool by Duct"/>
+<meta name="twitter:description" content="Free calculator for engagement rate by followers, reach, and impressions with practical quality benchmarks."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og-image.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="../assets/duct.css"/>
+<script src="../assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"Engagement Rate Calculator","url":"https://getduct.ai/tools/engagement-rate-calculator","description":"Free calculator that computes engagement rate by followers, reach, and impressions, plus average engagements per post.","applicationCategory":"BusinessApplication","operatingSystem":"All","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"creator":{"@type":"Organization","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do you calculate engagement rate?","acceptedAnswer":{"@type":"Answer","text":"The most common formula is Engagement Rate = Total Engagements divided by a denominator such as Followers, Reach, or Impressions, multiplied by 100."}},{"@type":"Question","name":"Should I calculate engagement rate by followers, reach, or impressions?","acceptedAnswer":{"@type":"Answer","text":"Use followers for broad account-level benchmarking, reach for content quality relative to exposed audience, and impressions for efficiency when audiences may see content multiple times."}},{"@type":"Question","name":"What counts as engagement?","acceptedAnswer":{"@type":"Answer","text":"Engagement typically includes likes, comments, shares, saves, clicks, and replies depending on platform. Keep your definition consistent across periods for reliable comparison."}},{"@type":"Question","name":"What is a good engagement rate?","acceptedAnswer":{"@type":"Answer","text":"Benchmarks vary by platform and audience size, but many teams use less than 1 percent as weak, 1 to 3 percent as average, 3 to 6 percent as healthy, and above 6 percent as strong for follower-based engagement rate."}},{"@type":"Question","name":"Can I compare engagement rate across channels?","acceptedAnswer":{"@type":"Answer","text":"You can compare trends, but direct comparisons can be misleading because each platform has different feed mechanics and engagement behaviors."}}]}
+</script>
+<style>
+  .skip-link {
+    position: absolute; top: -100%; left: 16px; z-index: 300;
+    padding: 10px 20px; background: var(--navy); color: #fff;
+    font-size: 14px; font-weight: 500; border-radius: var(--r);
+    text-decoration: none; transition: top .15s;
+  }
+  .skip-link:focus { top: 16px; }
+
+  :root {
+    --orange: #2563EB;
+    --orange-h: #1D4ED8;
+  }
+  .btn-orange:hover { box-shadow: 0 8px 24px rgba(37,99,235,.28); }
+
+  .tool-hero {
+    padding: 80px 24px 48px; text-align: center;
+    max-width: 760px; margin: 0 auto;
+  }
+  .tool-hero h1 {
+    font-family: var(--serif); font-size: clamp(32px, 5vw, 52px);
+    color: var(--navy); margin: 16px 0 16px; line-height: 1.15;
+  }
+  .tool-hero h1 em { color: var(--orange); font-style: italic; }
+  .tool-hero p { font-size: 17px; color: var(--navy-3); font-weight: 300; line-height: 1.6; margin: 0; }
+
+  .tool-wrap { max-width: 900px; margin: 0 auto 80px; padding: 0 24px; }
+  .tool-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--r-lg); overflow: hidden;
+    box-shadow: 0 4px 32px rgba(0,0,0,.06);
+  }
+  .tool-inputs {
+    padding: 36px 40px; display: grid;
+    grid-template-columns: 1fr 1fr; gap: 24px 32px;
+  }
+  @media (max-width: 640px) { .tool-inputs { grid-template-columns: 1fr; padding: 24px; } }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 13px; font-weight: 500; color: var(--navy); letter-spacing: .01em; }
+  .field .field-hint { font-size: 11px; color: var(--navy-3); margin-top: -2px; }
+  .field input {
+    padding: 11px 16px; border: 1.5px solid var(--border);
+    border-radius: var(--r); font-size: 15px; font-family: var(--sans);
+    color: var(--navy); background: var(--white);
+    transition: border-color .15s; outline: none; -moz-appearance: textfield;
+  }
+  .field input::-webkit-outer-spin-button,
+  .field input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .field input:focus { border-color: var(--orange); }
+  .field input::placeholder { color: var(--navy-3); opacity: .6; }
+
+  .tool-action { padding: 0 40px 36px; display: flex; align-items: center; gap: 16px; }
+  @media (max-width: 640px) { .tool-action { padding: 0 24px 24px; flex-direction: column; align-items: stretch; } }
+
+  .tool-results { border-top: 1px solid var(--border); padding: 36px 40px; display: none; }
+  @media (max-width: 640px) { .tool-results { padding: 24px; } }
+  .tool-results.visible { display: block; }
+
+  .results-row {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px;
+  }
+  @media (max-width: 860px) { .results-row { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 420px) { .results-row { grid-template-columns: 1fr; } }
+
+  .result-card { border: 1.5px solid var(--border); border-radius: var(--r); padding: 20px; }
+  .result-card.green { border-color: #22c55e; background: #f0fdf4; }
+  .result-card.amber { border-color: #f59e0b; background: #fffbeb; }
+  .result-card.red   { border-color: #ef4444; background: #fef2f2; }
+  .result-card.neutral { border-color: var(--border); background: var(--off); }
+
+  .result-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--navy-3); margin-bottom: 6px; }
+  .result-value { font-size: 26px; font-family: var(--serif); color: var(--navy); font-weight: 400; margin-bottom: 4px; line-height: 1.1; }
+  .result-badge {
+    display: inline-flex; align-items: center; gap: 5px; font-size: 11px;
+    font-weight: 500; padding: 2px 9px; border-radius: 100px; margin-bottom: 8px;
+  }
+  .result-badge.green { background: #dcfce7; color: #15803d; }
+  .result-badge.amber { background: #fef3c7; color: #92400e; }
+  .result-badge.red { background: #fee2e2; color: #991b1b; }
+  .result-badge.neutral { background: #f1f5f9; color: var(--navy-3); }
+  .result-context { font-size: 12px; color: var(--navy-3); line-height: 1.5; margin: 0; }
+
+  .tool-cta {
+    margin-top: 28px; background: var(--navy); border-radius: var(--r);
+    padding: 28px 32px; display: flex; align-items: center;
+    justify-content: space-between; gap: 24px; flex-wrap: wrap;
+  }
+  .tool-cta-text p:first-child { font-size: 16px; font-weight: 500; color: var(--white); margin: 0 0 4px; }
+  .tool-cta-text p:last-child { font-size: 13px; color: rgba(255,255,255,.55); margin: 0; }
+
+  .about-section { max-width: 760px; margin: 0 auto 80px; padding: 0 24px; }
+  .about-section h2 { font-family: var(--serif); font-size: 28px; color: var(--navy); margin-bottom: 16px; }
+  .about-section h2 em { color: var(--orange); font-style: italic; }
+  .about-section p, .about-section li { font-size: 15px; color: var(--navy-3); line-height: 1.75; margin-bottom: 12px; }
+  .about-section ul { padding-left: 20px; }
+  .about-section li { margin-bottom: 6px; }
+  .about-section strong { color: var(--navy); }
+
+  .insight-panel {
+    margin-top: 24px;
+    background: #eff6ff;
+    border: 1px solid rgba(37,99,235,.18);
+    border-left: 3px solid #2563EB;
+    border-radius: var(--r);
+    padding: 20px 24px;
+  }
+  .insight-label {
+    font-size: 10px; font-weight: 600; letter-spacing: .1em;
+    text-transform: uppercase; color: #2563EB; margin-bottom: 10px;
+  }
+  .insight-panel p { font-size: 14px; color: var(--navy-3); line-height: 1.7; margin: 0 0 8px; }
+  .insight-panel p:last-of-type { margin-bottom: 0; }
+</style>
+</head>
+<body>
+
+<!-- EXPERIMENT: Engagement calculator as lead magnet — does ranking for "engagement rate calculator" drive qualified organic signups from social and growth operators? -->
+
+<a href="#main-content" class="skip-link">Skip to content</a>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+
+<div data-duct-partial="/partials/nav-tools.html"></div>
+
+<main id="main-content">
+
+<div class="tool-hero">
+  <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Free tool · No signup required</div>
+  <h1>Engagement Rate Calculator <em>for growth teams</em></h1>
+  <p>Enter your engagements and audience metrics to calculate engagement rate by followers, reach, and impressions. Compare post quality faster without spreadsheet cleanup.</p>
+</div>
+
+<div class="tool-wrap">
+  <div class="tool-card" role="region" aria-label="Engagement Rate Calculator">
+
+    <div class="tool-inputs">
+      <div class="field">
+        <label for="inp-engagements">Total Engagements</label>
+        <span class="field-hint">Likes, comments, shares, saves, clicks (use your consistent definition)</span>
+        <input type="number" id="inp-engagements" placeholder="e.g. 780" min="1" inputmode="numeric" aria-required="true"/>
+      </div>
+      <div class="field">
+        <label for="inp-followers">Followers (optional)</label>
+        <span class="field-hint">Use for account-level engagement benchmarking</span>
+        <input type="number" id="inp-followers" placeholder="e.g. 12500" min="0" inputmode="numeric"/>
+      </div>
+      <div class="field">
+        <label for="inp-reach">Reach (optional)</label>
+        <span class="field-hint">Unique users who saw the content</span>
+        <input type="number" id="inp-reach" placeholder="e.g. 9400" min="0" inputmode="numeric"/>
+      </div>
+      <div class="field">
+        <label for="inp-impressions">Impressions (optional)</label>
+        <span class="field-hint">Total content views including repeats</span>
+        <input type="number" id="inp-impressions" placeholder="e.g. 18400" min="0" inputmode="numeric"/>
+      </div>
+      <div class="field">
+        <label for="inp-posts">Number of Posts (optional)</label>
+        <span class="field-hint">Used to calculate average engagements per post</span>
+        <input type="number" id="inp-posts" placeholder="e.g. 6" min="0" inputmode="numeric"/>
+      </div>
+    </div>
+
+    <div class="tool-action">
+      <button class="btn btn-orange btn-lg" id="calc-btn" aria-controls="results-section">
+        Calculate engagement →
+      </button>
+      <button class="btn btn-ghost" id="reset-btn" style="display:none">
+        Reset
+      </button>
+    </div>
+
+    <div class="tool-results" id="results-section" role="region" aria-label="Engagement rate results" aria-live="polite">
+      <p style="font-size:13px;font-weight:500;color:var(--navy-3);margin:0 0 20px;letter-spacing:.02em;text-transform:uppercase">Your Results</p>
+      <div class="results-row" id="results-row"></div>
+
+      <div id="insight-panel" class="insight-panel" hidden aria-live="polite">
+        <p class="insight-label">What this means</p>
+        <div id="insight-body"></div>
+      </div>
+
+      <div class="tool-cta">
+        <div class="tool-cta-text">
+          <p>Duct tracks content engagement shifts automatically every week.</p>
+          <p>See what changed, why it moved, and where to act next.</p>
+        </div>
+        <a href="#cta" class="btn btn-orange">See it in action&nbsp;→</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="about-section reveal">
+  <h2>How the <em>calculator works</em></h2>
+  <p>The calculator computes engagement rate using standard formulas:</p>
+  <ul>
+    <li><strong>Engagement rate by followers</strong> = Engagements ÷ Followers × 100</li>
+    <li><strong>Engagement rate by reach</strong> = Engagements ÷ Reach × 100</li>
+    <li><strong>Engagement rate by impressions</strong> = Engagements ÷ Impressions × 100</li>
+    <li><strong>Average engagements per post</strong> = Engagements ÷ Number of posts</li>
+  </ul>
+  <p>You can use one denominator or all three. The output helps you compare both headline quality (reach-based) and feed efficiency (impressions-based) while keeping follower context in view.</p>
+
+  <h2 style="margin-top:40px">Why engagement rate <em>matters</em></h2>
+  <p>Raw engagement totals can be misleading. A post with 500 engagements may look strong, but if it reached 80,000 people it underperformed. Engagement rate normalizes quality relative to distribution and lets teams compare content across weeks and campaigns.</p>
+  <p>For organic growth teams, engagement rate is an early signal for messaging resonance. If engagement rate declines before traffic declines, you can fix creative and positioning before funnel conversion is affected.</p>
+
+  <h2 style="margin-top:40px">Limitations</h2>
+  <ul>
+    <li>Platform algorithms differ, so direct cross-platform comparisons should be interpreted carefully.</li>
+    <li>Engagement definitions vary by platform (for example saves vs. clicks vs. comments).</li>
+    <li>This tool does not separate paid and organic impressions.</li>
+    <li>All calculations run in your browser. No data is sent or stored.</li>
+  </ul>
+</div>
+
+<section class="related-tools-banner reveal" id="related-tools" aria-labelledby="related-tools-heading">
+  <div class="related-tools-banner-inner">
+    <p class="tag">Also free</p>
+    <h2 id="related-tools-heading">Explore related <em>tools</em></h2>
+    <p class="related-tools-banner-desc">Pair engagement quality with growth and unit economics metrics. These tools follow the same privacy-first, in-browser model.</p>
+    <div class="insight-links related-tools" data-related-tools data-current-tool="engagement-rate-calculator" data-related-limit="3"></div>
+  </div>
+</section>
+
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+  <p class="tag">FAQ</p>
+  <h2>Frequently asked <em>questions</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.1s">
+  <details class="faq-item">
+    <summary class="faq-q">How do you calculate engagement rate?</summary>
+    <p class="faq-a">Engagement rate = Total Engagements ÷ audience denominator × 100. Common denominators are followers, reach, and impressions. The best one depends on what you are trying to compare.</p>
+  </details>
+  <details class="faq-item">
+    <summary class="faq-q">What is a good engagement rate?</summary>
+    <p class="faq-a">Benchmarks vary by platform and audience size, but many teams use this follower-based heuristic: below 1% low, 1-3% average, 3-6% healthy, and above 6% strong.</p>
+  </details>
+  <details class="faq-item">
+    <summary class="faq-q">Should I use reach or impressions?</summary>
+    <p class="faq-a">Use reach when you care about unique audience quality. Use impressions when your content is shown repeatedly and you want efficiency relative to total exposures.</p>
+  </details>
+  <details class="faq-item">
+    <summary class="faq-q">Can I compare engagement rate across channels?</summary>
+    <p class="faq-a">Compare trends first, not absolute values. Platform feed design, audience behavior, and content format can produce different baseline ranges.</p>
+  </details>
+  <details class="faq-item">
+    <summary class="faq-q">What should count as engagement?</summary>
+    <p class="faq-a">Typically likes, comments, shares, saves, clicks, and replies. The critical part is using the same definition every week so trend analysis stays consistent.</p>
+  </details>
+</div>
+</div>
+</section>
+
+<section class="cta" id="cta">
+<div class="cta-inner">
+<div class="reveal">
+  <p class="tag" style="justify-content:center;display:flex">Automate It</p>
+  <h2>Track engagement trends <em>automatically</em></h2>
+  <p class="sub">Duct connects your content and channel data and sends a weekly brief with what changed, where engagement is improving, and where it is slipping.</p>
+  <div class="cta-form">
+    <input type="email" id="ctaEmail" class="email-in" placeholder="you@company.com" aria-label="Email address"/>
+    <button class="btn btn-orange btn-lg"
+      data-form-url="https://docs.google.com/forms/d/e/1FAIpQLSfm7QgovGGHE38CsOPqj5O_XVBtnjbRhkf16rNJhdvkd-rddg/formResponse"
+      data-entry-id="entry.276669450"
+      onclick="submitForm('ctaEmail', this)">Get&nbsp;early&nbsp;access&nbsp;→</button>
+  </div>
+  <p class="cta-note">Free during beta · No credit card · First brief next Monday</p>
+</div>
+</div>
+</section>
+
+</main>
+
+<div data-duct-partial="/partials/footer-expanded.html"></div>
+
+<script>
+(function () {
+  function levelForRate(value) {
+    if (value >= 6) return { level: 'green', badge: '✓ Strong', context: 'High engagement quality relative to audience size.' };
+    if (value >= 3) return { level: 'amber', badge: '⚠ Healthy', context: 'Good engagement. Keep testing hooks and creative variations.' };
+    if (value >= 1) return { level: 'amber', badge: '⚠ Average', context: 'Baseline engagement. Improvement likely depends on stronger positioning and format testing.' };
+    return { level: 'red', badge: '✗ Low', context: 'Low engagement signal. Revisit topic relevance, hook strength, and distribution timing.' };
+  }
+
+  function fmtPercent(value) {
+    return value.toFixed(2) + '%';
+  }
+
+  function fmtNumber(value) {
+    if (value >= 1000000) return (value / 1000000).toFixed(2) + 'm';
+    if (value >= 1000) return (value / 1000).toFixed(1) + 'k';
+    return value.toFixed(0);
+  }
+
+  function makeCard(label, display, level, badge, context) {
+    var card = document.createElement('div');
+    card.className = 'result-card ' + level;
+    var lbl = document.createElement('div');
+    lbl.className = 'result-label';
+    lbl.textContent = label;
+    var val = document.createElement('div');
+    val.className = 'result-value';
+    val.textContent = display;
+    var bdg = document.createElement('span');
+    bdg.className = 'result-badge ' + level;
+    bdg.textContent = badge;
+    var ctx = document.createElement('p');
+    ctx.className = 'result-context';
+    ctx.textContent = context;
+    card.appendChild(lbl);
+    card.appendChild(val);
+    card.appendChild(bdg);
+    card.appendChild(ctx);
+    return card;
+  }
+
+  function getVal(id) {
+    var raw = document.getElementById(id).value;
+    return raw === '' ? NaN : parseFloat(raw);
+  }
+
+  function addP(node, text) {
+    var p = document.createElement('p');
+    p.textContent = text;
+    node.appendChild(p);
+  }
+
+  document.getElementById('calc-btn').addEventListener('click', function () {
+    var engagements = getVal('inp-engagements');
+    var followers = getVal('inp-followers');
+    var reach = getVal('inp-reach');
+    var impressions = getVal('inp-impressions');
+    var posts = getVal('inp-posts');
+
+    if (isNaN(engagements) || engagements <= 0) {
+      alert('Please enter valid total engagements.');
+      return;
+    }
+
+    var hasFollowers = !isNaN(followers) && followers > 0;
+    var hasReach = !isNaN(reach) && reach > 0;
+    var hasImpressions = !isNaN(impressions) && impressions > 0;
+    if (!hasFollowers && !hasReach && !hasImpressions) {
+      alert('Please enter at least one denominator: followers, reach, or impressions.');
+      return;
+    }
+
+    var row = document.getElementById('results-row');
+    while (row.firstChild) { row.removeChild(row.firstChild); }
+
+    if (hasFollowers) {
+      var byFollowers = (engagements / followers) * 100;
+      var followersState = levelForRate(byFollowers);
+      row.appendChild(makeCard('ER by Followers', fmtPercent(byFollowers), followersState.level, followersState.badge, followersState.context));
+    }
+
+    if (hasReach) {
+      var byReach = (engagements / reach) * 100;
+      var reachState = levelForRate(byReach);
+      row.appendChild(makeCard('ER by Reach', fmtPercent(byReach), reachState.level, reachState.badge, 'Useful for comparing content quality between posts with different distribution.'));
+    }
+
+    if (hasImpressions) {
+      var byImpressions = (engagements / impressions) * 100;
+      var impState = levelForRate(byImpressions);
+      row.appendChild(makeCard('ER by Impressions', fmtPercent(byImpressions), impState.level, impState.badge, 'Useful when repeat exposures are high and frequency varies.'));
+    }
+
+    if (!isNaN(posts) && posts > 0) {
+      var avgPerPost = engagements / posts;
+      row.appendChild(makeCard('Avg Engagements / Post', fmtNumber(avgPerPost), 'neutral', 'Calculated', 'Average raw interactions per post in the selected set.'));
+    }
+
+    var body = document.getElementById('insight-body');
+    while (body.firstChild) { body.removeChild(body.firstChild); }
+
+    if (hasFollowers) {
+      var erFollowers = (engagements / followers) * 100;
+      if (erFollowers >= 6) addP(body, 'You have strong audience resonance. Double down on the best-performing creative patterns and publishing windows.');
+      else if (erFollowers >= 3) addP(body, 'Performance is healthy. Use A/B creative tests to convert consistency into stronger breakout posts.');
+      else addP(body, 'Engagement quality is weak-to-average. Tighten your hook, message clarity, and audience-fit before scaling output volume.');
+    } else {
+      addP(body, 'You skipped follower-based rate, so prioritize trend tracking on reach- or impression-based engagement for reliable comparison.');
+    }
+
+    if (hasReach && hasImpressions && impressions > reach * 1.5) {
+      addP(body, 'Impressions are much higher than reach, suggesting high frequency. Watch engagement by impressions to detect creative fatigue early.');
+    }
+
+    addP(body, 'Engagement rate works best as a trend metric. Track it weekly alongside clicks, conversion rate, and pipeline impact to avoid vanity decisions.');
+
+    document.getElementById('insight-panel').removeAttribute('hidden');
+    document.getElementById('results-section').classList.add('visible');
+    document.getElementById('reset-btn').style.display = '';
+    document.getElementById('results-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  document.getElementById('reset-btn').addEventListener('click', function () {
+    ['inp-engagements', 'inp-followers', 'inp-reach', 'inp-impressions', 'inp-posts'].forEach(function (id) {
+      document.getElementById(id).value = '';
+    });
+    var section = document.getElementById('results-section');
+    section.classList.remove('visible');
+    document.getElementById('reset-btn').style.display = 'none';
+    document.getElementById('insight-panel').setAttribute('hidden', '');
+    var row = document.getElementById('results-row');
+    while (row.firstChild) { row.removeChild(row.firstChild); }
+  });
+}());
+</script>
+
+<script src="../assets/duct-partials.js"></script>
+<script src="../assets/duct.js" defer></script>
+</body>
+</html>
