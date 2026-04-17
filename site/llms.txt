@@ -14,6 +14,7 @@ Duct is designed for product managers, growth leads, and marketing teams at 20â€
 - [CTR Calculator](https://getduct.ai/tools/ctr-calculator): Free click-through rate calculator for paid and organic channels. Enter impressions and clicks to calculate CTR, then model projected clicks at target CTR and required CTR to hit click goals.
 - [CPM Calculator](https://getduct.ai/tools/cpm-calculator): Free cost-per-mille calculator for campaign planning. Enter spend and impressions to calculate CPM, projected spend at target CPM, and required CPM to stay inside budget.
 - [CPC Calculator](https://getduct.ai/tools/cpc-calculator): Free cost-per-click calculator for campaign planning. Enter spend and clicks to calculate CPC, projected spend at target CPC, and required CPC to stay inside budget.
+- [CPA Calculator](https://getduct.ai/tools/cpa-calculator): Free cost-per-acquisition calculator for marketers. Enter spend and conversions to calculate CPA, projected conversions at target CPA, and required CPA to stay within budget.
 
 ## Core pages
 

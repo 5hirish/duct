@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="../assets/apple-icon.svg"/>
+<title>CPA Calculator — Free Tool by Duct</title>
+<link rel="canonical" href="https://getduct.ai/tools/cpa-calculator"/>
+<meta name="description" content="Free CPA calculator for marketers. Calculate cost per acquisition, projected conversions, and required CPA targets to compete on paid media efficiency."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/tools/cpa-calculator"/>
+<meta property="og:title" content="CPA Calculator — Free Tool by Duct"/>
+<meta property="og:description" content="Calculate cost per acquisition and scenario targets for campaign profitability."/>
+<meta property="og:image" content="https://getduct.ai/assets/og-image.png"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="CPA Calculator — Free Tool by Duct"/>
+<meta name="twitter:description" content="Free cost per acquisition calculator for paid marketing teams competing on efficiency."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og-image.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="../assets/duct.css"/>
+<script src="../assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"CPA Calculator","url":"https://getduct.ai/tools/cpa-calculator","description":"Free calculator that computes cost per acquisition, projected conversions at target CPA, and required CPA to stay profitable.","applicationCategory":"BusinessApplication","operatingSystem":"All","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"creator":{"@type":"Organization","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<style>
+  .skip-link { position:absolute; top:-100%; left:16px; z-index:300; padding:10px 20px; background:var(--navy); color:#fff; font-size:14px; font-weight:500; border-radius:var(--r); text-decoration:none; transition:top .15s; }
+  .skip-link:focus { top:16px; }
+  :root { --orange:#2563EB; --orange-h:#1D4ED8; }
+  .btn-orange:hover { box-shadow:0 8px 24px rgba(37,99,235,.28); }
+  .tool-hero { padding:80px 24px 48px; text-align:center; max-width:760px; margin:0 auto; }
+  .tool-hero h1 { font-family:var(--serif); font-size:clamp(32px,5vw,52px); color:var(--navy); margin:16px 0; line-height:1.15; }
+  .tool-hero h1 em { color:var(--orange); font-style:italic; }
+  .tool-hero p { font-size:17px; color:var(--navy-3); font-weight:300; line-height:1.6; margin:0; }
+  .tool-wrap { max-width:900px; margin:0 auto 80px; padding:0 24px; }
+  .tool-card { background:var(--white); border:1px solid var(--border); border-radius:var(--r-lg); overflow:hidden; box-shadow:0 4px 32px rgba(0,0,0,.06); }
+  .tool-inputs { padding:36px 40px; display:grid; grid-template-columns:1fr 1fr; gap:24px 32px; }
+  @media (max-width:640px) { .tool-inputs { grid-template-columns:1fr; padding:24px; } }
+  .field { display:flex; flex-direction:column; gap:6px; }
+  .field label { font-size:13px; font-weight:500; color:var(--navy); }
+  .field .field-hint { font-size:11px; color:var(--navy-3); margin-top:-2px; }
+  .field input { padding:11px 16px; border:1.5px solid var(--border); border-radius:var(--r); font-size:15px; font-family:var(--sans); color:var(--navy); outline:none; }
+  .field input:focus { border-color:var(--orange); }
+  .tool-action { padding:0 40px 36px; display:flex; align-items:center; gap:16px; }
+  @media (max-width:640px) { .tool-action { padding:0 24px 24px; flex-direction:column; align-items:stretch; } }
+  .tool-results { border-top:1px solid var(--border); padding:36px 40px; display:none; }
+  @media (max-width:640px) { .tool-results { padding:24px; } }
+  .tool-results.visible { display:block; }
+  .results-row { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:28px; }
+  @media (max-width:860px) { .results-row { grid-template-columns:1fr 1fr; } }
+  @media (max-width:420px) { .results-row { grid-template-columns:1fr; } }
+  .result-card { border:1.5px solid var(--border); border-radius:var(--r); padding:20px; }
+  .result-card.green { border-color:#22c55e; background:#f0fdf4; }
+  .result-card.amber { border-color:#f59e0b; background:#fffbeb; }
+  .result-card.red { border-color:#ef4444; background:#fef2f2; }
+  .result-card.neutral { border-color:var(--border); background:var(--off); }
+  .result-label { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--navy-3); margin-bottom:6px; }
+  .result-value { font-size:26px; font-family:var(--serif); color:var(--navy); margin-bottom:4px; }
+  .result-badge { display:inline-flex; font-size:11px; font-weight:500; padding:2px 9px; border-radius:100px; margin-bottom:8px; }
+  .result-badge.green { background:#dcfce7; color:#15803d; }
+  .result-badge.amber { background:#fef3c7; color:#92400e; }
+  .result-badge.red { background:#fee2e2; color:#991b1b; }
+  .result-badge.neutral { background:#f1f5f9; color:var(--navy-3); }
+  .result-context { font-size:12px; color:var(--navy-3); line-height:1.5; margin:0; }
+  .insight-panel { margin-top:24px; background:#eff6ff; border:1px solid rgba(37,99,235,.18); border-left:3px solid #2563EB; border-radius:var(--r); padding:20px 24px; }
+  .insight-label { font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:#2563EB; margin-bottom:10px; }
+  .insight-panel p { font-size:14px; color:var(--navy-3); line-height:1.7; margin:0 0 8px; }
+</style>
+</head>
+<body>
+<!-- EXPERIMENT: Compete directly on "cpa calculator marketing" with faster scenario planning and stronger conversion-oriented interpretation than DashThis. -->
+<a href="#main-content" class="skip-link">Skip to content</a>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<div data-duct-partial="/partials/nav-tools.html"></div>
+<main id="main-content">
+<div class="tool-hero">
+  <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Free tool · No signup required</div>
+  <h1>CPA Calculator <em>for performance marketers</em></h1>
+  <p>Enter spend and conversions to calculate CPA instantly. Add target scenarios to pressure-test campaign efficiency before scaling budget.</p>
+</div>
+<div class="tool-wrap">
+  <div class="tool-card" role="region" aria-label="CPA Calculator">
+    <div class="tool-inputs">
+      <div class="field">
+        <label for="inp-spend">Spend</label>
+        <span class="field-hint">Total campaign spend in your currency</span>
+        <input type="number" id="inp-spend" placeholder="e.g. 9000" min="0" inputmode="decimal"/>
+      </div>
+      <div class="field">
+        <label for="inp-conversions">Conversions</label>
+        <span class="field-hint">Total attributed acquisitions/conversions</span>
+        <input type="number" id="inp-conversions" placeholder="e.g. 120" min="1" inputmode="numeric"/>
+      </div>
+      <div class="field">
+        <label for="inp-target-cpa">Target CPA (optional)</label>
+        <span class="field-hint">Projected conversions at target efficiency</span>
+        <input type="number" id="inp-target-cpa" placeholder="e.g. 60" min="0" inputmode="decimal"/>
+      </div>
+      <div class="field">
+        <label for="inp-budget">Budget Cap (optional)</label>
+        <span class="field-hint">Required CPA to stay inside budget</span>
+        <input type="number" id="inp-budget" placeholder="e.g. 7000" min="0" inputmode="decimal"/>
+      </div>
+    </div>
+    <div class="tool-action">
+      <button class="btn btn-orange btn-lg" id="calc-btn" aria-controls="results-section">Calculate CPA →</button>
+      <button class="btn btn-ghost" id="reset-btn" style="display:none">Reset</button>
+    </div>
+    <div class="tool-results" id="results-section" role="region" aria-live="polite">
+      <p style="font-size:13px;font-weight:500;color:var(--navy-3);margin:0 0 20px;letter-spacing:.02em;text-transform:uppercase">Your Results</p>
+      <div class="results-row" id="results-row"></div>
+      <div id="insight-panel" class="insight-panel" hidden>
+        <p class="insight-label">What this means</p>
+        <div id="insight-body"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<section class="related-tools-banner reveal" id="related-tools" aria-labelledby="related-tools-heading">
+  <div class="related-tools-banner-inner">
+    <p class="tag">Also free</p>
+    <h2 id="related-tools-heading">Explore related <em>tools</em></h2>
+    <p class="related-tools-banner-desc">Combine CPA with CPC, CTR, and CPM to diagnose which lever is driving efficiency swings before they hurt pipeline.</p>
+    <div class="insight-links related-tools" data-related-tools data-current-tool="cpa-calculator" data-related-limit="3"></div>
+  </div>
+</section>
+<!-- CTA (shared: site/partials/cta-tools.html) -->
+<div data-duct-partial="/partials/cta-tools.html"></div>
+</main>
+<div data-duct-partial="/partials/footer-expanded.html"></div>
+<script>
+(function () {
+  function money(v) { return '$' + (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v.toFixed(2)); }
+  function num(v) { return v >= 1000000 ? (v / 1000000).toFixed(2) + 'm' : (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v.toFixed(0)); }
+  function card(label, display, level, badge, context) {
+    var c = document.createElement('div'); c.className = 'result-card ' + level;
+    var l = document.createElement('div'); l.className = 'result-label'; l.textContent = label;
+    var v = document.createElement('div'); v.className = 'result-value'; v.textContent = display;
+    var b = document.createElement('span'); b.className = 'result-badge ' + level; b.textContent = badge;
+    var x = document.createElement('p'); x.className = 'result-context'; x.textContent = context;
+    c.appendChild(l); c.appendChild(v); c.appendChild(b); c.appendChild(x); return c;
+  }
+  function val(id) { var raw = document.getElementById(id).value; return raw === '' ? NaN : parseFloat(raw); }
+  function addP(node, text) { var p = document.createElement('p'); p.textContent = text; node.appendChild(p); }
+  document.getElementById('calc-btn').addEventListener('click', function () {
+    var spend = val('inp-spend');
+    var conv = val('inp-conversions');
+    var targetCpa = val('inp-target-cpa');
+    var budget = val('inp-budget');
+    if (isNaN(spend) || spend < 0 || isNaN(conv) || conv <= 0) { alert('Please enter valid spend and conversions.'); return; }
+    var cpa = spend / conv;
+    var row = document.getElementById('results-row');
+    while (row.firstChild) row.removeChild(row.firstChild);
+    var lvl = cpa <= 50 ? 'green' : (cpa <= 120 ? 'amber' : 'red');
+    row.appendChild(card('CPA', '$' + cpa.toFixed(2), lvl, lvl === 'green' ? '✓ Efficient' : (lvl === 'amber' ? '⚠ Moderate' : '✗ High'), 'Cost per acquisition from your campaign data.'));
+    row.appendChild(card('Spend', money(spend), 'neutral', 'Observed', 'Total spend included in this calculation.'));
+    row.appendChild(card('Conversions', num(conv), 'neutral', 'Observed', 'Attributed conversions/acquisitions.'));
+    if (!isNaN(targetCpa) && targetCpa > 0) {
+      var projectedConv = spend / targetCpa;
+      row.appendChild(card('Projected Conversions', num(projectedConv), projectedConv >= conv ? 'green' : 'red', projectedConv >= conv ? '↑ More volume' : '↓ Lower volume', 'Conversions expected at target CPA with same spend.'));
+    }
+    if (!isNaN(budget) && budget > 0) {
+      var reqCpa = budget / conv;
+      row.appendChild(card('Required CPA', '$' + reqCpa.toFixed(2), reqCpa >= cpa ? 'green' : 'amber', reqCpa >= cpa ? '✓ In budget' : '⚠ Needs efficiency', 'CPA threshold needed to stay inside budget at current conversion volume.'));
+    }
+    var body = document.getElementById('insight-body'); while (body.firstChild) body.removeChild(body.firstChild);
+    if (cpa <= 50) addP(body, 'Your CPA is healthy. Double-check lead quality so low acquisition cost translates to revenue.');
+    else if (cpa <= 120) addP(body, 'CPA is workable but sensitive. Improve conversion rate and audience quality before scaling spend.');
+    else addP(body, 'CPA is expensive. Tighten targeting and post-click funnel efficiency before increasing budget.');
+    addP(body, 'To beat dashboard-only calculators, track CPA alongside CPC and CTR weekly so you can identify which lever is causing efficiency drift.');
+    document.getElementById('insight-panel').removeAttribute('hidden');
+    document.getElementById('results-section').classList.add('visible');
+    document.getElementById('reset-btn').style.display = '';
+  });
+  document.getElementById('reset-btn').addEventListener('click', function () {
+    ['inp-spend','inp-conversions','inp-target-cpa','inp-budget'].forEach(function (id) { document.getElementById(id).value = ''; });
+    document.getElementById('results-section').classList.remove('visible');
+    document.getElementById('reset-btn').style.display = 'none';
+    document.getElementById('insight-panel').setAttribute('hidden', '');
+    var row = document.getElementById('results-row'); while (row.firstChild) row.removeChild(row.firstChild);
+  });
+}());
+</script>
+<script src="../assets/duct-partials.js"></script>
+<script src="../assets/duct.js" defer></script>
+</body>
+</html>
