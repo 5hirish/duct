@@ -29,6 +29,8 @@ Focus your analysis on cost-per-acquisition reduction opportunities:
 - Identify high-CPA search terms that should be added as negative keywords
 - Flag device segments where CPA is significantly above the account average
 - Look for campaigns or ad groups with high spend but low conversion rates
+- Use GA4 landing-page behavior to find paid traffic that bounces quickly
+- Use GSC query overlap to reduce paid spend where organic already performs strongly
 - Recommend specific budget shifts from high-CPA to low-CPA segments
 - Quantify potential CPA savings from recommended changes
 - Prioritize findings by potential CPA impact (largest savings first)
@@ -39,6 +41,8 @@ Focus your analysis on return-on-ad-spend optimization:
 - Identify ad groups and campaigns with the highest ROAS potential
 - Flag segments where ROAS is below 1.0x (losing money)
 - Look for device/platform splits where ROAS varies significantly
+- Use GA4 conversion-path context before pausing campaigns with weak last-click ROAS
+- Use GA4 landing-page engagement to separate traffic-quality issues from bid issues
 - Recommend budget reallocation from low-ROAS to high-ROAS segments
 - Identify campaigns where conversion value is disproportionate to spend
 - Prioritize findings by potential ROAS improvement (largest gains first)
@@ -49,6 +53,8 @@ Focus your analysis on conversion volume growth opportunities:
 - Identify devices/regions with strong conversion rates but low impression share
 - Flag geographic areas showing high conversion efficiency that could absorb more budget
 - Look for campaigns converting well that may be limited by budget or bid caps
+- Use GA4 landing-page data to identify pages that can absorb more paid traffic
+- Use GSC query/page data to find organic gaps where paid expansion can drive incremental conversions
 - Recommend specific geo or device bid adjustments to capture more volume
 - Quantify potential conversion gains from recommended expansions
 - Prioritize findings by incremental conversion potential
@@ -59,6 +65,8 @@ Focus your analysis on identifying and eliminating wasted spend:
 - Identify search terms consuming budget with zero or near-zero conversions
 - Flag ad groups with high spend but poor ROAS across the account
 - Look for geographic areas draining budget without adequate returns
+- Use GA4 landing-page behavior to identify campaigns paying for low-quality sessions
+- Use GSC overlap to flag paid clicks likely cannibalizing strong organic visibility
 - Calculate total wasted spend and potential recovery from recommended cuts
 - Recommend specific negative keywords, geo exclusions, and budget reallocations
 - Prioritize findings by amount of spend at risk (largest waste first)

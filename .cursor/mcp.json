@@ -3,6 +3,66 @@
     "next-devtools": {
       "command": "npx",
       "args": ["-y", "next-devtools-mcp@latest"]
+    },
+    "shadcn": {
+      "command": "npx",
+      "args": ["-y", "shadcn@latest", "mcp"]
+    },
+    "GitHub": {
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer "
+      }
+    },
+    "Playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
+    },
+    "Sentry": {
+      "command": "npx",
+      "args": ["-y", "@sentry/mcp-server@latest"],
+      "env": {
+        "SENTRY_AUTH_TOKEN": ""
+      }
+    },
+    "Railway": {
+      "command": "npx -y @railway/mcp-server",
+      "env": {},
+      "args": []
+    },
+    "Figma": {
+      "url": "https://mcp.figma.com/mcp",
+      "headers": {}
+    },
+    "Cloudflare": {
+      "command": "npx -y @cloudflare/mcp-server-cloudflare",
+      "env": {
+        "CLOUDFLARE_API_TOKEN": "",
+        "CLOUDFLARE_ACCOUNT_ID": ""
+      },
+      "args": []
+    },
+    "Cloudflare Docs": {
+      "url": "https://docs.mcp.cloudflare.com/mcp",
+      "headers": {}
+    },
+    "Cloudflare Builds": {
+      "url": "https://builds.mcp.cloudflare.com/mcp",
+      "headers": {
+        "Authorization": "Bearer "
+      }
+    },
+    "Cloudflare Bindings": {
+      "url": "https://bindings.mcp.cloudflare.com/mcp",
+      "headers": {
+        "Authorization": "Bearer "
+      }
+    },
+    "Cloudflare Observability": {
+      "url": "https://observability.mcp.cloudflare.com/mcp",
+      "headers": {
+        "Authorization": "Bearer "
+      }
     }
   }
 }

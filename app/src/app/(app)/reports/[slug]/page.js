@@ -27,7 +27,7 @@ export default async function ReportDetailPage({ params }) {
           &larr; Back to reports
         </Link>
       </p>
-      <h1 className="report-detail-title" style={{ marginTop: 0, marginBottom: 6 }}>
+      <h1 className="report-detail-title text-2xl font-semibold tracking-tight" style={{ marginTop: 0, marginBottom: 6 }}>
         {report.title}
       </h1>
       <p className="report-meta" style={{ marginTop: 0, marginBottom: 14 }}>

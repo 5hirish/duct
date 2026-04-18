@@ -56,6 +56,17 @@
       "problemMatcher": []
     },
     {
+      "label": "Site: stop dev server (8080)",
+      "type": "shell",
+      "command": "if command -v lsof >/dev/null 2>&1; then pids=$(lsof -t -i :8080 2>/dev/null || true); if [ -n \"$pids\" ]; then kill -9 $pids >/dev/null 2>&1 || true; fi; fi; pkill -f \"dev_server.py\" >/dev/null 2>&1 || true",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "dedicated",
+        "showReuseMessage": false
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "Site: Playwright smoke tests",
       "type": "shell",
       "command": "npm run test:e2e",

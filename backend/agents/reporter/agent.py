@@ -28,7 +28,11 @@ from agents.reporter.tools import (
     create_ad_group_performance_tool,
     create_campaign_performance_tool,
     create_device_performance_tool,
+    create_ga4_conversion_paths_tool,
+    create_ga4_landing_pages_tool,
     create_geo_performance_tool,
+    create_gsc_page_performance_tool,
+    create_gsc_query_performance_tool,
     create_search_terms_tool,
     get_tool_names_for_goal,
 )
@@ -42,6 +46,10 @@ _TOOL_CREATORS = {
     "fetch_device_performance": create_device_performance_tool,
     "fetch_geo_performance": create_geo_performance_tool,
     "fetch_ad_group_performance": create_ad_group_performance_tool,
+    "fetch_ga4_landing_pages": create_ga4_landing_pages_tool,
+    "fetch_ga4_conversion_paths": create_ga4_conversion_paths_tool,
+    "fetch_gsc_query_performance": create_gsc_query_performance_tool,
+    "fetch_gsc_page_performance": create_gsc_page_performance_tool,
 }
 
 
@@ -136,6 +144,8 @@ class GenerateAgent:
         date_from: str,
         date_to: str,
         goal: ReportGenerationGoal,
+        ga4_property_id: str = "",
+        gsc_site_url: str = "",
         custom_goal: str = "",
         context: str = "",
     ) -> dict[str, Any]:
@@ -172,6 +182,8 @@ class GenerateAgent:
             f"Goal: {goal_line}\n"
             f"Context: {context or 'None provided'}\n"
             f"Customer ID: {customer_id}\n"
+            f"GA4 Property ID: {ga4_property_id or 'N/A'}\n"
+            f"GSC Site URL: {gsc_site_url or 'N/A'}\n"
             f"Date range: {date_from} to {date_to}\n\n"
             "Call the tools you need to gather supplementary data for this report."
         )
@@ -198,8 +210,13 @@ class GenerateAgent:
                 tool_name = tool_call["name"]
                 tool_args = tool_call["args"]
 
-                # Inject customer_id and dates if LLM didn't provide them
-                tool_args.setdefault("customer_id", customer_id)
+                # Inject connector identifiers and dates if the LLM did not provide them.
+                if "ga4" in tool_name:
+                    tool_args.setdefault("property_id", ga4_property_id)
+                elif "gsc" in tool_name:
+                    tool_args.setdefault("site_url", gsc_site_url)
+                else:
+                    tool_args.setdefault("customer_id", customer_id)
                 tool_args.setdefault("date_from", date_from)
                 tool_args.setdefault("date_to", date_to)
 

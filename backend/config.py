@@ -56,6 +56,8 @@ class Configs(BaseSettings):
     google_ads_refresh_token: str = ""
     google_ads_customer_id: str = ""
     google_ads_login_customer_id: str = ""
+    ga4_property_id: str = ""
+    gsc_site_url: str = ""
 
     # Google Sign-In (user identity, separate from connector OAuth). If unset/empty, derived as
     # {api_public_url}/auth/signin/google/callback.
@@ -98,6 +100,19 @@ class Configs(BaseSettings):
     gemini_api_key: str = ""
     openai_api_key: str = ""
     anthropic_api_key: str = ""
+
+    # Sentry observability
+    app_env: str = Field(
+        default="local",
+        validation_alias=AliasChoices("APP_ENV", "ENVIRONMENT"),
+    )
+    sentry_dsn: str = ""
+    sentry_send_default_pii: bool = True
+    sentry_enable_logs: bool = True
+    sentry_traces_sample_rate: float = 1.0
+    sentry_profile_session_sample_rate: float = 1.0
+    sentry_profile_lifecycle: str = "trace"
+    sentry_enable_localhost: bool = False
 
     model_config = SettingsConfigDict(
         env_file=_settings_env_files(),

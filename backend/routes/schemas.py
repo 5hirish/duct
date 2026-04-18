@@ -31,6 +31,11 @@ class BusinessContext(BaseModel):
     monthly_budget: float = 0.0
     target_cpa: float = 0.0
     target_roas: float = 0.0
+    primary_conversion_action: str = ""
+    target_payback_days: float = 0.0
+    gross_margin_percent: float = 0.0
+    qualified_lead_value: float = 0.0
+    period_changes: str = ""
     notes: str = ""
 
 
@@ -46,6 +51,10 @@ class GenerateRequest(BaseModel):
     date_to: str = ""
     refresh_token: str = ""
     customer_id: str = ""
+    ga4_property_id: str = ""
+    ga4_refresh_token: str = ""
+    gsc_site_url: str = ""
+    gsc_refresh_token: str = ""
     account_name: str = ""
     currency_code: str = "USD"
     login_customer_id: str = ""

@@ -21,6 +21,8 @@ class EvidenceDataSource(StrEnum):
     """Upstream connector named on evidence (wire: ``source``)."""
 
     GOOGLE_ADS = "google_ads"
+    GA4 = "ga4"
+    GSC = "gsc"
 
 
 class EvidenceEntityType(StrEnum):
@@ -31,6 +33,10 @@ class EvidenceEntityType(StrEnum):
     SEARCH_TERM = "search_term"
     DEVICE = "device"
     GEO = "geo"
+    LANDING_PAGE = "landing_page"
+    CONVERSION_PATH = "conversion_path"
+    ORGANIC_QUERY = "organic_query"
+    ORGANIC_PAGE = "organic_page"
 
 
 class FindingType(StrEnum):

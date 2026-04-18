@@ -9,21 +9,28 @@ export default function ConnectionsPage() {
   /** False until client mount — keeps SSR + first client paint identical (avoids hydration mismatch). */
   const [mounted, setMounted] = useState(false);
   const [authState, setAuthState] = useState("checking");
+  const [ga4Connected, setGa4Connected] = useState(false);
+  const [gscConnected, setGscConnected] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     setMounted(true);
 
     const hash = window.location.hash;
-    if (hash.startsWith("#refresh_token=")) {
-      const token = decodeURIComponent(hash.slice("#refresh_token=".length));
-      if (token) {
-        sessionStorage.setItem("gads_refresh_token", token);
-      }
+    if (hash.startsWith("#")) {
+      const params = new URLSearchParams(hash.slice(1));
+      const gadsToken = params.get("refresh_token");
+      const ga4Token = params.get("ga4_refresh_token");
+      const gscToken = params.get("gsc_refresh_token");
+      if (gadsToken) sessionStorage.setItem("gads_refresh_token", decodeURIComponent(gadsToken));
+      if (ga4Token) sessionStorage.setItem("ga4_refresh_token", decodeURIComponent(ga4Token));
+      if (gscToken) sessionStorage.setItem("gsc_refresh_token", decodeURIComponent(gscToken));
       window.history.replaceState(null, "", window.location.pathname);
     }
 
     const token = sessionStorage.getItem("gads_refresh_token") || "";
+    setGa4Connected(!!sessionStorage.getItem("ga4_refresh_token"));
+    setGscConnected(!!sessionStorage.getItem("gsc_refresh_token"));
     if (!token) {
       setAuthState("unauthenticated");
       return;
@@ -51,6 +58,16 @@ export default function ConnectionsPage() {
     sessionStorage.removeItem("gads_refresh_token");
     sessionStorage.removeItem("gads_customer_id");
     setAuthState("unauthenticated");
+  }
+
+  function signOutGa4() {
+    sessionStorage.removeItem("ga4_refresh_token");
+    setGa4Connected(false);
+  }
+
+  function signOutGsc() {
+    sessionStorage.removeItem("gsc_refresh_token");
+    setGscConnected(false);
   }
 
   const isConnected = authState === "ready" || authState === "selecting_account";
@@ -91,7 +108,7 @@ export default function ConnectionsPage() {
             </svg>
           </Link>
         </Button>
-        <h1 className="page-toolbar-title">Connections</h1>
+        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">Connections</h1>
       </div>
       <p className="app-subtle" style={{ marginTop: 0, marginBottom: 18 }}>
         Manage data source connections for reports. Choose your Google Ads account when you{" "}
@@ -145,7 +162,7 @@ export default function ConnectionsPage() {
           <div className="connection-card-head">
             <div className="connection-logo" aria-hidden="true">
               <img
-                src="https://upload.wikimedia.org/wikipedia/commons/d/dc/Google_Search_Console_logo.svg"
+                src="/icons/google-search-console.png"
                 alt="Google Search Console logo"
                 width="28"
                 height="28"
@@ -159,10 +176,18 @@ export default function ConnectionsPage() {
             </div>
           </div>
           <div className="connection-status-row">
-            <span className="status-pill yellow">Coming soon</span>
-            <Button type="button" variant="secondary" size="sm" disabled>
-              Coming soon
-            </Button>
+            <span className={`status-pill ${gscConnected ? "green" : "grey"}`}>
+              {gscConnected ? "Connected" : "Not connected"}
+            </span>
+            {gscConnected ? (
+              <Button type="button" variant="outline" size="sm" onClick={signOutGsc}>
+                Disconnect
+              </Button>
+            ) : (
+              <Button size="sm" asChild>
+                <a href={`${BASE}/auth/connectors/gsc/oauth/authorize`}>Connect</a>
+              </Button>
+            )}
           </div>
         </article>
 
@@ -180,6 +205,89 @@ export default function ConnectionsPage() {
               <h2 className="connection-title">Google Analytics</h2>
               <p className="connection-description">
                 Website traffic, sessions, engagement, and conversion trend data for performance reporting.
+              </p>
+            </div>
+          </div>
+          <div className="connection-status-row">
+            <span className={`status-pill ${ga4Connected ? "green" : "grey"}`}>
+              {ga4Connected ? "Connected" : "Not connected"}
+            </span>
+            {ga4Connected ? (
+              <Button type="button" variant="outline" size="sm" onClick={signOutGa4}>
+                Disconnect
+              </Button>
+            ) : (
+              <Button size="sm" asChild>
+                <a href={`${BASE}/auth/connectors/ga4/oauth/authorize`}>Connect</a>
+              </Button>
+            )}
+          </div>
+        </article>
+
+        <article className="connection-card">
+          <div className="connection-card-head">
+            <div className="connection-logo" aria-hidden="true">
+              <img
+                src="/icons/meta-ads.svg"
+                alt="Meta Ads logo"
+                width="28"
+                height="28"
+              />
+            </div>
+            <div>
+              <h2 className="connection-title">Meta Ads</h2>
+              <p className="connection-description">
+                Facebook and Instagram campaign performance including spend, reach, conversions, and CPA.
+              </p>
+            </div>
+          </div>
+          <div className="connection-status-row">
+            <span className="status-pill yellow">Coming soon</span>
+            <Button type="button" variant="secondary" size="sm" disabled>
+              Coming soon
+            </Button>
+          </div>
+        </article>
+
+        <article className="connection-card">
+          <div className="connection-card-head">
+            <div className="connection-logo" aria-hidden="true">
+              <img
+                src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg"
+                alt="Stripe logo"
+                width="28"
+                height="28"
+              />
+            </div>
+            <div>
+              <h2 className="connection-title">Stripe</h2>
+              <p className="connection-description">
+                Revenue, subscriptions, churn, and payment outcomes to connect marketing performance to business impact.
+              </p>
+            </div>
+          </div>
+          <div className="connection-status-row">
+            <span className="status-pill yellow">Coming soon</span>
+            <Button type="button" variant="secondary" size="sm" disabled>
+              Coming soon
+            </Button>
+          </div>
+        </article>
+
+        <article className="connection-card">
+          <div className="connection-card-head">
+            <div className="connection-logo" aria-hidden="true">
+              <img
+                src="/icons/hubspot.svg"
+                alt="HubSpot logo"
+                width="28"
+                height="28"
+              />
+            </div>
+            <div>
+              <h2 className="connection-title">HubSpot</h2>
+              <p className="connection-description">
+                CRM lifecycle and pipeline outcomes to tie paid and organic traffic to downstream revenue.
               </p>
             </div>
           </div>

@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="../assets/apple-icon.svg"/>
+<title>Free SaaS &amp; marketing tools — calculators &amp; generators | Duct</title>
+<link rel="canonical" href="https://getduct.ai/tools/"/>
+<meta name="description" content="Free calculators and generators for SaaS and marketing teams: benchmarks, paid media math, UTMs, and weekly brief templates. No signup — or connect your stack for automated weekly intelligence with Duct."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/tools/"/>
+<meta property="og:title" content="Free SaaS &amp; marketing tools — Duct"/>
+<meta property="og:description" content="Benchmarks, paid media calculators, UTMs, and templates. Free in the browser — upgrade to weekly cross-tool briefs when you're ready."/>
+<meta property="og:image" content="https://getduct.ai/assets/og-image.png"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Free SaaS &amp; marketing tools — Duct"/>
+<meta name="twitter:description" content="Calculators and generators for growth teams. No signup required."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og-image.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&amp;display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="../assets/duct.css"/>
+<script src="../assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"CollectionPage","name":"Free growth and marketing tools","url":"https://getduct.ai/tools/","description":"Free calculators and generators for SaaS benchmarks, paid media efficiency, UTMs, and weekly marketing briefs.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"},"publisher":{"@type":"Organization","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"ItemList","name":"Duct free tools","numberOfItems":12,"itemListElement":[{"@type":"ListItem","position":1,"url":"https://getduct.ai/tools/utm-builder","name":"UTM Builder"},{"@type":"ListItem","position":2,"url":"https://getduct.ai/tools/saas-metrics-calculator","name":"SaaS Metrics Benchmark Calculator"},{"@type":"ListItem","position":3,"url":"https://getduct.ai/tools/weekly-brief-template","name":"Weekly Marketing Brief Generator"},{"@type":"ListItem","position":4,"url":"https://getduct.ai/tools/cac-ltv-calculator","name":"CAC / LTV Calculator"},{"@type":"ListItem","position":5,"url":"https://getduct.ai/tools/mrr-growth-calculator","name":"MRR Growth Rate Calculator"},{"@type":"ListItem","position":6,"url":"https://getduct.ai/tools/engagement-rate-calculator","name":"Engagement Rate Calculator"},{"@type":"ListItem","position":7,"url":"https://getduct.ai/tools/ctr-calculator","name":"CTR Calculator"},{"@type":"ListItem","position":8,"url":"https://getduct.ai/tools/cpm-calculator","name":"CPM Calculator"},{"@type":"ListItem","position":9,"url":"https://getduct.ai/tools/cpc-calculator","name":"CPC Calculator"},{"@type":"ListItem","position":10,"url":"https://getduct.ai/tools/cpa-calculator","name":"CPA Calculator"},{"@type":"ListItem","position":11,"url":"https://getduct.ai/tools/roas-calculator","name":"ROAS Calculator"},{"@type":"ListItem","position":12,"url":"https://getduct.ai/tools/marketing-roi-calculator","name":"Marketing ROI Calculator"}]}
+</script>
+<style>
+  .skip-link { position:absolute; top:-100%; left:16px; z-index:300; padding:10px 20px; background:var(--navy); color:#fff; font-size:14px; font-weight:500; border-radius:var(--r); text-decoration:none; transition:top .15s; }
+  .skip-link:focus { top:16px; }
+  :root { --orange:#2563EB; --orange-h:#1D4ED8; }
+  .btn-orange:hover { box-shadow:0 8px 24px rgba(37,99,235,.28); }
+
+  .tools-index-hero {
+    padding:72px 24px 40px;
+    text-align:center;
+    max-width:760px;
+    margin:0 auto;
+  }
+  .tools-index-hero h1 {
+    font-family:var(--serif);
+    font-size:clamp(34px,5vw,54px);
+    color:var(--navy);
+    margin:12px 0 18px;
+    line-height:1.12;
+    letter-spacing:-.4px;
+  }
+  .tools-index-hero h1 em { color:var(--orange); font-style:italic; }
+  .tools-index-hero .lead {
+    font-size:18px;
+    color:var(--navy-3);
+    font-weight:300;
+    line-height:1.65;
+    margin:0 auto 28px;
+    max-width:620px;
+  }
+  .tools-index-trust {
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:10px 14px;
+    margin:0;
+    padding:0;
+    list-style:none;
+  }
+  .tools-index-trust li {
+    font-size:12px;
+    font-weight:500;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    color:var(--navy-3);
+    border:1px solid var(--border);
+    background:var(--off);
+    padding:8px 14px;
+    border-radius:var(--pill);
+  }
+
+  .tools-hub-bridge {
+    max-width:920px;
+    margin:0 auto 56px;
+    padding:28px 32px;
+    border:1px solid rgba(37,99,235,.2);
+    border-radius:var(--r-lg);
+    background:linear-gradient(135deg, #eff6ff 0%, var(--white) 55%);
+    text-align:center;
+  }
+  .tools-hub-bridge h2 {
+    font-family:var(--serif);
+    font-size:clamp(22px,2.8vw,28px);
+    color:var(--navy);
+    margin:0 0 10px;
+    line-height:1.25;
+  }
+  .tools-hub-bridge h2 em { color:var(--orange); font-style:italic; }
+  .tools-hub-bridge p {
+    font-size:15px;
+    color:var(--navy-3);
+    font-weight:300;
+    line-height:1.65;
+    margin:0 auto 18px;
+    max-width:560px;
+  }
+  .tools-hub-bridge .btn { margin-top:4px; }
+
+  .tools-hub-wrap { max-width:1160px; margin:0 auto; padding:0 24px 80px; }
+  .tools-hub-section { margin-bottom:56px; }
+  .tools-hub-section:last-of-type { margin-bottom:40px; }
+  .tools-hub-section h2 {
+    font-family:var(--serif);
+    font-size:clamp(22px,3vw,30px);
+    color:var(--navy);
+    margin:0 0 8px;
+    letter-spacing:-.2px;
+  }
+  .tools-hub-section .tools-hub-desc {
+    font-size:14px;
+    color:var(--navy-3);
+    font-weight:300;
+    line-height:1.65;
+    margin:0 0 24px;
+    max-width:640px;
+  }
+  .tools-hub-grid {
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:16px;
+  }
+  @media (max-width:900px) { .tools-hub-grid { grid-template-columns:1fr 1fr; } }
+  @media (max-width:560px) { .tools-hub-grid { grid-template-columns:1fr; } }
+
+  .ft-card {
+    border:1.5px solid var(--border);
+    border-radius:var(--r-lg);
+    padding:28px 24px;
+    text-decoration:none;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    transition:border-color .2s, transform .2s, box-shadow .2s;
+    background:var(--white);
+    height:100%;
+    box-sizing:border-box;
+  }
+  .ft-card:hover {
+    border-color:#2563EB;
+    transform:translateY(-3px);
+    box-shadow:0 12px 36px rgba(37,99,235,.1);
+  }
+  .ft-badge {
+    font-size:10px;
+    font-weight:600;
+    letter-spacing:.06em;
+    padding:3px 10px;
+    border-radius:var(--pill);
+    background:#eff6ff;
+    color:#2563EB;
+    border:1px solid rgba(37,99,235,.2);
+    align-self:flex-start;
+  }
+  .ft-icon { font-size:26px; line-height:1; }
+  .ft-card h3 {
+    font-family:var(--serif);
+    font-size:18px;
+    color:var(--navy);
+    line-height:1.25;
+    letter-spacing:-.2px;
+    margin:0;
+  }
+  .ft-card p {
+    font-size:13px;
+    font-weight:300;
+    color:var(--navy-3);
+    line-height:1.68;
+    flex:1;
+    margin:0;
+  }
+  .ft-link {
+    font-size:13px;
+    font-weight:600;
+    color:#2563EB;
+    margin-top:4px;
+  }
+
+  .tools-hub-faq { padding-bottom:40px; }
+</style>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">Skip to content</a>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+
+<div data-duct-partial="/partials/nav-tools.html"></div>
+
+<main id="main-content">
+
+<section class="tools-index-hero">
+<p class="tag">Free tools</p>
+<h1>Everything you need to <em>sanity-check</em> the numbers</h1>
+<p class="lead">Use these calculators and generators on their own — no accounts, no exports. When you are tired of stitching spreadsheets every Monday, Duct connects your stack and delivers the same discipline as a weekly intelligence brief.</p>
+<ul class="tools-index-trust" aria-label="What to expect">
+<li>No signup</li>
+<li>Runs in your browser</li>
+<li>Built by the Duct team</li>
+</ul>
+</section>
+
+<div class="tools-hub-wrap">
+<div class="tools-hub-bridge reveal">
+<h2>Love the math, hate the <em>manual weekly grind?</em></h2>
+<p>Duct reads across GA4, ads, product analytics, CRM, and more — so you get what changed, what drove it, and what to do next. Same rigour as these tools, running while you ship.</p>
+<a href="#cta" class="btn btn-orange btn-lg">Get early access →</a>
+</div>
+
+<section class="tools-hub-section reveal" aria-labelledby="hub-saas-heading">
+<h2 id="hub-saas-heading">SaaS metrics &amp; revenue</h2>
+<p class="tools-hub-desc">Benchmark health and model growth the way finance and growth leads actually argue about it — with numbers, not vibes.</p>
+<div class="tools-hub-grid">
+<a href="/tools/saas-metrics-calculator" class="ft-card">
+<span class="ft-badge">Calculator</span>
+<span class="ft-icon" aria-hidden="true">🧮</span>
+<h3>SaaS Metrics Benchmark Calculator</h3>
+<p>Churn, LTV:CAC, payback, trial-to-paid — scored against industry medians with colour-coded clarity.</p>
+<span class="ft-link">Open calculator →</span>
+</a>
+<a href="/tools/cac-ltv-calculator" class="ft-card">
+<span class="ft-badge">Calculator</span>
+<span class="ft-icon" aria-hidden="true">📊</span>
+<h3>CAC / LTV Calculator</h3>
+<p>Unit economics in one view: CAC, LTV, ratio, and payback with benchmark context.</p>
+<span class="ft-link">Open calculator →</span>
+</a>
+<a href="/tools/mrr-growth-calculator" class="ft-card">
+<span class="ft-badge">Calculator</span>
+<span class="ft-icon" aria-hidden="true">📈</span>
+<h3>MRR Growth Rate Calculator</h3>
+<p>Net MRR growth, CMGR, and the growth rate you need to hit a target — fast.</p>
+<span class="ft-link">Open calculator →</span>
+</a>
+</div>
+</section>
+
+<section class="tools-hub-section reveal" aria-labelledby="hub-paid-heading">
+<h2 id="hub-paid-heading">Paid media efficiency</h2>
+<p class="tools-hub-desc">Planning spend, pacing, or post-mortems — these strip the guesswork out of CTR, CPM, CPC, CPA, ROAS, and ROI.</p>
+<div class="tools-hub-grid">
+<a href="/tools/ctr-calculator" class="ft-card">
+<span class="ft-badge">Calculator</span>
+<span class="ft-icon" aria-hidden="true">🎯</span>
+<h3>CTR Calculator</h3>
+<p>Click-through rate, projected clicks, and the CTR you need to hit volume goals.</p>
+<span class="ft-link">Open calculator →</span>
+</a>
+<a href="/tools/cpm-calculator" class="ft-card">
+<span class="ft-badge">Calculator</span>
+<span class="ft-icon" aria-hidden="true">💸</span>
+<h3>CPM Calculator</h3>
+<p>Cost per thousand impressions, spend scenarios, and efficiency targets.</p>
+<span class="ft-link">Open calculator →</span>
+</a>
+<a href="/tools/cpc-calculator" class="ft-card">
+<span class="ft-badge">Calculator</span>
+<span class="ft-icon" aria-hidden="true">🖱️</span>
+<h3>CPC Calculator</h3>
+<p>Cost per click and what spend looks like at your target CPC.</p>
+<span class="ft-link">Open calculator →</span>
+</a>
+<a href="/tools/cpa-calculator" class="ft-card">
+<span class="ft-badge">Calculator</span>
+<span class="ft-icon" aria-hidden="true">📌</span>
+<h3>CPA Calculator</h3>
+<p>Cost per acquisition, conversion scenarios, and budget-safe CPAs.</p>
+<span class="ft-link">Open calculator →</span>
+</a>
+<a href="/tools/roas-calculator" class="ft-card">
+<span class="ft-badge">Calculator</span>
+<span class="ft-icon" aria-hidden="true">💹</span>
+<h3>ROAS Calculator</h3>
+<p>Return on ad spend as a revenue multiple, target ROAS gaps, and margin-aware contribution ROAS.</p>
+<span class="ft-link">Open calculator →</span>
+</a>
+<a href="/tools/marketing-roi-calculator" class="ft-card">
+<span class="ft-badge">Calculator</span>
+<span class="ft-icon" aria-hidden="true">📉</span>
+<h3>Marketing ROI Calculator</h3>
+<p>ROI, profit, and revenue scenarios for campaign decisions in minutes.</p>
+<span class="ft-link">Open calculator →</span>
+</a>
+</div>
+</section>
+
+<section class="tools-hub-section reveal" aria-labelledby="hub-ops-heading">
+<h2 id="hub-ops-heading">Tracking, social &amp; reporting</h2>
+<p class="tools-hub-desc">Ship clean measurement links, templates your team will actually use, and engagement benchmarks you can defend in a deck.</p>
+<div class="tools-hub-grid">
+<a href="/tools/utm-builder" class="ft-card">
+<span class="ft-badge">Generator</span>
+<span class="ft-icon" aria-hidden="true">🔗</span>
+<h3>UTM Builder</h3>
+<p>GA4-friendly campaign links with live preview and validation — copy-ready.</p>
+<span class="ft-link">Build UTMs →</span>
+</a>
+<a href="/tools/weekly-brief-template" class="ft-card">
+<span class="ft-badge">Template</span>
+<span class="ft-icon" aria-hidden="true">📋</span>
+<h3>Weekly Marketing Brief Generator</h3>
+<p>Role- and stack-aware weekly report structure — fill the right slots per tool.</p>
+<span class="ft-link">Generate template →</span>
+</a>
+<a href="/tools/engagement-rate-calculator" class="ft-card">
+<span class="ft-badge">Calculator</span>
+<span class="ft-icon" aria-hidden="true">💬</span>
+<h3>Engagement Rate Calculator</h3>
+<p>Engagement by followers, reach, or impressions — apples-to-apples across posts.</p>
+<span class="ft-link">Open calculator →</span>
+</a>
+</div>
+</section>
+</div>
+
+<section class="faq tools-hub-faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+<p class="tag">FAQ</p>
+<h2>About these <em>tools</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.08s">
+<details class="faq-item">
+<summary class="faq-q">Do I need an account?</summary>
+<p class="faq-a">No. Every calculator and generator on this page runs in your browser without a Duct login. If you join the beta later, that is separate — these stay free.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">How is this related to Duct the product?</summary>
+<p class="faq-a">The same team builds both. These tools help you answer one-off questions quickly; Duct answers them continuously by connecting your product, marketing, and revenue stack into weekly briefs and alerts.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Will you store my inputs?</summary>
+<p class="faq-a">Calculations happen locally in your session — we do not persist your numbers on our servers for these free tools. For Duct beta, connection and brief delivery work under our privacy policy.</p>
+</details>
+</div>
+</div>
+</section>
+
+<div data-duct-partial="/partials/cta-tools.html"></div>
+
+</main>
+
+<div data-duct-partial="/partials/footer-expanded.html"></div>
+
+<script src="../assets/duct-partials.js"></script>
+<script src="../assets/duct.js" defer></script>
+</body>
+</html>

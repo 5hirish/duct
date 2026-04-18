@@ -219,12 +219,41 @@
 .brief-foot { border-top: 1px solid var(--border); padding: 10px 18px; display: flex; justify-content: space-between; }
 .brief-foot span { font-size: 11px; color: var(--navy-3); }
 
+/* Homepage tools teaser → full index at /tools/ */
+.tools-teaser { padding: 100px 52px; border-top: 1px solid var(--border); background: var(--off); }
+.tools-teaser-inner { max-width: 1160px; margin: 0 auto; }
+.tools-teaser-card {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 36px 40px;
+  background: var(--white);
+}
+.tools-teaser-card .tag { margin-bottom: 12px; }
+.tools-teaser-card h2 { font-family: var(--serif); font-size: clamp(26px, 3.5vw, 36px); color: var(--navy); line-height: 1.2; letter-spacing: -.3px; margin: 0 0 14px; }
+.tools-teaser-card h2 em { color: var(--orange); font-style: italic; }
+.tools-teaser-card .sub { margin: 0 0 20px; max-width: 62em; font-size: 15px; font-weight: 300; color: var(--navy-3); line-height: 1.65; }
+.tools-teaser-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--orange);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255,92,0,.35);
+  padding-bottom: 2px;
+  transition: color .2s, border-color .2s;
+}
+.tools-teaser-link:hover { color: var(--orange-h); border-bottom-color: rgba(224,80,0,.55); }
+
 /* Responsive */
 @media (max-width: 860px) {
   .pain-grid { grid-template-columns: 1fr; }
   .uc-grid { grid-template-columns: 1fr; }
   .preview-inner { grid-template-columns: 1fr; gap: 40px; }
-  .problem-full, .usecases, .preview { padding-left: 24px; padding-right: 24px; }
+  .problem-full, .usecases, .preview, .tools-teaser { padding-left: 24px; padding-right: 24px; }
 }
 
 @media (max-width: 700px) {
@@ -535,6 +564,18 @@
 </div>
 </section>
 
+<!-- FREE TOOLS (teaser → /tools/) -->
+<section class="tools-teaser" id="free-tools">
+<div class="tools-teaser-inner">
+<div class="tools-teaser-card reveal">
+<p class="tag">Free tools</p>
+<h2>Calculators &amp; generators for <em>growth teams</em></h2>
+<p class="sub">Benchmark SaaS metrics, model paid spend, build UTMs — no signup. When you want that same rigour across your whole stack automatically, that is what Duct is for.</p>
+<a href="/tools/" class="tools-teaser-link">Explore free tools →</a>
+</div>
+</div>
+</section>
+
 <!-- STATS -->
 <section class="stats">
 <div class="stats-inner">
@@ -585,22 +626,8 @@
 </div>
 </section>
 
-<!-- FINAL CTA -->
-<section class="cta" id="cta">
-<div class="cta-inner reveal">
-<p class="tag" style="justify-content:center;display:flex">Early Access</p>
-<h2>Stop reading tools.<br/><em>Start reading signals.</em></h2>
-<p class="sub" style="margin-top:14px">Connect your first tools in 10 minutes and get your first intelligence brief in your inbox.</p>
-<div class="cta-form" style="margin-top:36px">
-<input type="email" id="ctaEmail" class="email-in" placeholder="you@company.com" aria-label="Email address"/>
-<button class="btn btn-orange btn-lg"
-  data-form-url="https://docs.google.com/forms/d/e/1FAIpQLSfm7QgovGGHE38CsOPqj5O_XVBtnjbRhkf16rNJhdvkd-rddg/formResponse"
-  data-entry-id="entry.276669450"
-  onclick="submitForm('ctaEmail', this)">Get early access →</button>
-</div>
-<p class="cta-note">Free during beta · No credit card · Takes 10 minutes to set up</p>
-</div>
-</section>
+<!-- FINAL CTA (shared: site/partials/cta-home.html) -->
+<div data-duct-partial="/partials/cta-home.html"></div>
 
 </main>
 
