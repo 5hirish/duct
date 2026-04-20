@@ -126,7 +126,11 @@
   .tool-btn.selected { border-color: var(--orange); background: #eff6ff; }
   .tool-btn .tool-check { font-size: 11px; color: var(--orange); opacity: 0; }
   .tool-btn.selected .tool-check { opacity: 1; }
-  .tool-emoji { font-size: 20px; }
+  .tool-icon {
+    width: 22px; height: 22px;
+    object-fit: contain;
+    flex-shrink: 0;
+  }
 
   /* North star input */
   .ns-input {
@@ -288,42 +292,42 @@
       <p class="step-sub">Select all that apply — your brief will include the right metrics for each.</p>
       <div class="tool-grid" id="tool-grid">
         <button class="tool-btn" data-tool="ga4" aria-pressed="false">
-          <span class="tool-emoji" aria-hidden="true">📈</span>
+          <img class="tool-icon" src="../assets/icons/googleanalytics.svg" width="22" height="22" alt="" aria-hidden="true"/>
           <span>GA4</span>
           <span class="tool-check">✓</span>
         </button>
         <button class="tool-btn" data-tool="mixpanel" aria-pressed="false">
-          <span class="tool-emoji" aria-hidden="true">🔮</span>
+          <img class="tool-icon" src="../assets/icons/mixpanel.svg" width="22" height="22" alt="" aria-hidden="true"/>
           <span>Mixpanel</span>
           <span class="tool-check">✓</span>
         </button>
         <button class="tool-btn" data-tool="hubspot" aria-pressed="false">
-          <span class="tool-emoji" aria-hidden="true">🧡</span>
+          <img class="tool-icon" src="../assets/icons/hubspot.svg" width="22" height="22" alt="" aria-hidden="true"/>
           <span>HubSpot</span>
           <span class="tool-check">✓</span>
         </button>
         <button class="tool-btn" data-tool="google-ads" aria-pressed="false">
-          <span class="tool-emoji" aria-hidden="true">💰</span>
+          <img class="tool-icon" src="../assets/icons/google-ads.svg" width="22" height="22" alt="" aria-hidden="true"/>
           <span>Google Ads</span>
           <span class="tool-check">✓</span>
         </button>
         <button class="tool-btn" data-tool="ahrefs" aria-pressed="false">
-          <span class="tool-emoji" aria-hidden="true">🔍</span>
+          <img class="tool-icon" src="../assets/icons/ahrefs.svg" width="22" height="22" alt="" aria-hidden="true"/>
           <span>Ahrefs</span>
           <span class="tool-check">✓</span>
         </button>
         <button class="tool-btn" data-tool="gsc" aria-pressed="false">
-          <span class="tool-emoji" aria-hidden="true">🌐</span>
+          <img class="tool-icon" src="../assets/icons/googlesearchconsole.svg" width="22" height="22" alt="" aria-hidden="true"/>
           <span>Search Console</span>
           <span class="tool-check">✓</span>
         </button>
         <button class="tool-btn" data-tool="meta-ads" aria-pressed="false">
-          <span class="tool-emoji" aria-hidden="true">📘</span>
+          <img class="tool-icon" src="../assets/icons/meta.svg" width="22" height="22" alt="" aria-hidden="true"/>
           <span>Meta Ads</span>
           <span class="tool-check">✓</span>
         </button>
         <button class="tool-btn" data-tool="linkedin-ads" aria-pressed="false">
-          <span class="tool-emoji" aria-hidden="true">💼</span>
+          <img class="tool-icon" src="../assets/icons/linkedin.svg" width="22" height="22" alt="" aria-hidden="true"/>
           <span>LinkedIn Ads</span>
           <span class="tool-check">✓</span>
         </button>
