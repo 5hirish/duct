@@ -261,6 +261,170 @@ border: 1px solid var(--border); border-radius: var(--r); font-size: 13px;
 .diag-result { padding: 14px 16px; background: var(--orange); border-radius: var(--r); font-size: 13px; color: #fff; line-height: 1.6; }
 .diag-result strong { font-weight: 600; display: block; margin-bottom: 3px; }
 
+/* ── FLOW COMPARE (cycle vs Duct) ── */
+.flow-compare {
+  --flow-bad: #dc2626;
+  --flow-bad-soft: #fef2f2;
+  padding: 96px 52px;
+  background: var(--white);
+  border-top: 1px solid var(--border);
+}
+.flow-compare-inner { max-width: 1160px; margin: 0 auto; }
+.flow-compare-head {
+  text-align: center;
+  margin: 0 auto 48px;
+  max-width: 560px;
+}
+.flow-compare-head h2 { margin-bottom: 12px; }
+.flow-compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: stretch;
+}
+.flow-card {
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--white);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+}
+.flow-card-accent {
+  height: 4px;
+  width: 100%;
+  flex-shrink: 0;
+}
+.flow-card--bad .flow-card-accent { background: var(--flow-bad); }
+.flow-card--good .flow-card-accent { background: var(--orange); }
+.flow-card-top { padding: 24px 24px 8px; }
+.flow-card--good .flow-card-top { padding-top: 68px; }
+.flow-card-logos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.flow-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--off);
+}
+.flow-logo img { width: 18px; height: 18px; display: block; }
+.flow-card-kicker {
+  font-family: var(--serif);
+  font-size: clamp(20px, 2.5vw, 24px);
+  font-weight: 600;
+  color: var(--navy);
+  margin: 0 0 6px;
+  letter-spacing: -0.3px;
+}
+.flow-card-label {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+}
+.flow-card-label--bad { color: var(--flow-bad); }
+.flow-card-label--good { color: var(--orange); }
+.flow-rows {
+  list-style: none;
+  padding: 8px 24px 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+.flow-row {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+  color: var(--navy-2);
+  line-height: 1.45;
+}
+.flow-rows .flow-row:last-child { border-bottom: none; }
+.flow-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--off);
+  color: var(--navy-3);
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.flow-text { min-width: 0; }
+.flow-badge {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 6px 11px;
+  border-radius: var(--pill);
+  white-space: nowrap;
+}
+.flow-badge--bad {
+  background: var(--flow-bad-soft);
+  color: #b91c1c;
+}
+.flow-badge--good {
+  background: color-mix(in srgb, var(--orange) 14%, white);
+  color: var(--orange-h);
+}
+.flow-card-foot {
+  padding: 18px 24px 22px;
+  background: var(--off);
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+}
+.flow-card-foot--muted {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--navy-3);
+}
+.flow-card-foot--muted .flow-foot-icon {
+  font-size: 16px;
+  line-height: 1;
+  opacity: 0.7;
+}
+.flow-compare-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.flow-compare-cta .email-in {
+  flex: 1;
+  min-width: 160px;
+}
+@media (max-width: 900px) {
+  .flow-compare { padding: 64px 24px; }
+  .flow-compare-grid { grid-template-columns: 1fr; }
+  .flow-row {
+    grid-template-columns: 28px 1fr;
+    grid-template-areas:
+      "num text"
+      ". badge";
+    align-items: start;
+  }
+  .flow-num { grid-area: num; }
+  .flow-text { grid-area: text; }
+  .flow-badge { grid-area: badge; justify-self: start; margin-top: 2px; }
+}
+
 /* ── HOW ── */
 .how { padding: 96px 52px; background: var(--navy); }
 .how-inner { max-width: 1160px; margin: 0 auto; }
