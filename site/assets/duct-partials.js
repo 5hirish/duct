@@ -5,7 +5,7 @@
  */
 (function () {
   var parser = new DOMParser();
-  var version = window.DUCT_PARTIALS_VERSION || '2026-04-17';
+  var version = window.DUCT_PARTIALS_VERSION || '2026-04-22';
   var nodes = Array.prototype.slice.call(document.querySelectorAll('[data-duct-partial]'));
 
   function notifyReady() {

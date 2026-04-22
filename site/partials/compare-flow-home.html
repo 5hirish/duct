@@ -9,72 +9,80 @@
         <div class="flow-card-accent" aria-hidden="true"></div>
         <div class="flow-card-top">
           <div class="flow-card-logos" aria-hidden="true">
-            <span class="flow-logo"><img src="assets/icons/googleanalytics.svg" width="18" height="18" alt=""/></span>
-            <span class="flow-logo"><img src="assets/icons/mixpanel.svg" width="18" height="18" alt=""/></span>
-            <span class="flow-logo"><img src="assets/icons/hubspot.svg" width="18" height="18" alt=""/></span>
+            <span class="flow-logo" style="background:#fff;border:1px solid var(--border)"><img src="assets/icons/googleanalytics.svg" width="20" height="20" alt=""/></span>
+            <span class="flow-logo" data-brand style="background:#7856FF"><img src="assets/icons/mixpanel.svg" width="20" height="20" alt=""/></span>
+            <span class="flow-logo" data-brand style="background:#FF7A59"><img src="assets/icons/hubspot.svg" width="20" height="20" alt=""/></span>
           </div>
           <p class="flow-card-kicker">The usual stack</p>
           <p class="flow-card-label flow-card-label--bad">Never-ending cycle</p>
         </div>
         <ol class="flow-rows">
           <li class="flow-row">
-            <span class="flow-num" aria-hidden="true">1</span>
+            <span class="flow-num" aria-hidden="true">✗</span>
             <span class="flow-text">Build and tune dashboards in each tool</span>
             <span class="flow-badge flow-badge--bad">Week 1–2</span>
           </li>
           <li class="flow-row">
-            <span class="flow-num" aria-hidden="true">2</span>
+            <span class="flow-num" aria-hidden="true">✗</span>
             <span class="flow-text">Export, merge, and present in a weekly report</span>
             <span class="flow-badge flow-badge--bad">Every week</span>
           </li>
           <li class="flow-row">
-            <span class="flow-num" aria-hidden="true">3</span>
+            <span class="flow-num" aria-hidden="true">✗</span>
             <span class="flow-text">Spot the cross-tool disconnect—after it already hurt</span>
             <span class="flow-badge flow-badge--bad">Weeks later</span>
           </li>
           <li class="flow-row">
-            <span class="flow-num" aria-hidden="true">4</span>
-            <span class="flow-text">Ask analytics or eng for “one more view”</span>
+            <span class="flow-num" aria-hidden="true">✗</span>
+            <span class="flow-text">Ask analytics or eng for "one more view"</span>
             <span class="flow-badge flow-badge--bad">Repeat</span>
           </li>
         </ol>
-        <footer class="flow-card-foot flow-card-foot--muted">
-          <span class="flow-foot-icon" aria-hidden="true">↻</span>
-          <span>Cycle repeats…</span>
-        </footer>
       </article>
+      <div class="flow-vs" aria-hidden="true"><span class="flow-vs-badge">vs</span></div>
       <article class="flow-card flow-card--good" aria-label="Workflow with Duct">
         <div class="flow-card-accent" aria-hidden="true"></div>
         <div class="flow-card-top">
+          <div class="flow-card-duct-mark" aria-hidden="true">
+            <span class="duct-dot"></span>
+            <span>Duct</span>
+          </div>
           <p class="flow-card-kicker">With Duct</p>
           <p class="flow-card-label flow-card-label--good">Linear progress</p>
         </div>
         <ol class="flow-rows">
           <li class="flow-row">
-            <span class="flow-num" aria-hidden="true">1</span>
+            <span class="flow-num" aria-hidden="true">✓</span>
             <span class="flow-text">Connect your tools with OAuth</span>
             <span class="flow-badge flow-badge--good">~10 min</span>
           </li>
           <li class="flow-row">
-            <span class="flow-num" aria-hidden="true">2</span>
+            <span class="flow-num" aria-hidden="true">✓</span>
             <span class="flow-text">Set KPIs and funnel context once</span>
             <span class="flow-badge flow-badge--good">One time</span>
           </li>
           <li class="flow-row">
-            <span class="flow-num" aria-hidden="true">3</span>
+            <span class="flow-num" aria-hidden="true">✓</span>
             <span class="flow-text">Weekly briefs plus real-time cross-tool alerts</span>
             <span class="flow-badge flow-badge--good">Ongoing</span>
           </li>
           <li class="flow-row">
-            <span class="flow-num" aria-hidden="true">4</span>
+            <span class="flow-num" aria-hidden="true">✓</span>
             <span class="flow-text">Decide from ranked actions—not another deck</span>
             <span class="flow-badge flow-badge--good">Done</span>
           </li>
         </ol>
-        <footer class="flow-card-foot">
-          <a href="#hero" class="btn btn-orange btn-lg">Get early access →</a>
-        </footer>
       </article>
+    </div>
+    <div class="flow-compare-bottom">
+      <div class="flow-compare-bottom-cta">
+        <input type="email" id="flowCompareEmail" class="email-in" placeholder="you@company.com" aria-label="Email address"/>
+        <button type="button" class="btn btn-orange btn-lg"
+          data-form-url="https://docs.google.com/forms/d/e/1FAIpQLSfm7QgovGGHE38CsOPqj5O_XVBtnjbRhkf16rNJhdvkd-rddg/formResponse"
+          data-entry-id="entry.276669450"
+          onclick="submitForm('flowCompareEmail', this)">Get early access →</button>
+      </div>
+      <p class="flow-compare-bottom-hint">Free during beta · Connects in under 10 minutes · No data stored without your approval</p>
     </div>
   </div>
 </section>
