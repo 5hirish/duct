@@ -137,6 +137,12 @@
   }
   .tool-cta-text p:first-child { font-size: 16px; font-weight: 500; color: var(--white); margin: 0 0 4px; }
   .tool-cta-text p:last-child { font-size: 13px; color: rgba(255,255,255,.55); margin: 0; }
+  .duct-bridge { max-width:720px; margin:0 auto 56px; padding:0 24px; }
+  .duct-bridge-inner { border-left:3px solid var(--orange); padding:20px 28px; background:#eff6ff; border-radius:0 var(--r) var(--r) 0; }
+  .duct-bridge-headline { font-family:var(--serif); font-size:clamp(18px,2.5vw,22px); color:var(--navy); font-weight:400; line-height:1.35; margin:0 0 12px; }
+  .duct-bridge-body { font-size:15px; color:var(--navy-3); line-height:1.75; margin:0 0 16px; }
+  .duct-bridge-link { font-size:14px; font-weight:500; color:var(--orange); text-decoration:none; }
+  .duct-bridge-link:hover { text-decoration:underline; }
 
   .about-section { max-width: 720px; margin: 0 auto 80px; padding: 0 24px; }
   .about-section h2 { font-family: var(--serif); font-size: 28px; color: var(--navy); margin-bottom: 16px; }
@@ -184,7 +190,7 @@
 <div class="tool-hero">
   <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Free tool · No signup required</div>
   <h1>SaaS Metrics <em>Benchmark</em> Calculator</h1>
-  <p>Enter your numbers. See instantly how your churn, LTV:CAC, and trial-to-paid rate compare to industry benchmarks — colour-coded by health.</p>
+  <p>Your SaaS decisions are only as strong as your baseline metrics. Benchmark churn, LTV:CAC, and trial conversion clearly — colour-coded, decision-ready, no spreadsheet lag.</p>
 </div>
 
 <div class="tool-wrap">
@@ -242,21 +248,29 @@
     <div class="tool-results" id="results-section" role="region" aria-label="Benchmark results" aria-live="polite">
       <p style="font-size:13px;font-weight:500;color:var(--navy-3);margin:0 0 20px;letter-spacing:.02em;text-transform:uppercase">Your Results</p>
       <div class="results-grid" id="results-grid"></div>
+      <div class="tool-cta">
+        <div class="tool-cta-text">
+          <p>Benchmarks mapped — now focus on the metric that will bend growth.</p>
+          <p>Duct tracks churn, CAC payback, and conversion shifts weekly so SaaS operators can act before economics degrade.</p>
+        </div>
+        <a href="#cta" class="btn btn-orange">Get your free brief&nbsp;→</a>
+      </div>
 <div id="insight-panel" class="insight-panel" hidden aria-live="polite">
         <p class="insight-label">What this means</p>
         <div id="insight-body"></div>
-      </div>
-      <div class="tool-cta">
-        <div class="tool-cta-text">
-          <p>Want these metrics tracked automatically every week?</p>
-          <p>That's Duct — a weekly SaaS intelligence brief, no dashboards required.</p>
-        </div>
-        <a href="#cta" class="btn btn-orange">Get your free weekly brief&nbsp;→</a>
       </div>
     </div>
 
   </div>
 </div>
+
+<section class="duct-bridge reveal" aria-label="About Duct">
+  <div class="duct-bridge-inner">
+    <p class="duct-bridge-headline">Benchmark scores tell you where you stand. They don't tell you what changed this week.</p>
+    <p class="duct-bridge-body">To run growth well, you need weekly visibility on why churn, CAC, and conversion moved across channels and product stages. Duct delivers that synthesis so SaaS teams can take action before problems become quarter-long misses.</p>
+    <a href="#cta" class="duct-bridge-link">See how Duct works&nbsp;→</a>
+  </div>
+</section>
 
 <div class="about-section reveal">
   <h2>About this <em>calculator</em></h2>

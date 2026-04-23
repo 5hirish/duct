@@ -92,6 +92,12 @@
   .tool-cta { margin-top: 28px; background: var(--navy); border-radius: var(--r); padding: 28px 32px; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
   .tool-cta-text p:first-child { font-size: 16px; font-weight: 500; color: var(--white); margin: 0 0 4px; }
   .tool-cta-text p:last-child { font-size: 13px; color: rgba(255,255,255,.55); margin: 0; }
+  .duct-bridge { max-width:720px; margin:0 auto 56px; padding:0 24px; }
+  .duct-bridge-inner { border-left:3px solid var(--orange); padding:20px 28px; background:#eff6ff; border-radius:0 var(--r) var(--r) 0; }
+  .duct-bridge-headline { font-family:var(--serif); font-size:clamp(18px,2.5vw,22px); color:var(--navy); font-weight:400; line-height:1.35; margin:0 0 12px; }
+  .duct-bridge-body { font-size:15px; color:var(--navy-3); line-height:1.75; margin:0 0 16px; }
+  .duct-bridge-link { font-size:14px; font-weight:500; color:var(--orange); text-decoration:none; }
+  .duct-bridge-link:hover { text-decoration:underline; }
 
   .about-section { max-width: 760px; margin: 0 auto 80px; padding: 0 24px; }
   .about-section h2 { font-family: var(--serif); font-size: 28px; color: var(--navy); margin-bottom: 16px; }
@@ -120,7 +126,7 @@
 <div class="tool-hero">
   <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Free tool · No signup required</div>
   <h1>CTR Calculator <em>for growth teams</em></h1>
-  <p>Enter impressions and clicks to calculate CTR instantly. Add targets to estimate required click lift and projected clicks at your goal CTR.</p>
+  <p>Your message performance is only as clear as your click signal. Calculate CTR with target lift scenarios instantly — channel-ready and no spreadsheet cleanup.</p>
 </div>
 
 <div class="tool-wrap">
@@ -157,20 +163,28 @@
     <div class="tool-results" id="results-section" role="region" aria-label="CTR results" aria-live="polite">
       <p style="font-size:13px;font-weight:500;color:var(--navy-3);margin:0 0 20px;letter-spacing:.02em;text-transform:uppercase">Your Results</p>
       <div class="results-row" id="results-row"></div>
+      <div class="tool-cta">
+        <div class="tool-cta-text">
+          <p>CTR measured — now identify which creative to double down on.</p>
+          <p>Duct tracks weekly CTR and downstream conversion shifts so teams can catch fatigue before spend efficiency drops.</p>
+        </div>
+        <a href="#cta" class="btn btn-orange">Get your free brief&nbsp;→</a>
+      </div>
       <div id="insight-panel" class="insight-panel" hidden aria-live="polite">
         <p class="insight-label">What this means</p>
         <div id="insight-body"></div>
       </div>
-      <div class="tool-cta">
-        <div class="tool-cta-text">
-          <p>Duct tracks CTR shifts and message resonance each week.</p>
-          <p>Spot creative fatigue and intent mismatch before performance drops compound.</p>
-        </div>
-        <a href="#cta" class="btn btn-orange">See it in action&nbsp;→</a>
-      </div>
     </div>
   </div>
 </div>
+
+<section class="duct-bridge reveal" aria-label="About Duct">
+  <div class="duct-bridge-inner">
+    <p class="duct-bridge-headline">CTR tells you who clicked. It doesn't tell you whether that traffic produced business impact.</p>
+    <p class="duct-bridge-body">To make better decisions, CTR needs to be tied to CPC, conversion rate, and channel-level outcomes week by week. Duct does that synthesis and highlights where messaging or targeting needs intervention first.</p>
+    <a href="#cta" class="duct-bridge-link">See how Duct works&nbsp;→</a>
+  </div>
+</section>
 
 <div class="about-section reveal">
   <h2>How the <em>calculator works</em></h2>

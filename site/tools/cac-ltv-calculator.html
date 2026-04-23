@@ -121,6 +121,12 @@
   }
   .tool-cta-text p:first-child { font-size: 16px; font-weight: 500; color: var(--white); margin: 0 0 4px; }
   .tool-cta-text p:last-child { font-size: 13px; color: rgba(255,255,255,.55); margin: 0; }
+  .duct-bridge { max-width:720px; margin:0 auto 56px; padding:0 24px; }
+  .duct-bridge-inner { border-left:3px solid var(--orange); padding:20px 28px; background:#eff6ff; border-radius:0 var(--r) var(--r) 0; }
+  .duct-bridge-headline { font-family:var(--serif); font-size:clamp(18px,2.5vw,22px); color:var(--navy); font-weight:400; line-height:1.35; margin:0 0 12px; }
+  .duct-bridge-body { font-size:15px; color:var(--navy-3); line-height:1.75; margin:0 0 16px; }
+  .duct-bridge-link { font-size:14px; font-weight:500; color:var(--orange); text-decoration:none; }
+  .duct-bridge-link:hover { text-decoration:underline; }
 
   .about-section { max-width: 720px; margin: 0 auto 80px; padding: 0 24px; }
   .about-section h2 { font-family: var(--serif); font-size: 28px; color: var(--navy); margin-bottom: 16px; }
@@ -168,7 +174,7 @@
 <div class="tool-hero">
   <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Free tool · No signup required</div>
   <h1>CAC &amp; LTV Calculator <em>for SaaS</em></h1>
-  <p>Enter your spend, customers, and revenue. Get your CAC, LTV, LTV:CAC ratio, and payback period — instantly, with colour-coded health scores vs SaaS benchmarks.</p>
+  <p>Your growth model is only as healthy as your unit economics. Calculate CAC, LTV, and payback in one pass — benchmarked, decision-ready, no spreadsheet lag.</p>
 </div>
 
 <div class="tool-wrap">
@@ -217,22 +223,30 @@
       <p style="font-size:13px;font-weight:500;color:var(--navy-3);margin:0 0 20px;letter-spacing:.02em;text-transform:uppercase">Your Results</p>
       <div class="results-row" id="results-row"></div>
 
+      <div class="tool-cta">
+        <div class="tool-cta-text">
+          <p>Unit economics scored — now spot trend risk before it hits plan.</p>
+          <p>Duct tracks CAC, LTV, and payback weekly so SaaS teams see compression early and act faster.</p>
+        </div>
+        <a href="#cta" class="btn btn-orange">Get your free brief&nbsp;→</a>
+      </div>
+
       <div id="insight-panel" class="insight-panel" hidden aria-live="polite">
         <p class="insight-label">What this means</p>
         <div id="insight-body"></div>
-      </div>
-
-      <div class="tool-cta">
-        <div class="tool-cta-text">
-          <p>Duct tracks your LTV:CAC trend automatically each week.</p>
-          <p>Get alerted when it shifts — before it becomes a problem.</p>
-        </div>
-        <a href="#cta" class="btn btn-orange">See it in action&nbsp;→</a>
       </div>
     </div>
 
   </div>
 </div>
+
+<section class="duct-bridge reveal" aria-label="About Duct">
+  <div class="duct-bridge-inner">
+    <p class="duct-bridge-headline">LTV:CAC tells you model health now. It doesn't tell you where the next deterioration starts.</p>
+    <p class="duct-bridge-body">That requires tracking the weekly movement behind the ratio: acquisition costs, conversion quality, and retention pressure. Duct connects those signals into one operating brief so growth teams can intervene before unit economics break.</p>
+    <a href="#cta" class="duct-bridge-link">See how Duct works&nbsp;→</a>
+  </div>
+</section>
 
 <div class="about-section reveal">
   <h2>How the <em>calculation works</em></h2>
