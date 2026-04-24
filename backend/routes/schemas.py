@@ -91,6 +91,33 @@ class UnifiedReport(BaseModel):
     metadata: ReportMetadata = Field(default_factory=ReportMetadata)
 
 
+class RefreshRoutineTarget(BaseModel):
+    customer_id: str = ""
+    account_name: str = ""
+    currency_code: str = "USD"
+    login_customer_id: str = ""
+    property_id: str = ""
+    site_url: str = ""
+
+
+class ReportRefreshRequest(BaseModel):
+    connections: list[str] = Field(default_factory=list)
+    date_preset: str = "30"
+    date_from: str = ""
+    date_to: str = ""
+    refresh_token: str = ""
+    ga4_refresh_token: str = ""
+    gsc_refresh_token: str = ""
+    targets: dict[str, RefreshRoutineTarget] = Field(default_factory=dict)
+
+
+class ReportRefreshResponse(BaseModel):
+    refreshed_at: str
+    briefs: dict[str, Any] = Field(default_factory=dict)
+    date_from: str
+    date_to: str
+
+
 class HealthResponse(BaseModel):
     status: str = Field(default="ok")
 

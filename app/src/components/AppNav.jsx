@@ -2,9 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 import { useAuth } from "../lib/auth";
-import { getBusinessProfileCompletion } from "../lib/businessProfile";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -14,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import ProjectSwitcher from "./ProjectSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
 
 function navPillClass(active) {
@@ -28,14 +27,9 @@ function navPillClass(active) {
 export default function AppNav() {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
-  const [profilePercent, setProfilePercent] = useState(0);
   const isConnections = pathname.startsWith("/connections");
   const isGenerate = pathname.startsWith("/generate");
   const isReports = pathname.startsWith("/reports");
-
-  useEffect(() => {
-    setProfilePercent(getBusinessProfileCompletion().percent);
-  }, [pathname]);
 
   return (
     <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
@@ -51,6 +45,7 @@ export default function AppNav() {
         </Button>
       </div>
 
+      <ProjectSwitcher />
       <ThemeToggle />
 
       {user && (
@@ -86,9 +81,7 @@ export default function AppNav() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-52">
             <DropdownMenuItem asChild>
-              <Link href="/onboarding">
-                Profile ({profilePercent}% complete)
-              </Link>
+              <Link href="/projects">Manage projects</Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={signOut}>

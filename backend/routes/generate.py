@@ -6,7 +6,6 @@ import asyncio
 import json
 import logging
 from collections.abc import Awaitable, Callable
-from datetime import datetime, timezone
 from functools import partial
 from typing import TYPE_CHECKING, Any
 
@@ -15,19 +14,18 @@ from fastapi.responses import StreamingResponse
 
 from agents.models import Provider, resolve_model, resolve_provider
 from agents.reporter.agent import GenerateAgent
-from config import Configs, get_configs
+from config import get_configs
 from routes.schemas import GenerateRequest, ReportMetadata, ReportRequest, UnifiedReport
-from service.google.brief import build_brief
 from service.google.credentials import resolve_ads_credentials, resolve_customer_id
 from service.google.fetch import (
     fetch_ad_group_performance,
-    fetch_campaigns,
     fetch_device_performance,
     fetch_geo_performance,
     fetch_search_terms,
 )
 from service.google.ga4 import fetch_ga4_conversion_paths, fetch_ga4_landing_pages
 from service.google.gsc import fetch_gsc_page_performance, fetch_gsc_query_performance
+from service.pipeline import build_connector_brief, fetch_connector_payload, normalize_connections, now_iso, resolve_ga_credentials
 
 if TYPE_CHECKING:
     from agents.models import ModelName
@@ -50,8 +48,6 @@ STEP_LABELS = {
     STEP_ASSEMBLE: "Finalizing report",
 }
 
-SUPPORTED_CONNECTORS = {"google_ads", "ga4", "gsc"}
-
 EmitFn = Callable[[dict[str, Any]], Awaitable[None]]
 
 
@@ -70,10 +66,6 @@ def _resolve_agent_config() -> tuple[str, Provider, ModelName]:
     return api_key, provider, model
 
 
-def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
 async def _emit(
     emit_event: EmitFn | None,
     *,
@@ -87,7 +79,7 @@ async def _emit(
 ) -> None:
     if emit_event is None:
         return
-    body: dict[str, Any] = {"event": event, "ts": _now_iso()}
+    body: dict[str, Any] = {"event": event, "ts": now_iso()}
     if step_id is not None:
         body["step_id"] = step_id
     if status is not None:
@@ -133,49 +125,6 @@ async def _step_finished(
     )
 
 
-def _normalize_connections(req: GenerateRequest) -> list[str]:
-    if not req.connections:
-        raise HTTPException(status_code=422, detail="At least one connection is required.")
-    connections = sorted({c.strip().lower().replace("-", "_") for c in req.connections if c.strip()})
-    unsupported = sorted(set(connections) - SUPPORTED_CONNECTORS)
-    if unsupported:
-        raise HTTPException(status_code=422, detail=f"Unsupported connections: {', '.join(unsupported)}")
-    return connections
-
-
-def _resolve_ga_credentials(cfg: Configs) -> tuple[str, str]:
-    client_id = (cfg.google_oauth_client_id or cfg.google_ads_client_id).strip()
-    client_secret = (cfg.google_oauth_client_secret or cfg.google_ads_client_secret).strip()
-    return client_id, client_secret
-
-
-def _build_connector_brief(
-    *,
-    connector_id: str,
-    raw_data: dict[str, Any],
-    date_from: str,
-    date_to: str,
-) -> dict[str, Any]:
-    if connector_id == "google_ads":
-        brief = build_brief(raw_data, theme="paid_ads")
-        return brief.to_dict()
-
-    theme = "product_intelligence" if connector_id == "ga4" else "organic_growth"
-    return {
-        "source_metadata": {
-            "source": connector_id,
-            "generated_at": _now_iso(),
-            "window_current": f"{date_from} to {date_to}",
-            "theme": theme,
-        },
-        "summary": {
-            "connector": connector_id,
-            "datasets": list(raw_data.keys()),
-        },
-        "data": raw_data,
-    }
-
-
 async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | None = None) -> dict[str, Any]:
     await _emit(
         emit_event,
@@ -184,7 +133,7 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
         payload={"connections": req.connections},
     )
 
-    connections = _normalize_connections(req)
+    connections = normalize_connections(req.connections)
     if not req.date_from or not req.date_to:
         raise HTTPException(status_code=422, detail="date_from and date_to are required.")
 
@@ -193,7 +142,7 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
     gsc_site_url = (req.gsc_site_url or cfg.gsc_site_url).strip()
     ga4_refresh_token = (req.ga4_refresh_token or req.refresh_token).strip()
     gsc_refresh_token = (req.gsc_refresh_token or req.refresh_token).strip()
-    ga_client_id, ga_client_secret = _resolve_ga_credentials(cfg)
+    ga_client_id, ga_client_secret = resolve_ga_credentials(cfg)
 
     if "ga4" in connections and not ga4_property_id:
         raise HTTPException(status_code=422, detail="ga4_property_id is required when GA4 is selected.")
@@ -219,80 +168,23 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
     async def fetch_connector(connector_id: str) -> tuple[str, dict[str, Any]]:
         await _step_started(emit_event, STEP_COLLECT, connector_id=connector_id)
         try:
-            if connector_id == "google_ads":
-                customer_id = resolve_customer_id(request_customer_id=shim.customer_id)
-                dt, cid, secret, rt = resolve_ads_credentials(request_refresh_token=shim.refresh_token)
-                data = await asyncio.to_thread(
-                    fetch_campaigns,
-                    customer_id=customer_id,
-                    developer_token=dt,
-                    client_id=cid,
-                    client_secret=secret,
-                    refresh_token=rt,
-                    date_from=req.date_from,
-                    date_to=req.date_to,
-                    account_name=req.account_name,
-                    currency_code=req.currency_code,
-                    login_customer_id=login_customer_id,
-                )
-                if not data.get("rows"):
-                    raise RuntimeError("No campaigns returned for this customer and date range.")
-                await _step_finished(emit_event, STEP_COLLECT, connector_id=connector_id)
-                return connector_id, data
-
-            if connector_id == "ga4":
-                landing_task = asyncio.to_thread(
-                    fetch_ga4_landing_pages,
-                    property_id=ga4_property_id,
-                    date_from=req.date_from,
-                    date_to=req.date_to,
-                    refresh_token=ga4_refresh_token,
-                    client_id=ga_client_id,
-                    client_secret=ga_client_secret,
-                )
-                paths_task = asyncio.to_thread(
-                    fetch_ga4_conversion_paths,
-                    property_id=ga4_property_id,
-                    date_from=req.date_from,
-                    date_to=req.date_to,
-                    refresh_token=ga4_refresh_token,
-                    client_id=ga_client_id,
-                    client_secret=ga_client_secret,
-                )
-                landing_pages, conversion_paths = await asyncio.gather(landing_task, paths_task)
-                await _step_finished(emit_event, STEP_COLLECT, connector_id=connector_id)
-                return connector_id, {
-                    "landing_pages": landing_pages,
-                    "conversion_paths": conversion_paths,
-                }
-
-            if connector_id == "gsc":
-                queries_task = asyncio.to_thread(
-                    fetch_gsc_query_performance,
-                    site_url=gsc_site_url,
-                    date_from=req.date_from,
-                    date_to=req.date_to,
-                    refresh_token=gsc_refresh_token,
-                    client_id=ga_client_id,
-                    client_secret=ga_client_secret,
-                )
-                pages_task = asyncio.to_thread(
-                    fetch_gsc_page_performance,
-                    site_url=gsc_site_url,
-                    date_from=req.date_from,
-                    date_to=req.date_to,
-                    refresh_token=gsc_refresh_token,
-                    client_id=ga_client_id,
-                    client_secret=ga_client_secret,
-                )
-                query_perf, page_perf = await asyncio.gather(queries_task, pages_task)
-                await _step_finished(emit_event, STEP_COLLECT, connector_id=connector_id)
-                return connector_id, {
-                    "query_performance": query_perf,
-                    "page_performance": page_perf,
-                }
-
-            raise RuntimeError(f"Unsupported connector: {connector_id}")
+            data = await fetch_connector_payload(
+                connector_id=connector_id,
+                date_from=req.date_from,
+                date_to=req.date_to,
+                cfg=cfg,
+                refresh_token=shim.refresh_token,
+                customer_id=shim.customer_id,
+                account_name=req.account_name,
+                currency_code=req.currency_code,
+                login_customer_id=login_customer_id,
+                ga4_property_id=ga4_property_id,
+                gsc_site_url=gsc_site_url,
+                ga4_refresh_token=ga4_refresh_token,
+                gsc_refresh_token=gsc_refresh_token,
+            )
+            await _step_finished(emit_event, STEP_COLLECT, connector_id=connector_id)
+            return connector_id, data
         except Exception as exc:  # noqa: BLE001
             message = str(exc)
             await _step_finished(
@@ -315,7 +207,7 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
         await _step_started(emit_event, STEP_NORMALIZE, connector_id=connector_id)
         try:
             brief_dict = await asyncio.to_thread(
-                _build_connector_brief,
+                build_connector_brief,
                 connector_id=connector_id,
                 raw_data=raw_data,
                 date_from=req.date_from,
@@ -413,7 +305,7 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
         briefs=briefs,
         synthesis=synthesis_dict,
         metadata=ReportMetadata(
-            generated_at=_now_iso(),
+            generated_at=now_iso(),
             goal=req.goal.value,
             connectors_used=connections,
         ),

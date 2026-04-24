@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState, useCallback } from "react";
+import { Suspense, useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BASE } from "../../lib/api";
 import { Button } from "@/components/ui/button";
@@ -63,7 +63,10 @@ function SignInContent() {
   const [turnstileToken, setTurnstileToken] = useState("");
   const [ready, setReady] = useState(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const [turnstileError, setTurnstileError] = useState("");
   const requiresTurnstile = Boolean(TURNSTILE_SITE_KEY);
+  const turnstileContainerRef = useRef(null);
+  const turnstileWidgetIdRef = useRef(null);
 
   useEffect(() => {
     // Handle token from OAuth callback
@@ -85,19 +88,70 @@ function SignInContent() {
     setReady(true);
   }, [searchParams, router]);
 
-  // Load Turnstile script
+  // Load and render Turnstile explicitly so remounts always work.
   useEffect(() => {
     if (!TURNSTILE_SITE_KEY || !ready) return;
-    window.onTurnstileVerify = (token) => setTurnstileToken(token);
-    window.onTurnstileExpired = () => setTurnstileToken("");
-    window.onTurnstileError = () => setTurnstileToken("");
-    if (document.getElementById("cf-turnstile-script")) return;
-    const script = document.createElement("script");
-    script.id = "cf-turnstile-script";
-    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
-    script.async = true;
-    script.defer = true;
-    document.head.appendChild(script);
+    let cancelled = false;
+
+    const renderWidget = () => {
+      if (cancelled || !window.turnstile || !turnstileContainerRef.current) return;
+      try {
+        if (turnstileWidgetIdRef.current) {
+          window.turnstile.remove(turnstileWidgetIdRef.current);
+          turnstileWidgetIdRef.current = null;
+        }
+        setTurnstileError("");
+        setTurnstileToken("");
+        turnstileWidgetIdRef.current = window.turnstile.render(
+          turnstileContainerRef.current,
+          {
+            sitekey: TURNSTILE_SITE_KEY,
+            callback: (token) => {
+              setTurnstileToken(token);
+              setTurnstileError("");
+            },
+            "expired-callback": () => setTurnstileToken(""),
+            "error-callback": () => {
+              setTurnstileToken("");
+              setTurnstileError("Security check failed to load. Please refresh and try again.");
+            },
+            theme: "light",
+            appearance: "always",
+          }
+        );
+      } catch {
+        setTurnstileError("Security check failed to load. Please refresh and try again.");
+      }
+    };
+
+    window.onTurnstileLoad = renderWidget;
+
+    if (window.turnstile) {
+      renderWidget();
+    } else if (!document.getElementById("cf-turnstile-script")) {
+      const script = document.createElement("script");
+      script.id = "cf-turnstile-script";
+      script.src =
+        "https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad&render=explicit";
+      script.async = true;
+      script.defer = true;
+      script.onerror = () => {
+        setTurnstileError("Security check failed to load. Please refresh and try again.");
+      };
+      document.head.appendChild(script);
+    }
+
+    return () => {
+      cancelled = true;
+      setTurnstileToken("");
+      if (window.turnstile && turnstileWidgetIdRef.current) {
+        window.turnstile.remove(turnstileWidgetIdRef.current);
+        turnstileWidgetIdRef.current = null;
+      }
+      if (window.onTurnstileLoad === renderWidget) {
+        delete window.onTurnstileLoad;
+      }
+    };
   }, [ready]);
 
   const handleSignIn = useCallback(() => {
@@ -171,17 +225,7 @@ function SignInContent() {
             Get started with your Google account
           </p>
 
-          {TURNSTILE_SITE_KEY && (
-            <div
-              className="cf-turnstile"
-              data-sitekey={TURNSTILE_SITE_KEY}
-              data-callback="onTurnstileVerify"
-              data-expired-callback="onTurnstileExpired"
-              data-error-callback="onTurnstileError"
-              data-theme="light"
-              aria-label="Security verification"
-            />
-          )}
+          {TURNSTILE_SITE_KEY && <div ref={turnstileContainerRef} className="cf-turnstile" aria-label="Security verification" />}
 
           <Button
             type="button"
@@ -198,6 +242,9 @@ function SignInContent() {
             <p className="mt-2 text-center text-xs text-muted-foreground">
               Complete security check to continue.
             </p>
+          )}
+          {turnstileError && (
+            <p className="mt-2 text-center text-xs text-destructive">{turnstileError}</p>
           )}
 
           <p className="signin-legal">

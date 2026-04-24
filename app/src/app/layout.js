@@ -18,6 +18,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 const gtmId = process.env.NEXT_PUBLIC_GTM_ID;
+const shouldRenderNoScriptGtm = Boolean(gtmId) && process.env.NODE_ENV === "production";
 
 /** CI must not use placeholder hosts (e.g. `<subdomain>`); `new URL()` throws and breaks `next build`. */
 function metadataBaseUrl() {
@@ -91,7 +92,7 @@ export default function RootLayout({ children }) {
           <a href="#main-content" className="skip-link">
             Skip to main content
           </a>
-          {gtmId ? (
+          {shouldRenderNoScriptGtm ? (
             <noscript>
               <iframe
                 src={`https://www.googletagmanager.com/ns.html?id=${gtmId}`}

@@ -82,6 +82,7 @@ function mapStoredEntriesToReports(stored) {
       keyInsight: narrative?.verdict || narrative?.summary || "",
       connections: getConnectionsFromPayload(entry.payload),
       isLocal: true,
+      isLive: Boolean(entry.routine),
     };
   });
 }
@@ -90,11 +91,11 @@ function isDemoReport(report) {
   return report.slug === "google-ads-report";
 }
 
-export default function ReportsList({ serverReports }) {
+export default function ReportsList({ serverReports, projectId = null }) {
   const [localReports, setLocalReports] = useState([]);
 
   const syncLocalReportsFromStorage = useEffectEvent(() => {
-    setLocalReports(mapStoredEntriesToReports(getLocalReports()));
+    setLocalReports(mapStoredEntriesToReports(getLocalReports(projectId)));
   });
 
   useEffect(() => {
@@ -105,7 +106,7 @@ export default function ReportsList({ serverReports }) {
     }
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
-  }, []);
+  }, [projectId]);
 
   const allReports = [...localReports, ...serverReports.map((r) => ({ ...r, isLocal: false }))];
   allReports.sort((a, b) => {
@@ -153,7 +154,12 @@ export default function ReportsList({ serverReports }) {
                 {report.title}
               </strong>
               {report.isLocal && (
-                <Badge variant="outline" className="shrink-0 text-xs">Local</Badge>
+                <div className="flex items-center gap-1">
+                  <Badge variant="outline" className="shrink-0 text-xs">Local</Badge>
+                  {report.isLive && (
+                    <Badge variant="secondary" className="shrink-0 text-xs">Live</Badge>
+                  )}
+                </div>
               )}
             </div>
             <div className="flex items-center gap-1.5 min-w-0">

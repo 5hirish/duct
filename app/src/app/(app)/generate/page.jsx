@@ -11,7 +11,7 @@ import {
   generateReportStream,
 } from "../../../lib/api";
 import { saveLocalReport, generateSlug } from "../../../lib/localReports";
-import { getBusinessProfileDraft } from "../../../lib/businessProfile";
+import { getActiveProject, getActiveProjectId } from "../../../lib/projects";
 import { Button } from "@/components/ui/button";
 
 const GOALS = [
@@ -242,6 +242,8 @@ function StepAdsAccount({ accounts, loading, fetchError, selectedId, onChange })
 }
 
 function StepGa4Property({ properties, loading, fetchError, selectedId, onChange }) {
+  const [query, setQuery] = useState("");
+
   if (loading) {
     return (
       <div className="generate-field" style={{ marginBottom: 20 }}>
@@ -276,25 +278,118 @@ function StepGa4Property({ properties, loading, fetchError, selectedId, onChange
       </div>
     );
   }
+
+  function normalizeText(value) {
+    return String(value || "").trim().toLowerCase();
+  }
+
+  const filteredProperties = properties.filter((property) => {
+    const q = normalizeText(query);
+    if (!q) return true;
+    return (
+      normalizeText(property.property_name).includes(q) ||
+      normalizeText(property.account_name).includes(q) ||
+      normalizeText(property.property_id).includes(q)
+    );
+  });
+
   return (
-    <label className="generate-field" style={{ marginBottom: 16 }}>
-      <span className="app-subtle">GA4 property</span>
-      <select
+    <div className="generate-field" style={{ marginBottom: 16 }}>
+      <span className="app-subtle" style={{ display: "block", marginBottom: 8 }}>
+        GA4 property
+      </span>
+      <label className="sr-only" htmlFor="ga4-property-search">
+        Search fetched GA4 properties
+      </label>
+      <input
+        id="ga4-property-search"
+        type="text"
         className="app-input"
-        value={selectedId}
-        onChange={(e) => onChange(e.target.value)}
+        placeholder="Search properties (name, account, or ID)"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        style={{ marginBottom: 8 }}
+      />
+      <div
+        role="radiogroup"
+        aria-label="GA4 property"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
+          maxHeight: 260,
+          overflowY: "auto",
+          padding: 10,
+          border: "1px solid var(--border, rgba(255,255,255,0.12))",
+          borderRadius: 10,
+          background: "rgba(255,255,255,0.02)",
+        }}
       >
-        {properties.map((property) => (
-          <option key={normalizeGa4PropertyId(property.property_id)} value={normalizeGa4PropertyId(property.property_id)}>
-            {property.property_name} ({property.property_id}) — {property.account_name}
-          </option>
-        ))}
-      </select>
-    </label>
+        {filteredProperties.map((property) => {
+          const propertyId = normalizeGa4PropertyId(property.property_id);
+          const selected = selectedId === propertyId;
+          return (
+            <button
+              key={propertyId}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              onClick={() => onChange(propertyId)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+                width: "100%",
+                padding: "10px 12px",
+                borderRadius: 10,
+                border: selected
+                  ? "1px solid var(--color-primary, #4f46e5)"
+                  : "1px solid var(--border, rgba(255,255,255,0.12))",
+                background: selected ? "rgba(79,70,229,0.12)" : "transparent",
+                color: "inherit",
+                cursor: "pointer",
+                textAlign: "left",
+              }}
+            >
+              <span style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                <img
+                  src="https://www.google.com/s2/favicons?domain=analytics.google.com&sz=32"
+                  alt=""
+                  width="16"
+                  height="16"
+                  style={{ borderRadius: 4, flexShrink: 0 }}
+                />
+                <span style={{ minWidth: 0 }}>
+                  <span style={{ display: "block", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {property.property_name}
+                  </span>
+                  <span
+                    className="app-subtle"
+                    style={{ display: "block", fontSize: 12, overflow: "hidden", textOverflow: "ellipsis" }}
+                  >
+                    {property.account_name}
+                  </span>
+                </span>
+              </span>
+              <span className="status-pill grey" style={{ flexShrink: 0 }}>
+                ID {propertyId}
+              </span>
+            </button>
+          );
+        })}
+        {filteredProperties.length === 0 && (
+          <p className="app-subtle" style={{ margin: 0, padding: "8px 2px" }}>
+            No GA4 properties match "{query}".
+          </p>
+        )}
+      </div>
+    </div>
   );
 }
 
 function StepGscSite({ sites, loading, fetchError, selectedUrl, onChange }) {
+  const [query, setQuery] = useState("");
   if (loading) {
     return (
       <div className="generate-field" style={{ marginBottom: 20 }}>
@@ -329,22 +424,145 @@ function StepGscSite({ sites, loading, fetchError, selectedUrl, onChange }) {
       </div>
     );
   }
+  function getDisplayHost(siteUrl) {
+    if (!siteUrl) return "";
+    if (siteUrl.startsWith("sc-domain:")) return siteUrl.replace("sc-domain:", "");
+    try {
+      return new URL(siteUrl).hostname;
+    } catch {
+      return siteUrl;
+    }
+  }
+
+  function getFaviconUrl(siteUrl) {
+    if (!siteUrl || siteUrl.startsWith("sc-domain:")) return "";
+    const host = getDisplayHost(siteUrl);
+    if (!host) return "";
+    // Google-hosted favicon endpoint gives a clean, consistent icon.
+    return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=32`;
+  }
+
+  function permissionMeta(permissionLevel) {
+    const level = String(permissionLevel || "").toLowerCase();
+    const isVerified = level.includes("owner") || level.includes("full");
+    return {
+      isVerified,
+      label: isVerified ? "Verified" : "Unverified",
+      toneClass: isVerified ? "green" : "grey",
+    };
+  }
+
+  const filteredSites = sites.filter((site) => {
+    const url = normalizeGscSiteUrl(site.site_url);
+    const host = getDisplayHost(url);
+    const q = query.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      host.toLowerCase().includes(q) ||
+      url.toLowerCase().includes(q)
+    );
+  });
+
   return (
-    <label className="generate-field" style={{ marginBottom: 16 }}>
-      <span className="app-subtle">Search Console site</span>
-      <select
+    <div className="generate-field" style={{ marginBottom: 16 }}>
+      <span className="app-subtle" style={{ display: "block", marginBottom: 8 }}>
+        Search Console site
+      </span>
+      <label className="sr-only" htmlFor="gsc-site-search">
+        Search fetched Search Console sites
+      </label>
+      <input
+        id="gsc-site-search"
+        type="text"
         className="app-input"
-        value={selectedUrl}
-        onChange={(e) => onChange(e.target.value)}
+        placeholder="Search sites (domain, URL, or permission)"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        style={{ marginBottom: 8 }}
+      />
+      <div
+        role="radiogroup"
+        aria-label="Search Console site"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
+          maxHeight: 260,
+          overflowY: "auto",
+          padding: 10,
+          border: "1px solid var(--border, rgba(255,255,255,0.12))",
+          borderRadius: 10,
+          background: "rgba(255,255,255,0.02)",
+        }}
       >
-        {sites.map((site) => (
-          <option key={normalizeGscSiteUrl(site.site_url)} value={normalizeGscSiteUrl(site.site_url)}>
-            {site.site_url}
-            {site.permission_level ? ` — ${site.permission_level}` : ""}
-          </option>
-        ))}
-      </select>
-    </label>
+        {filteredSites.map((site) => {
+          const url = normalizeGscSiteUrl(site.site_url);
+          const host = getDisplayHost(url);
+          const faviconUrl = getFaviconUrl(url);
+          const selected = selectedUrl === url;
+          const permission = permissionMeta(site.permission_level);
+
+          return (
+            <button
+              key={url}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              onClick={() => onChange(url)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+                width: "100%",
+                padding: "10px 12px",
+                borderRadius: 10,
+                border: selected
+                  ? "1px solid var(--color-primary, #4f46e5)"
+                  : "1px solid var(--border, rgba(255,255,255,0.12))",
+                background: selected ? "rgba(79,70,229,0.12)" : "transparent",
+                color: "inherit",
+                cursor: "pointer",
+                textAlign: "left",
+              }}
+            >
+              <span style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                {faviconUrl ? (
+                  <img
+                    src={faviconUrl}
+                    alt=""
+                    width="16"
+                    height="16"
+                    style={{ borderRadius: 4, flexShrink: 0 }}
+                  />
+                ) : (
+                  <span aria-hidden="true" style={{ fontSize: 14, lineHeight: 1, flexShrink: 0 }}>
+                    🌐
+                  </span>
+                )}
+                <span style={{ minWidth: 0 }}>
+                  <span style={{ display: "block", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {host}
+                  </span>
+                  <span className="app-subtle" style={{ display: "block", fontSize: 12, overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {url}
+                  </span>
+                </span>
+              </span>
+              <span className={`status-pill ${permission.toneClass}`} style={{ flexShrink: 0 }}>
+                {permission.isVerified ? "✓ " : ""}
+                {permission.label}
+              </span>
+            </button>
+          );
+        })}
+        {filteredSites.length === 0 && (
+          <p className="app-subtle" style={{ margin: 0, padding: "8px 2px" }}>
+            No sites match "{query}".
+          </p>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -388,7 +606,7 @@ function normalizeIndustryValue(value) {
 }
 
 function businessContextFromProfileDraft() {
-  const draft = getBusinessProfileDraft();
+  const draft = getActiveProject() || {};
   return {
     industry: normalizeIndustryValue(draft.company?.industry),
     monthly_budget: toPositiveNumber(draft.targets?.monthly_budget),
@@ -402,8 +620,71 @@ function businessContextFromProfileDraft() {
   };
 }
 
+function buildReportRoutine({
+  selectedConnections,
+  datePreset,
+  dateFrom,
+  dateTo,
+  goal,
+  customGoal,
+  context,
+  selectedAdsCustomerId,
+  adsAccounts,
+  selectedGa4PropertyId,
+  ga4Properties,
+  selectedGscSiteUrl,
+  businessContext,
+}) {
+  const customerId = normalizeCustomerId(selectedAdsCustomerId);
+  const ga4PropertyId = normalizeGa4PropertyId(selectedGa4PropertyId);
+  const gscSiteUrl = normalizeGscSiteUrl(selectedGscSiteUrl);
+  const selectedAdsAccount = adsAccounts.find((a) => normalizeCustomerId(a.customer_id) === customerId);
+  const selectedGa4Property = ga4Properties.find(
+    (property) => normalizeGa4PropertyId(property.property_id) === ga4PropertyId
+  );
+
+  return {
+    schema_version: 1,
+    date_preset: datePreset,
+    custom_date_from: datePreset === "custom" ? dateFrom : null,
+    custom_date_to: datePreset === "custom" ? dateTo : null,
+    goal,
+    custom_goal: goal === "custom" ? customGoal.trim() : "",
+    context,
+    connections: selectedConnections,
+    targets: {
+      ...(selectedConnections.includes("google_ads")
+        ? {
+            google_ads: {
+              customer_id: customerId,
+              account_name: selectedAdsAccount?.descriptive_name ?? "",
+              currency_code: selectedAdsAccount?.currency_code || "USD",
+              login_customer_id: "",
+            },
+          }
+        : {}),
+      ...(selectedConnections.includes("ga4")
+        ? {
+            ga4: {
+              property_id: ga4PropertyId,
+              property_name: selectedGa4Property?.property_name ?? "",
+            },
+          }
+        : {}),
+      ...(selectedConnections.includes("gsc")
+        ? {
+            gsc: {
+              site_url: gscSiteUrl,
+            },
+          }
+        : {}),
+    },
+    business_context: businessContext,
+  };
+}
+
 function profileContextFromDraft() {
-  const draft = getBusinessProfileDraft();
+  const draft = getActiveProject() || {};
   const growthStage = String(draft.targets?.growth_stage_milestone || "").replaceAll("_", " ");
   const lines = [];
   if (draft.company?.business_model) {
@@ -1217,7 +1498,22 @@ export default function GeneratePage() {
   function handleSave() {
     if (!report) return;
     const slug = generateSlug(selectedAdsCustomerId || sessionStorage.getItem("gads_customer_id") || "", dateTo);
-    saveLocalReport(slug, report);
+    const routine = buildReportRoutine({
+      selectedConnections,
+      datePreset,
+      dateFrom,
+      dateTo,
+      goal,
+      customGoal,
+      context,
+      selectedAdsCustomerId,
+      adsAccounts,
+      selectedGa4PropertyId,
+      ga4Properties,
+      selectedGscSiteUrl,
+      businessContext,
+    });
+    saveLocalReport(slug, report, routine, getActiveProjectId() || null);
     setSaved(true);
     setTimeout(() => router.push("/reports"), 400);
   }

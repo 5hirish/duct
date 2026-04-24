@@ -12,6 +12,35 @@
 export const LOCAL_REPORTS_STORAGE_KEY = "duct_local_reports";
 const STORAGE_KEY = LOCAL_REPORTS_STORAGE_KEY;
 const MAX_REPORTS = 50;
+const UI_SCHEMA_VERSION = 1;
+const ROUTINE_SCHEMA_VERSION = 1;
+
+function defaultRefreshState() {
+  return {
+    last_refreshed_at: null,
+    refresh_status: "idle",
+    refresh_error: null,
+    live_briefs: null,
+  };
+}
+
+function defaultUiState() {
+  return {
+    schema_version: UI_SCHEMA_VERSION,
+    kpi_overrides: [],
+    annotations: [],
+    action_items: [],
+  };
+}
+
+function withReportDefaults(entry) {
+  if (!entry) return null;
+  return {
+    ...entry,
+    refresh: { ...defaultRefreshState(), ...(entry.refresh || {}) },
+    ui: { ...defaultUiState(), ...(entry.ui || {}) },
+  };
+}
 
 function readStore() {
   try {
@@ -30,11 +59,13 @@ function writeStore(reports) {
   }
 }
 
-export function getLocalReports() {
-  return readStore();
+export function getLocalReports(projectId = null) {
+  const reports = readStore();
+  if (!projectId) return reports;
+  return reports.filter((entry) => entry.project_id === projectId);
 }
 
-export function saveLocalReport(slug, payload) {
+export function saveLocalReport(slug, payload, routine = null, projectId = null) {
   const reports = readStore();
 
   // Mark as locally stored (support both envelope and legacy flat format)
@@ -45,7 +76,23 @@ export function saveLocalReport(slug, payload) {
 
   // Remove existing entry with same slug (update case)
   const filtered = reports.filter((r) => r.slug !== slug);
-  filtered.unshift({ slug, payload, savedAt: new Date().toISOString() });
+  const nextEntry = {
+    slug,
+    payload,
+    savedAt: new Date().toISOString(),
+    project_id: projectId || null,
+    ...(routine
+      ? {
+          routine: {
+            schema_version: ROUTINE_SCHEMA_VERSION,
+            ...routine,
+          },
+          refresh: defaultRefreshState(),
+          ui: defaultUiState(),
+        }
+      : {}),
+  };
+  filtered.unshift(nextEntry);
 
   // Cap at MAX_REPORTS
   if (filtered.length > MAX_REPORTS) {
@@ -56,9 +103,46 @@ export function saveLocalReport(slug, payload) {
 }
 
 export function getLocalReportBySlug(slug) {
+  const entry = getReportEntry(slug);
+  return entry ? entry.payload : null;
+}
+
+export function getReportEntry(slug) {
   const reports = readStore();
   const entry = reports.find((r) => r.slug === slug);
-  return entry ? entry.payload : null;
+  return withReportDefaults(entry);
+}
+
+export function patchReportRefresh(slug, patch) {
+  const reports = readStore();
+  let changed = false;
+  const next = reports.map((entry) => {
+    if (entry.slug !== slug) return entry;
+    changed = true;
+    const refresh = {
+      ...defaultRefreshState(),
+      ...(entry.refresh || {}),
+      ...(patch || {}),
+    };
+    return { ...entry, refresh };
+  });
+  if (changed) writeStore(next);
+}
+
+export function patchReportUi(slug, patch) {
+  const reports = readStore();
+  let changed = false;
+  const next = reports.map((entry) => {
+    if (entry.slug !== slug) return entry;
+    changed = true;
+    const ui = {
+      ...defaultUiState(),
+      ...(entry.ui || {}),
+      ...(patch || {}),
+    };
+    return { ...entry, ui };
+  });
+  if (changed) writeStore(next);
 }
 
 export function deleteLocalReport(slug) {

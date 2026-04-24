@@ -57,6 +57,32 @@ export async function generateReport(params) {
   return res.json();
 }
 
+export async function refreshReportBriefs(routine) {
+  const refreshToken = sessionStorage.getItem("gads_refresh_token") || "";
+  const ga4RefreshToken = sessionStorage.getItem("ga4_refresh_token") || "";
+  const gscRefreshToken = sessionStorage.getItem("gsc_refresh_token") || "";
+  const body = {
+    connections: routine?.connections || [],
+    date_preset: routine?.date_preset || "30",
+    date_from: routine?.custom_date_from || "",
+    date_to: routine?.custom_date_to || "",
+    refresh_token: refreshToken,
+    ga4_refresh_token: ga4RefreshToken,
+    gsc_refresh_token: gscRefreshToken,
+    targets: routine?.targets || {},
+  };
+  const res = await fetch(`${BASE}/api/reports/refresh`, {
+    method: "POST",
+    headers: backendApiHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || `Server error ${res.status}`);
+  }
+  return res.json();
+}
+
 function parseSseFrames(buffer) {
   const frames = [];
   let rest = buffer;

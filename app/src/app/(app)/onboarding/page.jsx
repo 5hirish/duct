@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,9 +18,12 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import {
-  getBusinessProfileDraft,
-  saveBusinessProfileDraft,
-} from "../../../lib/businessProfile";
+  createProject,
+  getActiveProject,
+  getProjectById,
+  saveProject,
+  setActiveProjectId,
+} from "../../../lib/projects";
 
 const INDUSTRIES = [
   "E-commerce & Retail",
@@ -116,8 +120,12 @@ const STEP_DEFINITIONS = [
 ];
 
 export default function OnboardingPage() {
+  const searchParams = useSearchParams();
   const [ready, setReady] = useState(false);
   const [step, setStep] = useState(1);
+  const [projectMeta, setProjectMeta] = useState(null);
+  const [isNewProjectFlow, setIsNewProjectFlow] = useState(false);
+  const [projectLoadError, setProjectLoadError] = useState("");
   const [profile, setProfile] = useState({
     company: { name: "", industry: "", business_model: "", website_url: "" },
     targets: {
@@ -143,7 +151,34 @@ export default function OnboardingPage() {
   });
 
   useEffect(() => {
-    const draft = getBusinessProfileDraft();
+    const wantsNewProject = searchParams.get("new") === "1";
+    const requestedProjectId = searchParams.get("project_id");
+    setIsNewProjectFlow(wantsNewProject);
+    setProjectLoadError("");
+    let project = null;
+    if (wantsNewProject) {
+      setProjectMeta(null);
+      setReady(true);
+      return;
+    } else if (requestedProjectId) {
+      project = getProjectById(requestedProjectId);
+      if (!project) {
+        setProjectMeta(null);
+        setProjectLoadError("Project not found. It may have been deleted.");
+        setReady(true);
+        return;
+      }
+      setActiveProjectId(project.id);
+    } else {
+      project = getActiveProject();
+      if (!project) {
+        project = createProject();
+        setActiveProjectId(project.id);
+      }
+    }
+
+    setProjectMeta(project);
+    const draft = project || {};
     setProfile((prev) => ({
       ...prev,
       ...draft,
@@ -178,12 +213,35 @@ export default function OnboardingPage() {
       },
     }));
     setReady(true);
-  }, []);
+  }, [searchParams]);
+
+  function isStepOneRequiredComplete(currentProfile) {
+    return Boolean(
+      currentProfile.company?.name?.trim() &&
+      currentProfile.company?.industry?.trim() &&
+      currentProfile.company?.business_model?.trim()
+    );
+  }
 
   useEffect(() => {
     if (!ready) return;
-    saveBusinessProfileDraft(profile);
-  }, [profile, ready]);
+    if (!projectMeta?.id) {
+      if (!isNewProjectFlow || !isStepOneRequiredComplete(profile)) return;
+      const created = createProject({
+        ...profile,
+        name: profile.company.name || "Untitled project",
+      });
+      setProjectMeta(created);
+      setActiveProjectId(created.id);
+      window.dispatchEvent(new Event("duct:project-changed"));
+      return;
+    }
+    saveProject({
+      ...projectMeta,
+      ...profile,
+      name: projectMeta.name || profile.company.name || "Untitled project",
+    });
+  }, [profile, projectMeta, ready, isNewProjectFlow]);
 
   const stepProgress = useMemo(
     () =>
@@ -259,8 +317,20 @@ export default function OnboardingPage() {
   if (!ready) {
     return (
       <section>
-        <h1 className="text-2xl font-semibold tracking-tight mb-2">Profile setup</h1>
+        <h1 className="text-2xl font-semibold tracking-tight mb-2">Project setup</h1>
         <p className="text-sm text-muted-foreground">Loading your saved progress...</p>
+      </section>
+    );
+  }
+
+  if (projectLoadError) {
+    return (
+      <section>
+        <h1 className="text-2xl font-semibold tracking-tight mb-2">Project setup</h1>
+        <p className="text-sm text-muted-foreground mb-4">{projectLoadError}</p>
+        <Button asChild>
+          <Link href="/projects">Back to manage projects</Link>
+        </Button>
       </section>
     );
   }
@@ -270,7 +340,7 @@ export default function OnboardingPage() {
       {/* Sticky progress shell */}
       <div className="onboarding-progress-shell">
         <div className="page-toolbar" style={{ marginBottom: 8 }}>
-          <h1 className="page-toolbar-title text-lg font-semibold tracking-tight">Profile setup</h1>
+          <h1 className="page-toolbar-title text-lg font-semibold tracking-tight">Project setup</h1>
           <span className="text-sm text-muted-foreground">{inputProgressPercent}% complete</span>
         </div>
 

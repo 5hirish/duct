@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends
 
-from routes import auth, connectors, generate, health, signin
+from routes import auth, connectors, generate, health, reports, signin
 from service.auth import validate_api_key
 
 router = APIRouter()
@@ -20,5 +20,10 @@ router.include_router(
 router.include_router(
     generate.router,
     prefix="/api",
+    dependencies=[Depends(validate_api_key)],
+)
+router.include_router(
+    reports.router,
+    prefix="/api/reports",
     dependencies=[Depends(validate_api_key)],
 )

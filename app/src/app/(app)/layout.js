@@ -1,10 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
 import AppNav from "../../components/AppNav";
 import { AuthProvider, AuthGuard } from "../../lib/auth";
+import { migrateFromLegacyProfile } from "../../lib/projects";
 
 export default function AppLayout({ children }) {
+  useEffect(() => {
+    migrateFromLegacyProfile();
+  }, []);
+
   return (
     <AuthProvider>
       <AuthGuard>

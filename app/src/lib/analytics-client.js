@@ -13,6 +13,14 @@ export function bootGtmDeferred(gtmId) {
 
   const w = window;
   const d = document;
+  const host = w.location?.hostname || "";
+  const isLocalhost =
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host === "0.0.0.0" ||
+    host.endsWith(".local");
+  if (isLocalhost) return;
+
   const tag = "script";
   const dlName = "dataLayer";
   let loaded = false;
