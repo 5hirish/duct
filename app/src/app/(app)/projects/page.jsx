@@ -6,6 +6,16 @@ import { useRouter } from "next/navigation";
 import { Trash2, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { deleteProject, getActiveProjectId, getProjects, setActiveProjectId } from "../../../lib/projects";
 
 function safeHostname(url) {
@@ -28,6 +38,7 @@ export default function ProjectsPage() {
   const router = useRouter();
   const [projects, setProjects] = useState([]);
   const [activeId, setActiveId] = useState("");
+  const [projectPendingDelete, setProjectPendingDelete] = useState(null);
 
   const hasProjects = projects.length > 0;
 
@@ -57,16 +68,16 @@ export default function ProjectsPage() {
     router.push(`/project/${projectId}`);
   }
 
-  function handleDeleteProject(event, project) {
+  function requestDeleteProject(event, project) {
     event.stopPropagation();
     event.preventDefault();
+    setProjectPendingDelete(project);
+  }
 
-    const confirmed = window.confirm(
-      `Delete project "${project.name || "Untitled project"}"? This cannot be undone.`
-    );
-    if (!confirmed) return;
-
-    deleteProject(project.id);
+  function confirmDeleteProject() {
+    if (!projectPendingDelete?.id) return;
+    deleteProject(projectPendingDelete.id);
+    setProjectPendingDelete(null);
     const nextProjects = getProjects();
     setProjects(nextProjects);
     setActiveId(getActiveProjectId() || "");
@@ -103,11 +114,18 @@ export default function ProjectsPage() {
           const host = safeHostname(url);
 
           return (
-            <button
+            <div
               key={project.id}
-              type="button"
+              role="button"
+              tabIndex={0}
               onClick={() => handleOpenProject(project.id)}
-              className="group rounded-3xl border border-border bg-card p-4 text-left shadow-sm ring-1 ring-foreground/5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleOpenProject(project.id);
+                }
+              }}
+              className="group cursor-pointer rounded-3xl border border-border bg-card p-4 text-left shadow-sm ring-1 ring-foreground/5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-3">
@@ -132,7 +150,7 @@ export default function ProjectsPage() {
                     size="icon"
                     className="size-8 rounded-full text-muted-foreground hover:text-destructive"
                     aria-label={`Delete ${name}`}
-                    onClick={(event) => handleDeleteProject(event, project)}
+                    onClick={(event) => requestDeleteProject(event, project)}
                   >
                     <Trash2 className="size-4" />
                   </Button>
@@ -146,10 +164,41 @@ export default function ProjectsPage() {
                   <span>No website URL</span>
                 )}
               </div>
-            </button>
+            </div>
           );
         })}
       </div>
+
+      <AlertDialog
+        open={Boolean(projectPendingDelete)}
+        onOpenChange={(open) => {
+          if (!open) setProjectPendingDelete(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {projectPendingDelete
+                ? `Delete “${projectPendingDelete.name || projectPendingDelete.company?.name || "Untitled project"}”?`
+                : "Delete project?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes the project and its saved configuration from this browser. Saved reports are not removed
+              automatically. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel type="button">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              type="button"
+              className="bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30"
+              onClick={confirmDeleteProject}
+            >
+              Delete project
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   );
 }
