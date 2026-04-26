@@ -5,8 +5,8 @@ Minimal Next.js app shell for rendering backend-generated reports.
 ## Current scope (no auth)
 
 - app layout shell
-- report list page (`/reports`)
-- report detail viewer (`/reports/[slug]`)
+- insights list page (`/insights`)
+- insight detail viewer (`/insights/[slug]`)
 - file-based artifact loading from `../backend/data/google_ads`
 
 ## Local run
@@ -17,7 +17,7 @@ npm install
 npm run dev
 ```
 
-Open: `http://localhost:3000/reports`
+Open: `http://localhost:3000/insights`
 
 ## Production (Cloudflare Workers)
 

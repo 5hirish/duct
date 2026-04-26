@@ -74,14 +74,14 @@ function SignInContent() {
     if (token) {
       localStorage.setItem(TOKEN_KEY, token);
       window.history.replaceState({}, "", "/");
-      router.replace("/reports");
+      router.replace("/insights");
       return;
     }
 
     // Already authenticated? Redirect.
     const existing = localStorage.getItem(TOKEN_KEY);
     if (isTokenValid(existing)) {
-      router.replace("/reports");
+      router.replace("/insights");
       return;
     }
 

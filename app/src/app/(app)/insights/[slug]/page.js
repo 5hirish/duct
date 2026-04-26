@@ -7,10 +7,10 @@ import LocalReportDetail from "../../../../components/LocalReportDetail";
 
 export const dynamic = "force-dynamic";
 
-export default async function ReportDetailPage({ params }) {
+export default async function InsightDetailPage({ params }) {
   const { slug } = await params;
 
-  // Local reports (stored in localStorage) are handled client-side
+  // Local insights (stored in localStorage) are handled client-side.
   if (slug.startsWith("local-")) {
     return <LocalReportDetail slug={slug} />;
   }
@@ -23,8 +23,8 @@ export default async function ReportDetailPage({ params }) {
   return (
     <section>
       <p style={{ marginTop: 0, marginBottom: 10 }}>
-        <Link href="/reports" transitionTypes={REPORT_NAV_TRANSITION_TYPES}>
-          &larr; Back to reports
+        <Link href="/insights" transitionTypes={REPORT_NAV_TRANSITION_TYPES}>
+          &larr; Back to insights
         </Link>
       </p>
       <h1 className="report-detail-title text-2xl font-semibold tracking-tight" style={{ marginTop: 0, marginBottom: 6 }}>

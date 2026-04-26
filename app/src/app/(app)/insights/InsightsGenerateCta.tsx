@@ -4,10 +4,10 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 
-export function ReportsGenerateCta() {
+export function InsightsGenerateCta() {
   return (
     <Button variant="outline" size="default" asChild>
-      <Link href="/generate">Generate</Link>
+      <Link href="/insights/generate">Generate Insight</Link>
     </Button>
   );
 }

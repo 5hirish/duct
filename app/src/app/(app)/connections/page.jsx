@@ -43,7 +43,7 @@ export default function ConnectionsPage() {
           className="connection-back-btn shrink-0 rounded-full"
           asChild
         >
-          <Link href="/reports" aria-label="Back to Reports" title="Back to Reports">
+          <Link href="/insights" aria-label="Back to Insights" title="Back to Insights">
             <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
               <path
                 d="M15 18 9 12l6-6"
@@ -59,9 +59,9 @@ export default function ConnectionsPage() {
         <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">Connections</h1>
       </div>
       <p className="app-subtle" style={{ marginTop: 0, marginBottom: 18 }}>
-        Manage data source connections for reports. Choose your Google Ads account when you{" "}
-        <Link href="/generate" className="app-link">
-          generate a report
+        Manage data source connections for insights. Choose your Google Ads account when you{" "}
+        <Link href="/insights/generate" className="app-link">
+          generate an insight
         </Link>
         .
       </p>

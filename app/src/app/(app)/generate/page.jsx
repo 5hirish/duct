@@ -43,7 +43,7 @@ const GOALS = [
     key: "custom",
     icon: "\u{270F}\u{FE0F}",
     label: "Custom goal",
-    description: "Describe your own analysis goal \u2014 the AI agent will tailor the report to your intent.",
+    description: "Describe your own analysis goal \u2014 the AI agent will tailor the insight to your intent.",
   },
 ];
 
@@ -111,7 +111,7 @@ function StepConnections({ connections, selected, onToggle }) {
     <div className="generate-step">
       <h2 className="generate-step-title">Select your data sources</h2>
       <p className="app-subtle" style={{ marginTop: 0, marginBottom: 16 }}>
-        Choose which connected tools to include in your report.
+        Choose which connected tools to include in your insight.
       </p>
       <div className="connection-grid">
         {connections.map((conn) => (
@@ -741,7 +741,7 @@ function StepGoal({
     <div className="generate-step">
       <h2 className="generate-step-title">What do you want to analyze?</h2>
       <p className="app-subtle" style={{ marginTop: 0, marginBottom: 16 }}>
-        Select a goal and provide any additional context for a more targeted report.
+        Select a goal and provide any additional context for a more targeted insight.
       </p>
 
       <div className="goal-grid">
@@ -991,9 +991,9 @@ function StepReview({
 
   return (
     <div className="generate-step">
-      <h2 className="generate-step-title">Review and generate</h2>
+      <h2 className="generate-step-title">Review and generate insight</h2>
       <p className="app-subtle" style={{ marginTop: 0, marginBottom: 16 }}>
-        Confirm the details below. This starts fetching data and building your report.
+        Confirm the details below. This starts fetching data and building your insight.
       </p>
       <div className="generate-review">
         <div>
@@ -1105,7 +1105,7 @@ function StepAnalyzing({
 
   return (
     <div className="generate-step generate-step--analyzing">
-      <h2 className="generate-step-title">Generating your report...</h2>
+      <h2 className="generate-step-title">Generating your insight...</h2>
       <div className="pipeline-steps">
         {PIPELINE_STEPS.map((step) => {
           const connectorStatuses = selectedConnections.map((connectorId) => ({
@@ -1166,7 +1166,7 @@ function StepReport({ report, onSave, onRestart, saved }) {
     <div className="generate-step">
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
         <Button type="button" onClick={onSave} disabled={saved}>
-          {saved ? "Saved to Reports" : "Save to Reports"}
+          {saved ? "Saved to Insights" : "Save to Insights"}
         </Button>
         <Button type="button" variant="outline" onClick={onRestart}>
           Generate another
@@ -1176,9 +1176,9 @@ function StepReport({ report, onSave, onRestart, saved }) {
         <GoogleAdsReport brief={brief} synthesis={synthesis} />
       ) : (
         <div className="generate-alert" role="status">
-          <h3 className="generate-alert-title">Report generated</h3>
+          <h3 className="generate-alert-title">Insight generated</h3>
           <p className="generate-alert-help" style={{ marginBottom: 10 }}>
-            A Google Ads brief was not included in this run, so the standard report view is unavailable.
+            A Google Ads brief was not included in this run, so the standard insight view is unavailable.
           </p>
           <p className="generate-alert-help" style={{ marginBottom: 10 }}>
             Connectors used: {connectorsUsed.length ? connectorsUsed.join(", ") : "—"}
@@ -1515,7 +1515,7 @@ export default function GeneratePage() {
     });
     saveLocalReport(slug, report, routine, getActiveProjectId() || null);
     setSaved(true);
-    setTimeout(() => router.push("/reports"), 400);
+    setTimeout(() => router.push("/insights"), 400);
   }
 
   function handleRestart() {
@@ -1635,7 +1635,7 @@ export default function GeneratePage() {
           className="connection-back-btn shrink-0 rounded-full"
           asChild
         >
-          <Link href="/reports" aria-label="Back to Reports" title="Back to Reports">
+          <Link href="/insights" aria-label="Back to Insights" title="Back to Insights">
             <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
               <path
                 d="M15 18 9 12l6-6"
@@ -1648,7 +1648,7 @@ export default function GeneratePage() {
             </svg>
           </Link>
         </Button>
-        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">Generate Report</h1>
+        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">Generate Insight</h1>
       </div>
 
       <ProgressDots step={step} />

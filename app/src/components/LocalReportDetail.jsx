@@ -98,8 +98,8 @@ export default function LocalReportDetail({ slug }) {
     return (
       <section>
         <p style={{ marginTop: 0, marginBottom: 10 }}>
-          <Link href="/reports" transitionTypes={REPORT_NAV_TRANSITION_TYPES}>
-            &larr; Back to reports
+          <Link href="/insights" transitionTypes={REPORT_NAV_TRANSITION_TYPES}>
+            &larr; Back to insights
           </Link>
         </p>
         <h1 className="report-detail-title" style={{ marginTop: 0, marginBottom: 6 }}>
@@ -164,8 +164,8 @@ export default function LocalReportDetail({ slug }) {
   return (
     <section>
       <p style={{ marginTop: 0, marginBottom: 10 }}>
-        <Link href="/reports" transitionTypes={REPORT_NAV_TRANSITION_TYPES}>
-          &larr; Back to reports
+        <Link href="/insights" transitionTypes={REPORT_NAV_TRANSITION_TYPES}>
+          &larr; Back to insights
         </Link>
       </p>
       <h1 className="report-detail-title" style={{ marginTop: 0, marginBottom: 6 }}>

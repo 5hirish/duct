@@ -119,12 +119,12 @@ export default function ReportsList({ serverReports, projectId = null }) {
   if (allReports.length === 0) {
     return (
       <div className="py-8 text-center">
-        <p className="mb-2 text-sm font-medium">No reports yet.</p>
+        <p className="mb-2 text-sm font-medium">No insights yet.</p>
         <p className="mb-5 text-sm text-muted-foreground max-w-sm mx-auto">
-          Generate an intelligence brief from your connected sources. Reports you save appear here.
+          Generate an intelligence brief from your connected sources. Saved insights appear here.
         </p>
         <Button asChild>
-          <Link href="/generate">Generate a report</Link>
+          <Link href="/insights/generate">Generate an insight</Link>
         </Button>
       </div>
     );
@@ -135,7 +135,7 @@ export default function ReportsList({ serverReports, projectId = null }) {
       {allReports.map((report) => (
         <Link
           key={report.slug}
-          href={`/reports/${report.slug}`}
+          href={`/insights/${report.slug}`}
           className="group relative overflow-hidden flex flex-col justify-between min-h-24 rounded-3xl border border-border bg-card p-4 text-sm shadow-sm ring-1 ring-foreground/5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
           aria-label={reportCardAriaLabel(report)}
           transitionTypes={REPORT_NAV_TRANSITION_TYPES}

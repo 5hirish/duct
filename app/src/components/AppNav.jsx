@@ -28,8 +28,7 @@ export default function AppNav() {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
   const isConnections = pathname.startsWith("/connections");
-  const isGenerate = pathname.startsWith("/generate");
-  const isReports = pathname.startsWith("/reports");
+  const isInsights = pathname.startsWith("/insights");
 
   return (
     <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
@@ -37,11 +36,8 @@ export default function AppNav() {
         <Button variant="ghost" size="sm" className={navPillClass(isConnections)} asChild>
           <Link href="/connections">Connections</Link>
         </Button>
-        <Button variant="ghost" size="sm" className={navPillClass(isGenerate)} asChild>
-          <Link href="/generate">Generate</Link>
-        </Button>
-        <Button variant="ghost" size="sm" className={navPillClass(isReports)} asChild>
-          <Link href="/reports">Reports</Link>
+        <Button variant="ghost" size="sm" className={navPillClass(isInsights)} asChild>
+          <Link href="/insights">Insights</Link>
         </Button>
       </div>
 

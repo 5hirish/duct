@@ -4,7 +4,7 @@ export default function manifest() {
     short_name: "Duct",
     description:
       "Duct synthesizes data across product, marketing, and sales tools into weekly intelligence briefs.",
-    start_url: "/reports",
+    start_url: "/insights",
     scope: "/",
     display: "standalone",
     background_color: "#ffffff",

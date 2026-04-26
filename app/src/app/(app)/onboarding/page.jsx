@@ -715,10 +715,10 @@ export default function OnboardingPage() {
 
           <div className="mt-2 flex flex-wrap gap-2">
             <Button type="button" asChild>
-              <Link href="/generate">Go to Generate</Link>
+              <Link href="/insights/generate">Go to Generate Insight</Link>
             </Button>
             <Button type="button" variant="outline" asChild>
-              <Link href="/reports">Back to Reports</Link>
+              <Link href="/insights">Back to Insights</Link>
             </Button>
           </div>
         </div>

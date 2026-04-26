@@ -18,7 +18,7 @@ export default function AppLayout({ children }) {
           <header className="app-header border-border/70 bg-background/85 shadow-sm ring-1 ring-border/40 backdrop-blur-xl supports-[backdrop-filter]:bg-background/70">
             <div className="app-header-inner">
               <div className="app-header-left">
-                <Link className="logo" href="/reports">
+                <Link className="logo" href="/insights">
                   duct <span className="logo-mark" aria-hidden="true" />
                 </Link>
                 <span className="app-subtle">app</span>

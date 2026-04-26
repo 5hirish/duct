@@ -46,7 +46,7 @@ export default function ProjectSwitcher() {
     setActiveProjectId(id);
     setActiveId(id);
     window.dispatchEvent(new Event("duct:project-changed"));
-    if (pathname?.startsWith("/reports")) {
+    if (pathname?.startsWith("/insights")) {
       router.refresh();
     }
   }
