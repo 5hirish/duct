@@ -94,7 +94,12 @@ function isDemoReport(report) {
   return report.slug === "google-ads-report";
 }
 
-export default function ReportsList({ serverReports, projectId = null, mode = null }) {
+export default function ReportsList({
+  serverReports,
+  projectId = null,
+  mode = null,
+  showGenerateButton = true,
+}) {
   const [localReports, setLocalReports] = useState([]);
 
   const syncLocalReportsFromStorage = useEffectEvent(() => {
@@ -129,9 +134,11 @@ export default function ReportsList({ serverReports, projectId = null, mode = nu
         <p className="mb-5 text-sm text-muted-foreground max-w-sm mx-auto">
           Generate an intelligence brief from your connected sources. Saved insights appear here.
         </p>
-        <Button asChild>
-          <Link href={mode ? `/insights/generate?mode=${mode}` : "/insights/generate"}>Generate an insight</Link>
-        </Button>
+        {showGenerateButton && (
+          <Button asChild>
+            <Link href={mode ? `/insights/generate?mode=${mode}` : "/insights/generate"}>Generate an insight</Link>
+          </Button>
+        )}
       </div>
     );
   }
