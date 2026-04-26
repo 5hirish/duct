@@ -53,8 +53,8 @@ function normalizeGscSiteUrl(url) {
 /** Map wizard step (1–6) to one of four progress phases: sources → configure → generating → report. */
 function progressPhase(step) {
   if (step <= 1) return 1;
-  if (step <= 4) return 2;
-  if (step === 5) return 3;
+  if (step <= 5) return 2;
+  if (step === 6) return 3;
   return 4;
 }
 
@@ -126,15 +126,6 @@ function StepConnections({ connections, selected, onToggle, locked = false }) {
     </div>
   );
 }
-
-const INDUSTRIES = [
-  { value: "", label: "Select industry..." },
-  { value: "ecommerce", label: "E-commerce" },
-  { value: "saas", label: "SaaS / B2B" },
-  { value: "lead_gen", label: "Lead generation" },
-  { value: "agency", label: "Agency / multi-client" },
-  { value: "other", label: "Other" },
-];
 
 function StepAdsAccount({ accounts, loading, fetchError, selectedId, onChange }) {
   if (loading) {
@@ -556,6 +547,10 @@ function dateRangeSummary(datePreset, dateFrom, dateTo) {
   return `${dateFrom} → ${dateTo}`;
 }
 
+function getWizardStorageKey(modeKey) {
+  return `duct_generate_wizard:${modeKey || DEFAULT_MODE_KEY}`;
+}
+
 function toPositiveNumber(value) {
   if (typeof value === "number") return Number.isFinite(value) && value > 0 ? value : 0;
   if (typeof value === "string") {
@@ -701,9 +696,26 @@ function profileContextFromDraft() {
   return lines.join("\n");
 }
 
+const BUSINESS_FIELD_TYPE = {
+  TEXT: "text",
+  NUMBER: "number",
+  SELECT: "select",
+  TEXTAREA: "textarea",
+};
+
+const BUSINESS_FIELD_SHOW_IF = {
+  ADS_SELECTED: "ads_selected",
+};
+
+function visibleBusinessContextFields(fields, showPaidTargets) {
+  return (fields || []).filter((field) => {
+    if (field?.show_if === BUSINESS_FIELD_SHOW_IF.ADS_SELECTED) return showPaidTargets;
+    return true;
+  });
+}
+
 function StepGoal({
   goals,
-  mode,
   goal,
   onGoalChange,
   customGoal,
@@ -717,9 +729,26 @@ function StepGoal({
   datePreset,
   onDatePresetChange,
   showPaidTargets,
+  businessContextFields,
   businessContext,
   onBusinessContextChange,
 }) {
+  const fields = visibleBusinessContextFields(businessContextFields, showPaidTargets);
+
+  function updateBusinessContextValue(field, rawValue) {
+    if (field.type === BUSINESS_FIELD_TYPE.NUMBER) {
+      onBusinessContextChange({
+        ...businessContext,
+        [field.key]: parseFloat(rawValue) || 0,
+      });
+      return;
+    }
+    onBusinessContextChange({
+      ...businessContext,
+      [field.key]: rawValue,
+    });
+  }
+
   return (
     <div className="generate-step">
       <h2 className="generate-step-title">What do you want to analyze?</h2>
@@ -763,180 +792,72 @@ function StepGoal({
         <span className="app-subtle" style={{ display: "block", marginBottom: 8 }}>
           Business context (optional)
         </span>
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {mode !== "organic_growth" && (
-            <label className="generate-field">
-              <span className="app-subtle">Industry</span>
-              <select
-                className="app-input"
-                value={businessContext.industry || ""}
-                onChange={(e) => onBusinessContextChange({ ...businessContext, industry: e.target.value })}
-              >
-                {INDUSTRIES.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
-            </label>
-          )}
-          {mode === "organic_growth" && (
-            <>
-              <label className="generate-field">
-                <span className="app-subtle">Primary organic KPI</span>
-                <select
-                  className="app-input"
-                  value={businessContext.primary_organic_kpi || ""}
-                  onChange={(e) => onBusinessContextChange({ ...businessContext, primary_organic_kpi: e.target.value })}
-                >
-                  <option value="">Select primary KPI...</option>
-                  <option value="organic_traffic">Organic Traffic</option>
-                  <option value="keyword_rankings">Keyword Rankings</option>
-                  <option value="backlinks">Backlinks</option>
-                  <option value="conversions_from_organic">Conversions from Organic</option>
-                </select>
-              </label>
-              <label className="generate-field">
-                <span className="app-subtle">Monthly organic traffic target (optional)</span>
+        <div className="generate-context-grid">
+          {fields.map((field) => {
+            const fieldClassName = `generate-field${field.full_width ? " generate-field--full" : ""}`;
+            const value = businessContext[field.key] ?? "";
+            const displayValue =
+              field.type === BUSINESS_FIELD_TYPE.NUMBER && field.empty_if_zero && Number(value) === 0
+                ? ""
+                : value;
+
+            if (field.type === BUSINESS_FIELD_TYPE.SELECT) {
+              return (
+                <label key={field.key} className={fieldClassName}>
+                  <span className="app-subtle">{field.label}</span>
+                  <select
+                    className="app-input"
+                    value={String(value)}
+                    onChange={(e) => updateBusinessContextValue(field, e.target.value)}
+                  >
+                    <option value="">{field.placeholder || "Select an option..."}</option>
+                    {(field.options || []).map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              );
+            }
+
+            if (field.type === BUSINESS_FIELD_TYPE.TEXTAREA) {
+              return (
+                <label key={field.key} className={fieldClassName}>
+                  <span className="app-subtle">{field.label}</span>
+                  <textarea
+                    className="app-input app-textarea"
+                    rows={field.rows || 2}
+                    placeholder={field.placeholder || ""}
+                    value={String(value)}
+                    onChange={(e) => updateBusinessContextValue(field, e.target.value)}
+                  />
+                </label>
+              );
+            }
+
+            return (
+              <label key={field.key} className={fieldClassName}>
+                <span className="app-subtle">{field.label}</span>
                 <input
-                  type="number"
+                  type={field.type === BUSINESS_FIELD_TYPE.NUMBER ? BUSINESS_FIELD_TYPE.NUMBER : BUSINESS_FIELD_TYPE.TEXT}
                   className="app-input"
-                  min="0"
-                  step="1"
-                  placeholder="e.g. 10000"
-                  value={businessContext.monthly_organic_traffic_target || ""}
-                  onChange={(e) => onBusinessContextChange({ ...businessContext, monthly_organic_traffic_target: parseFloat(e.target.value) || 0 })}
+                  min={field.type === BUSINESS_FIELD_TYPE.NUMBER ? field.min : undefined}
+                  max={field.type === BUSINESS_FIELD_TYPE.NUMBER ? field.max : undefined}
+                  step={field.type === BUSINESS_FIELD_TYPE.NUMBER ? field.step : undefined}
+                  placeholder={field.placeholder || ""}
+                  value={displayValue}
+                  onChange={(e) => updateBusinessContextValue(field, e.target.value)}
                 />
               </label>
-              <label className="generate-field">
-                <span className="app-subtle">Primary content type</span>
-                <select
-                  className="app-input"
-                  value={businessContext.primary_content_type || ""}
-                  onChange={(e) => onBusinessContextChange({ ...businessContext, primary_content_type: e.target.value })}
-                >
-                  <option value="">Select content type...</option>
-                  <option value="blog_articles">Blog/Articles</option>
-                  <option value="product_pages">Product Pages</option>
-                  <option value="landing_pages">Landing Pages</option>
-                  <option value="docs_help">Docs/Help</option>
-                </select>
-              </label>
-              <label className="generate-field">
-                <span className="app-subtle">What changed recently? (optional)</span>
-                <textarea
-                  className="app-input app-textarea"
-                  rows={2}
-                  placeholder="e.g. Published 10 new articles, migrated to new CMS, added hreflang tags."
-                  value={businessContext.period_changes || ""}
-                  onChange={(e) => onBusinessContextChange({ ...businessContext, period_changes: e.target.value })}
-                />
-              </label>
-            </>
-          )}
-          {showPaidTargets && (
-            <>
-              <label className="generate-field">
-                <span className="app-subtle">Primary conversion action</span>
-                <input
-                  type="text"
-                  className="app-input"
-                  placeholder="e.g. Demo booked, Trial started, Purchase"
-                  value={businessContext.primary_conversion_action || ""}
-                  onChange={(e) => onBusinessContextChange({ ...businessContext, primary_conversion_action: e.target.value })}
-                />
-              </label>
-              <label className="generate-field">
-                <span className="app-subtle">Monthly budget ($)</span>
-                <input
-                  type="number"
-                  className="app-input"
-                  min="0"
-                  step="0.01"
-                  placeholder="e.g. 5000"
-                  value={businessContext.monthly_budget || ""}
-                  onChange={(e) => onBusinessContextChange({ ...businessContext, monthly_budget: parseFloat(e.target.value) || 0 })}
-                />
-              </label>
-              <div className="connections-date-row">
-                <label className="generate-field">
-                  <span className="app-subtle">Target CPA ($)</span>
-                  <input
-                    type="number"
-                    className="app-input"
-                    min="0"
-                    step="0.01"
-                    placeholder="e.g. 50"
-                    value={businessContext.target_cpa || ""}
-                    onChange={(e) => onBusinessContextChange({ ...businessContext, target_cpa: parseFloat(e.target.value) || 0 })}
-                  />
-                </label>
-                <label className="generate-field">
-                  <span className="app-subtle">Target ROAS (x)</span>
-                  <input
-                    type="number"
-                    className="app-input"
-                    min="0"
-                    step="0.1"
-                    placeholder="e.g. 3.0"
-                    value={businessContext.target_roas || ""}
-                    onChange={(e) => onBusinessContextChange({ ...businessContext, target_roas: parseFloat(e.target.value) || 0 })}
-                  />
-                </label>
-              </div>
-              <div className="connections-date-row">
-                <label className="generate-field">
-                  <span className="app-subtle">Target payback (days)</span>
-                  <input
-                    type="number"
-                    className="app-input"
-                    min="0"
-                    step="1"
-                    placeholder="e.g. 90"
-                    value={businessContext.target_payback_days || ""}
-                    onChange={(e) => onBusinessContextChange({ ...businessContext, target_payback_days: parseFloat(e.target.value) || 0 })}
-                  />
-                </label>
-                <label className="generate-field">
-                  <span className="app-subtle">Gross margin (%)</span>
-                  <input
-                    type="number"
-                    className="app-input"
-                    min="0"
-                    max="100"
-                    step="1"
-                    placeholder="e.g. 70"
-                    value={businessContext.gross_margin_percent || ""}
-                    onChange={(e) => onBusinessContextChange({ ...businessContext, gross_margin_percent: parseFloat(e.target.value) || 0 })}
-                  />
-                </label>
-                <label className="generate-field">
-                  <span className="app-subtle">Qualified lead value ($)</span>
-                  <input
-                    type="number"
-                    className="app-input"
-                    min="0"
-                    step="1"
-                    placeholder="e.g. 1200"
-                    value={businessContext.qualified_lead_value || ""}
-                    onChange={(e) => onBusinessContextChange({ ...businessContext, qualified_lead_value: parseFloat(e.target.value) || 0 })}
-                  />
-                </label>
-              </div>
-              <p className="app-subtle" style={{ marginTop: 2, marginBottom: 0 }}>
-                Add at least one economic guardrail above to improve ROI recommendations.
-              </p>
-              <label className="generate-field">
-                <span className="app-subtle">What changed during this period? (optional)</span>
-                <textarea
-                  className="app-input app-textarea"
-                  rows={2}
-                  placeholder="e.g. Switched bid strategy, launched new offer, changed landing pages, tracking updates."
-                  value={businessContext.period_changes || ""}
-                  onChange={(e) => onBusinessContextChange({ ...businessContext, period_changes: e.target.value })}
-                />
-              </label>
-            </>
-          )}
+            );
+          })}
         </div>
+        {showPaidTargets && (
+          <p className="app-subtle" style={{ marginTop: 8, marginBottom: 0 }}>
+            Add at least one economic guardrail above to improve ROI recommendations.
+          </p>
+        )}
       </div>
 
       <label className="generate-field" style={{ marginTop: 14 }}>
@@ -994,6 +915,22 @@ function StepGoal({
   );
 }
 
+function formatBusinessContextFieldValue(field, rawValue) {
+  if (rawValue === null || rawValue === undefined) return "";
+  if (field.type === BUSINESS_FIELD_TYPE.SELECT) {
+    const option = (field.options || []).find((item) => String(item.value) === String(rawValue));
+    return option?.label ?? String(rawValue);
+  }
+  if (field.type === BUSINESS_FIELD_TYPE.NUMBER) {
+    const numeric = Number(rawValue);
+    if (!Number.isFinite(numeric) || numeric <= 0) return "";
+    if (field.key?.includes("percent")) return `${numeric}%`;
+    return Number.isInteger(numeric) ? numeric.toLocaleString() : numeric.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  }
+  const text = String(rawValue).trim();
+  return text;
+}
+
 function StepReview({
   selectedConnectionIds,
   connections,
@@ -1011,6 +948,12 @@ function StepReview({
   dateFrom,
   dateTo,
   datePreset,
+  context,
+  businessContext,
+  businessContextFields,
+  showPaidTargets,
+  title = "Review and generate insight",
+  description = "Confirm the details below. This starts fetching data and building your insight.",
 }) {
   const sourceNames = selectedConnectionIds
     .map((id) => connections.find((c) => c.id === id)?.name)
@@ -1028,46 +971,83 @@ function StepReview({
         ? "—"
         : null;
   const gscLine = needsGscSite ? (gscSiteUrl || "—") : null;
+  const businessRows = visibleBusinessContextFields(businessContextFields, showPaidTargets)
+    .map((field) => ({
+      label: field.label,
+      value: formatBusinessContextFieldValue(field, businessContext?.[field.key]),
+      fullWidth: !!field.full_width,
+    }))
+    .filter((row) => !!row.value);
+  const hasAdditionalContext = String(context || "").trim().length > 0;
 
   return (
     <div className="generate-step">
-      <h2 className="generate-step-title">Review and generate insight</h2>
+      <h2 className="generate-step-title">{title}</h2>
       <p className="app-subtle" style={{ marginTop: 0, marginBottom: 16 }}>
-        Confirm the details below. This starts fetching data and building your insight.
+        {description}
       </p>
       <div className="generate-review">
-        <div>
-          <span className="generate-review-label">Data sources</span>
-          <p className="generate-review-value">
-            {sourceNames.length ? sourceNames.join(", ") : "—"}
-          </p>
+        <div className="generate-review-section">
+          <h3 className="generate-review-section-title">Data setup</h3>
+          <div className="generate-review-grid">
+            <div>
+              <span className="generate-review-label">Data sources</span>
+              <p className="generate-review-value">{sourceNames.length ? sourceNames.join(", ") : "—"}</p>
+            </div>
+            {accountLine !== null && (
+              <div>
+                <span className="generate-review-label">Google Ads account</span>
+                <p className="generate-review-value">{accountLine}</p>
+              </div>
+            )}
+            {ga4Line !== null && (
+              <div>
+                <span className="generate-review-label">GA4 property</span>
+                <p className="generate-review-value">{ga4Line}</p>
+              </div>
+            )}
+            {gscLine !== null && (
+              <div>
+                <span className="generate-review-label">Search Console site</span>
+                <p className="generate-review-value">{gscLine}</p>
+              </div>
+            )}
+          </div>
         </div>
-        {accountLine !== null && (
-          <div>
-            <span className="generate-review-label">Google Ads account</span>
-            <p className="generate-review-value">{accountLine}</p>
+
+        <div className="generate-review-section">
+          <h3 className="generate-review-section-title">Analysis setup</h3>
+          <div className="generate-review-grid">
+            <div>
+              <span className="generate-review-label">Goal</span>
+              <p className="generate-review-value">{goalDisplayLabel(goalKey, customGoal, goals)}</p>
+            </div>
+            <div>
+              <span className="generate-review-label">Date range</span>
+              <p className="generate-review-value">{dateRangeSummary(datePreset, dateFrom, dateTo)}</p>
+            </div>
+            {hasAdditionalContext && (
+              <div className="generate-review-item--full">
+                <span className="generate-review-label">Additional context</span>
+                <p className="generate-review-value">{context}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {businessRows.length > 0 && (
+          <div className="generate-review-section">
+            <h3 className="generate-review-section-title">Business context</h3>
+            <div className="generate-review-grid">
+              {businessRows.map((row) => (
+                <div key={row.label} className={row.fullWidth ? "generate-review-item--full" : ""}>
+                  <span className="generate-review-label">{row.label}</span>
+                  <p className="generate-review-value">{row.value}</p>
+                </div>
+              ))}
+            </div>
           </div>
         )}
-        {ga4Line !== null && (
-          <div>
-            <span className="generate-review-label">GA4 property</span>
-            <p className="generate-review-value">{ga4Line}</p>
-          </div>
-        )}
-        {gscLine !== null && (
-          <div>
-            <span className="generate-review-label">Search Console site</span>
-            <p className="generate-review-value">{gscLine}</p>
-          </div>
-        )}
-        <div>
-          <span className="generate-review-label">Goal</span>
-          <p className="generate-review-value">{goalDisplayLabel(goalKey, customGoal, goals)}</p>
-        </div>
-        <div>
-          <span className="generate-review-label">Date range</span>
-          <p className="generate-review-value">{dateRangeSummary(datePreset, dateFrom, dateTo)}</p>
-        </div>
       </div>
     </div>
   );
@@ -1255,9 +1235,7 @@ export default function GeneratePage() {
 
   // Wizard state
   const [step, setStep] = useState(1);
-  const [selectedConnections, setSelectedConnections] = useState(
-    () => lockedConnections?.length ? [...lockedConnections] : []
-  );
+  const [selectedConnections, setSelectedConnections] = useState([]);
   const [goal, setGoal] = useState("");
   const [customGoal, setCustomGoal] = useState("");
   const [context, setContext] = useState(() => profileContextFromDraft());
@@ -1287,6 +1265,7 @@ export default function GeneratePage() {
   const [gscSitesError, setGscSitesError] = useState(null);
   const [selectedGscSiteUrl, setSelectedGscSiteUrl] = useState("");
   const [pipelineStatusByKey, setPipelineStatusByKey] = useState({});
+  const [hydratedFromSession, setHydratedFromSession] = useState(false);
 
   // Detect connected sources (Google Ads = OAuth token only; account chosen in generate flow)
   const [connections, setConnections] = useState([]);
@@ -1345,6 +1324,93 @@ export default function GeneratePage() {
       },
     ]);
   }, []);
+
+  useEffect(() => {
+    const storageKey = getWizardStorageKey(activeMode);
+    try {
+      const raw = sessionStorage.getItem(storageKey);
+      if (!raw) {
+        setHydratedFromSession(true);
+        return;
+      }
+      const draft = JSON.parse(raw);
+      if (Array.isArray(draft.selectedConnections)) {
+        setSelectedConnections(draft.selectedConnections);
+      }
+      if (typeof draft.goal === "string") {
+        setGoal(draft.goal);
+      }
+      if (typeof draft.customGoal === "string") {
+        setCustomGoal(draft.customGoal);
+      }
+      if (typeof draft.context === "string") {
+        setContext(draft.context);
+      }
+      if (typeof draft.datePreset === "string") {
+        setDatePreset(draft.datePreset);
+      }
+      if (typeof draft.dateFrom === "string") {
+        setDateFrom(draft.dateFrom);
+      }
+      if (typeof draft.dateTo === "string") {
+        setDateTo(draft.dateTo);
+      }
+      if (typeof draft.selectedAdsCustomerId === "string") {
+        setSelectedAdsCustomerId(draft.selectedAdsCustomerId);
+      }
+      if (typeof draft.selectedGa4PropertyId === "string") {
+        setSelectedGa4PropertyId(draft.selectedGa4PropertyId);
+      }
+      if (typeof draft.selectedGscSiteUrl === "string") {
+        setSelectedGscSiteUrl(draft.selectedGscSiteUrl);
+      }
+      if (draft.businessContext && typeof draft.businessContext === "object") {
+        setBusinessContext(draft.businessContext);
+      }
+      if (Number.isInteger(draft.step) && draft.step >= 1 && draft.step <= 5) {
+        setStep(draft.step);
+      }
+    } catch {
+      // Ignore malformed session draft and continue with defaults.
+    } finally {
+      setHydratedFromSession(true);
+    }
+  }, [activeMode]);
+
+  useEffect(() => {
+    if (!hydratedFromSession) return;
+    const storageKey = getWizardStorageKey(activeMode);
+    const draft = {
+      step: Math.min(step, 5),
+      selectedConnections,
+      goal,
+      customGoal,
+      context,
+      dateFrom,
+      dateTo,
+      datePreset,
+      selectedAdsCustomerId,
+      selectedGa4PropertyId,
+      selectedGscSiteUrl,
+      businessContext,
+    };
+    sessionStorage.setItem(storageKey, JSON.stringify(draft));
+  }, [
+    hydratedFromSession,
+    activeMode,
+    step,
+    selectedConnections,
+    goal,
+    customGoal,
+    context,
+    dateFrom,
+    dateTo,
+    datePreset,
+    selectedAdsCustomerId,
+    selectedGa4PropertyId,
+    selectedGscSiteUrl,
+    businessContext,
+  ]);
 
   useEffect(() => {
     if (step !== 2) return undefined;
@@ -1517,7 +1583,7 @@ export default function GeneratePage() {
   }
 
   async function handleGenerate() {
-    setStep(5);
+    setStep(6);
     setStatus("loading");
     setError(null);
     setPipelineStatusByKey(createInitialPipelineStatus(selectedConnections));
@@ -1553,7 +1619,7 @@ export default function GeneratePage() {
       });
       setReport(data);
       setStatus("success");
-      setStep(6);
+      setStep(7);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
       setStatus("error");
@@ -1586,7 +1652,7 @@ export default function GeneratePage() {
 
   function handleRestart() {
     setStep(1);
-    setSelectedConnections(lockedConnections?.length ? [...lockedConnections] : []);
+    setSelectedConnections([]);
     setGoal("");
     setCustomGoal("");
     setContext(profileContextFromDraft());
@@ -1614,6 +1680,7 @@ export default function GeneratePage() {
     setGscSitesLoading(false);
     setSelectedGscSiteUrl("");
     setPipelineStatusByKey({});
+    sessionStorage.removeItem(getWizardStorageKey(activeMode));
   }
 
   function handleRetry() {
@@ -1740,8 +1807,8 @@ export default function GeneratePage() {
                 : connections
             }
             selected={selectedConnections}
-            onToggle={lockedConnections?.length ? () => {} : toggleConnection}
-            locked={!!lockedConnections?.length}
+            onToggle={toggleConnection}
+            locked={false}
           />
           <div style={{ marginTop: 16 }}>
             <Button type="button" disabled={!canProceedStep1} onClick={() => setStep(2)}>
@@ -1806,7 +1873,6 @@ export default function GeneratePage() {
         <>
           <StepGoal
             goals={activeGoals}
-            mode={activeMode}
             goal={goal}
             onGoalChange={setGoal}
             customGoal={customGoal}
@@ -1820,6 +1886,7 @@ export default function GeneratePage() {
             datePreset={datePreset}
             onDatePresetChange={applyDatePreset}
             showPaidTargets={showPaidTargets}
+            businessContextFields={modeConfig?.business_context_fields ?? []}
             businessContext={businessContext}
             onBusinessContextChange={setBusinessContext}
           />
@@ -1858,9 +1925,57 @@ export default function GeneratePage() {
             dateFrom={dateFrom}
             dateTo={dateTo}
             datePreset={datePreset}
+            context={context}
+            businessContext={businessContext}
+            businessContextFields={modeConfig?.business_context_fields ?? []}
+            showPaidTargets={showPaidTargets}
+            title="Preview insight setup"
+            description="Preview everything captured so far before moving to final generation."
           />
           <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
             <Button type="button" variant="outline" onClick={() => setStep(3)}>
+              Back
+            </Button>
+            <Button type="button" disabled={!canProceedConfigure} onClick={() => setStep(5)}>
+              Next
+            </Button>
+          </div>
+          {!canProceedConfigure && (
+            <p className="app-subtle generate-step-hint" role="status">
+              {configureBlockedReason()}
+            </p>
+          )}
+        </>
+      )}
+
+      {step === 5 && (
+        <>
+          <StepReview
+            selectedConnectionIds={selectedConnections}
+            connections={connections}
+            needsAdsAccount={needsAdsAccount}
+            needsGa4Property={needsGa4Property}
+            needsGscSite={needsGscSite}
+            accountDescriptiveName={accountForReview?.descriptive_name ?? ""}
+            accountCustomerId={cidForReview}
+            ga4PropertyName={ga4ForReview?.property_name ?? ""}
+            ga4PropertyId={selectedGa4PropertyIdNorm}
+            gscSiteUrl={gscForReview?.site_url ?? selectedGscSiteUrlNorm}
+            goalKey={goal}
+            customGoal={customGoal}
+            goals={activeGoals}
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            datePreset={datePreset}
+            context={context}
+            businessContext={businessContext}
+            businessContextFields={modeConfig?.business_context_fields ?? []}
+            showPaidTargets={showPaidTargets}
+            title="Ready to generate"
+            description="Everything looks good. Start generation when you're ready."
+          />
+          <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+            <Button type="button" variant="outline" onClick={() => setStep(4)}>
               Back
             </Button>
             <Button type="button" disabled={!canProceedConfigure} onClick={handleGenerate}>
@@ -1875,7 +1990,7 @@ export default function GeneratePage() {
         </>
       )}
 
-      {step === 5 && (
+      {step === 6 && (
         <StepAnalyzing
           error={error}
           onRetry={handleRetry}
@@ -1885,7 +2000,7 @@ export default function GeneratePage() {
         />
       )}
 
-      {step === 6 && report && (
+      {step === 7 && report && (
         <StepReport
           report={report}
           onSave={handleSave}

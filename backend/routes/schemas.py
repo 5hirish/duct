@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from enum import StrEnum
 from typing import Annotated, Any, Self
 
 from pydantic import BaseModel, BeforeValidator, Field, model_validator
@@ -172,4 +173,59 @@ class RootResponse(BaseModel):
     service: str = "Duct API"
     version: str
     links: RootLinks = Field(default_factory=RootLinks)
+
+
+class BusinessContextFieldType(StrEnum):
+    TEXT = "text"
+    NUMBER = "number"
+    SELECT = "select"
+    TEXTAREA = "textarea"
+
+
+class BusinessContextFieldShowIf(StrEnum):
+    ALWAYS = "always"
+    ADS_SELECTED = "ads_selected"
+
+
+class BusinessContextFieldOption(BaseModel):
+    value: str
+    label: str
+
+
+class BusinessContextField(BaseModel):
+    key: str
+    label: str
+    type: BusinessContextFieldType
+    placeholder: str = ""
+    options: list[BusinessContextFieldOption] = Field(default_factory=list)
+    min: float | int | None = None
+    max: float | int | None = None
+    step: float | int | None = None
+    rows: int | None = None
+    full_width: bool = False
+    empty_if_zero: bool = False
+    show_if: BusinessContextFieldShowIf = BusinessContextFieldShowIf.ALWAYS
+
+
+class InsightGoalDescriptor(BaseModel):
+    key: str
+    icon: str = ""
+    label: str
+    description: str = ""
+
+
+class InsightMode(BaseModel):
+    key: str
+    emoji: str = ""
+    label: str
+    short_label: str = ""
+    tagline: str = ""
+    active: bool = False
+    locked_connections: list[str] = Field(default_factory=list)
+    goals: list[InsightGoalDescriptor] = Field(default_factory=list)
+    business_context_fields: list[BusinessContextField] = Field(default_factory=list)
+
+
+class InsightModesResponse(BaseModel):
+    modes: list[InsightMode] = Field(default_factory=list)
 

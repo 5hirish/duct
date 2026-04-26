@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Card } from "@/components/ui/card";
 import { fetchModes, getModeByKey, FALLBACK_MODES, DEFAULT_MODE_KEY } from "../../../lib/modes";
 import ReportsPageClient from "../../../components/ReportsPageClient";
 
@@ -13,45 +16,68 @@ export default function InsightsModeSelector({ serverReports }) {
   useEffect(() => {
     fetchModes()
       .then(setModes)
-      .catch(() => {}); // stay on fallback
+      .catch(() => {});
   }, []);
 
   const modeConfig = getModeByKey(modes, selectedMode);
 
   return (
-    <>
-      <div className="mode-selector" role="tablist" aria-label="Intelligence mode">
+    <Tabs value={selectedMode} onValueChange={setSelectedMode}>
+      {/* Mode card row */}
+      <TabsList
+        className="h-auto w-full justify-start gap-2.5 rounded-none bg-transparent p-0 mb-5 overflow-x-auto flex-nowrap"
+        aria-label="Intelligence mode"
+      >
         {modes.map((m) => (
-          <button
+          <TabsTrigger
             key={m.key}
-            role="tab"
-            aria-selected={selectedMode === m.key}
+            value={m.key}
             disabled={!m.active}
-            className={[
-              "mode-pill",
-              selectedMode === m.key ? "mode-pill--active" : "",
-              !m.active ? "mode-pill--disabled" : "",
-            ].filter(Boolean).join(" ")}
-            onClick={() => m.active && setSelectedMode(m.key)}
-            title={!m.active ? "Coming Soon" : m.tagline}
+            className="h-auto flex-none rounded-none border-0 bg-transparent p-0 data-active:bg-transparent data-active:shadow-none"
           >
-            <span aria-hidden="true">{m.emoji}</span>
-            {m.short_label}
-            {!m.active && <span className="mode-pill-coming-soon">Soon</span>}
-          </button>
+            <Card
+              size="sm"
+              className={[
+                "w-36 cursor-pointer gap-3 rounded-2xl px-4 py-4 text-left shadow-sm transition-all",
+                "ring-0 data-[state=active]:ring-2 data-[state=active]:ring-primary",
+                selectedMode === m.key
+                  ? "border-primary bg-primary/5 ring-1 ring-primary"
+                  : "hover:border-primary/50",
+                !m.active ? "opacity-50 cursor-not-allowed" : "",
+              ].filter(Boolean).join(" ")}
+            >
+              <span className="text-2xl leading-none" aria-hidden="true">{m.emoji}</span>
+              <div className="flex flex-col gap-1.5">
+                <span className="text-xs font-semibold leading-tight text-foreground">
+                  {m.label}
+                </span>
+                {!m.active && (
+                  <Badge variant="secondary" className="w-fit text-[10px]">
+                    Coming Soon
+                  </Badge>
+                )}
+              </div>
+            </Card>
+          </TabsTrigger>
         ))}
-      </div>
+      </TabsList>
 
-      <div className="mode-header-row">
-        <p className="app-subtle mode-tagline">
+      {/* Active mode header */}
+      <div className="flex items-center justify-between gap-3 mb-5">
+        <p className="text-sm text-muted-foreground">
           {modeConfig?.tagline ?? ""}
         </p>
-        <Button variant="outline" size="default" asChild>
+        <Button size="default" asChild>
           <Link href={`/insights/generate?mode=${selectedMode}`}>Generate Insight</Link>
         </Button>
       </div>
 
-      <ReportsPageClient serverReports={serverReports} mode={selectedMode} />
-    </>
+      {/* Report list — one TabsContent per mode, only active renders */}
+      {modes.map((m) => (
+        <TabsContent key={m.key} value={m.key} className="mt-0">
+          <ReportsPageClient serverReports={serverReports} mode={m.key} />
+        </TabsContent>
+      ))}
+    </Tabs>
   );
 }

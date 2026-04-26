@@ -15,7 +15,19 @@ from fastapi.responses import StreamingResponse
 from agents.models import Provider, resolve_model, resolve_provider
 from agents.insights.agent import GenerateInsightsAgent
 from config import get_configs
-from routes.schemas import GenerateRequest, InsightMetadata, ReportRequest, UnifiedInsight
+from routes.schemas import (
+    BusinessContextField,
+    BusinessContextFieldOption,
+    BusinessContextFieldShowIf,
+    BusinessContextFieldType,
+    GenerateRequest,
+    InsightGoalDescriptor,
+    InsightMetadata,
+    InsightMode,
+    InsightModesResponse,
+    ReportRequest,
+    UnifiedInsight,
+)
 from service.google.credentials import resolve_ads_credentials, resolve_customer_id
 from service.google.fetch import (
     fetch_ad_group_performance,
@@ -394,81 +406,208 @@ async def list_insight_modes() -> dict:
         GOAL_ICONS as ORGANIC_ICONS,
     )
 
-    def _goals(enum_cls, labels, descriptions, icons):
+    def _goals(enum_cls, labels, descriptions, icons) -> list[InsightGoalDescriptor]:
         return [
-            {
-                "key": g.value,
-                "icon": icons.get(g, ""),
-                "label": labels.get(g, g.value),
-                "description": descriptions.get(g, ""),
-            }
+            InsightGoalDescriptor(
+                key=g.value,
+                icon=icons.get(g, ""),
+                label=labels.get(g, g.value),
+                description=descriptions.get(g, ""),
+            )
             for g in enum_cls
         ]
 
-    return {
-        "modes": [
-            {
-                "key": "product_intelligence",
-                "emoji": "📊",
-                "label": "Product Intelligence",
-                "short_label": "Product",
-                "tagline": "Weekly brief for PMs & growth teams",
-                "active": False,
-                "locked_connections": [],
-                "goals": [],
-            },
-            {
-                "key": "organic_growth",
-                "emoji": "🌱",
-                "label": "Organic Growth",
-                "short_label": "Organic",
-                "tagline": "Automated SEO & content intelligence",
-                "active": True,
-                "locked_connections": ["gsc", "ga4"],
-                "goals": _goals(OrganicGrowthGoal, ORGANIC_LABELS, ORGANIC_DESCRIPTIONS, ORGANIC_ICONS),
-            },
-            {
-                "key": "paid_ads",
-                "emoji": "📣",
-                "label": "Paid Ads Intelligence",
-                "short_label": "Paid Ads",
-                "tagline": "Cross-platform brief for performance marketers",
-                "active": False,
-                "locked_connections": ["google_ads"],
-                "goals": _goals(InsightGenerationGoal, PAID_LABELS, PAID_DESCRIPTIONS, PAID_ICONS),
-            },
-            {
-                "key": "sales_revops",
-                "emoji": "💼",
-                "label": "Sales / RevOps",
-                "short_label": "Sales",
-                "tagline": "Pipeline & revenue intelligence",
-                "active": False,
-                "locked_connections": [],
-                "goals": [],
-            },
-            {
-                "key": "ecommerce_dtc",
-                "emoji": "🛒",
-                "label": "E-commerce / DTC",
-                "short_label": "E-commerce",
-                "tagline": "ROAS, LTV & retention synthesis",
-                "active": False,
-                "locked_connections": [],
-                "goals": [],
-            },
-            {
-                "key": "customer_success",
-                "emoji": "🤝",
-                "label": "Customer Success",
-                "short_label": "CS",
-                "tagline": "Early churn & health score signals",
-                "active": False,
-                "locked_connections": [],
-                "goals": [],
-            },
+    organic_business_context_fields = [
+        BusinessContextField(
+            key="primary_organic_kpi",
+            label="Primary organic KPI",
+            type=BusinessContextFieldType.SELECT,
+            placeholder="Select primary KPI...",
+            options=[
+                BusinessContextFieldOption(value="organic_traffic", label="Organic Traffic"),
+                BusinessContextFieldOption(value="keyword_rankings", label="Keyword Rankings"),
+                BusinessContextFieldOption(value="backlinks", label="Backlinks"),
+                BusinessContextFieldOption(value="conversions_from_organic", label="Conversions from Organic"),
+            ],
+        ),
+        BusinessContextField(
+            key="monthly_organic_traffic_target",
+            label="Monthly organic traffic target (optional)",
+            type=BusinessContextFieldType.NUMBER,
+            placeholder="e.g. 10000",
+            min=0,
+            step=1,
+            empty_if_zero=True,
+        ),
+        BusinessContextField(
+            key="primary_content_type",
+            label="Primary content type",
+            type=BusinessContextFieldType.SELECT,
+            placeholder="Select content type...",
+            options=[
+                BusinessContextFieldOption(value="blog_articles", label="Blog/Articles"),
+                BusinessContextFieldOption(value="product_pages", label="Product Pages"),
+                BusinessContextFieldOption(value="landing_pages", label="Landing Pages"),
+                BusinessContextFieldOption(value="docs_help", label="Docs/Help"),
+            ],
+        ),
+        BusinessContextField(
+            key="period_changes",
+            label="What changed recently? (optional)",
+            type=BusinessContextFieldType.TEXTAREA,
+            placeholder="e.g. Published 10 new articles, migrated to new CMS, added hreflang tags.",
+            rows=2,
+            full_width=True,
+        ),
+    ]
+
+    paid_ads_business_context_fields = [
+        BusinessContextField(
+            key="industry",
+            label="Industry",
+            type=BusinessContextFieldType.SELECT,
+            placeholder="Select industry...",
+            options=[
+                BusinessContextFieldOption(value="ecommerce", label="E-commerce"),
+                BusinessContextFieldOption(value="saas", label="SaaS / B2B"),
+                BusinessContextFieldOption(value="lead_gen", label="Lead generation"),
+                BusinessContextFieldOption(value="agency", label="Agency / multi-client"),
+                BusinessContextFieldOption(value="other", label="Other"),
+            ],
+            show_if=BusinessContextFieldShowIf.ALWAYS,
+        ),
+        BusinessContextField(
+            key="primary_conversion_action",
+            label="Primary conversion action",
+            type=BusinessContextFieldType.TEXT,
+            placeholder="e.g. Demo booked, Trial started, Purchase",
+            show_if=BusinessContextFieldShowIf.ADS_SELECTED,
+        ),
+        BusinessContextField(
+            key="monthly_budget",
+            label="Monthly budget ($)",
+            type=BusinessContextFieldType.NUMBER,
+            placeholder="e.g. 5000",
+            min=0,
+            step=0.01,
+            show_if=BusinessContextFieldShowIf.ADS_SELECTED,
+        ),
+        BusinessContextField(
+            key="target_cpa",
+            label="Target CPA ($)",
+            type=BusinessContextFieldType.NUMBER,
+            placeholder="e.g. 50",
+            min=0,
+            step=0.01,
+            show_if=BusinessContextFieldShowIf.ADS_SELECTED,
+        ),
+        BusinessContextField(
+            key="target_roas",
+            label="Target ROAS (x)",
+            type=BusinessContextFieldType.NUMBER,
+            placeholder="e.g. 3.0",
+            min=0,
+            step=0.1,
+            show_if=BusinessContextFieldShowIf.ADS_SELECTED,
+        ),
+        BusinessContextField(
+            key="target_payback_days",
+            label="Target payback (days)",
+            type=BusinessContextFieldType.NUMBER,
+            placeholder="e.g. 90",
+            min=0,
+            step=1,
+            show_if=BusinessContextFieldShowIf.ADS_SELECTED,
+        ),
+        BusinessContextField(
+            key="gross_margin_percent",
+            label="Gross margin (%)",
+            type=BusinessContextFieldType.NUMBER,
+            placeholder="e.g. 70",
+            min=0,
+            max=100,
+            step=1,
+            show_if=BusinessContextFieldShowIf.ADS_SELECTED,
+        ),
+        BusinessContextField(
+            key="qualified_lead_value",
+            label="Qualified lead value ($)",
+            type=BusinessContextFieldType.NUMBER,
+            placeholder="e.g. 1200",
+            min=0,
+            step=1,
+            show_if=BusinessContextFieldShowIf.ADS_SELECTED,
+        ),
+        BusinessContextField(
+            key="period_changes",
+            label="What changed during this period? (optional)",
+            type=BusinessContextFieldType.TEXTAREA,
+            placeholder="e.g. Switched bid strategy, launched new offer, changed landing pages, tracking updates.",
+            rows=2,
+            full_width=True,
+            show_if=BusinessContextFieldShowIf.ADS_SELECTED,
+        ),
+    ]
+
+    response = InsightModesResponse(
+        modes=[
+            InsightMode(
+                key="product_intelligence",
+                emoji="📊",
+                label="Product Intelligence",
+                short_label="Product",
+                tagline="Weekly brief for PMs & growth teams",
+                active=False,
+            ),
+            InsightMode(
+                key="organic_growth",
+                emoji="🌱",
+                label="Organic Growth",
+                short_label="Organic",
+                tagline="Automated SEO & content intelligence",
+                active=True,
+                locked_connections=["gsc", "ga4"],
+                goals=_goals(OrganicGrowthGoal, ORGANIC_LABELS, ORGANIC_DESCRIPTIONS, ORGANIC_ICONS),
+                business_context_fields=organic_business_context_fields,
+            ),
+            InsightMode(
+                key="paid_ads",
+                emoji="📣",
+                label="Paid Ads Intelligence",
+                short_label="Paid Ads",
+                tagline="Cross-platform brief for performance marketers",
+                active=False,
+                locked_connections=["google_ads"],
+                goals=_goals(InsightGenerationGoal, PAID_LABELS, PAID_DESCRIPTIONS, PAID_ICONS),
+                business_context_fields=paid_ads_business_context_fields,
+            ),
+            InsightMode(
+                key="sales_revops",
+                emoji="💼",
+                label="Sales / RevOps",
+                short_label="Sales",
+                tagline="Pipeline & revenue intelligence",
+                active=False,
+            ),
+            InsightMode(
+                key="ecommerce_dtc",
+                emoji="🛒",
+                label="E-commerce / DTC",
+                short_label="E-commerce",
+                tagline="ROAS, LTV & retention synthesis",
+                active=False,
+            ),
+            InsightMode(
+                key="customer_success",
+                emoji="🤝",
+                label="Customer Success",
+                short_label="CS",
+                tagline="Early churn & health score signals",
+                active=False,
+            ),
         ]
-    }
+    )
+    return response.model_dump(mode="json")
 
 
 @router.post("/insights/generate")
