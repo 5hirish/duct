@@ -6,7 +6,7 @@ from typing import Annotated, Any, Self
 
 from pydantic import BaseModel, BeforeValidator, Field, model_validator
 
-from agents.reporter.goals import InsightGenerationGoal, parse_goal_value
+from agents.insights.goals import InsightGenerationGoal, parse_goal_value
 
 
 class ReportRequest(BaseModel):
@@ -135,9 +135,3 @@ class RootResponse(BaseModel):
     version: str
     links: RootLinks = Field(default_factory=RootLinks)
 
-
-# Backward compatibility aliases for older route imports.
-ReportMetadata = InsightMetadata
-UnifiedReport = UnifiedInsight
-ReportRefreshRequest = InsightRefreshRequest
-ReportRefreshResponse = InsightRefreshResponse

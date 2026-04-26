@@ -13,7 +13,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
 from agents.models import Provider, resolve_model, resolve_provider
-from agents.reporter.agent import GenerateInsightsAgent
+from agents.insights.agent import GenerateInsightsAgent
 from config import get_configs
 from routes.schemas import GenerateRequest, InsightMetadata, ReportRequest, UnifiedInsight
 from service.google.credentials import resolve_ads_credentials, resolve_customer_id
@@ -364,14 +364,12 @@ def _build_fetch_fns(
 
 
 @router.post("/insights/generate")
-@router.post("/generate")
 async def generate_insight(req: GenerateRequest) -> dict:
     """Fetch data for selected connections, build briefs, and optional synthesis."""
     return await _run_generate_pipeline(req)
 
 
 @router.post("/insights/generate/stream")
-@router.post("/generate/stream")
 async def generate_insight_stream(req: GenerateRequest) -> StreamingResponse:
     """Stream real pipeline progress events and final payload over SSE."""
 

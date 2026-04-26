@@ -20,10 +20,10 @@ from langchain.chat_models import init_chat_model
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
 
 from agents.models import ModelName, Provider, get_api_key_kwargs
-from agents.reporter.goals import InsightGenerationGoal, goal_heading_text
-from agents.reporter.prompts import get_synthesis_user_prompt, get_system_prompt
-from agents.reporter.schema import SynthesisSchema
-from agents.reporter.tools import (
+from agents.insights.goals import InsightGenerationGoal, goal_heading_text
+from agents.insights.prompts import get_synthesis_user_prompt, get_system_prompt
+from agents.insights.schema import SynthesisSchema
+from agents.insights.tools import (
     GOAL_TOOL_PRIORITIES,
     create_ad_group_performance_tool,
     create_campaign_performance_tool,
@@ -332,13 +332,12 @@ class GenerateInsightsAgent:
             return None
         return synthesis.model_dump()
 
-    # ── legacy convenience (kept for backwards compat) ──────────────────
     def merge_synthesis(
         self,
         brief_dict: dict[str, Any],
         synthesis: SynthesisSchema | None,
     ) -> dict[str, Any]:
-        """Merge synthesis results into the brief dict (legacy flat format).
+        """Merge synthesis results into the brief dict (flat format).
 
         Prefer ``apply_classification_overrides`` + ``extract_synthesis`` for
         the envelope format.
@@ -358,5 +357,3 @@ class GenerateInsightsAgent:
         return brief_dict
 
 
-# Backward compatibility alias for older imports.
-GenerateAgent = GenerateInsightsAgent

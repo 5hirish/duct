@@ -37,14 +37,14 @@ The current and planned backend stack is:
 
 - `service/google/brief.py` — Google Ads brief normalization (loads demo from `data/<connector_id>/`, default `google_ads`)
 - `service/google/schema.py` — typed Google Ads brief payload (dataclasses / JSON contract)
-- `agents/reporter/prompts.py` — synthesis system + user prompts (e.g. Google Ads weekly insight brief)
+- `agents/insights/prompts.py` — synthesis system + user prompts (e.g. Google Ads weekly insight brief)
 - `routes/auth.py` — OAuth by connector (`/auth/connectors/{connector_id}/oauth/...`)
-- `routes/generate.py` — `POST /api/insights/generate` (legacy: `POST /api/generate`) for interactive brief + LangChain synthesis envelope
+- `routes/generate.py` — `POST /api/insights/generate` for interactive brief + LangChain synthesis envelope
 - `data/google_ads/` — `google-ads-report.json` (demo brief), `raw/demo_raw_payload.json`
 
 ## Artifact contract
 
-The app lists top-level `*.json` briefs in `data/google_ads/` (e.g. `google-ads-report.json`) for local dev; user-generated insights are returned from `POST /api/insights/generate` (legacy: `POST /api/generate`) and stored client-side (`localStorage`).
+The app lists top-level `*.json` briefs in `data/google_ads/` (e.g. `google-ads-report.json`) for local dev; user-generated insights are returned from `POST /api/insights/generate` and stored client-side (`localStorage`).
 
 The JSON contract:
 - `source_metadata.theme` — theme key (`paid_ads`, `product_intelligence`, `organic_growth`); the app resolves accent colors from this

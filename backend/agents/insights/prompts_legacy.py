@@ -18,7 +18,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from agents.reporter.goals import GOAL_DIRECTIVES, InsightGenerationGoal, goal_heading_text
+from agents.insights.goals import GOAL_DIRECTIVES, InsightGenerationGoal, goal_heading_text
 
 # ---------------------------------------------------------------------------
 # Analysis protocol — XML-tagged structure following Gemini best practices.

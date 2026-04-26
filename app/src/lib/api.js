@@ -45,7 +45,7 @@ export async function fetchGscSites(refreshToken) {
 }
 
 export async function generateReport(params) {
-  const res = await fetch(`${BASE}/api/generate`, {
+  const res = await fetch(`${BASE}/api/insights/generate`, {
     method: "POST",
     headers: backendApiHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify(params),
@@ -71,7 +71,7 @@ export async function refreshReportBriefs(routine) {
     gsc_refresh_token: gscRefreshToken,
     targets: routine?.targets || {},
   };
-  const res = await fetch(`${BASE}/api/reports/refresh`, {
+  const res = await fetch(`${BASE}/api/insights/refresh`, {
     method: "POST",
     headers: backendApiHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify(body),
@@ -111,7 +111,7 @@ function parseSseDataFrame(frame) {
 }
 
 export async function generateReportStream(params, { onEvent, signal } = {}) {
-  const res = await fetch(`${BASE}/api/generate/stream`, {
+  const res = await fetch(`${BASE}/api/insights/generate/stream`, {
     method: "POST",
     headers: backendApiHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify(params),

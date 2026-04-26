@@ -104,6 +104,3 @@ def parse_goal_value(value: object) -> InsightGenerationGoal:
             + ", ".join(repr(m.value) for m in InsightGenerationGoal)
         ) from exc
 
-
-# Backward compatibility alias for older imports.
-ReportGenerationGoal = InsightGenerationGoal

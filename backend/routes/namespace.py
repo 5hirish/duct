@@ -27,8 +27,3 @@ router.include_router(
     prefix="/api/insights",
     dependencies=[Depends(validate_api_key)],
 )
-router.include_router(
-    reports.router,
-    prefix="/api/reports",
-    dependencies=[Depends(validate_api_key)],
-)

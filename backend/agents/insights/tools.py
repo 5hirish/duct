@@ -16,7 +16,7 @@ from typing import Any
 from langchain_core.tools import StructuredTool
 from pydantic import BaseModel, Field
 
-from agents.reporter.goals import InsightGenerationGoal
+from agents.insights.goals import InsightGenerationGoal
 
 
 # ---------------------------------------------------------------------------

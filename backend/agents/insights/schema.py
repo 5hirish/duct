@@ -1,7 +1,7 @@
 """Structured output schemas for the generate agent.
 
 Uses extra='forbid' for OpenAI Structured Outputs compatibility.
-These schemas are shared between the LangChain agent and the legacy
+These schemas are shared between the LangChain agent and the
 Gemini synthesis path in service.google.brief.
 """
 
@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from agents.reporter.entities import (
+from agents.insights.entities import (
     SynActionPriority,
     SynActionType,
     SynConfidenceLevel,
