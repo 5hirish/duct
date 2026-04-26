@@ -94,7 +94,7 @@ class Configs(BaseSettings):
         ),
     )
 
-    # LLM synthesis (see agents.reporter.models for provider / model strings)
+    # LLM synthesis (insight generation; see agents.models for provider/model strings)
     generate_provider: str = ""
     generate_model: str = ""
     gemini_api_key: str = ""

@@ -18,7 +18,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from agents.reporter.goals import GOAL_DIRECTIVES, ReportGenerationGoal, goal_heading_text
+from agents.reporter.goals import GOAL_DIRECTIVES, InsightGenerationGoal, goal_heading_text
 
 # ---------------------------------------------------------------------------
 # Analysis protocol — XML-tagged structure following Gemini best practices.
@@ -261,7 +261,7 @@ def _format_business_context(biz_ctx: dict[str, Any] | None) -> str:
 
 def get_system_prompt(
     *,
-    goal: ReportGenerationGoal | None = None,
+    goal: InsightGenerationGoal | None = None,
     custom_goal: str = "",
     context: str = "",
     business_context: dict[str, Any] | None = None,

@@ -1,4 +1,4 @@
-"""Report lifecycle routes (refreshing saved report data)."""
+"""Insight lifecycle routes (refreshing saved insight data)."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 
 from config import get_configs
-from routes.schemas import ReportRefreshRequest, ReportRefreshResponse
+from routes.schemas import InsightRefreshRequest, InsightRefreshResponse
 from service.pipeline import (
     build_connector_brief,
     fetch_connector_payload,
@@ -17,11 +17,11 @@ from service.pipeline import (
     resolve_date_range,
 )
 
-router = APIRouter(tags=["reports"])
+router = APIRouter(tags=["insights"])
 
 
-@router.post("/refresh", response_model=ReportRefreshResponse)
-async def refresh_report(req: ReportRefreshRequest) -> ReportRefreshResponse:
+@router.post("/refresh", response_model=InsightRefreshResponse)
+async def refresh_insight(req: InsightRefreshRequest) -> InsightRefreshResponse:
     connections = normalize_connections(req.connections)
     date_from, date_to = resolve_date_range(req.date_preset, req.date_from, req.date_to)
     cfg = get_configs()
@@ -71,7 +71,7 @@ async def refresh_report(req: ReportRefreshRequest) -> ReportRefreshResponse:
         raise HTTPException(status_code=500, detail=detail)
     briefs = {connector_id: payload for connector_id, payload in normalized_rows}
 
-    return ReportRefreshResponse(
+    return InsightRefreshResponse(
         refreshed_at=now_iso(),
         briefs=briefs,
         date_from=date_from,

@@ -16,7 +16,7 @@ from typing import Any
 from langchain_core.tools import StructuredTool
 from pydantic import BaseModel, Field
 
-from agents.reporter.goals import ReportGenerationGoal
+from agents.reporter.goals import InsightGenerationGoal
 
 
 # ---------------------------------------------------------------------------
@@ -278,37 +278,37 @@ ALL_TOOL_NAMES: list[str] = [
 
 # Priority hints per goal — marked [PRIORITY] in the Phase 1 prompt so the
 # LLM knows which tools are most likely useful, but it can call any tool.
-GOAL_TOOL_PRIORITIES: dict[ReportGenerationGoal, list[str]] = {
-    ReportGenerationGoal.LOWER_CAC: [
+GOAL_TOOL_PRIORITIES: dict[InsightGenerationGoal, list[str]] = {
+    InsightGenerationGoal.LOWER_CAC: [
         "fetch_search_terms",
         "fetch_device_performance",
         "fetch_ga4_landing_pages",
         "fetch_gsc_query_performance",
     ],
-    ReportGenerationGoal.MAXIMIZE_ROAS: [
+    InsightGenerationGoal.MAXIMIZE_ROAS: [
         "fetch_ad_group_performance",
         "fetch_device_performance",
         "fetch_ga4_conversion_paths",
     ],
-    ReportGenerationGoal.SCALE_CONVERSIONS: [
+    InsightGenerationGoal.SCALE_CONVERSIONS: [
         "fetch_device_performance",
         "fetch_geo_performance",
         "fetch_ga4_landing_pages",
         "fetch_gsc_query_performance",
     ],
-    ReportGenerationGoal.AUDIT_SPEND: [
+    InsightGenerationGoal.AUDIT_SPEND: [
         "fetch_search_terms",
         "fetch_ad_group_performance",
         "fetch_geo_performance",
         "fetch_gsc_query_performance",
         "fetch_ga4_landing_pages",
     ],
-    ReportGenerationGoal.CUSTOM: [
+    InsightGenerationGoal.CUSTOM: [
         "fetch_ad_group_performance",
     ],
 }
 
 
-def get_tool_names_for_goal(goal: ReportGenerationGoal) -> list[str]:
+def get_tool_names_for_goal(goal: InsightGenerationGoal) -> list[str]:
     """Return ALL supplementary tool names. The LLM decides which to call."""
     return list(ALL_TOOL_NAMES)

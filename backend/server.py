@@ -1,4 +1,4 @@
-"""FastAPI server: Google Ads report generation for the Next.js app."""
+"""FastAPI server: Google Ads insight generation for the Next.js app."""
 
 from __future__ import annotations
 

@@ -8,7 +8,7 @@ This directory contains the Python reporting and synthesis side of Duct.
 - It reads data with read-only access.
 - It normalizes source data into stable internal payloads.
 - It generates typed findings and recommended actions.
-- It renders deliverable outputs like reports, briefs, and alerts.
+- It renders deliverable outputs like insights, briefs, and alerts.
 
 ## Current scope
 

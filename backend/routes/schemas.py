@@ -6,7 +6,7 @@ from typing import Annotated, Any, Self
 
 from pydantic import BaseModel, BeforeValidator, Field, model_validator
 
-from agents.reporter.goals import ReportGenerationGoal, parse_goal_value
+from agents.reporter.goals import InsightGenerationGoal, parse_goal_value
 
 
 class ReportRequest(BaseModel):
@@ -41,7 +41,7 @@ class BusinessContext(BaseModel):
 
 class GenerateRequest(BaseModel):
     connections: list[str] = Field(default_factory=list)  # e.g. ["google_ads"]
-    goal: Annotated[ReportGenerationGoal, BeforeValidator(parse_goal_value)]
+    goal: Annotated[InsightGenerationGoal, BeforeValidator(parse_goal_value)]
     custom_goal: str = Field(
         default="",
         description='Required when goal is "custom": free-text objective for the report.',
@@ -62,20 +62,20 @@ class GenerateRequest(BaseModel):
 
     @model_validator(mode="after")
     def _custom_goal_required(self) -> Self:
-        if self.goal == ReportGenerationGoal.CUSTOM and not self.custom_goal.strip():
+        if self.goal == InsightGenerationGoal.CUSTOM and not self.custom_goal.strip():
             raise ValueError('custom_goal is required when goal is "custom"')
         return self
 
 
-class ReportMetadata(BaseModel):
-    """Envelope-level metadata for a unified report."""
+class InsightMetadata(BaseModel):
+    """Envelope-level metadata for a unified insight."""
 
     generated_at: str = ""
     goal: str = ""
     connectors_used: list[str] = Field(default_factory=list)
 
 
-class UnifiedReport(BaseModel):
+class UnifiedInsight(BaseModel):
     """Envelope wrapping one or more connector briefs plus a synthesis layer.
 
     ``briefs`` maps connector_id → connector-specific brief dict.
@@ -88,7 +88,7 @@ class UnifiedReport(BaseModel):
     connectors_used: list[str] = Field(default_factory=list)
     briefs: dict[str, Any] = Field(default_factory=dict)
     synthesis: dict[str, Any] | None = None
-    metadata: ReportMetadata = Field(default_factory=ReportMetadata)
+    metadata: InsightMetadata = Field(default_factory=InsightMetadata)
 
 
 class RefreshRoutineTarget(BaseModel):
@@ -100,7 +100,7 @@ class RefreshRoutineTarget(BaseModel):
     site_url: str = ""
 
 
-class ReportRefreshRequest(BaseModel):
+class InsightRefreshRequest(BaseModel):
     connections: list[str] = Field(default_factory=list)
     date_preset: str = "30"
     date_from: str = ""
@@ -111,7 +111,7 @@ class ReportRefreshRequest(BaseModel):
     targets: dict[str, RefreshRoutineTarget] = Field(default_factory=dict)
 
 
-class ReportRefreshResponse(BaseModel):
+class InsightRefreshResponse(BaseModel):
     refreshed_at: str
     briefs: dict[str, Any] = Field(default_factory=dict)
     date_from: str
@@ -134,3 +134,10 @@ class RootResponse(BaseModel):
     service: str = "Duct API"
     version: str
     links: RootLinks = Field(default_factory=RootLinks)
+
+
+# Backward compatibility aliases for older route imports.
+ReportMetadata = InsightMetadata
+UnifiedReport = UnifiedInsight
+ReportRefreshRequest = InsightRefreshRequest
+ReportRefreshResponse = InsightRefreshResponse

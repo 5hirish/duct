@@ -1,1 +1,1 @@
-"""Agent implementations for synthesis and reporting."""
+"""Agent implementations for synthesis and insight generation."""

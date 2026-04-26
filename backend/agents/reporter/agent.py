@@ -1,4 +1,4 @@
-"""GenerateAgent — LangChain-based report generation agent.
+"""GenerateInsightsAgent — LangChain-based insight generation agent.
 
 Two-phase architecture (following nomadtools barrio pattern):
   Phase 1: Goal-driven data fetch via tool calling (supplementary queries)
@@ -20,7 +20,7 @@ from langchain.chat_models import init_chat_model
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
 
 from agents.models import ModelName, Provider, get_api_key_kwargs
-from agents.reporter.goals import ReportGenerationGoal, goal_heading_text
+from agents.reporter.goals import InsightGenerationGoal, goal_heading_text
 from agents.reporter.prompts import get_synthesis_user_prompt, get_system_prompt
 from agents.reporter.schema import SynthesisSchema
 from agents.reporter.tools import (
@@ -53,23 +53,23 @@ _TOOL_CREATORS = {
 }
 
 
-class GenerateAgent:
-    """Report generation agent with goal-driven tool use + structured output.
+class GenerateInsightsAgent:
+    """Insight generation agent with goal-driven tool use + structured output.
 
     Usage::
 
-        agent = GenerateAgent(api_key="...", provider=Provider.OPENAI, model=ModelName.GPT_5_MINI)
-        agent.setup_tools_for_goal(goal=ReportGenerationGoal.LOWER_CAC, fetch_fns={...})
+        agent = GenerateInsightsAgent(api_key="...", provider=Provider.OPENAI, model=ModelName.GPT_5_MINI)
+        agent.setup_tools_for_goal(goal=InsightGenerationGoal.LOWER_CAC, fetch_fns={...})
         supplementary = await agent.fetch_supplementary_data(
             customer_id,
             date_from,
             date_to,
-            goal=ReportGenerationGoal.LOWER_CAC,
+            goal=InsightGenerationGoal.LOWER_CAC,
             custom_goal="",
             context="",
         )
         result = await agent.synthesize(
-            goal=ReportGenerationGoal.LOWER_CAC,
+            goal=InsightGenerationGoal.LOWER_CAC,
             custom_goal="",
             context="",
             brief_dict=brief_dict,
@@ -111,7 +111,7 @@ class GenerateAgent:
 
     def setup_tools_for_goal(
         self,
-        goal: ReportGenerationGoal,
+        goal: InsightGenerationGoal,
         fetch_fns: dict[str, Callable[..., dict[str, Any]]],
     ) -> list[str]:
         """Register supplementary tools based on the user's goal.
@@ -143,7 +143,7 @@ class GenerateAgent:
         customer_id: str,
         date_from: str,
         date_to: str,
-        goal: ReportGenerationGoal,
+        goal: InsightGenerationGoal,
         ga4_property_id: str = "",
         gsc_site_url: str = "",
         custom_goal: str = "",
@@ -185,7 +185,7 @@ class GenerateAgent:
             f"GA4 Property ID: {ga4_property_id or 'N/A'}\n"
             f"GSC Site URL: {gsc_site_url or 'N/A'}\n"
             f"Date range: {date_from} to {date_to}\n\n"
-            "Call the tools you need to gather supplementary data for this report."
+            "Call the tools you need to gather supplementary data for this insight."
         )
 
         messages = [
@@ -251,7 +251,7 @@ class GenerateAgent:
 
     async def synthesize(
         self,
-        goal: ReportGenerationGoal,
+        goal: InsightGenerationGoal,
         custom_goal: str,
         context: str,
         brief_dict: dict[str, Any],
@@ -356,3 +356,7 @@ class GenerateAgent:
 
         self.apply_classification_overrides(brief_dict, synthesis)
         return brief_dict
+
+
+# Backward compatibility alias for older imports.
+GenerateAgent = GenerateInsightsAgent

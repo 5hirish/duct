@@ -1,4 +1,4 @@
-"""Interactive brief generation (fetch + goal-driven tools + LLM synthesis)."""
+"""Interactive insight generation (fetch + goal-driven tools + LLM synthesis)."""
 
 from __future__ import annotations
 
@@ -13,9 +13,9 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
 from agents.models import Provider, resolve_model, resolve_provider
-from agents.reporter.agent import GenerateAgent
+from agents.reporter.agent import GenerateInsightsAgent
 from config import get_configs
-from routes.schemas import GenerateRequest, ReportMetadata, ReportRequest, UnifiedReport
+from routes.schemas import GenerateRequest, InsightMetadata, ReportRequest, UnifiedInsight
 from service.google.credentials import resolve_ads_credentials, resolve_customer_id
 from service.google.fetch import (
     fetch_ad_group_performance,
@@ -32,7 +32,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(tags=["generate"])
+router = APIRouter(tags=["insights"])
 
 STEP_COLLECT = "collect_source_data"
 STEP_NORMALIZE = "normalize_connector_outputs"
@@ -45,7 +45,7 @@ STEP_LABELS = {
     STEP_NORMALIZE: "Normalizing connector outputs",
     STEP_SUPPLEMENTARY: "Fetching supplementary insights",
     STEP_SYNTHESIZE: "Synthesizing recommendations",
-    STEP_ASSEMBLE: "Finalizing report",
+    STEP_ASSEMBLE: "Finalizing insight",
 }
 
 EmitFn = Callable[[dict[str, Any]], Awaitable[None]]
@@ -243,7 +243,7 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
 
     if api_key and google_ads_brief and google_ads_raw:
         await _step_started(emit_event, STEP_SUPPLEMENTARY)
-        agent = GenerateAgent(
+        agent = GenerateInsightsAgent(
             api_key=api_key,
             provider=provider,
             model=model,
@@ -300,11 +300,11 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
         await _step_finished(emit_event, STEP_SYNTHESIZE)
 
     await _step_started(emit_event, STEP_ASSEMBLE)
-    envelope = UnifiedReport(
+    envelope = UnifiedInsight(
         connectors_used=connections,
         briefs=briefs,
         synthesis=synthesis_dict,
-        metadata=ReportMetadata(
+        metadata=InsightMetadata(
             generated_at=now_iso(),
             goal=req.goal.value,
             connectors_used=connections,
@@ -363,14 +363,16 @@ def _build_fetch_fns(
     return fetch_fns
 
 
+@router.post("/insights/generate")
 @router.post("/generate")
-async def generate(req: GenerateRequest) -> dict:
+async def generate_insight(req: GenerateRequest) -> dict:
     """Fetch data for selected connections, build briefs, and optional synthesis."""
     return await _run_generate_pipeline(req)
 
 
+@router.post("/insights/generate/stream")
 @router.post("/generate/stream")
-async def generate_stream(req: GenerateRequest) -> StreamingResponse:
+async def generate_insight_stream(req: GenerateRequest) -> StreamingResponse:
     """Stream real pipeline progress events and final payload over SSE."""
 
     queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
@@ -381,12 +383,12 @@ async def generate_stream(req: GenerateRequest) -> StreamingResponse:
 
     async def worker() -> None:
         try:
-            report = await _run_generate_pipeline(req, emit_event=emit_event)
+            insight = await _run_generate_pipeline(req, emit_event=emit_event)
             await _emit(
                 emit_event,
                 event="pipeline_finished",
                 status="success",
-                payload=report,
+                payload=insight,
             )
         except HTTPException as exc:
             await _emit(

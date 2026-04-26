@@ -1,1 +1,1 @@
-"""Report generation agent (LangChain + structured synthesis)."""
+"""Insight generation agent (LangChain + structured synthesis)."""
