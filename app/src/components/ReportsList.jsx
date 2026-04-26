@@ -5,6 +5,7 @@ import { useEffect, useEffectEvent, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getLocalReports, LOCAL_REPORTS_STORAGE_KEY } from "../lib/localReports";
+import { FALLBACK_MODES, getModeByKey } from "../lib/modes";
 import { REPORT_NAV_TRANSITION_TYPES } from "../lib/reportNavTransition";
 
 function formatTimeAgo(iso) {
@@ -74,9 +75,11 @@ function mapStoredEntriesToReports(stored) {
     const brief = unwrapBrief(entry.payload);
     const synthesis = entry.payload?.synthesis;
     const narrative = synthesis?.narrative ?? brief?.narrative;
+    const entryMode = entry.mode || entry.routine?.mode || null;
     return {
       slug: entry.slug,
       title: formatTitle(entry.slug),
+      mode: entryMode,
       themeLabel: brief?.source_metadata?.theme === "paid_ads" ? "Paid Ads" : "Report",
       generatedAt: entry.payload?.metadata?.generated_at || brief?.source_metadata?.generated_at || entry.savedAt,
       keyInsight: narrative?.verdict || narrative?.summary || "",
@@ -91,11 +94,11 @@ function isDemoReport(report) {
   return report.slug === "google-ads-report";
 }
 
-export default function ReportsList({ serverReports, projectId = null }) {
+export default function ReportsList({ serverReports, projectId = null, mode = null }) {
   const [localReports, setLocalReports] = useState([]);
 
   const syncLocalReportsFromStorage = useEffectEvent(() => {
-    setLocalReports(mapStoredEntriesToReports(getLocalReports(projectId)));
+    setLocalReports(mapStoredEntriesToReports(getLocalReports(projectId, mode)));
   });
 
   useEffect(() => {
@@ -108,7 +111,10 @@ export default function ReportsList({ serverReports, projectId = null }) {
     return () => window.removeEventListener("storage", onStorage);
   }, [projectId]);
 
-  const allReports = [...localReports, ...serverReports.map((r) => ({ ...r, isLocal: false }))];
+  const filteredServerReports = mode
+    ? serverReports.filter((r) => (r.mode || null) === mode)
+    : serverReports;
+  const allReports = [...localReports, ...filteredServerReports.map((r) => ({ ...r, isLocal: false }))];
   allReports.sort((a, b) => {
     if (!a.generatedAt && !b.generatedAt) return 0;
     if (!a.generatedAt) return 1;
@@ -124,7 +130,7 @@ export default function ReportsList({ serverReports, projectId = null }) {
           Generate an intelligence brief from your connected sources. Saved insights appear here.
         </p>
         <Button asChild>
-          <Link href="/insights/generate">Generate an insight</Link>
+          <Link href={mode ? `/insights/generate?mode=${mode}` : "/insights/generate"}>Generate an insight</Link>
         </Button>
       </div>
     );
@@ -153,14 +159,22 @@ export default function ReportsList({ serverReports, projectId = null }) {
               <strong className="font-semibold leading-tight text-foreground">
                 {report.title}
               </strong>
-              {report.isLocal && (
-                <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1">
+                {report.isLocal && (
                   <Badge variant="outline" className="shrink-0 text-xs">Local</Badge>
-                  {report.isLive && (
-                    <Badge variant="secondary" className="shrink-0 text-xs">Live</Badge>
-                  )}
-                </div>
-              )}
+                )}
+                {report.isLocal && report.isLive && (
+                  <Badge variant="secondary" className="shrink-0 text-xs">Live</Badge>
+                )}
+                {(() => {
+                  const modeConf = getModeByKey(FALLBACK_MODES, report.mode);
+                  return modeConf ? (
+                    <Badge variant="outline" className="shrink-0 text-xs">
+                      {modeConf.emoji} {modeConf.short_label}
+                    </Badge>
+                  ) : null;
+                })()}
+              </div>
             </div>
             <div className="flex items-center gap-1.5 min-w-0">
               <ConnectionIcons connections={report.connections} />

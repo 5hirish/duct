@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import GoogleAdsReport from "../../../components/GoogleAdsReport";
 import {
   fetchGa4Properties,
@@ -12,40 +12,8 @@ import {
 } from "../../../lib/api";
 import { saveLocalReport, generateSlug } from "../../../lib/localReports";
 import { getActiveProject, getActiveProjectId } from "../../../lib/projects";
+import { fetchModes, getModeByKey, FALLBACK_MODES, DEFAULT_MODE_KEY } from "../../../lib/modes";
 import { Button } from "@/components/ui/button";
-
-const GOALS = [
-  {
-    key: "lower_cac",
-    icon: "\u{1F4C9}",
-    label: "Lower CAC",
-    description: "Find which campaigns and audiences deliver the cheapest conversions \u2014 cut waste, keep quality.",
-  },
-  {
-    key: "maximize_roas",
-    icon: "\u{1F4B0}",
-    label: "Maximize ROAS",
-    description: "Identify top-returning campaigns and reallocate budget away from underperformers.",
-  },
-  {
-    key: "scale_conversions",
-    icon: "\u{1F680}",
-    label: "Scale conversions",
-    description: "Grow conversion volume while keeping cost efficiency in check \u2014 find headroom to spend more.",
-  },
-  {
-    key: "audit_spend",
-    icon: "\u{1F50D}",
-    label: "Audit spend efficiency",
-    description: "Spot wasted budget, flag underperformers, and surface reallocation opportunities across campaigns.",
-  },
-  {
-    key: "custom",
-    icon: "\u{270F}\u{FE0F}",
-    label: "Custom goal",
-    description: "Describe your own analysis goal \u2014 the AI agent will tailor the insight to your intent.",
-  },
-];
 
 function formatLocalYmd(d) {
   const y = d.getFullYear();
@@ -104,14 +72,16 @@ function ProgressDots({ step }) {
   );
 }
 
-function StepConnections({ connections, selected, onToggle }) {
+function StepConnections({ connections, selected, onToggle, locked = false }) {
   const hasAny = connections.some((c) => c.connected);
 
   return (
     <div className="generate-step">
       <h2 className="generate-step-title">Select your data sources</h2>
-      <p className="app-subtle" style={{ marginTop: 0, marginBottom: 16 }}>
-        Choose which connected tools to include in your insight.
+      <p className="app-subtle" style={{ marginTop: 0, marginBottom: locked ? 8 : 16 }}>
+        {locked
+          ? "Connections are pre-set for this intelligence mode."
+          : "Choose which connected tools to include in your insight."}
       </p>
       <div className="connection-grid">
         {connections.map((conn) => (
@@ -573,9 +543,9 @@ const DATE_PRESET_OPTIONS = [
   { key: "custom", label: "Custom", daysBack: null },
 ];
 
-function goalDisplayLabel(goalKey, customGoalText) {
+function goalDisplayLabel(goalKey, customGoalText, goals = []) {
   if (goalKey === "custom") return customGoalText.trim() || "Custom goal";
-  return GOALS.find((g) => g.key === goalKey)?.label ?? goalKey;
+  return goals.find((g) => g.key === goalKey)?.label ?? goalKey;
 }
 
 function dateRangeSummary(datePreset, dateFrom, dateTo) {
@@ -603,6 +573,15 @@ function normalizeIndustryValue(value) {
   if (normalized.includes("lead")) return "lead_gen";
   if (normalized.includes("agency")) return "agency";
   return "other";
+}
+
+function businessContextFromOrganicDraft() {
+  return {
+    primary_organic_kpi: "",
+    monthly_organic_traffic_target: 0,
+    primary_content_type: "",
+    period_changes: "",
+  };
 }
 
 function businessContextFromProfileDraft() {
@@ -634,6 +613,7 @@ function buildReportRoutine({
   ga4Properties,
   selectedGscSiteUrl,
   businessContext,
+  mode = null,
 }) {
   const customerId = normalizeCustomerId(selectedAdsCustomerId);
   const ga4PropertyId = normalizeGa4PropertyId(selectedGa4PropertyId);
@@ -680,6 +660,7 @@ function buildReportRoutine({
         : {}),
     },
     business_context: businessContext,
+    mode: mode || null,
   };
 }
 
@@ -721,6 +702,8 @@ function profileContextFromDraft() {
 }
 
 function StepGoal({
+  goals,
+  mode,
   goal,
   onGoalChange,
   customGoal,
@@ -745,7 +728,7 @@ function StepGoal({
       </p>
 
       <div className="goal-grid">
-        {GOALS.map((g) => (
+        {(goals || []).map((g) => (
           <button
             key={g.key}
             type="button"
@@ -781,18 +764,74 @@ function StepGoal({
           Business context (optional)
         </span>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <label className="generate-field">
-            <span className="app-subtle">Industry</span>
-            <select
-              className="app-input"
-              value={businessContext.industry}
-              onChange={(e) => onBusinessContextChange({ ...businessContext, industry: e.target.value })}
-            >
-              {INDUSTRIES.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </label>
+          {mode !== "organic_growth" && (
+            <label className="generate-field">
+              <span className="app-subtle">Industry</span>
+              <select
+                className="app-input"
+                value={businessContext.industry || ""}
+                onChange={(e) => onBusinessContextChange({ ...businessContext, industry: e.target.value })}
+              >
+                {INDUSTRIES.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </label>
+          )}
+          {mode === "organic_growth" && (
+            <>
+              <label className="generate-field">
+                <span className="app-subtle">Primary organic KPI</span>
+                <select
+                  className="app-input"
+                  value={businessContext.primary_organic_kpi || ""}
+                  onChange={(e) => onBusinessContextChange({ ...businessContext, primary_organic_kpi: e.target.value })}
+                >
+                  <option value="">Select primary KPI...</option>
+                  <option value="organic_traffic">Organic Traffic</option>
+                  <option value="keyword_rankings">Keyword Rankings</option>
+                  <option value="backlinks">Backlinks</option>
+                  <option value="conversions_from_organic">Conversions from Organic</option>
+                </select>
+              </label>
+              <label className="generate-field">
+                <span className="app-subtle">Monthly organic traffic target (optional)</span>
+                <input
+                  type="number"
+                  className="app-input"
+                  min="0"
+                  step="1"
+                  placeholder="e.g. 10000"
+                  value={businessContext.monthly_organic_traffic_target || ""}
+                  onChange={(e) => onBusinessContextChange({ ...businessContext, monthly_organic_traffic_target: parseFloat(e.target.value) || 0 })}
+                />
+              </label>
+              <label className="generate-field">
+                <span className="app-subtle">Primary content type</span>
+                <select
+                  className="app-input"
+                  value={businessContext.primary_content_type || ""}
+                  onChange={(e) => onBusinessContextChange({ ...businessContext, primary_content_type: e.target.value })}
+                >
+                  <option value="">Select content type...</option>
+                  <option value="blog_articles">Blog/Articles</option>
+                  <option value="product_pages">Product Pages</option>
+                  <option value="landing_pages">Landing Pages</option>
+                  <option value="docs_help">Docs/Help</option>
+                </select>
+              </label>
+              <label className="generate-field">
+                <span className="app-subtle">What changed recently? (optional)</span>
+                <textarea
+                  className="app-input app-textarea"
+                  rows={2}
+                  placeholder="e.g. Published 10 new articles, migrated to new CMS, added hreflang tags."
+                  value={businessContext.period_changes || ""}
+                  onChange={(e) => onBusinessContextChange({ ...businessContext, period_changes: e.target.value })}
+                />
+              </label>
+            </>
+          )}
           {showPaidTargets && (
             <>
               <label className="generate-field">
@@ -968,6 +1007,7 @@ function StepReview({
   gscSiteUrl,
   goalKey,
   customGoal,
+  goals,
   dateFrom,
   dateTo,
   datePreset,
@@ -1022,7 +1062,7 @@ function StepReview({
         )}
         <div>
           <span className="generate-review-label">Goal</span>
-          <p className="generate-review-value">{goalDisplayLabel(goalKey, customGoal)}</p>
+          <p className="generate-review-value">{goalDisplayLabel(goalKey, customGoal, goals)}</p>
         </div>
         <div>
           <span className="generate-review-label">Date range</span>
@@ -1192,10 +1232,32 @@ function StepReport({ report, onSave, onRestart, saved }) {
 
 export default function GeneratePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Mode — read from query param, locked for wizard lifetime
+  const modeParam = searchParams.get("mode") || DEFAULT_MODE_KEY;
+  const [modes, setModes] = useState(FALLBACK_MODES);
+  const [modesLoaded, setModesLoaded] = useState(false);
+  const resolvedMode = modes.find((m) => m.key === modeParam && m.active)?.key || DEFAULT_MODE_KEY;
+  const [activeMode] = useState(resolvedMode);
+  const modeConfig = getModeByKey(modes, activeMode);
+  const activeGoals = modeConfig?.goals ?? [];
+  const lockedConnections = modeConfig?.locked_connections ?? null;
+
+  useEffect(() => {
+    fetchModes()
+      .then((fetched) => {
+        setModes(fetched);
+        setModesLoaded(true);
+      })
+      .catch(() => setModesLoaded(true)); // stay on fallback
+  }, []);
 
   // Wizard state
   const [step, setStep] = useState(1);
-  const [selectedConnections, setSelectedConnections] = useState([]);
+  const [selectedConnections, setSelectedConnections] = useState(
+    () => lockedConnections?.length ? [...lockedConnections] : []
+  );
   const [goal, setGoal] = useState("");
   const [customGoal, setCustomGoal] = useState("");
   const [context, setContext] = useState(() => profileContextFromDraft());
@@ -1207,7 +1269,9 @@ export default function GeneratePage() {
   const [error, setError] = useState(null);
   const [report, setReport] = useState(null);
   const [saved, setSaved] = useState(false);
-  const [businessContext, setBusinessContext] = useState(() => businessContextFromProfileDraft());
+  const [businessContext, setBusinessContext] = useState(
+    () => activeMode === "organic_growth" ? businessContextFromOrganicDraft() : businessContextFromProfileDraft()
+  );
 
   // Connector target selections (loaded on step 2 when connector is selected)
   const [adsAccounts, setAdsAccounts] = useState([]);
@@ -1469,6 +1533,7 @@ export default function GeneratePage() {
     try {
       const data = await generateReportStream({
         connections: selectedConnections,
+        mode: activeMode,
         goal: goal === "custom" ? "custom" : goal,
         custom_goal: goal === "custom" ? customGoal.trim() : "",
         context,
@@ -1512,15 +1577,16 @@ export default function GeneratePage() {
       ga4Properties,
       selectedGscSiteUrl,
       businessContext,
+      mode: activeMode,
     });
-    saveLocalReport(slug, report, routine, getActiveProjectId() || null);
+    saveLocalReport(slug, report, routine, getActiveProjectId() || null, activeMode);
     setSaved(true);
     setTimeout(() => router.push("/insights"), 400);
   }
 
   function handleRestart() {
     setStep(1);
-    setSelectedConnections([]);
+    setSelectedConnections(lockedConnections?.length ? [...lockedConnections] : []);
     setGoal("");
     setCustomGoal("");
     setContext(profileContextFromDraft());
@@ -1532,7 +1598,9 @@ export default function GeneratePage() {
     setError(null);
     setReport(null);
     setSaved(false);
-    setBusinessContext(businessContextFromProfileDraft());
+    setBusinessContext(
+      activeMode === "organic_growth" ? businessContextFromOrganicDraft() : businessContextFromProfileDraft()
+    );
     setAdsAccounts([]);
     setAdsAccountsLoading(false);
     setSelectedAdsCustomerId("");
@@ -1556,13 +1624,16 @@ export default function GeneratePage() {
   const needsAdsAccount = selectedConnections.includes("google_ads");
   const needsGa4Property = selectedConnections.includes("ga4");
   const needsGscSite = selectedConnections.includes("gsc");
-  const showPaidTargets = selectedConnections.includes("google_ads");
+  const showPaidTargets = activeMode !== "organic_growth" && selectedConnections.includes("google_ads");
   const hasEconomicGuardrail =
     Number(businessContext.target_payback_days) > 0 ||
     Number(businessContext.gross_margin_percent) > 0 ||
     Number(businessContext.qualified_lead_value) > 0;
   const hasPrimaryConversionAction = String(businessContext.primary_conversion_action || "").trim().length > 0;
-  const adsBusinessContextOk = !showPaidTargets || (hasPrimaryConversionAction && hasEconomicGuardrail);
+  const adsBusinessContextOk =
+    activeMode === "organic_growth"
+      ? true
+      : !showPaidTargets || (hasPrimaryConversionAction && hasEconomicGuardrail);
   const selectedIdNorm = normalizeCustomerId(selectedAdsCustomerId);
   const adsAccountOk =
     !needsAdsAccount ||
@@ -1612,8 +1683,8 @@ export default function GeneratePage() {
     if (!goal) return "Select an analysis goal above to continue.";
     if (goal === "custom" && !customGoal.trim()) return "Enter a short description for your custom goal.";
     if (!dateFrom || !dateTo) return "Choose a date range (or pick Custom and set dates).";
-    if (showPaidTargets && !hasPrimaryConversionAction) return "Enter your primary conversion action for this ads analysis.";
-    if (showPaidTargets && !hasEconomicGuardrail) return "Add at least one economic guardrail (payback days, gross margin, or qualified lead value).";
+    if (activeMode !== "organic_growth" && showPaidTargets && !hasPrimaryConversionAction) return "Enter your primary conversion action for this ads analysis.";
+    if (activeMode !== "organic_growth" && showPaidTargets && !hasEconomicGuardrail) return "Add at least one economic guardrail (payback days, gross margin, or qualified lead value).";
     return "";
   }
 
@@ -1648,7 +1719,14 @@ export default function GeneratePage() {
             </svg>
           </Link>
         </Button>
-        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">Generate Insight</h1>
+        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">
+          Generate Insight
+          {modeConfig && (
+            <span className="mode-badge-wizard" aria-label={`Mode: ${modeConfig.label}`}>
+              {modeConfig.emoji} {modeConfig.label}
+            </span>
+          )}
+        </h1>
       </div>
 
       <ProgressDots step={step} />
@@ -1656,9 +1734,14 @@ export default function GeneratePage() {
       {step === 1 && (
         <>
           <StepConnections
-            connections={connections}
+            connections={
+              lockedConnections?.length
+                ? connections.filter((c) => lockedConnections.includes(c.id))
+                : connections
+            }
             selected={selectedConnections}
-            onToggle={toggleConnection}
+            onToggle={lockedConnections?.length ? () => {} : toggleConnection}
+            locked={!!lockedConnections?.length}
           />
           <div style={{ marginTop: 16 }}>
             <Button type="button" disabled={!canProceedStep1} onClick={() => setStep(2)}>
@@ -1722,6 +1805,8 @@ export default function GeneratePage() {
       {step === 3 && (
         <>
           <StepGoal
+            goals={activeGoals}
+            mode={activeMode}
             goal={goal}
             onGoalChange={setGoal}
             customGoal={customGoal}
@@ -1769,6 +1854,7 @@ export default function GeneratePage() {
             gscSiteUrl={gscForReview?.site_url ?? selectedGscSiteUrlNorm}
             goalKey={goal}
             customGoal={customGoal}
+            goals={activeGoals}
             dateFrom={dateFrom}
             dateTo={dateTo}
             datePreset={datePreset}

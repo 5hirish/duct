@@ -21,6 +21,7 @@ from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, Tool
 
 from agents.models import ModelName, Provider, get_api_key_kwargs
 from agents.insights.goals import InsightGenerationGoal, goal_heading_text
+from agents.insights.goals.organic_growth import OrganicGrowthGoal
 from agents.insights.prompts import get_synthesis_user_prompt, get_system_prompt
 from agents.insights.schema import SynthesisSchema
 from agents.insights.tools import (
@@ -111,14 +112,23 @@ class GenerateInsightsAgent:
 
     def setup_tools_for_goal(
         self,
-        goal: InsightGenerationGoal,
+        goal: InsightGenerationGoal | OrganicGrowthGoal,
         fetch_fns: dict[str, Callable[..., dict[str, Any]]],
+        mode: str = "paid_ads",
     ) -> list[str]:
         """Register supplementary tools based on the user's goal.
 
         ``fetch_fns`` maps tool name → pre-credentialed fetch function.
         Returns list of registered tool names.
         """
+        if mode == "organic_growth":
+            from agents.insights.goals.organic_growth import GOAL_TOOL_PRIORITIES as ORGANIC_PRIORITIES
+            self._goal_tool_priorities = ORGANIC_PRIORITIES
+        else:
+            from agents.insights.goals.paid_ads import GOAL_TOOL_PRIORITIES as PAID_PRIORITIES
+            self._goal_tool_priorities = PAID_PRIORITIES
+        self._active_mode = mode
+
         tool_names = get_tool_names_for_goal(goal)
         self.tools = []
         self.tools_by_name = {}
@@ -143,11 +153,12 @@ class GenerateInsightsAgent:
         customer_id: str,
         date_from: str,
         date_to: str,
-        goal: InsightGenerationGoal,
+        goal: InsightGenerationGoal | OrganicGrowthGoal,
         ga4_property_id: str = "",
         gsc_site_url: str = "",
         custom_goal: str = "",
         context: str = "",
+        connected_sources: list[str] | None = None,
     ) -> dict[str, Any]:
         """Phase 1: Let the LLM decide which supplementary data to fetch.
 
@@ -158,15 +169,26 @@ class GenerateInsightsAgent:
         if not self.llm_with_tools or not self.tools:
             return {}
 
-        priority_names = set(GOAL_TOOL_PRIORITIES.get(goal, []))
+        mode = getattr(self, "_active_mode", "paid_ads")
+        goal_priorities = getattr(self, "_goal_tool_priorities", {})
+        priority_names = set(goal_priorities.get(goal, []))
+
         tool_lines = []
         for t in self.tools:
             tag = " [PRIORITY]" if t.name in priority_names else ""
             tool_lines.append(f"- {t.name}{tag}: {t.description}")
         tool_descriptions = "\n".join(tool_lines)
 
+        _role_by_mode = {
+            "organic_growth": "You are a senior organic growth analyst preparing supplementary data for an SEO insight brief.",
+            "paid_ads": "You are a senior paid media analyst preparing supplementary data for a Google Ads brief.",
+        }
+        role_line = _role_by_mode.get(mode, "You are a data analyst preparing supplementary data for an insight brief.")
+        sources_str = ", ".join(connected_sources) if connected_sources else "the connected data sources"
+
         system_msg = (
-            "You are a Google Ads analyst preparing data for a report. "
+            f"{role_line} "
+            f"Connected sources: {sources_str}. "
             "The user's goal and context are provided below. "
             "You have access to supplementary data tools. Call the tools "
             "that will provide the most actionable data for this goal. "
@@ -251,16 +273,17 @@ class GenerateInsightsAgent:
 
     async def synthesize(
         self,
-        goal: InsightGenerationGoal,
+        goal: InsightGenerationGoal | OrganicGrowthGoal,
         custom_goal: str,
         context: str,
-        brief_dict: dict[str, Any],
-        raw_payload: dict[str, Any],
+        all_briefs: dict[str, Any],
         supplementary: dict[str, Any] | None = None,
         business_context: dict[str, Any] | None = None,
+        mode: str = "paid_ads",
     ) -> SynthesisSchema:
-        """Phase 2: Structured output from brief + raw data + supplementary.
+        """Phase 2: Structured output from connector briefs + supplementary data.
 
+        `all_briefs` maps connector_id → {"brief": {...}, "raw": {...}}.
         Returns a validated SynthesisSchema instance.
         """
         system_prompt = get_system_prompt(
@@ -268,8 +291,9 @@ class GenerateInsightsAgent:
             custom_goal=custom_goal,
             context=context,
             business_context=business_context,
+            mode=mode,
         )
-        user_prompt = get_synthesis_user_prompt(brief_dict, raw_payload, supplementary=supplementary)
+        user_prompt = get_synthesis_user_prompt(all_briefs, supplementary=supplementary, mode=mode)
 
         messages = [
             SystemMessage(content=system_prompt),

@@ -7,6 +7,21 @@ from typing import Annotated, Any, Self
 from pydantic import BaseModel, BeforeValidator, Field, model_validator
 
 from agents.insights.goals import InsightGenerationGoal, parse_goal_value
+from agents.insights.goals.organic_growth import OrganicGrowthGoal, parse_goal_value as parse_organic_goal_value
+
+
+def _parse_any_goal(value: object) -> InsightGenerationGoal | OrganicGrowthGoal:
+    """Coerce goal value — tries paid ads first, then organic growth."""
+    try:
+        return parse_goal_value(value)
+    except ValueError:
+        pass
+    try:
+        return parse_organic_goal_value(value)
+    except ValueError:
+        raise ValueError(
+            f"Unknown goal {value!r}. Not a valid paid ads or organic growth goal."
+        )
 
 
 class ReportRequest(BaseModel):
@@ -25,9 +40,20 @@ class ReportRequest(BaseModel):
 
 
 class BusinessContext(BaseModel):
-    """Optional business context for goal-aware LLM reasoning."""
+    """Optional business context for goal-aware LLM reasoning.
 
-    industry: str = ""           # "ecommerce", "saas", "lead_gen", "agency"
+    Paid ads fields (used when mode="paid_ads"):
+      monthly_budget, target_cpa, target_roas, primary_conversion_action,
+      target_payback_days, gross_margin_percent, qualified_lead_value
+
+    Organic growth fields (used when mode="organic_growth"):
+      primary_organic_kpi, monthly_organic_traffic_target, primary_content_type
+
+    Shared fields: industry, period_changes, notes
+    """
+
+    industry: str = ""
+    # Paid ads
     monthly_budget: float = 0.0
     target_cpa: float = 0.0
     target_roas: float = 0.0
@@ -35,13 +61,19 @@ class BusinessContext(BaseModel):
     target_payback_days: float = 0.0
     gross_margin_percent: float = 0.0
     qualified_lead_value: float = 0.0
+    # Organic growth
+    primary_organic_kpi: str = ""           # "organic_traffic", "keyword_rankings", etc.
+    monthly_organic_traffic_target: float = 0.0
+    primary_content_type: str = ""          # "blog_articles", "product_pages", etc.
+    # Shared
     period_changes: str = ""
     notes: str = ""
 
 
 class GenerateRequest(BaseModel):
-    connections: list[str] = Field(default_factory=list)  # e.g. ["google_ads"]
-    goal: Annotated[InsightGenerationGoal, BeforeValidator(parse_goal_value)]
+    connections: list[str] = Field(default_factory=list)
+    mode: str = Field(default="paid_ads", description="Intelligence mode: 'paid_ads' or 'organic_growth'")
+    goal: Annotated[InsightGenerationGoal | OrganicGrowthGoal, BeforeValidator(_parse_any_goal)]
     custom_goal: str = Field(
         default="",
         description='Required when goal is "custom": free-text objective for the report.',
@@ -59,10 +91,16 @@ class GenerateRequest(BaseModel):
     currency_code: str = "USD"
     login_customer_id: str = ""
     business_context: BusinessContext = Field(default_factory=BusinessContext)
+    mode_context: str = ""  # optional frontend-supplied mode context, appended to system prompt
 
     @model_validator(mode="after")
     def _custom_goal_required(self) -> Self:
-        if self.goal == InsightGenerationGoal.CUSTOM and not self.custom_goal.strip():
+        from agents.insights.goals.organic_growth import OrganicGrowthGoal as OGGoal
+        is_custom = (
+            self.goal == InsightGenerationGoal.CUSTOM
+            or (isinstance(self.goal, OGGoal) and self.goal == OGGoal.CUSTOM)
+        )
+        if is_custom and not self.custom_goal.strip():
             raise ValueError('custom_goal is required when goal is "custom"')
         return self
 

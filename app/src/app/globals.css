@@ -1662,3 +1662,86 @@
     color: var(--primary);
   }
 }
+
+/* ── Intelligence Mode Selector ─────────────────────────────────────────── */
+
+.mode-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.mode-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.mode-pill:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--foreground);
+}
+
+.mode-pill--active {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  color: var(--foreground);
+}
+
+.mode-pill--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.mode-pill-coming-soon {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: var(--muted);
+  color: var(--muted-foreground);
+  margin-left: 2px;
+}
+
+.mode-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.mode-tagline {
+  margin: 0;
+}
+
+/* Mode badge in generate wizard header */
+.mode-badge-wizard {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  margin-left: 10px;
+  vertical-align: middle;
+}

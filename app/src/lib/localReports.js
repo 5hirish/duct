@@ -59,13 +59,21 @@ function writeStore(reports) {
   }
 }
 
-export function getLocalReports(projectId = null) {
-  const reports = readStore();
-  if (!projectId) return reports;
-  return reports.filter((entry) => entry.project_id === projectId);
+export function getLocalReports(projectId = null, mode = null) {
+  let reports = readStore();
+  if (projectId) {
+    reports = reports.filter((entry) => entry.project_id === projectId);
+  }
+  if (mode) {
+    reports = reports.filter((entry) => {
+      const entryMode = entry.mode || entry.routine?.mode || null;
+      return entryMode === mode;
+    });
+  }
+  return reports;
 }
 
-export function saveLocalReport(slug, payload, routine = null, projectId = null) {
+export function saveLocalReport(slug, payload, routine = null, projectId = null, mode = null) {
   const reports = readStore();
 
   // Mark as locally stored (support both envelope and legacy flat format)
@@ -81,6 +89,7 @@ export function saveLocalReport(slug, payload, routine = null, projectId = null)
     payload,
     savedAt: new Date().toISOString(),
     project_id: projectId || null,
+    mode: mode || null,
     ...(routine
       ? {
           routine: {

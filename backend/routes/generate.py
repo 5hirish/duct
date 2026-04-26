@@ -237,11 +237,19 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
     briefs = {cid: payload for cid, payload in normalized_rows}
 
     synthesis_dict = None
-    google_ads_brief = briefs.get("google_ads")
-    google_ads_raw = raw_by_connector.get("google_ads")
+    mode = req.mode or "paid_ads"
     api_key, provider, model = _resolve_agent_config()
 
-    if api_key and google_ads_brief and google_ads_raw:
+    # Build the all_briefs dict: connector_id → {"brief": ..., "raw": ...}
+    all_briefs = {
+        cid: {"brief": brief, "raw": raw_by_connector.get(cid)}
+        for cid, brief in briefs.items()
+    }
+
+    # Determine primary connector for classification overrides (paid ads only)
+    primary_connector = "google_ads" if mode == "paid_ads" else None
+
+    if api_key and all_briefs:
         await _step_started(emit_event, STEP_SUPPLEMENTARY)
         agent = GenerateInsightsAgent(
             api_key=api_key,
@@ -263,10 +271,10 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
             ga4_refresh_token,
             gsc_refresh_token,
         )
-        registered = agent.setup_tools_for_goal(goal=req.goal, fetch_fns=fetch_fns)
+        registered = agent.setup_tools_for_goal(goal=req.goal, fetch_fns=fetch_fns, mode=mode)
         supplementary = {}
         if registered:
-            logger.info("Phase 1: fetching supplementary data for goal '%s'", req.goal.value)
+            logger.info("Phase 1: fetching supplementary data for goal '%s' (mode: %s)", req.goal.value, mode)
             supplementary = await agent.fetch_supplementary_data(
                 customer_id=ads_customer_id,
                 date_from=req.date_from,
@@ -276,21 +284,28 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
                 gsc_site_url=gsc_site_url,
                 custom_goal=req.custom_goal,
                 context=req.context,
+                connected_sources=connections,
             )
         await _step_finished(emit_event, STEP_SUPPLEMENTARY)
 
         await _step_started(emit_event, STEP_SYNTHESIZE)
         biz_ctx = req.business_context.model_dump() if req.business_context else None
+        # Merge mode_context from frontend into the context field if provided
+        full_context = req.context
+        if req.mode_context:
+            full_context = f"{req.mode_context}\n\n{full_context}".strip() if full_context else req.mode_context
         synthesis = await agent.synthesize(
             goal=req.goal,
             custom_goal=req.custom_goal,
-            context=req.context,
-            brief_dict=google_ads_brief,
-            raw_payload=google_ads_raw,
+            context=full_context,
+            all_briefs=all_briefs,
             supplementary=supplementary or None,
             business_context=biz_ctx,
+            mode=mode,
         )
-        agent.apply_classification_overrides(google_ads_brief, synthesis)
+        # Apply classification overrides only for paid ads (campaign action fields)
+        if primary_connector and primary_connector in briefs:
+            agent.apply_classification_overrides(briefs[primary_connector], synthesis)
         synthesis_dict = agent.extract_synthesis(synthesis)
         await _step_finished(emit_event, STEP_SYNTHESIZE)
     else:
@@ -361,6 +376,99 @@ def _build_fetch_fns(
         fetch_fns["fetch_gsc_query_performance"] = partial(fetch_gsc_query_performance, **gsc_cred_kwargs)
         fetch_fns["fetch_gsc_page_performance"] = partial(fetch_gsc_page_performance, **gsc_cred_kwargs)
     return fetch_fns
+
+
+@router.get("/insights/modes")
+async def list_insight_modes() -> dict:
+    """Return all intelligence modes with their goals. Frontend uses this as the single source of truth."""
+    from agents.insights.goals.paid_ads import (
+        InsightGenerationGoal,
+        GOAL_LABELS as PAID_LABELS,
+        GOAL_DESCRIPTIONS as PAID_DESCRIPTIONS,
+        GOAL_ICONS as PAID_ICONS,
+    )
+    from agents.insights.goals.organic_growth import (
+        OrganicGrowthGoal,
+        GOAL_LABELS as ORGANIC_LABELS,
+        GOAL_DESCRIPTIONS as ORGANIC_DESCRIPTIONS,
+        GOAL_ICONS as ORGANIC_ICONS,
+    )
+
+    def _goals(enum_cls, labels, descriptions, icons):
+        return [
+            {
+                "key": g.value,
+                "icon": icons.get(g, ""),
+                "label": labels.get(g, g.value),
+                "description": descriptions.get(g, ""),
+            }
+            for g in enum_cls
+        ]
+
+    return {
+        "modes": [
+            {
+                "key": "product_intelligence",
+                "emoji": "📊",
+                "label": "Product Intelligence",
+                "short_label": "Product",
+                "tagline": "Weekly brief for PMs & growth teams",
+                "active": False,
+                "locked_connections": [],
+                "goals": [],
+            },
+            {
+                "key": "organic_growth",
+                "emoji": "🌱",
+                "label": "Organic Growth",
+                "short_label": "Organic",
+                "tagline": "Automated SEO & content intelligence",
+                "active": True,
+                "locked_connections": ["gsc", "ga4"],
+                "goals": _goals(OrganicGrowthGoal, ORGANIC_LABELS, ORGANIC_DESCRIPTIONS, ORGANIC_ICONS),
+            },
+            {
+                "key": "paid_ads",
+                "emoji": "📣",
+                "label": "Paid Ads Intelligence",
+                "short_label": "Paid Ads",
+                "tagline": "Cross-platform brief for performance marketers",
+                "active": False,
+                "locked_connections": ["google_ads"],
+                "goals": _goals(InsightGenerationGoal, PAID_LABELS, PAID_DESCRIPTIONS, PAID_ICONS),
+            },
+            {
+                "key": "sales_revops",
+                "emoji": "💼",
+                "label": "Sales / RevOps",
+                "short_label": "Sales",
+                "tagline": "Pipeline & revenue intelligence",
+                "active": False,
+                "locked_connections": [],
+                "goals": [],
+            },
+            {
+                "key": "ecommerce_dtc",
+                "emoji": "🛒",
+                "label": "E-commerce / DTC",
+                "short_label": "E-commerce",
+                "tagline": "ROAS, LTV & retention synthesis",
+                "active": False,
+                "locked_connections": [],
+                "goals": [],
+            },
+            {
+                "key": "customer_success",
+                "emoji": "🤝",
+                "label": "Customer Success",
+                "short_label": "CS",
+                "tagline": "Early churn & health score signals",
+                "active": False,
+                "locked_connections": [],
+                "goals": [],
+            },
+        ]
+    }
 
 
 @router.post("/insights/generate")
