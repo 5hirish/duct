@@ -229,3 +229,14 @@ class InsightMode(BaseModel):
 class InsightModesResponse(BaseModel):
     modes: list[InsightMode] = Field(default_factory=list)
 
+
+class ProjectConfigOption(BaseModel):
+    value: str
+    label: str
+
+
+class ProjectConfigResponse(BaseModel):
+    industry_options: list[ProjectConfigOption] = Field(default_factory=list)
+    business_model_options: list[ProjectConfigOption] = Field(default_factory=list)
+    north_star_metric_options: list[ProjectConfigOption] = Field(default_factory=list)
+    growth_stage_milestone_options: list[ProjectConfigOption] = Field(default_factory=list)

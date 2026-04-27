@@ -67,6 +67,20 @@ function SignInContent() {
   const requiresTurnstile = Boolean(TURNSTILE_SITE_KEY);
   const turnstileContainerRef = useRef(null);
   const turnstileWidgetIdRef = useRef(null);
+  const getTurnstileResponseToken = useCallback(() => {
+    if (
+      typeof window === "undefined" ||
+      !window.turnstile ||
+      !turnstileWidgetIdRef.current
+    ) {
+      return "";
+    }
+    try {
+      return window.turnstile.getResponse(turnstileWidgetIdRef.current) || "";
+    } catch {
+      return "";
+    }
+  }, []);
 
   useEffect(() => {
     // Handle token from OAuth callback
@@ -162,16 +176,27 @@ function SignInContent() {
       );
       return;
     }
-    if (requiresTurnstile && !turnstileToken) {
+    const resolvedTurnstileToken = turnstileToken || getTurnstileResponseToken();
+    if (requiresTurnstile && !resolvedTurnstileToken) {
       return;
+    }
+    if (resolvedTurnstileToken && resolvedTurnstileToken !== turnstileToken) {
+      setTurnstileToken(resolvedTurnstileToken);
     }
     setIsSigningIn(true);
     let url = `${BASE}/auth/signin/google/authorize`;
-    if (turnstileToken) {
-      url += `?turnstile_token=${encodeURIComponent(turnstileToken)}`;
+    if (resolvedTurnstileToken) {
+      url += `?turnstile_token=${encodeURIComponent(resolvedTurnstileToken)}`;
     }
     window.location.href = url;
-  }, [isSigningIn, requiresTurnstile, turnstileToken]);
+  }, [
+    getTurnstileResponseToken,
+    isSigningIn,
+    requiresTurnstile,
+    turnstileToken,
+  ]);
+
+  const hasTurnstileToken = Boolean(turnstileToken || getTurnstileResponseToken());
 
   if (!ready) {
     return (
@@ -233,12 +258,12 @@ function SignInContent() {
             size="lg"
             className="h-12 w-full justify-center gap-3 rounded-4xl border-border bg-card font-medium shadow-sm hover:bg-muted/60"
             onClick={handleSignIn}
-            disabled={isSigningIn || (requiresTurnstile && !turnstileToken)}
+            disabled={isSigningIn || (requiresTurnstile && !hasTurnstileToken)}
           >
             <GoogleLogo />
             {isSigningIn ? "Signing in..." : "Sign in with Google"}
           </Button>
-          {requiresTurnstile && !turnstileToken && (
+          {requiresTurnstile && !hasTurnstileToken && (
             <p className="mt-2 text-center text-xs text-muted-foreground">
               Complete security check to continue.
             </p>

@@ -24,39 +24,9 @@ import {
   saveProject,
   setActiveProjectId,
 } from "../../../lib/projects";
+import { fetchProjectConfig, getFallbackProjectConfig } from "../../../lib/projectConfig";
 
-const INDUSTRIES = [
-  "E-commerce & Retail",
-  "SaaS & Software",
-  "Financial Services",
-  "Healthcare",
-  "Education",
-  "Professional Services",
-  "Marketing & Advertising",
-  "Real Estate",
-  "Travel & Hospitality",
-  "Other",
-];
-const BUSINESS_MODELS = ["B2B", "B2C", "Marketplace", "PLG", "Agency", "Hybrid"];
 const PRIMARY_SEGMENTS = ["Consumer", "SMB", "Mid-market", "Enterprise", "Public sector", "Non-profit", "Other"];
-
-const NORTH_STAR_OPTIONS = [
-  "Weekly active users",
-  "Monthly active customers",
-  "Qualified leads",
-  "Pipeline created",
-  "Net new revenue",
-  "Retention rate",
-  "Bookings",
-  "Custom",
-];
-const GROWTH_STAGE_OPTIONS = [
-  { value: "0_pre_customer", label: "No customers or active users yet" },
-  { value: "1_first_users", label: "First active users/customers (1-10)" },
-  { value: "2_early_revenue", label: "Early repeat usage or revenue (10-100 customers)" },
-  { value: "3_repeatable_growth", label: "Repeatable growth motion (100+ customers or steady MoM growth)" },
-  { value: "4_scaling", label: "Scaling across channels or segments with predictable performance" },
-];
 const BRAND_VOICES = ["Professional", "Friendly", "Bold", "Technical", "Playful"];
 const GROWTH_MOTIONS = ["Organic", "Paid", "Product-led", "Sales-led", "Partnerships", "Community", "Lifecycle/CRM"];
 const TOTAL_STEPS = 5;
@@ -126,6 +96,9 @@ export default function OnboardingPage() {
   const [projectMeta, setProjectMeta] = useState(null);
   const [isNewProjectFlow, setIsNewProjectFlow] = useState(false);
   const [projectLoadError, setProjectLoadError] = useState("");
+  const [projectConfig, setProjectConfig] = useState(getFallbackProjectConfig);
+  const [projectConfigLoading, setProjectConfigLoading] = useState(false);
+  const [projectConfigError, setProjectConfigError] = useState("");
   const [profile, setProfile] = useState({
     company: { name: "", industry: "", business_model: "", website_url: "" },
     targets: {
@@ -215,6 +188,35 @@ export default function OnboardingPage() {
     setReady(true);
   }, [searchParams]);
 
+  useEffect(() => {
+    if (!ready) return;
+    let cancelled = false;
+    async function loadProjectConfig() {
+      setProjectConfigLoading(true);
+      try {
+        const config = await fetchProjectConfig({
+          industry: profile.company.industry,
+          businessModel: profile.company.business_model,
+        });
+        if (cancelled) return;
+        setProjectConfig(config);
+        setProjectConfigError("");
+      } catch {
+        if (cancelled) return;
+        setProjectConfig(getFallbackProjectConfig());
+        setProjectConfigError("Using fallback options while config service is unavailable.");
+      } finally {
+        if (!cancelled) {
+          setProjectConfigLoading(false);
+        }
+      }
+    }
+    loadProjectConfig();
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, profile.company.industry, profile.company.business_model]);
+
   function isStepOneRequiredComplete(currentProfile) {
     return Boolean(
       currentProfile.company?.name?.trim() &&
@@ -266,6 +268,35 @@ export default function OnboardingPage() {
     [profile.competition.compare_against]
   );
   const [comparisonInput, setComparisonInput] = useState("");
+  const industryOptions = projectConfig?.industry_options ?? [];
+  const businessModelOptions = projectConfig?.business_model_options ?? [];
+  const northStarOptions = projectConfig?.north_star_metric_options ?? [];
+  const growthStageOptions = projectConfig?.growth_stage_milestone_options ?? [];
+  const hasCompanyContext = Boolean(profile.company.industry && profile.company.business_model);
+
+  function handleIndustryChange(value) {
+    setProfile((prev) => ({
+      ...prev,
+      company: { ...prev.company, industry: value },
+      targets: {
+        ...prev.targets,
+        north_star_metric: "",
+        growth_stage_milestone: "",
+      },
+    }));
+  }
+
+  function handleBusinessModelChange(value) {
+    setProfile((prev) => ({
+      ...prev,
+      company: { ...prev.company, business_model: value },
+      targets: {
+        ...prev.targets,
+        north_star_metric: "",
+        growth_stage_milestone: "",
+      },
+    }));
+  }
 
   function goNext() {
     setStep((current) => Math.min(current + 1, TOTAL_STEPS));
@@ -397,36 +428,26 @@ export default function OnboardingPage() {
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="company-industry">Industry</Label>
-            <Select
-              value={profile.company.industry}
-              onValueChange={(val) =>
-                setProfile((prev) => ({ ...prev, company: { ...prev.company, industry: val } }))
-              }
-            >
+            <Select value={profile.company.industry} onValueChange={handleIndustryChange}>
               <SelectTrigger id="company-industry">
                 <SelectValue placeholder="Select industry..." />
               </SelectTrigger>
               <SelectContent>
-                {INDUSTRIES.map((industry) => (
-                  <SelectItem key={industry} value={industry}>{industry}</SelectItem>
+                {industryOptions.map((industry) => (
+                  <SelectItem key={industry.value} value={industry.value}>{industry.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="company-business-model">Business model</Label>
-            <Select
-              value={profile.company.business_model}
-              onValueChange={(val) =>
-                setProfile((prev) => ({ ...prev, company: { ...prev.company, business_model: val } }))
-              }
-            >
+            <Select value={profile.company.business_model} onValueChange={handleBusinessModelChange}>
               <SelectTrigger id="company-business-model">
                 <SelectValue placeholder="Select business model..." />
               </SelectTrigger>
               <SelectContent>
-                {BUSINESS_MODELS.map((model) => (
-                  <SelectItem key={model} value={model}>{model}</SelectItem>
+                {businessModelOptions.map((model) => (
+                  <SelectItem key={model.value} value={model.value}>{model.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -455,6 +476,7 @@ export default function OnboardingPage() {
             <Label htmlFor="north-star-metric">North Star metric</Label>
             <Select
               value={profile.targets.north_star_metric}
+              disabled={!hasCompanyContext || projectConfigLoading}
               onValueChange={(val) =>
                 setProfile((prev) => ({ ...prev, targets: { ...prev.targets, north_star_metric: val } }))
               }
@@ -463,11 +485,17 @@ export default function OnboardingPage() {
                 <SelectValue placeholder="Select North Star metric..." />
               </SelectTrigger>
               <SelectContent>
-                {NORTH_STAR_OPTIONS.map((metric) => (
-                  <SelectItem key={metric} value={metric}>{metric}</SelectItem>
+                {northStarOptions.map((metric) => (
+                  <SelectItem key={metric.value} value={metric.value}>{metric.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            {!hasCompanyContext ? (
+              <p className="text-xs text-muted-foreground">
+                Select Industry and Business model first to load relevant North Star options.
+              </p>
+            ) : null}
+            {projectConfigError ? <p className="text-xs text-muted-foreground">{projectConfigError}</p> : null}
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="north-star-goal-window">What does success look like in the next 90 days?</Label>
@@ -486,6 +514,7 @@ export default function OnboardingPage() {
             <Label htmlFor="growth-stage-milestone">Current growth stage (milestone-based)</Label>
             <Select
               value={profile.targets.growth_stage_milestone}
+              disabled={!hasCompanyContext || projectConfigLoading}
               onValueChange={(val) =>
                 setProfile((prev) => ({ ...prev, targets: { ...prev.targets, growth_stage_milestone: val } }))
               }
@@ -494,7 +523,7 @@ export default function OnboardingPage() {
                 <SelectValue placeholder="Select your current milestone..." />
               </SelectTrigger>
               <SelectContent>
-                {GROWTH_STAGE_OPTIONS.map((stage) => (
+                {growthStageOptions.map((stage) => (
                   <SelectItem key={stage.value} value={stage.value}>{stage.label}</SelectItem>
                 ))}
               </SelectContent>
