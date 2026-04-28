@@ -1,17 +1,17 @@
 /**
- * Client-side localStorage CRUD for generated reports.
+ * Client-side localStorage for generated insights.
  *
- * Primary persistence for the /generate flow: JSON from POST /api/generate is saved here.
+ * Primary persistence for the /generate flow: JSON from the generate API is saved here.
  * Replace with a real store when accounts exist.
  *
- * Reports are stored as an array in localStorage under STORAGE_KEY.
- * Each entry: { slug, payload, savedAt }
- * Capped at MAX_REPORTS; oldest are pruned on save.
+ * Insights are stored as an array in localStorage under STORAGE_KEY.
+ * Each entry: { slug, payload, savedAt, routine?, refresh?, ui?, ... }
+ * Capped at MAX_INSIGHTS; oldest are pruned on save.
  */
 
-export const LOCAL_REPORTS_STORAGE_KEY = "duct_local_reports";
-const STORAGE_KEY = LOCAL_REPORTS_STORAGE_KEY;
-const MAX_REPORTS = 50;
+export const LOCAL_INSIGHTS_STORAGE_KEY = "duct_local_insights";
+const STORAGE_KEY = LOCAL_INSIGHTS_STORAGE_KEY;
+const MAX_INSIGHTS = 50;
 const UI_SCHEMA_VERSION = 1;
 const ROUTINE_SCHEMA_VERSION = 1;
 
@@ -33,7 +33,7 @@ function defaultUiState() {
   };
 }
 
-function withReportDefaults(entry) {
+function withInsightDefaults(entry) {
   if (!entry) return null;
   return {
     ...entry,
@@ -51,39 +51,37 @@ function readStore() {
   }
 }
 
-function writeStore(reports) {
+function writeStore(entries) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(reports));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
   } catch {
     // storage full — silently fail
   }
 }
 
-export function getLocalReports(projectId = null, mode = null) {
-  let reports = readStore();
+export function getLocalInsights(projectId = null, mode = null) {
+  let entries = readStore();
   if (projectId) {
-    reports = reports.filter((entry) => entry.project_id === projectId);
+    entries = entries.filter((entry) => entry.project_id === projectId);
   }
   if (mode) {
-    reports = reports.filter((entry) => {
+    entries = entries.filter((entry) => {
       const entryMode = entry.mode || entry.routine?.mode || null;
       return entryMode === mode;
     });
   }
-  return reports;
+  return entries;
 }
 
-export function saveLocalReport(slug, payload, routine = null, projectId = null, mode = null) {
-  const reports = readStore();
+export function saveLocalInsight(slug, payload, routine = null, projectId = null, mode = null) {
+  const entries = readStore();
 
-  // Mark as locally stored (support both envelope and legacy flat format)
   const meta = payload.briefs?.google_ads?.source_metadata ?? payload.source_metadata;
   if (meta) {
     meta._local = true;
   }
 
-  // Remove existing entry with same slug (update case)
-  const filtered = reports.filter((r) => r.slug !== slug);
+  const filtered = entries.filter((r) => r.slug !== slug);
   const nextEntry = {
     slug,
     payload,
@@ -103,29 +101,28 @@ export function saveLocalReport(slug, payload, routine = null, projectId = null,
   };
   filtered.unshift(nextEntry);
 
-  // Cap at MAX_REPORTS
-  if (filtered.length > MAX_REPORTS) {
-    filtered.length = MAX_REPORTS;
+  if (filtered.length > MAX_INSIGHTS) {
+    filtered.length = MAX_INSIGHTS;
   }
 
   writeStore(filtered);
 }
 
-export function getLocalReportBySlug(slug) {
-  const entry = getReportEntry(slug);
+export function getLocalInsightBySlug(slug) {
+  const entry = getInsightEntry(slug);
   return entry ? entry.payload : null;
 }
 
-export function getReportEntry(slug) {
-  const reports = readStore();
-  const entry = reports.find((r) => r.slug === slug);
-  return withReportDefaults(entry);
+export function getInsightEntry(slug) {
+  const entries = readStore();
+  const entry = entries.find((r) => r.slug === slug);
+  return withInsightDefaults(entry);
 }
 
-export function patchReportRefresh(slug, patch) {
-  const reports = readStore();
+export function patchInsightRefresh(slug, patch) {
+  const entries = readStore();
   let changed = false;
-  const next = reports.map((entry) => {
+  const next = entries.map((entry) => {
     if (entry.slug !== slug) return entry;
     changed = true;
     const refresh = {
@@ -138,10 +135,10 @@ export function patchReportRefresh(slug, patch) {
   if (changed) writeStore(next);
 }
 
-export function patchReportUi(slug, patch) {
-  const reports = readStore();
+export function patchInsightUi(slug, patch) {
+  const entries = readStore();
   let changed = false;
-  const next = reports.map((entry) => {
+  const next = entries.map((entry) => {
     if (entry.slug !== slug) return entry;
     changed = true;
     const ui = {
@@ -154,9 +151,9 @@ export function patchReportUi(slug, patch) {
   if (changed) writeStore(next);
 }
 
-export function deleteLocalReport(slug) {
-  const reports = readStore();
-  writeStore(reports.filter((r) => r.slug !== slug));
+export function deleteLocalInsight(slug) {
+  const entries = readStore();
+  writeStore(entries.filter((r) => r.slug !== slug));
 }
 
 export function generateSlug(customerId, dateTo) {

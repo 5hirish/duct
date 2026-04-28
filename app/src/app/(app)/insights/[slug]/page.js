@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { REPORT_NAV_TRANSITION_TYPES } from "../../../../lib/reportNavTransition";
 import { getReportBySlug } from "../../../../lib/reports";
 import GoogleAdsReport from "../../../../components/GoogleAdsReport";
-import LocalReportDetail from "../../../../components/LocalReportDetail";
+import LocalInsightDetail from "../../../../components/LocalInsightDetail";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +12,7 @@ export default async function InsightDetailPage({ params }) {
 
   // Local insights (stored in localStorage) are handled client-side.
   if (slug.startsWith("local-")) {
-    return <LocalReportDetail slug={slug} />;
+    return <LocalInsightDetail slug={slug} />;
   }
 
   const report = await getReportBySlug(slug);

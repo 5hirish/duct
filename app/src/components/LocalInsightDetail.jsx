@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import GoogleAdsReport from "./GoogleAdsReport";
-import { refreshReportBriefs } from "../lib/api";
+import { refreshInsightBriefs } from "../lib/api";
 import {
-  getReportEntry,
-  patchReportRefresh,
-} from "../lib/localReports";
+  getInsightEntry,
+  patchInsightRefresh,
+} from "../lib/localInsights";
 import { REPORT_NAV_TRANSITION_TYPES } from "../lib/reportNavTransition";
-import { ReportContextProvider } from "./ReportContext";
+import { InsightContextProvider } from "./InsightContext";
 
 function formatTitle(slug) {
   return slug
@@ -19,7 +19,7 @@ function formatTitle(slug) {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-export default function LocalReportDetail({ slug }) {
+export default function LocalInsightDetail({ slug }) {
   const [entry, setEntry] = useState(null);
   const [notFound, setNotFound] = useState(false);
   const [liveBriefs, setLiveBriefs] = useState(null);
@@ -31,7 +31,7 @@ export default function LocalReportDetail({ slug }) {
   });
 
   useEffect(() => {
-    const nextEntry = getReportEntry(slug);
+    const nextEntry = getInsightEntry(slug);
     if (nextEntry) {
       setEntry(nextEntry);
       setRefreshState(nextEntry.refresh || {});
@@ -45,7 +45,6 @@ export default function LocalReportDetail({ slug }) {
     let cancelled = false;
     async function runRefresh(manual = false) {
       if (!entry?.routine) return;
-      const connections = entry.routine.connections || [];
       const hasAnyToken = Boolean(
         sessionStorage.getItem("gads_refresh_token") ||
           sessionStorage.getItem("ga4_refresh_token") ||
@@ -57,20 +56,20 @@ export default function LocalReportDetail({ slug }) {
         refresh_status: "loading",
         refresh_error: null,
       };
-      patchReportRefresh(slug, loadingPatch);
+      patchInsightRefresh(slug, loadingPatch);
       if (!cancelled) {
         setRefreshState((prev) => ({ ...prev, ...loadingPatch }));
       }
 
       try {
-        const result = await refreshReportBriefs(entry.routine);
+        const result = await refreshInsightBriefs(entry.routine);
         const successPatch = {
           last_refreshed_at: result.refreshed_at,
           refresh_status: "idle",
           refresh_error: null,
           live_briefs: result.briefs,
         };
-        patchReportRefresh(slug, successPatch);
+        patchInsightRefresh(slug, successPatch);
         if (!cancelled) {
           setLiveBriefs(result.briefs);
           setRefreshState((prev) => ({ ...prev, ...successPatch }));
@@ -81,7 +80,7 @@ export default function LocalReportDetail({ slug }) {
           refresh_status: "error",
           refresh_error: message,
         };
-        patchReportRefresh(slug, errorPatch);
+        patchInsightRefresh(slug, errorPatch);
         if (!cancelled) {
           setRefreshState((prev) => ({ ...prev, ...errorPatch }));
         }
@@ -103,9 +102,9 @@ export default function LocalReportDetail({ slug }) {
           </Link>
         </p>
         <h1 className="report-detail-title" style={{ marginTop: 0, marginBottom: 6 }}>
-          Report not found
+          Insight not found
         </h1>
-        <p>This locally-stored report may have been cleared from your browser.</p>
+        <p>This locally-stored insight may have been cleared from your browser.</p>
       </section>
     );
   }
@@ -114,14 +113,13 @@ export default function LocalReportDetail({ slug }) {
     return (
       <section>
         <p className="app-subtle" role="status" aria-live="polite">
-          Loading report…
+          Loading insight…
         </p>
       </section>
     );
   }
 
   const payload = entry.payload;
-  // Detect envelope (v2) vs legacy flat format
   const isEnvelope = Boolean(payload.briefs);
   const brief = liveBriefs?.google_ads || (isEnvelope ? payload.briefs.google_ads : payload);
   const synthesis = isEnvelope ? payload.synthesis : null;
@@ -138,25 +136,25 @@ export default function LocalReportDetail({ slug }) {
   async function handleRefreshClick() {
     if (!entry?.routine || refreshStatus === "loading") return;
     const loadingPatch = { refresh_status: "loading", refresh_error: null };
-    patchReportRefresh(slug, loadingPatch);
+    patchInsightRefresh(slug, loadingPatch);
     setRefreshState((prev) => ({ ...prev, ...loadingPatch }));
     try {
-      const result = await refreshReportBriefs(entry.routine);
+      const result = await refreshInsightBriefs(entry.routine);
       const successPatch = {
         last_refreshed_at: result.refreshed_at,
         refresh_status: "idle",
         refresh_error: null,
         live_briefs: result.briefs,
       };
-      patchReportRefresh(slug, successPatch);
+      patchInsightRefresh(slug, successPatch);
       setLiveBriefs(result.briefs);
       setRefreshState((prev) => ({ ...prev, ...successPatch }));
-      const latest = getReportEntry(slug);
+      const latest = getInsightEntry(slug);
       if (latest) setEntry(latest);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       const errorPatch = { refresh_status: "error", refresh_error: message };
-      patchReportRefresh(slug, errorPatch);
+      patchInsightRefresh(slug, errorPatch);
       setRefreshState((prev) => ({ ...prev, ...errorPatch }));
     }
   }
@@ -197,7 +195,7 @@ export default function LocalReportDetail({ slug }) {
         </div>
       )}
 
-      <ReportContextProvider
+      <InsightContextProvider
         entry={{
           ...entry,
           refresh: {
@@ -208,7 +206,7 @@ export default function LocalReportDetail({ slug }) {
         liveBriefs={liveBriefs}
       >
         <GoogleAdsReport brief={brief} synthesis={synthesis} />
-      </ReportContextProvider>
+      </InsightContextProvider>
     </section>
   );
 }

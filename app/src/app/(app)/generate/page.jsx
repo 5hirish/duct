@@ -10,7 +10,7 @@ import {
   fetchGscSites,
   generateReportStream,
 } from "../../../lib/api";
-import { saveLocalReport, generateSlug } from "../../../lib/localReports";
+import { saveLocalInsight, generateSlug } from "../../../lib/localInsights";
 import { getActiveProject, getActiveProjectId } from "../../../lib/projects";
 import { fetchModes, getModeByKey, FALLBACK_MODES, DEFAULT_MODE_KEY } from "../../../lib/modes";
 import { Button } from "@/components/ui/button";
@@ -1645,7 +1645,7 @@ export default function GeneratePage() {
       businessContext,
       mode: activeMode,
     });
-    saveLocalReport(slug, report, routine, getActiveProjectId() || null, activeMode);
+    saveLocalInsight(slug, report, routine, getActiveProjectId() || null, activeMode);
     setSaved(true);
     setTimeout(() => router.push("/insights"), 400);
   }

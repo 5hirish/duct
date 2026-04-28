@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useEffectEvent, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { getLocalReports, LOCAL_REPORTS_STORAGE_KEY } from "../lib/localReports";
+import { getLocalInsights, LOCAL_INSIGHTS_STORAGE_KEY } from "../lib/localInsights";
 import { FALLBACK_MODES, getModeByKey } from "../lib/modes";
 import { REPORT_NAV_TRANSITION_TYPES } from "../lib/reportNavTransition";
 
@@ -60,17 +60,17 @@ function getConnectionsFromPayload(payload) {
   return [source];
 }
 
-function reportCardAriaLabel(report, maxInsightLen = 160) {
-  const localNote = report.isLocal ? " Stored in this browser." : "";
-  const raw = (report.keyInsight || "").trim();
+function insightCardAriaLabel(insight, maxInsightLen = 160) {
+  const localNote = insight.isLocal ? " Stored in this browser." : "";
+  const raw = (insight.keyInsight || "").trim();
   if (!raw) {
-    return `${report.title}.${localNote} View report.`;
+    return `${insight.title}.${localNote} View insight.`;
   }
   const clipped = raw.length > maxInsightLen ? `${raw.slice(0, maxInsightLen).trim()}…` : raw;
-  return `${report.title}. ${clipped}${localNote}`;
+  return `${insight.title}. ${clipped}${localNote}`;
 }
 
-function mapStoredEntriesToReports(stored) {
+function mapStoredEntriesToInsights(stored) {
   return stored.map((entry) => {
     const brief = unwrapBrief(entry.payload);
     const synthesis = entry.payload?.synthesis;
@@ -82,6 +82,7 @@ function mapStoredEntriesToReports(stored) {
       mode: entryMode,
       themeLabel: brief?.source_metadata?.theme === "paid_ads" ? "Paid Ads" : "Report",
       generatedAt: entry.payload?.metadata?.generated_at || brief?.source_metadata?.generated_at || entry.savedAt,
+      lastRefreshedAt: entry.refresh?.last_refreshed_at || null,
       keyInsight: narrative?.verdict || narrative?.summary || "",
       connections: getConnectionsFromPayload(entry.payload),
       isLocal: true,
@@ -90,27 +91,27 @@ function mapStoredEntriesToReports(stored) {
   });
 }
 
-function isDemoReport(report) {
-  return report.slug === "google-ads-report";
+function isDemoInsight(insight) {
+  return insight.slug === "google-ads-report";
 }
 
-export default function ReportsList({
+export default function InsightsList({
   serverReports,
   projectId = null,
   mode = null,
   showGenerateButton = true,
 }) {
-  const [localReports, setLocalReports] = useState([]);
+  const [localInsights, setLocalInsights] = useState([]);
 
-  const syncLocalReportsFromStorage = useEffectEvent(() => {
-    setLocalReports(mapStoredEntriesToReports(getLocalReports(projectId, mode)));
+  const syncLocalInsightsFromStorage = useEffectEvent(() => {
+    setLocalInsights(mapStoredEntriesToInsights(getLocalInsights(projectId, mode)));
   });
 
   useEffect(() => {
-    syncLocalReportsFromStorage();
+    syncLocalInsightsFromStorage();
     function onStorage(event) {
-      if (event.key !== null && event.key !== LOCAL_REPORTS_STORAGE_KEY) return;
-      syncLocalReportsFromStorage();
+      if (event.key !== null && event.key !== LOCAL_INSIGHTS_STORAGE_KEY) return;
+      syncLocalInsightsFromStorage();
     }
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
@@ -119,15 +120,15 @@ export default function ReportsList({
   const filteredServerReports = mode
     ? serverReports.filter((r) => (r.mode || null) === mode)
     : serverReports;
-  const allReports = [...localReports, ...filteredServerReports.map((r) => ({ ...r, isLocal: false }))];
-  allReports.sort((a, b) => {
+  const allInsights = [...localInsights, ...filteredServerReports.map((r) => ({ ...r, isLocal: false }))];
+  allInsights.sort((a, b) => {
     if (!a.generatedAt && !b.generatedAt) return 0;
     if (!a.generatedAt) return 1;
     if (!b.generatedAt) return -1;
     return b.generatedAt.localeCompare(a.generatedAt);
   });
 
-  if (allReports.length === 0) {
+  if (allInsights.length === 0) {
     return (
       <div className="py-8 text-center">
         <p className="mb-2 text-sm font-medium">No insights yet.</p>
@@ -145,15 +146,15 @@ export default function ReportsList({
 
   return (
     <div className="report-grid">
-      {allReports.map((report) => (
+      {allInsights.map((insight) => (
         <Link
-          key={report.slug}
-          href={`/insights/${report.slug}`}
+          key={insight.slug}
+          href={`/insights/${insight.slug}`}
           className="group relative overflow-hidden flex flex-col justify-between min-h-24 rounded-3xl border border-border bg-card p-4 text-sm shadow-sm ring-1 ring-foreground/5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-          aria-label={reportCardAriaLabel(report)}
+          aria-label={insightCardAriaLabel(insight)}
           transitionTypes={REPORT_NAV_TRANSITION_TYPES}
         >
-          {isDemoReport(report) && (
+          {isDemoInsight(insight) && (
             <span
               aria-hidden="true"
               className="pointer-events-none absolute -right-10 top-4 w-36 rotate-45 bg-primary py-1 text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-primary-foreground shadow-sm"
@@ -164,17 +165,17 @@ export default function ReportsList({
           <div className="flex flex-col gap-1">
             <div className="flex items-start justify-between gap-2">
               <strong className="font-semibold leading-tight text-foreground">
-                {report.title}
+                {insight.title}
               </strong>
               <div className="flex items-center gap-1">
-                {report.isLocal && (
+                {insight.isLocal && (
                   <Badge variant="outline" className="shrink-0 text-xs">Local</Badge>
                 )}
-                {report.isLocal && report.isLive && (
+                {insight.isLocal && insight.isLive && (
                   <Badge variant="secondary" className="shrink-0 text-xs">Live</Badge>
                 )}
                 {(() => {
-                  const modeConf = getModeByKey(FALLBACK_MODES, report.mode);
+                  const modeConf = getModeByKey(FALLBACK_MODES, insight.mode);
                   return modeConf ? (
                     <Badge variant="outline" className="shrink-0 text-xs">
                       {modeConf.emoji} {modeConf.short_label}
@@ -184,17 +185,22 @@ export default function ReportsList({
               </div>
             </div>
             <div className="flex items-center gap-1.5 min-w-0">
-              <ConnectionIcons connections={report.connections} />
+              <ConnectionIcons connections={insight.connections} />
               <p
                 className="text-xs text-muted-foreground flex-1 min-w-0 truncate"
-                title={report.keyInsight || "No key insight available yet."}
+                title={insight.keyInsight || "No key insight available yet."}
               >
-                {report.keyInsight || "No key insight available yet."}
+                {insight.keyInsight || "No key insight available yet."}
               </p>
               <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
-                {formatTimeAgo(report.generatedAt)}
+                {formatTimeAgo(insight.generatedAt)}
               </span>
             </div>
+            {insight.isLocal && insight.lastRefreshedAt && (
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Refreshed {formatTimeAgo(insight.lastRefreshedAt)}
+              </p>
+            )}
           </div>
         </Link>
       ))}

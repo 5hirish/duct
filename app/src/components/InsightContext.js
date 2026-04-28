@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useMemo } from "react";
 
-const ReportContext = createContext(null);
+const InsightContext = createContext(null);
 
 function formatDateWindow(windowCurrent = "") {
   const [from = "", to = ""] = windowCurrent.split(" to ");
@@ -89,7 +89,7 @@ function buildChatPayload(entry, brief, synthesis, liveRefresh) {
   return payload;
 }
 
-export function ReportContextProvider({ entry, liveBriefs, children }) {
+export function InsightContextProvider({ entry, liveBriefs, children }) {
   const value = useMemo(() => {
     const payload = entry?.payload || null;
     if (!payload) {
@@ -107,13 +107,13 @@ export function ReportContextProvider({ entry, liveBriefs, children }) {
     return { entry, brief, synthesis, chatPayload };
   }, [entry, liveBriefs]);
 
-  return <ReportContext.Provider value={value}>{children}</ReportContext.Provider>;
+  return <InsightContext.Provider value={value}>{children}</InsightContext.Provider>;
 }
 
-export function useReportContext() {
-  const context = useContext(ReportContext);
+export function useInsightContext() {
+  const context = useContext(InsightContext);
   if (!context) {
-    throw new Error("useReportContext must be used within ReportContextProvider");
+    throw new Error("useInsightContext must be used within InsightContextProvider");
   }
   return context;
 }

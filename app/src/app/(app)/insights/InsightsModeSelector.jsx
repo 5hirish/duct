@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { fetchModes, getModeByKey, FALLBACK_MODES, DEFAULT_MODE_KEY } from "../../../lib/modes";
-import ReportsPageClient from "../../../components/ReportsPageClient";
+import InsightsPageClient from "../../../components/InsightsPageClient";
 
 const COMING_SOON_PREVIEWS = {
   product_intelligence: {
@@ -127,7 +127,7 @@ export default function InsightsModeSelector({ serverReports }) {
         </div>
       )}
 
-      <ReportsPageClient
+      <InsightsPageClient
         serverReports={serverReports}
         mode={selectedMode}
         showGenerateButton={Boolean(modeConfig?.active)}

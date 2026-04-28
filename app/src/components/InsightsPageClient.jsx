@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import ReportsList from "./ReportsList";
+import InsightsList from "./InsightsList";
 import { getActiveProjectId } from "../lib/projects";
 
-export default function ReportsPageClient({ serverReports, mode = null, showGenerateButton = true }) {
+export default function InsightsPageClient({ serverReports, mode = null, showGenerateButton = true }) {
   const [projectId, setProjectId] = useState(null);
 
   useEffect(() => {
@@ -12,7 +12,7 @@ export default function ReportsPageClient({ serverReports, mode = null, showGene
   }, []);
 
   return (
-    <ReportsList
+    <InsightsList
       serverReports={serverReports}
       projectId={projectId}
       mode={mode}

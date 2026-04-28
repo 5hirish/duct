@@ -57,7 +57,7 @@ export async function generateReport(params) {
   return res.json();
 }
 
-export async function refreshReportBriefs(routine) {
+export async function refreshInsightBriefs(routine) {
   const refreshToken = sessionStorage.getItem("gads_refresh_token") || "";
   const ga4RefreshToken = sessionStorage.getItem("ga4_refresh_token") || "";
   const gscRefreshToken = sessionStorage.getItem("gsc_refresh_token") || "";

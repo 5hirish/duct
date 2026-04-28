@@ -30,7 +30,7 @@ Optional: `NEXT_PUBLIC_GTM_ID` for Google Tag Manager (GA4 etc. live in the GTM 
 
 ## Data source
 
-**Product path (generate flow):** The interactive wizard calls `POST /api/generate` and persists the returned JSON in the **browser** via [`src/lib/localReports.js`](src/lib/localReports.js) (`localStorage`). Do not rely on the API host filesystem for user reports in production; when you add accounts, move persistence to a real backend store.
+**Product path (generate flow):** The interactive wizard calls `POST /api/generate` and persists the returned JSON in the **browser** via [`src/lib/localInsights.js`](src/lib/localInsights.js) (`localStorage`). Do not rely on the API host filesystem for user reports in production; when you add accounts, move persistence to a real backend store.
 
 **Dev / demo list:** The reports page also merges in **top-level** JSON files from `backend/data/google_ads/*.json` (e.g. `google-ads-report.json`). The `raw/` subdir is not listed.
 
