@@ -183,8 +183,8 @@ Prioritize concrete, page-specific or query-specific recommendations over genera
 """,
 }
 
-# Tool names to mark [PRIORITY] in the Phase 1 prompt per goal.
-GOAL_TOOL_PRIORITIES: dict[OrganicGrowthGoal, list[str]] = {
+# Hard allowlist of tools per goal for Phase 1 tool-calling.
+GOAL_TOOL_ALLOWLIST: dict[OrganicGrowthGoal, list[str]] = {
     OrganicGrowthGoal.DIAGNOSE_TRAFFIC_DROP: [
         "fetch_gsc_query_performance",
         "fetch_gsc_page_performance",
@@ -209,6 +209,9 @@ GOAL_TOOL_PRIORITIES: dict[OrganicGrowthGoal, list[str]] = {
         "fetch_gsc_page_performance",
     ],
 }
+
+# Backward-compatible alias.
+GOAL_TOOL_PRIORITIES = GOAL_TOOL_ALLOWLIST
 
 
 def goal_heading_text(goal: OrganicGrowthGoal, *, custom_goal: str = "") -> str:

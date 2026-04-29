@@ -17,6 +17,8 @@ from langchain_core.tools import StructuredTool
 from pydantic import BaseModel, Field
 
 from agents.insights.goals import InsightGenerationGoal
+from agents.insights.goals.organic_growth import OrganicGrowthGoal
+from agents.insights.registry import ToolSpec, add_tool, get_tools_for_request
 
 
 # ---------------------------------------------------------------------------
@@ -260,55 +262,102 @@ def create_gsc_page_performance_tool(
     )
 
 
-# ---------------------------------------------------------------------------
-# Goal → tool mapping
-# ---------------------------------------------------------------------------
-
-# All supplementary tools available to any goal. The LLM decides which to call.
-ALL_TOOL_NAMES: list[str] = [
-    "fetch_search_terms",
-    "fetch_device_performance",
-    "fetch_geo_performance",
-    "fetch_ad_group_performance",
-    "fetch_ga4_landing_pages",
-    "fetch_ga4_conversion_paths",
-    "fetch_gsc_query_performance",
-    "fetch_gsc_page_performance",
-]
-
-# Priority hints per goal — marked [PRIORITY] in the Phase 1 prompt so the
-# LLM knows which tools are most likely useful, but it can call any tool.
-GOAL_TOOL_PRIORITIES: dict[InsightGenerationGoal, list[str]] = {
-    InsightGenerationGoal.LOWER_CAC: [
-        "fetch_search_terms",
-        "fetch_device_performance",
-        "fetch_ga4_landing_pages",
-        "fetch_gsc_query_performance",
-    ],
-    InsightGenerationGoal.MAXIMIZE_ROAS: [
-        "fetch_ad_group_performance",
-        "fetch_device_performance",
-        "fetch_ga4_conversion_paths",
-    ],
-    InsightGenerationGoal.SCALE_CONVERSIONS: [
-        "fetch_device_performance",
-        "fetch_geo_performance",
-        "fetch_ga4_landing_pages",
-        "fetch_gsc_query_performance",
-    ],
-    InsightGenerationGoal.AUDIT_SPEND: [
-        "fetch_search_terms",
-        "fetch_ad_group_performance",
-        "fetch_geo_performance",
-        "fetch_gsc_query_performance",
-        "fetch_ga4_landing_pages",
-    ],
-    InsightGenerationGoal.CUSTOM: [
-        "fetch_ad_group_performance",
-    ],
+CONNECTOR_BY_TOOL: dict[str, str] = {
+    "fetch_campaign_performance": "google_ads",
+    "fetch_search_terms": "google_ads",
+    "fetch_device_performance": "google_ads",
+    "fetch_geo_performance": "google_ads",
+    "fetch_ad_group_performance": "google_ads",
+    "fetch_ga4_landing_pages": "ga4",
+    "fetch_ga4_conversion_paths": "ga4",
+    "fetch_gsc_query_performance": "gsc",
+    "fetch_gsc_page_performance": "gsc",
 }
 
+ALL_TOOL_NAMES: list[str] = list(CONNECTOR_BY_TOOL.keys())
 
-def get_tool_names_for_goal(goal: InsightGenerationGoal) -> list[str]:
-    """Return ALL supplementary tool names. The LLM decides which to call."""
-    return list(ALL_TOOL_NAMES)
+_TOOL_CREATORS: dict[str, Callable[[Callable[..., dict[str, Any]]], StructuredTool]] = {
+    "fetch_campaign_performance": create_campaign_performance_tool,
+    "fetch_search_terms": create_search_terms_tool,
+    "fetch_device_performance": create_device_performance_tool,
+    "fetch_geo_performance": create_geo_performance_tool,
+    "fetch_ad_group_performance": create_ad_group_performance_tool,
+    "fetch_ga4_landing_pages": create_ga4_landing_pages_tool,
+    "fetch_ga4_conversion_paths": create_ga4_conversion_paths_tool,
+    "fetch_gsc_query_performance": create_gsc_query_performance_tool,
+    "fetch_gsc_page_performance": create_gsc_page_performance_tool,
+}
+
+_REGISTERED = False
+
+
+def _register_default_tools() -> None:
+    global _REGISTERED
+    if _REGISTERED:
+        return
+
+    from agents.insights.goals.paid_ads import GOAL_TOOL_ALLOWLIST as PAID_ALLOWLIST
+    from agents.insights.goals.organic_growth import GOAL_TOOL_ALLOWLIST as ORGANIC_ALLOWLIST
+
+    paid_goal_values = [goal.value for goal in InsightGenerationGoal]
+    organic_goal_values = [goal.value for goal in OrganicGrowthGoal]
+
+    for tool_name, creator_fn in _TOOL_CREATORS.items():
+        relevance: dict[str, int] = {}
+        for goal in InsightGenerationGoal:
+            relevance[goal.value] = 3 if tool_name in PAID_ALLOWLIST.get(goal, []) else 0
+        for goal in OrganicGrowthGoal:
+            relevance[goal.value] = 3 if tool_name in ORGANIC_ALLOWLIST.get(goal, []) else 0
+        # Keep custom goals permissive when available.
+        if tool_name in {"fetch_ad_group_performance", "fetch_gsc_query_performance", "fetch_gsc_page_performance"}:
+            for key in paid_goal_values + organic_goal_values:
+                relevance[key] = max(relevance.get(key, 0), 1)
+
+        add_tool(
+            ToolSpec(
+                name=tool_name,
+                connector_id=CONNECTOR_BY_TOOL[tool_name],
+                description_short=tool_name.replace("fetch_", "").replace("_", " "),
+                description_long="Registered supplementary dataset fetch tool.",
+                goal_relevance=relevance,
+                creator_fn=creator_fn,
+            )
+        )
+    _REGISTERED = True
+
+
+def get_tool_specs_for_goal(
+    *,
+    goal: InsightGenerationGoal | OrganicGrowthGoal,
+    available_tool_names: list[str],
+    allowlist: list[str] | None = None,
+    max_tools: int = 8,
+) -> list[ToolSpec]:
+    _register_default_tools()
+    return get_tools_for_request(
+        goal=goal.value,
+        available_tool_names=available_tool_names,
+        allowlist=allowlist,
+        max_tools=max_tools,
+    )
+
+
+def get_tool_names_for_goal(
+    *,
+    goal: InsightGenerationGoal | OrganicGrowthGoal,
+    available_tool_names: list[str],
+    allowlist: list[str] | None = None,
+    max_tools: int = 8,
+) -> list[str]:
+    _register_default_tools()
+    specs = get_tools_for_request(
+        goal=getattr(goal, "value", str(goal)),
+        available_tool_names=available_tool_names,
+        allowlist=allowlist,
+        max_tools=max_tools,
+    )
+    return [spec.name for spec in specs]
+
+
+def get_tool_creator(name: str) -> Callable[[Callable[..., dict[str, Any]]], StructuredTool] | None:
+    return _TOOL_CREATORS.get(name)

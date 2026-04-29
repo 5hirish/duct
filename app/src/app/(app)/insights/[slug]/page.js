@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { REPORT_NAV_TRANSITION_TYPES } from "../../../../lib/reportNavTransition";
 import { getReportBySlug } from "../../../../lib/reports";
-import GoogleAdsReport from "../../../../components/GoogleAdsReport";
+import InsightDashboard from "../../../../components/InsightDashboard";
 import LocalInsightDetail from "../../../../components/LocalInsightDetail";
 
 export const dynamic = "force-dynamic";
@@ -35,7 +35,7 @@ export default async function InsightDetailPage({ params }) {
         {report.generatedAt ? ` \u00B7 Generated: ${report.generatedAt}` : ""}
       </p>
 
-      <GoogleAdsReport payload={report.payload} />
+      <InsightDashboard brief={report.payload} briefs={{ google_ads: report.payload }} synthesis={null} />
     </section>
   );
 }

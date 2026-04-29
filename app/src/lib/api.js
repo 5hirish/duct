@@ -83,6 +83,69 @@ export async function refreshInsightBriefs(routine) {
   return res.json();
 }
 
+export async function streamInsightChat({
+  chatPayload,
+  messages,
+  message,
+  onToken,
+  onDone,
+  onError,
+}) {
+  const res = await fetch(`${BASE}/api/insights/chat`, {
+    method: "POST",
+    headers: backendApiHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify({
+      chat_payload: chatPayload,
+      messages,
+      message,
+    }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    onError?.(text || `Chat error ${res.status}`);
+    return;
+  }
+
+  if (!res.body) {
+    onError?.("Streaming response body is not available.");
+    return;
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+
+    for (const line of lines) {
+      if (!line.startsWith("data: ")) continue;
+      const payload = line.slice(6).trim();
+      if (payload === "[DONE]") {
+        onDone?.();
+        return;
+      }
+      try {
+        const parsed = JSON.parse(payload);
+        if (parsed.token) onToken?.(parsed.token);
+        if (parsed.error) {
+          onError?.(parsed.error);
+          return;
+        }
+      } catch {
+        // Skip malformed frames.
+      }
+    }
+  }
+  onDone?.();
+}
+
 function parseSseFrames(buffer) {
   const frames = [];
   let rest = buffer;

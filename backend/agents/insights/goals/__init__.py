@@ -13,6 +13,7 @@ from __future__ import annotations
 from agents.insights.goals.paid_ads import (
     GOAL_DIRECTIVES,
     GOAL_LABELS,
+    GOAL_TOOL_ALLOWLIST,
     GOAL_TOOL_PRIORITIES,
     InsightGenerationGoal,
     goal_heading_text,
@@ -23,6 +24,7 @@ __all__ = [
     "InsightGenerationGoal",
     "GOAL_LABELS",
     "GOAL_DIRECTIVES",
+    "GOAL_TOOL_ALLOWLIST",
     "GOAL_TOOL_PRIORITIES",
     "goal_heading_text",
     "parse_goal_value",

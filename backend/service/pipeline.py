@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from datetime import date, datetime, timedelta, timezone
 from typing import Any
 
@@ -15,7 +16,30 @@ from service.google.fetch import fetch_campaigns
 from service.google.ga4 import fetch_ga4_conversion_paths, fetch_ga4_landing_pages
 from service.google.gsc import fetch_gsc_page_performance, fetch_gsc_query_performance
 
+logger = logging.getLogger(__name__)
+
 SUPPORTED_CONNECTORS = {"google_ads", "ga4", "gsc"}
+
+
+def _log_stale_catalog_warnings() -> None:
+    try:
+        from agents.insights.catalog import get_catalog_for_connector, is_catalog_stale
+    except Exception:  # noqa: BLE001
+        return
+
+    for connector_id in SUPPORTED_CONNECTORS:
+        catalog = get_catalog_for_connector(connector_id)
+        if not catalog:
+            continue
+        if is_catalog_stale(catalog):
+            logger.warning(
+                "Entity catalog for connector '%s' is stale (last_audited=%s).",
+                connector_id,
+                catalog.get("last_audited", "unknown"),
+            )
+
+
+_log_stale_catalog_warnings()
 
 
 def now_iso() -> str:

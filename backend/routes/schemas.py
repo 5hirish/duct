@@ -123,9 +123,10 @@ class UnifiedInsight(BaseModel):
     falls back to the deterministic narrative/highlights/risks inside each brief.
     """
 
-    version: str = "2"
+    version: str = "3"
     connectors_used: list[str] = Field(default_factory=list)
     briefs: dict[str, Any] = Field(default_factory=dict)
+    supplementary: dict[str, Any] = Field(default_factory=dict)
     synthesis: dict[str, Any] | None = None
     metadata: InsightMetadata = Field(default_factory=InsightMetadata)
 

@@ -23,36 +23,14 @@ from agents.models import ModelName, Provider, get_api_key_kwargs
 from agents.insights.goals import InsightGenerationGoal, goal_heading_text
 from agents.insights.goals.organic_growth import OrganicGrowthGoal
 from agents.insights.prompts import get_synthesis_user_prompt, get_system_prompt
+from agents.insights.registry import get_tools_for_request as _registry_get_tools
 from agents.insights.schema import SynthesisSchema
 from agents.insights.tools import (
-    GOAL_TOOL_PRIORITIES,
-    create_ad_group_performance_tool,
-    create_campaign_performance_tool,
-    create_device_performance_tool,
-    create_ga4_conversion_paths_tool,
-    create_ga4_landing_pages_tool,
-    create_geo_performance_tool,
-    create_gsc_page_performance_tool,
-    create_gsc_query_performance_tool,
-    create_search_terms_tool,
-    get_tool_names_for_goal,
+    _register_default_tools,
+    get_tool_creator,
 )
 
 logger = logging.getLogger(__name__)
-
-# Map tool name → creator function
-_TOOL_CREATORS = {
-    "fetch_campaign_performance": create_campaign_performance_tool,
-    "fetch_search_terms": create_search_terms_tool,
-    "fetch_device_performance": create_device_performance_tool,
-    "fetch_geo_performance": create_geo_performance_tool,
-    "fetch_ad_group_performance": create_ad_group_performance_tool,
-    "fetch_ga4_landing_pages": create_ga4_landing_pages_tool,
-    "fetch_ga4_conversion_paths": create_ga4_conversion_paths_tool,
-    "fetch_gsc_query_performance": create_gsc_query_performance_tool,
-    "fetch_gsc_page_performance": create_gsc_page_performance_tool,
-}
-
 
 class GenerateInsightsAgent:
     """Insight generation agent with goal-driven tool use + structured output.
@@ -122,19 +100,28 @@ class GenerateInsightsAgent:
         Returns list of registered tool names.
         """
         if mode == "organic_growth":
-            from agents.insights.goals.organic_growth import GOAL_TOOL_PRIORITIES as ORGANIC_PRIORITIES
-            self._goal_tool_priorities = ORGANIC_PRIORITIES
+            from agents.insights.goals.organic_growth import GOAL_TOOL_ALLOWLIST
+            goal_allowlist = GOAL_TOOL_ALLOWLIST.get(goal, [])
         else:
-            from agents.insights.goals.paid_ads import GOAL_TOOL_PRIORITIES as PAID_PRIORITIES
-            self._goal_tool_priorities = PAID_PRIORITIES
+            from agents.insights.goals.paid_ads import GOAL_TOOL_ALLOWLIST
+            goal_allowlist = GOAL_TOOL_ALLOWLIST.get(goal, [])
         self._active_mode = mode
+        self._goal_allowlist = set(goal_allowlist)
 
-        tool_names = get_tool_names_for_goal(goal)
+        _register_default_tools()
+        available_tool_names = list(fetch_fns.keys())
+        tool_specs = _registry_get_tools(
+            goal=goal.value,
+            available_tool_names=available_tool_names,
+            allowlist=goal_allowlist,
+            max_tools=8,
+        )
+        tool_names = [spec.name for spec in tool_specs]
         self.tools = []
         self.tools_by_name = {}
 
         for name in tool_names:
-            creator = _TOOL_CREATORS.get(name)
+            creator = get_tool_creator(name)
             fn = fetch_fns.get(name)
             if creator and fn:
                 tool = creator(fn)
@@ -170,8 +157,7 @@ class GenerateInsightsAgent:
             return {}
 
         mode = getattr(self, "_active_mode", "paid_ads")
-        goal_priorities = getattr(self, "_goal_tool_priorities", {})
-        priority_names = set(goal_priorities.get(goal, []))
+        priority_names = set(getattr(self, "_goal_allowlist", set()))
 
         tool_lines = []
         for t in self.tools:
@@ -192,9 +178,8 @@ class GenerateInsightsAgent:
             "The user's goal and context are provided below. "
             "You have access to supplementary data tools. Call the tools "
             "that will provide the most actionable data for this goal. "
-            "Tools marked [PRIORITY] are most likely useful for this goal, "
-            "but call any tool you believe will provide actionable data. "
-            "You do NOT need to call every tool — only the ones relevant "
+            "Only call tools that materially improve actionability for this goal. "
+            "You do NOT need to call every available tool — only the ones relevant "
             "to the specific goal and context.\n\n"
             f"Available tools:\n{tool_descriptions}"
         )

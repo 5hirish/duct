@@ -15,14 +15,10 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from agents.insights.goals.paid_ads import (
-    InsightGenerationGoal,
-    goal_heading_text as paid_goal_heading,
-)
-from agents.insights.goals.organic_growth import (
-    OrganicGrowthGoal,
-    goal_heading_text as organic_goal_heading,
-)
+from agents.insights.catalog import get_catalogs_for_connectors
+from agents.insights.catalog.prompt import entity_catalog_prompt_block
+from agents.insights.goals.paid_ads import goal_heading_text as paid_goal_heading
+from agents.insights.goals.organic_growth import goal_heading_text as organic_goal_heading
 
 
 def _goal_heading(goal: Any, custom_goal: str, mode: str) -> str:
@@ -46,15 +42,23 @@ def get_system_prompt(
     context, then goal-specific directive.
     """
     if mode == "organic_growth":
-        from agents.insights.prompts.organic_growth import ANALYSIS_PROTOCOL, format_business_context
+        from agents.insights.prompts.organic_growth import (
+            ANALYSIS_PROTOCOL,
+            DASHBOARD_LAYOUT_PROTOCOL,
+            format_business_context,
+        )
         from agents.insights.goals.organic_growth import GOAL_DIRECTIVES
         directives = GOAL_DIRECTIVES
     else:
-        from agents.insights.prompts.paid_ads import ANALYSIS_PROTOCOL, format_business_context
+        from agents.insights.prompts.paid_ads import (
+            ANALYSIS_PROTOCOL,
+            DASHBOARD_LAYOUT_PROTOCOL,
+            format_business_context,
+        )
         from agents.insights.goals.paid_ads import GOAL_DIRECTIVES
         directives = GOAL_DIRECTIVES
 
-    sections: list[str] = [ANALYSIS_PROTOCOL]
+    sections: list[str] = [ANALYSIS_PROTOCOL, DASHBOARD_LAYOUT_PROTOCOL]
 
     biz_section = format_business_context(business_context)
     if biz_section:
@@ -104,6 +108,11 @@ def get_synthesis_user_prompt(
         from agents.insights.prompts.paid_ads import SUPPLEMENTARY_ANALYSIS_GUIDES
 
     parts = ["<data>\n"]
+
+    catalogs = get_catalogs_for_connectors(list(all_briefs.keys()))
+    catalog_block = entity_catalog_prompt_block(catalogs)
+    if catalog_block:
+        parts.append(catalog_block)
 
     for connector_id, connector_data in all_briefs.items():
         # Support both {"brief": ..., "raw": ...} and flat brief dict

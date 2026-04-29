@@ -94,8 +94,8 @@ Prioritize concrete, measurable recommendations aligned with their wording.
 """,
 }
 
-# Tool names to mark [PRIORITY] in the Phase 1 prompt per goal.
-GOAL_TOOL_PRIORITIES: dict[InsightGenerationGoal, list[str]] = {
+# Hard allowlist of tools per goal for Phase 1 tool-calling.
+GOAL_TOOL_ALLOWLIST: dict[InsightGenerationGoal, list[str]] = {
     InsightGenerationGoal.LOWER_CAC: [
         "fetch_search_terms",
         "fetch_device_performance",
@@ -124,6 +124,9 @@ GOAL_TOOL_PRIORITIES: dict[InsightGenerationGoal, list[str]] = {
         "fetch_ad_group_performance",
     ],
 }
+
+# Backward-compatible alias.
+GOAL_TOOL_PRIORITIES = GOAL_TOOL_ALLOWLIST
 
 
 def goal_heading_text(goal: InsightGenerationGoal, *, custom_goal: str = "") -> str:

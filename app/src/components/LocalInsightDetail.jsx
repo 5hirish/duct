@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import GoogleAdsReport from "./GoogleAdsReport";
+import ChatSidebar from "./ChatSidebar";
+import InsightDashboard from "./InsightDashboard";
 import { refreshInsightBriefs } from "../lib/api";
 import {
   getInsightEntry,
@@ -122,7 +123,9 @@ export default function LocalInsightDetail({ slug }) {
   const payload = entry.payload;
   const isEnvelope = Boolean(payload.briefs);
   const brief = liveBriefs?.google_ads || (isEnvelope ? payload.briefs.google_ads : payload);
+  const briefs = isEnvelope ? (liveBriefs || payload.briefs) : { google_ads: brief };
   const synthesis = isEnvelope ? payload.synthesis : null;
+  const supplementary = isEnvelope ? payload.supplementary : null;
 
   const title = formatTitle(slug);
   const theme = brief?.source_metadata?.theme === "paid_ads" ? "Paid Ads" : "Report";
@@ -205,7 +208,19 @@ export default function LocalInsightDetail({ slug }) {
         }}
         liveBriefs={liveBriefs}
       >
-        <GoogleAdsReport brief={brief} synthesis={synthesis} />
+        <div className="insight-detail-layout">
+          <div className="insight-detail-main">
+            <InsightDashboard
+              brief={brief}
+              briefs={briefs}
+              synthesis={synthesis}
+              supplementary={supplementary}
+            />
+          </div>
+          <aside className="insight-detail-sidebar">
+            <ChatSidebar />
+          </aside>
+        </div>
       </InsightContextProvider>
     </section>
   );

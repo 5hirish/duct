@@ -260,6 +260,7 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
 
     # Determine primary connector for classification overrides (paid ads only)
     primary_connector = "google_ads" if mode == "paid_ads" else None
+    supplementary: dict[str, Any] = {}
 
     if api_key and all_briefs:
         await _step_started(emit_event, STEP_SUPPLEMENTARY)
@@ -284,7 +285,6 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
             gsc_refresh_token,
         )
         registered = agent.setup_tools_for_goal(goal=req.goal, fetch_fns=fetch_fns, mode=mode)
-        supplementary = {}
         if registered:
             logger.info("Phase 1: fetching supplementary data for goal '%s' (mode: %s)", req.goal.value, mode)
             supplementary = await agent.fetch_supplementary_data(
@@ -330,6 +330,7 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
     envelope = UnifiedInsight(
         connectors_used=connections,
         briefs=briefs,
+        supplementary=supplementary,
         synthesis=synthesis_dict,
         metadata=InsightMetadata(
             generated_at=now_iso(),

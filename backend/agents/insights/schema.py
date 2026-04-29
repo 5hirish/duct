@@ -7,6 +7,8 @@ Gemini synthesis path in service.google.brief.
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from agents.insights.entities import (
@@ -88,6 +90,54 @@ class SynNarrative(BaseModel):
     operator_takeaway: str
 
 
+class BlockThreshold(BaseModel):
+    """Optional visual threshold metadata for block rendering hints."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    field: str = ""
+    below: float | None = None
+    above: float | None = None
+    tone: str = ""
+
+
+class BlockSpec(BaseModel):
+    """One dashboard block emitted by synthesis."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    block_id: str
+    block_type: Literal[
+        "kpi_strip",
+        "bar_chart",
+        "time_series",
+        "scatter",
+        "table",
+        "heatmap",
+        "signal_list",
+        "action_list",
+        "narrative",
+        "pie_chart",
+    ]
+    title: str
+    data_source: str
+    x_field: str = ""
+    y_field: str = ""
+    group_by: str = ""
+    sort_by: str = ""
+    sort_order: Literal["asc", "desc"] = "desc"
+    limit: int = 0
+    highlight_threshold: BlockThreshold = Field(default_factory=BlockThreshold)
+    insight_note: str = ""
+    kpi_fields: list[str] = Field(default_factory=list)
+
+
+class DashboardSpec(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    blocks: list[BlockSpec] = Field(default_factory=list)
+
+
 class SynthesisSchema(BaseModel):
     """Top-level structured output for the generate agent synthesis phase."""
 
@@ -99,3 +149,4 @@ class SynthesisSchema(BaseModel):
     recommended_actions: list[SynRecommendedAction] = Field(default_factory=list)
     classification_overrides: list[SynClassificationOverride] = Field(default_factory=list)
     analysis_notes: str = ""
+    dashboard_spec: DashboardSpec = Field(default_factory=DashboardSpec)

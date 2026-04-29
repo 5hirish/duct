@@ -97,14 +97,18 @@ export function InsightContextProvider({ entry, liveBriefs, children }) {
         entry: null,
         brief: null,
         synthesis: null,
+        supplementary: null,
+        dashboard_spec: null,
         chatPayload: null,
       };
     }
     const isEnvelope = Boolean(payload.briefs);
     const brief = liveBriefs?.google_ads || (isEnvelope ? payload.briefs?.google_ads : payload);
     const synthesis = isEnvelope ? payload.synthesis : null;
+    const supplementary = isEnvelope ? payload.supplementary ?? null : null;
+    const dashboard_spec = synthesis?.dashboard_spec ?? null;
     const chatPayload = brief ? buildChatPayload(entry, brief, synthesis, entry?.refresh || null) : null;
-    return { entry, brief, synthesis, chatPayload };
+    return { entry, brief, synthesis, supplementary, dashboard_spec, chatPayload };
   }, [entry, liveBriefs]);
 
   return <InsightContext.Provider value={value}>{children}</InsightContext.Provider>;

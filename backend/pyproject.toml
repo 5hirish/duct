@@ -33,6 +33,7 @@ sqlmodel = "^0.0.24"
 alembic = "^1.17"
 psycopg = {version = "^3.2", extras = ["binary"]}
 sentry-sdk = "^2.57.0"
+dlt = "^1.17.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^9"

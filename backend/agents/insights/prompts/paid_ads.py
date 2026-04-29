@@ -129,6 +129,32 @@ Before producing your final output, verify:
 </self_critique>
 """
 
+DASHBOARD_LAYOUT_PROTOCOL = """\
+<dashboard_layout_spec>
+You must produce `dashboard_spec` with at most 8 blocks.
+
+Allowed block types:
+- kpi_strip
+- bar_chart
+- time_series (only if time data exists)
+- scatter
+- table
+- heatmap
+- signal_list
+- action_list
+- narrative
+- pie_chart (sparingly for composition)
+
+Rules:
+- `data_source` must be an entity_id from the entity catalog, or "synthesis".
+- `x_field`, `y_field`, `group_by`, and `sort_by` must be exact field names from the catalog.
+- Include `signal_list` and `action_list`.
+- Order blocks from highest to lowest operator relevance for the stated goal.
+- Add `insight_note` when a block carries a clear actionable pattern.
+- Do not emit blocks for data entities that were not fetched.
+</dashboard_layout_spec>
+"""
+
 # Per-dataset analysis guides — injected alongside supplementary data.
 # Enhanced with expert PPC frameworks (Vallaeys N-gram analysis, ALM Corp
 # signal architecture, KlientBoost audit patterns).
