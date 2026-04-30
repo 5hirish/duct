@@ -42,7 +42,7 @@ export const metadata = {
   applicationName: "Duct App",
   manifest: "/manifest.webmanifest",
   icons: {
-    icon: "/icon.svg",
+    icon: "/icons/icon.svg",
     apple: "/apple-icon.svg",
   },
   appleWebApp: {

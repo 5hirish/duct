@@ -12,7 +12,7 @@ export default function manifest() {
     orientation: "portrait",
     icons: [
       {
-        src: "/icon.svg",
+        src: "/icons/icon.svg",
         sizes: "any",
         type: "image/svg+xml",
         purpose: "any maskable",
