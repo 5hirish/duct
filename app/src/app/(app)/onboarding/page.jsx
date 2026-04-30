@@ -42,31 +42,35 @@ function parseComparisonItems(rawValue) {
   );
 }
 
+function hasText(value) {
+  return String(value ?? "").trim().length > 0;
+}
+
 const STEP_DEFINITIONS = [
   {
     label: "Company basics",
     shortLabel: "Company",
     fields: [
-      { weight: 3, check: (profile) => profile.company.name.trim().length > 0 },
-      { weight: 3, check: (profile) => profile.company.industry.trim().length > 0 },
-      { weight: 2, check: (profile) => profile.company.business_model.trim().length > 0 },
-      { weight: 1, check: (profile) => profile.company.website_url.trim().length > 0 },
+      { weight: 3, check: (profile) => hasText(profile.company?.name) },
+      { weight: 3, check: (profile) => hasText(profile.company?.industry) },
+      { weight: 2, check: (profile) => hasText(profile.company?.business_model) },
+      { weight: 1, check: (profile) => hasText(profile.company?.website_url) },
     ],
   },
   {
     label: "Targets",
     shortLabel: "Targets",
     fields: [
-      { weight: 2, check: (profile) => profile.targets.north_star_metric.trim().length > 0 },
-      { weight: 2, check: (profile) => profile.targets.north_star_goal_window.trim().length > 0 },
-      { weight: 2, check: (profile) => profile.targets.growth_stage_milestone.trim().length > 0 },
+      { weight: 2, check: (profile) => hasText(profile.targets?.north_star_metric) },
+      { weight: 2, check: (profile) => hasText(profile.targets?.north_star_goal_window) },
+      { weight: 2, check: (profile) => hasText(profile.targets?.growth_stage_milestone) },
     ],
   },
   {
     label: "Audience",
     shortLabel: "Audience",
     fields: [
-      { weight: 2, check: (profile) => profile.audience.primary_segment.trim().length > 0 },
+      { weight: 2, check: (profile) => hasText(profile.audience?.primary_segment) },
       { weight: 3, check: (profile) => (profile.audience.personas[0]?.name || "").trim().length > 0 },
       { weight: 2, check: (profile) => (profile.audience.personas[0]?.description || "").trim().length > 0 },
     ],
@@ -75,16 +79,16 @@ const STEP_DEFINITIONS = [
     label: "Competition",
     shortLabel: "Competition",
     fields: [
-      { weight: 1, check: (profile) => profile.competition.compare_against.trim().length > 0 },
+      { weight: 1, check: (profile) => hasText(profile.competition?.compare_against) },
     ],
   },
   {
     label: "Business context",
     shortLabel: "Context",
     fields: [
-      { weight: 2, check: (profile) => profile.brand_channels.brand_voice.trim().length > 0 },
-      { weight: 2, check: (profile) => profile.brand_channels.growth_motions.length > 0 },
-      { weight: 1, check: (profile) => profile.brand_channels.context_notes.trim().length > 0 },
+      { weight: 2, check: (profile) => hasText(profile.brand_channels?.brand_voice) },
+      { weight: 2, check: (profile) => (profile.brand_channels?.growth_motions || []).length > 0 },
+      { weight: 1, check: (profile) => hasText(profile.brand_channels?.context_notes) },
     ],
   },
 ];
@@ -588,6 +592,7 @@ export default function OnboardingPage() {
                 setProfile((prev) => ({
                   ...prev,
                   audience: {
+                    ...prev.audience,
                     personas: [{
                       ...(prev.audience.personas[0] || {}),
                       name: e.target.value,
@@ -611,6 +616,7 @@ export default function OnboardingPage() {
                 setProfile((prev) => ({
                   ...prev,
                   audience: {
+                    ...prev.audience,
                     personas: [{
                       ...(prev.audience.personas[0] || {}),
                       description: e.target.value,

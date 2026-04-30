@@ -25,10 +25,10 @@ export default function GoogleSignInButton({
   return (
     <Button
       type="button"
-      variant="outline"
+      variant="default"
       size="lg"
       className={cn(
-        "h-12 w-full justify-center gap-3 rounded-4xl border-[#8e918f] bg-[#131314] font-medium text-[#e3e3e3] shadow-sm hover:border-[#a9aca8] hover:bg-[#1a1a1b] hover:text-[#e3e3e3] disabled:border-[#8e918f] disabled:bg-[#131314] disabled:text-[#9aa0a6] disabled:opacity-70",
+        "h-12 w-full justify-center gap-3 rounded-4xl border border-[#8e918f] bg-[#131314] font-medium text-[#e3e3e3] shadow-sm hover:border-[#a9aca8] hover:bg-[#1a1a1b] hover:text-[#e3e3e3] active:bg-[#1f1f20] focus-visible:bg-[#131314] dark:bg-[#131314] dark:hover:bg-[#1a1a1b] dark:focus-visible:bg-[#131314] disabled:border-[#8e918f] disabled:bg-[#131314] disabled:text-[#9aa0a6] disabled:opacity-70 disabled:dark:bg-[#131314]",
         className
       )}
       onClick={onClick}
