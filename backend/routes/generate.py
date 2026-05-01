@@ -14,6 +14,7 @@ from fastapi.responses import StreamingResponse
 
 from agents.models import Provider, resolve_model, resolve_provider
 from agents.insights.agent import GenerateInsightsAgent
+from agents.insights.v2.runner import AdkInsightsRunner
 from config import get_configs
 from routes.schemas import (
     BusinessContextField,
@@ -76,6 +77,16 @@ def _resolve_agent_config() -> tuple[str, Provider, ModelName]:
     }
     api_key = key_map.get(provider, cfg.gemini_api_key) or ""
     return api_key, provider, model
+
+
+def _build_agent(
+    api_key: str, provider: Provider, model: "ModelName"
+) -> GenerateInsightsAgent | AdkInsightsRunner:
+    """Instantiate the insight engine selected by GENERATE_ENGINE config."""
+    cfg = get_configs()
+    if cfg.generate_engine == "v2":
+        return AdkInsightsRunner(api_key=api_key, provider=provider, model=model, temperature=1.0)
+    return GenerateInsightsAgent(api_key=api_key, provider=provider, model=model, temperature=1.0)
 
 
 async def _emit(
@@ -263,63 +274,99 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
     supplementary: dict[str, Any] = {}
 
     if api_key and all_briefs:
-        await _step_started(emit_event, STEP_SUPPLEMENTARY)
-        agent = GenerateInsightsAgent(
-            api_key=api_key,
-            provider=provider,
-            model=model,
-            temperature=1.0,
-        )
-        ads_customer_id = resolve_customer_id(request_customer_id=shim.customer_id)
-        dt, cid, secret, rt = resolve_ads_credentials(request_refresh_token=shim.refresh_token)
-        fetch_fns = _build_fetch_fns(
-            dt,
-            cid,
-            secret,
-            rt,
-            login_customer_id,
-            set(connections),
-            ga4_property_id,
-            gsc_site_url,
-            ga4_refresh_token,
-            gsc_refresh_token,
-        )
-        registered = agent.setup_tools_for_goal(goal=req.goal, fetch_fns=fetch_fns, mode=mode)
-        if registered:
-            logger.info("Phase 1: fetching supplementary data for goal '%s' (mode: %s)", req.goal.value, mode)
-            supplementary = await agent.fetch_supplementary_data(
-                customer_id=ads_customer_id,
-                date_from=req.date_from,
-                date_to=req.date_to,
-                goal=req.goal,
-                ga4_property_id=ga4_property_id,
-                gsc_site_url=gsc_site_url,
-                custom_goal=req.custom_goal,
-                context=req.context,
-                connected_sources=connections,
-            )
-        await _step_finished(emit_event, STEP_SUPPLEMENTARY)
+        agent = _build_agent(api_key, provider, model)
 
-        await _step_started(emit_event, STEP_SYNTHESIZE)
+        # Build fetch functions only for connectors that are actually available.
+        # For organic_growth, skip Google Ads credential resolution entirely.
+        if mode == "organic_growth":
+            fetch_fns = {}
+            ads_customer_id = ""
+            ga4_cred_kwargs = dict(
+                refresh_token=ga4_refresh_token or "",
+                client_id=ga_client_id,
+                client_secret=ga_client_secret,
+            )
+            gsc_cred_kwargs = dict(
+                refresh_token=gsc_refresh_token or "",
+                client_id=ga_client_id,
+                client_secret=ga_client_secret,
+            )
+            if "ga4" in connections and ga4_property_id:
+                fetch_fns["fetch_ga4_landing_pages"] = partial(fetch_ga4_landing_pages, **ga4_cred_kwargs)
+                fetch_fns["fetch_ga4_conversion_paths"] = partial(fetch_ga4_conversion_paths, **ga4_cred_kwargs)
+            if "gsc" in connections and gsc_site_url:
+                fetch_fns["fetch_gsc_query_performance"] = partial(fetch_gsc_query_performance, **gsc_cred_kwargs)
+                fetch_fns["fetch_gsc_page_performance"] = partial(fetch_gsc_page_performance, **gsc_cred_kwargs)
+        else:
+            ads_customer_id = resolve_customer_id(request_customer_id=shim.customer_id)
+            dt, cid, secret, rt = resolve_ads_credentials(request_refresh_token=shim.refresh_token)
+            fetch_fns = _build_fetch_fns(
+                dt, cid, secret, rt, login_customer_id,
+                set(connections), ga4_property_id, gsc_site_url,
+                ga4_refresh_token, gsc_refresh_token,
+            )
+
         biz_ctx = req.business_context.model_dump() if req.business_context else None
-        # Merge mode_context from frontend into the context field if provided
         full_context = req.context
         if req.mode_context:
             full_context = f"{req.mode_context}\n\n{full_context}".strip() if full_context else req.mode_context
-        synthesis = await agent.synthesize(
-            goal=req.goal,
-            custom_goal=req.custom_goal,
-            context=full_context,
-            all_briefs=all_briefs,
-            supplementary=supplementary or None,
-            business_context=biz_ctx,
-            mode=mode,
-        )
-        # Apply classification overrides only for paid ads (campaign action fields)
+
+        registered = agent.setup_tools_for_goal(goal=req.goal, fetch_fns=fetch_fns, mode=mode)
+
+        if isinstance(agent, AdkInsightsRunner):
+            # v2: both phases run inside a single ADK SequentialAgent pipeline
+            await _step_started(emit_event, STEP_SUPPLEMENTARY)
+            await _step_started(emit_event, STEP_SYNTHESIZE)
+            logger.info("v2: running ADK pipeline for goal '%s' (mode: %s)", req.goal.value, mode)
+            supplementary, synthesis = await agent.run_pipeline(
+                goal=req.goal,
+                custom_goal=req.custom_goal,
+                context=full_context,
+                all_briefs=all_briefs,
+                business_context=biz_ctx,
+                mode=mode,
+                customer_id=ads_customer_id,
+                date_from=req.date_from,
+                date_to=req.date_to,
+                ga4_property_id=ga4_property_id,
+                gsc_site_url=gsc_site_url,
+                connected_sources=connections,
+            )
+            await _step_finished(emit_event, STEP_SUPPLEMENTARY)
+            await _step_finished(emit_event, STEP_SYNTHESIZE)
+        else:
+            # v1: separate Phase 1 (tool calling) + Phase 2 (synthesis)
+            await _step_started(emit_event, STEP_SUPPLEMENTARY)
+            if registered:
+                logger.info("Phase 1: fetching supplementary data for goal '%s' (mode: %s)", req.goal.value, mode)
+                supplementary = await agent.fetch_supplementary_data(
+                    customer_id=ads_customer_id,
+                    date_from=req.date_from,
+                    date_to=req.date_to,
+                    goal=req.goal,
+                    ga4_property_id=ga4_property_id,
+                    gsc_site_url=gsc_site_url,
+                    custom_goal=req.custom_goal,
+                    context=req.context,
+                    connected_sources=connections,
+                )
+            await _step_finished(emit_event, STEP_SUPPLEMENTARY)
+
+            await _step_started(emit_event, STEP_SYNTHESIZE)
+            synthesis = await agent.synthesize(
+                goal=req.goal,
+                custom_goal=req.custom_goal,
+                context=full_context,
+                all_briefs=all_briefs,
+                supplementary=supplementary or None,
+                business_context=biz_ctx,
+                mode=mode,
+            )
+            await _step_finished(emit_event, STEP_SYNTHESIZE)
+
         if primary_connector and primary_connector in briefs:
             agent.apply_classification_overrides(briefs[primary_connector], synthesis)
         synthesis_dict = agent.extract_synthesis(synthesis)
-        await _step_finished(emit_event, STEP_SYNTHESIZE)
     else:
         await _step_started(emit_event, STEP_SUPPLEMENTARY)
         await _step_finished(emit_event, STEP_SUPPLEMENTARY)

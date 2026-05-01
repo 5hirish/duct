@@ -1176,11 +1176,10 @@ function StepAnalyzing({
   );
 }
 
-function StepReport({ report, onSave, onRestart, saved }) {
-  // Unwrap envelope: brief from connector slot, synthesis alongside
-  const brief = report.briefs?.google_ads ?? null;
+function StepReport({ report, onSave, onRestart, saved, mode }) {
   const synthesis = report.synthesis ?? null;
   const connectorsUsed = report.connectors_used ?? [];
+  const googleAdsBrief = report.briefs?.google_ads ?? null;
 
   return (
     <div className="generate-step">
@@ -1192,19 +1191,115 @@ function StepReport({ report, onSave, onRestart, saved }) {
           Generate another
         </Button>
       </div>
-      {brief ? (
-        <GoogleAdsReport brief={brief} synthesis={synthesis} />
-      ) : (
+
+      {/* Paid Ads — render the full GoogleAdsReport */}
+      {googleAdsBrief && (
+        <GoogleAdsReport brief={googleAdsBrief} synthesis={synthesis} />
+      )}
+
+      {/* Organic Growth (and other non-ads modes) — render synthesis narrative */}
+      {!googleAdsBrief && synthesis && (
+        <OrganicInsightReport synthesis={synthesis} connectorsUsed={connectorsUsed} />
+      )}
+
+      {/* No synthesis and no known brief renderer — thin fallback, no raw JSON dump */}
+      {!googleAdsBrief && !synthesis && (
         <div className="generate-alert" role="status">
-          <h3 className="generate-alert-title">Insight generated</h3>
-          <p className="generate-alert-help" style={{ marginBottom: 10 }}>
-            A Google Ads brief was not included in this run, so the standard insight view is unavailable.
+          <h3 className="generate-alert-title">Insight collected</h3>
+          <p className="generate-alert-help">
+            Data was fetched from {connectorsUsed.length ? connectorsUsed.join(", ") : "your connected sources"} but no synthesis was produced.
+            This usually means the date range returned no data — try a longer window (30 or 90 days).
           </p>
-          <p className="generate-alert-help" style={{ marginBottom: 10 }}>
-            Connectors used: {connectorsUsed.length ? connectorsUsed.join(", ") : "—"}
-          </p>
-          <pre className="generate-error">{JSON.stringify(report, null, 2)}</pre>
         </div>
+      )}
+    </div>
+  );
+}
+
+function OrganicInsightReport({ synthesis, connectorsUsed }) {
+  const narrative = synthesis.narrative ?? {};
+  const highlights = synthesis.highlights ?? [];
+  const risks = synthesis.risks ?? [];
+  const actions = synthesis.recommended_actions ?? [];
+
+  return (
+    <div className="generate-step" style={{ padding: 0 }}>
+      {/* Narrative block */}
+      {narrative.verdict && (
+        <div className="generate-alert" role="status" style={{ marginBottom: 20 }}>
+          <p style={{ fontWeight: 600, marginBottom: 6 }}>{narrative.verdict}</p>
+          {narrative.summary && <p className="app-subtle" style={{ marginBottom: 6 }}>{narrative.summary}</p>}
+          {narrative.operator_takeaway && (
+            <p style={{ fontSize: 13, fontWeight: 500 }}>
+              <span className="app-subtle">This week: </span>{narrative.operator_takeaway}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Highlights */}
+      {highlights.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>Opportunities</h3>
+          {highlights.map((h, i) => (
+            <FindingCard key={i} finding={h} tone="win" />
+          ))}
+        </div>
+      )}
+
+      {/* Risks */}
+      {risks.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>Issues to address</h3>
+          {risks.map((r, i) => (
+            <FindingCard key={i} finding={r} tone="risk" />
+          ))}
+        </div>
+      )}
+
+      {/* Actions */}
+      {actions.length > 0 && (
+        <div>
+          <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>Recommended actions</h3>
+          {actions.map((a, i) => (
+            <div key={i} className="generate-alert" style={{ marginBottom: 10 }}>
+              <p style={{ fontWeight: 600, marginBottom: 4 }}>{a.title}</p>
+              {a.detail && <p className="app-subtle">{a.detail}</p>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Empty synthesis — no actionable findings */}
+      {!narrative.verdict && highlights.length === 0 && risks.length === 0 && (
+        <div className="generate-alert" role="status">
+          <h3 className="generate-alert-title">Not enough data</h3>
+          <p className="generate-alert-help">
+            The selected date range returned very limited data from {connectorsUsed.join(", ")}. Try a 30 or 90-day window for richer insights.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FindingCard({ finding, tone }) {
+  const borderColor = tone === "win" ? "var(--primary)" : "var(--destructive, #e53e3e)";
+  return (
+    <div
+      style={{
+        borderLeft: `3px solid ${borderColor}`,
+        paddingLeft: 12,
+        marginBottom: 12,
+        opacity: finding.confidence === "low" ? 0.7 : 1,
+      }}
+    >
+      <p style={{ fontWeight: 600, fontSize: 13, marginBottom: 4 }}>{finding.title}</p>
+      {finding.evidence && finding.evidence.map((e, i) => (
+        <p key={i} className="app-subtle" style={{ fontSize: 12, marginBottom: 2 }}>{e}</p>
+      ))}
+      {finding.recommended_action && (
+        <p style={{ fontSize: 12, marginTop: 6, fontWeight: 500 }}>{finding.recommended_action}</p>
       )}
     </div>
   );
@@ -2006,6 +2101,7 @@ export default function GeneratePage() {
           onSave={handleSave}
           onRestart={handleRestart}
           saved={saved}
+          mode={activeMode}
         />
       )}
     </section>

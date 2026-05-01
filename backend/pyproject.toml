@@ -34,6 +34,7 @@ alembic = "^1.17"
 psycopg = {version = "^3.2", extras = ["binary"]}
 sentry-sdk = "^2.57.0"
 dlt = "^1.17.1"
+google-adk = ">=1.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^9"

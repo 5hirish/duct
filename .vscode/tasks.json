@@ -45,6 +45,17 @@
       }
     },
     {
+      "label": "Backend: stop ADK web (8001)",
+      "type": "shell",
+      "command": "if command -v lsof >/dev/null 2>&1; then pids=$(lsof -t -i :8001 2>/dev/null || true); if [ -n \"$pids\" ]; then kill -9 $pids >/dev/null 2>&1 || true; fi; fi",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "dedicated",
+        "showReuseMessage": false
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "Backend: stop uvicorn (8000)",
       "type": "shell",
       "command": "if command -v lsof >/dev/null 2>&1; then pids=$(lsof -t -i :8000 2>/dev/null || true); if [ -n \"$pids\" ]; then kill -9 $pids >/dev/null 2>&1 || true; fi; fi; pkill -f \"uvicorn server:app\" >/dev/null 2>&1 || true",

@@ -100,6 +100,8 @@ class Configs(BaseSettings):
     gemini_api_key: str = ""
     openai_api_key: str = ""
     anthropic_api_key: str = ""
+    # Engine selection: "v1" (LangChain) or "v2" (Google ADK)
+    generate_engine: str = Field(default="v1")
 
     # Sentry observability
     app_env: str = Field(

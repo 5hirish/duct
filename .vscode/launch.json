@@ -20,6 +20,14 @@
       "cwd": "${workspaceFolder}/backend"
     },
     {
+      "name": "Backend: ADK web",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "poetry run adk web --host 127.0.0.1 --port 8001 agents",
+      "cwd": "${workspaceFolder}/backend",
+      "postDebugTask": "Backend: stop ADK web (8001)"
+    },
+    {
       "name": "App: dev server",
       "type": "node-terminal",
       "request": "launch",
