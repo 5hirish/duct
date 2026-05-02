@@ -15,6 +15,7 @@ from fastapi.responses import StreamingResponse
 from agents.models import Provider, resolve_model, resolve_provider
 from agents.insights.agent import GenerateInsightsAgent
 from agents.insights.v2.runner import AdkInsightsRunner
+from agents.insights.v3.runner import ClaudeAgentSdkRunner
 from config import get_configs
 from routes.schemas import (
     BusinessContextField,
@@ -81,9 +82,11 @@ def _resolve_agent_config() -> tuple[str, Provider, ModelName]:
 
 def _build_agent(
     api_key: str, provider: Provider, model: "ModelName"
-) -> GenerateInsightsAgent | AdkInsightsRunner:
+) -> GenerateInsightsAgent | AdkInsightsRunner | ClaudeAgentSdkRunner:
     """Instantiate the insight engine selected by GENERATE_ENGINE config."""
     cfg = get_configs()
+    if cfg.generate_engine == "v3":
+        return ClaudeAgentSdkRunner(api_key=api_key, provider=provider, model=model, temperature=1.0)
     if cfg.generate_engine == "v2":
         return AdkInsightsRunner(api_key=api_key, provider=provider, model=model, temperature=1.0)
     return GenerateInsightsAgent(api_key=api_key, provider=provider, model=model, temperature=1.0)
@@ -313,11 +316,12 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
 
         registered = agent.setup_tools_for_goal(goal=req.goal, fetch_fns=fetch_fns, mode=mode)
 
-        if isinstance(agent, AdkInsightsRunner):
-            # v2: both phases run inside a single ADK SequentialAgent pipeline
+        if isinstance(agent, (AdkInsightsRunner, ClaudeAgentSdkRunner)):
+            # v2/v3: both phases run inside a single pipeline call
             await _step_started(emit_event, STEP_SUPPLEMENTARY)
             await _step_started(emit_event, STEP_SYNTHESIZE)
-            logger.info("v2: running ADK pipeline for goal '%s' (mode: %s)", req.goal.value, mode)
+            engine = "v2" if isinstance(agent, AdkInsightsRunner) else "v3"
+            logger.info("%s: running pipeline for goal '%s' (mode: %s)", engine, req.goal.value, mode)
             supplementary, synthesis = await agent.run_pipeline(
                 goal=req.goal,
                 custom_goal=req.custom_goal,

@@ -35,6 +35,7 @@ psycopg = {version = "^3.2", extras = ["binary"]}
 sentry-sdk = "^2.57.0"
 dlt = "^1.17.1"
 google-adk = ">=1.0"
+claude-agent-sdk = ">=0.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^9"
