@@ -86,12 +86,9 @@ _ADK_MODEL_MAP: dict[tuple[Provider, ModelName], str] = {
     (Provider.OPENAI, ModelName.GPT_5_4_MINI): "openai/gpt-5.4-mini",
 }
 
-# Env var name per provider that ADK reads automatically
-_PROVIDER_ENV_VAR: dict[Provider, str] = {
-    Provider.GOOGLE_GENAI: "GOOGLE_API_KEY",
-    Provider.ANTHROPIC: "ANTHROPIC_API_KEY",
-    Provider.OPENAI: "OPENAI_API_KEY",
-}
+from agents.engines import Engine, ENGINE_PROVIDER_ENV_VAR as _ENGINE_PROVIDER_ENV_VAR
+
+_PROVIDER_ENV_VAR: dict[Provider, str] = _ENGINE_PROVIDER_ENV_VAR[Engine.V2]
 
 
 def _resolve_adk_model_string(provider: Provider, model: ModelName) -> str:

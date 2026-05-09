@@ -49,6 +49,7 @@ from agents.insights.goals.organic_growth import OrganicGrowthGoal
 from agents.insights.prompts import get_synthesis_user_prompt, get_system_prompt
 from agents.insights.registry import get_tools_for_request as _registry_get_tools
 from agents.insights.schema import SynthesisSchema
+from agents.engines import Engine, get_env_var_for_engine_provider
 from agents.insights.tools import CONNECTOR_BY_TOOL, _register_default_tools
 from agents.insights.v2.schema_compat import parse_synthesis_from_text
 from agents.models import ModelName, Provider
@@ -184,7 +185,7 @@ async def _run_synthesis(
     from claude_agent_sdk import AgentDefinition, ClaudeAgentOptions, query
     from claude_agent_sdk import ResultMessage
 
-    env_var = "ANTHROPIC_API_KEY"
+    env_var = get_env_var_for_engine_provider(Engine.V3, provider) or "ANTHROPIC_API_KEY"
     original = os.environ.get(env_var)
     if api_key and not os.environ.get(env_var):
         os.environ[env_var] = api_key

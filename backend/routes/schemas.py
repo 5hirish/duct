@@ -93,6 +93,7 @@ class GenerateRequest(BaseModel):
     login_customer_id: str = ""
     business_context: BusinessContext = Field(default_factory=BusinessContext)
     mode_context: str = ""  # optional frontend-supplied mode context, appended to system prompt
+    engine: str = Field(default="", description="Engine override: 'v1', 'v2', or 'v3'. Falls back to GENERATE_ENGINE env var.")
 
     @model_validator(mode="after")
     def _custom_goal_required(self) -> Self:

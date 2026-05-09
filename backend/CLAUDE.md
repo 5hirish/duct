@@ -42,6 +42,30 @@ The current and planned backend stack is:
 - `routes/generate.py` — `POST /api/insights/generate` for interactive brief + LangChain synthesis envelope
 - `data/google_ads/` — `google-ads-report.json` (demo brief), `raw/demo_raw_payload.json`
 
+## Agent-type architecture
+
+The `agents/` directory is organised by agent type. Each type is independent and has its own goals, tools, prompts, schema, and versioned runners.
+
+```
+agents/
+├── engines.py          — engine/provider/model registry (shared across all agent types)
+├── models.py           — Provider, ModelName enums (shared)
+├── insights/           — Insights agent (paid ads + organic growth intelligence)
+│   ├── v1/             — LangChain runner
+│   ├── v2/             — Google ADK runner
+│   ├── v3/             — Claude Agent SDK runner
+│   └── goals/, tools/, schema.py, registry.py, prompts/
+├── audit/              — future: SEO audit agent
+└── blog/               — future: Blog content generation agent
+```
+
+Route convention: each agent type gets its own route prefix:
+- `POST /api/insights/generate` — exists
+- `POST /api/audit/run` — future
+- `POST /api/blog/generate` — future
+
+Cross-agent invocations are modelled at the frontend level (e.g. audit findings carry an `invoke_insights` action that pre-populates the insights wizard). Backend agents remain decoupled — no direct calls between agent types.
+
 ## Artifact contract
 
 The app lists top-level `*.json` briefs in `data/google_ads/` (e.g. `google-ads-report.json`) for local dev; user-generated insights are returned from `POST /api/insights/generate` and stored client-side (`localStorage`).

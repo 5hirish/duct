@@ -12,7 +12,8 @@ from typing import TYPE_CHECKING, Any
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
-from agents.models import Provider, resolve_model, resolve_provider
+from agents.engines import Engine, resolve_engine, resolve_engine_model, resolve_engine_provider, PROVIDER_CONFIG_ATTR
+from agents.models import Provider
 from agents.insights.agent import GenerateInsightsAgent
 from agents.insights.v2.runner import AdkInsightsRunner
 from agents.insights.v3.runner import ClaudeAgentSdkRunner
@@ -65,29 +66,27 @@ STEP_LABELS = {
 EmitFn = Callable[[dict[str, Any]], Awaitable[None]]
 
 
-def _resolve_agent_config() -> tuple[str, Provider, ModelName]:
-    """Resolve LLM provider/model/API key from config."""
-    cfg = get_configs()
-    provider = resolve_provider(cfg.generate_provider or None)
-    model = resolve_model(cfg.generate_model or None, provider)
+def _resolve_agent_config(request_engine: str = "") -> tuple[str, Provider, "ModelName", Engine]:
+    """Resolve engine/provider/model/API key from config.
 
-    key_map = {
-        Provider.OPENAI: cfg.openai_api_key,
-        Provider.GOOGLE_GENAI: cfg.gemini_api_key,
-        Provider.ANTHROPIC: cfg.anthropic_api_key,
-    }
-    api_key = key_map.get(provider, cfg.gemini_api_key) or ""
-    return api_key, provider, model
+    Request engine takes precedence over GENERATE_ENGINE env var.
+    Provider and model default from the engine definition in agents/engines.py.
+    """
+    cfg = get_configs()
+    engine = resolve_engine(request_engine or cfg.generate_engine or None)
+    provider = resolve_engine_provider(engine, cfg.generate_provider or None)
+    model = resolve_engine_model(engine, provider, cfg.generate_model or None)
+    api_key = getattr(cfg, PROVIDER_CONFIG_ATTR[provider], "") or ""
+    return api_key, provider, model, engine
 
 
 def _build_agent(
-    api_key: str, provider: Provider, model: "ModelName"
+    api_key: str, provider: Provider, model: "ModelName", engine: Engine
 ) -> GenerateInsightsAgent | AdkInsightsRunner | ClaudeAgentSdkRunner:
-    """Instantiate the insight engine selected by GENERATE_ENGINE config."""
-    cfg = get_configs()
-    if cfg.generate_engine == "v3":
+    """Instantiate the insight engine resolved by _resolve_agent_config."""
+    if engine == Engine.V3:
         return ClaudeAgentSdkRunner(api_key=api_key, provider=provider, model=model, temperature=1.0)
-    if cfg.generate_engine == "v2":
+    if engine == Engine.V2:
         return AdkInsightsRunner(api_key=api_key, provider=provider, model=model, temperature=1.0)
     return GenerateInsightsAgent(api_key=api_key, provider=provider, model=model, temperature=1.0)
 
@@ -264,7 +263,7 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
 
     synthesis_dict = None
     mode = req.mode or "paid_ads"
-    api_key, provider, model = _resolve_agent_config()
+    api_key, provider, model, engine = _resolve_agent_config(req.engine)
 
     # Build the all_briefs dict: connector_id → {"brief": ..., "raw": ...}
     all_briefs = {
@@ -277,7 +276,7 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
     supplementary: dict[str, Any] = {}
 
     if api_key and all_briefs:
-        agent = _build_agent(api_key, provider, model)
+        agent = _build_agent(api_key, provider, model, engine)
 
         # Build fetch functions only for connectors that are actually available.
         # For organic_growth, skip Google Ads credential resolution entirely.

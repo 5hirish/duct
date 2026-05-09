@@ -1362,6 +1362,18 @@ export default function GeneratePage() {
   const [pipelineStatusByKey, setPipelineStatusByKey] = useState({});
   const [hydratedFromSession, setHydratedFromSession] = useState(false);
 
+  // Engine selection — read from localStorage, kept in sync with EngineDialog changes
+  const [engine, setEngine] = useState("v1");
+  useEffect(() => {
+    const stored = localStorage.getItem("duct_engine") || "v1";
+    setEngine(stored);
+    function handleStorage(e) {
+      if (e.key === "duct_engine") setEngine(e.newValue || "v1");
+    }
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
+
   // Detect connected sources (Google Ads = OAuth token only; account chosen in generate flow)
   const [connections, setConnections] = useState([]);
   useEffect(() => {
@@ -1709,6 +1721,7 @@ export default function GeneratePage() {
         account_name: account?.descriptive_name ?? "",
         currency_code: account?.currency_code || "USD",
         business_context: businessContext,
+        engine,
       }, {
         onEvent: applyPipelineEvent,
       });
