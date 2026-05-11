@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends
 
-from routes import audit, auth, chat, connectors, generate, health, projects, reports, signin
+from routes import agents, audit, auth, chat, connectors, generate, health, projects, reports, signin
 from service.auth import validate_api_key
 
 router = APIRouter()
@@ -40,5 +40,11 @@ router.include_router(
 router.include_router(
     audit.router,
     prefix="/api",
+    dependencies=[Depends(validate_api_key)],
+)
+# Unified agent session API — all new agent types go here
+router.include_router(
+    agents.router,
+    prefix="/api/agents",
     dependencies=[Depends(validate_api_key)],
 )

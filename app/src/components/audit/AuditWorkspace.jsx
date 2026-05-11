@@ -4,10 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import AuditChat from "./AuditChat";
 import AuditReport from "./AuditReport";
 import {
-  closeAuditSession,
-  sendAuditChat,
-  startAuditStream,
-  submitAuditAnswers,
+  closeAgentSession,
+  createAgentSession,
+  openAgentStream,
+  sendAgentMessage,
 } from "../../lib/api";
 import { AuditEvent, AuditStep } from "../../lib/auditEvents";
 
@@ -75,21 +75,24 @@ export default function AuditWorkspace({ sessionId, auditParams }) {
   const dragging = useRef(false);
   const containerRef = useRef(null);
 
-  // Actual backend session ID (returned from SSE response header)
+  // Backend session ID returned by POST /sessions
   const backendSessionIdRef = useRef(null);
+  const agentTypeRef = useRef("seo-audit");
 
-  // Start the SSE stream on mount
+  // Two-step start: create session (POST), then open SSE stream (GET)
   useEffect(() => {
     const ctrl = new AbortController();
     abortRef.current = ctrl;
 
     async function start() {
       try {
-        const { sessionId: sid, body } = await startAuditStream(auditParams, {
-          signal: ctrl.signal,
-        });
-        backendSessionIdRef.current = sid || sessionId;
+        // Step 1 — create session + start pipeline (returns immediately)
+        const { session_id, agent_type } = await createAgentSession("seo-audit", auditParams);
+        backendSessionIdRef.current = session_id;
+        agentTypeRef.current = agent_type;
 
+        // Step 2 — open SSE stream and consume events
+        const body = await openAgentStream(agent_type, session_id, { signal: ctrl.signal });
         await consumeSseStream(body, handleEvent, ctrl.signal);
       } catch (err) {
         if (!ctrl.signal.aborted) {
@@ -103,7 +106,7 @@ export default function AuditWorkspace({ sessionId, auditParams }) {
     return () => {
       ctrl.abort();
       if (backendSessionIdRef.current) {
-        closeAuditSession(backendSessionIdRef.current).catch(() => {});
+        closeAgentSession(agentTypeRef.current, backendSessionIdRef.current).catch(() => {});
       }
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -197,15 +200,14 @@ export default function AuditWorkspace({ sessionId, auditParams }) {
     }
   }
 
-  function activeSid() {
-    return backendSessionIdRef.current || sessionId;
-  }
-
   async function handleAnswerQuestions(answers) {
     setPendingQuestions(null);
     setAgentBusy(true);
     try {
-      await submitAuditAnswers(activeSid(), answers);
+      await sendAgentMessage(agentTypeRef.current, backendSessionIdRef.current, {
+        type: "answer",
+        answers,
+      });
     } catch (err) {
       setError(err.message);
       setAgentBusy(false);
@@ -217,7 +219,11 @@ export default function AuditWorkspace({ sessionId, auditParams }) {
     setMessages(prev => [...prev, { role: "user", text }]);
     setAgentBusy(true);
     try {
-      await sendAuditChat(activeSid(), content, selectedVersionId);
+      await sendAgentMessage(agentTypeRef.current, backendSessionIdRef.current, {
+        type: "chat",
+        content,
+        context_version_id: selectedVersionId,
+      });
     } catch (err) {
       setError(err.message);
       setAgentBusy(false);

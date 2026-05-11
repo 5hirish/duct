@@ -28,12 +28,42 @@ from agents.audit.schema import (
 )
 from agents.audit.v3.runner import ClaudeAuditRunner, close_session, get_session
 from agents.engines import Engine, resolve_engine, resolve_engine_model, resolve_engine_provider, PROVIDER_CONFIG_ATTR
+from service.crawl.fetcher import SSRFError, validate_public_url
 from config import get_configs
 from service.pipeline import now_iso
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["audit"])
+
+# Sessions older than this (seconds) with no active SSE consumer are pruned.
+_SESSION_TTL = 1800  # 30 minutes
+_session_created_at: dict[str, float] = {}  # session_id → creation timestamp
+
+
+async def _prune_stale_sessions() -> None:
+    """Background task: close sessions that have exceeded _SESSION_TTL.
+
+    Runs every 5 minutes. Prevents unbounded memory growth when clients
+    disconnect without calling DELETE /api/audit/session/{id}.
+    """
+    import time
+    while True:
+        await asyncio.sleep(300)  # check every 5 minutes
+        now = time.monotonic()
+        stale = [
+            sid for sid, created in list(_session_created_at.items())
+            if now - created > _SESSION_TTL
+        ]
+        for sid in stale:
+            logger.info("audit: pruning stale session %s", sid)
+            close_session(sid)
+            _session_created_at.pop(sid, None)
+
+
+@router.on_event("startup")  # type: ignore[attr-defined]
+async def _start_pruner() -> None:
+    asyncio.create_task(_prune_stale_sessions())
 
 
 # ---------------------------------------------------------------------------
@@ -101,6 +131,11 @@ async def _run_audit_pipeline(
         if not url.startswith("http"):
             url = f"https://{url}"
 
+        try:
+            validate_public_url(url)
+        except SSRFError as exc:
+            raise ValueError(f"Invalid URL: {exc}") from exc
+
         await emit_fn({
             "event": AuditEvent.STEP_FINISHED,
             "step_id": AuditStep.RESOLVE_URL,
@@ -142,7 +177,9 @@ async def _run_audit_pipeline(
 @router.post("/audit/run/stream")
 async def run_audit_stream(req: AuditRequest) -> StreamingResponse:
     """Start an SEO audit. Returns an SSE stream covering the full session lifetime."""
+    import time
     session_id = str(uuid.uuid4())
+    _session_created_at[session_id] = time.monotonic()
 
     queue: asyncio.Queue = asyncio.Queue()
     finished = asyncio.Event()
@@ -241,7 +278,7 @@ async def send_chat_message(session_id: str, req: AuditChatMessage) -> dict:
         combined_text = ctx_header + " ".join(b.get("text", "") for b in text_blocks)
         content = [{"type": "text", "text": combined_text}] + other_blocks
 
-    await session.queue.put({"role": "user", "content": content})  # type: ignore[union-attr]
+    await session.chat_queue.put({"role": "user", "content": content})  # type: ignore[union-attr]
     return {"status": "queued"}
 
 
@@ -253,4 +290,5 @@ async def send_chat_message(session_id: str, req: AuditChatMessage) -> dict:
 async def close_audit_session(session_id: str) -> dict:
     """Close an audit session and free resources."""
     close_session(session_id)
+    _session_created_at.pop(session_id, None)
     return {"status": "ok"}

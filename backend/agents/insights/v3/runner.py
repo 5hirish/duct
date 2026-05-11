@@ -180,10 +180,11 @@ async def _run_synthesis(
     synthesis_user_prompt: str,
     api_key: str,
     provider: Provider,
+    emit_event: Callable | None = None,
 ) -> SynthesisSchema | None:
     """Run synthesis phase via Claude Agent SDK with a synthesizer subagent."""
     from claude_agent_sdk import AgentDefinition, ClaudeAgentOptions, query
-    from claude_agent_sdk import ResultMessage
+    from claude_agent_sdk import ResultMessage, StreamEvent
 
     env_var = get_env_var_for_engine_provider(Engine.V3, provider) or "ANTHROPIC_API_KEY"
     original = os.environ.get(env_var)
@@ -197,6 +198,7 @@ async def _run_synthesis(
             allowed_tools=[AgentTool.AGENT],
             max_turns=5,
             system_prompt=_SYNTHESIS_ORCHESTRATOR_PROMPT,
+            include_partial_messages=True,
             agents={
                 "synthesizer": AgentDefinition(
                     description=(
@@ -218,7 +220,15 @@ async def _run_synthesis(
 
         synthesis_text: str | None = None
         async for message in query(prompt=full_prompt, options=options):
-            if isinstance(message, ResultMessage) and message.result:
+            if isinstance(message, StreamEvent) and emit_event:
+                ev = message.event
+                if ev.get("type") == "content_block_delta":
+                    delta = ev.get("delta", {})
+                    if delta.get("type") == "text_delta":
+                        chunk = delta.get("text", "")
+                        if chunk:
+                            await emit_event({"event": "synthesis_chunk", "text": chunk})
+            elif isinstance(message, ResultMessage) and message.result:
                 synthesis_text = message.result
                 break
 
@@ -350,6 +360,7 @@ class ClaudeAgentSdkRunner:
         ga4_property_id: str = "",
         gsc_site_url: str = "",
         connected_sources: list[str] | None = None,
+        emit_event: Callable | None = None,
     ) -> tuple[dict[str, Any], SynthesisSchema | None]:
         """Run the full two-phase pipeline.
 
@@ -396,6 +407,7 @@ class ClaudeAgentSdkRunner:
             synthesis_user_prompt=synthesis_user_prompt,
             api_key=self._api_key,
             provider=self.provider,
+            emit_event=emit_event,
         )
 
         elapsed = perf_counter() - start

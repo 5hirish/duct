@@ -334,6 +334,7 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
                 ga4_property_id=ga4_property_id,
                 gsc_site_url=gsc_site_url,
                 connected_sources=connections,
+                emit_event=emit_event,
             )
             await _step_finished(emit_event, STEP_SUPPLEMENTARY)
             await _step_finished(emit_event, STEP_SYNTHESIZE)
@@ -364,6 +365,7 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
                 supplementary=supplementary or None,
                 business_context=biz_ctx,
                 mode=mode,
+                emit_event=emit_event,
             )
             await _step_finished(emit_event, STEP_SYNTHESIZE)
 

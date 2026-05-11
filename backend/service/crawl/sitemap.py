@@ -10,7 +10,7 @@ from urllib.parse import urljoin, urlparse
 import httpx
 
 from agents.audit.schema import CrawlPlan
-from service.crawl.fetcher import fetch_text
+from service.crawl.fetcher import SSRFError, fetch_text, validate_public_url
 
 logger = logging.getLogger(__name__)
 
@@ -138,10 +138,21 @@ async def fetch_crawl_plan(
 
     total = len(all_entries)
 
-    # Filter to same-origin URLs only
+    # Filter to same-origin AND publicly routable URLs only
+    # (guards against sitemap injection pointing at internal services)
+    def _is_safe_entry(e: dict) -> bool:
+        loc_netloc = urlparse(e["loc"]).netloc
+        if loc_netloc != parsed.netloc:
+            return False
+        try:
+            validate_public_url(e["loc"])
+            return True
+        except SSRFError:
+            return False
+
     all_entries = [
         e for e in all_entries
-        if urlparse(e["loc"]).netloc == parsed.netloc
+        if _is_safe_entry(e)
     ]
 
     # Classify

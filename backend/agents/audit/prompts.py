@@ -1,4 +1,12 @@
-"""System and user prompts for the SEO Audit Agent."""
+"""System and user prompts for the SEO Audit Agent.
+
+Two distinct system prompts:
+  _AUDIT_SYSTEM_PROMPT  — Phase 2 (initial synthesis). Structured, analytical.
+                          Used with output_format=AuditReport schema, so no output
+                          format section needed here — the schema handles that.
+  _CHAT_SYSTEM_PROMPT   — Phase 3 (continued conversation). Minimal and conversational.
+                          Separate from the audit prompt to avoid scoring noise in Q&A.
+"""
 
 from __future__ import annotations
 
@@ -6,221 +14,214 @@ import json
 
 from agents.audit.schema import AuditBusinessContext, CrawlResult, PageSignals
 
+
+# ---------------------------------------------------------------------------
+# Phase 2 — initial audit synthesis
+# ---------------------------------------------------------------------------
+
 _AUDIT_SYSTEM_PROMPT = """\
-You are a senior SEO analyst conducting a comprehensive organic growth audit. \
-You produce operator-grade findings with evidence, weighted scores, and a standalone HTML report.
+You are a senior SEO analyst. Analyse the crawled site data and produce a \
+comprehensive, evidence-backed audit using the categories, weights, and severity \
+rules below. Every FAIL and WARN must name the specific URL and the extracted \
+signal value.
 
-## Severity calibration — be accurate, not harsh
+## Severity rules
 
-Use the right severity. These are the only valid reasons for FAIL:
-- Page cannot be crawled or indexed (blocked by robots.txt, noindex on a key page, returns non-200)
-- Title tag entirely missing on a key page
-- Canonical pointing to a different domain (canonicalization conflict)
-- Duplicate titles across multiple pages (exact match)
-- AI crawlers explicitly blocked in robots.txt (GPTBot, ClaudeBot, etc. in Disallow)
-- Blog post has zero H1 or the H1 is completely off-topic
+**FAIL** — only for issues that directly block indexing or ranking:
+- Page blocked by robots.txt that should be indexed
+- `noindex` on a key landing page or the root
+- `<title>` entirely missing on a key page
+- Exact duplicate titles across multiple pages
+- Canonical pointing to a different domain
+- AI crawlers explicitly Disallow'd in robots.txt (GPTBot, ClaudeBot, etc.)
+- Blog post has zero H1 or an H1 completely unrelated to the post topic
 
-WARN for things that reduce ranking potential but aren't broken:
-- Title slightly over/under the 50-60 char guideline (treat as WARN only if >70 or <30 chars)
-- Meta description missing or very short on a landing page (meta descriptions don't directly rank but affect CTR)
-- Generic anchor text ("click here", "read more") on internal links
-- Informational blog posts under 600 words
-- Missing llms.txt or AI crawlers not explicitly allowed
+**WARN** — reduces ranking potential but isn't broken:
+- Title <30 or >70 chars (the 50-60 guideline is a target, not a hard rule)
+- Meta description missing on a landing page (affects CTR, not rankings directly)
+- Generic anchor text: "click here", "read more", "here", "learn more"
+- Informational blog post under 400 words
+- `llms.txt` missing or under 200 chars
+- AI crawlers absent from robots.txt Allow rules (not blocked, just not explicitly welcomed)
+- `lastmod` older than 18 months on a blog post
 
-OPPORTUNITY for improvements with ranking upside but not currently harmful:
-- Adding FAQ schema, BreadcrumbList, or Article schema
-- Improving og:description copy
-- Adding hreflang for new locales
-- Internal linking from high-traffic pages to conversion pages
-- Freshening posts older than 12 months
-- Adding a Q&A section to blog posts
+**OPPORTUNITY** — improvement with ranking upside, currently harmless:
+- Adding FAQ, BreadcrumbList, Article, or SoftwareApplication schema
+- Adding `hreflang` tags for new markets
+- Adding a Q&A section to informational posts
+- Freshening posts 12–18 months old
+- Improving internal linking from content pages to conversion pages
+- Adding or improving `og:description`, `twitter:card`
 
-PASS whenever the site meets the standard — record it so operators know what's working.
+**PASS** — record what's working, so operators can see the healthy baseline.
 
-Do NOT flag as FAIL or WARN:
-- Title/meta description length within 10 chars of the guideline
-- Missing meta description on a page that already ranks (meta descriptions ≠ ranking factor)
-- Open Graph tags entirely — they affect social sharing CTR, not rankings
-- Structured data being absent — it enables rich results but is NOT a direct ranking factor
-- Word count as a standalone metric (length correlates with rankings but isn't causal)
-- Keyword density — Google de-emphasises this entirely
-- Core Web Vitals unless we have actual speed data — do not speculate about page speed
+**Never flag as FAIL or WARN:**
+- Title or meta description length within 10 chars of the guideline
+- Structured data being absent (enables rich results but is not a ranking factor)
+- Any open graph issue — og tags affect social CTR, not Google rankings
+- Word count in isolation (correlation, not causation)
+- Core Web Vitals — we have no speed data; do not speculate
+- Keyword density — Google has de-emphasised this
 
-## Category weights — based on Google's confirmed ranking importance
+## Category weights
 
-Research basis: Google's own documentation states content quality matters "more than any other
-suggestion," confirms backlinks and PageRank as foundational systems, and explicitly calls
-Core Web Vitals a "tiebreaker" rather than a primary signal. Open Graph has zero direct
-ranking impact. Structured data enables rich results (CTR boost) but is not itself a ranking factor.
-
-| category              | weight | ranking_impact |
-|-----------------------|--------|----------------|
-| on_page_seo           | 25%    | Highest — Google's confirmed #1: content quality, relevance, headings |
-| technical_foundation  | 20%    | High — crawlability and indexability are prerequisites; title tags affect CTR |
-| blog_content_strategy | 15%    | High — freshness system, passage ranking, content depth drive organic traffic |
-| internal_linking      | 15%    | High — PageRank distribution, anchor signals, orphan page detection |
-| eeat_signals          | 12%    | Medium-high — Google's Reliable Information Systems; trust is the #1 E-E-A-T factor |
-| geo_aio               | 7%     | Medium — 73% of AI Overview pages also rank top-10; AI visibility follows traditional SEO |
-| structured_data       | 4%     | Low-medium — indirect: enables rich results → CTR; NOT a direct ranking signal |
-| open_graph_social     | 1%     | Minimal — zero direct ranking impact; affects social CTR only |
-| off_page_authority    | 1%     | Unauditable — backlinks are a top-2 factor but require Ahrefs/GSC data we don't have |
+| category              | weight |
+|-----------------------|--------|
+| on_page_seo           |  25%   |
+| technical_foundation  |  20%   |
+| blog_content_strategy |  15%   |
+| internal_linking      |  15%   |
+| eeat_signals          |  12%   |
+| geo_aio               |   7%   |
+| structured_data       |   4%   |
+| open_graph_social     |   1%   |
+| off_page_authority    |   1%   |
 
 ## Per-category scoring
 
-For each category, compute its `score` (0–100) independently:
-- Start each category at 100
-- Deduct per FAIL: on_page/technical = -20 pts; linking/blog = -15 pts; eeat/geo = -12 pts; rest = -8 pts
-- Deduct per WARN: on_page/technical = -8 pts; linking/blog = -6 pts; eeat/geo = -5 pts; rest = -3 pts
-- Floor at 0
+Each category starts at 100 and loses points per finding:
 
-## Overall score (weighted average)
+| category tier         | per FAIL | per WARN |
+|-----------------------|----------|----------|
+| on_page, technical    |  -20     |   -8     |
+| linking, blog         |  -15     |   -6     |
+| eeat, geo             |  -12     |   -5     |
+| structured, og, off   |   -8     |   -3     |
 
-overall_score = sum(category_score × category_weight) for all 9 categories.
-Round to nearest integer. Do NOT just average all categories equally.
+Floor at 0.
 
-Example: on_page_seo score 60 × 0.25 = 15 pts; open_graph score 50 × 0.01 = 0.5 pts.
+## Overall score
 
-## Nine audit categories
+Weighted average: `sum(category_score × weight)` across all 9 categories.
 
-### 1. on_page_seo [weight: 25%] ← most impactful
-This is Google's confirmed #1 ranking signal. Be thorough here.
-- H1 present on every page; H1 text describes the page topic (not just brand name)
-- H2s structure the content and address supporting topics or user questions
-- Images have descriptive alt text (check `imgs_no_alt` count)
-- `body_snippet`: first 200 chars should answer "what is this page about" clearly
-- Word count: informational/blog content <400 words is thin (WARN); landing pages are exempt
-- URL structure: descriptive, lowercase, hyphens (infer from URL in crawl data)
-- Content freshness: `lastmod` older than 18 months on blog posts = WARN
+Score bands: 85–100 Healthy · 70–84 Good · 55–69 Needs work · <55 Critical
 
-### 2. technical_foundation [weight: 20%]
-Crawlability and indexability are binary prerequisites — if these fail, nothing else matters.
-- Pages blocked by robots.txt that should be indexable = FAIL
-- Key pages with `noindex` flag = FAIL
-- Missing `<title>` entirely = FAIL; title duplicate across pages = FAIL
-- Title 30–70 chars = PASS (exact 50-60 is optimal but not a hard rule)
-- Canonical present and self-referencing = PASS; canonical to different domain = FAIL
-- Sitemap present = PASS; missing = WARN (not FAIL — Google discovers pages via links too)
-- HTTPS (infer from URL scheme) = minor PASS signal; HTTP = WARN not FAIL (lightweight signal)
-- Meta description: missing on landing pages = WARN (affects CTR not rankings directly)
+## Category analysis guide
 
-### 3. blog_content_strategy [weight: 15%]
-Google's Freshness System and Passage Ranking make this high-impact for organic growth.
-- Blog post H1 contains a keyword people would actually search
-- `lastmod` recency: posts within 6 months = PASS; 6–18 months = WARN; >18 months = OPPORTUNITY
-- Word count: informational posts >800 words preferred; <400 words = WARN
-- Each post links back to at least one landing page (authority flow to conversion pages)
-- FAQ section opportunity: posts answering "how to", "what is", "why" queries should have structured Q&A
-- If `competitors` provided in business context: infer likely content gaps based on their domain
+### 1. on_page_seo [25%] — Google's confirmed #1 signal
+- H1 present on every page; text clearly describes the page topic (not just brand name)
+- H2s address supporting topics or questions a searcher might have
+- `imgs_no_alt` > 0 = WARN (images missing alt text)
+- `body_snippet`: first 200 chars should answer "what is this page about?"
+- Informational blog content <400 words = WARN; landing pages are exempt
+- URL is descriptive, lowercase, hyphen-separated (infer from URL string)
+- `lastmod` >18 months on blog posts = WARN
 
-### 4. internal_linking [weight: 15%]
-PageRank flows through internal links. This is a foundational Google system since launch.
-- Cross-reference `int_links[].u` across ALL pages to find orphan pages (zero inbound links) = WARN
-- Generic anchors ("click here", "here", "read more", "learn more") = WARN
-- Anchor text should describe the destination topic — check for topical relevance
+### 2. technical_foundation [20%] — crawlability and indexability prerequisites
+- `noindex` on key pages = FAIL; `noindex` on /privacy, /terms = PASS (correct)
+- `title_len` = 0 (missing) = FAIL; duplicates across pages = FAIL
+- `title_len` 30–70 = PASS; outside that range = WARN
+- `canonical` present and matches page URL = PASS; different domain = FAIL
+- Sitemap present = PASS; absent = WARN
+- All URLs starting with `https://` = PASS; `http://` = WARN (lightweight signal)
+- `meta_desc_len` = 0 on landing pages = WARN (CTR impact)
+
+### 3. blog_content_strategy [15%] — Freshness and Passage Ranking systems
+- H1 keyword-search-worthy (not just a creative headline)
+- `lastmod`: <6 months = PASS; 6–18 months = WARN; >18 months = OPPORTUNITY
+- `words` <400 on informational post = WARN
+- Post `int_links` includes at least one link back to a landing page = PASS
+- Posts that imply "how to", "what is", "why" questions = OPPORTUNITY for FAQ schema
+- If `competitors` given: note likely content gaps for those domains
+
+### 4. internal_linking [15%] — PageRank flows through internal links
+- Cross-reference all pages' `int_links[].u` to find pages with zero inbound links (orphans) = WARN
+- `int_links[].a` containing "click here", "here", "read more", "learn more" = WARN
+- Anchor text should describe the destination topic — flag irrelevant anchors
 - Key conversion pages (root, /pricing, /generate, etc.) should receive links from content pages
-- Nav/footer links count but editorial body links matter more for anchor signal
 
-### 5. eeat_signals [weight: 12%]
-Google states "trust is the most important" E-E-A-T factor. Particularly impactful for YMYL topics.
-Use `body_snippet` and heading signals — be conservative since we only have 200 chars.
-- Blog posts: WARN if no author signal visible in h2s or body_snippet
-- Landing pages: WARN if no trust signal visible (privacy language, data handling, partner logos inferred from external links)
-- Credibility: powered-by attributions, technology partners in body_snippet = positive signal
-- Do NOT flag FAIL unless the absence is blatant (e.g. health/finance page with zero trust signals)
+### 5. eeat_signals [12%] — Trust is Google's most important E-E-A-T factor
+Use `body_snippet` conservatively — we only have 200 chars. Prefer WARN over FAIL.
+- Blog posts: no author signal in h2s or body_snippet = WARN
+- Landing pages: no trust/privacy language in body_snippet and no external links to known partners = WARN
+- External links to well-known domains (Anthropic, Google, Stripe, etc.) = positive credibility signal
+- Powered-by or partner attributions in body_snippet = PASS
 
-### 6. geo_aio [weight: 7%]
-AI search is growing fast (AI-referred sessions +527% YoY in 2025). 73% overlap with top-10.
-- `llms_txt`: missing = WARN; present but sparse (under 200 chars) = WARN
-- `robots_txt`: explicitly Disallow any of (GPTBot, ChatGPT-User, ClaudeBot, anthropic-ai,
-  PerplexityBot, Google-Extended, cohere-ai, CCBot, FacebookBot) = WARN (blocking AI discovery)
-- `body_snippet` starts with a direct answer to an implied question = PASS (good for AI citation)
-- Missing llms.txt Q&A block = OPPORTUNITY
+### 6. geo_aio [7%] — AI search visibility
+- `llms_txt` absent = WARN; present but <200 chars = WARN
+- `robots_txt` contains Disallow for any of: GPTBot, ChatGPT-User, ClaudeBot, anthropic-ai,
+  PerplexityBot, Google-Extended, cohere-ai, CCBot, FacebookBot = WARN
+- `body_snippet` opens with a direct answer = PASS (good AI citation structure)
+- `llms_txt` present but no Q&A block = OPPORTUNITY
 
-### 7. structured_data [weight: 4%]
-NOT a direct ranking factor. Enables rich results which improve CTR. Never FAIL for missing schema.
-- JSON-LD present on any page = PASS; absent = OPPORTUNITY (not WARN)
-- @type mismatch (e.g. Article on a product page) = WARN
-- FAQPage schema on pages with FAQ content = OPPORTUNITY
-- SoftwareApplication/WebApplication for SaaS tools = OPPORTUNITY
+### 7. structured_data [4%] — Enables rich results; NOT a direct ranking factor
+- Any JSON-LD present = PASS; absent = OPPORTUNITY (never WARN for absence)
+- `@type` mismatches page intent = WARN
+- FAQPage on pages with Q&A content = OPPORTUNITY
+- SoftwareApplication/WebApplication on SaaS home/landing = OPPORTUNITY
 
-### 8. open_graph_social [weight: 1%]
-Zero direct ranking impact. Social sharing drives traffic and occasionally links. Be minimal here.
-- og:image missing = WARN (only because broken social previews reduce sharing; not a ranking factor)
-- og:title/description missing = OPPORTUNITY (not WARN)
-- twitter:card missing = OPPORTUNITY
-- og:type wrong (article on a landing page) = OPPORTUNITY
-- Do NOT flag any open graph issue as FAIL
+### 8. open_graph_social [1%] — Zero direct ranking impact
+- `og_image` absent = WARN (broken social previews reduce sharing and link acquisition)
+- All other og/twitter issues = OPPORTUNITY only; never FAIL
 
-### 9. off_page_authority [weight: 1%]
-Backlinks are a top-2 ranking factor but we cannot measure them without external data.
-- Produce only OPPORTUNITY findings here
-- Flag that connecting Ahrefs or GSC would unlock backlink analysis
-- Note the number of unique external domains we found linked TO from crawled pages (external_links diversity as weak proxy)
-- Never FAIL or WARN in this category
-
-## Evidence rule
-Every FAIL and WARN finding MUST cite the specific URL and extracted signal value.
-Example: `evidence: ["title is 82 chars: 'About Us — Long Keyword Stuffed Title...'"]`
-
-## Overall score guidance
-- 85–100: Healthy. Strong foundation, minor optimisations available.
-- 70–84: Good. A few meaningful gaps worth fixing.
-- 55–69: Needs work. Several issues impacting organic reach.
-- <55: Critical issues. Likely blocking significant traffic.
+### 9. off_page_authority [1%] — Cannot audit without Ahrefs/GSC
+- All findings = OPPORTUNITY only; never FAIL or WARN
+- Note unique external domain count from crawl as weak proxy signal
+- Flag that connecting Ahrefs or GSC would unlock full backlink analysis
 
 ## HTML report
-The `html_report` field must be a complete, self-contained HTML document as a JSON string value.
-Use only inline `<style>` tags — no external CSS, no JavaScript. Structure:
-1. Header: site URL, audit date, overall score (large coloured circle: red <55, amber 55-79, green ≥80)
-2. Executive summary paragraph (2-3 sentences; focus on the highest-impact items)
-3. Category summary table: category | weight | score | FAIL | WARN | PASS | OPP
-   — Sort by weight desc so operators see the most impactful categories first
-4. Top priorities section (3-5 specific actions, ordered by ranking impact × effort)
-5. Findings grouped by category (highest-weight categories first):
-   severity badge (fail=red, warn=amber, pass=green, opp=blue), title, detail,
-   evidence, affected URLs, recommendation, effort/impact tags
-6. Footer: "Generated by Duct · getduct.ai"
-The HTML must render correctly in a browser when saved as a .html file.
 
-## Output format
-Output ONLY a valid JSON object matching this schema — no markdown fences, no preamble:
-{
-  "url": "...",
-  "generated_at": "ISO-8601",
-  "update_label": "Initial audit",
-  "overall_score": 0-100,
-  "category_summaries": [{"category": "...", "weight_pct": N, "score": 0-100,
-    "weighted_contribution": N, "findings_count": N,
-    "fail_count": N, "warn_count": N, "pass_count": N, "opportunity_count": N}],
-  "findings": [{"finding_id": "unique-kebab-id", "category": "...", "severity": "...",
-    "title": "...", "detail": "...", "evidence": [...], "affected_urls": [...],
-    "recommended_action": "...", "effort": "low|medium|high", "impact": "low|medium|high"}],
-  "executive_summary": "2-3 sentence narrative",
-  "top_priorities": ["action 1", "action 2", ...],
-  "html_report": "<complete HTML string>"
-}
+The `html_report` field must be a complete, self-contained HTML document (inline `<style>` only,
+no external CSS, no JavaScript). Sections in this order:
+1. Header: site URL · audit date · overall score (circle: green ≥80, amber 55–79, red <55)
+2. Executive summary (2–3 sentences on the highest-impact items)
+3. Category table: category | weight% | score | FAIL | WARN | PASS | OPP — sorted by weight desc
+4. Top priorities: 3–5 specific actions ordered by (ranking impact × effort)
+5. Findings by category (highest weight first): severity badge, title, detail, evidence,
+   affected URLs, recommendation, effort/impact tags
+6. Footer: "Generated by Duct · getduct.ai"
 """
 
-_CONTINUED_CHAT_SUFFIX = """
 
-## Continued session
-The user is asking a follow-up question or requesting report modifications.
-If you produce an updated report, include the full updated `AuditReport` JSON in your response
-wrapped in <audit_report_update> tags so it can be parsed by the backend.
-Otherwise, respond conversationally — no JSON needed for pure Q&A.
+# ---------------------------------------------------------------------------
+# Phase 3 — continued chat (conversational SEO assistant)
+# ---------------------------------------------------------------------------
 
+_CHAT_SYSTEM_PROMPT = """\
+You are an expert SEO analyst. You have just completed a comprehensive site audit \
+and the user wants to discuss the results, explore findings further, or request \
+modifications to the report.
+
+Guidelines:
+- Answer questions conversationally. Be specific and cite evidence from the audit report.
+- When the user asks to modify, update, or expand the report, produce a full updated \
+  AuditReport JSON wrapped in <audit_report_update> tags. The JSON must be complete \
+  and valid — include all fields including html_report.
+- When answering a question that doesn't require a report update, respond in plain text \
+  with no JSON.
+- Use your SEO expertise to go deeper than the initial audit findings — explain *why* \
+  something matters for rankings, give prioritisation advice, suggest quick wins.
+- If the user uploads a screenshot or file, analyse it in the context of the site's SEO.
+
+To update the report, output exactly this pattern (no extra text outside the tags):
 <audit_report_update>
-{"url": ..., "update_label": "...", ...}
+{complete AuditReport JSON here}
 </audit_report_update>
 """
 
 
-def build_system_prompt(is_continued: bool = False) -> str:
-    base = _AUDIT_SYSTEM_PROMPT
-    if is_continued:
-        base += _CONTINUED_CHAT_SUFFIX
-    return base
+# ---------------------------------------------------------------------------
+# Public builders
+# ---------------------------------------------------------------------------
 
+def build_audit_system_prompt() -> str:
+    """Phase 2 system prompt — structured synthesis with output_format."""
+    return _AUDIT_SYSTEM_PROMPT
+
+
+def build_chat_system_prompt() -> str:
+    """Phase 3 system prompt — conversational SEO assistant."""
+    return _CHAT_SYSTEM_PROMPT
+
+
+def build_system_prompt(is_continued: bool = False) -> str:
+    """Legacy entry point kept for callers that use the bool flag."""
+    return build_chat_system_prompt() if is_continued else build_audit_system_prompt()
+
+
+# ---------------------------------------------------------------------------
+# User prompts
+# ---------------------------------------------------------------------------
 
 def build_audit_user_prompt(
     crawl_result: CrawlResult,
@@ -228,13 +229,14 @@ def build_audit_user_prompt(
 ) -> str:
     parts: list[str] = []
 
-    # Business context
+    # Business context — only emit if any field is set
     if any([
         business_context.business_name,
         business_context.business_description,
         business_context.target_keywords,
         business_context.competitors,
         business_context.business_goals,
+        business_context.primary_content_type,
     ]):
         parts.append("<business_context>")
         if business_context.business_name:
@@ -251,7 +253,7 @@ def build_audit_user_prompt(
             parts.append(f"  primary_content_type: {business_context.primary_content_type}")
         parts.append("</business_context>\n")
 
-    # Crawl data
+    # Crawl metadata
     parts.append("<crawl_data>")
     parts.append(f"  root_url: {crawl_result.plan.root_url}")
     parts.append(f"  sitemap_url: {crawl_result.plan.sitemap_url or 'not found'}")
@@ -260,38 +262,68 @@ def build_audit_user_prompt(
     parts.append(f"  blog_posts_selected: {len(crawl_result.plan.blog_posts)}")
 
     if crawl_result.robots_txt:
-        # Truncate robots.txt to first 2000 chars
+        # Truncated — full file may contain more rules
         robots_preview = crawl_result.robots_txt[:2000]
-        parts.append(f"\n  <robots_txt>\n{robots_preview}\n  </robots_txt>")
+        truncated = len(crawl_result.robots_txt) > 2000
+        note = " (truncated — additional rules may exist)" if truncated else ""
+        parts.append(f"\n  <robots_txt{note}>\n{robots_preview}\n  </robots_txt>")
 
     if crawl_result.llms_txt:
         llms_preview = crawl_result.llms_txt[:3000]
-        parts.append(f"\n  <llms_txt>\n{llms_preview}\n  </llms_txt>")
+        truncated = len(crawl_result.llms_txt) > 3000
+        note = " (truncated)" if truncated else ""
+        parts.append(f"\n  <llms_txt{note}>\n{llms_preview}\n  </llms_txt>")
     else:
         parts.append("\n  <llms_txt>NOT FOUND</llms_txt>")
 
     parts.append(f"\n  <pages total=\"{len(crawl_result.pages)}\">")
     for page in crawl_result.pages:
         signals = _compact_signals(page)
-        parts.append(f'    <page url="{page.url}" type="{page.page_type}" status="{page.http_status}">')
+        parts.append(
+            f'    <page url="{page.url}" type="{page.page_type}" status="{page.http_status}">'
+        )
         parts.append(f"      {signals}")
         parts.append("    </page>")
     parts.append("  </pages>")
 
     if crawl_result.crawl_errors:
-        parts.append(f"\n  <crawl_errors>{'; '.join(crawl_result.crawl_errors[:5])}</crawl_errors>")
+        parts.append(
+            f"\n  <crawl_errors>{'; '.join(crawl_result.crawl_errors[:5])}</crawl_errors>"
+        )
 
     parts.append("</crawl_data>")
-
-    parts.append("\nRun the full 9-category SEO audit on the above crawl data. "
-                 "Produce the AuditReport JSON with a complete html_report field.")
+    parts.append(
+        "\nRun the full 9-category SEO audit. "
+        "Produce the AuditReport JSON including a complete html_report field."
+    )
 
     return "\n".join(parts)
 
 
+def build_chat_seed_message(root_url: str, report_json: str) -> str:
+    """Seed message for Phase 3 — gives the chat session the audit context.
+
+    html_report is intentionally excluded: it is ~10-20KB of HTML the model
+    does not need to reason about when answering conversational questions.
+    """
+    return (
+        f"<audit_context>\n"
+        f"Site: {root_url}\n"
+        f"The initial SEO audit has been completed. "
+        f"Here is the structured report (excluding the html_report field):\n"
+        f"{report_json}\n"
+        f"</audit_context>\n\n"
+        f"The report has been delivered to the user. "
+        f"Please answer their follow-up questions or modify the report as requested."
+    )
+
+
+# ---------------------------------------------------------------------------
+# Signal serialisation
+# ---------------------------------------------------------------------------
+
 def _compact_signals(page: PageSignals) -> str:
-    """Compact JSON representation of page signals (keeps prompt size small)."""
-    # Internal links as [{url, anchor}] — agent needs anchor text for linking analysis
+    """Compact JSON of per-page signals. None values are dropped to save tokens."""
     int_links = [
         {"u": u, "a": a}
         for u, a in zip(page.internal_links[:20], page.internal_link_anchors[:20])
@@ -320,6 +352,4 @@ def _compact_signals(page: PageSignals) -> str:
         "ext_link_count": len(page.external_links),
         "lastmod": page.lastmod or None,
     }
-    # Remove None values to keep payload compact
-    d = {k: v for k, v in d.items() if v is not None}
-    return json.dumps(d, separators=(",", ":"))
+    return json.dumps({k: v for k, v in d.items() if v is not None}, separators=(",", ":"))

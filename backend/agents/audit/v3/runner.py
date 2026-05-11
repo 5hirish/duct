@@ -30,7 +30,12 @@ from time import perf_counter
 from typing import Any
 
 from agents.audit.events import AuditEvent, AuditStep, STEP_LABELS
-from agents.audit.prompts import build_audit_user_prompt, build_system_prompt
+from agents.audit.prompts import (
+    build_audit_system_prompt,
+    build_audit_user_prompt,
+    build_chat_seed_message,
+    build_chat_system_prompt,
+)
 from agents.audit.schema import (
     AuditBusinessContext,
     AuditReport,
@@ -54,7 +59,7 @@ _ANTHROPIC_MODEL_MAP: dict[ModelName, str] = {
 
 EmitFn = Callable[[dict[str, Any]], Awaitable[None]]
 
-# Module-level session registry (in-process only; not shared across workers)
+# Module-level session registry (in-process only; not shared across Railway instances)
 _sessions: dict[str, AuditSession] = {}
 
 
@@ -62,11 +67,31 @@ def get_session(session_id: str) -> AuditSession | None:
     return _sessions.get(session_id)
 
 
+def create_audit_session(session_id: str, agent_type: str = "seo-audit") -> AuditSession:
+    """Create and register a new AuditSession with both queues.
+
+    Call this before starting run_pipeline so the SSE stream endpoint
+    can connect to event_queue independently of when the pipeline starts.
+    """
+    import time
+    session = AuditSession(
+        session_id=session_id,
+        agent_type=agent_type,
+        event_queue=asyncio.Queue(),   # agent → SSE consumer
+        chat_queue=asyncio.Queue(),    # user messages → agent (Phase 3)
+        answer_future=None,
+        created_at=time.monotonic(),
+    )
+    _sessions[session_id] = session
+    return session
+
+
 def close_session(session_id: str) -> None:
     session = _sessions.pop(session_id, None)
-    if session and session.queue:
+    if session:
+        # Signal Phase 3 message generator to stop
         try:
-            session.queue.put_nowait(None)  # type: ignore[attr-defined]
+            session.chat_queue.put_nowait(None)  # type: ignore[attr-defined]
         except Exception:
             pass
 
@@ -228,18 +253,15 @@ async def run_synthesis(
     if api_key and not os.environ.get(env_var):
         os.environ[env_var] = api_key
 
-    # Create session (queue is for Phase 3 continued chat)
-    queue: asyncio.Queue = asyncio.Queue()
-    session = AuditSession(
-        session_id=session_id,
-        queue=queue,
-        answer_future=None,
-    )
-    _sessions[session_id] = session
+    # Session must already exist — created by create_audit_session() before run_pipeline()
+    session = _sessions.get(session_id)
+    if session is None:
+        logger.error("run_synthesis: session %s not found; creating fallback", session_id)
+        session = create_audit_session(session_id)
 
     initial_prompt = build_audit_user_prompt(crawl_result, business_context)
-    audit_system_prompt = build_system_prompt(is_continued=False)
-    chat_system_prompt = build_system_prompt(is_continued=True)
+    audit_system_prompt = build_audit_system_prompt()
+    chat_system_prompt = build_chat_system_prompt()
 
     # ------------------------------------------------------------------
     # Shared helpers
@@ -309,6 +331,13 @@ async def run_synthesis(
                 # StreamEvent — we don't forward the raw JSON tokens to the user
                 # but we could log progress here if needed
                 if isinstance(msg, StreamEvent):
+                    ev = msg.event
+                    if ev.get("type") == "content_block_delta":
+                        delta = ev.get("delta", {})
+                        if delta.get("type") == "text_delta":
+                            chunk = delta.get("text", "")
+                            if chunk:
+                                await emit({"event": AuditEvent.SYNTHESIS_CHUNK, "text": chunk})
                     continue
 
                 # ResultMessage — check for structured_output first, fall back to .result text
@@ -361,26 +390,25 @@ async def run_synthesis(
     # Phase 3 — continued chat session (no output_format; conversational)
     # ------------------------------------------------------------------
 
-    # Seed the chat session with the initial audit result so the agent has full context
-    seed_content = (
-        f"<initial_audit_context>\n"
-        f"The SEO audit for {crawl_result.plan.root_url} has been completed. "
-        f"Here is the full initial report:\n"
-        f"{initial_report.model_dump_json() if initial_report else 'Report generation failed.'}\n"
-        f"</initial_audit_context>\n\n"
-        f"You are now in continued-session mode. Answer follow-up questions, "
-        f"dive deeper into any finding, and update the report when the user asks. "
-        f"Wrap any updated report in <audit_report_update>...</audit_report_update> tags."
-    )
+    # Seed message: include the report without html_report — that field is 10-20KB of HTML
+    # the model doesn't need to reason about when answering conversational questions.
+    if initial_report:
+        report_without_html = initial_report.model_copy(update={"html_report": ""})
+        report_json = report_without_html.model_dump_json(exclude={"html_report"})
+    else:
+        report_json = "null"
+    seed_content = build_chat_seed_message(crawl_result.plan.root_url, report_json)
 
     async def chat_message_gen():
         # Seed message — gives the chat session full context of the initial audit
         yield {"type": "user", "message": {"role": "user", "content": seed_content}}
 
-        # Wait for chat messages from the queue
+        # Wait for chat messages from the session's chat_queue
         while True:
             try:
-                msg = await asyncio.wait_for(queue.get(), timeout=1800.0)
+                msg = await asyncio.wait_for(
+                    session.chat_queue.get(), timeout=1800.0  # type: ignore[attr-defined]
+                )
             except asyncio.TimeoutError:
                 logger.info("audit: session %s idle timeout", session_id)
                 break

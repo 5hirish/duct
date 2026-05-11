@@ -219,54 +219,72 @@ export async function generateReportStream(params, { onEvent, signal } = {}) {
 }
 
 // ---------------------------------------------------------------------------
-// SEO Audit API
+// Unified agent session API  (/api/agents)
 // ---------------------------------------------------------------------------
 
+/** List all available agent types. */
+export async function listAgents() {
+  const res = await fetch(`${BASE}/api/agents`, { headers: backendApiHeaders() });
+  if (!res.ok) throw new Error(`Failed to list agents: ${res.status}`);
+  return res.json();
+}
+
 /**
- * Start an audit session. Returns a ReadableStream (SSE).
- * The response header X-Audit-Session-Id contains the session ID.
+ * Create an agent session and start the pipeline.
+ * Returns { session_id, stream_url, agent_type }.
+ * Then connect to openAgentStream(agentType, sessionId) for SSE events.
  */
-export async function startAuditStream(params, { signal } = {}) {
-  const res = await fetch(`${BASE}/api/audit/run/stream`, {
+export async function createAgentSession(agentType, params) {
+  const res = await fetch(`${BASE}/api/agents/${encodeURIComponent(agentType)}/sessions`, {
     method: "POST",
     headers: backendApiHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify(params),
-    signal,
   });
   if (!res.ok) {
     const text = await res.text();
     throw new Error(text || `Server error ${res.status}`);
   }
-  const sessionId = res.headers.get("X-Audit-Session-Id");
-  return { sessionId, body: res.body };
+  return res.json(); // { session_id, stream_url, agent_type }
 }
 
-/** Submit AskUserQuestion answers. */
-export async function submitAuditAnswers(sessionId, answers) {
-  const res = await fetch(`${BASE}/api/audit/answer/${encodeURIComponent(sessionId)}`, {
-    method: "POST",
-    headers: backendApiHeaders({ "Content-Type": "application/json" }),
-    body: JSON.stringify({ answers }),
-  });
-  if (!res.ok) throw new Error(`Answer submit failed: ${res.status}`);
+/**
+ * Open the SSE stream for an active session.
+ * Returns the raw ReadableStream body — consume with a reader loop.
+ */
+export async function openAgentStream(agentType, sessionId, { signal } = {}) {
+  const url = `${BASE}/api/agents/${encodeURIComponent(agentType)}/sessions/${encodeURIComponent(sessionId)}/stream`;
+  const res = await fetch(url, { headers: backendApiHeaders(), signal });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || `Stream error ${res.status}`);
+  }
+  return res.body;
+}
+
+/**
+ * Send a message into an active agent session.
+ *
+ * type="chat"   — follow-up text or content blocks with images
+ * type="answer" — answer to a pending AskUserQuestion
+ */
+export async function sendAgentMessage(agentType, sessionId, message) {
+  // message: { type: "chat"|"answer", content?, context_version_id?, answers? }
+  const res = await fetch(
+    `${BASE}/api/agents/${encodeURIComponent(agentType)}/sessions/${encodeURIComponent(sessionId)}/messages`,
+    {
+      method: "POST",
+      headers: backendApiHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify(message),
+    }
+  );
+  if (!res.ok) throw new Error(`Message failed: ${res.status}`);
   return res.json();
 }
 
-/** Send a follow-up chat message (text or content blocks with images). */
-export async function sendAuditChat(sessionId, content, contextVersionId = null) {
-  const res = await fetch(`${BASE}/api/audit/chat/${encodeURIComponent(sessionId)}`, {
-    method: "POST",
-    headers: backendApiHeaders({ "Content-Type": "application/json" }),
-    body: JSON.stringify({ content, context_version_id: contextVersionId }),
-  });
-  if (!res.ok) throw new Error(`Chat send failed: ${res.status}`);
-  return res.json();
-}
-
-/** Close an audit session. */
-export async function closeAuditSession(sessionId) {
-  await fetch(`${BASE}/api/audit/session/${encodeURIComponent(sessionId)}`, {
-    method: "DELETE",
-    headers: backendApiHeaders(),
-  });
+/** Close an agent session and free server-side resources. */
+export async function closeAgentSession(agentType, sessionId) {
+  await fetch(
+    `${BASE}/api/agents/${encodeURIComponent(agentType)}/sessions/${encodeURIComponent(sessionId)}`,
+    { method: "DELETE", headers: backendApiHeaders() }
+  );
 }

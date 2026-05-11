@@ -28,6 +28,8 @@ class AuditEvent(StrEnum):
     AGENT_MESSAGE = "agent_message"
     MESSAGE_STOP = "message_stop"
 
+    SYNTHESIS_CHUNK = "synthesis_chunk"
+
 
 class AuditStep(StrEnum):
     """step_id values used in STEP_STARTED / STEP_FINISHED events."""

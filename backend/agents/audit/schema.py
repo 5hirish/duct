@@ -188,6 +188,9 @@ class VersionedReport:
 @dataclass
 class AuditSession:
     session_id: str
-    queue: object  # asyncio.Queue — typed as object to avoid import at module level
-    answer_future: object | None  # asyncio.Future | None
+    agent_type: str                       # e.g. "seo-audit"
+    event_queue: object                   # asyncio.Queue — agent → SSE consumer
+    chat_queue: object                    # asyncio.Queue — user messages → agent
+    answer_future: object | None          # asyncio.Future | None — for AskUserQuestion
+    created_at: float = 0.0              # time.monotonic() at creation
     report_versions: list[VersionedReport] = field(default_factory=list)

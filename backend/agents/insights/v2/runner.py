@@ -215,6 +215,7 @@ class AdkInsightsRunner:
         ga4_property_id: str = "",
         gsc_site_url: str = "",
         connected_sources: list[str] | None = None,
+        emit_event: Callable[..., Any] | None = None,
     ) -> tuple[dict[str, Any], SynthesisSchema | None]:
         """Run the full two-phase ADK pipeline.
 
@@ -284,12 +285,16 @@ class AdkInsightsRunner:
 
         start = perf_counter()
         try:
-            async for _ in runner.run_async(
+            async for event in runner.run_async(
                 user_id=_USER_ID,
                 session_id=session_id,
                 new_message=trigger,
             ):
-                pass
+                if emit_event and event.partial and event.content and event.content.parts:
+                    for part in event.content.parts:
+                        text = getattr(part, "text", None)
+                        if text:
+                            await emit_event({"event": "synthesis_chunk", "text": text})
         except Exception:
             logger.exception(
                 "v2 ADK pipeline failed with %s/%s",

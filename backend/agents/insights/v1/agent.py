@@ -256,6 +256,7 @@ class GenerateInsightsAgent:
         supplementary: dict[str, Any] | None = None,
         business_context: dict[str, Any] | None = None,
         mode: str = "paid_ads",
+        emit_event: Callable | None = None,
     ) -> SynthesisSchema:
         """Phase 2: Structured output from connector briefs + supplementary data.
 
@@ -284,9 +285,31 @@ class GenerateInsightsAgent:
 
         config = RunnableConfig(configurable={"thread_id": str(uuid.uuid4())})
         start = perf_counter()
+        result = None
         try:
-            final = await phase2_graph.ainvoke(initial_state, config=config)
-            result = final.get("synthesis_result")
+            if emit_event:
+                async for mode_key, data in phase2_graph.astream(
+                    initial_state, config, stream_mode=["messages", "updates"]
+                ):
+                    if mode_key == "messages":
+                        chunk, _meta = data
+                        content = getattr(chunk, "content", None)
+                        text = ""
+                        if isinstance(content, str):
+                            text = content
+                        elif isinstance(content, list):
+                            for item in content:
+                                if isinstance(item, dict) and item.get("type") == "text":
+                                    text += item.get("text", "")
+                        if text:
+                            await emit_event({"event": "synthesis_chunk", "text": text})
+                    elif mode_key == "updates" and isinstance(data, dict):
+                        for node_output in data.values():
+                            if isinstance(node_output, dict) and node_output.get("synthesis_result") is not None:
+                                result = node_output["synthesis_result"]
+            else:
+                final = await phase2_graph.ainvoke(initial_state, config=config)
+                result = final.get("synthesis_result")
         except Exception:
             logger.exception(
                 "Phase 2 graph failed with %s/%s, returning None",
