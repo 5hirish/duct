@@ -33,6 +33,7 @@ export default function AppNav() {
   const { user, signOut } = useAuth();
   const isConnections = pathname.startsWith("/connections");
   const isInsights = pathname.startsWith("/insights");
+  const isAudit = pathname.startsWith("/audit");
 
   const [engineKey, setEngineKey] = useState(DEFAULT_ENGINE);
   const [agentTypeKey, setAgentTypeKey] = useState(DEFAULT_AGENT_TYPE);
@@ -77,6 +78,9 @@ export default function AppNav() {
         </Button>
         <Button variant="ghost" size="sm" className={navPillClass(isInsights)} asChild>
           <Link href="/insights">Insights</Link>
+        </Button>
+        <Button variant="ghost" size="sm" className={navPillClass(isAudit)} asChild>
+          <Link href="/audit">SEO Audit</Link>
         </Button>
       </div>
 

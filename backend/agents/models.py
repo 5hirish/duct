@@ -1,4 +1,4 @@
-"""Provider and model enums with helper functions.
+"""Provider, model, and SDK tool enums with helper functions.
 
 Follows the nomadtools agents/models.py pattern for provider-agnostic
 model initialization via LangChain's init_chat_model().
@@ -6,7 +6,7 @@ model initialization via LangChain's init_chat_model().
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import Enum, StrEnum
 
 
 class Provider(str, Enum):
@@ -29,6 +29,31 @@ class ModelName(str, Enum):
     # Anthropic
     CLAUDE_SONNET = "claude-sonnet-4-6"
     CLAUDE_HAIKU = "claude-haiku-4-5-20251001"
+
+
+class AgentTool(StrEnum):
+    """Built-in Claude Agent SDK tool names passed to allowed_tools."""
+
+    ASK_USER_QUESTION = "AskUserQuestion"
+    TODO_WRITE = "TodoWrite"
+    AGENT = "Agent"
+    READ = "Read"
+    WRITE = "Write"
+    EDIT = "Edit"
+    BASH = "Bash"
+    GREP = "Grep"
+    GLOB = "Glob"
+    NOTEBOOK_EDIT = "NotebookEdit"
+
+
+class AgentPermissionMode(StrEnum):
+    """Claude Agent SDK permission_mode values for ClaudeAgentOptions."""
+
+    DEFAULT = "default"          # unmatched tools fall through to canUseTool
+    DONT_ASK = "dontAsk"         # unmatched tools are hard-denied; canUseTool skipped (except AskUserQuestion)
+    ACCEPT_EDITS = "acceptEdits" # file-edit tools auto-approved; others need canUseTool
+    BYPASS = "bypassPermissions" # all tools approved; use only in fully controlled environments
+    PLAN = "plan"                # read-only tools only; no file writes
 
 
 # Default provider → model mapping

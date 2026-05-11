@@ -217,3 +217,56 @@ export async function generateReportStream(params, { onEvent, signal } = {}) {
   if (finalPayload) return finalPayload;
   throw new Error("Stream ended before returning a final report payload.");
 }
+
+// ---------------------------------------------------------------------------
+// SEO Audit API
+// ---------------------------------------------------------------------------
+
+/**
+ * Start an audit session. Returns a ReadableStream (SSE).
+ * The response header X-Audit-Session-Id contains the session ID.
+ */
+export async function startAuditStream(params, { signal } = {}) {
+  const res = await fetch(`${BASE}/api/audit/run/stream`, {
+    method: "POST",
+    headers: backendApiHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify(params),
+    signal,
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || `Server error ${res.status}`);
+  }
+  const sessionId = res.headers.get("X-Audit-Session-Id");
+  return { sessionId, body: res.body };
+}
+
+/** Submit AskUserQuestion answers. */
+export async function submitAuditAnswers(sessionId, answers) {
+  const res = await fetch(`${BASE}/api/audit/answer/${encodeURIComponent(sessionId)}`, {
+    method: "POST",
+    headers: backendApiHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify({ answers }),
+  });
+  if (!res.ok) throw new Error(`Answer submit failed: ${res.status}`);
+  return res.json();
+}
+
+/** Send a follow-up chat message (text or content blocks with images). */
+export async function sendAuditChat(sessionId, content, contextVersionId = null) {
+  const res = await fetch(`${BASE}/api/audit/chat/${encodeURIComponent(sessionId)}`, {
+    method: "POST",
+    headers: backendApiHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify({ content, context_version_id: contextVersionId }),
+  });
+  if (!res.ok) throw new Error(`Chat send failed: ${res.status}`);
+  return res.json();
+}
+
+/** Close an audit session. */
+export async function closeAuditSession(sessionId) {
+  await fetch(`${BASE}/api/audit/session/${encodeURIComponent(sessionId)}`, {
+    method: "DELETE",
+    headers: backendApiHeaders(),
+  });
+}

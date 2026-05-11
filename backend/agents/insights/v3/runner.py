@@ -52,7 +52,7 @@ from agents.insights.schema import SynthesisSchema
 from agents.engines import Engine, get_env_var_for_engine_provider
 from agents.insights.tools import CONNECTOR_BY_TOOL, _register_default_tools
 from agents.insights.v2.schema_compat import parse_synthesis_from_text
-from agents.models import ModelName, Provider
+from agents.models import AgentPermissionMode, AgentTool, ModelName, Provider
 
 logger = logging.getLogger(__name__)
 
@@ -193,8 +193,8 @@ async def _run_synthesis(
     try:
         options = ClaudeAgentOptions(
             model=model_str,
-            permission_mode="dontAsk",
-            allowed_tools=["Agent"],
+            permission_mode=AgentPermissionMode.DONT_ASK,
+            allowed_tools=[AgentTool.AGENT],
             max_turns=5,
             system_prompt=_SYNTHESIS_ORCHESTRATOR_PROMPT,
             agents={
