@@ -89,7 +89,7 @@ build-backend = "poetry.core.masonry.api"
 ```
 
 Run with: `cd backend && poetry install`
-Dev server: `poetry run uvicorn server:app --reload --port 8000`
+Dev server: `poetry run uvicorn server:app --reload --port 8002`
 
 ---
 
@@ -258,11 +258,11 @@ class ReportRequest(BaseModel):
 - `GET /api/report/latest` — most recent `*.json` brief from `backend/data/google_ads/generated/`
 - `GET /health` — `{"status": "ok"}`
 
-**CORS:** `http://localhost:3000`
+**CORS:** `http://localhost:3003`
 
 **Credential fallback:** request body → `GOOGLE_ADS_*` env vars → `HTTPException(422)`
 
-**Run:** `cd backend && poetry run uvicorn server:app --reload --port 8000`
+**Run:** `cd backend && poetry run uvicorn server:app --reload --port 8002`
 
 ---
 
@@ -282,7 +282,7 @@ class ReportRequest(BaseModel):
 
 **States:** `idle | loading | success | error`
 
-**On submit:** POST to `http://localhost:8000/api/report/google-ads`
+**On submit:** POST to `http://localhost:8002/api/report/google-ads`
 
 **Rendering:**
 - Form always visible (re-run with different params)
@@ -299,7 +299,7 @@ Import `GoogleAdsReport` from `"../../components/GoogleAdsReport"`.
 ### 6. `app/src/lib/api.js`
 
 ```javascript
-const BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
+const BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8002";
 
 export async function runGoogleAdsReport(params) {
   const res = await fetch(`${BASE}/api/report/google-ads`, {
@@ -332,7 +332,7 @@ GOOGLE_ADS_CUSTOMER_ID=   # optional default (dashes OK)
 GEMINI_API_KEY=
 
 # Server
-PORT=8000
+PORT=8002
 ```
 
 ---
@@ -347,7 +347,7 @@ PORT=8000
 | `google-generativeai` is deprecated | Use `google-genai` (new SDK, `from google import genai`) |
 | Gemini structured output + tool calls conflict | Do not pass tool definitions — structured output only works without tools |
 | Thinking budget | Set `thinking_budget=1024` for light reasoning; use `0` to disable if too slow |
-| CORS in dev | `CORSMiddleware` allowing `localhost:3000` required |
+| CORS in dev | `CORSMiddleware` allowing `localhost:3003` required |
 | Demo report overwrite | Reports named `{customer_id}-{date_to}.json` — never collides with demo file |
 
 ---
@@ -368,9 +368,9 @@ PORT=8000
 
 1. `cd backend && poetry install`
 2. Copy `backend/.env.example` → `backend/.env`, add `GEMINI_API_KEY`
-3. `poetry run uvicorn server:app --reload --port 8000`
+3. `poetry run uvicorn server:app --reload --port 8002`
 4. `cd app && npm run dev`
-5. Go to `http://localhost:3000/run`
+5. Go to `http://localhost:3003/run`
 6. Click "Demo mode" — verify report renders end-to-end without credentials
 7. Fill in real Google Ads credentials + date range → submit
 8. Confirm `backend/data/google_ads/generated/{customer_id}-{date_to}.json` written

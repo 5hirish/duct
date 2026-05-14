@@ -308,6 +308,15 @@ async def run_synthesis(
     async def audit_message_gen():
         yield {"type": "user", "message": {"role": "user", "content": initial_prompt}}
 
+    # Shared env overrides for all SDK sessions in this runner.
+    # OTEL_SERVICE_NAME: tags traces/metrics as "duct-seo-audit" when OTEL is enabled via Railway env.
+    # ENABLE_PROMPT_CACHING_1H: extends prompt cache TTL from 5min → 1hr;
+    #   worth it here because the audit system prompt is ~2k tokens and stable across sessions.
+    _sdk_env = {
+        "OTEL_SERVICE_NAME": "duct-seo-audit",
+        "ENABLE_PROMPT_CACHING_1H": "1",
+    }
+
     audit_options = ClaudeAgentOptions(
         model=model_str,
         permission_mode=AgentPermissionMode.DONT_ASK,  # deny any tool not in allowed_tools; AskUserQuestion still routes through canUseTool
@@ -321,6 +330,7 @@ async def run_synthesis(
             "type": "json_schema",
             "schema": AuditReport.model_json_schema(),
         },
+        env=_sdk_env,
     )
 
     try:
@@ -425,6 +435,7 @@ async def run_synthesis(
         max_turns=50,
         system_prompt=chat_system_prompt,
         include_partial_messages=True,
+        env=_sdk_env,
         # No output_format — conversational responses
     )
 
@@ -475,6 +486,7 @@ async def run_synthesis(
                     for block in msg.content:
                         if _is_todo_write(block):
                             await emit({"event": AuditEvent.TODO_UPDATE, "todos": block.input.get("todos", [])})
+
 
     except Exception:
         logger.exception("audit v3: Phase 3 (chat) failed for session %s", session_id)

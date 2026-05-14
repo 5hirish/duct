@@ -58,7 +58,7 @@ User clicks "Connect Google Ads"
   → Google: user grants access
   → Google: redirects to /auth/google/callback?code=...&state=...
     → Backend: validate state (CSRF check), exchange code for tokens via google-auth-oauthlib
-    → Backend: redirect to http://localhost:3000/run#refresh_token=<token>
+    → Backend: redirect to http://localhost:3003/run#refresh_token=<token>
   → Frontend /run page: useEffect reads window.location.hash on mount
     → Store refresh_token in sessionStorage
     → Clear hash from URL bar (window.history.replaceState)
@@ -84,7 +84,7 @@ User clicks "Connect Google Ads"
 
 1. Google Cloud Console → APIs & Services → Credentials → Create OAuth 2.0 Client ID → type **Web application**
 2. Add authorized redirect URIs:
-   - `http://localhost:8000/auth/google/callback`
+   - `http://localhost:8002/auth/google/callback`
    - Production backend URL (when deployed)
 3. Enable **Google Ads API** in the project
 4. Note `client_id` and `client_secret` — these go in backend `.env` as `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET`
@@ -100,8 +100,8 @@ User clicks "Connect Google Ads"
    ```python
    GOOGLE_OAUTH_CLIENT_ID = os.environ.get("GOOGLE_OAUTH_CLIENT_ID", "")
    GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get("GOOGLE_OAUTH_CLIENT_SECRET", "")
-   GOOGLE_OAUTH_REDIRECT_URI = os.environ.get("GOOGLE_OAUTH_REDIRECT_URI", "http://localhost:8000/auth/google/callback")
-   FRONTEND_ORIGIN = os.environ.get("FRONTEND_ORIGIN", "http://localhost:3000")
+   GOOGLE_OAUTH_REDIRECT_URI = os.environ.get("GOOGLE_OAUTH_REDIRECT_URI", "http://localhost:8002/auth/google/callback")
+   FRONTEND_ORIGIN = os.environ.get("FRONTEND_ORIGIN", "http://localhost:3003")
    _oauth_states: dict[str, float] = {}  # state_token → timestamp, for CSRF
    ```
 
@@ -216,8 +216,8 @@ export async function fetchGoogleAdsAccounts(refreshToken) {
 ```
 GOOGLE_OAUTH_CLIENT_ID=<your-web-app-oauth-client-id>
 GOOGLE_OAUTH_CLIENT_SECRET=<your-web-app-oauth-client-secret>
-GOOGLE_OAUTH_REDIRECT_URI=http://localhost:8000/auth/google/callback
-FRONTEND_ORIGIN=http://localhost:3000
+GOOGLE_OAUTH_REDIRECT_URI=http://localhost:8002/auth/google/callback
+FRONTEND_ORIGIN=http://localhost:3003
 GOOGLE_ADS_DEVELOPER_TOKEN=<your-developer-token>
 ```
 
@@ -249,9 +249,9 @@ The existing `GOOGLE_ADS_CLIENT_ID`, `GOOGLE_ADS_CLIENT_SECRET`, `GOOGLE_ADS_REF
 
 ## Verification
 
-1. Start backend: `cd backend && uvicorn server:main --reload --port 8000`
+1. Start backend: `cd backend && uvicorn server:main --reload --port 8002`
 2. Start frontend: `cd app && npm run dev`
-3. Navigate to `http://localhost:3000/run`
+3. Navigate to `http://localhost:3003/run`
 4. Confirm "Connect Google Ads" button appears (not the old credential form)
 5. Click it — confirm redirect to Google consent screen
 6. Complete consent — confirm redirect back to `/run` with account dropdown populated

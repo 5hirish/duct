@@ -124,7 +124,7 @@ Three variants (CAC / ROAS / Pipeline) — same narrative as before; owner lines
 
 ## Verification
 
-1. Run `python3 -m http.server 8080` and open `http://localhost:8080/for-paid-ads-demo.html`
+1. Run `python3 -m http.server 8090` and open `http://localhost:8090/for-paid-ads-demo.html`
 2. Step through the demo (platforms + metric goal)
 3. Step 4: preview fade + "View full report →"
 4. Modal: light overlay + white sheet; header, hero + sparkline, ROAS bars, three KPI chips, two signals, expand third signal

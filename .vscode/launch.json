@@ -8,7 +8,7 @@
         "App: dev server"
       ],
       "stopAll": true,
-      "postDebugTask": "Backend: stop uvicorn (8000)"
+      "postDebugTask": "Backend: stop uvicorn (8002)"
     }
   ],
   "configurations": [
@@ -16,16 +16,16 @@
       "name": "Backend: FastAPI (uvicorn)",
       "type": "node-terminal",
       "request": "launch",
-      "command": "poetry run uvicorn server:app --reload --host 127.0.0.1 --port 8000",
+      "command": "poetry run uvicorn server:app --reload --host 127.0.0.1 --port 8002",
       "cwd": "${workspaceFolder}/backend"
     },
     {
       "name": "Backend: ADK web",
       "type": "node-terminal",
       "request": "launch",
-      "command": "poetry run adk web --host 127.0.0.1 --port 8001 agents",
+      "command": "poetry run adk web --host 127.0.0.1 --port 8003 agents",
       "cwd": "${workspaceFolder}/backend",
-      "postDebugTask": "Backend: stop ADK web (8001)"
+      "postDebugTask": "Backend: stop ADK web (8003)"
     },
     {
       "name": "App: dev server",
@@ -38,9 +38,9 @@
       "name": "Site: dev server",
       "type": "chrome",
       "request": "launch",
-      "url": "http://localhost:8080/",
-      "preLaunchTask": "Serve site on :8080",
-      "postDebugTask": "Site: stop dev server (8080)"
+      "url": "http://localhost:8090/",
+      "preLaunchTask": "Serve site on :8090",
+      "postDebugTask": "Site: stop dev server (8090)"
     },
     {
       "name": "Site: Playwright smoke tests",

@@ -41,6 +41,6 @@ Static multi-variant marketing site for [getduct.ai](https://getduct.ai). Follow
 
 ## Local dev
 
-- From the repo root: `python3 -m http.server 8080 --directory site`
-- Cursor/VS Code task **Serve site on :8080** runs `python3 dev_server.py --port 8080` inside `site/` for Cloudflare-style routing; only one server can bind **8080**—if you see address-in-use errors, stop the existing Python process before starting another.
-- Then open `http://localhost:8080/`
+- From the repo root: `python3 -m http.server 8090 --directory site`
+- Cursor/VS Code task **Serve site on :8090** runs `python3 dev_server.py --port 8090` inside `site/` for Cloudflare-style routing; only one server can bind **8090**—if you see address-in-use errors, stop the existing Python process before starting another.
+- Then open `http://localhost:8090/`

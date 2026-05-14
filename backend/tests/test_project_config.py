@@ -17,9 +17,9 @@ def _load_server_with_env():
     os.environ["GOOGLE_OAUTH_CLIENT_ID"] = "test-client-id"
     os.environ["GOOGLE_OAUTH_CLIENT_SECRET"] = "test-client-secret"
     os.environ["GOOGLE_OAUTH_REDIRECT_URI"] = (
-        "http://localhost:8000/auth/connectors/google_ads/oauth/callback"
+        "http://localhost:8002/auth/connectors/google_ads/oauth/callback"
     )
-    os.environ["FRONTEND_ORIGIN"] = "http://localhost:3000"
+    os.environ["FRONTEND_ORIGIN"] = "http://localhost:3003"
     os.environ["GOOGLE_ADS_DEVELOPER_TOKEN"] = "test-dev-token"
     os.environ["DUCT_API_KEY"] = TEST_DUCT_API_KEY
     os.environ.pop("GEMINI_API_KEY", None)

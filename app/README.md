@@ -17,7 +17,20 @@ npm install
 npm run dev
 ```
 
-Open: `http://localhost:3000/insights`
+Dev ports are **pinned** (not framework defaults) so they stay clear of other local stacks:
+
+| Surface | Port |
+| --- | --- |
+| Next.js (`npm run dev`) | **3003** |
+| FastAPI (`uvicorn` in `.vscode` / README-style commands) | **8002** |
+| ADK Web | **8003** |
+| Static site (`dev_server.py --port …`) | **8090** |
+
+Open the app: `http://localhost:3003/insights`
+
+If you set `NEXT_PUBLIC_APP_URL` for local builds, use `http://localhost:3003` so `metadataBase` matches the dev origin.
+
+For OAuth and CORS, set **`API_PUBLIC_URL`** / **`FRONTEND_ORIGIN`** in `backend/.env` or `backend/.env.local` to `http://localhost:8002` and `http://localhost:3003` respectively when developing against this stack (or override only in your local env). `NEXT_PUBLIC_API_BASE` should match the API origin (`http://localhost:8002` when unset in dev is handled in `src/lib/api.js`).
 
 ## Production (Cloudflare Workers)
 

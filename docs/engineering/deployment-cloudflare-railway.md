@@ -48,7 +48,7 @@ flowchart LR
   Worker -->|"NEXT_PUBLIC_API_BASE"| API
 ```
 
-The browser loads the Worker. Client-side API calls use [`app/src/lib/api.js`](../../app/src/lib/api.js): `NEXT_PUBLIC_API_BASE` (default `http://localhost:8000` in dev) must be the **public HTTPS URL** of the Railway service in production.
+The browser loads the Worker. Client-side API calls use [`app/src/lib/api.js`](../../app/src/lib/api.js): `NEXT_PUBLIC_API_BASE` (fallback `http://localhost:8002` in dev when unset) must be the **public HTTPS URL** of the Railway service in production.
 
 ---
 

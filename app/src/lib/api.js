@@ -7,7 +7,7 @@ const isProduction = process.env.NODE_ENV === "production";
  * This prevents silently sending real users to localhost when env vars are missing.
  */
 export const BASE =
-  normalizedConfiguredBase || (isProduction ? "" : "http://localhost:8000");
+  normalizedConfiguredBase || (isProduction ? "" : "http://localhost:8002");
 
 /** Must match backend DUCT_API_KEY. Prefer a Next server proxy in production so this is not public. */
 function backendApiHeaders(extra = {}) {

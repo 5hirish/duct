@@ -31,11 +31,11 @@ class Configs(BaseSettings):
     """
 
     # CORS / OAuth redirect target
-    frontend_origin: str = Field(default="http://localhost:3000")
+    frontend_origin: str = Field(default="http://localhost:3003")
 
     # Public origin of this API (scheme + host [+ port], no path). Used to build OAuth redirect
     # URIs when GOOGLE_OAUTH_REDIRECT_URI / GOOGLE_SIGNIN_REDIRECT_URI are unset.
-    api_public_url: str = Field(default="http://localhost:8000")
+    api_public_url: str = Field(default="http://localhost:8002")
 
     # Primary relational store for auth-first persistence.
     database_url: str = ""
@@ -136,7 +136,7 @@ class Configs(BaseSettings):
                 out[key] = val
         base_default = cls.model_fields["api_public_url"].default
         if not isinstance(base_default, str):
-            base_default = "http://localhost:8000"
+            base_default = "http://localhost:8002"
         raw_base = out.get("api_public_url")
         base = (raw_base if isinstance(raw_base, str) and raw_base else base_default).rstrip("/")
         out["api_public_url"] = base

@@ -3,7 +3,7 @@
 
 Examples:
   python3 dev_server.py
-  python3 dev_server.py --port 8080
+  python3 dev_server.py --port 8090
 """
 
 from __future__ import annotations
@@ -48,7 +48,7 @@ class CloudflarePagesDevHandler(SimpleHTTPRequestHandler):
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Serve the marketing site locally.")
     parser.add_argument("--host", default="127.0.0.1")
-    parser.add_argument("--port", type=int, default=8080)
+    parser.add_argument("--port", type=int, default=8090)
     return parser.parse_args()
 
 
