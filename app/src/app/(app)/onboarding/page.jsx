@@ -753,7 +753,7 @@ export default function OnboardingPage() {
               <Link href="/insights/generate">Go to Generate Insight</Link>
             </Button>
             <Button type="button" variant="outline" asChild>
-              <Link href="/insights">Back to Insights</Link>
+              <Link href="/insights/organic-growth">Back to Insights</Link>
             </Button>
           </div>
         </div>

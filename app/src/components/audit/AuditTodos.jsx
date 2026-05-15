@@ -9,8 +9,8 @@ const STATUS = {
     textCls: "line-through text-muted-foreground",
   },
   in_progress: {
-    icon: "⟳",
-    cls: "text-blue-500 animate-spin",
+    icon: null, // rendered as CSS spinner below
+    cls: "",
     textCls: "text-foreground font-medium",
   },
   pending: {
@@ -77,12 +77,11 @@ export default function AuditTodos({ todos }) {
                 : todo.content;
             return (
               <div key={i} className="flex items-start gap-2 text-xs">
-                <span
-                  className={`shrink-0 mt-0.5 ${s.cls} ${todo.status === "in_progress" ? "inline-block" : ""}`}
-                  style={todo.status === "in_progress" ? { animation: "spin 1s linear infinite" } : {}}
-                >
-                  {s.icon}
-                </span>
+                {todo.status === "in_progress" ? (
+                  <span className="inline-block size-2.5 shrink-0 mt-0.5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+                ) : (
+                  <span className={`shrink-0 mt-0.5 ${s.cls}`}>{s.icon}</span>
+                )}
                 <span className={s.textCls}>{label}</span>
               </div>
             );

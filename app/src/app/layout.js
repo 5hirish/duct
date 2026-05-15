@@ -4,6 +4,7 @@ import { DM_Sans, JetBrains_Mono } from "next/font/google";
 
 import { ProductAnalytics } from "../components/ProductAnalytics";
 import { ThemeProvider } from "../components/ThemeProvider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -89,22 +90,24 @@ export default function RootLayout({ children }) {
     >
       <body className="min-h-dvh bg-background font-sans text-foreground antialiased">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="duct-theme">
-          <a href="#main-content" className="skip-link">
-            Skip to main content
-          </a>
-          {shouldRenderNoScriptGtm ? (
-            <noscript>
-              <iframe
-                src={`https://www.googletagmanager.com/ns.html?id=${gtmId}`}
-                height="0"
-                width="0"
-                style={{ display: "none", visibility: "hidden" }}
-                title="Google Tag Manager"
-              />
-            </noscript>
-          ) : null}
-          <ProductAnalytics />
-          {children}
+          <TooltipProvider>
+            <a href="#main-content" className="skip-link">
+              Skip to main content
+            </a>
+            {shouldRenderNoScriptGtm ? (
+              <noscript>
+                <iframe
+                  src={`https://www.googletagmanager.com/ns.html?id=${gtmId}`}
+                  height="0"
+                  width="0"
+                  style={{ display: "none", visibility: "hidden" }}
+                  title="Google Tag Manager"
+                />
+              </noscript>
+            ) : null}
+            <ProductAnalytics />
+            {children}
+          </TooltipProvider>
         </ThemeProvider>
       </body>
     </html>

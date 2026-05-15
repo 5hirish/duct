@@ -96,6 +96,7 @@ def make_client() -> httpx.AsyncClient:
         timeout=_TIMEOUT,
         follow_redirects=True,
         max_redirects=5,
+        trust_env=False,  # don't inherit system proxy settings (e.g. Charles/SOCKS on dev)
     )
 
 

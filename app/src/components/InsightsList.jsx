@@ -137,7 +137,7 @@ export default function InsightsList({
         </p>
         {showGenerateButton && (
           <Button asChild>
-            <Link href={mode ? `/insights/generate?mode=${mode}` : "/insights/generate"}>Generate an insight</Link>
+            <Link href={mode ? `/insights/organic-growth/generate?mode=${mode}` : "/insights/organic-growth/generate"}>Generate an insight</Link>
           </Button>
         )}
       </div>
@@ -149,7 +149,7 @@ export default function InsightsList({
       {allInsights.map((insight) => (
         <Link
           key={insight.slug}
-          href={`/insights/${insight.slug}`}
+          href={`/insights/organic-growth/${insight.slug}`}
           className="group relative overflow-hidden flex flex-col justify-between min-h-24 rounded-3xl border border-border bg-card p-4 text-sm shadow-sm ring-1 ring-foreground/5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
           aria-label={insightCardAriaLabel(insight)}
           transitionTypes={REPORT_NAV_TRANSITION_TYPES}

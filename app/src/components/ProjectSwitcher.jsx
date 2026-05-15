@@ -46,7 +46,7 @@ export default function ProjectSwitcher() {
     setActiveProjectId(id);
     setActiveId(id);
     window.dispatchEvent(new Event("duct:project-changed"));
-    if (pathname?.startsWith("/insights")) {
+    if (pathname?.startsWith("/insights/organic-growth")) {
       router.refresh();
     }
   }

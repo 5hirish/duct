@@ -22,7 +22,6 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-import os
 import re
 from collections.abc import Callable, Awaitable
 from dataclasses import dataclass, field
@@ -249,9 +248,6 @@ async def run_synthesis(
     from claude_agent_sdk.types import HookMatcher, PermissionResultAllow, ResultMessage, StreamEvent
 
     env_var = get_env_var_for_engine_provider(Engine.V3, provider) or "ANTHROPIC_API_KEY"
-    original_key = os.environ.get(env_var)
-    if api_key and not os.environ.get(env_var):
-        os.environ[env_var] = api_key
 
     # Session must already exist — created by create_audit_session() before run_pipeline()
     session = _sessions.get(session_id)
@@ -308,14 +304,21 @@ async def run_synthesis(
     async def audit_message_gen():
         yield {"type": "user", "message": {"role": "user", "content": initial_prompt}}
 
-    # Shared env overrides for all SDK sessions in this runner.
-    # OTEL_SERVICE_NAME: tags traces/metrics as "duct-seo-audit" when OTEL is enabled via Railway env.
-    # ENABLE_PROMPT_CACHING_1H: extends prompt cache TTL from 5min → 1hr;
-    #   worth it here because the audit system prompt is ~2k tokens and stable across sessions.
-    _sdk_env = {
+    # Pass API key directly to the subprocess env rather than mutating os.environ.
+    # Mutating os.environ is not safe when multiple sessions run concurrently because
+    # one session's finally-block cleanup can remove the key before another session
+    # has spawned its subprocess.
+    _sdk_env: dict[str, str] = {
         "OTEL_SERVICE_NAME": "duct-audit-seo",
         "ENABLE_PROMPT_CACHING_1H": "1",
     }
+    if api_key:
+        _sdk_env[env_var] = api_key
+
+    # Capture subprocess stderr so the actual claude CLI error appears in server logs
+    # rather than only "Check stderr output for details".
+    def _on_subprocess_stderr(line: str) -> None:
+        logger.error("audit subprocess stderr [%s]: %s", session_id, line.rstrip())
 
     audit_options = ClaudeAgentOptions(
         model=model_str,
@@ -331,6 +334,7 @@ async def run_synthesis(
             "schema": AuditReport.model_json_schema(),
         },
         env=_sdk_env,
+        stderr=_on_subprocess_stderr,
     )
 
     try:
@@ -436,6 +440,7 @@ async def run_synthesis(
         system_prompt=chat_system_prompt,
         include_partial_messages=True,
         env=_sdk_env,
+        stderr=_on_subprocess_stderr,
         # No output_format — conversational responses
     )
 
@@ -490,11 +495,6 @@ async def run_synthesis(
 
     except Exception:
         logger.exception("audit v3: Phase 3 (chat) failed for session %s", session_id)
-    finally:
-        if original_key is None and env_var in os.environ:
-            del os.environ[env_var]
-        elif original_key is not None:
-            os.environ[env_var] = original_key
 
     return initial_report
 

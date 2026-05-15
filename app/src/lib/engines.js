@@ -28,7 +28,7 @@ export const ENGINES = [
   },
 ];
 
-export const DEFAULT_ENGINE = "v1";
+export const DEFAULT_ENGINE = "v3";
 export const ENGINE_STORAGE_KEY = "duct_engine";
 
 export function getEngine(key) {

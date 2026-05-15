@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef } from "react";
+import { Phase } from "./AuditWorkspace";
 
 function VersionSelector({ versions, selectedId, onSelect }) {
   if (!versions || versions.length === 0) return null;
@@ -13,7 +14,7 @@ function VersionSelector({ versions, selectedId, onSelect }) {
       <select
         value={selectedId ?? latest.version_id}
         onChange={e => onSelect(Number(e.target.value))}
-        className="rounded border border-input bg-background px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+        className="rounded border border-input bg-background pl-2 pr-7 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
       >
         {[...versions].reverse().map(v => (
           <option key={v.version_id} value={v.version_id}>
@@ -28,9 +29,9 @@ function VersionSelector({ versions, selectedId, onSelect }) {
   );
 }
 
-function ReportSkeleton() {
+function ReportSkeleton({ failed }) {
   return (
-    <div className="p-6 space-y-4 animate-pulse">
+    <div className={`p-6 space-y-4 ${failed ? "opacity-40" : "animate-pulse"}`}>
       <div className="h-6 bg-muted rounded w-1/3" />
       <div className="h-4 bg-muted rounded w-1/2" />
       <div className="grid grid-cols-3 gap-3 mt-4">
@@ -43,12 +44,14 @@ function ReportSkeleton() {
           <div key={i} className="h-12 bg-muted rounded" />
         ))}
       </div>
-      <p className="text-xs text-muted-foreground text-center mt-6">Agent is working…</p>
+      <p className={`text-xs text-center mt-6 ${failed ? "text-destructive/70" : "text-muted-foreground"}`}>
+        {failed ? "Report generation failed." : "Agent is working…"}
+      </p>
     </div>
   );
 }
 
-export default function AuditReport({ versions, selectedVersionId, onSelectVersion }) {
+export default function AuditReport({ phase, versions, selectedVersionId, onSelectVersion, errorMsg, onRetry }) {
   const iframeRef = useRef(null);
 
   const selectedVersion = versions?.find(v => v.version_id === selectedVersionId)
@@ -103,9 +106,7 @@ export default function AuditReport({ versions, selectedVersionId, onSelectVersi
 
       {/* Report content */}
       <div className="flex-1 overflow-hidden">
-        {!selectedVersion?.report?.html_report ? (
-          <ReportSkeleton />
-        ) : (
+        {selectedVersion?.report?.html_report ? (
           <iframe
             ref={iframeRef}
             srcDoc={selectedVersion.report.html_report}
@@ -113,6 +114,8 @@ export default function AuditReport({ versions, selectedVersionId, onSelectVersi
             title="SEO Audit Report"
             className="w-full h-full border-0"
           />
+        ) : (
+          <ReportSkeleton failed={phase === Phase.FAILED} />
         )}
       </div>
     </div>

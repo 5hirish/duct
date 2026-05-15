@@ -22,9 +22,13 @@ export default function AuditStepProgress({ steps }) {
     <div className="space-y-1 py-2">
       {steps.map((step) => (
         <div key={step.step_id} className="flex items-center gap-2 text-sm">
-          <span className={STATUS_STYLE[step.status] || "text-muted-foreground"}>
-            {step.status === "running" ? "⟳" : step.status === "success" ? "✓" : "✗"}
-          </span>
+          {step.status === "running" ? (
+            <span className="inline-block size-3 rounded-full border-2 border-blue-500 border-t-transparent animate-spin shrink-0" />
+          ) : (
+            <span className={STATUS_STYLE[step.status] || "text-muted-foreground"}>
+              {step.status === "success" ? "✓" : "✗"}
+            </span>
+          )}
           <span className={step.status === "running" ? "font-medium" : "text-muted-foreground"}>
             {STEP_LABELS[step.step_id] || step.label || step.step_id}
           </span>

@@ -5,6 +5,7 @@ import AuditStepProgress from "./AuditStepProgress";
 import AuditQuestions from "./AuditQuestions";
 import AuditInput from "./AuditInput";
 import AuditTodos from "./AuditTodos";
+import { Phase } from "./AuditWorkspace";
 
 function ChatBubble({ role, text, streaming }) {
   return (
@@ -27,16 +28,27 @@ function ChatBubble({ role, text, streaming }) {
   );
 }
 
+// Header status label per phase
+const PHASE_STATUS = {
+  [Phase.STARTING]:  { label: "Connecting…",      pulse: true  },
+  [Phase.PIPELINE]:  { label: "Running pipeline…", pulse: true  },
+  [Phase.QUESTIONS]: { label: "Waiting for you",   pulse: false },
+  [Phase.READY]:     { label: "Ready",              pulse: false },
+  [Phase.CHATTING]:  { label: "Thinking…",         pulse: true  },
+  [Phase.FAILED]:    { label: "Failed",             pulse: false },
+};
+
 export default function AuditChat({
-  messages,
+  phase,
   steps,
   todos,
+  messages,
   pendingQuestions,
-  sessionId,
+  hasReport,
+  errorMsg,
   onAnswerQuestions,
   onSendMessage,
-  agentBusy,
-  reportReady,
+  onRetry,
 }) {
   const bottomRef = useRef(null);
 
@@ -44,22 +56,38 @@ export default function AuditChat({
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, steps, pendingQuestions]);
 
+  const status = PHASE_STATUS[phase] ?? PHASE_STATUS[Phase.STARTING];
+  const isBusy = phase === Phase.STARTING || phase === Phase.PIPELINE || phase === Phase.CHATTING;
+  const isFailed = phase === Phase.FAILED;
+  const inputDisabled = isBusy || phase === Phase.QUESTIONS || isFailed;
+
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="border-b border-border/60 px-4 py-2 shrink-0">
+      <div className="flex items-center gap-2 border-b border-border/60 px-4 py-2 shrink-0">
         <span className="text-sm font-medium">Agent Chat</span>
-        {agentBusy && (
-          <span className="ml-2 text-xs text-muted-foreground animate-pulse">thinking…</span>
-        )}
+        <span
+          className={`text-xs ${isFailed ? "text-destructive" : "text-muted-foreground"} ${status.pulse ? "animate-pulse" : ""}`}
+        >
+          — {status.label}
+        </span>
       </div>
 
       {/* Sticky todo tracker */}
       <AuditTodos todos={todos} />
 
-      {/* Messages */}
+      {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1">
-        {/* Step progress */}
+
+        {/* Starting: spinner before first step arrives */}
+        {phase === Phase.STARTING && (
+          <div className="flex items-center gap-2 py-2 text-sm text-muted-foreground">
+            <span className="inline-block size-3 rounded-full border-2 border-current border-t-transparent animate-spin" />
+            Starting audit…
+          </div>
+        )}
+
+        {/* Step progress — always visible once steps arrive */}
         {steps.length > 0 && (
           <div className="mb-2">
             <AuditStepProgress steps={steps} />
@@ -72,15 +100,35 @@ export default function AuditChat({
         ))}
 
         {/* Clarifying questions */}
-        {pendingQuestions && pendingQuestions.length > 0 && (
+        {phase === Phase.QUESTIONS && pendingQuestions?.length > 0 && (
           <AuditQuestions
             questions={pendingQuestions}
             onSubmit={onAnswerQuestions}
-            disabled={agentBusy}
+            disabled={false}
           />
         )}
 
-        {reportReady && messages.length === 0 && (
+        {/* Error */}
+        {isFailed && (
+          <div className="mt-3 rounded-lg border border-destructive/30 bg-destructive/8 p-4">
+            <div className="flex items-start gap-3">
+              <span className="mt-0.5 text-destructive text-base leading-none">✕</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-destructive mb-1">Audit failed</p>
+                <p className="text-xs text-muted-foreground break-words leading-relaxed">{errorMsg}</p>
+              </div>
+            </div>
+            <button
+              onClick={onRetry}
+              className="mt-3 w-full rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive hover:bg-destructive/20 transition-colors"
+            >
+              ↺ Retry audit
+            </button>
+          </div>
+        )}
+
+        {/* Ready hint */}
+        {phase === Phase.READY && hasReport && messages.length === 0 && (
           <p className="text-xs text-muted-foreground text-center mt-4">
             Report ready. Ask a follow-up question to dive deeper, modify findings,
             or upload a screenshot for context.
@@ -91,10 +139,7 @@ export default function AuditChat({
       </div>
 
       {/* Input */}
-      <AuditInput
-        onSend={onSendMessage}
-        disabled={agentBusy || !!pendingQuestions}
-      />
+      <AuditInput onSend={onSendMessage} disabled={inputDisabled} />
     </div>
   );
 }

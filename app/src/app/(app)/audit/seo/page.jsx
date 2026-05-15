@@ -12,7 +12,7 @@ const CONTENT_TYPES = [
   { value: "docs", label: "Docs / Help" },
 ];
 
-export default function AuditSetupPage() {
+export default function SeoAuditSetupPage() {
   const router = useRouter();
   const [url, setUrl] = useState("");
   const [businessName, setBusinessName] = useState("");
@@ -45,11 +45,9 @@ export default function AuditSetupPage() {
         },
       };
 
-      // Client-side routing key only. The workspace page calls POST /api/agents/audit_seo/sessions
-      // on mount, gets the real backend session ID, then opens the SSE stream.
       const sessionId = crypto.randomUUID();
       sessionStorage.setItem(`audit_session_${sessionId}`, JSON.stringify(params));
-      router.push(`/audit/${sessionId}`);
+      router.push(`/audit/seo/${sessionId}`);
     } catch (err) {
       setError(err.message || "Failed to start audit.");
       setLoading(false);
@@ -67,7 +65,6 @@ export default function AuditSetupPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Required */}
         <div>
           <label className="block text-sm font-medium mb-1.5" htmlFor="url">
             Website URL <span className="text-destructive">*</span>
@@ -83,7 +80,6 @@ export default function AuditSetupPage() {
           />
         </div>
 
-        {/* Optional context */}
         <div className="rounded-lg border border-border/60 p-4 space-y-4">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
             Optional — improves report quality
@@ -111,7 +107,7 @@ export default function AuditSetupPage() {
                 id="content-type"
                 value={contentType}
                 onChange={e => setContentType(e.target.value)}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full rounded-md border border-input bg-background pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 {CONTENT_TYPES.map(ct => (
                   <option key={ct.value} value={ct.value}>{ct.label}</option>
@@ -177,9 +173,7 @@ export default function AuditSetupPage() {
           </div>
         </div>
 
-        {error && (
-          <p className="text-sm text-destructive">{error}</p>
-        )}
+        {error && <p className="text-sm text-destructive">{error}</p>}
 
         <Button type="submit" disabled={loading} className="w-full">
           {loading ? "Starting audit…" : "Run SEO Audit →"}

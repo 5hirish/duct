@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import AuditWorkspace from "../../../../components/audit/AuditWorkspace";
+import AuditWorkspace from "../../../../../components/audit/AuditWorkspace";
 
 export default function AuditSessionPage() {
   const { sessionId } = useParams();
@@ -20,8 +20,7 @@ export default function AuditSessionPage() {
         /* fall through */
       }
     }
-    // No stored params — redirect to setup (e.g. direct URL or page refresh)
-    router.replace("/audit");
+    router.replace("/audit/seo");
   }, [sessionId, router]);
 
   if (!params) {
@@ -32,5 +31,9 @@ export default function AuditSessionPage() {
     );
   }
 
-  return <AuditWorkspace sessionId={sessionId} auditParams={params} />;
+  return (
+    <div className="h-full">
+      <AuditWorkspace sessionId={sessionId} auditParams={params} />
+    </div>
+  );
 }

@@ -98,7 +98,7 @@ export default function LocalInsightDetail({ slug }) {
     return (
       <section>
         <p style={{ marginTop: 0, marginBottom: 10 }}>
-          <Link href="/insights" transitionTypes={REPORT_NAV_TRANSITION_TYPES}>
+          <Link href="/insights/organic-growth" transitionTypes={REPORT_NAV_TRANSITION_TYPES}>
             &larr; Back to insights
           </Link>
         </p>
@@ -165,7 +165,7 @@ export default function LocalInsightDetail({ slug }) {
   return (
     <section>
       <p style={{ marginTop: 0, marginBottom: 10 }}>
-        <Link href="/insights" transitionTypes={REPORT_NAV_TRANSITION_TYPES}>
+        <Link href="/insights/organic-growth" transitionTypes={REPORT_NAV_TRANSITION_TYPES}>
           &larr; Back to insights
         </Link>
       </p>

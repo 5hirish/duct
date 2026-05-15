@@ -41,9 +41,11 @@ selectolax = ">=0.3"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^9"
+pytest-asyncio = "^0.24"
 ruff = "^0.15"
 
 [tool.pytest.ini_options]
+asyncio_mode = "auto"
 filterwarnings = [
     # Starlette form parser; third-party until FastAPI/Starlette adopts python_multipart import.
     "ignore:Please use `import python_multipart` instead\\.:PendingDeprecationWarning",

@@ -125,7 +125,7 @@ export default function EngineDialog({ children }) {
       <DialogPrimitive.Trigger asChild>{children}</DialogPrimitive.Trigger>
       <DialogContent>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold tracking-tight">Inference Engine</h2>
+          <DialogPrimitive.Title className="text-base font-semibold tracking-tight">Inference Engine</DialogPrimitive.Title>
           <DialogPrimitive.Close asChild>
             <button
               className="rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground"

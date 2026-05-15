@@ -1755,7 +1755,7 @@ export default function GeneratePage() {
     });
     saveLocalInsight(slug, report, routine, getActiveProjectId() || null, activeMode);
     setSaved(true);
-    setTimeout(() => router.push("/insights"), 400);
+    setTimeout(() => router.push("/insights/organic-growth"), 400);
   }
 
   function handleRestart() {
@@ -1881,7 +1881,7 @@ export default function GeneratePage() {
           className="connection-back-btn shrink-0 rounded-full"
           asChild
         >
-          <Link href="/insights" aria-label="Back to Insights" title="Back to Insights">
+          <Link href="/insights/organic-growth" aria-label="Back to Insights" title="Back to Insights">
             <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
               <path
                 d="M15 18 9 12l6-6"
