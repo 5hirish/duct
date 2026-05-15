@@ -77,7 +77,7 @@ export default function AuditWorkspace({ sessionId, auditParams }) {
 
   // Backend session ID returned by POST /sessions
   const backendSessionIdRef = useRef(null);
-  const agentTypeRef = useRef("seo-audit");
+  const agentTypeRef = useRef("audit_seo");
 
   // Two-step start: create session (POST), then open SSE stream (GET)
   useEffect(() => {
@@ -87,7 +87,7 @@ export default function AuditWorkspace({ sessionId, auditParams }) {
     async function start() {
       try {
         // Step 1 — create session + start pipeline (returns immediately)
-        const { session_id, agent_type } = await createAgentSession("seo-audit", auditParams);
+        const { session_id, agent_type } = await createAgentSession("audit_seo", auditParams);
         backendSessionIdRef.current = session_id;
         agentTypeRef.current = agent_type;
 

@@ -13,6 +13,7 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
 
 from config import get_configs
+from service.auth_exchange import consume_exchange_code, store_exchange_code
 from service.google.oauth import create_google_signin_flow
 from service.oauthstate import cleanup_expired_states, consume_state, save_state
 from service.user_store import upsert_google_user
@@ -121,9 +122,8 @@ def signin_google_callback(
     try:
         flow.fetch_token(code=code)
     except Exception as exc:
-        raise HTTPException(
-            status_code=502, detail=f"OAuth token exchange failed: {exc}"
-        ) from exc
+        logger.exception("OAuth token exchange failed")
+        raise HTTPException(status_code=502, detail="OAuth token exchange failed.") from exc
 
     creds = flow.credentials
     if not creds or not creds.id_token:
@@ -141,9 +141,8 @@ def signin_google_callback(
                 str(creds.id_token), google_requests.Request(), get_configs().google_oauth_client_id
             )
         except Exception as exc:
-            raise HTTPException(
-                status_code=502, detail=f"Failed to verify ID token: {exc}"
-            ) from exc
+            logger.exception("Failed to verify Google ID token")
+            raise HTTPException(status_code=502, detail="Failed to verify ID token.") from exc
 
     provider_user_id = id_info.get("sub", "")
     email = id_info.get("email", "")
@@ -172,8 +171,27 @@ def signin_google_callback(
     try:
         token = _create_jwt(normalized_email, name, picture)
     except ValueError as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        logger.exception("JWT creation failed")
+        raise HTTPException(status_code=500, detail="Authentication error.") from exc
 
+    # C1 fix: deliver JWT via a short-lived exchange code so it never appears in
+    # the URL query string (browser history, server logs, Referer headers).
+    auth_code = store_exchange_code(token)
     cfg = get_configs()
-    redirect_url = f"{cfg.frontend_origin}/?token={quote(token, safe='')}"
+    redirect_url = f"{cfg.frontend_origin}/?auth_code={auth_code}"
     return _no_store_redirect(redirect_url, status_code=307)
+
+
+@router.get("/auth/exchange")
+def exchange_auth_code(code: str = Query(default="")) -> dict:
+    """Single-use endpoint: exchange a 60-second auth code for the JWT.
+
+    The frontend calls this immediately after the OAuth redirect, stores the
+    returned token in localStorage, then discards the code from the URL.
+    """
+    if not code:
+        raise HTTPException(status_code=400, detail="Missing auth code.")
+    token = consume_exchange_code(code)
+    if token is None:
+        raise HTTPException(status_code=400, detail="Invalid or expired auth code.")
+    return {"token": token}

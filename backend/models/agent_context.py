@@ -27,7 +27,7 @@ class AgentContext(SQLModel, table=True):
             ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True
         )
     )
-    # Human-readable internal agent identifier, e.g. 'seo-audit', 'paid-ads-insights'
+    # Human-readable internal agent identifier, e.g. 'audit_seo', 'insights'
     agent_id: str = Field(sa_column=Column(String, nullable=False))
     data: dict = Field(
         default_factory=dict,

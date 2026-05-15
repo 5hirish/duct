@@ -45,7 +45,7 @@ export default function AuditSetupPage() {
         },
       };
 
-      // Client-side routing key only. The workspace page calls POST /api/agents/seo-audit/sessions
+      // Client-side routing key only. The workspace page calls POST /api/agents/audit_seo/sessions
       // on mount, gets the real backend session ID, then opens the SSE stream.
       const sessionId = crypto.randomUUID();
       sessionStorage.setItem(`audit_session_${sessionId}`, JSON.stringify(params));

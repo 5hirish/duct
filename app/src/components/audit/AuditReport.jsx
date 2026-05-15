@@ -60,7 +60,7 @@ export default function AuditReport({ versions, selectedVersionId, onSelectVersi
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `seo-audit-v${selectedVersion.version_id}.html`;
+    a.download = `audit-seo-v${selectedVersion.version_id}.html`;
     a.click();
     URL.revokeObjectURL(url);
   }

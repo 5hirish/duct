@@ -71,12 +71,20 @@ function SignInContent() {
   }, []);
 
   useEffect(() => {
-    // Handle token from OAuth callback
-    const token = searchParams.get("token");
-    if (token) {
-      localStorage.setItem(TOKEN_KEY, token);
+    // Handle auth_code from OAuth callback — exchange it for the JWT server-side
+    // so the token itself never appears in the URL (browser history / Referer leak).
+    const authCode = searchParams.get("auth_code");
+    if (authCode) {
       window.history.replaceState({}, "", "/");
-      router.replace("/insights");
+      fetch(`${BASE}/auth/exchange?code=${encodeURIComponent(authCode)}`)
+        .then((r) => r.json())
+        .then(({ token }) => {
+          if (token) {
+            localStorage.setItem(TOKEN_KEY, token);
+            router.replace("/insights");
+          }
+        })
+        .catch(() => {});
       return;
     }
 

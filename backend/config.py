@@ -7,7 +7,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-from pydantic import AliasChoices, Field, model_validator
+from pydantic import AliasChoices, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _BACKEND_DIR = Path(__file__).resolve().parent
@@ -74,6 +74,10 @@ class Configs(BaseSettings):
     # Protects /api/* routes (header X-API-Key). Same value the Next app sends as X-API-Key.
     duct_api_key: str = ""
 
+    # Fernet key for encrypting connector refresh tokens at rest.
+    # Generate: python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+    credentials_encryption_key: str = ""
+
     # When false (default), FastAPI does not serve /openapi.json, /docs, or /redoc.
     expose_openapi_docs: bool = False
 
@@ -121,6 +125,13 @@ class Configs(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
     )
+
+    @field_validator("jwt_secret", mode="after")
+    @classmethod
+    def _jwt_secret_strength(cls, v: str) -> str:
+        if v and len(v) < 32:
+            raise ValueError("JWT_SECRET must be at least 32 characters.")
+        return v
 
     @model_validator(mode="before")
     @classmethod

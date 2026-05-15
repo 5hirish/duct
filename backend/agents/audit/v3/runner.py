@@ -67,7 +67,7 @@ def get_session(session_id: str) -> AuditSession | None:
     return _sessions.get(session_id)
 
 
-def create_audit_session(session_id: str, agent_type: str = "seo-audit") -> AuditSession:
+def create_audit_session(session_id: str, agent_type: str = "audit_seo") -> AuditSession:
     """Create and register a new AuditSession with both queues.
 
     Call this before starting run_pipeline so the SSE stream endpoint
@@ -313,7 +313,7 @@ async def run_synthesis(
     # ENABLE_PROMPT_CACHING_1H: extends prompt cache TTL from 5min → 1hr;
     #   worth it here because the audit system prompt is ~2k tokens and stable across sessions.
     _sdk_env = {
-        "OTEL_SERVICE_NAME": "duct-seo-audit",
+        "OTEL_SERVICE_NAME": "duct-audit-seo",
         "ENABLE_PROMPT_CACHING_1H": "1",
     }
 

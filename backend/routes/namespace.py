@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends
 
-from routes import agents, audit, auth, chat, connectors, generate, health, projects, reports, signin
+from routes import (
+    agents, audit, auth, chat, connectors, generate, health,
+    projects, reports, signin, user_connectors, user_contexts, user_projects,
+)
 from service.auth import validate_api_key
 
 router = APIRouter()
@@ -48,3 +51,7 @@ router.include_router(
     prefix="/api/agents",
     dependencies=[Depends(validate_api_key)],
 )
+# User-scoped endpoints — authenticated via Bearer JWT
+router.include_router(user_projects.router, prefix="/api/user/projects")
+router.include_router(user_contexts.router, prefix="/api/user/projects")
+router.include_router(user_connectors.router, prefix="/api/user/connectors")

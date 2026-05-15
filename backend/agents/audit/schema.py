@@ -188,7 +188,7 @@ class VersionedReport:
 @dataclass
 class AuditSession:
     session_id: str
-    agent_type: str                       # e.g. "seo-audit"
+    agent_type: str                       # e.g. "audit_seo"
     event_queue: object                   # asyncio.Queue — agent → SSE consumer
     chat_queue: object                    # asyncio.Queue — user messages → agent
     answer_future: object | None          # asyncio.Future | None — for AskUserQuestion

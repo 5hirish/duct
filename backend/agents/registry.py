@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field
 
 
 class AgentType(StrEnum):
-    SEO_AUDIT = "seo-audit"
+    SEO_AUDIT = "audit_seo"
     INSIGHTS = "insights"
     BLOG_WRITER = "blog-writer"     # future
     RESEARCH = "research"           # future
