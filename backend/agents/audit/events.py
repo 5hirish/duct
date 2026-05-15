@@ -28,7 +28,9 @@ class AuditEvent(StrEnum):
     AGENT_MESSAGE = "agent_message"
     MESSAGE_STOP = "message_stop"
 
-    SYNTHESIS_CHUNK = "synthesis_chunk"
+    SYNTHESIS_CHUNK = "synthesis_chunk"   # kept for backwards compat; no longer emitted
+
+    THINKING_CHUNK = "thinking_chunk"     # model extended-thinking delta
 
 
 class AuditStep(StrEnum):

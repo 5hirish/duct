@@ -342,7 +342,13 @@ async def _start_seo_audit(session_id: str, body: dict, emit_fn: Any) -> None:
     if not api_key:
         raise HTTPException(500, "ANTHROPIC_API_KEY is not configured.")
 
-    runner = ClaudeAuditRunner(api_key=api_key, provider=provider, model=model)
+    runner = ClaudeAuditRunner(
+        api_key=api_key,
+        provider=provider,
+        model=model,
+        effort=req.effort,
+        adaptive_thinking=req.adaptive_thinking,
+    )
 
     async def pipeline() -> None:
         try:

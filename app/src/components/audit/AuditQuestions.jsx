@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
 export default function AuditQuestions({ questions, onSubmit, disabled }) {
-  const [answers, setAnswers] = useState({});
+  const [answers, setAnswers]   = useState({});
   const [freeText, setFreeText] = useState({});
 
   function handleSelect(question, label) {
@@ -22,29 +22,42 @@ export default function AuditQuestions({ questions, onSubmit, disabled }) {
   function handleSubmit() {
     const resolved = {};
     for (const q of questions) {
-      const ans = freeText[q.question] || answers[q.question] || "";
-      resolved[q.question] = ans;
+      resolved[q.question] = freeText[q.question] || answers[q.question] || "";
     }
     onSubmit(resolved);
   }
 
-  const allAnswered = questions.every(q => {
+  function handleSkip() {
+    // Submit empty answers — Duct will use its best judgment from context
+    const resolved = {};
+    for (const q of questions) {
+      resolved[q.question] = "";
+    }
+    onSubmit(resolved);
+  }
+
+  const allAnswered = questions.every((q) => {
     const ans = answers[q.question];
     return ans && ans.trim() !== "";
   });
 
   return (
-    <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-4 my-3">
-      <p className="text-sm font-medium">
-        A few quick questions to improve your audit:
-      </p>
+    <div className="rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50/60 dark:bg-amber-950/20 p-4 space-y-4 my-3">
+      {/* Header */}
+      <div className="space-y-0.5">
+        <p className="text-sm font-semibold">One moment — Duct has a quick question</p>
+        <p className="text-xs text-muted-foreground">
+          Your answers sharpen the findings. Skip if you'd rather Duct decide.
+        </p>
+      </div>
 
+      {/* Questions */}
       {questions.map((q) => (
         <div key={q.question} className="space-y-2">
           <p className="text-sm font-medium">{q.question}</p>
           <div className="flex flex-wrap gap-2">
             {(q.options || []).map((opt) => {
-              const label = opt.label || opt;
+              const label    = opt.label || opt;
               const selected = answers[q.question] === label;
               return (
                 <button
@@ -81,7 +94,7 @@ export default function AuditQuestions({ questions, onSubmit, disabled }) {
               type="text"
               placeholder="Type your answer…"
               value={freeText[q.question] || ""}
-              onChange={e => handleFreeText(q.question, e.target.value)}
+              onChange={(e) => handleFreeText(q.question, e.target.value)}
               className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               autoFocus
             />
@@ -89,13 +102,24 @@ export default function AuditQuestions({ questions, onSubmit, disabled }) {
         </div>
       ))}
 
-      <Button
-        size="sm"
-        onClick={handleSubmit}
-        disabled={disabled || !allAnswered}
-      >
-        Continue audit →
-      </Button>
+      {/* Actions */}
+      <div className="flex items-center gap-2 pt-1">
+        <Button
+          size="sm"
+          onClick={handleSubmit}
+          disabled={disabled || !allAnswered}
+        >
+          Continue audit →
+        </Button>
+        <button
+          type="button"
+          onClick={handleSkip}
+          disabled={disabled}
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40"
+        >
+          Let Duct decide
+        </button>
+      </div>
     </div>
   );
 }

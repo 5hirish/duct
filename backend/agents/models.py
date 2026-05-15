@@ -36,6 +36,9 @@ class AgentTool(StrEnum):
 
     ASK_USER_QUESTION = "AskUserQuestion"
     TODO_WRITE = "TodoWrite"
+    FETCH_PAGES = "mcp__duct_crawl__FetchPages"   # in-process MCP tool: use namespaced format
+    WEB_SEARCH  = "WebSearch"         # SERP research, competitor discovery
+    WEB_FETCH   = "WebFetch"          # fetch arbitrary URLs (e.g. competitor pages)
     AGENT = "Agent"
     READ = "Read"
     WRITE = "Write"
@@ -54,6 +57,40 @@ class AgentPermissionMode(StrEnum):
     ACCEPT_EDITS = "acceptEdits" # file-edit tools auto-approved; others need canUseTool
     BYPASS = "bypassPermissions" # all tools approved; use only in fully controlled environments
     PLAN = "plan"                # read-only tools only; no file writes
+
+
+class ThinkingMode(StrEnum):
+    """Claude Agent SDK thinking type values for ClaudeAgentOptions.thinking.
+
+    Pass as ThinkingConfigAdaptive(type=ThinkingMode.ADAPTIVE) — using the enum
+    avoids bare string literals and ensures the SDK's TypedDict gets the required
+    'type' key (ThinkingConfigAdaptive() with no args produces {} which raises
+    KeyError: 'type' at CLI command build time).
+    """
+
+    ADAPTIVE = "adaptive"   # model decides thinking depth per turn
+    ENABLED  = "enabled"    # fixed budget_tokens; pair with ThinkingConfigEnabled
+    DISABLED = "disabled"   # no extended thinking
+
+
+class AgentEffort(StrEnum):
+    """Claude Agent SDK effort levels for ClaudeAgentOptions (v3 engine only).
+
+    Controls how hard the model works before responding. Maps to the Claude CLI
+    --effort flag introduced in claude-agent-sdk v0.1.36.
+
+    LOW    — fastest, cheapest; good for simple lookups
+    MEDIUM — balanced default
+    HIGH   — deeper reasoning; recommended for complex analysis (e.g. SEO audit)
+    XHIGH  — Opus 4.7-specific extended effort; falls back to HIGH on other models
+    MAX    — maximum effort; most expensive
+    """
+
+    LOW   = "low"
+    MEDIUM = "medium"
+    HIGH  = "high"
+    XHIGH = "xhigh"
+    MAX   = "max"
 
 
 # Default provider → model mapping

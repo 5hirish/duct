@@ -13,10 +13,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 _BACKEND_DIR = Path(__file__).resolve().parent
 
 
-def _settings_env_files() -> tuple[Path, ...] | None:
-    """Under pytest, skip dotenv so tests are not affected by developer `.env` / `.env.local`."""
-    if os.environ.get("PYTEST_VERSION"):
-        return None
+def _settings_env_files() -> tuple[Path, ...]:
+    """Return dotenv files to load. Always loaded — including under pytest —
+    so integration tests can use the same API keys as the running server."""
     return (
         _BACKEND_DIR / ".env",
         _BACKEND_DIR / ".env.local",
@@ -27,7 +26,6 @@ class Configs(BaseSettings):
     """Backend settings; all keys optional with defaults so imports work without a full `.env`.
 
     Loads `backend/.env` then `backend/.env.local` (later overrides; missing files are ignored).
-    Dotenv files are skipped when `PYTEST_VERSION` is set (pytest run).
     """
 
     # CORS / OAuth redirect target

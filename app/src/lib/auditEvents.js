@@ -18,6 +18,10 @@ export const AuditEvent = Object.freeze({
   AGENT_MESSAGE_CHUNK: "agent_message_chunk",
   AGENT_MESSAGE:       "agent_message",
   MESSAGE_STOP:        "message_stop",
+
+  SYNTHESIS_CHUNK:     "synthesis_chunk",   // legacy — no longer emitted
+
+  THINKING_CHUNK:      "thinking_chunk",    // extended-thinking delta
 });
 
 export const AuditStep = Object.freeze({

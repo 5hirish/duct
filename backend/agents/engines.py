@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from enum import Enum
 
-from agents.models import ModelName, Provider
+from agents.models import AgentEffort, ModelName, Provider
 
 
 class Engine(str, Enum):
@@ -73,6 +73,13 @@ ENGINE_PROVIDER_ENV_VAR: dict[Engine, dict[Provider, str]] = {
     Engine.V3: {
         Provider.ANTHROPIC: "ANTHROPIC_API_KEY",
     },
+}
+
+# Default effort level per engine (only meaningful for v3 / Claude Agent SDK)
+ENGINE_DEFAULT_EFFORT: dict[Engine, AgentEffort | None] = {
+    Engine.V1: None,
+    Engine.V2: None,
+    Engine.V3: AgentEffort.HIGH,
 }
 
 # Duct config attribute name → API key for each provider

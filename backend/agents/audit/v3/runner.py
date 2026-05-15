@@ -30,11 +30,10 @@ from typing import Any
 
 from agents.audit.events import AuditEvent, AuditStep, STEP_LABELS
 from agents.audit.prompts import (
-    build_audit_system_prompt,
     build_audit_user_prompt,
-    build_chat_seed_message,
-    build_chat_system_prompt,
+    build_unified_system_prompt,
 )
+from agents.audit.tools import build_audit_mcp_server
 from agents.audit.schema import (
     AuditBusinessContext,
     AuditReport,
@@ -43,7 +42,8 @@ from agents.audit.schema import (
     VersionedReport,
 )
 from agents.engines import Engine, get_env_var_for_engine_provider
-from agents.models import AgentPermissionMode, AgentTool, ModelName, Provider
+from agents.engines import ENGINE_DEFAULT_EFFORT, Engine
+from agents.models import AgentEffort, AgentPermissionMode, AgentTool, ModelName, Provider, ThinkingMode
 from service.crawl.extractor import extract_signals
 from service.crawl.fetcher import fetch_text, make_client
 from service.crawl.sitemap import fetch_crawl_plan
@@ -114,16 +114,21 @@ async def _fetch_and_extract(
 async def run_crawl(
     root_url: str,
     max_blog_posts: int = 5,
+    light: bool = False,
     emit: EmitFn | None = None,
 ) -> CrawlResult:
     async with make_client() as client:
         # Fetch sitemap + build plan
-        plan = await fetch_crawl_plan(client, root_url, max_blog_posts=max_blog_posts)
+        plan = await fetch_crawl_plan(client, root_url, max_blog_posts=max_blog_posts, light=light)
 
-        # Fetch robots.txt + llms.txt concurrently
+        # Fetch robots.txt + llms.txt concurrently.
+        # llms.txt may not exist; SPAs often return a 200 HTML page for unknown
+        # paths, so treat HTML responses as "not found" (empty string).
+        from service.crawl.sitemap import _is_html_body
         robots_coro = fetch_text(client, plan.robots_txt_url)
         llms_coro = fetch_text(client, plan.llms_txt_url)
-        (robots_text, _), (llms_text, _) = await asyncio.gather(robots_coro, llms_coro)
+        (robots_text, _), (llms_raw, _) = await asyncio.gather(robots_coro, llms_coro)
+        llms_text = "" if _is_html_body(llms_raw) else llms_raw
 
         # Crawl all pages concurrently
         all_urls = [
@@ -170,31 +175,58 @@ def _resolve_model(provider: Provider, model: ModelName) -> str:
 
 
 def _parse_report(text: str) -> AuditReport | None:
-    """Extract and parse AuditReport JSON from the agent's result text."""
+    """Extract and parse AuditReport JSON from agent output.
+
+    Tries several fallback strategies so partial/mis-escaped JSON still produces
+    a usable report:
+      1. Strip markdown fences and parse directly.
+      2. If parsing fails because html_report contains unescaped HTML (a known
+         model quirk), strip html_report from the JSON string, parse the rest,
+         then re-attach any HTML that was found separately.
+    """
     stripped = text.strip()
 
-    # Strip markdown fences if present
-    fenced = re.search(r"```(?:json)?\s*([\s\S]+?)\s*```", stripped)
+    # Strip markdown fences
+    fenced = re.search(r"```(?:json)?\s*([\s\S]+?)\s*```", stripped, re.DOTALL)
     if fenced:
         stripped = fenced.group(1).strip()
 
-    # Find JSON object boundaries
     start = stripped.find("{")
     end = stripped.rfind("}") + 1
     if start == -1 or end == 0:
-        logger.error("audit: no JSON object found in synthesis output")
+        logger.error("audit: no JSON object found in synthesis output (len=%d)", len(stripped))
         return None
 
+    candidate = stripped[start:end]
+
+    # Attempt 1: standard parse
     try:
-        return AuditReport.model_validate_json(stripped[start:end])
+        return AuditReport.model_validate_json(candidate)
+    except Exception:
+        pass
+
+    try:
+        return AuditReport.model_validate(json.loads(candidate))
     except Exception as exc:
-        logger.error("audit: AuditReport validation failed: %s", exc)
-        # Try relaxed parse
-        try:
-            raw = json.loads(stripped[start:end])
-            return AuditReport.model_validate(raw)
-        except Exception:
-            return None
+        logger.warning("audit: standard JSON parse failed (%s) — trying html_report strip", exc)
+
+    # Attempt 2: remove html_report field (it may contain unescaped HTML quotes)
+    # and parse the rest, then inject an empty html_report so the report is usable.
+    html_stripped = re.sub(
+        r',?\s*"html_report"\s*:\s*"(?:[^"\\]|\\.)*"',
+        '',
+        candidate,
+        flags=re.DOTALL,
+    )
+    try:
+        raw = json.loads(html_stripped)
+        raw.setdefault("html_report", "")
+        report = AuditReport.model_validate(raw)
+        logger.info("audit: parsed report after stripping html_report field")
+        return report
+    except Exception as exc2:
+        logger.error("audit: all parse attempts failed: %s", exc2)
+        return None
 
 
 def _is_todo_write(block: Any) -> bool:
@@ -225,89 +257,118 @@ async def run_synthesis(
     api_key: str,
     provider: Provider,
     emit: EmitFn,
-) -> AuditReport | None:
-    """Run Phase 2+3 via two separate ClaudeSDKClient sessions.
+    effort: AgentEffort = ENGINE_DEFAULT_EFFORT[Engine.V3],
+    adaptive_thinking: bool = True,
+    chat_idle_timeout: float = 1800.0,
+) -> tuple[AuditReport | None, bool]:  # (report, had_thinking)
+    """Single-session artifact pattern: generation + chat in one ClaudeSDKClient.
 
-    Phase 2 (initial audit):
-      - Uses output_format with AuditReport JSON schema for validated structured output.
-      - Uses AskUserQuestion for mid-run clarifications.
-      - include_partial_messages=True but text chunks are NOT streamed to the user
-        (the output is a JSON blob, not a conversational response).
+    The model produces a conversational analysis, then wraps the initial AuditReport
+    JSON in <duct_report>…</duct_report> tags. A streaming tag parser buffers the JSON
+    (keeping it out of the chat UI) and fires REPORT_UPDATED when the closing tag
+    arrives. All non-tag text is forwarded to the frontend as AGENT_MESSAGE_CHUNK.
+    Extended thinking tokens are forwarded as THINKING_CHUNK for the collapsible UI.
 
-    Phase 3 (continued chat):
-      - Separate ClaudeSDKClient session seeded with the initial report and Q&A context.
-      - include_partial_messages=True; text chunks ARE streamed as agent_message_chunk events.
-      - output_format is NOT set — responses are conversational. If the agent modifies
-        the report it wraps the JSON in <audit_report_update> tags.
-
-    Splitting the sessions is necessary because output_format applies session-wide: using it
-    in a single session would force all follow-up chat turns to return AuditReport JSON,
-    breaking conversational responses.
+    Subsequent chat turns continue in the same session (full context) and may produce
+    <audit_report_update> blocks for report versioning (existing pattern, unchanged).
     """
+    import shutil
     from claude_agent_sdk import ClaudeAgentOptions, ClaudeSDKClient
-    from claude_agent_sdk.types import HookMatcher, PermissionResultAllow, ResultMessage, StreamEvent
+    from claude_agent_sdk.types import HookMatcher, PermissionResultAllow, PermissionResultDeny, ResultMessage, StreamEvent, ThinkingConfigAdaptive
 
     env_var = get_env_var_for_engine_provider(Engine.V3, provider) or "ANTHROPIC_API_KEY"
 
-    # Session must already exist — created by create_audit_session() before run_pipeline()
     session = _sessions.get(session_id)
     if session is None:
         logger.error("run_synthesis: session %s not found; creating fallback", session_id)
         session = create_audit_session(session_id)
 
     initial_prompt = build_audit_user_prompt(crawl_result, business_context)
-    audit_system_prompt = build_audit_system_prompt()
-    chat_system_prompt = build_chat_system_prompt()
+    system_prompt = build_unified_system_prompt()
 
     # ------------------------------------------------------------------
-    # Shared helpers
+    # Helpers
     # ------------------------------------------------------------------
 
-    def _make_can_use_tool():
-        async def can_use_tool(tool_name: str, input_data: dict, context: Any) -> Any:
-            if tool_name != AgentTool.ASK_USER_QUESTION:
-                return PermissionResultAllow(updated_input=input_data)
-            loop = asyncio.get_event_loop()
-            fut: asyncio.Future = loop.create_future()
-            session.answer_future = fut  # type: ignore[assignment]
-            await emit({
-                "event": AuditEvent.QUESTIONS_REQUIRED,
-                "session_id": session_id,
-                "questions": input_data.get("questions", []),
-            })
-            try:
-                answers = await asyncio.wait_for(asyncio.shield(fut), timeout=120.0)
-            except asyncio.TimeoutError:
-                logger.warning("audit: AskUserQuestion timed out for session %s", session_id)
-                answers = {}
-            finally:
-                session.answer_future = None
-            return PermissionResultAllow(updated_input={
-                "questions": input_data.get("questions", []),
-                "answers": answers,
-            })
-        return can_use_tool
+    async def _can_use_tool(tool_name: str, input_data: dict, context: Any) -> Any:
+        # FetchPages is only useful after the initial report — block it until then
+        # to prevent the model from wasting all 60 turns on tool calls before
+        # generating the <duct_report> JSON.
+        # FetchPages: only after the initial report is generated
+        if tool_name == AgentTool.FETCH_PAGES:
+            if initial_report is None:
+                return PermissionResultDeny(
+                    message=(
+                        "FetchPages is only available after the initial report has been "
+                        "generated. Produce the <duct_report> JSON first, then use "
+                        "FetchPages to answer follow-up questions."
+                    )
+                )
+            return PermissionResultAllow(updated_input=input_data)
 
-    async def dummy_hook(input_data: dict, tool_use_id: str, context: Any) -> dict:
+        # WebFetch: redirect own-site URLs to FetchPages for richer structured signals
+        if tool_name == AgentTool.WEB_FETCH:
+            url = input_data.get("url", "")
+            from urllib.parse import urlparse as _parse
+            site_host = _parse(crawl_result.plan.root_url).netloc.lower().removeprefix("www.")
+            req_host  = _parse(url).netloc.lower().removeprefix("www.")
+            if req_host == site_host:
+                return PermissionResultDeny(
+                    message=(
+                        f"Use FetchPages(['{url}']) instead of WebFetch for pages on the "
+                        "audited site — it returns structured SEO signals and full body text."
+                    )
+                )
+            return PermissionResultAllow(updated_input=input_data)
+
+        if tool_name != AgentTool.ASK_USER_QUESTION:
+            return PermissionResultAllow(updated_input=input_data)
+        loop = asyncio.get_event_loop()
+        fut: asyncio.Future = loop.create_future()
+        session.answer_future = fut  # type: ignore[assignment]
+        await emit({
+            "event": AuditEvent.QUESTIONS_REQUIRED,
+            "session_id": session_id,
+            "questions": input_data.get("questions", []),
+        })
+        try:
+            answers = await asyncio.wait_for(asyncio.shield(fut), timeout=120.0)
+        except asyncio.TimeoutError:
+            logger.warning("audit: AskUserQuestion timed out for session %s", session_id)
+            answers = {}
+        finally:
+            session.answer_future = None
+        return PermissionResultAllow(updated_input={
+            "questions": input_data.get("questions", []),
+            "answers": answers,
+        })
+
+    async def _dummy_hook(input_data: dict, tool_use_id: str, context: Any) -> dict:
         return {"continue_": True}
 
-    hooks = {"PreToolUse": [HookMatcher(matcher=None, hooks=[dummy_hook])]}
+    hooks = {"PreToolUse": [HookMatcher(matcher=None, hooks=[_dummy_hook])]}
+
+    async def _emit_report_version(report: AuditReport, version_id: int) -> None:
+        if not report.update_label:
+            report.update_label = "Initial audit" if version_id == 1 else f"Update {version_id}"
+        versioned = VersionedReport(
+            version_id=version_id,
+            label=report.update_label,
+            report=report,
+            created_at=report.generated_at,
+        )
+        session.report_versions.append(versioned)
+        await emit({
+            "event": AuditEvent.REPORT_UPDATED,
+            "version_id": version_id,
+            "label": report.update_label,
+            "payload": report.model_dump(),
+        })
 
     # ------------------------------------------------------------------
-    # Phase 2 — initial audit with structured output
+    # SDK options
     # ------------------------------------------------------------------
 
-    initial_report: AuditReport | None = None
-    # Track Q&A exchanges so Phase 3 can be seeded with context
-    qa_context: list[dict] = []
-
-    async def audit_message_gen():
-        yield {"type": "user", "message": {"role": "user", "content": initial_prompt}}
-
-    # Pass API key directly to the subprocess env rather than mutating os.environ.
-    # Mutating os.environ is not safe when multiple sessions run concurrently because
-    # one session's finally-block cleanup can remove the key before another session
-    # has spawned its subprocess.
     _sdk_env: dict[str, str] = {
         "OTEL_SERVICE_NAME": "duct-audit-seo",
         "ENABLE_PROMPT_CACHING_1H": "1",
@@ -315,113 +376,49 @@ async def run_synthesis(
     if api_key:
         _sdk_env[env_var] = api_key
 
-    # Capture subprocess stderr so the actual claude CLI error appears in server logs
-    # rather than only "Check stderr output for details".
     def _on_subprocess_stderr(line: str) -> None:
         logger.error("audit subprocess stderr [%s]: %s", session_id, line.rstrip())
 
-    audit_options = ClaudeAgentOptions(
+    _cli_path = shutil.which("claude") or None
+    _mcp = build_audit_mcp_server(crawl_result)
+
+    options = ClaudeAgentOptions(
         model=model_str,
-        permission_mode=AgentPermissionMode.DONT_ASK,  # deny any tool not in allowed_tools; AskUserQuestion still routes through canUseTool
-        allowed_tools=[AgentTool.ASK_USER_QUESTION, AgentTool.TODO_WRITE],
-        can_use_tool=_make_can_use_tool(),
+        permission_mode=AgentPermissionMode.DONT_ASK,
+        allowed_tools=[
+            AgentTool.ASK_USER_QUESTION,
+            AgentTool.TODO_WRITE,
+            AgentTool.WEB_SEARCH,
+            AgentTool.WEB_FETCH,
+            AgentTool.FETCH_PAGES,  # mcp__duct_crawl__FetchPages — in-process MCP
+        ],
+        can_use_tool=_can_use_tool,
         hooks=hooks,
-        max_turns=10,
-        system_prompt=audit_system_prompt,
+        max_turns=60,
+        system_prompt=system_prompt,
         include_partial_messages=True,
-        output_format={
-            "type": "json_schema",
-            "schema": AuditReport.model_json_schema(),
-        },
+        thinking=ThinkingConfigAdaptive(type=ThinkingMode.ADAPTIVE) if adaptive_thinking else None,
+        effort=effort,
         env=_sdk_env,
         stderr=_on_subprocess_stderr,
+        setting_sources=[],
+        # sandbox intentionally omitted: the audit agent uses no Bash tools, so
+        # macOS seatbelt sandboxing adds no security value but causes the subprocess
+        # to exit with code 1 when launched from within a uvicorn server process.
+        cli_path=_cli_path,
+        mcp_servers={"duct_crawl": _mcp},
     )
 
-    try:
-        async with ClaudeSDKClient(audit_options) as client:
-            await client.query(audit_message_gen())
-
-            async for msg in client.receive_response():
-                # StreamEvent — we don't forward the raw JSON tokens to the user
-                # but we could log progress here if needed
-                if isinstance(msg, StreamEvent):
-                    ev = msg.event
-                    if ev.get("type") == "content_block_delta":
-                        delta = ev.get("delta", {})
-                        if delta.get("type") == "text_delta":
-                            chunk = delta.get("text", "")
-                            if chunk:
-                                await emit({"event": AuditEvent.SYNTHESIS_CHUNK, "text": chunk})
-                    continue
-
-                # ResultMessage — check for structured_output first, fall back to .result text
-                if isinstance(msg, ResultMessage):
-                    if msg.subtype == "error_max_structured_output_retries":
-                        logger.error("audit: structured output retries exceeded for session %s", session_id)
-                    elif msg.structured_output:
-                        try:
-                            initial_report = AuditReport.model_validate(msg.structured_output)
-                        except Exception as exc:
-                            logger.warning("audit: structured_output validation failed (%s), trying .result", exc)
-                            if msg.result:
-                                initial_report = _parse_report(msg.result)
-                    elif msg.result:
-                        initial_report = _parse_report(msg.result)
-                    break  # initial audit is single-turn; stop after first ResultMessage
-
-                # AssistantMessage — extract TodoWrite updates + accumulate Q&A context
-                if hasattr(msg, "content") and msg.content:
-                    for block in msg.content:
-                        if _is_todo_write(block):
-                            await emit({"event": AuditEvent.TODO_UPDATE, "todos": block.input.get("todos", [])})
-                    text_parts = [
-                        block.text for block in msg.content if hasattr(block, "text")
-                    ]
-                    if text_parts:
-                        qa_context.append({"role": "assistant", "content": "\n".join(text_parts)})
-
-    except Exception:
-        logger.exception("audit v3: Phase 2 (synthesis) failed for session %s", session_id)
-
-    if initial_report:
-        if not initial_report.update_label:
-            initial_report.update_label = "Initial audit"
-        versioned = VersionedReport(
-            version_id=1,
-            label=initial_report.update_label,
-            report=initial_report,
-            created_at=initial_report.generated_at,
-        )
-        session.report_versions.append(versioned)
-        await emit({
-            "event": AuditEvent.REPORT_UPDATED,
-            "version_id": 1,
-            "label": initial_report.update_label,
-            "payload": initial_report.model_dump(),
-        })
-
     # ------------------------------------------------------------------
-    # Phase 3 — continued chat session (no output_format; conversational)
+    # Message generator — initial prompt then chat queue
     # ------------------------------------------------------------------
 
-    # Seed message: include the report without html_report — that field is 10-20KB of HTML
-    # the model doesn't need to reason about when answering conversational questions.
-    if initial_report:
-        report_without_html = initial_report.model_copy(update={"html_report": ""})
-        report_json = report_without_html.model_dump_json(exclude={"html_report"})
-    else:
-        report_json = "null"
-    seed_content = build_chat_seed_message(crawl_result.plan.root_url, report_json)
-
-    async def chat_message_gen():
-        # Seed message — gives the chat session full context of the initial audit
-        yield {"type": "user", "message": {"role": "user", "content": seed_content}}
-
-        # Wait for chat messages from the session's chat_queue
+    async def message_gen():
+        yield {"type": "user", "message": {"role": "user", "content": initial_prompt}}
         while True:
             try:
                 msg = await asyncio.wait_for(
-                    session.chat_queue.get(), timeout=1800.0  # type: ignore[attr-defined]
+                    session.chat_queue.get(), timeout=chat_idle_timeout  # type: ignore[attr-defined]
                 )
             except asyncio.TimeoutError:
                 logger.info("audit: session %s idle timeout", session_id)
@@ -430,73 +427,164 @@ async def run_synthesis(
                 break
             yield {"type": "user", "message": msg}
 
-    chat_options = ClaudeAgentOptions(
-        model=model_str,
-        permission_mode=AgentPermissionMode.DONT_ASK,
-        allowed_tools=[AgentTool.ASK_USER_QUESTION, AgentTool.TODO_WRITE],
-        can_use_tool=_make_can_use_tool(),
-        hooks=hooks,
-        max_turns=50,
-        system_prompt=chat_system_prompt,
-        include_partial_messages=True,
-        env=_sdk_env,
-        stderr=_on_subprocess_stderr,
-        # No output_format — conversational responses
-    )
+    # ------------------------------------------------------------------
+    # Streaming tag parser state
+    # ------------------------------------------------------------------
+
+    # Tags the model uses for report JSON and standalone HTML.
+    # The HTML is in a separate tag so it never needs JSON-escaping.
+    _OPEN_TAG = "<duct_report>"
+    _CLOSE_TAG = "</duct_report>"
+    _HTML_OPEN = "<duct_html_report>"
+    _HTML_CLOSE = "</duct_html_report>"
+
+    _in_report_tag = False     # inside <duct_report> JSON block
+    _report_buf = ""
+    _in_html_tag = False       # inside <duct_html_report> raw HTML block
+    _html_buf = ""
+    _holdback = ""             # rolling prefix buffer to catch split open-tags
+    _turn_text: list[str] = []
+    had_thinking = False
+    initial_report: AuditReport | None = None
+
+    async def _flush_holdback() -> None:
+        """Emit any buffered prefix text that can't be part of a tag."""
+        nonlocal _holdback
+        if _holdback:
+            await emit({"event": AuditEvent.AGENT_MESSAGE_CHUNK, "text": _holdback})
+            _turn_text.append(_holdback)
+            _holdback = ""
+
+    async def _process_text(chunk: str) -> None:
+        """Route each text_delta chunk: buffer JSON/HTML tags, stream everything else."""
+        nonlocal _in_report_tag, _report_buf, _in_html_tag, _html_buf, _holdback
+
+        # --- inside <duct_report> JSON block ---
+        if _in_report_tag:
+            _report_buf += chunk
+            if _CLOSE_TAG in _report_buf:
+                json_part, _, after = _report_buf.partition(_CLOSE_TAG)
+                _in_report_tag = False
+                _report_buf = ""
+                report = _parse_report(json_part)
+                if report:
+                    nonlocal initial_report
+                    initial_report = report
+                    # Don't emit REPORT_UPDATED yet — wait for html_report from
+                    # <duct_html_report>. Emit when that tag closes, or at MESSAGE_STOP.
+                if after:
+                    await _process_text(after)
+            return
+
+        # --- inside <duct_html_report> raw HTML block ---
+        if _in_html_tag:
+            _html_buf += chunk
+            if _HTML_CLOSE in _html_buf:
+                html_part, _, after = _html_buf.partition(_HTML_CLOSE)
+                _in_html_tag = False
+                _html_buf = ""
+                if initial_report is not None and not initial_report.html_report:
+                    initial_report.html_report = html_part.strip()
+                    await _emit_report_version(initial_report, 1)
+                if after:
+                    await _process_text(after)
+            return
+
+        # --- not inside any tag: stream text, watch for opening tags ---
+        working = _holdback + chunk
+        _holdback = ""
+
+        # Check for any opening tag we care about
+        for open_tag, close_tag, set_in, set_buf in [
+            (_OPEN_TAG,   _CLOSE_TAG,  "_in_report_tag", "_report_buf"),
+            (_HTML_OPEN,  _HTML_CLOSE, "_in_html_tag",   "_html_buf"),
+        ]:
+            if open_tag in working:
+                before, _, after = working.partition(open_tag)
+                if before:
+                    await emit({"event": AuditEvent.AGENT_MESSAGE_CHUNK, "text": before})
+                    _turn_text.append(before)
+                if set_in == "_in_report_tag":
+                    _in_report_tag = True; _report_buf = after
+                else:
+                    _in_html_tag = True; _html_buf = after
+                # Whole tag might be in this chunk — recurse
+                await _process_text("")
+                return
+
+        # No opening tag found — hold back enough chars to catch a split tag
+        holdback_len = max(len(_OPEN_TAG), len(_HTML_OPEN)) - 1
+        if len(working) > holdback_len:
+            safe = working[:-holdback_len]
+            _holdback = working[-holdback_len:]
+            await emit({"event": AuditEvent.AGENT_MESSAGE_CHUNK, "text": safe})
+            _turn_text.append(safe)
+        else:
+            _holdback = working
+
+    # ------------------------------------------------------------------
+    # Main loop
+    # ------------------------------------------------------------------
 
     try:
-        async with ClaudeSDKClient(chat_options) as client:
-            await client.query(chat_message_gen())
-
-            current_chat_text: list[str] = []
+        async with ClaudeSDKClient(options) as client:
+            await client.query(message_gen())
 
             async for msg in client.receive_response():
-                # Stream text tokens in real-time for chat responses
                 if isinstance(msg, StreamEvent):
-                    event = msg.event
-                    if event.get("type") == "content_block_delta":
-                        delta = event.get("delta", {})
-                        if delta.get("type") == "text_delta":
+                    ev = msg.event
+                    ev_type = ev.get("type")
+
+                    if ev_type == "content_block_delta":
+                        delta = ev.get("delta", {})
+                        delta_type = delta.get("type")
+
+                        if delta_type == "thinking_delta":
+                            thinking_text = delta.get("thinking", "")
+                            if thinking_text:
+                                had_thinking = True
+                                await emit({"event": AuditEvent.THINKING_CHUNK, "text": thinking_text})
+
+                        elif delta_type == "text_delta":
                             chunk = delta.get("text", "")
                             if chunk:
-                                current_chat_text.append(chunk)
-                                await emit({"event": AuditEvent.AGENT_MESSAGE_CHUNK, "text": chunk})
-                    elif event.get("type") == "message_stop":
-                        # Full message is done — check for report update in accumulated text
-                        full_text = "".join(current_chat_text)
-                        current_chat_text.clear()
-                        updated = _extract_report_update(full_text)
-                        if updated:
-                            v_id = len(session.report_versions) + 1
-                            if not updated.update_label:
-                                updated.update_label = f"Update {v_id}"
-                            versioned = VersionedReport(
-                                version_id=v_id,
-                                label=updated.update_label,
-                                report=updated,
-                                created_at=updated.generated_at,
-                            )
-                            session.report_versions.append(versioned)
-                            await emit({
-                                "event": AuditEvent.REPORT_UPDATED,
-                                "version_id": v_id,
-                                "label": updated.update_label,
-                                "payload": updated.model_dump(),
-                            })
-                    continue
+                                await _process_text(chunk)
 
-                # AssistantMessage — extract TodoWrite updates
-                # (text is already streamed via StreamEvent above)
+                    elif ev_type == "message_stop":
+                        await _flush_holdback()
+                        full_text = "".join(_turn_text)
+                        _turn_text.clear()
+
+                        # If we parsed a JSON report but html_report hasn't arrived
+                        # yet (model didn't emit <duct_html_report> or did it inline),
+                        # emit REPORT_UPDATED now so the UI isn't left waiting.
+                        if initial_report is not None and len(session.report_versions) == 0:
+                            await _emit_report_version(initial_report, 1)
+
+                        # Chat turn: check for <audit_report_update> in full text
+                        if initial_report is not None and len(session.report_versions) >= 1:
+                            updated = _extract_report_update(full_text)
+                            if updated:
+                                # Carry over html_report from <duct_html_report> if present
+                                if not updated.html_report and _html_buf:
+                                    updated.html_report = _html_buf.strip()
+                                    _html_buf = ""
+                                v_id = len(session.report_versions) + 1
+                                await _emit_report_version(updated, v_id)
+
+                        await emit({"event": AuditEvent.MESSAGE_STOP})
+
+                    continue  # StreamEvent fully handled
+
                 if hasattr(msg, "content") and msg.content:
                     for block in msg.content:
                         if _is_todo_write(block):
                             await emit({"event": AuditEvent.TODO_UPDATE, "todos": block.input.get("todos", [])})
 
-
     except Exception:
-        logger.exception("audit v3: Phase 3 (chat) failed for session %s", session_id)
+        logger.exception("audit v3: run_synthesis failed for session %s", session_id)
 
-    return initial_report
+    return initial_report, had_thinking
 
 
 # ---------------------------------------------------------------------------
@@ -511,11 +599,15 @@ class ClaudeAuditRunner:
         api_key: str,
         provider: Provider = Provider.ANTHROPIC,
         model: ModelName = ModelName.CLAUDE_SONNET,
+        effort: AgentEffort = ENGINE_DEFAULT_EFFORT[Engine.V3],
+        adaptive_thinking: bool = True,
     ) -> None:
         self.provider = provider
         self.model = model
         self.model_str = _resolve_model(provider, model)
         self._api_key = api_key
+        self.effort = effort
+        self.adaptive_thinking = adaptive_thinking
 
     async def run_pipeline(
         self,
@@ -524,7 +616,10 @@ class ClaudeAuditRunner:
         business_context: AuditBusinessContext,
         emit: EmitFn,
         max_blog_posts: int = 5,
+        crawl_depth: str = "deep",
+        chat_idle_timeout: float = 1800.0,
     ) -> AuditReport | None:
+        from agents.audit.schema import CrawlDepth
         start = perf_counter()
 
         await emit({
@@ -533,15 +628,30 @@ class ClaudeAuditRunner:
             "label": STEP_LABELS[AuditStep.FETCH_SITEMAP],
             "status": "running",
         })
-        crawl_result = await run_crawl(url, max_blog_posts=max_blog_posts, emit=emit)
+        light = (crawl_depth == CrawlDepth.LIGHT)
+        crawl_result = await run_crawl(url, max_blog_posts=max_blog_posts, light=light, emit=emit)
+
+        _robots = crawl_result.robots_txt or ""
+        _llms   = crawl_result.llms_txt   or ""
         await emit({
             "event": AuditEvent.STEP_FINISHED,
             "step_id": AuditStep.FETCH_SITEMAP,
             "label": STEP_LABELS[AuditStep.FETCH_SITEMAP],
             "status": "success",
             "payload": {
-                "landing_pages": len(crawl_result.plan.landing_pages),
-                "blog_posts": len(crawl_result.plan.blog_posts),
+                "landing_pages":      len(crawl_result.plan.landing_pages),
+                "blog_posts":         len(crawl_result.plan.blog_posts),
+                "sitemap_url":        crawl_result.plan.sitemap_url,
+                "landing_page_urls":  crawl_result.plan.landing_pages,
+                "blog_post_urls":     crawl_result.plan.blog_posts,
+                "robots_txt_found":   bool(_robots),
+                "robots_txt_bytes":   len(_robots.encode()),
+                "robots_txt_lines":   _robots.count("\n") + 1 if _robots else 0,
+                "robots_txt_preview": _robots[:300],
+                "llms_txt_found":     bool(_llms),
+                "llms_txt_bytes":     len(_llms.encode()) if _llms else 0,
+                "llms_txt_lines":     _llms.count("\n") + 1 if _llms else 0,
+                "llms_txt_preview":   _llms[:300],
             },
         })
 
@@ -556,6 +666,33 @@ class ClaudeAuditRunner:
             "step_id": AuditStep.CRAWL_PAGES,
             "label": f"Crawled {len(crawl_result.pages)} pages",
             "status": "success",
+            "payload": {
+                "pages": [
+                    {
+                        "url":                    p.url,
+                        "page_type":              p.page_type,
+                        "http_status":            p.http_status,
+                        "word_count":             p.word_count_approx,
+                        "body_preview":           p.body_text_snippet,
+                        "title":                  p.title,
+                        "title_chars":            len(p.title),
+                        "meta_description":       p.meta_description,
+                        "meta_description_chars": len(p.meta_description),
+                        "images":                 p.image_count,
+                        "images_missing_alt":     p.images_missing_alt,
+                        "has_schema_org":         p.has_schema_org,
+                        "schema_types":           p.schema_types,
+                        "has_canonical":          bool(p.canonical),
+                        "canonical":              p.canonical,
+                        "is_noindex":             p.is_noindex,
+                        "hreflang_count":         len(p.hreflang_langs),
+                        "internal_links":         len(p.internal_links),
+                        "external_links":         len(p.external_links),
+                    }
+                    for p in crawl_result.pages
+                ],
+                "errors": crawl_result.crawl_errors,
+            },
         })
 
         await emit({
@@ -565,7 +702,7 @@ class ClaudeAuditRunner:
             "status": "running",
         })
 
-        report = await run_synthesis(
+        report, had_thinking = await run_synthesis(
             session_id=session_id,
             crawl_result=crawl_result,
             business_context=business_context,
@@ -573,6 +710,9 @@ class ClaudeAuditRunner:
             api_key=self._api_key,
             provider=self.provider,
             emit=emit,
+            effort=self.effort,
+            adaptive_thinking=self.adaptive_thinking,
+            chat_idle_timeout=chat_idle_timeout,
         )
 
         await emit({
@@ -580,6 +720,7 @@ class ClaudeAuditRunner:
             "step_id": AuditStep.SYNTHESIZE_AUDIT,
             "label": STEP_LABELS[AuditStep.SYNTHESIZE_AUDIT],
             "status": "success" if report else "error",
+            "payload": {"reasoned": had_thinking},
         })
 
         elapsed = perf_counter() - start

@@ -108,23 +108,57 @@ async def _fetch_all_entries(
     return _parse_urlset(text)
 
 
+def _bare_host(netloc: str) -> str:
+    """Strip www. prefix and port for same-origin comparison.
+
+    Allows matching when the root URL uses the apex domain but the sitemap
+    uses the www subdomain (or vice-versa), which is common on SPAs/CDNs.
+    """
+    return netloc.lower().removeprefix("www.").split(":")[0]
+
+
+def _is_html_body(text: str) -> bool:
+    """Return True if text looks like an HTML document rather than plain text."""
+    snippet = text.lstrip()[:100].lower()
+    return snippet.startswith("<!doctype html") or snippet.startswith("<html")
+
+
 async def fetch_crawl_plan(
     client: httpx.AsyncClient,
     root_url: str,
     max_blog_posts: int = MAX_BLOG_POSTS,
+    light: bool = False,
 ) -> CrawlPlan:
-    """Discover and classify pages from the site's sitemap."""
+    """Discover and classify pages from the site's sitemap.
+
+    light=True  → top 5 pages or 20% of sitemap entries, max 15 (for quick checks/tests).
+    light=False → full crawl up to MAX_LANDING_PAGES + max_blog_posts (default).
+    """
     parsed = urlparse(root_url)
     base = f"{parsed.scheme}://{parsed.netloc}"
+    root_bare = _bare_host(parsed.netloc)
 
     robots_url = urljoin(base, "/robots.txt")
     llms_txt_url = urljoin(base, "/llms.txt")
 
-    # Discover sitemap URL
+    # Discover sitemap URL — must be on the same domain as the input.
+    # Cross-domain sitemap references in robots.txt are ignored: the site may
+    # point to a sitemap they don't own (misconfiguration) and we must not
+    # crawl pages on a domain the user didn't ask to audit.
     robots_text, _ = await fetch_text(client, robots_url)
-    sitemap_url = _extract_sitemap_from_robots(robots_text, base)
+    robots_sitemap = _extract_sitemap_from_robots(robots_text, base)
+    if robots_sitemap and _bare_host(urlparse(robots_sitemap).netloc) == root_bare:
+        sitemap_url = robots_sitemap
+    else:
+        if robots_sitemap:
+            logger.info(
+                "sitemap in robots.txt (%s) is on a different domain than %s — ignoring",
+                robots_sitemap, root_bare,
+            )
+        sitemap_url = ""
+
     if not sitemap_url:
-        # Try common locations
+        # Try common locations on the input domain
         for candidate in ["/sitemap.xml", "/sitemap-index.xml", "/sitemap_index.xml"]:
             candidate_url = urljoin(base, candidate)
             _, status = await fetch_text(client, candidate_url)
@@ -138,11 +172,10 @@ async def fetch_crawl_plan(
 
     total = len(all_entries)
 
-    # Filter to same-origin AND publicly routable URLs only
-    # (guards against sitemap injection pointing at internal services)
+    # Filter: same domain as input (www variants allowed), publicly routable only.
     def _is_safe_entry(e: dict) -> bool:
         loc_netloc = urlparse(e["loc"]).netloc
-        if loc_netloc != parsed.netloc:
+        if _bare_host(loc_netloc) != root_bare:
             return False
         try:
             validate_public_url(e["loc"])
@@ -161,10 +194,15 @@ async def fetch_crawl_plan(
 
     # Sort blog posts by lastmod desc, take top N
     blog_entries.sort(key=lambda e: e.get("lastmod", ""), reverse=True)
-    selected_blogs = [_normalize_url(e["loc"]) for e in blog_entries[:max_blog_posts]]
 
-    # All landing pages, capped
-    selected_landings = [_normalize_url(e["loc"]) for e in landing_entries[:MAX_LANDING_PAGES]]
+    if light:
+        # Light pass: top 5 pages or 20% of total entries, whichever is smaller, max 15.
+        light_cap = min(5, max(1, int(total * 0.20)), 15)
+        selected_landings = [_normalize_url(e["loc"]) for e in landing_entries[:light_cap]]
+        selected_blogs = [_normalize_url(e["loc"]) for e in blog_entries[:1]]
+    else:
+        selected_landings = [_normalize_url(e["loc"]) for e in landing_entries[:MAX_LANDING_PAGES]]
+        selected_blogs = [_normalize_url(e["loc"]) for e in blog_entries[:max_blog_posts]]
 
     # Ensure root URL is included even if not in sitemap
     norm_root = _normalize_url(root_url)

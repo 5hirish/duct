@@ -7,6 +7,7 @@ import AppSidebar from "../../components/AppSidebar";
 import { AuthProvider, AuthGuard } from "../../lib/auth";
 import { migrateFromLegacyProfile } from "../../lib/projects";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { AuditNavProvider } from "../../lib/auditNavContext";
 
 // Routes whose main content must fill the remaining viewport (no scroll, no padding)
 const FULL_BLEED_PREFIXES = ["/audit/seo/"];
@@ -22,6 +23,7 @@ export default function AppLayout({ children }) {
   return (
     <AuthProvider>
       <AuthGuard>
+        <AuditNavProvider>
         <SidebarProvider>
           <AppSidebar />
           <SidebarInset
@@ -50,6 +52,7 @@ export default function AppLayout({ children }) {
             )}
           </SidebarInset>
         </SidebarProvider>
+        </AuditNavProvider>
       </AuthGuard>
     </AuthProvider>
   );

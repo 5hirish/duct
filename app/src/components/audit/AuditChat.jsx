@@ -1,28 +1,80 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import AuditStepProgress from "./AuditStepProgress";
 import AuditQuestions from "./AuditQuestions";
 import AuditInput from "./AuditInput";
 import AuditTodos from "./AuditTodos";
-import { Phase } from "./AuditWorkspace";
+import { Phase } from "./auditPhase";
 
-function ChatBubble({ role, text, streaming }) {
+function SendErrorBubble({ text, content, onRetry }) {
+  return (
+    <div className="flex justify-end mb-2">
+      <div className="max-w-[85%] space-y-1">
+        <div className="rounded-2xl rounded-br-sm px-3 py-2 text-sm bg-destructive/10 border border-destructive/30 text-destructive">
+          <p className="text-xs font-medium mb-0.5">Failed to send</p>
+          <p className="text-xs text-destructive/80">{text}</p>
+        </div>
+        {content && (
+          <button
+            onClick={() => onRetry(content)}
+            className="w-full text-xs text-right text-muted-foreground hover:text-foreground transition-colors pr-1"
+          >
+            ↺ Retry
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ThinkingBlock({ thinking, streaming }) {
+  const [expanded, setExpanded] = useState(false);
+  if (!thinking) return null;
+  return (
+    <div className="mb-1">
+      <button
+        onClick={() => setExpanded((x) => !x)}
+        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <span className="font-mono">{expanded ? "▾" : "▸"}</span>
+        <span>{expanded ? "Hide" : "Show"} reasoning{streaming ? "…" : ""}</span>
+      </button>
+      {expanded && (
+        <div className="mt-1 rounded-lg px-3 py-2 text-xs text-muted-foreground bg-muted/40 border border-border/40 italic whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto">
+          {thinking}
+          {streaming && (
+            <span className="inline-block w-0.5 h-3 bg-current ml-0.5 animate-pulse align-middle" />
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ChatBubble({ role, text, thinking, streaming }) {
   return (
     <div className={`flex ${role === "user" ? "justify-end" : "justify-start"} mb-2`}>
-      <div
-        className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm leading-relaxed ${
-          role === "user"
-            ? "bg-primary text-primary-foreground rounded-br-sm"
-            : "bg-muted text-foreground rounded-bl-sm"
-        }`}
-      >
-        <p className="whitespace-pre-wrap break-words">
-          {text}
-          {streaming && (
-            <span className="inline-block w-0.5 h-3.5 bg-current ml-0.5 animate-pulse align-middle" />
-          )}
-        </p>
+      <div className={`max-w-[85%] ${role !== "user" ? "space-y-0.5" : ""}`}>
+        {role !== "user" && (
+          <ThinkingBlock thinking={thinking} streaming={streaming && !text} />
+        )}
+        {(text || role === "user") && (
+          <div
+            className={`rounded-2xl px-3 py-2 text-sm leading-relaxed ${
+              role === "user"
+                ? "bg-primary text-primary-foreground rounded-br-sm"
+                : "bg-muted text-foreground rounded-bl-sm"
+            }`}
+          >
+            <p className="whitespace-pre-wrap break-words">
+              {text}
+              {streaming && text && (
+                <span className="inline-block w-0.5 h-3.5 bg-current ml-0.5 animate-pulse align-middle" />
+              )}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -48,6 +100,7 @@ export default function AuditChat({
   errorMsg,
   onAnswerQuestions,
   onSendMessage,
+  onRetrySend,
   onRetry,
 }) {
   const bottomRef = useRef(null);
@@ -64,10 +117,27 @@ export default function AuditChat({
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center gap-2 border-b border-border/60 px-4 py-2 shrink-0">
+      <div className={`flex items-center gap-2 border-b px-4 py-2 shrink-0 transition-colors ${
+        phase === Phase.QUESTIONS
+          ? "border-amber-400/70 bg-amber-50/60 dark:bg-amber-950/20"
+          : "border-border/60"
+      }`}>
         <span className="text-sm font-medium">Agent Chat</span>
+        {/* Fix 2 — pulsing attention dot when agent is waiting for user input */}
+        {phase === Phase.QUESTIONS && (
+          <span className="relative flex size-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+            <span className="relative inline-flex rounded-full size-2 bg-amber-500" />
+          </span>
+        )}
         <span
-          className={`text-xs ${isFailed ? "text-destructive" : "text-muted-foreground"} ${status.pulse ? "animate-pulse" : ""}`}
+          className={`text-xs ${
+            phase === Phase.QUESTIONS
+              ? "text-amber-600 dark:text-amber-400 font-medium"
+              : isFailed
+              ? "text-destructive"
+              : "text-muted-foreground"
+          } ${status.pulse && phase !== Phase.QUESTIONS ? "animate-pulse" : ""}`}
         >
           — {status.label}
         </span>
@@ -95,9 +165,13 @@ export default function AuditChat({
         )}
 
         {/* Chat messages */}
-        {messages.map((msg, i) => (
-          <ChatBubble key={i} role={msg.role} text={msg.text} streaming={msg.streaming} />
-        ))}
+        {messages.map((msg, i) =>
+          msg.role === "send_error" ? (
+            <SendErrorBubble key={i} text={msg.text} content={msg.content} onRetry={onRetrySend} />
+          ) : (
+            <ChatBubble key={i} role={msg.role} text={msg.text} thinking={msg.thinking} streaming={msg.streaming} />
+          )
+        )}
 
         {/* Clarifying questions */}
         {phase === Phase.QUESTIONS && pendingQuestions?.length > 0 && (
@@ -127,11 +201,10 @@ export default function AuditChat({
           </div>
         )}
 
-        {/* Ready hint */}
+        {/* Ready hint — only shown if no messages yet (e.g. report arrived without synthesis chunks) */}
         {phase === Phase.READY && hasReport && messages.length === 0 && (
-          <p className="text-xs text-muted-foreground text-center mt-4">
-            Report ready. Ask a follow-up question to dive deeper, modify findings,
-            or upload a screenshot for context.
+          <p className="text-sm text-center mt-6 px-2 py-3 rounded-lg bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800">
+            ✓ Report ready — ask me anything about the findings.
           </p>
         )}
 

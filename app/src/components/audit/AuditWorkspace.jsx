@@ -9,19 +9,12 @@ import {
   openAgentStream,
   sendAgentMessage,
 } from "../../lib/api";
-import { AuditEvent } from "../../lib/auditEvents";
+import { AuditEvent, AuditStep } from "../../lib/auditEvents";
+import { Phase } from "./auditPhase";
+import { useAuditNav } from "../../lib/auditNavContext";
 
-// ---------------------------------------------------------------------------
-// Phase enum — single source of truth for what the UI shows
-// ---------------------------------------------------------------------------
-export const Phase = {
-  STARTING:  "starting",   // connecting, before first SSE event
-  PIPELINE:  "pipeline",   // steps running
-  QUESTIONS: "questions",  // agent waiting for user answers
-  READY:     "ready",      // report done, chat open
-  CHATTING:  "chatting",   // user sent a message, waiting for reply
-  FAILED:    "failed",     // fatal error — show retry
-};
+// Re-export so consumers can import Phase from AuditWorkspace if they prefer
+export { Phase } from "./auditPhase";
 
 // ---------------------------------------------------------------------------
 // SSE helpers
@@ -72,6 +65,8 @@ const INITIAL_SPLIT = 50;
 // ---------------------------------------------------------------------------
 
 export default function AuditWorkspace({ sessionId, auditParams }) {
+  const { setIsAuditRunning } = useAuditNav();
+
   const [leftWidth, setLeftWidth] = useState(() => {
     if (typeof window !== "undefined") {
       return Number(localStorage.getItem("audit_split_w") || INITIAL_SPLIT);
@@ -98,6 +93,27 @@ export default function AuditWorkspace({ sessionId, auditParams }) {
   const agentTypeRef        = useRef("audit_seo");
   const dragging            = useRef(false);
   const containerRef        = useRef(null);
+
+  // Tell the nav bar whether to lock the back button
+  useEffect(() => {
+    const running = phase === Phase.STARTING || phase === Phase.PIPELINE;
+    setIsAuditRunning(running);
+  }, [phase, setIsAuditRunning]);
+
+  // Clear on unmount so the back button re-enables if the user navigates away
+  useEffect(() => {
+    return () => setIsAuditRunning(false);
+  }, [setIsAuditRunning]);
+
+  // ---------------------------------------------------------------------------
+  // Browser notification permission — request once on mount
+  // ---------------------------------------------------------------------------
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+  }, []);
 
   // ---------------------------------------------------------------------------
   // Retry
@@ -187,9 +203,26 @@ export default function AuditWorkspace({ sessionId, auditParams }) {
         );
         break;
 
+      // Thinking tokens from extended-thinking — accumulate into the current streaming bubble
+      case AuditEvent.THINKING_CHUNK:
+        setMessages((prev) => {
+          const last = prev[prev.length - 1];
+          if (last?.role === "assistant" && last.streaming)
+            return [...prev.slice(0, -1), { ...last, thinking: (last.thinking || "") + event.text }];
+          return [...prev, { role: "assistant", text: "", thinking: event.text, streaming: true }];
+        });
+        break;
+
+      // Fix 2 — browser notification + header pulse when agent needs input
       case AuditEvent.QUESTIONS_REQUIRED:
         setPendingQuestions(event.questions);
         setPhase(Phase.QUESTIONS);
+        if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+          new Notification("Duct — Your input is needed", {
+            body: "The agent has a question before continuing the audit.",
+            icon: "/favicon.ico",
+          });
+        }
         break;
 
       case AuditEvent.REPORT_UPDATED:
@@ -202,6 +235,19 @@ export default function AuditWorkspace({ sessionId, auditParams }) {
           return updated;
         });
         setSelectedVersionId(event.version_id);
+        // Close the last streaming bubble (if still open) + celebrate on initial report
+        setMessages((prev) => {
+          const withStreaming = prev[prev.length - 1]?.streaming
+            ? [...prev.slice(0, -1), { ...prev[prev.length - 1], streaming: false }]
+            : prev;
+          if (event.version_id === 1) {
+            return [...withStreaming, {
+              role: "assistant",
+              text: "✓ Your SEO report is ready! Review the score and findings in the panel on the right. Ask me anything about the results — I can explain findings, suggest fixes, or update the report.",
+            }];
+          }
+          return withStreaming;
+        });
         break;
 
       case AuditEvent.PIPELINE_FINISHED:
@@ -229,7 +275,22 @@ export default function AuditWorkspace({ sessionId, auditParams }) {
       case AuditEvent.PIPELINE_FAILED:
         pipelineEndedRef.current = true;
         setErrorMsg(event.error || "Audit pipeline failed.");
-        setPhase(Phase.FAILED);
+        if (reportReceivedRef.current) {
+          // Partial report exists — surface error inline, keep report panel intact
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "send_error",
+              text: event.error
+                ? `Pipeline stopped early: ${event.error} — your partial report is still available above.`
+                : "The pipeline ended unexpectedly. Your partial report is still available.",
+              content: null,
+            },
+          ]);
+          setPhase(Phase.READY);
+        } else {
+          setPhase(Phase.FAILED);
+        }
         break;
 
       case AuditEvent.TODO_UPDATE:
@@ -277,14 +338,23 @@ export default function AuditWorkspace({ sessionId, auditParams }) {
         answers,
       });
     } catch (err) {
-      setErrorMsg(err.message);
-      setPhase(Phase.FAILED);
+      // Restore questions so the user can retry — don't kill the session
+      setMessages((prev) => [
+        ...prev,
+        { role: "send_error", text: `Failed to submit answers: ${err.message || "network error"}. Please try again.`, content: null },
+      ]);
+      setPendingQuestions(answers); // restore so the form reappears
+      setPhase(Phase.QUESTIONS);
     }
   }
 
   async function handleSendMessage(content) {
     const text = typeof content === "string" ? content : "[image attached]";
-    setMessages((prev) => [...prev, { role: "user", text }]);
+    // Remove any previous inline send error before adding the new user message
+    setMessages((prev) => {
+      const cleaned = prev[prev.length - 1]?.role === "send_error" ? prev.slice(0, -1) : prev;
+      return [...cleaned, { role: "user", text }];
+    });
     setPhase(Phase.CHATTING);
     try {
       await sendAgentMessage(agentTypeRef.current, backendSessionIdRef.current, {
@@ -293,9 +363,17 @@ export default function AuditWorkspace({ sessionId, auditParams }) {
         context_version_id: selectedVersionId,
       });
     } catch (err) {
-      setErrorMsg(err.message);
-      setPhase(Phase.FAILED);
+      // Inline error — keep the report and chat intact, just flag the failed send
+      setMessages((prev) => [
+        ...prev,
+        { role: "send_error", text: err.message || "Failed to send message.", content },
+      ]);
+      setPhase(Phase.READY);
     }
+  }
+
+  function handleRetrySend(content) {
+    handleSendMessage(content);
   }
 
   // ---------------------------------------------------------------------------
@@ -341,19 +419,28 @@ export default function AuditWorkspace({ sessionId, auditParams }) {
           errorMsg={errorMsg}
           onAnswerQuestions={handleAnswerQuestions}
           onSendMessage={handleSendMessage}
+          onRetrySend={handleRetrySend}
           onRetry={handleRetry}
         />
       </div>
 
       <div
         onMouseDown={onMouseDownDivider}
-        className="w-1 shrink-0 cursor-col-resize bg-border/40 hover:bg-primary/30 transition-colors select-none"
         title="Drag to resize"
-      />
+        className="w-3 shrink-0 cursor-col-resize select-none flex items-center justify-center group"
+      >
+        <div className="w-px h-full bg-border/60 group-hover:bg-primary/30 transition-colors" />
+        <div className="absolute flex flex-col gap-[3px] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+          {[0,1,2,3,4].map((i) => (
+            <span key={i} className="block w-[3px] h-[3px] rounded-full bg-muted-foreground/50" />
+          ))}
+        </div>
+      </div>
 
       <div className="flex-1 flex flex-col overflow-hidden min-w-[280px]">
         <AuditReport
           phase={phase}
+          steps={steps}
           versions={reportVersions}
           selectedVersionId={selectedVersionId}
           onSelectVersion={setSelectedVersionId}

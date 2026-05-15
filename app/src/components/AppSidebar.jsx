@@ -18,6 +18,9 @@ import {
   Cpu,
   Sun,
   Moon,
+  Bell,
+  BellOff,
+  BellRing,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import {
@@ -184,6 +187,54 @@ function SidebarProjectSwitcher() {
 // User footer
 // ---------------------------------------------------------------------------
 
+function useNotificationPermission() {
+  const supported = typeof window !== "undefined" && "Notification" in window;
+  const [permission, setPermission] = useState(() =>
+    supported ? Notification.permission : "unsupported"
+  );
+
+  async function request() {
+    if (!supported || permission !== "default") return;
+    const result = await Notification.requestPermission();
+    setPermission(result);
+  }
+
+  return { permission, request };
+}
+
+function NotificationMenuItem() {
+  const { permission, request } = useNotificationPermission();
+
+  if (permission === "unsupported") return null;
+
+  const states = {
+    default:     { icon: Bell,     badge: "Off",      label: "Enable notifications", clickable: true  },
+    granted:     { icon: BellRing, badge: "On",       label: "Notifications",        clickable: false },
+    denied:      { icon: BellOff,  badge: "Blocked",  label: "Notifications",        clickable: false },
+  };
+  const { icon: Icon, badge, label, clickable } = states[permission] ?? states.default;
+
+  return (
+    <DropdownMenuItem
+      onClick={clickable ? request : undefined}
+      className={`flex items-center justify-between ${!clickable ? "cursor-default opacity-60" : ""}`}
+      title={permission === "denied" ? "Blocked in browser — open Site Settings to re-enable" : undefined}
+    >
+      <span className="flex items-center gap-2">
+        <Icon className="size-4" />
+        {label}
+      </span>
+      <span className={`rounded px-1.5 py-0.5 font-mono text-[10px] ${
+        permission === "granted"  ? "bg-green-500/15 text-green-600 dark:text-green-400" :
+        permission === "denied"   ? "bg-destructive/10 text-destructive" :
+                                    "bg-muted text-muted-foreground"
+      }`}>
+        {badge}
+      </span>
+    </DropdownMenuItem>
+  );
+}
+
 function SidebarUserFooter() {
   const { user, signOut } = useAuth();
   const { resolvedTheme, setTheme } = useTheme();
@@ -263,6 +314,7 @@ function SidebarUserFooter() {
             </span>
           </DropdownMenuItem>
         </EngineDialog>
+        <NotificationMenuItem />
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={signOut}>
           <LogOut className="size-4" />

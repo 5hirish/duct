@@ -8,6 +8,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from agents.models import AgentEffort
+
 
 class AuditCategory(StrEnum):
     TECHNICAL = "technical_foundation"
@@ -155,6 +157,17 @@ class AuditReport(BaseModel):
     html_report: str = ""
 
 
+class CrawlDepth(StrEnum):
+    """Controls how many pages the crawler fetches before synthesis.
+
+    LIGHT  — top 5 pages or 20% of sitemap URLs, whichever is smaller (max 15).
+             Good for quick checks and tests.
+    DEEP   — up to 30 landing pages + 5 blog posts (existing default).
+    """
+    LIGHT = "light"
+    DEEP  = "deep"
+
+
 class AuditRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -162,6 +175,9 @@ class AuditRequest(BaseModel):
     business_context: AuditBusinessContext = Field(default_factory=AuditBusinessContext)
     engine: str = ""
     max_blog_posts: int = Field(default=5, ge=1, le=10)
+    effort: AgentEffort = AgentEffort.MEDIUM
+    adaptive_thinking: bool = True
+    crawl_depth: CrawlDepth = CrawlDepth.DEEP
 
 
 class AuditAnswerRequest(BaseModel):
