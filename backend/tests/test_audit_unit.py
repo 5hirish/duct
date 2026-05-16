@@ -40,25 +40,22 @@ for _env_file in (ROOT / ".env", ROOT / ".env.local"):
 
 _FIXTURE_URL = "https://test.io/"
 
-# Minimal valid AuditReport JSON — html_report contains a small but complete HTML
-# document so tests can verify it survives the tag-parser unchanged.
-_REPORT = {
-    "url": _FIXTURE_URL,
-    "generated_at": "2026-05-15T00:00:00",
-    "update_label": "",
-    "overall_score": 72,
-    "category_summaries": [],
-    "findings": [],
-    "executive_summary": "Test summary.",
-    "top_priorities": [],
-    "html_report": (
-        "<!DOCTYPE html><html lang=\"en\"><head>"
-        "<meta charset=\"UTF-8\"><title>SEO Report</title>"
-        "<style>body{font-family:sans-serif;}</style></head>"
-        "<body><h1>SEO Report</h1><p>Overall score: 72</p></body></html>"
-    ),
-}
-_REPORT_JSON = json.dumps(_REPORT)
+# The <duct_report> tag now wraps HTML directly (not JSON).
+# This is the HTML artifact the model generates.
+_REPORT_HTML = (
+    "<!DOCTYPE html><html lang=\"en\"><head>"
+    "<meta charset=\"UTF-8\"><title>SEO Report</title>"
+    "<style>body{font-family:sans-serif;}</style></head>"
+    "<body><h1>SEO Audit</h1><p>Score: 72/100</p></body></html>"
+)
+
+# For update-tag tests we also need a v2 HTML
+_REPORT_V2_HTML = (
+    "<!DOCTYPE html><html lang=\"en\"><head>"
+    "<meta charset=\"UTF-8\"><title>SEO Report v2</title>"
+    "<style>body{font-family:sans-serif;}</style></head>"
+    "<body><h1>SEO Audit — Updated</h1><p>Score: 85/100</p></body></html>"
+)
 
 # Use the real SDK StreamEvent dataclass so isinstance checks in runner.py pass.
 from claude_agent_sdk.types import StreamEvent as _SDKStreamEvent  # noqa: E402
@@ -169,36 +166,21 @@ async def _run(stream_messages: list, close_on_report: bool = True):
 
 
 # ---------------------------------------------------------------------------
-# _parse_report() unit tests (no SDK involved)
+# HTML artifact extraction (no SDK involved)
 # ---------------------------------------------------------------------------
 
-def test_parse_report_valid_json():
-    from agents.audit.v3.runner import _parse_report
-    report = _parse_report(_REPORT_JSON)
-    assert report is not None
+def test_report_built_from_html():
+    """AuditReport is now built from raw HTML, not JSON parsing."""
+    from agents.audit.schema import AuditReport
+    report = AuditReport(
+        url=_FIXTURE_URL,
+        generated_at="2026-05-16T00:00:00",
+        html_report=_REPORT_HTML,
+        executive_summary="Strong fundamentals, critical title issue.",
+    )
     assert report.url == _FIXTURE_URL
-    assert report.overall_score == 72
-
-
-def test_parse_report_json_in_markdown_fence():
-    from agents.audit.v3.runner import _parse_report
-    fenced = f"```json\n{_REPORT_JSON}\n```"
-    report = _parse_report(fenced)
-    assert report is not None
-    assert report.overall_score == 72
-
-
-def test_parse_report_malformed_returns_none():
-    from agents.audit.v3.runner import _parse_report
-    assert _parse_report("not json at all") is None
-    assert _parse_report('{"url": "x"}') is None  # missing generated_at
-
-
-def test_parse_report_with_surrounding_text():
-    from agents.audit.v3.runner import _parse_report
-    text = f"Here is the report:\n{_REPORT_JSON}\nThat's it."
-    report = _parse_report(text)
-    assert report is not None
+    assert "<html" in report.html_report
+    assert report.executive_summary != ""
 
 
 # ---------------------------------------------------------------------------
@@ -208,7 +190,7 @@ def test_parse_report_with_surrounding_text():
 async def test_duct_report_tag_single_chunk():
     stream = [
         _text_delta("I analysed the site. "),
-        _text_delta(f"<duct_report>{_REPORT_JSON}</duct_report>"),
+        _text_delta(f"<duct_report>{_REPORT_HTML}</duct_report>"),
         _text_delta(" Report is ready."),
         _message_stop(),
     ]
@@ -223,8 +205,8 @@ async def test_duct_report_tag_single_chunk():
     assert "I analysed the site." in combined
     assert " Report is ready." in combined
 
-    # Raw JSON must NOT appear in chat chunks
-    assert _REPORT_JSON not in combined, "raw JSON leaked into AGENT_MESSAGE_CHUNK"
+    # HTML inside the tag must NOT appear in chat chunks
+    assert "<!DOCTYPE html>" not in combined, "raw HTML leaked into AGENT_MESSAGE_CHUNK"
 
     # REPORT_UPDATED must fire exactly once with version_id=1
     updates = [e for e in events if e.get("event") == "report_updated"]
@@ -246,7 +228,7 @@ async def test_duct_report_tag_single_chunk():
 
 async def test_duct_report_tag_split_across_chunks():
     # Split "<duct_report>" across three chunks to stress the holdback buffer
-    tag_parts = ["<duct_", "repo", f"rt>{_REPORT_JSON}</duct_report>"]
+    tag_parts = ["<duct_", "repo", f"rt>{_REPORT_HTML}</duct_report>"]
     stream = [
         _text_delta("Pre-tag text. "),
         *[_text_delta(p) for p in tag_parts],
@@ -260,12 +242,12 @@ async def test_duct_report_tag_split_across_chunks():
     combined = "".join(chunks)
     assert "Pre-tag text." in combined
     assert "<duct_" not in combined, "partial open tag leaked into chat stream"
-    assert _REPORT_JSON not in combined, "JSON leaked into chat stream"
+    assert _REPORT_HTML not in combined, "JSON leaked into chat stream"
 
 
 async def test_duct_report_close_tag_split():
     # Split "</duct_report>" across two chunks
-    json_part = _REPORT_JSON
+    json_part = _REPORT_HTML
     stream = [
         _text_delta(f"<duct_report>{json_part}</duct_rep"),
         _text_delta("ort> Post-tag text."),
@@ -286,7 +268,7 @@ async def test_thinking_chunks_forwarded():
     stream = [
         _thinking_delta("Let me think about the SEO issues..."),
         _thinking_delta(" Checking title length."),
-        _text_delta(f"<duct_report>{_REPORT_JSON}</duct_report>"),
+        _text_delta(f"<duct_report>{_REPORT_HTML}</duct_report>"),
         _message_stop(),
     ]
     report, had_thinking, events = await _run(stream)
@@ -302,7 +284,7 @@ async def test_thinking_chunks_forwarded():
 
 async def test_no_thinking_had_thinking_false():
     stream = [
-        _text_delta(f"<duct_report>{_REPORT_JSON}</duct_report>"),
+        _text_delta(f"<duct_report>{_REPORT_HTML}</duct_report>"),
         _message_stop(),
     ]
     _, had_thinking, events = await _run(stream)
@@ -317,7 +299,7 @@ async def test_no_thinking_had_thinking_false():
 
 async def test_message_stop_emitted_after_turn():
     stream = [
-        _text_delta(f"<duct_report>{_REPORT_JSON}</duct_report>"),
+        _text_delta(f"<duct_report>{_REPORT_HTML}</duct_report>"),
         _message_stop(),
     ]
     _, _, events = await _run(stream)
@@ -335,7 +317,7 @@ async def test_text_outside_tag_streamed_not_json():
     suffix = "Review the findings above."
     stream = [
         _text_delta(prefix),
-        _text_delta(f"<duct_report>{_REPORT_JSON}</duct_report>"),
+        _text_delta(f"<duct_report>{_REPORT_HTML}</duct_report>"),
         _text_delta(suffix),
         _message_stop(),
     ]
@@ -345,7 +327,7 @@ async def test_text_outside_tag_streamed_not_json():
     combined = "".join(chunks)
     assert prefix in combined
     assert suffix in combined
-    assert _REPORT_JSON not in combined
+    assert _REPORT_HTML not in combined
 
 
 # ---------------------------------------------------------------------------
@@ -355,7 +337,7 @@ async def test_text_outside_tag_streamed_not_json():
 async def test_session_close_terminates_cleanly():
     """close_session() in the emit callback must allow run_synthesis() to return."""
     stream = [
-        _text_delta(f"<duct_report>{_REPORT_JSON}</duct_report>"),
+        _text_delta(f"<duct_report>{_REPORT_HTML}</duct_report>"),
         _message_stop(),
     ]
     # close_on_report=True is the default — _run() already tests this
@@ -367,8 +349,6 @@ async def test_session_close_terminates_cleanly():
 # <audit_report_update> in a second chat turn
 # ---------------------------------------------------------------------------
 
-_REPORT_V2 = dict(_REPORT, overall_score=85, executive_summary="Updated summary.", update_label="Refined")
-_REPORT_V2_JSON = json.dumps(_REPORT_V2)
 
 async def test_audit_report_update_in_chat_turn():
     """
@@ -380,9 +360,9 @@ async def test_audit_report_update_in_chat_turn():
     # close_session() is called when v2 fires, which puts None in chat_queue
     # and allows message_gen to exit so run_synthesis() returns.
     stream = [
-        _text_delta(f"<duct_report>{_REPORT_JSON}</duct_report>"),
+        _text_delta(f"<duct_report>{_REPORT_HTML}</duct_report>"),
         _message_stop(),
-        _text_delta(f"Here is the refreshed report. <audit_report_update>{_REPORT_V2_JSON}</audit_report_update>"),
+        _text_delta(f"Here is the refreshed report. <audit_report_update>{_REPORT_V2_HTML}</audit_report_update>"),
         _message_stop(),
     ]
 
@@ -420,7 +400,8 @@ async def test_audit_report_update_in_chat_turn():
 
     v2 = next((e for e in updates if e.get("version_id") == 2), None)
     assert v2 is not None, "REPORT_UPDATED version_id=2 never fired"
-    assert v2["payload"]["overall_score"] == 85
+    assert "<html" in v2["payload"]["html_report"], "v2 html_report should be HTML"
+    assert "Updated" in v2["payload"]["html_report"]
 
 
 # ---------------------------------------------------------------------------

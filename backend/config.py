@@ -118,6 +118,12 @@ class Configs(BaseSettings):
     sentry_profile_lifecycle: str = "trace"
     sentry_enable_localhost: bool = False
 
+    # Claude Agent SDK built-in OpenTelemetry tracing.
+    # When sentry_dsn is set, OTEL endpoint + headers are derived automatically.
+    # Set sdk_otel_enabled=true to activate SDK-level traces (turns, tool calls,
+    # LLM request latencies) which appear in Sentry → Performance.
+    sdk_otel_enabled: bool = False
+
     model_config = SettingsConfigDict(
         env_file=_settings_env_files(),
         env_file_encoding="utf-8",
@@ -161,3 +167,39 @@ class Configs(BaseSettings):
 @lru_cache
 def get_configs() -> Configs:
     return Configs()
+
+
+def sentry_otel_env(cfg: Configs) -> dict[str, str]:
+    """Return OTEL env vars that route the Claude Agent SDK's built-in traces to Sentry.
+
+    The SDK subprocess inherits these; Sentry receives spans for every turn,
+    tool call, and LLM request with latencies and token counts.
+
+    DSN format:  https://<key>@o<org>.ingest[.region].sentry.io/<project>
+    OTLP format: https://o<org>.ingest[.region].sentry.io/api/<project>/integration/otlp/
+
+    Ref: https://docs.sentry.io/concepts/otlp/
+    """
+    import re
+
+    if not cfg.sdk_otel_enabled or not cfg.sentry_dsn:
+        return {}
+
+    m = re.match(
+        r"https://([^@]+)@(o\d+\.ingest(?:\.[^.]+)?\.sentry\.io)/(\d+)",
+        cfg.sentry_dsn.strip(),
+    )
+    if not m:
+        return {}
+
+    public_key, host, project_id = m.groups()
+    base_endpoint = f"https://{host}/api/{project_id}/integration/otlp/"
+
+    return {
+        "CLAUDE_CODE_ENABLE_TELEMETRY":        "1",
+        "CLAUDE_CODE_ENHANCED_TELEMETRY_BETA": "1",
+        "OTEL_SERVICE_NAME":                   cfg.app_env,
+        "OTEL_EXPORTER_OTLP_ENDPOINT":         base_endpoint,
+        "OTEL_EXPORTER_OTLP_HEADERS":          f"sentry sentry_key={public_key}",
+        "OTEL_EXPORTER_OTLP_PROTOCOL":         "http/protobuf",
+    }

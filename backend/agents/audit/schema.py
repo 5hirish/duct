@@ -11,38 +11,6 @@ from pydantic import BaseModel, ConfigDict, Field
 from agents.models import AgentEffort
 
 
-class AuditCategory(StrEnum):
-    TECHNICAL = "technical_foundation"
-    STRUCTURED_DATA = "structured_data"
-    EEAT = "eeat_signals"
-    GEO_AIO = "geo_aio"
-    ON_PAGE = "on_page_seo"
-    INTERNAL_LINKING = "internal_linking"
-    BLOG_STRATEGY = "blog_content_strategy"
-    OFF_PAGE = "off_page_authority"
-    OPEN_GRAPH = "open_graph_social"
-
-
-class Severity(StrEnum):
-    PASS = "pass"
-    WARN = "warn"
-    FAIL = "fail"
-    OPPORTUNITY = "opportunity"
-
-
-class AuditFinding(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    finding_id: str
-    category: AuditCategory
-    severity: Severity
-    title: str
-    detail: str
-    evidence: list[str] = Field(default_factory=list)
-    affected_urls: list[str] = Field(default_factory=list)
-    recommended_action: str = ""
-    effort: Literal["low", "medium", "high"] = "medium"
-    impact: Literal["low", "medium", "high"] = "medium"
 
 
 class PageSignals(BaseModel):
@@ -127,34 +95,19 @@ class AuditBusinessContext(BaseModel):
     primary_content_type: Literal["blog", "landing_pages", "product_pages", "docs", ""] = ""
 
 
-class CategorySummary(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    category: AuditCategory
-    weight_pct: int = 0       # category's % weight in overall score (1–25)
-    score: int = 0            # 0–100 for this category
-    weighted_contribution: int = 0  # score × weight_pct / 100, rounded
-    findings_count: int = 0
-    fail_count: int = 0
-    warn_count: int = 0
-    pass_count: int = 0
-    opportunity_count: int = 0
-
-
 class AuditReport(BaseModel):
-    """Top-level structured output from the synthesizer."""
+    """Artifact-pattern audit report: the HTML document IS the report.
 
-    model_config = ConfigDict(extra="forbid")
+    The model generates a full self-contained HTML document and streams it
+    inside <duct_report> tags. No JSON schema enforcement — the model writes
+    whatever it judges appropriate for the site.
+    """
 
     url: str
     generated_at: str
     update_label: str = ""
-    overall_score: int = 0
-    category_summaries: list[CategorySummary] = Field(default_factory=list)
-    findings: list[AuditFinding] = Field(default_factory=list)
-    executive_summary: str = ""
-    top_priorities: list[str] = Field(default_factory=list)
-    html_report: str = ""
+    executive_summary: str = ""   # text the model streamed before the HTML tag
+    html_report: str = ""         # full self-contained HTML document
 
 
 class CrawlDepth(StrEnum):
@@ -176,7 +129,7 @@ class AuditRequest(BaseModel):
     engine: str = ""
     max_blog_posts: int = Field(default=5, ge=1, le=10)
     effort: AgentEffort = AgentEffort.MEDIUM
-    adaptive_thinking: bool = True
+    adaptive_thinking: bool = False
     crawl_depth: CrawlDepth = CrawlDepth.DEEP
 
 

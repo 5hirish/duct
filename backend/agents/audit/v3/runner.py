@@ -238,15 +238,23 @@ def _is_todo_write(block: Any) -> bool:
     )
 
 
-def _extract_report_update(text: str) -> AuditReport | None:
-    """Extract AuditReport from <audit_report_update> tags in chat response."""
+def _extract_report_update(text: str, base: AuditReport | None = None) -> AuditReport | None:
+    """Extract updated HTML from <audit_report_update> tags in a chat turn."""
     match = re.search(
         r"<audit_report_update>\s*([\s\S]+?)\s*</audit_report_update>",
         text,
     )
     if not match:
         return None
-    return _parse_report(match.group(1))
+    from datetime import datetime, timezone
+    html = match.group(1).strip()
+    return AuditReport(
+        url=base.url if base else "",
+        generated_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        update_label="",
+        executive_summary="",
+        html_report=html,
+    )
 
 
 async def run_synthesis(
@@ -258,7 +266,7 @@ async def run_synthesis(
     provider: Provider,
     emit: EmitFn,
     effort: AgentEffort = ENGINE_DEFAULT_EFFORT[Engine.V3],
-    adaptive_thinking: bool = True,
+    adaptive_thinking: bool = False,
     chat_idle_timeout: float = 1800.0,
 ) -> tuple[AuditReport | None, bool]:  # (report, had_thinking)
     """Single-session artifact pattern: generation + chat in one ClaudeSDKClient.
@@ -369,9 +377,15 @@ async def run_synthesis(
     # SDK options
     # ------------------------------------------------------------------
 
+    from config import get_configs, sentry_otel_env
+    _cfg = get_configs()
+
     _sdk_env: dict[str, str] = {
         "OTEL_SERVICE_NAME": "duct-audit-seo",
         "ENABLE_PROMPT_CACHING_1H": "1",
+        # Sentry OTLP tracing — spans for every turn, tool call, LLM request.
+        # Activated only when sdk_otel_enabled=true + sentry_dsn is set.
+        **sentry_otel_env(_cfg),
     }
     if api_key:
         _sdk_env[env_var] = api_key
@@ -431,24 +445,18 @@ async def run_synthesis(
     # Streaming tag parser state
     # ------------------------------------------------------------------
 
-    # Tags the model uses for report JSON and standalone HTML.
-    # The HTML is in a separate tag so it never needs JSON-escaping.
+    # Report JSON tag — HTML is generated on demand, not during initial synthesis.
     _OPEN_TAG = "<duct_report>"
     _CLOSE_TAG = "</duct_report>"
-    _HTML_OPEN = "<duct_html_report>"
-    _HTML_CLOSE = "</duct_html_report>"
 
-    _in_report_tag = False     # inside <duct_report> JSON block
+    _in_report_tag = False
     _report_buf = ""
-    _in_html_tag = False       # inside <duct_html_report> raw HTML block
-    _html_buf = ""
-    _holdback = ""             # rolling prefix buffer to catch split open-tags
+    _holdback = ""
     _turn_text: list[str] = []
     had_thinking = False
     initial_report: AuditReport | None = None
 
     async def _flush_holdback() -> None:
-        """Emit any buffered prefix text that can't be part of a tag."""
         nonlocal _holdback
         if _holdback:
             await emit({"event": AuditEvent.AGENT_MESSAGE_CHUNK, "text": _holdback})
@@ -456,71 +464,66 @@ async def run_synthesis(
             _holdback = ""
 
     async def _process_text(chunk: str) -> None:
-        """Route each text_delta chunk: buffer JSON/HTML tags, stream everything else."""
-        nonlocal _in_report_tag, _report_buf, _in_html_tag, _html_buf, _holdback
+        """Buffer <duct_report> HTML; stream everything else as AGENT_MESSAGE_CHUNK."""
+        nonlocal _in_report_tag, _report_buf, _holdback
 
-        # --- inside <duct_report> JSON block ---
         if _in_report_tag:
             _report_buf += chunk
             if _CLOSE_TAG in _report_buf:
-                json_part, _, after = _report_buf.partition(_CLOSE_TAG)
+                html_part, _, after = _report_buf.partition(_CLOSE_TAG)
                 _in_report_tag = False
                 _report_buf = ""
-                report = _parse_report(json_part)
-                if report:
-                    nonlocal initial_report
-                    initial_report = report
-                    # Don't emit REPORT_UPDATED yet — wait for html_report from
-                    # <duct_html_report>. Emit when that tag closes, or at MESSAGE_STOP.
+                # Build AuditReport from the HTML artifact + accumulated summary text
+                from datetime import datetime, timezone
+                nonlocal initial_report
+                summary = "".join(_turn_text).strip()
+                initial_report = AuditReport(
+                    url=crawl_result.plan.root_url,
+                    generated_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                    update_label="Initial audit",
+                    executive_summary=summary,
+                    html_report=html_part.strip(),
+                )
+                await _emit_report_version(initial_report, 1)
                 if after:
                     await _process_text(after)
             return
 
-        # --- inside <duct_html_report> raw HTML block ---
-        if _in_html_tag:
-            _html_buf += chunk
-            if _HTML_CLOSE in _html_buf:
-                html_part, _, after = _html_buf.partition(_HTML_CLOSE)
-                _in_html_tag = False
-                _html_buf = ""
-                if initial_report is not None and not initial_report.html_report:
-                    initial_report.html_report = html_part.strip()
-                    await _emit_report_version(initial_report, 1)
-                if after:
-                    await _process_text(after)
-            return
-
-        # --- not inside any tag: stream text, watch for opening tags ---
         working = _holdback + chunk
         _holdback = ""
 
-        # Check for any opening tag we care about
-        for open_tag, close_tag, set_in, set_buf in [
-            (_OPEN_TAG,   _CLOSE_TAG,  "_in_report_tag", "_report_buf"),
-            (_HTML_OPEN,  _HTML_CLOSE, "_in_html_tag",   "_html_buf"),
-        ]:
-            if open_tag in working:
-                before, _, after = working.partition(open_tag)
-                if before:
-                    await emit({"event": AuditEvent.AGENT_MESSAGE_CHUNK, "text": before})
-                    _turn_text.append(before)
-                if set_in == "_in_report_tag":
-                    _in_report_tag = True; _report_buf = after
-                else:
-                    _in_html_tag = True; _html_buf = after
-                # Whole tag might be in this chunk — recurse
-                await _process_text("")
-                return
-
-        # No opening tag found — hold back enough chars to catch a split tag
-        holdback_len = max(len(_OPEN_TAG), len(_HTML_OPEN)) - 1
-        if len(working) > holdback_len:
-            safe = working[:-holdback_len]
-            _holdback = working[-holdback_len:]
-            await emit({"event": AuditEvent.AGENT_MESSAGE_CHUNK, "text": safe})
-            _turn_text.append(safe)
+        if _OPEN_TAG in working:
+            before, _, after = working.partition(_OPEN_TAG)
+            if before:
+                await emit({"event": AuditEvent.AGENT_MESSAGE_CHUNK, "text": before})
+                _turn_text.append(before)
+            _in_report_tag = True
+            _report_buf = after
+            if _CLOSE_TAG in _report_buf:
+                html_part, _, rest = _report_buf.partition(_CLOSE_TAG)
+                _in_report_tag = False
+                _report_buf = ""
+                from datetime import datetime, timezone
+                summary = "".join(_turn_text).strip()
+                initial_report = AuditReport(
+                    url=crawl_result.plan.root_url,
+                    generated_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                    update_label="Initial audit",
+                    executive_summary=summary,
+                    html_report=html_part.strip(),
+                )
+                await _emit_report_version(initial_report, 1)
+                if rest:
+                    await _process_text(rest)
         else:
-            _holdback = working
+            holdback_len = len(_OPEN_TAG) - 1
+            if len(working) > holdback_len:
+                safe = working[:-holdback_len]
+                _holdback = working[-holdback_len:]
+                await emit({"event": AuditEvent.AGENT_MESSAGE_CHUNK, "text": safe})
+                _turn_text.append(safe)
+            else:
+                _holdback = working
 
     # ------------------------------------------------------------------
     # Main loop
@@ -555,20 +558,14 @@ async def run_synthesis(
                         full_text = "".join(_turn_text)
                         _turn_text.clear()
 
-                        # If we parsed a JSON report but html_report hasn't arrived
-                        # yet (model didn't emit <duct_html_report> or did it inline),
-                        # emit REPORT_UPDATED now so the UI isn't left waiting.
+                        # Fallback: if JSON was parsed but REPORT_UPDATED not yet emitted
                         if initial_report is not None and len(session.report_versions) == 0:
                             await _emit_report_version(initial_report, 1)
 
-                        # Chat turn: check for <audit_report_update> in full text
+                        # Chat turn: check for <audit_report_update> in accumulated text
                         if initial_report is not None and len(session.report_versions) >= 1:
-                            updated = _extract_report_update(full_text)
+                            updated = _extract_report_update(full_text, base=initial_report)
                             if updated:
-                                # Carry over html_report from <duct_html_report> if present
-                                if not updated.html_report and _html_buf:
-                                    updated.html_report = _html_buf.strip()
-                                    _html_buf = ""
                                 v_id = len(session.report_versions) + 1
                                 await _emit_report_version(updated, v_id)
 
@@ -600,7 +597,7 @@ class ClaudeAuditRunner:
         provider: Provider = Provider.ANTHROPIC,
         model: ModelName = ModelName.CLAUDE_SONNET,
         effort: AgentEffort = ENGINE_DEFAULT_EFFORT[Engine.V3],
-        adaptive_thinking: bool = True,
+        adaptive_thinking: bool = False,
     ) -> None:
         self.provider = provider
         self.model = model
@@ -621,6 +618,7 @@ class ClaudeAuditRunner:
     ) -> AuditReport | None:
         from agents.audit.schema import CrawlDepth
         start = perf_counter()
+        _t = perf_counter  # alias for inline timings
 
         await emit({
             "event": AuditEvent.STEP_STARTED,
@@ -629,7 +627,9 @@ class ClaudeAuditRunner:
             "status": "running",
         })
         light = (crawl_depth == CrawlDepth.LIGHT)
+        t0 = _t()
         crawl_result = await run_crawl(url, max_blog_posts=max_blog_posts, light=light, emit=emit)
+        logger.info("⏱ crawl: %.1fs  pages=%d", _t() - t0, len(crawl_result.pages))
 
         _robots = crawl_result.robots_txt or ""
         _llms   = crawl_result.llms_txt   or ""
@@ -702,6 +702,7 @@ class ClaudeAuditRunner:
             "status": "running",
         })
 
+        t1 = _t()
         report, had_thinking = await run_synthesis(
             session_id=session_id,
             crawl_result=crawl_result,
@@ -724,5 +725,14 @@ class ClaudeAuditRunner:
         })
 
         elapsed = perf_counter() - start
-        logger.info("audit v3: pipeline completed in %.1fs for session %s", elapsed, session_id)
+        logger.info(
+            "⏱ pipeline done  total=%.1fs  crawl=%.1fs  synthesis=%.1fs  "
+            "pages=%d  thinking=%s  session=%s",
+            elapsed,
+            t1 - t0,
+            elapsed - (t1 - t0),
+            len(crawl_result.pages),
+            had_thinking,
+            session_id,
+        )
         return report

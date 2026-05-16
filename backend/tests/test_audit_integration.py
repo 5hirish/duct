@@ -353,7 +353,7 @@ async def test_full_pipeline_real_page():
             crawl_depth="light",      # max 3 pages — faster and sufficient for E2E
             chat_idle_timeout=5.0,    # exit 5s after report; prevents 30-min idle hang
         ),
-        timeout=900,  # 15 min outer limit — crawl + Sonnet synthesis with thinking
+        timeout=1500,  # 25 min outer limit — crawl + Sonnet synthesis + adaptive thinking
     )
 
     # Crawl events must have fired
