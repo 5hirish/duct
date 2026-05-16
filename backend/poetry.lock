@@ -556,6 +556,32 @@ files = [
 ]
 
 [[package]]
+name = "claude-agent-sdk"
+version = "0.2.82"
+description = "Python SDK for Claude Code"
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "claude_agent_sdk-0.2.82-py3-none-macosx_11_0_arm64.whl", hash = "sha256:24ad8ccbcee9afe206ae5d621a9e40a5022ca3eb8c2c672b36916d3e70746e42"},
+    {file = "claude_agent_sdk-0.2.82-py3-none-macosx_11_0_x86_64.whl", hash = "sha256:13e54d5163d9d4f899c4e2a3f14df597f4e050d5afa104618ccf7bb37b372ad1"},
+    {file = "claude_agent_sdk-0.2.82-py3-none-manylinux_2_17_aarch64.whl", hash = "sha256:3b0a0e3f0927737f1fc91ee4549185172243a4e8f135d4c1e4f1f1eba91373e1"},
+    {file = "claude_agent_sdk-0.2.82-py3-none-manylinux_2_17_x86_64.whl", hash = "sha256:b05873f9df01c5894930b87f6ca9315f0d97f1563bc2e4dc0fafe0d4a1e31997"},
+    {file = "claude_agent_sdk-0.2.82-py3-none-win_amd64.whl", hash = "sha256:71e85e4f50d04cd95e687898092f03648e74e1cd2537583de93370d2da1c0586"},
+    {file = "claude_agent_sdk-0.2.82.tar.gz", hash = "sha256:3e907b7d2bf52a5917d96a3ce336b8aa5546ea31e29ce826a7f346622cf7f4bf"},
+]
+
+[package.dependencies]
+anyio = ">=4.0.0"
+mcp = ">=1.23.0"
+sniffio = ">=1.0.0"
+
+[package.extras]
+dev = ["anyio[trio] (>=4.0.0)", "mypy (>=1.0.0)", "pytest (>=7.0.0)", "pytest-asyncio (>=0.20.0)", "pytest-cov (>=4.0.0)", "ruff (>=0.1.0)"]
+examples = ["asyncpg (>=0.27.0)", "boto3 (>=1.28.0)", "fakeredis (>=2.20.0)", "moto[s3] (>=5.0.0)", "redis (>=4.2.0)"]
+otel = ["opentelemetry-api (>=1.20.0)"]
+
+[[package]]
 name = "click"
 version = "8.3.2"
 description = "Composable command line interface toolkit"
@@ -1123,29 +1149,29 @@ files = [
 
 [package.dependencies]
 google-api-core = [
-    {version = ">=2.22.0,<=3.0.0", markers = "python_version >= \"3.13\""},
     {version = ">=2.13.0,<=3.0.0"},
+    {version = ">=2.22.0,<=3.0.0", markers = "python_version >= \"3.13\""},
 ]
 google-auth-oauthlib = ">=1.0.0,<2.0.0"
 googleapis-common-protos = [
-    {version = ">=1.63.2,<2.0.0", markers = "python_version >= \"3.13\""},
     {version = ">=1.56.3,<2.0.0"},
+    {version = ">=1.63.2,<2.0.0", markers = "python_version >= \"3.13\""},
 ]
 grpcio = [
-    {version = ">=1.66.2,<2.0.0", markers = "python_version >= \"3.13\""},
     {version = ">=1.59.0,<2.0.0"},
+    {version = ">=1.66.2,<2.0.0", markers = "python_version >= \"3.13\""},
 ]
 grpcio-status = [
-    {version = ">=1.66.2,<2.0.0", markers = "python_version >= \"3.13\""},
     {version = ">=1.59.0,<2.0.0"},
+    {version = ">=1.66.2,<2.0.0", markers = "python_version >= \"3.13\""},
 ]
 proto-plus = [
-    {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
     {version = ">=1.22.3,<2.0.0"},
+    {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
 ]
 protobuf = [
-    {version = ">=5.26.1,<7.0.0", markers = "python_version >= \"3.13\""},
     {version = ">=4.25.0,<7.0.0"},
+    {version = ">=5.26.1,<7.0.0", markers = "python_version >= \"3.13\""},
 ]
 PyYAML = ">=5.1,<7.0"
 
@@ -1168,8 +1194,8 @@ files = [
 google-api-core = {version = ">=1.34.1,<2.0.dev0 || >=2.11.dev0,<3.0.0", extras = ["grpc"]}
 google-auth = ">=2.14.1,<2.24.0 || >2.24.0,<2.25.0 || >2.25.0,<3.0.0"
 proto-plus = [
-    {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
     {version = ">=1.22.3,<2.0.0"},
+    {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
 ]
 protobuf = ">=3.20.2,<4.21.0 || >4.21.0,<4.21.1 || >4.21.1,<4.21.2 || >4.21.2,<4.21.3 || >4.21.3,<4.21.4 || >4.21.4,<4.21.5 || >4.21.5,<7.0.0"
 
@@ -1191,8 +1217,8 @@ googleapis-common-protos = ">=1.63.2,<2.0.0"
 grpcio = {version = ">=1.49.1,<2.0.0", optional = true, markers = "python_version >= \"3.11\" and extra == \"grpc\""}
 grpcio-status = {version = ">=1.49.1,<2.0.0", optional = true, markers = "python_version >= \"3.11\" and extra == \"grpc\""}
 proto-plus = [
-    {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
     {version = ">=1.22.3,<2.0.0"},
+    {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
 ]
 protobuf = ">=4.25.8,<8.0.0"
 requests = ">=2.20.0,<3.0.0"
@@ -1308,8 +1334,8 @@ google-cloud-iam = {version = "*", optional = true, markers = "extra == \"agent-
 google-cloud-logging = {version = "<4", optional = true, markers = "extra == \"agent-engines\""}
 google-cloud-resource-manager = ">=1.3.3,<3.0.0"
 google-cloud-storage = [
-    {version = ">=3.10.0,<4.0.0", markers = "python_version >= \"3.13\""},
     {version = ">=1.32.0,<4.0.0", markers = "python_version < \"3.13\""},
+    {version = ">=3.10.0,<4.0.0", markers = "python_version >= \"3.13\""},
 ]
 google-cloud-trace = {version = "<2", optional = true, markers = "extra == \"agent-engines\""}
 google-genai = {version = ">=1.66.0,<2.0.0", markers = "python_version >= \"3.10\""}
@@ -1375,8 +1401,8 @@ google-api-core = {version = ">=2.11.0,<3.0.0", extras = ["grpc"]}
 google-auth = ">=2.14.1,<2.24.0 || >2.24.0,<2.25.0 || >2.25.0,<3.0.0"
 grpcio = ">=1.33.2,<2.0.0"
 proto-plus = [
-    {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
     {version = ">=1.22.3,<2.0.0"},
+    {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
 ]
 protobuf = ">=4.25.8,<8.0.0"
 
@@ -1446,8 +1472,8 @@ google-api-core = {version = ">=2.11.0,<3.0.0", extras = ["grpc"]}
 google-auth = ">=2.14.1,<2.24.0 || >2.24.0,<2.25.0 || >2.25.0,<3.0.0"
 grpcio = ">=1.33.2,<2.0.0"
 proto-plus = [
-    {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
     {version = ">=1.22.3,<2.0.0"},
+    {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
 ]
 protobuf = ">=4.25.8,<8.0.0"
 
@@ -1475,8 +1501,8 @@ google-cloud-core = ">=1.4.4,<3.0.0"
 google-crc32c = ">=1.5.0,<2.0.0dev"
 grpc-google-iam-v1 = ">=0.12.4,<1.0.0"
 proto-plus = [
-    {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
     {version = ">=1.22.3,<2.0.0"},
+    {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
 ]
 protobuf = ">=3.20.2,<4.21.0 || >4.21.0,<4.21.1 || >4.21.1,<4.21.2 || >4.21.2,<4.21.3 || >4.21.3,<4.21.4 || >4.21.4,<4.21.5 || >4.21.5,<7.0.0"
 
@@ -1520,8 +1546,8 @@ google-auth = ">=2.14.1,<2.24.0 || >2.24.0,<2.25.0 || >2.25.0,<3.0.0"
 grpc-google-iam-v1 = ">=0.14.0,<1.0.0"
 grpcio = ">=1.33.2,<2.0.0"
 proto-plus = [
-    {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
     {version = ">=1.22.3,<2.0.0"},
+    {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
 ]
 protobuf = ">=4.25.8,<8.0.0"
 
@@ -1541,8 +1567,8 @@ files = [
 google-api-core = {version = ">=1.34.1,<2.0.dev0 || >=2.11.dev0,<3.0.0", extras = ["grpc"]}
 google-auth = ">=2.14.1,<2.24.0 || >2.24.0,<2.25.0 || >2.25.0,<3.0.0"
 proto-plus = [
+    {version = ">=1.22.3,<2.0.0"},
     {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
-    {version = ">=1.22.3,<2.0.0", markers = "python_version < \"3.13\""},
 ]
 protobuf = ">=3.20.2,<4.21.0 || >4.21.0,<4.21.1 || >4.21.1,<4.21.2 || >4.21.2,<4.21.3 || >4.21.3,<4.21.4 || >4.21.4,<4.21.5 || >4.21.5,<7.0.0"
 
@@ -1564,8 +1590,8 @@ google-auth = ">=2.14.1,<2.24.0 || >2.24.0,<2.25.0 || >2.25.0,<3.0.0"
 grpc-google-iam-v1 = ">=0.12.4,<1.0.0"
 grpcio = ">=1.33.2,<2.0.0"
 proto-plus = [
-    {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
     {version = ">=1.22.3,<2.0.0"},
+    {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
 ]
 protobuf = ">=4.25.8,<8.0.0"
 
@@ -1591,8 +1617,8 @@ grpc-google-iam-v1 = ">=0.12.4,<1.0.0"
 grpcio = ">=1.33.2,<2.0.0"
 opentelemetry-api = ">=1.9.0"
 proto-plus = [
-    {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
     {version = ">=1.22.3,<2.0.0"},
+    {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
 ]
 protobuf = ">=4.25.8,<8.0.0"
 
@@ -1613,8 +1639,8 @@ google-api-core = {version = ">=2.11.0,<3.0.0", extras = ["grpc"]}
 google-auth = ">=2.14.1,<2.24.0 || >2.24.0,<2.25.0 || >2.25.0,<3.0.0"
 grpcio = ">=1.33.2,<2.0.0"
 proto-plus = [
-    {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
     {version = ">=1.22.3,<2.0.0"},
+    {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
 ]
 protobuf = ">=4.25.8,<8.0.0"
 
@@ -1642,8 +1668,8 @@ grpcio-status = ">=1.33.2"
 opentelemetry-api = ">=1.27.0"
 opentelemetry-sdk = ">=1.27.0"
 proto-plus = [
-    {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
     {version = ">=1.22.3,<2.0.0"},
+    {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
 ]
 protobuf = ">=4.25.8,<8.0.0"
 
@@ -1668,8 +1694,8 @@ google-auth = ">=2.14.1,<2.24.0 || >2.24.0,<2.25.0 || >2.25.0,<3.0.0"
 grpc-google-iam-v1 = ">=0.14.0,<1.0.0"
 grpcio = ">=1.33.2,<2.0.0"
 proto-plus = [
-    {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
     {version = ">=1.22.3,<2.0.0"},
+    {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
 ]
 protobuf = ">=4.25.8,<8.0.0"
 
@@ -1691,8 +1717,8 @@ google-auth = ">=2.14.1,<2.24.0 || >2.24.0,<2.25.0 || >2.25.0,<3.0.0"
 grpc-google-iam-v1 = ">=0.14.0,<1.0.0"
 grpcio = ">=1.33.2,<2.0.0"
 proto-plus = [
-    {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
     {version = ">=1.22.3,<2.0.0"},
+    {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
 ]
 protobuf = ">=4.25.8,<8.0.0"
 
@@ -1743,8 +1769,8 @@ google-api-core = {version = ">=2.11.0,<3.0.0", extras = ["grpc"]}
 google-auth = ">=2.14.1,<2.24.0 || >2.24.0,<2.25.0 || >2.25.0,<3.0.0"
 grpcio = ">=1.33.2,<2.0.0"
 proto-plus = [
-    {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
     {version = ">=1.22.3,<2.0.0"},
+    {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
 ]
 protobuf = ">=4.25.8,<8.0.0"
 
@@ -1791,8 +1817,8 @@ google-api-core = {version = ">=2.11.0,<3.0.0", extras = ["grpc"]}
 google-auth = ">=2.14.1,<2.24.0 || >2.24.0,<2.25.0 || >2.25.0,<3.0.0"
 grpcio = ">=1.33.2,<2.0.0"
 proto-plus = [
-    {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
     {version = ">=1.22.3,<2.0.0"},
+    {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
 ]
 protobuf = ">=4.25.8,<8.0.0"
 
@@ -4357,6 +4383,26 @@ pygments = ">=2.7.2"
 dev = ["argcomplete", "attrs (>=19.2)", "hypothesis (>=3.56)", "mock", "requests", "setuptools", "xmlschema"]
 
 [[package]]
+name = "pytest-asyncio"
+version = "1.3.0"
+description = "Pytest support for asyncio"
+optional = false
+python-versions = ">=3.10"
+groups = ["dev"]
+files = [
+    {file = "pytest_asyncio-1.3.0-py3-none-any.whl", hash = "sha256:611e26147c7f77640e6d0a92a38ed17c3e9848063698d5c93d5aa7aa11cebff5"},
+    {file = "pytest_asyncio-1.3.0.tar.gz", hash = "sha256:d7f52f36d231b80ee124cd216ffb19369aa168fc10095013c6b014a34d3ee9e5"},
+]
+
+[package.dependencies]
+pytest = ">=8.2,<10"
+typing-extensions = {version = ">=4.12", markers = "python_version < \"3.13\""}
+
+[package.extras]
+docs = ["sphinx (>=5.3)", "sphinx-rtd-theme (>=1)"]
+testing = ["coverage (>=6.2)", "hypothesis (>=5.7.1)"]
+
+[[package]]
 name = "python-dateutil"
 version = "2.9.0.post0"
 description = "Extensions to the standard Python datetime module"
@@ -4922,6 +4968,83 @@ files = [
     {file = "ruff-0.15.9-py3-none-win_arm64.whl", hash = "sha256:0694e601c028fd97dc5c6ee244675bc241aeefced7ef80cd9c6935a871078f53"},
     {file = "ruff-0.15.9.tar.gz", hash = "sha256:29cbb1255a9797903f6dde5ba0188c707907ff44a9006eb273b5a17bfa0739a2"},
 ]
+
+[[package]]
+name = "selectolax"
+version = "0.4.9"
+description = "A fast HTML5 parser with CSS selectors, written in Cython, using Modest and Lexbor engines."
+optional = false
+python-versions = "<3.15,>=3.9"
+groups = ["main"]
+files = [
+    {file = "selectolax-0.4.9-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:96117cf8d7f208073daba79515e76e3bec2e28c7fb2fb2bcf9120c73d2d06e97"},
+    {file = "selectolax-0.4.9-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:4cce375ee59c7462efa38119d784b7e957303d968c4305fd0102def3b46f6a62"},
+    {file = "selectolax-0.4.9-cp310-cp310-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:6d0a9d182e1df3359b821f380ae2a7d8344b403d7ec53c0fc99149e4833ed692"},
+    {file = "selectolax-0.4.9-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:cc47abc57b400d57a17ca2f9540c4780b67379a3bb09047c170244f16007cbbc"},
+    {file = "selectolax-0.4.9-cp310-cp310-musllinux_1_2_aarch64.whl", hash = "sha256:4888a59a688b4d206aaac657befb4daf6f96e07d8b5757dc5e82c76505b7a8d3"},
+    {file = "selectolax-0.4.9-cp310-cp310-musllinux_1_2_x86_64.whl", hash = "sha256:f41d3f101b21bc3cb95ad103b98a233c329bb0361b3840decf1a888c2f960494"},
+    {file = "selectolax-0.4.9-cp310-cp310-win32.whl", hash = "sha256:05ef4923d89c75c5177f7b45b6917424175ed6ebb6ff9c4616497d83fbe9b9a6"},
+    {file = "selectolax-0.4.9-cp310-cp310-win_amd64.whl", hash = "sha256:88773dc96c39b71c8980b88abf3588ce780ff95d499065d9531048da7708c6a3"},
+    {file = "selectolax-0.4.9-cp310-cp310-win_arm64.whl", hash = "sha256:e124b1352489cb200db66c7179270dc269eada7d7bf4267d949026540a72a325"},
+    {file = "selectolax-0.4.9-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:aafcee3e53ee3cd7800826e26ba2af3e68370e6a1bd4c223fab27916623cc106"},
+    {file = "selectolax-0.4.9-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:d7d988d66a64153edd8db347ae55cb4e52a6157206c66c7f27c65046ad0f2b2d"},
+    {file = "selectolax-0.4.9-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:d5bbdd6cc28ae3279b4114b166447e83ecd8fc5aa397ca422645b654f25aff82"},
+    {file = "selectolax-0.4.9-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:d8ac4485bb49a0131bb8f612c3a04653184c2e304d4c4751ae0764439f3b6b76"},
+    {file = "selectolax-0.4.9-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:e3a42930b3eb3088d4ab11db698d3fa3a06c39b2a2d389652c12ecbda2586f89"},
+    {file = "selectolax-0.4.9-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:c77f364e05d8bcf7a89cf57f6414cb0261f968cf60395b381f20ecce01bf8546"},
+    {file = "selectolax-0.4.9-cp311-cp311-win32.whl", hash = "sha256:c964592aee0cf73423718cfb4fdbfe99ea7b28f13589f2bfc0e0d45683e0a0bc"},
+    {file = "selectolax-0.4.9-cp311-cp311-win_amd64.whl", hash = "sha256:582d74f84ba02c756ed09a75b918a7dffbfec3683c082e7c7361d44aa7cd9f8f"},
+    {file = "selectolax-0.4.9-cp311-cp311-win_arm64.whl", hash = "sha256:690bca07294e3bc635f44855d2d3a13ffe7085b72b9b4bed5016edfdad291f35"},
+    {file = "selectolax-0.4.9-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:1ee28b8f1326e3504a055a8f8a894e1180f5d3522f61391670c8b2d5e768cbc2"},
+    {file = "selectolax-0.4.9-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:668e243607d8bc2d130283506333f63b65bfba83bb32a59cf89f634031f02e0d"},
+    {file = "selectolax-0.4.9-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:9451274ccdb46f691f90538e2ede26e67d20f1ab17aa25083db4983208451609"},
+    {file = "selectolax-0.4.9-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:4c37ae18495338320064920144185e3a434d780ddc8654a44f2c611b2e1aa291"},
+    {file = "selectolax-0.4.9-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:77fd2ab190a5a13ce1c3f616538f325bd0f51760c924c3244f27897d23f0817a"},
+    {file = "selectolax-0.4.9-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:428bbfc0375607dc07ef9086ff6c7fb8e6af051876409e3fcac7d8c856b0fa91"},
+    {file = "selectolax-0.4.9-cp312-cp312-win32.whl", hash = "sha256:7d1afdd14451d7a0d9e095e28df2af11ea2066821170aaca1d7db0e56a44f5dc"},
+    {file = "selectolax-0.4.9-cp312-cp312-win_amd64.whl", hash = "sha256:592bba3ea66658b2080a6978839887eb1a890d8244441f64b9baf0ca74ed7918"},
+    {file = "selectolax-0.4.9-cp312-cp312-win_arm64.whl", hash = "sha256:9ececc7acdb4d16d217d83a55c41e0f4f74fb0e74858005a542e7bd88090aa0d"},
+    {file = "selectolax-0.4.9-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:b1ca6686d0199ca3ef2c919421116d9d34f56964e2162a0d8757a4e9a7bdfb4a"},
+    {file = "selectolax-0.4.9-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:0f49b7391544f60cc891587bcc504daed4995be2b02af9c6e3054a564a1b25d0"},
+    {file = "selectolax-0.4.9-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:6833df2a2f74cd89872a2915f5ba6b9e56e4bed31c0b3e26b593ca086f10d298"},
+    {file = "selectolax-0.4.9-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:010ff30cc2266074801d92fa717a3c333cc1cf9c98b699a46fc649a9707acc69"},
+    {file = "selectolax-0.4.9-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:395261e997f0d1d9d0232cf9ba7d69f46229e027ad7eb3ad0afba57c8eec7413"},
+    {file = "selectolax-0.4.9-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:19ee1f7de842be9dcdae7c7d27b01c91a0a717a06b136984234bc5b3048fc3d4"},
+    {file = "selectolax-0.4.9-cp313-cp313-win32.whl", hash = "sha256:2cd98512c3de597a6b5db9bd90d10b35244c4ba7b99c1149874111f453ae82d2"},
+    {file = "selectolax-0.4.9-cp313-cp313-win_amd64.whl", hash = "sha256:35097ce93a954a95ac82d930758cfc32c03421c0f173de7185e6381fbd00be28"},
+    {file = "selectolax-0.4.9-cp313-cp313-win_arm64.whl", hash = "sha256:bca470e8f6bf6b4b41f841e87fcc729c9c2fbed20850ef4bb1b7b9055c1f8a55"},
+    {file = "selectolax-0.4.9-cp314-cp314-macosx_10_13_x86_64.whl", hash = "sha256:b65f589b8e613089e77b6f735d956f6690021c66acaba0973df0e59b7fb6ab22"},
+    {file = "selectolax-0.4.9-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:e1a2a70a02960efc7112a99b81031fb60bca557e62f99806dd3a6354e6c888e3"},
+    {file = "selectolax-0.4.9-cp314-cp314-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:85c463dbd4f1a5b9a1219ea7895ed3307231cb4edcf46e60de99dde93d9dc65b"},
+    {file = "selectolax-0.4.9-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:432dca308603fcb39600fcbf9e02d8917596fde2d7b0fd752d437953bbb83ff0"},
+    {file = "selectolax-0.4.9-cp314-cp314-musllinux_1_2_aarch64.whl", hash = "sha256:25da6d4afec67efcb5b9f228a7f318163e65bc7f4956448cfc994b45894a062f"},
+    {file = "selectolax-0.4.9-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:718872445d44b58b0e6bc029993ac79396b5588b13d0c12c8b585f5a1a490c2d"},
+    {file = "selectolax-0.4.9-cp314-cp314-win32.whl", hash = "sha256:2affc47bbe2faff46410ce4edd82e9e6fe6a7ac7a84b4e572c1b22fc2fb1832f"},
+    {file = "selectolax-0.4.9-cp314-cp314-win_amd64.whl", hash = "sha256:0077fe3d5324a345839c8c9da7ac41b577e13a08266b4a24e7c25e16fb2b6229"},
+    {file = "selectolax-0.4.9-cp314-cp314-win_arm64.whl", hash = "sha256:f214d7c10112c818506e2aa72b309acee76e23b6ff677e91e5fd12fb60176abd"},
+    {file = "selectolax-0.4.9-cp314-cp314t-macosx_10_13_x86_64.whl", hash = "sha256:fb3eef8d522534b59498e2aff67d30b879ffb70961406fc6359336d846409f24"},
+    {file = "selectolax-0.4.9-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:dd270f3c008eddd9b93d6875b05fda569b9943e94b5c918ce5d06123330d35ec"},
+    {file = "selectolax-0.4.9-cp314-cp314t-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:0fe69c7d4a510574746fae68d00016d4ff10cffdba845dfa2a40296534390a91"},
+    {file = "selectolax-0.4.9-cp314-cp314t-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:8720dce153464c1d8172160a2dd96e97dfae0a64534aa2b54eafbe8371ba85b1"},
+    {file = "selectolax-0.4.9-cp314-cp314t-musllinux_1_2_aarch64.whl", hash = "sha256:44d07709c7ddc49702af5661d717aaeab469121328ce1131e182bbe98020c504"},
+    {file = "selectolax-0.4.9-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:919fbb7ba30e9e172913e029e453be68215122bbb3e7e8cedf524e525c24556b"},
+    {file = "selectolax-0.4.9-cp314-cp314t-win32.whl", hash = "sha256:596513c191ec4771357abc21160414e2a0054f064ba543e33e1a7ebd35c96ea6"},
+    {file = "selectolax-0.4.9-cp314-cp314t-win_amd64.whl", hash = "sha256:008206609f542cbad133570330e51cb4bb666d532b05111914072673de60f33a"},
+    {file = "selectolax-0.4.9-cp314-cp314t-win_arm64.whl", hash = "sha256:7ab014959dcf68a0be71484dc87b8d4002756c979836d1d873ba81302b6bffe0"},
+    {file = "selectolax-0.4.9-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:c8715a3394efcb35441ba88246bafa201e71f8e2a8b589b677e010f19775ac8d"},
+    {file = "selectolax-0.4.9-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:a4cec08de53f68354af7d3330edbd0a3ffe88d3312ca369b744d9e20c06a782f"},
+    {file = "selectolax-0.4.9-cp39-cp39-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:8d327fd802a8b19680748707a5afb975717a22dff1aee63180d6369016350e36"},
+    {file = "selectolax-0.4.9-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:06a2ca6ee2be60f7193b6c0e3f595737fc5317136092d0f2ae51574904f595d7"},
+    {file = "selectolax-0.4.9-cp39-cp39-musllinux_1_2_aarch64.whl", hash = "sha256:62565b700162eb583b340a3f1fc9b7af2aa6027ef35da00e063d67336b9dadc8"},
+    {file = "selectolax-0.4.9-cp39-cp39-musllinux_1_2_x86_64.whl", hash = "sha256:536f54435f51e4347411a2d687b03049476cecf0a39682e42946ef407c7342be"},
+    {file = "selectolax-0.4.9-cp39-cp39-win32.whl", hash = "sha256:c75748bd300316b300142193e7dbe0255fd81672f87707bb5a02e491275054a7"},
+    {file = "selectolax-0.4.9-cp39-cp39-win_amd64.whl", hash = "sha256:db788761bba4fbe6838743d9465ffdccb7dc212d91012f02229b0ffab8ee32c1"},
+    {file = "selectolax-0.4.9-cp39-cp39-win_arm64.whl", hash = "sha256:bd5914036479a7522bffb028f1fb145818831c06d021bdf41851a57c219b9b53"},
+    {file = "selectolax-0.4.9.tar.gz", hash = "sha256:15c3de54f75d0d13726fee140bbfec8805050a3d34d298f2e9c05c9da1b87e7a"},
+]
+
+[package.extras]
+cython = ["Cython"]
 
 [[package]]
 name = "semver"
@@ -5505,11 +5628,12 @@ version = "4.15.0"
 description = "Backported and Experimental Type Hints for Python 3.9+"
 optional = false
 python-versions = ">=3.9"
-groups = ["main"]
+groups = ["main", "dev"]
 files = [
     {file = "typing_extensions-4.15.0-py3-none-any.whl", hash = "sha256:f0fa19c6845758ab08074a0cfa8b7aecb71c999ca73d62883bc25cc018c4e548"},
     {file = "typing_extensions-4.15.0.tar.gz", hash = "sha256:0cea48d173cc12fa28ecabc3b837ea3cf6f38c6d1136f85cbaaf598984861466"},
 ]
+markers = {dev = "python_version == \"3.12\""}
 
 [[package]]
 name = "typing-inspection"
@@ -6405,4 +6529,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<3.14"
-content-hash = "3ab0588bdce2edba8955e17a7908292f6ccfa2dc8c30431f2510423a3d1811e8"
+content-hash = "a1099a8acd37323192baf6eb917c20b29f5580a3fdc050054a111c34e27b7a93"

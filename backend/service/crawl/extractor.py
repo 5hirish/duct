@@ -260,48 +260,75 @@ def _extract_signals_stdlib(html: str, url: str, page_type: str) -> PageSignals:
     class _Parser(HTMLParser):
         def __init__(self):
             super().__init__(convert_charrefs=True)
-            self.title = ""; self.meta_description = ""; self.canonical = ""
-            self.is_noindex = False; self.og_title = ""; self.og_description = ""
-            self.og_image = ""; self.og_type = ""; self.twitter_card = ""
-            self.h1s: list[str] = []; self.h2s: list[str] = []
-            self.image_count = 0; self.images_missing_alt = 0
+            self.title = ""
+            self.meta_description = ""
+            self.canonical = ""
+            self.is_noindex = False
+            self.og_title = ""
+            self.og_description = ""
+            self.og_image = ""
+            self.og_type = ""
+            self.twitter_card = ""
+            self.h1s: list[str] = []
+            self.h2s: list[str] = []
+            self.image_count = 0
+            self.images_missing_alt = 0
             self.schema_types: list[str] = []
-            self.internal_links: list[str] = []; self.external_links: list[str] = []
+            self.internal_links: list[str] = []
+            self.external_links: list[str] = []
             self._body_parts: list[str] = []
-            self._in_title = False; self._in_h1 = False; self._in_h2 = False
-            self._in_body = False; self._in_script_ld = False; self._skip = 0
+            self._in_title = False
+            self._in_h1 = False
+            self._in_h2 = False
+            self._in_body = False
+            self._in_script_ld = False
+            self._skip = 0
 
         def handle_starttag(self, tag, attrs):
-            tag = tag.lower(); attr = dict(attrs)
+            tag = tag.lower()
+            attr = dict(attrs)
             if tag in {"style", "noscript"}:
-                self._skip += 1; return
+                self._skip += 1
+                return
             if tag == "script":
                 if attr.get("type") == "application/ld+json":
                     self._in_script_ld = True
                 else:
                     self._skip += 1
                 return
-            if tag == "body": self._in_body = True
-            if tag == "title": self._in_title = True
+            if tag == "body":
+                self._in_body = True
+            if tag == "title":
+                self._in_title = True
             elif tag == "meta":
                 name = (attr.get("name") or "").lower()
                 prop = (attr.get("property") or "").lower()
                 c = attr.get("content") or ""
-                if name == "description": self.meta_description = c
-                elif name == "robots" and "noindex" in c.lower(): self.is_noindex = True
-                elif prop == "og:title": self.og_title = c
-                elif prop == "og:description": self.og_description = c
-                elif prop == "og:image": self.og_image = c
-                elif prop == "og:type": self.og_type = c
-                elif name == "twitter:card": self.twitter_card = c
+                if name == "description":
+                    self.meta_description = c
+                elif name == "robots" and "noindex" in c.lower():
+                    self.is_noindex = True
+                elif prop == "og:title":
+                    self.og_title = c
+                elif prop == "og:description":
+                    self.og_description = c
+                elif prop == "og:image":
+                    self.og_image = c
+                elif prop == "og:type":
+                    self.og_type = c
+                elif name == "twitter:card":
+                    self.twitter_card = c
             elif tag == "link":
                 if (attr.get("rel") or "").lower() == "canonical":
                     self.canonical = attr.get("href") or ""
-            elif tag == "h1": self._in_h1 = True
-            elif tag == "h2": self._in_h2 = True
+            elif tag == "h1":
+                self._in_h1 = True
+            elif tag == "h2":
+                self._in_h2 = True
             elif tag == "img":
                 self.image_count += 1
-                if not (attr.get("alt") or "").strip(): self.images_missing_alt += 1
+                if not (attr.get("alt") or "").strip():
+                    self.images_missing_alt += 1
             elif tag == "a":
                 href = attr.get("href") or ""
                 if href and not href.startswith(("#", "mailto:", "tel:", "javascript:")):
@@ -314,25 +341,37 @@ def _extract_signals_stdlib(html: str, url: str, page_type: str) -> PageSignals:
 
         def handle_endtag(self, tag):
             tag = tag.lower()
-            if tag in {"style", "noscript"}: self._skip = max(0, self._skip - 1)
+            if tag in {"style", "noscript"}:
+                self._skip = max(0, self._skip - 1)
             elif tag == "script":
-                if self._in_script_ld: self._in_script_ld = False
-                else: self._skip = max(0, self._skip - 1)
-            elif tag == "title": self._in_title = False
-            elif tag == "h1": self._in_h1 = False
-            elif tag == "h2": self._in_h2 = False
+                if self._in_script_ld:
+                    self._in_script_ld = False
+                else:
+                    self._skip = max(0, self._skip - 1)
+            elif tag == "title":
+                self._in_title = False
+            elif tag == "h1":
+                self._in_h1 = False
+            elif tag == "h2":
+                self._in_h2 = False
 
         def handle_data(self, data):
             if self._in_script_ld:
                 try:
                     _collect_schema_types(json.loads(data), self.schema_types)
-                except Exception: pass
+                except Exception:
+                    pass
                 return
-            if self._skip: return
-            if self._in_title: self.title = data.strip()
-            if self._in_h1 and data.strip(): self.h1s.append(data.strip())
-            if self._in_h2 and data.strip(): self.h2s.append(data.strip())
-            if self._in_body and data.strip(): self._body_parts.append(data)
+            if self._skip:
+                return
+            if self._in_title:
+                self.title = data.strip()
+            if self._in_h1 and data.strip():
+                self.h1s.append(data.strip())
+            if self._in_h2 and data.strip():
+                self.h2s.append(data.strip())
+            if self._in_body and data.strip():
+                self._body_parts.append(data)
 
     p = _Parser()
     try:

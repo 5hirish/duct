@@ -24,7 +24,6 @@ import json
 import logging
 import re
 from collections.abc import Callable, Awaitable
-from dataclasses import dataclass, field
 from time import perf_counter
 from typing import Any
 
@@ -42,7 +41,7 @@ from agents.audit.schema import (
     VersionedReport,
 )
 from agents.engines import Engine, get_env_var_for_engine_provider
-from agents.engines import ENGINE_DEFAULT_EFFORT, Engine
+from agents.engines import ENGINE_DEFAULT_EFFORT
 from agents.models import AgentEffort, AgentPermissionMode, AgentTool, ModelName, Provider, ThinkingMode
 from service.crawl.extractor import extract_signals
 from service.crawl.fetcher import fetch_text, make_client
@@ -283,7 +282,7 @@ async def run_synthesis(
     """
     import shutil
     from claude_agent_sdk import ClaudeAgentOptions, ClaudeSDKClient
-    from claude_agent_sdk.types import HookMatcher, PermissionResultAllow, PermissionResultDeny, ResultMessage, StreamEvent, ThinkingConfigAdaptive
+    from claude_agent_sdk.types import HookMatcher, PermissionResultAllow, PermissionResultDeny, StreamEvent, ThinkingConfigAdaptive
 
     env_var = get_env_var_for_engine_provider(Engine.V3, provider) or "ANTHROPIC_API_KEY"
 

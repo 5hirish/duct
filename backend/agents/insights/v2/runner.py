@@ -40,6 +40,7 @@ from agents.insights.prompts import get_synthesis_user_prompt, get_system_prompt
 from agents.insights.registry import get_tools_for_request as _registry_get_tools
 from agents.insights.schema import SynthesisSchema
 from agents.insights.tools import _register_default_tools
+from agents.engines import Engine, ENGINE_PROVIDER_ENV_VAR as _ENGINE_PROVIDER_ENV_VAR
 from agents.models import ModelName, Provider
 
 from .agents import build_pipeline_agent
@@ -85,8 +86,6 @@ _ADK_MODEL_MAP: dict[tuple[Provider, ModelName], str] = {
     (Provider.OPENAI, ModelName.GPT_5_MINI): "openai/gpt-5-mini",
     (Provider.OPENAI, ModelName.GPT_5_4_MINI): "openai/gpt-5.4-mini",
 }
-
-from agents.engines import Engine, ENGINE_PROVIDER_ENV_VAR as _ENGINE_PROVIDER_ENV_VAR
 
 _PROVIDER_ENV_VAR: dict[Provider, str] = _ENGINE_PROVIDER_ENV_VAR[Engine.V2]
 

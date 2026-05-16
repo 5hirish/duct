@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 import secrets
 from datetime import datetime, timezone
-from urllib.parse import quote
 
 import httpx
 import jwt

@@ -22,7 +22,6 @@ from fastapi.responses import StreamingResponse
 from agents.audit.events import AuditEvent, AuditStep, STEP_LABELS
 from agents.audit.schema import (
     AuditAnswerRequest,
-    AuditBusinessContext,
     AuditChatMessage,
     AuditRequest,
 )

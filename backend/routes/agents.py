@@ -40,7 +40,7 @@ from agents.audit.v3.runner import (
     get_session,
 )
 from agents.engines import PROVIDER_CONFIG_ATTR, resolve_engine, resolve_engine_model, resolve_engine_provider
-from agents.registry import AgentType, AGENT_REGISTRY, get_spec, list_specs
+from agents.registry import AgentType, get_spec, list_specs
 from config import get_configs
 from service.crawl.fetcher import SSRFError, validate_public_url
 from service.pipeline import now_iso
