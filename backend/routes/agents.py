@@ -359,6 +359,7 @@ async def _start_seo_audit(session_id: str, body: dict, emit_fn: Any) -> None:
                 business_context=req.business_context,
                 emit=emit_fn,
                 max_blog_posts=req.max_blog_posts,
+                user_preferences=req.user_preferences,
             )
             await emit_fn({"event": AuditEvent.PIPELINE_FINISHED, "status": "success"})
         except Exception as exc:

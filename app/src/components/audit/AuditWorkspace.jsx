@@ -84,6 +84,7 @@ export default function AuditWorkspace({ sessionId, auditParams }) {
   const [pendingQuestions, setPendingQuestions] = useState(null);
   const [errorMsg, setErrorMsg]               = useState("");
   const [retryCount, setRetryCount]           = useState(0);
+  const [streamingHtml, setStreamingHtml]     = useState("");
 
   // Refs that need to be readable inside async closures without stale values
   const abortRef            = useRef(null);
@@ -93,6 +94,8 @@ export default function AuditWorkspace({ sessionId, auditParams }) {
   const agentTypeRef        = useRef("audit_seo");
   const dragging            = useRef(false);
   const containerRef        = useRef(null);
+  const htmlBatchRef        = useRef("");
+  const htmlBatchTimer      = useRef(null);
 
   // Tell the nav bar whether to lock the back button
   useEffect(() => {
@@ -128,6 +131,9 @@ export default function AuditWorkspace({ sessionId, auditParams }) {
     setSelectedVersionId(null);
     setPendingQuestions(null);
     setErrorMsg("");
+    setStreamingHtml("");
+    htmlBatchRef.current = "";
+    clearTimeout(htmlBatchTimer.current);
     pipelineEndedRef.current  = false;
     reportReceivedRef.current = false;
     setRetryCount((c) => c + 1);
@@ -225,7 +231,18 @@ export default function AuditWorkspace({ sessionId, auditParams }) {
         }
         break;
 
+      case AuditEvent.REPORT_CHUNK:
+        htmlBatchRef.current += event.text;
+        clearTimeout(htmlBatchTimer.current);
+        htmlBatchTimer.current = setTimeout(() => {
+          setStreamingHtml(htmlBatchRef.current);
+        }, 80);
+        break;
+
       case AuditEvent.REPORT_UPDATED:
+        setStreamingHtml("");
+        htmlBatchRef.current = "";
+        clearTimeout(htmlBatchTimer.current);
         reportReceivedRef.current = true;
         setReportVersions((prev) => {
           const updated = [
@@ -444,6 +461,7 @@ export default function AuditWorkspace({ sessionId, auditParams }) {
           versions={reportVersions}
           selectedVersionId={selectedVersionId}
           onSelectVersion={setSelectedVersionId}
+          streamingHtml={streamingHtml}
           errorMsg={errorMsg}
           onRetry={handleRetry}
         />

@@ -22,6 +22,8 @@ export const AuditEvent = Object.freeze({
   SYNTHESIS_CHUNK:     "synthesis_chunk",   // legacy — no longer emitted
 
   THINKING_CHUNK:      "thinking_chunk",    // extended-thinking delta
+
+  REPORT_CHUNK:        "report_chunk",      // streaming HTML token inside <duct_report>
 });
 
 export const AuditStep = Object.freeze({

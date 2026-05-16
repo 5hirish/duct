@@ -21,6 +21,7 @@ import {
   Bell,
   BellOff,
   BellRing,
+  SlidersHorizontal,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import {
@@ -46,6 +47,8 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import EngineDialog from "./EngineDialog";
+import PreferencesDialog from "./PreferencesDialog";
+import { loadPreferences, hasNonDefaultPreferences } from "@/lib/userPreferences";
 import {
   DEFAULT_ENGINE,
   ENGINE_STORAGE_KEY,
@@ -235,6 +238,36 @@ function NotificationMenuItem() {
   );
 }
 
+function PreferencesDialogMenuItem() {
+  const [hasPrefs, setHasPrefs] = useState(false);
+
+  useEffect(() => {
+    const check = () => setHasPrefs(hasNonDefaultPreferences(loadPreferences()));
+    check();
+    window.addEventListener("storage", check);
+    return () => window.removeEventListener("storage", check);
+  }, []);
+
+  return (
+    <PreferencesDialog>
+      <DropdownMenuItem
+        onSelect={(e) => e.preventDefault()}
+        className="flex items-center justify-between"
+      >
+        <span className="flex items-center gap-2">
+          <SlidersHorizontal className="size-4" />
+          Preferences
+        </span>
+        {hasPrefs && (
+          <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+            Set
+          </span>
+        )}
+      </DropdownMenuItem>
+    </PreferencesDialog>
+  );
+}
+
 function SidebarUserFooter() {
   const { user, signOut } = useAuth();
   const { resolvedTheme, setTheme } = useTheme();
@@ -314,6 +347,7 @@ function SidebarUserFooter() {
             </span>
           </DropdownMenuItem>
         </EngineDialog>
+        <PreferencesDialogMenuItem />
         <NotificationMenuItem />
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={signOut}>
@@ -374,8 +408,8 @@ export default function AppSidebar() {
   const connectionCount = useConnectionCount();
 
   function isActive(item) {
-    if (!item.matchPrefix) return false;
-    return pathname.startsWith(item.matchPrefix);
+    if (!item.matchPrefix || !pathname) return false;
+    return pathname === item.matchPrefix || pathname.startsWith(item.matchPrefix + "/");
   }
 
   return (

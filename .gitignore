@@ -3,6 +3,9 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 
+# Test output artifacts (locally generated; not committed)
+backend/tests/outputs/
+
 # Python
 **/__pycache__/
 **/*.pyc

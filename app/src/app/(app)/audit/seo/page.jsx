@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { loadPreferences } from "@/lib/userPreferences";
 
 const CONTENT_TYPES = [
   { value: "", label: "Select type…" },
@@ -53,6 +54,7 @@ export default function SeoAuditSetupPage() {
         },
         effort,
         adaptive_thinking: adaptiveThinking,
+        user_preferences: loadPreferences(),
       };
       const sessionId = crypto.randomUUID();
       sessionStorage.setItem(`audit_session_${sessionId}`, JSON.stringify(params));

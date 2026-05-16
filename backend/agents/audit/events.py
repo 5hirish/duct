@@ -32,6 +32,8 @@ class AuditEvent(StrEnum):
 
     THINKING_CHUNK = "thinking_chunk"     # model extended-thinking delta
 
+    REPORT_CHUNK = "report_chunk"         # streaming HTML token inside <duct_report>
+
 
 class AuditStep(StrEnum):
     """step_id values used in STEP_STARTED / STEP_FINISHED events."""

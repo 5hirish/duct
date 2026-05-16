@@ -14,6 +14,59 @@ from __future__ import annotations
 import json
 
 from agents.audit.schema import AuditBusinessContext, CrawlResult, PageSignals
+from agents.user_preferences import UserPreferences
+
+_OUTCOME_LABELS: dict[str, str] = {
+    "revenue":    "Revenue & Growth",
+    "efficiency": "Efficiency & Speed",
+    "risk":       "Risk & Compliance",
+    "quality":    "Quality & Standards",
+}
+
+_STYLE_GUIDANCE: dict[str, str] = {
+    "executive": (
+        "Lead every finding with business impact (lost traffic, revenue risk, "
+        "competitive gap). Keep findings to 2 sentences max. Prioritise the top 3 "
+        "actions only. Avoid technical jargon — translate signals into outcomes."
+    ),
+    "practitioner": (
+        "Be signal-driven and actionable. Include specific URLs, measured values, "
+        "and step-by-step remediation. Moderate detail — enough to act without "
+        "unnecessary padding."
+    ),
+    "technical": (
+        "Include HTTP status codes, response headers, crawl-budget signals, "
+        "and developer-specific implementation notes. Reference RFC or spec "
+        "where relevant. Target a technically literate audience."
+    ),
+}
+
+_DEPTH_GUIDANCE: dict[str, str] = {
+    "summary":  "Surface the top 5 highest-impact findings only. One recommended action per finding. Skip supporting detail.",
+    "balanced": "Include all meaningful findings with full context, evidence, and recommended actions.",
+    "detailed": "Include every finding, all evidence URLs, full supporting data, and alternative remediation paths.",
+}
+
+
+def _format_user_preferences(prefs: UserPreferences) -> str:
+    lines = [
+        f"  role: {prefs.role or 'not specified'}",
+        f"  communication_style: {prefs.communication_style}",
+        f"  report_depth: {prefs.report_depth}",
+        f"  primary_outcome: {_OUTCOME_LABELS.get(prefs.primary_outcome, 'not specified')}",
+        "",
+        "  Style guidance:",
+        f"  {_STYLE_GUIDANCE[prefs.communication_style]}",
+        "",
+        "  Depth guidance:",
+        f"  {_DEPTH_GUIDANCE[prefs.report_depth]}",
+    ]
+    if prefs.primary_outcome:
+        lines += [
+            "",
+            f"  Outcome focus: Weight findings and recommendations toward {_OUTCOME_LABELS[prefs.primary_outcome]} impact.",
+        ]
+    return "<user_preferences>\n" + "\n".join(lines) + "\n</user_preferences>"
 
 
 # ---------------------------------------------------------------------------
@@ -415,6 +468,7 @@ def build_system_prompt(is_continued: bool = False) -> str:
 def build_audit_user_prompt(
     crawl_result: CrawlResult,
     business_context: AuditBusinessContext,
+    user_preferences: UserPreferences | None = None,
 ) -> str:
     parts: list[str] = []
 
@@ -441,6 +495,16 @@ def build_audit_user_prompt(
         if business_context.primary_content_type:
             parts.append(f"  primary_content_type: {business_context.primary_content_type}")
         parts.append("</business_context>\n")
+
+    # User preferences — personalise communication style, depth, and outcome focus
+    if user_preferences and any([
+        user_preferences.role,
+        user_preferences.communication_style != "practitioner",
+        user_preferences.report_depth != "balanced",
+        user_preferences.primary_outcome,
+    ]):
+        parts.append(_format_user_preferences(user_preferences))
+        parts.append("")
 
     # Crawl metadata
     parts.append("<crawl_data>")

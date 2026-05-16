@@ -46,6 +46,10 @@ ruff = "^0.15"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s  %(name)-35s  %(levelname)-7s  %(message)s"
+log_cli_date_format = "%H:%M:%S"
 filterwarnings = [
     # Starlette form parser; third-party until FastAPI/Starlette adopts python_multipart import.
     "ignore:Please use `import python_multipart` instead\\.:PendingDeprecationWarning",

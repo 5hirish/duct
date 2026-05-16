@@ -9,6 +9,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from agents.models import AgentEffort
+from agents.user_preferences import UserPreferences
 
 
 
@@ -131,6 +132,7 @@ class AuditRequest(BaseModel):
     effort: AgentEffort = AgentEffort.MEDIUM
     adaptive_thinking: bool = False
     crawl_depth: CrawlDepth = CrawlDepth.DEEP
+    user_preferences: UserPreferences = Field(default_factory=UserPreferences)
 
 
 class AuditAnswerRequest(BaseModel):

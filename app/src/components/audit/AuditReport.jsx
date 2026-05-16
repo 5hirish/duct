@@ -257,6 +257,7 @@ export default function AuditReport({
   versions,
   selectedVersionId,
   onSelectVersion,
+  streamingHtml,
   errorMsg,
   onRetry,
 }) {
@@ -266,17 +267,18 @@ export default function AuditReport({
     versions?.find((v) => v.version_id === selectedVersionId) ||
     versions?.[versions.length - 1];
 
-  const hasReport = !!selectedVersion?.report?.html_report;
+  const html = selectedVersion?.report?.html_report || streamingHtml || "";
+  const hasReport = !!html;
   const isFailed = phase === Phase.FAILED;
   const isPipeline = phase === Phase.PIPELINE || phase === Phase.STARTING;
 
   function handleDownload() {
-    if (!selectedVersion?.report?.html_report) return;
-    const blob = new Blob([selectedVersion.report.html_report], { type: "text/html" });
+    if (!html) return;
+    const blob = new Blob([html], { type: "text/html" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `duct-seo-v${selectedVersion.version_id}.html`;
+    a.download = `duct-seo-v${selectedVersion?.version_id ?? "draft"}.html`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -323,8 +325,8 @@ export default function AuditReport({
           <>
             <iframe
               ref={iframeRef}
-              srcDoc={selectedVersion.report.html_report}
-              sandbox="allow-same-origin allow-modals"
+              srcDoc={html}
+              sandbox="allow-modals"
               title="SEO Audit Report"
               className="w-full h-full border-0"
             />

@@ -267,6 +267,7 @@ async def run_synthesis(
     emit: EmitFn,
     effort: AgentEffort = ENGINE_DEFAULT_EFFORT[Engine.V3],
     adaptive_thinking: bool = False,
+    user_preferences=None,  # UserPreferences | None
     chat_idle_timeout: float = 1800.0,
 ) -> tuple[AuditReport | None, bool]:  # (report, had_thinking)
     """Single-session artifact pattern: generation + chat in one ClaudeSDKClient.
@@ -291,7 +292,7 @@ async def run_synthesis(
         logger.error("run_synthesis: session %s not found; creating fallback", session_id)
         session = create_audit_session(session_id)
 
-    initial_prompt = build_audit_user_prompt(crawl_result, business_context)
+    initial_prompt = build_audit_user_prompt(crawl_result, business_context, user_preferences)
     system_prompt = build_unified_system_prompt()
 
     # ------------------------------------------------------------------
@@ -359,6 +360,11 @@ async def run_synthesis(
     async def _emit_report_version(report: AuditReport, version_id: int) -> None:
         if not report.update_label:
             report.update_label = "Initial audit" if version_id == 1 else f"Update {version_id}"
+        elapsed_html = (perf_counter() - _open_tag_at) if _open_tag_at else 0.0
+        logger.info(
+            "synthesis: report v%d finalised — %d chars HTML, %d chunks, %.1fs streaming",
+            version_id, len(report.html_report), _report_chunk_count, elapsed_html,
+        )
         versioned = VersionedReport(
             version_id=version_id,
             label=report.update_label,
@@ -435,7 +441,13 @@ async def run_synthesis(
                     session.chat_queue.get(), timeout=chat_idle_timeout  # type: ignore[attr-defined]
                 )
             except asyncio.TimeoutError:
-                logger.info("audit: session %s idle timeout", session_id)
+                # The chat queue was empty — no user follow-up arrived.
+                # Synthesis is still running in the background; this only
+                # means no further messages will be sent to the model.
+                logger.info(
+                    "audit: session %s chat queue idle (synthesis still running)",
+                    session_id,
+                )
                 break
             if msg is None:
                 break
@@ -455,6 +467,9 @@ async def run_synthesis(
     _turn_text: list[str] = []
     had_thinking = False
     initial_report: AuditReport | None = None
+    _first_token_at: float | None = None   # perf_counter when first text delta arrived
+    _open_tag_at: float | None = None      # perf_counter when <duct_report> opened
+    _report_chunk_count = 0                # total REPORT_CHUNK events emitted
 
     async def _flush_holdback() -> None:
         nonlocal _holdback
@@ -464,18 +479,22 @@ async def run_synthesis(
             _holdback = ""
 
     async def _process_text(chunk: str) -> None:
-        """Buffer <duct_report> HTML; stream everything else as AGENT_MESSAGE_CHUNK."""
-        nonlocal _in_report_tag, _report_buf, _holdback
+        """Stream <duct_report> HTML tokens live; stream everything else as AGENT_MESSAGE_CHUNK."""
+        nonlocal _in_report_tag, _report_buf, _holdback, initial_report
+        nonlocal _open_tag_at, _report_chunk_count
 
         if _in_report_tag:
-            _report_buf += chunk
-            if _CLOSE_TAG in _report_buf:
-                html_part, _, after = _report_buf.partition(_CLOSE_TAG)
+            if _CLOSE_TAG in chunk:
+                # Close tag fully contained in this chunk
+                safe, _, remainder = chunk.partition(_CLOSE_TAG)
+                if safe:
+                    _report_chunk_count += 1
+                    _report_buf += safe
+                    await emit({"event": AuditEvent.REPORT_CHUNK, "text": safe})
                 _in_report_tag = False
+                html_part = _report_buf
                 _report_buf = ""
-                # Build AuditReport from the HTML artifact + accumulated summary text
                 from datetime import datetime, timezone
-                nonlocal initial_report
                 summary = "".join(_turn_text).strip()
                 initial_report = AuditReport(
                     url=crawl_result.plan.root_url,
@@ -485,8 +504,35 @@ async def run_synthesis(
                     html_report=html_part.strip(),
                 )
                 await _emit_report_version(initial_report, 1)
-                if after:
-                    await _process_text(after)
+                if remainder:
+                    await _process_text(remainder)
+            else:
+                # Accumulate and check for close tag split across chunks
+                _report_buf += chunk
+                if _CLOSE_TAG in _report_buf:
+                    html_part, _, remainder = _report_buf.partition(_CLOSE_TAG)
+                    _in_report_tag = False
+                    _report_buf = ""
+                    from datetime import datetime, timezone
+                    summary = "".join(_turn_text).strip()
+                    initial_report = AuditReport(
+                        url=crawl_result.plan.root_url,
+                        generated_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                        update_label="Initial audit",
+                        executive_summary=summary,
+                        html_report=html_part.strip(),
+                    )
+                    await _emit_report_version(initial_report, 1)
+                    if remainder:
+                        await _process_text(remainder)
+                elif chunk:
+                    _report_chunk_count += 1
+                    if _report_chunk_count % 50 == 0:
+                        logger.info(
+                            "synthesis: HTML streaming — %d chunks, ~%d chars buffered",
+                            _report_chunk_count, len(_report_buf),
+                        )
+                    await emit({"event": AuditEvent.REPORT_CHUNK, "text": chunk})
             return
 
         working = _holdback + chunk
@@ -498,23 +544,16 @@ async def run_synthesis(
                 await emit({"event": AuditEvent.AGENT_MESSAGE_CHUNK, "text": before})
                 _turn_text.append(before)
             _in_report_tag = True
-            _report_buf = after
-            if _CLOSE_TAG in _report_buf:
-                html_part, _, rest = _report_buf.partition(_CLOSE_TAG)
-                _in_report_tag = False
-                _report_buf = ""
-                from datetime import datetime, timezone
-                summary = "".join(_turn_text).strip()
-                initial_report = AuditReport(
-                    url=crawl_result.plan.root_url,
-                    generated_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
-                    update_label="Initial audit",
-                    executive_summary=summary,
-                    html_report=html_part.strip(),
-                )
-                await _emit_report_version(initial_report, 1)
-                if rest:
-                    await _process_text(rest)
+            _report_buf = ""
+            _open_tag_at = perf_counter()
+            elapsed_to_tag = (_open_tag_at - _first_token_at) if _first_token_at else 0.0
+            logger.info(
+                "synthesis: <duct_report> opened — HTML streaming started (%.1fs after first token)",
+                elapsed_to_tag,
+            )
+            # Recurse to process `after` through the streaming path
+            if after:
+                await _process_text(after)
         else:
             holdback_len = len(_OPEN_TAG) - 1
             if len(working) > holdback_len:
@@ -551,6 +590,9 @@ async def run_synthesis(
                         elif delta_type == "text_delta":
                             chunk = delta.get("text", "")
                             if chunk:
+                                if _first_token_at is None:
+                                    _first_token_at = perf_counter()
+                                    logger.info("synthesis: first text token received")
                                 await _process_text(chunk)
 
                     elif ev_type == "message_stop":
@@ -615,6 +657,7 @@ class ClaudeAuditRunner:
         max_blog_posts: int = 5,
         crawl_depth: str = "deep",
         chat_idle_timeout: float = 1800.0,
+        user_preferences=None,  # UserPreferences | None
     ) -> AuditReport | None:
         from agents.audit.schema import CrawlDepth
         start = perf_counter()
@@ -714,6 +757,7 @@ class ClaudeAuditRunner:
             effort=self.effort,
             adaptive_thinking=self.adaptive_thinking,
             chat_idle_timeout=chat_idle_timeout,
+            user_preferences=user_preferences,
         )
 
         await emit({

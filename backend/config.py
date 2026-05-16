@@ -197,7 +197,6 @@ def sentry_otel_env(cfg: Configs) -> dict[str, str]:
 
     return {
         "CLAUDE_CODE_ENABLE_TELEMETRY":        "1",
-        "CLAUDE_CODE_ENHANCED_TELEMETRY_BETA": "1",
         "OTEL_SERVICE_NAME":                   cfg.app_env,
         "OTEL_EXPORTER_OTLP_ENDPOINT":         base_endpoint,
         "OTEL_EXPORTER_OTLP_HEADERS":          f"sentry sentry_key={public_key}",
