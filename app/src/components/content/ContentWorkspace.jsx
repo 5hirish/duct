@@ -1,0 +1,343 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import ContentChat from "./ContentChat";
+import { Phase } from "./contentPhase";
+import {
+  answerContentQuestions,
+  closeContentSession,
+  consumeSseStream,
+  openPlanStream,
+  openPostStream,
+  sendContentChat,
+} from "../../lib/contentApi";
+import { ContentEvent } from "../../lib/contentEvents";
+
+const INITIAL_SPLIT = 50;
+
+/**
+ * Universal split-pane workspace for the content agent.
+ *
+ * Props:
+ *   - mode: 'plan_month' | 'draft_post'
+ *   - context: { projectId } | { projectId, planId, dayIndex, topic, pillar, postId }
+ *   - renderViewport: ({ payload, mode, sessionId }) => ReactNode
+ *     Called every render with the latest plan/post payload from the agent.
+ */
+export default function ContentWorkspace({ mode, context, renderViewport }) {
+  const [leftWidth, setLeftWidth] = useState(() => {
+    if (typeof window !== "undefined") {
+      return Number(localStorage.getItem("content_split_w") || INITIAL_SPLIT);
+    }
+    return INITIAL_SPLIT;
+  });
+
+  const [phase,    setPhase]    = useState(Phase.STARTING);
+  const [steps,    setSteps]    = useState([]);
+  const [todos,    setTodos]    = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [pendingQuestions, setPendingQuestions] = useState(null);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [retryCount, setRetryCount] = useState(0);
+  const [payload, setPayload]   = useState(null);
+  const [sessionId, setSessionId] = useState(null);
+
+  const abortRef = useRef(null);
+  const pipelineEndedRef = useRef(false);
+  const sessionIdRef     = useRef(null);
+  const dragging         = useRef(false);
+  const containerRef     = useRef(null);
+
+  // ---------------------------------------------------------------------------
+  // Retry
+  // ---------------------------------------------------------------------------
+
+  function handleRetry() {
+    setPhase(Phase.STARTING);
+    setSteps([]);
+    setTodos([]);
+    setMessages([]);
+    setPendingQuestions(null);
+    setErrorMsg("");
+    setPayload(null);
+    setSessionId(null);
+    pipelineEndedRef.current = false;
+    setRetryCount((c) => c + 1);
+  }
+
+  // ---------------------------------------------------------------------------
+  // SSE lifecycle
+  // ---------------------------------------------------------------------------
+
+  useEffect(() => {
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
+    pipelineEndedRef.current = false;
+
+    async function start() {
+      try {
+        const opener = mode === "plan_month" ? openPlanStream : openPostStream;
+        const { body, sessionId: sid } = await opener(context, { signal: ctrl.signal });
+        sessionIdRef.current = sid;
+        setSessionId(sid);
+
+        await consumeSseStream(body, handleEvent, ctrl.signal);
+
+        if (!ctrl.signal.aborted && !pipelineEndedRef.current) {
+          setErrorMsg("Backend closed the stream unexpectedly.");
+          setPhase(Phase.FAILED);
+        }
+      } catch (err) {
+        if (!ctrl.signal.aborted) {
+          setErrorMsg(err.message || "Stream error.");
+          setPhase(Phase.FAILED);
+        }
+      }
+    }
+
+    start();
+    return () => {
+      ctrl.abort();
+      if (sessionIdRef.current) {
+        closeContentSession(sessionIdRef.current).catch(() => {});
+        sessionIdRef.current = null;
+      }
+    };
+  }, [retryCount, mode, JSON.stringify(context)]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ---------------------------------------------------------------------------
+  // SSE event handler
+  // ---------------------------------------------------------------------------
+
+  function handleEvent(event) {
+    switch (event.event) {
+
+      case ContentEvent.STEP_STARTED:
+        setPhase(Phase.PIPELINE);
+        setSteps((prev) => {
+          const existing = prev.find((s) => s.step_id === event.step_id);
+          if (existing) {
+            return prev.map((s) =>
+              s.step_id === event.step_id
+                ? { ...s, status: "running", label: event.label || s.label, summary: event.summary }
+                : s,
+            );
+          }
+          return [
+            ...prev,
+            {
+              step_id: event.step_id,
+              label: event.label || event.step_id,
+              status: "running",
+              summary: event.summary || "",
+            },
+          ];
+        });
+        break;
+
+      case ContentEvent.STEP_FINISHED:
+        setSteps((prev) =>
+          prev.map((s) =>
+            s.step_id === event.step_id
+              ? { ...s, status: event.status || "success", summary: event.summary || s.summary }
+              : s,
+          ),
+        );
+        break;
+
+      case ContentEvent.STEP_FAILED:
+        setSteps((prev) =>
+          prev.map((s) =>
+            s.step_id === event.step_id
+              ? { ...s, status: "failed", summary: event.error || s.summary }
+              : s,
+          ),
+        );
+        break;
+
+      case ContentEvent.THINKING_CHUNK:
+        setMessages((prev) => {
+          const last = prev[prev.length - 1];
+          if (last?.role === "assistant" && last.streaming)
+            return [...prev.slice(0, -1), { ...last, thinking: (last.thinking || "") + event.text }];
+          return [...prev, { role: "assistant", text: "", thinking: event.text, streaming: true }];
+        });
+        break;
+
+      case ContentEvent.QUESTIONS_REQUIRED:
+        setPendingQuestions(event.questions);
+        setPhase(Phase.QUESTIONS);
+        if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+          new Notification("Duct — Your input is needed", {
+            body: "The content agent has a question before continuing.",
+            icon: "/favicon.ico",
+          });
+        }
+        break;
+
+      case ContentEvent.REPORT_CHUNK:
+        // Stream tokens are accumulated inside <duct_report>; we don't render
+        // them live in MVP (the close-tag PLAN_GENERATED / POST_DRAFT_UPDATED
+        // gives us the structured payload). Future: render to a "streaming
+        // preview" indicator.
+        break;
+
+      case ContentEvent.PLAN_GENERATED:
+        setPayload({ type: "plan", ...event.payload });
+        break;
+
+      case ContentEvent.POST_DRAFT_UPDATED:
+        setPayload({ type: "post", ...event.payload });
+        break;
+
+      case ContentEvent.PIPELINE_FINISHED:
+        pipelineEndedRef.current = true;
+        setPhase(Phase.READY);
+        break;
+
+      case ContentEvent.PIPELINE_FAILED:
+        pipelineEndedRef.current = true;
+        setErrorMsg(event.error || "Content pipeline failed.");
+        setPhase(Phase.FAILED);
+        break;
+
+      case ContentEvent.TODO_UPDATE:
+        setTodos(event.todos || []);
+        break;
+
+      case ContentEvent.AGENT_MESSAGE_CHUNK:
+        setMessages((prev) => {
+          const last = prev[prev.length - 1];
+          if (last?.role === "assistant" && last.streaming)
+            return [...prev.slice(0, -1), { ...last, text: last.text + event.text }];
+          return [...prev, { role: "assistant", text: event.text, streaming: true }];
+        });
+        break;
+
+      case ContentEvent.MESSAGE_STOP:
+        setMessages((prev) => {
+          const last = prev[prev.length - 1];
+          if (last?.streaming) return [...prev.slice(0, -1), { ...last, streaming: false }];
+          return prev;
+        });
+        setPhase((prev) => (prev === Phase.CHATTING ? Phase.READY : prev));
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // User actions
+  // ---------------------------------------------------------------------------
+
+  async function handleAnswerQuestions(answers) {
+    setPendingQuestions(null);
+    setPhase(Phase.PIPELINE);
+    try {
+      await answerContentQuestions(sessionIdRef.current, answers);
+    } catch (err) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "send_error",
+          text: `Failed to submit answers: ${err.message || "network error"}.`,
+          content: null,
+        },
+      ]);
+      setPendingQuestions(answers);
+      setPhase(Phase.QUESTIONS);
+    }
+  }
+
+  async function handleSendMessage(content) {
+    const text = typeof content === "string" ? content : "[image attached]";
+    setMessages((prev) => {
+      const cleaned = prev[prev.length - 1]?.role === "send_error" ? prev.slice(0, -1) : prev;
+      return [...cleaned, { role: "user", text }];
+    });
+    setPhase(Phase.CHATTING);
+    try {
+      await sendContentChat(sessionIdRef.current, content);
+    } catch (err) {
+      setMessages((prev) => [
+        ...prev,
+        { role: "send_error", text: err.message || "Failed to send message.", content },
+      ]);
+      setPhase(Phase.READY);
+    }
+  }
+
+  function handleRetrySend(content) {
+    handleSendMessage(content);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Drag divider
+  // ---------------------------------------------------------------------------
+
+  function onMouseDownDivider(e) {
+    e.preventDefault();
+    dragging.current = true;
+    function onMove(ev) {
+      if (!dragging.current || !containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const pct = Math.min(80, Math.max(20, ((ev.clientX - rect.left) / rect.width) * 100));
+      setLeftWidth(pct);
+      localStorage.setItem("content_split_w", String(pct));
+    }
+    function onUp() {
+      dragging.current = false;
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    }
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Render
+  // ---------------------------------------------------------------------------
+
+  return (
+    <div ref={containerRef} className="flex h-full w-full overflow-hidden">
+      <div
+        className="flex flex-col overflow-hidden border-r border-border/60"
+        style={{ width: `${leftWidth}%`, minWidth: "280px" }}
+      >
+        <ContentChat
+          mode={mode}
+          phase={phase}
+          steps={steps}
+          todos={todos}
+          messages={messages}
+          pendingQuestions={pendingQuestions}
+          errorMsg={errorMsg}
+          onAnswerQuestions={handleAnswerQuestions}
+          onSendMessage={handleSendMessage}
+          onRetrySend={handleRetrySend}
+          onRetry={handleRetry}
+        />
+      </div>
+
+      <div
+        onMouseDown={onMouseDownDivider}
+        title="Drag to resize"
+        className="w-3 shrink-0 cursor-col-resize select-none flex items-center justify-center group"
+      >
+        <div className="w-px h-full bg-border/60 group-hover:bg-primary/30 transition-colors" />
+      </div>
+
+      <div className="flex-1 flex flex-col overflow-hidden min-w-[280px]">
+        {renderViewport
+          ? renderViewport({ payload, mode, sessionId, phase })
+          : (
+              <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+                No viewport configured.
+              </div>
+            )}
+      </div>
+    </div>
+  );
+}
