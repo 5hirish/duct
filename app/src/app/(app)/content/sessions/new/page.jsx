@@ -1,24 +1,35 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import ContentWorkspace from "@/components/content/ContentWorkspace";
 import PlanViewport from "@/components/content/PlanViewport";
+import { listPlans } from "@/lib/contentApi";
 import { getActiveProjectId } from "@/lib/projects";
 
 /**
  * Brand-new plan_month session.
- * Triggers an SSE stream on mount. The session id is held in the workspace's
- * sessionIdRef; we don't persist it cross-route in MVP.
+ *
+ * Clicking "Draft this post →" on a day card routes the user to
+ * /content/posts/new?plan_id=<the latest plan>&day=<dayIndex> which
+ * opens a draft_post workspace bound to that day.
  */
 export default function NewPlanSessionPage() {
   const router = useRouter();
+  const [projectId, setProjectId] = useState(null);
+  const [latestPlanId, setLatestPlanId] = useState(null);
 
   useEffect(() => {
-    if (!getActiveProjectId()) router.replace("/content");
+    const id = getActiveProjectId();
+    if (!id) { router.replace("/content"); return; }
+    setProjectId(id);
+    // Resolve the latest plan id so onReviseDay can target it. We poll the
+    // backend after PIPELINE_FINISHED is observed (handled in the workspace).
+    listPlans(id).then((plans) => {
+      if (Array.isArray(plans) && plans[0]?.id) setLatestPlanId(plans[0].id);
+    }).catch(() => {});
   }, [router]);
 
-  const projectId = typeof window !== "undefined" ? getActiveProjectId() : null;
   if (!projectId) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -27,22 +38,22 @@ export default function NewPlanSessionPage() {
     );
   }
 
+  function reviseDay(dayIndex) {
+    const params = new URLSearchParams();
+    if (latestPlanId) params.set("plan_id", latestPlanId);
+    if (dayIndex)     params.set("day", String(dayIndex));
+    router.push(`/content/posts/new?${params.toString()}`);
+  }
+
   return (
     <div className="h-full">
       <ContentWorkspace
         mode="plan_month"
         context={{ projectId }}
-        renderViewport={({ payload }) => (
-          <PlanViewport
-            payload={payload}
-            onReviseDay={(dayIndex) => {
-              // For MVP: jump back to the landing and let the user start a
-              // draft_post session from the day card. A direct "draft from
-              // Day N" flow comes in Phase 6.
-              router.push(`/content?day=${dayIndex}`);
-            }}
-          />
-        )}
+        renderViewport={({ payload }) => {
+          if (payload?.id && payload.id !== latestPlanId) setLatestPlanId(payload.id);
+          return <PlanViewport payload={payload} onReviseDay={reviseDay} />;
+        }}
       />
     </div>
   );

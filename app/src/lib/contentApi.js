@@ -243,17 +243,35 @@ export async function markPostPosted(postId, { tiktokUrl } = {}) {
   return jsonOrThrow(res);
 }
 
-export async function publishPost(postId, { accountIds, scheduledAt } = {}) {
+/**
+ * POST /api/content/posts/{id}/publish — uploads each linked image to
+ * PostBridge then creates the post.
+ *
+ * @param postId          Content post UUID
+ * @param socialAccountIds Numeric PostBridge social account IDs
+ * @param scheduledAt     ISO 8601 string (optional; omit to post now)
+ * @param tiktokDraft     true → land as a TikTok draft, false → schedule/post
+ */
+export async function publishPost(postId, { socialAccountIds, scheduledAt, tiktokDraft = false } = {}) {
   const res = await fetch(
     `${BASE}/api/content/posts/${encodeURIComponent(postId)}/publish`,
     {
       method: "POST",
       headers: backendApiHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({
-        account_ids: accountIds,
+        social_account_ids: socialAccountIds,
         ...(scheduledAt ? { scheduled_at: scheduledAt } : {}),
+        tiktok_draft: tiktokDraft,
       }),
     },
+  );
+  return jsonOrThrow(res);
+}
+
+export async function syncPostDaily(postId) {
+  const res = await fetch(
+    `${BASE}/api/content/posts/${encodeURIComponent(postId)}/sync-daily`,
+    { method: "POST", headers: backendApiHeaders() },
   );
   return jsonOrThrow(res);
 }

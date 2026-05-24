@@ -108,15 +108,18 @@ DEFAULT_IMAGE_MODEL = ImageModel.GEMINI_3_1_FLASH_IMAGE_PREVIEW
 
 
 class Platform(StrEnum):
-    """Publishing channels used by PostBridge + UI selectors."""
+    """Publishing channels — values match the PostBridge v1 API platform names."""
 
-    TIKTOK    = "tiktok"
-    INSTAGRAM = "instagram"
-    YOUTUBE   = "youtube"
-    LINKEDIN  = "linkedin"
-    X         = "x"
-    FACEBOOK  = "facebook"
-    THREADS   = "threads"
+    TIKTOK          = "tiktok"
+    INSTAGRAM       = "instagram"
+    YOUTUBE         = "youtube"
+    LINKEDIN        = "linkedin"
+    TWITTER         = "twitter"
+    FACEBOOK        = "facebook"
+    THREADS         = "threads"
+    BLUESKY         = "bluesky"
+    PINTEREST       = "pinterest"
+    GOOGLE_BUSINESS = "google_business"
 
 
 class AspectRatio(StrEnum):

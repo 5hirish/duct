@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import ContentWorkspace from "@/components/content/ContentWorkspace";
 import PostViewport from "@/components/content/PostViewport";
+import PublishModal from "@/components/content/PublishModal";
 import { getPost } from "@/lib/contentApi";
 import { getActiveProjectId } from "@/lib/projects";
 
@@ -29,6 +30,7 @@ export default function PostDetailPage() {
   const [post, setPost] = useState(null);
   const [revise, setRevise] = useState(false);
   const [err, setErr] = useState("");
+  const [publishOpen, setPublishOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -88,28 +90,47 @@ export default function PostDetailPage() {
     );
   }
 
-  // Read-only viewport with a "Revise" CTA in the header.
+  const canPublish = post.status !== "posted";
+
   return (
     <div className="h-full flex flex-col">
-      <header className="border-b border-border/60 px-4 py-2 flex items-center justify-between shrink-0">
-        <div>
-          <p className="text-sm font-medium">{post.topic || post.post_dir_slug}</p>
-          <p className="text-xs text-muted-foreground">
+      <header className="border-b border-border/60 px-4 py-2 flex items-center justify-between shrink-0 gap-3">
+        <div className="min-w-0">
+          <p className="text-sm font-medium truncate">{post.topic || post.post_dir_slug}</p>
+          <p className="text-xs text-muted-foreground truncate">
             {post.pillar} · {post.status}
             {post.posted_at ? ` · posted ${new Date(post.posted_at).toLocaleDateString()}` : ""}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => router.push(`/content/posts/${postId}?revise=1`)}
-          className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/90"
-        >
-          Revise with Duct →
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          {canPublish && (
+            <button
+              type="button"
+              onClick={() => setPublishOpen(true)}
+              className="rounded-md border border-border bg-background px-3 py-1 text-xs font-medium hover:bg-muted/50"
+            >
+              Publish…
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => router.push(`/content/posts/${postId}?revise=1`)}
+            className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            Revise with Duct →
+          </button>
+        </div>
       </header>
       <div className="flex-1 overflow-hidden">
         <PostViewport payload={{ type: "post", ...post }} />
       </div>
+
+      <PublishModal
+        open={publishOpen}
+        onClose={() => setPublishOpen(false)}
+        post={post}
+        onPublished={(updated) => setPost(updated)}
+      />
     </div>
   );
 }

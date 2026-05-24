@@ -3,6 +3,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { patchPost } from "../../lib/contentApi";
 
+const STREAMING_HINTS = [
+  "Picking the hook…",
+  "Writing the caption…",
+  "Choosing hashtags…",
+  "Sketching image prompts…",
+];
+
 /**
  * Right-pane viewport for draft_post sessions.
  *
@@ -74,15 +81,7 @@ export default function PostViewport({ payload }) {
   }
 
   if (!post || post.type === undefined || (post.type && post.type !== "post" && !post.id)) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full text-center px-6 gap-2">
-        <div className="size-10 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
-        <p className="text-sm text-muted-foreground">Drafting the post…</p>
-        <p className="text-xs text-muted-foreground/70">
-          Slides, caption, and hashtags will appear here as soon as the draft is ready.
-        </p>
-      </div>
-    );
+    return <DraftingPulse />;
   }
 
   return (
@@ -147,6 +146,28 @@ export default function PostViewport({ payload }) {
 // ---------------------------------------------------------------------------
 // Subpanels
 // ---------------------------------------------------------------------------
+
+function DraftingPulse() {
+  const [idx, setIdx] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setIdx(i => (i + 1) % STREAMING_HINTS.length), 1800);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <div className="flex flex-col items-center justify-center h-full text-center px-6 gap-3">
+      <div className="size-10 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+      <p className="text-sm font-medium">Drafting the post…</p>
+      <p className="text-xs text-muted-foreground transition-opacity duration-500">
+        {STREAMING_HINTS[idx]}
+      </p>
+      <p className="text-[10px] text-muted-foreground/60 max-w-xs">
+        Slides, caption, and hashtags will appear here as soon as the draft is ready.
+        This usually takes 20–40 seconds.
+      </p>
+    </div>
+  );
+}
+
 
 function SlidesPreview({ html }) {
   // Use srcDoc with sandbox — no allow-scripts means inline event handlers

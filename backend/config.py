@@ -81,6 +81,11 @@ class Configs(BaseSettings):
     uploads_enabled: bool = False
     uploads_dir:     str  = "/app/uploads"
 
+    # PostBridge — server-wide API key (MVP). Used as fallback when no
+    # ConnectorCredential row exists for the calling user. Future: drop
+    # this once a per-user "connect PostBridge" UI lands.
+    postbridge_api_key: str = ""
+
     # When false (default), FastAPI does not serve /openapi.json, /docs, or /redoc.
     expose_openapi_docs: bool = False
 

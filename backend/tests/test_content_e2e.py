@@ -201,10 +201,14 @@ def test_run_plan_end_to_end_live():
     create_plan_session(session_id, project_id)
 
     async def _drive():
-        runner = ClaudeContentRunner(api_key=api_key, effort=AgentEffort.MEDIUM)
+        runner = ClaudeContentRunner(api_key=api_key)
         try:
             await asyncio.wait_for(
-                runner.run_plan(session_id, project_id, _emit, chat_idle_timeout=10.0),
+                runner.run_plan(
+                    session_id, project_id, _emit,
+                    effort=AgentEffort.MEDIUM,
+                    chat_idle_timeout=10.0,
+                ),
                 timeout=420.0,  # 7 minutes upper bound; the agent is told to be brisk
             )
         except asyncio.TimeoutError:

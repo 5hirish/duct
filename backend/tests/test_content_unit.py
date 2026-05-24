@@ -22,7 +22,6 @@ from claude_agent_sdk import AgentDefinition
 from agents.content.events import ContentEvent, ContentStep
 from agents.content.prompts import (
     DRAFT_POST_PROMPT,
-    ORCHESTRATOR_BASE_PROMPT,
     RESEARCH_PILLAR_PROMPT,
     build_orchestrator_system_prompt,
     build_plan_user_prompt,
@@ -39,7 +38,11 @@ from agents.content.schema import (
     PostDraft,
     make_session,
 )
-from agents.content.subagents import DRAFT_POST_AGENT, RESEARCH_PILLAR_AGENT
+from agents.content.subagents import (
+    BUILD_SLIDES_AGENT,
+    DRAFT_POST_AGENT,
+    RESEARCH_PILLAR_AGENT,
+)
 from agents.content.tools import build_content_mcp_server
 from agents.content.v3.runner import (
     ClaudeContentRunner,
@@ -104,6 +107,16 @@ def test_draft_post_agent_definition_shape():
     assert DRAFT_POST_AGENT.prompt is DRAFT_POST_PROMPT
     assert DRAFT_POST_AGENT.model == "claude-sonnet-4-6"
     assert "mcp__duct_content__fetch_format_library" in (DRAFT_POST_AGENT.tools or [])
+
+
+def test_build_slides_agent_definition_shape():
+    from agents.content.prompts import BUILD_SLIDES_PROMPT
+    assert isinstance(BUILD_SLIDES_AGENT, AgentDefinition)
+    assert BUILD_SLIDES_AGENT.prompt is BUILD_SLIDES_PROMPT
+    assert BUILD_SLIDES_AGENT.model == "claude-sonnet-4-6"
+    # Stage-2 needs no MCP readers; WebSearch only.
+    assert "WebSearch" in (BUILD_SLIDES_AGENT.tools or [])
+    assert all(not t.startswith("mcp__") for t in (BUILD_SLIDES_AGENT.tools or []))
 
 
 # ---------------------------------------------------------------------------
@@ -194,29 +207,52 @@ def test_post_draft_rejects_extra_fields():
 # ---------------------------------------------------------------------------
 
 
-def test_orchestrator_prompt_embeds_brand_context():
+def test_orchestrator_system_prompt_is_cache_stable():
+    """The system prompt must NOT include brand context — that goes in
+    the user message. This guarantees a stable cached prefix across
+    every project + user."""
     sys = build_orchestrator_system_prompt(_brand(), "plan_month")
-    assert "MaxAura" in sys
-    assert "face_shape" in sys
     assert "<duct_report>" in sys
     assert "submit_plan" in sys
     assert "research_pillar" in sys
-    assert "draft_post"     in sys
-    # mode-specific tail
+    assert "draft_post"      in sys
     assert "MODE: plan_month" in sys
-    # base preamble is included
-    assert ORCHESTRATOR_BASE_PROMPT.split("\n", 1)[0] in sys
+    # Cache stability: brand-specific content lives in the user message.
+    assert "MaxAura"   not in sys
+    assert "face_shape" not in sys
 
 
-def test_plan_user_prompt_lists_history():
+def test_orchestrator_system_prompt_identical_across_projects():
+    """Two different brands → identical system prompt (cache hit)."""
+    from agents.content.schema import ContentBrandContext, ContentPillar, ContentVisualAssets
+    from uuid import uuid4
+    brand_a = _brand()
+    brand_b = ContentBrandContext(
+        project_id=uuid4(),
+        project_name="DifferentBrand",
+        url="https://other.example.com",
+        audience="men 30-50 into coffee",
+        brand_voice="dry expert",
+        pillars=[ContentPillar(id="brewing", name="Brewing", description="...")],
+        visual=ContentVisualAssets(primary_color="#000", style="minimal"),
+    )
+    assert (
+        build_orchestrator_system_prompt(brand_a, "plan_month") ==
+        build_orchestrator_system_prompt(brand_b, "plan_month")
+    )
+
+
+def test_plan_user_prompt_carries_brand_and_history():
     p = build_plan_user_prompt(
         _brand(),
         history=[{"day_index": 1, "topic": "face shapes", "pillar": "face_shape", "status": "posted"}],
         formats=[{"slug": "format-d", "name": "Default UGC"}],
         avatars=[],
     )
+    # Brand stanza now lives here (cache-stable design)
+    assert "MaxAura"    in p
     assert "face_shape" in p
-    assert "format-d"  in p
+    assert "format-d"   in p
 
 
 def test_post_user_prompt_uses_day_or_freeform():

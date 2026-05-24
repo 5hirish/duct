@@ -5,23 +5,29 @@
  */
 
 export const Platform = Object.freeze({
-  TIKTOK:    "tiktok",
-  INSTAGRAM: "instagram",
-  YOUTUBE:   "youtube",
-  LINKEDIN:  "linkedin",
-  X:         "x",
-  FACEBOOK:  "facebook",
-  THREADS:   "threads",
+  TIKTOK:          "tiktok",
+  INSTAGRAM:       "instagram",
+  YOUTUBE:         "youtube",
+  LINKEDIN:        "linkedin",
+  TWITTER:         "twitter",
+  FACEBOOK:        "facebook",
+  THREADS:         "threads",
+  BLUESKY:         "bluesky",
+  PINTEREST:       "pinterest",
+  GOOGLE_BUSINESS: "google_business",
 });
 
 export const PLATFORM_LABELS = Object.freeze({
-  [Platform.TIKTOK]:    "TikTok",
-  [Platform.INSTAGRAM]: "Instagram",
-  [Platform.YOUTUBE]:   "YouTube",
-  [Platform.LINKEDIN]:  "LinkedIn",
-  [Platform.X]:         "X",
-  [Platform.FACEBOOK]:  "Facebook",
-  [Platform.THREADS]:   "Threads",
+  [Platform.TIKTOK]:          "TikTok",
+  [Platform.INSTAGRAM]:       "Instagram",
+  [Platform.YOUTUBE]:         "YouTube",
+  [Platform.LINKEDIN]:        "LinkedIn",
+  [Platform.TWITTER]:         "Twitter / X",
+  [Platform.FACEBOOK]:        "Facebook",
+  [Platform.THREADS]:         "Threads",
+  [Platform.BLUESKY]:         "Bluesky",
+  [Platform.PINTEREST]:       "Pinterest",
+  [Platform.GOOGLE_BUSINESS]: "Google Business",
 });
 
 export const PostStatus = Object.freeze({

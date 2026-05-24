@@ -48,7 +48,11 @@ from agents.content.schema import (
     PostDraft,
     make_session,
 )
-from agents.content.subagents import DRAFT_POST_AGENT, RESEARCH_PILLAR_AGENT
+from agents.content.subagents import (
+    BUILD_SLIDES_AGENT,
+    DRAFT_POST_AGENT,
+    RESEARCH_PILLAR_AGENT,
+)
 from agents.content.tools import build_content_mcp_server
 from agents.models import (
     AgentEffort,
@@ -378,8 +382,6 @@ async def _run(
             "mcp__duct_content__fetch_avatar_library",
             "mcp__duct_content__fetch_content_history",
             "mcp__duct_content__fetch_content_assets",
-            # Stubs — listed so the model can attempt and learn they're not
-            # ready yet (returns is_error with a clear "Phase 4/4b" message).
             "mcp__duct_content__generate_image",
             "mcp__duct_content__edit_image",
             "mcp__duct_content__publish_post",
@@ -387,8 +389,9 @@ async def _run(
             "mcp__duct_content__log_metrics",
         ],
         agents={
-            "research_pillar": RESEARCH_PILLAR_AGENT,
-            "draft_post":      DRAFT_POST_AGENT,
+            "research_pillar":    RESEARCH_PILLAR_AGENT,
+            "draft_post":         DRAFT_POST_AGENT,
+            "build_slides_html":  BUILD_SLIDES_AGENT,
         },
         can_use_tool=_can_use_tool,
         hooks={
@@ -607,22 +610,22 @@ async def _run(
 class ClaudeContentRunner:
     """High-level entrypoint used by routes/content.py.
 
-    One runner instance per request; sessions live in the module-level
-    `_sessions` registry so SSE consumers can attach independently.
+    Effort + adaptive_thinking are per-call so the route layer (and a
+    future UI) can dial them per request. Defaults are tuned for cost:
+    MEDIUM with adaptive thinking lets the model spend more on hard
+    turns (plan synthesis) without paying HIGH on every routine turn.
     """
 
-    def __init__(
-        self,
-        api_key: str,
-        *,
-        effort: AgentEffort = AgentEffort.HIGH,
-        adaptive_thinking: bool = True,
-    ) -> None:
+    # Defaults — overridable per-call from routes/content.py and the UI.
+    DEFAULT_PLAN_EFFORT  = AgentEffort.MEDIUM
+    DEFAULT_DRAFT_EFFORT = AgentEffort.MEDIUM
+    DEFAULT_PLAN_MAX_TURNS  = 120
+    DEFAULT_DRAFT_MAX_TURNS = 60
+
+    def __init__(self, api_key: str) -> None:
         if not api_key:
             raise ValueError("ANTHROPIC_API_KEY is required for ClaudeContentRunner.")
         self._api_key = api_key
-        self.effort = effort
-        self.adaptive_thinking = adaptive_thinking
 
     async def run_plan(
         self,
@@ -630,9 +633,18 @@ class ClaudeContentRunner:
         project_id: UUID,
         emit: EmitFn,
         *,
+        effort: AgentEffort | None = None,
+        adaptive_thinking: bool = True,
+        max_turns: int | None = None,
         chat_idle_timeout: float = 1800.0,
     ) -> None:
-        """Run a plan_month session end-to-end."""
+        """Run a plan_month session end-to-end.
+
+        Args:
+          effort: per-call effort override; defaults to DEFAULT_PLAN_EFFORT.
+          adaptive_thinking: when True the model decides per-turn depth.
+          max_turns: SDK turn ceiling; defaults to DEFAULT_PLAN_MAX_TURNS.
+        """
         session = _sessions.get(session_id) or create_plan_session(session_id, project_id)
         brand = _load_brand_context(project_id)
 
@@ -647,7 +659,6 @@ class ClaudeContentRunner:
             "label":   STEP_LABELS[ContentStep.LOAD_PROJECT],
             "status":  "running",
         })
-        # Simple loader: the orchestrator pulls history/library via @tools.
         await emit({
             "event":   ContentEvent.STEP_FINISHED,
             "step_id": ContentStep.LOAD_PROJECT,
@@ -666,9 +677,10 @@ class ClaudeContentRunner:
                 initial_prompt,
                 emit,
                 self._api_key,
-                effort=self.effort,
-                adaptive_thinking=self.adaptive_thinking,
+                effort=effort or self.DEFAULT_PLAN_EFFORT,
+                adaptive_thinking=adaptive_thinking,
                 chat_idle_timeout=chat_idle_timeout,
+                max_turns=max_turns or self.DEFAULT_PLAN_MAX_TURNS,
             )
             await emit({
                 "event":      ContentEvent.PIPELINE_FINISHED,
@@ -694,6 +706,9 @@ class ClaudeContentRunner:
         topic: str | None = None,
         pillar: str | None = None,
         format_style: str = "D",
+        effort: AgentEffort | None = None,
+        adaptive_thinking: bool = True,
+        max_turns: int | None = None,
         chat_idle_timeout: float = 1800.0,
     ) -> None:
         """Run a draft_post session end-to-end."""
@@ -724,10 +739,10 @@ class ClaudeContentRunner:
                 initial_prompt,
                 emit,
                 self._api_key,
-                effort=AgentEffort.MEDIUM,
-                adaptive_thinking=self.adaptive_thinking,
+                effort=effort or self.DEFAULT_DRAFT_EFFORT,
+                adaptive_thinking=adaptive_thinking,
                 chat_idle_timeout=chat_idle_timeout,
-                max_turns=60,
+                max_turns=max_turns or self.DEFAULT_DRAFT_MAX_TURNS,
             )
             await emit({
                 "event":      ContentEvent.PIPELINE_FINISHED,

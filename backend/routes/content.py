@@ -63,7 +63,7 @@ from agents.content.v3.runner import (
     get_session,
 )
 from agents.engines import PROVIDER_CONFIG_ATTR, Engine, resolve_engine_provider
-from agents.models import AgentEffort, Platform
+from agents.models import Platform
 from config import get_configs
 from db.session import get_session as db_session
 from models.content import (
@@ -157,7 +157,7 @@ async def _run_plan_worker(
         api_key = _resolve_api_key()
         if not api_key:
             raise ValueError("ANTHROPIC_API_KEY is not configured")
-        runner = ClaudeContentRunner(api_key=api_key, effort=AgentEffort.HIGH)
+        runner = ClaudeContentRunner(api_key=api_key)
         await runner.run_plan(session_id, project_id, emit_fn)
     except Exception as exc:
         logger.exception("content: plan worker error for session %s", session_id)
@@ -232,7 +232,7 @@ async def _run_draft_worker(
         api_key = _resolve_api_key()
         if not api_key:
             raise ValueError("ANTHROPIC_API_KEY is not configured")
-        runner = ClaudeContentRunner(api_key=api_key, effort=AgentEffort.MEDIUM)
+        runner = ClaudeContentRunner(api_key=api_key)
         # Resolve the Day from the plan if provided; otherwise pass topic/pillar.
         day_obj = None
         if req.plan_id is not None and req.day_index is not None:
@@ -1149,15 +1149,28 @@ def delete_asset(asset_id: UUID, db: Session = Depends(db_session)) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# PostBridge proxies (Phase 4)
+# PostBridge proxies (Phase 4) — schemas match the PostBridge v1 API
 # ---------------------------------------------------------------------------
 
 
+class SocialAccountOut(BaseModel):
+    id:       int
+    platform: str
+    username: str
+
+
 class PublishRequest(BaseModel):
+    """Body for POST /content/posts/{id}/publish.
+
+    social_account_ids are PostBridge's numeric IDs (see GET
+    /content/social-accounts). hashtags belong in `caption` per PostBridge.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
-    account_ids:  list[str]
-    scheduled_at: datetime | None = None
+    social_account_ids: list[int]
+    scheduled_at:       datetime | None = None
+    tiktok_draft:       bool = False
 
 
 @router.get("/content/social-accounts")
@@ -1165,7 +1178,7 @@ async def list_social_accounts(
     project_id: UUID,
     platform: str | None = None,
     db: Session = Depends(db_session),
-) -> list[dict]:
+) -> list[SocialAccountOut]:
     """List the user's connected PostBridge social accounts."""
     from service.post_bridge import PostBridgeAPIError, client_for_user
     proj = _project_or_404(db, project_id)
@@ -1177,8 +1190,11 @@ async def list_social_accounts(
         async with client as pb:
             accounts = await pb.list_social_accounts(platform=platform)
     except PostBridgeAPIError as exc:
-        raise HTTPException(exc.status_code or 502, exc.error.message or "PostBridge error") from exc
-    return [a.model_dump(mode="json") for a in accounts]
+        raise HTTPException(exc.status_code or 502, _friendly_pb_error(exc)) from exc
+    return [
+        SocialAccountOut(id=a.id, platform=a.platform.value, username=a.username)
+        for a in accounts
+    ]
 
 
 @router.post("/content/posts/{post_id}/publish")
@@ -1187,13 +1203,13 @@ async def publish_post_route(
     body: PublishRequest,
     db: Session = Depends(db_session),
 ) -> PostOut:
-    """Publish a saved post via PostBridge."""
+    """Upload each linked asset to PostBridge, then create the post."""
     from service.post_bridge import (
         PostBridgeAPIError,
         PostBridgeCreatePostRequest,
-        PostBridgePostType,
         client_for_user,
     )
+
     post = db.get(ContentPost, post_id)
     if post is None:
         raise HTTPException(404, "Post not found")
@@ -1201,48 +1217,64 @@ async def publish_post_route(
     if proj is None:
         raise HTTPException(404, "Project not found")
 
-    # Build media URLs from assets linked to this post.
     asset_rows = db.execute(
         select(ContentAsset)
         .where(ContentAsset.post_id == post.id, ContentAsset.project_id == post.project_id)
         .order_by(ContentAsset.created_at)
     ).scalars().all()
-    media_urls = [r.url for r in asset_rows if r.url]
-    if not media_urls:
-        raise HTTPException(400, "No media URLs for this post — generate or upload images first.")
+    if not asset_rows:
+        raise HTTPException(400, "Generate or upload at least one image before publishing.")
+
+    cfg = get_configs()
+    base = Path(cfg.uploads_dir or "/app/uploads")
+    asset_paths: list[tuple[Path, str, str, str]] = []
+    for a in asset_rows:
+        if not a.url.startswith("/uploads/"):
+            continue
+        disk = base / a.url[len("/uploads/"):]
+        if not disk.exists():
+            raise HTTPException(500, f"Asset bytes missing on disk for {a.url}.")
+        asset_paths.append((disk, a.filename or disk.name, a.mime_type or "image/png", a.url))
+    if not asset_paths:
+        raise HTTPException(400, "Couldn't find any uploaded image files for this post.")
 
     try:
         client = client_for_user(proj.user_id, db)
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
 
-    post_type = PostBridgePostType.SLIDESHOW
-    if post.post_type == "video":
-        post_type = PostBridgePostType.VIDEO
-    elif post.post_type == "image":
-        post_type = PostBridgePostType.IMAGE
-
-    request = PostBridgeCreatePostRequest(
-        account_ids=body.account_ids,
-        caption=post.caption,
-        hashtags=list(post.hashtags or []),
-        media_urls=media_urls,
-        scheduled_at=body.scheduled_at,
-        post_type=post_type,
-    )
     try:
         async with client as pb:
+            media_ids: list[str] = []
+            for disk, name, mime, _url in asset_paths:
+                data = disk.read_bytes()
+                upload = await pb.create_upload_url(name=name, mime_type=mime, size_bytes=len(data))
+                await pb.upload_media(data, upload.upload_url, mime)
+                media_ids.append(upload.media_id)
+
+            platform_configs: dict = {}
+            if body.tiktok_draft:
+                platform_configs["tiktok"] = {"draft": True}
+
+            request = PostBridgeCreatePostRequest(
+                caption=post.caption or "",
+                social_accounts=body.social_account_ids,
+                media=media_ids,
+                scheduled_at=body.scheduled_at,
+                platform_configurations=platform_configs or None,
+            )
             resp = await pb.create_post(request)
     except PostBridgeAPIError as exc:
-        raise HTTPException(exc.status_code or 502, exc.error.message or "PostBridge error") from exc
+        raise HTTPException(exc.status_code or 502, _friendly_pb_error(exc)) from exc
 
-    post.post_bridge_post_id   = resp.post_id
-    post.post_bridge_result_id = resp.result_id or ""
-    if resp.published_at:
-        post.posted_at = resp.published_at
-        post.status    = "posted"
+    post.post_bridge_post_id = resp.id
+    if resp.status.value == "posted":
+        post.status = "posted"
+        post.posted_at = datetime.now(timezone.utc)
+    elif resp.status.value == "scheduled":
+        post.status = "scheduled"
     else:
-        post.status = "scheduled" if resp.status.value in ("scheduled", "draft") else resp.status.value
+        post.status = resp.status.value
     db.add(post)
     db.commit()
     db.refresh(post)
@@ -1254,13 +1286,14 @@ async def sync_post_metrics(
     post_id: UUID,
     db: Session = Depends(db_session),
 ) -> PostOut:
-    """Fetch the latest analytics from PostBridge and merge into post.perf."""
+    """Sync → find post_result → fetch analytics → merge into post.perf."""
     from service.post_bridge import PostBridgeAPIError, client_for_user
+
     post = db.get(ContentPost, post_id)
     if post is None:
         raise HTTPException(404, "Post not found")
     if not post.post_bridge_post_id:
-        raise HTTPException(400, "Post has no post_bridge_post_id — publish it first.")
+        raise HTTPException(400, "Publish this post first — then we can pull metrics.")
     proj = db.get(Project, post.project_id)
     if proj is None:
         raise HTTPException(404, "Project not found")
@@ -1269,16 +1302,31 @@ async def sync_post_metrics(
         client = client_for_user(proj.user_id, db)
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
+
     try:
         async with client as pb:
-            analytics = await pb.get_analytics(post.post_bridge_post_id)
+            await pb.sync_analytics(platform="tiktok")
+            results = await pb.list_post_results(post_id=post.post_bridge_post_id, limit=10)
+            if not results:
+                raise HTTPException(409, "No post result yet — try again in a few minutes.")
+            chosen = next((r for r in results if r.success), results[0])
+            analytics_list = await pb.list_analytics(post_result_id=[chosen.id], limit=1)
+            if not analytics_list:
+                raise HTTPException(409, "Analytics haven't synced yet — try again in a few minutes.")
+            analytics = analytics_list[0]
     except PostBridgeAPIError as exc:
-        raise HTTPException(exc.status_code or 502, exc.error.message or "PostBridge error") from exc
+        raise HTTPException(exc.status_code or 502, _friendly_pb_error(exc)) from exc
 
     merged = dict(post.perf or {})
-    merged.update({k: v for k, v in analytics.model_dump(mode="json").items() if v is not None})
-    merged["last_synced_at"] = analytics.last_synced_at.isoformat() if analytics.last_synced_at else None
+    merged.update({
+        k: v for k, v in analytics.model_dump(mode="json").items()
+        if v is not None and k not in ("id",)
+    })
+    merged["last_synced_at"] = (
+        analytics.last_synced_at.isoformat() if analytics.last_synced_at else None
+    )
     post.perf = merged
+    post.post_bridge_result_id = chosen.id
     db.add(post)
     db.commit()
     db.refresh(post)
@@ -1292,11 +1340,12 @@ async def sync_post_daily(
 ) -> PostOut:
     """Refresh daily_perf snapshots from PostBridge."""
     from service.post_bridge import PostBridgeAPIError, client_for_user
+
     post = db.get(ContentPost, post_id)
     if post is None:
         raise HTTPException(404, "Post not found")
     if not post.post_bridge_post_id:
-        raise HTTPException(400, "Post has no post_bridge_post_id — publish it first.")
+        raise HTTPException(400, "Publish this post first — then we can pull daily snapshots.")
     proj = db.get(Project, post.project_id)
     if proj is None:
         raise HTTPException(404, "Project not found")
@@ -1305,14 +1354,43 @@ async def sync_post_daily(
         client = client_for_user(proj.user_id, db)
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
+
+    analytics_id = post.post_bridge_result_id
     try:
         async with client as pb:
-            daily = await pb.get_daily_analytics(post.post_bridge_post_id)
+            if not analytics_id:
+                results = await pb.list_post_results(post_id=post.post_bridge_post_id, limit=10)
+                chosen = next((r for r in results if r.success), results[0]) if results else None
+                if chosen is None:
+                    raise HTTPException(409, "No post result yet — try again in a few minutes.")
+                analytics_list = await pb.list_analytics(post_result_id=[chosen.id], limit=1)
+                if not analytics_list:
+                    raise HTTPException(409, "Analytics haven't synced yet — try again in a few minutes.")
+                analytics_id = analytics_list[0].id
+                post.post_bridge_result_id = chosen.id
+            daily = await pb.get_analytics_daily(analytics_id)
     except PostBridgeAPIError as exc:
-        raise HTTPException(exc.status_code or 502, exc.error.message or "PostBridge error") from exc
+        raise HTTPException(exc.status_code or 502, _friendly_pb_error(exc)) from exc
 
-    post.daily_perf = [s.model_dump(mode="json") for s in daily]
+    post.daily_perf = [s.model_dump(mode="json") for s in daily.snapshots]
     db.add(post)
     db.commit()
     db.refresh(post)
     return _post_out(post)
+
+
+def _friendly_pb_error(exc) -> str:
+    """Translate PostBridge errors into something a user can act on.
+
+    Hides internal status codes and stack traces; only surfaces what the
+    user can do next.
+    """
+    msg = (getattr(exc, "error", None) and getattr(exc.error, "message", "")) or ""
+    code = getattr(exc, "status_code", 0)
+    if code == 401 or code == 403:
+        return "Publishing isn't connected — ask your admin to set up the PostBridge connection."
+    if code == 429:
+        return "Hit the publishing rate limit — wait a minute and try again."
+    if code == 0:
+        return "Couldn't reach the publishing service. Check your internet and try again."
+    return msg or "Publishing failed. Please try again in a moment."

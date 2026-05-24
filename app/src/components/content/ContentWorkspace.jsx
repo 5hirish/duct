@@ -197,7 +197,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
 
       case ContentEvent.PIPELINE_FAILED:
         pipelineEndedRef.current = true;
-        setErrorMsg(event.error || "Content pipeline failed.");
+        setErrorMsg(friendlyErrorMessage(event.error));
         setPhase(Phase.FAILED);
         break;
 
@@ -274,6 +274,10 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
   }
 
   // ---------------------------------------------------------------------------
+  // Friendly error mapping — hide stack traces / status codes from users.
+  // ---------------------------------------------------------------------------
+
+  // ---------------------------------------------------------------------------
   // Drag divider
   // ---------------------------------------------------------------------------
 
@@ -340,4 +344,55 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
       </div>
     </div>
   );
+}
+
+
+/**
+ * Translate raw backend errors into actionable user-facing messages.
+ * Hides stack traces, status codes, and internal terminology. Falls back
+ * to a generic message when the input doesn't pattern-match.
+ */
+function friendlyErrorMessage(raw) {
+  const msg = String(raw || "").trim();
+  if (!msg) return "Something went wrong. Please try again.";
+
+  // Configuration gaps
+  if (/ANTHROPIC_API_KEY/i.test(msg)) {
+    return "The assistant isn't connected. Ask your admin to finish setup.";
+  }
+  if (/GEMINI_API_KEY/i.test(msg)) {
+    return "Image generation isn't connected yet. Ask your admin to finish setup.";
+  }
+  if (/uploads.*disabled/i.test(msg)) {
+    return "Image uploads aren't enabled in this environment.";
+  }
+  if (/POSTBRIDGE|post.?bridge.*connect/i.test(msg)) {
+    return "Publishing isn't connected. Ask your admin to set it up.";
+  }
+
+  // Common transient classes
+  if (/rate limit|429/i.test(msg)) {
+    return "We're hitting a rate limit — wait a minute and try again.";
+  }
+  if (/timeout|timed.?out/i.test(msg)) {
+    return "That took longer than expected. Try again.";
+  }
+  if (/network|connection|fetch failed|ECONNREFUSED/i.test(msg)) {
+    return "Couldn't reach the server. Check your internet and try again.";
+  }
+
+  // Validation
+  if (/validation|invalid|missing/i.test(msg) && msg.length < 200) {
+    return "Some input wasn't valid — please review and try again.";
+  }
+
+  // Don't leak status codes / file paths / stack traces.
+  if (/^\d{3}\b/.test(msg) || /Traceback|line \d+/i.test(msg)) {
+    return "Something went wrong on our end. Please try again in a moment.";
+  }
+
+  // Reasonably short, doesn't look technical → pass through.
+  if (msg.length < 200 && !/^\w+Error:/.test(msg)) return msg;
+
+  return "Something went wrong. Please try again.";
 }

@@ -86,30 +86,6 @@ def _asset_disk_path(asset: ContentAsset) -> Path | None:
     return base / asset.url[len("/uploads/"):]
 
 
-def _resolve_post_media_urls(db: Session, post: ContentPost) -> list[str]:
-    """Pick media URLs to send to PostBridge.
-
-    Strategy: prefer assets explicitly linked to this post (post_id FK),
-    sorted by created_at; fall back to any URLs embedded in image_prompts.
-    Filters to public /uploads/ URLs only — slides_html-embedded paths
-    that aren't asset rows are skipped.
-    """
-    rows = db.execute(
-        select(ContentAsset)
-        .where(ContentAsset.post_id == post.id, ContentAsset.project_id == post.project_id)
-        .order_by(ContentAsset.created_at)
-    ).scalars().all()
-    urls = [r.url for r in rows if r.url]
-    if urls:
-        return urls
-    # Fall back to URLs the agent referenced in image_prompts (rare).
-    for entry in (post.image_prompts or []):
-        if isinstance(entry, dict):
-            for k in ("asset_url", "url"):
-                v = entry.get(k)
-                if isinstance(v, str) and v.startswith("/uploads/"):
-                    urls.append(v)
-    return urls
 
 
 # ---------------------------------------------------------------------------
@@ -710,14 +686,16 @@ def build_content_mcp_server(
     @tool(
         name="publish_post",
         description=(
-            "Publish a saved post to one or more social platforms via PostBridge. "
-            "The user must have a PostBridge credential connected. Schedules for "
-            "now unless scheduled_at is provided."
+            "Publish a saved post via PostBridge. Uploads each generated slide "
+            "image to PostBridge, creates the post bound to one or more "
+            "social_account_ids (numeric, from list_social_accounts), and "
+            "stores the resulting PostBridge post id on the content_posts row."
         ),
         input_schema={
-            "post_id":      Annotated[str,       "UUID of the content_posts row to publish."],
-            "account_ids":  Annotated[list[str], "List of PostBridge social account IDs."],
-            "scheduled_at": Annotated[str,       "Optional ISO 8601 timestamp."],
+            "post_id":            Annotated[str,       "UUID of the content_posts row to publish."],
+            "social_account_ids": Annotated[list[int], "Numeric PostBridge social account IDs."],
+            "scheduled_at":       Annotated[str,       "Optional ISO 8601 timestamp; omit to post now."],
+            "tiktok_draft":       Annotated[bool,      "If true, post lands as a TikTok draft instead of scheduling."],
         },
     )
     async def publish_post(args: dict) -> dict:
@@ -725,17 +703,21 @@ def build_content_mcp_server(
             from service.post_bridge import (
                 PostBridgeAPIError,
                 PostBridgeCreatePostRequest,
-                PostBridgePostType,
                 client_for_user,
             )
 
-            post_id_raw    = args.get("post_id")
-            account_ids    = args.get("account_ids") or []
+            post_id_raw = args.get("post_id")
+            raw_ids     = args.get("social_account_ids") or []
             scheduled_raw  = args.get("scheduled_at")
+            tiktok_draft = bool(args.get("tiktok_draft"))
             if not post_id_raw:
                 return _err("post_id is required.")
-            if not account_ids:
-                return _err("account_ids is required (at least one PostBridge social account).")
+            try:
+                social_account_ids = [int(x) for x in raw_ids]
+            except (TypeError, ValueError):
+                return _err("social_account_ids must be a list of numbers.")
+            if not social_account_ids:
+                return _err("social_account_ids is required (at least one).")
 
             post_id = UUID(str(post_id_raw))
             scheduled_at = None
@@ -753,53 +735,73 @@ def build_content_mcp_server(
                 if proj is None:
                     return _err("Project missing.")
 
-                # Resolve media URLs: prefer asset URLs referenced via image_prompts,
-                # falling back to the most recent generated assets for the post.
-                media_urls = _resolve_post_media_urls(db, post)
-                if not media_urls:
-                    return _err("No media URLs found for this post — generate images first.")
+                # Gather the image assets we plan to upload (in slide order).
+                asset_rows = db.execute(
+                    select(ContentAsset)
+                    .where(ContentAsset.post_id == post.id, ContentAsset.project_id == post.project_id)
+                    .order_by(ContentAsset.created_at)
+                ).scalars().all()
+                if not asset_rows:
+                    return _err("No image assets linked to this post — generate or upload images first.")
 
                 try:
                     client = client_for_user(proj.user_id, db)
                 except ValueError as exc:
                     return _err(str(exc))
 
-                post_type = PostBridgePostType.SLIDESHOW
-                if post.post_type == "video":
-                    post_type = PostBridgePostType.VIDEO
-                elif post.post_type == "image":
-                    post_type = PostBridgePostType.IMAGE
-
-                request = PostBridgeCreatePostRequest(
-                    account_ids=account_ids,
-                    caption=post.caption,
-                    hashtags=list(post.hashtags or []),
-                    media_urls=media_urls,
-                    scheduled_at=scheduled_at,
-                    post_type=post_type,
-                )
+                # Upload each asset → media_id list.
+                media_ids: list[str] = []
                 try:
                     async with client as pb:
+                        for asset in asset_rows:
+                            disk = _asset_disk_path(asset)
+                            if disk is None or not disk.exists():
+                                return _err(f"Asset bytes missing on disk for {asset.url}.")
+                            data = disk.read_bytes()
+                            upload = await pb.create_upload_url(
+                                name=asset.filename or f"slide-{len(media_ids)+1}.png",
+                                mime_type=asset.mime_type or "image/png",
+                                size_bytes=len(data),
+                            )
+                            await pb.upload_media(data, upload.upload_url, asset.mime_type or "image/png")
+                            media_ids.append(upload.media_id)
+
+                        platform_configs: dict = {}
+                        if tiktok_draft:
+                            platform_configs["tiktok"] = {"draft": True}
+
+                        request = PostBridgeCreatePostRequest(
+                            caption=post.caption or "",
+                            social_accounts=social_account_ids,
+                            media=media_ids,
+                            scheduled_at=scheduled_at,
+                            platform_configurations=platform_configs or None,
+                        )
                         resp = await pb.create_post(request)
                 except PostBridgeAPIError as exc:
-                    return _err(f"PostBridge create_post failed ({exc.status_code}): {exc.error.message}")
+                    return _err(f"Couldn't publish — PostBridge said: {exc.error.message or exc.status_code}")
 
-                post.post_bridge_post_id   = resp.post_id
-                post.post_bridge_result_id = resp.result_id or ""
-                post.status                = "scheduled" if resp.status.value in ("scheduled", "draft") else resp.status.value
-                if resp.published_at:
-                    post.posted_at = resp.published_at
+                post.post_bridge_post_id = resp.id
+                if resp.status.value == "posted":
                     post.status    = "posted"
+                    post.posted_at = datetime.now(timezone.utc)
+                elif resp.status.value == "scheduled":
+                    post.status = "scheduled"
+                else:
+                    post.status = resp.status.value
                 db.add(post)
                 db.commit()
                 db.refresh(post)
-                logger.info("content: published post %s via PostBridge → %s", post.id, resp.post_id)
-
+                logger.info(
+                    "content: published post %s via PostBridge → id=%s status=%s",
+                    post.id, resp.id, resp.status,
+                )
                 return _ok({
-                    "post_id":           str(post.id),
-                    "post_bridge_post_id": resp.post_id,
-                    "status":            post.status,
-                    "scheduled_at":      resp.scheduled_at.isoformat() if resp.scheduled_at else None,
+                    "post_id":               str(post.id),
+                    "post_bridge_post_id":   resp.id,
+                    "status":                post.status,
+                    "scheduled_at":          resp.scheduled_at.isoformat() if resp.scheduled_at else None,
+                    "media_count":           len(media_ids),
                 })
         except Exception as exc:
             logger.exception("publish_post failed")
@@ -841,9 +843,10 @@ def build_content_mcp_server(
     @tool(
         name="log_metrics",
         description=(
-            "Refresh performance metrics for a post from PostBridge. Merges the "
-            "latest analytics into post.perf and appends a daily snapshot to "
-            "post.daily_perf. Requires post_bridge_post_id set on the row."
+            "Refresh performance metrics for a post from PostBridge. Looks up "
+            "the post_result for this post, fetches lifetime + daily analytics, "
+            "and merges them into post.perf / post.daily_perf. Requires "
+            "post_bridge_post_id set on the row (i.e. publish_post ran first)."
         ),
         input_schema={
             "post_id": Annotated[str, "UUID of the content_posts row."],
@@ -863,7 +866,7 @@ def build_content_mcp_server(
                 if post is None or post.project_id != project_id:
                     return _err(f"Post {post_id} not found for this project.")
                 if not post.post_bridge_post_id:
-                    return _err("Post has no post_bridge_post_id — publish it first or set it manually.")
+                    return _err("Post hasn't been published yet — run publish_post first.")
                 proj = db.get(Project, project_id)
                 if proj is None:
                     return _err("Project missing.")
@@ -875,16 +878,33 @@ def build_content_mcp_server(
 
                 try:
                     async with client as pb:
-                        analytics = await pb.get_analytics(post.post_bridge_post_id)
-                        daily     = await pb.get_daily_analytics(post.post_bridge_post_id)
+                        # Trigger a sync (best-effort) then chase the chain
+                        # post → post_result → analytics → daily.
+                        await pb.sync_analytics(platform="tiktok")
+                        results = await pb.list_post_results(post_id=post.post_bridge_post_id, limit=10)
+                        if not results:
+                            return _err("PostBridge hasn't recorded a post_result yet — try again in a few minutes.")
+                        # Pick the first successful result; fall back to the latest.
+                        chosen = next((r for r in results if r.success), results[0])
+                        analytics_list = await pb.list_analytics(post_result_id=[chosen.id], limit=1)
+                        if not analytics_list:
+                            return _err("PostBridge hasn't synced analytics for this post yet.")
+                        analytics = analytics_list[0]
+                        daily = await pb.get_analytics_daily(analytics.id)
                 except PostBridgeAPIError as exc:
-                    return _err(f"PostBridge analytics failed ({exc.status_code}): {exc.error.message}")
+                    return _err(f"Couldn't pull metrics — PostBridge said: {exc.error.message or exc.status_code}")
 
                 merged = dict(post.perf or {})
-                merged.update({k: v for k, v in analytics.model_dump(mode="json").items() if v is not None})
-                merged["last_synced_at"] = analytics.last_synced_at.isoformat() if analytics.last_synced_at else None
+                merged.update({
+                    k: v for k, v in analytics.model_dump(mode="json").items()
+                    if v is not None and k not in ("id",)
+                })
+                merged["last_synced_at"] = (
+                    analytics.last_synced_at.isoformat() if analytics.last_synced_at else None
+                )
                 post.perf = merged
-                post.daily_perf = [s.model_dump(mode="json") for s in daily]
+                post.post_bridge_result_id = chosen.id
+                post.daily_perf = [s.model_dump(mode="json") for s in daily.snapshots]
                 db.add(post)
                 db.commit()
                 db.refresh(post)
@@ -893,7 +913,7 @@ def build_content_mcp_server(
                     "post_id":    str(post.id),
                     "view_count": analytics.view_count,
                     "like_count": analytics.like_count,
-                    "snapshots":  len(daily),
+                    "snapshots":  len(daily.snapshots),
                 })
         except Exception as exc:
             logger.exception("log_metrics failed")

@@ -5,14 +5,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
-  getBrandContext,
   listAvatars,
   listFormats,
   listPlans,
   listPosts,
-  putBrandContext,
 } from "@/lib/contentApi";
 import { getActiveProjectId, getActiveProject } from "@/lib/projects";
+import BrandContextForm from "@/components/content/BrandContextForm";
 import PlanKanban from "@/components/content/PlanKanban";
 
 const TABS = ["plan", "brand", "library", "analytics"];
@@ -165,97 +164,11 @@ function PlanTab({ projectId }) {
 }
 
 // ---------------------------------------------------------------------------
-// Brand tab — simple JSON editor for MVP
+// Brand tab — structured form (mirrors the project-context onboarding pattern)
 // ---------------------------------------------------------------------------
 
 function BrandTab({ projectId }) {
-  const [brand,   setBrand]   = useState(null);
-  const [pillars, setPillars] = useState("");
-  const [audience, setAudience] = useState("");
-  const [voice,   setVoice]   = useState("");
-  const [valueProp, setValueProp] = useState("");
-  const [goal,    setGoal]    = useState("");
-  const [saving,  setSaving]  = useState(false);
-  const [msg,     setMsg]     = useState("");
-  const [err,     setErr]     = useState("");
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const b = await getBrandContext(projectId);
-        if (cancelled) return;
-        setBrand(b);
-        setAudience(b.content_brand?.audience || "");
-        setVoice(b.content_brand?.brand_voice || "");
-        setValueProp(b.content_brand?.value_prop || "");
-        setGoal(b.content_brand?.content_goal || "");
-        const items = Array.isArray(b.content_pillars?.items) ? b.content_pillars.items : [];
-        setPillars(JSON.stringify(items, null, 2));
-      } catch (e) {
-        if (!cancelled) setErr(e.message || "Failed to load brand context.");
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [projectId]);
-
-  async function save() {
-    setSaving(true); setMsg(""); setErr("");
-    try {
-      let parsedPillars;
-      try {
-        parsedPillars = pillars.trim() ? JSON.parse(pillars) : [];
-      } catch {
-        setErr("Pillars JSON is invalid.");
-        return;
-      }
-      const updated = await putBrandContext(projectId, {
-        content_brand: {
-          audience, brand_voice: voice, value_prop: valueProp, content_goal: goal,
-        },
-        content_pillars: { items: parsedPillars },
-      });
-      setBrand(updated);
-      setMsg("Saved.");
-    } catch (e) {
-      setErr(e.message || "Failed to save.");
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  if (!brand) return <p className="text-sm text-muted-foreground">Loading brand context…</p>;
-
-  return (
-    <div className="max-w-3xl space-y-4">
-      <Field label="Audience" hint="Who is this content for?">
-        <input className={INPUT} value={audience} onChange={(e) => setAudience(e.target.value)} />
-      </Field>
-      <Field label="Brand voice">
-        <input className={INPUT} value={voice} onChange={(e) => setVoice(e.target.value)} />
-      </Field>
-      <Field label="Value proposition">
-        <input className={INPUT} value={valueProp} onChange={(e) => setValueProp(e.target.value)} />
-      </Field>
-      <Field label="Content goal" hint="What does the agent optimise for?">
-        <input className={INPUT} value={goal} onChange={(e) => setGoal(e.target.value)} />
-      </Field>
-      <Field label="Pillars (JSON array of {id, name, description, research_hint?})" hint="Up to 5 pillars.">
-        <textarea
-          className={`${INPUT} font-mono text-xs`}
-          rows={10}
-          value={pillars}
-          onChange={(e) => setPillars(e.target.value)}
-        />
-      </Field>
-
-      <div className="flex items-center gap-3">
-        <Button onClick={save} disabled={saving}>{saving ? "Saving…" : "Save brand"}</Button>
-        {msg && <span className="text-xs text-green-600">{msg}</span>}
-        {err && <span className="text-xs text-destructive">{err}</span>}
-      </div>
-    </div>
-  );
+  return <BrandContextForm projectId={projectId} />;
 }
 
 // ---------------------------------------------------------------------------
@@ -384,18 +297,3 @@ function AnalyticsTab({ projectId }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Form helpers
-// ---------------------------------------------------------------------------
-
-const INPUT = "w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring";
-
-function Field({ label, hint, children }) {
-  return (
-    <label className="block space-y-1">
-      <span className="block text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</span>
-      {children}
-      {hint && <span className="block text-[10px] text-muted-foreground/70">{hint}</span>}
-    </label>
-  );
-}

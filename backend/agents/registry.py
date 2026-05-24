@@ -21,6 +21,7 @@ from pydantic import BaseModel, Field
 class AgentType(StrEnum):
     SEO_AUDIT = "audit_seo"
     INSIGHTS = "insights"
+    CONTENT_MARKETING = "content_marketing"
     BLOG_WRITER = "blog-writer"     # future
     RESEARCH = "research"           # future
 
@@ -117,12 +118,41 @@ def _research_spec() -> AgentSpec:
     )
 
 
+def _content_marketing_spec() -> AgentSpec:
+    """Spec for the Content Marketing agent (plan_month + draft_post).
+
+    Routes live under /api/content/* directly — the unified
+    /api/agents endpoint exposes this spec so listing UIs see it,
+    but session creation should call the content-specific endpoints.
+    """
+    from agents.content.schema import PlanRequest
+    return AgentSpec(
+        type=AgentType.CONTENT_MARKETING,
+        name="Content Marketing",
+        description=(
+            "30-day content plans + post drafts for TikTok-style carousels. "
+            "Researches pillars, drafts captions and slides, generates images, "
+            "and publishes via PostBridge."
+        ),
+        capabilities=[
+            AgentCapability.STREAMING,
+            AgentCapability.INTERACTIVE_QUESTIONS,
+            AgentCapability.VERSIONED_OUTPUT,
+            AgentCapability.CHAT,
+            AgentCapability.FILE_UPLOAD,
+        ],
+        config_schema=PlanRequest.model_json_schema(),
+        active=True,
+    )
+
+
 # Populated at import time — add new agents here
 AGENT_REGISTRY: dict[str, AgentSpec] = {
-    AgentType.SEO_AUDIT: _seo_audit_spec(),
-    AgentType.INSIGHTS:  _insights_spec(),
-    AgentType.BLOG_WRITER: _blog_writer_spec(),
-    AgentType.RESEARCH:  _research_spec(),
+    AgentType.SEO_AUDIT:         _seo_audit_spec(),
+    AgentType.INSIGHTS:          _insights_spec(),
+    AgentType.CONTENT_MARKETING: _content_marketing_spec(),
+    AgentType.BLOG_WRITER:       _blog_writer_spec(),
+    AgentType.RESEARCH:          _research_spec(),
 }
 
 

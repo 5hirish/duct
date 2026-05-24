@@ -238,7 +238,7 @@ def test_publish_requires_api_key():
     client = TestClient(server.app)
     res = client.post(
         f"/api/content/posts/{uuid4()}/publish",
-        json={"account_ids": ["acc_1"]},
+        json={"social_account_ids": [101]},
     )
     assert res.status_code == 403
 
