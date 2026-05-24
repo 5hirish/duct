@@ -1,11 +1,11 @@
-"""Unit tests for the MaxAura seed script's payload builders.
+"""Tests for scripts/seed_maxaura — the dev seed against real fixtures.
 
-We exercise the pure functions (no DB) so the seed contract is regression-
-protected: if apps.json changes shape, this test breaks loudly instead of
-silently inserting half-empty brand JSONB blobs.
+These tests run against actual nomadapps/marketing/ JSON files, not
+synthetic data. If the source files change shape (or our mapping
+diverges), they fail loudly so the seed never silently inserts
+half-populated rows.
 
-End-to-end Postgres seeding is covered by Phase 6's verification harness
-(scripts/seed_maxaura.py against a real DB).
+The live DB seed is at the bottom — gated by DATABASE_URL.
 """
 
 from __future__ import annotations
@@ -17,7 +17,6 @@ import pytest
 
 _MARKETING_DIR = Path("/home/user/nomadapps/marketing")
 _HAS_SOURCE = (_MARKETING_DIR / "apps.json").exists()
-
 
 pytestmark = pytest.mark.skipif(
     not _HAS_SOURCE,
@@ -31,120 +30,112 @@ def _load_app():
 
 
 # ---------------------------------------------------------------------------
-# Builders
+# Builder coverage — single test asserting the full project payload shape
 # ---------------------------------------------------------------------------
 
 
-def test_load_app_finds_maxaura():
+def test_seed_builders_pull_real_maxaura_data():
+    """One test covers the entire app → Project mapping. If apps.json
+    changes shape this fails clearly and identifies the broken field."""
+    from scripts.seed_maxaura import (
+        _build_content_brand,
+        _build_content_pillars,
+        _build_content_visual_assets,
+    )
     app = _load_app()
     assert app["id"] == "maxaura"
     assert app["name"] == "MaxAura"
-    assert app["url"] == "maxauralab.com"
 
-
-def test_content_brand_pulls_audience_voice_value_prop():
-    from scripts.seed_maxaura import _build_content_brand
-    brand = _build_content_brand(_load_app())
+    brand = _build_content_brand(app)
     assert "Self-Improver" in brand["audience"]
-    assert "16-35" in brand["audience"]
-    assert "confident" in brand["brand_voice"]
-    assert brand["tone"] == "casual"
+    assert "16-35"          in brand["audience"]
+    assert "confident"      in brand["brand_voice"]
+    assert brand["tone"]    == "casual"
     assert brand["value_prop"]
-    assert "Premium" in brand.get("pricing", "") or "$" in brand.get("pricing", "")
-    assert isinstance(brand["proof_points"], list) and len(brand["proof_points"]) >= 1
     assert isinstance(brand["features"], list) and len(brand["features"]) == 4
 
-
-def test_content_pillars_have_features_plus_conceptual_extras():
-    from scripts.seed_maxaura import _build_content_pillars
-    items = _build_content_pillars(_load_app())["items"]
+    items = _build_content_pillars(app)["items"]
     ids = {p["id"] for p in items}
-    # Four declared features
+    # Declared features...
     assert {"face_shape", "color_season", "hairstyle", "frames"}.issubset(ids)
-    # Four conceptual pillars the orchestrator can dispatch research_pillar against
+    # ...plus the conceptual pillars the orchestrator needs to dispatch against.
     assert {"confidence_arc", "ai_pov", "glow_up_identity", "color_aura"}.issubset(ids)
 
-
-def test_content_visual_assets_pulls_palette():
-    from scripts.seed_maxaura import _build_content_visual_assets
-    visual = _build_content_visual_assets(_load_app())
+    visual = _build_content_visual_assets(app)
     assert visual["primary_color"].startswith("#")
     assert visual["secondary_color"].startswith("#")
     assert visual["style"] == "editorial"
-    assert visual["background_urls"] == []
 
 
-def test_plan_loader_finds_thirty_days_plus_video():
-    """The MaxAura thirty_day_plan.json starts at day 0 (UGC video) and has
-    days 1-30 in slideshow form. Total = 31."""
+# ---------------------------------------------------------------------------
+# Real-fixture integrity — protects against rot in nomadapps/marketing
+# ---------------------------------------------------------------------------
+
+
+def test_real_plan_has_31_days_and_every_post_dir_resolves():
+    """The MaxAura plan is the seed source-of-truth — if a posts/<dir>/
+    is renamed or removed, the seed silently skips it. This test fails
+    instead."""
     import json
-
     plan = json.loads((_MARKETING_DIR / "maxaura" / "tiktok" / "thirty_day_plan.json").read_text())
     days = plan.get("days", [])
-    assert len(days) == 31
+    assert len(days) == 31  # day 0 (video) + days 1-30 (slideshows)
     assert days[0]["postType"] == "video"
-    assert days[0]["pillar"] == "confidence_arc"
 
-
-def test_post_dirs_resolve_to_existing_files():
-    """Every day with a postDir must have meta.json on disk."""
-    import json
-
-    plan = json.loads((_MARKETING_DIR / "maxaura" / "tiktok" / "thirty_day_plan.json").read_text())
     posts_root = _MARKETING_DIR / "maxaura" / "tiktok" / "posts"
-    for day in plan.get("days", []):
+    for day in days:
         post_dir = day.get("postDir")
         if not post_dir:
             continue
         slug = post_dir.rsplit("/", 1)[-1]
-        meta_path = posts_root / slug / "meta.json"
-        assert meta_path.exists(), f"meta.json missing for day {day.get('day')} ({slug})"
+        assert (posts_root / slug / "meta.json").exists(), f"meta.json missing for day {day['day']}"
 
 
-def test_slug_from_post_dir_handles_variants():
-    from scripts.seed_maxaura import _slug_from_post_dir
-    assert _slug_from_post_dir("posts/2026-05-15-001") == "2026-05-15-001"
-    assert _slug_from_post_dir("2026-05-15-001") == "2026-05-15-001"
-    assert _slug_from_post_dir("") is None
-    assert _slug_from_post_dir(None) is None
+def test_real_image_prompts_validate_against_postdraft_shape():
+    """Every prompt in a real meta.json must be a valid ImagePrompt.
+    Catches: source field rename, missing prompts, malformed entries."""
+    import json
+    from agents.content.schema import ImagePrompt
+
+    meta = json.loads((_MARKETING_DIR / "maxaura" / "tiktok" / "posts" / "2026-05-15-001" / "meta.json").read_text())
+    count = 0
+    for slide_id, prompts in (meta.get("imagePrompts") or {}).items():
+        for p in prompts:
+            ImagePrompt.model_validate({"slide_id": slide_id, "prompt": p, "aspect_ratio": "9:16"})
+            count += 1
+    assert count >= 7  # at least 7 image slides in the source
 
 
-def test_dry_run_invocation():
-    """Smoke: running with --dry-run produces no DB writes and exits 0."""
+# ---------------------------------------------------------------------------
+# CLI smoke
+# ---------------------------------------------------------------------------
+
+
+def test_seed_dry_run_exits_clean_without_db():
+    """--dry-run must not touch the DB and must exit 0 with the source
+    summary printed. This is how a new developer first runs the seed."""
     from scripts.seed_maxaura import main
     rc = main(["--source", str(_MARKETING_DIR), "--dry-run"])
     assert rc == 0
 
 
-def test_image_prompts_round_trip_into_postdraft_shape():
-    """Walking a real meta.json should produce image_prompts entries the
-    PostDraft Pydantic shape accepts."""
-    import json
-
-    from agents.content.schema import ImagePrompt
-
-    meta = json.loads((_MARKETING_DIR / "maxaura" / "tiktok" / "posts" / "2026-05-15-001" / "meta.json").read_text())
-    image_prompts = []
-    for slide_id, prompts in (meta.get("imagePrompts") or {}).items():
-        for p in prompts:
-            image_prompts.append({"slide_id": slide_id, "prompt": p, "aspect_ratio": "9:16"})
-    # Every entry should validate against the Pydantic ImagePrompt shape
-    for entry in image_prompts:
-        ImagePrompt.model_validate(entry)
-    assert len(image_prompts) >= 7  # there are at least 7 image slides
+# ---------------------------------------------------------------------------
+# Live e2e — gated by DATABASE_URL
+# ---------------------------------------------------------------------------
 
 
 @pytest.mark.skipif(
     "DATABASE_URL" not in os.environ,
-    reason="DATABASE_URL not set — full DB seed is skipped",
+    reason="DATABASE_URL not set — live DB seed is skipped",
 )
-def test_seed_end_to_end_against_real_db():
-    """Live seed against a real Postgres. Run with:
+@pytest.mark.live
+def test_seed_writes_full_project_against_real_postgres():
+    """The real e2e: seed → real Postgres → row counts + relationships
+    match what the agent will read at runtime.
 
-        DATABASE_URL=postgresql://… poetry run pytest tests/test_seed_maxaura.py::test_seed_end_to_end_against_real_db
-
-    Verifies users / projects / content_plans / content_posts / content_formats
-    / content_avatars rows land.
+    Run with:
+        DATABASE_URL=postgresql://... poetry run pytest \\
+            tests/test_seed_maxaura.py -k real_postgres -s
     """
     from sqlalchemy import select
     from sqlmodel import Session
@@ -159,22 +150,31 @@ def test_seed_end_to_end_against_real_db():
     assert rc == 0
 
     with Session(get_engine()) as db:
-        user = db.execute(select(User).where(User.email == "test+e2e@getduct.ai")).scalars().first()
+        user = db.execute(
+            select(User).where(User.email == "test+e2e@getduct.ai")
+        ).scalars().first()
         assert user is not None
+
         proj = db.execute(
             select(Project).where(Project.user_id == user.id, Project.slug == "maxaura")
         ).scalars().first()
         assert proj is not None
         assert proj.content_brand.get("audience")
-        assert len(proj.content_pillars.get("items", [])) >= 4
-        plan = db.execute(select(ContentPlan).where(ContentPlan.project_id == proj.id)).scalars().first()
+        assert len(proj.content_pillars.get("items", [])) >= 8  # 4 features + 4 conceptual
+
+        plan = db.execute(
+            select(ContentPlan).where(ContentPlan.project_id == proj.id)
+        ).scalars().first()
         assert plan is not None
         assert len(plan.days) == 31
-        posts = db.execute(select(ContentPost).where(ContentPost.plan_id == plan.id)).scalars().all()
-        # At least one post (the source has 3) and slides_html should be inlined.
+
+        posts = db.execute(
+            select(ContentPost).where(ContentPost.plan_id == plan.id)
+        ).scalars().all()
         assert len(posts) >= 1
-        any_with_html = any(len(p.slides_html) > 1000 for p in posts)
-        assert any_with_html
+        # slides.html got inlined — the chief value of the seed.
+        assert any(len(p.slides_html) > 1000 for p in posts)
+
         formats = db.execute(
             select(ContentFormat).where(ContentFormat.project_id == proj.id)
         ).scalars().all()

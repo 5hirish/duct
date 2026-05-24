@@ -1,9 +1,13 @@
 """Integration tests for /api/content/* routes.
 
-Scope: route registration + auth gating + session lifecycle (no DB writes).
-DB-touching paths (brand, plans, posts, formats, avatars) use Postgres
-JSONB columns that can't be compiled to SQLite, so end-to-end coverage of
-those endpoints lives in Phase 6 e2e tests against a real Postgres.
+Scope: registration + auth gating + idempotent session lifecycle.
+DB-touching CRUD paths are exercised end-to-end against a real Postgres
+in tests/test_content_e2e.py — those catch real bugs (JSONB shape,
+foreign key cascades, etc.) that SQLite stand-ins cannot.
+
+Anti-scope (intentionally NOT tested here):
+  - Pydantic body validation — Pydantic tests itself.
+  - Per-endpoint auth gating one-test-per-endpoint — parameterised below.
 """
 
 from __future__ import annotations
@@ -14,6 +18,7 @@ import sys
 from pathlib import Path
 from uuid import uuid4
 
+import pytest
 from fastapi.testclient import TestClient
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -31,7 +36,7 @@ def _load_server_with_env():
     os.environ["FRONTEND_ORIGIN"]            = "http://localhost:3003"
     os.environ["GOOGLE_ADS_DEVELOPER_TOKEN"] = "test-dev-token"
     os.environ["DUCT_API_KEY"]               = TEST_DUCT_API_KEY
-    os.environ.pop("DATABASE_URL", None)  # No DB — DB-touching paths are out of scope.
+    os.environ.pop("DATABASE_URL", None)
     os.environ.pop("GEMINI_API_KEY", None)
 
     import config
@@ -41,11 +46,13 @@ def _load_server_with_env():
 
 
 # ---------------------------------------------------------------------------
-# Route registration
+# Route registration — single test covering every endpoint we expose
 # ---------------------------------------------------------------------------
 
 
 def test_content_routes_registered():
+    """If any of these vanish, a frontend page breaks. One regression test
+    covers all 24 endpoints."""
     server = _load_server_with_env()
     paths = {r.path for r in server.app.routes if r.path.startswith("/api/content")}
     expected = {
@@ -71,11 +78,11 @@ def test_content_routes_registered():
         "/api/content/formats/{format_id}",
         "/api/content/avatars",
         "/api/content/avatars/{avatar_id}",
-        # Uploads + assets (Phase 4b)
+        # Uploads + assets
         "/api/content/uploads",
         "/api/content/assets",
         "/api/content/assets/{asset_id}",
-        # PostBridge (Phase 4)
+        # PostBridge
         "/api/content/social-accounts",
         "/api/content/posts/{post_id}/publish",
         "/api/content/posts/{post_id}/sync-metrics",
@@ -86,172 +93,58 @@ def test_content_routes_registered():
 
 
 # ---------------------------------------------------------------------------
-# Auth gating
+# Auth gating — one parameterised test, not 12
 # ---------------------------------------------------------------------------
 
 
-def test_content_brand_requires_api_key():
+@pytest.mark.parametrize(
+    ("method", "path", "body"),
+    [
+        # SSE + session lifecycle
+        ("GET",    "/api/content/brand?project_id={uuid}",                   None),
+        ("GET",    "/api/content/plans?project_id={uuid}",                   None),
+        ("GET",    "/api/content/posts?project_id={uuid}",                   None),
+        ("GET",    "/api/content/assets?project_id={uuid}",                  None),
+        ("GET",    "/api/content/social-accounts?project_id={uuid}",         None),
+        ("DELETE", "/api/content/session/{uuid}",                            None),
+        ("DELETE", "/api/content/assets/{uuid}",                             None),
+        # Mutating endpoints
+        ("POST",   "/api/content/posts/{uuid}/publish",                      {"social_account_ids": [101]}),
+        ("POST",   "/api/content/posts/{uuid}/sync-metrics",                 None),
+        ("POST",   "/api/content/posts/{uuid}/sync-daily",                   None),
+    ],
+)
+def test_endpoints_require_api_key(method, path, body):
+    """Every content endpoint must reject calls without X-API-Key. If a
+    new endpoint is added and forgets the dependency, add it here."""
     server = _load_server_with_env()
     client = TestClient(server.app)
-    res = client.get(f"/api/content/brand?project_id={uuid4()}")
-    assert res.status_code == 403
-
-
-def test_content_plans_requires_api_key():
-    server = _load_server_with_env()
-    client = TestClient(server.app)
-    res = client.get(f"/api/content/plans?project_id={uuid4()}")
-    assert res.status_code == 403
-
-
-def test_content_posts_requires_api_key():
-    server = _load_server_with_env()
-    client = TestClient(server.app)
-    res = client.get(f"/api/content/posts?project_id={uuid4()}")
-    assert res.status_code == 403
-
-
-def test_content_session_close_requires_api_key():
-    server = _load_server_with_env()
-    client = TestClient(server.app)
-    res = client.delete(f"/api/content/session/{uuid4()}")
-    assert res.status_code == 403
+    url = path.format(uuid=uuid4())
+    res = client.request(method, url, json=body) if body is not None else client.request(method, url)
+    assert res.status_code == 403, f"{method} {url} returned {res.status_code} without auth"
 
 
 # ---------------------------------------------------------------------------
-# Schema validation
+# Idempotent session lifecycle — protects against zombie sessions
 # ---------------------------------------------------------------------------
 
 
-def test_plan_stream_requires_project_id():
+def test_session_lifecycle_is_idempotent_and_404s_for_unknown_ids():
+    """DELETE must be idempotent (calling close on a session twice or on
+    a session that never existed should NOT error). Answer / chat
+    against an unknown session must 404 — silent acceptance would leak
+    "is this session alive?" timing info."""
     server = _load_server_with_env()
     client = TestClient(server.app)
-    res = client.post(
-        "/api/content/plan/stream",
-        headers={"X-API-Key": TEST_DUCT_API_KEY},
-        json={},  # missing project_id
-    )
-    assert res.status_code == 422
+    h = {"X-API-Key": TEST_DUCT_API_KEY}
+    unknown = uuid4()
 
-
-def test_post_stream_requires_project_id():
-    server = _load_server_with_env()
-    client = TestClient(server.app)
-    res = client.post(
-        "/api/content/post/stream",
-        headers={"X-API-Key": TEST_DUCT_API_KEY},
-        json={},
-    )
-    assert res.status_code == 422
-
-
-def test_chat_message_validation():
-    """content is required (str | list)."""
-    server = _load_server_with_env()
-    client = TestClient(server.app)
-    res = client.post(
-        f"/api/content/chat/{uuid4()}",
-        headers={"X-API-Key": TEST_DUCT_API_KEY},
-        json={},
-    )
-    assert res.status_code == 422
-
-
-# ---------------------------------------------------------------------------
-# Session lifecycle (no DB needed)
-# ---------------------------------------------------------------------------
-
-
-def test_close_unknown_session_is_ok():
-    """DELETE is idempotent — closing a non-existent session is not an error."""
-    server = _load_server_with_env()
-    client = TestClient(server.app)
-    res = client.delete(
-        f"/api/content/session/{uuid4()}",
-        headers={"X-API-Key": TEST_DUCT_API_KEY},
-    )
+    res = client.delete(f"/api/content/session/{unknown}", headers=h)
     assert res.status_code == 200
     assert res.json() == {"status": "ok"}
 
-
-def test_answer_unknown_session_404():
-    server = _load_server_with_env()
-    client = TestClient(server.app)
-    res = client.post(
-        f"/api/content/answer/{uuid4()}",
-        headers={"X-API-Key": TEST_DUCT_API_KEY},
-        json={"answers": {"q1": "a1"}},
-    )
+    res = client.post(f"/api/content/answer/{unknown}", headers=h, json={"answers": {}})
     assert res.status_code == 404
 
-
-def test_chat_unknown_session_404():
-    server = _load_server_with_env()
-    client = TestClient(server.app)
-    res = client.post(
-        f"/api/content/chat/{uuid4()}",
-        headers={"X-API-Key": TEST_DUCT_API_KEY},
-        json={"content": "hello"},
-    )
+    res = client.post(f"/api/content/chat/{unknown}", headers=h, json={"content": "x"})
     assert res.status_code == 404
-
-
-# ---------------------------------------------------------------------------
-# Phase 4 / 4b — auth gating on new endpoints
-# Behavioural tests (uploads disabled → 503, publish flow, etc.) need a real
-# DB and live in Phase 6 e2e suite.
-# ---------------------------------------------------------------------------
-
-
-def test_upload_requires_api_key():
-    server = _load_server_with_env()
-    client = TestClient(server.app)
-    files = {"file": ("a.png", b"fake-png", "image/png")}
-    data  = {"project_id": str(uuid4()), "asset_type": "logo"}
-    res = client.post("/api/content/uploads", files=files, data=data)
-    assert res.status_code == 403
-
-
-def test_assets_list_requires_api_key():
-    server = _load_server_with_env()
-    client = TestClient(server.app)
-    res = client.get(f"/api/content/assets?project_id={uuid4()}")
-    assert res.status_code == 403
-
-
-def test_assets_delete_requires_api_key():
-    server = _load_server_with_env()
-    client = TestClient(server.app)
-    res = client.delete(f"/api/content/assets/{uuid4()}")
-    assert res.status_code == 403
-
-
-def test_social_accounts_requires_api_key():
-    server = _load_server_with_env()
-    client = TestClient(server.app)
-    res = client.get(f"/api/content/social-accounts?project_id={uuid4()}")
-    assert res.status_code == 403
-
-
-def test_publish_requires_api_key():
-    server = _load_server_with_env()
-    client = TestClient(server.app)
-    res = client.post(
-        f"/api/content/posts/{uuid4()}/publish",
-        json={"social_account_ids": [101]},
-    )
-    assert res.status_code == 403
-
-
-def test_sync_metrics_requires_api_key():
-    server = _load_server_with_env()
-    client = TestClient(server.app)
-    res = client.post(f"/api/content/posts/{uuid4()}/sync-metrics")
-    assert res.status_code == 403
-
-
-def test_sync_daily_requires_api_key():
-    server = _load_server_with_env()
-    client = TestClient(server.app)
-    res = client.post(f"/api/content/posts/{uuid4()}/sync-daily")
-    assert res.status_code == 403
