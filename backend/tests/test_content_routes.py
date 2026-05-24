@@ -71,6 +71,15 @@ def test_content_routes_registered():
         "/api/content/formats/{format_id}",
         "/api/content/avatars",
         "/api/content/avatars/{avatar_id}",
+        # Uploads + assets (Phase 4b)
+        "/api/content/uploads",
+        "/api/content/assets",
+        "/api/content/assets/{asset_id}",
+        # PostBridge (Phase 4)
+        "/api/content/social-accounts",
+        "/api/content/posts/{post_id}/publish",
+        "/api/content/posts/{post_id}/sync-metrics",
+        "/api/content/posts/{post_id}/sync-daily",
     }
     missing = expected - paths
     assert not missing, f"Missing routes: {missing}"
@@ -185,3 +194,64 @@ def test_chat_unknown_session_404():
         json={"content": "hello"},
     )
     assert res.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# Phase 4 / 4b — auth gating on new endpoints
+# Behavioural tests (uploads disabled → 503, publish flow, etc.) need a real
+# DB and live in Phase 6 e2e suite.
+# ---------------------------------------------------------------------------
+
+
+def test_upload_requires_api_key():
+    server = _load_server_with_env()
+    client = TestClient(server.app)
+    files = {"file": ("a.png", b"fake-png", "image/png")}
+    data  = {"project_id": str(uuid4()), "asset_type": "logo"}
+    res = client.post("/api/content/uploads", files=files, data=data)
+    assert res.status_code == 403
+
+
+def test_assets_list_requires_api_key():
+    server = _load_server_with_env()
+    client = TestClient(server.app)
+    res = client.get(f"/api/content/assets?project_id={uuid4()}")
+    assert res.status_code == 403
+
+
+def test_assets_delete_requires_api_key():
+    server = _load_server_with_env()
+    client = TestClient(server.app)
+    res = client.delete(f"/api/content/assets/{uuid4()}")
+    assert res.status_code == 403
+
+
+def test_social_accounts_requires_api_key():
+    server = _load_server_with_env()
+    client = TestClient(server.app)
+    res = client.get(f"/api/content/social-accounts?project_id={uuid4()}")
+    assert res.status_code == 403
+
+
+def test_publish_requires_api_key():
+    server = _load_server_with_env()
+    client = TestClient(server.app)
+    res = client.post(
+        f"/api/content/posts/{uuid4()}/publish",
+        json={"account_ids": ["acc_1"]},
+    )
+    assert res.status_code == 403
+
+
+def test_sync_metrics_requires_api_key():
+    server = _load_server_with_env()
+    client = TestClient(server.app)
+    res = client.post(f"/api/content/posts/{uuid4()}/sync-metrics")
+    assert res.status_code == 403
+
+
+def test_sync_daily_requires_api_key():
+    server = _load_server_with_env()
+    client = TestClient(server.app)
+    res = client.post(f"/api/content/posts/{uuid4()}/sync-daily")
+    assert res.status_code == 403

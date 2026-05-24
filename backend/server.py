@@ -64,4 +64,16 @@ def _startup_init_db() -> None:
         init_db()
 
 
+# Mount the uploads directory as a static-file route when enabled. In
+# production this points at a Railway Volume; in dev it's a local path.
+if _cfg.uploads_enabled:
+    import os
+
+    from fastapi.staticfiles import StaticFiles
+
+    uploads_dir = _cfg.uploads_dir or "/app/uploads"
+    os.makedirs(uploads_dir, exist_ok=True)
+    app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
+
+
 app.include_router(api_router)

@@ -38,10 +38,11 @@ import time
 import uuid
 from collections.abc import AsyncGenerator
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
-from uuid import UUID
+from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import select
@@ -66,6 +67,7 @@ from agents.models import AgentEffort, Platform
 from config import get_configs
 from db.session import get_session as db_session
 from models.content import (
+    ContentAsset,
     ContentAvatar,
     ContentFormat,
     ContentPlan,
@@ -1006,3 +1008,311 @@ def delete_avatar(avatar_id: UUID, db: Session = Depends(db_session)) -> dict:
     db.delete(row)
     db.commit()
     return {"status": "ok"}
+
+
+# ---------------------------------------------------------------------------
+# Asset uploads + listing (Phase 4b)
+# ---------------------------------------------------------------------------
+
+
+_ALLOWED_ASSET_TYPES = {"logo", "background", "reference", "upload"}
+_ALLOWED_MIME = {"image/png", "image/jpeg", "image/webp"}
+_MIME_TO_EXT = {"image/png": "png", "image/jpeg": "jpg", "image/webp": "webp"}
+_MAX_UPLOAD_BYTES = 20 * 1024 * 1024  # 20 MB
+
+
+class ContentAssetOut(BaseModel):
+    id:         UUID
+    project_id: UUID
+    post_id:    UUID | None
+    asset_type: str
+    source:     str
+    url:        str
+    filename:   str
+    mime_type:  str
+    prompt:     str
+    model:      str
+    params:     dict
+    created_at: str
+
+
+def _asset_out(a: ContentAsset) -> ContentAssetOut:
+    return ContentAssetOut(
+        id=a.id,
+        project_id=a.project_id,
+        post_id=a.post_id,
+        asset_type=a.asset_type,
+        source=a.source,
+        url=a.url,
+        filename=a.filename,
+        mime_type=a.mime_type,
+        prompt=a.prompt,
+        model=a.model,
+        params=a.params or {},
+        created_at=a.created_at.isoformat(),
+    )
+
+
+def _uploads_dir() -> Path:
+    cfg = get_configs()
+    if not cfg.uploads_enabled:
+        raise HTTPException(503, "Uploads are disabled — set UPLOADS_ENABLED=true.")
+    base = Path(cfg.uploads_dir or "/app/uploads")
+    base.mkdir(parents=True, exist_ok=True)
+    return base
+
+
+@router.post("/content/uploads", status_code=201)
+async def upload_asset(
+    project_id: UUID = Form(...),
+    asset_type: str  = Form(...),
+    file: UploadFile = File(...),
+    db: Session = Depends(db_session),
+) -> ContentAssetOut:
+    """Upload a logo, background, or reference image. Writes to
+    /uploads/projects/{project_id}/{asset_type}/{uuid}-{filename} and
+    inserts a content_assets row pointing at the public URL."""
+    if asset_type not in _ALLOWED_ASSET_TYPES:
+        raise HTTPException(400, f"asset_type must be one of {sorted(_ALLOWED_ASSET_TYPES)}")
+    _project_or_404(db, project_id)
+
+    mime = (file.content_type or "").lower()
+    if mime not in _ALLOWED_MIME:
+        raise HTTPException(400, f"content_type must be one of {sorted(_ALLOWED_MIME)}")
+
+    body = await file.read()
+    if len(body) > _MAX_UPLOAD_BYTES:
+        raise HTTPException(413, f"File too large (max {_MAX_UPLOAD_BYTES} bytes).")
+
+    base = _uploads_dir()
+    target_dir = base / "projects" / str(project_id) / asset_type
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    ext = _MIME_TO_EXT.get(mime, "bin")
+    safe_name = (file.filename or "upload").rsplit("/", 1)[-1].replace(" ", "-")
+    asset_id  = uuid4()
+    filename  = f"{asset_id}-{safe_name}"
+    if "." not in filename.rsplit("/", 1)[-1]:
+        filename = f"{filename}.{ext}"
+    target_path = target_dir / filename
+    target_path.write_bytes(body)
+
+    public_url = f"/uploads/projects/{project_id}/{asset_type}/{filename}"
+    row = ContentAsset(
+        id=asset_id,
+        project_id=project_id,
+        asset_type=asset_type,
+        source="upload",
+        url=public_url,
+        filename=filename,
+        mime_type=mime,
+        params={"size_bytes": len(body)},
+    )
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    return _asset_out(row)
+
+
+@router.get("/content/assets")
+def list_assets(
+    project_id: UUID,
+    asset_type: str | None = None,
+    post_id:    UUID | None = None,
+    db: Session = Depends(db_session),
+) -> list[ContentAssetOut]:
+    stmt = select(ContentAsset).where(ContentAsset.project_id == project_id)
+    if asset_type:
+        stmt = stmt.where(ContentAsset.asset_type == asset_type)
+    if post_id:
+        stmt = stmt.where(ContentAsset.post_id == post_id)
+    stmt = stmt.order_by(ContentAsset.created_at.desc())
+    rows = db.execute(stmt).scalars().all()
+    return [_asset_out(r) for r in rows]
+
+
+@router.delete("/content/assets/{asset_id}")
+def delete_asset(asset_id: UUID, db: Session = Depends(db_session)) -> dict:
+    asset = db.get(ContentAsset, asset_id)
+    if asset is None:
+        raise HTTPException(404, "Asset not found")
+    if asset.url.startswith("/uploads/"):
+        cfg = get_configs()
+        base = Path(cfg.uploads_dir or "/app/uploads")
+        try:
+            (base / asset.url[len("/uploads/"):]).unlink(missing_ok=True)
+        except Exception as exc:
+            logger.warning("delete_asset: failed to remove file %s: %s", asset.url, exc)
+    db.delete(asset)
+    db.commit()
+    return {"status": "ok"}
+
+
+# ---------------------------------------------------------------------------
+# PostBridge proxies (Phase 4)
+# ---------------------------------------------------------------------------
+
+
+class PublishRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    account_ids:  list[str]
+    scheduled_at: datetime | None = None
+
+
+@router.get("/content/social-accounts")
+async def list_social_accounts(
+    project_id: UUID,
+    platform: str | None = None,
+    db: Session = Depends(db_session),
+) -> list[dict]:
+    """List the user's connected PostBridge social accounts."""
+    from service.post_bridge import PostBridgeAPIError, client_for_user
+    proj = _project_or_404(db, project_id)
+    try:
+        client = client_for_user(proj.user_id, db)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    try:
+        async with client as pb:
+            accounts = await pb.list_social_accounts(platform=platform)
+    except PostBridgeAPIError as exc:
+        raise HTTPException(exc.status_code or 502, exc.error.message or "PostBridge error") from exc
+    return [a.model_dump(mode="json") for a in accounts]
+
+
+@router.post("/content/posts/{post_id}/publish")
+async def publish_post_route(
+    post_id: UUID,
+    body: PublishRequest,
+    db: Session = Depends(db_session),
+) -> PostOut:
+    """Publish a saved post via PostBridge."""
+    from service.post_bridge import (
+        PostBridgeAPIError,
+        PostBridgeCreatePostRequest,
+        PostBridgePostType,
+        client_for_user,
+    )
+    post = db.get(ContentPost, post_id)
+    if post is None:
+        raise HTTPException(404, "Post not found")
+    proj = db.get(Project, post.project_id)
+    if proj is None:
+        raise HTTPException(404, "Project not found")
+
+    # Build media URLs from assets linked to this post.
+    asset_rows = db.execute(
+        select(ContentAsset)
+        .where(ContentAsset.post_id == post.id, ContentAsset.project_id == post.project_id)
+        .order_by(ContentAsset.created_at)
+    ).scalars().all()
+    media_urls = [r.url for r in asset_rows if r.url]
+    if not media_urls:
+        raise HTTPException(400, "No media URLs for this post — generate or upload images first.")
+
+    try:
+        client = client_for_user(proj.user_id, db)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+    post_type = PostBridgePostType.SLIDESHOW
+    if post.post_type == "video":
+        post_type = PostBridgePostType.VIDEO
+    elif post.post_type == "image":
+        post_type = PostBridgePostType.IMAGE
+
+    request = PostBridgeCreatePostRequest(
+        account_ids=body.account_ids,
+        caption=post.caption,
+        hashtags=list(post.hashtags or []),
+        media_urls=media_urls,
+        scheduled_at=body.scheduled_at,
+        post_type=post_type,
+    )
+    try:
+        async with client as pb:
+            resp = await pb.create_post(request)
+    except PostBridgeAPIError as exc:
+        raise HTTPException(exc.status_code or 502, exc.error.message or "PostBridge error") from exc
+
+    post.post_bridge_post_id   = resp.post_id
+    post.post_bridge_result_id = resp.result_id or ""
+    if resp.published_at:
+        post.posted_at = resp.published_at
+        post.status    = "posted"
+    else:
+        post.status = "scheduled" if resp.status.value in ("scheduled", "draft") else resp.status.value
+    db.add(post)
+    db.commit()
+    db.refresh(post)
+    return _post_out(post)
+
+
+@router.post("/content/posts/{post_id}/sync-metrics")
+async def sync_post_metrics(
+    post_id: UUID,
+    db: Session = Depends(db_session),
+) -> PostOut:
+    """Fetch the latest analytics from PostBridge and merge into post.perf."""
+    from service.post_bridge import PostBridgeAPIError, client_for_user
+    post = db.get(ContentPost, post_id)
+    if post is None:
+        raise HTTPException(404, "Post not found")
+    if not post.post_bridge_post_id:
+        raise HTTPException(400, "Post has no post_bridge_post_id — publish it first.")
+    proj = db.get(Project, post.project_id)
+    if proj is None:
+        raise HTTPException(404, "Project not found")
+
+    try:
+        client = client_for_user(proj.user_id, db)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    try:
+        async with client as pb:
+            analytics = await pb.get_analytics(post.post_bridge_post_id)
+    except PostBridgeAPIError as exc:
+        raise HTTPException(exc.status_code or 502, exc.error.message or "PostBridge error") from exc
+
+    merged = dict(post.perf or {})
+    merged.update({k: v for k, v in analytics.model_dump(mode="json").items() if v is not None})
+    merged["last_synced_at"] = analytics.last_synced_at.isoformat() if analytics.last_synced_at else None
+    post.perf = merged
+    db.add(post)
+    db.commit()
+    db.refresh(post)
+    return _post_out(post)
+
+
+@router.post("/content/posts/{post_id}/sync-daily")
+async def sync_post_daily(
+    post_id: UUID,
+    db: Session = Depends(db_session),
+) -> PostOut:
+    """Refresh daily_perf snapshots from PostBridge."""
+    from service.post_bridge import PostBridgeAPIError, client_for_user
+    post = db.get(ContentPost, post_id)
+    if post is None:
+        raise HTTPException(404, "Post not found")
+    if not post.post_bridge_post_id:
+        raise HTTPException(400, "Post has no post_bridge_post_id — publish it first.")
+    proj = db.get(Project, post.project_id)
+    if proj is None:
+        raise HTTPException(404, "Project not found")
+
+    try:
+        client = client_for_user(proj.user_id, db)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    try:
+        async with client as pb:
+            daily = await pb.get_daily_analytics(post.post_bridge_post_id)
+    except PostBridgeAPIError as exc:
+        raise HTTPException(exc.status_code or 502, exc.error.message or "PostBridge error") from exc
+
+    post.daily_perf = [s.model_dump(mode="json") for s in daily]
+    db.add(post)
+    db.commit()
+    db.refresh(post)
+    return _post_out(post)

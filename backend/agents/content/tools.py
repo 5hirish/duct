@@ -19,9 +19,12 @@ Every handler:
 
 from __future__ import annotations
 
+import base64
 import json
 import logging
 from collections.abc import Awaitable, Callable
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Annotated, Any
 from uuid import UUID
 
@@ -36,6 +39,7 @@ from agents.content.schema import (
     PlanDraft,
     PostDraft,
 )
+from config import get_configs
 from db.session import get_engine
 from models.content import (
     ContentAsset,
@@ -72,13 +76,40 @@ def _open_db() -> Session:
     return Session(engine)
 
 
-def _stub(name: str) -> dict:
-    return _err(
-        f"{name} is not implemented yet — available in Phase 4 (PostBridge) "
-        "or Phase 4b (Gemini image generation). Continue with the workflow "
-        "without this tool for now; the user can run image generation and "
-        "publishing from the Library / Publish modal UI."
-    )
+def _asset_disk_path(asset: ContentAsset) -> Path | None:
+    """Resolve a ContentAsset.url ('/uploads/...') to its on-disk path under
+    config.uploads_dir. Returns None if the URL doesn't map into uploads."""
+    cfg = get_configs()
+    base = Path(cfg.uploads_dir or "/app/uploads")
+    if not asset.url.startswith("/uploads/"):
+        return None
+    return base / asset.url[len("/uploads/"):]
+
+
+def _resolve_post_media_urls(db: Session, post: ContentPost) -> list[str]:
+    """Pick media URLs to send to PostBridge.
+
+    Strategy: prefer assets explicitly linked to this post (post_id FK),
+    sorted by created_at; fall back to any URLs embedded in image_prompts.
+    Filters to public /uploads/ URLs only — slides_html-embedded paths
+    that aren't asset rows are skipped.
+    """
+    rows = db.execute(
+        select(ContentAsset)
+        .where(ContentAsset.post_id == post.id, ContentAsset.project_id == post.project_id)
+        .order_by(ContentAsset.created_at)
+    ).scalars().all()
+    urls = [r.url for r in rows if r.url]
+    if urls:
+        return urls
+    # Fall back to URLs the agent referenced in image_prompts (rare).
+    for entry in (post.image_prompts or []):
+        if isinstance(entry, dict):
+            for k in ("asset_url", "url"):
+                v = entry.get(k)
+                if isinstance(v, str) and v.startswith("/uploads/"):
+                    urls.append(v)
+    return urls
 
 
 # ---------------------------------------------------------------------------
@@ -456,57 +487,417 @@ def build_content_mcp_server(
             logger.exception("fetch_content_assets failed")
             return _err(f"fetch_content_assets failed: {exc}")
 
-    # ----------------------- Stubs (Phase 4 / 4b) -----------------------
+    # ----------------------- Image generation (Phase 4b) -----------------------
 
     @tool(
         name="generate_image",
-        description="Stub — image generation lands in Phase 4b (Gemini service).",
+        description=(
+            "Generate one or more images from a text prompt via Gemini/Imagen. "
+            "Returns inline image data (so you can see the result) PLUS a stable "
+            "asset_url you must reference in slides_html. Defaults: 9:16 portrait, "
+            "1 image, model=gemini-3.1-flash-image-preview. Outputs are saved to "
+            "/uploads/projects/<project_id>/generated/ on the Railway Volume."
+        ),
         input_schema={
-            "prompt": Annotated[str, "Image prompt (will be used in Phase 4b)."],
+            "prompt": Annotated[str, "Image prompt — the alt-text style description from slides_html."],
+            "model":  Annotated[str, "Optional image model id; defaults to gemini-3.1-flash-image-preview."],
+            "aspect_ratio": Annotated[str, "Optional aspect ratio (e.g. '9:16'). Defaults to portrait."],
+            "number_of_images": Annotated[int, "How many images to generate. Default 1, max 4."],
+            "negative_prompt":  Annotated[str, "Optional negative prompt (Imagen models only)."],
+            "input_asset_id":   Annotated[str, "Optional reference asset UUID (Gemini-class models only)."],
         },
     )
-    async def generate_image(_args: dict) -> dict:
-        return _stub("generate_image")
+    async def generate_image(args: dict) -> dict:
+        try:
+            from service.gemini import (
+                GeminiAPIError,
+                GeminiImageClient,
+                GenerateImageRequest,
+                persist_generated_image,
+            )
+
+            cfg = get_configs()
+            if not cfg.gemini_api_key:
+                return _err("GEMINI_API_KEY is not configured; image generation unavailable.")
+            if not cfg.uploads_enabled:
+                return _err("uploads_enabled is false; cannot persist generated images.")
+
+            payload = {k: v for k, v in args.items() if v not in (None, "")}
+            payload.setdefault("number_of_images", min(int(payload.get("number_of_images", 1) or 1), 4))
+            try:
+                request = GenerateImageRequest.model_validate(payload)
+            except ValidationError as exc:
+                return _err(f"generate_image input invalid: {exc}")
+
+            input_bytes: bytes | None = None
+            with _open_db() as db:
+                if "input_asset_id" in payload and payload["input_asset_id"]:
+                    asset = db.get(ContentAsset, UUID(str(payload["input_asset_id"])))
+                    if asset is None or asset.project_id != project_id:
+                        return _err(f"input_asset_id {payload['input_asset_id']} not found for this project.")
+                    p = _asset_disk_path(asset)
+                    if p is None or not p.exists():
+                        return _err(f"input asset bytes missing on disk: {asset.url}")
+                    input_bytes = p.read_bytes()
+
+                client = GeminiImageClient(cfg.gemini_api_key)
+                try:
+                    images = await client.generate_image(request, input_bytes=input_bytes)
+                except GeminiAPIError as exc:
+                    return _err(f"Gemini generate failed: {exc}")
+
+                assets = []
+                for img in images:
+                    asset = persist_generated_image(
+                        project_id, img,
+                        db=db,
+                        prompt=request.prompt,
+                        model=request.model.value,
+                        params={
+                            "aspect_ratio":    request.aspect_ratio.value,
+                            "image_size":      request.image_size.value,
+                            "seed":            request.seed,
+                            "negative_prompt": request.negative_prompt,
+                            "input_asset_id":  payload.get("input_asset_id"),
+                        },
+                        post_id=session.post_id,
+                        source="imagen" if request.model.value.startswith("imagen-") else "gemini",
+                    )
+                    assets.append(asset)
+
+            content: list[dict] = []
+            for img, asset in zip(images, assets, strict=False):
+                content.append({
+                    "type":     "image",
+                    "data":     base64.b64encode(img.data).decode("ascii"),
+                    "mimeType": img.mime_type,
+                })
+            content.append({
+                "type": "text",
+                "text": json.dumps({
+                    "asset_ids":  [str(a.asset_id) for a in assets],
+                    "asset_urls": [a.url           for a in assets],
+                    "model":      request.model.value,
+                }),
+            })
+            return {"content": content}
+        except Exception as exc:
+            logger.exception("generate_image failed")
+            return _err(f"generate_image failed: {exc}")
 
     @tool(
         name="edit_image",
-        description="Stub — image editing lands in Phase 4b (Gemini service).",
+        description=(
+            "Edit an existing content asset (inpaint, outpaint, bgswap, style transfer, "
+            "or free-form Gemini edit). Returns the edited image inline + a stable "
+            "asset_url. The original asset is preserved — every edit creates a new "
+            "content_assets row."
+        ),
         input_schema={
-            "prompt": Annotated[str, "Edit prompt (will be used in Phase 4b)."],
+            "prompt":          Annotated[str, "Edit instruction."],
+            "input_asset_id":  Annotated[str, "UUID of the source asset (required)."],
+            "model":           Annotated[str, "Optional image model id."],
+            "edit_mode":       Annotated[str, "Optional edit mode (Imagen only)."],
+            "mask_asset_id":   Annotated[str, "Optional mask asset UUID."],
+            "mask_mode":       Annotated[str, "Optional mask mode."],
+            "style_asset_id":  Annotated[str, "Optional style reference asset UUID."],
+            "subject_asset_id": Annotated[str, "Optional subject reference asset UUID."],
+            "subject_type":    Annotated[str, "Optional subject type."],
+            "aspect_ratio":    Annotated[str, "Optional aspect ratio override."],
+            "number_of_images": Annotated[int, "How many images to generate (1-4)."],
+            "negative_prompt": Annotated[str, "Optional negative prompt (Imagen only)."],
         },
     )
-    async def edit_image(_args: dict) -> dict:
-        return _stub("edit_image")
+    async def edit_image(args: dict) -> dict:
+        try:
+            from service.gemini import (
+                EditImageRequest,
+                GeminiAPIError,
+                GeminiImageClient,
+                persist_generated_image,
+            )
+
+            cfg = get_configs()
+            if not cfg.gemini_api_key:
+                return _err("GEMINI_API_KEY is not configured; image editing unavailable.")
+            if not cfg.uploads_enabled:
+                return _err("uploads_enabled is false; cannot persist edited images.")
+
+            payload = {k: v for k, v in args.items() if v not in (None, "")}
+            payload.setdefault("number_of_images", min(int(payload.get("number_of_images", 1) or 1), 4))
+            try:
+                request = EditImageRequest.model_validate(payload)
+            except ValidationError as exc:
+                return _err(f"edit_image input invalid: {exc}")
+
+            with _open_db() as db:
+                base_asset = db.get(ContentAsset, request.input_asset_id)
+                if base_asset is None or base_asset.project_id != project_id:
+                    return _err(f"input_asset_id {request.input_asset_id} not found for this project.")
+                base_path = _asset_disk_path(base_asset)
+                if base_path is None or not base_path.exists():
+                    return _err(f"input asset bytes missing on disk: {base_asset.url}")
+                base_bytes = base_path.read_bytes()
+
+                def _load(ref_id: UUID | None) -> bytes | None:
+                    if ref_id is None:
+                        return None
+                    a = db.get(ContentAsset, ref_id)
+                    if a is None or a.project_id != project_id:
+                        return None
+                    p = _asset_disk_path(a)
+                    return p.read_bytes() if p and p.exists() else None
+
+                mask_bytes    = _load(request.mask_asset_id)
+                style_bytes   = _load(request.style_asset_id)
+                subject_bytes = _load(request.subject_asset_id)
+
+                client = GeminiImageClient(cfg.gemini_api_key)
+                try:
+                    images = await client.edit_image(
+                        request,
+                        base_bytes=base_bytes,
+                        mask_bytes=mask_bytes,
+                        style_bytes=style_bytes,
+                        subject_bytes=subject_bytes,
+                    )
+                except GeminiAPIError as exc:
+                    return _err(f"Gemini edit failed: {exc}")
+
+                assets = []
+                for img in images:
+                    asset = persist_generated_image(
+                        project_id, img,
+                        db=db,
+                        prompt=request.prompt,
+                        model=request.model.value,
+                        params={
+                            "edit_mode":         request.edit_mode.value if request.edit_mode else None,
+                            "input_asset_id":    str(request.input_asset_id),
+                            "mask_asset_id":     str(request.mask_asset_id)    if request.mask_asset_id    else None,
+                            "style_asset_id":    str(request.style_asset_id)   if request.style_asset_id   else None,
+                            "subject_asset_id":  str(request.subject_asset_id) if request.subject_asset_id else None,
+                            "seed":              request.seed,
+                            "negative_prompt":   request.negative_prompt,
+                        },
+                        post_id=session.post_id,
+                        source="imagen" if request.model.value.startswith("imagen-") else "gemini",
+                    )
+                    assets.append(asset)
+
+            content: list[dict] = []
+            for img, asset in zip(images, assets, strict=False):
+                content.append({
+                    "type":     "image",
+                    "data":     base64.b64encode(img.data).decode("ascii"),
+                    "mimeType": img.mime_type,
+                })
+            content.append({
+                "type": "text",
+                "text": json.dumps({
+                    "asset_ids":  [str(a.asset_id) for a in assets],
+                    "asset_urls": [a.url           for a in assets],
+                    "model":      request.model.value,
+                }),
+            })
+            return {"content": content}
+        except Exception as exc:
+            logger.exception("edit_image failed")
+            return _err(f"edit_image failed: {exc}")
+
+    # ----------------------- PostBridge (Phase 4) -----------------------
 
     @tool(
         name="publish_post",
-        description="Stub — PostBridge publishing lands in Phase 4.",
+        description=(
+            "Publish a saved post to one or more social platforms via PostBridge. "
+            "The user must have a PostBridge credential connected. Schedules for "
+            "now unless scheduled_at is provided."
+        ),
         input_schema={
-            "post_id": Annotated[str, "Post UUID to publish (will be used in Phase 4)."],
+            "post_id":      Annotated[str,       "UUID of the content_posts row to publish."],
+            "account_ids":  Annotated[list[str], "List of PostBridge social account IDs."],
+            "scheduled_at": Annotated[str,       "Optional ISO 8601 timestamp."],
         },
     )
-    async def publish_post(_args: dict) -> dict:
-        return _stub("publish_post")
+    async def publish_post(args: dict) -> dict:
+        try:
+            from service.post_bridge import (
+                PostBridgeAPIError,
+                PostBridgeCreatePostRequest,
+                PostBridgePostType,
+                client_for_user,
+            )
+
+            post_id_raw    = args.get("post_id")
+            account_ids    = args.get("account_ids") or []
+            scheduled_raw  = args.get("scheduled_at")
+            if not post_id_raw:
+                return _err("post_id is required.")
+            if not account_ids:
+                return _err("account_ids is required (at least one PostBridge social account).")
+
+            post_id = UUID(str(post_id_raw))
+            scheduled_at = None
+            if scheduled_raw:
+                try:
+                    scheduled_at = datetime.fromisoformat(str(scheduled_raw))
+                except ValueError as exc:
+                    return _err(f"scheduled_at invalid: {exc}")
+
+            with _open_db() as db:
+                post = db.get(ContentPost, post_id)
+                if post is None or post.project_id != project_id:
+                    return _err(f"Post {post_id} not found for this project.")
+                proj = db.get(Project, project_id)
+                if proj is None:
+                    return _err("Project missing.")
+
+                # Resolve media URLs: prefer asset URLs referenced via image_prompts,
+                # falling back to the most recent generated assets for the post.
+                media_urls = _resolve_post_media_urls(db, post)
+                if not media_urls:
+                    return _err("No media URLs found for this post — generate images first.")
+
+                try:
+                    client = client_for_user(proj.user_id, db)
+                except ValueError as exc:
+                    return _err(str(exc))
+
+                post_type = PostBridgePostType.SLIDESHOW
+                if post.post_type == "video":
+                    post_type = PostBridgePostType.VIDEO
+                elif post.post_type == "image":
+                    post_type = PostBridgePostType.IMAGE
+
+                request = PostBridgeCreatePostRequest(
+                    account_ids=account_ids,
+                    caption=post.caption,
+                    hashtags=list(post.hashtags or []),
+                    media_urls=media_urls,
+                    scheduled_at=scheduled_at,
+                    post_type=post_type,
+                )
+                try:
+                    async with client as pb:
+                        resp = await pb.create_post(request)
+                except PostBridgeAPIError as exc:
+                    return _err(f"PostBridge create_post failed ({exc.status_code}): {exc.error.message}")
+
+                post.post_bridge_post_id   = resp.post_id
+                post.post_bridge_result_id = resp.result_id or ""
+                post.status                = "scheduled" if resp.status.value in ("scheduled", "draft") else resp.status.value
+                if resp.published_at:
+                    post.posted_at = resp.published_at
+                    post.status    = "posted"
+                db.add(post)
+                db.commit()
+                db.refresh(post)
+                logger.info("content: published post %s via PostBridge → %s", post.id, resp.post_id)
+
+                return _ok({
+                    "post_id":           str(post.id),
+                    "post_bridge_post_id": resp.post_id,
+                    "status":            post.status,
+                    "scheduled_at":      resp.scheduled_at.isoformat() if resp.scheduled_at else None,
+                })
+        except Exception as exc:
+            logger.exception("publish_post failed")
+            return _err(f"publish_post failed: {exc}")
 
     @tool(
         name="mark_posted",
-        description="Stub — mark-posted lands in Phase 4 alongside PostBridge.",
+        description=(
+            "Mark a post as posted (manual flag — use when the user posted "
+            "outside of PostBridge). Sets status='posted' and posted_at=now."
+        ),
         input_schema={
-            "post_id": Annotated[str, "Post UUID."],
+            "post_id":    Annotated[str, "UUID of the content_posts row."],
+            "tiktok_url": Annotated[str, "Optional external URL of the live post."],
         },
     )
-    async def mark_posted(_args: dict) -> dict:
-        return _stub("mark_posted")
+    async def mark_posted(args: dict) -> dict:
+        try:
+            post_id_raw = args.get("post_id")
+            if not post_id_raw:
+                return _err("post_id is required.")
+            post_id = UUID(str(post_id_raw))
+            with _open_db() as db:
+                post = db.get(ContentPost, post_id)
+                if post is None or post.project_id != project_id:
+                    return _err(f"Post {post_id} not found for this project.")
+                post.status    = "posted"
+                post.posted_at = datetime.now(timezone.utc)
+                if args.get("tiktok_url"):
+                    post.tiktok_url = str(args["tiktok_url"])
+                db.add(post)
+                db.commit()
+                db.refresh(post)
+                return _ok({"post_id": str(post.id), "status": post.status})
+        except Exception as exc:
+            logger.exception("mark_posted failed")
+            return _err(f"mark_posted failed: {exc}")
 
     @tool(
         name="log_metrics",
-        description="Stub — metric ingest lands in Phase 4 alongside PostBridge.",
+        description=(
+            "Refresh performance metrics for a post from PostBridge. Merges the "
+            "latest analytics into post.perf and appends a daily snapshot to "
+            "post.daily_perf. Requires post_bridge_post_id set on the row."
+        ),
         input_schema={
-            "post_id": Annotated[str, "Post UUID."],
+            "post_id": Annotated[str, "UUID of the content_posts row."],
         },
     )
-    async def log_metrics(_args: dict) -> dict:
-        return _stub("log_metrics")
+    async def log_metrics(args: dict) -> dict:
+        try:
+            from service.post_bridge import PostBridgeAPIError, client_for_user
+
+            post_id_raw = args.get("post_id")
+            if not post_id_raw:
+                return _err("post_id is required.")
+            post_id = UUID(str(post_id_raw))
+
+            with _open_db() as db:
+                post = db.get(ContentPost, post_id)
+                if post is None or post.project_id != project_id:
+                    return _err(f"Post {post_id} not found for this project.")
+                if not post.post_bridge_post_id:
+                    return _err("Post has no post_bridge_post_id — publish it first or set it manually.")
+                proj = db.get(Project, project_id)
+                if proj is None:
+                    return _err("Project missing.")
+
+                try:
+                    client = client_for_user(proj.user_id, db)
+                except ValueError as exc:
+                    return _err(str(exc))
+
+                try:
+                    async with client as pb:
+                        analytics = await pb.get_analytics(post.post_bridge_post_id)
+                        daily     = await pb.get_daily_analytics(post.post_bridge_post_id)
+                except PostBridgeAPIError as exc:
+                    return _err(f"PostBridge analytics failed ({exc.status_code}): {exc.error.message}")
+
+                merged = dict(post.perf or {})
+                merged.update({k: v for k, v in analytics.model_dump(mode="json").items() if v is not None})
+                merged["last_synced_at"] = analytics.last_synced_at.isoformat() if analytics.last_synced_at else None
+                post.perf = merged
+                post.daily_perf = [s.model_dump(mode="json") for s in daily]
+                db.add(post)
+                db.commit()
+                db.refresh(post)
+
+                return _ok({
+                    "post_id":    str(post.id),
+                    "view_count": analytics.view_count,
+                    "like_count": analytics.like_count,
+                    "snapshots":  len(daily),
+                })
+        except Exception as exc:
+            logger.exception("log_metrics failed")
+            return _err(f"log_metrics failed: {exc}")
 
     return create_sdk_mcp_server(
         "duct_content",
