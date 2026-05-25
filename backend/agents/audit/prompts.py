@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import json
 
-from agents.audit.schema import AuditBusinessContext, CrawlResult, PageSignals
+from agents.audit.schema import AuditBusinessContext, AuditResearchContext, CrawlResult, PageSignals
 from agents.user_preferences import UserPreferences
 
 _OUTCOME_LABELS: dict[str, str] = {
@@ -364,6 +364,15 @@ When you have finished the full analysis:
      * Phase 3 label="60–90 days" theme="Compound" — opportunities and authority (3–5 tasks)
      For each task: `task` = one imperative sentence, \
      `effort_estimate` = the matching enum value.
+   - `strategic_narrative` (no length limit — the ONE exception to all copy rules): \
+     Write 2–3 paragraphs of genuine competitive strategy analysis using the \
+     <research_context> block if provided, or infer from the crawl data if not. Include: \
+     (1) how this site positions vs each named competitor — lead with the most interesting \
+     difference; (2) 2–3 content opportunity clusters: topics competitors cover that the \
+     target site doesn't; (3) a punchy one-sentence framing the team can rally around \
+     (e.g. "MaxAura has the aesthetic but not the authority — yet"). \
+     This is the strategic layer that makes the report worth paying for. Avoid generic \
+     SEO advice here; write only what is specific and true for this site.
 
 **Subsequent turns — chat**
 
@@ -562,23 +571,43 @@ def build_audit_user_prompt(
     business_context: AuditBusinessContext,
     user_preferences: UserPreferences | None = None,
     report_mode: str = "freehand",
+    research_context: AuditResearchContext | None = None,
 ) -> str:
     parts: list[str] = []
 
     # Business context — only emit if any field is set
-    if any([
+    _biz_fields = [
         business_context.business_name,
         business_context.business_description,
         business_context.target_keywords,
         business_context.competitors,
         business_context.business_goals,
         business_context.primary_content_type,
-    ]):
+        business_context.industry,
+        business_context.business_model,
+        business_context.positioning_statement,
+        business_context.audience_segment,
+        business_context.brand_voice,
+        business_context.growth_stage,
+    ]
+    if any(_biz_fields):
         parts.append("<business_context>")
         if business_context.business_name:
             parts.append(f"  name: {business_context.business_name}")
+        if business_context.industry:
+            parts.append(f"  industry: {business_context.industry}")
+        if business_context.business_model:
+            parts.append(f"  business_model: {business_context.business_model}")
         if business_context.business_description:
             parts.append(f"  description: {business_context.business_description}")
+        if business_context.positioning_statement:
+            parts.append(f"  positioning: {business_context.positioning_statement}")
+        if business_context.audience_segment:
+            parts.append(f"  audience: {business_context.audience_segment}")
+        if business_context.brand_voice:
+            parts.append(f"  brand_voice: {business_context.brand_voice}")
+        if business_context.growth_stage:
+            parts.append(f"  growth_stage: {business_context.growth_stage}")
         if business_context.business_goals:
             parts.append(f"  goals: {business_context.business_goals}")
         if business_context.target_keywords:
@@ -588,6 +617,26 @@ def build_audit_user_prompt(
         if business_context.primary_content_type:
             parts.append(f"  primary_content_type: {business_context.primary_content_type}")
         parts.append("</business_context>\n")
+
+    # Research context — enriched competitor analysis from the pre-flight sub-agent
+    if research_context and (research_context.competitors or research_context.content_gaps or research_context.enrichment_notes):
+        parts.append("<research_context>")
+        if research_context.brand_content_pillars:
+            parts.append(f"  brand_content_pillars: {', '.join(research_context.brand_content_pillars)}")
+        if research_context.brand_schema_types:
+            parts.append(f"  brand_schema_types: {', '.join(research_context.brand_schema_types)}")
+        for comp in research_context.competitors:
+            pillars = ", ".join(comp.content_pillars[:3])
+            diffs = "; ".join(comp.differentiators[:2])
+            parts.append(
+                f"  competitor {comp.domain}: positioning='{comp.positioning}' | "
+                f"pillars=[{pillars}] | differentiators=[{diffs}]"
+            )
+        if research_context.content_gaps:
+            parts.append(f"  content_gaps: {'; '.join(research_context.content_gaps)}")
+        for note in research_context.enrichment_notes:
+            parts.append(f"  note: {note}")
+        parts.append("</research_context>\n")
 
     # User preferences — personalise communication style, depth, and outcome focus
     if user_preferences and any([

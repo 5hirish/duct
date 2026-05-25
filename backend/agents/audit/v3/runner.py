@@ -273,6 +273,7 @@ async def run_synthesis(
     chat_idle_timeout: float = 1800.0,
     report_mode: str = "freehand",
     template_id: str = "",
+    research_context=None,  # AuditResearchContext | None
 ) -> tuple[AuditReport | None, bool]:  # (report, had_thinking)
     """Single-session artifact pattern: generation + chat in one ClaudeSDKClient.
 
@@ -296,7 +297,10 @@ async def run_synthesis(
         logger.error("run_synthesis: session %s not found; creating fallback", session_id)
         session = create_audit_session(session_id)
 
-    initial_prompt = build_audit_user_prompt(crawl_result, business_context, user_preferences, report_mode=report_mode)
+    initial_prompt = build_audit_user_prompt(
+        crawl_result, business_context, user_preferences,
+        report_mode=report_mode, research_context=research_context,
+    )
     system_prompt = build_unified_system_prompt(report_mode=report_mode, template_id=template_id)
 
     # ------------------------------------------------------------------
@@ -795,6 +799,33 @@ class ClaudeAuditRunner:
             },
         })
 
+        # Enrichment — competitor research sub-agent (Haiku + WebSearch/WebFetch)
+        await emit({
+            "event": AuditEvent.STEP_STARTED,
+            "step_id": AuditStep.ENRICHING,
+            "label": STEP_LABELS[AuditStep.ENRICHING],
+            "status": "running",
+        })
+        t_enrich = _t()
+        from agents.audit.enrichment import enrich_context
+        research_context = await enrich_context(
+            root_url=url,
+            business_context=business_context,
+            crawl_result=crawl_result,
+            api_key=self._api_key,
+        )
+        logger.info("⏱ enrichment: %.1fs", _t() - t_enrich)
+        await emit({
+            "event": AuditEvent.STEP_FINISHED,
+            "step_id": AuditStep.ENRICHING,
+            "label": STEP_LABELS[AuditStep.ENRICHING],
+            "status": "success",
+            "payload": {
+                "competitors_found": len(research_context.competitors) if research_context else 0,
+                "content_gaps": len(research_context.content_gaps) if research_context else 0,
+            },
+        })
+
         await emit({
             "event": AuditEvent.STEP_STARTED,
             "step_id": AuditStep.SYNTHESIZE_AUDIT,
@@ -817,6 +848,7 @@ class ClaudeAuditRunner:
             user_preferences=user_preferences,
             report_mode=report_mode,
             template_id=template_id,
+            research_context=research_context,
         )
 
         await emit({

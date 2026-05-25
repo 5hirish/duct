@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { loadPreferences } from "@/lib/userPreferences";
+import { getActiveProject } from "@/lib/projects";
 
 const CONTENT_TYPES = [
   { value: "", label: "Select type…" },
@@ -35,6 +36,20 @@ export default function SeoAuditSetupPage() {
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [loading, setLoading]           = useState(false);
   const [error, setError]               = useState("");
+  const [activeProject, setActiveProject] = useState(null);
+
+  useEffect(() => {
+    const project = getActiveProject();
+    if (!project) return;
+    setActiveProject(project);
+    if (!businessName && project.company?.name) setBusinessName(project.company.name);
+    if (!description && project.company?.business_model) setDescription(project.company.business_model);
+    if (!goals && project.targets?.north_star_metric) setGoals(project.targets.north_star_metric);
+    if (!keywords && project.competition?.compare_against) setKeywords(project.competition.compare_against);
+    if (!competitors && project.competition?.competitors?.length)
+      setCompetitors(project.competition.competitors.join(", "));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -45,12 +60,19 @@ export default function SeoAuditSetupPage() {
       const params = {
         url: url.trim(),
         business_context: {
-          business_name:        businessName.trim(),
-          business_description: description.trim(),
-          business_goals:       goals.trim(),
-          target_keywords:      keywords.split(",").map(k => k.trim()).filter(Boolean),
-          competitors:          competitors.split(",").map(c => c.trim()).filter(Boolean),
-          primary_content_type: contentType,
+          business_name:         businessName.trim(),
+          business_description:  description.trim(),
+          business_goals:        goals.trim(),
+          target_keywords:       keywords.split(",").map(k => k.trim()).filter(Boolean),
+          competitors:           competitors.split(",").map(c => c.trim()).filter(Boolean),
+          primary_content_type:  contentType,
+          // Richer fields from saved project profile
+          industry:              activeProject?.company?.industry || "",
+          business_model:        activeProject?.company?.business_model || "",
+          positioning_statement: activeProject?.competition?.positioning_statement || "",
+          audience_segment:      activeProject?.audience?.primary_segment || "",
+          brand_voice:           activeProject?.brand_channels?.brand_voice || "",
+          growth_stage:          activeProject?.targets?.growth_stage_milestone || "",
         },
         effort,
         adaptive_thinking: adaptiveThinking,

@@ -267,10 +267,10 @@ async def test_crawl_real_page():
 # ---------------------------------------------------------------------------
 
 @pytest.mark.skipif(not _HAS_API_KEY, reason="ANTHROPIC_API_KEY not set")
-async def test_run_synthesis_catches_planted_issues():
+async def test_run_synthesis_catches_planted_issues(acme_business_context):
     """Feeds a known-bad HTML fixture to Claude and asserts it catches each planted issue."""
     import asyncio
-    from agents.audit.schema import AuditBusinessContext, CrawlPlan, CrawlResult
+    from agents.audit.schema import CrawlPlan, CrawlResult
     from agents.audit.v3.runner import close_session, create_audit_session, run_synthesis
     from agents.models import Provider
     from service.crawl.extractor import extract_signals
@@ -301,11 +301,7 @@ async def test_run_synthesis_catches_planted_issues():
         total_sitemap_urls=1,
     )
     crawl_result = CrawlResult(plan=plan, pages=[page])
-    business_context = AuditBusinessContext(
-        business_name="Acme CRM",
-        business_description="A CRM tool for SaaS startups.",
-        business_goals="Improve organic search visibility and drive signups.",
-    )
+    business_context = acme_business_context
 
     session_id = "integration-fixture-test"
     create_audit_session(session_id)
@@ -445,7 +441,7 @@ async def test_run_synthesis_catches_planted_issues():
 #     not (_HAS_API_KEY and _HAS_NETWORK),
 #     reason="requires ANTHROPIC_API_KEY and network access to getduct.ai",
 # )
-async def test_full_pipeline_real_page():
+async def test_full_pipeline_real_page(duct_business_context):
     """End-to-end: crawls getduct.ai then runs Claude synthesis in template mode.
 
     Uses report_mode='template' — the agent calls SubmitAuditReport with structured
@@ -454,7 +450,6 @@ async def test_full_pipeline_real_page():
     """
     import asyncio
     import json as _json
-    from agents.audit.schema import AuditBusinessContext
     from agents.audit.v3.runner import ClaudeAuditRunner, close_session, create_audit_session
     from agents.models import ModelName, Provider
 
@@ -496,11 +491,7 @@ async def test_full_pipeline_real_page():
         provider=Provider.ANTHROPIC,
         model=ModelName.CLAUDE_SONNET,
     )
-    business_context = AuditBusinessContext(
-        business_name="Duct",
-        business_description="AI-powered SEO audit tool for SaaS companies.",
-        business_goals="Rank for SEO audit and AIO-related keywords.",
-    )
+    business_context = duct_business_context
 
     logger.info("[pipeline] target: %s  crawl_depth=deep  model=sonnet  mode=template", _AUDIT_URL)
     t0 = time.perf_counter()

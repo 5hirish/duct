@@ -174,6 +174,35 @@ class AuditBusinessContext(BaseModel):
     target_keywords: list[str] = Field(default_factory=list)
     competitors: list[str] = Field(default_factory=list)
     primary_content_type: ContentType = ContentType.unset
+    industry: str = ""
+    business_model: str = ""
+    positioning_statement: str = ""
+    audience_segment: str = ""
+    brand_voice: str = ""
+    growth_stage: str = ""
+
+
+# ---------------------------------------------------------------------------
+# Context enrichment (pre-synthesis research sub-agent output)
+# ---------------------------------------------------------------------------
+
+class CompetitorSignals(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    domain: str
+    positioning: str = ""          # value prop / target audience claim
+    content_pillars: list[str] = Field(default_factory=list)
+    differentiators: list[str] = Field(default_factory=list)  # vs the target site
+
+
+class AuditResearchContext(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    brand_content_pillars: list[str] = Field(default_factory=list)
+    brand_schema_types: list[str] = Field(default_factory=list)
+    competitors: list[CompetitorSignals] = Field(default_factory=list)
+    content_gaps: list[str] = Field(default_factory=list)   # topics competitors cover, target doesn't
+    enrichment_notes: list[str] = Field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -274,6 +303,7 @@ class StructuredAuditData(BaseModel):
     headline: str = ""                                    # 10–15 word punchy verdict hook
     wins: list[str] = Field(default_factory=list)         # 3–5 noun phrases of what's working
     roadmap: list[RoadmapPhase] = Field(default_factory=list)
+    strategic_narrative: str = ""                         # free-text competitive landscape + content opportunity analysis
 
 
 # ---------------------------------------------------------------------------

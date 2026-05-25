@@ -24,7 +24,7 @@ The current and planned backend stack is:
 - **Orchestration:** Dagster
 - **Synthesis:** Claude API + Instructor with typed models
 - **Delivery:** Resend and Slack webhooks
-- **Workspace/auth metadata:** Supabase
+- **Database:** PostgreSQL on Railway — SQLModel ORM, Alembic migrations, `psycopg` driver. No Supabase.
 
 ## Product-shape constraints
 
