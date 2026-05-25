@@ -227,6 +227,109 @@ def _extract_subagent_name(input_data: dict[str, Any]) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Writer-tool upfront validators
+#
+# Each returns a PermissionResultDeny (with corrective text the model can act
+# on) when the input is wrong, or None to fall through to allow. We mirror
+# the audit agent's SubmitAuditReport pattern: rejecting in can_use_tool is
+# faster than letting the @tool body produce is_error after the call.
+# ---------------------------------------------------------------------------
+
+
+def _deny(message: str):
+    """Build a PermissionResultDeny — lazy import keeps SDK off the top-level."""
+    from claude_agent_sdk.types import PermissionResultDeny
+    return PermissionResultDeny(message=message)
+
+
+def _unwrap(input_data: dict[str, Any], *keys: str) -> dict[str, Any]:
+    """The model may pass `{"post": {...}}` or `{...}` directly. Accept both."""
+    for k in keys:
+        v = input_data.get(k)
+        if isinstance(v, dict):
+            return v
+    return input_data
+
+
+def _validate_submit_plan(input_data: dict[str, Any], session_project_id):
+    """Validate the payload the model is about to hand to submit_plan."""
+    from pydantic import ValidationError
+    from agents.content.schema import PlanDraft
+
+    payload = _unwrap(input_data, "plan")
+    try:
+        draft = PlanDraft.model_validate(payload)
+    except ValidationError as exc:
+        return _deny(
+            "PlanDraft validation failed — fix these issues in the JSON and "
+            f"call submit_plan again:\n{exc}"
+        )
+    if str(draft.project_id) != str(session_project_id):
+        return _deny(
+            f"project_id mismatch: this session is scoped to {session_project_id}, "
+            f"but the payload had {draft.project_id}. Use the session's project_id "
+            "and call submit_plan again."
+        )
+    return None
+
+
+def _validate_submit_post_draft(input_data: dict[str, Any], session_project_id):
+    """Validate the payload the model is about to hand to submit_post_draft."""
+    from pydantic import ValidationError
+    from agents.content.schema import PostDraft
+
+    payload = _unwrap(input_data, "post")
+    try:
+        draft = PostDraft.model_validate(payload)
+    except ValidationError as exc:
+        return _deny(
+            "PostDraft validation failed — fix these issues in the JSON and "
+            f"call submit_post_draft again:\n{exc}"
+        )
+    if str(draft.project_id) != str(session_project_id):
+        return _deny(
+            f"project_id mismatch: this session is scoped to {session_project_id}, "
+            f"but the payload had {draft.project_id}. Use the session's project_id "
+            "and call submit_post_draft again."
+        )
+    return None
+
+
+def _validate_generate_image(input_data: dict[str, Any]):
+    """Validate generate_image arguments before paying for a Gemini call."""
+    from pydantic import ValidationError
+    from service.gemini.schema import GenerateImageRequest
+
+    payload = {k: v for k, v in input_data.items() if v not in (None, "")}
+    payload.setdefault("number_of_images", min(int(payload.get("number_of_images", 1) or 1), 4))
+    try:
+        GenerateImageRequest.model_validate(payload)
+    except ValidationError as exc:
+        return _deny(
+            "generate_image input is invalid — fix and call again:\n"
+            f"{exc}"
+        )
+    return None
+
+
+def _validate_edit_image(input_data: dict[str, Any]):
+    """Validate edit_image arguments before paying for a Gemini call."""
+    from pydantic import ValidationError
+    from service.gemini.schema import EditImageRequest
+
+    payload = {k: v for k, v in input_data.items() if v not in (None, "")}
+    payload.setdefault("number_of_images", min(int(payload.get("number_of_images", 1) or 1), 4))
+    try:
+        EditImageRequest.model_validate(payload)
+    except ValidationError as exc:
+        return _deny(
+            "edit_image input is invalid — fix and call again:\n"
+            f"{exc}"
+        )
+    return None
+
+
+# ---------------------------------------------------------------------------
 # Core run loop
 # ---------------------------------------------------------------------------
 
@@ -288,6 +391,38 @@ async def _run(
                 "summary":  brief[:160],
                 "status":   "running",
             })
+            return PermissionResultAllow(updated_input=input_data)
+
+        # ---- Writer-tool upfront validation ------------------------------
+        # Validating here (rather than letting the @tool body return
+        # is_error=true) gives the model a tight feedback loop: the
+        # corrective message arrives BEFORE any DB or API work runs, and
+        # the SDK surfaces it as a permission denial which the model
+        # treats as authoritative. Pattern borrowed from audit's
+        # SubmitAuditReport handler.
+
+        if tool_name == "mcp__duct_content__submit_plan":
+            deny = _validate_submit_plan(input_data, project_id)
+            if deny is not None:
+                return deny
+            return PermissionResultAllow(updated_input=input_data)
+
+        if tool_name == "mcp__duct_content__submit_post_draft":
+            deny = _validate_submit_post_draft(input_data, project_id)
+            if deny is not None:
+                return deny
+            return PermissionResultAllow(updated_input=input_data)
+
+        if tool_name == "mcp__duct_content__generate_image":
+            deny = _validate_generate_image(input_data)
+            if deny is not None:
+                return deny
+            return PermissionResultAllow(updated_input=input_data)
+
+        if tool_name == "mcp__duct_content__edit_image":
+            deny = _validate_edit_image(input_data)
+            if deny is not None:
+                return deny
             return PermissionResultAllow(updated_input=input_data)
 
         # AskUserQuestion: bridge to the SSE consumer via asyncio.Future.

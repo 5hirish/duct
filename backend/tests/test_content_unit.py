@@ -165,6 +165,96 @@ def test_extract_subagent_name_covers_known_sdk_key_variants():
 
 
 # ---------------------------------------------------------------------------
+# Writer-tool upfront validators — the model's tight feedback loop
+# ---------------------------------------------------------------------------
+
+
+def test_submit_post_draft_valid_payload_passes_with_or_without_wrapper():
+    """The model may pass either {"post": {...}} or {...} directly —
+    both are accepted (matches the @tool body's behaviour)."""
+    from agents.content.v3.runner import _validate_submit_post_draft
+
+    pid = uuid4()
+    valid = {
+        "type": "post",
+        "project_id": str(pid),
+        "post_dir_slug": "2026-06-01-001",
+        "pillar": "face_shape",
+        "topic": "x",
+        "slides_html": "<html/>",
+        "caption": "c",
+    }
+    assert _validate_submit_post_draft({"post": valid}, pid) is None
+    assert _validate_submit_post_draft(valid, pid)            is None
+
+
+def test_submit_post_draft_denies_on_pydantic_failure_with_corrective_text():
+    """Missing required field → PermissionResultDeny carrying enough
+    detail for the model to fix the JSON without a round-trip."""
+    from agents.content.v3.runner import _validate_submit_post_draft
+
+    pid = uuid4()
+    bad = {"type": "post", "project_id": str(pid)}  # missing post_dir_slug, pillar, etc.
+    deny = _validate_submit_post_draft(bad, pid)
+    assert deny is not None
+    assert "PostDraft validation failed" in deny.message
+    assert "call submit_post_draft again" in deny.message
+
+
+def test_submit_post_draft_denies_on_project_id_mismatch():
+    """Session-bound project guard: a stray project_id from a different
+    session must be rejected with an actionable message."""
+    from agents.content.v3.runner import _validate_submit_post_draft
+
+    session_pid = uuid4()
+    wrong = {
+        "type": "post",
+        "project_id": str(uuid4()),  # different from session_pid
+        "post_dir_slug": "x",
+        "pillar": "p",
+        "topic": "t",
+        "slides_html": "<html/>",
+        "caption": "c",
+    }
+    deny = _validate_submit_post_draft(wrong, session_pid)
+    assert deny is not None
+    assert "project_id mismatch" in deny.message
+    assert str(session_pid)      in deny.message
+
+
+def test_submit_plan_validates_days_array():
+    """PlanDraft requires days[] — passing an empty list is valid but a
+    missing key is not. Catches the model emitting a partial PlanDraft."""
+    from agents.content.v3.runner import _validate_submit_plan
+
+    pid = uuid4()
+    assert _validate_submit_plan(
+        {"type": "plan", "project_id": str(pid), "days": []},
+        pid,
+    ) is None
+    deny = _validate_submit_plan({"type": "plan", "project_id": str(pid)}, pid)
+    assert deny is not None
+    assert "PlanDraft validation failed" in deny.message
+
+
+def test_image_validators_reject_before_paying_for_gemini():
+    """generate_image / edit_image validation runs in can_use_tool so we
+    never pay Gemini for a malformed request. Empty prompt is the most
+    common drift; missing input_asset_id is the most common edit_image
+    bug."""
+    from agents.content.v3.runner import _validate_edit_image, _validate_generate_image
+
+    assert _validate_generate_image({"prompt": "a single red apple"}) is None
+    bad_gen = _validate_generate_image({"prompt": ""})
+    assert bad_gen is not None
+    assert "generate_image input is invalid" in bad_gen.message
+
+    bad_edit = _validate_edit_image({"prompt": "swap background"})  # no input_asset_id
+    assert bad_edit is not None
+    assert "edit_image input is invalid" in bad_edit.message
+
+
+# ---------------------------------------------------------------------------
 # Frontend ↔ backend event-enum mirror — guard against drift
 # ---------------------------------------------------------------------------
 
