@@ -38,6 +38,7 @@ from agents.audit.schema import (
     AuditReport,
     AuditSession,
     CrawlResult,
+    CrawlSummary,
     StructuredAuditData,
     VersionedReport,
 )
@@ -45,7 +46,7 @@ from agents.engines import Engine, get_env_var_for_engine_provider
 from agents.engines import ENGINE_DEFAULT_EFFORT
 from agents.models import AgentEffort, AgentPermissionMode, AgentTool, ModelName, Provider, ThinkingMode
 from service.crawl.extractor import extract_signals
-from service.crawl.fetcher import fetch_text, make_client
+from service.crawl.fetcher import fetch, fetch_text, make_client
 from service.crawl.sitemap import fetch_crawl_plan
 
 logger = logging.getLogger(__name__)
@@ -104,10 +105,11 @@ async def _fetch_and_extract(
     url: str,
     page_type: str,
 ) -> Any:
-    from service.crawl.fetcher import fetch_text as _fetch_text
-    html, status = await _fetch_text(client, url)
-    signals = extract_signals(html, url, page_type)
-    signals.http_status = status
+    result = await fetch(client, url)
+    signals = extract_signals(result.text, url, page_type, response_headers=result.headers)
+    signals.http_status = result.status
+    signals.ttfb_ms = result.ttfb_ms
+    signals.redirect_chain = result.redirect_chain
     return signals
 
 
@@ -385,6 +387,20 @@ async def run_synthesis(
             "payload": report.model_dump(),
         })
 
+    def _compute_crawl_summary() -> CrawlSummary:
+        pages = crawl_result.pages
+        if not pages:
+            return CrawlSummary()
+        ttfbs = [p.ttfb_ms for p in pages if p.ttfb_ms > 0]
+        return CrawlSummary(
+            avg_ttfb_ms=sum(ttfbs) / len(ttfbs) if ttfbs else 0.0,
+            pages_with_redirects=sum(1 for p in pages if p.redirect_chain),
+            spa_pages_count=sum(1 for p in pages if p.is_spa_suspected),
+            pages_noindex=sum(1 for p in pages if p.is_noindex),
+            pages_missing_title=sum(1 for p in pages if not p.title),
+            pages_missing_h1=sum(1 for p in pages if not p.h1s),
+        )
+
     async def _on_submit_report(args: dict) -> dict:
         nonlocal initial_report
         try:
@@ -394,13 +410,15 @@ async def run_synthesis(
                 "status": "validation_error",
                 "message": f"Report validation failed — fix these issues and resubmit: {exc}",
             }
+        # Always compute crawl_summary from raw page signals — deterministic, not LLM-generated.
+        structured.crawl_summary = _compute_crawl_summary()
         from datetime import datetime, timezone
         version_id = len(session.report_versions) + 1
         report = AuditReport(
             url=crawl_result.plan.root_url,
             generated_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
             update_label="Initial audit" if version_id == 1 else f"Update {version_id}",
-            executive_summary=structured.executive_summary,
+            executive_summary=" · ".join(structured.key_signals) if structured.key_signals else "",
             report_mode="template",
             template_id=template_id,
             structured_data=structured,

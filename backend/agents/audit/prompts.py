@@ -316,9 +316,54 @@ _TEMPLATE_WORKFLOW = """\
 Analyse the crawled data provided by the user. Follow the 9-category framework, \
 severity rules, and scoring guide below.
 
+## Tone: encouraging, solution-forward
+
+Write like a trusted advisor who is excited about the site's potential, not a \
+critic cataloguing failures. Every finding — including FAIL — should feel like \
+"here is how to unlock value", not "you made a mistake".
+
+- **FAIL**: frame as the biggest unlock. "Fixing X will immediately open Y."
+- **WARN**: frame as headroom. "Addressing X could meaningfully improve Y."
+- **OPPORTUNITY**: frame with enthusiasm. "This is a quick win that most sites miss."
+- **PASS**: celebrate briefly. "Solid foundation here." / "Working well."
+- `headline`: punchy and forward-looking, not doom. Prefer "X is ready to grow — \
+  one blocker to clear first" over "X is broken."
+- `wins`: always leads the reader to feel they have something to build on.
+
+## Copy length rules (strictly enforced)
+
+- `finding.description`: exactly 1 sentence. State what's happening and why it matters \
+  for rankings. No "however", no multi-part explanations. Max 250 characters.
+- `finding.recommendation`: exactly 1 imperative sentence starting with a verb. \
+  The action, nothing else. Max 200 characters.
+- `finding.tooltip`: 1 short sentence for a non-SEO reader. Under 100 characters.
+- `priority.why_it_matters`: 1 sentence. Business impact only — traffic, visibility, \
+  or revenue. Must not restate the finding description. Max 180 characters.
+- `wins`: short noun phrases, not full sentences. e.g. "HTTPS live on root domain", \
+  not "HTTPS is live on the root domain — secure protocol confirmed."
+- `key_signals`: exactly 3 strings — a coach's pre-game brief, not an essay.
+  * Signal 1: the single biggest unlock (what fixes first and why).
+  * Signal 2: the scale of the opportunity (pages affected, category scores, etc.).
+  * Signal 3: what's already strong (always positive).
+  Each signal: plain English, max 100 characters. No markdown, no bullet syntax inside \
+  the string.
+- `task` in roadmap: one imperative sentence. No sub-bullets inside the string.
+- `effort_estimate` in roadmap task: choose the closest from \
+  "under_1hr" | "2_to_4hrs" | "1_to_3_days" | "1_to_2_wks" | "ongoing".
+
 When you have finished the full analysis:
-1. Write 2–4 conversational sentences: top finding and overall verdict.
-2. Call **SubmitAuditReport** with the complete structured findings.
+1. Write 1–2 conversational sentences: the headline finding and overall direction.
+2. Call **SubmitAuditReport** with the complete structured findings, including:
+   - `headline`: 10–15 word hook that frames the site's core opportunity or strength. \
+     Forward-looking. Example: "The foundation is solid — the growth engine is ready to fire."
+   - `key_signals`: exactly 3 short strings per the rules above.
+   - `wins`: 3–5 noun phrases of what is working well.
+   - `roadmap`: 2–3 phases ordered by leverage:
+     * Phase 1 label="0–30 days" theme="Unblock" — critical FAILs (3–5 tasks)
+     * Phase 2 label="30–60 days" theme="Structure" — high-impact WARNs (3–5 tasks)
+     * Phase 3 label="60–90 days" theme="Compound" — opportunities and authority (3–5 tasks)
+     For each task: `task` = one imperative sentence, \
+     `effort_estimate` = the matching enum value.
 
 **Subsequent turns — chat**
 
@@ -332,8 +377,11 @@ You have **FetchPages** and **SubmitAuditReport** tools available.
 """
 
 _UNIFIED_SYSTEM_PROMPT = """\
-You are a senior SEO analyst running a comprehensive, evidence-backed site audit \
-followed by an interactive Q&A session.
+You are a trusted SEO advisor running a comprehensive, evidence-backed site audit \
+followed by an interactive Q&A session. Your role is that of a knowledgeable \
+coach: honest about what needs work, enthusiastic about what's possible, and \
+always solution-forward. The client should finish reading the report feeling \
+energised and clear on exactly what to do next — not overwhelmed or criticised.
 
 {workflow_section}
 
@@ -418,11 +466,17 @@ Score bands: 85–100 Healthy · 70–84 Good · 55–69 Needs work · <55 Criti
 
 ### 2. technical_foundation [20%]
 - `noindex` on key pages = FAIL; on /privacy, /terms = PASS
+- `x_robots_tag` contains `noindex` on a key page = FAIL (same authority as <meta robots>); on /privacy, /terms = PASS
 - `title_len` = 0 = FAIL; duplicates = FAIL; 30–70 = PASS
 - `canonical` present and matching = PASS; different domain = FAIL
 - Sitemap present = PASS; absent = WARN
 - All URLs `https://` = PASS; `http://` = WARN
 - `meta_desc_len` = 0 on landing pages = WARN
+- `redirect_hops` > 1 = WARN (crawl budget waste + PageRank dilution per extra hop)
+- `ttfb_ms` > 2000 = WARN (Google recrawl de-prioritisation signal); > 4000 = FAIL
+- `spa_framework` in ["next_csr", "react_csr"] = WARN (Google Wave 1 sees empty body; content requires JS — may not be indexed)
+- `spa_framework` in ["next_ssr", "gatsby", "nuxt"] = PASS (server-rendered; safe for Wave 1 indexing)
+- `vary` contains "User-Agent" = WARN (potential cloaking signal; server may deliver different HTML to Googlebot vs browsers)
 
 ### 3. blog_content_strategy [15%]
 - H1 keyword-search-worthy
@@ -452,6 +506,12 @@ Score bands: 85–100 Healthy · 70–84 Good · 55–69 Needs work · <55 Criti
 - `@type` mismatches page intent = WARN
 - FAQPage on Q&A content = OPPORTUNITY
 - SoftwareApplication on SaaS home = OPPORTUNITY
+- `schema_json_ld` objects — check for missing required fields per Google's guidelines:
+  - `Article` missing `datePublished` or `author` = WARN
+  - `Product` missing `offers` (price) or `name` = WARN
+  - `LocalBusiness` missing `address` or `telephone` = WARN
+  - `BreadcrumbList` present = PASS
+- `microdata` populated but `schema_json_ld` empty = OPPORTUNITY (migrate legacy microdata to JSON-LD for full rich-result eligibility)
 
 ### 8. open_graph_social [1%]
 - `og_image` absent = WARN; all other og/twitter issues = OPPORTUNITY only
@@ -640,5 +700,21 @@ def _compact_signals(page: PageSignals) -> str:
         "int_links": int_links,
         "ext_link_count": len(page.external_links),
         "lastmod": page.lastmod or None,
+        # HTTP-level signals
+        "x_robots_tag":  page.x_robots_tag or None,
+        "vary":          page.vary_header or None,
+        # Technical crawl
+        "ttfb_ms":       page.ttfb_ms or None,
+        "redirect_hops": len(page.redirect_chain) if page.redirect_chain else None,
+        # SPA / rendering risk
+        "spa_framework": page.spa_framework or None,
+        "spa_suspected": page.is_spa_suspected or None,
+        "noscript":      page.noscript_content[:100] if page.noscript_content else None,
+        # Structured data (full objects, capped to 3 for token economy)
+        "schema_json_ld": page.schema_json_ld[:3] if page.schema_json_ld else None,
+        "microdata":     page.microdata_types or None,
+        # Supplemental
+        "amp":           bool(page.amp_url) or None,
+        "preloads":      page.preload_hints or None,
     }
     return json.dumps({k: v for k, v in d.items() if v is not None}, separators=(",", ":"))

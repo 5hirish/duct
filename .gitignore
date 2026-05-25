@@ -47,6 +47,8 @@ pnpm-debug.log*
 **/test-results/
 **/blob-report/
 **/playwright/.cache/
+# Ad-hoc screenshots dumped at repo root (e.g. Playwright MCP / manual QA)
+/*.png
 
 # Deploy / local tooling
 .vercel/

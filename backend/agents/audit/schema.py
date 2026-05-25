@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Literal
+from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -12,13 +12,73 @@ from agents.models import AgentEffort
 from agents.user_preferences import UserPreferences
 
 
+# ---------------------------------------------------------------------------
+# Enums — replace all Literal[...] string constants
+# ---------------------------------------------------------------------------
 
+class Severity(StrEnum):
+    fail        = "fail"
+    warn        = "warn"
+    pass_       = "pass"        # "pass" is a Python keyword; value stays "pass" for JSON
+    opportunity = "opportunity"
+
+
+class ImpactLevel(StrEnum):
+    critical = "critical"
+    high     = "high"
+    medium   = "medium"
+    low      = "low"
+
+
+class EffortLevel(StrEnum):
+    low    = "low"
+    medium = "medium"
+    high   = "high"
+
+
+class EffortEstimate(StrEnum):
+    under_1hr     = "under_1hr"
+    two_to_4hrs   = "2_to_4hrs"
+    one_to_3_days = "1_to_3_days"
+    one_to_2_wks  = "1_to_2_wks"
+    ongoing       = "ongoing"
+
+
+class ScoreBand(StrEnum):
+    healthy    = "healthy"
+    good       = "good"
+    needs_work = "needs_work"
+    critical   = "critical"
+
+
+class PageType(StrEnum):
+    landing_page = "landing_page"
+    blog_post    = "blog_post"
+    other        = "other"
+
+
+class ContentType(StrEnum):
+    unset         = ""              # not specified
+    blog          = "blog"
+    landing_pages = "landing_pages"
+    product_pages = "product_pages"
+    docs          = "docs"
+
+
+class ReportMode(StrEnum):
+    freehand = "freehand"
+    template = "template"
+
+
+# ---------------------------------------------------------------------------
+# Crawl schemas
+# ---------------------------------------------------------------------------
 
 class PageSignals(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     url: str
-    page_type: Literal["landing_page", "blog_post", "other"] = "other"
+    page_type: PageType = PageType.other
     http_status: int = 200
 
     # <head> signals
@@ -61,6 +121,26 @@ class PageSignals(BaseModel):
     # From sitemap
     lastmod: str = ""
 
+    # HTTP-level signals (from response headers — invisible to HTML-only parsers)
+    x_robots_tag: str = ""          # X-Robots-Tag header; same authority as <meta name="robots">
+    vary_header: str = ""           # Vary: User-Agent → server serving different content per bot
+    cache_control: str = ""         # Cache-Control header; freshness signal for recrawl scheduling
+
+    # Technical crawl signals
+    ttfb_ms: float = 0.0            # time to first byte in milliseconds
+    redirect_chain: list[dict] = Field(default_factory=list)  # [{"url": "...", "status": 301}, ...]
+
+    # Rendering / SPA signals
+    is_spa_suspected: bool = False   # likely client-side rendered (empty body + known SPA markers)
+    spa_framework: str = ""          # detected framework: "next_ssr", "next_csr", "react_csr", "gatsby", "nuxt", ""
+    noscript_content: str = ""       # text visible inside <noscript> — what non-JS crawlers fall back to
+
+    # Supplemental page signals
+    amp_url: str = ""                # <link rel="amphtml" href="..."> URL
+    preload_hints: int = 0           # count of <link rel="preload"> — performance signal
+    schema_json_ld: list[dict] = Field(default_factory=list)   # full JSON-LD objects (not just @types)
+    microdata_types: list[str] = Field(default_factory=list)   # schema types found via microdata
+
 
 class CrawlPlan(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -93,8 +173,12 @@ class AuditBusinessContext(BaseModel):
     business_goals: str = ""
     target_keywords: list[str] = Field(default_factory=list)
     competitors: list[str] = Field(default_factory=list)
-    primary_content_type: Literal["blog", "landing_pages", "product_pages", "docs", ""] = ""
+    primary_content_type: ContentType = ContentType.unset
 
+
+# ---------------------------------------------------------------------------
+# Audit findings
+# ---------------------------------------------------------------------------
 
 class AffectedUrl(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -107,14 +191,14 @@ class AuditFinding(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     id: str                                                    # slug, e.g. "title-too-short"
-    severity: Literal["fail", "warn", "pass", "opportunity"]
+    severity: Severity
     title: str
-    description: str                                           # 2-3 sentence plain-language explanation
+    description: Annotated[str, Field(max_length=250)]         # 1 sentence — what's happening and why it matters
     tooltip: str                                               # 1 sentence for non-SEO users (hover text)
     affected_urls: list[AffectedUrl] = Field(default_factory=list)
-    recommendation: str = ""
-    impact: Literal["critical", "high", "medium", "low"] = "medium"
-    effort: Literal["low", "medium", "high"] = "medium"
+    recommendation: Annotated[str, Field(max_length=200)] = "" # 1 imperative sentence starting with a verb
+    impact: ImpactLevel = ImpactLevel.medium
+    effort: EffortLevel = EffortLevel.medium
 
 
 class AuditCategory(BaseModel):
@@ -136,11 +220,39 @@ class AuditPriority(BaseModel):
 
     rank: int
     title: str
-    why_it_matters: str    # business-language 1-2 sentences (lost traffic, revenue risk)
-    severity: Literal["fail", "warn", "opportunity"]
+    why_it_matters: Annotated[str, Field(max_length=180)]  # 1 sentence — business impact only
+    severity: Severity
     affected_url_count: int = 0
     category_id: str
     finding_id: str        # cross-reference into a category finding
+
+
+class RoadmapTask(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    task: str
+    effort_estimate: EffortEstimate = EffortEstimate.one_to_3_days
+    note: str = ""   # optional override / exception note
+
+
+class RoadmapPhase(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    label: str       # e.g. "0–30 days"
+    theme: str       # e.g. "Unblock"
+    tasks: list[RoadmapTask] = Field(default_factory=list)
+
+
+class CrawlSummary(BaseModel):
+    """Aggregate crawl-level stats for frontend callout cards."""
+    model_config = ConfigDict(extra="forbid")
+
+    avg_ttfb_ms: float = 0.0
+    pages_with_redirects: int = 0
+    spa_pages_count: int = 0
+    pages_noindex: int = 0
+    pages_missing_title: int = 0
+    pages_missing_h1: int = 0
 
 
 class StructuredAuditData(BaseModel):
@@ -148,17 +260,25 @@ class StructuredAuditData(BaseModel):
 
     url: str
     generated_at: str
-    overall_score: int     # weighted average computed from scoring rules
-    score_band: Literal["healthy", "good", "needs_work", "critical"]
-    pages_crawled: int     # UI uses this to compute coverage callout
+    overall_score: int                # weighted average computed from scoring rules
+    score_band: ScoreBand
+    pages_crawled: int                # UI uses this to compute coverage callout
     total_sitemap_urls: int
-    executive_summary: str
+    key_signals: list[str] = Field(default_factory=list)  # exactly 3 short strings — coach's brief
     total_issues: int = 0
     total_warnings: int = 0
     total_opportunities: int = 0
+    crawl_summary: CrawlSummary | None = None
     categories: list[AuditCategory] = Field(default_factory=list)  # all 9, sorted by weight desc
     top_priorities: list[AuditPriority] = Field(default_factory=list)
+    headline: str = ""                                    # 10–15 word punchy verdict hook
+    wins: list[str] = Field(default_factory=list)         # 3–5 noun phrases of what's working
+    roadmap: list[RoadmapPhase] = Field(default_factory=list)
 
+
+# ---------------------------------------------------------------------------
+# Report + session containers
+# ---------------------------------------------------------------------------
 
 class AuditReport(BaseModel):
     """Audit report — either freehand HTML (streaming tag-parsed) or structured template data.
@@ -174,7 +294,7 @@ class AuditReport(BaseModel):
     generated_at: str
     update_label: str = ""
     executive_summary: str = ""
-    report_mode: Literal["freehand", "template"] = "freehand"
+    report_mode: ReportMode = ReportMode.freehand
     template_id: str = ""
     html_report: str = ""                               # freehand only
     structured_data: StructuredAuditData | None = None  # template only
@@ -202,7 +322,7 @@ class AuditRequest(BaseModel):
     adaptive_thinking: bool = False
     crawl_depth: CrawlDepth = CrawlDepth.DEEP
     user_preferences: UserPreferences = Field(default_factory=UserPreferences)
-    report_mode: Literal["freehand", "template"] = "freehand"
+    report_mode: ReportMode = ReportMode.freehand
     template_id: str = "seo_v1"
 
 
