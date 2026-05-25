@@ -258,10 +258,7 @@ To update the report, output exactly this pattern (no extra text outside the tag
 # Unified system prompt — single-session artifact pattern
 # ---------------------------------------------------------------------------
 
-_UNIFIED_SYSTEM_PROMPT = """\
-You are a senior SEO analyst running a comprehensive, evidence-backed site audit \
-followed by an interactive Q&A session.
-
+_FREEHAND_WORKFLOW = """\
 ## Your workflow
 
 **Turn 1 — initial audit**
@@ -309,6 +306,36 @@ Do NOT call FetchPages during the initial report. Save it for targeted chat veri
 - For questions that don't require a report change, respond in plain text only.
 - Use your SEO expertise to explain *why* findings matter and suggest prioritised quick wins.
 - If the user uploads a screenshot or file, analyse it in the context of the site's SEO.
+"""
+
+_TEMPLATE_WORKFLOW = """\
+## Your workflow
+
+**Turn 1 — initial audit**
+
+Analyse the crawled data provided by the user. Follow the 9-category framework, \
+severity rules, and scoring guide below.
+
+When you have finished the full analysis:
+1. Write 2–4 conversational sentences: top finding and overall verdict.
+2. Call **SubmitAuditReport** with the complete structured findings.
+
+**Subsequent turns — chat**
+
+You have **FetchPages** and **SubmitAuditReport** tools available.
+- Answer questions conversationally. Cite specific URL and signal values.
+- Call SubmitAuditReport again (full updated data) whenever the user asks for report \
+  changes or you discover new evidence that meaningfully changes findings.
+- Do NOT call FetchPages during the initial audit. Save it for targeted chat verification.
+- Use your SEO expertise to explain *why* findings matter and suggest prioritised quick wins.
+- If the user uploads a screenshot or file, analyse it in the context of the site's SEO.
+"""
+
+_UNIFIED_SYSTEM_PROMPT = """\
+You are a senior SEO analyst running a comprehensive, evidence-backed site audit \
+followed by an interactive Q&A session.
+
+{workflow_section}
 
 ---
 
@@ -441,9 +468,14 @@ Score bands: 85–100 Healthy · 70–84 Good · 55–69 Needs work · <55 Criti
 # Public builders
 # ---------------------------------------------------------------------------
 
-def build_unified_system_prompt() -> str:
-    """Unified system prompt — single-session artifact pattern."""
-    return _UNIFIED_SYSTEM_PROMPT
+def build_unified_system_prompt(report_mode: str = "freehand", template_id: str = "") -> str:
+    """Unified system prompt — single-session artifact pattern.
+
+    report_mode="freehand": agent generates HTML inside <duct_report> tags.
+    report_mode="template": agent calls SubmitAuditReport tool with structured data.
+    """
+    workflow = _TEMPLATE_WORKFLOW if report_mode == "template" else _FREEHAND_WORKFLOW
+    return _UNIFIED_SYSTEM_PROMPT.format(workflow_section=workflow)
 
 
 def build_audit_system_prompt() -> str:
@@ -469,6 +501,7 @@ def build_audit_user_prompt(
     crawl_result: CrawlResult,
     business_context: AuditBusinessContext,
     user_preferences: UserPreferences | None = None,
+    report_mode: str = "freehand",
 ) -> str:
     parts: list[str] = []
 
@@ -545,10 +578,13 @@ def build_audit_user_prompt(
         )
 
     parts.append("</crawl_data>")
-    parts.append(
-        "\nRun the full 9-category SEO audit. "
-        "Produce the AuditReport JSON including a complete html_report field."
-    )
+    if report_mode == "template":
+        parts.append("\nRun the full 9-category SEO audit. When finished, call SubmitAuditReport with the complete structured findings.")
+    else:
+        parts.append(
+            "\nRun the full 9-category SEO audit. "
+            "Produce the AuditReport JSON including a complete html_report field."
+        )
 
     return "\n".join(parts)
 

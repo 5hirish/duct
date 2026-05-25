@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { Phase } from "./auditPhase";
 import { AuditStep } from "../../lib/auditEvents";
+import AuditReportV1 from "./AuditReportV1";
 
 // ---------------------------------------------------------------------------
 // Version history — pill toggles
@@ -267,12 +268,24 @@ export default function AuditReport({
     versions?.find((v) => v.version_id === selectedVersionId) ||
     versions?.[versions.length - 1];
 
+  const reportMode = selectedVersion?.report?.report_mode ?? "freehand";
+  const structuredData = selectedVersion?.report?.structured_data ?? null;
   const html = selectedVersion?.report?.html_report || streamingHtml || "";
-  const hasReport = !!html;
+  const hasReport = reportMode === "template" ? !!structuredData : !!html;
   const isFailed = phase === Phase.FAILED;
   const isPipeline = phase === Phase.PIPELINE || phase === Phase.STARTING;
 
   function handleDownload() {
+    if (reportMode === "template" && structuredData) {
+      const blob = new Blob([JSON.stringify(structuredData, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `duct-seo-v${selectedVersion?.version_id ?? "draft"}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      return;
+    }
     if (!html) return;
     const blob = new Blob([html], { type: "text/html" });
     const url = URL.createObjectURL(blob);
@@ -284,6 +297,10 @@ export default function AuditReport({
   }
 
   function handlePrint() {
+    if (reportMode === "template") {
+      window.print();
+      return;
+    }
     iframeRef.current?.contentWindow?.print();
   }
 
@@ -323,13 +340,19 @@ export default function AuditReport({
       <div className="flex-1 overflow-hidden relative">
         {hasReport ? (
           <>
-            <iframe
-              ref={iframeRef}
-              srcDoc={html}
-              sandbox="allow-modals"
-              title="SEO Audit Report"
-              className="w-full h-full border-0"
-            />
+            {reportMode === "template" && structuredData ? (
+              <div className="h-full overflow-auto">
+                <AuditReportV1 data={structuredData} />
+              </div>
+            ) : (
+              <iframe
+                ref={iframeRef}
+                srcDoc={html}
+                sandbox="allow-modals"
+                title="SEO Audit Report"
+                className="w-full h-full border-0"
+              />
+            )}
             {/* Failed overlay on top of existing report — don't nuke it */}
             {isFailed && (
               <FailedOverlay errorMsg={errorMsg} onRetry={onRetry} hasReport={true} />
