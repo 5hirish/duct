@@ -149,6 +149,8 @@ async def _run_audit_pipeline(
             business_context=req.business_context,
             emit=emit_fn,
             max_blog_posts=req.max_blog_posts,
+            report_mode=req.report_mode,
+            template_id=req.template_id,
         )
 
         if report:

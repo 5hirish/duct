@@ -38,6 +38,7 @@ from agents.audit.schema import (
     AuditReport,
     AuditSession,
     CrawlResult,
+    StructuredAuditData,
     VersionedReport,
 )
 from agents.engines import Engine, get_env_var_for_engine_provider
@@ -268,6 +269,8 @@ async def run_synthesis(
     adaptive_thinking: bool = False,
     user_preferences=None,  # UserPreferences | None
     chat_idle_timeout: float = 1800.0,
+    report_mode: str = "freehand",
+    template_id: str = "",
 ) -> tuple[AuditReport | None, bool]:  # (report, had_thinking)
     """Single-session artifact pattern: generation + chat in one ClaudeSDKClient.
 
@@ -291,25 +294,53 @@ async def run_synthesis(
         logger.error("run_synthesis: session %s not found; creating fallback", session_id)
         session = create_audit_session(session_id)
 
-    initial_prompt = build_audit_user_prompt(crawl_result, business_context, user_preferences)
-    system_prompt = build_unified_system_prompt()
+    initial_prompt = build_audit_user_prompt(crawl_result, business_context, user_preferences, report_mode=report_mode)
+    system_prompt = build_unified_system_prompt(report_mode=report_mode, template_id=template_id)
 
     # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------
 
     async def _can_use_tool(tool_name: str, input_data: dict, context: Any) -> Any:
+        # SubmitAuditReport — template mode: validate, emit REPORT_UPDATED, return allow
+        if tool_name == "SubmitAuditReport":
+            nonlocal initial_report
+            try:
+                structured = StructuredAuditData.model_validate(input_data)
+            except Exception as exc:
+                return PermissionResultDeny(
+                    message=f"Report validation failed — fix these issues and resubmit: {exc}"
+                )
+            from datetime import datetime, timezone
+            version_id = len(session.report_versions) + 1
+            report = AuditReport(
+                url=crawl_result.plan.root_url,
+                generated_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                update_label="Initial audit" if version_id == 1 else f"Update {version_id}",
+                executive_summary=structured.executive_summary,
+                report_mode="template",
+                template_id=template_id,
+                structured_data=structured,
+            )
+            initial_report = report
+            await _emit_report_version(report, version_id)
+            return PermissionResultAllow(updated_input=input_data)
+
         # FetchPages is only useful after the initial report — block it until then
         # to prevent the model from wasting all 60 turns on tool calls before
         # generating the <duct_report> JSON.
         # FetchPages: only after the initial report is generated
         if tool_name == AgentTool.FETCH_PAGES:
             if initial_report is None:
+                first_step = (
+                    "Call SubmitAuditReport first"
+                    if report_mode == "template"
+                    else "Produce the <duct_report> HTML first"
+                )
                 return PermissionResultDeny(
                     message=(
-                        "FetchPages is only available after the initial report has been "
-                        "generated. Produce the <duct_report> JSON first, then use "
-                        "FetchPages to answer follow-up questions."
+                        f"FetchPages is only available after the initial report has been "
+                        f"generated. {first_step}, then use FetchPages to answer follow-up questions."
                     )
                 )
             return PermissionResultAllow(updated_input=input_data)
@@ -399,7 +430,8 @@ async def run_synthesis(
         logger.error("audit subprocess stderr [%s]: %s", session_id, line.rstrip())
 
     _cli_path = shutil.which("claude") or None
-    _mcp = build_audit_mcp_server(crawl_result)
+    _extra_tools = ["SubmitAuditReport"] if report_mode == "template" else []
+    _mcp = build_audit_mcp_server(crawl_result, report_mode=report_mode)
 
     options = ClaudeAgentOptions(
         model=model_str,
@@ -410,6 +442,7 @@ async def run_synthesis(
             AgentTool.WEB_SEARCH,
             AgentTool.WEB_FETCH,
             AgentTool.FETCH_PAGES,  # mcp__duct_crawl__FetchPages — in-process MCP
+            *_extra_tools,
         ],
         can_use_tool=_can_use_tool,
         hooks=hooks,
@@ -603,8 +636,8 @@ async def run_synthesis(
                         if initial_report is not None and len(session.report_versions) == 0:
                             await _emit_report_version(initial_report, 1)
 
-                        # Chat turn: check for <audit_report_update> in accumulated text
-                        if initial_report is not None and len(session.report_versions) >= 1:
+                        # Freehand only: check for <audit_report_update> in accumulated text
+                        if report_mode == "freehand" and initial_report is not None and session.report_versions:
                             updated = _extract_report_update(full_text, base=initial_report)
                             if updated:
                                 v_id = len(session.report_versions) + 1
@@ -657,8 +690,14 @@ class ClaudeAuditRunner:
         crawl_depth: str = "deep",
         chat_idle_timeout: float = 1800.0,
         user_preferences=None,  # UserPreferences | None
+        report_mode: str = "freehand",
+        template_id: str = "seo_v1",
     ) -> AuditReport | None:
         from agents.audit.schema import CrawlDepth
+        session = _sessions.get(session_id)
+        if session:
+            session.report_mode = report_mode
+            session.template_id = template_id
         start = perf_counter()
         _t = perf_counter  # alias for inline timings
 
@@ -757,6 +796,8 @@ class ClaudeAuditRunner:
             adaptive_thinking=self.adaptive_thinking,
             chat_idle_timeout=chat_idle_timeout,
             user_preferences=user_preferences,
+            report_mode=report_mode,
+            template_id=template_id,
         )
 
         await emit({

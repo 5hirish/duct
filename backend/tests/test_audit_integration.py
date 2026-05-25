@@ -123,10 +123,16 @@ def _log_event_summary(events: list[dict]) -> None:
         logger.info("  %-32s × %d", evt, n)
 
 
-def _save_report(filename: str, html: str) -> Path:
+def _stamped(stem: str, ext: str) -> str:
+    """Return filename with a datetime stamp so runs never overwrite each other."""
+    stamp = time.strftime("%Y%m%d_%H%M%S")
+    return f"{stem}_{stamp}.{ext}"
+
+
+def _save_report(stem: str, content: str, ext: str = "html") -> Path:
     _OUTPUTS.mkdir(parents=True, exist_ok=True)
-    out = _OUTPUTS / filename
-    out.write_text(html, encoding="utf-8")
+    out = _OUTPUTS / _stamped(stem, ext)
+    out.write_text(content, encoding="utf-8")
     return out
 
 
@@ -309,7 +315,7 @@ async def test_run_synthesis_catches_planted_issues():
     # ------------------------------------------------------------------
     # Dump for visual inspection
     # ------------------------------------------------------------------
-    out = _save_report("fixture_report.html", html)
+    out = _save_report("fixture_report", html)
 
     _log_event_summary(events)
     logger.info("had_thinking:       %s", had_thinking)
@@ -359,8 +365,14 @@ async def test_run_synthesis_catches_planted_issues():
 #     reason="requires ANTHROPIC_API_KEY and network access to getduct.ai",
 # )
 async def test_full_pipeline_real_page():
-    """End-to-end: crawls getduct.ai then runs Claude synthesis on the real crawl result."""
+    """End-to-end: crawls getduct.ai then runs Claude synthesis in template mode.
+
+    Uses report_mode='template' — the agent calls SubmitAuditReport with structured
+    JSON instead of emitting <duct_report> HTML tags. The React component AuditReportV1
+    renders the structured data visually.
+    """
     import asyncio
+    import json as _json
     from agents.audit.schema import AuditBusinessContext
     from agents.audit.v3.runner import ClaudeAuditRunner, close_session, create_audit_session
     from agents.models import ModelName, Provider
@@ -373,7 +385,7 @@ async def test_full_pipeline_real_page():
         events.append(event)
         evt = event.get("event")
         if evt == "report_chunk":
-            pass  # too noisy; counted in summary
+            pass  # template mode emits no report_chunk — counted in summary
         elif evt == "step_started":
             logger.info("[step] ▶ %s — %s", event.get("step_id"), event.get("label", ""))
         elif evt == "step_finished":
@@ -381,9 +393,17 @@ async def test_full_pipeline_real_page():
             suffix = f"({len(pages)} pages)" if pages else ""
             logger.info("[step] ✓ %s %s — %s", event.get("step_id"), suffix, event.get("status", ""))
         elif evt == "report_updated":
-            html_len = len(event.get("payload", {}).get("html_report", ""))
-            logger.info("[event] report_updated v%s (%d chars)", event.get("version_id"), html_len)
+            payload = event.get("payload", {})
+            sd = payload.get("structured_data")
+            info = (
+                f"score={sd['overall_score']} band={sd['score_band']} "
+                f"categories={len(sd.get('categories', []))}"
+                if sd else "no structured_data"
+            )
+            logger.info("[event] report_updated v%s — %s", event.get("version_id"), info)
             close_session(session_id)
+        elif evt == "agent_message_chunk":
+            pass  # noisy; counted in summary
         elif evt == "message_stop":
             logger.info("[event] message_stop")
         elif evt == "thinking_chunk":
@@ -392,7 +412,7 @@ async def test_full_pipeline_real_page():
     runner = ClaudeAuditRunner(
         api_key=_cfg.anthropic_api_key,
         provider=Provider.ANTHROPIC,
-        model=ModelName.CLAUDE_HAIKU,  # haiku: fits comfortably in 5-min timeout
+        model=ModelName.CLAUDE_SONNET,
     )
     business_context = AuditBusinessContext(
         business_name="Duct",
@@ -400,7 +420,7 @@ async def test_full_pipeline_real_page():
         business_goals="Rank for SEO audit and AIO-related keywords.",
     )
 
-    logger.info("[pipeline] target: %s  crawl_depth=light  model=haiku", _AUDIT_URL)
+    logger.info("[pipeline] target: %s  crawl_depth=light  model=sonnet  mode=template", _AUDIT_URL)
     t0 = time.perf_counter()
 
     report = await asyncio.wait_for(
@@ -409,9 +429,11 @@ async def test_full_pipeline_real_page():
             url=_AUDIT_URL,
             business_context=business_context,
             emit=collect,
-            max_blog_posts=1,
-            crawl_depth="light",   # max ~15 pages — fast enough for E2E
-            chat_idle_timeout=5.0, # exit 5 s after report
+            max_blog_posts=2,
+            crawl_depth="light",
+            chat_idle_timeout=10.0,
+            report_mode="template",
+            template_id="seo_v1",
         ),
         timeout=_TIMEOUT,
     )
@@ -423,38 +445,55 @@ async def test_full_pipeline_real_page():
     # Crawl step events
     # ------------------------------------------------------------------
     step_ids = [e.get("step_id") for e in events if e.get("event") == "step_finished"]
-    assert "fetch_sitemap" in step_ids, \
-        f"fetch_sitemap step missing. Got: {step_ids}"
-    assert "crawl_pages" in step_ids, \
-        f"crawl_pages step missing. Got: {step_ids}"
-    assert "synthesize_audit" in step_ids, \
-        f"synthesize_audit step missing. Got: {step_ids}"
+    assert "fetch_sitemap" in step_ids,    f"fetch_sitemap step missing. Got: {step_ids}"
+    assert "crawl_pages" in step_ids,      f"crawl_pages step missing. Got: {step_ids}"
+    assert "synthesize_audit" in step_ids, f"synthesize_audit step missing. Got: {step_ids}"
 
     # ------------------------------------------------------------------
-    # Report presence
+    # Report presence and mode
     # ------------------------------------------------------------------
-    assert report is not None, \
-        "full pipeline returned no report — <duct_report> tag not parsed"
+    assert report is not None, "full pipeline returned no report — SubmitAuditReport not called"
+    assert report.report_mode == "template", f"expected report_mode=template, got {report.report_mode!r}"
+    assert report.template_id == "seo_v1",  f"expected template_id=seo_v1, got {report.template_id!r}"
     assert report.url == _AUDIT_URL
-    assert isinstance(report.executive_summary, str), \
-        "executive_summary must be a string"
+    assert report.html_report == "",        "html_report should be empty in template mode"
+    assert isinstance(report.executive_summary, str) and report.executive_summary, \
+        "executive_summary must be a non-empty string"
 
     # ------------------------------------------------------------------
-    # html_report structural integrity (URL-agnostic — site content can change)
+    # Structured data integrity
     # ------------------------------------------------------------------
-    html = report.html_report
-    html_lower = html.lower()
-    assert html, "html_report is empty — model omitted HTML from <duct_report>"
-    assert "<html" in html_lower, \
-        f"html_report missing <html> (first 200): {html[:200]}"
-    assert "</html>" in html_lower, "html_report missing </html> — likely truncated"
-    assert "<style" in html_lower,  "html_report missing <style> — renders unstyled"
-    assert "<script" not in html_lower, \
-        "html_report contains <script> — prompt says no JavaScript"
-    assert "getduct.ai" in html, "html_report doesn't mention the audited URL"
-    assert "duct" in html_lower,   "html_report missing Duct footer branding"
-    assert len(html) >= 2000, \
-        f"html_report too short ({len(html):,} chars) — likely a stub"
+    sd = report.structured_data
+    assert sd is not None, "structured_data is None — SubmitAuditReport validation failed"
+
+    assert 0 <= sd.overall_score <= 100, \
+        f"overall_score out of range: {sd.overall_score}"
+    assert sd.score_band in ("healthy", "good", "needs_work", "critical"), \
+        f"unexpected score_band: {sd.score_band!r}"
+    assert sd.pages_crawled > 0, "pages_crawled must be > 0"
+    assert sd.total_sitemap_urls >= sd.pages_crawled, \
+        "total_sitemap_urls should be >= pages_crawled"
+
+    assert len(sd.categories) == 9, \
+        f"expected 9 categories, got {len(sd.categories)}: {[c.id for c in sd.categories]}"
+
+    expected_category_ids = {
+        "on_page_seo", "technical_foundation", "blog_content_strategy",
+        "internal_linking", "eeat_signals", "geo_aio",
+        "structured_data", "open_graph_social", "off_page_authority",
+    }
+    actual_ids = {c.id for c in sd.categories}
+    missing = expected_category_ids - actual_ids
+    assert not missing, f"missing categories: {missing}"
+
+    for cat in sd.categories:
+        assert 0 <= cat.score <= 100, \
+            f"category {cat.id!r} score out of range: {cat.score}"
+        for finding in cat.findings:
+            assert finding.severity in ("fail", "warn", "pass", "opportunity"), \
+                f"invalid severity {finding.severity!r} in {cat.id}/{finding.id}"
+
+    assert len(sd.top_priorities) > 0, "top_priorities is empty"
 
     # ------------------------------------------------------------------
     # SSE event contract
@@ -465,25 +504,29 @@ async def test_full_pipeline_real_page():
 
     agent_chunks = [e for e in events if e.get("event") == "agent_message_chunk"]
     assert len(agent_chunks) > 0, \
-        "no AGENT_MESSAGE_CHUNK — model didn't stream analysis text before <duct_report>"
+        "no AGENT_MESSAGE_CHUNK — model didn't stream analysis text before SubmitAuditReport"
 
+    # template mode: no <duct_report> tag streaming
     report_chunks = [e for e in events if e.get("event") == "report_chunk"]
-    assert len(report_chunks) > 0, \
-        "no REPORT_CHUNK events — HTML not streamed live (streaming regression)"
+    assert len(report_chunks) == 0, \
+        f"unexpected REPORT_CHUNK events in template mode ({len(report_chunks)} received)"
 
     assert not any(e.get("event") == "synthesis_chunk" for e in events), \
         "legacy SYNTHESIS_CHUNK still being emitted"
 
     # ------------------------------------------------------------------
-    # Dump for visual inspection
+    # Save structured data as JSON for visual inspection + comparison
     # ------------------------------------------------------------------
-    out = _save_report("pipeline_report.html", html)
+    json_str = _json.dumps(sd.model_dump(), indent=2, ensure_ascii=False)
+    out = _save_report("pipeline_report_template", json_str, ext="json")
 
     thinking_events = [e for e in events if e.get("event") == "thinking_chunk"]
     _log_event_summary(events)
-    logger.info("html_report length: %d chars", len(html))
-    logger.info("executive_summary:  %.120r", report.executive_summary)
+    logger.info("overall_score:      %d (%s)", sd.overall_score, sd.score_band)
+    logger.info("pages_crawled:      %d / %d sitemap URLs", sd.pages_crawled, sd.total_sitemap_urls)
+    logger.info("categories:         %s", [(c.id, c.score) for c in sd.categories])
+    logger.info("top_priorities:     %d", len(sd.top_priorities))
+    logger.info("executive_summary:  %.120r", sd.executive_summary)
     logger.info("agent_msg_chunks:   %d", len(agent_chunks))
-    logger.info("report_chunks:      %d", len(report_chunks))
     logger.info("thinking_chunks:    %d", len(thinking_events))
     logger.info("report saved to:    %s", out)

@@ -22,7 +22,7 @@ from urllib.parse import urlparse
 from claude_agent_sdk import create_sdk_mcp_server, tool
 from claude_agent_sdk.types import McpSdkServerConfig
 
-from agents.audit.schema import CrawlResult, PageSignals
+from agents.audit.schema import CrawlResult, PageSignals, StructuredAuditData
 from service.crawl.extractor import extract_signals
 from service.crawl.fetcher import SSRFError, fetch_text, make_client, validate_public_url
 
@@ -32,7 +32,7 @@ _MAX_URLS_PER_CALL = 10
 _FULL_BODY_CHARS   = 5_000   # vs 500-char snippet in the shallow crawl
 
 
-def build_audit_mcp_server(crawl_result: CrawlResult) -> McpSdkServerConfig:
+def build_audit_mcp_server(crawl_result: CrawlResult, report_mode: str = "freehand") -> McpSdkServerConfig:
     """Build the in-process MCP server scoped to this audit session's site.
 
     The returned config is passed to ClaudeAgentOptions.mcp_servers so the
@@ -105,7 +105,26 @@ def build_audit_mcp_server(crawl_result: CrawlResult) -> McpSdkServerConfig:
 
         return {"content": [{"type": "text", "text": json.dumps(payload, indent=2)}]}
 
-    return create_sdk_mcp_server("duct_crawl", tools=[fetch_pages])
+    tools = [fetch_pages]
+
+    if report_mode == "template":
+        @tool(
+            name="SubmitAuditReport",
+            description=(
+                "Submit the completed SEO audit report as structured data. "
+                "Call once after finishing the full 9-category analysis to deliver the initial report. "
+                "During chat, call again with the full updated data whenever you want to issue a new "
+                "version based on user feedback or new findings. Each call creates a numbered snapshot."
+            ),
+            input_schema=StructuredAuditData.model_json_schema(),
+        )
+        async def submit_audit_report(args: dict) -> dict:
+            # Validation + REPORT_UPDATED emit are handled in can_use_tool before this runs.
+            return {"content": [{"type": "text", "text": '{"status": "received"}'}]}
+
+        tools.append(submit_audit_report)
+
+    return create_sdk_mcp_server("duct_crawl", tools=tools)
 
 
 def _compact(s: PageSignals) -> dict:
