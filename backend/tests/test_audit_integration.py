@@ -51,7 +51,7 @@ _HAS_API_KEY = bool(_cfg.anthropic_api_key)
 _AUDIT_URL = "https://getduct.ai"
 _OUTPUTS = ROOT / "tests" / "outputs"
 
-_TIMEOUT = 300  # 5 minutes outer guard for all API tests
+_TIMEOUT = 600  # 10 minutes outer guard for all API tests
 
 
 def _network_available(url: str = _AUDIT_URL) -> bool:
@@ -403,9 +403,10 @@ async def test_full_pipeline_real_page():
             logger.info("[event] report_updated v%s — %s", event.get("version_id"), info)
             close_session(session_id)
         elif evt == "agent_message_chunk":
-            pass  # noisy; counted in summary
+            pass  # accumulated in full_agent_text below
         elif evt == "message_stop":
-            logger.info("[event] message_stop")
+            full_text = "".join(e.get("text", "") for e in events if e.get("event") == "agent_message_chunk")
+            logger.info("[event] message_stop — agent text so far (%d chars): %.300r", len(full_text), full_text)
         elif evt == "thinking_chunk":
             pass  # noisy; counted in summary
 
@@ -420,7 +421,7 @@ async def test_full_pipeline_real_page():
         business_goals="Rank for SEO audit and AIO-related keywords.",
     )
 
-    logger.info("[pipeline] target: %s  crawl_depth=light  model=sonnet  mode=template", _AUDIT_URL)
+    logger.info("[pipeline] target: %s  crawl_depth=deep  model=sonnet  mode=template", _AUDIT_URL)
     t0 = time.perf_counter()
 
     report = await asyncio.wait_for(
@@ -430,8 +431,8 @@ async def test_full_pipeline_real_page():
             business_context=business_context,
             emit=collect,
             max_blog_posts=2,
-            crawl_depth="light",
-            chat_idle_timeout=10.0,
+            crawl_depth="deep",
+            chat_idle_timeout=30.0,
             report_mode="template",
             template_id="seo_v1",
         ),
@@ -471,8 +472,9 @@ async def test_full_pipeline_real_page():
     assert sd.score_band in ("healthy", "good", "needs_work", "critical"), \
         f"unexpected score_band: {sd.score_band!r}"
     assert sd.pages_crawled > 0, "pages_crawled must be > 0"
-    assert sd.total_sitemap_urls >= sd.pages_crawled, \
-        "total_sitemap_urls should be >= pages_crawled"
+    # total_sitemap_urls may be 0 when no XML sitemap is found; otherwise must be >= pages_crawled
+    assert sd.total_sitemap_urls == 0 or sd.total_sitemap_urls >= sd.pages_crawled, \
+        f"total_sitemap_urls ({sd.total_sitemap_urls}) < pages_crawled ({sd.pages_crawled})"
 
     assert len(sd.categories) == 9, \
         f"expected 9 categories, got {len(sd.categories)}: {[c.id for c in sd.categories]}"

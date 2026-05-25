@@ -36,7 +36,8 @@ class AgentTool(StrEnum):
 
     ASK_USER_QUESTION = "AskUserQuestion"
     TODO_WRITE = "TodoWrite"
-    FETCH_PAGES = "mcp__duct_crawl__FetchPages"   # in-process MCP tool: use namespaced format
+    FETCH_PAGES          = "mcp__duct_crawl__FetchPages"          # in-process MCP tool: use namespaced format
+    SUBMIT_AUDIT_REPORT  = "mcp__duct_crawl__SubmitAuditReport"   # template mode only
     WEB_SEARCH  = "WebSearch"         # SERP research, competitor discovery
     WEB_FETCH   = "WebFetch"          # fetch arbitrary URLs (e.g. competitor pages)
     AGENT = "Agent"

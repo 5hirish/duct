@@ -32,7 +32,11 @@ _MAX_URLS_PER_CALL = 10
 _FULL_BODY_CHARS   = 5_000   # vs 500-char snippet in the shallow crawl
 
 
-def build_audit_mcp_server(crawl_result: CrawlResult, report_mode: str = "freehand") -> McpSdkServerConfig:
+def build_audit_mcp_server(
+    crawl_result: CrawlResult,
+    report_mode: str = "freehand",
+    on_submit_report=None,  # async (args: dict) -> dict | None
+) -> McpSdkServerConfig:
     """Build the in-process MCP server scoped to this audit session's site.
 
     The returned config is passed to ClaudeAgentOptions.mcp_servers so the
@@ -119,7 +123,9 @@ def build_audit_mcp_server(crawl_result: CrawlResult, report_mode: str = "freeha
             input_schema=StructuredAuditData.model_json_schema(),
         )
         async def submit_audit_report(args: dict) -> dict:
-            # Validation + REPORT_UPDATED emit are handled in can_use_tool before this runs.
+            if on_submit_report:
+                result = await on_submit_report(args)
+                return {"content": [{"type": "text", "text": json.dumps(result)}]}
             return {"content": [{"type": "text", "text": '{"status": "received"}'}]}
 
         tools.append(submit_audit_report)

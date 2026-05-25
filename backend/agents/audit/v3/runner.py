@@ -302,30 +302,6 @@ async def run_synthesis(
     # ------------------------------------------------------------------
 
     async def _can_use_tool(tool_name: str, input_data: dict, context: Any) -> Any:
-        # SubmitAuditReport — template mode: validate, emit REPORT_UPDATED, return allow
-        if tool_name == "SubmitAuditReport":
-            nonlocal initial_report
-            try:
-                structured = StructuredAuditData.model_validate(input_data)
-            except Exception as exc:
-                return PermissionResultDeny(
-                    message=f"Report validation failed — fix these issues and resubmit: {exc}"
-                )
-            from datetime import datetime, timezone
-            version_id = len(session.report_versions) + 1
-            report = AuditReport(
-                url=crawl_result.plan.root_url,
-                generated_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
-                update_label="Initial audit" if version_id == 1 else f"Update {version_id}",
-                executive_summary=structured.executive_summary,
-                report_mode="template",
-                template_id=template_id,
-                structured_data=structured,
-            )
-            initial_report = report
-            await _emit_report_version(report, version_id)
-            return PermissionResultAllow(updated_input=input_data)
-
         # FetchPages is only useful after the initial report — block it until then
         # to prevent the model from wasting all 60 turns on tool calls before
         # generating the <duct_report> JSON.
@@ -409,6 +385,30 @@ async def run_synthesis(
             "payload": report.model_dump(),
         })
 
+    async def _on_submit_report(args: dict) -> dict:
+        nonlocal initial_report
+        try:
+            structured = StructuredAuditData.model_validate(args)
+        except Exception as exc:
+            return {
+                "status": "validation_error",
+                "message": f"Report validation failed — fix these issues and resubmit: {exc}",
+            }
+        from datetime import datetime, timezone
+        version_id = len(session.report_versions) + 1
+        report = AuditReport(
+            url=crawl_result.plan.root_url,
+            generated_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            update_label="Initial audit" if version_id == 1 else f"Update {version_id}",
+            executive_summary=structured.executive_summary,
+            report_mode="template",
+            template_id=template_id,
+            structured_data=structured,
+        )
+        initial_report = report
+        await _emit_report_version(report, version_id)
+        return {"status": "received", "version_id": version_id}
+
     # ------------------------------------------------------------------
     # SDK options
     # ------------------------------------------------------------------
@@ -430,8 +430,9 @@ async def run_synthesis(
         logger.error("audit subprocess stderr [%s]: %s", session_id, line.rstrip())
 
     _cli_path = shutil.which("claude") or None
-    _extra_tools = ["SubmitAuditReport"] if report_mode == "template" else []
-    _mcp = build_audit_mcp_server(crawl_result, report_mode=report_mode)
+    _extra_tools = [AgentTool.SUBMIT_AUDIT_REPORT] if report_mode == "template" else []
+    _submit_cb = _on_submit_report if report_mode == "template" else None
+    _mcp = build_audit_mcp_server(crawl_result, report_mode=report_mode, on_submit_report=_submit_cb)
 
     options = ClaudeAgentOptions(
         model=model_str,
