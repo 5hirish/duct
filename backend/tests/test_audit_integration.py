@@ -51,7 +51,7 @@ _HAS_API_KEY = bool(_cfg.anthropic_api_key)
 _AUDIT_URL = "https://getduct.ai"
 _OUTPUTS = ROOT / "tests" / "outputs"
 
-_TIMEOUT = 600  # 10 minutes outer guard for all API tests
+_TIMEOUT = 900  # 15 minutes: enrichment sub-agent (~90s) + synthesis (~300-600s)
 
 
 def _network_available(url: str = _AUDIT_URL) -> bool:

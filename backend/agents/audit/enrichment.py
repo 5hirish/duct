@@ -54,6 +54,7 @@ async def enrich_context(
     crawl_result: CrawlResult,
     api_key: str,
     model: str = _HAIKU_MODEL,
+    timeout: float = 90.0,
 ) -> AuditResearchContext | None:
     """Run a lightweight Claude sub-agent to research competitors and content gaps.
 
@@ -106,7 +107,7 @@ Be concise. Each field should be a short string or short list item, not a paragr
         model=model,
         allowed_tools=["WebSearch", "WebFetch"],
         permission_mode="bypassPermissions",
-        max_turns=20,
+        max_turns=10,
         env=env,
         setting_sources=[],
         output_format={
@@ -115,11 +116,10 @@ Be concise. Each field should be a short string or short list item, not a paragr
         },
     )
 
-    try:
+    async def _run() -> AuditResearchContext | None:
         async for message in query(prompt=prompt, options=options):
             if isinstance(message, ResultMessage) and message.structured_output:
                 context = AuditResearchContext.model_validate(message.structured_output)
-                # Backfill brand signals extracted locally
                 if not context.brand_content_pillars:
                     context.brand_content_pillars = brand_pillars
                 if not context.brand_schema_types:
@@ -130,8 +130,17 @@ Be concise. Each field should be a short string or short list item, not a paragr
                     len(context.content_gaps),
                 )
                 return context
+        return None
+
+    try:
+        import asyncio
+        result = await asyncio.wait_for(_run(), timeout=timeout)
+        if result is not None:
+            return result
+    except TimeoutError:
+        logger.warning("enrichment: sub-agent timed out after %.0fs; using local signals only", timeout)
     except Exception as exc:
-        logger.warning("enrichment: sub-agent failed (%s); proceeding without enrichment", exc)
+        logger.warning("enrichment: sub-agent failed (%s); using local signals only", exc)
 
     # Return a minimal context with just the locally-extracted brand signals
     return AuditResearchContext(

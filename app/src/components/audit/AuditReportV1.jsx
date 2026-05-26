@@ -343,6 +343,26 @@ function CategoryBarChart({ categories }) {
 }
 
 // ---------------------------------------------------------------------------
+// Strategic narrative — competitive landscape + content opportunity analysis
+// ---------------------------------------------------------------------------
+
+function StrategicNarrative({ narrative }) {
+  if (!narrative) return null;
+  const paragraphs = narrative.split(/\n\n+/).filter(Boolean);
+  return (
+    <section className="space-y-3">
+      <SectionHeader icon={Target}>Competitive Landscape</SectionHeader>
+      <div className="rounded-xl border border-slate-700 bg-slate-950 px-6 py-5 space-y-4">
+        {paragraphs.map((p, i) => (
+          <p key={i} className="text-sm leading-relaxed text-slate-300"
+            style={{ lineHeight: '1.75' }}>{p}</p>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Impact × Effort matrix — 2×2 quadrant
 // ---------------------------------------------------------------------------
 
@@ -824,6 +844,9 @@ export default function AuditReportV1({ data }) {
 
         {/* ── What's going right ───────────────────────────────────────── */}
         {data.wins?.length > 0 && <WinsStrip wins={data.wins} />}
+
+        {/* ── Competitive landscape / strategic narrative ───────────────── */}
+        {data.strategic_narrative && <StrategicNarrative narrative={data.strategic_narrative} />}
 
         {/* ── Fix these first ──────────────────────────────────────────── */}
         {data.top_priorities?.length > 0 && (

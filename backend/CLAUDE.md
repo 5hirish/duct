@@ -16,15 +16,24 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
 
 ## MVP architecture
 
-The current and planned backend stack is:
+### Current stack
 
-- **Ingestion:** PyAirbyte for early pilots, client-managed Airbyte later
+- **AI synthesis:** Three versioned engine implementations under `agents/insights/` — V1 (LangChain), V2 (Google ADK), V3 (Claude Agent SDK). Runtime-switchable via `generate_engine` env var.
+- **Ingestion:** Direct Google API clients (`google-ads`, `google-analytics-data`, `google-api-python-client`). Async concurrent fetching in `service/pipeline.py`.
+- **Normalization:** Lightweight Python pipeline — raw API response → typed Pydantic/SQLModel brief models. No query layer or transforms yet.
+- **Database:** PostgreSQL on Railway — SQLModel ORM, Alembic migrations, `psycopg` driver.
+- **Auth:** JWT for users; Google OAuth for connector linking (Ads, GA4, GSC, Sign-In).
+- **Observability:** Sentry error tracking; optional OpenTelemetry tracing (wired via Claude Agent SDK).
+- **Hosting:** Railway — auto-deploys from `main` via GitHub integration; `railway.json` defines Railpack build + uvicorn start.
+- **CI:** GitHub Actions (`backend.yml`) — Ruff lint + pytest on every PR and push to `main`.
+
+### Roadmap (not in codebase yet)
+
+- **Ingestion framework:** PyAirbyte for early pilots → client-managed Airbyte later
 - **Query layer:** DuckDB + Ibis
 - **Transforms:** dbt
 - **Orchestration:** Dagster
-- **Synthesis:** Claude API + Instructor with typed models
-- **Delivery:** Resend and Slack webhooks
-- **Database:** PostgreSQL on Railway — SQLModel ORM, Alembic migrations, `psycopg` driver. No Supabase.
+- **Delivery:** Resend (email) + Slack webhooks
 
 ## Product-shape constraints
 

@@ -6,7 +6,7 @@ Monorepo for [getduct.ai](https://getduct.ai).
 
 - `site/` — static marketing site
 - `backend/` — Python reporting and synthesis MVP
-- `app/` — Next.js App Router report viewer (no-auth shell)
+- `app/` — Next.js App Router report viewer and agent interface (Cloudflare Workers)
 - `docs/` — strategy, GTM, MVP, engineering, design, guides ([`docs/README.md`](docs/README.md))
 
 ## Monorepo guidance
