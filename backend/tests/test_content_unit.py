@@ -251,3 +251,115 @@ def test_frontend_content_events_mirror_backend_enums():
         assert f'"{ev.value}"' in js, f"frontend missing event: {ev.value}"
     for step in ContentStep:
         assert f'"{step.value}"' in js, f"frontend missing step: {step.value}"
+
+
+# ---------------------------------------------------------------------------
+# Pre-flight enrichment — local scan + prompt stanza
+# ---------------------------------------------------------------------------
+
+
+def test_research_stanza_omits_empty_context_keeps_prompt_clean():
+    """First-run projects (no posts, no enrichment) must not get a
+    pollution-y empty <content_research> block in their kickoff prompt.
+    Otherwise the orchestrator wastes tokens on noise."""
+    from agents.content.prompts import _research_stanza
+    from agents.content.schema import ContentResearchContext
+
+    assert _research_stanza(None) == ""
+    assert _research_stanza(ContentResearchContext()) == ""
+
+
+def test_research_stanza_renders_pillar_history_and_trends():
+    """When the enrichment ran, the kickoff prompt must include the
+    fields the orchestrator's prompt instructs it to consult: pillar
+    history (with days_since + recent topics) and the four trend
+    categories. If any of these go missing the orchestrator quietly
+    falls back to dispatching research_pillar sub-agents unnecessarily."""
+    from agents.content.prompts import _research_stanza
+    from agents.content.schema import (
+        ContentResearchContext,
+        PillarHistorySignal,
+        TrendSignal,
+    )
+
+    ctx = ContentResearchContext(
+        total_posts_to_date=12,
+        days_since_last_post=3,
+        pillar_history=[
+            PillarHistorySignal(
+                pillar="face_shape",
+                posts_count=4,
+                days_since_last_post=2,
+                recent_topics=["wolf cut for oval", "side parts"],
+                recent_hook_types=["identity_challenge", "curiosity_gap"],
+                median_save_rate=0.062,
+            ),
+            PillarHistorySignal(
+                pillar="color_aura",
+                posts_count=1,
+                days_since_last_post=45,
+                recent_topics=["winter palette intro"],
+            ),
+        ],
+        trending_sounds=[TrendSignal(kind="sound", label="aesthetic lofi 2026",
+                                     why_it_works="calm vocals fit beauty content",
+                                     evidence_url="https://tiktok.com/discover/lofi")],
+        trending_hashtags=[TrendSignal(kind="hashtag", label="#auramaxxing",
+                                       why_it_works="audience self-identifier")],
+        trending_hooks=[TrendSignal(kind="hook", label="things nobody tells you about [X]",
+                                    why_it_works="curiosity gap drives saves")],
+        trending_styles=[TrendSignal(kind="style", label="POV-text overlay frame 1")],
+        audience_insights=["audience prefers slideshows posted 8-10am local"],
+        enrichment_notes=["competitor X is leaning hard on Format A"],
+    )
+    out = _research_stanza(ctx)
+    # Block opens + closes properly
+    assert out.startswith("<content_research>")
+    assert out.endswith("</content_research>")
+    # Pillar history surfaces days_since and recent topics so the
+    # orchestrator can balance pillar distribution
+    assert "face_shape" in out
+    assert "color_aura" in out
+    assert "45d ago" in out
+    assert "wolf cut for oval" in out
+    # Each trend category renders
+    assert "trending_sounds" in out and "lofi 2026" in out
+    assert "trending_hashtags" in out and "auramaxxing" in out
+    assert "trending_hooks" in out and "things nobody tells you" in out
+    assert "trending_styles" in out and "POV-text overlay" in out
+    # Notes + audience insights surface
+    assert "audience_insights" in out
+    assert "notes" in out
+
+
+def test_local_signals_handles_empty_db_gracefully():
+    """When the project has no posts (first-run), local scan must not
+    raise and must return an empty-but-valid ContentResearchContext.
+
+    No mocking-Pydantic; we run against a real call with no DB
+    connection, which exercises the early-return path."""
+    from unittest.mock import patch
+    from agents.content.enrichment import _local_content_signals
+
+    with patch("agents.content.enrichment.get_engine", return_value=None):
+        ctx = _local_content_signals(uuid4())
+    assert ctx.pillar_history == []
+    assert ctx.total_posts_to_date == 0
+    assert ctx.days_since_last_post is None
+
+
+def test_enrich_returns_local_signals_when_no_api_key():
+    """Graceful degradation: empty api_key skips the sub-agent and
+    returns local signals only. This is the path that fires when
+    ANTHROPIC_API_KEY isn't set (dev / unit env)."""
+    import asyncio
+    from unittest.mock import patch
+    from agents.content.enrichment import enrich_content_context
+    from agents.content.schema import ContentBrandContext
+
+    brand = ContentBrandContext(project_id=uuid4(), project_name="X")
+    with patch("agents.content.enrichment.get_engine", return_value=None):
+        ctx = asyncio.run(enrich_content_context(brand, api_key=""))
+    # Empty but well-formed — sub-agent was correctly skipped
+    assert ctx.trending_sounds == []
+    assert ctx.trending_hashtags == []

@@ -802,8 +802,33 @@ class ClaudeContentRunner:
             "payload": {"project_name": brand.project_name, "pillars": len(brand.pillars)},
         })
 
+        # ── Enrichment: local scan + optional Haiku trend research ─────────
+        await emit({
+            "event":   ContentEvent.STEP_STARTED,
+            "step_id": ContentStep.ENRICHING,
+            "label":   STEP_LABELS[ContentStep.ENRICHING],
+            "status":  "running",
+        })
+        from agents.content.enrichment import enrich_content_context
+        research = await enrich_content_context(brand, self._api_key)
+        await emit({
+            "event":   ContentEvent.STEP_FINISHED,
+            "step_id": ContentStep.ENRICHING,
+            "label":   STEP_LABELS[ContentStep.ENRICHING],
+            "status":  "success",
+            "payload": {
+                "pillar_history":   len(research.pillar_history),
+                "trending_sounds":  len(research.trending_sounds),
+                "trending_hashtags": len(research.trending_hashtags),
+                "trending_hooks":   len(research.trending_hooks),
+                "trending_styles":  len(research.trending_styles),
+            },
+        })
+
         system_prompt = build_orchestrator_system_prompt(brand, "plan_month")
-        initial_prompt = build_plan_user_prompt(brand, history=[], formats=[], avatars=[])
+        initial_prompt = build_plan_user_prompt(
+            brand, history=[], formats=[], avatars=[], research=research,
+        )
 
         try:
             await _run(

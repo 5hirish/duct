@@ -61,6 +61,7 @@ export default function PostViewport({ payload }) {
         hook_text:    post.hook_text,
         tiktok_title: post.tiktok_title,
         audio_note:   post.audio_note,
+        strategic_note: post.strategic_note,
         slides_html:  post.slides_html,
         platforms:    post.platforms,
         status:       post.status,
@@ -137,6 +138,7 @@ export default function PostViewport({ payload }) {
           onChange={(field, v) => patch(field, v)}
         />
         <AudioPanel value={post.audio_note || ""} onChange={(v) => patch("audio_note", v)} />
+        <StrategicNotePanel value={post.strategic_note || ""} onChange={(v) => patch("strategic_note", v)} />
         <AssetStrip imagePrompts={post.image_prompts || []} />
       </div>
     </div>
@@ -314,6 +316,42 @@ function AudioPanel({ value, onChange }) {
     </section>
   );
 }
+
+function StrategicNotePanel({ value, onChange }) {
+  // Hide entirely when empty + user hasn't focused — keeps the viewport
+  // uncluttered for posts that don't carry agent reasoning.
+  const [forceShow, setForceShow] = useState(false);
+  const visible = forceShow || (value && value.trim());
+  if (!visible) {
+    return (
+      <button
+        type="button"
+        onClick={() => setForceShow(true)}
+        className="text-xs text-muted-foreground hover:text-foreground transition-colors text-left"
+      >
+        + Add strategic note (why this post works)
+      </button>
+    );
+  }
+  return (
+    <section className="rounded-lg border border-border bg-muted/20">
+      <header className="px-3 py-1.5 border-b border-border/50 flex items-center justify-between">
+        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          Why this works
+        </span>
+        <span className="text-[10px] text-muted-foreground/70">agent reasoning · editable</span>
+      </header>
+      <textarea
+        rows={2}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="1-2 sentences: which pillar this reinforces, who it targets, why the hook fits."
+        className="w-full resize-y rounded-b-lg border-0 bg-transparent px-3 py-2 text-xs italic focus:outline-none focus:ring-2 focus:ring-ring"
+      />
+    </section>
+  );
+}
+
 
 function AssetStrip({ imagePrompts }) {
   if (!Array.isArray(imagePrompts) || imagePrompts.length === 0) return null;

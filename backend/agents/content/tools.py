@@ -219,6 +219,7 @@ def build_content_mcp_server(
                     "hook_text":       draft.hook_text,
                     "image_prompts":   [p.model_dump(mode="json") for p in draft.image_prompts],
                     "audio_note":      draft.audio_note or "",
+                    "strategic_note":  draft.strategic_note or "",
                     "platforms":       [p.value for p in draft.platforms],
                 }
                 if existing is not None:
@@ -251,6 +252,8 @@ def build_content_mcp_server(
                         "hook_type":       row.hook_type,
                         "hook_text":       row.hook_text,
                         "image_prompts":   row.image_prompts,
+                        "audio_note":      row.audio_note,
+                        "strategic_note":  row.strategic_note,
                         "platforms":       row.platforms,
                         "status":          row.status,
                     },

@@ -216,6 +216,67 @@ class TopicCandidates(BaseModel):
     items: list[TopicCandidate]
 
 
+# ---------------------------------------------------------------------------
+# Pre-flight research context — populated by enrichment.py between
+# project-load and the orchestrator's first user turn. Borrowed from the
+# audit agent's AuditResearchContext pattern.
+# ---------------------------------------------------------------------------
+
+
+class PillarHistorySignal(BaseModel):
+    """Local-only signal computed from already-persisted content_posts.
+
+    Lets the orchestrator (and downstream draft sub-agents) avoid
+    repeating topics or under-using pillars without paying for web
+    research.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    pillar:                  str
+    posts_count:             int = 0
+    days_since_last_post:    int | None = None       # None = never used
+    recent_topics:           list[str] = Field(default_factory=list)
+    recent_hook_types:       list[str] = Field(default_factory=list)
+    median_save_rate:        float | None = None     # if perf data exists
+
+
+class TrendSignal(BaseModel):
+    """One trending element worth riding this week. The sub-agent fills
+    these from WebSearch / WebFetch results."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    kind:        str               # "sound" | "hashtag" | "hook" | "style" | "format"
+    label:       str               # human-readable name or hashtag
+    why_it_works: str = ""         # 1 sentence on why this fits the audience
+    evidence_url: str | None = None  # where the sub-agent saw it trending
+
+
+class ContentResearchContext(BaseModel):
+    """Output of the pre-flight enrichment sub-agent.
+
+    Local signals are always populated (cheap). Trend signals + audience
+    insights are populated only if the sub-agent succeeds — caller treats
+    missing fields as "no enrichment available" and proceeds.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    # Local signals — extracted from content_posts at no cost.
+    pillar_history:           list[PillarHistorySignal] = Field(default_factory=list)
+    total_posts_to_date:      int = 0
+    days_since_last_post:     int | None = None
+
+    # Sub-agent research — fill when WebSearch + WebFetch return useful results.
+    trending_sounds:          list[TrendSignal] = Field(default_factory=list)
+    trending_hashtags:        list[TrendSignal] = Field(default_factory=list)
+    trending_hooks:           list[TrendSignal] = Field(default_factory=list)
+    trending_styles:          list[TrendSignal] = Field(default_factory=list)
+    audience_insights:        list[str] = Field(default_factory=list)
+    enrichment_notes:         list[str] = Field(default_factory=list)
+
+
 class ImagePrompt(BaseModel):
     """One image slot inside a slide. The runner passes `prompt` to Gemini."""
 
@@ -254,6 +315,7 @@ class PostDraft(BaseModel):
     tiktok_title: str = ""
     image_prompts: list[ImagePrompt] = Field(default_factory=list)
     audio_note: str | None = None
+    strategic_note: str = ""           # 1-2 sentences: why this post works in the broader strategy
     platforms: list[Platform] = Field(default_factory=lambda: [Platform.TIKTOK])
 
 
@@ -300,17 +362,20 @@ __all__ = [
     "ContentBrandContext",
     "ContentChatMessage",
     "ContentPillar",
+    "ContentResearchContext",
     "ContentSession",
     "ContentVisualAssets",
     "Day",
     "DraftPostRequest",
     "ImagePrompt",
     "Perf",
+    "PillarHistorySignal",
     "PlanDraft",
     "PlanRequest",
     "PostDraft",
     "RunMode",
     "TopicCandidate",
     "TopicCandidates",
+    "TrendSignal",
     "make_session",
 ]

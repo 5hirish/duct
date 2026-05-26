@@ -62,6 +62,7 @@ class ContentPost(SQLModel, table=True):
         sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="[]"),
     )
     audio_note: str = Field(default="", sa_column=Column(Text, nullable=False, server_default=""))
+    strategic_note: str = Field(default="", sa_column=Column(Text, nullable=False, server_default=""))
     platforms: list = Field(
         default_factory=list,
         sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="[]"),

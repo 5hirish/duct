@@ -611,6 +611,7 @@ class PostIn(BaseModel):
     hook_text:     str = ""
     image_prompts: list = Field(default_factory=list)
     audio_note:    str = ""
+    strategic_note: str = ""
     platforms:     list[Platform] = Field(default_factory=lambda: [Platform.TIKTOK])
 
 
@@ -635,6 +636,7 @@ class PostPatch(BaseModel):
     hook_text:     str | None = None
     image_prompts: list | None = None
     audio_note:    str | None = None
+    strategic_note: str | None = None
     platforms:     list[Platform] | None = None
     notes:         str | None = None
 
@@ -661,6 +663,7 @@ class PostOut(BaseModel):
     hook_text:     str
     image_prompts: list
     audio_note:    str
+    strategic_note: str
     platforms:     list
     posted_at:     str | None
     tiktok_url:    str
@@ -694,6 +697,7 @@ def _post_out(p: ContentPost) -> PostOut:
         hook_text=p.hook_text,
         image_prompts=p.image_prompts or [],
         audio_note=p.audio_note,
+        strategic_note=p.strategic_note,
         platforms=p.platforms or [],
         posted_at=p.posted_at.isoformat() if p.posted_at else None,
         tiktok_url=p.tiktok_url,

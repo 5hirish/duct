@@ -43,6 +43,7 @@ class ContentStep(StrEnum):
     LOAD_PROJECT     = "load_project"
     LOAD_HISTORY     = "load_history"
     LOAD_LIBRARIES   = "load_libraries"
+    ENRICHING        = "enriching"
     SYNTHESIZE_PLAN  = "synthesize_plan"
 
     LOAD_TOPIC = "load_topic"
@@ -57,6 +58,7 @@ STEP_LABELS: dict[ContentStep, str] = {
     ContentStep.LOAD_PROJECT:      "Loading project",
     ContentStep.LOAD_HISTORY:      "Loading post history",
     ContentStep.LOAD_LIBRARIES:    "Loading format + avatar libraries",
+    ContentStep.ENRICHING:         "Researching trends + history",
     ContentStep.SYNTHESIZE_PLAN:   "Synthesizing 30-day plan",
     ContentStep.LOAD_TOPIC:        "Loading topic + brand context",
     ContentStep.WRITE_COPY:        "Writing slide copy",

@@ -29,6 +29,7 @@ if TYPE_CHECKING:
     from agents.content.schema import (
         Avatar,
         ContentBrandContext,
+        ContentResearchContext,
         Day,
         RunMode,
     )
@@ -210,6 +211,12 @@ METHOD:
    IS the alt text — be specific about composition, lighting, subject,
    what NOT to include.
 4. SKIP slides_html — return "" for it; stage 2 will build it.
+5. Write a 1-2 sentence strategic_note explaining WHY this post works in
+   the broader strategy. Cover: which pillar it reinforces, what kind of
+   viewer it targets, why this hook variant fits now. Plain English, not
+   marketing-speak. Example: "Reinforces face_shape pillar after 3 days
+   of color content; identity-challenge hook lands well on TikTok in
+   week 2 once the audience trusts the creator."
 
 {_QUALITY_STANDARD_BRIEF}
 {_HOOK_FORMULAS_BRIEF}
@@ -229,6 +236,7 @@ PostDraft shape with slides_html="":
     {{"slide_id": "slide-01", "prompt": "...", "aspect_ratio": "9:16"}}
   ],
   "audio_note": "trending soft pop, calm vocal, 90s",
+  "strategic_note": "Reinforces face_shape pillar after 3 days of color content; identity-challenge hook lands hardest with our audience.",
   "platforms": ["tiktok"]}}
 """
 
@@ -329,8 +337,9 @@ def build_plan_user_prompt(
     history: list[dict],
     formats: list[dict],
     avatars: list["Avatar | dict"],
+    research: "ContentResearchContext | None" = None,
 ) -> str:
-    """Kickoff prompt for plan_month — includes the brand stanza."""
+    """Kickoff prompt for plan_month — includes brand stanza + research context."""
     history_lines = (
         "\n".join(
             f"  - day {h.get('day_index', '?')}: {h.get('topic', '')} "
@@ -352,6 +361,8 @@ def build_plan_user_prompt(
     return f"""\
 {_brand_stanza(brand)}
 
+{_research_stanza(research)}
+
 Plan a 30-day content calendar for {brand.project_name}.
 
 Recent history (last 30):
@@ -367,15 +378,83 @@ Now:
 
 1. If brand voice / audience / value_prop / content_goal is empty above,
    ask up to 3 AskUserQuestion items to fill the gaps before planning.
-2. Otherwise call fetch_topic_bank. If empty or most pillars have
-   lastUsed > 30 days, dispatch research_pillar sub-agents (one per
-   pillar, IN PARALLEL — make multiple Agent tool calls in a single turn).
-3. Synthesize the 30-day plan: balanced pillar distribution, varied hooks,
-   sensible post-type mix, narrative arc.
+2. Use the <content_research> block above. It already covers pillar
+   history (days since last post, hook variety) and trending sounds /
+   hashtags / hooks / styles — fold those into the plan directly. Only
+   dispatch research_pillar sub-agents for pillars that BOTH lack topic
+   bank coverage AND aren't covered by the trending signals above.
+3. Synthesize the 30-day plan: balanced pillar distribution favouring
+   under-used pillars from pillar_history; varied hooks pulling from
+   the trending_hooks list; sensible post-type mix; narrative arc.
 4. Emit the plan inside <duct_report>{{ "type": "plan", ... }}</duct_report>
    then call submit_plan with the same payload.
 5. Brief summary in chat: what the plan covers and what comes next.
 """
+
+
+def _research_stanza(research: "ContentResearchContext | None") -> str:
+    """Render the enrichment context as a <content_research> block.
+
+    Returns an empty string when there's nothing to show — keeps the
+    user prompt lean for first-run projects.
+    """
+    if research is None:
+        return ""
+    has_any = any([
+        research.pillar_history,
+        research.trending_sounds,
+        research.trending_hashtags,
+        research.trending_hooks,
+        research.trending_styles,
+        research.audience_insights,
+        research.enrichment_notes,
+    ])
+    if not has_any:
+        return ""
+
+    parts: list[str] = ["<content_research>"]
+    if research.total_posts_to_date:
+        parts.append(f"  total_posts_to_date: {research.total_posts_to_date}")
+    if research.days_since_last_post is not None:
+        parts.append(f"  days_since_last_post: {research.days_since_last_post}")
+
+    if research.pillar_history:
+        parts.append("  pillar_history:")
+        for p in research.pillar_history[:10]:
+            recent = ", ".join(p.recent_topics[:3])
+            hooks  = ", ".join(p.recent_hook_types[:3])
+            since  = f"{p.days_since_last_post}d ago" if p.days_since_last_post is not None else "never"
+            srate  = f", save_rate≈{p.median_save_rate:.1%}" if p.median_save_rate is not None else ""
+            parts.append(
+                f"    - {p.pillar}: {p.posts_count} posts, last {since}{srate}"
+                + (f" | recent_topics=[{recent}]" if recent else "")
+                + (f" | recent_hooks=[{hooks}]" if hooks else "")
+            )
+
+    def _trend_lines(label: str, items: list) -> None:
+        if not items:
+            return
+        parts.append(f"  {label}:")
+        for t in items[:5]:
+            why = f" — {t.why_it_works}" if t.why_it_works else ""
+            ev  = f" ({t.evidence_url})" if t.evidence_url else ""
+            parts.append(f"    - {t.label}{why}{ev}")
+
+    _trend_lines("trending_sounds",   research.trending_sounds)
+    _trend_lines("trending_hashtags", research.trending_hashtags)
+    _trend_lines("trending_hooks",    research.trending_hooks)
+    _trend_lines("trending_styles",   research.trending_styles)
+
+    if research.audience_insights:
+        parts.append("  audience_insights:")
+        for s in research.audience_insights[:5]:
+            parts.append(f"    - {s}")
+    if research.enrichment_notes:
+        parts.append("  notes:")
+        for s in research.enrichment_notes[:5]:
+            parts.append(f"    - {s}")
+    parts.append("</content_research>")
+    return "\n".join(parts)
 
 
 def build_post_user_prompt(
