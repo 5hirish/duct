@@ -105,10 +105,8 @@ function ScoreGauge({ score, band, dark }) {
           strokeDasharray={`${filled} ${CIRCLE_CIRC}`}
           transform="rotate(-90 90 90)"
           style={{ transition: 'stroke-dasharray 1.4s cubic-bezier(0.4,0,0.2,1)' }} />
-        <text x="90" y="84" textAnchor="middle" fontSize="42" fontWeight="400"
+        <text x="90" y="100" textAnchor="middle" fontSize="42" fontWeight="400"
           fill={textFill} fontFamily='Georgia, "Times New Roman", serif'>{score}</text>
-        <text x="90" y="104" textAnchor="middle" fontSize="11"
-          fill={textFill} opacity="0.45">/100</text>
       </svg>
       <span className="text-xs font-semibold mt-1" style={{ color }}>{label}</span>
     </div>
@@ -201,7 +199,9 @@ function KeySignals({ signals }) {
         const color = SIGNAL_COLORS[i];
         return (
           <div key={i} className="flex items-start gap-3 rounded-xl px-4 py-4"
-            style={{ background: color + '0d', border: `1px solid ${color}22` }}>
+            style={{ background: color + '0d', border: `1px solid ${color}22`, transition: 'transform 0.15s, box-shadow 0.15s' }}
+            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}>
             {Icon && <Icon size={15} style={{ color, flexShrink: 0, marginTop: 2 }} strokeWidth={2} />}
             <p className="text-[14px] leading-snug" style={{ color: '#1a1209' }}>{text}</p>
           </div>
@@ -453,50 +453,54 @@ function FindingCard({ finding }) {
   if (finding.severity === 'pass') return <PassRow finding={finding} />;
 
   return (
-    <div className="rounded-xl overflow-hidden border border-border/50"
-      style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.07)' }}>
+    <div className="rounded-xl overflow-hidden"
+      style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.07)', border: '1px solid ' + cfg.accent + '22', transition: 'box-shadow 0.15s, transform 0.15s' }}
+      onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 14px rgba(0,0,0,0.10)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+      onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.07)'; e.currentTarget.style.transform = ''; }}>
+
+      {/* 3px top stripe */}
       <div style={{ height: 3, background: cfg.accent }} />
 
-      {/* Header: badge + title */}
-      <div className={`flex items-start gap-3 px-5 pt-3.5 pb-3 ${cfg.headerCls}`}>
+      {/* Colored header row: badge + title */}
+      <div className={`flex items-start gap-3 px-5 pt-3 pb-3 ${cfg.headerCls}`}>
         <span className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-md shrink-0 mt-0.5 ${cfg.pill}`}>
           {cfg.label}
         </span>
-        <p className="text-[15px] font-semibold leading-snug text-foreground flex-1 min-w-0">
+        <p className="text-[15px] font-semibold leading-snug text-gray-900 flex-1 min-w-0">
           {finding.title}
         </p>
       </div>
 
       {/* Body */}
-      <div className="bg-card px-5 pt-3 pb-4 space-y-3">
+      <div className="px-5 pt-3 pb-4 space-y-3 bg-white">
 
         {finding.description && (
-          <p className="text-sm text-muted-foreground leading-relaxed">
+          <p className="text-sm text-gray-500 leading-relaxed">
             {finding.description}
           </p>
         )}
 
         {finding.affected_urls?.length > 0 && (
-          <div className="rounded-lg overflow-hidden border border-border/50">
-            <div className="flex px-4 py-2 bg-muted/50 border-b border-border/40">
-              <span className="flex-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">URL</span>
-              <span className="w-48 shrink-0 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Measured</span>
+          <div className="rounded-lg overflow-hidden" style={{ border: '1px solid #e5e7eb' }}>
+            <div className="flex px-4 py-2 bg-gray-50 border-b border-gray-100">
+              <span className="flex-1 text-[10px] font-bold uppercase tracking-widest text-gray-400">URL</span>
+              <span className="w-48 shrink-0 text-[10px] font-bold uppercase tracking-widest text-gray-400">Measured</span>
             </div>
             {finding.affected_urls.map((u, i) => (
-              <div key={i}
-                className={`flex items-start px-4 py-2.5 ${i > 0 ? 'border-t border-border/30' : ''} ${i % 2 === 1 ? 'bg-muted/20' : 'bg-white'}`}>
-                <code className="flex-1 text-xs font-mono text-muted-foreground break-all pr-3">{u.url}</code>
-                <span className="w-48 shrink-0 text-sm font-medium text-foreground">{u.issue_value}</span>
+              <div key={i} className={`flex items-start px-4 py-2.5 bg-white${i > 0 ? ' border-t border-gray-50' : ''}`}>
+                <code className="flex-1 text-xs font-mono text-gray-400 break-all pr-3">{u.url}</code>
+                <span className="w-48 shrink-0 text-sm font-semibold text-gray-700">{u.issue_value}</span>
               </div>
             ))}
           </div>
         )}
 
         {finding.recommendation && (
-          <div className="flex items-start gap-2.5 rounded-lg px-4 py-3"
-            style={{ background: cfg.accent + '0c', border: `1px solid ${cfg.accent}22` }}>
-            <span className="text-[11px] font-bold shrink-0 mt-0.5" style={{ color: cfg.accent }}>→ Fix:</span>
-            <p className="text-sm leading-relaxed text-foreground flex-1">{finding.recommendation}</p>
+          <div className="rounded-lg px-4 py-3 bg-blue-50">
+            <p className="text-sm leading-relaxed text-gray-700">
+              <span className="font-semibold text-blue-600">Fix: </span>
+              {finding.recommendation}
+            </p>
           </div>
         )}
 
@@ -523,8 +527,8 @@ function CategoryAccordion({ category, isLast }) {
   const nonPassFindings = ordered.filter(f => f.severity !== 'pass');
 
   return (
-    <details className={`group${!isLast ? ' border-b border-border/50' : ''}`} open={hasBad || undefined}>
-      <summary className="flex items-center justify-between gap-3 px-5 py-4 cursor-pointer hover:bg-muted/30 transition-colors select-none">
+    <details className={`group${!isLast ? ' border-b border-gray-100' : ''}`} open={hasBad || undefined}>
+      <summary className="flex items-center justify-between gap-3 px-5 py-4 cursor-pointer hover:bg-gray-50 transition-colors select-none">
         <div className="flex items-center gap-3 min-w-0 flex-wrap">
           <div className="size-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
             style={{ background: color + '1a', color }}>{category.score}</div>
@@ -599,8 +603,8 @@ function PriorityCard({ priority }) {
     : null;
 
   return (
-    <div className="rounded-xl overflow-hidden border border-border/50 bg-card"
-      style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.07)', transition: 'box-shadow 0.15s, transform 0.15s' }}
+    <div className="rounded-xl overflow-hidden bg-white"
+      style={{ border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', transition: 'box-shadow 0.15s, transform 0.15s' }}
       onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.1)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
       onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.07)'; e.currentTarget.style.transform = ''; }}>
       <div style={{ height: 3, background: s.accent }} />
@@ -617,7 +621,7 @@ function PriorityCard({ priority }) {
             {s.label}
           </span>
           {effortLabel && (
-            <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-md border border-border/60 bg-muted/40 text-muted-foreground">
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-md border border-gray-200 bg-gray-50 text-gray-500">
               <Clock size={10} strokeWidth={2} />
               {effortLabel}
             </span>
@@ -690,7 +694,10 @@ function WinsStrip({ wins }) {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {wins.map((w, i) => (
-            <div key={i} className="flex items-center gap-2.5 rounded-lg border border-green-100 bg-white px-4 py-2.5">
+            <div key={i} className="flex items-center gap-2.5 rounded-lg border border-green-100 bg-white px-4 py-2.5"
+              style={{ transition: 'box-shadow 0.15s' }}
+              onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 2px 8px rgba(16,185,129,0.12)'; }}
+              onMouseLeave={e => { e.currentTarget.style.boxShadow = ''; }}>
               <CheckCircle2 size={13} color="#16a34a" className="shrink-0" />
               <span className="text-[14px] leading-snug">{w}</span>
             </div>
@@ -719,8 +726,8 @@ function RoadmapSection({ roadmap }) {
         {roadmap.map((phase, i) => {
           const cfg = PHASE_THEME_COLOR[phase.theme] ?? { text: '#6b7280', bg: 'rgba(107,114,128,0.08)', border: 'rgba(107,114,128,0.2)' };
           return (
-            <div key={i} className="rounded-xl border border-border bg-card p-5 sm:p-6 space-y-3"
-              style={{ boxShadow: '0 1px 2px rgba(13,15,26,0.04)' }}>
+            <div key={i} className="rounded-xl bg-white p-5 sm:p-6 space-y-3"
+              style={{ border: '1px solid #e5e7eb', boxShadow: '0 1px 2px rgba(13,15,26,0.04)' }}>
               <div className="flex items-center gap-3">
                 <span className="text-xs font-mono font-semibold px-2.5 py-1 rounded-full border"
                   style={{ color: cfg.text, background: cfg.bg, borderColor: cfg.border }}>
@@ -741,7 +748,7 @@ function RoadmapSection({ roadmap }) {
                       </span>
                       <p className="flex-1 text-[15px] leading-relaxed min-w-0">{t.task}</p>
                       {effortLabel && (
-                        <span className="shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md border border-border/50 bg-muted/40 text-muted-foreground">
+                        <span className="shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md border border-gray-200 bg-gray-50 text-gray-500">
                           <Clock size={10} strokeWidth={2} />
                           {effortLabel}
                         </span>
@@ -867,8 +874,8 @@ export default function AuditReportV1({ data }) {
         {data.categories?.length > 0 && (
           <section className="rise-6 space-y-3">
             <SectionHeader icon={BarChart2}>Category Scores</SectionHeader>
-            <div className="rounded-xl border border-border bg-card px-5 py-5"
-              style={{ boxShadow: '0 1px 2px rgba(13,15,26,0.04)' }}>
+            <div className="rounded-xl bg-white px-5 py-5"
+              style={{ border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
               <CategoryBarChart categories={data.categories} />
             </div>
           </section>
@@ -878,8 +885,8 @@ export default function AuditReportV1({ data }) {
         {data.categories?.length > 0 && (
           <section className="rise-7 space-y-3">
             <SectionHeader icon={Target}>Findings by Category</SectionHeader>
-            <div className="rounded-xl border border-border overflow-hidden bg-card"
-              style={{ boxShadow: '0 1px 2px rgba(13,15,26,0.04)' }}>
+            <div className="rounded-xl overflow-hidden bg-white"
+              style={{ border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
               {data.categories.map((cat, i) => (
                 <CategoryAccordion
                   key={cat.id}
