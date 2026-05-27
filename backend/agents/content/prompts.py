@@ -49,17 +49,143 @@ named technique, exact phrase, measurement, or celebrity reference.
 """
 
 _HOOK_FORMULAS_BRIEF = """\
-HOOKS (vary across the batch):
-1. identity_challenge   — "If you have [X], you've been [Y] wrong your whole life."
-2. curiosity_gap        — "The one thing experts look at first — they never tell you."
-3. transformation_reveal — "Same person. Changed nothing except this."
-4. pattern_interrupt    — "Stop [common action] until you know your actual [X]."
-5. authority_claim      — "What a $400/hr [expert] tells you — in one slideshow."
+HOOK TYPES (free-text descriptor — pick the structural angle):
+- identity_challenge / curiosity_gap / transformation_reveal /
+  pattern_interrupt / authority_claim — these stay valid as hook_type
+  values. But the EMOTION (below) is what actually moves people.
+"""
+
+_HOOK_EMOTIONS_BRIEF = """\
+HOOK EMOTIONS (mandatory — pick exactly ONE per post; vary across the batch):
+
+Emotional framing outperforms educational framing on TikTok. Pick the
+emotional trigger the post fundamentally is; it must come through in
+slide 1's headline.
+
+  frustration  — "I did everything right and still [bad outcome]"
+                 (the viewer recognises wasted effort + projects it onto
+                 their own life)
+  shock        — "A [authority figure] just told me [unexpected truth]"
+                 (third-party reveal — feels like overheard secret)
+  disbelief    — "This free app knew more than my $300/hr [expert]"
+                 (David-vs-Goliath; cheap tool beats expensive expert)
+  anger        — "They're selling you the wrong [thing] for your [feature]"
+                 (us-vs-industry; viewer feels misled by the establishment)
+  sadness      — "I spent [money/years] on [thing] that made it worse"
+                 (regret + confession — most intimate, requires darker tone)
+
+Persist the chosen value in `hook_emotion`. Slide 1 headline must FEEL
+like that emotion to a reader skimming with the sound off.
 """
 
 _SLIDE_COUNT_BRIEF = """\
 SLIDE COUNT: 7 = Format D default (highest completion rate). 10 = Format A
 educational deep-dive only. 5 = comment-bait / trend-response only.
+
+NO SLIDE COUNTERS ("1/4", "2/4"). They signal "this is a list" and give
+the viewer permission to exit after each slide. Omit entirely.
+"""
+
+_POST_ARCHITECTURE_BRIEF = """\
+MYSTERY ARCHITECTURE (use this — NOT the list architecture):
+
+  Hook → Open loop → Finding 1 + self-test → Finding 2 (cliffhanger)
+       → Revelation → Bridge → CTA
+
+Why: the old "Sign 1 → Sign 2 → Sign 3 → Test → Bridge → CTA" list
+architecture lets the viewer exit cleanly after any slide. Measured
+result: 62%→28% retention cliff at slide 2→3, actionable content on
+slide 5 seen by only 9% of viewers.
+
+The open loop on slide 2 makes a specific numbered promise that can
+only be fulfilled at slide 5. Reader has a destination; they cannot
+exit cleanly because the loop is still open.
+
+SLIDE 2 OPEN-LOOP FORMULA (mandatory):
+Name the number of things found. Rank by emotional weight. Tease the
+most powerful one LAST. Slide 2 MUST end on unresolved tension, not a
+satisfying observation. After writing slide 2, ask: if the viewer reads
+it and feels "yes, I understand" — REWRITE IT. It should make them feel
+"wait, what was the third thing?"
+  ✅ "It flagged three things. The first one I expected. The third one I'm still thinking about."
+  ✅ "She told me four things. I already knew one. The last one I genuinely didn't want to hear."
+  ❌ "The wrong colours make you look exhausted. that's sign one."
+
+ACTIONABLE CONTENT PLACEMENT (mandatory):
+The save-worthy asset (self-test, measurement, exact phrase to quote
+to a stylist) MUST appear at slide 3 or 4 — NOT slide 5+. Slide 3 has
+~22-28% retention = 3× the reach of slide 5 (~9%). Put the FULL
+revelation at slide 5 (intimate); put the ACTIONABLE TOOL at slide 3.
+"""
+
+_TERMINOLOGY_BRIEF = """\
+TERMINOLOGY — never say "AI" on slides or in captions. "AI" reads as
+sponsored content on TikTok and triggers the skepticism reflex. Real
+discovery content sounds like a friend's tip, not a press release.
+
+  ❌ Never use            ✅ Use instead
+  "I let AI analyze…"     "I found this free app"
+  "AI-powered analysis"   "took 30 seconds, one photo"
+  "This AI told me"       "an app told me something I didn't want to hear"
+  "AI insights"           "it just… told me"
+  "AI tool"               "free app" / "this app I found"
+
+Applies to slides, captions, audio notes — every output from this
+sub-agent. The product is AI-powered; the marketing language can't be.
+"""
+
+_IMAGE_PROMPT_DISCIPLINE_BRIEF = """\
+VISUAL-CONTENT ALIGNMENT (mandatory pre-prompt check):
+
+Before writing any image_prompts entry, answer every applicable row.
+If ANY don't align, the visual contradicts the copy — fix the prompt
+before you finalise the JSON.
+
+  If the copy claims…           | The image MUST show…
+  -----------------------------|------------------------------------------
+  She has face shape X         | Anatomical features of that shape made
+                               | explicit in the prompt (forehead width,
+                               | cheekbones, jaw) — not "pretty face"
+  She has hairstyle X          | That EXACT hairstyle clearly visible
+                               | (wolf cut, curtain bangs, centre part)
+  She is wearing colour X      | That colour is on her body or in her hand
+  She is doing action X        | Body language showing that exact action,
+                               | described specifically (not "gesturing")
+  She is in setting X          | Setting has specific named elements that
+                               | identify it (not "a room")
+
+FOUR ANCHOR RULES — apply to EVERY image_prompts entry:
+
+  1. Attractiveness baseline is SEPARATE from emotional state. She
+     should look naturally attractive and healthy regardless of the
+     emotional hook. The frustration / sadness lives in the EXPRESSION
+     and body language, never in how drained or washed-out she looks.
+     Include the anchor: "naturally attractive and healthy-looking — the
+     kind of person you'd genuinely follow".
+       ✅ warm olive skin, naturally attractive — then a wry exasperated expression
+       ❌ "washed out looking", "drains colour from her face"
+
+  2. Warm light is the default. Grey, flat, "overcast" light
+     photographs as lifeless. Default indoors: warm afternoon window
+     light (4800K), warm lamp (2700K), or soft warm indirect sunlight.
+     Only use overcast for outdoor street scenes.
+       ✅ "warm afternoon window light, golden, 4800K"
+       ❌ "soft overcast morning light, muted and real"
+
+  3. Phone-in-hand + direct eye contact is the default framing. Unless
+     the scene explicitly requires something else (holding a product,
+     mid-activity, looking at a mirror), use:
+     "holding phone at arm's length, slightly above eye level, looking
+     directly into camera". This is intimate, personal, real-creator.
+
+  4. Describe clothing NEUTRALLY. Never describe what's wrong with it.
+     Negative outfit descriptors ("washed out against her skin",
+     "drains colour from her face") bleed into how the MODEL renders —
+     producing a person who looks grey or unwell. Describe outfit by
+     colour, cut, fabric only. The copy on the slide says what's wrong
+     with the outfit; the image doesn't need to.
+       ✅ "muted olive-green knit sweater, slightly oversized, real fabric texture"
+       ❌ "muted olive-green knit sweater, slightly washed out looking against her skin"
 """
 
 
@@ -202,25 +328,63 @@ You are a draft sub-agent (STAGE 1 — metadata only). Given ONE day's
 brief, return the post's metadata — NOT the slides_html yet. The HTML
 comes in stage 2 (build_slides_html sub-agent).
 
-METHOD:
-1. Pick a hook formula. Vary against the recent_posts list — if the most
-   recent post used "identity_challenge", pick a different one.
-2. Compose caption (first line = hook), 3–5 hashtags, hook_text + hook_type,
-   and 1 audio_note line.
-3. Produce image_prompts: one entry per planned image slide. The prompt
-   IS the alt text — be specific about composition, lighting, subject,
-   what NOT to include.
-4. SKIP slides_html — return "" for it; stage 2 will build it.
-5. Write a 1-2 sentence strategic_note explaining WHY this post works in
-   the broader strategy. Cover: which pillar it reinforces, what kind of
-   viewer it targets, why this hook variant fits now. Plain English, not
-   marketing-speak. Example: "Reinforces face_shape pillar after 3 days
-   of color content; identity-challenge hook lands well on TikTok in
-   week 2 once the audience trusts the creator."
+METHOD — produce these in order, then assemble the JSON:
+
+1. EMOTION FIRST. Pick exactly one hook_emotion ∈ {{frustration, shock,
+   disbelief, anger, sadness}}. Vary across the batch — never reuse the
+   same emotion twice in a row in recent_posts. The emotion drives every
+   other choice; do not move on until it's locked.
+
+2. SLIDE 1 HOOK. 8-12 words max. Must FEEL like the chosen emotion (see
+   HOOK EMOTIONS below for templates). Persist the headline in `hook_text`.
+
+3. SAVE CTA. The slide-1 parenthetical that names the specific payoff
+   slide. RULE: a generic "save this before going shopping" gets ignored;
+   a specific "save this — the self-test is on slide 3" creates
+   pre-commitment. Always name which slide carries the payoff.
+   ✅ "save this — the self-test is on slide 3"
+   ✅ "save this before your next salon visit — stylist tips on slide 4"
+   ❌ "save this for later"
+   Persist in `save_cta`.
+
+4. POST ARCHITECTURE — Mystery, NOT list. {_POST_ARCHITECTURE_BRIEF}
+
+5. SLIDE 6 PERSONAL BRIDGE. First-person discovery beat, NOT an ad. The
+   slightly self-deprecating tone signals authenticity; positive
+   promotional tone kills conversion.
+   ✅ "I found a free app for this. one photo. 30 seconds. I kind of wish I hadn't."
+   ✅ "there's a free app that does this. I used it out of boredom. I'm still thinking about what it said."
+   ✅ "the app confirmed everything I'd been ignoring. free. one selfie. I felt like an idiot."
+   ❌ "Check out MaxAura for your personal color season analysis"
+   ❌ "This AI-powered tool gave me incredible insights"
+   ❌ "I recommend trying this app"
+   Persist in `bridge_text`.
+
+6. SLIDE 7 DUAL CTA. Slide 7 has BOTH calls to action — not one:
+   (a) Comment driver — audience-splitting question (e.g. "what's your
+       face shape? oval / round / heart / square 👇")
+   (b) Follow driver — tied to a SPECIFIC next post. Generic "follow me"
+       is forbidden. ✅ "follow — colour season breakdown next week"
+   Both must appear in the slide 7 copy you produce in `slides` (if you
+   emit the slides object) and reflected in `caption`'s closing line.
+
+7. IMAGE PROMPTS — produce one entry per planned image slide. Walk the
+   Visual-Content Alignment check below BEFORE writing any prompt.
+   {_IMAGE_PROMPT_DISCIPLINE_BRIEF}
+
+8. SKIP slides_html — return "" for it. Stage 2 will build it.
+
+9. STRATEGIC NOTE — 1-2 sentences explaining why this post works in the
+   broader strategy. Plain English, not marketing-speak. Persist in
+   `strategic_note`. Example: "Reinforces face_shape pillar after 3 days
+   of color content; disbelief framing lands hardest in week 2 once the
+   audience trusts the creator."
 
 {_QUALITY_STANDARD_BRIEF}
+{_HOOK_EMOTIONS_BRIEF}
 {_HOOK_FORMULAS_BRIEF}
 {_SLIDE_COUNT_BRIEF}
+{_TERMINOLOGY_BRIEF}
 
 OUTPUT: strict JSON, no prose, no markdown fences. Return EXACTLY the
 PostDraft shape with slides_html="":
@@ -231,12 +395,16 @@ PostDraft shape with slides_html="":
   "post_type": "slideshow", "format_style": "D",
   "slide_count": 7, "slides_html": "",
   "caption": "...", "hashtags": ["#tag1"],
-  "hook_type": "identity_challenge", "hook_text": "...",
+  "hook_type": "curiosity_gap",
+  "hook_text": "I used an app to analyse my face. It knew things I didn't.",
+  "hook_emotion": "disbelief",
+  "save_cta": "save this — the self-test is on slide 3",
   "image_prompts": [
     {{"slide_id": "slide-01", "prompt": "...", "aspect_ratio": "9:16"}}
   ],
-  "audio_note": "trending soft pop, calm vocal, 90s",
-  "strategic_note": "Reinforces face_shape pillar after 3 days of color content; identity-challenge hook lands hardest with our audience.",
+  "audio_note": "slowed introspective lo-fi or soft ambient — instrumental only, no lyrics",
+  "bridge_text": "I found a free app for this. one photo. 30 seconds. I kind of wish I hadn't.",
+  "strategic_note": "Reinforces face_shape pillar after 3 days of color content; disbelief framing lands hardest in week 2.",
   "platforms": ["tiktok"]}}
 """
 
@@ -384,8 +552,27 @@ Now:
    dispatch research_pillar sub-agents for pillars that BOTH lack topic
    bank coverage AND aren't covered by the trending signals above.
 3. Synthesize the 30-day plan: balanced pillar distribution favouring
-   under-used pillars from pillar_history; varied hooks pulling from
-   the trending_hooks list; sensible post-type mix; narrative arc.
+   under-used pillars from pillar_history; varied hook EMOTIONS
+   ({{frustration, shock, disbelief, anger, sadness}} — never twice in a
+   row); sensible post-type mix; narrative arc.
+
+   ## 4-PART SERIES STRUCTURE (use whenever the pillar set allows)
+
+   Group days into 4-post series, each tied to one of the brand's core
+   feature/analysis modules. Each post in a series ends with a
+   follow-driver naming the NEXT post in the series — viewers who
+   followed for post 1 are already invested in post 2:
+
+       Post 1: face_shape       → "follow — colour season breakdown next"
+       Post 2: color_aura       → "follow — hairstyle breakdown is next"
+       Post 3: hairstyle        → "follow — glasses frames dropping soon"
+       Post 4: glasses / frames → "follow — I'm doing a full style audit next"
+
+   Each post works STANDALONE but rewards followers with continuity.
+   With a 30-day plan and ~4-post series, aim for 6-8 micro-series; you
+   can repeat a pillar across series with different angles (e.g.
+   face_shape series A: cuts; face_shape series B: glasses).
+
 4. Emit the plan inside <duct_report>{{ "type": "plan", ... }}</duct_report>
    then call submit_plan with the same payload.
 5. Brief summary in chat: what the plan covers and what comes next.

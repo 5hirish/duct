@@ -59,8 +59,11 @@ export default function PostViewport({ payload }) {
         hashtags:     post.hashtags,
         hook_type:    post.hook_type,
         hook_text:    post.hook_text,
+        hook_emotion: post.hook_emotion,
+        save_cta:     post.save_cta,
         tiktok_title: post.tiktok_title,
         audio_note:   post.audio_note,
+        bridge_text:  post.bridge_text,
         strategic_note: post.strategic_note,
         slides_html:  post.slides_html,
         platforms:    post.platforms,
@@ -132,12 +135,15 @@ export default function PostViewport({ payload }) {
           value={Array.isArray(post.hashtags) ? post.hashtags : []}
           onChange={(v) => patch("hashtags", v)}
         />
+        <HookEmotionPills value={post.hook_emotion || ""} onChange={(v) => patch("hook_emotion", v)} />
         <HookPanel
           hookType={post.hook_type || ""}
           hookText={post.hook_text || ""}
+          saveCta={post.save_cta || ""}
           onChange={(field, v) => patch(field, v)}
         />
         <AudioPanel value={post.audio_note || ""} onChange={(v) => patch("audio_note", v)} />
+        <BridgeTextPanel value={post.bridge_text || ""} onChange={(v) => patch("bridge_text", v)} />
         <StrategicNotePanel value={post.strategic_note || ""} onChange={(v) => patch("strategic_note", v)} />
         <AssetStrip imagePrompts={post.image_prompts || []} />
       </div>
@@ -276,7 +282,88 @@ function HashtagPanel({ value, onChange }) {
   );
 }
 
-function HookPanel({ hookType, hookText, onChange }) {
+const HOOK_EMOTIONS = [
+  { value: "frustration", hint: "I did everything right and still…" },
+  { value: "shock",       hint: "A [authority] just told me…" },
+  { value: "disbelief",   hint: "A free app knew more than my $300/hr…" },
+  { value: "anger",       hint: "They're selling you the wrong…" },
+  { value: "sadness",     hint: "I spent [years/money] on…" },
+];
+
+function HookEmotionPills({ value, onChange }) {
+  return (
+    <section className="rounded-lg border border-border bg-background">
+      <header className="px-3 py-1.5 border-b border-border/50 flex items-center justify-between">
+        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          Hook emotion
+        </span>
+        <span className="text-[10px] text-muted-foreground/70">
+          drives slide 1 — pick one
+        </span>
+      </header>
+      <div className="px-3 py-2 flex flex-wrap gap-1.5">
+        {HOOK_EMOTIONS.map(({ value: v, hint }) => {
+          const active = value === v;
+          return (
+            <button
+              key={v}
+              type="button"
+              onClick={() => onChange(active ? "" : v)}
+              title={hint}
+              className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${
+                active
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border text-muted-foreground hover:bg-muted/50"
+              }`}
+            >
+              {v}
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+
+function BridgeTextPanel({ value, onChange }) {
+  // Hidden when empty + not focused — only slide-6 bridges show
+  const [forceShow, setForceShow] = useState(false);
+  const visible = forceShow || (value && value.trim());
+  if (!visible) {
+    return (
+      <button
+        type="button"
+        onClick={() => setForceShow(true)}
+        className="text-xs text-muted-foreground hover:text-foreground transition-colors text-left"
+      >
+        + Add slide-6 bridge (personal discovery beat)
+      </button>
+    );
+  }
+  return (
+    <section className="rounded-lg border border-border bg-background">
+      <header className="px-3 py-1.5 border-b border-border/50 flex items-center justify-between">
+        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          Slide 6 — bridge
+        </span>
+        <span className="text-[10px] text-muted-foreground/70">
+          first-person, slightly self-deprecating
+        </span>
+      </header>
+      <textarea
+        rows={2}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder='"I found a free app for this. one photo. 30 seconds. I kind of wish I hadn’t."'
+        className="w-full resize-y rounded-b-lg border-0 bg-transparent px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+      />
+    </section>
+  );
+}
+
+
+function HookPanel({ hookType, hookText, saveCta, onChange }) {
   return (
     <section className="rounded-lg border border-border bg-background space-y-2">
       <header className="px-3 py-1.5 border-b border-border/50">
@@ -295,6 +382,12 @@ function HookPanel({ hookType, hookText, onChange }) {
           onChange={(e) => onChange("hook_text", e.target.value)}
           placeholder="hook text — what slide 1 says"
           className="w-full resize-y rounded-md border border-input bg-background px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+        />
+        <input
+          value={saveCta}
+          onChange={(e) => onChange("save_cta", e.target.value)}
+          placeholder='save CTA — e.g. "save this — the self-test is on slide 3"'
+          className="w-full rounded-md border border-input bg-background px-2 py-1 text-xs italic text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
     </section>

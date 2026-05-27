@@ -609,8 +609,11 @@ class PostIn(BaseModel):
     tiktok_title:  str = ""
     hook_type:     str = ""
     hook_text:     str = ""
+    hook_emotion:  str = ""
+    save_cta:      str = ""
     image_prompts: list = Field(default_factory=list)
     audio_note:    str = ""
+    bridge_text:   str = ""
     strategic_note: str = ""
     platforms:     list[Platform] = Field(default_factory=lambda: [Platform.TIKTOK])
 
@@ -634,8 +637,11 @@ class PostPatch(BaseModel):
     tiktok_title:  str | None = None
     hook_type:     str | None = None
     hook_text:     str | None = None
+    hook_emotion:  str | None = None
+    save_cta:      str | None = None
     image_prompts: list | None = None
     audio_note:    str | None = None
+    bridge_text:   str | None = None
     strategic_note: str | None = None
     platforms:     list[Platform] | None = None
     notes:         str | None = None
@@ -661,8 +667,11 @@ class PostOut(BaseModel):
     tiktok_title:  str
     hook_type:     str
     hook_text:     str
+    hook_emotion:  str
+    save_cta:      str
     image_prompts: list
     audio_note:    str
+    bridge_text:   str
     strategic_note: str
     platforms:     list
     posted_at:     str | None
@@ -695,8 +704,11 @@ def _post_out(p: ContentPost) -> PostOut:
         tiktok_title=p.tiktok_title,
         hook_type=p.hook_type,
         hook_text=p.hook_text,
+        hook_emotion=p.hook_emotion,
+        save_cta=p.save_cta,
         image_prompts=p.image_prompts or [],
         audio_note=p.audio_note,
+        bridge_text=p.bridge_text,
         strategic_note=p.strategic_note,
         platforms=p.platforms or [],
         posted_at=p.posted_at.isoformat() if p.posted_at else None,

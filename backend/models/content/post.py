@@ -57,6 +57,9 @@ class ContentPost(SQLModel, table=True):
     tiktok_title: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
     hook_type: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
     hook_text: str = Field(default="", sa_column=Column(Text, nullable=False, server_default=""))
+    hook_emotion: str = Field(default="", sa_column=Column(Text, nullable=False, server_default=""))
+    save_cta: str = Field(default="", sa_column=Column(Text, nullable=False, server_default=""))
+    bridge_text: str = Field(default="", sa_column=Column(Text, nullable=False, server_default=""))
     image_prompts: list = Field(
         default_factory=list,
         sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="[]"),

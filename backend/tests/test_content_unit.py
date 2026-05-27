@@ -363,3 +363,52 @@ def test_enrich_returns_local_signals_when_no_api_key():
     # Empty but well-formed — sub-agent was correctly skipped
     assert ctx.trending_sounds == []
     assert ctx.trending_hashtags == []
+
+
+# ---------------------------------------------------------------------------
+# DRAFT_POST_PROMPT regression guard — borrowed patterns from nomadapps PR #37
+# ---------------------------------------------------------------------------
+
+
+def test_draft_post_prompt_contains_critical_quality_rules():
+    """The TikTok content patterns (PR #37 borrow) — mystery architecture,
+    5 emotional triggers, save_cta specific-payoff rule, AI→app
+    terminology, visual-content alignment — are quality anchors. Each
+    one is here because the source skill's experimentation showed
+    measurable retention/engagement lift from it.
+
+    If a future prompt edit accidentally deletes any of these, the model
+    silently regresses. This test fails loudly so PRs surface the
+    deletion before it ships.
+
+    One test, six asserts. Cheap (<10ms). Catches the bug class that
+    matters: silent prompt drift."""
+    from agents.content.prompts import DRAFT_POST_PROMPT
+
+    # 1. Mystery architecture (replaces list architecture)
+    assert "Mystery" in DRAFT_POST_PROMPT or "MYSTERY" in DRAFT_POST_PROMPT, \
+        "DRAFT_POST_PROMPT lost the mystery-architecture rule"
+    assert "Open loop" in DRAFT_POST_PROMPT or "open loop" in DRAFT_POST_PROMPT.lower(), \
+        "DRAFT_POST_PROMPT lost the open-loop instruction"
+
+    # 2. Five emotional triggers — all five must be present
+    for emotion in ("frustration", "shock", "disbelief", "anger", "sadness"):
+        assert emotion in DRAFT_POST_PROMPT, f"DRAFT_POST_PROMPT lost the '{emotion}' emotion trigger"
+
+    # 3. Save CTA rule — must enforce naming a specific payoff slide
+    assert "save this — the" in DRAFT_POST_PROMPT.lower() or "save_cta" in DRAFT_POST_PROMPT, \
+        "DRAFT_POST_PROMPT lost the save_cta specific-payoff rule"
+
+    # 4. AI → app terminology rule
+    assert 'never say "AI"' in DRAFT_POST_PROMPT or 'never say \"AI\"' in DRAFT_POST_PROMPT, \
+        "DRAFT_POST_PROMPT lost the AI→app terminology rule"
+
+    # 5. Visual-content alignment (image-prompt discipline)
+    assert "Visual-Content Alignment" in DRAFT_POST_PROMPT or "VISUAL-CONTENT ALIGNMENT" in DRAFT_POST_PROMPT, \
+        "DRAFT_POST_PROMPT lost the visual-content alignment check"
+
+    # 6. Dual CTA on slide 7
+    assert "Comment driver" in DRAFT_POST_PROMPT or "comment driver" in DRAFT_POST_PROMPT.lower(), \
+        "DRAFT_POST_PROMPT lost the slide-7 dual-CTA rule"
+    assert "Follow driver" in DRAFT_POST_PROMPT or "follow driver" in DRAFT_POST_PROMPT.lower(), \
+        "DRAFT_POST_PROMPT lost the slide-7 follow-driver rule"

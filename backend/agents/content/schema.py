@@ -312,9 +312,12 @@ class PostDraft(BaseModel):
     hashtags: list[str] = Field(default_factory=list)
     hook_type: str = ""
     hook_text: str = ""
+    hook_emotion: str = ""              # frustration | shock | disbelief | anger | sadness
+    save_cta: str = ""                  # slide-1 parenthetical naming a specific payoff slide
     tiktok_title: str = ""
     image_prompts: list[ImagePrompt] = Field(default_factory=list)
     audio_note: str | None = None
+    bridge_text: str = ""               # slide-6 personal discovery bridge (first-person, "free app")
     strategic_note: str = ""           # 1-2 sentences: why this post works in the broader strategy
     platforms: list[Platform] = Field(default_factory=lambda: [Platform.TIKTOK])
 
