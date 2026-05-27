@@ -99,3 +99,35 @@ def test_persist_generated_image_writes_file_and_inserts_row(mime_type, expected
         # Returned ImageAsset mirrors the row.
         assert asset.url == row.url
         assert asset.model == "imagen-4.0-generate-001"
+
+
+# ---------------------------------------------------------------------------
+# Multi-reference prefix — the role-explanation text the @tool prepends
+# when 2+ references are passed. Without it the model treats both images
+# as equal context and may drift on character identity or framing.
+# ---------------------------------------------------------------------------
+
+
+def test_multi_reference_prefix_returns_empty_for_zero_or_one_ref():
+    """Single-reference and no-reference cases must not get a multi-ref
+    prefix — otherwise the prompt lies to the model about what's
+    available, and the result drifts. Cheap regression guard."""
+    from service.gemini.client import build_multi_reference_prefix
+    assert build_multi_reference_prefix(0) == ""
+    assert build_multi_reference_prefix(1) == ""
+
+
+def test_multi_reference_prefix_describes_roles_for_two_or_three_refs():
+    """The whole value-add of the multi-ref pattern is that the model
+    knows which image is character vs camera vs supplementary. If the
+    prefix ever stops naming both roles, character drift returns on
+    slides 2-5."""
+    from service.gemini.client import build_multi_reference_prefix
+    two_ref = build_multi_reference_prefix(2)
+    assert "character reference" in two_ref
+    assert "framing/style reference" in two_ref or "framing/style" in two_ref
+
+    three_ref = build_multi_reference_prefix(3)
+    assert "character reference"     in three_ref
+    assert "framing/style reference" in three_ref
+    assert "third image" in three_ref.lower() or "supplementary" in three_ref.lower()

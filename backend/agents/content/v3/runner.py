@@ -296,12 +296,37 @@ def _validate_submit_post_draft(input_data: dict[str, Any], session_project_id):
 
 
 def _validate_generate_image(input_data: dict[str, Any]):
-    """Validate generate_image arguments before paying for a Gemini call."""
+    """Validate generate_image arguments before paying for a Gemini call.
+
+    Normalises the @tool's `input_asset_id` (legacy single) + the
+    `input_asset_ids` (new multi) input keys into the Pydantic shape's
+    single `input_asset_ids` list before validating. Keeps both legacy
+    and multi-ref calls passing without paying Gemini for malformed
+    inputs.
+    """
     from pydantic import ValidationError
     from service.gemini.schema import GenerateImageRequest
 
     payload = {k: v for k, v in input_data.items() if v not in (None, "")}
     payload.setdefault("number_of_images", min(int(payload.get("number_of_images", 1) or 1), 4))
+
+    # Coalesce legacy + new reference keys.
+    merged_ids: list = []
+    if payload.get("input_asset_id"):
+        merged_ids.append(payload["input_asset_id"])
+    for x in (payload.get("input_asset_ids") or []):
+        if x and x not in merged_ids:
+            merged_ids.append(x)
+    if merged_ids:
+        if len(merged_ids) > 3:
+            return _deny(
+                "Too many reference images for generate_image — max 3. "
+                "Pass [character_ref, camera_ref] for slides 2-5; drop "
+                "extras and call again."
+            )
+        payload["input_asset_ids"] = merged_ids
+    payload.pop("input_asset_id", None)
+
     try:
         GenerateImageRequest.model_validate(payload)
     except ValidationError as exc:

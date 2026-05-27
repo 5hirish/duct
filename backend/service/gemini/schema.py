@@ -71,9 +71,23 @@ class GenerateImageRequest(BaseModel):
     prompt: str = Field(min_length=1)
     model:  ImageModel = DEFAULT_IMAGE_MODEL
 
-    # When provided, Gemini-class models attempt edit-style continuation
-    # using this asset as a reference. Ignored for Imagen models.
+    # Single-reference legacy field — kept for backward compatibility. Use
+    # input_asset_ids (below) for the dual-reference pattern (character +
+    # camera/style). Gemini-class models only; Imagen ignores both.
     input_image_url:   HttpUrl | None = None
+
+    # Multiple reference assets — Gemini-class models only. Bytes are
+    # resolved by the @tool layer and passed in order to the SDK as
+    # separate inline_data parts. Max 3 recommended in practice; the
+    # Gemini 3.x spec accepts up to 14 (10 object + 4 character) but
+    # passing >3 routinely is a code smell.
+    #
+    # Common pattern: [character_ref, camera_ref] for slides 2-5 — the
+    # first locks face/skin/hair, the second imitates TikTok framing.
+    # When this list has 2+ entries the agent's @tool wrapper prepends
+    # a role-explanation prefix to the prompt; see service/gemini/client.
+    input_asset_ids:   list[UUID] = Field(default_factory=list)
+
     aspect_ratio:      AspectRatio = AspectRatio.PORTRAIT_9_16
     image_size:        ImageSize   = ImageSize.K1
     number_of_images:  int = Field(default=1, ge=1, le=8)

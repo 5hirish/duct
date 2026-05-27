@@ -489,7 +489,15 @@ def build_content_mcp_server(
             "aspect_ratio": Annotated[str, "Optional aspect ratio (e.g. '9:16'). Defaults to portrait."],
             "number_of_images": Annotated[int, "How many images to generate. Default 1, max 4."],
             "negative_prompt":  Annotated[str, "Optional negative prompt (Imagen models only)."],
-            "input_asset_id":   Annotated[str, "Optional reference asset UUID (Gemini-class models only)."],
+            "input_asset_id":   Annotated[str, "Single reference asset UUID (legacy; prefer input_asset_ids). Gemini-class models only."],
+            "input_asset_ids":  Annotated[
+                list[str],
+                "Multiple reference assets (Gemini-class only). Pass up to 3 UUIDs in role-order: "
+                "[character_ref, camera_or_style_ref, optional_third]. For slides 2-5 the common "
+                "pattern is [slide-01 character image, cameraRef from the reference library] — "
+                "first image locks face/skin/hair, second imitates TikTok framing. A role-explanation "
+                "prefix is auto-prepended to your prompt when 2+ ids are passed.",
+            ],
         },
     )
     async def generate_image(args: dict) -> dict:
@@ -500,6 +508,7 @@ def build_content_mcp_server(
                 GenerateImageRequest,
                 persist_generated_image,
             )
+            from service.gemini.client import build_multi_reference_prefix
 
             cfg = get_configs()
             if not cfg.gemini_api_key:
@@ -509,25 +518,59 @@ def build_content_mcp_server(
 
             payload = {k: v for k, v in args.items() if v not in (None, "")}
             payload.setdefault("number_of_images", min(int(payload.get("number_of_images", 1) or 1), 4))
+
+            # Normalise single-ref legacy → list. The model may pass
+            # input_asset_id, input_asset_ids, or both; merge in order.
+            ref_ids_raw: list = []
+            if payload.get("input_asset_id"):
+                ref_ids_raw.append(payload["input_asset_id"])
+            for extra in (payload.get("input_asset_ids") or []):
+                if extra and extra not in ref_ids_raw:
+                    ref_ids_raw.append(extra)
+            if len(ref_ids_raw) > 3:
+                return _err(
+                    "Too many reference images — max 3 (character + style + one supplementary). "
+                    "Drop the least useful and call again."
+                )
+            try:
+                ref_uuids = [UUID(str(x)) for x in ref_ids_raw]
+            except ValueError as exc:
+                return _err(f"invalid reference asset id: {exc}")
+
+            # Hand the validator a list-shaped payload regardless of which
+            # legacy key the model used.
+            payload["input_asset_ids"] = [str(u) for u in ref_uuids]
+            payload.pop("input_asset_id", None)
             try:
                 request = GenerateImageRequest.model_validate(payload)
             except ValidationError as exc:
                 return _err(f"generate_image input invalid: {exc}")
 
-            input_bytes: bytes | None = None
+            input_bytes_list: list[bytes] = []
             with _open_db() as db:
-                if "input_asset_id" in payload and payload["input_asset_id"]:
-                    asset = db.get(ContentAsset, UUID(str(payload["input_asset_id"])))
+                for ref_uuid in ref_uuids:
+                    asset = db.get(ContentAsset, ref_uuid)
                     if asset is None or asset.project_id != project_id:
-                        return _err(f"input_asset_id {payload['input_asset_id']} not found for this project.")
+                        return _err(f"reference asset {ref_uuid} not found for this project.")
                     p = _asset_disk_path(asset)
                     if p is None or not p.exists():
-                        return _err(f"input asset bytes missing on disk: {asset.url}")
-                    input_bytes = p.read_bytes()
+                        return _err(f"reference asset bytes missing on disk: {asset.url}")
+                    input_bytes_list.append(p.read_bytes())
+
+                # Auto-prepend the role-explanation prefix when 2+ refs.
+                if len(input_bytes_list) >= 2:
+                    prefix = build_multi_reference_prefix(len(input_bytes_list))
+                    if prefix and not request.prompt.startswith(prefix[:60]):
+                        request = request.model_copy(
+                            update={"prompt": f"{prefix}\n\n{request.prompt}"}
+                        )
 
                 client = GeminiImageClient(cfg.gemini_api_key)
                 try:
-                    images = await client.generate_image(request, input_bytes=input_bytes)
+                    images = await client.generate_image(
+                        request,
+                        input_bytes_list=input_bytes_list or None,
+                    )
                 except GeminiAPIError as exc:
                     return _err(f"Gemini generate failed: {exc}")
 
@@ -543,7 +586,7 @@ def build_content_mcp_server(
                             "image_size":      request.image_size.value,
                             "seed":            request.seed,
                             "negative_prompt": request.negative_prompt,
-                            "input_asset_id":  payload.get("input_asset_id"),
+                            "input_asset_ids": [str(u) for u in ref_uuids],
                         },
                         post_id=session.post_id,
                         source="imagen" if request.model.value.startswith("imagen-") else "gemini",

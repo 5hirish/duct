@@ -186,6 +186,38 @@ FOUR ANCHOR RULES — apply to EVERY image_prompts entry:
      with the outfit; the image doesn't need to.
        ✅ "muted olive-green knit sweater, slightly oversized, real fabric texture"
        ❌ "muted olive-green knit sweater, slightly washed out looking against her skin"
+
+MULTI-REFERENCE IMAGE GENERATION (Gemini-class models only — slides 2-5):
+
+generate_image accepts up to 3 reference images via `input_asset_ids`.
+The recommended pattern for personal-narrative posts (where slides 2-5
+must show the SAME character as slide 1):
+
+  Slide 1:   input_asset_ids: [cameraRef_asset_id]
+             one reference — the camera/style/framing source. Locks
+             TikTok aesthetic, phone-held angle, film grain, lighting.
+
+  Slides 2-5: input_asset_ids: [slide_01_asset_id, cameraRef_asset_id]
+             TWO references in this exact order:
+               1st = character reference (the slide-01 image we just
+                     generated; locks face, skin tone, hair)
+               2nd = camera/style reference (re-locks framing across
+                     setting changes)
+             The agent system auto-prepends role-explanation text so
+             the model knows which image is which. You don't have to
+             write that prefix manually — just pass the two assets in
+             the right order.
+
+  Collage / before-after:   input_asset_ids: [cameraRef_asset_id]
+             ON EACH separately generated image (NOT slide-01) — the
+             subjects are intentionally different people, but the
+             camera/style aesthetic must stay consistent across the
+             grid. Don't pass the character reference here.
+
+Max 3 references per call. Don't pass three as a habit — only add a
+third when it materially improves the output (e.g. a specific lighting
+scene reference). If a generation fails, drop a reference and retry
+before changing the prompt.
 """
 
 

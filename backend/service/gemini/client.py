@@ -65,19 +65,39 @@ class GeminiImageClient:
         request: GenerateImageRequest,
         *,
         input_bytes: bytes | None = None,
+        input_bytes_list: list[bytes] | None = None,
     ) -> list[GeneratedImage]:
         """Generate images from a text prompt.
 
         For Imagen models, image_size + person_generation + negative_prompt
-        all apply. For Gemini-class models, image_size is ignored and
-        input_bytes (if provided) is attached inline for edit-style flow.
+        all apply. For Gemini-class models, image_size is ignored and any
+        reference image bytes are attached inline as parts before the
+        prompt.
+
+        Reference passing (Gemini-class models only):
+          - `input_bytes_list` (preferred): N reference images passed in
+            order. The first is treated as the character/subject reference;
+            subsequent images are camera/style/layout references. When
+            len >= 2, the caller should also pass a contextual prefix in
+            `request.prompt` describing each image's role — see the
+            content agent's generate_image @tool which does this
+            automatically.
+          - `input_bytes` (legacy): single reference, equivalent to a
+            one-element `input_bytes_list`.
         """
         if request.model.value.startswith(_IMAGEN_PREFIX):
             return await asyncio.to_thread(self._run_imagen_generate, request)
+
+        # Normalise to a single list. input_bytes_list wins if provided.
+        bytes_list = (
+            list(input_bytes_list)
+            if input_bytes_list
+            else ([input_bytes] if input_bytes is not None else [])
+        )
         return await asyncio.to_thread(
             self._run_gemini_generate,
             request,
-            input_bytes,
+            bytes_list,
         )
 
     async def edit_image(
@@ -220,16 +240,19 @@ class GeminiImageClient:
     def _run_gemini_generate(
         self,
         request: GenerateImageRequest,
-        input_bytes: bytes | None,
+        input_bytes_list: list[bytes],
     ) -> list[GeneratedImage]:
         from google.genai import types
 
-        parts: list[Any] = [types.Part.from_text(text=request.prompt)]
-        if input_bytes is not None:
-            parts.insert(
-                0,
-                types.Part.from_bytes(data=input_bytes, mime_type="image/png"),
-            )
+        # Order: reference images first, then text. Gemini reads parts
+        # in order; the prompt should explicitly describe what each
+        # preceding image is for. The agent's @tool wrapper handles this
+        # via the contextual-prefix helper.
+        image_parts = [
+            types.Part.from_bytes(data=b, mime_type="image/png")
+            for b in input_bytes_list
+        ]
+        parts: list[Any] = [*image_parts, types.Part.from_text(text=request.prompt)]
 
         cfg_kwargs: dict[str, Any] = {
             "response_modalities": ["IMAGE", "TEXT"],
@@ -289,6 +312,44 @@ def _collapse_thinking_for_gemini_3_1(model: ImageModel, level):
         if level in (ThinkingLevel.LOW, ThinkingLevel.MEDIUM):
             return ThinkingLevel.MINIMAL if level == ThinkingLevel.LOW else ThinkingLevel.HIGH
     return level
+
+
+# Role hint prepended to multi-reference Gemini-class calls. Without it,
+# the model treats all images as equal context and may drift on either
+# character identity or style/framing. Order matters — first image is
+# always the character ref; subsequent images are style/layout.
+#
+# Sourced from the nomadapps tiktok-gen skill's `input_image_paths`
+# guidance for slides 2-5 (character + camera/style reference combined).
+_MULTI_REF_PREFIX_2 = (
+    "The first image is the character reference — maintain her facial "
+    "features, skin tone, hair colour and texture exactly. The second "
+    "image is the framing/style reference — imitate its TikTok camera "
+    "aesthetic, phone-held angle, film grain, and overall lighting quality."
+)
+_MULTI_REF_PREFIX_3 = (
+    "The first image is the character reference — maintain her facial "
+    "features, skin tone, hair colour and texture exactly. The second "
+    "image is the framing/style reference — imitate its TikTok camera "
+    "aesthetic, phone-held angle, film grain, and overall lighting quality. "
+    "The third image is a supplementary reference — its role is described "
+    "below in the prompt."
+)
+
+
+def build_multi_reference_prefix(num_references: int) -> str:
+    """Return the role-explanation prefix the agent should prepend to its
+    image prompt when passing 2+ reference images to a Gemini-class
+    model. Returns an empty string for 0 or 1 references.
+
+    Callers concatenate this with their own prompt:
+        prompt = build_multi_reference_prefix(2) + "\\n\\n" + user_prompt
+    """
+    if num_references >= 3:
+        return _MULTI_REF_PREFIX_3
+    if num_references == 2:
+        return _MULTI_REF_PREFIX_2
+    return ""
 
 
 def _extract_imagen_images(resp: Any, model: str) -> list[GeneratedImage]:

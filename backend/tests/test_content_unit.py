@@ -229,6 +229,41 @@ def test_writer_validator_blocks_cross_project_writes():
     assert str(session_pid)      in deny.message
 
 
+def test_generate_image_validator_coalesces_legacy_and_multi_ref_keys():
+    """The @tool accepts BOTH `input_asset_id` (single, legacy) and
+    `input_asset_ids` (list, new). The validator must coalesce them into
+    the Pydantic shape's single list field before validating — otherwise
+    `extra=forbid` rejects the legacy key and the deny-path fires for
+    every existing caller. Catches that regression class."""
+    from agents.content.v3.runner import _validate_generate_image
+    from uuid import uuid4
+
+    # Legacy single-id only — must pass.
+    assert _validate_generate_image({
+        "prompt": "a red apple", "input_asset_id": str(uuid4()),
+    }) is None
+
+    # New list only — must pass.
+    assert _validate_generate_image({
+        "prompt": "a red apple", "input_asset_ids": [str(uuid4()), str(uuid4())],
+    }) is None
+
+    # Both keys with overlap — should not duplicate, should not deny.
+    shared = str(uuid4())
+    assert _validate_generate_image({
+        "prompt": "a red apple", "input_asset_id": shared,
+        "input_asset_ids": [shared, str(uuid4())],
+    }) is None
+
+    # Over the cap of 3 refs — must deny with actionable text.
+    deny = _validate_generate_image({
+        "prompt": "x",
+        "input_asset_ids": [str(uuid4()) for _ in range(4)],
+    })
+    assert deny is not None
+    assert "max 3" in deny.message
+
+
 # ---------------------------------------------------------------------------
 # Frontend ↔ backend event-enum mirror — guard against drift
 # ---------------------------------------------------------------------------
