@@ -77,13 +77,29 @@ def _open_db() -> Session:
 
 
 def _asset_disk_path(asset: ContentAsset) -> Path | None:
-    """Resolve a ContentAsset.url ('/uploads/...') to its on-disk path under
-    config.uploads_dir. Returns None if the URL doesn't map into uploads."""
-    cfg = get_configs()
-    base = Path(cfg.uploads_dir or "/app/uploads")
-    if not asset.url.startswith("/uploads/"):
-        return None
-    return base / asset.url[len("/uploads/"):]
+    """Resolve a ContentAsset.url to its on-disk path.
+
+    Handles two URL families:
+      - '/uploads/...'         → Railway Volume (per-project user uploads,
+                                 agent-generated images). Resolved against
+                                 `config.uploads_dir`.
+      - '/static/references/…' → repo-bundled global reference library.
+                                 Resolved against
+                                 `service/content_references.global_references_dir()`.
+
+    Returns None if the URL matches neither family — caller treats that
+    as "asset bytes unavailable" and surfaces a friendly error.
+    """
+    if asset.url.startswith("/uploads/"):
+        cfg = get_configs()
+        base = Path(cfg.uploads_dir or "/app/uploads")
+        return base / asset.url[len("/uploads/"):]
+    # Global references shipped with the repo — no bucket round-trip.
+    from service.content_references import disk_path_for_public_url
+    resolved = disk_path_for_public_url(asset.url)
+    if resolved is not None:
+        return resolved
+    return None
 
 
 

@@ -76,4 +76,29 @@ if _cfg.uploads_enabled:
     app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 
 
+# Mount the global content reference library if it exists. These are
+# repo-bundled curated images (`backend/data/content/references/`) the
+# Gemini agent picks from when generating slides — see
+# `service/content_references.py` and the README at the disk root.
+# Always-on when the directory exists: no config gate (cheap, read-only).
+try:
+    from fastapi.staticfiles import StaticFiles
+    from service.content_references import (
+        PUBLIC_URL_PREFIX as _REFS_URL_PREFIX,
+        global_references_dir as _refs_dir,
+    )
+
+    _refs_path = _refs_dir()
+    if _refs_path.is_dir():
+        app.mount(
+            _REFS_URL_PREFIX,
+            StaticFiles(directory=str(_refs_path)),
+            name="content-references",
+        )
+except Exception as exc:  # noqa: BLE001 — never let static-mount fail boot
+    logging.getLogger(__name__).warning(
+        "content references not mounted: %s", exc,
+    )
+
+
 app.include_router(api_router)
