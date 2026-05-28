@@ -55,17 +55,16 @@ _TIMEOUT = 300  # 5 minutes outer guard for all API tests
 
 
 def _network_available(url: str = _AUDIT_URL) -> bool:
-    """Quick TCP check — returns False if the host is unreachable."""
-    import socket
-    from urllib.parse import urlparse
-    p = urlparse(url)
-    host = p.hostname or ""
-    port = p.port or (443 if p.scheme == "https" else 80)
+    """Probe at the HTTP layer, not just TCP. Catches the case where
+    the env's TCP connect succeeds (e.g. through a sandbox proxy) but
+    actual HTTP returns 0/4xx/5xx — letting the test run only when a
+    real GET would actually work."""
+    import httpx
     try:
-        socket.setdefaulttimeout(3)
-        socket.create_connection((host, port)).close()
-        return True
-    except OSError:
+        with httpx.Client(timeout=5.0, follow_redirects=True, trust_env=False) as c:
+            r = c.get(url)
+            return 200 <= r.status_code < 400
+    except Exception:
         return False
 
 
@@ -360,10 +359,10 @@ async def test_run_synthesis_catches_planted_issues():
 # Test 3 — Full pipeline: real crawl + real synthesis
 # ---------------------------------------------------------------------------
 
-# @pytest.mark.skipif(
-#     not (_HAS_API_KEY and _HAS_NETWORK),
-#     reason="requires ANTHROPIC_API_KEY and network access to getduct.ai",
-# )
+@pytest.mark.skipif(
+    not (_HAS_API_KEY and _HAS_NETWORK),
+    reason="requires ANTHROPIC_API_KEY and network access to getduct.ai",
+)
 async def test_full_pipeline_real_page():
     """End-to-end: crawls getduct.ai then runs Claude synthesis in template mode.
 
