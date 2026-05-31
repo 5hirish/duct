@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+
+<!-- EXPERIMENT: Does an interactive URL-input → scan tease → email gate → real SEO audit
+     drive more qualified leads than a standard email-capture landing page for events? -->
+
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="assets/apple-icon.svg"/>
+<title>Free SEO Audit — See exactly what's hurting your rankings | Duct</title>
+<link rel="canonical" href="https://getduct.ai/seo-audit"/>
+<meta name="description" content="Get a free, instant SEO audit for your website. Duct scans your pages, scores your signals, and delivers a prioritized action plan in minutes. No credit card needed."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/seo-audit"/>
+<meta property="og:title" content="Free SEO Audit — See exactly what's hurting your rankings"/>
+<meta property="og:description" content="Enter your website URL and get a full SEO audit in minutes. Uncover hidden issues, quick wins, and a prioritized action plan — free, no card needed."/>
+<meta property="og:image" content="https://getduct.ai/assets/og-image.png"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Free SEO Audit — See exactly what's hurting your rankings"/>
+<meta name="twitter:description" content="Enter your website URL and get a full SEO audit in minutes. Uncover hidden issues, quick wins, and a prioritized action plan — free."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og-image.png"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<script src="assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","name":"Free SEO Audit by Duct","url":"https://getduct.ai/seo-audit","description":"Enter your website URL and get a full, AI-powered SEO audit in minutes. Uncover hidden technical issues, keyword gaps, and a prioritized action plan — completely free.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<style>
+/* ── SEO Audit lead magnet — page-specific styles ── */
+:root {
+  --orange: #c0543c;
+  --orange-h: #a84430;
+  --navy: #0d1117;
+  --navy-2: #1c2128;
+  --navy-3: #6e7681;
+  --cream: #faf8f5;
+  --border: #e4e8ec;
+}
+
+/* ── State machine: show/hide sections ── */
+[data-lm-state="idle"]    .lm-scanning,
+[data-lm-state="idle"]    .lm-gate       { display: none; }
+[data-lm-state="scanning"] .lm-hero,
+[data-lm-state="scanning"] .lm-gate      { display: none; }
+[data-lm-state="gate"]    .lm-hero,
+[data-lm-state="gate"]    .lm-scanning   { display: none; }
+[data-lm-state="submitting"] .lm-hero,
+[data-lm-state="submitting"] .lm-scanning { display: none; }
+
+/* ── Hero ── */
+.lm-hero {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 80px 24px 60px;
+  text-align: center;
+}
+.lm-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--navy-3);
+  background: #fff;
+  margin-bottom: 28px;
+}
+.lm-badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--orange);
+  animation: lm-pulse 2s ease-in-out infinite;
+}
+@keyframes lm-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: .35; }
+}
+.lm-hero h1 {
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -.025em;
+  color: var(--navy);
+  margin: 0 0 20px;
+}
+.lm-hero h1 em { font-style: normal; color: var(--orange); }
+.lm-hero .lm-sub {
+  font-size: 1.125rem;
+  color: var(--navy-3);
+  line-height: 1.6;
+  margin: 0 0 40px;
+}
+
+/* URL input */
+.lm-url-form {
+  display: flex;
+  align-items: center;
+  max-width: 580px;
+  margin: 0 auto 12px;
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,.07);
+  transition: border-color .15s, box-shadow .15s;
+}
+.lm-url-form:focus-within {
+  border-color: var(--orange);
+  box-shadow: 0 2px 16px rgba(192,84,60,.18);
+}
+.lm-url-prefix {
+  flex-shrink: 0;
+  padding: 0 0 0 18px;
+  font-size: 15px;
+  color: var(--navy-3);
+  font-weight: 500;
+  pointer-events: none;
+  user-select: none;
+}
+.lm-url-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 16px 12px;
+  font-size: 15px;
+  background: transparent;
+  color: var(--navy);
+  min-width: 0;
+}
+.lm-url-input::placeholder { color: #b0bac5; }
+.lm-url-btn {
+  flex-shrink: 0;
+  margin: 7px;
+  padding: 10px 20px;
+  background: var(--orange);
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, box-shadow .15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.lm-url-btn:hover { background: var(--orange-h); box-shadow: 0 4px 14px rgba(192,84,60,.3); }
+.lm-url-btn svg { flex-shrink: 0; }
+.lm-url-error {
+  font-size: 13px;
+  color: #c0392b;
+  min-height: 20px;
+  margin-bottom: 4px;
+}
+.lm-footnote {
+  font-size: 13px;
+  color: var(--navy-3);
+  margin: 0;
+}
+
+/* Trust strip */
+.lm-trust {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 0 24px 72px;
+  text-align: center;
+}
+.lm-trust-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--navy-3);
+  margin: 0 0 18px;
+}
+.lm-trust-logos {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+.lm-trust-logo {
+  font-size: 14px;
+  font-weight: 600;
+  color: #c0cad4;
+  letter-spacing: -.01em;
+}
+
+/* ── Scanning section ── */
+.lm-scanning {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 60px 24px 72px;
+  text-align: center;
+}
+.lm-scanning-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--navy-3);
+  margin: 0 0 8px;
+  letter-spacing: .01em;
+}
+.lm-scanning-url {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin: 0 0 32px;
+}
+
+/* Browser mockup */
+.lm-browser {
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 32px rgba(0,0,0,.09);
+  position: relative;
+  max-width: 720px;
+  margin: 0 auto 32px;
+}
+.lm-browser-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #f7f8fa;
+  border-bottom: 1px solid var(--border);
+}
+.lm-browser-dots {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.lm-browser-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.lm-browser-addr {
+  flex: 1;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--navy-3);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.lm-browser-body {
+  position: relative;
+  height: 280px;
+  overflow: hidden;
+  background: #fafbfc;
+}
+
+/* Generic website placeholder content */
+.lm-site-mock {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.lm-mock-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.lm-mock-logo  { width: 80px;  height: 12px; background: #dde2e8; border-radius: 4px; }
+.lm-mock-link  { width: 48px;  height: 10px; background: #eaecef; border-radius: 3px; }
+.lm-mock-hero-text { width: 65%; height: 18px; background: #dde2e8; border-radius: 5px; }
+.lm-mock-hero-sub  { width: 50%; height: 12px; background: #eaecef; border-radius: 4px; }
+.lm-mock-btn       { width: 100px; height: 28px; background: #d4d9df; border-radius: 6px; }
+.lm-mock-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+.lm-mock-card {
+  height: 60px;
+  background: #eaecef;
+  border-radius: 8px;
+}
+
+/* Scan-line animation */
+.lm-scan-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent 0%, rgba(192,84,60,.7) 30%, rgba(192,84,60,1) 50%, rgba(192,84,60,.7) 70%, transparent 100%);
+  box-shadow: 0 0 18px 6px rgba(192,84,60,.35);
+  animation: lm-scan 1.6s linear infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+@keyframes lm-scan {
+  0%   { top: -4px; }
+  100% { top: 100%; }
+}
+
+/* Scan overlay gradient (bottom fade) */
+.lm-browser-body::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 60%, rgba(250,251,252,.9) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Step indicators */
+.lm-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 380px;
+  margin: 0 auto;
+}
+.lm-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--navy-3);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity .4s ease, transform .4s ease, color .3s, border-color .3s;
+}
+.lm-step.visible { opacity: 1; transform: translateY(0); }
+.lm-step.done {
+  color: var(--navy);
+  border-color: #c8e6d6;
+  background: #f4fbf7;
+}
+.lm-step.done .lm-step-icon { color: #2e9e6b; }
+.lm-step-spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--orange);
+  border-top-color: transparent;
+  animation: lm-spin .75s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes lm-spin { to { transform: rotate(360deg); } }
+.lm-step-icon { font-size: 15px; flex-shrink: 0; }
+
+/* ── Gate section ── */
+.lm-gate {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 60px 24px 72px;
+  text-align: center;
+}
+.lm-gate-wrap {
+  position: relative;
+  max-width: 720px;
+  margin: 0 auto 40px;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 32px rgba(0,0,0,.09);
+}
+
+/* Blurred report preview */
+.lm-report-blur {
+  filter: blur(10px) saturate(0.4);
+  pointer-events: none;
+  user-select: none;
+  background: #fff;
+  padding: 28px 24px;
+}
+.lm-rpt-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.lm-rpt-score-wrap {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.lm-rpt-score {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 6px solid var(--orange);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--orange);
+  background: #fff;
+  flex-shrink: 0;
+}
+.lm-rpt-meta { text-align: left; }
+.lm-rpt-title { font-size: 20px; font-weight: 700; color: var(--navy); margin: 0 0 4px; }
+.lm-rpt-sub   { font-size: 13px; color: var(--navy-3); margin: 0; }
+.lm-rpt-issue-bar {
+  height: 8px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #c0392b 0 30%, #e67e22 30% 55%, #2980b9 55% 80%, #27ae60 80%);
+  margin-bottom: 24px;
+}
+.lm-rpt-cats { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.lm-rpt-cat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+.lm-rpt-cat-label { font-size: 13px; color: var(--navy); width: 130px; flex-shrink: 0; }
+.lm-rpt-cat-bar-wrap { flex: 1; height: 8px; background: #eaecef; border-radius: 4px; overflow: hidden; }
+.lm-rpt-cat-bar { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #e67e22, #f39c12); }
+.lm-rpt-cat-score { font-size: 13px; font-weight: 700; color: var(--navy-3); width: 32px; text-align: right; flex-shrink: 0; }
+.lm-rpt-findings { display: flex; flex-direction: column; gap: 8px; }
+.lm-rpt-finding {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border-left: 3px solid;
+  background: #fafbfc;
+  text-align: left;
+}
+.lm-rpt-finding.err  { border-color: #c0392b; }
+.lm-rpt-finding.warn { border-color: #e67e22; }
+.lm-rpt-finding.opp  { border-color: #2980b9; }
+.lm-rpt-finding-text { font-size: 13px; color: var(--navy); }
+.lm-rpt-finding-desc { font-size: 12px; color: var(--navy-3); margin-top: 2px; }
+
+/* Lock overlay */
+.lm-lock-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,.82);
+  backdrop-filter: blur(2px);
+  padding: 24px;
+}
+.lm-lock-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--orange);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 16px rgba(192,84,60,.35);
+}
+.lm-lock-headline {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin: 0 0 6px;
+}
+.lm-lock-sub {
+  font-size: 14px;
+  color: var(--navy-3);
+  margin: 0 0 24px;
+}
+
+/* Email form in gate */
+.lm-email-form {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 440px;
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,.07);
+  transition: border-color .15s;
+}
+.lm-email-form:focus-within { border-color: var(--orange); }
+.lm-email-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 14px 14px;
+  font-size: 15px;
+  background: transparent;
+  color: var(--navy);
+  min-width: 0;
+}
+.lm-email-input::placeholder { color: #b0bac5; }
+.lm-email-btn {
+  flex-shrink: 0;
+  margin: 6px;
+  padding: 10px 18px;
+  background: var(--orange);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s;
+}
+.lm-email-btn:hover:not(:disabled) { background: var(--orange-h); }
+.lm-email-btn:disabled { opacity: .6; cursor: not-allowed; }
+
+/* Turnstile widget */
+.lm-turnstile-wrap {
+  margin: 14px 0 4px;
+  display: flex;
+  justify-content: center;
+}
+
+.lm-gate-error {
+  font-size: 13px;
+  color: #c0392b;
+  margin: 8px 0 0;
+  min-height: 20px;
+}
+.lm-gate-note {
+  font-size: 12px;
+  color: var(--navy-3);
+  margin: 10px 0 0;
+}
+
+/* ── Below-fold feature strip ── */
+.lm-features {
+  background: var(--cream);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 56px 24px;
+}
+.lm-features-inner {
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: center;
+}
+.lm-features h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin: 0 0 8px;
+}
+.lm-features h2 em { font-style: normal; color: var(--orange); }
+.lm-features-sub {
+  font-size: 15px;
+  color: var(--navy-3);
+  margin: 0 0 48px;
+}
+.lm-feat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 24px;
+  text-align: left;
+}
+.lm-feat {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+}
+.lm-feat-icon {
+  font-size: 24px;
+  margin-bottom: 12px;
+  display: block;
+}
+.lm-feat-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--navy);
+  margin: 0 0 6px;
+}
+.lm-feat-body {
+  font-size: 14px;
+  color: var(--navy-3);
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* ── FAQ ── */
+.lm-faq {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 64px 24px;
+}
+.lm-faq h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--navy);
+  text-align: center;
+  margin: 0 0 36px;
+}
+.lm-faq-item {
+  border-bottom: 1px solid var(--border);
+}
+.lm-faq-item summary {
+  padding: 18px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--navy);
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.lm-faq-item summary::-webkit-details-marker { display: none; }
+.lm-faq-item summary::after {
+  content: '+';
+  font-size: 20px;
+  color: var(--navy-3);
+  flex-shrink: 0;
+  transition: transform .2s;
+}
+.lm-faq-item[open] summary::after {
+  content: '−';
+}
+.lm-faq-a {
+  font-size: 14px;
+  color: var(--navy-3);
+  line-height: 1.65;
+  padding: 0 0 18px;
+  margin: 0;
+}
+
+/* ── Final CTA ── */
+.lm-cta {
+  text-align: center;
+  padding: 64px 24px 80px;
+  background: var(--cream);
+  border-top: 1px solid var(--border);
+}
+.lm-cta h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin: 0 0 10px;
+}
+.lm-cta p {
+  font-size: 15px;
+  color: var(--navy-3);
+  margin: 0 0 28px;
+}
+.lm-cta .lm-url-btn {
+  display: inline-flex;
+  font-size: 16px;
+  padding: 14px 28px;
+}
+</style>
+</head>
+<body data-lm-state="idle">
+
+<a href="#main-content" style="position:absolute;top:-100%;left:16px;z-index:300;padding:10px 20px;background:var(--navy);color:#fff;font-size:14px;font-weight:500;border-radius:var(--r);text-decoration:none;transition:top .15s" onfocus="this.style.top='16px'" onblur="this.style.top='-100%'">Skip to content</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+
+<!-- NAV -->
+<div data-duct-partial="/partials/nav-for-pages.html"></div>
+
+<main id="main-content">
+
+<!-- ═══════════════════════════════════════════
+     HERO (state: idle)
+════════════════════════════════════════════ -->
+<section class="lm-hero">
+  <div class="lm-badge">
+    <span class="lm-badge-dot" aria-hidden="true"></span>
+    Free audit · No sign-up required
+  </div>
+
+  <h1>See exactly what's<br/>hurting your <em>rankings.</em></h1>
+
+  <p class="lm-sub">
+    Duct crawls your site, scores every SEO signal, and delivers a prioritized<br/>
+    action plan in minutes. Free — enter your URL to get started.
+  </p>
+
+  <div class="lm-url-form" role="group" aria-label="Website URL input">
+    <span class="lm-url-prefix" aria-hidden="true">https://</span>
+    <input
+      type="url"
+      id="lmUrl"
+      class="lm-url-input"
+      placeholder="your-site.com"
+      aria-label="Your website URL"
+      autocomplete="url"
+      autocapitalize="off"
+      spellcheck="false"
+    />
+    <button class="lm-url-btn" id="lmUrlBtn" onclick="lmStartScan()" aria-label="Analyze my site">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+      Analyze my site
+    </button>
+  </div>
+  <p class="lm-url-error" id="lmUrlError" role="alert" aria-live="polite"></p>
+  <p class="lm-footnote">Free · No credit card · Takes ~2 minutes to generate</p>
+</section>
+
+<div class="lm-trust" aria-label="Trusted by">
+  <p class="lm-trust-label">Trusted by growth teams at</p>
+  <div class="lm-trust-logos" aria-hidden="true">
+    <span class="lm-trust-logo">Lindy</span>
+    <span class="lm-trust-logo">InsForge</span>
+    <span class="lm-trust-logo">Gauge</span>
+    <span class="lm-trust-logo">Early&nbsp;beta&nbsp;teams</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     SCANNING (state: scanning)
+════════════════════════════════════════════ -->
+<section class="lm-scanning" aria-live="polite" aria-label="Scanning your site">
+  <p class="lm-scanning-label">Scanning</p>
+  <p class="lm-scanning-url" id="lmScanningUrl"></p>
+
+  <!-- Browser mockup -->
+  <div class="lm-browser" role="img" aria-label="Browser preview with scan animation">
+    <div class="lm-browser-bar">
+      <div class="lm-browser-dots" aria-hidden="true">
+        <span class="lm-browser-dot" style="background:#ff5f57"></span>
+        <span class="lm-browser-dot" style="background:#febc2e"></span>
+        <span class="lm-browser-dot" style="background:#28c840"></span>
+      </div>
+      <div class="lm-browser-addr" id="lmBrowserAddr" aria-label="URL bar">your-site.com</div>
+    </div>
+    <div class="lm-browser-body">
+      <!-- Scan line -->
+      <div class="lm-scan-line" aria-hidden="true"></div>
+      <!-- Generic placeholder website layout -->
+      <div class="lm-site-mock" aria-hidden="true">
+        <div class="lm-mock-nav">
+          <div class="lm-mock-logo"></div>
+          <div class="lm-mock-link"></div>
+          <div class="lm-mock-link"></div>
+          <div class="lm-mock-link"></div>
+        </div>
+        <div class="lm-mock-hero-text"></div>
+        <div class="lm-mock-hero-sub"></div>
+        <div class="lm-mock-btn" style="margin-top:4px"></div>
+        <div class="lm-mock-row" style="margin-top:18px">
+          <div class="lm-mock-card"></div>
+          <div class="lm-mock-card"></div>
+          <div class="lm-mock-card"></div>
+        </div>
+        <div class="lm-mock-row">
+          <div class="lm-mock-card"></div>
+          <div class="lm-mock-card"></div>
+          <div class="lm-mock-card"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step indicators -->
+  <div class="lm-steps" role="list" aria-label="Scan progress">
+    <div class="lm-step" id="lmStep1" role="listitem">
+      <div class="lm-step-spinner" aria-hidden="true"></div>
+      <span>Mapping site structure</span>
+    </div>
+    <div class="lm-step" id="lmStep2" role="listitem">
+      <div class="lm-step-spinner" aria-hidden="true"></div>
+      <span>Reading pages and signals</span>
+    </div>
+    <div class="lm-step" id="lmStep3" role="listitem">
+      <div class="lm-step-spinner" aria-hidden="true"></div>
+      <span>Scoring and building report</span>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════
+     EMAIL GATE (state: gate | submitting)
+════════════════════════════════════════════ -->
+<section class="lm-gate" aria-label="Unlock your SEO report">
+  <div class="lm-gate-wrap">
+    <!-- Blurred report preview (aria-hidden — purely visual) -->
+    <div class="lm-report-blur" aria-hidden="true">
+      <div class="lm-rpt-header">
+        <div class="lm-rpt-score-wrap">
+          <div class="lm-rpt-score">72</div>
+          <div class="lm-rpt-meta">
+            <p class="lm-rpt-title">SEO Report</p>
+            <p class="lm-rpt-sub">your-site.com · 14 issues found</p>
+          </div>
+        </div>
+      </div>
+      <div class="lm-rpt-issue-bar"></div>
+      <div class="lm-rpt-cats">
+        <div class="lm-rpt-cat">
+          <span class="lm-rpt-cat-label">Technical SEO</span>
+          <div class="lm-rpt-cat-bar-wrap"><div class="lm-rpt-cat-bar" style="width:68%"></div></div>
+          <span class="lm-rpt-cat-score">68</span>
+        </div>
+        <div class="lm-rpt-cat">
+          <span class="lm-rpt-cat-label">On-Page</span>
+          <div class="lm-rpt-cat-bar-wrap"><div class="lm-rpt-cat-bar" style="width:54%;background:linear-gradient(90deg,#e67e22,#e74c3c)"></div></div>
+          <span class="lm-rpt-cat-score">54</span>
+        </div>
+        <div class="lm-rpt-cat">
+          <span class="lm-rpt-cat-label">Content Signals</span>
+          <div class="lm-rpt-cat-bar-wrap"><div class="lm-rpt-cat-bar" style="width:82%;background:linear-gradient(90deg,#27ae60,#2ecc71)"></div></div>
+          <span class="lm-rpt-cat-score">82</span>
+        </div>
+        <div class="lm-rpt-cat">
+          <span class="lm-rpt-cat-label">Performance</span>
+          <div class="lm-rpt-cat-bar-wrap"><div class="lm-rpt-cat-bar" style="width:71%"></div></div>
+          <span class="lm-rpt-cat-score">71</span>
+        </div>
+      </div>
+      <div class="lm-rpt-findings">
+        <div class="lm-rpt-finding err">
+          <div>
+            <div class="lm-rpt-finding-text">Missing meta descriptions on 6 pages</div>
+            <div class="lm-rpt-finding-desc">High impact · /blog, /pricing, /features…</div>
+          </div>
+        </div>
+        <div class="lm-rpt-finding warn">
+          <div>
+            <div class="lm-rpt-finding-text">Title tags too long on 4 pages</div>
+            <div class="lm-rpt-finding-desc">Medium impact · Average 68 chars (max 60)</div>
+          </div>
+        </div>
+        <div class="lm-rpt-finding opp">
+          <div>
+            <div class="lm-rpt-finding-text">Quick win: 12 pages ranking 4–15</div>
+            <div class="lm-rpt-finding-desc">Opportunity · Refreshing could capture 2–3× traffic</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lock overlay -->
+    <div class="lm-lock-overlay" id="lmLockOverlay">
+      <div class="lm-lock-icon" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </div>
+      <p class="lm-lock-headline" id="lmLockHeadline">Your report is ready</p>
+      <p class="lm-lock-sub">Enter your email to unlock the full SEO audit</p>
+
+      <div class="lm-email-form" role="group" aria-label="Email input to unlock report">
+        <input
+          type="email"
+          id="lmEmail"
+          class="lm-email-input"
+          placeholder="you@company.com"
+          aria-label="Your email address"
+          autocomplete="email"
+          autocapitalize="off"
+          spellcheck="false"
+        />
+        <button class="lm-email-btn" id="lmEmailBtn" onclick="lmSubmitLead()">
+          Unlock report →
+        </button>
+      </div>
+
+      <!-- Cloudflare Turnstile -->
+      <div class="lm-turnstile-wrap">
+        <div id="lmTurnstile" aria-label="Security verification"></div>
+      </div>
+
+      <p class="lm-gate-error" id="lmGateError" role="alert" aria-live="polite"></p>
+      <p class="lm-gate-note">No spam. We'll send your report summary. Unsubscribe any time.</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════
+     BELOW-FOLD: FEATURES
+════════════════════════════════════════════ -->
+<section class="lm-features reveal">
+  <div class="lm-features-inner">
+    <h2>What your <em>audit covers</em></h2>
+    <p class="lm-features-sub">A full technical and content analysis — not just a score.</p>
+    <div class="lm-feat-grid">
+      <div class="lm-feat">
+        <span class="lm-feat-icon">🔍</span>
+        <p class="lm-feat-title">Technical issues</p>
+        <p class="lm-feat-body">Missing meta tags, broken links, redirect chains, slow TTFB, noindex errors, and more — scanned automatically.</p>
+      </div>
+      <div class="lm-feat">
+        <span class="lm-feat-icon">📊</span>
+        <p class="lm-feat-title">Scoring by category</p>
+        <p class="lm-feat-body">Technical SEO, on-page signals, content quality, and performance — each scored and ranked so you know where to focus.</p>
+      </div>
+      <div class="lm-feat">
+        <span class="lm-feat-icon">⚡</span>
+        <p class="lm-feat-title">Prioritized action plan</p>
+        <p class="lm-feat-body">Every finding is ranked by impact × effort. Quick wins first. Big bets next. Clear, specific recommendations.</p>
+      </div>
+      <div class="lm-feat">
+        <span class="lm-feat-icon">🗺️</span>
+        <p class="lm-feat-title">Full site crawl</p>
+        <p class="lm-feat-body">Duct reads your sitemap and crawls your pages — not just the homepage. Every issue is traced back to the exact URL.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════
+     FAQ
+════════════════════════════════════════════ -->
+<section class="lm-faq reveal">
+  <h2>Frequently asked questions</h2>
+
+  <details class="lm-faq-item">
+    <summary>Is this actually free?</summary>
+    <p class="lm-faq-a">Yes — completely free. We ask for your email so we can send you the report summary and follow up. No credit card, no subscription, no catch.</p>
+  </details>
+  <details class="lm-faq-item">
+    <summary>How does Duct audit my site?</summary>
+    <p class="lm-faq-a">Duct crawls your sitemap, reads your pages, and runs them through an AI-powered SEO analysis pipeline. It checks technical signals (meta tags, redirects, TTFB), on-page signals (titles, headings, content), and surface keyword and content gaps.</p>
+  </details>
+  <details class="lm-faq-item">
+    <summary>How long does it take?</summary>
+    <p class="lm-faq-a">Most audits complete in 2–4 minutes, depending on the size of your site. You'll see a live progress indicator while it runs.</p>
+  </details>
+  <details class="lm-faq-item">
+    <summary>What happens after the audit?</summary>
+    <p class="lm-faq-a">You get the full interactive report — scores, findings, and a prioritized action plan. You can download it, share it, and optionally sign up to save it and run follow-up audits.</p>
+  </details>
+</section>
+
+
+<!-- ═══════════════════════════════════════════
+     FINAL CTA
+════════════════════════════════════════════ -->
+<section class="lm-cta reveal">
+  <h2>Ready to see what Duct finds?</h2>
+  <p>Enter your URL above and get your free SEO audit in minutes.</p>
+  <button class="lm-url-btn" onclick="window.scrollTo({top:0,behavior:'smooth'});document.getElementById('lmUrl').focus()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+    Get my free audit →
+  </button>
+</section>
+
+</main>
+
+<!-- FOOTER -->
+<div data-duct-partial="/partials/footer-expanded.html"></div>
+
+<!-- ═══════════════════════════════════════════
+     LEAD MAGNET STATE MACHINE
+════════════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  var capturedUrl = '';
+  var turnstileWidgetId = null;
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
+  function setState(s) {
+    document.body.setAttribute('data-lm-state', s);
+  }
+
+  function showStepVisible(id) {
+    var el = document.getElementById(id);
+    if (el) el.classList.add('visible');
+  }
+
+  function showStepDone(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.classList.add('visible', 'done');
+    var spinner = el.querySelector('.lm-step-spinner');
+    if (spinner) {
+      var icon = document.createElement('span');
+      icon.className = 'lm-step-icon';
+      icon.setAttribute('aria-hidden', 'true');
+      icon.textContent = '✓';
+      spinner.parentNode.replaceChild(icon, spinner);
+    }
+  }
+
+  function normalizeUrl(raw) {
+    raw = raw.trim();
+    if (!raw) return '';
+    if (!/^https?:\/\//i.test(raw)) raw = 'https://' + raw;
+    return raw;
+  }
+
+  function extractDomain(url) {
+    try {
+      return new URL(url).hostname.replace(/^www\./, '');
+    } catch (e) {
+      return url;
+    }
+  }
+
+  // ── Phase 1: URL → scan animation ─────────────────────────────────────────
+
+  window.lmStartScan = function () {
+    var raw = document.getElementById('lmUrl').value;
+    var errEl = document.getElementById('lmUrlError');
+    errEl.textContent = '';
+
+    var url = normalizeUrl(raw);
+    if (!url || !/^https?:\/\/.+\..+/.test(url)) {
+      errEl.textContent = 'Please enter a valid website URL (e.g. your-site.com)';
+      document.getElementById('lmUrl').focus();
+      return;
+    }
+
+    capturedUrl = url;
+    var domain = extractDomain(url);
+
+    // Fill scanning section UI
+    document.getElementById('lmScanningUrl').textContent = domain;
+    document.getElementById('lmBrowserAddr').textContent = domain;
+
+    // Transition to scanning state
+    setState('scanning');
+
+    // Reveal steps with stagger
+    setTimeout(function () { showStepVisible('lmStep1'); }, 400);
+    setTimeout(function () { showStepDone('lmStep1'); showStepVisible('lmStep2'); }, 1600);
+    setTimeout(function () { showStepDone('lmStep2'); showStepVisible('lmStep3'); }, 2800);
+    setTimeout(function () { showStepDone('lmStep3'); }, 4200);
+
+    // Transition to gate after 5 seconds
+    setTimeout(function () { lmShowGate(domain); }, 5000);
+  };
+
+  function lmShowGate(domain) {
+    // Update gate headline with domain
+    var headline = document.getElementById('lmLockHeadline');
+    if (headline) headline.textContent = 'See what we found on ' + domain;
+
+    setState('gate');
+
+    // Initialize Turnstile if not already done
+    lmInitTurnstile();
+  }
+
+  // ── Turnstile ──────────────────────────────────────────────────────────────
+
+  function lmInitTurnstile() {
+    var siteKey = (window.DUCT_CONFIG && window.DUCT_CONFIG.turnstile_site_key) || '';
+    if (!siteKey || turnstileWidgetId !== null) return;
+
+    if (window.turnstile) {
+      _renderTurnstile(siteKey);
+    } else {
+      // Load Turnstile script
+      var script = document.createElement('script');
+      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=lmOnTurnstileLoad';
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+      window.lmOnTurnstileLoad = function () { _renderTurnstile(siteKey); };
+    }
+  }
+
+  function _renderTurnstile(siteKey) {
+    if (turnstileWidgetId !== null) return;
+    turnstileWidgetId = window.turnstile.render('#lmTurnstile', {
+      sitekey: siteKey,
+      theme: 'light',
+      appearance: 'always',
+      callback: function () { /* token available via getResponse */ },
+      'expired-callback': function () { turnstileWidgetId = null; },
+      'error-callback': function () {
+        document.getElementById('lmGateError').textContent = 'Security check failed. Please refresh and try again.';
+      },
+    });
+  }
+
+  // ── Phase 2: Email submit → backend → redirect ─────────────────────────────
+
+  window.lmSubmitLead = function () {
+    var email = document.getElementById('lmEmail').value.trim();
+    var errEl = document.getElementById('lmGateError');
+    errEl.textContent = '';
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errEl.textContent = 'Please enter a valid email address.';
+      document.getElementById('lmEmail').focus();
+      return;
+    }
+
+    var turnstileToken = '';
+    if (window.turnstile && turnstileWidgetId !== null) {
+      turnstileToken = window.turnstile.getResponse(turnstileWidgetId) || '';
+    }
+
+    // Disable form while submitting
+    var btn = document.getElementById('lmEmailBtn');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    setState('submitting');
+
+    var apiUrl = (window.DUCT_CONFIG && window.DUCT_CONFIG.api_url) || 'http://localhost:8002';
+    var appUrl = (window.DUCT_CONFIG && window.DUCT_CONFIG.app_url) || 'http://localhost:3003';
+
+    fetch(apiUrl + '/api/lead-magnet/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: email,
+        website_url: capturedUrl,
+        turnstile_token: turnstileToken,
+        magnet_type: 'seo_audit',
+      }),
+    })
+      .then(function (res) {
+        if (!res.ok) {
+          return res.json().then(function (data) {
+            throw new Error(data.detail || 'Submission failed. Please try again.');
+          });
+        }
+        return res.json();
+      })
+      .then(function (data) {
+        window.location.href =
+          appUrl +
+          '/lead/seo-audit?url=' +
+          encodeURIComponent(capturedUrl) +
+          '&token=' +
+          encodeURIComponent(data.token);
+      })
+      .catch(function (err) {
+        setState('gate');
+        btn.disabled = false;
+        btn.textContent = 'Unlock report →';
+        errEl.textContent = err.message || 'Something went wrong. Please try again.';
+        // Reset Turnstile
+        if (window.turnstile && turnstileWidgetId !== null) {
+          window.turnstile.reset(turnstileWidgetId);
+        }
+      });
+  };
+
+  // Allow Enter key in email field
+  document.addEventListener('DOMContentLoaded', function () {
+    var emailInput = document.getElementById('lmEmail');
+    if (emailInput) {
+      emailInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') window.lmSubmitLead();
+      });
+    }
+    var urlInput = document.getElementById('lmUrl');
+    if (urlInput) {
+      urlInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') window.lmStartScan();
+      });
+    }
+  });
+})();
+</script>
+
+<script src="assets/duct-partials.js"></script>
+<script src="assets/duct.js" defer></script>
+
+</body>
+</html>

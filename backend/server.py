@@ -48,9 +48,12 @@ app = FastAPI(
     redoc_url="/redoc" if _cfg.expose_openapi_docs else None,
 )
 
+_cfg_cors = get_configs()
+_cors_origins = [o for o in [_cfg_cors.frontend_origin, _cfg_cors.site_origin] if o]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[get_configs().frontend_origin],
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

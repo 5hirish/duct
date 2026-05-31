@@ -64,7 +64,7 @@ const INITIAL_SPLIT = 50;
 // AuditWorkspace
 // ---------------------------------------------------------------------------
 
-export default function AuditWorkspace({ sessionId, auditParams }) {
+export default function AuditWorkspace({ sessionId, auditParams, publicMode = false, onReportReady }) {
   const { setIsAuditRunning } = useAuditNav();
 
   const [leftWidth, setLeftWidth] = useState(() => {
@@ -96,12 +96,23 @@ export default function AuditWorkspace({ sessionId, auditParams }) {
   const containerRef        = useRef(null);
   const htmlBatchRef        = useRef("");
   const htmlBatchTimer      = useRef(null);
+  const reportFiredRef      = useRef(false); // prevents onReportReady firing more than once
 
   // Tell the nav bar whether to lock the back button
   useEffect(() => {
     const running = phase === Phase.STARTING || phase === Phase.PIPELINE;
     setIsAuditRunning(running);
   }, [phase, setIsAuditRunning]);
+
+  // Fire onReportReady once when the first complete report is available
+  useEffect(() => {
+    if (!onReportReady || reportFiredRef.current) return;
+    if (phase !== Phase.READY || reportVersions.length === 0) return;
+    const latest = reportVersions[reportVersions.length - 1];
+    if (!latest?.report) return;
+    reportFiredRef.current = true;
+    onReportReady(latest.report);
+  }, [onReportReady, phase, reportVersions]);
 
   // Clear on unmount so the back button re-enables if the user navigates away
   useEffect(() => {
@@ -420,8 +431,22 @@ export default function AuditWorkspace({ sessionId, auditParams }) {
   // Render
   // ---------------------------------------------------------------------------
 
+  const showPublicCta = publicMode && phase === Phase.READY && reportVersions.length > 0;
+
   return (
-    <div ref={containerRef} className="flex h-full w-full overflow-hidden">
+    <div className="flex flex-col h-full w-full overflow-hidden">
+      {showPublicCta && (
+        <div className="shrink-0 flex items-center justify-between gap-4 px-4 py-2 bg-orange-50 border-b border-orange-200 text-sm">
+          <span className="font-medium text-orange-900">Save and share this report</span>
+          <a
+            href="/"
+            className="inline-flex items-center gap-1 rounded-md bg-orange-600 px-3 py-1 text-xs font-semibold text-white hover:bg-orange-700 transition-colors"
+          >
+            Sign up free →
+          </a>
+        </div>
+      )}
+    <div ref={containerRef} className="flex flex-1 min-h-0 w-full overflow-hidden">
       <div
         className="flex flex-col overflow-hidden border-r border-border/60"
         style={{ width: `${leftWidth}%`, minWidth: "280px" }}
@@ -466,6 +491,7 @@ export default function AuditWorkspace({ sessionId, auditParams }) {
           onRetry={handleRetry}
         />
       </div>
+    </div>
     </div>
   );
 }

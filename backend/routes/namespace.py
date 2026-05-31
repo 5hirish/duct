@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends
 
 from routes import (
     agents, audit, auth, chat, connectors, generate, health,
-    projects, reports, signin, user_connectors, user_contexts, user_projects,
+    lead_magnet, projects, reports, signin, user_connectors, user_contexts, user_projects,
 )
 from service.auth import validate_api_key
 
@@ -51,6 +51,8 @@ router.include_router(
     prefix="/api/agents",
     dependencies=[Depends(validate_api_key)],
 )
+# Lead magnet capture — public endpoints; rely on Cloudflare Turnstile, not API key
+router.include_router(lead_magnet.router, prefix="/api/lead-magnet")
 # User-scoped endpoints — authenticated via Bearer JWT
 router.include_router(user_projects.router, prefix="/api/user/projects")
 router.include_router(user_contexts.router, prefix="/api/user/projects")

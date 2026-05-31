@@ -288,3 +288,40 @@ export async function closeAgentSession(agentType, sessionId) {
     { method: "DELETE", headers: backendApiHeaders() }
   );
 }
+
+// ---------------------------------------------------------------------------
+// Lead magnet
+// ---------------------------------------------------------------------------
+
+/**
+ * Validate a lead magnet access token.
+ * Token is sent in the POST body — not as a query param — to avoid it appearing
+ * in server logs, browser history, or Referer headers.
+ * Returns { website_url } or throws if the token is invalid / expired.
+ */
+export async function validateLeadToken(token) {
+  const res = await fetch(`${BASE}/api/lead-magnet/validate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+  if (!res.ok) throw new Error("Invalid or expired lead token");
+  return res.json();
+}
+
+/**
+ * Persist the completed audit report against a lead magnet record.
+ * First write wins — 409 means it was already saved (silent success).
+ * Never throws; failures are logged but don't disrupt the user's report view.
+ */
+export async function saveLeadReport(token, report) {
+  try {
+    await fetch(`${BASE}/api/lead-magnet/report`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, report }),
+    });
+  } catch {
+    // Fire-and-forget: network errors shouldn't interrupt the user experience
+  }
+}
