@@ -319,6 +319,9 @@ class PostDraft(BaseModel):
     audio_note: str | None = None
     bridge_text: str = ""               # slide-6 personal discovery bridge (first-person, "free app")
     strategic_note: str = ""           # 1-2 sentences: why this post works in the broader strategy
+    visual_brief: str = ""              # reference-study output: lighting/posture/skin/gesture arc/copy voice
+    emotional_arc: str = ""             # 5-slide energy arc, one line per slide
+    camera_ref_pool: str = ""           # 'selfie-talking' | 'lifestyle' | 'closeup' — which ref pool to draw from
     platforms: list[Platform] = Field(default_factory=lambda: [Platform.TIKTOK])
 
 

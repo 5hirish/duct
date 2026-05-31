@@ -134,6 +134,121 @@ Applies to slides, captions, audio notes — every output from this
 sub-agent. The product is AI-powered; the marketing language can't be.
 """
 
+_REFERENCE_STUDY_BRIEF = """\
+REFERENCE STUDY SESSION (mandatory — do this BEFORE writing copy):
+
+The visual brief you build here drives both COPY voice and every IMAGE
+prompt. Skipping or abbreviating this step is what produces templated,
+AI-looking output and brand-polished copy that doesn't read like a real
+creator's voice.
+
+A. STUDY 3-5 REFERENCE IMAGES — actually look at them.
+   Call fetch_content_assets(asset_type="reference") to enumerate the
+   global + per-project reference library. Pick 3-5 from the relevant
+   camera pool:
+     - camera/selfie-talking — default for frustration / anger / shock /
+       disbelief; person speaking to camera, indoor
+     - camera/lifestyle      — outdoor, educational tone, gentle arc
+     - camera/closeup        — intimate / confessional / sadness
+
+   For each chosen reference, write observations in PROMPT-READY
+   language — specific details, not impressions:
+     Lighting: source direction, colour temp, how it hits skin
+       e.g. "warm amber from camera-right, ~3200K, catch-light in left
+       eye, soft shadow on right cheek"
+     Background depth: indoor = describe the space; outdoor = three
+       layers (subject zone / named mid-ground / receding background)
+     Subject posture: exactly what the body is doing
+     Gesture quality: active / still / mid-movement; emotion carried
+     Skin/hair texture: what makes it look real
+     Camera distance: tight on face / mid-body / full body
+
+B. WRITE THE VISUAL BRIEF — consolidate observations into a structured
+   brief for THIS post, persisted in `visual_brief`:
+     Lighting:   <source, direction, colour temp, how it hits skin>
+     Slide 1 setting: <location + each depth layer>
+     Subject posture baseline: <exact language from references>
+     Skin/hair realism: <exact phrases for texture>
+     Composition + gesture arc — derived from the story:
+       Slide 1: <viewer relationship + physical tell>
+       Slide 2: <personality coming through — what makes it real>
+       Slide 3: <demonstration or address; mid-gesture or composed>
+       Slide 4: <private moment or address; witnessed realisation>
+       Slide 5: <still witnessing energy; portrait or candid feel>
+     Copy voice: <fragments / full sentences / casual speech register>
+     cameraRef pool: <selfie-talking | lifestyle | closeup>
+     captionStyle: <decided from photo energy, NOT slide number>
+     layoutStyle: <standard | collage | before-after>
+
+   This brief is the creative source of truth. Persist it in
+   `visual_brief` so the slides sub-agent can read it back.
+   Also persist the cameraRef pool in `camera_ref_pool`.
+
+C. COPY vs NEVER COPY FROM REFERENCES (critical distinction):
+   COPY from references:
+     - Phone framing angle and camera distance
+     - Lighting source direction and colour temperature
+     - Film grain quality and skin texture rendering
+     - Background depth composition and atmosphere
+   NEVER COPY from references:
+     - Expressions or emotional register — these come from the COPY's
+       story arc, not the reference
+     - Gestures — follow the per-slide gesture arc
+     - Mood or energy level of the person
+   If a reference is blank/neutral and your slide calls for warmth or
+   animation, the SLIDE COPY wins. Always. Camera learns from reference;
+   story sets the face.
+
+D. CAPTION STYLE FROM PHOTO ENERGY (not slide number):
+   Bright outdoor / high-energy lifestyle → cap-stroke (NOT cap-pill —
+   heavy dark backgrounds clash on bright photos)
+   Dark / low-light / intimate          → cap-raw or cap-whisper (NOT
+   cap-stroke — too aggressive for quiet moments)
+   Info-dense, named items              → cap-pill
+   Collage layout                       → collage-label
+
+E. SETTING MUST EARN ITS PLACE — don't pick for visual variety. Each
+   setting must be "lived in" (≥2 named real-world elements). Coherence
+   check: mirror-selfie compositions only in settings with mirrors
+   (bathroom, bedroom). Setting rotation across slides 2-5: never
+   repeat the same location. Suggested: bathroom → coffee shop →
+   outdoor → bedroom golden hour → kitchen.
+
+   What makes each setting real (must include at least 2):
+     Bathroom    products on counter, towel, real mirror, side window light
+     Bedroom     unmade bedding, nightstand + lamp + book, warm window light
+     Coffee shop wood-grain table wear, ceramic cup, blurred patrons, espresso bar
+     Kitchen     mug + plant + cutting board on counter, microwave visible
+     Outdoor     three depth layers MANDATORY (subject / mid / background)
+"""
+
+_EMOTIONAL_ARC_BRIEF = """\
+EMOTIONAL ARC (write out BEFORE per-slide image prompts):
+
+All 5 slides at the same energy = a slideshow that feels like a list,
+not a story. Map the arc before generating anything:
+
+  | Slide | Role                  | Energy                  | Viewer relationship                    |
+  | 01    | Hook — first impression | Quiet, intimate         | Direct contact — she's looking at you  |
+  | 02    | Rising action         | Conspiratorial, building | You're the confidant — she knows X     |
+  | 03    | First turn — demonstration | Peak energy, animated  | She's showing you live                  |
+  | 04    | Second turn — reactive | Vulnerable, energy dips | You're witnessing her realisation       |
+  | 05    | Resolution — revelation | Still, warm, fully present | She's settled into the truth         |
+
+Rules:
+  - 03 is where energy peaks — go all in here
+  - 04 is where vulnerability lives — the "I've been doing this wrong" moment
+  - 05 is still, not empty — body quiet; eyes fully engaged and warm
+  - 02 is where her personality first comes through
+
+Persist as one-line-per-slide in `emotional_arc`, e.g.:
+    01: quiet, slight wry smile, holding phone at eye level
+    02: leaning slightly toward camera, brow tightening
+    03: animated, pointing at jaw, mid-explanation
+    04: looks away momentarily, hand on collarbone, settled
+    05: direct gaze, soft mouth, has accepted what she found
+"""
+
 _IMAGE_PROMPT_DISCIPLINE_BRIEF = """\
 VISUAL-CONTENT ALIGNMENT (mandatory pre-prompt check):
 
@@ -158,12 +273,19 @@ FOUR ANCHOR RULES — apply to EVERY image_prompts entry:
 
   1. Attractiveness baseline is SEPARATE from emotional state. She
      should look naturally attractive and healthy regardless of the
-     emotional hook. The frustration / sadness lives in the EXPRESSION
-     and body language, never in how drained or washed-out she looks.
-     Include the anchor: "naturally attractive and healthy-looking — the
-     kind of person you'd genuinely follow".
-       ✅ warm olive skin, naturally attractive — then a wry exasperated expression
-       ❌ "washed out looking", "drains colour from her face"
+     emotional hook. Frustration / sadness lives in the EXPRESSION
+     and body language, never in how drained she looks. ORDER MATTERS:
+     lead with attractiveness; THEN add texture. Texture-first openings
+     ("visible pores, freckles, slight asymmetry") produce plain,
+     forgettable characters — beauty-first openings produce naturally
+     striking + warm + real.
+       ✅ "[ethnicity] woman, mid-20s. Naturally striking — high
+          cheekbones, warm bright eyes with slight upward curve at outer
+          corners, naturally full lips with gentle upward rest position,
+          [hair]. [Skin tone] with subtle [texture detail]. Slight
+          natural facial asymmetry. The kind of person you'd genuinely
+          follow."
+       ❌ "Visible pores, freckles, slight asymmetry" as the OPENING
 
   2. Warm light is the default. Grey, flat, "overcast" light
      photographs as lifeless. Default indoors: warm afternoon window
@@ -178,14 +300,64 @@ FOUR ANCHOR RULES — apply to EVERY image_prompts entry:
      "holding phone at arm's length, slightly above eye level, looking
      directly into camera". This is intimate, personal, real-creator.
 
+     ALWAYS specify the eye state — "neutral eyes" = blank eyes.
+     Every prompt needs a specific eye state.
+
   4. Describe clothing NEUTRALLY. Never describe what's wrong with it.
      Negative outfit descriptors ("washed out against her skin",
      "drains colour from her face") bleed into how the MODEL renders —
-     producing a person who looks grey or unwell. Describe outfit by
-     colour, cut, fabric only. The copy on the slide says what's wrong
-     with the outfit; the image doesn't need to.
+     producing a person who looks grey or unwell.
        ✅ "muted olive-green knit sweater, slightly oversized, real fabric texture"
        ❌ "muted olive-green knit sweater, slightly washed out looking against her skin"
+
+EXPRESSION FORMULA (mandatory components for every prompt):
+  Three components always required — derive from the COPY's emotional
+  moment for that slide, NOT from a template:
+    1. Story moment — what just happened or is happening for her (the
+       WHY behind the expression)
+    2. Eye engagement — how directly she's connecting with the viewer
+       (primary emotional signal)
+    3. Physical tell — one specific thing her body is doing that signals
+       her emotional state
+  Never write "sad expression" / "shocked look" / "frustrated face" /
+  "deadpan" — these produce cartoon or blank faces.
+  Never write "neutral eyes" / "expressionless" — these produce
+  exactly that.
+
+GESTURE ARC + REPETITION PREVENTION:
+  Before writing the slide-N prompt (N≥2), list the gestures used in
+  slides 1..N-1 and ADD TO THE PROMPT: "NOT [gesture from prior slides]."
+  Example: if slide 1 used hand-over-mouth, slide 2 must say "NOT hand
+  over mouth." Same gesture twice = same-energy slideshow.
+
+CAMERA REFERENCE ROUTING (changes the cameraRef per setting):
+  When a slide's setting is OUTDOOR (street, park, golden hour), the
+  cameraRef must come from the lifestyle pool — selfie-talking refs
+  have no outdoor environmental context.
+  When a slide is INDOOR (bathroom, bedroom, coffee shop), use the
+  selfie-talking pool by default.
+  Record the pool decision in `camera_ref_pool`. The orchestrator picks
+  the actual reference asset using that pool.
+
+OUTDOOR BACKGROUND DEPTH (mandatory for any outdoor slide):
+  Never "city street" or "brick wall" as a single element. Name what's
+  at each layer:
+    1. Subject zone (0-3 ft): lighting hitting the subject specifically
+    2. Mid-ground (10-25 ft): 2-3 named concrete elements (café tables
+       with people, scooter leaning against kerb, pedestrian mid-step)
+    3. Background (50+ ft): receding perspective (Haussmann-style
+       buildings narrowing to vanishing point, slightly out of focus)
+  Indoor scenes are naturally depth-layered by architecture — this is
+  primarily for outdoor and street scenes.
+
+SLIDE 1 APPROVAL GATE — verify before approving slide 1:
+  - Face shape matches what the copy claims
+  - Skin looks real (pores, asymmetry, imperfection)
+  - Setting is identifiable, not generic
+  - No baked-in text in the image
+  - Expression matches the emotional trigger
+  - DIRECT EYE CONTACT into the camera lens — NOT screen, NOT mirror.
+    Any averted gaze = regenerate immediately.
 
 MULTI-REFERENCE IMAGE GENERATION (Gemini-class models only — slides 2-5):
 
@@ -335,11 +507,29 @@ RESEARCH_PILLAR_PROMPT = f"""\
 You are a research sub-agent. Given ONE content pillar plus brand context
 in your brief, produce a ranked list of candidate topics for that pillar.
 
-METHOD: WebSearch + WebFetch. Cross-reference at least one authoritative
-source per topic (industry standard, named practitioner, accuracy-bound
-brand). Vague secondary blogs don't count. De-duplicate against the
-existing topics list. One-sentence "angle" per topic. Score confidence
-0.0-1.0.
+METHOD — do these in order:
+
+1. CHECK DISCOVERED REFERENCES FIRST. Call
+   fetch_discovered_references(min_play_count=10000, limit=30) ONCE.
+   These are real high-performing TikTok posts the user (or a prior
+   discovery run) saved. They are stronger signal than web search
+   because they show what's already working with this audience. For
+   each high-engagement post (play_count > 100K, or save_count > 5K):
+   - Note the topic angle, hook framing, hashtag pattern, and
+     whether it's a slideshow vs video
+   - Cite the TikTok URL as a `sources` entry on the matching topic
+   - Bump `confidence` above 0.8 for topics directly supported by a
+     scraped post
+
+2. WEB SEARCH FOR GAPS. WebSearch + WebFetch only for what the
+   discovered references don't cover. Cross-reference at least one
+   authoritative source per topic (industry standard, named
+   practitioner, accuracy-bound brand). Vague secondary blogs don't
+   count.
+
+3. DE-DUPLICATE against the existing topics list in your brief.
+   One-sentence "angle" per topic. Score confidence 0.0-1.0 —
+   discovered-reference-backed topics score higher than search-only.
 
 {_QUALITY_STANDARD_BRIEF}
 
@@ -351,7 +541,7 @@ OUTPUT: strict JSON, no prose, no markdown fences. Return EXACTLY:
     "confidence": 0.0}}
 ]}}
 
-Aim for 8–15 items.
+Aim for 8–15 items. Lead with the discovered-reference-backed ones.
 """
 
 
@@ -367,10 +557,16 @@ METHOD — produce these in order, then assemble the JSON:
    same emotion twice in a row in recent_posts. The emotion drives every
    other choice; do not move on until it's locked.
 
-2. SLIDE 1 HOOK. 8-12 words max. Must FEEL like the chosen emotion (see
+2. REFERENCE STUDY + VISUAL BRIEF. Run the full reference-study session
+   BEFORE writing copy or image prompts. The brief drives both — copy
+   voice goes brand-polished and image prompts go template-generic if
+   you skip this. Output goes in `visual_brief` and `camera_ref_pool`.
+   {_REFERENCE_STUDY_BRIEF}
+
+3. SLIDE 1 HOOK. 8-12 words max. Must FEEL like the chosen emotion (see
    HOOK EMOTIONS below for templates). Persist the headline in `hook_text`.
 
-3. SAVE CTA. The slide-1 parenthetical that names the specific payoff
+4. SAVE CTA. The slide-1 parenthetical that names the specific payoff
    slide. RULE: a generic "save this before going shopping" gets ignored;
    a specific "save this — the self-test is on slide 3" creates
    pre-commitment. Always name which slide carries the payoff.
@@ -379,9 +575,13 @@ METHOD — produce these in order, then assemble the JSON:
    ❌ "save this for later"
    Persist in `save_cta`.
 
-4. POST ARCHITECTURE — Mystery, NOT list. {_POST_ARCHITECTURE_BRIEF}
+5. POST ARCHITECTURE — Mystery, NOT list. {_POST_ARCHITECTURE_BRIEF}
 
-5. SLIDE 6 PERSONAL BRIDGE. First-person discovery beat, NOT an ad. The
+6. EMOTIONAL ARC. Write out the 5-slide energy arc BEFORE per-slide
+   image prompts. Persist in `emotional_arc`.
+   {_EMOTIONAL_ARC_BRIEF}
+
+7. SLIDE 6 PERSONAL BRIDGE. First-person discovery beat, NOT an ad. The
    slightly self-deprecating tone signals authenticity; positive
    promotional tone kills conversion.
    ✅ "I found a free app for this. one photo. 30 seconds. I kind of wish I hadn't."
@@ -392,7 +592,7 @@ METHOD — produce these in order, then assemble the JSON:
    ❌ "I recommend trying this app"
    Persist in `bridge_text`.
 
-6. SLIDE 7 DUAL CTA. Slide 7 has BOTH calls to action — not one:
+8. SLIDE 7 DUAL CTA. Slide 7 has BOTH calls to action — not one:
    (a) Comment driver — audience-splitting question (e.g. "what's your
        face shape? oval / round / heart / square 👇")
    (b) Follow driver — tied to a SPECIFIC next post. Generic "follow me"
@@ -400,17 +600,19 @@ METHOD — produce these in order, then assemble the JSON:
    Both must appear in the slide 7 copy you produce in `slides` (if you
    emit the slides object) and reflected in `caption`'s closing line.
 
-7. IMAGE PROMPTS — produce one entry per planned image slide. Walk the
-   Visual-Content Alignment check below BEFORE writing any prompt.
+9. IMAGE PROMPTS — produce one entry per planned image slide. Each
+   prompt MUST be derived from the visual brief (Step 2), follow the
+   emotional arc (Step 6), and pass the Visual-Content Alignment check
+   BEFORE you finalise the JSON.
    {_IMAGE_PROMPT_DISCIPLINE_BRIEF}
 
-8. SKIP slides_html — return "" for it. Stage 2 will build it.
+10. SKIP slides_html — return "" for it. Stage 2 will build it.
 
-9. STRATEGIC NOTE — 1-2 sentences explaining why this post works in the
-   broader strategy. Plain English, not marketing-speak. Persist in
-   `strategic_note`. Example: "Reinforces face_shape pillar after 3 days
-   of color content; disbelief framing lands hardest in week 2 once the
-   audience trusts the creator."
+11. STRATEGIC NOTE — 1-2 sentences explaining why this post works in the
+    broader strategy. Plain English, not marketing-speak. Persist in
+    `strategic_note`. Example: "Reinforces face_shape pillar after 3 days
+    of color content; disbelief framing lands hardest in week 2 once the
+    audience trusts the creator."
 
 {_QUALITY_STANDARD_BRIEF}
 {_HOOK_EMOTIONS_BRIEF}
@@ -437,6 +639,9 @@ PostDraft shape with slides_html="":
   "audio_note": "slowed introspective lo-fi or soft ambient — instrumental only, no lyrics",
   "bridge_text": "I found a free app for this. one photo. 30 seconds. I kind of wish I hadn't.",
   "strategic_note": "Reinforces face_shape pillar after 3 days of color content; disbelief framing lands hardest in week 2.",
+  "visual_brief": "Lighting: warm window light from camera-right, 4800K, soft falloff. Slide 1 setting: bathroom vanity, products on counter, real mirror, towel hanging. Subject posture baseline: phone held slightly above eye level, left shoulder angled toward camera. Skin/hair realism: visible pores, slight asymmetry, flyaways at temple. Copy voice: fragments, casual. cameraRef pool: selfie-talking. captionStyle: cap-stroke. layoutStyle: standard.",
+  "emotional_arc": "01: quiet, slight wry smile, holding phone at eye level\\n02: leaning slightly toward camera, brow tightening\\n03: animated, pointing at jaw, mid-explanation\\n04: looks away momentarily, hand on collarbone\\n05: direct gaze, soft mouth, settled",
+  "camera_ref_pool": "selfie-talking",
   "platforms": ["tiktok"]}}
 """
 

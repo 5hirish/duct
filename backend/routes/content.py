@@ -615,6 +615,9 @@ class PostIn(BaseModel):
     audio_note:    str = ""
     bridge_text:   str = ""
     strategic_note: str = ""
+    visual_brief:  str = ""
+    emotional_arc: str = ""
+    camera_ref_pool: str = ""
     platforms:     list[Platform] = Field(default_factory=lambda: [Platform.TIKTOK])
 
 
@@ -643,6 +646,9 @@ class PostPatch(BaseModel):
     audio_note:    str | None = None
     bridge_text:   str | None = None
     strategic_note: str | None = None
+    visual_brief:  str | None = None
+    emotional_arc: str | None = None
+    camera_ref_pool: str | None = None
     platforms:     list[Platform] | None = None
     notes:         str | None = None
 
@@ -673,6 +679,9 @@ class PostOut(BaseModel):
     audio_note:    str
     bridge_text:   str
     strategic_note: str
+    visual_brief:  str
+    emotional_arc: str
+    camera_ref_pool: str
     platforms:     list
     posted_at:     str | None
     tiktok_url:    str
@@ -710,6 +719,9 @@ def _post_out(p: ContentPost) -> PostOut:
         audio_note=p.audio_note,
         bridge_text=p.bridge_text,
         strategic_note=p.strategic_note,
+        visual_brief=p.visual_brief,
+        emotional_arc=p.emotional_arc,
+        camera_ref_pool=p.camera_ref_pool,
         platforms=p.platforms or [],
         posted_at=p.posted_at.isoformat() if p.posted_at else None,
         tiktok_url=p.tiktok_url,
@@ -1031,7 +1043,7 @@ def delete_avatar(avatar_id: UUID, db: Session = Depends(db_session)) -> dict:
 # ---------------------------------------------------------------------------
 
 
-_ALLOWED_ASSET_TYPES = {"logo", "background", "reference", "upload"}
+_ALLOWED_ASSET_TYPES = {"logo", "background", "reference", "upload", "discovered_reference"}
 _ALLOWED_MIME = {"image/png", "image/jpeg", "image/webp"}
 _MIME_TO_EXT = {"image/png": "png", "image/jpeg": "jpg", "image/webp": "webp"}
 _MAX_UPLOAD_BYTES = 20 * 1024 * 1024  # 20 MB
@@ -1410,3 +1422,171 @@ def _friendly_pb_error(exc) -> str:
     if code == 0:
         return "Couldn't reach the publishing service. Check your internet and try again."
     return msg or "Publishing failed. Please try again in a moment."
+
+
+# ---------------------------------------------------------------------------
+# Discovery (Apify TikTok scraper)
+# ---------------------------------------------------------------------------
+
+
+class DiscoverStartIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    project_id:    UUID
+    actor_id:      str
+    input_payload: dict = Field(default_factory=dict)
+
+
+class DiscoverStartOut(BaseModel):
+    run_id:     str
+    dataset_id: str
+    actor_id:   str
+    status:     str
+
+
+class DiscoverStatusOut(BaseModel):
+    run_id:     str
+    status:     str
+    dataset_id: str
+    started_at:  str | None = None
+    finished_at: str | None = None
+
+
+class DiscoverResultOut(BaseModel):
+    run_id:     str
+    dataset_id: str
+    count:      int
+    items:      list[dict]
+
+
+class DiscoverSaveIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    project_id: UUID
+    actor_id:   str
+    run_id:     str
+    dataset_id: str
+    request:    dict = Field(default_factory=dict)
+    post:       dict   # raw ScrapedPost — re-validated server-side
+
+
+def _apify_client_or_503():
+    cfg = get_configs()
+    if not cfg.apify_api_key:
+        raise HTTPException(503, "Discovery isn't connected — APIFY_API_KEY is not set.")
+    from service.apify import ApifyClient
+    return ApifyClient(cfg.apify_api_key)
+
+
+@router.post("/content/discover/start")
+async def discover_start(body: DiscoverStartIn, db: Session = Depends(db_session)) -> DiscoverStartOut:
+    """Kick off an Apify actor run for TikTok content discovery."""
+    _project_or_404(db, body.project_id)
+    from service.apify import ApifyAPIError
+
+    client = _apify_client_or_503()
+    try:
+        async with client as c:
+            run = await c.start_run(body.actor_id, body.input_payload)
+    except ApifyAPIError as exc:
+        raise HTTPException(exc.status_code or 502, exc.message) from exc
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+    return DiscoverStartOut(
+        run_id=run.id,
+        dataset_id=run.default_dataset_id,
+        actor_id=body.actor_id,
+        status=run.status.value,
+    )
+
+
+@router.get("/content/discover/status/{run_id}")
+async def discover_status(run_id: str) -> DiscoverStatusOut:
+    from service.apify import ApifyAPIError
+
+    client = _apify_client_or_503()
+    try:
+        async with client as c:
+            run = await c.get_run(run_id)
+    except ApifyAPIError as exc:
+        raise HTTPException(exc.status_code or 502, exc.message) from exc
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+    return DiscoverStatusOut(
+        run_id=run.id,
+        status=run.status.value,
+        dataset_id=run.default_dataset_id,
+        started_at=run.started_at.isoformat() if run.started_at else None,
+        finished_at=run.finished_at.isoformat() if run.finished_at else None,
+    )
+
+
+@router.get("/content/discover/results/{dataset_id}")
+async def discover_results(dataset_id: str, limit: int = 200) -> DiscoverResultOut:
+    """Fetch raw items from a finished run's dataset.
+
+    We pass items through the ScrapedPost model to drop weird rows, then
+    return the validated dicts — keeps the frontend a thin renderer.
+    """
+    from service.apify import ApifyAPIError
+
+    client = _apify_client_or_503()
+    try:
+        async with client as c:
+            posts = await c.get_dataset_posts(dataset_id, limit=limit)
+    except ApifyAPIError as exc:
+        raise HTTPException(exc.status_code or 502, exc.message) from exc
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+    return DiscoverResultOut(
+        run_id="",
+        dataset_id=dataset_id,
+        count=len(posts),
+        items=[p.model_dump(mode="json") for p in posts],
+    )
+
+
+@router.post("/content/discover/save", status_code=201)
+def discover_save(body: DiscoverSaveIn, db: Session = Depends(db_session)) -> ContentAssetOut:
+    """Persist one discovered post as a ContentAsset reference.
+
+    No bytes downloaded — we save the metadata + slideshow image URLs in
+    `params` so the agent can reference them by URL when generating new
+    posts. Downloading + caching the image bytes is a follow-up.
+    """
+    from service.apify.schema import ScrapedPost
+
+    _project_or_404(db, body.project_id)
+    try:
+        post = ScrapedPost.model_validate(body.post)
+    except Exception as exc:  # ValidationError or anything else odd
+        raise HTTPException(400, f"Invalid scraped post payload: {exc}") from exc
+
+    # The asset's URL points at the TikTok webVideoUrl (the source of
+    # truth); slideshow_image_links go in params so the agent can pull
+    # them when constructing image prompts.
+    asset = ContentAsset(
+        project_id=body.project_id,
+        asset_type="discovered_reference",
+        source="apify",
+        url=post.web_video_url or f"apify://{body.actor_id}/{post.id}",
+        filename=f"tiktok-{post.id}",
+        mime_type="application/json",
+        prompt="",
+        model="",
+        params={
+            "actor_id":    body.actor_id,
+            "run_id":      body.run_id,
+            "dataset_id":  body.dataset_id,
+            "request":     body.request,
+            "post":        post.model_dump(mode="json"),
+            "saved_at":    datetime.now(timezone.utc).isoformat(),
+        },
+    )
+    db.add(asset)
+    db.commit()
+    db.refresh(asset)
+    return _asset_out(asset)

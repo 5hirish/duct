@@ -86,6 +86,12 @@ class Configs(BaseSettings):
     # this once a per-user "connect PostBridge" UI lands.
     postbridge_api_key: str = ""
 
+    # Apify API token — used by service/apify/ for TikTok content
+    # discovery (trending posts / hashtags / sounds). Server-side key for
+    # MVP, same shape as gemini_api_key. Future: per-user when billing
+    # demands it.
+    apify_api_key: str = ""
+
     # When false (default), FastAPI does not serve /openapi.json, /docs, or /redoc.
     expose_openapi_docs: bool = False
 

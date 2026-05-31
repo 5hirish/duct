@@ -447,3 +447,27 @@ def test_draft_post_prompt_contains_critical_quality_rules():
         "DRAFT_POST_PROMPT lost the slide-7 dual-CTA rule"
     assert "Follow driver" in DRAFT_POST_PROMPT or "follow driver" in DRAFT_POST_PROMPT.lower(), \
         "DRAFT_POST_PROMPT lost the slide-7 follow-driver rule"
+
+    # 7. Reference study session — the visual-brief discipline that drives
+    #    copy voice and image prompts (Phase 8.5 borrow from skill.md
+    #    Step 3). If a future edit deletes it, drafts go back to
+    #    template-generic AI-looking output.
+    lower = DRAFT_POST_PROMPT.lower()
+    assert "reference study" in lower or "visual brief" in lower, \
+        "DRAFT_POST_PROMPT lost the reference-study session"
+    assert "copy from references" in lower or "never copy from references" in lower, \
+        "DRAFT_POST_PROMPT lost the COPY-vs-NEVER-COPY reference rule"
+
+    # 8. Emotional arc — 5-slide energy map prevents flatlined drafts
+    assert "emotional arc" in lower or "emotional_arc" in lower, \
+        "DRAFT_POST_PROMPT lost the emotional-arc discipline"
+
+    # 9. Attractiveness anchor — order matters (beauty first, texture after)
+    assert "attractiveness" in lower, \
+        "DRAFT_POST_PROMPT lost the character-attractiveness anchor"
+    assert "order matters" in lower or "lead with" in lower, \
+        "DRAFT_POST_PROMPT lost the attractiveness-then-texture ordering"
+
+    # 10. Gesture-arc repetition prevention — same gesture twice = flat
+    assert "gesture arc" in lower or "not [gesture" in lower, \
+        "DRAFT_POST_PROMPT lost the gesture-arc repetition prevention"

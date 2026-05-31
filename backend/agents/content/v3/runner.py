@@ -542,6 +542,7 @@ async def _run(
             "mcp__duct_content__fetch_avatar_library",
             "mcp__duct_content__fetch_content_history",
             "mcp__duct_content__fetch_content_assets",
+            "mcp__duct_content__fetch_discovered_references",
             "mcp__duct_content__generate_image",
             "mcp__duct_content__edit_image",
             "mcp__duct_content__publish_post",

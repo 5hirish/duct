@@ -65,6 +65,9 @@ export default function PostViewport({ payload }) {
         audio_note:   post.audio_note,
         bridge_text:  post.bridge_text,
         strategic_note: post.strategic_note,
+        visual_brief:  post.visual_brief,
+        emotional_arc: post.emotional_arc,
+        camera_ref_pool: post.camera_ref_pool,
         slides_html:  post.slides_html,
         platforms:    post.platforms,
         status:       post.status,
@@ -145,6 +148,13 @@ export default function PostViewport({ payload }) {
         <AudioPanel value={post.audio_note || ""} onChange={(v) => patch("audio_note", v)} />
         <BridgeTextPanel value={post.bridge_text || ""} onChange={(v) => patch("bridge_text", v)} />
         <StrategicNotePanel value={post.strategic_note || ""} onChange={(v) => patch("strategic_note", v)} />
+        <VisualBriefPanel
+          value={post.visual_brief || ""}
+          cameraRefPool={post.camera_ref_pool || ""}
+          onChange={(v) => patch("visual_brief", v)}
+          onPoolChange={(v) => patch("camera_ref_pool", v)}
+        />
+        <EmotionalArcPanel value={post.emotional_arc || ""} onChange={(v) => patch("emotional_arc", v)} />
         <AssetStrip imagePrompts={post.image_prompts || []} />
       </div>
     </div>
@@ -440,6 +450,101 @@ function StrategicNotePanel({ value, onChange }) {
         onChange={(e) => onChange(e.target.value)}
         placeholder="1-2 sentences: which pillar this reinforces, who it targets, why the hook fits."
         className="w-full resize-y rounded-b-lg border-0 bg-transparent px-3 py-2 text-xs italic focus:outline-none focus:ring-2 focus:ring-ring"
+      />
+    </section>
+  );
+}
+
+
+const CAMERA_REF_POOLS = [
+  { value: "selfie-talking", hint: "default — indoor, person speaking to camera" },
+  { value: "lifestyle",      hint: "outdoor / educational / gentle arc" },
+  { value: "closeup",        hint: "intimate / confessional / sadness" },
+];
+
+function VisualBriefPanel({ value, cameraRefPool, onChange, onPoolChange }) {
+  const [forceShow, setForceShow] = useState(false);
+  const visible = forceShow || (value && value.trim()) || (cameraRefPool && cameraRefPool.trim());
+  if (!visible) {
+    return (
+      <button
+        type="button"
+        onClick={() => setForceShow(true)}
+        className="text-xs text-muted-foreground hover:text-foreground transition-colors text-left"
+      >
+        + Add visual brief (lighting / posture / camera pool)
+      </button>
+    );
+  }
+  return (
+    <section className="rounded-lg border border-border bg-muted/10">
+      <header className="px-3 py-1.5 border-b border-border/50 flex items-center justify-between gap-2">
+        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          Visual brief
+        </span>
+        <div className="flex items-center gap-1">
+          {CAMERA_REF_POOLS.map(({ value: v, hint }) => {
+            const active = cameraRefPool === v;
+            return (
+              <button
+                key={v}
+                type="button"
+                onClick={() => onPoolChange(active ? "" : v)}
+                title={hint}
+                className={`text-[10px] px-1.5 py-0.5 rounded border transition-colors ${
+                  active
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border text-muted-foreground hover:bg-muted/50"
+                }`}
+              >
+                {v}
+              </button>
+            );
+          })}
+        </div>
+      </header>
+      <textarea
+        rows={5}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Lighting / setting / posture / skin texture / gesture arc / copy voice — drives copy + every image prompt."
+        className="w-full resize-y rounded-b-lg border-0 bg-transparent px-3 py-2 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-ring"
+      />
+    </section>
+  );
+}
+
+
+function EmotionalArcPanel({ value, onChange }) {
+  const [forceShow, setForceShow] = useState(false);
+  const visible = forceShow || (value && value.trim());
+  if (!visible) {
+    return (
+      <button
+        type="button"
+        onClick={() => setForceShow(true)}
+        className="text-xs text-muted-foreground hover:text-foreground transition-colors text-left"
+      >
+        + Add emotional arc (5-slide energy map)
+      </button>
+    );
+  }
+  return (
+    <section className="rounded-lg border border-border bg-muted/10">
+      <header className="px-3 py-1.5 border-b border-border/50 flex items-center justify-between">
+        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          Emotional arc
+        </span>
+        <span className="text-[10px] text-muted-foreground/70">
+          one line per slide — peak at 03, vulnerable at 04, still at 05
+        </span>
+      </header>
+      <textarea
+        rows={5}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={"01: quiet, holding phone at eye level\n02: leaning in, brow tightening\n03: animated, mid-explanation\n04: looks away, hand on collarbone\n05: direct gaze, soft mouth, settled"}
+        className="w-full resize-y rounded-b-lg border-0 bg-transparent px-3 py-2 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-ring"
       />
     </section>
   );

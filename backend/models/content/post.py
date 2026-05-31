@@ -66,6 +66,9 @@ class ContentPost(SQLModel, table=True):
     )
     audio_note: str = Field(default="", sa_column=Column(Text, nullable=False, server_default=""))
     strategic_note: str = Field(default="", sa_column=Column(Text, nullable=False, server_default=""))
+    visual_brief: str = Field(default="", sa_column=Column(Text, nullable=False, server_default=""))
+    emotional_arc: str = Field(default="", sa_column=Column(Text, nullable=False, server_default=""))
+    camera_ref_pool: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
     platforms: list = Field(
         default_factory=list,
         sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="[]"),

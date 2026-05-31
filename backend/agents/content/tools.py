@@ -239,6 +239,9 @@ def build_content_mcp_server(
                     "audio_note":      draft.audio_note or "",
                     "bridge_text":     draft.bridge_text or "",
                     "strategic_note":  draft.strategic_note or "",
+                    "visual_brief":    draft.visual_brief or "",
+                    "emotional_arc":   draft.emotional_arc or "",
+                    "camera_ref_pool": draft.camera_ref_pool or "",
                     "platforms":       [p.value for p in draft.platforms],
                 }
                 if existing is not None:
@@ -276,6 +279,9 @@ def build_content_mcp_server(
                         "audio_note":      row.audio_note,
                         "bridge_text":     row.bridge_text,
                         "strategic_note":  row.strategic_note,
+                        "visual_brief":    row.visual_brief,
+                        "emotional_arc":   row.emotional_arc,
+                        "camera_ref_pool": row.camera_ref_pool,
                         "platforms":       row.platforms,
                         "status":          row.status,
                     },
@@ -445,6 +451,66 @@ def build_content_mcp_server(
         except Exception as exc:
             logger.exception("fetch_content_history failed")
             return _err(f"fetch_content_history failed: {exc}")
+
+    @tool(
+        name="fetch_discovered_references",
+        description=(
+            "Return TikTok posts the user (or a previous discovery run) saved as "
+            "high-performing references. Use this to ground topic / hook / format "
+            "decisions in real-world signal — what's actually working in the "
+            "target audience's niche right now. Each row carries the post's "
+            "engagement counts (play, digg, share, comment, collect), hashtags, "
+            "music, author, and the TikTok URL. Filter by min_play_count to "
+            "skip the long tail (default 10000)."
+        ),
+        input_schema={
+            "min_play_count": Annotated[
+                int,
+                "Skip posts with fewer plays. Default 10000 (filters out outliers).",
+            ],
+            "limit": Annotated[int, "Max rows to return. Default 30, max 100."],
+        },
+    )
+    async def fetch_discovered_references(args: dict) -> dict:
+        try:
+            min_plays = int(args.get("min_play_count") or 10000)
+            limit     = min(int(args.get("limit") or 30), 100)
+            with _open_db() as db:
+                rows = db.exec(
+                    select(ContentAsset)
+                    .where(
+                        ContentAsset.project_id == project_id,
+                        ContentAsset.asset_type == "discovered_reference",
+                    )
+                    .order_by(ContentAsset.created_at.desc())  # type: ignore[union-attr]
+                    .limit(200)  # over-fetch; we filter in Python by min_plays
+                ).all()
+                items: list[dict] = []
+                for r in rows:
+                    p = (r.params or {}).get("post") or {}
+                    if (p.get("play_count") or 0) < min_plays:
+                        continue
+                    items.append({
+                        "asset_id":      str(r.id),
+                        "tiktok_url":    r.url,
+                        "play_count":    p.get("play_count"),
+                        "digg_count":    p.get("digg_count"),
+                        "comment_count": p.get("comment_count"),
+                        "share_count":   p.get("share_count"),
+                        "collect_count": p.get("collect_count"),
+                        "hashtags":      p.get("hashtags") or [],
+                        "music":         (p.get("music_meta") or {}).get("music_name"),
+                        "author":        (p.get("author_meta") or {}).get("name"),
+                        "is_slideshow":  p.get("is_slideshow"),
+                        "text":          (p.get("text") or "")[:280],
+                        "created_at":    p.get("create_time_iso"),
+                    })
+                    if len(items) >= limit:
+                        break
+                return _ok({"references": items, "count": len(items)})
+        except Exception as exc:
+            logger.exception("fetch_discovered_references failed")
+            return _err(f"fetch_discovered_references failed: {exc}")
 
     @tool(
         name="fetch_content_assets",
@@ -998,6 +1064,7 @@ def build_content_mcp_server(
             fetch_avatar_library,
             fetch_content_history,
             fetch_content_assets,
+            fetch_discovered_references,
             generate_image,
             edit_image,
             publish_post,

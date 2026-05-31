@@ -27,5 +27,10 @@ RESEARCH_PILLAR_AGENT = AgentDefinition(
     tools=[
         AgentTool.WEB_SEARCH.value,
         AgentTool.WEB_FETCH.value,
+        # Read-only: lets research_pillar ground topic ideas in real
+        # high-performing TikTok posts the user (or a prior discovery
+        # run) saved. Strictly cheaper + higher-signal than WebSearch
+        # alone — bypasses Google ranking noise.
+        "mcp__duct_content__fetch_discovered_references",
     ],
 )

@@ -331,3 +331,53 @@ export async function uploadAsset(projectId, assetType, file) {
   });
   return jsonOrThrow(res);
 }
+
+
+// ---------------------------------------------------------------------------
+// Discovery (Apify TikTok scraper)
+// ---------------------------------------------------------------------------
+
+export async function startDiscoverRun({ projectId, actorId, inputPayload }) {
+  const res = await fetch(`${BASE}/api/content/discover/start`, {
+    method: "POST",
+    headers: backendApiHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify({
+      project_id:    projectId,
+      actor_id:      actorId,
+      input_payload: inputPayload || {},
+    }),
+  });
+  return jsonOrThrow(res);
+}
+
+export async function getDiscoverRunStatus(runId) {
+  const res = await fetch(
+    `${BASE}/api/content/discover/status/${encodeURIComponent(runId)}`,
+    { headers: backendApiHeaders() },
+  );
+  return jsonOrThrow(res);
+}
+
+export async function getDiscoverResults(datasetId, limit = 200) {
+  const res = await fetch(
+    `${BASE}/api/content/discover/results/${encodeURIComponent(datasetId)}?limit=${limit}`,
+    { headers: backendApiHeaders() },
+  );
+  return jsonOrThrow(res);
+}
+
+export async function saveDiscoveredReference({ projectId, actorId, runId, datasetId, request, post }) {
+  const res = await fetch(`${BASE}/api/content/discover/save`, {
+    method: "POST",
+    headers: backendApiHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify({
+      project_id: projectId,
+      actor_id:   actorId,
+      run_id:     runId,
+      dataset_id: datasetId,
+      request:    request || {},
+      post,
+    }),
+  });
+  return jsonOrThrow(res);
+}

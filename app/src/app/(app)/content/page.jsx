@@ -13,8 +13,9 @@ import {
 import { getActiveProjectId, getActiveProject } from "@/lib/projects";
 import BrandContextForm from "@/components/content/BrandContextForm";
 import PlanKanban from "@/components/content/PlanKanban";
+import DiscoverPage from "@/components/content/DiscoverPage";
 
-const TABS = ["plan", "brand", "library", "analytics"];
+const TABS = ["plan", "brand", "discover", "library", "analytics"];
 
 export default function ContentLandingPage() {
   const router = useRouter();
@@ -85,6 +86,7 @@ export default function ContentLandingPage() {
 
       {tab === "plan"      && <PlanTab      projectId={projectId} />}
       {tab === "brand"     && <BrandTab     projectId={projectId} />}
+      {tab === "discover"  && <DiscoverPage projectId={projectId} />}
       {tab === "library"   && <LibraryTab   projectId={projectId} />}
       {tab === "analytics" && <AnalyticsTab projectId={projectId} />}
     </div>
