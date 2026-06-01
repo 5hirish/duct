@@ -61,9 +61,15 @@ def _network_available(url: str = _AUDIT_URL) -> bool:
     an HTTP GET lets us detect that case so the real-network tests are properly skipped.
     """
     import urllib.request
-    import urllib.error
+    # Use the same Googlebot UA as the crawler — Cloudflare WAF blocks it on CI runner IPs,
+    # which returns 403, so the check correctly returns False and tests are skipped.
+    _GOOGLEBOT_UA = (
+        "Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36 "
+        "(compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+    )
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "python-urllib/integration-test"})
+        req = urllib.request.Request(url, headers={"User-Agent": _GOOGLEBOT_UA})
         with urllib.request.urlopen(req, timeout=5) as resp:
             return resp.status < 400
     except Exception:
