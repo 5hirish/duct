@@ -199,6 +199,13 @@ async def _run_synthesis(
             max_turns=5,
             system_prompt=_SYNTHESIS_ORCHESTRATOR_PROMPT,
             include_partial_messages=True,
+            env={
+                "ENABLE_PROMPT_CACHING_1H": "1",
+                # Clear inherited Claude Code IDE session vars that confuse child instances
+                "CLAUDE_CODE_SESSION_ID": "",
+                "CLAUDE_EFFORT": "",
+                "CLAUDE_CODE_ENABLE_SDK_FILE_CHECKPOINTING": "false",
+            },
             agents={
                 "synthesizer": AgentDefinition(
                     description=(
@@ -219,10 +226,17 @@ async def _run_synthesis(
         )
 
         synthesis_text: str | None = None
+        _tok_cache_read = 0
+        _tok_cache_write = 0
         async for message in query(prompt=full_prompt, options=options):
-            if isinstance(message, StreamEvent) and emit_event:
+            if isinstance(message, StreamEvent):
                 ev = message.event
-                if ev.get("type") == "content_block_delta":
+                ev_type = ev.get("type")
+                if ev_type == "message_start":
+                    usage = ev.get("message", {}).get("usage", {})
+                    _tok_cache_read += usage.get("cache_read_input_tokens", 0)
+                    _tok_cache_write += usage.get("cache_creation_input_tokens", 0)
+                if emit_event and ev_type == "content_block_delta":
                     delta = ev.get("delta", {})
                     if delta.get("type") == "text_delta":
                         chunk = delta.get("text", "")
@@ -231,6 +245,8 @@ async def _run_synthesis(
             elif isinstance(message, ResultMessage) and message.result:
                 synthesis_text = message.result
                 break
+
+        logger.info("v3: synthesis cache_read=%d cache_write=%d", _tok_cache_read, _tok_cache_write)
 
         if not synthesis_text:
             logger.error("v3: synthesis produced no result")

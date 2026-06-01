@@ -11,10 +11,10 @@ from __future__ import annotations
 import logging
 import uuid
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, field_validator
 from sqlmodel import Session, select
 
 from db.session import get_session
@@ -27,13 +27,22 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["lead-magnet"])
 
 _TOKEN_TTL_HOURS = 24
+_REPORT_CACHE_TTL_HOURS = 24  # reuse a cached report generated within this window
 
 
 class SubmitLeadRequest(BaseModel):
-    email: EmailStr
+    email: str
     website_url: str
     turnstile_token: str  # required — always validated (server skips only when secret key unconfigured)
     magnet_type: str = "seo_audit"
+
+    @field_validator("email")
+    @classmethod
+    def _email_valid(cls, v: str) -> str:
+        v = v.strip().lower()
+        if "@" not in v or "." not in v.split("@")[-1]:
+            raise ValueError("Invalid email address")
+        return v
 
 
 class SubmitLeadResponse(BaseModel):
@@ -53,6 +62,8 @@ class ValidateTokenRequest(BaseModel):
 
 class ValidateTokenResponse(BaseModel):
     website_url: str
+    cached_report: Optional[dict[str, Any]] = None
+    cached_at: Optional[datetime] = None
 
 
 class SaveReportRequest(BaseModel):
@@ -120,7 +131,25 @@ def validate_token(
     lead = session.exec(stmt).first()
     if not lead:
         raise HTTPException(status_code=404, detail="Invalid or expired access token.")
-    return ValidateTokenResponse(website_url=lead.website_url)
+
+    # Look for a recent report for the same URL — avoids re-running the audit
+    cache_cutoff = datetime.now(timezone.utc) - timedelta(hours=_REPORT_CACHE_TTL_HOURS)
+    cached = session.exec(
+        select(LeadMagnet)
+        .where(
+            LeadMagnet.website_url == lead.website_url,
+            LeadMagnet.report_json.isnot(None),
+            LeadMagnet.report_generated_at >= cache_cutoff,
+        )
+        .order_by(LeadMagnet.report_generated_at.desc())
+        .limit(1)
+    ).first()
+
+    return ValidateTokenResponse(
+        website_url=lead.website_url,
+        cached_report=cached.report_json if cached else None,
+        cached_at=cached.report_generated_at if cached else None,
+    )
 
 
 @router.post("/report", status_code=200)
@@ -148,3 +177,50 @@ def save_report(
 
     logger.info("lead_magnet: saved report for email=%s url=%s", lead.email, lead.website_url)
     return {"status": "saved"}
+
+
+@router.get("/check-url")
+async def check_url(url: str) -> dict:
+    """Lightweight reachability pre-flight called from the URL input form.
+
+    Validates the URL is public, then attempts a HEAD (falling back to GET) with
+    a short timeout. Returns {ok: true} or {ok: false, reason: "..."}.
+    No auth required — abuse is mitigated by rate limits and the cheap cost of a
+    HEAD request.
+    """
+    import httpx
+
+    try:
+        validate_public_url(url)
+    except (SSRFError, Exception):
+        return {"ok": False, "reason": "That doesn't look like a valid public URL."}
+
+    try:
+        # Do NOT follow redirects — a redirect target could be an internal address,
+        # bypassing validate_public_url. Any non-5xx response (including 3xx) proves
+        # the server is reachable, which is all we need.
+        async with httpx.AsyncClient(
+            follow_redirects=False,
+            timeout=httpx.Timeout(5.0, connect=3.0),
+        ) as client:
+            try:
+                r = await client.head(url, headers={"User-Agent": "DuctBot/1.0"})
+                reachable = r.status_code < 500
+            except httpx.UnsupportedProtocol:
+                reachable = False
+            except Exception:
+                # Some servers reject HEAD — try a byte-capped GET
+                try:
+                    r = await client.get(
+                        url,
+                        headers={"User-Agent": "DuctBot/1.0", "Range": "bytes=0-1023"},
+                    )
+                    reachable = r.status_code < 500
+                except Exception:
+                    reachable = False
+    except Exception:
+        reachable = False
+
+    if reachable:
+        return {"ok": True}
+    return {"ok": False, "reason": "We couldn't reach that site — please double-check the URL."}

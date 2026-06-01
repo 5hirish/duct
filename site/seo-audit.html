@@ -152,6 +152,9 @@
 }
 .lm-url-btn:hover { background: var(--orange-h); box-shadow: 0 4px 14px rgba(192,84,60,.3); }
 .lm-url-btn svg { flex-shrink: 0; }
+.lm-btn-checking { display: none; opacity: .75; }
+.lm-url-btn.is-checking .lm-btn-idle { display: none; }
+.lm-url-btn.is-checking .lm-btn-checking { display: inline; }
 .lm-url-error {
   font-size: 13px;
   color: #c0392b;
@@ -675,7 +678,7 @@
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
 
 <!-- NAV -->
-<div data-duct-partial="/partials/nav-for-pages.html"></div>
+<div data-duct-partial="/partials/nav-seo-audit.html"></div>
 
 <main id="main-content">
 
@@ -708,23 +711,17 @@
       spellcheck="false"
     />
     <button class="lm-url-btn" id="lmUrlBtn" onclick="lmStartScan()" aria-label="Analyze my site">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
-      Analyze my site
+      <span class="lm-btn-idle">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+        Analyze my site
+      </span>
+      <span class="lm-btn-checking" aria-hidden="true">Checking…</span>
     </button>
   </div>
   <p class="lm-url-error" id="lmUrlError" role="alert" aria-live="polite"></p>
   <p class="lm-footnote">Free · No credit card · Takes ~2 minutes to generate</p>
 </section>
 
-<div class="lm-trust" aria-label="Trusted by">
-  <p class="lm-trust-label">Trusted by growth teams at</p>
-  <div class="lm-trust-logos" aria-hidden="true">
-    <span class="lm-trust-logo">Lindy</span>
-    <span class="lm-trust-logo">InsForge</span>
-    <span class="lm-trust-logo">Gauge</span>
-    <span class="lm-trust-logo">Early&nbsp;beta&nbsp;teams</span>
-  </div>
-</div>
 
 
 <!-- ═══════════════════════════════════════════
@@ -1020,6 +1017,7 @@
   window.lmStartScan = function () {
     var raw = document.getElementById('lmUrl').value;
     var errEl = document.getElementById('lmUrlError');
+    var btn = document.getElementById('lmUrlBtn');
     errEl.textContent = '';
 
     var url = normalizeUrl(raw);
@@ -1029,6 +1027,32 @@
       return;
     }
 
+    // Quick reachability pre-flight — swap button to "Checking…" state
+    btn.disabled = true;
+    btn.classList.add('is-checking');
+
+    var apiUrl = (window.DUCT_CONFIG && window.DUCT_CONFIG.api_url) || 'http://localhost:8002';
+    fetch(apiUrl + '/api/lead-magnet/check-url?url=' + encodeURIComponent(url))
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        btn.disabled = false;
+        btn.classList.remove('is-checking');
+        if (!data.ok) {
+          errEl.textContent = data.reason || 'We couldn\'t reach that site — please double-check the URL.';
+          document.getElementById('lmUrl').focus();
+          return;
+        }
+        lmRunScan(url);
+      })
+      .catch(function () {
+        // If the check itself fails (network error, offline), proceed anyway
+        btn.disabled = false;
+        btn.classList.remove('is-checking');
+        lmRunScan(url);
+      });
+  };
+
+  function lmRunScan(url) {
     capturedUrl = url;
     var domain = extractDomain(url);
 
@@ -1047,7 +1071,7 @@
 
     // Transition to gate after 5 seconds
     setTimeout(function () { lmShowGate(domain); }, 5000);
-  };
+  }
 
   function lmShowGate(domain) {
     // Update gate headline with domain
@@ -1063,6 +1087,9 @@
   // ── Turnstile ──────────────────────────────────────────────────────────────
 
   function lmInitTurnstile() {
+    // Skip on localhost — Cloudflare rejects tokens from non-registered hostnames;
+    // backend also bypasses verification locally (app_env == "local")
+    if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
     var siteKey = (window.DUCT_CONFIG && window.DUCT_CONFIG.turnstile_site_key) || '';
     if (!siteKey || turnstileWidgetId !== null) return;
 

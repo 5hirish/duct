@@ -45,6 +45,7 @@ trafilatura = ">=2.0"
 pytest = "^9"
 pytest-asyncio = "^1.0"
 ruff = "^0.15"
+arize-phoenix = "^16.3.0"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

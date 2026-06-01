@@ -41,10 +41,14 @@ function VersionPills({ versions, selectedId, onSelect }) {
 // Synthesis progress — shown in the report panel while Duct works
 // ---------------------------------------------------------------------------
 
+// Virtual step ID — not emitted by the backend, driven by isStreamingReport prop
+const STEP_WRITE_REPORT = "write_report";
+
 const STAGE_META = [
-  { id: AuditStep.FETCH_SITEMAP, label: "Mapping your site structure",   icon: "🗺" },
-  { id: AuditStep.CRAWL_PAGES,  label: "Reading and parsing your pages", icon: "📄" },
-  { id: AuditStep.SYNTHESIZE_AUDIT, label: "Scoring signals & building findings", icon: "⚡" },
+  { id: AuditStep.FETCH_SITEMAP,    label: "Mapping your site structure",          virtual: false },
+  { id: AuditStep.CRAWL_PAGES,      label: "Reading and parsing your pages",       virtual: false },
+  { id: AuditStep.SYNTHESIZE_AUDIT, label: "Scoring signals & building findings",  virtual: false },
+  { id: STEP_WRITE_REPORT,          label: "Generating report",                    virtual: true  },
 ];
 
 const SYNTHESIS_LINES = [
@@ -57,11 +61,11 @@ const SYNTHESIS_LINES = [
   "Composing findings and priorities…",
 ];
 
-function SynthesisProgress({ steps }) {
+function SynthesisProgress({ steps, isStreamingReport = false }) {
   // Pick a rotating line based on the current second so it feels alive
   const lineIdx = Math.floor(Date.now() / 3000) % SYNTHESIS_LINES.length;
   const synthStep = steps.find((s) => s.step_id === AuditStep.SYNTHESIZE_AUDIT);
-  const isSynthesising = synthStep?.status === "running";
+  const isSynthesising = synthStep?.status === "running" || isStreamingReport;
 
   return (
     <div className="flex flex-col items-center justify-center h-full px-8 py-12 text-center select-none">
@@ -80,15 +84,18 @@ function SynthesisProgress({ steps }) {
           </span>
         </div>
         <p className="text-sm text-muted-foreground min-h-[1.25rem] transition-all">
-          {isSynthesising ? SYNTHESIS_LINES[lineIdx] : "Working on your report…"}
+          {isStreamingReport ? "Writing your report…" : isSynthesising ? SYNTHESIS_LINES[lineIdx] : "Working on your report…"}
         </p>
       </div>
 
       {/* Step list */}
       <div className="w-full max-w-xs space-y-2 text-left">
         {STAGE_META.map((stage) => {
-          const step = steps.find((s) => s.step_id === stage.id);
-          const status = step?.status ?? "pending";
+          // Virtual steps are driven by props, not by the backend steps array
+          const step = stage.virtual ? null : steps.find((s) => s.step_id === stage.id);
+          const status = stage.virtual
+            ? (isStreamingReport ? "running" : "pending")
+            : (step?.status ?? "pending");
 
           return (
             <div
@@ -112,7 +119,10 @@ function SynthesisProgress({ steps }) {
               {status === "running" && stage.id === AuditStep.SYNTHESIZE_AUDIT && (
                 <span className="text-xs text-muted-foreground shrink-0">~3 min</span>
               )}
-              {status === "running" && stage.id !== AuditStep.SYNTHESIZE_AUDIT && (
+              {status === "running" && stage.id === STEP_WRITE_REPORT && (
+                <span className="text-xs text-muted-foreground shrink-0 animate-pulse">writing…</span>
+              )}
+              {status === "running" && stage.id !== AuditStep.SYNTHESIZE_AUDIT && stage.id !== STEP_WRITE_REPORT && (
                 <span className="text-xs text-muted-foreground shrink-0 animate-pulse">now</span>
               )}
               {step?.payload?.landing_pages != null && (
@@ -126,20 +136,23 @@ function SynthesisProgress({ steps }) {
         })}
       </div>
 
-      {/* Indeterminate bar for synthesize step */}
+      {/* Progress bar — slow fill during analysis, pulse at ~85% during writing */}
       {isSynthesising && (
         <div className="mt-6 w-full max-w-xs">
           <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
-            <span>Building report</span>
-            <span>~3 min</span>
+            <span>{isStreamingReport ? "Generating report" : "Building report"}</span>
+            {!isStreamingReport && <span>~3 min</span>}
           </div>
           <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
-            <div
-              className="h-full rounded-full bg-primary origin-left"
-              style={{
-                animation: "duct-progress 180s cubic-bezier(0.1, 0, 0.25, 1) forwards",
-              }}
-            />
+            {isStreamingReport ? (
+              // Pulse at ~85% to signal "almost done, actively writing"
+              <div className="h-full w-[85%] rounded-full bg-primary animate-pulse" />
+            ) : (
+              <div
+                className="h-full rounded-full bg-primary origin-left"
+                style={{ animation: "duct-progress 180s cubic-bezier(0.1, 0, 0.25, 1) forwards" }}
+              />
+            )}
           </div>
           <style>{`
             @keyframes duct-progress {
@@ -270,8 +283,13 @@ export default function AuditReport({
 
   const reportMode = selectedVersion?.report?.report_mode ?? "freehand";
   const structuredData = selectedVersion?.report?.structured_data ?? null;
-  const html = selectedVersion?.report?.html_report || streamingHtml || "";
-  const hasReport = reportMode === "template" ? !!structuredData : !!html;
+  // finalHtml is the complete HTML from REPORT_UPDATED — never the streaming partial chunks.
+  // We only show the iframe once we have the full document to avoid white-flash reloads on
+  // every srcDoc update during the streaming phase.
+  const finalHtml = selectedVersion?.report?.html_report || "";
+  const html = finalHtml || streamingHtml || "";  // used for download
+  const hasReport = reportMode === "template" ? !!structuredData : !!finalHtml;
+  const isStreamingReport = !finalHtml && !!streamingHtml;  // receiving chunks, final not yet ready
   const isFailed = phase === Phase.FAILED;
   const isPipeline = phase === Phase.PIPELINE || phase === Phase.STARTING;
 
@@ -301,6 +319,8 @@ export default function AuditReport({
       window.print();
       return;
     }
+    // sandbox="allow-modals allow-same-origin" (no allow-scripts) lets the parent call
+    // contentWindow.print() while keeping agent HTML scripts inert.
     iframeRef.current?.contentWindow?.print();
   }
 
@@ -347,13 +367,12 @@ export default function AuditReport({
             ) : (
               <iframe
                 ref={iframeRef}
-                srcDoc={html}
-                sandbox="allow-modals"
+                srcDoc={finalHtml}
+                sandbox="allow-modals allow-same-origin"
                 title="SEO Audit Report"
                 className="w-full h-full border-0"
               />
             )}
-            {/* Failed overlay on top of existing report — don't nuke it */}
             {isFailed && (
               <FailedOverlay errorMsg={errorMsg} onRetry={onRetry} hasReport={true} />
             )}
@@ -361,7 +380,7 @@ export default function AuditReport({
         ) : isFailed ? (
           <FailedOverlay errorMsg={errorMsg} onRetry={onRetry} hasReport={false} />
         ) : (
-          <SynthesisProgress steps={steps || []} />
+          <SynthesisProgress steps={steps || []} isStreamingReport={isStreamingReport} />
         )}
       </div>
     </div>

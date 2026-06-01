@@ -360,13 +360,19 @@ async def _start_seo_audit(session_id: str, body: dict, emit_fn: Any) -> None:
                 emit=emit_fn,
                 max_blog_posts=req.max_blog_posts,
                 user_preferences=req.user_preferences,
+                crawl_depth=req.crawl_depth,
+                report_mode=req.report_mode,
+                template_id=req.template_id,
             )
             await emit_fn({"event": AuditEvent.PIPELINE_FINISHED, "status": "success"})
         except Exception as exc:
             logger.exception("seo-audit pipeline error for session %s", session_id)
             await emit_fn({"event": AuditEvent.PIPELINE_FAILED, "status": "error", "error": str(exc)})
 
-    asyncio.create_task(pipeline())
+    task = asyncio.create_task(pipeline())
+    session = get_session(session_id)
+    if session:
+        session.pipeline_task = task
 
 
 async def _start_insights(session_id: str, body: dict, emit_fn: Any) -> None:

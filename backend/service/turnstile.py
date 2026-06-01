@@ -10,11 +10,12 @@ from config import get_configs
 async def verify_turnstile(token: str, remote_ip: str) -> bool:
     """Verify a Cloudflare Turnstile token against the siteverify API.
 
-    Returns True if valid. Skips verification when turnstile_secret_key is not
-    configured (dev / CI environments).
+    Returns True if valid. Skips verification in local dev (app_env == "local")
+    or when turnstile_secret_key is not configured — Cloudflare rejects tokens
+    issued from localhost against a production site key.
     """
     cfg = get_configs()
-    if not cfg.turnstile_secret_key:
+    if not cfg.turnstile_secret_key or cfg.app_env == "local":
         return True
     async with httpx.AsyncClient() as client:
         resp = await client.post(

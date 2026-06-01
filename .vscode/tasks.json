@@ -2,6 +2,50 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "Phoenix: start (OTEL traces UI)",
+      "type": "shell",
+      "command": "poetry run python -m phoenix.server.main serve",
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "duct-observability",
+        "showReuseMessage": false
+      },
+      "problemMatcher": {
+        "owner": "phoenix",
+        "pattern": { "regexp": "^$" },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".",
+          "endsPattern": "Phoenix UI"
+        }
+      }
+    },
+    {
+      "label": "Backend: uvicorn (verbose)",
+      "type": "shell",
+      "command": "AUDIT_VERBOSE_LOGGING=1 poetry run uvicorn server:app --host 127.0.0.1 --port 8002",
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "duct-stack",
+        "showReuseMessage": false
+      },
+      "problemMatcher": {
+        "owner": "uvicorn",
+        "pattern": { "regexp": "^$" },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".",
+          "endsPattern": "Uvicorn running"
+        }
+      }
+    },
+    {
       "label": "Backend: uvicorn",
       "type": "shell",
       "command": "poetry run uvicorn server:app --reload --host 127.0.0.1 --port 8002",
@@ -64,6 +108,15 @@
         "panel": "dedicated",
         "showReuseMessage": false
       },
+      "problemMatcher": []
+    },
+    {
+      "label": "Duct: stop Site + API (8002, 8090)",
+      "dependsOn": [
+        "Backend: stop uvicorn (8002)",
+        "Site: stop dev server (8090)"
+      ],
+      "dependsOrder": "parallel",
       "problemMatcher": []
     },
     {

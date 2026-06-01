@@ -74,3 +74,5 @@ pnpm-debug.log*
 client_secret_*.json
 
 backend/tests/outputs/
+
+.vscode/chrome-site-debug/

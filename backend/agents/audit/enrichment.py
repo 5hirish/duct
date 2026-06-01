@@ -8,6 +8,7 @@ Brand signals are extracted for free from the already-crawled pages.
 from __future__ import annotations
 
 import logging
+import os
 from collections import Counter
 
 from agents.audit.schema import (
@@ -20,6 +21,9 @@ from agents.audit.schema import (
 logger = logging.getLogger(__name__)
 
 _HAIKU_MODEL = "claude-haiku-4-5-20251001"
+
+# Set AUDIT_VERBOSE_LOGGING=1 to log per-message SDK events and costs to terminal
+_VERBOSE = os.environ.get("AUDIT_VERBOSE_LOGGING", "").lower() in ("1", "true")
 
 
 # ---------------------------------------------------------------------------
@@ -63,6 +67,7 @@ async def enrich_context(
     """
     try:
         from claude_agent_sdk import ClaudeAgentOptions, ResultMessage, query
+        from claude_agent_sdk import AssistantMessage
     except ImportError:
         logger.warning("enrichment: claude_agent_sdk not available; skipping")
         return None
@@ -99,7 +104,7 @@ Brand signals already extracted from the target site's crawl (do NOT re-research
 
 Be concise. Each field should be a short string or short list item, not a paragraph."""
 
-    env: dict[str, str] = {}
+    env: dict[str, str] = {"ENABLE_PROMPT_CACHING_1H": "1"}
     if api_key:
         env["ANTHROPIC_API_KEY"] = api_key
 
@@ -118,18 +123,39 @@ Be concise. Each field should be a short string or short list item, not a paragr
 
     async def _run() -> AuditResearchContext | None:
         async for message in query(prompt=prompt, options=options):
-            if isinstance(message, ResultMessage) and message.structured_output:
-                context = AuditResearchContext.model_validate(message.structured_output)
-                if not context.brand_content_pillars:
-                    context.brand_content_pillars = brand_pillars
-                if not context.brand_schema_types:
-                    context.brand_schema_types = brand_schema_types
-                logger.info(
-                    "enrichment: got %d competitors, %d content gaps",
-                    len(context.competitors),
-                    len(context.content_gaps),
+            if _VERBOSE:
+                if isinstance(message, AssistantMessage):
+                    for block in message.content:
+                        if hasattr(block, "name"):
+                            logger.info("enrichment [tool_use]: %s", block.name)
+                        elif hasattr(block, "text") and block.text:
+                            logger.info("enrichment [text]: %s", block.text[:120].replace("\n", " "))
+
+            if isinstance(message, ResultMessage):
+                cost = message.total_cost_usd or 0
+                if message.is_error:
+                    logger.warning(
+                        "enrichment: result is_error=True subtype=%s cost=$%.4f",
+                        message.subtype, cost,
+                    )
+                    return None
+                if message.structured_output:
+                    logger.info("enrichment: success cost=$%.4f", cost)
+                    context = AuditResearchContext.model_validate(message.structured_output)
+                    if not context.brand_content_pillars:
+                        context.brand_content_pillars = brand_pillars
+                    if not context.brand_schema_types:
+                        context.brand_schema_types = brand_schema_types
+                    logger.info(
+                        "enrichment: got %d competitors, %d content gaps",
+                        len(context.competitors),
+                        len(context.content_gaps),
+                    )
+                    return context
+                logger.warning(
+                    "enrichment: result ok but no structured_output subtype=%s cost=$%.4f",
+                    message.subtype, cost,
                 )
-                return context
         return None
 
     try:

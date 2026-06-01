@@ -388,3 +388,4 @@ class AuditSession:
     report_versions: list[VersionedReport] = field(default_factory=list)
     report_mode: str = "freehand"
     template_id: str = ""
+    pipeline_task: object | None = None  # asyncio.Task — cancelled on DELETE

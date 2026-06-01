@@ -1,22 +1,57 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import AuditWorkspace from "../../../../components/audit/AuditWorkspace";
+import AuditReportV1 from "../../../../components/audit/AuditReportV1";
 import { saveLeadReport, validateLeadToken } from "../../../../lib/api";
 
-const SITE_URL = "https://getduct.ai/seo-audit";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL
+  ? `${process.env.NEXT_PUBLIC_SITE_URL}/seo-audit`
+  : process.env.NODE_ENV === "development"
+  ? "http://localhost:8090/seo-audit.html"
+  : "https://getduct.ai/seo-audit";
 
-export default function LeadSeoAuditPage() {
+// Mirrors AgentEffort enum in backend/agents/models.py
+const AgentEffort = Object.freeze({
+  LOW:   "low",
+  MEDIUM: "medium",
+  HIGH:  "high",
+  XHIGH: "xhigh",
+  MAX:   "max",
+});
+
+// Mirrors CrawlDepth enum in backend/agents/audit/schema.py
+const CrawlDepth = Object.freeze({
+  LIGHT: "light",
+  DEEP:  "deep",
+});
+
+// Mirrors ReportMode enum in backend/agents/audit/schema.py
+const ReportMode = Object.freeze({
+  FREEHAND: "freehand",
+  TEMPLATE: "template",
+});
+
+function timeAgo(isoString) {
+  const diffMs = Date.now() - new Date(isoString).getTime();
+  const h = Math.floor(diffMs / 36e5);
+  if (h < 1) return "less than an hour ago";
+  return h === 1 ? "1 hour ago" : `${h} hours ago`;
+}
+
+function LeadSeoAuditInner() {
   const searchParams = useSearchParams();
 
   // Capture once on mount — stable even after we strip the params from the URL bar
-  const [token]   = useState(() => searchParams.get("token") || "");
-  const [url]     = useState(() => searchParams.get("url")   || "");
+  const [token] = useState(() => searchParams.get("token") || "");
+  const [url]   = useState(() => searchParams.get("url")   || "");
 
-  const [state, setState]             = useState("validating"); // validating | invalid | ready
+  const [state, setState]             = useState("validating"); // validating | invalid | cached | ready
   const [sessionId]                   = useState(() => crypto.randomUUID());
   const [auditParams, setAuditParams] = useState(null);
+  const [cachedReport, setCachedReport] = useState(null);
+  const [cachedAt, setCachedAt]         = useState(null);
 
   useEffect(() => {
     if (!url || !token) {
@@ -30,11 +65,16 @@ export default function LeadSeoAuditPage() {
 
     validateLeadToken(token)
       .then((data) => {
+        // Always run a fresh audit — cached report restore (with chat history) coming later.
         setAuditParams({
           url: data.website_url || url,
           business_context: {},
-          effort: "standard",
+          effort: AgentEffort.LOW,
           adaptive_thinking: false,
+          report_mode: ReportMode.TEMPLATE,
+          template_id: "seo_v1",
+          crawl_depth: CrawlDepth.LIGHT,
+          max_blog_posts: 2,
         });
         setState("ready");
       })
@@ -47,6 +87,7 @@ export default function LeadSeoAuditPage() {
     [token],
   );
 
+  // ── Loading ──────────────────────────────────────────────────────────────
   if (state === "validating") {
     return (
       <div className="flex flex-1 items-center justify-center">
@@ -58,6 +99,7 @@ export default function LeadSeoAuditPage() {
     );
   }
 
+  // ── Invalid token ────────────────────────────────────────────────────────
   if (state === "invalid") {
     return (
       <div className="flex flex-1 items-center justify-center px-4">
@@ -83,6 +125,39 @@ export default function LeadSeoAuditPage() {
     );
   }
 
+  // ── Cached report ────────────────────────────────────────────────────────
+  if (state === "cached") {
+    return (
+      <div className="flex flex-col flex-1 min-h-0 overflow-y-auto">
+        <div className="shrink-0 flex items-center justify-between gap-4 px-4 py-2 bg-amber-50 border-b border-amber-200 text-sm">
+          <span className="text-amber-800">
+            ⚡ Showing a cached audit from {cachedAt ? timeAgo(cachedAt) : "recently"} —
+            results may not reflect recent changes.
+          </span>
+          <a
+            href={SITE_URL}
+            className="shrink-0 inline-flex items-center gap-1 rounded-md border border-amber-400 bg-white px-3 py-1 text-xs font-semibold text-amber-800 hover:bg-amber-50 transition-colors"
+          >
+            Run fresh audit →
+          </a>
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          <AuditReportV1 report={cachedReport} />
+        </div>
+        <div className="shrink-0 flex items-center justify-between gap-4 px-4 py-2 bg-orange-50 border-t border-orange-200 text-sm">
+          <span className="font-medium text-orange-900">Save and share this report</span>
+          <a
+            href="/"
+            className="inline-flex items-center gap-1 rounded-md bg-orange-600 px-3 py-1 text-xs font-semibold text-white hover:bg-orange-700 transition-colors"
+          >
+            Sign up free →
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Fresh audit ──────────────────────────────────────────────────────────
   return (
     <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
       <AuditWorkspace
@@ -92,5 +167,17 @@ export default function LeadSeoAuditPage() {
         onReportReady={handleReportReady}
       />
     </div>
+  );
+}
+
+export default function LeadSeoAuditPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-1 items-center justify-center">
+        <span className="size-5 rounded-full border-2 border-orange-500 border-t-transparent animate-spin" aria-hidden="true" />
+      </div>
+    }>
+      <LeadSeoAuditInner />
+    </Suspense>
   );
 }
