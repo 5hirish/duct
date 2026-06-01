@@ -59,13 +59,17 @@ function LeadSeoAuditInner() {
       return;
     }
 
+    // AbortController prevents the double-invoke from React StrictMode (dev)
+    // from creating two audit sessions.
+    const controller = new AbortController();
+
     // Remove token+url from URL bar immediately — prevents them sitting in
     // browser history or leaking via Referer on subsequent navigation.
     window.history.replaceState(null, "", window.location.pathname);
 
     validateLeadToken(token)
       .then((data) => {
-        // Always run a fresh audit — cached report restore (with chat history) coming later.
+        if (controller.signal.aborted) return;
         setAuditParams({
           url: data.website_url || url,
           business_context: {},
@@ -78,7 +82,9 @@ function LeadSeoAuditInner() {
         });
         setState("ready");
       })
-      .catch(() => setState("invalid"));
+      .catch(() => { if (!controller.signal.aborted) setState("invalid"); });
+
+    return () => controller.abort();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // run once — url/token captured in stable useState above
 

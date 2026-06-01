@@ -380,11 +380,20 @@ async def run_synthesis(
     async def _emit_report_version(report: AuditReport, version_id: int) -> None:
         if not report.update_label:
             report.update_label = "Initial audit" if version_id == 1 else f"Update {version_id}"
-        elapsed_html = (perf_counter() - _open_tag_at) if _open_tag_at else 0.0
-        logger.info(
-            "synthesis: report v%d finalised — %d chars HTML, %d chunks, %.1fs streaming",
-            version_id, len(report.html_report), _report_chunk_count, elapsed_html,
-        )
+        if report_mode == "template":
+            # Template mode: report comes via SubmitAuditReport tool call, not HTML streaming
+            logger.info(
+                "synthesis: report v%d finalised — template mode, overall_score=%s, %d categories",
+                version_id,
+                getattr(report, "overall_score", "?"),
+                len(getattr(report, "categories", []) or []),
+            )
+        else:
+            elapsed_html = (perf_counter() - _open_tag_at) if _open_tag_at else 0.0
+            logger.info(
+                "synthesis: report v%d finalised — %d chars HTML, %d chunks, %.1fs streaming",
+                version_id, len(report.html_report), _report_chunk_count, elapsed_html,
+            )
         versioned = VersionedReport(
             version_id=version_id,
             label=report.update_label,
@@ -516,6 +525,10 @@ async def run_synthesis(
             AgentTool.FETCH_PAGES,  # mcp__duct_crawl__FetchPages — in-process MCP
             *_extra_tools,
         ],
+        # ToolSearch is a Claude Code meta-tool that looks up other tools' schemas.
+        # The MCP initialization already delivers SubmitAuditReport's full schema,
+        # so ToolSearch calls are redundant — they add 2 extra model turns per audit.
+        disallowed_tools=["ToolSearch"],
         can_use_tool=_can_use_tool,
         hooks=hooks,
         max_turns=60,

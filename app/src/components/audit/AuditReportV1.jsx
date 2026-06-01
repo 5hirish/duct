@@ -1,4 +1,5 @@
 "use client";
+import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, Cell, ResponsiveContainer, LabelList } from 'recharts';
 import { AlertTriangle, CheckCircle2, Calendar, Activity, Target, BarChart2, Zap, Clock, TrendingUp } from 'lucide-react';
 
@@ -791,8 +792,9 @@ export default function AuditReportV1({ data }) {
 
   return (
     <div
-      className="min-h-full text-foreground"
+      className="min-h-full"
       style={{
+        color: '#1a1a1a',  /* hardcoded to match hardcoded light bg — immune to dark mode */
         background: `
           radial-gradient(900px 500px at 90% 0%, rgba(255,92,0,0.07), transparent 60%),
           radial-gradient(700px 600px at -5% 30%, rgba(255,92,0,0.04), transparent 55%),
