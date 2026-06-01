@@ -1,4 +1,4 @@
-"""Interactive brief generation (fetch + goal-driven tools + LLM synthesis)."""
+"""Interactive insight generation (fetch + goal-driven tools + LLM synthesis)."""
 
 from __future__ import annotations
 
@@ -6,35 +6,48 @@ import asyncio
 import json
 import logging
 from collections.abc import Awaitable, Callable
-from datetime import datetime, timezone
 from functools import partial
 from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
-from agents.models import Provider, resolve_model, resolve_provider
-from agents.reporter.agent import GenerateAgent
-from config import Configs, get_configs
-from routes.schemas import GenerateRequest, ReportMetadata, ReportRequest, UnifiedReport
-from service.google.brief import build_brief
+from agents.engines import Engine, resolve_engine, resolve_engine_model, resolve_engine_provider, PROVIDER_CONFIG_ATTR
+from agents.models import Provider
+from agents.insights.agent import GenerateInsightsAgent
+from agents.insights.v2.runner import AdkInsightsRunner
+from agents.insights.v3.runner import ClaudeAgentSdkRunner
+from config import get_configs
+from routes.schemas import (
+    BusinessContextField,
+    BusinessContextFieldOption,
+    BusinessContextFieldShowIf,
+    BusinessContextFieldType,
+    GenerateRequest,
+    InsightGoalDescriptor,
+    InsightMetadata,
+    InsightMode,
+    InsightModesResponse,
+    ReportRequest,
+    UnifiedInsight,
+)
 from service.google.credentials import resolve_ads_credentials, resolve_customer_id
 from service.google.fetch import (
     fetch_ad_group_performance,
-    fetch_campaigns,
     fetch_device_performance,
     fetch_geo_performance,
     fetch_search_terms,
 )
 from service.google.ga4 import fetch_ga4_conversion_paths, fetch_ga4_landing_pages
 from service.google.gsc import fetch_gsc_page_performance, fetch_gsc_query_performance
+from service.pipeline import build_connector_brief, fetch_connector_payload, normalize_connections, now_iso, resolve_ga_credentials
 
 if TYPE_CHECKING:
     from agents.models import ModelName
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(tags=["generate"])
+router = APIRouter(tags=["insights"])
 
 STEP_COLLECT = "collect_source_data"
 STEP_NORMALIZE = "normalize_connector_outputs"
@@ -47,31 +60,35 @@ STEP_LABELS = {
     STEP_NORMALIZE: "Normalizing connector outputs",
     STEP_SUPPLEMENTARY: "Fetching supplementary insights",
     STEP_SYNTHESIZE: "Synthesizing recommendations",
-    STEP_ASSEMBLE: "Finalizing report",
+    STEP_ASSEMBLE: "Finalizing insight",
 }
-
-SUPPORTED_CONNECTORS = {"google_ads", "ga4", "gsc"}
 
 EmitFn = Callable[[dict[str, Any]], Awaitable[None]]
 
 
-def _resolve_agent_config() -> tuple[str, Provider, ModelName]:
-    """Resolve LLM provider/model/API key from config."""
+def _resolve_agent_config(request_engine: str = "") -> tuple[str, Provider, "ModelName", Engine]:
+    """Resolve engine/provider/model/API key from config.
+
+    Request engine takes precedence over GENERATE_ENGINE env var.
+    Provider and model default from the engine definition in agents/engines.py.
+    """
     cfg = get_configs()
-    provider = resolve_provider(cfg.generate_provider or None)
-    model = resolve_model(cfg.generate_model or None, provider)
-
-    key_map = {
-        Provider.OPENAI: cfg.openai_api_key,
-        Provider.GOOGLE_GENAI: cfg.gemini_api_key,
-        Provider.ANTHROPIC: cfg.anthropic_api_key,
-    }
-    api_key = key_map.get(provider, cfg.gemini_api_key) or ""
-    return api_key, provider, model
+    engine = resolve_engine(request_engine or cfg.generate_engine or None)
+    provider = resolve_engine_provider(engine, cfg.generate_provider or None)
+    model = resolve_engine_model(engine, provider, cfg.generate_model or None)
+    api_key = getattr(cfg, PROVIDER_CONFIG_ATTR[provider], "") or ""
+    return api_key, provider, model, engine
 
 
-def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+def _build_agent(
+    api_key: str, provider: Provider, model: "ModelName", engine: Engine
+) -> GenerateInsightsAgent | AdkInsightsRunner | ClaudeAgentSdkRunner:
+    """Instantiate the insight engine resolved by _resolve_agent_config."""
+    if engine == Engine.V3:
+        return ClaudeAgentSdkRunner(api_key=api_key, provider=provider, model=model, temperature=1.0)
+    if engine == Engine.V2:
+        return AdkInsightsRunner(api_key=api_key, provider=provider, model=model, temperature=1.0)
+    return GenerateInsightsAgent(api_key=api_key, provider=provider, model=model, temperature=1.0)
 
 
 async def _emit(
@@ -87,7 +104,7 @@ async def _emit(
 ) -> None:
     if emit_event is None:
         return
-    body: dict[str, Any] = {"event": event, "ts": _now_iso()}
+    body: dict[str, Any] = {"event": event, "ts": now_iso()}
     if step_id is not None:
         body["step_id"] = step_id
     if status is not None:
@@ -133,49 +150,6 @@ async def _step_finished(
     )
 
 
-def _normalize_connections(req: GenerateRequest) -> list[str]:
-    if not req.connections:
-        raise HTTPException(status_code=422, detail="At least one connection is required.")
-    connections = sorted({c.strip().lower().replace("-", "_") for c in req.connections if c.strip()})
-    unsupported = sorted(set(connections) - SUPPORTED_CONNECTORS)
-    if unsupported:
-        raise HTTPException(status_code=422, detail=f"Unsupported connections: {', '.join(unsupported)}")
-    return connections
-
-
-def _resolve_ga_credentials(cfg: Configs) -> tuple[str, str]:
-    client_id = (cfg.google_oauth_client_id or cfg.google_ads_client_id).strip()
-    client_secret = (cfg.google_oauth_client_secret or cfg.google_ads_client_secret).strip()
-    return client_id, client_secret
-
-
-def _build_connector_brief(
-    *,
-    connector_id: str,
-    raw_data: dict[str, Any],
-    date_from: str,
-    date_to: str,
-) -> dict[str, Any]:
-    if connector_id == "google_ads":
-        brief = build_brief(raw_data, theme="paid_ads")
-        return brief.to_dict()
-
-    theme = "product_intelligence" if connector_id == "ga4" else "organic_growth"
-    return {
-        "source_metadata": {
-            "source": connector_id,
-            "generated_at": _now_iso(),
-            "window_current": f"{date_from} to {date_to}",
-            "theme": theme,
-        },
-        "summary": {
-            "connector": connector_id,
-            "datasets": list(raw_data.keys()),
-        },
-        "data": raw_data,
-    }
-
-
 async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | None = None) -> dict[str, Any]:
     await _emit(
         emit_event,
@@ -184,7 +158,7 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
         payload={"connections": req.connections},
     )
 
-    connections = _normalize_connections(req)
+    connections = normalize_connections(req.connections)
     if not req.date_from or not req.date_to:
         raise HTTPException(status_code=422, detail="date_from and date_to are required.")
 
@@ -193,7 +167,7 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
     gsc_site_url = (req.gsc_site_url or cfg.gsc_site_url).strip()
     ga4_refresh_token = (req.ga4_refresh_token or req.refresh_token).strip()
     gsc_refresh_token = (req.gsc_refresh_token or req.refresh_token).strip()
-    ga_client_id, ga_client_secret = _resolve_ga_credentials(cfg)
+    ga_client_id, ga_client_secret = resolve_ga_credentials(cfg)
 
     if "ga4" in connections and not ga4_property_id:
         raise HTTPException(status_code=422, detail="ga4_property_id is required when GA4 is selected.")
@@ -219,80 +193,23 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
     async def fetch_connector(connector_id: str) -> tuple[str, dict[str, Any]]:
         await _step_started(emit_event, STEP_COLLECT, connector_id=connector_id)
         try:
-            if connector_id == "google_ads":
-                customer_id = resolve_customer_id(request_customer_id=shim.customer_id)
-                dt, cid, secret, rt = resolve_ads_credentials(request_refresh_token=shim.refresh_token)
-                data = await asyncio.to_thread(
-                    fetch_campaigns,
-                    customer_id=customer_id,
-                    developer_token=dt,
-                    client_id=cid,
-                    client_secret=secret,
-                    refresh_token=rt,
-                    date_from=req.date_from,
-                    date_to=req.date_to,
-                    account_name=req.account_name,
-                    currency_code=req.currency_code,
-                    login_customer_id=login_customer_id,
-                )
-                if not data.get("rows"):
-                    raise RuntimeError("No campaigns returned for this customer and date range.")
-                await _step_finished(emit_event, STEP_COLLECT, connector_id=connector_id)
-                return connector_id, data
-
-            if connector_id == "ga4":
-                landing_task = asyncio.to_thread(
-                    fetch_ga4_landing_pages,
-                    property_id=ga4_property_id,
-                    date_from=req.date_from,
-                    date_to=req.date_to,
-                    refresh_token=ga4_refresh_token,
-                    client_id=ga_client_id,
-                    client_secret=ga_client_secret,
-                )
-                paths_task = asyncio.to_thread(
-                    fetch_ga4_conversion_paths,
-                    property_id=ga4_property_id,
-                    date_from=req.date_from,
-                    date_to=req.date_to,
-                    refresh_token=ga4_refresh_token,
-                    client_id=ga_client_id,
-                    client_secret=ga_client_secret,
-                )
-                landing_pages, conversion_paths = await asyncio.gather(landing_task, paths_task)
-                await _step_finished(emit_event, STEP_COLLECT, connector_id=connector_id)
-                return connector_id, {
-                    "landing_pages": landing_pages,
-                    "conversion_paths": conversion_paths,
-                }
-
-            if connector_id == "gsc":
-                queries_task = asyncio.to_thread(
-                    fetch_gsc_query_performance,
-                    site_url=gsc_site_url,
-                    date_from=req.date_from,
-                    date_to=req.date_to,
-                    refresh_token=gsc_refresh_token,
-                    client_id=ga_client_id,
-                    client_secret=ga_client_secret,
-                )
-                pages_task = asyncio.to_thread(
-                    fetch_gsc_page_performance,
-                    site_url=gsc_site_url,
-                    date_from=req.date_from,
-                    date_to=req.date_to,
-                    refresh_token=gsc_refresh_token,
-                    client_id=ga_client_id,
-                    client_secret=ga_client_secret,
-                )
-                query_perf, page_perf = await asyncio.gather(queries_task, pages_task)
-                await _step_finished(emit_event, STEP_COLLECT, connector_id=connector_id)
-                return connector_id, {
-                    "query_performance": query_perf,
-                    "page_performance": page_perf,
-                }
-
-            raise RuntimeError(f"Unsupported connector: {connector_id}")
+            data = await fetch_connector_payload(
+                connector_id=connector_id,
+                date_from=req.date_from,
+                date_to=req.date_to,
+                cfg=cfg,
+                refresh_token=shim.refresh_token,
+                customer_id=shim.customer_id,
+                account_name=req.account_name,
+                currency_code=req.currency_code,
+                login_customer_id=login_customer_id,
+                ga4_property_id=ga4_property_id,
+                gsc_site_url=gsc_site_url,
+                ga4_refresh_token=ga4_refresh_token,
+                gsc_refresh_token=gsc_refresh_token,
+            )
+            await _step_finished(emit_event, STEP_COLLECT, connector_id=connector_id)
+            return connector_id, data
         except Exception as exc:  # noqa: BLE001
             message = str(exc)
             await _step_finished(
@@ -315,7 +232,7 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
         await _step_started(emit_event, STEP_NORMALIZE, connector_id=connector_id)
         try:
             brief_dict = await asyncio.to_thread(
-                _build_connector_brief,
+                build_connector_brief,
                 connector_id=connector_id,
                 raw_data=raw_data,
                 date_from=req.date_from,
@@ -345,62 +262,116 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
     briefs = {cid: payload for cid, payload in normalized_rows}
 
     synthesis_dict = None
-    google_ads_brief = briefs.get("google_ads")
-    google_ads_raw = raw_by_connector.get("google_ads")
-    api_key, provider, model = _resolve_agent_config()
+    mode = req.mode or "paid_ads"
+    api_key, provider, model, engine = _resolve_agent_config(req.engine)
 
-    if api_key and google_ads_brief and google_ads_raw:
-        await _step_started(emit_event, STEP_SUPPLEMENTARY)
-        agent = GenerateAgent(
-            api_key=api_key,
-            provider=provider,
-            model=model,
-            temperature=1.0,
-        )
-        ads_customer_id = resolve_customer_id(request_customer_id=shim.customer_id)
-        dt, cid, secret, rt = resolve_ads_credentials(request_refresh_token=shim.refresh_token)
-        fetch_fns = _build_fetch_fns(
-            dt,
-            cid,
-            secret,
-            rt,
-            login_customer_id,
-            set(connections),
-            ga4_property_id,
-            gsc_site_url,
-            ga4_refresh_token,
-            gsc_refresh_token,
-        )
-        registered = agent.setup_tools_for_goal(goal=req.goal, fetch_fns=fetch_fns)
-        supplementary = {}
-        if registered:
-            logger.info("Phase 1: fetching supplementary data for goal '%s'", req.goal.value)
-            supplementary = await agent.fetch_supplementary_data(
+    # Build the all_briefs dict: connector_id → {"brief": ..., "raw": ...}
+    all_briefs = {
+        cid: {"brief": brief, "raw": raw_by_connector.get(cid)}
+        for cid, brief in briefs.items()
+    }
+
+    # Determine primary connector for classification overrides (paid ads only)
+    primary_connector = "google_ads" if mode == "paid_ads" else None
+    supplementary: dict[str, Any] = {}
+
+    if api_key and all_briefs:
+        agent = _build_agent(api_key, provider, model, engine)
+
+        # Build fetch functions only for connectors that are actually available.
+        # For organic_growth, skip Google Ads credential resolution entirely.
+        if mode == "organic_growth":
+            fetch_fns = {}
+            ads_customer_id = ""
+            ga4_cred_kwargs = dict(
+                refresh_token=ga4_refresh_token or "",
+                client_id=ga_client_id,
+                client_secret=ga_client_secret,
+            )
+            gsc_cred_kwargs = dict(
+                refresh_token=gsc_refresh_token or "",
+                client_id=ga_client_id,
+                client_secret=ga_client_secret,
+            )
+            if "ga4" in connections and ga4_property_id:
+                fetch_fns["fetch_ga4_landing_pages"] = partial(fetch_ga4_landing_pages, **ga4_cred_kwargs)
+                fetch_fns["fetch_ga4_conversion_paths"] = partial(fetch_ga4_conversion_paths, **ga4_cred_kwargs)
+            if "gsc" in connections and gsc_site_url:
+                fetch_fns["fetch_gsc_query_performance"] = partial(fetch_gsc_query_performance, **gsc_cred_kwargs)
+                fetch_fns["fetch_gsc_page_performance"] = partial(fetch_gsc_page_performance, **gsc_cred_kwargs)
+        else:
+            ads_customer_id = resolve_customer_id(request_customer_id=shim.customer_id)
+            dt, cid, secret, rt = resolve_ads_credentials(request_refresh_token=shim.refresh_token)
+            fetch_fns = _build_fetch_fns(
+                dt, cid, secret, rt, login_customer_id,
+                set(connections), ga4_property_id, gsc_site_url,
+                ga4_refresh_token, gsc_refresh_token,
+            )
+
+        biz_ctx = req.business_context.model_dump() if req.business_context else None
+        full_context = req.context
+        if req.mode_context:
+            full_context = f"{req.mode_context}\n\n{full_context}".strip() if full_context else req.mode_context
+
+        registered = agent.setup_tools_for_goal(goal=req.goal, fetch_fns=fetch_fns, mode=mode)
+
+        if isinstance(agent, (AdkInsightsRunner, ClaudeAgentSdkRunner)):
+            # v2/v3: both phases run inside a single pipeline call
+            await _step_started(emit_event, STEP_SUPPLEMENTARY)
+            await _step_started(emit_event, STEP_SYNTHESIZE)
+            engine = "v2" if isinstance(agent, AdkInsightsRunner) else "v3"
+            logger.info("%s: running pipeline for goal '%s' (mode: %s)", engine, req.goal.value, mode)
+            supplementary, synthesis = await agent.run_pipeline(
+                goal=req.goal,
+                custom_goal=req.custom_goal,
+                context=full_context,
+                all_briefs=all_briefs,
+                business_context=biz_ctx,
+                mode=mode,
                 customer_id=ads_customer_id,
                 date_from=req.date_from,
                 date_to=req.date_to,
-                goal=req.goal,
                 ga4_property_id=ga4_property_id,
                 gsc_site_url=gsc_site_url,
-                custom_goal=req.custom_goal,
-                context=req.context,
+                connected_sources=connections,
+                emit_event=emit_event,
             )
-        await _step_finished(emit_event, STEP_SUPPLEMENTARY)
+            await _step_finished(emit_event, STEP_SUPPLEMENTARY)
+            await _step_finished(emit_event, STEP_SYNTHESIZE)
+        else:
+            # v1: separate Phase 1 (tool calling) + Phase 2 (synthesis)
+            await _step_started(emit_event, STEP_SUPPLEMENTARY)
+            if registered:
+                logger.info("Phase 1: fetching supplementary data for goal '%s' (mode: %s)", req.goal.value, mode)
+                supplementary = await agent.fetch_supplementary_data(
+                    customer_id=ads_customer_id,
+                    date_from=req.date_from,
+                    date_to=req.date_to,
+                    goal=req.goal,
+                    ga4_property_id=ga4_property_id,
+                    gsc_site_url=gsc_site_url,
+                    custom_goal=req.custom_goal,
+                    context=req.context,
+                    connected_sources=connections,
+                )
+            await _step_finished(emit_event, STEP_SUPPLEMENTARY)
 
-        await _step_started(emit_event, STEP_SYNTHESIZE)
-        biz_ctx = req.business_context.model_dump() if req.business_context else None
-        synthesis = await agent.synthesize(
-            goal=req.goal,
-            custom_goal=req.custom_goal,
-            context=req.context,
-            brief_dict=google_ads_brief,
-            raw_payload=google_ads_raw,
-            supplementary=supplementary or None,
-            business_context=biz_ctx,
-        )
-        agent.apply_classification_overrides(google_ads_brief, synthesis)
+            await _step_started(emit_event, STEP_SYNTHESIZE)
+            synthesis = await agent.synthesize(
+                goal=req.goal,
+                custom_goal=req.custom_goal,
+                context=full_context,
+                all_briefs=all_briefs,
+                supplementary=supplementary or None,
+                business_context=biz_ctx,
+                mode=mode,
+                emit_event=emit_event,
+            )
+            await _step_finished(emit_event, STEP_SYNTHESIZE)
+
+        if primary_connector and primary_connector in briefs:
+            agent.apply_classification_overrides(briefs[primary_connector], synthesis)
         synthesis_dict = agent.extract_synthesis(synthesis)
-        await _step_finished(emit_event, STEP_SYNTHESIZE)
     else:
         await _step_started(emit_event, STEP_SUPPLEMENTARY)
         await _step_finished(emit_event, STEP_SUPPLEMENTARY)
@@ -408,12 +379,13 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
         await _step_finished(emit_event, STEP_SYNTHESIZE)
 
     await _step_started(emit_event, STEP_ASSEMBLE)
-    envelope = UnifiedReport(
+    envelope = UnifiedInsight(
         connectors_used=connections,
         briefs=briefs,
+        supplementary=supplementary,
         synthesis=synthesis_dict,
-        metadata=ReportMetadata(
-            generated_at=_now_iso(),
+        metadata=InsightMetadata(
+            generated_at=now_iso(),
             goal=req.goal.value,
             connectors_used=connections,
         ),
@@ -471,14 +443,234 @@ def _build_fetch_fns(
     return fetch_fns
 
 
-@router.post("/generate")
-async def generate(req: GenerateRequest) -> dict:
+@router.get("/insights/modes")
+async def list_insight_modes() -> dict:
+    """Return all intelligence modes with their goals. Frontend uses this as the single source of truth."""
+    from agents.insights.goals.paid_ads import (
+        InsightGenerationGoal,
+        GOAL_LABELS as PAID_LABELS,
+        GOAL_DESCRIPTIONS as PAID_DESCRIPTIONS,
+        GOAL_ICONS as PAID_ICONS,
+    )
+    from agents.insights.goals.organic_growth import (
+        OrganicGrowthGoal,
+        GOAL_LABELS as ORGANIC_LABELS,
+        GOAL_DESCRIPTIONS as ORGANIC_DESCRIPTIONS,
+        GOAL_ICONS as ORGANIC_ICONS,
+    )
+
+    def _goals(enum_cls, labels, descriptions, icons) -> list[InsightGoalDescriptor]:
+        return [
+            InsightGoalDescriptor(
+                key=g.value,
+                icon=icons.get(g, ""),
+                label=labels.get(g, g.value),
+                description=descriptions.get(g, ""),
+            )
+            for g in enum_cls
+        ]
+
+    organic_business_context_fields = [
+        BusinessContextField(
+            key="primary_organic_kpi",
+            label="Primary organic KPI",
+            type=BusinessContextFieldType.SELECT,
+            placeholder="Select primary KPI...",
+            options=[
+                BusinessContextFieldOption(value="organic_traffic", label="Organic Traffic"),
+                BusinessContextFieldOption(value="keyword_rankings", label="Keyword Rankings"),
+                BusinessContextFieldOption(value="backlinks", label="Backlinks"),
+                BusinessContextFieldOption(value="conversions_from_organic", label="Conversions from Organic"),
+            ],
+        ),
+        BusinessContextField(
+            key="monthly_organic_traffic_target",
+            label="Monthly organic traffic target (optional)",
+            type=BusinessContextFieldType.NUMBER,
+            placeholder="e.g. 10000",
+            min=0,
+            step=1,
+            empty_if_zero=True,
+        ),
+        BusinessContextField(
+            key="primary_content_type",
+            label="Primary content type",
+            type=BusinessContextFieldType.SELECT,
+            placeholder="Select content type...",
+            options=[
+                BusinessContextFieldOption(value="blog_articles", label="Blog/Articles"),
+                BusinessContextFieldOption(value="product_pages", label="Product Pages"),
+                BusinessContextFieldOption(value="landing_pages", label="Landing Pages"),
+                BusinessContextFieldOption(value="docs_help", label="Docs/Help"),
+            ],
+        ),
+        BusinessContextField(
+            key="period_changes",
+            label="What changed recently? (optional)",
+            type=BusinessContextFieldType.TEXTAREA,
+            placeholder="e.g. Published 10 new articles, migrated to new CMS, added hreflang tags.",
+            rows=2,
+            full_width=True,
+        ),
+    ]
+
+    paid_ads_business_context_fields = [
+        BusinessContextField(
+            key="industry",
+            label="Industry",
+            type=BusinessContextFieldType.SELECT,
+            placeholder="Select industry...",
+            options=[
+                BusinessContextFieldOption(value="ecommerce", label="E-commerce"),
+                BusinessContextFieldOption(value="saas", label="SaaS / B2B"),
+                BusinessContextFieldOption(value="lead_gen", label="Lead generation"),
+                BusinessContextFieldOption(value="agency", label="Agency / multi-client"),
+                BusinessContextFieldOption(value="other", label="Other"),
+            ],
+            show_if=BusinessContextFieldShowIf.ALWAYS,
+        ),
+        BusinessContextField(
+            key="primary_conversion_action",
+            label="Primary conversion action",
+            type=BusinessContextFieldType.TEXT,
+            placeholder="e.g. Demo booked, Trial started, Purchase",
+            show_if=BusinessContextFieldShowIf.ADS_SELECTED,
+        ),
+        BusinessContextField(
+            key="monthly_budget",
+            label="Monthly budget ($)",
+            type=BusinessContextFieldType.NUMBER,
+            placeholder="e.g. 5000",
+            min=0,
+            step=0.01,
+            show_if=BusinessContextFieldShowIf.ADS_SELECTED,
+        ),
+        BusinessContextField(
+            key="target_cpa",
+            label="Target CPA ($)",
+            type=BusinessContextFieldType.NUMBER,
+            placeholder="e.g. 50",
+            min=0,
+            step=0.01,
+            show_if=BusinessContextFieldShowIf.ADS_SELECTED,
+        ),
+        BusinessContextField(
+            key="target_roas",
+            label="Target ROAS (x)",
+            type=BusinessContextFieldType.NUMBER,
+            placeholder="e.g. 3.0",
+            min=0,
+            step=0.1,
+            show_if=BusinessContextFieldShowIf.ADS_SELECTED,
+        ),
+        BusinessContextField(
+            key="target_payback_days",
+            label="Target payback (days)",
+            type=BusinessContextFieldType.NUMBER,
+            placeholder="e.g. 90",
+            min=0,
+            step=1,
+            show_if=BusinessContextFieldShowIf.ADS_SELECTED,
+        ),
+        BusinessContextField(
+            key="gross_margin_percent",
+            label="Gross margin (%)",
+            type=BusinessContextFieldType.NUMBER,
+            placeholder="e.g. 70",
+            min=0,
+            max=100,
+            step=1,
+            show_if=BusinessContextFieldShowIf.ADS_SELECTED,
+        ),
+        BusinessContextField(
+            key="qualified_lead_value",
+            label="Qualified lead value ($)",
+            type=BusinessContextFieldType.NUMBER,
+            placeholder="e.g. 1200",
+            min=0,
+            step=1,
+            show_if=BusinessContextFieldShowIf.ADS_SELECTED,
+        ),
+        BusinessContextField(
+            key="period_changes",
+            label="What changed during this period? (optional)",
+            type=BusinessContextFieldType.TEXTAREA,
+            placeholder="e.g. Switched bid strategy, launched new offer, changed landing pages, tracking updates.",
+            rows=2,
+            full_width=True,
+            show_if=BusinessContextFieldShowIf.ADS_SELECTED,
+        ),
+    ]
+
+    response = InsightModesResponse(
+        modes=[
+            InsightMode(
+                key="product_intelligence",
+                emoji="📊",
+                label="Product Intelligence",
+                short_label="Product",
+                tagline="Weekly brief for PMs & growth teams",
+                active=False,
+            ),
+            InsightMode(
+                key="organic_growth",
+                emoji="🌱",
+                label="Organic Growth",
+                short_label="Organic",
+                tagline="Automated SEO & content intelligence",
+                active=True,
+                locked_connections=["gsc", "ga4"],
+                goals=_goals(OrganicGrowthGoal, ORGANIC_LABELS, ORGANIC_DESCRIPTIONS, ORGANIC_ICONS),
+                business_context_fields=organic_business_context_fields,
+            ),
+            InsightMode(
+                key="paid_ads",
+                emoji="📣",
+                label="Paid Ads Intelligence",
+                short_label="Paid Ads",
+                tagline="Cross-platform brief for performance marketers",
+                active=False,
+                locked_connections=["google_ads"],
+                goals=_goals(InsightGenerationGoal, PAID_LABELS, PAID_DESCRIPTIONS, PAID_ICONS),
+                business_context_fields=paid_ads_business_context_fields,
+            ),
+            InsightMode(
+                key="sales_revops",
+                emoji="💼",
+                label="Sales / RevOps",
+                short_label="Sales",
+                tagline="Pipeline & revenue intelligence",
+                active=False,
+            ),
+            InsightMode(
+                key="ecommerce_dtc",
+                emoji="🛒",
+                label="E-commerce / DTC",
+                short_label="E-commerce",
+                tagline="ROAS, LTV & retention synthesis",
+                active=False,
+            ),
+            InsightMode(
+                key="customer_success",
+                emoji="🤝",
+                label="Customer Success",
+                short_label="CS",
+                tagline="Early churn & health score signals",
+                active=False,
+            ),
+        ]
+    )
+    return response.model_dump(mode="json")
+
+
+@router.post("/insights/generate")
+async def generate_insight(req: GenerateRequest) -> dict:
     """Fetch data for selected connections, build briefs, and optional synthesis."""
     return await _run_generate_pipeline(req)
 
 
-@router.post("/generate/stream")
-async def generate_stream(req: GenerateRequest) -> StreamingResponse:
+@router.post("/insights/generate/stream")
+async def generate_insight_stream(req: GenerateRequest) -> StreamingResponse:
     """Stream real pipeline progress events and final payload over SSE."""
 
     queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
@@ -489,12 +681,12 @@ async def generate_stream(req: GenerateRequest) -> StreamingResponse:
 
     async def worker() -> None:
         try:
-            report = await _run_generate_pipeline(req, emit_event=emit_event)
+            insight = await _run_generate_pipeline(req, emit_event=emit_event)
             await _emit(
                 emit_event,
                 event="pipeline_finished",
                 status="success",
-                payload=report,
+                payload=insight,
             )
         except HTTPException as exc:
             await _emit(

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import GoogleAdsReport from "../../../components/GoogleAdsReport";
 import {
   fetchGa4Properties,
@@ -10,42 +10,10 @@ import {
   fetchGscSites,
   generateReportStream,
 } from "../../../lib/api";
-import { saveLocalReport, generateSlug } from "../../../lib/localReports";
-import { getBusinessProfileDraft } from "../../../lib/businessProfile";
+import { saveLocalInsight, generateSlug } from "../../../lib/localInsights";
+import { getActiveProject, getActiveProjectId } from "../../../lib/projects";
+import { fetchModes, getModeByKey, FALLBACK_MODES, DEFAULT_MODE_KEY } from "../../../lib/modes";
 import { Button } from "@/components/ui/button";
-
-const GOALS = [
-  {
-    key: "lower_cac",
-    icon: "\u{1F4C9}",
-    label: "Lower CAC",
-    description: "Find which campaigns and audiences deliver the cheapest conversions \u2014 cut waste, keep quality.",
-  },
-  {
-    key: "maximize_roas",
-    icon: "\u{1F4B0}",
-    label: "Maximize ROAS",
-    description: "Identify top-returning campaigns and reallocate budget away from underperformers.",
-  },
-  {
-    key: "scale_conversions",
-    icon: "\u{1F680}",
-    label: "Scale conversions",
-    description: "Grow conversion volume while keeping cost efficiency in check \u2014 find headroom to spend more.",
-  },
-  {
-    key: "audit_spend",
-    icon: "\u{1F50D}",
-    label: "Audit spend efficiency",
-    description: "Spot wasted budget, flag underperformers, and surface reallocation opportunities across campaigns.",
-  },
-  {
-    key: "custom",
-    icon: "\u{270F}\u{FE0F}",
-    label: "Custom goal",
-    description: "Describe your own analysis goal \u2014 the AI agent will tailor the report to your intent.",
-  },
-];
 
 function formatLocalYmd(d) {
   const y = d.getFullYear();
@@ -85,8 +53,8 @@ function normalizeGscSiteUrl(url) {
 /** Map wizard step (1–6) to one of four progress phases: sources → configure → generating → report. */
 function progressPhase(step) {
   if (step <= 1) return 1;
-  if (step <= 4) return 2;
-  if (step === 5) return 3;
+  if (step <= 5) return 2;
+  if (step === 6) return 3;
   return 4;
 }
 
@@ -104,14 +72,16 @@ function ProgressDots({ step }) {
   );
 }
 
-function StepConnections({ connections, selected, onToggle }) {
+function StepConnections({ connections, selected, onToggle, locked = false }) {
   const hasAny = connections.some((c) => c.connected);
 
   return (
     <div className="generate-step">
       <h2 className="generate-step-title">Select your data sources</h2>
-      <p className="app-subtle" style={{ marginTop: 0, marginBottom: 16 }}>
-        Choose which connected tools to include in your report.
+      <p className="app-subtle" style={{ marginTop: 0, marginBottom: locked ? 8 : 16 }}>
+        {locked
+          ? "Connections are pre-set for this intelligence mode."
+          : "Choose which connected tools to include in your insight."}
       </p>
       <div className="connection-grid">
         {connections.map((conn) => (
@@ -156,15 +126,6 @@ function StepConnections({ connections, selected, onToggle }) {
     </div>
   );
 }
-
-const INDUSTRIES = [
-  { value: "", label: "Select industry..." },
-  { value: "ecommerce", label: "E-commerce" },
-  { value: "saas", label: "SaaS / B2B" },
-  { value: "lead_gen", label: "Lead generation" },
-  { value: "agency", label: "Agency / multi-client" },
-  { value: "other", label: "Other" },
-];
 
 function StepAdsAccount({ accounts, loading, fetchError, selectedId, onChange }) {
   if (loading) {
@@ -242,6 +203,8 @@ function StepAdsAccount({ accounts, loading, fetchError, selectedId, onChange })
 }
 
 function StepGa4Property({ properties, loading, fetchError, selectedId, onChange }) {
+  const [query, setQuery] = useState("");
+
   if (loading) {
     return (
       <div className="generate-field" style={{ marginBottom: 20 }}>
@@ -276,25 +239,118 @@ function StepGa4Property({ properties, loading, fetchError, selectedId, onChange
       </div>
     );
   }
+
+  function normalizeText(value) {
+    return String(value || "").trim().toLowerCase();
+  }
+
+  const filteredProperties = properties.filter((property) => {
+    const q = normalizeText(query);
+    if (!q) return true;
+    return (
+      normalizeText(property.property_name).includes(q) ||
+      normalizeText(property.account_name).includes(q) ||
+      normalizeText(property.property_id).includes(q)
+    );
+  });
+
   return (
-    <label className="generate-field" style={{ marginBottom: 16 }}>
-      <span className="app-subtle">GA4 property</span>
-      <select
+    <div className="generate-field" style={{ marginBottom: 16 }}>
+      <span className="app-subtle" style={{ display: "block", marginBottom: 8 }}>
+        GA4 property
+      </span>
+      <label className="sr-only" htmlFor="ga4-property-search">
+        Search fetched GA4 properties
+      </label>
+      <input
+        id="ga4-property-search"
+        type="text"
         className="app-input"
-        value={selectedId}
-        onChange={(e) => onChange(e.target.value)}
+        placeholder="Search properties (name, account, or ID)"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        style={{ marginBottom: 8 }}
+      />
+      <div
+        role="radiogroup"
+        aria-label="GA4 property"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
+          maxHeight: 260,
+          overflowY: "auto",
+          padding: 10,
+          border: "1px solid var(--border, rgba(255,255,255,0.12))",
+          borderRadius: 10,
+          background: "rgba(255,255,255,0.02)",
+        }}
       >
-        {properties.map((property) => (
-          <option key={normalizeGa4PropertyId(property.property_id)} value={normalizeGa4PropertyId(property.property_id)}>
-            {property.property_name} ({property.property_id}) — {property.account_name}
-          </option>
-        ))}
-      </select>
-    </label>
+        {filteredProperties.map((property) => {
+          const propertyId = normalizeGa4PropertyId(property.property_id);
+          const selected = selectedId === propertyId;
+          return (
+            <button
+              key={propertyId}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              onClick={() => onChange(propertyId)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+                width: "100%",
+                padding: "10px 12px",
+                borderRadius: 10,
+                border: selected
+                  ? "1px solid var(--color-primary, #4f46e5)"
+                  : "1px solid var(--border, rgba(255,255,255,0.12))",
+                background: selected ? "rgba(79,70,229,0.12)" : "transparent",
+                color: "inherit",
+                cursor: "pointer",
+                textAlign: "left",
+              }}
+            >
+              <span style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                <img
+                  src="https://www.google.com/s2/favicons?domain=analytics.google.com&sz=32"
+                  alt=""
+                  width="16"
+                  height="16"
+                  style={{ borderRadius: 4, flexShrink: 0 }}
+                />
+                <span style={{ minWidth: 0 }}>
+                  <span style={{ display: "block", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {property.property_name}
+                  </span>
+                  <span
+                    className="app-subtle"
+                    style={{ display: "block", fontSize: 12, overflow: "hidden", textOverflow: "ellipsis" }}
+                  >
+                    {property.account_name}
+                  </span>
+                </span>
+              </span>
+              <span className="status-pill grey" style={{ flexShrink: 0 }}>
+                ID {propertyId}
+              </span>
+            </button>
+          );
+        })}
+        {filteredProperties.length === 0 && (
+          <p className="app-subtle" style={{ margin: 0, padding: "8px 2px" }}>
+            No GA4 properties match "{query}".
+          </p>
+        )}
+      </div>
+    </div>
   );
 }
 
 function StepGscSite({ sites, loading, fetchError, selectedUrl, onChange }) {
+  const [query, setQuery] = useState("");
   if (loading) {
     return (
       <div className="generate-field" style={{ marginBottom: 20 }}>
@@ -329,22 +385,145 @@ function StepGscSite({ sites, loading, fetchError, selectedUrl, onChange }) {
       </div>
     );
   }
+  function getDisplayHost(siteUrl) {
+    if (!siteUrl) return "";
+    if (siteUrl.startsWith("sc-domain:")) return siteUrl.replace("sc-domain:", "");
+    try {
+      return new URL(siteUrl).hostname;
+    } catch {
+      return siteUrl;
+    }
+  }
+
+  function getFaviconUrl(siteUrl) {
+    if (!siteUrl || siteUrl.startsWith("sc-domain:")) return "";
+    const host = getDisplayHost(siteUrl);
+    if (!host) return "";
+    // Google-hosted favicon endpoint gives a clean, consistent icon.
+    return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=32`;
+  }
+
+  function permissionMeta(permissionLevel) {
+    const level = String(permissionLevel || "").toLowerCase();
+    const isVerified = level.includes("owner") || level.includes("full");
+    return {
+      isVerified,
+      label: isVerified ? "Verified" : "Unverified",
+      toneClass: isVerified ? "green" : "grey",
+    };
+  }
+
+  const filteredSites = sites.filter((site) => {
+    const url = normalizeGscSiteUrl(site.site_url);
+    const host = getDisplayHost(url);
+    const q = query.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      host.toLowerCase().includes(q) ||
+      url.toLowerCase().includes(q)
+    );
+  });
+
   return (
-    <label className="generate-field" style={{ marginBottom: 16 }}>
-      <span className="app-subtle">Search Console site</span>
-      <select
+    <div className="generate-field" style={{ marginBottom: 16 }}>
+      <span className="app-subtle" style={{ display: "block", marginBottom: 8 }}>
+        Search Console site
+      </span>
+      <label className="sr-only" htmlFor="gsc-site-search">
+        Search fetched Search Console sites
+      </label>
+      <input
+        id="gsc-site-search"
+        type="text"
         className="app-input"
-        value={selectedUrl}
-        onChange={(e) => onChange(e.target.value)}
+        placeholder="Search sites (domain, URL, or permission)"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        style={{ marginBottom: 8 }}
+      />
+      <div
+        role="radiogroup"
+        aria-label="Search Console site"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
+          maxHeight: 260,
+          overflowY: "auto",
+          padding: 10,
+          border: "1px solid var(--border, rgba(255,255,255,0.12))",
+          borderRadius: 10,
+          background: "rgba(255,255,255,0.02)",
+        }}
       >
-        {sites.map((site) => (
-          <option key={normalizeGscSiteUrl(site.site_url)} value={normalizeGscSiteUrl(site.site_url)}>
-            {site.site_url}
-            {site.permission_level ? ` — ${site.permission_level}` : ""}
-          </option>
-        ))}
-      </select>
-    </label>
+        {filteredSites.map((site) => {
+          const url = normalizeGscSiteUrl(site.site_url);
+          const host = getDisplayHost(url);
+          const faviconUrl = getFaviconUrl(url);
+          const selected = selectedUrl === url;
+          const permission = permissionMeta(site.permission_level);
+
+          return (
+            <button
+              key={url}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              onClick={() => onChange(url)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+                width: "100%",
+                padding: "10px 12px",
+                borderRadius: 10,
+                border: selected
+                  ? "1px solid var(--color-primary, #4f46e5)"
+                  : "1px solid var(--border, rgba(255,255,255,0.12))",
+                background: selected ? "rgba(79,70,229,0.12)" : "transparent",
+                color: "inherit",
+                cursor: "pointer",
+                textAlign: "left",
+              }}
+            >
+              <span style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                {faviconUrl ? (
+                  <img
+                    src={faviconUrl}
+                    alt=""
+                    width="16"
+                    height="16"
+                    style={{ borderRadius: 4, flexShrink: 0 }}
+                  />
+                ) : (
+                  <span aria-hidden="true" style={{ fontSize: 14, lineHeight: 1, flexShrink: 0 }}>
+                    🌐
+                  </span>
+                )}
+                <span style={{ minWidth: 0 }}>
+                  <span style={{ display: "block", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {host}
+                  </span>
+                  <span className="app-subtle" style={{ display: "block", fontSize: 12, overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {url}
+                  </span>
+                </span>
+              </span>
+              <span className={`status-pill ${permission.toneClass}`} style={{ flexShrink: 0 }}>
+                {permission.isVerified ? "✓ " : ""}
+                {permission.label}
+              </span>
+            </button>
+          );
+        })}
+        {filteredSites.length === 0 && (
+          <p className="app-subtle" style={{ margin: 0, padding: "8px 2px" }}>
+            No sites match "{query}".
+          </p>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -355,9 +534,9 @@ const DATE_PRESET_OPTIONS = [
   { key: "custom", label: "Custom", daysBack: null },
 ];
 
-function goalDisplayLabel(goalKey, customGoalText) {
+function goalDisplayLabel(goalKey, customGoalText, goals = []) {
   if (goalKey === "custom") return customGoalText.trim() || "Custom goal";
-  return GOALS.find((g) => g.key === goalKey)?.label ?? goalKey;
+  return goals.find((g) => g.key === goalKey)?.label ?? goalKey;
 }
 
 function dateRangeSummary(datePreset, dateFrom, dateTo) {
@@ -366,6 +545,10 @@ function dateRangeSummary(datePreset, dateFrom, dateTo) {
     return `${preset.label} (${dateFrom} → ${dateTo})`;
   }
   return `${dateFrom} → ${dateTo}`;
+}
+
+function getWizardStorageKey(modeKey) {
+  return `duct_generate_wizard:${modeKey || DEFAULT_MODE_KEY}`;
 }
 
 function toPositiveNumber(value) {
@@ -387,8 +570,17 @@ function normalizeIndustryValue(value) {
   return "other";
 }
 
+function businessContextFromOrganicDraft() {
+  return {
+    primary_organic_kpi: "",
+    monthly_organic_traffic_target: 0,
+    primary_content_type: "",
+    period_changes: "",
+  };
+}
+
 function businessContextFromProfileDraft() {
-  const draft = getBusinessProfileDraft();
+  const draft = getActiveProject() || {};
   return {
     industry: normalizeIndustryValue(draft.company?.industry),
     monthly_budget: toPositiveNumber(draft.targets?.monthly_budget),
@@ -402,8 +594,73 @@ function businessContextFromProfileDraft() {
   };
 }
 
+function buildReportRoutine({
+  selectedConnections,
+  datePreset,
+  dateFrom,
+  dateTo,
+  goal,
+  customGoal,
+  context,
+  selectedAdsCustomerId,
+  adsAccounts,
+  selectedGa4PropertyId,
+  ga4Properties,
+  selectedGscSiteUrl,
+  businessContext,
+  mode = null,
+}) {
+  const customerId = normalizeCustomerId(selectedAdsCustomerId);
+  const ga4PropertyId = normalizeGa4PropertyId(selectedGa4PropertyId);
+  const gscSiteUrl = normalizeGscSiteUrl(selectedGscSiteUrl);
+  const selectedAdsAccount = adsAccounts.find((a) => normalizeCustomerId(a.customer_id) === customerId);
+  const selectedGa4Property = ga4Properties.find(
+    (property) => normalizeGa4PropertyId(property.property_id) === ga4PropertyId
+  );
+
+  return {
+    schema_version: 1,
+    date_preset: datePreset,
+    custom_date_from: datePreset === "custom" ? dateFrom : null,
+    custom_date_to: datePreset === "custom" ? dateTo : null,
+    goal,
+    custom_goal: goal === "custom" ? customGoal.trim() : "",
+    context,
+    connections: selectedConnections,
+    targets: {
+      ...(selectedConnections.includes("google_ads")
+        ? {
+            google_ads: {
+              customer_id: customerId,
+              account_name: selectedAdsAccount?.descriptive_name ?? "",
+              currency_code: selectedAdsAccount?.currency_code || "USD",
+              login_customer_id: "",
+            },
+          }
+        : {}),
+      ...(selectedConnections.includes("ga4")
+        ? {
+            ga4: {
+              property_id: ga4PropertyId,
+              property_name: selectedGa4Property?.property_name ?? "",
+            },
+          }
+        : {}),
+      ...(selectedConnections.includes("gsc")
+        ? {
+            gsc: {
+              site_url: gscSiteUrl,
+            },
+          }
+        : {}),
+    },
+    business_context: businessContext,
+    mode: mode || null,
+  };
+}
+
 function profileContextFromDraft() {
-  const draft = getBusinessProfileDraft();
+  const draft = getActiveProject() || {};
   const growthStage = String(draft.targets?.growth_stage_milestone || "").replaceAll("_", " ");
   const lines = [];
   if (draft.company?.business_model) {
@@ -439,7 +696,26 @@ function profileContextFromDraft() {
   return lines.join("\n");
 }
 
+const BUSINESS_FIELD_TYPE = {
+  TEXT: "text",
+  NUMBER: "number",
+  SELECT: "select",
+  TEXTAREA: "textarea",
+};
+
+const BUSINESS_FIELD_SHOW_IF = {
+  ADS_SELECTED: "ads_selected",
+};
+
+function visibleBusinessContextFields(fields, showPaidTargets) {
+  return (fields || []).filter((field) => {
+    if (field?.show_if === BUSINESS_FIELD_SHOW_IF.ADS_SELECTED) return showPaidTargets;
+    return true;
+  });
+}
+
 function StepGoal({
+  goals,
   goal,
   onGoalChange,
   customGoal,
@@ -453,18 +729,35 @@ function StepGoal({
   datePreset,
   onDatePresetChange,
   showPaidTargets,
+  businessContextFields,
   businessContext,
   onBusinessContextChange,
 }) {
+  const fields = visibleBusinessContextFields(businessContextFields, showPaidTargets);
+
+  function updateBusinessContextValue(field, rawValue) {
+    if (field.type === BUSINESS_FIELD_TYPE.NUMBER) {
+      onBusinessContextChange({
+        ...businessContext,
+        [field.key]: parseFloat(rawValue) || 0,
+      });
+      return;
+    }
+    onBusinessContextChange({
+      ...businessContext,
+      [field.key]: rawValue,
+    });
+  }
+
   return (
     <div className="generate-step">
       <h2 className="generate-step-title">What do you want to analyze?</h2>
       <p className="app-subtle" style={{ marginTop: 0, marginBottom: 16 }}>
-        Select a goal and provide any additional context for a more targeted report.
+        Select a goal and provide any additional context for a more targeted insight.
       </p>
 
       <div className="goal-grid">
-        {GOALS.map((g) => (
+        {(goals || []).map((g) => (
           <button
             key={g.key}
             type="button"
@@ -499,124 +792,72 @@ function StepGoal({
         <span className="app-subtle" style={{ display: "block", marginBottom: 8 }}>
           Business context (optional)
         </span>
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <label className="generate-field">
-            <span className="app-subtle">Industry</span>
-            <select
-              className="app-input"
-              value={businessContext.industry}
-              onChange={(e) => onBusinessContextChange({ ...businessContext, industry: e.target.value })}
-            >
-              {INDUSTRIES.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </label>
-          {showPaidTargets && (
-            <>
-              <label className="generate-field">
-                <span className="app-subtle">Primary conversion action</span>
+        <div className="generate-context-grid">
+          {fields.map((field) => {
+            const fieldClassName = `generate-field${field.full_width ? " generate-field--full" : ""}`;
+            const value = businessContext[field.key] ?? "";
+            const displayValue =
+              field.type === BUSINESS_FIELD_TYPE.NUMBER && field.empty_if_zero && Number(value) === 0
+                ? ""
+                : value;
+
+            if (field.type === BUSINESS_FIELD_TYPE.SELECT) {
+              return (
+                <label key={field.key} className={fieldClassName}>
+                  <span className="app-subtle">{field.label}</span>
+                  <select
+                    className="app-input"
+                    value={String(value)}
+                    onChange={(e) => updateBusinessContextValue(field, e.target.value)}
+                  >
+                    <option value="">{field.placeholder || "Select an option..."}</option>
+                    {(field.options || []).map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              );
+            }
+
+            if (field.type === BUSINESS_FIELD_TYPE.TEXTAREA) {
+              return (
+                <label key={field.key} className={fieldClassName}>
+                  <span className="app-subtle">{field.label}</span>
+                  <textarea
+                    className="app-input app-textarea"
+                    rows={field.rows || 2}
+                    placeholder={field.placeholder || ""}
+                    value={String(value)}
+                    onChange={(e) => updateBusinessContextValue(field, e.target.value)}
+                  />
+                </label>
+              );
+            }
+
+            return (
+              <label key={field.key} className={fieldClassName}>
+                <span className="app-subtle">{field.label}</span>
                 <input
-                  type="text"
+                  type={field.type === BUSINESS_FIELD_TYPE.NUMBER ? BUSINESS_FIELD_TYPE.NUMBER : BUSINESS_FIELD_TYPE.TEXT}
                   className="app-input"
-                  placeholder="e.g. Demo booked, Trial started, Purchase"
-                  value={businessContext.primary_conversion_action || ""}
-                  onChange={(e) => onBusinessContextChange({ ...businessContext, primary_conversion_action: e.target.value })}
+                  min={field.type === BUSINESS_FIELD_TYPE.NUMBER ? field.min : undefined}
+                  max={field.type === BUSINESS_FIELD_TYPE.NUMBER ? field.max : undefined}
+                  step={field.type === BUSINESS_FIELD_TYPE.NUMBER ? field.step : undefined}
+                  placeholder={field.placeholder || ""}
+                  value={displayValue}
+                  onChange={(e) => updateBusinessContextValue(field, e.target.value)}
                 />
               </label>
-              <label className="generate-field">
-                <span className="app-subtle">Monthly budget ($)</span>
-                <input
-                  type="number"
-                  className="app-input"
-                  min="0"
-                  step="0.01"
-                  placeholder="e.g. 5000"
-                  value={businessContext.monthly_budget || ""}
-                  onChange={(e) => onBusinessContextChange({ ...businessContext, monthly_budget: parseFloat(e.target.value) || 0 })}
-                />
-              </label>
-              <div className="connections-date-row">
-                <label className="generate-field">
-                  <span className="app-subtle">Target CPA ($)</span>
-                  <input
-                    type="number"
-                    className="app-input"
-                    min="0"
-                    step="0.01"
-                    placeholder="e.g. 50"
-                    value={businessContext.target_cpa || ""}
-                    onChange={(e) => onBusinessContextChange({ ...businessContext, target_cpa: parseFloat(e.target.value) || 0 })}
-                  />
-                </label>
-                <label className="generate-field">
-                  <span className="app-subtle">Target ROAS (x)</span>
-                  <input
-                    type="number"
-                    className="app-input"
-                    min="0"
-                    step="0.1"
-                    placeholder="e.g. 3.0"
-                    value={businessContext.target_roas || ""}
-                    onChange={(e) => onBusinessContextChange({ ...businessContext, target_roas: parseFloat(e.target.value) || 0 })}
-                  />
-                </label>
-              </div>
-              <div className="connections-date-row">
-                <label className="generate-field">
-                  <span className="app-subtle">Target payback (days)</span>
-                  <input
-                    type="number"
-                    className="app-input"
-                    min="0"
-                    step="1"
-                    placeholder="e.g. 90"
-                    value={businessContext.target_payback_days || ""}
-                    onChange={(e) => onBusinessContextChange({ ...businessContext, target_payback_days: parseFloat(e.target.value) || 0 })}
-                  />
-                </label>
-                <label className="generate-field">
-                  <span className="app-subtle">Gross margin (%)</span>
-                  <input
-                    type="number"
-                    className="app-input"
-                    min="0"
-                    max="100"
-                    step="1"
-                    placeholder="e.g. 70"
-                    value={businessContext.gross_margin_percent || ""}
-                    onChange={(e) => onBusinessContextChange({ ...businessContext, gross_margin_percent: parseFloat(e.target.value) || 0 })}
-                  />
-                </label>
-                <label className="generate-field">
-                  <span className="app-subtle">Qualified lead value ($)</span>
-                  <input
-                    type="number"
-                    className="app-input"
-                    min="0"
-                    step="1"
-                    placeholder="e.g. 1200"
-                    value={businessContext.qualified_lead_value || ""}
-                    onChange={(e) => onBusinessContextChange({ ...businessContext, qualified_lead_value: parseFloat(e.target.value) || 0 })}
-                  />
-                </label>
-              </div>
-              <p className="app-subtle" style={{ marginTop: 2, marginBottom: 0 }}>
-                Add at least one economic guardrail above to improve ROI recommendations.
-              </p>
-              <label className="generate-field">
-                <span className="app-subtle">What changed during this period? (optional)</span>
-                <textarea
-                  className="app-input app-textarea"
-                  rows={2}
-                  placeholder="e.g. Switched bid strategy, launched new offer, changed landing pages, tracking updates."
-                  value={businessContext.period_changes || ""}
-                  onChange={(e) => onBusinessContextChange({ ...businessContext, period_changes: e.target.value })}
-                />
-              </label>
-            </>
-          )}
+            );
+          })}
         </div>
+        {showPaidTargets && (
+          <p className="app-subtle" style={{ marginTop: 8, marginBottom: 0 }}>
+            Add at least one economic guardrail above to improve ROI recommendations.
+          </p>
+        )}
       </div>
 
       <label className="generate-field" style={{ marginTop: 14 }}>
@@ -674,6 +915,22 @@ function StepGoal({
   );
 }
 
+function formatBusinessContextFieldValue(field, rawValue) {
+  if (rawValue === null || rawValue === undefined) return "";
+  if (field.type === BUSINESS_FIELD_TYPE.SELECT) {
+    const option = (field.options || []).find((item) => String(item.value) === String(rawValue));
+    return option?.label ?? String(rawValue);
+  }
+  if (field.type === BUSINESS_FIELD_TYPE.NUMBER) {
+    const numeric = Number(rawValue);
+    if (!Number.isFinite(numeric) || numeric <= 0) return "";
+    if (field.key?.includes("percent")) return `${numeric}%`;
+    return Number.isInteger(numeric) ? numeric.toLocaleString() : numeric.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  }
+  const text = String(rawValue).trim();
+  return text;
+}
+
 function StepReview({
   selectedConnectionIds,
   connections,
@@ -687,9 +944,16 @@ function StepReview({
   gscSiteUrl,
   goalKey,
   customGoal,
+  goals,
   dateFrom,
   dateTo,
   datePreset,
+  context,
+  businessContext,
+  businessContextFields,
+  showPaidTargets,
+  title = "Review and generate insight",
+  description = "Confirm the details below. This starts fetching data and building your insight.",
 }) {
   const sourceNames = selectedConnectionIds
     .map((id) => connections.find((c) => c.id === id)?.name)
@@ -707,46 +971,83 @@ function StepReview({
         ? "—"
         : null;
   const gscLine = needsGscSite ? (gscSiteUrl || "—") : null;
+  const businessRows = visibleBusinessContextFields(businessContextFields, showPaidTargets)
+    .map((field) => ({
+      label: field.label,
+      value: formatBusinessContextFieldValue(field, businessContext?.[field.key]),
+      fullWidth: !!field.full_width,
+    }))
+    .filter((row) => !!row.value);
+  const hasAdditionalContext = String(context || "").trim().length > 0;
 
   return (
     <div className="generate-step">
-      <h2 className="generate-step-title">Review and generate</h2>
+      <h2 className="generate-step-title">{title}</h2>
       <p className="app-subtle" style={{ marginTop: 0, marginBottom: 16 }}>
-        Confirm the details below. This starts fetching data and building your report.
+        {description}
       </p>
       <div className="generate-review">
-        <div>
-          <span className="generate-review-label">Data sources</span>
-          <p className="generate-review-value">
-            {sourceNames.length ? sourceNames.join(", ") : "—"}
-          </p>
+        <div className="generate-review-section">
+          <h3 className="generate-review-section-title">Data setup</h3>
+          <div className="generate-review-grid">
+            <div>
+              <span className="generate-review-label">Data sources</span>
+              <p className="generate-review-value">{sourceNames.length ? sourceNames.join(", ") : "—"}</p>
+            </div>
+            {accountLine !== null && (
+              <div>
+                <span className="generate-review-label">Google Ads account</span>
+                <p className="generate-review-value">{accountLine}</p>
+              </div>
+            )}
+            {ga4Line !== null && (
+              <div>
+                <span className="generate-review-label">GA4 property</span>
+                <p className="generate-review-value">{ga4Line}</p>
+              </div>
+            )}
+            {gscLine !== null && (
+              <div>
+                <span className="generate-review-label">Search Console site</span>
+                <p className="generate-review-value">{gscLine}</p>
+              </div>
+            )}
+          </div>
         </div>
-        {accountLine !== null && (
-          <div>
-            <span className="generate-review-label">Google Ads account</span>
-            <p className="generate-review-value">{accountLine}</p>
+
+        <div className="generate-review-section">
+          <h3 className="generate-review-section-title">Analysis setup</h3>
+          <div className="generate-review-grid">
+            <div>
+              <span className="generate-review-label">Goal</span>
+              <p className="generate-review-value">{goalDisplayLabel(goalKey, customGoal, goals)}</p>
+            </div>
+            <div>
+              <span className="generate-review-label">Date range</span>
+              <p className="generate-review-value">{dateRangeSummary(datePreset, dateFrom, dateTo)}</p>
+            </div>
+            {hasAdditionalContext && (
+              <div className="generate-review-item--full">
+                <span className="generate-review-label">Additional context</span>
+                <p className="generate-review-value">{context}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {businessRows.length > 0 && (
+          <div className="generate-review-section">
+            <h3 className="generate-review-section-title">Business context</h3>
+            <div className="generate-review-grid">
+              {businessRows.map((row) => (
+                <div key={row.label} className={row.fullWidth ? "generate-review-item--full" : ""}>
+                  <span className="generate-review-label">{row.label}</span>
+                  <p className="generate-review-value">{row.value}</p>
+                </div>
+              ))}
+            </div>
           </div>
         )}
-        {ga4Line !== null && (
-          <div>
-            <span className="generate-review-label">GA4 property</span>
-            <p className="generate-review-value">{ga4Line}</p>
-          </div>
-        )}
-        {gscLine !== null && (
-          <div>
-            <span className="generate-review-label">Search Console site</span>
-            <p className="generate-review-value">{gscLine}</p>
-          </div>
-        )}
-        <div>
-          <span className="generate-review-label">Goal</span>
-          <p className="generate-review-value">{goalDisplayLabel(goalKey, customGoal)}</p>
-        </div>
-        <div>
-          <span className="generate-review-label">Date range</span>
-          <p className="generate-review-value">{dateRangeSummary(datePreset, dateFrom, dateTo)}</p>
-        </div>
       </div>
     </div>
   );
@@ -824,7 +1125,7 @@ function StepAnalyzing({
 
   return (
     <div className="generate-step generate-step--analyzing">
-      <h2 className="generate-step-title">Generating your report...</h2>
+      <h2 className="generate-step-title">Generating your insight...</h2>
       <div className="pipeline-steps">
         {PIPELINE_STEPS.map((step) => {
           const connectorStatuses = selectedConnections.map((connectorId) => ({
@@ -875,35 +1176,130 @@ function StepAnalyzing({
   );
 }
 
-function StepReport({ report, onSave, onRestart, saved }) {
-  // Unwrap envelope: brief from connector slot, synthesis alongside
-  const brief = report.briefs?.google_ads ?? null;
+function StepReport({ report, onSave, onRestart, saved, mode }) {
   const synthesis = report.synthesis ?? null;
   const connectorsUsed = report.connectors_used ?? [];
+  const googleAdsBrief = report.briefs?.google_ads ?? null;
 
   return (
     <div className="generate-step">
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
         <Button type="button" onClick={onSave} disabled={saved}>
-          {saved ? "Saved to Reports" : "Save to Reports"}
+          {saved ? "Saved to Insights" : "Save to Insights"}
         </Button>
         <Button type="button" variant="outline" onClick={onRestart}>
           Generate another
         </Button>
       </div>
-      {brief ? (
-        <GoogleAdsReport brief={brief} synthesis={synthesis} />
-      ) : (
+
+      {/* Paid Ads — render the full GoogleAdsReport */}
+      {googleAdsBrief && (
+        <GoogleAdsReport brief={googleAdsBrief} synthesis={synthesis} />
+      )}
+
+      {/* Organic Growth (and other non-ads modes) — render synthesis narrative */}
+      {!googleAdsBrief && synthesis && (
+        <OrganicInsightReport synthesis={synthesis} connectorsUsed={connectorsUsed} />
+      )}
+
+      {/* No synthesis and no known brief renderer — thin fallback, no raw JSON dump */}
+      {!googleAdsBrief && !synthesis && (
         <div className="generate-alert" role="status">
-          <h3 className="generate-alert-title">Report generated</h3>
-          <p className="generate-alert-help" style={{ marginBottom: 10 }}>
-            A Google Ads brief was not included in this run, so the standard report view is unavailable.
+          <h3 className="generate-alert-title">Insight collected</h3>
+          <p className="generate-alert-help">
+            Data was fetched from {connectorsUsed.length ? connectorsUsed.join(", ") : "your connected sources"} but no synthesis was produced.
+            This usually means the date range returned no data — try a longer window (30 or 90 days).
           </p>
-          <p className="generate-alert-help" style={{ marginBottom: 10 }}>
-            Connectors used: {connectorsUsed.length ? connectorsUsed.join(", ") : "—"}
-          </p>
-          <pre className="generate-error">{JSON.stringify(report, null, 2)}</pre>
         </div>
+      )}
+    </div>
+  );
+}
+
+function OrganicInsightReport({ synthesis, connectorsUsed }) {
+  const narrative = synthesis.narrative ?? {};
+  const highlights = synthesis.highlights ?? [];
+  const risks = synthesis.risks ?? [];
+  const actions = synthesis.recommended_actions ?? [];
+
+  return (
+    <div className="generate-step" style={{ padding: 0 }}>
+      {/* Narrative block */}
+      {narrative.verdict && (
+        <div className="generate-alert" role="status" style={{ marginBottom: 20 }}>
+          <p style={{ fontWeight: 600, marginBottom: 6 }}>{narrative.verdict}</p>
+          {narrative.summary && <p className="app-subtle" style={{ marginBottom: 6 }}>{narrative.summary}</p>}
+          {narrative.operator_takeaway && (
+            <p style={{ fontSize: 13, fontWeight: 500 }}>
+              <span className="app-subtle">This week: </span>{narrative.operator_takeaway}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Highlights */}
+      {highlights.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>Opportunities</h3>
+          {highlights.map((h, i) => (
+            <FindingCard key={i} finding={h} tone="win" />
+          ))}
+        </div>
+      )}
+
+      {/* Risks */}
+      {risks.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>Issues to address</h3>
+          {risks.map((r, i) => (
+            <FindingCard key={i} finding={r} tone="risk" />
+          ))}
+        </div>
+      )}
+
+      {/* Actions */}
+      {actions.length > 0 && (
+        <div>
+          <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>Recommended actions</h3>
+          {actions.map((a, i) => (
+            <div key={i} className="generate-alert" style={{ marginBottom: 10 }}>
+              <p style={{ fontWeight: 600, marginBottom: 4 }}>{a.title}</p>
+              {a.detail && <p className="app-subtle">{a.detail}</p>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Empty synthesis — no actionable findings */}
+      {!narrative.verdict && highlights.length === 0 && risks.length === 0 && (
+        <div className="generate-alert" role="status">
+          <h3 className="generate-alert-title">Not enough data</h3>
+          <p className="generate-alert-help">
+            The selected date range returned very limited data from {connectorsUsed.join(", ")}. Try a 30 or 90-day window for richer insights.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FindingCard({ finding, tone }) {
+  const borderColor = tone === "win" ? "var(--primary)" : "var(--destructive, #e53e3e)";
+  return (
+    <div
+      style={{
+        borderLeft: `3px solid ${borderColor}`,
+        paddingLeft: 12,
+        marginBottom: 12,
+        opacity: finding.confidence === "low" ? 0.7 : 1,
+      }}
+    >
+      <p style={{ fontWeight: 600, fontSize: 13, marginBottom: 4 }}>{finding.title}</p>
+      {finding.evidence && finding.evidence.map((e, i) => (
+        <p key={i} className="app-subtle" style={{ fontSize: 12, marginBottom: 2 }}>{e}</p>
+      ))}
+      {finding.recommended_action && (
+        <p style={{ fontSize: 12, marginTop: 6, fontWeight: 500 }}>{finding.recommended_action}</p>
       )}
     </div>
   );
@@ -911,6 +1307,26 @@ function StepReport({ report, onSave, onRestart, saved }) {
 
 export default function GeneratePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Mode — read from query param, locked for wizard lifetime
+  const modeParam = searchParams.get("mode") || DEFAULT_MODE_KEY;
+  const [modes, setModes] = useState(FALLBACK_MODES);
+  const [modesLoaded, setModesLoaded] = useState(false);
+  const resolvedMode = modes.find((m) => m.key === modeParam && m.active)?.key || DEFAULT_MODE_KEY;
+  const [activeMode] = useState(resolvedMode);
+  const modeConfig = getModeByKey(modes, activeMode);
+  const activeGoals = modeConfig?.goals ?? [];
+  const lockedConnections = modeConfig?.locked_connections ?? null;
+
+  useEffect(() => {
+    fetchModes()
+      .then((fetched) => {
+        setModes(fetched);
+        setModesLoaded(true);
+      })
+      .catch(() => setModesLoaded(true)); // stay on fallback
+  }, []);
 
   // Wizard state
   const [step, setStep] = useState(1);
@@ -926,7 +1342,9 @@ export default function GeneratePage() {
   const [error, setError] = useState(null);
   const [report, setReport] = useState(null);
   const [saved, setSaved] = useState(false);
-  const [businessContext, setBusinessContext] = useState(() => businessContextFromProfileDraft());
+  const [businessContext, setBusinessContext] = useState(
+    () => activeMode === "organic_growth" ? businessContextFromOrganicDraft() : businessContextFromProfileDraft()
+  );
 
   // Connector target selections (loaded on step 2 when connector is selected)
   const [adsAccounts, setAdsAccounts] = useState([]);
@@ -942,6 +1360,19 @@ export default function GeneratePage() {
   const [gscSitesError, setGscSitesError] = useState(null);
   const [selectedGscSiteUrl, setSelectedGscSiteUrl] = useState("");
   const [pipelineStatusByKey, setPipelineStatusByKey] = useState({});
+  const [hydratedFromSession, setHydratedFromSession] = useState(false);
+
+  // Engine selection — read from localStorage, kept in sync with EngineDialog changes
+  const [engine, setEngine] = useState("v1");
+  useEffect(() => {
+    const stored = localStorage.getItem("duct_engine") || "v1";
+    setEngine(stored);
+    function handleStorage(e) {
+      if (e.key === "duct_engine") setEngine(e.newValue || "v1");
+    }
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
 
   // Detect connected sources (Google Ads = OAuth token only; account chosen in generate flow)
   const [connections, setConnections] = useState([]);
@@ -1000,6 +1431,93 @@ export default function GeneratePage() {
       },
     ]);
   }, []);
+
+  useEffect(() => {
+    const storageKey = getWizardStorageKey(activeMode);
+    try {
+      const raw = sessionStorage.getItem(storageKey);
+      if (!raw) {
+        setHydratedFromSession(true);
+        return;
+      }
+      const draft = JSON.parse(raw);
+      if (Array.isArray(draft.selectedConnections)) {
+        setSelectedConnections(draft.selectedConnections);
+      }
+      if (typeof draft.goal === "string") {
+        setGoal(draft.goal);
+      }
+      if (typeof draft.customGoal === "string") {
+        setCustomGoal(draft.customGoal);
+      }
+      if (typeof draft.context === "string") {
+        setContext(draft.context);
+      }
+      if (typeof draft.datePreset === "string") {
+        setDatePreset(draft.datePreset);
+      }
+      if (typeof draft.dateFrom === "string") {
+        setDateFrom(draft.dateFrom);
+      }
+      if (typeof draft.dateTo === "string") {
+        setDateTo(draft.dateTo);
+      }
+      if (typeof draft.selectedAdsCustomerId === "string") {
+        setSelectedAdsCustomerId(draft.selectedAdsCustomerId);
+      }
+      if (typeof draft.selectedGa4PropertyId === "string") {
+        setSelectedGa4PropertyId(draft.selectedGa4PropertyId);
+      }
+      if (typeof draft.selectedGscSiteUrl === "string") {
+        setSelectedGscSiteUrl(draft.selectedGscSiteUrl);
+      }
+      if (draft.businessContext && typeof draft.businessContext === "object") {
+        setBusinessContext(draft.businessContext);
+      }
+      if (Number.isInteger(draft.step) && draft.step >= 1 && draft.step <= 5) {
+        setStep(draft.step);
+      }
+    } catch {
+      // Ignore malformed session draft and continue with defaults.
+    } finally {
+      setHydratedFromSession(true);
+    }
+  }, [activeMode]);
+
+  useEffect(() => {
+    if (!hydratedFromSession) return;
+    const storageKey = getWizardStorageKey(activeMode);
+    const draft = {
+      step: Math.min(step, 5),
+      selectedConnections,
+      goal,
+      customGoal,
+      context,
+      dateFrom,
+      dateTo,
+      datePreset,
+      selectedAdsCustomerId,
+      selectedGa4PropertyId,
+      selectedGscSiteUrl,
+      businessContext,
+    };
+    sessionStorage.setItem(storageKey, JSON.stringify(draft));
+  }, [
+    hydratedFromSession,
+    activeMode,
+    step,
+    selectedConnections,
+    goal,
+    customGoal,
+    context,
+    dateFrom,
+    dateTo,
+    datePreset,
+    selectedAdsCustomerId,
+    selectedGa4PropertyId,
+    selectedGscSiteUrl,
+    businessContext,
+  ]);
 
   useEffect(() => {
     if (step !== 2) return undefined;
@@ -1172,7 +1690,7 @@ export default function GeneratePage() {
   }
 
   async function handleGenerate() {
-    setStep(5);
+    setStep(6);
     setStatus("loading");
     setError(null);
     setPipelineStatusByKey(createInitialPipelineStatus(selectedConnections));
@@ -1188,6 +1706,7 @@ export default function GeneratePage() {
     try {
       const data = await generateReportStream({
         connections: selectedConnections,
+        mode: activeMode,
         goal: goal === "custom" ? "custom" : goal,
         custom_goal: goal === "custom" ? customGoal.trim() : "",
         context,
@@ -1202,12 +1721,13 @@ export default function GeneratePage() {
         account_name: account?.descriptive_name ?? "",
         currency_code: account?.currency_code || "USD",
         business_context: businessContext,
+        engine,
       }, {
         onEvent: applyPipelineEvent,
       });
       setReport(data);
       setStatus("success");
-      setStep(6);
+      setStep(7);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
       setStatus("error");
@@ -1217,9 +1737,25 @@ export default function GeneratePage() {
   function handleSave() {
     if (!report) return;
     const slug = generateSlug(selectedAdsCustomerId || sessionStorage.getItem("gads_customer_id") || "", dateTo);
-    saveLocalReport(slug, report);
+    const routine = buildReportRoutine({
+      selectedConnections,
+      datePreset,
+      dateFrom,
+      dateTo,
+      goal,
+      customGoal,
+      context,
+      selectedAdsCustomerId,
+      adsAccounts,
+      selectedGa4PropertyId,
+      ga4Properties,
+      selectedGscSiteUrl,
+      businessContext,
+      mode: activeMode,
+    });
+    saveLocalInsight(slug, report, routine, getActiveProjectId() || null, activeMode);
     setSaved(true);
-    setTimeout(() => router.push("/reports"), 400);
+    setTimeout(() => router.push("/insights/organic-growth"), 400);
   }
 
   function handleRestart() {
@@ -1236,7 +1772,9 @@ export default function GeneratePage() {
     setError(null);
     setReport(null);
     setSaved(false);
-    setBusinessContext(businessContextFromProfileDraft());
+    setBusinessContext(
+      activeMode === "organic_growth" ? businessContextFromOrganicDraft() : businessContextFromProfileDraft()
+    );
     setAdsAccounts([]);
     setAdsAccountsLoading(false);
     setSelectedAdsCustomerId("");
@@ -1250,6 +1788,7 @@ export default function GeneratePage() {
     setGscSitesLoading(false);
     setSelectedGscSiteUrl("");
     setPipelineStatusByKey({});
+    sessionStorage.removeItem(getWizardStorageKey(activeMode));
   }
 
   function handleRetry() {
@@ -1260,13 +1799,16 @@ export default function GeneratePage() {
   const needsAdsAccount = selectedConnections.includes("google_ads");
   const needsGa4Property = selectedConnections.includes("ga4");
   const needsGscSite = selectedConnections.includes("gsc");
-  const showPaidTargets = selectedConnections.includes("google_ads");
+  const showPaidTargets = activeMode !== "organic_growth" && selectedConnections.includes("google_ads");
   const hasEconomicGuardrail =
     Number(businessContext.target_payback_days) > 0 ||
     Number(businessContext.gross_margin_percent) > 0 ||
     Number(businessContext.qualified_lead_value) > 0;
   const hasPrimaryConversionAction = String(businessContext.primary_conversion_action || "").trim().length > 0;
-  const adsBusinessContextOk = !showPaidTargets || (hasPrimaryConversionAction && hasEconomicGuardrail);
+  const adsBusinessContextOk =
+    activeMode === "organic_growth"
+      ? true
+      : !showPaidTargets || (hasPrimaryConversionAction && hasEconomicGuardrail);
   const selectedIdNorm = normalizeCustomerId(selectedAdsCustomerId);
   const adsAccountOk =
     !needsAdsAccount ||
@@ -1316,8 +1858,8 @@ export default function GeneratePage() {
     if (!goal) return "Select an analysis goal above to continue.";
     if (goal === "custom" && !customGoal.trim()) return "Enter a short description for your custom goal.";
     if (!dateFrom || !dateTo) return "Choose a date range (or pick Custom and set dates).";
-    if (showPaidTargets && !hasPrimaryConversionAction) return "Enter your primary conversion action for this ads analysis.";
-    if (showPaidTargets && !hasEconomicGuardrail) return "Add at least one economic guardrail (payback days, gross margin, or qualified lead value).";
+    if (activeMode !== "organic_growth" && showPaidTargets && !hasPrimaryConversionAction) return "Enter your primary conversion action for this ads analysis.";
+    if (activeMode !== "organic_growth" && showPaidTargets && !hasEconomicGuardrail) return "Add at least one economic guardrail (payback days, gross margin, or qualified lead value).";
     return "";
   }
 
@@ -1339,7 +1881,7 @@ export default function GeneratePage() {
           className="connection-back-btn shrink-0 rounded-full"
           asChild
         >
-          <Link href="/reports" aria-label="Back to Reports" title="Back to Reports">
+          <Link href="/insights/organic-growth" aria-label="Back to Insights" title="Back to Insights">
             <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
               <path
                 d="M15 18 9 12l6-6"
@@ -1352,7 +1894,14 @@ export default function GeneratePage() {
             </svg>
           </Link>
         </Button>
-        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">Generate Report</h1>
+        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">
+          Generate Insight
+          {modeConfig && (
+            <span className="mode-badge-wizard" aria-label={`Mode: ${modeConfig.label}`}>
+              {modeConfig.emoji} {modeConfig.label}
+            </span>
+          )}
+        </h1>
       </div>
 
       <ProgressDots step={step} />
@@ -1360,9 +1909,14 @@ export default function GeneratePage() {
       {step === 1 && (
         <>
           <StepConnections
-            connections={connections}
+            connections={
+              lockedConnections?.length
+                ? connections.filter((c) => lockedConnections.includes(c.id))
+                : connections
+            }
             selected={selectedConnections}
             onToggle={toggleConnection}
+            locked={false}
           />
           <div style={{ marginTop: 16 }}>
             <Button type="button" disabled={!canProceedStep1} onClick={() => setStep(2)}>
@@ -1426,6 +1980,7 @@ export default function GeneratePage() {
       {step === 3 && (
         <>
           <StepGoal
+            goals={activeGoals}
             goal={goal}
             onGoalChange={setGoal}
             customGoal={customGoal}
@@ -1439,6 +1994,7 @@ export default function GeneratePage() {
             datePreset={datePreset}
             onDatePresetChange={applyDatePreset}
             showPaidTargets={showPaidTargets}
+            businessContextFields={modeConfig?.business_context_fields ?? []}
             businessContext={businessContext}
             onBusinessContextChange={setBusinessContext}
           />
@@ -1473,12 +2029,61 @@ export default function GeneratePage() {
             gscSiteUrl={gscForReview?.site_url ?? selectedGscSiteUrlNorm}
             goalKey={goal}
             customGoal={customGoal}
+            goals={activeGoals}
             dateFrom={dateFrom}
             dateTo={dateTo}
             datePreset={datePreset}
+            context={context}
+            businessContext={businessContext}
+            businessContextFields={modeConfig?.business_context_fields ?? []}
+            showPaidTargets={showPaidTargets}
+            title="Preview insight setup"
+            description="Preview everything captured so far before moving to final generation."
           />
           <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
             <Button type="button" variant="outline" onClick={() => setStep(3)}>
+              Back
+            </Button>
+            <Button type="button" disabled={!canProceedConfigure} onClick={() => setStep(5)}>
+              Next
+            </Button>
+          </div>
+          {!canProceedConfigure && (
+            <p className="app-subtle generate-step-hint" role="status">
+              {configureBlockedReason()}
+            </p>
+          )}
+        </>
+      )}
+
+      {step === 5 && (
+        <>
+          <StepReview
+            selectedConnectionIds={selectedConnections}
+            connections={connections}
+            needsAdsAccount={needsAdsAccount}
+            needsGa4Property={needsGa4Property}
+            needsGscSite={needsGscSite}
+            accountDescriptiveName={accountForReview?.descriptive_name ?? ""}
+            accountCustomerId={cidForReview}
+            ga4PropertyName={ga4ForReview?.property_name ?? ""}
+            ga4PropertyId={selectedGa4PropertyIdNorm}
+            gscSiteUrl={gscForReview?.site_url ?? selectedGscSiteUrlNorm}
+            goalKey={goal}
+            customGoal={customGoal}
+            goals={activeGoals}
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            datePreset={datePreset}
+            context={context}
+            businessContext={businessContext}
+            businessContextFields={modeConfig?.business_context_fields ?? []}
+            showPaidTargets={showPaidTargets}
+            title="Ready to generate"
+            description="Everything looks good. Start generation when you're ready."
+          />
+          <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+            <Button type="button" variant="outline" onClick={() => setStep(4)}>
               Back
             </Button>
             <Button type="button" disabled={!canProceedConfigure} onClick={handleGenerate}>
@@ -1493,7 +2098,7 @@ export default function GeneratePage() {
         </>
       )}
 
-      {step === 5 && (
+      {step === 6 && (
         <StepAnalyzing
           error={error}
           onRetry={handleRetry}
@@ -1503,12 +2108,13 @@ export default function GeneratePage() {
         />
       )}
 
-      {step === 6 && report && (
+      {step === 7 && report && (
         <StepReport
           report={report}
           onSave={handleSave}
           onRestart={handleRestart}
           saved={saved}
+          mode={activeMode}
         />
       )}
     </section>

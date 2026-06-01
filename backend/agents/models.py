@@ -1,4 +1,4 @@
-"""Provider and model enums with helper functions.
+"""Provider, model, and SDK tool enums with helper functions.
 
 Follows the nomadtools agents/models.py pattern for provider-agnostic
 model initialization via LangChain's init_chat_model().
@@ -6,7 +6,7 @@ model initialization via LangChain's init_chat_model().
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import Enum, StrEnum
 
 
 class Provider(str, Enum):
@@ -29,6 +29,69 @@ class ModelName(str, Enum):
     # Anthropic
     CLAUDE_SONNET = "claude-sonnet-4-6"
     CLAUDE_HAIKU = "claude-haiku-4-5-20251001"
+
+
+class AgentTool(StrEnum):
+    """Built-in Claude Agent SDK tool names passed to allowed_tools."""
+
+    ASK_USER_QUESTION = "AskUserQuestion"
+    TODO_WRITE = "TodoWrite"
+    FETCH_PAGES          = "mcp__duct_crawl__FetchPages"          # in-process MCP tool: use namespaced format
+    SUBMIT_AUDIT_REPORT  = "mcp__duct_crawl__SubmitAuditReport"   # template mode only
+    WEB_SEARCH  = "WebSearch"         # SERP research, competitor discovery
+    WEB_FETCH   = "WebFetch"          # fetch arbitrary URLs (e.g. competitor pages)
+    AGENT = "Agent"
+    READ = "Read"
+    WRITE = "Write"
+    EDIT = "Edit"
+    BASH = "Bash"
+    GREP = "Grep"
+    GLOB = "Glob"
+    NOTEBOOK_EDIT = "NotebookEdit"
+
+
+class AgentPermissionMode(StrEnum):
+    """Claude Agent SDK permission_mode values for ClaudeAgentOptions."""
+
+    DEFAULT = "default"          # unmatched tools fall through to canUseTool
+    DONT_ASK = "dontAsk"         # unmatched tools are hard-denied; canUseTool skipped (except AskUserQuestion)
+    ACCEPT_EDITS = "acceptEdits" # file-edit tools auto-approved; others need canUseTool
+    BYPASS = "bypassPermissions" # all tools approved; use only in fully controlled environments
+    PLAN = "plan"                # read-only tools only; no file writes
+
+
+class ThinkingMode(StrEnum):
+    """Claude Agent SDK thinking type values for ClaudeAgentOptions.thinking.
+
+    Pass as ThinkingConfigAdaptive(type=ThinkingMode.ADAPTIVE) — using the enum
+    avoids bare string literals and ensures the SDK's TypedDict gets the required
+    'type' key (ThinkingConfigAdaptive() with no args produces {} which raises
+    KeyError: 'type' at CLI command build time).
+    """
+
+    ADAPTIVE = "adaptive"   # model decides thinking depth per turn
+    ENABLED  = "enabled"    # fixed budget_tokens; pair with ThinkingConfigEnabled
+    DISABLED = "disabled"   # no extended thinking
+
+
+class AgentEffort(StrEnum):
+    """Claude Agent SDK effort levels for ClaudeAgentOptions (v3 engine only).
+
+    Controls how hard the model works before responding. Maps to the Claude CLI
+    --effort flag introduced in claude-agent-sdk v0.1.36.
+
+    LOW    — fastest, cheapest; good for simple lookups
+    MEDIUM — balanced default
+    HIGH   — deeper reasoning; recommended for complex analysis (e.g. SEO audit)
+    XHIGH  — Opus 4.7-specific extended effort; falls back to HIGH on other models
+    MAX    — maximum effort; most expensive
+    """
+
+    LOW   = "low"
+    MEDIUM = "medium"
+    HIGH  = "high"
+    XHIGH = "xhigh"
+    MAX   = "max"
 
 
 # Default provider → model mapping

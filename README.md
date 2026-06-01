@@ -61,10 +61,10 @@ To update the GTM ID, edit the single line in `site/assets/config.js`.
 ## Local dev
 
 ```bash
-python3 -m http.server 8080 --directory site
+python3 -m http.server 8090 --directory site
 ```
 
-Then open `http://localhost:8080/`.
+Then open `http://localhost:8090/`.
 
 ## Add a new page
 

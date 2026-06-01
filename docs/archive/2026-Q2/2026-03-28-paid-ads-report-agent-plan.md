@@ -332,7 +332,7 @@ Replace it with the full CSS block below (which includes the original rules plus
 
 - [ ] **Step 2: Verify page still renders**
 
-Run `python3 -m http.server 8080`, open `http://localhost:8080/for-paid-ads-demo.html`.
+Run `python3 -m http.server 8090`, open `http://localhost:8090/for-paid-ads-demo.html`.
 Expected: Page loads, no layout breaks, no console errors.
 
 - [ ] **Step 3: Commit**
@@ -797,8 +797,8 @@ Add `closeReportModal();` on the next line:
 
 - [ ] **Step 6: Full verification in browser**
 
-Start server: `python3 -m http.server 8080`
-Open: `http://localhost:8080/for-paid-ads-demo.html`
+Start server: `python3 -m http.server 8090`
+Open: `http://localhost:8090/for-paid-ads-demo.html`
 
 Run through this checklist:
 

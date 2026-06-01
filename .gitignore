@@ -3,6 +3,9 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 
+# Test output artifacts (locally generated; not committed)
+backend/tests/outputs/
+
 # Python
 **/__pycache__/
 **/*.pyc
@@ -44,6 +47,8 @@ pnpm-debug.log*
 **/test-results/
 **/blob-report/
 **/playwright/.cache/
+# Ad-hoc screenshots dumped at repo root (e.g. Playwright MCP / manual QA)
+/*.png
 
 # Deploy / local tooling
 .vercel/
@@ -67,3 +72,7 @@ pnpm-debug.log*
 **/.env.*
 !**/.env.example
 client_secret_*.json
+
+backend/tests/outputs/
+
+.vscode/chrome-site-debug/

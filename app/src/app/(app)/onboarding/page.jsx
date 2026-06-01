@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,42 +18,15 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import {
-  getBusinessProfileDraft,
-  saveBusinessProfileDraft,
-} from "../../../lib/businessProfile";
+  createProject,
+  getActiveProject,
+  getProjectById,
+  saveProject,
+  setActiveProjectId,
+} from "../../../lib/projects";
+import { fetchProjectConfig, getFallbackProjectConfig } from "../../../lib/projectConfig";
 
-const INDUSTRIES = [
-  "E-commerce & Retail",
-  "SaaS & Software",
-  "Financial Services",
-  "Healthcare",
-  "Education",
-  "Professional Services",
-  "Marketing & Advertising",
-  "Real Estate",
-  "Travel & Hospitality",
-  "Other",
-];
-const BUSINESS_MODELS = ["B2B", "B2C", "Marketplace", "PLG", "Agency", "Hybrid"];
 const PRIMARY_SEGMENTS = ["Consumer", "SMB", "Mid-market", "Enterprise", "Public sector", "Non-profit", "Other"];
-
-const NORTH_STAR_OPTIONS = [
-  "Weekly active users",
-  "Monthly active customers",
-  "Qualified leads",
-  "Pipeline created",
-  "Net new revenue",
-  "Retention rate",
-  "Bookings",
-  "Custom",
-];
-const GROWTH_STAGE_OPTIONS = [
-  { value: "0_pre_customer", label: "No customers or active users yet" },
-  { value: "1_first_users", label: "First active users/customers (1-10)" },
-  { value: "2_early_revenue", label: "Early repeat usage or revenue (10-100 customers)" },
-  { value: "3_repeatable_growth", label: "Repeatable growth motion (100+ customers or steady MoM growth)" },
-  { value: "4_scaling", label: "Scaling across channels or segments with predictable performance" },
-];
 const BRAND_VOICES = ["Professional", "Friendly", "Bold", "Technical", "Playful"];
 const GROWTH_MOTIONS = ["Organic", "Paid", "Product-led", "Sales-led", "Partnerships", "Community", "Lifecycle/CRM"];
 const TOTAL_STEPS = 5;
@@ -68,31 +42,35 @@ function parseComparisonItems(rawValue) {
   );
 }
 
+function hasText(value) {
+  return String(value ?? "").trim().length > 0;
+}
+
 const STEP_DEFINITIONS = [
   {
     label: "Company basics",
     shortLabel: "Company",
     fields: [
-      { weight: 3, check: (profile) => profile.company.name.trim().length > 0 },
-      { weight: 3, check: (profile) => profile.company.industry.trim().length > 0 },
-      { weight: 2, check: (profile) => profile.company.business_model.trim().length > 0 },
-      { weight: 1, check: (profile) => profile.company.website_url.trim().length > 0 },
+      { weight: 3, check: (profile) => hasText(profile.company?.name) },
+      { weight: 3, check: (profile) => hasText(profile.company?.industry) },
+      { weight: 2, check: (profile) => hasText(profile.company?.business_model) },
+      { weight: 1, check: (profile) => hasText(profile.company?.website_url) },
     ],
   },
   {
     label: "Targets",
     shortLabel: "Targets",
     fields: [
-      { weight: 2, check: (profile) => profile.targets.north_star_metric.trim().length > 0 },
-      { weight: 2, check: (profile) => profile.targets.north_star_goal_window.trim().length > 0 },
-      { weight: 2, check: (profile) => profile.targets.growth_stage_milestone.trim().length > 0 },
+      { weight: 2, check: (profile) => hasText(profile.targets?.north_star_metric) },
+      { weight: 2, check: (profile) => hasText(profile.targets?.north_star_goal_window) },
+      { weight: 2, check: (profile) => hasText(profile.targets?.growth_stage_milestone) },
     ],
   },
   {
     label: "Audience",
     shortLabel: "Audience",
     fields: [
-      { weight: 2, check: (profile) => profile.audience.primary_segment.trim().length > 0 },
+      { weight: 2, check: (profile) => hasText(profile.audience?.primary_segment) },
       { weight: 3, check: (profile) => (profile.audience.personas[0]?.name || "").trim().length > 0 },
       { weight: 2, check: (profile) => (profile.audience.personas[0]?.description || "").trim().length > 0 },
     ],
@@ -101,23 +79,30 @@ const STEP_DEFINITIONS = [
     label: "Competition",
     shortLabel: "Competition",
     fields: [
-      { weight: 1, check: (profile) => profile.competition.compare_against.trim().length > 0 },
+      { weight: 1, check: (profile) => hasText(profile.competition?.compare_against) },
     ],
   },
   {
     label: "Business context",
     shortLabel: "Context",
     fields: [
-      { weight: 2, check: (profile) => profile.brand_channels.brand_voice.trim().length > 0 },
-      { weight: 2, check: (profile) => profile.brand_channels.growth_motions.length > 0 },
-      { weight: 1, check: (profile) => profile.brand_channels.context_notes.trim().length > 0 },
+      { weight: 2, check: (profile) => hasText(profile.brand_channels?.brand_voice) },
+      { weight: 2, check: (profile) => (profile.brand_channels?.growth_motions || []).length > 0 },
+      { weight: 1, check: (profile) => hasText(profile.brand_channels?.context_notes) },
     ],
   },
 ];
 
 export default function OnboardingPage() {
+  const searchParams = useSearchParams();
   const [ready, setReady] = useState(false);
   const [step, setStep] = useState(1);
+  const [projectMeta, setProjectMeta] = useState(null);
+  const [isNewProjectFlow, setIsNewProjectFlow] = useState(false);
+  const [projectLoadError, setProjectLoadError] = useState("");
+  const [projectConfig, setProjectConfig] = useState(getFallbackProjectConfig);
+  const [projectConfigLoading, setProjectConfigLoading] = useState(false);
+  const [projectConfigError, setProjectConfigError] = useState("");
   const [profile, setProfile] = useState({
     company: { name: "", industry: "", business_model: "", website_url: "" },
     targets: {
@@ -143,7 +128,34 @@ export default function OnboardingPage() {
   });
 
   useEffect(() => {
-    const draft = getBusinessProfileDraft();
+    const wantsNewProject = searchParams.get("new") === "1";
+    const requestedProjectId = searchParams.get("project_id");
+    setIsNewProjectFlow(wantsNewProject);
+    setProjectLoadError("");
+    let project = null;
+    if (wantsNewProject) {
+      setProjectMeta(null);
+      setReady(true);
+      return;
+    } else if (requestedProjectId) {
+      project = getProjectById(requestedProjectId);
+      if (!project) {
+        setProjectMeta(null);
+        setProjectLoadError("Project not found. It may have been deleted.");
+        setReady(true);
+        return;
+      }
+      setActiveProjectId(project.id);
+    } else {
+      project = getActiveProject();
+      if (!project) {
+        project = createProject();
+        setActiveProjectId(project.id);
+      }
+    }
+
+    setProjectMeta(project);
+    const draft = project || {};
     setProfile((prev) => ({
       ...prev,
       ...draft,
@@ -178,12 +190,64 @@ export default function OnboardingPage() {
       },
     }));
     setReady(true);
-  }, []);
+  }, [searchParams]);
 
   useEffect(() => {
     if (!ready) return;
-    saveBusinessProfileDraft(profile);
-  }, [profile, ready]);
+    let cancelled = false;
+    async function loadProjectConfig() {
+      setProjectConfigLoading(true);
+      try {
+        const config = await fetchProjectConfig({
+          industry: profile.company.industry,
+          businessModel: profile.company.business_model,
+        });
+        if (cancelled) return;
+        setProjectConfig(config);
+        setProjectConfigError("");
+      } catch {
+        if (cancelled) return;
+        setProjectConfig(getFallbackProjectConfig());
+        setProjectConfigError("Using fallback options while config service is unavailable.");
+      } finally {
+        if (!cancelled) {
+          setProjectConfigLoading(false);
+        }
+      }
+    }
+    loadProjectConfig();
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, profile.company.industry, profile.company.business_model]);
+
+  function isStepOneRequiredComplete(currentProfile) {
+    return Boolean(
+      currentProfile.company?.name?.trim() &&
+      currentProfile.company?.industry?.trim() &&
+      currentProfile.company?.business_model?.trim()
+    );
+  }
+
+  useEffect(() => {
+    if (!ready) return;
+    if (!projectMeta?.id) {
+      if (!isNewProjectFlow || !isStepOneRequiredComplete(profile)) return;
+      const created = createProject({
+        ...profile,
+        name: profile.company.name || "Untitled project",
+      });
+      setProjectMeta(created);
+      setActiveProjectId(created.id);
+      window.dispatchEvent(new Event("duct:project-changed"));
+      return;
+    }
+    saveProject({
+      ...projectMeta,
+      ...profile,
+      name: projectMeta.name || profile.company.name || "Untitled project",
+    });
+  }, [profile, projectMeta, ready, isNewProjectFlow]);
 
   const stepProgress = useMemo(
     () =>
@@ -208,6 +272,35 @@ export default function OnboardingPage() {
     [profile.competition.compare_against]
   );
   const [comparisonInput, setComparisonInput] = useState("");
+  const industryOptions = projectConfig?.industry_options ?? [];
+  const businessModelOptions = projectConfig?.business_model_options ?? [];
+  const northStarOptions = projectConfig?.north_star_metric_options ?? [];
+  const growthStageOptions = projectConfig?.growth_stage_milestone_options ?? [];
+  const hasCompanyContext = Boolean(profile.company.industry && profile.company.business_model);
+
+  function handleIndustryChange(value) {
+    setProfile((prev) => ({
+      ...prev,
+      company: { ...prev.company, industry: value },
+      targets: {
+        ...prev.targets,
+        north_star_metric: "",
+        growth_stage_milestone: "",
+      },
+    }));
+  }
+
+  function handleBusinessModelChange(value) {
+    setProfile((prev) => ({
+      ...prev,
+      company: { ...prev.company, business_model: value },
+      targets: {
+        ...prev.targets,
+        north_star_metric: "",
+        growth_stage_milestone: "",
+      },
+    }));
+  }
 
   function goNext() {
     setStep((current) => Math.min(current + 1, TOTAL_STEPS));
@@ -259,8 +352,20 @@ export default function OnboardingPage() {
   if (!ready) {
     return (
       <section>
-        <h1 className="text-2xl font-semibold tracking-tight mb-2">Profile setup</h1>
+        <h1 className="text-2xl font-semibold tracking-tight mb-2">Project setup</h1>
         <p className="text-sm text-muted-foreground">Loading your saved progress...</p>
+      </section>
+    );
+  }
+
+  if (projectLoadError) {
+    return (
+      <section>
+        <h1 className="text-2xl font-semibold tracking-tight mb-2">Project setup</h1>
+        <p className="text-sm text-muted-foreground mb-4">{projectLoadError}</p>
+        <Button asChild>
+          <Link href="/projects">Back to manage projects</Link>
+        </Button>
       </section>
     );
   }
@@ -270,7 +375,7 @@ export default function OnboardingPage() {
       {/* Sticky progress shell */}
       <div className="onboarding-progress-shell">
         <div className="page-toolbar" style={{ marginBottom: 8 }}>
-          <h1 className="page-toolbar-title text-lg font-semibold tracking-tight">Profile setup</h1>
+          <h1 className="page-toolbar-title text-lg font-semibold tracking-tight">Project setup</h1>
           <span className="text-sm text-muted-foreground">{inputProgressPercent}% complete</span>
         </div>
 
@@ -327,36 +432,26 @@ export default function OnboardingPage() {
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="company-industry">Industry</Label>
-            <Select
-              value={profile.company.industry}
-              onValueChange={(val) =>
-                setProfile((prev) => ({ ...prev, company: { ...prev.company, industry: val } }))
-              }
-            >
+            <Select value={profile.company.industry} onValueChange={handleIndustryChange}>
               <SelectTrigger id="company-industry">
                 <SelectValue placeholder="Select industry..." />
               </SelectTrigger>
               <SelectContent>
-                {INDUSTRIES.map((industry) => (
-                  <SelectItem key={industry} value={industry}>{industry}</SelectItem>
+                {industryOptions.map((industry) => (
+                  <SelectItem key={industry.value} value={industry.value}>{industry.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="company-business-model">Business model</Label>
-            <Select
-              value={profile.company.business_model}
-              onValueChange={(val) =>
-                setProfile((prev) => ({ ...prev, company: { ...prev.company, business_model: val } }))
-              }
-            >
+            <Select value={profile.company.business_model} onValueChange={handleBusinessModelChange}>
               <SelectTrigger id="company-business-model">
                 <SelectValue placeholder="Select business model..." />
               </SelectTrigger>
               <SelectContent>
-                {BUSINESS_MODELS.map((model) => (
-                  <SelectItem key={model} value={model}>{model}</SelectItem>
+                {businessModelOptions.map((model) => (
+                  <SelectItem key={model.value} value={model.value}>{model.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -385,6 +480,7 @@ export default function OnboardingPage() {
             <Label htmlFor="north-star-metric">North Star metric</Label>
             <Select
               value={profile.targets.north_star_metric}
+              disabled={!hasCompanyContext || projectConfigLoading}
               onValueChange={(val) =>
                 setProfile((prev) => ({ ...prev, targets: { ...prev.targets, north_star_metric: val } }))
               }
@@ -393,11 +489,17 @@ export default function OnboardingPage() {
                 <SelectValue placeholder="Select North Star metric..." />
               </SelectTrigger>
               <SelectContent>
-                {NORTH_STAR_OPTIONS.map((metric) => (
-                  <SelectItem key={metric} value={metric}>{metric}</SelectItem>
+                {northStarOptions.map((metric) => (
+                  <SelectItem key={metric.value} value={metric.value}>{metric.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            {!hasCompanyContext ? (
+              <p className="text-xs text-muted-foreground">
+                Select Industry and Business model first to load relevant North Star options.
+              </p>
+            ) : null}
+            {projectConfigError ? <p className="text-xs text-muted-foreground">{projectConfigError}</p> : null}
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="north-star-goal-window">What does success look like in the next 90 days?</Label>
@@ -416,6 +518,7 @@ export default function OnboardingPage() {
             <Label htmlFor="growth-stage-milestone">Current growth stage (milestone-based)</Label>
             <Select
               value={profile.targets.growth_stage_milestone}
+              disabled={!hasCompanyContext || projectConfigLoading}
               onValueChange={(val) =>
                 setProfile((prev) => ({ ...prev, targets: { ...prev.targets, growth_stage_milestone: val } }))
               }
@@ -424,7 +527,7 @@ export default function OnboardingPage() {
                 <SelectValue placeholder="Select your current milestone..." />
               </SelectTrigger>
               <SelectContent>
-                {GROWTH_STAGE_OPTIONS.map((stage) => (
+                {growthStageOptions.map((stage) => (
                   <SelectItem key={stage.value} value={stage.value}>{stage.label}</SelectItem>
                 ))}
               </SelectContent>
@@ -489,6 +592,7 @@ export default function OnboardingPage() {
                 setProfile((prev) => ({
                   ...prev,
                   audience: {
+                    ...prev.audience,
                     personas: [{
                       ...(prev.audience.personas[0] || {}),
                       name: e.target.value,
@@ -512,6 +616,7 @@ export default function OnboardingPage() {
                 setProfile((prev) => ({
                   ...prev,
                   audience: {
+                    ...prev.audience,
                     personas: [{
                       ...(prev.audience.personas[0] || {}),
                       description: e.target.value,
@@ -645,10 +750,10 @@ export default function OnboardingPage() {
 
           <div className="mt-2 flex flex-wrap gap-2">
             <Button type="button" asChild>
-              <Link href="/generate">Go to Generate</Link>
+              <Link href="/insights/generate">Go to Generate Insight</Link>
             </Button>
             <Button type="button" variant="outline" asChild>
-              <Link href="/reports">Back to Reports</Link>
+              <Link href="/insights/organic-growth">Back to Insights</Link>
             </Button>
           </div>
         </div>

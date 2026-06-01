@@ -27,18 +27,32 @@ langchain = "^1.0"
 langchain-openai = "^1.0"
 langchain-google-genai = "^4.2"
 langchain-anthropic = "^1.4"
+langgraph = "^1.1"
 pyjwt = "^2.8"
 httpx = "^0.28"
 sqlmodel = "^0.0.24"
 alembic = "^1.17"
 psycopg = {version = "^3.2", extras = ["binary"]}
 sentry-sdk = "^2.57.0"
+dlt = "^1.17.1"
+google-adk = ">=1.0"
+claude-agent-sdk = ">=0.2"
+selectolax = ">=0.3"
+extruct = ">=0.16"
+trafilatura = ">=2.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^9"
+pytest-asyncio = "^1.0"
 ruff = "^0.15"
+arize-phoenix = "^16.3.0"
 
 [tool.pytest.ini_options]
+asyncio_mode = "auto"
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s  %(name)-35s  %(levelname)-7s  %(message)s"
+log_cli_date_format = "%H:%M:%S"
 filterwarnings = [
     # Starlette form parser; third-party until FastAPI/Starlette adopts python_multipart import.
     "ignore:Please use `import python_multipart` instead\\.:PendingDeprecationWarning",

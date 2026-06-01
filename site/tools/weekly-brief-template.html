@@ -126,7 +126,11 @@
   .tool-btn.selected { border-color: var(--orange); background: #eff6ff; }
   .tool-btn .tool-check { font-size: 11px; color: var(--orange); opacity: 0; }
   .tool-btn.selected .tool-check { opacity: 1; }
-  .tool-emoji { font-size: 20px; }
+  .tool-icon {
+    width: 22px; height: 22px;
+    object-fit: contain;
+    flex-shrink: 0;
+  }
 
   /* North star input */
   .ns-input {
@@ -181,6 +185,12 @@
   }
   .tool-cta-text p:first-child { font-size: 16px; font-weight: 500; color: var(--white); margin: 0 0 4px; }
   .tool-cta-text p:last-child { font-size: 13px; color: rgba(255,255,255,.55); margin: 0; }
+  .duct-bridge { max-width:720px; margin:0 auto 56px; padding:0 24px; }
+  .duct-bridge-inner { border-left:3px solid var(--orange); padding:20px 28px; background:#eff6ff; border-radius:0 var(--r) var(--r) 0; }
+  .duct-bridge-headline { font-family:var(--serif); font-size:clamp(18px,2.5vw,22px); color:var(--navy); font-weight:400; line-height:1.35; margin:0 0 12px; }
+  .duct-bridge-body { font-size:15px; color:var(--navy-3); line-height:1.75; margin:0 0 16px; }
+  .duct-bridge-link { font-size:14px; font-weight:500; color:var(--orange); text-decoration:none; }
+  .duct-bridge-link:hover { text-decoration:underline; }
 
   .about-section { max-width: 720px; margin: 0 auto 80px; padding: 0 24px; }
   .about-section h2 { font-family: var(--serif); font-size: 28px; color: var(--navy); margin-bottom: 16px; }
@@ -234,7 +244,7 @@
 <div class="tool-hero">
   <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Free tool · No signup required</div>
   <h1>Weekly Marketing Brief <em>Template</em> Generator</h1>
-  <p>Select your role and tool stack. Get a customised weekly brief template in 30 seconds — with the right sections, metrics, and questions for your exact setup.</p>
+  <p>Your team context is only as useful as the brief you share. Generate a weekly brief template built for your stack and role — clear structure, fast copy, no blank-page drag.</p>
 </div>
 
 <div class="tool-wrap">
@@ -288,42 +298,42 @@
       <p class="step-sub">Select all that apply — your brief will include the right metrics for each.</p>
       <div class="tool-grid" id="tool-grid">
         <button class="tool-btn" data-tool="ga4" aria-pressed="false">
-          <span class="tool-emoji" aria-hidden="true">📈</span>
+          <img class="tool-icon" src="../assets/icons/googleanalytics.svg" width="22" height="22" alt="" aria-hidden="true"/>
           <span>GA4</span>
           <span class="tool-check">✓</span>
         </button>
         <button class="tool-btn" data-tool="mixpanel" aria-pressed="false">
-          <span class="tool-emoji" aria-hidden="true">🔮</span>
+          <img class="tool-icon" src="../assets/icons/mixpanel.svg" width="22" height="22" alt="" aria-hidden="true"/>
           <span>Mixpanel</span>
           <span class="tool-check">✓</span>
         </button>
         <button class="tool-btn" data-tool="hubspot" aria-pressed="false">
-          <span class="tool-emoji" aria-hidden="true">🧡</span>
+          <img class="tool-icon" src="../assets/icons/hubspot.svg" width="22" height="22" alt="" aria-hidden="true"/>
           <span>HubSpot</span>
           <span class="tool-check">✓</span>
         </button>
         <button class="tool-btn" data-tool="google-ads" aria-pressed="false">
-          <span class="tool-emoji" aria-hidden="true">💰</span>
+          <img class="tool-icon" src="../assets/icons/google-ads.svg" width="22" height="22" alt="" aria-hidden="true"/>
           <span>Google Ads</span>
           <span class="tool-check">✓</span>
         </button>
         <button class="tool-btn" data-tool="ahrefs" aria-pressed="false">
-          <span class="tool-emoji" aria-hidden="true">🔍</span>
+          <img class="tool-icon" src="../assets/icons/ahrefs.svg" width="22" height="22" alt="" aria-hidden="true"/>
           <span>Ahrefs</span>
           <span class="tool-check">✓</span>
         </button>
         <button class="tool-btn" data-tool="gsc" aria-pressed="false">
-          <span class="tool-emoji" aria-hidden="true">🌐</span>
+          <img class="tool-icon" src="../assets/icons/googlesearchconsole.svg" width="22" height="22" alt="" aria-hidden="true"/>
           <span>Search Console</span>
           <span class="tool-check">✓</span>
         </button>
         <button class="tool-btn" data-tool="meta-ads" aria-pressed="false">
-          <span class="tool-emoji" aria-hidden="true">📘</span>
+          <img class="tool-icon" src="../assets/icons/meta.svg" width="22" height="22" alt="" aria-hidden="true"/>
           <span>Meta Ads</span>
           <span class="tool-check">✓</span>
         </button>
         <button class="tool-btn" data-tool="linkedin-ads" aria-pressed="false">
-          <span class="tool-emoji" aria-hidden="true">💼</span>
+          <img class="tool-icon" src="../assets/icons/linkedin.svg" width="22" height="22" alt="" aria-hidden="true"/>
           <span>LinkedIn Ads</span>
           <span class="tool-check">✓</span>
         </button>
@@ -363,16 +373,16 @@
         </button>
       </div>
       <div class="brief-box" id="brief-box" role="region" aria-label="Generated brief template"></div>
+      <div class="tool-cta">
+        <div class="tool-cta-text">
+          <p>Template generated — now replace manual weekly reporting with signal-driven updates.</p>
+          <p>Duct pulls your actual tool data into the same brief structure each week so your team can decide faster.</p>
+        </div>
+        <a href="#cta" class="btn btn-orange">Get your free brief&nbsp;→</a>
+      </div>
       <div class="insight-panel">
         <p class="insight-label">Before you fill this in</p>
         <p>A brief is only as useful as the baselines behind it. If you don't already know your key metric benchmarks, calculate them first — then fill in the template with confidence. <a href="#related-tools">Related calculators below</a> can help.</p>
-      </div>
-      <div class="tool-cta">
-        <div class="tool-cta-text">
-          <p>This takes 2–3 hours to fill in manually every week.</p>
-          <p>Duct fills it automatically — pulls from every tool in your stack, every Monday.</p>
-        </div>
-        <a href="#cta" class="btn btn-orange">Get the automated version free&nbsp;→</a>
       </div>
       <div style="margin-top:20px">
         <button class="step-nav-back" id="restart-btn">← Start over</button>
@@ -381,6 +391,14 @@
 
   </div>
 </div>
+
+<section class="duct-bridge reveal" aria-label="About Duct">
+  <div class="duct-bridge-inner">
+    <p class="duct-bridge-headline">A template tells you how to write a brief. It doesn't tell you what changed this week.</p>
+    <p class="duct-bridge-body">That requires pulling clean signals from your actual tools, synthesizing them, and surfacing one clear priority action. Duct automates that weekly workflow so leaders get a true brief, not another manual report draft.</p>
+    <a href="#cta" class="duct-bridge-link">See how Duct works&nbsp;→</a>
+  </div>
+</section>
 
 <div class="about-section reveal">
   <h2>What makes a good <em>weekly brief</em></h2>

@@ -118,6 +118,13 @@
     .tool-cta { margin: 24px 24px 0; padding: 22px 20px; }
   }
 
+  .duct-bridge { max-width: 720px; margin: 0 auto 56px; padding: 0 24px; }
+  .duct-bridge-inner { border-left: 3px solid var(--orange); padding: 20px 28px; background: #eff6ff; border-radius: 0 var(--r) var(--r) 0; }
+  .duct-bridge-headline { font-family: var(--serif); font-size: clamp(18px, 2.5vw, 22px); color: var(--navy); font-weight: 400; line-height: 1.35; margin: 0 0 12px; }
+  .duct-bridge-body { font-size: 15px; color: var(--navy-3); line-height: 1.75; margin: 0 0 16px; }
+  .duct-bridge-link { font-size: 14px; font-weight: 500; color: var(--orange); text-decoration: none; }
+  .duct-bridge-link:hover { text-decoration: underline; }
+
   .about-section { max-width: 720px; margin: 0 auto 80px; padding: 0 24px; }
   .about-section h2 { font-family: var(--serif); font-size: 28px; color: var(--navy); margin-bottom: 16px; }
   .about-section h2 em { color: var(--orange); font-style: italic; }
@@ -137,7 +144,7 @@
 <div class="tool-hero">
   <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Free tool · No signup required</div>
   <h1>UTM Builder <em>with live preview</em></h1>
-  <p>Build GA4-compliant UTM links instantly. Live URL preview, per-field validation, and one-click copy — no spreadsheet required.</p>
+  <p>Your GA4 campaign data is only as clean as your UTM links. Build them right the first time — live validation, instant preview, no spreadsheet.</p>
 </div>
 
 <div class="tool-wrap">
@@ -223,6 +230,14 @@
         <button class="btn btn-ghost" id="reset-btn" style="display:none">Reset</button>
       </div>
 
+      <div class="tool-cta">
+        <div class="tool-cta-text">
+          <p>Link tagged — now see where it actually converts.</p>
+          <p>Duct pulls your UTM campaign data into a weekly brief across GA4, ads, and email. No manual pulling.</p>
+        </div>
+        <a href="#cta" class="btn btn-orange">Get your free brief&nbsp;→</a>
+      </div>
+
       <div class="insight-panel" id="insight-panel" role="status">
         <p class="insight-panel-label">GA4 Compliance Note</p>
         <p id="insight-body"></p>
@@ -231,14 +246,6 @@
       <div class="recent-wrap" id="recent-wrap">
         <div class="recent-label">Recent URLs</div>
         <div class="recent-list" id="recent-list"></div>
-      </div>
-
-      <div class="tool-cta">
-        <div class="tool-cta-text">
-          <p>Want campaign and channel signals pulled together automatically?</p>
-          <p>That's Duct — a weekly intelligence brief across your stack, no spreadsheet required.</p>
-        </div>
-        <a href="#cta" class="btn btn-orange">Get your free weekly brief&nbsp;→</a>
       </div>
 
     <!-- FAQ -->
@@ -303,6 +310,14 @@
 
   </div>
 </div>
+
+<section class="duct-bridge reveal" aria-label="About Duct">
+  <div class="duct-bridge-inner">
+    <p class="duct-bridge-headline">UTM parameters tell GA4 where traffic came from. They don't tell you if it was worth it.</p>
+    <p class="duct-bridge-body">For that, you need to cross GA4 with your ad spend, conversion data, and email performance — every week. That's the job Duct does. Connect your stack once, get a weekly intelligence brief that shows what each campaign actually drove, which channels moved the needle, and what to do differently next week.</p>
+    <a href="#cta" class="duct-bridge-link">See how Duct works&nbsp;→</a>
+  </div>
+</section>
 
 <div class="about-section reveal">
   <h2>About this <em>tool</em></h2>

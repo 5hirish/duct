@@ -5,16 +5,16 @@ from __future__ import annotations
 import logging
 import secrets
 from datetime import datetime, timezone
-from urllib.parse import quote
 
-import httpx
 import jwt
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
 
 from config import get_configs
+from service.auth_exchange import consume_exchange_code, store_exchange_code
 from service.google.oauth import create_google_signin_flow
 from service.oauthstate import cleanup_expired_states, consume_state, save_state
+from service.turnstile import verify_turnstile
 from service.user_store import upsert_google_user
 
 logger = logging.getLogger(__name__)
@@ -34,24 +34,6 @@ def _no_store_redirect(url: str, status_code: int = 307) -> RedirectResponse:
     response.headers["Pragma"] = "no-cache"
     response.headers["Expires"] = "0"
     return response
-
-
-async def _verify_turnstile(token: str, remote_ip: str) -> bool:
-    """Verify a Cloudflare Turnstile token. Returns True if valid."""
-    cfg = get_configs()
-    if not cfg.turnstile_secret_key:
-        return True  # skip in dev when not configured
-    async with httpx.AsyncClient() as client:
-        resp = await client.post(
-            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-            data={
-                "secret": cfg.turnstile_secret_key,
-                "response": token,
-                "remoteip": remote_ip,
-            },
-        )
-        result = resp.json()
-        return result.get("success", False)
 
 
 def _create_jwt(email: str, name: str, picture: str) -> str:
@@ -77,7 +59,7 @@ async def signin_google_authorize(
     """Start Google OAuth for user sign-in."""
     if turnstile_token:
         client_ip = request.client.host if request.client else ""
-        valid = await _verify_turnstile(turnstile_token, client_ip)
+        valid = await verify_turnstile(turnstile_token, client_ip)
         if not valid:
             raise HTTPException(status_code=403, detail="Turnstile verification failed.")
     elif get_configs().turnstile_secret_key:
@@ -121,9 +103,8 @@ def signin_google_callback(
     try:
         flow.fetch_token(code=code)
     except Exception as exc:
-        raise HTTPException(
-            status_code=502, detail=f"OAuth token exchange failed: {exc}"
-        ) from exc
+        logger.exception("OAuth token exchange failed")
+        raise HTTPException(status_code=502, detail="OAuth token exchange failed.") from exc
 
     creds = flow.credentials
     if not creds or not creds.id_token:
@@ -141,9 +122,8 @@ def signin_google_callback(
                 str(creds.id_token), google_requests.Request(), get_configs().google_oauth_client_id
             )
         except Exception as exc:
-            raise HTTPException(
-                status_code=502, detail=f"Failed to verify ID token: {exc}"
-            ) from exc
+            logger.exception("Failed to verify Google ID token")
+            raise HTTPException(status_code=502, detail="Failed to verify ID token.") from exc
 
     provider_user_id = id_info.get("sub", "")
     email = id_info.get("email", "")
@@ -172,8 +152,27 @@ def signin_google_callback(
     try:
         token = _create_jwt(normalized_email, name, picture)
     except ValueError as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        logger.exception("JWT creation failed")
+        raise HTTPException(status_code=500, detail="Authentication error.") from exc
 
+    # C1 fix: deliver JWT via a short-lived exchange code so it never appears in
+    # the URL query string (browser history, server logs, Referer headers).
+    auth_code = store_exchange_code(token)
     cfg = get_configs()
-    redirect_url = f"{cfg.frontend_origin}/?token={quote(token, safe='')}"
+    redirect_url = f"{cfg.frontend_origin}/?auth_code={auth_code}"
     return _no_store_redirect(redirect_url, status_code=307)
+
+
+@router.get("/auth/exchange")
+def exchange_auth_code(code: str = Query(default="")) -> dict:
+    """Single-use endpoint: exchange a 60-second auth code for the JWT.
+
+    The frontend calls this immediately after the OAuth redirect, stores the
+    returned token in localStorage, then discards the code from the URL.
+    """
+    if not code:
+        raise HTTPException(status_code=400, detail="Missing auth code.")
+    token = consume_exchange_code(code)
+    if token is None:
+        raise HTTPException(status_code=400, detail="Invalid or expired auth code.")
+    return {"token": token}

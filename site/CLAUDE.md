@@ -19,10 +19,10 @@ When adding either, ask: *what's the hypothesis being tested?* Put it in a `<!--
 ## Local dev
 
 ```bash
-python3 -m http.server 8080 --directory site
+python3 -m http.server 8090 --directory site
 ```
 
-Then open `http://localhost:8080/`.
+Then open `http://localhost:8090/`.
 
 ## URL → file mapping
 

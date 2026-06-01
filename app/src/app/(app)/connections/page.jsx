@@ -2,63 +2,27 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { BASE, fetchGoogleAdsAccounts } from "../../../lib/api";
+import { BASE } from "../../../lib/api";
 import { Button } from "@/components/ui/button";
 
 export default function ConnectionsPage() {
-  /** False until client mount — keeps SSR + first client paint identical (avoids hydration mismatch). */
-  const [mounted, setMounted] = useState(false);
-  const [authState, setAuthState] = useState("checking");
   const [ga4Connected, setGa4Connected] = useState(false);
   const [gscConnected, setGscConnected] = useState(false);
-  const [error, setError] = useState("");
 
   useEffect(() => {
-    setMounted(true);
-
     const hash = window.location.hash;
     if (hash.startsWith("#")) {
       const params = new URLSearchParams(hash.slice(1));
-      const gadsToken = params.get("refresh_token");
       const ga4Token = params.get("ga4_refresh_token");
       const gscToken = params.get("gsc_refresh_token");
-      if (gadsToken) sessionStorage.setItem("gads_refresh_token", decodeURIComponent(gadsToken));
       if (ga4Token) sessionStorage.setItem("ga4_refresh_token", decodeURIComponent(ga4Token));
       if (gscToken) sessionStorage.setItem("gsc_refresh_token", decodeURIComponent(gscToken));
       window.history.replaceState(null, "", window.location.pathname);
     }
 
-    const token = sessionStorage.getItem("gads_refresh_token") || "";
     setGa4Connected(!!sessionStorage.getItem("ga4_refresh_token"));
     setGscConnected(!!sessionStorage.getItem("gsc_refresh_token"));
-    if (!token) {
-      setAuthState("unauthenticated");
-      return;
-    }
-
-    async function verifyConnection() {
-      try {
-        setError("");
-        const items = await fetchGoogleAdsAccounts(token);
-        if (items.length > 0) {
-          setAuthState("ready");
-        } else {
-          setAuthState("selecting_account");
-        }
-      } catch (err) {
-        setAuthState("unauthenticated");
-        setError(err instanceof Error ? err.message : String(err));
-      }
-    }
-
-    verifyConnection();
   }, []);
-
-  function signOut() {
-    sessionStorage.removeItem("gads_refresh_token");
-    sessionStorage.removeItem("gads_customer_id");
-    setAuthState("unauthenticated");
-  }
 
   function signOutGa4() {
     sessionStorage.removeItem("ga4_refresh_token");
@@ -70,22 +34,6 @@ export default function ConnectionsPage() {
     setGscConnected(false);
   }
 
-  const isConnected = authState === "ready" || authState === "selecting_account";
-  const statusPillClass = !mounted
-    ? "grey"
-    : authState === "checking"
-      ? "grey"
-      : isConnected
-        ? "green"
-        : "grey";
-  const statusPillLabel = !mounted
-    ? "Not connected"
-    : authState === "checking"
-      ? "Checking…"
-      : isConnected
-        ? "Connected"
-        : "Not connected";
-
   return (
     <section>
       <div className="page-toolbar-back">
@@ -95,7 +43,7 @@ export default function ConnectionsPage() {
           className="connection-back-btn shrink-0 rounded-full"
           asChild
         >
-          <Link href="/reports" aria-label="Back to Reports" title="Back to Reports">
+          <Link href="/insights/organic-growth" aria-label="Back to Insights" title="Back to Insights">
             <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
               <path
                 d="M15 18 9 12l6-6"
@@ -111,9 +59,9 @@ export default function ConnectionsPage() {
         <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">Connections</h1>
       </div>
       <p className="app-subtle" style={{ marginTop: 0, marginBottom: 18 }}>
-        Manage data source connections for reports. Choose your Google Ads account when you{" "}
-        <Link href="/generate" className="app-link">
-          generate a report
+        Manage data source connections for insights. Choose your Google Ads account when you{" "}
+        <Link href="/insights/organic-growth/generate" className="app-link">
+          generate an insight
         </Link>
         .
       </p>
@@ -137,24 +85,10 @@ export default function ConnectionsPage() {
             </div>
           </div>
           <div className="connection-status-row">
-            <span className={`status-pill ${statusPillClass}`} suppressHydrationWarning>
-              {statusPillLabel}
-            </span>
-            {!mounted ? (
-              <span className="app-subtle" aria-hidden="true">
-                &nbsp;
-              </span>
-            ) : authState === "checking" ? (
-              <span className="app-subtle">Verifying access…</span>
-            ) : isConnected ? (
-              <Button type="button" variant="outline" size="sm" onClick={signOut}>
-                Disconnect
-              </Button>
-            ) : (
-              <Button size="sm" asChild>
-                <a href={`${BASE}/auth/connectors/google_ads/oauth/authorize`}>Connect</a>
-              </Button>
-            )}
+            <span className="status-pill yellow">Coming Soon</span>
+            <Button type="button" variant="secondary" size="sm" disabled>
+              Coming Soon
+            </Button>
           </div>
         </article>
 
@@ -300,28 +234,6 @@ export default function ConnectionsPage() {
         </article>
       </div>
 
-      {error && authState === "unauthenticated" && (
-        <pre
-          style={{
-            marginTop: 20,
-            padding: 12,
-            borderRadius: 8,
-            background: "rgba(180, 40, 40, 0.12)",
-            color: "var(--app-fg, inherit)",
-            overflow: "auto",
-            fontSize: 13,
-          }}
-        >
-          {error}
-        </pre>
-      )}
-
-      {authState === "selecting_account" && (
-        <p className="app-subtle" style={{ marginTop: 20 }}>
-          Google Ads authorized, but no accessible customer accounts were returned. Check account access in Google Ads
-          or try another Google user.
-        </p>
-      )}
     </section>
   );
 }

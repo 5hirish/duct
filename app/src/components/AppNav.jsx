@@ -1,102 +1,80 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { useAuth } from "../lib/auth";
-import { getBusinessProfileCompletion } from "../lib/businessProfile";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
-import { ThemeToggle } from "./ThemeToggle";
+import { usePathname, useRouter } from "next/navigation";
+import { useMemo } from "react";
+import { useAuditNav } from "../lib/auditNavContext";
 
-function navPillClass(active) {
-  return cn(
-    "rounded-full shadow-none",
-    active
-      ? "bg-primary/15 font-semibold text-primary hover:bg-primary/22 hover:text-primary"
-      : "text-muted-foreground hover:bg-muted/70 hover:text-primary"
-  );
+const ROUTE_LABELS = [
+  ["/insights/organic-growth/generate", "Generate Insight"],
+  ["/insights/organic-growth",          "Organic Growth"],
+  ["/audit/seo",                        "SEO Audit"],
+  ["/connections",                      "Connections"],
+  ["/generate",                         "Generate Insight"],
+  ["/projects",                         "Projects"],
+  ["/onboarding",                       "Onboarding"],
+];
+
+// Routes that show a back button, and where they go back to
+const BACK_ROUTES = [
+  ["/audit/seo/", "/audit/seo"],
+];
+
+function routeLabel(pathname) {
+  if (!pathname) return "";
+  for (const [prefix, label] of ROUTE_LABELS) {
+    if (pathname.startsWith(prefix)) return label;
+  }
+  return "";
+}
+
+function backDest(pathname) {
+  if (!pathname) return null;
+  for (const [prefix, dest] of BACK_ROUTES) {
+    if (pathname.startsWith(prefix)) return dest;
+  }
+  return null;
 }
 
 export default function AppNav() {
   const pathname = usePathname();
-  const { user, signOut } = useAuth();
-  const [profilePercent, setProfilePercent] = useState(0);
-  const isConnections = pathname.startsWith("/connections");
-  const isGenerate = pathname.startsWith("/generate");
-  const isReports = pathname.startsWith("/reports");
+  const router = useRouter();
+  const { isAuditRunning } = useAuditNav();
 
-  useEffect(() => {
-    setProfilePercent(getBusinessProfileCompletion().percent);
-  }, [pathname]);
+  const label = useMemo(() => routeLabel(pathname), [pathname]);
+  const dest  = useMemo(() => backDest(pathname),   [pathname]);
 
   return (
-    <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
-      <div className="flex items-center gap-0.5 rounded-full bg-muted/80 p-1 ring-1 ring-border/70 sm:gap-1">
-        <Button variant="ghost" size="sm" className={navPillClass(isConnections)} asChild>
-          <Link href="/connections">Connections</Link>
-        </Button>
-        <Button variant="ghost" size="sm" className={navPillClass(isGenerate)} asChild>
-          <Link href="/generate">Generate</Link>
-        </Button>
-        <Button variant="ghost" size="sm" className={navPillClass(isReports)} asChild>
-          <Link href="/reports">Reports</Link>
-        </Button>
-      </div>
+    <div className="flex items-center gap-2 min-w-0">
+      {dest && (
+        <div className="relative group">
+          <button
+            onClick={() => !isAuditRunning && router.push(dest)}
+            disabled={isAuditRunning}
+            aria-label="Go back"
+            className={`flex items-center justify-center rounded-md p-1 transition-colors ${
+              isAuditRunning
+                ? "cursor-not-allowed text-muted-foreground/40"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+            }`}
+          >
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6.85355 3.14645C7.04882 3.34171 7.04882 3.65829 6.85355 3.85355L3.70711 7H12.5C12.7761 7 13 7.22386 13 7.5C13 7.77614 12.7761 8 12.5 8H3.70711L6.85355 11.1464C7.04882 11.3417 7.04882 11.6583 6.85355 11.8536C6.65829 12.0488 6.34171 12.0488 6.14645 11.8536L2.14645 7.85355C1.95118 7.65829 1.95118 7.34171 2.14645 7.14645L6.14645 3.14645C6.34171 2.95118 6.65829 2.95118 6.85355 3.14645Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd" />
+            </svg>
+          </button>
 
-      <ThemeToggle />
-
-      {user && (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              className="relative rounded-full p-0.5 focus-visible:ring-2 focus-visible:ring-ring/50"
-              aria-label="Profile menu"
-            >
-              <span className="relative inline-flex items-center justify-center">
-                {user.picture ? (
-                  <img
-                    className="size-7 rounded-full object-cover"
-                    src={user.picture}
-                    alt={user.name || user.email}
-                    width={28}
-                    height={28}
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  <span className="flex size-7 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">
-                    {(user.name || user.email || "U").charAt(0).toUpperCase()}
-                  </span>
-                )}
-                <span
-                  aria-hidden="true"
-                  className="absolute -bottom-0.5 -right-0.5 size-2 rounded-full border-[1.5px] border-background bg-primary"
-                />
-              </span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-52">
-            <DropdownMenuItem asChild>
-              <Link href="/onboarding">
-                Profile ({profilePercent}% complete)
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={signOut}>
-              Log out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          {/* Tooltip — only shown when disabled */}
+          {isAuditRunning && (
+            <div className="absolute left-1/2 top-full mt-2 -translate-x-1/2 z-50 pointer-events-none">
+              <div className="whitespace-nowrap rounded-md bg-popover border border-border px-2.5 py-1.5 text-xs text-popover-foreground shadow-md">
+                Audit in progress — wait for it to finish
+                <div className="absolute -top-1 left-1/2 -translate-x-1/2 size-2 rotate-45 border-l border-t border-border bg-popover" />
+              </div>
+            </div>
+          )}
+        </div>
       )}
+
+      <span className="text-sm font-medium text-foreground truncate">{label}</span>
     </div>
   );
 }

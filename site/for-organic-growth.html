@@ -20,8 +20,8 @@
 <meta name="twitter:title" content="Duct for Organic Growth — Cross-tool SEO and content intelligence"/>
 <meta name="twitter:description" content="Stop publishing blind. Duct connects Search Console, Ahrefs, GA4, and your content tools into a weekly action brief."/>
 <meta name="twitter:image" content="https://getduct.ai/assets/og-image.png"/>
-<link rel="stylesheet" href="assets/duct.css"/>
-<link rel="stylesheet" href="assets/demo.css"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<link rel="stylesheet" href="/assets/demo.css"/>
 <script src="assets/config.js" defer></script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebPage","name":"Duct for Organic Growth","url":"https://getduct.ai/for-organic-growth","description":"Stop publishing blind. Duct connects your organic growth stack and delivers a weekly action brief tied to your goals.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
@@ -72,6 +72,14 @@
   .al-spinner { border-top-color: var(--green); }
   .rpt-bar-fill { background: linear-gradient(90deg,#a7f3d0,var(--green)); }
   .kpi-sparkline-svg .spark-line { stroke: var(--green); }
+  /* Flow compare — align with organic green accent */
+  .flow-card-label--good { color: var(--green); }
+  .flow-card--good .flow-card-accent { background: var(--green); }
+  .flow-badge--good {
+    color: var(--green-h);
+    background: color-mix(in srgb, var(--green) 14%, white);
+  }
+  .flow-compare-cta .email-in:focus { border-color: var(--green); }
 </style>
 </head>
 <body>
@@ -116,6 +124,8 @@
 <span>Notion</span><span>LinkedIn Analytics</span><span>HubSpot</span><span>Slack</span><span>Mixpanel</span>
 </div>
 </div>
+
+<div data-duct-partial="/partials/compare-flow-organic.html"></div>
 
 <!-- WALKTHROUGH DEMO -->
 

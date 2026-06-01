@@ -120,6 +120,12 @@
   }
   .tool-cta-text p:first-child { font-size: 16px; font-weight: 500; color: var(--white); margin: 0 0 4px; }
   .tool-cta-text p:last-child { font-size: 13px; color: rgba(255,255,255,.55); margin: 0; }
+  .duct-bridge { max-width:720px; margin:0 auto 56px; padding:0 24px; }
+  .duct-bridge-inner { border-left:3px solid var(--orange); padding:20px 28px; background:#eff6ff; border-radius:0 var(--r) var(--r) 0; }
+  .duct-bridge-headline { font-family:var(--serif); font-size:clamp(18px,2.5vw,22px); color:var(--navy); font-weight:400; line-height:1.35; margin:0 0 12px; }
+  .duct-bridge-body { font-size:15px; color:var(--navy-3); line-height:1.75; margin:0 0 16px; }
+  .duct-bridge-link { font-size:14px; font-weight:500; color:var(--orange); text-decoration:none; }
+  .duct-bridge-link:hover { text-decoration:underline; }
 
   .about-section { max-width: 760px; margin: 0 auto 80px; padding: 0 24px; }
   .about-section h2 { font-family: var(--serif); font-size: 28px; color: var(--navy); margin-bottom: 16px; }
@@ -167,7 +173,7 @@
 <div class="tool-hero">
   <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Free tool · No signup required</div>
   <h1>MRR Growth Rate Calculator <em>for SaaS</em></h1>
-  <p>Enter your starting MRR, ending MRR, and timeframe to calculate net MRR growth and CMGR. Add a target to see the monthly growth rate you need to hit plan.</p>
+  <p>Your revenue plan is only as strong as your growth slope. Calculate MRR growth and CMGR clearly — benchmarked, decision-ready, no spreadsheet lag.</p>
 </div>
 
 <div class="tool-wrap">
@@ -211,22 +217,30 @@
       <p style="font-size:13px;font-weight:500;color:var(--navy-3);margin:0 0 20px;letter-spacing:.02em;text-transform:uppercase">Your Results</p>
       <div class="results-row" id="results-row"></div>
 
+      <div class="tool-cta">
+        <div class="tool-cta-text">
+          <p>Growth trajectory mapped — now catch slowdowns before quarter close.</p>
+          <p>Duct tracks MRR velocity weekly and highlights where acquisition, expansion, or churn is changing the trend.</p>
+        </div>
+        <a href="#cta" class="btn btn-orange">Get your free brief&nbsp;→</a>
+      </div>
+
       <div id="insight-panel" class="insight-panel" hidden aria-live="polite">
         <p class="insight-label">What this means</p>
         <div id="insight-body"></div>
-      </div>
-
-      <div class="tool-cta">
-        <div class="tool-cta-text">
-          <p>Duct tracks MRR growth and trend changes each week.</p>
-          <p>Spot slowdowns early before they hit quarterly goals.</p>
-        </div>
-        <a href="#cta" class="btn btn-orange">See it in action&nbsp;→</a>
       </div>
     </div>
 
   </div>
 </div>
+
+<section class="duct-bridge reveal" aria-label="About Duct">
+  <div class="duct-bridge-inner">
+    <p class="duct-bridge-headline">CMGR tells you momentum. It doesn't tell you what changed underneath the slope.</p>
+    <p class="duct-bridge-body">To act early, you need growth velocity connected to new logo flow, expansion, and churn pressure. Duct unifies those weekly signals into one brief so revenue teams know where to intervene first.</p>
+    <a href="#cta" class="duct-bridge-link">See how Duct works&nbsp;→</a>
+  </div>
+</section>
 
 <div class="about-section reveal">
   <h2>How the <em>calculator works</em></h2>

@@ -1,4 +1,4 @@
-"""FastAPI server: Google Ads report generation for the Next.js app."""
+"""FastAPI server: Google Ads insight generation for the Next.js app."""
 
 from __future__ import annotations
 
@@ -20,6 +20,19 @@ from routes.namespace import router as api_router
 from utils.openapi_docs_auth import OpenapiDocsBasicAuthMiddleware
 
 _cfg = get_configs()
+
+# Ensure application loggers are visible at INFO level.
+# Uvicorn's dictConfig leaves the root logger handlerless; app messages would be
+# silently dropped without this. We attach a stream handler directly to each
+# namespace rather than touching the root logger so uvicorn's own format is unaffected.
+_app_handler = logging.StreamHandler()
+_app_handler.setFormatter(logging.Formatter("%(levelname)s:%(name)s: %(message)s"))
+for _ns in ("agents", "routes", "service"):
+    _log = logging.getLogger(_ns)
+    _log.setLevel(logging.INFO)
+    if not _log.handlers:
+        _log.addHandler(_app_handler)
+    _log.propagate = False
 
 def _is_localhost_url(url: str) -> bool:
     hostname = urlparse(url).hostname
@@ -48,13 +61,21 @@ app = FastAPI(
     redoc_url="/redoc" if _cfg.expose_openapi_docs else None,
 )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[get_configs().frontend_origin],
+_cfg_cors = get_configs()
+_cors_origins = [o for o in [_cfg_cors.frontend_origin, _cfg_cors.site_origin] if o]
+
+# In local dev allow any localhost port (static site, app, storybook, etc.)
+_cors_kwargs: dict = dict(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+if _cfg_cors.app_env == "local":
+    _cors_kwargs["allow_origin_regex"] = r"http://(localhost|127\.0\.0\.1)(:\d+)?"
+else:
+    _cors_kwargs["allow_origins"] = _cors_origins
+
+app.add_middleware(CORSMiddleware, **_cors_kwargs)
 app.add_middleware(OpenapiDocsBasicAuthMiddleware)
 
 

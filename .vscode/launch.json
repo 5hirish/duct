@@ -2,13 +2,41 @@
   "version": "0.2.0",
   "compounds": [
     {
+      "name": "Duct: App + API + Phoenix (verbose)",
+      "configurations": [
+        "Backend: FastAPI (uvicorn verbose)",
+        "App: dev server",
+        "Phoenix: OTEL traces UI (:6006)"
+      ],
+      "stopAll": true
+    },
+    {
       "name": "Duct: App + API",
       "configurations": [
         "Backend: FastAPI (uvicorn)",
         "App: dev server"
       ],
       "stopAll": true,
-      "postDebugTask": "Backend: stop uvicorn (8000)"
+      "postDebugTask": "Backend: stop uvicorn (8002)"
+    },
+    {
+      "name": "Duct: Site + API",
+      "configurations": [
+        "Backend: FastAPI (uvicorn)",
+        "Site: dev server"
+      ],
+      "stopAll": true,
+      "postDebugTask": "Duct: stop Site + API (8002, 8090)"
+    },
+    {
+      "name": "Duct: Site + App + API",
+      "configurations": [
+        "Backend: FastAPI (uvicorn)",
+        "App: dev server",
+        "Site: dev server"
+      ],
+      "stopAll": true,
+      "postDebugTask": "Duct: stop Site + API (8002, 8090)"
     }
   ],
   "configurations": [
@@ -16,8 +44,30 @@
       "name": "Backend: FastAPI (uvicorn)",
       "type": "node-terminal",
       "request": "launch",
-      "command": "poetry run uvicorn server:app --reload --host 127.0.0.1 --port 8000",
+      "command": "poetry run uvicorn server:app --reload --host 127.0.0.1 --port 8002",
       "cwd": "${workspaceFolder}/backend"
+    },
+    {
+      "name": "Backend: FastAPI (uvicorn verbose)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "AUDIT_VERBOSE_LOGGING=1 poetry run uvicorn server:app --host 127.0.0.1 --port 8002",
+      "cwd": "${workspaceFolder}/backend"
+    },
+    {
+      "name": "Phoenix: OTEL traces UI (:6006)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "poetry run python -m phoenix.server.main serve",
+      "cwd": "${workspaceFolder}/backend"
+    },
+    {
+      "name": "Backend: ADK web",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "poetry run adk web --host 127.0.0.1 --port 8003 agents",
+      "cwd": "${workspaceFolder}/backend",
+      "postDebugTask": "Backend: stop ADK web (8003)"
     },
     {
       "name": "App: dev server",
@@ -28,11 +78,11 @@
     },
     {
       "name": "Site: dev server",
-      "type": "chrome",
+      "type": "node-terminal",
       "request": "launch",
-      "url": "http://localhost:8080/",
-      "preLaunchTask": "Serve site on :8080",
-      "postDebugTask": "Site: stop dev server (8080)"
+      "command": "python3 dev_server.py --port 8090",
+      "cwd": "${workspaceFolder}/site",
+      "postDebugTask": "Site: stop dev server (8090)"
     },
     {
       "name": "Site: Playwright smoke tests",

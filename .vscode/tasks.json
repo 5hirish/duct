@@ -2,9 +2,31 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Backend: uvicorn",
+      "label": "Phoenix: start (OTEL traces UI)",
       "type": "shell",
-      "command": "poetry run uvicorn server:app --reload --host 127.0.0.1 --port 8000",
+      "command": "poetry run python -m phoenix.server.main serve",
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "duct-observability",
+        "showReuseMessage": false
+      },
+      "problemMatcher": {
+        "owner": "phoenix",
+        "pattern": { "regexp": "^$" },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".",
+          "endsPattern": "Phoenix UI"
+        }
+      }
+    },
+    {
+      "label": "Backend: uvicorn (verbose)",
+      "type": "shell",
+      "command": "AUDIT_VERBOSE_LOGGING=1 poetry run uvicorn server:app --host 127.0.0.1 --port 8002",
       "options": { "cwd": "${workspaceFolder}/backend" },
       "isBackground": true,
       "presentation": {
@@ -24,9 +46,31 @@
       }
     },
     {
-      "label": "Serve site on :8080",
+      "label": "Backend: uvicorn",
       "type": "shell",
-      "command": "python3 dev_server.py --port 8080",
+      "command": "poetry run uvicorn server:app --reload --host 127.0.0.1 --port 8002",
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "duct-stack",
+        "showReuseMessage": false
+      },
+      "problemMatcher": {
+        "owner": "uvicorn",
+        "pattern": { "regexp": "^$" },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".",
+          "endsPattern": "Uvicorn running"
+        }
+      }
+    },
+    {
+      "label": "Serve site on :8090",
+      "type": "shell",
+      "command": "python3 dev_server.py --port 8090",
       "options": { "cwd": "${workspaceFolder}/site" },
       "isBackground": true,
       "presentation": {
@@ -45,9 +89,9 @@
       }
     },
     {
-      "label": "Backend: stop uvicorn (8000)",
+      "label": "Backend: stop ADK web (8003)",
       "type": "shell",
-      "command": "if command -v lsof >/dev/null 2>&1; then pids=$(lsof -t -i :8000 2>/dev/null || true); if [ -n \"$pids\" ]; then kill -9 $pids >/dev/null 2>&1 || true; fi; fi; pkill -f \"uvicorn server:app\" >/dev/null 2>&1 || true",
+      "command": "if command -v lsof >/dev/null 2>&1; then pids=$(lsof -t -i :8003 2>/dev/null || true); if [ -n \"$pids\" ]; then kill -9 $pids >/dev/null 2>&1 || true; fi; fi",
       "presentation": {
         "reveal": "silent",
         "panel": "dedicated",
@@ -56,9 +100,29 @@
       "problemMatcher": []
     },
     {
-      "label": "Site: stop dev server (8080)",
+      "label": "Backend: stop uvicorn (8002)",
       "type": "shell",
-      "command": "if command -v lsof >/dev/null 2>&1; then pids=$(lsof -t -i :8080 2>/dev/null || true); if [ -n \"$pids\" ]; then kill -9 $pids >/dev/null 2>&1 || true; fi; fi; pkill -f \"dev_server.py\" >/dev/null 2>&1 || true",
+      "command": "if command -v lsof >/dev/null 2>&1; then pids=$(lsof -t -i :8002 2>/dev/null || true); if [ -n \"$pids\" ]; then kill -9 $pids >/dev/null 2>&1 || true; fi; fi; pkill -f \"uvicorn server:app\" >/dev/null 2>&1 || true",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "dedicated",
+        "showReuseMessage": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Duct: stop Site + API (8002, 8090)",
+      "dependsOn": [
+        "Backend: stop uvicorn (8002)",
+        "Site: stop dev server (8090)"
+      ],
+      "dependsOrder": "parallel",
+      "problemMatcher": []
+    },
+    {
+      "label": "Site: stop dev server (8090)",
+      "type": "shell",
+      "command": "if command -v lsof >/dev/null 2>&1; then pids=$(lsof -t -i :8090 2>/dev/null || true); if [ -n \"$pids\" ]; then kill -9 $pids >/dev/null 2>&1 || true; fi; fi; pkill -f \"dev_server.py\" >/dev/null 2>&1 || true",
       "presentation": {
         "reveal": "silent",
         "panel": "dedicated",

@@ -120,6 +120,12 @@
   }
   .tool-cta-text p:first-child { font-size: 16px; font-weight: 500; color: var(--white); margin: 0 0 4px; }
   .tool-cta-text p:last-child { font-size: 13px; color: rgba(255,255,255,.55); margin: 0; }
+  .duct-bridge { max-width:720px; margin:0 auto 56px; padding:0 24px; }
+  .duct-bridge-inner { border-left:3px solid var(--orange); padding:20px 28px; background:#eff6ff; border-radius:0 var(--r) var(--r) 0; }
+  .duct-bridge-headline { font-family:var(--serif); font-size:clamp(18px,2.5vw,22px); color:var(--navy); font-weight:400; line-height:1.35; margin:0 0 12px; }
+  .duct-bridge-body { font-size:15px; color:var(--navy-3); line-height:1.75; margin:0 0 16px; }
+  .duct-bridge-link { font-size:14px; font-weight:500; color:var(--orange); text-decoration:none; }
+  .duct-bridge-link:hover { text-decoration:underline; }
 
   .about-section { max-width: 760px; margin: 0 auto 80px; padding: 0 24px; }
   .about-section h2 { font-family: var(--serif); font-size: 28px; color: var(--navy); margin-bottom: 16px; }
@@ -159,7 +165,7 @@
 <div class="tool-hero">
   <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Free tool · No signup required</div>
   <h1>Engagement Rate Calculator <em>for growth teams</em></h1>
-  <p>Enter your engagements and audience metrics to calculate engagement rate by followers, reach, and impressions. Compare post quality faster without spreadsheet cleanup.</p>
+  <p>Your content signal is only as useful as your engagement quality. Calculate rate by followers, reach, and impressions in one pass — no spreadsheet cleanup.</p>
 </div>
 
 <div class="tool-wrap">
@@ -208,22 +214,30 @@
       <p style="font-size:13px;font-weight:500;color:var(--navy-3);margin:0 0 20px;letter-spacing:.02em;text-transform:uppercase">Your Results</p>
       <div class="results-row" id="results-row"></div>
 
+      <div class="tool-cta">
+        <div class="tool-cta-text">
+          <p>Engagement normalized — now focus on posts that actually move outcomes.</p>
+          <p>Duct tracks weekly engagement shifts with traffic and conversion signals so teams can act on resonance, not vanity spikes.</p>
+        </div>
+        <a href="#cta" class="btn btn-orange">Get your free brief&nbsp;→</a>
+      </div>
+
       <div id="insight-panel" class="insight-panel" hidden aria-live="polite">
         <p class="insight-label">What this means</p>
         <div id="insight-body"></div>
-      </div>
-
-      <div class="tool-cta">
-        <div class="tool-cta-text">
-          <p>Duct tracks content engagement shifts automatically every week.</p>
-          <p>See what changed, why it moved, and where to act next.</p>
-        </div>
-        <a href="#cta" class="btn btn-orange">See it in action&nbsp;→</a>
       </div>
     </div>
 
   </div>
 </div>
+
+<section class="duct-bridge reveal" aria-label="About Duct">
+  <div class="duct-bridge-inner">
+    <p class="duct-bridge-headline">Engagement rate tells you interaction quality. It doesn't tell you if that attention turned into pipeline.</p>
+    <p class="duct-bridge-body">To make confident content decisions, engagement has to be read with click-through, conversion, and channel performance over time. Duct connects those signals weekly so teams can scale what truly works.</p>
+    <a href="#cta" class="duct-bridge-link">See how Duct works&nbsp;→</a>
+  </div>
+</section>
 
 <div class="about-section reveal">
   <h2>How the <em>calculator works</em></h2>

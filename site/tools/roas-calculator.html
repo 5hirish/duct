@@ -66,9 +66,18 @@
   .result-badge.red { background:#fee2e2; color:#991b1b; }
   .result-badge.neutral { background:#f1f5f9; color:var(--navy-3); }
   .result-context { font-size:12px; color:var(--navy-3); line-height:1.5; margin:0; }
+  .tool-cta { margin-top:24px; background:var(--navy); border-radius:var(--r); padding:28px 32px; display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap; }
+  .tool-cta-text p:first-child { font-size:16px; font-weight:500; color:var(--white); margin:0 0 4px; }
+  .tool-cta-text p:last-child { font-size:13px; color:rgba(255,255,255,.55); margin:0; }
   .insight-panel { margin-top:24px; background:#eff6ff; border:1px solid rgba(37,99,235,.18); border-left:3px solid #2563EB; border-radius:var(--r); padding:20px 24px; }
   .insight-label { font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:#2563EB; margin-bottom:10px; }
   .insight-panel p { font-size:14px; color:var(--navy-3); line-height:1.7; margin:0 0 8px; }
+  .duct-bridge { max-width:720px; margin:0 auto 56px; padding:0 24px; }
+  .duct-bridge-inner { border-left:3px solid var(--orange); padding:20px 28px; background:#eff6ff; border-radius:0 var(--r) var(--r) 0; }
+  .duct-bridge-headline { font-family:var(--serif); font-size:clamp(18px,2.5vw,22px); color:var(--navy); font-weight:400; line-height:1.35; margin:0 0 12px; }
+  .duct-bridge-body { font-size:15px; color:var(--navy-3); line-height:1.75; margin:0 0 16px; }
+  .duct-bridge-link { font-size:14px; font-weight:500; color:var(--orange); text-decoration:none; }
+  .duct-bridge-link:hover { text-decoration:underline; }
 </style>
 </head>
 <body>
@@ -79,7 +88,7 @@
 <div class="tool-hero">
   <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Free tool · No signup required</div>
   <h1>ROAS Calculator <em>for paid performance teams</em></h1>
-  <p>Compute return on ad spend as a revenue multiple, compare against a target ROAS, and see revenue or spend gaps in one pass.</p>
+  <p>Your budget decisions are only as good as your efficiency signal. Calculate ROAS with clear target gaps and spend guardrails, no spreadsheet cleanup.</p>
 </div>
 <div class="tool-wrap">
   <div class="tool-card" role="region" aria-label="ROAS Calculator">
@@ -113,6 +122,13 @@
     <div class="tool-results" id="results-section" role="region" aria-live="polite">
       <p style="font-size:13px;font-weight:500;color:var(--navy-3);margin:0 0 20px;letter-spacing:.02em;text-transform:uppercase">Your Results</p>
       <div class="results-row" id="results-row"></div>
+      <div class="tool-cta">
+        <div class="tool-cta-text">
+          <p>ROAS benchmarked — now decide what to scale next.</p>
+          <p>Duct turns your ROAS, spend, and conversion signals into a weekly brief that flags which campaigns deserve more budget.</p>
+        </div>
+        <a href="#cta" class="btn btn-orange">Get your free brief&nbsp;→</a>
+      </div>
       <div id="insight-panel" class="insight-panel" hidden>
         <p class="insight-label">What this means</p>
         <div id="insight-body"></div>
@@ -120,6 +136,13 @@
     </div>
   </div>
 </div>
+<section class="duct-bridge reveal" aria-label="About Duct">
+  <div class="duct-bridge-inner">
+    <p class="duct-bridge-headline">ROAS tells you efficiency in one view. It doesn't tell you which levers to pull next week.</p>
+    <p class="duct-bridge-body">That requires reading ROAS beside CPC, CPA, and conversion movement across channels. Duct does that synthesis for you each week and highlights where budget shifts are most likely to produce profitable growth.</p>
+    <a href="#cta" class="duct-bridge-link">See how Duct works&nbsp;→</a>
+  </div>
+</section>
 <section class="related-tools-banner reveal" id="related-tools" aria-labelledby="related-tools-heading">
   <div class="related-tools-banner-inner">
     <p class="tag">Also free</p>

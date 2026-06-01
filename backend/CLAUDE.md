@@ -16,15 +16,24 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
 
 ## MVP architecture
 
-The current and planned backend stack is:
+### Current stack
 
-- **Ingestion:** PyAirbyte for early pilots, client-managed Airbyte later
+- **AI synthesis:** Three versioned engine implementations under `agents/insights/` — V1 (LangChain), V2 (Google ADK), V3 (Claude Agent SDK). Runtime-switchable via `generate_engine` env var.
+- **Ingestion:** Direct Google API clients (`google-ads`, `google-analytics-data`, `google-api-python-client`). Async concurrent fetching in `service/pipeline.py`.
+- **Normalization:** Lightweight Python pipeline — raw API response → typed Pydantic/SQLModel brief models. No query layer or transforms yet.
+- **Database:** PostgreSQL on Railway — SQLModel ORM, Alembic migrations, `psycopg` driver.
+- **Auth:** JWT for users; Google OAuth for connector linking (Ads, GA4, GSC, Sign-In).
+- **Observability:** Sentry error tracking; optional OpenTelemetry tracing (wired via Claude Agent SDK).
+- **Hosting:** Railway — auto-deploys from `main` via GitHub integration; `railway.json` defines Railpack build + uvicorn start.
+- **CI:** GitHub Actions (`backend.yml`) — Ruff lint + pytest on every PR and push to `main`.
+
+### Roadmap (not in codebase yet)
+
+- **Ingestion framework:** PyAirbyte for early pilots → client-managed Airbyte later
 - **Query layer:** DuckDB + Ibis
 - **Transforms:** dbt
 - **Orchestration:** Dagster
-- **Synthesis:** Claude API + Instructor with typed models
-- **Delivery:** Resend and Slack webhooks
-- **Workspace/auth metadata:** Supabase
+- **Delivery:** Resend (email) + Slack webhooks
 
 ## Product-shape constraints
 
@@ -37,14 +46,38 @@ The current and planned backend stack is:
 
 - `service/google/brief.py` — Google Ads brief normalization (loads demo from `data/<connector_id>/`, default `google_ads`)
 - `service/google/schema.py` — typed Google Ads brief payload (dataclasses / JSON contract)
-- `agents/reporter/prompts.py` — synthesis system + user prompts (e.g. Google Ads weekly brief)
+- `agents/insights/prompts.py` — synthesis system + user prompts (e.g. Google Ads weekly insight brief)
 - `routes/auth.py` — OAuth by connector (`/auth/connectors/{connector_id}/oauth/...`)
-- `routes/generate.py` — `POST /api/generate` (interactive brief + LangChain synthesis envelope)
+- `routes/generate.py` — `POST /api/insights/generate` for interactive brief + LangChain synthesis envelope
 - `data/google_ads/` — `google-ads-report.json` (demo brief), `raw/demo_raw_payload.json`
+
+## Agent-type architecture
+
+The `agents/` directory is organised by agent type. Each type is independent and has its own goals, tools, prompts, schema, and versioned runners.
+
+```
+agents/
+├── engines.py          — engine/provider/model registry (shared across all agent types)
+├── models.py           — Provider, ModelName enums (shared)
+├── insights/           — Insights agent (paid ads + organic growth intelligence)
+│   ├── v1/             — LangChain runner
+│   ├── v2/             — Google ADK runner
+│   ├── v3/             — Claude Agent SDK runner
+│   └── goals/, tools/, schema.py, registry.py, prompts/
+├── audit/              — future: SEO audit agent
+└── blog/               — future: Blog content generation agent
+```
+
+Route convention: each agent type gets its own route prefix:
+- `POST /api/insights/generate` — exists
+- `POST /api/audit/run` — future
+- `POST /api/blog/generate` — future
+
+Cross-agent invocations are modelled at the frontend level (e.g. audit findings carry an `invoke_insights` action that pre-populates the insights wizard). Backend agents remain decoupled — no direct calls between agent types.
 
 ## Artifact contract
 
-The app lists top-level `*.json` briefs in `data/google_ads/` (e.g. `google-ads-report.json`) for local dev; user-generated reports are returned from `POST /api/generate` and stored client-side (`localStorage`).
+The app lists top-level `*.json` briefs in `data/google_ads/` (e.g. `google-ads-report.json`) for local dev; user-generated insights are returned from `POST /api/insights/generate` and stored client-side (`localStorage`).
 
 The JSON contract:
 - `source_metadata.theme` — theme key (`paid_ads`, `product_intelligence`, `organic_growth`); the app resolves accent colors from this

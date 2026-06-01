@@ -14,10 +14,10 @@ This directory contains the static marketing site for [getduct.ai](https://getdu
 ## Local dev
 
 ```bash
-python3 -m http.server 8080 --directory site
+python3 -m http.server 8090 --directory site
 ```
 
-Then open `http://localhost:8080/`.
+Then open `http://localhost:8090/`.
 
 ## Automated QA (Playwright)
 

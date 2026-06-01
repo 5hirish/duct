@@ -9,9 +9,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from agents.reporter.goals import ReportGenerationGoal
-from agents.reporter.prompts import get_synthesis_user_prompt, get_system_prompt
-from agents.reporter.schema import SynthesisSchema as _SynthesisSchema
+from agents.insights.goals import InsightGenerationGoal
+from agents.insights.prompts import get_synthesis_user_prompt, get_system_prompt
+from agents.insights.schema import SynthesisSchema as _SynthesisSchema
 from service.google.schema import (
     AccountSummary,
     ActionPriority,
@@ -351,7 +351,7 @@ def synthesize_with_gemini_dict(
     brief_dict: dict[str, Any],
     raw_payload: dict[str, Any],
     *,
-    goal: ReportGenerationGoal | None = None,
+    goal: InsightGenerationGoal | None = None,
     custom_goal: str = "",
     context: str = "",
 ) -> dict[str, Any]:

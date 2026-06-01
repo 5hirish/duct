@@ -17,7 +17,7 @@ This is the product core described in `docs/mvp/mvp-plan.md`.
 - read from client-owned data destinations
 - normalize data into stable internal payloads
 - generate typed findings and actions
-- render reports and briefs
+- render insights and briefs
 - later deliver email briefs and Slack alerts
 
 ## Intended scope

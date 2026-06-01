@@ -2,6 +2,9 @@
 (function(w, d, s, l, i) {
   var loaded = false;
   if (!i) return;
+  var host = (w.location && w.location.hostname) || '';
+  var isLocalhost = host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0' || host.slice(-6) === '.local';
+  if (isLocalhost) return;
 
   function loadGtm() {
     if (loaded) return;
