@@ -14,7 +14,6 @@ from collections import Counter
 from agents.audit.schema import (
     AuditBusinessContext,
     AuditResearchContext,
-    CompetitorSignals,
     CrawlResult,
 )
 

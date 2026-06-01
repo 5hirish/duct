@@ -70,6 +70,12 @@ function LeadSeoAuditInner() {
     validateLeadToken(token)
       .then((data) => {
         if (controller.signal.aborted) return;
+        if (data.cached_report) {
+          setCachedReport(data.cached_report);
+          setCachedAt(data.cached_at);
+          setState("cached");
+          return;
+        }
         setAuditParams({
           url: data.website_url || url,
           business_context: {},

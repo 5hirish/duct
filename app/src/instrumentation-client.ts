@@ -36,7 +36,7 @@ if (appEnv !== "local" && process.env.NEXT_PUBLIC_SENTRY_DSN) {
           }
         }
         if (event.request.cookies) {
-          event.request.cookies = "[Filtered]";
+          event.request.cookies = {};  // Record<string, string> — clear all cookies
         }
       }
       // Scrub breadcrumb navigation URLs

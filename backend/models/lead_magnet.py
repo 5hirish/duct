@@ -20,7 +20,8 @@ class LeadMagnet(SQLModel, table=True):
     magnet_type: str = Field(default="seo_audit")
     access_token: str = Field(unique=True, index=True)
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc)
+        default_factory=lambda: datetime.now(timezone.utc),
+        sa_column=Column(sa.DateTime(timezone=True), nullable=False),
     )
 
     # Populated after audit completes — nullable until then
@@ -28,4 +29,7 @@ class LeadMagnet(SQLModel, table=True):
         default=None,
         sa_column=Column(JSONB(astext_type=sa.Text()), nullable=True),
     )
-    report_generated_at: Optional[datetime] = Field(default=None)
+    report_generated_at: Optional[datetime] = Field(
+        default=None,
+        sa_column=Column(sa.DateTime(timezone=True), nullable=True),
+    )

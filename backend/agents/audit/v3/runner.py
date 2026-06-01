@@ -25,9 +25,6 @@ import logging
 import os
 import re
 from collections.abc import Callable, Awaitable
-
-# Set AUDIT_VERBOSE_LOGGING=1 to log per-message SDK events and costs to terminal
-_VERBOSE = os.environ.get("AUDIT_VERBOSE_LOGGING", "").lower() in ("1", "true")
 from time import perf_counter
 from typing import Any
 
@@ -54,6 +51,9 @@ from service.crawl.fetcher import fetch, fetch_text, make_client
 from service.crawl.sitemap import fetch_crawl_plan
 
 logger = logging.getLogger(__name__)
+
+# Set AUDIT_VERBOSE_LOGGING=1 to log per-message SDK events and costs to terminal
+_VERBOSE = os.environ.get("AUDIT_VERBOSE_LOGGING", "").lower() in ("1", "true")
 
 _FALLBACK_MODEL = "claude-sonnet-4-6"
 _ANTHROPIC_MODEL_MAP: dict[ModelName, str] = {
@@ -294,7 +294,6 @@ async def run_synthesis(
     Subsequent chat turns continue in the same session (full context) and may produce
     <audit_report_update> blocks for report versioning (existing pattern, unchanged).
     """
-    import shutil
     from claude_agent_sdk import ClaudeAgentOptions, ClaudeSDKClient
     from claude_agent_sdk.types import HookMatcher, PermissionResultAllow, PermissionResultDeny, StreamEvent, ThinkingConfigAdaptive
 

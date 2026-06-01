@@ -237,9 +237,10 @@ def _inject_report_context(session: Any, content: str | list, version_id: int | 
     versions = getattr(session, "report_versions", [])
     if not versions:
         return content
-    try:
-        v = versions[version_id] if version_id is not None else versions[-1]
-    except IndexError:
+    # version_id is 1-based; find by matching field, not list index
+    if version_id is not None:
+        v = next((x for x in versions if x.version_id == version_id), versions[-1])
+    else:
         v = versions[-1]
 
     report = getattr(v, "report", None)
