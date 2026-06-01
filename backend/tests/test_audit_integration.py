@@ -55,17 +55,18 @@ _TIMEOUT = 900  # 15 minutes: enrichment sub-agent (~90s) + synthesis (~300-600s
 
 
 def _network_available(url: str = _AUDIT_URL) -> bool:
-    """Quick TCP check — returns False if the host is unreachable."""
-    import socket
-    from urllib.parse import urlparse
-    p = urlparse(url)
-    host = p.hostname or ""
-    port = p.port or (443 if p.scheme == "https" else 80)
+    """HTTP check — returns False if the host is unreachable or returns a non-2xx status.
+
+    TCP-only checks pass even when Cloudflare answers the handshake but returns 403;
+    an HTTP GET lets us detect that case so the real-network tests are properly skipped.
+    """
+    import urllib.request
+    import urllib.error
     try:
-        socket.setdefaulttimeout(3)
-        socket.create_connection((host, port)).close()
-        return True
-    except OSError:
+        req = urllib.request.Request(url, headers={"User-Agent": "python-urllib/integration-test"})
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            return resp.status < 400
+    except Exception:
         return False
 
 
@@ -437,10 +438,10 @@ async def test_run_synthesis_catches_planted_issues(acme_business_context):
 # Test 3 — Full pipeline: real crawl + real synthesis
 # ---------------------------------------------------------------------------
 
-# @pytest.mark.skipif(
-#     not (_HAS_API_KEY and _HAS_NETWORK),
-#     reason="requires ANTHROPIC_API_KEY and network access to getduct.ai",
-# )
+@pytest.mark.skipif(
+    not (_HAS_API_KEY and _HAS_NETWORK),
+    reason="requires ANTHROPIC_API_KEY and network access to getduct.ai (HTTP 200)",
+)
 async def test_full_pipeline_real_page(duct_business_context):
     """End-to-end: crawls getduct.ai then runs Claude synthesis in template mode.
 
