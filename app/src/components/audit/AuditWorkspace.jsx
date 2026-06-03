@@ -64,7 +64,7 @@ const INITIAL_SPLIT = 50;
 // AuditWorkspace
 // ---------------------------------------------------------------------------
 
-export default function AuditWorkspace({ sessionId, auditParams }) {
+export default function AuditWorkspace({ sessionId, auditParams, publicMode = false, onReportReady }) {
   const { setIsAuditRunning } = useAuditNav();
 
   const [leftWidth, setLeftWidth] = useState(() => {
@@ -85,6 +85,7 @@ export default function AuditWorkspace({ sessionId, auditParams }) {
   const [errorMsg, setErrorMsg]               = useState("");
   const [retryCount, setRetryCount]           = useState(0);
   const [streamingHtml, setStreamingHtml]     = useState("");
+  const [isAgentTyping, setIsAgentTyping]     = useState(false);
 
   // Refs that need to be readable inside async closures without stale values
   const abortRef            = useRef(null);
@@ -96,12 +97,23 @@ export default function AuditWorkspace({ sessionId, auditParams }) {
   const containerRef        = useRef(null);
   const htmlBatchRef        = useRef("");
   const htmlBatchTimer      = useRef(null);
+  const reportFiredRef      = useRef(false); // prevents onReportReady firing more than once
 
   // Tell the nav bar whether to lock the back button
   useEffect(() => {
     const running = phase === Phase.STARTING || phase === Phase.PIPELINE;
     setIsAuditRunning(running);
   }, [phase, setIsAuditRunning]);
+
+  // Fire onReportReady once when the first complete report is available
+  useEffect(() => {
+    if (!onReportReady || reportFiredRef.current) return;
+    if (phase !== Phase.READY || reportVersions.length === 0) return;
+    const latest = reportVersions[reportVersions.length - 1];
+    if (!latest?.report) return;
+    reportFiredRef.current = true;
+    onReportReady(latest.report);
+  }, [onReportReady, phase, reportVersions]);
 
   // Clear on unmount so the back button re-enables if the user navigates away
   useEffect(() => {
@@ -315,6 +327,7 @@ export default function AuditWorkspace({ sessionId, auditParams }) {
         break;
 
       case AuditEvent.AGENT_MESSAGE_CHUNK:
+        setIsAgentTyping(false);
         setMessages((prev) => {
           const last = prev[prev.length - 1];
           if (last?.role === "assistant" && last.streaming)
@@ -324,6 +337,7 @@ export default function AuditWorkspace({ sessionId, auditParams }) {
         break;
 
       case AuditEvent.MESSAGE_STOP:
+        setIsAgentTyping(false);
         setMessages((prev) => {
           const last = prev[prev.length - 1];
           if (last?.streaming) return [...prev.slice(0, -1), { ...last, streaming: false }];
@@ -373,6 +387,7 @@ export default function AuditWorkspace({ sessionId, auditParams }) {
       return [...cleaned, { role: "user", text }];
     });
     setPhase(Phase.CHATTING);
+    setIsAgentTyping(true);
     try {
       await sendAgentMessage(agentTypeRef.current, backendSessionIdRef.current, {
         type: "chat",
@@ -381,6 +396,7 @@ export default function AuditWorkspace({ sessionId, auditParams }) {
       });
     } catch (err) {
       // Inline error — keep the report and chat intact, just flag the failed send
+      setIsAgentTyping(false);
       setMessages((prev) => [
         ...prev,
         { role: "send_error", text: err.message || "Failed to send message.", content },
@@ -391,6 +407,18 @@ export default function AuditWorkspace({ sessionId, auditParams }) {
 
   function handleRetrySend(content) {
     handleSendMessage(content);
+  }
+
+  function handleStop() {
+    abortRef.current?.abort();
+    if (backendSessionIdRef.current) {
+      closeAgentSession(agentTypeRef.current, backendSessionIdRef.current).catch(() => {});
+    }
+    setIsAgentTyping(false);
+    // During pipeline: go to FAILED (no report yet); during chatting: stay READY if we have a report
+    setPhase((prev) =>
+      prev === Phase.CHATTING && reportVersions.length > 0 ? Phase.READY : Phase.FAILED
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -420,8 +448,25 @@ export default function AuditWorkspace({ sessionId, auditParams }) {
   // Render
   // ---------------------------------------------------------------------------
 
+  const showPublicCta = publicMode && phase === Phase.READY && reportVersions.length > 0;
+
   return (
-    <div ref={containerRef} className="flex h-full w-full overflow-hidden">
+    <div className="flex flex-col h-full w-full overflow-hidden">
+      {showPublicCta && (
+        <div className="shrink-0 flex items-center justify-between gap-3 px-4 py-2.5 bg-orange-50 border-b border-orange-200 text-sm">
+          <div className="flex flex-col gap-0.5 min-w-0">
+            <span className="font-semibold text-orange-900 leading-tight">Want the full picture?</span>
+            <span className="text-orange-700 text-xs leading-tight">This is a quick scan. Sign up for a deeper audit with competitor analysis, keyword gaps, and a prioritized action plan.</span>
+          </div>
+          <a
+            href="/"
+            className="shrink-0 inline-flex items-center gap-1 rounded-md bg-orange-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-orange-700 transition-colors"
+          >
+            Get the full audit →
+          </a>
+        </div>
+      )}
+    <div ref={containerRef} className="flex flex-1 min-h-0 w-full overflow-hidden">
       <div
         className="flex flex-col overflow-hidden border-r border-border/60"
         style={{ width: `${leftWidth}%`, minWidth: "280px" }}
@@ -434,10 +479,13 @@ export default function AuditWorkspace({ sessionId, auditParams }) {
           pendingQuestions={pendingQuestions}
           hasReport={reportVersions.length > 0}
           errorMsg={errorMsg}
+          isAgentTyping={isAgentTyping}
+          isStreaming={phase === Phase.PIPELINE || (phase === Phase.CHATTING && isAgentTyping)}
           onAnswerQuestions={handleAnswerQuestions}
           onSendMessage={handleSendMessage}
           onRetrySend={handleRetrySend}
           onRetry={handleRetry}
+          onStop={handleStop}
         />
       </div>
 
@@ -466,6 +514,7 @@ export default function AuditWorkspace({ sessionId, auditParams }) {
           onRetry={handleRetry}
         />
       </div>
+    </div>
     </div>
   );
 }

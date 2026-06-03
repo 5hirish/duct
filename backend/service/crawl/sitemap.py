@@ -81,6 +81,20 @@ def _is_sitemapindex(xml_text: str) -> bool:
 
 
 def _extract_sitemap_from_robots(robots_txt: str, base_url: str) -> str:
+    """Extract the first Sitemap: directive from robots.txt content.
+
+    Uses urllib.robotparser for RFC-compliant parsing (handles Allow/Disallow,
+    wildcards, comments) rather than brittle line-by-line string matching.
+    Falls back to manual scan if the parser returns nothing.
+    """
+    import urllib.robotparser
+    rp = urllib.robotparser.RobotFileParser()
+    rp.parse(robots_txt.splitlines())
+    # RobotFileParser.site_maps() returns the Sitemap: directives (Python 3.8+)
+    maps = rp.site_maps()
+    if maps:
+        return maps[0]
+    # Manual fallback for edge cases where the parser finds nothing
     for line in robots_txt.splitlines():
         if line.lower().startswith("sitemap:"):
             return line.split(":", 1)[1].strip()

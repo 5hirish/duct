@@ -6,7 +6,6 @@ import logging
 import secrets
 from datetime import datetime, timezone
 
-import httpx
 import jwt
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
@@ -15,6 +14,7 @@ from config import get_configs
 from service.auth_exchange import consume_exchange_code, store_exchange_code
 from service.google.oauth import create_google_signin_flow
 from service.oauthstate import cleanup_expired_states, consume_state, save_state
+from service.turnstile import verify_turnstile
 from service.user_store import upsert_google_user
 
 logger = logging.getLogger(__name__)
@@ -34,24 +34,6 @@ def _no_store_redirect(url: str, status_code: int = 307) -> RedirectResponse:
     response.headers["Pragma"] = "no-cache"
     response.headers["Expires"] = "0"
     return response
-
-
-async def _verify_turnstile(token: str, remote_ip: str) -> bool:
-    """Verify a Cloudflare Turnstile token. Returns True if valid."""
-    cfg = get_configs()
-    if not cfg.turnstile_secret_key:
-        return True  # skip in dev when not configured
-    async with httpx.AsyncClient() as client:
-        resp = await client.post(
-            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-            data={
-                "secret": cfg.turnstile_secret_key,
-                "response": token,
-                "remoteip": remote_ip,
-            },
-        )
-        result = resp.json()
-        return result.get("success", False)
 
 
 def _create_jwt(email: str, name: str, picture: str) -> str:
@@ -77,7 +59,7 @@ async def signin_google_authorize(
     """Start Google OAuth for user sign-in."""
     if turnstile_token:
         client_ip = request.client.host if request.client else ""
-        valid = await _verify_turnstile(turnstile_token, client_ip)
+        valid = await verify_turnstile(turnstile_token, client_ip)
         if not valid:
             raise HTTPException(status_code=403, detail="Turnstile verification failed.")
     elif get_configs().turnstile_secret_key:

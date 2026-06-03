@@ -29,6 +29,8 @@ class Configs(BaseSettings):
 
     # CORS / OAuth redirect target
     frontend_origin: str = Field(default="http://localhost:3003")
+    # Marketing site origin (getduct.ai) — allowed for public lead-magnet endpoints
+    site_origin: str = Field(default="https://getduct.ai")
 
     # Public origin of this API (scheme + host [+ port], no path). Used to build OAuth redirect
     # URIs when GOOGLE_OAUTH_REDIRECT_URI / GOOGLE_SIGNIN_REDIRECT_URI are unset.

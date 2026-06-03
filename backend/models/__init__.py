@@ -10,5 +10,6 @@ from models.content import (  # noqa: F401
     ContentPlan,
     ContentPost,
 )
+from models.lead_magnet import LeadMagnet  # noqa: F401
 from models.project import Project  # noqa: F401
 

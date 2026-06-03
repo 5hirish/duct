@@ -1,11 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import AuditStepProgress from "./AuditStepProgress";
 import AuditQuestions from "./AuditQuestions";
 import AuditInput from "./AuditInput";
 import AuditTodos from "./AuditTodos";
 import { Phase } from "./auditPhase";
+import { CodeBlock, resolveCode } from "./CodeBlock";
 
 function SendErrorBubble({ text, content, onRetry }) {
   return (
@@ -32,7 +35,7 @@ function ThinkingBlock({ thinking, streaming }) {
   const [expanded, setExpanded] = useState(false);
   if (!thinking) return null;
   return (
-    <div className="mb-1">
+    <div className="mb-2">
       <button
         onClick={() => setExpanded((x) => !x)}
         className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
@@ -41,10 +44,44 @@ function ThinkingBlock({ thinking, streaming }) {
         <span>{expanded ? "Hide" : "Show"} reasoning{streaming ? "…" : ""}</span>
       </button>
       {expanded && (
-        <div className="mt-1 rounded-lg px-3 py-2 text-xs text-muted-foreground bg-muted/40 border border-border/40 italic whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto">
-          {thinking}
+        <div className="mt-1.5 rounded-lg px-3.5 py-3 bg-muted/40 border border-border/40">
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              // Headings: not italic, real weight/color so sections are scannable
+              h1: ({children}) => <p className="text-xs font-bold text-foreground/80 mt-3 mb-1">{children}</p>,
+              h2: ({children}) => <p className="text-xs font-semibold text-foreground/75 mt-2.5 mb-1">{children}</p>,
+              h3: ({children}) => <p className="text-[11px] font-semibold text-foreground/70 mt-2 mb-0.5 uppercase tracking-wide">{children}</p>,
+              h4: ({children}) => <p className="text-[11px] font-medium text-foreground/65 mt-1.5 mb-0.5">{children}</p>,
+              // Body: italic + muted, with real breathing room between paragraphs
+              p:  ({children}) => <p className="text-[11px] text-muted-foreground italic leading-relaxed my-1.5">{children}</p>,
+              // Lists: proper vertical rhythm, not italic for bullets themselves
+              ul: ({children}) => <ul className="list-disc pl-4 my-1.5 space-y-1">{children}</ul>,
+              ol: ({children}) => <ol className="list-decimal pl-4 my-1.5 space-y-1">{children}</ol>,
+              li: ({children}) => <li className="text-[11px] text-muted-foreground italic leading-relaxed">{children}</li>,
+              // Code: inline vs fenced block
+              code: ({className, children}) => {
+                const { language, isBlock } = resolveCode(className, children);
+                if (isBlock) return <CodeBlock language={language} compact>{children}</CodeBlock>;
+                return <code className="text-[10px] not-italic font-mono bg-background/70 border border-border/60 text-foreground/80 px-1 py-0.5 rounded">{children}</code>;
+              },
+              strong: ({children}) => <strong className="font-semibold not-italic text-foreground/75">{children}</strong>,
+              em: ({children}) => <em className="not-italic text-muted-foreground">{children}</em>,
+              // Links: open in new tab
+              a: ({href, children}) => <a href={href} target="_blank" rel="noopener noreferrer" className="text-foreground/70 underline underline-offset-2 not-italic hover:text-foreground/90">{children}</a>,
+              // Blockquote
+              blockquote: ({children}) => <blockquote className="border-l-2 border-border/60 pl-3 my-1.5 italic text-muted-foreground/70">{children}</blockquote>,
+              // Tables
+              table: ({children}) => <table className="border-collapse my-1.5 w-full text-[10px]">{children}</table>,
+              th: ({children}) => <th className="border border-border/60 px-2 py-0.5 font-semibold text-left not-italic bg-muted/20">{children}</th>,
+              td: ({children}) => <td className="border border-border/60 px-2 py-0.5 italic">{children}</td>,
+              hr: () => <hr className="border-border/40 my-2" />,
+            }}
+          >
+            {thinking}
+          </ReactMarkdown>
           {streaming && (
-            <span className="inline-block w-0.5 h-3 bg-current ml-0.5 animate-pulse align-middle" />
+            <span className="inline-block w-0.5 h-3 bg-muted-foreground/60 ml-0.5 animate-pulse align-middle" />
           )}
         </div>
       )}
@@ -52,27 +89,89 @@ function ThinkingBlock({ thinking, streaming }) {
   );
 }
 
-function ChatBubble({ role, text, thinking, streaming }) {
+function TypingIndicator() {
   return (
-    <div className={`flex ${role === "user" ? "justify-end" : "justify-start"} mb-2`}>
-      <div className={`max-w-[85%] ${role !== "user" ? "space-y-0.5" : ""}`}>
-        {role !== "user" && (
-          <ThinkingBlock thinking={thinking} streaming={streaming && !text} />
-        )}
-        {(text || role === "user") && (
-          <div
-            className={`rounded-2xl px-3 py-2 text-sm leading-relaxed ${
-              role === "user"
-                ? "bg-primary text-primary-foreground rounded-br-sm"
-                : "bg-muted text-foreground rounded-bl-sm"
-            }`}
-          >
-            <p className="whitespace-pre-wrap break-words">
+    <div className="flex justify-start mb-2">
+      <div className="rounded-2xl rounded-bl-sm px-4 py-3 bg-muted text-foreground">
+        <span className="flex gap-1 items-center">
+          {[0, 150, 300].map((delay) => (
+            <span
+              key={delay}
+              className="inline-block w-1.5 h-1.5 rounded-full bg-muted-foreground/60 animate-bounce"
+              style={{ animationDelay: `${delay}ms` }}
+            />
+          ))}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function ChatBubble({ role, text, thinking, streaming }) {
+  if (role === "user") {
+    return (
+      <div className="flex justify-end mb-4">
+        <div className="max-w-[82%]">
+          <div className="rounded-2xl rounded-br-sm px-4 py-2.5 text-sm leading-relaxed bg-primary text-primary-foreground">
+            <p className="whitespace-pre-wrap break-words">{text}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex justify-start mb-4">
+      <div className="w-full space-y-1">
+        <ThinkingBlock thinking={thinking} streaming={streaming && !text} />
+        {text && (
+          <div className="rounded-2xl rounded-bl-sm px-4 py-3 text-sm bg-muted text-foreground">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              className={[
+                "prose prose-sm dark:prose-invert max-w-none",
+                "prose-p:my-2.5 prose-p:leading-relaxed prose-p:text-sm",
+                "prose-headings:font-semibold prose-headings:text-foreground prose-headings:mt-5 prose-headings:mb-2",
+                "prose-h1:text-xl prose-h2:text-base prose-h3:text-[15px] prose-h4:text-sm",
+                "prose-ul:my-2 prose-ol:my-2 prose-li:my-1 prose-li:leading-relaxed",
+                "prose-strong:text-foreground prose-strong:font-semibold",
+                // prose-a/code/pre/table are handled by the components prop below
+              ].join(" ")}
+              components={{
+                // Inline vs fenced code block
+                code({ className, children }) {
+                  const { language, isBlock } = resolveCode(className, children);
+                  if (isBlock) return <CodeBlock language={language}>{children}</CodeBlock>;
+                  return (
+                    <code className="bg-primary/10 text-primary dark:bg-primary/20 px-1.5 py-0.5 rounded text-[0.8em] font-mono before:content-none after:content-none">
+                      {children}
+                    </code>
+                  );
+                },
+                // Links: new tab + security
+                a({ href, children }) {
+                  return (
+                    <a href={href} target="_blank" rel="noopener noreferrer"
+                       className="text-primary underline underline-offset-2 hover:no-underline">
+                      {children}
+                    </a>
+                  );
+                },
+                // Tables
+                table({ children }) { return <table className="border-collapse my-3 w-full text-sm">{children}</table>; },
+                th({ children }) { return <th className="border border-border px-3 py-1.5 font-semibold text-left bg-muted/50">{children}</th>; },
+                td({ children }) { return <td className="border border-border px-3 py-1.5">{children}</td>; },
+                // Blockquote
+                blockquote({ children }) {
+                  return <blockquote className="border-l-4 border-border pl-4 my-3 text-muted-foreground italic">{children}</blockquote>;
+                },
+              }}
+            >
               {text}
-              {streaming && text && (
-                <span className="inline-block w-0.5 h-3.5 bg-current ml-0.5 animate-pulse align-middle" />
-              )}
-            </p>
+            </ReactMarkdown>
+            {streaming && (
+              <span className="inline-block w-0.5 h-3.5 bg-current ml-0.5 animate-pulse align-middle" />
+            )}
           </div>
         )}
       </div>
@@ -98,21 +197,52 @@ export default function AuditChat({
   pendingQuestions,
   hasReport,
   errorMsg,
+  isAgentTyping,
+  isStreaming,
   onAnswerQuestions,
   onSendMessage,
   onRetrySend,
   onRetry,
+  onStop,
 }) {
-  const bottomRef = useRef(null);
+  const scrollRef    = useRef(null);
+  const bottomRef    = useRef(null);
+  const isAtBottom   = useRef(true);
+  const prevMsgLen   = useRef(0);
+  const [showScrollBtn, setShowScrollBtn] = useState(false);
 
+  function handleScroll() {
+    const el = scrollRef.current;
+    if (!el) return;
+    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+    isAtBottom.current = atBottom;
+    if (atBottom) setShowScrollBtn(false);
+  }
+
+  function scrollToLatest() {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    setShowScrollBtn(false);
+  }
+
+  // Instant auto-scroll only when already near the bottom (don't hijack manual reading)
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, steps, pendingQuestions]);
+    if (isAtBottom.current) scrollToLatest();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages, steps, isAgentTyping, pendingQuestions]);
+
+  // Show "New message" button only when a new message appears and user has scrolled up
+  // (thinking chunk updates don't add to messages.length, so this ignores them)
+  useEffect(() => {
+    if (messages.length > prevMsgLen.current) {
+      prevMsgLen.current = messages.length;
+      if (!isAtBottom.current) setShowScrollBtn(true);
+    }
+  }, [messages.length]);
 
   const status = PHASE_STATUS[phase] ?? PHASE_STATUS[Phase.STARTING];
-  const isBusy = phase === Phase.STARTING || phase === Phase.PIPELINE || phase === Phase.CHATTING;
   const isFailed = phase === Phase.FAILED;
-  const inputDisabled = isBusy || phase === Phase.QUESTIONS || isFailed;
+  // Allow typing during CHATTING (post-report chat), disabled only during pipeline + questions + failed
+  const inputDisabled = phase === Phase.QUESTIONS || isFailed;
 
   return (
     <div className="flex flex-col h-full">
@@ -146,8 +276,17 @@ export default function AuditChat({
       {/* Sticky todo tracker */}
       <AuditTodos todos={todos} />
 
-      {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1">
+      {/* Scrollable content + floating new-message button */}
+      <div className="flex-1 relative min-h-0">
+        <div
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className="absolute inset-0 overflow-y-auto px-4 py-4
+            [&::-webkit-scrollbar]:w-[3px]
+            [&::-webkit-scrollbar-thumb]:rounded-full
+            [&::-webkit-scrollbar-thumb]:bg-border/60
+            [&::-webkit-scrollbar-track]:bg-transparent"
+        >
 
         {/* Starting: spinner before first step arrives */}
         {phase === Phase.STARTING && (
@@ -172,6 +311,9 @@ export default function AuditChat({
             <ChatBubble key={i} role={msg.role} text={msg.text} thinking={msg.thinking} streaming={msg.streaming} />
           )
         )}
+
+        {/* Typing indicator — shown after sending a message while waiting for first chunk */}
+        {isAgentTyping && <TypingIndicator />}
 
         {/* Clarifying questions */}
         {phase === Phase.QUESTIONS && pendingQuestions?.length > 0 && (
@@ -208,11 +350,29 @@ export default function AuditChat({
           </p>
         )}
 
-        <div ref={bottomRef} />
-      </div>
+          <div ref={bottomRef} />
+        </div>{/* end scroll container */}
+
+        {/* Floating "New message" indicator — only appears when user has scrolled up */}
+        {showScrollBtn && (
+          <div className="absolute bottom-3 inset-x-0 flex justify-center z-10 pointer-events-none">
+            <button
+              onClick={scrollToLatest}
+              className="pointer-events-auto flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all"
+            >
+              ↓ New message
+            </button>
+          </div>
+        )}
+      </div>{/* end relative wrapper */}
 
       {/* Input */}
-      <AuditInput onSend={onSendMessage} disabled={inputDisabled} />
+      <AuditInput
+        onSend={onSendMessage}
+        disabled={inputDisabled}
+        isStreaming={isStreaming}
+        onStop={onStop}
+      />
     </div>
   );
 }

@@ -1,16 +1,18 @@
 """HTML signal extractor for the SEO audit crawler.
 
 Uses selectolax (Lexbor HTML5 engine — same parser Chrome uses) for fast,
-browser-accurate parsing of real-world HTML. Replaces the stdlib html.parser
-state machine which was fragile against malformed markup.
+browser-accurate parsing of real-world HTML.
 
 Extracts per-page SEO signals:
-  - Head: title, meta description, canonical, noindex, hreflang
+  - Head: title, meta description, canonical, noindex, hreflang, AMP URL
   - OG/social: og:title/description/image/type, twitter:card/image
-  - Structure: h1/h2 text, JSON-LD @types, structured data presence
-  - Images: count + images missing alt
+  - Structure: h1/h2 text, JSON-LD full objects + @types, microdata types (extruct)
+  - Images: count + images missing alt, preload hints
   - Links: internal + external URLs with anchor text (parallel arrays)
-  - Content: approximate word count, body text snippet (first 500 chars)
+  - Content: word count (trafilatura boilerplate removal), body text snippet
+  - HTTP-level: X-Robots-Tag, Vary, Cache-Control (from response headers)
+  - SPA detection: framework fingerprinting from static HTML markers
+  - Noscript: visible fallback content for non-JS crawlers
 """
 
 from __future__ import annotations
@@ -24,22 +26,27 @@ from agents.audit.schema import PageSignals
 
 logger = logging.getLogger(__name__)
 
-# Noise elements whose text we exclude from word count / body snippet.
-# selectolax lets us remove these before extracting body text.
-_NOISE_SELECTORS = [
-    "script", "style", "noscript", "nav", "footer", "header",
-    "[role='navigation']", "[role='banner']", "[role='contentinfo']",
-    ".nav", ".navigation", ".menu", ".footer", ".header", ".sidebar",
-    "#nav", "#navigation", "#menu", "#footer", "#header", "#sidebar",
-]
-
 _BODY_SNIPPET_LEN = 500
 _MAX_INTERNAL_LINKS = 50
 _MAX_EXTERNAL_LINKS = 20
+_MAX_JSON_LD_OBJECTS = 10   # cap to avoid bloating the prompt
+
+# SPA framework fingerprints detectable from static HTML alone.
+# Order matters: most specific first.
+_SPA_PATTERNS: list[tuple[str, str, str]] = [
+    # (regex_pattern, framework_key, description)
+    (r'<script[^>]+id=["\']__NEXT_DATA__["\']', "next_ssr",  "Next.js with SSR/SSG — content in static HTML"),
+    (r'window\.__NEXT_DATA__',                   "next_ssr",  "Next.js with SSR/SSG — content in static HTML"),
+    (r'<div[^>]+id=["\']__next["\'][^>]*>\s*</div>', "next_csr", "Next.js client-side only — empty shell"),
+    (r'<div[^>]+id=["\']root["\'][^>]*>\s*</div>',   "react_csr","React client-side only — empty shell"),
+    (r'<div[^>]+id=["\']app["\'][^>]*>\s*</div>',    "react_csr","React/Vue client-side only — empty shell"),
+    (r'window\.__NUXT__',                            "nuxt",     "Nuxt.js"),
+    (r'window\.gatsby',                              "gatsby",   "Gatsby"),
+    (r'<div[^>]+id=["\']gatsby-focus-wrapper["\']',  "gatsby",   "Gatsby"),
+]
 
 
 def _get_text(node) -> str:
-    """Get cleaned visible text from a node, stripping child tags."""
     if node is None:
         return ""
     return (node.text(deep=True, strip=True) or "").strip()
@@ -51,13 +58,90 @@ def _attr(node, name: str, default: str = "") -> str:
     return (node.attributes.get(name) or default).strip()
 
 
-def extract_signals(html: str, url: str, page_type: str = "other") -> PageSignals:
-    """Parse *html* and return a PageSignals instance for *url*."""
+def _detect_spa(html: str) -> tuple[bool, str]:
+    """Return (is_spa_suspected, framework_key) by scanning static HTML markers."""
+    for pattern, framework, _ in _SPA_PATTERNS:
+        if re.search(pattern, html, re.IGNORECASE | re.DOTALL):
+            # next_ssr means it IS server-rendered; not an SEO risk, but still label it
+            return True, framework
+    return False, ""
+
+
+def _extract_microdata_types(html: str) -> list[str]:
+    """Extract Schema.org types from HTML microdata (itemtype attributes).
+
+    Tries extruct first for completeness; falls back to a regex scan.
+    """
+    types: list[str] = []
+    try:
+        import extruct
+        data = extruct.extract(html, syntaxes=["microdata"], uniform=True)
+        for item in data.get("microdata", []):
+            t = item.get("type", "")
+            if t:
+                # Normalise schema.org URLs → bare type name
+                types.append(t.rsplit("/", 1)[-1] if "/" in t else t)
+    except Exception:
+        # Regex fallback
+        for m in re.finditer(r'itemtype=["\']https?://schema\.org/([^"\'>\s]+)', html, re.IGNORECASE):
+            types.append(m.group(1))
+    return list(dict.fromkeys(types))
+
+
+def _extract_body_text(tree, html: str) -> tuple[int, str]:
+    """Extract main body text using trafilatura for boilerplate removal.
+
+    trafilatura uses ML-based content extraction (similar to what Google's
+    content quality signals measure) — far more accurate than manual
+    nav/footer/header CSS selector stripping for real-world pages.
+
+    Falls back to the manual noise-stripping approach when trafilatura
+    is unavailable or returns nothing.
+    """
+    try:
+        import trafilatura
+        extracted = trafilatura.extract(
+            html,
+            include_comments=False,
+            include_tables=True,
+            no_fallback=False,
+            favor_precision=False,
+        )
+        if extracted and len(extracted.split()) > 10:
+            word_count = len(extracted.split())
+            snippet = extracted[:_BODY_SNIPPET_LEN]
+            return word_count, snippet
+    except Exception as exc:
+        logger.debug("trafilatura extraction failed: %s", exc)
+
+    # Manual fallback: strip known noise selectors then extract body text
+    body = tree.css_first("body")
+    if not body:
+        return 0, ""
+    for noise_sel in ("nav", "header", "footer", "script", "style", "noscript",
+                      "[role='navigation']", "[role='banner']", "[role='contentinfo']"):
+        for node in tree.css(noise_sel):
+            node.decompose()
+    full_text = re.sub(r"\s+", " ", body.text(deep=True, separator=" ", strip=True)).strip()
+    return len(full_text.split()), full_text[:_BODY_SNIPPET_LEN]
+
+
+def extract_signals(
+    html: str,
+    url: str,
+    page_type: str = "other",
+    response_headers: dict[str, str] | None = None,
+) -> PageSignals:
+    """Parse *html* and return a PageSignals instance for *url*.
+
+    *response_headers* should be the lowercased HTTP response headers dict
+    from FetchResult.headers — used to extract X-Robots-Tag, Vary, etc.
+    """
     try:
         from selectolax.parser import HTMLParser as SParser
     except ImportError:
         logger.warning("selectolax not installed, falling back to stdlib html.parser")
-        return _extract_signals_stdlib(html, url, page_type)
+        return _extract_signals_stdlib(html, url, page_type, response_headers)
 
     try:
         tree = SParser(html)
@@ -65,7 +149,15 @@ def extract_signals(html: str, url: str, page_type: str = "other") -> PageSignal
         logger.debug("selectolax parse error for %s: %s", url, exc)
         return PageSignals(url=url, page_type=page_type)  # type: ignore[arg-type]
 
+    hdrs = response_headers or {}
     base_netloc = urlparse(url).netloc
+
+    # ------------------------------------------------------------------
+    # HTTP-level signals (from response headers)
+    # ------------------------------------------------------------------
+    x_robots_tag = hdrs.get("x-robots-tag", "")
+    vary_header = hdrs.get("vary", "")
+    cache_control = hdrs.get("cache-control", "")
 
     # ------------------------------------------------------------------
     # <head> signals
@@ -79,10 +171,10 @@ def extract_signals(html: str, url: str, page_type: str = "other") -> PageSignal
     canonical_node = tree.css_first('link[rel="canonical"]')
     canonical = _attr(canonical_node, "href")
 
-    # noindex: <meta name="robots" content="noindex,...">
+    # noindex: <meta name="robots" content="noindex,..."> OR X-Robots-Tag header
     robots_node = tree.css_first('meta[name="robots"]')
     robots_content = _attr(robots_node, "content").lower()
-    is_noindex = "noindex" in robots_content
+    is_noindex = "noindex" in robots_content or "noindex" in x_robots_tag.lower()
 
     # hreflang: collect all lang values
     hreflang_langs = [
@@ -90,6 +182,15 @@ def extract_signals(html: str, url: str, page_type: str = "other") -> PageSignal
         for node in tree.css('link[rel="alternate"][hreflang]')
         if _attr(node, "hreflang")
     ]
+
+    # AMP alternate
+    amp_node = tree.css_first('link[rel="amphtml"]')
+    amp_url = _attr(amp_node, "href")
+    if amp_url:
+        amp_url = urljoin(url, amp_url)
+
+    # Preload hints
+    preload_hints = len(tree.css('link[rel="preload"]'))
 
     # ------------------------------------------------------------------
     # Open Graph + social
@@ -129,19 +230,27 @@ def extract_signals(html: str, url: str, page_type: str = "other") -> PageSignal
     )
 
     # ------------------------------------------------------------------
-    # JSON-LD structured data
+    # JSON-LD structured data — full objects + type list
     # ------------------------------------------------------------------
 
     schema_types: list[str] = []
+    schema_json_ld: list[dict] = []
     for script in tree.css('script[type="application/ld+json"]'):
         raw = script.text(strip=True)
         if not raw:
             continue
         try:
             obj = json.loads(raw)
+            if len(schema_json_ld) < _MAX_JSON_LD_OBJECTS:
+                schema_json_ld.append(obj if isinstance(obj, dict) else {"@graph": obj})
             _collect_schema_types(obj, schema_types)
         except (json.JSONDecodeError, ValueError):
             pass
+
+    # ------------------------------------------------------------------
+    # Microdata types (extruct / regex)
+    # ------------------------------------------------------------------
+    microdata_types = _extract_microdata_types(html)
 
     # ------------------------------------------------------------------
     # Links (with anchor text)
@@ -177,24 +286,24 @@ def extract_signals(html: str, url: str, page_type: str = "other") -> PageSignal
             external_link_anchors.append(anchor)
 
     # ------------------------------------------------------------------
-    # Body text: word count + snippet
-    # Remove noise nodes in-place, then extract text from remaining body.
+    # Noscript content — what non-JS crawlers see as fallback
     # ------------------------------------------------------------------
+    noscript_parts = []
+    for ns in tree.css("noscript"):
+        t = _get_text(ns)
+        if t:
+            noscript_parts.append(t)
+    noscript_content = " ".join(noscript_parts)[:500]
 
-    word_count_approx = 0
-    body_text_snippet = ""
+    # ------------------------------------------------------------------
+    # SPA detection
+    # ------------------------------------------------------------------
+    is_spa_suspected, spa_framework = _detect_spa(html)
 
-    body = tree.css_first("body")
-    if body:
-        # Strip nav/header/footer/script/style noise before text extraction
-        for noise_sel in ("nav", "header", "footer", "script", "style", "noscript",
-                          "[role='navigation']", "[role='banner']", "[role='contentinfo']"):
-            for node in tree.css(noise_sel):
-                node.decompose()
-
-        full_text = re.sub(r"\s+", " ", body.text(deep=True, separator=" ", strip=True)).strip()
-        word_count_approx = len(full_text.split())
-        body_text_snippet = full_text[:_BODY_SNIPPET_LEN]
+    # ------------------------------------------------------------------
+    # Body text: word count + snippet via trafilatura
+    # ------------------------------------------------------------------
+    word_count_approx, body_text_snippet = _extract_body_text(tree, html)
 
     return PageSignals(
         url=url,
@@ -204,12 +313,16 @@ def extract_signals(html: str, url: str, page_type: str = "other") -> PageSignal
         canonical=canonical,
         is_noindex=is_noindex,
         hreflang_langs=hreflang_langs,
+        amp_url=amp_url,
+        preload_hints=preload_hints,
         h1s=h1s,
         h2s=h2s,
         image_count=image_count,
         images_missing_alt=images_missing_alt,
-        has_schema_org=bool(schema_types),
+        has_schema_org=bool(schema_types) or bool(microdata_types),
         schema_types=list(dict.fromkeys(schema_types)),
+        schema_json_ld=schema_json_ld,
+        microdata_types=list(dict.fromkeys(microdata_types)),
         og_title=og_title,
         og_description=og_description,
         og_image=og_image,
@@ -222,6 +335,12 @@ def extract_signals(html: str, url: str, page_type: str = "other") -> PageSignal
         internal_link_anchors=internal_link_anchors,
         external_links=external_links,
         external_link_anchors=external_link_anchors,
+        noscript_content=noscript_content,
+        is_spa_suspected=is_spa_suspected,
+        spa_framework=spa_framework,
+        x_robots_tag=x_robots_tag,
+        vary_header=vary_header,
+        cache_control=cache_control,
     )
 
 
@@ -247,15 +366,28 @@ def _collect_schema_types(obj: object, out: list[str]) -> None:
 # stdlib fallback (used if selectolax is not installed)
 # ---------------------------------------------------------------------------
 
-def _extract_signals_stdlib(html: str, url: str, page_type: str) -> PageSignals:
-    """Minimal fallback extractor using stdlib html.parser.
-
-    Less accurate than the selectolax path — anchor text and body snippet
-    are not extracted. Used only when selectolax is unavailable.
-    """
+def _extract_signals_stdlib(
+    html: str,
+    url: str,
+    page_type: str,
+    response_headers: dict[str, str] | None = None,
+) -> PageSignals:
+    """Minimal fallback extractor using stdlib html.parser."""
     from html.parser import HTMLParser
 
+    hdrs = response_headers or {}
+    x_robots_tag = hdrs.get("x-robots-tag", "")
+    vary_header = hdrs.get("vary", "")
+    cache_control = hdrs.get("cache-control", "")
+
     base_netloc = urlparse(url).netloc
+    is_spa_suspected, spa_framework = _detect_spa(html)
+    microdata_types = _extract_microdata_types(html)
+    amp_match = re.search(r'<link[^>]+rel=["\']amphtml["\'][^>]+href=["\']([^"\']+)', html, re.IGNORECASE)
+    amp_url = urljoin(url, amp_match.group(1)) if amp_match else ""
+    preload_hints = len(re.findall(r'<link[^>]+rel=["\']preload["\']', html, re.IGNORECASE))
+    noscript_texts = re.findall(r'<noscript[^>]*>(.*?)</noscript>', html, re.IGNORECASE | re.DOTALL)
+    noscript_content = " ".join(re.sub(r'<[^>]+>', '', t).strip() for t in noscript_texts)[:500]
 
     class _Parser(HTMLParser):
         def __init__(self):
@@ -274,6 +406,7 @@ def _extract_signals_stdlib(html: str, url: str, page_type: str) -> PageSignals:
             self.image_count = 0
             self.images_missing_alt = 0
             self.schema_types: list[str] = []
+            self.schema_json_ld: list[dict] = []
             self.internal_links: list[str] = []
             self.external_links: list[str] = []
             self._body_parts: list[str] = []
@@ -319,7 +452,8 @@ def _extract_signals_stdlib(html: str, url: str, page_type: str) -> PageSignals:
                 elif name == "twitter:card":
                     self.twitter_card = c
             elif tag == "link":
-                if (attr.get("rel") or "").lower() == "canonical":
+                rel = (attr.get("rel") or "").lower()
+                if rel == "canonical":
                     self.canonical = attr.get("href") or ""
             elif tag == "h1":
                 self._in_h1 = True
@@ -358,7 +492,10 @@ def _extract_signals_stdlib(html: str, url: str, page_type: str) -> PageSignals:
         def handle_data(self, data):
             if self._in_script_ld:
                 try:
-                    _collect_schema_types(json.loads(data), self.schema_types)
+                    obj = json.loads(data)
+                    _collect_schema_types(obj, self.schema_types)
+                    if len(self.schema_json_ld) < _MAX_JSON_LD_OBJECTS:
+                        self.schema_json_ld.append(obj if isinstance(obj, dict) else {"@graph": obj})
                 except Exception:
                     pass
                 return
@@ -378,19 +515,33 @@ def _extract_signals_stdlib(html: str, url: str, page_type: str) -> PageSignals:
         p.feed(html)
     except Exception:
         pass
+
+    is_noindex_combined = p.is_noindex or "noindex" in x_robots_tag.lower()
     full_text = re.sub(r"\s+", " ", " ".join(p._body_parts)).strip()
+
     return PageSignals(
         url=url, page_type=page_type,  # type: ignore[arg-type]
         title=p.title, meta_description=p.meta_description, canonical=p.canonical,
-        is_noindex=p.is_noindex, h1s=[h for h in p.h1s if h][:5],
+        is_noindex=is_noindex_combined,
+        h1s=[h for h in p.h1s if h][:5],
         h2s=[h for h in p.h2s if h][:8],
         image_count=p.image_count, images_missing_alt=p.images_missing_alt,
-        has_schema_org=bool(p.schema_types),
+        has_schema_org=bool(p.schema_types) or bool(microdata_types),
         schema_types=list(dict.fromkeys(p.schema_types)),
+        schema_json_ld=p.schema_json_ld,
+        microdata_types=list(dict.fromkeys(microdata_types)),
         og_title=p.og_title, og_description=p.og_description,
         og_image=p.og_image, og_type=p.og_type, twitter_card=p.twitter_card,
         word_count_approx=len(full_text.split()),
         body_text_snippet=full_text[:_BODY_SNIPPET_LEN],
         internal_links=list(dict.fromkeys(p.internal_links))[:50],
         external_links=list(dict.fromkeys(p.external_links))[:20],
+        amp_url=amp_url,
+        preload_hints=preload_hints,
+        noscript_content=noscript_content,
+        is_spa_suspected=is_spa_suspected,
+        spa_framework=spa_framework,
+        x_robots_tag=x_robots_tag,
+        vary_header=vary_header,
+        cache_control=cache_control,
     )

@@ -41,12 +41,14 @@ class AuditStep(StrEnum):
     RESOLVE_URL = "resolve_url"
     FETCH_SITEMAP = "fetch_sitemap"
     CRAWL_PAGES = "crawl_pages"
+    ENRICHING = "enriching"
     SYNTHESIZE_AUDIT = "synthesize_audit"
 
 
 STEP_LABELS: dict[AuditStep, str] = {
-    AuditStep.RESOLVE_URL:     "Resolving website",
-    AuditStep.FETCH_SITEMAP:   "Fetching sitemap",
-    AuditStep.CRAWL_PAGES:     "Crawling pages",
+    AuditStep.RESOLVE_URL:      "Resolving website",
+    AuditStep.FETCH_SITEMAP:    "Fetching sitemap",
+    AuditStep.CRAWL_PAGES:      "Crawling pages",
+    AuditStep.ENRICHING:        "Researching competitors",
     AuditStep.SYNTHESIZE_AUDIT: "AI synthesis",
 }

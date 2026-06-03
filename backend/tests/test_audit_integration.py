@@ -51,7 +51,7 @@ _HAS_API_KEY = bool(_cfg.anthropic_api_key)
 _AUDIT_URL = "https://getduct.ai"
 _OUTPUTS = ROOT / "tests" / "outputs"
 
-_TIMEOUT = 300  # 5 minutes outer guard for all API tests
+_TIMEOUT = 900  # 15 minutes: enrichment sub-agent (~90s) + synthesis (~300-600s)
 
 
 def _network_available(url: str = _AUDIT_URL) -> bool:
@@ -59,23 +59,19 @@ def _network_available(url: str = _AUDIT_URL) -> bool:
 
     TCP-only checks pass even when Cloudflare answers the handshake but returns 403;
     an HTTP GET lets us detect that case so the real-network tests are properly skipped.
-    Uses the same Googlebot UA as the crawler so Cloudflare WAF whitelists the probe
-    instead of blocking it from CI runner IPs (port from audit branch e43728b1)."""
-    import httpx
+    """
+    import urllib.request
+    # Use the same Googlebot UA as the crawler — Cloudflare WAF blocks it on CI runner IPs,
+    # which returns 403, so the check correctly returns False and tests are skipped.
     _GOOGLEBOT_UA = (
         "Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) "
         "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36 "
         "(compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
     )
     try:
-        with httpx.Client(
-            timeout=5.0,
-            follow_redirects=True,
-            trust_env=False,
-            headers={"User-Agent": _GOOGLEBOT_UA},
-        ) as c:
-            r = c.get(url)
-            return 200 <= r.status_code < 400
+        req = urllib.request.Request(url, headers={"User-Agent": _GOOGLEBOT_UA})
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            return resp.status < 400
     except Exception:
         return False
 
@@ -147,6 +143,68 @@ def _save_report(stem: str, content: str, ext: str = "html") -> Path:
     return out
 
 
+_COMPONENT_PATH = ROOT.parent / "app" / "src" / "components" / "audit" / "AuditReportV1.jsx"
+
+
+def _save_html_preview(data: dict, stem: str) -> Path:
+    """Wrap AuditReportV1.jsx in a self-contained CDN HTML page for visual inspection.
+
+    Strips the Next.js 'use client' directive and 'export default' so the
+    component runs directly under React CDN + Babel. Open the output file in
+    any browser — no build step needed.
+    """
+    import json as _json
+    import re as _re
+
+    src = _COMPONENT_PATH.read_text(encoding="utf-8")
+    # Strip Next.js directive, ES module imports (bundler handles these; CDN shims below),
+    # and make the export a plain function declaration.
+    src = src.replace('"use client";\n', "").replace("'use client';\n", "")
+    src = _re.sub(r"^import\s+.*?;\n", "", src, flags=_re.MULTILINE)
+    src = _re.sub(r"^export default function ", "function ", src, count=1, flags=_re.MULTILINE)
+
+    # CDN shims — replace bundler imports with window globals exposed by the UMD scripts.
+    # Note: window.lucide (base pkg) exports SVG data arrays, NOT React components.
+    # Assign no-ops so icon-bearing components render without errors in standalone preview.
+    cdn_shims = (
+        "// CDN shims: replaces ES module imports stripped above\n"
+        "const { BarChart, Bar, XAxis, YAxis, Cell, ResponsiveContainer, LabelList } = window.Recharts || {};\n"
+        "const _noIcon = () => null;\n"
+        "const AlertTriangle = _noIcon, CheckCircle2 = _noIcon, Calendar = _noIcon,\n"
+        "      Activity = _noIcon, Target = _noIcon, BarChart2 = _noIcon,\n"
+        "      Zap = _noIcon, Clock = _noIcon, TrendingUp = _noIcon;\n\n"
+    )
+    src = cdn_shims + src
+
+    data_json = _json.dumps(data, ensure_ascii=False)
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Audit Report Preview</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/recharts@2/umd/Recharts.js"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script>window.__AUDIT_DATA__ = {data_json};</script>
+  <script type="text/babel" data-presets="react">
+{src}
+    ReactDOM.createRoot(document.getElementById("root")).render(
+      <AuditReportV1 data={{window.__AUDIT_DATA__}} />
+    );
+  </script>
+</body>
+</html>"""
+
+    return _save_report(stem, html, ext="html")
+
+
 # ---------------------------------------------------------------------------
 # Test 1 — Crawl only (no Claude)
 # ---------------------------------------------------------------------------
@@ -178,18 +236,37 @@ async def test_crawl_real_page():
     assert root_page.word_count_approx >= 50, \
         f"suspiciously low word count: {root_page.word_count_approx}"
 
-    logger.info("  title:         %r", root_page.title)
-    logger.info("  http status:   %s", root_page.http_status)
-    logger.info("  word count:    %s", root_page.word_count_approx)
-    logger.info("  canonical:     %s", root_page.canonical or "(none)")
-    logger.info("  h1s:           %s", root_page.h1s)
-    logger.info("  has schema:    %s %s", root_page.has_schema_org, root_page.schema_types)
-    logger.info("  sitemap:       %s", result.plan.sitemap_url or "(not found)")
-    logger.info("  robots_txt:    %d chars", len(result.robots_txt))
-    logger.info("  llms_txt:      %d chars", len(result.llms_txt))
-    logger.info("  landing pages: %s", result.plan.landing_pages)
-    logger.info("  blog posts:    %s", result.plan.blog_posts)
-    logger.info("  crawl errors:  %s", result.crawl_errors or "none")
+    # ------------------------------------------------------------------
+    # New Googlebot-accurate signals
+    # ------------------------------------------------------------------
+    assert isinstance(root_page.ttfb_ms, float) and root_page.ttfb_ms > 0, \
+        f"ttfb_ms not measured (got {root_page.ttfb_ms})"
+    assert isinstance(root_page.redirect_chain, list), \
+        "redirect_chain must be a list"
+    assert isinstance(root_page.is_spa_suspected, bool), \
+        "is_spa_suspected must be a bool"
+
+    logger.info("  title:          %r", root_page.title)
+    logger.info("  http status:    %s", root_page.http_status)
+    logger.info("  ttfb_ms:        %.1f ms", root_page.ttfb_ms)
+    logger.info("  redirect_chain: %s", root_page.redirect_chain or "(none)")
+    logger.info("  x_robots_tag:   %r", root_page.x_robots_tag or "(none)")
+    logger.info("  vary_header:    %r", root_page.vary_header or "(none)")
+    logger.info("  word count:     %s", root_page.word_count_approx)
+    logger.info("  canonical:      %s", root_page.canonical or "(none)")
+    logger.info("  h1s:            %s", root_page.h1s)
+    logger.info("  has schema:     %s %s", root_page.has_schema_org, root_page.schema_types)
+    logger.info("  microdata:      %s", root_page.microdata_types or "(none)")
+    logger.info("  spa_suspected:  %s  framework=%r", root_page.is_spa_suspected, root_page.spa_framework or "(none)")
+    logger.info("  amp_url:        %s", root_page.amp_url or "(none)")
+    logger.info("  preload_hints:  %d", root_page.preload_hints)
+    logger.info("  noscript:       %r", root_page.noscript_content[:80] if root_page.noscript_content else "(none)")
+    logger.info("  sitemap:        %s", result.plan.sitemap_url or "(not found)")
+    logger.info("  robots_txt:     %d chars", len(result.robots_txt))
+    logger.info("  llms_txt:       %d chars", len(result.llms_txt))
+    logger.info("  landing pages:  %s", result.plan.landing_pages)
+    logger.info("  blog posts:     %s", result.plan.blog_posts)
+    logger.info("  crawl errors:   %s", result.crawl_errors or "none")
 
 
 # ---------------------------------------------------------------------------
@@ -197,10 +274,10 @@ async def test_crawl_real_page():
 # ---------------------------------------------------------------------------
 
 @pytest.mark.skipif(not _HAS_API_KEY, reason="ANTHROPIC_API_KEY not set")
-async def test_run_synthesis_catches_planted_issues():
+async def test_run_synthesis_catches_planted_issues(acme_business_context):
     """Feeds a known-bad HTML fixture to Claude and asserts it catches each planted issue."""
     import asyncio
-    from agents.audit.schema import AuditBusinessContext, CrawlPlan, CrawlResult
+    from agents.audit.schema import CrawlPlan, CrawlResult
     from agents.audit.v3.runner import close_session, create_audit_session, run_synthesis
     from agents.models import Provider
     from service.crawl.extractor import extract_signals
@@ -231,11 +308,7 @@ async def test_run_synthesis_catches_planted_issues():
         total_sitemap_urls=1,
     )
     crawl_result = CrawlResult(plan=plan, pages=[page])
-    business_context = AuditBusinessContext(
-        business_name="Acme CRM",
-        business_description="A CRM tool for SaaS startups.",
-        business_goals="Improve organic search visibility and drive signups.",
-    )
+    business_context = acme_business_context
 
     session_id = "integration-fixture-test"
     create_audit_session(session_id)
@@ -373,9 +446,9 @@ async def test_run_synthesis_catches_planted_issues():
 
 @pytest.mark.skipif(
     not (_HAS_API_KEY and _HAS_NETWORK),
-    reason="requires ANTHROPIC_API_KEY and network access to getduct.ai",
+    reason="requires ANTHROPIC_API_KEY and network access to getduct.ai (HTTP 200)",
 )
-async def test_full_pipeline_real_page():
+async def test_full_pipeline_real_page(duct_business_context):
     """End-to-end: crawls getduct.ai then runs Claude synthesis in template mode.
 
     Uses report_mode='template' — the agent calls SubmitAuditReport with structured
@@ -384,7 +457,6 @@ async def test_full_pipeline_real_page():
     """
     import asyncio
     import json as _json
-    from agents.audit.schema import AuditBusinessContext
     from agents.audit.v3.runner import ClaudeAuditRunner, close_session, create_audit_session
     from agents.models import ModelName, Provider
 
@@ -414,9 +486,10 @@ async def test_full_pipeline_real_page():
             logger.info("[event] report_updated v%s — %s", event.get("version_id"), info)
             close_session(session_id)
         elif evt == "agent_message_chunk":
-            pass  # noisy; counted in summary
+            pass  # accumulated in full_agent_text below
         elif evt == "message_stop":
-            logger.info("[event] message_stop")
+            full_text = "".join(e.get("text", "") for e in events if e.get("event") == "agent_message_chunk")
+            logger.info("[event] message_stop — agent text so far (%d chars): %.300r", len(full_text), full_text)
         elif evt == "thinking_chunk":
             pass  # noisy; counted in summary
 
@@ -425,13 +498,9 @@ async def test_full_pipeline_real_page():
         provider=Provider.ANTHROPIC,
         model=ModelName.CLAUDE_SONNET,
     )
-    business_context = AuditBusinessContext(
-        business_name="Duct",
-        business_description="AI-powered SEO audit tool for SaaS companies.",
-        business_goals="Rank for SEO audit and AIO-related keywords.",
-    )
+    business_context = duct_business_context
 
-    logger.info("[pipeline] target: %s  crawl_depth=light  model=sonnet  mode=template", _AUDIT_URL)
+    logger.info("[pipeline] target: %s  crawl_depth=deep  model=sonnet  mode=template", _AUDIT_URL)
     t0 = time.perf_counter()
 
     report = await asyncio.wait_for(
@@ -441,8 +510,8 @@ async def test_full_pipeline_real_page():
             business_context=business_context,
             emit=collect,
             max_blog_posts=2,
-            crawl_depth="light",
-            chat_idle_timeout=10.0,
+            crawl_depth="deep",
+            chat_idle_timeout=30.0,
             report_mode="template",
             template_id="seo_v1",
         ),
@@ -482,8 +551,9 @@ async def test_full_pipeline_real_page():
     assert sd.score_band in ("healthy", "good", "needs_work", "critical"), \
         f"unexpected score_band: {sd.score_band!r}"
     assert sd.pages_crawled > 0, "pages_crawled must be > 0"
-    assert sd.total_sitemap_urls >= sd.pages_crawled, \
-        "total_sitemap_urls should be >= pages_crawled"
+    # total_sitemap_urls may be 0 when no XML sitemap is found; otherwise must be >= pages_crawled
+    assert sd.total_sitemap_urls == 0 or sd.total_sitemap_urls >= sd.pages_crawled, \
+        f"total_sitemap_urls ({sd.total_sitemap_urls}) < pages_crawled ({sd.pages_crawled})"
 
     assert len(sd.categories) == 9, \
         f"expected 9 categories, got {len(sd.categories)}: {[c.id for c in sd.categories]}"
@@ -507,6 +577,28 @@ async def test_full_pipeline_real_page():
     assert len(sd.top_priorities) > 0, "top_priorities is empty"
 
     # ------------------------------------------------------------------
+    # Narrative fields — headline / wins / roadmap / key_signals
+    # ------------------------------------------------------------------
+    assert sd.headline, \
+        "headline is empty — model did not follow SubmitAuditReport instructions"
+    assert len(sd.key_signals) == 3, \
+        f"key_signals must be exactly 3 strings, got {len(sd.key_signals)}: {sd.key_signals!r}"
+    assert all(isinstance(s, str) and s for s in sd.key_signals), \
+        f"key_signals must be non-empty strings: {sd.key_signals!r}"
+    assert len(sd.wins) >= 1, \
+        f"wins is empty — model must include at least one positive finding (got {sd.wins!r})"
+    assert len(sd.roadmap) >= 1, \
+        f"roadmap is empty — model must include at least one phase (got {sd.roadmap!r})"
+    for phase in sd.roadmap:
+        assert phase.tasks, f"roadmap phase {phase.label!r} has no tasks"
+
+    # ------------------------------------------------------------------
+    # Crawl summary — computed by runner from raw page signals
+    # ------------------------------------------------------------------
+    assert sd.crawl_summary is not None, \
+        "crawl_summary is None — runner failed to compute it from CrawlResult"
+
+    # ------------------------------------------------------------------
     # SSE event contract
     # ------------------------------------------------------------------
     report_events = [e for e in events if e.get("event") == "report_updated"]
@@ -526,10 +618,11 @@ async def test_full_pipeline_real_page():
         "legacy SYNTHESIS_CHUNK still being emitted"
 
     # ------------------------------------------------------------------
-    # Save structured data as JSON for visual inspection + comparison
+    # Save outputs for visual inspection + comparison
     # ------------------------------------------------------------------
     json_str = _json.dumps(sd.model_dump(), indent=2, ensure_ascii=False)
-    out = _save_report("pipeline_report_template", json_str, ext="json")
+    json_out  = _save_report("pipeline_report_template", json_str, ext="json")
+    html_out  = _save_html_preview(sd.model_dump(), "pipeline_report_preview")
 
     thinking_events = [e for e in events if e.get("event") == "thinking_chunk"]
     _log_event_summary(events)
@@ -537,7 +630,13 @@ async def test_full_pipeline_real_page():
     logger.info("pages_crawled:      %d / %d sitemap URLs", sd.pages_crawled, sd.total_sitemap_urls)
     logger.info("categories:         %s", [(c.id, c.score) for c in sd.categories])
     logger.info("top_priorities:     %d", len(sd.top_priorities))
-    logger.info("executive_summary:  %.120r", sd.executive_summary)
+    logger.info("key_signals:        %r", sd.key_signals)
+    logger.info("headline:           %.120r", sd.headline)
+    logger.info("wins:               %d item(s): %s", len(sd.wins), sd.wins[:2])
+    logger.info("roadmap:            %d phase(s): %s",
+                len(sd.roadmap), [f"{p.label}/{p.theme}({len(p.tasks)}t)" for p in sd.roadmap])
+    logger.info("crawl_summary:      %s", sd.crawl_summary)
     logger.info("agent_msg_chunks:   %d", len(agent_chunks))
     logger.info("thinking_chunks:    %d", len(thinking_events))
-    logger.info("report saved to:    %s", out)
+    logger.info("json saved to:      %s", json_out)
+    logger.info("html preview:       %s", html_out)

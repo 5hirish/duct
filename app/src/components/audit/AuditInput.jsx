@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 
-export default function AuditInput({ onSend, disabled }) {
+export default function AuditInput({ onSend, disabled, isStreaming, onStop }) {
   const [text, setText] = useState("");
   const [attachments, setAttachments] = useState([]);
   const fileRef = useRef(null);
@@ -107,8 +107,8 @@ export default function AuditInput({ onSend, disabled }) {
           onChange={e => setText(e.target.value)}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
-          disabled={disabled}
-          placeholder={disabled ? "Waiting for agent…" : "Ask a follow-up question…"}
+          disabled={disabled || isStreaming}
+          placeholder={isStreaming ? "Agent is working…" : disabled ? "Waiting for agent…" : "Ask a follow-up question…"}
           className="flex-1 resize-none rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 min-h-[38px] max-h-[120px] overflow-y-auto"
           style={{ height: "38px" }}
           onInput={e => {
@@ -117,14 +117,24 @@ export default function AuditInput({ onSend, disabled }) {
           }}
         />
 
-        <button
-          type="button"
-          onClick={handleSend}
-          disabled={disabled || (!text.trim() && attachments.length === 0)}
-          className="shrink-0 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-40"
-        >
-          Send
-        </button>
+        {isStreaming ? (
+          <button
+            type="button"
+            onClick={onStop}
+            className="shrink-0 rounded-md bg-destructive px-3 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90"
+          >
+            Stop
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={handleSend}
+            disabled={disabled || (!text.trim() && attachments.length === 0)}
+            className="shrink-0 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-40"
+          >
+            Send
+          </button>
+        )}
       </div>
     </div>
   );
