@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { ChevronUp, FileText, X } from "lucide-react";
 import ContentChat from "./ContentChat";
 import { Phase } from "./contentPhase";
 import {
@@ -41,6 +42,8 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
   const [retryCount, setRetryCount] = useState(0);
   const [payload, setPayload]   = useState(null);
   const [sessionId, setSessionId] = useState(null);
+  const [isAgentTyping, setIsAgentTyping] = useState(false);
+  const [mobilePaneOpen, setMobilePaneOpen] = useState(false);
 
   const abortRef = useRef(null);
   const pipelineEndedRef = useRef(false);
@@ -61,6 +64,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
     setErrorMsg("");
     setPayload(null);
     setSessionId(null);
+    setIsAgentTyping(false);
     pipelineEndedRef.current = false;
     setRetryCount((c) => c + 1);
   }
@@ -206,6 +210,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
         break;
 
       case ContentEvent.AGENT_MESSAGE_CHUNK:
+        setIsAgentTyping(false);
         setMessages((prev) => {
           const last = prev[prev.length - 1];
           if (last?.role === "assistant" && last.streaming)
@@ -215,6 +220,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
         break;
 
       case ContentEvent.MESSAGE_STOP:
+        setIsAgentTyping(false);
         setMessages((prev) => {
           const last = prev[prev.length - 1];
           if (last?.streaming) return [...prev.slice(0, -1), { ...last, streaming: false }];
@@ -258,9 +264,11 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
       return [...cleaned, { role: "user", text }];
     });
     setPhase(Phase.CHATTING);
+    setIsAgentTyping(true);
     try {
       await sendContentChat(sessionIdRef.current, content);
     } catch (err) {
+      setIsAgentTyping(false);
       setMessages((prev) => [
         ...prev,
         { role: "send_error", text: err.message || "Failed to send message.", content },
@@ -271,6 +279,17 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
 
   function handleRetrySend(content) {
     handleSendMessage(content);
+  }
+
+  function handleStop() {
+    abortRef.current?.abort();
+    if (sessionIdRef.current) {
+      closeContentSession(sessionIdRef.current).catch(() => {});
+    }
+    setIsAgentTyping(false);
+    setPhase((prev) =>
+      prev === Phase.CHATTING && payload ? Phase.READY : Phase.FAILED,
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -304,44 +323,132 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
   // Render
   // ---------------------------------------------------------------------------
 
-  return (
-    <div ref={containerRef} className="flex h-full w-full overflow-hidden">
-      <div
-        className="flex flex-col overflow-hidden border-r border-border/60"
-        style={{ width: `${leftWidth}%`, minWidth: "280px" }}
-      >
-        <ContentChat
-          mode={mode}
-          phase={phase}
-          steps={steps}
-          todos={todos}
-          messages={messages}
-          pendingQuestions={pendingQuestions}
-          errorMsg={errorMsg}
-          onAnswerQuestions={handleAnswerQuestions}
-          onSendMessage={handleSendMessage}
-          onRetrySend={handleRetrySend}
-          onRetry={handleRetry}
-        />
-      </div>
+  const hasPayload = Boolean(payload);
+  const isRunning  = phase === Phase.STARTING || phase === Phase.PIPELINE;
+  // True whenever the agent is actively producing tokens — drives ContentInput
+  // Stop button + textarea disabling. Distinct from inputDisabled (which is
+  // phase-based) so the user can stop in-flight chat without falling into a
+  // FAILED state.
+  const isStreaming = isRunning || (phase === Phase.CHATTING && isAgentTyping);
 
-      <div
-        onMouseDown={onMouseDownDivider}
-        title="Drag to resize"
-        className="w-3 shrink-0 cursor-col-resize select-none flex items-center justify-center group"
-      >
-        <div className="w-px h-full bg-border/60 group-hover:bg-primary/30 transition-colors" />
-      </div>
-
-      <div className="flex-1 flex flex-col overflow-hidden min-w-[280px]">
-        {renderViewport
-          ? renderViewport({ payload, mode, sessionId, phase })
-          : (
-              <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
-                No viewport configured.
-              </div>
+  // Always-visible mobile bar above the input — opens the right pane as a
+  // bottom sheet. Shows "Generating…" while running, "Ready" once a payload
+  // arrives.
+  const paneLabel = mode === "plan_month" ? "30-day plan" : "Post draft";
+  const mobilePostBar = (
+    <button
+      onClick={() => setMobilePaneOpen(true)}
+      className="md:hidden w-full flex items-center gap-3 px-4 py-3 bg-card border-t border-border/60 hover:bg-muted/50 active:bg-muted transition-colors text-left"
+    >
+      {hasPayload ? (
+        <>
+          <div className="size-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+            <FileText size={16} className="text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold truncate">{paneLabel} ready</p>
+            <p className="text-xs text-muted-foreground">Tap to view + edit</p>
+          </div>
+          <ChevronUp size={16} className="text-muted-foreground shrink-0" />
+        </>
+      ) : (
+        <>
+          <div className="size-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
+            {isRunning ? (
+              <span className="size-4 rounded-full border-2 border-border border-t-primary animate-spin" aria-hidden="true" />
+            ) : (
+              <FileText size={16} className="text-muted-foreground" />
             )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-muted-foreground truncate">
+              {isRunning ? `Generating ${paneLabel.toLowerCase()}…` : paneLabel}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {isRunning ? "Agent is working" : "Tap to view"}
+            </p>
+          </div>
+          <ChevronUp size={16} className="text-muted-foreground/40 shrink-0" />
+        </>
+      )}
+    </button>
+  );
+
+  const viewportEl = renderViewport
+    ? renderViewport({ payload, mode, sessionId, phase })
+    : (
+        <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+          No viewport configured.
+        </div>
+      );
+
+  return (
+    <div className="flex flex-col h-full w-full overflow-hidden">
+      <div
+        ref={containerRef}
+        className="flex flex-1 min-h-0 w-full overflow-hidden"
+        style={{ "--split": `${leftWidth}%` }}
+      >
+        {/* Chat panel — full-width on mobile, split on md+ */}
+        <div className="flex flex-col overflow-hidden border-r border-border/60 w-full md:w-[var(--split)] md:min-w-[280px]">
+          <ContentChat
+            mode={mode}
+            phase={phase}
+            steps={steps}
+            todos={todos}
+            messages={messages}
+            pendingQuestions={pendingQuestions}
+            errorMsg={errorMsg}
+            isAgentTyping={isAgentTyping}
+            isStreaming={isStreaming}
+            onAnswerQuestions={handleAnswerQuestions}
+            onSendMessage={handleSendMessage}
+            onRetrySend={handleRetrySend}
+            onRetry={handleRetry}
+            onStop={handleStop}
+            mobilePostBar={mobilePostBar}
+          />
+        </div>
+
+        {/* Divider — desktop only */}
+        <div
+          onMouseDown={onMouseDownDivider}
+          title="Drag to resize"
+          className="hidden md:flex w-3 shrink-0 cursor-col-resize select-none items-center justify-center group"
+        >
+          <div className="w-px h-full bg-border/60 group-hover:bg-primary/30 transition-colors" />
+        </div>
+
+        {/* Viewport panel — desktop only */}
+        <div className="hidden md:flex flex-1 flex-col overflow-hidden min-w-[280px]">
+          {viewportEl}
+        </div>
       </div>
+
+      {/* Mobile bottom sheet — full-screen viewport */}
+      {mobilePaneOpen && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col bg-background md:hidden"
+          style={{ animation: "slideUp 0.25s ease-out", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+        >
+          <div
+            className="shrink-0 flex items-center justify-between px-4 border-b border-border/60"
+            style={{ paddingTop: "max(12px, env(safe-area-inset-top, 12px))", paddingBottom: "12px" }}
+          >
+            <span className="font-semibold text-sm">{paneLabel}</span>
+            <button
+              onClick={() => setMobilePaneOpen(false)}
+              className="flex items-center justify-center size-11 rounded-md hover:bg-muted transition-colors"
+              aria-label={`Close ${paneLabel.toLowerCase()}`}
+            >
+              <X size={18} />
+            </button>
+          </div>
+          <div className="flex-1 overflow-hidden">
+            {viewportEl}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

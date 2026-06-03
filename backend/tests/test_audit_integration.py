@@ -55,13 +55,25 @@ _TIMEOUT = 300  # 5 minutes outer guard for all API tests
 
 
 def _network_available(url: str = _AUDIT_URL) -> bool:
-    """Probe at the HTTP layer, not just TCP. Catches the case where
-    the env's TCP connect succeeds (e.g. through a sandbox proxy) but
-    actual HTTP returns 0/4xx/5xx — letting the test run only when a
-    real GET would actually work."""
+    """HTTP check — returns False if the host is unreachable or returns a non-2xx status.
+
+    TCP-only checks pass even when Cloudflare answers the handshake but returns 403;
+    an HTTP GET lets us detect that case so the real-network tests are properly skipped.
+    Uses the same Googlebot UA as the crawler so Cloudflare WAF whitelists the probe
+    instead of blocking it from CI runner IPs (port from audit branch e43728b1)."""
     import httpx
+    _GOOGLEBOT_UA = (
+        "Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36 "
+        "(compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+    )
     try:
-        with httpx.Client(timeout=5.0, follow_redirects=True, trust_env=False) as c:
+        with httpx.Client(
+            timeout=5.0,
+            follow_redirects=True,
+            trust_env=False,
+            headers={"User-Agent": _GOOGLEBOT_UA},
+        ) as c:
             r = c.get(url)
             return 200 <= r.status_code < 400
     except Exception:
