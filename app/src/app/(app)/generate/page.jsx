@@ -563,7 +563,13 @@ function toPositiveNumber(value) {
 function normalizeIndustryValue(value) {
   const normalized = String(value || "").trim().toLowerCase();
   if (!normalized) return "";
-  if (normalized === "ecommerce" || normalized.includes("retail")) return "ecommerce";
+  if (
+    normalized === "ecommerce" ||
+    normalized.includes("retail") ||
+    normalized.includes("fashion") ||
+    normalized.includes("beauty")
+  )
+    return "ecommerce";
   if (normalized === "saas" || normalized.includes("software")) return "saas";
   if (normalized.includes("lead")) return "lead_gen";
   if (normalized.includes("agency")) return "agency";

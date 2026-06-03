@@ -152,7 +152,21 @@ function SidebarProjectSwitcher() {
     window.dispatchEvent(new Event("duct:project-changed"));
   }
 
-  if (!active && projects.length === 0) return null;
+  if (!active && projects.length === 0) {
+    return (
+      <button
+        onClick={() => router.push("/projects")}
+        className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+      >
+        <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+          <Plus className="size-4" />
+        </span>
+        <span className="flex-1 truncate font-medium text-sidebar-foreground group-data-[collapsible=icon]:hidden">
+          New project
+        </span>
+      </button>
+    );
+  }
 
   return (
     <DropdownMenu>
