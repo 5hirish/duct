@@ -25,6 +25,10 @@ class Project(SQLModel, table=True):
         )
     )
     name: str = Field(sa_column=Column(String, nullable=False))
+    slug: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
+    tagline: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
+    description: str = Field(default="", sa_column=Column(sa.Text(), nullable=False, server_default=""))
+    url: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
     company_name: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
     industry: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
     targets: dict = Field(
@@ -40,6 +44,18 @@ class Project(SQLModel, table=True):
         sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="{}"),
     )
     brand_channels: dict = Field(
+        default_factory=dict,
+        sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="{}"),
+    )
+    content_brand: dict = Field(
+        default_factory=dict,
+        sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="{}"),
+    )
+    content_pillars: dict = Field(
+        default_factory=dict,
+        sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="{}"),
+    )
+    content_visual_assets: dict = Field(
         default_factory=dict,
         sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="{}"),
     )

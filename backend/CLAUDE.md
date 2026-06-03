@@ -65,13 +65,13 @@ agents/
 │   ├── v3/             — Claude Agent SDK runner
 │   └── goals/, tools/, schema.py, registry.py, prompts/
 ├── audit/              — future: SEO audit agent
-└── blog/               — future: Blog content generation agent
+└── content/            — future: Content marketing agent (plans, posts, publishing)
 ```
 
 Route convention: each agent type gets its own route prefix:
 - `POST /api/insights/generate` — exists
 - `POST /api/audit/run` — future
-- `POST /api/blog/generate` — future
+- `POST /api/content/plan/stream` / `POST /api/content/post/stream` — future
 
 Cross-agent invocations are modelled at the frontend level (e.g. audit findings carry an `invoke_insights` action that pre-populates the insights wizard). Backend agents remain decoupled — no direct calls between agent types.
 

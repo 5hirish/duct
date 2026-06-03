@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -77,6 +76,23 @@ class Configs(BaseSettings):
     # Fernet key for encrypting connector refresh tokens at rest.
     # Generate: python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
     credentials_encryption_key: str = ""
+
+    # Asset uploads (Railway Volume mounted at /app/uploads in prod).
+    # When uploads_enabled=true the server mounts the directory at /uploads as
+    # a StaticFiles route. The content agent writes generated images here.
+    uploads_enabled: bool = False
+    uploads_dir:     str  = "/app/uploads"
+
+    # PostBridge — server-wide API key (MVP). Used as fallback when no
+    # ConnectorCredential row exists for the calling user. Future: drop
+    # this once a per-user "connect PostBridge" UI lands.
+    postbridge_api_key: str = ""
+
+    # Apify API token — used by service/apify/ for TikTok content
+    # discovery (trending posts / hashtags / sounds). Server-side key for
+    # MVP, same shape as gemini_api_key. Future: per-user when billing
+    # demands it.
+    apify_api_key: str = ""
 
     # When false (default), FastAPI does not serve /openapi.json, /docs, or /redoc.
     expose_openapi_docs: bool = False

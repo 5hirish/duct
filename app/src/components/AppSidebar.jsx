@@ -112,11 +112,12 @@ const NAV_SECTIONS = [
     label: "Execute",
     items: [
       {
-        key: "blog_writer",
-        label: "Blog Writer",
+        key: "content_marketing",
+        label: "Content Marketing",
         icon: PenLine,
-        href: null,
-        available: false,
+        href: "/content",
+        available: true,
+        matchPrefix: "/content",
       },
     ],
   },

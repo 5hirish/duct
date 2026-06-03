@@ -1835,3 +1835,9 @@ select.app-input {
   margin-left: 10px;
   vertical-align: middle;
 }
+
+/* Mobile bottom sheet — used by ContentWorkspace on small screens. */
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}

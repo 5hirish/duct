@@ -10,7 +10,7 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/s
 import { AuditNavProvider } from "../../lib/auditNavContext";
 
 // Routes whose main content must fill the remaining viewport (no scroll, no padding)
-const FULL_BLEED_PREFIXES = ["/audit/seo/"];
+const FULL_BLEED_PREFIXES = ["/audit/seo/", "/content/sessions/", "/content/posts/"];
 
 export default function AppLayout({ children }) {
   const pathname = usePathname();

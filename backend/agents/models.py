@@ -94,6 +94,53 @@ class AgentEffort(StrEnum):
     MAX   = "max"
 
 
+class ImageModel(str, Enum):
+    """Image generation model IDs (Gemini + Imagen via google-genai SDK)."""
+
+    GEMINI_3_1_FLASH_IMAGE_PREVIEW = "gemini-3.1-flash-image-preview"
+    GEMINI_3_PRO_IMAGE_PREVIEW     = "gemini-3-pro-image-preview"
+    GEMINI_2_5_FLASH_IMAGE         = "gemini-2.5-flash-image"
+    IMAGEN_4_GENERATE_001          = "imagen-4.0-generate-001"
+    IMAGEN_4_ULTRA_GENERATE_001    = "imagen-4.0-ultra-generate-001"
+    IMAGEN_4_FAST_GENERATE_001     = "imagen-4.0-fast-generate-001"
+
+
+DEFAULT_IMAGE_MODEL = ImageModel.GEMINI_3_1_FLASH_IMAGE_PREVIEW
+
+
+class Platform(StrEnum):
+    """Publishing channels — values match the PostBridge v1 API platform names."""
+
+    TIKTOK          = "tiktok"
+    INSTAGRAM       = "instagram"
+    YOUTUBE         = "youtube"
+    LINKEDIN        = "linkedin"
+    TWITTER         = "twitter"
+    FACEBOOK        = "facebook"
+    THREADS         = "threads"
+    BLUESKY         = "bluesky"
+    PINTEREST       = "pinterest"
+    GOOGLE_BUSINESS = "google_business"
+
+
+class AspectRatio(StrEnum):
+    """Image aspect ratios accepted by Gemini/Imagen."""
+
+    SQUARE_1_1     = "1:1"
+    PORTRAIT_9_16  = "9:16"
+    LANDSCAPE_16_9 = "16:9"
+    PORTRAIT_3_4   = "3:4"
+    LANDSCAPE_4_3  = "4:3"
+    PORTRAIT_2_3   = "2:3"
+    LANDSCAPE_3_2  = "3:2"
+    PORTRAIT_4_5   = "4:5"
+    LANDSCAPE_5_4  = "5:4"
+    PORTRAIT_9_21  = "9:21"
+    LANDSCAPE_21_9 = "21:9"
+    PORTRAIT_3_5   = "3:5"
+    LANDSCAPE_5_3  = "5:3"
+
+
 # Default provider → model mapping
 DEFAULT_MODELS = {
     Provider.OPENAI: ModelName.GPT_5_MINI,

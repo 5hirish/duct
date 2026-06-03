@@ -1,0 +1,39 @@
+"""Gemini + Imagen image-generation service.
+
+Wraps google-genai with typed Pydantic requests/responses. Outputs are
+persisted to the Railway Volume at /app/uploads/projects/{project_id}/
+generated/ and recorded as ContentAsset rows. The agent's @tool wrappers
+return both the inline image (so the model can see the layout) and the
+stable public URL (so slides_html can reference it).
+"""
+
+from service.gemini.client import GeminiAPIError, GeminiImageClient
+from service.gemini.schema import (
+    EditImageRequest,
+    EditMode,
+    GenerateImageRequest,
+    GeneratedImage,
+    ImageAsset,
+    ImageSize,
+    MaskMode,
+    PersonGeneration,
+    SubjectType,
+    ThinkingLevel,
+)
+from service.gemini.storage import persist_generated_image
+
+__all__ = [
+    "EditImageRequest",
+    "EditMode",
+    "GeminiAPIError",
+    "GeminiImageClient",
+    "GenerateImageRequest",
+    "GeneratedImage",
+    "ImageAsset",
+    "ImageSize",
+    "MaskMode",
+    "PersonGeneration",
+    "SubjectType",
+    "ThinkingLevel",
+    "persist_generated_image",
+]
