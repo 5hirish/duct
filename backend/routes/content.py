@@ -368,7 +368,8 @@ class BrandContextIn(BaseModel):
     slug:    str | None = None
     tagline: str | None = None
     description: str | None = None
-    url:     str | None = None
+    # NOTE: `url` (website) is owned by project context (company.website_url);
+    # it is intentionally NOT writable here to avoid two editors clobbering one column.
 
     @field_validator("content_brand", "content_pillars", "content_visual_assets", mode="after")
     @classmethod
@@ -431,8 +432,6 @@ def put_brand_context(
         proj.tagline = body.tagline
     if body.description is not None:
         proj.description = body.description
-    if body.url is not None:
-        proj.url = body.url
     proj.updated_at = datetime.now(timezone.utc)
     db.add(proj)
     db.commit()

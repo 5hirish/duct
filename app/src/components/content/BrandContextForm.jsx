@@ -1,20 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   Building2,
   Check,
   Layers,
+  Megaphone,
   Palette,
+  Pencil,
   Plus,
-  Target,
   Trash2,
-  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getBrandContext, putBrandContext } from "@/lib/contentApi";
+import { getActiveProject } from "@/lib/projects";
 
 /**
  * Structured form for editing a project's content brand context.
@@ -35,13 +37,13 @@ export default function BrandContextForm({ projectId, onSaved }) {
   const [savedAt, setSavedAt] = useState(null);
   const [error, setError]   = useState("");
 
+  // Inherited (read-only) project context — single source of truth for the
+  // shared business fields (company, website, industry, audience, voice).
+  const [project, setProject] = useState(null);
   // Identity
   const [tagline, setTagline] = useState("");
-  const [url, setUrl]         = useState("");
   const [description, setDescription] = useState("");
-  // Brand
-  const [audience, setAudience] = useState("");
-  const [voice, setVoice]       = useState("");
+  // Brand (content-specific)
   const [tone, setTone]         = useState("");
   const [valueProp, setValueProp] = useState("");
   const [contentGoal, setContentGoal] = useState("");
@@ -61,11 +63,9 @@ export default function BrandContextForm({ projectId, onSaved }) {
       try {
         const b = await getBrandContext(projectId);
         if (cancelled) return;
+        setProject(getActiveProject());
         setTagline(b.tagline || "");
-        setUrl(b.url || "");
         setDescription(b.description || "");
-        setAudience(b.content_brand?.audience || "");
-        setVoice(b.content_brand?.brand_voice || "");
         setTone(b.content_brand?.tone || "");
         setValueProp(b.content_brand?.value_prop || "");
         setContentGoal(b.content_brand?.content_goal || "");
@@ -107,11 +107,8 @@ export default function BrandContextForm({ projectId, onSaved }) {
         }));
       const updated = await putBrandContext(projectId, {
         tagline:     tagline.trim(),
-        url:         url.trim(),
         description: description.trim(),
         content_brand: {
-          audience:     audience.trim(),
-          brand_voice:  voice.trim(),
           tone:         tone.trim(),
           value_prop:   valueProp.trim(),
           content_goal: contentGoal.trim(),
@@ -143,7 +140,8 @@ export default function BrandContextForm({ projectId, onSaved }) {
       <div>
         <h2 className="text-lg font-semibold tracking-tight">Brand context</h2>
         <p className="text-sm text-muted-foreground">
-          The voice, audience, and visual identity the content agent uses for every plan and post.
+          The tone, messaging, pillars, and visual identity the content agent uses. Core
+          business details are inherited from your project setup.
         </p>
       </div>
 
@@ -153,12 +151,37 @@ export default function BrandContextForm({ projectId, onSaved }) {
         </div>
       )}
 
-      <Section icon={Building2} title="Identity" hint="Who you are at a glance.">
+      {/* Inherited from project context — single source of truth for shared fields */}
+      <section className="rounded-2xl border border-dashed border-border bg-muted/20 p-5 md:p-6">
+        <div className="grid gap-x-8 gap-y-4 md:grid-cols-[240px_1fr]">
+          <header className="space-y-2">
+            <h3 className="flex items-center gap-2 text-sm font-semibold">
+              <Building2 className="size-4 text-muted-foreground" />
+              From project context
+            </h3>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              Company, website, audience, and brand voice live in your project setup so they
+              stay consistent across audit, insights, and content.
+            </p>
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/onboarding?project_id=${projectId}`}>
+                <Pencil className="size-3.5" /> Edit in project setup
+              </Link>
+            </Button>
+          </header>
+          <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <ReadOnly label="Company" value={project?.company?.name} />
+            <ReadOnly label="Industry" value={project?.company?.industry} />
+            <ReadOnly label="Website" value={project?.company?.website_url} />
+            <ReadOnly label="Brand voice" value={project?.brand_channels?.brand_voice} />
+            <ReadOnly label="Audience" value={project?.audience?.primary_segment} className="sm:col-span-2" />
+          </dl>
+        </div>
+      </section>
+
+      <Section icon={Building2} title="Identity" hint="Tagline and description used across posts.">
         <Field label="Tagline" hint="One memorable line.">
           <Input value={tagline} onChange={e => setTagline(e.target.value)} placeholder="One memorable line" />
-        </Field>
-        <Field label="Website">
-          <Input value={url} onChange={e => setUrl(e.target.value)} placeholder="https://example.com" />
         </Field>
         <Field label="Short description" hint="One sentence on what you do.">
           <Textarea value={description} onChange={e => setDescription(e.target.value)}
@@ -166,23 +189,10 @@ export default function BrandContextForm({ projectId, onSaved }) {
         </Field>
       </Section>
 
-      <Section icon={Users} title="Audience & voice" hint="Who you're talking to and how you sound.">
-        <Field label="Audience" hint="Who is this content for?">
-          <Textarea value={audience} onChange={e => setAudience(e.target.value)}
-            rows={2} placeholder="e.g. women 16-35, beauty enthusiasts, looking for science-backed style advice" />
+      <Section icon={Megaphone} title="Voice & messaging" hint="How posts sound and what they must (or must not) say.">
+        <Field label="Tone" hint="Brand voice is inherited; tone fine-tunes it for content.">
+          <Input value={tone} onChange={e => setTone(e.target.value)} placeholder="casual, punchy" />
         </Field>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Brand voice" hint="Comma-separated adjectives.">
-            <Input value={voice} onChange={e => setVoice(e.target.value)}
-              placeholder="confident, warm, educational" />
-          </Field>
-          <Field label="Tone">
-            <Input value={tone} onChange={e => setTone(e.target.value)} placeholder="casual" />
-          </Field>
-        </div>
-      </Section>
-
-      <Section icon={Target} title="Value & goals" hint="What you offer and what the content should drive.">
         <Field label="Value proposition" hint="What you uniquely offer.">
           <Textarea value={valueProp} onChange={e => setValueProp(e.target.value)}
             rows={2} placeholder="e.g. Real-time AI analysis of YOUR actual selfie — not a static quiz." />
@@ -235,7 +245,13 @@ export default function BrandContextForm({ projectId, onSaved }) {
               </div>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <Input value={p.name || ""}
-                  onChange={e => updatePillar(i, { name: e.target.value })}
+                  onChange={e => {
+                    const name = e.target.value;
+                    // Auto-fill the slug from the name unless the user has
+                    // manually edited it (id no longer matches the old name's slug).
+                    const auto = !p.id || p.id === slugify(p.name || "");
+                    updatePillar(i, auto ? { name, id: slugify(name) } : { name });
+                  }}
                   placeholder="Name — e.g. Face Shape Analysis" />
                 <Input value={p.id || ""}
                   onChange={e => updatePillar(i, { id: e.target.value })}
@@ -306,6 +322,17 @@ function Section({ icon: Icon, title, hint, children }) {
   );
 }
 
+function ReadOnly({ label, value, className = "" }) {
+  return (
+    <div className={className}>
+      <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</dt>
+      <dd className={`mt-0.5 truncate text-sm ${value ? "text-foreground" : "text-muted-foreground/60"}`}>
+        {value || "Not set"}
+      </dd>
+    </div>
+  );
+}
+
 function Field({ label, hint, children }) {
   return (
     <div className="grid gap-1.5">
@@ -316,8 +343,14 @@ function Field({ label, hint, children }) {
   );
 }
 
+/** Normalize a hex string (with or without a leading #) to "#rrggbb", or "" if invalid. */
+function normalizeHex(v) {
+  const s = String(v || "").trim().replace(/^#/, "");
+  return /^([0-9a-f]{3}|[0-9a-f]{6})$/i.test(s) ? `#${s}` : "";
+}
+
 function ColorField({ label, value, onChange, placeholder }) {
-  const valid = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(value || "");
+  const hex = normalizeHex(value);
   return (
     <Field label={label}>
       <div className="flex items-center gap-2">
@@ -325,10 +358,10 @@ function ColorField({ label, value, onChange, placeholder }) {
           className="relative size-9 shrink-0 overflow-hidden rounded-xl border border-border bg-[conic-gradient(at_50%_50%,#0001_25%,transparent_0_50%,#0001_0_75%,transparent_0)] bg-[length:10px_10px] cursor-pointer"
           title="Pick a color"
         >
-          {valid && <span className="absolute inset-0" style={{ backgroundColor: value }} />}
+          {hex && <span className="absolute inset-0" style={{ backgroundColor: hex }} />}
           <input
             type="color"
-            value={valid ? value : "#000000"}
+            value={hex || "#000000"}
             onChange={(e) => onChange(e.target.value)}
             className="absolute inset-0 cursor-pointer opacity-0"
             aria-label={typeof label === "string" ? label : "color"}

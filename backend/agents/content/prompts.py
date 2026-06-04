@@ -695,8 +695,11 @@ def _brand_stanza(brand: ContentBrandContext) -> str:
 - Description:  {brand.description or '(none)'}
 - Audience:     {brand.audience or '(unknown — ask the user)'}
 - Voice:        {brand.brand_voice or '(unknown — ask the user)'}
+- Tone:         {brand.tone or '(unspecified)'}
 - Value prop:   {brand.value_prop or '(unknown — ask the user)'}
 - Content goal: {brand.content_goal or '(unknown — ask the user)'}
+- Always say:   {brand.do_say or '(none specified)'}
+- Never say:    {brand.do_not_say or '(none specified)'}
 - Visual style: {brand.visual.style or '(unspecified)'}, primary {brand.visual.primary_color or '—'}, secondary {brand.visual.secondary_color or '—'}
 
 Features:

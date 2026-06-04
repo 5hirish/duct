@@ -149,6 +149,13 @@ def _load_brand_context(project_id: UUID) -> ContentBrandContext:
         ]
         visual = ContentVisualAssets.model_validate(visual_blob) if isinstance(visual_blob, dict) and visual_blob else ContentVisualAssets()
 
+        # Shared business fields come from the project context (single source of
+        # truth); content-specific fields stay in content_brand. Fall back to the
+        # legacy content_brand values for projects edited before this split.
+        channels_blob = proj.brand_channels or {}
+        brand_voice = str(channels_blob.get("brand_voice") or brand_blob.get("brand_voice") or "")
+        audience = _compose_audience(proj.audience) or str(brand_blob.get("audience") or "")
+
         return ContentBrandContext(
             project_id=proj.id,
             project_name=proj.name,
@@ -156,14 +163,43 @@ def _load_brand_context(project_id: UUID) -> ContentBrandContext:
             tagline=proj.tagline or "",
             description=proj.description or "",
             url=proj.url or "",
-            audience=str(brand_blob.get("audience") or ""),
-            brand_voice=str(brand_blob.get("brand_voice") or ""),
+            audience=audience,
+            brand_voice=brand_voice,
+            tone=str(brand_blob.get("tone") or ""),
             value_prop=str(brand_blob.get("value_prop") or ""),
             content_goal=str(brand_blob.get("content_goal") or ""),
+            do_say=str(brand_blob.get("do_say") or ""),
+            do_not_say=str(brand_blob.get("do_not_say") or ""),
             features=features,
             pillars=pillars,
             visual=visual,
         )
+
+
+def _compose_audience(audience: dict | None) -> str:
+    """Render the project's structured audience into a prompt-friendly line.
+
+    Shape: { primary_segment, personas: [{ name, description, priority }] }.
+    Returns "" when nothing usable is set so callers can fall back.
+    """
+    if not isinstance(audience, dict):
+        return ""
+    parts: list[str] = []
+    segment = str(audience.get("primary_segment") or "").strip()
+    if segment:
+        parts.append(segment)
+    personas = audience.get("personas")
+    if isinstance(personas, list):
+        for p in personas:
+            if not isinstance(p, dict):
+                continue
+            name = str(p.get("name") or "").strip()
+            desc = str(p.get("description") or "").strip()
+            if name and desc:
+                parts.append(f"{name} — {desc}")
+            elif name or desc:
+                parts.append(name or desc)
+    return "; ".join(parts)
 
 
 # ---------------------------------------------------------------------------

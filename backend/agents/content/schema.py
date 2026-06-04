@@ -134,8 +134,11 @@ class ContentBrandContext(BaseModel):
     url: str = ""
     audience: str = ""
     brand_voice: str = ""
+    tone: str = ""
     value_prop: str = ""
     content_goal: str = ""
+    do_say: str = ""
+    do_not_say: str = ""
     features: list[AppFeature] = Field(default_factory=list)
     pillars: list[ContentPillar] = Field(default_factory=list)
     visual: ContentVisualAssets = Field(default_factory=ContentVisualAssets)
