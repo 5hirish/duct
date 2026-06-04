@@ -292,6 +292,27 @@ export async function listSocialAccounts(projectId, platform) {
   return jsonOrThrow(res);
 }
 
+/** The social accounts this project has linked (persisted selection). */
+export async function listLinkedAccounts(projectId) {
+  const url = new URL(`${BASE}/api/content/linked-accounts`);
+  url.searchParams.set("project_id", projectId);
+  const res = await fetch(url.toString(), { headers: backendApiHeaders() });
+  return jsonOrThrow(res);
+}
+
+/**
+ * Replace the project's linked-account set.
+ * accounts: [{ account_id: number, platform: string, username: string }]
+ */
+export async function saveLinkedAccounts(projectId, accounts) {
+  const res = await fetch(`${BASE}/api/content/linked-accounts`, {
+    method: "PUT",
+    headers: backendApiHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify({ project_id: projectId, accounts }),
+  });
+  return jsonOrThrow(res);
+}
+
 export async function listFormats(projectId) {
   const res = await fetch(
     `${BASE}/api/content/formats?project_id=${encodeURIComponent(projectId)}`,

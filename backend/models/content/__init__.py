@@ -5,6 +5,7 @@ from models.content.avatar import ContentAvatar
 from models.content.format import ContentFormat
 from models.content.plan import ContentPlan
 from models.content.post import ContentPost
+from models.content.social_link import ContentSocialLink
 
 __all__ = [
     "ContentAsset",
@@ -12,4 +13,5 @@ __all__ = [
     "ContentFormat",
     "ContentPlan",
     "ContentPost",
+    "ContentSocialLink",
 ]

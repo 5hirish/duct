@@ -13,8 +13,9 @@ import {
 import { getActiveProjectId, getActiveProject } from "@/lib/projects";
 import BrandContextForm from "@/components/content/BrandContextForm";
 import DiscoverPage from "@/components/content/DiscoverPage";
+import AccountsTab from "@/components/content/AccountsTab";
 
-const TABS = ["plan", "brand", "discover", "library", "analytics"];
+const TABS = ["plan", "analytics", "discover", "library", "brand", "accounts"];
 
 export default function ContentLandingPage() {
   const router = useRouter();
@@ -84,10 +85,11 @@ export default function ContentLandingPage() {
       </nav>
 
       {tab === "plan"      && <PlanTab      projectId={projectId} />}
-      {tab === "brand"     && <BrandTab     projectId={projectId} />}
+      {tab === "analytics" && <AnalyticsTab projectId={projectId} />}
       {tab === "discover"  && <DiscoverPage projectId={projectId} />}
       {tab === "library"   && <LibraryTab   projectId={projectId} />}
-      {tab === "analytics" && <AnalyticsTab projectId={projectId} />}
+      {tab === "brand"     && <BrandTab     projectId={projectId} />}
+      {tab === "accounts"  && <AccountsTab  projectId={projectId} />}
     </div>
   );
 }

@@ -45,7 +45,7 @@ from uuid import UUID, uuid4
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlmodel import Session
 
 from agents.content.events import ContentEvent
@@ -72,6 +72,7 @@ from models.content import (
     ContentFormat,
     ContentPlan,
     ContentPost,
+    ContentSocialLink,
 )
 from models.project import Project
 from service.pipeline import now_iso
@@ -1223,6 +1224,80 @@ async def list_social_accounts(
         SocialAccountOut(id=a.id, platform=a.platform.value, username=a.username)
         for a in accounts
     ]
+
+
+# ---------------------------------------------------------------------------
+# Linked accounts — the project's persisted selection of social accounts.
+# ---------------------------------------------------------------------------
+
+class LinkedAccountOut(BaseModel):
+    account_id: int
+    platform:   str
+    username:   str
+
+
+class LinkedAccountIn(BaseModel):
+    account_id: int
+    platform:   str = ""
+    username:   str = ""
+
+
+class LinkedAccountsIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    project_id: UUID
+    accounts:   list[LinkedAccountIn] = Field(default_factory=list)
+
+
+def _link_out(row: ContentSocialLink) -> LinkedAccountOut:
+    return LinkedAccountOut(
+        account_id=int(row.external_account_id),
+        platform=row.platform,
+        username=row.username,
+    )
+
+
+@router.get("/content/linked-accounts")
+def list_linked_accounts(
+    project_id: UUID,
+    db: Session = Depends(db_session),
+) -> list[LinkedAccountOut]:
+    """The social accounts this project has linked."""
+    _project_or_404(db, project_id)
+    rows = db.execute(
+        select(ContentSocialLink)
+        .where(ContentSocialLink.project_id == project_id)
+        .order_by(ContentSocialLink.created_at)
+    ).scalars().all()
+    return [_link_out(r) for r in rows]
+
+
+@router.put("/content/linked-accounts")
+def save_linked_accounts(
+    body: LinkedAccountsIn,
+    db: Session = Depends(db_session),
+) -> list[LinkedAccountOut]:
+    """Replace the project's linked-account set with the supplied list."""
+    _project_or_404(db, body.project_id)
+    db.execute(
+        delete(ContentSocialLink).where(ContentSocialLink.project_id == body.project_id)
+    )
+    # De-dupe by account id, last wins.
+    by_id: dict[int, LinkedAccountIn] = {a.account_id: a for a in body.accounts}
+    for acc in by_id.values():
+        db.add(ContentSocialLink(
+            project_id=body.project_id,
+            external_account_id=str(acc.account_id),
+            platform=acc.platform,
+            username=acc.username,
+        ))
+    db.commit()
+    rows = db.execute(
+        select(ContentSocialLink)
+        .where(ContentSocialLink.project_id == body.project_id)
+        .order_by(ContentSocialLink.created_at)
+    ).scalars().all()
+    return [_link_out(r) for r in rows]
 
 
 @router.post("/content/posts/{post_id}/publish")
