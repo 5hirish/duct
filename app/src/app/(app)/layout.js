@@ -10,11 +10,15 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/s
 import { AuditNavProvider } from "../../lib/auditNavContext";
 
 // Routes whose main content must fill the remaining viewport (no scroll, no padding)
-const FULL_BLEED_PREFIXES = ["/audit/seo/", "/content/sessions/", "/content/posts/"];
+const FULL_BLEED_PREFIXES = ["/audit/seo/", "/content/sessions/", "/content/posts/", "/content/plan"];
+
+// Routes that use the full viewport width (fluid) but still scroll with padding
+const WIDE_PREFIXES = ["/content"];
 
 export default function AppLayout({ children }) {
   const pathname = usePathname();
   const isFullBleed = FULL_BLEED_PREFIXES.some((p) => pathname?.startsWith(p));
+  const isWide = !isFullBleed && WIDE_PREFIXES.some((p) => pathname?.startsWith(p));
 
   useEffect(() => {
     // Migrate any legacy local profile, then reconcile with the backend
@@ -50,7 +54,11 @@ export default function AppLayout({ children }) {
                 {children}
               </div>
             ) : (
-              <div id="main-content" className="app-main" tabIndex={-1}>
+              <div
+                id="main-content"
+                className={isWide ? "app-main-wide" : "app-main"}
+                tabIndex={-1}
+              >
                 {children}
               </div>
             )}

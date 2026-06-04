@@ -1,14 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { PLATFORM_LABELS, POST_STATUS_LABELS, PostStatus } from "../../lib/contentEnums";
+import { PLATFORM_LABELS } from "../../lib/contentEnums";
+import { STATUS_ORDER, firstImageSrc, statusMeta } from "../../lib/contentStatus";
 
-const COLUMNS = [
-  { key: PostStatus.PENDING,   label: POST_STATUS_LABELS[PostStatus.PENDING],   accent: "border-amber-400/40 bg-amber-50/40 dark:bg-amber-950/10" },
-  { key: PostStatus.DRAFT,     label: POST_STATUS_LABELS[PostStatus.DRAFT],     accent: "border-blue-400/40 bg-blue-50/40 dark:bg-blue-950/10" },
-  { key: PostStatus.POSTED,    label: POST_STATUS_LABELS[PostStatus.POSTED],    accent: "border-green-400/40 bg-green-50/40 dark:bg-green-950/10" },
-  { key: PostStatus.DISCARDED, label: POST_STATUS_LABELS[PostStatus.DISCARDED], accent: "border-muted-foreground/30 bg-muted/40" },
-];
+const COLUMNS = STATUS_ORDER.map((key) => {
+  const meta = statusMeta(key);
+  return { key, label: meta.label, accent: meta.accentClass };
+});
 
 /**
  * Kanban view of the 30-day plan, columns by status.
@@ -81,52 +80,68 @@ export default function PlanKanban({ plan, onReviseDay }) {
 
 function DayCard({ card, onRevise }) {
   const postId   = card.post?.id || card.post_id || null;
-  const topic    = card.topic    || "(untitled)";
-  const pillar   = card.pillar   || "—";
+  const hook     = card.post?.hook_text || card.hook_text || "";
+  const topic    = card.topic    || card.post?.topic || "(untitled)";
+  const headline = hook || topic;
+  const pillar   = card.pillar   || card.post?.pillar || "—";
   const postType = card.post_type || "slideshow";
   const platforms = Array.isArray(card.platforms) ? card.platforms : [];
+  const thumb    = firstImageSrc(card.post?.slides_html);
 
   return (
-    <div className="rounded-md border border-border bg-background p-2.5 space-y-1.5 hover:border-primary/40 transition-colors">
-      <div className="flex items-start justify-between gap-2">
-        <span className="text-[10px] uppercase tracking-wide text-muted-foreground tabular-nums">
-          Day {card.dayIndex}
-        </span>
-        <span className="text-[10px] rounded-full bg-muted px-1.5 py-px text-muted-foreground">
-          {postType}
-        </span>
-      </div>
-
-      <p className="text-sm font-medium leading-snug line-clamp-2">{topic}</p>
-
-      <div className="flex items-center gap-1.5 flex-wrap">
-        <span className="text-[10px] rounded-full bg-primary/10 text-primary px-1.5 py-px font-medium">
-          {pillar}
-        </span>
-        {platforms.map((p) => (
-          <span key={p} className="text-[10px] rounded-full bg-muted px-1.5 py-px text-muted-foreground">
-            {PLATFORM_LABELS[p] || p}
+    <div className="overflow-hidden rounded-md border border-border bg-background hover:border-primary/40 transition-colors">
+      {thumb && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={thumb}
+          alt=""
+          className="h-28 w-full object-cover border-b border-border/60"
+        />
+      )}
+      <div className="p-2.5 space-y-1.5">
+        <div className="flex items-start justify-between gap-2">
+          <span className="text-[10px] uppercase tracking-wide text-muted-foreground tabular-nums">
+            Day {card.dayIndex}
           </span>
-        ))}
-      </div>
+          <span className="text-[10px] rounded-full bg-muted px-1.5 py-px text-muted-foreground">
+            {postType}
+          </span>
+        </div>
 
-      <div className="pt-1">
-        {postId ? (
-          <Link
-            href={`/content/posts/${postId}`}
-            className="text-xs text-primary hover:underline"
-          >
-            Revise →
-          </Link>
-        ) : (
-          <button
-            type="button"
-            onClick={onRevise}
-            className="text-xs text-primary hover:underline"
-          >
-            Draft this post →
-          </button>
+        <p className="text-sm font-medium leading-snug line-clamp-2">{headline}</p>
+        {hook && topic && hook !== topic && (
+          <p className="text-xs text-muted-foreground line-clamp-1">{topic}</p>
         )}
+
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-[10px] rounded-full bg-primary/10 text-primary px-1.5 py-px font-medium">
+            {pillar}
+          </span>
+          {platforms.map((p) => (
+            <span key={p} className="text-[10px] rounded-full bg-muted px-1.5 py-px text-muted-foreground">
+              {PLATFORM_LABELS[p] || p}
+            </span>
+          ))}
+        </div>
+
+        <div className="pt-1">
+          {postId ? (
+            <Link
+              href={`/content/posts/${postId}`}
+              className="text-xs text-primary hover:underline"
+            >
+              Revise →
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={onRevise}
+              className="text-xs text-primary hover:underline"
+            >
+              Draft this post →
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

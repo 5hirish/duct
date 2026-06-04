@@ -12,7 +12,6 @@ import {
 } from "@/lib/contentApi";
 import { getActiveProjectId, getActiveProject } from "@/lib/projects";
 import BrandContextForm from "@/components/content/BrandContextForm";
-import PlanKanban from "@/components/content/PlanKanban";
 import DiscoverPage from "@/components/content/DiscoverPage";
 
 const TABS = ["plan", "brand", "discover", "library", "analytics"];
@@ -52,7 +51,7 @@ export default function ContentLandingPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto py-6 px-6">
+    <div className="w-full">
       <header className="mb-6 flex items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">Content Marketing</h1>
@@ -160,7 +159,19 @@ function PlanTab({ projectId }) {
         </div>
       )}
 
-      {active && <PlanKanban plan={active} />}
+      {active && (
+        <div className="rounded-lg border border-border bg-background p-5 flex items-center justify-between gap-4 flex-wrap">
+          <div className="min-w-0">
+            <p className="font-medium truncate">{active.name || "30-day plan"}</p>
+            <p className="text-sm text-muted-foreground">
+              {Array.isArray(active.days) ? active.days.length : 0} days · open the board to manage as Kanban or Calendar.
+            </p>
+          </div>
+          <Button asChild>
+            <Link href={`/content/plan?plan=${active.id}`}>Open plan board →</Link>
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
