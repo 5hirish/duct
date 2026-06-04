@@ -1,5 +1,12 @@
 "use client";
 
+import {
+  deleteProjectRemote,
+  fetchProjectsRemote,
+  hasAuthToken,
+  upsertProjectRemote,
+} from "./projectsApi";
+
 const PROJECTS_STORAGE_KEY = "duct_projects";
 const ACTIVE_PROJECT_ID_STORAGE_KEY = "duct_active_project_id";
 const LEGACY_PROFILE_STORAGE_KEY = "duct_business_profile";
@@ -126,6 +133,28 @@ function writeProjectsStore(projects) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Backend sync (hybrid: localStorage is the always-current cache, the backend
+// is the durable store). Writes to the backend are explicit — callers persist
+// at deliberate save points (e.g. the onboarding "Save & Next" button) — so
+// localStorage edits don't generate a request per keystroke.
+// ---------------------------------------------------------------------------
+
+/** Notify same-document listeners (sidebar, projects page) to re-read the store. */
+function notifyProjectsChanged() {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event("storage"));
+  window.dispatchEvent(new Event("duct:project-changed"));
+}
+
+/**
+ * Explicitly persist a project to the backend (upsert by id). Best-effort and
+ * safe to fire-and-forget; no-ops when signed out. Returns the server copy or null.
+ */
+export function pushProjectToBackend(project) {
+  return upsertProjectRemote(project);
+}
+
 export function getProjects() {
   return readProjectsStore();
 }
@@ -164,6 +193,7 @@ export function deleteProject(id) {
   const projects = readProjectsStore();
   const next = projects.filter((project) => project.id !== id);
   writeProjectsStore(next);
+  deleteProjectRemote(id);
   if (getActiveProjectId() === id) {
     setActiveProjectId(next[0]?.id || "");
   }
@@ -277,4 +307,52 @@ export function migrateFromLegacyProfile() {
   });
   if (created?.id) setActiveProjectId(created.id);
   return created || null;
+}
+
+/**
+ * Load projects from the backend and reconcile with the local cache.
+ *
+ * - Server rows win when the same id exists in both, unless the local copy is
+ *   strictly newer (by updatedAt) — then the local copy is pushed back up.
+ * - Local-only projects (created before sync, or while signed out) are kept and
+ *   uploaded so nothing is lost.
+ * Safe no-op when signed out / no token. Notifies listeners on completion.
+ */
+export async function hydrateProjectsFromBackend() {
+  if (typeof window === "undefined" || !hasAuthToken()) return;
+
+  const remote = await fetchProjectsRemote();
+  const local = readProjectsStore();
+
+  const byId = new Map();
+  for (const p of remote) byId.set(p.id, withProjectDefaults(p));
+
+  const toPushUp = [];
+  for (const lp of local) {
+    const rp = byId.get(lp.id);
+    if (!rp) {
+      // Local-only project — keep it and upload.
+      byId.set(lp.id, lp);
+      toPushUp.push(lp);
+    } else if ((lp.updatedAt || "") > (rp.updatedAt || "")) {
+      // Local edits are newer — prefer them and re-upload.
+      byId.set(lp.id, lp);
+      toPushUp.push(lp);
+    }
+  }
+
+  const merged = Array.from(byId.values());
+  writeProjectsStore(merged);
+
+  // Re-point the active project if it no longer resolves.
+  const activeId = getActiveProjectId();
+  if (activeId && !byId.has(activeId)) {
+    setActiveProjectId(merged[0]?.id || "");
+  } else if (!activeId && merged[0]?.id) {
+    setActiveProjectId(merged[0].id);
+  }
+
+  for (const p of toPushUp) upsertProjectRemote(p);
+
+  notifyProjectsChanged();
 }

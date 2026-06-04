@@ -59,6 +59,7 @@ import {
   getProjects,
   setActiveProjectId,
 } from "@/lib/projects";
+import { faviconUrl } from "@/lib/favicon";
 
 // ---------------------------------------------------------------------------
 // Nav structure
@@ -127,6 +128,28 @@ const NAV_SECTIONS = [
 // Project switcher in sidebar header
 // ---------------------------------------------------------------------------
 
+/** Project avatar: site favicon when a website URL is set, else the name initial. */
+function ProjectAvatar({ project, wrapperClass, imgSize = 16 }) {
+  const favicon = faviconUrl(project?.company?.website_url || "");
+  const initial = (project?.name || "P").charAt(0).toUpperCase();
+  return (
+    <span className={wrapperClass}>
+      {favicon ? (
+        <img
+          src={favicon}
+          alt=""
+          width={imgSize}
+          height={imgSize}
+          className="rounded-sm"
+          style={{ width: imgSize, height: imgSize }}
+        />
+      ) : (
+        initial
+      )}
+    </span>
+  );
+}
+
 function SidebarProjectSwitcher() {
   const router = useRouter();
   const [projects, setProjects] = useState([]);
@@ -172,9 +195,11 @@ function SidebarProjectSwitcher() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-          <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary font-semibold text-xs">
-            {(active?.name || "P").charAt(0).toUpperCase()}
-          </span>
+          <ProjectAvatar
+            project={active}
+            wrapperClass="flex size-6 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary font-semibold text-xs"
+            imgSize={16}
+          />
           <span className="flex-1 truncate font-medium text-sidebar-foreground group-data-[collapsible=icon]:hidden">
             {active?.name || "Select project"}
           </span>
@@ -184,9 +209,11 @@ function SidebarProjectSwitcher() {
       <DropdownMenuContent className="w-56" align="start" side="bottom">
         {projects.map((p) => (
           <DropdownMenuItem key={p.id} onClick={() => select(p.id)}>
-            <span className="flex size-5 shrink-0 items-center justify-center rounded bg-muted text-xs font-semibold">
-              {p.name.charAt(0).toUpperCase()}
-            </span>
+            <ProjectAvatar
+              project={p}
+              wrapperClass="flex size-5 shrink-0 items-center justify-center rounded bg-muted text-xs font-semibold"
+              imgSize={14}
+            />
             <span className="ml-2 truncate">{p.name}</span>
             {p.id === activeId && <Check className="ml-auto size-3.5 text-primary" />}
           </DropdownMenuItem>

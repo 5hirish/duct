@@ -21,6 +21,7 @@ import {
   createProject,
   getActiveProject,
   getProjectById,
+  pushProjectToBackend,
   saveProject,
   setActiveProjectId,
 } from "../../../lib/projects";
@@ -304,6 +305,41 @@ export default function OnboardingPage() {
 
   function goNext() {
     setStep((current) => Math.min(current + 1, TOTAL_STEPS));
+  }
+
+  // "Save & Next": the deliberate persistence point. Saves the current profile
+  // locally, then upserts it to the backend (fire-and-forget), then advances.
+  function saveAndNext() {
+    const merged = {
+      ...(projectMeta || {}),
+      ...profile,
+      name: projectMeta?.name || profile.company.name || "Untitled project",
+    };
+    const saved = projectMeta?.id ? saveProject(merged) : createProject(merged);
+    if (saved?.id && saved.id !== projectMeta?.id) {
+      setProjectMeta(saved);
+      setActiveProjectId(saved.id);
+      window.dispatchEvent(new Event("duct:project-changed"));
+    }
+    pushProjectToBackend(saved);
+    goNext();
+  }
+
+  // Final step: persist the project (local + backend). Navigation is handled by
+  // the separate Back button, so this only saves.
+  function saveProjectFinal() {
+    const merged = {
+      ...(projectMeta || {}),
+      ...profile,
+      name: projectMeta?.name || profile.company.name || "Untitled project",
+    };
+    const saved = projectMeta?.id ? saveProject(merged) : createProject(merged);
+    if (saved?.id && saved.id !== projectMeta?.id) {
+      setProjectMeta(saved);
+      setActiveProjectId(saved.id);
+    }
+    window.dispatchEvent(new Event("duct:project-changed"));
+    pushProjectToBackend(saved);
   }
 
   function goBack() {
@@ -748,14 +784,6 @@ export default function OnboardingPage() {
             />
           </div>
 
-          <div className="mt-2 flex flex-wrap gap-2">
-            <Button type="button" asChild>
-              <Link href="/insights/generate">Go to Generate Insight</Link>
-            </Button>
-            <Button type="button" variant="outline" asChild>
-              <Link href="/insights/organic-growth">Back to Insights</Link>
-            </Button>
-          </div>
         </div>
       )}
 
@@ -765,9 +793,13 @@ export default function OnboardingPage() {
             Back
           </Button>
         )}
-        {step < TOTAL_STEPS && (
-          <Button type="button" onClick={goNext}>
-            Next
+        {step < TOTAL_STEPS ? (
+          <Button type="button" onClick={saveAndNext}>
+            Save & Next
+          </Button>
+        ) : (
+          <Button type="button" onClick={saveProjectFinal}>
+            Save Project
           </Button>
         )}
         {step > 1 && step < TOTAL_STEPS && (

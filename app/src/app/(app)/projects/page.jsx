@@ -17,22 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { deleteProject, getActiveProjectId, getProjects, setActiveProjectId } from "../../../lib/projects";
-
-function safeHostname(url) {
-  if (!url) return "";
-  try {
-    const normalized = /^https?:\/\//i.test(url) ? url : `https://${url}`;
-    return new URL(normalized).hostname;
-  } catch {
-    return "";
-  }
-}
-
-function faviconUrl(url) {
-  const host = safeHostname(url);
-  if (!host) return "";
-  return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=64`;
-}
+import { faviconUrl, safeHostname } from "@/lib/favicon";
 
 export default function ProjectsPage() {
   const router = useRouter();

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import AppNav from "../../components/AppNav";
 import AppSidebar from "../../components/AppSidebar";
 import { AuthProvider, AuthGuard } from "../../lib/auth";
-import { migrateFromLegacyProfile } from "../../lib/projects";
+import { hydrateProjectsFromBackend, migrateFromLegacyProfile } from "../../lib/projects";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AuditNavProvider } from "../../lib/auditNavContext";
 
@@ -17,7 +17,11 @@ export default function AppLayout({ children }) {
   const isFullBleed = FULL_BLEED_PREFIXES.some((p) => pathname?.startsWith(p));
 
   useEffect(() => {
+    // Migrate any legacy local profile, then reconcile with the backend
+    // (pulls server projects down, pushes local-only ones up). Self-gates on
+    // a valid auth token, so it's a no-op when signed out.
     migrateFromLegacyProfile();
+    hydrateProjectsFromBackend();
   }, []);
 
   return (

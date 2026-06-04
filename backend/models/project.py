@@ -31,6 +31,7 @@ class Project(SQLModel, table=True):
     url: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
     company_name: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
     industry: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
+    business_model: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
     targets: dict = Field(
         default_factory=dict,
         sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="{}"),

@@ -26,6 +26,8 @@ class ProjectIn(BaseModel):
     name: str
     company_name: str = ""
     industry: str = ""
+    business_model: str = ""
+    website_url: str = ""
     targets: dict = {}
     audience: dict = {}
     competition: dict = {}
@@ -44,6 +46,8 @@ class ProjectOut(BaseModel):
     name: str
     company_name: str
     industry: str
+    business_model: str
+    website_url: str
     targets: dict
     audience: dict
     competition: dict
@@ -58,6 +62,8 @@ def _to_out(p: Project) -> ProjectOut:
         name=p.name,
         company_name=p.company_name,
         industry=p.industry,
+        business_model=p.business_model,
+        website_url=p.url,
         targets=p.targets or {},
         audience=p.audience or {},
         competition=p.competition or {},
@@ -89,6 +95,8 @@ def create_project(
         name=body.name,
         company_name=body.company_name,
         industry=body.industry,
+        business_model=body.business_model,
+        url=body.website_url,
         targets=body.targets,
         audience=body.audience,
         competition=body.competition,
@@ -121,16 +129,26 @@ def update_project(
     user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ) -> ProjectOut:
+    """Upsert by client-supplied id.
+
+    The frontend generates project UUIDs locally (and already references them
+    from content plans / agent contexts), so a missing project is created with
+    the supplied id rather than 404'd — keeping those references valid.
+    """
+    from datetime import datetime, timezone
+
     project = session.execute(
         select(Project).where(Project.id == project_id, Project.user_id == user.id)
     ).scalars().first()
     if project is None:
-        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Project not found")
+        project = Project(id=project_id, user_id=user.id)
+        session.add(project)
 
-    from datetime import datetime, timezone
     project.name = body.name
     project.company_name = body.company_name
     project.industry = body.industry
+    project.business_model = body.business_model
+    project.url = body.website_url
     project.targets = body.targets
     project.audience = body.audience
     project.competition = body.competition
