@@ -170,6 +170,7 @@ class DraftPostRequest(BaseModel):
     day_index: int | None = None
     topic: str | None = None
     pillar: str | None = None
+    channel: str | None = None   # primary platform (platforms[0]); selects the agent playbook
 
 
 class ContentAnswerRequest(BaseModel):

@@ -734,18 +734,36 @@ def _mode_tail(mode: RunMode) -> str:
     }[mode]
 
 
+def _channel_directive(channel) -> str:
+    """A short target-channel line prepended to the mode tail.
+
+    `channel` is a channels.Channel (or None). The base playbook is TikTok; for
+    a channel without a dedicated agent we say so and ask the model to adapt.
+    """
+    if channel is None or getattr(channel, "id", "tiktok") == "tiktok":
+        return "TARGET CHANNEL: TikTok — apply the TikTok playbook below."
+    if getattr(channel, "supported", False):
+        return f"TARGET CHANNEL: {channel.label} — apply the {channel.label} playbook below."
+    return (
+        f"TARGET CHANNEL: {channel.label}. There is no dedicated {channel.label} "
+        "agent yet — apply the TikTok playbook below and adapt where the platform "
+        "differs (aspect ratio, caption length, hashtags, CTA conventions)."
+    )
+
+
 def build_orchestrator_system_prompt(
     brand: ContentBrandContext,  # noqa: ARG001 — accepted for backwards-compat; brand goes in user msg
     mode: RunMode,
+    channel=None,
 ) -> str:
     """Compose the orchestrator's system prompt.
 
     Designed for prompt caching: ORCHESTRATOR_BASE_PROMPT is stable across
-    all users + sessions; only the mode tail varies (two variants). Brand
+    all users + sessions; only the mode tail + channel directive vary. Brand
     context lives in the first user message instead of here, so the
     cached prefix doesn't get invalidated by every new project.
     """
-    return ORCHESTRATOR_BASE_PROMPT + "\n\n" + _mode_tail(mode)
+    return f"{ORCHESTRATOR_BASE_PROMPT}\n\n{_channel_directive(channel)}\n\n{_mode_tail(mode)}"
 
 
 def build_plan_user_prompt(
@@ -901,6 +919,7 @@ def build_post_user_prompt(
     format_slug: str = "",
     avatar: "Avatar | dict | None" = None,
     recent_posts: list[dict] | None = None,
+    channel=None,
 ) -> str:
     """Kickoff prompt for draft_post mode."""
     recent_lines = (
@@ -928,6 +947,8 @@ def build_post_user_prompt(
 {_brand_stanza(brand)}
 
 Draft one post for {brand.project_name}.
+
+{_channel_directive(channel)}
 
 Target: {target}
 

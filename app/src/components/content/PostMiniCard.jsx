@@ -101,9 +101,13 @@ export default function PostMiniCard({ day, post, schedule, onRevise, showThumb 
   );
 
   if (postId) {
-    return <Link href={`/content/posts/${postId}`} className="block">{inner}</Link>;
+    // Draft → open the agent split-view in editing mode; otherwise read view.
+    const status = post?.status || day?.status || "pending";
+    const href = status === "draft" ? `/content/posts/${postId}?revise=1` : `/content/posts/${postId}`;
+    return <Link href={href} className="block">{inner}</Link>;
   }
   if (onRevise) {
+    // Pending (no post) → creation mode.
     return (
       <button type="button" onClick={onRevise} className="block w-full text-left">
         {inner}

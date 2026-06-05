@@ -260,6 +260,9 @@ async def _run_draft_worker(
                         except Exception as exc:
                             logger.warning("content: failed to parse Day[%d] from plan %s: %s",
                                            req.day_index, req.plan_id, exc)
+        # Primary channel: explicit request → the day's first platform → default.
+        from agents.content.channels import primary_channel
+        channel = req.channel or (primary_channel(day_obj.platforms) if day_obj else None)
         await runner.run_draft(
             session_id,
             req.project_id,
@@ -267,6 +270,7 @@ async def _run_draft_worker(
             day=day_obj,
             topic=req.topic,
             pillar=req.pillar,
+            channel=channel,
         )
         # Link the drafted post back onto its plan-day (post_id) so the board
         # can match the new post to its slot (we link by post_id, not position).

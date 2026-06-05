@@ -935,22 +935,28 @@ class ClaudeContentRunner:
         topic: str | None = None,
         pillar: str | None = None,
         format_slug: str = "",
+        channel: str | None = None,
         effort: AgentEffort | None = None,
         adaptive_thinking: bool = True,
         max_turns: int | None = None,
         chat_idle_timeout: float = 1800.0,
     ) -> None:
         """Run a draft_post session end-to-end."""
+        from agents.content.channels import resolve as resolve_channel
         session = _sessions.get(session_id) or create_draft_session(session_id, project_id)
         brand = _load_brand_context(project_id)
+        ch = resolve_channel(channel)
 
         await emit({
-            "event":      ContentEvent.PIPELINE_STARTED,
-            "session_id": session_id,
-            "mode":       "draft_post",
+            "event":             ContentEvent.PIPELINE_STARTED,
+            "session_id":        session_id,
+            "mode":              "draft_post",
+            "channel":           ch.id,
+            "channel_label":     ch.label,
+            "channel_supported": ch.supported,
         })
 
-        system_prompt = build_orchestrator_system_prompt(brand, "draft_post")
+        system_prompt = build_orchestrator_system_prompt(brand, "draft_post", channel=ch)
         initial_prompt = build_post_user_prompt(
             brand,
             day,
@@ -959,6 +965,7 @@ class ClaudeContentRunner:
             format_slug=format_slug,
             avatar=None,
             recent_posts=[],
+            channel=ch,
         )
 
         try:

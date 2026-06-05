@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { LayoutGrid, CalendarDays } from "lucide-react";
 import {
   Select,
@@ -19,6 +20,7 @@ import PlanCalendar from "@/components/content/PlanCalendar";
  * to preselect (e.g. from a query param).
  */
 export default function PlanBoard({ projectId, initialPlanId = "" }) {
+  const router = useRouter();
   const [plans, setPlans] = useState([]);
   const [activeId, setActiveId] = useState(initialPlanId || "");
   const [plan, setPlan] = useState(null); // full plan (days + posts)
@@ -73,6 +75,17 @@ export default function PlanBoard({ projectId, initialPlanId = "" }) {
     () => plans.find((p) => p.id === activeId) || plan || null,
     [plans, activeId, plan]
   );
+
+  // Pending card → open the creation split-view, carrying the day's primary channel.
+  const reviseDay = useCallback((index) => {
+    const day = Array.isArray(plan?.days) ? plan.days[index] : null;
+    const channel = (Array.isArray(day?.platforms) && day.platforms[0]) || "tiktok";
+    const params = new URLSearchParams();
+    if (activeId) params.set("plan_id", activeId);
+    params.set("day", String(index));
+    params.set("channel", channel);
+    router.push(`/content/posts/new?${params.toString()}`);
+  }, [plan, activeId, router]);
 
   if (error) {
     return <p className="text-sm text-destructive">{error}</p>;
@@ -135,9 +148,9 @@ export default function PlanBoard({ projectId, initialPlanId = "" }) {
           Loading plan…
         </div>
       ) : view === "kanban" ? (
-        <PlanKanban plan={plan} postsById={postsById} />
+        <PlanKanban plan={plan} postsById={postsById} onReviseDay={reviseDay} />
       ) : (
-        <PlanCalendar plan={plan} postsById={postsById} view={calView} onViewChange={setCalView} />
+        <PlanCalendar plan={plan} postsById={postsById} view={calView} onViewChange={setCalView} onReviseDay={reviseDay} />
       )}
     </div>
   );

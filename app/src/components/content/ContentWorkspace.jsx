@@ -42,6 +42,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
   const [retryCount, setRetryCount] = useState(0);
   const [payload, setPayload]   = useState(null);
   const [sessionId, setSessionId] = useState(null);
+  const [channelNote, setChannelNote] = useState(null);
   const [isAgentTyping, setIsAgentTyping] = useState(false);
   const [mobilePaneOpen, setMobilePaneOpen] = useState(false);
 
@@ -114,6 +115,14 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
   // ---------------------------------------------------------------------------
 
   function handleEvent(event) {
+    // PIPELINE_STARTED carries the resolved channel; note when we fell back.
+    if (event.channel) {
+      setChannelNote(
+        event.channel_supported === false
+          ? `Using the TikTok playbook — no dedicated ${event.channel_label || event.channel} agent yet.`
+          : null,
+      );
+    }
     switch (event.event) {
 
       case ContentEvent.STEP_STARTED:
@@ -374,13 +383,24 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
     </button>
   );
 
-  const viewportEl = renderViewport
-    ? renderViewport({ payload, mode, sessionId, phase })
-    : (
-        <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
-          No viewport configured.
+  const viewportEl = (
+    <div className="flex h-full flex-col overflow-hidden">
+      {channelNote && (
+        <div className="shrink-0 border-b border-amber-400/30 bg-amber-500/10 px-4 py-2 text-xs text-amber-600 dark:text-amber-400">
+          {channelNote}
         </div>
-      );
+      )}
+      <div className="min-h-0 flex-1 overflow-hidden">
+        {renderViewport
+          ? renderViewport({ payload, mode, sessionId, phase })
+          : (
+              <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                No viewport configured.
+              </div>
+            )}
+      </div>
+    </div>
+  );
 
   return (
     <div className="flex flex-col h-full w-full overflow-hidden">

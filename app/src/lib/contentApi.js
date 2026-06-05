@@ -65,7 +65,7 @@ export async function openPlanStream({ projectId, startDate, signal } = {}) {
  * POST /api/content/post/stream body={project_id, plan_id?, day_index?, topic?, pillar?}
  */
 export async function openPostStream(
-  { projectId, planId, dayIndex, topic, pillar } = {},
+  { projectId, planId, dayIndex, topic, pillar, channel } = {},
   { signal } = {},
 ) {
   const res = await fetch(`${BASE}/api/content/post/stream`, {
@@ -77,6 +77,7 @@ export async function openPostStream(
       ...(dayIndex !== undefined && dayIndex !== null ? { day_index: dayIndex } : {}),
       ...(topic     ? { topic     } : {}),
       ...(pillar    ? { pillar    } : {}),
+      ...(channel   ? { channel   } : {}),
     }),
     signal,
   });
