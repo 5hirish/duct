@@ -76,6 +76,23 @@ def _open_db() -> Session:
     return Session(engine)
 
 
+def _resolve_format_id(db: Session, project_id, format_slug: str):
+    """Resolve a format slug (e.g. 'format-d') to the project's ContentFormat id.
+
+    Returns None when the project has no format with that slug (link stays NULL).
+    """
+    slug = (format_slug or "").strip().lower()
+    if not slug:
+        return None
+    row = db.exec(
+        select(ContentFormat).where(
+            ContentFormat.project_id == project_id,
+            ContentFormat.slug == slug,
+        )
+    ).first()
+    return row.id if row else None
+
+
 def _asset_disk_path(asset: ContentAsset) -> Path | None:
     """Resolve a ContentAsset.url to its on-disk path.
 
@@ -151,11 +168,17 @@ def build_content_mcp_server(
                     f"project_id mismatch: payload has {draft.project_id}, "
                     f"session is scoped to {project_id}."
                 )
+            # Monthly model: anchor the plan to the first of the current month;
+            # the calendar lays items on sequential dates from there.
+            from datetime import date as _date
+            today = _date.today()
+            month_start = today.replace(day=1)
+            month_label = today.strftime("%B %Y")
             with _open_db() as db:
                 row = ContentPlan(
                     project_id=project_id,
-                    name=draft.name or "30-day plan",
-                    start_date=draft.start_date,
+                    name=draft.name or f"{month_label} plan",
+                    start_date=month_start,
                     character=draft.character.model_dump(mode="json"),
                     days=[d.model_dump(mode="json") for d in draft.days],
                     status="draft",
@@ -223,7 +246,7 @@ def build_content_mcp_server(
                     "pillar":          draft.pillar,
                     "topic":           draft.topic,
                     "post_type":       draft.post_type,
-                    "format_style":    draft.format_style,
+                    "format_id":       _resolve_format_id(db, project_id, draft.format_slug),
                     "avatar_id":       draft.avatar_id,
                     "slide_count":     draft.slide_count,
                     "status":          "draft",
@@ -362,26 +385,33 @@ def build_content_mcp_server(
 
     @tool(
         name="fetch_format_library",
-        description="Return the list of per-project content formats (name, slug, full JSONB data).",
+        description=(
+            "Return the per-project content formats (name, slug, full JSONB data) "
+            "AND resolved_css — the shared base engine CSS plus the format's linked "
+            "styles, ready to inline verbatim into the slides <style> block. Do not "
+            "write caption/hook/layout CSS yourself; use resolved_css and its classes."
+        ),
         input_schema={},
     )
     async def fetch_format_library(_args: dict) -> dict:
         try:
+            from agents.content.styles import css_for
             with _open_db() as db:
                 rows = db.exec(
                     select(ContentFormat).where(ContentFormat.project_id == project_id)
                 ).all()
-                return _ok({
-                    "formats": [
-                        {
-                            "id":   str(r.id),
-                            "slug": r.slug,
-                            "name": r.name,
-                            "data": r.data,
-                        }
-                        for r in rows
-                    ]
-                })
+                out = []
+                for r in rows:
+                    data = r.data or {}
+                    linked = data.get("linked_styles") or data.get("caption_classes") or []
+                    out.append({
+                        "id":   str(r.id),
+                        "slug": r.slug,
+                        "name": r.name,
+                        "data": data,
+                        "resolved_css": css_for(linked),
+                    })
+                return _ok({"formats": out})
         except Exception as exc:
             logger.exception("fetch_format_library failed")
             return _err(f"fetch_format_library failed: {exc}")
@@ -441,7 +471,6 @@ def build_content_mcp_server(
                             "topic":         r.topic,
                             "hook_type":     r.hook_type,
                             "status":        r.status,
-                            "day_index":     r.day_index,
                             "posted_at":     r.posted_at.isoformat() if r.posted_at else None,
                             "perf":          r.perf,
                         }

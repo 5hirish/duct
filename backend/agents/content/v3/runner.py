@@ -820,7 +820,14 @@ class ClaudeContentRunner:
     DEFAULT_DRAFT_MAX_TURNS = 60
 
     def __init__(self, api_key: str) -> None:
-        if not api_key:
+        # An empty api_key is allowed: in local dev the SDK falls back to the
+        # `claude` OAuth login (subscription credit). The SDK env injection in
+        # run_plan/run_draft only sets ANTHROPIC_API_KEY when non-empty, so an
+        # empty key cleanly defers to OAuth. Routes gate prod via
+        # allow_subscription_auth().
+        from config import allow_subscription_auth
+
+        if not api_key and not allow_subscription_auth():
             raise ValueError("ANTHROPIC_API_KEY is required for ClaudeContentRunner.")
         self._api_key = api_key
 
@@ -927,7 +934,7 @@ class ClaudeContentRunner:
         day: Day | None = None,
         topic: str | None = None,
         pillar: str | None = None,
-        format_style: str = "D",
+        format_slug: str = "",
         effort: AgentEffort | None = None,
         adaptive_thinking: bool = True,
         max_turns: int | None = None,
@@ -949,7 +956,7 @@ class ClaudeContentRunner:
             day,
             topic=topic,
             pillar=pillar,
-            format_style=format_style,
+            format_slug=format_slug,
             avatar=None,
             recent_posts=[],
         )

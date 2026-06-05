@@ -57,18 +57,21 @@ class Perf(BaseModel):
 
 
 class Day(BaseModel):
-    """One entry in ContentPlan.days[]."""
+    """One entry in ContentPlan.days[] — an ordered content item for the month.
+
+    Items are ordered by their position in the list; there is no day number.
+    The calendar lays them out on sequential dates from the 1st of the month.
+    """
 
     model_config = ConfigDict(extra="forbid")
 
-    day: int = Field(ge=1, le=31)
     topic_id: str | None = None
     topic: str = ""
     pillar: str = ""
     status: Literal["pending", "draft", "posted", "discarded"] = "pending"
     post_type: Literal["slideshow", "video", "image"] = "slideshow"
     post_id: UUID | None = None
-    format_style: str = "D"
+    format_slug: str = ""   # which library format to build with (e.g. "format-d")
     avatar_id: UUID | None = None
     platforms: list[Platform] = Field(default_factory=lambda: [Platform.TIKTOK])
 
@@ -307,7 +310,7 @@ class PostDraft(BaseModel):
     topic: str
     topic_id: str | None = None
     post_type: Literal["slideshow", "video", "image"] = "slideshow"
-    format_style: str = "D"
+    format_slug: str = ""   # which library format to build with (e.g. "format-d")
     avatar_id: UUID | None = None
     slide_count: int = Field(default=7, ge=1, le=20)
     slides_html: str

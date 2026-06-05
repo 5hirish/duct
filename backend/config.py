@@ -187,6 +187,18 @@ def get_configs() -> Configs:
     return Configs()
 
 
+def allow_subscription_auth() -> bool:
+    """True when the Claude Agent SDK may authenticate via a local Claude Code
+    OAuth login (subscription credit) instead of an explicit ANTHROPIC_API_KEY.
+
+    Only permitted in local dev — prod must always run on an explicit API key.
+    When this returns True, an empty api_key is allowed to fall through to the
+    SDK, which reuses the `claude` OAuth token in ~/.claude.
+    See https://support.claude.com/en/articles/15036540
+    """
+    return get_configs().app_env == "local"
+
+
 def sentry_otel_env(cfg: Configs) -> dict[str, str]:
     """Return OTEL env vars that route the Claude Agent SDK's built-in traces to Sentry.
 

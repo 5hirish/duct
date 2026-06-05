@@ -400,7 +400,7 @@ before changing the prompt.
 ORCHESTRATOR_BASE_PROMPT = """\
 You are the Content Orchestrator for a social-media content engine.
 
-You produce 30-day plans of TikTok-style carousel posts (and individual
+You produce monthly content plans of TikTok-style carousel posts (and individual
 post drafts on demand) tuned to the user's project brand, audience, and
 content goals. You collaborate via chat in a split workspace: chat on the
 left, an adaptive viewport on the right that renders the plan or post.
@@ -626,7 +626,7 @@ PostDraft shape with slides_html="":
 {{"type": "post", "project_id": "<uuid>",
   "post_dir_slug": "YYYY-MM-DD-NNN",
   "pillar": "<id>", "topic": "<title>",
-  "post_type": "slideshow", "format_style": "D",
+  "post_type": "slideshow", "format_slug": "format-d",
   "slide_count": 7, "slides_html": "",
   "caption": "...", "hashtags": ["#tag1"],
   "hook_type": "curiosity_gap",
@@ -651,20 +651,27 @@ You are a slides sub-agent (STAGE 2). Given an existing post's metadata,
 produce the slides_html field — a self-contained <!doctype html>…</html>
 document.
 
-STRUCTURE RULES (must follow):
-- Each slide: <div class="slide" id="slide-NN"> at 1080px × 1920px,
-  position:relative.
-- Safe text zone: width 900px, height 1635px (right 180px + bottom 285px
-  = TikTok UI).
-- Horizontal padding ≥ 72px on text-bearing slides.
-- Minimum source font size 44px. Body/bullets ≥ 48px. Sub-headlines
-  ≥ 72px. Headlines ≥ 96px.
-- White text on photo background: gradient overlay rgba(0,0,0,0.6) +
-  text-shadow 0 2px 24px rgba(0,0,0,0.6).
-- Every visual is <img src="" alt="<prompt from image_prompts>"> — no
-  SVG, no inline event handlers (sandbox iframe rejects them).
-- <head>: viewport=device-width, Google Fonts (Inter + Playfair Display),
-  one <style> block.
+CSS — DO NOT WRITE IT FROM SCRATCH:
+- FIRST call fetch_format_library. Find the format whose slug matches the
+  post's format_slug (fall back to the only/first format). Take its
+  `resolved_css` and inline it VERBATIM as the single <style> block.
+- resolved_css already defines the slide engine + the linked styles. Use
+  those classes — do NOT redefine or invent caption/hook/layout CSS:
+    · photo slides: <div class="slide slide-hook"> with
+      <img class="bg" …> + <div class="grad"></div> + <div class="cap-bottom">…
+    · captions inside .cap-bottom: cap-stroke / cap-pill / cap-raw /
+      cap-whisper (+ their -sub variants); slide-1 hook: hook-headline / hook-sub
+    · text-only fallback: <div class="slide slide-body"><div class="body-content">
+      <span class="body-statement">…</span></div></div>
+- Only add tiny per-post tweaks if truly needed; never restyle a provided class.
+
+STRUCTURE RULES:
+- Each slide: <div class="slide" id="slide-NN"> (1080×1920, the engine handles size).
+- Keep text inside the safe zone (resolved_css already insets .cap-bottom).
+- Every visual is <img src="" alt="<prompt from image_prompts>"> — no SVG, no
+  inline event handlers (sandbox iframe rejects them).
+- <head>: viewport=device-width, Google Fonts (Inter + Playfair Display), the
+  single <style> block containing resolved_css.
 
 OUTPUT: strict JSON, no prose, no markdown fences. Return the SAME
 PostDraft shape you received — copy every field through — with
@@ -713,9 +720,10 @@ Pillars:
 def _mode_tail(mode: RunMode) -> str:
     return {
         "plan_month": (
-            "MODE: plan_month — your deliverable this turn is a full 30-day "
-            "plan as a PlanDraft wrapped in <duct_report>. Call submit_plan "
-            "once after emitting the tag."
+            "MODE: plan_month — your deliverable this turn is a full monthly "
+            "content plan (an ordered list of posts for the current month, no "
+            "day numbers) as a PlanDraft wrapped in <duct_report>. Call "
+            "submit_plan once after emitting the tag."
         ),
         "draft_post": (
             "MODE: draft_post — your deliverable this turn is ONE PostDraft "
@@ -771,7 +779,7 @@ def build_plan_user_prompt(
 
 {_research_stanza(research)}
 
-Plan a 30-day content calendar for {brand.project_name}.
+Plan a content calendar for the current month for {brand.project_name}.
 
 Recent history (last 30):
 {history_lines}
@@ -791,7 +799,7 @@ Now:
    hashtags / hooks / styles — fold those into the plan directly. Only
    dispatch research_pillar sub-agents for pillars that BOTH lack topic
    bank coverage AND aren't covered by the trending signals above.
-3. Synthesize the 30-day plan: balanced pillar distribution favouring
+3. Synthesize the monthly plan: balanced pillar distribution favouring
    under-used pillars from pillar_history; varied hook EMOTIONS
    ({{frustration, shock, disbelief, anger, sadness}} — never twice in a
    row); sensible post-type mix; narrative arc.
@@ -809,7 +817,7 @@ Now:
        Post 4: glasses / frames → "follow — I'm doing a full style audit next"
 
    Each post works STANDALONE but rewards followers with continuity.
-   With a 30-day plan and ~4-post series, aim for 6-8 micro-series; you
+   With a month of posts and ~4-post series, aim for 6-8 micro-series; you
    can repeat a pillar across series with different angles (e.g.
    face_shape series A: cuts; face_shape series B: glasses).
 
@@ -890,7 +898,7 @@ def build_post_user_prompt(
     *,
     topic: str | None = None,
     pillar: str | None = None,
-    format_style: str = "D",
+    format_slug: str = "",
     avatar: "Avatar | dict | None" = None,
     recent_posts: list[dict] | None = None,
 ) -> str:
@@ -903,13 +911,13 @@ def build_post_user_prompt(
     )
     if day is not None:
         target = (
-            f"Day {day.day} · topic={day.topic} · pillar={day.pillar} · "
-            f"format_style={day.format_style} · post_type={day.post_type}"
+            f"topic={day.topic} · pillar={day.pillar} · "
+            f"format_slug={day.format_slug} · post_type={day.post_type}"
         )
     else:
         target = (
             f"Standalone draft · topic={topic or '(unspecified)'} · "
-            f"pillar={pillar or '(unspecified)'} · format_style={format_style}"
+            f"pillar={pillar or '(unspecified)'} · format_slug={format_slug}"
         )
     avatar_summary = (
         json.dumps(avatar, default=str)

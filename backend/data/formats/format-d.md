@@ -1,0 +1,350 @@
+> **Duct adaptation note (not part of the original spec).**
+> The CSS for `cap-stroke` / `cap-pill` / `cap-raw` / `cap-whisper` /
+> `hook-headline` and the slide engine lives in Duct's shared **style registry**
+> (Library → Styles). This format's **linked styles** resolve to that CSS, and
+> `build_slides_html` inlines it verbatim (`fetch_format_library` →
+> `resolved_css`) into one `<style>` block — it does **not** write caption/hook
+> CSS from scratch. So the class names below are real, shipped classes; the old
+> `formats/css/*` files and the `tiktok-gen` skill are not used in Duct.
+
+---
+
+# Format D — UGC / Raw Authentic
+
+**Default format for all posts.**
+
+---
+
+## Philosophy
+
+Every slide (1–5) has a real iPhone photo. The text overlay is how she's talking to you — direct, a little urgent, no polish. Slides 6–7 break to a dark background to signal a different moment.
+
+The reference: viral beauty carousels that get 1M+ views with iPhone photos + two lines of bold text on every slide.
+
+---
+
+## Slide Structure (7 slides)
+
+| Slide | Type | Background | Caption style |
+|-------|------|------------|---------------|
+| 1 | Hook | iPhone photo, full-bleed, text bottom-anchored | `hook-headline` / `hook-sub` |
+| 2 | Open loop | iPhone photo or illustration | `cap-stroke` — punchy |
+| 3 | Finding 1 + self-test | iPhone photo or illustration | `cap-stroke` (personal story arc) · `cap-pill` (comparative/educational — see Caption Styles) |
+| 4 | Finding 2 + cliffhanger | iPhone photo or illustration | `cap-stroke` — escalating tension |
+| 5 | Emotional peak / revelation | iPhone photo only | `cap-raw` — quiet, intimate |
+| 6 | Personal bridge | Dark `#1A0A10` — no photo | `bridge-statement` (bridge.css) |
+| 7 | Comment bait CTA | Dark `#1A0A10` — no photo | `cta-question` (cta.css) |
+
+If the post is a personal story arc, the emotional peak slide needs a real face — don't use an illustration there. Slides 6–7 stay dark to signal a different moment.
+
+---
+
+## Slide Backgrounds — Three Types
+
+Each of slides 1–5 uses one of three background types. Decide before generating any images.
+
+### 1. iPhone photo — personal narrator (same character)
+
+One woman across all five slides, five different settings. Use when the post IS a personal story — the viewer should feel they're following the same creator through her discovery. Builds the "I know this person" feeling that drives follows.
+
+**Use for:** `ai_pov`, `glow_up_identity`, any first-person discovery arc.
+
+**Setting rotation — suggested defaults for variety:**
+
+These are starting points when no stronger narrative reason exists. Override whenever a setting better serves the story moment (see skill.md — Step 3E). The setting should earn its place.
+
+| Slide | Suggested default | Override when… |
+|-------|------------------|----------------|
+| 1 | Bathroom vanity or morning bedroom | Any setting where the hook moment naturally happens |
+| 2 | Coffee shop near window | The open-loop energy fits a different social/private setting |
+| 3 | Outdoor overcast or street | The demonstration is better shown in another environment |
+| 4 | Bedroom golden hour | The reactive moment calls for a different private space |
+| 5 | Kitchen or living room candid | The revelation maps more naturally to another setting |
+
+**How to generate consistent character:**
+1. Generate slide 1 first. Get approval on the face before continuing.
+2. For slides 2–5: pass the approved `slide-01-bg.jpeg` as `input_image_path`.
+3. Prepend to every subsequent prompt:
+   ```
+   Same person as the reference image — maintain her facial features, skin tone,
+   hair colour and texture exactly. New expression: [describe]. New setting: [describe].
+   Same lighting temperature as the reference: [copy exact lighting line from slide-01].
+   Different body language: [specific action/gesture for this slide].
+   ```
+4. Never pass a reference if: it hasn't been approved, slides intentionally show different subjects, or the reference has AI artifacts.
+
+---
+
+### 2. iPhone photo — different subjects
+
+Different people per slide. Use when the content IS the visual comparison — each slide's subject demonstrates the concept being taught.
+
+**Use for:** `face_shape` (showing different face shapes), `color_aura` (showing different seasons/undertones), `transformation` (before/after different people). Any post where diversity of subjects adds credibility.
+
+Generate each slide independently with its own prompt. No reference image.
+
+---
+
+### 3. Pinterest-style illustration or diagram
+
+An editorial illustration — hand-drawn aesthetic, minimal line work, flat colour or light wash. Should look like something saved from a beauty/style Pinterest board, not a polished brand infographic.
+
+**Use for:** face shape silhouettes, colour season wheels, measurement diagrams, "this vs that" visual comparisons. Slides 2–4 on educational posts where a photo of a person communicates the concept less clearly than a drawing.
+
+**Don't use on the emotional peak slide in a story arc** — that slide needs a real face. Fine on any slide in a purely educational/illustration post.
+
+Prompt guidance in the Gemini Image Prompt Template section below.
+
+---
+
+## Caption Styles
+
+Three classes from the shared style registry (Library → Styles), linked by this format.
+
+| Class | Visual | Use on | Don't use on |
+|-------|--------|--------|--------------|
+| `cap-stroke` | Bold white + thick black outline. Readable on any photo, any lighting. | Slide 2 (open loop), slide 3 (personal story revelation), slide 4 (escalation). Any punchy moment. | Slide 5 revelation — too aggressive for an intimate moment. |
+| `cap-pill` | Each line on its own solid black pill. Readable even on bright/busy photos. | Slide 3 **when** the content is a genuine comparison or data-heavy list (multiple named items, sequential options). | Slide 1, slide 5. Also avoid on bright/high-energy outdoor photos — dark pill backgrounds look heavy. Use `cap-stroke` for slide 3 when the finding is a personal first-person revelation, not a data chart. |
+| `cap-raw` | Clean white text, no outline, no background. Looks like the TikTok text tool. | Slide 5 (emotional peak — intimate, quiet). Sadness/disbelief hooks. | Any bright photo — text disappears. Only use when photo is dark (golden hour, indoor, overcast). |
+
+Slide 1 uses `hook-headline` / `hook-sub` from `hook-bottom.css` — not the caption classes above.
+
+**One caption block per slide.** Real high-performing TikTok carousels use a single stacked text block per slide — not a large headline with a smaller subtitle below it. Use `<br>` to break at natural speech pauses; all lines stay the same weight and size. The `-sub` variant classes exist for genuinely different register text (like a whispered aside), not as a default subtitle on every slide. When in doubt: one block, same class throughout.
+
+Each class's CSS + usage lives in the style registry (Library → Styles); the slide builder inlines it automatically.
+
+---
+
+## Per-slide expression and gesture guidance (Format D)
+
+These are execution defaults for Format D's visual language. The emotional arc from skill.md always takes priority — if the copy's emotional moment conflicts with these defaults, the copy wins. These are starting points, not mandates.
+
+### Composition by viewer relationship
+
+| Slide | Viewer relationship | Composition guideline |
+|-------|--------------------|-----------------------|
+| 01 Hook | Direct address | Phone-in-hand selfie tends to work — she's looking at you, sharing something. Eye contact into lens is required (conversion). |
+| 02 Rising action | Direct address — conspiratorial | Phone-in-hand or leaning toward camera. Still talking to you, personality showing. |
+| 03 Demonstration | Showing you something | Selfie works if she's pointing/showing at herself. Candid or in-action can land better if she's mid-gesture in an environment. Match to what she's demonstrating. |
+| 04 Reactive moment | You're witnessing | Candid tends to feel more real — a private moment caught rather than performed. Phone-in-hand selfie can feel forced for a vulnerability beat. |
+| 05 Revelation | You're witnessing | Portrait or candid often works better — she's settled into a truth, not addressing you. Phone on stand, timer, or photographed-by-someone are all valid. She doesn't need to hold the phone. |
+
+**Key guideline:** Phone-in-hand is right when she's talking to the viewer. It can feel wrong when the slide is about the viewer witnessing something private. Ask which one this slide is.
+
+### Expression and eye state defaults
+
+| Slide | Expression (face) | Eye state | Physical tell |
+|-------|-------------------|-----------|---------------|
+| 01 | Lips slightly parted — caught mid-exhale. One brow barely raised. The "oh" before speaking. | Slightly widened, catching light — alive, brow barely raised. **Direct eye contact into camera lens — required.** | Phone at chest height or arm's length. Body slightly turned toward camera. |
+| 02 | Closed-mouth smile pulling to one side — the look just before saying something you can't believe. Head tilted forward, chin slightly down. | Amused softening at outer corners — she knows something | Leaning forward, shoulders forward — conspiratorial energy |
+| 03 | Mouth open mid-demonstration, cheeks lifted, brows animated. Mid-sentence — showing, not posing. | Wide, direct, energised — peak expressiveness | Hand actively gesturing or pointing, body angled toward camera |
+| 04 | Both brows raised, soft "oh—" shape — caught mid-realisation. Head tilted gently back. | Slightly wider, caught mid-process, brows up | One hand touching own hair or face — the involuntary self-check |
+| 05 | Mouth relaxed, slight upward curve. Face still, head level. | Full steady warm direct contact — all emotion lives here. Not downcast. Not tired. | Body at ease — leaning, sitting, or standing naturally. No forced pose. |
+
+**Gesture repetition rule:** Before writing slide N prompt (N ≥ 2), list all gestures from slides 1 through N−1. Add to the prompt: "NOT [prior gesture]." Prevents Gemini from repeating the same gesture across slides.
+
+**Setting-composition coherence (requirement — affects realism):** Mirror selfie compositions are only plausible in settings that contain a mirror (bathroom, bedroom). For kitchen, coffee shop, or outdoor settings, prompt: "NOT a mirror selfie, no mirror visible."
+
+---
+
+## Layout: All Photo Slides
+
+All slides 1–5 use `class="slide slide-hook"`. CSS defined in `hook-bottom.css`:
+- Background image: `.bg` class, full-bleed, `object-position: center 15%`
+- Gradient: `.grad` class, bottom-to-top, darkens lower 65% of the slide
+- Caption block: `.cap-bottom` class, anchored above the TikTok caption bar
+- Text safe zone: clears TikTok action buttons on the right and the caption bar at the bottom
+
+---
+
+## Face Shape Anatomy Reference
+
+**Fill in [FACE SHAPE] using these anatomical descriptions — copy the exact language into prompts.**
+
+| Shape | Anatomical description for prompt |
+|-------|----------------------------------|
+| Heart | Wide forehead (widest point of face), high prominent cheekbones, face narrows significantly toward a pointed chin — overall silhouette is an inverted triangle, wider at hairline than at jaw |
+| Oval | Face slightly longer than wide, gentle rounded jawline, forehead slightly wider than jaw, balanced proportions with no single feature dominating |
+| Round | Face as wide as it is long, fullest at cheeks, short forehead-to-chin distance, soft rounded jaw with no sharp angles |
+| Square | Wide angular forehead, wide jaw, strong defined jawline approximately equal width to forehead — face looks roughly square in overall outline |
+
+**If the post content claims the model has a specific face shape, her actual face in the image MUST match. Describe the anatomy explicitly in the prompt. Do not assume the model will be generated with the right shape — you must specify it.**
+
+---
+
+## Gemini Image Prompt Templates
+
+### Template A — iPhone photo
+
+Fill in every field below before generating. Vague fields produce the AI look. The more specific the physical and cinematic description, the more the result looks like a real photograph.
+
+#### Fields to fill in
+
+**1. Subject — physical features**
+- Face shape: [copy exact anatomical description from Face Shape Reference above — required for face_shape pillar posts]
+- Age: [22–26]
+- Attractiveness anchor: ALWAYS include — "naturally attractive and healthy-looking — the kind of person you'd genuinely follow" — Gemini defaults to neutral/average without this, which reads as tired or unappealing
+- Ethnicity and skin: [e.g. "South Asian woman, medium-warm brown skin with golden undertone, slight natural flush across cheeks"]
+- Skin texture: [visible pores on nose bridge, natural asymmetry in brow arch, slight redness around nostrils, subtle under-eye shadows — name what makes the skin look real]
+- Face asymmetry: [left brow sits slightly higher than right / one cheek slightly fuller — natural imperfection signals]
+- Hair: [COLOUR + STYLE + SPECIFIC TEXTURE DETAIL — e.g. "chestnut brown, loose waves 2–3 inches below shoulder, natural frizz at temples, 2 visible flyaways catching side light, not freshly styled"]
+- Makeup: [none — bare skin / mascara only, no liner / subtle tinted moisturiser, no concealer]
+
+**2. Content-driven features — mandatory cross-check**
+Before writing the prompt, check: does the copy claim she has face shape X? Hairstyle Y? Outfit colour Z? These MUST be visible in the image:
+- Face shape post — describe the face shape anatomy explicitly
+- Hairstyle post — that exact hairstyle must be on her head
+- Colour/season post — that colour must be in her outfit or what she's holding
+
+**3. Scene direction**
+- Expression: [MICRO-EXPRESSION — not just an emotion, describe the specific muscle movements. e.g. "left corner of mouth barely raised in a wry almost-smile, brow relaxed, eyes direct and steady — the look of someone who has accepted a difficult truth. Not performing emotion."]
+- Eye direction: [DIRECTLY into camera lens / gaze drifted 30° left, unfocused, mid-thought / looking down at hands / looking slightly past camera at something off-frame]
+- Eye quality: [warm catch light from window at camera-right / no catch light — flat interior light / eyes slightly hooded from natural fatigue]
+- Head angle: [straight-on / slight three-quarter turn, left cheek toward camera / chin slightly lowered, not chin-up model pose]
+- Body language: [SPECIFIC — e.g. "weight shifted to left hip, right shoulder slightly dropped, spine naturally curved — not standing at attention"]
+- Hands and gesture: choose based on the slide's viewer relationship — see composition guideline table in "Per-slide expression and gesture guidance" above. Phone-in-hand selfie works for direct-address slides (01–02); candid or portrait tends to feel more natural for witnessed moments (04–05). There's no single right answer — match the composition to what makes the emotional moment feel real.
+- Clothing: [SPECIFIC NATURAL OUTFIT — colour, cut, fabric only. NEVER describe what is wrong with it in colour-theory terms — "washed out against her skin", "drains colour from her face" bleed into how the model looks. e.g. "faded sage green oversized knit, slight pilling at cuffs, real fabric texture at shoulder seam"]
+
+**4. Setting and lighting**
+- Location: [one of the five below]
+- Lighting source: [NAME IT — WARM IS THE DEFAULT for indoor scenes. Overcast/grey/diffused flat light photographs as lifeless. e.g. "warm afternoon window light, golden, 4800K, soft and directional" / "practical bedside lamp at 2700K, warm fill". Reserve "overcast" for outdoor street scenes only.]
+- Lighting direction: [45° from camera-left / directly from above / backlit from behind subject / practical lamp in background, face underlit]
+- Lighting quality: [hard directional — sharp shadow edge / soft diffused — no shadow edge / bounced off white wall — fill light]
+- Shadow description: [natural shadow falloff on right cheek from left-source light / rim light catching left ear and hair edge / dappled light from window blinds]
+- Background elements: [NAME SPECIFIC THINGS — blurred wooden shelving / out-of-focus figure sitting 3 metres back / steaming coffee cup at frame edge / unmade linen just visible / chipped paint on wall]
+- Background exposure: [background 1–2 stops underexposed relative to subject / background evenly lit / slightly overexposed window creating silhouette edge]
+
+**Setting options:**
+| Setting | Time | Light source |
+|---------|------|-------------|
+| Bathroom vanity | Morning | Side-window light, skincare products on counter |
+| Bedroom window | Late afternoon golden hour | Side window, warm 4800K, unmade linen visible |
+| Coffee shop | Midday or overcast afternoon | North window, overhead ambient, ceramic cup on wooden table |
+| Outdoor street | Overcast or low golden hour | Open sky / directional sun, blurred brick or concrete background |
+| Kitchen / living room | Evening | Practical lamp at 2700K, cooler fill from phone/TV screen optional |
+
+**5. Camera and film simulation**
+- Camera body: [iPhone 14 Pro rear camera, 26mm main lens — OR — shot on Contax T2, 38mm f/2.8 for more analog feel]
+- Mode: [portrait mode, f/1.8 equivalent background separation — OR — standard mode, deeper focus, more environmental]
+- ISO: [800 — bright outdoor / 1200 — indoor daylight / 1600–2000 — evening, low light]
+- Film simulation: [Kodak Portra 400 warmth, lifted shadows, creamy highlights — OR — Fuji Superia 400, slightly cooler, green-tinted shadows — OR — pushed grain, heavy texture, high contrast]
+- Grain: [fine realistic grain / moderate grain / heavy pushed grain]
+- Optical character: [slight vignette at corners / realistic chromatic aberration at frame edges / slight lens warmth / no lens flare]
+
+**6. Mood line**
+One sentence: what was she doing 2 seconds before this frame was captured? What is she reacting to?
+
+**7. Photographer reference (optional but powerful)**
+Add one: [Nan Goldin — raw intimate confessional / Martin Parr — deadpan documentary / Vivian Maier — candid unposed / Diane Arbus — frontal direct gaze / William Eggleston — everyday colour snapshot]
+
+#### Mandatory tail — append to every iPhone photo prompt
+```
+documentary photography, photojournalistic, unposed, candid, available light only,
+visible pores, natural skin asymmetry, natural imperfections, not retouched,
+slight realistic grain, slight lens vignette, slight chromatic aberration at frame edges,
+no airbrushing, no AI skin smoothing, no plastic skin, no poreless face,
+NO AI perfection, NO symmetry perfection, no studio lighting, no ring light,
+no commercial photography aesthetic, no stock photo look, no posed expression
+```
+
+#### Mandatory negative concepts — add "Avoid: [these]" at end
+```
+Avoid: studio backdrop, cream walls, ring light, artificial circular bokeh,
+perfectly symmetrical face, airbrushed skin, retouched, posed model expression,
+professional studio lighting, stock photo aesthetic, overly saturated, CGI, 3D render
+```
+
+---
+
+**When using consistent character (same person across slides), prepend:**
+```
+Same person as the reference image — maintain her face shape, facial features, skin tone,
+skin texture, hair colour and texture exactly. Do not alter the face structure.
+New expression: [MICRO-EXPRESSION — describe specifically].
+New setting: [location, light source, direction, quality].
+New body language: [specific pose, gesture, hand position].
+Different outfit appropriate to the new setting.
+```
+
+**Do NOT pass a reference image if:** it hasn't been approved, the reference has AI artifacts (too-smooth skin, fake symmetry), or the slides intentionally show different subjects.
+
+---
+
+### Template B — Pinterest-style illustration
+
+Use for educational slides where a diagram communicates the concept better than a photo.
+
+```
+[DESCRIBE THE CONCEPT — e.g. "face shape silhouette diagram showing heart face shape",
+"colour season wheel divided into warm/cool/neutral sections",
+"before/after hairstyle sketch for square face"].
+
+Style: hand-drawn editorial illustration. Pinterest beauty board aesthetic.
+Loose ink line work or brush strokes. Flat or light watercolour wash.
+Colour palette: [pick 2–3 tones — e.g. "dusty rose, cream, and charcoal" /
+"terracotta, warm ivory, and deep brown"].
+NOT a polished infographic. NOT vector clip art. NOT a brand deck visual.
+Feels like an illustration from a style magazine or a saved Pinterest pin.
+
+Dark area at bottom [35–40]% of frame — clear text zone for caption overlay.
+9:16 portrait orientation. No text, no labels, no numbers in the image.
+
+illustration style, editorial beauty, hand-drawn, Pinterest aesthetic,
+flat wash colour, loose sketch, not polished, not corporate, not infographic
+```
+
+**Visual targets by content type:**
+
+| Content | What to illustrate |
+|---------|-------------------|
+| Face shape | Minimal face outline silhouette — just the jawline, cheekbones, forehead curve. One shape per slide. |
+| Colour season | Abstract colour swatch arrangement or a loose wheel — warm vs cool tones shown as organic colour blocks. |
+| Hairstyle | Loose sketch of the hairstyle shape around a head outline — like a salon consultation sketch. |
+| Measurement / proportion | Simple line diagram with a single measurement marked — e.g. "2 inches below the chin" shown as a dotted line. |
+
+---
+
+## Styling
+
+Do **not** write caption/hook/layout CSS by hand. The slide builder calls
+`fetch_format_library`, takes this format's `resolved_css` (the shared base
+engine + its linked styles), and inlines it verbatim into the single `<style>`
+block. Use the shipped classes:
+
+| Class | Use on |
+|-------|--------|
+| `hook-headline` / `hook-sub` | Slide 1 hook |
+| `cap-stroke` (+ `-sub`) | Slides 2–4 — punchy captions over photos |
+| `cap-pill` | Slide 3 — comparison / data-heavy lines |
+| `cap-raw` (+ `-sub`) | Slide 5 — quiet, intimate revelation |
+| `cap-whisper` | Image-is-the-content slides — tiny label |
+| `body-neutral` | Text-only fallback when no photo was generated |
+
+The engine (slide shell, safe zones, film grain, photo `.bg` + `.grad`,
+`.cap-bottom`) is always included by `resolved_css`. Slides 6–7 (bridge / CTA)
+are brand-colored and not yet in the shared registry — render those with simple
+dark background + white/accent text for now.
+
+---
+
+## What makes Format D fail
+
+- Same photo repeated on multiple slides — lazy, kills the UGC feel
+- Studio / ring light / cream backdrop in any image — kills authenticity immediately
+- Warm paper or gradient backgrounds on body slides — looks like Canva, not TikTok
+- Polished infographic or vector clip art illustration — looks like a brand deck, not TikTok
+- Illustration on the emotional peak slide of a story arc post — kills the intimacy; that slide needs a real face
+- Consistent character when the content shows different subjects — confusing and wrong
+- More than 25 words on any single slide — won't fit at phone scale
+- Stroke text on a quiet emotional moment — too aggressive
+- Raw text on a bright photo — unreadable
+- Pill text on a 3-word hook — over-engineered
+- Brand name or logo on slides 1–6 — algorithmic death
+- Text in the right 180px — covered by TikTok action buttons
+- More than 7 slides — completion rate drops before the bridge
+- Describing the model's appearance using the emotional concept ("washed out", "drains colour", "muted and real" as person descriptors) — Gemini generates a visually grey, unwell-looking person. Describe clothing neutrally; put the emotional concept in the expression only.
+- Overcast/grey/diffused flat light for indoor scenes — photographs as lifeless. Warm window light or lamp light is the default indoors.
+- Model not looking at camera on direct-address slides — breaks the personal TikTok connection. On slide 1 specifically, direct eye contact into the lens is non-negotiable — averted gaze on the hook frame breaks viewer connection before a word is read.
+- Mirror selfie composition in a mirrorless setting (kitchen, coffee shop, outdoor) — looks implausible. Either choose a bathroom/bedroom and name the mirror, or explicitly prompt "direct arm-extended selfie, no mirror visible."
+- `cap-pill` on a bright, high-energy outdoor or lifestyle photo — heavy dark pill backgrounds clash. Use `cap-stroke` for personal story revelation slides on bright photos.
+- No attractiveness anchor in the prompt — Gemini defaults to "average/neutral" which often reads as tired or unappealing. Add "naturally attractive and healthy-looking — the kind of person you'd genuinely follow" to every prompt.

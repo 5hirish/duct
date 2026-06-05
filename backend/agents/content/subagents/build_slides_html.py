@@ -7,8 +7,9 @@ Stage 2 (this) takes an existing post's metadata and produces the
 slides_html field on demand. Runs only when the user clicks "Build
 slides" on a card, so most plans never pay this cost.
 
-Tools: WebSearch only — slide HTML doesn't need WebFetch or MCP readers,
-the metadata brief carries everything the agent needs.
+Tools: WebSearch + fetch_format_library — the latter supplies resolved_css
+(shared base engine + the format's linked styles) so the agent inlines the
+canonical caption/hook CSS instead of inventing it per run.
 """
 
 from __future__ import annotations
@@ -27,5 +28,9 @@ BUILD_SLIDES_AGENT = AgentDefinition(
     ),
     prompt=BUILD_SLIDES_PROMPT,
     model=ModelName.CLAUDE_SONNET.value,
-    tools=[AgentTool.WEB_SEARCH.value],
+    tools=[
+        AgentTool.WEB_SEARCH.value,
+        # Pull the format's resolved_css (base engine + linked styles) to inline.
+        "mcp__duct_content__fetch_format_library",
+    ],
 )
