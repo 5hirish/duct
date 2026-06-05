@@ -4,6 +4,20 @@
  */
 
 import { BASE } from "./api";
+import { cached, invalidate } from "./contentCache";
+
+// Cache TTLs (ms). Short — these only smooth out tab-switch refetches.
+const TTL_POSTS     = 60_000;
+const TTL_BRAND     = 120_000;
+const TTL_ANALYTICS = 120_000;
+const TTL_FORMATS   = 120_000;
+
+/** Resolve a backend-relative asset URL (e.g. /uploads/...) to an absolute URL. */
+export function mediaUrl(u) {
+  if (!u) return "";
+  if (/^(https?:|data:|blob:)/i.test(u)) return u;
+  return `${BASE}${u.startsWith("/") ? "" : "/"}${u}`;
+}
 
 function backendApiHeaders(extra = {}) {
   const headers = { ...extra };
@@ -153,11 +167,13 @@ export async function consumeSseStream(body, onEvent, signal) {
 // ---------------------------------------------------------------------------
 
 export async function getBrandContext(projectId) {
-  const res = await fetch(
-    `${BASE}/api/content/brand?project_id=${encodeURIComponent(projectId)}`,
-    { headers: backendApiHeaders() },
-  );
-  return jsonOrThrow(res);
+  return cached(`brand:${projectId}`, TTL_BRAND, async () => {
+    const res = await fetch(
+      `${BASE}/api/content/brand?project_id=${encodeURIComponent(projectId)}`,
+      { headers: backendApiHeaders() },
+    );
+    return jsonOrThrow(res);
+  });
 }
 
 export async function putBrandContext(projectId, body) {
@@ -169,7 +185,9 @@ export async function putBrandContext(projectId, body) {
       body: JSON.stringify(body),
     },
   );
-  return jsonOrThrow(res);
+  const out = await jsonOrThrow(res);
+  invalidate(`brand:${projectId}`);
+  return out;
 }
 
 export async function listPlans(projectId) {
@@ -200,15 +218,24 @@ export async function patchPlanDay(planId, day, patch) {
   return jsonOrThrow(res);
 }
 
+// Posts + their PostBridge-sourced analytics both depend on post state, so any
+// post write clears both. Broad (prefix) invalidation keeps it simple and safe.
+function invalidatePosts() {
+  invalidate("posts:");
+  invalidate("analytics:");
+}
+
 export async function listPosts(projectId, { planId, status } = {}) {
-  const params = new URLSearchParams({ project_id: projectId });
-  if (planId) params.set("plan_id", planId);
-  if (status) params.set("status", status);
-  const res = await fetch(
-    `${BASE}/api/content/posts?${params.toString()}`,
-    { headers: backendApiHeaders() },
-  );
-  return jsonOrThrow(res);
+  return cached(`posts:${projectId}:${planId || ""}:${status || ""}`, TTL_POSTS, async () => {
+    const params = new URLSearchParams({ project_id: projectId });
+    if (planId) params.set("plan_id", planId);
+    if (status) params.set("status", status);
+    const res = await fetch(
+      `${BASE}/api/content/posts?${params.toString()}`,
+      { headers: backendApiHeaders() },
+    );
+    return jsonOrThrow(res);
+  });
 }
 
 export async function getPost(postId) {
@@ -228,7 +255,9 @@ export async function patchPost(postId, patch) {
       body: JSON.stringify(patch),
     },
   );
-  return jsonOrThrow(res);
+  const out = await jsonOrThrow(res);
+  invalidatePosts();
+  return out;
 }
 
 export async function markPostPosted(postId, { tiktokUrl } = {}) {
@@ -240,7 +269,9 @@ export async function markPostPosted(postId, { tiktokUrl } = {}) {
     method: "POST",
     headers: backendApiHeaders(),
   });
-  return jsonOrThrow(res);
+  const out = await jsonOrThrow(res);
+  invalidatePosts();
+  return out;
 }
 
 /**
@@ -265,7 +296,9 @@ export async function publishPost(postId, { socialAccountIds, scheduledAt, tikto
       }),
     },
   );
-  return jsonOrThrow(res);
+  const out = await jsonOrThrow(res);
+  invalidatePosts();
+  return out;
 }
 
 export async function syncPostDaily(postId) {
@@ -273,7 +306,9 @@ export async function syncPostDaily(postId) {
     `${BASE}/api/content/posts/${encodeURIComponent(postId)}/sync-daily`,
     { method: "POST", headers: backendApiHeaders() },
   );
-  return jsonOrThrow(res);
+  const out = await jsonOrThrow(res);
+  invalidatePosts();
+  return out;
 }
 
 export async function syncPostMetrics(postId) {
@@ -281,7 +316,9 @@ export async function syncPostMetrics(postId) {
     `${BASE}/api/content/posts/${encodeURIComponent(postId)}/sync-metrics`,
     { method: "POST", headers: backendApiHeaders() },
   );
-  return jsonOrThrow(res);
+  const out = await jsonOrThrow(res);
+  invalidatePosts();
+  return out;
 }
 
 export async function listSocialAccounts(projectId, platform) {
@@ -290,6 +327,23 @@ export async function listSocialAccounts(projectId, platform) {
   if (platform) url.searchParams.set("platform", platform);
   const res = await fetch(url.toString(), { headers: backendApiHeaders() });
   return jsonOrThrow(res);
+}
+
+/**
+ * Per-post analytics for the project's linked accounts, pulled live from
+ * PostBridge. Pass { refresh: true } to trigger a PostBridge sync first.
+ */
+export async function getContentAnalytics(projectId, { refresh = false } = {}) {
+  const fetchIt = async () => {
+    const url = new URL(`${BASE}/api/content/analytics`);
+    url.searchParams.set("project_id", projectId);
+    if (refresh) url.searchParams.set("refresh", "true");
+    const res = await fetch(url.toString(), { headers: backendApiHeaders() });
+    return jsonOrThrow(res);
+  };
+  // Explicit refresh drops the cache first, then fetches live + repopulates.
+  if (refresh) invalidate(`analytics:${projectId}`);
+  return cached(`analytics:${projectId}`, TTL_ANALYTICS, fetchIt);
 }
 
 /** The social accounts this project has linked (persisted selection). */
@@ -310,15 +364,72 @@ export async function saveLinkedAccounts(projectId, accounts) {
     headers: backendApiHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify({ project_id: projectId, accounts }),
   });
-  return jsonOrThrow(res);
+  const out = await jsonOrThrow(res);
+  // Analytics is scoped to linked platforms — changing the set changes it.
+  invalidate(`analytics:${projectId}`);
+  return out;
+}
+
+/** GET /api/content/styles — shared, read-only style registry (base_css + styles[]). */
+export async function listStyles() {
+  return cached("styles:global", TTL_FORMATS, async () => {
+    const res = await fetch(`${BASE}/api/content/styles`, { headers: backendApiHeaders() });
+    return jsonOrThrow(res);
+  });
 }
 
 export async function listFormats(projectId) {
-  const res = await fetch(
-    `${BASE}/api/content/formats?project_id=${encodeURIComponent(projectId)}`,
-    { headers: backendApiHeaders() },
-  );
-  return jsonOrThrow(res);
+  return cached(`formats:${projectId}`, TTL_FORMATS, async () => {
+    const res = await fetch(
+      `${BASE}/api/content/formats?project_id=${encodeURIComponent(projectId)}`,
+      { headers: backendApiHeaders() },
+    );
+    return jsonOrThrow(res);
+  });
+}
+
+/**
+ * POST /api/content/formats — create or update (idempotent on project_id+slug).
+ * body = { projectId, slug, name, data }
+ */
+export async function upsertFormat({ projectId, slug, name = "", data = {} }) {
+  const res = await fetch(`${BASE}/api/content/formats`, {
+    method: "POST",
+    headers: backendApiHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify({ project_id: projectId, slug, name, data }),
+  });
+  const out = await jsonOrThrow(res);
+  invalidateFormats();
+  return out;
+}
+
+/** PATCH /api/content/formats/{id} — full FormatIn body required by the backend. */
+export async function patchFormat(formatId, { projectId, slug, name = "", data = {} }) {
+  const res = await fetch(`${BASE}/api/content/formats/${formatId}`, {
+    method: "PATCH",
+    headers: backendApiHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify({ project_id: projectId, slug, name, data }),
+  });
+  const out = await jsonOrThrow(res);
+  invalidateFormats();
+  return out;
+}
+
+/** DELETE /api/content/formats/{id} */
+export async function deleteFormat(formatId) {
+  const res = await fetch(`${BASE}/api/content/formats/${formatId}`, {
+    method: "DELETE",
+    headers: backendApiHeaders(),
+  });
+  const out = await jsonOrThrow(res);
+  invalidateFormats();
+  return out;
+}
+
+// A format edit changes the format name posts render, so clear posts too.
+function invalidateFormats() {
+  invalidate("formats:");
+  invalidate("posts:");
 }
 
 export async function listAvatars(projectId) {

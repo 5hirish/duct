@@ -38,10 +38,10 @@ export default function NewPlanSessionPage() {
     );
   }
 
-  function reviseDay(dayIndex) {
+  function reviseDay(index) {
     const params = new URLSearchParams();
     if (latestPlanId) params.set("plan_id", latestPlanId);
-    if (dayIndex)     params.set("day", String(dayIndex));
+    if (index != null) params.set("day", String(index));
     router.push(`/content/posts/new?${params.toString()}`);
   }
 

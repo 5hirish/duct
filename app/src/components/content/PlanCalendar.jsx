@@ -1,165 +1,156 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Images, Video, Image as ImageIcon } from "lucide-react";
 import { STATUS_ORDER, statusMeta } from "../../lib/contentStatus";
+import { dayKey, effectiveSchedule, monthStartOf } from "../../lib/contentSchedule";
+import { PlatformGlyph, platformMeta } from "./platformGlyphs";
+import PostMiniCard from "./PostMiniCard";
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
 ];
+const TYPE_ICON = { slideshow: Images, video: Video, image: ImageIcon };
 
-function pad(n) {
-  return String(n).padStart(2, "0");
+function addDays(d, n) {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
 }
-
-function ymd(date) {
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+function startOfWeek(d) {
+  return addDays(d, -d.getDay());
 }
-
-// Parse a "YYYY-MM-DD" date string to a local Date at midnight (avoids the UTC
-// shift you'd get from new Date("YYYY-MM-DD")).
-function parseISODate(s) {
-  if (typeof s !== "string") return null;
-  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (!m) return null;
-  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
-}
-
-function addDays(date, n) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + n);
+function platformsOf(entry) {
+  const p = entry.post?.platforms?.length ? entry.post.platforms : entry.day?.platforms;
+  return Array.isArray(p) ? p : [];
 }
 
 /**
- * Monthly calendar view of a 30-day plan.
- * Each plan day lands on start_date + (day - 1); cells show a "Day N" chip and
- * a status-colored dot. Cells with a linked post navigate to the editor.
+ * Calendar view of the monthly plan. Items land on their effective date
+ * (published > scheduled > proposed slot), so a day can hold several.
+ *   - view="month" → compact overview (platform logos + per-type counts)
+ *   - view="week"  → time-ordered stacked PostMiniCards per day
  *
- * Props:
- *   - plan: { days[], posts[], start_date }
- *   - onReviseDay?(dayIndex)
+ * Props: { plan, postsById, view, onViewChange, onReviseDay }
  */
-export default function PlanCalendar({ plan, onReviseDay }) {
-  const startDate = useMemo(() => parseISODate(plan?.start_date), [plan?.start_date]);
-  const [cursor, setCursor] = useState(() => {
-    const base = parseISODate(plan?.start_date) || new Date();
-    return { year: base.getFullYear(), month: base.getMonth() };
-  });
+export default function PlanCalendar({ plan, postsById = {}, view = "month", onViewChange, onReviseDay }) {
+  const monthStart = monthStartOf(plan);
 
-  // Map date-key → { dayIndex, status, post } for fast cell lookup.
   const byDate = useMemo(() => {
     const map = new Map();
-    if (!startDate) return map;
+    if (!monthStart) return map;
     const days = Array.isArray(plan?.days) ? plan.days : [];
-    const postsByDay = new Map();
-    for (const post of plan?.posts || []) {
-      if (typeof post.day_index === "number") postsByDay.set(post.day_index, post);
-    }
     days.forEach((d, idx) => {
-      const dayIndex = typeof d.day === "number" ? d.day : idx + 1;
-      const date = addDays(startDate, dayIndex - 1);
-      map.set(ymd(date), {
-        dayIndex,
-        status: d.status || "pending",
-        topic: d.topic,
-        post: postsByDay.get(dayIndex - 1) || postsByDay.get(dayIndex) || null,
-      });
+      const post = d.post_id ? postsById[d.post_id] || null : null;
+      const schedule = effectiveSchedule(d, post, monthStart, idx);
+      if (!schedule.date) return;
+      const k = dayKey(schedule.date);
+      if (!map.has(k)) map.set(k, []);
+      map.get(k).push({ day: d, post, schedule, index: idx });
     });
+    // Time-order each day: timeless (proposed) first, then by time.
+    for (const arr of map.values()) {
+      arr.sort((a, b) =>
+        (a.schedule.hasTime ? 1 : 0) - (b.schedule.hasTime ? 1 : 0) ||
+        (a.schedule.date.getTime() - b.schedule.date.getTime())
+      );
+    }
     return map;
-  }, [plan, startDate]);
+  }, [plan, postsById, monthStart]);
 
-  if (!startDate) {
+  const [monthCursor, setMonthCursor] = useState(() => {
+    const base = monthStart || new Date();
+    return { year: base.getFullYear(), month: base.getMonth() };
+  });
+  const [weekStart, setWeekStart] = useState(() => startOfWeek(monthStart || new Date()));
+
+  if (!monthStart) {
     return (
-      <div className="flex-1 flex items-center justify-center p-8 text-center">
+      <div className="flex flex-1 items-center justify-center p-8 text-center">
         <p className="text-sm text-muted-foreground">
           This plan has no start date, so it can&apos;t be placed on a calendar yet.
-          Switch to the Kanban view, or set a start date when generating the plan.
         </p>
       </div>
     );
   }
 
-  // Build a 6-week (42-cell) grid starting on the Sunday on/before the 1st.
+  const openWeek = (date) => {
+    setWeekStart(startOfWeek(date));
+    onViewChange?.("week");
+  };
+
+  return view === "week"
+    ? <WeekView byDate={byDate} weekStart={weekStart} setWeekStart={setWeekStart} onReviseDay={onReviseDay} />
+    : <MonthView byDate={byDate} cursor={monthCursor} setCursor={setMonthCursor} onOpenWeek={openWeek} />;
+}
+
+// ---------------------------------------------------------------------------
+// Legend + month nav (shared header bits)
+// ---------------------------------------------------------------------------
+
+function Legend() {
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      {STATUS_ORDER.map((s) => {
+        const meta = statusMeta(s);
+        return (
+          <span key={s} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span className={`size-2 rounded-full ${meta.dotClass}`} />
+            {meta.label}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Month view — compact overview
+// ---------------------------------------------------------------------------
+
+function MonthView({ byDate, cursor, setCursor, onOpenWeek }) {
   const firstOfMonth = new Date(cursor.year, cursor.month, 1);
-  const gridStart = addDays(firstOfMonth, -firstOfMonth.getDay());
+  const gridStart = startOfWeek(firstOfMonth);
   const cells = Array.from({ length: 42 }, (_, i) => addDays(gridStart, i));
-  const todayKey = ymd(new Date());
+  const todayKey = dayKey(new Date());
 
   return (
     <div className="flex-1 overflow-auto p-4">
-      {/* Header: month nav + legend */}
-      <div className="mb-4 flex items-center justify-between gap-4 flex-wrap">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            aria-label="Previous month"
-            onClick={() =>
-              setCursor((c) => {
-                const d = new Date(c.year, c.month - 1, 1);
-                return { year: d.getFullYear(), month: d.getMonth() };
-              })
-            }
-            className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-          >
+          <button type="button" aria-label="Previous month"
+            onClick={() => setCursor((c) => { const d = new Date(c.year, c.month - 1, 1); return { year: d.getFullYear(), month: d.getMonth() }; })}
+            className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
             <ChevronLeft className="size-4" />
           </button>
-          <h2 className="text-base font-semibold tabular-nums min-w-[9rem] text-center">
-            {MONTHS[cursor.month]} {cursor.year}
-          </h2>
-          <button
-            type="button"
-            aria-label="Next month"
-            onClick={() =>
-              setCursor((c) => {
-                const d = new Date(c.year, c.month + 1, 1);
-                return { year: d.getFullYear(), month: d.getMonth() };
-              })
-            }
-            className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-          >
+          <h2 className="min-w-[9rem] text-center text-base font-semibold tabular-nums">{MONTHS[cursor.month]} {cursor.year}</h2>
+          <button type="button" aria-label="Next month"
+            onClick={() => setCursor((c) => { const d = new Date(c.year, c.month + 1, 1); return { year: d.getFullYear(), month: d.getMonth() }; })}
+            className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
             <ChevronRight className="size-4" />
           </button>
         </div>
-
-        <div className="flex items-center gap-3 flex-wrap">
-          {STATUS_ORDER.map((s) => {
-            const meta = statusMeta(s);
-            return (
-              <span key={s} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <span className={`size-2 rounded-full ${meta.dotClass}`} />
-                {meta.label}
-              </span>
-            );
-          })}
-        </div>
+        <Legend />
       </div>
 
-      {/* Weekday header */}
-      <div className="grid grid-cols-7 gap-2 mb-2">
+      <div className="mb-2 grid grid-cols-7 gap-2">
         {WEEKDAYS.map((w) => (
-          <div key={w} className="text-xs font-medium text-muted-foreground px-1">
-            {w}
-          </div>
+          <div key={w} className="px-1 text-xs font-medium text-muted-foreground">{w}</div>
         ))}
       </div>
 
-      {/* Day grid */}
       <div className="grid grid-cols-7 gap-2">
         {cells.map((date) => {
-          const key = ymd(date);
-          const inMonth = date.getMonth() === cursor.month;
-          const isToday = key === todayKey;
-          const entry = byDate.get(key);
+          const key = dayKey(date);
+          const entries = byDate.get(key) || [];
           return (
-            <CalendarCell
+            <MonthCell
               key={key}
               date={date}
-              inMonth={inMonth}
-              isToday={isToday}
-              entry={entry}
-              onRevise={onReviseDay}
+              inMonth={date.getMonth() === cursor.month}
+              isToday={key === todayKey}
+              entries={entries}
+              onOpenWeek={onOpenWeek}
             />
           );
         })}
@@ -168,50 +159,116 @@ export default function PlanCalendar({ plan, onReviseDay }) {
   );
 }
 
-function CalendarCell({ date, inMonth, isToday, entry, onRevise }) {
-  const meta = entry ? statusMeta(entry.status) : null;
-  const postId = entry?.post?.id || null;
+function MonthCell({ date, inMonth, isToday, entries, onOpenWeek }) {
+  // unique platforms + per-type counts across the day
+  const platforms = [...new Set(entries.flatMap(platformsOf))];
+  const typeCounts = entries.reduce((acc, e) => {
+    const t = e.post?.post_type || e.day?.post_type || "slideshow";
+    acc[t] = (acc[t] || 0) + 1;
+    return acc;
+  }, {});
 
-  const body = (
-    <div
-      className={`flex h-full min-h-24 flex-col rounded-lg border p-2 transition-colors ${
+  return (
+    <button
+      type="button"
+      onClick={() => entries.length && onOpenWeek(date)}
+      className={`flex min-h-24 flex-col rounded-lg border p-2 text-left transition-colors ${
         isToday ? "border-primary/60 bg-primary/5" : "border-border/60"
-      } ${inMonth ? "bg-background" : "bg-muted/20"} ${
-        entry ? "hover:border-primary/50" : ""
-      }`}
+      } ${inMonth ? "bg-background" : "bg-muted/20"} ${entries.length ? "hover:border-primary/50 cursor-pointer" : "cursor-default"}`}
     >
-      <span
-        className={`text-xs font-medium tabular-nums ${
-          inMonth ? "text-foreground" : "text-muted-foreground/50"
-        }`}
-      >
-        {date.getDate()}
-      </span>
-      {entry && (
-        <div className="mt-1 space-y-1">
-          <span className={`inline-flex items-center gap-1 text-[11px] font-medium ${meta.textClass}`}>
-            <span className={`size-1.5 rounded-full ${meta.dotClass}`} />
-            Day {entry.dayIndex}
+      <div className="flex items-start justify-between">
+        <span className={`text-xs font-medium tabular-nums ${inMonth ? "text-foreground" : "text-muted-foreground/50"}`}>
+          {date.getDate()}
+        </span>
+        {platforms.length > 0 && (
+          <span className="flex items-center gap-0.5">
+            {platforms.slice(0, 3).map((p) => {
+              const meta = platformMeta(p);
+              return (
+                <span key={p} title={meta.label}
+                  className="flex size-3.5 items-center justify-center rounded-sm text-white"
+                  style={{ backgroundColor: meta.color }}>
+                  <PlatformGlyph platform={p} className="size-2" />
+                </span>
+              );
+            })}
+            {platforms.length > 3 && <span className="text-[9px] text-muted-foreground">+{platforms.length - 3}</span>}
           </span>
-          {entry.topic && (
-            <p className="text-[11px] leading-snug text-muted-foreground line-clamp-2">
-              {entry.topic}
-            </p>
-          )}
+        )}
+      </div>
+
+      {entries.length > 0 && (
+        <div className="mt-auto flex flex-wrap items-center gap-1.5 pt-1">
+          {Object.entries(typeCounts).map(([t, n]) => {
+            const Icon = TYPE_ICON[t] || Images;
+            return (
+              <span key={t} className="inline-flex items-center gap-0.5 rounded bg-muted px-1 py-px text-[10px] text-muted-foreground">
+                <Icon className="size-2.5" /> {n}
+              </span>
+            );
+          })}
         </div>
       )}
+    </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Week view — time-ordered stacked cards per day
+// ---------------------------------------------------------------------------
+
+function WeekView({ byDate, weekStart, setWeekStart, onReviseDay }) {
+  const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  const todayKey = dayKey(new Date());
+  const end = addDays(weekStart, 6);
+  const range = `${MONTHS[weekStart.getMonth()].slice(0, 3)} ${weekStart.getDate()} – ${MONTHS[end.getMonth()].slice(0, 3)} ${end.getDate()}`;
+
+  return (
+    <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/60 p-4">
+        <div className="flex items-center gap-2">
+          <button type="button" aria-label="Previous week"
+            onClick={() => setWeekStart((w) => addDays(w, -7))}
+            className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
+            <ChevronLeft className="size-4" />
+          </button>
+          <h2 className="min-w-[10rem] text-center text-base font-semibold tabular-nums">{range}</h2>
+          <button type="button" aria-label="Next week"
+            onClick={() => setWeekStart((w) => addDays(w, 7))}
+            className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
+            <ChevronRight className="size-4" />
+          </button>
+        </div>
+        <Legend />
+      </div>
+
+      <div className="grid flex-1 grid-cols-7 gap-px overflow-auto bg-border/40">
+        {days.map((date) => {
+          const key = dayKey(date);
+          const entries = byDate.get(key) || [];
+          const isToday = key === todayKey;
+          return (
+            <div key={key} className="flex min-w-0 flex-col bg-background">
+              <div className={`sticky top-0 z-10 border-b border-border/60 bg-background/95 px-2 py-1.5 text-center backdrop-blur ${isToday ? "text-primary" : ""}`}>
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{WEEKDAYS[date.getDay()]}</p>
+                <p className={`text-sm font-semibold tabular-nums ${isToday ? "text-primary" : ""}`}>{date.getDate()}</p>
+              </div>
+              <div className="flex-1 space-y-2 p-1.5">
+                {entries.map((e) => (
+                  <PostMiniCard
+                    key={e.index}
+                    day={e.day}
+                    post={e.post}
+                    schedule={e.schedule}
+                    showThumb={false}
+                    onRevise={() => onReviseDay?.(e.index)}
+                  />
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
-
-  if (entry && postId) {
-    return <Link href={`/content/posts/${postId}`}>{body}</Link>;
-  }
-  if (entry && onRevise) {
-    return (
-      <button type="button" onClick={() => onRevise(entry.dayIndex)} className="text-left">
-        {body}
-      </button>
-    );
-  }
-  return body;
 }

@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getBrandContext, putBrandContext } from "@/lib/contentApi";
 import { getActiveProject } from "@/lib/projects";
+import { slugify } from "@/lib/slug";
 
 /**
  * Structured form for editing a project's content brand context.
@@ -100,7 +101,7 @@ export default function BrandContextForm({ projectId, onSaved }) {
       const cleanedPillars = pillars
         .filter(p => (p.name || "").trim() || (p.id || "").trim())
         .map(p => ({
-          id:          slugify(p.id || p.name || ""),
+          id:          pillarSlug(p.id || p.name || ""),
           name:        (p.name || "").trim(),
           description: (p.description || "").trim(),
           ...(p.research_hint ? { research_hint: p.research_hint } : {}),
@@ -245,13 +246,8 @@ export default function BrandContextForm({ projectId, onSaved }) {
               </div>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <Input value={p.name || ""}
-                  onChange={e => {
-                    const name = e.target.value;
-                    // Auto-fill the slug from the name unless the user has
-                    // manually edited it (id no longer matches the old name's slug).
-                    const auto = !p.id || p.id === slugify(p.name || "");
-                    updatePillar(i, auto ? { name, id: slugify(name) } : { name });
-                  }}
+                  onChange={e => updatePillar(i, { name: e.target.value })}
+                  onBlur={() => { if (!p.id && p.name) updatePillar(i, { id: pillarSlug(p.name) }); }}
                   placeholder="Name — e.g. Face Shape Analysis" />
                 <Input value={p.id || ""}
                   onChange={e => updatePillar(i, { id: e.target.value })}
@@ -382,9 +378,7 @@ function Textarea({ className = "", ...props }) {
   );
 }
 
-function slugify(s) {
-  return String(s || "")
-    .toLowerCase()
-    .replace(/[^a-z0-9_]+/g, "_")
-    .replace(/^_+|_+$/g, "");
+// Pillar ids use underscores (face_shape) — the shared slugify takes a separator.
+function pillarSlug(s) {
+  return slugify(s, "_");
 }
