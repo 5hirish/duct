@@ -1,10 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Images, Video, Image as ImageIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { STATUS_ORDER, statusMeta } from "../../lib/contentStatus";
 import { dayKey, effectiveSchedule, monthStartOf } from "../../lib/contentSchedule";
-import { PlatformGlyph, platformMeta } from "./platformGlyphs";
 import PostMiniCard from "./PostMiniCard";
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -12,17 +11,12 @@ const MONTHS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
 ];
-const TYPE_ICON = { slideshow: Images, video: Video, image: ImageIcon };
 
 function addDays(d, n) {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
 }
 function startOfWeek(d) {
   return addDays(d, -d.getDay());
-}
-function platformsOf(entry) {
-  const p = entry.post?.platforms?.length ? entry.post.platforms : entry.day?.platforms;
-  return Array.isArray(p) ? p : [];
 }
 
 /**
@@ -81,7 +75,7 @@ export default function PlanCalendar({ plan, postsById = {}, view = "month", onV
 
   return view === "week"
     ? <WeekView byDate={byDate} weekStart={weekStart} setWeekStart={setWeekStart} onReviseDay={onReviseDay} />
-    : <MonthView byDate={byDate} cursor={monthCursor} setCursor={setMonthCursor} onOpenWeek={openWeek} />;
+    : <MonthView byDate={byDate} cursor={monthCursor} setCursor={setMonthCursor} onOpenWeek={openWeek} onReviseDay={onReviseDay} />;
 }
 
 // ---------------------------------------------------------------------------
@@ -108,15 +102,15 @@ function Legend() {
 // Month view — compact overview
 // ---------------------------------------------------------------------------
 
-function MonthView({ byDate, cursor, setCursor, onOpenWeek }) {
+function MonthView({ byDate, cursor, setCursor, onOpenWeek, onReviseDay }) {
   const firstOfMonth = new Date(cursor.year, cursor.month, 1);
   const gridStart = startOfWeek(firstOfMonth);
   const cells = Array.from({ length: 42 }, (_, i) => addDays(gridStart, i));
   const todayKey = dayKey(new Date());
 
   return (
-    <div className="flex-1 overflow-auto p-4">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+    <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-4 px-4 pb-3 pt-4">
         <div className="flex items-center gap-2">
           <button type="button" aria-label="Previous month"
             onClick={() => setCursor((c) => { const d = new Date(c.year, c.month - 1, 1); return { year: d.getFullYear(), month: d.getMonth() }; })}
@@ -133,13 +127,13 @@ function MonthView({ byDate, cursor, setCursor, onOpenWeek }) {
         <Legend />
       </div>
 
-      <div className="mb-2 grid grid-cols-7 gap-2">
+      <div className="grid grid-cols-7 border-b border-border/60 px-4">
         {WEEKDAYS.map((w) => (
-          <div key={w} className="px-1 text-xs font-medium text-muted-foreground">{w}</div>
+          <div key={w} className="pb-2 text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{w}</div>
         ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-2">
+      <div className="grid flex-1 auto-rows-fr grid-cols-7 gap-px overflow-auto border-t border-border/40 bg-border/40 px-px">
         {cells.map((date) => {
           const key = dayKey(date);
           const entries = byDate.get(key) || [];
@@ -151,6 +145,7 @@ function MonthView({ byDate, cursor, setCursor, onOpenWeek }) {
               isToday={key === todayKey}
               entries={entries}
               onOpenWeek={onOpenWeek}
+              onReviseDay={onReviseDay}
             />
           );
         })}
@@ -159,57 +154,56 @@ function MonthView({ byDate, cursor, setCursor, onOpenWeek }) {
   );
 }
 
-function MonthCell({ date, inMonth, isToday, entries, onOpenWeek }) {
-  // unique platforms + per-type counts across the day
-  const platforms = [...new Set(entries.flatMap(platformsOf))];
-  const typeCounts = entries.reduce((acc, e) => {
-    const t = e.post?.post_type || e.day?.post_type || "slideshow";
-    acc[t] = (acc[t] || 0) + 1;
-    return acc;
-  }, {});
+function MonthCell({ date, inMonth, isToday, entries, onOpenWeek, onReviseDay }) {
+  const MAX = 3;
+  const shown = entries.slice(0, MAX);
+  const extra = entries.length - shown.length;
 
   return (
-    <button
-      type="button"
-      onClick={() => entries.length && onOpenWeek(date)}
-      className={`flex min-h-24 flex-col rounded-lg border p-2 text-left transition-colors ${
-        isToday ? "border-primary/60 bg-primary/5" : "border-border/60"
-      } ${inMonth ? "bg-background" : "bg-muted/20"} ${entries.length ? "hover:border-primary/50 cursor-pointer" : "cursor-default"}`}
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => onOpenWeek(date)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpenWeek(date); }
+      }}
+      aria-label={`Open week of ${MONTHS[date.getMonth()]} ${date.getDate()}`}
+      className={`group flex min-h-[7.5rem] cursor-pointer flex-col gap-1 p-1.5 outline-none transition-colors hover:bg-muted/40 focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-primary ${
+        inMonth ? "bg-background" : "bg-muted/20"
+      } ${isToday ? "ring-1 ring-inset ring-primary/50" : ""}`}
     >
-      <div className="flex items-start justify-between">
-        <span className={`text-xs font-medium tabular-nums ${inMonth ? "text-foreground" : "text-muted-foreground/50"}`}>
-          {date.getDate()}
-        </span>
-        {platforms.length > 0 && (
-          <span className="flex items-center gap-0.5">
-            {platforms.slice(0, 3).map((p) => {
-              const meta = platformMeta(p);
-              return (
-                <span key={p} title={meta.label}
-                  className="flex size-3.5 items-center justify-center rounded-sm text-white"
-                  style={{ backgroundColor: meta.color }}>
-                  <PlatformGlyph platform={p} className="size-2" />
-                </span>
-              );
-            })}
-            {platforms.length > 3 && <span className="text-[9px] text-muted-foreground">+{platforms.length - 3}</span>}
-          </span>
-        )}
-      </div>
+      <span
+        className={`flex size-6 shrink-0 items-center justify-center self-start rounded-full text-xs font-semibold tabular-nums transition-colors ${
+          isToday
+            ? "bg-primary text-primary-foreground"
+            : inMonth
+              ? "text-foreground group-hover:bg-muted"
+              : "text-muted-foreground/40"
+        }`}
+      >
+        {date.getDate()}
+      </span>
 
-      {entries.length > 0 && (
-        <div className="mt-auto flex flex-wrap items-center gap-1.5 pt-1">
-          {Object.entries(typeCounts).map(([t, n]) => {
-            const Icon = TYPE_ICON[t] || Images;
-            return (
-              <span key={t} className="inline-flex items-center gap-0.5 rounded bg-muted px-1 py-px text-[10px] text-muted-foreground">
-                <Icon className="size-2.5" /> {n}
-              </span>
-            );
-          })}
+      {shown.length > 0 && (
+        <div className="flex min-h-0 flex-col gap-1">
+          {shown.map((e) => (
+            <PostMiniCard
+              key={e.index}
+              variant="chip"
+              day={e.day}
+              post={e.post}
+              schedule={e.schedule}
+              onRevise={() => onReviseDay?.(e.index)}
+            />
+          ))}
+          {extra > 0 && (
+            <span className="px-1 text-[10px] font-medium text-muted-foreground group-hover:text-foreground">
+              +{extra} more
+            </span>
+          )}
         </div>
       )}
-    </button>
+    </div>
   );
 }
 
@@ -257,10 +251,10 @@ function WeekView({ byDate, weekStart, setWeekStart, onReviseDay }) {
                 {entries.map((e) => (
                   <PostMiniCard
                     key={e.index}
+                    variant="compact"
                     day={e.day}
                     post={e.post}
                     schedule={e.schedule}
-                    showThumb={false}
                     onRevise={() => onReviseDay?.(e.index)}
                   />
                 ))}

@@ -55,11 +55,10 @@ export function effectiveSchedule(day, post, monthStart, index) {
     date = addDays(monthStart, index || 0); kind = "proposed"; hasTime = false;
   }
 
-  const label = date
-    ? `${KIND_LABEL[kind]} ${fmtDate(date)}${hasTime ? `, ${fmtTime(date)}` : ""}`
-    : KIND_LABEL[kind];
+  const dateLabel = date ? `${fmtDate(date)}${hasTime ? `, ${fmtTime(date)}` : ""}` : "";
+  const label = date ? `${KIND_LABEL[kind]} ${dateLabel}` : KIND_LABEL[kind];
 
-  return { date, time: hasTime ? fmtTime(date) : null, kind, label, status, hasTime };
+  return { date, time: hasTime ? fmtTime(date) : null, kind, label, dateLabel, status, hasTime };
 }
 
 /** Stable YYYY-MM-DD key in local time. */
