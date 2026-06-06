@@ -163,6 +163,26 @@ class HealthResponse(BaseModel):
     status: str = Field(default="ok")
 
 
+class EngineStatus(BaseModel):
+    """Availability of a single inference engine, for the engine picker UI."""
+
+    key: str = Field(description="Engine key: v1 | v2 | v3")
+    status: str = Field(description="active | needs_auth | inactive")
+    auth_method: str | None = Field(
+        default=None, description="How an active engine is authenticated: api_key | oauth"
+    )
+    supports_oauth: bool = Field(
+        default=False, description="True if the engine can authenticate without an API key"
+    )
+    detail: str | None = Field(
+        default=None, description="Human-readable guidance, shown when status is needs_auth"
+    )
+
+
+class EngineStatusResponse(BaseModel):
+    engines: list[EngineStatus]
+
+
 class RootLinks(BaseModel):
     """Public entrypoints for humans and tooling hitting the API host root."""
 

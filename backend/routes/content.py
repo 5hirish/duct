@@ -65,7 +65,7 @@ from agents.content.v3.runner import (
 )
 from agents.engines import PROVIDER_CONFIG_ATTR, Engine, resolve_engine_provider
 from agents.models import Platform
-from config import allow_subscription_auth, get_configs
+from config import claude_oauth_available, get_configs
 from db.session import get_session as db_session
 from models.content import (
     ContentAsset,
@@ -168,7 +168,7 @@ async def _run_plan_worker(
 ) -> None:
     try:
         api_key = _resolve_api_key()
-        if not api_key and not allow_subscription_auth():
+        if not api_key and not claude_oauth_available():
             raise ValueError("ANTHROPIC_API_KEY is not configured")
         runner = ClaudeContentRunner(api_key=api_key)
         await runner.run_plan(session_id, project_id, emit_fn)
@@ -243,7 +243,7 @@ async def _run_draft_worker(
 ) -> None:
     try:
         api_key = _resolve_api_key()
-        if not api_key and not allow_subscription_auth():
+        if not api_key and not claude_oauth_available():
             raise ValueError("ANTHROPIC_API_KEY is not configured")
         runner = ClaudeContentRunner(api_key=api_key)
         # Resolve the Day from the plan if provided; otherwise pass topic/pillar.

@@ -28,7 +28,7 @@ from agents.audit.schema import (
 from agents.audit.v3.runner import ClaudeAuditRunner, close_session, get_session
 from agents.engines import Engine, resolve_engine, resolve_engine_model, resolve_engine_provider, PROVIDER_CONFIG_ATTR
 from service.crawl.fetcher import SSRFError, validate_public_url
-from config import allow_subscription_auth, get_configs
+from config import claude_oauth_available, get_configs
 from service.pipeline import now_iso
 
 logger = logging.getLogger(__name__)
@@ -109,7 +109,7 @@ async def _run_audit_pipeline(
 ) -> None:
     try:
         api_key, provider, model, _ = _resolve_agent_config(req.engine)
-        if not api_key and not allow_subscription_auth():
+        if not api_key and not claude_oauth_available():
             raise ValueError("ANTHROPIC_API_KEY is not configured")
 
         await emit_fn({

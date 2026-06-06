@@ -41,7 +41,7 @@ from agents.audit.v3.runner import (
 )
 from agents.engines import PROVIDER_CONFIG_ATTR, resolve_engine, resolve_engine_model, resolve_engine_provider
 from agents.registry import AgentType, get_spec, list_specs
-from config import allow_subscription_auth, get_configs
+from config import claude_oauth_available, get_configs
 from service.crawl.fetcher import SSRFError, validate_public_url
 from service.pipeline import now_iso
 
@@ -340,7 +340,7 @@ async def _start_seo_audit(session_id: str, body: dict, emit_fn: Any) -> None:
     model = resolve_engine_model(engine, provider, cfg.generate_model or None)
     api_key = getattr(cfg, PROVIDER_CONFIG_ATTR[provider], "") or ""
 
-    if not api_key and not allow_subscription_auth():
+    if not api_key and not claude_oauth_available():
         raise HTTPException(500, "ANTHROPIC_API_KEY is not configured.")
 
     runner = ClaudeAuditRunner(

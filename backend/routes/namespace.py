@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends
 
 from routes import (
-    agents, audit, auth, chat, connectors, content, generate, health,
+    agents, audit, auth, chat, connectors, content, engines, generate, health,
     lead_magnet, projects, reports, signin, user_connectors, user_contexts, user_projects,
 )
 from service.auth import validate_api_key
@@ -22,6 +22,11 @@ router.include_router(
 )
 router.include_router(
     generate.router,
+    prefix="/api",
+    dependencies=[Depends(validate_api_key)],
+)
+router.include_router(
+    engines.router,
     prefix="/api",
     dependencies=[Depends(validate_api_key)],
 )

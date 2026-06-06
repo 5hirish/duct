@@ -120,6 +120,17 @@ class Configs(BaseSettings):
     gemini_api_key: str = ""
     openai_api_key: str = ""
     anthropic_api_key: str = ""
+    # Long-lived Claude OAuth token from `claude setup-token` (the operator's own
+    # Pro/Max subscription). Detected here only so the engine-status endpoint can
+    # report v3 as authenticated; the Claude Agent SDK subprocess reads the real
+    # CLAUDE_CODE_OAUTH_TOKEN env var itself. Intended for local/self-hosted
+    # individual use — NOT for routing end users' requests through a subscription
+    # (see https://code.claude.com/docs/en/legal-and-compliance). Production
+    # multi-user serving must use ANTHROPIC_API_KEY (Claude Console).
+    claude_code_oauth_token: str = Field(
+        default="",
+        validation_alias=AliasChoices("CLAUDE_CODE_OAUTH_TOKEN"),
+    )
     # Engine selection: "v1" (LangChain), "v2" (Google ADK), "v3" (Claude Agent SDK)
     generate_engine: str = Field(default="v1")
 
@@ -197,6 +208,23 @@ def allow_subscription_auth() -> bool:
     See https://support.claude.com/en/articles/15036540
     """
     return get_configs().app_env == "local"
+
+
+def claude_oauth_available() -> bool:
+    """True when Claude (v3) can authenticate without an explicit ANTHROPIC_API_KEY.
+
+    Two non-API-key paths, both for the operator's *own* ordinary use:
+      - CLAUDE_CODE_OAUTH_TOKEN, a long-lived token from `claude setup-token`
+        (works headless/self-hosted), or
+      - a local `claude` OAuth login in ~/.claude (dev only).
+
+    Per Anthropic's policy, subscription credentials must NOT route end users'
+    requests on a third-party product — production multi-user serving uses an
+    ANTHROPIC_API_KEY from the Claude Console. This helper exists so a single
+    operator running their own instance isn't blocked, not to serve users.
+    See https://code.claude.com/docs/en/legal-and-compliance
+    """
+    return bool(get_configs().claude_code_oauth_token) or allow_subscription_auth()
 
 
 def sentry_otel_env(cfg: Configs) -> dict[str, str]:

@@ -61,11 +61,15 @@ class Day(BaseModel):
 
     Items are ordered by their position in the list; there is no day number.
     The calendar lays them out on sequential dates from the 1st of the month.
+
+    extra="ignore": stored/legacy day objects may carry extra planning fields
+    (notes, hook_text, save_cta, a legacy `day` index) that this shape doesn't
+    model — tolerate and drop them rather than failing validation.
     """
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
-    topic_id: str | None = None
+    topic_id: int | str | None = None
     topic: str = ""
     pillar: str = ""
     status: Literal["pending", "draft", "posted", "discarded"] = "pending"
