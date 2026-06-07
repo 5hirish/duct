@@ -717,6 +717,38 @@ Pillars:
 """
 
 
+# The exact PostDraft JSON the orchestrator must emit when it drafts a post
+# itself (rather than dispatching the draft_post sub-agent). Without this the
+# model leaks plan-day fields (pillar_id/day/status/platform/hook) and emits
+# image_prompts as bare strings, which fail PostDraft validation.
+_POSTDRAFT_SHAPE = """\
+EXACT PostDraft JSON shape — emit these field names EXACTLY (extra fields are
+rejected):
+
+{"type": "post", "project_id": "<uuid>",
+ "post_dir_slug": "YYYY-MM-DD-NNN",
+ "pillar": "<pillar id>", "topic": "<topic title>",
+ "post_type": "slideshow", "format_slug": "format-d",
+ "slide_count": 7, "slides_html": "",
+ "caption": "...", "hashtags": ["#tag1"],
+ "hook_type": "curiosity_gap",
+ "hook_text": "the slide-1 headline",
+ "hook_emotion": "disbelief",
+ "save_cta": "save this — the self-test is on slide 3",
+ "image_prompts": [
+   {"slide_id": "slide-01", "prompt": "...", "aspect_ratio": "9:16"}
+ ],
+ "audio_note": "...", "bridge_text": "...", "strategic_note": "...",
+ "visual_brief": "...", "emotional_arc": "...", "camera_ref_pool": "selfie-talking",
+ "platforms": ["tiktok"]}
+
+CRITICAL: use `pillar` (NOT pillar_id), `topic`, `hook_text`/`hook_type`/`hook_emotion`
+(NOT a bare `hook`), and `platforms` as an array (NOT `platform`). `image_prompts`
+is a list of OBJECTS ({slide_id, prompt, aspect_ratio}), never a list of strings.
+Do NOT include plan-only fields (`day`, `status`). Stage-1 sets slides_html="".\
+"""
+
+
 def _mode_tail(mode: RunMode) -> str:
     return {
         "plan_month": (
@@ -729,7 +761,8 @@ def _mode_tail(mode: RunMode) -> str:
             "MODE: draft_post — your deliverable this turn is ONE PostDraft "
             "wrapped in <duct_report>. Call submit_post_draft once after "
             "emitting the tag. Default to stage-1 (metadata only); stage-2 "
-            "(build_slides_html) runs only when the user asks for slides."
+            "(build_slides_html) runs only when the user asks for slides.\n\n"
+            + _POSTDRAFT_SHAPE
         ),
     }[mode]
 

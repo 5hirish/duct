@@ -24,9 +24,12 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
 import re
 import shutil
+from collections import deque
 from collections.abc import Awaitable, Callable
+from contextlib import suppress
 from time import perf_counter
 from typing import Any
 from uuid import UUID
@@ -65,6 +68,171 @@ from agents.models import (
 logger = logging.getLogger(__name__)
 
 EmitFn = Callable[[dict[str, Any]], Awaitable[None]]
+
+# The `claude` CLI subprocess can exit non-zero during initialize() before it
+# streams anything — most often a transient subscription usage/rate limit on
+# the OAuth path (no ANTHROPIC_API_KEY), or a momentary spawn glitch. The SDK
+# surfaces this opaquely as ProcessError("Command failed with exit code 1 /
+# Check stderr output for details"). Because nothing has streamed yet, retrying
+# the connect is side-effect-free, so we retry with backoff before giving up.
+_MAX_CONNECT_ATTEMPTS = 3
+_CONNECT_BACKOFF_SECS = 1.5
+
+# Substrings that mark a startup stderr as a usage/rate limit rather than a
+# config bug — used only to phrase a clearer error; matching is case-folded.
+_RATE_LIMIT_HINTS = (
+    "rate limit",
+    "usage limit",
+    "quota",
+    "429",
+    "limit reached",
+    "overloaded",
+)
+
+# The SDK fills ProcessError.stderr with this literal when it couldn't drain
+# the pipe — it carries no signal, so we treat it as "no stderr captured".
+_PLACEHOLDER_STDERR = "Check stderr output for details"
+
+
+def _captured_stderr(buf: deque[str], exc: Exception) -> str:
+    """Best real subprocess stderr we have: our own ring buffer first, then the
+    SDK's ProcessError.stderr — but never the meaningless placeholder."""
+    text = "\n".join(buf).strip()
+    if text:
+        return text
+    sdk_stderr = (getattr(exc, "stderr", "") or "").strip()
+    return "" if sdk_stderr == _PLACEHOLDER_STDERR else sdk_stderr
+
+
+def _is_rate_limited(stderr_text: str) -> bool:
+    lowered = (stderr_text or "").lower()
+    return any(hint in lowered for hint in _RATE_LIMIT_HINTS)
+
+
+def _describe_startup_failure(stderr_text: str, exit_code: int | None) -> str:
+    """Phrase a clear, user-facing reason for a CLI startup crash.
+
+    stderr_text is the captured subprocess stderr (may be empty). Falls back to
+    a generic message when nothing was captured so the error is never just
+    "exit code 1".
+    """
+    text = (stderr_text or "").strip()
+    if _is_rate_limited(text):
+        return (
+            "The content engine hit a temporary Claude usage/rate limit while "
+            "starting up. Wait a few minutes and retry the draft."
+            + (f"\nSubprocess stderr:\n{text}" if text else "")
+        )
+    if text:
+        return (
+            "The content engine subprocess failed to start "
+            f"(exit code {exit_code}).\nSubprocess stderr:\n{text}"
+        )
+    return (
+        "The content engine subprocess failed to start "
+        f"(exit code {exit_code}) without emitting stderr. Common causes: the "
+        "Claude CLI is not authenticated (set CLAUDE_CODE_OAUTH_TOKEN from "
+        "`claude setup-token`, or ANTHROPIC_API_KEY), a temporary subscription "
+        "usage limit, or the backend was launched from an IDE debugger that "
+        "injected NODE_OPTIONS into the spawned Node CLI."
+    )
+
+
+def _isolated_config_dir(explicit_auth: str) -> str | None:
+    """A CLAUDE_CONFIG_DIR for the content agent isolated from the developer's
+    interactive ~/.claude.
+
+    A backend worker spawning `claude` on the OAuth path shares ~/.claude with
+    any interactive Claude Code running on the same box — including its session
+    files, locks, and the security-guidance plugin's agent-sdk-venv bootstrap.
+    That shared state is the one environmental difference between this worker
+    (which intermittently sees the CLI exit 1 during initialize, with no
+    stderr) and a clean-room run (which never does). Giving the worker its own
+    config dir removes that contention.
+
+    `explicit_auth` is any auth the SDK env carries on its own — an
+    ANTHROPIC_API_KEY or a CLAUDE_CODE_OAUTH_TOKEN from `claude setup-token`.
+    When it is empty we fall back to the interactive `/login` subscription, whose
+    credentials live in ~/.claude/.credentials.json, so we symlink that file into
+    the isolated dir (live, so token refreshes are picked up) — otherwise the
+    isolated CLI would report "Not logged in". With explicit auth in the env, no
+    credential link is needed.
+
+    Returns the dir to use, or None to fall back to the default ~/.claude.
+    Opt out entirely with DUCT_CONTENT_CLAUDE_CONFIG_DIR=0.
+    """
+    override = os.environ.get("DUCT_CONTENT_CLAUDE_CONFIG_DIR")
+    if override in ("0", "off", "false", "no"):
+        return None
+
+    home = os.path.expanduser("~/.claude")
+    target = override or f"{home}-duct-content"
+    try:
+        os.makedirs(target, exist_ok=True)
+        if not explicit_auth:
+            # Interactive-login path: share the live credentials file, isolate
+            # everything else.
+            src = os.path.join(home, ".credentials.json")
+            dst = os.path.join(target, ".credentials.json")
+            if os.path.exists(src) and not os.path.lexists(dst):
+                os.symlink(src, dst)
+        return target
+    except OSError:
+        logger.warning(
+            "content: could not prepare isolated CLAUDE_CONFIG_DIR at %s; "
+            "falling back to default ~/.claude", target, exc_info=True,
+        )
+        return None
+
+
+def _report_startup_failure_to_sentry(
+    exc: Exception | None,
+    *,
+    session_id: str,
+    mode: Any,
+    attempts: int,
+    exit_code: int | None,
+    stderr: str,
+    rate_limited: bool,
+) -> None:
+    """Send an exhausted CLI-startup failure to Sentry (no-op if uninitialised).
+
+    Only the final failure (after all retries) is reported, so a recovered
+    blip never pages anyone. Rate-limit crashes and hard crashes get distinct
+    fingerprints so they group separately. Never raises — Sentry reporting must
+    not mask the underlying error.
+    """
+    try:
+        import sentry_sdk
+
+        kind = "rate_limit" if rate_limited else "startup_crash"
+        with sentry_sdk.push_scope() as scope:
+            scope.set_tag("agent", "content")
+            scope.set_tag("content.failure", "cli_startup")
+            scope.set_tag("content.failure_kind", kind)
+            scope.set_tag("content.mode", str(getattr(mode, "value", mode)))
+            scope.set_context(
+                "content_startup",
+                {
+                    "session_id": session_id,
+                    "attempts": attempts,
+                    "exit_code": exit_code,
+                    "stderr": stderr or "(none captured)",
+                },
+            )
+            # Group all exit-1 startup crashes of the same kind together rather
+            # than by the generic ProcessError traceback.
+            scope.fingerprint = ["content-cli-startup", kind]
+            scope.level = "warning" if rate_limited else "error"
+            if exc is not None:
+                sentry_sdk.capture_exception(exc)
+            else:
+                sentry_sdk.capture_message(
+                    f"content CLI startup failed ({kind})", level=scope.level
+                )
+    except Exception:  # noqa: BLE001 — reporting must never break the run
+        logger.debug("content: Sentry startup-failure report failed", exc_info=True)
+
 
 # Module-level session registry — in-process only.
 _sessions: dict[str, ContentSession] = {}
@@ -416,7 +584,12 @@ async def _run(
       - PostToolUse hook matched on 'Agent' emits STEP_FINISHED
       - <duct_report> parser branches on the "type" discriminator
     """
-    from claude_agent_sdk import ClaudeAgentOptions, ClaudeSDKClient
+    from claude_agent_sdk import (
+        ClaudeAgentOptions,
+        ClaudeSDKClient,
+        CLIConnectionError,
+        ProcessError,
+    )
     from claude_agent_sdk.types import (
         HookMatcher,
         PermissionResultAllow,
@@ -548,11 +721,57 @@ async def _run(
         "ENABLE_PROMPT_CACHING_1H": "1",
         **sentry_otel_env(_cfg),
     }
+    # Auth precedence mirrors the CLI's: an explicit ANTHROPIC_API_KEY wins;
+    # otherwise forward a CLAUDE_CODE_OAUTH_TOKEN (from `claude setup-token`) so
+    # the subprocess uses the operator's Claude subscription. pydantic loads
+    # .env.local into Configs but NOT into os.environ, so the token must be
+    # injected here explicitly — the SDK merges options.env over the inherited
+    # environment. With neither set we fall back to the interactive `/login`.
     if api_key:
         _sdk_env["ANTHROPIC_API_KEY"] = api_key
+    else:
+        # The SDK merges options.env OVER the inherited os.environ, so it cannot
+        # delete a key — only override it. When the server is launched from a
+        # Claude Desktop / Code session it inherits a BLANK ANTHROPIC_API_KEY
+        # (and sometimes ANTHROPIC_AUTH_TOKEN), which both outrank
+        # CLAUDE_CODE_OAUTH_TOKEN in the CLI's auth precedence. A present-but-empty
+        # key makes the CLI exit 1 during initialize with no stderr. Drop the
+        # blank vars from our own environ so they can't shadow the token; this is
+        # a no-op for anything that checks truthiness.
+        for _stale in ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN"):
+            if _stale in os.environ and not os.environ[_stale].strip():
+                del os.environ[_stale]
+        if _cfg.claude_code_oauth_token:
+            _sdk_env["CLAUDE_CODE_OAUTH_TOKEN"] = _cfg.claude_code_oauth_token
+
+    # When the backend is launched from an IDE (Cursor / VS Code), the JS
+    # debugger injects NODE_OPTIONS=--require .../js-debug/bootloader.js
+    # --inspect-publish-uid=... into the process. The `claude` CLI is a Node
+    # program; inheriting that makes the debugger bootloader attach and write to
+    # stdout, which corrupts the stream-json control protocol — the subprocess
+    # then exits 1 during initialize with no stderr. CLAUDE_CODE_SSE_PORT is the
+    # parent IDE's bridge port and is likewise irrelevant to a headless worker.
+    # Override both to empty (the SDK merges options.env over os.environ but can't
+    # delete keys); an empty NODE_OPTIONS is ignored by Node.
+    for _ide_var in ("NODE_OPTIONS", "CLAUDE_CODE_SSE_PORT"):
+        if os.environ.get(_ide_var):
+            _sdk_env[_ide_var] = ""
+
+    # Isolate this worker's CLI state from any interactive ~/.claude on the box.
+    _config_dir = _isolated_config_dir(api_key or _cfg.claude_code_oauth_token)
+    if _config_dir:
+        _sdk_env["CLAUDE_CONFIG_DIR"] = _config_dir
+
+    # Bounded ring buffer of recent stderr lines. The SDK reads stderr on a
+    # detached task that gets cancelled during teardown, so on a fast startup
+    # crash the per-line logs below can be lost before they flush — keeping our
+    # own copy lets _connect_with_retry attach the real reason to the error.
+    _stderr_buf: deque[str] = deque(maxlen=100)
 
     def _on_subprocess_stderr(line: str) -> None:
-        logger.error("content subprocess stderr [%s]: %s", session_id, line.rstrip())
+        stripped = line.rstrip()
+        _stderr_buf.append(stripped)
+        logger.error("content subprocess stderr [%s]: %s", session_id, stripped)
 
     _cli_path = shutil.which("claude") or None
     _mcp = build_content_mcp_server(project_id, emit, session)
@@ -750,53 +969,108 @@ async def _run(
                 _holdback = working
 
     # ------------------------------------------------------------------
+    # Connect (with retry) — startup crashes are side-effect-free
+    # ------------------------------------------------------------------
+
+    async def _connect_with_retry() -> ClaudeSDKClient:
+        """Open a connected ClaudeSDKClient, retrying transient startup crashes.
+
+        A fresh client is built per attempt so a half-initialised one is never
+        reused. On the final failure, raises a RuntimeError carrying the real
+        subprocess stderr (the SDK's own ProcessError only says "exit code 1").
+        """
+        last_exc: Exception | None = None
+        for attempt in range(1, _MAX_CONNECT_ATTEMPTS + 1):
+            _stderr_buf.clear()
+            candidate = ClaudeSDKClient(options)
+            try:
+                await candidate.connect()
+                if attempt > 1:
+                    logger.info(
+                        "content: SDK connect recovered on attempt %d/%d for session %s",
+                        attempt, _MAX_CONNECT_ATTEMPTS, session_id,
+                    )
+                return candidate
+            except (ProcessError, CLIConnectionError) as exc:
+                last_exc = exc
+                with suppress(Exception):
+                    await candidate.disconnect()
+                captured = _captured_stderr(_stderr_buf, exc)
+                logger.warning(
+                    "content: SDK connect attempt %d/%d failed for session %s: %s%s",
+                    attempt, _MAX_CONNECT_ATTEMPTS, session_id, exc,
+                    f"\n  subprocess stderr:\n{captured}" if captured else "",
+                )
+                if attempt < _MAX_CONNECT_ATTEMPTS:
+                    await asyncio.sleep(_CONNECT_BACKOFF_SECS * attempt)
+
+        captured = _captured_stderr(_stderr_buf, last_exc)
+        exit_code = getattr(last_exc, "exit_code", None)
+        rate_limited = _is_rate_limited(captured)
+        _report_startup_failure_to_sentry(
+            last_exc,
+            session_id=session_id,
+            mode=session.mode,
+            attempts=_MAX_CONNECT_ATTEMPTS,
+            exit_code=exit_code,
+            stderr=captured,
+            rate_limited=rate_limited,
+        )
+        raise RuntimeError(_describe_startup_failure(captured, exit_code)) from last_exc
+
+    # ------------------------------------------------------------------
     # Main loop
     # ------------------------------------------------------------------
 
+    client: ClaudeSDKClient | None = None
     try:
-        async with ClaudeSDKClient(options) as client:
-            await client.query(message_gen())
+        client = await _connect_with_retry()
+        await client.query(message_gen())
 
-            async for msg in client.receive_response():
-                if isinstance(msg, StreamEvent):
-                    ev = msg.event
-                    ev_type = ev.get("type")
+        async for msg in client.receive_response():
+            if isinstance(msg, StreamEvent):
+                ev = msg.event
+                ev_type = ev.get("type")
 
-                    if ev_type == "content_block_delta":
-                        delta = ev.get("delta", {})
-                        delta_type = delta.get("type")
-                        if delta_type == "thinking_delta":
-                            thinking_text = delta.get("thinking", "")
-                            if thinking_text:
-                                await emit({
-                                    "event": ContentEvent.THINKING_CHUNK,
-                                    "text":  thinking_text,
-                                })
-                        elif delta_type == "text_delta":
-                            text_chunk = delta.get("text", "")
-                            if text_chunk:
-                                if _first_token_at is None:
-                                    _first_token_at = perf_counter()
-                                    logger.info("content: first text token received")
-                                await _process_text(text_chunk)
-                    elif ev_type == "message_stop":
-                        await _flush_holdback()
-                        _turn_text.clear()
-                        await emit({"event": ContentEvent.MESSAGE_STOP})
-                    continue
-
-                if hasattr(msg, "content") and msg.content:
-                    for block in msg.content:
-                        if _is_todo_write(block):
-                            todos = block.input.get("todos", [])
-                            session.todos = todos
+                if ev_type == "content_block_delta":
+                    delta = ev.get("delta", {})
+                    delta_type = delta.get("type")
+                    if delta_type == "thinking_delta":
+                        thinking_text = delta.get("thinking", "")
+                        if thinking_text:
                             await emit({
-                                "event": ContentEvent.TODO_UPDATE,
-                                "todos": todos,
+                                "event": ContentEvent.THINKING_CHUNK,
+                                "text":  thinking_text,
                             })
+                    elif delta_type == "text_delta":
+                        text_chunk = delta.get("text", "")
+                        if text_chunk:
+                            if _first_token_at is None:
+                                _first_token_at = perf_counter()
+                                logger.info("content: first text token received")
+                            await _process_text(text_chunk)
+                elif ev_type == "message_stop":
+                    await _flush_holdback()
+                    _turn_text.clear()
+                    await emit({"event": ContentEvent.MESSAGE_STOP})
+                continue
+
+            if hasattr(msg, "content") and msg.content:
+                for block in msg.content:
+                    if _is_todo_write(block):
+                        todos = block.input.get("todos", [])
+                        session.todos = todos
+                        await emit({
+                            "event": ContentEvent.TODO_UPDATE,
+                            "todos": todos,
+                        })
     except Exception:
         logger.exception("content v3: run failed for session %s", session_id)
         raise
+    finally:
+        if client is not None:
+            with suppress(Exception):
+                await client.disconnect()
 
 
 # ---------------------------------------------------------------------------

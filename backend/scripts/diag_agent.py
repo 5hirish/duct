@@ -142,8 +142,10 @@ async def main() -> None:
                 pass
         print("  ✓ real system prompt + full options OK — could NOT reproduce the failure.")
         print("    → the earlier exit-1 was most likely transient (e.g. a subscription "
-              "rate/usage limit — note the RateLimitEvent above). Retry the draft; if it "
-              "recurs, the real cause is logged as 'content subprocess stderr […]'.")
+              "rate/usage limit — note the RateLimitEvent above). The runner now retries "
+              "the connect 3× with backoff, captures the real subprocess stderr, raises a "
+              "classified RuntimeError (surfaced via PIPELINE_FAILED), and reports the "
+              "exhausted failure to Sentry (tag content.failure=cli_startup).")
     except Exception:  # noqa: BLE001
         print("  ✗ real system prompt + full options FAILED — reproduced it!")
         traceback.print_exc()

@@ -471,3 +471,147 @@ def test_draft_post_prompt_contains_critical_quality_rules():
     # 10. Gesture-arc repetition prevention — same gesture twice = flat
     assert "gesture arc" in lower or "not [gesture" in lower, \
         "DRAFT_POST_PROMPT lost the gesture-arc repetition prevention"
+
+
+# ---------------------------------------------------------------------------
+# CLI startup-failure diagnosis + retry (agents/content/v3/runner.py)
+#
+# The `claude` subprocess can exit 1 during initialize() — most often a
+# transient subscription usage/rate limit on the OAuth path. The SDK surfaces
+# this opaquely ("Command failed with exit code 1 / Check stderr output for
+# details"). These tests pin the diagnosis helpers that turn that into an
+# actionable, correctly-grouped signal — the bit that's easy to silently break.
+# ---------------------------------------------------------------------------
+
+
+def test_startup_stderr_capture_prefers_buffer_and_drops_sdk_placeholder():
+    from collections import deque
+
+    from claude_agent_sdk import ProcessError
+
+    from agents.content.v3 import runner
+
+    placeholder = ProcessError("x", exit_code=1, stderr="Check stderr output for details")
+    # The SDK's meaningless placeholder must never be reported as real stderr.
+    assert runner._captured_stderr(deque(), placeholder) == ""
+    # A genuine ProcessError.stderr is kept when our buffer is empty.
+    real = ProcessError("x", exit_code=1, stderr="TypeError in cli.js")
+    assert runner._captured_stderr(deque(), real) == "TypeError in cli.js"
+    # Our own ring buffer (the reliable source) wins over ProcessError.stderr.
+    assert runner._captured_stderr(deque(["a", "b"]), real) == "a\nb"
+
+
+def test_startup_failure_message_classifies_rate_limit_and_never_leaks_placeholder():
+    from agents.content.v3 import runner
+
+    rate = runner._describe_startup_failure("Error: 429 usage limit reached", 1)
+    assert "usage/rate limit" in rate
+
+    crash = runner._describe_startup_failure("TypeError: boom", 1)
+    assert "exit code 1" in crash and "boom" in crash
+
+    empty = runner._describe_startup_failure("", 1)
+    assert "without emitting stderr" in empty
+    assert runner._PLACEHOLDER_STDERR not in empty
+
+
+def test_sentry_startup_report_fingerprints_by_kind_and_never_raises(monkeypatch):
+    from agents.content.v3 import runner
+
+    scopes: list = []
+
+    class _Scope:
+        def __init__(self):
+            self.tags, self.ctx, self.fingerprint, self.level = {}, {}, None, None
+
+        def set_tag(self, k, v):
+            self.tags[k] = v
+
+        def set_context(self, k, v):
+            self.ctx[k] = v
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+    captured: dict = {}
+
+    class _FakeSentry:
+        def push_scope(self):
+            sc = _Scope()
+            scopes.append(sc)
+            return sc
+
+        def capture_exception(self, exc):
+            captured["exc"] = exc
+
+        def capture_message(self, msg, level=None):
+            captured["msg"] = (msg, level)
+
+    import sys
+
+    monkeypatch.setitem(sys.modules, "sentry_sdk", _FakeSentry())
+
+    runner._report_startup_failure_to_sentry(
+        RuntimeError("boom"),
+        session_id="s1",
+        mode="draft_post",
+        attempts=3,
+        exit_code=1,
+        stderr="429 usage limit reached",
+        rate_limited=True,
+    )
+    sc = scopes[-1]
+    assert captured["exc"].args == ("boom",)
+    assert sc.tags["content.failure_kind"] == "rate_limit"
+    assert sc.level == "warning"
+    assert sc.fingerprint == ["content-cli-startup", "rate_limit"]
+    assert sc.ctx["content_startup"]["exit_code"] == 1
+
+    # A hard crash groups separately and reports at error level.
+    runner._report_startup_failure_to_sentry(
+        RuntimeError("segfault"),
+        session_id="s2",
+        mode="plan_month",
+        attempts=3,
+        exit_code=139,
+        stderr="Segmentation fault",
+        rate_limited=False,
+    )
+    sc2 = scopes[-1]
+    assert sc2.fingerprint == ["content-cli-startup", "startup_crash"]
+    assert sc2.level == "error"
+
+
+def test_isolated_config_dir_separates_state_but_shares_oauth_login(tmp_path, monkeypatch):
+    # A backend worker must not share ~/.claude (sessions, locks, plugin/security
+    # bootstrap) with an interactive Claude Code on the same box — that shared
+    # state is the leading suspect for intermittent CLI exit-1 at startup.
+    import os
+
+    from agents.content.v3 import runner
+
+    fake_home = tmp_path / ".claude"
+    fake_home.mkdir()
+    (fake_home / ".credentials.json").write_text("{}")
+    monkeypatch.setattr(os.path, "expanduser", lambda p: p.replace("~", str(tmp_path)))
+    monkeypatch.delenv("DUCT_CONTENT_CLAUDE_CONFIG_DIR", raising=False)
+
+    # OAuth path (no api key): isolated dir created, live creds symlinked in.
+    iso = runner._isolated_config_dir("")
+    assert iso is not None and iso != str(fake_home)
+    link = os.path.join(iso, ".credentials.json")
+    assert os.path.islink(link)
+    assert os.readlink(link) == str(fake_home / ".credentials.json")
+
+    # API-key path: dir still isolated, but no credential symlink is needed.
+    iso2 = tmp_path / "viakey"
+    monkeypatch.setenv("DUCT_CONTENT_CLAUDE_CONFIG_DIR", str(iso2))
+    assert runner._isolated_config_dir("sk-test") == str(iso2)
+    assert not os.path.exists(os.path.join(str(iso2), ".credentials.json"))
+
+    # Explicit opt-out falls back to the default ~/.claude.
+    monkeypatch.setenv("DUCT_CONTENT_CLAUDE_CONFIG_DIR", "0")
+    assert runner._isolated_config_dir("") is None
