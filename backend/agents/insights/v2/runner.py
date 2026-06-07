@@ -47,7 +47,7 @@ from agents.engines import Engine, ENGINE_PROVIDER_ENV_VAR as _ENGINE_PROVIDER_E
 from agents.models import ModelName, Provider
 
 from .agents import SYNTHESIS_AGENT_NAME, build_pipeline_node
-from .schema_compat import parse_synthesis_from_text
+from .schema_compat import extract_json_dict, parse_synthesis_from_text
 from .state_keys import (
     STATE_ALL_BRIEFS,
     STATE_CONNECTED_SRCS,
@@ -338,16 +338,10 @@ class AdkInsightsRunner:
 
         state = updated_session.state
 
-        # Parse supplementary data written by DataFetchAgent
-        supplementary_raw = state.get(STATE_SUPPLEMENTARY, "{}")
-        try:
-            if isinstance(supplementary_raw, dict):
-                supplementary = supplementary_raw
-            else:
-                supplementary = json.loads(supplementary_raw)
-        except (json.JSONDecodeError, TypeError):
-            logger.warning("v2: could not parse supplementary_data from state")
-            supplementary = {}
+        # Parse supplementary data written by DataFetchAgent. The agent is asked
+        # for fence-less JSON but models don't always comply, so extraction is
+        # tolerant of markdown fences and surrounding prose.
+        supplementary = extract_json_dict(state.get(STATE_SUPPLEMENTARY, "{}"))
 
         # Parse synthesis written by SynthesisAgent
         synthesis_raw = state.get(STATE_SYNTHESIS_TEXT, "")

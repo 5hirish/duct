@@ -33,6 +33,7 @@ import pytest
 from agents.insights.goals import InsightGenerationGoal
 from agents.insights.schema import SynthesisSchema
 from agents.insights.v2.runner import AdkInsightsRunner
+from agents.insights.v2.schema_compat import extract_json_dict, validate_synthesis
 from agents.models import ModelName, Provider
 
 _DEMO_BRIEF = Path(__file__).resolve().parents[1] / "data" / "google_ads" / "google-ads-report.json"
@@ -122,3 +123,35 @@ async def test_v2_pipeline_gemini():
 @pytest.mark.live
 async def test_v2_pipeline_claude():
     await _run(Provider.ANTHROPIC, ModelName.CLAUDE_SONNET, os.environ["ANTHROPIC_API_KEY"])
+
+
+# --- Deterministic unit tests for the Phase 2 parsing helpers (no API key) ---
+
+
+def test_extract_json_dict_handles_fences_and_prose():
+    """The data-fetch agent is asked for fence-less JSON but models don't always
+    comply — extraction must be tolerant (this fixed empty-supplementary bugs)."""
+    obj = {"fetch_x": {"rows": 1}}
+    assert extract_json_dict('{"fetch_x": {"rows": 1}}') == obj
+    assert extract_json_dict('```json\n{"fetch_x": {"rows": 1}}\n```') == obj
+    assert extract_json_dict('Here is the data:\n{"fetch_x": {"rows": 1}}\nDone.') == obj
+    assert extract_json_dict({"already": "dict"}) == {"already": "dict"}
+    assert extract_json_dict("not json at all") == {}
+    assert extract_json_dict("") == {}
+
+
+def test_validate_synthesis_reports_errors_for_repair():
+    """validate_synthesis must surface the error string so the repair loop can
+    feed it back, and return (None, msg) on bad input / (schema, '') on good."""
+    parsed, err = validate_synthesis("")
+    assert parsed is None and err
+
+    parsed, err = validate_synthesis('{"verdict": "x"}')  # missing required fields
+    assert parsed is None
+    assert "validation error" in err.lower()
+
+    # Fences are stripped before validation: a fenced object yields a *schema*
+    # validation error (missing fields), not a JSON parse error — proving the
+    # candidate was JSON-decoded, which is what the repair loop relies on.
+    _, err_fenced = validate_synthesis('```json\n{"verdict": "x"}\n```')
+    assert "validation error" in err_fenced.lower()
