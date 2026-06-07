@@ -1,8 +1,17 @@
-"""ADK agent tree for the v2 insight pipeline.
+"""ADK 2.x dynamic-workflow agent graph for the v2 insight pipeline.
 
-SequentialAgent("duct_insights_pipeline")
-├── LlmAgent("data_fetch_agent")   # Phase 1: tool calling → writes supplementary_data
-└── LlmAgent("synthesis_agent")    # Phase 2: structured JSON → writes synthesis_text
+duct_insights_pipeline (dynamic @node, rerun_on_resume=True)
+├── ctx.run_node(LlmAgent "data_fetch_agent")  # Phase 1: tool calling → writes supplementary_data
+└── ctx.run_node(LlmAgent "synthesis_agent")   # Phase 2: structured JSON → writes synthesis_text
+
+Migrated from ADK 1.x: the two-phase pipeline that was a ``SequentialAgent``
+(removed as a top-level export in 2.0) is now an imperative dynamic workflow —
+an orchestrator function node that dispatches the two ``LlmAgent`` nodes via
+``Context.run_node``. The agents themselves are unchanged: the same instruction
+templates with ``{state_key}`` injection and ``output_key`` capture, both of
+which still work in 2.x (Google's own v2 ``workflow_agent_seq`` sample uses
+them). Keeping that plumbing minimises migration risk; the dynamic-workflow
+shape is what unlocks the Phase 2 iterative tool loop / conditional branching.
 
 Both agents are constructed per-request (tools vary by goal) so this module
 exposes factory functions rather than module-level singletons.
@@ -12,9 +21,15 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from google.adk.agents import LlmAgent, SequentialAgent
+from google.adk.agents.context import Context
+from google.adk.agents.llm_agent import LlmAgent
+from google.adk.workflow import node
 
 from .state_keys import STATE_SUPPLEMENTARY, STATE_SYNTHESIS_TEXT
+
+# Author name of the synthesis agent — the runner filters streaming ``partial``
+# events by this so only synthesis tokens are surfaced as ``synthesis_chunk``.
+SYNTHESIS_AGENT_NAME = "synthesis_agent"
 
 
 def build_data_fetch_agent(
@@ -110,7 +125,7 @@ def build_synthesis_agent(
     )
 
     return LlmAgent(
-        name="synthesis_agent",
+        name=SYNTHESIS_AGENT_NAME,
         model=model_str,
         instruction=instruction,
         output_key=STATE_SYNTHESIS_TEXT,
@@ -119,17 +134,33 @@ def build_synthesis_agent(
     )
 
 
-def build_pipeline_agent(
+def build_pipeline_node(
     model_str: str,
     adk_tools: list[Callable],
     mode: str,
     synthesis_system_prompt: str,
-) -> SequentialAgent:
-    """Build the full two-phase pipeline as an ADK SequentialAgent."""
-    return SequentialAgent(
-        name="duct_insights_pipeline",
-        sub_agents=[
-            build_data_fetch_agent(model_str, adk_tools, mode),
-            build_synthesis_agent(model_str, synthesis_system_prompt),
-        ],
-    )
+):
+    """Build the two-phase pipeline as an ADK 2.x dynamic-workflow node.
+
+    Returns an orchestrator node (the ADK 2.x replacement for ``SequentialAgent``)
+    that runs Phase 1 then Phase 2 via ``Context.run_node``. The orchestrator
+    must set ``rerun_on_resume=True`` because dynamically scheduled child nodes
+    can be interrupted, causing the parent to re-run to collect their results.
+
+    Each phase captures its output into session state via the agent's
+    ``output_key`` (``supplementary_data`` / ``synthesis_text``); the runner
+    reads those back from the session after the run completes.
+    """
+    data_fetch_agent = build_data_fetch_agent(model_str, adk_tools, mode)
+    synthesis_agent = build_synthesis_agent(model_str, synthesis_system_prompt)
+
+    @node(name="duct_insights_pipeline", rerun_on_resume=True)
+    async def pipeline(ctx: Context, _input=None) -> None:
+        # Phase 1 — data fetch: LLM selects/calls supplementary tools and
+        # writes the tool_name→result JSON to state["supplementary_data"].
+        await ctx.run_node(data_fetch_agent)
+        # Phase 2 — synthesis: reads {all_briefs} + {supplementary_data} from
+        # state and writes the SynthesisSchema JSON to state["synthesis_text"].
+        await ctx.run_node(synthesis_agent, use_as_output=True)
+
+    return pipeline

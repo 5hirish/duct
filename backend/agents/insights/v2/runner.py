@@ -4,7 +4,9 @@ Public interface mirrors GenerateInsightsAgent (v1) so routes/generate.py
 can select either engine via a config flag without any other changes.
 
 Key differences from v1:
-- Both phases run inside a single ADK SequentialAgent pipeline.
+- Both phases run inside a single ADK 2.x dynamic-workflow node (the
+  replacement for 1.x's SequentialAgent): an orchestrator node dispatches
+  the two LlmAgent phases via Context.run_node.
 - setup_tools_for_goal() + run_pipeline() replace the separate
   fetch_supplementary_data() / synthesize() calls.
 - fetch_supplementary_data() and synthesize() are kept as no-op stubs for
@@ -30,6 +32,7 @@ from collections.abc import Callable
 from time import perf_counter
 from typing import Any
 
+from google.adk.agents.run_config import RunConfig, StreamingMode
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types as genai_types
@@ -43,7 +46,7 @@ from agents.insights.tools import _register_default_tools
 from agents.engines import Engine, ENGINE_PROVIDER_ENV_VAR as _ENGINE_PROVIDER_ENV_VAR
 from agents.models import ModelName, Provider
 
-from .agents import build_pipeline_agent
+from .agents import SYNTHESIS_AGENT_NAME, build_pipeline_node
 from .schema_compat import parse_synthesis_from_text
 from .state_keys import (
     STATE_ALL_BRIEFS,
@@ -232,7 +235,7 @@ class AdkInsightsRunner:
         )
         all_briefs_text = get_synthesis_user_prompt(all_briefs, mode=mode)
 
-        pipeline = build_pipeline_agent(
+        pipeline = build_pipeline_node(
             model_str=self.model_str,
             adk_tools=adk_tools,
             mode=mode,
@@ -242,7 +245,7 @@ class AdkInsightsRunner:
         session_service = InMemorySessionService()
         session_id = str(uuid.uuid4())
         runner = Runner(
-            agent=pipeline,
+            node=pipeline,
             app_name=_APP_NAME,
             session_service=session_service,
         )
@@ -282,14 +285,27 @@ class AdkInsightsRunner:
         if self._api_key and not os.environ.get(env_var):
             os.environ[env_var] = self._api_key
 
+        # SSE streaming must be requested explicitly in ADK 2.x; without it no
+        # partial events are emitted. We forward only the synthesis agent's
+        # partials so "synthesis_chunk" carries synthesis text (not Phase 1's
+        # tool-result JSON).
+        run_config = RunConfig(streaming_mode=StreamingMode.SSE)
+
         start = perf_counter()
         try:
             async for event in runner.run_async(
                 user_id=_USER_ID,
                 session_id=session_id,
                 new_message=trigger,
+                run_config=run_config,
             ):
-                if emit_event and event.partial and event.content and event.content.parts:
+                if (
+                    emit_event
+                    and event.partial
+                    and event.author == SYNTHESIS_AGENT_NAME
+                    and event.content
+                    and event.content.parts
+                ):
                     for part in event.content.parts:
                         text = getattr(part, "text", None)
                         if text:
