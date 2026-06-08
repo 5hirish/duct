@@ -15,7 +15,6 @@ References:
 
 from __future__ import annotations
 
-from typing import Any
 
 ANALYSIS_PROTOCOL = """\
 <role>
@@ -236,30 +235,5 @@ SUPPLEMENTARY_ANALYSIS_GUIDES: dict[str, str] = {
 }
 
 
-def format_business_context(biz_ctx: dict[str, Any] | None) -> str:
-    if not biz_ctx:
-        return ""
-    lines = []
-    if biz_ctx.get("industry"):
-        lines.append(f"- Industry: {biz_ctx['industry']}")
-    if biz_ctx.get("monthly_budget"):
-        lines.append(f"- Monthly ad budget: ${biz_ctx['monthly_budget']:,.0f}")
-    if biz_ctx.get("target_cpa"):
-        lines.append(f"- Target CPA: ${biz_ctx['target_cpa']:,.2f}")
-    if biz_ctx.get("target_roas"):
-        lines.append(f"- Target ROAS: {biz_ctx['target_roas']:.1f}x")
-    if biz_ctx.get("primary_conversion_action"):
-        lines.append(f"- Primary conversion action: {biz_ctx['primary_conversion_action']}")
-    if biz_ctx.get("target_payback_days"):
-        lines.append(f"- Target payback window: {biz_ctx['target_payback_days']:,.0f} days")
-    if biz_ctx.get("gross_margin_percent"):
-        lines.append(f"- Gross margin: {biz_ctx['gross_margin_percent']:,.0f}%")
-    if biz_ctx.get("qualified_lead_value"):
-        lines.append(f"- Qualified lead value: ${biz_ctx['qualified_lead_value']:,.0f}")
-    if biz_ctx.get("period_changes"):
-        lines.append(f"- Period changes: {biz_ctx['period_changes']}")
-    if biz_ctx.get("notes"):
-        lines.append(f"- Notes: {biz_ctx['notes']}")
-    if not lines:
-        return ""
-    return "<business_context>\n" + "\n".join(lines) + "\n</business_context>"
+# Business context formatting is now shared — see
+# agents/core/business_context.format_business_context (used by get_system_prompt).

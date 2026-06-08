@@ -15,7 +15,6 @@ Core mental models encoded:
 
 from __future__ import annotations
 
-from typing import Any
 
 ANALYSIS_PROTOCOL = """\
 <role>
@@ -245,22 +244,5 @@ SUPPLEMENTARY_ANALYSIS_GUIDES: dict[str, str] = {
 }
 
 
-def format_business_context(biz_ctx: dict[str, Any] | None) -> str:
-    if not biz_ctx:
-        return ""
-    lines = []
-    if biz_ctx.get("industry"):
-        lines.append(f"- Industry: {biz_ctx['industry']}")
-    if biz_ctx.get("primary_organic_kpi"):
-        lines.append(f"- Primary KPI: {biz_ctx['primary_organic_kpi']}")
-    if biz_ctx.get("monthly_organic_traffic_target"):
-        lines.append(f"- Monthly organic traffic target: {biz_ctx['monthly_organic_traffic_target']:,} sessions")
-    if biz_ctx.get("primary_content_type"):
-        lines.append(f"- Primary content type: {biz_ctx['primary_content_type']}")
-    if biz_ctx.get("period_changes"):
-        lines.append(f"- Recent changes: {biz_ctx['period_changes']}")
-    if biz_ctx.get("notes"):
-        lines.append(f"- Notes: {biz_ctx['notes']}")
-    if not lines:
-        return ""
-    return "<business_context>\n" + "\n".join(lines) + "\n</business_context>"
+# Business context formatting is now shared — see
+# agents/core/business_context.format_business_context (used by get_system_prompt).

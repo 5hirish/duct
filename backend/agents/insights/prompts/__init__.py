@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
+from agents.core.business_context import format_business_context
 from agents.insights.catalog import get_catalogs_for_connectors
 from agents.insights.catalog.prompt import entity_catalog_prompt_block
 from agents.insights.goals.paid_ads import goal_heading_text as paid_goal_heading
@@ -45,7 +46,6 @@ def get_system_prompt(
         from agents.insights.prompts.organic_growth import (
             ANALYSIS_PROTOCOL,
             DASHBOARD_LAYOUT_PROTOCOL,
-            format_business_context,
         )
         from agents.insights.goals.organic_growth import GOAL_DIRECTIVES
         directives = GOAL_DIRECTIVES
@@ -53,14 +53,19 @@ def get_system_prompt(
         from agents.insights.prompts.paid_ads import (
             ANALYSIS_PROTOCOL,
             DASHBOARD_LAYOUT_PROTOCOL,
-            format_business_context,
         )
         from agents.insights.goals.paid_ads import GOAL_DIRECTIVES
         directives = GOAL_DIRECTIVES
 
     sections: list[str] = [ANALYSIS_PROTOCOL, DASHBOARD_LAYOUT_PROTOCOL]
 
-    biz_section = format_business_context(business_context)
+    # Shared business-context formatter (agents/core/business_context.py) — one
+    # standard <business_context> block across all agents; mode selects section.
+    biz_section = format_business_context(
+        business_context,
+        include_paid=(mode != "organic_growth"),
+        include_organic=(mode == "organic_growth"),
+    )
     if biz_section:
         sections.append(biz_section)
 
