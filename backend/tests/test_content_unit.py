@@ -147,6 +147,43 @@ async def _drain_first(q) -> object:
     return await asyncio.wait_for(q.get(), timeout=1.0)
 
 
+def test_unified_agents_route_creates_contentsession():
+    """Folding /api/content/* into /api/agents/*: the unified session factory
+    must build a ContentSession (not the default AuditSession) with the right
+    mode/project_id, and 422 on a missing project_id."""
+    from uuid import uuid4
+
+    import pytest
+    from fastapi import HTTPException
+
+    from agents.content.schema import ContentSession
+    from agents.content.v3.runner import close_session, get_session
+    from agents.registry import AgentType
+    from routes.agents import _create_session_for
+
+    pid = uuid4()
+    s = _create_session_for(
+        AgentType.CONTENT_MARKETING, "ufold-plan", {"mode": "plan_month", "project_id": str(pid)}
+    )
+    assert isinstance(s, ContentSession)
+    assert s.mode == "plan_month" and s.project_id == pid
+    assert s.agent_type == "content_marketing"
+    assert get_session("ufold-plan") is s
+    close_session("ufold-plan")
+
+    plan_id = uuid4()
+    s2 = _create_session_for(
+        AgentType.CONTENT_MARKETING,
+        "ufold-draft",
+        {"mode": "draft_post", "project_id": str(pid), "plan_id": str(plan_id)},
+    )
+    assert isinstance(s2, ContentSession) and s2.mode == "draft_post" and s2.plan_id == plan_id
+    close_session("ufold-draft")
+
+    with pytest.raises(HTTPException):
+        _create_session_for(AgentType.CONTENT_MARKETING, "ufold-bad", {"mode": "plan_month"})
+
+
 # ---------------------------------------------------------------------------
 # Sub-agent dispatch name resolution — defensive but covers the SDK's
 # documented-as-fuzzy key naming for the Agent tool input.

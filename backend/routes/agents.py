@@ -31,6 +31,8 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
+from uuid import UUID
+
 from agents.audit.events import AuditEvent
 from agents.audit.schema import AuditRequest
 from agents.audit.v3.runner import (
@@ -39,6 +41,9 @@ from agents.audit.v3.runner import (
     create_audit_session,
     get_session,
 )
+from agents.content.schema import DraftPostRequest, PlanRequest
+from agents.content.v3.runner import create_draft_session, create_plan_session
+from agents.core import session as _core_session
 from agents.engines import PROVIDER_CONFIG_ATTR, resolve_engine, resolve_engine_model, resolve_engine_provider
 from agents.registry import AgentType, get_spec, list_specs
 from config import claude_oauth_available, get_configs
@@ -63,10 +68,9 @@ async def _prune_stale_sessions() -> None:
     while True:
         await asyncio.sleep(300)
         now = time.monotonic()
+        # One shared registry across all agent types (agents/core/session.py).
         stale = [
-            sid for sid, session in list(
-                __import__("agents.audit.v3.runner", fromlist=["_sessions"])._sessions.items()
-            )
+            sid for sid, session in list(_core_session._sessions.items())
             if now - session.created_at > _SESSION_TTL
         ]
         for sid in stale:
@@ -135,7 +139,7 @@ async def create_session(agent_type: str, request: Request) -> dict:
 
     body = await request.json()
     session_id = str(uuid.uuid4())
-    session = create_audit_session(session_id, agent_type)
+    session = _create_session_for(agent_type, session_id, body)
 
     async def emit_fn(event_body: dict[str, Any]) -> None:
         event_body["agent_type"] = agent_type
@@ -303,6 +307,24 @@ async def delete_session(agent_type: str, session_id: str) -> dict:
 # Agent-specific pipeline dispatchers
 # ---------------------------------------------------------------------------
 
+def _create_session_for(agent_type: str, session_id: str, body: dict):
+    """Create + register the right session type for the agent (one shared
+    registry; see agents/core/session.py)."""
+    if agent_type == AgentType.CONTENT_MARKETING:
+        try:
+            project_id = UUID(str(body["project_id"]))
+        except Exception as exc:
+            raise HTTPException(422, "content_marketing requires a valid project_id") from exc
+        if body.get("mode") == "draft_post":
+            plan_id = body.get("plan_id")
+            return create_draft_session(
+                session_id, project_id, plan_id=UUID(str(plan_id)) if plan_id else None
+            )
+        return create_plan_session(session_id, project_id)
+    # audit + insights share the AuditSession shape.
+    return create_audit_session(session_id, agent_type)
+
+
 async def _dispatch_start(
     agent_type: str,
     session_id: str,
@@ -312,10 +334,42 @@ async def _dispatch_start(
     """Route session creation to the correct agent pipeline."""
     if agent_type == AgentType.SEO_AUDIT:
         await _start_seo_audit(session_id, body, emit_fn)
+    elif agent_type == AgentType.CONTENT_MARKETING:
+        await _start_content_marketing(session_id, body, emit_fn)
     elif agent_type == AgentType.INSIGHTS:
         await _start_insights(session_id, body, emit_fn)
     else:
         raise HTTPException(501, f"Agent type {agent_type!r} is not yet implemented.")
+
+
+async def _start_content_marketing(session_id: str, body: dict, emit_fn: Any) -> None:
+    """Start the content marketing pipeline (plan_month or draft_post) as a
+    background task, streaming to the shared session.event_queue. Reuses the
+    plan/draft workers so the DB logic (Day resolution, post_id linkback) stays
+    in one place."""
+    # Imported lazily to avoid a route-module import cycle.
+    from routes.content import _run_draft_worker, _run_plan_worker
+
+    mode = body.get("mode", "plan_month")
+    if mode == "draft_post":
+        try:
+            req = DraftPostRequest.model_validate(body)
+        except Exception as exc:
+            raise HTTPException(422, f"Invalid content draft_post config: {exc}") from exc
+        coro = _run_draft_worker(session_id, req, emit_fn)
+    elif mode == "plan_month":
+        try:
+            req = PlanRequest.model_validate(body)
+        except Exception as exc:
+            raise HTTPException(422, f"Invalid content plan_month config: {exc}") from exc
+        coro = _run_plan_worker(session_id, req.project_id, emit_fn)
+    else:
+        raise HTTPException(422, f"content mode must be 'plan_month' or 'draft_post', got {mode!r}")
+
+    task = asyncio.create_task(coro)
+    session = get_session(session_id)
+    if session:
+        session.pipeline_task = task
 
 
 async def _start_seo_audit(session_id: str, body: dict, emit_fn: Any) -> None:
