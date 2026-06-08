@@ -15,61 +15,11 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
-from agents.insights.tools import CONNECTOR_BY_TOOL
+from agents.insights.tools import CONNECTOR_BY_TOOL, TOOL_DESCRIPTIONS
 
-
-# ---------------------------------------------------------------------------
-# Descriptions copied verbatim from v1/tools.py
-# ---------------------------------------------------------------------------
-
-_TOOL_DESCRIPTIONS: dict[str, str] = {
-    "fetch_campaign_performance": (
-        "Fetch Google Ads campaign performance data. Returns per-campaign "
-        "spend, clicks, impressions, conversions, ROAS, and previous-period "
-        "comparison. Use this as the primary data source for any analysis."
-    ),
-    "fetch_search_terms": (
-        "Fetch the top 100 search terms by spend. Shows which actual user "
-        "queries triggered ads, their match type, and per-term spend, CTR, "
-        "conversions, CPA, and ROAS. Essential for finding wasted spend on "
-        "irrelevant queries and identifying high-value terms to target."
-    ),
-    "fetch_device_performance": (
-        "Fetch campaign performance broken down by device (MOBILE, DESKTOP, "
-        "TABLET). Reveals device-level efficiency gaps — e.g. high CPA on "
-        "mobile vs desktop. Use to find budget reallocation opportunities "
-        "across devices."
-    ),
-    "fetch_geo_performance": (
-        "Fetch geographic performance data showing spend, conversions, and "
-        "ROAS by location. Reveals which regions are converting efficiently "
-        "and which are wasting budget. Use to identify geo expansion or "
-        "geo exclusion opportunities."
-    ),
-    "fetch_ad_group_performance": (
-        "Fetch ad group level performance within campaigns. Shows which "
-        "specific ad groups drive conversions vs waste spend. Deeper "
-        "granularity than campaign-level data. Use to find optimization "
-        "opportunities within campaigns that look mixed at the campaign level."
-    ),
-    "fetch_ga4_landing_pages": (
-        "Fetch GA4 landing page behavior for paid traffic (google / cpc), "
-        "including sessions, bounce rate, engagement rate, session duration, "
-        "conversions, and revenue."
-    ),
-    "fetch_ga4_conversion_paths": (
-        "Fetch GA4 conversion path context by source/medium and channel group "
-        "to evaluate assisted-conversion dynamics beyond last-click."
-    ),
-    "fetch_gsc_query_performance": (
-        "Fetch Google Search Console organic query performance with clicks, "
-        "impressions, CTR, and position for overlap analysis against paid terms."
-    ),
-    "fetch_gsc_page_performance": (
-        "Fetch Google Search Console organic page performance with clicks, "
-        "impressions, CTR, and position for page-level organic/paid alignment."
-    ),
-}
+# Tool descriptions are single-sourced in agents/insights/tools.py so the LLM
+# sees identical guidance regardless of engine (v1/v2/v3).
+_TOOL_DESCRIPTIONS = TOOL_DESCRIPTIONS
 
 
 # ---------------------------------------------------------------------------
