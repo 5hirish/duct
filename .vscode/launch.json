@@ -44,7 +44,7 @@
       "name": "Backend: FastAPI (uvicorn)",
       "type": "node-terminal",
       "request": "launch",
-      "command": "poetry run uvicorn server:app --reload --host 127.0.0.1 --port 8002",
+      "command": "poetry run uvicorn server:app --reload --reload-dir agents --reload-dir routes --reload-dir models --reload-dir service --reload-dir db --reload-dir utils --reload-delay 1 --host 127.0.0.1 --port 8002",
       "cwd": "${workspaceFolder}/backend"
     },
     {

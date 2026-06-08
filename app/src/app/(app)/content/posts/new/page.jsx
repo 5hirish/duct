@@ -53,7 +53,9 @@ export default function NewPostDraftPage() {
           pillar,
           channel,
         }}
-        renderViewport={({ payload }) => <PostViewport payload={payload} />}
+        renderViewport={({ payload, onSendMessage }) => (
+          <PostViewport payload={payload} onSendMessage={onSendMessage} />
+        )}
       />
     </div>
   );

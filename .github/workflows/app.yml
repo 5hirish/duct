@@ -55,5 +55,8 @@ jobs:
       - name: Typecheck (if configured)
         run: npm run typecheck --if-present
 
+      - name: Slide-renderer parity (slideDoc.js vs backend templates.py)
+        run: npm run check:parity
+
       - name: Build app
         run: npm run build

@@ -377,6 +377,99 @@ async def send_content_chat_message(session_id: str, req: ContentChatMessage) ->
     return {"status": "queued"}
 
 
+class SlideRenderResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    render_id:    str
+    image_base64: str   # the rasterized 1080×1920 PNG, base64 (no data: prefix)
+
+
+@router.post("/content/slide-render/{session_id}")
+async def submit_slide_render(session_id: str, req: SlideRenderResult) -> dict:
+    """Resolve a pending render_slide request — the browser rasterized the slide
+    and POSTs the PNG back here; we hand the bytes to the waiting agent tool.
+    An empty image_base64 signals a browser-side failure (resolves to a clean
+    tool error rather than hanging the agent for the full timeout)."""
+    session = get_session(session_id)
+    if not session:
+        raise HTTPException(404, "Session not found or expired")
+    fut = session.render_futures.get(req.render_id)
+    if not fut or getattr(fut, "done", lambda: True)():
+        raise HTTPException(400, "No pending render for this id (it may have timed out)")
+    try:
+        fut.set_result(req.image_base64)
+    except asyncio.InvalidStateError as exc:
+        raise HTTPException(409, "Render already resolved") from exc
+    return {"status": "ok"}
+
+
+def _inline_local_images(html: str) -> str:
+    """Replace src="/uploads/…" with base64 data URIs so a browser rasterizing
+    the doc isn't CORS-tainted (the app + backend are different origins).
+
+    Hardened against path traversal: image_url is agent-influenceable (a slide's
+    image_url survives submit/edit), so a value like "/uploads/../../etc/passwd"
+    must NOT be read off disk. We resolve and require the path stays inside
+    uploads_dir before reading.
+    """
+    import base64
+    import re
+
+    cfg = get_configs()
+    base = Path(cfg.uploads_dir or "/app/uploads").resolve()
+
+    def _repl(m: "re.Match") -> str:
+        url = m.group(1)
+        rel = url[len("/uploads/"):]
+        try:
+            p = (base / rel).resolve()
+            if not p.is_relative_to(base) or not p.is_file():
+                return m.group(0)   # traversal / missing → leave the src untouched
+            suffix = p.suffix.lower()
+            mime = {
+                ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+                ".webp": "image/webp",
+            }.get(suffix, "image/png")
+            data = base64.b64encode(p.read_bytes()).decode("ascii")
+            return f'src="data:{mime};base64,{data}"'
+        except Exception:
+            return m.group(0)
+
+    return re.sub(r'src="(/uploads/[^"]+)"', _repl, html)
+
+
+@router.get("/content/slide-doc/{session_id}")
+def get_slide_render_doc(
+    session_id: str,
+    post_id: UUID,
+    slide_id: str,
+    db: Session = Depends(db_session),
+) -> dict:
+    """Self-contained 1080×1920 single-slide HTML (images inlined as base64) for
+    the browser to rasterize — backing the render_slide bridge. Origin-clean, so
+    the client-side canvas capture isn't tainted."""
+    from agents.content.schema import Slide
+    from agents.content.templates import render_slides_html
+
+    # Scope to the session's project — a valid session can only rasterize its
+    # own project's posts (defence-in-depth; content routes lack per-user auth).
+    session = get_session(session_id)
+    if not session:
+        raise HTTPException(404, "Session not found or expired")
+    post = db.get(ContentPost, post_id)
+    if post is None or post.project_id != session.project_id:
+        raise HTTPException(404, "Post not found")
+    raw = next(
+        (s for s in (post.slides or []) if isinstance(s, dict) and s.get("slide_id") == slide_id),
+        None,
+    )
+    if raw is None:
+        raise HTTPException(404, f"Slide {slide_id} not found on this post")
+    slide = Slide.model_validate(raw)
+    html = render_slides_html(post.layout or "full-bleed", [slide])
+    return {"html": _inline_local_images(html), "width": 1080, "height": 1920}
+
+
 @router.delete("/content/session/{session_id}")
 async def close_content_session(session_id: str) -> dict:
     close_session(session_id)
@@ -632,8 +725,10 @@ class PostIn(BaseModel):
     post_type:     str = "slideshow"
     format_slug:   str = ""   # resolved to format_id; "" leaves the post unlinked
     avatar_id:     UUID | None = None
+    layout:        str = "full-bleed"
     slide_count:   int = 0
     status:        str = "pending"
+    slides:        list = Field(default_factory=list)
     slides_html:   str = ""
     caption:       str = ""
     hashtags:      list = Field(default_factory=list)
@@ -662,8 +757,10 @@ class PostPatch(BaseModel):
     post_type:     str | None = None
     format_slug:   str | None = None
     avatar_id:     UUID | None = None
+    layout:        str | None = None
     slide_count:   int | None = None
     status:        str | None = None
+    slides:        list | None = None
     slides_html:   str | None = None
     caption:       str | None = None
     hashtags:      list | None = None
@@ -697,8 +794,10 @@ class PostOut(BaseModel):
     format_name:   str
     avatar_id:     UUID | None
     thumbnail_url: str
+    layout:        str
     slide_count:   int
     status:        str
+    slides:        list
     slides_html:   str
     caption:       str
     hashtags:      list
@@ -747,8 +846,10 @@ def _post_out(
         format_name=(fmt[1] if fmt else ""),
         avatar_id=p.avatar_id,
         thumbnail_url=thumbnail_url,
+        layout=p.layout or "full-bleed",
         slide_count=p.slide_count,
         status=p.status,
+        slides=p.slides or [],
         slides_html=p.slides_html,
         caption=p.caption,
         hashtags=p.hashtags or [],
@@ -831,6 +932,21 @@ def _enrich_one(db: Session, post: ContentPost) -> PostOut:
     return _post_out(post, fmt=_fmt_for(post, by_id), thumbnail_url=thumb)
 
 
+def _rerender_slides(post: ContentPost) -> None:
+    """Re-derive slides_html + image_prompts + slide_count from structured
+    slides. Called after a slides edit so the rendered preview, the flat
+    image-prompt list, and the count stay in lock-step. Staleness is implicit:
+    a slide whose image_prompt now differs from image_prompt_used renders with
+    the 'outdated' flag (see agents/content/templates.py)."""
+    from agents.content.schema import Slide
+    from agents.content.templates import derive_image_prompts, render_slides_html
+
+    parsed = [Slide.model_validate(s) for s in (post.slides or [])]
+    post.slides_html = render_slides_html(post.layout or "full-bleed", parsed)
+    post.image_prompts = derive_image_prompts(parsed)
+    post.slide_count = len(parsed)
+
+
 @router.get("/content/posts")
 def list_posts(
     project_id: UUID,
@@ -878,6 +994,14 @@ def create_post(body: PostIn, db: Session = Depends(db_session)) -> PostOut:
     # format_slug is an input-only selector — resolve it to the FK and drop it.
     values.pop("format_slug", None)
     values["format_id"] = _resolve_format_id(db, body.project_id, body.format_slug)
+    # If structured slides came in without HTML, render the HTML from the template.
+    if values.get("slides") and not values.get("slides_html"):
+        from agents.content.schema import Slide
+        from agents.content.templates import derive_image_prompts, render_slides_html
+        parsed = [Slide.model_validate(s) for s in values["slides"]]
+        values["slides_html"] = render_slides_html(values.get("layout") or "full-bleed", parsed)
+        values["image_prompts"] = derive_image_prompts(parsed)
+        values["slide_count"] = len(parsed)
     if existing is not None:
         for k, v in values.items():
             setattr(existing, k, v)
@@ -910,6 +1034,13 @@ def patch_post(post_id: UUID, body: PostPatch, db: Session = Depends(db_session)
         setattr(post, k, v)
     if format_slug is not None:
         post.format_id = _resolve_format_id(db, post.project_id, format_slug)
+    # When structured slides change, re-render the HTML from the template unless
+    # the caller also passed an explicit slides_html (don't clobber that).
+    if "slides" in patch and "slides_html" not in patch:
+        try:
+            _rerender_slides(post)
+        except Exception:
+            logger.exception("patch_post: failed to re-render slides for %s", post_id)
     post.updated_at = datetime.now(timezone.utc)
     db.add(post)
     db.commit()

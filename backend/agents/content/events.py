@@ -24,8 +24,9 @@ class ContentEvent(StrEnum):
     STEP_FINISHED = "step_finished"
     STEP_FAILED   = "step_failed"
 
-    QUESTIONS_REQUIRED = "questions_required"
-    TODO_UPDATE        = "todo_update"
+    QUESTIONS_REQUIRED    = "questions_required"
+    TODO_UPDATE           = "todo_update"
+    SLIDE_RENDER_REQUESTED = "slide_render_requested"  # agent asked the browser to rasterize a slide
 
     AGENT_MESSAGE_CHUNK = "agent_message_chunk"
     MESSAGE_STOP        = "message_stop"

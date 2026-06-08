@@ -54,6 +54,17 @@ class ContentPost(SQLModel, table=True):
     slide_count: int = Field(default=0, sa_column=Column(Integer, nullable=False, server_default="0"))
     status: str = Field(default="pending", sa_column=Column(String, nullable=False, server_default="pending"))
 
+    # Overall layout family (full-bleed | text-only | collage | before-after |
+    # editorial). Denormalised from the format so render is self-contained.
+    layout: str = Field(default="full-bleed", sa_column=Column(String, nullable=False, server_default="full-bleed"))
+    # Structured per-slide content authored by the agent — the SOURCE OF TRUTH.
+    # slides_html below is DERIVED from this by the template renderer. Each entry
+    # carries copy, the image prompt, and (once generated) image_url +
+    # image_prompt_used for staleness. See agents/content/schema.py:Slide.
+    slides: list = Field(
+        default_factory=list,
+        sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="[]"),
+    )
     slides_html: str = Field(default="", sa_column=Column(Text, nullable=False, server_default=""))
     caption: str = Field(default="", sa_column=Column(Text, nullable=False, server_default=""))
     hashtags: list = Field(

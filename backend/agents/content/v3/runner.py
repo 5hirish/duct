@@ -52,7 +52,6 @@ from agents.content.schema import (
     make_session,
 )
 from agents.content.subagents import (
-    BUILD_SLIDES_AGENT,
     DRAFT_POST_AGENT,
     RESEARCH_PILLAR_AGENT,
 )
@@ -513,6 +512,10 @@ def _validate_generate_image(input_data: dict[str, Any]):
 
     payload = {k: v for k, v in input_data.items() if v not in (None, "")}
     payload.setdefault("number_of_images", min(int(payload.get("number_of_images", 1) or 1), 4))
+    # slide_id / item_index route the result onto a slide (or cell); they're
+    # not Gemini request fields.
+    payload.pop("slide_id", None)
+    payload.pop("item_index", None)
 
     # Coalesce legacy + new reference keys.
     merged_ids: list = []
@@ -600,6 +603,13 @@ async def _run(
     session_id = session.session_id
     project_id = session.project_id
 
+    # Web research observability: can_use_tool emits STEP_STARTED when the model
+    # opens a WebSearch/WebFetch; a PostToolUse hook pops the oldest pending step
+    # and marks it finished. FIFO pairing is approximate under parallel searches
+    # but accurate enough for the progress display.
+    _research_pending: deque[tuple[str, str]] = deque()
+    _research_seq = [0]
+
     # ------------------------------------------------------------------
     # can_use_tool — Agent dispatch observability + AskUserQuestion bridge
     # ------------------------------------------------------------------
@@ -659,6 +669,30 @@ async def _run(
                 return deny
             return PermissionResultAllow(updated_input=input_data)
 
+        # Web research: surface each search/fetch as a visible workflow step.
+        if tool_name in (AgentTool.WEB_SEARCH, AgentTool.WEB_FETCH):
+            _research_seq[0] += 1
+            sid = f"research:{_research_seq[0]}"
+            query = (
+                input_data.get("query")
+                or input_data.get("url")
+                or input_data.get("prompt")
+                or ""
+            )
+            if not isinstance(query, str):
+                query = json.dumps(query, default=str)
+            label = "Web search" if tool_name == AgentTool.WEB_SEARCH else "Reading page"
+            _research_pending.append((sid, label))
+            await emit({
+                "event":      ContentEvent.STEP_STARTED,
+                "session_id": session_id,
+                "step_id":    sid,
+                "label":      label,
+                "summary":    query[:140],
+                "status":     "running",
+            })
+            return PermissionResultAllow(updated_input=input_data)
+
         # AskUserQuestion: bridge to the SSE consumer via asyncio.Future.
         if tool_name == AgentTool.ASK_USER_QUESTION:
             loop = asyncio.get_event_loop()
@@ -707,6 +741,20 @@ async def _run(
             "summary":    result[:240],
             "status":     "success",
         })
+        return {"continue_": True}
+
+    async def _post_web_hook(input_data: dict, tool_use_id: str, context: Any) -> dict:
+        # Close out the oldest open research step (FIFO). Web searches are quick,
+        # so even under parallelism the display stays close to reality.
+        if _research_pending:
+            sid, label = _research_pending.popleft()
+            await emit({
+                "event":      ContentEvent.STEP_FINISHED,
+                "session_id": session_id,
+                "step_id":    sid,
+                "label":      label,
+                "status":     "success",
+            })
         return {"continue_": True}
 
     # ------------------------------------------------------------------
@@ -791,6 +839,7 @@ async def _run(
             AgentTool.AGENT,
             "mcp__duct_content__submit_plan",
             "mcp__duct_content__submit_post_draft",
+            "mcp__duct_content__edit_slide",
             "mcp__duct_content__fetch_brand_context",
             "mcp__duct_content__fetch_topic_bank",
             "mcp__duct_content__fetch_format_library",
@@ -798,6 +847,8 @@ async def _run(
             "mcp__duct_content__fetch_content_history",
             "mcp__duct_content__fetch_content_assets",
             "mcp__duct_content__fetch_discovered_references",
+            "mcp__duct_content__fetch_post",
+            "mcp__duct_content__render_slide",
             "mcp__duct_content__generate_image",
             "mcp__duct_content__edit_image",
             "mcp__duct_content__publish_post",
@@ -807,12 +858,15 @@ async def _run(
         agents={
             "research_pillar":    RESEARCH_PILLAR_AGENT,
             "draft_post":         DRAFT_POST_AGENT,
-            "build_slides_html":  BUILD_SLIDES_AGENT,
         },
         can_use_tool=_can_use_tool,
         hooks={
             "PreToolUse":  [HookMatcher(matcher=None,    hooks=[_pre_tool_hook])],
-            "PostToolUse": [HookMatcher(matcher="Agent", hooks=[_post_agent_hook])],
+            "PostToolUse": [
+                HookMatcher(matcher="Agent",     hooks=[_post_agent_hook]),
+                HookMatcher(matcher="WebSearch", hooks=[_post_web_hook]),
+                HookMatcher(matcher="WebFetch",  hooks=[_post_web_hook]),
+            ],
         },
         max_turns=max_turns,
         system_prompt=system_prompt,

@@ -76,8 +76,9 @@ def test_system_prompt_advertises_essential_capabilities():
     accidentally stripped, the model won't know what to do. One coarse
     assertion is enough — the prompt content is reviewed in PR diffs."""
     sys = build_orchestrator_system_prompt(_brand(), "plan_month")
-    for must_have in ("<duct_report>", "submit_plan", "research_pillar",
-                      "draft_post", "build_slides_html", "MODE: plan_month"):
+    for must_have in ("<duct_report>", "submit_plan", "submit_post_draft",
+                      "research_pillar", "draft_post", "STRUCTURED SLIDES",
+                      "MODE: plan_month"):
         assert must_have in sys, f"system prompt missing critical phrase: {must_have!r}"
 
 

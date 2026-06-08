@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import AuditChat from "./AuditChat";
 import AuditReport from "./AuditReport";
+import SplitWorkspace from "../workspace/SplitWorkspace";
 import {
   closeAgentSession,
   createAgentSession,
@@ -58,21 +59,12 @@ async function consumeSseStream(body, onEvent, signal) {
   }
 }
 
-const INITIAL_SPLIT = 50;
-
 // ---------------------------------------------------------------------------
 // AuditWorkspace
 // ---------------------------------------------------------------------------
 
 export default function AuditWorkspace({ sessionId, auditParams, publicMode = false, onReportReady }) {
   const { setIsAuditRunning } = useAuditNav();
-
-  const [leftWidth, setLeftWidth] = useState(() => {
-    if (typeof window !== "undefined") {
-      return Number(localStorage.getItem("audit_split_w") || INITIAL_SPLIT);
-    }
-    return INITIAL_SPLIT;
-  });
 
   // Core state
   const [phase, setPhase]                     = useState(Phase.STARTING);
@@ -93,8 +85,6 @@ export default function AuditWorkspace({ sessionId, auditParams, publicMode = fa
   const reportReceivedRef   = useRef(false); // set when any report data arrives
   const backendSessionIdRef = useRef(null);
   const agentTypeRef        = useRef("audit_seo");
-  const dragging            = useRef(false);
-  const containerRef        = useRef(null);
   const htmlBatchRef        = useRef("");
   const htmlBatchTimer      = useRef(null);
   const reportFiredRef      = useRef(false); // prevents onReportReady firing more than once
@@ -422,55 +412,34 @@ export default function AuditWorkspace({ sessionId, auditParams, publicMode = fa
   }
 
   // ---------------------------------------------------------------------------
-  // Drag divider
-  // ---------------------------------------------------------------------------
-
-  function onMouseDownDivider(e) {
-    e.preventDefault();
-    dragging.current = true;
-    function onMove(ev) {
-      if (!dragging.current || !containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const pct = Math.min(80, Math.max(20, ((ev.clientX - rect.left) / rect.width) * 100));
-      setLeftWidth(pct);
-      localStorage.setItem("audit_split_w", String(pct));
-    }
-    function onUp() {
-      dragging.current = false;
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-    }
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
-  }
-
-  // ---------------------------------------------------------------------------
-  // Render
+  // Render — split shell is shared (../workspace/SplitWorkspace).
   // ---------------------------------------------------------------------------
 
   const showPublicCta = publicMode && phase === Phase.READY && reportVersions.length > 0;
+  const rightStatus = reportVersions.length > 0 ? "ready" : phase === Phase.PIPELINE ? "busy" : "idle";
+
+  const banner = showPublicCta ? (
+    <div className="shrink-0 flex items-center justify-between gap-3 px-4 py-2.5 bg-orange-50 border-b border-orange-200 text-sm">
+      <div className="flex flex-col gap-0.5 min-w-0">
+        <span className="font-semibold text-orange-900 leading-tight">Want the full picture?</span>
+        <span className="text-orange-700 text-xs leading-tight">This is a quick scan. Sign up for a deeper audit with competitor analysis, keyword gaps, and a prioritized action plan.</span>
+      </div>
+      <a
+        href="/"
+        className="shrink-0 inline-flex items-center gap-1 rounded-md bg-orange-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-orange-700 transition-colors"
+      >
+        Get the full audit →
+      </a>
+    </div>
+  ) : null;
 
   return (
-    <div className="flex flex-col h-full w-full overflow-hidden">
-      {showPublicCta && (
-        <div className="shrink-0 flex items-center justify-between gap-3 px-4 py-2.5 bg-orange-50 border-b border-orange-200 text-sm">
-          <div className="flex flex-col gap-0.5 min-w-0">
-            <span className="font-semibold text-orange-900 leading-tight">Want the full picture?</span>
-            <span className="text-orange-700 text-xs leading-tight">This is a quick scan. Sign up for a deeper audit with competitor analysis, keyword gaps, and a prioritized action plan.</span>
-          </div>
-          <a
-            href="/"
-            className="shrink-0 inline-flex items-center gap-1 rounded-md bg-orange-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-orange-700 transition-colors"
-          >
-            Get the full audit →
-          </a>
-        </div>
-      )}
-    <div ref={containerRef} className="flex flex-1 min-h-0 w-full overflow-hidden">
-      <div
-        className="flex flex-col overflow-hidden border-r border-border/60"
-        style={{ width: `${leftWidth}%`, minWidth: "280px" }}
-      >
+    <SplitWorkspace
+      storageKey="audit_split_w"
+      rightLabel="Report"
+      rightStatus={rightStatus}
+      banner={banner}
+      left={
         <AuditChat
           phase={phase}
           steps={steps}
@@ -487,22 +456,8 @@ export default function AuditWorkspace({ sessionId, auditParams, publicMode = fa
           onRetry={handleRetry}
           onStop={handleStop}
         />
-      </div>
-
-      <div
-        onMouseDown={onMouseDownDivider}
-        title="Drag to resize"
-        className="w-3 shrink-0 cursor-col-resize select-none flex items-center justify-center group"
-      >
-        <div className="w-px h-full bg-border/60 group-hover:bg-primary/30 transition-colors" />
-        <div className="absolute flex flex-col gap-[3px] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-          {[0,1,2,3,4].map((i) => (
-            <span key={i} className="block w-[3px] h-[3px] rounded-full bg-muted-foreground/50" />
-          ))}
-        </div>
-      </div>
-
-      <div className="flex-1 flex flex-col overflow-hidden min-w-[280px]">
+      }
+      right={
         <AuditReport
           phase={phase}
           steps={steps}
@@ -513,8 +468,7 @@ export default function AuditWorkspace({ sessionId, auditParams, publicMode = fa
           errorMsg={errorMsg}
           onRetry={handleRetry}
         />
-      </div>
-    </div>
-    </div>
+      }
+    />
   );
 }

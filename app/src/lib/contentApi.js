@@ -121,6 +121,28 @@ export async function closeContentSession(sessionId) {
   ).catch(() => {});
 }
 
+/** GET a self-contained 1080×1920 single-slide doc (images inlined) to rasterize. */
+export async function getSlideRenderDoc(sessionId, postId, slideId) {
+  const url =
+    `${BASE}/api/content/slide-doc/${encodeURIComponent(sessionId)}` +
+    `?post_id=${encodeURIComponent(postId)}&slide_id=${encodeURIComponent(slideId)}`;
+  const res = await fetch(url, { headers: backendApiHeaders() });
+  return jsonOrThrow(res);
+}
+
+/** POST a rasterized slide PNG back to resolve the agent's render_slide request. */
+export async function postSlideRender(sessionId, { render_id, image_base64 }) {
+  const res = await fetch(
+    `${BASE}/api/content/slide-render/${encodeURIComponent(sessionId)}`,
+    {
+      method: "POST",
+      headers: backendApiHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ render_id, image_base64 }),
+    },
+  );
+  return jsonOrThrow(res);
+}
+
 // ---------------------------------------------------------------------------
 // SSE frame parser
 // ---------------------------------------------------------------------------

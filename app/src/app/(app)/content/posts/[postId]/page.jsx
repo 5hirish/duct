@@ -82,8 +82,11 @@ export default function PostDetailPage() {
             pillar:   post.pillar  || undefined,
             channel:  (Array.isArray(post.platforms) && post.platforms[0]) || undefined,
           }}
-          renderViewport={({ payload }) => (
-            <PostViewport payload={payload || { type: "post", ...post }} />
+          renderViewport={({ payload, onSendMessage }) => (
+            <PostViewport
+              payload={payload || { type: "post", ...post }}
+              onSendMessage={onSendMessage}
+            />
           )}
         />
       </div>
