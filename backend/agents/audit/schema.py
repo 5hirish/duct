@@ -8,6 +8,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from agents.core.business_context import BusinessContext
 from agents.core.session import BaseAgentSession
 from agents.models import AgentEffort
 from agents.user_preferences import UserPreferences
@@ -166,21 +167,11 @@ class CrawlResult(BaseModel):
     crawl_errors: list[str] = Field(default_factory=list)
 
 
-class AuditBusinessContext(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    business_name: str = ""
-    business_description: str = ""
-    business_goals: str = ""
-    target_keywords: list[str] = Field(default_factory=list)
-    competitors: list[str] = Field(default_factory=list)
-    primary_content_type: ContentType = ContentType.unset
-    industry: str = ""
-    business_model: str = ""
-    positioning_statement: str = ""
-    audience_segment: str = ""
-    brand_voice: str = ""
-    growth_stage: str = ""
+# Business context is now the shared, unified model passed equally to every
+# agent (agents/core/business_context.py) — a superset of every agent's fields
+# with extra="ignore", so existing audit payloads validate unchanged.
+# AuditBusinessContext is kept as an alias for backwards-compatible imports.
+AuditBusinessContext = BusinessContext
 
 
 # ---------------------------------------------------------------------------

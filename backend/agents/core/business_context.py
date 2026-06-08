@@ -27,6 +27,10 @@ class BusinessContext(BaseModel):
     business_name: str = ""
     business_description: str = ""
     industry: str = ""
+    business_model: str = ""
+    positioning_statement: str = ""
+    brand_voice: str = ""
+    growth_stage: str = ""
     competitors: list[str] = Field(default_factory=list)
     target_keywords: list[str] = Field(default_factory=list)
     audience_segment: str = ""
@@ -65,7 +69,12 @@ _SHARED_LABELS: list[tuple[str, str]] = [
     ("business_name", "Business"),
     ("business_description", "Description"),
     ("industry", "Industry"),
+    ("business_model", "Business model"),
+    ("positioning_statement", "Positioning"),
     ("audience_segment", "Audience"),
+    ("brand_voice", "Brand voice"),
+    ("growth_stage", "Growth stage"),
+    ("primary_content_type", "Primary content type"),
     ("business_goals", "Goals"),
     ("period_changes", "Recent changes"),
     ("notes", "Notes"),
@@ -82,7 +91,6 @@ _PAID_LABELS: list[tuple[str, str]] = [
 _ORGANIC_LABELS: list[tuple[str, str]] = [
     ("primary_organic_kpi", "Primary organic KPI"),
     ("monthly_organic_traffic_target", "Monthly organic traffic target"),
-    ("primary_content_type", "Primary content type"),
 ]
 _LIST_LABELS: list[tuple[str, str]] = [
     ("competitors", "Competitors"),
