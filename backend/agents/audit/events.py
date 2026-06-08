@@ -1,54 +1,17 @@
-"""SSE event and step-ID enums for the SEO Audit Agent.
+"""Backwards-compatible aliases for the SEO Audit Agent's event vocabulary.
 
-Both the runner (agents/audit/v3/runner.py) and the route (routes/audit.py)
-import from here so event names are defined in exactly one place.
-The frontend mirrors these values in app/src/lib/auditEvents.js.
+Event/step names are now defined once in agents/core/events.py and shared across
+all agent types (audit emits the subset it supports). These aliases keep existing
+imports working; the frontend still mirrors the same string values in
+app/src/lib/auditEvents.js.
 """
 
 from __future__ import annotations
 
-from enum import StrEnum
+from agents.core.events import STEP_LABELS, AgentEvent, AgentStep
 
+# Aliases — same class objects; existing `AuditEvent.X` / `AuditStep.X` access works.
+AuditEvent = AgentEvent
+AuditStep = AgentStep
 
-class AuditEvent(StrEnum):
-    """SSE event.event values emitted over the audit stream."""
-
-    PIPELINE_STARTED = "pipeline_started"
-    PIPELINE_FINISHED = "pipeline_finished"
-    PIPELINE_FAILED = "pipeline_failed"
-
-    STEP_STARTED = "step_started"
-    STEP_FINISHED = "step_finished"
-
-    QUESTIONS_REQUIRED = "questions_required"
-    REPORT_UPDATED = "report_updated"
-    TODO_UPDATE = "todo_update"
-
-    AGENT_MESSAGE_CHUNK = "agent_message_chunk"
-    AGENT_MESSAGE = "agent_message"
-    MESSAGE_STOP = "message_stop"
-
-    SYNTHESIS_CHUNK = "synthesis_chunk"   # kept for backwards compat; no longer emitted
-
-    THINKING_CHUNK = "thinking_chunk"     # model extended-thinking delta
-
-    REPORT_CHUNK = "report_chunk"         # streaming HTML token inside <duct_report>
-
-
-class AuditStep(StrEnum):
-    """step_id values used in STEP_STARTED / STEP_FINISHED events."""
-
-    RESOLVE_URL = "resolve_url"
-    FETCH_SITEMAP = "fetch_sitemap"
-    CRAWL_PAGES = "crawl_pages"
-    ENRICHING = "enriching"
-    SYNTHESIZE_AUDIT = "synthesize_audit"
-
-
-STEP_LABELS: dict[AuditStep, str] = {
-    AuditStep.RESOLVE_URL:      "Resolving website",
-    AuditStep.FETCH_SITEMAP:    "Fetching sitemap",
-    AuditStep.CRAWL_PAGES:      "Crawling pages",
-    AuditStep.ENRICHING:        "Researching competitors",
-    AuditStep.SYNTHESIZE_AUDIT: "AI synthesis",
-}
+__all__ = ["STEP_LABELS", "AuditEvent", "AuditStep"]

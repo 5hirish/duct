@@ -270,11 +270,15 @@ def test_generate_image_validator_coalesces_legacy_and_multi_ref_keys():
 # ---------------------------------------------------------------------------
 
 
-def test_frontend_content_events_mirror_backend_enums():
-    """If a new ContentEvent or ContentStep lands without updating
-    app/src/lib/contentEvents.js the frontend silently ignores the new
-    event. This test fails loudly so we catch the drift in CI."""
+def test_frontend_content_events_are_valid_backend_events():
+    """Every event/step the content frontend references must be a real, shared
+    backend value. Event names now live once in agents/core/events.py as a
+    superset shared across all agents (AgentEvent/AgentStep); each frontend file
+    mirrors the subset its agent uses. This guards against the frontend
+    referencing an unknown or typo'd event/step."""
     import os
+    import re
+
     from agents.content.events import ContentEvent, ContentStep
 
     repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -283,10 +287,10 @@ def test_frontend_content_events_mirror_backend_enums():
         pytest.skip("frontend contentEvents.js not in this checkout")
     with open(js_path) as fh:
         js = fh.read()
-    for ev in ContentEvent:
-        assert f'"{ev.value}"' in js, f"frontend missing event: {ev.value}"
-    for step in ContentStep:
-        assert f'"{step.value}"' in js, f"frontend missing step: {step.value}"
+    valid = {e.value for e in ContentEvent} | {s.value for s in ContentStep}
+    referenced = set(re.findall(r':\s*"([a-z_0-9]+)"', js))
+    unknown = referenced - valid
+    assert not unknown, f"contentEvents.js references unknown events/steps: {unknown}"
 
 
 # ---------------------------------------------------------------------------
