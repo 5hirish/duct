@@ -56,6 +56,9 @@ from agents.content.subagents import (
     RESEARCH_PILLAR_AGENT,
 )
 from agents.content.tools import build_content_mcp_server
+from agents.core import session as _core_session
+from agents.core.report_stream import DuctReportStreamParser
+from agents.core.session import bridge_ask_user_question, register_session
 from agents.models import (
     AgentEffort,
     AgentPermissionMode,
@@ -233,23 +236,17 @@ def _report_startup_failure_to_sentry(
         logger.debug("content: Sentry startup-failure report failed", exc_info=True)
 
 
-# Module-level session registry — in-process only.
-_sessions: dict[str, ContentSession] = {}
-
-
 # ---------------------------------------------------------------------------
-# Session registry
+# Session registry — shared with all agents (agents/core/session.py). These
+# wrappers keep the content-specific import surface and ContentSession typing.
 # ---------------------------------------------------------------------------
 
-
-def get_session(session_id: str) -> ContentSession | None:
-    return _sessions.get(session_id)
+get_session = _core_session.get_session
+close_session = _core_session.close_session
 
 
 def create_plan_session(session_id: str, project_id: UUID) -> ContentSession:
-    session = make_session(session_id, project_id, "plan_month")
-    _sessions[session_id] = session
-    return session
+    return register_session(make_session(session_id, project_id, "plan_month"))
 
 
 def create_draft_session(
@@ -261,18 +258,7 @@ def create_draft_session(
     session = make_session(session_id, project_id, "draft_post")
     if plan_id is not None:
         session.plan_id = plan_id
-    _sessions[session_id] = session
-    return session
-
-
-def close_session(session_id: str) -> None:
-    session = _sessions.pop(session_id, None)
-    if session is None:
-        return
-    try:
-        session.chat_queue.put_nowait(None)
-    except Exception:
-        pass
+    return register_session(session)
 
 
 # ---------------------------------------------------------------------------
@@ -695,25 +681,10 @@ async def _run(
 
         # AskUserQuestion: bridge to the SSE consumer via asyncio.Future.
         if tool_name == AgentTool.ASK_USER_QUESTION:
-            loop = asyncio.get_event_loop()
-            fut: asyncio.Future = loop.create_future()
-            session.answer_future = fut
-            await emit({
-                "event":     ContentEvent.QUESTIONS_REQUIRED,
-                "session_id": session_id,
-                "questions": input_data.get("questions", []),
-            })
-            try:
-                answers = await asyncio.wait_for(asyncio.shield(fut), timeout=120.0)
-            except asyncio.TimeoutError:
-                logger.warning("content: AskUserQuestion timed out for session %s", session_id)
-                answers = {}
-            finally:
-                session.answer_future = None
-            return PermissionResultAllow(updated_input={
-                "questions": input_data.get("questions", []),
-                "answers":   answers,
-            })
+            updated = await bridge_ask_user_question(
+                session, session_id, input_data, emit, log_prefix="content"
+            )
+            return PermissionResultAllow(updated_input=updated)
 
         # Everything else is allowed by allowed_tools; pass through.
         return PermissionResultAllow(updated_input=input_data)
@@ -900,23 +871,22 @@ async def _run(
     # Streaming <duct_report> tag parser
     # ------------------------------------------------------------------
 
-    _OPEN_TAG = "<duct_report>"
-    _CLOSE_TAG = "</duct_report>"
-
-    _in_tag = False
-    _buf = ""
-    _holdback = ""
-    _turn_text: list[str] = []
     _first_token_at: float | None = None
-    _open_tag_at: float | None = None
-    _chunk_count = 0
 
-    async def _flush_holdback() -> None:
-        nonlocal _holdback
-        if _holdback:
-            await emit({"event": ContentEvent.AGENT_MESSAGE_CHUNK, "text": _holdback})
-            _turn_text.append(_holdback)
-            _holdback = ""
+    # <duct_report> streaming is handled by the shared parser (core/report_stream).
+    # Content streams JSON and branches on the payload's "type" in _handle_close.
+    async def _on_text(text: str) -> None:
+        await emit({"event": ContentEvent.AGENT_MESSAGE_CHUNK, "text": text})
+
+    async def _on_report_chunk(text: str) -> None:
+        await emit({"event": ContentEvent.REPORT_CHUNK, "text": text})
+
+    async def _on_report_open() -> None:
+        elapsed = (perf_counter() - _first_token_at) if _first_token_at else 0.0
+        logger.info(
+            "content: <duct_report> opened — JSON streaming started (%.1fs after first token)",
+            elapsed,
+        )
 
     async def _handle_close(raw_json: str) -> None:
         """Parse the JSON inside the closed <duct_report> tag, emit the
@@ -959,68 +929,16 @@ async def _run(
                 "no event emitted", kind,
             )
 
-    async def _process_text(chunk: str) -> None:
-        nonlocal _in_tag, _buf, _holdback, _open_tag_at, _chunk_count
+    async def _on_report_close(raw_json: str, _turn_text: str) -> None:
+        await _handle_close(raw_json)
 
-        if _in_tag:
-            if _CLOSE_TAG in chunk:
-                safe, _, remainder = chunk.partition(_CLOSE_TAG)
-                if safe:
-                    _chunk_count += 1
-                    _buf += safe
-                    await emit({"event": ContentEvent.REPORT_CHUNK, "text": safe})
-                _in_tag = False
-                raw = _buf
-                _buf = ""
-                await _handle_close(raw)
-                if remainder:
-                    await _process_text(remainder)
-            else:
-                _buf += chunk
-                if _CLOSE_TAG in _buf:
-                    raw, _, remainder = _buf.partition(_CLOSE_TAG)
-                    _in_tag = False
-                    _buf = ""
-                    await _handle_close(raw)
-                    if remainder:
-                        await _process_text(remainder)
-                elif chunk:
-                    _chunk_count += 1
-                    if _chunk_count % 50 == 0:
-                        logger.info(
-                            "content: <duct_report> streaming — %d chunks, ~%d chars buffered",
-                            _chunk_count, len(_buf),
-                        )
-                    await emit({"event": ContentEvent.REPORT_CHUNK, "text": chunk})
-            return
-
-        working = _holdback + chunk
-        _holdback = ""
-
-        if _OPEN_TAG in working:
-            before, _, after = working.partition(_OPEN_TAG)
-            if before:
-                await emit({"event": ContentEvent.AGENT_MESSAGE_CHUNK, "text": before})
-                _turn_text.append(before)
-            _in_tag = True
-            _buf = ""
-            _open_tag_at = perf_counter()
-            elapsed = (_open_tag_at - _first_token_at) if _first_token_at else 0.0
-            logger.info(
-                "content: <duct_report> opened — JSON streaming started (%.1fs after first token)",
-                elapsed,
-            )
-            if after:
-                await _process_text(after)
-        else:
-            holdback_len = len(_OPEN_TAG) - 1
-            if len(working) > holdback_len:
-                safe = working[:-holdback_len]
-                _holdback = working[-holdback_len:]
-                await emit({"event": ContentEvent.AGENT_MESSAGE_CHUNK, "text": safe})
-                _turn_text.append(safe)
-            else:
-                _holdback = working
+    parser = DuctReportStreamParser(
+        on_text=_on_text,
+        on_report_chunk=_on_report_chunk,
+        on_report_close=_on_report_close,
+        on_open=_on_report_open,
+        log_prefix="content",
+    )
 
     # ------------------------------------------------------------------
     # Connect (with retry) — startup crashes are side-effect-free
@@ -1102,10 +1020,10 @@ async def _run(
                             if _first_token_at is None:
                                 _first_token_at = perf_counter()
                                 logger.info("content: first text token received")
-                            await _process_text(text_chunk)
+                            await parser.feed(text_chunk)
                 elif ev_type == "message_stop":
-                    await _flush_holdback()
-                    _turn_text.clear()
+                    await parser.flush()
+                    parser.turn_text.clear()
                     await emit({"event": ContentEvent.MESSAGE_STOP})
                 continue
 
@@ -1176,7 +1094,7 @@ class ClaudeContentRunner:
           adaptive_thinking: when True the model decides per-turn depth.
           max_turns: SDK turn ceiling; defaults to DEFAULT_PLAN_MAX_TURNS.
         """
-        session = _sessions.get(session_id) or create_plan_session(session_id, project_id)
+        session = get_session(session_id) or create_plan_session(session_id, project_id)
         brand = _load_brand_context(project_id)
 
         await emit({
@@ -1270,7 +1188,7 @@ class ClaudeContentRunner:
     ) -> None:
         """Run a draft_post session end-to-end."""
         from agents.content.channels import resolve as resolve_channel
-        session = _sessions.get(session_id) or create_draft_session(session_id, project_id)
+        session = get_session(session_id) or create_draft_session(session_id, project_id)
         brand = _load_brand_context(project_id)
         ch = resolve_channel(channel)
 

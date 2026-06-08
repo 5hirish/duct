@@ -14,10 +14,12 @@ import asyncio
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from enum import StrEnum
-from typing import Any, Literal
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
+
+from agents.core.session import BaseAgentSession
 
 from agents.models import AspectRatio, ImageModel, Platform
 
@@ -190,19 +192,15 @@ class ContentChatMessage(BaseModel):
     content: str | list
 
 
-@dataclass
-class ContentSession:
-    """Per-session state — mirrors AuditSession at agents/audit/schema.py."""
+@dataclass(kw_only=True)
+class ContentSession(BaseAgentSession):
+    """Per-session state — BaseAgentSession (session_id, agent_type, queues,
+    answer_future, created_at, pipeline_task) plus content-specific fields."""
 
-    session_id: str
     project_id: UUID
     mode: RunMode
-    event_queue: Any                  # asyncio.Queue — agent → SSE consumer
-    chat_queue: Any                   # asyncio.Queue — user follow-ups → agent
-    answer_future: Any | None = None  # asyncio.Future | None — AskUserQuestion bridge
     plan_id: UUID | None = None
     post_id: UUID | None = None
-    created_at: float = 0.0
     todos: list[dict] = field(default_factory=list)
     # render_id -> asyncio.Future, resolved by the frontend's slide-render POST.
     # Bridges the agent's render_slide tool to client-side rasterization (same
@@ -472,6 +470,7 @@ def make_session(
     import time
     return ContentSession(
         session_id=session_id,
+        agent_type="content_marketing",
         project_id=project_id,
         mode=mode,
         event_queue=asyncio.Queue(),

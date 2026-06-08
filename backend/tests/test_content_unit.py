@@ -117,7 +117,6 @@ def test_session_registry_lifecycle_closes_and_drains():
     forgets to push the sentinel, the stream hangs until chat_idle_timeout.
     """
     from agents.content.v3.runner import (
-        _sessions,
         close_session,
         create_draft_session,
         create_plan_session,
@@ -129,7 +128,7 @@ def test_session_registry_lifecycle_closes_and_drains():
     s = create_plan_session(sid, pid)
     assert get_session(sid) is s
     close_session(sid)
-    assert sid not in _sessions
+    assert get_session(sid) is None
 
     # Sentinel reached the queue:
     drained = asyncio.run(_drain_first(s.chat_queue))

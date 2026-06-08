@@ -8,6 +8,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from agents.core.session import BaseAgentSession
 from agents.models import AgentEffort
 from agents.user_preferences import UserPreferences
 
@@ -377,15 +378,11 @@ class VersionedReport:
     created_at: str
 
 
-@dataclass
-class AuditSession:
-    session_id: str
-    agent_type: str                       # e.g. "audit_seo"
-    event_queue: object                   # asyncio.Queue — agent → SSE consumer
-    chat_queue: object                    # asyncio.Queue — user messages → agent
-    answer_future: object | None          # asyncio.Future | None — for AskUserQuestion
-    created_at: float = 0.0              # time.monotonic() at creation
+@dataclass(kw_only=True)
+class AuditSession(BaseAgentSession):
+    """Audit session — BaseAgentSession (session_id, agent_type, queues,
+    answer_future, created_at, pipeline_task) plus report versioning."""
+
     report_versions: list[VersionedReport] = field(default_factory=list)
     report_mode: str = "freehand"
     template_id: str = ""
-    pipeline_task: object | None = None  # asyncio.Task — cancelled on DELETE

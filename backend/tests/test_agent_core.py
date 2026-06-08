@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from agents.core.artifacts import (
     ArtifactMetadata,
     BaseArtifact,
@@ -118,3 +120,80 @@ def test_streaming_runner_protocol_is_runtime_checkable():
 
     assert isinstance(Dummy(), StreamingAgentRunner)
     assert not isinstance(NotARunner(), StreamingAgentRunner)
+
+
+# --- report stream parser ---------------------------------------------------
+
+from agents.core.report_stream import DuctReportStreamParser  # noqa: E402
+
+
+class _Rec:
+    def __init__(self):
+        self.text: list[str] = []
+        self.chunks: list[str] = []
+        self.closes: list[tuple[str, str]] = []
+        self.opens = 0
+
+    async def on_text(self, t):  # noqa: ANN001
+        self.text.append(t)
+
+    async def on_chunk(self, t):  # noqa: ANN001
+        self.chunks.append(t)
+
+    async def on_close(self, raw, turn):  # noqa: ANN001
+        self.closes.append((raw, turn))
+
+    async def on_open(self):
+        self.opens += 1
+
+
+def _run_parser(chunks: list[str]) -> _Rec:
+    rec = _Rec()
+    parser = DuctReportStreamParser(
+        on_text=rec.on_text,
+        on_report_chunk=rec.on_chunk,
+        on_report_close=rec.on_close,
+        on_open=rec.on_open,
+        log_prefix="test",
+    )
+
+    async def go():
+        for c in chunks:
+            await parser.feed(c)
+        await parser.flush()
+
+    asyncio.run(go())
+    return rec
+
+
+def test_parser_plain_prose_no_report():
+    rec = _run_parser(["hello ", "world"])
+    assert "".join(rec.text) == "hello world"
+    assert rec.closes == [] and rec.chunks == [] and rec.opens == 0
+
+
+def test_parser_full_report_single_chunk():
+    rec = _run_parser(["intro <duct_report>PAYLOAD</duct_report> outro"])
+    assert rec.opens == 1
+    assert "".join(rec.chunks) == "PAYLOAD"
+    assert rec.closes == [("PAYLOAD", "intro")]
+    assert "".join(rec.text) == "intro  outro"  # prose before + after the tag
+
+
+def test_parser_split_open_tag_holdback():
+    # The open tag is split across chunks — holdback must not miss it.
+    rec = _run_parser(["before <duct_re", "port>PAY</duct_report>"])
+    assert rec.opens == 1
+    assert rec.closes == [("PAY", "before")]
+
+
+def test_parser_split_close_tag():
+    rec = _run_parser(["<duct_report>PAY</duct_", "report>after"])
+    assert [c for c in rec.closes] == [("PAY", "")]
+    assert "".join(rec.text) == "after"  # remainder after close streamed as prose
+
+
+def test_parser_payload_streamed_in_pieces():
+    rec = _run_parser(["<duct_report>", "A", "B", "C", "</duct_report>"])
+    assert rec.chunks == ["A", "B", "C"]
+    assert rec.closes == [("ABC", "")]
