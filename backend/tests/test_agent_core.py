@@ -197,3 +197,43 @@ def test_parser_payload_streamed_in_pieces():
     rec = _run_parser(["<duct_report>", "A", "B", "C", "</duct_report>"])
     assert rec.chunks == ["A", "B", "C"]
     assert rec.closes == [("ABC", "")]
+
+
+# --- claude_sdk startup helpers ---------------------------------------------
+
+from collections import deque  # noqa: E402
+
+from agents.core import claude_sdk as _sdk  # noqa: E402
+
+
+def test_is_rate_limited_matches_known_hints():
+    assert _sdk.is_rate_limited("Error: usage limit reached for this org")
+    assert _sdk.is_rate_limited("HTTP 429 Too Many Requests")
+    assert not _sdk.is_rate_limited("ENOENT: command not found")
+    assert not _sdk.is_rate_limited("")
+
+
+def test_captured_stderr_prefers_buffer_then_skips_placeholder():
+    buf: deque[str] = deque(["line one", "line two"])
+    assert _sdk.captured_stderr(buf, Exception()) == "line one\nline two"
+
+    class _Exc(Exception):
+        stderr = _sdk.PLACEHOLDER_STDERR
+
+    assert _sdk.captured_stderr(deque(), _Exc()) == ""  # placeholder treated as none
+
+    class _Exc2(Exception):
+        stderr = "real error text"
+
+    assert _sdk.captured_stderr(deque(), _Exc2()) == "real error text"
+
+
+def test_describe_startup_failure_phrasing():
+    rl = _sdk.describe_startup_failure("usage limit reached", 1, agent_label="content engine")
+    assert "content engine" in rl and "rate limit" in rl.lower()
+
+    crash = _sdk.describe_startup_failure("boom", 1, agent_label="content engine")
+    assert "exit code 1" in crash and "boom" in crash
+
+    empty = _sdk.describe_startup_failure("", 1, agent_label="content engine")
+    assert "without emitting stderr" in empty and "NODE_OPTIONS" in empty

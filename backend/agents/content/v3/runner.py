@@ -56,6 +56,7 @@ from agents.content.subagents import (
     RESEARCH_PILLAR_AGENT,
 )
 from agents.content.tools import build_content_mcp_server
+from agents.core import claude_sdk as _sdk
 from agents.core import session as _core_session
 from agents.core.report_stream import DuctReportStreamParser
 from agents.core.session import bridge_ask_user_question, register_session
@@ -71,120 +72,34 @@ logger = logging.getLogger(__name__)
 
 EmitFn = Callable[[dict[str, Any]], Awaitable[None]]
 
-# The `claude` CLI subprocess can exit non-zero during initialize() before it
-# streams anything — most often a transient subscription usage/rate limit on
-# the OAuth path (no ANTHROPIC_API_KEY), or a momentary spawn glitch. The SDK
-# surfaces this opaquely as ProcessError("Command failed with exit code 1 /
-# Check stderr output for details"). Because nothing has streamed yet, retrying
-# the connect is side-effect-free, so we retry with backoff before giving up.
-_MAX_CONNECT_ATTEMPTS = 3
-_CONNECT_BACKOFF_SECS = 1.5
-
-# Substrings that mark a startup stderr as a usage/rate limit rather than a
-# config bug — used only to phrase a clearer error; matching is case-folded.
-_RATE_LIMIT_HINTS = (
-    "rate limit",
-    "usage limit",
-    "quota",
-    "429",
-    "limit reached",
-    "overloaded",
-)
-
-# The SDK fills ProcessError.stderr with this literal when it couldn't drain
-# the pipe — it carries no signal, so we treat it as "no stderr captured".
-_PLACEHOLDER_STDERR = "Check stderr output for details"
+# CLI-startup helpers now live in agents/core/claude_sdk.py (reusable across
+# Claude-SDK agents). These thin wrappers bind the content-specific label,
+# config-dir env var/suffix, and Sentry namespace so the call sites in _run()
+# stay unchanged.
+_MAX_CONNECT_ATTEMPTS = _sdk.MAX_CONNECT_ATTEMPTS
+_CONNECT_BACKOFF_SECS = _sdk.CONNECT_BACKOFF_SECS
+_PLACEHOLDER_STDERR = _sdk.PLACEHOLDER_STDERR
 
 
 def _captured_stderr(buf: deque[str], exc: Exception) -> str:
-    """Best real subprocess stderr we have: our own ring buffer first, then the
-    SDK's ProcessError.stderr — but never the meaningless placeholder."""
-    text = "\n".join(buf).strip()
-    if text:
-        return text
-    sdk_stderr = (getattr(exc, "stderr", "") or "").strip()
-    return "" if sdk_stderr == _PLACEHOLDER_STDERR else sdk_stderr
+    return _sdk.captured_stderr(buf, exc)
 
 
 def _is_rate_limited(stderr_text: str) -> bool:
-    lowered = (stderr_text or "").lower()
-    return any(hint in lowered for hint in _RATE_LIMIT_HINTS)
+    return _sdk.is_rate_limited(stderr_text)
 
 
 def _describe_startup_failure(stderr_text: str, exit_code: int | None) -> str:
-    """Phrase a clear, user-facing reason for a CLI startup crash.
-
-    stderr_text is the captured subprocess stderr (may be empty). Falls back to
-    a generic message when nothing was captured so the error is never just
-    "exit code 1".
-    """
-    text = (stderr_text or "").strip()
-    if _is_rate_limited(text):
-        return (
-            "The content engine hit a temporary Claude usage/rate limit while "
-            "starting up. Wait a few minutes and retry the draft."
-            + (f"\nSubprocess stderr:\n{text}" if text else "")
-        )
-    if text:
-        return (
-            "The content engine subprocess failed to start "
-            f"(exit code {exit_code}).\nSubprocess stderr:\n{text}"
-        )
-    return (
-        "The content engine subprocess failed to start "
-        f"(exit code {exit_code}) without emitting stderr. Common causes: the "
-        "Claude CLI is not authenticated (set CLAUDE_CODE_OAUTH_TOKEN from "
-        "`claude setup-token`, or ANTHROPIC_API_KEY), a temporary subscription "
-        "usage limit, or the backend was launched from an IDE debugger that "
-        "injected NODE_OPTIONS into the spawned Node CLI."
-    )
+    return _sdk.describe_startup_failure(stderr_text, exit_code, agent_label="content engine")
 
 
 def _isolated_config_dir(explicit_auth: str) -> str | None:
-    """A CLAUDE_CONFIG_DIR for the content agent isolated from the developer's
-    interactive ~/.claude.
-
-    A backend worker spawning `claude` on the OAuth path shares ~/.claude with
-    any interactive Claude Code running on the same box — including its session
-    files, locks, and the security-guidance plugin's agent-sdk-venv bootstrap.
-    That shared state is the one environmental difference between this worker
-    (which intermittently sees the CLI exit 1 during initialize, with no
-    stderr) and a clean-room run (which never does). Giving the worker its own
-    config dir removes that contention.
-
-    `explicit_auth` is any auth the SDK env carries on its own — an
-    ANTHROPIC_API_KEY or a CLAUDE_CODE_OAUTH_TOKEN from `claude setup-token`.
-    When it is empty we fall back to the interactive `/login` subscription, whose
-    credentials live in ~/.claude/.credentials.json, so we symlink that file into
-    the isolated dir (live, so token refreshes are picked up) — otherwise the
-    isolated CLI would report "Not logged in". With explicit auth in the env, no
-    credential link is needed.
-
-    Returns the dir to use, or None to fall back to the default ~/.claude.
-    Opt out entirely with DUCT_CONTENT_CLAUDE_CONFIG_DIR=0.
-    """
-    override = os.environ.get("DUCT_CONTENT_CLAUDE_CONFIG_DIR")
-    if override in ("0", "off", "false", "no"):
-        return None
-
-    home = os.path.expanduser("~/.claude")
-    target = override or f"{home}-duct-content"
-    try:
-        os.makedirs(target, exist_ok=True)
-        if not explicit_auth:
-            # Interactive-login path: share the live credentials file, isolate
-            # everything else.
-            src = os.path.join(home, ".credentials.json")
-            dst = os.path.join(target, ".credentials.json")
-            if os.path.exists(src) and not os.path.lexists(dst):
-                os.symlink(src, dst)
-        return target
-    except OSError:
-        logger.warning(
-            "content: could not prepare isolated CLAUDE_CONFIG_DIR at %s; "
-            "falling back to default ~/.claude", target, exc_info=True,
-        )
-        return None
+    return _sdk.isolated_config_dir(
+        explicit_auth,
+        env_var="DUCT_CONTENT_CLAUDE_CONFIG_DIR",
+        suffix="duct-content",
+        log_prefix="content",
+    )
 
 
 def _report_startup_failure_to_sentry(
@@ -197,43 +112,16 @@ def _report_startup_failure_to_sentry(
     stderr: str,
     rate_limited: bool,
 ) -> None:
-    """Send an exhausted CLI-startup failure to Sentry (no-op if uninitialised).
-
-    Only the final failure (after all retries) is reported, so a recovered
-    blip never pages anyone. Rate-limit crashes and hard crashes get distinct
-    fingerprints so they group separately. Never raises — Sentry reporting must
-    not mask the underlying error.
-    """
-    try:
-        import sentry_sdk
-
-        kind = "rate_limit" if rate_limited else "startup_crash"
-        with sentry_sdk.push_scope() as scope:
-            scope.set_tag("agent", "content")
-            scope.set_tag("content.failure", "cli_startup")
-            scope.set_tag("content.failure_kind", kind)
-            scope.set_tag("content.mode", str(getattr(mode, "value", mode)))
-            scope.set_context(
-                "content_startup",
-                {
-                    "session_id": session_id,
-                    "attempts": attempts,
-                    "exit_code": exit_code,
-                    "stderr": stderr or "(none captured)",
-                },
-            )
-            # Group all exit-1 startup crashes of the same kind together rather
-            # than by the generic ProcessError traceback.
-            scope.fingerprint = ["content-cli-startup", kind]
-            scope.level = "warning" if rate_limited else "error"
-            if exc is not None:
-                sentry_sdk.capture_exception(exc)
-            else:
-                sentry_sdk.capture_message(
-                    f"content CLI startup failed ({kind})", level=scope.level
-                )
-    except Exception:  # noqa: BLE001 — reporting must never break the run
-        logger.debug("content: Sentry startup-failure report failed", exc_info=True)
+    _sdk.report_startup_failure_to_sentry(
+        exc,
+        agent="content",
+        session_id=session_id,
+        mode=mode,
+        attempts=attempts,
+        exit_code=exit_code,
+        stderr=stderr,
+        rate_limited=rate_limited,
+    )
 
 
 # ---------------------------------------------------------------------------
