@@ -13,17 +13,6 @@ from __future__ import annotations
 DUCT_REPORT_OPEN = "<duct_report>"
 DUCT_REPORT_CLOSE = "</duct_report>"
 
-JSON_OUTPUT_INSTRUCTION = (
-    "Output ONLY a single valid JSON object — no markdown fences, no preamble, "
-    "no trailing text."
-)
-
-DUCT_REPORT_CONVENTION = (
-    f"When your result is ready, emit it as a single JSON object wrapped in "
-    f"{DUCT_REPORT_OPEN} … {DUCT_REPORT_CLOSE} tags. Put nothing else inside the "
-    f"tags — no fences, no commentary."
-)
-
 
 def xml_block(tag: str, content: str) -> str:
     """Wrap ``content`` in a labelled XML block, or return '' when empty.

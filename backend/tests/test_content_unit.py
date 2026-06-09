@@ -525,35 +525,9 @@ def test_draft_post_prompt_contains_critical_quality_rules():
 # ---------------------------------------------------------------------------
 
 
-def test_startup_stderr_capture_prefers_buffer_and_drops_sdk_placeholder():
-    from collections import deque
-
-    from claude_agent_sdk import ProcessError
-
-    from agents.content.v3 import runner
-
-    placeholder = ProcessError("x", exit_code=1, stderr="Check stderr output for details")
-    # The SDK's meaningless placeholder must never be reported as real stderr.
-    assert runner._captured_stderr(deque(), placeholder) == ""
-    # A genuine ProcessError.stderr is kept when our buffer is empty.
-    real = ProcessError("x", exit_code=1, stderr="TypeError in cli.js")
-    assert runner._captured_stderr(deque(), real) == "TypeError in cli.js"
-    # Our own ring buffer (the reliable source) wins over ProcessError.stderr.
-    assert runner._captured_stderr(deque(["a", "b"]), real) == "a\nb"
-
-
-def test_startup_failure_message_classifies_rate_limit_and_never_leaks_placeholder():
-    from agents.content.v3 import runner
-
-    rate = runner._describe_startup_failure("Error: 429 usage limit reached", 1)
-    assert "usage/rate limit" in rate
-
-    crash = runner._describe_startup_failure("TypeError: boom", 1)
-    assert "exit code 1" in crash and "boom" in crash
-
-    empty = runner._describe_startup_failure("", 1)
-    assert "without emitting stderr" in empty
-    assert runner._PLACEHOLDER_STDERR not in empty
+# NB: the stderr-capture / failure-message / rate-limit classification logic is
+# tested directly in tests/test_agent_core.py (it now lives in core/claude_sdk.py).
+# Here we only cover the content-specific Sentry wiring (agent="content" tags).
 
 
 def test_sentry_startup_report_fingerprints_by_kind_and_never_raises(monkeypatch):

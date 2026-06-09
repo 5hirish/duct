@@ -109,9 +109,3 @@ STEP_LABELS: dict[AgentStep, str] = {
     # Shared
     AgentStep.ENRICHING: "Researching competitors",
 }
-
-
-def make_event(event: AgentEvent | str, **payload: object) -> dict:
-    """Build a standard event body. The emit layer adds ``ts`` / ``session_id`` /
-    ``agent_type`` (see routes/agents.py); this just normalizes ``event``."""
-    return {"event": str(event), **payload}

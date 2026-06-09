@@ -1,30 +1,14 @@
-"""Shared output vocabulary — the standard envelope + reusable components every
-agent's result composes.
+"""Shared output components — reusable building blocks that agents compose.
 
-Each agent keeps its genuinely-unique fields, but the cross-cutting shapes
-(metadata envelope, findings, recommended actions, evidence, narrative) are
-defined once here so the frontend reads one consistent structure across audit,
-content, and insights. Adoption (refactoring SynthesisSchema / AuditReport /
-PlanDraft to extend these) happens per agent; this module is the target.
+The cross-cutting finding/action/evidence/narrative shapes are defined once here
+so outputs stay consistent across agents. Insights composes these today (its
+SynFinding / SynRecommendedAction / SynNarrative extend the bases); audit's
+finding shape already aligns on the same field names.
 """
 
 from __future__ import annotations
 
 from pydantic import BaseModel, Field
-
-
-class ArtifactMetadata(BaseModel):
-    """Envelope metadata present on every agent artifact.
-
-    ``source_metadata`` carries the existing app contract keys (``theme``,
-    ``generated_at``) so the frontend's accent-color / timestamp resolution is
-    unchanged.
-    """
-
-    agent_type: str = ""
-    generated_at: str = ""
-    version: str = ""
-    source_metadata: dict = Field(default_factory=dict)
 
 
 class EvidenceSource(BaseModel):
@@ -42,7 +26,7 @@ class EvidenceSource(BaseModel):
 
 
 class Narrative(BaseModel):
-    """The headline read of the artifact."""
+    """The headline read of an artifact."""
 
     verdict: str = ""
     summary: str = ""
@@ -70,19 +54,3 @@ class RecommendedAction(BaseModel):
     title: str = ""
     detail: str = ""
     evidence: list[str] = Field(default_factory=list)
-
-
-class BaseArtifact(BaseModel):
-    """Common envelope every agent's top-level output extends.
-
-    Agents add their unique fields (insights ``dashboard_spec``, audit
-    ``structured_data`` / ``html_report``, content ``slides`` / ``days``) on
-    their own subclasses; these fields stay standard.
-    """
-
-    metadata: ArtifactMetadata = Field(default_factory=ArtifactMetadata)
-    headline: str = ""
-    executive_summary: str = ""
-    narrative: Narrative | None = None
-    findings: list[Finding] = Field(default_factory=list)
-    recommended_actions: list[RecommendedAction] = Field(default_factory=list)

@@ -4,17 +4,8 @@ from __future__ import annotations
 
 import asyncio
 
-from agents.core.artifacts import (
-    ArtifactMetadata,
-    BaseArtifact,
-    EvidenceSource,
-    Finding,
-    Narrative,
-    RecommendedAction,
-)
 from agents.core.business_context import BusinessContext, format_business_context
-from agents.core.contracts import BaseAgentRequest, StreamingAgentRunner
-from agents.core.events import AgentEvent, AgentStep, make_event
+from agents.core.events import AgentEvent, AgentStep
 from agents.core.prompts import DUCT_REPORT_CLOSE, DUCT_REPORT_OPEN, xml_block
 
 
@@ -29,11 +20,6 @@ def test_event_values_and_aliases_match_frontend_contract():
     from agents.audit.events import AuditEvent
     from agents.content.events import ContentEvent
     assert AuditEvent is AgentEvent and ContentEvent is AgentEvent
-
-
-def test_make_event_normalizes_event_and_keeps_payload():
-    body = make_event(AgentEvent.STEP_STARTED, step_id="crawl_pages", label="Crawling")
-    assert body == {"event": "step_started", "step_id": "crawl_pages", "label": "Crawling"}
 
 
 # --- prompts ----------------------------------------------------------------
@@ -76,50 +62,6 @@ def test_format_business_context_section_toggles():
     assert "Target CPA: 50.0" in paid_only and "Primary organic KPI" not in paid_only
     organic_only = format_business_context(data, include_paid=False)
     assert "Primary organic KPI: organic_traffic" in organic_only and "Target CPA" not in organic_only
-
-
-# --- artifacts --------------------------------------------------------------
-
-def test_base_artifact_composes_shared_components():
-    art = BaseArtifact(
-        metadata=ArtifactMetadata(agent_type="audit_seo", version="1", source_metadata={"theme": "organic_growth"}),
-        headline="Spend efficiency declined",
-        narrative=Narrative(verdict="declining", summary="ROAS fell", takeaway="cut waste"),
-        findings=[
-            Finding(
-                id="title-too-short",
-                title="Titles too short",
-                impact="medium",
-                evidence_sources=[EvidenceSource(source="crawl", url="https://x.com", value="13 chars")],
-            )
-        ],
-        recommended_actions=[RecommendedAction(id="a1", title="Rewrite titles", priority="high")],
-    )
-    dumped = art.model_dump()
-    assert dumped["metadata"]["source_metadata"]["theme"] == "organic_growth"
-    assert dumped["findings"][0]["evidence_sources"][0]["value"] == "13 chars"
-    # Round-trips.
-    assert BaseArtifact.model_validate(dumped) == art
-
-
-# --- contracts --------------------------------------------------------------
-
-def test_base_agent_request_defaults_and_business_context():
-    req = BaseAgentRequest()
-    assert req.engine == "" and req.adaptive_thinking is False
-    assert isinstance(req.business_context, BusinessContext)
-
-
-def test_streaming_runner_protocol_is_runtime_checkable():
-    class Dummy:
-        async def run(self, session_id, request, emit):  # noqa: ANN001
-            return None
-
-    class NotARunner:
-        pass
-
-    assert isinstance(Dummy(), StreamingAgentRunner)
-    assert not isinstance(NotARunner(), StreamingAgentRunner)
 
 
 # --- report stream parser ---------------------------------------------------
