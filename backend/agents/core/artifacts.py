@@ -50,29 +50,25 @@ class Narrative(BaseModel):
 
 
 class Finding(BaseModel):
-    """A single observation. Severity/confidence are free strings so each agent
-    keeps its own scale (insights confidence; audit fail/warn/opportunity)."""
+    """Minimal common base for an observation. Each agent extends this with its
+    own domain fields — insights adds type/confidence/recommended_action/
+    related_campaigns; audit adds severity/affected_urls/effort — so the shared
+    ``id``/``title``/``impact``/``evidence`` surface stays consistent across agents."""
 
     id: str = ""
     title: str = ""
-    description: str = ""
-    severity: str = ""
-    confidence: str = ""
     impact: str = ""
-    recommendation: str = ""
     evidence: list[str] = Field(default_factory=list)
     evidence_sources: list[EvidenceSource] = Field(default_factory=list)
 
 
 class RecommendedAction(BaseModel):
-    """A prioritized next step."""
+    """Minimal common base for a prioritized next step; agents extend with their
+    own fields (insights: type/priority/owner/related_campaigns)."""
 
     id: str = ""
     title: str = ""
     detail: str = ""
-    priority: str = ""            # "high" | "medium" | "low"
-    owner: str = ""
-    effort: str = ""
     evidence: list[str] = Field(default_factory=list)
 
 

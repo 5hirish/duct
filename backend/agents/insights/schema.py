@@ -11,6 +11,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from agents.core.artifacts import Finding, Narrative, RecommendedAction
 from agents.insights.entities import (
     SynActionPriority,
     SynActionType,
@@ -53,14 +54,13 @@ class SynEvidenceSource(BaseModel):
     connector_entity_id: str = ""
 
 
-class SynFinding(BaseModel):
+class SynFinding(Finding):
+    """Insights finding — extends the shared Finding base (id, title, impact,
+    evidence, evidence_sources) with paid/organic-specific fields."""
+
     model_config = ConfigDict(extra="forbid")
 
-    finding_id: str
     type: SynFindingType
-    title: str
-    evidence: list[str] = Field(default_factory=list)
-    impact: str = ""
     recommended_action: str = ""
     confidence: SynConfidenceLevel = SynConfidenceLevel.MEDIUM
     related_campaigns: list[str] = Field(default_factory=list)
@@ -68,26 +68,23 @@ class SynFinding(BaseModel):
     evidence_chain: SynEvidenceChain = Field(default_factory=SynEvidenceChain)
 
 
-class SynRecommendedAction(BaseModel):
+class SynRecommendedAction(RecommendedAction):
+    """Insights action — extends the shared RecommendedAction base (id, title,
+    detail, evidence) with paid/organic-specific fields."""
+
     model_config = ConfigDict(extra="forbid")
 
-    action_id: str
     type: SynActionType
-    title: str
-    detail: str = ""
     priority: SynActionPriority = SynActionPriority.MEDIUM
     owner: str = "paid team"
     related_campaigns: list[str] = Field(default_factory=list)
-    evidence: list[str] = Field(default_factory=list)
     evidence_sources: list[SynEvidenceSource] = Field(default_factory=list)
 
 
-class SynNarrative(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+class SynNarrative(Narrative):
+    """Insights narrative — the shared Narrative (verdict / summary / takeaway)."""
 
-    verdict: str
-    summary: str
-    operator_takeaway: str
+    model_config = ConfigDict(extra="forbid")
 
 
 class BlockThreshold(BaseModel):

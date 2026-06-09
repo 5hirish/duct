@@ -1235,9 +1235,9 @@ function OrganicInsightReport({ synthesis, connectorsUsed }) {
         <div className="generate-alert" role="status" style={{ marginBottom: 20 }}>
           <p style={{ fontWeight: 600, marginBottom: 6 }}>{narrative.verdict}</p>
           {narrative.summary && <p className="app-subtle" style={{ marginBottom: 6 }}>{narrative.summary}</p>}
-          {narrative.operator_takeaway && (
+          {narrative.takeaway && (
             <p style={{ fontSize: 13, fontWeight: 500 }}>
-              <span className="app-subtle">This week: </span>{narrative.operator_takeaway}
+              <span className="app-subtle">This week: </span>{narrative.takeaway}
             </p>
           )}
         </div>

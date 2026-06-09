@@ -90,7 +90,7 @@ Finding style — each finding must include:
 Narrative style:
 - verdict: one sentence, operator-ready (what happened and what it means)
 - summary: 2-3 sentences covering the key story of the period
-- operator_takeaway: the single most important action to take this week
+- takeaway: the single most important action to take this week
 
 </output_format>
 

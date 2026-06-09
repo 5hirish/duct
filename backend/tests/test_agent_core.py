@@ -89,7 +89,7 @@ def test_base_artifact_composes_shared_components():
             Finding(
                 id="title-too-short",
                 title="Titles too short",
-                severity="warn",
+                impact="medium",
                 evidence_sources=[EvidenceSource(source="crawl", url="https://x.com", value="13 chars")],
             )
         ],

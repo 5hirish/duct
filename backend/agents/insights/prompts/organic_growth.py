@@ -112,7 +112,7 @@ Narrative style:
   pages losing position 3-6 rankings for branded queries — likely algorithm sensitivity,
   not structural decay")
 - summary: 2-3 sentences covering the key story of the period
-- operator_takeaway: the single highest-leverage action to take this week
+- takeaway: the single highest-leverage action to take this week
 
 </output_format>
 

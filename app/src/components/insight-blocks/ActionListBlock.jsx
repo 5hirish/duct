@@ -10,7 +10,7 @@ export default function ActionListBlock({ title, synthesis, insightNote = "" }) 
       <div className="rpt-disclosure-panel">
         <ul style={{ margin: 0, paddingLeft: "1.2rem" }}>
           {actions.map((action) => (
-            <li key={action.action_id} style={{ marginBottom: 8 }}>
+            <li key={action.id} style={{ marginBottom: 8 }}>
               <strong>{action.title}</strong>
               {action.detail ? ` — ${action.detail}` : ""}
             </li>

@@ -103,7 +103,8 @@ async def _run(provider: Provider, model: ModelName, api_key: str):
     if supplementary:
         assert set(supplementary).issubset(set(registered)), "unexpected supplementary keys"
     if synthesis is not None:
-        assert synthesis.verdict, "synthesis verdict empty"
+        # narrative is the shared core Narrative (verdict / summary / takeaway).
+        assert synthesis.narrative.verdict, "synthesis narrative verdict empty"
 
 
 @pytest.mark.skipif(
