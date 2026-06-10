@@ -4,7 +4,7 @@
   "private": true,
   "description": "Duct minimal report viewer app shell.",
   "scripts": {
-    "dev": "NODE_OPTIONS='--max-old-space-size=4096' next dev -p 3003",
+    "dev": "NODE_OPTIONS='--max-old-space-size=2048' next dev -p 3003",
     "check:parity": "node scripts/check-slide-parity.mjs",
     "build": "next build",
     "start": "next start",
