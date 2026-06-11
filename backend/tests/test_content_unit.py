@@ -163,17 +163,17 @@ def test_unified_agents_route_creates_contentsession():
 
     pid = uuid4()
     s = _create_session_for(
-        AgentType.CONTENT_MARKETING, "ufold-plan", {"mode": "plan_month", "project_id": str(pid)}
+        AgentType.TIKTOK_STUDIO, "ufold-plan", {"mode": "plan_month", "project_id": str(pid)}
     )
     assert isinstance(s, ContentSession)
     assert s.mode == "plan_month" and s.project_id == pid
-    assert s.agent_type == "content_marketing"
+    assert s.agent_type == "tiktok_studio"
     assert get_session("ufold-plan") is s
     close_session("ufold-plan")
 
     plan_id = uuid4()
     s2 = _create_session_for(
-        AgentType.CONTENT_MARKETING,
+        AgentType.TIKTOK_STUDIO,
         "ufold-draft",
         {"mode": "draft_post", "project_id": str(pid), "plan_id": str(plan_id)},
     )
@@ -181,7 +181,7 @@ def test_unified_agents_route_creates_contentsession():
     close_session("ufold-draft")
 
     with pytest.raises(HTTPException):
-        _create_session_for(AgentType.CONTENT_MARKETING, "ufold-bad", {"mode": "plan_month"})
+        _create_session_for(AgentType.TIKTOK_STUDIO, "ufold-bad", {"mode": "plan_month"})
 
 
 # ---------------------------------------------------------------------------

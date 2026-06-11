@@ -1,4 +1,4 @@
-"""Deterministic slide → HTML renderer for the Content Marketing Agent.
+"""Deterministic slide → HTML renderer for the Content Studio agent.
 
 The orchestrator authors structured `Slide` objects (copy + an image prompt);
 this module renders the final `slides_html` document. The model NEVER writes

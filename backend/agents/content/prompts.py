@@ -1,4 +1,4 @@
-"""System prompts and user-prompt builders for the Content Marketing Agent.
+"""System prompts and user-prompt builders for the Content Studio agent.
 
 Three prompts:
   - ORCHESTRATOR_BASE_PROMPT  — universal preamble for ContentOrchestrator.

@@ -1,4 +1,4 @@
-"""In-process MCP tools exposed to the Content Marketing Agent.
+"""In-process MCP tools exposed to the Content Studio agent.
 
 Two groups of tools:
   - Writers: submit_plan, submit_post_draft — validate Pydantic, upsert DB,

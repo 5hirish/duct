@@ -43,6 +43,7 @@ from agents.audit.schema import (
     StructuredAuditData,
     VersionedReport,
 )
+from agents.core import claude_sdk as _sdk
 from agents.core import session as _core_session
 from agents.core.report_stream import DuctReportStreamParser
 from agents.core.session import bridge_ask_user_question, register_session
@@ -450,6 +451,30 @@ async def run_synthesis(
     }
     if api_key:
         _sdk_env[env_var] = api_key
+    elif _cfg.claude_code_oauth_token:
+        # OAuth/subscription path: forward the token so the isolated config dir
+        # below doesn't depend on the dev's interactive ~/.claude credentials.
+        _sdk_env["CLAUDE_CODE_OAUTH_TOKEN"] = _cfg.claude_code_oauth_token
+
+    # When launched from an IDE debugger, NODE_OPTIONS injects a bootloader that
+    # corrupts the CLI's stream-json protocol → exit 1 during initialize. The SDK
+    # merges options.env over os.environ but can't delete keys, so blank them.
+    for _ide_var in ("NODE_OPTIONS", "CLAUDE_CODE_SSE_PORT"):
+        if os.environ.get(_ide_var):
+            _sdk_env[_ide_var] = ""
+
+    # Isolate this worker's CLI state from the dev's interactive ~/.claude (and
+    # any live Claude Code session). Concurrent access to a shared ~/.claude is
+    # what makes the subprocess exit 1 during initialize. Mirrors the content
+    # runner; the frontend guards against duplicate sessions sharing this dir.
+    _config_dir = _sdk.isolated_config_dir(
+        api_key or _cfg.claude_code_oauth_token,
+        env_var="DUCT_AUDIT_CLAUDE_CONFIG_DIR",
+        suffix="duct-audit",
+        log_prefix="audit",
+    )
+    if _config_dir:
+        _sdk_env["CLAUDE_CONFIG_DIR"] = _config_dir
 
     # OTEL traces to a local Phoenix / OTLP collector.
     # Set OTEL_ENDPOINT=http://localhost:6006 (or any OTLP endpoint) to enable.

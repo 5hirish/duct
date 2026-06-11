@@ -54,7 +54,7 @@ export default function ContentLandingPage() {
   return (
     <div className="w-full">
       <header className="mb-6">
-        <h1 className="text-2xl font-semibold">Content Marketing</h1>
+        <h1 className="text-2xl font-semibold">Content Studio</h1>
         <p className="text-sm text-muted-foreground">
           Monthly plans, post drafts, formats, and analytics for {projectName}.
         </p>

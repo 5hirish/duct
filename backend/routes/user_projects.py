@@ -25,6 +25,7 @@ _JSONB_MAX_BYTES = 128_000
 class ProjectIn(BaseModel):
     name: str
     company_name: str = ""
+    pitch: str = ""
     industry: str = ""
     business_model: str = ""
     website_url: str = ""
@@ -45,6 +46,7 @@ class ProjectOut(BaseModel):
     id: UUID
     name: str
     company_name: str
+    pitch: str
     industry: str
     business_model: str
     website_url: str
@@ -61,6 +63,7 @@ def _to_out(p: Project) -> ProjectOut:
         id=p.id,
         name=p.name,
         company_name=p.company_name,
+        pitch=p.pitch,
         industry=p.industry,
         business_model=p.business_model,
         website_url=p.url,
@@ -94,6 +97,7 @@ def create_project(
         user_id=user.id,
         name=body.name,
         company_name=body.company_name,
+        pitch=body.pitch,
         industry=body.industry,
         business_model=body.business_model,
         url=body.website_url,
@@ -146,6 +150,7 @@ def update_project(
 
     project.name = body.name
     project.company_name = body.company_name
+    project.pitch = body.pitch
     project.industry = body.industry
     project.business_model = body.business_model
     project.url = body.website_url

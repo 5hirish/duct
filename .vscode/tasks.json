@@ -48,7 +48,7 @@
     {
       "label": "Backend: uvicorn",
       "type": "shell",
-      "command": "poetry run uvicorn server:app --reload --reload-dir agents --reload-dir routes --reload-dir models --reload-dir service --reload-dir db --reload-dir utils --reload-delay 1 --host 127.0.0.1 --port 8002",
+      "command": "poetry run uvicorn server:app --reload --reload-dir \"${workspaceFolder}/backend\" --reload-exclude \"${workspaceFolder}/backend/.venv\" --reload-exclude \"${workspaceFolder}/backend/data\" --reload-delay 1 --host 127.0.0.1 --port 8002",
       "options": { "cwd": "${workspaceFolder}/backend" },
       "isBackground": true,
       "presentation": {

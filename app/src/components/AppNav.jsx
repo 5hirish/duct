@@ -16,7 +16,7 @@ import { useAuditNav } from "../lib/auditNavContext";
 // Friendly labels for known path segments. Unknown segments (dynamic ids /
 // slugs) fall back to prettifySegment().
 const SEGMENT_LABELS = {
-  content: "Content Marketing",
+  content: "Content Studio",
   plan: "Plan",
   posts: "Posts",
   sessions: "Sessions",

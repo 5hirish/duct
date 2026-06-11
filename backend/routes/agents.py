@@ -97,7 +97,9 @@ async def _sse_stream(event_queue: asyncio.Queue) -> AsyncGenerator[str, None]:
             continue
         if payload is None:  # sentinel — session closed
             break
-        yield f"data: {json.dumps(payload)}\n\n"
+        # default=str so payloads carrying UUIDs / datetimes / enums (content
+        # events do) serialize instead of crashing the stream mid-flight.
+        yield f"data: {json.dumps(payload, default=str)}\n\n"
 
 
 # ---------------------------------------------------------------------------
@@ -310,11 +312,11 @@ async def delete_session(agent_type: str, session_id: str) -> dict:
 def _create_session_for(agent_type: str, session_id: str, body: dict):
     """Create + register the right session type for the agent (one shared
     registry; see agents/core/session.py)."""
-    if agent_type == AgentType.CONTENT_MARKETING:
+    if agent_type == AgentType.TIKTOK_STUDIO:
         try:
             project_id = UUID(str(body["project_id"]))
         except Exception as exc:
-            raise HTTPException(422, "content_marketing requires a valid project_id") from exc
+            raise HTTPException(422, "tiktok_studio requires a valid project_id") from exc
         if body.get("mode") == "draft_post":
             plan_id = body.get("plan_id")
             return create_draft_session(
@@ -334,16 +336,16 @@ async def _dispatch_start(
     """Route session creation to the correct agent pipeline."""
     if agent_type == AgentType.SEO_AUDIT:
         await _start_seo_audit(session_id, body, emit_fn)
-    elif agent_type == AgentType.CONTENT_MARKETING:
-        await _start_content_marketing(session_id, body, emit_fn)
+    elif agent_type == AgentType.TIKTOK_STUDIO:
+        await _start_tiktok_studio(session_id, body, emit_fn)
     elif agent_type == AgentType.INSIGHTS:
         await _start_insights(session_id, body, emit_fn)
     else:
         raise HTTPException(501, f"Agent type {agent_type!r} is not yet implemented.")
 
 
-async def _start_content_marketing(session_id: str, body: dict, emit_fn: Any) -> None:
-    """Start the content marketing pipeline (plan_month or draft_post) as a
+async def _start_tiktok_studio(session_id: str, body: dict, emit_fn: Any) -> None:
+    """Start the Content Studio pipeline (plan_month or draft_post) as a
     background task, streaming to the shared session.event_queue. Reuses the
     plan/draft workers so the DB logic (Day resolution, post_id linkback) stays
     in one place."""
@@ -351,20 +353,24 @@ async def _start_content_marketing(session_id: str, body: dict, emit_fn: Any) ->
     from routes.content import _run_draft_worker, _run_plan_worker
 
     mode = body.get("mode", "plan_month")
+    # `mode` is a dispatch discriminator, not pipeline config — strip it before
+    # validating against the extra="forbid" request models (which have no such
+    # field and would otherwise reject the whole body).
+    config = {k: v for k, v in body.items() if k != "mode"}
     if mode == "draft_post":
         try:
-            req = DraftPostRequest.model_validate(body)
+            req = DraftPostRequest.model_validate(config)
         except Exception as exc:
-            raise HTTPException(422, f"Invalid content draft_post config: {exc}") from exc
+            raise HTTPException(422, f"Invalid draft_post config: {exc}") from exc
         coro = _run_draft_worker(session_id, req, emit_fn)
     elif mode == "plan_month":
         try:
-            req = PlanRequest.model_validate(body)
+            req = PlanRequest.model_validate(config)
         except Exception as exc:
-            raise HTTPException(422, f"Invalid content plan_month config: {exc}") from exc
+            raise HTTPException(422, f"Invalid plan_month config: {exc}") from exc
         coro = _run_plan_worker(session_id, req.project_id, emit_fn)
     else:
-        raise HTTPException(422, f"content mode must be 'plan_month' or 'draft_post', got {mode!r}")
+        raise HTTPException(422, f"mode must be 'plan_month' or 'draft_post', got {mode!r}")
 
     task = asyncio.create_task(coro)
     session = get_session(session_id)

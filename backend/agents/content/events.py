@@ -1,4 +1,4 @@
-"""Backwards-compatible aliases for the Content Marketing Agent's event vocabulary.
+"""Backwards-compatible aliases for the Content Studio agent's event vocabulary.
 
 Event/step names are now defined once in agents/core/events.py and shared across
 all agent types (content emits the subset it supports). These aliases keep

@@ -1,10 +1,23 @@
 /**
- * REST + SSE helpers for the Content Marketing Agent.
- * Talks directly to /api/content/* (not via /api/agents/...).
+ * REST + SSE helpers for the Content Studio agent.
+ *
+ * Session lifecycle (plan/post drafting, chat, answers, close) runs through the
+ * unified /api/agents/tiktok_studio/* endpoints — same pattern as the SEO audit
+ * workspace. The content-specific CRUD + slide-render routes still live under
+ * /api/content/*.
  */
 
-import { BASE } from "./api";
+import {
+  BASE,
+  createAgentSession,
+  openAgentStream,
+  sendAgentMessage,
+  closeAgentSession,
+} from "./api";
 import { cached, invalidate } from "./contentCache";
+
+/** Unified agent-type id for this workspace (see backend agents/registry.py). */
+const AGENT_TYPE = "tiktok_studio";
 
 // Cache TTLs (ms). Short — these only smooth out tab-switch refetches.
 const TTL_POSTS     = 60_000;
@@ -40,85 +53,60 @@ async function jsonOrThrow(res) {
 // ---------------------------------------------------------------------------
 
 /**
- * POST /api/content/plan/stream  body={project_id, start_date?}
- * Returns { body: ReadableStream, sessionId }.
+ * Start a 30-day plan session via the unified agent API:
+ *   POST /api/agents/tiktok_studio/sessions  body={mode:"plan_month", project_id, start_date?}
+ *   GET  /api/agents/tiktok_studio/sessions/{id}/stream
+ * Returns { body: ReadableStream, sessionId }. Events emitted between create and
+ * stream-open are buffered server-side in the session queue, so none are lost.
  */
-export async function openPlanStream({ projectId, startDate, signal } = {}) {
-  const res = await fetch(`${BASE}/api/content/plan/stream`, {
-    method: "POST",
-    headers: backendApiHeaders({ "Content-Type": "application/json" }),
-    body: JSON.stringify({
-      project_id: projectId,
-      ...(startDate ? { start_date: startDate } : {}),
-    }),
-    signal,
+export async function openPlanStream({ projectId, startDate } = {}, { signal, onSession } = {}) {
+  const { session_id } = await createAgentSession(AGENT_TYPE, {
+    mode: "plan_month",
+    project_id: projectId,
+    ...(startDate ? { start_date: startDate } : {}),
   });
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(text || `Plan stream failed: ${res.status}`);
-  }
-  const sessionId = res.headers.get("X-Content-Session-Id") || "";
-  return { body: res.body, sessionId };
+  // Surface the id the instant the backend session exists (and its worker is
+  // spawned) — before the abortable stream open — so the caller can close an
+  // orphaned session if it was torn down mid-create (e.g. StrictMode remount).
+  onSession?.(session_id);
+  const body = await openAgentStream(AGENT_TYPE, session_id, { signal });
+  return { body, sessionId: session_id };
 }
 
 /**
- * POST /api/content/post/stream body={project_id, plan_id?, day_index?, topic?, pillar?}
+ * Start a single-post draft session via the unified agent API:
+ *   POST /api/agents/tiktok_studio/sessions  body={mode:"draft_post", project_id, plan_id?, day_index?, topic?, pillar?, channel?}
+ *   GET  /api/agents/tiktok_studio/sessions/{id}/stream
  */
 export async function openPostStream(
   { projectId, planId, dayIndex, topic, pillar, channel } = {},
-  { signal } = {},
+  { signal, onSession } = {},
 ) {
-  const res = await fetch(`${BASE}/api/content/post/stream`, {
-    method: "POST",
-    headers: backendApiHeaders({ "Content-Type": "application/json" }),
-    body: JSON.stringify({
-      project_id: projectId,
-      ...(planId    ? { plan_id:    planId    } : {}),
-      ...(dayIndex !== undefined && dayIndex !== null ? { day_index: dayIndex } : {}),
-      ...(topic     ? { topic     } : {}),
-      ...(pillar    ? { pillar    } : {}),
-      ...(channel   ? { channel   } : {}),
-    }),
-    signal,
+  const { session_id } = await createAgentSession(AGENT_TYPE, {
+    mode: "draft_post",
+    project_id: projectId,
+    ...(planId    ? { plan_id:    planId    } : {}),
+    ...(dayIndex !== undefined && dayIndex !== null ? { day_index: dayIndex } : {}),
+    ...(topic     ? { topic     } : {}),
+    ...(pillar    ? { pillar    } : {}),
+    ...(channel   ? { channel   } : {}),
   });
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(text || `Post stream failed: ${res.status}`);
-  }
-  const sessionId = res.headers.get("X-Content-Session-Id") || "";
-  return { body: res.body, sessionId };
+  onSession?.(session_id);
+  const body = await openAgentStream(AGENT_TYPE, session_id, { signal });
+  return { body, sessionId: session_id };
 }
 
 export async function answerContentQuestions(sessionId, answers) {
-  const res = await fetch(
-    `${BASE}/api/content/answer/${encodeURIComponent(sessionId)}`,
-    {
-      method: "POST",
-      headers: backendApiHeaders({ "Content-Type": "application/json" }),
-      body: JSON.stringify({ answers }),
-    },
-  );
-  return jsonOrThrow(res);
+  return sendAgentMessage(AGENT_TYPE, sessionId, { type: "answer", answers });
 }
 
 export async function sendContentChat(sessionId, content) {
-  const res = await fetch(
-    `${BASE}/api/content/chat/${encodeURIComponent(sessionId)}`,
-    {
-      method: "POST",
-      headers: backendApiHeaders({ "Content-Type": "application/json" }),
-      body: JSON.stringify({ content }),
-    },
-  );
-  return jsonOrThrow(res);
+  return sendAgentMessage(AGENT_TYPE, sessionId, { type: "chat", content });
 }
 
 export async function closeContentSession(sessionId) {
   if (!sessionId) return;
-  await fetch(
-    `${BASE}/api/content/session/${encodeURIComponent(sessionId)}`,
-    { method: "DELETE", headers: backendApiHeaders() },
-  ).catch(() => {});
+  await closeAgentSession(AGENT_TYPE, sessionId).catch(() => {});
 }
 
 /** GET a self-contained 1080×1920 single-slide doc (images inlined) to rasterize. */

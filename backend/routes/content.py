@@ -1,4 +1,4 @@
-"""Content Marketing Agent routes.
+"""Content Studio agent routes.
 
 Streaming endpoints clone the SSE machinery from routes/audit.py:
   POST   /api/content/plan/stream         — start a plan_month session

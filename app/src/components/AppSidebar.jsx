@@ -115,8 +115,8 @@ const NAV_SECTIONS = [
     label: "Execute",
     items: [
       {
-        key: "content_marketing",
-        label: "Content Marketing",
+        key: "tiktok_studio",
+        label: "Content Studio",
         icon: PenLine,
         href: "/content",
         available: true,

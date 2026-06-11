@@ -71,13 +71,30 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
     const ctrl = new AbortController();
     abortRef.current = ctrl;
     pipelineEndedRef.current = false;
+    // Per-effect-instance state (closure, not refs) so a StrictMode double-mount
+    // never lets one instance clobber or leak the other's backend session.
+    let cancelled = false;
+    let localSid = null;
 
     async function start() {
       try {
         const opener = mode === "plan_month" ? openPlanStream : openPostStream;
-        const { body, sessionId: sid } = await opener(context, { signal: ctrl.signal });
-        sessionIdRef.current = sid;
-        setSessionId(sid);
+        const { body } = await opener(context, {
+          signal: ctrl.signal,
+          onSession: (sid) => {
+            localSid = sid;
+            // Torn down before the stream opened (StrictMode remount / fast
+            // nav): close the orphan so its agent worker is cancelled instead
+            // of racing the surviving session on the shared CLI config dir.
+            if (cancelled) {
+              closeContentSession(sid).catch(() => {});
+              return;
+            }
+            sessionIdRef.current = sid;
+            setSessionId(sid);
+          },
+        });
+        if (cancelled) return;
 
         await consumeSseStream(body, handleEvent, ctrl.signal);
 
@@ -95,10 +112,12 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
 
     start();
     return () => {
+      cancelled = true;
       ctrl.abort();
-      if (sessionIdRef.current) {
-        closeContentSession(sessionIdRef.current).catch(() => {});
-        sessionIdRef.current = null;
+      const sid = sessionIdRef.current || localSid;
+      if (sid) {
+        closeContentSession(sid).catch(() => {});
+        if (sessionIdRef.current === sid) sessionIdRef.current = null;
       }
     };
   }, [retryCount, mode, JSON.stringify(context)]); // eslint-disable-line react-hooks/exhaustive-deps

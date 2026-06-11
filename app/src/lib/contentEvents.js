@@ -1,5 +1,5 @@
 /**
- * SSE event names and step IDs for the Content Marketing Agent.
+ * SSE event names and step IDs for the Content Studio agent.
  * Mirror of backend agents/content/events.py — keep in sync.
  */
 

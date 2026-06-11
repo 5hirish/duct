@@ -1,4 +1,4 @@
-"""Pre-flight enrichment for the Content Marketing Agent.
+"""Pre-flight enrichment for the Content Studio agent.
 
 Runs between load_project and the orchestrator's first synthesis turn.
 Two stages:

@@ -33,6 +33,19 @@ const compact = (n) =>
     ? Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(n)
     : "—";
 
+// share_url comes from the third-party Post-Bridge API, so treat it as untrusted:
+// only render it as a link when it resolves to an http(s) URL. Blocks javascript:
+// and other script-bearing schemes from reaching an href.
+function safeHref(u) {
+  if (typeof u !== "string" || !u) return null;
+  try {
+    const url = new URL(u, typeof window !== "undefined" ? window.location.origin : "https://getduct.ai");
+    return /^https?:$/.test(url.protocol) ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
 function parseDate(s) {
   if (!s) return null;
   const d = new Date(s);
@@ -280,8 +293,8 @@ export default function AnalyticsView({ projectId }) {
                         <td className="px-3 py-2 text-right tabular-nums">{fmt(r.comment_count)}</td>
                         <td className="px-3 py-2 text-right tabular-nums">{fmt(r.share_count)}</td>
                         <td className="px-2 py-2 text-right">
-                          {r.share_url && (
-                            <a href={r.share_url} target="_blank" rel="noreferrer" className="inline-flex text-muted-foreground hover:text-foreground" title="Open post">
+                          {safeHref(r.share_url) && (
+                            <a href={safeHref(r.share_url)} target="_blank" rel="noopener noreferrer" className="inline-flex text-muted-foreground hover:text-foreground" title="Open post">
                               <ExternalLink className="size-3.5" />
                             </a>
                           )}

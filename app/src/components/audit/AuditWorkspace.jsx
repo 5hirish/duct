@@ -150,10 +150,22 @@ export default function AuditWorkspace({ sessionId, auditParams, publicMode = fa
     abortRef.current          = ctrl;
     pipelineEndedRef.current  = false;
     reportReceivedRef.current = false;
+    // Per-effect-instance state (closures) so a StrictMode double-mount can't
+    // leak an orphaned audit session that races the survivor on the CLI dir.
+    let cancelled = false;
+    let localSid  = null;
 
     async function start() {
       try {
         const { session_id, agent_type } = await createAgentSession("audit_seo", auditParams);
+        localSid = session_id;
+        // Torn down before the stream opened (StrictMode remount / fast nav):
+        // close the orphan so its worker is cancelled instead of running a full
+        // duplicate audit that contends with the survivor on ~/.claude.
+        if (cancelled) {
+          closeAgentSession(agent_type, session_id).catch(() => {});
+          return;
+        }
         backendSessionIdRef.current = session_id;
         agentTypeRef.current        = agent_type;
 
@@ -175,9 +187,12 @@ export default function AuditWorkspace({ sessionId, auditParams, publicMode = fa
 
     start();
     return () => {
+      cancelled = true;
       ctrl.abort();
-      if (backendSessionIdRef.current) {
-        closeAgentSession(agentTypeRef.current, backendSessionIdRef.current).catch(() => {});
+      const sid = backendSessionIdRef.current || localSid;
+      if (sid) {
+        closeAgentSession(agentTypeRef.current, sid).catch(() => {});
+        if (backendSessionIdRef.current === sid) backendSessionIdRef.current = null;
       }
     };
   }, [retryCount]); // eslint-disable-line react-hooks/exhaustive-deps

@@ -1,4 +1,4 @@
-"""ClaudeContentRunner — Content Marketing agent (Claude Agent SDK, v3 engine).
+"""ClaudeContentRunner — Content Studio agent (Claude Agent SDK, v3 engine).
 
 Architecture mirrors agents/audit/v3/runner.py but with two structural deltas:
 
@@ -79,6 +79,12 @@ EmitFn = Callable[[dict[str, Any]], Awaitable[None]]
 _MAX_CONNECT_ATTEMPTS = _sdk.MAX_CONNECT_ATTEMPTS
 _CONNECT_BACKOFF_SECS = _sdk.CONNECT_BACKOFF_SECS
 _PLACEHOLDER_STDERR = _sdk.PLACEHOLDER_STDERR
+
+# Max wall-clock with NO message of any kind from the subprocess before we treat
+# the run as stalled. The CLI streams thinking/text/tool deltas continuously, so
+# any real activity resets this; only a genuine stall (e.g. MCP-server init that
+# never readies) trips it. Turns a silent infinite spinner into a surfaced error.
+_STALL_TIMEOUT_SECS = 120.0
 
 
 def _captured_stderr(buf: deque[str], exc: Exception) -> str:
@@ -887,7 +893,28 @@ async def _run(
         client = await _connect_with_retry()
         await client.query(message_gen())
 
-        async for msg in client.receive_response():
+        # Watchdog: the SDK connects fine but can stall *before* the completion
+        # produces anything (e.g. an in-process MCP server that never readies),
+        # leaving the UI on an infinite "Starting…" spinner. Bound the wait per
+        # message so a true stall raises (→ PIPELINE_FAILED) instead of hanging.
+        _responses = client.receive_response()
+        while True:
+            try:
+                msg = await asyncio.wait_for(
+                    _responses.__anext__(), timeout=_STALL_TIMEOUT_SECS
+                )
+            except StopAsyncIteration:
+                break
+            except asyncio.TimeoutError as exc:
+                captured = _captured_stderr(_stderr_buf, None)
+                raise RuntimeError(
+                    f"Content agent produced no output for {_STALL_TIMEOUT_SECS:.0f}s — "
+                    "the run stalled before completing (the subprocess connected but "
+                    "emitted nothing)."
+                    + (f"\n  subprocess stderr:\n{captured}" if captured else
+                       " No subprocess stderr was captured.")
+                ) from exc
+
             if isinstance(msg, StreamEvent):
                 ev = msg.event
                 ev_type = ev.get("type")

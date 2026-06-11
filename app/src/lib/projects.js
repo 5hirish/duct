@@ -14,6 +14,7 @@ const LEGACY_PROFILE_STORAGE_KEY = "duct_business_profile";
 export const DEFAULT_PROJECT_PROFILE = {
   company: {
     name: "",
+    pitch: "",
     industry: "",
     business_model: "",
     website_url: "",

@@ -1,4 +1,4 @@
-"""Pydantic schemas + dataclasses for the Content Marketing Agent.
+"""Pydantic schemas + dataclasses for the Content Studio agent.
 
 Two groups:
   - Domain shapes — ported from nomadapps/marketing/app/src/types.ts
@@ -470,7 +470,7 @@ def make_session(
     import time
     return ContentSession(
         session_id=session_id,
-        agent_type="content_marketing",
+        agent_type="tiktok_studio",
         project_id=project_id,
         mode=mode,
         event_queue=asyncio.Queue(),

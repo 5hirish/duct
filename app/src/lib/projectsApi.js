@@ -46,6 +46,7 @@ function toApi(local) {
   return {
     name: local.name || company.name || "Untitled project",
     company_name: company.name || "",
+    pitch: company.pitch || "",
     industry: company.industry || "",
     business_model: company.business_model || "",
     website_url: company.website_url || "",
@@ -64,6 +65,7 @@ function fromApi(remote) {
     updatedAt: remote.updated_at || "",
     company: {
       name: remote.company_name || "",
+      pitch: remote.pitch || "",
       industry: remote.industry || "",
       business_model: remote.business_model || "",
       website_url: remote.website_url || "",

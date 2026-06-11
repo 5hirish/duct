@@ -87,7 +87,7 @@ export function getAgentType(key) {
 //
 // Which inference engines can run each sidebar agent. Mirrors the runner
 // implementations under backend/agents/<agent>/: insights ships v1/v2/v3,
-// while SEO audit and content marketing are Claude Agent SDK (v3) only. Keys
+// while SEO audit and Content Studio are Claude Agent SDK (v3) only. Keys
 // are the AppSidebar NAV item keys. Keep in sync when an agent gains a new
 // engine runner.
 // ---------------------------------------------------------------------------
@@ -96,7 +96,7 @@ export const AGENT_ENGINE_SUPPORT = {
   product_intelligence: ["v1", "v2", "v3"],
   paid_ads: ["v1", "v2", "v3"],
   seo_audit: ["v3"],
-  content_marketing: ["v3"],
+  tiktok_studio: ["v3"],
 };
 
 // True when `engineKey` can run the agent `agentKey`. Fail-open for unknown
