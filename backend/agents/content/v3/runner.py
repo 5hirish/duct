@@ -34,7 +34,7 @@ from time import perf_counter
 from typing import Any
 from uuid import UUID
 
-from agents.content.events import ContentEvent, ContentStep, STEP_LABELS
+from agents.content.events import ContentEvent, ContentStep, STEP_LABELS, StepStatus
 from agents.content.prompts import (
     build_orchestrator_system_prompt,
     build_plan_user_prompt,
@@ -513,7 +513,7 @@ async def _run(
                 "step_id":  f"{ContentStep.DISPATCH_SUBAGENT.value}:{sub_name}",
                 "label":    f"Sub-agent · {sub_name}",
                 "summary":  brief[:160],
-                "status":   "running",
+                "status": StepStatus.RUNNING,
             })
             return PermissionResultAllow(updated_input=input_data)
 
@@ -569,7 +569,7 @@ async def _run(
                 "step_id":    sid,
                 "label":      label,
                 "summary":    query[:140],
-                "status":     "running",
+                "status": StepStatus.RUNNING,
             })
             return PermissionResultAllow(updated_input=input_data)
 
@@ -604,7 +604,7 @@ async def _run(
             "step_id":    f"{ContentStep.DISPATCH_SUBAGENT.value}:{sub_name}",
             "label":      f"Sub-agent · {sub_name}",
             "summary":    result[:240],
-            "status":     "success",
+            "status": StepStatus.SUCCESS,
         })
         return {"continue_": True}
 
@@ -618,7 +618,7 @@ async def _run(
                 "session_id": session_id,
                 "step_id":    sid,
                 "label":      label,
-                "status":     "success",
+                "status": StepStatus.SUCCESS,
             })
         return {"continue_": True}
 
@@ -1021,13 +1021,13 @@ class ClaudeContentRunner:
             "event":   ContentEvent.STEP_STARTED,
             "step_id": ContentStep.LOAD_PROJECT,
             "label":   STEP_LABELS[ContentStep.LOAD_PROJECT],
-            "status":  "running",
+            "status": StepStatus.RUNNING,
         })
         await emit({
             "event":   ContentEvent.STEP_FINISHED,
             "step_id": ContentStep.LOAD_PROJECT,
             "label":   STEP_LABELS[ContentStep.LOAD_PROJECT],
-            "status":  "success",
+            "status": StepStatus.SUCCESS,
             "payload": {"project_name": brand.project_name, "pillars": len(brand.pillars)},
         })
 
@@ -1036,7 +1036,7 @@ class ClaudeContentRunner:
             "event":   ContentEvent.STEP_STARTED,
             "step_id": ContentStep.ENRICHING,
             "label":   STEP_LABELS[ContentStep.ENRICHING],
-            "status":  "running",
+            "status": StepStatus.RUNNING,
         })
         from agents.content.enrichment import enrich_content_context
         research = await enrich_content_context(brand, self._api_key)
@@ -1044,7 +1044,7 @@ class ClaudeContentRunner:
             "event":   ContentEvent.STEP_FINISHED,
             "step_id": ContentStep.ENRICHING,
             "label":   STEP_LABELS[ContentStep.ENRICHING],
-            "status":  "success",
+            "status": StepStatus.SUCCESS,
             "payload": {
                 "pillar_history":   len(research.pillar_history),
                 "trending_sounds":  len(research.trending_sounds),

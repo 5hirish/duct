@@ -37,6 +37,7 @@ from sqlmodel import Session, select
 from agents.content.events import ContentEvent
 from agents.content.schema import (
     ContentSession,
+    ContentStatus,
     PlanDraft,
     PostDraft,
     Slide,
@@ -478,7 +479,6 @@ def build_content_mcp_server(
                     "avatar_id":       draft.avatar_id,
                     "layout":          draft.layout.value,
                     "slide_count":     slide_count,
-                    "status":          "draft",
                     "slides":          slides_json,
                     "slides_html":     slides_html,
                     "caption":         draft.caption,
@@ -500,9 +500,15 @@ def build_content_mcp_server(
                 if existing is not None:
                     for k, v in values.items():
                         setattr(existing, k, v)
+                    # Preserve a saved status across agent re-submits (chat
+                    # refinements): a post the user already Saved (draft) or
+                    # published must NOT be reset to "pending". `status` is
+                    # deliberately absent from `values` above.
                     row = existing
                 else:
-                    row = ContentPost(**values)
+                    # A brand-new post is unsaved — the user's Save flips it
+                    # pending → draft (see routes/content.py PATCH + the UI).
+                    row = ContentPost(**values, status=ContentStatus.PENDING)
                     db.add(row)
                 db.commit()
                 db.refresh(row)
@@ -651,7 +657,10 @@ def build_content_mcp_server(
         try:
             with _open_db() as db:
                 rows = db.exec(
-                    select(ContentPost).where(ContentPost.project_id == project_id)
+                    select(ContentPost).where(
+                        ContentPost.project_id == project_id,
+                        ContentPost.status != ContentStatus.PENDING,  # unsaved drafts aren't "covered"
+                    )
                 ).all()
                 bank: dict[str, dict] = {}
                 for r in rows:
@@ -746,7 +755,10 @@ def build_content_mcp_server(
             with _open_db() as db:
                 rows = db.exec(
                     select(ContentPost)
-                    .where(ContentPost.project_id == project_id)
+                    .where(
+                        ContentPost.project_id == project_id,
+                        ContentPost.status != ContentStatus.PENDING,  # exclude unsaved drafts
+                    )
                     .order_by(ContentPost.updated_at.desc())  # type: ignore[union-attr]
                     .limit(limit)
                 ).all()

@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { Phase } from "./auditPhase";
 import { AuditStep } from "../../lib/auditEvents";
+import { StepStatus } from "../../lib/agentSteps";
 import AuditReportV1 from "./AuditReportV1";
 
 // ---------------------------------------------------------------------------
@@ -65,7 +66,7 @@ function SynthesisProgress({ steps, isStreamingReport = false }) {
   // Pick a rotating line based on the current second so it feels alive
   const lineIdx = Math.floor(Date.now() / 3000) % SYNTHESIS_LINES.length;
   const synthStep = steps.find((s) => s.step_id === AuditStep.SYNTHESIZE_AUDIT);
-  const isSynthesising = synthStep?.status === "running" || isStreamingReport;
+  const isSynthesising = synthStep?.status === StepStatus.RUNNING || isStreamingReport;
 
   return (
     <div className="flex flex-col items-center justify-center h-full px-8 py-12 text-center select-none">
@@ -101,28 +102,28 @@ function SynthesisProgress({ steps, isStreamingReport = false }) {
             <div
               key={stage.id}
               className={`flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-300 ${
-                status === "running"
+                status === StepStatus.RUNNING
                   ? "bg-primary/8 border border-primary/20"
-                  : status === "success"
+                  : status === StepStatus.SUCCESS
                   ? "opacity-50"
                   : "opacity-20"
               }`}
             >
-              {status === "running" ? (
+              {status === StepStatus.RUNNING ? (
                 <span className="size-3.5 shrink-0 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-              ) : status === "success" ? (
+              ) : status === StepStatus.SUCCESS ? (
                 <span className="text-green-500 text-sm shrink-0">✓</span>
               ) : (
                 <span className="size-3.5 shrink-0 rounded-full border border-muted-foreground/30" />
               )}
               <span className="text-sm flex-1">{stage.label}</span>
-              {status === "running" && stage.id === AuditStep.SYNTHESIZE_AUDIT && (
+              {status === StepStatus.RUNNING && stage.id === AuditStep.SYNTHESIZE_AUDIT && (
                 <span className="text-xs text-muted-foreground shrink-0">~3 min</span>
               )}
-              {status === "running" && stage.id === STEP_WRITE_REPORT && (
+              {status === StepStatus.RUNNING && stage.id === STEP_WRITE_REPORT && (
                 <span className="text-xs text-muted-foreground shrink-0 animate-pulse">writing…</span>
               )}
-              {status === "running" && stage.id !== AuditStep.SYNTHESIZE_AUDIT && stage.id !== STEP_WRITE_REPORT && (
+              {status === StepStatus.RUNNING && stage.id !== AuditStep.SYNTHESIZE_AUDIT && stage.id !== STEP_WRITE_REPORT && (
                 <span className="text-xs text-muted-foreground shrink-0 animate-pulse">now</span>
               )}
               {step?.payload?.landing_pages != null && (

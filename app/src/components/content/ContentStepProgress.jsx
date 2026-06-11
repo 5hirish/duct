@@ -1,6 +1,7 @@
 "use client";
 
 import { STEP_LABELS, ContentStep } from "../../lib/contentEvents";
+import { StepStatus } from "../../lib/agentSteps";
 
 /**
  * Renders the pipeline step list above the chat — one row per step the
@@ -47,7 +48,7 @@ function StepRow({ step }) {
   return (
     <div className="flex items-center gap-2 text-xs">
       <StatusDot status={step.status} />
-      <span className={step.status === "running" ? "text-foreground" : "text-muted-foreground"}>
+      <span className={step.status === StepStatus.RUNNING ? "text-foreground" : "text-muted-foreground"}>
         {label}
       </span>
     </div>
@@ -55,13 +56,13 @@ function StepRow({ step }) {
 }
 
 function StatusDot({ status }) {
-  if (status === "running") {
+  if (status === StepStatus.RUNNING) {
     return <span className="inline-block size-2 shrink-0 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />;
   }
-  if (status === "success") {
+  if (status === StepStatus.SUCCESS) {
     return <span className="inline-block size-2 shrink-0 rounded-full bg-green-500" />;
   }
-  if (status === "error" || status === "failed") {
+  if (status === StepStatus.ERROR) {
     return <span className="inline-block size-2 shrink-0 rounded-full bg-destructive" />;
   }
   return <span className="inline-block size-2 shrink-0 rounded-full bg-muted-foreground/40" />;
@@ -69,7 +70,7 @@ function StatusDot({ status }) {
 
 function DispatchChip({ step }) {
   const name = step.step_id?.split(":", 2)[1] || "agent";
-  const running = step.status === "running";
+  const running = step.status === StepStatus.RUNNING;
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] ${

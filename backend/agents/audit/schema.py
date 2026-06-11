@@ -179,21 +179,44 @@ AuditBusinessContext = BusinessContext
 # ---------------------------------------------------------------------------
 
 class CompetitorSignals(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    # extra="ignore" (not "forbid") + all-optional fields: this schema is handed
+    # to a Haiku sub-agent via output_format json_schema. "forbid" emits
+    # additionalProperties:false and a required `domain`, which Haiku frequently
+    # fails to satisfy → error_max_structured_output_retries. Lenient schema lets
+    # imperfect-but-useful output validate. See agents/audit/enrichment.py.
+    model_config = ConfigDict(extra="ignore")
 
-    domain: str
+    domain: str = ""
     positioning: str = ""          # value prop / target audience claim
-    content_pillars: list[str] = Field(default_factory=list)
-    differentiators: list[str] = Field(default_factory=list)  # vs the target site
+    content_pillars: str = ""      # comma-separated themes — flat string, not a
+    differentiators: str = ""      # nested list, so Haiku reliably matches the schema
 
 
 class AuditResearchContext(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    # extra="ignore" for the same reason as CompetitorSignals — this is the
+    # Haiku enrichment sub-agent's output schema; keep it forgiving.
+    model_config = ConfigDict(extra="ignore")
 
     brand_content_pillars: list[str] = Field(default_factory=list)
     brand_schema_types: list[str] = Field(default_factory=list)
     competitors: list[CompetitorSignals] = Field(default_factory=list)
     content_gaps: list[str] = Field(default_factory=list)   # topics competitors cover, target doesn't
+    enrichment_notes: list[str] = Field(default_factory=list)
+
+
+class EnrichmentOutput(BaseModel):
+    """The subset the Haiku enrichment sub-agent actually researches and emits.
+
+    Brand signals (pillars, schema types) are computed deterministically from the
+    crawl — the prompt tells Haiku NOT to research them — so they're excluded from
+    its output schema. enrich_context() maps this into a full AuditResearchContext
+    by adding the crawl-derived brand fields.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    competitors: list[CompetitorSignals] = Field(default_factory=list)
+    content_gaps: list[str] = Field(default_factory=list)
     enrichment_notes: list[str] = Field(default_factory=list)
 
 
@@ -219,7 +242,14 @@ class AuditFinding(BaseModel):
     affected_urls: list[AffectedUrl] = Field(default_factory=list)
     recommendation: Annotated[str, Field(max_length=200)] = "" # 1 imperative sentence starting with a verb
     impact: ImpactLevel = ImpactLevel.medium
-    effort: EffortLevel = EffortLevel.medium
+    effort: EffortLevel = Field(
+        default=EffortLevel.medium,
+        description=(
+            "Effort LEVEL to ship this fix — exactly one of: low, medium, high. "
+            "This is a level, NOT a time estimate; never use values like "
+            "'2_to_4hrs' here (those belong to a roadmap task's effort_estimate)."
+        ),
+    )
 
 
 class AuditCategory(BaseModel):
@@ -252,7 +282,13 @@ class RoadmapTask(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     task: str
-    effort_estimate: EffortEstimate = EffortEstimate.one_to_3_days
+    effort_estimate: EffortEstimate = Field(
+        default=EffortEstimate.one_to_3_days,
+        description=(
+            "Time ESTIMATE for this task — exactly one of: under_1hr, 2_to_4hrs, "
+            "1_to_3_days, 1_to_2_wks, ongoing. Not a low/medium/high level."
+        ),
+    )
     note: str = ""   # optional override / exception note
 
 

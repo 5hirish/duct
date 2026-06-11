@@ -626,11 +626,9 @@ def build_audit_user_prompt(
         if research_context.brand_schema_types:
             parts.append(f"  brand_schema_types: {', '.join(research_context.brand_schema_types)}")
         for comp in research_context.competitors:
-            pillars = ", ".join(comp.content_pillars[:3])
-            diffs = "; ".join(comp.differentiators[:2])
             parts.append(
                 f"  competitor {comp.domain}: positioning='{comp.positioning}' | "
-                f"pillars=[{pillars}] | differentiators=[{diffs}]"
+                f"pillars=[{comp.content_pillars}] | differentiators=[{comp.differentiators}]"
             )
         if research_context.content_gaps:
             parts.append(f"  content_gaps: {'; '.join(research_context.content_gaps)}")

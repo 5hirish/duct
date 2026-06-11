@@ -8,10 +8,10 @@ app/src/lib/contentEvents.js.
 
 from __future__ import annotations
 
-from agents.core.events import STEP_LABELS, AgentEvent, AgentStep
+from agents.core.events import STEP_LABELS, AgentEvent, AgentStep, StepStatus
 
 # Aliases — same class objects; existing `ContentEvent.X` / `ContentStep.X` access works.
 ContentEvent = AgentEvent
 ContentStep = AgentStep
 
-__all__ = ["STEP_LABELS", "ContentEvent", "ContentStep"]
+__all__ = ["STEP_LABELS", "ContentEvent", "ContentStep", "StepStatus"]

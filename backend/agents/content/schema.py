@@ -329,6 +329,28 @@ class SlideLayout(StrEnum):
     EDITORIAL    = "editorial"      # styled shoot, ivory bg, product lineup
 
 
+class ContentStatus(StrEnum):
+    """Lifecycle of a content post — ContentPost.status (and Day.status).
+
+    Stored as a plain String column (values match these members); use this enum
+    in code instead of bare strings. Mirrored on the frontend in
+    app/src/lib/contentStatus.js.
+
+    PENDING   — agent drafted it, but the user hasn't saved/kept it yet.
+                Hidden from the board + the agent's topic-bank/history reads.
+    DRAFT     — user clicked Save; now a real, kept draft.
+    SCHEDULED — queued to publish.
+    POSTED    — published.
+    DISCARDED — rejected.
+    """
+
+    PENDING   = "pending"
+    DRAFT     = "draft"
+    SCHEDULED = "scheduled"
+    POSTED    = "posted"
+    DISCARDED = "discarded"
+
+
 # Per-slide kind — drives which template renders the slide within a layout.
 #   photo / text          — single image (or none) + overlay caption
 #   collage               — 2×2 grid; one image per `items` cell

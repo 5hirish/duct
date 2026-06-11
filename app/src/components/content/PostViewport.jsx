@@ -19,6 +19,7 @@ import {
 import { patchPost } from "../../lib/contentApi";
 import { extractStyleHead } from "../../lib/slideDoc";
 import { statusMeta } from "../../lib/contentStatus";
+import { PostStatus } from "../../lib/contentEnums";
 import { PlatformGlyph, platformMeta } from "./platformGlyphs";
 import SlidesCarousel from "./SlidesCarousel";
 
@@ -65,23 +66,27 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
     setDirty(true);
   }
 
-  async function handleCommit() {
+  // The editable fields sent on every save. `slides` is the source of truth —
+  // we never send slides_html (the backend re-renders it from slides + layout).
+  function editedFields() {
+    return {
+      caption: post.caption, hashtags: post.hashtags,
+      hook_type: post.hook_type, hook_text: post.hook_text, hook_emotion: post.hook_emotion,
+      save_cta: post.save_cta, tiktok_title: post.tiktok_title, audio_note: post.audio_note,
+      bridge_text: post.bridge_text, strategic_note: post.strategic_note,
+      visual_brief: post.visual_brief, emotional_arc: post.emotional_arc,
+      camera_ref_pool: post.camera_ref_pool,
+      layout: post.layout, slides: post.slides,
+      platforms: post.platforms,
+    };
+  }
+
+  async function persist(statusValue) {
     if (!post?.id) return;
     setSaving(true);
     setSaveError("");
     try {
-      // Send `slides` (the source of truth) but NOT slides_html — the backend
-      // re-renders the HTML from the slides + layout and recomputes staleness.
-      const updated = await patchPost(post.id, {
-        caption: post.caption, hashtags: post.hashtags,
-        hook_type: post.hook_type, hook_text: post.hook_text, hook_emotion: post.hook_emotion,
-        save_cta: post.save_cta, tiktok_title: post.tiktok_title, audio_note: post.audio_note,
-        bridge_text: post.bridge_text, strategic_note: post.strategic_note,
-        visual_brief: post.visual_brief, emotional_arc: post.emotional_arc,
-        camera_ref_pool: post.camera_ref_pool,
-        layout: post.layout, slides: post.slides,
-        platforms: post.platforms, status: post.status,
-      });
+      const updated = await patchPost(post.id, { ...editedFields(), status: statusValue });
       setDraft(updated);
       setDirty(false);
       return updated;
@@ -92,6 +97,13 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
       setSaving(false);
     }
   }
+
+  // Save user edits, status unchanged.
+  function handleCommit() { return persist(post.status); }
+
+  // Keep the post: promote pending → draft (and persist current edits in the
+  // same PATCH). Until this runs, the post is hidden from the board + the agent.
+  function handleSave() { return persist(PostStatus.DRAFT); }
 
   // Persist any pending edits before asking the agent to act on a slide, so the
   // agent (which reads the saved post) regenerates against the latest prompt.
@@ -167,14 +179,26 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
                 Discard
               </button>
             )}
-            <button
-              type="button"
-              onClick={handleCommit}
-              disabled={!dirty || saving}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-foreground px-3 py-1.5 text-xs font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-40"
-            >
-              {saving ? "Saving…" : dirty ? "Commit edits" : <><Check className="size-3.5" /> Saved</>}
-            </button>
+            {post?.status === PostStatus.PENDING ? (
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={saving}
+                title="Keep this post — adds it to your board"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
+              >
+                {saving ? "Saving…" : <><Check className="size-3.5" /> Save</>}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleCommit}
+                disabled={!dirty || saving}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-foreground px-3 py-1.5 text-xs font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-40"
+              >
+                {saving ? "Saving…" : dirty ? "Commit edits" : <><Check className="size-3.5" /> Saved</>}
+              </button>
+            )}
             {canPublish && onPublish && (
               <button type="button" onClick={onPublish} className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium hover:bg-muted/50">
                 <Send className="size-3.5" /> Publish

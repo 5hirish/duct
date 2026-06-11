@@ -15,6 +15,7 @@ import {
   sendContentChat,
 } from "../../lib/contentApi";
 import { ContentEvent } from "../../lib/contentEvents";
+import { StepStatus } from "../../lib/agentSteps";
 import { captureSlideDocToPng } from "../../lib/slideCapture";
 
 /**
@@ -144,7 +145,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
           if (existing) {
             return prev.map((s) =>
               s.step_id === event.step_id
-                ? { ...s, status: "running", label: event.label || s.label, summary: event.summary }
+                ? { ...s, status: StepStatus.RUNNING, label: event.label || s.label, summary: event.summary }
                 : s,
             );
           }
@@ -153,7 +154,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
             {
               step_id: event.step_id,
               label: event.label || event.step_id,
-              status: "running",
+              status: StepStatus.RUNNING,
               summary: event.summary || "",
             },
           ];
@@ -164,7 +165,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
         setSteps((prev) =>
           prev.map((s) =>
             s.step_id === event.step_id
-              ? { ...s, status: event.status || "success", summary: event.summary || s.summary }
+              ? { ...s, status: event.status || StepStatus.SUCCESS, summary: event.summary || s.summary }
               : s,
           ),
         );
@@ -174,7 +175,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
         setSteps((prev) =>
           prev.map((s) =>
             s.step_id === event.step_id
-              ? { ...s, status: "failed", summary: event.error || s.summary }
+              ? { ...s, status: StepStatus.ERROR, summary: event.error || s.summary }
               : s,
           ),
         );

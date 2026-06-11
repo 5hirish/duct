@@ -50,6 +50,19 @@ class AgentEvent(StrEnum):
     POST_DRAFT_UPDATED = "post_draft_updated"  # content: a post draft
 
 
+class StepStatus(StrEnum):
+    """Lifecycle status carried on the ``status`` field of STEP_* events.
+
+    Contract with the frontend (app/src/lib/agentSteps.js). Use ERROR for the
+    failed state everywhere — audit historically used "error", content "failed";
+    "error" is canonical.
+    """
+
+    RUNNING = "running"
+    SUCCESS = "success"
+    ERROR = "error"
+
+
 class AgentStep(StrEnum):
     """Every ``step_id`` value used in STEP_STARTED / STEP_FINISHED events.
 

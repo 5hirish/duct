@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { loadPreferences } from "@/lib/userPreferences";
 import { getActiveProject } from "@/lib/projects";
+import { ReportMode, DEFAULT_AUDIT_TEMPLATE_ID } from "@/lib/audit";
 
 const CONTENT_TYPES = [
   { value: "", label: "Select type…" },
@@ -121,6 +122,12 @@ export default function SeoAuditSetupPage() {
         effort,
         adaptive_thinking: adaptiveThinking,
         user_preferences: loadPreferences(),
+        // Structured template report (matches the lead-magnet flow): the agent
+        // calls SubmitAuditReport instead of streaming freeform <duct_report>
+        // HTML. Backend default is "freehand"; this opts the app audit into the
+        // same template the public audit uses.
+        report_mode: ReportMode.TEMPLATE,
+        template_id: DEFAULT_AUDIT_TEMPLATE_ID,
       };
       const sessionId = crypto.randomUUID();
       sessionStorage.setItem(`audit_session_${sessionId}`, JSON.stringify(params));

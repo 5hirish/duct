@@ -28,7 +28,7 @@ from collections.abc import Callable, Awaitable
 from time import perf_counter
 from typing import Any
 
-from agents.audit.events import AuditEvent, AuditStep, STEP_LABELS
+from agents.audit.events import AuditEvent, AuditStep, STEP_LABELS, StepStatus
 from agents.audit.prompts import (
     build_audit_user_prompt,
     build_unified_system_prompt,
@@ -682,12 +682,34 @@ async def run_synthesis(
             # Turn 1: initial synthesis
             await _receive_one_turn()
 
+            # Recovery: with extended thinking on a large crawl, the model
+            # sometimes spends the whole turn reasoning and ends WITHOUT emitting
+            # <duct_report> (surfaces as out=0 / "no report generated"). It has
+            # the analysis — it just didn't output the report. Nudge it once to
+            # produce the report before giving up, which salvages most of these.
+            if not session.report_versions:  # type: ignore[attr-defined]
+                logger.warning(
+                    "synthesis: turn 1 produced no <duct_report> (out=%d) for session %s — "
+                    "sending one recovery nudge", _tok_out, session_id,
+                )
+                async def _recover_gen():
+                    yield {
+                        "type": "user",
+                        "message": (
+                            "You analysed the data but did not emit the report. Output the "
+                            "complete <duct_report>…</duct_report> now, in full — do not run "
+                            "more tools or add further analysis, just produce the report."
+                        ),
+                    }
+                await client.query(_recover_gen())
+                await _receive_one_turn()
+
             # Only enter chat mode when synthesis produced a report.
             # If no report, skip PIPELINE_FINISHED — the route handler will emit it after
             # run_pipeline() returns, which will surface the "no report" error to the frontend.
             if session.report_versions:  # type: ignore[attr-defined]
                 # Signal the frontend that synthesis is done — phase transitions to READY
-                await emit({"event": AuditEvent.PIPELINE_FINISHED, "status": "success"})
+                await emit({"event": AuditEvent.PIPELINE_FINISHED, "status": StepStatus.SUCCESS})
 
                 # Phase 3: sequential multi-turn chat loop.
                 # ClaudeSDKClient keeps the subprocess alive across multiple
@@ -717,6 +739,14 @@ async def run_synthesis(
         "synthesis: tokens in=%d out=%d cache_read=%d cache_write=%d session=%s",
         _tok_in, _tok_out, _tok_cache_read, _tok_cache_write, session_id,
     )
+    if initial_report is None:
+        logger.error(
+            "synthesis: NO REPORT for session %s — model ended without <duct_report> "
+            "(out=%d tokens, reasoned=%s) even after the recovery nudge; likely "
+            "extended-thinking / max_turns exhaustion. Surfaces as a failed audit; "
+            "a retry usually succeeds.",
+            session_id, _tok_out, had_thinking,
+        )
     return initial_report, had_thinking
 
 
@@ -767,7 +797,7 @@ class ClaudeAuditRunner:
             "event": AuditEvent.STEP_STARTED,
             "step_id": AuditStep.FETCH_SITEMAP,
             "label": STEP_LABELS[AuditStep.FETCH_SITEMAP],
-            "status": "running",
+            "status": StepStatus.RUNNING,
         })
         light = (crawl_depth == CrawlDepth.LIGHT)
         t0 = _t()
@@ -780,7 +810,7 @@ class ClaudeAuditRunner:
             "event": AuditEvent.STEP_FINISHED,
             "step_id": AuditStep.FETCH_SITEMAP,
             "label": STEP_LABELS[AuditStep.FETCH_SITEMAP],
-            "status": "success",
+            "status": StepStatus.SUCCESS,
             "payload": {
                 "landing_pages":      len(crawl_result.plan.landing_pages),
                 "blog_posts":         len(crawl_result.plan.blog_posts),
@@ -802,13 +832,13 @@ class ClaudeAuditRunner:
             "event": AuditEvent.STEP_STARTED,
             "step_id": AuditStep.CRAWL_PAGES,
             "label": f"Crawled {len(crawl_result.pages)} pages",
-            "status": "running",
+            "status": StepStatus.RUNNING,
         })
         await emit({
             "event": AuditEvent.STEP_FINISHED,
             "step_id": AuditStep.CRAWL_PAGES,
             "label": f"Crawled {len(crawl_result.pages)} pages",
-            "status": "success",
+            "status": StepStatus.SUCCESS,
             "payload": {
                 "pages": [
                     {
@@ -853,7 +883,7 @@ class ClaudeAuditRunner:
                 "event": AuditEvent.STEP_STARTED,
                 "step_id": AuditStep.ENRICHING,
                 "label": STEP_LABELS[AuditStep.ENRICHING],
-                "status": "running",
+                "status": StepStatus.RUNNING,
             })
             t_enrich = _t()
             from agents.audit.enrichment import enrich_context
@@ -868,10 +898,19 @@ class ClaudeAuditRunner:
                 "event": AuditEvent.STEP_FINISHED,
                 "step_id": AuditStep.ENRICHING,
                 "label": STEP_LABELS[AuditStep.ENRICHING],
-                "status": "success",
+                "status": StepStatus.SUCCESS,
                 "payload": {
-                    "competitors_found": len(research_context.competitors) if research_context else 0,
-                    "content_gaps": len(research_context.content_gaps) if research_context else 0,
+                    "competitors": [
+                        {
+                            "domain":          c.domain,
+                            "positioning":     c.positioning,
+                            "content_pillars": c.content_pillars,
+                            "differentiators": c.differentiators,
+                        }
+                        for c in (research_context.competitors if research_context else [])
+                    ],
+                    "content_gaps":     research_context.content_gaps if research_context else [],
+                    "enrichment_notes": research_context.enrichment_notes if research_context else [],
                 },
             })
         else:
@@ -887,7 +926,7 @@ class ClaudeAuditRunner:
             "event": AuditEvent.STEP_STARTED,
             "step_id": AuditStep.SYNTHESIZE_AUDIT,
             "label": STEP_LABELS[AuditStep.SYNTHESIZE_AUDIT],
-            "status": "running",
+            "status": StepStatus.RUNNING,
         })
 
         t1 = _t()
@@ -912,7 +951,7 @@ class ClaudeAuditRunner:
             "event": AuditEvent.STEP_FINISHED,
             "step_id": AuditStep.SYNTHESIZE_AUDIT,
             "label": STEP_LABELS[AuditStep.SYNTHESIZE_AUDIT],
-            "status": "success" if report else "error",
+            "status": StepStatus.SUCCESS if report else StepStatus.ERROR,
             "payload": {"reasoned": had_thinking},
         })
 

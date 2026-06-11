@@ -30,6 +30,7 @@ export const AuditStep = Object.freeze({
   RESOLVE_URL:      "resolve_url",
   FETCH_SITEMAP:    "fetch_sitemap",
   CRAWL_PAGES:      "crawl_pages",
+  ENRICHING:        "enriching",        // shared step — must match AgentStep.ENRICHING
   SYNTHESIZE_AUDIT: "synthesize_audit",
 });
 
@@ -37,5 +38,6 @@ export const STEP_LABELS = Object.freeze({
   [AuditStep.RESOLVE_URL]:      "Resolving website",
   [AuditStep.FETCH_SITEMAP]:    "Fetching sitemap",
   [AuditStep.CRAWL_PAGES]:      "Crawling pages",
+  [AuditStep.ENRICHING]:        "Researching competitors",
   [AuditStep.SYNTHESIZE_AUDIT]: "AI synthesis",
 });

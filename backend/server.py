@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import logging
+import sys
 import time
 from urllib.parse import urlparse
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import sentry_sdk
+from uvicorn.logging import DefaultFormatter
 
 import service.google.ads  # noqa: F401 — registers connectors before routes import
 import service.google.ga4  # noqa: F401 — registers connectors before routes import
@@ -22,15 +24,18 @@ from utils.openapi_docs_auth import OpenapiDocsBasicAuthMiddleware
 
 _cfg = get_configs()
 
-# Logging: timestamp every line + per-request HTTP timing.
+# Logging: timestamp every line + per-request HTTP timing, keeping colour.
 # Uvicorn's dictConfig leaves the root logger handlerless (app messages would be
 # dropped) and its access lines carry neither a timestamp nor a duration. So we
 # (1) attach a timestamped handler to the app namespaces, (2) timestamp uvicorn's
 # own startup/error lines, and (3) silence uvicorn's access log in favour of
 # AccessLogMiddleware below, which records wall-clock duration per request.
+# We use uvicorn's DefaultFormatter (not a plain logging.Formatter) so the level
+# stays colourised in a TTY (%(levelprefix)s) — what terminal level-highlighting
+# keys on — while degrading to plain text when piped (prod / log files).
 # The `,%(msecs)` in the default asctime gives millisecond precision for free.
-_LOG_FORMAT = "%(asctime)s %(levelname)s %(name)s: %(message)s"
-_log_formatter = logging.Formatter(_LOG_FORMAT)
+_LOG_FORMAT = "%(asctime)s %(levelprefix)s %(name)s: %(message)s"
+_log_formatter = DefaultFormatter(fmt=_LOG_FORMAT, use_colors=sys.stderr.isatty())
 
 _app_handler = logging.StreamHandler()
 _app_handler.setFormatter(_log_formatter)

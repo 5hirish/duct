@@ -8,10 +8,10 @@ app/src/lib/auditEvents.js.
 
 from __future__ import annotations
 
-from agents.core.events import STEP_LABELS, AgentEvent, AgentStep
+from agents.core.events import STEP_LABELS, AgentEvent, AgentStep, StepStatus
 
 # Aliases — same class objects; existing `AuditEvent.X` / `AuditStep.X` access works.
 AuditEvent = AgentEvent
 AuditStep = AgentStep
 
-__all__ = ["STEP_LABELS", "AuditEvent", "AuditStep"]
+__all__ = ["STEP_LABELS", "AuditEvent", "AuditStep", "StepStatus"]

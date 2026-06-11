@@ -125,18 +125,20 @@ function ChatBubble({ role, text, thinking, streaming }) {
       <div className="w-full space-y-1">
         <ThinkingBlock thinking={thinking} streaming={streaming && !text} />
         {text && (
-          <div className="rounded-2xl rounded-bl-sm px-4 py-3 text-sm bg-muted text-foreground">
+          <div className={[
+            "rounded-2xl rounded-bl-sm px-4 py-3 text-sm bg-muted text-foreground",
+            // react-markdown@9+ removed the className prop; the prose styles that
+            // used to sit on <ReactMarkdown> live on this wrapper now.
+            "prose prose-sm dark:prose-invert max-w-none",
+            "prose-p:my-2.5 prose-p:leading-relaxed prose-p:text-sm",
+            "prose-headings:font-semibold prose-headings:text-foreground prose-headings:mt-5 prose-headings:mb-2",
+            "prose-h1:text-xl prose-h2:text-base prose-h3:text-[15px] prose-h4:text-sm",
+            "prose-ul:my-2 prose-ol:my-2 prose-li:my-1 prose-li:leading-relaxed",
+            "prose-strong:text-foreground prose-strong:font-semibold",
+            // prose-a/code/pre/table are handled by the components prop below
+          ].join(" ")}>
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
-              className={[
-                "prose prose-sm dark:prose-invert max-w-none",
-                "prose-p:my-2.5 prose-p:leading-relaxed prose-p:text-sm",
-                "prose-headings:font-semibold prose-headings:text-foreground prose-headings:mt-5 prose-headings:mb-2",
-                "prose-h1:text-xl prose-h2:text-base prose-h3:text-[15px] prose-h4:text-sm",
-                "prose-ul:my-2 prose-ol:my-2 prose-li:my-1 prose-li:leading-relaxed",
-                "prose-strong:text-foreground prose-strong:font-semibold",
-                // prose-a/code/pre/table are handled by the components prop below
-              ].join(" ")}
               components={{
                 // Inline vs fenced code block
                 code({ className, children }) {

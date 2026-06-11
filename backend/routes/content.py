@@ -53,6 +53,7 @@ from agents.content.styles import base_css, list_styles
 from agents.content.schema import (
     ContentAnswerRequest,
     ContentChatMessage,
+    ContentStatus,
     DraftPostRequest,
     PlanRequest,
 )
@@ -959,6 +960,10 @@ def list_posts(
         stmt = stmt.where(ContentPost.plan_id == plan_id)
     if status:
         stmt = stmt.where(ContentPost.status == status)
+    else:
+        # Default board view hides unsaved (pending) drafts — they live only in
+        # the live drafting workspace until the user clicks Save (pending→draft).
+        stmt = stmt.where(ContentPost.status != ContentStatus.PENDING)
     stmt = stmt.order_by(ContentPost.updated_at.desc())
     rows = db.execute(stmt).scalars().all()
     by_id = _format_map(db, project_id)

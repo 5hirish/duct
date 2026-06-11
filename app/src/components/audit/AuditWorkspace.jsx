@@ -11,6 +11,7 @@ import {
   sendAgentMessage,
 } from "../../lib/api";
 import { AuditEvent, AuditStep } from "../../lib/auditEvents";
+import { StepStatus } from "../../lib/agentSteps";
 import { Phase } from "./auditPhase";
 import { useAuditNav } from "../../lib/auditNavContext";
 
@@ -210,9 +211,9 @@ export default function AuditWorkspace({ sessionId, auditParams, publicMode = fa
           const existing = prev.find((s) => s.step_id === event.step_id);
           if (existing)
             return prev.map((s) =>
-              s.step_id === event.step_id ? { ...s, status: "running" } : s
+              s.step_id === event.step_id ? { ...s, status: StepStatus.RUNNING } : s
             );
-          return [...prev, { step_id: event.step_id, label: event.label, status: "running", payload: null }];
+          return [...prev, { step_id: event.step_id, label: event.label, status: StepStatus.RUNNING, payload: null }];
         });
         break;
 
@@ -220,7 +221,7 @@ export default function AuditWorkspace({ sessionId, auditParams, publicMode = fa
         setSteps((prev) =>
           prev.map((s) =>
             s.step_id === event.step_id
-              ? { ...s, status: event.status || "success", payload: event.payload || null }
+              ? { ...s, status: event.status || StepStatus.SUCCESS, payload: event.payload || null }
               : s
           )
         );
@@ -261,6 +262,11 @@ export default function AuditWorkspace({ sessionId, auditParams, publicMode = fa
         htmlBatchRef.current = "";
         clearTimeout(htmlBatchTimer.current);
         reportReceivedRef.current = true;
+        // The report is ready → synthesis (and any earlier still-"running" step)
+        // is done. run_synthesis stays open for follow-up chat, so its backend
+        // STEP_FINISHED won't arrive until the session closes — clear the loaders
+        // now instead of leaving them spinning behind a finished report.
+        setSteps((prev) => prev.map((s) => (s.status === StepStatus.RUNNING ? { ...s, status: StepStatus.SUCCESS } : s)));
         setReportVersions((prev) => {
           const updated = [
             ...prev.filter((v) => v.version_id !== event.version_id),
@@ -286,6 +292,7 @@ export default function AuditWorkspace({ sessionId, auditParams, publicMode = fa
 
       case AuditEvent.PIPELINE_FINISHED:
         pipelineEndedRef.current = true;
+        setSteps((prev) => prev.map((s) => (s.status === StepStatus.RUNNING ? { ...s, status: StepStatus.SUCCESS } : s)));
         if (event.payload) {
           reportReceivedRef.current = true;
           setReportVersions((prev) => {
