@@ -80,11 +80,24 @@ _MAX_CONNECT_ATTEMPTS = _sdk.MAX_CONNECT_ATTEMPTS
 _CONNECT_BACKOFF_SECS = _sdk.CONNECT_BACKOFF_SECS
 _PLACEHOLDER_STDERR = _sdk.PLACEHOLDER_STDERR
 
-# Max wall-clock with NO message of any kind from the subprocess before we treat
-# the run as stalled. The CLI streams thinking/text/tool deltas continuously, so
-# any real activity resets this; only a genuine stall (e.g. MCP-server init that
-# never readies) trips it. Turns a silent infinite spinner into a surfaced error.
+# Max wall-clock to wait for the FIRST message from the subprocess. This guards
+# the startup window only: a subprocess that connects but never produces anything
+# (e.g. an MCP-server init that never readies) would otherwise leave the UI on an
+# infinite "Starting…" spinner. It is deliberately NOT applied per-message — once
+# output is flowing, mid-turn silences are legitimate (an AskUserQuestion waiting
+# on the user, a long research sub-agent, image generation) and bounding them
+# would tear down the SDK mid-tool-call → bogus PIPELINE_FAILED + a "hook callback
+# hook_0: AbortError" from the subprocess.
 _STALL_TIMEOUT_SECS = 120.0
+
+# How long an AskUserQuestion may wait for the user before the bridge gives up and
+# lets the model proceed with empty answers. The shared default (120s) is far too
+# short for a human reading a multi-part question in an interactive chat: it makes
+# the agent abandon the human-in-the-loop and guess, and the abandoned CLI-side
+# interaction surfaces as a "hook_0: AbortError". An abandoned *session* is still
+# torn down promptly via close_session (which cancels the pipeline task), so a
+# generous budget here only ever benefits a user who is actively, slowly answering.
+_ASK_USER_TIMEOUT_SECS = 600.0
 
 
 def _captured_stderr(buf: deque[str], exc: Exception) -> str:
@@ -573,10 +586,14 @@ async def _run(
             })
             return PermissionResultAllow(updated_input=input_data)
 
-        # AskUserQuestion: bridge to the SSE consumer via asyncio.Future.
+        # AskUserQuestion: bridge to the SSE consumer via asyncio.Future. Give the
+        # user a realistic budget to answer (see _ASK_USER_TIMEOUT_SECS) — the
+        # shared 120s default is too tight for an interactive chat and makes the
+        # model proceed with empty answers.
         if tool_name == AgentTool.ASK_USER_QUESTION:
             updated = await bridge_ask_user_question(
-                session, session_id, input_data, emit, log_prefix="content"
+                session, session_id, input_data, emit,
+                timeout=_ASK_USER_TIMEOUT_SECS, log_prefix="content",
             )
             return PermissionResultAllow(updated_input=updated)
 
@@ -893,16 +910,25 @@ async def _run(
         client = await _connect_with_retry()
         await client.query(message_gen())
 
-        # Watchdog: the SDK connects fine but can stall *before* the completion
+        # Startup watchdog: the SDK connects fine but can stall *before* it
         # produces anything (e.g. an in-process MCP server that never readies),
-        # leaving the UI on an infinite "Starting…" spinner. Bound the wait per
-        # message so a true stall raises (→ PIPELINE_FAILED) instead of hanging.
+        # leaving the UI on an infinite "Starting…" spinner. Bound ONLY the first
+        # message so that stall raises (→ PIPELINE_FAILED) instead of hanging.
+        # Once output is flowing, do NOT bound subsequent messages: mid-turn
+        # silences are legitimate (AskUserQuestion awaiting the user, a long
+        # research sub-agent, image generation), and tearing the SDK down during
+        # one surfaces a bogus stall error plus a "hook_0: AbortError".
         _responses = client.receive_response()
+        _seen_output = False
         while True:
             try:
-                msg = await asyncio.wait_for(
-                    _responses.__anext__(), timeout=_STALL_TIMEOUT_SECS
-                )
+                if _seen_output:
+                    msg = await _responses.__anext__()
+                else:
+                    msg = await asyncio.wait_for(
+                        _responses.__anext__(), timeout=_STALL_TIMEOUT_SECS
+                    )
+                    _seen_output = True
             except StopAsyncIteration:
                 break
             except asyncio.TimeoutError as exc:

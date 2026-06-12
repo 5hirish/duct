@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { Phase } from "./auditPhase";
 import { AuditStep } from "../../lib/auditEvents";
 import { StepStatus } from "../../lib/agentSteps";
+import PipelineProgress from "../PipelineProgress";
 import AuditReportV1 from "./AuditReportV1";
 
 // ---------------------------------------------------------------------------
@@ -48,6 +49,9 @@ const STEP_WRITE_REPORT = "write_report";
 const STAGE_META = [
   { id: AuditStep.FETCH_SITEMAP,    label: "Mapping your site structure",          virtual: false },
   { id: AuditStep.CRAWL_PAGES,      label: "Reading and parsing your pages",       virtual: false },
+  // conditional: enrichment is skipped for the lead-magnet flow (no business
+  // context), so only render this stage once the backend actually emits it.
+  { id: AuditStep.ENRICHING,        label: "Researching competitors",              virtual: false, conditional: true },
   { id: AuditStep.SYNTHESIZE_AUDIT, label: "Scoring signals & building findings",  virtual: false },
   { id: STEP_WRITE_REPORT,          label: "Generating report",                    virtual: true  },
 ];
@@ -62,108 +66,51 @@ const SYNTHESIS_LINES = [
   "Composing findings and priorities…",
 ];
 
+// Right-aligned payload chips, audit-specific (sitemap page counts, competitor
+// counts). Everything else (icons, time estimate, progress bar, rotating lines)
+// is the shared PipelineProgress.
+function auditStageChip(stage, step, status) {
+  if (step?.payload?.landing_pages != null) {
+    return (
+      <span className="text-xs text-muted-foreground shrink-0">
+        {step.payload.landing_pages} page{step.payload.landing_pages !== 1 ? "s" : ""}
+        {step.payload.blog_posts > 0 && `, ${step.payload.blog_posts} post${step.payload.blog_posts !== 1 ? "s" : ""}`}
+      </span>
+    );
+  }
+  if (status === StepStatus.SUCCESS && step?.payload?.competitors != null) {
+    return (
+      <span className="text-xs text-muted-foreground shrink-0">
+        {step.payload.competitors.length} competitor{step.payload.competitors.length !== 1 ? "s" : ""}
+      </span>
+    );
+  }
+  return null;
+}
+
 function SynthesisProgress({ steps, isStreamingReport = false }) {
-  // Pick a rotating line based on the current second so it feels alive
-  const lineIdx = Math.floor(Date.now() / 3000) % SYNTHESIS_LINES.length;
-  const synthStep = steps.find((s) => s.step_id === AuditStep.SYNTHESIZE_AUDIT);
-  const isSynthesising = synthStep?.status === StepStatus.RUNNING || isStreamingReport;
-
+  // Once the model starts adding categories, swap the static time estimate for live
+  // "N/9 categories" progress (emitted per AddAuditCategory call by the backend).
+  const synthStep = steps?.find((s) => s.step_id === AuditStep.SYNTHESIZE_AUDIT);
+  const done = synthStep?.payload?.categories_done;
+  const estimate = done != null
+    ? `${done}/${synthStep.payload.categories_total ?? 9} categories`
+    : "~3 min";
   return (
-    <div className="flex flex-col items-center justify-center h-full px-8 py-12 text-center select-none">
-      {/* Brand + animation */}
-      <div className="mb-8 space-y-3">
-        <div className="flex items-center justify-center gap-2">
-          <span className="text-2xl font-bold tracking-tight">Duct</span>
-          <span className="flex gap-1">
-            {[0, 1, 2].map((i) => (
-              <span
-                key={i}
-                className="inline-block size-1.5 rounded-full bg-primary animate-bounce"
-                style={{ animationDelay: `${i * 0.18}s` }}
-              />
-            ))}
-          </span>
-        </div>
-        <p className="text-sm text-muted-foreground min-h-[1.25rem] transition-all">
-          {isStreamingReport ? "Writing your report…" : isSynthesising ? SYNTHESIS_LINES[lineIdx] : "Working on your report…"}
-        </p>
-      </div>
-
-      {/* Step list */}
-      <div className="w-full max-w-xs space-y-2 text-left">
-        {STAGE_META.map((stage) => {
-          // Virtual steps are driven by props, not by the backend steps array
-          const step = stage.virtual ? null : steps.find((s) => s.step_id === stage.id);
-          const status = stage.virtual
-            ? (isStreamingReport ? "running" : "pending")
-            : (step?.status ?? "pending");
-
-          return (
-            <div
-              key={stage.id}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-300 ${
-                status === StepStatus.RUNNING
-                  ? "bg-primary/8 border border-primary/20"
-                  : status === StepStatus.SUCCESS
-                  ? "opacity-50"
-                  : "opacity-20"
-              }`}
-            >
-              {status === StepStatus.RUNNING ? (
-                <span className="size-3.5 shrink-0 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-              ) : status === StepStatus.SUCCESS ? (
-                <span className="text-green-500 text-sm shrink-0">✓</span>
-              ) : (
-                <span className="size-3.5 shrink-0 rounded-full border border-muted-foreground/30" />
-              )}
-              <span className="text-sm flex-1">{stage.label}</span>
-              {status === StepStatus.RUNNING && stage.id === AuditStep.SYNTHESIZE_AUDIT && (
-                <span className="text-xs text-muted-foreground shrink-0">~3 min</span>
-              )}
-              {status === StepStatus.RUNNING && stage.id === STEP_WRITE_REPORT && (
-                <span className="text-xs text-muted-foreground shrink-0 animate-pulse">writing…</span>
-              )}
-              {status === StepStatus.RUNNING && stage.id !== AuditStep.SYNTHESIZE_AUDIT && stage.id !== STEP_WRITE_REPORT && (
-                <span className="text-xs text-muted-foreground shrink-0 animate-pulse">now</span>
-              )}
-              {step?.payload?.landing_pages != null && (
-                <span className="text-xs text-muted-foreground shrink-0">
-                  {step.payload.landing_pages} page{step.payload.landing_pages !== 1 ? "s" : ""}
-                  {step.payload.blog_posts > 0 && `, ${step.payload.blog_posts} post${step.payload.blog_posts !== 1 ? "s" : ""}`}
-                </span>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Progress bar — slow fill during analysis, pulse at ~85% during writing */}
-      {isSynthesising && (
-        <div className="mt-6 w-full max-w-xs">
-          <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
-            <span>{isStreamingReport ? "Generating report" : "Building report"}</span>
-            {!isStreamingReport && <span>~3 min</span>}
-          </div>
-          <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
-            {isStreamingReport ? (
-              // Pulse at ~85% to signal "almost done, actively writing"
-              <div className="h-full w-[85%] rounded-full bg-primary animate-pulse" />
-            ) : (
-              <div
-                className="h-full rounded-full bg-primary origin-left"
-                style={{ animation: "duct-progress 180s cubic-bezier(0.1, 0, 0.25, 1) forwards" }}
-              />
-            )}
-          </div>
-          <style>{`
-            @keyframes duct-progress {
-              from { width: 0% }
-              to   { width: 82% }
-            }
-          `}</style>
-        </div>
-      )}
-    </div>
+    <PipelineProgress
+      stages={STAGE_META}
+      steps={steps}
+      activeId={AuditStep.SYNTHESIZE_AUDIT}
+      writingId={STEP_WRITE_REPORT}
+      writing={isStreamingReport}
+      lines={SYNTHESIS_LINES}
+      estimate={estimate}
+      buildingLabel="Building report"
+      streamingLabel="Generating report"
+      streamingSubtitle="Writing your report…"
+      idleSubtitle="Working on your report…"
+      stageChip={auditStageChip}
+    />
   );
 }
 

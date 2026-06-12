@@ -59,7 +59,7 @@ async def enrich_context(
     crawl_result: CrawlResult,
     api_key: str,
     model: str = _HAIKU_MODEL,
-    timeout: float = 90.0,
+    timeout: float = 60.0,
 ) -> AuditResearchContext | None:
     """Run a lightweight Claude sub-agent to research competitors and content gaps.
 
@@ -77,7 +77,7 @@ async def enrich_context(
     brand_schema_types = _extract_brand_schema_types(crawl_result)
 
     if business_context.competitors:
-        competitors_hint = f"Competitors to research (fetch their homepages): {', '.join(business_context.competitors[:4])}"
+        competitors_hint = f"Competitors to research (fetch their homepages): {', '.join(business_context.competitors[:3])}"
     else:
         industry_hint = business_context.industry or business_context.business_description or root_url
         competitors_hint = f"Search the web to find the top 3 competitors for: {industry_hint}"
@@ -89,7 +89,7 @@ Business: {business_context.business_name or root_url}
 
 {competitors_hint}
 
-For each competitor (max 4 total):
+For each competitor (max 3 total):
 1. Fetch their homepage using WebFetch
 2. Extract their main value proposition and target audience
 3. Identify their top 3 content themes/pillars
@@ -132,7 +132,7 @@ Be concise. Each field should be a short string or short list item, not a paragr
         model=model,
         allowed_tools=["WebSearch", "WebFetch"],
         permission_mode="bypassPermissions",
-        max_turns=15,  # 4 WebFetches + searches + the final structured-output turn
+        max_turns=12,  # 3 WebFetches + searches + the final structured-output turn
         env=env,
         setting_sources=[],
         output_format={

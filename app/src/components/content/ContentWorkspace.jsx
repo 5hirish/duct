@@ -347,6 +347,10 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
 
   const hasPayload = Boolean(payload);
   const isRunning  = phase === Phase.STARTING || phase === Phase.PIPELINE;
+  // The right viewport is mid-build whenever there's no payload yet and the run
+  // hasn't failed — including while a question is pending. Drives the polished
+  // PipelineProgress loading panel (synthesis spinner + bar) until the plan/post lands.
+  const viewportBuilding = !hasPayload && phase !== Phase.FAILED;
   // True whenever the agent is actively producing tokens — drives ContentInput
   // Stop button + textarea disabling. Distinct from inputDisabled (which is
   // phase-based) so the user can stop in-flight chat without falling into a
@@ -364,7 +368,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
       )}
       <div className="min-h-0 flex-1 overflow-hidden">
         {renderViewport
-          ? renderViewport({ payload, mode, sessionId, phase, onSendMessage: handleSendMessage })
+          ? renderViewport({ payload, mode, sessionId, phase, steps, building: viewportBuilding, onSendMessage: handleSendMessage })
           : (
               <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
                 No viewport configured.

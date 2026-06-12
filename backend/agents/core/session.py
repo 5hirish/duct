@@ -40,6 +40,7 @@ class BaseAgentSession:
     chat_queue: Any                   # asyncio.Queue — user messages → agent
     answer_future: Any | None = None  # asyncio.Future | None — AskUserQuestion bridge
     created_at: float = 0.0           # time.monotonic() at registration
+    last_activity: float = 0.0        # time.monotonic() of last consumer/user activity — drives stale pruning
     pipeline_task: Any | None = None  # asyncio.Task — cancelled on close
 
 
@@ -55,8 +56,19 @@ def register_session(session: BaseAgentSession) -> BaseAgentSession:
     """Register a freshly-built session, stamping created_at if unset."""
     if not session.created_at:
         session.created_at = time.monotonic()
+    if not session.last_activity:
+        session.last_activity = session.created_at
     _sessions[session.session_id] = session
     return session
+
+
+def touch_session(session: BaseAgentSession | None) -> None:
+    """Mark a session as active *now*. Called whenever a live SSE consumer reads
+    a frame (data or keep-alive ping) or the user sends a message, so the stale
+    pruner measures inactivity rather than total age — an actively-streaming
+    session is never killed just for being long-lived. No-op on None."""
+    if session is not None:
+        session.last_activity = time.monotonic()
 
 
 def close_session(session_id: str) -> None:

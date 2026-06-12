@@ -280,7 +280,7 @@ async def run_synthesis(
     <audit_report_update> blocks for report versioning (existing pattern, unchanged).
     """
     from claude_agent_sdk import ClaudeAgentOptions, ClaudeSDKClient
-    from claude_agent_sdk.types import HookMatcher, PermissionResultAllow, PermissionResultDeny, StreamEvent, ThinkingConfigAdaptive
+    from claude_agent_sdk.types import HookMatcher, PermissionResultAllow, PermissionResultDeny, StreamEvent, ThinkingConfigAdaptive, ThinkingConfigEnabled
 
     env_var = get_env_var_for_engine_provider(Engine.V3, provider) or "ANTHROPIC_API_KEY"
 
@@ -307,7 +307,7 @@ async def run_synthesis(
         if tool_name == AgentTool.FETCH_PAGES:
             if initial_report is None:
                 first_step = (
-                    "Call SubmitAuditReport first"
+                    "Finish the report first (StartAuditReport → AddAuditCategory ×9 → FinalizeAuditReport)"
                     if report_mode == "template"
                     else "Produce the <duct_report> HTML first"
                 )
@@ -350,12 +350,15 @@ async def run_synthesis(
         if not report.update_label:
             report.update_label = "Initial audit" if version_id == 1 else f"Update {version_id}"
         if report_mode == "template":
-            # Template mode: report comes via SubmitAuditReport tool call, not HTML streaming
+            # Template mode: report data lives on report.structured_data (NOT on the
+            # AuditReport wrapper) — read it from there so the counts are accurate.
+            _sd = report.structured_data
             logger.info(
-                "synthesis: report v%d finalised — template mode, overall_score=%s, %d categories",
+                "synthesis: report v%d finalised — template mode, overall_score=%s, %d categories, %d findings",
                 version_id,
-                getattr(report, "overall_score", "?"),
-                len(getattr(report, "categories", []) or []),
+                _sd.overall_score if _sd else "?",
+                len(_sd.categories) if _sd else 0,
+                sum(len(c.findings) for c in _sd.categories) if _sd else 0,
             )
         else:
             logger.info(
@@ -435,6 +438,14 @@ async def run_synthesis(
     _sdk_env: dict[str, str] = {
         "OTEL_SERVICE_NAME": "duct-audit-seo",
         "ENABLE_PROMPT_CACHING_1H": "1",
+        # Tool search is ON by default (non-Haiku models) and DEFERS tool schemas
+        # out of context, discovering them on demand. Audit has a small fixed tool
+        # set (FetchPages + Start/Add/Finalize/SubmitAuditReport), and the SDK docs
+        # say eager loading is faster for <10 tools — so disable it. This guarantees
+        # the model always sees the report tools' schemas without a discovery round-
+        # trip (otherwise the large StructuredAuditData/AuditCategory schemas could
+        # trip auto-deferral and the model might not find them reliably).
+        "ENABLE_TOOL_SEARCH": "false",
         # Sentry OTLP tracing — spans for every turn, tool call, LLM request.
         # Activated only when sdk_otel_enabled=true + sentry_dsn is set.
         **sentry_otel_env(_cfg),
@@ -502,9 +513,47 @@ async def run_synthesis(
     # Do NOT override cli_path — let the SDK use its own bundled binary which is
     # version-matched to the SDK. Passing shutil.which("claude") here would use the
     # system-installed CLI which may be a different (incompatible) version.
-    _extra_tools = [AgentTool.SUBMIT_AUDIT_REPORT] if report_mode == "template" else []
+    _extra_tools = [
+        AgentTool.START_AUDIT_REPORT,
+        AgentTool.ADD_AUDIT_CATEGORY,
+        AgentTool.FINALIZE_AUDIT_REPORT,
+        AgentTool.SUBMIT_AUDIT_REPORT,  # chat-revision resubmit path
+    ] if report_mode == "template" else []
     _submit_cb = _on_submit_report if report_mode == "template" else None
-    _mcp = build_audit_mcp_server(crawl_result, report_mode=report_mode, on_submit_report=_submit_cb)
+
+    async def _on_category_added(count: int, category: dict) -> None:
+        # Live progress: surface each category as the model adds it, so the UI shows
+        # "N/9 categories" instead of a static spinner during the build. Best-effort —
+        # the tool layer never fails on a streaming-emit error.
+        await emit({
+            "event": AuditEvent.STEP_STARTED,
+            "step_id": AuditStep.SYNTHESIZE_AUDIT,
+            "label": STEP_LABELS[AuditStep.SYNTHESIZE_AUDIT],
+            "status": StepStatus.RUNNING,
+            "payload": {
+                "categories_done": count,
+                "categories_total": 9,
+                "last_category": category.get("label") or category.get("id"),
+            },
+        })
+
+    _category_cb = _on_category_added if report_mode == "template" else None
+    _mcp = build_audit_mcp_server(
+        crawl_result,
+        report_mode=report_mode,
+        on_submit_report=_submit_cb,
+        on_category_added=_category_cb,
+    )
+
+    # Thinking config: template mode applies a rigid 9-category scoring framework, where
+    # unbounded adaptive thinking burns minutes for little gain — cap it with a fixed
+    # budget. Freehand narrative still benefits from unbounded adaptive thinking.
+    if not adaptive_thinking:
+        _thinking = None
+    elif report_mode == "template":
+        _thinking = ThinkingConfigEnabled(type=ThinkingMode.ENABLED, budget_tokens=8000)
+    else:
+        _thinking = ThinkingConfigAdaptive(type=ThinkingMode.ADAPTIVE)
 
     options = ClaudeAgentOptions(
         model=model_str,
@@ -517,16 +566,17 @@ async def run_synthesis(
             AgentTool.FETCH_PAGES,  # mcp__duct_crawl__FetchPages — in-process MCP
             *_extra_tools,
         ],
-        # ToolSearch is a Claude Code meta-tool that looks up other tools' schemas.
-        # The MCP initialization already delivers SubmitAuditReport's full schema,
-        # so ToolSearch calls are redundant — they add 2 extra model turns per audit.
+        # Belt-and-suspenders with ENABLE_TOOL_SEARCH=false (the documented control,
+        # set in _sdk_env): with tool search off, all audit tool schemas
+        # (Start/Add/Finalize/SubmitAuditReport) load upfront, so the meta ToolSearch
+        # tool is unnecessary — disallow it so the model can never waste a turn on it.
         disallowed_tools=["ToolSearch"],
         can_use_tool=_can_use_tool,
         hooks=hooks,
         max_turns=60,
         system_prompt=system_prompt,
         include_partial_messages=True,
-        thinking=ThinkingConfigAdaptive(type=ThinkingMode.ADAPTIVE) if adaptive_thinking else None,
+        thinking=_thinking,
         effort=effort,
         env=_sdk_env,
         stderr=_on_subprocess_stderr,

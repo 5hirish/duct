@@ -351,12 +351,25 @@ critic cataloguing failures. Every finding — including FAIL — should feel li
 - `effort_estimate` in roadmap task: choose the closest from \
   "under_1hr" | "2_to_4hrs" | "1_to_3_days" | "1_to_2_wks" | "ongoing".
 
-When you have finished the full analysis:
-1. Write 1–2 conversational sentences: the headline finding and overall direction.
-2. Call **SubmitAuditReport** with the complete structured findings, including:
+When you have finished the full analysis, deliver the report in THREE stages. Each call \
+is small and focused — this is faster and far more reliable than one giant submission. \
+First write 1–2 conversational sentences (the headline finding and overall direction), then:
+
+1. Call **StartAuditReport** once — the scorecard header only:
+   - `overall_score`, `score_band`, `pages_crawled`, `total_sitemap_urls`, and the three \
+     totals (`total_issues`, `total_warnings`, `total_opportunities`).
    - `headline`: 10–15 word hook that frames the site's core opportunity or strength. \
      Forward-looking. Example: "The foundation is solid — the growth engine is ready to fire."
    - `key_signals`: exactly 3 short strings per the rules above.
+   - Omit `url`, `generated_at`, `crawl_summary` — the backend fills these authoritatively.
+
+2. Call **AddAuditCategory** once for EACH of the 9 categories — its `id`, `label`, `score`, \
+   `tooltip`, the four counts (`fail_count`/`warn_count`/`pass_count`/`opp_count`), and all its \
+   `findings`. One call per category; order does not matter. Do NOT batch categories into one call.
+
+3. Call **FinalizeAuditReport** once, LAST, after every category is added — the cross-cutting \
+   synthesis:
+   - `top_priorities`: the highest-leverage items, each referencing a category finding by id.
    - `wins`: 3–5 noun phrases of what is working well.
    - `roadmap`: 2–3 phases ordered by leverage:
      * Phase 1 label="0–30 days" theme="Unblock" — critical FAILs (3–5 tasks)
@@ -378,8 +391,10 @@ When you have finished the full analysis:
 
 You have **FetchPages** and **SubmitAuditReport** tools available.
 - Answer questions conversationally. Cite specific URL and signal values.
-- Call SubmitAuditReport again (full updated data) whenever the user asks for report \
-  changes or you discover new evidence that meaningfully changes findings.
+- Call **SubmitAuditReport** (the FULL updated report as one object) whenever the user asks \
+  for report changes or you discover new evidence that meaningfully changes findings. Use \
+  this single-call tool for revisions — not the Start/Add/Finalize sequence, which is for \
+  the initial build only.
 - Do NOT call FetchPages during the initial audit. Save it for targeted chat verification.
 - Use your SEO expertise to explain *why* findings matter and suggest prioritised quick wins.
 - If the user uploads a screenshot or file, analyse it in the context of the site's SEO.
@@ -541,7 +556,8 @@ def build_unified_system_prompt(report_mode: str = "freehand", template_id: str 
     """Unified system prompt — single-session artifact pattern.
 
     report_mode="freehand": agent generates HTML inside <duct_report> tags.
-    report_mode="template": agent calls SubmitAuditReport tool with structured data.
+    report_mode="template": agent builds the report via StartAuditReport →
+        AddAuditCategory ×9 → FinalizeAuditReport (SubmitAuditReport for chat revisions).
     """
     workflow = _TEMPLATE_WORKFLOW if report_mode == "template" else _FREEHAND_WORKFLOW
     return _UNIFIED_SYSTEM_PROMPT.format(workflow_section=workflow)
@@ -686,7 +702,10 @@ def build_audit_user_prompt(
 
     parts.append("</crawl_data>")
     if report_mode == "template":
-        parts.append("\nRun the full 9-category SEO audit. When finished, call SubmitAuditReport with the complete structured findings.")
+        parts.append(
+            "\nRun the full 9-category SEO audit. When finished, deliver it via StartAuditReport, "
+            "then AddAuditCategory once per category, then FinalizeAuditReport."
+        )
     else:
         parts.append(
             "\nRun the full 9-category SEO audit. "

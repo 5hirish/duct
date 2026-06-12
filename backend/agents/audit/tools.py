@@ -22,7 +22,14 @@ from urllib.parse import urlparse
 from claude_agent_sdk import create_sdk_mcp_server, tool
 from claude_agent_sdk.types import McpSdkServerConfig
 
-from agents.audit.schema import CrawlResult, PageSignals, StructuredAuditData
+from agents.audit.schema import (
+    AuditCategory,
+    AuditReportFinalize,
+    AuditReportStart,
+    CrawlResult,
+    PageSignals,
+    StructuredAuditData,
+)
 from service.crawl.extractor import extract_signals
 from service.crawl.fetcher import SSRFError, fetch, make_client, validate_public_url
 
@@ -35,7 +42,8 @@ _FULL_BODY_CHARS   = 5_000   # vs 500-char snippet in the shallow crawl
 def build_audit_mcp_server(
     crawl_result: CrawlResult,
     report_mode: str = "freehand",
-    on_submit_report=None,  # async (args: dict) -> dict | None
+    on_submit_report=None,    # async (args: dict) -> dict | None
+    on_category_added=None,   # async (count: int, category: dict) -> None — live progress
 ) -> McpSdkServerConfig:
     """Build the in-process MCP server scoped to this audit session's site.
 
@@ -114,23 +122,134 @@ def build_audit_mcp_server(
     tools = [fetch_pages]
 
     if report_mode == "template":
+        # Incremental build accumulator — persists across the Start/Add/Finalize
+        # calls within this session (the MCP server is built once per session).
+        # Each tool is small, so the model fills it reliably; partial progress
+        # (categories added before a mid-build failure) survives in `draft`.
+        draft: dict = {"categories": []}
+
+        def _text(payload: dict) -> dict:
+            return {"content": [{"type": "text", "text": json.dumps(payload)}]}
+
+        def _err(message: str) -> dict:
+            # is_error=True signals a failed call so the agent loop CONTINUES and the
+            # model can react/retry — vs an uncaught exception, which per the SDK docs
+            # stops the loop and fails the whole query.
+            return {
+                "content": [{"type": "text", "text": json.dumps({"status": "error", "message": message})}],
+                "is_error": True,
+            }
+
+        @tool(
+            name="StartAuditReport",
+            description=(
+                "Begin the structured SEO audit report. Call this FIRST, once, after you have "
+                "finished analysing the crawl and computed all 9 category scores. Provide the "
+                "scorecard header (overall_score, score_band, totals, key_signals, headline). "
+                "Then call AddAuditCategory once per category, and FinalizeAuditReport last. "
+                "url, generated_at and crawl_summary are filled by the backend — omit them."
+            ),
+            input_schema=AuditReportStart.model_json_schema(),
+        )
+        async def start_audit_report(args: dict) -> dict:
+            draft.clear()
+            draft.update(args)
+            draft["categories"] = []
+            logger.info("audit tool: StartAuditReport — score=%s band=%s",
+                        args.get("overall_score"), args.get("score_band"))
+            return _text({
+                "status": "started",
+                "next": "Call AddAuditCategory once for each of the 9 categories, then FinalizeAuditReport.",
+            })
+
+        @tool(
+            name="AddAuditCategory",
+            description=(
+                "Add ONE category's findings to the report in progress. Call once per category "
+                "(all 9), after StartAuditReport. Each call is a single AuditCategory: id, label, "
+                "score, tooltip, the four counts, and its findings[]. Order does not matter."
+            ),
+            input_schema=AuditCategory.model_json_schema(),
+        )
+        async def add_audit_category(args: dict) -> dict:
+            draft.setdefault("categories", []).append(args)
+            n = len(draft["categories"])
+            logger.info("audit tool: AddAuditCategory '%s' (%d findings) — %d/9 categories",
+                        args.get("label") or args.get("id") or "?",
+                        len(args.get("findings") or []), n)
+            if on_category_added:
+                try:
+                    await on_category_added(n, args)
+                except Exception:  # noqa: BLE001 — streaming is best-effort, never fail the tool
+                    logger.warning("audit tool: on_category_added emit failed", exc_info=True)
+            return _text({
+                "status": "category_added",
+                "category": args.get("label") or args.get("id") or "",
+                "categories_so_far": n,
+                "next": "Add the next category, or call FinalizeAuditReport once all are in.",
+            })
+
+        @tool(
+            name="FinalizeAuditReport",
+            description=(
+                "Finish and deliver the report. Call this LAST, once all categories have been "
+                "added via AddAuditCategory. Provide the cross-cutting synthesis: top_priorities "
+                "(reference category findings by id), wins, roadmap, strategic_narrative. The "
+                "backend assembles, validates and publishes the full report."
+            ),
+            input_schema=AuditReportFinalize.model_json_schema(),
+        )
+        async def finalize_audit_report(args: dict) -> dict:
+            if not draft.get("categories"):
+                return _err(
+                    "No categories recorded. Call StartAuditReport, then AddAuditCategory "
+                    "for each category, before FinalizeAuditReport."
+                )
+            from datetime import datetime, timezone
+            merged = {
+                **draft,
+                **args,
+                "url": crawl_result.plan.root_url,
+                "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            }
+            logger.info("audit tool: FinalizeAuditReport — %d categories, %d priorities, %d roadmap phases",
+                        len(draft.get("categories") or []),
+                        len(args.get("top_priorities") or []),
+                        len(args.get("roadmap") or []))
+            try:
+                if on_submit_report:
+                    return _text(await on_submit_report(merged))
+                return _text({"status": "received"})
+            except Exception as exc:  # noqa: BLE001 — keep the agent loop alive (SDK docs)
+                logger.exception("FinalizeAuditReport: report assembly failed")
+                return _err(
+                    f"Report assembly failed ({exc}). Re-check the fields and call "
+                    "FinalizeAuditReport again."
+                )
+
         @tool(
             name="SubmitAuditReport",
             description=(
-                "Submit the completed SEO audit report as structured data. "
-                "Call once after finishing the full 9-category analysis to deliver the initial report. "
-                "During chat, call again with the full updated data whenever you want to issue a new "
-                "version based on user feedback or new findings. Each call creates a numbered snapshot."
+                "Re-submit the FULL updated report as a single structured object. Use this only "
+                "during chat, when the user asks for changes or you discover new evidence — it "
+                "issues a new numbered version. For the initial build use StartAuditReport / "
+                "AddAuditCategory / FinalizeAuditReport instead."
             ),
             input_schema=StructuredAuditData.model_json_schema(),
         )
         async def submit_audit_report(args: dict) -> dict:
+            logger.info("audit tool: SubmitAuditReport (full-object path) — %d categories",
+                        len(args.get("categories") or []))
             if on_submit_report:
-                result = await on_submit_report(args)
-                return {"content": [{"type": "text", "text": json.dumps(result)}]}
-            return {"content": [{"type": "text", "text": '{"status": "received"}'}]}
+                return _text(await on_submit_report(args))
+            return _text({"status": "received"})
 
-        tools.append(submit_audit_report)
+        tools.extend([
+            start_audit_report,
+            add_audit_category,
+            finalize_audit_report,
+            submit_audit_report,
+        ])
 
     return create_sdk_mcp_server("duct_crawl", tools=tools)
 

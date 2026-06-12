@@ -50,9 +50,9 @@ export default function NewPlanSessionPage() {
       <ContentWorkspace
         mode="plan_month"
         context={{ projectId }}
-        renderViewport={({ payload }) => {
+        renderViewport={({ payload, steps, building }) => {
           if (payload?.id && payload.id !== latestPlanId) setLatestPlanId(payload.id);
-          return <PlanViewport payload={payload} onReviseDay={reviseDay} />;
+          return <PlanViewport payload={payload} steps={steps} building={building} onReviseDay={reviseDay} />;
         }}
       />
     </div>

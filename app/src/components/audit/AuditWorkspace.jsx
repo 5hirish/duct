@@ -211,9 +211,11 @@ export default function AuditWorkspace({ sessionId, auditParams, publicMode = fa
           const existing = prev.find((s) => s.step_id === event.step_id);
           if (existing)
             return prev.map((s) =>
-              s.step_id === event.step_id ? { ...s, status: StepStatus.RUNNING } : s
+              // merge payload when present (e.g. live "N/9 categories" progress);
+              // a payload-less STEP_STARTED keeps the existing payload.
+              s.step_id === event.step_id ? { ...s, status: StepStatus.RUNNING, payload: event.payload ?? s.payload } : s
             );
-          return [...prev, { step_id: event.step_id, label: event.label, status: StepStatus.RUNNING, payload: null }];
+          return [...prev, { step_id: event.step_id, label: event.label, status: StepStatus.RUNNING, payload: event.payload ?? null }];
         });
         break;
 
