@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { STEP_LABELS as BACKEND_STEP_LABELS, AuditStep } from "../../lib/auditEvents";
+import { StepStatus } from "../../lib/agentSteps";
 
 const STEP_LABELS = {
   ...BACKEND_STEP_LABELS,
@@ -248,18 +249,80 @@ function CrawlDetails({ payload }) {
 }
 
 // ---------------------------------------------------------------------------
+// EnrichingDetails — expanded panel for the competitor-research sub-agent
+// ---------------------------------------------------------------------------
+
+function EnrichingDetails({ payload }) {
+  const p = payload || {};
+  const competitors = p.competitors || [];
+  const gaps = p.content_gaps || [];
+  const notes = p.enrichment_notes || [];
+
+  if (!competitors.length && !gaps.length && !notes.length) {
+    return <p className="text-[10px] text-muted-foreground italic">No competitor research was returned for this audit.</p>;
+  }
+
+  return (
+    <div className="space-y-3 text-xs">
+      {competitors.length > 0 && (
+        <div className="space-y-1.5">
+          <span className="text-muted-foreground">{competitors.length} competitor{competitors.length !== 1 ? "s" : ""}</span>
+          <div className="space-y-1.5">
+            {competitors.map((c) => (
+              <div key={c.domain} className="rounded bg-muted/40 px-2 py-1.5 space-y-1">
+                <div className="font-mono text-[10px] text-foreground/80">{c.domain}</div>
+                {c.positioning && <p className="text-[10px] text-muted-foreground leading-relaxed">{c.positioning}</p>}
+                {c.content_pillars && (
+                  <p className="text-[10px] text-muted-foreground">
+                    <span className="text-foreground/50">Pillars:</span> {c.content_pillars}
+                  </p>
+                )}
+                {c.differentiators && (
+                  <p className="text-[10px] text-foreground/60">
+                    <span className="text-muted-foreground/50">Differentiators:</span> {c.differentiators}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {gaps.length > 0 && (
+        <div className="space-y-1">
+          <span className="text-muted-foreground">Content gaps</span>
+          <ul className="list-disc pl-4 space-y-0.5 text-[10px] text-foreground/70">
+            {gaps.map((g, i) => <li key={i}>{g}</li>)}
+          </ul>
+        </div>
+      )}
+
+      {notes.length > 0 && (
+        <div className="space-y-1">
+          <span className="text-muted-foreground">Notes</span>
+          <ul className="space-y-0.5 text-[10px] text-muted-foreground italic">
+            {notes.map((n, i) => <li key={i}>• {n}</li>)}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Step row — header + expandable details
 // ---------------------------------------------------------------------------
 
 const DETAIL_COMPONENTS = {
   [AuditStep.FETCH_SITEMAP]: SitemapDetails,
   [AuditStep.CRAWL_PAGES]:   CrawlDetails,
+  [AuditStep.ENRICHING]:     EnrichingDetails,
 };
 
 function StepRow({ step, expanded, onToggle }) {
   const { step_id, label, status, payload } = step;
-  const isRunning    = status === "running";
-  const isDone       = status === "success" || status === "error";
+  const isRunning    = status === StepStatus.RUNNING;
+  const isDone       = status === StepStatus.SUCCESS || status === StepStatus.ERROR;
   const isSynthesize = step_id === AuditStep.SYNTHESIZE_AUDIT;
   const Details      = DETAIL_COMPONENTS[step_id];
   const canExpand    = isDone && !!Details && !!payload;
@@ -276,9 +339,9 @@ function StepRow({ step, expanded, onToggle }) {
         {/* Status icon */}
         {isRunning ? (
           <span className="inline-block size-3 rounded-full border-2 border-blue-500 border-t-transparent animate-spin shrink-0" />
-        ) : status === "success" ? (
+        ) : status === StepStatus.SUCCESS ? (
           <span className="text-green-500 text-xs shrink-0">✓</span>
-        ) : status === "error" ? (
+        ) : status === StepStatus.ERROR ? (
           <span className="text-destructive text-xs shrink-0">✗</span>
         ) : (
           <span className="size-3 shrink-0 rounded-full border border-muted-foreground/20" />
@@ -293,6 +356,21 @@ function StepRow({ step, expanded, onToggle }) {
           <span className="text-xs text-muted-foreground tabular-nums">
             {payload.landing_pages} page{payload.landing_pages !== 1 ? "s" : ""}
             {payload.blog_posts > 0 && `, ${payload.blog_posts} post${payload.blog_posts !== 1 ? "s" : ""}`}
+          </span>
+        )}
+
+        {/* Crawled page count */}
+        {payload?.pages != null && (
+          <span className="text-xs text-muted-foreground tabular-nums">
+            {payload.pages.length} page{payload.pages.length !== 1 ? "s" : ""}
+          </span>
+        )}
+
+        {/* Competitor research summary */}
+        {payload?.competitors != null && (
+          <span className="text-xs text-muted-foreground tabular-nums">
+            {payload.competitors.length} competitor{payload.competitors.length !== 1 ? "s" : ""}
+            {payload.content_gaps?.length > 0 && `, ${payload.content_gaps.length} gap${payload.content_gaps.length !== 1 ? "s" : ""}`}
           </span>
         )}
 

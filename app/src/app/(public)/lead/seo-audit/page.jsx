@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import AuditWorkspace from "../../../../components/audit/AuditWorkspace";
 import AuditReportV1 from "../../../../components/audit/AuditReportV1";
 import { saveLeadReport, validateLeadToken } from "../../../../lib/api";
+import { ReportMode, DEFAULT_AUDIT_TEMPLATE_ID } from "../../../../lib/audit";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL
   ? `${process.env.NEXT_PUBLIC_SITE_URL}/seo-audit`
@@ -25,12 +26,6 @@ const AgentEffort = Object.freeze({
 const CrawlDepth = Object.freeze({
   LIGHT: "light",
   DEEP:  "deep",
-});
-
-// Mirrors ReportMode enum in backend/agents/audit/schema.py
-const ReportMode = Object.freeze({
-  FREEHAND: "freehand",
-  TEMPLATE: "template",
 });
 
 function timeAgo(isoString) {
@@ -82,9 +77,11 @@ function LeadSeoAuditInner() {
           effort: AgentEffort.LOW,
           adaptive_thinking: false,
           report_mode: ReportMode.TEMPLATE,
-          template_id: "seo_v1",
+          template_id: DEFAULT_AUDIT_TEMPLATE_ID,
           crawl_depth: CrawlDepth.LIGHT,
           max_blog_posts: 2,
+          // Teaser tier: backend force-skips enrichment + extended thinking.
+          lead_magnet: true,
         });
         setState("ready");
       })

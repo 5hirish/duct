@@ -1,20 +1,22 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronUp, FileText, X } from "lucide-react";
 import ContentChat from "./ContentChat";
+import SplitWorkspace from "../workspace/SplitWorkspace";
 import { Phase } from "./contentPhase";
 import {
   answerContentQuestions,
   closeContentSession,
   consumeSseStream,
+  getSlideRenderDoc,
   openPlanStream,
   openPostStream,
+  postSlideRender,
   sendContentChat,
 } from "../../lib/contentApi";
 import { ContentEvent } from "../../lib/contentEvents";
-
-const INITIAL_SPLIT = 50;
+import { StepStatus } from "../../lib/agentSteps";
+import { captureSlideDocToPng } from "../../lib/slideCapture";
 
 /**
  * Universal split-pane workspace for the content agent.
@@ -22,17 +24,12 @@ const INITIAL_SPLIT = 50;
  * Props:
  *   - mode: 'plan_month' | 'draft_post'
  *   - context: { projectId } | { projectId, planId, dayIndex, topic, pillar, postId }
- *   - renderViewport: ({ payload, mode, sessionId }) => ReactNode
+ *   - renderViewport: ({ payload, mode, sessionId, phase, onSendMessage }) => ReactNode
  *     Called every render with the latest plan/post payload from the agent.
+ *     onSendMessage(text) sends a chat turn into the live session (used by the
+ *     viewport for "approve & generate images" / per-slide regenerate).
  */
 export default function ContentWorkspace({ mode, context, renderViewport }) {
-  const [leftWidth, setLeftWidth] = useState(() => {
-    if (typeof window !== "undefined") {
-      return Number(localStorage.getItem("content_split_w") || INITIAL_SPLIT);
-    }
-    return INITIAL_SPLIT;
-  });
-
   const [phase,    setPhase]    = useState(Phase.STARTING);
   const [steps,    setSteps]    = useState([]);
   const [todos,    setTodos]    = useState([]);
@@ -42,14 +39,12 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
   const [retryCount, setRetryCount] = useState(0);
   const [payload, setPayload]   = useState(null);
   const [sessionId, setSessionId] = useState(null);
+  const [channelNote, setChannelNote] = useState(null);
   const [isAgentTyping, setIsAgentTyping] = useState(false);
-  const [mobilePaneOpen, setMobilePaneOpen] = useState(false);
 
   const abortRef = useRef(null);
   const pipelineEndedRef = useRef(false);
   const sessionIdRef     = useRef(null);
-  const dragging         = useRef(false);
-  const containerRef     = useRef(null);
 
   // ---------------------------------------------------------------------------
   // Retry
@@ -77,13 +72,30 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
     const ctrl = new AbortController();
     abortRef.current = ctrl;
     pipelineEndedRef.current = false;
+    // Per-effect-instance state (closure, not refs) so a StrictMode double-mount
+    // never lets one instance clobber or leak the other's backend session.
+    let cancelled = false;
+    let localSid = null;
 
     async function start() {
       try {
         const opener = mode === "plan_month" ? openPlanStream : openPostStream;
-        const { body, sessionId: sid } = await opener(context, { signal: ctrl.signal });
-        sessionIdRef.current = sid;
-        setSessionId(sid);
+        const { body } = await opener(context, {
+          signal: ctrl.signal,
+          onSession: (sid) => {
+            localSid = sid;
+            // Torn down before the stream opened (StrictMode remount / fast
+            // nav): close the orphan so its agent worker is cancelled instead
+            // of racing the surviving session on the shared CLI config dir.
+            if (cancelled) {
+              closeContentSession(sid).catch(() => {});
+              return;
+            }
+            sessionIdRef.current = sid;
+            setSessionId(sid);
+          },
+        });
+        if (cancelled) return;
 
         await consumeSseStream(body, handleEvent, ctrl.signal);
 
@@ -101,10 +113,12 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
 
     start();
     return () => {
+      cancelled = true;
       ctrl.abort();
-      if (sessionIdRef.current) {
-        closeContentSession(sessionIdRef.current).catch(() => {});
-        sessionIdRef.current = null;
+      const sid = sessionIdRef.current || localSid;
+      if (sid) {
+        closeContentSession(sid).catch(() => {});
+        if (sessionIdRef.current === sid) sessionIdRef.current = null;
       }
     };
   }, [retryCount, mode, JSON.stringify(context)]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -114,6 +128,14 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
   // ---------------------------------------------------------------------------
 
   function handleEvent(event) {
+    // PIPELINE_STARTED carries the resolved channel; note when we fell back.
+    if (event.channel) {
+      setChannelNote(
+        event.channel_supported === false
+          ? `Using the TikTok playbook — no dedicated ${event.channel_label || event.channel} agent yet.`
+          : null,
+      );
+    }
     switch (event.event) {
 
       case ContentEvent.STEP_STARTED:
@@ -123,7 +145,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
           if (existing) {
             return prev.map((s) =>
               s.step_id === event.step_id
-                ? { ...s, status: "running", label: event.label || s.label, summary: event.summary }
+                ? { ...s, status: StepStatus.RUNNING, label: event.label || s.label, summary: event.summary }
                 : s,
             );
           }
@@ -132,7 +154,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
             {
               step_id: event.step_id,
               label: event.label || event.step_id,
-              status: "running",
+              status: StepStatus.RUNNING,
               summary: event.summary || "",
             },
           ];
@@ -143,7 +165,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
         setSteps((prev) =>
           prev.map((s) =>
             s.step_id === event.step_id
-              ? { ...s, status: event.status || "success", summary: event.summary || s.summary }
+              ? { ...s, status: event.status || StepStatus.SUCCESS, summary: event.summary || s.summary }
               : s,
           ),
         );
@@ -153,7 +175,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
         setSteps((prev) =>
           prev.map((s) =>
             s.step_id === event.step_id
-              ? { ...s, status: "failed", summary: event.error || s.summary }
+              ? { ...s, status: StepStatus.ERROR, summary: event.error || s.summary }
               : s,
           ),
         );
@@ -207,6 +229,10 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
 
       case ContentEvent.TODO_UPDATE:
         setTodos(event.todos || []);
+        break;
+
+      case ContentEvent.SLIDE_RENDER_REQUESTED:
+        handleSlideRender(event);
         break;
 
       case ContentEvent.AGENT_MESSAGE_CHUNK:
@@ -281,6 +307,24 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
     handleSendMessage(content);
   }
 
+  // The agent asked to SEE a composed slide: fetch the self-contained doc,
+  // rasterize it in the browser (1080×1920), and POST the PNG back. On any
+  // failure we POST an empty result so the agent's render_slide tool fails fast.
+  async function handleSlideRender(event) {
+    const sid = sessionIdRef.current;
+    if (!sid) return;
+    let png = "";
+    try {
+      const { html } = await getSlideRenderDoc(sid, event.post_id, event.slide_id);
+      png = await captureSlideDocToPng(html);
+    } catch {
+      png = "";
+    }
+    try {
+      await postSlideRender(sid, { render_id: event.render_id, image_base64: png });
+    } catch { /* the tool will time out and degrade gracefully */ }
+  }
+
   function handleStop() {
     abortRef.current?.abort();
     if (sessionIdRef.current) {
@@ -297,159 +341,68 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
   // ---------------------------------------------------------------------------
 
   // ---------------------------------------------------------------------------
-  // Drag divider
-  // ---------------------------------------------------------------------------
-
-  function onMouseDownDivider(e) {
-    e.preventDefault();
-    dragging.current = true;
-    function onMove(ev) {
-      if (!dragging.current || !containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const pct = Math.min(80, Math.max(20, ((ev.clientX - rect.left) / rect.width) * 100));
-      setLeftWidth(pct);
-      localStorage.setItem("content_split_w", String(pct));
-    }
-    function onUp() {
-      dragging.current = false;
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-    }
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
-  }
-
-  // ---------------------------------------------------------------------------
-  // Render
+  // Render — split shell is shared (../workspace/SplitWorkspace); this component
+  // only wires the agent-specific chat + viewport into it.
   // ---------------------------------------------------------------------------
 
   const hasPayload = Boolean(payload);
   const isRunning  = phase === Phase.STARTING || phase === Phase.PIPELINE;
+  // The right viewport is mid-build whenever there's no payload yet and the run
+  // hasn't failed — including while a question is pending. Drives the polished
+  // PipelineProgress loading panel (synthesis spinner + bar) until the plan/post lands.
+  const viewportBuilding = !hasPayload && phase !== Phase.FAILED;
   // True whenever the agent is actively producing tokens — drives ContentInput
   // Stop button + textarea disabling. Distinct from inputDisabled (which is
   // phase-based) so the user can stop in-flight chat without falling into a
   // FAILED state.
   const isStreaming = isRunning || (phase === Phase.CHATTING && isAgentTyping);
-
-  // Always-visible mobile bar above the input — opens the right pane as a
-  // bottom sheet. Shows "Generating…" while running, "Ready" once a payload
-  // arrives.
   const paneLabel = mode === "plan_month" ? "30-day plan" : "Post draft";
-  const mobilePostBar = (
-    <button
-      onClick={() => setMobilePaneOpen(true)}
-      className="md:hidden w-full flex items-center gap-3 px-4 py-3 bg-card border-t border-border/60 hover:bg-muted/50 active:bg-muted transition-colors text-left"
-    >
-      {hasPayload ? (
-        <>
-          <div className="size-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-            <FileText size={16} className="text-primary" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold truncate">{paneLabel} ready</p>
-            <p className="text-xs text-muted-foreground">Tap to view + edit</p>
-          </div>
-          <ChevronUp size={16} className="text-muted-foreground shrink-0" />
-        </>
-      ) : (
-        <>
-          <div className="size-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
-            {isRunning ? (
-              <span className="size-4 rounded-full border-2 border-border border-t-primary animate-spin" aria-hidden="true" />
-            ) : (
-              <FileText size={16} className="text-muted-foreground" />
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-muted-foreground truncate">
-              {isRunning ? `Generating ${paneLabel.toLowerCase()}…` : paneLabel}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {isRunning ? "Agent is working" : "Tap to view"}
-            </p>
-          </div>
-          <ChevronUp size={16} className="text-muted-foreground/40 shrink-0" />
-        </>
+  const rightStatus = hasPayload ? "ready" : isRunning ? "busy" : "idle";
+
+  const viewportEl = (
+    <div className="flex h-full flex-col overflow-hidden">
+      {channelNote && (
+        <div className="shrink-0 border-b border-amber-400/30 bg-amber-500/10 px-4 py-2 text-xs text-amber-600 dark:text-amber-400">
+          {channelNote}
+        </div>
       )}
-    </button>
+      <div className="min-h-0 flex-1 overflow-hidden">
+        {renderViewport
+          ? renderViewport({ payload, mode, sessionId, phase, steps, building: viewportBuilding, onSendMessage: handleSendMessage })
+          : (
+              <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                No viewport configured.
+              </div>
+            )}
+      </div>
+    </div>
   );
 
-  const viewportEl = renderViewport
-    ? renderViewport({ payload, mode, sessionId, phase })
-    : (
-        <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
-          No viewport configured.
-        </div>
-      );
-
   return (
-    <div className="flex flex-col h-full w-full overflow-hidden">
-      <div
-        ref={containerRef}
-        className="flex flex-1 min-h-0 w-full overflow-hidden"
-        style={{ "--split": `${leftWidth}%` }}
-      >
-        {/* Chat panel — full-width on mobile, split on md+ */}
-        <div className="flex flex-col overflow-hidden border-r border-border/60 w-full md:w-[var(--split)] md:min-w-[280px]">
-          <ContentChat
-            mode={mode}
-            phase={phase}
-            steps={steps}
-            todos={todos}
-            messages={messages}
-            pendingQuestions={pendingQuestions}
-            errorMsg={errorMsg}
-            isAgentTyping={isAgentTyping}
-            isStreaming={isStreaming}
-            onAnswerQuestions={handleAnswerQuestions}
-            onSendMessage={handleSendMessage}
-            onRetrySend={handleRetrySend}
-            onRetry={handleRetry}
-            onStop={handleStop}
-            mobilePostBar={mobilePostBar}
-          />
-        </div>
-
-        {/* Divider — desktop only */}
-        <div
-          onMouseDown={onMouseDownDivider}
-          title="Drag to resize"
-          className="hidden md:flex w-3 shrink-0 cursor-col-resize select-none items-center justify-center group"
-        >
-          <div className="w-px h-full bg-border/60 group-hover:bg-primary/30 transition-colors" />
-        </div>
-
-        {/* Viewport panel — desktop only */}
-        <div className="hidden md:flex flex-1 flex-col overflow-hidden min-w-[280px]">
-          {viewportEl}
-        </div>
-      </div>
-
-      {/* Mobile bottom sheet — full-screen viewport */}
-      {mobilePaneOpen && (
-        <div
-          className="fixed inset-0 z-50 flex flex-col bg-background md:hidden"
-          style={{ animation: "slideUp 0.25s ease-out", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
-        >
-          <div
-            className="shrink-0 flex items-center justify-between px-4 border-b border-border/60"
-            style={{ paddingTop: "max(12px, env(safe-area-inset-top, 12px))", paddingBottom: "12px" }}
-          >
-            <span className="font-semibold text-sm">{paneLabel}</span>
-            <button
-              onClick={() => setMobilePaneOpen(false)}
-              className="flex items-center justify-center size-11 rounded-md hover:bg-muted transition-colors"
-              aria-label={`Close ${paneLabel.toLowerCase()}`}
-            >
-              <X size={18} />
-            </button>
-          </div>
-          <div className="flex-1 overflow-hidden">
-            {viewportEl}
-          </div>
-        </div>
-      )}
-    </div>
+    <SplitWorkspace
+      storageKey="content_split_w"
+      rightLabel={paneLabel}
+      rightStatus={rightStatus}
+      right={viewportEl}
+      left={
+        <ContentChat
+          mode={mode}
+          phase={phase}
+          steps={steps}
+          todos={todos}
+          messages={messages}
+          pendingQuestions={pendingQuestions}
+          errorMsg={errorMsg}
+          isAgentTyping={isAgentTyping}
+          isStreaming={isStreaming}
+          onAnswerQuestions={handleAnswerQuestions}
+          onSendMessage={handleSendMessage}
+          onRetrySend={handleRetrySend}
+          onRetry={handleRetry}
+          onStop={handleStop}
+        />
+      }
+    />
   );
 }
 

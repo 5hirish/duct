@@ -56,6 +56,16 @@ ENGINE_SUPPORTED_PROVIDERS: dict[Engine, frozenset[Provider]] = {
     Engine.V3: frozenset({Provider.ANTHROPIC}),
 }
 
+# Whether an engine can authenticate without an explicit API key. Only the
+# Claude Agent SDK (v3) supports an OAuth/subscription token fallback; v1/v2
+# (Gemini) require their provider API key. Used by the engine-status endpoint
+# to decide between "needs_auth" (recoverable) and "inactive".
+ENGINE_SUPPORTS_OAUTH: dict[Engine, bool] = {
+    Engine.V1: False,
+    Engine.V2: False,
+    Engine.V3: True,
+}
+
 # Env var name that each engine's underlying framework reads for each provider.
 # Used by v2 (ADK) and v3 (Claude Agent SDK) runners when setting env vars.
 ENGINE_PROVIDER_ENV_VAR: dict[Engine, dict[Provider, str]] = {

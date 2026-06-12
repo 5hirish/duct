@@ -30,9 +30,11 @@ export const PLATFORM_LABELS = Object.freeze({
   [Platform.GOOGLE_BUSINESS]: "Google Business",
 });
 
+// Mirrors ContentStatus in backend/agents/content/schema.py.
 export const PostStatus = Object.freeze({
-  PENDING:   "pending",
-  DRAFT:     "draft",
+  PENDING:   "pending",   // agent-drafted, not yet saved by the user
+  DRAFT:     "draft",     // saved/kept
+  SCHEDULED: "scheduled",
   POSTED:    "posted",
   DISCARDED: "discarded",
 });
@@ -40,6 +42,7 @@ export const PostStatus = Object.freeze({
 export const POST_STATUS_LABELS = Object.freeze({
   [PostStatus.PENDING]:   "Pending",
   [PostStatus.DRAFT]:     "Draft",
+  [PostStatus.SCHEDULED]: "Scheduled",
   [PostStatus.POSTED]:    "Posted",
   [PostStatus.DISCARDED]: "Discarded",
 });

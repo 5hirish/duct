@@ -1,4 +1,4 @@
-"""Content Marketing Agent routes.
+"""Content Studio agent routes.
 
 Streaming endpoints clone the SSE machinery from routes/audit.py:
   POST   /api/content/plan/stream         — start a plan_month session
@@ -45,13 +45,15 @@ from uuid import UUID, uuid4
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlmodel import Session
 
 from agents.content.events import ContentEvent
+from agents.content.styles import base_css, list_styles
 from agents.content.schema import (
     ContentAnswerRequest,
     ContentChatMessage,
+    ContentStatus,
     DraftPostRequest,
     PlanRequest,
 )
@@ -64,7 +66,7 @@ from agents.content.v3.runner import (
 )
 from agents.engines import PROVIDER_CONFIG_ATTR, Engine, resolve_engine_provider
 from agents.models import Platform
-from config import get_configs
+from config import claude_oauth_available, get_configs
 from db.session import get_session as db_session
 from models.content import (
     ContentAsset,
@@ -72,6 +74,7 @@ from models.content import (
     ContentFormat,
     ContentPlan,
     ContentPost,
+    ContentSocialLink,
 )
 from models.project import Project
 from service.pipeline import now_iso
@@ -87,6 +90,17 @@ router = APIRouter(tags=["content"])
 
 _SESSION_TTL = 1800  # 30 minutes
 _session_created_at: dict[str, float] = {}
+
+# In-process TTL cache for the PostBridge-backed analytics endpoint. That call
+# paginates PostBridge's external API (≤2000 records + post-results) on every
+# request; without this, opening the Analytics tab hammers PostBridge each time.
+# refresh=true bypasses + repopulates; writes that change analytics clear it.
+_ANALYTICS_TTL = 120.0  # seconds
+_analytics_cache: dict[UUID, tuple[float, list]] = {}
+
+
+def _invalidate_analytics(project_id: UUID) -> None:
+    _analytics_cache.pop(project_id, None)
 
 
 async def _prune_stale_sessions() -> None:
@@ -155,7 +169,7 @@ async def _run_plan_worker(
 ) -> None:
     try:
         api_key = _resolve_api_key()
-        if not api_key:
+        if not api_key and not claude_oauth_available():
             raise ValueError("ANTHROPIC_API_KEY is not configured")
         runner = ClaudeContentRunner(api_key=api_key)
         await runner.run_plan(session_id, project_id, emit_fn)
@@ -230,7 +244,7 @@ async def _run_draft_worker(
 ) -> None:
     try:
         api_key = _resolve_api_key()
-        if not api_key:
+        if not api_key and not claude_oauth_available():
             raise ValueError("ANTHROPIC_API_KEY is not configured")
         runner = ClaudeContentRunner(api_key=api_key)
         # Resolve the Day from the plan if provided; otherwise pass topic/pillar.
@@ -247,6 +261,9 @@ async def _run_draft_worker(
                         except Exception as exc:
                             logger.warning("content: failed to parse Day[%d] from plan %s: %s",
                                            req.day_index, req.plan_id, exc)
+        # Primary channel: explicit request → the day's first platform → default.
+        from agents.content.channels import primary_channel
+        channel = req.channel or (primary_channel(day_obj.platforms) if day_obj else None)
         await runner.run_draft(
             session_id,
             req.project_id,
@@ -254,7 +271,25 @@ async def _run_draft_worker(
             day=day_obj,
             topic=req.topic,
             pillar=req.pillar,
+            channel=channel,
         )
+        # Link the drafted post back onto its plan-day (post_id) so the board
+        # can match the new post to its slot (we link by post_id, not position).
+        if req.plan_id is not None and req.day_index is not None:
+            sess = get_session(session_id)
+            new_post_id = getattr(sess, "post_id", None) if sess else None
+            if new_post_id is not None:
+                with next(db_session()) as db:
+                    plan = db.get(ContentPlan, req.plan_id)
+                    if plan and 0 <= req.day_index < len(plan.days):
+                        days = list(plan.days)
+                        day = dict(days[req.day_index]) if isinstance(days[req.day_index], dict) else {}
+                        day["post_id"] = str(new_post_id)
+                        days[req.day_index] = day
+                        plan.days = days
+                        plan.updated_at = datetime.now(timezone.utc)
+                        db.add(plan)
+                        db.commit()
     except Exception as exc:
         logger.exception("content: draft worker error for session %s", session_id)
         await emit_fn({
@@ -343,6 +378,99 @@ async def send_content_chat_message(session_id: str, req: ContentChatMessage) ->
     return {"status": "queued"}
 
 
+class SlideRenderResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    render_id:    str
+    image_base64: str   # the rasterized 1080×1920 PNG, base64 (no data: prefix)
+
+
+@router.post("/content/slide-render/{session_id}")
+async def submit_slide_render(session_id: str, req: SlideRenderResult) -> dict:
+    """Resolve a pending render_slide request — the browser rasterized the slide
+    and POSTs the PNG back here; we hand the bytes to the waiting agent tool.
+    An empty image_base64 signals a browser-side failure (resolves to a clean
+    tool error rather than hanging the agent for the full timeout)."""
+    session = get_session(session_id)
+    if not session:
+        raise HTTPException(404, "Session not found or expired")
+    fut = session.render_futures.get(req.render_id)
+    if not fut or getattr(fut, "done", lambda: True)():
+        raise HTTPException(400, "No pending render for this id (it may have timed out)")
+    try:
+        fut.set_result(req.image_base64)
+    except asyncio.InvalidStateError as exc:
+        raise HTTPException(409, "Render already resolved") from exc
+    return {"status": "ok"}
+
+
+def _inline_local_images(html: str) -> str:
+    """Replace src="/uploads/…" with base64 data URIs so a browser rasterizing
+    the doc isn't CORS-tainted (the app + backend are different origins).
+
+    Hardened against path traversal: image_url is agent-influenceable (a slide's
+    image_url survives submit/edit), so a value like "/uploads/../../etc/passwd"
+    must NOT be read off disk. We resolve and require the path stays inside
+    uploads_dir before reading.
+    """
+    import base64
+    import re
+
+    cfg = get_configs()
+    base = Path(cfg.uploads_dir or "/app/uploads").resolve()
+
+    def _repl(m: "re.Match") -> str:
+        url = m.group(1)
+        rel = url[len("/uploads/"):]
+        try:
+            p = (base / rel).resolve()
+            if not p.is_relative_to(base) or not p.is_file():
+                return m.group(0)   # traversal / missing → leave the src untouched
+            suffix = p.suffix.lower()
+            mime = {
+                ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+                ".webp": "image/webp",
+            }.get(suffix, "image/png")
+            data = base64.b64encode(p.read_bytes()).decode("ascii")
+            return f'src="data:{mime};base64,{data}"'
+        except Exception:
+            return m.group(0)
+
+    return re.sub(r'src="(/uploads/[^"]+)"', _repl, html)
+
+
+@router.get("/content/slide-doc/{session_id}")
+def get_slide_render_doc(
+    session_id: str,
+    post_id: UUID,
+    slide_id: str,
+    db: Session = Depends(db_session),
+) -> dict:
+    """Self-contained 1080×1920 single-slide HTML (images inlined as base64) for
+    the browser to rasterize — backing the render_slide bridge. Origin-clean, so
+    the client-side canvas capture isn't tainted."""
+    from agents.content.schema import Slide
+    from agents.content.templates import render_slides_html
+
+    # Scope to the session's project — a valid session can only rasterize its
+    # own project's posts (defence-in-depth; content routes lack per-user auth).
+    session = get_session(session_id)
+    if not session:
+        raise HTTPException(404, "Session not found or expired")
+    post = db.get(ContentPost, post_id)
+    if post is None or post.project_id != session.project_id:
+        raise HTTPException(404, "Post not found")
+    raw = next(
+        (s for s in (post.slides or []) if isinstance(s, dict) and s.get("slide_id") == slide_id),
+        None,
+    )
+    if raw is None:
+        raise HTTPException(404, f"Slide {slide_id} not found on this post")
+    slide = Slide.model_validate(raw)
+    html = render_slides_html(post.layout or "full-bleed", [slide])
+    return {"html": _inline_local_images(html), "width": 1080, "height": 1920}
+
+
 @router.delete("/content/session/{session_id}")
 async def close_content_session(session_id: str) -> dict:
     close_session(session_id)
@@ -367,7 +495,8 @@ class BrandContextIn(BaseModel):
     slug:    str | None = None
     tagline: str | None = None
     description: str | None = None
-    url:     str | None = None
+    # NOTE: `url` (website) is owned by project context (company.website_url);
+    # it is intentionally NOT writable here to avoid two editors clobbering one column.
 
     @field_validator("content_brand", "content_pillars", "content_visual_assets", mode="after")
     @classmethod
@@ -430,8 +559,6 @@ def put_brand_context(
         proj.tagline = body.tagline
     if body.description is not None:
         proj.description = body.description
-    if body.url is not None:
-        proj.url = body.url
     proj.updated_at = datetime.now(timezone.utc)
     db.add(proj)
     db.commit()
@@ -483,7 +610,6 @@ def _plan_out(p: ContentPlan, posts: list[ContentPost] | None = None) -> PlanOut
             [
                 {
                     "id":            str(post.id),
-                    "day_index":     post.day_index,
                     "post_dir_slug": post.post_dir_slug,
                     "pillar":        post.pillar,
                     "topic":         post.topic,
@@ -514,7 +640,7 @@ def get_plan(plan_id: UUID, db: Session = Depends(db_session)) -> PlanOut:
     if plan is None:
         raise HTTPException(404, "Plan not found")
     posts = db.execute(
-        select(ContentPost).where(ContentPost.plan_id == plan_id).order_by(ContentPost.day_index)
+        select(ContentPost).where(ContentPost.plan_id == plan_id).order_by(ContentPost.created_at)
     ).scalars().all()
     return _plan_out(plan, posts=list(posts))
 
@@ -546,21 +672,21 @@ class DayPatch(BaseModel):
     model_config = ConfigDict(extra="allow")  # shallow merge of arbitrary day fields
 
 
-@router.patch("/content/plans/{plan_id}/days/{day}")
+@router.patch("/content/plans/{plan_id}/days/{index}")
 def patch_plan_day(
     plan_id: UUID,
-    day: int,
+    index: int,
     body: DayPatch,
     db: Session = Depends(db_session),
 ) -> PlanOut:
-    """Shallow-merge a single day's fields. Day is 1-indexed (1..30)."""
+    """Shallow-merge a single day's fields by its 0-based position in days[]."""
     plan = db.get(ContentPlan, plan_id)
     if plan is None:
         raise HTTPException(404, "Plan not found")
     days = list(plan.days or [])
-    idx = day - 1
+    idx = index
     if idx < 0 or idx >= len(days):
-        raise HTTPException(400, f"Day {day} out of range (plan has {len(days)} days)")
+        raise HTTPException(400, f"Index {index} out of range (plan has {len(days)} items)")
     existing = dict(days[idx]) if isinstance(days[idx], dict) else {}
     patch = body.model_dump(exclude_unset=True)
     existing.update(patch)
@@ -593,16 +719,17 @@ class PostIn(BaseModel):
 
     project_id:    UUID
     plan_id:       UUID | None = None
-    day_index:     int | None = None
     post_dir_slug: str
     pillar:        str = ""
     topic:         str = ""
     topic_id:      int | None = None
     post_type:     str = "slideshow"
-    format_style:  str = "D"
+    format_slug:   str = ""   # resolved to format_id; "" leaves the post unlinked
     avatar_id:     UUID | None = None
+    layout:        str = "full-bleed"
     slide_count:   int = 0
     status:        str = "pending"
+    slides:        list = Field(default_factory=list)
     slides_html:   str = ""
     caption:       str = ""
     hashtags:      list = Field(default_factory=list)
@@ -625,15 +752,16 @@ class PostPatch(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     plan_id:       UUID | None = None
-    day_index:     int | None = None
     pillar:        str | None = None
     topic:         str | None = None
     topic_id:      int | None = None
     post_type:     str | None = None
-    format_style:  str | None = None
+    format_slug:   str | None = None
     avatar_id:     UUID | None = None
+    layout:        str | None = None
     slide_count:   int | None = None
     status:        str | None = None
+    slides:        list | None = None
     slides_html:   str | None = None
     caption:       str | None = None
     hashtags:      list | None = None
@@ -657,16 +785,20 @@ class PostOut(BaseModel):
     id:            UUID
     project_id:    UUID
     plan_id:       UUID | None
-    day_index:     int | None
     post_dir_slug: str
     pillar:        str
     topic:         str
     topic_id:      int | None
     post_type:     str
-    format_style:  str
+    format_id:     UUID | None
+    format_slug:   str
+    format_name:   str
     avatar_id:     UUID | None
+    thumbnail_url: str
+    layout:        str
     slide_count:   int
     status:        str
+    slides:        list
     slides_html:   str
     caption:       str
     hashtags:      list
@@ -684,7 +816,9 @@ class PostOut(BaseModel):
     camera_ref_pool: str
     platforms:     list
     posted_at:     str | None
+    scheduled_at:  str | None
     tiktok_url:    str
+    published_via: str
     perf:          dict
     daily_perf:    list
     notes:         str
@@ -692,21 +826,31 @@ class PostOut(BaseModel):
     updated_at:    str
 
 
-def _post_out(p: ContentPost) -> PostOut:
+def _post_out(
+    p: ContentPost,
+    *,
+    fmt: tuple[str, str] | None = None,
+    thumbnail_url: str = "",
+) -> PostOut:
+    """Serialize a post. `fmt` is an optional (slug, name) for the linked format."""
     return PostOut(
         id=p.id,
         project_id=p.project_id,
         plan_id=p.plan_id,
-        day_index=p.day_index,
         post_dir_slug=p.post_dir_slug,
         pillar=p.pillar,
         topic=p.topic,
         topic_id=p.topic_id,
         post_type=p.post_type,
-        format_style=p.format_style,
+        format_id=p.format_id,
+        format_slug=(fmt[0] if fmt else ""),
+        format_name=(fmt[1] if fmt else ""),
         avatar_id=p.avatar_id,
+        thumbnail_url=thumbnail_url,
+        layout=p.layout or "full-bleed",
         slide_count=p.slide_count,
         status=p.status,
+        slides=p.slides or [],
         slides_html=p.slides_html,
         caption=p.caption,
         hashtags=p.hashtags or [],
@@ -724,13 +868,84 @@ def _post_out(p: ContentPost) -> PostOut:
         camera_ref_pool=p.camera_ref_pool,
         platforms=p.platforms or [],
         posted_at=p.posted_at.isoformat() if p.posted_at else None,
+        scheduled_at=p.scheduled_at.isoformat() if p.scheduled_at else None,
         tiktok_url=p.tiktok_url,
+        published_via=p.published_via,
         perf=p.perf or {},
         daily_perf=p.daily_perf or [],
         notes=p.notes,
         created_at=p.created_at.isoformat(),
         updated_at=p.updated_at.isoformat(),
     )
+
+
+# ---------------------------------------------------------------------------
+# Post enrichment — link format + derive a thumbnail
+# ---------------------------------------------------------------------------
+
+def _format_map(db: Session, project_id: UUID) -> dict:
+    """Return a by_id lookup of (slug, name) for a project's formats."""
+    rows = db.execute(
+        select(ContentFormat).where(ContentFormat.project_id == project_id)
+    ).scalars().all()
+    return {f.id: (f.slug, f.name or f.slug) for f in rows}
+
+
+def _resolve_format_id(db: Session, project_id: UUID, format_slug: str) -> UUID | None:
+    """Find the format row in this project matching a slug (e.g. 'format-d')."""
+    slug = (format_slug or "").strip().lower()
+    if not slug:
+        return None
+    row = db.execute(
+        select(ContentFormat).where(
+            ContentFormat.project_id == project_id,
+            ContentFormat.slug == slug,
+        )
+    ).scalars().first()
+    return row.id if row else None
+
+
+def _thumb_map(db: Session, post_ids: list[UUID]) -> dict[UUID, str]:
+    """Map post_id → first usable image asset url (generated or uploaded)."""
+    if not post_ids:
+        return {}
+    rows = db.execute(
+        select(ContentAsset.post_id, ContentAsset.url, ContentAsset.created_at)
+        .where(ContentAsset.post_id.in_(post_ids))
+        .where(ContentAsset.asset_type.in_(["generated", "upload"]))
+        .where(ContentAsset.url != "")
+        .order_by(ContentAsset.created_at.asc())
+    ).all()
+    out: dict[UUID, str] = {}
+    for pid, url, _created in rows:
+        if pid is not None and pid not in out and url:
+            out[pid] = url
+    return out
+
+
+def _fmt_for(post: ContentPost, by_id: dict) -> tuple[str, str] | None:
+    return by_id.get(post.format_id)
+
+
+def _enrich_one(db: Session, post: ContentPost) -> PostOut:
+    by_id = _format_map(db, post.project_id)
+    thumb = _thumb_map(db, [post.id]).get(post.id, "")
+    return _post_out(post, fmt=_fmt_for(post, by_id), thumbnail_url=thumb)
+
+
+def _rerender_slides(post: ContentPost) -> None:
+    """Re-derive slides_html + image_prompts + slide_count from structured
+    slides. Called after a slides edit so the rendered preview, the flat
+    image-prompt list, and the count stay in lock-step. Staleness is implicit:
+    a slide whose image_prompt now differs from image_prompt_used renders with
+    the 'outdated' flag (see agents/content/templates.py)."""
+    from agents.content.schema import Slide
+    from agents.content.templates import derive_image_prompts, render_slides_html
+
+    parsed = [Slide.model_validate(s) for s in (post.slides or [])]
+    post.slides_html = render_slides_html(post.layout or "full-bleed", parsed)
+    post.image_prompts = derive_image_prompts(parsed)
+    post.slide_count = len(parsed)
 
 
 @router.get("/content/posts")
@@ -745,9 +960,18 @@ def list_posts(
         stmt = stmt.where(ContentPost.plan_id == plan_id)
     if status:
         stmt = stmt.where(ContentPost.status == status)
+    else:
+        # Default board view hides unsaved (pending) drafts — they live only in
+        # the live drafting workspace until the user clicks Save (pending→draft).
+        stmt = stmt.where(ContentPost.status != ContentStatus.PENDING)
     stmt = stmt.order_by(ContentPost.updated_at.desc())
     rows = db.execute(stmt).scalars().all()
-    return [_post_out(r) for r in rows]
+    by_id = _format_map(db, project_id)
+    thumbs = _thumb_map(db, [r.id for r in rows])
+    return [
+        _post_out(r, fmt=_fmt_for(r, by_id), thumbnail_url=thumbs.get(r.id, ""))
+        for r in rows
+    ]
 
 
 @router.get("/content/posts/{post_id}")
@@ -755,7 +979,7 @@ def get_post(post_id: UUID, db: Session = Depends(db_session)) -> PostOut:
     post = db.get(ContentPost, post_id)
     if post is None:
         raise HTTPException(404, "Post not found")
-    return _post_out(post)
+    return _enrich_one(db, post)
 
 
 @router.post("/content/posts", status_code=201)
@@ -772,6 +996,17 @@ def create_post(body: PostIn, db: Session = Depends(db_session)) -> PostOut:
         **body.model_dump(),
         "platforms": [p.value for p in body.platforms],
     }
+    # format_slug is an input-only selector — resolve it to the FK and drop it.
+    values.pop("format_slug", None)
+    values["format_id"] = _resolve_format_id(db, body.project_id, body.format_slug)
+    # If structured slides came in without HTML, render the HTML from the template.
+    if values.get("slides") and not values.get("slides_html"):
+        from agents.content.schema import Slide
+        from agents.content.templates import derive_image_prompts, render_slides_html
+        parsed = [Slide.model_validate(s) for s in values["slides"]]
+        values["slides_html"] = render_slides_html(values.get("layout") or "full-bleed", parsed)
+        values["image_prompts"] = derive_image_prompts(parsed)
+        values["slide_count"] = len(parsed)
     if existing is not None:
         for k, v in values.items():
             setattr(existing, k, v)
@@ -779,12 +1014,12 @@ def create_post(body: PostIn, db: Session = Depends(db_session)) -> PostOut:
         db.add(existing)
         db.commit()
         db.refresh(existing)
-        return _post_out(existing)
+        return _enrich_one(db, existing)
     post = ContentPost(**values)
     db.add(post)
     db.commit()
     db.refresh(post)
-    return _post_out(post)
+    return _enrich_one(db, post)
 
 
 @router.patch("/content/posts/{post_id}")
@@ -798,13 +1033,24 @@ def patch_post(post_id: UUID, body: PostPatch, db: Session = Depends(db_session)
             p.value if isinstance(p, Platform) else p
             for p in patch["platforms"]
         ]
+    # format_slug is input-only — resolve to the FK rather than setting a column.
+    format_slug = patch.pop("format_slug", None)
     for k, v in patch.items():
         setattr(post, k, v)
+    if format_slug is not None:
+        post.format_id = _resolve_format_id(db, post.project_id, format_slug)
+    # When structured slides change, re-render the HTML from the template unless
+    # the caller also passed an explicit slides_html (don't clobber that).
+    if "slides" in patch and "slides_html" not in patch:
+        try:
+            _rerender_slides(post)
+        except Exception:
+            logger.exception("patch_post: failed to re-render slides for %s", post_id)
     post.updated_at = datetime.now(timezone.utc)
     db.add(post)
     db.commit()
     db.refresh(post)
-    return _post_out(post)
+    return _enrich_one(db, post)
 
 
 @router.post("/content/posts/{post_id}/mark-posted")
@@ -823,7 +1069,7 @@ def mark_post_posted(
     db.add(post)
     db.commit()
     db.refresh(post)
-    return _post_out(post)
+    return _enrich_one(db, post)
 
 
 class MetricsLog(BaseModel):
@@ -854,7 +1100,7 @@ def log_post_metrics(
     db.add(post)
     db.commit()
     db.refresh(post)
-    return _post_out(post)
+    return _enrich_one(db, post)
 
 
 @router.delete("/content/posts/{post_id}")
@@ -865,6 +1111,19 @@ def delete_post(post_id: UUID, db: Session = Depends(db_session)) -> dict:
     db.delete(post)
     db.commit()
     return {"status": "ok"}
+
+
+# ---------------------------------------------------------------------------
+# Styles registry — shared, generic slide CSS (read-only, shipped in code)
+# ---------------------------------------------------------------------------
+
+
+@router.get("/content/styles")
+def get_styles() -> dict:
+    """The shared TikTok slide style registry — base engine CSS + linkable
+    styles (captions, hook, text card). Formats link to these by key; the
+    slide-builder inlines them; the Library previews them."""
+    return {"base_css": base_css(), "styles": list_styles()}
 
 
 # ---------------------------------------------------------------------------
@@ -1225,6 +1484,218 @@ async def list_social_accounts(
     ]
 
 
+# ---------------------------------------------------------------------------
+# Linked accounts — the project's persisted selection of social accounts.
+# ---------------------------------------------------------------------------
+
+class LinkedAccountOut(BaseModel):
+    account_id: int
+    platform:   str
+    username:   str
+
+
+class LinkedAccountIn(BaseModel):
+    account_id: int
+    platform:   str = ""
+    username:   str = ""
+
+
+class LinkedAccountsIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    project_id: UUID
+    accounts:   list[LinkedAccountIn] = Field(default_factory=list)
+
+
+def _link_out(row: ContentSocialLink) -> LinkedAccountOut:
+    return LinkedAccountOut(
+        account_id=int(row.external_account_id),
+        platform=row.platform,
+        username=row.username,
+    )
+
+
+@router.get("/content/linked-accounts")
+def list_linked_accounts(
+    project_id: UUID,
+    db: Session = Depends(db_session),
+) -> list[LinkedAccountOut]:
+    """The social accounts this project has linked."""
+    _project_or_404(db, project_id)
+    rows = db.execute(
+        select(ContentSocialLink)
+        .where(ContentSocialLink.project_id == project_id)
+        .order_by(ContentSocialLink.created_at)
+    ).scalars().all()
+    return [_link_out(r) for r in rows]
+
+
+@router.put("/content/linked-accounts")
+def save_linked_accounts(
+    body: LinkedAccountsIn,
+    db: Session = Depends(db_session),
+) -> list[LinkedAccountOut]:
+    """Replace the project's linked-account set with the supplied list."""
+    _project_or_404(db, body.project_id)
+    db.execute(
+        delete(ContentSocialLink).where(ContentSocialLink.project_id == body.project_id)
+    )
+    # De-dupe by account id, last wins.
+    by_id: dict[int, LinkedAccountIn] = {a.account_id: a for a in body.accounts}
+    for acc in by_id.values():
+        db.add(ContentSocialLink(
+            project_id=body.project_id,
+            external_account_id=str(acc.account_id),
+            platform=acc.platform,
+            username=acc.username,
+        ))
+    db.commit()
+    # Analytics output is filtered by the linked platform set — drop its cache.
+    _invalidate_analytics(body.project_id)
+    rows = db.execute(
+        select(ContentSocialLink)
+        .where(ContentSocialLink.project_id == body.project_id)
+        .order_by(ContentSocialLink.created_at)
+    ).scalars().all()
+    return [_link_out(r) for r in rows]
+
+
+# ---------------------------------------------------------------------------
+# Analytics — live, pulled straight from PostBridge for the linked accounts.
+# (Distinct from per-post `perf`, which only covers posts published via Duct.)
+# ---------------------------------------------------------------------------
+
+class AnalyticsRowOut(BaseModel):
+    id:                 str
+    post_result_id:     str
+    platform:           str
+    title:              str
+    share_url:          str
+    cover_image_url:    str
+    view_count:         int
+    like_count:         int
+    comment_count:      int
+    share_count:        int
+    platform_created_at: str | None
+    last_synced_at:     str | None
+    # Enriched from the matching local ContentPost (when published via our system).
+    pillar:             str = ""
+    format_name:        str = ""
+    published_via:      str = ""
+    post_id:            str | None = None
+
+
+@router.get("/content/analytics")
+async def list_content_analytics(
+    project_id: UUID,
+    refresh: bool = False,
+    db: Session = Depends(db_session),
+) -> list[AnalyticsRowOut]:
+    """Per-post analytics for the project, read straight from PostBridge.
+
+    Mirrors the original marketing app: PostBridge `/v1/analytics` is the source
+    of truth — it captures everything published to the account (via this app,
+    the PB dashboard, or TikTok Studio), with counts + share_url + cover image.
+    Paginates all records, then scopes to the platforms the project has linked
+    (Accounts tab); if nothing is linked, shows all. refresh=true syncs first.
+    """
+    from service.post_bridge import PostBridgeAPIError, client_for_user
+
+    proj = _project_or_404(db, project_id)
+
+    if not refresh:
+        hit = _analytics_cache.get(project_id)
+        if hit is not None and (time.monotonic() - hit[0]) < _ANALYTICS_TTL:
+            return hit[1]
+
+    linked_platforms = {
+        r.platform
+        for r in db.execute(
+            select(ContentSocialLink).where(ContentSocialLink.project_id == project_id)
+        ).scalars().all()
+        if r.platform
+    }
+
+    try:
+        client = client_for_user(proj.user_id, db)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+    records = []
+    result_to_post: dict[str, str] = {}  # post_result_id -> post_bridge_post_id
+    try:
+        async with client as pb:
+            if refresh:
+                await pb.sync_analytics()
+            # Paginate all analytics records (PostBridge caps limit at 100).
+            offset = 0
+            for _ in range(20):  # safety cap: 2000 records
+                page = await pb.list_analytics(limit=100, offset=offset)
+                records.extend(page)
+                if len(page) < 100:
+                    break
+                offset += 100
+            # Best-effort: map result -> PostBridge post id so we can also match
+            # local posts that only stored post_bridge_post_id. Never fatal.
+            try:
+                for r in await pb.list_post_results(limit=100):
+                    result_to_post[r.id] = r.post_id
+            except PostBridgeAPIError:
+                pass
+    except PostBridgeAPIError as exc:
+        raise HTTPException(exc.status_code or 502, _friendly_pb_error(exc)) from exc
+
+    # Index this project's local posts so each analytics row can be tied back to
+    # a pillar/format and badged "via Duct" — by result id (direct) or post id.
+    local_posts = db.execute(
+        select(ContentPost).where(ContentPost.project_id == project_id)
+    ).scalars().all()
+    local_by_result = {p.post_bridge_result_id: p for p in local_posts if p.post_bridge_result_id}
+    local_by_post = {p.post_bridge_post_id: p for p in local_posts if p.post_bridge_post_id}
+    fmt_by_id = _format_map(db, project_id)  # format_id → (slug, name)
+
+    # Self-heal: when post-results responded, persist the result id onto any local
+    # post that only had a post id, so it stays matched even if post-results 500s
+    # on later loads. (post-results is intermittently flaky on PostBridge's side.)
+    backfilled = False
+    for result_id, post_id in result_to_post.items():
+        lp = local_by_post.get(post_id)
+        if lp is not None and not lp.post_bridge_result_id:
+            lp.post_bridge_result_id = result_id
+            local_by_result[result_id] = lp
+            db.add(lp)
+            backfilled = True
+    if backfilled:
+        db.commit()
+
+    rows: list[AnalyticsRowOut] = []
+    for a in records:
+        if linked_platforms and a.platform not in linked_platforms:
+            continue
+        local = local_by_result.get(a.post_result_id) or local_by_post.get(result_to_post.get(a.post_result_id, ""))
+        rows.append(AnalyticsRowOut(
+            id=a.id,
+            post_result_id=a.post_result_id,
+            platform=a.platform or "",
+            title=str(a.video_description or ""),
+            share_url=str(a.share_url or ""),
+            cover_image_url=str(a.cover_image_url or ""),
+            view_count=a.view_count or 0,
+            like_count=a.like_count or 0,
+            comment_count=a.comment_count or 0,
+            share_count=a.share_count or 0,
+            platform_created_at=a.platform_created_at if isinstance(a.platform_created_at, str) else None,
+            last_synced_at=a.last_synced_at.isoformat() if a.last_synced_at else None,
+            pillar=local.pillar if local else "",
+            format_name=(fmt_by_id.get(local.format_id, ("", ""))[1] if local else ""),
+            published_via=local.published_via if local else "",
+            post_id=str(local.id) if local else None,
+        ))
+    rows.sort(key=lambda x: x.view_count, reverse=True)
+    _analytics_cache[project_id] = (time.monotonic(), rows)
+    return rows
+
+
 @router.post("/content/posts/{post_id}/publish")
 async def publish_post_route(
     post_id: UUID,
@@ -1296,6 +1767,9 @@ async def publish_post_route(
         raise HTTPException(exc.status_code or 502, _friendly_pb_error(exc)) from exc
 
     post.post_bridge_post_id = resp.id
+    post.published_via = "duct"  # published through our system
+    if body.scheduled_at is not None:
+        post.scheduled_at = body.scheduled_at
     if resp.status.value == "posted":
         post.status = "posted"
         post.posted_at = datetime.now(timezone.utc)
@@ -1306,7 +1780,8 @@ async def publish_post_route(
     db.add(post)
     db.commit()
     db.refresh(post)
-    return _post_out(post)
+    _invalidate_analytics(post.project_id)
+    return _enrich_one(db, post)
 
 
 @router.post("/content/posts/{post_id}/sync-metrics")
@@ -1358,7 +1833,8 @@ async def sync_post_metrics(
     db.add(post)
     db.commit()
     db.refresh(post)
-    return _post_out(post)
+    _invalidate_analytics(post.project_id)
+    return _enrich_one(db, post)
 
 
 @router.post("/content/posts/{post_id}/sync-daily")
@@ -1404,7 +1880,8 @@ async def sync_post_daily(
     db.add(post)
     db.commit()
     db.refresh(post)
-    return _post_out(post)
+    _invalidate_analytics(post.project_id)
+    return _enrich_one(db, post)
 
 
 def _friendly_pb_error(exc) -> str:

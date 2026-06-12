@@ -204,7 +204,7 @@ function KeySignals({ signals }) {
             onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'; }}
             onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}>
             {Icon && <Icon size={15} style={{ color, flexShrink: 0, marginTop: 2 }} strokeWidth={2} />}
-            <p className="text-[14px] leading-snug" style={{ color: '#1a1209' }}>{text}</p>
+            <p className="text-[14px] leading-snug" style={{ color: 'var(--foreground)' }}>{text}</p>
           </div>
         );
       })}
@@ -231,10 +231,10 @@ function SectionHeader({ icon: Icon, children }) {
 // ---------------------------------------------------------------------------
 
 const SEVERITY_CFG = {
-  fail:        { label: 'FAIL', accent: '#ef4444', pill: 'bg-red-100 text-red-700 border border-red-200',             headerCls: 'bg-red-50'     },
-  warn:        { label: 'WARN', accent: '#f59e0b', pill: 'bg-amber-100 text-amber-700 border border-amber-200',       headerCls: 'bg-amber-50'   },
-  pass:        { label: 'PASS', accent: '#10b981', pill: 'bg-emerald-100 text-emerald-700 border border-emerald-200', headerCls: 'bg-emerald-50' },
-  opportunity: { label: 'OPP',  accent: '#f97316', pill: 'bg-orange-100 text-orange-700 border border-orange-200',    headerCls: 'bg-orange-50'  },
+  fail:        { label: 'FAIL', accent: '#ef4444', pill: 'bg-red-500/15 text-red-700 dark:text-red-400 border border-red-500/30',             headerCls: 'bg-red-500/10'     },
+  warn:        { label: 'WARN', accent: '#f59e0b', pill: 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30',       headerCls: 'bg-amber-500/10'   },
+  pass:        { label: 'PASS', accent: '#10b981', pill: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30', headerCls: 'bg-emerald-500/10' },
+  opportunity: { label: 'OPP',  accent: '#f97316', pill: 'bg-orange-500/15 text-orange-700 dark:text-orange-400 border border-orange-500/30',    headerCls: 'bg-orange-500/10'  },
 };
 
 // ---------------------------------------------------------------------------
@@ -467,39 +467,39 @@ function FindingCard({ finding }) {
         <span className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-md shrink-0 mt-0.5 ${cfg.pill}`}>
           {cfg.label}
         </span>
-        <p className="text-[15px] font-semibold leading-snug text-gray-900 flex-1 min-w-0">
+        <p className="text-[15px] font-semibold leading-snug text-foreground flex-1 min-w-0">
           {finding.title}
         </p>
       </div>
 
       {/* Body */}
-      <div className="px-5 pt-3 pb-4 space-y-3 bg-white">
+      <div className="px-5 pt-3 pb-4 space-y-3 bg-card">
 
         {finding.description && (
-          <p className="text-sm text-gray-500 leading-relaxed">
+          <p className="text-sm text-muted-foreground leading-relaxed">
             {finding.description}
           </p>
         )}
 
         {finding.affected_urls?.length > 0 && (
-          <div className="rounded-lg overflow-hidden" style={{ border: '1px solid #e5e7eb' }}>
-            <div className="flex px-4 py-2 bg-gray-50 border-b border-gray-100">
-              <span className="flex-1 text-[10px] font-bold uppercase tracking-widest text-gray-400">URL</span>
-              <span className="w-48 shrink-0 text-[10px] font-bold uppercase tracking-widest text-gray-400">Measured</span>
+          <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+            <div className="flex px-4 py-2 bg-muted/40 border-b border-border/60">
+              <span className="flex-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">URL</span>
+              <span className="w-48 shrink-0 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">Measured</span>
             </div>
             {finding.affected_urls.map((u, i) => (
-              <div key={i} className={`flex items-start px-4 py-2.5 bg-white${i > 0 ? ' border-t border-gray-50' : ''}`}>
-                <code className="flex-1 text-xs font-mono text-gray-400 break-all pr-3">{u.url}</code>
-                <span className="w-48 shrink-0 text-sm font-semibold text-gray-700">{u.issue_value}</span>
+              <div key={i} className={`flex items-start px-4 py-2.5 bg-card${i > 0 ? ' border-t border-border/40' : ''}`}>
+                <code className="flex-1 text-xs font-mono text-muted-foreground/70 break-all pr-3">{u.url}</code>
+                <span className="w-48 shrink-0 text-sm font-semibold text-foreground/80">{u.issue_value}</span>
               </div>
             ))}
           </div>
         )}
 
         {finding.recommendation && (
-          <div className="rounded-lg px-4 py-3 bg-blue-50">
-            <p className="text-sm leading-relaxed text-gray-700">
-              <span className="font-semibold text-blue-600">Fix: </span>
+          <div className="rounded-lg px-4 py-3 bg-blue-500/10">
+            <p className="text-sm leading-relaxed text-foreground/80">
+              <span className="font-semibold text-blue-600 dark:text-blue-400">Fix: </span>
               {finding.recommendation}
             </p>
           </div>
@@ -528,30 +528,30 @@ function CategoryAccordion({ category, isLast }) {
   const nonPassFindings = ordered.filter(f => f.severity !== 'pass');
 
   return (
-    <details className={`group${!isLast ? ' border-b border-gray-100' : ''}`} open={hasBad || undefined}>
-      <summary className="flex items-center justify-between gap-3 px-5 py-4 cursor-pointer hover:bg-gray-50 transition-colors select-none">
+    <details className={`group${!isLast ? ' border-b border-border/60' : ''}`} open={hasBad || undefined}>
+      <summary className="flex items-center justify-between gap-3 px-5 py-4 cursor-pointer hover:bg-muted/40 transition-colors select-none">
         <div className="flex items-center gap-3 min-w-0 flex-wrap">
           <div className="size-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
             style={{ background: color + '1a', color }}>{category.score}</div>
           <span className="text-[15px] font-semibold">{category.label}</span>
           <div className="flex items-center gap-1.5 flex-wrap">
             {category.fail_count > 0 && (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/15 text-red-700 dark:text-red-400">
                 {category.fail_count} Error{category.fail_count !== 1 ? 's' : ''}
               </span>
             )}
             {category.warn_count > 0 && (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400">
                 {category.warn_count} Warning{category.warn_count !== 1 ? 's' : ''}
               </span>
             )}
             {!hasBad && category.opp_count > 0 && (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-700 dark:text-orange-400">
                 {category.opp_count} Opp
               </span>
             )}
             {!hasBad && !category.opp_count && (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700 hidden sm:inline">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-500/15 text-green-700 dark:text-green-400 hidden sm:inline">
                 All clear
               </span>
             )}
@@ -572,7 +572,7 @@ function CategoryAccordion({ category, isLast }) {
           <details className="group/pass">
             <summary className="flex items-center gap-2 cursor-pointer select-none py-1.5">
               <CheckCircle2 size={13} color="#10b981" strokeWidth={2} className="shrink-0" />
-              <span className="text-[13px] text-emerald-700 font-medium">
+              <span className="text-[13px] text-emerald-700 dark:text-emerald-400 font-medium">
                 {passFindings.length} check{passFindings.length !== 1 ? 's' : ''} passing
               </span>
               <span className="text-muted-foreground text-[10px] ml-1 transition-transform group-open/pass:rotate-180">▼</span>
@@ -592,9 +592,9 @@ function CategoryAccordion({ category, isLast }) {
 // ---------------------------------------------------------------------------
 
 const PRIORITY_STYLE = {
-  fail:        { accent: '#ef4444', rankBg: 'rgba(239,68,68,0.1)',   rankColor: '#ef4444', badgeCls: 'bg-red-100 text-red-700 border border-red-200',         label: 'Error'       },
-  warn:        { accent: '#f59e0b', rankBg: 'rgba(245,158,11,0.1)',  rankColor: '#b45309', badgeCls: 'bg-amber-100 text-amber-700 border border-amber-200',   label: 'Warning'     },
-  opportunity: { accent: '#f97316', rankBg: 'rgba(249,115,22,0.1)',  rankColor: '#c2410c', badgeCls: 'bg-orange-100 text-orange-700 border border-orange-200', label: 'Opportunity' },
+  fail:        { accent: '#ef4444', rankBg: 'rgba(239,68,68,0.1)',   rankColor: '#ef4444', badgeCls: 'bg-red-500/15 text-red-700 dark:text-red-400 border border-red-500/30',         label: 'Error'       },
+  warn:        { accent: '#f59e0b', rankBg: 'rgba(245,158,11,0.1)',  rankColor: '#b45309', badgeCls: 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30',   label: 'Warning'     },
+  opportunity: { accent: '#f97316', rankBg: 'rgba(249,115,22,0.1)',  rankColor: '#c2410c', badgeCls: 'bg-orange-500/15 text-orange-700 dark:text-orange-400 border border-orange-500/30', label: 'Opportunity' },
 };
 
 function PriorityCard({ priority }) {
@@ -604,8 +604,8 @@ function PriorityCard({ priority }) {
     : null;
 
   return (
-    <div className="rounded-xl overflow-hidden bg-white"
-      style={{ border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', transition: 'box-shadow 0.15s, transform 0.15s' }}
+    <div className="rounded-xl overflow-hidden bg-card"
+      style={{ border: '1px solid var(--border)', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', transition: 'box-shadow 0.15s, transform 0.15s' }}
       onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.1)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
       onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.07)'; e.currentTarget.style.transform = ''; }}>
       <div style={{ height: 3, background: s.accent }} />
@@ -622,7 +622,7 @@ function PriorityCard({ priority }) {
             {s.label}
           </span>
           {effortLabel && (
-            <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-md border border-gray-200 bg-gray-50 text-gray-500">
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-md border border-border bg-muted/40 text-muted-foreground">
               <Clock size={10} strokeWidth={2} />
               {effortLabel}
             </span>
@@ -638,9 +638,9 @@ function PriorityCard({ priority }) {
 // ---------------------------------------------------------------------------
 
 function statColor(value, thresholds) {
-  if (thresholds.fail != null && value >= thresholds.fail) return { text: 'text-red-600' };
-  if (thresholds.warn != null && value >= thresholds.warn) return { text: 'text-amber-600' };
-  return { text: 'text-green-600' };
+  if (thresholds.fail != null && value >= thresholds.fail) return { text: 'text-red-600 dark:text-red-400' };
+  if (thresholds.warn != null && value >= thresholds.warn) return { text: 'text-amber-600 dark:text-amber-400' };
+  return { text: 'text-green-600 dark:text-green-400' };
 }
 
 const NEUTRAL_COLOR = { text: 'text-muted-foreground' };
@@ -695,7 +695,7 @@ function WinsStrip({ wins }) {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {wins.map((w, i) => (
-            <div key={i} className="flex items-center gap-2.5 rounded-lg border border-green-100 bg-white px-4 py-2.5"
+            <div key={i} className="flex items-center gap-2.5 rounded-lg border border-green-100 bg-card px-4 py-2.5"
               style={{ transition: 'box-shadow 0.15s' }}
               onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 2px 8px rgba(16,185,129,0.12)'; }}
               onMouseLeave={e => { e.currentTarget.style.boxShadow = ''; }}>
@@ -727,8 +727,8 @@ function RoadmapSection({ roadmap }) {
         {roadmap.map((phase, i) => {
           const cfg = PHASE_THEME_COLOR[phase.theme] ?? { text: '#6b7280', bg: 'rgba(107,114,128,0.08)', border: 'rgba(107,114,128,0.2)' };
           return (
-            <div key={i} className="rounded-xl bg-white p-5 sm:p-6 space-y-3"
-              style={{ border: '1px solid #e5e7eb', boxShadow: '0 1px 2px rgba(13,15,26,0.04)' }}>
+            <div key={i} className="rounded-xl bg-card p-5 sm:p-6 space-y-3"
+              style={{ border: '1px solid var(--border)', boxShadow: '0 1px 2px rgba(13,15,26,0.04)' }}>
               <div className="flex items-center gap-3">
                 <span className="text-xs font-mono font-semibold px-2.5 py-1 rounded-full border"
                   style={{ color: cfg.text, background: cfg.bg, borderColor: cfg.border }}>
@@ -749,7 +749,7 @@ function RoadmapSection({ roadmap }) {
                       </span>
                       <p className="flex-1 text-[15px] leading-relaxed min-w-0">{t.task}</p>
                       {effortLabel && (
-                        <span className="shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md border border-gray-200 bg-gray-50 text-gray-500">
+                        <span className="shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md border border-border bg-muted/40 text-muted-foreground">
                           <Clock size={10} strokeWidth={2} />
                           {effortLabel}
                         </span>
@@ -792,13 +792,14 @@ export default function AuditReportV1({ data }) {
 
   return (
     <div
-      className="min-h-full"
+      className="min-h-full text-foreground"
       style={{
-        color: '#1a1a1a',  /* hardcoded to match hardcoded light bg — immune to dark mode */
+        // Neutral chrome adapts to the app theme via CSS vars; the orange radial
+        // accents and the dark hero/accent palette stay fixed (they read on both).
         background: `
           radial-gradient(900px 500px at 90% 0%, rgba(255,92,0,0.07), transparent 60%),
           radial-gradient(700px 600px at -5% 30%, rgba(255,92,0,0.04), transparent 55%),
-          #f7f7f6
+          var(--background)
         `,
       }}
     >
@@ -836,7 +837,7 @@ export default function AuditReportV1({ data }) {
 
         {/* ── Coverage banner ──────────────────────────────────────────── */}
         {showCoverageBanner && (
-          <div className="rise-2 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+          <div className="rise-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-800 dark:text-amber-300"
             data-tooltip="Only a sample of your sitemap was scanned.">
             <span className="font-semibold">Limited scan: </span>
             Based on {data.pages_crawled} of {data.total_sitemap_urls} sitemap pages.
@@ -876,8 +877,8 @@ export default function AuditReportV1({ data }) {
         {data.categories?.length > 0 && (
           <section className="rise-6 space-y-3">
             <SectionHeader icon={BarChart2}>Category Scores</SectionHeader>
-            <div className="rounded-xl bg-white px-5 py-5"
-              style={{ border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+            <div className="rounded-xl bg-card px-5 py-5"
+              style={{ border: '1px solid var(--border)', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
               <CategoryBarChart categories={data.categories} />
             </div>
           </section>
@@ -887,8 +888,8 @@ export default function AuditReportV1({ data }) {
         {data.categories?.length > 0 && (
           <section className="rise-7 space-y-3">
             <SectionHeader icon={Target}>Findings by Category</SectionHeader>
-            <div className="rounded-xl overflow-hidden bg-white"
-              style={{ border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+            <div className="rounded-xl overflow-hidden bg-card"
+              style={{ border: '1px solid var(--border)', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
               {data.categories.map((cat, i) => (
                 <CategoryAccordion
                   key={cat.id}

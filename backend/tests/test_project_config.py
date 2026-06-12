@@ -46,7 +46,7 @@ def test_projects_config_returns_all_base_options():
     res = client.get("/api/projects/config", headers=headers)
     assert res.status_code == 200
     payload = res.json()
-    assert len(payload["industry_options"]) == 10
+    assert len(payload["industry_options"]) == 11
     assert len(payload["business_model_options"]) == 6
     assert len(payload["north_star_metric_options"]) == 8
     assert len(payload["growth_stage_milestone_options"]) == 5

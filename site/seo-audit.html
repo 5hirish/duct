@@ -365,27 +365,54 @@
 
 /* ── Gate section ── */
 .lm-gate {
-  max-width: 860px;
-  margin: 0 auto;
-  padding: 60px 24px 72px;
-  text-align: center;
+  position: relative;
+  /* Full-bleed: the blurred report fills the whole section and the unlock card
+     floats over it — no nested "card on a card". */
+  overflow: hidden;
 }
 .lm-gate-wrap {
   position: relative;
-  max-width: 720px;
-  margin: 0 auto 40px;
-  border-radius: 14px;
+  /* Fill the viewport below the 62px fixed nav so the report reads as a real,
+     full page being unlocked rather than a small framed card. */
+  min-height: calc(100vh - 62px);
   overflow: hidden;
-  box-shadow: 0 4px 32px rgba(0,0,0,.09);
 }
 
-/* Blurred report preview */
+/* Blurred report preview — a real-looking, full-bleed report page sits behind
+   the unlock card, framing it on every side so the gate reads as "unlock THIS".
+   Blurred enough to be unreadable, kept colourful so it looks finished. */
 .lm-report-blur {
-  filter: blur(10px) saturate(0.4);
+  filter: blur(7px) saturate(0.95);
   pointer-events: none;
   user-select: none;
   background: #fff;
-  padding: 28px 24px;
+  /* top padding clears the 62px fixed nav */
+  padding: 104px clamp(20px, 7vw, 88px) 72px;
+  min-height: calc(100vh - 62px);
+}
+.lm-rpt-inner {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+/* Header summary stats (right of the score) */
+.lm-rpt-stats { display: flex; gap: 24px; }
+.lm-rpt-stat { text-align: center; }
+.lm-rpt-stat-num { display: block; font-size: 22px; font-weight: 800; color: var(--navy); line-height: 1.1; }
+.lm-rpt-stat-lbl { font-size: 11px; color: var(--navy-3); }
+/* Two-column body: category scores | top findings */
+.lm-rpt-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px 44px;
+  margin-top: 24px;
+}
+.lm-rpt-col-title {
+  font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--navy-3); margin: 0 0 14px; text-align: left;
+}
+@media (max-width: 640px) {
+  .lm-rpt-grid  { grid-template-columns: 1fr; }
+  .lm-rpt-stats { display: none; }
 }
 .lm-rpt-header {
   display: flex;
@@ -449,7 +476,9 @@
 .lm-rpt-finding-text { font-size: 13px; color: var(--navy); }
 .lm-rpt-finding-desc { font-size: 12px; color: var(--navy-3); margin-top: 2px; }
 
-/* Lock overlay */
+/* Lock overlay — a light scrim that lets the blurred report show through around
+   the unlock card (rather than a near-solid sheet that hides it). The card below
+   carries the contrast for the form, so this stays mostly see-through. */
 .lm-lock-overlay {
   position: absolute;
   inset: 0;
@@ -457,9 +486,23 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: rgba(255,255,255,.82);
-  backdrop-filter: blur(2px);
-  padding: 24px;
+  background: radial-gradient(120% 80% at 50% 50%, rgba(250,248,245,.32) 0%, rgba(250,248,245,.62) 100%);
+  padding: 28px;
+}
+/* Frosted unlock card — opaque enough for a crisp, readable form, floating over
+   the blurred report. */
+.lm-lock-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 460px;
+  padding: 36px 30px 30px;
+  border-radius: 16px;
+  background: rgba(255,255,255,.97);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  box-shadow: 0 12px 48px rgba(13,17,23,.20);
 }
 .lm-lock-icon {
   width: 52px;
@@ -794,55 +837,107 @@
   <div class="lm-gate-wrap">
     <!-- Blurred report preview (aria-hidden — purely visual) -->
     <div class="lm-report-blur" aria-hidden="true">
-      <div class="lm-rpt-header">
-        <div class="lm-rpt-score-wrap">
-          <div class="lm-rpt-score">72</div>
-          <div class="lm-rpt-meta">
-            <p class="lm-rpt-title">SEO Report</p>
-            <p class="lm-rpt-sub">your-site.com · 14 issues found</p>
+      <div class="lm-rpt-inner">
+        <div class="lm-rpt-header">
+          <div class="lm-rpt-score-wrap">
+            <div class="lm-rpt-score">72</div>
+            <div class="lm-rpt-meta">
+              <p class="lm-rpt-title">SEO Report</p>
+              <p class="lm-rpt-sub">your-site.com · 35 pages · 14 issues found</p>
+            </div>
+          </div>
+          <div class="lm-rpt-stats">
+            <div class="lm-rpt-stat"><span class="lm-rpt-stat-num">7</span><span class="lm-rpt-stat-lbl">Critical</span></div>
+            <div class="lm-rpt-stat"><span class="lm-rpt-stat-num">12</span><span class="lm-rpt-stat-lbl">Warnings</span></div>
+            <div class="lm-rpt-stat"><span class="lm-rpt-stat-num">9</span><span class="lm-rpt-stat-lbl">Quick wins</span></div>
           </div>
         </div>
-      </div>
-      <div class="lm-rpt-issue-bar"></div>
-      <div class="lm-rpt-cats">
-        <div class="lm-rpt-cat">
-          <span class="lm-rpt-cat-label">Technical SEO</span>
-          <div class="lm-rpt-cat-bar-wrap"><div class="lm-rpt-cat-bar" style="width:68%"></div></div>
-          <span class="lm-rpt-cat-score">68</span>
-        </div>
-        <div class="lm-rpt-cat">
-          <span class="lm-rpt-cat-label">On-Page</span>
-          <div class="lm-rpt-cat-bar-wrap"><div class="lm-rpt-cat-bar" style="width:54%;background:linear-gradient(90deg,#e67e22,#e74c3c)"></div></div>
-          <span class="lm-rpt-cat-score">54</span>
-        </div>
-        <div class="lm-rpt-cat">
-          <span class="lm-rpt-cat-label">Content Signals</span>
-          <div class="lm-rpt-cat-bar-wrap"><div class="lm-rpt-cat-bar" style="width:82%;background:linear-gradient(90deg,#27ae60,#2ecc71)"></div></div>
-          <span class="lm-rpt-cat-score">82</span>
-        </div>
-        <div class="lm-rpt-cat">
-          <span class="lm-rpt-cat-label">Performance</span>
-          <div class="lm-rpt-cat-bar-wrap"><div class="lm-rpt-cat-bar" style="width:71%"></div></div>
-          <span class="lm-rpt-cat-score">71</span>
-        </div>
-      </div>
-      <div class="lm-rpt-findings">
-        <div class="lm-rpt-finding err">
-          <div>
-            <div class="lm-rpt-finding-text">Missing meta descriptions on 6 pages</div>
-            <div class="lm-rpt-finding-desc">High impact · /blog, /pricing, /features…</div>
+        <div class="lm-rpt-issue-bar"></div>
+
+        <div class="lm-rpt-grid">
+          <!-- Left: category scores -->
+          <div class="lm-rpt-col">
+            <p class="lm-rpt-col-title">Category scores</p>
+            <div class="lm-rpt-cats">
+              <div class="lm-rpt-cat">
+                <span class="lm-rpt-cat-label">Technical SEO</span>
+                <div class="lm-rpt-cat-bar-wrap"><div class="lm-rpt-cat-bar" style="width:68%"></div></div>
+                <span class="lm-rpt-cat-score">68</span>
+              </div>
+              <div class="lm-rpt-cat">
+                <span class="lm-rpt-cat-label">On-Page</span>
+                <div class="lm-rpt-cat-bar-wrap"><div class="lm-rpt-cat-bar" style="width:54%;background:linear-gradient(90deg,#e67e22,#e74c3c)"></div></div>
+                <span class="lm-rpt-cat-score">54</span>
+              </div>
+              <div class="lm-rpt-cat">
+                <span class="lm-rpt-cat-label">Content Signals</span>
+                <div class="lm-rpt-cat-bar-wrap"><div class="lm-rpt-cat-bar" style="width:82%;background:linear-gradient(90deg,#27ae60,#2ecc71)"></div></div>
+                <span class="lm-rpt-cat-score">82</span>
+              </div>
+              <div class="lm-rpt-cat">
+                <span class="lm-rpt-cat-label">Performance</span>
+                <div class="lm-rpt-cat-bar-wrap"><div class="lm-rpt-cat-bar" style="width:71%"></div></div>
+                <span class="lm-rpt-cat-score">71</span>
+              </div>
+              <div class="lm-rpt-cat">
+                <span class="lm-rpt-cat-label">Structured Data</span>
+                <div class="lm-rpt-cat-bar-wrap"><div class="lm-rpt-cat-bar" style="width:60%"></div></div>
+                <span class="lm-rpt-cat-score">60</span>
+              </div>
+              <div class="lm-rpt-cat">
+                <span class="lm-rpt-cat-label">Internal Linking</span>
+                <div class="lm-rpt-cat-bar-wrap"><div class="lm-rpt-cat-bar" style="width:75%;background:linear-gradient(90deg,#27ae60,#2ecc71)"></div></div>
+                <span class="lm-rpt-cat-score">75</span>
+              </div>
+              <div class="lm-rpt-cat">
+                <span class="lm-rpt-cat-label">E-E-A-T Signals</span>
+                <div class="lm-rpt-cat-bar-wrap"><div class="lm-rpt-cat-bar" style="width:48%;background:linear-gradient(90deg,#e67e22,#e74c3c)"></div></div>
+                <span class="lm-rpt-cat-score">48</span>
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="lm-rpt-finding warn">
-          <div>
-            <div class="lm-rpt-finding-text">Title tags too long on 4 pages</div>
-            <div class="lm-rpt-finding-desc">Medium impact · Average 68 chars (max 60)</div>
-          </div>
-        </div>
-        <div class="lm-rpt-finding opp">
-          <div>
-            <div class="lm-rpt-finding-text">Quick win: 12 pages ranking 4–15</div>
-            <div class="lm-rpt-finding-desc">Opportunity · Refreshing could capture 2–3× traffic</div>
+
+          <!-- Right: top findings -->
+          <div class="lm-rpt-col">
+            <p class="lm-rpt-col-title">Top findings</p>
+            <div class="lm-rpt-findings">
+              <div class="lm-rpt-finding err">
+                <div>
+                  <div class="lm-rpt-finding-text">Missing meta descriptions on 6 pages</div>
+                  <div class="lm-rpt-finding-desc">High impact · /blog, /pricing, /features…</div>
+                </div>
+              </div>
+              <div class="lm-rpt-finding warn">
+                <div>
+                  <div class="lm-rpt-finding-text">Title tags too long on 4 pages</div>
+                  <div class="lm-rpt-finding-desc">Medium impact · Average 68 chars (max 60)</div>
+                </div>
+              </div>
+              <div class="lm-rpt-finding opp">
+                <div>
+                  <div class="lm-rpt-finding-text">Quick win: 12 pages ranking 4–15</div>
+                  <div class="lm-rpt-finding-desc">Opportunity · Refreshing could capture 2–3× traffic</div>
+                </div>
+              </div>
+              <div class="lm-rpt-finding err">
+                <div>
+                  <div class="lm-rpt-finding-text">8 pages missing structured data</div>
+                  <div class="lm-rpt-finding-desc">High impact · No Article / FAQ schema detected</div>
+                </div>
+              </div>
+              <div class="lm-rpt-finding warn">
+                <div>
+                  <div class="lm-rpt-finding-text">Thin content on 5 blog posts</div>
+                  <div class="lm-rpt-finding-desc">Medium impact · Under 300 words each</div>
+                </div>
+              </div>
+              <div class="lm-rpt-finding opp">
+                <div>
+                  <div class="lm-rpt-finding-text">Add internal links to 3 cornerstone pages</div>
+                  <div class="lm-rpt-finding-desc">Opportunity · Strengthen topical authority</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -850,38 +945,40 @@
 
     <!-- Lock overlay -->
     <div class="lm-lock-overlay" id="lmLockOverlay">
-      <div class="lm-lock-icon" aria-hidden="true">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-        </svg>
-      </div>
-      <p class="lm-lock-headline" id="lmLockHeadline">Your report is ready</p>
-      <p class="lm-lock-sub">Enter your email to unlock the full SEO audit</p>
+      <div class="lm-lock-card">
+        <div class="lm-lock-icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </div>
+        <p class="lm-lock-headline" id="lmLockHeadline">Your report is ready</p>
+        <p class="lm-lock-sub">Enter your email to unlock the full SEO audit</p>
 
-      <div class="lm-email-form" role="group" aria-label="Email input to unlock report">
-        <input
-          type="email"
-          id="lmEmail"
-          class="lm-email-input"
-          placeholder="you@company.com"
-          aria-label="Your email address"
-          autocomplete="email"
-          autocapitalize="off"
-          spellcheck="false"
-        />
-        <button class="lm-email-btn" id="lmEmailBtn" onclick="lmSubmitLead()">
-          Unlock report →
-        </button>
-      </div>
+        <div class="lm-email-form" role="group" aria-label="Email input to unlock report">
+          <input
+            type="email"
+            id="lmEmail"
+            class="lm-email-input"
+            placeholder="you@company.com"
+            aria-label="Your email address"
+            autocomplete="email"
+            autocapitalize="off"
+            spellcheck="false"
+          />
+          <button class="lm-email-btn" id="lmEmailBtn" onclick="lmSubmitLead()">
+            Unlock report →
+          </button>
+        </div>
 
-      <!-- Cloudflare Turnstile -->
-      <div class="lm-turnstile-wrap">
-        <div id="lmTurnstile" aria-label="Security verification"></div>
-      </div>
+        <!-- Cloudflare Turnstile -->
+        <div class="lm-turnstile-wrap">
+          <div id="lmTurnstile" aria-label="Security verification"></div>
+        </div>
 
-      <p class="lm-gate-error" id="lmGateError" role="alert" aria-live="polite"></p>
-      <p class="lm-gate-note">No spam. We'll send your report summary. Unsubscribe any time.</p>
+        <p class="lm-gate-error" id="lmGateError" role="alert" aria-live="polite"></p>
+        <p class="lm-gate-note">No spam. We'll send your report summary. Unsubscribe any time.</p>
+      </div>
     </div>
   </div>
 </section>

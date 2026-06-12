@@ -37,7 +37,10 @@ class AgentTool(StrEnum):
     ASK_USER_QUESTION = "AskUserQuestion"
     TODO_WRITE = "TodoWrite"
     FETCH_PAGES          = "mcp__duct_crawl__FetchPages"          # in-process MCP tool: use namespaced format
-    SUBMIT_AUDIT_REPORT  = "mcp__duct_crawl__SubmitAuditReport"   # template mode only
+    SUBMIT_AUDIT_REPORT  = "mcp__duct_crawl__SubmitAuditReport"   # template mode only — chat-revision resubmit
+    START_AUDIT_REPORT     = "mcp__duct_crawl__StartAuditReport"     # template: incremental build, step 1
+    ADD_AUDIT_CATEGORY     = "mcp__duct_crawl__AddAuditCategory"     # template: incremental build, step 2 (×9)
+    FINALIZE_AUDIT_REPORT  = "mcp__duct_crawl__FinalizeAuditReport"  # template: incremental build, step 3
     WEB_SEARCH  = "WebSearch"         # SERP research, competitor discovery
     WEB_FETCH   = "WebFetch"          # fetch arbitrary URLs (e.g. competitor pages)
     AGENT = "Agent"

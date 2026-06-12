@@ -78,12 +78,15 @@ export default function PostDetailPage() {
           context={{
             projectId,
             planId:   post.plan_id || undefined,
-            dayIndex: post.day_index ?? undefined,
             topic:    post.topic   || undefined,
             pillar:   post.pillar  || undefined,
+            channel:  (Array.isArray(post.platforms) && post.platforms[0]) || undefined,
           }}
-          renderViewport={({ payload }) => (
-            <PostViewport payload={payload || { type: "post", ...post }} />
+          renderViewport={({ payload, onSendMessage }) => (
+            <PostViewport
+              payload={payload || { type: "post", ...post }}
+              onSendMessage={onSendMessage}
+            />
           )}
         />
       </div>
@@ -93,37 +96,13 @@ export default function PostDetailPage() {
   const canPublish = post.status !== "posted";
 
   return (
-    <div className="h-full flex flex-col">
-      <header className="border-b border-border/60 px-4 py-2 flex items-center justify-between shrink-0 gap-3">
-        <div className="min-w-0">
-          <p className="text-sm font-medium truncate">{post.topic || post.post_dir_slug}</p>
-          <p className="text-xs text-muted-foreground truncate">
-            {post.pillar} · {post.status}
-            {post.posted_at ? ` · posted ${new Date(post.posted_at).toLocaleDateString()}` : ""}
-          </p>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          {canPublish && (
-            <button
-              type="button"
-              onClick={() => setPublishOpen(true)}
-              className="rounded-md border border-border bg-background px-3 py-1 text-xs font-medium hover:bg-muted/50"
-            >
-              Publish…
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={() => router.push(`/content/posts/${postId}?revise=1`)}
-            className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/90"
-          >
-            Revise with Duct →
-          </button>
-        </div>
-      </header>
-      <div className="flex-1 overflow-hidden">
-        <PostViewport payload={{ type: "post", ...post }} />
-      </div>
+    <div className="h-full">
+      <PostViewport
+        payload={{ type: "post", ...post }}
+        canPublish={canPublish}
+        onPublish={() => setPublishOpen(true)}
+        onRevise={() => router.push(`/content/posts/${postId}?revise=1`)}
+      />
 
       <PublishModal
         open={publishOpen}

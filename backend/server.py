@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import logging
+import sys
+import time
 from urllib.parse import urlparse
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import sentry_sdk
+from uvicorn.logging import DefaultFormatter
 
 import service.google.ads  # noqa: F401 — registers connectors before routes import
 import service.google.ga4  # noqa: F401 — registers connectors before routes import
@@ -21,18 +24,82 @@ from utils.openapi_docs_auth import OpenapiDocsBasicAuthMiddleware
 
 _cfg = get_configs()
 
-# Ensure application loggers are visible at INFO level.
-# Uvicorn's dictConfig leaves the root logger handlerless; app messages would be
-# silently dropped without this. We attach a stream handler directly to each
-# namespace rather than touching the root logger so uvicorn's own format is unaffected.
+# Logging: timestamp every line + per-request HTTP timing, keeping colour.
+# Uvicorn's dictConfig leaves the root logger handlerless (app messages would be
+# dropped) and its access lines carry neither a timestamp nor a duration. So we
+# (1) attach a timestamped handler to the app namespaces, (2) timestamp uvicorn's
+# own startup/error lines, and (3) silence uvicorn's access log in favour of
+# AccessLogMiddleware below, which records wall-clock duration per request.
+# We use uvicorn's DefaultFormatter (not a plain logging.Formatter) so the level
+# stays colourised in a TTY (%(levelprefix)s) — what terminal level-highlighting
+# keys on — while degrading to plain text when piped (prod / log files).
+# The `,%(msecs)` in the default asctime gives millisecond precision for free.
+_LOG_FORMAT = "%(asctime)s %(levelprefix)s %(name)s: %(message)s"
+_log_formatter = DefaultFormatter(fmt=_LOG_FORMAT, use_colors=sys.stderr.isatty())
+
 _app_handler = logging.StreamHandler()
-_app_handler.setFormatter(logging.Formatter("%(levelname)s:%(name)s: %(message)s"))
-for _ns in ("agents", "routes", "service"):
+_app_handler.setFormatter(_log_formatter)
+for _ns in ("agents", "routes", "service", "duct.access"):
     _log = logging.getLogger(_ns)
     _log.setLevel(logging.INFO)
     if not _log.handlers:
         _log.addHandler(_app_handler)
     _log.propagate = False
+
+# Timestamp uvicorn's own startup/error lines; drop its access log (superseded).
+for _uv in ("uvicorn", "uvicorn.error"):
+    for _h in logging.getLogger(_uv).handlers:
+        _h.setFormatter(_log_formatter)
+_uv_access = logging.getLogger("uvicorn.access")
+_uv_access.handlers = []
+_uv_access.propagate = False
+
+_access_logger = logging.getLogger("duct.access")
+
+
+class AccessLogMiddleware:
+    """Pure-ASGI access log with per-request wall-clock duration.
+
+    Replaces uvicorn's access log. Implemented at the ASGI layer (not
+    BaseHTTPMiddleware) so it never buffers the response body — safe for the SSE
+    streaming endpoints, where the line is emitted when the stream closes and the
+    duration then reflects the full session lifetime.
+    """
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+        start = time.perf_counter()
+        status = {"code": 0}
+
+        async def _send(message):
+            if message["type"] == "http.response.start":
+                status["code"] = message["status"]
+            await send(message)
+
+        try:
+            await self.app(scope, receive, _send)
+        finally:
+            elapsed_ms = (time.perf_counter() - start) * 1000
+            client = scope.get("client")
+            client_str = f"{client[0]}:{client[1]}" if client else "-"
+            path = scope.get("path", "-")
+            qs = scope.get("query_string", b"")
+            if qs:
+                path = f"{path}?{qs.decode('latin-1')}"
+            _access_logger.info(
+                "%s %s %s -> %d (%.1fms)",
+                client_str,
+                scope.get("method", "-"),
+                path,
+                status["code"],
+                elapsed_ms,
+            )
+
 
 def _is_localhost_url(url: str) -> bool:
     hostname = urlparse(url).hostname
@@ -77,6 +144,8 @@ else:
 
 app.add_middleware(CORSMiddleware, **_cors_kwargs)
 app.add_middleware(OpenapiDocsBasicAuthMiddleware)
+# Added last → outermost, so the timing spans CORS + auth + handler.
+app.add_middleware(AccessLogMiddleware)
 
 
 @app.on_event("startup")

@@ -15,7 +15,7 @@ export default function SignalListBlock({ title, synthesis, insightNote = "" }) 
       <p className="rpt-section-label">{title || "Signals"}</p>
       <div className="signal-grid">
         {items.map((finding) => (
-          <article key={finding.finding_id} className="signal-block">
+          <article key={finding.id} className="signal-block">
             <span className="signal-pill yellow">{titleForFindingType(finding.type)}</span>
             <p className="signal-title">{finding.title}</p>
             <p className="signal-body">{finding.impact}</p>

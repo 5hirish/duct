@@ -38,10 +38,10 @@ export default function NewPlanSessionPage() {
     );
   }
 
-  function reviseDay(dayIndex) {
+  function reviseDay(index) {
     const params = new URLSearchParams();
     if (latestPlanId) params.set("plan_id", latestPlanId);
-    if (dayIndex)     params.set("day", String(dayIndex));
+    if (index != null) params.set("day", String(index));
     router.push(`/content/posts/new?${params.toString()}`);
   }
 
@@ -50,9 +50,9 @@ export default function NewPlanSessionPage() {
       <ContentWorkspace
         mode="plan_month"
         context={{ projectId }}
-        renderViewport={({ payload }) => {
+        renderViewport={({ payload, steps, building }) => {
           if (payload?.id && payload.id !== latestPlanId) setLatestPlanId(payload.id);
-          return <PlanViewport payload={payload} onReviseDay={reviseDay} />;
+          return <PlanViewport payload={payload} steps={steps} building={building} onReviseDay={reviseDay} />;
         }}
       />
     </div>

@@ -15,7 +15,9 @@ from agents.audit.schema import (
     AuditBusinessContext,
     AuditResearchContext,
     CrawlResult,
+    EnrichmentOutput,
 )
+from agents.core import claude_sdk as _sdk
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +59,7 @@ async def enrich_context(
     crawl_result: CrawlResult,
     api_key: str,
     model: str = _HAIKU_MODEL,
-    timeout: float = 90.0,
+    timeout: float = 60.0,
 ) -> AuditResearchContext | None:
     """Run a lightweight Claude sub-agent to research competitors and content gaps.
 
@@ -75,7 +77,7 @@ async def enrich_context(
     brand_schema_types = _extract_brand_schema_types(crawl_result)
 
     if business_context.competitors:
-        competitors_hint = f"Competitors to research (fetch their homepages): {', '.join(business_context.competitors[:4])}"
+        competitors_hint = f"Competitors to research (fetch their homepages): {', '.join(business_context.competitors[:3])}"
     else:
         industry_hint = business_context.industry or business_context.business_description or root_url
         competitors_hint = f"Search the web to find the top 3 competitors for: {industry_hint}"
@@ -87,7 +89,7 @@ Business: {business_context.business_name or root_url}
 
 {competitors_hint}
 
-For each competitor (max 4 total):
+For each competitor (max 3 total):
 1. Fetch their homepage using WebFetch
 2. Extract their main value proposition and target audience
 3. Identify their top 3 content themes/pillars
@@ -103,20 +105,39 @@ Brand signals already extracted from the target site's crawl (do NOT re-research
 
 Be concise. Each field should be a short string or short list item, not a paragraph."""
 
+    from config import get_configs
+    _cfg = get_configs()
     env: dict[str, str] = {"ENABLE_PROMPT_CACHING_1H": "1"}
     if api_key:
         env["ANTHROPIC_API_KEY"] = api_key
+    elif _cfg.claude_code_oauth_token:
+        env["CLAUDE_CODE_OAUTH_TOKEN"] = _cfg.claude_code_oauth_token
+    # Same isolation the synthesis subprocess gets: neutralize IDE NODE_OPTIONS
+    # injection and run in a dedicated CLAUDE_CONFIG_DIR so the enrichment CLI
+    # doesn't contend with the dev's ~/.claude (exit 1 at initialize). Shares the
+    # audit dir — enrichment runs before synthesis, so they never overlap.
+    for _ide_var in ("NODE_OPTIONS", "CLAUDE_CODE_SSE_PORT"):
+        if os.environ.get(_ide_var):
+            env[_ide_var] = ""
+    _config_dir = _sdk.isolated_config_dir(
+        api_key or _cfg.claude_code_oauth_token,
+        env_var="DUCT_AUDIT_CLAUDE_CONFIG_DIR",
+        suffix="duct-audit",
+        log_prefix="audit-enrichment",
+    )
+    if _config_dir:
+        env["CLAUDE_CONFIG_DIR"] = _config_dir
 
     options = ClaudeAgentOptions(
         model=model,
         allowed_tools=["WebSearch", "WebFetch"],
         permission_mode="bypassPermissions",
-        max_turns=10,
+        max_turns=12,  # 3 WebFetches + searches + the final structured-output turn
         env=env,
         setting_sources=[],
         output_format={
             "type": "json_schema",
-            "schema": AuditResearchContext.model_json_schema(),
+            "schema": EnrichmentOutput.model_json_schema(),
         },
     )
 
@@ -139,16 +160,32 @@ Be concise. Each field should be a short string or short list item, not a paragr
                     )
                     return None
                 if message.structured_output:
-                    logger.info("enrichment: success cost=$%.4f", cost)
-                    context = AuditResearchContext.model_validate(message.structured_output)
-                    if not context.brand_content_pillars:
-                        context.brand_content_pillars = brand_pillars
-                    if not context.brand_schema_types:
-                        context.brand_schema_types = brand_schema_types
+                    so = message.structured_output
+                    # Workaround for the SDK output-wrapping bug (anthropics/
+                    # claude-agent-sdk #571): the model sometimes returns
+                    # {"output": {...}} instead of the bare object. With
+                    # extra="ignore" that would silently validate to an EMPTY
+                    # result (0 competitors), so unwrap a lone "output" key.
+                    if isinstance(so, dict) and list(so.keys()) == ["output"] and isinstance(so["output"], dict):
+                        logger.info("enrichment: unwrapped {'output': …} envelope (SDK #571)")
+                        so = so["output"]
+                    out = EnrichmentOutput.model_validate(so)
+                    if not out.competitors and not out.content_gaps and not out.enrichment_notes:
+                        logger.warning(
+                            "enrichment: validated EMPTY — raw structured_output keys=%s",
+                            list(so.keys()) if isinstance(so, dict) else type(so).__name__,
+                        )
+                    # Brand signals come from the crawl (deterministic), not Haiku.
+                    context = AuditResearchContext(
+                        brand_content_pillars=brand_pillars,
+                        brand_schema_types=brand_schema_types,
+                        competitors=out.competitors,
+                        content_gaps=out.content_gaps,
+                        enrichment_notes=out.enrichment_notes,
+                    )
                     logger.info(
-                        "enrichment: got %d competitors, %d content gaps",
-                        len(context.competitors),
-                        len(context.content_gaps),
+                        "enrichment: success cost=$%.4f — %d competitors, %d content gaps",
+                        cost, len(context.competitors), len(context.content_gaps),
                     )
                     return context
                 logger.warning(

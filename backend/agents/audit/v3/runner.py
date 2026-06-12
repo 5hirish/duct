@@ -28,7 +28,7 @@ from collections.abc import Callable, Awaitable
 from time import perf_counter
 from typing import Any
 
-from agents.audit.events import AuditEvent, AuditStep, STEP_LABELS
+from agents.audit.events import AuditEvent, AuditStep, STEP_LABELS, StepStatus
 from agents.audit.prompts import (
     build_audit_user_prompt,
     build_unified_system_prompt,
@@ -43,6 +43,10 @@ from agents.audit.schema import (
     StructuredAuditData,
     VersionedReport,
 )
+from agents.core import claude_sdk as _sdk
+from agents.core import session as _core_session
+from agents.core.report_stream import DuctReportStreamParser
+from agents.core.session import bridge_ask_user_question, register_session
 from agents.engines import Engine, get_env_var_for_engine_provider
 from agents.engines import ENGINE_DEFAULT_EFFORT
 from agents.models import AgentEffort, AgentPermissionMode, AgentTool, ModelName, Provider, ThinkingMode
@@ -63,12 +67,10 @@ _ANTHROPIC_MODEL_MAP: dict[ModelName, str] = {
 
 EmitFn = Callable[[dict[str, Any]], Awaitable[None]]
 
-# Module-level session registry (in-process only; not shared across Railway instances)
-_sessions: dict[str, AuditSession] = {}
-
-
-def get_session(session_id: str) -> AuditSession | None:
-    return _sessions.get(session_id)
+# Session registry + close semantics are shared (agents/core/session.py). These
+# wrappers keep the audit-specific import surface and AuditSession typing.
+get_session = _core_session.get_session
+close_session = _core_session.close_session
 
 
 def create_audit_session(session_id: str, agent_type: str = "audit_seo") -> AuditSession:
@@ -77,31 +79,14 @@ def create_audit_session(session_id: str, agent_type: str = "audit_seo") -> Audi
     Call this before starting run_pipeline so the SSE stream endpoint
     can connect to event_queue independently of when the pipeline starts.
     """
-    import time
     session = AuditSession(
         session_id=session_id,
         agent_type=agent_type,
         event_queue=asyncio.Queue(),   # agent → SSE consumer
         chat_queue=asyncio.Queue(),    # user messages → agent (Phase 3)
         answer_future=None,
-        created_at=time.monotonic(),
     )
-    _sessions[session_id] = session
-    return session
-
-
-def close_session(session_id: str) -> None:
-    session = _sessions.pop(session_id, None)
-    if session:
-        # Cancel the background pipeline task so synthesis stops immediately
-        task = getattr(session, "pipeline_task", None)
-        if task and not task.done():  # type: ignore[union-attr]
-            task.cancel()  # type: ignore[union-attr]
-        # Signal the chat queue generator to stop (Phase 3 follow-up messages)
-        try:
-            session.chat_queue.put_nowait(None)  # type: ignore[attr-defined]
-        except Exception:
-            pass
+    return register_session(session)
 
 
 # ---------------------------------------------------------------------------
@@ -295,11 +280,11 @@ async def run_synthesis(
     <audit_report_update> blocks for report versioning (existing pattern, unchanged).
     """
     from claude_agent_sdk import ClaudeAgentOptions, ClaudeSDKClient
-    from claude_agent_sdk.types import HookMatcher, PermissionResultAllow, PermissionResultDeny, StreamEvent, ThinkingConfigAdaptive
+    from claude_agent_sdk.types import HookMatcher, PermissionResultAllow, PermissionResultDeny, StreamEvent, ThinkingConfigAdaptive, ThinkingConfigEnabled
 
     env_var = get_env_var_for_engine_provider(Engine.V3, provider) or "ANTHROPIC_API_KEY"
 
-    session = _sessions.get(session_id)
+    session = get_session(session_id)
     if session is None:
         logger.error("run_synthesis: session %s not found; creating fallback", session_id)
         session = create_audit_session(session_id)
@@ -322,7 +307,7 @@ async def run_synthesis(
         if tool_name == AgentTool.FETCH_PAGES:
             if initial_report is None:
                 first_step = (
-                    "Call SubmitAuditReport first"
+                    "Finish the report first (StartAuditReport → AddAuditCategory ×9 → FinalizeAuditReport)"
                     if report_mode == "template"
                     else "Produce the <duct_report> HTML first"
                 )
@@ -351,25 +336,10 @@ async def run_synthesis(
 
         if tool_name != AgentTool.ASK_USER_QUESTION:
             return PermissionResultAllow(updated_input=input_data)
-        loop = asyncio.get_event_loop()
-        fut: asyncio.Future = loop.create_future()
-        session.answer_future = fut  # type: ignore[assignment]
-        await emit({
-            "event": AuditEvent.QUESTIONS_REQUIRED,
-            "session_id": session_id,
-            "questions": input_data.get("questions", []),
-        })
-        try:
-            answers = await asyncio.wait_for(asyncio.shield(fut), timeout=120.0)
-        except asyncio.TimeoutError:
-            logger.warning("audit: AskUserQuestion timed out for session %s", session_id)
-            answers = {}
-        finally:
-            session.answer_future = None
-        return PermissionResultAllow(updated_input={
-            "questions": input_data.get("questions", []),
-            "answers": answers,
-        })
+        updated = await bridge_ask_user_question(
+            session, session_id, input_data, emit, log_prefix="audit"
+        )
+        return PermissionResultAllow(updated_input=updated)
 
     async def _dummy_hook(input_data: dict, tool_use_id: str, context: Any) -> dict:
         return {"continue_": True}
@@ -380,18 +350,20 @@ async def run_synthesis(
         if not report.update_label:
             report.update_label = "Initial audit" if version_id == 1 else f"Update {version_id}"
         if report_mode == "template":
-            # Template mode: report comes via SubmitAuditReport tool call, not HTML streaming
+            # Template mode: report data lives on report.structured_data (NOT on the
+            # AuditReport wrapper) — read it from there so the counts are accurate.
+            _sd = report.structured_data
             logger.info(
-                "synthesis: report v%d finalised — template mode, overall_score=%s, %d categories",
+                "synthesis: report v%d finalised — template mode, overall_score=%s, %d categories, %d findings",
                 version_id,
-                getattr(report, "overall_score", "?"),
-                len(getattr(report, "categories", []) or []),
+                _sd.overall_score if _sd else "?",
+                len(_sd.categories) if _sd else 0,
+                sum(len(c.findings) for c in _sd.categories) if _sd else 0,
             )
         else:
-            elapsed_html = (perf_counter() - _open_tag_at) if _open_tag_at else 0.0
             logger.info(
-                "synthesis: report v%d finalised — %d chars HTML, %d chunks, %.1fs streaming",
-                version_id, len(report.html_report), _report_chunk_count, elapsed_html,
+                "synthesis: report v%d finalised — %d chars HTML, %d chunks",
+                version_id, len(report.html_report), parser.report_chunk_count,
             )
         versioned = VersionedReport(
             version_id=version_id,
@@ -466,6 +438,14 @@ async def run_synthesis(
     _sdk_env: dict[str, str] = {
         "OTEL_SERVICE_NAME": "duct-audit-seo",
         "ENABLE_PROMPT_CACHING_1H": "1",
+        # Tool search is ON by default (non-Haiku models) and DEFERS tool schemas
+        # out of context, discovering them on demand. Audit has a small fixed tool
+        # set (FetchPages + Start/Add/Finalize/SubmitAuditReport), and the SDK docs
+        # say eager loading is faster for <10 tools — so disable it. This guarantees
+        # the model always sees the report tools' schemas without a discovery round-
+        # trip (otherwise the large StructuredAuditData/AuditCategory schemas could
+        # trip auto-deferral and the model might not find them reliably).
+        "ENABLE_TOOL_SEARCH": "false",
         # Sentry OTLP tracing — spans for every turn, tool call, LLM request.
         # Activated only when sdk_otel_enabled=true + sentry_dsn is set.
         **sentry_otel_env(_cfg),
@@ -482,6 +462,33 @@ async def run_synthesis(
     }
     if api_key:
         _sdk_env[env_var] = api_key
+    elif _cfg.claude_code_oauth_token:
+        # OAuth/subscription path: forward the token so the isolated config dir
+        # below doesn't depend on the dev's interactive ~/.claude credentials.
+        _sdk_env["CLAUDE_CODE_OAUTH_TOKEN"] = _cfg.claude_code_oauth_token
+
+    # When launched from an IDE debugger, NODE_OPTIONS injects a bootloader that
+    # corrupts the CLI's stream-json protocol → exit 1 during initialize. The SDK
+    # merges options.env over os.environ but can't delete keys, so blank them.
+    for _ide_var in ("NODE_OPTIONS", "CLAUDE_CODE_SSE_PORT"):
+        if os.environ.get(_ide_var):
+            _sdk_env[_ide_var] = ""
+
+    # Isolate this worker's CLI state from the dev's interactive ~/.claude (and
+    # any live Claude Code session). Concurrent access to a shared ~/.claude is
+    # what makes the subprocess exit 1 during initialize. Mirrors the content
+    # runner; the frontend guards against duplicate sessions sharing this dir.
+    # Per-session config dir so two audits running at once (e.g. a full audit and
+    # a lead-magnet audit) never share CLI state and contend — cleaned up below.
+    _config_dir = _sdk.isolated_config_dir(
+        api_key or _cfg.claude_code_oauth_token,
+        env_var="DUCT_AUDIT_CLAUDE_CONFIG_DIR",
+        suffix="duct-audit",
+        log_prefix="audit",
+        session_id=session_id,
+    )
+    if _config_dir:
+        _sdk_env["CLAUDE_CONFIG_DIR"] = _config_dir
 
     # OTEL traces to a local Phoenix / OTLP collector.
     # Set OTEL_ENDPOINT=http://localhost:6006 (or any OTLP endpoint) to enable.
@@ -509,9 +516,47 @@ async def run_synthesis(
     # Do NOT override cli_path — let the SDK use its own bundled binary which is
     # version-matched to the SDK. Passing shutil.which("claude") here would use the
     # system-installed CLI which may be a different (incompatible) version.
-    _extra_tools = [AgentTool.SUBMIT_AUDIT_REPORT] if report_mode == "template" else []
+    _extra_tools = [
+        AgentTool.START_AUDIT_REPORT,
+        AgentTool.ADD_AUDIT_CATEGORY,
+        AgentTool.FINALIZE_AUDIT_REPORT,
+        AgentTool.SUBMIT_AUDIT_REPORT,  # chat-revision resubmit path
+    ] if report_mode == "template" else []
     _submit_cb = _on_submit_report if report_mode == "template" else None
-    _mcp = build_audit_mcp_server(crawl_result, report_mode=report_mode, on_submit_report=_submit_cb)
+
+    async def _on_category_added(count: int, category: dict) -> None:
+        # Live progress: surface each category as the model adds it, so the UI shows
+        # "N/9 categories" instead of a static spinner during the build. Best-effort —
+        # the tool layer never fails on a streaming-emit error.
+        await emit({
+            "event": AuditEvent.STEP_STARTED,
+            "step_id": AuditStep.SYNTHESIZE_AUDIT,
+            "label": STEP_LABELS[AuditStep.SYNTHESIZE_AUDIT],
+            "status": StepStatus.RUNNING,
+            "payload": {
+                "categories_done": count,
+                "categories_total": 9,
+                "last_category": category.get("label") or category.get("id"),
+            },
+        })
+
+    _category_cb = _on_category_added if report_mode == "template" else None
+    _mcp = build_audit_mcp_server(
+        crawl_result,
+        report_mode=report_mode,
+        on_submit_report=_submit_cb,
+        on_category_added=_category_cb,
+    )
+
+    # Thinking config: template mode applies a rigid 9-category scoring framework, where
+    # unbounded adaptive thinking burns minutes for little gain — cap it with a fixed
+    # budget. Freehand narrative still benefits from unbounded adaptive thinking.
+    if not adaptive_thinking:
+        _thinking = None
+    elif report_mode == "template":
+        _thinking = ThinkingConfigEnabled(type=ThinkingMode.ENABLED, budget_tokens=8000)
+    else:
+        _thinking = ThinkingConfigAdaptive(type=ThinkingMode.ADAPTIVE)
 
     options = ClaudeAgentOptions(
         model=model_str,
@@ -524,16 +569,17 @@ async def run_synthesis(
             AgentTool.FETCH_PAGES,  # mcp__duct_crawl__FetchPages — in-process MCP
             *_extra_tools,
         ],
-        # ToolSearch is a Claude Code meta-tool that looks up other tools' schemas.
-        # The MCP initialization already delivers SubmitAuditReport's full schema,
-        # so ToolSearch calls are redundant — they add 2 extra model turns per audit.
+        # Belt-and-suspenders with ENABLE_TOOL_SEARCH=false (the documented control,
+        # set in _sdk_env): with tool search off, all audit tool schemas
+        # (Start/Add/Finalize/SubmitAuditReport) load upfront, so the meta ToolSearch
+        # tool is unnecessary — disallow it so the model can never waste a turn on it.
         disallowed_tools=["ToolSearch"],
         can_use_tool=_can_use_tool,
         hooks=hooks,
         max_turns=60,
         system_prompt=system_prompt,
         include_partial_messages=True,
-        thinking=ThinkingConfigAdaptive(type=ThinkingMode.ADAPTIVE) if adaptive_thinking else None,
+        thinking=_thinking,
         effort=effort,
         env=_sdk_env,
         stderr=_on_subprocess_stderr,
@@ -556,116 +602,49 @@ async def run_synthesis(
     # ------------------------------------------------------------------
 
     # Report JSON tag — HTML is generated on demand, not during initial synthesis.
-    _OPEN_TAG = "<duct_report>"
-    _CLOSE_TAG = "</duct_report>"
-
-    _in_report_tag = False
-    _report_buf = ""
-    _holdback = ""
-    _turn_text: list[str] = []
     had_thinking = False
     initial_report: AuditReport | None = None
     _first_token_at: float | None = None   # perf_counter when first text delta arrived
-    _open_tag_at: float | None = None      # perf_counter when <duct_report> opened
-    _report_chunk_count = 0                # total REPORT_CHUNK events emitted
     # Token accumulators — populated from streaming usage events
     _tok_in = 0
     _tok_out = 0
     _tok_cache_read = 0
     _tok_cache_write = 0
 
-    async def _flush_holdback() -> None:
-        nonlocal _holdback
-        if _holdback:
-            await emit({"event": AuditEvent.AGENT_MESSAGE_CHUNK, "text": _holdback})
-            _turn_text.append(_holdback)
-            _holdback = ""
+    # <duct_report> streaming is handled by the shared parser (core/report_stream).
+    # Audit streams HTML and builds an AuditReport from the closed payload.
+    async def _on_text(text: str) -> None:
+        await emit({"event": AuditEvent.AGENT_MESSAGE_CHUNK, "text": text})
 
-    async def _process_text(chunk: str) -> None:
-        """Stream <duct_report> HTML tokens live; stream everything else as AGENT_MESSAGE_CHUNK."""
-        nonlocal _in_report_tag, _report_buf, _holdback, initial_report
-        nonlocal _open_tag_at, _report_chunk_count
+    async def _on_report_chunk(text: str) -> None:
+        await emit({"event": AuditEvent.REPORT_CHUNK, "text": text})
 
-        if _in_report_tag:
-            if _CLOSE_TAG in chunk:
-                # Close tag fully contained in this chunk
-                safe, _, remainder = chunk.partition(_CLOSE_TAG)
-                if safe:
-                    _report_chunk_count += 1
-                    _report_buf += safe
-                    await emit({"event": AuditEvent.REPORT_CHUNK, "text": safe})
-                _in_report_tag = False
-                html_part = _report_buf
-                _report_buf = ""
-                from datetime import datetime, timezone
-                summary = "".join(_turn_text).strip()
-                initial_report = AuditReport(
-                    url=crawl_result.plan.root_url,
-                    generated_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
-                    update_label="Initial audit",
-                    executive_summary=summary,
-                    html_report=html_part.strip(),
-                )
-                await _emit_report_version(initial_report, 1)
-                if remainder:
-                    await _process_text(remainder)
-            else:
-                # Accumulate and check for close tag split across chunks
-                _report_buf += chunk
-                if _CLOSE_TAG in _report_buf:
-                    html_part, _, remainder = _report_buf.partition(_CLOSE_TAG)
-                    _in_report_tag = False
-                    _report_buf = ""
-                    from datetime import datetime, timezone
-                    summary = "".join(_turn_text).strip()
-                    initial_report = AuditReport(
-                        url=crawl_result.plan.root_url,
-                        generated_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
-                        update_label="Initial audit",
-                        executive_summary=summary,
-                        html_report=html_part.strip(),
-                    )
-                    await _emit_report_version(initial_report, 1)
-                    if remainder:
-                        await _process_text(remainder)
-                elif chunk:
-                    _report_chunk_count += 1
-                    if _report_chunk_count % 50 == 0:
-                        logger.info(
-                            "synthesis: HTML streaming — %d chunks, ~%d chars buffered",
-                            _report_chunk_count, len(_report_buf),
-                        )
-                    await emit({"event": AuditEvent.REPORT_CHUNK, "text": chunk})
-            return
+    async def _on_report_open() -> None:
+        elapsed = (perf_counter() - _first_token_at) if _first_token_at else 0.0
+        logger.info(
+            "synthesis: <duct_report> opened — HTML streaming started (%.1fs after first token)",
+            elapsed,
+        )
 
-        working = _holdback + chunk
-        _holdback = ""
+    async def _on_report_close(raw_html: str, turn_text: str) -> None:
+        nonlocal initial_report
+        from datetime import datetime, timezone
+        initial_report = AuditReport(
+            url=crawl_result.plan.root_url,
+            generated_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            update_label="Initial audit",
+            executive_summary=turn_text,
+            html_report=raw_html.strip(),
+        )
+        await _emit_report_version(initial_report, 1)
 
-        if _OPEN_TAG in working:
-            before, _, after = working.partition(_OPEN_TAG)
-            if before:
-                await emit({"event": AuditEvent.AGENT_MESSAGE_CHUNK, "text": before})
-                _turn_text.append(before)
-            _in_report_tag = True
-            _report_buf = ""
-            _open_tag_at = perf_counter()
-            elapsed_to_tag = (_open_tag_at - _first_token_at) if _first_token_at else 0.0
-            logger.info(
-                "synthesis: <duct_report> opened — HTML streaming started (%.1fs after first token)",
-                elapsed_to_tag,
-            )
-            # Recurse to process `after` through the streaming path
-            if after:
-                await _process_text(after)
-        else:
-            holdback_len = len(_OPEN_TAG) - 1
-            if len(working) > holdback_len:
-                safe = working[:-holdback_len]
-                _holdback = working[-holdback_len:]
-                await emit({"event": AuditEvent.AGENT_MESSAGE_CHUNK, "text": safe})
-                _turn_text.append(safe)
-            else:
-                _holdback = working
+    parser = DuctReportStreamParser(
+        on_text=_on_text,
+        on_report_chunk=_on_report_chunk,
+        on_report_close=_on_report_close,
+        on_open=_on_report_open,
+        log_prefix="synthesis",
+    )
 
     # ------------------------------------------------------------------
     # Shared event processing helper (used for synthesis + each chat turn)
@@ -716,12 +695,12 @@ async def run_synthesis(
                             if _first_token_at is None:
                                 _first_token_at = perf_counter()
                                 logger.info("synthesis: first text token received")
-                            await _process_text(chunk)
+                            await parser.feed(chunk)
 
                 elif ev_type == "message_stop":
-                    await _flush_holdback()
-                    full_text = "".join(_turn_text)
-                    _turn_text.clear()
+                    await parser.flush()
+                    full_text = "".join(parser.turn_text)
+                    parser.turn_text.clear()
 
                     # Fallback: if report was parsed but REPORT_UPDATED not yet emitted
                     if initial_report is not None and len(session.report_versions) == 0:
@@ -756,12 +735,34 @@ async def run_synthesis(
             # Turn 1: initial synthesis
             await _receive_one_turn()
 
+            # Recovery: with extended thinking on a large crawl, the model
+            # sometimes spends the whole turn reasoning and ends WITHOUT emitting
+            # <duct_report> (surfaces as out=0 / "no report generated"). It has
+            # the analysis — it just didn't output the report. Nudge it once to
+            # produce the report before giving up, which salvages most of these.
+            if not session.report_versions:  # type: ignore[attr-defined]
+                logger.warning(
+                    "synthesis: turn 1 produced no <duct_report> (out=%d) for session %s — "
+                    "sending one recovery nudge", _tok_out, session_id,
+                )
+                async def _recover_gen():
+                    yield {
+                        "type": "user",
+                        "message": (
+                            "You analysed the data but did not emit the report. Output the "
+                            "complete <duct_report>…</duct_report> now, in full — do not run "
+                            "more tools or add further analysis, just produce the report."
+                        ),
+                    }
+                await client.query(_recover_gen())
+                await _receive_one_turn()
+
             # Only enter chat mode when synthesis produced a report.
             # If no report, skip PIPELINE_FINISHED — the route handler will emit it after
             # run_pipeline() returns, which will surface the "no report" error to the frontend.
             if session.report_versions:  # type: ignore[attr-defined]
                 # Signal the frontend that synthesis is done — phase transitions to READY
-                await emit({"event": AuditEvent.PIPELINE_FINISHED, "status": "success"})
+                await emit({"event": AuditEvent.PIPELINE_FINISHED, "status": StepStatus.SUCCESS})
 
                 # Phase 3: sequential multi-turn chat loop.
                 # ClaudeSDKClient keeps the subprocess alive across multiple
@@ -786,11 +787,23 @@ async def run_synthesis(
 
     except Exception:
         logger.exception("audit v3: run_synthesis failed for session %s", session_id)
+    finally:
+        # The async-with above has disconnected the subprocess, so the throwaway
+        # per-session config dir is safe to remove.
+        _sdk.cleanup_session_config_dir(_config_dir, log_prefix="audit")
 
     logger.info(
         "synthesis: tokens in=%d out=%d cache_read=%d cache_write=%d session=%s",
         _tok_in, _tok_out, _tok_cache_read, _tok_cache_write, session_id,
     )
+    if initial_report is None:
+        logger.error(
+            "synthesis: NO REPORT for session %s — model ended without <duct_report> "
+            "(out=%d tokens, reasoned=%s) even after the recovery nudge; likely "
+            "extended-thinking / max_turns exhaustion. Surfaces as a failed audit; "
+            "a retry usually succeeds.",
+            session_id, _tok_out, had_thinking,
+        )
     return initial_report, had_thinking
 
 
@@ -828,9 +841,10 @@ class ClaudeAuditRunner:
         user_preferences=None,  # UserPreferences | None
         report_mode: str = "freehand",
         template_id: str = "seo_v1",
+        lead_magnet: bool = False,
     ) -> AuditReport | None:
         from agents.audit.schema import CrawlDepth
-        session = _sessions.get(session_id)
+        session = get_session(session_id)
         if session:
             session.report_mode = report_mode
             session.template_id = template_id
@@ -841,7 +855,7 @@ class ClaudeAuditRunner:
             "event": AuditEvent.STEP_STARTED,
             "step_id": AuditStep.FETCH_SITEMAP,
             "label": STEP_LABELS[AuditStep.FETCH_SITEMAP],
-            "status": "running",
+            "status": StepStatus.RUNNING,
         })
         light = (crawl_depth == CrawlDepth.LIGHT)
         t0 = _t()
@@ -854,7 +868,7 @@ class ClaudeAuditRunner:
             "event": AuditEvent.STEP_FINISHED,
             "step_id": AuditStep.FETCH_SITEMAP,
             "label": STEP_LABELS[AuditStep.FETCH_SITEMAP],
-            "status": "success",
+            "status": StepStatus.SUCCESS,
             "payload": {
                 "landing_pages":      len(crawl_result.plan.landing_pages),
                 "blog_posts":         len(crawl_result.plan.blog_posts),
@@ -876,13 +890,13 @@ class ClaudeAuditRunner:
             "event": AuditEvent.STEP_STARTED,
             "step_id": AuditStep.CRAWL_PAGES,
             "label": f"Crawled {len(crawl_result.pages)} pages",
-            "status": "running",
+            "status": StepStatus.RUNNING,
         })
         await emit({
             "event": AuditEvent.STEP_FINISHED,
             "step_id": AuditStep.CRAWL_PAGES,
             "label": f"Crawled {len(crawl_result.pages)} pages",
-            "status": "success",
+            "status": StepStatus.SUCCESS,
             "payload": {
                 "pages": [
                     {
@@ -912,22 +926,24 @@ class ClaudeAuditRunner:
             },
         })
 
-        # Enrichment — competitor research sub-agent (Haiku + WebSearch/WebFetch)
-        # Skip when there is no business context to enrich (e.g. lead magnet flow).
-        # Without competitors/industry/description the sub-agent has nothing to research
-        # and will either error or burn 90s searching blindly.
+        # Enrichment — competitor research sub-agent (Haiku + WebSearch/WebFetch).
+        # Lead-magnet (teaser) audits ALWAYS skip it — it's a ~60s+ sub-agent that
+        # usually times out, and the lead flow is meant to be fast. The full audit
+        # still runs it, but only when there's business context to research
+        # (without competitors/industry/description the sub-agent has nothing to do
+        # and would just burn time searching blindly).
         _has_biz_context = bool(
             business_context.competitors
             or business_context.industry
             or business_context.business_description
             or business_context.business_name
         )
-        if _has_biz_context:
+        if _has_biz_context and not lead_magnet:
             await emit({
                 "event": AuditEvent.STEP_STARTED,
                 "step_id": AuditStep.ENRICHING,
                 "label": STEP_LABELS[AuditStep.ENRICHING],
-                "status": "running",
+                "status": StepStatus.RUNNING,
             })
             t_enrich = _t()
             from agents.audit.enrichment import enrich_context
@@ -942,10 +958,19 @@ class ClaudeAuditRunner:
                 "event": AuditEvent.STEP_FINISHED,
                 "step_id": AuditStep.ENRICHING,
                 "label": STEP_LABELS[AuditStep.ENRICHING],
-                "status": "success",
+                "status": StepStatus.SUCCESS,
                 "payload": {
-                    "competitors_found": len(research_context.competitors) if research_context else 0,
-                    "content_gaps": len(research_context.content_gaps) if research_context else 0,
+                    "competitors": [
+                        {
+                            "domain":          c.domain,
+                            "positioning":     c.positioning,
+                            "content_pillars": c.content_pillars,
+                            "differentiators": c.differentiators,
+                        }
+                        for c in (research_context.competitors if research_context else [])
+                    ],
+                    "content_gaps":     research_context.content_gaps if research_context else [],
+                    "enrichment_notes": research_context.enrichment_notes if research_context else [],
                 },
             })
         else:
@@ -961,7 +986,7 @@ class ClaudeAuditRunner:
             "event": AuditEvent.STEP_STARTED,
             "step_id": AuditStep.SYNTHESIZE_AUDIT,
             "label": STEP_LABELS[AuditStep.SYNTHESIZE_AUDIT],
-            "status": "running",
+            "status": StepStatus.RUNNING,
         })
 
         t1 = _t()
@@ -986,7 +1011,7 @@ class ClaudeAuditRunner:
             "event": AuditEvent.STEP_FINISHED,
             "step_id": AuditStep.SYNTHESIZE_AUDIT,
             "label": STEP_LABELS[AuditStep.SYNTHESIZE_AUDIT],
-            "status": "success" if report else "error",
+            "status": StepStatus.SUCCESS if report else StepStatus.ERROR,
             "payload": {"reasoned": had_thinking},
         })
 

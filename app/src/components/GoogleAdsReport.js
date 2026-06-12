@@ -219,7 +219,7 @@ function SignalsSection({ highlights, risks, accent }) {
     <>
       <div className="signal-grid">
         {visible.map((f) => (
-          <SignalBlock key={f.finding_id} finding={f} />
+          <SignalBlock key={f.id} finding={f} />
         ))}
       </div>
 
@@ -228,7 +228,7 @@ function SignalsSection({ highlights, risks, accent }) {
           {expanded && (
             <div className="rpt-signal-extra-wrap" style={{ marginTop: 12 }}>
               {extra.map((f) => (
-                <SignalBlock key={f.finding_id} finding={f} />
+                <SignalBlock key={f.id} finding={f} />
               ))}
             </div>
           )}
@@ -383,7 +383,7 @@ export default function GoogleAdsReport({ brief, synthesis, payload: legacyPaylo
     .filter(Boolean)
     .join(" · ");
 
-  const summaryText = `${narrative.summary} Operator takeaway: ${narrative.operator_takeaway}`;
+  const summaryText = `${narrative.summary} Operator takeaway: ${narrative.takeaway}`;
   const sourcesText = `Generated at ${meta.generated_at} · ${meta.source_file ?? meta.export_type}`;
 
   return (

@@ -1,4 +1,4 @@
-"""End-to-end tests for the Content Marketing Agent.
+"""End-to-end tests for the Content Studio agent.
 
 The default suite runs offline — only the parser tests that defend
 against real model output quirks (markdown fences, unescaped HTML in

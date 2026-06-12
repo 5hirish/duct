@@ -12,6 +12,7 @@ function backendApiHeaders(extra = {}) {
 const FALLBACK_PROJECT_CONFIG = {
   industry_options: [
     { value: "E-commerce & Retail", label: "E-commerce & Retail" },
+    { value: "Fashion & Beauty", label: "Fashion & Beauty" },
     { value: "SaaS & Software", label: "SaaS & Software" },
     { value: "Financial Services", label: "Financial Services" },
     { value: "Healthcare", label: "Healthcare" },

@@ -1,6 +1,27 @@
 "use client";
 
 import PlanKanban from "./PlanKanban";
+import PipelineProgress from "../PipelineProgress";
+import { ContentStep } from "../../lib/contentEvents";
+
+// Loading ladder mirrors the audit report: the two fixed backend steps
+// (LOAD_PROJECT, ENRICHING) plus a virtual synthesis stage the backend doesn't
+// emit a step for (the long SDK turn that produces the plan).
+const PLAN_STAGES = [
+  { id: ContentStep.LOAD_PROJECT,    label: "Loading your brand & pillars" },
+  { id: ContentStep.ENRICHING,       label: "Researching trends & history" },
+  { id: ContentStep.SYNTHESIZE_PLAN, label: "Synthesizing your 30-day plan", virtual: true },
+];
+
+const PLAN_LINES = [
+  "Reviewing your content pillars…",
+  "Studying what's worked before…",
+  "Scanning trending sounds & hooks…",
+  "Mapping topics across 30 days…",
+  "Balancing pillars and formats…",
+  "Casting your narrator…",
+  "Sequencing the posting cadence…",
+];
 
 /**
  * Right-pane viewport for plan_month sessions.
@@ -10,20 +31,25 @@ import PlanKanban from "./PlanKanban";
  *
  * Props:
  *   - payload: { type: "plan", id, name, days[], character, ... }
+ *   - steps: live pipeline steps from the workspace (drives the loading ladder)
+ *   - building: the plan is still being built (no payload yet, run not failed)
  *   - onReviseDay?(dayIndex)
  */
-export default function PlanViewport({ payload, onReviseDay }) {
+export default function PlanViewport({ payload, steps = [], building = false, onReviseDay }) {
   if (!payload || payload.type !== "plan") {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-center px-6 gap-2">
-        <div className="size-10 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
-        <p className="text-sm text-muted-foreground">
-          The agent is researching pillars and synthesizing the plan…
-        </p>
-        <p className="text-xs text-muted-foreground/70">
-          Day cards will appear here as soon as the plan lands.
-        </p>
-      </div>
+      <PipelineProgress
+        stages={PLAN_STAGES}
+        steps={steps}
+        activeId={ContentStep.SYNTHESIZE_PLAN}
+        synthesising={building}
+        virtualWaitsForPrior
+        lines={PLAN_LINES}
+        estimate="~3 min"
+        buildingLabel="Building your plan"
+        streamingSubtitle="Synthesizing your 30-day plan…"
+        idleSubtitle="Researching pillars and synthesizing the plan…"
+      />
     );
   }
 

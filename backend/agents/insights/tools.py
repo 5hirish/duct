@@ -123,6 +123,63 @@ def _make_gsc_tool(
 
 
 # ---------------------------------------------------------------------------
+# Canonical tool descriptions — single source of truth.
+# v1 factories (below), the v2 ADK wrappers (agents/insights/v2/tools.py), and
+# the registry's description_long all read from here so the LLM sees identical
+# guidance regardless of engine.
+# ---------------------------------------------------------------------------
+
+TOOL_DESCRIPTIONS: dict[str, str] = {
+    "fetch_campaign_performance": (
+        "Fetch Google Ads campaign performance data. Returns per-campaign "
+        "spend, clicks, impressions, conversions, ROAS, and previous-period "
+        "comparison. Use this as the primary data source for any analysis."
+    ),
+    "fetch_search_terms": (
+        "Fetch the top 100 search terms by spend. Shows which actual user "
+        "queries triggered ads, their match type, and per-term spend, CTR, "
+        "conversions, CPA, and ROAS. Essential for finding wasted spend on "
+        "irrelevant queries and identifying high-value terms to target."
+    ),
+    "fetch_device_performance": (
+        "Fetch campaign performance broken down by device (MOBILE, DESKTOP, "
+        "TABLET). Reveals device-level efficiency gaps — e.g. high CPA on "
+        "mobile vs desktop. Use to find budget reallocation opportunities "
+        "across devices."
+    ),
+    "fetch_geo_performance": (
+        "Fetch geographic performance data showing spend, conversions, and "
+        "ROAS by location. Reveals which regions are converting efficiently "
+        "and which are wasting budget. Use to identify geo expansion or "
+        "geo exclusion opportunities."
+    ),
+    "fetch_ad_group_performance": (
+        "Fetch ad group level performance within campaigns. Shows which "
+        "specific ad groups drive conversions vs waste spend. Deeper "
+        "granularity than campaign-level data. Use to find optimization "
+        "opportunities within campaigns that look mixed at the campaign level."
+    ),
+    "fetch_ga4_landing_pages": (
+        "Fetch GA4 landing page behavior for paid traffic (google / cpc), "
+        "including sessions, bounce rate, engagement rate, session duration, "
+        "conversions, and revenue."
+    ),
+    "fetch_ga4_conversion_paths": (
+        "Fetch GA4 conversion path context by source/medium and channel group "
+        "to evaluate assisted-conversion dynamics beyond last-click."
+    ),
+    "fetch_gsc_query_performance": (
+        "Fetch Google Search Console organic query performance with clicks, "
+        "impressions, CTR, and position for overlap analysis against paid terms."
+    ),
+    "fetch_gsc_page_performance": (
+        "Fetch Google Search Console organic page performance with clicks, "
+        "impressions, CTR, and position for page-level organic/paid alignment."
+    ),
+}
+
+
+# ---------------------------------------------------------------------------
 # Individual tool creators
 # ---------------------------------------------------------------------------
 
@@ -133,11 +190,7 @@ def create_campaign_performance_tool(
     return _make_tool(
         fetch_fn,
         name="fetch_campaign_performance",
-        description=(
-            "Fetch Google Ads campaign performance data. Returns per-campaign "
-            "spend, clicks, impressions, conversions, ROAS, and previous-period "
-            "comparison. Use this as the primary data source for any analysis."
-        ),
+        description=TOOL_DESCRIPTIONS["fetch_campaign_performance"],
     )
 
 
@@ -148,12 +201,7 @@ def create_search_terms_tool(
     return _make_tool(
         fetch_fn,
         name="fetch_search_terms",
-        description=(
-            "Fetch the top 100 search terms by spend. Shows which actual user "
-            "queries triggered ads, their match type, and per-term spend, CTR, "
-            "conversions, CPA, and ROAS. Essential for finding wasted spend on "
-            "irrelevant queries and identifying high-value terms to target."
-        ),
+        description=TOOL_DESCRIPTIONS["fetch_search_terms"],
     )
 
 
@@ -164,12 +212,7 @@ def create_device_performance_tool(
     return _make_tool(
         fetch_fn,
         name="fetch_device_performance",
-        description=(
-            "Fetch campaign performance broken down by device (MOBILE, DESKTOP, "
-            "TABLET). Reveals device-level efficiency gaps — e.g. high CPA on "
-            "mobile vs desktop. Use to find budget reallocation opportunities "
-            "across devices."
-        ),
+        description=TOOL_DESCRIPTIONS["fetch_device_performance"],
     )
 
 
@@ -180,12 +223,7 @@ def create_geo_performance_tool(
     return _make_tool(
         fetch_fn,
         name="fetch_geo_performance",
-        description=(
-            "Fetch geographic performance data showing spend, conversions, and "
-            "ROAS by location. Reveals which regions are converting efficiently "
-            "and which are wasting budget. Use to identify geo expansion or "
-            "geo exclusion opportunities."
-        ),
+        description=TOOL_DESCRIPTIONS["fetch_geo_performance"],
     )
 
 
@@ -196,12 +234,7 @@ def create_ad_group_performance_tool(
     return _make_tool(
         fetch_fn,
         name="fetch_ad_group_performance",
-        description=(
-            "Fetch ad group level performance within campaigns. Shows which "
-            "specific ad groups drive conversions vs waste spend. Deeper "
-            "granularity than campaign-level data. Use to find optimization "
-            "opportunities within campaigns that look mixed at the campaign level."
-        ),
+        description=TOOL_DESCRIPTIONS["fetch_ad_group_performance"],
     )
 
 
@@ -212,11 +245,7 @@ def create_ga4_landing_pages_tool(
     return _make_ga4_tool(
         fetch_fn,
         name="fetch_ga4_landing_pages",
-        description=(
-            "Fetch GA4 landing page behavior for paid traffic (google / cpc), "
-            "including sessions, bounce rate, engagement rate, session duration, "
-            "conversions, and revenue."
-        ),
+        description=TOOL_DESCRIPTIONS["fetch_ga4_landing_pages"],
     )
 
 
@@ -227,10 +256,7 @@ def create_ga4_conversion_paths_tool(
     return _make_ga4_tool(
         fetch_fn,
         name="fetch_ga4_conversion_paths",
-        description=(
-            "Fetch GA4 conversion path context by source/medium and channel group "
-            "to evaluate assisted-conversion dynamics beyond last-click."
-        ),
+        description=TOOL_DESCRIPTIONS["fetch_ga4_conversion_paths"],
     )
 
 
@@ -241,10 +267,7 @@ def create_gsc_query_performance_tool(
     return _make_gsc_tool(
         fetch_fn,
         name="fetch_gsc_query_performance",
-        description=(
-            "Fetch Google Search Console organic query performance with clicks, "
-            "impressions, CTR, and position for overlap analysis against paid terms."
-        ),
+        description=TOOL_DESCRIPTIONS["fetch_gsc_query_performance"],
     )
 
 
@@ -255,10 +278,7 @@ def create_gsc_page_performance_tool(
     return _make_gsc_tool(
         fetch_fn,
         name="fetch_gsc_page_performance",
-        description=(
-            "Fetch Google Search Console organic page performance with clicks, "
-            "impressions, CTR, and position for page-level organic/paid alignment."
-        ),
+        description=TOOL_DESCRIPTIONS["fetch_gsc_page_performance"],
     )
 
 
@@ -318,7 +338,9 @@ def _register_default_tools() -> None:
                 name=tool_name,
                 connector_id=CONNECTOR_BY_TOOL[tool_name],
                 description_short=tool_name.replace("fetch_", "").replace("_", " "),
-                description_long="Registered supplementary dataset fetch tool.",
+                description_long=TOOL_DESCRIPTIONS.get(
+                    tool_name, "Registered supplementary dataset fetch tool."
+                ),
                 goal_relevance=relevance,
                 creator_fn=creator_fn,
             )

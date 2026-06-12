@@ -25,6 +25,7 @@ export default function NewPostDraftPage() {
   const dayIndex  = search.get("day");
   const topic     = search.get("topic") || undefined;
   const pillar    = search.get("pillar") || undefined;
+  const channel   = search.get("channel") || undefined;
 
   useEffect(() => {
     const id = getActiveProjectId();
@@ -50,8 +51,11 @@ export default function NewPostDraftPage() {
           dayIndex: dayIndex !== null && dayIndex !== undefined ? Number(dayIndex) : undefined,
           topic,
           pillar,
+          channel,
         }}
-        renderViewport={({ payload }) => <PostViewport payload={payload} />}
+        renderViewport={({ payload, onSendMessage }) => (
+          <PostViewport payload={payload} onSendMessage={onSendMessage} />
+        )}
       />
     </div>
   );

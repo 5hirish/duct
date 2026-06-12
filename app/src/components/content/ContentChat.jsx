@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";  // honor single newlines as line breaks (LLMs use them)
 import ContentInput from "./ContentInput";
 import ContentQuestions from "./ContentQuestions";
 import ContentStepProgress from "./ContentStepProgress";
@@ -46,28 +47,28 @@ function ThinkingBlock({ thinking, streaming }) {
       {expanded && (
         <div className="mt-1.5 rounded-lg px-3.5 py-3 bg-muted/40 border border-border/40">
           <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
+            remarkPlugins={[remarkGfm, remarkBreaks]}
             components={{
               h1: ({ children }) => <p className="text-xs font-bold text-foreground/80 mt-3 mb-1">{children}</p>,
               h2: ({ children }) => <p className="text-xs font-semibold text-foreground/75 mt-2.5 mb-1">{children}</p>,
               h3: ({ children }) => <p className="text-[11px] font-semibold text-foreground/70 mt-2 mb-0.5 uppercase tracking-wide">{children}</p>,
               h4: ({ children }) => <p className="text-[11px] font-medium text-foreground/65 mt-1.5 mb-0.5">{children}</p>,
-              p:  ({ children }) => <p className="text-[11px] text-muted-foreground italic leading-relaxed my-1.5">{children}</p>,
+              p:  ({ children }) => <p className="text-[11px] text-muted-foreground leading-relaxed my-2">{children}</p>,
               ul: ({ children }) => <ul className="list-disc pl-4 my-1.5 space-y-1">{children}</ul>,
               ol: ({ children }) => <ol className="list-decimal pl-4 my-1.5 space-y-1">{children}</ol>,
-              li: ({ children }) => <li className="text-[11px] text-muted-foreground italic leading-relaxed">{children}</li>,
+              li: ({ children }) => <li className="text-[11px] text-muted-foreground leading-relaxed">{children}</li>,
               code: ({ className, children }) => {
                 const { language, isBlock } = resolveCode(className, children);
                 if (isBlock) return <CodeBlock language={language} compact>{children}</CodeBlock>;
                 return <code className="text-[10px] not-italic font-mono bg-background/70 border border-border/60 text-foreground/80 px-1 py-0.5 rounded">{children}</code>;
               },
               strong: ({ children }) => <strong className="font-semibold not-italic text-foreground/75">{children}</strong>,
-              em: ({ children }) => <em className="not-italic text-muted-foreground">{children}</em>,
+              em: ({ children }) => <em className="italic text-muted-foreground">{children}</em>,
               a: ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer" className="text-foreground/70 underline underline-offset-2 not-italic hover:text-foreground/90">{children}</a>,
               blockquote: ({ children }) => <blockquote className="border-l-2 border-border/60 pl-3 my-1.5 italic text-muted-foreground/70">{children}</blockquote>,
               table: ({ children }) => <table className="border-collapse my-1.5 w-full text-[10px]">{children}</table>,
               th: ({ children }) => <th className="border border-border/60 px-2 py-0.5 font-semibold text-left not-italic bg-muted/20">{children}</th>,
-              td: ({ children }) => <td className="border border-border/60 px-2 py-0.5 italic">{children}</td>,
+              td: ({ children }) => <td className="border border-border/60 px-2 py-0.5">{children}</td>,
               hr: () => <hr className="border-border/40 my-2" />,
             }}
           >
@@ -117,17 +118,19 @@ function ChatBubble({ role, text, thinking, streaming }) {
       <div className="w-full space-y-1">
         <ThinkingBlock thinking={thinking} streaming={streaming && !text} />
         {text && (
-          <div className="rounded-2xl rounded-bl-sm px-4 py-3 text-sm bg-muted text-foreground">
+          <div className={[
+            "rounded-2xl rounded-bl-sm px-4 py-3 text-sm bg-muted text-foreground",
+            // react-markdown@9+ removed the className prop; the prose styles that
+            // used to sit on <ReactMarkdown> live on this wrapper now.
+            "prose prose-sm dark:prose-invert max-w-none",
+            "prose-p:my-3 prose-p:leading-relaxed prose-p:text-sm",
+            "prose-headings:font-semibold prose-headings:text-foreground prose-headings:mt-5 prose-headings:mb-2",
+            "prose-h1:text-xl prose-h2:text-base prose-h3:text-[15px] prose-h4:text-sm",
+            "prose-ul:my-2.5 prose-ol:my-2.5 prose-li:my-1.5 prose-li:leading-relaxed",
+            "prose-strong:text-foreground prose-strong:font-semibold",
+          ].join(" ")}>
             <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              className={[
-                "prose prose-sm dark:prose-invert max-w-none",
-                "prose-p:my-2.5 prose-p:leading-relaxed prose-p:text-sm",
-                "prose-headings:font-semibold prose-headings:text-foreground prose-headings:mt-5 prose-headings:mb-2",
-                "prose-h1:text-xl prose-h2:text-base prose-h3:text-[15px] prose-h4:text-sm",
-                "prose-ul:my-2 prose-ol:my-2 prose-li:my-1 prose-li:leading-relaxed",
-                "prose-strong:text-foreground prose-strong:font-semibold",
-              ].join(" ")}
+              remarkPlugins={[remarkGfm, remarkBreaks]}
               components={{
                 code({ className, children }) {
                   const { language, isBlock } = resolveCode(className, children);

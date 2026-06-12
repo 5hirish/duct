@@ -67,7 +67,7 @@ def test_content_routes_registered():
         # Plans
         "/api/content/plans",
         "/api/content/plans/{plan_id}",
-        "/api/content/plans/{plan_id}/days/{day}",
+        "/api/content/plans/{plan_id}/days/{index}",
         # Posts
         "/api/content/posts",
         "/api/content/posts/{post_id}",

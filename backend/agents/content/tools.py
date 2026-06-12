@@ -1,4 +1,4 @@
-"""In-process MCP tools exposed to the Content Marketing Agent.
+"""In-process MCP tools exposed to the Content Studio agent.
 
 Two groups of tools:
   - Writers: submit_plan, submit_post_draft — validate Pydantic, upsert DB,
@@ -19,6 +19,7 @@ Every handler:
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import json
 import logging
@@ -26,7 +27,7 @@ from collections.abc import Awaitable, Callable
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Annotated, Any
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from claude_agent_sdk import create_sdk_mcp_server, tool
 from claude_agent_sdk.types import McpSdkServerConfig
@@ -36,9 +37,12 @@ from sqlmodel import Session, select
 from agents.content.events import ContentEvent
 from agents.content.schema import (
     ContentSession,
+    ContentStatus,
     PlanDraft,
     PostDraft,
+    Slide,
 )
+from agents.content.templates import derive_image_prompts, render_slides_html
 from config import get_configs
 from db.session import get_engine
 from models.content import (
@@ -60,6 +64,24 @@ EmitFn = Callable[[dict[str, Any]], Awaitable[None]]
 # ---------------------------------------------------------------------------
 
 
+# Per-post write serialization. submit_post_draft / edit_slide / generate_image
+# attach all read-modify-write content_posts.slides; without this, an agent
+# generating images in parallel (or an attach racing an edit) can lose updates.
+# Process-local asyncio locks keyed by post id — covers the agent's concurrent
+# tool calls within one worker; a multi-worker deploy would also want a DB guard.
+_POST_LOCKS: dict[str, asyncio.Lock] = {}
+
+
+def _post_lock(key: str) -> asyncio.Lock:
+    """Get-or-create the lock for a post key. Safe under single-threaded asyncio
+    (no await between the get and the set)."""
+    lock = _POST_LOCKS.get(key)
+    if lock is None:
+        lock = asyncio.Lock()
+        _POST_LOCKS[key] = lock
+    return lock
+
+
 def _ok(payload: dict | list | str) -> dict:
     text = payload if isinstance(payload, str) else json.dumps(payload, default=str)
     return {"content": [{"type": "text", "text": text}]}
@@ -74,6 +96,209 @@ def _open_db() -> Session:
     if engine is None:
         raise RuntimeError("DATABASE_URL is not configured.")
     return Session(engine)
+
+
+def _resolve_format_id(db: Session, project_id, format_slug: str):
+    """Resolve a format slug (e.g. 'format-d') to the project's ContentFormat id.
+
+    Returns None when the project has no format with that slug (link stays NULL).
+    """
+    slug = (format_slug or "").strip().lower()
+    if not slug:
+        return None
+    row = db.exec(
+        select(ContentFormat).where(
+            ContentFormat.project_id == project_id,
+            ContentFormat.slug == slug,
+        )
+    ).first()
+    return row.id if row else None
+
+
+def _merge_slide_images(incoming: list[Slide], existing_row: ContentPost | None) -> list[Slide]:
+    """Carry already-generated images forward across copy/prompt edits.
+
+    The orchestrator authors copy + image prompts; it does NOT re-send the
+    generated `image_url` on every edit. So when a slide already has an image
+    on the persisted row, we backfill image_url / image_asset_id /
+    image_prompt_used onto the incoming slide (keyed by slide_id) UNLESS the
+    incoming slide explicitly carries its own image_url.
+
+    Staleness falls out naturally: a copy-only edit keeps the old
+    image_prompt_used, so if the prompt changed the slide reads as stale
+    (is_image_stale True) and the UI can offer a regenerate. A pure caption
+    edit leaves prompt == prompt_used, so the image stays valid.
+    """
+    if existing_row is None or not getattr(existing_row, "slides", None):
+        return incoming
+    prev_by_id: dict[str, dict] = {}
+    for s in existing_row.slides or []:
+        if isinstance(s, dict) and s.get("slide_id"):
+            prev_by_id[str(s["slide_id"])] = s
+    merged: list[Slide] = []
+    for slide in incoming:
+        prev = prev_by_id.get(slide.slide_id)
+        if not prev:
+            merged.append(slide)
+            continue
+        update: dict = {}
+        if not slide.image_url and prev.get("image_url"):
+            update.update({
+                "image_url":         prev.get("image_url", ""),
+                "image_asset_id":    prev.get("image_asset_id"),
+                "image_prompt_used": prev.get("image_prompt_used", ""),
+            })
+        # Carry generated cell images forward (collage / before-after), matched
+        # by position within the slide.
+        if slide.items:
+            prev_items = prev.get("items") or []
+            new_items = list(slide.items)
+            touched = False
+            for j, it in enumerate(slide.items):
+                pit = prev_items[j] if j < len(prev_items) else None
+                if pit and not it.image_url and pit.get("image_url"):
+                    new_items[j] = it.model_copy(update={
+                        "image_url":         pit.get("image_url", ""),
+                        "image_asset_id":    pit.get("image_asset_id"),
+                        "image_prompt_used": pit.get("image_prompt_used", ""),
+                    })
+                    touched = True
+            if touched:
+                update["items"] = new_items
+        if update:
+            slide = slide.model_copy(update=update)
+        merged.append(slide)
+    return merged
+
+
+def _build_post_payload(row: ContentPost) -> dict:
+    """The POST_DRAFT_UPDATED payload — shared by submit_post_draft and the
+    per-slide image attach path so the frontend always gets the same shape."""
+    return {
+        "id":              str(row.id),
+        "post_dir_slug":   row.post_dir_slug,
+        "pillar":          row.pillar,
+        "topic":           row.topic,
+        "layout":          row.layout,
+        "slide_count":     row.slide_count,
+        "slides":          row.slides,
+        "slides_html":     row.slides_html,
+        "caption":         row.caption,
+        "hashtags":        row.hashtags,
+        "hook_type":       row.hook_type,
+        "hook_text":       row.hook_text,
+        "hook_emotion":    row.hook_emotion,
+        "save_cta":        row.save_cta,
+        "image_prompts":   row.image_prompts,
+        "audio_note":      row.audio_note,
+        "bridge_text":     row.bridge_text,
+        "strategic_note":  row.strategic_note,
+        "visual_brief":    row.visual_brief,
+        "emotional_arc":   row.emotional_arc,
+        "camera_ref_pool": row.camera_ref_pool,
+        "platforms":       row.platforms,
+        "status":          row.status,
+    }
+
+
+def _attach_image_to_slide(
+    db: Session,
+    row: ContentPost,
+    slide_id: str,
+    *,
+    asset_id: str,
+    url: str,
+    item_index: int | None = None,
+) -> bool:
+    """Write a generated image onto one slide (or one cell of a multi-image
+    slide) of a post + re-render the HTML.
+
+    Sets image_url / image_asset_id and anchors image_prompt_used to the
+    target's CURRENT image_prompt so later prompt edits read as stale. When
+    item_index is given, the image lands on slide.items[item_index] (a collage
+    cell / before-after side) instead of the slide itself. Returns True if the
+    target was found + updated. The caller commits.
+    """
+    slides = list(row.slides or [])
+    found = False
+    for i, s in enumerate(slides):
+        if not (isinstance(s, dict) and str(s.get("slide_id")) == str(slide_id)):
+            continue
+        s = dict(s)
+        if item_index is not None:
+            items = list(s.get("items") or [])
+            if not (0 <= item_index < len(items)):
+                return False
+            cell = dict(items[item_index])
+            cell["image_url"] = url
+            cell["image_asset_id"] = asset_id
+            cell["image_prompt_used"] = cell.get("image_prompt", "")
+            items[item_index] = cell
+            s["items"] = items
+        else:
+            s["image_url"] = url
+            s["image_asset_id"] = asset_id
+            s["image_prompt_used"] = s.get("image_prompt", "")
+        slides[i] = s
+        found = True
+        break
+    if not found:
+        return False
+    row.slides = slides
+    parsed = [Slide.model_validate(s) for s in slides]
+    row.slides_html = render_slides_html(row.layout, parsed)
+    row.image_prompts = derive_image_prompts(parsed)
+    row.updated_at = datetime.now(timezone.utc)
+    db.add(row)
+    return True
+
+
+def _downscale_png_b64(png: bytes, max_w: int = 600) -> str:
+    """Return a base64 PNG downscaled to max_w wide — the agent only needs enough
+    detail to judge composition/legibility, and a full 1080×1920 PNG is a heavy
+    vision input. Full-res is persisted separately for publishing. Falls back to
+    the original bytes if Pillow can't process them."""
+    try:
+        from io import BytesIO
+
+        from PIL import Image
+
+        img = Image.open(BytesIO(png))
+        if img.width > max_w:
+            img = img.resize((max_w, max(1, round(img.height * max_w / img.width))))
+        buf = BytesIO()
+        img.save(buf, format="PNG")
+        return base64.b64encode(buf.getvalue()).decode("ascii")
+    except Exception:
+        return base64.b64encode(png).decode("ascii")
+
+
+def _persist_slide_render(project_id: UUID, post_id: UUID, slide_id: str, png: bytes) -> str:
+    """Best-effort: write a rasterized slide PNG to the volume + a ContentAsset
+    row (asset_type='slide_render'). These composed renders are what publish_post
+    uploads to TikTok. Returns the public url, or '' if uploads are disabled."""
+    cfg = get_configs()
+    if not cfg.uploads_enabled:
+        return ""
+    base = Path(cfg.uploads_dir or "/app/uploads")
+    proj_dir = base / "projects" / str(project_id) / "renders"
+    proj_dir.mkdir(parents=True, exist_ok=True)
+    fname = f"{slide_id}-{uuid4().hex[:8]}.png"
+    (proj_dir / fname).write_bytes(png)
+    url = f"/uploads/projects/{project_id}/renders/{fname}"
+    with _open_db() as db:
+        db.add(ContentAsset(
+            project_id=project_id,
+            post_id=post_id,
+            asset_type="slide_render",
+            source="render",
+            url=url,
+            filename=fname,
+            mime_type="image/png",
+            params={"slide_id": slide_id, "width": 1080, "height": 1920},
+        ))
+        db.commit()
+    return url
 
 
 def _asset_disk_path(asset: ContentAsset) -> Path | None:
@@ -151,11 +376,17 @@ def build_content_mcp_server(
                     f"project_id mismatch: payload has {draft.project_id}, "
                     f"session is scoped to {project_id}."
                 )
+            # Monthly model: anchor the plan to the first of the current month;
+            # the calendar lays items on sequential dates from there.
+            from datetime import date as _date
+            today = _date.today()
+            month_start = today.replace(day=1)
+            month_label = today.strftime("%B %Y")
             with _open_db() as db:
                 row = ContentPlan(
                     project_id=project_id,
-                    name=draft.name or "30-day plan",
-                    start_date=draft.start_date,
+                    name=draft.name or f"{month_label} plan",
+                    start_date=month_start,
                     character=draft.character.model_dump(mode="json"),
                     days=[d.model_dump(mode="json") for d in draft.days],
                     status="draft",
@@ -209,13 +440,34 @@ def build_content_mcp_server(
                     f"project_id mismatch: payload has {draft.project_id}, "
                     f"session is scoped to {project_id}."
                 )
-            with _open_db() as db:
+            # Serialize against concurrent image-attach / edit_slide on this post.
+            lock_key = str(session.post_id) if session.post_id else f"slug:{project_id}:{draft.post_dir_slug}"
+            async with _post_lock(lock_key):
+              with _open_db() as db:
                 existing = db.exec(
                     select(ContentPost).where(
                         ContentPost.project_id == project_id,
                         ContentPost.post_dir_slug == draft.post_dir_slug,
                     )
                 ).first()
+
+                # Structured slides are the source of truth: carry already-
+                # generated images forward across copy edits, render the HTML
+                # deterministically, and derive the flat image_prompts list.
+                # Legacy callers that still pass slides_html (no slides) keep
+                # working unchanged.
+                if draft.slides:
+                    merged = _merge_slide_images(draft.slides, existing)
+                    slides_json = [s.model_dump(mode="json") for s in merged]
+                    slides_html = render_slides_html(draft.layout, merged)
+                    image_prompts = derive_image_prompts(merged)
+                    slide_count = len(merged)
+                else:
+                    slides_json = existing.slides if existing is not None else []
+                    slides_html = draft.slides_html
+                    image_prompts = [p.model_dump(mode="json") for p in draft.image_prompts]
+                    slide_count = draft.slide_count
+
                 values = {
                     "project_id":      project_id,
                     "plan_id":         session.plan_id,
@@ -223,11 +475,12 @@ def build_content_mcp_server(
                     "pillar":          draft.pillar,
                     "topic":           draft.topic,
                     "post_type":       draft.post_type,
-                    "format_style":    draft.format_style,
+                    "format_id":       _resolve_format_id(db, project_id, draft.format_slug),
                     "avatar_id":       draft.avatar_id,
-                    "slide_count":     draft.slide_count,
-                    "status":          "draft",
-                    "slides_html":     draft.slides_html,
+                    "layout":          draft.layout.value,
+                    "slide_count":     slide_count,
+                    "slides":          slides_json,
+                    "slides_html":     slides_html,
                     "caption":         draft.caption,
                     "hashtags":        draft.hashtags,
                     "tiktok_title":    draft.tiktok_title,
@@ -235,7 +488,7 @@ def build_content_mcp_server(
                     "hook_text":       draft.hook_text,
                     "hook_emotion":    draft.hook_emotion or "",
                     "save_cta":        draft.save_cta or "",
-                    "image_prompts":   [p.model_dump(mode="json") for p in draft.image_prompts],
+                    "image_prompts":   image_prompts,
                     "audio_note":      draft.audio_note or "",
                     "bridge_text":     draft.bridge_text or "",
                     "strategic_note":  draft.strategic_note or "",
@@ -247,49 +500,113 @@ def build_content_mcp_server(
                 if existing is not None:
                     for k, v in values.items():
                         setattr(existing, k, v)
+                    # Preserve a saved status across agent re-submits (chat
+                    # refinements): a post the user already Saved (draft) or
+                    # published must NOT be reset to "pending". `status` is
+                    # deliberately absent from `values` above.
                     row = existing
                 else:
-                    row = ContentPost(**values)
+                    # A brand-new post is unsaved — the user's Save flips it
+                    # pending → draft (see routes/content.py PATCH + the UI).
+                    row = ContentPost(**values, status=ContentStatus.PENDING)
                     db.add(row)
                 db.commit()
                 db.refresh(row)
                 session.post_id = row.id
                 logger.info(
-                    "content: post %s upserted (slug=%s, slides=%d)",
-                    row.id, row.post_dir_slug, row.slide_count,
+                    "content: post %s upserted (slug=%s, layout=%s, slides=%d, images=%d)",
+                    row.id, row.post_dir_slug, row.layout, row.slide_count,
+                    sum(1 for s in (row.slides or []) if isinstance(s, dict) and s.get("image_url")),
                 )
                 await emit({
                     "event": ContentEvent.POST_DRAFT_UPDATED,
                     "session_id": session.session_id,
                     "post_id": str(row.id),
-                    "payload": {
-                        "id":              str(row.id),
-                        "post_dir_slug":   row.post_dir_slug,
-                        "pillar":          row.pillar,
-                        "topic":           row.topic,
-                        "slide_count":     row.slide_count,
-                        "slides_html":     row.slides_html,
-                        "caption":         row.caption,
-                        "hashtags":        row.hashtags,
-                        "hook_type":       row.hook_type,
-                        "hook_text":       row.hook_text,
-                        "hook_emotion":    row.hook_emotion,
-                        "save_cta":        row.save_cta,
-                        "image_prompts":   row.image_prompts,
-                        "audio_note":      row.audio_note,
-                        "bridge_text":     row.bridge_text,
-                        "strategic_note":  row.strategic_note,
-                        "visual_brief":    row.visual_brief,
-                        "emotional_arc":   row.emotional_arc,
-                        "camera_ref_pool": row.camera_ref_pool,
-                        "platforms":       row.platforms,
-                        "status":          row.status,
-                    },
+                    "payload": _build_post_payload(row),
                 })
-                return _ok({"post_id": str(row.id), "post_dir_slug": row.post_dir_slug})
+                return _ok({
+                    "post_id": str(row.id),
+                    "post_dir_slug": row.post_dir_slug,
+                    "slide_count": row.slide_count,
+                    "images_generated": sum(
+                        1 for s in (row.slides or [])
+                        if isinstance(s, dict) and s.get("image_url")
+                    ),
+                })
         except Exception as exc:
             logger.exception("submit_post_draft failed")
             return _err(f"submit_post_draft failed: {exc}")
+
+    @tool(
+        name="edit_slide",
+        description=(
+            "Surgically edit ONE slide of the current post WITHOUT re-sending the "
+            "whole post. Pass slide_id + a `patch` of only the fields that change "
+            "— e.g. {\"caption_style\":\"cap-raw\"}, {\"headline\":\"...\"}, "
+            "{\"kind\":\"text\"}, {\"image_prompt\":\"...\"}, or {\"items\":[...]}. "
+            "The slide is merged + revalidated, the HTML re-rendered, and "
+            "POST_DRAFT_UPDATED emitted. Changing image_prompt marks that image "
+            "stale (regenerate to match). Use submit_post_draft for whole-post or "
+            "multi-slide changes, or to add / remove / reorder slides."
+        ),
+        input_schema={
+            "slide_id": Annotated[str, "The slide to edit, e.g. 'slide-03'."],
+            "patch":    Annotated[dict, "Partial Slide fields to merge (only what changes)."],
+        },
+    )
+    async def edit_slide(args: dict) -> dict:
+        try:
+            slide_id = (args.get("slide_id") or "").strip()
+            patch = args.get("patch") or {}
+            if not slide_id:
+                return _err("slide_id is required (e.g. 'slide-03').")
+            if not isinstance(patch, dict) or not patch:
+                return _err("patch must be a non-empty object of the fields to change.")
+            if session.post_id is None:
+                return _err("No current post in this session to edit.")
+            async with _post_lock(str(session.post_id)):
+              with _open_db() as db:
+                row = db.get(ContentPost, session.post_id)
+                if row is None or row.project_id != project_id:
+                    return _err("Current post not found for this project.")
+                slides = list(row.slides or [])
+                idx = next(
+                    (i for i, s in enumerate(slides)
+                     if isinstance(s, dict) and s.get("slide_id") == slide_id),
+                    None,
+                )
+                if idx is None:
+                    avail = [s.get("slide_id") for s in slides if isinstance(s, dict)]
+                    return _err(f"slide_id {slide_id!r} not found. Available: {avail}")
+                merged = {**slides[idx], **patch, "slide_id": slide_id}
+                try:
+                    slide_obj = Slide.model_validate(merged)
+                except ValidationError as exc:
+                    return _err(f"patched slide is invalid — fix and call again:\n{exc}")
+                slides[idx] = slide_obj.model_dump(mode="json")
+                parsed = [Slide.model_validate(s) for s in slides]
+                row.slides = slides
+                row.slides_html = render_slides_html(row.layout, parsed)
+                row.image_prompts = derive_image_prompts(parsed)
+                row.slide_count = len(parsed)
+                row.updated_at = datetime.now(timezone.utc)
+                db.add(row)
+                db.commit()
+                db.refresh(row)
+                await emit({
+                    "event": ContentEvent.POST_DRAFT_UPDATED,
+                    "session_id": session.session_id,
+                    "post_id": str(row.id),
+                    "payload": _build_post_payload(row),
+                })
+                return _ok({
+                    "post_id":  str(row.id),
+                    "slide_id": slide_id,
+                    "updated":  list(patch.keys()),
+                })
+        except Exception as exc:
+            logger.exception("edit_slide failed")
+            return _err(f"edit_slide failed: {exc}")
 
     # ----------------------- Readers -----------------------
 
@@ -340,7 +657,10 @@ def build_content_mcp_server(
         try:
             with _open_db() as db:
                 rows = db.exec(
-                    select(ContentPost).where(ContentPost.project_id == project_id)
+                    select(ContentPost).where(
+                        ContentPost.project_id == project_id,
+                        ContentPost.status != ContentStatus.PENDING,  # unsaved drafts aren't "covered"
+                    )
                 ).all()
                 bank: dict[str, dict] = {}
                 for r in rows:
@@ -362,26 +682,33 @@ def build_content_mcp_server(
 
     @tool(
         name="fetch_format_library",
-        description="Return the list of per-project content formats (name, slug, full JSONB data).",
+        description=(
+            "Return the per-project content formats (name, slug, full JSONB data) "
+            "AND resolved_css — the shared base engine CSS plus the format's linked "
+            "styles, ready to inline verbatim into the slides <style> block. Do not "
+            "write caption/hook/layout CSS yourself; use resolved_css and its classes."
+        ),
         input_schema={},
     )
     async def fetch_format_library(_args: dict) -> dict:
         try:
+            from agents.content.styles import css_for
             with _open_db() as db:
                 rows = db.exec(
                     select(ContentFormat).where(ContentFormat.project_id == project_id)
                 ).all()
-                return _ok({
-                    "formats": [
-                        {
-                            "id":   str(r.id),
-                            "slug": r.slug,
-                            "name": r.name,
-                            "data": r.data,
-                        }
-                        for r in rows
-                    ]
-                })
+                out = []
+                for r in rows:
+                    data = r.data or {}
+                    linked = data.get("linked_styles") or data.get("caption_classes") or []
+                    out.append({
+                        "id":   str(r.id),
+                        "slug": r.slug,
+                        "name": r.name,
+                        "data": data,
+                        "resolved_css": css_for(linked),
+                    })
+                return _ok({"formats": out})
         except Exception as exc:
             logger.exception("fetch_format_library failed")
             return _err(f"fetch_format_library failed: {exc}")
@@ -428,7 +755,10 @@ def build_content_mcp_server(
             with _open_db() as db:
                 rows = db.exec(
                     select(ContentPost)
-                    .where(ContentPost.project_id == project_id)
+                    .where(
+                        ContentPost.project_id == project_id,
+                        ContentPost.status != ContentStatus.PENDING,  # exclude unsaved drafts
+                    )
                     .order_by(ContentPost.updated_at.desc())  # type: ignore[union-attr]
                     .limit(limit)
                 ).all()
@@ -441,7 +771,6 @@ def build_content_mcp_server(
                             "topic":         r.topic,
                             "hook_type":     r.hook_type,
                             "status":        r.status,
-                            "day_index":     r.day_index,
                             "posted_at":     r.posted_at.isoformat() if r.posted_at else None,
                             "perf":          r.perf,
                         }
@@ -566,7 +895,21 @@ def build_content_mcp_server(
             "/uploads/projects/<project_id>/generated/ on the Railway Volume."
         ),
         input_schema={
-            "prompt": Annotated[str, "Image prompt — the alt-text style description from slides_html."],
+            "prompt": Annotated[str, "Image prompt — the scene description for this slide."],
+            "slide_id": Annotated[
+                str,
+                "The slide this image is for (e.g. 'slide-01'). When set, the "
+                "result is attached to that slide of the current post: its "
+                "image_url is filled, the preview re-renders, and a "
+                "POST_DRAFT_UPDATED event fires — no separate submit_post_draft "
+                "needed for the image. Always pass this during the image phase.",
+            ],
+            "item_index": Annotated[
+                int,
+                "For multi-image slides (collage / before-after), the 0-based "
+                "cell to attach this image to (collage cell or before/after "
+                "side). Omit for single-image slides. Generate one cell per call.",
+            ],
             "model":  Annotated[str, "Optional image model id; defaults to gemini-3.1-flash-image-preview."],
             "aspect_ratio": Annotated[str, "Optional aspect ratio (e.g. '9:16'). Defaults to portrait."],
             "number_of_images": Annotated[int, "How many images to generate. Default 1, max 4."],
@@ -600,6 +943,11 @@ def build_content_mcp_server(
 
             payload = {k: v for k, v in args.items() if v not in (None, "")}
             payload.setdefault("number_of_images", min(int(payload.get("number_of_images", 1) or 1), 4))
+            # slide_id / item_index steer where the result is attached; they're
+            # not Gemini params, so pull them out before building the request.
+            target_slide_id = str(payload.pop("slide_id", "") or "").strip()
+            _ti = payload.pop("item_index", None)
+            target_item_index = int(_ti) if _ti not in (None, "") else None
 
             # Normalise single-ref legacy → list. The model may pass
             # input_asset_id, input_asset_ids, or both; merge in order.
@@ -675,6 +1023,39 @@ def build_content_mcp_server(
                     )
                     assets.append(asset)
 
+            # Attach the first image to the target slide so the preview updates
+            # live (one slide at a time) without a separate submit_post_draft.
+            attached = False
+            if target_slide_id and assets and session.post_id is not None:
+                try:
+                    async with _post_lock(str(session.post_id)):
+                      with _open_db() as db2:
+                        row = db2.get(ContentPost, session.post_id)
+                        if row is not None and row.project_id == project_id:
+                            attached = _attach_image_to_slide(
+                                db2, row, target_slide_id,
+                                asset_id=str(assets[0].asset_id),
+                                url=assets[0].url,
+                                item_index=target_item_index,
+                            )
+                            if attached:
+                                db2.commit()
+                                db2.refresh(row)
+                                logger.info(
+                                    "content: image attached to %s%s on post %s",
+                                    target_slide_id,
+                                    f"#{target_item_index}" if target_item_index is not None else "",
+                                    row.id,
+                                )
+                                await emit({
+                                    "event": ContentEvent.POST_DRAFT_UPDATED,
+                                    "session_id": session.session_id,
+                                    "post_id": str(row.id),
+                                    "payload": _build_post_payload(row),
+                                })
+                except Exception:
+                    logger.exception("content: failed to attach image to slide %s", target_slide_id)
+
             content: list[dict] = []
             for img, asset in zip(images, assets, strict=False):
                 content.append({
@@ -685,9 +1066,10 @@ def build_content_mcp_server(
             content.append({
                 "type": "text",
                 "text": json.dumps({
-                    "asset_ids":  [str(a.asset_id) for a in assets],
-                    "asset_urls": [a.url           for a in assets],
-                    "model":      request.model.value,
+                    "asset_ids":   [str(a.asset_id) for a in assets],
+                    "asset_urls":  [a.url           for a in assets],
+                    "model":       request.model.value,
+                    "attached_to": target_slide_id if attached else None,
                 }),
             })
             return {"content": content}
@@ -820,16 +1202,19 @@ def build_content_mcp_server(
     @tool(
         name="publish_post",
         description=(
-            "Publish a saved post via PostBridge. Uploads each generated slide "
-            "image to PostBridge, creates the post bound to one or more "
-            "social_account_ids (numeric, from list_social_accounts), and "
-            "stores the resulting PostBridge post id on the content_posts row."
+            "Publish a saved post via PostBridge. Uploads each slide's COMPOSED "
+            "render (caption baked in — call render_slide first) to PostBridge, "
+            "creates the post bound to one or more social_account_ids (numeric, "
+            "from list_social_accounts), and stores the resulting PostBridge post "
+            "id on the content_posts row. By default it refuses slides that have "
+            "no render (their captions wouldn't appear)."
         ),
         input_schema={
             "post_id":            Annotated[str,       "UUID of the content_posts row to publish."],
             "social_account_ids": Annotated[list[int], "Numeric PostBridge social account IDs."],
             "scheduled_at":       Annotated[str,       "Optional ISO 8601 timestamp; omit to post now."],
             "tiktok_draft":       Annotated[bool,      "If true, post lands as a TikTok draft instead of scheduling."],
+            "allow_uncomposed":   Annotated[bool,      "Escape hatch: publish single-image slides as their RAW photo when no composed render exists (captions won't appear). Multi-image slides still require a render. Default false."],
         },
     )
     async def publish_post(args: dict) -> dict:
@@ -844,6 +1229,7 @@ def build_content_mcp_server(
             raw_ids     = args.get("social_account_ids") or []
             scheduled_raw  = args.get("scheduled_at")
             tiktok_draft = bool(args.get("tiktok_draft"))
+            allow_uncomposed = bool(args.get("allow_uncomposed"))
             if not post_id_raw:
                 return _err("post_id is required.")
             try:
@@ -869,14 +1255,60 @@ def build_content_mcp_server(
                 if proj is None:
                     return _err("Project missing.")
 
-                # Gather the image assets we plan to upload (in slide order).
-                asset_rows = db.execute(
+                # Gather what to upload, in slide order. PREFER the composed
+                # slide renders (caption + layout baked in) — those are what
+                # should appear on TikTok. Fall back to a single-image slide's
+                # raw photo only when it has no render yet.
+                all_assets = db.execute(
                     select(ContentAsset)
                     .where(ContentAsset.post_id == post.id, ContentAsset.project_id == post.project_id)
                     .order_by(ContentAsset.created_at)
                 ).scalars().all()
+                renders_by_slide: dict[str, ContentAsset] = {}
+                by_url: dict[str, ContentAsset] = {}
+                for a in all_assets:
+                    if a.asset_type == "slide_render":
+                        sid = (a.params or {}).get("slide_id")
+                        if sid:
+                            renders_by_slide[str(sid)] = a   # asc order → latest wins
+                    if a.url:
+                        by_url.setdefault(a.url, a)
+
+                slides_meta = [s for s in (post.slides or []) if isinstance(s, dict)]
+                asset_rows: list[ContentAsset] = []
+                missing: list[str] = []
+                uncomposed: list[str] = []
+                if slides_meta:
+                    for s in slides_meta:
+                        sid = str(s.get("slide_id") or "")
+                        ren = renders_by_slide.get(sid)
+                        if ren is not None:
+                            asset_rows.append(ren)
+                            continue
+                        # No composed render. Only a single-image slide can fall
+                        # back to its raw photo, and only when explicitly allowed
+                        # (collage / before-after MUST be rendered to compose).
+                        url = s.get("image_url")
+                        fallback = by_url.get(url) if url else None
+                        if allow_uncomposed and fallback is not None and not s.get("items"):
+                            asset_rows.append(fallback)
+                            uncomposed.append(sid or "(unnamed)")
+                        else:
+                            missing.append(sid or "(unnamed)")
+                else:
+                    # Legacy posts with no structured slides — upload whatever's linked.
+                    asset_rows = list(all_assets)
+
+                if missing:
+                    return _err(
+                        "These slides have no composed render, so their captions "
+                        f"wouldn't publish: {missing}. Call render_slide on each, then "
+                        "publish again — or pass allow_uncomposed=true to publish "
+                        "single-image slides as raw photos (captions won't appear; "
+                        "collage / before-after still require a render)."
+                    )
                 if not asset_rows:
-                    return _err("No image assets linked to this post — generate or upload images first.")
+                    return _err("No slide images to publish — render or generate images first.")
 
                 try:
                     client = client_for_user(proj.user_id, db)
@@ -936,6 +1368,7 @@ def build_content_mcp_server(
                     "status":                post.status,
                     "scheduled_at":          resp.scheduled_at.isoformat() if resp.scheduled_at else None,
                     "media_count":           len(media_ids),
+                    "uncomposed_slides":     uncomposed,   # published as raw photos (no caption)
                 })
         except Exception as exc:
             logger.exception("publish_post failed")
@@ -1053,11 +1486,167 @@ def build_content_mcp_server(
             logger.exception("log_metrics failed")
             return _err(f"log_metrics failed: {exc}")
 
+    @tool(
+        name="render_slide",
+        description=(
+            "Rasterize ONE slide to a 1080×1920 (9:16) PNG and SEE it — the "
+            "COMPOSED slide as it will actually look (caption overlay, gradient, "
+            "layout, safe zones), not just the raw photo. Returns the image inline "
+            "so you can critique composition, caption legibility, text/face "
+            "overlap, and safe-zone fit, then fix the structured slide. These "
+            "composed renders are also what publish_post uploads. Needs a "
+            "connected session UI; if none responds it times out — then proceed "
+            "on the raw photo + structured data."
+        ),
+        input_schema={
+            "slide_id": Annotated[str, "The slide to render, e.g. 'slide-01'."],
+        },
+    )
+    async def render_slide(args: dict) -> dict:
+        try:
+            slide_id = (args.get("slide_id") or "").strip()
+            if not slide_id:
+                return _err("slide_id is required (e.g. 'slide-01').")
+            if session.post_id is None:
+                return _err("No current post in this session to render.")
+            with _open_db() as db:
+                row = db.get(ContentPost, session.post_id)
+                if row is None or row.project_id != project_id:
+                    return _err("Current post not found for this project.")
+                slide_ids = [s.get("slide_id") for s in (row.slides or []) if isinstance(s, dict)]
+                if slide_id not in slide_ids:
+                    return _err(f"slide_id {slide_id!r} not on this post. Available: {slide_ids}")
+                post_id = row.id
+
+            render_id = str(uuid4())
+            loop = asyncio.get_event_loop()
+            fut: asyncio.Future = loop.create_future()
+            session.render_futures[render_id] = fut
+            await emit({
+                "event":      ContentEvent.SLIDE_RENDER_REQUESTED,
+                "session_id": session.session_id,
+                "post_id":    str(post_id),
+                "slide_id":   slide_id,
+                "render_id":  render_id,
+            })
+            try:
+                png_b64 = await asyncio.wait_for(asyncio.shield(fut), timeout=25.0)
+            except asyncio.TimeoutError:
+                return _err(
+                    "No browser rendered the slide in time (no connected session UI). "
+                    "Proceed using the raw photo + the structured slide data."
+                )
+            finally:
+                session.render_futures.pop(render_id, None)
+
+            if not png_b64 or not str(png_b64).strip():
+                return _err(
+                    "the browser couldn't rasterize the slide. Proceed on the raw "
+                    "photo + the structured slide data."
+                )
+            try:
+                png = base64.b64decode(png_b64)
+            except Exception:
+                return _err("the render returned invalid image data.")
+
+            asset_url = ""
+            try:
+                asset_url = _persist_slide_render(project_id, post_id, slide_id, png)
+            except Exception:
+                logger.exception("render_slide: persist failed (returning image anyway)")
+
+            # Persist full-res (for publishing); show the agent a lighter copy.
+            return {"content": [
+                {"type": "image", "data": _downscale_png_b64(png), "mimeType": "image/png"},
+                {"type": "text", "text": json.dumps({
+                    "slide_id": slide_id, "asset_url": asset_url, "width": 1080, "height": 1920,
+                    "note": "preview downscaled; the full-res render is saved for publishing",
+                })},
+            ]}
+        except Exception as exc:
+            logger.exception("render_slide failed")
+            return _err(f"render_slide failed: {exc}")
+
+    @tool(
+        name="fetch_post",
+        description=(
+            "Return the current persisted state of ONE post — structured slides "
+            "(copy + image prompts + any generated image_url), layout, and "
+            "metadata. Use this to ground an edit on the live post before "
+            "changing a caption/prompt or generating images, especially when "
+            "resuming an earlier draft. Pass post_dir_slug or post_id; with "
+            "neither, returns this session's current post. Each slide includes "
+            "`image_stale` (true = the prompt changed after the image was made, "
+            "so the image should be regenerated)."
+        ),
+        input_schema={
+            "post_dir_slug": Annotated[str, "Post slug, e.g. '2026-06-08-001'. Optional."],
+            "post_id":       Annotated[str, "Post UUID. Optional."],
+        },
+    )
+    async def fetch_post(args: dict) -> dict:
+        try:
+            slug = (args.get("post_dir_slug") or "").strip()
+            pid = (args.get("post_id") or "").strip()
+            with _open_db() as db:
+                row = None
+                if pid:
+                    try:
+                        row = db.get(ContentPost, UUID(pid))
+                    except ValueError:
+                        return _err(f"invalid post_id: {pid}")
+                elif slug:
+                    row = db.exec(
+                        select(ContentPost).where(
+                            ContentPost.project_id == project_id,
+                            ContentPost.post_dir_slug == slug,
+                        )
+                    ).first()
+                elif session.post_id is not None:
+                    row = db.get(ContentPost, session.post_id)
+                if row is None or row.project_id != project_id:
+                    return _err("post not found for this project (pass a valid post_dir_slug or post_id).")
+
+                slides_out = []
+                for s in row.slides or []:
+                    if not isinstance(s, dict):
+                        continue
+                    used = (s.get("image_prompt_used") or "").strip()
+                    cur = (s.get("image_prompt") or "").strip()
+                    slides_out.append({
+                        **s,
+                        "image_stale": bool(s.get("image_url")) and (cur != used),
+                    })
+                return _ok({
+                    "post_id":       str(row.id),
+                    "post_dir_slug": row.post_dir_slug,
+                    "pillar":        row.pillar,
+                    "topic":         row.topic,
+                    "layout":        row.layout,
+                    "status":        row.status,
+                    "slide_count":   row.slide_count,
+                    "hook_emotion":  row.hook_emotion,
+                    "emotional_arc": row.emotional_arc,
+                    "visual_brief":  row.visual_brief,
+                    "strategic_note": row.strategic_note,
+                    "caption":       row.caption,
+                    "hashtags":      row.hashtags,
+                    "slides":        slides_out,
+                    # The literal rendered markup, so you can see exactly how your
+                    # structured choices (classes/layout) compose. Author edits as
+                    # structured slides — the renderer rebuilds this on save.
+                    "slides_html":   row.slides_html,
+                })
+        except Exception as exc:
+            logger.exception("fetch_post failed")
+            return _err(f"fetch_post failed: {exc}")
+
     return create_sdk_mcp_server(
         "duct_content",
         tools=[
             submit_plan,
             submit_post_draft,
+            edit_slide,
             fetch_brand_context,
             fetch_topic_bank,
             fetch_format_library,
@@ -1065,6 +1654,8 @@ def build_content_mcp_server(
             fetch_content_history,
             fetch_content_assets,
             fetch_discovered_references,
+            fetch_post,
+            render_slide,
             generate_image,
             edit_image,
             publish_post,

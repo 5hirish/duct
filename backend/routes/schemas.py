@@ -7,6 +7,7 @@ from typing import Annotated, Any, Self
 
 from pydantic import BaseModel, BeforeValidator, Field, model_validator
 
+from agents.core.business_context import BusinessContext
 from agents.insights.goals import InsightGenerationGoal, parse_goal_value
 from agents.insights.goals.organic_growth import OrganicGrowthGoal, parse_goal_value as parse_organic_goal_value
 
@@ -40,35 +41,10 @@ class ReportRequest(BaseModel):
     use_demo: bool = False
 
 
-class BusinessContext(BaseModel):
-    """Optional business context for goal-aware LLM reasoning.
-
-    Paid ads fields (used when mode="paid_ads"):
-      monthly_budget, target_cpa, target_roas, primary_conversion_action,
-      target_payback_days, gross_margin_percent, qualified_lead_value
-
-    Organic growth fields (used when mode="organic_growth"):
-      primary_organic_kpi, monthly_organic_traffic_target, primary_content_type
-
-    Shared fields: industry, period_changes, notes
-    """
-
-    industry: str = ""
-    # Paid ads
-    monthly_budget: float = 0.0
-    target_cpa: float = 0.0
-    target_roas: float = 0.0
-    primary_conversion_action: str = ""
-    target_payback_days: float = 0.0
-    gross_margin_percent: float = 0.0
-    qualified_lead_value: float = 0.0
-    # Organic growth
-    primary_organic_kpi: str = ""           # "organic_traffic", "keyword_rankings", etc.
-    monthly_organic_traffic_target: float = 0.0
-    primary_content_type: str = ""          # "blog_articles", "product_pages", etc.
-    # Shared
-    period_changes: str = ""
-    notes: str = ""
+# BusinessContext is the shared, unified model (agents/core/business_context.py),
+# passed equally to every agent. It is a superset (identity + paid + organic
+# fields) with extra="ignore", so existing insights form payloads validate
+# unchanged. Imported above; re-exported here for backwards-compatible imports.
 
 
 class GenerateRequest(BaseModel):
@@ -161,6 +137,26 @@ class InsightRefreshResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     status: str = Field(default="ok")
+
+
+class EngineStatus(BaseModel):
+    """Availability of a single inference engine, for the engine picker UI."""
+
+    key: str = Field(description="Engine key: v1 | v2 | v3")
+    status: str = Field(description="active | needs_auth | inactive")
+    auth_method: str | None = Field(
+        default=None, description="How an active engine is authenticated: api_key | oauth"
+    )
+    supports_oauth: bool = Field(
+        default=False, description="True if the engine can authenticate without an API key"
+    )
+    detail: str | None = Field(
+        default=None, description="Human-readable guidance, shown when status is needs_auth"
+    )
+
+
+class EngineStatusResponse(BaseModel):
+    engines: list[EngineStatus]
 
 
 class RootLinks(BaseModel):

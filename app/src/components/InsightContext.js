@@ -16,7 +16,7 @@ function buildSummaryText(chatPayload) {
     `Account: ${chatPayload.account?.name || "unknown"} (${chatPayload.account?.currency || "USD"})`,
     `Date window: ${chatPayload.date_window?.current?.from || "?"} to ${chatPayload.date_window?.current?.to || "?"}`,
     `Narrative: ${chatPayload.narrative?.summary || "n/a"}`,
-    `Operator takeaway: ${chatPayload.narrative?.operator_takeaway || "n/a"}`,
+    `Operator takeaway: ${chatPayload.narrative?.takeaway || "n/a"}`,
     `Actions: ${(chatPayload.recommended_actions || []).join(" | ") || "n/a"}`,
   ];
   return lines.join("\n");
