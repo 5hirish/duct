@@ -1,4 +1,4 @@
-name: App Checks
+name: App CI/CD
 
 permissions:
   contents: read
@@ -60,3 +60,66 @@ jobs:
 
       - name: Build app
         run: npm run build
+
+  # ---------------------------------------------------------------------------
+  # Deploy the Worker (OpenNext → wrangler) on merge to main, only after the
+  # checks above pass. Replaces the Cloudflare "Workers Builds" git integration,
+  # which failed because its Node 20 builder can't run wrangler@4.99 (needs >=22;
+  # pinned via app/.nvmrc). Disable that integration so this is the only deploy.
+  #
+  # Repo secrets used: CLOUDFLARE_API_TOKEN (Workers Scripts:Edit, Workers R2
+  # Storage:Edit, Account Settings:Read), CLOUDFLARE_ACCOUNT_ID, and the build-time
+  # NEXT_PUBLIC_* vars (inlined into the client bundle).
+  # ---------------------------------------------------------------------------
+  deploy:
+    name: Deploy to Cloudflare Workers
+    needs: app-checks
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: deploy-app
+      cancel-in-progress: false
+
+    defaults:
+      run:
+        working-directory: app
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Resolve Node version
+        id: node-version
+        run: |
+          if [ -f .nvmrc ]; then
+            echo "value=$(tr -d '[:space:]' < .nvmrc)" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=22" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ steps.node-version.outputs.value }}
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (Next.js → OpenNext → Cloudflare)
+        run: npx opennextjs-cloudflare build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+          NEXT_PUBLIC_API_BASE: ${{ secrets.NEXT_PUBLIC_API_BASE }}
+          NEXT_PUBLIC_DUCT_API_KEY: ${{ secrets.NEXT_PUBLIC_DUCT_API_KEY }}
+          NEXT_PUBLIC_GTM_ID: ${{ secrets.NEXT_PUBLIC_GTM_ID }}
+          NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ secrets.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}
+
+      - name: Deploy to Cloudflare Workers
+        run: npx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

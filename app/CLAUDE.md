@@ -4,7 +4,7 @@ Next.js App Router report viewer and agent interface.
 
 ## Stack
 
-- **Framework:** Next.js 16 App Router, React 19, TypeScript 6, Node 20 (dev runs on port 3003)
+- **Framework:** Next.js 16 App Router, React 19, TypeScript 6, Node 22 (pinned in `app/.nvmrc` — the OpenNext/wrangler toolchain requires ≥22; dev runs on port 3003)
 - **UI:** shadcn/ui + Radix UI primitives, Tailwind CSS 4, lucide-react, next-themes (light/dark)
 - **Charts:** Nivo (heatmaps, complex) + Recharts (general) — both intentionally present
 - **State:** React Context (`InsightContext.js`) + component-level state only. No Redux/Zustand.
@@ -16,7 +16,7 @@ Next.js App Router report viewer and agent interface.
 
 - **Host:** Cloudflare Workers via `@opennextjs/cloudflare` adapter + wrangler CLI.
 - `npm run deploy:cf` → OpenNext build + `wrangler deploy` (do not run directly — all deploys go through CI/CD on merge to main).
-- **CI:** GitHub Actions (`app.yml`) — lint, typecheck, `next build` on every PR and push to `main`.
+- **CI/CD:** GitHub Actions (`app.yml`) — lint, typecheck, `next build` on every PR; on push to `main` the `deploy` job runs `opennextjs-cloudflare build` + `wrangler deploy`. (Replaced the Cloudflare "Workers Builds" git integration, which failed on its Node 20 builder — wrangler@4.99 needs ≥22.)
 
 ## Route structure
 
