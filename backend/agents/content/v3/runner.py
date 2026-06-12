@@ -112,12 +112,13 @@ def _describe_startup_failure(stderr_text: str, exit_code: int | None) -> str:
     return _sdk.describe_startup_failure(stderr_text, exit_code, agent_label="content engine")
 
 
-def _isolated_config_dir(explicit_auth: str) -> str | None:
+def _isolated_config_dir(explicit_auth: str, session_id: str | None = None) -> str | None:
     return _sdk.isolated_config_dir(
         explicit_auth,
         env_var="DUCT_CONTENT_CLAUDE_CONFIG_DIR",
         suffix="duct-content",
         log_prefix="content",
+        session_id=session_id,
     )
 
 
@@ -687,8 +688,10 @@ async def _run(
         if os.environ.get(_ide_var):
             _sdk_env[_ide_var] = ""
 
-    # Isolate this worker's CLI state from any interactive ~/.claude on the box.
-    _config_dir = _isolated_config_dir(api_key or _cfg.claude_code_oauth_token)
+    # Isolate this worker's CLI state from any interactive ~/.claude on the box,
+    # AND from any other content run — a per-session dir means two concurrent
+    # sessions never contend on shared CLI state (cleaned up in the finally below).
+    _config_dir = _isolated_config_dir(api_key or _cfg.claude_code_oauth_token, session_id=session_id)
     if _config_dir:
         _sdk_env["CLAUDE_CONFIG_DIR"] = _config_dir
 
@@ -984,6 +987,8 @@ async def _run(
         if client is not None:
             with suppress(Exception):
                 await client.disconnect()
+        # The subprocess is gone; remove this run's throwaway per-session config dir.
+        _sdk.cleanup_session_config_dir(_config_dir, log_prefix="content")
 
 
 # ---------------------------------------------------------------------------

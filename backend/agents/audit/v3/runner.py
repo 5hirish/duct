@@ -478,11 +478,14 @@ async def run_synthesis(
     # any live Claude Code session). Concurrent access to a shared ~/.claude is
     # what makes the subprocess exit 1 during initialize. Mirrors the content
     # runner; the frontend guards against duplicate sessions sharing this dir.
+    # Per-session config dir so two audits running at once (e.g. a full audit and
+    # a lead-magnet audit) never share CLI state and contend — cleaned up below.
     _config_dir = _sdk.isolated_config_dir(
         api_key or _cfg.claude_code_oauth_token,
         env_var="DUCT_AUDIT_CLAUDE_CONFIG_DIR",
         suffix="duct-audit",
         log_prefix="audit",
+        session_id=session_id,
     )
     if _config_dir:
         _sdk_env["CLAUDE_CONFIG_DIR"] = _config_dir
@@ -784,6 +787,10 @@ async def run_synthesis(
 
     except Exception:
         logger.exception("audit v3: run_synthesis failed for session %s", session_id)
+    finally:
+        # The async-with above has disconnected the subprocess, so the throwaway
+        # per-session config dir is safe to remove.
+        _sdk.cleanup_session_config_dir(_config_dir, log_prefix="audit")
 
     logger.info(
         "synthesis: tokens in=%d out=%d cache_read=%d cache_write=%d session=%s",
@@ -834,6 +841,7 @@ class ClaudeAuditRunner:
         user_preferences=None,  # UserPreferences | None
         report_mode: str = "freehand",
         template_id: str = "seo_v1",
+        lead_magnet: bool = False,
     ) -> AuditReport | None:
         from agents.audit.schema import CrawlDepth
         session = get_session(session_id)
@@ -918,17 +926,19 @@ class ClaudeAuditRunner:
             },
         })
 
-        # Enrichment — competitor research sub-agent (Haiku + WebSearch/WebFetch)
-        # Skip when there is no business context to enrich (e.g. lead magnet flow).
-        # Without competitors/industry/description the sub-agent has nothing to research
-        # and will either error or burn 90s searching blindly.
+        # Enrichment — competitor research sub-agent (Haiku + WebSearch/WebFetch).
+        # Lead-magnet (teaser) audits ALWAYS skip it — it's a ~60s+ sub-agent that
+        # usually times out, and the lead flow is meant to be fast. The full audit
+        # still runs it, but only when there's business context to research
+        # (without competitors/industry/description the sub-agent has nothing to do
+        # and would just burn time searching blindly).
         _has_biz_context = bool(
             business_context.competitors
             or business_context.industry
             or business_context.business_description
             or business_context.business_name
         )
-        if _has_biz_context:
+        if _has_biz_context and not lead_magnet:
             await emit({
                 "event": AuditEvent.STEP_STARTED,
                 "step_id": AuditStep.ENRICHING,

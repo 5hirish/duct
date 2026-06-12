@@ -426,6 +426,10 @@ class AuditRequest(BaseModel):
     user_preferences: UserPreferences = Field(default_factory=UserPreferences)
     report_mode: ReportMode = ReportMode.freehand
     template_id: str = "seo_v1"
+    # Lightweight lead-magnet (public) audit: forces enrichment off and extended
+    # thinking off, independent of the other tuning params, so the teaser stays
+    # fast. The full app audit leaves this false.
+    lead_magnet: bool = False
 
 
 class AuditAnswerRequest(BaseModel):

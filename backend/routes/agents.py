@@ -420,7 +420,9 @@ async def _start_seo_audit(session_id: str, body: dict, emit_fn: Any) -> None:
         provider=provider,
         model=model,
         effort=req.effort,
-        adaptive_thinking=req.adaptive_thinking,
+        # Lead-magnet (teaser) audits never use extended thinking — keep the
+        # first token fast regardless of what the request asked for.
+        adaptive_thinking=req.adaptive_thinking and not req.lead_magnet,
     )
 
     async def pipeline() -> None:
@@ -436,6 +438,7 @@ async def _start_seo_audit(session_id: str, body: dict, emit_fn: Any) -> None:
                 crawl_depth=req.crawl_depth,
                 report_mode=req.report_mode,
                 template_id=req.template_id,
+                lead_magnet=req.lead_magnet,
             )
             await emit_fn({"event": AuditEvent.PIPELINE_FINISHED, "status": "success"})
         except Exception as exc:

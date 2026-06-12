@@ -80,6 +80,8 @@ function LeadSeoAuditInner() {
           template_id: DEFAULT_AUDIT_TEMPLATE_ID,
           crawl_depth: CrawlDepth.LIGHT,
           max_blog_posts: 2,
+          // Teaser tier: backend force-skips enrichment + extended thinking.
+          lead_magnet: true,
         });
         setState("ready");
       })

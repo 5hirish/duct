@@ -16,9 +16,14 @@ from __future__ import annotations
 
 import logging
 import os
+import shutil
 from collections import deque
 
 logger = logging.getLogger(__name__)
+
+# Per-session config dirs live under this subfolder of the agent's base dir, so
+# cleanup can tell a throwaway session dir apart from the shared base.
+_SESSION_DIR_SEGMENT = "sessions"
 
 # Retry an initialize crash with backoff — nothing has streamed yet, so a fresh
 # connect is side-effect-free.
@@ -95,6 +100,7 @@ def isolated_config_dir(
     env_var: str,
     suffix: str,
     log_prefix: str = "agent",
+    session_id: str | None = None,
 ) -> str | None:
     """A CLAUDE_CONFIG_DIR isolated from the developer's interactive ~/.claude.
 
@@ -110,6 +116,12 @@ def isolated_config_dir(
     so we symlink that file (live, so refreshes propagate). ``env_var`` opts out
     when set to a falsey string; ``suffix`` names the dir (``~/.claude-<suffix>``).
 
+    ``session_id`` (when given) gives THIS run its own dir under
+    ``~/.claude-<suffix>/sessions/<session_id>``, so concurrent `claude`
+    subprocesses never share CLI state (locks, session files) and can't contend
+    — the durable fix for two same-agent runs overlapping. Pair it with
+    ``cleanup_session_config_dir`` once the subprocess is gone.
+
     Returns the dir to use, or None to fall back to the default ~/.claude.
     """
     override = os.environ.get(env_var)
@@ -117,7 +129,10 @@ def isolated_config_dir(
         return None
 
     home = os.path.expanduser("~/.claude")
-    target = override or f"{home}-{suffix}"
+    base = override or f"{home}-{suffix}"
+    # Per-session subdir keeps concurrent runs from sharing CLI state; without a
+    # session_id we keep the historical single shared dir.
+    target = os.path.join(base, _SESSION_DIR_SEGMENT, session_id) if session_id else base
     try:
         os.makedirs(target, exist_ok=True)
         if not explicit_auth:
@@ -132,6 +147,24 @@ def isolated_config_dir(
             "falling back to default ~/.claude", log_prefix, target, exc_info=True,
         )
         return None
+
+
+def cleanup_session_config_dir(path: str | None, *, log_prefix: str = "agent") -> None:
+    """Remove a per-session config dir created by ``isolated_config_dir(session_id=…)``.
+
+    Best-effort and defensive: only ever removes a dir that sits under the
+    ``/sessions/`` segment, so a shared base dir (or an operator override) can
+    never be deleted. No-op on a falsy path. Safe to call after the subprocess
+    has been disconnected.
+    """
+    if not path:
+        return
+    if f"{os.sep}{_SESSION_DIR_SEGMENT}{os.sep}" not in path:
+        return  # not a session-scoped dir — never touch the shared base
+    try:
+        shutil.rmtree(path, ignore_errors=True)
+    except Exception:  # noqa: BLE001 — cleanup must never break teardown
+        logger.debug("%s: could not remove session config dir %s", log_prefix, path, exc_info=True)
 
 
 def report_startup_failure_to_sentry(
