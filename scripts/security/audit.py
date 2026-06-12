@@ -339,7 +339,10 @@ def static_pattern_scan(targets: list[str]) -> list[Finding]:
         re.IGNORECASE,
     )
     sql_pattern = re.compile(
-        r"(execute|raw|text)\s*\(\s*(f[\"'].*\{.+\}.*[\"']|[\"'].*(SELECT|INSERT|UPDATE|DELETE).*[\"']\s*\+)",
+        # \b anchors the verb as a whole word — without it "set_context(" matches
+        # via its "...text(", "draw(" matches "raw(", etc. (false positives). Real
+        # execute()/text()/raw() calls still match (preceded by ., space, or line start).
+        r"\b(execute|raw|text)\s*\(\s*(f[\"'].*\{.+\}.*[\"']|[\"'].*(SELECT|INSERT|UPDATE|DELETE).*[\"']\s*\+)",
         re.IGNORECASE,
     )
     pii_log_pattern = re.compile(r"(log|print)\s*\(.*(email|phone|ssn|token|password)", re.IGNORECASE)
