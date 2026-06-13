@@ -57,10 +57,15 @@ def judge_available() -> bool:
     return bool(api_key or oauth)
 
 
-def build_judge_client():
+def build_judge_client(*, max_retries: int = 6):
     """Construct an ``anthropic.Anthropic`` client using the best available
     credential. Raises ``JudgeUnavailable`` when the SDK is missing or no
-    credential is set."""
+    credential is set.
+
+    ``max_retries`` is raised above the SDK default (2) because the judge runs
+    right after a heavy agent session, so the org can be momentarily rate-limited
+    — the SDK's exponential backoff rides out transient 429s.
+    """
     try:
         import anthropic
     except Exception as exc:  # pragma: no cover - import guard
@@ -68,13 +73,14 @@ def build_judge_client():
 
     api_key, oauth = resolve_credentials()
     if api_key:
-        return anthropic.Anthropic(api_key=api_key)
+        return anthropic.Anthropic(api_key=api_key, max_retries=max_retries)
     if oauth:
         # Bearer + oauth beta header, set as defaults so they ride every request
         # (including messages.parse()). x-api-key is intentionally NOT set.
         return anthropic.Anthropic(
             auth_token=oauth,
             default_headers={"anthropic-beta": _OAUTH_BETA},
+            max_retries=max_retries,
         )
     raise JudgeUnavailable(
         "no Claude credential found (set ANTHROPIC_API_KEY or CLAUDE_CODE_OAUTH_TOKEN)"

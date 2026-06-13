@@ -330,15 +330,24 @@ def _effort():
     return AgentEffort.MEDIUM
 
 
-def _is_auth_error(exc: Exception) -> bool:
+def _judge_skip_reason(exc: Exception) -> str | None:
+    """Classify a judge-call exception as an infra issue we should SKIP on
+    (bad/again-rate-limited credential, transient 5xx) vs. a real failure to
+    raise. A 429 is environment, not content degradation, so it skips."""
     try:
         import anthropic
 
         if isinstance(exc, (anthropic.AuthenticationError, anthropic.PermissionDeniedError)):
-            return True
+            return "judge credential did not authenticate the Messages API"
+        if isinstance(exc, anthropic.RateLimitError):
+            return "judge was rate-limited (429) even after retries — re-run later or raise the Anthropic tier"
+        if isinstance(exc, anthropic.APIStatusError) and getattr(exc, "status_code", None) in (500, 502, 503, 529):
+            return f"judge hit a transient API error ({exc.status_code})"
     except Exception:
         pass
-    return getattr(exc, "status_code", None) in (401, 403)
+    if getattr(exc, "status_code", None) in (401, 403, 429, 529):
+        return f"judge hit an auth/rate-limit error ({getattr(exc, 'status_code', '?')})"
+    return None
 
 
 def _emit_scorecard(scorecard) -> None:
@@ -421,8 +430,9 @@ def test_content_draft_post_with_images_passes_judge(maxaura_project, tmp_path, 
     try:
         scorecard = evaluate(content_post_rubric(), artifact)
     except Exception as exc:
-        if _is_auth_error(exc):
-            pytest.skip(f"judge credential did not authenticate the Messages API: {exc}")
+        reason = _judge_skip_reason(exc)
+        if reason:
+            pytest.skip(f"{reason}: {exc}")
         raise
 
     _emit_scorecard(scorecard)
