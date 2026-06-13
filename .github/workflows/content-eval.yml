@@ -1,21 +1,26 @@
 name: Content Agent Eval
 
-# Manual-only: this runs the REAL v3 content agent (Claude Agent SDK) end to end
-# — it drafts a post, generates every slide image via Gemini, and has a Claude
-# judge (vision) score the result. It costs money and needs a database, so it is
-# never wired to pull_request / push. Trigger it from the Actions tab when you
-# want to check the content agent against the rubric (e.g. before/after a prompt
-# or model change, to catch output degradation).
+# Runs the REAL v3 content agent (Claude Agent SDK) end to end — it drafts a
+# post, generates every slide image via Gemini, and has a Claude judge (vision)
+# score the result against the rubric. It costs money, so it is not wired to the
+# normal PR/push CI. Trigger it manually from the Actions tab to check the
+# content agent for output degradation.
 #
+# Postgres runs as an ephemeral service container, so no external DB is needed.
 # Required repository secrets:
 #   CLAUDE_CODE_OAUTH_TOKEN  — drives both the agent and the judge (reused).
-#   GEMINI_API_KEY           — slide image generation.
-#   EVAL_DATABASE_URL        — a scratch Postgres the eval can read/write.
+#   GEMINI_API_KEY           — slide image generation (without it the e2e skips).
 # Optional:
 #   ANTHROPIC_API_KEY        — if set, the judge prefers it over the OAuth token.
 
 on:
   workflow_dispatch:
+  # TEMP(verify): branch-scoped push trigger so this eval can be exercised from
+  # the feature branch (workflow_dispatch only works once the file is on the
+  # default branch). Remove this `push:` block after verification.
+  push:
+    branches:
+      - claude/sleepy-knuth-vtioc5
 
 permissions:
   contents: read
@@ -25,6 +30,26 @@ jobs:
     name: v3 content e2e + judge
     runs-on: ubuntu-latest
     timeout-minutes: 45
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: duct
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      # psycopg3 scheme up front: alembic uses DATABASE_URL verbatim, and
+      # db.session leaves an explicit +psycopg URL untouched.
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/duct
 
     defaults:
       run:
@@ -55,8 +80,6 @@ jobs:
         run: poetry install --with dev
 
       - name: Run database migrations
-        env:
-          DATABASE_URL: ${{ secrets.EVAL_DATABASE_URL }}
         run: poetry run python scripts/migrations.py upgrade head
 
       - name: Run content agent eval
@@ -64,11 +87,10 @@ jobs:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          DATABASE_URL: ${{ secrets.EVAL_DATABASE_URL }}
           DUCT_EVAL_OUTPUT: eval-scorecard.json
-        # -s so the rendered scorecard prints; the test also appends it to the
-        # GitHub step summary and writes eval-scorecard.json.
-        run: poetry run pytest -m live tests/test_content_post_e2e.py -s -v
+        # -rs surfaces skip reasons; -s prints the rendered scorecard. The test
+        # also appends the scorecard to the GitHub step summary.
+        run: poetry run pytest -m live tests/test_content_post_e2e.py -s -v -rs
 
       - name: Upload scorecard
         if: always()
