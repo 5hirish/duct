@@ -509,38 +509,47 @@ def _create_session_for(agent_type: str, session_id: str, body: dict):
 
         # Resolve the conversation inside an open session and read every field we
         # need before the session closes (commit expires the ORM instance).
-        with next(db_session()) as db:
-            conv, is_resume = resolve_or_create_conversation(
-                db,
-                agent_type=agent_type,
-                project_id=project_id,
-                mode=mode,
-                artifact_type=body.get("artifact_type"),
-                artifact_id=_as_uuid(body.get("artifact_id")),
-                conversation_id=_as_uuid(body.get("conversation_id")),
-                resume=bool(body.get("resume")),
-                start_fresh=bool(body.get("start_fresh")),
-            )
-            conv_id = conv.id
-            conv_mode = conv.mode
-            conv_artifact_type = conv.artifact_type
-            conv_artifact_id = conv.artifact_id
+        # Persistence is best-effort: if the DB is unavailable the agent still
+        # runs, just without chat history / resume (conv_* stay None).
+        conv_id = conv_mode = conv_artifact_type = conv_artifact_id = None
+        is_resume = False
+        try:
+            with next(db_session()) as db:
+                conv, is_resume = resolve_or_create_conversation(
+                    db,
+                    agent_type=agent_type,
+                    project_id=project_id,
+                    mode=mode,
+                    artifact_type=body.get("artifact_type"),
+                    artifact_id=_as_uuid(body.get("artifact_id")),
+                    conversation_id=_as_uuid(body.get("conversation_id")),
+                    resume=bool(body.get("resume")),
+                    start_fresh=bool(body.get("start_fresh")),
+                )
+                conv_id = conv.id
+                conv_mode = conv.mode
+                conv_artifact_type = conv.artifact_type
+                conv_artifact_id = conv.artifact_id
+        except Exception:
+            logger.warning("agents: conversation persistence unavailable for %s — "
+                           "running without history", session_id, exc_info=True)
 
         # The conversation's own mode wins on resume (the body's may be stale).
-        if conv_mode == "draft_post":
+        if (conv_mode or mode) == "draft_post":
             session = create_draft_session(session_id, project_id, plan_id=_as_uuid(body.get("plan_id")))
         else:
             session = create_plan_session(session_id, project_id)
 
-        session.conversation_id = conv_id
-        session.recorder = ConversationRecorder(conv_id)
-        session.resume = is_resume
-        # Derive the working artifact from the conversation so the runner's
-        # _content_context_xml + PIPELINE_FINISHED see the right id on resume.
-        if conv_artifact_type == "post" and conv_artifact_id:
-            session.post_id = conv_artifact_id
-        elif conv_artifact_type == "plan" and conv_artifact_id:
-            session.plan_id = conv_artifact_id
+        if conv_id is not None:
+            session.conversation_id = conv_id
+            session.recorder = ConversationRecorder(conv_id)
+            session.resume = is_resume
+            # Derive the working artifact from the conversation so the runner's
+            # _content_context_xml + PIPELINE_FINISHED see the right id on resume.
+            if conv_artifact_type == "post" and conv_artifact_id:
+                session.post_id = conv_artifact_id
+            elif conv_artifact_type == "plan" and conv_artifact_id:
+                session.plan_id = conv_artifact_id
         return session
     # audit + insights share the AuditSession shape.
     return create_audit_session(session_id, agent_type)
