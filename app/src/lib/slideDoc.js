@@ -53,8 +53,10 @@ function fullImageLayer(slide) {
   }
   let badge = `image · ${escAttr(slide.aspect_ratio || "9:16")}`;
   if (slide.role) badge += ` · ${escAttr(slide.role)}`;
+  // Clamp the prompt to a few lines (CSS in buildSlideDoc) so a long prompt
+  // can't overflow the frame and collide with the caption; full text on hover.
   const prompt = (slide.image_prompt || "").trim()
-    ? `<div class="img-ph-prompt">${escCap(slide.image_prompt)}</div>`
+    ? `<div class="img-ph-prompt" title="${escAttr(slide.image_prompt)}">${escCap(slide.image_prompt)}</div>`
     : `<div class="img-ph-prompt is-empty">no image prompt yet</div>`;
   return `<div class="img-placeholder"><div class="img-placeholder-inner"><div class="img-ph-badge">${badge}</div>${prompt}</div></div>`;
 }
@@ -66,7 +68,7 @@ function cellImgOrPh(it) {
     return o;
   }
   if ((it.image_prompt || "").trim()) {
-    return `<div class="cell-ph"><div class="cell-ph-text">${escCap(it.image_prompt)}</div></div>`;
+    return `<div class="cell-ph"><div class="cell-ph-text" title="${escAttr(it.image_prompt)}">${escCap(it.image_prompt)}</div></div>`;
   }
   return `<div class="cell-ph"><div class="cell-ph-text is-empty">no prompt yet</div></div>`;
 }
@@ -144,7 +146,11 @@ export function buildSlideDoc(slide, n, headHtml, zoom) {
   return (
     `<!doctype html><html><head><meta charset="utf-8">${headHtml}` +
     `<style>:root{--zoom:${zoom}} html,body{margin:0;padding:0;background:#000} ` +
-    `body{display:block !important;align-items:initial;gap:0}</style>` +
+    `body{display:block !important;align-items:initial;gap:0} ` +
+    // Truncate long image-prompt placeholders to a few lines with an ellipsis so
+    // they stay inside the frame; the full prompt shows on hover (title attr).
+    `.img-ph-prompt{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:7;line-clamp:7;overflow:hidden} ` +
+    `.cell-ph-text{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;line-clamp:4;overflow:hidden}</style>` +
     `</head><body>${renderSlideBody(slide, n)}</body></html>`
   );
 }

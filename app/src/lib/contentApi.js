@@ -13,6 +13,9 @@ import {
   openAgentStream,
   sendAgentMessage,
   closeAgentSession,
+  getAgentConversation,
+  listAgentConversations,
+  archiveAgentConversation,
 } from "./api";
 import { cached, invalidate } from "./contentCache";
 
@@ -59,18 +62,22 @@ async function jsonOrThrow(res) {
  * Returns { body: ReadableStream, sessionId }. Events emitted between create and
  * stream-open are buffered server-side in the session queue, so none are lost.
  */
-export async function openPlanStream({ projectId, startDate } = {}, { signal, onSession } = {}) {
-  const { session_id } = await createAgentSession(AGENT_TYPE, {
+export async function openPlanStream(
+  { projectId, startDate, conversationId, resume, startFresh, artifactType, artifactId } = {},
+  { signal, onSession } = {},
+) {
+  const { session_id, conversation_id } = await createAgentSession(AGENT_TYPE, {
     mode: "plan_month",
     project_id: projectId,
     ...(startDate ? { start_date: startDate } : {}),
+    ...resumeFields({ conversationId, resume, startFresh, artifactType, artifactId }),
   });
-  // Surface the id the instant the backend session exists (and its worker is
+  // Surface the ids the instant the backend session exists (and its worker is
   // spawned) — before the abortable stream open — so the caller can close an
   // orphaned session if it was torn down mid-create (e.g. StrictMode remount).
-  onSession?.(session_id);
+  onSession?.({ sessionId: session_id, conversationId: conversation_id });
   const body = await openAgentStream(AGENT_TYPE, session_id, { signal });
-  return { body, sessionId: session_id };
+  return { body, sessionId: session_id, conversationId: conversation_id };
 }
 
 /**
@@ -79,10 +86,11 @@ export async function openPlanStream({ projectId, startDate } = {}, { signal, on
  *   GET  /api/agents/tiktok_studio/sessions/{id}/stream
  */
 export async function openPostStream(
-  { projectId, planId, dayIndex, topic, pillar, channel } = {},
+  { projectId, planId, dayIndex, topic, pillar, channel,
+    conversationId, resume, startFresh, artifactType, artifactId } = {},
   { signal, onSession } = {},
 ) {
-  const { session_id } = await createAgentSession(AGENT_TYPE, {
+  const { session_id, conversation_id } = await createAgentSession(AGENT_TYPE, {
     mode: "draft_post",
     project_id: projectId,
     ...(planId    ? { plan_id:    planId    } : {}),
@@ -90,10 +98,39 @@ export async function openPostStream(
     ...(topic     ? { topic     } : {}),
     ...(pillar    ? { pillar    } : {}),
     ...(channel   ? { channel   } : {}),
+    ...resumeFields({ conversationId, resume, startFresh, artifactType, artifactId }),
   });
-  onSession?.(session_id);
+  onSession?.({ sessionId: session_id, conversationId: conversation_id });
   const body = await openAgentStream(AGENT_TYPE, session_id, { signal });
-  return { body, sessionId: session_id };
+  return { body, sessionId: session_id, conversationId: conversation_id };
+}
+
+/** Conversation/resume body fields shared by the openers — omitted keys keep
+ * the normal first-open behaviour (server auto-creates a fresh conversation). */
+function resumeFields({ conversationId, resume, startFresh, artifactType, artifactId } = {}) {
+  return {
+    ...(conversationId ? { conversation_id: conversationId } : {}),
+    ...(resume         ? { resume: true } : {}),
+    ...(startFresh     ? { start_fresh: true } : {}),
+    ...(artifactType   ? { artifact_type: artifactType } : {}),
+    ...(artifactId     ? { artifact_id: artifactId } : {}),
+  };
+}
+
+/** Fetch a content conversation + its event log for chat rehydration. */
+export async function getContentConversation(conversationId) {
+  return getAgentConversation(AGENT_TYPE, conversationId);
+}
+
+/** List content conversations (resume lookup / history). */
+export async function listContentConversations(filters) {
+  return listAgentConversations(AGENT_TYPE, filters);
+}
+
+/** Archive a content conversation (start-fresh support). */
+export async function archiveContentConversation(conversationId) {
+  if (!conversationId) return;
+  await archiveAgentConversation(AGENT_TYPE, conversationId).catch(() => {});
 }
 
 export async function answerContentQuestions(sessionId, answers) {

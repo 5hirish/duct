@@ -162,6 +162,25 @@ def _project_or_404(db: Session, project_id: UUID) -> Project:
 # ---------------------------------------------------------------------------
 
 
+def _link_conversation_artifact(session_id: str, kind: str) -> None:
+    """Bind the session's persisted conversation to the artifact it just produced
+    (post/plan) so 'click post → resume' can find it. Best-effort: a brand-new
+    draft creates its conversation before the post exists, so the id is only
+    known once the worker finishes. No-op when the session isn't tracked."""
+    sess = get_session(session_id)
+    conv_id = getattr(sess, "conversation_id", None) if sess else None
+    artifact_id = getattr(sess, "post_id" if kind == "post" else "plan_id", None) if sess else None
+    if not conv_id or not artifact_id:
+        return
+    try:
+        from agents.content.persistence import link_artifact
+        with next(db_session()) as db:
+            link_artifact(db, conv_id, kind, artifact_id)
+    except Exception:
+        logger.warning("content: failed to link conversation %s → %s %s",
+                       conv_id, kind, artifact_id, exc_info=True)
+
+
 async def _run_plan_worker(
     session_id: str,
     project_id: UUID,
@@ -173,6 +192,7 @@ async def _run_plan_worker(
             raise ValueError("ANTHROPIC_API_KEY is not configured")
         runner = ClaudeContentRunner(api_key=api_key)
         await runner.run_plan(session_id, project_id, emit_fn)
+        _link_conversation_artifact(session_id, "plan")
     except Exception as exc:
         logger.exception("content: plan worker error for session %s", session_id)
         await emit_fn({
@@ -290,6 +310,7 @@ async def _run_draft_worker(
                         plan.updated_at = datetime.now(timezone.utc)
                         db.add(plan)
                         db.commit()
+        _link_conversation_artifact(session_id, "post")
     except Exception as exc:
         logger.exception("content: draft worker error for session %s", session_id)
         await emit_fn({
@@ -824,6 +845,9 @@ class PostOut(BaseModel):
     notes:         str
     created_at:    str
     updated_at:    str
+    # The active agent conversation for this post (if any) — drives "click post →
+    # resume the chat" on the detail page. None ⇒ open a fresh session.
+    active_conversation_id: UUID | None = None
 
 
 def _post_out(
@@ -831,9 +855,11 @@ def _post_out(
     *,
     fmt: tuple[str, str] | None = None,
     thumbnail_url: str = "",
+    active_conversation_id: UUID | None = None,
 ) -> PostOut:
     """Serialize a post. `fmt` is an optional (slug, name) for the linked format."""
     return PostOut(
+        active_conversation_id=active_conversation_id,
         id=p.id,
         project_id=p.project_id,
         plan_id=p.plan_id,
@@ -979,7 +1005,16 @@ def get_post(post_id: UUID, db: Session = Depends(db_session)) -> PostOut:
     post = db.get(ContentPost, post_id)
     if post is None:
         raise HTTPException(404, "Post not found")
-    return _enrich_one(db, post)
+    from agents.content.persistence import find_active_conversation
+    conv = find_active_conversation(db, artifact_type="post", artifact_id=post.id)
+    by_id = _format_map(db, post.project_id)
+    thumb = _thumb_map(db, [post.id]).get(post.id, "")
+    return _post_out(
+        post,
+        fmt=_fmt_for(post, by_id),
+        thumbnail_url=thumb,
+        active_conversation_id=conv.id if conv else None,
+    )
 
 
 @router.post("/content/posts", status_code=201)

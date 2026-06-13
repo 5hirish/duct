@@ -42,9 +42,18 @@ from agents.audit.v3.runner import (
     create_audit_session,
     get_session,
 )
+from agents.content.persistence import (
+    ConversationRecorder,
+    archive_conversation,
+    get_conversation,
+    list_conversations,
+    load_events,
+    resolve_or_create_conversation,
+)
 from agents.content.schema import DraftPostRequest, PlanRequest
 from agents.content.v3.runner import create_draft_session, create_plan_session
 from agents.core import session as _core_session
+from db.session import get_session as db_session
 from agents.engines import PROVIDER_CONFIG_ATTR, resolve_engine, resolve_engine_model, resolve_engine_provider
 from agents.registry import AgentType, get_spec, list_specs
 from config import claude_oauth_available, get_configs
@@ -156,7 +165,13 @@ async def create_session(agent_type: str, request: Request) -> dict:
     await _dispatch_start(agent_type, session_id, body, emit_fn)
 
     stream_url = f"/api/agents/{agent_type}/sessions/{session_id}/stream"
-    return {"session_id": session_id, "stream_url": stream_url, "agent_type": agent_type}
+    conversation_id = getattr(session, "conversation_id", None)
+    return {
+        "session_id": session_id,
+        "stream_url": stream_url,
+        "agent_type": agent_type,
+        "conversation_id": str(conversation_id) if conversation_id else None,
+    }
 
 
 @router.get("/{agent_type}/sessions/{session_id}/stream")
@@ -228,6 +243,8 @@ async def send_message(agent_type: str, session_id: str, msg: AgentMessage) -> d
     # off the stale list while a human is interacting with it.
     _core_session.touch_session(session)
 
+    recorder = getattr(session, "recorder", None)
+
     if msg.type == "answer":
         if msg.answers is None:
             raise HTTPException(422, "answers field required for type='answer'")
@@ -238,11 +255,18 @@ async def send_message(agent_type: str, session_id: str, msg: AgentMessage) -> d
             fut.set_result(msg.answers)  # type: ignore[union-attr]
         except asyncio.InvalidStateError:
             raise HTTPException(409, "Question already answered")
+        if recorder is not None:
+            await recorder.record_answer(msg.answers)
         return {"status": "ok", "type": "answer"}
 
     # type == "chat"
     if msg.content is None:
         raise HTTPException(422, "content field required for type='chat'")
+
+    # Persist the raw user text (before the XML working-context wrapper) so chat
+    # history rehydrates as the user actually typed it.
+    if recorder is not None:
+        await recorder.record_user(msg.content)
 
     # Ground each follow-up in the session's current artifact so edits act on the
     # persisted state, not just the SDK process's (prunable) memory.
@@ -387,23 +411,137 @@ async def delete_session(agent_type: str, session_id: str) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Persisted conversations (chat history / resume)
+# ---------------------------------------------------------------------------
+
+def _conversation_summary(conv) -> dict:
+    return {
+        "id": str(conv.id),
+        "agent_type": conv.agent_type,
+        "project_id": str(conv.project_id),
+        "mode": conv.mode,
+        "artifact_type": conv.artifact_type,
+        "artifact_id": str(conv.artifact_id) if conv.artifact_id else None,
+        "title": conv.title,
+        "status": conv.status,
+        "last_seq": conv.last_seq,
+        "created_at": conv.created_at.isoformat() if conv.created_at else None,
+        "last_active_at": conv.last_active_at.isoformat() if conv.last_active_at else None,
+    }
+
+
+@router.get("/{agent_type}/conversations")
+async def list_agent_conversations(
+    agent_type: str,
+    project_id: str | None = None,
+    artifact_type: str | None = None,
+    artifact_id: str | None = None,
+    include_archived: bool = False,
+) -> list[dict]:
+    """List conversations for an agent — used for resume lookup and history."""
+    with next(db_session()) as db:
+        convs = list_conversations(
+            db,
+            agent_type=agent_type,
+            project_id=UUID(project_id) if project_id else None,
+            artifact_type=artifact_type,
+            artifact_id=UUID(artifact_id) if artifact_id else None,
+            include_archived=include_archived,
+        )
+        return [_conversation_summary(c) for c in convs]
+
+
+@router.get("/{agent_type}/conversations/{conversation_id}")
+async def get_agent_conversation(agent_type: str, conversation_id: str) -> dict:
+    """Conversation + its event log (ordered by seq) for UI rehydration."""
+    with next(db_session()) as db:
+        conv = get_conversation(db, UUID(conversation_id))
+        if not conv or conv.agent_type != agent_type:
+            raise HTTPException(404, f"Conversation {conversation_id!r} not found.")
+        events = load_events(db, conv.id)
+        return {
+            "conversation": _conversation_summary(conv),
+            "events": [
+                {"seq": e.seq, "kind": e.kind, "data": e.data,
+                 "created_at": e.created_at.isoformat() if e.created_at else None}
+                for e in events
+            ],
+        }
+
+
+@router.post("/{agent_type}/conversations/{conversation_id}/archive")
+async def archive_agent_conversation(agent_type: str, conversation_id: str) -> dict:
+    """Archive a conversation (start-fresh support) — frees the per-artifact
+    active-conversation slot so a new one can be created."""
+    with next(db_session()) as db:
+        conv = get_conversation(db, UUID(conversation_id))
+        if not conv or conv.agent_type != agent_type:
+            raise HTTPException(404, f"Conversation {conversation_id!r} not found.")
+        archive_conversation(db, conv.id)
+    return {"status": "ok"}
+
+
+# ---------------------------------------------------------------------------
 # Agent-specific pipeline dispatchers
 # ---------------------------------------------------------------------------
 
 def _create_session_for(agent_type: str, session_id: str, body: dict):
     """Create + register the right session type for the agent (one shared
-    registry; see agents/core/session.py)."""
+    registry; see agents/core/session.py).
+
+    For tiktok_studio this also resolves-or-creates the persisted conversation
+    (chat history / resume) and stamps it onto the session so the runner can
+    re-prime from the DB and the recorder can persist each turn."""
     if agent_type == AgentType.TIKTOK_STUDIO:
         try:
             project_id = UUID(str(body["project_id"]))
         except Exception as exc:
             raise HTTPException(422, "tiktok_studio requires a valid project_id") from exc
-        if body.get("mode") == "draft_post":
-            plan_id = body.get("plan_id")
-            return create_draft_session(
-                session_id, project_id, plan_id=UUID(str(plan_id)) if plan_id else None
+
+        mode = body.get("mode", "plan_month")
+        if mode not in ("plan_month", "draft_post"):
+            raise HTTPException(422, f"invalid mode {mode!r}")
+
+        # Resume / start-fresh inputs (all optional — omitting them is the
+        # normal first-open path).
+        def _as_uuid(v):
+            return UUID(str(v)) if v else None
+
+        # Resolve the conversation inside an open session and read every field we
+        # need before the session closes (commit expires the ORM instance).
+        with next(db_session()) as db:
+            conv, is_resume = resolve_or_create_conversation(
+                db,
+                agent_type=agent_type,
+                project_id=project_id,
+                mode=mode,
+                artifact_type=body.get("artifact_type"),
+                artifact_id=_as_uuid(body.get("artifact_id")),
+                conversation_id=_as_uuid(body.get("conversation_id")),
+                resume=bool(body.get("resume")),
+                start_fresh=bool(body.get("start_fresh")),
             )
-        return create_plan_session(session_id, project_id)
+            conv_id = conv.id
+            conv_mode = conv.mode
+            conv_artifact_type = conv.artifact_type
+            conv_artifact_id = conv.artifact_id
+
+        # The conversation's own mode wins on resume (the body's may be stale).
+        if conv_mode == "draft_post":
+            session = create_draft_session(session_id, project_id, plan_id=_as_uuid(body.get("plan_id")))
+        else:
+            session = create_plan_session(session_id, project_id)
+
+        session.conversation_id = conv_id
+        session.recorder = ConversationRecorder(conv_id)
+        session.resume = is_resume
+        # Derive the working artifact from the conversation so the runner's
+        # _content_context_xml + PIPELINE_FINISHED see the right id on resume.
+        if conv_artifact_type == "post" and conv_artifact_id:
+            session.post_id = conv_artifact_id
+        elif conv_artifact_type == "plan" and conv_artifact_id:
+            session.plan_id = conv_artifact_id
+        return session
     # audit + insights share the AuditSession shape.
     return create_audit_session(session_id, agent_type)
 
@@ -434,10 +572,18 @@ async def _start_tiktok_studio(session_id: str, body: dict, emit_fn: Any) -> Non
     from routes.content import _run_draft_worker, _run_plan_worker
 
     mode = body.get("mode", "plan_month")
-    # `mode` is a dispatch discriminator, not pipeline config — strip it before
-    # validating against the extra="forbid" request models (which have no such
-    # field and would otherwise reject the whole body).
-    config = {k: v for k, v in body.items() if k != "mode"}
+    # `mode` is a dispatch discriminator, and the conversation/resume fields are
+    # consumed by _create_session_for — strip them all before validating against
+    # the extra="forbid" request models (which would otherwise reject the body).
+    _control_fields = {"mode", "conversation_id", "resume", "start_fresh", "artifact_type", "artifact_id"}
+    config = {k: v for k, v in body.items() if k not in _control_fields}
+
+    # Persist the conversation by wrapping the emit callback (the runner already
+    # emits every event — see agents/content/persistence.ConversationRecorder).
+    session = get_session(session_id)
+    recorder = getattr(session, "recorder", None) if session else None
+    if recorder is not None:
+        emit_fn = recorder.wrap_emit(emit_fn)
     if mode == "draft_post":
         try:
             req = DraftPostRequest.model_validate(config)

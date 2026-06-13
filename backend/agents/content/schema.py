@@ -14,7 +14,7 @@ import asyncio
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from enum import StrEnum
-from typing import Literal
+from typing import Any, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -201,6 +201,12 @@ class ContentSession(BaseAgentSession):
     mode: RunMode
     plan_id: UUID | None = None
     post_id: UUID | None = None
+    # Persisted-conversation linkage (session resume / chat history). Set by the
+    # route layer when a session is created; the runner re-primes from the DB when
+    # resume is True. recorder persists each turn (agents/content/persistence.py).
+    conversation_id: UUID | None = None
+    recorder: Any = None
+    resume: bool = False
     todos: list[dict] = field(default_factory=list)
     # render_id -> asyncio.Future, resolved by the frontend's slide-render POST.
     # Bridges the agent's render_slide tool to client-side rasterization (same

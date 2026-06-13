@@ -126,21 +126,28 @@ function ChatBubble({ role, text, thinking, streaming }) {
       <div className="w-full space-y-1">
         <ThinkingBlock thinking={thinking} streaming={streaming && !text} />
         {text && (
-          <div className={[
-            "rounded-2xl rounded-bl-sm px-4 py-3 text-sm bg-muted text-foreground",
-            // react-markdown@9+ removed the className prop; the prose styles that
-            // used to sit on <ReactMarkdown> live on this wrapper now.
-            "prose prose-sm dark:prose-invert max-w-none",
-            "prose-p:my-3 prose-p:leading-relaxed prose-p:text-sm",
-            "prose-headings:font-semibold prose-headings:text-foreground prose-headings:mt-5 prose-headings:mb-2",
-            "prose-h1:text-xl prose-h2:text-base prose-h3:text-[15px] prose-h4:text-sm",
-            "prose-ul:my-2.5 prose-ol:my-2.5 prose-li:my-1.5 prose-li:leading-relaxed",
-            "prose-strong:text-foreground prose-strong:font-semibold",
-            // prose-a/code/pre/table are handled by the components prop below
-          ].join(" ")}>
+          <div className="rounded-2xl rounded-bl-sm px-4 py-3 text-sm bg-muted text-foreground max-w-none">
+            {/* Explicit per-element styling — the app has NO @tailwindcss/typography
+                plugin, so `prose` classes are no-ops and Tailwind's preflight strips
+                heading sizes, list bullets and paragraph margins. Style every element
+                directly (same approach as ThinkingBlock) so markdown renders, not blobs. */}
             <ReactMarkdown
               remarkPlugins={[remarkGfm, remarkBreaks]}
               components={{
+                // Headings
+                h1: ({ children }) => <h1 className="text-lg font-bold text-foreground mt-4 mb-2 first:mt-0">{children}</h1>,
+                h2: ({ children }) => <h2 className="text-base font-bold text-foreground mt-4 mb-1.5 first:mt-0">{children}</h2>,
+                h3: ({ children }) => <h3 className="text-sm font-semibold text-foreground mt-3 mb-1 first:mt-0">{children}</h3>,
+                h4: ({ children }) => <h4 className="text-sm font-semibold text-foreground/90 mt-2.5 mb-1 first:mt-0">{children}</h4>,
+                // Paragraph
+                p: ({ children }) => <p className="my-2.5 leading-relaxed first:mt-0 last:mb-0">{children}</p>,
+                // Lists — restore bullets/numbers (preflight removes list-style)
+                ul: ({ children }) => <ul className="list-disc pl-5 my-2.5 space-y-1 marker:text-muted-foreground/70 [&_ul]:my-1 [&_ol]:my-1">{children}</ul>,
+                ol: ({ children }) => <ol className="list-decimal pl-5 my-2.5 space-y-1 marker:text-muted-foreground/70 [&_ul]:my-1 [&_ol]:my-1">{children}</ol>,
+                li: ({ children }) => <li className="leading-relaxed pl-0.5">{children}</li>,
+                strong: ({ children }) => <strong className="font-semibold text-foreground">{children}</strong>,
+                em: ({ children }) => <em className="italic">{children}</em>,
+                hr: () => <hr className="border-border my-4" />,
                 // Inline vs fenced code block
                 code({ className, children }) {
                   const { language, isBlock } = resolveCode(className, children);
@@ -161,7 +168,7 @@ function ChatBubble({ role, text, thinking, streaming }) {
                   );
                 },
                 // Tables
-                table({ children }) { return <table className="border-collapse my-3 w-full text-sm">{children}</table>; },
+                table({ children }) { return <div className="overflow-x-auto my-3"><table className="border-collapse w-full text-sm">{children}</table></div>; },
                 th({ children }) { return <th className="border border-border px-3 py-1.5 font-semibold text-left bg-muted/50">{children}</th>; },
                 td({ children }) { return <td className="border border-border px-3 py-1.5">{children}</td>; },
                 // Blockquote

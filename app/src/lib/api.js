@@ -313,6 +313,47 @@ export async function closeAgentSession(agentType, sessionId) {
 }
 
 // ---------------------------------------------------------------------------
+// Persisted conversations (chat history / resume)
+// ---------------------------------------------------------------------------
+
+/** List an agent's conversations (resume lookup / history). Returns an array of
+ * conversation summaries. Pass filters: { projectId, artifactType, artifactId }. */
+export async function listAgentConversations(agentType, { projectId, artifactType, artifactId, includeArchived } = {}) {
+  const qs = new URLSearchParams();
+  if (projectId) qs.set("project_id", projectId);
+  if (artifactType) qs.set("artifact_type", artifactType);
+  if (artifactId) qs.set("artifact_id", artifactId);
+  if (includeArchived) qs.set("include_archived", "true");
+  const res = await fetch(
+    `${BASE}/api/agents/${encodeURIComponent(agentType)}/conversations?${qs.toString()}`,
+    { headers: backendApiHeaders() }
+  );
+  if (!res.ok) throw new Error(`List conversations failed: ${res.status}`);
+  return res.json();
+}
+
+/** Fetch a conversation + its event log for UI rehydration.
+ * Returns { conversation, events: [{ seq, kind, data, created_at }] }. */
+export async function getAgentConversation(agentType, conversationId) {
+  const res = await fetch(
+    `${BASE}/api/agents/${encodeURIComponent(agentType)}/conversations/${encodeURIComponent(conversationId)}`,
+    { headers: backendApiHeaders() }
+  );
+  if (!res.ok) throw new Error(`Get conversation failed: ${res.status}`);
+  return res.json();
+}
+
+/** Archive a conversation (start-fresh support). */
+export async function archiveAgentConversation(agentType, conversationId) {
+  const res = await fetch(
+    `${BASE}/api/agents/${encodeURIComponent(agentType)}/conversations/${encodeURIComponent(conversationId)}/archive`,
+    { method: "POST", headers: backendApiHeaders() }
+  );
+  if (!res.ok) throw new Error(`Archive conversation failed: ${res.status}`);
+  return res.json();
+}
+
+// ---------------------------------------------------------------------------
 // Lead magnet
 // ---------------------------------------------------------------------------
 

@@ -101,7 +101,7 @@ _ASK_USER_TIMEOUT_SECS = 600.0
 # Left alone the run sits idle until the chat timeout and then reports a hollow
 # "finished" with a null id. Nudging once to persist salvages most of these,
 # exactly as it does for audit. The nudge rides the same chat_queue the user
-# types into, so message_gen feeds it back as the next turn.
+# types into, so the main loop's chat turn picks it up as the next turn.
 _RECOVERY_NUDGE_PLAN = (
     "You analysed everything but did not persist the plan. Emit the complete "
     '<duct_report>{"type":"plan", …}</duct_report> now and then call submit_plan '
@@ -708,17 +708,15 @@ async def _run(
     # Message generator — initial prompt then chat queue
     # ------------------------------------------------------------------
 
-    async def message_gen():
+    async def _initial_prompt_gen():
+        # Yield the initial prompt ONCE and return so the generator COMPLETES.
+        # The SDK only flushes a streaming-input turn to the model when its input
+        # generator ends; the old single message_gen yielded the prompt then
+        # blocked forever on chat_queue, so the stream never closed, the first
+        # turn was never sent, and the model never replied — the run hung forever
+        # at "Loading project". Follow-up turns are now discrete query() calls in
+        # the main loop (mirrors the audit runner).
         yield {"type": "user", "message": {"role": "user", "content": initial_prompt}}
-        while True:
-            try:
-                msg = await asyncio.wait_for(session.chat_queue.get(), timeout=chat_idle_timeout)
-            except asyncio.TimeoutError:
-                logger.info("content: session %s chat queue idle", session_id)
-                break
-            if msg is None:
-                break
-            yield {"type": "user", "message": msg}
 
     # ------------------------------------------------------------------
     # Streaming <duct_report> tag parser
@@ -818,8 +816,8 @@ async def _run(
         # End of a turn-group: the model has stopped and is now idle awaiting the
         # next user message. If it finished without persisting the deliverable,
         # nudge it once (audit's recovery pattern) before it sits idle until the
-        # chat timeout and the run reports a hollow "finished". message_gen feeds
-        # the nudge back as the next turn via the chat queue.
+        # chat timeout and the run reports a hollow "finished". The main loop's
+        # chat turn pops this off the chat queue and sends it as the next turn.
         nonlocal _nudged
         if not _artifact_produced() and not _nudged:
             _nudged = True
@@ -851,47 +849,75 @@ async def _run(
             agent_label="content engine",
             mode=session.mode,
         )
-        await client.query(message_gen())
+        async def _receive_one_turn(*, bound_first_output: bool = False) -> None:
+            # Consume one full receive_response() turn. On the first turn we bound
+            # time-to-first-*model*-output: not the first message (that's the init
+            # SystemMessage, which arrives in ~0.1s and would disarm the guard
+            # before the model ever speaks), but the first NON-system message. If
+            # the subprocess connects yet never produces a turn, this raises
+            # (→ PIPELINE_FAILED) instead of hanging forever. Once the model is
+            # talking, subsequent waits are unbounded: mid-turn silences
+            # (AskUserQuestion, a long research sub-agent, image gen) are
+            # legitimate and tearing the SDK down during one surfaces a bogus
+            # stall error plus a "hook_0: AbortError".
+            responses = client.receive_response()
+            armed = bound_first_output
+            while True:
+                try:
+                    if armed:
+                        msg = await asyncio.wait_for(
+                            responses.__anext__(), timeout=_STALL_TIMEOUT_SECS
+                        )
+                    else:
+                        msg = await responses.__anext__()
+                except StopAsyncIteration:
+                    break
+                except asyncio.TimeoutError as exc:
+                    captured = _captured_stderr(_stderr_buf, None)
+                    raise RuntimeError(
+                        f"Content agent produced no output for {_STALL_TIMEOUT_SECS:.0f}s — "
+                        "the run stalled before completing (the subprocess connected "
+                        "but emitted nothing)."
+                        + (f"\n  subprocess stderr:\n{captured}" if captured else
+                           " No subprocess stderr was captured.")
+                    ) from exc
+                if armed and type(msg).__name__ != "SystemMessage":
+                    armed = False  # model is responding — disarm the startup guard
+                await pump_stream_event(
+                    msg,
+                    on_text=_on_text_delta,
+                    on_thinking=_on_thinking,
+                    on_message_stop=_on_msg_stop,
+                    on_result=_on_result,
+                    on_todo=_on_todo,
+                )
 
-        # Startup watchdog: the SDK connects fine but can stall *before* it
-        # produces anything (e.g. an in-process MCP server that never readies),
-        # leaving the UI on an infinite "Starting…" spinner. Bound ONLY the first
-        # message so that stall raises (→ PIPELINE_FAILED) instead of hanging.
-        # Once output is flowing, do NOT bound subsequent messages: mid-turn
-        # silences are legitimate (AskUserQuestion awaiting the user, a long
-        # research sub-agent, image generation), and tearing the SDK down during
-        # one surfaces a bogus stall error plus a "hook_0: AbortError".
-        _responses = client.receive_response()
-        _seen_output = False
+        # Turn 1: the initial synthesis prompt, sent as a COMPLETING generator so
+        # the SDK actually flushes it to the model (see _initial_prompt_gen).
+        await client.query(_initial_prompt_gen())
+        await _receive_one_turn(bound_first_output=True)
+
+        # Follow-up turns: recovery nudges (queued by _on_result when a turn ends
+        # with no artifact persisted) and user chat / AskUserQuestion answers,
+        # each sent as its own discrete query() — mirrors the audit runner's
+        # multi-turn loop. The connected client keeps the subprocess alive across
+        # query() + receive_response() cycles.
         while True:
             try:
-                if _seen_output:
-                    msg = await _responses.__anext__()
-                else:
-                    msg = await asyncio.wait_for(
-                        _responses.__anext__(), timeout=_STALL_TIMEOUT_SECS
-                    )
-                    _seen_output = True
-            except StopAsyncIteration:
+                chat_msg = await asyncio.wait_for(
+                    session.chat_queue.get(), timeout=chat_idle_timeout
+                )
+            except asyncio.TimeoutError:
+                logger.info("content: session %s chat idle timeout", session_id)
                 break
-            except asyncio.TimeoutError as exc:
-                captured = _captured_stderr(_stderr_buf, None)
-                raise RuntimeError(
-                    f"Content agent produced no output for {_STALL_TIMEOUT_SECS:.0f}s — "
-                    "the run stalled before completing (the subprocess connected but "
-                    "emitted nothing)."
-                    + (f"\n  subprocess stderr:\n{captured}" if captured else
-                       " No subprocess stderr was captured.")
-                ) from exc
+            if chat_msg is None:
+                break
 
-            await pump_stream_event(
-                msg,
-                on_text=_on_text_delta,
-                on_thinking=_on_thinking,
-                on_message_stop=_on_msg_stop,
-                on_result=_on_result,
-                on_todo=_on_todo,
-            )
+            async def _chat_gen(m=chat_msg):
+                yield {"type": "user", "message": m}
+
+            await client.query(_chat_gen())
+            await _receive_one_turn()
     except Exception:
         logger.exception("content v3: run failed for session %s", session_id)
         raise
@@ -1006,9 +1032,15 @@ class ClaudeContentRunner:
         })
 
         system_prompt = build_orchestrator_system_prompt(brand, "plan_month")
-        initial_prompt = build_plan_user_prompt(
-            brand, history=[], formats=[], avatars=[], research=research,
-        )
+        if getattr(session, "resume", False) and getattr(session, "conversation_id", None):
+            from agents.content.persistence import build_resume_initial_prompt
+            initial_prompt = await build_resume_initial_prompt(session, self._api_key) or (
+                "Resume this conversation. Greet the user briefly and wait for their instruction."
+            )
+        else:
+            initial_prompt = build_plan_user_prompt(
+                brand, history=[], formats=[], avatars=[], research=research,
+            )
 
         try:
             await _run(
@@ -1097,16 +1129,22 @@ class ClaudeContentRunner:
         })
 
         system_prompt = build_orchestrator_system_prompt(brand, "draft_post", channel=ch)
-        initial_prompt = build_post_user_prompt(
-            brand,
-            day,
-            topic=topic,
-            pillar=pillar,
-            format_slug=format_slug,
-            avatar=None,
-            recent_posts=[],
-            channel=ch,
-        )
+        if getattr(session, "resume", False) and getattr(session, "conversation_id", None):
+            from agents.content.persistence import build_resume_initial_prompt
+            initial_prompt = await build_resume_initial_prompt(session, self._api_key) or (
+                "Resume this conversation. Greet the user briefly and wait for their instruction."
+            )
+        else:
+            initial_prompt = build_post_user_prompt(
+                brand,
+                day,
+                topic=topic,
+                pillar=pillar,
+                format_slug=format_slug,
+                avatar=None,
+                recent_posts=[],
+                channel=ch,
+            )
 
         try:
             await _run(
