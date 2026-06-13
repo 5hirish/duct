@@ -138,6 +138,13 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
     }
     switch (event.event) {
 
+      // Leave the "Starting session…" state the instant the backend responds —
+      // before any step arrives — so the right-pane PipelineProgress skeleton
+      // shows immediately instead of waiting on the first STEP_STARTED.
+      case ContentEvent.PIPELINE_STARTED:
+        setPhase((p) => (p === Phase.STARTING ? Phase.PIPELINE : p));
+        break;
+
       case ContentEvent.STEP_STARTED:
         setPhase(Phase.PIPELINE);
         setSteps((prev) => {

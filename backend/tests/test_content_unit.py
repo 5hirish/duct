@@ -531,7 +531,7 @@ def test_draft_post_prompt_contains_critical_quality_rules():
 
 
 def test_sentry_startup_report_fingerprints_by_kind_and_never_raises(monkeypatch):
-    from agents.content.v3 import runner
+    from agents.core import claude_sdk
 
     scopes: list = []
 
@@ -569,8 +569,9 @@ def test_sentry_startup_report_fingerprints_by_kind_and_never_raises(monkeypatch
 
     monkeypatch.setitem(sys.modules, "sentry_sdk", _FakeSentry())
 
-    runner._report_startup_failure_to_sentry(
+    claude_sdk.report_startup_failure_to_sentry(
         RuntimeError("boom"),
+        agent="content",
         session_id="s1",
         mode="draft_post",
         attempts=3,
@@ -586,8 +587,9 @@ def test_sentry_startup_report_fingerprints_by_kind_and_never_raises(monkeypatch
     assert sc.ctx["content_startup"]["exit_code"] == 1
 
     # A hard crash groups separately and reports at error level.
-    runner._report_startup_failure_to_sentry(
+    claude_sdk.report_startup_failure_to_sentry(
         RuntimeError("segfault"),
+        agent="content",
         session_id="s2",
         mode="plan_month",
         attempts=3,
@@ -606,7 +608,7 @@ def test_isolated_config_dir_separates_state_but_shares_oauth_login(tmp_path, mo
     # state is the leading suspect for intermittent CLI exit-1 at startup.
     import os
 
-    from agents.content.v3 import runner
+    from agents.core import claude_sdk
 
     fake_home = tmp_path / ".claude"
     fake_home.mkdir()
@@ -614,8 +616,10 @@ def test_isolated_config_dir_separates_state_but_shares_oauth_login(tmp_path, mo
     monkeypatch.setattr(os.path, "expanduser", lambda p: p.replace("~", str(tmp_path)))
     monkeypatch.delenv("DUCT_CONTENT_CLAUDE_CONFIG_DIR", raising=False)
 
+    kw = dict(env_var="DUCT_CONTENT_CLAUDE_CONFIG_DIR", suffix="duct-content", log_prefix="content")
+
     # OAuth path (no api key): isolated dir created, live creds symlinked in.
-    iso = runner._isolated_config_dir("")
+    iso = claude_sdk.isolated_config_dir("", **kw)
     assert iso is not None and iso != str(fake_home)
     link = os.path.join(iso, ".credentials.json")
     assert os.path.islink(link)
@@ -624,9 +628,9 @@ def test_isolated_config_dir_separates_state_but_shares_oauth_login(tmp_path, mo
     # API-key path: dir still isolated, but no credential symlink is needed.
     iso2 = tmp_path / "viakey"
     monkeypatch.setenv("DUCT_CONTENT_CLAUDE_CONFIG_DIR", str(iso2))
-    assert runner._isolated_config_dir("sk-test") == str(iso2)
+    assert claude_sdk.isolated_config_dir("sk-test", **kw) == str(iso2)
     assert not os.path.exists(os.path.join(str(iso2), ".credentials.json"))
 
     # Explicit opt-out falls back to the default ~/.claude.
     monkeypatch.setenv("DUCT_CONTENT_CLAUDE_CONFIG_DIR", "0")
-    assert runner._isolated_config_dir("") is None
+    assert claude_sdk.isolated_config_dir("", **kw) is None

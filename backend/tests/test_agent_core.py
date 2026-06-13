@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 
-from agents.core.business_context import BusinessContext, format_business_context
+from agents.core.context import BusinessContext, format_business_context
 from agents.core.events import AgentEvent, AgentStep
 from agents.core.prompts import DUCT_REPORT_CLOSE, DUCT_REPORT_OPEN, xml_block
 
@@ -66,7 +66,7 @@ def test_format_business_context_section_toggles():
 
 # --- report stream parser ---------------------------------------------------
 
-from agents.core.report_stream import DuctReportStreamParser  # noqa: E402
+from agents.core.stream import DuctReportStreamParser  # noqa: E402
 
 
 class _Rec:

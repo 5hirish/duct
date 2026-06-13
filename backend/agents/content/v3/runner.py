@@ -24,7 +24,6 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-import os
 import re
 import shutil
 from collections import deque
@@ -58,8 +57,8 @@ from agents.content.subagents import (
 from agents.content.tools import build_content_mcp_server
 from agents.core import claude_sdk as _sdk
 from agents.core import session as _core_session
-from agents.core.report_stream import DuctReportStreamParser
 from agents.core.session import bridge_ask_user_question, register_session
+from agents.core.stream import DuctReportStreamParser, pump_stream_event
 from agents.models import (
     AgentEffort,
     AgentPermissionMode,
@@ -72,13 +71,9 @@ logger = logging.getLogger(__name__)
 
 EmitFn = Callable[[dict[str, Any]], Awaitable[None]]
 
-# CLI-startup helpers now live in agents/core/claude_sdk.py (reusable across
-# Claude-SDK agents). These thin wrappers bind the content-specific label,
-# config-dir env var/suffix, and Sentry namespace so the call sites in _run()
-# stay unchanged.
-_MAX_CONNECT_ATTEMPTS = _sdk.MAX_CONNECT_ATTEMPTS
-_CONNECT_BACKOFF_SECS = _sdk.CONNECT_BACKOFF_SECS
-_PLACEHOLDER_STDERR = _sdk.PLACEHOLDER_STDERR
+# CLI startup (env hygiene, connect-with-retry), per-message StreamEvent decode,
+# and config-dir isolation now live in agents/core (claude_sdk.py, stream.py),
+# shared with audit. Only the stderr helper below stays content-local.
 
 # Max wall-clock to wait for the FIRST message from the subprocess. This guards
 # the startup window only: a subprocess that connects but never produces anything
@@ -99,49 +94,29 @@ _STALL_TIMEOUT_SECS = 120.0
 # generous budget here only ever benefits a user who is actively, slowly answering.
 _ASK_USER_TIMEOUT_SECS = 600.0
 
+# One-shot recovery nudge — mirrors the "no <duct_report>" recovery in
+# agents/audit/v3/runner.py. With adaptive thinking + sub-agent dispatch the
+# model occasionally ends a turn-group having analysed everything but WITHOUT
+# persisting the deliverable (it never calls submit_plan / submit_post_draft).
+# Left alone the run sits idle until the chat timeout and then reports a hollow
+# "finished" with a null id. Nudging once to persist salvages most of these,
+# exactly as it does for audit. The nudge rides the same chat_queue the user
+# types into, so message_gen feeds it back as the next turn.
+_RECOVERY_NUDGE_PLAN = (
+    "You analysed everything but did not persist the plan. Emit the complete "
+    '<duct_report>{"type":"plan", …}</duct_report> now and then call submit_plan '
+    "with the same payload — do not run more research, just produce and save the plan."
+)
+_RECOVERY_NUDGE_POST = (
+    "You analysed everything but did not persist the post draft. Emit the complete "
+    '<duct_report>{"type":"post", …}</duct_report> now and then call '
+    "submit_post_draft with the same payload — do not run more research, just "
+    "produce and save the draft."
+)
 
-def _captured_stderr(buf: deque[str], exc: Exception) -> str:
+
+def _captured_stderr(buf: deque[str], exc: Exception | None) -> str:
     return _sdk.captured_stderr(buf, exc)
-
-
-def _is_rate_limited(stderr_text: str) -> bool:
-    return _sdk.is_rate_limited(stderr_text)
-
-
-def _describe_startup_failure(stderr_text: str, exit_code: int | None) -> str:
-    return _sdk.describe_startup_failure(stderr_text, exit_code, agent_label="content engine")
-
-
-def _isolated_config_dir(explicit_auth: str, session_id: str | None = None) -> str | None:
-    return _sdk.isolated_config_dir(
-        explicit_auth,
-        env_var="DUCT_CONTENT_CLAUDE_CONFIG_DIR",
-        suffix="duct-content",
-        log_prefix="content",
-        session_id=session_id,
-    )
-
-
-def _report_startup_failure_to_sentry(
-    exc: Exception | None,
-    *,
-    session_id: str,
-    mode: Any,
-    attempts: int,
-    exit_code: int | None,
-    stderr: str,
-    rate_limited: bool,
-) -> None:
-    _sdk.report_startup_failure_to_sentry(
-        exc,
-        agent="content",
-        session_id=session_id,
-        mode=mode,
-        attempts=attempts,
-        exit_code=exit_code,
-        stderr=stderr,
-        rate_limited=rate_limited,
-    )
 
 
 # ---------------------------------------------------------------------------
@@ -300,14 +275,6 @@ def _parse_report_json(raw: str) -> dict | None:
     except Exception as exc:
         logger.warning("content: <duct_report> JSON parse failed: %s", exc)
         return None
-
-
-def _is_todo_write(block: Any) -> bool:
-    return (
-        getattr(block, "type", None) == "tool_use"
-        and getattr(block, "name", None) == AgentTool.TODO_WRITE
-        and isinstance(getattr(block, "input", None), dict)
-    )
 
 
 def _extract_subagent_name(input_data: dict[str, Any]) -> str:
@@ -481,21 +448,27 @@ async def _run(
       - PostToolUse hook matched on 'Agent' emits STEP_FINISHED
       - <duct_report> parser branches on the "type" discriminator
     """
-    from claude_agent_sdk import (
-        ClaudeAgentOptions,
-        ClaudeSDKClient,
-        CLIConnectionError,
-        ProcessError,
-    )
+    from claude_agent_sdk import ClaudeAgentOptions, ClaudeSDKClient
     from claude_agent_sdk.types import (
         HookMatcher,
         PermissionResultAllow,
-        StreamEvent,
         ThinkingConfigAdaptive,
     )
 
     session_id = session.session_id
     project_id = session.project_id
+
+    # Recovery-nudge state. The canonical "deliverable persisted" signal is the
+    # writer tool having stashed the id on the session (submit_plan → plan_id,
+    # submit_post_draft → post_id). The <duct_report> tag only drives the live
+    # preview, so a draft streamed but never written still counts as "not
+    # produced". Nudge at most once per session (see ResultMessage handling).
+    _is_plan = session.mode == "plan_month"
+
+    def _artifact_produced() -> bool:
+        return (session.plan_id is not None) if _is_plan else (session.post_id is not None)
+
+    _nudged = False
 
     # Web research observability: can_use_tool emits STEP_STARTED when the model
     # opens a WebSearch/WebFetch; a PostToolUse hook pops the oldest pending step
@@ -647,53 +620,19 @@ async def _run(
     from config import get_configs, sentry_otel_env
     _cfg = get_configs()
 
-    _sdk_env: dict[str, str] = {
-        "OTEL_SERVICE_NAME": "duct-content",
-        "ENABLE_PROMPT_CACHING_1H": "1",
-        **sentry_otel_env(_cfg),
-    }
-    # Auth precedence mirrors the CLI's: an explicit ANTHROPIC_API_KEY wins;
-    # otherwise forward a CLAUDE_CODE_OAUTH_TOKEN (from `claude setup-token`) so
-    # the subprocess uses the operator's Claude subscription. pydantic loads
-    # .env.local into Configs but NOT into os.environ, so the token must be
-    # injected here explicitly — the SDK merges options.env over the inherited
-    # environment. With neither set we fall back to the interactive `/login`.
-    if api_key:
-        _sdk_env["ANTHROPIC_API_KEY"] = api_key
-    else:
-        # The SDK merges options.env OVER the inherited os.environ, so it cannot
-        # delete a key — only override it. When the server is launched from a
-        # Claude Desktop / Code session it inherits a BLANK ANTHROPIC_API_KEY
-        # (and sometimes ANTHROPIC_AUTH_TOKEN), which both outrank
-        # CLAUDE_CODE_OAUTH_TOKEN in the CLI's auth precedence. A present-but-empty
-        # key makes the CLI exit 1 during initialize with no stderr. Drop the
-        # blank vars from our own environ so they can't shadow the token; this is
-        # a no-op for anything that checks truthiness.
-        for _stale in ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN"):
-            if _stale in os.environ and not os.environ[_stale].strip():
-                del os.environ[_stale]
-        if _cfg.claude_code_oauth_token:
-            _sdk_env["CLAUDE_CODE_OAUTH_TOKEN"] = _cfg.claude_code_oauth_token
-
-    # When the backend is launched from an IDE (Cursor / VS Code), the JS
-    # debugger injects NODE_OPTIONS=--require .../js-debug/bootloader.js
-    # --inspect-publish-uid=... into the process. The `claude` CLI is a Node
-    # program; inheriting that makes the debugger bootloader attach and write to
-    # stdout, which corrupts the stream-json control protocol — the subprocess
-    # then exits 1 during initialize with no stderr. CLAUDE_CODE_SSE_PORT is the
-    # parent IDE's bridge port and is likewise irrelevant to a headless worker.
-    # Override both to empty (the SDK merges options.env over os.environ but can't
-    # delete keys); an empty NODE_OPTIONS is ignored by Node.
-    for _ide_var in ("NODE_OPTIONS", "CLAUDE_CODE_SSE_PORT"):
-        if os.environ.get(_ide_var):
-            _sdk_env[_ide_var] = ""
-
-    # Isolate this worker's CLI state from any interactive ~/.claude on the box,
-    # AND from any other content run — a per-session dir means two concurrent
-    # sessions never contend on shared CLI state (cleaned up in the finally below).
-    _config_dir = _isolated_config_dir(api_key or _cfg.claude_code_oauth_token, session_id=session_id)
-    if _config_dir:
-        _sdk_env["CLAUDE_CONFIG_DIR"] = _config_dir
+    # Subprocess env hygiene (clears IDE session/debugger vars and blank auth
+    # keys, isolates a per-session CLAUDE_CONFIG_DIR, wires tracing) is shared
+    # with audit — see agents/core/claude_sdk.build_sdk_env.
+    _sdk_env, _config_dir = _sdk.build_sdk_env(
+        service_name="duct-content",
+        api_key=api_key,
+        oauth_token=_cfg.claude_code_oauth_token,
+        config_env_var="DUCT_CONTENT_CLAUDE_CONFIG_DIR",
+        config_suffix="duct-content",
+        log_prefix="content",
+        session_id=session_id,
+        sentry_env=sentry_otel_env(_cfg),
+    )
 
     # Bounded ring buffer of recent stderr lines. The SDK reads stderr on a
     # detached task that gets cancelled during teardown, so on a fast startup
@@ -787,7 +726,7 @@ async def _run(
 
     _first_token_at: float | None = None
 
-    # <duct_report> streaming is handled by the shared parser (core/report_stream).
+    # <duct_report> streaming is handled by the shared parser (core/stream).
     # Content streams JSON and branches on the payload's "type" in _handle_close.
     async def _on_text(text: str) -> None:
         await emit({"event": ContentEvent.AGENT_MESSAGE_CHUNK, "text": text})
@@ -855,54 +794,48 @@ async def _run(
     )
 
     # ------------------------------------------------------------------
-    # Connect (with retry) — startup crashes are side-effect-free
+    # Per-message pump callbacks. The shared StreamEvent decode lives in
+    # agents/core/stream.pump_stream_event; the outer loop (with the streaming
+    # startup watchdog) stays below, agent-specific.
     # ------------------------------------------------------------------
 
-    async def _connect_with_retry() -> ClaudeSDKClient:
-        """Open a connected ClaudeSDKClient, retrying transient startup crashes.
+    async def _on_thinking(text: str) -> None:
+        await emit({"event": ContentEvent.THINKING_CHUNK, "text": text})
 
-        A fresh client is built per attempt so a half-initialised one is never
-        reused. On the final failure, raises a RuntimeError carrying the real
-        subprocess stderr (the SDK's own ProcessError only says "exit code 1").
-        """
-        last_exc: Exception | None = None
-        for attempt in range(1, _MAX_CONNECT_ATTEMPTS + 1):
-            _stderr_buf.clear()
-            candidate = ClaudeSDKClient(options)
-            try:
-                await candidate.connect()
-                if attempt > 1:
-                    logger.info(
-                        "content: SDK connect recovered on attempt %d/%d for session %s",
-                        attempt, _MAX_CONNECT_ATTEMPTS, session_id,
-                    )
-                return candidate
-            except (ProcessError, CLIConnectionError) as exc:
-                last_exc = exc
-                with suppress(Exception):
-                    await candidate.disconnect()
-                captured = _captured_stderr(_stderr_buf, exc)
-                logger.warning(
-                    "content: SDK connect attempt %d/%d failed for session %s: %s%s",
-                    attempt, _MAX_CONNECT_ATTEMPTS, session_id, exc,
-                    f"\n  subprocess stderr:\n{captured}" if captured else "",
-                )
-                if attempt < _MAX_CONNECT_ATTEMPTS:
-                    await asyncio.sleep(_CONNECT_BACKOFF_SECS * attempt)
+    async def _on_text_delta(text: str) -> None:
+        nonlocal _first_token_at
+        if _first_token_at is None:
+            _first_token_at = perf_counter()
+            logger.info("content: first text token received")
+        await parser.feed(text)
 
-        captured = _captured_stderr(_stderr_buf, last_exc)
-        exit_code = getattr(last_exc, "exit_code", None)
-        rate_limited = _is_rate_limited(captured)
-        _report_startup_failure_to_sentry(
-            last_exc,
-            session_id=session_id,
-            mode=session.mode,
-            attempts=_MAX_CONNECT_ATTEMPTS,
-            exit_code=exit_code,
-            stderr=captured,
-            rate_limited=rate_limited,
-        )
-        raise RuntimeError(_describe_startup_failure(captured, exit_code)) from last_exc
+    async def _on_msg_stop() -> None:
+        await parser.flush()
+        parser.turn_text.clear()
+        await emit({"event": ContentEvent.MESSAGE_STOP})
+
+    async def _on_result(result_msg: Any) -> None:
+        # End of a turn-group: the model has stopped and is now idle awaiting the
+        # next user message. If it finished without persisting the deliverable,
+        # nudge it once (audit's recovery pattern) before it sits idle until the
+        # chat timeout and the run reports a hollow "finished". message_gen feeds
+        # the nudge back as the next turn via the chat queue.
+        nonlocal _nudged
+        if not _artifact_produced() and not _nudged:
+            _nudged = True
+            logger.warning(
+                "content: turn ended with no %s persisted for session %s "
+                "(stop_reason=%s) — sending one recovery nudge",
+                "plan" if _is_plan else "post", session_id, result_msg.stop_reason,
+            )
+            await session.chat_queue.put({
+                "role": "user",
+                "content": _RECOVERY_NUDGE_PLAN if _is_plan else _RECOVERY_NUDGE_POST,
+            })
+
+    async def _on_todo(todos: list) -> None:
+        session.todos = todos
+        await emit({"event": ContentEvent.TODO_UPDATE, "todos": todos})
 
     # ------------------------------------------------------------------
     # Main loop
@@ -910,7 +843,14 @@ async def _run(
 
     client: ClaudeSDKClient | None = None
     try:
-        client = await _connect_with_retry()
+        client = await _sdk.connect_with_retry(
+            options,
+            stderr_buf=_stderr_buf,
+            session_id=session_id,
+            agent="content",
+            agent_label="content engine",
+            mode=session.mode,
+        )
         await client.query(message_gen())
 
         # Startup watchdog: the SDK connects fine but can stall *before* it
@@ -944,42 +884,14 @@ async def _run(
                        " No subprocess stderr was captured.")
                 ) from exc
 
-            if isinstance(msg, StreamEvent):
-                ev = msg.event
-                ev_type = ev.get("type")
-
-                if ev_type == "content_block_delta":
-                    delta = ev.get("delta", {})
-                    delta_type = delta.get("type")
-                    if delta_type == "thinking_delta":
-                        thinking_text = delta.get("thinking", "")
-                        if thinking_text:
-                            await emit({
-                                "event": ContentEvent.THINKING_CHUNK,
-                                "text":  thinking_text,
-                            })
-                    elif delta_type == "text_delta":
-                        text_chunk = delta.get("text", "")
-                        if text_chunk:
-                            if _first_token_at is None:
-                                _first_token_at = perf_counter()
-                                logger.info("content: first text token received")
-                            await parser.feed(text_chunk)
-                elif ev_type == "message_stop":
-                    await parser.flush()
-                    parser.turn_text.clear()
-                    await emit({"event": ContentEvent.MESSAGE_STOP})
-                continue
-
-            if hasattr(msg, "content") and msg.content:
-                for block in msg.content:
-                    if _is_todo_write(block):
-                        todos = block.input.get("todos", [])
-                        session.todos = todos
-                        await emit({
-                            "event": ContentEvent.TODO_UPDATE,
-                            "todos": todos,
-                        })
+            await pump_stream_event(
+                msg,
+                on_text=_on_text_delta,
+                on_thinking=_on_thinking,
+                on_message_stop=_on_msg_stop,
+                on_result=_on_result,
+                on_todo=_on_todo,
+            )
     except Exception:
         logger.exception("content v3: run failed for session %s", session_id)
         raise
@@ -1041,8 +953,15 @@ class ClaudeContentRunner:
           max_turns: SDK turn ceiling; defaults to DEFAULT_PLAN_MAX_TURNS.
         """
         session = get_session(session_id) or create_plan_session(session_id, project_id)
-        brand = _load_brand_context(project_id)
 
+        # Emit the first events BEFORE loading brand context so the UI leaves its
+        # "Starting session…" state immediately. _load_brand_context is a SYNC DB
+        # read that opens a fresh connection through the Railway proxy — running it
+        # directly here would block the event loop (and therefore the SSE stream,
+        # so the just-queued events couldn't even be delivered) until it returns.
+        # Two concurrent sessions (e.g. a dev StrictMode double-mount) would block
+        # the loop in series and the UI would hang at "Starting session…". Run it
+        # off the loop via asyncio.to_thread so the stream stays live.
         await emit({
             "event":    ContentEvent.PIPELINE_STARTED,
             "session_id": session_id,
@@ -1054,6 +973,7 @@ class ClaudeContentRunner:
             "label":   STEP_LABELS[ContentStep.LOAD_PROJECT],
             "status": StepStatus.RUNNING,
         })
+        brand = await asyncio.to_thread(_load_brand_context, project_id)
         await emit({
             "event":   ContentEvent.STEP_FINISHED,
             "step_id": ContentStep.LOAD_PROJECT,
@@ -1102,12 +1022,25 @@ class ClaudeContentRunner:
                 chat_idle_timeout=chat_idle_timeout,
                 max_turns=max_turns or self.DEFAULT_PLAN_MAX_TURNS,
             )
-            await emit({
-                "event":      ContentEvent.PIPELINE_FINISHED,
-                "session_id": session_id,
-                "mode":       "plan_month",
-                "plan_id":    str(session.plan_id) if session.plan_id else None,
-            })
+            if session.plan_id is not None:
+                await emit({
+                    "event":      ContentEvent.PIPELINE_FINISHED,
+                    "session_id": session_id,
+                    "mode":       "plan_month",
+                    "plan_id":    str(session.plan_id),
+                })
+            else:
+                # The session ended without ever persisting a plan — even the
+                # recovery nudge didn't recover it. Surface a real failure
+                # instead of a hollow "finished" with plan_id: null (which the
+                # UI would render as success with nothing to open).
+                logger.error("content: plan session %s ended with no plan persisted", session_id)
+                await emit({
+                    "event":      ContentEvent.PIPELINE_FAILED,
+                    "session_id": session_id,
+                    "error":      "The content engine finished without producing a plan. "
+                                  "This is usually transient — please try again.",
+                })
         except Exception as exc:
             await emit({
                 "event":      ContentEvent.PIPELINE_FAILED,
@@ -1135,9 +1068,11 @@ class ClaudeContentRunner:
         """Run a draft_post session end-to-end."""
         from agents.content.channels import resolve as resolve_channel
         session = get_session(session_id) or create_draft_session(session_id, project_id)
-        brand = _load_brand_context(project_id)
-        ch = resolve_channel(channel)
+        ch = resolve_channel(channel)  # sync, no DB — safe before the first emit
 
+        # Emit lifecycle + the first step BEFORE the (blocking) brand-context load
+        # so the UI leaves "Starting session…" immediately; load off the event
+        # loop so it can't block the loop / SSE stream. (See run_plan for why.)
         await emit({
             "event":             ContentEvent.PIPELINE_STARTED,
             "session_id":        session_id,
@@ -1145,6 +1080,20 @@ class ClaudeContentRunner:
             "channel":           ch.id,
             "channel_label":     ch.label,
             "channel_supported": ch.supported,
+        })
+        await emit({
+            "event":   ContentEvent.STEP_STARTED,
+            "step_id": ContentStep.LOAD_PROJECT,
+            "label":   STEP_LABELS[ContentStep.LOAD_PROJECT],
+            "status": StepStatus.RUNNING,
+        })
+        brand = await asyncio.to_thread(_load_brand_context, project_id)
+        await emit({
+            "event":   ContentEvent.STEP_FINISHED,
+            "step_id": ContentStep.LOAD_PROJECT,
+            "label":   STEP_LABELS[ContentStep.LOAD_PROJECT],
+            "status": StepStatus.SUCCESS,
+            "payload": {"project_name": brand.project_name, "pillars": len(brand.pillars)},
         })
 
         system_prompt = build_orchestrator_system_prompt(brand, "draft_post", channel=ch)
@@ -1171,12 +1120,24 @@ class ClaudeContentRunner:
                 chat_idle_timeout=chat_idle_timeout,
                 max_turns=max_turns or self.DEFAULT_DRAFT_MAX_TURNS,
             )
-            await emit({
-                "event":      ContentEvent.PIPELINE_FINISHED,
-                "session_id": session_id,
-                "mode":       "draft_post",
-                "post_id":    str(session.post_id) if session.post_id else None,
-            })
+            if session.post_id is not None:
+                await emit({
+                    "event":      ContentEvent.PIPELINE_FINISHED,
+                    "session_id": session_id,
+                    "mode":       "draft_post",
+                    "post_id":    str(session.post_id),
+                })
+            else:
+                # Ended without persisting a post draft — even the recovery nudge
+                # didn't recover it. Surface a real failure rather than a hollow
+                # "finished" with post_id: null.
+                logger.error("content: draft session %s ended with no post persisted", session_id)
+                await emit({
+                    "event":      ContentEvent.PIPELINE_FAILED,
+                    "session_id": session_id,
+                    "error":      "The content engine finished without producing a post draft. "
+                                  "This is usually transient — please try again.",
+                })
         except Exception as exc:
             await emit({
                 "event":      ContentEvent.PIPELINE_FAILED,

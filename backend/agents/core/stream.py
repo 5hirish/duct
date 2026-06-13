@@ -1,22 +1,114 @@
-"""Streaming parser for the ``<duct_report>`` convention, shared by Claude-SDK agents.
+"""Shared streaming helpers for Claude-SDK agents.
 
-Both audit and content streamed model output token-by-token, forwarding prose as
-AGENT_MESSAGE_CHUNK and the bytes inside ``<duct_report>…</duct_report>`` as
-REPORT_CHUNK, then handing the closed payload to an agent-specific handler
-(audit builds an HTML AuditReport; content parses JSON and branches on ``type``).
-The tag state machine — holdback for open tags split across chunks, close tags
-split across chunks, and recursion on the remainder — was duplicated verbatim.
-It now lives here once; agents supply only the three callbacks.
+Two cohesive pieces both runners share:
+
+  * ``pump_stream_event`` — decode one SDK message (thinking/text deltas, token
+    usage, ``message_stop``, ``ResultMessage``, ``TodoWrite``) and dispatch to
+    callbacks. The *outer* loop differs per agent (audit drives discrete turns;
+    content runs one streaming-input session with a startup watchdog), so this
+    owns only the per-message decode; the caller keeps its loop and state.
+
+  * ``DuctReportStreamParser`` — the ``<duct_report>`` tag state machine. The
+    pump's ``on_text`` feeds it; it forwards prose vs in-tag payload to
+    agent-specific callbacks (audit builds HTML, content parses JSON). The
+    ``<duct_report>`` convention is shared by every Duct agent — not audit-
+    specific — so it belongs here in core.
 """
 
 from __future__ import annotations
 
 import logging
 from collections.abc import Awaitable, Callable
+from typing import Any
 
 from agents.core.prompts import DUCT_REPORT_CLOSE, DUCT_REPORT_OPEN
 
 logger = logging.getLogger(__name__)
+
+# The TodoWrite tool's canonical name (AgentTool.TODO_WRITE is a StrEnum whose
+# value is exactly this — compared as a string here so core stays import-light).
+_TODO_WRITE = "TodoWrite"
+
+
+def is_todo_write(block: Any) -> bool:
+    """True if an assistant content block is a ``TodoWrite`` tool call."""
+    return (
+        getattr(block, "type", None) == "tool_use"
+        and getattr(block, "name", None) == _TODO_WRITE
+        and isinstance(getattr(block, "input", None), dict)
+    )
+
+
+async def pump_stream_event(
+    msg: Any,
+    *,
+    on_text: Callable[[str], Awaitable[None]],
+    on_thinking: Callable[[str], Awaitable[None]] | None = None,
+    on_message_stop: Callable[[], Awaitable[None]] | None = None,
+    on_usage: Callable[[dict, str], None] | None = None,
+    on_result: Callable[[Any], Awaitable[None]] | None = None,
+    on_todo: Callable[[list], Awaitable[None]] | None = None,
+    on_tool_use: Callable[[str], None] | None = None,
+) -> None:
+    """Decode one SDK message and dispatch to the provided callbacks.
+
+    The caller owns the parser: ``on_text`` receives each raw text delta (do
+    first-token timing there, then ``await parser.feed(text)``); ``on_message_stop``
+    fires at a turn boundary (flush the parser + any agent-specific work there).
+    ``on_usage(usage, phase)`` is called with ``phase`` in ``{"start", "delta"}``.
+    Unhandled message types are ignored. Only ``on_text`` is required.
+    """
+    from claude_agent_sdk.types import ResultMessage, StreamEvent
+
+    if isinstance(msg, StreamEvent):
+        ev = msg.event
+        ev_type = ev.get("type")
+
+        if ev_type == "content_block_delta":
+            delta = ev.get("delta", {})
+            delta_type = delta.get("type")
+            if delta_type == "thinking_delta":
+                text = delta.get("thinking", "")
+                if text and on_thinking:
+                    await on_thinking(text)
+            elif delta_type == "text_delta":
+                text = delta.get("text", "")
+                if text:
+                    await on_text(text)
+        elif ev_type == "content_block_start":
+            if on_tool_use:
+                block = ev.get("content_block", {})
+                if block.get("type") == "tool_use":
+                    on_tool_use(block.get("name", "?"))
+        elif ev_type == "message_start":
+            if on_usage:
+                usage = ev.get("message", {}).get("usage", {})
+                if usage:
+                    on_usage(usage, "start")
+        elif ev_type == "message_delta":
+            if on_usage:
+                usage = ev.get("usage", {})
+                if usage:
+                    on_usage(usage, "delta")
+        elif ev_type == "message_stop":
+            if on_message_stop:
+                await on_message_stop()
+        return
+
+    if isinstance(msg, ResultMessage):
+        if on_result:
+            await on_result(msg)
+        return
+
+    if on_todo and hasattr(msg, "content") and msg.content:
+        for block in msg.content:
+            if is_todo_write(block):
+                await on_todo(block.input.get("todos", []))
+
+
+# ---------------------------------------------------------------------------
+# <duct_report> tag parser (shared convention; not agent-specific)
+# ---------------------------------------------------------------------------
 
 TextCallback = Callable[[str], Awaitable[None]]
 CloseCallback = Callable[[str, str], Awaitable[None]]  # (raw_payload, turn_text)

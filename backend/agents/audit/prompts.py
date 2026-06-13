@@ -14,7 +14,7 @@ from __future__ import annotations
 import json
 
 from agents.audit.schema import AuditBusinessContext, AuditResearchContext, CrawlResult, PageSignals
-from agents.user_preferences import UserPreferences
+from agents.preferences import UserPreferences
 
 _OUTCOME_LABELS: dict[str, str] = {
     "revenue":    "Revenue & Growth",

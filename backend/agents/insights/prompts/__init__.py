@@ -15,7 +15,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from agents.core.business_context import format_business_context
+from agents.core.context import format_business_context
 from agents.insights.catalog import get_catalogs_for_connectors
 from agents.insights.catalog.prompt import entity_catalog_prompt_block
 from agents.insights.goals.paid_ads import goal_heading_text as paid_goal_heading
@@ -59,7 +59,7 @@ def get_system_prompt(
 
     sections: list[str] = [ANALYSIS_PROTOCOL, DASHBOARD_LAYOUT_PROTOCOL]
 
-    # Shared business-context formatter (agents/core/business_context.py) — one
+    # Shared business-context formatter (agents/core/context.py) — one
     # standard <business_context> block across all agents; mode selects section.
     biz_section = format_business_context(
         business_context,

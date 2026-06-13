@@ -24,7 +24,9 @@ import json
 import logging
 import os
 import re
-from collections.abc import Callable, Awaitable
+from collections import deque
+from collections.abc import Awaitable, Callable
+from contextlib import suppress
 from time import perf_counter
 from typing import Any
 
@@ -45,8 +47,8 @@ from agents.audit.schema import (
 )
 from agents.core import claude_sdk as _sdk
 from agents.core import session as _core_session
-from agents.core.report_stream import DuctReportStreamParser
 from agents.core.session import bridge_ask_user_question, register_session
+from agents.core.stream import DuctReportStreamParser, pump_stream_event
 from agents.engines import Engine, get_env_var_for_engine_provider
 from agents.engines import ENGINE_DEFAULT_EFFORT
 from agents.models import AgentEffort, AgentPermissionMode, AgentTool, ModelName, Provider, ThinkingMode
@@ -224,15 +226,6 @@ def _parse_report(text: str) -> AuditReport | None:
         return None
 
 
-def _is_todo_write(block: Any) -> bool:
-    """Return True if a content block is a TodoWrite tool call."""
-    return (
-        getattr(block, "type", None) == "tool_use"
-        and getattr(block, "name", None) == AgentTool.TODO_WRITE
-        and isinstance(getattr(block, "input", None), dict)
-    )
-
-
 def _extract_report_update(text: str, base: AuditReport | None = None) -> AuditReport | None:
     """Extract updated HTML from <audit_report_update> tags in a chat turn."""
     match = re.search(
@@ -279,8 +272,8 @@ async def run_synthesis(
     Subsequent chat turns continue in the same session (full context) and may produce
     <audit_report_update> blocks for report versioning (existing pattern, unchanged).
     """
-    from claude_agent_sdk import ClaudeAgentOptions, ClaudeSDKClient
-    from claude_agent_sdk.types import HookMatcher, PermissionResultAllow, PermissionResultDeny, StreamEvent, ThinkingConfigAdaptive, ThinkingConfigEnabled
+    from claude_agent_sdk import ClaudeAgentOptions
+    from claude_agent_sdk.types import HookMatcher, PermissionResultAllow, PermissionResultDeny, ThinkingConfigAdaptive, ThinkingConfigEnabled
 
     env_var = get_env_var_for_engine_provider(Engine.V3, provider) or "ANTHROPIC_API_KEY"
 
@@ -426,92 +419,33 @@ async def run_synthesis(
     from config import get_configs, sentry_otel_env
     _cfg = get_configs()
 
-    # The SDK already inherits os.environ for the subprocess, but when the backend
-    # runs inside a Claude Code session (VSCode/Cursor), the parent process has
-    # Claude Code-specific vars that confuse child claude instances:
-    #   - CLAUDE_CODE_SESSION_ID: makes child think it's part of the parent session
-    #   - CLAUDE_CODE_EXECPATH: points to the IDE's binary, not the installed CLI
-    #   - TMPDIR: sandboxed temp dir scoped to the IDE session
-    #   - CLAUDE_EFFORT: overrides the effort level we explicitly set
-    #   - CLAUDE_CODE_ENABLE_SDK_FILE_CHECKPOINTING: inherits IDE's checkpointing
-    # Explicitly clear them here so our values win over the inherited ones.
-    _sdk_env: dict[str, str] = {
-        "OTEL_SERVICE_NAME": "duct-audit-seo",
-        "ENABLE_PROMPT_CACHING_1H": "1",
-        # Tool search is ON by default (non-Haiku models) and DEFERS tool schemas
-        # out of context, discovering them on demand. Audit has a small fixed tool
-        # set (FetchPages + Start/Add/Finalize/SubmitAuditReport), and the SDK docs
-        # say eager loading is faster for <10 tools — so disable it. This guarantees
-        # the model always sees the report tools' schemas without a discovery round-
-        # trip (otherwise the large StructuredAuditData/AuditCategory schemas could
-        # trip auto-deferral and the model might not find them reliably).
-        "ENABLE_TOOL_SEARCH": "false",
-        # Sentry OTLP tracing — spans for every turn, tool call, LLM request.
-        # Activated only when sdk_otel_enabled=true + sentry_dsn is set.
-        **sentry_otel_env(_cfg),
-        # Clear inherited Claude Code IDE session vars that confuse child instances
-        "CLAUDE_CODE_SESSION_ID": "",
-        "CLAUDE_CODE_EXECPATH": "",
-        "CLAUDE_EFFORT": "",
-        "CLAUDE_CODE_ENABLE_SDK_FILE_CHECKPOINTING": "false",
-        "CLAUDE_CODE_ENABLE_TASKS": "",
-        # Redirect Claude-specific temp dirs away from the IDE sandbox temp dir
-        "TMPDIR": "/tmp",
-        "CLAUDE_TMPDIR": "/tmp",
-        "CLAUDE_CODE_TMPDIR": "/tmp",
-    }
-    if api_key:
-        _sdk_env[env_var] = api_key
-    elif _cfg.claude_code_oauth_token:
-        # OAuth/subscription path: forward the token so the isolated config dir
-        # below doesn't depend on the dev's interactive ~/.claude credentials.
-        _sdk_env["CLAUDE_CODE_OAUTH_TOKEN"] = _cfg.claude_code_oauth_token
-
-    # When launched from an IDE debugger, NODE_OPTIONS injects a bootloader that
-    # corrupts the CLI's stream-json protocol → exit 1 during initialize. The SDK
-    # merges options.env over os.environ but can't delete keys, so blank them.
-    for _ide_var in ("NODE_OPTIONS", "CLAUDE_CODE_SSE_PORT"):
-        if os.environ.get(_ide_var):
-            _sdk_env[_ide_var] = ""
-
-    # Isolate this worker's CLI state from the dev's interactive ~/.claude (and
-    # any live Claude Code session). Concurrent access to a shared ~/.claude is
-    # what makes the subprocess exit 1 during initialize. Mirrors the content
-    # runner; the frontend guards against duplicate sessions sharing this dir.
-    # Per-session config dir so two audits running at once (e.g. a full audit and
-    # a lead-magnet audit) never share CLI state and contend — cleaned up below.
-    _config_dir = _sdk.isolated_config_dir(
-        api_key or _cfg.claude_code_oauth_token,
-        env_var="DUCT_AUDIT_CLAUDE_CONFIG_DIR",
-        suffix="duct-audit",
+    # Subprocess env hygiene (clears IDE session/debugger vars and blank auth
+    # keys, isolates a per-session CLAUDE_CONFIG_DIR, wires Sentry + local OTLP
+    # tracing) is shared with content — see agents/core/claude_sdk.build_sdk_env.
+    # Audit eager-loads tool schemas (enable_tool_search=False): a small fixed
+    # tool set loads faster eagerly and guarantees the report tools' schemas are
+    # present without a discovery round-trip that could trip auto-deferral.
+    _sdk_env, _config_dir = _sdk.build_sdk_env(
+        service_name="duct-audit-seo",
+        api_key=api_key,
+        oauth_token=_cfg.claude_code_oauth_token,
+        config_env_var="DUCT_AUDIT_CLAUDE_CONFIG_DIR",
+        config_suffix="duct-audit",
         log_prefix="audit",
         session_id=session_id,
+        sentry_env=sentry_otel_env(_cfg),
+        api_key_env_var=env_var,
+        enable_tool_search=False,
     )
-    if _config_dir:
-        _sdk_env["CLAUDE_CONFIG_DIR"] = _config_dir
 
-    # OTEL traces to a local Phoenix / OTLP collector.
-    # Set OTEL_ENDPOINT=http://localhost:6006 (or any OTLP endpoint) to enable.
-    # Decoupled from AUDIT_VERBOSE_LOGGING so traces work without debug output.
-    # Start Phoenix with: python -m phoenix.server.main serve
-    _otel_endpoint = os.environ.get("OTEL_ENDPOINT", "")
-    if _otel_endpoint:
-        _sdk_env.update({
-            "CLAUDE_CODE_ENABLE_TELEMETRY": "1",
-            "CLAUDE_CODE_ENHANCED_TELEMETRY_BETA": "1",
-            "OTEL_TRACES_EXPORTER": "otlp",
-            "OTEL_METRICS_EXPORTER": "otlp",
-            "OTEL_LOGS_EXPORTER": "otlp",
-            "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf",
-            "OTEL_EXPORTER_OTLP_ENDPOINT": _otel_endpoint,
-            "OTEL_METRIC_EXPORT_INTERVAL": "5000",
-            "OTEL_LOGS_EXPORT_INTERVAL": "2000",
-            "OTEL_TRACES_EXPORT_INTERVAL": "2000",
-        })
-        logger.info("synthesis: OTEL traces → %s", _otel_endpoint)
+    # Ring buffer of recent stderr so connect_with_retry can attach the real
+    # crash reason (the SDK drains stderr on a task cancelled during teardown).
+    _stderr_buf: deque[str] = deque(maxlen=100)
 
     def _on_subprocess_stderr(line: str) -> None:
-        logger.error("audit subprocess stderr [%s]: %s", session_id, line.rstrip())
+        stripped = line.rstrip()
+        _stderr_buf.append(stripped)
+        logger.error("audit subprocess stderr [%s]: %s", session_id, stripped)
 
     # Do NOT override cli_path — let the SDK use its own bundled binary which is
     # version-matched to the SDK. Passing shutil.which("claude") here would use the
@@ -611,7 +545,7 @@ async def run_synthesis(
     _tok_cache_read = 0
     _tok_cache_write = 0
 
-    # <duct_report> streaming is handled by the shared parser (core/report_stream).
+    # <duct_report> streaming is handled by the shared parser (core/stream).
     # Audit streams HTML and builds an AuditReport from the closed payload.
     async def _on_text(text: str) -> None:
         await emit({"event": AuditEvent.AGENT_MESSAGE_CHUNK, "text": text})
@@ -650,146 +584,153 @@ async def run_synthesis(
     # Shared event processing helper (used for synthesis + each chat turn)
     # ------------------------------------------------------------------
 
+    async def _on_thinking(text: str) -> None:
+        nonlocal had_thinking
+        had_thinking = True
+        await emit({"event": AuditEvent.THINKING_CHUNK, "text": text})
+
+    async def _on_text_delta(text: str) -> None:
+        nonlocal _first_token_at
+        if _first_token_at is None:
+            _first_token_at = perf_counter()
+            logger.info("synthesis: first text token received")
+        await parser.feed(text)
+
+    def _on_usage(usage: dict, phase: str) -> None:
+        nonlocal _tok_in, _tok_out, _tok_cache_read, _tok_cache_write
+        if phase == "start":
+            _tok_in += usage.get("input_tokens", 0)
+            _tok_cache_read += usage.get("cache_read_input_tokens", 0)
+            _tok_cache_write += usage.get("cache_creation_input_tokens", 0)
+            if _VERBOSE:
+                logger.info(
+                    "synthesis [turn_start]: input=%d cache_read=%d cache_write=%d",
+                    usage.get("input_tokens", 0),
+                    usage.get("cache_read_input_tokens", 0),
+                    usage.get("cache_creation_input_tokens", 0),
+                )
+        elif phase == "delta":
+            _tok_out += usage.get("output_tokens", 0)
+
+    async def _on_msg_stop() -> None:
+        await parser.flush()
+        full_text = "".join(parser.turn_text)
+        parser.turn_text.clear()
+
+        # Fallback: if report was parsed but REPORT_UPDATED not yet emitted
+        if initial_report is not None and len(session.report_versions) == 0:
+            await _emit_report_version(initial_report, 1)
+
+        # Freehand: check for <audit_report_update> in accumulated text
+        if report_mode == "freehand" and initial_report is not None and session.report_versions:
+            updated = _extract_report_update(full_text, base=initial_report)
+            if updated:
+                v_id = len(session.report_versions) + 1
+                await _emit_report_version(updated, v_id)
+
+        await emit({"event": AuditEvent.MESSAGE_STOP})
+
+    async def _on_todo(todos: list) -> None:
+        await emit({"event": AuditEvent.TODO_UPDATE, "todos": todos})
+
+    def _on_tool_use(name: str) -> None:
+        logger.info("synthesis [tool_use]: %s", name)
+
     async def _receive_one_turn() -> None:
-        nonlocal _tok_in, _tok_out, _tok_cache_read, _tok_cache_write, had_thinking, _first_token_at
+        # Shared StreamEvent decode lives in agents/core/stream.pump_stream_event;
+        # the discrete-turn loop (one full receive_response() per turn) stays here.
         async for msg in client.receive_response():
-            if isinstance(msg, StreamEvent):
-                ev = msg.event
-                ev_type = ev.get("type")
-
-                if _VERBOSE and ev_type == "content_block_start":
-                    block = ev.get("content_block", {})
-                    if block.get("type") == "tool_use":
-                        logger.info("synthesis [tool_use]: %s", block.get("name", "?"))
-
-                elif ev_type == "message_start":
-                    usage = ev.get("message", {}).get("usage", {})
-                    if usage:
-                        _tok_in += usage.get("input_tokens", 0)
-                        _tok_cache_read += usage.get("cache_read_input_tokens", 0)
-                        _tok_cache_write += usage.get("cache_creation_input_tokens", 0)
-                        if _VERBOSE:
-                            logger.info("synthesis [turn_start]: input=%d cache_read=%d cache_write=%d",
-                                        usage.get("input_tokens", 0),
-                                        usage.get("cache_read_input_tokens", 0),
-                                        usage.get("cache_creation_input_tokens", 0))
-
-                elif ev_type == "message_delta":
-                    usage = ev.get("usage", {})
-                    if usage:
-                        _tok_out += usage.get("output_tokens", 0)
-
-                if ev_type == "content_block_delta":
-                    delta = ev.get("delta", {})
-                    delta_type = delta.get("type")
-
-                    if delta_type == "thinking_delta":
-                        thinking_text = delta.get("thinking", "")
-                        if thinking_text:
-                            had_thinking = True
-                            await emit({"event": AuditEvent.THINKING_CHUNK, "text": thinking_text})
-
-                    elif delta_type == "text_delta":
-                        chunk = delta.get("text", "")
-                        if chunk:
-                            if _first_token_at is None:
-                                _first_token_at = perf_counter()
-                                logger.info("synthesis: first text token received")
-                            await parser.feed(chunk)
-
-                elif ev_type == "message_stop":
-                    await parser.flush()
-                    full_text = "".join(parser.turn_text)
-                    parser.turn_text.clear()
-
-                    # Fallback: if report was parsed but REPORT_UPDATED not yet emitted
-                    if initial_report is not None and len(session.report_versions) == 0:
-                        await _emit_report_version(initial_report, 1)
-
-                    # Freehand: check for <audit_report_update> in accumulated text
-                    if report_mode == "freehand" and initial_report is not None and session.report_versions:
-                        updated = _extract_report_update(full_text, base=initial_report)
-                        if updated:
-                            v_id = len(session.report_versions) + 1
-                            await _emit_report_version(updated, v_id)
-
-                    await emit({"event": AuditEvent.MESSAGE_STOP})
-
-                continue  # StreamEvent fully handled
-
-            if hasattr(msg, "content") and msg.content:
-                for block in msg.content:
-                    if _is_todo_write(block):
-                        await emit({"event": AuditEvent.TODO_UPDATE, "todos": block.input.get("todos", [])})
+            await pump_stream_event(
+                msg,
+                on_text=_on_text_delta,
+                on_thinking=_on_thinking,
+                on_message_stop=_on_msg_stop,
+                on_usage=_on_usage,
+                on_todo=_on_todo,
+                on_tool_use=_on_tool_use if _VERBOSE else None,
+            )
 
     # ------------------------------------------------------------------
     # Main loop
     # ------------------------------------------------------------------
 
+    client = None
     try:
-        async with ClaudeSDKClient(options) as client:
-            logger.info("synthesis: subprocess started, sending prompt session=%s", session_id)
-            await client.query(_initial_prompt_gen())
-            logger.info("synthesis: prompt sent, waiting for first response session=%s", session_id)
+        # connect-with-retry (shared with content): a transient initialize crash
+        # is side-effect-free, so a fresh connect is retried before giving up.
+        client = await _sdk.connect_with_retry(
+            options,
+            stderr_buf=_stderr_buf,
+            session_id=session_id,
+            agent="audit",
+            agent_label="audit engine",
+            mode=report_mode,
+        )
+        logger.info("synthesis: subprocess started, sending prompt session=%s", session_id)
+        await client.query(_initial_prompt_gen())
+        logger.info("synthesis: prompt sent, waiting for first response session=%s", session_id)
 
-            # Turn 1: initial synthesis
+        # Turn 1: initial synthesis
+        await _receive_one_turn()
+
+        # Recovery: with extended thinking on a large crawl, the model
+        # sometimes spends the whole turn reasoning and ends WITHOUT emitting
+        # <duct_report> (surfaces as out=0 / "no report generated"). It has
+        # the analysis — it just didn't output the report. Nudge it once to
+        # produce the report before giving up, which salvages most of these.
+        if not session.report_versions:  # type: ignore[attr-defined]
+            logger.warning(
+                "synthesis: turn 1 produced no <duct_report> (out=%d) for session %s — "
+                "sending one recovery nudge", _tok_out, session_id,
+            )
+            async def _recover_gen():
+                yield {
+                    "type": "user",
+                    "message": (
+                        "You analysed the data but did not emit the report. Output the "
+                        "complete <duct_report>…</duct_report> now, in full — do not run "
+                        "more tools or add further analysis, just produce the report."
+                    ),
+                }
+            await client.query(_recover_gen())
             await _receive_one_turn()
 
-            # Recovery: with extended thinking on a large crawl, the model
-            # sometimes spends the whole turn reasoning and ends WITHOUT emitting
-            # <duct_report> (surfaces as out=0 / "no report generated"). It has
-            # the analysis — it just didn't output the report. Nudge it once to
-            # produce the report before giving up, which salvages most of these.
-            if not session.report_versions:  # type: ignore[attr-defined]
-                logger.warning(
-                    "synthesis: turn 1 produced no <duct_report> (out=%d) for session %s — "
-                    "sending one recovery nudge", _tok_out, session_id,
-                )
-                async def _recover_gen():
-                    yield {
-                        "type": "user",
-                        "message": (
-                            "You analysed the data but did not emit the report. Output the "
-                            "complete <duct_report>…</duct_report> now, in full — do not run "
-                            "more tools or add further analysis, just produce the report."
-                        ),
-                    }
-                await client.query(_recover_gen())
+        # Only enter chat mode when synthesis produced a report.
+        # If no report, skip PIPELINE_FINISHED — the route handler will emit it after
+        # run_pipeline() returns, which will surface the "no report" error to the frontend.
+        if session.report_versions:  # type: ignore[attr-defined]
+            # Signal the frontend that synthesis is done — phase transitions to READY
+            await emit({"event": AuditEvent.PIPELINE_FINISHED, "status": StepStatus.SUCCESS})
+
+            # Phase 3: sequential multi-turn chat loop.
+            # ClaudeSDKClient keeps the subprocess alive across multiple
+            # query() + receive_response() cycles within the same connected client.
+            while True:
+                try:
+                    chat_msg = await asyncio.wait_for(
+                        session.chat_queue.get(),  # type: ignore[attr-defined]
+                        timeout=chat_idle_timeout,
+                    )
+                except asyncio.TimeoutError:
+                    logger.info("audit: session %s chat idle timeout", session_id)
+                    break
+                if chat_msg is None:
+                    break
+
+                async def _chat_msg_gen(m=chat_msg):
+                    yield {"type": "user", "message": m}
+
+                await client.query(_chat_msg_gen())
                 await _receive_one_turn()
-
-            # Only enter chat mode when synthesis produced a report.
-            # If no report, skip PIPELINE_FINISHED — the route handler will emit it after
-            # run_pipeline() returns, which will surface the "no report" error to the frontend.
-            if session.report_versions:  # type: ignore[attr-defined]
-                # Signal the frontend that synthesis is done — phase transitions to READY
-                await emit({"event": AuditEvent.PIPELINE_FINISHED, "status": StepStatus.SUCCESS})
-
-                # Phase 3: sequential multi-turn chat loop.
-                # ClaudeSDKClient keeps the subprocess alive across multiple
-                # query() + receive_response() cycles within the same async with block.
-                while True:
-                    try:
-                        chat_msg = await asyncio.wait_for(
-                            session.chat_queue.get(),  # type: ignore[attr-defined]
-                            timeout=chat_idle_timeout,
-                        )
-                    except asyncio.TimeoutError:
-                        logger.info("audit: session %s chat idle timeout", session_id)
-                        break
-                    if chat_msg is None:
-                        break
-
-                    async def _chat_msg_gen(m=chat_msg):
-                        yield {"type": "user", "message": m}
-
-                    await client.query(_chat_msg_gen())
-                    await _receive_one_turn()
 
     except Exception:
         logger.exception("audit v3: run_synthesis failed for session %s", session_id)
     finally:
-        # The async-with above has disconnected the subprocess, so the throwaway
-        # per-session config dir is safe to remove.
+        if client is not None:
+            with suppress(Exception):
+                await client.disconnect()
+        # The subprocess is disconnected, so the throwaway per-session config dir
+        # is safe to remove.
         _sdk.cleanup_session_config_dir(_config_dir, log_prefix="audit")
 
     logger.info(

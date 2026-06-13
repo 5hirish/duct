@@ -244,10 +244,40 @@ async def send_message(agent_type: str, session_id: str, msg: AgentMessage) -> d
     if msg.content is None:
         raise HTTPException(422, "content field required for type='chat'")
 
-    # Inject report version context for audit agent
-    content = _inject_report_context(session, msg.content, msg.context_version_id)
+    # Ground each follow-up in the session's current artifact so edits act on the
+    # persisted state, not just the SDK process's (prunable) memory.
+    content = _inject_working_context(session, msg.content, msg.context_version_id)
     await session.chat_queue.put({"role": "user", "content": content})  # type: ignore[attr-defined]
     return {"status": "queued", "type": "chat"}
+
+
+def _inject_working_context(session: Any, content: str | list, version_id: int | None) -> str | list:
+    """Prepend the session's current artifact as XML context for the chat agent.
+
+    Audit/insights inject the selected (versioned) report; tiktok_studio injects
+    the current plan/post straight from the DB. Grounding the model in the
+    persisted artifact on every turn means a follow-up edit survives a session
+    prune + reconnect (the SDK subprocess memory does not) and acts on the exact
+    saved state, which tool calls (edit_slide / generate_image) may have changed.
+    """
+    if getattr(session, "report_versions", None):
+        return _inject_report_context(session, content, version_id)
+    if session.agent_type == AgentType.TIKTOK_STUDIO:
+        ctx = _content_context_xml(session)
+        if ctx:
+            return _prepend_context(content, ctx)
+    return content
+
+
+def _prepend_context(content: str | list, ctx: str) -> str | list:
+    """Prepend an XML context block to a chat message (str or content-block list)."""
+    if isinstance(content, str):
+        return ctx + content
+    # List of content blocks — merge context into the text block(s), keep the rest.
+    text_blocks = [b for b in content if isinstance(b, dict) and b.get("type") == "text"]
+    other_blocks = [b for b in content if not (isinstance(b, dict) and b.get("type") == "text")]
+    combined_text = ctx + " ".join(b.get("text", "") for b in text_blocks)
+    return [{"type": "text", "text": combined_text}] + other_blocks
 
 
 def _inject_report_context(session: Any, content: str | list, version_id: int | None) -> str | list:
@@ -270,15 +300,54 @@ def _inject_report_context(session: Any, content: str | list, version_id: int | 
         f"{report.model_dump_json(exclude={'html_report'})}\n"
         "</working_report>\n\n"
     )
+    return _prepend_context(content, ctx)
 
-    if isinstance(content, str):
-        return ctx + content
 
-    # List of content blocks — merge context into existing text block or prepend
-    text_blocks = [b for b in content if isinstance(b, dict) and b.get("type") == "text"]
-    other_blocks = [b for b in content if not (isinstance(b, dict) and b.get("type") == "text")]
-    combined_text = ctx + " ".join(b.get("text", "") for b in text_blocks)
-    return [{"type": "text", "text": combined_text}] + other_blocks
+def _content_context_xml(session: Any) -> str:
+    """Serialize the tiktok_studio session's current persisted plan or post as an
+    XML context block. Returns '' when nothing is persisted yet (the first
+    message before generation completes) so we never inject an empty wrapper.
+
+    slides_html is excluded from posts: it is large and DERIVED from `slides`
+    (the source of truth), the same reason audit excludes html_report.
+    """
+    from db.session import get_session as db_session
+    from models.content import ContentPlan, ContentPost
+
+    mode = getattr(session, "mode", "")
+    plan_id = getattr(session, "plan_id", None)
+    post_id = getattr(session, "post_id", None)
+    try:
+        with next(db_session()) as db:
+            if mode == "plan_month" and plan_id is not None:
+                plan = db.get(ContentPlan, plan_id)
+                if plan is None:
+                    return ""
+                payload = {
+                    "id": str(plan.id),
+                    "name": plan.name,
+                    "start_date": plan.start_date,
+                    "character": plan.character,
+                    "days": plan.days,
+                }
+                return (
+                    f"<working_plan id='{plan.id}'>\n"
+                    f"{json.dumps(payload, default=str)}\n"
+                    "</working_plan>\n\n"
+                )
+            if mode == "draft_post" and post_id is not None:
+                post = db.get(ContentPost, post_id)
+                if post is None:
+                    return ""
+                payload = post.model_dump(exclude={"slides_html"})
+                return (
+                    f"<working_post id='{post.id}'>\n"
+                    f"{json.dumps(payload, default=str)}\n"
+                    "</working_post>\n\n"
+                )
+    except Exception:
+        logger.warning("agents: content context injection failed for session %s", session.session_id, exc_info=True)
+    return ""
 
 
 # ---------------------------------------------------------------------------

@@ -7,7 +7,7 @@ from typing import Annotated, Any, Self
 
 from pydantic import BaseModel, BeforeValidator, Field, model_validator
 
-from agents.core.business_context import BusinessContext
+from agents.core.context import BusinessContext
 from agents.insights.goals import InsightGenerationGoal, parse_goal_value
 from agents.insights.goals.organic_growth import OrganicGrowthGoal, parse_goal_value as parse_organic_goal_value
 
@@ -41,7 +41,7 @@ class ReportRequest(BaseModel):
     use_demo: bool = False
 
 
-# BusinessContext is the shared, unified model (agents/core/business_context.py),
+# BusinessContext is the shared, unified model (agents/core/context.py),
 # passed equally to every agent. It is a superset (identity + paid + organic
 # fields) with extra="ignore", so existing insights form payloads validate
 # unchanged. Imported above; re-exported here for backwards-compatible imports.
