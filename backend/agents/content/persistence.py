@@ -18,7 +18,6 @@ Design: see models/content/conversation.py. The artifact link is polymorphic
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 from datetime import datetime, timezone
 from typing import Any
@@ -362,59 +361,20 @@ def save_summary(db: Session, conversation_id: UUID, summary: str, through_seq: 
     db.commit()
 
 
-def build_working_artifact_xml(mode: str, plan_id: UUID | None, post_id: UUID | None) -> str:
-    """Serialize the session's current persisted plan/post as an XML context
-    block — the same shape routes.agents._content_context_xml injects on chat
-    turns, reused here so the resumed agent sees the live artifact on turn 1.
+async def build_reprime_context(session: Any, api_key: str) -> str:
+    """Build the restored-context block prepended to the user's FIRST message
+    after a resume — NOT a greeting turn. Resuming must never make the agent
+    speak on its own (reload/refresh/reconnect just restore state); instead the
+    prior summary + recent turns ride along on the user's next instruction so the
+    agent answers it with full context. The current artifact is injected
+    separately (routes.agents._content_context_xml), so it's not included here.
 
-    slides_html is excluded from posts (large + derived from `slides`)."""
-    try:
-        with next(db_session()) as db:
-            if mode == "plan_month" and plan_id is not None:
-                plan = db.get(ContentPlan, plan_id)
-                if plan is None:
-                    return ""
-                payload = {
-                    "id": str(plan.id),
-                    "name": plan.name,
-                    "start_date": plan.start_date,
-                    "character": plan.character,
-                    "days": plan.days,
-                }
-                return f"<working_plan id='{plan.id}'>\n{json.dumps(payload, default=str)}\n</working_plan>\n\n"
-            if mode == "draft_post" and post_id is not None:
-                post = db.get(ContentPost, post_id)
-                if post is None:
-                    return ""
-                payload = post.model_dump(exclude={"slides_html"})
-                return f"<working_post id='{post.id}'>\n{json.dumps(payload, default=str)}\n</working_post>\n\n"
-    except Exception:
-        logger.warning("persistence: working-artifact serialization failed", exc_info=True)
-    return ""
-
-
-_RESUME_INSTRUCTION = (
-    "You are RESUMING an existing conversation. Above is a summary and/or the "
-    "recent turns of the prior discussion, and the current {artifact} in "
-    "<working_{artifact}>. Pick up where you left off: greet the user in one short "
-    "line that shows you remember the context, then wait for their next "
-    "instruction. Do NOT re-run research or regenerate the {artifact} unless the "
-    "user explicitly asks."
-)
-
-
-async def build_resume_initial_prompt(session: Any, api_key: str) -> str:
-    """Build the turn-1 prompt for a resumed session: working artifact +
-    re-prime block (summary + recent turns) + a resume instruction. Compacts
-    (Haiku-summarizes) the tail first when the conversation has grown past the
-    threshold, so reopened chats start lean. Never raises — returns whatever
-    context it can assemble."""
+    Compacts (Haiku-summarizes) the tail first when the conversation has grown
+    past the threshold, so reopened chats stay lean. Never raises — returns "" if
+    there's no usable context."""
     conversation_id = getattr(session, "conversation_id", None)
-    mode = getattr(session, "mode", "draft_post")
     if conversation_id is None:
         return ""
-
-    # Compaction: fold the tail into the running summary if it's grown enough.
     try:
         with next(db_session()) as db:
             conv = get_conversation(db, conversation_id)
@@ -432,9 +392,14 @@ async def build_resume_initial_prompt(session: Any, api_key: str) -> str:
         logger.warning("persistence: resume re-prime failed for %s", conversation_id, exc_info=True)
         return ""
 
-    artifact_kind = "plan" if mode == "plan_month" else "post"
-    artifact_xml = build_working_artifact_xml(
-        mode, getattr(session, "plan_id", None), getattr(session, "post_id", None)
+    if not reprime.strip():
+        return ""
+    return (
+        "<resumed_context>\n"
+        "You are continuing an earlier conversation with this user about the "
+        "current post/plan (shown in the working_post / working_plan block). Use "
+        "this context to answer their next message naturally. Do NOT greet, "
+        "recap, or restate it, and do not regenerate anything unless they ask.\n"
+        f"{reprime}"
+        "</resumed_context>\n\n"
     )
-    instruction = _RESUME_INSTRUCTION.format(artifact=artifact_kind)
-    return f"{artifact_xml}{reprime}{instruction}"

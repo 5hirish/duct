@@ -438,6 +438,7 @@ async def _run(
     adaptive_thinking: bool = True,
     chat_idle_timeout: float = 1800.0,
     max_turns: int = 120,
+    resume: bool = False,
 ) -> None:
     """Drive a single Claude Agent SDK session for plan_month or draft_post.
 
@@ -894,8 +895,11 @@ async def _run(
 
         # Turn 1: the initial synthesis prompt, sent as a COMPLETING generator so
         # the SDK actually flushes it to the model (see _initial_prompt_gen).
-        await client.query(_initial_prompt_gen())
-        await _receive_one_turn(bound_first_output=True)
+        # SKIPPED on resume — resuming must NOT make the agent speak; it just
+        # waits for the user's first message (which carries the restored context).
+        if not resume:
+            await client.query(_initial_prompt_gen())
+            await _receive_one_turn(bound_first_output=True)
 
         # Follow-up turns: recovery nudges (queued by _on_result when a turn ends
         # with no artifact persisted) and user chat / AskUserQuestion answers,
@@ -980,6 +984,37 @@ class ClaudeContentRunner:
         """
         session = get_session(session_id) or create_plan_session(session_id, project_id)
 
+        # ── Resume: restore + ready, NEVER a greeting turn (see run_draft). ──
+        # Skip enrichment + the pipeline entirely; just load brand for the system
+        # prompt, stash the restored context for the user's first message, and go
+        # READY immediately so the input unlocks with no "working" state.
+        if getattr(session, "resume", False) and getattr(session, "conversation_id", None):
+            brand = await asyncio.to_thread(_load_brand_context, project_id)
+            system_prompt = build_orchestrator_system_prompt(brand, "plan_month")
+            from agents.content.persistence import build_reprime_context
+            session.resume_primer = await build_reprime_context(session, self._api_key)
+            session.needs_reprime = True
+            await emit({
+                "event":      ContentEvent.PIPELINE_FINISHED,
+                "session_id": session_id,
+                "mode":       "plan_month",
+                "plan_id":    str(session.plan_id) if session.plan_id else None,
+                "resumed":    True,
+            })
+            try:
+                await _run(
+                    session, system_prompt, "", emit, self._api_key,
+                    effort=effort or self.DEFAULT_PLAN_EFFORT,
+                    adaptive_thinking=adaptive_thinking,
+                    chat_idle_timeout=chat_idle_timeout,
+                    max_turns=max_turns or self.DEFAULT_PLAN_MAX_TURNS,
+                    resume=True,
+                )
+            except Exception as exc:
+                await emit({"event": ContentEvent.PIPELINE_FAILED, "session_id": session_id, "error": str(exc)})
+                raise
+            return
+
         # Emit the first events BEFORE loading brand context so the UI leaves its
         # "Starting session…" state immediately. _load_brand_context is a SYNC DB
         # read that opens a fresh connection through the Railway proxy — running it
@@ -1032,15 +1067,9 @@ class ClaudeContentRunner:
         })
 
         system_prompt = build_orchestrator_system_prompt(brand, "plan_month")
-        if getattr(session, "resume", False) and getattr(session, "conversation_id", None):
-            from agents.content.persistence import build_resume_initial_prompt
-            initial_prompt = await build_resume_initial_prompt(session, self._api_key) or (
-                "Resume this conversation. Greet the user briefly and wait for their instruction."
-            )
-        else:
-            initial_prompt = build_plan_user_prompt(
-                brand, history=[], formats=[], avatars=[], research=research,
-            )
+        initial_prompt = build_plan_user_prompt(
+            brand, history=[], formats=[], avatars=[], research=research,
+        )
 
         try:
             await _run(
@@ -1102,6 +1131,42 @@ class ClaudeContentRunner:
         session = get_session(session_id) or create_draft_session(session_id, project_id)
         ch = resolve_channel(channel)  # sync, no DB — safe before the first emit
 
+        is_resume = bool(getattr(session, "resume", False) and getattr(session, "conversation_id", None))
+
+        # ── Resume: restore + ready, NEVER a greeting turn ──────────────────
+        # Reload/refresh/reconnect must just bring the session back to life — the
+        # agent stays silent until the user sends their next message. We load the
+        # brand silently (needed for the system prompt), stash the restored
+        # context for that first message, and signal READY immediately so the
+        # input unlocks. No PIPELINE_STARTED/steps → no "working" state, no greeting.
+        if is_resume:
+            brand = await asyncio.to_thread(_load_brand_context, project_id)
+            system_prompt = build_orchestrator_system_prompt(brand, "draft_post", channel=ch)
+            from agents.content.persistence import build_reprime_context
+            session.resume_primer = await build_reprime_context(session, self._api_key)
+            session.needs_reprime = True
+            await emit({
+                "event":      ContentEvent.PIPELINE_FINISHED,
+                "session_id": session_id,
+                "mode":       "draft_post",
+                "post_id":    str(session.post_id) if session.post_id else None,
+                "resumed":    True,
+            })
+            try:
+                await _run(
+                    session, system_prompt, "", emit, self._api_key,
+                    effort=effort or self.DEFAULT_DRAFT_EFFORT,
+                    adaptive_thinking=adaptive_thinking,
+                    chat_idle_timeout=chat_idle_timeout,
+                    max_turns=max_turns or self.DEFAULT_DRAFT_MAX_TURNS,
+                    resume=True,
+                )
+            except Exception as exc:
+                await emit({"event": ContentEvent.PIPELINE_FAILED, "session_id": session_id, "error": str(exc)})
+                raise
+            return
+
+        # ── Fresh draft: run the generation pipeline ────────────────────────
         # Emit lifecycle + the first step BEFORE the (blocking) brand-context load
         # so the UI leaves "Starting session…" immediately; load off the event
         # loop so it can't block the loop / SSE stream. (See run_plan for why.)
@@ -1129,22 +1194,16 @@ class ClaudeContentRunner:
         })
 
         system_prompt = build_orchestrator_system_prompt(brand, "draft_post", channel=ch)
-        if getattr(session, "resume", False) and getattr(session, "conversation_id", None):
-            from agents.content.persistence import build_resume_initial_prompt
-            initial_prompt = await build_resume_initial_prompt(session, self._api_key) or (
-                "Resume this conversation. Greet the user briefly and wait for their instruction."
-            )
-        else:
-            initial_prompt = build_post_user_prompt(
-                brand,
-                day,
-                topic=topic,
-                pillar=pillar,
-                format_slug=format_slug,
-                avatar=None,
-                recent_posts=[],
-                channel=ch,
-            )
+        initial_prompt = build_post_user_prompt(
+            brand,
+            day,
+            topic=topic,
+            pillar=pillar,
+            format_slug=format_slug,
+            avatar=None,
+            recent_posts=[],
+            channel=ch,
+        )
 
         try:
             await _run(

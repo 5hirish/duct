@@ -207,6 +207,11 @@ class ContentSession(BaseAgentSession):
     conversation_id: UUID | None = None
     recorder: Any = None
     resume: bool = False
+    # On resume we don't run a greeting turn; the restored context (resume_primer)
+    # is prepended to the user's FIRST chat message instead. needs_reprime gates
+    # that one-time injection (see routes.agents.send_message).
+    needs_reprime: bool = False
+    resume_primer: str = ""
     todos: list[dict] = field(default_factory=list)
     # render_id -> asyncio.Future, resolved by the frontend's slide-render POST.
     # Bridges the agent's render_slide tool to client-side rasterization (same

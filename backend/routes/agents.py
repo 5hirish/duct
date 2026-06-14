@@ -312,6 +312,16 @@ async def send_message(agent_type: str, session_id: str, msg: AgentMessage) -> d
     # Ground each follow-up in the session's current artifact so edits act on the
     # persisted state, not just the SDK process's (prunable) memory.
     content = _inject_working_context(session, msg.content, msg.context_version_id)
+
+    # First message after a resume: prepend the restored conversation context
+    # (summary + recent turns) so the agent answers WITH history — there was no
+    # greeting turn to carry it. One-time; cleared after injecting.
+    if getattr(session, "needs_reprime", False):
+        primer = getattr(session, "resume_primer", "") or ""
+        if primer:
+            content = _prepend_context(content, primer)
+        session.needs_reprime = False
+
     await session.chat_queue.put({"role": "user", "content": content})  # type: ignore[attr-defined]
     return {"status": "queued", "type": "chat"}
 

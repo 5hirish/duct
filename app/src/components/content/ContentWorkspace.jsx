@@ -59,6 +59,10 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
   // A bare stream drop (network blip, server restart) is NOT terminal.
   const terminalRef = useRef(false);
   const reconnectAttemptRef = useRef(0);
+  // On a resume the only turn is a one-line greeting; its extended-thinking is
+  // pure noise (and narrates internal state), so we hide thinking until the user
+  // takes their first action. Real work turns show thinking normally.
+  const suppressThinkingRef = useRef(false);
 
   // The params we actually open with — context, unless Start fresh overrode it.
   const openContext = openOverride || context;
@@ -198,6 +202,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
       try {
         // Resume: rehydrate persisted chat history BEFORE the live stream so the
         // order is history → new turns (the SSE handler appends to the tail).
+        suppressThinkingRef.current = Boolean(openContext?.conversationId);
         if (openContext?.conversationId) {
           try {
             const { events } = await getContentConversation(openContext.conversationId);
@@ -330,6 +335,8 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
         break;
 
       case ContentEvent.THINKING_CHUNK:
+        // Hide the resume greeting's thinking (see suppressThinkingRef).
+        if (suppressThinkingRef.current) break;
         setMessages((prev) => {
           const last = prev[prev.length - 1];
           if (last?.role === "assistant" && last.streaming)
@@ -452,6 +459,8 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
   }
 
   async function handleSendMessage(content) {
+    // The user is engaging — show thinking normally from here on.
+    suppressThinkingRef.current = false;
     const text = typeof content === "string" ? content : "[image attached]";
     setMessages((prev) => {
       const cleaned = prev[prev.length - 1]?.role === "send_error" ? prev.slice(0, -1) : prev;
