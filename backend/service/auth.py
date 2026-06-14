@@ -66,3 +66,32 @@ async def get_current_user(
     if user is None:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="User not found")
     return user
+
+
+async def get_current_user_optional(
+    credentials: HTTPAuthorizationCredentials | None = Security(_bearer),
+    settings: Configs = Depends(get_configs),
+    session: Session = Depends(get_session),
+) -> User | None:
+    """Like ``get_current_user`` but returns ``None`` instead of raising 401 when
+    no valid Bearer token is present.
+
+    For routes that personalise when the caller is logged in yet must keep
+    working for signed-out / token-less sessions (the app degrades to local-only
+    without a token). Never trusts client-supplied identity — the name comes from
+    the JWT-resolved ``User`` row or not at all.
+    """
+    if not credentials or not settings.jwt_secret:
+        return None
+    try:
+        payload = jwt.decode(
+            credentials.credentials,
+            settings.jwt_secret,
+            algorithms=["HS256"],
+        )
+    except jwt.InvalidTokenError:  # includes ExpiredSignatureError
+        return None
+    email: str = payload.get("sub", "")
+    if not email:
+        return None
+    return session.execute(select(User).where(User.email == email)).scalars().first()

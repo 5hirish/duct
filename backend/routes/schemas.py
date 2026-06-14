@@ -7,7 +7,7 @@ from typing import Annotated, Any, Self
 
 from pydantic import BaseModel, BeforeValidator, Field, model_validator
 
-from agents.core.context import BusinessContext, UserContext
+from agents.core.context import BusinessContext
 from agents.insights.goals import InsightGenerationGoal, parse_goal_value
 from agents.insights.goals.organic_growth import OrganicGrowthGoal, parse_goal_value as parse_organic_goal_value
 
@@ -68,7 +68,6 @@ class GenerateRequest(BaseModel):
     currency_code: str = "USD"
     login_customer_id: str = ""
     business_context: BusinessContext = Field(default_factory=BusinessContext)
-    user_context: UserContext = Field(default_factory=UserContext)  # who the report is for (name/role) — personalises tone, kept out of the cached system prompt
     mode_context: str = ""  # optional frontend-supplied mode context, appended to system prompt
     engine: str = Field(default="", description="Engine override: 'v1', 'v2', or 'v3'. Falls back to GENERATE_ENGINE env var.")
 

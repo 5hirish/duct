@@ -9,7 +9,7 @@ from collections.abc import Awaitable, Callable
 from functools import partial
 from typing import TYPE_CHECKING, Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 
 from agents.engines import Engine, resolve_engine, resolve_engine_model, resolve_engine_provider, PROVIDER_CONFIG_ATTR
@@ -18,6 +18,8 @@ from agents.insights.agent import GenerateInsightsAgent
 from agents.insights.v2.runner import AdkInsightsRunner
 from agents.insights.v3.runner import ClaudeAgentSdkRunner
 from config import get_configs
+from models.auth import User
+from service.auth import get_current_user_optional
 from routes.schemas import (
     BusinessContextField,
     BusinessContextFieldOption,
@@ -150,7 +152,7 @@ async def _step_finished(
     )
 
 
-async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | None = None) -> dict[str, Any]:
+async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | None = None, user: User | None = None) -> dict[str, Any]:
     await _emit(
         emit_event,
         event="pipeline_started",
@@ -309,7 +311,9 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
             )
 
         biz_ctx = req.business_context.model_dump() if req.business_context else None
-        user_ctx = req.user_context.model_dump() if req.user_context else None
+        # Identity comes from the authenticated session, never the client — the
+        # name today; add role/etc. here as columns land on the User model.
+        user_ctx = {"name": user.full_name} if user and user.full_name else None
         full_context = req.context
         if req.mode_context:
             full_context = f"{req.mode_context}\n\n{full_context}".strip() if full_context else req.mode_context
@@ -667,13 +671,19 @@ async def list_insight_modes() -> dict:
 
 
 @router.post("/insights/generate")
-async def generate_insight(req: GenerateRequest) -> dict:
+async def generate_insight(
+    req: GenerateRequest,
+    user: User | None = Depends(get_current_user_optional),
+) -> dict:
     """Fetch data for selected connections, build briefs, and optional synthesis."""
-    return await _run_generate_pipeline(req)
+    return await _run_generate_pipeline(req, user=user)
 
 
 @router.post("/insights/generate/stream")
-async def generate_insight_stream(req: GenerateRequest) -> StreamingResponse:
+async def generate_insight_stream(
+    req: GenerateRequest,
+    user: User | None = Depends(get_current_user_optional),
+) -> StreamingResponse:
     """Stream real pipeline progress events and final payload over SSE."""
 
     queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
@@ -684,7 +694,7 @@ async def generate_insight_stream(req: GenerateRequest) -> StreamingResponse:
 
     async def worker() -> None:
         try:
-            insight = await _run_generate_pipeline(req, emit_event=emit_event)
+            insight = await _run_generate_pipeline(req, emit_event=emit_event, user=user)
             await _emit(
                 emit_event,
                 event="pipeline_finished",

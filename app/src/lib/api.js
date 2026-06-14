@@ -19,6 +19,25 @@ function backendApiHeaders(extra = {}) {
   return headers;
 }
 
+// Bearer JWT minted by Google Sign-In (localStorage "duct_auth_token"), same
+// source as projectsApi.js. Optional: signed-out sessions omit it and the
+// backend personalises only when a valid token is present.
+function authToken() {
+  if (typeof window === "undefined") return "";
+  try {
+    return window.localStorage.getItem("duct_auth_token") || "";
+  } catch {
+    return "";
+  }
+}
+
+function backendAuthedHeaders(extra = {}) {
+  const headers = backendApiHeaders(extra);
+  const token = authToken();
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  return headers;
+}
+
 export async function fetchConnectorAccounts(connectorId, refreshToken) {
   const res = await fetch(
     `${BASE}/api/connectors/${encodeURIComponent(connectorId)}/accounts?refresh_token=${encodeURIComponent(refreshToken)}`,
@@ -70,7 +89,7 @@ export async function fetchEngineStatus() {
 export async function generateReport(params) {
   const res = await fetch(`${BASE}/api/insights/generate`, {
     method: "POST",
-    headers: backendApiHeaders({ "Content-Type": "application/json" }),
+    headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify(params),
   });
   if (!res.ok) {
@@ -199,7 +218,7 @@ function parseSseDataFrame(frame) {
 export async function generateReportStream(params, { onEvent, signal } = {}) {
   const res = await fetch(`${BASE}/api/insights/generate/stream`, {
     method: "POST",
-    headers: backendApiHeaders({ "Content-Type": "application/json" }),
+    headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify(params),
     signal,
   });
