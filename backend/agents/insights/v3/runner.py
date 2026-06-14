@@ -404,15 +404,16 @@ class ClaudeAgentSdkRunner:
         # Build synthesis prompts
         synthesis_system_prompt = get_system_prompt(
             goal=goal,
-            custom_goal=custom_goal,
-            context=context,
-            business_context=business_context,
             mode=mode,
         )
         synthesis_user_prompt = get_synthesis_user_prompt(
             all_briefs,
             supplementary=supplementary,
             mode=mode,
+            business_context=business_context,
+            goal=goal,
+            custom_goal=custom_goal,
+            context=context,
         )
 
         # Phase 2 — Claude Agent SDK synthesis

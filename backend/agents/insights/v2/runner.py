@@ -228,12 +228,16 @@ class AdkInsightsRunner:
 
         synthesis_system_prompt = get_system_prompt(
             goal=goal,
-            custom_goal=custom_goal,
-            context=context,
-            business_context=business_context,
             mode=mode,
         )
-        all_briefs_text = get_synthesis_user_prompt(all_briefs, mode=mode)
+        all_briefs_text = get_synthesis_user_prompt(
+            all_briefs,
+            mode=mode,
+            business_context=business_context,
+            goal=goal,
+            custom_goal=custom_goal,
+            context=context,
+        )
 
         pipeline = build_pipeline_node(
             model_str=self.model_str,
