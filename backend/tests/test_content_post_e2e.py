@@ -231,13 +231,6 @@ def _image_coverage(post_id) -> tuple[int, int]:
     return covered, len(slides)
 
 
-def _read_upload(url: str, uploads_dir: str) -> bytes | None:
-    if not url or not url.startswith("/uploads/"):
-        return None
-    path = Path(uploads_dir) / url[len("/uploads/"):]
-    return path.read_bytes() if path.exists() else None
-
-
 def _mime_for(url: str) -> str:
     lower = url.lower()
     if lower.endswith((".jpg", ".jpeg")):
@@ -247,20 +240,24 @@ def _mime_for(url: str) -> str:
     return "image/png"
 
 
-def _load_slide_images(post, uploads_dir: str) -> list[JudgeImage]:
+def _load_slide_images(post) -> list[JudgeImage]:
+    """Load each slide/cell image as bytes via the storage layer, which resolves
+    any URL family we emit (local /uploads, R2/CDN, bundled refs) the same way."""
+    from service import storage
+
     images: list[JudgeImage] = []
     for slide in (post.slides or []):
         sid = slide.get("slide_id", "?")
         role = slide.get("role", "")
         url = slide.get("image_url")
         if url:
-            data = _read_upload(url, uploads_dir)
+            data = storage.get_bytes(url)
             if data:
                 images.append(JudgeImage(label=f"{sid} ({role})", mime_type=_mime_for(url), data=data))
         for j, cell in enumerate(slide.get("items") or []):
             curl = (cell or {}).get("image_url")
             if curl:
-                data = _read_upload(curl, uploads_dir)
+                data = storage.get_bytes(curl)
                 if data:
                     images.append(JudgeImage(label=f"{sid} cell{j}", mime_type=_mime_for(curl), data=data))
     return images
@@ -389,8 +386,10 @@ def test_content_draft_post_with_images_passes_judge(maxaura_project, tmp_path, 
     if reason:
         pytest.skip(reason)
 
-    # Point image generation at a temp uploads volume and refresh cached config.
-    monkeypatch.setenv("UPLOADS_ENABLED", "true")
+    # Force the local image-storage backend at a temp dir and refresh cached
+    # config. (No R2 creds in CI, but pin it explicitly so a stray R2 env can't
+    # send the images to a bucket the judge-image loader would then re-fetch.)
+    monkeypatch.setenv("STORAGE_BACKEND", "local")
     monkeypatch.setenv("UPLOADS_DIR", str(tmp_path))
     import config
 
@@ -424,7 +423,7 @@ def test_content_draft_post_with_images_passes_judge(maxaura_project, tmp_path, 
     assert post.slides, "post has no slides"
 
     covered, total = _image_coverage(session.post_id)
-    images = _load_slide_images(post, str(tmp_path))
+    images = _load_slide_images(post)
     assert len(images) >= _MIN_IMAGES_TO_JUDGE, (
         f"image phase under-delivered: {covered}/{total} slides imaged, "
         f"{len(images)} image files on disk (need >= {_MIN_IMAGES_TO_JUDGE} to judge)"
