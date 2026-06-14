@@ -77,11 +77,24 @@ class Configs(BaseSettings):
     # Generate: python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
     credentials_encryption_key: str = ""
 
-    # Asset uploads (Railway Volume mounted at /app/uploads in prod).
+    # Asset uploads (local disk backend; Railway Volume at /app/uploads in prod).
     # When uploads_enabled=true the server mounts the directory at /uploads as
-    # a StaticFiles route. The content agent writes generated images here.
+    # a StaticFiles route. Used by the 'local' storage backend (dev default).
     uploads_enabled: bool = False
     uploads_dir:     str  = "/app/uploads"
+
+    # Image storage backend: "local" (disk + /uploads StaticFiles) or "r2"
+    # (Cloudflare R2 over the S3 API, served from R2's CDN). "" / "auto" picks
+    # "r2" automatically when the R2 settings below are all present, else "local".
+    # See service/storage.py.
+    storage_backend: str = ""
+    r2_account_id:        str = ""
+    r2_access_key_id:     str = ""
+    r2_secret_access_key: str = ""
+    r2_bucket:            str = ""
+    # Public base URL the bucket is served from (R2 public dev URL or a custom
+    # CDN domain), e.g. "https://media.getduct.ai". No trailing slash needed.
+    r2_public_base_url:   str = ""
 
     # PostBridge — server-wide API key (MVP). Used as fallback when no
     # ConnectorCredential row exists for the calling user. Future: drop

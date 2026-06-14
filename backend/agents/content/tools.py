@@ -25,7 +25,6 @@ import json
 import logging
 from collections.abc import Awaitable, Callable
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Annotated, Any
 from uuid import UUID, uuid4
 
@@ -44,6 +43,7 @@ from agents.content.schema import (
 )
 from agents.content.templates import derive_image_prompts, render_slides_html
 from config import get_configs
+from service import storage
 from db.session import get_engine
 from models.content import (
     ContentAsset,
@@ -273,19 +273,44 @@ def _downscale_png_b64(png: bytes, max_w: int = 600) -> str:
         return base64.b64encode(png).decode("ascii")
 
 
+def _downscale_for_vision(data: bytes, mime: str, max_edge: int = 1536) -> tuple[str, str]:
+    """Prepare a generated image for the agent's critique view: cap the long edge
+    at ~max_edge and re-encode (JPEG for opaque photos). Claude resizes to
+    ≤1568px on the long edge server-side anyway, so this only trims the
+    backend→model upload with no fidelity loss. The full-res original is what we
+    persist to storage and reference in the slide. Returns (base64, mimeType);
+    falls back to the original bytes on any error."""
+    try:
+        from io import BytesIO
+
+        from PIL import Image
+
+        img = Image.open(BytesIO(data))
+        long_edge = max(img.width, img.height)
+        if long_edge > max_edge:
+            scale = max_edge / long_edge
+            img = img.resize((max(1, round(img.width * scale)), max(1, round(img.height * scale))))
+        buf = BytesIO()
+        if img.mode in ("RGBA", "LA", "P"):
+            img.save(buf, format="PNG")
+            return base64.b64encode(buf.getvalue()).decode("ascii"), "image/png"
+        img.convert("RGB").save(buf, format="JPEG", quality=85)
+        return base64.b64encode(buf.getvalue()).decode("ascii"), "image/jpeg"
+    except Exception:
+        return base64.b64encode(data).decode("ascii"), mime
+
+
 def _persist_slide_render(project_id: UUID, post_id: UUID, slide_id: str, png: bytes) -> str:
-    """Best-effort: write a rasterized slide PNG to the volume + a ContentAsset
-    row (asset_type='slide_render'). These composed renders are what publish_post
-    uploads to TikTok. Returns the public url, or '' if uploads are disabled."""
-    cfg = get_configs()
-    if not cfg.uploads_enabled:
+    """Best-effort: write a rasterized slide PNG to object storage + a
+    ContentAsset row (asset_type='slide_render'). These composed renders are what
+    publish_post uploads to TikTok. Returns the public url, or '' when the local
+    backend has serving disabled (uploads_enabled=false)."""
+    # On the local backend a write is pointless if /uploads isn't being served.
+    if storage.storage_backend() == "local" and not get_configs().uploads_enabled:
         return ""
-    base = Path(cfg.uploads_dir or "/app/uploads")
-    proj_dir = base / "projects" / str(project_id) / "renders"
-    proj_dir.mkdir(parents=True, exist_ok=True)
     fname = f"{slide_id}-{uuid4().hex[:8]}.png"
-    (proj_dir / fname).write_bytes(png)
-    url = f"/uploads/projects/{project_id}/renders/{fname}"
+    key = f"projects/{project_id}/renders/{fname}"
+    url = storage.put_image(key, png, "image/png")
     with _open_db() as db:
         db.add(ContentAsset(
             project_id=project_id,
@@ -301,30 +326,15 @@ def _persist_slide_render(project_id: UUID, post_id: UUID, slide_id: str, png: b
     return url
 
 
-def _asset_disk_path(asset: ContentAsset) -> Path | None:
-    """Resolve a ContentAsset.url to its on-disk path.
+def _load_asset_bytes(asset: ContentAsset) -> bytes | None:
+    """Resolve a ContentAsset to its raw bytes from the configured object store.
 
-    Handles two URL families:
-      - '/uploads/...'         → Railway Volume (per-project user uploads,
-                                 agent-generated images). Resolved against
-                                 `config.uploads_dir`.
-      - '/static/references/…' → repo-bundled global reference library.
-                                 Resolved against
-                                 `service/content_references.global_references_dir()`.
-
-    Returns None if the URL matches neither family — caller treats that
-    as "asset bytes unavailable" and surfaces a friendly error.
+    Delegates to service.storage.get_bytes, which handles every URL family we
+    emit: absolute R2/CDN URLs (HTTP GET), local '/uploads/...' (disk), and
+    repo-bundled '/static/references/...'. Returns None when unavailable —
+    callers surface a friendly error.
     """
-    if asset.url.startswith("/uploads/"):
-        cfg = get_configs()
-        base = Path(cfg.uploads_dir or "/app/uploads")
-        return base / asset.url[len("/uploads/"):]
-    # Global references shipped with the repo — no bucket round-trip.
-    from service.content_references import disk_path_for_public_url
-    resolved = disk_path_for_public_url(asset.url)
-    if resolved is not None:
-        return resolved
-    return None
+    return storage.get_bytes(asset.url)
 
 
 
@@ -976,7 +986,7 @@ def build_content_mcp_server(
             try:
                 request = GenerateImageRequest.model_validate(payload)
             except ValidationError as exc:
-                return _err(f"generate_image input invalid: {exc}")
+                return _err(f"The image request was invalid: {exc}")
 
             input_bytes_list: list[bytes] = []
             with _open_db() as db:
@@ -984,10 +994,11 @@ def build_content_mcp_server(
                     asset = db.get(ContentAsset, ref_uuid)
                     if asset is None or asset.project_id != project_id:
                         return _err(f"reference asset {ref_uuid} not found for this project.")
-                    p = _asset_disk_path(asset)
-                    if p is None or not p.exists():
-                        return _err(f"reference asset bytes missing on disk: {asset.url}")
-                    input_bytes_list.append(p.read_bytes())
+                    ref_bytes = _load_asset_bytes(asset)
+                    if not ref_bytes:
+                        logger.warning("content: reference asset bytes unavailable: %s", asset.url)
+                        return _err("One of the reference images couldn't be loaded — try regenerating it.")
+                    input_bytes_list.append(ref_bytes)
 
                 # Auto-prepend the role-explanation prefix when 2+ refs.
                 if len(input_bytes_list) >= 2:
@@ -1061,11 +1072,8 @@ def build_content_mcp_server(
 
             content: list[dict] = []
             for img, asset in zip(images, assets, strict=False):
-                content.append({
-                    "type":     "image",
-                    "data":     base64.b64encode(img.data).decode("ascii"),
-                    "mimeType": img.mime_type,
-                })
+                b64, vmime = _downscale_for_vision(img.data, img.mime_type)
+                content.append({"type": "image", "data": b64, "mimeType": vmime})
             content.append({
                 "type": "text",
                 "text": json.dumps({
@@ -1076,9 +1084,9 @@ def build_content_mcp_server(
                 }),
             })
             return {"content": content}
-        except Exception as exc:
+        except Exception:
             logger.exception("generate_image failed")
-            return _err(f"generate_image failed: {exc}")
+            return _err("Image generation hit a snag — please try again.")
 
     @tool(
         name="edit_image",
@@ -1126,16 +1134,15 @@ def build_content_mcp_server(
             try:
                 request = EditImageRequest.model_validate(payload)
             except ValidationError as exc:
-                return _err(f"edit_image input invalid: {exc}")
+                return _err(f"The image edit request was invalid: {exc}")
 
             with _open_db() as db:
                 base_asset = db.get(ContentAsset, request.input_asset_id)
                 if base_asset is None or base_asset.project_id != project_id:
                     return _err(f"input_asset_id {request.input_asset_id} not found for this project.")
-                base_path = _asset_disk_path(base_asset)
-                if base_path is None or not base_path.exists():
-                    return _err(f"input asset bytes missing on disk: {base_asset.url}")
-                base_bytes = base_path.read_bytes()
+                base_bytes = _load_asset_bytes(base_asset)
+                if not base_bytes:
+                    return _err("The image you're editing couldn't be loaded — try regenerating it.")
 
                 def _load(ref_id: UUID | None) -> bytes | None:
                     if ref_id is None:
@@ -1143,8 +1150,7 @@ def build_content_mcp_server(
                     a = db.get(ContentAsset, ref_id)
                     if a is None or a.project_id != project_id:
                         return None
-                    p = _asset_disk_path(a)
-                    return p.read_bytes() if p and p.exists() else None
+                    return _load_asset_bytes(a)
 
                 mask_bytes    = _load(request.mask_asset_id)
                 style_bytes   = _load(request.style_asset_id)
@@ -1186,11 +1192,8 @@ def build_content_mcp_server(
 
             content: list[dict] = []
             for img, asset in zip(images, assets, strict=False):
-                content.append({
-                    "type":     "image",
-                    "data":     base64.b64encode(img.data).decode("ascii"),
-                    "mimeType": img.mime_type,
-                })
+                b64, vmime = _downscale_for_vision(img.data, img.mime_type)
+                content.append({"type": "image", "data": b64, "mimeType": vmime})
             content.append({
                 "type": "text",
                 "text": json.dumps({
@@ -1200,9 +1203,9 @@ def build_content_mcp_server(
                 }),
             })
             return {"content": content}
-        except Exception as exc:
+        except Exception:
             logger.exception("edit_image failed")
-            return _err(f"edit_image failed: {exc}")
+            return _err("Image editing hit a snag — please try again.")
 
     # ----------------------- PostBridge (Phase 4) -----------------------
 
@@ -1327,10 +1330,9 @@ def build_content_mcp_server(
                 try:
                     async with client as pb:
                         for asset in asset_rows:
-                            disk = _asset_disk_path(asset)
-                            if disk is None or not disk.exists():
-                                return _err(f"Asset bytes missing on disk for {asset.url}.")
-                            data = disk.read_bytes()
+                            data = _load_asset_bytes(asset)
+                            if not data:
+                                return _err("Some media for this post couldn't be loaded — try regenerating the images.")
                             upload = await pb.create_upload_url(
                                 name=asset.filename or f"slide-{len(media_ids)+1}.png",
                                 mime_type=asset.mime_type or "image/png",

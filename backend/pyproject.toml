@@ -30,6 +30,9 @@ langchain-anthropic = "^1.4"
 langgraph = "^1.1"
 pyjwt = "^2.8"
 httpx = "^0.28"
+# Cloudflare R2 image storage over the S3 API (service/storage.py). Only loaded
+# when the 'r2' storage backend is active.
+boto3 = "^1.35"
 sqlmodel = "^0.0.24"
 alembic = "^1.17"
 psycopg = {version = "^3.2", extras = ["binary"]}
