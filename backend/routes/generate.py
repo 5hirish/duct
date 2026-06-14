@@ -309,6 +309,7 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
             )
 
         biz_ctx = req.business_context.model_dump() if req.business_context else None
+        user_ctx = req.user_context.model_dump() if req.user_context else None
         full_context = req.context
         if req.mode_context:
             full_context = f"{req.mode_context}\n\n{full_context}".strip() if full_context else req.mode_context
@@ -327,6 +328,7 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
                 context=full_context,
                 all_briefs=all_briefs,
                 business_context=biz_ctx,
+                user_context=user_ctx,
                 mode=mode,
                 customer_id=ads_customer_id,
                 date_from=req.date_from,
@@ -364,6 +366,7 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
                 all_briefs=all_briefs,
                 supplementary=supplementary or None,
                 business_context=biz_ctx,
+                user_context=user_ctx,
                 mode=mode,
                 emit_event=emit_event,
             )

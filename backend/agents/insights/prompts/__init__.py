@@ -21,7 +21,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from agents.core.context import format_business_context
+from agents.core.context import format_business_context, format_user_context
 from agents.insights.catalog import get_catalogs_for_connectors
 from agents.insights.catalog.prompt import entity_catalog_prompt_block
 from agents.insights.goals.paid_ads import goal_heading_text as paid_goal_heading
@@ -32,6 +32,17 @@ def _goal_heading(goal: Any, custom_goal: str, mode: str) -> str:
     if mode == "organic_growth":
         return organic_goal_heading(goal, custom_goal=custom_goal)
     return paid_goal_heading(goal, custom_goal=custom_goal)
+
+
+# Generic, user-agnostic directive — byte-identical for every user, so it lives
+# safely in the cached system prefix. The actual reader (name/role/…) is supplied
+# per-request in the <user_context> block of the user message.
+_READER_DIRECTIVE = (
+    "When a <user_context> block is present in the request, tailor the depth, "
+    "framing, and vocabulary of your analysis to that reader (e.g. a founder, a "
+    "CMO, or a hands-on specialist) — without changing the underlying findings, "
+    "the numbers you cite, or the required output structure."
+)
 
 
 def get_system_prompt(
@@ -80,6 +91,10 @@ def get_system_prompt(
         if directive:
             sections.append(directive)
 
+    # Static reader-personalisation directive (cache-safe — same for everyone);
+    # the per-user value travels in <user_context> in the user message.
+    sections.append(_READER_DIRECTIVE)
+
     from agents.core.persona import with_confidentiality
     return with_confidentiality("\n\n".join(sections))
 
@@ -91,6 +106,7 @@ def get_synthesis_user_prompt(
     supplementary: dict[str, Any] | None = None,
     mode: str = "paid_ads",
     business_context: dict[str, Any] | None = None,
+    user_context: dict[str, Any] | None = None,
     goal: Any = None,
     custom_goal: str = "",
     context: str = "",
@@ -130,6 +146,9 @@ def get_synthesis_user_prompt(
     )
     if biz_section:
         parts.append(biz_section)
+    user_section = format_user_context(user_context)
+    if user_section:
+        parts.append(user_section)
     if goal is not None:
         parts.append(f"<user_goal>\n{_goal_heading(goal, custom_goal, mode)}\n</user_goal>")
     if context:

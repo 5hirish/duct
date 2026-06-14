@@ -194,6 +194,7 @@ class AdkInsightsRunner:
         all_briefs: dict[str, Any],
         supplementary: dict[str, Any] | None = None,
         business_context: dict[str, Any] | None = None,
+        user_context: dict[str, Any] | None = None,
         mode: str = "paid_ads",
     ) -> SynthesisSchema | None:
         """No-op stub — v2 runs both phases together in run_pipeline()."""
@@ -210,6 +211,7 @@ class AdkInsightsRunner:
         context: str,
         all_briefs: dict[str, Any],
         business_context: dict[str, Any] | None = None,
+        user_context: dict[str, Any] | None = None,
         mode: str = "paid_ads",
         customer_id: str = "",
         date_from: str = "",
@@ -234,6 +236,7 @@ class AdkInsightsRunner:
             all_briefs,
             mode=mode,
             business_context=business_context,
+            user_context=user_context,
             goal=goal,
             custom_goal=custom_goal,
             context=context,
