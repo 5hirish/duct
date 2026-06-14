@@ -60,12 +60,18 @@ class Rubric:
     ``pass_threshold`` is the minimum weighted overall (on the 1–5 scale). The
     artifact passes only when the overall is at or above it AND every dimension
     clears its ``min_score`` AND every marker gates clean.
+
+    ``persona`` is the end user the judge should embody while grading — a
+    third-party critic "masking as the user" (e.g. a sound-off TikTok scroller
+    for short-form content). It shapes the judge's gut reaction; the dimensions
+    still define what gets scored. Leave empty for a neutral expert evaluator.
     """
 
     name: str
     dimensions: list[Dimension]
     markers: list[Marker] = field(default_factory=list)
     pass_threshold: float = 3.5
+    persona: str = ""
 
     def dimension_keys(self) -> list[str]:
         return [d.key for d in self.dimensions]

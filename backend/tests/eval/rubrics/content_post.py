@@ -21,6 +21,17 @@ def content_post_rubric() -> Rubric:
     return Rubric(
         name="content_post_tiktok",
         pass_threshold=3.6,
+        persona=(
+            "You are a 22-year-old in this brand's target audience, scrolling TikTok and "
+            "Instagram Reels late at night with the sound OFF and your thumb already "
+            "moving. You give any post about one second before you swipe. You stop only "
+            "for a first frame that hits a nerve or sparks curiosity; you keep watching "
+            "only while each slide yanks you to the next; you save or share only when "
+            "something is genuinely useful or share-worthy. You are fluent in this kind of "
+            "content and instantly bored by generic advice, ad-speak, or anything that "
+            "smells like 'AI'. You read the first slide as a thumbnail — if it doesn't "
+            "land at a glance, you're already gone."
+        ),
         dimensions=[
             Dimension(
                 "hook",

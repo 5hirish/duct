@@ -207,12 +207,6 @@ def maxaura_project():
 # ---------------------------------------------------------------------------
 
 
-def _slide_has_image(slide: dict) -> bool:
-    if slide.get("image_url"):
-        return True
-    return any((cell or {}).get("image_url") for cell in (slide.get("items") or []))
-
-
 def _read_post(post_id):
     from sqlmodel import Session
 
@@ -223,19 +217,24 @@ def _read_post(post_id):
         return db.get(ContentPost, post_id)
 
 
-def _image_coverage(post_id) -> tuple[int, int]:
-    """(slides with an image, total slides) for the persisted post."""
-    post = _read_post(post_id)
-    slides = (post.slides or []) if post is not None else []
-    covered = sum(1 for s in slides if _slide_has_image(s))
-    return covered, len(slides)
+def _generated_assets(post_id) -> list[tuple[str, str]]:
+    """(url, mime_type) for every image the agent generated for this post.
 
+    Read from content_assets (post_id + asset_type='generated') — the source of
+    truth for "images produced", independent of whether the agent also attached
+    them onto a slide's image_url (which only happens when it passes slide_id)."""
+    from sqlmodel import Session, select
 
-def _read_upload(url: str, uploads_dir: str) -> bytes | None:
-    if not url or not url.startswith("/uploads/"):
-        return None
-    path = Path(uploads_dir) / url[len("/uploads/"):]
-    return path.read_bytes() if path.exists() else None
+    from db.session import get_engine
+    from models.content import ContentAsset
+
+    with Session(get_engine()) as db:
+        rows = db.exec(
+            select(ContentAsset)
+            .where(ContentAsset.post_id == post_id)
+            .where(ContentAsset.asset_type == "generated")
+        ).all()
+        return [(r.url, r.mime_type or "") for r in rows]
 
 
 def _mime_for(url: str) -> str:
@@ -247,22 +246,16 @@ def _mime_for(url: str) -> str:
     return "image/png"
 
 
-def _load_slide_images(post, uploads_dir: str) -> list[JudgeImage]:
+def _load_post_images(post_id) -> list[JudgeImage]:
+    """Load every generated image for the post as bytes via the storage layer
+    (resolves local /uploads, R2/CDN, or bundled refs identically)."""
+    from service import storage
+
     images: list[JudgeImage] = []
-    for slide in (post.slides or []):
-        sid = slide.get("slide_id", "?")
-        role = slide.get("role", "")
-        url = slide.get("image_url")
-        if url:
-            data = _read_upload(url, uploads_dir)
-            if data:
-                images.append(JudgeImage(label=f"{sid} ({role})", mime_type=_mime_for(url), data=data))
-        for j, cell in enumerate(slide.get("items") or []):
-            curl = (cell or {}).get("image_url")
-            if curl:
-                data = _read_upload(curl, uploads_dir)
-                if data:
-                    images.append(JudgeImage(label=f"{sid} cell{j}", mime_type=_mime_for(curl), data=data))
+    for i, (url, mime) in enumerate(_generated_assets(post_id), 1):
+        data = storage.get_bytes(url)
+        if data:
+            images.append(JudgeImage(label=f"generated image {i}", mime_type=mime or _mime_for(url), data=data))
     return images
 
 
@@ -315,11 +308,10 @@ async def _drive(runner, session, session_id, project_id) -> list[dict]:
                 return  # nothing drafted — the test asserts + reports below
             # Phase 2 — drive the image phase.
             await session.chat_queue.put({"role": "user", "content": _IMAGE_TURN})
-            # Phase 3 — wait until at least one slide has an image (fast mode
-            # generates a single image), or time out, then end.
+            # Phase 3 — wait until the agent has generated at least one image
+            # (fast mode generates a single image), or time out, then end.
             def _has_image() -> bool:
-                covered, _total = _image_coverage(session.post_id)
-                return state["done"] or covered >= 1
+                return state["done"] or len(_generated_assets(session.post_id)) >= 1
             await _wait(_has_image, _IMAGE_TIMEOUT, soft=True)
         finally:
             # Always release the run loop, even on early return / error.
@@ -389,8 +381,10 @@ def test_content_draft_post_with_images_passes_judge(maxaura_project, tmp_path, 
     if reason:
         pytest.skip(reason)
 
-    # Point image generation at a temp uploads volume and refresh cached config.
-    monkeypatch.setenv("UPLOADS_ENABLED", "true")
+    # Force the local image-storage backend at a temp dir and refresh cached
+    # config. (No R2 creds in CI, but pin it explicitly so a stray R2 env can't
+    # send the images to a bucket the judge-image loader would then re-fetch.)
+    monkeypatch.setenv("STORAGE_BACKEND", "local")
     monkeypatch.setenv("UPLOADS_DIR", str(tmp_path))
     import config
 
@@ -423,11 +417,11 @@ def test_content_draft_post_with_images_passes_judge(maxaura_project, tmp_path, 
     assert post is not None, "persisted post not found in the database"
     assert post.slides, "post has no slides"
 
-    covered, total = _image_coverage(session.post_id)
-    images = _load_slide_images(post, str(tmp_path))
+    total = len(post.slides or [])
+    images = _load_post_images(session.post_id)
     assert len(images) >= _MIN_IMAGES_TO_JUDGE, (
-        f"image phase under-delivered: {covered}/{total} slides imaged, "
-        f"{len(images)} image files on disk (need >= {_MIN_IMAGES_TO_JUDGE} to judge)"
+        f"image phase under-delivered: agent generated {len(images)} image(s) for a "
+        f"{total}-slide post (need >= {_MIN_IMAGES_TO_JUDGE} to judge)"
     )
 
     # --- The judge: score the finished post + images against the rubric. ------
@@ -436,11 +430,10 @@ def test_content_draft_post_with_images_passes_judge(maxaura_project, tmp_path, 
     # were intentionally left without an image.
     eval_note = (
         f"This is a fast pipeline smoke check, not a full post: the agent was asked for "
-        f"a SHORT {total}-slide post and to generate {covered} image(s) on purpose. "
+        f"a SHORT {total}-slide post and generated {len(images)} image(s) on purpose. "
         "Calibrate structural expectations (e.g. multi-slide 'mystery architecture') to "
         "this short format, judge the image dimensions on the image(s) actually present, "
-        "and do not penalise the post for being short or for slides intentionally left "
-        "without an image."
+        "and do not penalise the post for being short or for slides without an image."
     )
     artifact = build_content_post_artifact(
         post, brand_summary=_brand_summary(), images=images, eval_note=eval_note

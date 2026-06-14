@@ -7,14 +7,16 @@ returns a computed ``Scorecard``.
 
 We call google-genai directly (the Gemini stack the v2/ADK engine sits on)
 rather than ADK: the judge is one multimodal call that must see the images and
-return JSON, which google-genai does natively — see service/google/brief.py
-(text + JSON) and service/gemini/client.py (image-part input). Following the v2
-engine's own choice (agents/insights/v2/schema_compat.py), we use JSON mode and
-parse the text, rather than a response_schema, for the widest Gemini support.
+return a typed verdict, which google-genai does natively. We use the
+structured-output API — ``response_schema=JudgeVerdict`` — so the model is
+constrained to the Pydantic shape and ``response.parsed`` comes back validated
+(see service/google/brief.py for the same response_schema pattern); a text-JSON
+fallback (``_parse_verdict``) covers the rare case ``parsed`` is empty.
 
-Vision is the point: image dimensions (composition, on-brand styling, prompt
-fidelity) can only be graded by actually looking at the generated pixels, so an
-artifact's images are attached as image parts.
+Vision is the point — and Gemini's native multimodality is the reason this lives
+on Gemini: image dimensions (composition, legibility at a glance, on-brand
+styling, prompt fidelity) can only be graded by actually looking at the pixels,
+so an artifact's images are attached as image parts in the same request.
 """
 
 from __future__ import annotations
@@ -25,7 +27,7 @@ import re
 from dataclasses import dataclass, field
 
 from tests.eval.client import DEFAULT_JUDGE_MODEL, build_judge_client
-from tests.eval.prompts import JSON_OUTPUT_INSTRUCTION, JUDGE_SYSTEM_PROMPT, render_rubric
+from tests.eval.prompts import build_judge_system_prompt, render_rubric
 from tests.eval.rubric import Rubric
 from tests.eval.verdict import JudgeVerdict, Scorecard, build_scorecard
 
@@ -87,8 +89,9 @@ def _run_judge(client, model: str, rubric: Rubric, artifact: JudgeArtifact, max_
             parts.append(types.Part.from_bytes(data=data, mime_type=mime))
 
     config = types.GenerateContentConfig(
-        system_instruction=JUDGE_SYSTEM_PROMPT + "\n\n" + JSON_OUTPUT_INSTRUCTION,
+        system_instruction=build_judge_system_prompt(rubric.persona),
         response_mime_type="application/json",
+        response_schema=JudgeVerdict,
         temperature=0.2,
         max_output_tokens=max_output_tokens,
     )
@@ -97,6 +100,11 @@ def _run_judge(client, model: str, rubric: Rubric, artifact: JudgeArtifact, max_
         contents=[types.Content(role="user", parts=parts)],
         config=config,
     )
+    # Structured output gives us the validated object directly; fall back to
+    # parsing the text only if the SDK didn't populate `.parsed`.
+    parsed = getattr(resp, "parsed", None)
+    if isinstance(parsed, JudgeVerdict):
+        return parsed
     return _parse_verdict(resp)
 
 

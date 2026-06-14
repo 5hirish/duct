@@ -117,6 +117,15 @@ def test_render_rubric_lists_every_key():
         assert key in text
 
 
+def test_judge_system_prompt_embeds_persona():
+    from tests.eval.prompts import build_judge_system_prompt
+
+    assert "Evaluate as this end user" not in build_judge_system_prompt("")
+    with_persona = build_judge_system_prompt("a sound-off TikTok scroller")
+    assert "a sound-off TikTok scroller" in with_persona
+    assert "Evaluate as this end user" in with_persona
+
+
 def test_parse_verdict_handles_json_fence():
     # Gemini responses expose the text via resp.text; tolerate a ```json fence.
     resp = SimpleNamespace(text=(
@@ -148,6 +157,8 @@ def test_content_rubric_shape_is_stable():
     # Hook and image quality carry the heaviest weight — they're what degrades first.
     weights = {d.key: d.weight for d in rubric.dimensions}
     assert weights["hook"] >= 1.5 and weights["image_quality"] >= 1.5
+    # The content judge evaluates as a short-form viewer persona.
+    assert rubric.persona and "scroll" in rubric.persona.lower()
 
 
 def test_build_content_post_artifact_renders_copy_and_flags_missing_images():
