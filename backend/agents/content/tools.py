@@ -888,11 +888,10 @@ def build_content_mcp_server(
     @tool(
         name="generate_image",
         description=(
-            "Generate one or more images from a text prompt via Gemini/Imagen. "
+            "Generate one or more images from a text prompt. "
             "Returns inline image data (so you can see the result) PLUS a stable "
             "asset_url you must reference in slides_html. Defaults: 9:16 portrait, "
-            "1 image, model=gemini-3.1-flash-image-preview. Outputs are saved to "
-            "/uploads/projects/<project_id>/generated/ on the Railway Volume."
+            "1 image. Generated images are saved to the project's media library."
         ),
         input_schema={
             "prompt": Annotated[str, "Image prompt — the scene description for this slide."],
@@ -937,9 +936,12 @@ def build_content_mcp_server(
 
             cfg = get_configs()
             if not cfg.gemini_api_key:
-                return _err("GEMINI_API_KEY is not configured; image generation unavailable.")
+                return _err("Image generation isn't enabled for this workspace yet.")
             if not cfg.uploads_enabled:
-                return _err("uploads_enabled is false; cannot persist generated images.")
+                return _err(
+                    "Image saving isn't turned on for this workspace, so new images "
+                    "can't be kept. Ask your Duct administrator to enable it, then try again."
+                )
 
             payload = {k: v for k, v in args.items() if v not in (None, "")}
             payload.setdefault("number_of_images", min(int(payload.get("number_of_images", 1) or 1), 4))
@@ -1002,7 +1004,8 @@ def build_content_mcp_server(
                         input_bytes_list=input_bytes_list or None,
                     )
                 except GeminiAPIError as exc:
-                    return _err(f"Gemini generate failed: {exc}")
+                    logger.warning("content: image generation failed: %s", exc, exc_info=True)
+                    return _err("Image generation failed — please try again in a moment.")
 
                 assets = []
                 for img in images:
@@ -1111,9 +1114,12 @@ def build_content_mcp_server(
 
             cfg = get_configs()
             if not cfg.gemini_api_key:
-                return _err("GEMINI_API_KEY is not configured; image editing unavailable.")
+                return _err("Image editing isn't enabled for this workspace yet.")
             if not cfg.uploads_enabled:
-                return _err("uploads_enabled is false; cannot persist edited images.")
+                return _err(
+                    "Image saving isn't turned on for this workspace, so edited images "
+                    "can't be kept. Ask your Duct administrator to enable it, then try again."
+                )
 
             payload = {k: v for k, v in args.items() if v not in (None, "")}
             payload.setdefault("number_of_images", min(int(payload.get("number_of_images", 1) or 1), 4))
@@ -1154,7 +1160,8 @@ def build_content_mcp_server(
                         subject_bytes=subject_bytes,
                     )
                 except GeminiAPIError as exc:
-                    return _err(f"Gemini edit failed: {exc}")
+                    logger.warning("content: image edit failed: %s", exc, exc_info=True)
+                    return _err("Image editing failed — please try again in a moment.")
 
                 assets = []
                 for img in images:
@@ -1345,7 +1352,8 @@ def build_content_mcp_server(
                         )
                         resp = await pb.create_post(request)
                 except PostBridgeAPIError as exc:
-                    return _err(f"Couldn't publish — PostBridge said: {exc.error.message or exc.status_code}")
+                    logger.warning("content: publish failed: %s", exc, exc_info=True)
+                    return _err(f"Couldn't publish that just now — {exc.error.message or 'please try again shortly'}.")
 
                 post.post_bridge_post_id = resp.id
                 if resp.status.value == "posted":
@@ -1450,16 +1458,17 @@ def build_content_mcp_server(
                         await pb.sync_analytics(platform="tiktok")
                         results = await pb.list_post_results(post_id=post.post_bridge_post_id, limit=10)
                         if not results:
-                            return _err("PostBridge hasn't recorded a post_result yet — try again in a few minutes.")
+                            return _err("This post hasn't finished publishing yet — try again in a few minutes.")
                         # Pick the first successful result; fall back to the latest.
                         chosen = next((r for r in results if r.success), results[0])
                         analytics_list = await pb.list_analytics(post_result_id=[chosen.id], limit=1)
                         if not analytics_list:
-                            return _err("PostBridge hasn't synced analytics for this post yet.")
+                            return _err("Analytics for this post haven't synced yet.")
                         analytics = analytics_list[0]
                         daily = await pb.get_analytics_daily(analytics.id)
                 except PostBridgeAPIError as exc:
-                    return _err(f"Couldn't pull metrics — PostBridge said: {exc.error.message or exc.status_code}")
+                    logger.warning("content: metrics pull failed: %s", exc, exc_info=True)
+                    return _err(f"Couldn't pull metrics just now — {exc.error.message or 'please try again shortly'}.")
 
                 merged = dict(post.perf or {})
                 merged.update({

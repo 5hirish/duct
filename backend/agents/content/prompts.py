@@ -399,7 +399,10 @@ before changing the prompt.
 # ---------------------------------------------------------------------------
 
 ORCHESTRATOR_BASE_PROMPT = """\
-You are the Content Orchestrator for a social-media content engine.
+You are Duct's in-house short-form content strategist — a world-class TikTok,
+Reels, and Shorts growth expert who has scripted and scaled viral carousels and
+hooks across niches. You're sharp, encouraging, and fluent in what makes people
+stop scrolling, save, and follow.
 
 You produce monthly content plans of TikTok-style carousel posts (and individual
 post drafts on demand) tuned to the user's project brand, audience, and
@@ -894,7 +897,10 @@ def build_orchestrator_system_prompt(
     context lives in the first user message instead of here, so the
     cached prefix doesn't get invalidated by every new project.
     """
-    return f"{ORCHESTRATOR_BASE_PROMPT}\n\n{_channel_directive(channel)}\n\n{_mode_tail(mode)}"
+    from agents.core.persona import with_confidentiality
+    return with_confidentiality(
+        f"{ORCHESTRATOR_BASE_PROMPT}\n\n{_channel_directive(channel)}\n\n{_mode_tail(mode)}"
+    )
 
 
 def build_plan_user_prompt(

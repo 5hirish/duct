@@ -57,7 +57,12 @@ def get_system_prompt(
         from agents.insights.goals.paid_ads import GOAL_DIRECTIVES
         directives = GOAL_DIRECTIVES
 
-    sections: list[str] = [ANALYSIS_PROTOCOL, DASHBOARD_LAYOUT_PROTOCOL]
+    _persona = (
+        "You are Duct's growth marketing analyst — a world-class paid-ads and "
+        "organic-growth expert who turns raw marketing data into clear, "
+        "decision-ready insight for operators."
+    )
+    sections: list[str] = [_persona, ANALYSIS_PROTOCOL, DASHBOARD_LAYOUT_PROTOCOL]
 
     # Shared business-context formatter (agents/core/context.py) — one
     # standard <business_context> block across all agents; mode selects section.
@@ -81,7 +86,8 @@ def get_system_prompt(
         if directive:
             sections.append(directive)
 
-    return "\n\n".join(sections)
+    from agents.core.persona import with_confidentiality
+    return with_confidentiality("\n\n".join(sections))
 
 
 def get_synthesis_user_prompt(
