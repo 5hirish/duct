@@ -18,10 +18,10 @@ from tests.eval import (
     MarkerVerdict,
     Rubric,
     build_scorecard,
-    resolve_credentials,
+    resolve_judge_api_key,
 )
 from tests.eval.client import judge_available
-from tests.eval.judge import _render_rubric, _verdict_from_text
+from tests.eval.judge import _parse_verdict, _render_rubric
 from tests.eval.rubrics.content_post import build_content_post_artifact, content_post_rubric
 
 
@@ -117,25 +117,24 @@ def test_render_rubric_lists_every_key():
     assert "must be ABSENT" in text  # forbidden marker rendered as such
 
 
-def test_verdict_from_text_handles_json_fence():
-    resp = SimpleNamespace(content=[SimpleNamespace(type="text", text=(
+def test_parse_verdict_handles_json_fence():
+    # Gemini responses expose the text via resp.text; tolerate a ```json fence.
+    resp = SimpleNamespace(text=(
         '```json\n{"dimensions":[{"key":"a","score":3,"rationale":"r"}],'
         '"markers":[],"summary":"ok"}\n```'
-    ))])
-    verdict = _verdict_from_text(resp)
+    ))
+    verdict = _parse_verdict(resp)
     assert verdict.dimensions[0].key == "a" and verdict.dimensions[0].score == 3
 
 
-def test_resolve_credentials_prefers_env(monkeypatch):
-    monkeypatch.setenv("ANTHROPIC_API_KEY", "k-123")
-    monkeypatch.setenv("CLAUDE_CODE_OAUTH_TOKEN", "oat-456")
-    api_key, oauth = resolve_credentials()
-    assert api_key == "k-123" and oauth == "oat-456"
+def test_resolve_judge_api_key_prefers_env(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "g-123")
+    assert resolve_judge_api_key() == "g-123"
 
 
 def test_judge_unavailable_without_any_credential(monkeypatch):
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-    monkeypatch.delenv("CLAUDE_CODE_OAUTH_TOKEN", raising=False)
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
     # Neutralise any backend/.env fallback so this asserts the no-cred path.
     monkeypatch.setattr("tests.eval.client._config_cred", lambda _name: "")
     assert judge_available() is False

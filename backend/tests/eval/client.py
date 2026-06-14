@@ -1,31 +1,31 @@
-"""Judge client construction + credential resolution.
+"""Judge client construction + credential resolution (Google Gemini).
 
-The judge is the harness's only network dependency. It runs a single
-vision-capable Claude call, so we use the Anthropic Messages API directly (not
-the Agent SDK) — structured output and image input are first-class there.
+The judge is the harness's only network dependency: one vision-capable Gemini
+call that scores the deliverable. Gemini — the same stack the v2/ADK engine sits
+on — is used here instead of Claude because (a) the grading call must inspect
+images and return JSON in a single shot, which google-genai does natively, and
+(b) the Gemini key has the rate-limit headroom the raw Anthropic Messages API
+path did not.
 
-Credential order (per the project's CI decision): an explicit ``ANTHROPIC_API_KEY``
-wins; otherwise fall back to the ``CLAUDE_CODE_OAUTH_TOKEN`` already present in
-CI (Bearer auth + the oauth beta header). When neither is available — or the
-``anthropic`` SDK isn't installed — ``judge_available()`` is False and callers
-skip rather than fail. If a provided OAuth token turns out not to authenticate
-the Messages API, the call surfaces an auth error the caller treats as a skip.
+We call ``google-genai`` directly rather than Google ADK: in this codebase the
+ADK/v2 path neither accepts image input nor emits native structured output (see
+agents/insights/v2/schema_compat.py), both of which the vision judge needs. The
+call shape mirrors service/google/brief.py (text + JSON) and
+service/gemini/client.py (image parts).
 """
 
 from __future__ import annotations
 
 import os
 
-# Default judge model: the most capable grader, so the bar that guards against
-# the (cheaper) content model's degradation is itself trustworthy.
-DEFAULT_JUDGE_MODEL = "claude-opus-4-8"
-
-# Claude Code OAuth tokens authenticate the Messages API via Bearer + this beta.
-_OAUTH_BETA = "oauth-2025-04-20"
+# Default judge model: the v2 engine's Gemini default — multimodal (accepts
+# images) and proven with JSON output in service/google/brief.py. Override per
+# run with DUCT_JUDGE_MODEL (e.g. "gemini-3.1-flash-preview").
+DEFAULT_JUDGE_MODEL = "gemini-2.5-flash"
 
 
 class JudgeUnavailable(RuntimeError):
-    """No usable Claude credential / SDK is available for the judge."""
+    """No usable Gemini credential / SDK is available for the judge."""
 
 
 def _config_cred(name: str) -> str:
@@ -39,49 +39,33 @@ def _config_cred(name: str) -> str:
         return ""
 
 
-def resolve_credentials() -> tuple[str, str]:
-    """Return ``(api_key, oauth_token)`` — env first, then Duct config. Either
-    or both may be empty."""
-    api_key = os.environ.get("ANTHROPIC_API_KEY", "") or _config_cred("anthropic_api_key")
-    oauth = os.environ.get("CLAUDE_CODE_OAUTH_TOKEN", "") or _config_cred("claude_code_oauth_token")
-    return api_key.strip(), oauth.strip()
+def resolve_judge_api_key() -> str:
+    """The Gemini API key for the judge — env first, then Duct config."""
+    return (
+        os.environ.get("GEMINI_API_KEY", "")
+        or os.environ.get("GOOGLE_API_KEY", "")
+        or _config_cred("gemini_api_key")
+    ).strip()
 
 
 def judge_available() -> bool:
-    """True when the anthropic SDK is importable and a credential is present."""
+    """True when the google-genai SDK is importable and a Gemini key is present."""
     try:
-        import anthropic  # noqa: F401
+        from google import genai  # noqa: F401
     except Exception:
         return False
-    api_key, oauth = resolve_credentials()
-    return bool(api_key or oauth)
+    return bool(resolve_judge_api_key())
 
 
-def build_judge_client(*, max_retries: int = 6):
-    """Construct an ``anthropic.Anthropic`` client using the best available
-    credential. Raises ``JudgeUnavailable`` when the SDK is missing or no
-    credential is set.
-
-    ``max_retries`` is raised above the SDK default (2) because the judge runs
-    right after a heavy agent session, so the org can be momentarily rate-limited
-    — the SDK's exponential backoff rides out transient 429s.
-    """
+def build_judge_client():
+    """Construct a ``google.genai.Client`` from the resolved Gemini key. Raises
+    ``JudgeUnavailable`` when the SDK is missing or no key is set."""
     try:
-        import anthropic
+        from google import genai
     except Exception as exc:  # pragma: no cover - import guard
-        raise JudgeUnavailable("the anthropic SDK is not installed") from exc
+        raise JudgeUnavailable("the google-genai SDK is not installed") from exc
 
-    api_key, oauth = resolve_credentials()
-    if api_key:
-        return anthropic.Anthropic(api_key=api_key, max_retries=max_retries)
-    if oauth:
-        # Bearer + oauth beta header, set as defaults so they ride every request
-        # (including messages.parse()). x-api-key is intentionally NOT set.
-        return anthropic.Anthropic(
-            auth_token=oauth,
-            default_headers={"anthropic-beta": _OAUTH_BETA},
-            max_retries=max_retries,
-        )
-    raise JudgeUnavailable(
-        "no Claude credential found (set ANTHROPIC_API_KEY or CLAUDE_CODE_OAUTH_TOKEN)"
-    )
+    key = resolve_judge_api_key()
+    if not key:
+        raise JudgeUnavailable("no Gemini credential found (set GEMINI_API_KEY)")
+    return genai.Client(api_key=key)

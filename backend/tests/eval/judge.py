@@ -1,20 +1,26 @@
-"""The evaluation judge — a single vision-capable Claude call.
+"""The evaluation judge — a single vision-capable Gemini call.
 
-``evaluate()`` renders a rubric + artifact (text and images) into one Messages
-API request, asks the judge for structured per-dimension scores and marker
-checks, validates the result against ``JudgeVerdict``, and returns a computed
-``Scorecard``.
+``evaluate()`` renders a rubric + artifact (text and images) into one Gemini
+``generate_content`` request, asks for structured per-dimension scores and
+marker checks as JSON, validates the result against ``JudgeVerdict``, and
+returns a computed ``Scorecard``.
+
+We call google-genai directly (the Gemini stack the v2/ADK engine sits on)
+rather than ADK: the judge is one multimodal call that must see the images and
+return JSON, which google-genai does natively — see service/google/brief.py
+(text + JSON) and service/gemini/client.py (image-part input). Following the v2
+engine's own choice (agents/insights/v2/schema_compat.py), we use JSON mode and
+parse the text, rather than a response_schema, for the widest Gemini support.
 
 Vision is the point: image dimensions (composition, on-brand styling, prompt
 fidelity) can only be graded by actually looking at the generated pixels, so an
-artifact's images are attached as image blocks.
+artifact's images are attached as image parts.
 """
 
 from __future__ import annotations
 
-import base64
 import io
-import json
+import os
 import re
 from dataclasses import dataclass, field
 
@@ -23,7 +29,7 @@ from tests.eval.rubric import Rubric
 from tests.eval.verdict import JudgeVerdict, Scorecard, build_scorecard
 
 _MAX_IMAGES = 12
-_MAX_IMAGE_WIDTH = 768  # downscale heavy 9:16 renders to keep vision tokens sane
+_MAX_IMAGE_WIDTH = 768  # downscale heavy 9:16 renders to keep the request light
 
 
 @dataclass
@@ -48,86 +54,68 @@ def evaluate(
     rubric: Rubric,
     artifact: JudgeArtifact,
     *,
-    model: str = DEFAULT_JUDGE_MODEL,
+    model: str | None = None,
     client=None,
-    max_tokens: int = 4096,
+    max_output_tokens: int = 4096,
 ) -> Scorecard:
-    """Grade ``artifact`` against ``rubric`` with the Claude judge.
+    """Grade ``artifact`` against ``rubric`` with the Gemini judge.
 
-    ``client`` defaults to one built from the resolved credentials. Auth errors
-    propagate so callers can treat a non-working credential as a skip.
+    ``client`` defaults to one built from the resolved Gemini key. API errors
+    (rate limit, 5xx) propagate so callers can treat them as a skip.
     """
     client = client or build_judge_client()
-
-    content: list[dict] = [
-        {"type": "text", "text": _render_rubric(rubric)},
-        {"type": "text", "text": f"# Artifact under review: {artifact.title}\n\n{artifact.body}"},
-    ]
-    if artifact.images:
-        content.append({
-            "type": "text",
-            "text": "# Images (each is labeled — inspect them for the image dimensions and markers):",
-        })
-        for img in artifact.images[:_MAX_IMAGES]:
-            data, mime = _downscale(img.data, img.mime_type)
-            content.append({"type": "text", "text": f"Image — {img.label}:"})
-            content.append({
-                "type": "image",
-                "source": {
-                    "type": "base64",
-                    "media_type": mime,
-                    "data": base64.b64encode(data).decode("ascii"),
-                },
-            })
-
-    verdict = _run_judge(client, model, max_tokens, content)
+    model = model or os.environ.get("DUCT_JUDGE_MODEL") or DEFAULT_JUDGE_MODEL
+    verdict = _run_judge(client, model, rubric, artifact, max_output_tokens)
     return build_scorecard(rubric, verdict)
 
 
-# ---------------------------------------------------------------------------
-# Judge call — prefer the SDK's structured-output helper, fall back to JSON mode
-# ---------------------------------------------------------------------------
+def _run_judge(client, model: str, rubric: Rubric, artifact: JudgeArtifact, max_output_tokens: int) -> JudgeVerdict:
+    from google.genai import types
+
+    parts = [
+        types.Part.from_text(text=_render_rubric(rubric)),
+        types.Part.from_text(text=f"# Artifact under review: {artifact.title}\n\n{artifact.body}"),
+    ]
+    if artifact.images:
+        parts.append(types.Part.from_text(
+            text="# Images (each is labeled — inspect them for the image dimensions and markers):"
+        ))
+        for img in artifact.images[:_MAX_IMAGES]:
+            data, mime = _downscale(img.data, img.mime_type)
+            parts.append(types.Part.from_text(text=f"Image — {img.label}:"))
+            parts.append(types.Part.from_bytes(data=data, mime_type=mime))
+
+    config = types.GenerateContentConfig(
+        system_instruction=_system_prompt() + "\n\n" + _json_instruction(),
+        response_mime_type="application/json",
+        temperature=0.2,
+        max_output_tokens=max_output_tokens,
+    )
+    resp = client.models.generate_content(
+        model=model,
+        contents=[types.Content(role="user", parts=parts)],
+        config=config,
+    )
+    return _parse_verdict(resp)
 
 
-def _run_judge(client, model: str, max_tokens: int, content: list[dict]) -> JudgeVerdict:
-    system = _system_prompt()
-    messages = [{"role": "user", "content": content}]
-
-    # Preferred path: messages.parse validates against the Pydantic schema and
-    # strips JSON-schema constraints structured outputs doesn't support.
-    try:
-        resp = client.messages.parse(
-            model=model,
-            max_tokens=max_tokens,
-            system=system,
-            messages=messages,
-            output_format=JudgeVerdict,
-        )
-        parsed = getattr(resp, "parsed_output", None) or getattr(resp, "parsed", None)
-        if parsed is not None:
-            return parsed
-        return _verdict_from_text(resp)  # e.g. a refusal — recover from text
-    except (AttributeError, TypeError):
-        # An SDK without messages.parse / output_format — ask for JSON in the
-        # prompt and parse it. Same model, same images, no schema features.
-        resp = client.messages.create(
-            model=model,
-            max_tokens=max_tokens,
-            system=system + "\n\n" + _json_instruction(),
-            messages=messages,
-        )
-        return _verdict_from_text(resp)
-
-
-def _verdict_from_text(resp) -> JudgeVerdict:
-    text = "".join(
-        getattr(b, "text", "") for b in (getattr(resp, "content", None) or [])
-        if getattr(b, "type", None) == "text"
-    ).strip()
+def _parse_verdict(resp) -> JudgeVerdict:
+    """Pull the JSON verdict out of a Gemini response and validate it."""
+    text = (getattr(resp, "text", None) or "").strip()
+    if not text:
+        # Some SDK versions only expose text via candidates[].content.parts[].text
+        chunks: list[str] = []
+        for cand in (getattr(resp, "candidates", None) or []):
+            content = getattr(cand, "content", None)
+            for part in (getattr(content, "parts", None) or []):
+                piece = getattr(part, "text", None)
+                if piece:
+                    chunks.append(piece)
+        text = "".join(chunks).strip()
     fenced = re.search(r"```(?:json)?\s*([\s\S]+?)\s*```", text)
     if fenced:
         text = fenced.group(1).strip()
-    return JudgeVerdict.model_validate(json.loads(text))
+    return JudgeVerdict.model_validate_json(text)
 
 
 def _downscale(data: bytes, mime: str) -> tuple[bytes, str]:

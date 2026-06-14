@@ -10,27 +10,24 @@ pass/fail) makes thresholds auditable and stable across judge runs.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from tests.eval.rubric import Rubric
 
-# Literal (not ge/le) so the JSON schema emits an `enum` — natively supported by
-# structured outputs, with no constraint-stripping needed.
-Score = Literal[1, 2, 3, 4, 5]
-
 
 class DimensionScore(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    # extra="ignore": the judge model occasionally adds stray keys; tolerate them
+    # rather than failing the whole verdict parse.
+    model_config = ConfigDict(extra="ignore")
 
     key: str = Field(description="Must match one of the rubric dimension keys exactly.")
-    score: Score = Field(description="1=broken, 2=weak, 3=acceptable, 4=strong, 5=excellent.")
+    score: int = Field(description="Integer 1-5: 1=broken, 2=weak, 3=acceptable, 4=strong, 5=excellent.")
     rationale: str = Field(description="One or two sentences citing specific evidence.")
 
 
 class MarkerVerdict(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     key: str = Field(description="Must match one of the rubric marker keys exactly.")
     satisfied: bool = Field(description="True if the described condition is present in the artifact.")
@@ -40,7 +37,7 @@ class MarkerVerdict(BaseModel):
 class JudgeVerdict(BaseModel):
     """Structured-output schema handed to the judge model."""
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     dimensions: list[DimensionScore]
     markers: list[MarkerVerdict]
@@ -102,7 +99,12 @@ def build_scorecard(rubric: Rubric, verdict: JudgeVerdict) -> Scorecard:
 
     Pure and deterministic — unit-testable offline with a fabricated verdict.
     """
-    score_by_key = {d.key: int(d.score) for d in verdict.dimensions}
+    # Clamp to 1–5 so a stray out-of-range score from the judge can't skew the
+    # weighted overall or crash the gate.
+    def _clamp(value: int) -> int:
+        return 1 if value < 1 else 5 if value > 5 else value
+
+    score_by_key = {d.key: _clamp(int(d.score)) for d in verdict.dimensions}
     marker_by_key = {m.key: m for m in verdict.markers}
     failures: list[str] = []
 

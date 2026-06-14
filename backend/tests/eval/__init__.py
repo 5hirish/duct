@@ -27,7 +27,7 @@ from tests.eval.client import (
     JudgeUnavailable,
     build_judge_client,
     judge_available,
-    resolve_credentials,
+    resolve_judge_api_key,
 )
 from tests.eval.judge import JudgeArtifact, JudgeImage, evaluate
 from tests.eval.rubric import Dimension, Marker, Rubric
@@ -57,5 +57,5 @@ __all__ = [
     "build_scorecard",
     "evaluate",
     "judge_available",
-    "resolve_credentials",
+    "resolve_judge_api_key",
 ]

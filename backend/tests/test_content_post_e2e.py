@@ -2,17 +2,19 @@
 
 This is the complete content pipeline under one test: the v3 Claude Agent SDK
 runner drafts a real post, then generates a real image for every slide via its
-own ``generate_image`` tool (Gemini), and a Claude *judge* (vision) scores the
+own ``generate_image`` tool (Gemini), and a *Gemini* judge (vision) scores the
 finished post + images against ``content_post_rubric`` to guard against model-
-output degradation. Unlike the offline parser tests, this exercises the real
-agent, real image generation, and a real DB.
+output degradation. The judge runs on Gemini (the v2/ADK stack) rather than
+Claude so the grading call isn't gated by the Anthropic Messages API rate
+limits. Unlike the offline parser tests, this exercises the real agent, real
+image generation, and a real DB.
 
 It is gated and skips cleanly unless everything it needs is present:
 
-  DATABASE_URL                              — Postgres for the ephemeral project
-  CLAUDE_CODE_OAUTH_TOKEN or ANTHROPIC_API_KEY — drives the agent AND the judge
-  GEMINI_API_KEY                            — slide image generation
-  the ``claude`` CLI on PATH                — the Agent SDK subprocess
+  DATABASE_URL                                 — Postgres for the ephemeral project
+  CLAUDE_CODE_OAUTH_TOKEN or ANTHROPIC_API_KEY — drives the content agent (v3)
+  GEMINI_API_KEY                               — slide image generation AND the judge
+  the ``claude`` CLI on PATH                   — the Agent SDK subprocess
 
 Run it:
 
@@ -331,22 +333,20 @@ def _effort():
 
 
 def _judge_skip_reason(exc: Exception) -> str | None:
-    """Classify a judge-call exception as an infra issue we should SKIP on
-    (bad/again-rate-limited credential, transient 5xx) vs. a real failure to
-    raise. A 429 is environment, not content degradation, so it skips."""
-    try:
-        import anthropic
-
-        if isinstance(exc, (anthropic.AuthenticationError, anthropic.PermissionDeniedError)):
-            return "judge credential did not authenticate the Messages API"
-        if isinstance(exc, anthropic.RateLimitError):
-            return "judge was rate-limited (429) even after retries — re-run later or raise the Anthropic tier"
-        if isinstance(exc, anthropic.APIStatusError) and getattr(exc, "status_code", None) in (500, 502, 503, 529):
-            return f"judge hit a transient API error ({exc.status_code})"
-    except Exception:
-        pass
-    if getattr(exc, "status_code", None) in (401, 403, 429, 529):
-        return f"judge hit an auth/rate-limit error ({getattr(exc, 'status_code', '?')})"
+    """Classify a Gemini judge-call exception as an infra issue to SKIP on
+    (rate limit / quota / transient 5xx) vs. a real failure to raise. A rate
+    limit is environment, not content degradation, so it skips."""
+    code = getattr(exc, "code", None) or getattr(exc, "status_code", None)
+    blob = f"{getattr(exc, 'status', '')} {getattr(exc, 'message', '') or exc}".lower()
+    transient = any(
+        token in blob
+        for token in ("resource_exhausted", "rate limit", "rate_limit", "quota", "unavailable", "overloaded")
+    )
+    if code in (429, 500, 502, 503, 504) or transient:
+        return (
+            f"judge hit a transient Gemini error ({code or 'rate/quota'}) — "
+            "re-run later or raise the Gemini quota"
+        )
     return None
 
 
