@@ -115,7 +115,6 @@ def test_render_rubric_lists_every_key():
     text = render_rubric(_rubric())
     for key in ("`a`", "`b`", "`must`", "`nope`"):
         assert key in text
-    assert "must be ABSENT" in text  # forbidden marker rendered as such
 
 
 def test_parse_verdict_handles_json_fence():
@@ -145,7 +144,7 @@ def test_content_rubric_shape_is_stable():
     rubric = content_post_rubric()
     keys = set(rubric.dimension_keys())
     assert {"hook", "image_quality", "image_fidelity", "cohesion"}.issubset(keys)
-    assert {"no_ai_mention", "single_hook_emotion"}.issubset(set(rubric.marker_keys()))
+    assert {"mentions_ai", "single_hook_emotion"}.issubset(set(rubric.marker_keys()))
     # Hook and image quality carry the heaviest weight — they're what degrades first.
     weights = {d.key: d.weight for d in rubric.dimensions}
     assert weights["hook"] >= 1.5 and weights["image_quality"] >= 1.5

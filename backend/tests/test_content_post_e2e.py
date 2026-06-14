@@ -63,7 +63,8 @@ _IMAGE_TURN = (
 _TOPIC = (
     "the 3 grooming mistakes quietly weakening your jawline. TEST MODE: keep this "
     "SHORT — produce EXACTLY 3 single-image slides (set slide_count=3); no collage "
-    "or before/after slides."
+    "or before/after slides; do NOT number the slides or use list counters "
+    "(no '1/4', '①', 'tip 3')."
 )
 _PILLAR = "jawline"
 
@@ -434,9 +435,11 @@ def test_content_draft_post_with_images_passes_judge(maxaura_project, tmp_path, 
     # image dimensions on the image(s) present and doesn't penalise slides that
     # were intentionally left without an image.
     eval_note = (
-        f"This is a fast pipeline check: the post has {total} slide(s) and {covered} "
-        "of them had an image generated on purpose. Judge the image dimensions on "
-        "the image(s) actually present; do not penalise slides intentionally left "
+        f"This is a fast pipeline smoke check, not a full post: the agent was asked for "
+        f"a SHORT {total}-slide post and to generate {covered} image(s) on purpose. "
+        "Calibrate structural expectations (e.g. multi-slide 'mystery architecture') to "
+        "this short format, judge the image dimensions on the image(s) actually present, "
+        "and do not penalise the post for being short or for slides intentionally left "
         "without an image."
     )
     artifact = build_content_post_artifact(

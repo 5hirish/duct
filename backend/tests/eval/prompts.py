@@ -38,8 +38,12 @@ def render_rubric(rubric: Rubric) -> str:
         lines.append(f"- key=`{d.key}` — {d.title}: {d.description}")
     if rubric.markers:
         lines.append("")
-        lines.append("## Markers — answer satisfied=true/false using the exact key")
+        lines.append(
+            "## Markers — for each, set satisfied=true if the described condition is "
+            "PRESENT in the artifact and false if it is absent. Just report what you "
+            "observe; do NOT judge whether it is good or bad (the pass/fail logic is "
+            "applied separately)."
+        )
         for m in rubric.markers:
-            req = "must be ABSENT" if m.kind == "forbidden" else "must be PRESENT"
-            lines.append(f"- key=`{m.key}` ({req}): {m.description}")
+            lines.append(f"- key=`{m.key}`: {m.description}")
     return "\n".join(lines)

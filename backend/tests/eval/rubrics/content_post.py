@@ -94,16 +94,20 @@ def content_post_rubric() -> Rubric:
             ),
         ],
         markers=[
+            # Forbidden markers name the BAD thing, so satisfied=true (it's present)
+            # maps cleanly to a failure — don't name them "no_x" (that flips the
+            # polarity the judge keys off of).
             Marker(
-                "no_ai_mention",
-                "The slides or caption explicitly say 'AI' / 'AI-powered', or describe an "
-                "AI/LLM analysing something. The brand voice forbids naming AI on-platform.",
+                "mentions_ai",
+                "Any slide or the caption says 'AI' or 'AI-powered', or describes an AI/LLM "
+                "analysing something (e.g. 'I let AI analyse…'). The brand never names AI "
+                "on-platform.",
                 kind="forbidden",
             ),
             Marker(
-                "no_slide_counters",
-                "Slides use list counters such as '1/4', '2/5' or 'tip 3' that signal a list "
-                "and invite the viewer to exit after each slide.",
+                "uses_slide_counters",
+                "Any slide uses a list counter or slide number such as '1/4', '2/5', '①' or "
+                "'tip 3' that frames the post as a list.",
                 kind="forbidden",
             ),
             Marker(
