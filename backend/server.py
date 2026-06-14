@@ -184,16 +184,17 @@ app.add_middleware(OpenapiDocsBasicAuthMiddleware)
 app.add_middleware(AccessLogMiddleware)
 
 
-# Mount the uploads directory as a static-file route when enabled. In
-# production this points at a Railway Volume; in dev it's a local path.
-if _cfg.uploads_enabled:
+# Serve /uploads only for the local storage backend (dev). In prod the 'r2'
+# backend serves images straight from R2's CDN, so this mount is skipped.
+from service import storage as _storage  # noqa: E402
+
+if _storage.storage_backend() == "local":
     import os
 
     from fastapi.staticfiles import StaticFiles
 
-    uploads_dir = _cfg.uploads_dir or "/app/uploads"
-    os.makedirs(uploads_dir, exist_ok=True)
-    app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
+    os.makedirs(_cfg.uploads_dir, exist_ok=True)
+    app.mount("/uploads", StaticFiles(directory=_cfg.uploads_dir), name="uploads")
 
 
 # Mount the global content reference library if it exists. These are

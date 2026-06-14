@@ -303,11 +303,7 @@ def _downscale_for_vision(data: bytes, mime: str, max_edge: int = 1536) -> tuple
 def _persist_slide_render(project_id: UUID, post_id: UUID, slide_id: str, png: bytes) -> str:
     """Best-effort: write a rasterized slide PNG to object storage + a
     ContentAsset row (asset_type='slide_render'). These composed renders are what
-    publish_post uploads to TikTok. Returns the public url, or '' when the local
-    backend has serving disabled (uploads_enabled=false)."""
-    # On the local backend a write is pointless if /uploads isn't being served.
-    if storage.storage_backend() == "local" and not get_configs().uploads_enabled:
-        return ""
+    publish_post uploads to TikTok. Returns the public url."""
     fname = f"{slide_id}-{uuid4().hex[:8]}.png"
     key = f"projects/{project_id}/renders/{fname}"
     url = storage.put_image(key, png, "image/png")
@@ -947,11 +943,6 @@ def build_content_mcp_server(
             cfg = get_configs()
             if not cfg.gemini_api_key:
                 return _err("Image generation isn't enabled for this workspace yet.")
-            if not cfg.uploads_enabled:
-                return _err(
-                    "Image saving isn't turned on for this workspace, so new images "
-                    "can't be kept. Ask your Duct administrator to enable it, then try again."
-                )
 
             payload = {k: v for k, v in args.items() if v not in (None, "")}
             payload.setdefault("number_of_images", min(int(payload.get("number_of_images", 1) or 1), 4))
@@ -1061,11 +1052,24 @@ def build_content_mcp_server(
                                     f"#{target_item_index}" if target_item_index is not None else "",
                                     row.id,
                                 )
+                                # Instant first paint: ship a small inline data
+                                # URI of the just-generated image so the viewport
+                                # renders it immediately, with no CDN round-trip;
+                                # the client swaps to the full-res CDN url once it
+                                # preloads.
+                                _pv_b64, _pv_mime = _downscale_for_vision(
+                                    images[0].data, images[0].mime_type, max_edge=800
+                                )
                                 await emit({
                                     "event": ContentEvent.POST_DRAFT_UPDATED,
                                     "session_id": session.session_id,
                                     "post_id": str(row.id),
                                     "payload": _build_post_payload(row),
+                                    "inline_preview": {
+                                        "slide_id":   target_slide_id,
+                                        "item_index": target_item_index,
+                                        "data_uri":   f"data:{_pv_mime};base64,{_pv_b64}",
+                                    },
                                 })
                 except Exception:
                     logger.exception("content: failed to attach image to slide %s", target_slide_id)
@@ -1123,11 +1127,6 @@ def build_content_mcp_server(
             cfg = get_configs()
             if not cfg.gemini_api_key:
                 return _err("Image editing isn't enabled for this workspace yet.")
-            if not cfg.uploads_enabled:
-                return _err(
-                    "Image saving isn't turned on for this workspace, so edited images "
-                    "can't be kept. Ask your Duct administrator to enable it, then try again."
-                )
 
             payload = {k: v for k, v in args.items() if v not in (None, "")}
             payload.setdefault("number_of_images", min(int(payload.get("number_of_images", 1) or 1), 4))

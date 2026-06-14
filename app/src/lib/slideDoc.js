@@ -44,8 +44,12 @@ function isStale(prompt, used) {
 
 function fullImageLayer(slide) {
   const alt = escAttr(slide.image_prompt || slide.headline || slide.slide_id);
-  if (slide.image_url) {
-    let o = `<img class="bg" src="${escAttr(slide.image_url)}" alt="${alt}">`;
+  // _preview_uri is a transient inline data URI for instant first paint after a
+  // generation (no CDN round-trip); it's swapped out for image_url once the CDN
+  // image preloads, and is stripped before any save. See ContentWorkspace.
+  const bg = slide._preview_uri || slide.image_url;
+  if (bg) {
+    let o = `<img class="bg" src="${escAttr(bg)}" alt="${alt}">`;
     if (isStale(slide.image_prompt, slide.image_prompt_used)) {
       o += `<div class="img-stale-flag">image outdated — regenerate to match the new prompt</div>`;
     }
@@ -62,8 +66,9 @@ function fullImageLayer(slide) {
 }
 
 function cellImgOrPh(it) {
-  if (it.image_url) {
-    let o = `<img class="cell-img" src="${escAttr(it.image_url)}" alt="${escAttr(it.image_prompt)}">`;
+  const cellSrc = it._preview_uri || it.image_url;
+  if (cellSrc) {
+    let o = `<img class="cell-img" src="${escAttr(cellSrc)}" alt="${escAttr(it.image_prompt)}">`;
     if (isStale(it.image_prompt, it.image_prompt_used)) o += `<div class="cell-stale-flag">outdated</div>`;
     return o;
   }

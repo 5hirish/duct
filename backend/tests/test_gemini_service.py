@@ -32,11 +32,11 @@ from service.gemini.schema import GeneratedImage, ThinkingLevel
 @pytest.mark.parametrize(
     ("model", "level", "expected"),
     [
-        (ImageModel.GEMINI_3_1_FLASH_IMAGE_PREVIEW, ThinkingLevel.LOW,    ThinkingLevel.MINIMAL),
-        (ImageModel.GEMINI_3_1_FLASH_IMAGE_PREVIEW, ThinkingLevel.MEDIUM, ThinkingLevel.HIGH),
-        (ImageModel.GEMINI_3_1_FLASH_IMAGE_PREVIEW, ThinkingLevel.HIGH,   ThinkingLevel.HIGH),
-        (ImageModel.GEMINI_3_PRO_IMAGE_PREVIEW,     ThinkingLevel.LOW,    ThinkingLevel.LOW),
-        (ImageModel.GEMINI_3_PRO_IMAGE_PREVIEW,     ThinkingLevel.MEDIUM, ThinkingLevel.MEDIUM),
+        (ImageModel.GEMINI_3_1_FLASH_IMAGE, ThinkingLevel.LOW,    ThinkingLevel.MINIMAL),
+        (ImageModel.GEMINI_3_1_FLASH_IMAGE, ThinkingLevel.MEDIUM, ThinkingLevel.HIGH),
+        (ImageModel.GEMINI_3_1_FLASH_IMAGE, ThinkingLevel.HIGH,   ThinkingLevel.HIGH),
+        (ImageModel.GEMINI_3_PRO_IMAGE,     ThinkingLevel.LOW,    ThinkingLevel.LOW),
+        (ImageModel.GEMINI_3_PRO_IMAGE,     ThinkingLevel.MEDIUM, ThinkingLevel.MEDIUM),
     ],
 )
 def test_thinking_level_collapse_per_model(model, level, expected):
@@ -66,8 +66,10 @@ def test_persist_generated_image_writes_file_and_inserts_row(mime_type, expected
     from service.gemini.storage import persist_generated_image
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        with patch("service.gemini.storage.get_configs") as mock_cfg:
+        # Persistence now flows through service.storage (local backend → disk).
+        with patch("service.storage.get_configs") as mock_cfg:
             mock_cfg.return_value.uploads_dir = tmpdir
+            mock_cfg.return_value.storage_backend = "local"
             db = MagicMock()
             project_id = uuid4()
             img = GeneratedImage(data=b"\x89PNG-fake-bytes", mime_type=mime_type)

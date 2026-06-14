@@ -43,6 +43,18 @@ const TYPE_ICON = { slideshow: Images, video: Video, image: ImageIcon };
  *     "approve & generate images" action, which sends a chat turn to the agent.
  *     Absent on the read-only detail page.
  */
+// Drop transient client-only fields (e.g. _preview_uri, the instant-paint inline
+// data URI) from slides + cells before persisting — the DB stores only real urls.
+function stripTransient(slides) {
+  if (!Array.isArray(slides)) return slides;
+  return slides.map(({ _preview_uri, items, ...s }) => ({
+    ...s,
+    ...(Array.isArray(items)
+      ? { items: items.map(({ _preview_uri: _p, ...it }) => it) }
+      : items !== undefined ? { items } : {}),
+  }));
+}
+
 export default function PostViewport({ payload, canPublish = false, onPublish, onRevise, onSendMessage }) {
   const [draft, setDraft] = useState(null);
   const [dirty, setDirty] = useState(false);
@@ -77,7 +89,7 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
       bridge_text: post.bridge_text, strategic_note: post.strategic_note,
       visual_brief: post.visual_brief, emotional_arc: post.emotional_arc,
       camera_ref_pool: post.camera_ref_pool,
-      layout: post.layout, slides: post.slides,
+      layout: post.layout, slides: stripTransient(post.slides),
       platforms: post.platforms,
     };
   }

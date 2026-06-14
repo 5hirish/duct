@@ -308,7 +308,7 @@ class GeminiImageClient:
 def _collapse_thinking_for_gemini_3_1(model: ImageModel, level):
     """gemini-3.1-flash-image only supports MINIMAL or HIGH; collapse others."""
     from service.gemini.schema import ThinkingLevel
-    if model == ImageModel.GEMINI_3_1_FLASH_IMAGE_PREVIEW:
+    if model == ImageModel.GEMINI_3_1_FLASH_IMAGE:
         if level in (ThinkingLevel.LOW, ThinkingLevel.MEDIUM):
             return ThinkingLevel.MINIMAL if level == ThinkingLevel.LOW else ThinkingLevel.HIGH
     return level

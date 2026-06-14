@@ -100,15 +100,18 @@ class AgentEffort(StrEnum):
 class ImageModel(str, Enum):
     """Image generation model IDs (Gemini + Imagen via google-genai SDK)."""
 
-    GEMINI_3_1_FLASH_IMAGE_PREVIEW = "gemini-3.1-flash-image-preview"
-    GEMINI_3_PRO_IMAGE_PREVIEW     = "gemini-3-pro-image-preview"
-    GEMINI_2_5_FLASH_IMAGE         = "gemini-2.5-flash-image"
-    IMAGEN_4_GENERATE_001          = "imagen-4.0-generate-001"
-    IMAGEN_4_ULTRA_GENERATE_001    = "imagen-4.0-ultra-generate-001"
-    IMAGEN_4_FAST_GENERATE_001     = "imagen-4.0-fast-generate-001"
+    # GA model ids (the earlier "-preview" aliases are superseded by GA).
+    GEMINI_3_1_FLASH_IMAGE = "gemini-3.1-flash-image"
+    GEMINI_3_PRO_IMAGE     = "gemini-3-pro-image"
+    GEMINI_2_5_FLASH_IMAGE = "gemini-2.5-flash-image"
+    IMAGEN_4_GENERATE_001       = "imagen-4.0-generate-001"
+    IMAGEN_4_ULTRA_GENERATE_001 = "imagen-4.0-ultra-generate-001"
+    IMAGEN_4_FAST_GENERATE_001  = "imagen-4.0-fast-generate-001"
 
 
-DEFAULT_IMAGE_MODEL = ImageModel.GEMINI_3_1_FLASH_IMAGE_PREVIEW
+# gemini-3.1-flash-image: the high-efficiency, high-volume flash image model
+# (per the Gemini image-generation docs) — the right default for slide gen.
+DEFAULT_IMAGE_MODEL = ImageModel.GEMINI_3_1_FLASH_IMAGE
 
 
 class Platform(StrEnum):

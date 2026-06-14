@@ -35,6 +35,25 @@ export function mediaUrl(u) {
   return `${BASE}${u.startsWith("/") ? "" : "/"}${u}`;
 }
 
+/**
+ * Thumbnail variant of an absolute image URL. When the media domain has
+ * Cloudflare Image Resizing enabled (NEXT_PUBLIC_CDN_IMAGE_RESIZING="true"),
+ * rewrites to a width-capped, auto-format (WebP/AVIF) render via /cdn-cgi/image/
+ * — so the board/list pull small images while the editor keeps full-res. Safe
+ * passthrough (returns the URL unchanged) when disabled or for relative/data URLs.
+ */
+export function cdnImage(u, { width = 480, quality = 80 } = {}) {
+  if (!u || process.env.NEXT_PUBLIC_CDN_IMAGE_RESIZING !== "true") return u;
+  if (!/^https?:\/\//i.test(u)) return u;
+  try {
+    const url = new URL(u);
+    const opts = `width=${width},quality=${quality},format=auto,fit=scale-down`;
+    return `${url.origin}/cdn-cgi/image/${opts}${url.pathname}${url.search}`;
+  } catch {
+    return u;
+  }
+}
+
 function backendApiHeaders(extra = {}) {
   const headers = { ...extra };
   const key = process.env.NEXT_PUBLIC_DUCT_API_KEY;

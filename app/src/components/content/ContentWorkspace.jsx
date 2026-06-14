@@ -11,6 +11,7 @@ import {
   consumeSseStream,
   getContentConversation,
   getSlideRenderDoc,
+  mediaUrl,
   openPlanStream,
   openPostStream,
   postSlideRender,
@@ -359,9 +360,27 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
         setPayload({ type: "plan", ...event.payload });
         break;
 
-      case ContentEvent.POST_DRAFT_UPDATED:
-        setPayload({ type: "post", ...event.payload });
+      case ContentEvent.POST_DRAFT_UPDATED: {
+        const base = { type: "post", ...event.payload };
+        const ip = event.inline_preview;
+        if (ip?.data_uri) {
+          // Instant first paint: render the inline data URI now, then preload the
+          // real CDN image and drop the preview so the iframe shows full-res
+          // (cached) — avoids a visible CDN round-trip on the freshly generated slide.
+          setPayload(applyPreview(base, ip.slide_id, ip.item_index, ip.data_uri));
+          const realUrl = findSlideImage(base, ip.slide_id, ip.item_index);
+          if (realUrl && typeof window !== "undefined") {
+            const pre = new window.Image();
+            const drop = () => setPayload((prev) => applyPreview(prev, ip.slide_id, ip.item_index, null));
+            pre.onload = drop;
+            pre.onerror = drop;
+            pre.src = mediaUrl(realUrl);
+          }
+        } else {
+          setPayload(base);
+        }
         break;
+      }
 
       case ContentEvent.PIPELINE_FINISHED:
         pipelineEndedRef.current = true;
@@ -558,6 +577,33 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
   );
 }
 
+
+/** The real (CDN) image_url for a slide or one of its cells, from a post payload. */
+function findSlideImage(payload, slideId, itemIndex) {
+  const slide = (payload?.slides || []).find((s) => String(s.slide_id) === String(slideId));
+  if (!slide) return null;
+  if (itemIndex == null) return slide.image_url || null;
+  return slide.items?.[itemIndex]?.image_url || null;
+}
+
+/** Set (or clear, when uri is null) the transient _preview_uri on a slide/cell —
+ * the instant-paint inline data URI. Returns a new payload; leaves image_url
+ * (the saved value) untouched. */
+function applyPreview(payload, slideId, itemIndex, uri) {
+  if (!payload?.slides) return payload;
+  const apply = (obj) => {
+    const next = { ...obj };
+    if (uri) next._preview_uri = uri; else delete next._preview_uri;
+    return next;
+  };
+  const slides = payload.slides.map((s) => {
+    if (String(s.slide_id) !== String(slideId)) return s;
+    if (itemIndex == null) return apply(s);
+    const items = (s.items || []).map((it, i) => (i === itemIndex ? apply(it) : it));
+    return { ...s, items };
+  });
+  return { ...payload, slides };
+}
 
 /**
  * Map persisted conversation events (kind + data) to the chat `messages` shape

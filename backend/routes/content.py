@@ -77,6 +77,7 @@ from models.content import (
     ContentSocialLink,
 )
 from models.project import Project
+from service import storage
 from service.pipeline import now_iso
 
 logger = logging.getLogger(__name__)
@@ -1383,15 +1384,6 @@ def _asset_out(a: ContentAsset) -> ContentAssetOut:
     )
 
 
-def _uploads_dir() -> Path:
-    cfg = get_configs()
-    if not cfg.uploads_enabled:
-        raise HTTPException(503, "Uploads are disabled — set UPLOADS_ENABLED=true.")
-    base = Path(cfg.uploads_dir or "/app/uploads")
-    base.mkdir(parents=True, exist_ok=True)
-    return base
-
-
 @router.post("/content/uploads", status_code=201)
 async def upload_asset(
     project_id: UUID = Form(...),
@@ -1414,20 +1406,15 @@ async def upload_asset(
     if len(body) > _MAX_UPLOAD_BYTES:
         raise HTTPException(413, f"File too large (max {_MAX_UPLOAD_BYTES} bytes).")
 
-    base = _uploads_dir()
-    target_dir = base / "projects" / str(project_id) / asset_type
-    target_dir.mkdir(parents=True, exist_ok=True)
-
     ext = _MIME_TO_EXT.get(mime, "bin")
     safe_name = (file.filename or "upload").rsplit("/", 1)[-1].replace(" ", "-")
     asset_id  = uuid4()
     filename  = f"{asset_id}-{safe_name}"
     if "." not in filename.rsplit("/", 1)[-1]:
         filename = f"{filename}.{ext}"
-    target_path = target_dir / filename
-    target_path.write_bytes(body)
 
-    public_url = f"/uploads/projects/{project_id}/{asset_type}/{filename}"
+    key = f"projects/{project_id}/{asset_type}/{filename}"
+    public_url = storage.put_image(key, body, mime)
     row = ContentAsset(
         id=asset_id,
         project_id=project_id,
