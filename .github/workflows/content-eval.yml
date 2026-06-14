@@ -1,0 +1,106 @@
+name: Content Agent Eval
+
+# Runs the REAL v3 content agent (Claude Agent SDK) end to end — it drafts a
+# post, generates every slide image via Gemini, and has a Claude judge (vision)
+# score the result against the rubric. It costs money, so it is not wired to the
+# normal PR/push CI. Trigger it manually from the Actions tab to check the
+# content agent for output degradation.
+#
+# Postgres runs as an ephemeral service container, so no external DB is needed.
+# Required repository secrets:
+#   CLAUDE_CODE_OAUTH_TOKEN  — drives both the agent and the judge (reused).
+#   GEMINI_API_KEY           — slide image generation (without it the e2e skips).
+# Optional:
+#   ANTHROPIC_API_KEY        — if set, the judge prefers it over the OAuth token.
+
+on:
+  workflow_dispatch:
+  # TEMP(verify): branch-scoped push trigger so this eval can be exercised from
+  # the feature branch (workflow_dispatch only works once the file is on the
+  # default branch). Remove this `push:` block after verification.
+  push:
+    branches:
+      - claude/sleepy-knuth-vtioc5
+
+permissions:
+  contents: read
+
+# A new run supersedes an in-flight one on the same ref (no two paid evals at once).
+concurrency:
+  group: content-eval-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  content-eval:
+    name: v3 content e2e + judge
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: duct
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      # psycopg3 scheme up front: alembic uses DATABASE_URL verbatim, and
+      # db.session leaves an explicit +psycopg URL untouched.
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/duct
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Claude Code CLI
+        # The Agent SDK spawns the `claude` binary as a subprocess.
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Install Poetry
+        run: pip install poetry
+
+      - name: Install backend dependencies
+        run: poetry install --with dev
+
+      - name: Run database migrations
+        run: poetry run python scripts/migrations.py upgrade head
+
+      - name: Run content agent eval
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          DUCT_EVAL_OUTPUT: eval-scorecard.json
+        # -rs surfaces skip reasons; -s prints the rendered scorecard. The test
+        # also appends the scorecard to the GitHub step summary.
+        run: poetry run pytest -m live tests/test_content_post_e2e.py -s -v -rs
+
+      - name: Upload scorecard
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: content-eval-scorecard
+          path: backend/eval-scorecard.json
+          if-no-files-found: ignore
