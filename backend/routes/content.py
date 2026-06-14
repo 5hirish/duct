@@ -117,9 +117,8 @@ async def _prune_stale_sessions() -> None:
             _session_created_at.pop(sid, None)
 
 
-@router.on_event("startup")  # type: ignore[attr-defined]
-async def _start_pruner() -> None:
-    asyncio.create_task(_prune_stale_sessions())
+# Launched from the app lifespan in server.py — FastAPI's lifespan disables
+# router-level on_event hooks, so startup tasks are started centrally there.
 
 
 # ---------------------------------------------------------------------------
@@ -1005,15 +1004,24 @@ def get_post(post_id: UUID, db: Session = Depends(db_session)) -> PostOut:
     post = db.get(ContentPost, post_id)
     if post is None:
         raise HTTPException(404, "Post not found")
-    from agents.content.persistence import find_active_conversation
-    conv = find_active_conversation(db, artifact_type="post", artifact_id=post.id)
+    # Best-effort: the active-conversation lookup drives "click post → resume",
+    # but a persistence-table issue (e.g. migration not yet applied) must never
+    # break viewing a post — degrade to "no conversation" instead.
+    active_conversation_id = None
+    try:
+        from agents.content.persistence import find_active_conversation
+        conv = find_active_conversation(db, artifact_type="post", artifact_id=post.id)
+        active_conversation_id = conv.id if conv else None
+    except Exception:
+        db.rollback()
+        logger.warning("content: active-conversation lookup failed for post %s", post_id, exc_info=True)
     by_id = _format_map(db, post.project_id)
     thumb = _thumb_map(db, [post.id]).get(post.id, "")
     return _post_out(
         post,
         fmt=_fmt_for(post, by_id),
         thumbnail_url=thumb,
-        active_conversation_id=conv.id if conv else None,
+        active_conversation_id=active_conversation_id,
     )
 
 

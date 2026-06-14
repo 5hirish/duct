@@ -176,7 +176,10 @@ def resolve_or_create_conversation(
         conv: AgentConversation | None = None
         if conversation_id is not None:
             conv = get_conversation(db, conversation_id)
-        elif resume and artifact_type and artifact_id:
+        # Not found (or none given) but we know the artifact → reuse its active
+        # conversation. "When we don't find the session, just start a new one":
+        # if neither resolves, we fall through and create a fresh one below.
+        if conv is None and artifact_type and artifact_id:
             conv = find_active_conversation(db, artifact_type=artifact_type, artifact_id=artifact_id)
         if conv is not None:
             return conv, conv.last_seq > 0

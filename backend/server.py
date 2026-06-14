@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import sys
 import time
+from contextlib import asynccontextmanager
 from urllib.parse import urlparse
 
 from fastapi import FastAPI
@@ -120,12 +122,46 @@ if _cfg.sentry_dsn and (
     )
     logging.getLogger(__name__).info("Sentry SDK initialized for backend.")
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Single startup/shutdown owner for the app.
+
+    Replaces the deprecated `@app.on_event("startup")` and the per-router
+    `@router.on_event("startup")` pruner hooks. Per the FastAPI docs, providing
+    a `lifespan` disables ALL `on_event` handlers — including the ones merged in
+    from included routers — so every startup action must live here.
+    """
+    # Optional dev convenience: create tables from SQLModel metadata.
+    if _cfg.init_db_on_startup:
+        init_db()
+
+    # Background session-pruner loops: the shared agent registry plus the two
+    # legacy per-route session maps. Each runs forever; cancel on shutdown.
+    # Imported here (not at module top) to keep startup wiring beside the tasks.
+    from routes.agents import _prune_stale_sessions as _prune_agent_sessions
+    from routes.audit import _prune_stale_sessions as _prune_audit_sessions
+    from routes.content import _prune_stale_sessions as _prune_content_sessions
+
+    pruners = [
+        asyncio.create_task(_prune_agent_sessions(), name="prune-agent-sessions"),
+        asyncio.create_task(_prune_audit_sessions(), name="prune-audit-sessions"),
+        asyncio.create_task(_prune_content_sessions(), name="prune-content-sessions"),
+    ]
+    try:
+        yield
+    finally:
+        for task in pruners:
+            task.cancel()
+        await asyncio.gather(*pruners, return_exceptions=True)
+
+
 _openapi = "/openapi.json" if _cfg.expose_openapi_docs else None
 app = FastAPI(
     title="Duct API",
     openapi_url=_openapi,
     docs_url="/docs" if _cfg.expose_openapi_docs else None,
     redoc_url="/redoc" if _cfg.expose_openapi_docs else None,
+    lifespan=lifespan,
 )
 
 _cfg_cors = get_configs()
@@ -146,12 +182,6 @@ app.add_middleware(CORSMiddleware, **_cors_kwargs)
 app.add_middleware(OpenapiDocsBasicAuthMiddleware)
 # Added last → outermost, so the timing spans CORS + auth + handler.
 app.add_middleware(AccessLogMiddleware)
-
-
-@app.on_event("startup")
-def _startup_init_db() -> None:
-    if _cfg.init_db_on_startup:
-        init_db()
 
 
 # Mount the uploads directory as a static-file route when enabled. In

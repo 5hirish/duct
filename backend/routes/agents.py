@@ -68,11 +68,8 @@ router = APIRouter(tags=["agents"])
 _SESSION_TTL = 1800  # 30 minutes
 
 
-@router.on_event("startup")
-async def _start_session_pruner() -> None:
-    asyncio.create_task(_prune_stale_sessions())
-
-
+# Started from the app lifespan in server.py (FastAPI's lifespan disables
+# router-level on_event hooks, so all startup tasks are launched centrally).
 async def _prune_stale_sessions() -> None:
     while True:
         await asyncio.sleep(300)

@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(alembic upgrade:*)",
+      "Bash(alembic downgrade:*)",
+      "Bash(alembic current:*)",
+      "Bash(alembic heads:*)",
+      "Bash(alembic history:*)",
+      "Bash(alembic show:*)",
+      "Bash(alembic stamp:*)"
+    ]
+  }
+}

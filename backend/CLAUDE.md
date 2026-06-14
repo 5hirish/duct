@@ -27,6 +27,22 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
 - **Hosting:** Railway — auto-deploys from `main` via GitHub integration; `railway.json` defines Railpack build + uvicorn start.
 - **CI:** GitHub Actions (`backend.yml`) — Ruff lint + pytest on every PR and push to `main`.
 
+### Database migrations
+
+Schema changes are applied **manually** with Alembic — a normal local dev step,
+distinct from an app deploy (the global "deploys go through CI/CD" rule is about
+shipping app code, not running migrations). Nothing runs migrations
+automatically: `railway.json` only starts uvicorn and there is no CI migration job.
+
+- Apply: from `backend/`, run `alembic upgrade head`. The DB URL resolves from
+  `backend/.env.local` (the Railway TCP proxy) via `config.get_configs()`.
+- Inspect: `alembic current`, `alembic heads`, `alembic history`.
+- The proxy host is not resolvable inside the command sandbox, so migration
+  commands run with the sandbox disabled (they need network to `*.rlwy.net`).
+- New models must be imported in `models/__init__.py` so `SQLModel.metadata`
+  picks them up for autogenerate.
+- Migrations should be additive/reversible — always provide a working `downgrade`.
+
 ### Roadmap (not in codebase yet)
 
 - **Ingestion framework:** PyAirbyte for early pilots → client-managed Airbyte later

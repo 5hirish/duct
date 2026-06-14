@@ -83,7 +83,11 @@ export default function PostDetailPage() {
             pillar:   post.pillar  || undefined,
             channel:  (Array.isArray(post.platforms) && post.platforms[0]) || undefined,
             // Resume this post's prior conversation when one exists (set by the
-            // backend on GET /content/posts/{id}); otherwise open fresh.
+            // backend on GET /content/posts/{id}); otherwise open fresh. Pass the
+            // artifact so that even a stale conversation id falls back to (or
+            // rebinds) this post's active conversation rather than orphaning one.
+            artifactType: "post",
+            artifactId:   post.id,
             ...(post.active_conversation_id
               ? { conversationId: post.active_conversation_id, resume: true }
               : {}),

@@ -60,9 +60,8 @@ async def _prune_stale_sessions() -> None:
             _session_created_at.pop(sid, None)
 
 
-@router.on_event("startup")  # type: ignore[attr-defined]
-async def _start_pruner() -> None:
-    asyncio.create_task(_prune_stale_sessions())
+# Launched from the app lifespan in server.py — FastAPI's lifespan disables
+# router-level on_event hooks, so startup tasks are started centrally there.
 
 
 # ---------------------------------------------------------------------------
