@@ -44,6 +44,7 @@ from agents.content.schema import (
     ContentBrandContext,
     ContentPillar,
     ContentSession,
+    ContentTool,
     ContentVisualAssets,
     Day,
     PlanDraft,
@@ -513,25 +514,25 @@ async def _run(
         # treats as authoritative. Pattern borrowed from audit's
         # SubmitAuditReport handler.
 
-        if tool_name == "mcp__duct_content__submit_plan":
+        if tool_name == ContentTool.SUBMIT_PLAN:
             deny = _validate_submit_plan(input_data, project_id)
             if deny is not None:
                 return deny
             return PermissionResultAllow(updated_input=input_data)
 
-        if tool_name == "mcp__duct_content__submit_post_draft":
+        if tool_name == ContentTool.SUBMIT_POST_DRAFT:
             deny = _validate_submit_post_draft(input_data, project_id)
             if deny is not None:
                 return deny
             return PermissionResultAllow(updated_input=input_data)
 
-        if tool_name == "mcp__duct_content__generate_image":
+        if tool_name == ContentTool.GENERATE_IMAGE:
             deny = _validate_generate_image(input_data)
             if deny is not None:
                 return deny
             return PermissionResultAllow(updated_input=input_data)
 
-        if tool_name == "mcp__duct_content__edit_image":
+        if tool_name == ContentTool.EDIT_IMAGE:
             deny = _validate_edit_image(input_data)
             if deny is not None:
                 return deny
@@ -576,6 +577,39 @@ async def _run(
         return PermissionResultAllow(updated_input=input_data)
 
     async def _pre_tool_hook(input_data: dict, tool_use_id: str, context: Any) -> dict:
+        # Forensics: log every tool the agent runs with its full input, paired by
+        # tool_use_id to the tool_result recorded in _record_tool_result_hook.
+        # Best-effort — persistence must never block or fail a tool call.
+        _rec = getattr(session, "recorder", None)
+        if _rec is not None:
+            try:
+                await _rec.record_tool_use(
+                    name=input_data.get("tool_name", ""),
+                    tool_input=input_data.get("tool_input", input_data),
+                    tool_use_id=tool_use_id,
+                )
+            except Exception:
+                logger.debug("content: tool_use persistence failed", exc_info=True)
+        return {"continue_": True}
+
+    async def _record_tool_result_hook(input_data: dict, tool_use_id: str, context: Any) -> dict:
+        # Global PostToolUse companion to _pre_tool_hook: log every tool's output.
+        _rec = getattr(session, "recorder", None)
+        if _rec is not None:
+            try:
+                result = (
+                    input_data.get("tool_response")
+                    or input_data.get("tool_result")
+                    or input_data.get("response")
+                )
+                await _rec.record_tool_result(
+                    name=input_data.get("tool_name", ""),
+                    result=result,
+                    tool_use_id=tool_use_id,
+                    is_error=bool(input_data.get("is_error") or input_data.get("isError")),
+                )
+            except Exception:
+                logger.debug("content: tool_result persistence failed", exc_info=True)
         return {"continue_": True}
 
     async def _post_agent_hook(input_data: dict, tool_use_id: str, context: Any) -> dict:
@@ -662,23 +696,23 @@ async def _run(
             AgentTool.WEB_SEARCH,
             AgentTool.WEB_FETCH,
             AgentTool.AGENT,
-            "mcp__duct_content__submit_plan",
-            "mcp__duct_content__submit_post_draft",
-            "mcp__duct_content__edit_slide",
-            "mcp__duct_content__fetch_brand_context",
-            "mcp__duct_content__fetch_topic_bank",
-            "mcp__duct_content__fetch_format_library",
-            "mcp__duct_content__fetch_avatar_library",
-            "mcp__duct_content__fetch_content_history",
-            "mcp__duct_content__fetch_content_assets",
-            "mcp__duct_content__fetch_discovered_references",
-            "mcp__duct_content__fetch_post",
-            "mcp__duct_content__render_slide",
-            "mcp__duct_content__generate_image",
-            "mcp__duct_content__edit_image",
-            "mcp__duct_content__publish_post",
-            "mcp__duct_content__mark_posted",
-            "mcp__duct_content__log_metrics",
+            ContentTool.SUBMIT_PLAN,
+            ContentTool.SUBMIT_POST_DRAFT,
+            ContentTool.EDIT_SLIDE,
+            ContentTool.FETCH_BRAND_CONTEXT,
+            ContentTool.FETCH_TOPIC_BANK,
+            ContentTool.FETCH_FORMAT_LIBRARY,
+            ContentTool.FETCH_AVATAR_LIBRARY,
+            ContentTool.FETCH_CONTENT_HISTORY,
+            ContentTool.FETCH_CONTENT_ASSETS,
+            ContentTool.FETCH_DISCOVERED_REFERENCES,
+            ContentTool.FETCH_POST,
+            ContentTool.RENDER_SLIDE,
+            ContentTool.GENERATE_IMAGE,
+            ContentTool.EDIT_IMAGE,
+            ContentTool.PUBLISH_POST,
+            ContentTool.MARK_POSTED,
+            ContentTool.LOG_METRICS,
         ],
         agents={
             "research_pillar":    RESEARCH_PILLAR_AGENT,
@@ -688,9 +722,10 @@ async def _run(
         hooks={
             "PreToolUse":  [HookMatcher(matcher=None,    hooks=[_pre_tool_hook])],
             "PostToolUse": [
-                HookMatcher(matcher="Agent",     hooks=[_post_agent_hook]),
-                HookMatcher(matcher="WebSearch", hooks=[_post_web_hook]),
-                HookMatcher(matcher="WebFetch",  hooks=[_post_web_hook]),
+                HookMatcher(matcher=None,                  hooks=[_record_tool_result_hook]),
+                HookMatcher(matcher=AgentTool.AGENT,       hooks=[_post_agent_hook]),
+                HookMatcher(matcher=AgentTool.WEB_SEARCH,  hooks=[_post_web_hook]),
+                HookMatcher(matcher=AgentTool.WEB_FETCH,   hooks=[_post_web_hook]),
             ],
         },
         max_turns=max_turns,

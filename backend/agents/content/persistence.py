@@ -18,6 +18,7 @@ Design: see models/content/conversation.py. The artifact link is polymorphic
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 from datetime import datetime, timezone
 from typing import Any
@@ -26,7 +27,7 @@ from uuid import UUID
 from sqlalchemy import update
 from sqlmodel import Session, select
 
-from agents.core.events import AgentEvent
+from agents.core.events import AgentEvent, EventKind
 from db.session import get_session as db_session
 from models.content import AgentConversation, AgentEvent as AgentEventRow, ContentPlan, ContentPost
 
@@ -39,6 +40,27 @@ ARTIFACT_REGISTRY: dict[tuple[str, str], type] = {
     ("tiktok_studio", "post"): ContentPost,
     ("tiktok_studio", "plan"): ContentPlan,
 }
+
+# Cap on a single tool input/output payload (serialized chars). Tool results are
+# normally small JSON (urls, ids, short text); this only trips on a pathological
+# blob so one tool call can't bloat the conversation log.
+_MAX_TOOL_PAYLOAD = 256_000
+
+
+def _jsonable(value: Any) -> Any:
+    """Coerce a tool input/result into a JSONB-safe value.
+
+    Round-trips through json so non-JSON types (UUID, datetime, Pydantic) become
+    plain strings, and truncates pathologically large payloads to a preview so a
+    single tool call can never bloat the log."""
+    try:
+        serialized = json.dumps(value, default=str)
+    except (TypeError, ValueError):
+        value, serialized = str(value), json.dumps(str(value))
+    if len(serialized) <= _MAX_TOOL_PAYLOAD:
+        return json.loads(serialized)
+    return {"_truncated": True, "_serialized_len": len(serialized), "preview": serialized[:4000]}
+
 
 # How many new events since the last summary before we (re)summarize on resume.
 _SUMMARY_THRESHOLD = 8
@@ -69,10 +91,11 @@ def _next_seq(db: Session, conversation_id: UUID) -> int:
     return int(row[0]) if row else 0
 
 
-def append_event(db: Session, conversation_id: UUID, kind: str, data: dict) -> None:
+def append_event(db: Session, conversation_id: UUID, kind: str | EventKind, data: dict) -> None:
     """Append one event to the conversation log."""
     seq = _next_seq(db, conversation_id)
-    db.add(AgentEventRow(conversation_id=conversation_id, seq=seq, kind=kind, data=data))
+    # Store the plain value, never "EventKind.TOOL_USE" — the column is free-text.
+    db.add(AgentEventRow(conversation_id=conversation_id, seq=seq, kind=str(kind), data=data))
     db.commit()
 
 
@@ -234,7 +257,7 @@ class ConversationRecorder:
         elif event == AgentEvent.MESSAGE_STOP:
             await self._flush_turn()
         elif event == AgentEvent.QUESTIONS_REQUIRED:
-            await self._append("question", {"questions": body.get("questions", [])})
+            await self._append(EventKind.QUESTION, {"questions": body.get("questions", [])})
 
     async def _flush_turn(self) -> None:
         thinking = "".join(self._thinking_buf).strip()
@@ -242,20 +265,46 @@ class ConversationRecorder:
         self._thinking_buf.clear()
         self._assistant_buf.clear()
         if thinking:
-            await self._append("thinking", {"text": thinking})
+            await self._append(EventKind.THINKING, {"text": thinking})
         if assistant:
-            await self._append("assistant", {"text": assistant})
+            await self._append(EventKind.ASSISTANT, {"text": assistant})
 
     async def record_user(self, content: Any) -> None:
-        await self._append("user", {"content": content})
+        await self._append(EventKind.USER, {"content": content})
 
     async def record_answer(self, answers: dict) -> None:
-        await self._append("answer", {"answers": answers})
+        await self._append(EventKind.ANSWER, {"answers": answers})
 
-    async def _append(self, kind: str, data: dict) -> None:
+    # Tool-call forensics. Every tool the agent runs is logged with its full
+    # input and output, paired by tool_use_id — mirroring the Anthropic messages
+    # shape (tool_use block in the assistant turn, tool_result block in the
+    # following user turn). This lives in the same conversation log as the chat,
+    # so a mis-keyed write or a tool that silently failed is visible alongside
+    # what the user saw, and a richer restore can reconstruct the real message
+    # history. Deliberately NOT surfaced in build_reprime_block's transcript —
+    # persisting for fetch/restore must not re-inject stale tool I/O into the
+    # model's context on resume.
+    async def record_tool_use(self, name: str, tool_input: Any, tool_use_id: str) -> None:
+        await self._append(EventKind.TOOL_USE, {
+            "name": name,
+            "tool_use_id": tool_use_id,
+            "input": _jsonable(tool_input),
+        })
+
+    async def record_tool_result(
+        self, name: str, result: Any, tool_use_id: str, *, is_error: bool = False
+    ) -> None:
+        await self._append(EventKind.TOOL_RESULT, {
+            "name": name,
+            "tool_use_id": tool_use_id,
+            "is_error": is_error,
+            "result": _jsonable(result),
+        })
+
+    async def _append(self, kind: str | EventKind, data: dict) -> None:
         await asyncio.to_thread(self._append_sync, kind, data)
 
-    def _append_sync(self, kind: str, data: dict) -> None:
+    def _append_sync(self, kind: str | EventKind, data: dict) -> None:
         with next(db_session()) as db:
             append_event(db, self.conversation_id, kind, data)
 
@@ -266,18 +315,23 @@ class ConversationRecorder:
 
 def _event_text(ev: AgentEventRow) -> str:
     """Human-readable one-liner for a stored event, used in <recent_turns>."""
-    if ev.kind == "user":
+    if ev.kind == EventKind.USER:
         c = ev.data.get("content", "")
         return c if isinstance(c, str) else " ".join(
             b.get("text", "") for b in c if isinstance(b, dict) and b.get("type") == "text"
         )
-    if ev.kind in ("assistant", "thinking"):
+    if ev.kind in (EventKind.ASSISTANT, EventKind.THINKING):
         return ev.data.get("text", "")
-    if ev.kind == "question":
+    if ev.kind == EventKind.QUESTION:
         qs = ev.data.get("questions", [])
         return "asked: " + "; ".join(q.get("question", "") for q in qs if isinstance(q, dict))
-    if ev.kind == "answer":
+    if ev.kind == EventKind.ANSWER:
         return "answered: " + "; ".join(f"{k}={v}" for k, v in ev.data.get("answers", {}).items())
+    if ev.kind == EventKind.TOOL_USE:
+        return f"called {ev.data.get('name', '')}({json.dumps(ev.data.get('input', {}), default=str)[:200]})"
+    if ev.kind == EventKind.TOOL_RESULT:
+        tag = "error" if ev.data.get("is_error") else "ok"
+        return f"{ev.data.get('name', '')} → {tag}: {json.dumps(ev.data.get('result'), default=str)[:200]}"
     return ev.data.get("text", "")
 
 
@@ -290,7 +344,8 @@ def build_reprime_block(conversation: AgentConversation, recent_events: list[Age
     parts: list[str] = []
     if conversation.summary:
         parts.append(f"<conversation_summary>\n{conversation.summary}\n</conversation_summary>")
-    turns = [e for e in recent_events if e.kind in ("user", "assistant", "question", "answer")]
+    turns = [e for e in recent_events
+             if e.kind in (EventKind.USER, EventKind.ASSISTANT, EventKind.QUESTION, EventKind.ANSWER)]
     turns = turns[-(_RECENT_TURNS * 2):]
     if turns:
         lines = [f"{e.kind}: {_event_text(e)}".strip() for e in turns]

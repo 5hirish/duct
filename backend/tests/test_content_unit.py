@@ -634,3 +634,47 @@ def test_isolated_config_dir_separates_state_but_shares_oauth_login(tmp_path, mo
     # Explicit opt-out falls back to the default ~/.claude.
     monkeypatch.setenv("DUCT_CONTENT_CLAUDE_CONFIG_DIR", "0")
     assert claude_sdk.isolated_config_dir("", **kw) is None
+
+
+def test_jsonable_coerces_db_unsafe_types_and_caps_pathological_payloads():
+    """Tool inputs/outputs land in a JSONB column. _jsonable must coerce
+    non-JSON types (UUID, datetime) so the write can't fail, and truncate a
+    runaway blob so one tool call can't bloat the conversation log."""
+    from datetime import datetime
+    from agents.content.persistence import _jsonable, _MAX_TOOL_PAYLOAD
+
+    coerced = _jsonable({"post_id": uuid4(), "when": datetime(2026, 6, 14), "slides": [{"i": 1}]})
+    assert isinstance(coerced["post_id"], str)     # UUID → str, write-safe
+    assert isinstance(coerced["when"], str)        # datetime → str
+    assert coerced["slides"] == [{"i": 1}]         # plain JSON preserved
+
+    big = _jsonable({"blob": "x" * (_MAX_TOOL_PAYLOAD + 1)})
+    assert big["_truncated"] is True and "preview" in big
+
+    # A non-serializable object must degrade to its string form, never raise.
+    class _Weird:
+        def __repr__(self):
+            return "WEIRD"
+    assert _jsonable(_Weird()) == "WEIRD"
+
+
+def test_reprime_block_excludes_tool_events():
+    """tool_use / tool_result are persisted for forensics + restore, but must
+    NOT leak into the re-prime transcript — otherwise stale tool I/O gets
+    re-injected into the model's context on resume (token bloat + confusion)."""
+    from agents.content.persistence import build_reprime_block
+    from models.content import AgentConversation, AgentEvent as AgentEventRow
+
+    conv = AgentConversation(agent_type="tiktok_studio", project_id=uuid4(), summary="")
+    events = [
+        AgentEventRow(conversation_id=conv.id, seq=1, kind="user", data={"content": "draft it"}),
+        AgentEventRow(conversation_id=conv.id, seq=2, kind="tool_use",
+                      data={"name": "submit_post_draft", "input": {"post_dir_slug": "2026-06-14-001"}}),
+        AgentEventRow(conversation_id=conv.id, seq=3, kind="tool_result",
+                      data={"name": "submit_post_draft", "result": {"ok": True}}),
+        AgentEventRow(conversation_id=conv.id, seq=4, kind="assistant", data={"text": "done"}),
+    ]
+    block = build_reprime_block(conv, events)
+    assert "draft it" in block and "done" in block        # conversational turns kept
+    assert "submit_post_draft" not in block               # tool events excluded
+    assert "2026-06-14-001" not in block

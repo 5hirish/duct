@@ -362,6 +362,36 @@ class ContentStatus(StrEnum):
     DISCARDED = "discarded"
 
 
+class ContentTool(StrEnum):
+    """Fully-namespaced names of the content MCP tools (server ``duct_content``).
+
+    The @tool decorators in agents/content/tools.py register the *short* names
+    (e.g. "submit_post_draft"); the SDK namespaces them as
+    ``mcp__duct_content__<short>``. This enum holds those namespaced names — the
+    form used in ClaudeAgentOptions.allowed_tools and the can_use_tool dispatch.
+    Mirrors AgentTool's treatment of the audit (``duct_crawl``) MCP tools. Keep
+    in sync with the @tool registrations.
+    """
+
+    SUBMIT_PLAN                = "mcp__duct_content__submit_plan"
+    SUBMIT_POST_DRAFT          = "mcp__duct_content__submit_post_draft"
+    EDIT_SLIDE                 = "mcp__duct_content__edit_slide"
+    FETCH_BRAND_CONTEXT        = "mcp__duct_content__fetch_brand_context"
+    FETCH_TOPIC_BANK           = "mcp__duct_content__fetch_topic_bank"
+    FETCH_FORMAT_LIBRARY       = "mcp__duct_content__fetch_format_library"
+    FETCH_AVATAR_LIBRARY       = "mcp__duct_content__fetch_avatar_library"
+    FETCH_CONTENT_HISTORY      = "mcp__duct_content__fetch_content_history"
+    FETCH_CONTENT_ASSETS       = "mcp__duct_content__fetch_content_assets"
+    FETCH_DISCOVERED_REFERENCES = "mcp__duct_content__fetch_discovered_references"
+    FETCH_POST                 = "mcp__duct_content__fetch_post"
+    RENDER_SLIDE               = "mcp__duct_content__render_slide"
+    GENERATE_IMAGE             = "mcp__duct_content__generate_image"
+    EDIT_IMAGE                 = "mcp__duct_content__edit_image"
+    PUBLISH_POST               = "mcp__duct_content__publish_post"
+    MARK_POSTED                = "mcp__duct_content__mark_posted"
+    LOG_METRICS                = "mcp__duct_content__log_metrics"
+
+
 # Per-slide kind — drives which template renders the slide within a layout.
 #   photo / text          — single image (or none) + overlay caption
 #   collage               — 2×2 grid; one image per `items` cell

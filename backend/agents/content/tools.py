@@ -450,12 +450,29 @@ def build_content_mcp_server(
             lock_key = str(session.post_id) if session.post_id else f"slug:{project_id}:{draft.post_dir_slug}"
             async with _post_lock(lock_key):
               with _open_db() as db:
-                existing = db.exec(
-                    select(ContentPost).where(
-                        ContentPost.project_id == project_id,
-                        ContentPost.post_dir_slug == draft.post_dir_slug,
-                    )
-                ).first()
+                # A revise/resume session is bound to a specific post via
+                # session.post_id (routes/agents.py derives it from the
+                # conversation's artifact_id). That binding wins over the
+                # model-supplied slug: a drafting agent that mints a fresh
+                # date-slug (e.g. today's date) would otherwise miss the upsert
+                # key and FORK a brand-new post, orphaning it from the chat.
+                # Resolve the bound row first and keep its slug.
+                existing = None
+                if session.post_id is not None:
+                    bound = db.get(ContentPost, session.post_id)
+                    if bound is not None and bound.project_id == project_id:
+                        existing = bound
+                if existing is None:
+                    existing = db.exec(
+                        select(ContentPost).where(
+                            ContentPost.project_id == project_id,
+                            ContentPost.post_dir_slug == draft.post_dir_slug,
+                        )
+                    ).first()
+                # Never rename a post we're updating in place — the slug is its
+                # stable identity (URL + conversation link). Only a brand-new
+                # insert adopts the model-supplied slug.
+                effective_slug = existing.post_dir_slug if existing is not None else draft.post_dir_slug
 
                 # Structured slides are the source of truth: carry already-
                 # generated images forward across copy edits, render the HTML
@@ -477,7 +494,7 @@ def build_content_mcp_server(
                 values = {
                     "project_id":      project_id,
                     "plan_id":         session.plan_id,
-                    "post_dir_slug":   draft.post_dir_slug,
+                    "post_dir_slug":   effective_slug,
                     "pillar":          draft.pillar,
                     "topic":           draft.topic,
                     "post_type":       draft.post_type,
