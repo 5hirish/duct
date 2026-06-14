@@ -25,6 +25,11 @@ on:
 permissions:
   contents: read
 
+# A new run supersedes an in-flight one on the same ref (no two paid evals at once).
+concurrency:
+  group: content-eval-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   content-eval:
     name: v3 content e2e + judge

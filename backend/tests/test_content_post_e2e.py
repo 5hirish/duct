@@ -42,26 +42,29 @@ from tests.eval import JudgeImage, assert_scorecard, evaluate, judge_available
 from tests.eval.rubrics.content_post import build_content_post_artifact, content_post_rubric
 
 # ---------------------------------------------------------------------------
-# Tuning — generous, because a real Sonnet draft + ~7 Gemini images is slow.
+# Tuning — kept fast on purpose: a 3-slide draft and a SINGLE image generation
+# call. That exercises the whole pipeline (draft -> image tool -> judge) without
+# paying for a full 7-slide post and ~8 images.
 # ---------------------------------------------------------------------------
-_DRAFT_TIMEOUT = 480.0    # wait for the draft to persist (post_id set)
-_IMAGE_TIMEOUT = 780.0    # wait for the agent to image every slide
-_CHAT_IDLE = 300.0        # how long the run waits between our driven turns
-_HARD_TIMEOUT = 1500.0    # overall ceiling for the whole drive
+_DRAFT_TIMEOUT = 360.0    # wait for the draft to persist (post_id set)
+_IMAGE_TIMEOUT = 180.0    # wait for the single image to attach
+_CHAT_IDLE = 180.0        # how long the run waits between our driven turns
+_HARD_TIMEOUT = 600.0     # overall ceiling for the whole drive
 _POLL = 4.0
-_MIN_IMAGES_TO_JUDGE = 3  # below this we treat the run as a failed image phase
+_MIN_IMAGES_TO_JUDGE = 1  # fast mode generates one image; that's enough to judge
 
 _IMAGE_TURN = (
-    "Approved — the copy is good. Now produce the full visual set: call "
-    "generate_image once for EVERY slide, passing that slide's slide_id and an "
-    "image_prompt derived from the slide. Generate single-image slides directly; "
-    "for collage or before/after slides generate each cell with its item_index. "
-    "Keep the subject, lighting and styling consistent across all slides so it "
-    "looks like one shoot. When every slide (and every cell) has an image, the "
-    "post is complete — do not ask for further confirmation, just finish."
+    "Approved. Now generate the image for the FIRST slide only: call "
+    "generate_image once with that slide's slide_id and an image_prompt derived "
+    "from it. One image is enough for this run — once slide 1 has an image the "
+    "post is complete; do not ask for confirmation, just finish."
 )
 
-_TOPIC = "the 3 grooming mistakes quietly weakening your jawline"
+_TOPIC = (
+    "the 3 grooming mistakes quietly weakening your jawline. TEST MODE: keep this "
+    "SHORT — produce EXACTLY 3 single-image slides (set slide_count=3); no collage "
+    "or before/after slides."
+)
 _PILLAR = "jawline"
 
 
@@ -311,11 +314,12 @@ async def _drive(runner, session, session_id, project_id) -> list[dict]:
                 return  # nothing drafted — the test asserts + reports below
             # Phase 2 — drive the image phase.
             await session.chat_queue.put({"role": "user", "content": _IMAGE_TURN})
-            # Phase 3 — wait until every slide has an image (or time out), then end.
-            def _all_imaged() -> bool:
-                covered, total = _image_coverage(session.post_id)
-                return state["done"] or (total > 0 and covered >= total)
-            await _wait(_all_imaged, _IMAGE_TIMEOUT, soft=True)
+            # Phase 3 — wait until at least one slide has an image (fast mode
+            # generates a single image), or time out, then end.
+            def _has_image() -> bool:
+                covered, _total = _image_coverage(session.post_id)
+                return state["done"] or covered >= 1
+            await _wait(_has_image, _IMAGE_TIMEOUT, soft=True)
         finally:
             # Always release the run loop, even on early return / error.
             await session.chat_queue.put(None)
@@ -426,7 +430,18 @@ def test_content_draft_post_with_images_passes_judge(maxaura_project, tmp_path, 
     )
 
     # --- The judge: score the finished post + images against the rubric. ------
-    artifact = build_content_post_artifact(post, brand_summary=_brand_summary(), images=images)
+    # Fast mode generates one image on purpose; tell the judge so it grades the
+    # image dimensions on the image(s) present and doesn't penalise slides that
+    # were intentionally left without an image.
+    eval_note = (
+        f"This is a fast pipeline check: the post has {total} slide(s) and {covered} "
+        "of them had an image generated on purpose. Judge the image dimensions on "
+        "the image(s) actually present; do not penalise slides intentionally left "
+        "without an image."
+    )
+    artifact = build_content_post_artifact(
+        post, brand_summary=_brand_summary(), images=images, eval_note=eval_note
+    )
     try:
         scorecard = evaluate(content_post_rubric(), artifact)
     except Exception as exc:

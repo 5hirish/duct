@@ -132,14 +132,20 @@ def build_content_post_artifact(
     *,
     brand_summary: str,
     images: list[JudgeImage],
+    eval_note: str = "",
 ) -> JudgeArtifact:
     """Render a persisted ``ContentPost`` (duck-typed) into a judge artifact.
 
     ``post`` only needs the ContentPost attributes (``slides``, ``caption``, …);
     the model class itself is not imported here so the rubric stays decoupled
     from the DB layer. ``images`` are the already-loaded slide images.
+    ``eval_note``, when set, is surfaced to the judge first (e.g. to explain a
+    reduced fast-mode run so it doesn't penalise intentionally-missing images).
     """
-    lines: list[str] = [
+    lines: list[str] = []
+    if eval_note:
+        lines += [f"EVALUATION NOTE: {eval_note}", ""]
+    lines += [
         "BRAND CONTEXT:",
         brand_summary,
         "",

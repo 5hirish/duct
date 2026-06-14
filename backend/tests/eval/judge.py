@@ -25,6 +25,7 @@ import re
 from dataclasses import dataclass, field
 
 from tests.eval.client import DEFAULT_JUDGE_MODEL, build_judge_client
+from tests.eval.prompts import JSON_OUTPUT_INSTRUCTION, JUDGE_SYSTEM_PROMPT, render_rubric
 from tests.eval.rubric import Rubric
 from tests.eval.verdict import JudgeVerdict, Scorecard, build_scorecard
 
@@ -73,7 +74,7 @@ def _run_judge(client, model: str, rubric: Rubric, artifact: JudgeArtifact, max_
     from google.genai import types
 
     parts = [
-        types.Part.from_text(text=_render_rubric(rubric)),
+        types.Part.from_text(text=render_rubric(rubric)),
         types.Part.from_text(text=f"# Artifact under review: {artifact.title}\n\n{artifact.body}"),
     ]
     if artifact.images:
@@ -86,7 +87,7 @@ def _run_judge(client, model: str, rubric: Rubric, artifact: JudgeArtifact, max_
             parts.append(types.Part.from_bytes(data=data, mime_type=mime))
 
     config = types.GenerateContentConfig(
-        system_instruction=_system_prompt() + "\n\n" + _json_instruction(),
+        system_instruction=JUDGE_SYSTEM_PROMPT + "\n\n" + JSON_OUTPUT_INSTRUCTION,
         response_mime_type="application/json",
         temperature=0.2,
         max_output_tokens=max_output_tokens,
@@ -135,39 +136,3 @@ def _downscale(data: bytes, mime: str) -> tuple[bytes, str]:
         return out.getvalue(), "image/jpeg"
     except Exception:
         return data, mime
-
-
-def _system_prompt() -> str:
-    return (
-        "You are a rigorous content-quality evaluator. You grade a single "
-        "AI-generated deliverable against a rubric in order to catch model-"
-        "output degradation, so be critical and evidence-based: reserve 5 for "
-        "genuinely excellent work and do not inflate scores.\n\n"
-        "Score every rubric DIMENSION from 1 to 5 (1=broken, 2=weak, "
-        "3=acceptable, 4=strong, 5=excellent) with a one- or two-sentence "
-        "rationale citing specific evidence from the text or images. Answer "
-        "every MARKER as whether the described condition is present in the "
-        "artifact. Use the exact keys given. When images are provided, judge "
-        "the image dimensions by actually inspecting the pixels, not the prompts."
-    )
-
-
-def _render_rubric(rubric: Rubric) -> str:
-    lines = [f"# Rubric: {rubric.name}", "", "## Dimensions — score each 1–5 using the exact key"]
-    for d in rubric.dimensions:
-        lines.append(f"- key=`{d.key}` — {d.title}: {d.description}")
-    if rubric.markers:
-        lines.append("")
-        lines.append("## Markers — answer satisfied=true/false using the exact key")
-        for m in rubric.markers:
-            req = "must be ABSENT" if m.kind == "forbidden" else "must be PRESENT"
-            lines.append(f"- key=`{m.key}` ({req}): {m.description}")
-    return "\n".join(lines)
-
-
-def _json_instruction() -> str:
-    return (
-        "Return ONLY a JSON object (no prose, no code fence) with this shape:\n"
-        '{"dimensions":[{"key":str,"score":1-5,"rationale":str}],'
-        '"markers":[{"key":str,"satisfied":bool,"evidence":str}],"summary":str}'
-    )

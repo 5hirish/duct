@@ -21,7 +21,8 @@ from tests.eval import (
     resolve_judge_api_key,
 )
 from tests.eval.client import judge_available
-from tests.eval.judge import _parse_verdict, _render_rubric
+from tests.eval.judge import _parse_verdict
+from tests.eval.prompts import render_rubric
 from tests.eval.rubrics.content_post import build_content_post_artifact, content_post_rubric
 
 
@@ -111,7 +112,7 @@ def test_scorecard_markdown_and_dict_roundtrip():
 
 
 def test_render_rubric_lists_every_key():
-    text = _render_rubric(_rubric())
+    text = render_rubric(_rubric())
     for key in ("`a`", "`b`", "`must`", "`nope`"):
         assert key in text
     assert "must be ABSENT" in text  # forbidden marker rendered as such
