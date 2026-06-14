@@ -30,7 +30,14 @@ from uuid import UUID, uuid4
 
 from claude_agent_sdk import create_sdk_mcp_server, tool
 from claude_agent_sdk.types import McpSdkServerConfig
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
+
+from agents.content.results import (
+    EditImageResult,
+    EditSlideResult,
+    GenerateImageResult,
+    RenderSlideResult,
+)
 from sqlmodel import Session, select
 
 from agents.content.events import ContentEvent
@@ -96,6 +103,63 @@ def _open_db() -> Session:
     if engine is None:
         raise RuntimeError("DATABASE_URL is not configured.")
     return Session(engine)
+
+
+# --- Typed result serializers -------------------------------------------------
+# Tool results the model reads back are modeled (see results.py) instead of
+# hand-built dicts, so field names like `attached_to` / `asset_ids` are typed.
+
+def _ok_model(m: BaseModel) -> dict:
+    """Success result from a typed model (text-only)."""
+    return _ok(m.model_dump(mode="json"))
+
+
+def _ok_with_images(image_blocks: list[dict], m: BaseModel) -> dict:
+    """Success result carrying image content blocks + a typed model as the text."""
+    return {"content": [*image_blocks, {"type": "text", "text": m.model_dump_json()}]}
+
+
+# --- Relational precondition guards -------------------------------------------
+# "post/slide/cell exists on THIS project" is an invariant against live state the
+# input schema can't express — so it's a runtime guard returning a hard _err, not
+# prose for the model. Shared here to replace the copies that had drifted across
+# tools (ownership check ×6, "find slide or list valid ids" ×3). Each returns the
+# resolved entity OR an _err-shaped dict; callers use:  x, err = guard(...); if err: return err
+
+def _require_post(db: Session, project_id, post_id) -> tuple[ContentPost | None, dict | None]:
+    """Resolve the current post for this project, or an _err result."""
+    if post_id is None:
+        return None, _err("No current post in this session.")
+    row = db.get(ContentPost, post_id)
+    if row is None or row.project_id != project_id:
+        return None, _err("Current post not found for this project.")
+    return row, None
+
+
+def _require_slide(post: ContentPost, slide_id: str) -> tuple[dict | None, int, dict | None]:
+    """Find a slide on the post by id, or an _err listing the valid ids.
+
+    Returns (slide_dict, index, None) on hit; (None, -1, err) on miss.
+    """
+    slides = list(post.slides or [])
+    for i, s in enumerate(slides):
+        if isinstance(s, dict) and str(s.get("slide_id")) == str(slide_id):
+            return s, i, None
+    valid = [str(s.get("slide_id")) for s in slides if isinstance(s, dict)]
+    return None, -1, _err(f"slide_id {slide_id!r} isn't on this post. Use one of: {valid}.")
+
+
+def _require_item(slide: dict, item_index: int | None) -> dict | None:
+    """Range-check item_index against a slide's image cells. None = ok, else _err."""
+    if item_index is None:
+        return None
+    n = len(slide.get("items") or [])
+    if n and not (0 <= item_index < n):
+        return _err(
+            f"item_index {item_index} is out of range for {slide.get('slide_id')!r} "
+            f"— it has {n} image cell(s) (use 0–{n - 1}), or omit it for a single image."
+        )
+    return None
 
 
 def _resolve_format_id(db: Session, project_id, format_slug: str):
@@ -589,18 +653,13 @@ def build_content_mcp_server(
                 return _err("No current post in this session to edit.")
             async with _post_lock(str(session.post_id)):
               with _open_db() as db:
-                row = db.get(ContentPost, session.post_id)
-                if row is None or row.project_id != project_id:
-                    return _err("Current post not found for this project.")
+                row, err = _require_post(db, project_id, session.post_id)
+                if err:
+                    return err
                 slides = list(row.slides or [])
-                idx = next(
-                    (i for i, s in enumerate(slides)
-                     if isinstance(s, dict) and s.get("slide_id") == slide_id),
-                    None,
-                )
-                if idx is None:
-                    avail = [s.get("slide_id") for s in slides if isinstance(s, dict)]
-                    return _err(f"slide_id {slide_id!r} not found. Available: {avail}")
+                _slide, idx, err = _require_slide(row, slide_id)
+                if err:
+                    return err
                 merged = {**slides[idx], **patch, "slide_id": slide_id}
                 try:
                     slide_obj = Slide.model_validate(merged)
@@ -622,11 +681,11 @@ def build_content_mcp_server(
                     "post_id": str(row.id),
                     "payload": _build_post_payload(row),
                 })
-                return _ok({
-                    "post_id":  str(row.id),
-                    "slide_id": slide_id,
-                    "updated":  list(patch.keys()),
-                })
+                return _ok_model(EditSlideResult(
+                    post_id=str(row.id),
+                    slide_id=slide_id,
+                    updated=list(patch.keys()),
+                ))
         except Exception as exc:
             logger.exception("edit_slide failed")
             return _err(f"edit_slide failed: {exc}")
@@ -969,6 +1028,20 @@ def build_content_mcp_server(
             _ti = payload.pop("item_index", None)
             target_item_index = int(_ti) if _ti not in (None, "") else None
 
+            # Validate the attach target against the live post BEFORE paying for a
+            # Gemini call — a bad slide_id/cell is a hard error (with the valid
+            # ids), not a silent attached_to:null. Shared guards; see _require_*.
+            if target_slide_id:
+                with _open_db() as db0:
+                    post0, err = _require_post(db0, project_id, session.post_id)
+                    if err:
+                        return err
+                    slide0, _idx, err = _require_slide(post0, target_slide_id)
+                    if err:
+                        return err
+                    if (err := _require_item(slide0, target_item_index)):
+                        return err
+
             # Normalise single-ref legacy → list. The model may pass
             # input_asset_id, input_asset_ids, or both; merge in order.
             ref_ids_raw: list = []
@@ -1091,20 +1164,16 @@ def build_content_mcp_server(
                 except Exception:
                     logger.exception("content: failed to attach image to slide %s", target_slide_id)
 
-            content: list[dict] = []
-            for img, asset in zip(images, assets, strict=False):
+            image_blocks: list[dict] = []
+            for img in images:
                 b64, vmime = _downscale_for_vision(img.data, img.mime_type)
-                content.append({"type": "image", "data": b64, "mimeType": vmime})
-            content.append({
-                "type": "text",
-                "text": json.dumps({
-                    "asset_ids":   [str(a.asset_id) for a in assets],
-                    "asset_urls":  [a.url           for a in assets],
-                    "model":       request.model.value,
-                    "attached_to": target_slide_id if attached else None,
-                }),
-            })
-            return {"content": content}
+                image_blocks.append({"type": "image", "data": b64, "mimeType": vmime})
+            return _ok_with_images(image_blocks, GenerateImageResult(
+                asset_ids=[str(a.asset_id) for a in assets],
+                asset_urls=[a.url for a in assets],
+                model=request.model.value,
+                attached_to=target_slide_id if attached else None,
+            ))
         except Exception:
             logger.exception("generate_image failed")
             return _err("Image generation hit a snag — please try again.")
@@ -1206,19 +1275,15 @@ def build_content_mcp_server(
                     )
                     assets.append(asset)
 
-            content: list[dict] = []
-            for img, asset in zip(images, assets, strict=False):
+            image_blocks: list[dict] = []
+            for img in images:
                 b64, vmime = _downscale_for_vision(img.data, img.mime_type)
-                content.append({"type": "image", "data": b64, "mimeType": vmime})
-            content.append({
-                "type": "text",
-                "text": json.dumps({
-                    "asset_ids":  [str(a.asset_id) for a in assets],
-                    "asset_urls": [a.url           for a in assets],
-                    "model":      request.model.value,
-                }),
-            })
-            return {"content": content}
+                image_blocks.append({"type": "image", "data": b64, "mimeType": vmime})
+            return _ok_with_images(image_blocks, EditImageResult(
+                asset_ids=[str(a.asset_id) for a in assets],
+                asset_urls=[a.url for a in assets],
+                model=request.model.value,
+            ))
         except Exception:
             logger.exception("edit_image failed")
             return _err("Image editing hit a snag — please try again.")
@@ -1537,12 +1602,12 @@ def build_content_mcp_server(
             if session.post_id is None:
                 return _err("No current post in this session to render.")
             with _open_db() as db:
-                row = db.get(ContentPost, session.post_id)
-                if row is None or row.project_id != project_id:
-                    return _err("Current post not found for this project.")
-                slide_ids = [s.get("slide_id") for s in (row.slides or []) if isinstance(s, dict)]
-                if slide_id not in slide_ids:
-                    return _err(f"slide_id {slide_id!r} not on this post. Available: {slide_ids}")
+                row, err = _require_post(db, project_id, session.post_id)
+                if err:
+                    return err
+                _slide, _idx, err = _require_slide(row, slide_id)
+                if err:
+                    return err
                 post_id = row.id
 
             render_id = str(uuid4())
@@ -1583,13 +1648,13 @@ def build_content_mcp_server(
                 logger.exception("render_slide: persist failed (returning image anyway)")
 
             # Persist full-res (for publishing); show the agent a lighter copy.
-            return {"content": [
-                {"type": "image", "data": _downscale_png_b64(png), "mimeType": "image/png"},
-                {"type": "text", "text": json.dumps({
-                    "slide_id": slide_id, "asset_url": asset_url, "width": 1080, "height": 1920,
-                    "note": "preview downscaled; the full-res render is saved for publishing",
-                })},
-            ]}
+            return _ok_with_images(
+                [{"type": "image", "data": _downscale_png_b64(png), "mimeType": "image/png"}],
+                RenderSlideResult(
+                    slide_id=slide_id, asset_url=asset_url,
+                    note="preview downscaled; the full-res render is saved for publishing",
+                ),
+            )
         except Exception as exc:
             logger.exception("render_slide failed")
             return _err(f"render_slide failed: {exc}")

@@ -383,6 +383,24 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
             pre.onerror = drop;
             pre.src = mediaUrl(realUrl);
           }
+          // Drop a clickable image bubble into the chat (iMessage-style). This
+          // only runs on inline_preview, which the backend attaches solely when
+          // generate_image produced + attached an image — never on copy edits.
+          const slideIdx = (base.slides || []).findIndex(
+            (s) => String(s.slide_id) === String(ip.slide_id),
+          );
+          const cap =
+            (slideIdx >= 0 ? `Slide ${slideIdx + 1}` : "Generated image") +
+            (ip.item_index != null ? ` · image ${ip.item_index + 1}` : "");
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              image: ip.data_uri,
+              fullUrl: realUrl ? mediaUrl(realUrl) : ip.data_uri,
+              caption: cap,
+            },
+          ]);
         } else {
           setPayload(base);
         }

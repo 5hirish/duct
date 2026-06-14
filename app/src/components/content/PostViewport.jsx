@@ -356,10 +356,10 @@ function BulkImageBar({ slides, onSendMessage, commitIfDirty }) {
       {pending > 0 && (
         <button
           type="button"
-          onClick={() => ask("The draft looks good — generate the images now, one at a time, for every slide (and every collage / before-after cell) that has a prompt but no image yet. View and critique each before moving on.")}
+          onClick={() => ask("The draft looks good — start the images, ONE AT A TIME with me in the loop. Generate the next slide (or cell) that still needs an image, critique it, render the composed slide, then STOP and wait for my feedback before the next one. Don't batch them — apply what I tell you to the following slides.")}
           className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90"
         >
-          <Sparkles className="size-3.5" /> Approve &amp; generate {pending} image{pending > 1 ? "s" : ""}
+          <Sparkles className="size-3.5" /> Approve &amp; generate {pending} image{pending > 1 ? "s" : ""} — one by one
         </button>
       )}
       {staleCount > 0 && (

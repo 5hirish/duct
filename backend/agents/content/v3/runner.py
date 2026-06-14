@@ -667,6 +667,9 @@ async def _run(
         log_prefix="content",
         session_id=session_id,
         sentry_env=sentry_otel_env(_cfg),
+        # Fixed, small tool set → load schemas eagerly instead of via ToolSearch.
+        # Mirrors audit; also stops the model narrating "let me load the tools".
+        enable_tool_search=False,
     )
 
     # Bounded ring buffer of recent stderr lines. The SDK reads stderr on a

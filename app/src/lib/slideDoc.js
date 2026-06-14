@@ -7,6 +7,8 @@
 // placeholder CSS — all static, content-independent), so the preview matches
 // what the server will produce on commit. Keep this in sync with templates.py.
 
+import { mediaUrl } from "./contentApi";
+
 function escAttr(s) {
   return String(s || "")
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
@@ -47,7 +49,11 @@ function fullImageLayer(slide) {
   // _preview_uri is a transient inline data URI for instant first paint after a
   // generation (no CDN round-trip); it's swapped out for image_url once the CDN
   // image preloads, and is stripped before any save. See ContentWorkspace.
-  const bg = slide._preview_uri || slide.image_url;
+  // Normalise the stored image_url (relative /uploads/... on local dev) to an
+  // absolute URL — a relative src can't resolve inside the iframe srcDoc
+  // (origin about:srcdoc) and silently 404s, leaving the prompt placeholder.
+  // _preview_uri is already a data: URI, so it passes straight through.
+  const bg = slide._preview_uri || mediaUrl(slide.image_url);
   if (bg) {
     let o = `<img class="bg" src="${escAttr(bg)}" alt="${alt}">`;
     if (isStale(slide.image_prompt, slide.image_prompt_used)) {
@@ -66,7 +72,7 @@ function fullImageLayer(slide) {
 }
 
 function cellImgOrPh(it) {
-  const cellSrc = it._preview_uri || it.image_url;
+  const cellSrc = it._preview_uri || mediaUrl(it.image_url);
   if (cellSrc) {
     let o = `<img class="cell-img" src="${escAttr(cellSrc)}" alt="${escAttr(it.image_prompt)}">`;
     if (isStale(it.image_prompt, it.image_prompt_used)) o += `<div class="cell-stale-flag">outdated</div>`;

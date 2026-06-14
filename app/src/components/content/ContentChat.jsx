@@ -171,6 +171,48 @@ function ChatBubble({ role, text, thinking, streaming }) {
   );
 }
 
+// A generated-image bubble in the transcript. Shows the inline data URI for an
+// instant thumbnail; clicking opens a full-screen lightbox at the full-res URL.
+function ChatImageBubble({ image, fullUrl, caption }) {
+  const [open, setOpen] = useState(false);
+  const thumb = image || fullUrl;   // inline data: URI first (instant paint)
+  const full = fullUrl || image;    // full-res target for the lightbox
+  useEffect(() => {
+    if (!open) return undefined;
+    const onKey = (e) => { if (e.key === "Escape") setOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+  if (!thumb) return null;
+  return (
+    <div className="flex justify-start mb-4">
+      <div className="max-w-[82%] space-y-1">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          title="View full screen"
+          className="block overflow-hidden rounded-2xl rounded-bl-sm border border-border/60 bg-muted/40 transition-opacity hover:opacity-95"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={thumb} alt={caption || "Generated image"} loading="lazy" className="block w-44 max-w-full object-cover" />
+        </button>
+        {caption && <p className="pl-1 text-[11px] text-muted-foreground">{caption}</p>}
+      </div>
+      {open && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setOpen(false)}
+          className="fixed inset-0 z-50 flex cursor-zoom-out items-center justify-center bg-black/80 p-6"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={full} alt={caption || "Generated image"} className="max-h-full max-w-full rounded-lg object-contain shadow-2xl" />
+        </div>
+      )}
+    </div>
+  );
+}
+
 const PHASE_STATUS = {
   [Phase.STARTING]:  { label: "Connecting…",       pulse: true  },
   [Phase.PIPELINE]:  { label: "Working…",          pulse: true  },
@@ -312,6 +354,8 @@ export default function ContentChat({
           {messages.map((msg, i) =>
             msg.role === "send_error" ? (
               <SendErrorBubble key={i} text={msg.text} content={msg.content} onRetry={onRetrySend} />
+            ) : msg.image ? (
+              <ChatImageBubble key={i} image={msg.image} fullUrl={msg.fullUrl} caption={msg.caption} />
             ) : (
               <ChatBubble
                 key={i}
