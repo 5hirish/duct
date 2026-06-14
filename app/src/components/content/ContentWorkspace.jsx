@@ -14,6 +14,7 @@ import {
   openPlanStream,
   openPostStream,
   postSlideRender,
+  reattachContentStream,
   sendContentChat,
 } from "../../lib/contentApi";
 import { ContentEvent } from "../../lib/contentEvents";
@@ -44,6 +45,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
   const [channelNote, setChannelNote] = useState(null);
   const [isAgentTyping, setIsAgentTyping] = useState(false);
   const [conversationId, setConversationId] = useState(null);
+  const [reconnecting, setReconnecting] = useState(false);
   // When set, overrides `context` for the next session open (used by Start fresh
   // to reopen with start_fresh instead of resume). null ⇒ use context as-is.
   const [openOverride, setOpenOverride] = useState(null);
@@ -52,6 +54,10 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
   const pipelineEndedRef = useRef(false);
   const sessionIdRef     = useRef(null);
   const conversationIdRef = useRef(null);
+  // Terminal = the run truly ended (PIPELINE_FAILED) — never auto-reconnect then.
+  // A bare stream drop (network blip, server restart) is NOT terminal.
+  const terminalRef = useRef(false);
+  const reconnectAttemptRef = useRef(0);
 
   // The params we actually open with — context, unless Start fresh overrode it.
   const openContext = openOverride || context;
@@ -70,6 +76,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
     setPayload(null);
     setSessionId(null);
     setIsAgentTyping(false);
+    setReconnecting(false);
     pipelineEndedRef.current = false;
     setRetryCount((c) => c + 1);
   }
@@ -99,6 +106,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
     setPendingQuestions(null);
     setErrorMsg("");
     setIsAgentTyping(false);
+    setReconnecting(false);
     setPhase(Phase.STARTING);
     pipelineEndedRef.current = false;
     // Changing openOverride re-triggers the SSE effect (deps include it).
@@ -119,10 +127,71 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
     const ctrl = new AbortController();
     abortRef.current = ctrl;
     pipelineEndedRef.current = false;
+    terminalRef.current = false;
+    reconnectAttemptRef.current = 0;
     // Per-effect-instance state (closure, not refs) so a StrictMode double-mount
     // never lets one instance clobber or leak the other's backend session.
     let cancelled = false;
     let localSid = null;
+
+    const MAX_RECONNECT = 5;
+
+    const dead = () => cancelled || ctrl.signal.aborted;
+
+    function handleSession({ sessionId: sid, conversationId: cid }) {
+      localSid = sid;
+      // Torn down before the stream opened (StrictMode remount / fast nav):
+      // close the orphan so its worker is cancelled instead of racing the
+      // surviving session on the shared CLI config dir.
+      if (cancelled) {
+        closeContentSession(sid).catch(() => {});
+        return;
+      }
+      sessionIdRef.current = sid;
+      setSessionId(sid);
+      const next = cid || conversationIdRef.current || null;
+      conversationIdRef.current = next;
+      setConversationId(next);
+    }
+
+    // Jittered exponential backoff: ~1s, 2s, 4s, 8s, 15s (±50% jitter).
+    function backoffDelay(attempt) {
+      const base = Math.min(15000, 1000 * 2 ** (attempt - 1));
+      return Math.round(base * (0.5 + Math.random() * 0.5));
+    }
+
+    function sleep(ms) {
+      return new Promise((resolve) => {
+        const t = setTimeout(resolve, ms);
+        ctrl.signal.addEventListener("abort", () => { clearTimeout(t); resolve(); }, { once: true });
+      });
+    }
+
+    // Re-establish a stream after an unexpected drop. Prefer re-attaching to the
+    // SAME live session (within the backend grace window) so the in-flight run
+    // continues gap-free; if it's gone, resume a fresh session from the
+    // persisted conversation. Returns a stream body, or null on failure.
+    async function reconnect() {
+      const sid = sessionIdRef.current;
+      if (sid) {
+        try { return await reattachContentStream(sid, { signal: ctrl.signal }); }
+        catch { /* session past grace → resume-create below */ }
+      }
+      if (dead()) return null;
+      const artifactType = mode === "plan_month" ? "plan" : "post";
+      const artifactId   = mode === "plan_month" ? context.planId : context.postId;
+      const opener = mode === "plan_month" ? openPlanStream : openPostStream;
+      const { body } = await opener(
+        {
+          ...openContext,
+          conversationId: conversationIdRef.current,
+          resume: true,
+          ...(artifactType && artifactId ? { artifactType, artifactId } : {}),
+        },
+        { signal: ctrl.signal, onSession: handleSession },
+      );
+      return body;
+    }
 
     async function start() {
       try {
@@ -138,33 +207,41 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
         }
 
         const opener = mode === "plan_month" ? openPlanStream : openPostStream;
-        const { body } = await opener(openContext, {
-          signal: ctrl.signal,
-          onSession: ({ sessionId: sid, conversationId: cid }) => {
-            localSid = sid;
-            // Torn down before the stream opened (StrictMode remount / fast
-            // nav): close the orphan so its agent worker is cancelled instead
-            // of racing the surviving session on the shared CLI config dir.
-            if (cancelled) {
-              closeContentSession(sid).catch(() => {});
-              return;
-            }
-            sessionIdRef.current = sid;
-            setSessionId(sid);
-            conversationIdRef.current = cid || null;
-            setConversationId(cid || null);
-          },
-        });
+        const { body } = await opener(openContext, { signal: ctrl.signal, onSession: handleSession });
         if (cancelled) return;
 
-        await consumeSseStream(body, handleEvent, ctrl.signal);
+        // Stream → reconnect loop. consumeSseStream returns on a server-side end
+        // and throws on a network error; both are drops unless the run is truly
+        // terminal (PIPELINE_FAILED) or we've been torn down.
+        let stream = body;
+        while (true) {
+          try {
+            await consumeSseStream(stream, handleEvent, ctrl.signal);
+          } catch { /* network drop → reconnect below */ }
+          if (dead() || terminalRef.current) return;
 
-        if (!ctrl.signal.aborted && !pipelineEndedRef.current) {
-          setErrorMsg("Backend closed the stream unexpectedly.");
-          setPhase(Phase.FAILED);
+          reconnectAttemptRef.current += 1;
+          if (reconnectAttemptRef.current > MAX_RECONNECT) {
+            setReconnecting(false);
+            setErrorMsg("We lost the connection and couldn't reconnect. Please retry.");
+            setPhase(Phase.FAILED);
+            return;
+          }
+          setReconnecting(true);
+          setIsAgentTyping(false);
+          await sleep(backoffDelay(reconnectAttemptRef.current));
+          if (dead()) return;
+
+          let next = null;
+          try { next = await reconnect(); } catch { next = null; }
+          if (dead()) return;
+          if (!next) continue;            // open failed → loop backs off again
+          stream = next;
+          setReconnecting(false);          // re-established; handleEvent resets the counter
         }
       } catch (err) {
-        if (!ctrl.signal.aborted) {
+        if (!dead()) {
+          setReconnecting(false);
           setErrorMsg(err.message || "Stream error.");
           setPhase(Phase.FAILED);
         }
@@ -188,6 +265,9 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
   // ---------------------------------------------------------------------------
 
   function handleEvent(event) {
+    // Any frame proves the stream is healthy → reset the reconnect backoff so a
+    // single drop later in a long session starts counting from zero again.
+    reconnectAttemptRef.current = 0;
     // PIPELINE_STARTED carries the resolved channel; note when we fell back.
     if (event.channel) {
       setChannelNote(
@@ -290,6 +370,8 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
 
       case ContentEvent.PIPELINE_FAILED:
         pipelineEndedRef.current = true;
+        terminalRef.current = true;  // a real run failure — don't auto-reconnect
+        setReconnecting(false);
         setErrorMsg(friendlyErrorMessage(event.error));
         setPhase(Phase.FAILED);
         break;
@@ -462,6 +544,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
           errorMsg={errorMsg}
           isAgentTyping={isAgentTyping}
           isStreaming={isStreaming}
+          reconnecting={reconnecting}
           onAnswerQuestions={handleAnswerQuestions}
           onSendMessage={handleSendMessage}
           onRetrySend={handleRetrySend}

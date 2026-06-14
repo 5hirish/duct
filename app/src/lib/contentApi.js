@@ -133,6 +133,15 @@ export async function archiveContentConversation(conversationId) {
   await archiveAgentConversation(AGENT_TYPE, conversationId).catch(() => {});
 }
 
+/**
+ * Re-attach to an EXISTING session's SSE stream (no new session created). Works
+ * while the backend's reconnect grace window is still open; throws if the
+ * session is already gone (caller then falls back to a resume-create).
+ */
+export async function reattachContentStream(sessionId, { signal } = {}) {
+  return openAgentStream(AGENT_TYPE, sessionId, { signal });
+}
+
 export async function answerContentQuestions(sessionId, answers) {
   return sendAgentMessage(AGENT_TYPE, sessionId, { type: "answer", answers });
 }

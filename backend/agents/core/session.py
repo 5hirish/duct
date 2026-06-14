@@ -42,6 +42,7 @@ class BaseAgentSession:
     created_at: float = 0.0           # time.monotonic() at registration
     last_activity: float = 0.0        # time.monotonic() of last consumer/user activity — drives stale pruning
     pipeline_task: Any | None = None  # asyncio.Task — cancelled on close
+    grace_task: Any | None = None     # asyncio.Task — closes the session if no consumer reconnects in time
 
 
 # Single shared registry across all agent types (UUID keys — no collisions).
@@ -80,6 +81,9 @@ def close_session(session_id: str) -> None:
     task = session.pipeline_task
     if task is not None and not task.done():
         task.cancel()
+    grace = session.grace_task
+    if grace is not None and not grace.done():
+        grace.cancel()
     try:
         session.chat_queue.put_nowait(None)  # sentinel — stops the chat-queue loop
     except Exception:

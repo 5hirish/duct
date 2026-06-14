@@ -195,6 +195,7 @@ export default function ContentChat({
   errorMsg,
   isAgentTyping,
   isStreaming,
+  reconnecting,
   onAnswerQuestions,
   onSendMessage,
   onRetrySend,
@@ -239,8 +240,9 @@ export default function ContentChat({
 
   const status = PHASE_STATUS[phase] ?? PHASE_STATUS[Phase.STARTING];
   const isFailed = phase === Phase.FAILED;
-  // Input enabled during READY + CHATTING (post-artifact chat), disabled during pipeline / questions / failed.
-  const inputDisabled = phase === Phase.STARTING || phase === Phase.PIPELINE || phase === Phase.QUESTIONS || isFailed;
+  // Input enabled during READY + CHATTING (post-artifact chat), disabled during
+  // pipeline / questions / failed, and while we're reconnecting a dropped stream.
+  const inputDisabled = phase === Phase.STARTING || phase === Phase.PIPELINE || phase === Phase.QUESTIONS || isFailed || reconnecting;
   const modeLabel = MODE_LABELS[mode] || "Content agent";
 
   return (
@@ -325,6 +327,13 @@ export default function ContentChat({
 
           {phase === Phase.QUESTIONS && pendingQuestions?.length > 0 && (
             <ContentQuestions questions={pendingQuestions} onSubmit={onAnswerQuestions} disabled={false} />
+          )}
+
+          {reconnecting && !isFailed && (
+            <div className="mt-3 flex items-center gap-2 rounded-lg border border-amber-400/30 bg-amber-500/10 px-4 py-2.5 text-xs text-amber-600 dark:text-amber-400">
+              <span className="inline-block size-3 rounded-full border-2 border-current border-t-transparent animate-spin" />
+              Connection dropped — reconnecting…
+            </div>
           )}
 
           {isFailed && (

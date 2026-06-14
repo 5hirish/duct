@@ -67,6 +67,40 @@ router = APIRouter(tags=["agents"])
 # Sessions older than this with no active SSE consumer are pruned.
 _SESSION_TTL = 1800  # 30 minutes
 
+# When a stream disconnects we DON'T kill the session immediately — the run keeps
+# going and events buffer in its queue, giving the client this long to reconnect
+# and re-attach to the SAME live session (transient network blips, tab refresh).
+# The inactivity pruner (_SESSION_TTL) is the longer backstop.
+_RECONNECT_GRACE = 60  # seconds
+
+
+def _cancel_grace(session) -> None:
+    """A consumer (re)connected — cancel any pending grace-close timer."""
+    grace = getattr(session, "grace_task", None)
+    if grace is not None and not grace.done():
+        grace.cancel()
+    if session is not None:
+        session.grace_task = None
+
+
+def _schedule_grace_close(session_id: str) -> None:
+    """A consumer disconnected — close the session only if nobody reconnects
+    within _RECONNECT_GRACE. A reconnect cancels this via _cancel_grace."""
+    session = get_session(session_id)
+    if session is None:
+        return
+    _cancel_grace(session)
+
+    async def _close_after_grace() -> None:
+        await asyncio.sleep(_RECONNECT_GRACE)  # cancelled if a consumer reconnects
+        s = get_session(session_id)
+        if s is not None:
+            s.grace_task = None  # past the wait — don't let close_session re-cancel us
+            logger.info("agents: reconnect grace elapsed; closing session %s", session_id)
+            close_session(session_id)
+
+    session.grace_task = asyncio.create_task(_close_after_grace())
+
 
 # Started from the app lifespan in server.py (FastAPI's lifespan disables
 # router-level on_event hooks, so all startup tasks are launched centrally).
@@ -182,6 +216,11 @@ async def stream_session(agent_type: str, session_id: str) -> StreamingResponse:
 
     event_queue: asyncio.Queue = session.event_queue  # type: ignore[assignment]
 
+    # A (re)connection arrived in time — cancel any pending grace-close so a
+    # reconnect re-attaches to the SAME live run (events buffered in the queue
+    # while disconnected are delivered now).
+    _cancel_grace(session)
+
     async def stream() -> AsyncGenerator[str, None]:
         try:
             async for chunk in _sse_stream(event_queue):
@@ -193,7 +232,12 @@ async def stream_session(agent_type: str, session_id: str) -> StreamingResponse:
         except asyncio.CancelledError:
             pass
         finally:
-            close_session(session_id)
+            # Don't tear down on a transient disconnect — keep the run alive for
+            # a grace window so the client can reconnect. The pipeline keeps
+            # streaming into the queue; if nobody returns, _close_after_grace
+            # frees everything. A terminal event (sentinel None) ends the
+            # _sse_stream loop normally; schedule grace either way.
+            _schedule_grace_close(session_id)
 
     return StreamingResponse(
         stream(),
