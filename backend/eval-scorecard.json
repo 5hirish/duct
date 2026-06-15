@@ -1,0 +1,81 @@
+{
+  "rubric": "content_post_tiktok",
+  "overall": 4.65,
+  "passed": true,
+  "dimension_scores": {
+    "hook": 5,
+    "mystery_architecture": 3,
+    "actionability": 5,
+    "brand_alignment": 5,
+    "copy_quality": 5,
+    "image_quality": 5,
+    "image_fidelity": 5,
+    "cohesion": 4
+  },
+  "failures": [],
+  "summary": "This short post effectively grabs attention with a strong, curiosity-driven hook and a high-quality, mood-setting image. It delivers a genuinely useful and actionable tip on slide 2, perfectly aligning with the brand's voice and strategic goal of driving app engagement. The content successfully navigates brand constraints and provides a clear path for the user to learn more.",
+  "dimensions": [
+    {
+      "key": "hook",
+      "score": 5,
+      "rationale": "The headline 'Your jaw isn't weak. Your routine is.' is a direct, scroll-stopping hook that challenges the viewer's perception and creates immediate curiosity, perfectly supported by the introspective image."
+    },
+    {
+      "key": "mystery_architecture",
+      "score": 3,
+      "rationale": "While the 3-slide format limits a complex unfolding story, it strategically delivers one actionable tip early (slide 2) and then drives to the app for the 'full picture,' which is an effective approach for this short format."
+    },
+    {
+      "key": "actionability",
+      "score": 5,
+      "rationale": "Slide 2 provides a highly specific and actionable instruction: 'Drop it 2 finger-widths above your Adam's apple,' which is concrete enough for immediate application."
+    },
+    {
+      "key": "brand_alignment",
+      "score": 5,
+      "rationale": "The topic, confident voice, and focus on self-improvement and aesthetics align perfectly with MaxAura's brand and target audience, without using forbidden terms like 'AI'."
+    },
+    {
+      "key": "copy_quality",
+      "score": 5,
+      "rationale": "The caption is natural, reinforces the hook, and seamlessly guides the user to the app, while the hashtags are relevant and on-platform."
+    },
+    {
+      "key": "image_quality",
+      "score": 5,
+      "rationale": "The single provided image for slide 1 is high-quality, well-composed, and perfectly captures the moody, realistic aesthetic described in the visual brief, with no visible AI artifacts."
+    },
+    {
+      "key": "image_fidelity",
+      "score": 5,
+      "rationale": "The provided image for slide 1 perfectly matches its detailed prompt, depicting a man introspectively examining his jawline in a moody, amber-lit bathroom, fulfilling all visual requirements."
+    },
+    {
+      "key": "cohesion",
+      "score": 4,
+      "rationale": "The textual content maintains a clear emotional arc and logical flow from the hook to the actionable tip and then to the app CTA, despite the absence of images for slides 2 and 3."
+    }
+  ],
+  "markers": [
+    {
+      "key": "mentions_ai",
+      "satisfied": false,
+      "evidence": "The text states 'it reads your face shape' but explicitly avoids using the terms 'AI' or 'AI-powered'."
+    },
+    {
+      "key": "uses_slide_counters",
+      "satisfied": false,
+      "evidence": "No explicit slide numbers or list counters are present on any slide."
+    },
+    {
+      "key": "single_hook_emotion",
+      "satisfied": true,
+      "evidence": "The headline 'Your jaw isn't weak. Your routine is.' directly evokes disbelief and curiosity, focusing on a single emotional frame."
+    },
+    {
+      "key": "save_worthy_payoff",
+      "satisfied": true,
+      "evidence": "Slide 2 offers a concrete, measurable instruction: 'Drop it 2 finger-widths above your Adam's apple,' which is highly save-worthy."
+    }
+  ]
+}
