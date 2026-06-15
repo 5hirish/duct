@@ -257,6 +257,11 @@ class GeminiImageClient:
         cfg_kwargs: dict[str, Any] = {
             "response_modalities": ["IMAGE", "TEXT"],
         }
+        # aspect_ratio + image_size ride in image_config for Gemini image models
+        # (previously dropped — images defaulted to square and got cropped).
+        img_cfg = _gemini_image_config(request)
+        if img_cfg is not None:
+            cfg_kwargs["image_config"] = img_cfg
         if request.thinking_level is not None:
             cfg_kwargs["thinking_config"] = types.ThinkingConfig(
                 thinking_level=_collapse_thinking_for_gemini_3_1(
@@ -286,13 +291,17 @@ class GeminiImageClient:
             types.Part.from_bytes(data=base_bytes, mime_type="image/png"),
             types.Part.from_text(text=request.prompt),
         ]
+        cfg_kwargs: dict[str, Any] = {"response_modalities": ["IMAGE", "TEXT"]}
+        # Only set image_config if an aspect_ratio override was requested — an
+        # edit otherwise keeps the source image's dimensions.
+        img_cfg = _gemini_image_config(request)
+        if img_cfg is not None:
+            cfg_kwargs["image_config"] = img_cfg
         try:
             resp = self._client.models.generate_content(
                 model=request.model.value,
                 contents=[types.Content(role="user", parts=parts)],
-                config=types.GenerateContentConfig(
-                    response_modalities=["IMAGE", "TEXT"],
-                ),
+                config=types.GenerateContentConfig(**cfg_kwargs),
             )
         except Exception as exc:
             raise GeminiAPIError(str(exc), model=request.model.value) from exc
@@ -303,6 +312,27 @@ class GeminiImageClient:
 # ---------------------------------------------------------------------------
 # Module helpers
 # ---------------------------------------------------------------------------
+
+
+def _gemini_image_config(request: Any):
+    """Build a ``types.ImageConfig`` for the Gemini image path.
+
+    Gemini image models read aspect_ratio + image_size from
+    ``GenerateContentConfig.image_config`` (NOT top-level kwargs and NOT a
+    negative_prompt — negative prompting isn't a concept for these models; see
+    ai.google.dev/gemini-api/docs/image-generation). Returns None when neither
+    is set (e.g. an edit that should keep the source dimensions).
+    """
+    from google.genai import types
+
+    kw: dict[str, Any] = {}
+    ar = getattr(request, "aspect_ratio", None)
+    if ar is not None:
+        kw["aspect_ratio"] = ar.value
+    sz = getattr(request, "image_size", None)
+    if sz is not None:
+        kw["image_size"] = sz.value
+    return types.ImageConfig(**kw) if kw else None
 
 
 def _collapse_thinking_for_gemini_3_1(model: ImageModel, level):

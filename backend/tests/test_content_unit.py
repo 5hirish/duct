@@ -723,6 +723,36 @@ def test_generated_slide_image_prompt_is_locked_on_bulk_reemit():
     assert _resolved_image_prompt("anything", "", True) == "anything"   # nothing stored
 
 
+def test_attach_image_syncs_prompt_and_provenance_no_false_stale():
+    """When generate_image attaches an image (prompt_used given), the slide's
+    image_prompt AND image_prompt_used are both set to the generating prompt — so
+    the slide is NOT falsely 'stale' right after a (re)generation. Keystone for
+    the staleness lifecycle: generating an image is a deliberate act that defines
+    what the slide depicts."""
+    from agents.content.tools import _attach_image_to_slide
+    from agents.content.schema import Slide
+    from models.content import ContentPost
+
+    class _FakeDB:
+        def add(self, _row):
+            pass
+
+    row = ContentPost(
+        project_id=uuid4(), post_dir_slug="x", layout="full-bleed",
+        slides=[{"slide_id": "slide-01", "kind": "photo", "image_prompt": "old short stub"}],
+    )
+    NEW = "24yo woman, heart face, real skin with visible pores, natural asymmetry, warm window light, candid"
+    ok = _attach_image_to_slide(
+        _FakeDB(), row, "slide-01",
+        asset_id=str(uuid4()), url="https://cdn/x.png", prompt_used=NEW,
+    )
+    assert ok
+    s = row.slides[0]
+    assert s["image_url"] == "https://cdn/x.png"
+    assert s["image_prompt"] == NEW and s["image_prompt_used"] == NEW   # in sync
+    assert Slide.model_validate(s).is_image_stale() is False            # not falsely stale
+
+
 def test_image_tool_schemas_constrain_model_and_required_params():
     """The image tools must expose ENUM-constrained model/aspect_ratio (so an
     invalid id like 'gemini-3.1-flash-image-preview' can't be passed) and mark

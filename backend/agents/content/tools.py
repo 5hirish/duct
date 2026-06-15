@@ -332,16 +332,19 @@ def _attach_image_to_slide(
     """Write a generated image onto one slide (or one cell of a multi-image
     slide) of a post + re-render the HTML.
 
-    Sets image_url / image_asset_id and anchors image_prompt_used to the prompt
-    that ACTUALLY produced this image — pass it via ``prompt_used`` (the
-    descriptive prompt sent to the model, before any reference prefix). That is
-    the source of truth for staleness: a later edit to the slide's image_prompt
-    then reads as stale. When ``prompt_used`` is omitted we fall back to the
-    target's current image_prompt (legacy behaviour). When item_index is given
-    AND the slide actually has cells, the image lands on slide.items[item_index]
-    (a collage cell / before-after side); item_index on a single-image slide
-    (no cells) is treated as a plain single-image attach rather than failing —
-    the model routinely passes item_index=0 for ordinary photo slides. Returns
+    Sets image_url / image_asset_id. When ``prompt_used`` is given (the
+    descriptive prompt the image was generated from, before any reference
+    prefix), it is recorded as BOTH ``image_prompt`` and ``image_prompt_used``:
+    generating an image is a deliberate act that defines what the slide depicts,
+    so the slide's prompt and its provenance stay in sync — the slide does NOT
+    read as falsely stale right after a successful (re)generation. (The accidental
+    degradation path — a bulk submit_post_draft re-emit — is still guarded
+    separately in _merge_slide_images; a later deliberate edit_slide that changes
+    image_prompt correctly marks the image stale.) When ``prompt_used`` is omitted
+    we only anchor image_prompt_used to the slide's current image_prompt (legacy).
+    item_index targets a collage/before-after cell when the slide has cells; a
+    stray item_index on a single-image slide falls through to a plain attach
+    (the model routinely passes item_index=0 for ordinary photo slides). Returns
     True if the target was found + updated. The caller commits.
     """
     slides = list(row.slides or [])
@@ -360,13 +363,21 @@ def _attach_image_to_slide(
             cell = dict(items[item_index])
             cell["image_url"] = url
             cell["image_asset_id"] = asset_id
-            cell["image_prompt_used"] = prompt_used if prompt_used is not None else cell.get("image_prompt", "")
+            if prompt_used is not None:
+                cell["image_prompt"] = prompt_used       # keep prompt + provenance in sync
+                cell["image_prompt_used"] = prompt_used
+            else:
+                cell["image_prompt_used"] = cell.get("image_prompt", "")
             items[item_index] = cell
             s["items"] = items
         else:
             s["image_url"] = url
             s["image_asset_id"] = asset_id
-            s["image_prompt_used"] = prompt_used if prompt_used is not None else s.get("image_prompt", "")
+            if prompt_used is not None:
+                s["image_prompt"] = prompt_used          # keep prompt + provenance in sync
+                s["image_prompt_used"] = prompt_used
+            else:
+                s["image_prompt_used"] = s.get("image_prompt", "")
         slides[i] = s
         found = True
         break

@@ -133,3 +133,23 @@ def test_multi_reference_prefix_describes_roles_for_two_or_three_refs():
     assert "character reference"     in three_ref
     assert "framing/style reference" in three_ref
     assert "third image" in three_ref.lower() or "supplementary" in three_ref.lower()
+
+
+def test_gemini_image_config_carries_aspect_ratio_and_size():
+    """Gemini image models read aspect_ratio + image_size from
+    config.image_config (not top-level kwargs, and not a negative_prompt — those
+    aren't a concept for Gemini). _gemini_image_config builds that, and returns
+    None when nothing is set (an edit that should keep the source dimensions)."""
+    from types import SimpleNamespace
+
+    from service.gemini.client import _gemini_image_config
+
+    cfg = _gemini_image_config(SimpleNamespace(
+        aspect_ratio=SimpleNamespace(value="9:16"),
+        image_size=SimpleNamespace(value="2K"),
+    ))
+    assert cfg is not None
+    assert cfg.aspect_ratio == "9:16"
+    assert cfg.image_size == "2K"
+
+    assert _gemini_image_config(SimpleNamespace(aspect_ratio=None, image_size=None)) is None
