@@ -88,6 +88,19 @@ def close_session(session_id: str) -> None:
         session.chat_queue.put_nowait(None)  # sentinel — stops the chat-queue loop
     except Exception:
         pass
+    try:
+        session.event_queue.put_nowait(None)  # sentinel — ends the SSE stream (_sse_stream)
+    except Exception:
+        pass
+
+
+def close_all_sessions() -> None:
+    """Close every registered session. Called on server shutdown so long-lived
+    SSE streams drain immediately — otherwise uvicorn's graceful shutdown blocks
+    waiting for them (a --reload or a deploy hangs until the chat idle-timeout).
+    Iterates a snapshot since close_session mutates the registry."""
+    for session_id in list(_sessions.keys()):
+        close_session(session_id)
 
 
 async def bridge_ask_user_question(

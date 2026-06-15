@@ -237,3 +237,34 @@ def test_tool_schema_inlines_enums_and_strips_pydantic_noise():
     cell = s["properties"]["cells"]["items"]
     assert cell["properties"]["shade"]["enum"] == ["red", "blue"]
     assert cell["required"] == ["label"]
+
+
+# --- shutdown: close_all_sessions drains SSE streams -------------------------
+
+def test_close_all_sessions_sentinels_sse_and_clears_registry():
+    """On shutdown close_all_sessions must end every SSE stream: it pops each
+    session and puts the None sentinel on its event_queue (what _sse_stream
+    breaks on) AND chat_queue. This is what stops uvicorn's graceful shutdown
+    from hanging on long-lived streams (a --reload or deploy would otherwise
+    block until the chat idle-timeout)."""
+    import asyncio as _asyncio
+
+    from agents.core.session import (
+        BaseAgentSession,
+        close_all_sessions,
+        get_session,
+        register_session,
+    )
+
+    eq, cq = _asyncio.Queue(), _asyncio.Queue()
+    register_session(BaseAgentSession(
+        session_id="shutdown-drain-test", agent_type="content",
+        event_queue=eq, chat_queue=cq,
+    ))
+    assert get_session("shutdown-drain-test") is not None
+
+    close_all_sessions()
+
+    assert get_session("shutdown-drain-test") is None   # popped from the registry
+    assert eq.get_nowait() is None                      # SSE sentinel → _sse_stream exits
+    assert cq.get_nowait() is None                      # chat-loop sentinel

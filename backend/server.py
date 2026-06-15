@@ -150,6 +150,13 @@ async def lifespan(app: FastAPI):
     try:
         yield
     finally:
+        # Close active agent sessions FIRST: this sentinels each session's SSE
+        # event queue so the long-lived stream generators exit, letting uvicorn's
+        # graceful shutdown drain connections instead of blocking on them (a
+        # --reload or a deploy would otherwise hang until the chat idle-timeout).
+        from agents.core.session import close_all_sessions
+
+        close_all_sessions()
         for task in pruners:
             task.cancel()
         await asyncio.gather(*pruners, return_exceptions=True)
