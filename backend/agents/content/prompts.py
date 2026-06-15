@@ -117,6 +117,19 @@ The save-worthy asset (self-test, measurement, exact phrase to quote
 to a stylist) MUST appear at slide 3 or 4 — NOT slide 5+. Slide 3 has
 ~22-28% retention = 3× the reach of slide 5 (~9%). Put the FULL
 revelation at slide 5 (intimate); put the ACTIONABLE TOOL at slide 3.
+
+STRUCTURE BY TOPIC (the mystery arc is the default; these are the two other
+proven carousel shapes — pick whichever the topic fits, still applying the
+open-loop principle):
+- TRANSFORMATION / COMPARISON (glow-up, wrong-vs-right, X-vs-Y): use the
+  BEFORE/AFTER layout (do/don't cells). It's one of the most shareable
+  carousel types — the reveal tension carries it. Still tease the "after"
+  before you show it (don't resolve early).
+- LISTICLE (signs, mistakes, tips): earns SAVES — each item gets its own
+  slide and a strong save-for-later pull. But NEVER a bare "Sign 1 / Sign 2 /
+  Sign 3" that lets the viewer exit after each. Wrap it in the mystery
+  framing: rank the items, tease the most powerful one LAST, keep one loop
+  open to the end. The goal is saves AND completion, not saves OR completion.
 """
 
 _TERMINOLOGY_BRIEF = """\
@@ -311,6 +324,22 @@ FOUR ANCHOR RULES — apply to EVERY image_prompts entry:
        ✅ "muted olive-green knit sweater, slightly oversized, real fabric texture"
        ❌ "muted olive-green knit sweater, slightly washed out looking against her skin"
 
+PROMPT SKELETON — fill these slots IN ORDER for every image_prompt (this is the
+structure the model follows best; the rules above + below fill each slot):
+  SUBJECT     — attractiveness-first: face geometry, skin tone, hair (Rule 1)
+  COMPOSITION — framing + distance: arm's-length selfie, ~26mm, slightly above
+                eye level (Rule 3), unless the slide needs other framing
+  ACTION      — the EXPRESSION FORMULA below (story moment + eye engagement +
+                physical tell), plus "NOT [prior gesture]" (see gesture arc)
+  LOCATION    — specific named setting elements (never "a room")
+  STYLE       — the iPhone UGC signature, non-negotiable: "shot on iPhone main
+                camera, ~26mm, Smart HDR with slight computational flatness,
+                fine natural grain, available warm light, candid / un-posed,
+                real skin texture — NOT beauty-mode smoothed."
+  NEVER specify a DSLR / mirrorless body (Sony, Canon, 85mm f/1.4): that
+  triggers the polished, advertised look we are specifically avoiding. The
+  iPhone-computational look is what reads as real UGC.
+
 EXPRESSION FORMULA (mandatory components for every prompt):
   Three components always required — derive from the COPY's emotional
   moment for that slide, NOT from a template:
@@ -351,7 +380,18 @@ OUTDOOR BACKGROUND DEPTH (mandatory for any outdoor slide):
   Indoor scenes are naturally depth-layered by architecture — this is
   primarily for outdoor and street scenes.
 
+SLIDE 1 = THE VISUAL HOOK (not just a portrait). The viewer decides in
+~1 second, sound-off, whether to swipe in. Slide 1's IMAGE must stop the
+scroll ON ITS OWN — an arresting expression and/or ONE unexpected element
+in frame that telegraphs the hook emotion — working WITH the headline, not
+leaning on it. A technically-perfect but generic selfie is a miss. Build the
+scroll-stop into the prompt: the "wait, what?" expression, an out-of-place
+object, a caught-mid-reaction moment.
+
 SLIDE 1 APPROVAL GATE — verify before approving slide 1:
+  - SCROLL-STOP: sound-off, in ~1s, the image alone creates a "wait, what?"
+    and telegraphs the hook emotion — not a generically pretty portrait. If
+    it reads as a nice selfie but doesn't arrest the scroll, regenerate.
   - Face shape matches what the copy claims
   - Skin looks real (pores, asymmetry, imperfection)
   - Setting is identifiable, not generic
@@ -478,12 +518,23 @@ Do NOT call generate_image until the user signals the writing is good
 slides that have an image_prompt in slide order, but ONE IMAGE AT A TIME —
 never batch. For each:
 
+  0. fetch_slide_context(slide_id) FIRST — never generate from memory. It hands
+     you the slide's current image_prompt, the post's visual_brief, THIS slide's
+     emotional_arc beat, the camera_ref_pool + resolved cameraRef candidates, the
+     locked character asset, and the role-ordered `suggested_input_asset_ids` +
+     `suggested_model`. Build the prompt from the visual_brief + arc beat, and use
+     the suggested refs/model unless you have a reason not to. (Essential after a
+     resume, when the brief has fallen out of your context.)
   1. Generate it (generate_image), passing slide_id. Slide 1 locks the
      character; for slides 2-5 pass [slide_01_asset_id, cameraRef_asset_id] so
      the same person + framing carry across (see the image discipline brief).
      For a collage / before-after slide, generate EACH cell separately —
      generate_image(slide_id, item_index=N) for N=0,1,… — and pass only the
      cameraRef (the cells are intentionally different subjects/looks).
+     MODEL TIER: generate slide 1 with model="gemini-3-pro-image" (highest
+     fidelity — it sets the character every later slide inherits, so quality
+     here propagates). Generate slides 2-5 on the default model (fast + cheap).
+     If pro errors or is unavailable, fall back to the default and note it.
   2. LOOK at the returned photo with your own vision and critique it against:
      this slide's role + emotion, the visual_brief, the emotional_arc, the
      PREVIOUS slide's image (same face/skin/hair + lighting continuity), and
@@ -743,6 +794,12 @@ METHOD — produce these in order, then assemble the JSON:
     of color content; disbelief framing lands hardest in week 2 once the
     audience trusts the creator."
 
+12. AUDIO — `audio_note`. Prefer a TRENDING sound when one fits the mood:
+    on TikTok a trending sound is a distribution lever — it boosts reach even
+    when unrelated to the content. State the trend type/vibe; the orchestrator
+    swaps in a live pick from the plan's trending-sound signals. Fall back to
+    instrumental ambient / lo-fi (no lyrics) only when nothing trending fits.
+
 {_QUALITY_STANDARD_BRIEF}
 {_HOOK_EMOTIONS_BRIEF}
 {_HOOK_FORMULAS_BRIEF}
@@ -777,7 +834,7 @@ array:
   "hook_text": "I used an app to analyse my face. It knew things I didn't.",
   "hook_emotion": "disbelief",
   "save_cta": "save this — the self-test is on slide 3",
-  "audio_note": "slowed introspective lo-fi or soft ambient — instrumental only, no lyrics",
+  "audio_note": "trending quiet-revelation sound if one fits; else slowed introspective lo-fi (instrumental, no lyrics)",
   "bridge_text": "I found a free app for this. one photo. 30 seconds. I kind of wish I hadn't.",
   "strategic_note": "Reinforces face_shape pillar after 3 days of color content; disbelief framing lands hardest in week 2.",
   "visual_brief": "Lighting: warm window light from camera-right, 4800K, soft falloff. Slide 1 setting: bathroom vanity, products on counter, real mirror, towel hanging. Subject posture baseline: phone held slightly above eye level, left shoulder angled toward camera. Skin/hair realism: visible pores, slight asymmetry, flyaways at temple. Copy voice: fragments, casual. cameraRef pool: selfie-talking. captionStyle: cap-stroke. layoutStyle: standard.",

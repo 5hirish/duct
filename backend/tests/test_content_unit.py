@@ -753,6 +753,22 @@ def test_attach_image_syncs_prompt_and_provenance_no_false_stale():
     assert Slide.model_validate(s).is_image_stale() is False            # not falsely stale
 
 
+def test_arc_line_for_slide_extracts_this_slides_beat():
+    """fetch_slide_context hands the model THIS slide's emotional_arc beat (the
+    arc is one "01: ...\\n02: ..." blob). Matches by the slide's trailing number,
+    tolerates non-zero-padded lines, and falls back to the idx-th line."""
+    from agents.content.tools import _arc_line_for_slide
+
+    arc = "01: quiet wry smile\n02: leaning in, brow tightening\n03: pointing at jaw"
+    assert _arc_line_for_slide(arc, "slide-02", 1) == "02: leaning in, brow tightening"
+    assert _arc_line_for_slide(arc, "slide-03", 2) == "03: pointing at jaw"
+    # non-zero-padded arc lines still match
+    assert _arc_line_for_slide("1: a\n2: b", "slide-01", 0) == "1: a"
+    # empty arc → empty; unmatched number → idx-th line fallback
+    assert _arc_line_for_slide("", "slide-01", 0) == ""
+    assert _arc_line_for_slide("01: a\n02: b", "slide-09", 1) == "02: b"
+
+
 def test_image_tool_schemas_constrain_model_and_required_params():
     """The image tools must expose ENUM-constrained model/aspect_ratio (so an
     invalid id like 'gemini-3.1-flash-image-preview' can't be passed) and mark

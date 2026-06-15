@@ -384,6 +384,7 @@ class ContentTool(StrEnum):
     FETCH_CONTENT_ASSETS       = "mcp__duct_content__fetch_content_assets"
     FETCH_DISCOVERED_REFERENCES = "mcp__duct_content__fetch_discovered_references"
     FETCH_POST                 = "mcp__duct_content__fetch_post"
+    FETCH_SLIDE_CONTEXT        = "mcp__duct_content__fetch_slide_context"
     RENDER_SLIDE               = "mcp__duct_content__render_slide"
     GENERATE_IMAGE             = "mcp__duct_content__generate_image"
     EDIT_IMAGE                 = "mcp__duct_content__edit_image"

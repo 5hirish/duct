@@ -168,6 +168,44 @@ def _require_item(slide: dict, item_index: int | None) -> dict | None:
     return None
 
 
+def _arc_line_for_slide(emotional_arc: str, slide_id: str, idx: int) -> str:
+    """Pull THIS slide's line out of the emotional_arc blob ("01: ...\\n02: ...").
+
+    Matches by the slide's trailing number (slide-03 -> "3"); falls back to the
+    idx-th line. Returns "" when the arc is empty or has no matching line.
+    """
+    arc = (emotional_arc or "").strip()
+    if not arc:
+        return ""
+    lines = [ln.strip() for ln in arc.splitlines() if ln.strip()]
+    num = ("".join(ch for ch in str(slide_id) if ch.isdigit()).lstrip("0")) or "0"
+    for ln in lines:
+        head = (ln.split(":", 1)[0].strip().lstrip("0")) or "0"
+        if head == num:
+            return ln
+    return lines[idx] if 0 <= idx < len(lines) else ""
+
+
+def _resolve_camera_refs(db: Session, project_id, pool: str) -> list[dict]:
+    """Best-effort cameraRef resolution for a camera pool (selfie-talking /
+    lifestyle / closeup). Pools are a naming convention (camera/<pool>), so we
+    match the pool keyword in filename/url/prompt; fall back to all reference
+    assets when nothing matches. Returns up to 5 candidates, role-ready."""
+    rows = db.exec(
+        select(ContentAsset).where(
+            ContentAsset.project_id == project_id,
+            ContentAsset.asset_type == "reference",
+        )
+    ).all()
+    key = (pool or "").strip().lower()
+    matched = [
+        a for a in rows
+        if key and key in f"{a.filename} {a.url} {a.prompt}".lower()
+    ] if key else []
+    chosen = matched or rows
+    return [{"asset_id": str(a.id), "url": a.url, "filename": a.filename} for a in chosen[:5]]
+
+
 def _resolve_format_id(db: Session, project_id, format_slug: str):
     """Resolve a format slug (e.g. 'format-d') to the project's ContentFormat id.
 
@@ -1872,6 +1910,79 @@ def build_content_mcp_server(
             logger.exception("fetch_post failed")
             return _err(f"fetch_post failed: {exc}")
 
+    @tool(
+        name="fetch_slide_context",
+        description=(
+            "Pre-assembled context for generating ONE slide's image — call this "
+            "right before generate_image for each slide so you never work from "
+            "memory. Returns the slide's current image_prompt, the post's "
+            "visual_brief, THIS slide's emotional_arc line, the camera_ref_pool + "
+            "resolved cameraRef candidates, the locked character asset (slide 1's "
+            "image, for the slides 2-5 reference chain), and the role-ordered "
+            "suggested input_asset_ids + suggested model for this slide. Use these "
+            "so realism, character, and framing stay consistent across the set."
+        ),
+        input_schema={
+            "type": "object",
+            "properties": {
+                "slide_id": {"type": "string", "description": "The slide to fetch context for, e.g. 'slide-03'."},
+            },
+            "required": ["slide_id"],
+        },
+    )
+    async def fetch_slide_context(args: dict) -> dict:
+        try:
+            slide_id = (args.get("slide_id") or "").strip()
+            if not slide_id:
+                return _err("slide_id is required (e.g. 'slide-03').")
+            with _open_db() as db:
+                post, err = _require_post(db, project_id, session.post_id)
+                if err:
+                    return err
+                slide, idx, err = _require_slide(post, slide_id)
+                if err:
+                    return err
+
+                # Locked character = slide-1's generated image (the reference every
+                # later slide chains from). None until slide 1 is generated.
+                character_asset_id = None
+                for s in post.slides or []:
+                    if isinstance(s, dict) and str(s.get("slide_id")).strip().endswith("01"):
+                        character_asset_id = s.get("image_asset_id")
+                        break
+
+                camera_refs = _resolve_camera_refs(db, project_id, post.camera_ref_pool or "")
+                cam = camera_refs[0]["asset_id"] if camera_refs else None
+                is_slide_one = str(slide.get("slide_id")).strip().endswith("01")
+                char = str(character_asset_id) if character_asset_id else None
+                # Role-ordered ref chain: slide 1 = [cameraRef]; slides 2-5 =
+                # [character, cameraRef]. (Collage/before-after cells: pass only
+                # the cameraRef per cell — see the image discipline brief.)
+                suggested_refs = ([cam] if cam else []) if is_slide_one \
+                    else [x for x in (char, cam) if x]
+
+                cur = (slide.get("image_prompt") or "").strip()
+                used = (slide.get("image_prompt_used") or "").strip()
+                return _ok({
+                    "slide_id":            slide_id,
+                    "role":                slide.get("role", ""),
+                    "kind":                slide.get("kind", "photo"),
+                    "headline":            slide.get("headline", ""),
+                    "subtext":             slide.get("subtext", ""),
+                    "image_prompt":        slide.get("image_prompt", ""),
+                    "image_stale":         bool(slide.get("image_url")) and (cur != used),
+                    "visual_brief":        post.visual_brief,
+                    "emotional_arc_line":  _arc_line_for_slide(post.emotional_arc, slide_id, idx),
+                    "camera_ref_pool":     post.camera_ref_pool,
+                    "camera_ref_assets":   camera_refs,
+                    "character_asset_id":  char,
+                    "suggested_input_asset_ids": suggested_refs,
+                    "suggested_model":     "gemini-3-pro-image" if is_slide_one else None,
+                })
+        except Exception as exc:
+            logger.exception("fetch_slide_context failed")
+            return _err(f"fetch_slide_context failed: {exc}")
+
     return create_sdk_mcp_server(
         "duct_content",
         tools=[
@@ -1886,6 +1997,7 @@ def build_content_mcp_server(
             fetch_content_assets,
             fetch_discovered_references,
             fetch_post,
+            fetch_slide_context,
             render_slide,
             generate_image,
             edit_image,
