@@ -30,7 +30,7 @@ from uuid import UUID, uuid4
 
 from claude_agent_sdk import create_sdk_mcp_server, tool
 from claude_agent_sdk.types import McpSdkServerConfig
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from agents.content.results import (
     EditImageResult,
@@ -44,7 +44,8 @@ from agents.content.results import (
 )
 from sqlmodel import Session, select
 
-from agents.models import DEFAULT_IMAGE_MODEL
+from agents.models import DEFAULT_IMAGE_MODEL, AspectRatio, ImageModel
+from agents.core.tool_schema import tool_schema
 from agents.content.events import ContentEvent
 from agents.content.schema import (
     ContentSession,
@@ -184,6 +185,29 @@ def _resolve_format_id(db: Session, project_id, format_slug: str):
     return row.id if row else None
 
 
+def _resolved_image_prompt(incoming: str, prev_prompt: str, prev_has_image: bool) -> str:
+    """Decide a slide/cell image_prompt on the bulk re-emit (submit_post_draft)
+    path. NO length heuristics — purely structural.
+
+    Once a slide has a GENERATED IMAGE, its image_prompt is the provenance of
+    that image and is LOCKED here: a whole-post resubmit is copy/structure work
+    and must not rewrite it. This is what stops a rich prompt from silently
+    collapsing into a stub across successive submits (2170 → 956 → … → 75 chars)
+    and producing plastic output. Deliberate scene changes go through edit_slide
+    (which IS allowed to shorten — a real edit, including a more concise rewrite).
+    Independently, an omitted/empty incoming prompt never deletes a stored one.
+    Before an image exists the slide is still being drafted, so refinements
+    (shorter or longer) are accepted as-is.
+    """
+    inc = (incoming or "").strip()
+    prev = (prev_prompt or "").strip()
+    if not prev:
+        return incoming            # nothing stored to protect
+    if prev_has_image or not inc:  # locked to its image, or an omission
+        return prev_prompt
+    return incoming                # still drafting → accept the refinement
+
+
 def _merge_slide_images(incoming: list[Slide], existing_row: ContentPost | None) -> list[Slide]:
     """Carry already-generated images forward across copy/prompt edits.
 
@@ -192,6 +216,11 @@ def _merge_slide_images(incoming: list[Slide], existing_row: ContentPost | None)
     on the persisted row, we backfill image_url / image_asset_id /
     image_prompt_used onto the incoming slide (keyed by slide_id) UNLESS the
     incoming slide explicitly carries its own image_url.
+
+    We ALSO guard image_prompt against degradation (see _keep_richer_prompt):
+    the bulk re-emit may only enhance a stored prompt, never shorten or drop it.
+    This makes it safe for the agent to omit/abbreviate image_prompt on re-emit
+    — the richer stored prompt is preserved.
 
     Staleness falls out naturally: a copy-only edit keeps the old
     image_prompt_used, so if the prompt changed the slide reads as stale
@@ -211,26 +240,46 @@ def _merge_slide_images(incoming: list[Slide], existing_row: ContentPost | None)
             merged.append(slide)
             continue
         update: dict = {}
-        if not slide.image_url and prev.get("image_url"):
+        prev_has_image = bool(prev.get("image_url"))
+        # A generated slide's image_prompt is locked on the bulk re-emit path —
+        # only edit_slide may change it. (Structural, no length compare.)
+        kept_prompt = _resolved_image_prompt(slide.image_prompt, prev.get("image_prompt", ""), prev_has_image)
+        if kept_prompt != slide.image_prompt:
+            update["image_prompt"] = kept_prompt
+            if prev_has_image and (slide.image_prompt or "").strip():
+                logger.info(
+                    "content: kept locked image_prompt for generated slide %s on bulk re-emit "
+                    "(use edit_slide to change a generated slide's prompt)", slide.slide_id,
+                )
+        if not slide.image_url and prev_has_image:
             update.update({
                 "image_url":         prev.get("image_url", ""),
                 "image_asset_id":    prev.get("image_asset_id"),
                 "image_prompt_used": prev.get("image_prompt_used", ""),
             })
         # Carry generated cell images forward (collage / before-after), matched
-        # by position within the slide.
+        # by position within the slide. Cell prompts get the same structural lock.
         if slide.items:
             prev_items = prev.get("items") or []
             new_items = list(slide.items)
             touched = False
             for j, it in enumerate(slide.items):
                 pit = prev_items[j] if j < len(prev_items) else None
-                if pit and not it.image_url and pit.get("image_url"):
-                    new_items[j] = it.model_copy(update={
+                if not pit:
+                    continue
+                cell_update: dict = {}
+                pit_has_image = bool(pit.get("image_url"))
+                kept_cell_prompt = _resolved_image_prompt(it.image_prompt, pit.get("image_prompt", ""), pit_has_image)
+                if kept_cell_prompt != it.image_prompt:
+                    cell_update["image_prompt"] = kept_cell_prompt
+                if not it.image_url and pit_has_image:
+                    cell_update.update({
                         "image_url":         pit.get("image_url", ""),
                         "image_asset_id":    pit.get("image_asset_id"),
                         "image_prompt_used": pit.get("image_prompt_used", ""),
                     })
+                if cell_update:
+                    new_items[j] = it.model_copy(update=cell_update)
                     touched = True
             if touched:
                 update["items"] = new_items
@@ -288,10 +337,12 @@ def _attach_image_to_slide(
     descriptive prompt sent to the model, before any reference prefix). That is
     the source of truth for staleness: a later edit to the slide's image_prompt
     then reads as stale. When ``prompt_used`` is omitted we fall back to the
-    target's current image_prompt (legacy behaviour). When item_index is given,
-    the image lands on slide.items[item_index] (a collage cell / before-after
-    side) instead of the slide itself. Returns True if the target was found +
-    updated. The caller commits.
+    target's current image_prompt (legacy behaviour). When item_index is given
+    AND the slide actually has cells, the image lands on slide.items[item_index]
+    (a collage cell / before-after side); item_index on a single-image slide
+    (no cells) is treated as a plain single-image attach rather than failing —
+    the model routinely passes item_index=0 for ordinary photo slides. Returns
+    True if the target was found + updated. The caller commits.
     """
     slides = list(row.slides or [])
     found = False
@@ -299,8 +350,11 @@ def _attach_image_to_slide(
         if not (isinstance(s, dict) and str(s.get("slide_id")) == str(slide_id)):
             continue
         s = dict(s)
-        if item_index is not None:
-            items = list(s.get("items") or [])
+        items = list(s.get("items") or [])
+        # item_index only applies to multi-image slides. On a single-image slide
+        # (no cells) the model's stray item_index=0 must NOT fail the attach —
+        # fall through to the single-image path.
+        if item_index is not None and items:
             if not (0 <= item_index < len(items)):
                 return False
             cell = dict(items[item_index])
@@ -426,6 +480,69 @@ def build_content_mcp_server(
     emit pushes events to the SSE consumer; session lets writers stash IDs
     (e.g. session.plan_id after submit_plan).
     """
+    # Typed input models for the image tools — the source of truth for both the
+    # tool input_schema (via tool_schema()) and the field constraints the model
+    # sees (enums from StrEnum so an invalid id can't be passed; ranges via
+    # Field). Defined here, not at module top, because the gemini enums pull the
+    # google client; service.gemini is imported lazily at session-build time.
+    from service.gemini.schema import EditMode, MaskMode, SubjectType
+
+    class GenerateImageInput(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+        prompt: str = Field(description="Image prompt — the scene description for this slide.")
+        slide_id: str | None = Field(
+            None,
+            description=(
+                "The slide this image is for (e.g. 'slide-01'). When set, the result is "
+                "attached to that slide of the current post: image_url is filled, the preview "
+                "re-renders, and POST_DRAFT_UPDATED fires — no separate submit_post_draft "
+                "needed. Always pass this during the image phase."
+            ),
+        )
+        item_index: int | None = Field(
+            None, ge=0,
+            description=(
+                "For multi-image slides (collage / before-after), the 0-based cell to attach "
+                "this image to. Omit for single-image slides."
+            ),
+        )
+        model: ImageModel = Field(
+            DEFAULT_IMAGE_MODEL,
+            description=f"Optional image model id; defaults to {DEFAULT_IMAGE_MODEL.value}.",
+        )
+        aspect_ratio: AspectRatio = Field(
+            AspectRatio.PORTRAIT_9_16, description="Optional aspect ratio. Defaults to 9:16 portrait.",
+        )
+        number_of_images: int = Field(1, ge=1, le=4, description="How many images to generate. Default 1, max 4.")
+        negative_prompt: str | None = Field(None, description="Optional negative prompt (Imagen models only).")
+        input_asset_id: str | None = Field(
+            None, description="Single reference asset UUID (legacy; prefer input_asset_ids). Gemini-class models only.",
+        )
+        input_asset_ids: list[str] = Field(
+            default_factory=list,
+            description=(
+                "Multiple reference assets (Gemini-class only). Up to 3 UUIDs in role-order: "
+                "[character_ref, camera_or_style_ref, optional_third]. For slides 2-5 the common "
+                "pattern is [slide-01 character image, cameraRef from the reference library] — "
+                "first image locks face/skin/hair, second imitates TikTok framing. A role-explanation "
+                "prefix is auto-prepended to your prompt when 2+ ids are passed."
+            ),
+        )
+
+    class EditImageInput(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+        prompt: str = Field(description="Edit instruction.")
+        input_asset_id: str = Field(description="UUID of the source asset to edit.")
+        model: ImageModel | None = Field(None, description="Optional image model id.")
+        edit_mode: EditMode | None = Field(None, description="Optional edit mode (Imagen only).")
+        mask_asset_id: str | None = Field(None, description="Optional mask asset UUID.")
+        mask_mode: MaskMode | None = Field(None, description="Optional mask mode.")
+        style_asset_id: str | None = Field(None, description="Optional style reference asset UUID.")
+        subject_asset_id: str | None = Field(None, description="Optional subject reference asset UUID.")
+        subject_type: SubjectType | None = Field(None, description="Optional subject type.")
+        aspect_ratio: AspectRatio | None = Field(None, description="Optional aspect ratio override.")
+        number_of_images: int = Field(1, ge=1, le=4, description="How many images to generate (1-4).")
+        negative_prompt: str | None = Field(None, description="Optional negative prompt (Imagen only).")
 
     # ----------------------- Writers -----------------------
 
@@ -670,7 +787,18 @@ def build_content_mcp_server(
                 _slide, idx, err = _require_slide(row, slide_id)
                 if err:
                     return err
-                merged = {**slides[idx], **patch, "slide_id": slide_id}
+                existing_slide = slides[idx]
+                # edit_slide is the DELIBERATE surgical path — a real prompt edit
+                # (including a more concise rewrite) is allowed here. Degradation
+                # protection lives on the bulk re-emit path (_merge_slide_images),
+                # which is where prompts silently collapsed.
+                merged = {**existing_slide, **patch, "slide_id": slide_id}
+                # If this patch manually attaches an image (image_url) without
+                # declaring which prompt produced it, anchor provenance to the
+                # slide's current prompt — a blank image_prompt_used makes the
+                # slide read as falsely stale.
+                if patch.get("image_url") and "image_prompt_used" not in patch:
+                    merged["image_prompt_used"] = merged.get("image_prompt", "")
                 try:
                     slide_obj = Slide.model_validate(merged)
                 except ValidationError as exc:
@@ -838,7 +966,12 @@ def build_content_mcp_server(
             "hook_type, status, posted_at, perf."
         ),
         input_schema={
-            "limit": Annotated[int, "Max rows to return. Default 30, max 100."],
+            "type": "object",
+            "properties": {
+                "limit": {"type": "integer", "minimum": 1, "maximum": 100,
+                          "description": "Max rows to return. Default 30, max 100."},
+            },
+            "required": [],
         },
     )
     async def fetch_content_history(args: dict) -> dict:
@@ -885,11 +1018,16 @@ def build_content_mcp_server(
             "skip the long tail (default 10000)."
         ),
         input_schema={
-            "min_play_count": Annotated[
-                int,
-                "Skip posts with fewer plays. Default 10000 (filters out outliers).",
-            ],
-            "limit": Annotated[int, "Max rows to return. Default 30, max 100."],
+            "type": "object",
+            "properties": {
+                "min_play_count": {
+                    "type": "integer", "minimum": 0,
+                    "description": "Skip posts with fewer plays. Default 10000 (filters out outliers).",
+                },
+                "limit": {"type": "integer", "minimum": 1, "maximum": 100,
+                          "description": "Max rows to return. Default 30, max 100."},
+            },
+            "required": [],
         },
     )
     async def fetch_discovered_references(args: dict) -> dict:
@@ -941,10 +1079,14 @@ def build_content_mcp_server(
             "(e.g. 'generated', 'logo', 'background', 'reference', 'upload')."
         ),
         input_schema={
-            "asset_type": Annotated[
-                str,
-                "Optional asset_type filter. Empty string = all types.",
-            ],
+            "type": "object",
+            "properties": {
+                "asset_type": {
+                    "type": "string",
+                    "description": "Optional asset_type filter (e.g. 'generated', 'reference', 'slide_render'). Omit for all types.",
+                },
+            },
+            "required": [],
         },
     )
     async def fetch_content_assets(args: dict) -> dict:
@@ -985,36 +1127,7 @@ def build_content_mcp_server(
             "asset_url you must reference in slides_html. Defaults: 9:16 portrait, "
             "1 image. Generated images are saved to the project's media library."
         ),
-        input_schema={
-            "prompt": Annotated[str, "Image prompt — the scene description for this slide."],
-            "slide_id": Annotated[
-                str,
-                "The slide this image is for (e.g. 'slide-01'). When set, the "
-                "result is attached to that slide of the current post: its "
-                "image_url is filled, the preview re-renders, and a "
-                "POST_DRAFT_UPDATED event fires — no separate submit_post_draft "
-                "needed for the image. Always pass this during the image phase.",
-            ],
-            "item_index": Annotated[
-                int,
-                "For multi-image slides (collage / before-after), the 0-based "
-                "cell to attach this image to (collage cell or before/after "
-                "side). Omit for single-image slides. Generate one cell per call.",
-            ],
-            "model":  Annotated[str, f"Optional image model id; defaults to {DEFAULT_IMAGE_MODEL.value}."],
-            "aspect_ratio": Annotated[str, "Optional aspect ratio (e.g. '9:16'). Defaults to portrait."],
-            "number_of_images": Annotated[int, "How many images to generate. Default 1, max 4."],
-            "negative_prompt":  Annotated[str, "Optional negative prompt (Imagen models only)."],
-            "input_asset_id":   Annotated[str, "Single reference asset UUID (legacy; prefer input_asset_ids). Gemini-class models only."],
-            "input_asset_ids":  Annotated[
-                list[str],
-                "Multiple reference assets (Gemini-class only). Pass up to 3 UUIDs in role-order: "
-                "[character_ref, camera_or_style_ref, optional_third]. For slides 2-5 the common "
-                "pattern is [slide-01 character image, cameraRef from the reference library] — "
-                "first image locks face/skin/hair, second imitates TikTok framing. A role-explanation "
-                "prefix is auto-prepended to your prompt when 2+ ids are passed.",
-            ],
-        },
+        input_schema=tool_schema(GenerateImageInput),
     )
     async def generate_image(args: dict) -> dict:
         try:
@@ -1201,20 +1314,7 @@ def build_content_mcp_server(
             "asset_url. The original asset is preserved — every edit creates a new "
             "content_assets row."
         ),
-        input_schema={
-            "prompt":          Annotated[str, "Edit instruction."],
-            "input_asset_id":  Annotated[str, "UUID of the source asset (required)."],
-            "model":           Annotated[str, "Optional image model id."],
-            "edit_mode":       Annotated[str, "Optional edit mode (Imagen only)."],
-            "mask_asset_id":   Annotated[str, "Optional mask asset UUID."],
-            "mask_mode":       Annotated[str, "Optional mask mode."],
-            "style_asset_id":  Annotated[str, "Optional style reference asset UUID."],
-            "subject_asset_id": Annotated[str, "Optional subject reference asset UUID."],
-            "subject_type":    Annotated[str, "Optional subject type."],
-            "aspect_ratio":    Annotated[str, "Optional aspect ratio override."],
-            "number_of_images": Annotated[int, "How many images to generate (1-4)."],
-            "negative_prompt": Annotated[str, "Optional negative prompt (Imagen only)."],
-        },
+        input_schema=tool_schema(EditImageInput),
     )
     async def edit_image(args: dict) -> dict:
         try:
@@ -1316,11 +1416,16 @@ def build_content_mcp_server(
             "no render (their captions wouldn't appear)."
         ),
         input_schema={
-            "post_id":            Annotated[str,       "UUID of the content_posts row to publish."],
-            "social_account_ids": Annotated[list[int], "Numeric PostBridge social account IDs."],
-            "scheduled_at":       Annotated[str,       "Optional ISO 8601 timestamp; omit to post now."],
-            "tiktok_draft":       Annotated[bool,      "If true, post lands as a TikTok draft instead of scheduling."],
-            "allow_uncomposed":   Annotated[bool,      "Escape hatch: publish single-image slides as their RAW photo when no composed render exists (captions won't appear). Multi-image slides still require a render. Default false."],
+            "type": "object",
+            "properties": {
+                "post_id":            {"type": "string", "description": "UUID of the content_posts row to publish."},
+                "social_account_ids": {"type": "array", "items": {"type": "integer"},
+                                       "description": "Numeric PostBridge social account IDs (at least one)."},
+                "scheduled_at":       {"type": "string", "description": "Optional ISO 8601 timestamp; omit to post now."},
+                "tiktok_draft":       {"type": "boolean", "description": "If true, post lands as a TikTok draft instead of scheduling."},
+                "allow_uncomposed":   {"type": "boolean", "description": "Escape hatch: publish single-image slides as their RAW photo when no composed render exists (captions won't appear). Multi-image slides still require a render. Default false."},
+            },
+            "required": ["post_id", "social_account_ids"],
         },
     )
     async def publish_post(args: dict) -> dict:
@@ -1487,8 +1592,12 @@ def build_content_mcp_server(
             "outside of PostBridge). Sets status='posted' and posted_at=now."
         ),
         input_schema={
-            "post_id":    Annotated[str, "UUID of the content_posts row."],
-            "tiktok_url": Annotated[str, "Optional external URL of the live post."],
+            "type": "object",
+            "properties": {
+                "post_id":    {"type": "string", "description": "UUID of the content_posts row."},
+                "tiktok_url": {"type": "string", "description": "Optional external URL of the live post."},
+            },
+            "required": ["post_id"],
         },
     )
     async def mark_posted(args: dict) -> dict:
@@ -1687,8 +1796,12 @@ def build_content_mcp_server(
             "so the image should be regenerated)."
         ),
         input_schema={
-            "post_dir_slug": Annotated[str, "Post slug, e.g. '2026-06-08-001'. Optional."],
-            "post_id":       Annotated[str, "Post UUID. Optional."],
+            "type": "object",
+            "properties": {
+                "post_dir_slug": {"type": "string", "description": "Post slug, e.g. '2026-06-08-001'."},
+                "post_id":       {"type": "string", "description": "Post UUID."},
+            },
+            "required": [],  # pass either, or neither (defaults to the session's current post)
         },
     )
     async def fetch_post(args: dict) -> dict:

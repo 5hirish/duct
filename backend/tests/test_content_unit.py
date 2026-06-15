@@ -678,3 +678,84 @@ def test_reprime_block_excludes_tool_events():
     assert "draft it" in block and "done" in block        # conversational turns kept
     assert "submit_post_draft" not in block               # tool events excluded
     assert "2026-06-14-001" not in block
+
+
+def test_generated_slide_image_prompt_is_locked_on_bulk_reemit():
+    """The bulk re-emit (submit_post_draft) must never rewrite a GENERATED
+    slide's image_prompt — that is how a 2170-char realism prompt silently
+    collapsed to a 75-char stub and produced plastic output. The lock is
+    structural (image present), not a length heuristic: even a *longer* incoming
+    prompt is ignored on this path; deliberate changes go through edit_slide.
+    A slide with no image yet is still being drafted, so refinements pass."""
+    from types import SimpleNamespace
+    from agents.content.tools import _merge_slide_images, _resolved_image_prompt
+    from agents.content.schema import Slide
+
+    RICH = "detailed realism prompt: visible pores, asymmetry, film grain, no plastic skin"
+    generated = SimpleNamespace(slides=[{
+        "slide_id": "slide-01", "image_prompt": RICH, "image_url": "https://cdn/x.png",
+        "image_asset_id": None, "image_prompt_used": RICH,
+    }])
+
+    # generated slide: a shorter incoming prompt is IGNORED, image carried forward
+    short = _merge_slide_images([Slide(slide_id="slide-01", image_prompt="round face selfie")], generated)
+    assert short[0].image_prompt == RICH
+    assert short[0].image_url == "https://cdn/x.png"
+    # generated slide: even a LONGER incoming is locked (use edit_slide instead)
+    longer = _merge_slide_images([Slide(slide_id="slide-01", image_prompt=RICH + " extra detail")], generated)
+    assert longer[0].image_prompt == RICH
+    # generated slide: omitted (empty) prompt never deletes the stored one
+    omitted = _merge_slide_images([Slide(slide_id="slide-01", image_prompt="")], generated)
+    assert omitted[0].image_prompt == RICH
+
+    # un-generated slide (no image): drafting refinements pass through, shorter or not
+    draft = SimpleNamespace(slides=[{"slide_id": "slide-02", "image_prompt": RICH, "image_url": ""}])
+    refined = _merge_slide_images([Slide(slide_id="slide-02", image_prompt="tighter v2")], draft)
+    assert refined[0].image_prompt == "tighter v2"
+    # ...but an omitted prompt still doesn't wipe a stored one even while drafting
+    kept = _merge_slide_images([Slide(slide_id="slide-02", image_prompt="")], draft)
+    assert kept[0].image_prompt == RICH
+
+    # helper: no length math anywhere
+    assert _resolved_image_prompt("short", RICH, True) == RICH          # locked
+    assert _resolved_image_prompt("short", RICH, False) == "short"      # drafting
+    assert _resolved_image_prompt("", RICH, False) == RICH              # omission
+    assert _resolved_image_prompt("anything", "", True) == "anything"   # nothing stored
+
+
+def test_image_tool_schemas_constrain_model_and_required_params():
+    """The image tools must expose ENUM-constrained model/aspect_ratio (so an
+    invalid id like 'gemini-3.1-flash-image-preview' can't be passed) and mark
+    only the truly-required params required. Asserts the schema the model actually
+    receives (via the MCP server's list_tools), guarding both the free-string
+    `model` bug and the dict-form 'every key required' default."""
+    import mcp.types as mt
+    from agents.content.tools import build_content_mcp_server
+    from agents.content.schema import make_session
+
+    async def _emit(_body):
+        return None
+
+    cfg = build_content_mcp_server(uuid4(), _emit, make_session("t", uuid4(), "draft_post"))
+    inst = cfg["instance"]
+
+    async def _list():
+        handler = inst.request_handlers[mt.ListToolsRequest]
+        res = await handler(mt.ListToolsRequest(method="tools/list"))
+        return {t.name: t.inputSchema for t in res.root.tools}
+
+    schemas = asyncio.run(_list())
+
+    gi = schemas["generate_image"]
+    assert gi["required"] == ["prompt"]                                  # only prompt required
+    assert "gemini-3.1-flash-image" in gi["properties"]["model"]["enum"]  # valid id offered
+    assert "gemini-3.1-flash-image-preview" not in gi["properties"]["model"]["enum"]  # the bad id can't be passed
+    assert "9:16" in gi["properties"]["aspect_ratio"]["enum"]
+
+    ei = schemas["edit_image"]
+    assert set(ei["required"]) == {"prompt", "input_asset_id"}
+    assert "enum" in ei["properties"]["edit_mode"]
+
+    # optional-as-required fixes: these take either/neither id, nothing forced
+    assert schemas["fetch_post"]["required"] == []
+    assert schemas["mark_posted"]["required"] == ["post_id"]
