@@ -110,3 +110,32 @@ def test_public_url_matches_disk_layout(tmp_path):
             resolved = disk_path_for_public_url(ref.public_url)
             assert resolved is not None
             assert resolved.resolve() == ref.disk_path
+
+
+def test_global_reference_asset_dicts_shape_and_filter(tmp_path):
+    """fetch_content_assets surfaces globals via this shaper. The agent
+    treats globals like DB assets, so the dict must carry the asset keys —
+    and crucially `id` MUST be the /static/references URL (NOT a UUID),
+    because that's exactly what the agent passes back into generate_image."""
+    _seed_refs(tmp_path)
+    with patch("service.content_references._DISK_ROOT", tmp_path):
+        from service.content_references import global_reference_asset_dicts
+
+        cam = global_reference_asset_dicts(axis="camera", subtype="selfie-talking")
+        assert len(cam) == 1
+        a = cam[0]
+        assert a["id"] == "/static/references/camera/selfie-talking/IMG_5885.jpeg"
+        assert a["id"] == a["url"]
+        assert a["asset_type"] == "reference"
+        assert a["source"] == "global"
+        assert a["mime_type"] == "image/jpeg"
+        assert a["axis"] == "camera"
+        assert a["subtype"] == "selfie-talking"
+
+        # .png subtype carries the right mime
+        closeup = global_reference_asset_dicts(axis="camera", subtype="closeup")
+        assert closeup[0]["mime_type"] == "image/png"
+
+        # No filter → every axis is represented
+        axes = {a["axis"] for a in global_reference_asset_dicts()}
+        assert axes == {"camera", "layouts", "captions"}

@@ -301,6 +301,37 @@ def test_generate_image_validator_coalesces_legacy_and_multi_ref_keys():
     assert "max 3" in deny.message
 
 
+def test_generate_image_validator_accepts_global_library_url_refs():
+    """A reference id may be a repo-bundled global library URL
+    ('/static/references/...') instead of a DB UUID — the tool resolves it
+    from disk. The validator must NOT reject it through the UUID-typed
+    request model, but it MUST still count toward the max-3 cap. Catches
+    the regression where every camera-ref call gets denied."""
+    from uuid import uuid4
+
+    from agents.content.v3.runner import _validate_generate_image
+
+    lib = "/static/references/camera/selfie-talking/IMG_5885.jpeg"
+
+    # Single global library ref — must pass.
+    assert _validate_generate_image({
+        "prompt": "p", "input_asset_ids": [lib],
+    }) is None
+
+    # Mixed [character UUID, camera library URL] — the slide 2-5 pattern.
+    assert _validate_generate_image({
+        "prompt": "p", "input_asset_ids": [str(uuid4()), lib],
+    }) is None
+
+    # Globals still count toward the cap: 4 distinct refs (mixed) must deny.
+    deny = _validate_generate_image({
+        "prompt": "p",
+        "input_asset_ids": [str(uuid4()), str(uuid4()), lib, lib + "x"],
+    })
+    assert deny is not None
+    assert "max 3" in deny.message
+
+
 # ---------------------------------------------------------------------------
 # Frontend ↔ backend event-enum mirror — guard against drift
 # ---------------------------------------------------------------------------
