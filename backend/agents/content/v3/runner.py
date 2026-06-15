@@ -392,7 +392,14 @@ def _validate_generate_image(input_data: dict[str, Any]):
                 "Pass [character_ref, camera_ref] for slides 2-5; drop "
                 "extras and call again."
             )
-        payload["input_asset_ids"] = merged_ids
+        # Global library refs ('/static/references/...') are resolved from
+        # disk by the tool, not the DB — keep them out of the UUID-typed
+        # request model so validation doesn't reject them. They still count
+        # toward the max-3 cap checked above.
+        from service.content_references import disk_path_for_public_url
+        payload["input_asset_ids"] = [
+            x for x in merged_ids if disk_path_for_public_url(str(x)) is None
+        ]
     payload.pop("input_asset_id", None)
 
     try:

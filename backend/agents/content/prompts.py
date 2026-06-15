@@ -157,9 +157,9 @@ AI-looking output and brand-polished copy that doesn't read like a real
 creator's voice.
 
 A. STUDY 3-5 REFERENCE IMAGES — actually look at them.
-   Call fetch_content_assets(asset_type="reference") to enumerate the
-   global + per-project reference library. Pick 3-5 from the relevant
-   camera pool:
+   Call fetch_content_assets(asset_type="reference", axis="camera") to
+   enumerate the camera reference library (global + per-project). Pick
+   3-5 from the relevant camera pool:
      - camera/selfie-talking — default for frustration / anger / shock /
        disbelief; person speaking to camera, indoor
      - camera/lifestyle      — outdoor, educational tone, gentle arc
@@ -433,6 +433,11 @@ SLIDE 1 APPROVAL GATE — verify before approving slide 1:
 MULTI-REFERENCE IMAGE GENERATION (Gemini-class models only — slides 2-5):
 
 generate_image accepts up to 3 reference images via `input_asset_ids`.
+Identify each reference by the `id` fetch_content_assets gave it: a
+global library reference's id is its `/static/references/...` URL, a
+generated or uploaded asset's id is a UUID. Pass either form — the tool
+reads library refs from disk and per-project assets from the DB.
+
 The recommended pattern for personal-narrative posts (where slides 2-5
 must show the SAME character as slide 1):
 

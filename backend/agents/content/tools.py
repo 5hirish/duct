@@ -187,23 +187,31 @@ def _arc_line_for_slide(emotional_arc: str, slide_id: str, idx: int) -> str:
 
 
 def _resolve_camera_refs(db: Session, project_id, pool: str) -> list[dict]:
-    """Best-effort cameraRef resolution for a camera pool (selfie-talking /
-    lifestyle / closeup). Pools are a naming convention (camera/<pool>), so we
-    match the pool keyword in filename/url/prompt; fall back to all reference
-    assets when nothing matches. Returns up to 5 candidates, role-ready."""
+    """Resolve cameraRef candidates for a pool (selfie-talking / lifestyle /
+    closeup). Primary source is the repo-bundled GLOBAL camera library for that
+    pool — its `asset_id` is a /static/references/... URL that generate_image
+    resolves from disk. Also includes any per-project DB references. Returns up
+    to 5, role-ready (the same shape fetch_content_assets emits)."""
+    key = (pool or "").strip().lower()
+    refs: list[dict] = []
+    # Global library (camera axis, pool subtype) — where the curated refs live.
+    try:
+        from service.content_references import global_reference_asset_dicts
+        for d in global_reference_asset_dicts(axis="camera", subtype=key or None):
+            refs.append({"asset_id": d["id"], "url": d["url"], "filename": d.get("slug", "")})
+    except Exception:
+        logger.debug("global camera refs unavailable", exc_info=True)
+    # Per-project DB references (a project may have uploaded its own).
     rows = db.exec(
         select(ContentAsset).where(
             ContentAsset.project_id == project_id,
             ContentAsset.asset_type == "reference",
         )
     ).all()
-    key = (pool or "").strip().lower()
-    matched = [
-        a for a in rows
-        if key and key in f"{a.filename} {a.url} {a.prompt}".lower()
-    ] if key else []
-    chosen = matched or rows
-    return [{"asset_id": str(a.id), "url": a.url, "filename": a.filename} for a in chosen[:5]]
+    db_matched = [a for a in rows if key and key in f"{a.filename} {a.url} {a.prompt}".lower()]
+    for a in (db_matched or rows):
+        refs.append({"asset_id": str(a.id), "url": a.url, "filename": a.filename})
+    return refs[:5]
 
 
 def _resolve_format_id(db: Session, project_id, format_slug: str):
@@ -1125,7 +1133,12 @@ def build_content_mcp_server(
         description=(
             "Return content assets (generated images, uploads, references) "
             "for this project. Filter by asset_type if provided "
-            "(e.g. 'generated', 'logo', 'background', 'reference', 'upload')."
+            "(e.g. 'generated', 'logo', 'background', 'reference', 'upload'). "
+            "References include the repo-bundled GLOBAL library (camera / "
+            "layouts / captions) served from /static/references — narrow it "
+            "with the optional axis + subtype filters. A global reference's "
+            "`id` is its /static/references/... URL; pass that id straight "
+            "into generate_image's input_asset_ids."
         ),
         input_schema={
             "type": "object",
@@ -1134,6 +1147,14 @@ def build_content_mcp_server(
                     "type": "string",
                     "description": "Optional asset_type filter (e.g. 'generated', 'reference', 'slide_render'). Omit for all types.",
                 },
+                "axis": {
+                    "type": "string",
+                    "description": "Optional reference-axis filter: 'camera' | 'layouts' | 'captions'. Only affects global library references.",
+                },
+                "subtype": {
+                    "type": "string",
+                    "description": "Optional reference-subtype filter (e.g. 'selfie-talking', 'lifestyle', 'closeup'). Only affects global library references.",
+                },
             },
             "required": [],
         },
@@ -1141,27 +1162,34 @@ def build_content_mcp_server(
     async def fetch_content_assets(args: dict) -> dict:
         try:
             asset_type = (args.get("asset_type") or "").strip()
+            axis       = (args.get("axis") or "").strip() or None
+            subtype    = (args.get("subtype") or "").strip() or None
             with _open_db() as db:
                 stmt = select(ContentAsset).where(ContentAsset.project_id == project_id)
                 if asset_type:
                     stmt = stmt.where(ContentAsset.asset_type == asset_type)
                 rows = db.exec(stmt).all()
-                return _ok({
-                    "assets": [
-                        {
-                            "id":         str(r.id),
-                            "asset_type": r.asset_type,
-                            "source":     r.source,
-                            "url":        r.url,
-                            "mime_type":  r.mime_type,
-                            "prompt":     r.prompt,
-                            "model":      r.model,
-                            "params":     r.params,
-                            "created_at": r.created_at.isoformat(),
-                        }
-                        for r in rows
-                    ]
-                })
+                assets = [
+                    {
+                        "id":         str(r.id),
+                        "asset_type": r.asset_type,
+                        "source":     r.source,
+                        "url":        r.url,
+                        "mime_type":  r.mime_type,
+                        "prompt":     r.prompt,
+                        "model":      r.model,
+                        "params":     r.params,
+                        "created_at": r.created_at.isoformat(),
+                    }
+                    for r in rows
+                ]
+            # Merge the repo-bundled global reference library (disk, not DB).
+            # Globals are project-agnostic, so they ride alongside the
+            # project-scoped rows whenever references are in scope.
+            if asset_type in ("", "reference"):
+                from service.content_references import global_reference_asset_dicts
+                assets.extend(global_reference_asset_dicts(axis=axis, subtype=subtype))
+            return _ok({"assets": assets})
         except Exception as exc:
             logger.exception("fetch_content_assets failed")
             return _err(f"fetch_content_assets failed: {exc}")
@@ -1216,6 +1244,7 @@ def build_content_mcp_server(
 
             # Normalise single-ref legacy → list. The model may pass
             # input_asset_id, input_asset_ids, or both; merge in order.
+            # Order encodes role: [character_ref, camera/style_ref].
             ref_ids_raw: list = []
             if payload.get("input_asset_id"):
                 ref_ids_raw.append(payload["input_asset_id"])
@@ -1227,14 +1256,35 @@ def build_content_mcp_server(
                     "Too many reference images — max 3 (character + style + one supplementary). "
                     "Drop the least useful and call again."
                 )
-            try:
-                ref_uuids = [UUID(str(x)) for x in ref_ids_raw]
-            except ValueError as exc:
-                return _err(f"invalid reference asset id: {exc}")
 
-            # Hand the validator a list-shaped payload regardless of which
-            # legacy key the model used.
-            payload["input_asset_ids"] = [str(u) for u in ref_uuids]
+            # A reference id is EITHER a per-project ContentAsset UUID
+            # (resolved from the DB + Railway Volume) OR a repo-bundled
+            # global library URL ('/static/references/...', resolved from
+            # disk — no DB row, no project scope). Classify in order so the
+            # [character, camera] role ordering is preserved.
+            from service.content_references import disk_path_for_public_url
+
+            ref_plan: list[tuple[str, str]] = []   # (kind, value); kind: 'global'|'uuid'
+            uuid_refs: list[str] = []
+            for raw in ref_ids_raw:
+                raw_s = str(raw).strip()
+                if disk_path_for_public_url(raw_s) is not None:
+                    ref_plan.append(("global", raw_s))
+                    continue
+                try:
+                    parsed = UUID(raw_s)
+                except ValueError:
+                    return _err(
+                        f"invalid reference asset id {raw_s!r} — expected a content "
+                        "asset UUID or a /static/references/... library URL."
+                    )
+                ref_plan.append(("uuid", str(parsed)))
+                uuid_refs.append(str(parsed))
+
+            # The Pydantic request carries UUIDs only (input_asset_ids is
+            # typed list[UUID]); global library refs reach the client as
+            # bytes via input_bytes_list below.
+            payload["input_asset_ids"] = uuid_refs
             payload.pop("input_asset_id", None)
             try:
                 request = GenerateImageRequest.model_validate(payload)
@@ -1246,8 +1296,17 @@ def build_content_mcp_server(
             generating_prompt = request.prompt
 
             input_bytes_list: list[bytes] = []
+            global_refs: list[str] = []
             with _open_db() as db:
-                for ref_uuid in ref_uuids:
+                for kind, value in ref_plan:
+                    if kind == "global":
+                        gp = disk_path_for_public_url(value)
+                        if gp is None or not gp.exists():
+                            return _err(f"reference library file missing on disk: {value}")
+                        input_bytes_list.append(gp.read_bytes())
+                        global_refs.append(value)
+                        continue
+                    ref_uuid = UUID(value)
                     asset = db.get(ContentAsset, ref_uuid)
                     if asset is None or asset.project_id != project_id:
                         return _err(f"reference asset {ref_uuid} not found for this project.")
@@ -1283,11 +1342,12 @@ def build_content_mcp_server(
                         prompt=request.prompt,
                         model=request.model.value,
                         params={
-                            "aspect_ratio":    request.aspect_ratio.value,
-                            "image_size":      request.image_size.value,
-                            "seed":            request.seed,
-                            "negative_prompt": request.negative_prompt,
-                            "input_asset_ids": [str(u) for u in ref_uuids],
+                            "aspect_ratio":      request.aspect_ratio.value,
+                            "image_size":        request.image_size.value,
+                            "seed":              request.seed,
+                            "negative_prompt":   request.negative_prompt,
+                            "input_asset_ids":   uuid_refs,
+                            "input_global_refs": global_refs,
                         },
                         post_id=session.post_id,
                         source="imagen" if request.model.value.startswith("imagen-") else "gemini",
