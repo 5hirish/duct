@@ -41,3 +41,27 @@ class EditSlideResult(BaseModel):
     post_id: str
     slide_id: str
     updated: list[str]  # the patched field names
+
+
+class SubmitPlanResult(BaseModel):
+    plan_id: str
+    days: int
+
+
+class SubmitPostResult(BaseModel):
+    post_id: str
+    post_dir_slug: str
+    slide_count: int
+    images_generated: int
+
+
+class MarkPostedResult(BaseModel):
+    post_id: str
+    status: str
+
+
+class LogMetricsResult(BaseModel):
+    post_id: str
+    view_count: int
+    like_count: int
+    snapshots: int

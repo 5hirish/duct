@@ -22,12 +22,14 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 from agents.core.prompts import DUCT_REPORT_CLOSE, DUCT_REPORT_OPEN
+from agents.models import AgentTool
 
 logger = logging.getLogger(__name__)
 
-# The TodoWrite tool's canonical name (AgentTool.TODO_WRITE is a StrEnum whose
-# value is exactly this — compared as a string here so core stays import-light).
-_TODO_WRITE = "TodoWrite"
+# The TodoWrite tool's canonical name, sourced from the single AgentTool enum
+# (StrEnum → plain str for the by-name comparisons below). agents.models is a
+# pure-enum leaf module, so importing it keeps core import-light.
+_TODO_WRITE = AgentTool.TODO_WRITE.value
 
 
 def is_todo_write(block: Any) -> bool:

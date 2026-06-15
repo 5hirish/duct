@@ -40,6 +40,7 @@ from agents.audit.schema import (
     AuditBusinessContext,
     AuditReport,
     AuditSession,
+    AuditTool,
     CrawlResult,
     CrawlSummary,
     StructuredAuditData,
@@ -61,11 +62,8 @@ logger = logging.getLogger(__name__)
 # Set AUDIT_VERBOSE_LOGGING=1 to log per-message SDK events and costs to terminal
 _VERBOSE = os.environ.get("AUDIT_VERBOSE_LOGGING", "").lower() in ("1", "true")
 
-_FALLBACK_MODEL = "claude-sonnet-4-6"
-_ANTHROPIC_MODEL_MAP: dict[ModelName, str] = {
-    ModelName.CLAUDE_SONNET: "claude-sonnet-4-6",
-    ModelName.CLAUDE_HAIKU: "claude-haiku-4-5-20251001",
-}
+# Anthropic-only engine; model strings are owned by the ModelName enum in agents/models.py.
+_ANTHROPIC_MODELS = (ModelName.CLAUDE_SONNET, ModelName.CLAUDE_HAIKU)
 
 EmitFn = Callable[[dict[str, Any]], Awaitable[None]]
 
@@ -161,14 +159,14 @@ async def run_crawl(
 # ---------------------------------------------------------------------------
 
 def _resolve_model(provider: Provider, model: ModelName) -> str:
-    if provider != Provider.ANTHROPIC:
+    if provider != Provider.ANTHROPIC or model not in _ANTHROPIC_MODELS:
         logger.warning(
             "audit v3: only Anthropic supported; ignoring provider=%s, falling back to %s",
             provider.value,
-            _FALLBACK_MODEL,
+            ModelName.CLAUDE_SONNET.value,
         )
-        return _FALLBACK_MODEL
-    return _ANTHROPIC_MODEL_MAP.get(model, _FALLBACK_MODEL)
+        return ModelName.CLAUDE_SONNET.value
+    return model.value
 
 
 def _parse_report(text: str) -> AuditReport | None:
@@ -297,7 +295,7 @@ async def run_synthesis(
         # to prevent the model from wasting all 60 turns on tool calls before
         # generating the <duct_report> JSON.
         # FetchPages: only after the initial report is generated
-        if tool_name == AgentTool.FETCH_PAGES:
+        if tool_name == AuditTool.FETCH_PAGES:
             if initial_report is None:
                 first_step = (
                     "Finish the report first (StartAuditReport → AddAuditCategory ×9 → FinalizeAuditReport)"
@@ -451,10 +449,10 @@ async def run_synthesis(
     # version-matched to the SDK. Passing shutil.which("claude") here would use the
     # system-installed CLI which may be a different (incompatible) version.
     _extra_tools = [
-        AgentTool.START_AUDIT_REPORT,
-        AgentTool.ADD_AUDIT_CATEGORY,
-        AgentTool.FINALIZE_AUDIT_REPORT,
-        AgentTool.SUBMIT_AUDIT_REPORT,  # chat-revision resubmit path
+        AuditTool.START_AUDIT_REPORT,
+        AuditTool.ADD_AUDIT_CATEGORY,
+        AuditTool.FINALIZE_AUDIT_REPORT,
+        AuditTool.SUBMIT_AUDIT_REPORT,  # chat-revision resubmit path
     ] if report_mode == "template" else []
     _submit_cb = _on_submit_report if report_mode == "template" else None
 
@@ -500,7 +498,7 @@ async def run_synthesis(
             AgentTool.TODO_WRITE,
             AgentTool.WEB_SEARCH,
             AgentTool.WEB_FETCH,
-            AgentTool.FETCH_PAGES,  # mcp__duct_crawl__FetchPages — in-process MCP
+            AuditTool.FETCH_PAGES,  # mcp__duct_crawl__FetchPages — in-process MCP
             *_extra_tools,
         ],
         # Belt-and-suspenders with ENABLE_TOOL_SEARCH=false (the documented control,

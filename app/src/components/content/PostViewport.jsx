@@ -230,7 +230,7 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
         <div className="mx-auto max-w-2xl space-y-4 p-5">
           <SlidesCarousel slides={slides} headHtml={headHtml} index={slideIdx} onIndexChange={setCurrentIndex} />
 
-          <BulkImageBar slides={slides} onSendMessage={onSendMessage} commitIfDirty={commitIfDirty} />
+          <BulkImageBar slides={slides} onSendMessage={onSendMessage} commitIfDirty={commitIfDirty} currentIndex={slideIdx} />
 
           <PostCopy post={post} patch={patch} />
         </div>
@@ -343,13 +343,19 @@ function imageUnits(slides) {
 
 // Batch image actions — generate all pending, or regenerate everything stale.
 // Auto-hides when there's nothing to do, so it's invisible most of the time.
-function BulkImageBar({ slides, onSendMessage, commitIfDirty }) {
+function BulkImageBar({ slides, onSendMessage, commitIfDirty, currentIndex = 0 }) {
   if (!onSendMessage) return null;
   const units = imageUnits(slides);
   const t = (u) => (u.it ? u.it : u.s);
   const pending = units.filter((u) => (t(u).image_prompt || "").trim() && !t(u).image_url).length;
-  const staleCount = units.filter((u) => isTargetStale(t(u))).length;
-  if (pending === 0 && staleCount === 0) return null;
+  // Regenerate is scoped to the slide the user is viewing — never all of them.
+  // (The per-slide "outdated" badge flags the others as you navigate.)
+  const cur = slides[Math.min(currentIndex, Math.max(0, slides.length - 1))];
+  const curStale =
+    !!cur &&
+    (isTargetStale(cur) ||
+      (Array.isArray(cur.items) && cur.items.some((it) => isTargetStale(it))));
+  if (pending === 0 && !curStale) return null;
   async function ask(text) { await commitIfDirty?.(); onSendMessage(text); }
   return (
     <div className="flex flex-wrap gap-2">
@@ -362,13 +368,13 @@ function BulkImageBar({ slides, onSendMessage, commitIfDirty }) {
           <Sparkles className="size-3.5" /> Approve &amp; generate {pending} image{pending > 1 ? "s" : ""} — one by one
         </button>
       )}
-      {staleCount > 0 && (
+      {curStale && (
         <button
           type="button"
-          onClick={() => ask("Regenerate the images whose prompt changed (the outdated ones) so they match the new prompts.")}
+          onClick={() => ask(`Regenerate just the image for ${cur.slide_id} — the slide I'm viewing — to match its updated prompt. Leave every other slide exactly as it is.`)}
           className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-amber-400/50 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-600 transition-colors hover:bg-amber-500/20 dark:text-amber-400"
         >
-          <RefreshCw className="size-3.5" /> {staleCount} outdated — regenerate
+          <RefreshCw className="size-3.5" /> This slide is outdated — regenerate
         </button>
       )}
     </div>

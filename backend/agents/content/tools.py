@@ -36,10 +36,15 @@ from agents.content.results import (
     EditImageResult,
     EditSlideResult,
     GenerateImageResult,
+    LogMetricsResult,
+    MarkPostedResult,
     RenderSlideResult,
+    SubmitPlanResult,
+    SubmitPostResult,
 )
 from sqlmodel import Session, select
 
+from agents.models import DEFAULT_IMAGE_MODEL
 from agents.content.events import ContentEvent
 from agents.content.schema import (
     ContentSession,
@@ -132,7 +137,7 @@ def _require_post(db: Session, project_id, post_id) -> tuple[ContentPost | None,
         return None, _err("No current post in this session.")
     row = db.get(ContentPost, post_id)
     if row is None or row.project_id != project_id:
-        return None, _err("Current post not found for this project.")
+        return None, _err(f"Post {post_id} not found for this project.")
     return row, None
 
 
@@ -273,15 +278,20 @@ def _attach_image_to_slide(
     asset_id: str,
     url: str,
     item_index: int | None = None,
+    prompt_used: str | None = None,
 ) -> bool:
     """Write a generated image onto one slide (or one cell of a multi-image
     slide) of a post + re-render the HTML.
 
-    Sets image_url / image_asset_id and anchors image_prompt_used to the
-    target's CURRENT image_prompt so later prompt edits read as stale. When
-    item_index is given, the image lands on slide.items[item_index] (a collage
-    cell / before-after side) instead of the slide itself. Returns True if the
-    target was found + updated. The caller commits.
+    Sets image_url / image_asset_id and anchors image_prompt_used to the prompt
+    that ACTUALLY produced this image — pass it via ``prompt_used`` (the
+    descriptive prompt sent to the model, before any reference prefix). That is
+    the source of truth for staleness: a later edit to the slide's image_prompt
+    then reads as stale. When ``prompt_used`` is omitted we fall back to the
+    target's current image_prompt (legacy behaviour). When item_index is given,
+    the image lands on slide.items[item_index] (a collage cell / before-after
+    side) instead of the slide itself. Returns True if the target was found +
+    updated. The caller commits.
     """
     slides = list(row.slides or [])
     found = False
@@ -296,13 +306,13 @@ def _attach_image_to_slide(
             cell = dict(items[item_index])
             cell["image_url"] = url
             cell["image_asset_id"] = asset_id
-            cell["image_prompt_used"] = cell.get("image_prompt", "")
+            cell["image_prompt_used"] = prompt_used if prompt_used is not None else cell.get("image_prompt", "")
             items[item_index] = cell
             s["items"] = items
         else:
             s["image_url"] = url
             s["image_asset_id"] = asset_id
-            s["image_prompt_used"] = s.get("image_prompt", "")
+            s["image_prompt_used"] = prompt_used if prompt_used is not None else s.get("image_prompt", "")
         slides[i] = s
         found = True
         break
@@ -478,7 +488,7 @@ def build_content_mcp_server(
                         "character": row.character,
                     },
                 })
-                return _ok({"plan_id": str(row.id), "days": len(draft.days)})
+                return _ok_model(SubmitPlanResult(plan_id=str(row.id), days=len(draft.days)))
         except Exception as exc:
             logger.exception("submit_plan failed")
             return _err(f"submit_plan failed: {exc}")
@@ -611,15 +621,15 @@ def build_content_mcp_server(
                     "post_id": str(row.id),
                     "payload": _build_post_payload(row),
                 })
-                return _ok({
-                    "post_id": str(row.id),
-                    "post_dir_slug": row.post_dir_slug,
-                    "slide_count": row.slide_count,
-                    "images_generated": sum(
+                return _ok_model(SubmitPostResult(
+                    post_id=str(row.id),
+                    post_dir_slug=row.post_dir_slug,
+                    slide_count=row.slide_count,
+                    images_generated=sum(
                         1 for s in (row.slides or [])
                         if isinstance(s, dict) and s.get("image_url")
                     ),
-                })
+                ))
         except Exception as exc:
             logger.exception("submit_post_draft failed")
             return _err(f"submit_post_draft failed: {exc}")
@@ -991,7 +1001,7 @@ def build_content_mcp_server(
                 "cell to attach this image to (collage cell or before/after "
                 "side). Omit for single-image slides. Generate one cell per call.",
             ],
-            "model":  Annotated[str, "Optional image model id; defaults to gemini-3.1-flash-image-preview."],
+            "model":  Annotated[str, f"Optional image model id; defaults to {DEFAULT_IMAGE_MODEL.value}."],
             "aspect_ratio": Annotated[str, "Optional aspect ratio (e.g. '9:16'). Defaults to portrait."],
             "number_of_images": Annotated[int, "How many images to generate. Default 1, max 4."],
             "negative_prompt":  Annotated[str, "Optional negative prompt (Imagen models only)."],
@@ -1068,6 +1078,10 @@ def build_content_mcp_server(
                 request = GenerateImageRequest.model_validate(payload)
             except ValidationError as exc:
                 return _err(f"The image request was invalid: {exc}")
+            # The descriptive prompt the agent passed — captured BEFORE the
+            # multi-reference prefix is prepended below, so image_prompt_used
+            # stays comparable to the slide's stored image_prompt for staleness.
+            generating_prompt = request.prompt
 
             input_bytes_list: list[bytes] = []
             with _open_db() as db:
@@ -1132,6 +1146,7 @@ def build_content_mcp_server(
                                 asset_id=str(assets[0].asset_id),
                                 url=assets[0].url,
                                 item_index=target_item_index,
+                                prompt_used=generating_prompt,
                             )
                             if attached:
                                 db2.commit()
@@ -1339,9 +1354,9 @@ def build_content_mcp_server(
                     return _err(f"scheduled_at invalid: {exc}")
 
             with _open_db() as db:
-                post = db.get(ContentPost, post_id)
-                if post is None or post.project_id != project_id:
-                    return _err(f"Post {post_id} not found for this project.")
+                post, err = _require_post(db, project_id, post_id)
+                if err:
+                    return err
                 proj = db.get(Project, project_id)
                 if proj is None:
                     return _err("Project missing.")
@@ -1483,9 +1498,9 @@ def build_content_mcp_server(
                 return _err("post_id is required.")
             post_id = UUID(str(post_id_raw))
             with _open_db() as db:
-                post = db.get(ContentPost, post_id)
-                if post is None or post.project_id != project_id:
-                    return _err(f"Post {post_id} not found for this project.")
+                post, err = _require_post(db, project_id, post_id)
+                if err:
+                    return err
                 post.status    = "posted"
                 post.posted_at = datetime.now(timezone.utc)
                 if args.get("tiktok_url"):
@@ -1493,7 +1508,7 @@ def build_content_mcp_server(
                 db.add(post)
                 db.commit()
                 db.refresh(post)
-                return _ok({"post_id": str(post.id), "status": post.status})
+                return _ok_model(MarkPostedResult(post_id=str(post.id), status=post.status))
         except Exception as exc:
             logger.exception("mark_posted failed")
             return _err(f"mark_posted failed: {exc}")
@@ -1520,9 +1535,9 @@ def build_content_mcp_server(
             post_id = UUID(str(post_id_raw))
 
             with _open_db() as db:
-                post = db.get(ContentPost, post_id)
-                if post is None or post.project_id != project_id:
-                    return _err(f"Post {post_id} not found for this project.")
+                post, err = _require_post(db, project_id, post_id)
+                if err:
+                    return err
                 if not post.post_bridge_post_id:
                     return _err("Post hasn't been published yet — run publish_post first.")
                 proj = db.get(Project, project_id)
@@ -1568,12 +1583,12 @@ def build_content_mcp_server(
                 db.commit()
                 db.refresh(post)
 
-                return _ok({
-                    "post_id":    str(post.id),
-                    "view_count": analytics.view_count,
-                    "like_count": analytics.like_count,
-                    "snapshots":  len(daily.snapshots),
-                })
+                return _ok_model(LogMetricsResult(
+                    post_id=str(post.id),
+                    view_count=analytics.view_count,
+                    like_count=analytics.like_count,
+                    snapshots=len(daily.snapshots),
+                ))
         except Exception as exc:
             logger.exception("log_metrics failed")
             return _err(f"log_metrics failed: {exc}")

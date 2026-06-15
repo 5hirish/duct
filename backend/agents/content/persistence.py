@@ -28,6 +28,7 @@ from sqlalchemy import update
 from sqlmodel import Session, select
 
 from agents.core.events import AgentEvent, EventKind
+from agents.models import AgentPermissionMode, ModelName
 from db.session import get_session as db_session
 from models.content import AgentConversation, AgentEvent as AgentEventRow, ContentPlan, ContentPost
 
@@ -66,7 +67,7 @@ def _jsonable(value: Any) -> Any:
 _SUMMARY_THRESHOLD = 8
 # How many raw recent turns to inline verbatim in the re-prime block.
 _RECENT_TURNS = 6
-_HAIKU_MODEL = "claude-haiku-4-5-20251001"
+_HAIKU_MODEL = ModelName.CLAUDE_HAIKU.value
 _SUMMARY_TIMEOUT = 45.0
 
 
@@ -383,7 +384,7 @@ async def summarize_conversation(
     )
     options = ClaudeAgentOptions(
         model=_HAIKU_MODEL,
-        permission_mode="bypassPermissions",
+        permission_mode=AgentPermissionMode.BYPASS,
         max_turns=1,
         env={"ANTHROPIC_API_KEY": api_key},
         setting_sources=[],

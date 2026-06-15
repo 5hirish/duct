@@ -16,31 +16,36 @@ class Provider(str, Enum):
 
 
 class ModelName(str, Enum):
+    
     # OpenAI
+    GPT_5_5 = "gpt-5.5"
     GPT_5_4_MINI = "gpt-5.4-mini"
     GPT_5_MINI = "gpt-5-mini"
     GPT_4O_MINI = "gpt-4o-mini"
     GPT_4O = "gpt-4o"
+    
     # Google
+    GEMINI_3_5_FLASH = "gemini-3.5-flash"
     GEMINI_3_1_FLASH = "gemini-3.1-flash-preview"
-    GEMINI_3_1_FLASH_LITE = "gemini-3.1-flash-lite-preview"
+    GEMINI_3_1_FLASH_LITE = "gemini-3.1-flash-lite"
     GEMINI_2_5_FLASH = "gemini-2.5-flash"
     GEMINI_2_5_FLASH_LITE = "gemini-2.5-flash-lite"
+    
     # Anthropic
     CLAUDE_SONNET = "claude-sonnet-4-6"
-    CLAUDE_HAIKU = "claude-haiku-4-5-20251001"
+    CLAUDE_HAIKU = "claude-haiku-4-5"
 
 
 class AgentTool(StrEnum):
-    """Built-in Claude Agent SDK tool names passed to allowed_tools."""
+    """Built-in Claude Agent SDK tool names passed to allowed_tools.
+
+    Per-agent MCP tool names are NOT here — each agent type owns its own enum
+    next to its tools/schema: see AuditTool (agents/audit/schema.py, server
+    ``duct_crawl``) and ContentTool (agents/content/schema.py, ``duct_content``).
+    """
 
     ASK_USER_QUESTION = "AskUserQuestion"
     TODO_WRITE = "TodoWrite"
-    FETCH_PAGES          = "mcp__duct_crawl__FetchPages"          # in-process MCP tool: use namespaced format
-    SUBMIT_AUDIT_REPORT  = "mcp__duct_crawl__SubmitAuditReport"   # template mode only — chat-revision resubmit
-    START_AUDIT_REPORT     = "mcp__duct_crawl__StartAuditReport"     # template: incremental build, step 1
-    ADD_AUDIT_CATEGORY     = "mcp__duct_crawl__AddAuditCategory"     # template: incremental build, step 2 (×9)
-    FINALIZE_AUDIT_REPORT  = "mcp__duct_crawl__FinalizeAuditReport"  # template: incremental build, step 3
     WEB_SEARCH  = "WebSearch"         # SERP research, competitor discovery
     WEB_FETCH   = "WebFetch"          # fetch arbitrary URLs (e.g. competitor pages)
     AGENT = "Agent"
@@ -100,10 +105,12 @@ class AgentEffort(StrEnum):
 class ImageModel(str, Enum):
     """Image generation model IDs (Gemini + Imagen via google-genai SDK)."""
 
-    # GA model ids (the earlier "-preview" aliases are superseded by GA).
+    # Google Gemini model
     GEMINI_3_1_FLASH_IMAGE = "gemini-3.1-flash-image"
     GEMINI_3_PRO_IMAGE     = "gemini-3-pro-image"
     GEMINI_2_5_FLASH_IMAGE = "gemini-2.5-flash-image"
+    
+    # Google Imagen model
     IMAGEN_4_GENERATE_001       = "imagen-4.0-generate-001"
     IMAGEN_4_ULTRA_GENERATE_001 = "imagen-4.0-ultra-generate-001"
     IMAGEN_4_FAST_GENERATE_001  = "imagen-4.0-fast-generate-001"

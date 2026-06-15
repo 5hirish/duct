@@ -60,25 +60,22 @@ logger = logging.getLogger(__name__)
 # Model mapping
 # ---------------------------------------------------------------------------
 
-_ANTHROPIC_MODEL_MAP: dict[ModelName, str] = {
-    ModelName.CLAUDE_SONNET: "claude-sonnet-4-6",
-    ModelName.CLAUDE_HAIKU: "claude-haiku-4-5-20251001",
-}
-
-_FALLBACK_MODEL = "claude-sonnet-4-6"
+# Claude Agent SDK runs Anthropic models only; anything else falls back to Sonnet.
+# Model strings come from the ModelName enum in agents/models.py — never hardcoded here.
+_ANTHROPIC_MODELS = (ModelName.CLAUDE_SONNET, ModelName.CLAUDE_HAIKU)
 
 
 def _resolve_model_string(provider: Provider, model: ModelName) -> str:
-    if provider != Provider.ANTHROPIC:
+    if provider != Provider.ANTHROPIC or model not in _ANTHROPIC_MODELS:
         logger.warning(
             "v3: Claude Agent SDK only supports Anthropic models natively; "
             "ignoring provider=%s, model=%s and falling back to %s",
             provider.value,
             model.value,
-            _FALLBACK_MODEL,
+            ModelName.CLAUDE_SONNET.value,
         )
-        return _FALLBACK_MODEL
-    return _ANTHROPIC_MODEL_MAP.get(model, _FALLBACK_MODEL)
+        return ModelName.CLAUDE_SONNET.value
+    return model.value
 
 
 # ---------------------------------------------------------------------------

@@ -245,10 +245,9 @@ def _compose_audience(audience: dict | None) -> str:
 
 
 def _resolve_anthropic_model(model: ModelName) -> str:
-    return {
-        ModelName.CLAUDE_SONNET: "claude-sonnet-4-6",
-        ModelName.CLAUDE_HAIKU:  "claude-haiku-4-5-20251001",
-    }.get(model, "claude-sonnet-4-6")
+    if model not in (ModelName.CLAUDE_SONNET, ModelName.CLAUDE_HAIKU):
+        return ModelName.CLAUDE_SONNET.value
+    return model.value
 
 
 _HTML_FIELD_RE = re.compile(

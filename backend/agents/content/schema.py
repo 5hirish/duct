@@ -369,8 +369,8 @@ class ContentTool(StrEnum):
     (e.g. "submit_post_draft"); the SDK namespaces them as
     ``mcp__duct_content__<short>``. This enum holds those namespaced names — the
     form used in ClaudeAgentOptions.allowed_tools and the can_use_tool dispatch.
-    Mirrors AgentTool's treatment of the audit (``duct_crawl``) MCP tools. Keep
-    in sync with the @tool registrations.
+    Mirrors AuditTool (agents/audit/schema.py), which does the same for the
+    audit (``duct_crawl``) MCP tools. Keep in sync with the @tool registrations.
     """
 
     SUBMIT_PLAN                = "mcp__duct_content__submit_plan"

@@ -36,7 +36,7 @@ from agents.content.schema import (
     PillarHistorySignal,
     TrendSignal,
 )
-from agents.models import ModelName
+from agents.models import AgentPermissionMode, AgentTool, ModelName
 from db.session import get_engine
 from models.content import ContentPost
 
@@ -205,8 +205,8 @@ async def enrich_content_context(
 
     options = ClaudeAgentOptions(
         model=model,
-        allowed_tools=["WebSearch", "WebFetch"],
-        permission_mode="bypassPermissions",
+        allowed_tools=[AgentTool.WEB_SEARCH, AgentTool.WEB_FETCH],
+        permission_mode=AgentPermissionMode.BYPASS,
         max_turns=12,
         env={"ANTHROPIC_API_KEY": api_key},
         setting_sources=[],

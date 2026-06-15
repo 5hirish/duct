@@ -18,10 +18,11 @@ from agents.audit.schema import (
     EnrichmentOutput,
 )
 from agents.core import claude_sdk as _sdk
+from agents.models import AgentPermissionMode, AgentTool, ModelName
 
 logger = logging.getLogger(__name__)
 
-_HAIKU_MODEL = "claude-haiku-4-5-20251001"
+_HAIKU_MODEL = ModelName.CLAUDE_HAIKU.value
 
 # Set AUDIT_VERBOSE_LOGGING=1 to log per-message SDK events and costs to terminal
 _VERBOSE = os.environ.get("AUDIT_VERBOSE_LOGGING", "").lower() in ("1", "true")
@@ -130,8 +131,8 @@ Be concise. Each field should be a short string or short list item, not a paragr
 
     options = ClaudeAgentOptions(
         model=model,
-        allowed_tools=["WebSearch", "WebFetch"],
-        permission_mode="bypassPermissions",
+        allowed_tools=[AgentTool.WEB_SEARCH, AgentTool.WEB_FETCH],
+        permission_mode=AgentPermissionMode.BYPASS,
         max_turns=12,  # 3 WebFetches + searches + the final structured-output turn
         env=env,
         setting_sources=[],

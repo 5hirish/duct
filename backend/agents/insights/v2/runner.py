@@ -70,31 +70,17 @@ logger = logging.getLogger(__name__)
 _APP_NAME = "duct"
 _USER_ID = "system"
 
-# Map (Provider, ModelName) → ADK model string.
-# Gemini: native (google.adk.models.google_llm)
-# Anthropic: native (google.adk.models.anthropic_llm, matches claude-.*-4.* / claude-3-.*)
-# OpenAI: requires google-adk[extensions] (LiteLLM); use openai/<model> prefix if available.
-_ADK_MODEL_MAP: dict[tuple[Provider, ModelName], str] = {
-    # Gemini
-    (Provider.GOOGLE_GENAI, ModelName.GEMINI_2_5_FLASH): "gemini-2.5-flash",
-    (Provider.GOOGLE_GENAI, ModelName.GEMINI_2_5_FLASH_LITE): "gemini-2.5-flash-lite",
-    (Provider.GOOGLE_GENAI, ModelName.GEMINI_3_1_FLASH): "gemini-3.1-flash-preview",
-    (Provider.GOOGLE_GENAI, ModelName.GEMINI_3_1_FLASH_LITE): "gemini-3.1-flash-lite-preview",
-    # Anthropic (model strings match ADK's claude-.*-4.* / claude-3-.* patterns)
-    (Provider.ANTHROPIC, ModelName.CLAUDE_SONNET): "claude-sonnet-4-6",
-    (Provider.ANTHROPIC, ModelName.CLAUDE_HAIKU): "claude-haiku-4-5-20251001",
-    # OpenAI via LiteLLM prefix (requires google-adk[extensions])
-    (Provider.OPENAI, ModelName.GPT_4O): "openai/gpt-4o",
-    (Provider.OPENAI, ModelName.GPT_4O_MINI): "openai/gpt-4o-mini",
-    (Provider.OPENAI, ModelName.GPT_5_MINI): "openai/gpt-5-mini",
-    (Provider.OPENAI, ModelName.GPT_5_4_MINI): "openai/gpt-5.4-mini",
-}
-
 _PROVIDER_ENV_VAR: dict[Provider, str] = _ENGINE_PROVIDER_ENV_VAR[Engine.V2]
 
 
 def _resolve_adk_model_string(provider: Provider, model: ModelName) -> str:
-    return _ADK_MODEL_MAP.get((provider, model), model.value)
+    """ADK model string for a (provider, model). The id is owned by the
+    ModelName enum in agents/models.py; Gemini and Anthropic are native to ADK,
+    while OpenAI routes through LiteLLM and needs an ``openai/`` prefix
+    (requires google-adk[extensions])."""
+    if provider == Provider.OPENAI:
+        return f"openai/{model.value}"
+    return model.value
 
 
 class AdkInsightsRunner:
