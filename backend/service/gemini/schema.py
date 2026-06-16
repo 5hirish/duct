@@ -1,8 +1,8 @@
 """Pydantic request/response models for the Gemini image service.
 
 Every flag is an enum — no bare strings. Per-model option pruning happens
-inside the client (e.g. IMAGEN_4_FAST drops image_size; GEMINI_3_1 collapses
-LOW/MEDIUM → MINIMAL/HIGH thinking levels).
+inside the client (e.g. GEMINI_3_1 collapses LOW/MEDIUM → MINIMAL/HIGH
+thinking levels).
 """
 
 from __future__ import annotations
@@ -22,40 +22,11 @@ class ImageSize(StrEnum):
     K4 = "4K"
 
 
-class PersonGeneration(StrEnum):
-    ALLOW_ALL    = "allow_all"
-    ALLOW_ADULT  = "allow_adult"
-    DONT_ALLOW   = "dont_allow"
-
-
 class ThinkingLevel(StrEnum):
     MINIMAL = "minimal"
     LOW     = "low"
     MEDIUM  = "medium"
     HIGH    = "high"
-
-
-class EditMode(StrEnum):
-    INPAINT_INSERT      = "inpaint_insert"
-    INPAINT_REMOVAL     = "inpaint_removal"
-    OUTPAINT            = "outpaint"
-    BGSWAP              = "bgswap"
-    PRODUCT_IMAGE       = "product_image"
-    STYLE_TRANSFER      = "style_transfer"
-
-
-class MaskMode(StrEnum):
-    USER_PROVIDED = "user_provided"
-    BACKGROUND    = "background"
-    FOREGROUND    = "foreground"
-    SEMANTIC      = "semantic"
-
-
-class SubjectType(StrEnum):
-    PERSON  = "person"
-    ANIMAL  = "animal"
-    PRODUCT = "product"
-    DEFAULT = "default"
 
 
 # ---------------------------------------------------------------------------
@@ -73,10 +44,10 @@ class GenerateImageRequest(BaseModel):
 
     # Single-reference legacy field — kept for backward compatibility. Use
     # input_asset_ids (below) for the dual-reference pattern (character +
-    # camera/style). Gemini-class models only; Imagen ignores both.
+    # camera/style).
     input_image_url:   HttpUrl | None = None
 
-    # Multiple reference assets — Gemini-class models only. Bytes are
+    # Multiple reference assets. Bytes are
     # resolved by the @tool layer and passed in order to the SDK as
     # separate inline_data parts. Max 3 recommended in practice; the
     # Gemini 3.x spec accepts up to 14 (10 object + 4 character) but
@@ -94,15 +65,18 @@ class GenerateImageRequest(BaseModel):
     image_size:        ImageSize   = ImageSize.K2
     number_of_images:  int = Field(default=1, ge=1, le=8)
     seed:              int | None = None
-    negative_prompt:   str | None = None
-    person_generation: PersonGeneration | None = None
     include_text:      bool = False
     thinking_level:    ThinkingLevel | None = None
     output_mime_type:  Literal["image/png", "image/jpeg"] = "image/png"
 
 
 class EditImageRequest(BaseModel):
-    """Inputs for GeminiImageClient.edit_image()."""
+    """Inputs for GeminiImageClient.edit_image().
+
+    Gemini-class edits are free-form generate_content continuations from the
+    base image + prompt. (The structured mask / inpaint / style / subject
+    reference flow was Imagen-only and was removed with the Imagen 4 endpoints.)
+    """
 
     model_config = ConfigDict(extra="forbid")
 
@@ -110,17 +84,9 @@ class EditImageRequest(BaseModel):
     input_asset_id:  UUID
     model:           ImageModel = DEFAULT_IMAGE_MODEL
 
-    edit_mode:       EditMode | None = None
-    mask_asset_id:   UUID | None = None
-    mask_mode:       MaskMode | None = None
-    style_asset_id:  UUID | None = None
-    subject_asset_id: UUID | None = None
-    subject_type:    SubjectType | None = None
-
     aspect_ratio:    AspectRatio | None = None
     number_of_images: int = Field(default=1, ge=1, le=8)
     seed:            int | None = None
-    negative_prompt: str | None = None
 
 
 # ---------------------------------------------------------------------------

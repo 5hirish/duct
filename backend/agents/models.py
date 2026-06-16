@@ -103,17 +103,16 @@ class AgentEffort(StrEnum):
 
 
 class ImageModel(str, Enum):
-    """Image generation model IDs (Gemini + Imagen via google-genai SDK)."""
+    """Image generation model IDs (Gemini via google-genai SDK).
 
-    # Google Gemini model
+    The Imagen 4 endpoints (imagen-4.0-generate/ultra/fast-001) were removed —
+    Google discontinues them on 2026-08-17, with gemini-3.1-flash-image as the
+    sole migration path (now DEFAULT_IMAGE_MODEL below).
+    """
+
     GEMINI_3_1_FLASH_IMAGE = "gemini-3.1-flash-image"
     GEMINI_3_PRO_IMAGE     = "gemini-3-pro-image"
     GEMINI_2_5_FLASH_IMAGE = "gemini-2.5-flash-image"
-    
-    # Google Imagen model
-    IMAGEN_4_GENERATE_001       = "imagen-4.0-generate-001"
-    IMAGEN_4_ULTRA_GENERATE_001 = "imagen-4.0-ultra-generate-001"
-    IMAGEN_4_FAST_GENERATE_001  = "imagen-4.0-fast-generate-001"
 
 
 # gemini-3.1-flash-image: the high-efficiency, high-volume flash image model

@@ -542,7 +542,6 @@ def build_content_mcp_server(
     # sees (enums from StrEnum so an invalid id can't be passed; ranges via
     # Field). Defined here, not at module top, because the gemini enums pull the
     # google client; service.gemini is imported lazily at session-build time.
-    from service.gemini.schema import EditMode, MaskMode, SubjectType
 
     class GenerateImageInput(BaseModel):
         model_config = ConfigDict(extra="forbid")
@@ -571,7 +570,6 @@ def build_content_mcp_server(
             AspectRatio.PORTRAIT_9_16, description="Optional aspect ratio. Defaults to 9:16 portrait.",
         )
         number_of_images: int = Field(1, ge=1, le=4, description="How many images to generate. Default 1, max 4.")
-        negative_prompt: str | None = Field(None, description="Optional negative prompt (Imagen models only).")
         input_asset_id: str | None = Field(
             None, description="Single reference asset UUID (legacy; prefer input_asset_ids). Gemini-class models only.",
         )
@@ -591,15 +589,8 @@ def build_content_mcp_server(
         prompt: str = Field(description="Edit instruction.")
         input_asset_id: str = Field(description="UUID of the source asset to edit.")
         model: ImageModel | None = Field(None, description="Optional image model id.")
-        edit_mode: EditMode | None = Field(None, description="Optional edit mode (Imagen only).")
-        mask_asset_id: str | None = Field(None, description="Optional mask asset UUID.")
-        mask_mode: MaskMode | None = Field(None, description="Optional mask mode.")
-        style_asset_id: str | None = Field(None, description="Optional style reference asset UUID.")
-        subject_asset_id: str | None = Field(None, description="Optional subject reference asset UUID.")
-        subject_type: SubjectType | None = Field(None, description="Optional subject type.")
         aspect_ratio: AspectRatio | None = Field(None, description="Optional aspect ratio override.")
         number_of_images: int = Field(1, ge=1, le=4, description="How many images to generate (1-4).")
-        negative_prompt: str | None = Field(None, description="Optional negative prompt (Imagen only).")
 
     # ----------------------- Writers -----------------------
 
@@ -1345,12 +1336,11 @@ def build_content_mcp_server(
                             "aspect_ratio":      request.aspect_ratio.value,
                             "image_size":        request.image_size.value,
                             "seed":              request.seed,
-                            "negative_prompt":   request.negative_prompt,
                             "input_asset_ids":   uuid_refs,
                             "input_global_refs": global_refs,
                         },
                         post_id=session.post_id,
-                        source="imagen" if request.model.value.startswith("imagen-") else "gemini",
+                        source="gemini",
                     )
                     assets.append(asset)
 
@@ -1418,8 +1408,8 @@ def build_content_mcp_server(
     @tool(
         name="edit_image",
         description=(
-            "Edit an existing content asset (inpaint, outpaint, bgswap, style transfer, "
-            "or free-form Gemini edit). Returns the edited image inline + a stable "
+            "Edit an existing content asset via a free-form Gemini edit (describe the "
+            "change in the prompt). Returns the edited image inline + a stable "
             "asset_url. The original asset is preserved — every edit creates a new "
             "content_assets row."
         ),
@@ -1453,26 +1443,11 @@ def build_content_mcp_server(
                 if not base_bytes:
                     return _err("The image you're editing couldn't be loaded — try regenerating it.")
 
-                def _load(ref_id: UUID | None) -> bytes | None:
-                    if ref_id is None:
-                        return None
-                    a = db.get(ContentAsset, ref_id)
-                    if a is None or a.project_id != project_id:
-                        return None
-                    return _load_asset_bytes(a)
-
-                mask_bytes    = _load(request.mask_asset_id)
-                style_bytes   = _load(request.style_asset_id)
-                subject_bytes = _load(request.subject_asset_id)
-
                 client = GeminiImageClient(cfg.gemini_api_key)
                 try:
                     images = await client.edit_image(
                         request,
                         base_bytes=base_bytes,
-                        mask_bytes=mask_bytes,
-                        style_bytes=style_bytes,
-                        subject_bytes=subject_bytes,
                     )
                 except GeminiAPIError as exc:
                     logger.warning("content: image edit failed: %s", exc, exc_info=True)
@@ -1486,16 +1461,11 @@ def build_content_mcp_server(
                         prompt=request.prompt,
                         model=request.model.value,
                         params={
-                            "edit_mode":         request.edit_mode.value if request.edit_mode else None,
                             "input_asset_id":    str(request.input_asset_id),
-                            "mask_asset_id":     str(request.mask_asset_id)    if request.mask_asset_id    else None,
-                            "style_asset_id":    str(request.style_asset_id)   if request.style_asset_id   else None,
-                            "subject_asset_id":  str(request.subject_asset_id) if request.subject_asset_id else None,
                             "seed":              request.seed,
-                            "negative_prompt":   request.negative_prompt,
                         },
                         post_id=session.post_id,
-                        source="imagen" if request.model.value.startswith("imagen-") else "gemini",
+                        source="gemini",
                     )
                     assets.append(asset)
 

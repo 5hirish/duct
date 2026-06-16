@@ -57,7 +57,8 @@ export default function SlidesCarousel({ slides = [], headHtml = "", index = 0, 
 
   function go(delta) {
     if (total < 2) return;
-    onIndexChange?.((clamped + delta + total) % total);
+    const next = Math.max(0, Math.min(clamped + delta, total - 1));
+    if (next !== clamped) onIndexChange?.(next);
   }
 
   function onKeyDown(e) {
@@ -112,11 +113,11 @@ export default function SlidesCarousel({ slides = [], headHtml = "", index = 0, 
           />
         </div>
 
-        {total > 1 && (
-          <>
-            <NavButton side="left" onClick={() => go(-1)} />
-            <NavButton side="right" onClick={() => go(1)} />
-          </>
+        {total > 1 && clamped > 0 && (
+          <NavButton side="left" onClick={() => go(-1)} />
+        )}
+        {total > 1 && clamped < total - 1 && (
+          <NavButton side="right" onClick={() => go(1)} />
         )}
       </div>
 

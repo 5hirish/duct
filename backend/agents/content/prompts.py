@@ -614,8 +614,8 @@ Treat it as precious and edit SURGICALLY:
 
 - Realism is positive-only: bake the anti-gloss INTO the prompt — real skin
   (visible pores, fine texture, natural asymmetry), available/warm light (never
-  studio or ring light), a candid un-posed moment. Do NOT rely on negative_prompt
-  — it is ignored by the default model (it only affects Imagen models).
+  studio or ring light), a candid un-posed moment. There is no negative-prompt
+  lever — the Gemini image models don't support one.
 - During the image phase do NOT call submit_post_draft to "save progress" —
   generate_image attaches the image itself (no submit needed). Re-emitting the
   whole post forces you to re-type prompts you already wrote, and they shrink

@@ -831,7 +831,7 @@ def test_image_tool_schemas_constrain_model_and_required_params():
 
     ei = schemas["edit_image"]
     assert set(ei["required"]) == {"prompt", "input_asset_id"}
-    assert "enum" in ei["properties"]["edit_mode"]
+    assert "gemini-3.1-flash-image" in ei["properties"]["model"]["enum"]  # enum-constrained model
 
     # optional-as-required fixes: these take either/neither id, nothing forced
     assert schemas["fetch_post"]["required"] == []

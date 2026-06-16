@@ -4,8 +4,8 @@ Mocked tests cover the two pieces that have real logic worth defending:
   - persist_generated_image: writes bytes to disk + inserts the right
     ContentAsset row (catches: wrong filename extension, missing dirs,
     wrong source/asset_type, URL not under /uploads/).
-  - per-model option pruning (Imagen-fast drops image_size; Gemini-3.1
-    collapses LOW/MEDIUM thinking levels) — actual gating logic.
+  - per-model option pruning (Gemini-3.1 collapses LOW/MEDIUM thinking
+    levels) — actual gating logic.
 
 Live coverage (real Gemini call) lives in tests/test_content_e2e.py
 behind GEMINI_API_KEY — that's where contract correctness is verified.
@@ -78,9 +78,9 @@ def test_persist_generated_image_writes_file_and_inserts_row(mime_type, expected
                 project_id, img,
                 db=db,
                 prompt="a young woman, soft window light",
-                model="imagen-4.0-generate-001",
+                model="gemini-3.1-flash-image",
                 params={"aspect_ratio": "9:16"},
-                source="imagen",
+                source="gemini",
             )
 
         # File on disk under the project's generated/ subdirectory.
@@ -93,14 +93,14 @@ def test_persist_generated_image_writes_file_and_inserts_row(mime_type, expected
         db.add.assert_called_once()
         row = db.add.call_args[0][0]
         assert row.project_id == project_id
-        assert row.source     == "imagen"
+        assert row.source     == "gemini"
         assert row.asset_type == "generated"
         assert row.mime_type  == mime_type
         assert row.url.startswith(f"/uploads/projects/{project_id}/generated/")
 
         # Returned ImageAsset mirrors the row.
         assert asset.url == row.url
-        assert asset.model == "imagen-4.0-generate-001"
+        assert asset.model == "gemini-3.1-flash-image"
 
 
 # ---------------------------------------------------------------------------
