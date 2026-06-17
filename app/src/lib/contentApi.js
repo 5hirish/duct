@@ -296,7 +296,10 @@ export async function patchPlanDay(planId, day, patch) {
 
 // Posts + their PostBridge-sourced analytics both depend on post state, so any
 // post write clears both. Broad (prefix) invalidation keeps it simple and safe.
-function invalidatePosts() {
+// Exported so the live agent session can clear the board cache when a draft
+// changes over SSE (image regen, edits) — otherwise the kanban shows a stale
+// thumbnail until the cache TTL expires.
+export function invalidatePosts() {
   invalidate("posts:");
   invalidate("analytics:");
 }
@@ -375,6 +378,64 @@ export async function publishPost(postId, { socialAccountIds, scheduledAt, tikto
   const out = await jsonOrThrow(res);
   invalidatePosts();
   return out;
+}
+
+/**
+ * Streaming publish — same as publishPost but consumes the SSE progress stream
+ * (`prepare` → `upload` {index,total,slide_id} → `create` → `done` | `error`).
+ * `onEvent(ev)` fires per frame. Resolves when the stream ends; throws on a
+ * transport/auth failure (logical failures arrive as an `error` event).
+ */
+export async function publishPostStream(
+  postId,
+  { socialAccountIds, scheduledAt, tiktokDraft = false } = {},
+  onEvent,
+  signal,
+) {
+  const res = await fetch(
+    `${BASE}/api/content/posts/${encodeURIComponent(postId)}/publish/stream`,
+    {
+      method: "POST",
+      headers: backendApiHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({
+        social_account_ids: socialAccountIds,
+        ...(scheduledAt ? { scheduled_at: scheduledAt } : {}),
+        tiktok_draft: tiktokDraft,
+      }),
+      signal,
+    },
+  );
+  if (!res.ok || !res.body) {
+    const msg = await res.text().catch(() => "");
+    throw new Error(msg || `Publish failed (${res.status}).`);
+  }
+  await consumeSseStream(res.body, onEvent, signal);
+  invalidatePosts();
+}
+
+/**
+ * Download the post's composed slides + caption.txt as a zip. Fetches with auth
+ * headers, then triggers a browser download from the blob (a plain <a download>
+ * wouldn't carry the API key).
+ */
+export async function downloadPostSlides(postId, filename = "slides.zip") {
+  const res = await fetch(
+    `${BASE}/api/content/posts/${encodeURIComponent(postId)}/slides.zip`,
+    { headers: backendApiHeaders() },
+  );
+  if (!res.ok) {
+    const msg = await res.text().catch(() => "");
+    throw new Error(msg || `Download failed (${res.status}).`);
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 export async function syncPostDaily(postId) {

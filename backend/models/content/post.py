@@ -111,6 +111,13 @@ class ContentPost(SQLModel, table=True):
         default_factory=list,
         sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="[]"),
     )
+    # Latest pre-publish review (PublishAssessment.model_dump): overall score,
+    # band, sanity checks, marker scores. None until a review runs. Persisted so
+    # the panel survives reload and shows on the read-only detail page.
+    last_assessment: dict | None = Field(
+        default=None,
+        sa_column=Column(JSONB(astext_type=sa.Text()), nullable=True),
+    )
     notes: str = Field(default="", sa_column=Column(Text, nullable=False, server_default=""))
 
     created_at: datetime = Field(

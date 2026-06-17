@@ -48,6 +48,7 @@ class AgentEvent(StrEnum):
     REPORT_UPDATED = "report_updated"        # audit: a new versioned report
     PLAN_GENERATED = "plan_generated"        # content: 30-day plan
     POST_DRAFT_UPDATED = "post_draft_updated"  # content: a post draft
+    PUBLISH_ASSESSMENT = "publish_assessment"  # content: pre-publish review (sanity + content score)
 
 
 class EventKind(StrEnum):

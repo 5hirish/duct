@@ -92,9 +92,11 @@ export default function PostDetailPage() {
               ? { conversationId: post.active_conversation_id, resume: true }
               : {}),
           }}
-          renderViewport={({ payload, onSendMessage }) => (
+          renderViewport={({ payload, assessment, phase, onSendMessage }) => (
             <PostViewport
               payload={payload || { type: "post", ...post }}
+              assessment={assessment}
+              phase={phase}
               onSendMessage={onSendMessage}
             />
           )}

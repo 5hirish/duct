@@ -39,6 +39,22 @@ _cfg = get_configs()
 _LOG_FORMAT = "%(asctime)s %(levelprefix)s %(name)s: %(message)s"
 _log_formatter = DefaultFormatter(fmt=_LOG_FORMAT, use_colors=sys.stderr.isatty())
 
+
+class _RelabelUvicornError(logging.Filter):
+    """uvicorn logs its lifecycle lines (startup/shutdown) AND real errors under
+    the logger named ``uvicorn.error`` — so an ordinary "Application startup
+    complete" prints as ``uvicorn.error: …`` and reads like a failure. Relabel it
+    to plain ``uvicorn`` for display; the level prefix (INFO/ERROR) already carries
+    the severity."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        if record.name == "uvicorn.error":
+            record.name = "uvicorn"
+        return True
+
+
+_relabel_uvicorn = _RelabelUvicornError()
+
 _app_handler = logging.StreamHandler()
 _app_handler.setFormatter(_log_formatter)
 for _ns in ("agents", "routes", "service", "duct.access"):
@@ -48,10 +64,12 @@ for _ns in ("agents", "routes", "service", "duct.access"):
         _log.addHandler(_app_handler)
     _log.propagate = False
 
-# Timestamp uvicorn's own startup/error lines; drop its access log (superseded).
+# Timestamp uvicorn's own startup/error lines (and relabel the misleading
+# "uvicorn.error" name); drop its access log (superseded).
 for _uv in ("uvicorn", "uvicorn.error"):
     for _h in logging.getLogger(_uv).handlers:
         _h.setFormatter(_log_formatter)
+        _h.addFilter(_relabel_uvicorn)
 _uv_access = logging.getLogger("uvicorn.access")
 _uv_access.handlers = []
 _uv_access.propagate = False

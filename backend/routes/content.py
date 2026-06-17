@@ -43,7 +43,7 @@ from typing import Any
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
-from fastapi.responses import StreamingResponse
+from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import delete, select
 from sqlmodel import Session
@@ -67,7 +67,7 @@ from agents.content.v3.runner import (
 from agents.engines import PROVIDER_CONFIG_ATTR, Engine, resolve_engine_provider
 from agents.models import Platform
 from config import claude_oauth_available, get_configs
-from db.session import get_session as db_session
+from db.session import get_engine, get_session as db_session
 from models.content import (
     ContentAsset,
     ContentAvatar,
@@ -843,6 +843,7 @@ class PostOut(BaseModel):
     perf:          dict
     daily_perf:    list
     notes:         str
+    last_assessment: dict | None = None
     created_at:    str
     updated_at:    str
     # The active agent conversation for this post (if any) — drives "click post →
@@ -900,6 +901,7 @@ def _post_out(
         perf=p.perf or {},
         daily_perf=p.daily_perf or [],
         notes=p.notes,
+        last_assessment=p.last_assessment,
         created_at=p.created_at.isoformat(),
         updated_at=p.updated_at.isoformat(),
     )
@@ -931,8 +933,30 @@ def _resolve_format_id(db: Session, project_id: UUID, format_slug: str) -> UUID 
     return row.id if row else None
 
 
+def _post_thumb(post: ContentPost) -> str:
+    """The card thumbnail: the CURRENT first-slide image (the post's cover) —
+    walking slides in order, returning the first slide's (or first collage cell's)
+    image_url. This is what's actually published, NOT whatever image happened to
+    be generated first (which `_thumb_map` returns and is usually a stale, since-
+    replaced asset)."""
+    for s in post.slides or []:
+        if not isinstance(s, dict):
+            continue
+        u = (s.get("image_url") or "").strip()
+        if u:
+            return u
+        for it in s.get("items") or []:
+            if isinstance(it, dict) and (it.get("image_url") or "").strip():
+                return it["image_url"].strip()
+    return ""
+
+
 def _thumb_map(db: Session, post_ids: list[UUID]) -> dict[UUID, str]:
-    """Map post_id → first usable image asset url (generated or uploaded)."""
+    """Fallback thumbnail — map post_id → its MOST RECENT generated/uploaded asset.
+    Used when a post has no structured slide image yet (a draft mid-generation, or
+    a legacy post). Latest-first so an in-progress draft shows the freshest image,
+    not a stale early one. Prefer `_post_thumb` (the current first-slide cover)
+    wherever the slides carry image_urls."""
     if not post_ids:
         return {}
     rows = db.execute(
@@ -940,12 +964,12 @@ def _thumb_map(db: Session, post_ids: list[UUID]) -> dict[UUID, str]:
         .where(ContentAsset.post_id.in_(post_ids))
         .where(ContentAsset.asset_type.in_(["generated", "upload"]))
         .where(ContentAsset.url != "")
-        .order_by(ContentAsset.created_at.asc())
+        .order_by(ContentAsset.created_at.desc())   # latest first
     ).all()
     out: dict[UUID, str] = {}
     for pid, url, _created in rows:
         if pid is not None and pid not in out and url:
-            out[pid] = url
+            out[pid] = url   # first seen = most recent (desc order)
     return out
 
 
@@ -955,7 +979,7 @@ def _fmt_for(post: ContentPost, by_id: dict) -> tuple[str, str] | None:
 
 def _enrich_one(db: Session, post: ContentPost) -> PostOut:
     by_id = _format_map(db, post.project_id)
-    thumb = _thumb_map(db, [post.id]).get(post.id, "")
+    thumb = _post_thumb(post) or _thumb_map(db, [post.id]).get(post.id, "")
     return _post_out(post, fmt=_fmt_for(post, by_id), thumbnail_url=thumb)
 
 
@@ -993,9 +1017,9 @@ def list_posts(
     stmt = stmt.order_by(ContentPost.updated_at.desc())
     rows = db.execute(stmt).scalars().all()
     by_id = _format_map(db, project_id)
-    thumbs = _thumb_map(db, [r.id for r in rows])
+    thumbs = _thumb_map(db, [r.id for r in rows])  # legacy fallback
     return [
-        _post_out(r, fmt=_fmt_for(r, by_id), thumbnail_url=thumbs.get(r.id, ""))
+        _post_out(r, fmt=_fmt_for(r, by_id), thumbnail_url=_post_thumb(r) or thumbs.get(r.id, ""))
         for r in rows
     ]
 
@@ -1017,7 +1041,7 @@ def get_post(post_id: UUID, db: Session = Depends(db_session)) -> PostOut:
         db.rollback()
         logger.warning("content: active-conversation lookup failed for post %s", post_id, exc_info=True)
     by_id = _format_map(db, post.project_id)
-    thumb = _thumb_map(db, [post.id]).get(post.id, "")
+    thumb = _post_thumb(post) or _thumb_map(db, [post.id]).get(post.id, "")
     return _post_out(
         post,
         fmt=_fmt_for(post, by_id),
@@ -1726,6 +1750,71 @@ async def list_content_analytics(
     return rows
 
 
+def _select_publish_assets(db: Session, post: ContentPost) -> list[ContentAsset]:
+    """The images to actually publish: ONE per slide, in slide order — the latest
+    COMPOSED render (caption baked in) when present, else a single-image slide's
+    raw photo. A post accumulates dozens of assets across regenerations + per-slide
+    renders; uploading them all would ship the wrong frames in the wrong order and
+    take minutes. Shared by both publish routes so they upload the same set.
+    """
+    all_assets = db.execute(
+        select(ContentAsset)
+        .where(ContentAsset.post_id == post.id, ContentAsset.project_id == post.project_id)
+        .order_by(ContentAsset.created_at)   # ascending → the latest render of a slide wins
+    ).scalars().all()
+    if not all_assets:
+        return []
+
+    renders_by_slide: dict[str, ContentAsset] = {}
+    by_url: dict[str, ContentAsset] = {}
+    for a in all_assets:
+        if a.asset_type == "slide_render":
+            sid = (a.params or {}).get("slide_id")
+            if sid:
+                renders_by_slide[str(sid)] = a
+        if a.url:
+            by_url.setdefault(a.url, a)
+
+    slides_meta = [s for s in (post.slides or []) if isinstance(s, dict)]
+    if not slides_meta:
+        return list(all_assets)   # legacy posts with no structured slides
+
+    chosen: list[ContentAsset] = []
+    for s in slides_meta:
+        sid = str(s.get("slide_id") or "")
+        ren = renders_by_slide.get(sid)
+        if ren is not None:
+            chosen.append(ren)
+            continue
+        # No composed render: a single-image slide falls back to its raw photo
+        # (collage / before-after must be rendered to compose, so skip).
+        url = s.get("image_url")
+        fb = by_url.get(url) if url else None
+        if fb is not None and not s.get("items"):
+            chosen.append(fb)
+    return chosen
+
+
+def _slide_id_of(asset: ContentAsset) -> str:
+    """The slide a render belongs to (for streaming progress labels)."""
+    if asset.asset_type == "slide_render":
+        return str((asset.params or {}).get("slide_id") or "")
+    return ""
+
+
+def _apply_publish_status(post: ContentPost, resp, *, scheduled: bool) -> None:
+    """Map PostBridge's response status onto a VALID ContentStatus. create_post
+    succeeded (it returned an id), so the post is live or in-flight — anything that
+    isn't an explicit schedule becomes "posted". We never persist PostBridge's
+    transient values (e.g. "processing"): they aren't a ContentStatus, so they'd
+    strand the post off the kanban board (which groups by ContentStatus)."""
+    if scheduled or resp.status.value == "scheduled":
+        post.status = "scheduled"
+    else:
+        post.status = "posted"
+        post.posted_at = datetime.now(timezone.utc)
+
+
 @router.post("/content/posts/{post_id}/publish")
 async def publish_post_route(
     post_id: UUID,
@@ -1746,26 +1835,9 @@ async def publish_post_route(
     if proj is None:
         raise HTTPException(404, "Project not found")
 
-    asset_rows = db.execute(
-        select(ContentAsset)
-        .where(ContentAsset.post_id == post.id, ContentAsset.project_id == post.project_id)
-        .order_by(ContentAsset.created_at)
-    ).scalars().all()
-    if not asset_rows:
-        raise HTTPException(400, "Generate or upload at least one image before publishing.")
-
-    cfg = get_configs()
-    base = Path(cfg.uploads_dir or "/app/uploads")
-    asset_paths: list[tuple[Path, str, str, str]] = []
-    for a in asset_rows:
-        if not a.url.startswith("/uploads/"):
-            continue
-        disk = base / a.url[len("/uploads/"):]
-        if not disk.exists():
-            raise HTTPException(500, f"Asset bytes missing on disk for {a.url}.")
-        asset_paths.append((disk, a.filename or disk.name, a.mime_type or "image/png", a.url))
-    if not asset_paths:
-        raise HTTPException(400, "Couldn't find any uploaded image files for this post.")
+    chosen = _select_publish_assets(db, post)
+    if not chosen:
+        raise HTTPException(400, "No images to publish — generate and render the slides first.")
 
     try:
         client = client_for_user(proj.user_id, db)
@@ -1775,9 +1847,15 @@ async def publish_post_route(
     try:
         async with client as pb:
             media_ids: list[str] = []
-            for disk, name, mime, _url in asset_paths:
-                data = disk.read_bytes()
-                upload = await pb.create_upload_url(name=name, mime_type=mime, size_bytes=len(data))
+            for a in chosen:
+                data = await asyncio.to_thread(storage.get_bytes, a.url)   # /uploads (disk) or R2 (HTTP)
+                if not data:
+                    raise HTTPException(500, f"Couldn't load image bytes for {a.url}.")
+                mime = a.mime_type or "image/png"
+                upload = await pb.create_upload_url(
+                    name=a.filename or f"slide-{len(media_ids) + 1}.png",
+                    mime_type=mime, size_bytes=len(data),
+                )
                 await pb.upload_media(data, upload.upload_url, mime)
                 media_ids.append(upload.media_id)
 
@@ -1800,18 +1878,157 @@ async def publish_post_route(
     post.published_via = "duct"  # published through our system
     if body.scheduled_at is not None:
         post.scheduled_at = body.scheduled_at
-    if resp.status.value == "posted":
-        post.status = "posted"
-        post.posted_at = datetime.now(timezone.utc)
-    elif resp.status.value == "scheduled":
-        post.status = "scheduled"
-    else:
-        post.status = resp.status.value
+    _apply_publish_status(post, resp, scheduled=body.scheduled_at is not None)
     db.add(post)
     db.commit()
     db.refresh(post)
     _invalidate_analytics(post.project_id)
     return _enrich_one(db, post)
+
+
+@router.post("/content/posts/{post_id}/publish/stream")
+async def publish_post_stream(post_id: UUID, body: PublishRequest) -> StreamingResponse:
+    """Same as POST .../publish, but streams progress as SSE so the UI can show
+    real per-slide steps. Events: ``prepare`` → ``upload`` (index/total/slide_id)
+    → ``create`` → ``done`` | ``error``. Opens its own DB session — the request's
+    session is torn down once we start streaming the body."""
+    from service.post_bridge import (
+        PostBridgeAPIError,
+        PostBridgeCreatePostRequest,
+        client_for_user,
+    )
+
+    def _sse(d: dict) -> str:
+        d.setdefault("ts", now_iso())
+        return f"data: {json.dumps(d, default=str)}\n\n"
+
+    async def gen() -> AsyncGenerator[str, None]:
+        try:
+            with Session(get_engine()) as db:
+                post = db.get(ContentPost, post_id)
+                if post is None:
+                    yield _sse({"event": "error", "message": "Post not found."})
+                    return
+                proj = db.get(Project, post.project_id)
+                if proj is None:
+                    yield _sse({"event": "error", "message": "Project not found."})
+                    return
+
+                chosen = _select_publish_assets(db, post)
+                if not chosen:
+                    yield _sse({"event": "error", "message": "No images to publish — generate and render the slides first."})
+                    return
+
+                total = len(chosen)
+                yield _sse({"event": "prepare", "total": total})
+
+                try:
+                    client = client_for_user(proj.user_id, db)
+                except ValueError as exc:
+                    yield _sse({"event": "error", "message": str(exc)})
+                    return
+
+                media_ids: list[str] = []
+                try:
+                    async with client as pb:
+                        for i, a in enumerate(chosen):
+                            yield _sse({"event": "upload", "index": i + 1, "total": total, "slide_id": _slide_id_of(a)})
+                            data = await asyncio.to_thread(storage.get_bytes, a.url)
+                            if not data:
+                                yield _sse({"event": "error", "message": "Couldn't load one of the slide images. Try regenerating it."})
+                                return
+                            mime = a.mime_type or "image/png"
+                            upload = await pb.create_upload_url(
+                                name=a.filename or f"slide-{i + 1}.png", mime_type=mime, size_bytes=len(data),
+                            )
+                            await pb.upload_media(data, upload.upload_url, mime)
+                            media_ids.append(upload.media_id)
+
+                        yield _sse({"event": "create"})
+                        platform_configs: dict = {}
+                        if body.tiktok_draft:
+                            platform_configs["tiktok"] = {"draft": True}
+                        request = PostBridgeCreatePostRequest(
+                            caption=post.caption or "",
+                            social_accounts=body.social_account_ids,
+                            media=media_ids,
+                            scheduled_at=body.scheduled_at,
+                            platform_configurations=platform_configs or None,
+                        )
+                        resp = await pb.create_post(request)
+                except PostBridgeAPIError as exc:
+                    yield _sse({"event": "error", "message": _friendly_pb_error(exc)})
+                    return
+
+                post.post_bridge_post_id = resp.id
+                post.published_via = "duct"
+                if body.scheduled_at is not None:
+                    post.scheduled_at = body.scheduled_at
+                _apply_publish_status(post, resp, scheduled=body.scheduled_at is not None)
+                db.add(post)
+                db.commit()
+                db.refresh(post)
+                _invalidate_analytics(post.project_id)
+                out = _enrich_one(db, post)
+                yield _sse({
+                    "event": "done",
+                    "status": post.status,
+                    "scheduled": bool(body.scheduled_at),
+                    "tiktok_draft": bool(body.tiktok_draft),
+                    "post": out.model_dump(mode="json"),
+                })
+        except Exception:
+            logger.exception("publish_post_stream failed")
+            yield _sse({"event": "error", "message": "Publishing failed. Please try again."})
+
+    return StreamingResponse(
+        gen(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+@router.get("/content/posts/{post_id}/slides.zip")
+def download_post_slides(post_id: UUID, db: Session = Depends(db_session)) -> Response:
+    """Download the post's composed slide renders (in slide order) + a caption.txt,
+    as a zip — so the user can publish manually. Same image-selection as the
+    publish routes (one composed render per slide). Sync endpoint: FastAPI runs it
+    in a worker thread, so the blocking byte reads (disk / R2) don't stall the loop."""
+    import io
+    import zipfile
+
+    post = db.get(ContentPost, post_id)
+    if post is None:
+        raise HTTPException(404, "Post not found")
+    chosen = _select_publish_assets(db, post)
+    if not chosen:
+        raise HTTPException(400, "No images to download — generate and render the slides first.")
+
+    _ext = {"image/png": ".png", "image/jpeg": ".jpg", "image/webp": ".webp"}
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        n = 0
+        for i, a in enumerate(chosen):
+            data = storage.get_bytes(a.url)
+            if not data:
+                continue
+            ext = _ext.get((a.mime_type or "").lower(), "") or Path(a.filename or "").suffix or ".png"
+            zf.writestr(f"slide-{i + 1:02d}{ext}", data)
+            n += 1
+        if not n:
+            raise HTTPException(500, "Couldn't load the slide images. Try regenerating them.")
+        caption = (post.caption or "").strip()
+        tags = " ".join(t for t in (post.hashtags or []) if t)
+        caption_txt = "\n\n".join(p for p in (caption, tags) if p)
+        if caption_txt:
+            zf.writestr("caption.txt", caption_txt + "\n")
+
+    slug = post.post_dir_slug or str(post.id)
+    return Response(
+        content=buf.getvalue(),
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="{slug}-slides.zip"'},
+    )
 
 
 @router.post("/content/posts/{post_id}/sync-metrics")

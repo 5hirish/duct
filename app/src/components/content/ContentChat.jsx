@@ -32,53 +32,26 @@ function SendErrorBubble({ text, content, onRetry }) {
   );
 }
 
+// We deliberately do NOT surface the model's raw chain-of-thought. It's a private
+// scratchpad that inevitably contains internals (sub-agent + tool names, asset
+// UUIDs, JSON, slide ids like "slide-06", field names) — no prompt rule cleans it
+// reliably, and this is a non-technical creator tool. While the model is reasoning
+// (thinking streaming, no reply text yet) we show a calm "Thinking…" affordance;
+// the polished reply + the step chips convey everything the user needs.
 function ThinkingBlock({ thinking, streaming }) {
-  const [expanded, setExpanded] = useState(false);
-  if (!thinking) return null;
+  if (!thinking || !streaming) return null;
   return (
-    <div className="mb-2">
-      <button
-        onClick={() => setExpanded((x) => !x)}
-        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <span className="font-mono">{expanded ? "▾" : "▸"}</span>
-        <span>{expanded ? "Hide" : "Show"} reasoning{streaming ? "…" : ""}</span>
-      </button>
-      {expanded && (
-        <div className="mt-1.5 rounded-lg px-3.5 py-3 bg-muted/40 border border-border/40">
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm, remarkBreaks]}
-            components={{
-              h1: ({ children }) => <p className="text-xs font-bold text-foreground/80 mt-3 mb-1">{children}</p>,
-              h2: ({ children }) => <p className="text-xs font-semibold text-foreground/75 mt-2.5 mb-1">{children}</p>,
-              h3: ({ children }) => <p className="text-[11px] font-semibold text-foreground/70 mt-2 mb-0.5 uppercase tracking-wide">{children}</p>,
-              h4: ({ children }) => <p className="text-[11px] font-medium text-foreground/65 mt-1.5 mb-0.5">{children}</p>,
-              p:  ({ children }) => <p className="text-[11px] text-muted-foreground leading-relaxed my-2">{children}</p>,
-              ul: ({ children }) => <ul className="list-disc pl-4 my-1.5 space-y-1">{children}</ul>,
-              ol: ({ children }) => <ol className="list-decimal pl-4 my-1.5 space-y-1">{children}</ol>,
-              li: ({ children }) => <li className="text-[11px] text-muted-foreground leading-relaxed">{children}</li>,
-              code: ({ className, children }) => {
-                const { language, isBlock } = resolveCode(className, children);
-                if (isBlock) return <CodeBlock language={language} compact>{children}</CodeBlock>;
-                return <code className="text-[10px] not-italic font-mono bg-background/70 border border-border/60 text-foreground/80 px-1 py-0.5 rounded">{children}</code>;
-              },
-              strong: ({ children }) => <strong className="font-semibold not-italic text-foreground/75">{children}</strong>,
-              em: ({ children }) => <em className="italic text-muted-foreground">{children}</em>,
-              a: ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer" className="text-foreground/70 underline underline-offset-2 not-italic hover:text-foreground/90">{children}</a>,
-              blockquote: ({ children }) => <blockquote className="border-l-2 border-border/60 pl-3 my-1.5 italic text-muted-foreground/70">{children}</blockquote>,
-              table: ({ children }) => <table className="border-collapse my-1.5 w-full text-[10px]">{children}</table>,
-              th: ({ children }) => <th className="border border-border/60 px-2 py-0.5 font-semibold text-left not-italic bg-muted/20">{children}</th>,
-              td: ({ children }) => <td className="border border-border/60 px-2 py-0.5">{children}</td>,
-              hr: () => <hr className="border-border/40 my-2" />,
-            }}
-          >
-            {thinking}
-          </ReactMarkdown>
-          {streaming && (
-            <span className="inline-block w-0.5 h-3 bg-muted-foreground/60 ml-0.5 animate-pulse align-middle" />
-          )}
-        </div>
-      )}
+    <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
+      <span className="flex gap-1">
+        {[0, 150, 300].map((d) => (
+          <span
+            key={d}
+            className="inline-block size-1 rounded-full bg-muted-foreground/60 animate-bounce"
+            style={{ animationDelay: `${d}ms` }}
+          />
+        ))}
+      </span>
+      <span>Thinking…</span>
     </div>
   );
 }

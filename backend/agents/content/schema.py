@@ -388,9 +388,11 @@ class ContentTool(StrEnum):
     RENDER_SLIDE               = "mcp__duct_content__render_slide"
     GENERATE_IMAGE             = "mcp__duct_content__generate_image"
     EDIT_IMAGE                 = "mcp__duct_content__edit_image"
-    PUBLISH_POST               = "mcp__duct_content__publish_post"
-    MARK_POSTED                = "mcp__duct_content__mark_posted"
-    LOG_METRICS                = "mcp__duct_content__log_metrics"
+    CHECK_POST_SANITY          = "mcp__duct_content__check_post_sanity"
+    SUBMIT_ASSESSMENT          = "mcp__duct_content__submit_assessment"
+    # Publishing + metrics are UI/REST-driven (routes/content.py): PublishModal →
+    # POST /publish, board → /mark-posted, metrics → /sync-metrics + /sync-daily.
+    # They are deliberately NOT on the agent surface.
 
 
 # Per-slide kind — drives which template renders the slide within a layout.
@@ -518,6 +520,72 @@ class PlanDraft(BaseModel):
     start_date: date | None = None
     character: Character = Field(default_factory=Character)
     days: list[Day]
+
+
+# ---------------------------------------------------------------------------
+# Pre-publish review — sanity (deterministic Python) + content assessment
+# (subjective, scored in-session by the review_post sub-agent). See
+# agents/content/assessment.py for the marker weights + scoring math.
+# ---------------------------------------------------------------------------
+
+
+class SanityCheck(BaseModel):
+    """One deterministic completeness check (computed by compute_sanity).
+
+    Advisory: a failed check is surfaced in the panel but never disables
+    Publish. `id` is a stable key (e.g. "images_fresh"); `detail` names the
+    specific offenders so the user/agent can fix them. `severity` weights how
+    much a failure drags the overall score — "hard" (a broken post: missing
+    image, empty caption) costs more than "soft" (a quality nit: no hashtags).
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    id: str
+    label: str = ""
+    passed: bool
+    detail: str = ""
+    severity: Literal["hard", "soft"] = "hard"
+
+
+class ContentMarker(BaseModel):
+    """One subjective quality marker scored by the review_post sub-agent.
+
+    The sub-agent authors {id, score, verdict, why, fix}; `label` and `weight`
+    are filled server-side from the canonical tables in assessment.py so the
+    agent cannot skew the weighting. `score` is 0–100.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    id: str                         # one of assessment.MARKER_IDS
+    label: str = ""                 # filled server-side
+    score: int = Field(ge=0, le=100)
+    weight: float = 0.0             # filled server-side
+    verdict: str = ""               # one-line judgement
+    why: str = ""                   # the reasoning behind the score
+    fix: str = ""                   # the single most valuable improvement
+
+
+class PublishAssessment(BaseModel):
+    """The full pre-publish review emitted as PUBLISH_ASSESSMENT.
+
+    `overall` blends the weighted content score with a penalty per failed
+    sanity check (see assessment.compute_overall). Advisory only.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    post_id: str
+    overall: int                    # 0–100, sanity-penalised
+    content_score: int              # 0–100, weighted markers only
+    band: str                       # Strong | Good | Needs work | Not ready
+    sanity: list[SanityCheck] = Field(default_factory=list)
+    markers: list[ContentMarker] = Field(default_factory=list)
+    sanity_passed: int = 0
+    sanity_total: int = 0
+    notes: str = ""
+    generated_at: str = ""          # ISO 8601, filled by submit_assessment
 
 
 # ---------------------------------------------------------------------------

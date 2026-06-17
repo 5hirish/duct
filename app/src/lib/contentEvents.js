@@ -24,6 +24,7 @@ export const ContentEvent = Object.freeze({
 
   PLAN_GENERATED:      "plan_generated",
   POST_DRAFT_UPDATED:  "post_draft_updated",
+  PUBLISH_ASSESSMENT:  "publish_assessment",
 });
 
 export const ContentStep = Object.freeze({

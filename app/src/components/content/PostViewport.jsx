@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Check,
   Hash,
@@ -17,7 +17,11 @@ import { extractStyleHead } from "../../lib/slideDoc";
 import { statusMeta } from "../../lib/contentStatus";
 import { PostStatus } from "../../lib/contentEnums";
 import { PlatformGlyph, platformMeta } from "./platformGlyphs";
+import { useRouter } from "next/navigation";
 import SlidesCarousel from "./SlidesCarousel";
+import PublishReviewPanel from "./PublishReviewPanel";
+import PublishModal from "./PublishModal";
+import { Phase } from "./contentPhase";
 
 const STREAMING_HINTS = [
   "Picking the hook…",
@@ -27,6 +31,47 @@ const STREAMING_HINTS = [
 ];
 
 const TYPE_ICON = { slideshow: Images, video: Video, image: ImageIcon };
+
+// The chat turn that kicks off the in-session pre-publish review (review_post
+// sub-agent → submit_assessment → PUBLISH_ASSESSMENT). Emphatic that this is a
+// READ-ONLY review — the agent has a habit of "helpfully" applying fixes, which
+// must never happen on a review (the user decides what to change).
+const REVIEW_TURN =
+  "Run a pre-publish review of this draft — SCORE ONLY, do NOT change anything. " +
+  "Dispatch the review (hook, narrative momentum, save-worthiness, shareability, " +
+  "visual quality, CTA), then report the overall score and the top fixes. Do NOT " +
+  "edit any slide, caption, hashtag, or image, and do NOT regenerate images — " +
+  "I'll decide what to change after I see the score.";
+
+// Build the "Improve with Duct" chat turn from the latest assessment: lead with
+// the weakest markers' fixes, then any failed completeness checks.
+function improveTurn(a) {
+  const weak = [...(a.markers || [])]
+    .sort((x, y) => (x.score ?? 0) - (y.score ?? 0))
+    .slice(0, 3)
+    .map((m, i) => `${i + 1}. ${m.label} (${m.score}/100): ${m.fix || m.verdict}`);
+  const gaps = (a.sanity || [])
+    .filter((c) => !c.passed)
+    .map((c) => `- ${c.label}${c.detail ? `: ${c.detail}` : ""}`);
+  let t = `Improve this draft before publishing. Prioritise the weakest markers:\n${weak.join("\n")}`;
+  if (gaps.length) t += `\n\nAlso close these completeness gaps:\n${gaps.join("\n")}`;
+  t += "\n\nApply these changes and then stop — don't re-run the review yet; I'll rerun it myself once you're done.";
+  return t;
+}
+
+// A content fingerprint of everything the review judges (copy + images). Used to
+// detect that the draft changed since the last review, so the panel can flag it.
+function postSig(post) {
+  const slides = Array.isArray(post?.slides) ? post.slides : [];
+  return JSON.stringify({
+    c: post?.caption || "",
+    h: Array.isArray(post?.hashtags) ? post.hashtags : [],
+    s: slides.map((s) => [
+      s.headline || "", s.subtext || "", s.image_url || "",
+      (Array.isArray(s.items) ? s.items : []).map((it) => [it.label || "", it.image_url || ""]),
+    ]),
+  });
+}
 
 /**
  * Post viewport — preview-first. The right pane shows what actually ships: the
@@ -55,15 +100,39 @@ function stripTransient(slides) {
   }));
 }
 
-export default function PostViewport({ payload, canPublish = false, onPublish, onRevise, onSendMessage }) {
+// Quiet period after the last manual edit before auto-saving.
+const AUTOSAVE_MS = 1000;
+
+export default function PostViewport({ payload, assessment = null, phase, canPublish = false, onPublish, onRevise, onSendMessage }) {
   const [draft, setDraft] = useState(null);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [reviewing, setReviewing] = useState(false);
+  const [publishOpen, setPublishOpen] = useState(false);
+  const reviewedSigRef = useRef(null);
+  const router = useRouter();
+
+  // Stop the "Reviewing…" placeholder once a fresh assessment lands.
+  useEffect(() => { if (assessment) setReviewing(false); }, [assessment?.generated_at]);
+  // …and don't leave it stuck if the agent turn ends without one (error /
+  // interruption / the agent never finalised the review).
+  useEffect(() => {
+    if (phase === Phase.READY || phase === Phase.FAILED) setReviewing(false);
+  }, [phase]);
+
+  // The last *incoming* payload object we've adopted into `draft`. A manual/auto
+  // save (patchPost) doesn't flow back to the parent's `payload` prop, so this
+  // guard stops the sync effect from re-running when `dirty` flips false after a
+  // save and clobbering the freshly-saved draft with the now-stale prop. We only
+  // re-sync when a genuinely new payload object arrives (an agent update).
+  const lastSyncedPayload = useRef(null);
 
   useEffect(() => {
     if (!payload || payload.type !== "post") return;
+    if (payload === lastSyncedPayload.current) return; // not a new agent update
+    lastSyncedPayload.current = payload;
     if (!dirty) setDraft(payload);
   }, [payload, dirty]);
 
@@ -72,9 +141,25 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
   // inlines the full style registry + layout CSS, all content-independent).
   const headHtml = useMemo(() => extractStyleHead(post?.slides_html || ""), [post?.slides_html]);
 
+  // The review to show: the live in-session one wins; otherwise the persisted
+  // last_assessment on the post (so it survives reload + shows on the detail
+  // page). Guard that it belongs to THIS post.
+  const effectiveAssessment = assessment || post?.last_assessment || null;
+  const matchesPost = Boolean(effectiveAssessment && String(effectiveAssessment.post_id) === String(post?.id));
+  // Staleness: snapshot the post's content fingerprint when a review lands, then
+  // flag the panel if the slides/copy have changed since (agent OR manual edit).
+  const currentSig = useMemo(() => postSig(post), [post]);
+  useEffect(() => {
+    if (matchesPost) reviewedSigRef.current = currentSig;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [effectiveAssessment?.generated_at]);
+  const assessmentStale =
+    matchesPost && reviewedSigRef.current != null && reviewedSigRef.current !== currentSig;
+
   function patch(field, value) {
     setDraft((prev) => ({ ...(prev || payload || {}), [field]: value }));
     setDirty(true);
+    if (saveError) setSaveError(""); // editing again re-arms auto-save after a failure
   }
 
   // The editable fields sent on every save. `slides` is the source of truth —
@@ -127,6 +212,44 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
   }
 
   function handleDiscard() { setDraft(payload); setDirty(false); setSaveError(""); }
+
+  // Kick off the in-session pre-publish review. Persist pending edits first so
+  // the review_post sub-agent scores the latest copy.
+  async function handleReview() {
+    if (!onSendMessage) return;
+    await commitIfDirty();
+    setReviewing(true);
+    onSendMessage(REVIEW_TURN);
+  }
+
+  // Panel "Improve with Duct" → hand the prioritized fixes to the agent. It only
+  // EDITS the draft (it doesn't re-review); once the edits land the draft reads
+  // as stale and the panel's primary action flips to "Rerun review".
+  async function handleImprove() {
+    if (!onSendMessage || !effectiveAssessment) return;
+    await commitIfDirty();
+    onSendMessage(improveTurn(effectiveAssessment));
+  }
+
+  // Panel "Publish now" → the parent's publish flow when present (detail page),
+  // otherwise our own PublishModal (the live drafting / revise session).
+  function handlePanelPublish() {
+    if (onPublish) onPublish();
+    else setPublishOpen(true);
+  }
+
+  // Auto-save: debounce manual edits and persist them at the current status
+  // (the agent's own edits already persist server-side). Pending posts are
+  // excluded — keeping one is a deliberate promotion via the Save button. We
+  // skip while a save is in flight (no double-save) and while one is erroring
+  // (no hammering a failing endpoint); editing again clears the error and re-arms.
+  useEffect(() => {
+    if (!dirty || saving || saveError) return;
+    if (!post?.id || post.status === PostStatus.PENDING) return;
+    const t = setTimeout(() => { persist(post.status).catch(() => {}); }, AUTOSAVE_MS);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dirty, saving, saveError, post?.id, post?.status, draft]);
 
   if (!post || (post.type && post.type !== "post" && !post.id)) {
     return <DraftingPulse />;
@@ -199,18 +322,22 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
                 {saving ? "Saving…" : <><Check className="size-3.5" /> Save</>}
               </button>
             ) : (
-              <button
-                type="button"
-                onClick={handleCommit}
-                disabled={!dirty || saving}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-foreground px-3 py-1.5 text-xs font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-40"
-              >
-                {saving ? "Saving…" : dirty ? "Commit edits" : <><Check className="size-3.5" /> Saved</>}
-              </button>
+              <SaveIndicator saving={saving} dirty={dirty} hasError={Boolean(saveError)} onRetry={handleCommit} />
             )}
             {canPublish && onPublish && (
               <button type="button" onClick={onPublish} className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium hover:bg-muted/50">
                 <Send className="size-3.5" /> Publish
+              </button>
+            )}
+            {onSendMessage && slides.length > 0 && (
+              <button
+                type="button"
+                onClick={handleReview}
+                disabled={reviewing}
+                title="Run a pre-publish review, then publish"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                <Send className="size-3.5" /> {reviewing ? "Reviewing…" : "Review & publish"}
               </button>
             )}
             {onRevise && (
@@ -232,9 +359,32 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
 
           <BulkImageBar slides={slides} onSendMessage={onSendMessage} commitIfDirty={commitIfDirty} currentIndex={slideIdx} />
 
+          {(reviewing || matchesPost) && (
+            <PublishReviewPanel
+              assessment={matchesPost ? effectiveAssessment : null}
+              reviewing={reviewing}
+              stale={assessmentStale}
+              onImprove={onSendMessage ? handleImprove : undefined}
+              onRerun={onSendMessage ? handleReview : undefined}
+              onPublish={handlePanelPublish}
+            />
+          )}
+
           <PostCopy post={post} patch={patch} />
         </div>
       </div>
+
+      {/* Fallback publish flow for the live session (the detail page passes its
+          own onPublish + PublishModal, so we only mount ours when it doesn't). */}
+      {!onPublish && (
+        <PublishModal
+          open={publishOpen}
+          onClose={() => setPublishOpen(false)}
+          post={post}
+          onPublished={(updated) => setDraft(updated)}    // update state; modal keeps the success screen up
+          onViewPost={() => router.push(`/content/posts/${post.id}`)}  // → clean published view
+        />
+      )}
     </div>
   );
 }
@@ -245,6 +395,36 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
 
 function prettify(s) {
   return String(s || "").replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+// Passive save status for auto-saved (non-pending) posts. Renders as quiet text,
+// not a button — edits persist on their own. The only actionable state is a
+// failed save, which offers a Retry.
+function SaveIndicator({ saving, dirty, hasError, onRetry }) {
+  if (hasError) {
+    return (
+      <button
+        type="button"
+        onClick={onRetry}
+        className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/40 px-2.5 py-1.5 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10"
+      >
+        <RefreshCw className="size-3.5" /> Save failed · Retry
+      </button>
+    );
+  }
+  const inFlight = saving || dirty;
+  return (
+    <span
+      aria-live="polite"
+      className="inline-flex items-center gap-1.5 px-1.5 text-xs font-medium text-muted-foreground"
+    >
+      {inFlight ? (
+        <><RefreshCw className="size-3.5 animate-spin" /> Saving…</>
+      ) : (
+        <><Check className="size-3.5 text-emerald-500" /> Saved</>
+      )}
+    </span>
+  );
 }
 
 function Labeled({ label, hint, children }) {

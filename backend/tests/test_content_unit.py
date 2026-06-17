@@ -835,4 +835,4 @@ def test_image_tool_schemas_constrain_model_and_required_params():
 
     # optional-as-required fixes: these take either/neither id, nothing forced
     assert schemas["fetch_post"]["required"] == []
-    assert schemas["mark_posted"]["required"] == ["post_id"]
+    assert schemas["render_slide"]["required"] == ["slide_id"]

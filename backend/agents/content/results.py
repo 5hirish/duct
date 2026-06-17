@@ -53,15 +53,3 @@ class SubmitPostResult(BaseModel):
     post_dir_slug: str
     slide_count: int
     images_generated: int
-
-
-class MarkPostedResult(BaseModel):
-    post_id: str
-    status: str
-
-
-class LogMetricsResult(BaseModel):
-    post_id: str
-    view_count: int
-    like_count: int
-    snapshots: int

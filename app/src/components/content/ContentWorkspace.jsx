@@ -11,6 +11,7 @@ import {
   consumeSseStream,
   getContentConversation,
   getSlideRenderDoc,
+  invalidatePosts,
   mediaUrl,
   openPlanStream,
   openPostStream,
@@ -42,6 +43,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
   const [errorMsg, setErrorMsg] = useState("");
   const [retryCount, setRetryCount] = useState(0);
   const [payload, setPayload]   = useState(null);
+  const [assessment, setAssessment] = useState(null);
   const [sessionId, setSessionId] = useState(null);
   const [channelNote, setChannelNote] = useState(null);
   const [isAgentTyping, setIsAgentTyping] = useState(false);
@@ -368,6 +370,9 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
         break;
 
       case ContentEvent.POST_DRAFT_UPDATED: {
+        // The draft changed (copy, image regen, etc.) → the board's cached list
+        // is now stale; clear it so the kanban re-fetches the latest thumbnail.
+        invalidatePosts();
         const base = { type: "post", ...event.payload };
         const ip = event.inline_preview;
         if (ip?.data_uri) {
@@ -406,6 +411,12 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
         }
         break;
       }
+
+      case ContentEvent.PUBLISH_ASSESSMENT:
+        // The pre-publish review from the review_post sub-agent. Held here and
+        // threaded to the viewport, which renders it as a collapsible panel.
+        setAssessment(event.payload || null);
+        break;
 
       case ContentEvent.PIPELINE_FINISHED:
         pipelineEndedRef.current = true;
@@ -563,7 +574,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
       )}
       <div className="min-h-0 flex-1 overflow-hidden">
         {renderViewport
-          ? renderViewport({ payload, mode, sessionId, phase, steps, building: viewportBuilding, onSendMessage: handleSendMessage })
+          ? renderViewport({ payload, assessment, mode, sessionId, phase, steps, building: viewportBuilding, onSendMessage: handleSendMessage })
           : (
               <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
                 No viewport configured.

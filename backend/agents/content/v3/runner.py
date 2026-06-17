@@ -54,6 +54,7 @@ from agents.content.schema import (
 from agents.content.subagents import (
     DRAFT_POST_AGENT,
     RESEARCH_PILLAR_AGENT,
+    REVIEW_POST_AGENT,
 )
 from agents.content.tools import build_content_mcp_server
 from agents.core import claude_sdk as _sdk
@@ -290,6 +291,20 @@ def _extract_subagent_name(input_data: dict[str, Any]) -> str:
     return "unknown"
 
 
+# Friendly progress-chip labels per sub-agent — these are what the user sees in
+# the chat step tray (ContentStepProgress renders dispatch_subagent:* chips).
+# Unknown names fall back to a humanised form of the raw name.
+_SUBAGENT_LABELS: dict[str, str] = {
+    "research_pillar": "Researching topics",
+    "draft_post":      "Drafting post",
+    "review_post":     "Reviewing before publish",
+}
+
+
+def _subagent_label(name: str) -> str:
+    return _SUBAGENT_LABELS.get(name) or f"Sub-agent · {name.replace('_', ' ')}"
+
+
 # ---------------------------------------------------------------------------
 # Writer-tool upfront validators
 #
@@ -506,7 +521,7 @@ async def _run(
                 "event":    ContentEvent.STEP_STARTED,
                 "session_id": session_id,
                 "step_id":  f"{ContentStep.DISPATCH_SUBAGENT.value}:{sub_name}",
-                "label":    f"Sub-agent · {sub_name}",
+                "label":    _subagent_label(sub_name),
                 "summary":  brief[:160],
                 "status": StepStatus.RUNNING,
             })
@@ -634,7 +649,7 @@ async def _run(
             "event":      ContentEvent.STEP_FINISHED,
             "session_id": session_id,
             "step_id":    f"{ContentStep.DISPATCH_SUBAGENT.value}:{sub_name}",
-            "label":      f"Sub-agent · {sub_name}",
+            "label":      _subagent_label(sub_name),
             "summary":    result[:240],
             "status": StepStatus.SUCCESS,
         })
@@ -720,13 +735,17 @@ async def _run(
             ContentTool.RENDER_SLIDE,
             ContentTool.GENERATE_IMAGE,
             ContentTool.EDIT_IMAGE,
-            ContentTool.PUBLISH_POST,
-            ContentTool.MARK_POSTED,
-            ContentTool.LOG_METRICS,
+            # Owned by the review_post sub-agent (it runs the whole pre-publish
+            # review). Kept in the parent allow-list because every sub-agent tool
+            # is also gated here — the orchestrator is told (in the prompt) not to
+            # call these directly; the sub-agent finalises via submit_assessment.
+            ContentTool.CHECK_POST_SANITY,
+            ContentTool.SUBMIT_ASSESSMENT,
         ],
         agents={
             "research_pillar":    RESEARCH_PILLAR_AGENT,
             "draft_post":         DRAFT_POST_AGENT,
+            "review_post":        REVIEW_POST_AGENT,
         },
         can_use_tool=_can_use_tool,
         hooks={

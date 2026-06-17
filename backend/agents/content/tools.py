@@ -1,12 +1,17 @@
 """In-process MCP tools exposed to the Content Studio agent.
 
-Two groups of tools:
-  - Writers: submit_plan, submit_post_draft — validate Pydantic, upsert DB,
-    emit SSE events (PLAN_GENERATED / POST_DRAFT_UPDATED).
+Tool groups:
+  - Writers: submit_plan, submit_post_draft, edit_slide, submit_assessment —
+    validate Pydantic, upsert DB, emit SSE events (PLAN_GENERATED /
+    POST_DRAFT_UPDATED / PUBLISH_ASSESSMENT).
   - Readers: fetch_brand_context, fetch_topic_bank, fetch_format_library,
-    fetch_avatar_library, fetch_content_history, fetch_content_assets.
-  - Stubs: generate_image, edit_image, publish_post, mark_posted, log_metrics
-    — return is_error=true with "available in Phase 4/4b" until those phases land.
+    fetch_avatar_library, fetch_content_history, fetch_content_assets,
+    fetch_post, fetch_slide_context, check_post_sanity.
+  - Image + render: generate_image, edit_image, render_slide — return image
+    content blocks the agent can see (for critique + visual review).
+
+Publishing + metrics are NOT agent tools — they are UI/REST-driven
+(routes/content.py: /publish, /mark-posted, /sync-metrics, /sync-daily).
 
 Every handler:
   1. Opens a short-lived DB session (db.session.get_session generator), never
@@ -36,8 +41,6 @@ from agents.content.results import (
     EditImageResult,
     EditSlideResult,
     GenerateImageResult,
-    LogMetricsResult,
-    MarkPostedResult,
     RenderSlideResult,
     SubmitPlanResult,
     SubmitPostResult,
@@ -47,11 +50,19 @@ from sqlmodel import Session, select
 from agents.models import DEFAULT_IMAGE_MODEL, AspectRatio, ImageModel
 from agents.core.tool_schema import tool_schema
 from agents.content.events import ContentEvent
+from agents.content.assessment import (
+    MARKER_IDS,
+    apply_marker_metadata,
+    compute_overall,
+    compute_sanity,
+)
 from agents.content.schema import (
+    ContentMarker,
     ContentSession,
     ContentStatus,
     PlanDraft,
     PostDraft,
+    PublishAssessment,
     Slide,
 )
 from agents.content.templates import derive_image_prompts, render_slides_html
@@ -340,6 +351,7 @@ def _build_post_payload(row: ContentPost) -> dict:
     per-slide image attach path so the frontend always gets the same shape."""
     return {
         "id":              str(row.id),
+        "project_id":      str(row.project_id),
         "post_dir_slug":   row.post_dir_slug,
         "pillar":          row.pillar,
         "topic":           row.topic,
@@ -362,6 +374,7 @@ def _build_post_payload(row: ContentPost) -> dict:
         "camera_ref_pool": row.camera_ref_pool,
         "platforms":       row.platforms,
         "status":          row.status,
+        "last_assessment": row.last_assessment,
     }
 
 
@@ -488,7 +501,7 @@ def _downscale_for_vision(data: bytes, mime: str, max_edge: int = 1536) -> tuple
 def _persist_slide_render(project_id: UUID, post_id: UUID, slide_id: str, png: bytes) -> str:
     """Best-effort: write a rasterized slide PNG to object storage + a
     ContentAsset row (asset_type='slide_render'). These composed renders are what
-    publish_post uploads to TikTok. Returns the public url."""
+    the publish route uploads to TikTok. Returns the public url."""
     fname = f"{slide_id}-{uuid4().hex[:8]}.png"
     key = f"projects/{project_id}/renders/{fname}"
     url = storage.put_image(key, png, "image/png")
@@ -1482,304 +1495,12 @@ def build_content_mcp_server(
             logger.exception("edit_image failed")
             return _err("Image editing hit a snag — please try again.")
 
-    # ----------------------- PostBridge (Phase 4) -----------------------
-
-    @tool(
-        name="publish_post",
-        description=(
-            "Publish a saved post via PostBridge. Uploads each slide's COMPOSED "
-            "render (caption baked in — call render_slide first) to PostBridge, "
-            "creates the post bound to one or more social_account_ids (numeric, "
-            "from list_social_accounts), and stores the resulting PostBridge post "
-            "id on the content_posts row. By default it refuses slides that have "
-            "no render (their captions wouldn't appear)."
-        ),
-        input_schema={
-            "type": "object",
-            "properties": {
-                "post_id":            {"type": "string", "description": "UUID of the content_posts row to publish."},
-                "social_account_ids": {"type": "array", "items": {"type": "integer"},
-                                       "description": "Numeric PostBridge social account IDs (at least one)."},
-                "scheduled_at":       {"type": "string", "description": "Optional ISO 8601 timestamp; omit to post now."},
-                "tiktok_draft":       {"type": "boolean", "description": "If true, post lands as a TikTok draft instead of scheduling."},
-                "allow_uncomposed":   {"type": "boolean", "description": "Escape hatch: publish single-image slides as their RAW photo when no composed render exists (captions won't appear). Multi-image slides still require a render. Default false."},
-            },
-            "required": ["post_id", "social_account_ids"],
-        },
-    )
-    async def publish_post(args: dict) -> dict:
-        try:
-            from service.post_bridge import (
-                PostBridgeAPIError,
-                PostBridgeCreatePostRequest,
-                client_for_user,
-            )
-
-            post_id_raw = args.get("post_id")
-            raw_ids     = args.get("social_account_ids") or []
-            scheduled_raw  = args.get("scheduled_at")
-            tiktok_draft = bool(args.get("tiktok_draft"))
-            allow_uncomposed = bool(args.get("allow_uncomposed"))
-            if not post_id_raw:
-                return _err("post_id is required.")
-            try:
-                social_account_ids = [int(x) for x in raw_ids]
-            except (TypeError, ValueError):
-                return _err("social_account_ids must be a list of numbers.")
-            if not social_account_ids:
-                return _err("social_account_ids is required (at least one).")
-
-            post_id = UUID(str(post_id_raw))
-            scheduled_at = None
-            if scheduled_raw:
-                try:
-                    scheduled_at = datetime.fromisoformat(str(scheduled_raw))
-                except ValueError as exc:
-                    return _err(f"scheduled_at invalid: {exc}")
-
-            with _open_db() as db:
-                post, err = _require_post(db, project_id, post_id)
-                if err:
-                    return err
-                proj = db.get(Project, project_id)
-                if proj is None:
-                    return _err("Project missing.")
-
-                # Gather what to upload, in slide order. PREFER the composed
-                # slide renders (caption + layout baked in) — those are what
-                # should appear on TikTok. Fall back to a single-image slide's
-                # raw photo only when it has no render yet.
-                all_assets = db.execute(
-                    select(ContentAsset)
-                    .where(ContentAsset.post_id == post.id, ContentAsset.project_id == post.project_id)
-                    .order_by(ContentAsset.created_at)
-                ).scalars().all()
-                renders_by_slide: dict[str, ContentAsset] = {}
-                by_url: dict[str, ContentAsset] = {}
-                for a in all_assets:
-                    if a.asset_type == "slide_render":
-                        sid = (a.params or {}).get("slide_id")
-                        if sid:
-                            renders_by_slide[str(sid)] = a   # asc order → latest wins
-                    if a.url:
-                        by_url.setdefault(a.url, a)
-
-                slides_meta = [s for s in (post.slides or []) if isinstance(s, dict)]
-                asset_rows: list[ContentAsset] = []
-                missing: list[str] = []
-                uncomposed: list[str] = []
-                if slides_meta:
-                    for s in slides_meta:
-                        sid = str(s.get("slide_id") or "")
-                        ren = renders_by_slide.get(sid)
-                        if ren is not None:
-                            asset_rows.append(ren)
-                            continue
-                        # No composed render. Only a single-image slide can fall
-                        # back to its raw photo, and only when explicitly allowed
-                        # (collage / before-after MUST be rendered to compose).
-                        url = s.get("image_url")
-                        fallback = by_url.get(url) if url else None
-                        if allow_uncomposed and fallback is not None and not s.get("items"):
-                            asset_rows.append(fallback)
-                            uncomposed.append(sid or "(unnamed)")
-                        else:
-                            missing.append(sid or "(unnamed)")
-                else:
-                    # Legacy posts with no structured slides — upload whatever's linked.
-                    asset_rows = list(all_assets)
-
-                if missing:
-                    return _err(
-                        "These slides have no composed render, so their captions "
-                        f"wouldn't publish: {missing}. Call render_slide on each, then "
-                        "publish again — or pass allow_uncomposed=true to publish "
-                        "single-image slides as raw photos (captions won't appear; "
-                        "collage / before-after still require a render)."
-                    )
-                if not asset_rows:
-                    return _err("No slide images to publish — render or generate images first.")
-
-                try:
-                    client = client_for_user(proj.user_id, db)
-                except ValueError as exc:
-                    return _err(str(exc))
-
-                # Upload each asset → media_id list.
-                media_ids: list[str] = []
-                try:
-                    async with client as pb:
-                        for asset in asset_rows:
-                            data = _load_asset_bytes(asset)
-                            if not data:
-                                return _err("Some media for this post couldn't be loaded — try regenerating the images.")
-                            upload = await pb.create_upload_url(
-                                name=asset.filename or f"slide-{len(media_ids)+1}.png",
-                                mime_type=asset.mime_type or "image/png",
-                                size_bytes=len(data),
-                            )
-                            await pb.upload_media(data, upload.upload_url, asset.mime_type or "image/png")
-                            media_ids.append(upload.media_id)
-
-                        platform_configs: dict = {}
-                        if tiktok_draft:
-                            platform_configs["tiktok"] = {"draft": True}
-
-                        request = PostBridgeCreatePostRequest(
-                            caption=post.caption or "",
-                            social_accounts=social_account_ids,
-                            media=media_ids,
-                            scheduled_at=scheduled_at,
-                            platform_configurations=platform_configs or None,
-                        )
-                        resp = await pb.create_post(request)
-                except PostBridgeAPIError as exc:
-                    logger.warning("content: publish failed: %s", exc, exc_info=True)
-                    return _err(f"Couldn't publish that just now — {exc.error.message or 'please try again shortly'}.")
-
-                post.post_bridge_post_id = resp.id
-                if resp.status.value == "posted":
-                    post.status    = "posted"
-                    post.posted_at = datetime.now(timezone.utc)
-                elif resp.status.value == "scheduled":
-                    post.status = "scheduled"
-                else:
-                    post.status = resp.status.value
-                db.add(post)
-                db.commit()
-                db.refresh(post)
-                logger.info(
-                    "content: published post %s via PostBridge → id=%s status=%s",
-                    post.id, resp.id, resp.status,
-                )
-                return _ok({
-                    "post_id":               str(post.id),
-                    "post_bridge_post_id":   resp.id,
-                    "status":                post.status,
-                    "scheduled_at":          resp.scheduled_at.isoformat() if resp.scheduled_at else None,
-                    "media_count":           len(media_ids),
-                    "uncomposed_slides":     uncomposed,   # published as raw photos (no caption)
-                })
-        except Exception as exc:
-            logger.exception("publish_post failed")
-            return _err(f"publish_post failed: {exc}")
-
-    @tool(
-        name="mark_posted",
-        description=(
-            "Mark a post as posted (manual flag — use when the user posted "
-            "outside of PostBridge). Sets status='posted' and posted_at=now."
-        ),
-        input_schema={
-            "type": "object",
-            "properties": {
-                "post_id":    {"type": "string", "description": "UUID of the content_posts row."},
-                "tiktok_url": {"type": "string", "description": "Optional external URL of the live post."},
-            },
-            "required": ["post_id"],
-        },
-    )
-    async def mark_posted(args: dict) -> dict:
-        try:
-            post_id_raw = args.get("post_id")
-            if not post_id_raw:
-                return _err("post_id is required.")
-            post_id = UUID(str(post_id_raw))
-            with _open_db() as db:
-                post, err = _require_post(db, project_id, post_id)
-                if err:
-                    return err
-                post.status    = "posted"
-                post.posted_at = datetime.now(timezone.utc)
-                if args.get("tiktok_url"):
-                    post.tiktok_url = str(args["tiktok_url"])
-                db.add(post)
-                db.commit()
-                db.refresh(post)
-                return _ok_model(MarkPostedResult(post_id=str(post.id), status=post.status))
-        except Exception as exc:
-            logger.exception("mark_posted failed")
-            return _err(f"mark_posted failed: {exc}")
-
-    @tool(
-        name="log_metrics",
-        description=(
-            "Refresh performance metrics for a post from PostBridge. Looks up "
-            "the post_result for this post, fetches lifetime + daily analytics, "
-            "and merges them into post.perf / post.daily_perf. Requires "
-            "post_bridge_post_id set on the row (i.e. publish_post ran first)."
-        ),
-        input_schema={
-            "post_id": Annotated[str, "UUID of the content_posts row."],
-        },
-    )
-    async def log_metrics(args: dict) -> dict:
-        try:
-            from service.post_bridge import PostBridgeAPIError, client_for_user
-
-            post_id_raw = args.get("post_id")
-            if not post_id_raw:
-                return _err("post_id is required.")
-            post_id = UUID(str(post_id_raw))
-
-            with _open_db() as db:
-                post, err = _require_post(db, project_id, post_id)
-                if err:
-                    return err
-                if not post.post_bridge_post_id:
-                    return _err("Post hasn't been published yet — run publish_post first.")
-                proj = db.get(Project, project_id)
-                if proj is None:
-                    return _err("Project missing.")
-
-                try:
-                    client = client_for_user(proj.user_id, db)
-                except ValueError as exc:
-                    return _err(str(exc))
-
-                try:
-                    async with client as pb:
-                        # Trigger a sync (best-effort) then chase the chain
-                        # post → post_result → analytics → daily.
-                        await pb.sync_analytics(platform="tiktok")
-                        results = await pb.list_post_results(post_id=post.post_bridge_post_id, limit=10)
-                        if not results:
-                            return _err("This post hasn't finished publishing yet — try again in a few minutes.")
-                        # Pick the first successful result; fall back to the latest.
-                        chosen = next((r for r in results if r.success), results[0])
-                        analytics_list = await pb.list_analytics(post_result_id=[chosen.id], limit=1)
-                        if not analytics_list:
-                            return _err("Analytics for this post haven't synced yet.")
-                        analytics = analytics_list[0]
-                        daily = await pb.get_analytics_daily(analytics.id)
-                except PostBridgeAPIError as exc:
-                    logger.warning("content: metrics pull failed: %s", exc, exc_info=True)
-                    return _err(f"Couldn't pull metrics just now — {exc.error.message or 'please try again shortly'}.")
-
-                merged = dict(post.perf or {})
-                merged.update({
-                    k: v for k, v in analytics.model_dump(mode="json").items()
-                    if v is not None and k not in ("id",)
-                })
-                merged["last_synced_at"] = (
-                    analytics.last_synced_at.isoformat() if analytics.last_synced_at else None
-                )
-                post.perf = merged
-                post.post_bridge_result_id = chosen.id
-                post.daily_perf = [s.model_dump(mode="json") for s in daily.snapshots]
-                db.add(post)
-                db.commit()
-                db.refresh(post)
-
-                return _ok_model(LogMetricsResult(
-                    post_id=str(post.id),
-                    view_count=analytics.view_count,
-                    like_count=analytics.like_count,
-                    snapshots=len(daily.snapshots),
-                ))
-        except Exception as exc:
-            logger.exception("log_metrics failed")
-            return _err(f"log_metrics failed: {exc}")
+    # Publishing + metrics are UI/REST-driven (PublishModal → POST /publish;
+    # board → /mark-posted; metrics → /sync-metrics + /sync-daily). The agent
+    # surface is creation + review only, so the publish_post / mark_posted /
+    # log_metrics tools were removed — the routes in routes/content.py are the
+    # single source of truth. render_slide stays: it's the agent's eyes, not a
+    # publish path.
 
     @tool(
         name="render_slide",
@@ -1789,7 +1510,7 @@ def build_content_mcp_server(
             "layout, safe zones), not just the raw photo. Returns the image inline "
             "so you can critique composition, caption legibility, text/face "
             "overlap, and safe-zone fit, then fix the structured slide. These "
-            "composed renders are also what publish_post uploads. Needs a "
+            "composed renders are also what gets published. Needs a "
             "connected session UI; if none responds it times out — then proceed "
             "on the raw photo + structured data."
         ),
@@ -2013,6 +1734,141 @@ def build_content_mcp_server(
             logger.exception("fetch_slide_context failed")
             return _err(f"fetch_slide_context failed: {exc}")
 
+    @tool(
+        name="check_post_sanity",
+        description=(
+            "Run the deterministic pre-publish completeness checks on the current "
+            "post (or pass post_id): every slide has a fresh image, the hook + text "
+            "slides carry copy, the caption + hashtags exist, and there's no "
+            "placeholder text. No side-effects — returns the pass/fail checks so you "
+            "know what's incomplete before scoring. Sanity is mechanical; the "
+            "subjective quality scoring is yours (submit_assessment)."
+        ),
+        input_schema={
+            "post_id": Annotated[str, "Optional UUID; defaults to the current post in this session."],
+        },
+    )
+    async def check_post_sanity(args: dict) -> dict:
+        try:
+            pid = (args.get("post_id") or "").strip()
+            with _open_db() as db:
+                if pid:
+                    try:
+                        row = db.get(ContentPost, UUID(pid))
+                    except ValueError:
+                        return _err(f"invalid post_id: {pid}")
+                    if row is None or row.project_id != project_id:
+                        return _err("post not found for this project.")
+                else:
+                    row, err = _require_post(db, project_id, session.post_id)
+                    if err:
+                        return err
+                checks = compute_sanity(row.slides or [], row.caption or "", row.hashtags or [])
+            passed = sum(1 for c in checks if c.passed)
+            return _ok({
+                "post_id": str(row.id),
+                "passed":  passed,
+                "total":   len(checks),
+                "checks":  [c.model_dump(mode="json") for c in checks],
+            })
+        except Exception as exc:
+            logger.exception("check_post_sanity failed")
+            return _err(f"check_post_sanity failed: {exc}")
+
+    @tool(
+        name="submit_assessment",
+        description=(
+            "Persist + emit the pre-publish review for the current post. Pass your "
+            "scored content `markers` — the SIX quality markers, each 0–100 with a "
+            "one-line verdict, the why, and the single most valuable fix. This tool "
+            "re-runs the deterministic sanity checks, computes the weighted overall "
+            "score, and emits PUBLISH_ASSESSMENT to the user's review panel. "
+            "Advisory only — it never blocks publishing. Marker ids (score ALL six): "
+            "hook_strength, narrative_momentum, save_worthiness, "
+            "shareability_resonance, visual_quality, cta_caption_fit."
+        ),
+        input_schema={
+            "markers": Annotated[
+                list,
+                "List of {id, score (0-100), verdict, why, fix}, one per marker id.",
+            ],
+            "notes":   Annotated[str, "Optional one-line overall summary."],
+            "post_id": Annotated[str, "Optional UUID; defaults to the current post."],
+        },
+    )
+    async def submit_assessment(args: dict) -> dict:
+        try:
+            raw = args.get("markers") or []
+            if not isinstance(raw, list) or not raw:
+                return _err("markers is required: a list of {id, score, verdict, why, fix}.")
+            try:
+                parsed = [ContentMarker.model_validate(m) for m in raw]
+            except ValidationError as exc:
+                return _err(f"marker validation failed: {exc}")
+            markers = apply_marker_metadata(parsed)
+            if not markers:
+                return _err(f"no recognised marker ids; expected from: {', '.join(MARKER_IDS)}.")
+
+            # Signal partial coverage rather than silently scoring on a subset.
+            missing = [mid for mid in MARKER_IDS if mid not in {m.id for m in markers}]
+            note = (args.get("notes") or "").strip()
+            if missing:
+                note = (
+                    f"Only {len(markers)}/{len(MARKER_IDS)} markers scored "
+                    f"(missing: {', '.join(missing)}). {note}"
+                ).strip()
+
+            pid = (args.get("post_id") or "").strip()
+            with _open_db() as db:
+                if pid:
+                    try:
+                        row = db.get(ContentPost, UUID(pid))
+                    except ValueError:
+                        return _err(f"invalid post_id: {pid}")
+                    if row is None or row.project_id != project_id:
+                        return _err("post not found for this project.")
+                else:
+                    row, err = _require_post(db, project_id, session.post_id)
+                    if err:
+                        return err
+                sanity = compute_sanity(row.slides or [], row.caption or "", row.hashtags or [])
+                overall, content_score, band = compute_overall(markers, sanity)
+                assessment = PublishAssessment(
+                    post_id=str(row.id),
+                    overall=overall,
+                    content_score=content_score,
+                    band=band,
+                    sanity=sanity,
+                    markers=markers,
+                    sanity_passed=sum(1 for c in sanity if c.passed),
+                    sanity_total=len(sanity),
+                    notes=note,
+                    generated_at=datetime.now(timezone.utc).isoformat(),
+                )
+                # Persist so the panel survives reload + shows on the detail page.
+                row.last_assessment = assessment.model_dump(mode="json")
+                db.add(row)
+                db.commit()
+                post_id_str = str(row.id)
+
+            await emit({
+                "event":      ContentEvent.PUBLISH_ASSESSMENT,
+                "session_id": session.session_id,
+                "post_id":    post_id_str,
+                "payload":    assessment.model_dump(mode="json"),
+            })
+            weakest = min(markers, key=lambda m: m.score)
+            summary = (
+                f"Pre-publish review: {overall}/100 ({band}). "
+                f"Sanity {assessment.sanity_passed}/{assessment.sanity_total}. "
+                f"Weakest: {weakest.label} ({weakest.score}) — "
+                f"{weakest.fix or weakest.verdict}"
+            ).strip()
+            return _ok(summary)
+        except Exception as exc:
+            logger.exception("submit_assessment failed")
+            return _err(f"submit_assessment failed: {exc}")
+
     return create_sdk_mcp_server(
         "duct_content",
         tools=[
@@ -2031,8 +1887,7 @@ def build_content_mcp_server(
             render_slide,
             generate_image,
             edit_image,
-            publish_post,
-            mark_posted,
-            log_metrics,
+            check_post_sanity,
+            submit_assessment,
         ],
     )
