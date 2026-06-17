@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlertTriangle, Check, ChevronDown, RefreshCw, Send, Sparkles, X } from "lucide-react";
+import { AlertTriangle, Check, ChevronDown, Download, RefreshCw, Send, Sparkles, X } from "lucide-react";
 
 /**
  * Pre-publish review panel — additive + collapsible. Renders the PUBLISH_ASSESSMENT
@@ -61,7 +61,7 @@ function MarkerRow({ m }) {
   );
 }
 
-export default function PublishReviewPanel({ assessment, reviewing = false, stale = false, onImprove, onRerun, onPublish }) {
+export default function PublishReviewPanel({ assessment, reviewing = false, stale = false, published = false, onImprove, onRerun, onPublish, onDownload }) {
   const [open, setOpen] = useState(true);
   // Re-open whenever a fresh assessment lands.
   useEffect(() => { if (assessment) setOpen(true); }, [assessment?.generated_at]);
@@ -99,7 +99,7 @@ export default function PublishReviewPanel({ assessment, reviewing = false, stal
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold">Pre-publish review</span>
+            <span className="text-sm font-semibold">{published ? "Content review" : "Pre-publish review"}</span>
             <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${bm.soft} ${bm.text}`}>{a.band}</span>
           </div>
           <p className="mt-0.5 text-xs text-muted-foreground">
@@ -145,36 +145,52 @@ export default function PublishReviewPanel({ assessment, reviewing = false, stal
           </div>
 
           <div className="flex flex-wrap gap-2 pt-1">
-            {/* Once the draft has changed since this review, the useful next step
-                is to re-score it — so the primary action flips to "Rerun review".
-                Otherwise it's "Improve with Duct" (hand the fixes to the agent). */}
-            {stale && onRerun ? (
-              <button
-                type="button"
-                onClick={onRerun}
-                disabled={reviewing}
-                className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
-              >
-                <RefreshCw className="size-3.5" /> {reviewing ? "Reviewing…" : "Rerun review"}
-              </button>
-            ) : onImprove ? (
-              <button
-                type="button"
-                onClick={onImprove}
-                disabled={reviewing}
-                className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
-              >
-                <Sparkles className="size-3.5" /> Improve with Duct
-              </button>
-            ) : null}
-            {onPublish && (
-              <button
-                type="button"
-                onClick={onPublish}
-                className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold hover:bg-muted/50"
-              >
-                <Send className="size-3.5" /> Publish now
-              </button>
+            {published ? (
+              // Already live: this is a read-only record of the review — the only
+              // action is downloading the slides (to repost / archive).
+              onDownload && (
+                <button
+                  type="button"
+                  onClick={onDownload}
+                  className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold hover:bg-muted/50"
+                >
+                  <Download className="size-3.5" /> Download slides
+                </button>
+              )
+            ) : (
+              <>
+                {/* Once the draft has changed since this review, the useful next step
+                    is to re-score it — so the primary action flips to "Rerun review".
+                    Otherwise it's "Improve with Duct" (hand the fixes to the agent). */}
+                {stale && onRerun ? (
+                  <button
+                    type="button"
+                    onClick={onRerun}
+                    disabled={reviewing}
+                    className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+                  >
+                    <RefreshCw className="size-3.5" /> {reviewing ? "Reviewing…" : "Rerun review"}
+                  </button>
+                ) : onImprove ? (
+                  <button
+                    type="button"
+                    onClick={onImprove}
+                    disabled={reviewing}
+                    className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+                  >
+                    <Sparkles className="size-3.5" /> Improve with Duct
+                  </button>
+                ) : null}
+                {onPublish && (
+                  <button
+                    type="button"
+                    onClick={onPublish}
+                    className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold hover:bg-muted/50"
+                  >
+                    <Send className="size-3.5" /> Publish now
+                  </button>
+                )}
+              </>
             )}
           </div>
         </div>

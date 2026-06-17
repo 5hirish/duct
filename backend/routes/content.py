@@ -1050,6 +1050,157 @@ def get_post(post_id: UUID, db: Session = Depends(db_session)) -> PostOut:
     )
 
 
+def _clone_post_assets(db: Session, src: ContentPost, clone: ContentPost) -> None:
+    """Deep-copy the source post's CURRENT images into NEW assets owned by the
+    clone, remap the clone's slides to point at them, and re-render its HTML — so
+    the variant is fully independent (publishable + downloadable on its own, and
+    unaffected by the original's edits/deletion). Only the current per-slide image
+    + the latest composed render per slide are copied, not the regeneration
+    history. Best-effort per asset: a copy that fails leaves that slide on the
+    shared URL rather than blanking it."""
+    import copy
+    from uuid import uuid4 as _uuid4
+
+    from agents.content.schema import Slide
+    from agents.content.templates import render_slides_html
+
+    src_assets = db.execute(
+        select(ContentAsset)
+        .where(ContentAsset.post_id == src.id, ContentAsset.project_id == src.project_id)
+        .order_by(ContentAsset.created_at)   # asc → latest render wins
+    ).scalars().all()
+    if not src_assets:
+        return
+
+    by_url = {a.url: a for a in src_assets if a.url}
+    latest_render: dict[str, ContentAsset] = {}
+    for a in src_assets:
+        if a.asset_type == "slide_render":
+            sid = (a.params or {}).get("slide_id")
+            if sid:
+                latest_render[str(sid)] = a
+
+    copied: dict[str, ContentAsset] = {}   # old_url → new ContentAsset (dedup)
+
+    def _copy(a: ContentAsset) -> ContentAsset | None:
+        if a.url in copied:
+            return copied[a.url]
+        data = storage.get_bytes(a.url)
+        if not data:
+            return None
+        sub = "renders" if a.asset_type == "slide_render" else "generated"
+        ext = Path(a.filename or "").suffix or (".png" if "png" in (a.mime_type or "") else ".jpg")
+        key = f"projects/{clone.project_id}/{sub}/{_uuid4().hex}{ext}"
+        new = ContentAsset(
+            project_id=clone.project_id,
+            post_id=clone.id,
+            asset_type=a.asset_type,
+            source=a.source,
+            url=storage.put_image(key, data, a.mime_type or "image/png"),
+            filename=a.filename,
+            mime_type=a.mime_type,
+            prompt=a.prompt,
+            model=a.model,
+            params=dict(a.params or {}),
+        )
+        db.add(new)
+        copied[a.url] = new
+        return new
+
+    # Deep-copy: clone.slides is still the SAME list object as src.slides, and
+    # nested items would otherwise be mutated in place — corrupting the original.
+    slides = copy.deepcopy([s for s in (clone.slides or []) if isinstance(s, dict)])
+    for s in slides:
+        u = (s.get("image_url") or "").strip()
+        if u in by_url:
+            na = _copy(by_url[u])
+            if na is not None:
+                s["image_url"] = na.url
+                s["image_asset_id"] = str(na.id)
+        for it in s.get("items") or []:
+            if isinstance(it, dict):
+                iu = (it.get("image_url") or "").strip()
+                if iu in by_url:
+                    nia = _copy(by_url[iu])
+                    if nia is not None:
+                        it["image_url"] = nia.url
+                        it["image_asset_id"] = str(nia.id)
+        ren = latest_render.get(str(s.get("slide_id")))
+        if ren is not None:
+            _copy(ren)   # the clone's own composed render (publish gathers by post_id)
+
+    clone.slides = slides
+    try:
+        clone.slides_html = render_slides_html(
+            clone.layout or "full-bleed", [Slide.model_validate(s) for s in slides]
+        )
+    except Exception:
+        logger.warning("clone: slides_html re-render failed; keeping copied html", exc_info=True)
+
+
+@router.post("/content/posts/{post_id}/clone", status_code=201)
+def clone_post(post_id: UUID, db: Session = Depends(db_session)) -> PostOut:
+    """Create a new DRAFT variant from an existing post — deep-copies the content
+    (slides + their own copies of the current images/renders, copy, layout, hooks,
+    metadata) under a fresh slug, with all publish/metrics state cleared. Lets the
+    user spin an independent version off a published (or any) post instead of
+    editing the original in place."""
+    src = db.get(ContentPost, post_id)
+    if src is None:
+        raise HTTPException(404, "Post not found")
+
+    base = src.post_dir_slug or "post"
+    taken = {
+        s for (s,) in db.execute(
+            select(ContentPost.post_dir_slug).where(ContentPost.project_id == src.project_id)
+        ).all()
+    }
+    slug = f"{base}-copy"
+    i = 2
+    while slug in taken:
+        slug = f"{base}-copy-{i}"
+        i += 1
+
+    clone = ContentPost(
+        project_id=src.project_id,
+        plan_id=src.plan_id,
+        post_dir_slug=slug,
+        pillar=src.pillar,
+        topic=src.topic,
+        topic_id=src.topic_id,
+        post_type=src.post_type,
+        format_id=src.format_id,
+        avatar_id=src.avatar_id,
+        layout=src.layout,
+        slide_count=src.slide_count,
+        slides=src.slides or [],
+        slides_html=src.slides_html,
+        caption=src.caption,
+        hashtags=src.hashtags or [],
+        tiktok_title=src.tiktok_title,
+        hook_type=src.hook_type,
+        hook_text=src.hook_text,
+        hook_emotion=src.hook_emotion,
+        save_cta=src.save_cta,
+        bridge_text=src.bridge_text,
+        strategic_note=src.strategic_note,
+        visual_brief=src.visual_brief,
+        emotional_arc=src.emotional_arc,
+        camera_ref_pool=src.camera_ref_pool,
+        image_prompts=src.image_prompts or [],
+        audio_note=src.audio_note,
+        platforms=src.platforms or [],
+        status=ContentStatus.DRAFT,   # a kept draft — shows on the board immediately
+        # publish + perf + last_assessment left at their cleared defaults
+    )
+    db.add(clone)
+    _clone_post_assets(db, src, clone)   # give the variant its own image files
+    db.commit()
+    db.refresh(clone)
+    _invalidate_analytics(clone.project_id)
+    return _enrich_one(db, clone)
+
+
 @router.post("/content/posts", status_code=201)
 def create_post(body: PostIn, db: Session = Depends(db_session)) -> PostOut:
     _project_or_404(db, body.project_id)

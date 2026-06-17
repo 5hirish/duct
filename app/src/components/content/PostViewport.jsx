@@ -2,17 +2,24 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  BarChart3,
   Check,
+  Copy,
+  ExternalLink,
+  Eye,
   Hash,
+  Heart,
   Image as ImageIcon,
   Images,
+  MessageCircle,
   RefreshCw,
   Send,
+  Share2,
   Sparkles,
   Video,
   Wand2,
 } from "lucide-react";
-import { patchPost } from "../../lib/contentApi";
+import { downloadPostSlides, patchPost, syncPostMetrics } from "../../lib/contentApi";
 import { extractStyleHead } from "../../lib/slideDoc";
 import { statusMeta } from "../../lib/contentStatus";
 import { PostStatus } from "../../lib/contentEnums";
@@ -103,7 +110,7 @@ function stripTransient(slides) {
 // Quiet period after the last manual edit before auto-saving.
 const AUTOSAVE_MS = 1000;
 
-export default function PostViewport({ payload, assessment = null, phase, canPublish = false, onPublish, onRevise, onSendMessage }) {
+export default function PostViewport({ payload, assessment = null, phase, canPublish = false, onPublish, onRevise, onClone, onSendMessage }) {
   const [draft, setDraft] = useState(null);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -111,6 +118,7 @@ export default function PostViewport({ payload, assessment = null, phase, canPub
   const [currentIndex, setCurrentIndex] = useState(0);
   const [reviewing, setReviewing] = useState(false);
   const [publishOpen, setPublishOpen] = useState(false);
+  const [cloning, setCloning] = useState(false);
   const reviewedSigRef = useRef(null);
   const router = useRouter();
 
@@ -238,6 +246,25 @@ export default function PostViewport({ payload, assessment = null, phase, canPub
     else setPublishOpen(true);
   }
 
+  // Download the composed slides + caption as a .zip (available even once posted).
+  async function handleDownloadSlides() {
+    if (!post?.id) return;
+    try {
+      const slug = post.post_dir_slug || post.id;
+      await downloadPostSlides(post.id, `${slug}-slides.zip`);
+    } catch (err) {
+      setSaveError(err.message || "Couldn't download the slides.");
+    }
+  }
+
+  // Clone → a new draft variant (the parent does the create + routes to it).
+  async function handleClone() {
+    if (!onClone) return;
+    setCloning(true);
+    try { await onClone(); } catch (err) { setSaveError(err.message || "Couldn't clone the post."); }
+    finally { setCloning(false); }
+  }
+
   // Auto-save: debounce manual edits and persist them at the current status
   // (the agent's own edits already persist server-side). Pending posts are
   // excluded — keeping one is a deliberate promotion via the Save button. We
@@ -259,6 +286,10 @@ export default function PostViewport({ payload, assessment = null, phase, canPub
   const slideIdx = Math.min(currentIndex, Math.max(0, slides.length - 1));
 
   const status = post.status || "pending";
+  const isPosted = status === PostStatus.POSTED;
+  // Two-column on the full-width static view (no live chat): slides on the right,
+  // details on the left. The live editor + mobile stay single-column.
+  const twoCol = !onSendMessage && slides.length > 0;
   const meta = statusMeta(status);
   const TypeIcon = TYPE_ICON[post.post_type] || Images;
   const platforms = Array.isArray(post.platforms) ? post.platforms : [];
@@ -267,6 +298,24 @@ export default function PostViewport({ payload, assessment = null, phase, canPub
     : post.scheduled_at
     ? `Scheduled ${new Date(post.scheduled_at).toLocaleDateString("en", { month: "short", day: "numeric" })}`
     : "Not scheduled";
+
+  // Body blocks — composed into one or two columns below.
+  const metricsEl = isPosted && post.post_bridge_post_id ? <PostMetrics post={post} /> : null;
+  const reviewEl = (reviewing || matchesPost) ? (
+    <PublishReviewPanel
+      assessment={matchesPost ? effectiveAssessment : null}
+      reviewing={reviewing}
+      stale={assessmentStale}
+      published={isPosted}
+      onImprove={!isPosted && onSendMessage ? handleImprove : undefined}
+      onRerun={!isPosted && onSendMessage ? handleReview : undefined}
+      onPublish={!isPosted ? handlePanelPublish : undefined}
+      onDownload={handleDownloadSlides}
+    />
+  ) : null;
+  const carouselEl = (
+    <SlidesCarousel slides={slides} headHtml={headHtml} index={slideIdx} onIndexChange={setCurrentIndex} />
+  );
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
@@ -340,11 +389,21 @@ export default function PostViewport({ payload, assessment = null, phase, canPub
                 <Send className="size-3.5" /> {reviewing ? "Reviewing…" : "Review & publish"}
               </button>
             )}
-            {onRevise && (
+            {isPosted && onClone ? (
+              <button
+                type="button"
+                onClick={handleClone}
+                disabled={cloning}
+                title="Create a new draft variant from this post"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                <Copy className="size-3.5" /> {cloning ? "Cloning…" : "Clone"}
+              </button>
+            ) : onRevise ? (
               <button type="button" onClick={onRevise} className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90">
                 <Wand2 className="size-3.5" /> Revise with Duct
               </button>
-            )}
+            ) : null}
           </div>
         </div>
         {saveError && <p className="mt-2 text-xs text-destructive">{saveError}</p>}
@@ -354,24 +413,28 @@ export default function PostViewport({ payload, assessment = null, phase, canPub
           Slide layout, image prompts, hook and creative-brief edits all happen
           through the agent chat, so the pane stays focused on what ships. */}
       <div className="min-h-0 flex-1 overflow-auto">
-        <div className="mx-auto max-w-2xl space-y-4 p-5">
-          <SlidesCarousel slides={slides} headHtml={headHtml} index={slideIdx} onIndexChange={setCurrentIndex} />
-
-          <BulkImageBar slides={slides} onSendMessage={onSendMessage} commitIfDirty={commitIfDirty} currentIndex={slideIdx} />
-
-          {(reviewing || matchesPost) && (
-            <PublishReviewPanel
-              assessment={matchesPost ? effectiveAssessment : null}
-              reviewing={reviewing}
-              stale={assessmentStale}
-              onImprove={onSendMessage ? handleImprove : undefined}
-              onRerun={onSendMessage ? handleReview : undefined}
-              onPublish={handlePanelPublish}
-            />
-          )}
-
-          <PostCopy post={post} patch={patch} />
-        </div>
+        {twoCol ? (
+          // Desktop full-width view: slides on the right, everything else on the
+          // left. Collapses to a single column (slides first) on mobile.
+          <div className="mx-auto grid max-w-5xl gap-5 p-5 md:grid-cols-[minmax(0,1fr)_minmax(280px,360px)]">
+            <div className="order-2 space-y-4 md:order-1">
+              {metricsEl}
+              {reviewEl}
+              <PostCopy post={post} patch={patch} />
+            </div>
+            <div className="order-1 md:order-2 md:sticky md:top-5 md:self-start">
+              {carouselEl}
+            </div>
+          </div>
+        ) : (
+          <div className="mx-auto max-w-2xl space-y-4 p-5">
+            {metricsEl}
+            {carouselEl}
+            <BulkImageBar slides={slides} onSendMessage={onSendMessage} commitIfDirty={commitIfDirty} currentIndex={slideIdx} />
+            {reviewEl}
+            <PostCopy post={post} patch={patch} />
+          </div>
+        )}
       </div>
 
       {/* Fallback publish flow for the live session (the detail page passes its
@@ -395,6 +458,127 @@ export default function PostViewport({ payload, assessment = null, phase, canPub
 
 function prettify(s) {
   return String(s || "").replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+// ---------------------------------------------------------------------------
+// Performance — PostBridge metrics for a published post
+// ---------------------------------------------------------------------------
+
+const METRIC_TILES = [
+  { key: "view_count",    label: "Views",    icon: Eye },
+  { key: "like_count",    label: "Likes",    icon: Heart },
+  { key: "comment_count", label: "Comments", icon: MessageCircle },
+  { key: "share_count",   label: "Shares",   icon: Share2 },
+];
+
+function fmtCount(n) {
+  if (n == null) return "—";
+  if (n >= 1e6) return (n / 1e6).toFixed(n % 1e6 === 0 ? 0 : 1).replace(/\.0$/, "") + "M";
+  if (n >= 1e3) return (n / 1e3).toFixed(n % 1e3 === 0 ? 0 : 1).replace(/\.0$/, "") + "K";
+  return n.toLocaleString();
+}
+
+// share_url comes from PostBridge (external) — only allow http(s) so a
+// javascript:/data: URL can't ride into an <a href> (XSS).
+function safeHref(u) {
+  if (typeof u !== "string" || !u) return null;
+  try {
+    const url = new URL(u, typeof window !== "undefined" ? window.location.origin : "https://getduct.ai");
+    return /^https?:$/.test(url.protocol) ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+function timeAgo(iso) {
+  if (!iso) return "";
+  const s = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (s < 60) return "just now";
+  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+  return `${Math.floor(s / 86400)}d ago`;
+}
+
+// Live PostBridge metrics for a published post. Shows stored perf immediately,
+// auto-pulls once if we have nothing yet, and offers a manual refresh. The post
+// is published (post_bridge_post_id present) before this renders.
+function PostMetrics({ post }) {
+  const [perf, setPerf] = useState(post.perf || {});
+  const [syncing, setSyncing] = useState(false);
+  const [note, setNote] = useState("");
+  const fetchedRef = useRef(false);
+
+  const hasAny = METRIC_TILES.some((t) => perf?.[t.key] != null);
+
+  async function refresh() {
+    setSyncing(true); setNote("");
+    try {
+      const updated = await syncPostMetrics(post.id);
+      setPerf(updated?.perf || {});
+    } catch (e) {
+      const msg = e?.message || "";
+      setNote(/publish|processing|finished/i.test(msg)
+        ? "Metrics appear once the platform finishes processing the post."
+        : "Couldn't refresh metrics — try again shortly.");
+    } finally {
+      setSyncing(false);
+    }
+  }
+
+  // Best-effort first load when there's nothing stored yet.
+  useEffect(() => {
+    if (!fetchedRef.current && !hasAny) { fetchedRef.current = true; refresh(); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const shareUrl = safeHref(perf?.share_url);
+
+  return (
+    <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="flex items-center gap-1.5 text-sm font-semibold">
+          <BarChart3 className="size-4 text-primary" /> Performance
+        </h3>
+        <div className="flex items-center gap-2">
+          {perf?.last_synced_at && (
+            <span className="text-[11px] text-muted-foreground">Updated {timeAgo(perf.last_synced_at)}</span>
+          )}
+          <button
+            type="button"
+            onClick={refresh}
+            disabled={syncing}
+            className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs font-medium hover:bg-muted/50 disabled:opacity-50"
+          >
+            <RefreshCw className={`size-3.5 ${syncing ? "animate-spin" : ""}`} /> {syncing ? "Syncing…" : "Refresh"}
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-4 gap-2">
+        {METRIC_TILES.map(({ key, label, icon: Icon }) => (
+          <div key={key} className="rounded-xl border border-border/60 bg-muted/30 px-3 py-2.5">
+            <Icon className="size-4 text-muted-foreground" />
+            <p className="mt-1.5 text-lg font-semibold leading-none tabular-nums">
+              {syncing && !hasAny ? "…" : fmtCount(perf?.[key])}
+            </p>
+            <p className="mt-1 text-[11px] text-muted-foreground">{label}</p>
+          </div>
+        ))}
+      </div>
+
+      {note && <p className="text-[11px] text-muted-foreground">{note}</p>}
+      {shareUrl && (
+        <a
+          href={shareUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+        >
+          <ExternalLink className="size-3.5" /> View on platform
+        </a>
+      )}
+    </section>
+  );
 }
 
 // Passive save status for auto-saved (non-pending) posts. Renders as quiet text,

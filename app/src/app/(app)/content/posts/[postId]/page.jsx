@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import ContentWorkspace from "@/components/content/ContentWorkspace";
 import PostViewport from "@/components/content/PostViewport";
 import PublishModal from "@/components/content/PublishModal";
-import { getPost } from "@/lib/contentApi";
+import { clonePost, getPost } from "@/lib/contentApi";
 import { getActiveProjectId } from "@/lib/projects";
 
 /**
@@ -107,6 +107,11 @@ export default function PostDetailPage() {
 
   const canPublish = post.status !== "posted";
 
+  async function handleClone() {
+    const created = await clonePost(post.id);
+    router.push(`/content/posts/${created.id}`);   // open the new draft variant
+  }
+
   return (
     <div className="h-full">
       <PostViewport
@@ -114,6 +119,7 @@ export default function PostDetailPage() {
         canPublish={canPublish}
         onPublish={() => setPublishOpen(true)}
         onRevise={() => router.push(`/content/posts/${postId}?revise=1`)}
+        onClone={handleClone}
       />
 
       <PublishModal

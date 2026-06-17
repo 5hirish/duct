@@ -458,6 +458,17 @@ export async function syncPostMetrics(postId) {
   return out;
 }
 
+/** Clone a post into a fresh DRAFT variant; returns the new post. */
+export async function clonePost(postId) {
+  const res = await fetch(
+    `${BASE}/api/content/posts/${encodeURIComponent(postId)}/clone`,
+    { method: "POST", headers: backendApiHeaders() },
+  );
+  const out = await jsonOrThrow(res);
+  invalidatePosts();
+  return out;
+}
+
 export async function listSocialAccounts(projectId, platform) {
   const url = new URL(`${BASE}/api/content/social-accounts`);
   url.searchParams.set("project_id", projectId);
