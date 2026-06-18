@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Images, Video, Image as ImageIcon, Clock, ArrowRight, Sparkles, RefreshCw, Settings2 } from "lucide-react";
+import { Images, Video, Image as ImageIcon, Clock, ArrowRight, Sparkles, RefreshCw, Settings2, ExternalLink } from "lucide-react";
 import PipelineProgress from "../PipelineProgress";
 import { ContentStep } from "../../lib/contentEvents";
 import { parseDate, dayKey } from "../../lib/contentSchedule";
@@ -240,6 +240,25 @@ function SlotCard({ day, time, onDraft }) {
       </div>
 
       {day?.rationale && <p className="mt-1 text-[11px] leading-snug text-muted-foreground/80">{day.rationale}</p>}
+
+      {Array.isArray(day?.evidence) && day.evidence.length > 0 && (
+        <div className="mt-1.5 flex flex-wrap gap-1">
+          {day.evidence.slice(0, 3).map((ev, i) => (
+            <a
+              key={i}
+              href={ev.tiktok_url}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="inline-flex max-w-full items-center gap-1 rounded-full border border-border/60 bg-muted/50 px-1.5 py-0.5 text-[10px] text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+              title={`Grounded in a saved discovery — ${ev.tiktok_url}`}
+            >
+              <ExternalLink className="size-2.5 shrink-0" />
+              <span className="truncate">{ev.label || "discovery"}</span>
+            </a>
+          ))}
+        </div>
+      )}
 
       <button
         type="button"

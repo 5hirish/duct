@@ -83,6 +83,10 @@ class ScrapedPostMusic(BaseModel):
     music_name: str = Field(default="", validation_alias="musicName")
     music_author: str = Field(default="", validation_alias="musicAuthor")
     music_id: str = Field(default="", validation_alias="musicId")
+    # `music_original` flags an original sound (rideable trend); play_url is the
+    # audio so a future "trending sounds" view can preview / analyse it.
+    music_original: bool = Field(default=False, validation_alias="musicOriginal")
+    play_url: str = Field(default="", validation_alias="playUrl")
 
 
 class ScrapedPostVideo(BaseModel):
@@ -130,6 +134,15 @@ class ScrapedPost(BaseModel):
     # Populated only when the run requested comments (profile/competitor mode) —
     # the audience's own words: questions + objections to mine for hooks.
     comments:          list[ScrapedComment] = Field(default_factory=list)
+    # Richer signal kept for analysis/filtering (mostly free passthrough). Most
+    # are always returned; subtitle_links only when transcription is requested.
+    mentions:          list[str] = Field(default_factory=list)
+    effect_stickers:   list[dict] = Field(default_factory=list, validation_alias="effectStickers")
+    subtitle_links:    list[dict] = Field(default_factory=list, validation_alias="subtitleLinks")
+    text_language:     str = Field(default="", validation_alias="textLanguage")
+    location_created:  str = Field(default="", validation_alias="locationCreated")
+    is_ad:             bool = Field(default=False, validation_alias="isAd")
+    is_sponsored:      bool = Field(default=False, validation_alias="isSponsored")
 
 
 class DiscoveredReferenceRecord(BaseModel):

@@ -59,6 +59,17 @@ class Perf(BaseModel):
     last_synced_at: datetime | None = None
 
 
+class DayEvidence(BaseModel):
+    """A saved TikTok discovery that grounds a plan slot — rendered as a citation
+    chip in the planner so the plan shows its receipts (what's already working)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    tiktok_url: str = ""
+    label: str = ""      # short, e.g. "@author · 1.2M plays" or the winning hook
+    asset_id: str = ""   # optional saved ContentAsset id (for future thumbnail resolution)
+
+
 class Day(BaseModel):
     """One entry in ContentPlan.days[] — an ordered content item for the month.
 
@@ -91,6 +102,7 @@ class Day(BaseModel):
     objective: str = ""                       # what this post should drive (e.g. saves, profile visits, trial signups)
     hook: str = ""                            # the literal scroll-stopping opening line (first 3s)
     hook_type: str = ""                       # curiosity | question | bold_statement | pattern_interrupt | relatable
+    evidence: list[DayEvidence] = Field(default_factory=list)  # saved discoveries that ground this slot
 
 
 class AvatarRefCell(BaseModel):

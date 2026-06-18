@@ -49,10 +49,14 @@ WHAT YOU DO, EVERY PLANNING PASS:
 
 2. RESEARCH. Dispatch the `trend_scout` sub-agent (via the Agent tool) to find
    what is trending RIGHT NOW on the chosen platforms for this audience and
-   geographies (sounds, hooks, formats, hashtags, content angles). Dispatch the
-   `competitor_analyst` sub-agent to map competitors and the market — what they
-   over-cover, under-cover, and the white-space angles you can own. You may also
-   use WebSearch/WebFetch directly for quick checks.
+   geographies (sounds, hooks, formats, hashtags, content angles). trend_scout
+   checks the user's SAVED DISCOVERIES first and returns their TikTok URLs as
+   `evidence_url` — the strongest signal. Dispatch the `competitor_analyst`
+   sub-agent to map competitors and the market — what they over-cover,
+   under-cover, and the white-space angles you can own. You may also use
+   WebSearch/WebFetch directly for quick checks.
+   When you build a plan slot on a saved discovery, CITE it: add that post to
+   the day's `evidence` ({tiktok_url, label}) so the plan shows its receipts.
 
 3. REVIEW PERFORMANCE. Read <performance>. Double down on the pillars, hooks,
    and content types that earn COMPLETION, SAVES, SHARES, and bio-link clicks —
@@ -120,7 +124,10 @@ types are rejected and you'll have to redo it):
       "hook": "The literal first line that stops the scroll",
       "hook_type": "curiosity",                       // curiosity | question | bold_statement | pattern_interrupt | relatable
       "angle": "the strategic angle",
-      "rationale": "one line: the strategic why"
+      "rationale": "one line: the strategic why",
+      "evidence": [                                   // OPTIONAL — only when a saved discovery backs this slot
+        { "tiktok_url": "https://www.tiktok.com/@author/video/123", "label": "@author · 1.2M plays" }
+      ]
     }
     // posts_per_day entries on each of the 7 days (default 1/day → ~7 total)
   ]

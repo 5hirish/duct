@@ -45,7 +45,7 @@ from pathlib import Path
 from typing import Any
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import delete, select
@@ -2754,14 +2754,20 @@ async def discover_results(dataset_id: str, response: Response, limit: int = 200
 
 
 @router.post("/content/discover/save", status_code=201)
-def discover_save(body: DiscoverSaveIn, db: Session = Depends(db_session)) -> ContentAssetOut:
+def discover_save(
+    body: DiscoverSaveIn,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(db_session),
+) -> ContentAssetOut:
     """Persist one discovered post as a ContentAsset reference.
 
-    No bytes downloaded — we save the metadata + slideshow image URLs in
-    `params` so the agent can reference them by URL when generating new
-    posts. Downloading + caching the image bytes is a follow-up.
+    Returns immediately with the metadata + source URLs; a background task then
+    downloads the cover + slideshow image bytes into our bucket (params.media)
+    so the reference survives TikTok's signed-URL expiry and can be analysed
+    later. See service.discovery.capture_reference_media.
     """
     from service.apify.schema import ScrapedPost
+    from service.discovery import capture_reference_media
 
     _project_or_404(db, body.project_id)
     try:
@@ -2793,4 +2799,10 @@ def discover_save(body: DiscoverSaveIn, db: Session = Depends(db_session)) -> Co
     db.add(asset)
     db.commit()
     db.refresh(asset)
+
+    # Fire-and-forget: pull the cover + slideshow bytes into our bucket before
+    # TikTok's signed CDN URLs expire. Runs after the response is sent.
+    background_tasks.add_task(
+        capture_reference_media, asset.id, post.model_dump(mode="json")
+    )
     return _asset_out(asset)

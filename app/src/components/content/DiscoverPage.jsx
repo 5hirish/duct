@@ -100,6 +100,71 @@ function normHandle(s) {
   return String(s || "").trim().replace(/^@+/, "").toLowerCase();
 }
 
+function firstLine(text) {
+  const t = String(text || "").trim();
+  if (!t) return "";
+  const line = t.split(/[\n.!?]/)[0].trim();
+  return line.length > 90 ? `${line.slice(0, 88)}…` : line;
+}
+
+// Turn the scraped set into the "what's working" read-out. All client-side —
+// no extra Apify cost. Surfaces the decisions a marketer actually makes:
+// which format, which sounds, which hashtags, what hooks, and the bar to beat.
+function computeSynthesis(posts) {
+  if (!posts.length) return null;
+  const n = posts.length;
+  const avgEng = (arr) => (arr.length ? arr.reduce((s, p) => s + engagement(p), 0) / arr.length : 0);
+
+  const slideshows = posts.filter((p) => p.is_slideshow);
+  const videos = posts.filter((p) => !p.is_slideshow);
+
+  const engs = posts.map(engagement).sort((a, b) => a - b);
+  const median = engs[Math.floor(engs.length / 2)] || 0;
+  const p75 = engs[Math.floor(engs.length * 0.75)] || 0;
+
+  const soundMap = new Map();
+  for (const p of posts) {
+    const m = p.music_meta;
+    if (!m?.music_name) continue;
+    const key = m.music_id || `${m.music_name}|${m.music_author}`;
+    const e = soundMap.get(key) || { name: m.music_name, original: !!m.music_original, count: 0, plays: 0 };
+    e.count += 1;
+    e.plays += p.play_count || 0;
+    soundMap.set(key, e);
+  }
+  const sounds = [...soundMap.values()]
+    .sort((a, b) => b.count - a.count || b.plays - a.plays)
+    .slice(0, 5);
+
+  const tagMap = new Map();
+  for (const p of posts) {
+    for (const t of p.hashtags || []) {
+      const e = tagMap.get(t) || { tag: t, count: 0 };
+      e.count += 1;
+      tagMap.set(t, e);
+    }
+  }
+  const tags = [...tagMap.values()].sort((a, b) => b.count - a.count).slice(0, 10);
+
+  const hooks = [...posts]
+    .sort((a, b) => engagement(b) - engagement(a))
+    .slice(0, 4)
+    .map((p) => ({ text: firstLine(p.text), eng: engagement(p), url: p.web_video_url }))
+    .filter((h) => h.text);
+
+  return {
+    n,
+    slideshows: slideshows.length,
+    slideEng: avgEng(slideshows),
+    videoEng: avgEng(videos),
+    median,
+    p75,
+    sounds,
+    tags,
+    hooks,
+  };
+}
+
 export default function DiscoverPage({ projectId }) {
   const [mode, setMode]             = useState("hashtag");
   const [tags, setTags]             = useState([]);     // hashtag mode
@@ -419,6 +484,7 @@ export default function DiscoverPage({ projectId }) {
       {/* Results */}
       {results.length > 0 && (
         <div className="space-y-3">
+          <SynthesisPanel posts={results} />
           <div className="flex items-center justify-between gap-3">
             <p className="text-xs text-muted-foreground">
               <span className="font-medium text-foreground tabular-nums">{results.length}</span> posts found
@@ -662,5 +728,87 @@ function Metric({ icon: Icon, value }) {
     <span className="inline-flex items-center gap-1 tabular-nums">
       <Icon className="h-3.5 w-3.5" /> {fmtNum(value)}
     </span>
+  );
+}
+
+function Tile({ title, children }) {
+  return (
+    <div className="rounded-lg border border-border/60 bg-background/40 p-2.5">
+      <p className="mb-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">{title}</p>
+      <div className="space-y-1">{children}</div>
+    </div>
+  );
+}
+
+function SynthesisPanel({ posts }) {
+  const s = useMemo(() => computeSynthesis(posts), [posts]);
+  if (!s) return null;
+  const pct = (x) => `${(x * 100).toFixed(1)}%`;
+  const slidePct = Math.round((s.slideshows / s.n) * 100);
+
+  return (
+    <section className="rounded-xl border border-border/70 bg-card p-4">
+      <h3 className="mb-3 flex flex-wrap items-center gap-x-1.5 text-xs font-semibold text-foreground">
+        <Sparkles className="h-3.5 w-3.5 text-primary" /> What&apos;s working
+        <span className="font-normal text-muted-foreground">· median {pct(s.median)} eng · top quartile {pct(s.p75)}</span>
+      </h3>
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Tile title="Format split">
+          <div className="flex h-2 overflow-hidden rounded-full bg-muted">
+            <div className="bg-primary" style={{ width: `${slidePct}%` }} />
+          </div>
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="font-medium text-foreground">Slides {slidePct}% · {pct(s.slideEng)}</span>
+            <span className="text-muted-foreground">Video {100 - slidePct}% · {pct(s.videoEng)}</span>
+          </div>
+        </Tile>
+
+        <Tile title="Rising sounds">
+          {s.sounds.length ? (
+            s.sounds.map((snd, i) => (
+              <div key={i} className="flex items-center justify-between gap-2 text-[11px]">
+                <span className="flex min-w-0 items-center gap-1">
+                  <Music2 className="h-3 w-3 shrink-0 text-muted-foreground" />
+                  <span className="truncate">{snd.name}</span>
+                  {snd.original && <span className="shrink-0 rounded bg-primary/10 px-1 text-[9px] font-medium text-primary">orig</span>}
+                </span>
+                <span className="shrink-0 tabular-nums text-muted-foreground">{snd.count}×</span>
+              </div>
+            ))
+          ) : (
+            <p className="text-[11px] text-muted-foreground/60">No sound data</p>
+          )}
+        </Tile>
+
+        <Tile title="Top hashtags">
+          {s.tags.length ? (
+            <div className="flex flex-wrap gap-1">
+              {s.tags.map((t) => (
+                <span key={t.tag} className="inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-[10px]">
+                  #{t.tag}<span className="tabular-nums text-muted-foreground">{t.count}</span>
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="text-[11px] text-muted-foreground/60">No hashtags</p>
+          )}
+        </Tile>
+      </div>
+
+      {s.hooks.length > 0 && (
+        <div className="mt-3 border-t border-border/40 pt-3">
+          <p className="mb-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">Winning hooks</p>
+          <ul className="space-y-1">
+            {s.hooks.map((h, i) => (
+              <li key={i} className="flex items-start gap-2 text-[11px]">
+                <span className="shrink-0 rounded bg-primary/10 px-1 font-medium tabular-nums text-primary">{pct(h.eng)}</span>
+                <a href={h.url} target="_blank" rel="noreferrer" className="line-clamp-1 hover:underline">{h.text}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </section>
   );
 }
