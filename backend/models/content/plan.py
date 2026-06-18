@@ -34,6 +34,13 @@ class ContentPlan(SQLModel, table=True):
         default_factory=list,
         sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="[]"),
     )
+    # Strategist narrative — written by the content_planner agent. Holds the
+    # long-term arc (narrative_arc), why-this-order (sequencing_rationale), and
+    # the content-type mix so each weekly refresh can continue the thread.
+    strategy: dict = Field(
+        default_factory=dict,
+        sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="{}"),
+    )
     status: str = Field(default="draft", sa_column=Column(String, nullable=False, server_default="draft"))
     created_at: datetime = Field(
         default_factory=_utcnow,

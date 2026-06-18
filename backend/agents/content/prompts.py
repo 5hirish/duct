@@ -1362,6 +1362,11 @@ Do NOT generate or edit images, and do NOT publish — your job ends at the revi
 """
 
 
+# Public alias for the <content_research> renderer — reused by the content
+# planner agent (agents/planner/prompts.py). Keep stable so cross-package
+# callers don't depend on the private name.
+render_research_stanza = _research_stanza
+
 __all__ = [
     "DRAFT_POST_PROMPT",
     "ORCHESTRATOR_BASE_PROMPT",
@@ -1370,4 +1375,5 @@ __all__ = [
     "build_orchestrator_system_prompt",
     "build_plan_user_prompt",
     "build_post_user_prompt",
+    "render_research_stanza",
 ]

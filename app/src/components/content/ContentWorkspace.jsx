@@ -14,6 +14,7 @@ import {
   invalidatePosts,
   mediaUrl,
   openPlanStream,
+  openPlannerStream,
   openPostStream,
   postSlideRender,
   reattachContentStream,
@@ -27,7 +28,7 @@ import { captureSlideDocToPng } from "../../lib/slideCapture";
  * Universal split-pane workspace for the content agent.
  *
  * Props:
- *   - mode: 'plan_month' | 'draft_post'
+ *   - mode: 'plan_month' | 'draft_post' | 'update_plan' (Content Planner)
  *   - context: { projectId } | { projectId, planId, dayIndex, topic, pillar, postId }
  *   - renderViewport: ({ payload, mode, sessionId, phase, onSendMessage }) => ReactNode
  *     Called every render with the latest plan/post payload from the agent.
@@ -69,6 +70,10 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
   // The params we actually open with — context, unless Start fresh overrode it.
   const openContext = openOverride || context;
 
+  // Which unified agent backs this mode. The Content Planner (update_plan) is a
+  // distinct agent type; plan_month/draft_post are the Content Studio agent.
+  const agentType = mode === "update_plan" ? "content_planner" : "tiktok_studio";
+
   // ---------------------------------------------------------------------------
   // Retry
   // ---------------------------------------------------------------------------
@@ -96,14 +101,16 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
     const convId = conversationIdRef.current;
     // Archive the old conversation now; start_fresh:true on reopen is the
     // backstop (it also archives any active conversation for the artifact).
-    if (convId) await archiveContentConversation(convId);
+    // Scope to this mode's agent type so the planner's conversation is archived
+    // under content_planner (not tiktok_studio).
+    if (convId) await archiveContentConversation(convId, agentType);
     abortRef.current?.abort();
-    if (sessionIdRef.current) closeContentSession(sessionIdRef.current).catch(() => {});
+    if (sessionIdRef.current) closeContentSession(sessionIdRef.current, agentType).catch(() => {});
 
     // Bind the new conversation to the same artifact so it stays the post's
     // active chat. artifact ids come straight off the context.
-    const artifactType = mode === "plan_month" ? "plan" : "post";
-    const artifactId   = mode === "plan_month" ? context.planId : context.postId;
+    const artifactType = mode === "draft_post" ? "post" : "plan";
+    const artifactId   = mode === "draft_post" ? context.postId : context.planId;
 
     setMessages([]);
     setPayload(null);
@@ -151,7 +158,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
       // close the orphan so its worker is cancelled instead of racing the
       // surviving session on the shared CLI config dir.
       if (cancelled) {
-        closeContentSession(sid).catch(() => {});
+        closeContentSession(sid, agentType).catch(() => {});
         return;
       }
       sessionIdRef.current = sid;
@@ -181,13 +188,16 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
     async function reconnect() {
       const sid = sessionIdRef.current;
       if (sid) {
-        try { return await reattachContentStream(sid, { signal: ctrl.signal }); }
+        try { return await reattachContentStream(sid, { signal: ctrl.signal, agentType }); }
         catch { /* session past grace → resume-create below */ }
       }
       if (dead()) return null;
-      const artifactType = mode === "plan_month" ? "plan" : "post";
-      const artifactId   = mode === "plan_month" ? context.planId : context.postId;
-      const opener = mode === "plan_month" ? openPlanStream : openPostStream;
+      const artifactType = mode === "draft_post" ? "post" : "plan";
+      const artifactId   = mode === "draft_post" ? context.postId : context.planId;
+      const opener =
+        mode === "update_plan" ? openPlannerStream
+        : mode === "plan_month" ? openPlanStream
+        : openPostStream;
       const { body } = await opener(
         {
           ...openContext,
@@ -214,7 +224,10 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
           } catch { /* non-fatal: server still resumes; UI just lacks history */ }
         }
 
-        const opener = mode === "plan_month" ? openPlanStream : openPostStream;
+        const opener =
+        mode === "update_plan" ? openPlannerStream
+        : mode === "plan_month" ? openPlanStream
+        : openPostStream;
         const { body } = await opener(openContext, { signal: ctrl.signal, onSession: handleSession });
         if (cancelled) return;
 
@@ -262,7 +275,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
       ctrl.abort();
       const sid = sessionIdRef.current || localSid;
       if (sid) {
-        closeContentSession(sid).catch(() => {});
+        closeContentSession(sid, agentType).catch(() => {});
         if (sessionIdRef.current === sid) sessionIdRef.current = null;
       }
     };
@@ -472,7 +485,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
     setPendingQuestions(null);
     setPhase(Phase.PIPELINE);
     try {
-      await answerContentQuestions(sessionIdRef.current, answers);
+      await answerContentQuestions(sessionIdRef.current, answers, agentType);
     } catch (err) {
       setMessages((prev) => [
         ...prev,
@@ -498,7 +511,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
     setPhase(Phase.CHATTING);
     setIsAgentTyping(true);
     try {
-      await sendContentChat(sessionIdRef.current, content);
+      await sendContentChat(sessionIdRef.current, content, agentType);
     } catch (err) {
       setIsAgentTyping(false);
       setMessages((prev) => [
@@ -534,7 +547,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
   function handleStop() {
     abortRef.current?.abort();
     if (sessionIdRef.current) {
-      closeContentSession(sessionIdRef.current).catch(() => {});
+      closeContentSession(sessionIdRef.current, agentType).catch(() => {});
     }
     setIsAgentTyping(false);
     setPhase((prev) =>
@@ -562,7 +575,10 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
   // phase-based) so the user can stop in-flight chat without falling into a
   // FAILED state.
   const isStreaming = isRunning || (phase === Phase.CHATTING && isAgentTyping);
-  const paneLabel = mode === "plan_month" ? "30-day plan" : "Post draft";
+  const paneLabel =
+    mode === "update_plan" ? "7-day plan"
+    : mode === "plan_month" ? "30-day plan"
+    : "Post draft";
   const rightStatus = hasPayload ? "ready" : isRunning ? "busy" : "idle";
 
   const viewportEl = (

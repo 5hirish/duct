@@ -64,6 +64,7 @@ from agents.content.v3.runner import (
     create_plan_session,
     get_session,
 )
+from agents.planner.schema import PlannerConfig
 from agents.engines import PROVIDER_CONFIG_ATTR, Engine, resolve_engine_provider
 from agents.models import Platform
 from config import claude_oauth_available, get_configs
@@ -195,6 +196,33 @@ async def _run_plan_worker(
         _link_conversation_artifact(session_id, "plan")
     except Exception as exc:
         logger.exception("content: plan worker error for session %s", session_id)
+        await emit_fn({
+            "event":      ContentEvent.PIPELINE_FAILED,
+            "session_id": session_id,
+            "error":      str(exc),
+        })
+
+
+async def _run_planner_worker(
+    session_id: str,
+    project_id: UUID,
+    emit_fn: Any,
+    *,
+    start_date=None,
+) -> None:
+    """Run the Content Planner agent (update_plan) — produces the canonical
+    rolling 7-day plan. Mirrors _run_plan_worker but uses ClaudePlannerRunner."""
+    try:
+        from agents.planner.v3.runner import ClaudePlannerRunner
+
+        api_key = _resolve_api_key()
+        if not api_key and not claude_oauth_available():
+            raise ValueError("ANTHROPIC_API_KEY is not configured")
+        runner = ClaudePlannerRunner(api_key=api_key)
+        await runner.run_plan(session_id, project_id, emit_fn, start_date=start_date)
+        _link_conversation_artifact(session_id, "plan")
+    except Exception as exc:
+        logger.exception("planner: worker error for session %s", session_id)
         await emit_fn({
             "event":      ContentEvent.PIPELINE_FAILED,
             "session_id": session_id,
@@ -2297,6 +2325,36 @@ def _friendly_pb_error(exc) -> str:
     if code == 0:
         return "Couldn't reach the publishing service. Check your internet and try again."
     return msg or "Publishing failed. Please try again in a moment."
+
+
+# ---------------------------------------------------------------------------
+# Content Planner configuration (agent_contexts, agent_id='content_planner')
+# ---------------------------------------------------------------------------
+
+
+@router.get("/content/planner-config")
+def get_planner_config(project_id: UUID) -> dict:
+    """Read the saved planner config + the project's connected social accounts.
+
+    The content_planner agent writes config via its save_planner_config tool;
+    this endpoint backs the UI's display / manual reconfigure path."""
+    from agents.planner.data import linked_accounts, load_planner_config
+
+    config = load_planner_config(project_id)
+    return {
+        "config": config.model_dump(mode="json"),
+        "is_complete": config.is_complete(),
+        "connected_accounts": linked_accounts(project_id),
+    }
+
+
+@router.put("/content/planner-config")
+def put_planner_config(project_id: UUID, config: PlannerConfig) -> dict:
+    """Upsert the planner config for a project."""
+    from agents.planner.data import save_planner_config
+
+    saved = save_planner_config(project_id, config)
+    return {"config": saved.model_dump(mode="json"), "is_complete": saved.is_complete()}
 
 
 # ---------------------------------------------------------------------------

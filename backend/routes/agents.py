@@ -50,8 +50,10 @@ from agents.content.persistence import (
     load_events,
     resolve_or_create_conversation,
 )
-from agents.content.schema import DraftPostRequest, PlanRequest
-from agents.content.v3.runner import create_draft_session, create_plan_session
+from agents.content.schema import DraftPostRequest
+from agents.content.v3.runner import create_draft_session
+from agents.planner.schema import PlannerRequest
+from agents.planner.v3.runner import create_planner_session
 from agents.core import session as _core_session
 from db.session import get_session as db_session
 from agents.engines import PROVIDER_CONFIG_ATTR, resolve_engine, resolve_engine_model, resolve_engine_provider
@@ -341,7 +343,51 @@ def _inject_working_context(session: Any, content: str | list, version_id: int |
         ctx = _content_context_xml(session)
         if ctx:
             return _prepend_context(content, ctx)
+    if session.agent_type == AgentType.CONTENT_PLANNER:
+        ctx = _planner_context_xml(session)
+        if ctx:
+            return _prepend_context(content, ctx)
     return content
+
+
+def _planner_context_xml(session: Any) -> str:
+    """Serialize the planner session's active plan as an XML context block so
+    chat follow-ups act on the persisted plan. '' when no plan exists yet."""
+    from db.session import get_session as db_session
+    from models.content import ContentPlan
+
+    plan_id = getattr(session, "plan_id", None)
+    project_id = getattr(session, "project_id", None)
+    try:
+        with next(db_session()) as db:
+            plan = None
+            if plan_id is not None:
+                plan = db.get(ContentPlan, plan_id)
+            if plan is None and project_id is not None:
+                from sqlmodel import select
+                plan = db.exec(
+                    select(ContentPlan)
+                    .where(ContentPlan.project_id == project_id)
+                    .where(ContentPlan.status == "active")
+                    .order_by(ContentPlan.updated_at.desc())
+                ).first()
+            if plan is None:
+                return ""
+            payload = {
+                "id": str(plan.id),
+                "name": plan.name,
+                "start_date": plan.start_date,
+                "strategy": plan.strategy,
+                "days": plan.days,
+            }
+            return (
+                f"<working_plan id='{plan.id}'>\n"
+                f"{json.dumps(payload, default=str)}\n"
+                "</working_plan>\n\n"
+            )
+    except Exception:
+        logger.warning("agents: planner context injection failed for session %s", session.session_id, exc_info=True)
+    return ""
 
 
 def _prepend_context(content: str | list, ctx: str) -> str | list:
@@ -549,9 +595,15 @@ def _create_session_for(agent_type: str, session_id: str, body: dict):
         except Exception as exc:
             raise HTTPException(422, "tiktok_studio requires a valid project_id") from exc
 
-        mode = body.get("mode", "plan_month")
-        if mode not in ("plan_month", "draft_post"):
-            raise HTTPException(422, f"invalid mode {mode!r}")
+        # Content Studio now only drafts posts — plan generation moved to the
+        # content_planner agent. Keep the body lenient but reject plan_month.
+        mode = body.get("mode", "draft_post")
+        if mode != "draft_post":
+            raise HTTPException(
+                422,
+                "tiktok_studio only drafts posts now — use the content_planner "
+                "agent (mode=update_plan) to create or refresh the plan.",
+            )
 
         # Resume / start-fresh inputs (all optional — omitting them is the
         # normal first-open path).
@@ -562,7 +614,7 @@ def _create_session_for(agent_type: str, session_id: str, body: dict):
         # need before the session closes (commit expires the ORM instance).
         # Persistence is best-effort: if the DB is unavailable the agent still
         # runs, just without chat history / resume (conv_* stay None).
-        conv_id = conv_mode = conv_artifact_type = conv_artifact_id = None
+        conv_id = conv_artifact_type = conv_artifact_id = None
         is_resume = False
         try:
             with next(db_session()) as db:
@@ -570,7 +622,7 @@ def _create_session_for(agent_type: str, session_id: str, body: dict):
                     db,
                     agent_type=agent_type,
                     project_id=project_id,
-                    mode=mode,
+                    mode="draft_post",
                     artifact_type=body.get("artifact_type"),
                     artifact_id=_as_uuid(body.get("artifact_id")),
                     conversation_id=_as_uuid(body.get("conversation_id")),
@@ -578,18 +630,13 @@ def _create_session_for(agent_type: str, session_id: str, body: dict):
                     start_fresh=bool(body.get("start_fresh")),
                 )
                 conv_id = conv.id
-                conv_mode = conv.mode
                 conv_artifact_type = conv.artifact_type
                 conv_artifact_id = conv.artifact_id
         except Exception:
             logger.warning("agents: conversation persistence unavailable for %s — "
                            "running without history", session_id, exc_info=True)
 
-        # The conversation's own mode wins on resume (the body's may be stale).
-        if (conv_mode or mode) == "draft_post":
-            session = create_draft_session(session_id, project_id, plan_id=_as_uuid(body.get("plan_id")))
-        else:
-            session = create_plan_session(session_id, project_id)
+        session = create_draft_session(session_id, project_id, plan_id=_as_uuid(body.get("plan_id")))
 
         if conv_id is not None:
             session.conversation_id = conv_id
@@ -599,7 +646,45 @@ def _create_session_for(agent_type: str, session_id: str, body: dict):
             # _content_context_xml + PIPELINE_FINISHED see the right id on resume.
             if conv_artifact_type == "post" and conv_artifact_id:
                 session.post_id = conv_artifact_id
-            elif conv_artifact_type == "plan" and conv_artifact_id:
+        return session
+    if agent_type == AgentType.CONTENT_PLANNER:
+        try:
+            project_id = UUID(str(body["project_id"]))
+        except Exception as exc:
+            raise HTTPException(422, "content_planner requires a valid project_id") from exc
+
+        def _as_uuid(v):
+            return UUID(str(v)) if v else None
+
+        # Resolve-or-create the persisted conversation (chat history / resume),
+        # reading every field before the session closes. Best-effort.
+        conv_id = conv_artifact_id = None
+        is_resume = False
+        try:
+            with next(db_session()) as db:
+                conv, is_resume = resolve_or_create_conversation(
+                    db,
+                    agent_type=agent_type,
+                    project_id=project_id,
+                    mode="update_plan",
+                    artifact_type=body.get("artifact_type"),
+                    artifact_id=_as_uuid(body.get("artifact_id")),
+                    conversation_id=_as_uuid(body.get("conversation_id")),
+                    resume=bool(body.get("resume")),
+                    start_fresh=bool(body.get("start_fresh")),
+                )
+                conv_id = conv.id
+                conv_artifact_id = conv.artifact_id
+        except Exception:
+            logger.warning("agents: conversation persistence unavailable for %s — "
+                           "running without history", session_id, exc_info=True)
+
+        session = create_planner_session(session_id, project_id)
+        if conv_id is not None:
+            session.conversation_id = conv_id
+            session.recorder = ConversationRecorder(conv_id)
+            session.resume = is_resume
+            if conv_artifact_id:
                 session.plan_id = conv_artifact_id
         return session
     # audit + insights share the AuditSession shape.
@@ -617,6 +702,8 @@ async def _dispatch_start(
         await _start_seo_audit(session_id, body, emit_fn)
     elif agent_type == AgentType.TIKTOK_STUDIO:
         await _start_tiktok_studio(session_id, body, emit_fn)
+    elif agent_type == AgentType.CONTENT_PLANNER:
+        await _start_content_planner(session_id, body, emit_fn)
     elif agent_type == AgentType.INSIGHTS:
         await _start_insights(session_id, body, emit_fn)
     else:
@@ -624,14 +711,19 @@ async def _dispatch_start(
 
 
 async def _start_tiktok_studio(session_id: str, body: dict, emit_fn: Any) -> None:
-    """Start the Content Studio pipeline (plan_month or draft_post) as a
-    background task, streaming to the shared session.event_queue. Reuses the
-    plan/draft workers so the DB logic (Day resolution, post_id linkback) stays
-    in one place."""
+    """Start the Content Studio pipeline (draft_post) as a background task,
+    streaming to the shared session.event_queue. Plan generation moved to the
+    content_planner agent — this agent only drafts posts now."""
     # Imported lazily to avoid a route-module import cycle.
-    from routes.content import _run_draft_worker, _run_plan_worker
+    from routes.content import _run_draft_worker
 
-    mode = body.get("mode", "plan_month")
+    mode = body.get("mode", "draft_post")
+    if mode != "draft_post":
+        raise HTTPException(
+            422,
+            "tiktok_studio only supports draft_post — use the content_planner "
+            "agent to create or refresh the plan.",
+        )
     # `mode` is a dispatch discriminator, and the conversation/resume fields are
     # consumed by _create_session_for — strip them all before validating against
     # the extra="forbid" request models (which would otherwise reject the body).
@@ -644,21 +736,39 @@ async def _start_tiktok_studio(session_id: str, body: dict, emit_fn: Any) -> Non
     recorder = getattr(session, "recorder", None) if session else None
     if recorder is not None:
         emit_fn = recorder.wrap_emit(emit_fn)
-    if mode == "draft_post":
-        try:
-            req = DraftPostRequest.model_validate(config)
-        except Exception as exc:
-            raise HTTPException(422, f"Invalid draft_post config: {exc}") from exc
-        coro = _run_draft_worker(session_id, req, emit_fn)
-    elif mode == "plan_month":
-        try:
-            req = PlanRequest.model_validate(config)
-        except Exception as exc:
-            raise HTTPException(422, f"Invalid plan_month config: {exc}") from exc
-        coro = _run_plan_worker(session_id, req.project_id, emit_fn)
-    else:
-        raise HTTPException(422, f"mode must be 'plan_month' or 'draft_post', got {mode!r}")
 
+    try:
+        req = DraftPostRequest.model_validate(config)
+    except Exception as exc:
+        raise HTTPException(422, f"Invalid draft_post config: {exc}") from exc
+    coro = _run_draft_worker(session_id, req, emit_fn)
+
+    task = asyncio.create_task(coro)
+    session = get_session(session_id)
+    if session:
+        session.pipeline_task = task
+
+
+async def _start_content_planner(session_id: str, body: dict, emit_fn: Any) -> None:
+    """Start the Content Planner pipeline (update_plan) as a background task,
+    streaming to the shared session.event_queue. Mirrors _start_tiktok_studio."""
+    from routes.content import _run_planner_worker
+
+    # Strip dispatch/conversation control fields before validating the request.
+    _control_fields = {"mode", "conversation_id", "resume", "start_fresh", "artifact_type", "artifact_id"}
+    config = {k: v for k, v in body.items() if k not in _control_fields}
+    try:
+        req = PlannerRequest.model_validate(config)
+    except Exception as exc:
+        raise HTTPException(422, f"Invalid content_planner config: {exc}") from exc
+
+    # Persist the conversation by wrapping the emit callback (recorder).
+    session = get_session(session_id)
+    recorder = getattr(session, "recorder", None) if session else None
+    if recorder is not None:
+        emit_fn = recorder.wrap_emit(emit_fn)
+
+    coro = _run_planner_worker(session_id, req.project_id, emit_fn, start_date=req.start_date)
     task = asyncio.create_task(coro)
     session = get_session(session_id)
     if session:

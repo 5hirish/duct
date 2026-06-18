@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { CalendarRange } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   listPosts,
@@ -53,11 +54,19 @@ export default function ContentLandingPage() {
 
   return (
     <div className="w-full">
-      <header className="mb-6">
-        <h1 className="text-2xl font-semibold">Content Studio</h1>
-        <p className="text-sm text-muted-foreground">
-          Monthly plans, post drafts, formats, and analytics for {projectName}.
-        </p>
+      <header className="mb-6 flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold">Content Studio</h1>
+          <p className="text-sm text-muted-foreground">
+            Plans, post drafts, formats, and analytics for {projectName}.
+          </p>
+        </div>
+        <Button asChild size="sm" className="shrink-0">
+          <Link href="/content/planner">
+            <CalendarRange className="size-4" />
+            Update Plan
+          </Link>
+        </Button>
       </header>
 
       <nav className="border-b border-border/60 mb-6">

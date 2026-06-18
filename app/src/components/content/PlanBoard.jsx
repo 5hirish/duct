@@ -39,7 +39,13 @@ export default function PlanBoard({ projectId, initialPlanId = "" }) {
         const list = await listPlans(projectId);
         if (cancelled) return;
         setPlans(list);
-        setActiveId((prev) => prev || initialPlanId || list[0]?.id || "");
+        // The Content Planner's canonical rolling plan (status "active") is the
+        // default selection. Kanban stays the default view — it reads well for a
+        // 7-item plan and the full 7-day timeline lives in the planner workspace.
+        // Older 30-day plans stay available in the selector.
+        const active = Array.isArray(list) ? list.find((p) => p.status === "active") : null;
+        const chosen = initialPlanId || active?.id || list[0]?.id || "";
+        setActiveId((prev) => prev || chosen);
       } catch (e) {
         if (!cancelled) setError(e.message || "Failed to load plans.");
       } finally {

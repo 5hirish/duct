@@ -21,6 +21,8 @@ import { cached, invalidate } from "./contentCache";
 
 /** Unified agent-type id for this workspace (see backend agents/registry.py). */
 const AGENT_TYPE = "tiktok_studio";
+/** The Content Planner agent — owns the canonical rolling 7-day plan. */
+const PLANNER_AGENT_TYPE = "content_planner";
 
 // Cache TTLs (ms). Short — these only smooth out tab-switch refetches.
 const TTL_POSTS     = 60_000;
@@ -124,6 +126,28 @@ export async function openPostStream(
   return { body, sessionId: session_id, conversationId: conversation_id };
 }
 
+/**
+ * Start (or resume) a Content Planner session via the unified agent API:
+ *   POST /api/agents/content_planner/sessions  body={mode:"update_plan", project_id, start_date?}
+ *   GET  /api/agents/content_planner/sessions/{id}/stream
+ * The planner produces the project's canonical rolling 7-day plan and emits
+ * PLAN_GENERATED — the same event the plan viewport already renders.
+ */
+export async function openPlannerStream(
+  { projectId, startDate, conversationId, resume, startFresh, artifactType, artifactId } = {},
+  { signal, onSession } = {},
+) {
+  const { session_id, conversation_id } = await createAgentSession(PLANNER_AGENT_TYPE, {
+    mode: "update_plan",
+    project_id: projectId,
+    ...(startDate ? { start_date: startDate } : {}),
+    ...resumeFields({ conversationId, resume, startFresh, artifactType, artifactId }),
+  });
+  onSession?.({ sessionId: session_id, conversationId: conversation_id });
+  const body = await openAgentStream(PLANNER_AGENT_TYPE, session_id, { signal });
+  return { body, sessionId: session_id, conversationId: conversation_id };
+}
+
 /** Conversation/resume body fields shared by the openers — omitted keys keep
  * the normal first-open behaviour (server auto-creates a fresh conversation). */
 function resumeFields({ conversationId, resume, startFresh, artifactType, artifactId } = {}) {
@@ -147,9 +171,9 @@ export async function listContentConversations(filters) {
 }
 
 /** Archive a content conversation (start-fresh support). */
-export async function archiveContentConversation(conversationId) {
+export async function archiveContentConversation(conversationId, agentType = AGENT_TYPE) {
   if (!conversationId) return;
-  await archiveAgentConversation(AGENT_TYPE, conversationId).catch(() => {});
+  await archiveAgentConversation(agentType, conversationId).catch(() => {});
 }
 
 /**
@@ -157,21 +181,45 @@ export async function archiveContentConversation(conversationId) {
  * while the backend's reconnect grace window is still open; throws if the
  * session is already gone (caller then falls back to a resume-create).
  */
-export async function reattachContentStream(sessionId, { signal } = {}) {
-  return openAgentStream(AGENT_TYPE, sessionId, { signal });
+export async function reattachContentStream(sessionId, { signal, agentType = AGENT_TYPE } = {}) {
+  return openAgentStream(agentType, sessionId, { signal });
 }
 
-export async function answerContentQuestions(sessionId, answers) {
-  return sendAgentMessage(AGENT_TYPE, sessionId, { type: "answer", answers });
+export async function answerContentQuestions(sessionId, answers, agentType = AGENT_TYPE) {
+  return sendAgentMessage(agentType, sessionId, { type: "answer", answers });
 }
 
-export async function sendContentChat(sessionId, content) {
-  return sendAgentMessage(AGENT_TYPE, sessionId, { type: "chat", content });
+export async function sendContentChat(sessionId, content, agentType = AGENT_TYPE) {
+  return sendAgentMessage(agentType, sessionId, { type: "chat", content });
 }
 
-export async function closeContentSession(sessionId) {
+export async function closeContentSession(sessionId, agentType = AGENT_TYPE) {
   if (!sessionId) return;
-  await closeAgentSession(AGENT_TYPE, sessionId).catch(() => {});
+  await closeAgentSession(agentType, sessionId).catch(() => {});
+}
+
+// ---------------------------------------------------------------------------
+// Content Planner configuration
+// ---------------------------------------------------------------------------
+
+/** Read the saved planner config + the project's connected social accounts. */
+export async function getPlannerConfig(projectId) {
+  const url = new URL(`${BASE}/api/content/planner-config`);
+  url.searchParams.set("project_id", projectId);
+  const res = await fetch(url, { headers: backendApiHeaders() });
+  return jsonOrThrow(res);
+}
+
+/** Upsert the planner config for a project. */
+export async function savePlannerConfig(projectId, config) {
+  const url = new URL(`${BASE}/api/content/planner-config`);
+  url.searchParams.set("project_id", projectId);
+  const res = await fetch(url, {
+    method: "PUT",
+    headers: backendApiHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify(config),
+  });
+  return jsonOrThrow(res);
 }
 
 /** GET a self-contained 1080×1920 single-slide doc (images inlined) to rasterize. */

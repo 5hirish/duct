@@ -22,6 +22,7 @@ class AgentType(StrEnum):
     SEO_AUDIT = "audit_seo"
     INSIGHTS = "insights"
     TIKTOK_STUDIO = "tiktok_studio"
+    CONTENT_PLANNER = "content_planner"
     BLOG_WRITER = "blog-writer"     # future
     RESEARCH = "research"           # future
 
@@ -125,14 +126,14 @@ def _tiktok_studio_spec() -> AgentSpec:
     endpoints (create → stream → messages). The content-specific CRUD and
     slide-render routes still live under /api/content/*.
     """
-    from agents.content.schema import PlanRequest
+    from agents.content.schema import DraftPostRequest
     return AgentSpec(
         type=AgentType.TIKTOK_STUDIO,
         name="Content Studio",
         description=(
-            "30-day content plans + post drafts for TikTok-style carousels. "
-            "Researches pillars, drafts captions and slides, generates images, "
-            "and publishes via PostBridge."
+            "Post drafts for TikTok-style carousels. Drafts captions and slides, "
+            "generates images, and publishes via PostBridge. (Content planning "
+            "now lives in the Content Planner agent.)"
         ),
         capabilities=[
             AgentCapability.STREAMING,
@@ -141,7 +142,31 @@ def _tiktok_studio_spec() -> AgentSpec:
             AgentCapability.CHAT,
             AgentCapability.FILE_UPLOAD,
         ],
-        config_schema=PlanRequest.model_json_schema(),
+        config_schema=DraftPostRequest.model_json_schema(),
+        active=True,
+    )
+
+
+def _content_planner_spec() -> AgentSpec:
+    """Spec for the Content Planner agent — the strategist that owns the
+    project's canonical rolling 7-day plan (research → best times → sequencing
+    → narrative). Runs through /api/agents/content_planner/* (mode=update_plan)."""
+    from agents.planner.schema import PlannerRequest
+    return AgentSpec(
+        type=AgentType.CONTENT_PLANNER,
+        name="Content Planner",
+        description=(
+            "A research-heavy content strategist. Researches platform trends and "
+            "competitors, reviews past-post performance, picks the best post "
+            "times per platform and geography, sequences content types into a "
+            "long-term narrative, and (re)writes the project's canonical 7-day plan."
+        ),
+        capabilities=[
+            AgentCapability.STREAMING,
+            AgentCapability.INTERACTIVE_QUESTIONS,
+            AgentCapability.CHAT,
+        ],
+        config_schema=PlannerRequest.model_json_schema(),
         active=True,
     )
 
@@ -151,6 +176,7 @@ AGENT_REGISTRY: dict[str, AgentSpec] = {
     AgentType.SEO_AUDIT:         _seo_audit_spec(),
     AgentType.INSIGHTS:          _insights_spec(),
     AgentType.TIKTOK_STUDIO:     _tiktok_studio_spec(),
+    AgentType.CONTENT_PLANNER:   _content_planner_spec(),
     AgentType.BLOG_WRITER:       _blog_writer_spec(),
     AgentType.RESEARCH:          _research_spec(),
 }

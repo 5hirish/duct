@@ -198,6 +198,7 @@ const PHASE_STATUS = {
 const MODE_LABELS = {
   plan_month: "Generating 30-day plan",
   draft_post: "Drafting post",
+  update_plan: "Content Planner",
 };
 
 export default function ContentChat({

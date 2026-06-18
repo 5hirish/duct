@@ -148,9 +148,10 @@ async def _drain_first(q) -> object:
 
 
 def test_unified_agents_route_creates_contentsession():
-    """Folding /api/content/* into /api/agents/*: the unified session factory
-    must build a ContentSession (not the default AuditSession) with the right
-    mode/project_id, and 422 on a missing project_id."""
+    """The unified session factory must build a ContentSession (not the default
+    AuditSession) for tiktok_studio draft_post, build a PlannerSession for
+    content_planner, reject plan_month on tiktok_studio (planning moved to the
+    planner), and 422 on a missing project_id."""
     from uuid import uuid4
 
     import pytest
@@ -158,19 +159,11 @@ def test_unified_agents_route_creates_contentsession():
 
     from agents.content.schema import ContentSession
     from agents.content.v3.runner import close_session, get_session
+    from agents.planner.schema import PlannerSession
     from agents.registry import AgentType
     from routes.agents import _create_session_for
 
     pid = uuid4()
-    s = _create_session_for(
-        AgentType.TIKTOK_STUDIO, "ufold-plan", {"mode": "plan_month", "project_id": str(pid)}
-    )
-    assert isinstance(s, ContentSession)
-    assert s.mode == "plan_month" and s.project_id == pid
-    assert s.agent_type == "tiktok_studio"
-    assert get_session("ufold-plan") is s
-    close_session("ufold-plan")
-
     plan_id = uuid4()
     s2 = _create_session_for(
         AgentType.TIKTOK_STUDIO,
@@ -178,10 +171,28 @@ def test_unified_agents_route_creates_contentsession():
         {"mode": "draft_post", "project_id": str(pid), "plan_id": str(plan_id)},
     )
     assert isinstance(s2, ContentSession) and s2.mode == "draft_post" and s2.plan_id == plan_id
+    assert s2.agent_type == "tiktok_studio"
+    assert get_session("ufold-draft") is s2
     close_session("ufold-draft")
 
+    # Content Studio no longer plans — plan_month is rejected.
     with pytest.raises(HTTPException):
-        _create_session_for(AgentType.TIKTOK_STUDIO, "ufold-bad", {"mode": "plan_month"})
+        _create_session_for(
+            AgentType.TIKTOK_STUDIO, "ufold-plan", {"mode": "plan_month", "project_id": str(pid)}
+        )
+
+    # The Content Planner owns plans (mode=update_plan → PlannerSession).
+    sp = _create_session_for(
+        AgentType.CONTENT_PLANNER, "ufold-planner", {"mode": "update_plan", "project_id": str(pid)}
+    )
+    assert isinstance(sp, PlannerSession)
+    assert sp.mode == "update_plan" and sp.project_id == pid
+    assert sp.agent_type == "content_planner"
+    assert get_session("ufold-planner") is sp
+    close_session("ufold-planner")
+
+    with pytest.raises(HTTPException):
+        _create_session_for(AgentType.TIKTOK_STUDIO, "ufold-bad", {"mode": "draft_post"})
 
 
 # ---------------------------------------------------------------------------

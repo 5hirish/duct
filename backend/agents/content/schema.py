@@ -81,6 +81,12 @@ class Day(BaseModel):
     format_slug: str = ""   # which library format to build with (e.g. "format-d")
     avatar_id: UUID | None = None
     platforms: list[Platform] = Field(default_factory=lambda: [Platform.TIKTOK])
+    # Planner fields — written by the content_planner agent. Optional + explicit
+    # because Day uses extra="ignore" (unknown keys would be dropped on validate).
+    scheduled_at: datetime | None = None      # best post time (date + time) for this slot
+    best_time_note: str = ""                  # human note, e.g. "7:10pm IST — audience peak"
+    angle: str = ""                           # the hook/angle this post takes
+    rationale: str = ""                       # 1-line strategic why for this slot
 
 
 class AvatarRefCell(BaseModel):
@@ -511,6 +517,22 @@ class PostDraft(BaseModel):
     platforms: list[Platform] = Field(default_factory=lambda: [Platform.TIKTOK])
 
 
+class PlanStrategy(BaseModel):
+    """The strategist's long-term narrative — persisted on the plan so each
+    weekly refresh can continue the arc instead of restarting it.
+
+    Authored by the content_planner agent; tolerated (extra="ignore") so older
+    plans without it validate cleanly.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    narrative_arc: str = ""           # the multi-week story this week sits inside
+    sequencing_rationale: str = ""    # why these content types, in this order, this week
+    content_mix: dict = Field(default_factory=dict)  # e.g. {"slideshow": 4, "video": 2, "image": 1}
+    weekly_theme: str = ""            # the through-line for this 7-day window
+
+
 class PlanDraft(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -520,6 +542,9 @@ class PlanDraft(BaseModel):
     start_date: date | None = None
     character: Character = Field(default_factory=Character)
     days: list[Day]
+    # Long-term narrative (content_planner). Default-factory so plan_month-era
+    # payloads that omit it still validate.
+    strategy: PlanStrategy = Field(default_factory=PlanStrategy)
 
 
 # ---------------------------------------------------------------------------
@@ -631,6 +656,7 @@ __all__ = [
     "PillarHistorySignal",
     "PlanDraft",
     "PlanRequest",
+    "PlanStrategy",
     "PostDraft",
     "RunMode",
     "Slide",

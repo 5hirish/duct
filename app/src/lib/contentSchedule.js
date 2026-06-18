@@ -41,7 +41,10 @@ const KIND_LABEL = { published: "Published", scheduled: "Scheduled", proposed: "
 export function effectiveSchedule(day, post, monthStart, index) {
   const status = post?.status || day?.status || "pending";
   const posted = parseDate(post?.posted_at);
-  const scheduled = parseDate(post?.scheduled_at);
+  // A linked post's scheduled_at wins; otherwise the plan day's own scheduled_at
+  // (the Content Planner sets a best post time per slot). Falls back to the
+  // sequential proposed slot for legacy 30-day days that carry neither.
+  const scheduled = parseDate(post?.scheduled_at) || parseDate(day?.scheduled_at);
 
   let date = null;
   let kind = "proposed";
