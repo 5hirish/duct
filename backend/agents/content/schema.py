@@ -160,6 +160,7 @@ class ContentBrandContext(BaseModel):
     do_say: str = ""
     do_not_say: str = ""
     competition: str = ""   # composed from project.competition (planner uses it for gaps)
+    competitor_handles: list[str] = Field(default_factory=list)  # TikTok handles the brand tracks in Discover
     targets: str = ""       # composed from project.targets (goals/KPIs)
     features: list[AppFeature] = Field(default_factory=list)
     pillars: list[ContentPillar] = Field(default_factory=list)

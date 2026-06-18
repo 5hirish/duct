@@ -619,6 +619,69 @@ def put_brand_context(
 
 
 # ---------------------------------------------------------------------------
+# Competitor watchlist — TikTok handles the brand tracks in Discover's profile
+# mode. Lives in content_brand.tiktok_competitors (content-owned, writable, no
+# migration) and is surfaced on ContentBrandContext so the planner's
+# competitor_analyst sees the same list. Single source of truth.
+# ---------------------------------------------------------------------------
+
+_WATCHLIST_KEY = "tiktok_competitors"
+_WATCHLIST_MAX = 50
+
+
+def _norm_handles(raw: object) -> list[str]:
+    """Normalise TikTok handles: strip @, lowercase, dedupe, drop empties."""
+    if not isinstance(raw, (list, tuple)):
+        return []
+    seen: list[str] = []
+    for item in raw:
+        h = str(item or "").strip().lstrip("@").lower()
+        if h and h not in seen:
+            seen.append(h)
+        if len(seen) >= _WATCHLIST_MAX:
+            break
+    return seen
+
+
+class WatchlistOut(BaseModel):
+    handles: list[str]
+
+
+class WatchlistIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    handles: list[str] = Field(default_factory=list)
+
+
+@router.get("/content/discover/watchlist")
+def get_discover_watchlist(
+    project_id: UUID,
+    db: Session = Depends(db_session),
+) -> WatchlistOut:
+    proj = _project_or_404(db, project_id)
+    return WatchlistOut(handles=_norm_handles((proj.content_brand or {}).get(_WATCHLIST_KEY)))
+
+
+@router.put("/content/discover/watchlist")
+def put_discover_watchlist(
+    project_id: UUID,
+    body: WatchlistIn,
+    db: Session = Depends(db_session),
+) -> WatchlistOut:
+    proj = _project_or_404(db, project_id)
+    handles = _norm_handles(body.handles)
+    # Reassign a NEW dict so SQLAlchemy detects the JSONB change (mirrors
+    # put_brand_context); merging preserves the other content_brand keys.
+    cb = dict(proj.content_brand or {})
+    cb[_WATCHLIST_KEY] = handles
+    proj.content_brand = cb
+    proj.updated_at = datetime.now(timezone.utc)
+    db.add(proj)
+    db.commit()
+    return WatchlistOut(handles=handles)
+
+
+# ---------------------------------------------------------------------------
 # Plans CRUD
 # ---------------------------------------------------------------------------
 

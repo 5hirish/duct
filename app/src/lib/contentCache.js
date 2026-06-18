@@ -36,6 +36,13 @@ export async function cached(key, ttlMs, fetcher) {
   return p;
 }
 
+/** Read the last cached value for `key` even if its TTL has lapsed, else null.
+ * For stale-while-revalidate: paint the stale value instantly, then refetch. */
+export function peek(key) {
+  const hit = store.get(key);
+  return hit ? hit.value : null;
+}
+
 /** Drop every cached entry (and in-flight promise) whose key starts with `prefix`. */
 export function invalidate(prefix) {
   for (const k of store.keys())    if (k.startsWith(prefix)) store.delete(k);

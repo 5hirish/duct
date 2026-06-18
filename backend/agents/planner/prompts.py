@@ -184,6 +184,7 @@ def _brand_stanza(brand: ContentBrandContext) -> str:
         f"  do_not_say: {brand.do_not_say or '(none)'}",
         f"  features: {features}",
         f"  competition: {brand.competition or '(none on file)'}",
+        f"  competitor_tiktok_handles: {', '.join('@' + h for h in brand.competitor_handles) or '(none tracked)'}",
         f"  targets/KPIs: {brand.targets or '(none on file)'}",
         "  pillars:",
         pillar_lines,

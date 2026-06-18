@@ -6,6 +6,7 @@ import { CalendarRange } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   listPosts,
+  peekPosts,
 } from "@/lib/contentApi";
 import { getActiveProjectId, getActiveProject } from "@/lib/projects";
 import BrandContextForm from "@/components/content/BrandContextForm";
@@ -162,8 +163,10 @@ function postRank(p) {
 }
 
 function PostsTab({ projectId }) {
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Paint the last-known posts instantly (even if the cache TTL lapsed), then
+  // revalidate in the background — no skeleton over content we already have.
+  const [posts, setPosts] = useState(() => peekPosts(projectId) || []);
+  const [loading, setLoading] = useState(() => peekPosts(projectId) == null);
   const [filter, setFilter] = useState("all");
 
   useEffect(() => {

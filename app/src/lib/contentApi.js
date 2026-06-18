@@ -17,7 +17,7 @@ import {
   listAgentConversations,
   archiveAgentConversation,
 } from "./api";
-import { cached, invalidate } from "./contentCache";
+import { cached, invalidate, peek } from "./contentCache";
 
 /** Unified agent-type id for this workspace (see backend agents/registry.py). */
 const AGENT_TYPE = "tiktok_studio";
@@ -314,6 +314,28 @@ export async function putBrandContext(projectId, body) {
   return out;
 }
 
+/** Read the project's TikTok competitor watchlist (Discover profile mode). */
+export async function getDiscoverWatchlist(projectId) {
+  const res = await fetch(
+    `${BASE}/api/content/discover/watchlist?project_id=${encodeURIComponent(projectId)}`,
+    { headers: backendApiHeaders() },
+  );
+  return jsonOrThrow(res); // { handles: [...] }
+}
+
+/** Replace the project's TikTok competitor watchlist. Returns { handles }. */
+export async function putDiscoverWatchlist(projectId, handles) {
+  const res = await fetch(
+    `${BASE}/api/content/discover/watchlist?project_id=${encodeURIComponent(projectId)}`,
+    {
+      method: "PUT",
+      headers: backendApiHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ handles }),
+    },
+  );
+  return jsonOrThrow(res);
+}
+
 export async function listPlans(projectId) {
   const res = await fetch(
     `${BASE}/api/content/plans?project_id=${encodeURIComponent(projectId)}`,
@@ -350,6 +372,12 @@ export async function patchPlanDay(planId, day, patch) {
 export function invalidatePosts() {
   invalidate("posts:");
   invalidate("analytics:");
+}
+
+/** Last-known posts for the project from cache (even if stale), or null — lets
+ * the Posts tab paint instantly while listPosts revalidates in the background. */
+export function peekPosts(projectId, { planId, status } = {}) {
+  return peek(`posts:${projectId}:${planId || ""}:${status || ""}`);
 }
 
 export async function listPosts(projectId, { planId, status } = {}) {

@@ -49,8 +49,32 @@ class ScrapedPostAuthor(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     name: str = ""
+    nick_name: str = Field(default="", validation_alias="nickName")
     fans: int = 0
     verified: bool = False
+    # Richer fields used by the profile/competitor discovery mode — avatar + bio
+    # power the profile header card; heart/following round out the snapshot.
+    avatar: str = ""
+    signature: str = ""  # the profile bio
+    bio_link: str = Field(default="", validation_alias="bioLink")
+    profile_url: str = Field(default="", validation_alias="profileUrl")
+    following: int = 0
+    heart: int = 0
+
+
+class ScrapedComment(BaseModel):
+    """One comment on a scraped post — best-effort passthrough.
+
+    The actor only returns comments when ``commentsPerPost`` is set (profile
+    mode). Field names follow the actor's output; extra='ignore' tolerates
+    shape drift so a key rename can't break the discovery flow.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    text: str = ""
+    digg_count: int = Field(default=0, validation_alias="diggCount")
+    author: str = Field(default="", validation_alias="uniqueId")
 
 
 class ScrapedPostMusic(BaseModel):
@@ -103,6 +127,9 @@ class ScrapedPost(BaseModel):
     video_meta:        ScrapedPostVideo | None = Field(default=None, validation_alias="videoMeta")
     hashtags:          list[str] = Field(default_factory=list)
     slideshow_image_links: list[str] = Field(default_factory=list, validation_alias="slideshowImageLinks")
+    # Populated only when the run requested comments (profile/competitor mode) —
+    # the audience's own words: questions + objections to mine for hooks.
+    comments:          list[ScrapedComment] = Field(default_factory=list)
 
 
 class DiscoveredReferenceRecord(BaseModel):

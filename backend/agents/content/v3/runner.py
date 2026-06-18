@@ -209,6 +209,9 @@ def _load_brand_context(project_id: UUID) -> ContentBrandContext:
             do_say=str(brand_blob.get("do_say") or ""),
             do_not_say=str(brand_blob.get("do_not_say") or ""),
             competition=_compose_blob(proj.competition),
+            competitor_handles=[
+                str(h) for h in (brand_blob.get("tiktok_competitors") or []) if h
+            ],
             targets=_compose_blob(proj.targets),
             features=features,
             pillars=pillars,
