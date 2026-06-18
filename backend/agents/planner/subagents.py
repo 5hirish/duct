@@ -14,6 +14,7 @@ from claude_agent_sdk import AgentDefinition
 
 from agents.models import AgentTool, ModelName
 from agents.planner.prompts import COMPETITOR_ANALYST_PROMPT, TREND_SCOUT_PROMPT
+from agents.planner.schema import PlannerTool
 
 TREND_SCOUT_AGENT = AgentDefinition(
     description=(
@@ -23,7 +24,14 @@ TREND_SCOUT_AGENT = AgentDefinition(
     ),
     prompt=TREND_SCOUT_PROMPT,
     model=ModelName.CLAUDE_HAIKU.value,
-    tools=[AgentTool.WEB_SEARCH.value, AgentTool.WEB_FETCH.value],
+    tools=[
+        AgentTool.WEB_SEARCH.value,
+        AgentTool.WEB_FETCH.value,
+        # Read-only: grounds trends in the real high-performing TikTok posts the
+        # user saved from the Discover feature — stronger signal than web search
+        # alone, and the source of the plan's evidence citations.
+        PlannerTool.FETCH_DISCOVERED_REFERENCES.value,
+    ],
 )
 
 COMPETITOR_ANALYST_AGENT = AgentDefinition(

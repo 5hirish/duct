@@ -1068,71 +1068,6 @@ def build_content_mcp_server(
             return _err(f"fetch_content_history failed: {exc}")
 
     @tool(
-        name="fetch_discovered_references",
-        description=(
-            "Return TikTok posts the user (or a previous discovery run) saved as "
-            "high-performing references. Use this to ground topic / hook / format "
-            "decisions in real-world signal — what's actually working in the "
-            "target audience's niche right now. Each row carries the post's "
-            "engagement counts (play, digg, share, comment, collect), hashtags, "
-            "music, author, and the TikTok URL. Filter by min_play_count to "
-            "skip the long tail (default 10000)."
-        ),
-        input_schema={
-            "type": "object",
-            "properties": {
-                "min_play_count": {
-                    "type": "integer", "minimum": 0,
-                    "description": "Skip posts with fewer plays. Default 10000 (filters out outliers).",
-                },
-                "limit": {"type": "integer", "minimum": 1, "maximum": 100,
-                          "description": "Max rows to return. Default 30, max 100."},
-            },
-            "required": [],
-        },
-    )
-    async def fetch_discovered_references(args: dict) -> dict:
-        try:
-            min_plays = int(args.get("min_play_count") or 10000)
-            limit     = min(int(args.get("limit") or 30), 100)
-            with _open_db() as db:
-                rows = db.exec(
-                    select(ContentAsset)
-                    .where(
-                        ContentAsset.project_id == project_id,
-                        ContentAsset.asset_type == "discovered_reference",
-                    )
-                    .order_by(ContentAsset.created_at.desc())  # type: ignore[union-attr]
-                    .limit(200)  # over-fetch; we filter in Python by min_plays
-                ).all()
-                items: list[dict] = []
-                for r in rows:
-                    p = (r.params or {}).get("post") or {}
-                    if (p.get("play_count") or 0) < min_plays:
-                        continue
-                    items.append({
-                        "asset_id":      str(r.id),
-                        "tiktok_url":    r.url,
-                        "play_count":    p.get("play_count"),
-                        "digg_count":    p.get("digg_count"),
-                        "comment_count": p.get("comment_count"),
-                        "share_count":   p.get("share_count"),
-                        "collect_count": p.get("collect_count"),
-                        "hashtags":      p.get("hashtags") or [],
-                        "music":         (p.get("music_meta") or {}).get("music_name"),
-                        "author":        (p.get("author_meta") or {}).get("name"),
-                        "is_slideshow":  p.get("is_slideshow"),
-                        "text":          (p.get("text") or "")[:280],
-                        "created_at":    p.get("create_time_iso"),
-                    })
-                    if len(items) >= limit:
-                        break
-                return _ok({"references": items, "count": len(items)})
-        except Exception as exc:
-            logger.exception("fetch_discovered_references failed")
-            return _err(f"fetch_discovered_references failed: {exc}")
-
-    @tool(
         name="fetch_content_assets",
         description=(
             "Return content assets (generated images, uploads, references) "
@@ -1881,7 +1816,6 @@ def build_content_mcp_server(
             fetch_avatar_library,
             fetch_content_history,
             fetch_content_assets,
-            fetch_discovered_references,
             fetch_post,
             fetch_slide_context,
             render_slide,

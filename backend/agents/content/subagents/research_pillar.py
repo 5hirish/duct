@@ -14,9 +14,10 @@ from __future__ import annotations
 from claude_agent_sdk import AgentDefinition
 
 from agents.content.prompts import RESEARCH_PILLAR_PROMPT
-from agents.content.schema import ContentTool
 from agents.models import AgentTool, ModelName
 
+# NOTE: saved TikTok discoveries are consumed by the Content Planner's
+# trend_scout sub-agent, not here — planning owns the discovery signal.
 RESEARCH_PILLAR_AGENT = AgentDefinition(
     description=(
         "Research candidate topics for a single content pillar. "
@@ -28,10 +29,5 @@ RESEARCH_PILLAR_AGENT = AgentDefinition(
     tools=[
         AgentTool.WEB_SEARCH.value,
         AgentTool.WEB_FETCH.value,
-        # Read-only: lets research_pillar ground topic ideas in real
-        # high-performing TikTok posts the user (or a prior discovery
-        # run) saved. Strictly cheaper + higher-signal than WebSearch
-        # alone — bypasses Google ranking noise.
-        ContentTool.FETCH_DISCOVERED_REFERENCES.value,
     ],
 )

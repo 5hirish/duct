@@ -40,6 +40,7 @@ class PlannerTool(StrEnum):
     SAVE_PLANNER_CONFIG  = "mcp__duct_planner__save_planner_config"
     FETCH_POST_METRICS   = "mcp__duct_planner__fetch_post_metrics"
     SYNC_ALL_POSTS       = "mcp__duct_planner__sync_all_posts"
+    FETCH_DISCOVERED_REFERENCES = "mcp__duct_planner__fetch_discovered_references"
 
 
 class PlannerRequest(BaseModel):

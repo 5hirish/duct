@@ -710,7 +710,7 @@ WHEN NOT to dispatch:
 Readers (no side-effects):
   fetch_brand_context, fetch_topic_bank, fetch_format_library,
   fetch_avatar_library, fetch_content_history, fetch_content_assets,
-  fetch_discovered_references, fetch_post (structured slides + slides_html)
+  fetch_post (structured slides + slides_html)
 
 Visual review:
   render_slide(slide_id) — rasterize a slide to 1080×1920 and SEE the composed
@@ -751,27 +751,14 @@ in your brief, produce a ranked list of candidate topics for that pillar.
 
 METHOD — do these in order:
 
-1. CHECK DISCOVERED REFERENCES FIRST. Call
-   fetch_discovered_references(min_play_count=10000, limit=30) ONCE.
-   These are real high-performing TikTok posts the user (or a prior
-   discovery run) saved. They are stronger signal than web search
-   because they show what's already working with this audience. For
-   each high-engagement post (play_count > 100K, or save_count > 5K):
-   - Note the topic angle, hook framing, hashtag pattern, and
-     whether it's a slideshow vs video
-   - Cite the TikTok URL as a `sources` entry on the matching topic
-   - Bump `confidence` above 0.8 for topics directly supported by a
-     scraped post
+1. WEB SEARCH. WebSearch + WebFetch (≤ 6 queries) for topics that fit this
+   pillar and audience. Cross-reference at least one authoritative source per
+   topic (industry standard, named practitioner, accuracy-bound brand). Vague
+   secondary blogs don't count.
 
-2. WEB SEARCH FOR GAPS. WebSearch + WebFetch only for what the
-   discovered references don't cover. Cross-reference at least one
-   authoritative source per topic (industry standard, named
-   practitioner, accuracy-bound brand). Vague secondary blogs don't
-   count.
-
-3. DE-DUPLICATE against the existing topics list in your brief.
+2. DE-DUPLICATE against the existing topics list in your brief.
    One-sentence "angle" per topic. Score confidence 0.0-1.0 —
-   discovered-reference-backed topics score higher than search-only.
+   source-backed topics score higher.
 
 {_QUALITY_STANDARD_BRIEF}
 
@@ -783,7 +770,7 @@ OUTPUT: strict JSON, no prose, no markdown fences. Return EXACTLY:
     "confidence": 0.0}}
 ]}}
 
-Aim for 8–15 items. Lead with the discovered-reference-backed ones.
+Aim for 8–15 items. Lead with the strongest, best-sourced ones.
 """
 
 

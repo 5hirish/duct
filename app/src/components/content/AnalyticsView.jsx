@@ -15,6 +15,8 @@ import {
 import {
   ArrowUpDown,
   BarChart2,
+  Check,
+  ChevronDown,
   ExternalLink,
   Eye,
   Heart,
@@ -22,10 +24,20 @@ import {
   RefreshCw,
   Share2,
   TrendingUp,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { getContentAnalytics } from "@/lib/contentApi";
 import { PlatformGlyph, platformMeta } from "./platformGlyphs";
+import { AccountAvatar } from "./AccountAvatar";
 
 const fmt = (n) => (typeof n === "number" ? n.toLocaleString() : "—");
 const compact = (n) =>
@@ -33,7 +45,13 @@ const compact = (n) =>
     ? Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(n)
     : "—";
 
-// share_url comes from the third-party Post-Bridge API, so treat it as untrusted:
+// Last upstream sync per project. Module-scoped so it survives the tab-switch
+// remounts — we auto-revalidate in the background at most this often; the manual
+// Refresh button always bypasses it.
+const lastSyncAt = new Map();
+const SYNC_THROTTLE_MS = 60_000;
+
+// share_url comes from the third-party analytics provider, so treat it as untrusted:
 // only render it as a link when it resolves to an http(s) URL. Blocks javascript:
 // and other script-bearing schemes from reaching an href.
 function safeHref(u) {
@@ -60,28 +78,76 @@ function shortDate(d) {
 
 export default function AnalyticsView({ projectId }) {
   const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);    // first paint only — nothing to show yet
+  const [updating, setUpdating] = useState(false); // background revalidate in flight
   const [error, setError] = useState("");
   const [sortKey, setSortKey] = useState("views"); // views | likes | date
+  const [accountId, setAccountId] = useState(null); // null = all accounts
 
-  const load = useCallback(async (refresh = false) => {
-    if (refresh) setRefreshing(true); else setLoading(true);
+  // Pull fresh numbers from the source and swap them in. Surfaced as a background
+  // "Updating…" state — the existing dashboard stays visible and interactive.
+  const refresh = useCallback(async () => {
+    setUpdating(true);
     setError("");
     try {
-      const data = await getContentAnalytics(projectId, { refresh });
+      const data = await getContentAnalytics(projectId, { refresh: true });
       setRows(Array.isArray(data) ? data : []);
+      lastSyncAt.set(projectId, Date.now());
     } catch (e) {
-      setError(e.message || "Couldn't load analytics.");
+      setError(e.message || "Couldn't update analytics.");
     } finally {
-      setRefreshing(false);
-      setLoading(false);
+      setUpdating(false);
     }
   }, [projectId]);
 
-  useEffect(() => { load(false); }, [load]);
+  // Stale-while-revalidate: paint whatever we already have instantly (fast read,
+  // no upstream sync), then revalidate in the background — never block the UI.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const existing = await getContentAnalytics(projectId, { refresh: false });
+        if (!cancelled) setRows(Array.isArray(existing) ? existing : []);
+      } catch {
+        // Ignore — the background revalidate below surfaces any real failure.
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+      if (cancelled) return;
+      if (Date.now() - (lastSyncAt.get(projectId) || 0) > SYNC_THROTTLE_MS) {
+        await refresh();
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [projectId, refresh]);
 
-  const totals = useMemo(() => rows.reduce(
+  // Distinct accounts present in the analytics data, for the filter dropdown.
+  // Derived from all rows so the menu always lists every account with data.
+  const accounts = useMemo(() => {
+    const map = new Map();
+    for (const r of rows) {
+      const id = r.social_account_id;
+      if (id == null) continue;
+      const cur = map.get(id) || { id, platform: r.platform, username: r.account_username || "", count: 0 };
+      cur.count += 1;
+      if (!cur.username && r.account_username) cur.username = r.account_username;
+      map.set(id, cur);
+    }
+    return [...map.values()].sort((a, b) => b.count - a.count);
+  }, [rows]);
+
+  // Drop the active filter if its account is no longer present (e.g. after refresh).
+  useEffect(() => {
+    if (accountId != null && !accounts.some((a) => a.id === accountId)) setAccountId(null);
+  }, [accounts, accountId]);
+
+  const filteredRows = useMemo(
+    () => (accountId == null ? rows : rows.filter((r) => r.social_account_id === accountId)),
+    [rows, accountId],
+  );
+
+  const totals = useMemo(() => filteredRows.reduce(
     (a, r) => ({
       views: a.views + (r.view_count || 0),
       likes: a.likes + (r.like_count || 0),
@@ -89,16 +155,16 @@ export default function AnalyticsView({ projectId }) {
       shares: a.shares + (r.share_count || 0),
     }),
     { views: 0, likes: 0, comments: 0, shares: 0 }
-  ), [rows]);
+  ), [filteredRows]);
 
-  const avgViews = rows.length ? Math.round(totals.views / rows.length) : 0;
+  const avgViews = filteredRows.length ? Math.round(totals.views / filteredRows.length) : 0;
   const engagement = totals.likes + totals.comments + totals.shares;
   const engagementRate = totals.views ? (engagement / totals.views) * 100 : 0;
 
   // Views over time — aggregate by day.
   const timeline = useMemo(() => {
     const byDay = new Map();
-    for (const r of rows) {
+    for (const r of filteredRows) {
       const d = parseDate(r.platform_created_at);
       if (!d) continue;
       const k = dayKey(d);
@@ -109,57 +175,69 @@ export default function AnalyticsView({ projectId }) {
     return [...byDay.values()]
       .sort((a, b) => a.date - b.date)
       .map((x) => ({ label: shortDate(x.date), views: x.views }));
-  }, [rows]);
+  }, [filteredRows]);
 
   // Top posts by views.
   const topPosts = useMemo(
-    () => [...rows]
+    () => [...filteredRows]
       .sort((a, b) => (b.view_count || 0) - (a.view_count || 0))
       .slice(0, 8)
       .map((r, i) => ({ ...r, rank: i + 1, name: (r.title || platformMeta(r.platform).label).slice(0, 28) })),
-    [rows]
+    [filteredRows]
   );
 
   // Breakdown by pillar / format — over posts attributed to our system.
-  const pillarData = useMemo(() => aggregateBy(rows, "pillar", prettify), [rows]);
-  const formatData = useMemo(() => aggregateBy(rows, "format_name", (f) => f || ""), [rows]);
+  const pillarData = useMemo(() => aggregateBy(filteredRows, "pillar", prettify), [filteredRows]);
+  const formatData = useMemo(() => aggregateBy(filteredRows, "format_name", (f) => f || ""), [filteredRows]);
 
   const sortedRows = useMemo(() => {
-    const copy = [...rows];
+    const copy = [...filteredRows];
     if (sortKey === "likes") copy.sort((a, b) => (b.like_count || 0) - (a.like_count || 0));
     else if (sortKey === "date") copy.sort((a, b) => (parseDate(b.platform_created_at)?.getTime() || 0) - (parseDate(a.platform_created_at)?.getTime() || 0));
     else copy.sort((a, b) => (b.view_count || 0) - (a.view_count || 0));
     return copy;
-  }, [rows, sortKey]);
+  }, [filteredRows, sortKey]);
 
   return (
     <div className="max-w-6xl space-y-6">
       {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold tracking-tight">Analytics</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold tracking-tight">Analytics</h2>
+            {updating && rows.length > 0 && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                <RefreshCw className="size-3 animate-spin" /> Updating…
+              </span>
+            )}
+          </div>
           <p className="text-sm text-muted-foreground">
-            Live performance from PostBridge across your linked accounts.
+            Live performance across your linked accounts.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => load(true)} disabled={refreshing || loading}>
-          <RefreshCw className={`size-3.5 ${refreshing ? "animate-spin" : ""}`} />
-          {refreshing ? "Syncing…" : "Refresh from PostBridge"}
-        </Button>
+        <div className="flex items-center gap-2">
+          {accounts.length > 0 && (
+            <AccountFilter accounts={accounts} value={accountId} onChange={setAccountId} />
+          )}
+          <Button variant="outline" size="sm" onClick={refresh} disabled={updating || loading}>
+            <RefreshCw className={`size-3.5 ${updating ? "animate-spin" : ""}`} />
+            {updating ? "Updating…" : "Refresh"}
+          </Button>
+        </div>
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      {loading ? (
+      {loading || (updating && rows.length === 0) ? (
         <div className="flex items-center justify-center gap-2 py-24 text-sm text-muted-foreground">
-          <RefreshCw className="size-4 animate-spin" /> Fetching analytics from PostBridge…
+          <RefreshCw className="size-4 animate-spin" /> Loading analytics…
         </div>
       ) : rows.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/70 py-20 text-center">
           <BarChart2 className="mb-3 size-10 text-muted-foreground/40" />
           <p className="text-sm font-semibold">No analytics yet</p>
           <p className="mt-1 max-w-xs text-xs text-muted-foreground">
-            Publish posts through PostBridge and link the accounts in the Accounts tab, then hit Refresh.
+            Publish posts and link the accounts in the Accounts tab, then hit Refresh.
           </p>
         </div>
       ) : (
@@ -170,7 +248,7 @@ export default function AnalyticsView({ projectId }) {
             <StatCard icon={Heart} label="Likes" value={fmt(totals.likes)} accent="text-rose-500" />
             <StatCard icon={MessageCircle} label="Comments" value={fmt(totals.comments)} accent="text-violet-500" />
             <StatCard icon={Share2} label="Shares" value={fmt(totals.shares)} accent="text-emerald-500" />
-            <StatCard icon={TrendingUp} label="Engagement" value={`${engagementRate.toFixed(1)}%`} sub={`${fmt(rows.length)} posts · ${fmt(avgViews)} avg views`} accent="text-amber-500" />
+            <StatCard icon={TrendingUp} label="Engagement" value={`${engagementRate.toFixed(1)}%`} sub={`${fmt(filteredRows.length)} posts · ${fmt(avgViews)} avg views`} accent="text-amber-500" />
           </div>
 
           {/* Charts */}
@@ -227,7 +305,7 @@ export default function AnalyticsView({ projectId }) {
           {/* Posts table */}
           <div className="overflow-hidden rounded-2xl border border-border">
             <div className="flex items-center justify-between gap-3 border-b border-border/60 px-4 py-3">
-              <h3 className="text-sm font-semibold">All posts <span className="text-muted-foreground tabular-nums">· {rows.length}</span></h3>
+              <h3 className="text-sm font-semibold">All posts <span className="text-muted-foreground tabular-nums">· {filteredRows.length}</span></h3>
               <div className="flex items-center gap-1.5">
                 <ArrowUpDown className="size-3 text-muted-foreground" />
                 {["views", "likes", "date"].map((k) => (
@@ -309,6 +387,58 @@ export default function AnalyticsView({ projectId }) {
         </>
       )}
     </div>
+  );
+}
+
+/**
+ * Account filter — a dropdown that scopes the whole view to one social account.
+ * Each option renders richly: profile avatar (badged with the platform glyph),
+ * the @handle, and the platform name + post count.
+ */
+function AccountFilter({ accounts, value, onChange }) {
+  const selected = accounts.find((a) => a.id === value) || null;
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="sm" className="max-w-[200px]">
+          {selected ? (
+            <>
+              <AccountAvatar account={selected} size="xs" />
+              <span className="truncate">@{selected.username || selected.id}</span>
+            </>
+          ) : (
+            <>
+              <Users className="size-3.5" />
+              All accounts
+            </>
+          )}
+          <ChevronDown className="size-3.5 text-muted-foreground" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-64">
+        <DropdownMenuLabel>Filter by account</DropdownMenuLabel>
+        <DropdownMenuItem onSelect={() => onChange(null)} className="gap-2.5">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+            <Users className="size-4" />
+          </span>
+          <span className="min-w-0 flex-1 text-sm font-medium">All accounts</span>
+          {value == null && <Check className="size-4 shrink-0 text-primary" />}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        {accounts.map((a) => (
+          <DropdownMenuItem key={a.id} onSelect={() => onChange(a.id)} className="gap-2.5">
+            <AccountAvatar account={a} size="sm" />
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-medium">@{a.username || a.id}</span>
+              <span className="block truncate text-[11px] text-muted-foreground">
+                {platformMeta(a.platform).label} · {a.count} {a.count === 1 ? "post" : "posts"}
+              </span>
+            </span>
+            {value === a.id && <Check className="size-4 shrink-0 text-primary" />}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 

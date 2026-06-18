@@ -45,11 +45,25 @@ const ACTORS = [
 ];
 
 const SORTS = [
+  { id: "engagement", label: "Best engagement", key: (p) => engagement(p) },
   { id: "plays",      label: "Top plays",       key: (p) => p.play_count || 0 },
   { id: "saves",      label: "Most saved",      key: (p) => p.collect_count || 0 },
-  { id: "engagement", label: "Best engagement", key: (p) => engagement(p) },
   { id: "recent",     label: "Most recent",     key: (p) => new Date(p.create_time_iso || 0).getTime() },
 ];
+
+// Recency windows → the actor's `oldestPostDateUnified` (relative days). Without
+// this the scraper returns all-time top posts, so "what's working" surfaces
+// years-old virals. The id is passed straight through to the actor input.
+const DATE_WINDOWS = [
+  { id: "1",  label: "24 hours" },
+  { id: "7",  label: "7 days" },
+  { id: "30", label: "30 days" },
+  { id: "90", label: "90 days" },
+];
+
+// Server-side quality floor (min hearts) — drops the low-engagement long tail
+// before it reaches us, which also trims Apify result cost.
+const MIN_DIGGS = 1000;
 
 const RUNNING = new Set(["running", "polling", "fetching"]);
 
@@ -77,7 +91,8 @@ export default function DiscoverPage({ projectId }) {
   const [tags, setTags]             = useState(["faceshape", "colorseason"]);
   const [tagDraft, setTagDraft]     = useState("");
   const [region, setRegion]         = useState("US");
-  const [sort, setSort]             = useState("plays");
+  const [dateWindow, setDateWindow] = useState("30");
+  const [sort, setSort]             = useState("engagement");
   const [busy, setBusy]             = useState({}); // post.id → "saving" | "saved"
 
   const actor = useMemo(() => ACTORS.find((a) => a.id === actorId), [actorId]);
@@ -89,13 +104,15 @@ export default function DiscoverPage({ projectId }) {
       return {
         hashtags: tags,
         resultsPerPage: 30,
+        oldestPostDateUnified: dateWindow, // posts within the chosen window
+        leastDiggs: MIN_DIGGS,             // skip the low-engagement long tail
         shouldDownloadVideos: false,
         shouldDownloadCovers: false,
         shouldDownloadSubtitles: false,
       };
     }
     return { type: "TREND", region, resultsPerPage: 30 };
-  }, [actorId, tags, region]);
+  }, [actorId, tags, region, dateWindow]);
 
   function addTag() {
     const v = tagDraft.trim().replace(/^#/, "").toLowerCase();
@@ -165,30 +182,53 @@ export default function DiscoverPage({ projectId }) {
             </div>
 
             {actorId === "clockworks/tiktok-scraper" ? (
-              <div>
-                <label className="text-[11px] font-medium text-muted-foreground">Hashtags</label>
-                <div className="mt-1 flex flex-wrap items-center gap-1.5 rounded-md border border-border/70 bg-background p-2">
-                  {tags.map((t) => (
-                    <span key={t} className="inline-flex items-center gap-1 rounded bg-muted px-2 py-0.5 text-[11px] font-medium">
-                      #{t}
-                      <button type="button" onClick={() => setTags(tags.filter((x) => x !== t))} className="text-muted-foreground hover:text-destructive">
-                        <X className="h-3 w-3" />
-                      </button>
-                    </span>
-                  ))}
-                  <input
-                    value={tagDraft}
-                    onChange={(e) => setTagDraft(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addTag(); }
-                      if (e.key === "Backspace" && !tagDraft && tags.length) setTags(tags.slice(0, -1));
-                    }}
-                    onBlur={addTag}
-                    placeholder={tags.length ? "" : "faceshape, colorseason…"}
-                    className="min-w-[120px] flex-1 bg-transparent px-1 py-0.5 text-[11px] outline-none placeholder:text-muted-foreground/60"
-                  />
+              <>
+                <div>
+                  <label className="text-[11px] font-medium text-muted-foreground">Hashtags</label>
+                  <div className="mt-1 flex flex-wrap items-center gap-1.5 rounded-md border border-border/70 bg-background p-2">
+                    {tags.map((t) => (
+                      <span key={t} className="inline-flex items-center gap-1 rounded bg-muted px-2 py-0.5 text-[11px] font-medium">
+                        #{t}
+                        <button type="button" onClick={() => setTags(tags.filter((x) => x !== t))} className="text-muted-foreground hover:text-destructive">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))}
+                    <input
+                      value={tagDraft}
+                      onChange={(e) => setTagDraft(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addTag(); }
+                        if (e.key === "Backspace" && !tagDraft && tags.length) setTags(tags.slice(0, -1));
+                      }}
+                      onBlur={addTag}
+                      placeholder={tags.length ? "" : "faceshape, colorseason…"}
+                      className="min-w-[120px] flex-1 bg-transparent px-1 py-0.5 text-[11px] outline-none placeholder:text-muted-foreground/60"
+                    />
+                  </div>
                 </div>
-              </div>
+                <div>
+                  <label className="text-[11px] font-medium text-muted-foreground">Posted within</label>
+                  <div className="mt-1 inline-flex rounded-lg border border-border/70 bg-muted/40 p-0.5">
+                    {DATE_WINDOWS.map((w) => {
+                      const active = dateWindow === w.id;
+                      return (
+                        <button
+                          key={w.id}
+                          type="button"
+                          onClick={() => setDateWindow(w.id)}
+                          className={cn(
+                            "rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors",
+                            active ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+                          )}
+                        >
+                          {w.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
             ) : (
               <div>
                 <label className="text-[11px] font-medium text-muted-foreground">Region</label>

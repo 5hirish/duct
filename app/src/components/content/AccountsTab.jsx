@@ -9,15 +9,9 @@ import {
   saveLinkedAccounts,
 } from "@/lib/contentApi";
 import { PlatformGlyph, platformMeta } from "./platformGlyphs";
+import { AccountAvatar } from "./AccountAvatar";
 
 const POSTBRIDGE_URL = "https://app.post-bridge.com";
-
-// Resolve a real profile picture from the handle (best-effort, falls back to a
-// monogram on error). PostBridge itself doesn't return avatars.
-function avatarUrl(platform, username) {
-  if (!username) return "";
-  return `https://unavatar.io/${platform}/${encodeURIComponent(username)}?fallback=false`;
-}
 
 /**
  * Accounts tab — link the project's social accounts.
@@ -115,10 +109,10 @@ export default function AccountsTab({ projectId }) {
         <p className="mt-1 text-sm text-muted-foreground">
           {error
             ? error
-            : "Connect a TikTok, Instagram, or YouTube account in PostBridge, then refresh to link it to this project."}
+            : "Connect a TikTok, Instagram, or YouTube account, then refresh to link it to this project."}
         </p>
         <Button className="mt-4" asChild>
-          <a href={POSTBRIDGE_URL} target="_blank" rel="noreferrer">Connect in PostBridge →</a>
+          <a href={POSTBRIDGE_URL} target="_blank" rel="noreferrer">Connect an account →</a>
         </Button>
       </div>
     );
@@ -178,8 +172,8 @@ export default function AccountsTab({ projectId }) {
       </div>
 
       <p className="text-xs text-muted-foreground/70">
-        Profile pictures are resolved from public handles. PostBridge doesn&apos;t expose
-        bios or follower counts, so those aren&apos;t shown.
+        Profile pictures are resolved from public handles. Bios and follower counts
+        aren&apos;t available, so those aren&apos;t shown.
       </p>
     </div>
   );
@@ -220,45 +214,6 @@ function AccountCard({ account, linked, busy, onToggle }) {
         )}
       </Button>
     </article>
-  );
-}
-
-function AccountAvatar({ account, linked }) {
-  const meta = platformMeta(account.platform);
-  const [imgFailed, setImgFailed] = useState(false);
-  const src = imgFailed ? "" : avatarUrl(account.platform, account.username);
-  const initial = (account.username || "?").charAt(0).toUpperCase();
-
-  return (
-    <div className="relative shrink-0">
-      <div className="flex size-11 items-center justify-center overflow-hidden rounded-full border border-border/60 bg-muted">
-        {src ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={src}
-            alt=""
-            className="size-full object-cover"
-            referrerPolicy="no-referrer"
-            onError={() => setImgFailed(true)}
-          />
-        ) : (
-          <span className="text-sm font-semibold text-muted-foreground">{initial}</span>
-        )}
-      </div>
-      {/* Platform badge — brand-colored chip with a white glyph (legible on both themes) */}
-      <span
-        className="absolute -bottom-0.5 -right-0.5 flex size-5 items-center justify-center rounded-full border-2 border-card text-white"
-        title={meta.label}
-        style={{ backgroundColor: meta.color }}
-      >
-        <PlatformGlyph platform={account.platform} className="size-3" />
-      </span>
-      {linked && (
-        <span className="absolute -left-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
-          <Check className="size-2.5" />
-        </span>
-      )}
-    </div>
   );
 }
 

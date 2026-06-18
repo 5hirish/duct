@@ -76,9 +76,8 @@ const NAV_SECTIONS = [
         key: "organic_growth",
         label: "Organic Growth",
         icon: TrendingUp,
-        href: "/insights/organic-growth",
-        available: true,
-        matchPrefix: "/insights/organic-growth",
+        href: null,
+        available: false,
       },
       {
         key: "product_intelligence",

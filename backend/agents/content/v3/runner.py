@@ -751,7 +751,6 @@ async def _run(
             ContentTool.FETCH_AVATAR_LIBRARY,
             ContentTool.FETCH_CONTENT_HISTORY,
             ContentTool.FETCH_CONTENT_ASSETS,
-            ContentTool.FETCH_DISCOVERED_REFERENCES,
             ContentTool.FETCH_POST,
             ContentTool.FETCH_SLIDE_CONTEXT,
             ContentTool.RENDER_SLIDE,

@@ -36,6 +36,7 @@ import asyncio
 import hashlib
 import json
 import logging
+import re
 import time
 import uuid
 from collections.abc import AsyncGenerator
@@ -1901,6 +1902,17 @@ def save_linked_accounts(
 # (Distinct from per-post `perf`, which only covers posts published via Duct.)
 # ---------------------------------------------------------------------------
 
+# Most platform share URLs embed the posting handle as `/@handle` (TikTok,
+# YouTube, Threads, Bluesky). We use it to attribute a row to a linked account
+# when PostBridge's post-results endpoint (the only other link) is unavailable.
+_HANDLE_RE = re.compile(r"/@([A-Za-z0-9._-]+)")
+
+
+def _handle_from_url(url: str) -> str:
+    m = _HANDLE_RE.search(url or "")
+    return m.group(1).lower() if m else ""
+
+
 class AnalyticsRowOut(BaseModel):
     id:                 str
     post_result_id:     str
@@ -1914,6 +1926,10 @@ class AnalyticsRowOut(BaseModel):
     share_count:        int
     platform_created_at: str | None
     last_synced_at:     str | None
+    # The PostBridge social account this result belongs to (for per-account
+    # filtering in the UI). Resolved via the post-result → social_account_id link.
+    social_account_id:  int | None = None
+    account_username:   str = ""
     # Enriched from the matching local ContentPost (when published via our system).
     pillar:             str = ""
     format_name:        str = ""
@@ -1944,13 +1960,22 @@ async def list_content_analytics(
         if hit is not None and (time.monotonic() - hit[0]) < _ANALYTICS_TTL:
             return hit[1]
 
-    linked_platforms = {
-        r.platform
-        for r in db.execute(
-            select(ContentSocialLink).where(ContentSocialLink.project_id == project_id)
-        ).scalars().all()
-        if r.platform
-    }
+    linked_rows = db.execute(
+        select(ContentSocialLink).where(ContentSocialLink.project_id == project_id)
+    ).scalars().all()
+    linked_platforms = {r.platform for r in linked_rows if r.platform}
+    # handle -> (social_account_id, username): the reliable, local way to attribute
+    # an analytics row to an account by the handle in its share_url, used when
+    # PostBridge's post-results endpoint (the only upstream link) is down.
+    linked_by_handle: dict[str, tuple[int, str]] = {}
+    for r in linked_rows:
+        handle = (r.username or "").lstrip("@").lower()
+        if not handle:
+            continue
+        try:
+            linked_by_handle[handle] = (int(r.external_account_id), r.username)
+        except (TypeError, ValueError):
+            continue
 
     try:
         client = client_for_user(proj.user_id, db)
@@ -1958,7 +1983,10 @@ async def list_content_analytics(
         raise HTTPException(400, str(exc)) from exc
 
     records = []
-    result_to_post: dict[str, str] = {}  # post_result_id -> post_bridge_post_id
+    result_to_post: dict[str, str] = {}     # post_result_id -> post_bridge_post_id
+    result_to_account: dict[str, int] = {}  # post_result_id -> social_account_id
+    result_to_username: dict[str, str] = {} # post_result_id -> handle (from result)
+    accounts_by_id: dict[int, str] = {}     # social_account_id -> canonical username
     try:
         async with client as pb:
             if refresh:
@@ -1972,10 +2000,21 @@ async def list_content_analytics(
                     break
                 offset += 100
             # Best-effort: map result -> PostBridge post id so we can also match
-            # local posts that only stored post_bridge_post_id. Never fatal.
+            # local posts that only stored post_bridge_post_id, and result ->
+            # social account so each row can be filtered by account. Never fatal.
             try:
                 for r in await pb.list_post_results(limit=100):
                     result_to_post[r.id] = r.post_id
+                    if r.social_account_id:
+                        result_to_account[r.id] = r.social_account_id
+                    if r.platform_data and r.platform_data.username:
+                        result_to_username[r.id] = r.platform_data.username
+            except PostBridgeAPIError:
+                pass
+            # Canonical handles per account (post-result platform_data may be null).
+            try:
+                for acct in await pb.list_social_accounts(limit=100):
+                    accounts_by_id[acct.id] = acct.username
             except PostBridgeAPIError:
                 pass
     except PostBridgeAPIError as exc:
@@ -2009,6 +2048,15 @@ async def list_content_analytics(
         if linked_platforms and a.platform not in linked_platforms:
             continue
         local = local_by_result.get(a.post_result_id) or local_by_post.get(result_to_post.get(a.post_result_id, ""))
+        # Attribute to a social account: prefer the post-results link, fall back to
+        # the handle in the share_url matched against the project's linked accounts.
+        acct_id = result_to_account.get(a.post_result_id)
+        acct_username = (accounts_by_id.get(acct_id, "") if acct_id else "") \
+            or result_to_username.get(a.post_result_id, "")
+        if acct_id is None:
+            hit = linked_by_handle.get(_handle_from_url(str(a.share_url or "")))
+            if hit:
+                acct_id, acct_username = hit
         rows.append(AnalyticsRowOut(
             id=a.id,
             post_result_id=a.post_result_id,
@@ -2022,6 +2070,8 @@ async def list_content_analytics(
             share_count=a.share_count or 0,
             platform_created_at=a.platform_created_at if isinstance(a.platform_created_at, str) else None,
             last_synced_at=a.last_synced_at.isoformat() if a.last_synced_at else None,
+            social_account_id=acct_id,
+            account_username=acct_username,
             pillar=local.pillar if local else "",
             format_name=(fmt_by_id.get(local.format_id, ("", ""))[1] if local else ""),
             published_via=local.published_via if local else "",

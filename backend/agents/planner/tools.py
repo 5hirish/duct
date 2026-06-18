@@ -26,6 +26,7 @@ from agents.planner import data as _data
 from agents.planner.schema import PlannerConfig, PlannerSession
 from db.session import get_engine
 from models.content import ContentPlan
+from service.discovery import query_discovered_references
 from sqlmodel import Session, select
 
 logger = logging.getLogger(__name__)
@@ -182,6 +183,45 @@ def build_planner_mcp_server(
             return _err(f"fetch_brand_context failed: {exc}")
 
     @tool(
+        name="fetch_discovered_references",
+        description=(
+            "Return TikTok posts the user saved from the Discover feature as "
+            "high-performing references — real signal for what's already working "
+            "in this audience's niche. Each row carries engagement counts (play, "
+            "digg, share, comment, collect), hashtags, music, author, and the "
+            "tiktok_url + asset_id. Ground topic/hook/format choices in these and "
+            "cite the tiktok_url. Filter the long tail with min_play_count "
+            "(default 10000)."
+        ),
+        input_schema={
+            "type": "object",
+            "properties": {
+                "min_play_count": {
+                    "type": "integer", "minimum": 0,
+                    "description": "Skip posts with fewer plays. Default 10000.",
+                },
+                "limit": {
+                    "type": "integer", "minimum": 1, "maximum": 100,
+                    "description": "Max rows to return. Default 30, max 100.",
+                },
+            },
+            "required": [],
+        },
+    )
+    async def fetch_discovered_references(args: dict) -> dict:
+        try:
+            min_plays = int(args.get("min_play_count") or 10000)
+            limit     = min(int(args.get("limit") or 30), 100)
+            with _open_db() as db:
+                items = query_discovered_references(
+                    db, project_id, min_plays=min_plays, limit=limit
+                )
+            return _ok({"references": items, "count": len(items)})
+        except Exception as exc:
+            logger.exception("planner fetch_discovered_references failed")
+            return _err(f"fetch_discovered_references failed: {exc}")
+
+    @tool(
         name="fetch_planner_config",
         description=(
             "Read the saved planner configuration (platforms, posts_per_day, "
@@ -292,6 +332,7 @@ def build_planner_mcp_server(
         tools=[
             submit_plan,
             fetch_brand_context,
+            fetch_discovered_references,
             fetch_planner_config,
             save_planner_config,
             fetch_post_metrics,
