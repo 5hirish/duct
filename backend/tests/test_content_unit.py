@@ -847,3 +847,56 @@ def test_image_tool_schemas_constrain_model_and_required_params():
     # optional-as-required fixes: these take either/neither id, nothing forced
     assert schemas["fetch_post"]["required"] == []
     assert schemas["render_slide"]["required"] == ["slide_id"]
+
+
+def test_merge_manual_metrics_maps_keys_preserves_postbridge_and_tracks_manual():
+    """Manual-entry merge: form fields map to the canonical perf keys (the same
+    keys metricsOf/PostCard already read), PostBridge's *_count fields are left
+    untouched, and every touched key is recorded under manual_keys so a later
+    sync won't be assumed to own them. Nested retention/audience pass through."""
+    from routes.content import _merge_manual_metrics
+
+    perf = {"view_count": 825, "like_count": 5, "comment_count": 0, "share_count": 1}
+    provided = {
+        "saves": 12,
+        "reach": 1200,
+        "profile_views": 40,
+        "new_followers": 6,
+        "avg_watch_time": 3.6,
+        "completion_rate": 15.0,
+        "retention": {"slide1": 100, "slide2": 62},
+        "audience_age": {"18-24": 53, "25-34": 22},
+    }
+    out = _merge_manual_metrics(perf, provided, at="2026-06-18T00:00:00+00:00")
+
+    # snake_case field → canonical perf key
+    assert out["saves"] == 12
+    assert out["reach"] == 1200
+    assert out["profileViews"] == 40
+    assert out["newFollowers"] == 6
+    assert out["avgWatchTime"] == 3.6
+    assert out["completionRate"] == 15.0
+    assert out["retention"] == {"slide1": 100, "slide2": 62}
+    assert out["audienceAge"] == {"18-24": 53, "25-34": 22}
+
+    # PostBridge-owned counts are never clobbered by a manual entry
+    assert out["view_count"] == 825 and out["share_count"] == 1
+
+    assert set(out["manual_keys"]) == {
+        "saves", "reach", "profileViews", "newFollowers",
+        "avgWatchTime", "completionRate", "retention", "audienceAge",
+    }
+    assert out["manual_updated_at"] == "2026-06-18T00:00:00+00:00"
+    # input perf dict is not mutated in place
+    assert "saves" not in perf
+
+
+def test_merge_manual_metrics_unions_manual_keys_across_calls():
+    """A second manual edit adds to (not replaces) the recorded manual_keys, so
+    the set reflects every hand-entered field over time."""
+    from routes.content import _merge_manual_metrics
+
+    first = _merge_manual_metrics({}, {"saves": 3}, at="2026-06-18T00:00:00+00:00")
+    second = _merge_manual_metrics(first, {"reach": 900}, at="2026-06-18T01:00:00+00:00")
+    assert second["saves"] == 3 and second["reach"] == 900
+    assert set(second["manual_keys"]) == {"saves", "reach"}

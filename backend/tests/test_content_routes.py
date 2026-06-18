@@ -73,6 +73,7 @@ def test_content_routes_registered():
         "/api/content/posts/{post_id}",
         "/api/content/posts/{post_id}/mark-posted",
         "/api/content/posts/{post_id}/log-metrics",
+        "/api/content/posts/{post_id}/metrics",
         # Libraries
         "/api/content/formats",
         "/api/content/formats/{format_id}",

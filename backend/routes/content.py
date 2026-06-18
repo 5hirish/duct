@@ -19,6 +19,7 @@ Plans + posts CRUD:
   POST   /api/content/posts               · PATCH /api/content/posts/{id}
   POST   /api/content/posts/{id}/mark-posted
   POST   /api/content/posts/{id}/log-metrics
+  POST   /api/content/posts/{id}/metrics      — manual metric entry (saves, etc.)
 
 Format + avatar library CRUD:
   GET/POST/PATCH/DELETE  /api/content/formats[/{id}]
@@ -868,6 +869,10 @@ class PostOut(BaseModel):
     scheduled_at:  str | None
     tiktok_url:    str
     published_via: str
+    # PostBridge linkage — the frontend reads post_bridge_post_id to decide a
+    # post is PostBridge-backed (shows Refresh + auto-pulls metrics on view).
+    post_bridge_post_id:   str
+    post_bridge_result_id: str
     perf:          dict
     daily_perf:    list
     notes:         str
@@ -926,6 +931,8 @@ def _post_out(
         scheduled_at=p.scheduled_at.isoformat() if p.scheduled_at else None,
         tiktok_url=p.tiktok_url,
         published_via=p.published_via,
+        post_bridge_post_id=p.post_bridge_post_id,
+        post_bridge_result_id=p.post_bridge_result_id,
         perf=p.perf or {},
         daily_perf=p.daily_perf or [],
         notes=p.notes,
@@ -1347,6 +1354,101 @@ def log_post_metrics(
     db.add(post)
     db.commit()
     db.refresh(post)
+    return _enrich_one(db, post)
+
+
+# Manual-entry metrics. PostBridge analytics only return view/like/comment/share
+# counts; saves, reach, watch time, completion, retention, and audience-age have
+# to be read off the platform's native analytics screen and typed in. Field →
+# canonical perf key (matches the keys metricsOf/PostCard and the migrated
+# MaxAura data already read — we don't invent a third naming convention).
+_MANUAL_METRIC_KEYS: dict[str, str] = {
+    "views":           "views",
+    "likes":           "likes",
+    "comments":        "comments",
+    "shares":          "shares",
+    "saves":           "saves",
+    "reach":           "reach",
+    "profile_views":   "profileViews",
+    "new_followers":   "newFollowers",
+    "avg_watch_time":  "avgWatchTime",
+    "completion_rate": "completionRate",
+    "retention":       "retention",
+    "audience_age":    "audienceAge",
+}
+
+
+class ManualMetrics(BaseModel):
+    """Manually-entered performance numbers. All optional — only the fields the
+    user filled in are merged into perf; the rest are left untouched (so a
+    PostBridge sync can still own view/like/comment/share counts)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    views:           int | None = Field(default=None, ge=0)
+    likes:           int | None = Field(default=None, ge=0)
+    comments:        int | None = Field(default=None, ge=0)
+    shares:          int | None = Field(default=None, ge=0)
+    saves:           int | None = Field(default=None, ge=0)
+    reach:           int | None = Field(default=None, ge=0)
+    profile_views:   int | None = Field(default=None, ge=0)
+    new_followers:   int | None = Field(default=None, ge=0)
+    avg_watch_time:  float | None = Field(default=None, ge=0)   # seconds
+    completion_rate: float | None = Field(default=None, ge=0, le=100)  # percent
+    # {"slide1": 100, "slide2": 62, ...} — per-slide retention %, 0–100
+    retention:       dict[str, float] | None = None
+    # {"18-24": 53, "25-34": 22, ...} — audience-age split %, 0–100
+    audience_age:    dict[str, float] | None = None
+
+
+def _merge_manual_metrics(perf: dict, provided: dict, *, at: str) -> dict:
+    """Merge hand-entered metrics into a perf dict (pure — no DB).
+
+    Maps each form field to its canonical perf key, records the touched keys
+    under ``manual_keys`` (so a later PostBridge sync won't be assumed to own
+    them), and stamps ``manual_updated_at``. Leaves untouched keys — notably the
+    PostBridge ``*_count`` fields — exactly as they were.
+    """
+    merged = dict(perf or {})
+    manual = set(merged.get("manual_keys") or [])
+    for field, value in provided.items():
+        key = _MANUAL_METRIC_KEYS.get(field, field)
+        merged[key] = value
+        manual.add(key)
+    merged["manual_keys"] = sorted(manual)
+    merged["manual_updated_at"] = at
+    return merged
+
+
+@router.post("/content/posts/{post_id}/metrics")
+def update_post_metrics(
+    post_id: UUID,
+    body: ManualMetrics,
+    db: Session = Depends(db_session),
+) -> PostOut:
+    """Merge user-entered metrics into perf (last-write-wins per key).
+
+    Distinct from /sync-metrics (PostBridge pull) and /log-metrics (append a
+    daily snapshot): this only updates the current lifetime numbers and records
+    which keys are human-entered, so a later PostBridge sync won't be assumed to
+    own them. Does not touch daily_perf — that stays PostBridge's domain so a
+    /sync-daily refresh can't clobber hand-entered history.
+    """
+    post = db.get(ContentPost, post_id)
+    if post is None:
+        raise HTTPException(404, "Post not found")
+
+    provided = body.model_dump(exclude_none=True)
+    if not provided:
+        raise HTTPException(400, "No metrics provided.")
+
+    post.perf = _merge_manual_metrics(
+        post.perf, provided, at=datetime.now(timezone.utc).isoformat()
+    )
+    db.add(post)
+    db.commit()
+    db.refresh(post)
+    _invalidate_analytics(post.project_id)
     return _enrich_one(db, post)
 
 

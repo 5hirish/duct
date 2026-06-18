@@ -11,6 +11,7 @@ import {
   Share2,
 } from "lucide-react";
 import { cdnImage, mediaUrl } from "@/lib/contentApi";
+import { coreMetrics, fmtCount } from "@/lib/contentMetrics";
 import { PlatformGlyph, platformMeta } from "@/components/content/platformGlyphs";
 
 // ---------------------------------------------------------------------------
@@ -24,31 +25,6 @@ const STATUS_STYLE = {
   discarded: "bg-rose-500/90 text-white",
   pending:   "bg-zinc-500/90 text-white",
 };
-
-function fmtNum(n) {
-  const v = Number(n) || 0;
-  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(v % 1_000_000 ? 1 : 0)}M`;
-  if (v >= 1_000)     return `${(v / 1_000).toFixed(v % 1_000 ? 1 : 0)}k`;
-  return String(v);
-}
-
-function pick(perf, ...keys) {
-  for (const k of keys) {
-    const v = perf?.[k];
-    if (typeof v === "number") return v;
-  }
-  return null;
-}
-
-function metricsOf(perf = {}) {
-  return {
-    views:    pick(perf, "view_count", "play_count", "views"),
-    likes:    pick(perf, "like_count", "digg_count", "likes"),
-    comments: pick(perf, "comment_count", "comments"),
-    shares:   pick(perf, "share_count", "shares"),
-    saves:    pick(perf, "save_count", "collect_count", "saves"),
-  };
-}
 
 function fmtDate(iso) {
   if (!iso) return "";
@@ -70,7 +46,7 @@ export default function PostCard({ post }) {
   // when Image Resizing is enabled (full-res stays for the editor).
   const thumb = cdnImage(mediaUrl(post.thumbnail_url), { width: 480 });
   const platforms = Array.isArray(post.platforms) ? post.platforms : [];
-  const m = metricsOf(post.perf);
+  const m = coreMetrics(post.perf);
   const hasMetrics = Object.values(m).some((v) => v != null);
   const status = post.status || "pending";
   const formatLabel = post.format_name || post.format_slug || "";
@@ -181,7 +157,7 @@ function Metric({ icon: Icon, value }) {
   return (
     <span className="inline-flex items-center gap-1 tabular-nums">
       <Icon className="h-3.5 w-3.5" />
-      {fmtNum(value)}
+      {fmtCount(value)}
     </span>
   );
 }

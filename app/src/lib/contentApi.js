@@ -506,6 +506,26 @@ export async function syncPostMetrics(postId) {
   return out;
 }
 
+/**
+ * Merge hand-entered metrics into a post's perf (saves, reach, watch time,
+ * completion, retention, audience age — the numbers PostBridge can't supply).
+ * `metrics` carries only the fields the user filled in (snake_case keys matching
+ * the ManualMetrics backend model). Returns the updated post.
+ */
+export async function updatePostMetrics(postId, metrics) {
+  const res = await fetch(
+    `${BASE}/api/content/posts/${encodeURIComponent(postId)}/metrics`,
+    {
+      method: "POST",
+      headers: backendApiHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify(metrics),
+    },
+  );
+  const out = await jsonOrThrow(res);
+  invalidatePosts();
+  return out;
+}
+
 /** Clone a post into a fresh DRAFT variant; returns the new post. */
 export async function clonePost(postId) {
   const res = await fetch(

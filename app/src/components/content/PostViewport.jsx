@@ -2,30 +2,25 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  BarChart3,
   Check,
   Copy,
-  ExternalLink,
-  Eye,
   Hash,
-  Heart,
   Image as ImageIcon,
   Images,
-  MessageCircle,
   RefreshCw,
   Send,
-  Share2,
   Sparkles,
   Video,
   Wand2,
 } from "lucide-react";
-import { downloadPostSlides, patchPost, syncPostMetrics } from "../../lib/contentApi";
+import { downloadPostSlides, patchPost } from "../../lib/contentApi";
 import { extractStyleHead } from "../../lib/slideDoc";
 import { statusMeta } from "../../lib/contentStatus";
 import { PostStatus } from "../../lib/contentEnums";
 import { PlatformGlyph, platformMeta } from "./platformGlyphs";
 import { useRouter } from "next/navigation";
 import SlidesCarousel from "./SlidesCarousel";
+import PostMetrics from "./PostMetrics";
 import PublishReviewPanel from "./PublishReviewPanel";
 import PublishModal from "./PublishModal";
 import { Phase } from "./contentPhase";
@@ -299,8 +294,16 @@ export default function PostViewport({ payload, assessment = null, phase, canPub
     ? `Scheduled ${new Date(post.scheduled_at).toLocaleDateString("en", { month: "short", day: "numeric" })}`
     : "Not scheduled";
 
-  // Body blocks — composed into one or two columns below.
-  const metricsEl = isPosted && post.post_bridge_post_id ? <PostMetrics post={post} /> : null;
+  // Body blocks — composed into one or two columns below. Shown for ANY posted
+  // post (not just PostBridge-published ones) — externally-posted and migrated
+  // posts get the same card, fully hand-entered. Patching perf back into the
+  // draft keeps the rest of the view (and a later save) consistent.
+  const metricsEl = isPosted ? (
+    <PostMetrics
+      post={post}
+      onUpdated={(updated) => setDraft((d) => ({ ...(d || post), perf: updated.perf }))}
+    />
+  ) : null;
   const reviewEl = (reviewing || matchesPost) ? (
     <PublishReviewPanel
       assessment={matchesPost ? effectiveAssessment : null}
@@ -458,127 +461,6 @@ export default function PostViewport({ payload, assessment = null, phase, canPub
 
 function prettify(s) {
   return String(s || "").replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-// ---------------------------------------------------------------------------
-// Performance — PostBridge metrics for a published post
-// ---------------------------------------------------------------------------
-
-const METRIC_TILES = [
-  { key: "view_count",    label: "Views",    icon: Eye },
-  { key: "like_count",    label: "Likes",    icon: Heart },
-  { key: "comment_count", label: "Comments", icon: MessageCircle },
-  { key: "share_count",   label: "Shares",   icon: Share2 },
-];
-
-function fmtCount(n) {
-  if (n == null) return "—";
-  if (n >= 1e6) return (n / 1e6).toFixed(n % 1e6 === 0 ? 0 : 1).replace(/\.0$/, "") + "M";
-  if (n >= 1e3) return (n / 1e3).toFixed(n % 1e3 === 0 ? 0 : 1).replace(/\.0$/, "") + "K";
-  return n.toLocaleString();
-}
-
-// share_url comes from PostBridge (external) — only allow http(s) so a
-// javascript:/data: URL can't ride into an <a href> (XSS).
-function safeHref(u) {
-  if (typeof u !== "string" || !u) return null;
-  try {
-    const url = new URL(u, typeof window !== "undefined" ? window.location.origin : "https://getduct.ai");
-    return /^https?:$/.test(url.protocol) ? url.toString() : null;
-  } catch {
-    return null;
-  }
-}
-
-function timeAgo(iso) {
-  if (!iso) return "";
-  const s = (Date.now() - new Date(iso).getTime()) / 1000;
-  if (s < 60) return "just now";
-  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
-  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
-  return `${Math.floor(s / 86400)}d ago`;
-}
-
-// Live PostBridge metrics for a published post. Shows stored perf immediately,
-// auto-pulls once if we have nothing yet, and offers a manual refresh. The post
-// is published (post_bridge_post_id present) before this renders.
-function PostMetrics({ post }) {
-  const [perf, setPerf] = useState(post.perf || {});
-  const [syncing, setSyncing] = useState(false);
-  const [note, setNote] = useState("");
-  const fetchedRef = useRef(false);
-
-  const hasAny = METRIC_TILES.some((t) => perf?.[t.key] != null);
-
-  async function refresh() {
-    setSyncing(true); setNote("");
-    try {
-      const updated = await syncPostMetrics(post.id);
-      setPerf(updated?.perf || {});
-    } catch (e) {
-      const msg = e?.message || "";
-      setNote(/publish|processing|finished/i.test(msg)
-        ? "Metrics appear once the platform finishes processing the post."
-        : "Couldn't refresh metrics — try again shortly.");
-    } finally {
-      setSyncing(false);
-    }
-  }
-
-  // Best-effort first load when there's nothing stored yet.
-  useEffect(() => {
-    if (!fetchedRef.current && !hasAny) { fetchedRef.current = true; refresh(); }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const shareUrl = safeHref(perf?.share_url);
-
-  return (
-    <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
-      <div className="flex items-center justify-between gap-2">
-        <h3 className="flex items-center gap-1.5 text-sm font-semibold">
-          <BarChart3 className="size-4 text-primary" /> Performance
-        </h3>
-        <div className="flex items-center gap-2">
-          {perf?.last_synced_at && (
-            <span className="text-[11px] text-muted-foreground">Updated {timeAgo(perf.last_synced_at)}</span>
-          )}
-          <button
-            type="button"
-            onClick={refresh}
-            disabled={syncing}
-            className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs font-medium hover:bg-muted/50 disabled:opacity-50"
-          >
-            <RefreshCw className={`size-3.5 ${syncing ? "animate-spin" : ""}`} /> {syncing ? "Syncing…" : "Refresh"}
-          </button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-4 gap-2">
-        {METRIC_TILES.map(({ key, label, icon: Icon }) => (
-          <div key={key} className="rounded-xl border border-border/60 bg-muted/30 px-3 py-2.5">
-            <Icon className="size-4 text-muted-foreground" />
-            <p className="mt-1.5 text-lg font-semibold leading-none tabular-nums">
-              {syncing && !hasAny ? "…" : fmtCount(perf?.[key])}
-            </p>
-            <p className="mt-1 text-[11px] text-muted-foreground">{label}</p>
-          </div>
-        ))}
-      </div>
-
-      {note && <p className="text-[11px] text-muted-foreground">{note}</p>}
-      {shareUrl && (
-        <a
-          href={shareUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-        >
-          <ExternalLink className="size-3.5" /> View on platform
-        </a>
-      )}
-    </section>
-  );
 }
 
 // Passive save status for auto-saved (non-pending) posts. Renders as quiet text,
