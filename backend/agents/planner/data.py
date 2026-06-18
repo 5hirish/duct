@@ -108,6 +108,14 @@ def _num(perf: dict, *keys: str) -> int:
     return 0
 
 
+def _flt(perf: dict, *keys: str) -> float:
+    for k in keys:
+        v = perf.get(k)
+        if isinstance(v, (int, float)):
+            return round(float(v), 3)
+    return 0.0
+
+
 def performance_summary(project_id: UUID) -> dict:
     """Compact summary of recent published-post metrics, grouped by pillar and
     content type, plus the top performers. Reads already-synced perf/daily_perf
@@ -128,6 +136,7 @@ def performance_summary(project_id: UUID) -> dict:
     rows: list[dict] = []
     saves_by_pillar: dict[str, list[int]] = defaultdict(list)
     views_by_type: dict[str, list[int]] = defaultdict(list)
+    completion_by_type: dict[str, list[float]] = defaultdict(list)
     for p in posts:
         perf = p.perf or {}
         views = _num(perf, "view_count", "views")
@@ -135,6 +144,11 @@ def performance_summary(project_id: UUID) -> dict:
         saves = _num(perf, "save_count", "saves")
         comments = _num(perf, "comment_count", "comments")
         shares = _num(perf, "share_count", "shares")
+        # The signals that matter more than likes (see content strategy research):
+        completion = _flt(perf, "completion_rate")
+        save_rate = _flt(perf, "save_rate")
+        profile_visits = _num(perf, "profile_visits")
+        bio_clicks = _num(perf, "bio_link_clicks")
         pillar = p.pillar or "(none)"
         ptype = p.post_type or "slideshow"
         rows.append({
@@ -146,19 +160,28 @@ def performance_summary(project_id: UUID) -> dict:
             "posted_at": p.posted_at.isoformat() if p.posted_at else None,
             "views": views, "likes": likes, "saves": saves,
             "comments": comments, "shares": shares,
+            "completion_rate": completion, "save_rate": save_rate,
+            "profile_visits": profile_visits, "bio_link_clicks": bio_clicks,
         })
         saves_by_pillar[pillar].append(saves)
         views_by_type[ptype].append(views)
+        if completion:
+            completion_by_type[ptype].append(completion)
 
     by_pillar = {
         pillar: {"posts": len(s), "median_saves": int(median(s)) if s else 0}
         for pillar, s in saves_by_pillar.items()
     }
     by_type = {
-        ptype: {"posts": len(v), "median_views": int(median(v)) if v else 0}
+        ptype: {
+            "posts": len(v),
+            "median_views": int(median(v)) if v else 0,
+            "median_completion": round(median(completion_by_type[ptype]), 3) if completion_by_type.get(ptype) else None,
+        }
         for ptype, v in views_by_type.items()
     }
-    top = sorted(rows, key=lambda r: (r["saves"], r["views"]), reverse=True)[:5]
+    # Rank by the conversion-leaning signals first (saves + completion), not likes.
+    top = sorted(rows, key=lambda r: (r["saves"], r["completion_rate"], r["views"]), reverse=True)[:5]
 
     return {
         "total_posted": len(rows),
@@ -166,6 +189,55 @@ def performance_summary(project_id: UUID) -> dict:
         "by_pillar": by_pillar,
         "by_type": by_type,
         "top": top,
+        "metric_note": "Optimise for completion_rate + saves + shares + bio_link_clicks, not likes.",
+    }
+
+
+# ---------------------------------------------------------------------------
+# Data-driven best-time — this account's own posting history (#7)
+# ---------------------------------------------------------------------------
+
+_WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+
+
+def posting_time_analysis(project_id: UUID) -> dict:
+    """Rank this account's historical posting windows by performance, so the
+    planner picks best-times from OWN data rather than generic charts. Buckets
+    published posts by (weekday, hour) of posted_at and ranks by average views.
+    Returns {"windows": [...], "note": ...}; empty windows when history is thin.
+    """
+    with _open_db() as db:
+        posts = db.exec(
+            select(ContentPost)
+            .where(ContentPost.project_id == project_id)
+            .where(ContentPost.posted_at.is_not(None))
+            .limit(200)
+        ).all()
+
+    samples: dict[tuple[int, int], list[int]] = defaultdict(list)
+    for p in posts:
+        if not p.posted_at:
+            continue
+        views = _num(p.perf or {}, "view_count", "views")
+        samples[(p.posted_at.weekday(), p.posted_at.hour)].append(views)
+
+    total = sum(len(v) for v in samples.values())
+    if total < 5:
+        return {"windows": [], "note": "Not enough posting history yet — use trends + geography to pick times."}
+
+    windows = [
+        {
+            "weekday": _WEEKDAYS[wd],
+            "hour_utc": hr,
+            "posts": len(vs),
+            "avg_views": int(sum(vs) / len(vs)) if vs else 0,
+        }
+        for (wd, hr), vs in samples.items()
+    ]
+    windows.sort(key=lambda w: (w["avg_views"], w["posts"]), reverse=True)
+    return {
+        "windows": windows[:6],
+        "note": "Best windows from this account's own history (hours in UTC — convert to the audience's geography).",
     }
 
 

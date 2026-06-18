@@ -22,15 +22,17 @@ def test_planner_config_caps_geographies_and_completeness():
 
     cfg = PlannerConfig(
         platforms=["tiktok", "instagram"],
-        posts_per_week=5,
+        posts_per_day=2,
         geographies=["United States", "India", "UK", "Canada"],
+        primary_objective="trial_signups",
     )
     assert cfg.geographies == ["United States", "India", "UK"]  # capped to 3
     assert cfg.is_complete()
 
-    # Missing platforms OR geographies → incomplete (the config gate fires).
-    assert not PlannerConfig(platforms=[], geographies=["US"]).is_complete()
-    assert not PlannerConfig(platforms=["tiktok"], geographies=[]).is_complete()
+    # Missing platforms, geographies, OR primary_objective → incomplete (gate fires).
+    assert not PlannerConfig(platforms=[], geographies=["US"], primary_objective="sales").is_complete()
+    assert not PlannerConfig(platforms=["tiktok"], geographies=[], primary_objective="sales").is_complete()
+    assert not PlannerConfig(platforms=["tiktok"], geographies=["US"]).is_complete()
 
 
 def test_plandraft_carries_strategy_and_day_planner_fields():

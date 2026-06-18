@@ -61,8 +61,10 @@ export default function ContentPlannerPage() {
             payload={payload}
             steps={steps}
             building={building}
+            projectId={projectId}
             onReviseDay={reviseDay}
             onRefreshPosts={() => onSendMessage?.("/refresh-posts")}
+            onSendMessage={onSendMessage}
           />
         )}
       />

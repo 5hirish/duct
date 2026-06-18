@@ -184,9 +184,10 @@ def build_planner_mcp_server(
     @tool(
         name="fetch_planner_config",
         description=(
-            "Read the saved planner configuration (platforms, posts_per_week, "
-            "geographies, posting_times) AND the project's connected social "
-            "accounts. Constrain platform choices to the connected accounts."
+            "Read the saved planner configuration (platforms, posts_per_day, "
+            "geographies, primary_objective, cta_destination, upcoming, audience "
+            "fields) AND the project's connected social accounts. Constrain "
+            "platform choices to the connected accounts."
         ),
         input_schema={},
     )
@@ -207,12 +208,19 @@ def build_planner_mcp_server(
         name="save_planner_config",
         description=(
             "Persist the planner configuration. Call after the user picks "
-            "platforms, posting frequency, and 1-3 priority geographies."
+            "platforms, posting cadence (posts/day), 1-3 geographies, and the "
+            "primary objective (plus any optional CTA / upcoming / audience info)."
         ),
         input_schema={
             "platforms": Annotated[list, "Platform ids to plan for, e.g. ['tiktok','instagram'] (from connected accounts)."],
-            "posts_per_week": Annotated[int, "How many posts per week (1-21)."],
+            "posts_per_day": Annotated[int, "How many posts per day (1-10; default 1)."],
             "geographies": Annotated[list, "1-3 priority geographies, e.g. ['United States','India']."],
+            "primary_objective": Annotated[str, "Primary objective: awareness | followers | saves | website_traffic | trial_signups | sales."],
+            "cta_destination": Annotated[str, "Where the bio link / offer points (conversion posts). Optional."],
+            "upcoming": Annotated[str, "Launches / promos / events / seasonal moments to plan around. Optional."],
+            "audience_pains": Annotated[str, "Audience pains. Optional."],
+            "audience_desires": Annotated[str, "Audience desires. Optional."],
+            "audience_objections": Annotated[str, "Audience objections. Optional."],
             "posting_times": Annotated[dict, "Optional platform -> preferred local time note."],
         },
     )
@@ -220,8 +228,14 @@ def build_planner_mcp_server(
         try:
             payload = {
                 "platforms": args.get("platforms") or [],
-                "posts_per_week": args.get("posts_per_week") or 5,
+                "posts_per_day": args.get("posts_per_day") or 1,
                 "geographies": args.get("geographies") or [],
+                "primary_objective": args.get("primary_objective") or "",
+                "cta_destination": args.get("cta_destination") or "",
+                "upcoming": args.get("upcoming") or "",
+                "audience_pains": args.get("audience_pains") or "",
+                "audience_desires": args.get("audience_desires") or "",
+                "audience_objections": args.get("audience_objections") or "",
                 "posting_times": args.get("posting_times") or {},
             }
             try:
@@ -232,6 +246,8 @@ def build_planner_mcp_server(
                 return _err("At least one platform is required (use a connected account).")
             if not config.geographies:
                 return _err("At least one geography is required (max 3).")
+            if not config.primary_objective:
+                return _err("A primary_objective is required (e.g. awareness / followers / saves / trial_signups / sales).")
             saved = _data.save_planner_config(project_id, config)
             return _ok({"saved": True, "config": saved.model_dump(mode="json")})
         except Exception as exc:

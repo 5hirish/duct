@@ -61,10 +61,22 @@ class PlannerConfig(BaseModel):
 
     # Which connected platforms to plan for (constrained to linked accounts).
     platforms: list[Platform] = Field(default_factory=list)
-    # Posting frequency across the 7-day window.
-    posts_per_week: int = Field(default=5, ge=1, le=21)
+    # Posting cadence — posts per day (default 1). The plan spans the next 7 days,
+    # so total posts ≈ posts_per_day × 7.
+    posts_per_day: int = Field(default=1, ge=1, le=10)
     # Top geographies to optimise timing/relevance for — 1 to 3.
     geographies: list[str] = Field(default_factory=list)
+    # The primary business objective this plan should drive — anchors the funnel
+    # mix. e.g. awareness | followers | saves | website_traffic | trial_signups | sales
+    primary_objective: str = ""
+    # Where the CTA points (bio link / offer / landing page) — used for BOFU posts.
+    cta_destination: str = ""
+    # Anything coming up to plan around — launches, promos, events, seasonal moments.
+    upcoming: str = ""
+    # Audience deep-dive (optional refinements the strategist plans against).
+    audience_pains: str = ""
+    audience_desires: str = ""
+    audience_objections: str = ""
     # Optional per-platform preferred local posting time notes (platform -> note).
     posting_times: dict[str, str] = Field(default_factory=dict)
     updated_at: datetime | None = None
@@ -76,8 +88,10 @@ class PlannerConfig(BaseModel):
         return cleaned[:3]
 
     def is_complete(self) -> bool:
-        """True once the agent has enough to plan without re-asking."""
-        return bool(self.platforms) and bool(self.geographies)
+        """True once the agent has enough to plan without re-asking. Platforms,
+        geographies, and the primary objective are the decision-critical inputs;
+        the rest are optional refinements the agent infers when absent."""
+        return bool(self.platforms) and bool(self.geographies) and bool(self.primary_objective)
 
 
 @dataclass(kw_only=True)

@@ -289,7 +289,9 @@ async def _run(
             "session_id": session_id,
             "step_id":    f"{ContentStep.DISPATCH_SUBAGENT.value}:{sub_name}",
             "label":      _subagent_label(sub_name),
-            "summary":    result[:240],
+            # Wider than the chip tooltip so the chat's expandable step panel can
+            # show the actual research the sub-agent returned (transparency).
+            "summary":    result[:800],
             "status":     StepStatus.SUCCESS,
         })
         return {"continue_": True}
@@ -599,6 +601,7 @@ class ClaudePlannerRunner:
         config = await asyncio.to_thread(_data.load_planner_config, project_id)
         accounts = await asyncio.to_thread(_data.linked_accounts, project_id)
         performance = await asyncio.to_thread(_data.performance_summary, project_id)
+        best_times = await asyncio.to_thread(_data.posting_time_analysis, project_id)
         prior_strategy = await asyncio.to_thread(_load_prior_strategy, project_id)
         await emit({
             "event":   ContentEvent.STEP_FINISHED,
@@ -612,7 +615,7 @@ class ClaudePlannerRunner:
         await emit({
             "event":   ContentEvent.STEP_STARTED,
             "step_id": ContentStep.ENRICHING,
-            "label":   STEP_LABELS[ContentStep.ENRICHING],
+            "label":   "Researching trends & competitors",
             "status":  StepStatus.RUNNING,
         })
         from agents.content.enrichment import enrich_content_context
@@ -624,14 +627,15 @@ class ClaudePlannerRunner:
         await emit({
             "event":   ContentEvent.STEP_FINISHED,
             "step_id": ContentStep.ENRICHING,
-            "label":   STEP_LABELS[ContentStep.ENRICHING],
+            "label":   "Researching trends & competitors",
             "status":  StepStatus.SUCCESS,
         })
 
         system_prompt = build_planner_system_prompt()
         initial_prompt = build_planner_user_prompt(
             brand, config, accounts, performance,
-            research=research, prior_strategy=prior_strategy, start_date=start_date,
+            research=research, prior_strategy=prior_strategy,
+            best_times=best_times, start_date=start_date,
         )
 
         try:

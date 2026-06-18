@@ -30,16 +30,22 @@ person mid-scroll and move them one step along that emotional arc.
 
 WHAT YOU DO, EVERY PLANNING PASS:
 
-1. CONFIGURE (only if not already configured). You plan for specific platforms,
-   a posting frequency, and 1-3 priority geographies. If the configuration is
-   missing or incomplete, use the AskUserQuestion tool to ask — in ONE call,
-   up to 3 questions:
-     - Which platforms to plan for (offer ONLY the connected/linked accounts).
-     - Posting frequency (posts per week).
+1. CONFIGURE. You plan for specific platforms, a posting frequency, 1-3 priority
+   geographies, and a primary objective. When the <planner_config> block says
+   CONFIG MISSING, you MUST call the AskUserQuestion tool and WAIT for the user's
+   answer before you do anything else — do NOT assume "smart defaults", do NOT
+   proceed without their input. Confirming these choices is the whole point.
+   Ask in ONE AskUserQuestion call (up to 4 questions, 2-4 options each):
+     - Which platforms to plan for (offer ONLY the connected/linked accounts;
+       recommend one and say why).
+     - Posting cadence (posts per DAY — offer sensible options like 1 / 2 / 3; default 1).
      - Top geographies to focus on (1-3).
-   Help the user choose well — recommend an option and say why. Then call
-   save_planner_config with their answers BEFORE planning. Never invent a
-   platform the brand hasn't connected.
+     - Primary objective (e.g. awareness / followers / saves / website traffic /
+       trial signups / sales) — this anchors the funnel mix.
+   After they answer, call save_planner_config with their choices, then plan.
+   ONLY skip the questions when the config is already saved (the block shows the
+   saved values, not "CONFIG MISSING"). Never invent a platform the brand hasn't
+   connected.
 
 2. RESEARCH. Dispatch the `trend_scout` sub-agent (via the Agent tool) to find
    what is trending RIGHT NOW on the chosen platforms for this audience and
@@ -48,38 +54,81 @@ WHAT YOU DO, EVERY PLANNING PASS:
    over-cover, under-cover, and the white-space angles you can own. You may also
    use WebSearch/WebFetch directly for quick checks.
 
-3. REVIEW PERFORMANCE. Read the performance summary in the first user message
-   (already-synced metrics of published posts). If it looks stale or the user
-   asks, call sync_all_posts to pull the latest from PostBridge, then re-read.
-   Double down on what worked (pillars, hooks, content types with strong
-   saves/views); cut what didn't.
+3. REVIEW PERFORMANCE. Read <performance>. Double down on the pillars, hooks,
+   and content types that earn COMPLETION, SAVES, SHARES, and bio-link clicks —
+   NOT likes (a 1k-view / 50%-completion post beats 10k / 5%). Cut what
+   underperforms. If the data looks stale or the user asks, call sync_all_posts,
+   then re-read.
 
-4. PLAN BEST TIMES. For each platform + the priority geographies + this
-   audience, pick the best time of day to post and set a concrete scheduled_at
-   (date + local-aware time) plus a one-line best_time_note explaining why.
+4. PLAN BEST TIMES. Prefer the proven windows in <best_times> (this account's
+   OWN history); otherwise reason from platform + geography + audience. Set a
+   concrete scheduled_at (date+time inside the 7-day window) + a one-line
+   best_time_note. The first 60 minutes after posting drive ~80% of reach.
 
-5. SEQUENCE + NARRATIVE. Decide the CONTENT-TYPE MIX (slideshow / video / image)
-   and the ORDER deliberately — what comes after what, so the week builds. Carry
-   forward the long-term narrative arc from the previous plan's strategy (given
-   in the user message) so each refresh CONTINUES the story rather than
-   restarting it. Capture this in the plan's `strategy` (narrative_arc,
-   sequencing_rationale, content_mix, weekly_theme).
+5. STRATEGIZE THE MIX. Plan a deliberate FUNNEL mix across the week —
+   awareness (TOFU) / consideration (MOFU) / conversion (BOFU) — weighted to the
+   primary_objective (new/awareness goals lean TOFU; conversion goals add MOFU/
+   BOFU; never all-TOFU — it won't convert; BOFU posts use the cta_destination).
+   Tag each post's funnel_stage + objective. Also balance the PILLAR mix and the
+   CONTENT-TYPE mix (slideshow / video / image), and order posts so the week
+   builds. Capture strategy.funnel_mix, strategy.pillar_mix, strategy.content_mix.
 
-6. DELIVER. Produce exactly a 7-day plan: one entry per planned post (respecting
-   the configured frequency), each with platform(s), post_type, scheduled_at +
-   best_time_note, pillar, the hook/angle, format, and a one-line `rationale`
-   (the strategic why). Days you intentionally skip simply have no entry.
+6. HOOKS + SERIES + NARRATIVE. Give every post a scroll-stopping `hook` (the
+   first 3 seconds decide ~80% of the outcome) with a `hook_type` (curiosity /
+   question / bold_statement / pattern_interrupt / relatable). Build recurring
+   SERIES / franchises across the week — each post can tease the next, turning
+   viewers into followers. Carry forward the long-term narrative_arc from
+   <previous_strategy> so each refresh CONTINUES the story, not restart it.
 
-OUTPUT CONTRACT (same as the rest of Duct):
-  - Emit the complete plan as JSON inside a single
-    <duct_report>{ "type": "plan", ... }</duct_report> tag (a PlanDraft:
-    project_id, name, start_date, character, strategy, days[]). Each day is a
-    Day: topic, pillar, post_type, platforms, format_slug, scheduled_at,
-    best_time_note, angle, rationale.
-  - Then call submit_plan ONCE with the same payload to persist it (this makes
-    it the project's active plan and renders it on the 7-day timeline).
-  - Then give a short chat summary: the weekly theme, the content mix, and what
-    you'd watch next.
+7. DELIVER. Produce a rolling NEXT-7-DAYS plan. Schedule every post within the
+   window start_date through start_date+6 INCLUSIVE — never beyond day 7. Plan
+   posts_per_day post(s) on EACH of the 7 days (default 1/day → ~7 posts total;
+   posts_per_day × 7 overall). Each entry has platform(s),
+   post_type, scheduled_at (a real date+time inside the 7-day window) +
+   best_time_note, pillar, funnel_stage, objective, hook + hook_type, angle, and
+   a one-line `rationale`.
+
+OUTPUT CONTRACT — emit the plan as JSON inside a single <duct_report> tag, then
+call submit_plan ONCE with the SAME object. Match these types EXACTLY (wrong
+types are rejected and you'll have to redo it):
+
+<duct_report>
+{
+  "type": "plan",
+  "project_id": "<the EXACT project_id UUID from the <brand> block — NOT the slug or name>",
+  "name": "week of Jun 18",
+  "start_date": "2026-06-18",                         // YYYY-MM-DD string
+  "character": { "name": "", "voice": "", "notes": "" },   // an OBJECT (or {}), never a prose string
+  "strategy": {
+    "narrative_arc": "the multi-week story this week advances",
+    "sequencing_rationale": "why these types, in this order, this week",
+    "content_mix": { "slideshow": 3, "video": 2, "image": 1 },   // post-type map, never prose
+    "pillar_mix":  { "educate": 3, "entertain": 2, "promote": 1 }, // pillar map, never prose
+    "funnel_mix":  { "awareness": 4, "consideration": 2, "conversion": 1 }, // intent map, never prose
+    "weekly_theme": "the through-line for these 7 days"
+  },
+  "days": [
+    {
+      "topic": "the post's subject",
+      "pillar": "which content pillar",
+      "post_type": "slideshow",                       // one of: slideshow | video | image
+      "platforms": ["tiktok"],                        // array of connected platform ids
+      "scheduled_at": "2026-06-18T19:10:00",          // ISO datetime, within start_date..start_date+6
+      "best_time_note": "7:10pm IST — audience peak",
+      "funnel_stage": "awareness",                    // awareness | consideration | conversion
+      "objective": "saves",                           // what this post should drive
+      "hook": "The literal first line that stops the scroll",
+      "hook_type": "curiosity",                       // curiosity | question | bold_statement | pattern_interrupt | relatable
+      "angle": "the strategic angle",
+      "rationale": "one line: the strategic why"
+    }
+    // posts_per_day entries on each of the 7 days (default 1/day → ~7 total)
+  ]
+}
+</duct_report>
+
+After submit_plan succeeds, give a short chat summary: the weekly theme, the
+content mix, and what you'd watch next.
 
 Be decisive and specific. No filler topics. Plan like the brand's growth
 depends on this week — because it does.
@@ -111,9 +160,17 @@ def build_planner_system_prompt() -> str:
 
 
 def _brand_stanza(brand: ContentBrandContext) -> str:
-    pillars = "; ".join(p.name for p in brand.pillars) or "(none defined)"
+    pillar_lines = (
+        "\n".join(
+            f"    - {p.name}: {p.description}".rstrip(" :") + (f" (hint: {p.research_hint})" if p.research_hint else "")
+            for p in brand.pillars
+        )
+        or "    (none defined)"
+    )
+    features = ", ".join(f.name for f in brand.features) or "(none)"
     lines = [
         "<brand>",
+        f"  project_id: {brand.project_id}   ← use this EXACT id in submit_plan / the plan JSON",
         f"  project: {brand.project_name}",
         f"  url: {brand.url or '(none)'}",
         f"  tagline: {brand.tagline or '(none)'}",
@@ -123,7 +180,13 @@ def _brand_stanza(brand: ContentBrandContext) -> str:
         f"  tone: {brand.tone or '(unknown)'}",
         f"  value_prop: {brand.value_prop or '(unknown)'}",
         f"  content_goal: {brand.content_goal or '(unknown)'}",
-        f"  pillars: {pillars}",
+        f"  do_say: {brand.do_say or '(none)'}",
+        f"  do_not_say: {brand.do_not_say or '(none)'}",
+        f"  features: {features}",
+        f"  competition: {brand.competition or '(none on file)'}",
+        f"  targets/KPIs: {brand.targets or '(none on file)'}",
+        "  pillars:",
+        pillar_lines,
         "</brand>",
     ]
     return "\n".join(lines)
@@ -135,11 +198,24 @@ def _config_stanza(config: PlannerConfig, accounts: list[dict]) -> str:
         or "    (no accounts connected — ask the user to connect one)"
     )
     if config.is_complete():
+        audience_extra = "\n".join(
+            f"  {label}: {val}"
+            for label, val in (
+                ("audience_pains", config.audience_pains),
+                ("audience_desires", config.audience_desires),
+                ("audience_objections", config.audience_objections),
+            )
+            if val
+        )
         cfg = (
             f"  platforms: {', '.join(config.platforms) or '(none)'}\n"
-            f"  posts_per_week: {config.posts_per_week}\n"
+            f"  posts_per_day: {config.posts_per_day}\n"
             f"  geographies: {', '.join(config.geographies) or '(none)'}\n"
+            f"  primary_objective: {config.primary_objective or '(none)'}\n"
+            f"  cta_destination: {config.cta_destination or '(none — ask or infer)'}\n"
+            f"  upcoming: {config.upcoming or '(none noted)'}\n"
             f"  posting_times: {json.dumps(config.posting_times) if config.posting_times else '(none yet)'}"
+            + (f"\n{audience_extra}" if audience_extra else "")
         )
         status = "CONFIG (saved — use it; only re-ask if the user wants changes):"
     else:
@@ -158,9 +234,24 @@ def _performance_stanza(perf: dict) -> str:
         "<performance>\n"
         f"  total_posted (recent): {perf.get('total_posted', 0)}\n"
         f"  by_pillar: {json.dumps(perf.get('by_pillar', {}))}\n"
-        f"  by_type: {json.dumps(perf.get('by_type', {}))}\n"
-        f"  top_performers: {json.dumps(perf.get('top', []), default=str)}\n"
+        f"  by_type (incl. median_completion): {json.dumps(perf.get('by_type', {}))}\n"
+        f"  top_performers (saves/completion first): {json.dumps(perf.get('top', []), default=str)}\n"
+        f"  → {perf.get('metric_note', 'Optimise for completion + saves + shares + bio-link clicks, not likes.')}\n"
         "</performance>"
+    )
+
+
+def _best_times_stanza(analysis: dict | None) -> str:
+    """Render the data-driven best posting windows (from this account's own
+    history). Empty string when there's nothing useful to show."""
+    if not analysis or not analysis.get("windows"):
+        return ""
+    return (
+        "<best_times>\n"
+        f"  {analysis.get('note', '')}\n"
+        f"  windows: {json.dumps(analysis.get('windows', []), default=str)}\n"
+        "  Prefer these proven windows; the first 60 minutes after posting drive ~80% of reach.\n"
+        "</best_times>"
     )
 
 
@@ -183,9 +274,10 @@ def build_planner_user_prompt(
     *,
     research=None,
     prior_strategy: dict | None = None,
+    best_times: dict | None = None,
     start_date: date | None = None,
 ) -> str:
-    """Kickoff prompt — brand, config, performance, research, prior narrative."""
+    """Kickoff prompt — brand, config, performance, best-times, research, narrative."""
     from agents.content.prompts import render_research_stanza  # reuse the content renderer
 
     start = (start_date or date.today()).isoformat()
@@ -196,6 +288,8 @@ def build_planner_user_prompt(
 
 {_performance_stanza(performance)}
 
+{_best_times_stanza(best_times)}
+
 {_prior_strategy_stanza(prior_strategy)}
 
 {render_research_stanza(research)}
@@ -204,19 +298,24 @@ Build (or refresh) the canonical rolling 7-day content plan for
 {brand.project_name}, starting {start}.
 
 Now:
-1. If CONFIG MISSING above, ask up to 3 AskUserQuestion items (platforms from
-   the connected accounts, frequency, 1-3 geographies), help the user choose,
-   and call save_planner_config before planning.
-2. Dispatch trend_scout and competitor_analyst for fresh trend + competitor
-   research. Fold the findings (and the <content_research> block if present)
-   into the plan.
-3. Review the <performance> block; double down on what's working.
-4. Synthesize the 7-day plan: deliberate content-type mix + sequencing, best
-   post times per platform/geo, and a narrative arc that continues
-   <previous_strategy>.
-5. Emit <duct_report>{{ "type": "plan", ... }}</duct_report> then call
+1. If CONFIG MISSING above, ask the AskUserQuestion items (platforms from the
+   connected accounts, frequency, 1-3 geographies, AND the primary objective),
+   help the user choose, and call save_planner_config before planning.
+2. Reason deeply about THIS audience in THESE geographies — their pains,
+   desires, objections, and what makes them feel seen / belong (use the audience
+   fields + brand). Local culture and language matter; tailor angles to the geos.
+3. Dispatch trend_scout and competitor_analyst for fresh trend + competitor
+   research. Fold the findings (and the <content_research> block) into the plan.
+4. Review <performance> + <best_times>: double down on what's working, optimise
+   for completion + saves + bio-link clicks (not likes), and schedule into the
+   proven windows.
+5. Synthesize the 7-day plan: a deliberate FUNNEL mix (awareness/consideration/
+   conversion tied to primary_objective), pillar + content-type mix, a scroll-
+   stopping hook per post, recurring series/franchises, and a narrative arc that
+   continues <previous_strategy>.
+6. Emit <duct_report>{{ "type": "plan", ... }}</duct_report> then call
    submit_plan with the same payload.
-6. Short chat summary: weekly theme, content mix, what to watch next.
+7. Short chat summary: weekly theme, funnel + content mix, what to watch next.
 """
 
 

@@ -85,8 +85,12 @@ class Day(BaseModel):
     # because Day uses extra="ignore" (unknown keys would be dropped on validate).
     scheduled_at: datetime | None = None      # best post time (date + time) for this slot
     best_time_note: str = ""                  # human note, e.g. "7:10pm IST — audience peak"
-    angle: str = ""                           # the hook/angle this post takes
+    angle: str = ""                           # the strategic angle this post takes
     rationale: str = ""                       # 1-line strategic why for this slot
+    funnel_stage: str = ""                    # awareness | consideration | conversion
+    objective: str = ""                       # what this post should drive (e.g. saves, profile visits, trial signups)
+    hook: str = ""                            # the literal scroll-stopping opening line (first 3s)
+    hook_type: str = ""                       # curiosity | question | bold_statement | pattern_interrupt | relatable
 
 
 class AvatarRefCell(BaseModel):
@@ -155,6 +159,8 @@ class ContentBrandContext(BaseModel):
     content_goal: str = ""
     do_say: str = ""
     do_not_say: str = ""
+    competition: str = ""   # composed from project.competition (planner uses it for gaps)
+    targets: str = ""       # composed from project.targets (goals/KPIs)
     features: list[AppFeature] = Field(default_factory=list)
     pillars: list[ContentPillar] = Field(default_factory=list)
     visual: ContentVisualAssets = Field(default_factory=ContentVisualAssets)
@@ -529,7 +535,9 @@ class PlanStrategy(BaseModel):
 
     narrative_arc: str = ""           # the multi-week story this week sits inside
     sequencing_rationale: str = ""    # why these content types, in this order, this week
-    content_mix: dict = Field(default_factory=dict)  # e.g. {"slideshow": 4, "video": 2, "image": 1}
+    content_mix: dict = Field(default_factory=dict)  # post-type mix, e.g. {"slideshow": 4, "video": 2, "image": 1}
+    pillar_mix: dict = Field(default_factory=dict)   # pillar ratio, e.g. {"educate": 3, "entertain": 2, "promote": 1}
+    funnel_mix: dict = Field(default_factory=dict)   # intent ratio, e.g. {"awareness": 4, "consideration": 2, "conversion": 1}
     weekly_theme: str = ""            # the through-line for this 7-day window
 
 

@@ -208,6 +208,8 @@ def _load_brand_context(project_id: UUID) -> ContentBrandContext:
             content_goal=str(brand_blob.get("content_goal") or ""),
             do_say=str(brand_blob.get("do_say") or ""),
             do_not_say=str(brand_blob.get("do_not_say") or ""),
+            competition=_compose_blob(proj.competition),
+            targets=_compose_blob(proj.targets),
             features=features,
             pillars=pillars,
             visual=visual,
@@ -238,6 +240,26 @@ def _compose_audience(audience: dict | None) -> str:
             elif name or desc:
                 parts.append(name or desc)
     return "; ".join(parts)
+
+
+def _compose_blob(blob: dict | None) -> str:
+    """Render a small JSONB context dict (project.competition / .targets) into a
+    compact prompt line. Returns "" when nothing usable is set."""
+    if not isinstance(blob, dict) or not blob:
+        return ""
+    parts: list[str] = []
+    for key, value in blob.items():
+        if value in (None, "", [], {}):
+            continue
+        if isinstance(value, (list, tuple)):
+            rendered = ", ".join(str(v) for v in value if v not in (None, ""))
+        elif isinstance(value, dict):
+            rendered = "; ".join(f"{k}: {v}" for k, v in value.items() if v not in (None, ""))
+        else:
+            rendered = str(value)
+        if rendered:
+            parts.append(f"{str(key).replace('_', ' ')}: {rendered}")
+    return " | ".join(parts)
 
 
 # ---------------------------------------------------------------------------
