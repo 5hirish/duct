@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AtSign,
   BadgeCheck,
@@ -28,13 +28,16 @@ import {
 
 import {
   getBrandContext,
+  getDiscoverBenchmark,
   getDiscoverWatchlist,
   putDiscoverWatchlist,
   saveDiscoveredReference,
+  peekDiscoverSnapshot,
+  saveDiscoverSnapshot,
+  clearDiscoverSnapshot,
 } from "../../lib/contentApi";
 import { useScraperRun } from "../../hooks/useScraperRun";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -70,6 +73,19 @@ const DATE_WINDOWS = [
 // Server-side quality floor (min hearts) — drops the low-engagement long tail
 // before it reaches us, which also trims Apify result cost.
 const MIN_DIGGS = 1000;
+
+// Region presets for the trend feed — flags make it scannable; the custom field
+// covers anything else (any 2-letter country code).
+const TREND_REGIONS = [
+  { code: "US", flag: "🇺🇸", label: "US" },
+  { code: "GB", flag: "🇬🇧", label: "UK" },
+  { code: "IN", flag: "🇮🇳", label: "India" },
+  { code: "CA", flag: "🇨🇦", label: "Canada" },
+  { code: "AU", flag: "🇦🇺", label: "Australia" },
+  { code: "DE", flag: "🇩🇪", label: "Germany" },
+  { code: "BR", flag: "🇧🇷", label: "Brazil" },
+  { code: "JP", flag: "🇯🇵", label: "Japan" },
+];
 
 const RUNNING = new Set(["running", "polling", "fetching"]);
 
@@ -166,21 +182,51 @@ function computeSynthesis(posts) {
 }
 
 export default function DiscoverPage({ projectId }) {
-  const [mode, setMode]             = useState("hashtag");
-  const [tags, setTags]             = useState([]);     // hashtag mode
-  const [keywords, setKeywords]     = useState([]);     // keyword mode
-  const [handle, setHandle]         = useState("");     // profile mode input
+  // Last run for this project (results + mode + filters), restored on return so
+  // we don't force a fresh (paid) scrape. In-memory; lost on full page reload.
+  const restored = useMemo(() => peekDiscoverSnapshot(projectId), [projectId]);
+
+  const [mode, setMode]             = useState(() => restored?.mode || "hashtag");
+  const [tags, setTags]             = useState(() => restored?.tags || []);        // hashtag mode
+  const [keywords, setKeywords]     = useState(() => restored?.keywords || []);    // keyword mode
+  const [handle, setHandle]         = useState(() => restored?.handle || "");      // profile mode input
   const [watchlist, setWatchlist]   = useState([]);     // pinned competitor handles
-  const [region, setRegion]         = useState("US");   // trend mode
-  const [dateWindow, setDateWindow] = useState("30");
-  const [profileSort, setProfileSort] = useState("popular");
-  const [sort, setSort]             = useState("engagement");
+  const [region, setRegion]         = useState(() => restored?.region || "US");    // trend mode
+  const [dateWindow, setDateWindow] = useState(() => restored?.dateWindow || "30");
+  const [profileSort, setProfileSort] = useState(() => restored?.profileSort || "popular");
+  const [sort, setSort]             = useState(() => restored?.sort || "engagement");
   const [busy, setBusy]             = useState({}); // post.id → "saving" | "saved"
+  const [benchmark, setBenchmark]   = useState(null); // the project's own perf baseline (you vs niche)
+
+  const lastRunRef = useRef(null); // params of the run that produced the shown results
 
   const modeDef = useMemo(() => MODES.find((m) => m.id === mode) || MODES[0], [mode]);
   const actorId = modeDef.actorId;
-  const { phase, results, error, elapsed, runId, datasetId, startRun, reset } = useScraperRun();
+  const { phase, results, error, elapsed, runId, datasetId, startRun, reset, hydrate } = useScraperRun();
   const isRunning = RUNNING.has(phase);
+
+  // Restore the last run's results into the run state on mount (no re-scrape).
+  useEffect(() => {
+    if (!restored?.results?.length) return;
+    lastRunRef.current = {
+      mode: restored.mode, tags: restored.tags || [], keywords: restored.keywords || [],
+      handle: restored.handle || "", region: restored.region || "US",
+      dateWindow: restored.dateWindow || "30", profileSort: restored.profileSort || "popular",
+      input: restored.input,
+    };
+    hydrate({ results: restored.results, runId: restored.runId, datasetId: restored.datasetId });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restored, hydrate]);
+
+  // Persist the run (results + mode + filters) when it completes, so returning
+  // to the tab restores it. Skipped on the hydrate-only path (no run this mount).
+  useEffect(() => {
+    if (phase !== "done") return;
+    const base = lastRunRef.current;
+    if (!base) return;
+    saveDiscoverSnapshot(projectId, { ...base, sort, results, runId, datasetId });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, results, sort, runId, datasetId, projectId]);
 
   // Anchor discovery from Brand: pre-seed hashtag/keyword inputs from the
   // brand's content pillars, and load the saved competitor watchlist.
@@ -188,12 +234,15 @@ export default function DiscoverPage({ projectId }) {
     if (!projectId) return;
     let alive = true;
     (async () => {
-      const [brand, wl] = await Promise.all([
+      const [brand, wl, bench] = await Promise.all([
         getBrandContext(projectId).catch(() => null),
         getDiscoverWatchlist(projectId).catch(() => null),
+        getDiscoverBenchmark(projectId).catch(() => null),
       ]);
       if (!alive) return;
       if (Array.isArray(wl?.handles)) setWatchlist(wl.handles);
+      if (bench) setBenchmark(bench); // your own baseline for the you-vs-niche overlay
+      if (restored) return; // a restored run already carries its filters — don't seed over them
       const pillars = brand?.content_pillars?.items || [];
       if (pillars.length) {
         const tagSeeds = pillars.map((p) => slugifyTag(p.name)).filter(Boolean).slice(0, 4);
@@ -203,7 +252,7 @@ export default function DiscoverPage({ projectId }) {
       }
     })();
     return () => { alive = false; };
-  }, [projectId]);
+  }, [projectId, restored]);
 
   const buildInput = useCallback(() => {
     const dw = DATE_WINDOWS.find((w) => w.id === dateWindow) || DATE_WINDOWS[2];
@@ -244,7 +293,21 @@ export default function DiscoverPage({ projectId }) {
 
   function handleRun() {
     if (!projectId || !canRun) return;
-    startRun({ projectId, actorId, inputPayload: buildInput() });
+    const input = buildInput();
+    // Same query as what's already shown → keep results on screen (refresh),
+    // otherwise let startRun clear them and show the skeleton.
+    const prev = peekDiscoverSnapshot(projectId);
+    const keepResults = !!prev && prev.mode === mode
+      && JSON.stringify(prev.input) === JSON.stringify(input)
+      && (prev.results?.length || 0) > 0;
+    lastRunRef.current = { mode, tags: [...tags], keywords: [...keywords], handle, region, dateWindow, profileSort, input };
+    startRun({ projectId, actorId, inputPayload: input, keepResults });
+  }
+
+  function handleReset() {
+    reset();
+    clearDiscoverSnapshot(projectId);
+    lastRunRef.current = null;
   }
 
   async function handleSave(post) {
@@ -388,12 +451,34 @@ export default function DiscoverPage({ projectId }) {
 
             {mode === "trend" && (
               <Labeled label="Region">
-                <Input
-                  value={region}
-                  onChange={(e) => setRegion(e.target.value.toUpperCase())}
-                  maxLength={2}
-                  className="mt-1 h-9 w-20 font-mono"
-                />
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {TREND_REGIONS.map((r) => {
+                    const active = region === r.code;
+                    return (
+                      <button
+                        key={r.code}
+                        type="button"
+                        onClick={() => setRegion(r.code)}
+                        className={cn(
+                          "inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition-colors",
+                          active
+                            ? "border-primary/50 bg-primary/10 text-foreground shadow-sm"
+                            : "border-border/70 bg-background text-muted-foreground hover:border-primary/30 hover:text-foreground",
+                        )}
+                      >
+                        <span className="text-sm leading-none">{r.flag}</span>{r.label}
+                      </button>
+                    );
+                  })}
+                  <input
+                    value={region}
+                    onChange={(e) => setRegion(e.target.value.toUpperCase().slice(0, 2))}
+                    maxLength={2}
+                    placeholder="--"
+                    aria-label="Custom region code"
+                    className="w-14 rounded-lg border border-border/70 bg-background px-2 py-1.5 text-center font-mono text-[11px] uppercase outline-none placeholder:text-muted-foreground/50 focus:border-primary/40"
+                  />
+                </div>
               </Labeled>
             )}
 
@@ -412,7 +497,7 @@ export default function DiscoverPage({ projectId }) {
 
           <div className="flex items-center gap-2">
             {phase !== "idle" && (
-              <Button variant="ghost" size="sm" onClick={reset} disabled={isRunning} title="Reset">
+              <Button variant="ghost" size="sm" onClick={handleReset} disabled={isRunning} title="Reset">
                 <RotateCcw className="h-3.5 w-3.5" />
               </Button>
             )}
@@ -459,18 +544,26 @@ export default function DiscoverPage({ projectId }) {
         </div>
       )}
 
-      {/* Running */}
-      {isRunning && (
+      {/* Running — fresh scrape with nothing to show yet */}
+      {isRunning && results.length === 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-center gap-2 rounded-lg border border-border/60 bg-muted/30 px-3 py-3 text-xs text-muted-foreground">
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            Scraping on Apify ({elapsed}s) — polling every 3s, results appear as soon as the actor finishes.
+            Scraping ({elapsed}s) — results appear as soon as the run finishes.
           </div>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {[0, 1, 2, 3].map((i) => (
               <div key={i} className="aspect-[4/5] animate-pulse rounded-xl border border-border/50 bg-muted/30" />
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Refreshing the same query — keep the previous results visible below */}
+      {isRunning && results.length > 0 && (
+        <div className="flex items-center justify-center gap-2 rounded-lg border border-border/60 bg-muted/30 px-3 py-2.5 text-xs text-muted-foreground">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          Refreshing results ({elapsed}s)…
         </div>
       )}
 
@@ -483,8 +576,8 @@ export default function DiscoverPage({ projectId }) {
 
       {/* Results */}
       {results.length > 0 && (
-        <div className="space-y-3">
-          <SynthesisPanel posts={results} />
+        <div className={cn("space-y-3 transition-opacity", isRunning && "opacity-60")}>
+          <SynthesisPanel posts={results} benchmark={benchmark} />
           <div className="flex items-center justify-between gap-3">
             <p className="text-xs text-muted-foreground">
               <span className="font-medium text-foreground tabular-nums">{results.length}</span> posts found
@@ -740,17 +833,39 @@ function Tile({ title, children }) {
   );
 }
 
-function SynthesisPanel({ posts }) {
+function SynthesisPanel({ posts, benchmark }) {
   const s = useMemo(() => computeSynthesis(posts), [posts]);
   if (!s) return null;
   const pct = (x) => `${(x * 100).toFixed(1)}%`;
   const slidePct = Math.round((s.slideshows / s.n) * 100);
+
+  // "You vs niche": overlay the marketer's own baseline (median engagement +
+  // format mix), computed server-side the SAME way as the niche numbers.
+  const you = benchmark && benchmark.post_count > 0 && benchmark.engagement_sample > 0 ? benchmark : null;
+  const youFmt = you?.format_mix || {};
+  const youTotal = Object.values(youFmt).reduce((a, b) => a + b, 0);
+  const youSlidePct = youTotal ? Math.round(((youFmt.slideshow || 0) / youTotal) * 100) : 0;
+  const beats = you ? you.engagement >= s.median : false;
+  const fmtGap = you ? slidePct - youSlidePct : 0; // niche slide% minus yours
 
   return (
     <section className="rounded-xl border border-border/70 bg-card p-4">
       <h3 className="mb-3 flex flex-wrap items-center gap-x-1.5 text-xs font-semibold text-foreground">
         <Sparkles className="h-3.5 w-3.5 text-primary" /> What&apos;s working
         <span className="font-normal text-muted-foreground">· median {pct(s.median)} eng · top quartile {pct(s.p75)}</span>
+        {you ? (
+          <span
+            className={cn(
+              "inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-semibold",
+              beats ? "bg-green-500/15 text-green-600 dark:text-green-400" : "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+            )}
+            title={`Your median engagement across ${you.post_count} posted posts`}
+          >
+            you {pct(you.engagement)} {beats ? "↑" : "↓"}
+          </span>
+        ) : benchmark && benchmark.post_count === 0 ? (
+          <span className="font-normal text-muted-foreground/50">· post &amp; sync to compare to your own results</span>
+        ) : null}
       </h3>
 
       <div className="grid gap-3 sm:grid-cols-3">
@@ -762,6 +877,16 @@ function SynthesisPanel({ posts }) {
             <span className="font-medium text-foreground">Slides {slidePct}% · {pct(s.slideEng)}</span>
             <span className="text-muted-foreground">Video {100 - slidePct}% · {pct(s.videoEng)}</span>
           </div>
+          {you && (
+            <div className="mt-1 border-t border-border/40 pt-1 text-[10px] text-muted-foreground">
+              You: {youSlidePct}% slides <span className="text-muted-foreground/60">({you.post_count} posts)</span>
+              {Math.abs(fmtGap) >= 20 && (
+                <span className="mt-0.5 block text-foreground/70">
+                  {fmtGap > 0 ? "Niche leans slideshows — you're under-indexed." : "You over-index on slideshows vs the niche."}
+                </span>
+              )}
+            </div>
+          )}
         </Tile>
 
         <Tile title="Rising sounds">

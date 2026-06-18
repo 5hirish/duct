@@ -43,6 +43,13 @@ export function peek(key) {
   return hit ? hit.value : null;
 }
 
+/** Write a value directly (no fetcher). Pairs with peek() for snapshot-style
+ * state like the Discover tab's last run. Default: no expiry (read via peek,
+ * which ignores TTL); the value lives until invalidated or a full page reload. */
+export function put(key, value, ttlMs = Infinity) {
+  store.set(key, { value, expires: Date.now() + ttlMs });
+}
+
 /** Drop every cached entry (and in-flight promise) whose key starts with `prefix`. */
 export function invalidate(prefix) {
   for (const k of store.keys())    if (k.startsWith(prefix)) store.delete(k);

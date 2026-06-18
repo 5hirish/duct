@@ -56,11 +56,22 @@ export function useScraperRun() {
     clearTimers();
   }, [clearTimers]);
 
-  const startRun = useCallback(async ({ projectId, actorId, inputPayload }) => {
+  // Restore a previous run's results without re-scraping (stale snapshot replay).
+  const hydrate = useCallback(({ results: r, runId: rid = "", datasetId: did = "" }) => {
+    setResults(Array.isArray(r) ? r : []);
+    setRunId(rid);
+    setDatasetId(did);
+    setError("");
+    setPhase("done");
+  }, []);
+
+  // keepResults: on a refresh of the *same* query, leave the current results on
+  // screen (with an "updating" treatment) instead of flashing a skeleton.
+  const startRun = useCallback(async ({ projectId, actorId, inputPayload, keepResults = false }) => {
     cancelled.current = false;
     clearTimers();
     setPhase("running");
-    setResults([]);
+    if (!keepResults) setResults([]);
     setError("");
     setElapsed(0);
     setRunId("");
@@ -123,5 +134,5 @@ export function useScraperRun() {
     }
   }, [clearTimers]);
 
-  return { phase, results, error, elapsed, runId, datasetId, startRun, reset };
+  return { phase, results, error, elapsed, runId, datasetId, startRun, reset, hydrate };
 }

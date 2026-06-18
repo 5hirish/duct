@@ -81,7 +81,7 @@ function SignInContent() {
         .then(({ token }) => {
           if (token) {
             localStorage.setItem(TOKEN_KEY, token);
-            router.replace("/insights/organic-growth");
+            router.replace("/content");
           }
         })
         .catch(() => {});
@@ -91,7 +91,7 @@ function SignInContent() {
     // Already authenticated? Redirect.
     const existing = localStorage.getItem(TOKEN_KEY);
     if (isTokenValid(existing)) {
-      router.replace("/insights/organic-growth");
+      router.replace("/content");
       return;
     }
 

@@ -35,7 +35,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getContentAnalytics } from "@/lib/contentApi";
+import { getContentAnalytics, peekAnalytics } from "@/lib/contentApi";
 import { PlatformGlyph, platformMeta } from "./platformGlyphs";
 import { AccountAvatar } from "./AccountAvatar";
 
@@ -77,8 +77,10 @@ function shortDate(d) {
 }
 
 export default function AnalyticsView({ projectId }) {
-  const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(true);    // first paint only — nothing to show yet
+  // Paint the last-known rows instantly (even if the cache TTL lapsed); only
+  // show the loader on a true cold start with nothing cached.
+  const [rows, setRows] = useState(() => peekAnalytics(projectId) || []);
+  const [loading, setLoading] = useState(() => peekAnalytics(projectId) == null);
   const [updating, setUpdating] = useState(false); // background revalidate in flight
   const [error, setError] = useState("");
   const [sortKey, setSortKey] = useState("views"); // views | likes | date
@@ -105,7 +107,8 @@ export default function AnalyticsView({ projectId }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      setLoading(true);
+      // Don't force the loader here — the initial state is seeded from cache, so
+      // we only block when there was nothing to seed (loading already true).
       try {
         const existing = await getContentAnalytics(projectId, { refresh: false });
         if (!cancelled) setRows(Array.isArray(existing) ? existing : []);

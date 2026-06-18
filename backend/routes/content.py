@@ -2806,3 +2806,35 @@ def discover_save(
         capture_reference_media, asset.id, post.model_dump(mode="json")
     )
     return _asset_out(asset)
+
+
+@router.post("/content/discover/recapture-media")
+def recapture_discover_media(
+    project_id: UUID,
+    limit: int = 50,
+    db: Session = Depends(db_session),
+) -> dict:
+    """Backfill media for saved discoveries whose capture was lost (server
+    restart) or failed. Recovers only while the TikTok CDN URLs are still
+    alive. Manual/cron trigger — see service.discovery.recapture_missing_media.
+    """
+    from service.discovery import recapture_missing_media
+
+    _project_or_404(db, project_id)
+    return recapture_missing_media(project_id, limit=max(1, min(limit, 200)))
+
+
+@router.get("/content/discover/benchmark")
+def get_discover_benchmark(
+    project_id: UUID,
+    db: Session = Depends(db_session),
+) -> dict:
+    """The project's own posted-post baseline (median engagement + format mix),
+    for Discover's "you vs niche" overlay. Engagement is computed the same way
+    as the scraped niche so the comparison is apples-to-apples. Empty on cold
+    start (no posted posts yet).
+    """
+    from agents.planner.data import performance_baseline
+
+    _project_or_404(db, project_id)
+    return performance_baseline(project_id)

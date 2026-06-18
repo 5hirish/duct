@@ -26,7 +26,7 @@ from agents.planner import data as _data
 from agents.planner.schema import PlannerConfig, PlannerSession
 from db.session import get_engine
 from models.content import ContentPlan
-from service.discovery import query_discovered_references
+from service.discovery import query_discovered_references, saved_reference_urls
 from sqlmodel import Session, select
 
 logger = logging.getLogger(__name__)
@@ -93,10 +93,19 @@ def build_planner_mcp_server(
                 )
             start = draft.start_date or _date.today()
             label = start.strftime("week of %b %d")
-            days_json = [d.model_dump(mode="json") for d in draft.days]
             strategy_json = draft.strategy.model_dump(mode="json")
             character_json = draft.character.model_dump(mode="json")
             with _open_db() as db:
+                # True receipts: drop any plan evidence whose URL isn't an
+                # actually-saved discovery, so citations can't be fabricated.
+                saved_urls = saved_reference_urls(db, project_id)
+                for d in draft.days:
+                    if d.evidence:
+                        d.evidence = [
+                            e for e in d.evidence
+                            if e.tiktok_url and e.tiktok_url in saved_urls
+                        ]
+                days_json = [d.model_dump(mode="json") for d in draft.days]
                 # Rolling plan: refresh the existing ACTIVE plan in place so the
                 # canonical plan keeps one stable row; other plans are untouched.
                 row = db.exec(

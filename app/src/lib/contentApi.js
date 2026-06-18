@@ -17,7 +17,7 @@ import {
   listAgentConversations,
   archiveAgentConversation,
 } from "./api";
-import { cached, invalidate, peek } from "./contentCache";
+import { cached, invalidate, peek, put } from "./contentCache";
 
 /** Unified agent-type id for this workspace (see backend agents/registry.py). */
 const AGENT_TYPE = "tiktok_studio";
@@ -336,6 +336,16 @@ export async function putDiscoverWatchlist(projectId, handles) {
   return jsonOrThrow(res);
 }
 
+/** The project's own posted-post baseline for Discover's "you vs niche" overlay.
+ *  Returns { post_count, engagement, engagement_sample, format_mix }. */
+export async function getDiscoverBenchmark(projectId) {
+  const res = await fetch(
+    `${BASE}/api/content/discover/benchmark?project_id=${encodeURIComponent(projectId)}`,
+    { headers: backendApiHeaders() },
+  );
+  return jsonOrThrow(res);
+}
+
 export async function listPlans(projectId) {
   const res = await fetch(
     `${BASE}/api/content/plans?project_id=${encodeURIComponent(projectId)}`,
@@ -573,6 +583,12 @@ export async function listSocialAccounts(projectId, platform) {
   return jsonOrThrow(res);
 }
 
+/** Last-known analytics rows from cache (even if stale), or null — lets the
+ * Analytics tab paint instantly on return while it revalidates in the background. */
+export function peekAnalytics(projectId) {
+  return peek(`analytics:${projectId}`);
+}
+
 /**
  * Per-post analytics for the project's linked accounts, pulled live from
  * PostBridge. Pass { refresh: true } to trigger a PostBridge sync first.
@@ -756,4 +772,27 @@ export async function saveDiscoveredReference({ projectId, actorId, runId, datas
     }),
   });
   return jsonOrThrow(res);
+}
+
+// ---------------------------------------------------------------------------
+// Discover — last-run snapshot (in-memory, per project). A discovery run is a
+// paid, on-demand scrape, so instead of re-running when the tab remounts we
+// restore the previous run (results + mode + filters). Lost on full reload.
+// ---------------------------------------------------------------------------
+
+const discoverSnapKey = (projectId) => `discover-snap:${projectId}`;
+
+/** The project's last Discover run snapshot (or null) — survives tab switches. */
+export function peekDiscoverSnapshot(projectId) {
+  return peek(discoverSnapKey(projectId));
+}
+
+/** Persist the project's last Discover run so the tab restores it on return. */
+export function saveDiscoverSnapshot(projectId, snapshot) {
+  put(discoverSnapKey(projectId), snapshot);
+}
+
+/** Forget the cached Discover run (Reset). */
+export function clearDiscoverSnapshot(projectId) {
+  invalidate(discoverSnapKey(projectId));
 }

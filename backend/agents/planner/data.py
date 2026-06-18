@@ -333,10 +333,51 @@ async def sync_all_posts(project_id: UUID) -> dict:
     return {"synced": synced, "skipped": skipped, "failed": failed}
 
 
+def performance_baseline(project_id: UUID) -> dict:
+    """The project's OWN posted-post baseline for Discover's "you vs niche"
+    overlay. Engagement is computed the SAME way as the scraped niche —
+    (likes + comments + shares + saves) / views — so the comparison is
+    apples-to-apples. Returns median engagement (directional, not stat-sig) +
+    the format mix. Empty (post_count=0) on cold start so the UI can degrade.
+    """
+    with _open_db() as db:
+        posts = db.exec(
+            select(ContentPost)
+            .where(ContentPost.project_id == project_id)
+            .where(ContentPost.posted_at.is_not(None))
+            .order_by(ContentPost.posted_at.desc())
+            .limit(_PERF_LOOKBACK_LIMIT)
+        ).all()
+
+    engs: list[float] = []
+    fmt: dict[str, int] = defaultdict(int)
+    for p in posts:
+        perf = p.perf or {}
+        fmt[p.post_type or "slideshow"] += 1
+        views = _num(perf, "view_count", "views")
+        if views <= 0:
+            continue
+        interactions = (
+            _num(perf, "like_count", "likes")
+            + _num(perf, "comment_count", "comments")
+            + _num(perf, "share_count", "shares")
+            + _num(perf, "save_count", "saves")
+        )
+        engs.append(interactions / views)
+
+    return {
+        "post_count": len(posts),
+        "engagement": round(median(engs), 4) if engs else 0.0,
+        "engagement_sample": len(engs),
+        "format_mix": dict(fmt),
+    }
+
+
 __all__ = [
     "AGENT_ID",
     "linked_accounts",
     "load_planner_config",
+    "performance_baseline",
     "performance_summary",
     "save_planner_config",
     "sync_all_posts",
