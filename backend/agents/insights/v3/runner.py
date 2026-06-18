@@ -39,7 +39,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import os
 from collections.abc import Callable
 from time import perf_counter
 from typing import Any
@@ -184,9 +183,21 @@ async def _run_synthesis(
     from claude_agent_sdk import ResultMessage, StreamEvent
 
     env_var = get_env_var_for_engine_provider(Engine.V3, provider) or "ANTHROPIC_API_KEY"
-    original = os.environ.get(env_var)
-    if api_key and not os.environ.get(env_var):
-        os.environ[env_var] = api_key
+    # Inject the resolved provider key into the per-call SDK env (merged over
+    # os.environ for the subprocess only) instead of mutating the process-global
+    # os.environ. This makes a per-request bring-your-own key always win and keeps
+    # concurrent requests from racing on a shared var. When api_key is empty (e.g.
+    # local subscription-OAuth) we leave it unset so the SDK can fall back to
+    # CLAUDE_CODE_OAUTH_TOKEN / ~/.claude.
+    sdk_env = {
+        "ENABLE_PROMPT_CACHING_1H": "1",
+        # Clear inherited Claude Code IDE session vars that confuse child instances
+        "CLAUDE_CODE_SESSION_ID": "",
+        "CLAUDE_EFFORT": "",
+        "CLAUDE_CODE_ENABLE_SDK_FILE_CHECKPOINTING": "false",
+    }
+    if api_key:
+        sdk_env[env_var] = api_key
 
     try:
         options = ClaudeAgentOptions(
@@ -196,13 +207,7 @@ async def _run_synthesis(
             max_turns=5,
             system_prompt=_SYNTHESIS_ORCHESTRATOR_PROMPT,
             include_partial_messages=True,
-            env={
-                "ENABLE_PROMPT_CACHING_1H": "1",
-                # Clear inherited Claude Code IDE session vars that confuse child instances
-                "CLAUDE_CODE_SESSION_ID": "",
-                "CLAUDE_EFFORT": "",
-                "CLAUDE_CODE_ENABLE_SDK_FILE_CHECKPOINTING": "false",
-            },
+            env=sdk_env,
             agents={
                 "synthesizer": AgentDefinition(
                     description=(
@@ -254,11 +259,6 @@ async def _run_synthesis(
     except Exception:
         logger.exception("v3: synthesis phase failed")
         return None
-    finally:
-        if original is None and env_var in os.environ:
-            del os.environ[env_var]
-        elif original is not None:
-            os.environ[env_var] = original
 
 
 # ---------------------------------------------------------------------------

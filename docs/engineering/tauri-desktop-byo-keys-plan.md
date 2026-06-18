@@ -1,6 +1,6 @@
 # Tauri Desktop App + Bring‑Your‑Own Provider Keys — Implementation Plan
 
-> **Status:** Draft for review
+> **Status:** Phase 0 (backend BYO key) implemented — frontend (Phase 1) & Tauri shell (Phases 2–3) pending
 > **Date:** 2026‑06‑18
 > **Branch:** `claude/stoic-volta-2alwt0`
 > **Owner:** @5hirish
@@ -254,5 +254,45 @@ Each phase is shippable and reversible.
 | `app/src/lib/providerKeys.js` *(new)* | Shell‑aware key store (sessionStorage ↔ Tauri keychain) |
 | `app/src/lib/api.js` | Add `X-Provider-*` headers in `backendAuthedHeaders()` |
 | `app/src/app/(app)/connections/page.jsx` | Providers tab/section UI |
+
+## 15. Decisions locked
+
+1. **Key transport:** per‑provider headers — `X-Provider-Anthropic` / `-OpenAI` / `-Gemini`.
+2. **Key precedence:** **bring‑your‑own first, backend fallback** (`user_keys.get(provider) or config key`).
+3. **Backend‑fallback policy:** **open** for the friends alpha (monitor spend; no allowlist/cap yet).
+4. **Persistence:** **none** server‑side for alpha — keys travel per‑request, used in memory only.
+5. Desktop frontend delivery, provider list (OpenRouter?), and Tauri repo location: still open (Phases 2–3).
+
+## 16. Implementation log
+
+**Phase 0 — backend per‑request BYO key (done).** Shell‑agnostic; also powers a web beta.
+
+- `backend/service/auth.py` — new `get_user_provider_keys()` dependency reading the
+  `X-Provider-*` headers (`APIKeyHeader`, `auto_error=False`) → `dict[Provider, str]`,
+  trimmed, only non‑blank providers returned.
+- `backend/routes/generate.py` — `_resolve_agent_config(request_engine, user_keys=…)`
+  resolves `api_key = user_keys.get(provider) or config key`; both `/insights/generate`
+  and `/insights/generate/stream` take the dependency and pass it through
+  `_run_generate_pipeline`.
+- `backend/agents/insights/v3/runner.py` — key now injected into the per‑call
+  `ClaudeAgentOptions(env=…)`; removed the global `os.environ` mutation (and the unused
+  `import os`). Fixes both the precedence bug (a server key no longer shadows a BYO key)
+  and the cross‑request race.
+- `backend/agents/insights/v2/runner.py` — ADK now honours the resolved key even when a
+  server key is in the env (precedence). Residual global‑env race under concurrent
+  *different* keys noted as a follow‑up (needs per‑model LiteLlm `api_key`).
+- `backend/server.py` — Sentry `before_send` scrubs `X-Provider-*` / `X-API-Key` /
+  `Authorization` headers (matters because `send_default_pii=True`).
+- `backend/tests/test_byo_provider_keys.py` — header parsing + precedence/fallback/no‑leak.
+- Verified: `py_compile` + `ruff` clean. Suite runs in CI (backend deps not installed locally).
+
+**Follow‑ups (not in Phase 0):**
+- `routes/audit.py` and the content agents reuse `_resolve_agent_config` / their own v3
+  runners — add the same `user_keys` dependency + env‑injection there.
+- `routes/agents.py` unified session API: thread BYO keys through session creation.
+- v2 ADK per‑model key (remove the global‑env race).
+
+**Next:** Phase 1 — `Providers` tab in `connections/page.jsx` + shell‑aware key store +
+`X-Provider-*` headers in `lib/api.js`.
 | `desktop/` *(new)* | Tauri v2 shell: webview→hosted URL, `keyring` commands, updater, packaging |
 ```
