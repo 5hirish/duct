@@ -74,6 +74,7 @@ export function useScraperRun() {
     try {
       const run = await startDiscoverRun({ projectId, actorId, inputPayload });
       if (cancelled.current) return;
+      console.debug("[discover] run=%s dataset=%s status=%s", run.run_id, run.dataset_id, run.status);
       setRunId(run.run_id);
       setDatasetId(run.dataset_id);
       setPhase("polling");

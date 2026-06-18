@@ -33,6 +33,7 @@ Deferred:
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import logging
 import time
@@ -2513,21 +2514,70 @@ def _apify_client_or_503():
     return ApifyClient(cfg.apify_api_key)
 
 
+# In-process dedupe cache for discover runs. The backend runs a single uvicorn
+# worker (railway.json), so a module-level dict is shared across all requests.
+# An identical search (same project + actor + input) within the TTL reuses the
+# prior Apify run instead of paying for a fresh one — the actor run is the
+# expensive, slow part; reading its dataset later is free. Lost on restart
+# (worst case: one extra run); swap for Redis if we ever scale to >1 replica.
+_DISCOVER_CACHE: dict[str, tuple[float, str]] = {}
+_DISCOVER_CACHE_TTL = 1800.0  # 30 minutes
+
+
+def _discover_cache_key(project_id: UUID, actor_id: str, payload: dict) -> str:
+    blob = json.dumps(payload or {}, sort_keys=True, default=str)
+    return hashlib.sha256(f"{project_id}|{actor_id}|{blob}".encode()).hexdigest()
+
+
 @router.post("/content/discover/start")
 async def discover_start(body: DiscoverStartIn, db: Session = Depends(db_session)) -> DiscoverStartOut:
-    """Kick off an Apify actor run for TikTok content discovery."""
-    _project_or_404(db, body.project_id)
+    """Kick off (or reuse a recent) Apify actor run for TikTok discovery."""
     from service.apify import ApifyAPIError
+    from service.apify.schema import ApifyRunStatus
 
+    _project_or_404(db, body.project_id)
     client = _apify_client_or_503()
+    key = _discover_cache_key(body.project_id, body.actor_id, body.input_payload)
+    dead = {
+        ApifyRunStatus.FAILED, ApifyRunStatus.ABORTING, ApifyRunStatus.ABORTED,
+        ApifyRunStatus.TIMING_OUT, ApifyRunStatus.TIMED_OUT,
+    }
+
     try:
         async with client as c:
+            cached = _DISCOVER_CACHE.get(key)
+            if cached and (time.monotonic() - cached[0]) < _DISCOVER_CACHE_TTL:
+                # Confirm the cached run is still usable before reusing it — a
+                # since-failed run shouldn't trap repeat searches for 30 min.
+                try:
+                    run = await c.get_run(cached[1])
+                    if run.status not in dead:
+                        logger.info(
+                            "discover: reusing run actor=%s project=%s run_id=%s dataset_id=%s status=%s",
+                            body.actor_id, body.project_id, run.id,
+                            run.default_dataset_id, run.status.value,
+                        )
+                        return DiscoverStartOut(
+                            run_id=run.id,
+                            dataset_id=run.default_dataset_id,
+                            actor_id=body.actor_id,
+                            status=run.status.value,
+                        )
+                except ApifyAPIError:
+                    pass  # gone / unreachable — fall through to a fresh run
+                _DISCOVER_CACHE.pop(key, None)
+
             run = await c.start_run(body.actor_id, body.input_payload)
     except ApifyAPIError as exc:
         raise HTTPException(exc.status_code or 502, exc.message) from exc
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
 
+    _DISCOVER_CACHE[key] = (time.monotonic(), run.id)
+    logger.info(
+        "discover: started run actor=%s project=%s run_id=%s dataset_id=%s",
+        body.actor_id, body.project_id, run.id, run.default_dataset_id,
+    )
     return DiscoverStartOut(
         run_id=run.id,
         dataset_id=run.default_dataset_id,
@@ -2537,9 +2587,11 @@ async def discover_start(body: DiscoverStartIn, db: Session = Depends(db_session
 
 
 @router.get("/content/discover/status/{run_id}")
-async def discover_status(run_id: str) -> DiscoverStatusOut:
+async def discover_status(run_id: str, response: Response) -> DiscoverStatusOut:
     from service.apify import ApifyAPIError
 
+    # Polled every 3s while a run is in flight — never serve a stale status.
+    response.headers["Cache-Control"] = "no-store"
     client = _apify_client_or_503()
     try:
         async with client as c:
@@ -2559,7 +2611,7 @@ async def discover_status(run_id: str) -> DiscoverStatusOut:
 
 
 @router.get("/content/discover/results/{dataset_id}")
-async def discover_results(dataset_id: str, limit: int = 200) -> DiscoverResultOut:
+async def discover_results(dataset_id: str, response: Response, limit: int = 200) -> DiscoverResultOut:
     """Fetch raw items from a finished run's dataset.
 
     We pass items through the ScrapedPost model to drop weird rows, then
@@ -2576,6 +2628,10 @@ async def discover_results(dataset_id: str, limit: int = 200) -> DiscoverResultO
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
 
+    # A finished run's dataset is immutable, so let the browser cache it on
+    # refresh/revisit. Kept modest — the TikTok cover URLs inside are signed
+    # and expire within hours, so a day-long cache would surface dead images.
+    response.headers["Cache-Control"] = "private, max-age=3600"
     return DiscoverResultOut(
         run_id="",
         dataset_id=dataset_id,

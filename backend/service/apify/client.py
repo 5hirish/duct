@@ -104,8 +104,12 @@ class ApifyClient:
         """Start an actor run. Returns the run object including
         defaultDatasetId so the caller can poll → fetch items later."""
         actor_id = _validate_id(actor_id, "actor_id")
-        # Apify accepts ~ and / inside actor id slugs (e.g. user~name).
-        path = f"/v2/acts/{quote(actor_id, safe='~/-_')}/runs"
+        # Apify's API addresses store actors as `username~actorName`, but the
+        # Store/UI shows them as `username/actorName`. A literal `/` becomes an
+        # extra URL path segment, which Apify answers with a 404 ("there is no
+        # API endpoint at this URL"). Normalize the slug to the tilde form.
+        slug = actor_id.replace("/", "~")
+        path = f"/v2/acts/{quote(slug, safe='~_-')}/runs"
         resp = await self._request("POST", path, json=input_payload)
         try:
             return ApifyRun.model_validate((resp.json() or {}).get("data") or {})

@@ -61,6 +61,23 @@ class ScrapedPostMusic(BaseModel):
     music_id: str = Field(default="", validation_alias="musicId")
 
 
+class ScrapedPostVideo(BaseModel):
+    """Video metadata — notably the cover image used as the card thumbnail.
+
+    `cover_url` is the still frame; the actor also returns a higher-res
+    `originalCoverUrl`. Both are TikTok CDN URLs with signed, time-limited
+    query params, so they can expire (relevant once we cache results).
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    cover_url:          str = Field(default="", validation_alias="coverUrl")
+    original_cover_url: str = Field(default="", validation_alias="originalCoverUrl")
+    duration:           int = 0
+    width:              int = 0
+    height:             int = 0
+
+
 class ScrapedPost(BaseModel):
     """One TikTok post returned by the scraper actor.
 
@@ -83,6 +100,7 @@ class ScrapedPost(BaseModel):
     share_count:       int = Field(default=0, validation_alias="shareCount")
     music_meta:        ScrapedPostMusic | None = Field(default=None, validation_alias="musicMeta")
     author_meta:       ScrapedPostAuthor | None = Field(default=None, validation_alias="authorMeta")
+    video_meta:        ScrapedPostVideo | None = Field(default=None, validation_alias="videoMeta")
     hashtags:          list[str] = Field(default_factory=list)
     slideshow_image_links: list[str] = Field(default_factory=list, validation_alias="slideshowImageLinks")
 

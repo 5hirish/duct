@@ -215,12 +215,6 @@ export default function DiscoverPage({ projectId }) {
             </Button>
           </div>
         </div>
-
-        {(runId || datasetId) && (
-          <p className="mt-2 font-mono text-[10px] text-muted-foreground/50">
-            {runId && <>run={runId.slice(0, 12)} </>}{datasetId && <>· dataset={datasetId.slice(0, 12)}</>}
-          </p>
-        )}
       </section>
 
       {error && (
@@ -238,7 +232,7 @@ export default function DiscoverPage({ projectId }) {
           </div>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="aspect-[3/4] animate-pulse rounded-xl border border-border/50 bg-muted/30" />
+              <div key={i} className="aspect-[4/5] animate-pulse rounded-xl border border-border/50 bg-muted/30" />
             ))}
           </div>
         </div>
@@ -290,7 +284,10 @@ function ResultCard({ post, busy, onSave }) {
   const author = post.author_meta?.name;
   const verified = post.author_meta?.verified;
   const music  = post.music_meta?.music_name;
-  const cover  = (post.slideshow_image_links || [])[0];
+  const cover  = (post.slideshow_image_links || [])[0]
+    || post.video_meta?.cover_url
+    || post.video_meta?.original_cover_url
+    || "";
   const tags   = (post.hashtags || []).slice(0, 3);
   const eng    = engagement(post);
   const saved  = busy === "saved";
@@ -302,7 +299,7 @@ function ResultCard({ post, busy, onSave }) {
         href={post.web_video_url}
         target="_blank"
         rel="noreferrer"
-        className="relative block aspect-[3/4] w-full overflow-hidden bg-gradient-to-br from-muted/60 to-muted/20"
+        className="relative block aspect-[4/5] w-full overflow-hidden bg-gradient-to-br from-muted/60 to-muted/20"
       >
         {cover ? (
           // eslint-disable-next-line @next/next/no-img-element
