@@ -262,7 +262,14 @@ Each phase is shippable and reversible.
 2. **Key precedence:** **bring‑your‑own first, backend fallback** (`user_keys.get(provider) or config key`).
 3. **Backend‑fallback policy:** **open** for the friends alpha (monitor spend; no allowlist/cap yet).
 4. **Persistence:** **none** server‑side for alpha — keys travel per‑request, used in memory only.
-5. Desktop frontend delivery, provider list (OpenRouter?), and Tauri repo location: still open (Phases 2–3).
+5. **Desktop frontend delivery:** **hosted URL for alpha → bundled static at GA.** Load
+   `app.getduct.ai` in the webview now (ships fast; UI auto-updates via the Cloudflare
+   deploy; avoids a static-export refactor of the 4 user-generated dynamic routes —
+   `[sessionId]`, `[postId]`, `[projectId]`, `[slug]`). Flip to a bundled static SPA at
+   GA for instant cold-start. Native powers (keychain) come from the Rust core regardless
+   of where the UI loads.
+6. **Providers in alpha:** Anthropic / OpenAI / Gemini only — **no OpenRouter** yet.
+7. **Repo location:** new top-level **`desktop/`** in this monorepo.
 
 ## 16. Implementation log
 
