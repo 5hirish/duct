@@ -273,9 +273,17 @@ class AdkInsightsRunner:
             parts=[genai_types.Part(text="Run the insight pipeline.")],
         )
 
+        # Prefer the resolved key: a per-request bring-your-own key already won
+        # over the server key in _resolve_agent_config, so honour it here even if
+        # the server's key is present in the env. ADK reads the provider key from
+        # the environment at run time; we set it here and restore in `finally`.
+        # NOTE: this still mutates the process-global env, so concurrent v2 runs
+        # with *different* keys can race — acceptable for the current low-
+        # concurrency beta; a proper fix passes the key per-model (LiteLlm
+        # api_key) and is tracked as a follow-up.
         env_var = _PROVIDER_ENV_VAR.get(self.provider, "GOOGLE_API_KEY")
         original_env_val = os.environ.get(env_var)
-        if self._api_key and not os.environ.get(env_var):
+        if self._api_key:
             os.environ[env_var] = self._api_key
 
         # SSE streaming must be requested explicitly in ADK 2.x; without it no

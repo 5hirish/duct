@@ -12,6 +12,7 @@ from sqlalchemy import select
 from sqlmodel import Session
 from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN
 
+from agents.models import Provider
 from config import Configs, get_configs
 from db.session import get_session
 from models.auth import User
@@ -20,6 +21,13 @@ logger = logging.getLogger(__name__)
 
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 _bearer = HTTPBearer(auto_error=False)
+
+# Optional per-request bring-your-own provider API keys. auto_error=False so
+# requests without them still pass; the generate route prefers any supplied key
+# over the server-side config key for that provider (see get_user_provider_keys).
+_anthropic_key_header = APIKeyHeader(name="X-Provider-Anthropic", auto_error=False)
+_openai_key_header = APIKeyHeader(name="X-Provider-OpenAI", auto_error=False)
+_gemini_key_header = APIKeyHeader(name="X-Provider-Gemini", auto_error=False)
 
 
 async def validate_api_key(
@@ -35,6 +43,31 @@ async def validate_api_key(
         logger.warning("Rejected request with invalid X-API-Key")
         raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Could not validate API key")
     return True
+
+
+async def get_user_provider_keys(
+    anthropic_key: str | None = Security(_anthropic_key_header),
+    openai_key: str | None = Security(_openai_key_header),
+    gemini_key: str | None = Security(_gemini_key_header),
+) -> dict[Provider, str]:
+    """Per-request bring-your-own provider API keys from the X-Provider-* headers.
+
+    Returns only the providers the caller actually supplied (non-blank). The
+    generate route prefers these over the server-side config keys, falling back
+    to the backend's own key when a provider is absent. These values are secrets:
+    never log them and never persist them (see the Sentry header scrub in
+    server.py).
+    """
+    supplied = {
+        Provider.ANTHROPIC: anthropic_key,
+        Provider.OPENAI: openai_key,
+        Provider.GOOGLE_GENAI: gemini_key,
+    }
+    return {
+        provider: value.strip()
+        for provider, value in supplied.items()
+        if value and value.strip()
+    }
 
 
 async def get_current_user(

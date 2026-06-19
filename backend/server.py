@@ -126,6 +126,32 @@ def _is_localhost_url(url: str) -> bool:
     return hostname in {"localhost", "127.0.0.1", "::1"}
 
 
+# Secret request headers that must never reach Sentry, even with
+# send_default_pii enabled: the per-request bring-your-own provider keys and the
+# app gate key. Matched case-insensitively in the before_send hook below.
+_SENSITIVE_HEADERS = frozenset({
+    "x-api-key",
+    "x-provider-anthropic",
+    "x-provider-openai",
+    "x-provider-gemini",
+    "authorization",
+})
+
+
+def _scrub_sensitive_headers(event: dict, _hint: dict) -> dict:
+    """Sentry before_send: redact secret request headers so BYO provider keys and
+    the app API key are never captured. Best-effort — never drops the event."""
+    try:
+        headers = event.get("request", {}).get("headers")
+        if isinstance(headers, dict):
+            for name in list(headers):
+                if name.lower() in _SENSITIVE_HEADERS:
+                    headers[name] = "[redacted]"
+    except Exception:  # noqa: BLE001 — scrubbing must never break error reporting
+        pass
+    return event
+
+
 if _cfg.sentry_dsn and (
     _cfg.sentry_enable_localhost or not _is_localhost_url(_cfg.api_public_url)
 ):
@@ -137,6 +163,7 @@ if _cfg.sentry_dsn and (
         traces_sample_rate=_cfg.sentry_traces_sample_rate,
         profile_session_sample_rate=_cfg.sentry_profile_session_sample_rate,
         profile_lifecycle=_cfg.sentry_profile_lifecycle,
+        before_send=_scrub_sensitive_headers,
     )
     logging.getLogger(__name__).info("Sentry SDK initialized for backend.")
 
