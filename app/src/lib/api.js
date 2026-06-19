@@ -1,3 +1,5 @@
+import { providerKeyHeaders } from "./providerKeys";
+
 const configuredBase = process.env.NEXT_PUBLIC_API_BASE?.trim();
 const normalizedConfiguredBase = configuredBase?.replace(/\/+$/, "");
 const isProduction = process.env.NODE_ENV === "production";
@@ -89,7 +91,7 @@ export async function fetchEngineStatus() {
 export async function generateReport(params) {
   const res = await fetch(`${BASE}/api/insights/generate`, {
     method: "POST",
-    headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
+    headers: { ...backendAuthedHeaders({ "Content-Type": "application/json" }), ...(await providerKeyHeaders()) },
     body: JSON.stringify(params),
   });
   if (!res.ok) {
@@ -218,7 +220,7 @@ function parseSseDataFrame(frame) {
 export async function generateReportStream(params, { onEvent, signal } = {}) {
   const res = await fetch(`${BASE}/api/insights/generate/stream`, {
     method: "POST",
-    headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
+    headers: { ...backendAuthedHeaders({ "Content-Type": "application/json" }), ...(await providerKeyHeaders()) },
     body: JSON.stringify(params),
     signal,
   });

@@ -254,6 +254,7 @@ Each phase is shippable and reversible.
 | `app/src/lib/providerKeys.js` *(new)* | Shell‑aware key store (sessionStorage ↔ Tauri keychain) |
 | `app/src/lib/api.js` | Add `X-Provider-*` headers in `backendAuthedHeaders()` |
 | `app/src/app/(app)/connections/page.jsx` | Providers tab/section UI |
+| `desktop/` *(new)* | Tauri v2 shell: webview→hosted URL, `keyring` commands, updater, packaging |
 
 ## 15. Decisions locked
 
@@ -292,7 +293,17 @@ Each phase is shippable and reversible.
 - `routes/agents.py` unified session API: thread BYO keys through session creation.
 - v2 ADK per‑model key (remove the global‑env race).
 
-**Next:** Phase 1 — `Providers` tab in `connections/page.jsx` + shell‑aware key store +
-`X-Provider-*` headers in `lib/api.js`.
-| `desktop/` *(new)* | Tauri v2 shell: webview→hosted URL, `keyring` commands, updater, packaging |
-```
+**Phase 1 — Providers tab (done).** Web mode; works today against the hosted API.
+
+- `app/src/lib/providerKeys.js` (new) — shell-aware key store: `sessionStorage` on web,
+  OS keychain via Tauri `invoke` on desktop (guarded by `window.__TAURI__`);
+  `providerKeyHeaders()` builds the `X-Provider-*` headers.
+- `app/src/lib/api.js` — `generateReport` / `generateReportStream` merge the provider
+  headers into the request.
+- `app/src/app/(app)/connections/page.jsx` — `Tabs` split into **Data sources** and
+  **Providers**; per-provider masked entry (Anthropic / OpenAI / Gemini), show/hide,
+  save/remove, format hint, session-scoped storage.
+- Verified: `node --check` on the plain JS; JSX lint/build runs in CI.
+
+**Next:** Phase 2 — Tauri shell (needs the open §12 decisions: hosted-vs-bundled,
+provider list, repo location). Backend follow-ups above remain.

@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { BASE } from "../../../lib/api";
+import { PROVIDERS, getProviderKey, setProviderKey, clearProviderKey } from "../../../lib/providerKeys";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export default function ConnectionsPage() {
   const [ga4Connected, setGa4Connected] = useState(false);
@@ -58,6 +61,14 @@ export default function ConnectionsPage() {
         </Button>
         <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">Connections</h1>
       </div>
+
+      <Tabs defaultValue="connections">
+        <TabsList>
+          <TabsTrigger value="connections">Data sources</TabsTrigger>
+          <TabsTrigger value="providers">Providers</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="connections">
       <p className="app-subtle" style={{ marginTop: 0, marginBottom: 18 }}>
         Manage data source connections for insights. Choose your Google Ads account when you{" "}
         <Link href="/insights/organic-growth/generate" className="app-link">
@@ -233,7 +244,135 @@ export default function ConnectionsPage() {
           </div>
         </article>
       </div>
+        </TabsContent>
+
+        <TabsContent value="providers">
+          <ProvidersPanel />
+        </TabsContent>
+      </Tabs>
 
     </section>
+  );
+}
+
+function ProvidersPanel() {
+  return (
+    <>
+      <p className="app-subtle" style={{ marginTop: 0, marginBottom: 18 }}>
+        Bring your own model-provider API keys. During the beta these power
+        insight generation on your own account. Keys stay in this browser
+        session and are sent securely with each request — never stored on our
+        servers. Tip: use a budget-capped or restricted key.
+      </p>
+      <div className="connection-grid">
+        {PROVIDERS.map((provider) => (
+          <ProviderCard key={provider.id} provider={provider} />
+        ))}
+      </div>
+    </>
+  );
+}
+
+function ProviderCard({ provider }) {
+  const [value, setValue] = useState("");
+  const [saved, setSaved] = useState(false);
+  const [revealed, setRevealed] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    getProviderKey(provider.id).then((stored) => {
+      if (!alive) return;
+      setValue(stored || "");
+      setSaved(Boolean(stored));
+    });
+    return () => {
+      alive = false;
+    };
+  }, [provider.id]);
+
+  const trimmed = value.trim();
+  const looksValid = !provider.prefix || trimmed.startsWith(provider.prefix);
+
+  async function save() {
+    setBusy(true);
+    await setProviderKey(provider.id, trimmed);
+    setSaved(Boolean(trimmed));
+    setBusy(false);
+  }
+
+  async function remove() {
+    setBusy(true);
+    await clearProviderKey(provider.id);
+    setValue("");
+    setSaved(false);
+    setBusy(false);
+  }
+
+  return (
+    <article className="connection-card">
+      <div className="connection-card-head">
+        <div>
+          <h2 className="connection-title">{provider.label}</h2>
+          <p className="connection-description">
+            {provider.description}{" "}
+            <a className="app-link" href={provider.consoleUrl} target="_blank" rel="noreferrer">
+              Get a key
+            </a>
+            .
+          </p>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+        <Input
+          type={revealed ? "text" : "password"}
+          value={value}
+          placeholder={provider.placeholder}
+          onChange={(event) => setValue(event.target.value)}
+          autoComplete="off"
+          autoCapitalize="off"
+          autoCorrect="off"
+          spellCheck={false}
+          aria-label={`${provider.label} API key`}
+        />
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => setRevealed((shown) => !shown)}
+          disabled={!value}
+        >
+          {revealed ? "Hide" : "Show"}
+        </Button>
+      </div>
+
+      {trimmed && !looksValid && (
+        <p className="app-subtle" style={{ marginTop: 6, fontSize: 12 }}>
+          {`Keys usually start with "${provider.prefix}".`}
+        </p>
+      )}
+
+      <div className="connection-status-row">
+        <span className={`status-pill ${saved ? "green" : "grey"}`}>
+          {saved ? "Saved" : "Not set"}
+        </span>
+        <div style={{ display: "flex", gap: 8 }}>
+          {saved && (
+            <Button type="button" variant="outline" size="sm" onClick={remove} disabled={busy}>
+              Remove
+            </Button>
+          )}
+          <Button
+            type="button"
+            size="sm"
+            onClick={save}
+            disabled={busy || !trimmed || !looksValid}
+          >
+            Save
+          </Button>
+        </div>
+      </div>
+    </article>
   );
 }
