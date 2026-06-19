@@ -20,6 +20,15 @@
       "postDebugTask": "Backend: stop uvicorn (8002)"
     },
     {
+      "name": "Duct: API + Desktop",
+      "configurations": [
+        "Backend: FastAPI (uvicorn)",
+        "Desktop: Tauri dev (local app)"
+      ],
+      "stopAll": true,
+      "postDebugTask": "Backend: stop uvicorn (8002)"
+    },
+    {
       "name": "Duct: Site + API",
       "configurations": [
         "Backend: FastAPI (uvicorn)",
@@ -77,6 +86,13 @@
       "request": "launch",
       "command": "npm run dev",
       "cwd": "${workspaceFolder}/app"
+    },
+    {
+      "name": "Desktop: Tauri dev (local app)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev:local",
+      "cwd": "${workspaceFolder}/desktop"
     },
     {
       "name": "Site: dev server",
