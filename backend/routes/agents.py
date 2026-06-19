@@ -57,8 +57,10 @@ from agents.planner.v3.runner import create_planner_session
 from agents.core import session as _core_session
 from db.session import get_session as db_session
 from agents.engines import PROVIDER_CONFIG_ATTR, resolve_engine, resolve_engine_model, resolve_engine_provider
+from agents.models import Provider
 from agents.registry import AgentType, get_spec, list_specs
 from config import claude_oauth_available, get_configs
+from service.auth import provider_keys_from_headers
 from service.crawl.fetcher import SSRFError, validate_public_url
 from service.pipeline import now_iso
 
@@ -186,6 +188,10 @@ async def create_session(agent_type: str, request: Request) -> dict:
         raise HTTPException(422, f"Agent {agent_type!r} is not yet available.")
 
     body = await request.json()
+    # Per-request bring-your-own provider keys (X-Provider-* headers), preferred
+    # over the server key by each agent's key resolver. Parsed off the request
+    # here since this route takes its body from request.json(), not a Depends.
+    user_keys = provider_keys_from_headers(request.headers)
     session_id = str(uuid.uuid4())
     session = _create_session_for(agent_type, session_id, body)
 
@@ -195,7 +201,7 @@ async def create_session(agent_type: str, request: Request) -> dict:
         await _emit_to_queue(session.event_queue, event_body)  # type: ignore[arg-type]
 
     # Dispatch to the correct pipeline
-    await _dispatch_start(agent_type, session_id, body, emit_fn)
+    await _dispatch_start(agent_type, session_id, body, emit_fn, user_keys)
 
     stream_url = f"/api/agents/{agent_type}/sessions/{session_id}/stream"
     conversation_id = getattr(session, "conversation_id", None)
@@ -696,21 +702,27 @@ async def _dispatch_start(
     session_id: str,
     body: dict,
     emit_fn: Any,
+    user_keys: dict[Provider, str] | None = None,
 ) -> None:
-    """Route session creation to the correct agent pipeline."""
+    """Route session creation to the correct agent pipeline.
+
+    ``user_keys`` carries the caller's bring-your-own provider keys (if any);
+    each agent prefers a supplied key over the server key for its provider."""
     if agent_type == AgentType.SEO_AUDIT:
-        await _start_seo_audit(session_id, body, emit_fn)
+        await _start_seo_audit(session_id, body, emit_fn, user_keys)
     elif agent_type == AgentType.TIKTOK_STUDIO:
-        await _start_tiktok_studio(session_id, body, emit_fn)
+        await _start_tiktok_studio(session_id, body, emit_fn, user_keys)
     elif agent_type == AgentType.CONTENT_PLANNER:
-        await _start_content_planner(session_id, body, emit_fn)
+        await _start_content_planner(session_id, body, emit_fn, user_keys)
     elif agent_type == AgentType.INSIGHTS:
         await _start_insights(session_id, body, emit_fn)
     else:
         raise HTTPException(501, f"Agent type {agent_type!r} is not yet implemented.")
 
 
-async def _start_tiktok_studio(session_id: str, body: dict, emit_fn: Any) -> None:
+async def _start_tiktok_studio(
+    session_id: str, body: dict, emit_fn: Any, user_keys: dict[Provider, str] | None = None
+) -> None:
     """Start the Content Studio pipeline (draft_post) as a background task,
     streaming to the shared session.event_queue. Plan generation moved to the
     content_planner agent — this agent only drafts posts now."""
@@ -741,7 +753,7 @@ async def _start_tiktok_studio(session_id: str, body: dict, emit_fn: Any) -> Non
         req = DraftPostRequest.model_validate(config)
     except Exception as exc:
         raise HTTPException(422, f"Invalid draft_post config: {exc}") from exc
-    coro = _run_draft_worker(session_id, req, emit_fn)
+    coro = _run_draft_worker(session_id, req, emit_fn, user_keys=user_keys)
 
     task = asyncio.create_task(coro)
     session = get_session(session_id)
@@ -749,7 +761,9 @@ async def _start_tiktok_studio(session_id: str, body: dict, emit_fn: Any) -> Non
         session.pipeline_task = task
 
 
-async def _start_content_planner(session_id: str, body: dict, emit_fn: Any) -> None:
+async def _start_content_planner(
+    session_id: str, body: dict, emit_fn: Any, user_keys: dict[Provider, str] | None = None
+) -> None:
     """Start the Content Planner pipeline (update_plan) as a background task,
     streaming to the shared session.event_queue. Mirrors _start_tiktok_studio."""
     from routes.content import _run_planner_worker
@@ -768,14 +782,16 @@ async def _start_content_planner(session_id: str, body: dict, emit_fn: Any) -> N
     if recorder is not None:
         emit_fn = recorder.wrap_emit(emit_fn)
 
-    coro = _run_planner_worker(session_id, req.project_id, emit_fn, start_date=req.start_date)
+    coro = _run_planner_worker(session_id, req.project_id, emit_fn, start_date=req.start_date, user_keys=user_keys)
     task = asyncio.create_task(coro)
     session = get_session(session_id)
     if session:
         session.pipeline_task = task
 
 
-async def _start_seo_audit(session_id: str, body: dict, emit_fn: Any) -> None:
+async def _start_seo_audit(
+    session_id: str, body: dict, emit_fn: Any, user_keys: dict[Provider, str] | None = None
+) -> None:
     """Validate config and start the SEO audit pipeline as a background task."""
     try:
         req = AuditRequest.model_validate(body)
@@ -795,7 +811,8 @@ async def _start_seo_audit(session_id: str, body: dict, emit_fn: Any) -> None:
     engine = resolve_engine(req.engine or "v3")
     provider = resolve_engine_provider(engine, cfg.generate_provider or None)
     model = resolve_engine_model(engine, provider, cfg.generate_model or None)
-    api_key = getattr(cfg, PROVIDER_CONFIG_ATTR[provider], "") or ""
+    # Bring-your-own first, server key as fallback (same precedence as insights).
+    api_key = (user_keys or {}).get(provider) or getattr(cfg, PROVIDER_CONFIG_ATTR[provider], "") or ""
 
     if not api_key and not claude_oauth_available():
         raise HTTPException(500, "ANTHROPIC_API_KEY is not configured.")

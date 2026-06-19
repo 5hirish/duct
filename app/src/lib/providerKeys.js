@@ -19,6 +19,10 @@ export const PROVIDERS = [
     placeholder: "sk-ant-…",
     prefix: "sk-ant-",
     description: "Powers the Claude Agent SDK engine (v3).",
+    // What this key actually unlocks. Claude runs nearly everything, so most
+    // testers only need this one — call that out.
+    powers: "SEO Audit, Content Studio, Content Planner, and the default Insights engine (v3)",
+    recommended: true,
     consoleUrl: "https://console.anthropic.com/settings/keys",
   },
   {
@@ -28,6 +32,8 @@ export const PROVIDERS = [
     placeholder: "sk-…",
     prefix: "sk-",
     description: "GPT models on the LangChain (v1) and ADK (v2) engines.",
+    powers: "Insights only — when you switch the engine to OpenAI (v1/v2)",
+    recommended: false,
     consoleUrl: "https://platform.openai.com/api-keys",
   },
   {
@@ -37,6 +43,8 @@ export const PROVIDERS = [
     placeholder: "AIza…",
     prefix: "",
     description: "Default models for the LangChain (v1) and ADK (v2) engines.",
+    powers: "Insights only — on the Gemini (v1/v2) engines",
+    recommended: false,
     consoleUrl: "https://aistudio.google.com/app/apikey",
   },
 ];

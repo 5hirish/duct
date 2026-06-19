@@ -17,7 +17,7 @@ from agents.models import Provider
 from agents.insights.agent import GenerateInsightsAgent
 from agents.insights.v2.runner import AdkInsightsRunner
 from agents.insights.v3.runner import ClaudeAgentSdkRunner
-from config import get_configs
+from config import claude_oauth_available, get_configs
 from models.auth import User
 from service.auth import get_current_user_optional, get_user_provider_keys
 from routes.schemas import (
@@ -67,6 +67,26 @@ STEP_LABELS = {
 
 EmitFn = Callable[[dict[str, Any]], Awaitable[None]]
 
+# Friendly provider name for the "add your key" error a keyless request returns.
+_PROVIDER_LABEL: dict[Provider, str] = {
+    Provider.ANTHROPIC: "Anthropic",
+    Provider.OPENAI: "OpenAI",
+    Provider.GOOGLE_GENAI: "Gemini",
+}
+
+
+def _missing_key_message(provider: Provider, engine: Engine) -> str:
+    """User-facing error when no key (BYO or server) is available for the engine.
+
+    Surfaced verbatim to the UI (the stream emits it as ``pipeline_failed``), so
+    it must say what to do — point the user at the Providers tab. Replaces the
+    old silent no-synthesis path where a keyless run returned briefs only."""
+    label = _PROVIDER_LABEL.get(provider, provider.value)
+    return (
+        f"No {label} API key is configured for the {engine.value} engine. "
+        f"Add your {label} key under Connections → Providers to generate insights."
+    )
+
 
 def _resolve_agent_config(
     request_engine: str = "",
@@ -90,13 +110,18 @@ def _resolve_agent_config(
 
 
 def _build_agent(
-    api_key: str, provider: Provider, model: "ModelName", engine: Engine
+    api_key: str, provider: Provider, model: "ModelName", engine: Engine, *, byo_key: bool = False
 ) -> GenerateInsightsAgent | AdkInsightsRunner | ClaudeAgentSdkRunner:
-    """Instantiate the insight engine resolved by _resolve_agent_config."""
+    """Instantiate the insight engine resolved by _resolve_agent_config.
+
+    ``byo_key`` marks the key as a per-request bring-your-own key (vs the shared
+    server key). Only the v2 ADK runner needs it: a BYO key is carried per-model
+    so concurrent requests with *different* keys never race on a global env var.
+    """
     if engine == Engine.V3:
         return ClaudeAgentSdkRunner(api_key=api_key, provider=provider, model=model, temperature=1.0)
     if engine == Engine.V2:
-        return AdkInsightsRunner(api_key=api_key, provider=provider, model=model, temperature=1.0)
+        return AdkInsightsRunner(api_key=api_key, provider=provider, model=model, temperature=1.0, byo_key=byo_key)
     return GenerateInsightsAgent(api_key=api_key, provider=provider, model=model, temperature=1.0)
 
 
@@ -279,6 +304,7 @@ async def _run_generate_pipeline(
     synthesis_dict = None
     mode = req.mode or "paid_ads"
     api_key, provider, model, engine = _resolve_agent_config(req.engine, user_keys=user_keys)
+    byo_key = bool((user_keys or {}).get(provider))
 
     # Build the all_briefs dict: connector_id → {"brief": ..., "raw": ...}
     all_briefs = {
@@ -286,12 +312,20 @@ async def _run_generate_pipeline(
         for cid, brief in briefs.items()
     }
 
+    # Can we actually run synthesis? A resolved key (BYO or server), or — only on
+    # v3 — a local Claude subscription/OAuth token. When briefs exist but nothing
+    # can authenticate, fail loudly with an actionable message instead of silently
+    # returning briefs with no synthesis (the old keyless no-op).
+    can_authenticate = bool(api_key) or (engine == Engine.V3 and claude_oauth_available())
+    if all_briefs and not can_authenticate:
+        raise HTTPException(status_code=400, detail=_missing_key_message(provider, engine))
+
     # Determine primary connector for classification overrides (paid ads only)
     primary_connector = "google_ads" if mode == "paid_ads" else None
     supplementary: dict[str, Any] = {}
 
-    if api_key and all_briefs:
-        agent = _build_agent(api_key, provider, model, engine)
+    if can_authenticate and all_briefs:
+        agent = _build_agent(api_key, provider, model, engine, byo_key=byo_key)
 
         # Build fetch functions only for connectors that are actually available.
         # For organic_growth, skip Google Ads credential resolution entirely.

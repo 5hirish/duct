@@ -58,11 +58,31 @@ async def get_user_provider_keys(
     never log them and never persist them (see the Sentry header scrub in
     server.py).
     """
-    supplied = {
+    return _filter_provider_keys({
         Provider.ANTHROPIC: anthropic_key,
         Provider.OPENAI: openai_key,
         Provider.GOOGLE_GENAI: gemini_key,
-    }
+    })
+
+
+def provider_keys_from_headers(headers) -> dict[Provider, str]:
+    """Same parse as ``get_user_provider_keys`` but from a raw headers mapping.
+
+    For routes that read ``Request.headers`` directly instead of via FastAPI's
+    ``Security`` dependency injection — notably the unified agent session API
+    (``routes/agents.py``), which takes the request body off ``await
+    request.json()`` and so needs to pull the BYO keys off the same request
+    object. ``headers`` is any case-insensitive mapping (Starlette ``Headers``).
+    """
+    return _filter_provider_keys({
+        Provider.ANTHROPIC: headers.get("X-Provider-Anthropic"),
+        Provider.OPENAI: headers.get("X-Provider-OpenAI"),
+        Provider.GOOGLE_GENAI: headers.get("X-Provider-Gemini"),
+    })
+
+
+def _filter_provider_keys(supplied: dict[Provider, str | None]) -> dict[Provider, str]:
+    """Keep only the providers with a non-blank key, trimmed."""
     return {
         provider: value.strip()
         for provider, value in supplied.items()

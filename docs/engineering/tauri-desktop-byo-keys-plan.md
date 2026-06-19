@@ -294,11 +294,11 @@ Each phase is shippable and reversible.
 - `backend/tests/test_byo_provider_keys.py` — header parsing + precedence/fallback/no‑leak.
 - Verified: `py_compile` + `ruff` clean. Suite runs in CI (backend deps not installed locally).
 
-**Follow‑ups (not in Phase 0):**
-- `routes/audit.py` and the content agents reuse `_resolve_agent_config` / their own v3
-  runners — add the same `user_keys` dependency + env‑injection there.
-- `routes/agents.py` unified session API: thread BYO keys through session creation.
-- v2 ADK per‑model key (remove the global‑env race).
+**Follow‑ups (done — see Phase 1b below):**
+- ✅ `routes/agents.py` unified session API threads BYO keys through session creation,
+  covering the audit + content + planner agents (all v3/Claude).
+- ✅ v2 ADK per‑model key removes the global‑env race (LiteLlm `api_key`, with a
+  serialized env fallback when `google-adk[extensions]` isn't installed).
 
 **Phase 1 — Providers tab (done).** Web mode; works today against the hosted API.
 
@@ -312,5 +312,34 @@ Each phase is shippable and reversible.
   save/remove, format hint, session-scoped storage.
 - Verified: `node --check` on the plain JS; JSX lint/build runs in CI.
 
+**Phase 1b — BYO across all agent surfaces + key UX (done).** Closes the Phase 0 follow-ups.
+
+- **BYO keys on every agent (not just insights).** `service/auth.py` adds
+  `provider_keys_from_headers()` (the `request.headers` twin of the `Depends` parser).
+  `routes/agents.py` parses it in `create_session` and threads `user_keys` through
+  `_dispatch_start` → SEO audit / Content Studio / Content Planner; each prefers the BYO
+  key over the server key (audit inline, content via `_resolve_api_key(user_keys)`). The
+  v3 runners already inject the key per-call via `build_sdk_env`, so no runner change was
+  needed. `app/src/lib/api.js` attaches `providerKeyHeaders()` to `createAgentSession`,
+  covering all three agents (audit + content go through it).
+- **No more silent keyless insight.** `routes/generate.py` now raises a typed 400
+  (`_missing_key_message`) when briefs exist but no key (BYO or server) — and is
+  OAuth-aware (v3 local subscription still runs keyless). The app shows it as a top-of-app
+  toast (`app/src/lib/toast.js` + `components/Toaster.jsx`, mounted in `(app)/layout.js`;
+  `generate/page.jsx` toasts on failure). Dependency-free bus, no new packages.
+- **Provider → agent mapping in the UI.** Each Providers card lists what its key powers;
+  Anthropic (Claude) is flagged **Recommended** (runs audit, content, and the default
+  insights engine), OpenAI/Gemini noted as insights-engine-only.
+- **v2 ADK race fix.** `agents/insights/v2/runner.py` carries a BYO key on a per-model
+  `LiteLlm` (no `os.environ` mutation); the shared server key keeps the env path
+  (same value across runs → safe). When the LiteLlm extra is absent, BYO falls back to
+  env injection serialized under a lock (still race-safe). NOTE: `litellm` is not in the
+  current venv, so the full per-model path only activates once `google-adk[extensions]`
+  is installed; until then v2 BYO uses the serialized fallback (and v2 OpenAI needs the
+  extra regardless — pre-existing).
+- Verified: `ruff` + `py_compile` clean; `tests/test_byo_provider_keys.py` extended
+  (header parse, missing-key message, v2 per-model/fallback) — 11 passed. Frontend JS
+  `node --check`; JSX parsed via esbuild.
+
 **Next:** Phase 2 — Tauri shell (needs the open §12 decisions: hosted-vs-bundled,
-provider list, repo location). Backend follow-ups above remain.
+provider list, repo location).

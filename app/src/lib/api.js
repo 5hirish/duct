@@ -279,9 +279,13 @@ export async function listAgents() {
  * Then connect to openAgentStream(agentType, sessionId) for SSE events.
  */
 export async function createAgentSession(agentType, params) {
+  // Provider keys travel on session creation — that's where the agent's engine
+  // is constructed with the key. Covers every agent type (audit, content,
+  // planner) since they all start here. Follow-up chat/answer/stream calls reuse
+  // the already-keyed session, so they don't need the headers.
   const res = await fetch(`${BASE}/api/agents/${encodeURIComponent(agentType)}/sessions`, {
     method: "POST",
-    headers: backendApiHeaders({ "Content-Type": "application/json" }),
+    headers: { ...backendApiHeaders({ "Content-Type": "application/json" }), ...(await providerKeyHeaders()) },
     body: JSON.stringify(params),
   });
   if (!res.ok) {

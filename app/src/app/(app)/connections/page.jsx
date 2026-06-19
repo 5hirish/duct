@@ -260,9 +260,15 @@ function ProvidersPanel() {
     <>
       <p className="app-subtle" style={{ marginTop: 0, marginBottom: 18 }}>
         Bring your own model-provider API keys. During the beta these power
-        insight generation on your own account. Keys stay in this browser
-        session and are sent securely with each request — never stored on our
-        servers. Tip: use a budget-capped or restricted key.
+        generation on your own account. Keys stay in this browser session and are
+        sent securely with each request — never stored on our servers. Tip: use a
+        budget-capped or restricted key.
+      </p>
+      <p className="app-subtle" style={{ marginTop: -6, marginBottom: 18, fontSize: 13 }}>
+        Each card lists which agents the key powers. <strong>Anthropic (Claude)</strong>{" "}
+        runs the audit, content, and the default insights engine, so for most of
+        the app it&apos;s the only key you need. OpenAI and Gemini are optional —
+        only for the insights engine when you switch to them.
       </p>
       <div className="connection-grid">
         {PROVIDERS.map((provider) => (
@@ -313,7 +319,12 @@ function ProviderCard({ provider }) {
     <article className="connection-card">
       <div className="connection-card-head">
         <div>
-          <h2 className="connection-title">{provider.label}</h2>
+          <h2 className="connection-title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {provider.label}
+            {provider.recommended && (
+              <span className="status-pill green" style={{ fontSize: 11 }}>Recommended</span>
+            )}
+          </h2>
           <p className="connection-description">
             {provider.description}{" "}
             <a className="app-link" href={provider.consoleUrl} target="_blank" rel="noreferrer">
@@ -321,6 +332,11 @@ function ProviderCard({ provider }) {
             </a>
             .
           </p>
+          {provider.powers && (
+            <p className="connection-description" style={{ marginTop: 6 }}>
+              <strong>Powers:</strong> {provider.powers}.
+            </p>
+          )}
         </div>
       </div>
 

@@ -69,7 +69,7 @@ from agents.content.v3.runner import (
 )
 from agents.planner.schema import PlannerConfig
 from agents.engines import PROVIDER_CONFIG_ATTR, Engine, resolve_engine_provider
-from agents.models import Platform
+from agents.models import Platform, Provider
 from config import claude_oauth_available, get_configs
 from db.session import get_engine, get_session as db_session
 from models.content import (
@@ -131,10 +131,13 @@ async def _prune_stale_sessions() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _resolve_api_key() -> str:
+def _resolve_api_key(user_keys: dict[Provider, str] | None = None) -> str:
+    """Resolve the content/planner engine key: a per-request bring-your-own key
+    for the resolved provider wins over the server config key (content + planner
+    are v3/Claude, so this is the Anthropic key in practice)."""
     cfg = get_configs()
     provider = resolve_engine_provider(Engine.V3, cfg.generate_provider or None)
-    return getattr(cfg, PROVIDER_CONFIG_ATTR[provider], "") or ""
+    return (user_keys or {}).get(provider) or getattr(cfg, PROVIDER_CONFIG_ATTR[provider], "") or ""
 
 
 async def _emit(queue: asyncio.Queue, body: dict[str, Any]) -> None:
@@ -189,9 +192,11 @@ async def _run_plan_worker(
     session_id: str,
     project_id: UUID,
     emit_fn: Any,
+    *,
+    user_keys: dict[Provider, str] | None = None,
 ) -> None:
     try:
-        api_key = _resolve_api_key()
+        api_key = _resolve_api_key(user_keys)
         if not api_key and not claude_oauth_available():
             raise ValueError("ANTHROPIC_API_KEY is not configured")
         runner = ClaudeContentRunner(api_key=api_key)
@@ -212,13 +217,14 @@ async def _run_planner_worker(
     emit_fn: Any,
     *,
     start_date=None,
+    user_keys: dict[Provider, str] | None = None,
 ) -> None:
     """Run the Content Planner agent (update_plan) — produces the canonical
     rolling 7-day plan. Mirrors _run_plan_worker but uses ClaudePlannerRunner."""
     try:
         from agents.planner.v3.runner import ClaudePlannerRunner
 
-        api_key = _resolve_api_key()
+        api_key = _resolve_api_key(user_keys)
         if not api_key and not claude_oauth_available():
             raise ValueError("ANTHROPIC_API_KEY is not configured")
         runner = ClaudePlannerRunner(api_key=api_key)
@@ -292,9 +298,11 @@ async def _run_draft_worker(
     session_id: str,
     req: DraftPostRequest,
     emit_fn: Any,
+    *,
+    user_keys: dict[Provider, str] | None = None,
 ) -> None:
     try:
-        api_key = _resolve_api_key()
+        api_key = _resolve_api_key(user_keys)
         if not api_key and not claude_oauth_available():
             raise ValueError("ANTHROPIC_API_KEY is not configured")
         runner = ClaudeContentRunner(api_key=api_key)

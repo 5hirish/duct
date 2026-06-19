@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import AppNav from "../../components/AppNav";
 import AppSidebar from "../../components/AppSidebar";
+import Toaster from "../../components/Toaster";
 import { AuthProvider, AuthGuard } from "../../lib/auth";
 import { hydrateProjectsFromBackend, migrateFromLegacyProfile } from "../../lib/projects";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
@@ -30,6 +31,7 @@ export default function AppLayout({ children }) {
 
   return (
     <AuthProvider>
+      <Toaster />
       <AuthGuard>
         <AuditNavProvider>
         <SidebarProvider>

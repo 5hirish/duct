@@ -10,6 +10,7 @@ import {
   fetchGscSites,
   generateReportStream,
 } from "../../../lib/api";
+import { toastError } from "../../../lib/toast";
 import { saveLocalInsight, generateSlug } from "../../../lib/localInsights";
 import { getActiveProject, getActiveProjectId } from "../../../lib/projects";
 import { fetchModes, getModeByKey, FALLBACK_MODES, DEFAULT_MODE_KEY } from "../../../lib/modes";
@@ -1735,8 +1736,12 @@ export default function GeneratePage() {
       setStatus("success");
       setStep(7);
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      const message = err instanceof Error ? err.message : String(err);
+      setError(message);
       setStatus("error");
+      // Surface it at the top of the app too — most importantly the "no provider
+      // key" case, which the backend now returns instead of a silent empty report.
+      toastError(message, { title: "Couldn’t generate insight", duration: 9000 });
     }
   }
 

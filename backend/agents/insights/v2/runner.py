@@ -24,6 +24,8 @@ API key injection:
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import json
 import logging
 import os
@@ -72,6 +74,19 @@ _USER_ID = "system"
 
 _PROVIDER_ENV_VAR: dict[Provider, str] = _ENGINE_PROVIDER_ENV_VAR[Engine.V2]
 
+# Serializes the (rare) env-var fallback path so concurrent runs injecting
+# *different* keys via os.environ can't read each other's key mid-call. The
+# common paths — a per-model BYO key (carried on a LiteLlm model) and the shared
+# server key (same value across runs) — never take this lock.
+_ENV_LOCK = asyncio.Lock()
+
+# LiteLLM provider-route prefix per provider (used to carry a per-model api_key).
+_LITELLM_PREFIX: dict[Provider, str] = {
+    Provider.OPENAI: "openai",
+    Provider.ANTHROPIC: "anthropic",
+    Provider.GOOGLE_GENAI: "gemini",
+}
+
 
 def _resolve_adk_model_string(provider: Provider, model: ModelName) -> str:
     """ADK model string for a (provider, model). The id is owned by the
@@ -81,6 +96,65 @@ def _resolve_adk_model_string(provider: Provider, model: ModelName) -> str:
     if provider == Provider.OPENAI:
         return f"openai/{model.value}"
     return model.value
+
+
+def _build_adk_model(provider: Provider, model: ModelName, api_key: str, *, prefer_per_model: bool):
+    """Return ``(adk_model, per_model_key)`` for a (provider, model).
+
+    When ``prefer_per_model`` (a per-request bring-your-own key) and a key is
+    present, wrap the model in a ``LiteLlm`` instance carrying that key so it
+    travels *with the model* — no process-global ``os.environ`` mutation, so
+    concurrent requests with different BYO keys can't race on a shared env var.
+
+    Otherwise (the shared server key, or the LiteLlm extra not installed) return
+    the plain model string, which ADK resolves against the provider env var —
+    unchanged from the original behaviour. ``per_model_key`` is True only when the
+    key is carried on the returned model object.
+    """
+    model_str = _resolve_adk_model_string(provider, model)
+    if not (prefer_per_model and api_key):
+        return model_str, False
+    # The lite_llm module imports even without the extra, but constructing LiteLlm
+    # raises ImportError when the `litellm` package (google-adk[extensions]) is
+    # absent — so guard the construction, not just the import, and fall back to
+    # serialized env-var injection (still race-safe) when it's unavailable.
+    try:
+        from google.adk.models.lite_llm import LiteLlm
+
+        litellm_id = f"{_LITELLM_PREFIX.get(provider, 'gemini')}/{model.value}"
+        return LiteLlm(model=litellm_id, api_key=api_key), True
+    except Exception:
+        logger.warning(
+            "v2: LiteLlm (google-adk[extensions]) unavailable; falling back to "
+            "serialized env-var key injection for provider=%s", provider.value,
+        )
+        return model_str, False
+
+
+@contextlib.asynccontextmanager
+async def _maybe_env(env_var: str, value: str | None, *, serialize: bool):
+    """Temporarily set ``os.environ[env_var]=value``, restoring it after.
+
+    No-op when ``value`` is None (per-model key carried on the model, or no key).
+    When ``serialize`` is True, hold ``_ENV_LOCK`` for the duration so a
+    concurrent run injecting a *different* value can't observe this one mid-call
+    — used only on the BYO env-var fallback path.
+    """
+    if value is None:
+        yield
+        return
+    async with contextlib.AsyncExitStack() as stack:
+        if serialize:
+            await stack.enter_async_context(_ENV_LOCK)
+        original = os.environ.get(env_var)
+        os.environ[env_var] = value
+        try:
+            yield
+        finally:
+            if original is None:
+                os.environ.pop(env_var, None)
+            else:
+                os.environ[env_var] = original
 
 
 class AdkInsightsRunner:
@@ -97,11 +171,16 @@ class AdkInsightsRunner:
         provider: Provider = Provider.GOOGLE_GENAI,
         model: ModelName = ModelName.GEMINI_2_5_FLASH,
         temperature: float = 1.0,
+        byo_key: bool = False,
     ) -> None:
         self.provider = provider
         self.model = model
         self.model_str = _resolve_adk_model_string(provider, model)
         self._api_key = api_key
+        # A per-request bring-your-own key is carried per-model (LiteLlm) so it
+        # never touches the process-global env; the shared server key keeps the
+        # original env-var path (same value across runs → no race).
+        self._byo_key = byo_key
         self._temperature = temperature
 
         self._goal_tool_names: list[str] = []
@@ -228,8 +307,14 @@ class AdkInsightsRunner:
             context=context,
         )
 
+        # A BYO key is carried per-model (LiteLlm api_key); the server key keeps
+        # the env-var path. per_model_key=True means nothing is injected globally.
+        adk_model, per_model_key = _build_adk_model(
+            self.provider, self.model, self._api_key, prefer_per_model=self._byo_key
+        )
+
         pipeline = build_pipeline_node(
-            model_str=self.model_str,
+            model_str=adk_model,
             adk_tools=adk_tools,
             mode=mode,
             synthesis_system_prompt=synthesis_system_prompt,
@@ -273,18 +358,12 @@ class AdkInsightsRunner:
             parts=[genai_types.Part(text="Run the insight pipeline.")],
         )
 
-        # Prefer the resolved key: a per-request bring-your-own key already won
-        # over the server key in _resolve_agent_config, so honour it here even if
-        # the server's key is present in the env. ADK reads the provider key from
-        # the environment at run time; we set it here and restore in `finally`.
-        # NOTE: this still mutates the process-global env, so concurrent v2 runs
-        # with *different* keys can race — acceptable for the current low-
-        # concurrency beta; a proper fix passes the key per-model (LiteLlm
-        # api_key) and is tracked as a follow-up.
+        # Inject the key via the provider env var ONLY when it isn't already
+        # carried on the model (i.e. the server-key path, or a LiteLlm fallback).
+        # A BYO env injection is serialized so concurrent different-key runs can't
+        # race; the server key is the same value across runs, so it isn't locked.
         env_var = _PROVIDER_ENV_VAR.get(self.provider, "GOOGLE_API_KEY")
-        original_env_val = os.environ.get(env_var)
-        if self._api_key:
-            os.environ[env_var] = self._api_key
+        inject_value = self._api_key if (self._api_key and not per_model_key) else None
 
         # SSE streaming must be requested explicitly in ADK 2.x; without it no
         # partial events are emitted. We forward only the synthesis agent's
@@ -294,23 +373,24 @@ class AdkInsightsRunner:
 
         start = perf_counter()
         try:
-            async for event in runner.run_async(
-                user_id=_USER_ID,
-                session_id=session_id,
-                new_message=trigger,
-                run_config=run_config,
-            ):
-                if (
-                    emit_event
-                    and event.partial
-                    and event.author == SYNTHESIS_AGENT_NAME
-                    and event.content
-                    and event.content.parts
+            async with _maybe_env(env_var, inject_value, serialize=self._byo_key):
+                async for event in runner.run_async(
+                    user_id=_USER_ID,
+                    session_id=session_id,
+                    new_message=trigger,
+                    run_config=run_config,
                 ):
-                    for part in event.content.parts:
-                        text = getattr(part, "text", None)
-                        if text:
-                            await emit_event({"event": "synthesis_chunk", "text": text})
+                    if (
+                        emit_event
+                        and event.partial
+                        and event.author == SYNTHESIS_AGENT_NAME
+                        and event.content
+                        and event.content.parts
+                    ):
+                        for part in event.content.parts:
+                            text = getattr(part, "text", None)
+                            if text:
+                                await emit_event({"event": "synthesis_chunk", "text": text})
         except Exception:
             logger.exception(
                 "v2 ADK pipeline failed with %s/%s",
@@ -318,12 +398,6 @@ class AdkInsightsRunner:
                 self.model_str,
             )
             return {}, None
-        finally:
-            # Restore original env value
-            if original_env_val is None and env_var in os.environ:
-                del os.environ[env_var]
-            elif original_env_val is not None:
-                os.environ[env_var] = original_env_val
 
         elapsed = perf_counter() - start
         logger.info("v2 ADK pipeline completed in %.1fs", elapsed)
