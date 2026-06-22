@@ -332,6 +332,7 @@ async def _run_draft_worker(
             topic=req.topic,
             pillar=req.pillar,
             channel=channel,
+            post_type=req.post_type,
         )
         # Link the drafted post back onto its plan-day (post_id) so the board
         # can match the new post to its slot (we link by post_id, not position).
@@ -1016,6 +1017,13 @@ class PostOut(BaseModel):
     emotional_arc: str
     camera_ref_pool: str
     platforms:     list
+    # Single-clip video (post_type == "video"); empty/None for slideshow posts.
+    video_url:               str = ""
+    video_asset_id:          UUID | None = None
+    video_prompt:            str = ""
+    video_duration_seconds:  int | None = None
+    video_aspect_ratio:      str = "9:16"
+    source_image_asset_id:   UUID | None = None
     posted_at:     str | None
     scheduled_at:  str | None
     tiktok_url:    str
@@ -1079,6 +1087,12 @@ def _post_out(
         emotional_arc=p.emotional_arc,
         camera_ref_pool=p.camera_ref_pool,
         platforms=p.platforms or [],
+        video_url=p.video_url,
+        video_asset_id=p.video_asset_id,
+        video_prompt=p.video_prompt,
+        video_duration_seconds=p.video_duration_seconds,
+        video_aspect_ratio=p.video_aspect_ratio,
+        source_image_asset_id=p.source_image_asset_id,
         posted_at=p.posted_at.isoformat() if p.posted_at else None,
         scheduled_at=p.scheduled_at.isoformat() if p.scheduled_at else None,
         tiktok_url=p.tiktok_url,
@@ -2242,7 +2256,26 @@ def _select_publish_assets(db: Session, post: ContentPost) -> list[ContentAsset]
     raw photo. A post accumulates dozens of assets across regenerations + per-slide
     renders; uploading them all would ship the wrong frames in the wrong order and
     take minutes. Shared by both publish routes so they upload the same set.
+
+    Video posts are the exception: they publish ONE clip — the attached video
+    asset (post.video_asset_id), with a latest-video-asset fallback.
     """
+    if post.post_type == "video":
+        if post.video_asset_id is not None:
+            vid = db.get(ContentAsset, post.video_asset_id)
+            if vid is not None and vid.project_id == post.project_id:
+                return [vid]
+        # Fallback: the most recent video/* asset attached to this post.
+        post_videos = db.execute(
+            select(ContentAsset)
+            .where(ContentAsset.post_id == post.id, ContentAsset.project_id == post.project_id)
+            .order_by(ContentAsset.created_at.desc())
+        ).scalars().all()
+        for a in post_videos:
+            if (a.mime_type or "").startswith("video/"):
+                return [a]
+        return []
+
     all_assets = db.execute(
         select(ContentAsset)
         .where(ContentAsset.post_id == post.id, ContentAsset.project_id == post.project_id)

@@ -207,6 +207,9 @@ class DraftPostRequest(BaseModel):
     topic: str | None = None
     pillar: str | None = None
     channel: str | None = None   # primary platform (platforms[0]); selects the agent playbook
+    # Content type for a standalone (no-plan) draft: "slideshow" | "image" | "video".
+    # When a plan day is resolved its post_type wins; this only seeds the no-day case.
+    post_type: str | None = None
 
 
 class ClonePostRequest(BaseModel):
@@ -242,6 +245,10 @@ class ContentSession(BaseAgentSession):
     mode: RunMode
     plan_id: UUID | None = None
     post_id: UUID | None = None
+    # Content type being drafted ("slideshow" | "image" | "video"). Resolved at
+    # run start (from the bound post or plan day); gates whether the runner wires
+    # the Higgsfield video MCP into the session. See agents/content/v3/runner.py.
+    post_type: str = "slideshow"
     # Persisted-conversation linkage (session resume / chat history). Set by the
     # route layer when a session is created; the runner re-primes from the DB when
     # resume is True. recorder persists each turn (agents/content/persistence.py).
@@ -428,6 +435,7 @@ class ContentTool(StrEnum):
     RENDER_SLIDE               = "mcp__duct_content__render_slide"
     GENERATE_IMAGE             = "mcp__duct_content__generate_image"
     EDIT_IMAGE                 = "mcp__duct_content__edit_image"
+    ATTACH_POST_VIDEO          = "mcp__duct_content__attach_post_video"
     CHECK_POST_SANITY          = "mcp__duct_content__check_post_sanity"
     SUBMIT_ASSESSMENT          = "mcp__duct_content__submit_assessment"
     # Publishing + metrics are UI/REST-driven (routes/content.py): PublishModal →
@@ -549,6 +557,16 @@ class PostDraft(BaseModel):
     emotional_arc: str = ""             # 5-slide energy arc, one line per slide
     camera_ref_pool: str = ""           # 'selfie-talking' | 'lifestyle' | 'closeup' — which ref pool to draw from
     platforms: list[Platform] = Field(default_factory=lambda: [Platform.TIKTOK])
+    # Video (single-clip) — populated only when post_type == "video"; slides stays
+    # empty. The clip is generated via Higgsfield image-to-video (a keyframe still
+    # is animated) and attached by the attach_post_video tool, which sets video_url
+    # + video_asset_id. The orchestrator authors video_prompt + the clip settings.
+    video_url: str = ""
+    video_asset_id: UUID | None = None
+    video_prompt: str = ""                          # motion / action prompt for the clip
+    video_duration_seconds: int = Field(default=5, ge=1, le=15)  # Higgsfield clips ≤ 15s
+    video_aspect_ratio: AspectRatio = AspectRatio.PORTRAIT_9_16
+    source_image_asset_id: UUID | None = None       # keyframe still that was animated
 
 
 class PlanStrategy(BaseModel):

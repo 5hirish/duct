@@ -53,3 +53,10 @@ class SubmitPostResult(BaseModel):
     post_dir_slug: str
     slide_count: int
     images_generated: int
+
+
+class AttachPostVideoResult(BaseModel):
+    post_id: str
+    video_asset_id: str
+    video_url: str
+    duration_seconds: int | None = None

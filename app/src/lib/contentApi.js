@@ -107,7 +107,7 @@ export async function openPlanStream(
  *   GET  /api/agents/tiktok_studio/sessions/{id}/stream
  */
 export async function openPostStream(
-  { projectId, planId, dayIndex, topic, pillar, channel,
+  { projectId, planId, dayIndex, topic, pillar, channel, postType,
     conversationId, resume, startFresh, artifactType, artifactId } = {},
   { signal, onSession } = {},
 ) {
@@ -119,6 +119,7 @@ export async function openPostStream(
     ...(topic     ? { topic     } : {}),
     ...(pillar    ? { pillar    } : {}),
     ...(channel   ? { channel   } : {}),
+    ...(postType  ? { post_type: postType } : {}),
     ...resumeFields({ conversationId, resume, startFresh, artifactType, artifactId }),
   });
   onSession?.({ sessionId: session_id, conversationId: conversation_id });

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Link2, Loader2, PenLine, Sparkles, X } from "lucide-react";
+import { Images, Link2, Loader2, PenLine, Sparkles, Video, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -60,6 +60,7 @@ export default function AddPostModal({ projectId, plan, onClose, onSaved }) {
 
   // Manual fields
   const [topic, setTopic] = useState("");
+  const [postType, setPostType] = useState("slideshow"); // manual mode: slideshow | video
   const [hookText, setHookText] = useState("");
   const [caption, setCaption] = useState("");
   const [hashtags, setHashtags] = useState([]);
@@ -137,7 +138,7 @@ export default function AddPostModal({ projectId, plan, onClose, onSaved }) {
     if (mode === "manual") {
       return {
         topic: topic.trim() || "Untitled post",
-        post_type: "slideshow",
+        post_type: postType,
         clone_source: null,
       };
     }
@@ -227,7 +228,7 @@ export default function AddPostModal({ projectId, plan, onClose, onSaved }) {
             topic: topic.trim(),
             pillar: pillar || "",
             hook: hookText,
-            post_type: "slideshow",
+            post_type: postType,
             platforms,
           });
           dayIndex = Math.max(0, (updated?.days?.length ?? dayIndex + 1) - 1);
@@ -235,6 +236,7 @@ export default function AddPostModal({ projectId, plan, onClose, onSaved }) {
         const params = new URLSearchParams();
         if (planId) { params.set("plan_id", planId); params.set("day", String(dayIndex)); }
         else { if (topic.trim()) params.set("topic", topic.trim()); if (pillar) params.set("pillar", pillar); }
+        if (postType && postType !== "slideshow") params.set("post_type", postType);
         params.set("channel", ch);
         router.push(`/content/posts/new?${params.toString()}`);
         return;
@@ -294,6 +296,31 @@ export default function AddPostModal({ projectId, plan, onClose, onSaved }) {
               <Field label="Topic">
                 <Input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="What's the post about?" autoFocus />
               </Field>
+              <Field label="Format">
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    { key: "slideshow", label: "Slideshow", Icon: Images },
+                    { key: "video", label: "Video", Icon: Video },
+                  ].map(({ key, label, Icon }) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setPostType(key)}
+                      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-colors ${
+                        postType === key ? "border-primary bg-primary/10 text-primary" : "border-border/70 text-muted-foreground hover:border-primary/40"
+                      }`}
+                    >
+                      <Icon className="size-3.5" /> {label}
+                    </button>
+                  ))}
+                </div>
+              </Field>
+              {postType === "video" && (
+                <p className="rounded-xl bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                  Video posts are generated with Higgsfield (image-to-video). Make sure Higgsfield is
+                  connected for your workspace before drafting.
+                </p>
+              )}
               <Field label="Hook" hint={`${hookText.length}/120`}>
                 <Input value={hookText} maxLength={120} onChange={(e) => setHookText(e.target.value)} placeholder="The scroll-stopping first line" />
               </Field>

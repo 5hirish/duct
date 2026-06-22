@@ -21,6 +21,7 @@ import { PostStatus } from "../../lib/contentEnums";
 import { PlatformGlyph, platformMeta } from "./platformGlyphs";
 import { useRouter } from "next/navigation";
 import SlidesCarousel from "./SlidesCarousel";
+import VideoViewport from "./VideoViewport";
 import PostMetrics from "./PostMetrics";
 import PublishReviewPanel from "./PublishReviewPanel";
 import PublishModal from "./PublishModal";
@@ -317,7 +318,10 @@ export default function PostViewport({ payload, assessment = null, phase, canPub
       onDownload={handleDownloadSlides}
     />
   ) : null;
-  const carouselEl = (
+  const isVideo = post.post_type === "video";
+  const carouselEl = isVideo ? (
+    <VideoViewport post={post} />
+  ) : (
     <SlidesCarousel slides={slides} headHtml={headHtml} index={slideIdx} onIndexChange={setCurrentIndex} />
   );
 
@@ -435,7 +439,9 @@ export default function PostViewport({ payload, assessment = null, phase, canPub
           <div className="mx-auto max-w-2xl space-y-4 p-5">
             {metricsEl}
             {carouselEl}
-            <BulkImageBar slides={slides} onSendMessage={onSendMessage} commitIfDirty={commitIfDirty} currentIndex={slideIdx} />
+            {!isVideo && (
+              <BulkImageBar slides={slides} onSendMessage={onSendMessage} commitIfDirty={commitIfDirty} currentIndex={slideIdx} />
+            )}
             {reviewEl}
             <PostCopy post={post} patch={patch} />
           </div>

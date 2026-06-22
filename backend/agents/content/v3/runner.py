@@ -170,6 +170,46 @@ def create_clone_session(
 # ---------------------------------------------------------------------------
 
 
+def _resolve_session_post_type(session: ContentSession, day: Day | None = None) -> str:
+    """Resolve the content type for this draft session: the plan day's type if
+    given, else the bound post's type, else 'slideshow'. Sync — call via
+    asyncio.to_thread. Drives whether _run wires the Higgsfield video MCP."""
+    if day is not None and getattr(day, "post_type", ""):
+        return day.post_type
+    if session.post_id is not None:
+        from sqlmodel import Session
+
+        from db.session import get_engine
+        from models.content import ContentPost
+
+        engine = get_engine()
+        if engine is not None:
+            with Session(engine) as db:
+                row = db.get(ContentPost, session.post_id)
+                if row is not None and row.post_type:
+                    return row.post_type
+    return "slideshow"
+
+
+def _resolve_higgsfield_token(project_id: UUID) -> str:
+    """Resolve the Higgsfield bearer token for the project's owner (or env
+    fallback). Sync — call via asyncio.to_thread. "" means "not connected", and
+    the runner then skips wiring the video MCP (the run fails soft)."""
+    from sqlmodel import Session
+
+    from db.session import get_engine
+    from models.project import Project
+    from service.higgsfield.auth import higgsfield_token_for_user
+
+    engine = get_engine()
+    if engine is None:
+        return ""
+    with Session(engine) as db:
+        proj = db.get(Project, project_id)
+        user_id = proj.user_id if proj is not None else None
+        return higgsfield_token_for_user(user_id, db)
+
+
 def _load_brand_context(project_id: UUID) -> ContentBrandContext:
     """Build a ContentBrandContext snapshot from the Project row.
 
@@ -751,6 +791,28 @@ async def _run(
     _cli_path = shutil.which("claude") or None
     _mcp = build_content_mcp_server(project_id, emit, session)
 
+    # Video posts also get Higgsfield's hosted MCP wired in as a REMOTE HTTP
+    # server, authenticated with the user's stored bearer (frontend OAuth) or the
+    # HIGGSFIELD_API_TOKEN env fallback. The Claude Agent SDK doesn't run OAuth —
+    # it just replays the bearer (see service/higgsfield/auth). Only attached for
+    # post_type == "video" so slideshow sessions don't pay the connect/tool cost.
+    # If no token is connected we skip it and the agent reports it can't generate
+    # video (fails soft rather than crashing).
+    mcp_servers: dict = {"duct_content": _mcp}
+    _video_allowed_tools: list = []
+    if session.post_type == "video":
+        _hf_token = await asyncio.to_thread(_resolve_higgsfield_token, project_id)
+        if _hf_token:
+            from service.higgsfield.auth import higgsfield_mcp_config
+            mcp_servers["higgsfield"] = higgsfield_mcp_config(_hf_token)
+            _video_allowed_tools = ["mcp__higgsfield__*"]
+            logger.info("content: Higgsfield video MCP attached (session %s)", session_id)
+        else:
+            logger.warning(
+                "content: video post but Higgsfield is not connected (session %s) — "
+                "agent will lack video-generation tools", session_id,
+            )
+
     # ------------------------------------------------------------------
     # ClaudeAgentOptions
     # ------------------------------------------------------------------
@@ -778,6 +840,11 @@ async def _run(
             ContentTool.RENDER_SLIDE,
             ContentTool.GENERATE_IMAGE,
             ContentTool.EDIT_IMAGE,
+            # Attaches a finished Higgsfield clip to a video post. Harmless for
+            # slideshow sessions (the model only calls it for post_type='video').
+            ContentTool.ATTACH_POST_VIDEO,
+            # Higgsfield's remote MCP tools (only present when wired above).
+            *_video_allowed_tools,
             # Owned by the review_post sub-agent (it runs the whole pre-publish
             # review). Kept in the parent allow-list because every sub-agent tool
             # is also gated here — the orchestrator is told (in the prompt) not to
@@ -809,7 +876,7 @@ async def _run(
         stderr=_on_subprocess_stderr,
         setting_sources=[],
         cli_path=_cli_path,
-        mcp_servers={"duct_content": _mcp},
+        mcp_servers=mcp_servers,
     )
 
     # ------------------------------------------------------------------
@@ -1228,6 +1295,7 @@ class ClaudeContentRunner:
         pillar: str | None = None,
         format_slug: str = "",
         channel: str | None = None,
+        post_type: str | None = None,
         effort: AgentEffort | None = None,
         adaptive_thinking: bool = True,
         max_turns: int | None = None,
@@ -1237,6 +1305,14 @@ class ClaudeContentRunner:
         from agents.content.channels import resolve as resolve_channel
         session = get_session(session_id) or create_draft_session(session_id, project_id)
         ch = resolve_channel(channel)  # sync, no DB — safe before the first emit
+        # Resolve content type up front so _run knows whether to wire the
+        # Higgsfield video MCP for this session. Authoritative order: plan day /
+        # bound post (DB) wins; an explicit request post_type only seeds the
+        # no-day, no-post case (a standalone "draft now" video).
+        _resolved_type = await asyncio.to_thread(_resolve_session_post_type, session, day)
+        if _resolved_type == "slideshow" and post_type:
+            _resolved_type = post_type
+        session.post_type = _resolved_type
 
         is_resume = bool(getattr(session, "resume", False) and getattr(session, "conversation_id", None))
 
@@ -1310,6 +1386,7 @@ class ClaudeContentRunner:
             avatar=None,
             recent_posts=[],
             channel=ch,
+            post_type=session.post_type,
         )
 
         try:
@@ -1387,6 +1464,9 @@ class ClaudeContentRunner:
             session_id, project_id, plan_id=plan_id, post_id=post_id
         )
         session.post_id = post_id
+        # Clones inherit the reference's type (slideshow | video) — resolve from
+        # the bound post so a video clone wires the Higgsfield MCP in _run.
+        session.post_type = await asyncio.to_thread(_resolve_session_post_type, session, None)
         engine = get_engine()
         if engine is None:
             raise RuntimeError("DATABASE_URL is not configured.")

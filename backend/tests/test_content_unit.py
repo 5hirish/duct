@@ -900,3 +900,55 @@ def test_merge_manual_metrics_unions_manual_keys_across_calls():
     second = _merge_manual_metrics(first, {"reach": 900}, at="2026-06-18T01:00:00+00:00")
     assert second["saves"] == 3 and second["reach"] == 900
     assert set(second["manual_keys"]) == {"saves", "reach"}
+
+
+# ---------------------------------------------------------------------------
+# Video posts (Higgsfield) — prompt branch + token resolver are real logic
+# ---------------------------------------------------------------------------
+
+
+def test_video_kickoff_prompt_uses_higgsfield_flow_not_slides():
+    """A video post must steer the model to the Higgsfield image-to-video flow
+    (keyframe → animate → poll → attach_post_video), while a slideshow post must
+    stay on the slides path. If the post_type branch breaks, a video post would
+    silently draft slides and never call Higgsfield."""
+    from agents.content.prompts import build_post_user_prompt
+
+    brand = _brand()
+    video = build_post_user_prompt(brand, None, topic="x", post_type="video")
+    slides = build_post_user_prompt(brand, None, topic="x", post_type="slideshow")
+
+    assert "mcp__higgsfield__" in video and "attach_post_video" in video
+    assert "VIDEO post" in video
+    assert "higgsfield" not in slides.lower()
+    assert "slide_count" in slides
+
+
+def test_higgsfield_token_resolver_falls_back_to_env(monkeypatch):
+    """With no per-user ConnectorCredential (user_id=None), the resolver returns
+    the server-wide HIGGSFIELD_API_TOKEN — the dev/single-operator path. Empty
+    config ⇒ '' (caller treats that as 'not connected' and skips the MCP)."""
+    import service.higgsfield.auth as auth
+
+    class _Cfg:
+        higgsfield_api_token = "hf-test-token"
+
+    monkeypatch.setattr(auth, "get_configs", lambda: _Cfg())
+    assert auth.higgsfield_token_for_user(None, db=None) == "hf-test-token"
+
+    class _Empty:
+        higgsfield_api_token = ""
+
+    monkeypatch.setattr(auth, "get_configs", lambda: _Empty())
+    assert auth.higgsfield_token_for_user(None, db=None) == ""
+
+
+def test_higgsfield_mcp_config_shape():
+    """The remote MCP config the runner hands the SDK must be an HTTP server with
+    the bearer header — the SDK replays this verbatim (it does not run OAuth)."""
+    from service.higgsfield.auth import MCP_URL, higgsfield_mcp_config
+
+    cfg = higgsfield_mcp_config("tok123")
+    assert cfg["type"] == "http"
+    assert cfg["url"] == MCP_URL
+    assert cfg["headers"]["Authorization"] == "Bearer tok123"

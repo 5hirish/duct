@@ -29,6 +29,7 @@ export default function NewPostDraftPage() {
   const topic       = search.get("topic") || undefined;
   const pillar      = search.get("pillar") || undefined;
   const channel     = search.get("channel") || undefined;
+  const postType    = search.get("post_type") || undefined;
   const clonePostId = search.get("clone_post_id") || undefined;
 
   useEffect(() => {
@@ -56,6 +57,7 @@ export default function NewPostDraftPage() {
         topic,
         pillar,
         channel,
+        postType,
       };
 
   return (

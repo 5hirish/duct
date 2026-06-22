@@ -106,6 +106,14 @@ class Configs(BaseSettings):
     # demands it.
     apify_api_key: str = ""
 
+    # Higgsfield — video generation via the hosted MCP (mcp.higgsfield.ai).
+    # Per-user tokens (obtained through the frontend OAuth connect flow) are
+    # stored encrypted in connector_credentials (connector_type="higgsfield")
+    # and preferred. This server-wide token is the admin/env fallback — use a
+    # long-lived Higgsfield CLI/API token here, since it must survive headless
+    # replay against the MCP. See service/higgsfield/auth.py.
+    higgsfield_api_token: str = ""
+
     # When false (default), FastAPI does not serve /openapi.json, /docs, or /redoc.
     expose_openapi_docs: bool = False
 

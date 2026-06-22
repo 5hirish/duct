@@ -38,6 +38,7 @@ from claude_agent_sdk.types import McpSdkServerConfig
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from agents.content.results import (
+    AttachPostVideoResult,
     EditImageResult,
     EditSlideResult,
     GenerateImageResult,
@@ -355,10 +356,20 @@ def _build_post_payload(row: ContentPost) -> dict:
         "post_dir_slug":   row.post_dir_slug,
         "pillar":          row.pillar,
         "topic":           row.topic,
+        # Drives the viewport switch on the frontend (slideshow/image → slides
+        # carousel; video → <video> player). Previously omitted from the payload.
+        "post_type":       row.post_type,
         "layout":          row.layout,
         "slide_count":     row.slide_count,
         "slides":          row.slides,
         "slides_html":     row.slides_html,
+        # Single-clip video (populated when post_type == "video"; see attach_post_video).
+        "video_url":             row.video_url,
+        "video_asset_id":        str(row.video_asset_id) if row.video_asset_id else None,
+        "video_prompt":          row.video_prompt,
+        "video_duration_seconds": row.video_duration_seconds,
+        "video_aspect_ratio":    row.video_aspect_ratio,
+        "source_image_asset_id": str(row.source_image_asset_id) if row.source_image_asset_id else None,
         "caption":         row.caption,
         "hashtags":        row.hashtags,
         "hook_type":       row.hook_type,
@@ -608,6 +619,35 @@ def build_content_mcp_server(
         aspect_ratio: AspectRatio | None = Field(None, description="Optional aspect ratio override.")
         number_of_images: int = Field(1, ge=1, le=4, description="How many images to generate (1-4).")
 
+    class AttachPostVideoInput(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+        source_url: str = Field(
+            description=(
+                "The URL of the FINISHED video clip returned by Higgsfield "
+                "(mcp__higgsfield__*) once generation has completed. The clip is "
+                "downloaded and stored in the project's media library, then attached "
+                "to the current video post (POST_DRAFT_UPDATED fires)."
+            ),
+        )
+        video_prompt: str = Field(
+            "", description="The motion / action prompt used to generate the clip (kept for provenance).",
+        )
+        duration_seconds: int | None = Field(
+            None, ge=1, le=15, description="Clip length in seconds, if known.",
+        )
+        aspect_ratio: AspectRatio = Field(
+            AspectRatio.PORTRAIT_9_16, description="Clip aspect ratio. Defaults to 9:16 portrait.",
+        )
+        model: str = Field("", description="The Higgsfield model that produced the clip (e.g. 'kling-3.0'), if known.")
+        source_image_asset_id: str | None = Field(
+            None,
+            description=(
+                "The content asset UUID of the keyframe still that was animated, when the "
+                "keyframe was a Duct/Gemini image (from generate_image). Omit if the keyframe "
+                "was generated inside Higgsfield."
+            ),
+        )
+
     # ----------------------- Writers -----------------------
 
     @tool(
@@ -774,6 +814,19 @@ def build_content_mcp_server(
                     "emotional_arc":   draft.emotional_arc or "",
                     "camera_ref_pool": draft.camera_ref_pool or "",
                     "platforms":       [p.value for p in draft.platforms],
+                    # Video (single-clip). The motion prompt + clip settings are
+                    # authored copy → always taken from the draft. The generated
+                    # clip itself (video_url / video_asset_id) and its keyframe are
+                    # attached LATER by attach_post_video; a copy-edit re-submit
+                    # must not wipe them, so carry the persisted values forward
+                    # unless the draft explicitly supplies new ones (same guard as
+                    # _merge_slide_images does for generated slide images).
+                    "video_prompt":           draft.video_prompt or "",
+                    "video_duration_seconds": draft.video_duration_seconds,
+                    "video_aspect_ratio":     draft.video_aspect_ratio.value,
+                    "video_url":              draft.video_url or (existing.video_url if existing is not None else ""),
+                    "video_asset_id":         draft.video_asset_id or (existing.video_asset_id if existing is not None else None),
+                    "source_image_asset_id":  draft.source_image_asset_id or (existing.source_image_asset_id if existing is not None else None),
                 }
                 if existing is not None:
                     for k, v in values.items():
@@ -1433,6 +1486,113 @@ def build_content_mcp_server(
             logger.exception("edit_image failed")
             return _err("Image editing hit a snag — please try again.")
 
+    @tool(
+        name="attach_post_video",
+        description=(
+            "Attach a finished Higgsfield video clip to the current VIDEO post. "
+            "Call this AFTER a Higgsfield image-to-video generation has completed and "
+            "you have the final clip URL: it downloads the clip into the project's "
+            "media library (as a video/mp4 content asset), sets the post's video_url + "
+            "video_asset_id, and emits POST_DRAFT_UPDATED so the viewport plays it. "
+            "Only for post_type='video'."
+        ),
+        input_schema=tool_schema(AttachPostVideoInput),
+    )
+    async def attach_post_video(args: dict) -> dict:
+        try:
+            from service.higgsfield.storage import download_video_bytes, persist_generated_video
+
+            source_url = str(args.get("source_url") or "").strip()
+            if not source_url:
+                return _err("source_url is required — pass the finished Higgsfield clip URL.")
+            if session.post_id is None:
+                return _err("No current post in this session — draft the video post first (submit_post_draft).")
+
+            video_prompt = str(args.get("video_prompt") or "")
+            model = str(args.get("model") or "higgsfield")
+            aspect_ratio = str(args.get("aspect_ratio") or AspectRatio.PORTRAIT_9_16.value)
+            _dur = args.get("duration_seconds")
+            duration_seconds = int(_dur) if _dur not in (None, "") else None
+            _src_img = str(args.get("source_image_asset_id") or "").strip()
+            try:
+                source_image_asset_id = UUID(_src_img) if _src_img else None
+            except ValueError:
+                return _err(f"source_image_asset_id {_src_img!r} is not a valid UUID — omit it if unknown.")
+
+            # Validate the target post exists on this project before downloading.
+            with _open_db() as db0:
+                post0, err = _require_post(db0, project_id, session.post_id)
+                if err:
+                    return err
+
+            # Download the finished clip (can be a few MB; generous timeout).
+            try:
+                data = await asyncio.to_thread(download_video_bytes, source_url)
+            except Exception as exc:
+                logger.warning("attach_post_video: download failed from %s", source_url, exc_info=True)
+                return _err(f"Couldn't download the clip from Higgsfield ({exc}). Re-check the URL or retry.")
+            if not data:
+                return _err("The clip downloaded empty — the Higgsfield URL may have expired. Re-generate and retry.")
+
+            mime_type = "video/mp4"
+            if source_url.lower().split("?")[0].endswith(".webm"):
+                mime_type = "video/webm"
+            elif source_url.lower().split("?")[0].endswith(".mov"):
+                mime_type = "video/quicktime"
+
+            # Persist + attach under the post lock so a concurrent submit_post_draft
+            # re-emit can't race the clip onto the row.
+            async with _post_lock(str(session.post_id)):
+                with _open_db() as db:
+                    asset = persist_generated_video(
+                        project_id,
+                        db=db,
+                        data=data,
+                        mime_type=mime_type,
+                        prompt=video_prompt,
+                        model=model,
+                        params={
+                            "aspect_ratio":          aspect_ratio,
+                            "duration_seconds":      duration_seconds,
+                            "source_url":            source_url,
+                            "source_image_asset_id": str(source_image_asset_id) if source_image_asset_id else None,
+                        },
+                        duration_seconds=duration_seconds,
+                        post_id=session.post_id,
+                        source="higgsfield",
+                    )
+                    row = db.get(ContentPost, session.post_id)
+                    if row is None or row.project_id != project_id:
+                        return _err("The video post disappeared while attaching — re-draft and retry.")
+                    row.post_type = "video"
+                    row.video_url = asset.url
+                    row.video_asset_id = asset.asset_id
+                    row.video_prompt = video_prompt
+                    row.video_duration_seconds = duration_seconds
+                    row.video_aspect_ratio = aspect_ratio
+                    if source_image_asset_id is not None:
+                        row.source_image_asset_id = source_image_asset_id
+                    row.updated_at = datetime.now(timezone.utc)
+                    db.add(row)
+                    db.commit()
+                    db.refresh(row)
+                    logger.info("content: attached video asset %s to post %s", asset.asset_id, row.id)
+                    await emit({
+                        "event": ContentEvent.POST_DRAFT_UPDATED,
+                        "session_id": session.session_id,
+                        "post_id": str(row.id),
+                        "payload": _build_post_payload(row),
+                    })
+                    return _ok_model(AttachPostVideoResult(
+                        post_id=str(row.id),
+                        video_asset_id=str(asset.asset_id),
+                        video_url=asset.url,
+                        duration_seconds=duration_seconds,
+                    ))
+        except Exception:
+            logger.exception("attach_post_video failed")
+            return _err("Attaching the video hit a snag — please try again.")
+
     # Publishing + metrics are UI/REST-driven (PublishModal → POST /publish;
     # board → /mark-posted; metrics → /sync-metrics + /sync-daily). The agent
     # surface is creation + review only, so the publish_post / mark_posted /
@@ -1824,6 +1984,7 @@ def build_content_mcp_server(
             render_slide,
             generate_image,
             edit_image,
+            attach_post_video,
             check_post_sanity,
             submit_assessment,
         ],

@@ -1041,6 +1041,11 @@ def _mode_tail(mode: RunMode) -> str:
         "STRUCTURED SLIDES (copy + an image_prompt per slide) + a layout — "
         "NOT HTML — and you do NOT generate images yet. Images wait until "
         "the user is happy with the written draft (see IMAGE GENERATION).\n\n"
+        "EXCEPTION — VIDEO posts (post_type='video'): the deliverable is ONE "
+        "short vertical clip (≤15s) generated with Higgsfield image-to-video, "
+        "NOT slides. The turn prompt gives the exact video flow (keyframe → "
+        "mcp__higgsfield__* image-to-video → poll → attach_post_video); follow "
+        "it and leave `slides` empty.\n\n"
         + _POSTDRAFT_SHAPE
     )
     return {
@@ -1246,8 +1251,13 @@ def build_post_user_prompt(
     avatar: "Avatar | dict | None" = None,
     recent_posts: list[dict] | None = None,
     channel=None,
+    post_type: str = "slideshow",
 ) -> str:
-    """Kickoff prompt for draft_post mode."""
+    """Kickoff prompt for draft_post mode.
+
+    ``post_type`` selects the deliverable: a slideshow (the default — structured
+    slides + per-slide images) or a single video clip (Higgsfield image-to-video).
+    """
     recent_lines = (
         "\n".join(
             f"  - {p.get('topic', '?')} [{p.get('pillar', '?')}, hook={p.get('hook_type', '?')}]"
@@ -1269,10 +1279,18 @@ def build_post_user_prompt(
         if isinstance(avatar, dict)
         else (avatar.model_dump_json() if avatar is not None else "(none)")
     )
+    phase_instructions = (
+        _VIDEO_PHASE_INSTRUCTIONS if post_type == "video" else _SLIDESHOW_PHASE_INSTRUCTIONS
+    )
+    refs_label = (
+        "Avatar reference (for character consistency in the keyframe):"
+        if post_type == "video"
+        else "Avatar reference (for character consistency across slides):"
+    )
     return f"""\
 {_brand_stanza(brand)}
 
-Draft one post for {brand.project_name}.
+Draft one {'video' if post_type == 'video' else 'post'} for {brand.project_name}.
 
 {_channel_directive(channel)}
 
@@ -1281,9 +1299,13 @@ Target: {target}
 Recent posts (last 5):
 {recent_lines}
 
-Avatar reference (for character consistency across slides):
+{refs_label}
 {avatar_summary}
 
+{phase_instructions}"""
+
+
+_SLIDESHOW_PHASE_INSTRUCTIONS = """\
 Now — WRITE PHASE (copy + image prompts only; NO images yet):
 
 1. Call TodoWrite with your drafting checklist so the user can watch the
@@ -1295,12 +1317,55 @@ Now — WRITE PHASE (copy + image prompts only; NO images yet):
    slide_count — each with copy (caption_style + headline + optional subtext)
    and an `image_prompt`. Do NOT write slides_html and do NOT call
    generate_image.
-4. Emit the draft inside <duct_report>{{ "type": "post", ... }}</duct_report>
+4. Emit the draft inside <duct_report>{ "type": "post", ... }</duct_report>
    then call submit_post_draft.
 5. Brief summary in chat: hook used, layout, slide count, what makes this
    different — then ASK the user to review the copy + image prompts, and tell
    them you'll generate the images once they're happy (they can tweak any
    caption or image prompt first).
+"""
+
+# Video posts are ONE short vertical clip (≤15s), generated with Higgsfield
+# image-to-video — NOT a slideshow. Higgsfield's tools are wired in as remote
+# MCP tools namespaced `mcp__higgsfield__*` (their exact names + parameters are
+# in your tool list — read them at call time). Keyframe → animate → poll → attach.
+_VIDEO_PHASE_INSTRUCTIONS = """\
+This is a VIDEO post: the deliverable is ONE short vertical clip (≤15s, 9:16),
+generated with Higgsfield image-to-video. There are NO slides.
+
+WRITE PHASE (copy + prompts only; NO generation yet):
+
+1. Call TodoWrite with your checklist (research → hook → caption → keyframe brief
+   → motion brief). Update as you go.
+2. Author the post copy: caption (first line is the scroll-stopping hook),
+   hashtags, hook_type/hook_text. Leave `slides` EMPTY.
+3. Author the clip: set `post_type` to "video", write a vivid `image_prompt`
+   for the opening KEYFRAME (the first frame — reuse the avatar reference for
+   character consistency) and a `video_prompt` describing the MOTION/action
+   (camera move, subject motion, energy). Set `video_duration_seconds` (default
+   5) and `video_aspect_ratio` "9:16".
+4. Emit the draft inside <duct_report>{ "type": "post", "post_type": "video", ... }
+   </duct_report> then call submit_post_draft.
+5. Brief summary in chat (hook, the visual idea, the motion) and ASK the user to
+   review before you generate — they can tweak the keyframe or motion prompt.
+
+VIDEO PHASE (only AFTER the user approves):
+
+A. Generate the KEYFRAME still: call generate_image with the keyframe
+   `image_prompt` and NO slide_id (a standalone still). Pass the avatar/character
+   reference via input_asset_ids for consistency. Note the returned asset_url +
+   asset_id.
+B. Animate it with Higgsfield: call the `mcp__higgsfield__*` image-to-video tool
+   with that keyframe image URL + your `video_prompt`, 9:16, shortest sensible
+   duration. Generation is async — poll the Higgsfield status/result tool until
+   the clip is ready and you have the final video URL.
+C. Persist it: call attach_post_video(source_url=<final clip URL>,
+   video_prompt=<motion prompt>, duration_seconds=<n>, aspect_ratio="9:16",
+   model=<higgsfield model>, source_image_asset_id=<keyframe asset_id>). This
+   downloads the clip, attaches it to the post, and refreshes the preview.
+D. If the Higgsfield tools are NOT in your tool list, Higgsfield isn't connected —
+   tell the user to connect it in Settings → Connectors, and stop.
+E. Brief summary in chat once the clip is attached.
 """
 
 

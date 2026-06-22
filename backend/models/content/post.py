@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
 import sqlalchemy as sa
-from sqlalchemy import Column, DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint
+from sqlalchemy import Column, DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint, Uuid
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, SQLModel
 
@@ -90,6 +90,18 @@ class ContentPost(SQLModel, table=True):
         default_factory=list,
         sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="[]"),
     )
+
+    # Video (single-clip) — populated only when post_type == "video". The clip is
+    # generated via Higgsfield (service/higgsfield) and stored as a content_assets
+    # row; these denormalise the chosen clip + its generation inputs onto the post
+    # so render + publish are self-contained. slides[] stays empty for video posts.
+    video_url: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
+    video_asset_id: UUID | None = Field(default=None, sa_column=Column(Uuid, nullable=True))
+    video_prompt: str = Field(default="", sa_column=Column(Text, nullable=False, server_default=""))
+    video_duration_seconds: int | None = Field(default=None, sa_column=Column(Integer, nullable=True))
+    video_aspect_ratio: str = Field(default="9:16", sa_column=Column(String, nullable=False, server_default="9:16"))
+    # The keyframe still (a content_assets id) that was animated into the clip.
+    source_image_asset_id: UUID | None = Field(default=None, sa_column=Column(Uuid, nullable=True))
 
     posted_at: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
     # When the post is scheduled to publish (set via the publish flow). Drives
