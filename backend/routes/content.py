@@ -54,6 +54,7 @@ from sqlmodel import Session
 from agents.content.events import ContentEvent
 from agents.content.styles import base_css, list_styles
 from agents.content.schema import (
+    ClonePostRequest,
     ContentAnswerRequest,
     ContentChatMessage,
     ContentStatus,
@@ -352,6 +353,39 @@ async def _run_draft_worker(
         _link_conversation_artifact(session_id, "post")
     except Exception as exc:
         logger.exception("content: draft worker error for session %s", session_id)
+        await emit_fn({
+            "event":      ContentEvent.PIPELINE_FAILED,
+            "session_id": session_id,
+            "error":      str(exc),
+        })
+
+
+async def _run_clone_worker(
+    session_id: str,
+    req: ClonePostRequest,
+    emit_fn: Any,
+    *,
+    user_keys: dict[Provider, str] | None = None,
+) -> None:
+    """Drive a clone_post session: ingest the reference (deferred + cached on the
+    post's clone_source), then model it into an original draft. Mirrors
+    _run_draft_worker but the pending post (with clone_source) already exists."""
+    try:
+        api_key = _resolve_api_key(user_keys)
+        if not api_key and not claude_oauth_available():
+            raise ValueError("ANTHROPIC_API_KEY is not configured")
+        runner = ClaudeContentRunner(api_key=api_key)
+        await runner.run_clone(
+            session_id,
+            req.project_id,
+            emit_fn,
+            post_id=req.post_id,
+            plan_id=req.plan_id,
+            channel=req.channel,
+        )
+        _link_conversation_artifact(session_id, "post")
+    except Exception as exc:
+        logger.exception("content: clone worker error for session %s", session_id)
         await emit_fn({
             "event":      ContentEvent.PIPELINE_FAILED,
             "session_id": session_id,
@@ -822,6 +856,45 @@ def patch_plan_day(
     return _plan_out(plan)
 
 
+class DayAppend(BaseModel):
+    model_config = ConfigDict(extra="allow")  # tolerate extra day fields
+
+    post_id:      UUID | None = None
+    topic:        str = ""
+    pillar:       str = ""
+    post_type:    str = "slideshow"
+    status:       str = "pending"
+    source:       str = "manual"   # marks a user-added slot the planner must preserve
+    scheduled_at: str | None = None   # ISO "Plan for" date/time; drives board placement
+    platforms:    list[str] = Field(default_factory=lambda: ["tiktok"])
+
+
+@router.post("/content/plans/{plan_id}/days", status_code=201)
+def append_plan_day(
+    plan_id: UUID,
+    body: DayAppend,
+    db: Session = Depends(db_session),
+) -> PlanOut:
+    """Append one day to plan.days[] — the board's Add-post flow lands user
+    entries in the plan at their 'Plan for' date/time. Duplicate slots are fine
+    (no dedup). The day is tagged source='manual' so content_planner preserves it
+    on regeneration."""
+    plan = db.get(ContentPlan, plan_id)
+    if plan is None:
+        raise HTTPException(404, "Plan not found")
+    day = body.model_dump(exclude_none=False)
+    if day.get("post_id") is not None:
+        day["post_id"] = str(day["post_id"])   # JSONB-safe
+    days = list(plan.days or [])
+    days.append(day)
+    plan.days = days
+    plan.updated_at = datetime.now(timezone.utc)
+    db.add(plan)
+    db.commit()
+    db.refresh(plan)
+    return _plan_out(plan)
+
+
 @router.delete("/content/plans/{plan_id}")
 def delete_plan(plan_id: UUID, db: Session = Depends(db_session)) -> dict:
     plan = db.get(ContentPlan, plan_id)
@@ -869,6 +942,10 @@ class PostIn(BaseModel):
     emotional_arc: str = ""
     camera_ref_pool: str = ""
     platforms:     list[Platform] = Field(default_factory=lambda: [Platform.TIKTOK])
+    notes:         str = ""
+    # Clone/reference lineage for Add-post flow (None for ordinary posts). The
+    # source pointer is set on Save; the ingest cache is filled at first Draft-now.
+    clone_source:  dict | None = None
 
 
 class PostPatch(BaseModel):
@@ -902,6 +979,7 @@ class PostPatch(BaseModel):
     camera_ref_pool: str | None = None
     platforms:     list[Platform] | None = None
     notes:         str | None = None
+    clone_source:  dict | None = None
 
 
 class PostOut(BaseModel):
@@ -949,6 +1027,7 @@ class PostOut(BaseModel):
     perf:          dict
     daily_perf:    list
     notes:         str
+    clone_source:  dict | None = None
     last_assessment: dict | None = None
     created_at:    str
     updated_at:    str
@@ -1009,6 +1088,7 @@ def _post_out(
         perf=p.perf or {},
         daily_perf=p.daily_perf or [],
         notes=p.notes,
+        clone_source=p.clone_source,
         last_assessment=p.last_assessment,
         created_at=p.created_at.isoformat(),
         updated_at=p.updated_at.isoformat(),
@@ -1111,6 +1191,7 @@ def list_posts(
     project_id: UUID,
     plan_id: UUID | None = None,
     status: str | None = None,
+    include_pending: bool = False,
     db: Session = Depends(db_session),
 ) -> list[PostOut]:
     stmt = select(ContentPost).where(ContentPost.project_id == project_id)
@@ -1118,9 +1199,11 @@ def list_posts(
         stmt = stmt.where(ContentPost.plan_id == plan_id)
     if status:
         stmt = stmt.where(ContentPost.status == status)
-    else:
+    elif not include_pending:
         # Default board view hides unsaved (pending) drafts — they live only in
         # the live drafting workspace until the user clicks Save (pending→draft).
+        # The plan board passes include_pending=1 so user-added (Add-post) entries,
+        # which sit at pending until drafted, still appear in their plan slot.
         stmt = stmt.where(ContentPost.status != ContentStatus.PENDING)
     stmt = stmt.order_by(ContentPost.updated_at.desc())
     rows = db.execute(stmt).scalars().all()
@@ -2759,6 +2842,99 @@ async def discover_results(dataset_id: str, response: Response, limit: int = 200
         count=len(posts),
         items=[p.model_dump(mode="json") for p in posts],
     )
+
+
+class DiscoverReferenceOut(BaseModel):
+    asset_id:     str
+    tiktok_url:   str
+    cover_url:    str
+    is_slideshow: bool
+    author:       str
+    text:         str
+    metrics:      dict   # views/likes/comments/shares/saves
+    diagnostic:   dict   # dominant lever + ratios (service.discovery.diagnose_reference)
+    has_media:    bool
+
+
+@router.get("/content/discover/references")
+def discover_references(
+    project_id: UUID,
+    min_plays: int = 0,
+    limit: int = 60,
+    db: Session = Depends(db_session),
+) -> list[DiscoverReferenceOut]:
+    """Saved discovered references for the Add-post 'References' picker — newest
+    first, with a captured cover + the 'why it worked' diagnostic so each card is
+    self-describing. min_plays defaults to 0 (show everything the user saved)."""
+    from service.discovery import diagnose_reference
+
+    rows = db.execute(
+        select(ContentAsset)
+        .where(
+            ContentAsset.project_id == project_id,
+            ContentAsset.asset_type == "discovered_reference",
+        )
+        .order_by(ContentAsset.created_at.desc())
+        .limit(200)
+    ).scalars().all()
+
+    out: list[DiscoverReferenceOut] = []
+    for r in rows:
+        params = r.params or {}
+        post = params.get("post") or {}
+        if (post.get("play_count") or 0) < min_plays:
+            continue
+        media = params.get("media") or {}
+        vm = post.get("video_meta") or {}
+        cover = media.get("cover") or vm.get("cover_url") or vm.get("original_cover_url") or ""
+        out.append(DiscoverReferenceOut(
+            asset_id=str(r.id),
+            tiktok_url=r.url,
+            cover_url=cover,
+            is_slideshow=bool(post.get("is_slideshow")),
+            author=(post.get("author_meta") or {}).get("name") or "",
+            text=(post.get("text") or "")[:280],
+            metrics={
+                "views":    post.get("play_count"),
+                "likes":    post.get("digg_count"),
+                "comments": post.get("comment_count"),
+                "shares":   post.get("share_count"),
+                "saves":    post.get("collect_count"),
+            },
+            diagnostic=diagnose_reference(post),
+            has_media=(media.get("status") == "ok"),
+        ))
+        if len(out) >= limit:
+            break
+    return out
+
+
+@router.get("/content/discover/oembed")
+async def discover_oembed(url: str, response: Response) -> dict:
+    """Free TikTok oEmbed peek for the paste-URL Add-post mode — proxied so the
+    browser dodges CORS. Returns {title, author_name, thumbnail_url}. NO Apify
+    cost (oEmbed is a public, free TikTok endpoint); the full scrape is deferred
+    to Draft-now. Best-effort: a 502 just means the modal shows the raw URL."""
+    import httpx
+
+    if not url.startswith(("http://", "https://")) or "tiktok" not in url:
+        raise HTTPException(400, "Provide a TikTok URL.")
+    try:
+        async with httpx.AsyncClient(timeout=8.0, follow_redirects=True) as c:
+            r = await c.get("https://www.tiktok.com/oembed", params={"url": url})
+        if r.status_code != 200:
+            raise HTTPException(502, "oEmbed unavailable")
+        data = r.json()
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(502, f"oEmbed failed: {exc}") from exc
+    response.headers["Cache-Control"] = "private, max-age=600"
+    return {
+        "title":         data.get("title") or "",
+        "author_name":   data.get("author_name") or "",
+        "thumbnail_url": data.get("thumbnail_url") or "",
+    }
 
 
 @router.post("/content/discover/save", status_code=201)

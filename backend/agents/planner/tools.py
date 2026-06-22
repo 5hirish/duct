@@ -114,6 +114,18 @@ def build_planner_mcp_server(
                     .where(ContentPlan.status == "active")
                     .order_by(ContentPlan.updated_at.desc())
                 ).first()
+                # Preserve user-added entries: days tagged source="manual" come
+                # from the board's Add-post flow. The planner owns the canonical
+                # slots but must NOT wipe manual entries when it regenerates —
+                # carry them over (appended; the board places them by scheduled_at).
+                if row is not None:
+                    manual_days = [
+                        d for d in (row.days or [])
+                        if isinstance(d, dict) and d.get("source") == "manual"
+                    ]
+                    if manual_days:
+                        days_json = days_json + manual_days
+                        logger.info("planner: preserved %d manual day(s) on regenerate", len(manual_days))
                 if row is None:
                     row = ContentPlan(
                         project_id=project_id,

@@ -35,6 +35,7 @@ from uuid import UUID
 
 from agents.content.events import ContentEvent, ContentStep, STEP_LABELS, StepStatus
 from agents.content.prompts import (
+    build_clone_user_prompt,
     build_orchestrator_system_prompt,
     build_plan_user_prompt,
     build_post_user_prompt,
@@ -143,6 +144,24 @@ def create_draft_session(
     session = make_session(session_id, project_id, "draft_post")
     if plan_id is not None:
         session.plan_id = plan_id
+    return register_session(session)
+
+
+def create_clone_session(
+    session_id: str,
+    project_id: UUID,
+    *,
+    plan_id: UUID | None = None,
+    post_id: UUID | None = None,
+) -> ContentSession:
+    """Session for clone_post — drafts a post by modeling a proven reference.
+    The pending post (carrying clone_source) is created up front by the Add-post
+    flow; post_id points the runner at it so the clone UPDATES that row."""
+    session = make_session(session_id, project_id, "clone_post")
+    if plan_id is not None:
+        session.plan_id = plan_id
+    if post_id is not None:
+        session.post_id = post_id
     return register_session(session)
 
 
@@ -477,7 +496,7 @@ def _validate_edit_image(input_data: dict[str, Any]):
 async def _run(
     session: ContentSession,
     system_prompt: str,
-    initial_prompt: str,
+    initial_prompt: str | list,   # str, or a list of content blocks (clone_post attaches reference images)
     emit: EmitFn,
     api_key: str,
     *,
@@ -1331,10 +1350,173 @@ class ClaudeContentRunner:
             })
             raise
 
+    async def run_clone(
+        self,
+        session_id: str,
+        project_id: UUID,
+        emit: EmitFn,
+        *,
+        post_id: UUID,
+        plan_id: UUID | None = None,
+        channel: str | None = None,
+        effort: AgentEffort | None = None,
+        adaptive_thinking: bool = True,
+        max_turns: int | None = None,
+        chat_idle_timeout: float = 1800.0,
+    ) -> None:
+        """Run a clone_post session: ingest the reference (deferred, cached),
+        then model it into an original PostDraft for this brand.
+
+        The pending post (carrying clone_source) already exists — `post_id` points
+        at it. The ingest runs as deterministic opening steps (resolve▸scrape▸
+        media▸analyze), is cached back onto clone_source so a re-draft never
+        re-charges Apify, then the agent writes the clone onto the SAME post_dir_slug
+        (pending → draft)."""
+        import base64
+        from datetime import datetime, timezone
+
+        from sqlmodel import Session
+
+        from agents.content.channels import primary_channel, resolve as resolve_channel
+        from db.session import get_engine
+        from models.content import ContentPost
+        from service import storage
+        from service.discovery import ingest_reference
+
+        session = get_session(session_id) or create_clone_session(
+            session_id, project_id, plan_id=plan_id, post_id=post_id
+        )
+        session.post_id = post_id
+        engine = get_engine()
+        if engine is None:
+            raise RuntimeError("DATABASE_URL is not configured.")
+
+        def _load_post() -> tuple[dict, str, list]:
+            with Session(engine) as db:
+                p = db.get(ContentPost, post_id)
+                if p is None:
+                    raise ValueError(f"Post {post_id} not found.")
+                return (dict(p.clone_source or {}), p.post_dir_slug, list(p.platforms or []))
+
+        clone_source, post_dir_slug, platforms = await asyncio.to_thread(_load_post)
+        ch = resolve_channel(channel or (primary_channel(platforms) if platforms else None))
+
+        await emit({
+            "event":      ContentEvent.PIPELINE_STARTED,
+            "session_id": session_id,
+            "mode":       "clone_post",
+            "channel":    getattr(ch, "id", "tiktok"),
+            "channel_label": getattr(ch, "label", "TikTok"),
+        })
+
+        # ── Ingest the reference (the expensive step — cached on clone_source) ──
+        _CLONE_STEP_LABELS = {
+            "resolving": "Resolving the reference",
+            "scraping":  "Scraping TikTok (metadata + media)",
+            "media":     "Saving cover & slide images",
+            "analyzing": "Reading why it worked",
+        }
+
+        async def _on_step(sid: str, status: str, msg: str = "") -> None:
+            label = _CLONE_STEP_LABELS.get(sid, sid)
+            if status == "running":
+                await emit({"event": ContentEvent.STEP_STARTED, "step_id": f"clone_{sid}",
+                            "label": label, "status": StepStatus.RUNNING})
+            else:
+                await emit({"event": ContentEvent.STEP_FINISHED, "step_id": f"clone_{sid}",
+                            "label": label,
+                            "status": StepStatus.SUCCESS if status == "ok" else StepStatus.ERROR,
+                            "payload": {"message": msg}})
+
+        try:
+            reference = await ingest_reference(project_id, clone_source, on_step=_on_step)
+        except Exception as exc:
+            await emit({"event": ContentEvent.PIPELINE_FAILED, "session_id": session_id,
+                        "error": f"Couldn't fetch the reference: {exc}"})
+            raise
+        if reference.get("error"):
+            await emit({"event": ContentEvent.PIPELINE_FAILED, "session_id": session_id,
+                        "error": "Couldn't fetch this TikTok reference — check the URL and try again."})
+            return
+
+        # Cache the ingest onto the post so a second Draft-now is free.
+        def _cache() -> None:
+            with Session(engine) as db:
+                p = db.get(ContentPost, post_id)
+                if p is None:
+                    return
+                cs = dict(p.clone_source or {})
+                sp = reference.get("scraped_post") or {}
+                cs.update({
+                    "ingested":    True,
+                    "scraped_post": sp,
+                    "media":       reference.get("media") or {},
+                    "diagnostic":  reference.get("diagnostic") or {},
+                    "tiktok_url":  reference.get("tiktok_url") or cs.get("url"),
+                    "reference_asset_id": cs.get("reference_asset_id") or reference.get("asset_id"),
+                    "ingested_at": datetime.now(timezone.utc).isoformat(),
+                })
+                p.clone_source = cs
+                p.post_type = "video" if sp.get("is_slideshow") is False else "slideshow"
+                db.add(p)
+                db.commit()
+
+        await asyncio.to_thread(_cache)
+
+        # ── Build the agent kickoff: clone prompt + reference images ────────────
+        brand = await asyncio.to_thread(_load_brand_context, project_id)
+        system_prompt = build_orchestrator_system_prompt(brand, "clone_post", channel=ch)
+        clone_text = build_clone_user_prompt(
+            brand, reference=reference, post_dir_slug=post_dir_slug, channel=ch,
+        )
+        content_blocks: list = [{"type": "text", "text": clone_text}]
+        media = reference.get("media") or {}
+        img_urls = ([media["cover"]] if media.get("cover") else []) + list(media.get("slides") or [])[:5]
+        for u in img_urls:
+            data = await asyncio.to_thread(storage.get_bytes, u)
+            if data:
+                content_blocks.append({
+                    "type": "image",
+                    "source": {"type": "base64", "media_type": "image/jpeg",
+                               "data": base64.b64encode(data).decode("ascii")},
+                })
+
+        try:
+            await _run(
+                session,
+                system_prompt,
+                content_blocks,
+                emit,
+                self._api_key,
+                effort=effort or self.DEFAULT_DRAFT_EFFORT,
+                adaptive_thinking=adaptive_thinking,
+                chat_idle_timeout=chat_idle_timeout,
+                max_turns=max_turns or self.DEFAULT_DRAFT_MAX_TURNS,
+            )
+            if session.post_id is not None:
+                await emit({
+                    "event":      ContentEvent.PIPELINE_FINISHED,
+                    "session_id": session_id,
+                    "mode":       "clone_post",
+                    "post_id":    str(session.post_id),
+                })
+            else:
+                logger.error("content: clone session %s ended with no post persisted", session_id)
+                await emit({
+                    "event":      ContentEvent.PIPELINE_FAILED,
+                    "session_id": session_id,
+                    "error":      "The content engine finished without producing a clone draft. "
+                                  "This is usually transient — please try again.",
+                })
+        except Exception as exc:
+            await emit({"event": ContentEvent.PIPELINE_FAILED, "session_id": session_id, "error": str(exc)})
+            raise
+
 
 __all__ = [
     "ClaudeContentRunner",
     "close_session",
+    "create_clone_session",
     "create_draft_session",
     "create_plan_session",
     "get_session",

@@ -7,25 +7,29 @@ import PostViewport from "@/components/content/PostViewport";
 import { getActiveProjectId } from "@/lib/projects";
 
 /**
- * Start a new draft_post session.
+ * Start a draft_post OR clone_post session.
  *
  * Query params:
- *   - plan_id      (optional)  — anchor the draft to a specific plan
- *   - day          (optional)  — which Day in the plan we're drafting
- *   - topic, pillar (optional) — for standalone (no-plan) drafts
+ *   - plan_id        (optional)  — anchor to a specific plan
+ *   - day            (optional)  — which Day in the plan we're drafting
+ *   - topic, pillar  (optional)  — for standalone (no-plan) drafts
+ *   - clone_post_id  (optional)  — when present, run clone_post against this
+ *                                  pending post (it carries clone_source); the
+ *                                  agent ingests its reference, then clones it.
  *
- * Reached from PlanViewport's "Draft this post →" button on a day card.
+ * Reached from the board's "Draft this post →" and the Add-post modal's Draft-now.
  */
 export default function NewPostDraftPage() {
   const router = useRouter();
   const search = useSearchParams();
   const [projectId, setProjectId] = useState(null);
 
-  const planId    = search.get("plan_id") || undefined;
-  const dayIndex  = search.get("day");
-  const topic     = search.get("topic") || undefined;
-  const pillar    = search.get("pillar") || undefined;
-  const channel   = search.get("channel") || undefined;
+  const planId      = search.get("plan_id") || undefined;
+  const dayIndex    = search.get("day");
+  const topic       = search.get("topic") || undefined;
+  const pillar      = search.get("pillar") || undefined;
+  const channel     = search.get("channel") || undefined;
+  const clonePostId = search.get("clone_post_id") || undefined;
 
   useEffect(() => {
     const id = getActiveProjectId();
@@ -41,18 +45,24 @@ export default function NewPostDraftPage() {
     );
   }
 
+  const isClone = Boolean(clonePostId);
+  const mode = isClone ? "clone_post" : "draft_post";
+  const context = isClone
+    ? { projectId, postId: clonePostId, planId, channel }
+    : {
+        projectId,
+        planId,
+        dayIndex: dayIndex !== null && dayIndex !== undefined ? Number(dayIndex) : undefined,
+        topic,
+        pillar,
+        channel,
+      };
+
   return (
     <div className="h-full">
       <ContentWorkspace
-        mode="draft_post"
-        context={{
-          projectId,
-          planId,
-          dayIndex: dayIndex !== null && dayIndex !== undefined ? Number(dayIndex) : undefined,
-          topic,
-          pillar,
-          channel,
-        }}
+        mode={mode}
+        context={context}
         renderViewport={({ payload, assessment, phase, onSendMessage }) => (
           <PostViewport payload={payload} assessment={assessment} phase={phase} onSendMessage={onSendMessage} />
         )}

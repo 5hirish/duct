@@ -3,6 +3,9 @@
 import { STATUS_ORDER, statusMeta } from "../../lib/contentStatus";
 import { effectiveSchedule, monthStartOf } from "../../lib/contentSchedule";
 import PostMiniCard from "./PostMiniCard";
+import AddPostCard from "./AddPostCard";
+
+const PENDING_KEY = STATUS_ORDER[0]; // "pending" — the only lane with the Add-post CTA
 
 const COLUMNS = STATUS_ORDER.map((key) => {
   const meta = statusMeta(key);
@@ -19,7 +22,7 @@ const COLUMNS = STATUS_ORDER.map((key) => {
  *   - postsById: { [id]: fullPost }
  *   - onReviseDay?(index)
  */
-export default function PlanKanban({ plan, postsById = {}, onReviseDay }) {
+export default function PlanKanban({ plan, postsById = {}, onReviseDay, onAddPost }) {
   const days = Array.isArray(plan?.days) ? plan.days : [];
   const monthStart = monthStartOf(plan);
 
@@ -59,7 +62,8 @@ export default function PlanKanban({ plan, postsById = {}, onReviseDay }) {
                 <span className="text-xs tabular-nums text-muted-foreground">{cards.length}</span>
               </div>
               <div className="min-h-[80px] flex-1 space-y-2 p-2">
-                {cards.length === 0 && (
+                {col.key === PENDING_KEY && onAddPost && <AddPostCard onClick={onAddPost} />}
+                {cards.length === 0 && col.key !== PENDING_KEY && (
                   <p className="px-1 py-2 text-xs italic text-muted-foreground/60">Nothing here yet.</p>
                 )}
                 {cards.map((card) => (

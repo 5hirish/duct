@@ -375,6 +375,9 @@ def _build_post_payload(row: ContentPost) -> dict:
         "platforms":       row.platforms,
         "status":          row.status,
         "last_assessment": row.last_assessment,
+        # Clone lineage (None for ordinary posts) → lets the viewport render the
+        # reference diagnostic + the Kept-vs-Changed ledger trust panel.
+        "clone_source":    row.clone_source,
     }
 
 

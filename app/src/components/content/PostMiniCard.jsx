@@ -52,6 +52,8 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
   const kind = schedule?.kind || "proposed";
   const status = post?.status || day?.status || "pending";
   const sMeta = statusMeta(status);
+  const cloneKind = post?.clone_source?.kind;
+  const isClone = cloneKind === "url" || cloneKind === "reference";
 
   const showThumb = variant === "full";
   // In Week/Month the card sits under its day column, so the date is redundant —
@@ -138,6 +140,11 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
               <span className={`rounded-md px-1.5 py-0.5 text-[10px] font-medium ${KIND_BADGE[kind]}`}>
                 {KIND_LABEL[kind] || prettify(kind)}
               </span>
+              {isClone && (
+                <span className="rounded-md bg-violet-500/15 px-1.5 py-0.5 text-[10px] font-medium text-violet-600 dark:text-violet-400">
+                  Clone
+                </span>
+              )}
               {dateText && (
                 <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
                   {schedule?.time && <Clock className="size-2.5" />}
@@ -178,7 +185,10 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
 
   // Shared interaction: link to the post (status-aware) or the create flow.
   // stopPropagation keeps a Month chip's click from also firing the day cell.
-  if (postId) {
+  // Pending entries (manual or not-yet-ingested clones) prefer the drafting
+  // affordance (onRevise) over a detail link — they aren't real drafts yet.
+  const draftablePending = status === "pending" && onRevise;
+  if (postId && !draftablePending) {
     const href = status === "draft" ? `/content/posts/${postId}?revise=1` : `/content/posts/${postId}`;
     return (
       <Link

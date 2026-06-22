@@ -127,6 +127,30 @@ export async function openPostStream(
 }
 
 /**
+ * Start a clone_post session (Add-post → Draft-now from a URL/reference) via the
+ * unified agent API: POST /api/agents/tiktok_studio/sessions body={mode:"clone_post",
+ * project_id, post_id, plan_id?, channel?}. The pending post (with clone_source)
+ * already exists — the runner ingests its reference, then drafts the clone.
+ */
+export async function openClonePostStream(
+  { projectId, postId, planId, channel,
+    conversationId, resume, startFresh, artifactType, artifactId } = {},
+  { signal, onSession } = {},
+) {
+  const { session_id, conversation_id } = await createAgentSession(AGENT_TYPE, {
+    mode: "clone_post",
+    project_id: projectId,
+    post_id: postId,
+    ...(planId  ? { plan_id: planId } : {}),
+    ...(channel ? { channel } : {}),
+    ...resumeFields({ conversationId, resume, startFresh, artifactType, artifactId }),
+  });
+  onSession?.({ sessionId: session_id, conversationId: conversation_id });
+  const body = await openAgentStream(AGENT_TYPE, session_id, { signal });
+  return { body, sessionId: session_id, conversationId: conversation_id };
+}
+
+/**
  * Start (or resume) a Content Planner session via the unified agent API:
  *   POST /api/agents/content_planner/sessions  body={mode:"update_plan", project_id, start_date?}
  *   GET  /api/agents/content_planner/sessions/{id}/stream
@@ -346,6 +370,32 @@ export async function getDiscoverBenchmark(projectId) {
   return jsonOrThrow(res);
 }
 
+/** Saved discovered references for the Add-post "References" picker. Each item
+ *  carries a cover, metrics, and a "why it worked" diagnostic. No scrape cost. */
+export async function listReferences(projectId) {
+  const res = await fetch(
+    `${BASE}/api/content/discover/references?project_id=${encodeURIComponent(projectId)}`,
+    { headers: backendApiHeaders() },
+  );
+  return jsonOrThrow(res);
+}
+
+/** Free TikTok oEmbed peek for the paste-URL mode (thumbnail + author + title) —
+ *  proxied server-side to dodge CORS. NO Apify cost. Returns null on failure
+ *  (the modal just shows the raw URL). */
+export async function tiktokOEmbed(url) {
+  try {
+    const res = await fetch(
+      `${BASE}/api/content/discover/oembed?url=${encodeURIComponent(url)}`,
+      { headers: backendApiHeaders() },
+    );
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
+}
+
 export async function listPlans(projectId) {
   const res = await fetch(
     `${BASE}/api/content/plans?project_id=${encodeURIComponent(projectId)}`,
@@ -374,6 +424,21 @@ export async function patchPlanDay(planId, day, patch) {
   return jsonOrThrow(res);
 }
 
+/** Append a day to a plan (the Add-post flow lands a user entry at its
+ *  "Plan for" date/time). `day` carries post_id, scheduled_at, source, etc.
+ *  Returns the updated plan. Duplicate slots are allowed. */
+export async function appendPlanDay(planId, day) {
+  const res = await fetch(
+    `${BASE}/api/content/plans/${encodeURIComponent(planId)}/days`,
+    {
+      method: "POST",
+      headers: backendApiHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify(day),
+    },
+  );
+  return jsonOrThrow(res);
+}
+
 // Posts + their PostBridge-sourced analytics both depend on post state, so any
 // post write clears both. Broad (prefix) invalidation keeps it simple and safe.
 // Exported so the live agent session can clear the board cache when a draft
@@ -390,11 +455,12 @@ export function peekPosts(projectId, { planId, status } = {}) {
   return peek(`posts:${projectId}:${planId || ""}:${status || ""}`);
 }
 
-export async function listPosts(projectId, { planId, status } = {}) {
-  return cached(`posts:${projectId}:${planId || ""}:${status || ""}`, TTL_POSTS, async () => {
+export async function listPosts(projectId, { planId, status, includePending = false } = {}) {
+  return cached(`posts:${projectId}:${planId || ""}:${status || ""}:${includePending ? "p" : ""}`, TTL_POSTS, async () => {
     const params = new URLSearchParams({ project_id: projectId });
     if (planId) params.set("plan_id", planId);
     if (status) params.set("status", status);
+    if (includePending) params.set("include_pending", "1");
     const res = await fetch(
       `${BASE}/api/content/posts?${params.toString()}`,
       { headers: backendApiHeaders() },
@@ -420,6 +486,20 @@ export async function patchPost(postId, patch) {
       body: JSON.stringify(patch),
     },
   );
+  const out = await jsonOrThrow(res);
+  invalidatePosts();
+  return out;
+}
+
+/** Create a post (Add-post → Save). Idempotent upsert on (project_id,
+ *  post_dir_slug). `body` is a PostIn (status defaults to "pending"; pass
+ *  clone_source for url/reference entries). Returns the created PostOut. */
+export async function createPost(body) {
+  const res = await fetch(`${BASE}/api/content/posts`, {
+    method: "POST",
+    headers: backendApiHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify(body),
+  });
   const out = await jsonOrThrow(res);
   invalidatePosts();
   return out;

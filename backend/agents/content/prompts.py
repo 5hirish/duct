@@ -1007,7 +1007,42 @@ A multi-image slide looks like (inside `slides`):
 """
 
 
+# Clone/reference discipline — appended to the draft tail in clone_post mode.
+# Encodes the "great artists steal" playbook: copy structure & strategy, never
+# expression & substance. Grounded in 2025-26 creator practice (saves/completion
+# are the strongest signals; likes the weakest).
+_CLONE_DISCIPLINE = """
+
+CLONE / REFERENCE MODE — great artists STEAL: you copy STRUCTURE & STRATEGY, never EXPRESSION & SUBSTANCE.
+You are given a reference TikTok (a proven post) + its performance metrics + a "why it worked" diagnostic, and the brand context above. Produce a faithful-but-ORIGINAL adaptation for THIS brand. Run this loop:
+
+1. DECONSTRUCT the reference into Format / Topic / Execution. Name the hook TYPE & mechanism (curiosity, contrarian, pain-point, question, relatable), the retention structure (open loop, pattern interrupts, loop seam / per-slide arc), the emotional driver, and the CTA logic.
+2. DIAGNOSE the single dominant lever it won on — saves=utility, shares=identity, comments=debate, completion=structure, views=hook. Saves & completion are the strongest signals; likes the weakest. Copy THAT lever, not the surface. Use the diagnostic provided; if the metrics are thin, infer qualitatively and say so.
+3. STRIP it to a brand-agnostic skeleton.
+4. MAP to the brand: refill the skeleton with the brand's substance in the brand's voice — channel an EXISTING desire in their market, never invent one. Aim to be BETTER than the reference for this audience (more specific, clearer, more useful).
+5. REGENERATE as a PostDraft, then write a Kept-vs-Changed ledger.
+
+ALWAYS KEEP (model): the format/container, hook type/mechanism, retention structure, the emotional lever, the CTA logic.
+ALWAYS CHANGE (originate): the words/script, the topic/example, ALL media, claims/stats, on-screen text, the audio track, the brand voice. Never reuse the reference's footage, images, exact wording, or watermark.
+
+CAROUSEL reference → slide 1 is the WHOLE hook + swipe-bait; keep each slide ≤20% text; model the slide count (aim 6–13) and the per-slide open-loop arc.
+VIDEO reference → deconstruct hook / pacing / on-screen text from the cover and any frames you can see; note where you're inferring (full audio/shot transcription is a later capability).
+
+LEDGER: after submit_post_draft, put a concise Kept-vs-Changed ledger in the post's `strategic_note` — "KEPT: …; CHANGED: …; BETTER: <the one improvement you made>" — AND summarise it in chat as a side-by-side so the user sees exactly what was modeled vs originated. This ledger is the trust artifact.
+
+Use the EXACT post_dir_slug given in the kickoff for submit_post_draft so the clone UPDATES the existing pending card (pending → draft) instead of creating a duplicate.
+"""
+
+
 def _mode_tail(mode: RunMode) -> str:
+    _draft_tail = (
+        "MODE: draft_post — your deliverable this turn is ONE PostDraft "
+        "wrapped in <duct_report>, then submit_post_draft once. You author "
+        "STRUCTURED SLIDES (copy + an image_prompt per slide) + a layout — "
+        "NOT HTML — and you do NOT generate images yet. Images wait until "
+        "the user is happy with the written draft (see IMAGE GENERATION).\n\n"
+        + _POSTDRAFT_SHAPE
+    )
     return {
         "plan_month": (
             "MODE: plan_month — your deliverable this turn is a full monthly "
@@ -1015,14 +1050,10 @@ def _mode_tail(mode: RunMode) -> str:
             "day numbers) as a PlanDraft wrapped in <duct_report>. Call "
             "submit_plan once after emitting the tag."
         ),
-        "draft_post": (
-            "MODE: draft_post — your deliverable this turn is ONE PostDraft "
-            "wrapped in <duct_report>, then submit_post_draft once. You author "
-            "STRUCTURED SLIDES (copy + an image_prompt per slide) + a layout — "
-            "NOT HTML — and you do NOT generate images yet. Images wait until "
-            "the user is happy with the written draft (see IMAGE GENERATION).\n\n"
-            + _POSTDRAFT_SHAPE
-        ),
+        "draft_post": _draft_tail,
+        # clone_post is draft_post with the cloning discipline layered on — same
+        # PostDraft deliverable, but modeled from a proven reference.
+        "clone_post": _draft_tail + _CLONE_DISCIPLINE,
     }[mode]
 
 
@@ -1273,6 +1304,59 @@ Now — WRITE PHASE (copy + image prompts only; NO images yet):
 """
 
 
+def build_clone_user_prompt(
+    brand: ContentBrandContext,
+    *,
+    reference: dict,
+    post_dir_slug: str,
+    day: "Day | None" = None,
+    channel=None,
+) -> str:
+    """Kickoff prompt for clone_post mode. `reference` is the ingest result from
+    service.discovery.ingest_reference: {tiktok_url, scraped_post, media,
+    diagnostic}. The cover + slide image bytes are attached separately to the
+    user message as image blocks (see runner.run_clone) so the agent can actually
+    SEE the reference; this text carries the metadata + the diagnosis."""
+    post = reference.get("scraped_post") or {}
+    diag = reference.get("diagnostic") or {}
+    media = reference.get("media") or {}
+    author = (post.get("author_meta") or {}).get("name") or ""
+    music = (post.get("music_meta") or {}).get("music_name") or "(unknown)"
+    is_slide = bool(post.get("is_slideshow"))
+    caption = (post.get("text") or "")[:600]
+    hashtags = post.get("hashtags") or []
+    n_slides = len(media.get("slides") or []) or len(post.get("slideshow_image_links") or [])
+    metrics_line = (
+        f"views={diag.get('views')} · likes={diag.get('likes')} · "
+        f"comments={diag.get('comments')} · shares={diag.get('shares')} · saves={diag.get('saves')}"
+    )
+    slot = f"\nPlan slot (scheduled_at): {day.scheduled_at}" if (day and day.scheduled_at) else ""
+    return f"""\
+{_brand_stanza(brand)}
+
+Clone / adapt this proven reference TikTok for {brand.project_name}.
+
+{_channel_directive(channel)}
+
+REFERENCE
+- url: {reference.get('tiktok_url') or '(unknown)'}
+- author: @{author}
+- type: {"PHOTO CAROUSEL" if is_slide else "VIDEO"}{f' ({n_slides} slides)' if is_slide and n_slides else ''}
+- caption: {caption or '(none)'}
+- hashtags: {", ".join(hashtags[:15]) or "(none)"}
+- sound: {music}
+- metrics: {metrics_line}
+- DIAGNOSIS — dominant lever: {(diag.get('lever') or 'unknown').upper()} ({diag.get('confidence')} confidence)
+  {diag.get('summary') or '(metrics thin — infer the lever qualitatively)'}
+
+The reference's cover{' + slide frames' if is_slide else ''} are attached as images below — STUDY them to deconstruct the visual hook, on-screen text, and composition.
+
+TARGET: write to post_dir_slug={post_dir_slug} (this UPDATES the existing pending card → draft).{slot}
+
+Now run the CLONE loop (deconstruct → diagnose → strip → map to brand → regenerate). Author the PostDraft (structured slides + layout, NO images yet), emit it in <duct_report>, call submit_post_draft with the EXACT post_dir_slug above, then write the Kept-vs-Changed ledger into strategic_note and summarise it in chat as a reference↔clone side-by-side. Ask the user to review the copy before you generate images.
+"""
+
+
 REVIEW_POST_PROMPT = f"""\
 You are a pre-publish review sub-agent. Given the current post, score it on the
 six signals that drive reach on TikTok Photo Mode / carousels, so the user can
@@ -1359,6 +1443,7 @@ __all__ = [
     "ORCHESTRATOR_BASE_PROMPT",
     "RESEARCH_PILLAR_PROMPT",
     "REVIEW_POST_PROMPT",
+    "build_clone_user_prompt",
     "build_orchestrator_system_prompt",
     "build_plan_user_prompt",
     "build_post_user_prompt",

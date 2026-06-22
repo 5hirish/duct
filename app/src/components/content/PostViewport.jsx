@@ -14,6 +14,7 @@ import {
   Wand2,
 } from "lucide-react";
 import { downloadPostSlides, patchPost } from "../../lib/contentApi";
+import { fmtCount } from "../../lib/contentMetrics";
 import { extractStyleHead } from "../../lib/slideDoc";
 import { statusMeta } from "../../lib/contentStatus";
 import { PostStatus } from "../../lib/contentEnums";
@@ -416,6 +417,7 @@ export default function PostViewport({ payload, assessment = null, phase, canPub
           Slide layout, image prompts, hook and creative-brief edits all happen
           through the agent chat, so the pane stays focused on what ships. */}
       <div className="min-h-0 flex-1 overflow-auto">
+        <ClonePanel post={post} />
         {twoCol ? (
           // Desktop full-width view: slides on the right, everything else on the
           // left. Collapses to a single column (slides first) on mobile.
@@ -461,6 +463,62 @@ export default function PostViewport({ payload, assessment = null, phase, canPub
 
 function prettify(s) {
   return String(s || "").replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+// Clone trust panel — shown when a post was modeled from a reference. Surfaces
+// the "why it worked" diagnostic + the agent's Kept-vs-Changed ledger
+// (strategic_note), so the user sees exactly what was modeled vs. originated.
+function ClonePanel({ post }) {
+  const cs = post?.clone_source;
+  if (!cs || (cs.kind !== "url" && cs.kind !== "reference")) return null;
+  const diag = cs.diagnostic || {};
+  const ledger = (post?.strategic_note || "").trim();
+  const lever = diag.lever;
+  const chips = [
+    ["views", diag.views],
+    ["likes", diag.likes],
+    ["comments", diag.comments],
+    ["shares", diag.shares],
+    ["saves", diag.saves],
+  ].filter(([, v]) => typeof v === "number" && v > 0);
+
+  return (
+    <div className="mx-auto max-w-5xl px-5 pt-5">
+      <div className="rounded-xl border border-violet-400/30 bg-violet-50/40 p-3.5 dark:bg-violet-950/10">
+        <div className="flex items-center gap-2">
+          <Sparkles className="size-4 text-violet-600 dark:text-violet-400" />
+          <span className="text-xs font-semibold text-violet-700 dark:text-violet-300">
+            Cloned from a reference{cs.ingested ? "" : " — analysing…"}
+          </span>
+          {cs.tiktok_url && (
+            <a href={cs.tiktok_url} target="_blank" rel="noreferrer" className="ml-auto truncate text-[11px] text-violet-600/80 hover:underline dark:text-violet-400/80">
+              view original ↗
+            </a>
+          )}
+        </div>
+        {lever && (
+          <p className="mt-2 text-xs text-foreground">
+            <span className="font-medium uppercase tracking-wide text-violet-600 dark:text-violet-400">{lever}</span>
+            {diag.summary ? ` — ${diag.summary}` : ""}
+          </p>
+        )}
+        {chips.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {chips.map(([k, v]) => (
+              <span key={k} className="rounded-md bg-background/60 px-2 py-0.5 text-[10px] text-muted-foreground">
+                {fmtCount(v)} {k}
+              </span>
+            ))}
+          </div>
+        )}
+        {ledger && (
+          <div className="mt-2.5 whitespace-pre-wrap rounded-lg bg-background/50 p-2.5 text-[11px] leading-relaxed text-muted-foreground">
+            {ledger}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 // Passive save status for auto-saved (non-pending) posts. Renders as quiet text,

@@ -10,9 +10,11 @@ discovery — planning owns it).
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 from datetime import datetime, timezone
+from typing import Awaitable, Callable
 from uuid import UUID
 
 from sqlmodel import Session, select
@@ -22,6 +24,10 @@ from models.content import ContentAsset
 from service import storage
 
 logger = logging.getLogger(__name__)
+
+# Async callback the clone worker passes so each ingest stage surfaces as an SSE
+# step. (step_id, status, message) — status in {"running", "ok", "error"}.
+StepCb = Callable[[str, str, str], Awaitable[None]]
 
 
 def query_discovered_references(
@@ -211,4 +217,204 @@ def recapture_missing_media(project_id: UUID, *, limit: int = 50) -> dict:
         "recaptured": recaptured,
         "still_missing": still_missing,
         "pending": pending,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Clone-time intelligence: read "why it worked" from the metrics, and the
+# deferred single-URL ingest the clone_post worker runs on first Draft-now.
+# ---------------------------------------------------------------------------
+
+# Algorithm signal hierarchy (2025-26): completion/replays > shares > saves >
+# comments > likes. We can only read the public counts, so we rank by rate ×
+# weight and name the single dominant lever to copy. Mirrored on the frontend in
+# app/src/lib/contentMetrics.js::diagnoseReference — keep the two in sync.
+_LEVER_WEIGHTS = {"saves": 3.0, "shares": 2.5, "comments": 1.5, "likes": 1.0}
+_LEVER_SUMMARY = {
+    "saves":    "Won on SAVES (utility) — clone a genuinely save-worthy how-to / list / framework in your niche and add an explicit \"save this\" CTA.",
+    "shares":   "Won on SHARES (identity/emotion) — clone the relatable or aspirational angle and the \"send this to a friend\" trigger.",
+    "comments": "Won on COMMENTS (debate/community) — clone the opinion or open-question hook that makes people reply.",
+    "likes":    "Likes are the weakest signal — copy the hook for reach, but build a stronger save/share payoff than the original.",
+}
+
+
+def diagnose_reference(post: dict) -> dict:
+    """Compute engagement ratios and name the single dominant lever a reference
+    won on, so the clone agent copies *that* (not the surface). `post` is a
+    ScrapedPost dict. A save_rate >2% is a strong FYP signal."""
+    post = post or {}
+    views    = int(post.get("play_count") or 0)
+    likes    = int(post.get("digg_count") or 0)
+    comments = int(post.get("comment_count") or 0)
+    shares   = int(post.get("share_count") or 0)
+    saves    = int(post.get("collect_count") or 0)
+
+    def _rate(n: int) -> float | None:
+        return round(n / views, 5) if views else None
+
+    rates = {
+        "saves":    _rate(saves),
+        "shares":   _rate(shares),
+        "comments": _rate(comments),
+        "likes":    _rate(likes),
+    }
+    scored = [(k, v * _LEVER_WEIGHTS[k]) for k, v in rates.items() if v is not None]
+    lever = max(scored, key=lambda kv: kv[1])[0] if scored else None
+    return {
+        "views": views, "likes": likes, "comments": comments,
+        "shares": shares, "saves": saves,
+        "save_rate": rates["saves"], "share_rate": rates["shares"],
+        "comment_rate": rates["comments"], "like_rate": rates["likes"],
+        "lever": lever,
+        "summary": _LEVER_SUMMARY.get(lever or "", ""),
+        "strong_save_signal": bool(rates["saves"] and rates["saves"] >= 0.02),
+        "is_slideshow": bool(post.get("is_slideshow")),
+        # Confidence is low when we lack saves (e.g. PostBridge exposes only 4
+        # public counts) — the agent should then infer the lever qualitatively.
+        "confidence": "high" if (views and saves) else "low",
+    }
+
+
+async def _scrape_single_post(url: str, *, max_wait_s: float = 120.0) -> dict | None:
+    """Run the single-URL TikTok scrape (Apify clockworks/tiktok-scraper) with
+    media-download flags and poll to completion. Returns one ScrapedPost dict or
+    None. This is the paid step — the worker only calls it when nothing is cached."""
+    from config import get_configs
+    from service.apify import ApifyAPIError, ApifyClient
+    from service.apify.client import get_default_actor_ids
+    from service.apify.schema import ApifyRunStatus
+
+    cfg = get_configs()
+    if not cfg.apify_api_key:
+        return None
+    actor_id = get_default_actor_ids()["post_by_hashtag"]  # clockworks/tiktok-scraper
+    payload = {
+        "postURLs": [url],
+        "resultsPerPage": 1,
+        "shouldDownloadCovers": True,
+        "shouldDownloadSlideshowImages": True,
+        "shouldDownloadVideos": False,   # video bytes are a Phase-2 (re-scrape) concern
+    }
+    dead = {
+        ApifyRunStatus.FAILED, ApifyRunStatus.ABORTING, ApifyRunStatus.ABORTED,
+        ApifyRunStatus.TIMING_OUT, ApifyRunStatus.TIMED_OUT,
+    }
+    try:
+        async with ApifyClient(cfg.apify_api_key) as c:
+            run = await c.start_run(actor_id, payload)
+            dataset_id = run.default_dataset_id
+            waited = 0.0
+            while run.status not in ({ApifyRunStatus.SUCCEEDED} | dead) and waited < max_wait_s:
+                await asyncio.sleep(3.0)
+                waited += 3.0
+                run = await c.get_run(run.id)
+                dataset_id = run.default_dataset_id or dataset_id
+            if run.status != ApifyRunStatus.SUCCEEDED:
+                logger.warning("clone ingest: run %s ended status=%s", run.id, run.status)
+                return None
+            posts = await c.get_dataset_posts(dataset_id, limit=1)
+            return posts[0].model_dump(mode="json") if posts else None
+    except (ApifyAPIError, ValueError):
+        logger.exception("clone ingest: scrape failed for %s", url)
+        return None
+
+
+def _reference_media(asset: ContentAsset | None) -> dict:
+    return dict(((asset.params or {}).get("media") or {})) if asset else {}
+
+
+async def ingest_reference(project_id: UUID, clone_source: dict, *, on_step: StepCb | None = None) -> dict:
+    """Resolve a `clone_source` pointer into a full reference card:
+    ``{tiktok_url, asset_id, scraped_post, media, diagnostic, error}``.
+
+    The expensive Apify scrape runs only when nothing is cached:
+      - cached ``clone_source.scraped_post`` → reuse (a re-draft never re-charges);
+      - kind == "reference" → reuse the saved ``discovered_reference`` post;
+      - kind == "url" → scrape once, persist a ``discovered_reference`` (joins the
+        library), then capture media.
+    Media is captured only when missing. Coarse stages surface via ``on_step``.
+    Sync DB / network work runs in threads so the event loop stays responsive."""
+    async def _step(sid: str, status: str, msg: str = "") -> None:
+        if on_step is not None:
+            await on_step(sid, status, msg)
+
+    kind = (clone_source or {}).get("kind") or "url"
+    url = (clone_source or {}).get("url") or ""
+    ref_asset_id = (clone_source or {}).get("reference_asset_id")
+    cached_post = (clone_source or {}).get("scraped_post")
+    engine = get_engine()
+
+    await _step("resolving", "running", "Resolving the reference…")
+    asset_id: UUID | None = None
+    post: dict | None = None
+
+    if cached_post:
+        post = cached_post
+        await _step("resolving", "ok", "Using the cached reference.")
+    elif kind == "reference" and ref_asset_id and engine is not None:
+        def _load():
+            with Session(engine) as db:
+                a = db.get(ContentAsset, UUID(str(ref_asset_id)))
+                return (a.id, a.url, (a.params or {}).get("post")) if a else (None, "", None)
+        asset_id, url, post = await asyncio.to_thread(_load)
+        await _step("resolving", "ok", "Loaded saved reference.")
+
+    if post is None and url:
+        await _step("scraping", "running", "Scraping the TikTok (metadata + media)…")
+        post = await _scrape_single_post(url)
+        if post is None:
+            await _step("scraping", "error", "Couldn't fetch this TikTok.")
+            return {"error": "scrape_failed", "tiktok_url": url, "scraped_post": None,
+                    "media": {}, "diagnostic": {}, "asset_id": None}
+        url = post.get("web_video_url") or url
+        # Persist as a discovered_reference so URL-pasted posts join the library.
+        if engine is not None:
+            def _save():
+                with Session(engine) as db:
+                    a = ContentAsset(
+                        project_id=project_id,
+                        asset_type="discovered_reference",
+                        source="apify",
+                        url=post.get("web_video_url") or url,
+                        filename=f"tiktok-{post.get('id')}",
+                        mime_type="application/json",
+                        params={"post": post, "saved_at": datetime.now(timezone.utc).isoformat()},
+                    )
+                    db.add(a)
+                    db.commit()
+                    db.refresh(a)
+                    return a.id
+            asset_id = await asyncio.to_thread(_save)
+        await _step("scraping", "ok", "Fetched the post.")
+
+    if post is None:
+        return {"error": "no_source", "tiktok_url": url, "scraped_post": None,
+                "media": {}, "diagnostic": {}, "asset_id": None}
+
+    # Capture media (cover + slides) into our bucket if it isn't there yet.
+    media: dict = {}
+    if asset_id is not None and engine is not None:
+        def _existing_media():
+            with Session(engine) as db:
+                return _reference_media(db.get(ContentAsset, asset_id))
+        media = await asyncio.to_thread(_existing_media)
+        if (media.get("status") or "") != "ok":
+            await _step("media", "running", "Saving cover & slide images…")
+            await asyncio.to_thread(capture_reference_media, asset_id, post)
+            media = await asyncio.to_thread(_existing_media)
+            await _step("media", "ok", "Media captured.")
+    else:
+        await _step("media", "ok", "")
+
+    await _step("analyzing", "running", "Reading why it worked…")
+    diagnostic = diagnose_reference(post)
+    await _step("analyzing", "ok", diagnostic.get("summary", ""))
+
+    return {
+        "tiktok_url": url,
+        "asset_id": str(asset_id) if asset_id else None,
+        "scraped_post": post,
+        "media": media,
+        "diagnostic": diagnostic,
+        "error": None,
     }

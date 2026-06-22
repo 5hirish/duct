@@ -13,6 +13,7 @@ import {
   getSlideRenderDoc,
   invalidatePosts,
   mediaUrl,
+  openClonePostStream,
   openPlanStream,
   openPlannerStream,
   openPostStream,
@@ -109,8 +110,8 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
 
     // Bind the new conversation to the same artifact so it stays the post's
     // active chat. artifact ids come straight off the context.
-    const artifactType = mode === "draft_post" ? "post" : "plan";
-    const artifactId   = mode === "draft_post" ? context.postId : context.planId;
+    const artifactType = (mode === "draft_post" || mode === "clone_post") ? "post" : "plan";
+    const artifactId   = (mode === "draft_post" || mode === "clone_post") ? context.postId : context.planId;
 
     setMessages([]);
     setPayload(null);
@@ -197,6 +198,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
       const opener =
         mode === "update_plan" ? openPlannerStream
         : mode === "plan_month" ? openPlanStream
+        : mode === "clone_post" ? openClonePostStream
         : openPostStream;
       const { body } = await opener(
         {
@@ -227,6 +229,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
         const opener =
         mode === "update_plan" ? openPlannerStream
         : mode === "plan_month" ? openPlanStream
+        : mode === "clone_post" ? openClonePostStream
         : openPostStream;
         const { body } = await opener(openContext, { signal: ctrl.signal, onSession: handleSession });
         if (cancelled) return;
@@ -578,6 +581,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
   const paneLabel =
     mode === "update_plan" ? "7-day plan"
     : mode === "plan_month" ? "30-day plan"
+    : mode === "clone_post" ? "Cloned post"
     : "Post draft";
   const rightStatus = hasPayload ? "ready" : isRunning ? "busy" : "idle";
 

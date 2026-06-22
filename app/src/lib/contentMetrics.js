@@ -70,6 +70,67 @@ export function hasAnyMetric(perf = {}) {
   return Object.values(coreMetrics(perf)).some((v) => v != null);
 }
 
+// ---------------------------------------------------------------------------
+// Reference cloning: read "why it worked" from the engagement mix and name the
+// single dominant lever to copy. Mirrors backend service.discovery.diagnose_
+// reference — keep the two in sync. Algorithm signal hierarchy (2025-26):
+// completion/replays > shares > saves > comments > likes. A save_rate >2% is a
+// strong FYP signal; likes are the weakest signal.
+const LEVER_WEIGHTS = { saves: 3.0, shares: 2.5, comments: 1.5, likes: 1.0 };
+const LEVER_SUMMARY = {
+  saves:
+    'Won on SAVES (utility) — clone a genuinely save-worthy how-to / list / framework in your niche and add an explicit "save this" CTA.',
+  shares:
+    'Won on SHARES (identity/emotion) — clone the relatable or aspirational angle and the "send this to a friend" trigger.',
+  comments:
+    "Won on COMMENTS (debate/community) — clone the opinion or open-question hook that makes people reply.",
+  likes:
+    "Likes are the weakest signal — copy the hook for reach, but build a stronger save/share payoff than the original.",
+};
+
+/** Diagnose a reference's dominant lever. Accepts a ScrapedPost
+ *  (play_count/digg_count/…) OR a {views,likes,comments,shares,saves} object. */
+export function diagnoseReference(src = {}) {
+  const num = (v) => (typeof v === "number" && Number.isFinite(v) ? v : null);
+  const views = num(src.views ?? src.play_count) || 0;
+  const likes = num(src.likes ?? src.digg_count) || 0;
+  const comments = num(src.comments ?? src.comment_count) || 0;
+  const shares = num(src.shares ?? src.share_count) || 0;
+  const saves = num(src.saves ?? src.collect_count);
+  const rate = (n) => (views && n != null ? n / views : null);
+  const rates = {
+    saves: rate(saves),
+    shares: rate(shares),
+    comments: rate(comments),
+    likes: rate(likes),
+  };
+  let lever = null;
+  let best = -1;
+  for (const [k, v] of Object.entries(rates)) {
+    if (v == null) continue;
+    const score = v * LEVER_WEIGHTS[k];
+    if (score > best) {
+      best = score;
+      lever = k;
+    }
+  }
+  return {
+    views,
+    likes,
+    comments,
+    shares,
+    saves,
+    save_rate: rates.saves,
+    share_rate: rates.shares,
+    comment_rate: rates.comments,
+    like_rate: rates.likes,
+    lever,
+    summary: lever ? LEVER_SUMMARY[lever] : "",
+    strong_save_signal: !!(rates.saves && rates.saves >= 0.02),
+    confidence: views && saves != null ? "high" : "low",
+  };
+}
+
 // PostBridge "owns" a post's core counts only when it published it. For those
 // posts the core four are read-only (a sync would overwrite a manual edit);
 // everywhere else (TikTok Studio, migrated plans) every field is hand-entered.

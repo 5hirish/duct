@@ -13,6 +13,7 @@ import {
 import { getPlan, listPlans, listPosts } from "@/lib/contentApi";
 import PlanKanban from "@/components/content/PlanKanban";
 import PlanCalendar from "@/components/content/PlanCalendar";
+import AddPostModal from "@/components/content/AddPostModal";
 
 /**
  * Inline plan board — plan selector + Kanban/Calendar toggle. Renders directly
@@ -29,6 +30,8 @@ export default function PlanBoard({ projectId, initialPlanId = "" }) {
   const [calView, setCalView] = useState("month"); // "month" | "week"
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showAdd, setShowAdd] = useState(false);
+  const [refreshTick, setRefreshTick] = useState(0); // bump to reload plan + posts
 
   useEffect(() => {
     if (!projectId) return;
@@ -63,7 +66,8 @@ export default function PlanBoard({ projectId, initialPlanId = "" }) {
       try {
         const [full, posts] = await Promise.all([
           getPlan(activeId),
-          listPosts(projectId, { planId: activeId }).catch(() => []),
+          // include_pending so user-added (Add-post) entries show in their slot.
+          listPosts(projectId, { planId: activeId, includePending: true }).catch(() => []),
         ]);
         if (cancelled) return;
         setPlan(full);
@@ -75,23 +79,34 @@ export default function PlanBoard({ projectId, initialPlanId = "" }) {
       }
     })();
     return () => { cancelled = true; };
-  }, [activeId, projectId]);
+  }, [activeId, projectId, refreshTick]);
 
   const activeMeta = useMemo(
     () => plans.find((p) => p.id === activeId) || plan || null,
     [plans, activeId, plan]
   );
 
-  // Pending card → open the creation split-view, carrying the day's primary channel.
+  // Pending card → open the creation split-view, carrying the day's primary
+  // channel. A pending CLONE entry (clone_source pointer, not yet ingested)
+  // routes to clone_post so the agent ingests + models the reference.
   const reviseDay = useCallback((index) => {
     const day = Array.isArray(plan?.days) ? plan.days[index] : null;
-    const channel = (Array.isArray(day?.platforms) && day.platforms[0]) || "tiktok";
+    const post = day?.post_id ? postsById[day.post_id] : null;
+    const channel = (Array.isArray(day?.platforms) && day.platforms[0])
+      || (Array.isArray(post?.platforms) && post.platforms[0]) || "tiktok";
+    const cs = post?.clone_source;
+    if (post && cs && (cs.kind === "url" || cs.kind === "reference")) {
+      const params = new URLSearchParams({ clone_post_id: post.id, channel });
+      if (activeId) params.set("plan_id", activeId);
+      router.push(`/content/posts/new?${params.toString()}`);
+      return;
+    }
     const params = new URLSearchParams();
     if (activeId) params.set("plan_id", activeId);
     params.set("day", String(index));
     params.set("channel", channel);
     router.push(`/content/posts/new?${params.toString()}`);
-  }, [plan, activeId, router]);
+  }, [plan, postsById, activeId, router]);
 
   if (error) {
     return <p className="text-sm text-destructive">{error}</p>;
@@ -154,9 +169,18 @@ export default function PlanBoard({ projectId, initialPlanId = "" }) {
           Loading plan…
         </div>
       ) : view === "kanban" ? (
-        <PlanKanban plan={plan} postsById={postsById} onReviseDay={reviseDay} />
+        <PlanKanban plan={plan} postsById={postsById} onReviseDay={reviseDay} onAddPost={() => setShowAdd(true)} />
       ) : (
         <PlanCalendar plan={plan} postsById={postsById} view={calView} onViewChange={setCalView} onReviseDay={reviseDay} />
+      )}
+
+      {showAdd && (
+        <AddPostModal
+          projectId={projectId}
+          plan={plan}
+          onClose={() => setShowAdd(false)}
+          onSaved={() => { setShowAdd(false); setRefreshTick((t) => t + 1); }}
+        />
       )}
     </div>
   );

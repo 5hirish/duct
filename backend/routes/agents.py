@@ -50,8 +50,8 @@ from agents.content.persistence import (
     load_events,
     resolve_or_create_conversation,
 )
-from agents.content.schema import DraftPostRequest
-from agents.content.v3.runner import create_draft_session
+from agents.content.schema import ClonePostRequest, DraftPostRequest
+from agents.content.v3.runner import create_clone_session, create_draft_session
 from agents.planner.schema import PlannerRequest
 from agents.planner.v3.runner import create_planner_session
 from agents.core import session as _core_session
@@ -601,13 +601,13 @@ def _create_session_for(agent_type: str, session_id: str, body: dict):
         except Exception as exc:
             raise HTTPException(422, "tiktok_studio requires a valid project_id") from exc
 
-        # Content Studio now only drafts posts — plan generation moved to the
-        # content_planner agent. Keep the body lenient but reject plan_month.
+        # Content Studio drafts posts (draft_post) and clones references
+        # (clone_post). Plan generation moved to the content_planner agent.
         mode = body.get("mode", "draft_post")
-        if mode != "draft_post":
+        if mode not in ("draft_post", "clone_post"):
             raise HTTPException(
                 422,
-                "tiktok_studio only drafts posts now — use the content_planner "
+                "tiktok_studio only drafts/clones posts now — use the content_planner "
                 "agent (mode=update_plan) to create or refresh the plan.",
             )
 
@@ -642,7 +642,14 @@ def _create_session_for(agent_type: str, session_id: str, body: dict):
             logger.warning("agents: conversation persistence unavailable for %s — "
                            "running without history", session_id, exc_info=True)
 
-        session = create_draft_session(session_id, project_id, plan_id=_as_uuid(body.get("plan_id")))
+        if mode == "clone_post":
+            session = create_clone_session(
+                session_id, project_id,
+                plan_id=_as_uuid(body.get("plan_id")),
+                post_id=_as_uuid(body.get("post_id")),
+            )
+        else:
+            session = create_draft_session(session_id, project_id, plan_id=_as_uuid(body.get("plan_id")))
 
         if conv_id is not None:
             session.conversation_id = conv_id
@@ -650,7 +657,8 @@ def _create_session_for(agent_type: str, session_id: str, body: dict):
             session.resume = is_resume
             # Derive the working artifact from the conversation so the runner's
             # _content_context_xml + PIPELINE_FINISHED see the right id on resume.
-            if conv_artifact_type == "post" and conv_artifact_id:
+            # (clone_post already stamped post_id from the body — don't clobber it.)
+            if conv_artifact_type == "post" and conv_artifact_id and session.post_id is None:
                 session.post_id = conv_artifact_id
         return session
     if agent_type == AgentType.CONTENT_PLANNER:
@@ -727,14 +735,14 @@ async def _start_tiktok_studio(
     streaming to the shared session.event_queue. Plan generation moved to the
     content_planner agent — this agent only drafts posts now."""
     # Imported lazily to avoid a route-module import cycle.
-    from routes.content import _run_draft_worker
+    from routes.content import _run_clone_worker, _run_draft_worker
 
     mode = body.get("mode", "draft_post")
-    if mode != "draft_post":
+    if mode not in ("draft_post", "clone_post"):
         raise HTTPException(
             422,
-            "tiktok_studio only supports draft_post — use the content_planner "
-            "agent to create or refresh the plan.",
+            "tiktok_studio only supports draft_post / clone_post — use the "
+            "content_planner agent to create or refresh the plan.",
         )
     # `mode` is a dispatch discriminator, and the conversation/resume fields are
     # consumed by _create_session_for — strip them all before validating against
@@ -749,11 +757,18 @@ async def _start_tiktok_studio(
     if recorder is not None:
         emit_fn = recorder.wrap_emit(emit_fn)
 
-    try:
-        req = DraftPostRequest.model_validate(config)
-    except Exception as exc:
-        raise HTTPException(422, f"Invalid draft_post config: {exc}") from exc
-    coro = _run_draft_worker(session_id, req, emit_fn, user_keys=user_keys)
+    if mode == "clone_post":
+        try:
+            req = ClonePostRequest.model_validate(config)
+        except Exception as exc:
+            raise HTTPException(422, f"Invalid clone_post config: {exc}") from exc
+        coro = _run_clone_worker(session_id, req, emit_fn, user_keys=user_keys)
+    else:
+        try:
+            req = DraftPostRequest.model_validate(config)
+        except Exception as exc:
+            raise HTTPException(422, f"Invalid draft_post config: {exc}") from exc
+        coro = _run_draft_worker(session_id, req, emit_fn, user_keys=user_keys)
 
     task = asyncio.create_task(coro)
     session = get_session(session_id)

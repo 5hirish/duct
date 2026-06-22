@@ -89,6 +89,10 @@ class Day(BaseModel):
     status: Literal["pending", "draft", "posted", "discarded"] = "pending"
     post_type: Literal["slideshow", "video", "image"] = "slideshow"
     post_id: UUID | None = None
+    # Origin of this slot. "" / "planner" = authored by the content_planner agent
+    # (rewritten on each plan regeneration). "manual" = a user-added entry from the
+    # board's Add-post flow — the planner MUST preserve these when it regenerates.
+    source: str = ""        # "" | "planner" | "manual"
     format_slug: str = ""   # which library format to build with (e.g. "format-d")
     avatar_id: UUID | None = None
     platforms: list[Platform] = Field(default_factory=lambda: [Platform.TIKTOK])
@@ -184,7 +188,7 @@ class ContentBrandContext(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-RunMode = Literal["plan_month", "draft_post"]
+RunMode = Literal["plan_month", "draft_post", "clone_post"]
 
 
 class PlanRequest(BaseModel):
@@ -203,6 +207,18 @@ class DraftPostRequest(BaseModel):
     topic: str | None = None
     pillar: str | None = None
     channel: str | None = None   # primary platform (platforms[0]); selects the agent playbook
+
+
+class ClonePostRequest(BaseModel):
+    """clone_post kickoff. The pending post (with clone_source) already exists —
+    post_id points the runner at it; the reference is ingested at run start."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    project_id: UUID
+    post_id:    UUID            # the pending post carrying clone_source
+    plan_id:    UUID | None = None
+    channel:    str | None = None
 
 
 class ContentAnswerRequest(BaseModel):
@@ -669,6 +685,7 @@ __all__ = [
     "ContentResearchContext",
     "ContentSession",
     "ContentVisualAssets",
+    "ClonePostRequest",
     "Day",
     "DraftPostRequest",
     "ImagePrompt",

@@ -120,6 +120,18 @@ class ContentPost(SQLModel, table=True):
     )
     notes: str = Field(default="", sa_column=Column(Text, nullable=False, server_default=""))
 
+    # Clone/reference lineage for posts added via the board's Add-post flow.
+    # None for ordinary planner/manual posts. Holds the source pointer + a cache
+    # of the (expensive) Apify ingest so re-drafting never re-charges:
+    #   {kind: "manual"|"url"|"reference", url, reference_asset_id, ingested,
+    #    scraped_post, media: {cover, slides[]}, diagnostic, ingested_at}
+    # See agents/content/v3/runner.py:_run_clone_worker (ingest is deferred to the
+    # first Draft-now, then cached here).
+    clone_source: dict | None = Field(
+        default=None,
+        sa_column=Column(JSONB(astext_type=sa.Text()), nullable=True),
+    )
+
     created_at: datetime = Field(
         default_factory=_utcnow,
         sa_column=Column(DateTime(timezone=True), nullable=False),
