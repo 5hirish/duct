@@ -25,7 +25,6 @@ import asyncio
 import json
 import logging
 import re
-import shutil
 from collections import deque
 from collections.abc import Awaitable, Callable
 from contextlib import suppress
@@ -793,7 +792,6 @@ async def _run(
         _stderr_buf.append(stripped)
         logger.error("content subprocess stderr [%s]: %s", session_id, stripped)
 
-    _cli_path = shutil.which("claude") or None
     _mcp = build_content_mcp_server(project_id, emit, session)
 
     # Video posts also get Higgsfield's hosted MCP wired in as a REMOTE HTTP
@@ -880,7 +878,10 @@ async def _run(
         env=_sdk_env,
         stderr=_on_subprocess_stderr,
         setting_sources=[],
-        cli_path=_cli_path,
+        # Do NOT override cli_path — let the SDK use its own bundled binary, which
+        # is version-matched to the SDK. Passing shutil.which("claude") here would
+        # use the system-installed CLI, which may be a different (incompatible)
+        # version (mirrors agents/audit/v3/runner.py).
         mcp_servers=mcp_servers,
     )
 

@@ -728,19 +728,19 @@ files = [
 
 [[package]]
 name = "claude-agent-sdk"
-version = "0.2.101"
+version = "0.2.106"
 description = "Python SDK for Claude Code"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 markers = "platform_python_implementation != \"PyPy\" or sys_platform == \"win32\" or sys_platform == \"emscripten\" or sys_platform != \"win32\" and sys_platform != \"emscripten\""
 files = [
-    {file = "claude_agent_sdk-0.2.101-py3-none-macosx_11_0_arm64.whl", hash = "sha256:c07981e7fbf0cdbf2944a19f852f784c72de9764ea510cf602480eaf8749c969"},
-    {file = "claude_agent_sdk-0.2.101-py3-none-macosx_11_0_x86_64.whl", hash = "sha256:3c03f59de5d7a78509be4f804fd73a2ff67935f13b159b1d89becb3a21ff2d78"},
-    {file = "claude_agent_sdk-0.2.101-py3-none-manylinux_2_17_aarch64.whl", hash = "sha256:97019d8db2d0aad5632d2f121ea88fb0310e27fc9181cf9f6bc758de640a4c35"},
-    {file = "claude_agent_sdk-0.2.101-py3-none-manylinux_2_17_x86_64.whl", hash = "sha256:ac43f1e0cb7980b447bcbaef7614f6cd068cfd4653c555e3dead2d72d9117133"},
-    {file = "claude_agent_sdk-0.2.101-py3-none-win_amd64.whl", hash = "sha256:9d994518a4939e17c389ae063f06c236528b4ddc23557d22f1a2685a6dc8d7a6"},
-    {file = "claude_agent_sdk-0.2.101.tar.gz", hash = "sha256:f9663e3b8b3a79c20bffd3196525fa5734a1908c1a69ea01aea4de877901a097"},
+    {file = "claude_agent_sdk-0.2.106-py3-none-macosx_11_0_arm64.whl", hash = "sha256:86506d6a701759a8215083283644513bce56c968b1b95f67108a3114a177eaaf"},
+    {file = "claude_agent_sdk-0.2.106-py3-none-macosx_11_0_x86_64.whl", hash = "sha256:9894cb7bdb276b46085b0ced1e6d867454b56c86fc703ba8e6fdd2a89eec4144"},
+    {file = "claude_agent_sdk-0.2.106-py3-none-manylinux_2_17_aarch64.whl", hash = "sha256:d158f15ba7c4990f72b84d88362dea71d2fa315b1f29772989e22f29c130bdec"},
+    {file = "claude_agent_sdk-0.2.106-py3-none-manylinux_2_17_x86_64.whl", hash = "sha256:778eb7e6aa07363c8b6d669bcb778e889011430a245bddc624380344ac8cc00b"},
+    {file = "claude_agent_sdk-0.2.106-py3-none-win_amd64.whl", hash = "sha256:a9b60131f064dd1a260c55308ed1f26a53db0a942cdf859843ff606c81006400"},
+    {file = "claude_agent_sdk-0.2.106.tar.gz", hash = "sha256:26c20cf75db1ed609aae6217cb6dd40844365c66acf3a7abf4e877671695228e"},
 ]
 
 [package.dependencies]
@@ -1371,7 +1371,7 @@ files = [
 [package.dependencies]
 google-api-core = [
     {version = ">=2.22.0,<=3.0.0", markers = "python_version >= \"3.13\""},
-    {version = ">=2.13.0,<=3.0.0"},
+    {version = ">=2.13.0,<=3.0.0", markers = "python_version < \"3.13\""},
 ]
 google-auth-oauthlib = ">=1.0.0,<2.0.0"
 googleapis-common-protos = [
@@ -1418,7 +1418,7 @@ google-auth = ">=2.14.1,<2.24.0 || >2.24.0,<2.25.0 || >2.25.0,<3.0.0"
 grpcio = ">=1.59.0,<2.0.0"
 proto-plus = [
     {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
-    {version = ">=1.22.3,<2.0.0", markers = "python_version < \"3.13\""},
+    {version = ">=1.22.3,<2.0.0"},
 ]
 protobuf = ">=4.25.8,<8.0.0"
 

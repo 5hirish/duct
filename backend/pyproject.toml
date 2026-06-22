@@ -67,6 +67,10 @@ markers = [
 filterwarnings = [
     # Starlette form parser; third-party until FastAPI/Starlette adopts python_multipart import.
     "ignore:Please use `import python_multipart` instead\\.:PendingDeprecationWarning",
+    # google-adk (v2 insights engine) deprecates its own BaseAgentConfig but still
+    # subclasses it at import time — fires when google.adk.agents is imported. Not
+    # ours; pinned at ^2.2 so this can't mask a real removal.
+    "ignore:BaseAgentConfig is deprecated:DeprecationWarning",
 ]
 
 [build-system]
