@@ -4,9 +4,10 @@ import Link from "next/link";
 import { Images, Video, Image as ImageIcon, Clock } from "lucide-react";
 import { mediaUrl } from "@/lib/contentApi";
 import { firstImageSrc, statusMeta } from "@/lib/contentStatus";
+import { PostType } from "@/lib/contentEnums";
 import { PlatformGlyph, platformMeta } from "@/components/content/platformGlyphs";
 
-const TYPE_ICON = { slideshow: Images, video: Video, image: ImageIcon };
+const TYPE_ICON = { [PostType.SLIDESHOW]: Images, [PostType.VIDEO]: Video, [PostType.IMAGE]: ImageIcon };
 
 const KIND_BADGE = {
   published: "bg-green-500/15 text-green-600 dark:text-green-400",

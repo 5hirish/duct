@@ -5,6 +5,7 @@ import { Images, Video, Image as ImageIcon, Clock, ArrowRight, Sparkles, Refresh
 import PipelineProgress from "../PipelineProgress";
 import { ContentStep } from "../../lib/contentEvents";
 import { parseDate, dayKey } from "../../lib/contentSchedule";
+import { PostType } from "../../lib/contentEnums";
 import { PlatformGlyph, platformMeta } from "./platformGlyphs";
 import PlannerConfigDialog from "./PlannerConfigDialog";
 
@@ -25,7 +26,7 @@ const PLAN_LINES = [
   "Locking in the next 7 days…",
 ];
 
-const TYPE_ICON = { slideshow: Images, video: Video, image: ImageIcon };
+const TYPE_ICON = { [PostType.SLIDESHOW]: Images, [PostType.VIDEO]: Video, [PostType.IMAGE]: ImageIcon };
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 

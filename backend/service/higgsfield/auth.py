@@ -18,10 +18,10 @@ from sqlalchemy import select
 from sqlmodel import Session
 
 from config import get_configs
-from models.connector import ConnectorCredential
+from models.connector import ConnectorCredential, ConnectorType
 from service.credentials import decrypt_credentials
 
-CONNECTOR_TYPE = "higgsfield"
+CONNECTOR_TYPE = ConnectorType.HIGGSFIELD
 MCP_URL = "https://mcp.higgsfield.ai/mcp"
 
 # Credential-blob keys we accept, in priority order. The connect flow may store

@@ -17,7 +17,7 @@ import { downloadPostSlides, patchPost } from "../../lib/contentApi";
 import { fmtCount } from "../../lib/contentMetrics";
 import { extractStyleHead } from "../../lib/slideDoc";
 import { statusMeta } from "../../lib/contentStatus";
-import { PostStatus } from "../../lib/contentEnums";
+import { PostStatus, PostType, POST_TYPE_LABELS } from "../../lib/contentEnums";
 import { PlatformGlyph, platformMeta } from "./platformGlyphs";
 import { useRouter } from "next/navigation";
 import SlidesCarousel from "./SlidesCarousel";
@@ -34,7 +34,7 @@ const STREAMING_HINTS = [
   "Sketching image prompts…",
 ];
 
-const TYPE_ICON = { slideshow: Images, video: Video, image: ImageIcon };
+const TYPE_ICON = { [PostType.SLIDESHOW]: Images, [PostType.VIDEO]: Video, [PostType.IMAGE]: ImageIcon };
 
 // The chat turn that kicks off the in-session pre-publish review (review_post
 // sub-agent → submit_assessment → PUBLISH_ASSESSMENT). Emphatic that this is a
@@ -318,7 +318,7 @@ export default function PostViewport({ payload, assessment = null, phase, canPub
       onDownload={handleDownloadSlides}
     />
   ) : null;
-  const isVideo = post.post_type === "video";
+  const isVideo = post.post_type === PostType.VIDEO;
   const carouselEl = isVideo ? (
     <VideoViewport post={post} />
   ) : (
@@ -344,7 +344,7 @@ export default function PostViewport({ payload, assessment = null, phase, canPub
               {post.format_name && (
                 <span className="rounded-full border border-border/70 px-2 py-0.5">{post.format_name}</span>
               )}
-              <span className="inline-flex items-center gap-1"><TypeIcon className="size-3" /> {post.post_type || "slideshow"}</span>
+              <span className="inline-flex items-center gap-1"><TypeIcon className="size-3" /> {POST_TYPE_LABELS[post.post_type] || post.post_type || "Slideshow"}</span>
               {typeof post.slide_count === "number" && post.slide_count > 0 && <span>· {post.slide_count} slides</span>}
               <span>· {dateLabel}</span>
               {platforms.length > 0 && (

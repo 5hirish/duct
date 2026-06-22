@@ -16,7 +16,7 @@ from uuid import UUID, uuid4
 import httpx
 from sqlmodel import Session
 
-from models.content import ContentAsset
+from models.content import AssetSource, AssetType, ContentAsset
 from service import storage
 from service.higgsfield.schema import VideoAsset
 
@@ -52,7 +52,7 @@ def persist_generated_video(
     params: dict,
     duration_seconds: int | None = None,
     post_id: UUID | None = None,
-    source: str = "higgsfield",
+    source: str = AssetSource.HIGGSFIELD,
 ) -> VideoAsset:
     """Store ``data`` and insert a ContentAsset row; return a VideoAsset handle."""
     ext = _MIME_TO_EXT.get(mime_type, "mp4")
@@ -65,7 +65,7 @@ def persist_generated_video(
         id=asset_id,
         project_id=project_id,
         post_id=post_id,
-        asset_type="generated",
+        asset_type=AssetType.GENERATED,
         source=source,
         url=public_url,
         filename=filename,

@@ -61,8 +61,11 @@ WHAT YOU DO, EVERY PLANNING PASS:
 3. REVIEW PERFORMANCE. Read <performance>. Double down on the pillars, hooks,
    and content types that earn COMPLETION, SAVES, SHARES, and bio-link clicks —
    NOT likes (a 1k-view / 50%-completion post beats 10k / 5%). Cut what
-   underperforms. If the data looks stale or the user asks, call sync_all_posts,
-   then re-read.
+   underperforms. <performance>.type_performance ranks the content TYPES
+   (slideshow / video / image) by proven completion+saves and tells you the
+   `leader`, the `unproven_types` (too little data), and `untested_types` (zero
+   history) — let it DRIVE content_mix in step 5, not just inform it. If the data
+   looks stale or the user asks, call sync_all_posts, then re-read.
 
 4. PLAN BEST TIMES. Prefer the proven windows in <best_times> (this account's
    OWN history); otherwise reason from platform + geography + audience. Set a
@@ -73,9 +76,20 @@ WHAT YOU DO, EVERY PLANNING PASS:
    awareness (TOFU) / consideration (MOFU) / conversion (BOFU) — weighted to the
    primary_objective (new/awareness goals lean TOFU; conversion goals add MOFU/
    BOFU; never all-TOFU — it won't convert; BOFU posts use the cta_destination).
-   Tag each post's funnel_stage + objective. Also balance the PILLAR mix and the
-   CONTENT-TYPE mix (slideshow / video / image), and order posts so the week
-   builds. Capture strategy.funnel_mix, strategy.pillar_mix, strategy.content_mix.
+   Tag each post's funnel_stage + objective. Balance the PILLAR mix too, and
+   order posts so the week builds. Capture strategy.funnel_mix, strategy.pillar_mix,
+   strategy.content_mix.
+   CONTENT-TYPE mix (slideshow / video / image) is PERFORMANCE-WEIGHTED, not a
+   fixed ratio — follow type_performance.guidance (explore + exploit):
+     • EXPLOIT: give the proven `leader` the largest share of the week.
+     • EXPLORE: ALWAYS reserve ≥1 slot to test an `untested` or `unproven` type
+       so a format with little/no data (e.g. video — now fully supported via
+       Higgsfield image-to-video) can earn its place; never zero it out just
+       because it has no history yet.
+     • Trim chronic underperformers (proven type, weak completion+saves).
+     • Cold start (no/low history): seed a balanced spread incl. ≥1 video, and
+       let next week's numbers decide.
+   Make strategy.content_mix reflect this, and set each day's post_type to match.
 
 6. HOOKS + SERIES + NARRATIVE. Give every post a scroll-stopping `hook` (the
    first 3 seconds decide ~80% of the outcome) with a `hook_type` (curiosity /
@@ -237,12 +251,21 @@ def _config_stanza(config: PlannerConfig, accounts: list[dict]) -> str:
 
 def _performance_stanza(perf: dict) -> str:
     if not perf or not perf.get("total_posted"):
-        return "<performance>\n  (no published posts yet — plan from first principles)\n</performance>"
+        return (
+            "<performance>\n"
+            "  (no published posts yet — plan from first principles)\n"
+            "  No content-type history yet: seed a balanced mix INCLUDING ≥1 video this week\n"
+            "  so next refresh has completion+saves signal to weight the mix by.\n"
+            "</performance>"
+        )
+    tp = perf.get("type_performance", {})
     return (
         "<performance>\n"
         f"  total_posted (recent): {perf.get('total_posted', 0)}\n"
         f"  by_pillar: {json.dumps(perf.get('by_pillar', {}))}\n"
-        f"  by_type (incl. median_completion): {json.dumps(perf.get('by_type', {}))}\n"
+        f"  by_type (incl. median_completion + median_saves): {json.dumps(perf.get('by_type', {}))}\n"
+        f"  type_performance (USE THIS to set content_mix): {json.dumps(tp, default=str)}\n"
+        f"  → CONTENT-TYPE POLICY: {tp.get('guidance', 'weight the mix by completion+saves; reserve a slot to test untried types.')}\n"
         f"  top_performers (saves/completion first): {json.dumps(perf.get('top', []), default=str)}\n"
         f"  → {perf.get('metric_note', 'Optimise for completion + saves + shares + bio-link clicks, not likes.')}\n"
         "</performance>"

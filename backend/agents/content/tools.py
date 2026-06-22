@@ -63,6 +63,7 @@ from agents.content.schema import (
     ContentStatus,
     PlanDraft,
     PostDraft,
+    PostType,
     PublishAssessment,
     Slide,
 )
@@ -71,6 +72,8 @@ from config import get_configs
 from service import storage
 from db.session import get_engine
 from models.content import (
+    AssetSource,
+    AssetType,
     ContentAsset,
     ContentAvatar,
     ContentFormat,
@@ -217,7 +220,7 @@ def _resolve_camera_refs(db: Session, project_id, pool: str) -> list[dict]:
     rows = db.exec(
         select(ContentAsset).where(
             ContentAsset.project_id == project_id,
-            ContentAsset.asset_type == "reference",
+            ContentAsset.asset_type == AssetType.REFERENCE,
         )
     ).all()
     db_matched = [a for a in rows if key and key in f"{a.filename} {a.url} {a.prompt}".lower()]
@@ -523,8 +526,8 @@ def _persist_slide_render(project_id: UUID, post_id: UUID, slide_id: str, png: b
         db.add(ContentAsset(
             project_id=project_id,
             post_id=post_id,
-            asset_type="slide_render",
-            source="render",
+            asset_type=AssetType.SLIDE_RENDER,
+            source=AssetSource.RENDER,
             url=url,
             filename=fname,
             mime_type="image/png",
@@ -1344,7 +1347,7 @@ def build_content_mcp_server(
                             "input_global_refs": global_refs,
                         },
                         post_id=session.post_id,
-                        source="gemini",
+                        source=AssetSource.GEMINI,
                     )
                     assets.append(asset)
 
@@ -1469,7 +1472,7 @@ def build_content_mcp_server(
                             "seed":              request.seed,
                         },
                         post_id=session.post_id,
-                        source="gemini",
+                        source=AssetSource.GEMINI,
                     )
                     assets.append(asset)
 
@@ -1559,12 +1562,12 @@ def build_content_mcp_server(
                         },
                         duration_seconds=duration_seconds,
                         post_id=session.post_id,
-                        source="higgsfield",
+                        source=AssetSource.HIGGSFIELD,
                     )
                     row = db.get(ContentPost, session.post_id)
                     if row is None or row.project_id != project_id:
                         return _err("The video post disappeared while attaching — re-draft and retry.")
-                    row.post_type = "video"
+                    row.post_type = PostType.VIDEO
                     row.video_url = asset.url
                     row.video_asset_id = asset.asset_id
                     row.video_prompt = video_prompt

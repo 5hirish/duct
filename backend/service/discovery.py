@@ -20,7 +20,7 @@ from uuid import UUID
 from sqlmodel import Session, select
 
 from db.session import get_engine
-from models.content import ContentAsset
+from models.content import AssetSource, AssetType, ContentAsset
 from service import storage
 
 logger = logging.getLogger(__name__)
@@ -45,7 +45,7 @@ def query_discovered_references(
         select(ContentAsset)
         .where(
             ContentAsset.project_id == project_id,
-            ContentAsset.asset_type == "discovered_reference",
+            ContentAsset.asset_type == AssetType.DISCOVERED_REFERENCE,
         )
         .order_by(ContentAsset.created_at.desc())  # type: ignore[union-attr]
         .limit(200)  # over-fetch; filter in Python by min_plays
@@ -83,7 +83,7 @@ def saved_reference_urls(db: Session, project_id: UUID) -> set[str]:
     rows = db.exec(
         select(ContentAsset).where(
             ContentAsset.project_id == project_id,
-            ContentAsset.asset_type == "discovered_reference",
+            ContentAsset.asset_type == AssetType.DISCOVERED_REFERENCE,
         )
     ).all()
     return {r.url for r in rows if r.url}
@@ -187,7 +187,7 @@ def recapture_missing_media(project_id: UUID, *, limit: int = 50) -> dict:
         rows = db.exec(
             select(ContentAsset).where(
                 ContentAsset.project_id == project_id,
-                ContentAsset.asset_type == "discovered_reference",
+                ContentAsset.asset_type == AssetType.DISCOVERED_REFERENCE,
             ).order_by(ContentAsset.created_at.desc())  # type: ignore[union-attr]
         ).all()
         targets: list[tuple[UUID, dict]] = []
@@ -373,8 +373,8 @@ async def ingest_reference(project_id: UUID, clone_source: dict, *, on_step: Ste
                 with Session(engine) as db:
                     a = ContentAsset(
                         project_id=project_id,
-                        asset_type="discovered_reference",
-                        source="apify",
+                        asset_type=AssetType.DISCOVERED_REFERENCE,
+                        source=AssetSource.APIFY,
                         url=post.get("web_video_url") or url,
                         filename=f"tiktok-{post.get('id')}",
                         mime_type="application/json",

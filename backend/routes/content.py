@@ -60,6 +60,7 @@ from agents.content.schema import (
     ContentStatus,
     DraftPostRequest,
     PlanRequest,
+    PostType,
 )
 from agents.content.v3.runner import (
     ClaudeContentRunner,
@@ -74,6 +75,9 @@ from agents.models import Platform, Provider
 from config import claude_oauth_available, get_configs
 from db.session import get_engine, get_session as db_session
 from models.content import (
+    UPLOADABLE_ASSET_TYPES,
+    AssetSource,
+    AssetType,
     ContentAsset,
     ContentAvatar,
     ContentFormat,
@@ -863,7 +867,7 @@ class DayAppend(BaseModel):
     post_id:      UUID | None = None
     topic:        str = ""
     pillar:       str = ""
-    post_type:    str = "slideshow"
+    post_type:    PostType = PostType.SLIDESHOW
     status:       str = "pending"
     source:       str = "manual"   # marks a user-added slot the planner must preserve
     scheduled_at: str | None = None   # ISO "Plan for" date/time; drives board placement
@@ -920,7 +924,7 @@ class PostIn(BaseModel):
     pillar:        str = ""
     topic:         str = ""
     topic_id:      int | None = None
-    post_type:     str = "slideshow"
+    post_type:     PostType = PostType.SLIDESHOW
     format_slug:   str = ""   # resolved to format_id; "" leaves the post unlinked
     avatar_id:     UUID | None = None
     layout:        str = "full-bleed"
@@ -956,7 +960,7 @@ class PostPatch(BaseModel):
     pillar:        str | None = None
     topic:         str | None = None
     topic_id:      int | None = None
-    post_type:     str | None = None
+    post_type:     PostType | None = None
     format_slug:   str | None = None
     avatar_id:     UUID | None = None
     layout:        str | None = None
@@ -991,7 +995,7 @@ class PostOut(BaseModel):
     pillar:        str
     topic:         str
     topic_id:      int | None
-    post_type:     str
+    post_type:     PostType
     format_id:     UUID | None
     format_slug:   str
     format_name:   str
@@ -1164,7 +1168,7 @@ def _thumb_map(db: Session, post_ids: list[UUID]) -> dict[UUID, str]:
     rows = db.execute(
         select(ContentAsset.post_id, ContentAsset.url, ContentAsset.created_at)
         .where(ContentAsset.post_id.in_(post_ids))
-        .where(ContentAsset.asset_type.in_(["generated", "upload"]))
+        .where(ContentAsset.asset_type.in_([AssetType.GENERATED, AssetType.UPLOAD]))
         .where(ContentAsset.url != "")
         .order_by(ContentAsset.created_at.desc())   # latest first
     ).all()
@@ -1280,7 +1284,7 @@ def _clone_post_assets(db: Session, src: ContentPost, clone: ContentPost) -> Non
     by_url = {a.url: a for a in src_assets if a.url}
     latest_render: dict[str, ContentAsset] = {}
     for a in src_assets:
-        if a.asset_type == "slide_render":
+        if a.asset_type == AssetType.SLIDE_RENDER:
             sid = (a.params or {}).get("slide_id")
             if sid:
                 latest_render[str(sid)] = a
@@ -1293,7 +1297,7 @@ def _clone_post_assets(db: Session, src: ContentPost, clone: ContentPost) -> Non
         data = storage.get_bytes(a.url)
         if not data:
             return None
-        sub = "renders" if a.asset_type == "slide_render" else "generated"
+        sub = "renders" if a.asset_type == AssetType.SLIDE_RENDER else "generated"
         ext = Path(a.filename or "").suffix or (".png" if "png" in (a.mime_type or "") else ".jpg")
         key = f"projects/{clone.project_id}/{sub}/{_uuid4().hex}{ext}"
         new = ContentAsset(
@@ -1821,7 +1825,7 @@ def delete_avatar(avatar_id: UUID, db: Session = Depends(db_session)) -> dict:
 # ---------------------------------------------------------------------------
 
 
-_ALLOWED_ASSET_TYPES = {"logo", "background", "reference", "upload", "discovered_reference"}
+_ALLOWED_ASSET_TYPES = UPLOADABLE_ASSET_TYPES
 _ALLOWED_MIME = {"image/png", "image/jpeg", "image/webp"}
 _MIME_TO_EXT = {"image/png": "png", "image/jpeg": "jpg", "image/webp": "webp"}
 _MAX_UPLOAD_BYTES = 20 * 1024 * 1024  # 20 MB
@@ -1894,7 +1898,7 @@ async def upload_asset(
         id=asset_id,
         project_id=project_id,
         asset_type=asset_type,
-        source="upload",
+        source=AssetSource.UPLOAD,
         url=public_url,
         filename=filename,
         mime_type=mime,
@@ -2260,7 +2264,7 @@ def _select_publish_assets(db: Session, post: ContentPost) -> list[ContentAsset]
     Video posts are the exception: they publish ONE clip — the attached video
     asset (post.video_asset_id), with a latest-video-asset fallback.
     """
-    if post.post_type == "video":
+    if post.post_type == PostType.VIDEO:
         if post.video_asset_id is not None:
             vid = db.get(ContentAsset, post.video_asset_id)
             if vid is not None and vid.project_id == post.project_id:
@@ -2287,7 +2291,7 @@ def _select_publish_assets(db: Session, post: ContentPost) -> list[ContentAsset]
     renders_by_slide: dict[str, ContentAsset] = {}
     by_url: dict[str, ContentAsset] = {}
     for a in all_assets:
-        if a.asset_type == "slide_render":
+        if a.asset_type == AssetType.SLIDE_RENDER:
             sid = (a.params or {}).get("slide_id")
             if sid:
                 renders_by_slide[str(sid)] = a
@@ -2316,7 +2320,7 @@ def _select_publish_assets(db: Session, post: ContentPost) -> list[ContentAsset]
 
 def _slide_id_of(asset: ContentAsset) -> str:
     """The slide a render belongs to (for streaming progress labels)."""
-    if asset.asset_type == "slide_render":
+    if asset.asset_type == AssetType.SLIDE_RENDER:
         return str((asset.params or {}).get("slide_id") or "")
     return ""
 
@@ -2905,7 +2909,7 @@ def discover_references(
         select(ContentAsset)
         .where(
             ContentAsset.project_id == project_id,
-            ContentAsset.asset_type == "discovered_reference",
+            ContentAsset.asset_type == AssetType.DISCOVERED_REFERENCE,
         )
         .order_by(ContentAsset.created_at.desc())
         .limit(200)
@@ -2997,8 +3001,8 @@ def discover_save(
     # them when constructing image prompts.
     asset = ContentAsset(
         project_id=body.project_id,
-        asset_type="discovered_reference",
-        source="apify",
+        asset_type=AssetType.DISCOVERED_REFERENCE,
+        source=AssetSource.APIFY,
         url=post.web_video_url or f"apify://{body.actor_id}/{post.id}",
         filename=f"tiktok-{post.id}",
         mime_type="application/json",

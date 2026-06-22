@@ -15,6 +15,7 @@ from uuid import UUID
 
 from sqlmodel import Session, select
 
+from agents.content.schema import PostType
 from agents.planner.schema import PlannerConfig
 from db.session import get_engine
 from models.agent_context import AgentContext
@@ -26,6 +27,14 @@ AGENT_ID = "content_planner"
 
 # How far back to summarise published-post performance for the strategist.
 _PERF_LOOKBACK_LIMIT = 40
+
+# The content types the planner allocates across. Used to flag types that have
+# NO history yet (so the planner can seed an exploratory slot to learn). Plain
+# string values (not enum members) so dict-key lookups + f-strings render clean.
+_ALL_POST_TYPES = tuple(pt.value for pt in PostType)
+# Below this post count a type's medians are too thin to trust — the planner
+# treats it as "unproven" (worth testing, not yet worth scaling).
+_MIN_CONFIDENT_POSTS = 3
 
 
 def _open_db() -> Session:
@@ -137,6 +146,7 @@ def performance_summary(project_id: UUID) -> dict:
     saves_by_pillar: dict[str, list[int]] = defaultdict(list)
     views_by_type: dict[str, list[int]] = defaultdict(list)
     completion_by_type: dict[str, list[float]] = defaultdict(list)
+    saves_by_type: dict[str, list[int]] = defaultdict(list)
     for p in posts:
         perf = p.perf or {}
         views = _num(perf, "view_count", "views")
@@ -165,6 +175,7 @@ def performance_summary(project_id: UUID) -> dict:
         })
         saves_by_pillar[pillar].append(saves)
         views_by_type[ptype].append(views)
+        saves_by_type[ptype].append(saves)
         if completion:
             completion_by_type[ptype].append(completion)
 
@@ -177,19 +188,81 @@ def performance_summary(project_id: UUID) -> dict:
             "posts": len(v),
             "median_views": int(median(v)) if v else 0,
             "median_completion": round(median(completion_by_type[ptype]), 3) if completion_by_type.get(ptype) else None,
+            "median_saves": int(median(saves_by_type[ptype])) if saves_by_type.get(ptype) else 0,
         }
         for ptype, v in views_by_type.items()
     }
     # Rank by the conversion-leaning signals first (saves + completion), not likes.
     top = sorted(rows, key=lambda r: (r["saves"], r["completion_rate"], r["views"]), reverse=True)[:5]
 
+    type_performance = _rank_content_types(by_type)
+
     return {
         "total_posted": len(rows),
         "posts": rows[:15],
         "by_pillar": by_pillar,
         "by_type": by_type,
+        # Cross-type comparison + an explicit allocation recommendation so the
+        # planner can weight content_mix by what's actually working (and seed the
+        # types it has no data on). See _rank_content_types.
+        "type_performance": type_performance,
         "top": top,
         "metric_note": "Optimise for completion_rate + saves + shares + bio_link_clicks, not likes.",
+    }
+
+
+def _rank_content_types(by_type: dict[str, dict]) -> dict:
+    """Turn the per-type medians into an explicit, comparative recommendation the
+    planner can act on directly (instead of inferring the comparison each turn).
+
+    Ranks types by the conversion-leaning blend (completion first, then saves),
+    splits them into PROVEN (enough posts to trust) vs UNPROVEN (too thin), and
+    flags types with NO history at all. The guidance string encodes the
+    explore+exploit policy: scale the proven leader, but always reserve a slot to
+    test an unproven/untested type so a new format (e.g. video) can earn its data.
+    """
+    def _key(item: tuple[str, dict]) -> tuple[float, int]:
+        m = item[1]
+        return (m.get("median_completion") or 0.0, m.get("median_saves") or 0)
+
+    ranked = [
+        {
+            "type": ptype,
+            "posts": m.get("posts", 0),
+            "median_completion": m.get("median_completion"),
+            "median_saves": m.get("median_saves", 0),
+            "median_views": m.get("median_views", 0),
+            "confidence": "proven" if m.get("posts", 0) >= _MIN_CONFIDENT_POSTS else "unproven",
+        }
+        for ptype, m in sorted(by_type.items(), key=_key, reverse=True)
+    ]
+    leader = next((r["type"] for r in ranked if r["confidence"] == "proven"), None)
+    unproven = [r["type"] for r in ranked if r["confidence"] == "unproven"]
+    untested = [t for t in _ALL_POST_TYPES if t not in by_type]
+
+    to_test = untested + unproven  # untested first — zero data is the biggest blind spot
+    if leader and to_test:
+        guidance = (
+            f"Scale up '{leader}' (best proven completion+saves). Reserve ≥1 slot this week to "
+            f"test {to_test} — don't starve a format you have little/no data on (that's how a new "
+            f"type like video earns its place)."
+        )
+    elif leader:
+        guidance = f"Scale up '{leader}' (best proven completion+saves); trim chronic underperformers."
+    elif to_test:
+        guidance = (
+            f"Not enough history to crown a winner yet — spread tests across {to_test or list(by_type)} "
+            f"and let completion+saves decide next week."
+        )
+    else:
+        guidance = "Not enough history yet — plan a balanced mix and measure completion+saves."
+
+    return {
+        "ranked": ranked,
+        "leader": leader,
+        "untested_types": untested,
+        "unproven_types": unproven,
+        "guidance": guidance,
     }
 
 

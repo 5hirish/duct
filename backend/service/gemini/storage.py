@@ -9,7 +9,7 @@ from uuid import UUID, uuid4
 
 from sqlmodel import Session
 
-from models.content import ContentAsset
+from models.content import AssetSource, AssetType, ContentAsset
 from service import storage
 from service.gemini.schema import GeneratedImage, ImageAsset
 
@@ -32,7 +32,7 @@ def persist_generated_image(
     model:  str,
     params: dict,
     post_id: UUID | None = None,
-    source:  str = "gemini",
+    source:  str = AssetSource.GEMINI,
 ) -> ImageAsset:
     """Persist image bytes to object storage under
     projects/{project_id}/generated/<uuid>.<ext>, insert a ContentAsset row, and
@@ -53,7 +53,7 @@ def persist_generated_image(
         id=asset_id,
         project_id=project_id,
         post_id=post_id,
-        asset_type="generated",
+        asset_type=AssetType.GENERATED,
         source=source,
         url=public_url,
         filename=filename,

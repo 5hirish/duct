@@ -52,6 +52,20 @@ export const POST_STATUS_LABELS = Object.freeze({
   [PostStatus.DISCARDED]: "Discarded",
 });
 
+// Mirrors PostType in backend/agents/content/schema.py. Video posts are
+// generated via Higgsfield image-to-video.
+export const PostType = Object.freeze({
+  SLIDESHOW: "slideshow",
+  VIDEO:     "video",
+  IMAGE:     "image",
+});
+
+export const POST_TYPE_LABELS = Object.freeze({
+  [PostType.SLIDESHOW]: "Slideshow",
+  [PostType.VIDEO]:     "Video",
+  [PostType.IMAGE]:     "Image",
+});
+
 export const AspectRatio = Object.freeze({
   SQUARE_1_1:     "1:1",
   PORTRAIT_9_16:  "9:16",

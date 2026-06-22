@@ -50,6 +50,7 @@ from agents.content.schema import (
     Day,
     PlanDraft,
     PostDraft,
+    PostType,
     make_session,
 )
 from agents.content.subagents import (
@@ -170,13 +171,14 @@ def create_clone_session(
 # ---------------------------------------------------------------------------
 
 
-def _resolve_session_post_type(session: ContentSession, day: Day | None = None) -> str:
+def _resolve_session_post_type(session: ContentSession, day: Day | None = None) -> PostType:
     """Resolve the content type for this draft session: the plan day's type if
-    given, else the bound post's type, else 'slideshow'. Sync — call via
+    given, else the bound post's type, else SLIDESHOW. Sync — call via
     asyncio.to_thread. Drives whether _run wires the Higgsfield video MCP."""
+    raw: str | None = None
     if day is not None and getattr(day, "post_type", ""):
-        return day.post_type
-    if session.post_id is not None:
+        raw = day.post_type
+    elif session.post_id is not None:
         from sqlmodel import Session
 
         from db.session import get_engine
@@ -187,8 +189,11 @@ def _resolve_session_post_type(session: ContentSession, day: Day | None = None) 
             with Session(engine) as db:
                 row = db.get(ContentPost, session.post_id)
                 if row is not None and row.post_type:
-                    return row.post_type
-    return "slideshow"
+                    raw = row.post_type
+    try:
+        return PostType(raw) if raw else PostType.SLIDESHOW
+    except ValueError:
+        return PostType.SLIDESHOW
 
 
 def _resolve_higgsfield_token(project_id: UUID) -> str:
@@ -800,7 +805,7 @@ async def _run(
     # video (fails soft rather than crashing).
     mcp_servers: dict = {"duct_content": _mcp}
     _video_allowed_tools: list = []
-    if session.post_type == "video":
+    if session.post_type == PostType.VIDEO:
         _hf_token = await asyncio.to_thread(_resolve_higgsfield_token, project_id)
         if _hf_token:
             from service.higgsfield.auth import higgsfield_mcp_config
@@ -1310,7 +1315,7 @@ class ClaudeContentRunner:
         # bound post (DB) wins; an explicit request post_type only seeds the
         # no-day, no-post case (a standalone "draft now" video).
         _resolved_type = await asyncio.to_thread(_resolve_session_post_type, session, day)
-        if _resolved_type == "slideshow" and post_type:
+        if _resolved_type == PostType.SLIDESHOW and post_type:
             _resolved_type = post_type
         session.post_type = _resolved_type
 
@@ -1537,7 +1542,7 @@ class ClaudeContentRunner:
                     "ingested_at": datetime.now(timezone.utc).isoformat(),
                 })
                 p.clone_source = cs
-                p.post_type = "video" if sp.get("is_slideshow") is False else "slideshow"
+                p.post_type = PostType.VIDEO if sp.get("is_slideshow") is False else PostType.SLIDESHOW
                 db.add(p)
                 db.commit()
 

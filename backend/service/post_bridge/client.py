@@ -21,7 +21,7 @@ from sqlalchemy import select
 from sqlmodel import Session
 
 from config import get_configs
-from models.connector import ConnectorCredential
+from models.connector import ConnectorCredential, ConnectorType
 from service.credentials import decrypt_credentials
 from service.post_bridge.schema import (
     CreateUploadUrlRequest,
@@ -346,7 +346,7 @@ def _api_key_for_user(user_id: UUID | None, db: Session) -> tuple[str, str]:
         row = db.execute(
             select(ConnectorCredential).where(
                 ConnectorCredential.user_id == user_id,
-                ConnectorCredential.connector_type == "post_bridge",
+                ConnectorCredential.connector_type == ConnectorType.POST_BRIDGE,
             )
         ).scalars().first()
         if row is not None:

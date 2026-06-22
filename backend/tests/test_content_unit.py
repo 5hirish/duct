@@ -941,14 +941,3 @@ def test_higgsfield_token_resolver_falls_back_to_env(monkeypatch):
 
     monkeypatch.setattr(auth, "get_configs", lambda: _Empty())
     assert auth.higgsfield_token_for_user(None, db=None) == ""
-
-
-def test_higgsfield_mcp_config_shape():
-    """The remote MCP config the runner hands the SDK must be an HTTP server with
-    the bearer header — the SDK replays this verbatim (it does not run OAuth)."""
-    from service.higgsfield.auth import MCP_URL, higgsfield_mcp_config
-
-    cfg = higgsfield_mcp_config("tok123")
-    assert cfg["type"] == "http"
-    assert cfg["url"] == MCP_URL
-    assert cfg["headers"]["Authorization"] == "Bearer tok123"

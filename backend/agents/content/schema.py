@@ -24,6 +24,33 @@ from agents.core.session import BaseAgentSession
 from agents.models import AspectRatio, ImageModel, Platform
 
 
+class PostType(StrEnum):
+    """Content type of a post — ContentPost.post_type (and Day / PostDraft.post_type).
+
+    Stored as a plain String column (values match these members); use this enum
+    in code instead of bare strings. Mirrored on the frontend in
+    app/src/lib/contentEnums.js. Defined near the top because Day (below) and the
+    runner/tools/routes all reference it. VIDEO posts are generated via Higgsfield
+    image-to-video (see service/higgsfield).
+    """
+
+    SLIDESHOW = "slideshow"
+    VIDEO     = "video"
+    IMAGE     = "image"
+
+
+class DayStatus(StrEnum):
+    """Lifecycle of a single plan slot — ContentPlan.days[].status. DELIBERATELY
+    NARROWER than ContentStatus: a plan day never carries 'scheduled' (that's a
+    post-level state). Stored as a plain String value inside the days JSON.
+    """
+
+    PENDING   = "pending"
+    DRAFT     = "draft"
+    POSTED    = "posted"
+    DISCARDED = "discarded"
+
+
 # ---------------------------------------------------------------------------
 # Domain shapes (ports of marketing/app/src/types.ts)
 # ---------------------------------------------------------------------------
@@ -86,8 +113,8 @@ class Day(BaseModel):
     topic_id: int | str | None = None
     topic: str = ""
     pillar: str = ""
-    status: Literal["pending", "draft", "posted", "discarded"] = "pending"
-    post_type: Literal["slideshow", "video", "image"] = "slideshow"
+    status: DayStatus = DayStatus.PENDING
+    post_type: PostType = PostType.SLIDESHOW
     post_id: UUID | None = None
     # Origin of this slot. "" / "planner" = authored by the content_planner agent
     # (rewritten on each plan regeneration). "manual" = a user-added entry from the
@@ -207,9 +234,9 @@ class DraftPostRequest(BaseModel):
     topic: str | None = None
     pillar: str | None = None
     channel: str | None = None   # primary platform (platforms[0]); selects the agent playbook
-    # Content type for a standalone (no-plan) draft: "slideshow" | "image" | "video".
-    # When a plan day is resolved its post_type wins; this only seeds the no-day case.
-    post_type: str | None = None
+    # Content type for a standalone (no-plan) draft. When a plan day is resolved
+    # its post_type wins; this only seeds the no-day case.
+    post_type: PostType | None = None
 
 
 class ClonePostRequest(BaseModel):
@@ -245,10 +272,10 @@ class ContentSession(BaseAgentSession):
     mode: RunMode
     plan_id: UUID | None = None
     post_id: UUID | None = None
-    # Content type being drafted ("slideshow" | "image" | "video"). Resolved at
-    # run start (from the bound post or plan day); gates whether the runner wires
-    # the Higgsfield video MCP into the session. See agents/content/v3/runner.py.
-    post_type: str = "slideshow"
+    # Content type being drafted. Resolved at run start (from the bound post or
+    # plan day); gates whether the runner wires the Higgsfield video MCP into the
+    # session. See agents/content/v3/runner.py.
+    post_type: PostType = PostType.SLIDESHOW
     # Persisted-conversation linkage (session resume / chat history). Set by the
     # route layer when a session is created; the runner re-primes from the DB when
     # resume is True. recorder persists each turn (agents/content/persistence.py).
@@ -535,7 +562,7 @@ class PostDraft(BaseModel):
     pillar: str
     topic: str
     topic_id: str | None = None
-    post_type: Literal["slideshow", "video", "image"] = "slideshow"
+    post_type: PostType = PostType.SLIDESHOW
     format_slug: str = ""   # which library format to build with (e.g. "format-d")
     layout: SlideLayout = SlideLayout.FULL_BLEED
     avatar_id: UUID | None = None
@@ -705,6 +732,7 @@ __all__ = [
     "ContentVisualAssets",
     "ClonePostRequest",
     "Day",
+    "DayStatus",
     "DraftPostRequest",
     "ImagePrompt",
     "Perf",
@@ -713,6 +741,7 @@ __all__ = [
     "PlanRequest",
     "PlanStrategy",
     "PostDraft",
+    "PostType",
     "RunMode",
     "Slide",
     "SlideItem",

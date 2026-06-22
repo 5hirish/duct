@@ -6,7 +6,7 @@ import { Images, Link2, Loader2, PenLine, Sparkles, Video, X } from "lucide-reac
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Platform, PLATFORM_LABELS } from "@/lib/contentEnums";
+import { Platform, PLATFORM_LABELS, PostType } from "@/lib/contentEnums";
 import { fmtCount } from "@/lib/contentMetrics";
 import {
   appendPlanDay,
@@ -60,7 +60,7 @@ export default function AddPostModal({ projectId, plan, onClose, onSaved }) {
 
   // Manual fields
   const [topic, setTopic] = useState("");
-  const [postType, setPostType] = useState("slideshow"); // manual mode: slideshow | video
+  const [postType, setPostType] = useState(PostType.SLIDESHOW); // manual mode: slideshow | video
   const [hookText, setHookText] = useState("");
   const [caption, setCaption] = useState("");
   const [hashtags, setHashtags] = useState([]);
@@ -145,7 +145,7 @@ export default function AddPostModal({ projectId, plan, onClose, onSaved }) {
     if (mode === "url") {
       return {
         topic: (peek?.title || "Cloned from TikTok").slice(0, 120),
-        post_type: "slideshow",
+        post_type: PostType.SLIDESHOW,
         clone_source: { kind: "url", url: url.trim(), ingested: false },
       };
     }
@@ -153,7 +153,7 @@ export default function AddPostModal({ projectId, plan, onClose, onSaved }) {
     const r = selectedRef;
     return {
       topic: (r?.text || `Clone of @${r?.author || "reference"}`).slice(0, 120),
-      post_type: r?.is_slideshow ? "slideshow" : "video",
+      post_type: r?.is_slideshow ? PostType.SLIDESHOW : PostType.VIDEO,
       clone_source: { kind: "reference", reference_asset_id: r?.asset_id, ingested: false },
     };
   }
@@ -236,7 +236,7 @@ export default function AddPostModal({ projectId, plan, onClose, onSaved }) {
         const params = new URLSearchParams();
         if (planId) { params.set("plan_id", planId); params.set("day", String(dayIndex)); }
         else { if (topic.trim()) params.set("topic", topic.trim()); if (pillar) params.set("pillar", pillar); }
-        if (postType && postType !== "slideshow") params.set("post_type", postType);
+        if (postType && postType !== PostType.SLIDESHOW) params.set("post_type", postType);
         params.set("channel", ch);
         router.push(`/content/posts/new?${params.toString()}`);
         return;
@@ -299,8 +299,8 @@ export default function AddPostModal({ projectId, plan, onClose, onSaved }) {
               <Field label="Format">
                 <div className="flex flex-wrap gap-1.5">
                   {[
-                    { key: "slideshow", label: "Slideshow", Icon: Images },
-                    { key: "video", label: "Video", Icon: Video },
+                    { key: PostType.SLIDESHOW, label: "Slideshow", Icon: Images },
+                    { key: PostType.VIDEO, label: "Video", Icon: Video },
                   ].map(({ key, label, Icon }) => (
                     <button
                       key={key}
@@ -315,7 +315,7 @@ export default function AddPostModal({ projectId, plan, onClose, onSaved }) {
                   ))}
                 </div>
               </Field>
-              {postType === "video" && (
+              {postType === PostType.VIDEO && (
                 <p className="rounded-xl bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
                   Video posts are generated with Higgsfield (image-to-video). Make sure Higgsfield is
                   connected for your workspace before drafting.

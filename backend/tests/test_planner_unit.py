@@ -74,3 +74,49 @@ def test_chat_text_flattens_content():
     assert _chat_text("hello") == "hello"
     assert _chat_text([{"type": "text", "text": "a"}, {"type": "image", "x": 1}]) == "a"
     assert _chat_text(None) == ""
+
+
+# ---------------------------------------------------------------------------
+# Content-type performance ranking — drives performance-weighted content_mix
+# (explore + exploit). Pure function, no DB.
+# ---------------------------------------------------------------------------
+
+
+def test_rank_content_types_crowns_proven_leader_and_seeds_untested():
+    """Video has the best completion+saves with enough posts → it's the proven
+    `leader`. A type with NO history (image) is `untested` and must be surfaced
+    for an exploration slot."""
+    from agents.planner.data import _rank_content_types
+
+    tp = _rank_content_types({
+        "video":     {"posts": 5, "median_completion": 0.42, "median_saves": 30, "median_views": 1200},
+        "slideshow": {"posts": 8, "median_completion": 0.21, "median_saves": 12, "median_views": 3000},
+    })
+    assert tp["leader"] == "video"                       # exploit the proven winner
+    assert tp["untested_types"] == ["image"]             # explore what has no data
+    assert [r["type"] for r in tp["ranked"]] == ["video", "slideshow"]
+
+
+def test_rank_content_types_cold_start_for_video_seeds_exploration():
+    """Only slideshow history → video+image are untested. The planner must still
+    be told to test them (so a brand-new format like video isn't starved)."""
+    from agents.planner.data import _rank_content_types
+
+    tp = _rank_content_types({
+        "slideshow": {"posts": 6, "median_completion": 0.3, "median_saves": 20, "median_views": 2000},
+    })
+    assert tp["leader"] == "slideshow"
+    assert "video" in tp["untested_types"] and "image" in tp["untested_types"]
+
+
+def test_rank_content_types_does_not_crown_a_single_lucky_post():
+    """A type with 1 high post is `unproven`, not the leader — we don't scale a
+    format off one lucky clip; we flag it for more testing."""
+    from agents.planner.data import _rank_content_types
+
+    tp = _rank_content_types({
+        "slideshow": {"posts": 10, "median_completion": 0.25, "median_saves": 15, "median_views": 2500},
+        "video":     {"posts": 1,  "median_completion": 0.50, "median_saves": 40, "median_views": 1500},
+    })
+    assert tp["leader"] == "slideshow"                   # proven, despite lower medians
+    assert tp["unproven_types"] == ["video"]

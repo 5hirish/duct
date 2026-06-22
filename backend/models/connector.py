@@ -3,10 +3,27 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from enum import StrEnum
 from uuid import UUID, uuid4
 
 from sqlalchemy import Column, DateTime, ForeignKey, String, UniqueConstraint
 from sqlmodel import Field, SQLModel
+
+
+class ConnectorType(StrEnum):
+    """The external services a user can connect — ConnectorCredential.connector_type.
+
+    Stored as a plain String column (values match these members); use this enum
+    in code instead of bare strings. The Google connector ids are also exposed as
+    GOOGLE_ADS_CONNECTOR_ID / GA4_CONNECTOR_ID / GSC_CONNECTOR_ID in
+    service/google/constants.py (same values) for the OAuth-callback subsystem.
+    """
+
+    POST_BRIDGE = "post_bridge"   # social publishing + analytics
+    HIGGSFIELD  = "higgsfield"    # video generation
+    GOOGLE_ADS  = "google_ads"
+    GA4         = "ga4"
+    GSC         = "gsc"
 
 
 def _utcnow() -> datetime:
