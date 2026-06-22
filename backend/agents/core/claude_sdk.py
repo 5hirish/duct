@@ -28,6 +28,23 @@ logger = logging.getLogger(__name__)
 # cleanup can tell a throwaway session dir apart from the shared base.
 _SESSION_DIR_SEGMENT = "sessions"
 
+# A Claude subscription/OAuth token (minted by `claude setup-token`) carries this
+# prefix; API keys use `sk-ant-api…`. A bring-your-own Anthropic credential must
+# be routed by which kind it is: an OAuth token in ANTHROPIC_API_KEY makes the
+# CLI exit 1 during initialize, and an API key in CLAUDE_CODE_OAUTH_TOKEN fails
+# the same way. The frontend's API/OAuth selector is only a hint — this prefix is
+# the source of truth, so a mis-selected credential still authenticates.
+_ANTHROPIC_OAUTH_PREFIX = "sk-ant-oat"
+
+
+def is_anthropic_oauth_token(value: str | None) -> bool:
+    """True when ``value`` looks like a Claude subscription/OAuth token.
+
+    Used to decide whether a bring-your-own Anthropic credential belongs in
+    ``CLAUDE_CODE_OAUTH_TOKEN`` (this returns True) or ``ANTHROPIC_API_KEY``.
+    """
+    return bool(value) and value.strip().startswith(_ANTHROPIC_OAUTH_PREFIX)
+
 # Retry an initialize crash with backoff — nothing has streamed yet, so a fresh
 # connect is side-effect-free.
 MAX_CONNECT_ATTEMPTS = 3
@@ -224,6 +241,13 @@ def build_sdk_env(
         env["ENABLE_TOOL_SEARCH"] = "false"
     if sentry_env:
         env.update(sentry_env)
+
+    # A bring-your-own Anthropic credential may be a subscription OAuth token
+    # rather than an API key. Route it to the OAuth slot so the CLI authenticates
+    # correctly, and let a supplied OAuth token win over a server-configured one.
+    if is_anthropic_oauth_token(api_key):
+        oauth_token = api_key.strip()
+        api_key = ""
 
     # Auth precedence mirrors the CLI's: an explicit key wins; otherwise forward a
     # CLAUDE_CODE_OAUTH_TOKEN. The SDK merges options.env OVER os.environ but can't

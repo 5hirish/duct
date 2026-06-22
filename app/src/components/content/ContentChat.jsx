@@ -10,6 +10,11 @@ import ContentStepProgress from "./ContentStepProgress";
 import ContentTodos from "./ContentTodos";
 import { Phase } from "./contentPhase";
 import { CodeBlock, resolveCode } from "./CodeBlock";
+import { isDevEnv } from "@/lib/env";
+
+// On dev/localhost we surface the model's raw reasoning to help debug the agent;
+// in production it stays hidden (see ThinkingBlock note below).
+const SHOW_REASONING = isDevEnv();
 
 function SendErrorBubble({ text, content, onRetry }) {
   return (
@@ -39,7 +44,47 @@ function SendErrorBubble({ text, content, onRetry }) {
 // (thinking streaming, no reply text yet) we show a calm "Thinking…" affordance;
 // the polished reply + the step chips convey everything the user needs.
 function ThinkingBlock({ thinking, streaming }) {
+  const [expanded, setExpanded] = useState(true);
+
+  // Dev / localhost: surface the raw chain-of-thought behind a collapsible
+  // (expanded by default) so we can debug what the agent is reasoning about.
+  if (SHOW_REASONING) {
+    if (!thinking) {
+      // No reasoning captured yet but the model is working — keep the calm pulse.
+      return streaming ? <ThinkingPulse /> : null;
+    }
+    return (
+      <div className="mb-2">
+        <button
+          onClick={() => setExpanded((x) => !x)}
+          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <span className="font-mono">{expanded ? "▾" : "▸"}</span>
+          <span>{expanded ? "Hide" : "Show"} reasoning{streaming ? "…" : ""}</span>
+          <span className="rounded bg-muted-foreground/15 px-1 py-px text-[9px] font-medium uppercase tracking-wide text-muted-foreground/80">dev</span>
+        </button>
+        {expanded && (
+          <div className="mt-1.5 rounded-lg px-3.5 py-3 bg-muted/40 border border-border/40">
+            <p className="text-[11px] text-muted-foreground leading-relaxed whitespace-pre-wrap break-words font-mono">
+              {thinking}
+            </p>
+            {streaming && (
+              <span className="inline-block w-0.5 h-3 bg-muted-foreground/60 ml-0.5 animate-pulse align-middle" />
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Production: this is a non-technical creator tool, so we never surface the raw
+  // chain-of-thought (it leaks tool/sub-agent names, asset UUIDs, slide ids, JSON…).
+  // Just a calm "Thinking…" pulse while the model reasons.
   if (!thinking || !streaming) return null;
+  return <ThinkingPulse />;
+}
+
+function ThinkingPulse() {
   return (
     <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
       <span className="flex gap-1">

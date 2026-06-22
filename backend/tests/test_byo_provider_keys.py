@@ -176,3 +176,66 @@ def test_v2_byo_key_per_model_or_safe_fallback():
     else:
         assert per_model is False
         assert isinstance(model, str)  # safe fallback, no crash
+
+
+# --- Anthropic OAuth-vs-API credential routing -----------------------------
+# A bring-your-own Anthropic credential can be either an API key (sk-ant-api…)
+# or a Claude subscription OAuth token (sk-ant-oat…, from `claude setup-token`).
+# The env builder must route each to the env var the CLI expects, by prefix.
+
+
+def test_is_anthropic_oauth_token_detects_by_prefix():
+    from agents.core.claude_sdk import is_anthropic_oauth_token
+
+    assert is_anthropic_oauth_token("sk-ant-oat01-abc") is True
+    assert is_anthropic_oauth_token("  sk-ant-oat01-abc  ") is True  # trimmed
+    assert is_anthropic_oauth_token("sk-ant-api03-abc") is False
+    assert is_anthropic_oauth_token("sk-ant-xyz") is False
+    assert is_anthropic_oauth_token("") is False
+    assert is_anthropic_oauth_token(None) is False
+
+
+def test_build_sdk_env_routes_oauth_token_to_oauth_var(monkeypatch):
+    # An OAuth token supplied as the api_key must land in CLAUDE_CODE_OAUTH_TOKEN,
+    # never ANTHROPIC_API_KEY (the CLI exits 1 on an OAuth token there).
+    from agents.core.claude_sdk import build_sdk_env
+
+    # Disable the isolated config dir so the test does no filesystem work.
+    monkeypatch.setenv("DUCT_TEST_CLAUDE_CFG", "off")
+    env, _ = build_sdk_env(
+        service_name="test",
+        api_key="sk-ant-oat01-token",
+        config_env_var="DUCT_TEST_CLAUDE_CFG",
+        config_suffix="test",
+    )
+    assert env.get("CLAUDE_CODE_OAUTH_TOKEN") == "sk-ant-oat01-token"
+    assert "ANTHROPIC_API_KEY" not in env
+
+
+def test_build_sdk_env_routes_api_key_to_api_var(monkeypatch):
+    from agents.core.claude_sdk import build_sdk_env
+
+    monkeypatch.setenv("DUCT_TEST_CLAUDE_CFG", "off")
+    env, _ = build_sdk_env(
+        service_name="test",
+        api_key="sk-ant-api03-key",
+        config_env_var="DUCT_TEST_CLAUDE_CFG",
+        config_suffix="test",
+    )
+    assert env.get("ANTHROPIC_API_KEY") == "sk-ant-api03-key"
+    assert "CLAUDE_CODE_OAUTH_TOKEN" not in env
+
+
+def test_build_sdk_env_byo_oauth_token_overrides_server_oauth(monkeypatch):
+    # A supplied OAuth token wins over a server-configured one.
+    from agents.core.claude_sdk import build_sdk_env
+
+    monkeypatch.setenv("DUCT_TEST_CLAUDE_CFG", "off")
+    env, _ = build_sdk_env(
+        service_name="test",
+        api_key="sk-ant-oat01-user",
+        oauth_token="sk-ant-oat01-server",
+        config_env_var="DUCT_TEST_CLAUDE_CFG",
+        config_suffix="test",
+    )
+    assert env.get("CLAUDE_CODE_OAUTH_TOKEN") == "sk-ant-oat01-user"

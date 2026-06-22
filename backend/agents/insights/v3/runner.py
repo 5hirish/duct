@@ -43,6 +43,7 @@ from collections.abc import Callable
 from time import perf_counter
 from typing import Any
 
+from agents.core.claude_sdk import is_anthropic_oauth_token
 from agents.insights.goals import InsightGenerationGoal
 from agents.insights.goals.organic_growth import OrganicGrowthGoal
 from agents.insights.prompts import get_synthesis_user_prompt, get_system_prompt
@@ -197,7 +198,13 @@ async def _run_synthesis(
         "CLAUDE_CODE_ENABLE_SDK_FILE_CHECKPOINTING": "false",
     }
     if api_key:
-        sdk_env[env_var] = api_key
+        # A bring-your-own value may be a Claude subscription OAuth token, which
+        # must go to CLAUDE_CODE_OAUTH_TOKEN — not ANTHROPIC_API_KEY (the CLI
+        # rejects an OAuth token there). Detect by prefix; see claude_sdk.
+        if is_anthropic_oauth_token(api_key):
+            sdk_env["CLAUDE_CODE_OAUTH_TOKEN"] = api_key
+        else:
+            sdk_env[env_var] = api_key
 
     try:
         options = ClaudeAgentOptions(

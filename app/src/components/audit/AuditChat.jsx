@@ -10,6 +10,11 @@ import AuditInput from "./AuditInput";
 import AuditTodos from "./AuditTodos";
 import { Phase } from "./auditPhase";
 import { CodeBlock, resolveCode } from "./CodeBlock";
+import { isDevEnv } from "@/lib/env";
+
+// On dev/localhost the reasoning disclosure starts expanded so it's visible
+// immediately; in production it stays collapsed behind the "Show reasoning" toggle.
+const REASONING_OPEN_BY_DEFAULT = isDevEnv();
 
 function SendErrorBubble({ text, content, onRetry }) {
   return (
@@ -33,7 +38,7 @@ function SendErrorBubble({ text, content, onRetry }) {
 }
 
 function ThinkingBlock({ thinking, streaming }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(REASONING_OPEN_BY_DEFAULT);
   if (!thinking) return null;
   return (
     <div className="mb-2">

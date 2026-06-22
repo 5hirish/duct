@@ -11,19 +11,38 @@
  * prefers a supplied key over its own and uses it only for that request.
  */
 
+/**
+ * Provider catalogue rendered by the Providers settings panel.
+ *
+ * `powers` is an array so the UI can show one scannable chip per agent. A
+ * provider that supports a non-API credential carries an `oauth` block; the
+ * card then offers an API-key / OAuth-token choice. The choice is only a UI
+ * hint — the backend routes the credential by its prefix (see
+ * `agents/core/claude_sdk.is_anthropic_oauth_token`), so the same
+ * `X-Provider-*` header carries either kind.
+ */
 export const PROVIDERS = [
   {
     id: "anthropic",
-    label: "Anthropic (Claude)",
+    label: "Anthropic",
     header: "X-Provider-Anthropic",
-    placeholder: "sk-ant-…",
-    prefix: "sk-ant-",
-    description: "Powers the Claude Agent SDK engine (v3).",
-    // What this key actually unlocks. Claude runs nearly everything, so most
-    // testers only need this one — call that out.
-    powers: "SEO Audit, Content Studio, Content Planner, and the default Insights engine (v3)",
-    recommended: true,
+    // API-key credential (the default).
+    placeholder: "sk-ant-api03-…",
+    prefix: "sk-ant-api",
     consoleUrl: "https://console.anthropic.com/settings/keys",
+    description:
+      "Runs the audit, content, and the default insights engine — for most of Duct it's the only key you need.",
+    powers: ["SEO Audit", "Content Studio", "Content Planner", "Insights (default)"],
+    recommended: true,
+    // Claude Pro/Max subscribers can authenticate with an OAuth token instead
+    // of paying per-token on an API key.
+    oauth: {
+      placeholder: "sk-ant-oat01-…",
+      prefix: "sk-ant-oat",
+      // No web console — it's minted by a CLI command.
+      setup: "claude setup-token",
+      hint: "Runs on your Claude Pro or Max subscription instead of API billing.",
+    },
   },
   {
     id: "openai",
@@ -31,10 +50,10 @@ export const PROVIDERS = [
     header: "X-Provider-OpenAI",
     placeholder: "sk-…",
     prefix: "sk-",
-    description: "GPT models on the LangChain (v1) and ADK (v2) engines.",
-    powers: "Insights only — when you switch the engine to OpenAI (v1/v2)",
-    recommended: false,
     consoleUrl: "https://platform.openai.com/api-keys",
+    description: "GPT models for the insights engine — only when you switch the engine to OpenAI.",
+    powers: ["Insights (v1/v2)"],
+    recommended: false,
   },
   {
     id: "gemini",
@@ -42,10 +61,10 @@ export const PROVIDERS = [
     header: "X-Provider-Gemini",
     placeholder: "AIza…",
     prefix: "",
-    description: "Default models for the LangChain (v1) and ADK (v2) engines.",
-    powers: "Insights only — on the Gemini (v1/v2) engines",
-    recommended: false,
     consoleUrl: "https://aistudio.google.com/app/apikey",
+    description: "Gemini models for the insights engine — only when you switch the engine to Gemini.",
+    powers: ["Insights (v1/v2)"],
+    recommended: false,
   },
 ];
 
