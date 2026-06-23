@@ -23,7 +23,7 @@ TREND_SCOUT_AGENT = AgentDefinition(
         "trend signals. No DB writes."
     ),
     prompt=TREND_SCOUT_PROMPT,
-    model=ModelName.CLAUDE_HAIKU.value,
+    model=ModelName.CLAUDE_HAIKU_4_5.value,
     tools=[
         AgentTool.WEB_SEARCH.value,
         AgentTool.WEB_FETCH.value,
@@ -41,7 +41,7 @@ COMPETITOR_ANALYST_AGENT = AgentDefinition(
         "No DB writes."
     ),
     prompt=COMPETITOR_ANALYST_PROMPT,
-    model=ModelName.CLAUDE_HAIKU.value,
+    model=ModelName.CLAUDE_HAIKU_4_5.value,
     tools=[AgentTool.WEB_SEARCH.value, AgentTool.WEB_FETCH.value],
 )
 

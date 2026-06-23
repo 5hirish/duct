@@ -45,6 +45,9 @@ sentry-sdk = "^2.57.0"
 dlt = "^1.17.1"
 google-adk = "^2.2"
 claude-agent-sdk = ">=0.2"
+# xAI Grok Imagine image-to-video (service/xai/video_gen.py). Late-imported, so
+# it's only required when a grok-* video model is actually used.
+xai-sdk = ">=0.1"
 selectolax = ">=0.3"
 extruct = ">=0.16"
 trafilatura = ">=2.0"

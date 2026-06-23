@@ -345,7 +345,15 @@ export default function PostViewport({ payload, assessment = null, phase, canPub
                 <span className="rounded-full border border-border/70 px-2 py-0.5">{post.format_name}</span>
               )}
               <span className="inline-flex items-center gap-1"><TypeIcon className="size-3" /> {POST_TYPE_LABELS[post.post_type] || post.post_type || "Slideshow"}</span>
-              {typeof post.slide_count === "number" && post.slide_count > 0 && <span>· {post.slide_count} slides</span>}
+              {isVideo
+                ? (() => {
+                    const n = post.video_storyboard?.length || 0;
+                    const parts = [];
+                    if (post.video_url) parts.push("clip");
+                    if (n > 0) parts.push(`${n} keyframe${n === 1 ? "" : "s"}`);
+                    return parts.length ? <span>· {parts.join(" + ")}</span> : null;
+                  })()
+                : typeof post.slide_count === "number" && post.slide_count > 0 && <span>· {post.slide_count} slides</span>}
               <span>· {dateLabel}</span>
               {platforms.length > 0 && (
                 <span className="flex items-center gap-1">

@@ -131,6 +131,10 @@ class ScrapedPost(BaseModel):
     video_meta:        ScrapedPostVideo | None = Field(default=None, validation_alias="videoMeta")
     hashtags:          list[str] = Field(default_factory=list)
     slideshow_image_links: list[str] = Field(default_factory=list, validation_alias="slideshowImageLinks")
+    # Direct media URLs (Apify-hosted) — populated only when the run requests
+    # shouldDownloadVideos. For a video post this carries the downloaded .mp4 in
+    # the actor's key-value store; we fetch it at clone-time for Gemini analysis.
+    media_urls:        list[str] = Field(default_factory=list, validation_alias="mediaUrls")
     # Populated only when the run requested comments (profile/competitor mode) —
     # the audience's own words: questions + objections to mine for hooks.
     comments:          list[ScrapedComment] = Field(default_factory=list)

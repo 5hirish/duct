@@ -60,3 +60,9 @@ class AttachPostVideoResult(BaseModel):
     video_asset_id: str
     video_url: str
     duration_seconds: int | None = None
+
+
+class UnderstandVideoResult(BaseModel):
+    analysis: str                 # the director-grade deconstruction text
+    source: str                   # "cache" | "fresh" | "url"
+    post_id: str | None = None

@@ -66,7 +66,7 @@ async def main() -> None:
         return {}
 
     base = dict(
-        model=_resolve_anthropic_model(ModelName.CLAUDE_SONNET),
+        model=_resolve_anthropic_model(ModelName.CLAUDE_SONNET_4_6),
         permission_mode=AgentPermissionMode.DONT_ASK,
         system_prompt="Connectivity test. Reply with exactly: OK",
         max_turns=1,

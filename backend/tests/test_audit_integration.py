@@ -496,7 +496,7 @@ async def test_full_pipeline_real_page(duct_business_context):
     runner = ClaudeAuditRunner(
         api_key=_cfg.anthropic_api_key,
         provider=Provider.ANTHROPIC,
-        model=ModelName.CLAUDE_SONNET,
+        model=ModelName.CLAUDE_SONNET_4_6,
     )
     business_context = duct_business_context
 

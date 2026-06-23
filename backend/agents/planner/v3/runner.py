@@ -336,7 +336,7 @@ async def _run(
     _mcp = build_planner_mcp_server(project_id, emit, session)
 
     options = ClaudeAgentOptions(
-        model=_resolve_anthropic_model(ModelName.CLAUDE_SONNET),
+        model=_resolve_anthropic_model(ModelName.CLAUDE_SONNET_4_6),
         permission_mode=AgentPermissionMode.DONT_ASK,
         allowed_tools=[
             AgentTool.ASK_USER_QUESTION,

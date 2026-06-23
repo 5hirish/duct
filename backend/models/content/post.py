@@ -102,6 +102,14 @@ class ContentPost(SQLModel, table=True):
     video_aspect_ratio: str = Field(default="9:16", sa_column=Column(String, nullable=False, server_default="9:16"))
     # The keyframe still (a content_assets id) that was animated into the clip.
     source_image_asset_id: UUID | None = Field(default=None, sa_column=Column(Uuid, nullable=True))
+    # Multi-beat storyboard for video posts — ordered shots, each carrying its
+    # keyframe prompt + (once generated) keyframe asset id/url, mirroring slides[].
+    # The keyframe images themselves are normal content_assets rows in the same
+    # projects/{id}/generated/ bucket path. See agents/content/schema.py:VideoBeat.
+    video_storyboard: list = Field(
+        default_factory=list,
+        sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="[]"),
+    )
 
     posted_at: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
     # When the post is scheduled to publish (set via the publish flow). Drives

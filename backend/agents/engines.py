@@ -39,14 +39,14 @@ ENGINE_DEFAULT_PROVIDER: dict[Engine, Provider] = {
 ENGINE_DEFAULT_MODEL: dict[tuple[Engine, Provider], ModelName] = {
     # v1 — LangChain (all providers native)
     (Engine.V1, Provider.GOOGLE_GENAI): ModelName.GEMINI_2_5_FLASH,
-    (Engine.V1, Provider.ANTHROPIC):    ModelName.CLAUDE_SONNET,
+    (Engine.V1, Provider.ANTHROPIC):    ModelName.CLAUDE_SONNET_4_6,
     (Engine.V1, Provider.OPENAI):       ModelName.GPT_5_MINI,
     # v2 — Google ADK
     (Engine.V2, Provider.GOOGLE_GENAI): ModelName.GEMINI_2_5_FLASH,
-    (Engine.V2, Provider.ANTHROPIC):    ModelName.CLAUDE_SONNET,
+    (Engine.V2, Provider.ANTHROPIC):    ModelName.CLAUDE_SONNET_4_6,
     (Engine.V2, Provider.OPENAI):       ModelName.GPT_5_MINI,
     # v3 — Claude Agent SDK (Anthropic only)
-    (Engine.V3, Provider.ANTHROPIC):    ModelName.CLAUDE_SONNET,
+    (Engine.V3, Provider.ANTHROPIC):    ModelName.CLAUDE_SONNET_4_6,
 }
 
 # Which providers each engine supports

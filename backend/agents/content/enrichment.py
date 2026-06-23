@@ -43,7 +43,7 @@ from models.content import ContentPost
 logger = logging.getLogger(__name__)
 
 
-_HAIKU_MODEL = ModelName.CLAUDE_HAIKU.value
+_HAIKU_MODEL = ModelName.CLAUDE_HAIKU_4_5.value
 _DEFAULT_TIMEOUT = 90.0
 
 

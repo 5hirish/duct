@@ -25,7 +25,7 @@ RESEARCH_PILLAR_AGENT = AgentDefinition(
         "confidence}. No DB writes; orchestrator persists the result."
     ),
     prompt=RESEARCH_PILLAR_PROMPT,
-    model=ModelName.CLAUDE_HAIKU.value,
+    model=ModelName.CLAUDE_HAIKU_4_5.value,
     tools=[
         AgentTool.WEB_SEARCH.value,
         AgentTool.WEB_FETCH.value,

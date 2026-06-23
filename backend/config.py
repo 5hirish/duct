@@ -140,6 +140,12 @@ class Configs(BaseSettings):
     gemini_api_key: str = ""
     openai_api_key: str = ""
     anthropic_api_key: str = ""
+    # xAI (Grok) API key — used for the Grok Imagine image-to-video models in the
+    # content video-generation tool (alternative provider to Veo).
+    xai_api_key: str = ""
+    # BytePlus ModelArk API key — used for the Seedance 2.0 image-to-video models
+    # (a third video-generation provider alongside Veo and Grok).
+    byteplus_api_key: str = ""
     # Long-lived Claude OAuth token from `claude setup-token` (the operator's own
     # Pro/Max subscription). Detected here only so the engine-status endpoint can
     # report v3 as authenticated; the Claude Agent SDK subprocess reads the real

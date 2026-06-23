@@ -32,8 +32,9 @@ class ModelName(str, Enum):
     GEMINI_2_5_FLASH_LITE = "gemini-2.5-flash-lite"
     
     # Anthropic
-    CLAUDE_SONNET = "claude-sonnet-4-6"
-    CLAUDE_HAIKU = "claude-haiku-4-5"
+    CLAUDE_OPUS_4_8 = "claude-opus-4-8"
+    CLAUDE_SONNET_4_6 = "claude-sonnet-4-6"
+    CLAUDE_HAIKU_4_5 = "claude-haiku-4-5"
 
 
 class AgentTool(StrEnum):
@@ -120,6 +121,76 @@ class ImageModel(str, Enum):
 DEFAULT_IMAGE_MODEL = ImageModel.GEMINI_3_1_FLASH_IMAGE
 
 
+class VideoModel(str, Enum):
+    """Video-generation model IDs, across providers (see video_provider_for).
+
+    Veo (Google, google-genai generate_videos): 3.1 supports referenceImages
+    (subject consistency) + first+last-frame interpolation; preview ids may be
+    allowlisted/billed; the 3.0 ids are deprecated.
+    Grok (xAI Imagine, SDK xai-sdk): image-to-video with native audio; no
+    interpolation / reference-image / extension features (Veo-only).
+    Seedance 2.0 (BytePlus ModelArk, REST): image-to-video with native audio,
+    first+last-frame interpolation, reference images (1-9), 4-15s clips.
+    """
+
+    # Veo (Google)
+    VEO_3_1      = "veo-3.1-generate-preview"
+    VEO_3_1_FAST = "veo-3.1-fast-generate-preview"
+    VEO_3_1_LITE = "veo-3.1-lite-generate-preview"
+
+    # Grok (xAI Imagine) — only 1.5 is supported
+    GROK_IMAGINE_VIDEO_1_5 = "grok-imagine-video-1.5"
+
+    # Seedance (BytePlus ModelArk) — only 2.0 is supported
+    SEEDANCE_2_0 = "dreamina-seedance-2-0-260128"
+    SEEDANCE_2_0_FAST = "dreamina-seedance-2-0-fast-260128"
+    SEEDANCE_2_0_MINI = "dreamina-seedance-2-0-mini-260615"
+
+
+# Veo 3.1: referenceImages + interpolation — the right default for our keyframe
+# → clip flow. Analysis is cached per clone so quality > marginal cost.
+DEFAULT_VIDEO_GEN_MODEL = VideoModel.VEO_3_1
+
+
+class VideoProvider(str, Enum):
+    """Which backend serves a VideoModel — drives client + key selection."""
+
+    VEO      = "veo"       # Google, google-genai SDK
+    GROK     = "grok"      # xAI Imagine, SDK
+    SEEDANCE = "seedance"  # BytePlus ModelArk, REST
+
+
+def video_provider_for(model: str | None) -> VideoProvider:
+    """Resolve a video model id to its provider (defaults to Veo)."""
+    m = str(model or "").lower()
+    if m.startswith("grok"):
+        return VideoProvider.GROK
+    if "seedance" in m:          # e.g. dreamina-seedance-2-0-...
+        return VideoProvider.SEEDANCE
+    return VideoProvider.VEO
+
+
+class VideoUnderstandingModel(str, Enum):
+    """Gemini models that support video understanding — "Gemini 2.5 and later"
+    (ai.google.dev/gemini-api/docs/video-understanding).
+
+    Deprecations (ai.google.dev/gemini-api/docs/deprecations): gemini-3-pro-preview
+    was RETIRED 2026-03-09; gemini-2.5-* deprecate 2026-10-16. So the current
+    pro/flash are the 3.x generation, with gemini-2.5-pro kept as a still-live
+    fallback (the model the clone analysis was empirically validated on).
+    """
+
+    GEMINI_3_1_PRO   = "gemini-3.1-pro-preview"   # current pro — deepest reasoning over video
+    GEMINI_3_5_FLASH = "gemini-3.5-flash"          # current flash — cheaper; the doc's example model
+    GEMINI_2_5_PRO   = "gemini-2.5-pro"            # legacy pro, live until 2026-10-16
+
+
+# 3.1-pro is the default — the current live pro (replaces the retired 3-pro-preview
+# and the deprecating 2.5-pro). The analysis is cached per clone (paid once), so
+# quality (catching the transformation + on-screen text) > marginal cost.
+DEFAULT_VIDEO_UNDERSTANDING_MODEL = VideoUnderstandingModel.GEMINI_3_1_PRO
+
+
 class Platform(StrEnum):
     """Publishing channels — values match the PostBridge v1 API platform names."""
 
@@ -157,7 +228,7 @@ class AspectRatio(StrEnum):
 DEFAULT_MODELS = {
     Provider.OPENAI: ModelName.GPT_5_MINI,
     Provider.GOOGLE_GENAI: ModelName.GEMINI_2_5_FLASH,
-    Provider.ANTHROPIC: ModelName.CLAUDE_SONNET,
+    Provider.ANTHROPIC: ModelName.CLAUDE_SONNET_4_6,
 }
 
 

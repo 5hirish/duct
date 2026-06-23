@@ -63,7 +63,7 @@ logger = logging.getLogger(__name__)
 _VERBOSE = os.environ.get("AUDIT_VERBOSE_LOGGING", "").lower() in ("1", "true")
 
 # Anthropic-only engine; model strings are owned by the ModelName enum in agents/models.py.
-_ANTHROPIC_MODELS = (ModelName.CLAUDE_SONNET, ModelName.CLAUDE_HAIKU)
+_ANTHROPIC_MODELS = (ModelName.CLAUDE_SONNET_4_6, ModelName.CLAUDE_HAIKU_4_5)
 
 EmitFn = Callable[[dict[str, Any]], Awaitable[None]]
 
@@ -163,9 +163,9 @@ def _resolve_model(provider: Provider, model: ModelName) -> str:
         logger.warning(
             "audit v3: only Anthropic supported; ignoring provider=%s, falling back to %s",
             provider.value,
-            ModelName.CLAUDE_SONNET.value,
+            ModelName.CLAUDE_SONNET_4_6.value,
         )
-        return ModelName.CLAUDE_SONNET.value
+        return ModelName.CLAUDE_SONNET_4_6.value
     return model.value
 
 
@@ -757,7 +757,7 @@ class ClaudeAuditRunner:
         self,
         api_key: str,
         provider: Provider = Provider.ANTHROPIC,
-        model: ModelName = ModelName.CLAUDE_SONNET,
+        model: ModelName = ModelName.CLAUDE_SONNET_4_6,
         effort: AgentEffort = ENGINE_DEFAULT_EFFORT[Engine.V3],
         adaptive_thinking: bool = False,
     ) -> None:

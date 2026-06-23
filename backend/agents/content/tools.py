@@ -45,10 +45,17 @@ from agents.content.results import (
     RenderSlideResult,
     SubmitPlanResult,
     SubmitPostResult,
+    UnderstandVideoResult,
 )
 from sqlmodel import Session, select
 
-from agents.models import DEFAULT_IMAGE_MODEL, AspectRatio, ImageModel
+from agents.models import (
+    DEFAULT_IMAGE_MODEL,
+    AspectRatio,
+    ImageModel,
+    VideoModel,
+    VideoUnderstandingModel,
+)
 from agents.core.tool_schema import tool_schema
 from agents.content.events import ContentEvent
 from agents.content.assessment import (
@@ -66,6 +73,7 @@ from agents.content.schema import (
     PostType,
     PublishAssessment,
     Slide,
+    VideoBeat,
 )
 from agents.content.templates import derive_image_prompts, render_slides_html
 from config import get_configs
@@ -119,6 +127,17 @@ def _err(message: str) -> dict:
     return {"content": [{"type": "text", "text": message}], "is_error": True}
 
 
+def _is_youtube_url(url: str) -> bool:
+    """A YouTube URL goes to Gemini as fileData (no local download); anything else
+    is fetched as bytes. Host-based (not substring) so
+    'https://evil.com/?x=youtube.com/' is NOT treated as YouTube."""
+    from urllib.parse import urlparse
+
+    host = (urlparse(url).hostname or "").rstrip(".").lower()
+    host = host[4:] if host.startswith("www.") else host
+    return host in {"youtube.com", "m.youtube.com", "youtu.be"}
+
+
 def _open_db() -> Session:
     engine = get_engine()
     if engine is None:
@@ -168,6 +187,17 @@ def _require_slide(post: ContentPost, slide_id: str) -> tuple[dict | None, int, 
             return s, i, None
     valid = [str(s.get("slide_id")) for s in slides if isinstance(s, dict)]
     return None, -1, _err(f"slide_id {slide_id!r} isn't on this post. Use one of: {valid}.")
+
+
+def _require_beat(post: ContentPost, beat_id: str) -> tuple[dict | None, int, dict | None]:
+    """Find a video-storyboard beat by id, or an _err listing the valid ids
+    (the video analogue of _require_slide). (beat_dict, index, None) on hit."""
+    beats = list(post.video_storyboard or [])
+    for i, b in enumerate(beats):
+        if isinstance(b, dict) and str(b.get("beat_id")) == str(beat_id):
+            return b, i, None
+    valid = [str(b.get("beat_id")) for b in beats if isinstance(b, dict)]
+    return None, -1, _err(f"beat_id {beat_id!r} isn't on this post. Use one of: {valid}.")
 
 
 def _require_item(slide: dict, item_index: int | None) -> dict | None:
@@ -350,6 +380,90 @@ def _merge_slide_images(incoming: list[Slide], existing_row: ContentPost | None)
     return merged
 
 
+def _merge_beat_images(incoming: list[VideoBeat], existing_row: ContentPost | None) -> list[VideoBeat]:
+    """Carry already-generated keyframe stills forward across copy/prompt edits —
+    the video-storyboard analogue of _merge_slide_images. Keyed by beat_id, backfill
+    the first-frame (image_*) and the optional after-frame (end_image_*) from the
+    persisted row UNLESS the incoming beat carries its own url. A copy-only re-emit
+    that omits the generated urls keeps the keyframes; a changed prompt with the old
+    image_prompt_used reads as stale so the UI can offer a regenerate."""
+    if existing_row is None or not getattr(existing_row, "video_storyboard", None):
+        return incoming
+    prev_by_id: dict[str, dict] = {}
+    for b in existing_row.video_storyboard or []:
+        if isinstance(b, dict) and b.get("beat_id"):
+            prev_by_id[str(b["beat_id"])] = b
+    merged: list[VideoBeat] = []
+    for beat in incoming:
+        prev = prev_by_id.get(beat.beat_id)
+        if not prev:
+            merged.append(beat)
+            continue
+        update: dict = {}
+        if not beat.image_url and prev.get("image_url"):
+            update.update({
+                "image_url":         prev.get("image_url", ""),
+                "image_asset_id":    prev.get("image_asset_id"),
+                "image_prompt_used": prev.get("image_prompt_used", ""),
+            })
+        if not beat.end_image_url and prev.get("end_image_url"):
+            update.update({
+                "end_image_url":         prev.get("end_image_url", ""),
+                "end_image_asset_id":    prev.get("end_image_asset_id"),
+                "end_image_prompt_used": prev.get("end_image_prompt_used", ""),
+            })
+        # The per-beat clip is attached later (not re-authored) — preserve it.
+        if not beat.clip_url and prev.get("clip_url"):
+            update["clip_url"] = prev.get("clip_url", "")
+        if update:
+            beat = beat.model_copy(update=update)
+        merged.append(beat)
+    return merged
+
+
+def _attach_image_to_beat(
+    db: Session,
+    row: ContentPost,
+    beat_id: str,
+    *,
+    asset_id: str,
+    url: str,
+    frame: str = "first",
+    prompt_used: str | None = None,
+) -> bool:
+    """Write a generated keyframe onto one beat of a video post's storyboard.
+
+    ``frame`` selects the first-frame (default) or the 'after' frame of a
+    transformation beat ("last"). Sets image_url / image_asset_id (or end_*), and
+    keeps the prompt + provenance in sync so the beat doesn't read falsely stale
+    right after a successful (re)generation — same contract as
+    _attach_image_to_slide. Returns True if the beat was found + updated; the
+    caller commits."""
+    beats = list(row.video_storyboard or [])
+    for i, b in enumerate(beats):
+        if not (isinstance(b, dict) and str(b.get("beat_id")) == str(beat_id)):
+            continue
+        b = dict(b)
+        if frame == "last":
+            b["end_image_url"] = url
+            b["end_image_asset_id"] = asset_id
+            b["end_image_prompt_used"] = prompt_used if prompt_used is not None else b.get("end_image_prompt", "")
+            if prompt_used is not None:
+                b["end_image_prompt"] = prompt_used
+        else:
+            b["image_url"] = url
+            b["image_asset_id"] = asset_id
+            b["image_prompt_used"] = prompt_used if prompt_used is not None else b.get("image_prompt", "")
+            if prompt_used is not None:
+                b["image_prompt"] = prompt_used
+        beats[i] = b
+        row.video_storyboard = beats
+        row.updated_at = datetime.now(timezone.utc)
+        db.add(row)
+        return True
+    return False
+
+
 def _build_post_payload(row: ContentPost) -> dict:
     """The POST_DRAFT_UPDATED payload — shared by submit_post_draft and the
     per-slide image attach path so the frontend always gets the same shape."""
@@ -373,6 +487,7 @@ def _build_post_payload(row: ContentPost) -> dict:
         "video_duration_seconds": row.video_duration_seconds,
         "video_aspect_ratio":    row.video_aspect_ratio,
         "source_image_asset_id": str(row.source_image_asset_id) if row.source_image_asset_id else None,
+        "video_storyboard":      row.video_storyboard,
         "caption":         row.caption,
         "hashtags":        row.hashtags,
         "hook_type":       row.hook_type,
@@ -592,6 +707,23 @@ def build_content_mcp_server(
                 "this image to. Omit for single-image slides."
             ),
         )
+        beat_id: str | None = Field(
+            None,
+            description=(
+                "For VIDEO posts: the storyboard beat this keyframe is for (e.g. 'beat-01'). "
+                "When set, the standalone still is attached to that beat of the current post "
+                "(image_url filled, POST_DRAFT_UPDATED fires) — the video analogue of slide_id. "
+                "Mutually exclusive with slide_id."
+            ),
+        )
+        frame: str = Field(
+            "first",
+            description=(
+                "With beat_id, which keyframe of the beat to attach to: 'first' (default, the "
+                "opening frame) or 'last' (the 'after' frame of a before→after transformation "
+                "beat, used for first+last-frame interpolation)."
+            ),
+        )
         model: ImageModel = Field(
             DEFAULT_IMAGE_MODEL,
             description=f"Optional image model id; defaults to {DEFAULT_IMAGE_MODEL.value}.",
@@ -648,6 +780,108 @@ def build_content_mcp_server(
                 "The content asset UUID of the keyframe still that was animated, when the "
                 "keyframe was a Duct/Gemini image (from generate_image). Omit if the keyframe "
                 "was generated inside Higgsfield."
+            ),
+        )
+
+    class UnderstandVideoInput(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+        target: str = Field(
+            "reference",
+            description=(
+                "'reference' (default) deconstructs the post's CLONE REFERENCE; 'generated' "
+                "watches the post's OWN generated clip (post.video_url) — use this in review to "
+                "check what the clip ACTUALLY contains (on-screen text rendered? transformation "
+                "shown? artifacts?). Ignored when video_url is given."
+            ),
+        )
+        video_url: str | None = Field(
+            None,
+            description=(
+                "Optional direct .mp4 URL to fetch, OR a public YouTube URL (analysed "
+                "without downloading). Omit to deconstruct the CURRENT post's clone "
+                "reference (the usual case) — the reference clip was captured at ingest."
+            ),
+        )
+        media_resolution: str | None = Field(
+            None,
+            description=(
+                "Token/detail per frame: 'low' (~100 tokens/sec, cheaper, good for long "
+                "clips) or 'high' (more detail). Omit for the default (~300 tokens/sec)."
+            ),
+        )
+        fps: float | None = Field(
+            None, ge=0.1, le=10,
+            description=(
+                "Sampling frame rate. Default 3 (catches fast hard cuts). Lower (0.5–1) for "
+                "long videos to save tokens; higher (5) for very fast motion."
+            ),
+        )
+        start_offset: str | None = Field(
+            None, description="Analyse only from this point, e.g. '30s' or '1m15s'.",
+        )
+        end_offset: str | None = Field(
+            None, description="Analyse only up to this point, e.g. '80s'.",
+        )
+        model: VideoUnderstandingModel | None = Field(
+            None,
+            description="Override the model (gemini-3.5-flash to save cost). Default gemini-3.1-pro-preview.",
+        )
+        force: bool = Field(
+            False,
+            description=(
+                "Re-run the analysis even if a cached deconstruction already exists on the "
+                "reference. Default false returns the cached one instantly (no extra cost)."
+            ),
+        )
+
+    class GenerateVideoClipInput(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+        motion_prompt: str = Field(
+            description=(
+                "The Veo direction for the clip — the beat-by-beat DYNAMIC/STATIC/AUDIO motion "
+                "prompt (camera, action, lighting, any spoken line in double quotes). Detailed "
+                "cinematography wins; Veo generates synced audio."
+            ),
+        )
+        beat_id: str | None = Field(
+            None,
+            description=(
+                "Animate this storyboard beat's keyframe as the first frame (and, for a "
+                "transformation beat, its 'after' frame as the last frame). Omit to animate the "
+                "post's opening keyframe."
+            ),
+        )
+        reference_asset_ids: list[str] = Field(
+            default_factory=list,
+            description="Up to 3 reference stills (character/product) for subject consistency (Veo 3.1).",
+        )
+        duration_seconds: int = Field(
+            8, ge=4, le=15,
+            description="Clip length in seconds. Default 8. Veo: 4/6/8 (snapped); Grok 1.5: ≤12; Seedance 2.0: ≤15.",
+        )
+        aspect_ratio: AspectRatio = Field(
+            AspectRatio.PORTRAIT_9_16, description="Clip aspect ratio. Defaults to 9:16 portrait.",
+        )
+        model: VideoModel | None = Field(None, description="Veo model id (default veo-3.1-generate-preview).")
+        negative_prompt: str | None = Field(None, description="What to exclude from the clip.")
+        person_generation: str | None = Field(
+            None, description="'dont_allow' | 'allow_adult' | 'allow_all' — whether to generate people.",
+        )
+        generate_audio: bool = Field(
+            True,
+            description=(
+                "Veo generates synced audio (voice/SFX/music) by default. Set false for a SILENT "
+                "clip — e.g. a pure-vibe montage where the creator adds their own trending sound."
+            ),
+        )
+        extension_prompts: list[str] = Field(
+            default_factory=list,
+            description=(
+                "Extend the clip into a LONGER CONTINUOUS shot: each entry adds a +7s continuation "
+                "segment directed by its prompt (the output is the full cumulative clip — no "
+                "stitching). Use for a single evolving shot beyond 8s (e.g. a continuous "
+                "talking-head/vibe shot), NOT for hard cuts between distinct beats. ≤20 segments "
+                "(≤148s); Veo 3.1 / 3.1-Fast only; 720p during extension."
             ),
         )
 
@@ -789,6 +1023,16 @@ def build_content_mcp_server(
                     image_prompts = [p.model_dump(mode="json") for p in draft.image_prompts]
                     slide_count = draft.slide_count
 
+                # Video storyboard (multi-beat) — same carry-forward contract as
+                # slides: generated keyframes persist across copy-only re-emits.
+                if draft.video_storyboard:
+                    storyboard_json = [
+                        b.model_dump(mode="json")
+                        for b in _merge_beat_images(draft.video_storyboard, existing)
+                    ]
+                else:
+                    storyboard_json = existing.video_storyboard if existing is not None else []
+
                 values = {
                     "project_id":      project_id,
                     "plan_id":         session.plan_id,
@@ -830,6 +1074,7 @@ def build_content_mcp_server(
                     "video_url":              draft.video_url or (existing.video_url if existing is not None else ""),
                     "video_asset_id":         draft.video_asset_id or (existing.video_asset_id if existing is not None else None),
                     "source_image_asset_id":  draft.source_image_asset_id or (existing.source_image_asset_id if existing is not None else None),
+                    "video_storyboard":       storyboard_json,
                 }
                 if existing is not None:
                     for k, v in values.items():
@@ -1220,15 +1465,18 @@ def build_content_mcp_server(
 
             payload = {k: v for k, v in args.items() if v not in (None, "")}
             payload.setdefault("number_of_images", min(int(payload.get("number_of_images", 1) or 1), 4))
-            # slide_id / item_index steer where the result is attached; they're
-            # not Gemini params, so pull them out before building the request.
+            # slide_id / item_index (carousel) or beat_id / frame (video) steer where
+            # the result is attached; they're not Gemini params, so pull them out
+            # before building the request.
             target_slide_id = str(payload.pop("slide_id", "") or "").strip()
             _ti = payload.pop("item_index", None)
             target_item_index = int(_ti) if _ti not in (None, "") else None
+            target_beat_id = str(payload.pop("beat_id", "") or "").strip()
+            target_frame = "last" if str(payload.pop("frame", "first")).strip().lower() == "last" else "first"
 
             # Validate the attach target against the live post BEFORE paying for a
-            # Gemini call — a bad slide_id/cell is a hard error (with the valid
-            # ids), not a silent attached_to:null. Shared guards; see _require_*.
+            # Gemini call — a bad slide_id/cell/beat_id is a hard error (with the
+            # valid ids), not a silent attached_to:null. Shared guards; see _require_*.
             if target_slide_id:
                 with _open_db() as db0:
                     post0, err = _require_post(db0, project_id, session.post_id)
@@ -1238,6 +1486,14 @@ def build_content_mcp_server(
                     if err:
                         return err
                     if (err := _require_item(slide0, target_item_index)):
+                        return err
+            elif target_beat_id:
+                with _open_db() as db0:
+                    post0, err = _require_post(db0, project_id, session.post_id)
+                    if err:
+                        return err
+                    _beat0, _bidx, err = _require_beat(post0, target_beat_id)
+                    if err:
                         return err
 
             # Normalise single-ref legacy → list. The model may pass
@@ -1398,6 +1654,46 @@ def build_content_mcp_server(
                 except Exception:
                     logger.exception("content: failed to attach image to slide %s", target_slide_id)
 
+            # Video posts: attach the keyframe to its storyboard beat (first or the
+            # 'after' frame). Mirrors the slide path — the keyframe still is a normal
+            # content_assets row; this just links it onto the beat + refreshes preview.
+            elif target_beat_id and assets and session.post_id is not None:
+                try:
+                    async with _post_lock(str(session.post_id)):
+                      with _open_db() as db2:
+                        row = db2.get(ContentPost, session.post_id)
+                        if row is not None and row.project_id == project_id:
+                            attached = _attach_image_to_beat(
+                                db2, row, target_beat_id,
+                                asset_id=str(assets[0].asset_id),
+                                url=assets[0].url,
+                                frame=target_frame,
+                                prompt_used=generating_prompt,
+                            )
+                            if attached:
+                                db2.commit()
+                                db2.refresh(row)
+                                logger.info(
+                                    "content: keyframe attached to %s (%s) on post %s",
+                                    target_beat_id, target_frame, row.id,
+                                )
+                                _pv_b64, _pv_mime = _downscale_for_vision(
+                                    images[0].data, images[0].mime_type, max_edge=800
+                                )
+                                await emit({
+                                    "event": ContentEvent.POST_DRAFT_UPDATED,
+                                    "session_id": session.session_id,
+                                    "post_id": str(row.id),
+                                    "payload": _build_post_payload(row),
+                                    "inline_preview": {
+                                        "beat_id":  target_beat_id,
+                                        "frame":    target_frame,
+                                        "data_uri": f"data:{_pv_mime};base64,{_pv_b64}",
+                                    },
+                                })
+                except Exception:
+                    logger.exception("content: failed to attach keyframe to beat %s", target_beat_id)
+
             image_blocks: list[dict] = []
             for img in images:
                 b64, vmime = _downscale_for_vision(img.data, img.mime_type)
@@ -1406,7 +1702,7 @@ def build_content_mcp_server(
                 asset_ids=[str(a.asset_id) for a in assets],
                 asset_urls=[a.url for a in assets],
                 model=request.model.value,
-                attached_to=target_slide_id if attached else None,
+                attached_to=((target_slide_id or target_beat_id) if attached else None),
             ))
         except Exception:
             logger.exception("generate_image failed")
@@ -1595,6 +1891,360 @@ def build_content_mcp_server(
         except Exception:
             logger.exception("attach_post_video failed")
             return _err("Attaching the video hit a snag — please try again.")
+
+    @tool(
+        name="understand_video",
+        description=(
+            "Deconstruct a reference video into a director-grade breakdown: a beat-by-beat "
+            "shot list (camera, lighting, character/outfit/mood changes), the "
+            "transformation/narrative arc, on-screen text verbatim, audio + any dialogue, "
+            "the hook and why it works, and the aesthetic. Omit video_url to analyse the "
+            "CURRENT post's clone reference — it was already watched at ingest, so this "
+            "returns the cached deconstruction instantly (pass force=true to re-watch). Use "
+            "this BEFORE drafting a video clone so you rebuild the EXACT structure (the "
+            "before→after, the on-screen text) instead of inventing one."
+        ),
+        input_schema=tool_schema(UnderstandVideoInput),
+    )
+    async def understand_video(args: dict) -> dict:
+        try:
+            from service.discovery import (
+                analyze_video_bytes,
+                analyze_youtube_video,
+                understand_reference_video,
+            )
+
+            video_url = str(args.get("video_url") or "").strip()
+            force = bool(args.get("force") or False)
+            # The documented video-understanding knobs, forwarded to Gemini. None =
+            # use the service default (fps 3, gemini-3.1-pro-preview, default resolution).
+            knobs = {
+                k: args.get(k)
+                for k in ("media_resolution", "fps", "start_offset", "end_offset", "model")
+                if args.get(k) is not None
+            }
+
+            # Ad-hoc: analyse any video URL (not tied to the current post). A YouTube
+            # URL goes straight to Gemini as fileData; any other URL is fetched.
+            # video_url is agent/user-controlled, so guard it against SSRF (private /
+            # link-local / non-http hosts) before any fetch or hand-off to Gemini.
+            if video_url:
+                from service.url_safety import is_public_http_url, safe_get_bytes
+
+                if not is_public_http_url(video_url):
+                    return _err(
+                        "That video URL isn't allowed — pass a public http(s) URL "
+                        "(internal/loopback/link-local addresses are blocked)."
+                    )
+                if _is_youtube_url(video_url):
+                    analysis = await analyze_youtube_video(video_url, **knobs)
+                else:
+                    data = await asyncio.to_thread(safe_get_bytes, video_url)
+                    if not data:
+                        return _err(f"Couldn't download a video from {video_url} — check the URL.")
+                    analysis = await analyze_video_bytes(data, **knobs)
+                if not analysis:
+                    return _err(
+                        "Video analysis came back empty — the clip may be unreadable or the "
+                        "Gemini key isn't configured."
+                    )
+                return _ok_model(UnderstandVideoResult(analysis=analysis, source="url"))
+
+            target = str(args.get("target") or "reference").strip().lower()
+
+            # 'generated': watch the post's OWN generated clip (for review — does it
+            # actually contain the on-screen text / transformation it was meant to?).
+            # The clip is our own asset (trusted bucket URL, may be a relative /uploads
+            # path) → load via storage.get_bytes, not the SSRF-guarded fetch. Not cached
+            # (a re-generate changes the clip).
+            if target == "generated":
+                if session.post_id is None:
+                    return _err("No current post — open the video post first.")
+                with _open_db() as db:
+                    post, err = _require_post(db, project_id, session.post_id)
+                    if err:
+                        return err
+                    clip_url = (post.video_url or "").strip()
+                if not clip_url:
+                    return _err("This post has no generated clip yet — generate it first (generate_video_clip).")
+                data = await asyncio.to_thread(storage.get_bytes, clip_url)
+                analysis = await analyze_video_bytes(data, **knobs) if data else ""
+                if not analysis:
+                    return _err("Couldn't read the generated clip — it may still be processing; retry shortly.")
+                return _ok_model(UnderstandVideoResult(
+                    analysis=analysis, source="generated", post_id=str(session.post_id),
+                ))
+
+            # Default: the current post's clone reference (captured at ingest).
+            if session.post_id is None:
+                return _err("No current post — open the clone first, or pass an explicit video_url.")
+            with _open_db() as db:
+                post, err = _require_post(db, project_id, session.post_id)
+                if err:
+                    return err
+                cs = dict(post.clone_source or {})
+
+            cached = (cs.get("video_analysis") or "").strip()
+            if cached and not force:
+                return _ok_model(UnderstandVideoResult(
+                    analysis=cached, source="cache", post_id=str(session.post_id),
+                ))
+
+            # Re-watch: prefer the captured stable mp4, else the scraped post's mediaUrls.
+            stored_video = ((cs.get("media") or {}).get("video") or "").strip()
+            if stored_video:
+                data = await asyncio.to_thread(storage.get_bytes, stored_video)
+                analysis = await analyze_video_bytes(data, **knobs) if data else ""
+            else:
+                analysis = await understand_reference_video(cs.get("scraped_post") or {}, **knobs)
+            if not analysis:
+                return _err(
+                    "Couldn't deconstruct the reference clip — it may not be a video or the "
+                    "source expired. Fall back to the cover frame + metadata."
+                )
+
+            # Persist back onto the post so later turns / a re-draft reuse it.
+            async with _post_lock(str(session.post_id)):
+                with _open_db() as db:
+                    row = db.get(ContentPost, session.post_id)
+                    if row is not None and row.project_id == project_id:
+                        cs2 = dict(row.clone_source or {})
+                        cs2["video_analysis"] = analysis
+                        row.clone_source = cs2
+                        db.add(row)
+                        db.commit()
+            return _ok_model(UnderstandVideoResult(
+                analysis=analysis, source="fresh", post_id=str(session.post_id),
+            ))
+        except Exception:
+            logger.exception("understand_video failed")
+            return _err(
+                "Analysing the video hit a snag — please try again, or draft from the cover "
+                "frame + metadata."
+            )
+
+    @tool(
+        name="generate_video_clip",
+        description=(
+            "Generate the VIDEO post's clip IN-HOUSE with Veo (no Higgsfield needed). Animates a "
+            "keyframe still into a clip: pass beat_id to use that storyboard beat's keyframe as the "
+            "first frame (and its 'after' frame as the last frame for a transformation), or omit it "
+            "to animate the post's opening keyframe. Pass reference_asset_ids (up to 3) for character/"
+            "product consistency. Generation takes minutes — this polls to completion, stores the mp4 "
+            "as a content asset, sets the post's video_url + video_asset_id, and emits "
+            "POST_DRAFT_UPDATED. Only for post_type='video'."
+        ),
+        input_schema=tool_schema(GenerateVideoClipInput),
+    )
+    async def generate_video_clip(args: dict) -> dict:
+        try:
+            from agents.models import VideoProvider, video_provider_for
+            from service.gemini.video_gen import DEFAULT_VEO_MODEL
+            from service.higgsfield.storage import persist_generated_video
+
+            cfg = get_configs()
+            if session.post_id is None:
+                return _err("No current post — draft the video post first (submit_post_draft).")
+
+            motion_prompt = str(args.get("motion_prompt") or "").strip()
+            if not motion_prompt:
+                return _err("motion_prompt is required — describe the clip's motion + audio.")
+            beat_id = str(args.get("beat_id") or "").strip()
+            model = str(args.get("model") or "").strip() or DEFAULT_VEO_MODEL
+            # Route to the provider that serves this model (Veo / Grok / Seedance) + check its key.
+            provider = video_provider_for(model)
+            if provider == VideoProvider.GROK and not cfg.xai_api_key:
+                return _err("Grok video isn't configured — set XAI_API_KEY to use grok-imagine models.")
+            if provider == VideoProvider.SEEDANCE and not cfg.byteplus_api_key:
+                return _err("Seedance isn't configured — set BYTEPLUS_API_KEY to use seedance models.")
+            if provider == VideoProvider.VEO and not cfg.gemini_api_key:
+                return _err("Veo isn't configured — set GEMINI_API_KEY to generate clips in-house.")
+            aspect_ratio = str(args.get("aspect_ratio") or AspectRatio.PORTRAIT_9_16.value)
+            _dur = args.get("duration_seconds")
+            duration_seconds = int(_dur) if _dur not in (None, "") else 8
+            negative_prompt = str(args.get("negative_prompt") or "").strip() or None
+            person_generation = str(args.get("person_generation") or "").strip() or None
+            generate_audio = bool(args.get("generate_audio", True))
+            ext_prompts = [str(p).strip() for p in (args.get("extension_prompts") or []) if str(p).strip()][:20]
+            # Each extension adds +7s; the cumulative clip we attach is base + 7·N.
+            total_duration = duration_seconds + 7 * len(ext_prompts)
+            ref_ids = [str(r).strip() for r in (args.get("reference_asset_ids") or []) if str(r).strip()]
+
+            # Resolve the keyframe(s) + reference bytes against the live post (one db block,
+            # released BEFORE the minutes-long Veo call). first_frame is the opening/beat
+            # keyframe; last_frame is the beat's 'after' frame for a transformation.
+            first_frame = last_frame = None
+            keyframe_asset_id: UUID | None = None
+            ref_bytes: list[bytes] = []
+            with _open_db() as db0:
+                post0, err = _require_post(db0, project_id, session.post_id)
+                if err:
+                    return err
+                if beat_id:
+                    beat0, _bi, err = _require_beat(post0, beat_id)
+                    if err:
+                        return err
+                    first_id = beat0.get("image_asset_id")
+                    end_id = beat0.get("end_image_asset_id") if beat0.get("is_transformation") else None
+                else:
+                    # Opening keyframe: the post's source_image_asset_id, else the first beat's.
+                    first_id = post0.source_image_asset_id
+                    if not first_id:
+                        for b in (post0.video_storyboard or []):
+                            if isinstance(b, dict) and b.get("image_asset_id"):
+                                first_id = b["image_asset_id"]
+                                break
+                    end_id = None
+
+                def _bytes_for(aid) -> bytes | None:
+                    if not aid:
+                        return None
+                    a = db0.get(ContentAsset, UUID(str(aid)))
+                    return _load_asset_bytes(a) if (a and a.project_id == project_id) else None
+
+                if first_id:
+                    first_frame = _bytes_for(first_id)
+                    try:
+                        keyframe_asset_id = UUID(str(first_id))
+                    except ValueError:
+                        keyframe_asset_id = None
+                last_frame = _bytes_for(end_id)
+                for rid in ref_ids[:3]:
+                    rb = _bytes_for(rid)
+                    if rb:
+                        ref_bytes.append(rb)
+
+            if first_frame is None and not beat_id:
+                return _err(
+                    "No keyframe to animate yet — generate the opening keyframe first "
+                    "(generate_image), then call this."
+                )
+
+            # Generate (minutes; no db connection held). Route to the provider's client.
+            try:
+                if provider == VideoProvider.GROK:
+                    from service.xai.video_gen import GrokVideoClient
+
+                    if last_frame or ref_bytes or ext_prompts:
+                        logger.info(
+                            "content: Grok ignores last_frame/reference_images/extension "
+                            "(Veo-only) — generating from the first frame + prompt.",
+                        )
+                    grok_duration = min(duration_seconds, 12)   # Grok 1.5 caps at 12s
+                    data = await GrokVideoClient(cfg.xai_api_key).generate_video(
+                        prompt=motion_prompt,
+                        first_frame=first_frame,
+                        duration_seconds=grok_duration,
+                        model=model,
+                    )
+                    clip_source = AssetSource.GROK
+                    total_duration = grok_duration  # Grok has no extension
+                elif provider == VideoProvider.SEEDANCE:
+                    from service.byteplus.video_gen import SeedanceVideoClient
+
+                    if ext_prompts:
+                        logger.info("content: Seedance ignores extension_prompts (Veo-only).")
+                    # Seedance supports first+last (transformation) + reference images natively.
+                    data = await SeedanceVideoClient(cfg.byteplus_api_key).generate_video(
+                        prompt=motion_prompt,
+                        first_frame=first_frame,
+                        last_frame=last_frame,
+                        reference_images=ref_bytes or None,
+                        duration_seconds=duration_seconds,   # Seedance 2.0: up to 15s
+                        aspect_ratio=aspect_ratio,
+                        generate_audio=generate_audio,
+                        model=model,
+                    )
+                    clip_source = AssetSource.SEEDANCE
+                    total_duration = duration_seconds
+                else:
+                    from service.gemini.video_gen import GeminiVeoClient
+
+                    # Veo accepts only 4/6/8 — snap anything else to 8.
+                    veo_duration = duration_seconds if duration_seconds in (4, 6, 8) else 8
+                    data = await GeminiVeoClient(cfg.gemini_api_key).generate_video(
+                        prompt=motion_prompt,
+                        first_frame=first_frame,
+                        last_frame=last_frame,
+                        reference_images=ref_bytes or None,
+                        model=model,
+                        aspect_ratio=aspect_ratio,
+                        duration_seconds=veo_duration,
+                        person_generation=person_generation,
+                        negative_prompt=negative_prompt,
+                        generate_audio=generate_audio,
+                        extension_prompts=ext_prompts or None,
+                    )
+                    clip_source = AssetSource.VEO
+                    total_duration = veo_duration + 7 * len(ext_prompts)
+            except Exception as exc:
+                logger.warning("generate_video_clip: %s failed", provider.value, exc_info=True)
+                return _err(f"{provider.value.title()} couldn't generate the clip ({exc}). Re-check inputs or retry.")
+
+            # Persist + attach under the post lock.
+            async with _post_lock(str(session.post_id)):
+                with _open_db() as db:
+                    asset = persist_generated_video(
+                        project_id,
+                        db=db,
+                        data=data,
+                        mime_type="video/mp4",
+                        prompt=motion_prompt,
+                        model=model,
+                        params={
+                            "aspect_ratio":    aspect_ratio,
+                            "duration_seconds": total_duration,
+                            "beat_id":         beat_id or None,
+                            "reference_asset_ids": ref_ids,
+                            "first_last":      bool(last_frame),
+                            "generate_audio":  generate_audio,
+                            "extensions":      len(ext_prompts),
+                        },
+                        duration_seconds=total_duration,
+                        post_id=session.post_id,
+                        source=clip_source,
+                    )
+                    row = db.get(ContentPost, session.post_id)
+                    if row is None or row.project_id != project_id:
+                        return _err("The video post disappeared while attaching — re-draft and retry.")
+                    row.post_type = PostType.VIDEO
+                    row.video_url = asset.url
+                    row.video_asset_id = asset.asset_id
+                    row.video_prompt = motion_prompt
+                    row.video_duration_seconds = total_duration
+                    row.video_aspect_ratio = aspect_ratio
+                    if keyframe_asset_id is not None:
+                        row.source_image_asset_id = keyframe_asset_id
+                    # Record the clip on its beat too, when beat-scoped.
+                    if beat_id:
+                        beats = list(row.video_storyboard or [])
+                        for i, b in enumerate(beats):
+                            if isinstance(b, dict) and str(b.get("beat_id")) == beat_id:
+                                b = dict(b)
+                                b["clip_url"] = asset.url
+                                beats[i] = b
+                                row.video_storyboard = beats
+                                break
+                    row.updated_at = datetime.now(timezone.utc)
+                    db.add(row)
+                    db.commit()
+                    db.refresh(row)
+                    logger.info("content: Veo clip %s attached to post %s", asset.asset_id, row.id)
+                    await emit({
+                        "event": ContentEvent.POST_DRAFT_UPDATED,
+                        "session_id": session.session_id,
+                        "post_id": str(row.id),
+                        "payload": _build_post_payload(row),
+                    })
+                    return _ok_model(AttachPostVideoResult(
+                        post_id=str(row.id),
+                        video_asset_id=str(asset.asset_id),
+                        video_url=asset.url,
+                        duration_seconds=duration_seconds,
+                    ))
+        except Exception:
+            logger.exception("generate_video_clip failed")
+            return _err("Generating the clip hit a snag — please try again.")
 
     # Publishing + metrics are UI/REST-driven (PublishModal → POST /publish;
     # board → /mark-posted; metrics → /sync-metrics + /sync-daily). The agent
@@ -1988,6 +2638,8 @@ def build_content_mcp_server(
             generate_image,
             edit_image,
             attach_post_video,
+            understand_video,
+            generate_video_clip,
             check_post_sanity,
             submit_assessment,
         ],

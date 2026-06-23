@@ -123,7 +123,7 @@ async def test_v2_pipeline_gemini():
 )
 @pytest.mark.live
 async def test_v2_pipeline_claude():
-    await _run(Provider.ANTHROPIC, ModelName.CLAUDE_SONNET, os.environ["ANTHROPIC_API_KEY"])
+    await _run(Provider.ANTHROPIC, ModelName.CLAUDE_SONNET_4_6, os.environ["ANTHROPIC_API_KEY"])
 
 
 # --- Deterministic unit tests for the Phase 2 parsing helpers (no API key) ---

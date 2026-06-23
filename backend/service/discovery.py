@@ -22,6 +22,7 @@ from sqlmodel import Session, select
 from db.session import get_engine
 from models.content import AssetSource, AssetType, ContentAsset
 from service import storage
+from service.url_safety import host_in, is_public_http_url, safe_get_bytes
 
 logger = logging.getLogger(__name__)
 
@@ -293,7 +294,10 @@ async def _scrape_single_post(url: str, *, max_wait_s: float = 120.0) -> dict | 
         "resultsPerPage": 1,
         "shouldDownloadCovers": True,
         "shouldDownloadSlideshowImages": True,
-        "shouldDownloadVideos": False,   # video bytes are a Phase-2 (re-scrape) concern
+        # Download the .mp4 so a VIDEO clone can be deconstructed by Gemini video
+        # understanding (the actor stores it + returns mediaUrls). No-op cost for
+        # slideshows (no video to download); this is the clone-only single scrape.
+        "shouldDownloadVideos": True,
     }
     dead = {
         ApifyRunStatus.FAILED, ApifyRunStatus.ABORTING, ApifyRunStatus.ABORTED,
@@ -321,6 +325,79 @@ async def _scrape_single_post(url: str, *, max_wait_s: float = 120.0) -> dict | 
 
 def _reference_media(asset: ContentAsset | None) -> dict:
     return dict(((asset.params or {}).get("media") or {})) if asset else {}
+
+
+# Apify CDN / key-value-store hosts — the ONLY hosts we'll append the Apify token
+# to (exact match, never a substring: "https://evil.com/?x=api.apify.com" must
+# NOT leak the token).
+_APIFY_HOSTS = {"api.apify.com", "storage.apify.com"}
+
+
+def _fetch_reference_video_bytes(post: dict) -> bytes | None:
+    """Fetch the reference .mp4 bytes from the Apify-hosted ``mediaUrls`` (set
+    when the scrape requested shouldDownloadVideos). Apify key-value-store record
+    URLs may need the API token, so retry with it appended — but ONLY when the host
+    is genuinely Apify (else we'd leak the token). The URL itself must be a public
+    http(s) host (SSRF guard) since it comes from a third-party API response.
+    Returns None if there is no video URL or every fetch fails (caller falls back
+    to cover+metadata)."""
+    src = (post.get("media_urls") or [""])[0]
+    if not src or not is_public_http_url(src):
+        return None
+    data = safe_get_bytes(src)  # untrusted (third-party API output) → SSRF-guarded
+    if not data and host_in(src, _APIFY_HOSTS):
+        from config import get_configs
+
+        token = (get_configs().apify_api_key or "").strip()
+        if token:
+            sep = "&" if "?" in src else "?"
+            data = safe_get_bytes(f"{src}{sep}token={token}")
+    return data or None
+
+
+async def _run_understanding(**understand_kwargs) -> str:
+    """Resolve the Gemini key, build the client, and run understand_video with the
+    given knobs (data|youtube_url, fps, start/end_offset, media_resolution, model).
+    Returns "" on any failure (no key / SDK error) so callers fall back to cover +
+    metadata. ``None`` knobs are dropped so understand_video's defaults apply."""
+    from config import get_configs
+    from service.gemini.video import GeminiVideoClient
+
+    api_key = (get_configs().gemini_api_key or "").strip()
+    if not api_key:
+        return ""
+    kwargs = {k: v for k, v in understand_kwargs.items() if v is not None}
+    try:
+        return await GeminiVideoClient(api_key).understand_video(**kwargs)
+    except Exception:
+        logger.exception("clone ingest: video understanding failed")
+        return ""
+
+
+async def analyze_video_bytes(data: bytes, **knobs) -> str:
+    """Deconstruct clip bytes → director-grade structured analysis (beats,
+    transformation arc, on-screen text, audio). **knobs forwards the documented
+    levers (fps, start_offset, end_offset, media_resolution, model)."""
+    if not data:
+        return ""
+    return await _run_understanding(data=data, mime_type="video/mp4", **knobs)
+
+
+async def analyze_youtube_video(youtube_url: str, **knobs) -> str:
+    """Deconstruct a public YouTube URL (passed to Gemini as fileData — no local
+    download). For long-form sources; **knobs forwards the documented levers."""
+    if not youtube_url:
+        return ""
+    return await _run_understanding(youtube_url=youtube_url, **knobs)
+
+
+async def understand_reference_video(post: dict, **knobs) -> str:
+    """Fetch the reference .mp4 (Apify-hosted) and deconstruct it. The single
+    analysis entry point the understand_video tool uses when it only has the
+    scraped post; clone ingest fetches the bytes once and calls analyze_video_bytes
+    directly to avoid a double download. **knobs forwards the documented levers."""
+    data = await asyncio.to_thread(_fetch_reference_video_bytes, post)
+    return await analyze_video_bytes(data, **knobs) if data else ""
 
 
 async def ingest_reference(project_id: UUID, clone_source: dict, *, on_step: StepCb | None = None) -> dict:
@@ -406,6 +483,50 @@ async def ingest_reference(project_id: UUID, clone_source: dict, *, on_step: Ste
     else:
         await _step("media", "ok", "")
 
+    # For a VIDEO reference, deconstruct the clip itself with Gemini video
+    # understanding — the agent can't watch an mp4, so this is its eyes (Higgsfield's
+    # analyser missed the before→after transformation + on-screen text). Capture the
+    # mp4 into our bucket first (a stable URL — Apify CDN links expire), then analyse
+    # the SAME bytes. Best-effort: on any failure the agent falls back to cover+metadata.
+    video_analysis = ""
+    if post.get("is_slideshow") is False:
+        await _step("watching", "running", "Watching the video frame by frame…")
+        data = await asyncio.to_thread(_fetch_reference_video_bytes, post)
+        if data:
+            if asset_id is not None:
+                stored = await asyncio.to_thread(
+                    storage.put_image, f"discover/{asset_id}/video.mp4", data, "video/mp4"
+                )
+                if stored:
+                    media = {**media, "video": stored}
+            video_analysis = await analyze_video_bytes(data)
+        await _step(
+            "watching", "ok" if video_analysis else "error",
+            "Deconstructed the video." if video_analysis else "Couldn't read the clip — using the cover.",
+        )
+        # Persist onto the discovered_reference asset so the library entry carries
+        # the analysis (a re-clone reuses it; mirrors params.media for cover/slides).
+        if asset_id is not None and engine is not None and (video_analysis or media.get("video")):
+            _vid_url, _vid_analysis = media.get("video") or "", video_analysis
+
+            def _persist_video_meta() -> None:
+                with Session(engine) as db:
+                    a = db.get(ContentAsset, asset_id)
+                    if a is None:
+                        return
+                    params = dict(a.params or {})
+                    m = dict(params.get("media") or {})
+                    if _vid_url:
+                        m["video"] = _vid_url
+                    if _vid_analysis:
+                        m["video_analysis"] = _vid_analysis
+                    params["media"] = m
+                    a.params = params  # reassign so SQLAlchemy detects the JSONB change
+                    db.add(a)
+                    db.commit()
+
+            await asyncio.to_thread(_persist_video_meta)
+
     await _step("analyzing", "running", "Reading why it worked…")
     diagnostic = diagnose_reference(post)
     await _step("analyzing", "ok", diagnostic.get("summary", ""))
@@ -416,5 +537,6 @@ async def ingest_reference(project_id: UUID, clone_source: dict, *, on_step: Ste
         "scraped_post": post,
         "media": media,
         "diagnostic": diagnostic,
+        "video_analysis": video_analysis,
         "error": None,
     }

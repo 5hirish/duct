@@ -924,7 +924,7 @@ def test_video_kickoff_prompt_uses_higgsfield_flow_not_slides():
     assert "slide_count" in slides
 
 
-def _clone_reference(*, is_slideshow: bool) -> dict:
+def _clone_reference(*, is_slideshow: bool, video_analysis: str = "") -> dict:
     """Minimal ingest result (service.discovery.ingest_reference shape) for a
     clone kickoff — a video reference vs a photo carousel."""
     return {
@@ -938,36 +938,255 @@ def _clone_reference(*, is_slideshow: bool) -> dict:
         },
         "media": {"cover": "https://cdn/cover.jpg", "slides": []},
         "diagnostic": {"lever": "saves", "confidence": "high", "summary": "won on saves"},
+        "video_analysis": video_analysis,
     }
 
 
-def test_clone_kickoff_video_reference_uses_higgsfield_analyse_then_generate():
-    """Cloning a VIDEO reference must steer the model to analyse the reference
-    with Higgsfield (video-analysis tool) and produce a VIDEO clip via the
-    keyframe → image-to-video → attach_post_video flow — NOT a slideshow.
-    Cloning a photo carousel must stay on the slides path. If the is_slideshow
-    branch breaks, a video clone would silently draft slides and never call
-    Higgsfield's analyser or generator."""
+def test_clone_kickoff_video_embeds_gemini_deconstruction_then_higgsfield_generates():
+    """Cloning a VIDEO reference must embed the Gemini DECONSTRUCTION (watched at
+    ingest) in the kickoff, steer the model to rebuild the structure + on-screen
+    text, and generate via the keyframe → Higgsfield image-to-video →
+    attach_post_video flow — NOT a slideshow, and NOT the Higgsfield analyser.
+    Cloning a photo carousel must stay on the slides path with no deconstruction."""
     from agents.content.prompts import build_clone_user_prompt
 
     brand = _brand()
+    decon = "1. BEAT-BY-BEAT: straight hair -> bangs. 3. ON-SCREEN TEXT: 'me without bangs'."
     video = build_clone_user_prompt(
-        brand, reference=_clone_reference(is_slideshow=False), post_dir_slug="d01-x"
+        brand,
+        reference=_clone_reference(is_slideshow=False, video_analysis=decon),
+        post_dir_slug="d01-x",
     )
     carousel = build_clone_user_prompt(
         brand, reference=_clone_reference(is_slideshow=True), post_dir_slug="d01-x"
     )
 
-    # Video clone: analyse-with-Higgsfield + the generation flow, post_type=video.
-    assert "mcp__higgsfield__" in video
-    assert "attach_post_video" in video
+    # Video clone: the watched deconstruction is embedded; analysis is Gemini (the
+    # understand_video tool), generation is Higgsfield; on-screen text is recreated.
+    assert "DECONSTRUCTION" in video and decon in video
+    assert "understand_video" in video
+    assert "on-screen text" in video.lower()
     assert 'post_type="video"' in video
-    assert "video-analysis" in video
-    # Carousel clone: slides path, no Higgsfield.
+    assert "attach_post_video" in video and "mcp__higgsfield__" in video  # generation only
+    # Carousel clone: slides path, no Higgsfield, no deconstruction block.
     assert "higgsfield" not in carousel.lower()
     assert "structured slides" in carousel
+    assert "DECONSTRUCTION" not in carousel
     # Both target the SAME pending card (pending → draft), never a duplicate.
     assert "post_dir_slug=d01-x" in video and "post_dir_slug=d01-x" in carousel
+
+
+def test_video_reuses_slide_image_discipline_and_keeps_motion_video_only():
+    """The keyframe is a still, so it REUSES the same proven image discipline the
+    slide drafter uses (_IMAGE_PROMPT_DISCIPLINE_BRIEF) — not a thinner parallel
+    block. The VIDEO-ONLY motion/structure bits (guardrails, clip spec, storyboard)
+    must still never leak into the slideshow instruction blocks."""
+    from agents.content import prompts as p
+
+    video = p._VIDEO_PHASE_INSTRUCTIONS + p._VIDEO_CLONE_INSTRUCTIONS
+    slideshow = p._SLIDESHOW_PHASE_INSTRUCTIONS + p._SLIDESHOW_CLONE_INSTRUCTIONS
+    # Shared image discipline: the keyframe gets the SAME brief as the slide drafter.
+    for shared in ("FOUR ANCHOR RULES", "PROMPT SKELETON"):
+        assert shared in video, f"{shared} missing from the video keyframe standards"
+        assert shared in p.DRAFT_POST_PROMPT, f"{shared} missing from the slide drafter"
+    # Video-only motion/structure must NOT leak into the slideshow tails.
+    for marker in ("HARD CONSTRAINTS", "CLIP DIRECTION", "video_storyboard", "beat_id"):
+        assert marker in video, f"{marker} missing from the video blocks"
+        assert marker not in slideshow, f"LEAK: {marker} reached the slideshow blocks"
+    assert "higgsfield" not in slideshow.lower()
+
+
+def test_clone_kickoff_video_without_analysis_falls_back_to_understand_video_tool():
+    """If the ingest-time analysis is unavailable (no key / fetch failed), the
+    video kickoff must NOT embed an empty deconstruction block and must tell the
+    model to call understand_video (or deconstruct from the cover) — never silently
+    proceed as if it had watched the clip."""
+    from agents.content.prompts import build_clone_user_prompt
+
+    video = build_clone_user_prompt(
+        _brand(), reference=_clone_reference(is_slideshow=False), post_dir_slug="d01-x"
+    )
+    assert "DECONSTRUCTION (Gemini watched the clip)" not in video
+    assert "understand_video" in video
+
+
+def test_video_understanding_knobs_map_to_sdk():
+    """The documented video-understanding levers must map to real google.genai
+    types: fps + start/end offset → VideoMetadata; media_resolution → the enum,
+    with 'default'/unknown ⇒ None (API default). If the SDK renames these, this
+    fails loudly instead of silently dropping the knob at runtime."""
+    from google.genai import types
+
+    import service.gemini.video as gv
+
+    vm = gv._video_metadata(types, 3, "30s", "80s")
+    assert vm.fps == 3 and vm.start_offset == "30s" and vm.end_offset == "80s"
+    assert gv._video_metadata(types, None, None, None) is None
+
+    cfg = gv._gen_config(types, "low")
+    assert cfg.media_resolution == types.MediaResolution.MEDIA_RESOLUTION_LOW
+    assert gv._gen_config(types, "default") is None  # not a real member → API default
+    assert gv._gen_config(types, None) is None
+
+
+def test_is_youtube_url_routes_youtube_to_filedata():
+    """YouTube URLs must be detected so they go to Gemini as fileData (no local
+    download); any other URL is fetched as bytes. Host-based, so a substring
+    bypass is rejected."""
+    from agents.content.tools import _is_youtube_url
+
+    assert _is_youtube_url("https://www.youtube.com/watch?v=abc")
+    assert _is_youtube_url("https://youtu.be/abc")
+    assert not _is_youtube_url("https://cdn.example.com/clip.mp4")
+    assert not _is_youtube_url("https://api.apify.com/v2/key-value-stores/x/records/y")
+    # SSRF/spoof: substring 'youtube.com/' in the path must NOT count as YouTube.
+    assert not _is_youtube_url("https://evil.com/?x=youtube.com/watch")
+
+
+def test_url_safety_blocks_ssrf_and_substring_token_leak():
+    """is_public_http_url must reject private/loopback/link-local + non-http; and
+    host_in must be an EXACT host check (no substring) so the Apify token is never
+    appended to an attacker host like 'https://evil.com/?x=api.apify.com'."""
+    from service.url_safety import host_in, is_public_http_url
+
+    # SSRF: cloud-metadata, loopback, private, link-local, non-http → blocked.
+    assert not is_public_http_url("http://169.254.169.254/latest/meta-data/")
+    assert not is_public_http_url("http://127.0.0.1/")
+    assert not is_public_http_url("http://10.0.0.1/x")
+    assert not is_public_http_url("http://192.168.1.1/x")
+    assert not is_public_http_url("file:///etc/passwd")
+    assert not is_public_http_url("ftp://example.com/x")
+    assert not is_public_http_url("")
+    # Public IP literal + normal https host → allowed.
+    assert is_public_http_url("https://8.8.8.8/x")
+    assert is_public_http_url("https://api.apify.com/v2/key-value-stores/x/records/y")
+
+    # Secret-leak gate: exact host only.
+    apify = {"api.apify.com", "storage.apify.com"}
+    assert host_in("https://api.apify.com/v2/x?token=t", apify)
+    assert not host_in("https://evil.com/?x=api.apify.com", apify)
+    assert not host_in("https://api.apify.com.evil.com/x", apify)
+
+
+def test_safe_get_bytes_revalidates_redirect_hops(monkeypatch):
+    """safe_get_bytes must NOT follow a redirect to an internal host — closing the
+    follow_redirects bypass where a validated URL 302s straight to 127.0.0.1."""
+    import httpx
+
+    import service.url_safety as us
+
+    class _Resp:
+        def __init__(self, *, redirect_to=None, content=b""):
+            self._loc = redirect_to
+            self.content = content
+            self.headers = {"location": redirect_to} if redirect_to else {}
+
+        @property
+        def is_redirect(self):
+            return self._loc is not None
+
+        def raise_for_status(self):
+            return None
+
+    def _fake_get(url, **kw):
+        # The first (public) host 302s to an internal address; a direct public host 200s.
+        if "8.8.8.8" in url:
+            return _Resp(content=b"OK")
+        return _Resp(redirect_to="http://127.0.0.1/secret")
+
+    monkeypatch.setattr(httpx, "get", _fake_get)
+    # Redirect target (127.0.0.1) is re-validated and rejected → None.
+    assert us.safe_get_bytes("https://cdn-public.example/x") is None
+    # Direct 200 from a public IP literal → bytes.
+    assert us.safe_get_bytes("https://8.8.8.8/clip.mp4") == b"OK"
+
+
+def test_video_storyboard_merge_carries_keyframes_and_beat_attach():
+    """video_storyboard persistence mirrors slides: _merge_beat_images carries a
+    generated keyframe forward across a copy-only re-emit (incoming omits the url),
+    keeps an incoming url, and _attach_image_to_beat writes the first vs 'after'
+    frame. _require_beat lists valid ids on a miss (hard error, not silent)."""
+    import types
+
+    from agents.content.schema import VideoBeat
+    from agents.content.tools import (
+        _attach_image_to_beat,
+        _merge_beat_images,
+        _require_beat,
+    )
+
+    existing = types.SimpleNamespace(video_storyboard=[{
+        "beat_id": "beat-01", "image_prompt": "alley selfie",
+        "image_url": "https://cdn/k1.png", "image_asset_id": "a1",
+        "image_prompt_used": "alley selfie",
+    }])
+    # Copy-only re-emit (no url) → keyframe carried forward.
+    merged = _merge_beat_images([VideoBeat(beat_id="beat-01", image_prompt="alley selfie")], existing)
+    assert merged[0].image_url == "https://cdn/k1.png" and str(merged[0].image_asset_id) == "a1"
+    # Incoming with its own url is left as-is.
+    merged2 = _merge_beat_images(
+        [VideoBeat(beat_id="beat-09", image_prompt="x", image_url="https://cdn/new.png")], existing
+    )
+    assert merged2[0].image_url == "https://cdn/new.png"
+
+    class _DB:
+        def add(self, *_):
+            pass
+
+    row = types.SimpleNamespace(
+        video_storyboard=[{"beat_id": "beat-01", "image_prompt": "before", "end_image_prompt": "after"}],
+        updated_at=None,
+    )
+    assert _attach_image_to_beat(_DB(), row, "beat-01", asset_id="a2", url="https://cdn/first.png", frame="first")
+    assert row.video_storyboard[0]["image_url"] == "https://cdn/first.png"
+    # Transformation 'after' frame attaches to the end_* fields, leaving the first intact.
+    assert _attach_image_to_beat(_DB(), row, "beat-01", asset_id="a3", url="https://cdn/after.png", frame="last")
+    assert row.video_storyboard[0]["end_image_url"] == "https://cdn/after.png"
+    assert row.video_storyboard[0]["image_url"] == "https://cdn/first.png"
+    # Unknown beat → no attach, and the guard lists the valid ids.
+    assert not _attach_image_to_beat(_DB(), row, "beat-99", asset_id="x", url="y")
+    _b, _i, err = _require_beat(types.SimpleNamespace(video_storyboard=row.video_storyboard), "beat-99")
+    assert err is not None and "beat-01" in err["content"][0]["text"]
+
+
+def test_video_provider_resolution_routes_grok_vs_veo():
+    """The video-gen dispatcher must route by model id: grok-* → Grok (xAI), every
+    Veo id → Veo. A misroute would call the wrong client/key."""
+    from agents.models import VideoModel, VideoProvider, video_provider_for
+
+    assert video_provider_for(VideoModel.VEO_3_1.value) is VideoProvider.VEO
+    assert video_provider_for(VideoModel.VEO_3_1_FAST.value) is VideoProvider.VEO
+    assert video_provider_for(VideoModel.GROK_IMAGINE_VIDEO_1_5.value) is VideoProvider.GROK
+    assert video_provider_for(VideoModel.SEEDANCE_2_0.value) is VideoProvider.SEEDANCE
+    assert video_provider_for("dreamina-seedance-2-0-260128") is VideoProvider.SEEDANCE
+    assert video_provider_for(None) is VideoProvider.VEO  # default
+    # Each provider's client requires a key (no silent unauth'd calls).
+    from service.byteplus.video_gen import SeedanceVideoClient
+    from service.xai.video_gen import GrokVideoClient
+    for cls in (GrokVideoClient, SeedanceVideoClient):
+        try:
+            cls("")
+            raise AssertionError(f"{cls.__name__} allowed empty key")
+        except ValueError:
+            pass
+
+
+def test_analyze_video_bytes_fails_soft(monkeypatch):
+    """analyze_video_bytes must return '' (never raise) when there's no Gemini key
+    or no bytes — so a clone degrades to cover+metadata instead of crashing. The
+    function does `from config import get_configs` per call, so patch it on config."""
+    import asyncio
+
+    import config
+    import service.discovery as disc
+
+    class _NoKey:
+        gemini_api_key = ""
+
+    monkeypatch.setattr(config, "get_configs", lambda: _NoKey())
+    # No key → "" before any SDK construction; empty bytes → "" too.
+    assert asyncio.run(disc.analyze_video_bytes(b"\x00\x01\x02")) == ""
+    assert asyncio.run(disc.analyze_video_bytes(b"")) == ""
 
 
 def test_higgsfield_token_resolver_falls_back_to_env(monkeypatch):

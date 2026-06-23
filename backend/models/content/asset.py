@@ -40,6 +40,9 @@ class AssetSource(StrEnum):
     """
 
     GEMINI     = "gemini"      # Gemini image generation
+    VEO        = "veo"         # Veo video generation (in-house, Gemini API)
+    GROK       = "grok"        # Grok Imagine video generation (xAI)
+    SEEDANCE   = "seedance"    # Seedance 2.0 video generation (BytePlus ModelArk)
     HIGGSFIELD = "higgsfield"  # Higgsfield video generation
     RENDER     = "render"      # client-side slide rasterisation
     UPLOAD     = "upload"      # user upload

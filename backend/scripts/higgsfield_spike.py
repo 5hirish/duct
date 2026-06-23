@@ -180,7 +180,7 @@ async def main() -> None:
 
     stderr_lines: list[str] = []
     options = ClaudeAgentOptions(
-        model=_resolve_anthropic_model(ModelName.CLAUDE_SONNET),
+        model=_resolve_anthropic_model(ModelName.CLAUDE_SONNET_4_6),
         permission_mode=AgentPermissionMode.DONT_ASK,
         system_prompt=(
             "You are a terse diagnostic harness. Use the Higgsfield MCP tools as "

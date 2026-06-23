@@ -141,7 +141,7 @@ def test_v2_no_key_returns_string_model():
     from agents.insights.v2.runner import _build_adk_model
 
     model, per_model = _build_adk_model(
-        Provider.ANTHROPIC, ModelName.CLAUDE_SONNET, "", prefer_per_model=True
+        Provider.ANTHROPIC, ModelName.CLAUDE_SONNET_4_6, "", prefer_per_model=True
     )
     assert per_model is False
     assert isinstance(model, str)

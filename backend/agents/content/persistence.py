@@ -67,7 +67,7 @@ def _jsonable(value: Any) -> Any:
 _SUMMARY_THRESHOLD = 8
 # How many raw recent turns to inline verbatim in the re-prime block.
 _RECENT_TURNS = 6
-_HAIKU_MODEL = ModelName.CLAUDE_HAIKU.value
+_HAIKU_MODEL = ModelName.CLAUDE_HAIKU_4_5.value
 _SUMMARY_TIMEOUT = 45.0
 
 

@@ -1026,7 +1026,7 @@ ALWAYS KEEP (model): the format/container, hook type/mechanism, retention struct
 ALWAYS CHANGE (originate): the words/script, the topic/example, ALL media, claims/stats, on-screen text, the audio track, the brand voice. Never reuse the reference's footage, images, exact wording, or watermark.
 
 CAROUSEL reference → slide 1 is the WHOLE hook + swipe-bait; keep each slide ≤20% text; model the slide count (aim 6–13) and the per-slide open-loop arc.
-VIDEO reference → the clone is ALSO a video (ONE ≤15s 9:16 Higgsfield clip, NOT slides). FIRST analyse the reference with the Higgsfield video-analysis tool (mcp__higgsfield__*) to deconstruct the hook, pacing, on-screen text, shot list, and visual style; the kickoff prompt gives the exact flow (analyse → author keyframe+motion → review → keyframe → image-to-video → attach_post_video). Fall back to the cover frame + metadata only if the analyser can't ingest the URL, and say you're inferring.
+VIDEO reference → the clone is ALSO a video (ONE ≤15s 9:16 Higgsfield clip, NOT slides). The reference was already WATCHED at ingest by Gemini video understanding — a director-grade DECONSTRUCTION (beats, transformation arc, on-screen text verbatim, audio, hook) is in the kickoff prompt; rebuild that EXACT structure (if it's a before→after, show both; if the hook is on-screen text, carry an equivalent overlay — never flatten it). Call understand_video to re-watch or analyse another clip. The kickoff gives the flow (study deconstruction → author keyframe+motion → review → keyframe → Higgsfield image-to-video → attach_post_video).
 
 LEDGER: after submit_post_draft, put a concise Kept-vs-Changed ledger in the post's `strategic_note` — "KEPT: …; CHANGED: …; BETTER: <the one improvement you made>" — AND summarise it in chat as a side-by-side so the user sees exactly what was modeled vs originated. This ledger is the trust artifact.
 
@@ -1325,93 +1325,156 @@ Now — WRITE PHASE (copy + image prompts only; NO images yet):
    caption or image prompt first).
 """
 
-# Video posts are ONE short vertical clip (≤15s), generated with Higgsfield
-# image-to-video — NOT a slideshow. Higgsfield's tools are wired in as remote
-# MCP tools namespaced `mcp__higgsfield__*` (their exact names + parameters are
-# in your tool list — read them at call time). Keyframe → animate → poll → attach.
+# ── VIDEO-ONLY craft standards ────────────────────────────────────────────────
+# Reusable blocks appended ONLY to the video instruction tails (_VIDEO_PHASE_*,
+# _VIDEO_CLONE_*). They must NEVER reach the slideshow paths — carousels have
+# their own image-style rules. Stolen from analysing high-performing UGC clips:
+# the realism vocab + anti-artifact guardrails + cinematographer-grade clip spec
+# are what image-to-video models (Veo, Higgsfield/Seedance) actually reward.
+# The keyframe is a still — it gets the SAME proven image discipline a slide does
+# (_IMAGE_PROMPT_DISCIPLINE_BRIEF: attractiveness-first realism, warm-light default,
+# the prompt skeleton, the expression formula), NOT a thinner parallel block (the old
+# one led with "visible pores / overcast light" — the exact texture-first + flat-light
+# traps that brief corrects). Video adds only the moving-shot framing note below.
+_VIDEO_KEYFRAME_NOTE = """\
+KEYFRAME = the OPENING FRAME of a moving shot. Author its `image_prompt` (and a
+transformation beat's `end_image_prompt`) with the IMAGE PROMPT DISCIPLINE above —
+the same bar as a slide image (attractiveness-first realism, warm light, the prompt
+skeleton, the expression formula, the iPhone-UGC style line). Compose a clean opening
+pose/expression the motion then continues FROM — not mid-blink, not a peak gesture."""
+
+_VIDEO_GUARDRAILS = """\
+HARD CONSTRAINTS (keyframes + motion): the subject has exactly TWO hands — count
+them. In a selfie-POV beat one hand holds the phone, so only one hand is free —
+never two held objects in selfie POV; a beat needing two free hands is a tripod
+beat with no phone in frame. No third arm, no extra fingers, no mirror/reflection
+doubling. Every POV change lands on a HARD CUT between beats. The character's
+face, hair, body and wardrobe stay identical across every beat."""
+
+_VIDEO_CLIP_SPEC = """\
+CLIP DIRECTION (author each beat's `motion`, then the overall clip): give each
+beat a timecoded shot with three layers — DYNAMIC (subject + camera motion: the
+gesture/micro-action, camera move or push-in/whip, any speed-ramp, and the
+transition into the beat), STATIC (set, lighting source/direction/quality, and
+palette) and AUDIO (music genre/energy + the beat-sync moment, plus any spoken
+line in double quotes — the model generates synced audio). Match the reference's
+audio VIBE, never its actual track. Cuts land on the beat; beats sum to ≤15s. If
+the post should be SILENT (the creator adds their own trending sound — common for
+vibe montages), call generate_video_clip with generate_audio=false."""
+
+_VIDEO_STANDARDS = (
+    f"{_IMAGE_PROMPT_DISCIPLINE_BRIEF}\n\n{_VIDEO_KEYFRAME_NOTE}\n\n"
+    f"{_VIDEO_GUARDRAILS}\n\n{_VIDEO_CLIP_SPEC}"
+)
+
+
+# Video posts are a short vertical clip (≤15s, 9:16) built from a multi-beat
+# STORYBOARD — one clean keyframe per beat (vs slides) — generated with Higgsfield
+# image-to-video today (Veo path coming). Keyframes attach per beat via
+# generate_image(beat_id=…). Mcp tools are namespaced `mcp__higgsfield__*`.
 _VIDEO_PHASE_INSTRUCTIONS = """\
-This is a VIDEO post: the deliverable is ONE short vertical clip (≤15s, 9:16),
-generated with Higgsfield image-to-video. There are NO slides.
+This is a VIDEO post: the deliverable is a short vertical clip (≤15s, 9:16) built
+from a multi-beat STORYBOARD (one clean keyframe per shot). There are NO slides.
 
-WRITE PHASE (copy + prompts only; NO generation yet):
+WRITE PHASE (copy + storyboard; NO generation yet):
 
-1. Call TodoWrite with your checklist (research → hook → caption → keyframe brief
-   → motion brief). Update as you go.
+1. Call TodoWrite with your checklist (research → hook → beats → keyframe briefs →
+   motion). Update as you go.
 2. Author the post copy: caption (first line is the scroll-stopping hook),
    hashtags, hook_type/hook_text. Leave `slides` EMPTY.
-3. Author the clip: set `post_type` to "video", write a vivid `image_prompt`
-   for the opening KEYFRAME (the first frame — reuse the avatar reference for
-   character consistency) and a `video_prompt` describing the MOTION/action
-   (camera move, subject motion, energy). Set `video_duration_seconds` (default
-   5) and `video_aspect_ratio` "9:16".
+3. Set `post_type` to "video" and author `video_storyboard` as 2–5 ordered beats.
+   Each beat: a `role`, the `on_screen_text` overlay (the hook often lives HERE),
+   a vivid keyframe `image_prompt` (apply the IMAGE PROMPT DISCIPLINE; reuse the avatar /
+   character reference for identity; pass the product/app-screen asset as a
+   reference on any beat that shows the product), a `motion` (apply CLIP
+   DIRECTION), and `duration_seconds` (beats sum to ≤15). For a before→after beat
+   set `is_transformation: true` and write `end_image_prompt` (the 'after' frame).
+   Apply the HARD CONSTRAINTS across beats.
 4. Emit the draft inside <duct_report>{ "type": "post", "post_type": "video", ... }
    </duct_report> then call submit_post_draft.
-5. Brief summary in chat (hook, the visual idea, the motion) and ASK the user to
-   review before you generate — they can tweak the keyframe or motion prompt.
+5. Brief summary in chat (hook, the beats, the motion) and ASK the user to review
+   before you generate — they can tweak any beat's copy, keyframe or motion.
 
 VIDEO PHASE (only AFTER the user approves):
 
-A. Generate the KEYFRAME still: call generate_image with the keyframe
-   `image_prompt` and NO slide_id (a standalone still). Pass the avatar/character
-   reference via input_asset_ids for consistency. Note the returned asset_url +
-   asset_id.
-B. Animate it with Higgsfield: call the `mcp__higgsfield__*` image-to-video tool
-   with that keyframe image URL + your `video_prompt`, 9:16, shortest sensible
-   duration. Generation is async — poll the Higgsfield status/result tool until
-   the clip is ready and you have the final video URL.
-C. Persist it: call attach_post_video(source_url=<final clip URL>,
-   video_prompt=<motion prompt>, duration_seconds=<n>, aspect_ratio="9:16",
-   model=<higgsfield model>, source_image_asset_id=<keyframe asset_id>). This
-   downloads the clip, attaches it to the post, and refreshes the preview.
-D. If the Higgsfield tools are NOT in your tool list, Higgsfield isn't connected —
+A. Generate each beat's keyframe: generate_image(beat_id="<beat>", frame="first")
+   with the character reference (+ the product/app-screen reference on the product
+   beat) via input_asset_ids — it attaches to that beat. For a transformation beat
+   also generate the 'after' frame: generate_image(beat_id="<beat>", frame="last").
+B. Produce the clip — IN-HOUSE with Veo (preferred): call generate_video_clip(
+   motion_prompt=<the full beat-by-beat DYNAMIC/STATIC/AUDIO>, reference_asset_ids=[the
+   character keyframe], duration_seconds=8). It animates the opening keyframe (or pass
+   beat_id to animate a specific beat; a transformation beat auto-uses its 'after' frame
+   as the last frame), then stores + attaches the clip. Veo takes minutes — await it.
+   (Veo caps at 8s per shot; for a LONGER CONTINUOUS shot pass extension_prompts — each
+   adds +7s, cumulative, no cut. Hard-cut multi-beat stitching is a follow-up — for now
+   one clip carries the beats.) ALTERNATIVELY, if Higgsfield is connected, animate via the
+   `mcp__higgsfield__*` image-to-video tool, poll, then attach_post_video(source_url=…,
+   source_image_asset_id=<opening keyframe asset_id>).
+C. If the Higgsfield tools are NOT in your tool list, Higgsfield isn't connected —
    tell the user to connect it in Settings → Connectors, and stop.
-E. Brief summary in chat once the clip is attached.
-"""
+D. Brief summary in chat once the clip is attached.
+
+""" + _VIDEO_STANDARDS
 
 
 # Video-clone kickoff tail — the reference is a VIDEO, so the clone is ALSO a
-# single ≤15s 9:16 clip (NOT slides), analysed with Higgsfield's video-analysis
-# tool and generated with Higgsfield image-to-video. Mirrors the generation flow
-# in _VIDEO_PHASE_INSTRUCTIONS, but seeded from the deconstructed reference.
+# single ≤15s 9:16 clip (NOT slides). The reference was already WATCHED at ingest
+# by Gemini video understanding (the DECONSTRUCTION block in the kickoff); the clip
+# is generated with Higgsfield image-to-video. Mirrors _VIDEO_PHASE_INSTRUCTIONS,
+# seeded from the deconstruction.
 _VIDEO_CLONE_INSTRUCTIONS = """\
-This is a VIDEO clone: the deliverable is ONE short vertical clip (≤15s, 9:16)
-generated with Higgsfield — NOT slides. Run the clone loop, but produce a VIDEO:
+This is a VIDEO clone: the deliverable is a short vertical clip (≤15s, 9:16) built
+from a multi-beat STORYBOARD — NOT slides. Run the clone loop, but produce a VIDEO:
 
-1. ANALYSE the reference: call the Higgsfield video-analysis tool (mcp__higgsfield__*)
-   on the reference video URL above to deconstruct the hook, pacing, on-screen text,
-   shot list, audio energy, and visual style. (If it can't ingest the URL, deconstruct
-   from the attached cover frame + metadata and say you're inferring.)
+1. STUDY the DECONSTRUCTION block above — a director-grade breakdown (beat-by-beat
+   shot list, the transformation/narrative arc, on-screen text verbatim, audio, hook)
+   produced by actually watching the clip. Rebuild its EXACT structure: if there's a
+   before→after transformation (e.g. straight hair → bangs), your clone MUST show the
+   before AND the after; if the hook is ON-SCREEN TEXT, your clone MUST carry an
+   equivalent overlay. Do NOT flatten a transformation into a static vibe shot. (To
+   re-watch, or analyse a different clip, call understand_video.)
 2. DECONSTRUCT → DIAGNOSE → STRIP → MAP to brand (the clone discipline above): KEEP the
-   structure / hook-type / retention shape / dominant lever; ORIGINATE all words,
-   footage, on-screen text, and audio in the brand's voice. Be better for THIS audience.
+   structure / hook-type / retention shape / on-screen-text logic / dominant lever;
+   ORIGINATE all words, footage, on-screen text, and audio in the brand's voice.
 3. Author the clone as a VIDEO PostDraft: set post_type="video"; write the caption
-   (first line = the scroll-stopping hook) + hashtags + hook_type/hook_text; write a
-   vivid keyframe `image_prompt` for the OPENING frame (reuse the avatar reference for
-   character consistency) and a `video_prompt` for the MOTION (camera move, subject
-   motion, energy) modeled on the reference's pacing; set `video_duration_seconds`
-   (≤15) and `video_aspect_ratio` "9:16"; leave `slides` EMPTY. Emit it in
-   <duct_report>{ "type": "post", "post_type": "video", ... }</duct_report> and call
-   submit_post_draft with the EXACT post_dir_slug above. Put the Kept-vs-Changed ledger
-   in `strategic_note` and summarise it in chat as a reference↔clone side-by-side.
-4. ASK the user to review the keyframe + motion brief before you generate — they can
-   tweak either. Do NOT generate yet.
+   (first line = the scroll-stopping hook) + hashtags + hook_type/hook_text. Map the
+   reference's shots onto `video_storyboard` as ordered beats — one beat per shot of
+   the deconstruction. Each beat: a `role`, the `on_screen_text` overlay (recreate the
+   reference's hook text in your own words, e.g. "before:" → "after:"), a keyframe
+   `image_prompt` (apply the IMAGE PROMPT DISCIPLINE; reuse the avatar/character reference for
+   identity; pass the product/app-screen asset as a reference on the beat that shows
+   the product — that's your native product moment), a `motion` (apply CLIP DIRECTION,
+   modelled on the reference's pacing), `duration_seconds` (beats sum to ≤15). For the
+   before→after beat set `is_transformation: true` and write `end_image_prompt`. Apply
+   the HARD CONSTRAINTS. Emit it in <duct_report>{ "type": "post", "post_type": "video",
+   ... }</duct_report>, call submit_post_draft with the EXACT post_dir_slug above, put
+   the Kept-vs-Changed ledger in `strategic_note`, and summarise it in chat as a
+   reference↔clone side-by-side.
+4. ASK the user to review the beats + motion before you generate — they can tweak any
+   beat. Do NOT generate yet.
 
 VIDEO PHASE (only AFTER the user approves):
 
-A. Generate the KEYFRAME still: generate_image with the keyframe `image_prompt` and NO
-   slide_id (a standalone still); pass the avatar/character reference via
-   input_asset_ids. Note the returned asset_url + asset_id.
-B. Animate it: call the Higgsfield image-to-video tool (mcp__higgsfield__*) with that
-   keyframe URL + your `video_prompt`, 9:16, shortest sensible duration. Generation is
-   async — poll the Higgsfield status/result tool until you have the final clip URL.
-C. Persist it: attach_post_video(source_url=<final clip URL>, video_prompt=<motion>,
-   duration_seconds=<n>, aspect_ratio="9:16", model=<higgsfield model>,
-   source_image_asset_id=<keyframe asset_id>). This downloads + attaches the clip and
-   refreshes the preview.
-D. If the Higgsfield tools are NOT in your tool list, Higgsfield isn't connected — tell
+A. Generate each beat's keyframe: generate_image(beat_id="<beat>", frame="first") with
+   the character reference (+ the product/app-screen reference on the product beat) via
+   input_asset_ids — it attaches to that beat. For the transformation beat also generate
+   the 'after' frame: generate_image(beat_id="<beat>", frame="last").
+B. Produce the clip — IN-HOUSE with Veo (preferred): call generate_video_clip(
+   motion_prompt=<the full beat-by-beat DYNAMIC/STATIC/AUDIO>, reference_asset_ids=[the
+   character keyframe], duration_seconds=8). It animates the opening keyframe (or pass
+   beat_id to animate a specific beat; the transformation beat auto-uses its 'after'
+   frame as the last frame), then stores + attaches the clip. Veo takes minutes — await
+   it. (Veo caps at 8s per shot; for a LONGER CONTINUOUS shot pass extension_prompts —
+   each +7s, cumulative; hard-cut multi-beat stitching is a follow-up.) ALTERNATIVELY, if
+   Higgsfield is connected, animate the keyframe via the `mcp__higgsfield__*`
+   image-to-video tool, poll, then attach_post_video(source_url=…,
+   source_image_asset_id=<opening keyframe asset_id>).
+C. If the Higgsfield tools are NOT in your tool list, Higgsfield isn't connected — tell
    the user to connect it in Settings → Connectors, and stop.
-E. Brief summary in chat once the clip is attached.
-"""
+D. Brief summary in chat once the clip is attached.
+
+""" + _VIDEO_STANDARDS
 
 
 # Slideshow-clone kickoff tail — deconstruct the cover + slide frames into an
@@ -1453,10 +1516,12 @@ def build_clone_user_prompt(
     )
     slot = f"\nPlan slot (scheduled_at): {day.scheduled_at}" if (day and day.scheduled_at) else ""
     ref_url = reference.get("tiktok_url") or "(unknown)"
+    video_analysis = (reference.get("video_analysis") or "").strip()
 
-    # A video reference clones into a VIDEO (analyse → keyframe + motion →
-    # Higgsfield); a carousel clones into a carousel. The attached-media line and
-    # the closing instructions both branch on type.
+    # A video reference clones into a VIDEO (deconstruction → keyframe + motion →
+    # Higgsfield); a carousel clones into a carousel. The attached-media line, the
+    # deconstruction block, and the closing instructions all branch on type.
+    decon_block = ""
     if is_slide:
         attached_line = (
             "The reference's cover + slide frames are attached as images below — STUDY "
@@ -1464,11 +1529,21 @@ def build_clone_user_prompt(
         )
         instructions = _SLIDESHOW_CLONE_INSTRUCTIONS
     else:
-        attached_line = (
-            "The reference's cover frame is attached below; the full clip is the "
-            "reference video URL above (step 1 analyses it with Higgsfield)."
-        )
         instructions = _VIDEO_CLONE_INSTRUCTIONS
+        if video_analysis:
+            attached_line = (
+                "The reference's cover frame is attached below. The DECONSTRUCTION below is "
+                "a director-grade breakdown from actually WATCHING the clip — treat it as "
+                "ground truth for the structure, transformation, and on-screen text."
+            )
+            decon_block = f"\nDECONSTRUCTION (Gemini watched the clip)\n{video_analysis}\n"
+        else:
+            # Analysis unavailable (no key / fetch failed) — degrade to cover+metadata.
+            attached_line = (
+                "The reference's cover frame is attached below; the full clip couldn't be "
+                "auto-analysed, so call understand_video to watch it, or deconstruct from the "
+                "cover + metadata and say you're inferring."
+            )
 
     return f"""\
 {_brand_stanza(brand)}
@@ -1489,7 +1564,7 @@ REFERENCE
   {diag.get('summary') or '(metrics thin — infer the lever qualitatively)'}
 
 {attached_line}
-
+{decon_block}
 TARGET: write to post_dir_slug={post_dir_slug} (this UPDATES the existing pending card → draft).{slot}
 
 {instructions}
@@ -1512,11 +1587,16 @@ METHOD — in order:
    gaps (missing/stale images, no caption, placeholder text). Note them, but do
    NOT re-score them as content quality — they're reported separately.
 
-3. SEE THE SLIDES. Call render_slide for slide 1, the payoff slide, and any
-   you're unsure about, to view the COMPOSED frame (caption legibility,
-   text/face overlap, safe zones, cross-slide consistency). This is your
-   evidence for visual_quality. If a render times out, judge from the image
-   prompt + structured data and say so in that marker's `why`.
+3. SEE THE CONTENT — branch on post_type:
+   • CAROUSEL (slideshow): call render_slide for slide 1, the payoff slide, and any
+     you're unsure about, to view the COMPOSED frame (caption legibility, text/face
+     overlap, safe zones, cross-slide consistency). Evidence for visual_quality. If a
+     render times out, judge from the image prompt + structured data and say so.
+   • VIDEO (post_type='video'): call understand_video(target="generated") to WATCH the
+     post's OWN generated clip — a beat-by-beat read of what it ACTUALLY contains
+     (opening frame, on-screen text, the transformation/payoff, identity across shots,
+     motion artifacts, audio). That is your evidence. If there's no clip yet, say so and
+     score from the storyboard brief — flag that it's unrendered.
 
 4. SCORE THE SIX MARKERS, each 0–100. Anchor: 90-100 exceptional · 70-89 strong
    · 50-69 mixed · 30-49 weak · 0-29 broken.
@@ -1545,6 +1625,23 @@ THE SIX MARKERS (score EVERY one; `id` must match exactly):
 - cta_caption_fit — is there a clear closing action (save / follow tied to a
   specific next post / comment-bait), a caption whose first line hooks, and
   relevant, non-spammy hashtags?
+
+WHEN THE POST IS A VIDEO, score the SAME six ids through the clip you WATCHED — same
+weighting, applied to the moving clip, grounded in the understand_video read:
+- hook_strength — the first ~1.5s of the CLIP stops the scroll with sound off
+  (opening frame + any on-screen text hook).
+- narrative_momentum — the clip holds to the payoff: pacing/beats land and the
+  transformation/reveal ACTUALLY happens (a before→after must show BOTH); no dead air.
+- save_worthiness — a screenshot/save-worthy moment lands (the result, the app's pick,
+  the finished look).
+- shareability_resonance — relatable / identity-affirming enough to send to a friend.
+- visual_quality — from WATCHING: the on-screen text the storyboard specified ACTUALLY
+  rendered and is legible; the character stays consistent (face/hair/outfit) across
+  shots; NO extra hands/limbs/morphing; on-brand, not AI-slop. Name the exact failure.
+- cta_caption_fit — caption first line hooks, a clear CTA, relevant hashtags, and the
+  audio FITS the vibe (or is correctly SILENT for a creator-adds-their-own-sound clip).
+This is where you DISCOVER GAPS — name what the clip failed to deliver vs the brief
+(missing on-screen text, the reveal that didn't land, a drifting face) in `why`/`fix`.
 
 Judge against the bar the post was written to:
 {_HOOK_EMOTIONS_BRIEF}

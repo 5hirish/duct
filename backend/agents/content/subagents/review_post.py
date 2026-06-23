@@ -16,10 +16,12 @@ self-contained and idempotent (no orchestrator-side merge), and calling it here
 hop where the panel could silently never paint.
 
 Tools allowed: fetch_post + check_post_sanity (read the post + its completeness),
-render_slide (SEE the composed frames for the visual_quality marker), and
-submit_assessment (finalise). It shares the session's MCP server, so render_slide
-resolves through the same ContentSession.render_futures round-trip and
-submit_assessment emits through the same SSE queue the orchestrator uses.
+render_slide (SEE the composed frames for a CAROUSEL's visual_quality marker),
+understand_video (WATCH a VIDEO post's own generated clip — target='generated' — to
+score it on what it ACTUALLY contains), and submit_assessment (finalise). It shares
+the session's MCP server, so render_slide resolves through the same
+ContentSession.render_futures round-trip and submit_assessment emits through the
+same SSE queue the orchestrator uses.
 """
 
 from __future__ import annotations
@@ -33,16 +35,18 @@ from agents.models import ModelName
 REVIEW_POST_AGENT = AgentDefinition(
     description=(
         "Score the current post before publishing on six quality markers "
-        "(hook, momentum, save-worthiness, shareability, visual, CTA). Looks at "
-        "the rendered slides itself, finalises via submit_assessment (emits the "
-        "review panel), and returns a one-line summary."
+        "(hook, momentum, save-worthiness, shareability, visual, CTA). For a CAROUSEL "
+        "it views the rendered slides; for a VIDEO it WATCHES the generated clip "
+        "(understand_video). Finalises via submit_assessment (emits the review panel) "
+        "and returns a one-line summary."
     ),
     prompt=REVIEW_POST_PROMPT,
-    model=ModelName.CLAUDE_SONNET.value,
+    model=ModelName.CLAUDE_SONNET_4_6.value,
     tools=[
         ContentTool.FETCH_POST.value,
         ContentTool.CHECK_POST_SANITY.value,
         ContentTool.RENDER_SLIDE.value,
+        ContentTool.UNDERSTAND_VIDEO.value,
         ContentTool.SUBMIT_ASSESSMENT.value,
     ],
 )

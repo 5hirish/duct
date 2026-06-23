@@ -62,7 +62,7 @@ logger = logging.getLogger(__name__)
 
 # Claude Agent SDK runs Anthropic models only; anything else falls back to Sonnet.
 # Model strings come from the ModelName enum in agents/models.py — never hardcoded here.
-_ANTHROPIC_MODELS = (ModelName.CLAUDE_SONNET, ModelName.CLAUDE_HAIKU)
+_ANTHROPIC_MODELS = (ModelName.CLAUDE_SONNET_4_6, ModelName.CLAUDE_HAIKU_4_5)
 
 
 def _resolve_model_string(provider: Provider, model: ModelName) -> str:
@@ -72,9 +72,9 @@ def _resolve_model_string(provider: Provider, model: ModelName) -> str:
             "ignoring provider=%s, model=%s and falling back to %s",
             provider.value,
             model.value,
-            ModelName.CLAUDE_SONNET.value,
+            ModelName.CLAUDE_SONNET_4_6.value,
         )
-        return ModelName.CLAUDE_SONNET.value
+        return ModelName.CLAUDE_SONNET_4_6.value
     return model.value
 
 
@@ -284,7 +284,7 @@ class ClaudeAgentSdkRunner:
         self,
         api_key: str,
         provider: Provider = Provider.ANTHROPIC,
-        model: ModelName = ModelName.CLAUDE_SONNET,
+        model: ModelName = ModelName.CLAUDE_SONNET_4_6,
         temperature: float = 1.0,
     ) -> None:
         self.provider = provider

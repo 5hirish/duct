@@ -61,6 +61,7 @@ pnpm-debug.log*
 
 # Claude Code
 .claude/cache/
+.file-refs/
 
 # Cursor local state
 .cursor/hooks/state/

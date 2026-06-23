@@ -334,8 +334,8 @@ def _compose_blob(blob: dict | None) -> str:
 
 
 def _resolve_anthropic_model(model: ModelName) -> str:
-    if model not in (ModelName.CLAUDE_SONNET, ModelName.CLAUDE_HAIKU):
-        return ModelName.CLAUDE_SONNET.value
+    if model not in (ModelName.CLAUDE_SONNET_4_6, ModelName.CLAUDE_HAIKU_4_5):
+        return ModelName.CLAUDE_SONNET_4_6.value
     return model.value
 
 
@@ -821,7 +821,7 @@ async def _run(
     # ------------------------------------------------------------------
 
     options = ClaudeAgentOptions(
-        model=_resolve_anthropic_model(ModelName.CLAUDE_SONNET),
+        model=_resolve_anthropic_model(ModelName.CLAUDE_SONNET_4_6),
         permission_mode=AgentPermissionMode.DONT_ASK,
         allowed_tools=[
             AgentTool.ASK_USER_QUESTION,
@@ -846,6 +846,13 @@ async def _run(
             # Attaches a finished Higgsfield clip to a video post. Harmless for
             # slideshow sessions (the model only calls it for post_type='video').
             ContentTool.ATTACH_POST_VIDEO,
+            # Deconstructs a reference clip via Gemini video understanding. Cheap +
+            # cached (reads clone_source.video_analysis); the clone agent calls it
+            # before drafting a video clone. Harmless outside clone sessions.
+            ContentTool.UNDERSTAND_VIDEO,
+            # Generates the clip IN-HOUSE with Veo (no Higgsfield needed). The model
+            # only calls it for post_type='video'; harmless for slideshow sessions.
+            ContentTool.GENERATE_VIDEO_CLIP,
             # Higgsfield's remote MCP tools (only present when wired above).
             *_video_allowed_tools,
             # Owned by the review_post sub-agent (it runs the whole pre-publish
@@ -1545,6 +1552,10 @@ class ClaudeContentRunner:
                     "scraped_post": sp,
                     "media":       reference.get("media") or {},
                     "diagnostic":  reference.get("diagnostic") or {},
+                    # Director-grade Gemini deconstruction of the clip (video refs);
+                    # persisted on the post so the agent reads it while drafting and a
+                    # re-draft never re-watches. media.video carries the stable mp4 URL.
+                    "video_analysis": reference.get("video_analysis") or "",
                     "tiktok_url":  reference.get("tiktok_url") or cs.get("url"),
                     "reference_asset_id": cs.get("reference_asset_id") or reference.get("asset_id"),
                     "ingested_at": datetime.now(timezone.utc).isoformat(),

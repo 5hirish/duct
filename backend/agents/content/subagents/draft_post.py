@@ -27,7 +27,7 @@ DRAFT_POST_AGENT = AgentDefinition(
         "No DB writes; orchestrator persists via submit_post_draft."
     ),
     prompt=DRAFT_POST_PROMPT,
-    model=ModelName.CLAUDE_SONNET.value,
+    model=ModelName.CLAUDE_SONNET_4_6.value,
     tools=[
         AgentTool.WEB_SEARCH.value,
         ContentTool.FETCH_FORMAT_LIBRARY.value,

@@ -463,6 +463,8 @@ class ContentTool(StrEnum):
     GENERATE_IMAGE             = "mcp__duct_content__generate_image"
     EDIT_IMAGE                 = "mcp__duct_content__edit_image"
     ATTACH_POST_VIDEO          = "mcp__duct_content__attach_post_video"
+    UNDERSTAND_VIDEO           = "mcp__duct_content__understand_video"
+    GENERATE_VIDEO_CLIP        = "mcp__duct_content__generate_video_clip"
     CHECK_POST_SANITY          = "mcp__duct_content__check_post_sanity"
     SUBMIT_ASSESSMENT          = "mcp__duct_content__submit_assessment"
     # Publishing + metrics are UI/REST-driven (routes/content.py): PublishModal →
@@ -541,6 +543,50 @@ class Slide(BaseModel):
         return (self.image_prompt or "").strip() != (self.image_prompt_used or "").strip()
 
 
+class VideoBeat(BaseModel):
+    """One shot/beat of a VIDEO post's storyboard. The orchestrator authors the
+    beat (its keyframe prompt + motion + on-screen text); the keyframe still(s)
+    are generated later (generate_image with beat_id) and the per-beat clip is
+    filled once animated. Mirrors Slide: image_prompt → image_asset_id/image_url
+    with a staleness anchor, so keyframes persist on the post exactly like slide
+    images (same bucket path, same content_assets rows).
+
+    A TRANSFORMATION beat (before→after, e.g. straight hair → bangs) carries an
+    `end_image_prompt` for the 'after' frame — fed to image-to-video as the
+    last-frame of a first+last interpolation (Seedance role last_frame / Veo
+    lastFrame). Non-transformation beats use only the first frame.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    beat_id: str                                   # "beat-01"
+    role: str = ""                                 # hook | before | reveal | product | cta
+    on_screen_text: str = ""                       # overlay copy for this beat (the hook is often here)
+    motion: str = ""                               # camera move / subject motion for this beat
+    duration_seconds: int = Field(default=3, ge=1, le=15)
+    is_transformation: bool = False                # before→after (first+last-frame interpolation)
+    # First keyframe still (the beat's opening frame).
+    image_prompt: str = ""
+    aspect_ratio: AspectRatio = AspectRatio.PORTRAIT_9_16
+    image_asset_id: UUID | None = None             # set after generation
+    image_url: str = ""                            # set after generation
+    image_prompt_used: str = ""                    # staleness anchor (prompt that produced image_url)
+    # Optional 'after' keyframe for a transformation beat (first+last interpolation).
+    end_image_prompt: str = ""
+    end_image_asset_id: UUID | None = None
+    end_image_url: str = ""
+    end_image_prompt_used: str = ""
+    # The per-beat generated clip (once animated); the final stitched clip stays on
+    # the post's video_url / video_asset_id.
+    clip_url: str = ""
+
+    def is_image_stale(self) -> bool:
+        """True when the generated first keyframe no longer matches its prompt."""
+        if not self.image_url:
+            return False
+        return (self.image_prompt or "").strip() != (self.image_prompt_used or "").strip()
+
+
 class PostDraft(BaseModel):
     """One draft post coming back from the draft_post sub-agent or orchestrator.
 
@@ -594,6 +640,11 @@ class PostDraft(BaseModel):
     video_duration_seconds: int = Field(default=5, ge=1, le=15)  # Higgsfield clips ≤ 15s
     video_aspect_ratio: AspectRatio = AspectRatio.PORTRAIT_9_16
     source_image_asset_id: UUID | None = None       # keyframe still that was animated
+    # Multi-beat storyboard — one clean keyframe per shot (vs the single
+    # source_image_asset_id). Each beat's keyframe is a standalone still attached
+    # by generate_image(beat_id=...). The video models take one frame per clip (or
+    # first+last per transformation), so the clone is authored shot-by-shot here.
+    video_storyboard: list[VideoBeat] = Field(default_factory=list)
 
 
 class PlanStrategy(BaseModel):

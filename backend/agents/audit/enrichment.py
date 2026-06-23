@@ -22,7 +22,7 @@ from agents.models import AgentPermissionMode, AgentTool, ModelName
 
 logger = logging.getLogger(__name__)
 
-_HAIKU_MODEL = ModelName.CLAUDE_HAIKU.value
+_HAIKU_MODEL = ModelName.CLAUDE_HAIKU_4_5.value
 
 # Set AUDIT_VERBOSE_LOGGING=1 to log per-message SDK events and costs to terminal
 _VERBOSE = os.environ.get("AUDIT_VERBOSE_LOGGING", "").lower() in ("1", "true")
