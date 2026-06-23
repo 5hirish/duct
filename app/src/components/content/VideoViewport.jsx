@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Film, Smartphone } from "lucide-react";
 import { mediaUrl } from "@/lib/contentApi";
 
@@ -44,6 +44,8 @@ export default function VideoViewport({ post }) {
 
   const total = items.length;
   const [index, setIndex] = useState(0);
+  // Reset to the top of the stack (the clip) when switching to a different post.
+  useEffect(() => { setIndex(0); }, [post?.id]);
   const clamped = Math.max(0, Math.min(index, Math.max(0, total - 1)));
   const current = items[clamped];
   const swipeX = useRef(null);

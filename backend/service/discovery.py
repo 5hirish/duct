@@ -332,6 +332,9 @@ def _reference_media(asset: ContentAsset | None) -> dict:
 # NOT leak the token).
 _APIFY_HOSTS = {"api.apify.com", "storage.apify.com"}
 
+# Reference clips are a few MB — well over the 20s image-fetch default.
+_VIDEO_FETCH_TIMEOUT_SECS = 60.0
+
 
 def _fetch_reference_video_bytes(post: dict) -> bytes | None:
     """Fetch the reference .mp4 bytes from the Apify-hosted ``mediaUrls`` (set
@@ -344,14 +347,15 @@ def _fetch_reference_video_bytes(post: dict) -> bytes | None:
     src = (post.get("media_urls") or [""])[0]
     if not src or not is_public_http_url(src):
         return None
-    data = safe_get_bytes(src)  # untrusted (third-party API output) → SSRF-guarded
+    # Videos can be a few MB — give the fetch more headroom than the 20s image default.
+    data = safe_get_bytes(src, timeout=_VIDEO_FETCH_TIMEOUT_SECS)  # untrusted → SSRF-guarded
     if not data and host_in(src, _APIFY_HOSTS):
         from config import get_configs
 
         token = (get_configs().apify_api_key or "").strip()
         if token:
             sep = "&" if "?" in src else "?"
-            data = safe_get_bytes(f"{src}{sep}token={token}")
+            data = safe_get_bytes(f"{src}{sep}token={token}", timeout=_VIDEO_FETCH_TIMEOUT_SECS)
     return data or None
 
 
@@ -525,7 +529,13 @@ async def ingest_reference(project_id: UUID, clone_source: dict, *, on_step: Ste
                     db.add(a)
                     db.commit()
 
-            await asyncio.to_thread(_persist_video_meta)
+            # Best-effort mirror — the analysis is already in the return dict and cached
+            # onto clone_source by run_clone, so a transient DB error here must NOT abort
+            # the whole clone (matches capture_reference_media's fail-soft contract).
+            try:
+                await asyncio.to_thread(_persist_video_meta)
+            except Exception:
+                logger.warning("clone ingest: couldn't mirror video analysis onto the reference asset", exc_info=True)
 
     await _step("analyzing", "running", "Reading why it worked…")
     diagnostic = diagnose_reference(post)

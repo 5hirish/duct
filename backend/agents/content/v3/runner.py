@@ -811,9 +811,11 @@ async def _run(
             _video_allowed_tools = ["mcp__higgsfield__*"]
             logger.info("content: Higgsfield video MCP attached (session %s)", session_id)
         else:
-            logger.warning(
-                "content: video post but Higgsfield is not connected (session %s) — "
-                "agent will lack video-generation tools", session_id,
+            # Veo (generate_video_clip) is the in-house default generator, so Higgsfield
+            # is now an OPTIONAL alternative — its absence is expected, not a problem.
+            logger.info(
+                "content: Higgsfield not connected (session %s) — using Veo "
+                "(generate_video_clip) as the default video generator", session_id,
             )
 
     # ------------------------------------------------------------------

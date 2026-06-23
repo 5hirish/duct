@@ -1955,8 +1955,9 @@ def build_content_mcp_server(
             # 'generated': watch the post's OWN generated clip (for review — does it
             # actually contain the on-screen text / transformation it was meant to?).
             # The clip is our own asset (trusted bucket URL, may be a relative /uploads
-            # path) → load via storage.get_bytes, not the SSRF-guarded fetch. Not cached
-            # (a re-generate changes the clip).
+            # path) → load via storage.get_bytes, not the SSRF-guarded fetch. Cached on
+            # clone_source keyed by the current video_asset_id, so re-reviews are free but
+            # a re-generate (new asset id) invalidates it.
             if target == "generated":
                 if session.post_id is None:
                     return _err("No current post — open the video post first.")
@@ -1965,12 +1966,28 @@ def build_content_mcp_server(
                     if err:
                         return err
                     clip_url = (post.video_url or "").strip()
+                    clip_key = str(post.video_asset_id or clip_url)
+                    cached = (dict(post.clone_source or {}).get("generated_analysis") or {})
                 if not clip_url:
                     return _err("This post has no generated clip yet — generate it first (generate_video_clip).")
+                if not force and cached.get("video_asset_id") == clip_key and cached.get("analysis"):
+                    return _ok_model(UnderstandVideoResult(
+                        analysis=cached["analysis"], source="cache", post_id=str(session.post_id),
+                    ))
                 data = await asyncio.to_thread(storage.get_bytes, clip_url)
                 analysis = await analyze_video_bytes(data, **knobs) if data else ""
                 if not analysis:
                     return _err("Couldn't read the generated clip — it may still be processing; retry shortly.")
+                # Persist the analysis keyed on the current clip's asset id.
+                async with _post_lock(str(session.post_id)):
+                    with _open_db() as db:
+                        row = db.get(ContentPost, session.post_id)
+                        if row is not None and row.project_id == project_id:
+                            cs2 = dict(row.clone_source or {})
+                            cs2["generated_analysis"] = {"video_asset_id": clip_key, "analysis": analysis}
+                            row.clone_source = cs2
+                            db.add(row)
+                            db.commit()
                 return _ok_model(UnderstandVideoResult(
                     analysis=analysis, source="generated", post_id=str(session.post_id),
                 ))
@@ -2066,53 +2083,61 @@ def build_content_mcp_server(
             person_generation = str(args.get("person_generation") or "").strip() or None
             generate_audio = bool(args.get("generate_audio", True))
             ext_prompts = [str(p).strip() for p in (args.get("extension_prompts") or []) if str(p).strip()][:20]
-            # Each extension adds +7s; the cumulative clip we attach is base + 7·N.
-            total_duration = duration_seconds + 7 * len(ext_prompts)
             ref_ids = [str(r).strip() for r in (args.get("reference_asset_ids") or []) if str(r).strip()]
+            # The persisted clip length — each provider branch sets it precisely below
+            # (Veo adds +7s per extension; Grok/Seedance have none). Default keeps it bound.
+            total_duration = duration_seconds
 
-            # Resolve the keyframe(s) + reference bytes against the live post (one db block,
-            # released BEFORE the minutes-long Veo call). first_frame is the opening/beat
-            # keyframe; last_frame is the beat's 'after' frame for a transformation.
-            first_frame = last_frame = None
-            keyframe_asset_id: UUID | None = None
-            ref_bytes: list[bytes] = []
-            with _open_db() as db0:
-                post0, err = _require_post(db0, project_id, session.post_id)
-                if err:
-                    return err
-                if beat_id:
-                    beat0, _bi, err = _require_beat(post0, beat_id)
-                    if err:
-                        return err
-                    first_id = beat0.get("image_asset_id")
-                    end_id = beat0.get("end_image_asset_id") if beat0.get("is_transformation") else None
-                else:
-                    # Opening keyframe: the post's source_image_asset_id, else the first beat's.
-                    first_id = post0.source_image_asset_id
-                    if not first_id:
-                        for b in (post0.video_storyboard or []):
-                            if isinstance(b, dict) and b.get("image_asset_id"):
-                                first_id = b["image_asset_id"]
-                                break
-                    end_id = None
+            # Resolve the keyframe(s) + reference bytes against the live post. The sync DB
+            # queries + asset byte-loads (HTTP for R2 assets) run OFF the event loop in a
+            # thread, and the connection is released here — well before the minutes-long
+            # generate call. first_frame is the opening/beat keyframe; last_frame is the
+            # beat's 'after' frame for a transformation.
+            def _resolve_inputs():
+                with _open_db() as db0:
+                    post0, perr = _require_post(db0, project_id, session.post_id)
+                    if perr:
+                        return perr, None, None, [], None
+                    if beat_id:
+                        beat0, _bi, berr = _require_beat(post0, beat_id)
+                        if berr:
+                            return berr, None, None, [], None
+                        first_id = beat0.get("image_asset_id")
+                        end_id = beat0.get("end_image_asset_id") if beat0.get("is_transformation") else None
+                    else:
+                        # Opening keyframe: the post's source_image_asset_id, else the first beat's.
+                        first_id = post0.source_image_asset_id
+                        if not first_id:
+                            for b in (post0.video_storyboard or []):
+                                if isinstance(b, dict) and b.get("image_asset_id"):
+                                    first_id = b["image_asset_id"]
+                                    break
+                        end_id = None
 
-                def _bytes_for(aid) -> bytes | None:
-                    if not aid:
-                        return None
-                    a = db0.get(ContentAsset, UUID(str(aid)))
-                    return _load_asset_bytes(a) if (a and a.project_id == project_id) else None
+                    def _bytes_for(aid):
+                        if not aid:
+                            return None
+                        a = db0.get(ContentAsset, UUID(str(aid)))
+                        return _load_asset_bytes(a) if (a and a.project_id == project_id) else None
 
-                if first_id:
-                    first_frame = _bytes_for(first_id)
-                    try:
-                        keyframe_asset_id = UUID(str(first_id))
-                    except ValueError:
-                        keyframe_asset_id = None
-                last_frame = _bytes_for(end_id)
-                for rid in ref_ids[:3]:
-                    rb = _bytes_for(rid)
-                    if rb:
-                        ref_bytes.append(rb)
+                    ff = _bytes_for(first_id) if first_id else None
+                    kf_id = None
+                    if first_id:
+                        try:
+                            kf_id = UUID(str(first_id))
+                        except ValueError:
+                            kf_id = None
+                    lf = _bytes_for(end_id)
+                    refs = []
+                    for rid in ref_ids[:3]:
+                        rb = _bytes_for(rid)
+                        if rb:
+                            refs.append(rb)
+                    return None, ff, lf, refs, kf_id
+
+            err, first_frame, last_frame, ref_bytes, keyframe_asset_id = await asyncio.to_thread(_resolve_inputs)
+            if err:
+                return err
 
             if first_frame is None and not beat_id:
                 return _err(

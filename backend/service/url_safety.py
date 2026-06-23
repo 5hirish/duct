@@ -70,13 +70,14 @@ def host_in(url: str, allowed: set[str]) -> bool:
     return host in allowed
 
 
-def safe_get_bytes(url: str) -> bytes | None:
+def safe_get_bytes(url: str, *, timeout: float = _FETCH_TIMEOUT_SECS) -> bytes | None:
     """Fetch bytes from an UNTRUSTED URL with SSRF guards. Use this (not
     storage.get_bytes, which follows redirects blindly) for agent/third-party URLs.
 
     Closes the redirect bypass: redirects are NOT auto-followed; each hop's target
     is re-validated with is_public_http_url before we follow it (a validated URL
     can otherwise 302 straight to an internal host). Returns None on any failure.
+    ``timeout`` is the per-request ceiling — pass a larger value for video downloads.
 
     Residual: the initial connect still re-resolves DNS, so a narrow rebinding race
     remains (see is_public_http_url) — acceptable here because the only consumer is
@@ -88,7 +89,7 @@ def safe_get_bytes(url: str) -> bytes | None:
         if not is_public_http_url(current):
             return None
         try:
-            resp = httpx.get(current, timeout=_FETCH_TIMEOUT_SECS, follow_redirects=False)
+            resp = httpx.get(current, timeout=timeout, follow_redirects=False)
         except Exception:
             logger.warning("safe_get_bytes: fetch failed", exc_info=True)
             return None

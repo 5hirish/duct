@@ -1521,11 +1521,18 @@ def build_clone_user_prompt(
     # A video reference clones into a VIDEO (deconstruction → keyframe + motion →
     # Higgsfield); a carousel clones into a carousel. The attached-media line, the
     # deconstruction block, and the closing instructions all branch on type.
+    # TikTok CDN links expire within hours, so capture can fail — say so plainly
+    # rather than telling the model to "study" images that aren't attached.
+    has_media = bool(media.get("cover") or media.get("slides"))
     decon_block = ""
     if is_slide:
         attached_line = (
             "The reference's cover + slide frames are attached as images below — STUDY "
             "them to deconstruct the visual hook, on-screen text, and composition."
+            if has_media else
+            "NOTE: the reference's images couldn't be captured (its CDN links likely "
+            "expired), so none are attached — deconstruct from the caption + metadata + "
+            "diagnosis below and SAY you're inferring the visuals."
         )
         instructions = _SLIDESHOW_CLONE_INSTRUCTIONS
     else:
