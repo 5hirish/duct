@@ -1026,7 +1026,7 @@ ALWAYS KEEP (model): the format/container, hook type/mechanism, retention struct
 ALWAYS CHANGE (originate): the words/script, the topic/example, ALL media, claims/stats, on-screen text, the audio track, the brand voice. Never reuse the reference's footage, images, exact wording, or watermark.
 
 CAROUSEL reference → slide 1 is the WHOLE hook + swipe-bait; keep each slide ≤20% text; model the slide count (aim 6–13) and the per-slide open-loop arc.
-VIDEO reference → deconstruct hook / pacing / on-screen text from the cover and any frames you can see; note where you're inferring (full audio/shot transcription is a later capability).
+VIDEO reference → the clone is ALSO a video (ONE ≤15s 9:16 Higgsfield clip, NOT slides). FIRST analyse the reference with the Higgsfield video-analysis tool (mcp__higgsfield__*) to deconstruct the hook, pacing, on-screen text, shot list, and visual style; the kickoff prompt gives the exact flow (analyse → author keyframe+motion → review → keyframe → image-to-video → attach_post_video). Fall back to the cover frame + metadata only if the analyser can't ingest the URL, and say you're inferring.
 
 LEDGER: after submit_post_draft, put a concise Kept-vs-Changed ledger in the post's `strategic_note` — "KEPT: …; CHANGED: …; BETTER: <the one improvement you made>" — AND summarise it in chat as a side-by-side so the user sees exactly what was modeled vs originated. This ledger is the trust artifact.
 
@@ -1369,6 +1369,62 @@ E. Brief summary in chat once the clip is attached.
 """
 
 
+# Video-clone kickoff tail — the reference is a VIDEO, so the clone is ALSO a
+# single ≤15s 9:16 clip (NOT slides), analysed with Higgsfield's video-analysis
+# tool and generated with Higgsfield image-to-video. Mirrors the generation flow
+# in _VIDEO_PHASE_INSTRUCTIONS, but seeded from the deconstructed reference.
+_VIDEO_CLONE_INSTRUCTIONS = """\
+This is a VIDEO clone: the deliverable is ONE short vertical clip (≤15s, 9:16)
+generated with Higgsfield — NOT slides. Run the clone loop, but produce a VIDEO:
+
+1. ANALYSE the reference: call the Higgsfield video-analysis tool (mcp__higgsfield__*)
+   on the reference video URL above to deconstruct the hook, pacing, on-screen text,
+   shot list, audio energy, and visual style. (If it can't ingest the URL, deconstruct
+   from the attached cover frame + metadata and say you're inferring.)
+2. DECONSTRUCT → DIAGNOSE → STRIP → MAP to brand (the clone discipline above): KEEP the
+   structure / hook-type / retention shape / dominant lever; ORIGINATE all words,
+   footage, on-screen text, and audio in the brand's voice. Be better for THIS audience.
+3. Author the clone as a VIDEO PostDraft: set post_type="video"; write the caption
+   (first line = the scroll-stopping hook) + hashtags + hook_type/hook_text; write a
+   vivid keyframe `image_prompt` for the OPENING frame (reuse the avatar reference for
+   character consistency) and a `video_prompt` for the MOTION (camera move, subject
+   motion, energy) modeled on the reference's pacing; set `video_duration_seconds`
+   (≤15) and `video_aspect_ratio` "9:16"; leave `slides` EMPTY. Emit it in
+   <duct_report>{ "type": "post", "post_type": "video", ... }</duct_report> and call
+   submit_post_draft with the EXACT post_dir_slug above. Put the Kept-vs-Changed ledger
+   in `strategic_note` and summarise it in chat as a reference↔clone side-by-side.
+4. ASK the user to review the keyframe + motion brief before you generate — they can
+   tweak either. Do NOT generate yet.
+
+VIDEO PHASE (only AFTER the user approves):
+
+A. Generate the KEYFRAME still: generate_image with the keyframe `image_prompt` and NO
+   slide_id (a standalone still); pass the avatar/character reference via
+   input_asset_ids. Note the returned asset_url + asset_id.
+B. Animate it: call the Higgsfield image-to-video tool (mcp__higgsfield__*) with that
+   keyframe URL + your `video_prompt`, 9:16, shortest sensible duration. Generation is
+   async — poll the Higgsfield status/result tool until you have the final clip URL.
+C. Persist it: attach_post_video(source_url=<final clip URL>, video_prompt=<motion>,
+   duration_seconds=<n>, aspect_ratio="9:16", model=<higgsfield model>,
+   source_image_asset_id=<keyframe asset_id>). This downloads + attaches the clip and
+   refreshes the preview.
+D. If the Higgsfield tools are NOT in your tool list, Higgsfield isn't connected — tell
+   the user to connect it in Settings → Connectors, and stop.
+E. Brief summary in chat once the clip is attached.
+"""
+
+
+# Slideshow-clone kickoff tail — deconstruct the cover + slide frames into an
+# ORIGINAL carousel for this brand (no generation yet; images wait for approval).
+_SLIDESHOW_CLONE_INSTRUCTIONS = """\
+Now run the CLONE loop (deconstruct → diagnose → strip → map to brand → regenerate). \
+Author the PostDraft (structured slides + layout, NO images yet), emit it in \
+<duct_report>, call submit_post_draft with the EXACT post_dir_slug above, then write \
+the Kept-vs-Changed ledger into strategic_note and summarise it in chat as a \
+reference↔clone side-by-side. Ask the user to review the copy before you generate images.\
+"""
+
+
 def build_clone_user_prompt(
     brand: ContentBrandContext,
     *,
@@ -1396,6 +1452,24 @@ def build_clone_user_prompt(
         f"comments={diag.get('comments')} · shares={diag.get('shares')} · saves={diag.get('saves')}"
     )
     slot = f"\nPlan slot (scheduled_at): {day.scheduled_at}" if (day and day.scheduled_at) else ""
+    ref_url = reference.get("tiktok_url") or "(unknown)"
+
+    # A video reference clones into a VIDEO (analyse → keyframe + motion →
+    # Higgsfield); a carousel clones into a carousel. The attached-media line and
+    # the closing instructions both branch on type.
+    if is_slide:
+        attached_line = (
+            "The reference's cover + slide frames are attached as images below — STUDY "
+            "them to deconstruct the visual hook, on-screen text, and composition."
+        )
+        instructions = _SLIDESHOW_CLONE_INSTRUCTIONS
+    else:
+        attached_line = (
+            "The reference's cover frame is attached below; the full clip is the "
+            "reference video URL above (step 1 analyses it with Higgsfield)."
+        )
+        instructions = _VIDEO_CLONE_INSTRUCTIONS
+
     return f"""\
 {_brand_stanza(brand)}
 
@@ -1404,7 +1478,7 @@ Clone / adapt this proven reference TikTok for {brand.project_name}.
 {_channel_directive(channel)}
 
 REFERENCE
-- url: {reference.get('tiktok_url') or '(unknown)'}
+- url: {ref_url}
 - author: @{author}
 - type: {"PHOTO CAROUSEL" if is_slide else "VIDEO"}{f' ({n_slides} slides)' if is_slide and n_slides else ''}
 - caption: {caption or '(none)'}
@@ -1414,11 +1488,11 @@ REFERENCE
 - DIAGNOSIS — dominant lever: {(diag.get('lever') or 'unknown').upper()} ({diag.get('confidence')} confidence)
   {diag.get('summary') or '(metrics thin — infer the lever qualitatively)'}
 
-The reference's cover{' + slide frames' if is_slide else ''} are attached as images below — STUDY them to deconstruct the visual hook, on-screen text, and composition.
+{attached_line}
 
 TARGET: write to post_dir_slug={post_dir_slug} (this UPDATES the existing pending card → draft).{slot}
 
-Now run the CLONE loop (deconstruct → diagnose → strip → map to brand → regenerate). Author the PostDraft (structured slides + layout, NO images yet), emit it in <duct_report>, call submit_post_draft with the EXACT post_dir_slug above, then write the Kept-vs-Changed ledger into strategic_note and summarise it in chat as a reference↔clone side-by-side. Ask the user to review the copy before you generate images.
+{instructions}
 """
 
 

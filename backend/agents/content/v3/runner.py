@@ -1525,6 +1525,14 @@ class ClaudeContentRunner:
                         "error": "Couldn't fetch this TikTok reference — check the URL and try again."})
             return
 
+        # The reference's type wins: a video reference clones into a VIDEO post,
+        # a carousel into a carousel. `is_slideshow is False` is the same test the
+        # planner/card use; a missing flag (None) defaults to slideshow.
+        sp = reference.get("scraped_post") or {}
+        ref_post_type = (
+            PostType.VIDEO if sp.get("is_slideshow") is False else PostType.SLIDESHOW
+        )
+
         # Cache the ingest onto the post so a second Draft-now is free.
         def _cache() -> None:
             with Session(engine) as db:
@@ -1532,7 +1540,6 @@ class ClaudeContentRunner:
                 if p is None:
                     return
                 cs = dict(p.clone_source or {})
-                sp = reference.get("scraped_post") or {}
                 cs.update({
                     "ingested":    True,
                     "scraped_post": sp,
@@ -1543,11 +1550,18 @@ class ClaudeContentRunner:
                     "ingested_at": datetime.now(timezone.utc).isoformat(),
                 })
                 p.clone_source = cs
-                p.post_type = PostType.VIDEO if sp.get("is_slideshow") is False else PostType.SLIDESHOW
+                p.post_type = ref_post_type
                 db.add(p)
                 db.commit()
 
         await asyncio.to_thread(_cache)
+
+        # Update the SESSION's type to match BEFORE _run reads it to decide whether
+        # to wire the Higgsfield MCP. The pending post was created as the default
+        # slideshow, so session.post_type (resolved at the top from that row) is
+        # stale once ingest reveals a video reference — without this, a video clone
+        # would run without Higgsfield's analyser / image-to-video tools.
+        session.post_type = ref_post_type
 
         # ── Build the agent kickoff: clone prompt + reference images ────────────
         brand = await asyncio.to_thread(_load_brand_context, project_id)

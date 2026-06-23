@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Video } from "lucide-react";
 import { BASE } from "../../../lib/api";
 import { PROVIDERS, getProviderKey, setProviderKey, clearProviderKey } from "../../../lib/providerKeys";
+import { listConnectors, saveConnector, deleteConnector } from "../../../lib/connectorsApi";
 import { ProviderLogo } from "@/components/ProviderLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -171,6 +172,8 @@ export default function ConnectionsPage() {
           </div>
         </article>
 
+        <HiggsfieldCard />
+
         <article className="connection-card">
           <div className="connection-card-head">
             <div className="connection-logo" aria-hidden="true">
@@ -254,6 +257,137 @@ export default function ConnectionsPage() {
       </Tabs>
 
     </section>
+  );
+}
+
+// Higgsfield — AI video generation for content posts. Unlike the Google cards
+// (OAuth redirect) this is a token paste stored server-side via
+// /api/user/connectors; the headless content runner reads it to wire the
+// Higgsfield MCP when drafting a video. See service/higgsfield/auth.py.
+function HiggsfieldCard() {
+  const [connected, setConnected] = useState(false);
+  const [connectorId, setConnectorId] = useState(null);
+  const [token, setToken] = useState("");
+  const [revealed, setRevealed] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let alive = true;
+    listConnectors()
+      .then((rows) => {
+        if (!alive) return;
+        const hf = rows.find((r) => r.connector_type === "higgsfield");
+        if (hf) {
+          setConnected(true);
+          setConnectorId(hf.id);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  async function connect() {
+    const trimmed = token.trim();
+    if (!trimmed) return;
+    setBusy(true);
+    setError("");
+    try {
+      const row = await saveConnector({
+        connectorType: "higgsfield",
+        accountName: "Higgsfield",
+        credentials: { api_token: trimmed },
+      });
+      setConnected(true);
+      setConnectorId(row.id);
+      setToken("");
+    } catch {
+      setError("Couldn't save the token — make sure you're signed in, then try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function disconnect() {
+    if (!connectorId) return;
+    setBusy(true);
+    setError("");
+    try {
+      await deleteConnector(connectorId);
+      setConnected(false);
+      setConnectorId(null);
+    } catch {
+      setError("Couldn't disconnect — try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <article className="connection-card">
+      <div className="connection-card-head">
+        <div className="connection-logo" aria-hidden="true">
+          <Video size={24} />
+        </div>
+        <div>
+          <h2 className="connection-title">Higgsfield</h2>
+          <p className="connection-description">
+            AI video generation for content posts — generate and clone short videos. Billed to your
+            Higgsfield subscription.
+          </p>
+        </div>
+      </div>
+
+      {connected ? (
+        <div className="connection-status-row">
+          <span className="status-pill green">Connected</span>
+          <Button type="button" variant="outline" size="sm" onClick={disconnect} disabled={busy}>
+            Disconnect
+          </Button>
+        </div>
+      ) : (
+        <>
+          <div className="prov-field" style={{ marginTop: 8 }}>
+            <div className="prov-input-wrap">
+              <Input
+                type={revealed ? "text" : "password"}
+                value={token}
+                placeholder="Higgsfield token"
+                onChange={(event) => setToken(event.target.value)}
+                autoComplete="off"
+                autoCapitalize="off"
+                autoCorrect="off"
+                spellCheck={false}
+                aria-label="Higgsfield token"
+              />
+              <button
+                type="button"
+                className="prov-reveal"
+                onClick={() => setRevealed((shown) => !shown)}
+                disabled={!token}
+                aria-label={revealed ? "Hide token" : "Show token"}
+              >
+                {revealed ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </div>
+          <p className="prov-help">
+            Generate a token with <code>higgsfield auth login</code> (or copy one from your Higgsfield
+            dashboard).
+          </p>
+          <div className="connection-status-row">
+            <span className="status-pill grey">Not connected</span>
+            <Button type="button" size="sm" onClick={connect} disabled={busy || !token.trim()}>
+              Connect
+            </Button>
+          </div>
+        </>
+      )}
+
+      {error && <p className="prov-help prov-help--warn">{error}</p>}
+    </article>
   );
 }
 

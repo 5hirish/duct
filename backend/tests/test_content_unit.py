@@ -924,6 +924,52 @@ def test_video_kickoff_prompt_uses_higgsfield_flow_not_slides():
     assert "slide_count" in slides
 
 
+def _clone_reference(*, is_slideshow: bool) -> dict:
+    """Minimal ingest result (service.discovery.ingest_reference shape) for a
+    clone kickoff — a video reference vs a photo carousel."""
+    return {
+        "tiktok_url": "https://www.tiktok.com/@ref/video/123",
+        "scraped_post": {
+            "is_slideshow": is_slideshow,
+            "text": "ref caption",
+            "hashtags": ["beauty"],
+            "author_meta": {"name": "ref"},
+            "music_meta": {"music_name": "some sound"},
+        },
+        "media": {"cover": "https://cdn/cover.jpg", "slides": []},
+        "diagnostic": {"lever": "saves", "confidence": "high", "summary": "won on saves"},
+    }
+
+
+def test_clone_kickoff_video_reference_uses_higgsfield_analyse_then_generate():
+    """Cloning a VIDEO reference must steer the model to analyse the reference
+    with Higgsfield (video-analysis tool) and produce a VIDEO clip via the
+    keyframe → image-to-video → attach_post_video flow — NOT a slideshow.
+    Cloning a photo carousel must stay on the slides path. If the is_slideshow
+    branch breaks, a video clone would silently draft slides and never call
+    Higgsfield's analyser or generator."""
+    from agents.content.prompts import build_clone_user_prompt
+
+    brand = _brand()
+    video = build_clone_user_prompt(
+        brand, reference=_clone_reference(is_slideshow=False), post_dir_slug="d01-x"
+    )
+    carousel = build_clone_user_prompt(
+        brand, reference=_clone_reference(is_slideshow=True), post_dir_slug="d01-x"
+    )
+
+    # Video clone: analyse-with-Higgsfield + the generation flow, post_type=video.
+    assert "mcp__higgsfield__" in video
+    assert "attach_post_video" in video
+    assert 'post_type="video"' in video
+    assert "video-analysis" in video
+    # Carousel clone: slides path, no Higgsfield.
+    assert "higgsfield" not in carousel.lower()
+    assert "structured slides" in carousel
+    # Both target the SAME pending card (pending → draft), never a duplicate.
+    assert "post_dir_slug=d01-x" in video and "post_dir_slug=d01-x" in carousel
+
+
 def test_higgsfield_token_resolver_falls_back_to_env(monkeypatch):
     """With no per-user ConnectorCredential (user_id=None), the resolver returns
     the server-wide HIGGSFIELD_API_TOKEN — the dev/single-operator path. Empty

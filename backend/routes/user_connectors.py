@@ -12,20 +12,29 @@ from starlette.status import HTTP_404_NOT_FOUND
 
 from db.session import get_session
 from models.auth import User
-from models.connector import ConnectorCredential
+from models.connector import ConnectorCredential, ConnectorType
 from service.auth import get_current_user
 from service.credentials import encrypt_credentials
 
 router = APIRouter(tags=["user-connectors"])
 
-ALLOWED_CONNECTOR_TYPES = {"google_ads", "ga4", "gsc"}
+# Connector types a user may save through this generic endpoint. Higgsfield is a
+# token-paste credential (from `higgsfield auth login`); the content runner reads
+# it via service/higgsfield/auth.higgsfield_token_for_user. The Google ones are
+# written by the OAuth callback in routes/auth.py and listed/deleted here.
+ALLOWED_CONNECTOR_TYPES = {
+    ConnectorType.GOOGLE_ADS,
+    ConnectorType.GA4,
+    ConnectorType.GSC,
+    ConnectorType.HIGGSFIELD,
+}
 
 
 class ConnectorIn(BaseModel):
-    connector_type: str          # 'google_ads' | 'ga4' | 'gsc'
-    account_id: str = ""         # customer_id / property_id / site_url
+    connector_type: str          # ConnectorType value, e.g. 'google_ads' | 'higgsfield'
+    account_id: str = ""         # customer_id / property_id / site_url ("" for higgsfield)
     account_name: str = ""
-    credentials: dict            # raw dict — will be encrypted at rest
+    credentials: dict            # raw dict — encrypted at rest; higgsfield: {"api_token": "..."}
 
 
 class ConnectorOut(BaseModel):
