@@ -120,7 +120,7 @@ def _research_spec() -> AgentSpec:
 
 
 def _tiktok_studio_spec() -> AgentSpec:
-    """Spec for the Content Studio agent (plan_month + draft_post).
+    """Spec for the Content Studio agent (draft_post + clone_post).
 
     Session lifecycle runs through the unified /api/agents/tiktok_studio/*
     endpoints (create → stream → messages). The content-specific CRUD and

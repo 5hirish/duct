@@ -89,7 +89,7 @@ async def main() -> None:
         ("+allowed_tools", {"allowed_tools": [
             AgentTool.ASK_USER_QUESTION, AgentTool.TODO_WRITE, AgentTool.WEB_SEARCH,
             AgentTool.WEB_FETCH, AgentTool.AGENT,
-            ContentTool.SUBMIT_PLAN, ContentTool.SUBMIT_POST_DRAFT,
+            ContentTool.SUBMIT_POST_DRAFT,
         ]}),
         ("+hooks+can_use_tool", {
             "can_use_tool": can_use_tool,

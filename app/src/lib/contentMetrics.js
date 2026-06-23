@@ -7,6 +7,10 @@
 // so every read goes through one picker that tries each known alias in turn.
 // PostBridge supplies only the first four counts; saves, reach, watch time,
 // completion, retention and audience age are platform-native and hand-entered.
+//
+// This is the FRONTEND mirror of the canonical alias contract, which lives in
+// backend/service/content_metrics.py (METRIC_ALIASES). JS can't import the Python
+// module — when a key convention changes, update BOTH this file and that one.
 
 function pickNum(perf, ...keys) {
   for (const k of keys) {

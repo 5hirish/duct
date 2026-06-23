@@ -1,7 +1,7 @@
 """In-process MCP tools exposed to the Content Studio agent.
 
 Tool groups:
-  - Writers: submit_plan, submit_post_draft, edit_slide, submit_assessment —
+  - Writers: submit_post_draft, edit_slide, submit_assessment —
     validate Pydantic, upsert DB, emit SSE events (PLAN_GENERATED /
     POST_DRAFT_UPDATED / PUBLISH_ASSESSMENT).
   - Readers: fetch_brand_context, fetch_topic_bank, fetch_format_library,
@@ -43,7 +43,6 @@ from agents.content.results import (
     EditSlideResult,
     GenerateImageResult,
     RenderSlideResult,
-    SubmitPlanResult,
     SubmitPostResult,
     UnderstandVideoResult,
 )
@@ -68,7 +67,6 @@ from agents.content.schema import (
     ContentMarker,
     ContentSession,
     ContentStatus,
-    PlanDraft,
     PostDraft,
     PostType,
     PublishAssessment,
@@ -85,7 +83,6 @@ from models.content import (
     ContentAsset,
     ContentAvatar,
     ContentFormat,
-    ContentPlan,
     ContentPost,
 )
 from models.project import Project
@@ -680,7 +677,7 @@ def build_content_mcp_server(
     project_id is captured in closures so every tool call is implicitly
     scoped to the user's project — the model cannot leak across projects.
     emit pushes events to the SSE consumer; session lets writers stash IDs
-    (e.g. session.plan_id after submit_plan).
+    (e.g. session.post_id after submit_post_draft).
     """
     # Typed input models for the image tools — the source of truth for both the
     # tool input_schema (via tool_schema()) and the field constraints the model
@@ -886,70 +883,6 @@ def build_content_mcp_server(
         )
 
     # ----------------------- Writers -----------------------
-
-    @tool(
-        name="submit_plan",
-        description=(
-            "Persist a 30-day content plan. Validates the payload against the "
-            "PlanDraft schema, upserts a content_plans row scoped to this "
-            "project, and emits a PLAN_GENERATED event so the workspace "
-            "renders the plan. Call this AFTER emitting <duct_report>{\"type\":\"plan\",...}</duct_report>."
-        ),
-        input_schema={
-            "plan": Annotated[
-                dict,
-                "JSON object matching the PlanDraft schema (type='plan').",
-            ],
-        },
-    )
-    async def submit_plan(args: dict) -> dict:
-        try:
-            payload = args.get("plan") or args
-            try:
-                draft = PlanDraft.model_validate(payload)
-            except ValidationError as exc:
-                return _err(f"PlanDraft validation failed: {exc}")
-            if draft.project_id != project_id:
-                return _err(
-                    f"project_id mismatch: payload has {draft.project_id}, "
-                    f"session is scoped to {project_id}."
-                )
-            # Monthly model: anchor the plan to the first of the current month;
-            # the calendar lays items on sequential dates from there.
-            from datetime import date as _date
-            today = _date.today()
-            month_start = today.replace(day=1)
-            month_label = today.strftime("%B %Y")
-            with _open_db() as db:
-                row = ContentPlan(
-                    project_id=project_id,
-                    name=draft.name or f"{month_label} plan",
-                    start_date=month_start,
-                    character=draft.character.model_dump(mode="json"),
-                    days=[d.model_dump(mode="json") for d in draft.days],
-                    status="draft",
-                )
-                db.add(row)
-                db.commit()
-                db.refresh(row)
-                session.plan_id = row.id
-                logger.info("content: plan %s persisted (%d days)", row.id, len(draft.days))
-                await emit({
-                    "event": ContentEvent.PLAN_GENERATED,
-                    "session_id": session.session_id,
-                    "plan_id": str(row.id),
-                    "payload": {
-                        "id": str(row.id),
-                        "name": row.name,
-                        "start_date": row.start_date.isoformat() if row.start_date else None,
-                        "days": row.days,
-                        "character": row.character,
-                    },
-                })
-                return _ok_model(SubmitPlanResult(plan_id=str(row.id), days=len(draft.days)))
-        except Exception as exc:
-            logger.exception("submit_plan failed")
-            return _err(f"submit_plan failed: {exc}")
 
     @tool(
         name="submit_post_draft",
@@ -2648,7 +2581,6 @@ def build_content_mcp_server(
     return create_sdk_mcp_server(
         "duct_content",
         tools=[
-            submit_plan,
             submit_post_draft,
             edit_slide,
             fetch_brand_context,

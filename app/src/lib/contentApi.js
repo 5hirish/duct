@@ -73,33 +73,8 @@ async function jsonOrThrow(res) {
 }
 
 // ---------------------------------------------------------------------------
-// SSE — plan/post stream lifecycle
+// SSE — post/clone stream lifecycle
 // ---------------------------------------------------------------------------
-
-/**
- * Start a 30-day plan session via the unified agent API:
- *   POST /api/agents/tiktok_studio/sessions  body={mode:"plan_month", project_id, start_date?}
- *   GET  /api/agents/tiktok_studio/sessions/{id}/stream
- * Returns { body: ReadableStream, sessionId }. Events emitted between create and
- * stream-open are buffered server-side in the session queue, so none are lost.
- */
-export async function openPlanStream(
-  { projectId, startDate, conversationId, resume, startFresh, artifactType, artifactId } = {},
-  { signal, onSession } = {},
-) {
-  const { session_id, conversation_id } = await createAgentSession(AGENT_TYPE, {
-    mode: "plan_month",
-    project_id: projectId,
-    ...(startDate ? { start_date: startDate } : {}),
-    ...resumeFields({ conversationId, resume, startFresh, artifactType, artifactId }),
-  });
-  // Surface the ids the instant the backend session exists (and its worker is
-  // spawned) — before the abortable stream open — so the caller can close an
-  // orphaned session if it was torn down mid-create (e.g. StrictMode remount).
-  onSession?.({ sessionId: session_id, conversationId: conversation_id });
-  const body = await openAgentStream(AGENT_TYPE, session_id, { signal });
-  return { body, sessionId: session_id, conversationId: conversation_id };
-}
 
 /**
  * Start a single-post draft session via the unified agent API:

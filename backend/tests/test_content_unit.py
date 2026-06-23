@@ -23,7 +23,7 @@ import pytest
 
 from agents.content.prompts import (
     build_orchestrator_system_prompt,
-    build_plan_user_prompt,
+    build_post_user_prompt,
 )
 from agents.content.schema import (
     ContentBrandContext,
@@ -63,11 +63,11 @@ def test_system_prompt_excludes_brand_so_anthropic_cache_hits():
     If someone re-inlines brand into the system prompt this assertion
     fails and they pay full input-token price on every turn.
     """
-    sys_a = build_orchestrator_system_prompt(_brand("BrandA"), "plan_month")
-    sys_b = build_orchestrator_system_prompt(_brand("BrandB"), "plan_month")
+    sys_a = build_orchestrator_system_prompt(_brand("BrandA"), "draft_post")
+    sys_b = build_orchestrator_system_prompt(_brand("BrandB"), "draft_post")
     assert sys_a == sys_b, "system prompt drifts between projects — cache will miss"
     # And the brand-stanza content must instead appear in the user message.
-    user = build_plan_user_prompt(_brand("BrandA"), history=[], formats=[], avatars=[])
+    user = build_post_user_prompt(_brand("BrandA"), None, topic="face shapes", pillar="face_shape")
     assert "BrandA" in user
 
 
@@ -75,10 +75,10 @@ def test_system_prompt_advertises_essential_capabilities():
     """If the operating-loop / dispatch-policy / artifact contract is
     accidentally stripped, the model won't know what to do. One coarse
     assertion is enough — the prompt content is reviewed in PR diffs."""
-    sys = build_orchestrator_system_prompt(_brand(), "plan_month")
-    for must_have in ("<duct_report>", "submit_plan", "submit_post_draft",
+    sys = build_orchestrator_system_prompt(_brand(), "draft_post")
+    for must_have in ("<duct_report>", "submit_post_draft",
                       "research_pillar", "draft_post", "STRUCTURED SLIDES",
-                      "MODE: plan_month"):
+                      "MODE: draft_post"):
         assert must_have in sys, f"system prompt missing critical phrase: {must_have!r}"
 
 
@@ -90,7 +90,7 @@ def test_system_prompt_advertises_essential_capabilities():
 def test_mcp_server_builds_and_exposes_writer_tools():
     """Catches: SDK version mismatch, @tool decorator misuse, broken
     closure capture of project_id/emit/session."""
-    session = make_session("t", uuid4(), "plan_month")
+    session = make_session("t", uuid4(), "draft_post")
     srv = build_content_mcp_server(session.project_id, _noop, session)
     assert isinstance(srv, dict)
     assert srv.get("name") == "duct_content"
@@ -119,13 +119,12 @@ def test_session_registry_lifecycle_closes_and_drains():
     from agents.content.v3.runner import (
         close_session,
         create_draft_session,
-        create_plan_session,
         get_session,
     )
 
     sid = "lifecycle-test"
     pid = uuid4()
-    s = create_plan_session(sid, pid)
+    s = create_draft_session(sid, pid)
     assert get_session(sid) is s
     close_session(sid)
     assert get_session(sid) is None
@@ -226,9 +225,8 @@ def test_writer_validator_accepts_both_wrapper_shapes_and_denies_with_corrective
           retries blindly. This is the entire value prop of borrowing the
           audit branch's validate-and-deny pattern.
 
-    Symmetry: submit_plan shares the same code path (just a different
-    schema). One test is enough — if the pattern breaks here, it breaks
-    there too.
+    The planner's submit_plan validator shares this same validate-and-deny
+    pattern (just a different schema), so one test covers the shape.
     """
     from agents.content.v3.runner import _validate_submit_post_draft
 
@@ -484,79 +482,6 @@ def test_enrich_returns_local_signals_when_no_api_key():
 
 
 # ---------------------------------------------------------------------------
-# DRAFT_POST_PROMPT regression guard — borrowed patterns from nomadapps PR #37
-# ---------------------------------------------------------------------------
-
-
-def test_draft_post_prompt_contains_critical_quality_rules():
-    """The TikTok content patterns (PR #37 borrow) — mystery architecture,
-    5 emotional triggers, save_cta specific-payoff rule, AI→app
-    terminology, visual-content alignment — are quality anchors. Each
-    one is here because the source skill's experimentation showed
-    measurable retention/engagement lift from it.
-
-    If a future prompt edit accidentally deletes any of these, the model
-    silently regresses. This test fails loudly so PRs surface the
-    deletion before it ships.
-
-    One test, six asserts. Cheap (<10ms). Catches the bug class that
-    matters: silent prompt drift."""
-    from agents.content.prompts import DRAFT_POST_PROMPT
-
-    # 1. Mystery architecture (replaces list architecture)
-    assert "Mystery" in DRAFT_POST_PROMPT or "MYSTERY" in DRAFT_POST_PROMPT, \
-        "DRAFT_POST_PROMPT lost the mystery-architecture rule"
-    assert "Open loop" in DRAFT_POST_PROMPT or "open loop" in DRAFT_POST_PROMPT.lower(), \
-        "DRAFT_POST_PROMPT lost the open-loop instruction"
-
-    # 2. Five emotional triggers — all five must be present
-    for emotion in ("frustration", "shock", "disbelief", "anger", "sadness"):
-        assert emotion in DRAFT_POST_PROMPT, f"DRAFT_POST_PROMPT lost the '{emotion}' emotion trigger"
-
-    # 3. Save CTA rule — must enforce naming a specific payoff slide
-    assert "save this — the" in DRAFT_POST_PROMPT.lower() or "save_cta" in DRAFT_POST_PROMPT, \
-        "DRAFT_POST_PROMPT lost the save_cta specific-payoff rule"
-
-    # 4. AI → app terminology rule
-    assert 'never say "AI"' in DRAFT_POST_PROMPT or 'never say \"AI\"' in DRAFT_POST_PROMPT, \
-        "DRAFT_POST_PROMPT lost the AI→app terminology rule"
-
-    # 5. Visual-content alignment (image-prompt discipline)
-    assert "Visual-Content Alignment" in DRAFT_POST_PROMPT or "VISUAL-CONTENT ALIGNMENT" in DRAFT_POST_PROMPT, \
-        "DRAFT_POST_PROMPT lost the visual-content alignment check"
-
-    # 6. Dual CTA on slide 7
-    assert "Comment driver" in DRAFT_POST_PROMPT or "comment driver" in DRAFT_POST_PROMPT.lower(), \
-        "DRAFT_POST_PROMPT lost the slide-7 dual-CTA rule"
-    assert "Follow driver" in DRAFT_POST_PROMPT or "follow driver" in DRAFT_POST_PROMPT.lower(), \
-        "DRAFT_POST_PROMPT lost the slide-7 follow-driver rule"
-
-    # 7. Reference study session — the visual-brief discipline that drives
-    #    copy voice and image prompts (Phase 8.5 borrow from skill.md
-    #    Step 3). If a future edit deletes it, drafts go back to
-    #    template-generic AI-looking output.
-    lower = DRAFT_POST_PROMPT.lower()
-    assert "reference study" in lower or "visual brief" in lower, \
-        "DRAFT_POST_PROMPT lost the reference-study session"
-    assert "copy from references" in lower or "never copy from references" in lower, \
-        "DRAFT_POST_PROMPT lost the COPY-vs-NEVER-COPY reference rule"
-
-    # 8. Emotional arc — 5-slide energy map prevents flatlined drafts
-    assert "emotional arc" in lower or "emotional_arc" in lower, \
-        "DRAFT_POST_PROMPT lost the emotional-arc discipline"
-
-    # 9. Attractiveness anchor — order matters (beauty first, texture after)
-    assert "attractiveness" in lower, \
-        "DRAFT_POST_PROMPT lost the character-attractiveness anchor"
-    assert "order matters" in lower or "lead with" in lower, \
-        "DRAFT_POST_PROMPT lost the attractiveness-then-texture ordering"
-
-    # 10. Gesture-arc repetition prevention — same gesture twice = flat
-    assert "gesture arc" in lower or "not [gesture" in lower, \
-        "DRAFT_POST_PROMPT lost the gesture-arc repetition prevention"
-
-
-# ---------------------------------------------------------------------------
 # CLI startup-failure diagnosis + retry (agents/content/v3/runner.py)
 #
 # The `claude` subprocess can exit 1 during initialize() — most often a
@@ -633,7 +558,7 @@ def test_sentry_startup_report_fingerprints_by_kind_and_never_raises(monkeypatch
         RuntimeError("segfault"),
         agent="content",
         session_id="s2",
-        mode="plan_month",
+        mode="draft_post",
         attempts=3,
         exit_code=139,
         stderr="Segmentation fault",

@@ -7,15 +7,12 @@ slides_html) and a frontend↔backend enum-mirror check.
 The LIVE suite (marked @pytest.mark.live) hits real APIs against real
 accounts. Run when you want to validate contract correctness end-to-end:
 
-  ANTHROPIC_API_KEY=sk-…   — drives a real plan_month session
   GEMINI_API_KEY=ai-…      — generates one real image
   POSTBRIDGE_API_KEY=sk-…  — read-only list_social_accounts smoke
-  DATABASE_URL=postgresql://…  — for the seed + plan e2e
 
 Examples:
   POSTBRIDGE_API_KEY=sk-… poetry run pytest tests/test_content_e2e.py -k live_post_bridge -s
   GEMINI_API_KEY=ai-…     poetry run pytest tests/test_content_e2e.py -k live_gemini -s
-  ANTHROPIC_API_KEY=sk-… DATABASE_URL=… poetry run pytest tests/test_content_e2e.py -k live_run_plan -s
 """
 
 from __future__ import annotations
@@ -23,11 +20,9 @@ from __future__ import annotations
 import asyncio
 import json
 import os
-from uuid import uuid4
 
 import pytest
 
-from agents.content.events import ContentEvent
 from agents.content.v3.runner import _parse_report_json
 
 
@@ -172,80 +167,6 @@ def test_live_gemini_generate_one_image_real_api():
     assert len(img.data) > 1024, f"image suspiciously small ({len(img.data)} bytes)"
 
 
-@pytest.mark.skipif(
-    not (os.environ.get("ANTHROPIC_API_KEY") and os.environ.get("DATABASE_URL")),
-    reason="ANTHROPIC_API_KEY + DATABASE_URL not set — live run_plan skipped",
-)
-@pytest.mark.live
-def test_live_run_plan_against_seeded_maxaura_project():
-    """Drive a real plan_month session against the seeded MaxAura project.
-    The most expensive test in the suite (one full Sonnet plan_month run
-    — typically $0.10-0.30 with prompt caching).
-
-    Asserts the agent loop reached a terminal state and persisted at
-    least one ContentPlan row. Doesn't enforce plan quality (that's a
-    human review concern) — only that the machinery worked end-to-end.
-
-    Prereqs: run scripts/seed_maxaura.py against the same DB first.
-    """
-    from sqlalchemy import select
-    from sqlmodel import Session
-
-    from agents.content.v3.runner import ClaudeContentRunner, create_plan_session
-    from agents.models import AgentEffort
-    from db.session import get_engine
-    from models.auth import User
-    from models.content import ContentPlan
-    from models.project import Project
-
-    with Session(get_engine()) as db:
-        user = db.execute(
-            select(User).where(User.email == "test+e2e@getduct.ai")
-        ).scalars().first()
-        if user is None:
-            pytest.skip("seed user not present; run scripts/seed_maxaura.py first")
-        proj = db.execute(
-            select(Project).where(Project.user_id == user.id, Project.slug == "maxaura")
-        ).scalars().first()
-        if proj is None:
-            pytest.skip("seeded MaxAura project missing")
-        project_id = proj.id
-
-    events: list[dict] = []
-    async def _emit(body: dict) -> None:
-        events.append(body)
-
-    session_id = f"live-test-{uuid4()}"
-    create_plan_session(session_id, project_id)
-
-    async def _drive():
-        runner = ClaudeContentRunner(api_key=os.environ["ANTHROPIC_API_KEY"])
-        try:
-            await asyncio.wait_for(
-                runner.run_plan(
-                    session_id, project_id, _emit,
-                    effort=AgentEffort.MEDIUM,
-                    chat_idle_timeout=10.0,
-                ),
-                timeout=420.0,
-            )
-        except asyncio.TimeoutError:
-            events.append({"event": "test_timeout"})
-
-    asyncio.run(_drive())
-
-    event_names = [e.get("event") for e in events]
-    assert ContentEvent.PIPELINE_STARTED in event_names
-    assert ContentEvent.STEP_STARTED     in event_names, "expected at least one STEP_STARTED chip"
-    assert (
-        ContentEvent.PIPELINE_FINISHED in event_names
-        or ContentEvent.PIPELINE_FAILED in event_names
-    ), "stream did not terminate"
-
-    if ContentEvent.PIPELINE_FINISHED in event_names:
-        with Session(get_engine()) as db:
-            plans = db.execute(
-                select(ContentPlan).where(ContentPlan.project_id == project_id)
-            ).scalars().all()
-            assert any(len(p.days or []) >= 10 for p in plans), \
-                "no plan with >=10 days persisted — agent didn't actually deliver"
+# NOTE: the live plan_month e2e was removed with the dormant Content Studio
+# planning path. The Content Planner agent has its own coverage
+# (tests/test_planner_unit.py); live draft/clone coverage lives above.

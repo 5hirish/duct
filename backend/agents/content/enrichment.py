@@ -39,6 +39,7 @@ from agents.content.schema import (
 from agents.models import AgentPermissionMode, AgentTool, ModelName
 from db.session import get_engine
 from models.content import ContentPost
+from service.content_metrics import metric_float
 
 logger = logging.getLogger(__name__)
 
@@ -98,9 +99,9 @@ def _local_content_signals(project_id: UUID) -> ContentResearchContext:
         hook_counter: Counter[str] = Counter(p.hook_type for p in recent if p.hook_type)
         recent_hook_types = [h for h, _ in hook_counter.most_common(5)]
 
-        # save_rate median where present
+        # save_rate median where present (read via the canonical metric contract)
         rates = [
-            float(p.perf.get("save_rate"))
+            metric_float(p.perf, "save_rate")
             for p in posts
             if isinstance(p.perf, dict) and isinstance(p.perf.get("save_rate"), (int, float))
         ]

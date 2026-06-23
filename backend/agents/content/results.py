@@ -43,11 +43,6 @@ class EditSlideResult(BaseModel):
     updated: list[str]  # the patched field names
 
 
-class SubmitPlanResult(BaseModel):
-    plan_id: str
-    days: int
-
-
 class SubmitPostResult(BaseModel):
     post_id: str
     post_dir_slug: str

@@ -64,8 +64,13 @@ WHAT YOU DO, EVERY PLANNING PASS:
    underperforms. <performance>.type_performance ranks the content TYPES
    (slideshow / video / image) by proven completion+saves and tells you the
    `leader`, the `unproven_types` (too little data), and `untested_types` (zero
-   history) — let it DRIVE content_mix in step 5, not just inform it. If the data
-   looks stale or the user asks, call sync_all_posts, then re-read.
+   history) — let it DRIVE content_mix in step 5, not just inform it.
+   ALSO read <performance>.hypothesis_performance — it GRADES YOUR OWN PAST BETS:
+   which hook_type, funnel_stage, and objective actually earned completion+saves
+   (each bucket's `posts` is its confidence — <3 is a hint, not proof). Repeat the
+   bets that earned; stop repeating the ones that didn't. This is how you improve
+   the STRATEGY, not just the format mix. If the data looks stale or the user asks,
+   call sync_all_posts, then re-read.
 
 4. PLAN BEST TIMES. Prefer the proven windows in <best_times> (this account's
    OWN history); otherwise reason from platform + geography + audience. Set a
@@ -259,6 +264,7 @@ def _performance_stanza(perf: dict) -> str:
             "</performance>"
         )
     tp = perf.get("type_performance", {})
+    hp = perf.get("hypothesis_performance", {})
     return (
         "<performance>\n"
         f"  total_posted (recent): {perf.get('total_posted', 0)}\n"
@@ -266,6 +272,13 @@ def _performance_stanza(perf: dict) -> str:
         f"  by_type (incl. median_completion + median_saves): {json.dumps(perf.get('by_type', {}))}\n"
         f"  type_performance (USE THIS to set content_mix): {json.dumps(tp, default=str)}\n"
         f"  → CONTENT-TYPE POLICY: {tp.get('guidance', 'weight the mix by completion+saves; reserve a slot to test untried types.')}\n"
+        # Grades the plan's OWN past bets (each bucket carries `posts` = confidence):
+        f"  hypothesis_performance — which of your past BETS earned completion+saves:\n"
+        f"      by_hook_type:    {json.dumps(hp.get('by_hook_type', []), default=str)}\n"
+        f"      by_funnel_stage: {json.dumps(hp.get('by_funnel_stage', []), default=str)}\n"
+        f"      by_objective:    {json.dumps(hp.get('by_objective', []), default=str)}\n"
+        f"  → BET POLICY: lean into the hook_type / funnel_stage / objective with the best completion+saves "
+        f"(treat buckets with <3 posts as low-confidence, not proven); stop repeating the bets that didn't earn.\n"
         f"  top_performers (saves/completion first): {json.dumps(perf.get('top', []), default=str)}\n"
         f"  → {perf.get('metric_note', 'Optimise for completion + saves + shares + bio-link clicks, not likes.')}\n"
         "</performance>"

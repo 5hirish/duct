@@ -57,7 +57,6 @@ def test_content_routes_registered():
     paths = {r.path for r in server.app.routes if r.path.startswith("/api/content")}
     expected = {
         # SSE
-        "/api/content/plan/stream",
         "/api/content/post/stream",
         "/api/content/answer/{session_id}",
         "/api/content/chat/{session_id}",

@@ -36,7 +36,6 @@ from agents.content.events import ContentEvent, ContentStep, STEP_LABELS, StepSt
 from agents.content.prompts import (
     build_clone_user_prompt,
     build_orchestrator_system_prompt,
-    build_plan_user_prompt,
     build_post_user_prompt,
 )
 from agents.content.schema import (
@@ -47,7 +46,6 @@ from agents.content.schema import (
     ContentTool,
     ContentVisualAssets,
     Day,
-    PlanDraft,
     PostDraft,
     PostType,
     make_session,
@@ -105,11 +103,6 @@ _ASK_USER_TIMEOUT_SECS = 600.0
 # "finished" with a null id. Nudging once to persist salvages most of these,
 # exactly as it does for audit. The nudge rides the same chat_queue the user
 # types into, so the main loop's chat turn picks it up as the next turn.
-_RECOVERY_NUDGE_PLAN = (
-    "You analysed everything but did not persist the plan. Emit the complete "
-    '<duct_report>{"type":"plan", …}</duct_report> now and then call submit_plan '
-    "with the same payload — do not run more research, just produce and save the plan."
-)
 _RECOVERY_NUDGE_POST = (
     "You analysed everything but did not persist the post draft. Emit the complete "
     '<duct_report>{"type":"post", …}</duct_report> now and then call '
@@ -129,10 +122,6 @@ def _captured_stderr(buf: deque[str], exc: Exception | None) -> str:
 
 get_session = _core_session.get_session
 close_session = _core_session.close_session
-
-
-def create_plan_session(session_id: str, project_id: UUID) -> ContentSession:
-    return register_session(make_session(session_id, project_id, "plan_month"))
 
 
 def create_draft_session(
@@ -418,28 +407,6 @@ def _unwrap(input_data: dict[str, Any], *keys: str) -> dict[str, Any]:
     return input_data
 
 
-def _validate_submit_plan(input_data: dict[str, Any], session_project_id):
-    """Validate the payload the model is about to hand to submit_plan."""
-    from pydantic import ValidationError
-    from agents.content.schema import PlanDraft
-
-    payload = _unwrap(input_data, "plan")
-    try:
-        draft = PlanDraft.model_validate(payload)
-    except ValidationError as exc:
-        return _deny(
-            "PlanDraft validation failed — fix these issues in the JSON and "
-            f"call submit_plan again:\n{exc}"
-        )
-    if str(draft.project_id) != str(session_project_id):
-        return _deny(
-            f"project_id mismatch: this session is scoped to {session_project_id}, "
-            f"but the payload had {draft.project_id}. Use the session's project_id "
-            "and call submit_plan again."
-        )
-    return None
-
-
 def _validate_submit_post_draft(input_data: dict[str, Any], session_project_id):
     """Validate the payload the model is about to hand to submit_post_draft."""
     from pydantic import ValidationError
@@ -550,7 +517,7 @@ async def _run(
     max_turns: int = 120,
     resume: bool = False,
 ) -> None:
-    """Drive a single Claude Agent SDK session for plan_month or draft_post.
+    """Drive a single Claude Agent SDK session for draft_post or clone_post.
 
     Mirrors agents/audit/v3/runner.py:run_synthesis. The differences are:
       - options.agents populated with research_pillar + draft_post
@@ -570,14 +537,12 @@ async def _run(
     project_id = session.project_id
 
     # Recovery-nudge state. The canonical "deliverable persisted" signal is the
-    # writer tool having stashed the id on the session (submit_plan → plan_id,
-    # submit_post_draft → post_id). The <duct_report> tag only drives the live
-    # preview, so a draft streamed but never written still counts as "not
-    # produced". Nudge at most once per session (see ResultMessage handling).
-    _is_plan = session.mode == "plan_month"
-
+    # writer tool having stashed the id on the session (submit_post_draft →
+    # post_id). The <duct_report> tag only drives the live preview, so a draft
+    # streamed but never written still counts as "not produced". Nudge at most
+    # once per session (see ResultMessage handling).
     def _artifact_produced() -> bool:
-        return (session.plan_id is not None) if _is_plan else (session.post_id is not None)
+        return session.post_id is not None
 
     _nudged = False
 
@@ -622,12 +587,6 @@ async def _run(
         # the SDK surfaces it as a permission denial which the model
         # treats as authoritative. Pattern borrowed from audit's
         # SubmitAuditReport handler.
-
-        if tool_name == ContentTool.SUBMIT_PLAN:
-            deny = _validate_submit_plan(input_data, project_id)
-            if deny is not None:
-                return deny
-            return PermissionResultAllow(updated_input=input_data)
 
         if tool_name == ContentTool.SUBMIT_POST_DRAFT:
             deny = _validate_submit_post_draft(input_data, project_id)
@@ -831,7 +790,6 @@ async def _run(
             AgentTool.WEB_SEARCH,
             AgentTool.WEB_FETCH,
             AgentTool.AGENT,
-            ContentTool.SUBMIT_PLAN,
             ContentTool.SUBMIT_POST_DRAFT,
             ContentTool.EDIT_SLIDE,
             ContentTool.FETCH_BRAND_CONTEXT,
@@ -931,7 +889,7 @@ async def _run(
 
     async def _handle_close(raw_json: str) -> None:
         """Parse the JSON inside the closed <duct_report> tag, emit the
-        matching event, and validate against PlanDraft / PostDraft.
+        matching event, and validate against PostDraft.
 
         Validation failures are logged but do NOT raise — the writer @tool
         will revalidate and surface a clear error to the model on the next
@@ -942,18 +900,7 @@ async def _run(
             logger.warning("content: <duct_report> JSON parse failed; nothing emitted")
             return
         kind = payload.get("type", "")
-        if kind == "plan":
-            try:
-                PlanDraft.model_validate(payload)
-            except Exception as exc:
-                logger.warning("content: PlanDraft validation failed (will let writer re-validate): %s", exc)
-            await emit({
-                "event":       ContentEvent.PLAN_GENERATED,
-                "session_id":  session_id,
-                "payload":     payload,
-                "source":      "duct_report",
-            })
-        elif kind == "post":
+        if kind == "post":
             try:
                 PostDraft.model_validate(payload)
             except Exception as exc:
@@ -1012,13 +959,13 @@ async def _run(
         if not _artifact_produced() and not _nudged:
             _nudged = True
             logger.warning(
-                "content: turn ended with no %s persisted for session %s "
+                "content: turn ended with no post persisted for session %s "
                 "(stop_reason=%s) — sending one recovery nudge",
-                "plan" if _is_plan else "post", session_id, result_msg.stop_reason,
+                session_id, result_msg.stop_reason,
             )
             await session.chat_queue.put({
                 "role": "user",
-                "content": _RECOVERY_NUDGE_PLAN if _is_plan else _RECOVERY_NUDGE_POST,
+                "content": _RECOVERY_NUDGE_POST,
             })
 
     async def _on_todo(todos: list) -> None:
@@ -1133,171 +1080,23 @@ class ClaudeContentRunner:
     Effort + adaptive_thinking are per-call so the route layer (and a
     future UI) can dial them per request. Defaults are tuned for cost:
     MEDIUM with adaptive thinking lets the model spend more on hard
-    turns (plan synthesis) without paying HIGH on every routine turn.
+    turns (draft + clone synthesis) without paying HIGH on every routine turn.
     """
 
     # Defaults — overridable per-call from routes/content.py and the UI.
-    DEFAULT_PLAN_EFFORT  = AgentEffort.MEDIUM
     DEFAULT_DRAFT_EFFORT = AgentEffort.MEDIUM
-    DEFAULT_PLAN_MAX_TURNS  = 120
     DEFAULT_DRAFT_MAX_TURNS = 60
 
     def __init__(self, api_key: str) -> None:
         # An empty api_key is allowed when a Claude OAuth path is available: a
         # CLAUDE_CODE_OAUTH_TOKEN (self-hosted) or a local `claude` login. The
-        # SDK env injection in run_plan/run_draft only sets ANTHROPIC_API_KEY
+        # SDK env injection in run_draft/run_clone only sets ANTHROPIC_API_KEY
         # when non-empty, so an empty key cleanly defers to OAuth.
         from config import claude_oauth_available
 
         if not api_key and not claude_oauth_available():
             raise ValueError("ANTHROPIC_API_KEY is required for ClaudeContentRunner.")
         self._api_key = api_key
-
-    async def run_plan(
-        self,
-        session_id: str,
-        project_id: UUID,
-        emit: EmitFn,
-        *,
-        effort: AgentEffort | None = None,
-        adaptive_thinking: bool = True,
-        max_turns: int | None = None,
-        chat_idle_timeout: float = 1800.0,
-    ) -> None:
-        """Run a plan_month session end-to-end.
-
-        Args:
-          effort: per-call effort override; defaults to DEFAULT_PLAN_EFFORT.
-          adaptive_thinking: when True the model decides per-turn depth.
-          max_turns: SDK turn ceiling; defaults to DEFAULT_PLAN_MAX_TURNS.
-        """
-        session = get_session(session_id) or create_plan_session(session_id, project_id)
-
-        # ── Resume: restore + ready, NEVER a greeting turn (see run_draft). ──
-        # Skip enrichment + the pipeline entirely; just load brand for the system
-        # prompt, stash the restored context for the user's first message, and go
-        # READY immediately so the input unlocks with no "working" state.
-        if getattr(session, "resume", False) and getattr(session, "conversation_id", None):
-            brand = await asyncio.to_thread(_load_brand_context, project_id)
-            system_prompt = build_orchestrator_system_prompt(brand, "plan_month")
-            from agents.content.persistence import build_reprime_context
-            session.resume_primer = await build_reprime_context(session, self._api_key)
-            session.needs_reprime = True
-            await emit({
-                "event":      ContentEvent.PIPELINE_FINISHED,
-                "session_id": session_id,
-                "mode":       "plan_month",
-                "plan_id":    str(session.plan_id) if session.plan_id else None,
-                "resumed":    True,
-            })
-            try:
-                await _run(
-                    session, system_prompt, "", emit, self._api_key,
-                    effort=effort or self.DEFAULT_PLAN_EFFORT,
-                    adaptive_thinking=adaptive_thinking,
-                    chat_idle_timeout=chat_idle_timeout,
-                    max_turns=max_turns or self.DEFAULT_PLAN_MAX_TURNS,
-                    resume=True,
-                )
-            except Exception as exc:
-                await emit({"event": ContentEvent.PIPELINE_FAILED, "session_id": session_id, "error": str(exc)})
-                raise
-            return
-
-        # Emit the first events BEFORE loading brand context so the UI leaves its
-        # "Starting session…" state immediately. _load_brand_context is a SYNC DB
-        # read that opens a fresh connection through the Railway proxy — running it
-        # directly here would block the event loop (and therefore the SSE stream,
-        # so the just-queued events couldn't even be delivered) until it returns.
-        # Two concurrent sessions (e.g. a dev StrictMode double-mount) would block
-        # the loop in series and the UI would hang at "Starting session…". Run it
-        # off the loop via asyncio.to_thread so the stream stays live.
-        await emit({
-            "event":    ContentEvent.PIPELINE_STARTED,
-            "session_id": session_id,
-            "mode":     "plan_month",
-        })
-        await emit({
-            "event":   ContentEvent.STEP_STARTED,
-            "step_id": ContentStep.LOAD_PROJECT,
-            "label":   STEP_LABELS[ContentStep.LOAD_PROJECT],
-            "status": StepStatus.RUNNING,
-        })
-        brand = await asyncio.to_thread(_load_brand_context, project_id)
-        await emit({
-            "event":   ContentEvent.STEP_FINISHED,
-            "step_id": ContentStep.LOAD_PROJECT,
-            "label":   STEP_LABELS[ContentStep.LOAD_PROJECT],
-            "status": StepStatus.SUCCESS,
-            "payload": {"project_name": brand.project_name, "pillars": len(brand.pillars)},
-        })
-
-        # ── Enrichment: local scan + optional Haiku trend research ─────────
-        await emit({
-            "event":   ContentEvent.STEP_STARTED,
-            "step_id": ContentStep.ENRICHING,
-            "label":   STEP_LABELS[ContentStep.ENRICHING],
-            "status": StepStatus.RUNNING,
-        })
-        from agents.content.enrichment import enrich_content_context
-        research = await enrich_content_context(brand, self._api_key)
-        await emit({
-            "event":   ContentEvent.STEP_FINISHED,
-            "step_id": ContentStep.ENRICHING,
-            "label":   STEP_LABELS[ContentStep.ENRICHING],
-            "status": StepStatus.SUCCESS,
-            "payload": {
-                "pillar_history":   len(research.pillar_history),
-                "trending_sounds":  len(research.trending_sounds),
-                "trending_hashtags": len(research.trending_hashtags),
-                "trending_hooks":   len(research.trending_hooks),
-                "trending_styles":  len(research.trending_styles),
-            },
-        })
-
-        system_prompt = build_orchestrator_system_prompt(brand, "plan_month")
-        initial_prompt = build_plan_user_prompt(
-            brand, history=[], formats=[], avatars=[], research=research,
-        )
-
-        try:
-            await _run(
-                session,
-                system_prompt,
-                initial_prompt,
-                emit,
-                self._api_key,
-                effort=effort or self.DEFAULT_PLAN_EFFORT,
-                adaptive_thinking=adaptive_thinking,
-                chat_idle_timeout=chat_idle_timeout,
-                max_turns=max_turns or self.DEFAULT_PLAN_MAX_TURNS,
-            )
-            if session.plan_id is not None:
-                await emit({
-                    "event":      ContentEvent.PIPELINE_FINISHED,
-                    "session_id": session_id,
-                    "mode":       "plan_month",
-                    "plan_id":    str(session.plan_id),
-                })
-            else:
-                # The session ended without ever persisting a plan — even the
-                # recovery nudge didn't recover it. Surface a real failure
-                # instead of a hollow "finished" with plan_id: null (which the
-                # UI would render as success with nothing to open).
-                logger.error("content: plan session %s ended with no plan persisted", session_id)
-                await emit({
-                    "event":      ContentEvent.PIPELINE_FAILED,
-                    "session_id": session_id,
-                    "error":      "The content engine finished without producing a plan. "
-                                  "This is usually transient — please try again.",
-                })
-        except Exception as exc:
-            await emit({
-                "event":      ContentEvent.PIPELINE_FAILED,
-                "session_id": session_id,
-                "error":      str(exc),
-            })
-            raise
 
     async def run_draft(
         self,
@@ -1367,7 +1166,7 @@ class ClaudeContentRunner:
         # ── Fresh draft: run the generation pipeline ────────────────────────
         # Emit lifecycle + the first step BEFORE the (blocking) brand-context load
         # so the UI leaves "Starting session…" immediately; load off the event
-        # loop so it can't block the loop / SSE stream. (See run_plan for why.)
+        # loop so it can't block the loop / SSE stream. (See run_draft for why.)
         await emit({
             "event":             ContentEvent.PIPELINE_STARTED,
             "session_id":        session_id,
@@ -1631,6 +1430,5 @@ __all__ = [
     "close_session",
     "create_clone_session",
     "create_draft_session",
-    "create_plan_session",
     "get_session",
 ]

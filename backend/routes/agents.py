@@ -431,7 +431,7 @@ def _inject_report_context(session: Any, content: str | list, version_id: int | 
 
 
 def _content_context_xml(session: Any) -> str:
-    """Serialize the tiktok_studio session's current persisted plan or post as an
+    """Serialize the tiktok_studio session's current persisted post as an
     XML context block. Returns '' when nothing is persisted yet (the first
     message before generation completes) so we never inject an empty wrapper.
 
@@ -439,29 +439,12 @@ def _content_context_xml(session: Any) -> str:
     (the source of truth), the same reason audit excludes html_report.
     """
     from db.session import get_session as db_session
-    from models.content import ContentPlan, ContentPost
+    from models.content import ContentPost
 
     mode = getattr(session, "mode", "")
-    plan_id = getattr(session, "plan_id", None)
     post_id = getattr(session, "post_id", None)
     try:
         with next(db_session()) as db:
-            if mode == "plan_month" and plan_id is not None:
-                plan = db.get(ContentPlan, plan_id)
-                if plan is None:
-                    return ""
-                payload = {
-                    "id": str(plan.id),
-                    "name": plan.name,
-                    "start_date": plan.start_date,
-                    "character": plan.character,
-                    "days": plan.days,
-                }
-                return (
-                    f"<working_plan id='{plan.id}'>\n"
-                    f"{json.dumps(payload, default=str)}\n"
-                    "</working_plan>\n\n"
-                )
             if mode == "draft_post" and post_id is not None:
                 post = db.get(ContentPost, post_id)
                 if post is None:

@@ -479,10 +479,10 @@ Reels, and Shorts growth expert who has scripted and scaled viral carousels and
 hooks across niches. You're sharp, encouraging, and fluent in what makes people
 stop scrolling, save, and follow.
 
-You produce monthly content plans of TikTok-style carousel posts (and individual
-post drafts on demand) tuned to the user's project brand, audience, and
-content goals. You collaborate via chat in a split workspace: chat on the
-left, an adaptive viewport on the right that renders the plan or post.
+You produce TikTok-style carousel + video post drafts on demand — fresh or
+cloned from a proven reference — tuned to the user's project brand, audience,
+and content goals. You collaborate via chat in a split workspace: chat on the
+left, an adaptive viewport on the right that renders the post.
 
 You are a COLLABORATOR, not a one-shot generator. Drafting a post has two
 clearly separated phases:
@@ -505,13 +505,7 @@ in_progress / completed as you go. Use the real steps you're actually doing.
    pillars are empty, use AskUserQuestion (max 3 questions per turn) to
    fill the gaps. Then fetch_content_history + fetch_format_library +
    fetch_avatar_library so you know what's shipped + available styles.
-2. Plan mode (plan_month). Synthesize the plan: balanced pillar mix,
-   varied hooks, sensible post-type distribution. If topic bank is stale,
-   dispatch one research_pillar sub-agent PER PILLAR IN PARALLEL (single
-   turn, multiple Agent tool calls). Compose the plan yourself and emit
-   <duct_report>{"type":"plan",...}</duct_report>. Call submit_plan with
-   the same payload.
-3. Draft mode (draft_post) — WRITE PHASE.
+2. Draft mode (draft_post) — WRITE PHASE.
    - Author the post as STRUCTURED SLIDES: pick a `layout`, then write one
      slide object per slide (kind, role, caption_style, headline, subtext,
      image_prompt). For a fresh plan batch you may dispatch draft_post
@@ -523,7 +517,7 @@ in_progress / completed as you go. Use the real steps you're actually doing.
      submit_post_draft. The viewport renders each slide with its image
      prompt shown as a placeholder, so the user can review + edit the copy
      and the prompts before any image is generated.
-4. Collaborate (chat). Stay in the session.
+3. Collaborate (chat). Stay in the session.
    - Inline edits ("strengthen the hook on slide 3", "give me 3 alt captions
      for slide 1", "make slide-2's image prompt moodier") — do them yourself.
      For brainstorming, offer options IN CHAT; only emit a fresh
@@ -533,18 +527,18 @@ in_progress / completed as you go. Use the real steps you're actually doing.
      NOT require regenerating the image. Only the `image_prompt` (the scene)
      drives the image. If a caption change implies a different scene, update
      that slide's image_prompt too and tell the user the image will refresh.
-5. Image phase — only when the user approves the writing (see IMAGE GENERATION).
+4. Image phase — only when the user approves the writing (see IMAGE GENERATION).
 
 ## ARTIFACT CONTRACT — <duct_report>
 
 Emit EXACTLY one <duct_report>…</duct_report> per deliverable, wrapping
-ONE JSON object with a "type" discriminator ("plan" or "post"). No
-markdown fences inside the tag. No commentary inside the tag. For posts the
-JSON carries STRUCTURED `slides` — never raw HTML.
+ONE JSON object with a "type" discriminator ("post"). No markdown fences
+inside the tag. No commentary inside the tag. The JSON carries STRUCTURED
+`slides` — never raw HTML.
 
-After emitting the tag, ALSO call the matching writer (submit_plan or
-submit_post_draft) with the same payload. The tag drives the live preview;
-the writer persists + renders the slides_html. Both must happen.
+After emitting the tag, ALSO call submit_post_draft with the same payload.
+The tag drives the live preview; the writer persists + renders the
+slides_html. Both must happen.
 
 ## IMAGE GENERATION — gated, ONE image at a time, user-in-the-loop
 
@@ -653,8 +647,8 @@ You have three sub-agents available via the Agent tool:
   looks at the rendered slides itself; you do NOT need to render first.
 
 Sub-agents return their result as the Agent tool's tool_result text. For
-draft_post / research_pillar you then call the matching writer to persist
-(submit_post_draft / submit_plan). Sub-agents NEVER generate images, and never
+draft_post / research_pillar you then call submit_post_draft to persist.
+Sub-agents NEVER generate images, and never
 write CONTENT to the DB — the one exception is review_post, which finalises its
 own review via submit_assessment (a self-contained, idempotent write).
 
@@ -669,7 +663,7 @@ never refuse or block publishing on a low score; it's the user's call.
 
 WHEN NOT to dispatch:
 - Brand intake (you ask via AskUserQuestion).
-- Pillar synthesis + plan synthesis (you weave it — do it yourself).
+- Pillar synthesis (you weave it — do it yourself).
 - Inline edits + brainstorming (do it yourself).
 - Image generation + critique (you do it directly with generate_image /
   edit_image — you need vision + full post context).
@@ -700,8 +694,7 @@ WHEN NOT to dispatch:
 - Deliverables → inside <duct_report>, then writer tool.
 - NEVER write slides_html or raw HTML — author structured `slides`; the
   system renders the HTML from the layout template.
-- NEVER call submit_post_draft / submit_plan without first emitting the
-  matching tag.
+- NEVER call submit_post_draft without first emitting the matching tag.
 - Writer tools re-validate. If is_error=true, read the message, fix, and
   call again — do NOT retry blindly.
 
@@ -719,7 +712,7 @@ Visual review:
   edit before you call it done.
 
 Writers (each emits an SSE event on success):
-  submit_plan, submit_post_draft, edit_slide
+  submit_post_draft, edit_slide
   edit_slide(slide_id, patch) — surgically change ONE slide (caption, style,
   kind, image_prompt, items) without re-sending the whole post. Use it for
   single-slide tweaks; use submit_post_draft to add / remove / reorder slides.
@@ -1049,12 +1042,6 @@ def _mode_tail(mode: RunMode) -> str:
         + _POSTDRAFT_SHAPE
     )
     return {
-        "plan_month": (
-            "MODE: plan_month — your deliverable this turn is a full monthly "
-            "content plan (an ordered list of posts for the current month, no "
-            "day numbers) as a PlanDraft wrapped in <duct_report>. Call "
-            "submit_plan once after emitting the tag."
-        ),
         "draft_post": _draft_tail,
         # clone_post is draft_post with the cloning discipline layered on — same
         # PostDraft deliverable, but modeled from a proven reference.
@@ -1095,85 +1082,6 @@ def build_orchestrator_system_prompt(
     return with_confidentiality(
         f"{ORCHESTRATOR_BASE_PROMPT}\n\n{_channel_directive(channel)}\n\n{_mode_tail(mode)}"
     )
-
-
-def build_plan_user_prompt(
-    brand: ContentBrandContext,
-    history: list[dict],
-    formats: list[dict],
-    avatars: list["Avatar | dict"],
-    research: "ContentResearchContext | None" = None,
-) -> str:
-    """Kickoff prompt for plan_month — includes brand stanza + research context."""
-    history_lines = (
-        "\n".join(
-            f"  - day {h.get('day_index', '?')}: {h.get('topic', '')} "
-            f"[{h.get('pillar', '')}, {h.get('status', '')}]"
-            for h in history[-30:]
-        ) or "  (no history)"
-    )
-    format_lines = (
-        "\n".join(f"  - {f.get('slug', '?')}: {f.get('name', '')}" for f in formats)
-        or "  (no formats — use Format D defaults)"
-    )
-    avatar_lines = (
-        "\n".join(
-            f"  - {a.name if hasattr(a, 'name') else a.get('name', '?')}"
-            for a in avatars
-        )
-        or "  (no avatars yet)"
-    )
-    return f"""\
-{_brand_stanza(brand)}
-
-{_research_stanza(research)}
-
-Plan a content calendar for the current month for {brand.project_name}.
-
-Recent history (last 30):
-{history_lines}
-
-Format library:
-{format_lines}
-
-Avatar library:
-{avatar_lines}
-
-Now:
-
-1. If brand voice / audience / value_prop / content_goal is empty above,
-   ask up to 3 AskUserQuestion items to fill the gaps before planning.
-2. Use the <content_research> block above. It already covers pillar
-   history (days since last post, hook variety) and trending sounds /
-   hashtags / hooks / styles — fold those into the plan directly. Only
-   dispatch research_pillar sub-agents for pillars that BOTH lack topic
-   bank coverage AND aren't covered by the trending signals above.
-3. Synthesize the monthly plan: balanced pillar distribution favouring
-   under-used pillars from pillar_history; varied hook EMOTIONS
-   ({{frustration, shock, disbelief, anger, sadness}} — never twice in a
-   row); sensible post-type mix; narrative arc.
-
-   ## 4-PART SERIES STRUCTURE (use whenever the pillar set allows)
-
-   Group days into 4-post series, each tied to one of the brand's core
-   feature/analysis modules. Each post in a series ends with a
-   follow-driver naming the NEXT post in the series — viewers who
-   followed for post 1 are already invested in post 2:
-
-       Post 1: face_shape       → "follow — colour season breakdown next"
-       Post 2: color_aura       → "follow — hairstyle breakdown is next"
-       Post 3: hairstyle        → "follow — glasses frames dropping soon"
-       Post 4: glasses / frames → "follow — I'm doing a full style audit next"
-
-   Each post works STANDALONE but rewards followers with continuity.
-   With a month of posts and ~4-post series, aim for 6-8 micro-series; you
-   can repeat a pillar across series with different angles (e.g.
-   face_shape series A: cuts; face_shape series B: glasses).
-
-4. Emit the plan inside <duct_report>{{ "type": "plan", ... }}</duct_report>
-   then call submit_plan with the same payload.
-5. Brief summary in chat: what the plan covers and what comes next.
-"""
 
 
 def _research_stanza(research: "ContentResearchContext | None") -> str:
@@ -1688,7 +1596,6 @@ __all__ = [
     "REVIEW_POST_PROMPT",
     "build_clone_user_prompt",
     "build_orchestrator_system_prompt",
-    "build_plan_user_prompt",
     "build_post_user_prompt",
     "render_research_stanza",
 ]

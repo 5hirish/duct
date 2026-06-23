@@ -1,7 +1,6 @@
 """Content Studio agent routes.
 
 Streaming endpoints clone the SSE machinery from routes/audit.py:
-  POST   /api/content/plan/stream         — start a plan_month session
   POST   /api/content/post/stream         — start a draft_post session
   POST   /api/content/answer/{sid}        — resolve pending AskUserQuestion
   POST   /api/content/chat/{sid}          — continued chat into an active session
@@ -59,14 +58,12 @@ from agents.content.schema import (
     ContentChatMessage,
     ContentStatus,
     DraftPostRequest,
-    PlanRequest,
     PostType,
 )
 from agents.content.v3.runner import (
     ClaudeContentRunner,
     close_session,
     create_draft_session,
-    create_plan_session,
     get_session,
 )
 from agents.planner.schema import PlannerConfig
@@ -170,7 +167,7 @@ def _project_or_404(db: Session, project_id: UUID) -> Project:
 
 
 # ---------------------------------------------------------------------------
-# SSE: plan_month
+# SSE: content planner (the weekly plan — Content Planner agent)
 # ---------------------------------------------------------------------------
 
 
@@ -193,29 +190,6 @@ def _link_conversation_artifact(session_id: str, kind: str) -> None:
                        conv_id, kind, artifact_id, exc_info=True)
 
 
-async def _run_plan_worker(
-    session_id: str,
-    project_id: UUID,
-    emit_fn: Any,
-    *,
-    user_keys: dict[Provider, str] | None = None,
-) -> None:
-    try:
-        api_key = _resolve_api_key(user_keys)
-        if not api_key and not claude_oauth_available():
-            raise ValueError("ANTHROPIC_API_KEY is not configured")
-        runner = ClaudeContentRunner(api_key=api_key)
-        await runner.run_plan(session_id, project_id, emit_fn)
-        _link_conversation_artifact(session_id, "plan")
-    except Exception as exc:
-        logger.exception("content: plan worker error for session %s", session_id)
-        await emit_fn({
-            "event":      ContentEvent.PIPELINE_FAILED,
-            "session_id": session_id,
-            "error":      str(exc),
-        })
-
-
 async def _run_planner_worker(
     session_id: str,
     project_id: UUID,
@@ -225,7 +199,7 @@ async def _run_planner_worker(
     user_keys: dict[Provider, str] | None = None,
 ) -> None:
     """Run the Content Planner agent (update_plan) — produces the canonical
-    rolling 7-day plan. Mirrors _run_plan_worker but uses ClaudePlannerRunner."""
+    rolling 7-day plan via ClaudePlannerRunner."""
     try:
         from agents.planner.v3.runner import ClaudePlannerRunner
 
@@ -242,56 +216,6 @@ async def _run_planner_worker(
             "session_id": session_id,
             "error":      str(exc),
         })
-
-
-@router.post("/content/plan/stream")
-async def run_plan_stream(req: PlanRequest) -> StreamingResponse:
-    """Start a 30-day plan synthesis session. Returns an SSE stream covering
-    the full session lifetime (continues after PIPELINE_FINISHED so the user
-    can chat with the agent to refine the plan)."""
-    session_id = str(uuid.uuid4())
-    _session_created_at[session_id] = time.monotonic()
-    create_plan_session(session_id, req.project_id)
-
-    queue: asyncio.Queue = asyncio.Queue()
-    finished = asyncio.Event()
-
-    async def emit_fn(body: dict[str, Any]) -> None:
-        await _emit(queue, body)
-
-    async def worker() -> None:
-        try:
-            await _run_plan_worker(session_id, req.project_id, emit_fn)
-        except Exception as exc:
-            logger.exception("content: plan worker outer error")
-            await emit_fn({
-                "event":      ContentEvent.PIPELINE_FAILED,
-                "session_id": session_id,
-                "error":      str(exc),
-            })
-
-    asyncio.create_task(worker())
-
-    async def stream() -> AsyncGenerator[str, None]:
-        try:
-            async for chunk in _stream_queue(queue, finished):
-                yield chunk
-        except asyncio.CancelledError:
-            pass
-        finally:
-            close_session(session_id)
-            _session_created_at.pop(session_id, None)
-
-    return StreamingResponse(
-        stream(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control":          "no-cache",
-            "Connection":             "keep-alive",
-            "X-Accel-Buffering":      "no",
-            "X-Content-Session-Id":   session_id,
-        },
-    )
 
 
 # ---------------------------------------------------------------------------

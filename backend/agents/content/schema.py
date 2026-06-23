@@ -215,14 +215,7 @@ class ContentBrandContext(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-RunMode = Literal["plan_month", "draft_post", "clone_post"]
-
-
-class PlanRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    project_id: UUID
-    start_date: date | None = None
+RunMode = Literal["draft_post", "clone_post"]
 
 
 class DraftPostRequest(BaseModel):
@@ -448,7 +441,6 @@ class ContentTool(StrEnum):
     audit (``duct_crawl``) MCP tools. Keep in sync with the @tool registrations.
     """
 
-    SUBMIT_PLAN                = "mcp__duct_content__submit_plan"
     SUBMIT_POST_DRAFT          = "mcp__duct_content__submit_post_draft"
     EDIT_SLIDE                 = "mcp__duct_content__edit_slide"
     FETCH_BRAND_CONTEXT        = "mcp__duct_content__fetch_brand_context"
@@ -789,7 +781,6 @@ __all__ = [
     "Perf",
     "PillarHistorySignal",
     "PlanDraft",
-    "PlanRequest",
     "PlanStrategy",
     "PostDraft",
     "PostType",

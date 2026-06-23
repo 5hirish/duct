@@ -19,7 +19,8 @@ from agents.content.schema import PostType
 from agents.planner.schema import PlannerConfig
 from db.session import get_engine
 from models.agent_context import AgentContext
-from models.content import ContentPost, ContentSocialLink
+from models.content import ContentPlan, ContentPost, ContentSocialLink
+from service.content_metrics import metric_float, metric_int
 
 logger = logging.getLogger(__name__)
 
@@ -109,20 +110,30 @@ def linked_accounts(project_id: UUID) -> list[dict]:
 # ---------------------------------------------------------------------------
 
 
-def _num(perf: dict, *keys: str) -> int:
-    for k in keys:
-        v = perf.get(k)
-        if isinstance(v, (int, float)):
-            return int(v)
-    return 0
-
-
-def _flt(perf: dict, *keys: str) -> float:
-    for k in keys:
-        v = perf.get(k)
-        if isinstance(v, (int, float)):
-            return round(float(v), 3)
-    return 0.0
+def _planned_hypotheses(db: Session, project_id: UUID) -> dict[str, dict]:
+    """Map each posted post's id → the STRATEGIC BET the plan made for it
+    (hook_type / funnel_stage / objective), read from the plan day that produced
+    it (day.post_id). Scans all the project's plans (active + archived) so the bet
+    survives a re-plan that overwrote the active week. Used to grade which bets
+    actually earned completion+saves — not just which content TYPE did."""
+    plans = db.exec(
+        select(ContentPlan).where(ContentPlan.project_id == project_id)
+    ).all()
+    out: dict[str, dict] = {}
+    for plan in plans:
+        for d in (plan.days or []):
+            if not isinstance(d, dict):
+                continue
+            pid = d.get("post_id")
+            if not pid:
+                continue
+            # Later plans win if a post was re-planned; archived weeks fill gaps.
+            out[str(pid)] = {
+                "hook_type": (d.get("hook_type") or "").strip(),
+                "funnel_stage": (d.get("funnel_stage") or "").strip().lower(),
+                "objective": (d.get("objective") or "").strip().lower()[:40],
+            }
+    return out
 
 
 def performance_summary(project_id: UUID) -> dict:
@@ -138,6 +149,7 @@ def performance_summary(project_id: UUID) -> dict:
             .order_by(ContentPost.posted_at.desc())
             .limit(_PERF_LOOKBACK_LIMIT)
         ).all()
+        planned = _planned_hypotheses(db, project_id)
 
     if not posts:
         return {"total_posted": 0, "posts": [], "by_pillar": {}, "by_type": {}, "top": []}
@@ -147,18 +159,22 @@ def performance_summary(project_id: UUID) -> dict:
     views_by_type: dict[str, list[int]] = defaultdict(list)
     completion_by_type: dict[str, list[float]] = defaultdict(list)
     saves_by_type: dict[str, list[int]] = defaultdict(list)
+    # Grade the PLAN'S BETS: completion/saves bucketed by the hook_type / funnel /
+    # objective the plan chose for each post (not just by content type).
+    comp_by: dict[str, dict[str, list[float]]] = {"hook_type": defaultdict(list), "funnel_stage": defaultdict(list), "objective": defaultdict(list)}
+    saves_by: dict[str, dict[str, list[int]]] = {"hook_type": defaultdict(list), "funnel_stage": defaultdict(list), "objective": defaultdict(list)}
     for p in posts:
         perf = p.perf or {}
-        views = _num(perf, "view_count", "views")
-        likes = _num(perf, "like_count", "likes")
-        saves = _num(perf, "save_count", "saves")
-        comments = _num(perf, "comment_count", "comments")
-        shares = _num(perf, "share_count", "shares")
+        views = metric_int(perf, "views")
+        likes = metric_int(perf, "likes")
+        saves = metric_int(perf, "saves")
+        comments = metric_int(perf, "comments")
+        shares = metric_int(perf, "shares")
         # The signals that matter more than likes (see content strategy research):
-        completion = _flt(perf, "completion_rate")
-        save_rate = _flt(perf, "save_rate")
-        profile_visits = _num(perf, "profile_visits")
-        bio_clicks = _num(perf, "bio_link_clicks")
+        completion = metric_float(perf, "completion_rate")
+        save_rate = metric_float(perf, "save_rate")
+        profile_visits = metric_int(perf, "profile_visits")
+        bio_clicks = metric_int(perf, "bio_link_clicks")
         pillar = p.pillar or "(none)"
         ptype = p.post_type or "slideshow"
         rows.append({
@@ -179,6 +195,22 @@ def performance_summary(project_id: UUID) -> dict:
         if completion:
             completion_by_type[ptype].append(completion)
 
+        # Bucket the post's outcome by the plan's bet. hook_type falls back to the
+        # post's own (so manual/clone posts still count); funnel/objective are
+        # plan-only, so they only score posts that were actually planned.
+        bet = planned.get(str(p.id)) or {}
+        buckets = {
+            "hook_type": bet.get("hook_type") or (p.hook_type or "").strip(),
+            "funnel_stage": bet.get("funnel_stage") or "",
+            "objective": bet.get("objective") or "",
+        }
+        for dim, val in buckets.items():
+            if not val:
+                continue
+            saves_by[dim][val].append(saves)
+            if completion:
+                comp_by[dim][val].append(completion)
+
     by_pillar = {
         pillar: {"posts": len(s), "median_saves": int(median(s)) if s else 0}
         for pillar, s in saves_by_pillar.items()
@@ -197,6 +229,28 @@ def performance_summary(project_id: UUID) -> dict:
 
     type_performance = _rank_content_types(by_type)
 
+    # Score the plan's STRATEGIC bets: for each dimension (hook_type / funnel /
+    # objective), median completion+saves per bucket, ranked so the planner can
+    # double down on the angles that earned and trim the ones that didn't.
+    def _bucket_summary(dim: str) -> list[dict]:
+        out = []
+        for val, saves_list in saves_by[dim].items():
+            comp_list = comp_by[dim].get(val) or []
+            out.append({
+                "value": val,
+                "posts": len(saves_list),
+                "median_completion": round(median(comp_list), 3) if comp_list else None,
+                "median_saves": int(median(saves_list)) if saves_list else 0,
+            })
+        out.sort(key=lambda b: (b["median_completion"] or 0.0, b["median_saves"]), reverse=True)
+        return out
+
+    hypothesis_performance = {
+        "by_hook_type": _bucket_summary("hook_type"),
+        "by_funnel_stage": _bucket_summary("funnel_stage"),
+        "by_objective": _bucket_summary("objective"),
+    }
+
     return {
         "total_posted": len(rows),
         "posts": rows[:15],
@@ -206,6 +260,10 @@ def performance_summary(project_id: UUID) -> dict:
         # planner can weight content_mix by what's actually working (and seed the
         # types it has no data on). See _rank_content_types.
         "type_performance": type_performance,
+        # Grades the plan's OWN bets (hook_type / funnel / objective) by the
+        # completion+saves they earned, so the strategist learns strategy, not just
+        # format. Buckets carry `posts` so thin samples read as low-confidence.
+        "hypothesis_performance": hypothesis_performance,
         "top": top,
         "metric_note": "Optimise for completion_rate + saves + shares + bio_link_clicks, not likes.",
     }
@@ -291,7 +349,7 @@ def posting_time_analysis(project_id: UUID) -> dict:
     for p in posts:
         if not p.posted_at:
             continue
-        views = _num(p.perf or {}, "view_count", "views")
+        views = metric_int(p.perf or {}, "views")
         samples[(p.posted_at.weekday(), p.posted_at.hour)].append(views)
 
     total = sum(len(v) for v in samples.values())
@@ -427,14 +485,14 @@ def performance_baseline(project_id: UUID) -> dict:
     for p in posts:
         perf = p.perf or {}
         fmt[p.post_type or "slideshow"] += 1
-        views = _num(perf, "view_count", "views")
+        views = metric_int(perf, "views")
         if views <= 0:
             continue
         interactions = (
-            _num(perf, "like_count", "likes")
-            + _num(perf, "comment_count", "comments")
-            + _num(perf, "share_count", "shares")
-            + _num(perf, "save_count", "saves")
+            metric_int(perf, "likes")
+            + metric_int(perf, "comments")
+            + metric_int(perf, "shares")
+            + metric_int(perf, "saves")
         )
         engs.append(interactions / views)
 

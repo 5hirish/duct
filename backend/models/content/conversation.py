@@ -67,7 +67,7 @@ class AgentConversation(SQLModel, table=True):
             ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True
         )
     )
-    # SDK-config dispatch discriminator on resume ("plan_month" | "draft_post").
+    # SDK-config dispatch discriminator on resume ("draft_post" | "clone_post").
     mode: str = Field(default="draft_post", sa_column=Column(String, nullable=False, server_default="draft_post"))
 
     # Polymorphic artifact link — NO FK (points across content_posts / content_plans

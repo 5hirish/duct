@@ -14,7 +14,6 @@ import {
   invalidatePosts,
   mediaUrl,
   openClonePostStream,
-  openPlanStream,
   openPlannerStream,
   openPostStream,
   postSlideRender,
@@ -29,7 +28,7 @@ import { captureSlideDocToPng } from "../../lib/slideCapture";
  * Universal split-pane workspace for the content agent.
  *
  * Props:
- *   - mode: 'plan_month' | 'draft_post' | 'update_plan' (Content Planner)
+ *   - mode: 'draft_post' | 'clone_post' | 'update_plan' (Content Planner)
  *   - context: { projectId } | { projectId, planId, dayIndex, topic, pillar, postId }
  *   - renderViewport: ({ payload, mode, sessionId, phase, onSendMessage }) => ReactNode
  *     Called every render with the latest plan/post payload from the agent.
@@ -72,7 +71,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
   const openContext = openOverride || context;
 
   // Which unified agent backs this mode. The Content Planner (update_plan) is a
-  // distinct agent type; plan_month/draft_post are the Content Studio agent.
+  // distinct agent type; draft_post/clone_post are the Content Studio agent.
   const agentType = mode === "update_plan" ? "content_planner" : "tiktok_studio";
 
   // ---------------------------------------------------------------------------
@@ -193,11 +192,10 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
         catch { /* session past grace → resume-create below */ }
       }
       if (dead()) return null;
-      const artifactType = mode === "draft_post" ? "post" : "plan";
-      const artifactId   = mode === "draft_post" ? context.postId : context.planId;
+      const artifactType = mode === "update_plan" ? "plan" : "post";
+      const artifactId   = mode === "update_plan" ? context.planId : context.postId;
       const opener =
         mode === "update_plan" ? openPlannerStream
-        : mode === "plan_month" ? openPlanStream
         : mode === "clone_post" ? openClonePostStream
         : openPostStream;
       const { body } = await opener(
@@ -228,7 +226,6 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
 
         const opener =
         mode === "update_plan" ? openPlannerStream
-        : mode === "plan_month" ? openPlanStream
         : mode === "clone_post" ? openClonePostStream
         : openPostStream;
         const { body } = await opener(openContext, { signal: ctrl.signal, onSession: handleSession });
@@ -580,7 +577,6 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
   const isStreaming = isRunning || (phase === Phase.CHATTING && isAgentTyping);
   const paneLabel =
     mode === "update_plan" ? "7-day plan"
-    : mode === "plan_month" ? "30-day plan"
     : mode === "clone_post" ? "Cloned post"
     : "Post draft";
   const rightStatus = hasPayload ? "ready" : isRunning ? "busy" : "idle";
