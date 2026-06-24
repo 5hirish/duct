@@ -153,8 +153,11 @@ class ApifyClient:
         limit: int = 500,
     ) -> list[ScrapedPost]:
         """Like get_dataset_items but validates each item via ScrapedPost.
-        Bad items are dropped silently (the actor evolves; we don't want
-        one weird row to bork the whole discovery flow)."""
+        Bad items are dropped (the actor evolves; we don't want one weird row
+        to bork the whole discovery flow) — but loudly: a silent drop once
+        masked an actor field-shape change (hashtags str→object) as a total
+        "couldn't fetch this TikTok", so log at WARNING with the field errors
+        so the next drift is visible, not invisible."""
         items = await self.get_dataset_items(dataset_id, limit=limit)
         posts: list[ScrapedPost] = []
         for raw in items:
@@ -162,8 +165,12 @@ class ApifyClient:
                 continue
             try:
                 posts.append(ScrapedPost.model_validate(raw))
-            except ValidationError:
-                logger.debug("apify: dropped invalid item (id=%r)", raw.get("id"))
+            except ValidationError as exc:
+                fields = ", ".join(".".join(str(p) for p in e["loc"]) for e in exc.errors()[:5])
+                logger.warning(
+                    "apify: dropped invalid item (id=%r) — %d validation error(s) on: %s",
+                    raw.get("id"), len(exc.errors()), fields,
+                )
                 continue
         return posts
 

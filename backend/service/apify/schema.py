@@ -12,7 +12,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class ApifyRunStatus(str, Enum):
@@ -147,6 +147,28 @@ class ScrapedPost(BaseModel):
     location_created:  str = Field(default="", validation_alias="locationCreated")
     is_ad:             bool = Field(default=False, validation_alias="isAd")
     is_sponsored:      bool = Field(default=False, validation_alias="isSponsored")
+
+    @field_validator("hashtags", mode="before")
+    @classmethod
+    def _normalize_hashtags(cls, v: Any) -> list[str]:
+        """The actor returns hashtags as objects ({id, name, title, cover}) for
+        some posts and as bare strings for others. Coerce both into the bare tag
+        names so one row's shape never drops the whole post (the item would fail
+        validation and be silently discarded by get_dataset_posts, surfacing as a
+        misleading "couldn't fetch this TikTok"). Empty/blank tags are dropped."""
+        if not isinstance(v, list):
+            return []
+        out: list[str] = []
+        for item in v:
+            if isinstance(item, str):
+                tag = item.strip()
+            elif isinstance(item, dict):
+                tag = str(item.get("name") or "").strip()
+            else:
+                tag = ""
+            if tag:
+                out.append(tag)
+        return out
 
 
 class DiscoveredReferenceRecord(BaseModel):

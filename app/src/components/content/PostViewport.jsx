@@ -13,8 +13,9 @@ import {
   Video,
   Wand2,
 } from "lucide-react";
-import { downloadPostSlides, patchPost } from "../../lib/contentApi";
+import { downloadPostSlides, patchPost, mediaUrl } from "../../lib/contentApi";
 import { fmtCount } from "../../lib/contentMetrics";
+import { StepStatus } from "../../lib/agentSteps";
 import { extractStyleHead } from "../../lib/slideDoc";
 import { statusMeta } from "../../lib/contentStatus";
 import { PostStatus, PostType, POST_TYPE_LABELS } from "../../lib/contentEnums";
@@ -107,7 +108,7 @@ function stripTransient(slides) {
 // Quiet period after the last manual edit before auto-saving.
 const AUTOSAVE_MS = 1000;
 
-export default function PostViewport({ payload, assessment = null, phase, canPublish = false, onPublish, onRevise, onClone, onSendMessage }) {
+export default function PostViewport({ payload, assessment = null, phase, steps = [], canPublish = false, onPublish, onRevise, onClone, onSendMessage }) {
   const [draft, setDraft] = useState(null);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -276,7 +277,7 @@ export default function PostViewport({ payload, assessment = null, phase, canPub
   }, [dirty, saving, saveError, post?.id, post?.status, draft]);
 
   if (!post || (post.type && post.type !== "post" && !post.id)) {
-    return <DraftingPulse />;
+    return <DraftingPulse steps={steps} />;
   }
 
   const slides = Array.isArray(post.slides) ? post.slides : [];
@@ -483,6 +484,7 @@ function prettify(s) {
 // the "why it worked" diagnostic + the agent's Kept-vs-Changed ledger
 // (strategic_note), so the user sees exactly what was modeled vs. originated.
 function ClonePanel({ post }) {
+  const [open, setOpen] = useState(true);
   const cs = post?.clone_source;
   if (!cs || (cs.kind !== "url" && cs.kind !== "reference")) return null;
   const diag = cs.diagnostic || {};
@@ -495,40 +497,58 @@ function ClonePanel({ post }) {
     ["shares", diag.shares],
     ["saves", diag.saves],
   ].filter(([, v]) => typeof v === "number" && v > 0);
+  const hasBody = Boolean(lever || chips.length > 0 || ledger);
 
   return (
     <div className="mx-auto max-w-5xl px-5 pt-5">
       <div className="rounded-xl border border-violet-400/30 bg-violet-50/40 p-3.5 dark:bg-violet-950/10">
         <div className="flex items-center gap-2">
-          <Sparkles className="size-4 text-violet-600 dark:text-violet-400" />
-          <span className="text-xs font-semibold text-violet-700 dark:text-violet-300">
-            Cloned from a reference{cs.ingested ? "" : " — analysing…"}
-          </span>
+          <Sparkles className="size-4 shrink-0 text-violet-600 dark:text-violet-400" />
+          <button
+            type="button"
+            onClick={hasBody ? () => setOpen((o) => !o) : undefined}
+            className={`flex min-w-0 flex-1 items-center gap-1.5 text-left ${hasBody ? "cursor-pointer" : "cursor-default"}`}
+            aria-expanded={hasBody ? open : undefined}
+          >
+            <span className="truncate text-xs font-semibold text-violet-700 dark:text-violet-300">
+              Cloned from a reference{cs.ingested ? "" : " — analysing…"}
+            </span>
+            {hasBody && (
+              <span className={`shrink-0 text-[11px] text-violet-600/60 transition-transform dark:text-violet-400/60 ${open ? "rotate-90" : ""}`}>
+                ›
+              </span>
+            )}
+          </button>
           {cs.tiktok_url && (
-            <a href={cs.tiktok_url} target="_blank" rel="noreferrer" className="ml-auto truncate text-[11px] text-violet-600/80 hover:underline dark:text-violet-400/80">
+            <a href={cs.tiktok_url} target="_blank" rel="noreferrer" className="shrink-0 truncate text-[11px] text-violet-600/80 hover:underline dark:text-violet-400/80">
               view original ↗
             </a>
           )}
         </div>
-        {lever && (
-          <p className="mt-2 text-xs text-foreground">
-            <span className="font-medium uppercase tracking-wide text-violet-600 dark:text-violet-400">{lever}</span>
-            {diag.summary ? ` — ${diag.summary}` : ""}
-          </p>
-        )}
-        {chips.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {chips.map(([k, v]) => (
-              <span key={k} className="rounded-md bg-background/60 px-2 py-0.5 text-[10px] text-muted-foreground">
-                {fmtCount(v)} {k}
-              </span>
-            ))}
-          </div>
-        )}
-        {ledger && (
-          <div className="mt-2.5 whitespace-pre-wrap rounded-lg bg-background/50 p-2.5 text-[11px] leading-relaxed text-muted-foreground">
-            {ledger}
-          </div>
+
+        {hasBody && open && (
+          <>
+            {lever && (
+              <p className="mt-2 text-xs text-foreground">
+                <span className="font-medium uppercase tracking-wide text-violet-600 dark:text-violet-400">{lever}</span>
+                {diag.summary ? ` — ${diag.summary}` : ""}
+              </p>
+            )}
+            {chips.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {chips.map(([k, v]) => (
+                  <span key={k} className="rounded-md bg-background/60 px-2 py-0.5 text-[10px] text-muted-foreground">
+                    {fmtCount(v)} {k}
+                  </span>
+                ))}
+              </div>
+            )}
+            {ledger && (
+              <div className="mt-2.5 whitespace-pre-wrap rounded-lg bg-background/50 p-2.5 text-[11px] leading-relaxed text-muted-foreground">
+                {ledger}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -703,17 +723,38 @@ function BulkImageBar({ slides, onSendMessage, commitIfDirty, currentIndex = 0 }
 // Drafting state
 // ---------------------------------------------------------------------------
 
-function DraftingPulse() {
+// Right-pane loader while the agent works. Transparent: it surfaces the actual
+// current pipeline step (not fake cycled copy) and, for a clone, the reference
+// being modeled (cover + caption) so the wait shows real context. Falls back to
+// the cycled hints only before any step has arrived.
+function DraftingPulse({ steps = [] }) {
   const [idx, setIdx] = useState(0);
   useEffect(() => {
     const t = setInterval(() => setIdx((i) => (i + 1) % STREAMING_HINTS.length), 1800);
     return () => clearInterval(t);
   }, []);
+
+  const running = [...steps].reverse().find((s) => s.status === StepStatus.RUNNING);
+  const lastDone = [...steps].reverse().find((s) => s.status === StepStatus.SUCCESS || s.status === StepStatus.ERROR);
+  const liveLabel = running?.label || lastDone?.label || "";
+  const scrape = steps.find((s) => s.step_id === "clone_scraping" && s.payload)?.payload;
+  const isCloning = Boolean(scrape) || steps.some((s) => s.step_id?.startsWith("clone_"));
+
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
+      {scrape?.thumbnail && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={mediaUrl(scrape.thumbnail)}
+          alt=""
+          className="mb-1 h-28 w-16 rounded-lg border border-border/50 object-cover shadow-sm"
+        />
+      )}
       <div className="size-10 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
-      <p className="text-sm font-medium">Drafting the post…</p>
-      <p className="text-xs text-muted-foreground transition-opacity duration-500">{STREAMING_HINTS[idx]}</p>
+      <p className="text-sm font-medium">{isCloning ? "Cloning the reference…" : "Drafting the post…"}</p>
+      <p className="text-xs text-muted-foreground transition-opacity duration-500">
+        {liveLabel || STREAMING_HINTS[idx]}
+      </p>
       <p className="max-w-xs text-[10px] text-muted-foreground/60">
         Slides, caption, and hashtags appear here as soon as the draft is ready. Usually 20–40 seconds.
       </p>

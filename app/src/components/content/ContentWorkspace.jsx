@@ -313,7 +313,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
           if (existing) {
             return prev.map((s) =>
               s.step_id === event.step_id
-                ? { ...s, status: StepStatus.RUNNING, label: event.label || s.label, summary: event.summary }
+                ? { ...s, status: StepStatus.RUNNING, label: event.label || s.label, summary: event.summary, payload: event.payload ?? s.payload }
                 : s,
             );
           }
@@ -324,6 +324,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
               label: event.label || event.step_id,
               status: StepStatus.RUNNING,
               summary: event.summary || "",
+              payload: event.payload ?? null,
             },
           ];
         });
@@ -333,7 +334,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
         setSteps((prev) =>
           prev.map((s) =>
             s.step_id === event.step_id
-              ? { ...s, status: event.status || StepStatus.SUCCESS, summary: event.summary || s.summary }
+              ? { ...s, status: event.status || StepStatus.SUCCESS, summary: event.summary || s.summary, payload: event.payload ?? s.payload }
               : s,
           ),
         );

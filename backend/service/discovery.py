@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 # Async callback the clone worker passes so each ingest stage surfaces as an SSE
 # step. (step_id, status, message) — status in {"running", "ok", "error"}.
-StepCb = Callable[[str, str, str], Awaitable[None]]
+StepCb = Callable[..., Awaitable[None]]  # (step_id, status, message="", payload=None)
 
 
 def query_discovered_references(
@@ -100,8 +100,13 @@ _DOWNLOAD_ATTEMPTS = 2
 
 
 def _download_to_bucket(src_url: str, key: str) -> str:
-    """Fetch bytes from a (TikTok CDN) URL and store them in our bucket.
-    Retries once on a transient miss. Returns the stored URL, or "" on failure."""
+    """Fetch bytes from a TikTok CDN or Apify-hosted URL and store them in our
+    bucket. Retries once on a transient miss. When the scrape requests
+    shouldDownloadCovers/Slideshow the cover + slides live in Apify's key-value
+    store, whose record URLs are token-gated (a plain GET 403s) — so on failure
+    retry with the API token appended, but ONLY when the host is genuinely Apify
+    (never append the token to a TikTok/other host: that would leak it). Returns
+    the stored URL, or "" on failure."""
     if not src_url:
         return ""
     for attempt in range(_DOWNLOAD_ATTEMPTS):
@@ -110,6 +115,16 @@ def _download_to_bucket(src_url: str, key: str) -> str:
             return storage.put_image(key, data, _IMG_CONTENT_TYPE)
         if attempt + 1 < _DOWNLOAD_ATTEMPTS:
             time.sleep(0.4)
+    # Apify key-value-store records need the token (mirrors _fetch_reference_video_bytes).
+    if host_in(src_url, _APIFY_HOSTS) and is_public_http_url(src_url):
+        from config import get_configs
+
+        token = (get_configs().apify_api_key or "").strip()
+        if token:
+            sep = "&" if "?" in src_url else "?"
+            data = storage.get_bytes(f"{src_url}{sep}token={token}")
+            if data:
+                return storage.put_image(key, data, _IMG_CONTENT_TYPE)
     return ""
 
 
@@ -404,6 +419,26 @@ async def understand_reference_video(post: dict, **knobs) -> str:
     return await analyze_video_bytes(data, **knobs) if data else ""
 
 
+def _reference_preview(post: dict) -> dict:
+    """Compact reference card for the 'Scraping' step's detail panel — the
+    same shape the paste-a-URL dialog shows: cover thumbnail + handle + caption
+    + the public engagement counts the clone is modeling. The TikTok cover URL
+    is used as-is (it loads cross-origin, like the oembed thumbnail does)."""
+    vm = post.get("video_meta") or {}
+    am = post.get("author_meta") or {}
+    return {
+        "thumbnail": vm.get("cover_url") or vm.get("original_cover_url") or "",
+        "author":    am.get("nick_name") or am.get("name") or "",
+        "caption":   (post.get("text") or "")[:280],
+        "post_type": "video" if post.get("is_slideshow") is False else "slideshow",
+        "views":     post.get("play_count"),
+        "likes":     post.get("digg_count"),
+        "comments":  post.get("comment_count"),
+        "shares":    post.get("share_count"),
+        "saves":     post.get("collect_count"),
+    }
+
+
 async def ingest_reference(project_id: UUID, clone_source: dict, *, on_step: StepCb | None = None) -> dict:
     """Resolve a `clone_source` pointer into a full reference card:
     ``{tiktok_url, asset_id, scraped_post, media, diagnostic, error}``.
@@ -415,9 +450,9 @@ async def ingest_reference(project_id: UUID, clone_source: dict, *, on_step: Ste
         library), then capture media.
     Media is captured only when missing. Coarse stages surface via ``on_step``.
     Sync DB / network work runs in threads so the event loop stays responsive."""
-    async def _step(sid: str, status: str, msg: str = "") -> None:
+    async def _step(sid: str, status: str, msg: str = "", payload: dict | None = None) -> None:
         if on_step is not None:
-            await on_step(sid, status, msg)
+            await on_step(sid, status, msg, payload)
 
     kind = (clone_source or {}).get("kind") or "url"
     url = (clone_source or {}).get("url") or ""
@@ -441,6 +476,10 @@ async def ingest_reference(project_id: UUID, clone_source: dict, *, on_step: Ste
         await _step("resolving", "ok", "Loaded saved reference.")
 
     if post is None and url:
+        # Close the resolving step before scraping — the cached / saved-asset
+        # branches above already do, but the freshly-pasted-URL path didn't, so
+        # "Resolving the reference" span as a spinner for the whole run.
+        await _step("resolving", "ok", "Resolved the link.")
         await _step("scraping", "running", "Scraping the TikTok (metadata + media)…")
         post = await _scrape_single_post(url)
         if post is None:
@@ -466,7 +505,7 @@ async def ingest_reference(project_id: UUID, clone_source: dict, *, on_step: Ste
                     db.refresh(a)
                     return a.id
             asset_id = await asyncio.to_thread(_save)
-        await _step("scraping", "ok", "Fetched the post.")
+        await _step("scraping", "ok", "Fetched the post.", payload=_reference_preview(post))
 
     if post is None:
         return {"error": "no_source", "tiktok_url": url, "scraped_post": None,
@@ -475,17 +514,22 @@ async def ingest_reference(project_id: UUID, clone_source: dict, *, on_step: Ste
     # Capture media (cover + slides) into our bucket if it isn't there yet.
     media: dict = {}
     if asset_id is not None and engine is not None:
+        # Emit "running" unconditionally (even on a cached hit) so the UI always
+        # gets a STEP_STARTED to attach the finished count to.
+        await _step("media", "running", "Saving cover & slide images…")
+
         def _existing_media():
             with Session(engine) as db:
                 return _reference_media(db.get(ContentAsset, asset_id))
         media = await asyncio.to_thread(_existing_media)
         if (media.get("status") or "") != "ok":
-            await _step("media", "running", "Saving cover & slide images…")
             await asyncio.to_thread(capture_reference_media, asset_id, post)
             media = await asyncio.to_thread(_existing_media)
-            await _step("media", "ok", "Media captured.")
-    else:
-        await _step("media", "ok", "")
+        await _step("media", "ok", "Media captured.", payload={
+            "cover":  bool(media.get("cover")),
+            "slides": len(media.get("slides") or []),
+            "video":  bool(media.get("video")),
+        })
 
     # For a VIDEO reference, deconstruct the clip itself with Gemini video
     # understanding — the agent can't watch an mp4, so this is its eyes (Higgsfield's
@@ -507,6 +551,7 @@ async def ingest_reference(project_id: UUID, clone_source: dict, *, on_step: Ste
         await _step(
             "watching", "ok" if video_analysis else "error",
             "Deconstructed the video." if video_analysis else "Couldn't read the clip — using the cover.",
+            payload={"analyzed": bool(video_analysis), "analysis": video_analysis[:4000]},
         )
         # Persist onto the discovered_reference asset so the library entry carries
         # the analysis (a re-clone reuses it; mirrors params.media for cover/slides).
@@ -539,7 +584,10 @@ async def ingest_reference(project_id: UUID, clone_source: dict, *, on_step: Ste
 
     await _step("analyzing", "running", "Reading why it worked…")
     diagnostic = diagnose_reference(post)
-    await _step("analyzing", "ok", diagnostic.get("summary", ""))
+    await _step("analyzing", "ok", diagnostic.get("summary", ""), payload={
+        k: diagnostic.get(k)
+        for k in ("lever", "summary", "views", "likes", "comments", "shares", "saves")
+    })
 
     return {
         "tiktok_url": url,

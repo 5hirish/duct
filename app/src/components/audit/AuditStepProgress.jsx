@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { STEP_LABELS as BACKEND_STEP_LABELS, AuditStep } from "../../lib/auditEvents";
 import { StepStatus } from "../../lib/agentSteps";
+import AgentStepTimeline from "../workspace/AgentStepTimeline";
 
 const STEP_LABELS = {
   ...BACKEND_STEP_LABELS,
@@ -319,136 +320,75 @@ const DETAIL_COMPONENTS = {
   [AuditStep.ENRICHING]:     EnrichingDetails,
 };
 
-function StepRow({ step, expanded, onToggle }) {
-  const { step_id, label, status, payload } = step;
+// Inline right-of-row badges (page/competitor counts, time estimate, "Reasoned").
+function renderMeta(step) {
+  const { step_id, status, payload } = step;
   const isRunning    = status === StepStatus.RUNNING;
   const isDone       = status === StepStatus.SUCCESS || status === StepStatus.ERROR;
   const isSynthesize = step_id === AuditStep.SYNTHESIZE_AUDIT;
-  const Details      = DETAIL_COMPONENTS[step_id];
-  const canExpand    = isDone && !!Details && !!payload;
 
   return (
-    <div>
-      {/* Header row */}
-      <div
-        className={`flex items-center gap-2 text-sm ${canExpand ? "cursor-pointer hover:opacity-80 transition-opacity" : ""}`}
-        onClick={canExpand ? onToggle : undefined}
-        role={canExpand ? "button" : undefined}
-        aria-expanded={canExpand ? expanded : undefined}
-      >
-        {/* Status icon */}
-        {isRunning ? (
-          <span className="inline-block size-3 rounded-full border-2 border-blue-500 border-t-transparent animate-spin shrink-0" />
-        ) : status === StepStatus.SUCCESS ? (
-          <span className="text-green-500 text-xs shrink-0">✓</span>
-        ) : status === StepStatus.ERROR ? (
-          <span className="text-destructive text-xs shrink-0">✗</span>
-        ) : (
-          <span className="size-3 shrink-0 rounded-full border border-muted-foreground/20" />
-        )}
-
-        <span className={isRunning ? "font-medium flex-1" : "text-muted-foreground flex-1"}>
-          {STEP_LABELS[step_id] || label || step_id}
+    <>
+      {payload?.landing_pages != null && !isSynthesize && (
+        <span className="text-xs text-muted-foreground tabular-nums">
+          {payload.landing_pages} page{payload.landing_pages !== 1 ? "s" : ""}
+          {payload.blog_posts > 0 && `, ${payload.blog_posts} post${payload.blog_posts !== 1 ? "s" : ""}`}
         </span>
-
-        {/* Crawl page count */}
-        {payload?.landing_pages != null && !isSynthesize && (
-          <span className="text-xs text-muted-foreground tabular-nums">
-            {payload.landing_pages} page{payload.landing_pages !== 1 ? "s" : ""}
-            {payload.blog_posts > 0 && `, ${payload.blog_posts} post${payload.blog_posts !== 1 ? "s" : ""}`}
-          </span>
-        )}
-
-        {/* Crawled page count */}
-        {payload?.pages != null && (
-          <span className="text-xs text-muted-foreground tabular-nums">
-            {payload.pages.length} page{payload.pages.length !== 1 ? "s" : ""}
-          </span>
-        )}
-
-        {/* Competitor research summary */}
-        {payload?.competitors != null && (
-          <span className="text-xs text-muted-foreground tabular-nums">
-            {payload.competitors.length} competitor{payload.competitors.length !== 1 ? "s" : ""}
-            {payload.content_gaps?.length > 0 && `, ${payload.content_gaps.length} gap${payload.content_gaps.length !== 1 ? "s" : ""}`}
-          </span>
-        )}
-
-        {/* Time estimate on synthesize while running */}
-        {isSynthesize && isRunning && (
-          <span className="text-xs text-muted-foreground">~3 min</span>
-        )}
-
-        {/* Extended thinking indicator */}
-        {isSynthesize && isDone && payload?.reasoned && (
-          <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/10 px-1.5 py-px text-[10px] font-medium text-primary">
-            ✦ Reasoned
-          </span>
-        )}
-
-        {/* Expand chevron */}
-        {canExpand && (
-          <span className={`text-muted-foreground/50 text-xs transition-transform duration-150 ${expanded ? "rotate-90" : ""}`}>
-            ›
-          </span>
-        )}
-      </div>
-
-      {/* Progress bar for synthesize */}
+      )}
+      {payload?.pages != null && (
+        <span className="text-xs text-muted-foreground tabular-nums">
+          {payload.pages.length} page{payload.pages.length !== 1 ? "s" : ""}
+        </span>
+      )}
+      {payload?.competitors != null && (
+        <span className="text-xs text-muted-foreground tabular-nums">
+          {payload.competitors.length} competitor{payload.competitors.length !== 1 ? "s" : ""}
+          {payload.content_gaps?.length > 0 && `, ${payload.content_gaps.length} gap${payload.content_gaps.length !== 1 ? "s" : ""}`}
+        </span>
+      )}
       {isSynthesize && isRunning && (
-        <div className="ml-5 mt-1.5">
-          <div className="h-0.5 w-full rounded-full bg-muted overflow-hidden">
-            <div
-              className="h-full rounded-full bg-blue-400"
-              style={{ animation: "duct-step-fill 180s cubic-bezier(0.08, 0, 0.2, 1) forwards" }}
-            />
-          </div>
-          <style>{`@keyframes duct-step-fill { from { width: 0% } to { width: 85% } }`}</style>
-        </div>
+        <span className="text-xs text-muted-foreground">~3 min</span>
       )}
+      {isSynthesize && isDone && payload?.reasoned && (
+        <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/10 px-1.5 py-px text-[10px] font-medium text-primary">
+          ✦ Reasoned
+        </span>
+      )}
+    </>
+  );
+}
 
-      {/* Expandable detail panel */}
-      {canExpand && (
+// The animated progress bar shown under the synthesize step while it runs.
+function renderBelow(step) {
+  const isSynthesize = step.step_id === AuditStep.SYNTHESIZE_AUDIT;
+  if (!isSynthesize || step.status !== StepStatus.RUNNING) return null;
+  return (
+    <div className="ml-5 mt-1.5">
+      <div className="h-0.5 w-full rounded-full bg-muted overflow-hidden">
         <div
-          className="overflow-hidden transition-all duration-200 ml-5"
-          style={{ maxHeight: expanded ? "700px" : "0px" }}
-        >
-          <div className="pt-2 pb-1">
-            <Details payload={payload} />
-          </div>
-        </div>
-      )}
+          className="h-full rounded-full bg-blue-400"
+          style={{ animation: "duct-step-fill 180s cubic-bezier(0.08, 0, 0.2, 1) forwards" }}
+        />
+      </div>
+      <style>{`@keyframes duct-step-fill { from { width: 0% } to { width: 85% } }`}</style>
     </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// AuditStepProgress
+// AuditStepProgress — audit's labels + detail panels rendered through the
+// shared AgentStepTimeline (the one step primitive all agents now use).
 // ---------------------------------------------------------------------------
 
 export default function AuditStepProgress({ steps }) {
-  const [expanded, setExpanded] = useState(new Set());
-
-  if (!steps || steps.length === 0) return null;
-
-  function toggle(id) {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  }
-
   return (
-    <div className="space-y-2.5 py-2">
-      {steps.map((step) => (
-        <StepRow
-          key={step.step_id}
-          step={step}
-          expanded={expanded.has(step.step_id)}
-          onToggle={() => toggle(step.step_id)}
-        />
-      ))}
-    </div>
+    <AgentStepTimeline
+      steps={steps}
+      labels={STEP_LABELS}
+      detailComponents={DETAIL_COMPONENTS}
+      renderMeta={renderMeta}
+      renderBelow={renderBelow}
+      size="sm"
+    />
   );
 }

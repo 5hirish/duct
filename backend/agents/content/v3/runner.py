@@ -1285,6 +1285,31 @@ class ClaudeContentRunner:
         if engine is None:
             raise RuntimeError("DATABASE_URL is not configured.")
 
+        # Coarse pipeline stages surfaced to the shared step timeline. Each finished
+        # step carries a structured payload the UI renders as a detail panel
+        # (reference preview, media counts, video understanding, why it worked).
+        _CLONE_STEP_LABELS = {
+            "loading":   "Loading project",
+            "resolving": "Resolving the reference",
+            "scraping":  "Scraping TikTok (metadata + media)",
+            "media":     "Saving cover & slide images",
+            "watching":  "Watching the reference video",
+            "analyzing": "Reading why it worked",
+        }
+
+        async def _on_step(sid: str, status: str, msg: str = "", payload: dict | None = None) -> None:
+            label = _CLONE_STEP_LABELS.get(sid, sid)
+            if status == "running":
+                await emit({"event": ContentEvent.STEP_STARTED, "step_id": f"clone_{sid}",
+                            "label": label, "status": StepStatus.RUNNING})
+            else:
+                await emit({"event": ContentEvent.STEP_FINISHED, "step_id": f"clone_{sid}",
+                            "label": label,
+                            "status": StepStatus.SUCCESS if status == "ok" else StepStatus.ERROR,
+                            "summary": msg or "", "payload": payload})
+
+        await _on_step("loading", "running")
+
         def _load_post() -> tuple[dict, str, list]:
             with Session(engine) as db:
                 p = db.get(ContentPost, post_id)
@@ -1294,6 +1319,7 @@ class ClaudeContentRunner:
 
         clone_source, post_dir_slug, platforms = await asyncio.to_thread(_load_post)
         ch = resolve_channel(channel or (primary_channel(platforms) if platforms else None))
+        await _on_step("loading", "ok", f"{getattr(ch, 'label', 'TikTok')} clone")
 
         await emit({
             "event":      ContentEvent.PIPELINE_STARTED,
@@ -1304,24 +1330,6 @@ class ClaudeContentRunner:
         })
 
         # ── Ingest the reference (the expensive step — cached on clone_source) ──
-        _CLONE_STEP_LABELS = {
-            "resolving": "Resolving the reference",
-            "scraping":  "Scraping TikTok (metadata + media)",
-            "media":     "Saving cover & slide images",
-            "analyzing": "Reading why it worked",
-        }
-
-        async def _on_step(sid: str, status: str, msg: str = "") -> None:
-            label = _CLONE_STEP_LABELS.get(sid, sid)
-            if status == "running":
-                await emit({"event": ContentEvent.STEP_STARTED, "step_id": f"clone_{sid}",
-                            "label": label, "status": StepStatus.RUNNING})
-            else:
-                await emit({"event": ContentEvent.STEP_FINISHED, "step_id": f"clone_{sid}",
-                            "label": label,
-                            "status": StepStatus.SUCCESS if status == "ok" else StepStatus.ERROR,
-                            "payload": {"message": msg}})
-
         try:
             reference = await ingest_reference(project_id, clone_source, on_step=_on_step)
         except Exception as exc:

@@ -65,8 +65,8 @@ export default function NewPostDraftPage() {
       <ContentWorkspace
         mode={mode}
         context={context}
-        renderViewport={({ payload, assessment, phase, onSendMessage }) => (
-          <PostViewport payload={payload} assessment={assessment} phase={phase} onSendMessage={onSendMessage} />
+        renderViewport={({ payload, assessment, phase, steps, onSendMessage }) => (
+          <PostViewport payload={payload} assessment={assessment} phase={phase} steps={steps} onSendMessage={onSendMessage} />
         )}
       />
     </div>

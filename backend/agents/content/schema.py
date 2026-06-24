@@ -17,7 +17,7 @@ from enum import StrEnum
 from typing import Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from agents.core.session import BaseAgentSession
 
@@ -604,7 +604,7 @@ class PostDraft(BaseModel):
     format_slug: str = ""   # which library format to build with (e.g. "format-d")
     layout: SlideLayout = SlideLayout.FULL_BLEED
     avatar_id: UUID | None = None
-    slide_count: int = Field(default=7, ge=1, le=20)
+    slide_count: int = Field(default=7, ge=0, le=20)
     slides: list[Slide] = Field(default_factory=list)   # source of truth for content + images
     slides_html: str = ""                               # DERIVED by submit_post_draft (do not author)
     caption: str = ""
@@ -637,6 +637,18 @@ class PostDraft(BaseModel):
     # by generate_image(beat_id=...). The video models take one frame per clip (or
     # first+last per transformation), so the clone is authored shot-by-shot here.
     video_storyboard: list[VideoBeat] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _slide_count_matches_type(self) -> "PostDraft":
+        """A video post carries its content in the clip / storyboard, not slides —
+        slide_count 0 is correct there. A slideshow must have at least one slide;
+        without this guard, relaxing slide_count to ge=0 (so video validates) would
+        also let an empty slideshow through. Previously slide_count had ge=1, which
+        REJECTED valid video drafts (slide_count=0) and pushed the agent to re-draft
+        the video as a fake multi-slide slideshow."""
+        if self.post_type != PostType.VIDEO and self.slide_count < 1:
+            raise ValueError("a slideshow post must have at least one slide")
+        return self
 
 
 class PlanStrategy(BaseModel):
