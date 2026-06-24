@@ -25,21 +25,36 @@ export default function VideoViewport({ post }) {
   const beats = Array.isArray(post?.video_storyboard) ? post.video_storyboard : [];
   const videoUrl = post?.video_url || "";
   // Opening keyframe → the video's poster (instant frame before the clip loads).
-  const posterUrl = beats.find((b) => b?.image_url)?.image_url || "";
+  // Prefer the transient preview so a freshly generated keyframe paints instantly.
+  const opening = beats.find((b) => b?._preview_uri || b?.image_url);
+  const posterUrl = opening?._preview_uri || opening?.image_url || "";
 
-  // Build the stack: clip first, then keyframes in sequence.
+  // Build the stack: clip first, then keyframes in sequence. A transformation
+  // beat contributes BOTH its first frame and its 'after' frame so the user can
+  // review/iterate on each (the 'after' was generated but never shown before).
   const items = [];
   if (videoUrl) {
     items.push({ kind: "video", url: videoUrl, label: "Generated video", poster: posterUrl });
   }
   beats.forEach((b, i) => {
+    const label = b?.role ? prettyRole(b.role) : `Keyframe ${i + 1}`;
     items.push({
       kind: "image",
-      url: b?.image_url || "",
+      url: b?._preview_uri || b?.image_url || "",
       prompt: b?.image_prompt || b?.motion || "",
       onScreenText: b?.on_screen_text || "",
-      label: b?.role ? prettyRole(b.role) : `Keyframe ${i + 1}`,
+      label,
     });
+    const after = b?._end_preview_uri || b?.end_image_url || "";
+    if (b?.is_transformation && after) {
+      items.push({
+        kind: "image",
+        url: after,
+        prompt: b?.end_image_prompt || "",
+        onScreenText: b?.on_screen_text || "",
+        label: `${label} · after`,
+      });
+    }
   });
 
   const total = items.length;

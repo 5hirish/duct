@@ -1280,9 +1280,61 @@ _VIDEO_STANDARDS = (
 # STORYBOARD — one clean keyframe per beat (vs slides) — generated with Higgsfield
 # image-to-video today (Veo path coming). Keyframes attach per beat via
 # generate_image(beat_id=…). Mcp tools are namespaced `mcp__higgsfield__*`.
+# The interactive generation phase — SHARED by draft + clone video flows. The
+# agent gates on the user at each step (storyboard, every keyframe, the clip)
+# rather than batch-generating, and realizes the storyboard as ONE continuous
+# Veo clip via extension (the base ≤8s + 7s per extra beat, ≤148s combined).
+_VIDEO_GENERATION_PHASE = """\
+VIDEO PHASE — INTERACTIVE. Generate ONE thing at a time and WAIT for the user
+between each step. NEVER batch all the keyframes, and NEVER jump to the clip.
+
+GATE 1 — approve the storyboard. Right after submit_post_draft, call
+AskUserQuestion before generating anything:
+  question — "Approve this storyboard, or change a beat?"
+  options  — ["Looks good — start the keyframes", "Change something"]
+Generate NOTHING until the user approves. If they choose to change it (an option
+or free-text feedback), revise the beats, submit_post_draft again, and re-ask.
+
+GATE 2 — keyframes, ONE BEAT AT A TIME, in order. For each beat:
+  a. Say which beat + frame you're about to generate, and why (one line) — so the
+     user knows what's coming.
+  b. generate_image(beat_id="<beat>", frame="first") with the character reference
+     (+ the product/app-screen reference on the product beat) via input_asset_ids.
+     For a transformation beat ALSO generate frame="last" (the 'after'). Each
+     keyframe appears in the chat as it lands.
+  c. AskUserQuestion —
+       question — "Keep this keyframe for beat <n> (<role>), or change it?"
+       options  — ["Looks good — next beat", "Regenerate / change it"]
+  d. Approve → next beat. Change → regenerate THIS beat's keyframe only (the other
+     beats are kept), then re-ask. Do NOT advance until the current beat is
+     approved.
+  Move on only when EVERY beat's keyframe is approved.
+
+GATE 3 — render the clip as ONE continuous video via Veo extension. Plan the
+timing within Veo's real limits: the base clip is ≤8s; each EXTENSION adds +7s and
+continues the SAME shot (≤20 extensions, ≤148s total; the output is a single
+combined clip, no hard cut between segments). Map the storyboard onto it:
+  • beat 1 seeds the base clip — its keyframe is the first frame (a transformation
+    beat uses its 'after' frame as the last frame);
+  • pass each SUBSEQUENT beat's motion, in order, as an entry in extension_prompts
+    so Veo continues the shot beat-by-beat into one combined clip.
+  Tell the user the plan (how many beats, ~total seconds), then call
+  generate_video_clip(motion_prompt=<beat-1 DYNAMIC/STATIC/AUDIO>,
+  reference_asset_ids=[the character keyframe], extension_prompts=[<beat-2 motion>,
+  <beat-3 motion>, …], duration_seconds=8). Veo takes minutes — await it.
+  (ALTERNATIVELY, if the `mcp__higgsfield__*` tools are in your list, Higgsfield is
+  connected — animate the opening keyframe via image-to-video, poll, then
+  attach_post_video(source_url=…, source_image_asset_id=<opening keyframe asset_id>).
+  If the user wants Higgsfield but its tools are NOT in your list, tell them to
+  connect it in Settings → Connectors.)
+Then give a brief summary once the clip is attached.
+
+"""
+
+
 _VIDEO_PHASE_INSTRUCTIONS = """\
-This is a VIDEO post: the deliverable is a short vertical clip (≤15s, 9:16) built
-from a multi-beat STORYBOARD (one clean keyframe per shot). There are NO slides.
+This is a VIDEO post: the deliverable is a short vertical clip (9:16) built from a
+multi-beat STORYBOARD (one clean keyframe per shot). There are NO slides.
 
 WRITE PHASE (copy + storyboard; NO generation yet):
 
@@ -1295,35 +1347,15 @@ WRITE PHASE (copy + storyboard; NO generation yet):
    a vivid keyframe `image_prompt` (apply the IMAGE PROMPT DISCIPLINE; reuse the avatar /
    character reference for identity; pass the product/app-screen asset as a
    reference on any beat that shows the product), a `motion` (apply CLIP
-   DIRECTION), and `duration_seconds` (beats sum to ≤15). For a before→after beat
-   set `is_transformation: true` and write `end_image_prompt` (the 'after' frame).
-   Apply the HARD CONSTRAINTS across beats.
+   DIRECTION), and `duration_seconds`. Plan the durations so the beats form ONE clip
+   within Veo's limits — a ≤8s base plus +7s per extra beat (≤148s total). For a
+   before→after beat set `is_transformation: true` and write `end_image_prompt`
+   (the 'after' frame). Apply the HARD CONSTRAINTS across beats.
 4. Emit the draft inside <duct_report>{ "type": "post", "post_type": "video", ... }
    </duct_report> then call submit_post_draft.
-5. Brief summary in chat (hook, the beats, the motion) and ASK the user to review
-   before you generate — they can tweak any beat's copy, keyframe or motion.
+5. Briefly summarise the hook, the beats and the motion in chat.
 
-VIDEO PHASE (only AFTER the user approves):
-
-A. Generate each beat's keyframe: generate_image(beat_id="<beat>", frame="first")
-   with the character reference (+ the product/app-screen reference on the product
-   beat) via input_asset_ids — it attaches to that beat. For a transformation beat
-   also generate the 'after' frame: generate_image(beat_id="<beat>", frame="last").
-B. Produce the clip — IN-HOUSE with Veo (preferred): call generate_video_clip(
-   motion_prompt=<the full beat-by-beat DYNAMIC/STATIC/AUDIO>, reference_asset_ids=[the
-   character keyframe], duration_seconds=8). It animates the opening keyframe (or pass
-   beat_id to animate a specific beat; a transformation beat auto-uses its 'after' frame
-   as the last frame), then stores + attaches the clip. Veo takes minutes — await it.
-   (Veo caps at 8s per shot; for a LONGER CONTINUOUS shot pass extension_prompts — each
-   adds +7s, cumulative, no cut. Hard-cut multi-beat stitching is a follow-up — for now
-   one clip carries the beats.) ALTERNATIVELY, if Higgsfield is connected, animate via the
-   `mcp__higgsfield__*` image-to-video tool, poll, then attach_post_video(source_url=…,
-   source_image_asset_id=<opening keyframe asset_id>).
-C. If the Higgsfield tools are NOT in your tool list, Higgsfield isn't connected —
-   tell the user to connect it in Settings → Connectors, and stop.
-D. Brief summary in chat once the clip is attached.
-
-""" + _VIDEO_STANDARDS
+""" + _VIDEO_GENERATION_PHASE + _VIDEO_STANDARDS
 
 
 # Video-clone kickoff tail — the reference is a VIDEO, so the clone is ALSO a
@@ -1332,8 +1364,8 @@ D. Brief summary in chat once the clip is attached.
 # is generated with Higgsfield image-to-video. Mirrors _VIDEO_PHASE_INSTRUCTIONS,
 # seeded from the deconstruction.
 _VIDEO_CLONE_INSTRUCTIONS = """\
-This is a VIDEO clone: the deliverable is a short vertical clip (≤15s, 9:16) built
-from a multi-beat STORYBOARD — NOT slides. Run the clone loop, but produce a VIDEO:
+This is a VIDEO clone: the deliverable is a short vertical clip (9:16) built from a
+multi-beat STORYBOARD — NOT slides. Run the clone loop, but produce a VIDEO:
 
 1. STUDY the DECONSTRUCTION block above — a director-grade breakdown (beat-by-beat
    shot list, the transformation/narrative arc, on-screen text verbatim, audio, hook)
@@ -1353,36 +1385,18 @@ from a multi-beat STORYBOARD — NOT slides. Run the clone loop, but produce a V
    `image_prompt` (apply the IMAGE PROMPT DISCIPLINE; reuse the avatar/character reference for
    identity; pass the product/app-screen asset as a reference on the beat that shows
    the product — that's your native product moment), a `motion` (apply CLIP DIRECTION,
-   modelled on the reference's pacing), `duration_seconds` (beats sum to ≤15). For the
-   before→after beat set `is_transformation: true` and write `end_image_prompt`. Apply
-   the HARD CONSTRAINTS. Emit it in <duct_report>{ "type": "post", "post_type": "video",
+   modelled on the reference's pacing), and `duration_seconds` planned within Veo's
+   limits — a ≤8s base plus +7s per extra beat (≤148s total). For the before→after beat
+   set `is_transformation: true` and write `end_image_prompt`. Apply the HARD
+   CONSTRAINTS. Emit it in <duct_report>{ "type": "post", "post_type": "video",
    ... }</duct_report>, call submit_post_draft with the EXACT post_dir_slug above, put
    the Kept-vs-Changed ledger in `strategic_note`, and summarise it in chat as a
    reference↔clone side-by-side.
-4. ASK the user to review the beats + motion before you generate — they can tweak any
-   beat. Do NOT generate yet.
 
-VIDEO PHASE (only AFTER the user approves):
+Then run the INTERACTIVE VIDEO PHASE below — the user approves the storyboard, then
+each keyframe, before you render the clip.
 
-A. Generate each beat's keyframe: generate_image(beat_id="<beat>", frame="first") with
-   the character reference (+ the product/app-screen reference on the product beat) via
-   input_asset_ids — it attaches to that beat. For the transformation beat also generate
-   the 'after' frame: generate_image(beat_id="<beat>", frame="last").
-B. Produce the clip — IN-HOUSE with Veo (preferred): call generate_video_clip(
-   motion_prompt=<the full beat-by-beat DYNAMIC/STATIC/AUDIO>, reference_asset_ids=[the
-   character keyframe], duration_seconds=8). It animates the opening keyframe (or pass
-   beat_id to animate a specific beat; the transformation beat auto-uses its 'after'
-   frame as the last frame), then stores + attaches the clip. Veo takes minutes — await
-   it. (Veo caps at 8s per shot; for a LONGER CONTINUOUS shot pass extension_prompts —
-   each +7s, cumulative; hard-cut multi-beat stitching is a follow-up.) ALTERNATIVELY, if
-   Higgsfield is connected, animate the keyframe via the `mcp__higgsfield__*`
-   image-to-video tool, poll, then attach_post_video(source_url=…,
-   source_image_asset_id=<opening keyframe asset_id>).
-C. If the Higgsfield tools are NOT in your tool list, Higgsfield isn't connected — tell
-   the user to connect it in Settings → Connectors, and stop.
-D. Brief summary in chat once the clip is attached.
-
-""" + _VIDEO_STANDARDS
+""" + _VIDEO_GENERATION_PHASE + _VIDEO_STANDARDS
 
 
 # Slideshow-clone kickoff tail — deconstruct the cover + slide frames into an

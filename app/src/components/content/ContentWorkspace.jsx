@@ -389,7 +389,36 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
         invalidatePosts();
         const base = { type: "post", ...event.payload };
         const ip = event.inline_preview;
-        if (ip?.data_uri) {
+        if (ip?.data_uri && ip.beat_id) {
+          // VIDEO keyframe preview: paint the beat instantly, then preload the real
+          // CDN image and drop the preview; drop a chat bubble so keyframes appear
+          // one-by-one as the agent generates them (parity with slide images).
+          setPayload(applyBeatPreview(base, ip.beat_id, ip.frame, ip.data_uri));
+          const realUrl = findBeatImage(base, ip.beat_id, ip.frame);
+          if (realUrl && typeof window !== "undefined") {
+            const pre = new window.Image();
+            const drop = () => setPayload((prev) => applyBeatPreview(prev, ip.beat_id, ip.frame, null));
+            pre.onload = drop;
+            pre.onerror = drop;
+            pre.src = mediaUrl(realUrl);
+          }
+          const beatIdx = (base.video_storyboard || []).findIndex(
+            (b) => String(b.beat_id) === String(ip.beat_id),
+          );
+          const role = beatIdx >= 0 ? base.video_storyboard[beatIdx]?.role : "";
+          const cap =
+            `Beat ${beatIdx >= 0 ? beatIdx + 1 : "?"}${role ? ` · ${role}` : ""}` +
+            (ip.frame === "last" ? " · after-frame" : " keyframe");
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              image: ip.data_uri,
+              fullUrl: realUrl ? mediaUrl(realUrl) : ip.data_uri,
+              caption: cap,
+            },
+          ]);
+        } else if (ip?.data_uri) {
           // Instant first paint: render the inline data URI now, then preload the
           // real CDN image and drop the preview so the iframe shows full-res
           // (cached) — avoids a visible CDN round-trip on the freshly generated slide.
@@ -658,6 +687,27 @@ function applyPreview(payload, slideId, itemIndex, uri) {
     return { ...s, items };
   });
   return { ...payload, slides };
+}
+
+/** The real (CDN) image_url for a storyboard beat's first or 'after' (last) frame. */
+function findBeatImage(payload, beatId, frame) {
+  const beat = (payload?.video_storyboard || []).find((b) => String(b.beat_id) === String(beatId));
+  if (!beat) return null;
+  return (frame === "last" ? beat.end_image_url : beat.image_url) || null;
+}
+
+/** Set/clear the transient preview URI on a beat's first (_preview_uri) or 'after'
+ * (_end_preview_uri) keyframe — the instant-paint analogue of applyPreview for video. */
+function applyBeatPreview(payload, beatId, frame, uri) {
+  if (!payload?.video_storyboard) return payload;
+  const key = frame === "last" ? "_end_preview_uri" : "_preview_uri";
+  const video_storyboard = payload.video_storyboard.map((b) => {
+    if (String(b.beat_id) !== String(beatId)) return b;
+    const next = { ...b };
+    if (uri) next[key] = uri; else delete next[key];
+    return next;
+  });
+  return { ...payload, video_storyboard };
 }
 
 /**
