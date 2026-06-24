@@ -12,7 +12,7 @@ Three levels of coverage:
     No network crawl. Uses a local HTML fixture with 5 deliberately planted
     SEO issues and calls run_synthesis() with a real ClaudeSDKClient.
     Verifies the synthesis layer catches each known issue via the unified
-    artifact session pattern (<duct_report> tag parse, no output_format).
+    artifact session pattern (<duct_artifact> tag parse, no output_format).
     Requires ANTHROPIC_API_KEY.
 
   test_full_pipeline_real_page
@@ -22,10 +22,10 @@ Three levels of coverage:
 
 Architecture (unified session):
   - Single ClaudeSDKClient session, no output_format.
-  - Initial report extracted from <duct_report> XML tag in the stream.
+  - Initial report extracted from <duct_artifact> XML tag in the stream.
   - SYNTHESIS_CHUNK no longer emitted; model streams AGENT_MESSAGE_CHUNK text.
   - THINKING_CHUNK emitted when adaptive thinking fires.
-  - REPORT_CHUNK emitted per-token while inside <duct_report> for live streaming.
+  - REPORT_CHUNK emitted per-token while inside <duct_artifact> for live streaming.
   - close_session() in the emit callback terminates the message_gen loop.
 
 All tests have a 5-minute (300s) outer timeout.
@@ -352,7 +352,7 @@ async def test_run_synthesis_catches_planted_issues(acme_business_context):
     # Core report presence
     # ------------------------------------------------------------------
     assert report is not None, \
-        "run_synthesis returned None — <duct_report> tag not found or parse failed"
+        "run_synthesis returned None — <duct_artifact> tag not found or parse failed"
     assert report.url == _FIXTURE_URL
     assert isinstance(report.executive_summary, str), "executive_summary must be a string"
 
@@ -360,7 +360,7 @@ async def test_run_synthesis_catches_planted_issues(acme_business_context):
     # html_report structural integrity
     # ------------------------------------------------------------------
     html = report.html_report
-    assert html, "html_report is empty — model omitted HTML from <duct_report>"
+    assert html, "html_report is empty — model omitted HTML from <duct_artifact>"
 
     html_lower = html.lower()
     assert "<html" in html_lower,   f"html_report missing <html> (first 200): {html[:200]}"
@@ -387,7 +387,7 @@ async def test_run_synthesis_catches_planted_issues(acme_business_context):
 
     agent_chunks = [e for e in events if e.get("event") == "agent_message_chunk"]
     assert len(agent_chunks) > 0, (
-        "no AGENT_MESSAGE_CHUNK events — model did not stream analysis text before <duct_report>. "
+        "no AGENT_MESSAGE_CHUNK events — model did not stream analysis text before <duct_artifact>. "
         "Check the unified system prompt."
     )
     report_chunks = [e for e in events if e.get("event") == "report_chunk"]
@@ -452,7 +452,7 @@ async def test_full_pipeline_real_page(duct_business_context):
     """End-to-end: crawls getduct.ai then runs Claude synthesis in template mode.
 
     Uses report_mode='template' — the agent calls SubmitAuditReport with structured
-    JSON instead of emitting <duct_report> HTML tags. The React component AuditReportV1
+    JSON instead of emitting <duct_artifact> HTML tags. The React component AuditReportV1
     renders the structured data visually.
     """
     import asyncio
@@ -609,7 +609,7 @@ async def test_full_pipeline_real_page(duct_business_context):
     assert len(agent_chunks) > 0, \
         "no AGENT_MESSAGE_CHUNK — model didn't stream analysis text before SubmitAuditReport"
 
-    # template mode: no <duct_report> tag streaming
+    # template mode: no <duct_artifact> tag streaming
     report_chunks = [e for e in events if e.get("event") == "report_chunk"]
     assert len(report_chunks) == 0, \
         f"unexpected REPORT_CHUNK events in template mode ({len(report_chunks)} received)"

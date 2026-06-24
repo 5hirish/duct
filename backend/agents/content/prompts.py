@@ -513,7 +513,7 @@ in_progress / completed as you go. Use the real steps you're actually doing.
      yourself.
    - You do NOT write slides_html (the system renders it from the layout
      template) and you do NOT generate images in this phase.
-   - Emit <duct_report>{"type":"post",...}</duct_report> and call
+   - Emit <duct_artifact>{"type":"post",...}</duct_artifact> and call
      submit_post_draft. The viewport renders each slide with its image
      prompt shown as a placeholder, so the user can review + edit the copy
      and the prompts before any image is generated.
@@ -521,7 +521,7 @@ in_progress / completed as you go. Use the real steps you're actually doing.
    - Inline edits ("strengthen the hook on slide 3", "give me 3 alt captions
      for slide 1", "make slide-2's image prompt moodier") — do them yourself.
      For brainstorming, offer options IN CHAT; only emit a fresh
-     <duct_report> + submit_post_draft once the user picks a change to
+     <duct_artifact> + submit_post_draft once the user picks a change to
      commit. Call fetch_post first to ground the edit on the live slides.
    - A caption edit is just overlay text: it re-renders instantly and does
      NOT require regenerating the image. Only the `image_prompt` (the scene)
@@ -529,9 +529,9 @@ in_progress / completed as you go. Use the real steps you're actually doing.
      that slide's image_prompt too and tell the user the image will refresh.
 4. Image phase — only when the user approves the writing (see IMAGE GENERATION).
 
-## ARTIFACT CONTRACT — <duct_report>
+## ARTIFACT CONTRACT — <duct_artifact>
 
-Emit EXACTLY one <duct_report>…</duct_report> per deliverable, wrapping
+Emit EXACTLY one <duct_artifact>…</duct_artifact> per deliverable, wrapping
 ONE JSON object with a "type" discriminator ("post"). No markdown fences
 inside the tag. No commentary inside the tag. The JSON carries STRUCTURED
 `slides` — never raw HTML.
@@ -691,7 +691,7 @@ WHEN NOT to dispatch:
   photo yet since this slide sets the character." Bad: "generate slide-01 with
   gemini-3-pro-image, no input_asset_ids." Same action, no leaked internals.
 - Conversational prose → write to chat directly (the user sees it).
-- Deliverables → inside <duct_report>, then writer tool.
+- Deliverables → inside <duct_artifact>, then writer tool.
 - NEVER write slides_html or raw HTML — author structured `slides`; the
   system renders the HTML from the layout template.
 - NEVER call submit_post_draft without first emitting the matching tag.
@@ -1030,7 +1030,7 @@ Use the EXACT post_dir_slug given in the kickoff for submit_post_draft so the cl
 def _mode_tail(mode: RunMode) -> str:
     _draft_tail = (
         "MODE: draft_post — your deliverable this turn is ONE PostDraft "
-        "wrapped in <duct_report>, then submit_post_draft once. You author "
+        "wrapped in <duct_artifact>, then submit_post_draft once. You author "
         "STRUCTURED SLIDES (copy + an image_prompt per slide) + a layout — "
         "NOT HTML — and you do NOT generate images yet. Images wait until "
         "the user is happy with the written draft (see IMAGE GENERATION).\n\n"
@@ -1225,7 +1225,7 @@ Now — WRITE PHASE (copy + image prompts only; NO images yet):
    slide_count — each with copy (caption_style + headline + optional subtext)
    and an `image_prompt`. Do NOT write slides_html and do NOT call
    generate_image.
-4. Emit the draft inside <duct_report>{ "type": "post", ... }</duct_report>
+4. Emit the draft inside <duct_artifact>{ "type": "post", ... }</duct_artifact>
    then call submit_post_draft.
 5. Brief summary in chat: hook used, layout, slide count, what makes this
    different — then ASK the user to review the copy + image prompts, and tell
@@ -1351,8 +1351,8 @@ WRITE PHASE (copy + storyboard; NO generation yet):
    within Veo's limits — a ≤8s base plus +7s per extra beat (≤148s total). For a
    before→after beat set `is_transformation: true` and write `end_image_prompt`
    (the 'after' frame). Apply the HARD CONSTRAINTS across beats.
-4. Emit the draft inside <duct_report>{ "type": "post", "post_type": "video", ... }
-   </duct_report> then call submit_post_draft.
+4. Emit the draft inside <duct_artifact>{ "type": "post", "post_type": "video", ... }
+   </duct_artifact> then call submit_post_draft.
 5. Briefly summarise the hook, the beats and the motion in chat.
 
 """ + _VIDEO_GENERATION_PHASE + _VIDEO_STANDARDS
@@ -1388,8 +1388,8 @@ multi-beat STORYBOARD — NOT slides. Run the clone loop, but produce a VIDEO:
    modelled on the reference's pacing), and `duration_seconds` planned within Veo's
    limits — a ≤8s base plus +7s per extra beat (≤148s total). For the before→after beat
    set `is_transformation: true` and write `end_image_prompt`. Apply the HARD
-   CONSTRAINTS. Emit it in <duct_report>{ "type": "post", "post_type": "video",
-   ... }</duct_report>, call submit_post_draft with the EXACT post_dir_slug above, put
+   CONSTRAINTS. Emit it in <duct_artifact>{ "type": "post", "post_type": "video",
+   ... }</duct_artifact>, call submit_post_draft with the EXACT post_dir_slug above, put
    the Kept-vs-Changed ledger in `strategic_note`, and summarise it in chat as a
    reference↔clone side-by-side.
 
@@ -1404,7 +1404,7 @@ each keyframe, before you render the clip.
 _SLIDESHOW_CLONE_INSTRUCTIONS = """\
 Now run the CLONE loop (deconstruct → diagnose → strip → map to brand → regenerate). \
 Author the PostDraft (structured slides + layout, NO images yet), emit it in \
-<duct_report>, call submit_post_draft with the EXACT post_dir_slug above, then write \
+<duct_artifact>, call submit_post_draft with the EXACT post_dir_slug above, then write \
 the Kept-vs-Changed ledger into strategic_note and summarise it in chat as a \
 reference↔clone side-by-side. Ask the user to review the copy before you generate images.\
 """

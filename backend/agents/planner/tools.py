@@ -70,7 +70,7 @@ def build_planner_mcp_server(
             "payload against the PlanDraft schema, upserts the project's ACTIVE "
             "content_plans row (updates in place if one exists — never deletes "
             "other plans), and emits PLAN_GENERATED so the timeline renders. "
-            "Call AFTER emitting <duct_report>{\"type\":\"plan\",...}</duct_report>."
+            "Call AFTER emitting <duct_artifact>{\"type\":\"plan\",...}</duct_artifact>."
         ),
         input_schema={
             "plan": Annotated[

@@ -41,7 +41,7 @@ class AgentEvent(StrEnum):
     AGENT_MESSAGE = "agent_message"
     MESSAGE_STOP = "message_stop"
     THINKING_CHUNK = "thinking_chunk"        # model extended-thinking delta
-    REPORT_CHUNK = "report_chunk"            # streaming token inside <duct_report>
+    REPORT_CHUNK = "report_chunk"            # streaming token inside <duct_artifact>
     SYNTHESIS_CHUNK = "synthesis_chunk"      # insights synthesis stream; legacy alias on audit
 
     # Terminal payloads

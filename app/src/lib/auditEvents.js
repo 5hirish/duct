@@ -23,7 +23,7 @@ export const AuditEvent = Object.freeze({
 
   THINKING_CHUNK:      "thinking_chunk",    // extended-thinking delta
 
-  REPORT_CHUNK:        "report_chunk",      // streaming HTML token inside <duct_report>
+  REPORT_CHUNK:        "report_chunk",      // streaming HTML token inside <duct_artifact>
 });
 
 export const AuditStep = Object.freeze({

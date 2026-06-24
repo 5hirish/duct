@@ -8,7 +8,7 @@ Architecture mirrors agents/audit/v3/runner.py but with two structural deltas:
      the built-in `Agent` tool. Sub-agent execution is observed through the
      can_use_tool callback (STEP_STARTED) and a PostToolUse hook (STEP_FINISHED).
 
-  2. Discriminated <duct_report> payload.
+  2. Discriminated <duct_artifact> payload.
      The streaming tag parser parses JSON inside the tag and branches on the
      "type" field — emits PLAN_GENERATED or POST_DRAFT_UPDATED accordingly.
      If parsing fails (slides_html with unescaped HTML, same problem as audit),
@@ -59,7 +59,7 @@ from agents.content.tools import build_content_mcp_server
 from agents.core import claude_sdk as _sdk
 from agents.core import session as _core_session
 from agents.core.session import bridge_ask_user_question, register_session
-from agents.core.stream import DuctReportStreamParser, pump_stream_event
+from agents.core.stream import DuctArtifactStreamParser, pump_stream_event
 from agents.models import (
     AgentEffort,
     AgentPermissionMode,
@@ -95,7 +95,7 @@ _STALL_TIMEOUT_SECS = 120.0
 # generous budget here only ever benefits a user who is actively, slowly answering.
 _ASK_USER_TIMEOUT_SECS = 600.0
 
-# One-shot recovery nudge — mirrors the "no <duct_report>" recovery in
+# One-shot recovery nudge — mirrors the "no <duct_artifact>" recovery in
 # agents/audit/v3/runner.py. With adaptive thinking + sub-agent dispatch the
 # model occasionally ends a turn-group having analysed everything but WITHOUT
 # persisting the deliverable (it never calls submit_plan / submit_post_draft).
@@ -105,7 +105,7 @@ _ASK_USER_TIMEOUT_SECS = 600.0
 # types into, so the main loop's chat turn picks it up as the next turn.
 _RECOVERY_NUDGE_POST = (
     "You analysed everything but did not persist the post draft. Emit the complete "
-    '<duct_report>{"type":"post", …}</duct_report> now and then call '
+    '<duct_artifact>{"type":"post", …}</duct_artifact> now and then call '
     "submit_post_draft with the same payload — do not run more research, just "
     "produce and save the draft."
 )
@@ -335,7 +335,7 @@ _HTML_FIELD_RE = re.compile(
 
 
 def _parse_report_json(raw: str) -> dict | None:
-    """Parse the JSON inside <duct_report>. Falls back to stripping slides_html
+    """Parse the JSON inside <duct_artifact>. Falls back to stripping slides_html
     if the model emitted unescaped HTML quotes (same problem audit has)."""
     candidate = raw.strip()
     fenced = re.search(r"```(?:json)?\s*([\s\S]+?)\s*```", candidate)
@@ -351,7 +351,7 @@ def _parse_report_json(raw: str) -> dict | None:
         payload.setdefault("slides_html", "")
         return payload
     except Exception as exc:
-        logger.warning("content: <duct_report> JSON parse failed: %s", exc)
+        logger.warning("content: <duct_artifact> JSON parse failed: %s", exc)
         return None
 
 
@@ -524,7 +524,7 @@ async def _run(
       - allowed_tools includes Agent + the duct_content MCP tools
       - can_use_tool has a leading Agent branch that emits STEP_STARTED
       - PostToolUse hook matched on 'Agent' emits STEP_FINISHED
-      - <duct_report> parser branches on the "type" discriminator
+      - <duct_artifact> parser branches on the "type" discriminator
     """
     from claude_agent_sdk import ClaudeAgentOptions, ClaudeSDKClient
     from claude_agent_sdk.types import (
@@ -538,7 +538,7 @@ async def _run(
 
     # Recovery-nudge state. The canonical "deliverable persisted" signal is the
     # writer tool having stashed the id on the session (submit_post_draft →
-    # post_id). The <duct_report> tag only drives the live preview, so a draft
+    # post_id). The <duct_artifact> tag only drives the live preview, so a draft
     # streamed but never written still counts as "not produced". Nudge at most
     # once per session (see ResultMessage handling).
     def _artifact_produced() -> bool:
@@ -867,12 +867,12 @@ async def _run(
         yield {"type": "user", "message": {"role": "user", "content": initial_prompt}}
 
     # ------------------------------------------------------------------
-    # Streaming <duct_report> tag parser
+    # Streaming <duct_artifact> tag parser
     # ------------------------------------------------------------------
 
     _first_token_at: float | None = None
 
-    # <duct_report> streaming is handled by the shared parser (core/stream).
+    # <duct_artifact> streaming is handled by the shared parser (core/stream).
     # Content streams JSON and branches on the payload's "type" in _handle_close.
     async def _on_text(text: str) -> None:
         await emit({"event": ContentEvent.AGENT_MESSAGE_CHUNK, "text": text})
@@ -883,12 +883,12 @@ async def _run(
     async def _on_report_open() -> None:
         elapsed = (perf_counter() - _first_token_at) if _first_token_at else 0.0
         logger.info(
-            "content: <duct_report> opened — JSON streaming started (%.1fs after first token)",
+            "content: <duct_artifact> opened — JSON streaming started (%.1fs after first token)",
             elapsed,
         )
 
     async def _handle_close(raw_json: str) -> None:
-        """Parse the JSON inside the closed <duct_report> tag, emit the
+        """Parse the JSON inside the closed <duct_artifact> tag, emit the
         matching event, and validate against PostDraft.
 
         Validation failures are logged but do NOT raise — the writer @tool
@@ -897,7 +897,7 @@ async def _run(
         """
         payload = _parse_report_json(raw_json)
         if payload is None:
-            logger.warning("content: <duct_report> JSON parse failed; nothing emitted")
+            logger.warning("content: <duct_artifact> JSON parse failed; nothing emitted")
             return
         kind = payload.get("type", "")
         if kind == "post":
@@ -909,18 +909,18 @@ async def _run(
                 "event":       ContentEvent.POST_DRAFT_UPDATED,
                 "session_id":  session_id,
                 "payload":     payload,
-                "source":      "duct_report",
+                "source":      "duct_artifact",
             })
         else:
             logger.warning(
-                "content: <duct_report> missing 'type' discriminator (got %r); "
+                "content: <duct_artifact> missing 'type' discriminator (got %r); "
                 "no event emitted", kind,
             )
 
     async def _on_report_close(raw_json: str, _turn_text: str) -> None:
         await _handle_close(raw_json)
 
-    parser = DuctReportStreamParser(
+    parser = DuctArtifactStreamParser(
         on_text=_on_text,
         on_report_chunk=_on_report_chunk,
         on_report_close=_on_report_close,

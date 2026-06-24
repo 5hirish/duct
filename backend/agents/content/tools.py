@@ -890,7 +890,7 @@ def build_content_mcp_server(
             "Persist a single post draft. Validates against PostDraft schema, "
             "upserts a content_posts row keyed by (project_id, post_dir_slug), "
             "and emits POST_DRAFT_UPDATED. Call AFTER emitting "
-            "<duct_report>{\"type\":\"post\",...}</duct_report>."
+            "<duct_artifact>{\"type\":\"post\",...}</duct_artifact>."
         ),
         input_schema={
             "post": Annotated[

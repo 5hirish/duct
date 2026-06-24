@@ -3,7 +3,7 @@
 Prompts:
   _UNIFIED_SYSTEM_PROMPT — Single-session artifact pattern (current).
                             Generation + chat in one context. Initial report is
-                            wrapped in <duct_report>…</duct_report> tags; updates
+                            wrapped in <duct_artifact>…</duct_artifact> tags; updates
                             use <audit_report_update>…</audit_report_update>.
   _AUDIT_SYSTEM_PROMPT   — Legacy Phase 2 only (kept for reference).
   _CHAT_SYSTEM_PROMPT    — Legacy Phase 3 only (kept for reference).
@@ -270,10 +270,10 @@ When you have finished the analysis:
 1. Write 2–4 conversational sentences: top finding and overall verdict.
 2. Immediately after, output the full HTML audit report wrapped in these tags:
 
-<duct_report>
+<duct_artifact>
 <!DOCTYPE html>
 ...complete self-contained HTML report...
-</duct_report>
+</duct_artifact>
 
 The HTML IS the report — it renders directly in the user's browser. Make it \
 complete and well-structured. Use inline `<style>` only (no external CSS, no JS). \
@@ -556,7 +556,7 @@ Score bands: 85–100 Healthy · 70–84 Good · 55–69 Needs work · <55 Criti
 def build_unified_system_prompt(report_mode: str = "freehand", template_id: str = "") -> str:
     """Unified system prompt — single-session artifact pattern.
 
-    report_mode="freehand": agent generates HTML inside <duct_report> tags.
+    report_mode="freehand": agent generates HTML inside <duct_artifact> tags.
     report_mode="template": agent builds the report via StartAuditReport →
         AddAuditCategory ×9 → FinalizeAuditReport (SubmitAuditReport for chat revisions).
     """

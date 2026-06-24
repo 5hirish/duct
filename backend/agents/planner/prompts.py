@@ -111,11 +111,11 @@ WHAT YOU DO, EVERY PLANNING PASS:
    best_time_note, pillar, funnel_stage, objective, hook + hook_type, angle, and
    a one-line `rationale`.
 
-OUTPUT CONTRACT — emit the plan as JSON inside a single <duct_report> tag, then
+OUTPUT CONTRACT — emit the plan as JSON inside a single <duct_artifact> tag, then
 call submit_plan ONCE with the SAME object. Match these types EXACTLY (wrong
 types are rejected and you'll have to redo it):
 
-<duct_report>
+<duct_artifact>
 {
   "type": "plan",
   "project_id": "<the EXACT project_id UUID from the <brand> block — NOT the slug or name>",
@@ -151,7 +151,7 @@ types are rejected and you'll have to redo it):
     // posts_per_day entries on each of the 7 days (default 1/day → ~7 total)
   ]
 }
-</duct_report>
+</duct_artifact>
 
 After submit_plan succeeds, give a short chat summary: the weekly theme, the
 content mix, and what you'd watch next.
@@ -163,7 +163,7 @@ depends on this week — because it does.
 _DELIVERABLE_TAIL = """\
 
 MODE: update_plan — your deliverable is ONE 7-day PlanDraft wrapped in
-<duct_report>, then submit_plan once. Do NOT draft full posts (slides/captions);
+<duct_artifact>, then submit_plan once. Do NOT draft full posts (slides/captions);
 that happens later in the drafting flow. Plan the slots only.
 """
 
@@ -357,7 +357,7 @@ Now:
    conversion tied to primary_objective), pillar + content-type mix, a scroll-
    stopping hook per post, recurring series/franchises, and a narrative arc that
    continues <previous_strategy>.
-6. Emit <duct_report>{{ "type": "plan", ... }}</duct_report> then call
+6. Emit <duct_artifact>{{ "type": "plan", ... }}</duct_artifact> then call
    submit_plan with the same payload.
 7. Short chat summary: weekly theme, funnel + content mix, what to watch next.
 """

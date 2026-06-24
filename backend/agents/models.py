@@ -13,7 +13,8 @@ class Provider(str, Enum):
     OPENAI = "openai"
     GOOGLE_GENAI = "google_genai"
     ANTHROPIC = "anthropic"
-
+    XAI = "xai"
+    BYTE_PLUS = "byte_plus"
 
 class ModelName(str, Enum):
     

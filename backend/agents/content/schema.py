@@ -583,7 +583,7 @@ class PostDraft(BaseModel):
     """One draft post coming back from the draft_post sub-agent or orchestrator.
 
     `type` discriminator keeps PlanDraft and PostDraft distinguishable inside
-    the <duct_report> tag.
+    the <duct_artifact> tag.
 
     The orchestrator authors structured `slides` (copy + image prompts) and a
     `layout`; it does NOT write `slides_html`. submit_post_draft renders the

@@ -6,7 +6,7 @@ and verify exactly which SSE events run_synthesis() emits.
 
 Covers:
   - _parse_report()              direct unit test
-  - <duct_report> tag parser     single chunk, split across chunks, text before/after
+  - <duct_artifact> tag parser     single chunk, split across chunks, text before/after
   - THINKING_CHUNK forwarding    adaptive thinking delta → event
   - MESSAGE_STOP emission        after each completed turn
   - session close terminates     close_session() drains chat_queue cleanly
@@ -40,7 +40,7 @@ for _env_file in (ROOT / ".env", ROOT / ".env.local"):
 
 _FIXTURE_URL = "https://test.io/"
 
-# The <duct_report> tag now wraps HTML directly (not JSON).
+# The <duct_artifact> tag now wraps HTML directly (not JSON).
 # This is the HTML artifact the model generates.
 _REPORT_HTML = (
     "<!DOCTYPE html><html lang=\"en\"><head>"
@@ -185,16 +185,16 @@ def test_report_built_from_html():
 # Tag parser: happy path (single chunk contains full tag)
 # ---------------------------------------------------------------------------
 
-async def test_duct_report_tag_single_chunk():
+async def test_duct_artifact_tag_single_chunk():
     stream = [
         _text_delta("I analysed the site. "),
-        _text_delta(f"<duct_report>{_REPORT_HTML}</duct_report>"),
+        _text_delta(f"<duct_artifact>{_REPORT_HTML}</duct_artifact>"),
         _text_delta(" Report is ready."),
         _message_stop(),
     ]
     report, _, events = await _run(stream)
 
-    assert report is not None, "report not extracted from <duct_report> tag"
+    assert report is not None, "report not extracted from <duct_artifact> tag"
     assert report.url == _FIXTURE_URL
 
     # Text outside the tag should be streamed
@@ -224,9 +224,9 @@ async def test_duct_report_tag_single_chunk():
 # Tag parser: tag split across chunk boundaries
 # ---------------------------------------------------------------------------
 
-async def test_duct_report_tag_split_across_chunks():
-    # Split "<duct_report>" across three chunks to stress the holdback buffer
-    tag_parts = ["<duct_", "repo", f"rt>{_REPORT_HTML}</duct_report>"]
+async def test_duct_artifact_tag_split_across_chunks():
+    # Split "<duct_artifact>" across three chunks to stress the holdback buffer
+    tag_parts = ["<duct_", "arti", f"fact>{_REPORT_HTML}</duct_artifact>"]
     stream = [
         _text_delta("Pre-tag text. "),
         *[_text_delta(p) for p in tag_parts],
@@ -243,12 +243,12 @@ async def test_duct_report_tag_split_across_chunks():
     assert _REPORT_HTML not in combined, "JSON leaked into chat stream"
 
 
-async def test_duct_report_close_tag_split():
-    # Split "</duct_report>" across two chunks
+async def test_duct_artifact_close_tag_split():
+    # Split "</duct_artifact>" across two chunks
     json_part = _REPORT_HTML
     stream = [
-        _text_delta(f"<duct_report>{json_part}</duct_rep"),
-        _text_delta("ort> Post-tag text."),
+        _text_delta(f"<duct_artifact>{json_part}</duct_arti"),
+        _text_delta("fact> Post-tag text."),
         _message_stop(),
     ]
     report, _, events = await _run(stream)
@@ -266,7 +266,7 @@ async def test_thinking_chunks_forwarded():
     stream = [
         _thinking_delta("Let me think about the SEO issues..."),
         _thinking_delta(" Checking title length."),
-        _text_delta(f"<duct_report>{_REPORT_HTML}</duct_report>"),
+        _text_delta(f"<duct_artifact>{_REPORT_HTML}</duct_artifact>"),
         _message_stop(),
     ]
     report, had_thinking, events = await _run(stream)
@@ -282,7 +282,7 @@ async def test_thinking_chunks_forwarded():
 
 async def test_no_thinking_had_thinking_false():
     stream = [
-        _text_delta(f"<duct_report>{_REPORT_HTML}</duct_report>"),
+        _text_delta(f"<duct_artifact>{_REPORT_HTML}</duct_artifact>"),
         _message_stop(),
     ]
     _, had_thinking, events = await _run(stream)
@@ -297,7 +297,7 @@ async def test_no_thinking_had_thinking_false():
 
 async def test_message_stop_emitted_after_turn():
     stream = [
-        _text_delta(f"<duct_report>{_REPORT_HTML}</duct_report>"),
+        _text_delta(f"<duct_artifact>{_REPORT_HTML}</duct_artifact>"),
         _message_stop(),
     ]
     _, _, events = await _run(stream)
@@ -315,7 +315,7 @@ async def test_text_outside_tag_streamed_not_json():
     suffix = "Review the findings above."
     stream = [
         _text_delta(prefix),
-        _text_delta(f"<duct_report>{_REPORT_HTML}</duct_report>"),
+        _text_delta(f"<duct_artifact>{_REPORT_HTML}</duct_artifact>"),
         _text_delta(suffix),
         _message_stop(),
     ]
@@ -335,7 +335,7 @@ async def test_text_outside_tag_streamed_not_json():
 async def test_session_close_terminates_cleanly():
     """close_session() in the emit callback must allow run_synthesis() to return."""
     stream = [
-        _text_delta(f"<duct_report>{_REPORT_HTML}</duct_report>"),
+        _text_delta(f"<duct_artifact>{_REPORT_HTML}</duct_artifact>"),
         _message_stop(),
     ]
     # close_on_report=True is the default — _run() already tests this
@@ -351,14 +351,14 @@ async def test_session_close_terminates_cleanly():
 async def test_audit_report_update_in_chat_turn():
     """
     The SDK yields a single continuous stream across all turns.
-    Turn 1 produces <duct_report> → REPORT_UPDATED v1.
+    Turn 1 produces <duct_artifact> → REPORT_UPDATED v1.
     Turn 2 produces <audit_report_update> → REPORT_UPDATED v2.
     """
     # Combined stream: initial report then, after message_stop, an update block.
     # close_session() is called when v2 fires, which puts None in chat_queue
     # and allows message_gen to exit so run_synthesis() returns.
     stream = [
-        _text_delta(f"<duct_report>{_REPORT_HTML}</duct_report>"),
+        _text_delta(f"<duct_artifact>{_REPORT_HTML}</duct_artifact>"),
         _message_stop(),
         _text_delta(f"Here is the refreshed report. <audit_report_update>{_REPORT_V2_HTML}</audit_report_update>"),
         _message_stop(),

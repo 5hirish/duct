@@ -28,7 +28,7 @@ from agents.content.v3.runner import _load_brand_context, _resolve_anthropic_mod
 from agents.core import claude_sdk as _sdk
 from agents.core import session as _core_session
 from agents.core.session import bridge_ask_user_question, register_session
-from agents.core.stream import DuctReportStreamParser, pump_stream_event
+from agents.core.stream import DuctArtifactStreamParser, pump_stream_event
 from agents.models import (
     AgentEffort,
     AgentPermissionMode,
@@ -52,7 +52,7 @@ _ASK_USER_TIMEOUT_SECS = 600.0
 
 _RECOVERY_NUDGE = (
     "You analysed everything but did not persist the plan. Emit the complete "
-    '<duct_report>{"type":"plan", …}</duct_report> now and then call submit_plan '
+    '<duct_artifact>{"type":"plan", …}</duct_artifact> now and then call submit_plan '
     "with the same payload — do not run more research, just produce and save the plan."
 )
 
@@ -103,7 +103,7 @@ def _parse_report_json(raw: str) -> dict | None:
     try:
         return json.loads(candidate)
     except Exception as exc:
-        logger.warning("planner: <duct_report> JSON parse failed: %s", exc)
+        logger.warning("planner: <duct_artifact> JSON parse failed: %s", exc)
         return None
 
 
@@ -381,7 +381,7 @@ async def _run(
     )
 
     # ------------------------------------------------------------------
-    # Message generators + <duct_report> parser
+    # Message generators + <duct_artifact> parser
     # ------------------------------------------------------------------
 
     async def _initial_prompt_gen():
@@ -408,13 +408,13 @@ async def _run(
                 "event":      ContentEvent.PLAN_GENERATED,
                 "session_id": session_id,
                 "payload":    payload,
-                "source":     "duct_report",
+                "source":     "duct_artifact",
             })
 
     async def _on_report_close(raw_json: str, _turn_text: str) -> None:
         await _handle_close(raw_json)
 
-    parser = DuctReportStreamParser(
+    parser = DuctArtifactStreamParser(
         on_text=_on_text,
         on_report_chunk=_on_report_chunk,
         on_report_close=_on_report_close,

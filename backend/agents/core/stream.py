@@ -8,10 +8,10 @@ Two cohesive pieces both runners share:
     content runs one streaming-input session with a startup watchdog), so this
     owns only the per-message decode; the caller keeps its loop and state.
 
-  * ``DuctReportStreamParser`` — the ``<duct_report>`` tag state machine. The
+  * ``DuctArtifactStreamParser`` — the ``<duct_artifact>`` tag state machine. The
     pump's ``on_text`` feeds it; it forwards prose vs in-tag payload to
     agent-specific callbacks (audit builds HTML, content parses JSON). The
-    ``<duct_report>`` convention is shared by every Duct agent — not audit-
+    ``<duct_artifact>`` convention is shared by every Duct agent — not audit-
     specific — so it belongs here in core.
 """
 
@@ -21,7 +21,7 @@ import logging
 from collections.abc import Awaitable, Callable
 from typing import Any
 
-from agents.core.prompts import DUCT_REPORT_CLOSE, DUCT_REPORT_OPEN
+from agents.core.prompts import DUCT_ARTIFACT_CLOSE, DUCT_ARTIFACT_OPEN
 from agents.models import AgentTool
 
 logger = logging.getLogger(__name__)
@@ -109,7 +109,7 @@ async def pump_stream_event(
 
 
 # ---------------------------------------------------------------------------
-# <duct_report> tag parser (shared convention; not agent-specific)
+# <duct_artifact> tag parser (shared convention; not agent-specific)
 # ---------------------------------------------------------------------------
 
 TextCallback = Callable[[str], Awaitable[None]]
@@ -117,7 +117,7 @@ CloseCallback = Callable[[str, str], Awaitable[None]]  # (raw_payload, turn_text
 OpenCallback = Callable[[], Awaitable[None]]
 
 
-class DuctReportStreamParser:
+class DuctArtifactStreamParser:
     """Feed streamed text deltas in; callbacks fire as tags open, stream, close.
 
     Callbacks (all async):
@@ -137,8 +137,8 @@ class DuctReportStreamParser:
         on_report_close: CloseCallback,
         on_open: OpenCallback | None = None,
         log_prefix: str = "agent",
-        open_tag: str = DUCT_REPORT_OPEN,
-        close_tag: str = DUCT_REPORT_CLOSE,
+        open_tag: str = DUCT_ARTIFACT_OPEN,
+        close_tag: str = DUCT_ARTIFACT_CLOSE,
     ) -> None:
         self._on_text = on_text
         self._on_report_chunk = on_report_chunk
@@ -180,7 +180,7 @@ class DuctReportStreamParser:
                     self.report_chunk_count += 1
                     if self.report_chunk_count % 50 == 0:
                         logger.info(
-                            "%s: <duct_report> streaming — %d chunks, ~%d chars buffered",
+                            "%s: <duct_artifact> streaming — %d chunks, ~%d chars buffered",
                             self._log_prefix, self.report_chunk_count, len(self._buf),
                         )
                     await self._on_report_chunk(chunk)
