@@ -10,6 +10,7 @@ import ContentStepProgress from "./ContentStepProgress";
 import ContentTodos from "./ContentTodos";
 import { Phase } from "./contentPhase";
 import { CodeBlock, resolveCode } from "./CodeBlock";
+import CompactMarkdown from "./CompactMarkdown";
 import { isDevEnv } from "@/lib/env";
 
 // On dev/localhost we surface the model's raw reasoning to help debug the agent;
@@ -65,9 +66,9 @@ function ThinkingBlock({ thinking, streaming }) {
         </button>
         {expanded && (
           <div className="mt-1.5 rounded-lg px-3.5 py-3 bg-muted/40 border border-border/40">
-            <p className="text-[11px] text-muted-foreground leading-relaxed whitespace-pre-wrap break-words font-mono">
-              {thinking}
-            </p>
+            {/* Render the reasoning as markdown (headings/lists/bold), not a raw
+                pre-wrapped blob — the model writes structured markdown. */}
+            <CompactMarkdown>{thinking}</CompactMarkdown>
             {streaming && (
               <span className="inline-block w-0.5 h-3 bg-muted-foreground/60 ml-0.5 animate-pulse align-middle" />
             )}

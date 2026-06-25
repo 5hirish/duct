@@ -13,9 +13,8 @@ import {
   Video,
   Wand2,
 } from "lucide-react";
-import { downloadPostSlides, patchPost, mediaUrl } from "../../lib/contentApi";
+import { downloadPostSlides, patchPost } from "../../lib/contentApi";
 import { fmtCount } from "../../lib/contentMetrics";
-import { StepStatus } from "../../lib/agentSteps";
 import { extractStyleHead } from "../../lib/slideDoc";
 import { statusMeta } from "../../lib/contentStatus";
 import { PostStatus, PostType, POST_TYPE_LABELS } from "../../lib/contentEnums";
@@ -27,12 +26,29 @@ import PostMetrics from "./PostMetrics";
 import PublishReviewPanel from "./PublishReviewPanel";
 import PublishModal from "./PublishModal";
 import { Phase } from "./contentPhase";
+import PipelineProgress from "../PipelineProgress";
 
-const STREAMING_HINTS = [
+// Right-pane loading ladder for a post/clone — the SHARED PipelineProgress (same
+// rich step ladder audit + planner use), so the post loader stops being a fork.
+// Clone ingest steps are `conditional` (only appear for a clone); a virtual
+// "Drafting the post" stage carries the agent-drafting phase the backend has no
+// discrete step for.
+const POST_STAGES = [
+  { id: "clone_loading",   label: "Loading project",                  conditional: true },
+  { id: "clone_resolving", label: "Resolving the reference",          conditional: true },
+  { id: "clone_scraping",  label: "Scraping TikTok (metadata + media)", conditional: true },
+  { id: "clone_media",     label: "Saving cover & slide images",      conditional: true },
+  { id: "clone_watching",  label: "Watching the reference video",     conditional: true },
+  { id: "clone_analyzing", label: "Decoding why it worked",           conditional: true },
+  { id: "draft_post",      label: "Drafting the post",                virtual: true },
+];
+
+const POST_LINES = [
+  "Studying the reference…",
   "Picking the hook…",
   "Writing the caption…",
   "Choosing hashtags…",
-  "Sketching image prompts…",
+  "Sketching the keyframes…",
 ];
 
 const TYPE_ICON = { [PostType.SLIDESHOW]: Images, [PostType.VIDEO]: Video, [PostType.IMAGE]: ImageIcon };
@@ -108,7 +124,7 @@ function stripTransient(slides) {
 // Quiet period after the last manual edit before auto-saving.
 const AUTOSAVE_MS = 1000;
 
-export default function PostViewport({ payload, assessment = null, phase, steps = [], canPublish = false, onPublish, onRevise, onClone, onSendMessage }) {
+export default function PostViewport({ payload, assessment = null, phase, steps = [], building = false, canPublish = false, onPublish, onRevise, onClone, onSendMessage }) {
   const [draft, setDraft] = useState(null);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -277,7 +293,7 @@ export default function PostViewport({ payload, assessment = null, phase, steps 
   }, [dirty, saving, saveError, post?.id, post?.status, draft]);
 
   if (!post || (post.type && post.type !== "post" && !post.id)) {
-    return <DraftingPulse steps={steps} />;
+    return <PostPipeline steps={steps} building={building} />;
   }
 
   const slides = Array.isArray(post.slides) ? post.slides : [];
@@ -723,41 +739,25 @@ function BulkImageBar({ slides, onSendMessage, commitIfDirty, currentIndex = 0 }
 // Drafting state
 // ---------------------------------------------------------------------------
 
-// Right-pane loader while the agent works. Transparent: it surfaces the actual
-// current pipeline step (not fake cycled copy) and, for a clone, the reference
-// being modeled (cover + caption) so the wait shows real context. Falls back to
-// the cycled hints only before any step has arrived.
-function DraftingPulse({ steps = [] }) {
-  const [idx, setIdx] = useState(0);
-  useEffect(() => {
-    const t = setInterval(() => setIdx((i) => (i + 1) % STREAMING_HINTS.length), 1800);
-    return () => clearInterval(t);
-  }, []);
-
-  const running = [...steps].reverse().find((s) => s.status === StepStatus.RUNNING);
-  const lastDone = [...steps].reverse().find((s) => s.status === StepStatus.SUCCESS || s.status === StepStatus.ERROR);
-  const liveLabel = running?.label || lastDone?.label || "";
-  const scrape = steps.find((s) => s.step_id === "clone_scraping" && s.payload)?.payload;
-  const isCloning = Boolean(scrape) || steps.some((s) => s.step_id?.startsWith("clone_"));
-
+// Right-pane loader while the agent works — the shared PipelineProgress step
+// ladder (✓ done / spinner active / hollow pending), matching the audit + planner
+// loaders. For a clone the ingest steps light up in order, then the virtual
+// "Drafting the post" stage spins through the agent draft.
+function PostPipeline({ steps = [], building = false }) {
+  const isCloning = steps.some((s) => s.step_id?.startsWith("clone_"));
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
-      {scrape?.thumbnail && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={mediaUrl(scrape.thumbnail)}
-          alt=""
-          className="mb-1 h-28 w-16 rounded-lg border border-border/50 object-cover shadow-sm"
-        />
-      )}
-      <div className="size-10 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
-      <p className="text-sm font-medium">{isCloning ? "Cloning the reference…" : "Drafting the post…"}</p>
-      <p className="text-xs text-muted-foreground transition-opacity duration-500">
-        {liveLabel || STREAMING_HINTS[idx]}
-      </p>
-      <p className="max-w-xs text-[10px] text-muted-foreground/60">
-        Slides, caption, and hashtags appear here as soon as the draft is ready. Usually 20–40 seconds.
-      </p>
-    </div>
+    <PipelineProgress
+      stages={POST_STAGES}
+      steps={steps}
+      activeId="draft_post"
+      synthesising={building}
+      virtualWaitsForPrior
+      lines={POST_LINES}
+      estimate="~30s"
+      buildingLabel={isCloning ? "Cloning the reference" : "Drafting the post"}
+      streamingLabel={isCloning ? "Cloning the reference" : "Drafting the post"}
+      streamingSubtitle={isCloning ? "Modeling the reference into your post…" : "Drafting your post…"}
+      idleSubtitle={isCloning ? "Cloning the reference…" : "Drafting your post…"}
+    />
   );
 }

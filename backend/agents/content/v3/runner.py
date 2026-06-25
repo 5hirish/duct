@@ -1285,6 +1285,45 @@ class ClaudeContentRunner:
         if engine is None:
             raise RuntimeError("DATABASE_URL is not configured.")
 
+        # ── Resume: restore + ready, NEVER re-ingest or re-draft ────────────────
+        # A reload/refresh re-binds to the post's existing conversation (the page
+        # passes artifact_type="post" + artifact_id, so resolve_or_create matches
+        # it). Like run_draft, bring the session back to life silently and wait for
+        # the user's next message — do NOT re-run the (expensive) ingest + draft.
+        is_resume = bool(getattr(session, "resume", False) and getattr(session, "conversation_id", None))
+        if is_resume:
+            def _load_platforms() -> list:
+                with Session(engine) as db:
+                    p = db.get(ContentPost, post_id)
+                    return list(p.platforms or []) if p else []
+            platforms = await asyncio.to_thread(_load_platforms)
+            ch = resolve_channel(channel or (primary_channel(platforms) if platforms else None))
+            brand = await asyncio.to_thread(_load_brand_context, project_id)
+            system_prompt = build_orchestrator_system_prompt(brand, "clone_post", channel=ch)
+            from agents.content.persistence import build_reprime_context
+            session.resume_primer = await build_reprime_context(session, self._api_key)
+            session.needs_reprime = True
+            await emit({
+                "event":      ContentEvent.PIPELINE_FINISHED,
+                "session_id": session_id,
+                "mode":       "clone_post",
+                "post_id":    str(session.post_id) if session.post_id else None,
+                "resumed":    True,
+            })
+            try:
+                await _run(
+                    session, system_prompt, "", emit, self._api_key,
+                    effort=effort or self.DEFAULT_DRAFT_EFFORT,
+                    adaptive_thinking=adaptive_thinking,
+                    chat_idle_timeout=chat_idle_timeout,
+                    max_turns=max_turns or self.DEFAULT_DRAFT_MAX_TURNS,
+                    resume=True,
+                )
+            except Exception as exc:
+                await emit({"event": ContentEvent.PIPELINE_FAILED, "session_id": session_id, "error": str(exc)})
+                raise
+            return
+
         # Coarse pipeline stages surfaced to the shared step timeline. Each finished
         # step carries a structured payload the UI renders as a detail panel
         # (reference preview, media counts, video understanding, why it worked).
@@ -1294,7 +1333,7 @@ class ClaudeContentRunner:
             "scraping":  "Scraping TikTok (metadata + media)",
             "media":     "Saving cover & slide images",
             "watching":  "Watching the reference video",
-            "analyzing": "Reading why it worked",
+            "analyzing": "Decoding why it worked",
         }
 
         async def _on_step(sid: str, status: str, msg: str = "", payload: dict | None = None) -> None:

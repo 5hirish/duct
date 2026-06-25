@@ -140,11 +140,16 @@ def list_conversations(
 def find_active_conversation(
     db: Session, *, artifact_type: str, artifact_id: UUID
 ) -> AgentConversation | None:
+    # Most-recently-active first: a StrictMode double-open (or a re-draft) can
+    # leave more than one active conversation linked to the same artifact, and
+    # resume must land on the freshest one (the one carrying the latest turns),
+    # not an arbitrary row.
     return db.exec(
         select(AgentConversation)
         .where(AgentConversation.artifact_type == artifact_type)
         .where(AgentConversation.artifact_id == artifact_id)
         .where(AgentConversation.status == "active")
+        .order_by(AgentConversation.last_active_at.desc())
     ).first()
 
 

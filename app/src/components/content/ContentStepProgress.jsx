@@ -5,6 +5,7 @@ import { StepStatus } from "../../lib/agentSteps";
 import { mediaUrl } from "../../lib/contentApi";
 import { fmtCount } from "../../lib/contentMetrics";
 import AgentStepTimeline from "../workspace/AgentStepTimeline";
+import CompactMarkdown from "./CompactMarkdown";
 
 /**
  * The content/clone pipeline step list above the chat. Renders through the
@@ -147,9 +148,9 @@ function VideoUnderstanding({ payload }) {
     return <p className="text-[11px] italic text-muted-foreground">Couldn't read the clip — used the cover + metadata instead.</p>;
   }
   return (
-    <p className="max-h-72 overflow-y-auto whitespace-pre-wrap break-words rounded bg-muted/50 p-2 text-[11px] leading-relaxed text-muted-foreground">
-      {p.analysis}
-    </p>
+    <div className="max-h-72 overflow-y-auto rounded bg-muted/50 p-2">
+      <CompactMarkdown>{p.analysis}</CompactMarkdown>
+    </div>
   );
 }
 

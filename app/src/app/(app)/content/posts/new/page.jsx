@@ -49,7 +49,16 @@ export default function NewPostDraftPage() {
   const isClone = Boolean(clonePostId);
   const mode = isClone ? "clone_post" : "draft_post";
   const context = isClone
-    ? { projectId, postId: clonePostId, planId, channel }
+    ? {
+        projectId, postId: clonePostId, planId, channel,
+        // Anchor the conversation to the pending post so a reload re-binds to the
+        // SAME conversation (the backend's find_active_conversation matches on
+        // artifact) instead of starting the clone over from scratch. Mirrors the
+        // existing-post page; the post_id is stable in the URL (clone_post_id).
+        artifactType: "post",
+        artifactId: clonePostId,
+        resume: true,
+      }
     : {
         projectId,
         planId,
@@ -65,8 +74,8 @@ export default function NewPostDraftPage() {
       <ContentWorkspace
         mode={mode}
         context={context}
-        renderViewport={({ payload, assessment, phase, steps, onSendMessage }) => (
-          <PostViewport payload={payload} assessment={assessment} phase={phase} steps={steps} onSendMessage={onSendMessage} />
+        renderViewport={({ payload, assessment, phase, steps, building, onSendMessage }) => (
+          <PostViewport payload={payload} assessment={assessment} phase={phase} steps={steps} building={building} onSendMessage={onSendMessage} />
         )}
       />
     </div>

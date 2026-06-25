@@ -582,7 +582,7 @@ async def ingest_reference(project_id: UUID, clone_source: dict, *, on_step: Ste
             except Exception:
                 logger.warning("clone ingest: couldn't mirror video analysis onto the reference asset", exc_info=True)
 
-    await _step("analyzing", "running", "Reading why it worked…")
+    await _step("analyzing", "running", "Decoding why it worked…")
     diagnostic = diagnose_reference(post)
     await _step("analyzing", "ok", diagnostic.get("summary", ""), payload={
         k: diagnostic.get(k)

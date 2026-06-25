@@ -19,21 +19,25 @@ export default function ContentPlannerPage() {
   const router = useRouter();
   const [projectId, setProjectId] = useState(null);
   const [activePlanId, setActivePlanId] = useState(null);
+  const [plansLoaded, setPlansLoaded] = useState(false);
 
   useEffect(() => {
     const id = getActiveProjectId();
     if (!id) { router.replace("/content"); return; }
     setProjectId(id);
     // Resolve the active plan id so "Draft this post →" can target it before the
-    // first PLAN_GENERATED arrives (e.g. when refreshing an existing plan).
+    // first PLAN_GENERATED arrives, AND so a reload re-binds to the plan's
+    // existing conversation (artifact anchor) instead of re-planning from scratch.
+    // Gate the workspace render on this resolving so the open context is stable.
     listPlans(id).then((plans) => {
-      if (!Array.isArray(plans)) return;
-      const active = plans.find((p) => p.status === "active") || plans[0];
-      if (active?.id) setActivePlanId(active.id);
-    }).catch(() => {});
+      if (Array.isArray(plans)) {
+        const active = plans.find((p) => p.status === "active") || plans[0];
+        if (active?.id) setActivePlanId(active.id);
+      }
+    }).catch(() => {}).finally(() => setPlansLoaded(true));
   }, [router]);
 
-  if (!projectId) {
+  if (!projectId || !plansLoaded) {
     return (
       <div className="flex h-full items-center justify-center">
         <p className="text-sm text-muted-foreground">Loading planner…</p>
@@ -55,7 +59,9 @@ export default function ContentPlannerPage() {
     <div className="h-full">
       <ContentWorkspace
         mode="update_plan"
-        context={{ projectId }}
+        context={activePlanId
+          ? { projectId, artifactType: "plan", artifactId: activePlanId, resume: true }
+          : { projectId }}
         renderViewport={({ payload, steps, building, onSendMessage }) => (
           <PlannerTimeline
             payload={payload}

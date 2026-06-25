@@ -1025,6 +1025,20 @@ def build_content_mcp_server(
                 db.commit()
                 db.refresh(row)
                 session.post_id = row.id
+                # Bind the conversation to this post the MOMENT it's persisted so
+                # "open post → resume" works right away. Previously the link was set
+                # only when the worker RETURNED (_link_conversation_artifact at
+                # session end) — but interactive video sessions stay alive through
+                # the keyframe gates, so a post opened mid/post-draft found no linked
+                # conversation and the agent restarted from scratch.
+                _conv_id = getattr(session, "conversation_id", None)
+                if _conv_id is not None:
+                    from agents.content.persistence import link_artifact
+                    try:
+                        link_artifact(db, _conv_id, "post", row.id)
+                    except Exception:
+                        logger.warning("content: failed to link conversation %s -> post %s",
+                                       _conv_id, row.id, exc_info=True)
                 logger.info(
                     "content: post %s upserted (slug=%s, layout=%s, slides=%d, images=%d)",
                     row.id, row.post_dir_slug, row.layout, row.slide_count,
