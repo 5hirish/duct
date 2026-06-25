@@ -221,6 +221,10 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
             if (cancelled) return;
             const hist = mapEventsToMessages(events);
             if (hist.length) setMessages(hist);
+            // Restore the step ladder too, so a reload shows the completed
+            // pipeline (Loading project ✓ → … → Drafting ✓) instead of a blank.
+            const restoredSteps = reconstructSteps(events);
+            if (restoredSteps.length) setSteps(restoredSteps);
           } catch { /* non-fatal: server still resumes; UI just lacks history */ }
         }
 
@@ -348,6 +352,21 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
               : s,
           ),
         );
+        break;
+
+      case ContentEvent.TOOL_ACTIVITY:
+        // A slow generative tool (image/video/…) — drop a friendly loader bubble
+        // into the chat while it runs, then remove it when the tool returns (the
+        // result/image bubble shows separately). Keyed by activity_id.
+        if (event.status === StepStatus.RUNNING) {
+          setMessages((prev) =>
+            prev.some((m) => m.activity?.id === event.activity_id)
+              ? prev
+              : [...prev, { role: "assistant", activity: { id: event.activity_id, label: event.label } }],
+          );
+        } else {
+          setMessages((prev) => prev.filter((m) => m.activity?.id !== event.activity_id));
+        }
         break;
 
       case ContentEvent.THINKING_CHUNK:
@@ -708,6 +727,30 @@ function applyBeatPreview(payload, beatId, frame, uri) {
     return next;
   });
   return { ...payload, video_storyboard };
+}
+
+/**
+ * Rebuild the step ladder from persisted "step" events (recorder writes the
+ * terminal state of each pipeline step) so a reload restores the completed
+ * pipeline instead of a blank. Dedup by step_id (latest wins), first-seen order.
+ */
+function reconstructSteps(events) {
+  const order = [];
+  const byId = new Map();
+  for (const e of events || []) {
+    if (e.kind !== "step") continue;
+    const d = e.data || {};
+    if (!d.step_id) continue;
+    if (!byId.has(d.step_id)) order.push(d.step_id);
+    byId.set(d.step_id, {
+      step_id: d.step_id,
+      label: d.label || d.step_id,
+      status: d.status || StepStatus.SUCCESS,
+      summary: d.summary || "",
+      payload: d.payload ?? null,
+    });
+  }
+  return order.map((id) => byId.get(id));
 }
 
 /**

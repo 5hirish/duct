@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Check,
+  ChevronDown,
   Copy,
   Hash,
   Image as ImageIcon,
@@ -500,7 +501,9 @@ function prettify(s) {
 // the "why it worked" diagnostic + the agent's Kept-vs-Changed ledger
 // (strategic_note), so the user sees exactly what was modeled vs. originated.
 function ClonePanel({ post }) {
-  const [open, setOpen] = useState(true);
+  // Collapsed by default — the Kept/Changed ledger is long and dominates the
+  // viewport; show just the header and let the user expand it on demand.
+  const [open, setOpen] = useState(false);
   const cs = post?.clone_source;
   if (!cs || (cs.kind !== "url" && cs.kind !== "reference")) return null;
   const diag = cs.diagnostic || {};
@@ -530,9 +533,10 @@ function ClonePanel({ post }) {
               Cloned from a reference{cs.ingested ? "" : " — analysing…"}
             </span>
             {hasBody && (
-              <span className={`shrink-0 text-[11px] text-violet-600/60 transition-transform dark:text-violet-400/60 ${open ? "rotate-90" : ""}`}>
-                ›
-              </span>
+              <ChevronDown
+                aria-hidden
+                className={`size-4 shrink-0 text-violet-500 transition-transform dark:text-violet-400 ${open ? "" : "-rotate-90"}`}
+              />
             )}
           </button>
           {cs.tiktok_url && (

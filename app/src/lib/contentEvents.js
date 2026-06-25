@@ -14,6 +14,7 @@ export const ContentEvent = Object.freeze({
 
   QUESTIONS_REQUIRED:  "questions_required",
   TODO_UPDATE:         "todo_update",
+  TOOL_ACTIVITY:       "tool_activity",
   SLIDE_RENDER_REQUESTED: "slide_render_requested",
 
   AGENT_MESSAGE_CHUNK: "agent_message_chunk",

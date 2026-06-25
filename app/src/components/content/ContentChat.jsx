@@ -192,6 +192,29 @@ function ChatBubble({ role, text, thinking, streaming }) {
 
 // A generated-image bubble in the transcript. Shows the inline data URI for an
 // instant thumbnail; clicking opens a full-screen lightbox at the full-res URL.
+// A friendly, non-technical loader shown in the chat while a slow generative
+// tool (image / video / understanding) runs, so the user sees something IS
+// happening. Removed when the tool returns (its result bubble shows separately).
+function ToolActivityBubble({ label }) {
+  return (
+    <div className="mb-4 flex justify-start">
+      <div className="flex items-center gap-2.5 rounded-2xl rounded-bl-sm bg-muted px-4 py-2.5 text-sm text-foreground/80">
+        <span className="inline-block size-3.5 shrink-0 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
+        <span>{label}</span>
+        <span className="flex gap-0.5">
+          {[0, 150, 300].map((d) => (
+            <span
+              key={d}
+              className="inline-block size-1 rounded-full bg-muted-foreground/60 animate-bounce"
+              style={{ animationDelay: `${d}ms` }}
+            />
+          ))}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function ChatImageBubble({ image, fullUrl, caption }) {
   const [open, setOpen] = useState(false);
   const thumb = image || fullUrl;   // inline data: URI first (instant paint)
@@ -374,6 +397,8 @@ export default function ContentChat({
           {messages.map((msg, i) =>
             msg.role === "send_error" ? (
               <SendErrorBubble key={i} text={msg.text} content={msg.content} onRetry={onRetrySend} />
+            ) : msg.activity ? (
+              <ToolActivityBubble key={i} label={msg.activity.label} />
             ) : msg.image ? (
               <ChatImageBubble key={i} image={msg.image} fullUrl={msg.fullUrl} caption={msg.caption} />
             ) : (

@@ -264,6 +264,19 @@ class ConversationRecorder:
             await self._flush_turn()
         elif event == AgentEvent.QUESTIONS_REQUIRED:
             await self._append(EventKind.QUESTION, {"questions": body.get("questions", [])})
+        elif event in (AgentEvent.STEP_FINISHED, AgentEvent.STEP_FAILED):
+            # Persist the terminal state of each pipeline step (with its payload)
+            # so the step ladder restores on resume — chat alone left the ladder
+            # blank on reload. Only terminal events: a still-"running" step at
+            # reload is dead (resume re-primes, never continues), so showing it
+            # as running would mislead.
+            await self._append(EventKind.STEP, {
+                "step_id": body.get("step_id"),
+                "label": body.get("label"),
+                "status": body.get("status") or ("error" if event == AgentEvent.STEP_FAILED else "success"),
+                "summary": body.get("summary") or "",
+                "payload": body.get("payload"),
+            })
 
     async def _flush_turn(self) -> None:
         thinking = "".join(self._thinking_buf).strip()

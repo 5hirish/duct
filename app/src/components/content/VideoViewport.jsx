@@ -141,10 +141,17 @@ export default function VideoViewport({ post }) {
               )}
             </>
           ) : (
-            <div className="flex h-full w-full flex-col items-center justify-center gap-2 px-4 text-center text-white/60">
-              <Film className="size-7" />
-              <p className="text-xs font-medium">Keyframe not generated yet</p>
-              {current.prompt && <p className="max-w-[15rem] text-[11px] text-white/40">{current.prompt}</p>}
+            <div className="flex h-full w-full flex-col items-center justify-center gap-2 px-4 py-6 text-center text-white/60">
+              <Film className="size-7 shrink-0" />
+              <p className="shrink-0 text-xs font-medium">Keyframe not generated yet</p>
+              {current.prompt && (
+                // The keyframe prompt is long — bound it to the frame and scroll,
+                // so it never overflows the phone preview (matches how slide
+                // prompts stay clamped rather than spilling out of the frame).
+                <p className="max-h-[55%] max-w-[17rem] overflow-y-auto whitespace-pre-wrap px-1 text-left text-[11px] leading-relaxed text-white/40">
+                  {current.prompt}
+                </p>
+              )}
             </div>
           )}
         </div>

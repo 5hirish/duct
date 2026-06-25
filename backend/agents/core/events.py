@@ -35,6 +35,8 @@ class AgentEvent(StrEnum):
 
     # Progress / todos
     TODO_UPDATE = "todo_update"
+    TOOL_ACTIVITY = "tool_activity"           # a generative tool (image/video/…) is
+                                              # running — drives a friendly in-chat loader
 
     # Streaming model output
     AGENT_MESSAGE_CHUNK = "agent_message_chunk"
@@ -71,6 +73,8 @@ class EventKind(StrEnum):
     ANSWER = "answer"
     TOOL_USE = "tool_use"        # one per tool call: name + full input
     TOOL_RESULT = "tool_result"  # paired by tool_use_id: output + is_error
+    STEP = "step"                # a pipeline step (started/finished) — replayed so
+                                 # the step ladder restores on resume, not just chat
 
 
 class StepStatus(StrEnum):

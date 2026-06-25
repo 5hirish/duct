@@ -115,6 +115,30 @@ def _captured_stderr(buf: deque[str], exc: Exception | None) -> str:
     return _sdk.captured_stderr(buf, exc)
 
 
+# Friendly, non-technical labels for the SLOW generative tools — these drive the
+# in-chat "something's happening" loader (TOOL_ACTIVITY). Fast/invisible tools
+# (submit, fetch_*, render_slide) are intentionally omitted so the chat doesn't
+# flicker a loader for instant calls.
+_TOOL_ACTIVITY_LABELS = {
+    ContentTool.GENERATE_IMAGE:      "Generating the image",
+    ContentTool.EDIT_IMAGE:          "Editing the image",
+    ContentTool.GENERATE_VIDEO_CLIP: "Rendering the video — this can take a few minutes",
+    ContentTool.UNDERSTAND_VIDEO:    "Watching the reference video",
+    ContentTool.ATTACH_POST_VIDEO:   "Attaching the video",
+}
+
+
+def _tool_activity_label(tool_name: str, tool_input: Any) -> str | None:
+    """Friendly loader copy for a tool call, or None if it shouldn't show one."""
+    label = _TOOL_ACTIVITY_LABELS.get(tool_name)
+    if label is None:
+        return None
+    # A generate_image on a storyboard beat is really a keyframe — nicer copy.
+    if tool_name == ContentTool.GENERATE_IMAGE and isinstance(tool_input, dict) and tool_input.get("beat_id"):
+        return "Generating the keyframe"
+    return label
+
+
 # ---------------------------------------------------------------------------
 # Session registry — shared with all agents (agents/core/session.py). These
 # wrappers keep the content-specific import surface and ContentSession typing.
@@ -645,6 +669,18 @@ async def _run(
         return PermissionResultAllow(updated_input=input_data)
 
     async def _pre_tool_hook(input_data: dict, tool_use_id: str, context: Any) -> dict:
+        # Friendly in-chat loader: tell the user a slow generative tool (image /
+        # video / understanding) is running — paired with the PostToolUse "done"
+        # below by tool_use_id so the loader clears when the result lands.
+        _act = _tool_activity_label(input_data.get("tool_name", ""), input_data.get("tool_input", input_data))
+        if _act is not None:
+            await emit({
+                "event":       ContentEvent.TOOL_ACTIVITY,
+                "session_id":  session_id,
+                "activity_id": tool_use_id,
+                "label":       _act,
+                "status":      StepStatus.RUNNING,
+            })
         # Forensics: log every tool the agent runs with its full input, paired by
         # tool_use_id to the tool_result recorded in _record_tool_result_hook.
         # Best-effort — persistence must never block or fail a tool call.
@@ -661,6 +697,15 @@ async def _run(
         return {"continue_": True}
 
     async def _record_tool_result_hook(input_data: dict, tool_use_id: str, context: Any) -> dict:
+        # Clear the in-chat loader the moment the tool returns (success OR error —
+        # the result/error bubble shows separately).
+        if _tool_activity_label(input_data.get("tool_name", ""), input_data.get("tool_input", {})) is not None:
+            await emit({
+                "event":       ContentEvent.TOOL_ACTIVITY,
+                "session_id":  session_id,
+                "activity_id": tool_use_id,
+                "status":      StepStatus.SUCCESS,
+            })
         # Global PostToolUse companion to _pre_tool_hook: log every tool's output.
         _rec = getattr(session, "recorder", None)
         if _rec is not None:
