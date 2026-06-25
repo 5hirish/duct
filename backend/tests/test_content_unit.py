@@ -901,6 +901,35 @@ def test_clone_kickoff_video_embeds_gemini_deconstruction_then_higgsfield_genera
     assert "post_dir_slug=d01-x" in video and "post_dir_slug=d01-x" in carousel
 
 
+def test_clone_discipline_maps_to_closest_pillar_and_stays_content_first():
+    """The clone discipline must steer the agent to (a) map the reference to its
+    CLOSEST brand pillar by subject — a hair reference stays a hair post, it does
+    NOT drift to face-shape — and (b) stay content-first / soft-sell by default,
+    not name-dropping the product unless it's a product-demo pillar or the user
+    asked. Guards the reported regression (hair ref → face-shape post that promoted
+    'MaxAura said heart face')."""
+    from agents.content import prompts as p
+
+    disc = p._CLONE_DISCIPLINE.lower()
+    # Closest-pillar mapping (topical fit over reach).
+    assert "pick the closest pillar" in disc
+    assert "topical fit beats reach" in disc
+    assert "does not become a face-shape post" in disc
+    # Content-first / soft-sell default.
+    assert "content-first / soft-sell" in disc
+    assert "do not name the brand/product" in disc
+    # The video clone tail must not push an unconditional product moment.
+    assert "no product placement" in p._VIDEO_CLONE_INSTRUCTIONS.lower()
+    # Strategist fit × proof: clone a proven in-niche winner closely; out-of-niche
+    # is a structure-only transfer mapped to the best-fit pillar.
+    assert "judge fit × proof" in disc
+    assert "in-niche + proven" in disc and "clone close" in disc
+    assert "out-of-niche" in disc and "structure-only transfer" in disc
+    # Research-grounded hook principle (first 3s is the ranking signal).
+    assert "first 3 seconds" in disc
+    assert "identity call" in disc and "open loop" in disc
+
+
 def test_video_reuses_slide_image_discipline_and_keeps_motion_video_only():
     """The keyframe is a still, so it REUSES the same proven image discipline the
     slide drafter uses (_IMAGE_PROMPT_DISCIPLINE_BRIEF) — not a thinner parallel
