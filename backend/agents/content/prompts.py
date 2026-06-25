@@ -1026,6 +1026,8 @@ CONTENT-FIRST / SOFT-SELL (default): the clone must stand on its own as genuinel
 
 HOOK = THE WHOLE GAME (first 3 seconds). TikTok's algorithm weights the opening 3s above everything: ~70%+ hook retention earns roughly 2.2× the reach; under ~60% barely gets shown — and the algorithm surfaces a zero-follower post if the hook lands, so this is where reach is won or lost. Whatever you model from the reference, the hook must read INSTANTLY and speak to your SPECIFIC sub-community (niche-first — "for heart-shaped faces" beats "for everyone"). Match the reference's hook TYPE, but write it for your audience. The patterns that reliably hold attention: IDENTITY CALL ("if you have a heart-shaped face, watch this"), CONTRARIAN ("stop picking frames by trend — do this first"), OPEN LOOP ("this one feature changed how I choose glasses"), CONFESSION ("I wore the wrong cut for 5 years"). On-screen text in the first second + a visual pattern-interrupt on the beat cut both lift hook retention.
 
+CHARACTER — clone the creator, not just the format. When the reference is IN your niche, generate a character that MIRRORS its creator's demographic: gender, ethnicity, approximate age, hair, and overall look + energy (the Gemini DECONSTRUCTION above describes them — use it). Authentic cloning means the SAME KIND of person who already resonated with this audience, not a generic stand-in — a clone of a Black creator's video shouldn't become a white creator's, and vice-versa. DEFAULT to mirroring the reference UNLESS (a) the brand context defines a fixed avatar/persona it always uses — then keep that face for consistency but lean its styling/energy toward the reference — or (b) the user asked for someone specific. For an OUT-OF-NICHE reference you only borrowed the structure, so use a creator that fits YOUR niche instead. Either way apply the IMAGE PROMPT DISCIPLINE in full so the character reads as a real, friendly, approachable, relatable creator (attractiveness-first realism, warm natural light, the iPhone-UGC look, real-not-polished) — a person you'd actually follow, never an ad model.
+
 CAROUSEL reference → slide 1 is the WHOLE hook + swipe-bait; keep each slide ≤20% text; model the slide count (aim 6–13) and the per-slide open-loop arc.
 VIDEO reference → the clone is ALSO a video (ONE ≤15s 9:16 Higgsfield clip, NOT slides). The reference was already WATCHED at ingest by Gemini video understanding — a director-grade DECONSTRUCTION (beats, transformation arc, on-screen text verbatim, audio, hook) is in the kickoff prompt; rebuild that EXACT structure (if it's a before→after, show both; if the hook is on-screen text, carry an equivalent overlay — never flatten it). Call understand_video to re-watch or analyse another clip. The kickoff gives the flow (study deconstruction → author keyframe+motion → review → keyframe → Higgsfield image-to-video → attach_post_video).
 
@@ -1268,15 +1270,28 @@ doubling. Every POV change lands on a HARD CUT between beats. The character's
 face, hair, body and wardrobe stay identical across every beat."""
 
 _VIDEO_CLIP_SPEC = """\
-CLIP DIRECTION (author each beat's `motion`, then the overall clip): give each
-beat a timecoded shot with three layers — DYNAMIC (subject + camera motion: the
-gesture/micro-action, camera move or push-in/whip, any speed-ramp, and the
-transition into the beat), STATIC (set, lighting source/direction/quality, and
-palette) and AUDIO (music genre/energy + the beat-sync moment, plus any spoken
-line in double quotes — the model generates synced audio). Match the reference's
-audio VIBE, never its actual track. Cuts land on the beat; beats sum to ≤15s. If
-the post should be SILENT (the creator adds their own trending sound — common for
-vibe montages), call generate_video_clip with generate_audio=false."""
+CLIP DIRECTION (author each beat's `motion`, then the overall clip). This text is
+sent verbatim to Veo, so write it in Veo's cinematic vocabulary — name the camera,
+not just "it moves". Give each beat a timecoded shot with three layers:
+  • DYNAMIC — the cinematography (the levers Veo actually responds to):
+      - SHOT SIZE: extreme close-up | close-up | medium | wide | establishing
+      - CAMERA ANGLE: eye-level | low angle | high angle | overhead | POV
+      - CAMERA MOVE: handheld, slow push-in, dolly, pan, tilt, tracking, whip, speed-ramp
+      - LENS/FOCUS: ~26mm wide, shallow vs deep focus
+      …plus the subject's gesture / micro-action and the transition INTO the beat.
+    DEFAULT look = real-creator iPhone UGC: handheld with slight organic sway,
+    ~26mm, eye-level arm's-length selfie. Keep the creator APPEALING + ATTRACTIVE —
+    a flattering angle and warm flattering light, never an unflattering low/harsh
+    angle (attractiveness carries from the keyframe — don't let motion break it).
+  • STATIC — set, lighting (source / direction / quality / colour temp) and palette.
+  • AUDIO — music genre/energy + the beat-sync moment, plus any spoken line in
+    double quotes (Veo generates synced audio). Match the reference's audio VIBE,
+    never its actual track.
+Cuts land on the beat; beats sum to your planned length. For the FULL clip, beat 1's
+motion is the base motion_prompt and each later beat's motion is an extension_prompt
+(Veo continues the shot — see VIDEO PHASE). If the post should be SILENT (creator
+adds their own trending sound — common for vibe montages), call generate_video_clip
+with generate_audio=false."""
 
 _VIDEO_STANDARDS = (
     f"{_IMAGE_PROMPT_DISCIPLINE_BRIEF}\n\n{_VIDEO_KEYFRAME_NOTE}\n\n"
@@ -1306,10 +1321,36 @@ or free-text feedback), revise the beats, submit_post_draft again, and re-ask.
 GATE 2 — keyframes, ONE BEAT AT A TIME, in order. For each beat:
   a. Say which beat + frame you're about to generate, and why (one line) — so the
      user knows what's coming.
-  b. generate_image(beat_id="<beat>", frame="first") with the character reference
-     (+ the product/app-screen reference on the product beat) via input_asset_ids.
-     For a transformation beat ALSO generate frame="last" (the 'after'). Each
-     keyframe appears in the chat as it lands.
+  b. Generate the keyframe — LOCK THE CHARACTER across beats that show the SAME
+     person (same mechanism as slides 2-5 referencing slide 1):
+       - BEAT 1 sets the face. generate_image(beat_id="<beat-1>", frame="first")
+         with the character reference (the avatar/cameraRef, or the mirrored-creator
+         look from CHARACTER) via input_asset_ids.
+       - A later beat showing the SAME creator MUST pass BEAT 1's keyframe (its
+         image_asset_id — now on the post) as the FIRST input_asset_id, so the SAME
+         face / hair / wardrobe carry across. Without it the model redraws a
+         different person each beat. (+ the product/app-screen reference on a
+         product beat.)
+       - UNLESS the storyboard DELIBERATELY calls for a DIFFERENT person in that beat
+         (a friend, a stranger, a second subject, a reaction shot) — then do NOT
+         inherit beat 1; give that beat its own reference / fresh character for its
+         role. Default to locking consistency; vary it only when the beat needs it.
+       - MULTIPLE PEOPLE in one frame (two characters interacting, a reaction
+         two-shot): (a) describe EACH person as a distinct, fully-specified subject —
+         "Person A: <demographic + look>; Person B: <demographic + look>" — and state
+         their positions + interaction ("A on the left handing her phone to B on the
+         right"); apply the IMAGE PROMPT DISCIPLINE to each. (b) To keep BOTH
+         identities stable across beats, pass each recurring person's OWN locked
+         reference together (input_asset_ids holds up to 3, e.g. [personA_ref,
+         personB_ref]) and SAY in the prompt which reference is which person; reuse
+         the SAME ref for a person in every beat they appear (map one brand avatar
+         per character if the brand defines several). Keep the two visually distinct
+         (different hair / wardrobe) so the model doesn't merge them — two interacting
+         subjects drift more than one, so favour slightly wider framing when the
+         interaction matters more than fine face detail.
+       - For a transformation beat's frame="last" (the 'after'), pass that beat's
+         OWN first frame as a reference so the 'after' is unmistakably the same person.
+     Each keyframe appears in the chat as it lands.
   c. AskUserQuestion —
        question — "Keep this keyframe for beat <n> (<role>), or change it?"
        options  — ["Looks good — next beat", "Regenerate / change it"]
@@ -1390,8 +1431,9 @@ multi-beat STORYBOARD — NOT slides. Run the clone loop, but produce a VIDEO:
    reference's shots onto `video_storyboard` as ordered beats — one beat per shot of
    the deconstruction. Each beat: a `role`, the `on_screen_text` overlay (recreate the
    reference's hook text in your own words, e.g. "before:" → "after:"), a keyframe
-   `image_prompt` (apply the IMAGE PROMPT DISCIPLINE; reuse the avatar/character reference for
-   identity; ONLY when the topic is genuinely a product moment — a product-demo pillar or the
+   `image_prompt` (apply the IMAGE PROMPT DISCIPLINE; build the character per CHARACTER above —
+   mirror the reference creator's demographic, or the brand avatar if one is defined;
+   ONLY when the topic is genuinely a product moment — a product-demo pillar or the
    user asked — pass the product/app-screen asset as a reference on that beat; otherwise keep
    every beat content-first with NO product placement), a `motion` (apply CLIP DIRECTION,
    modelled on the reference's pacing), and `duration_seconds` planned within Veo's

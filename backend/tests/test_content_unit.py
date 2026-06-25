@@ -928,6 +928,10 @@ def test_clone_discipline_maps_to_closest_pillar_and_stays_content_first():
     # Research-grounded hook principle (first 3s is the ranking signal).
     assert "first 3 seconds" in disc
     assert "identity call" in disc and "open loop" in disc
+    # Character authenticity: an in-niche clone mirrors the reference creator's
+    # demographic (gender/ethnicity/look), reusing the UGC image discipline.
+    assert "clone the creator" in disc
+    assert "demographic" in disc and "ethnicity" in disc
 
 
 def test_video_reuses_slide_image_discipline_and_keeps_motion_video_only():
@@ -944,10 +948,19 @@ def test_video_reuses_slide_image_discipline_and_keeps_motion_video_only():
         assert shared in video, f"{shared} missing from the video keyframe standards"
         assert shared in p.DRAFT_POST_PROMPT, f"{shared} missing from the slide drafter"
     # Video-only motion/structure must NOT leak into the slideshow tails.
-    for marker in ("HARD CONSTRAINTS", "CLIP DIRECTION", "video_storyboard", "beat_id"):
+    for marker in ("HARD CONSTRAINTS", "CLIP DIRECTION", "video_storyboard", "beat_id",
+                   "SHOT SIZE", "CAMERA MOVE"):
         assert marker in video, f"{marker} missing from the video blocks"
         assert marker not in slideshow, f"LEAK: {marker} reached the slideshow blocks"
     assert "higgsfield" not in slideshow.lower()
+    # Keyframe character consistency: beats 2+ MUST reference beat 1's keyframe as
+    # an input asset (same mechanism slides use), so the same person carries across.
+    assert "LOCK THE CHARACTER" in video
+    assert "BEAT 1's keyframe" in video and "input_asset_id" in video
+    # Multi-character: describe each person distinctly + a per-character reference
+    # scheme so two interacting subjects each stay consistent across beats.
+    assert "MULTIPLE PEOPLE" in video
+    assert "Person A" in video and "Person B" in video
 
 
 def test_clone_kickoff_video_without_analysis_falls_back_to_understand_video_tool():
