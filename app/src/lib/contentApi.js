@@ -512,6 +512,39 @@ export async function markPostPosted(postId, { tiktokUrl } = {}) {
 }
 
 /**
+ * GET /api/content/postbridge/posts — recent PostBridge posts on the connected
+ * account, so the user can link an already-published one to this card. Each row:
+ * { id, caption, status, is_draft, created_at, scheduled_at, accounts[],
+ *   already_linked, linked_label }.
+ */
+export async function listPostBridgePosts(projectId, { platform } = {}) {
+  const url = new URL(`${BASE}/api/content/postbridge/posts`);
+  url.searchParams.set("project_id", projectId);
+  if (platform) url.searchParams.set("platform", platform);
+  const res = await fetch(url.toString(), { headers: backendApiHeaders() });
+  return jsonOrThrow(res);
+}
+
+/**
+ * POST /api/content/posts/{id}/link-postbridge-post — link this card to an
+ * already-published PostBridge post so its analytics sync in. Marks the card
+ * posted/scheduled with 'external' provenance.
+ */
+export async function linkPostBridgePost(postId, { postBridgePostId } = {}) {
+  const res = await fetch(
+    `${BASE}/api/content/posts/${encodeURIComponent(postId)}/link-postbridge-post`,
+    {
+      method: "POST",
+      headers: backendApiHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ post_bridge_post_id: postBridgePostId }),
+    },
+  );
+  const out = await jsonOrThrow(res);
+  invalidatePosts();
+  return out;
+}
+
+/**
  * POST /api/content/posts/{id}/publish — uploads each linked image to
  * PostBridge then creates the post.
  *

@@ -157,6 +157,81 @@ def test_bracket_regex_ignores_legit_asides_flags_fillins():
     assert not bad["no_placeholder_text"].passed
 
 
+# ---------------------------------------------------------------------------
+# Video-post sanity (post_type="video") — checks the storyboard + clip, not slides.
+# ---------------------------------------------------------------------------
+
+def _complete_video():
+    """A fully animated video post — every video sanity check should pass."""
+    beats = [
+        {"beat_id": "beat-01", "role": "hook", "on_screen_text": "wrong cut era",
+         "image_url": "u1", "image_prompt": "p1", "image_prompt_used": "p1"},
+        {"beat_id": "beat-02", "role": "reveal", "on_screen_text": "right cut",
+         "image_url": "u2", "image_prompt": "p2", "image_prompt_used": "p2",
+         "end_image_url": "e2", "end_image_prompt": "ep2", "end_image_prompt_used": "ep2"},
+    ]
+    return beats, "First line hooks. Then the rest.", ["#hair", "#bangs"]
+
+
+def _video_kwargs(beats, video_url="clip.mp4", video_prompt="slow push in"):
+    return dict(
+        post_type="video", video_url=video_url,
+        video_storyboard=beats, video_prompt=video_prompt,
+    )
+
+
+def test_video_sanity_all_pass_on_complete_clip():
+    beats, caption, tags = _complete_video()
+    checks = compute_sanity([], caption, tags, **_video_kwargs(beats))
+    assert {c.id for c in checks} == {
+        "video_present", "keyframes_generated", "keyframes_fresh",
+        "caption_present", "no_placeholder_text", "hashtags_present",
+    }
+    assert all(c.passed for c in checks), [(c.id, c.detail) for c in checks if not c.passed]
+
+
+def test_video_sanity_flags_missing_clip_and_keyframes():
+    beats = [
+        # hook beat: keyframe never generated + placeholder overlay text
+        {"beat_id": "beat-01", "role": "hook", "on_screen_text": "[insert hook]",
+         "image_prompt": "p1", "image_url": ""},
+        # reveal beat: stale first keyframe + missing after-frame
+        {"beat_id": "beat-02", "role": "reveal", "on_screen_text": "ok",
+         "image_url": "u", "image_prompt": "NEW", "image_prompt_used": "OLD",
+         "end_image_prompt": "ep", "end_image_url": ""},
+    ]
+    checks = {c.id: c for c in compute_sanity(
+        [], "", ["#a", "#A"], **_video_kwargs(beats, video_url="")
+    )}
+    assert not checks["video_present"].passed
+    assert not checks["keyframes_generated"].passed and "beat-01" in checks["keyframes_generated"].detail
+    assert "after-frame" in checks["keyframes_generated"].detail   # beat-02 end frame missing
+    assert not checks["keyframes_fresh"].passed and "beat-02" in checks["keyframes_fresh"].detail
+    assert not checks["no_placeholder_text"].passed and "beat-01" in checks["no_placeholder_text"].detail
+    assert not checks["caption_present"].passed                    # empty caption
+    assert not checks["hashtags_present"].passed                   # #a / #A duplicate
+
+
+def test_video_sanity_ignores_slides_and_slideshow_uses_beats_safely():
+    # A video post never trips slide checks even if a stray slides list is passed.
+    beats, caption, tags = _complete_video()
+    checks = {c.id: c for c in compute_sanity(
+        [{"slide_id": "slide-01", "kind": "photo", "image_url": ""}],  # would fail slideshow
+        caption, tags, **_video_kwargs(beats),
+    )}
+    assert "slides_have_images" not in checks
+    assert checks["video_present"].passed
+
+
+def test_video_placeholder_scans_motion_brief():
+    beats, caption, tags = _complete_video()
+    checks = {c.id: c for c in compute_sanity(
+        [], caption, tags, **_video_kwargs(beats, video_prompt="push in on [insert subject]")
+    )}
+    assert not checks["no_placeholder_text"].passed
+    assert "video_prompt" in checks["no_placeholder_text"].detail
+
+
 def test_apply_marker_metadata_fills_and_filters():
     markers = apply_marker_metadata([
         ContentMarker(id="visual_quality", score=50),

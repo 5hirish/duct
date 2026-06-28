@@ -2520,8 +2520,9 @@ def build_content_mcp_server(
         name="check_post_sanity",
         description=(
             "Run the deterministic pre-publish completeness checks on the current "
-            "post (or pass post_id): every slide has a fresh image, the hook + text "
-            "slides carry copy, the caption + hashtags exist, and there's no "
+            "post (or pass post_id). For a CAROUSEL: every slide has a fresh image, "
+            "the hook + text slides carry copy. For a VIDEO: the clip is generated and "
+            "its keyframes are fresh. Both: the caption + hashtags exist and there's no "
             "placeholder text. No side-effects — returns the pass/fail checks so you "
             "know what's incomplete before scoring. Sanity is mechanical; the "
             "subjective quality scoring is yours (submit_assessment)."
@@ -2545,7 +2546,13 @@ def build_content_mcp_server(
                     row, err = _require_post(db, project_id, session.post_id)
                     if err:
                         return err
-                checks = compute_sanity(row.slides or [], row.caption or "", row.hashtags or [])
+                checks = compute_sanity(
+                    row.slides or [], row.caption or "", row.hashtags or [],
+                    post_type=row.post_type or "slideshow",
+                    video_url=row.video_url or "",
+                    video_storyboard=row.video_storyboard or [],
+                    video_prompt=row.video_prompt or "",
+                )
             passed = sum(1 for c in checks if c.passed)
             return _ok({
                 "post_id": str(row.id),
@@ -2613,7 +2620,13 @@ def build_content_mcp_server(
                     row, err = _require_post(db, project_id, session.post_id)
                     if err:
                         return err
-                sanity = compute_sanity(row.slides or [], row.caption or "", row.hashtags or [])
+                sanity = compute_sanity(
+                    row.slides or [], row.caption or "", row.hashtags or [],
+                    post_type=row.post_type or "slideshow",
+                    video_url=row.video_url or "",
+                    video_storyboard=row.video_storyboard or [],
+                    video_prompt=row.video_prompt or "",
+                )
                 overall, content_score, band = compute_overall(markers, sanity)
                 assessment = PublishAssessment(
                     post_id=str(row.id),

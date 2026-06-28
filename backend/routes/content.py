@@ -1474,16 +1474,178 @@ def mark_post_posted(
     db: Session = Depends(db_session),
     tiktok_url: str | None = None,
 ) -> PostOut:
+    """Manually mark a draft as already-published (the user posted it elsewhere —
+    TikTok Studio, the PostBridge dashboard, etc.). Provenance becomes 'external'
+    so the board badges it as posted-outside-Duct. To pull analytics, link it to a
+    PostBridge post instead (POST .../link-postbridge-post)."""
     post = db.get(ContentPost, post_id)
     if post is None:
         raise HTTPException(404, "Post not found")
     post.status = "posted"
     post.posted_at = datetime.now(timezone.utc)
+    # Only stamp external provenance when it didn't go out through our own publish
+    # flow (which sets published_via='duct' + a post_bridge_post_id).
+    if not post.post_bridge_post_id:
+        post.published_via = "external"
     if tiktok_url:
         post.tiktok_url = tiktok_url
     db.add(post)
     db.commit()
     db.refresh(post)
+    return _enrich_one(db, post)
+
+
+class LinkPostBridgeIn(BaseModel):
+    """Body for POST /content/posts/{id}/link-postbridge-post."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    post_bridge_post_id: str
+
+
+class LinkablePostOut(BaseModel):
+    """One PostBridge post the user could link a Duct card to (picker row)."""
+
+    id:             str
+    caption:        str = ""
+    status:         str = ""
+    is_draft:       bool = False
+    created_at:     datetime | None = None
+    scheduled_at:   datetime | None = None
+    accounts:       list[SocialAccountOut] = Field(default_factory=list)
+    already_linked: bool = False           # already linked to a local card
+    linked_label:   str = ""               # which local card, if any
+
+
+@router.get("/content/postbridge/posts")
+async def list_postbridge_posts(
+    project_id: UUID,
+    platform: str | None = None,
+    limit: int = 30,
+    db: Session = Depends(db_session),
+) -> list[LinkablePostOut]:
+    """Recent PostBridge posts on the connected account, so the user can link an
+    already-published post to a Duct card (and pull its analytics)."""
+    from service.post_bridge import PostBridgeAPIError, client_for_user
+
+    proj = _project_or_404(db, project_id)
+    try:
+        client = client_for_user(proj.user_id, db)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+    platforms = [platform] if platform else None
+    try:
+        async with client as pb:
+            posts, _ = await pb.list_posts(platform=platforms, limit=min(max(limit, 1), 50))
+            accounts = await pb.list_social_accounts(limit=100)
+    except PostBridgeAPIError as exc:
+        raise HTTPException(exc.status_code or 502, _friendly_pb_error(exc)) from exc
+
+    acct_by_id = {a.id: a for a in accounts}
+    linked = db.execute(
+        select(ContentPost).where(
+            ContentPost.project_id == project_id,
+            ContentPost.post_bridge_post_id != "",
+        )
+    ).scalars().all()
+    linked_by_pb = {p.post_bridge_post_id: p for p in linked}
+
+    out: list[LinkablePostOut] = []
+    for p in posts:
+        accts = [
+            SocialAccountOut(id=a.id, platform=a.platform.value, username=a.username)
+            for sid in p.social_accounts
+            if (a := acct_by_id.get(sid)) is not None
+        ]
+        lp = linked_by_pb.get(p.id)
+        out.append(LinkablePostOut(
+            id=p.id,
+            caption=p.caption or "",
+            status=p.status.value,
+            is_draft=p.is_draft,
+            created_at=p.created_at,
+            scheduled_at=p.scheduled_at,
+            accounts=accts,
+            already_linked=lp is not None,
+            linked_label=(lp.topic or lp.post_dir_slug) if lp is not None else "",
+        ))
+    return out
+
+
+@router.post("/content/posts/{post_id}/link-postbridge-post")
+async def link_postbridge_post(
+    post_id: UUID,
+    body: LinkPostBridgeIn,
+    db: Session = Depends(db_session),
+) -> PostOut:
+    """Link a Duct card to an ALREADY-published PostBridge post so its analytics
+    sync into this card. Validates the PB post exists, resolves its post_result
+    (the analytics key) best-effort, and marks the card posted/scheduled with
+    'external' provenance. Pull numbers afterwards via .../sync-metrics."""
+    from service.post_bridge import PostBridgeAPIError, client_for_user
+
+    pb_id = (body.post_bridge_post_id or "").strip()
+    if not pb_id:
+        raise HTTPException(400, "post_bridge_post_id is required.")
+    post = db.get(ContentPost, post_id)
+    if post is None:
+        raise HTTPException(404, "Post not found")
+    proj = db.get(Project, post.project_id)
+    if proj is None:
+        raise HTTPException(404, "Project not found")
+
+    # Don't let the same PostBridge post back two different cards.
+    dupe = db.execute(
+        select(ContentPost).where(
+            ContentPost.project_id == post.project_id,
+            ContentPost.post_bridge_post_id == pb_id,
+            ContentPost.id != post.id,
+        )
+    ).scalars().first()
+    if dupe is not None:
+        raise HTTPException(
+            409,
+            f"That PostBridge post is already linked to “{dupe.topic or dupe.post_dir_slug}”.",
+        )
+
+    try:
+        client = client_for_user(proj.user_id, db)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+    try:
+        async with client as pb:
+            pb_post = await pb.get_post(pb_id)   # 404s if it isn't on this account
+            result_id = ""
+            try:
+                results = await pb.list_post_results(post_id=pb_id, limit=10)
+                chosen = next((r for r in results if r.success), results[0] if results else None)
+                if chosen is not None:
+                    result_id = chosen.id
+            except PostBridgeAPIError:
+                pass   # analytics linkage is best-effort; sync-metrics can resolve it later
+    except PostBridgeAPIError as exc:
+        if exc.status_code == 404:
+            raise HTTPException(404, "No PostBridge post with that id on the connected account.") from exc
+        raise HTTPException(exc.status_code or 502, _friendly_pb_error(exc)) from exc
+
+    post.post_bridge_post_id = pb_id
+    post.post_bridge_result_id = result_id
+    post.published_via = "external"
+    is_scheduled = pb_post.status.value == "scheduled" or (
+        pb_post.scheduled_at is not None and pb_post.status.value not in ("posted",)
+    )
+    if is_scheduled:
+        post.status = "scheduled"
+        post.scheduled_at = pb_post.scheduled_at
+    else:
+        post.status = "posted"
+        post.posted_at = post.posted_at or pb_post.created_at or datetime.now(timezone.utc)
+    db.add(post)
+    db.commit()
+    db.refresh(post)
+    _invalidate_analytics(post.project_id)
     return _enrich_one(db, post)
 
 

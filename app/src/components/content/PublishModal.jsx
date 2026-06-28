@@ -24,6 +24,7 @@ import {
 } from "@/lib/contentApi";
 import { PlatformGlyph, platformMeta } from "./platformGlyphs";
 import DateTimePicker from "./DateTimePicker";
+import LinkExistingTab from "./LinkExistingTab";
 
 // Local "YYYY-MM-DDTHH:mm" (NOT UTC — the value is a wall-clock schedule time).
 function toLocalInput(d) {
@@ -48,6 +49,7 @@ function toLocalInput(d) {
  *                   back to onClose.
  */
 export default function PublishModal({ open, onClose, post, onPublished, onViewPost }) {
+  const [tab, setTab]               = useState("publish");  // "publish" | "link"
   const [accounts, setAccounts]     = useState([]);
   const [selected, setSelected]     = useState(new Set());
   const [scheduledAt, setScheduledAt] = useState("");
@@ -67,7 +69,7 @@ export default function PublishModal({ open, onClose, post, onPublished, onViewP
 
   useEffect(() => {
     if (!open || !post?.project_id) return;
-    setStage("loading"); setError("");
+    setStage("loading"); setError(""); setTab("publish");
     let cancelled = false;
     (async () => {
       try {
@@ -190,8 +192,36 @@ export default function PublishModal({ open, onClose, post, onPublished, onViewP
           )}
         </header>
 
+        {/* Tabs — publish via Duct, or link/mark an already-posted one. Hidden once
+            publishing is underway (the progress + success screens own the view). */}
+        {(stage === "" || stage === "loading") && (
+          <div className="shrink-0 px-5 pb-1">
+            <div className="flex gap-1 rounded-lg bg-muted/60 p-1">
+              {[["publish", "Publish"], ["link", "Already posted"]].map(([key, label]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => { setTab(key); setError(""); }}
+                  aria-pressed={tab === key}
+                  className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                    tab === key ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Body */}
         <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-2">
+          {tab === "link" ? (
+            <div className="pt-2">
+              <LinkExistingTab post={post} onPublished={onPublished} onClose={onClose} />
+            </div>
+          ) : (
+          <>
           {stage === "loading" && <LoadingSkeleton />}
 
           {stage === "publishing" && (
@@ -281,10 +311,13 @@ export default function PublishModal({ open, onClose, post, onPublished, onViewP
               )}
             </div>
           )}
+          </>
+          )}
         </div>
 
-        {/* Footer — only in the picker stage; progress + success own their views. */}
-        {stage === "" && (
+        {/* Footer — only the publish picker stage; progress + success + the link
+            tab own their own views/actions. */}
+        {tab === "publish" && stage === "" && (
           <footer className="flex shrink-0 items-center justify-between gap-2 px-5 py-4">
             {hasSlides ? (
               <Button

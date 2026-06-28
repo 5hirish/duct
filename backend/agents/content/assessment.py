@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import re
 
-from agents.content.schema import ContentMarker, SanityCheck
+from agents.content.schema import ContentMarker, PostType, SanityCheck
 
 # ---------------------------------------------------------------------------
 # Subjective marker registry — the rubric's weighting, owned server-side.
@@ -105,17 +105,122 @@ def _text_fields(slides: list[dict]) -> list[tuple[str, str]]:
     return out
 
 
+def _beat_text_fields(beats: list[dict]) -> list[tuple[str, str]]:
+    """(beat_id, text) for every author-written surface on a VIDEO storyboard:
+    the on-screen overlay copy the clip is supposed to render."""
+    out: list[tuple[str, str]] = []
+    for b in beats:
+        if not isinstance(b, dict):
+            continue
+        bid = str(b.get("beat_id") or "")
+        out.append((bid, b.get("on_screen_text") or ""))
+    return out
+
+
+def _end_stale(d: dict) -> bool:
+    """A transformation beat's 'after' keyframe whose prompt changed since it
+    was generated (mirror of _stale for the end_image_* fields)."""
+    if not (d.get("end_image_url") or "").strip():
+        return False
+    return (d.get("end_image_prompt") or "").strip() != (d.get("end_image_prompt_used") or "").strip()
+
+
+# ---------------------------------------------------------------------------
+# Shared checks (post-type-agnostic) — caption, placeholders, hashtags.
+# ---------------------------------------------------------------------------
+
+def _caption_check(caption: str) -> SanityCheck:
+    """The feed caption exists and fits the platform ceiling."""
+    cap = (caption or "").strip()
+    if not cap:
+        return SanityCheck(
+            id="caption_present", label="Caption present",
+            passed=False, detail="The post has no caption.",
+        )
+    if len(cap) > _CAPTION_MAX:
+        return SanityCheck(
+            id="caption_present", label="Caption present",
+            passed=False, severity="soft",
+            detail=f"Caption is {len(cap)} chars — over the {_CAPTION_MAX:,} char limit (safe for all platforms).",
+        )
+    return SanityCheck(id="caption_present", label="Caption present", passed=True, detail="")
+
+
+def _placeholder_check(fields: list[tuple[str, str]]) -> SanityCheck:
+    """No leftover placeholder / fill-in text on any author-written surface.
+    `fields` is (surface_id, text) — slide ids for a carousel, beat ids for a
+    video, plus ("caption", caption)."""
+    placeholders: set[str] = set()
+    for sid, txt in fields:
+        if txt and (_PLACEHOLDER_RE.search(txt) or _BRACKET_RE.search(txt)):
+            if sid:
+                placeholders.add(sid)
+    ph = sorted(placeholders)
+    return SanityCheck(
+        id="no_placeholder_text",
+        label="No placeholder text",
+        passed=not ph,
+        detail="" if not ph else "Placeholder/fill-in text in: " + ", ".join(ph),
+    )
+
+
+def _hashtags_check(hashtags: list[str]) -> SanityCheck:
+    """At least one hashtag, none duplicated."""
+    tags = [t for t in (hashtags or []) if isinstance(t, str) and t.strip()]
+    norm = [t.strip().lower().lstrip("#") for t in tags]
+    dups = sorted({t for t in norm if norm.count(t) > 1})
+    if not tags:
+        return SanityCheck(
+            id="hashtags_present", label="Hashtags present",
+            passed=False, severity="soft", detail="No hashtags.",
+        )
+    if dups:
+        return SanityCheck(
+            id="hashtags_present", label="Hashtags present",
+            passed=False, severity="soft",
+            detail="Duplicate hashtags: " + ", ".join("#" + d for d in dups),
+        )
+    return SanityCheck(
+        id="hashtags_present", label="Hashtags present",
+        passed=True, severity="soft", detail="",
+    )
+
+
 def compute_sanity(
     slides: list[dict],
     caption: str,
     hashtags: list[str],
+    *,
+    post_type: str = PostType.SLIDESHOW.value,
+    video_url: str = "",
+    video_storyboard: list[dict] | None = None,
+    video_prompt: str = "",
 ) -> list[SanityCheck]:
     """Run the deterministic completeness checks against a post's stored state.
 
-    `slides` is the JSONB list (each slide a dict, multi-image slides carry
-    `items`). Pure function — safe to unit-test with hand-built dicts.
+    Branches on `post_type`: a SLIDESHOW is checked against `slides` (each a
+    JSONB dict, multi-image slides carry `items`); a VIDEO is checked against
+    its `video_storyboard` beats + the final `video_url` clip. Pure function —
+    safe to unit-test with hand-built dicts.
     """
-    slides = [s for s in (slides or []) if isinstance(s, dict)]
+    if (post_type or "").strip().lower() == PostType.VIDEO.value:
+        return _compute_sanity_video(
+            video_url=video_url,
+            beats=[b for b in (video_storyboard or []) if isinstance(b, dict)],
+            caption=caption,
+            hashtags=hashtags,
+            video_prompt=video_prompt,
+        )
+    return _compute_sanity_slideshow(
+        [s for s in (slides or []) if isinstance(s, dict)], caption, hashtags
+    )
+
+
+def _compute_sanity_slideshow(
+    slides: list[dict],
+    caption: str,
+    hashtags: list[str],
+) -> list[SanityCheck]:
     checks: list[SanityCheck] = []
 
     # 1 — every shippable slide / cell has an image.
@@ -165,58 +270,76 @@ def compute_sanity(
         detail="" if not no_copy else "No headline on: " + ", ".join(no_copy),
     ))
 
-    # 4 — the feed caption exists and fits the platform ceiling.
-    cap = (caption or "").strip()
-    if not cap:
-        checks.append(SanityCheck(
-            id="caption_present", label="Caption present",
-            passed=False, detail="The post has no caption.",
-        ))
-    elif len(cap) > _CAPTION_MAX:
-        checks.append(SanityCheck(
-            id="caption_present", label="Caption present",
-            passed=False, severity="soft",
-            detail=f"Caption is {len(cap)} chars — over the {_CAPTION_MAX:,} char limit (safe for all platforms).",
-        ))
-    else:
-        checks.append(SanityCheck(
-            id="caption_present", label="Caption present", passed=True, detail="",
-        ))
+    # 4–6 — shared: caption, no placeholders, hashtags.
+    checks.append(_caption_check(caption))
+    checks.append(_placeholder_check(_text_fields(slides) + [("caption", caption or "")]))
+    checks.append(_hashtags_check(hashtags))
 
-    # 5 — no leftover placeholder text anywhere on the post.
-    placeholders: set[str] = set()
-    for sid, txt in _text_fields(slides) + [("caption", caption or "")]:
-        if txt and (_PLACEHOLDER_RE.search(txt) or _BRACKET_RE.search(txt)):
-            if sid:
-                placeholders.add(sid)
-    ph = sorted(placeholders)
+    return checks
+
+
+def _compute_sanity_video(
+    *,
+    video_url: str,
+    beats: list[dict],
+    caption: str,
+    hashtags: list[str],
+    video_prompt: str,
+) -> list[SanityCheck]:
+    """VIDEO-post completeness. The deliverable is ONE clip authored from a
+    storyboard of beats, so the slide checks don't apply — instead: the final
+    clip exists, every beat's keyframe(s) were generated and are fresh, and the
+    same caption / placeholder / hashtag checks as a carousel."""
+    checks: list[SanityCheck] = []
+
+    # 1 — the final clip has actually been generated (the shippable asset).
+    has_clip = bool((video_url or "").strip())
     checks.append(SanityCheck(
-        id="no_placeholder_text",
-        label="No placeholder text",
-        passed=not ph,
-        detail="" if not ph else "Placeholder/fill-in text in: " + ", ".join(ph),
+        id="video_present",
+        label="Video clip generated",
+        passed=has_clip,
+        detail="" if has_clip else "No video clip yet — the storyboard hasn't been animated into a clip.",
     ))
 
-    # 6 — at least one hashtag, none duplicated.
-    tags = [t for t in (hashtags or []) if isinstance(t, str) and t.strip()]
-    norm = [t.strip().lower().lstrip("#") for t in tags]
-    dups = sorted({t for t in norm if norm.count(t) > 1})
-    if not tags:
-        checks.append(SanityCheck(
-            id="hashtags_present", label="Hashtags present",
-            passed=False, severity="soft", detail="No hashtags.",
-        ))
-    elif dups:
-        checks.append(SanityCheck(
-            id="hashtags_present", label="Hashtags present",
-            passed=False, severity="soft",
-            detail="Duplicate hashtags: " + ", ".join("#" + d for d in dups),
-        ))
-    else:
-        checks.append(SanityCheck(
-            id="hashtags_present", label="Hashtags present",
-            passed=True, severity="soft", detail="",
-        ))
+    # 2 — every authored beat has its keyframe still(s) generated.
+    missing: list[str] = []
+    for b in beats:
+        bid = str(b.get("beat_id") or "")
+        if (b.get("image_prompt") or "").strip() and not (b.get("image_url") or "").strip():
+            missing.append(bid)
+        if (b.get("end_image_prompt") or "").strip() and not (b.get("end_image_url") or "").strip():
+            missing.append(f"{bid} (after-frame)")
+    checks.append(SanityCheck(
+        id="keyframes_generated",
+        label="All keyframes generated",
+        passed=not missing,
+        detail="" if not missing else "Missing keyframe: " + ", ".join(missing),
+    ))
+
+    # 3 — no stale keyframes (prompt edited after the still was generated, so
+    #     the clip may no longer match the brief it was animated from).
+    stale: list[str] = []
+    for b in beats:
+        bid = str(b.get("beat_id") or "")
+        if _stale(b):
+            stale.append(bid)
+        if _end_stale(b):
+            stale.append(f"{bid} (after-frame)")
+    checks.append(SanityCheck(
+        id="keyframes_fresh",
+        label="Keyframes up to date",
+        passed=not stale,
+        detail="" if not stale else "Keyframe outdated since its prompt changed: " + ", ".join(stale),
+    ))
+
+    # 4–6 — shared: caption, no placeholders (scan overlay copy + the clip
+    #       motion brief), hashtags.
+    checks.append(_caption_check(caption))
+    checks.append(_placeholder_check(
+        _beat_text_fields(beats)
+        + [("caption", caption or ""), ("video_prompt", video_prompt or "")]
+    ))
+    checks.append(_hashtags_check(hashtags))
 
     return checks
 
