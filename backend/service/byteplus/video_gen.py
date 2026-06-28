@@ -7,15 +7,16 @@ submit ``POST /api/v3/contents/generations/tasks`` → poll
 download the result ``video_url`` → mp4 bytes. Mirrors the other video clients
 (bytes in / bytes out).
 
-Seedance 2.0 supports first-frame, first+last-frame (transformation), reference
-images (1-9, mutually exclusive with first/last), native audio, and 4-15s clips.
-Images are sent as base64 data URIs so it works in dev + prod alike.
+Seedance supports first-frame, first+last-frame (transformation), reference
+images (1-9, mutually exclusive with first/last), optional native audio
+(generate_audio — silent when false), and 4-15s clips. Images are sent as base64
+data URIs so it works in dev + prod alike.
 
-NOTE: Seedance 2.0 REJECTS direct upload of reference images/videos containing
-real human FACES (must be a trusted Seedance output / preset digital character /
-authorized asset) — a Gemini-generated face keyframe may be rejected; confirm via
-spike. UNVALIDATED end-to-end: response field names follow the docs and are parsed
-defensively.
+NOTE: the Seedance 2.0 series REJECTS direct upload of reference images/videos
+containing real human FACES (must be a trusted Seedance output / preset digital
+character / authorized asset) — so a Gemini-generated face keyframe may be rejected.
+Seedance 1.5 Pro is NOT face-restricted and still does silent + first+last
+interpolation, so it's the default for our face-based clone keyframes.
 """
 
 from __future__ import annotations
@@ -28,8 +29,9 @@ from agents.models import VideoModel
 
 logger = logging.getLogger(__name__)
 
-# Single source of truth — the model id lives on the VideoModel enum.
-DEFAULT_SEEDANCE_MODEL = VideoModel.SEEDANCE_2_0.value
+# Single source of truth — the model id lives on the VideoModel enum. 1.5 Pro is the
+# face-safe default (the 2.0 series rejects real-face image uploads).
+DEFAULT_SEEDANCE_MODEL = VideoModel.SEEDANCE_1_5_PRO.value
 
 _TASKS_URL = "https://ark.ap-southeast.bytepluses.com/api/v3/contents/generations/tasks"
 _SUBMIT_TIMEOUT_SECS = 60.0
@@ -101,6 +103,18 @@ class SeedanceVideoClient:
             try:
                 resp = await client.post(_TASKS_URL, headers=headers, json=body)
                 resp.raise_for_status()
+            except httpx.HTTPStatusError as exc:
+                err = {}
+                try:
+                    err = (exc.response.json() or {}).get("error") or {}
+                except Exception:
+                    pass
+                detail = err.get("message") or exc.response.text[:300]
+                if err.get("code") == "ModelNotOpen":
+                    detail = f"model '{model}' isn't activated — enable it in the BytePlus Ark Console, then retry."
+                raise SeedanceVideoError(
+                    f"submit failed ({exc.response.status_code}): {detail}"
+                ) from exc
             except Exception as exc:
                 raise SeedanceVideoError(f"submit failed: {exc}") from exc
             task_id = (resp.json() or {}).get("id")

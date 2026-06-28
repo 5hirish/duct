@@ -952,6 +952,12 @@ class PostOut(BaseModel):
     video_duration_seconds:  int | None = None
     video_aspect_ratio:      str = "9:16"
     source_image_asset_id:   UUID | None = None
+    # The storyboard beats (each carries resolved image_url/end_image_url) so the
+    # video viewport can restore its keyframes on reload — not just the slideshow.
+    video_storyboard:        list = []
+    # Every generated take is a post-linked asset; this is the newest-first list so
+    # the viewport can stack recent variants (the primary one is is_primary=True).
+    video_variants:          list = []
     posted_at:     str | None
     scheduled_at:  str | None
     tiktok_url:    str
@@ -972,15 +978,39 @@ class PostOut(BaseModel):
     active_conversation_id: UUID | None = None
 
 
+def _video_variants(db: Session, post: ContentPost, limit: int = 6) -> list[dict]:
+    """The post's generated video clips, newest-first — for the variant stack.
+    Every generate_video_clip persists a post-linked ContentAsset, so prior takes
+    are all here; the one matching post.video_asset_id is flagged is_primary."""
+    rows = db.execute(
+        select(ContentAsset)
+        .where(ContentAsset.post_id == post.id)
+        .where(ContentAsset.mime_type.like("video/%"))
+        .order_by(ContentAsset.created_at.desc())
+        .limit(limit)
+    ).scalars().all()
+    return [
+        {
+            "asset_id": str(a.id),
+            "url": a.url,
+            "created_at": a.created_at.isoformat() if a.created_at else None,
+            "is_primary": post.video_asset_id is not None and a.id == post.video_asset_id,
+        }
+        for a in rows
+    ]
+
+
 def _post_out(
     p: ContentPost,
     *,
     fmt: tuple[str, str] | None = None,
     thumbnail_url: str = "",
     active_conversation_id: UUID | None = None,
+    video_variants: list | None = None,
 ) -> PostOut:
     """Serialize a post. `fmt` is an optional (slug, name) for the linked format."""
     return PostOut(
+        video_variants=video_variants or [],
         active_conversation_id=active_conversation_id,
         id=p.id,
         project_id=p.project_id,
@@ -1021,6 +1051,7 @@ def _post_out(
         video_duration_seconds=p.video_duration_seconds,
         video_aspect_ratio=p.video_aspect_ratio,
         source_image_asset_id=p.source_image_asset_id,
+        video_storyboard=p.video_storyboard or [],
         posted_at=p.posted_at.isoformat() if p.posted_at else None,
         scheduled_at=p.scheduled_at.isoformat() if p.scheduled_at else None,
         tiktok_url=p.tiktok_url,
@@ -1180,6 +1211,7 @@ def get_post(post_id: UUID, db: Session = Depends(db_session)) -> PostOut:
         fmt=_fmt_for(post, by_id),
         thumbnail_url=thumb,
         active_conversation_id=active_conversation_id,
+        video_variants=_video_variants(db, post) if post.post_type == "video" else [],
     )
 
 
@@ -1403,6 +1435,37 @@ def patch_post(post_id: UUID, body: PostPatch, db: Session = Depends(db_session)
     db.commit()
     db.refresh(post)
     return _enrich_one(db, post)
+
+
+class VideoSelectIn(BaseModel):
+    asset_id: UUID
+
+
+@router.post("/content/posts/{post_id}/video/select")
+def select_post_video(
+    post_id: UUID, body: VideoSelectIn, db: Session = Depends(db_session)
+) -> PostOut:
+    """Make a previously-generated take the post's PRIMARY clip (drives the viewport +
+    what publishes). Validates the asset is a video already linked to this post — so a
+    caller can only pick among real takes, never inject an arbitrary URL."""
+    post = db.get(ContentPost, post_id)
+    if post is None:
+        raise HTTPException(404, "Post not found")
+    asset = db.get(ContentAsset, body.asset_id)
+    if asset is None or asset.post_id != post.id or not (asset.mime_type or "").startswith("video/"):
+        raise HTTPException(400, "Asset is not a video clip of this post")
+    post.video_url = asset.url
+    post.video_asset_id = asset.id
+    post.updated_at = datetime.now(timezone.utc)
+    db.add(post)
+    db.commit()
+    db.refresh(post)
+    by_id = _format_map(db, post.project_id)
+    thumb = _post_thumb(post) or ""
+    return _post_out(
+        post, fmt=_fmt_for(post, by_id), thumbnail_url=thumb,
+        video_variants=_video_variants(db, post),
+    )
 
 
 @router.post("/content/posts/{post_id}/mark-posted")

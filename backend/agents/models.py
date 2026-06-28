@@ -130,8 +130,10 @@ class VideoModel(str, Enum):
     allowlisted/billed; the 3.0 ids are deprecated.
     Grok (xAI Imagine, SDK xai-sdk): image-to-video with native audio; no
     interpolation / reference-image / extension features (Veo-only).
-    Seedance 2.0 (BytePlus ModelArk, REST): image-to-video with native audio,
-    first+last-frame interpolation, reference images (1-9), 4-15s clips.
+    Seedance (BytePlus ModelArk, REST): first-frame + first+last-frame interpolation
+    + silent video (generate_audio=false). NOTE: the 2.0 series REJECTS direct upload
+    of images with real human FACES — so for our face-based clone keyframes use
+    Seedance 1.5 Pro (silent + interpolation, NOT face-restricted) as the default.
     """
 
     # Veo (Google)
@@ -142,8 +144,13 @@ class VideoModel(str, Enum):
     # Grok (xAI Imagine) — only 1.5 is supported
     GROK_IMAGINE_VIDEO_1_5 = "grok-imagine-video-1.5"
 
-    # Seedance (BytePlus ModelArk) — only 2.0 is supported
-    SEEDANCE_2_0 = "dreamina-seedance-2-0-260128"
+    # Seedance (BytePlus ModelArk). All ids verified against account 3002778785:
+    # the 2.0 series (dreamina-prefixed) is activated + working; 1.5 Pro is a valid
+    # id but needs activating in the Ark Console. 1.5 Pro = silent + first+last
+    # interpolation and (unlike 2.0) NOT face-restricted → the right default for our
+    # face-based clone keyframes. The 2.0 series rejects real-face image uploads.
+    SEEDANCE_1_5_PRO = "seedance-1-5-pro-251215"        # needs activation; face-safe
+    SEEDANCE_2_0 = "dreamina-seedance-2-0-260128"       # activated; face-restricted
     SEEDANCE_2_0_FAST = "dreamina-seedance-2-0-fast-260128"
     SEEDANCE_2_0_MINI = "dreamina-seedance-2-0-mini-260615"
 

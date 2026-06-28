@@ -90,6 +90,17 @@ class GeminiVeoClient:
                 f"{VideoModel.VEO_3_1.value} or {VideoModel.VEO_3_1_FAST.value}.",
                 model=model,
             )
+        # Veo can't COMBINE a literal first frame (image-to-video) with
+        # reference_images (subject-reference mode) — sending both is a 400
+        # "Unsupported video generation request". The approved keyframe IS the
+        # first frame and already carries the character, so it wins; drop the
+        # references. (Reference images still work on their own — text+refs → video.)
+        if first_frame is not None and reference_images:
+            logger.info(
+                "veo: first frame present — dropping %d reference image(s) (Veo can't "
+                "combine image-to-video with reference images)", len(reference_images),
+            )
+            reference_images = None
         return await asyncio.to_thread(
             self._run_generate,
             prompt, first_frame, first_frame_mime, last_frame,
@@ -118,7 +129,21 @@ class GeminiVeoClient:
     ) -> bytes:
         from google.genai import types
 
-        cfg: dict[str, Any] = {"generate_audio": generate_audio}
+        # `generate_audio` is ONLY accepted in Vertex / Enterprise mode — on the
+        # Gemini Developer API it raises "generate_audio parameter is only supported
+        # in Gemini Enterprise Agent Platform mode" and fails EVERY Veo call (any
+        # value). Only pass it where supported; on the Developer API omit it so the
+        # clip generates with Veo's default instead of crashing.
+        audio_supported = bool(getattr(self._client, "vertexai", False))
+        if generate_audio and not audio_supported:
+            logger.info(
+                "veo: generate_audio is unsupported on the Gemini Developer API — "
+                "generating without the audio toggle (model %s)", model,
+            )
+
+        cfg: dict[str, Any] = {}
+        if audio_supported:
+            cfg["generate_audio"] = generate_audio
         if aspect_ratio:
             cfg["aspect_ratio"] = aspect_ratio
         if resolution:
@@ -156,13 +181,15 @@ class GeminiVeoClient:
             # is fixed to 720p / duration 8 per the docs.
             for ext_prompt in extension_prompts:
                 prev_video = self._video_from_op(op, model)
-                ext_cfg = types.GenerateVideosConfig(
+                ext_kwargs: dict[str, Any] = dict(
                     number_of_videos=1,
                     resolution="720p",
                     duration_seconds=8,
                     aspect_ratio=aspect_ratio,
-                    generate_audio=generate_audio,
                 )
+                if audio_supported:
+                    ext_kwargs["generate_audio"] = generate_audio
+                ext_cfg = types.GenerateVideosConfig(**ext_kwargs)
                 op = self._client.models.generate_videos(
                     model=model, video=prev_video,
                     prompt=(ext_prompt.strip() or prompt), config=ext_cfg,

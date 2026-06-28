@@ -331,6 +331,16 @@ async def send_message(agent_type: str, session_id: str, msg: AgentMessage) -> d
         session.needs_reprime = False
 
     await session.chat_queue.put({"role": "user", "content": content})  # type: ignore[attr-defined]
+
+    # If the agent's run loop already ended (idle timeout / completion) this session
+    # is a zombie: the message queues but nothing consumes it ("sent a message,
+    # nothing happened"). Revive it in RESUME mode so the queued message is actually
+    # processed. The message already carries the post as working context above, so
+    # the agent has what it needs even without a chat re-prime.
+    _task = getattr(session, "pipeline_task", None)
+    if (_task is None or _task.done()) and getattr(session, "conversation_id", None):
+        await _restart_session_resume(session)
+
     return {"status": "queued", "type": "chat"}
 
 
@@ -709,6 +719,47 @@ async def _dispatch_start(
         await _start_insights(session_id, body, emit_fn)
     else:
         raise HTTPException(501, f"Agent type {agent_type!r} is not yet implemented.")
+
+
+async def _restart_session_resume(session) -> None:
+    """Re-launch a session's pipeline in RESUME mode after its run loop ended
+    (idle timeout / completion). Restores the conversation + artifact and consumes
+    whatever is already queued on chat_queue — turning a zombie session (accepts
+    messages, never processes them) back into a live one. Requires a persisted
+    conversation (checked by the caller); otherwise resume can't restore context."""
+    from routes.content import _run_clone_worker, _run_draft_worker, _run_planner_worker
+
+    agent_type = session.agent_type
+    session_id = session.session_id
+
+    async def emit_fn(body: dict[str, Any]) -> None:
+        body["agent_type"] = agent_type
+        body["session_id"] = session_id
+        await _emit_to_queue(session.event_queue, body)  # type: ignore[arg-type]
+
+    recorder = getattr(session, "recorder", None)
+    if recorder is not None:
+        emit_fn = recorder.wrap_emit(emit_fn)
+
+    session.resume = True  # force the runner's resume branch (restore, don't re-run)
+    project_id = session.project_id
+
+    if agent_type == AgentType.CONTENT_PLANNER:
+        coro = _run_planner_worker(session_id, project_id, emit_fn)
+    elif getattr(session, "mode", "") == "clone_post":
+        coro = _run_clone_worker(
+            session_id,
+            ClonePostRequest(project_id=project_id, post_id=session.post_id, plan_id=session.plan_id),
+            emit_fn,
+        )
+    else:
+        coro = _run_draft_worker(
+            session_id,
+            DraftPostRequest(project_id=project_id, plan_id=session.plan_id),
+            emit_fn,
+        )
+    session.pipeline_task = asyncio.create_task(coro)
+    logger.info("agents: revived session %s in resume mode (run loop had ended)", session_id)
 
 
 async def _start_tiktok_studio(

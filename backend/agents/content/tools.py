@@ -461,10 +461,33 @@ def _attach_image_to_beat(
     return False
 
 
-def _build_post_payload(row: ContentPost) -> dict:
+def _video_clip_variants(db: Session, post: ContentPost, limit: int = 6) -> list[dict]:
+    """Newest-first generated clips linked to this post — for the viewport's variant
+    stack. Every take is persisted as a post-linked asset; the one matching
+    post.video_asset_id is the current primary."""
+    rows = db.exec(
+        select(ContentAsset)
+        .where(ContentAsset.post_id == post.id)
+        .where(ContentAsset.mime_type.like("video/%"))
+        .order_by(ContentAsset.created_at.desc())
+        .limit(limit)
+    ).all()
+    return [
+        {
+            "asset_id": str(a.id),
+            "url": a.url,
+            "created_at": a.created_at.isoformat() if a.created_at else None,
+            "is_primary": post.video_asset_id is not None and a.id == post.video_asset_id,
+        }
+        for a in rows
+    ]
+
+
+def _build_post_payload(row: ContentPost, db: Session | None = None) -> dict:
     """The POST_DRAFT_UPDATED payload — shared by submit_post_draft and the
-    per-slide image attach path so the frontend always gets the same shape."""
-    return {
+    per-slide image attach path so the frontend always gets the same shape. Pass
+    `db` to include the newest-first video variant stack (video posts only)."""
+    payload = {
         "id":              str(row.id),
         "project_id":      str(row.project_id),
         "post_dir_slug":   row.post_dir_slug,
@@ -505,6 +528,9 @@ def _build_post_payload(row: ContentPost) -> dict:
         # reference diagnostic + the Kept-vs-Changed ledger trust panel.
         "clone_source":    row.clone_source,
     }
+    if db is not None and row.post_type == PostType.VIDEO:
+        payload["video_variants"] = _video_clip_variants(db, row)
+    return payload
 
 
 def _attach_image_to_slide(
@@ -835,9 +861,10 @@ def build_content_mcp_server(
         model_config = ConfigDict(extra="forbid")
         motion_prompt: str = Field(
             description=(
-                "The Veo direction for the clip — the beat-by-beat DYNAMIC/STATIC/AUDIO motion "
-                "prompt (camera, action, lighting, any spoken line in double quotes). Detailed "
-                "cinematography wins; Veo generates synced audio."
+                "The Veo direction for the clip — the beat-by-beat DYNAMIC/STATIC motion "
+                "prompt (camera, action, lighting). Detailed cinematography wins. The clip is "
+                "delivered SILENT (the creator adds their own trending sound in TikTok), so "
+                "describe the MOTION, not narration."
             ),
         )
         beat_id: str | None = Field(
@@ -846,6 +873,22 @@ def build_content_mcp_server(
                 "Animate this storyboard beat's keyframe as the first frame (and, for a "
                 "transformation beat, its 'after' frame as the last frame). Omit to animate the "
                 "post's opening keyframe."
+            ),
+        )
+        first_frame_asset_id: str | None = Field(
+            None,
+            description=(
+                "Explicit FIRST frame for a first→last interpolation morph (overrides beat_id). "
+                "Use the first beat's approved keyframe as the start of the morph."
+            ),
+        )
+        last_frame_asset_id: str | None = Field(
+            None,
+            description=(
+                "Explicit LAST frame for a first→last interpolation morph (pairs with "
+                "first_frame_asset_id). Use the FINAL beat's approved keyframe — Veo morphs "
+                "smoothly between the two approved frames, so both endpoints stay on-model. "
+                "This is THE way to render a transformation (before→after) as ONE clip."
             ),
         )
         reference_asset_ids: list[str] = Field(
@@ -865,10 +908,13 @@ def build_content_mcp_server(
             None, description="'dont_allow' | 'allow_adult' | 'allow_all' — whether to generate people.",
         )
         generate_audio: bool = Field(
-            True,
+            False,
             description=(
-                "Veo generates synced audio (voice/SFX/music) by default. Set false for a SILENT "
-                "clip — e.g. a pure-vibe montage where the creator adds their own trending sound."
+                "Leave FALSE — clips are silent by default so the creator adds their own trending "
+                "sound in TikTok (what most want). Note: on Veo 3.x via the Gemini Developer API "
+                "audio is baked in and can't be toggled, so this only takes effect on providers "
+                "that support silence natively (Seedance). Only set true if the user explicitly "
+                "asks for generated audio."
             ),
         )
         extension_prompts: list[str] = Field(
@@ -1827,7 +1873,7 @@ def build_content_mcp_server(
                         "event": ContentEvent.POST_DRAFT_UPDATED,
                         "session_id": session.session_id,
                         "post_id": str(row.id),
-                        "payload": _build_post_payload(row),
+                        "payload": _build_post_payload(row, db),
                     })
                     return _ok_model(AttachPostVideoResult(
                         post_id=str(row.id),
@@ -2012,8 +2058,15 @@ def build_content_mcp_server(
 
             motion_prompt = str(args.get("motion_prompt") or "").strip()
             if not motion_prompt:
-                return _err("motion_prompt is required — describe the clip's motion + audio.")
+                return _err("motion_prompt is required — describe the clip's motion (camera + action).")
             beat_id = str(args.get("beat_id") or "").strip()
+            first_frame_asset_id = str(args.get("first_frame_asset_id") or "").strip()
+            last_frame_asset_id = str(args.get("last_frame_asset_id") or "").strip()
+            # Default to Veo 3.1: faces OK + first→last interpolation. Seedance is NOT a
+            # viable default for clones — the 2.0 series REJECTS face keyframes at submit
+            # ("input image may contain real person", verified) and the face-safe 1.5 Pro
+            # isn't available in this region. So Seedance stays opt-in (explicit model=…)
+            # for non-face b-roll only, never the default for face-based content.
             model = str(args.get("model") or "").strip() or DEFAULT_VEO_MODEL
             # Route to the provider that serves this model (Veo / Grok / Seedance) + check its key.
             provider = video_provider_for(model)
@@ -2028,7 +2081,7 @@ def build_content_mcp_server(
             duration_seconds = int(_dur) if _dur not in (None, "") else 8
             negative_prompt = str(args.get("negative_prompt") or "").strip() or None
             person_generation = str(args.get("person_generation") or "").strip() or None
-            generate_audio = bool(args.get("generate_audio", True))
+            generate_audio = bool(args.get("generate_audio", False))
             ext_prompts = [str(p).strip() for p in (args.get("extension_prompts") or []) if str(p).strip()][:20]
             ref_ids = [str(r).strip() for r in (args.get("reference_asset_ids") or []) if str(r).strip()]
             # The persisted clip length — each provider branch sets it precisely below
@@ -2045,7 +2098,13 @@ def build_content_mcp_server(
                     post0, perr = _require_post(db0, project_id, session.post_id)
                     if perr:
                         return perr, None, None, [], None
-                    if beat_id:
+                    if first_frame_asset_id and last_frame_asset_id:
+                        # Explicit first→last interpolation morph across any two approved
+                        # keyframes (e.g. the first beat → the final beat). Both endpoints
+                        # are on-model, so the morph stays consistent. Overrides beat_id.
+                        first_id = first_frame_asset_id
+                        end_id = last_frame_asset_id
+                    elif beat_id:
                         beat0, _bi, berr = _require_beat(post0, beat_id)
                         if berr:
                             return berr, None, None, [], None
@@ -2206,7 +2265,7 @@ def build_content_mcp_server(
                         "event": ContentEvent.POST_DRAFT_UPDATED,
                         "session_id": session.session_id,
                         "post_id": str(row.id),
-                        "payload": _build_post_payload(row),
+                        "payload": _build_post_payload(row, db),
                     })
                     return _ok_model(AttachPostVideoResult(
                         post_id=str(row.id),

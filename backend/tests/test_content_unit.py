@@ -961,6 +961,11 @@ def test_video_reuses_slide_image_discipline_and_keeps_motion_video_only():
     # scheme so two interacting subjects each stay consistent across beats.
     assert "MULTIPLE PEOPLE" in video
     assert "Person A" in video and "Person B" in video
+    # Honest keyframe review (anti-sycophancy) + hand-defect handling: hands near the
+    # face are flagged as the #1 defect, and a broken frame is regenerated/rejected,
+    # not rationalised.
+    assert "HANDS ARE THE #1 DEFECT" in video
+    assert "critical art director" in video and "REJECT" in video
 
 
 def test_clone_kickoff_video_without_analysis_falls_back_to_understand_video_tool():

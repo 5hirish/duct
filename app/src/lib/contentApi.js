@@ -467,6 +467,22 @@ export async function patchPost(postId, patch) {
   return out;
 }
 
+/** Pick which generated take is the post's primary clip (drives the viewport +
+ *  what publishes). `assetId` must be a video asset already linked to the post. */
+export async function selectPostVideo(postId, assetId) {
+  const res = await fetch(
+    `${BASE}/api/content/posts/${encodeURIComponent(postId)}/video/select`,
+    {
+      method: "POST",
+      headers: backendApiHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ asset_id: assetId }),
+    },
+  );
+  const out = await jsonOrThrow(res);
+  invalidatePosts();
+  return out;
+}
+
 /** Create a post (Add-post → Save). Idempotent upsert on (project_id,
  *  post_dir_slug). `body` is a PostIn (status defaults to "pending"; pass
  *  clone_source for url/reference entries). Returns the created PostOut. */

@@ -15,7 +15,7 @@ import {
   Wand2,
 } from "lucide-react";
 import { downloadPostSlides, patchPost } from "../../lib/contentApi";
-import { fmtCount } from "../../lib/contentMetrics";
+import { fmtCount, safeHref } from "../../lib/contentMetrics";
 import { extractStyleHead } from "../../lib/slideDoc";
 import { statusMeta } from "../../lib/contentStatus";
 import { PostStatus, PostType, POST_TYPE_LABELS } from "../../lib/contentEnums";
@@ -539,8 +539,8 @@ function ClonePanel({ post }) {
               />
             )}
           </button>
-          {cs.tiktok_url && (
-            <a href={cs.tiktok_url} target="_blank" rel="noreferrer" className="shrink-0 truncate text-[11px] text-violet-600/80 hover:underline dark:text-violet-400/80">
+          {safeHref(cs.tiktok_url) && (
+            <a href={safeHref(cs.tiktok_url)} target="_blank" rel="noopener noreferrer" className="shrink-0 truncate text-[11px] text-violet-600/80 hover:underline dark:text-violet-400/80">
               view original ↗
             </a>
           )}
@@ -605,12 +605,12 @@ function SaveIndicator({ saving, dirty, hasError, onRetry }) {
   );
 }
 
-function Labeled({ label, hint, children }) {
+function Labeled({ label, hint, action, children }) {
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-muted-foreground">{label}</span>
-        {hint && <span className="text-[11px] text-muted-foreground/70">{hint}</span>}
+        {action || (hint && <span className="text-[11px] text-muted-foreground/70">{hint}</span>)}
       </div>
       {children}
     </div>
@@ -670,10 +670,33 @@ function PostCopy({ post, patch }) {
       <Labeled label="Caption" hint="first line is the hook — 2–3 sentences">
         <Textarea rows={4} value={post.caption || ""} onChange={(v) => patch("caption", v)} placeholder="First line is the hook. Keep it 2–3 sentences." />
       </Labeled>
-      <Labeled label="Hashtags">
+      <Labeled label="Hashtags" action={<CopyAllHashtags tags={post.hashtags} />}>
         <HashtagInput value={Array.isArray(post.hashtags) ? post.hashtags : []} onChange={(v) => patch("hashtags", v)} />
       </Labeled>
     </section>
+  );
+}
+
+/** Copy every hashtag (space-joined, "#a #b #c") to the clipboard — ready to paste
+ *  straight into a TikTok caption. */
+function CopyAllHashtags({ tags }) {
+  const [copied, setCopied] = useState(false);
+  const list = Array.isArray(tags) ? tags : [];
+  if (!list.length) return null;
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(list.join(" "));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch { /* clipboard blocked — no-op */ }
+  }
+  return (
+    <button type="button" onClick={copy}
+      className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground/70 transition hover:text-foreground">
+      {copied
+        ? <><Check className="size-3 text-emerald-500" /> Copied</>
+        : <><Copy className="size-3" /> Copy all</>}
+    </button>
   );
 }
 

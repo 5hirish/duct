@@ -36,6 +36,7 @@ import {
   saveDiscoverSnapshot,
   clearDiscoverSnapshot,
 } from "../../lib/contentApi";
+import { safeHref } from "../../lib/contentMetrics";
 import { useScraperRun } from "../../hooks/useScraperRun";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -691,9 +692,9 @@ function ResultCard({ post, busy, onSave }) {
     <article className="group flex flex-col overflow-hidden rounded-xl border border-border/70 bg-card transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md">
       {/* Cover */}
       <a
-        href={post.web_video_url}
+        href={safeHref(post.web_video_url) || undefined}
         target="_blank"
-        rel="noreferrer"
+        rel="noopener noreferrer"
         className="relative block aspect-[4/5] w-full overflow-hidden bg-gradient-to-br from-muted/60 to-muted/20"
       >
         {cover ? (
@@ -928,7 +929,7 @@ function SynthesisPanel({ posts, benchmark }) {
             {s.hooks.map((h, i) => (
               <li key={i} className="flex items-start gap-2 text-[11px]">
                 <span className="shrink-0 rounded bg-primary/10 px-1 font-medium tabular-nums text-primary">{pct(h.eng)}</span>
-                <a href={h.url} target="_blank" rel="noreferrer" className="line-clamp-1 hover:underline">{h.text}</a>
+                <a href={safeHref(h.url) || undefined} target="_blank" rel="noopener noreferrer" className="line-clamp-1 hover:underline">{h.text}</a>
               </li>
             ))}
           </ul>

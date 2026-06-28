@@ -650,6 +650,15 @@ class PostDraft(BaseModel):
             raise ValueError("a slideshow post must have at least one slide")
         return self
 
+    @model_validator(mode="after")
+    def _cap_hashtags(self) -> "PostDraft":
+        """TikTok's 2026 sweet spot is 3–5 hashtags (>5 dilutes reach + sends the
+        algorithm mixed signals). The prompt asks the agent for ≤5 in priority
+        order; trim any overflow as a safety net so a slip never ships >5."""
+        if len(self.hashtags) > 5:
+            self.hashtags = self.hashtags[:5]
+        return self
+
 
 class PlanStrategy(BaseModel):
     """The strategist's long-term narrative — persisted on the plan so each

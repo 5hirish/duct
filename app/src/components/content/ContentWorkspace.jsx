@@ -10,6 +10,7 @@ import {
   closeContentSession,
   consumeSseStream,
   getContentConversation,
+  getPost,
   getSlideRenderDoc,
   invalidatePosts,
   mediaUrl,
@@ -226,6 +227,19 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
             const restoredSteps = reconstructSteps(events);
             if (restoredSteps.length) setSteps(restoredSteps);
           } catch { /* non-fatal: server still resumes; UI just lacks history */ }
+          // POST_DRAFT_UPDATED / PLAN_GENERATED are NOT persisted to the event log,
+          // so the viewport (clip, keyframes, slides) can't be rebuilt from `events`.
+          // Re-fetch the post so a resumed draft shows its CURRENT generated clip +
+          // keyframes instead of a blank "No clip yet" (runs before the live stream,
+          // which then takes over via POST_DRAFT_UPDATED).
+          const pid = (mode === "draft_post" || mode === "clone_post") ? context.postId : null;
+          if (pid) {
+            try {
+              const p = await getPost(pid);
+              const hasContent = p && (p.video_url || (p.video_storyboard || []).length || (p.slides || []).length);
+              if (!cancelled && hasContent) setPayload({ type: "post", ...p });
+            } catch { /* non-fatal: viewport falls back to the page's post prop */ }
+          }
         }
 
         const opener =

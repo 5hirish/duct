@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Film, Smartphone } from "lucide-react";
-import { mediaUrl } from "@/lib/contentApi";
+import { Check, ChevronLeft, ChevronRight, Film, Loader2, Smartphone } from "lucide-react";
+import { mediaUrl, selectPostVideo } from "@/lib/contentApi";
 
 /**
  * Phone-framed video viewport — the right-pane preview for a video post
@@ -23,19 +23,44 @@ import { mediaUrl } from "@/lib/contentApi";
  */
 export default function VideoViewport({ post }) {
   const beats = Array.isArray(post?.video_storyboard) ? post.video_storyboard : [];
-  const videoUrl = post?.video_url || "";
+  const variants = Array.isArray(post?.video_variants) ? post.video_variants : [];
   // Opening keyframe → the video's poster (instant frame before the clip loads).
   // Prefer the transient preview so a freshly generated keyframe paints instantly.
   const opening = beats.find((b) => b?._preview_uri || b?.image_url);
   const posterUrl = opening?._preview_uri || opening?.image_url || "";
 
-  // Build the stack: clip first, then keyframes in sequence. A transformation
-  // beat contributes BOTH its first frame and its 'after' frame so the user can
-  // review/iterate on each (the 'after' was generated but never shown before).
-  const items = [];
-  if (videoUrl) {
-    items.push({ kind: "video", url: videoUrl, label: "Generated video", poster: posterUrl });
+  // "Use this take" → persist which generated clip is the post's primary (for
+  // publishing). Optimistic: flip the badge locally on success.
+  const [primaryOverride, setPrimaryOverride] = useState(null);
+  const [pendingId, setPendingId] = useState(null);
+  async function useTake(assetId) {
+    if (!post?.id || !assetId || pendingId) return;
+    setPendingId(assetId);
+    try {
+      await selectPostVideo(post.id, assetId);
+      setPrimaryOverride(assetId);
+    } catch { /* leave the badge as-is if it fails */ }
+    finally { setPendingId(null); }
   }
+
+  // Build the stack: the 3 most-recent takes (NEWEST first), then the keyframes. A
+  // transformation beat contributes BOTH its first frame and its 'after' frame so
+  // the user can review each. Falls back to the single video_url when variants
+  // aren't populated (e.g. an older event without the list).
+  const items = [];
+  const takes = variants.length
+    ? variants.slice(0, 3).map((v, i) => ({
+        kind: "video",
+        url: v.url,
+        poster: posterUrl,
+        label: i === 0 ? "Latest take" : `Take ${i + 1}`,
+        assetId: v.asset_id,
+        isPrimary: primaryOverride ? v.asset_id === primaryOverride : v.is_primary,
+      }))
+    : (post?.video_url
+        ? [{ kind: "video", url: post.video_url, label: "Generated video", poster: posterUrl }]
+        : []);
+  items.push(...takes);
   beats.forEach((b, i) => {
     const label = b?.role ? prettyRole(b.role) : `Keyframe ${i + 1}`;
     items.push({
@@ -59,8 +84,9 @@ export default function VideoViewport({ post }) {
 
   const total = items.length;
   const [index, setIndex] = useState(0);
-  // Reset to the top of the stack (the clip) when switching to a different post.
-  useEffect(() => { setIndex(0); }, [post?.id]);
+  // Reset to the top of the stack (the latest take) when switching posts; the
+  // primary override is per-post, so clear it too.
+  useEffect(() => { setIndex(0); setPrimaryOverride(null); }, [post?.id]);
   const clamped = Math.max(0, Math.min(index, Math.max(0, total - 1)));
   const current = items[clamped];
   const swipeX = useRef(null);
@@ -116,16 +142,36 @@ export default function VideoViewport({ post }) {
           onPointerUp={onPointerUp}
         >
           {current.kind === "video" ? (
-            <video
-              key={current.url}
-              src={mediaUrl(current.url)}
-              poster={current.poster ? mediaUrl(current.poster) : undefined}
-              controls
-              playsInline
-              loop
-              preload="metadata"
-              className="h-full w-full bg-black object-contain"
-            />
+            <>
+              <video
+                key={current.url}
+                src={mediaUrl(current.url)}
+                poster={current.poster ? mediaUrl(current.poster) : undefined}
+                controls
+                playsInline
+                loop
+                preload="metadata"
+                className="h-full w-full bg-black object-contain"
+              />
+              {current.assetId && (
+                current.isPrimary ? (
+                  <span className="pointer-events-none absolute left-2 top-2 z-10 inline-flex items-center gap-1 rounded-full bg-emerald-500/90 px-2 py-1 text-[11px] font-semibold text-white shadow">
+                    <Check className="size-3" /> Using this
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => useTake(current.assetId)}
+                    disabled={pendingId === current.assetId}
+                    className="absolute left-2 top-2 z-10 inline-flex items-center gap-1 rounded-full bg-white/90 px-2 py-1 text-[11px] font-semibold text-black shadow transition hover:bg-white disabled:opacity-60"
+                  >
+                    {pendingId === current.assetId
+                      ? <><Loader2 className="size-3 animate-spin" /> Setting…</>
+                      : "Use this take"}
+                  </button>
+                )
+              )}
+            </>
           ) : current.url ? (
             <>
               <img
@@ -177,8 +223,42 @@ export default function VideoViewport({ post }) {
           ))}
         </div>
       )}
+
+      {/* On-screen text timeline — every beat's overlay text + its time range, so the
+          full caption script is visible even for beats whose keyframe (or the clip)
+          hasn't been generated yet. Times are the cumulative beat durations. */}
+      {beats.some((b) => b?.on_screen_text) && (
+        <div className="border-t border-border/60 px-3 py-2.5">
+          <p className="mb-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">
+            On-screen text
+          </p>
+          <ol className="space-y-1">
+            {beats.map((b, i) => {
+              const start = beats
+                .slice(0, i)
+                .reduce((s, x) => s + (Number(x?.duration_seconds) || 0), 0);
+              const end = start + (Number(b?.duration_seconds) || 0);
+              return (
+                <li key={i} className="flex gap-2 text-[11px] leading-snug">
+                  <span className="shrink-0 tabular-nums text-muted-foreground/60">
+                    {fmtTime(start)}–{fmtTime(end)}
+                  </span>
+                  <span className={b?.on_screen_text ? "text-foreground" : "italic text-muted-foreground/40"}>
+                    {b?.on_screen_text || "(no on-screen text)"}
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      )}
     </div>
   );
+}
+
+function fmtTime(s) {
+  const sec = Math.max(0, Math.round(Number(s) || 0));
+  return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
 }
 
 function prettyRole(role) {
