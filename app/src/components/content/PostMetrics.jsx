@@ -10,11 +10,16 @@ import {
   Eye,
   Gauge,
   Heart,
+  Images,
+  MapPin,
   MessageCircle,
   Pencil,
   Radio,
   RefreshCw,
+  Search,
   Share2,
+  TrendingUp,
+  UserCircle,
   UserPlus,
   Users,
   X,
@@ -29,13 +34,20 @@ import {
   fmtPct,
   fmtRate,
   fmtSeconds,
+  genderOf,
   hasAnyMetric,
   isPostBridgeBacked,
   lastUpdatedAt,
+  locationsOf,
   retentionOf,
   safeHref,
+  searchQueriesOf,
   timeAgo,
+  trafficSourcesOf,
 } from "../../lib/contentMetrics";
+import MetricCurveInput from "./MetricCurveInput";
+import MetricBars from "./MetricBars";
+import { countryNames } from "../../lib/countries";
 
 // The five headline tiles. The first four are synced from PostBridge when it
 // published the post (read-only then); `saves` is always hand-entered.
@@ -50,25 +62,39 @@ const CORE = [
 // PostBridge-owned counts — read-only on a post it published.
 const AUTO_FIELDS = new Set(["views", "likes", "comments", "shares"]);
 
-// Platform-native scalars PostBridge never returns — all manual.
-const EXTRA = [
-  { field: "reach",          label: "Reach",          icon: Radio,    kind: "int", fmt: fmtCount },
-  { field: "profileViews",   label: "Profile views",  icon: Eye,      kind: "int", fmt: fmtCount },
-  { field: "newFollowers",   label: "New followers",  icon: UserPlus, kind: "int", fmt: fmtCount },
-  { field: "avgWatchTime",   label: "Avg watch",      icon: Clock,    kind: "sec", fmt: fmtSeconds },
-  { field: "completionRate", label: "Watched full",   icon: Gauge,    kind: "pct", fmt: fmtPct },
-];
-
 // camelCase form field → snake_case ManualMetrics key.
 const SNAKE = {
   views: "views", likes: "likes", comments: "comments", shares: "shares", saves: "saves",
   reach: "reach", profileViews: "profile_views", newFollowers: "new_followers",
   avgWatchTime: "avg_watch_time", completionRate: "completion_rate",
+  retentionRate: "retention_rate", photosViewed: "photos_viewed",
 };
 
-const AUDIENCE_BUCKETS = ["13-17", "18-24", "25-34", "35-44", "45-54", "55+"];
+const AGE_BUCKETS    = ["13-17", "18-24", "25-34", "35-44", "45-54", "55+"];
+const GENDER_BUCKETS = ["Male", "Female", "Other"];
+// TikTok's traffic-source rows, in its order.
+const TRAFFIC_BUCKETS = [
+  "For You", "Search", "Following", "Direct messages", "Personal profile", "Sound", "Other",
+];
 
 const numStr = (v) => (v == null ? "" : String(v));
+const round1 = (v) => Number(Number(v).toFixed(1));
+
+// Treat it as a video if typed so, OR if it carries a clip / storyboard — so a
+// post whose post_type didn't round-trip still shows the video metrics.
+function isVideoPost(post) {
+  return (
+    post?.post_type === "video" ||
+    Boolean(post?.video_url) ||
+    (Array.isArray(post?.video_storyboard) && post.video_storyboard.length > 0)
+  );
+}
+
+// seconds → "M:SS" (matches TikTok's retention-curve axis labels).
+function fmtTime(s) {
+  const sec = Math.max(0, Math.floor(Number(s) || 0));
+  return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
+}
 
 // slide1..slideN keys, unioning the post's slide count with any keys already
 // stored, so retention rows match the actual carousel.
@@ -81,10 +107,42 @@ function slideKeys(post, retention) {
   return Array.from({ length: n }, (_, i) => `slide${i + 1}`);
 }
 
-function audienceKeys(audience) {
-  const extra = audience ? Object.keys(audience).filter((k) => !AUDIENCE_BUCKETS.includes(k)) : [];
-  return [...AUDIENCE_BUCKETS, ...extra];
+// Retention is curve-shaped, but the X-axis differs by type:
+//   VIDEO     → one point per SECOND, 0..duration (keys "0".."N", time-labelled)
+//   SLIDESHOW → one point per SLIDE  (keys "slide1".."slideN")
+// Integer-string keys ("0","1",…) iterate in numeric order in JS objects, so the
+// video curve stays in order without extra sorting.
+function retentionBuckets(post, retention) {
+  if (isVideoPost(post)) {
+    const stored = Object.keys(retention || {}).map(Number).filter(Number.isFinite);
+    const dur = Number(post?.video_duration_seconds) || (stored.length ? Math.max(...stored) : 0) || 10;
+    const n = Math.min(Math.max(dur, 1), 60);   // 0..dur, capped for sanity
+    return Array.from({ length: n + 1 }, (_, i) => String(i));
+  }
+  return slideKeys(post, retention);
 }
+
+// Label one retention bucket: a time for video, a slide number for a carousel.
+const retentionLabel = (post, key, i) =>
+  isVideoPost(post) ? fmtTime(key) : `Slide ${i + 1}`;
+const retentionTitle = (post) =>
+  isVideoPost(post) ? "Retention over time" : "Retention per slide";
+
+function ageKeys(audience) {
+  const extra = audience ? Object.keys(audience).filter((k) => !AGE_BUCKETS.includes(k)) : [];
+  return [...AGE_BUCKETS, ...extra];
+}
+
+// Fixed-bucket dict → form values (string per bucket).
+const bucketForm = (keys, d) => Object.fromEntries(keys.map((k) => [k, numStr(d?.[k])]));
+// MetricBars items ([{key,value}]) → a {key: value} object (fixed-bucket dims).
+const itemsToObj = (items) => Object.fromEntries((items || []).map((it) => [it.key, it.value]));
+// Free-form dict → editable rows (sorted desc so the biggest shares lead).
+const dictToRows = (d) =>
+  Object.entries(d || {})
+    .filter(([, v]) => typeof v === "number")
+    .sort((a, b) => b[1] - a[1])
+    .map(([key, value]) => ({ key, value: numStr(value) }));
 
 function seedForm(post) {
   const perf = post?.perf || {};
@@ -98,11 +156,39 @@ function seedForm(post) {
       shares: numStr(c.shares), saves: numStr(c.saves),
       reach: numStr(e.reach), profileViews: numStr(e.profileViews),
       newFollowers: numStr(e.newFollowers), avgWatchTime: numStr(e.avgWatchTime),
-      completionRate: numStr(e.completionRate),
+      completionRate: numStr(e.completionRate), retentionRate: numStr(e.retentionRate),
+      photosViewed: numStr(e.photosViewed),
     },
-    retention: Object.fromEntries(slideKeys(post, ret).map((k) => [k, numStr(ret[k])])),
-    audience: Object.fromEntries(audienceKeys(aud).map((k) => [k, numStr(aud[k])])),
+    retention: bucketForm(retentionBuckets(post, ret), ret),
+    audience:  bucketForm(ageKeys(aud), aud),
+    gender:    bucketForm(GENDER_BUCKETS, genderOf(perf) || {}),
+    traffic:   bucketForm(TRAFFIC_BUCKETS, trafficSourcesOf(perf) || {}),
+    locations: dictToRows(locationsOf(perf)),
+    queries:   dictToRows(searchQueriesOf(perf)),
   };
+}
+
+// Collect a fixed-bucket form ({bucket: str}) → {bucket: number}, dropping blanks.
+function collectDict(obj) {
+  const r = {};
+  for (const [k, raw] of Object.entries(obj)) {
+    if (raw === "" || raw == null) continue;
+    const num = Number(raw);
+    if (Number.isFinite(num) && num >= 0) r[k] = num;
+  }
+  return r;
+}
+
+// Collect free-form rows ([{key,value}]) → {key: number}, dropping blank rows.
+function rowsToDict(rows) {
+  const r = {};
+  for (const { key, value } of rows || []) {
+    const k = (key || "").trim();
+    if (!k || value === "" || value == null) continue;
+    const num = Number(value);
+    if (Number.isFinite(num) && num >= 0) r[k] = num;
+  }
+  return r;
 }
 
 // Turn the form into a ManualMetrics payload — only filled-in fields, and never
@@ -116,19 +202,13 @@ function buildPayload(form, editableCore) {
     const num = Number(raw);
     if (Number.isFinite(num) && num >= 0) out[snake] = num;
   }
-  const collect = (obj) => {
-    const r = {};
-    for (const [k, raw] of Object.entries(obj)) {
-      if (raw === "" || raw == null) continue;
-      const num = Number(raw);
-      if (Number.isFinite(num) && num >= 0) r[k] = num;
-    }
-    return r;
-  };
-  const ret = collect(form.retention);
-  if (Object.keys(ret).length) out.retention = ret;
-  const aud = collect(form.audience);
-  if (Object.keys(aud).length) out.audience_age = aud;
+  const add = (key, dict) => { if (Object.keys(dict).length) out[key] = dict; };
+  add("retention",       collectDict(form.retention));
+  add("audience_age",    collectDict(form.audience));
+  add("gender",          collectDict(form.gender));
+  add("traffic_sources", collectDict(form.traffic));
+  add("locations",       rowsToDict(form.locations));
+  add("search_queries",  rowsToDict(form.queries));
   return out;
 }
 
@@ -136,11 +216,13 @@ function buildPayload(form, editableCore) {
  * Performance card for a published post. Shows stored perf immediately, pulls
  * the latest from PostBridge on open (for posts it published), and lets the user
  * hand-enter the metrics PostBridge can't supply — saves, reach, watch time,
- * completion, per-slide retention and audience age. Rendered for ANY posted post
- * (PostBridge-backed or not); a non-PostBridge post is fully manual.
+ * retention, per-slide retention / photos viewed, audience age, gender, traffic
+ * sources, locations and search queries. Several inputs are post-type aware:
+ * a VIDEO shows avg-watched %; a SLIDESHOW shows photos-viewed (avg of N) and
+ * the slide-number-based per-slide retention.
  *
  * Props:
- *   - post       : the post (reads post.perf, post.post_bridge_post_id, slides)
+ *   - post       : the post (reads post.perf, post.post_bridge_post_id, slides, post_type)
  *   - onUpdated(updatedPost) : bubble a fresh post up so the parent stays in sync
  */
 export default function PostMetrics({ post, onUpdated }) {
@@ -154,13 +236,38 @@ export default function PostMetrics({ post, onUpdated }) {
 
   const pbBacked = isPostBridgeBacked(post);
   const editableCore = !pbBacked; // non-PostBridge posts hand-enter the core too
+  const isVideo = isVideoPost(post);
+  const slideTotal = Math.max(
+    Array.isArray(post?.slides) ? post.slides.length : 0,
+    Number(post?.slide_count) || 0,
+  );
+
+  // Watch-time / completion fields, post-type aware. VIDEO: avg-watched % +
+  // watched-full %. SLIDESHOW: photos viewed (avg of the N slides).
+  const extras = [
+    { field: "reach",        label: "Reach",         icon: Radio,    step: 1,   fmt: fmtCount },
+    { field: "profileViews", label: "Profile views", icon: Eye,      step: 1,   fmt: fmtCount },
+    { field: "newFollowers", label: "New followers", icon: UserPlus, step: 1,   fmt: fmtCount },
+    { field: "avgWatchTime", label: "Avg watch",     icon: Clock,    step: 0.1, suffix: "s", fmt: fmtSeconds },
+    ...(isVideo
+      ? [
+          { field: "retentionRate",  label: "Retention rate", icon: Gauge, step: 0.1, max: 100, suffix: "%", fmt: fmtPct },
+          { field: "completionRate", label: "Watched full",   icon: Gauge, step: 0.1, max: 100, suffix: "%", fmt: fmtPct },
+        ]
+      : [
+          {
+            field: "photosViewed", label: "Photos viewed", icon: Images, step: 0.1,
+            suffix: slideTotal ? `/ ${slideTotal}` : "",
+            fmt: (v) => (slideTotal ? `${round1(v)} / ${slideTotal}` : `${round1(v)}`),
+          },
+        ]),
+  ];
 
   // On mount AND whenever you navigate to a different post (Next reuses this
   // component across route-param changes), re-seed the display + form from the
   // post's stored perf, then pull the latest from PostBridge. Keyed on post.id
   // so it re-fires per post; fetchedIdRef dedupes StrictMode's double-mount and
   // ignores the parent's perf-only re-renders (same id → no refetch/clobber).
-  // 429s are swallowed server-side, so a refetch on every visit is safe.
   useEffect(() => {
     setPerf(post?.perf || {});
     setForm(seedForm(post));
@@ -220,17 +327,25 @@ export default function PostMetrics({ post, onUpdated }) {
   }
 
   const setVal = (field, v) => setForm((f) => ({ ...f, values: { ...f.values, [field]: v } }));
-  const setRet = (k, v) => setForm((f) => ({ ...f, retention: { ...f.retention, [k]: v } }));
-  const setAud = (k, v) => setForm((f) => ({ ...f, audience: { ...f.audience, [k]: v } }));
+  const setObjDim = (dim, items) => setForm((f) => ({ ...f, [dim]: itemsToObj(items) }));
+  const setRows = (dim, rows) => setForm((f) => ({ ...f, [dim]: rows }));
+
+  // Ordered retention keys (seconds for video, slides for a carousel) — the
+  // curve reads/writes them as a positional array.
+  const retKeys = Object.keys(form.retention);
 
   const core = coreMetrics(perf);
   const extra = extraMetrics(perf);
   const { saveRate, engagementRate } = derivedRates(perf);
   const retention = retentionOf(perf);
   const audience = audienceAgeOf(perf);
+  const gender = genderOf(perf);
+  const traffic = trafficSourcesOf(perf);
+  const locations = locationsOf(perf);
+  const queries = searchQueriesOf(perf);
   const updatedAt = lastUpdatedAt(perf);
   const shareUrl = safeHref(perf?.share_url);
-  const showExtras = EXTRA.some(({ field }) => extra[field] != null);
+  const showExtras = extras.some(({ field }) => extra[field] != null);
 
   return (
     <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
@@ -324,18 +439,18 @@ export default function PostMetrics({ post, onUpdated }) {
         </div>
       )}
 
-      {/* More metrics */}
+      {/* More metrics (reach, watch time, retention/avg-watched or photos viewed) */}
       {editing ? (
         <Group title="More metrics" icon={Gauge}>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {EXTRA.map(({ field, label, kind }) => (
+            {extras.map(({ field, label, step, max, suffix }) => (
               <Field key={field} label={label}>
                 <NumberInput
                   value={form.values[field]}
                   onChange={(v) => setVal(field, v)}
-                  step={kind === "int" ? 1 : 0.1}
-                  max={kind === "pct" ? 100 : undefined}
-                  suffix={kind === "pct" ? "%" : kind === "sec" ? "s" : ""}
+                  step={step}
+                  max={max}
+                  suffix={suffix}
                 />
               </Field>
             ))}
@@ -344,63 +459,103 @@ export default function PostMetrics({ post, onUpdated }) {
       ) : showExtras ? (
         <Reveal title="More metrics" icon={Gauge}>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {EXTRA.filter(({ field }) => extra[field] != null).map(({ field, label, icon: Icon, fmt }) => (
+            {extras.filter(({ field }) => extra[field] != null).map(({ field, label, icon: Icon, fmt }) => (
               <ReadStat key={field} icon={Icon} label={label} value={fmt(extra[field])} />
             ))}
           </div>
         </Reveal>
       ) : null}
 
-      {/* Retention per slide */}
+      {/* Retention curve. VIDEO → per second (0:00..duration); SLIDESHOW → per
+          slide (slide-number based, not time based). */}
       {editing ? (
-        Object.keys(form.retention).length > 0 && (
-          <Group title="Retention per slide" icon={BarChart3}>
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-              {Object.keys(form.retention).map((k, i) => (
-                <Field key={k} label={`Slide ${i + 1}`}>
-                  <NumberInput value={form.retention[k]} onChange={(v) => setRet(k, v)} max={100} suffix="%" />
-                </Field>
-              ))}
-            </div>
+        retKeys.length > 0 && (
+          <Group title={retentionTitle(post)} icon={BarChart3}>
+            <MetricCurveInput
+              values={retKeys.map((k) => Number(form.retention[k]) || 0)}
+              labels={retKeys.map((k, i) => retentionLabel(post, k, i))}
+              onChange={(vals) =>
+                setForm((f) => ({
+                  ...f,
+                  retention: Object.fromEntries(retKeys.map((k, i) => [k, vals[i]])),
+                }))
+              }
+            />
           </Group>
         )
       ) : retention ? (
-        <Reveal title="Retention per slide" icon={BarChart3}>
+        <Reveal title={retentionTitle(post)} icon={BarChart3}>
           <div className="space-y-1.5">
             {Object.entries(retention).map(([k, v], i) => (
-              <RetentionBar key={k} label={`Slide ${i + 1}`} pct={typeof v === "number" ? v : null} />
+              <PercentBar key={k} label={retentionLabel(post, k, i)} pct={typeof v === "number" ? v : null} />
             ))}
           </div>
         </Reveal>
       ) : null}
 
+      {/* Gender */}
+      {editing ? (
+        <Group title="Gender" icon={UserCircle}>
+          <MetricBars
+            items={GENDER_BUCKETS.map((k) => ({ key: k, value: form.gender[k] }))}
+            onChange={(items) => setObjDim("gender", items)}
+            balance
+          />
+        </Group>
+      ) : (
+        <BreakdownView title="Gender" icon={UserCircle} data={gender} />
+      )}
+
       {/* Audience age */}
       {editing ? (
         <Group title="Audience age" icon={Users}>
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-            {Object.keys(form.audience).map((k) => (
-              <Field key={k} label={k}>
-                <NumberInput value={form.audience[k]} onChange={(v) => setAud(k, v)} max={100} suffix="%" />
-              </Field>
-            ))}
-          </div>
+          <MetricBars
+            items={Object.keys(form.audience).map((k) => ({ key: k, value: form.audience[k] }))}
+            onChange={(items) => setObjDim("audience", items)}
+            balance
+          />
         </Group>
-      ) : audience ? (
-        <Reveal title="Audience age" icon={Users}>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
-            {Object.entries(audience).map(([k, v]) => (
-              <span key={k}>{k} <span className="font-medium text-foreground tabular-nums">{fmtPct(typeof v === "number" ? v : null)}</span></span>
-            ))}
-          </div>
-        </Reveal>
-      ) : null}
+      ) : (
+        <BreakdownView title="Audience age" icon={Users} data={audience} />
+      )}
+
+      {/* Traffic sources */}
+      {editing ? (
+        <Group title="Traffic sources" icon={TrendingUp}>
+          <MetricBars
+            items={TRAFFIC_BUCKETS.map((k) => ({ key: k, value: form.traffic[k] }))}
+            onChange={(items) => setObjDim("traffic", items)}
+            balance
+          />
+        </Group>
+      ) : (
+        <BreakdownView title="Traffic sources" icon={TrendingUp} data={traffic} />
+      )}
+
+      {/* Locations (free-form) */}
+      {editing ? (
+        <Group title="Locations" icon={MapPin}>
+          <MetricBars items={form.locations} onChange={(rows) => setRows("locations", rows)} editableKeys keyPlaceholder="Country" keyOptions={countryNames()} />
+        </Group>
+      ) : (
+        <BreakdownView title="Locations" icon={MapPin} data={locations} />
+      )}
+
+      {/* Search queries (free-form) */}
+      {editing ? (
+        <Group title="Search queries" icon={Search}>
+          <MetricBars items={form.queries} onChange={(rows) => setRows("queries", rows)} editableKeys keyPlaceholder="Search term" />
+        </Group>
+      ) : (
+        <BreakdownView title="Search queries" icon={Search} data={queries} />
+      )}
 
       {note && <p className="text-[11px] text-muted-foreground">{note}</p>}
 
       {editing ? (
         <p className="text-[11px] leading-relaxed text-muted-foreground">
           {pbBacked
-            ? "Views, likes, comments and shares are tracked automatically. Add saves, watch time and audience from your post's analytics — it sharpens what Duct plans next."
+            ? "Views, likes, comments and shares are tracked automatically. Add the rest from your post's analytics — saves, watch time, retention, audience, traffic and search — it sharpens what Duct plans next."
             : "Add every metric from your post's analytics — it sharpens what Duct plans next."}
         </p>
       ) : (
@@ -409,7 +564,7 @@ export default function PostMetrics({ post, onUpdated }) {
         <p className="border-t border-border/50 pt-2.5 text-[11px] leading-relaxed text-muted-foreground">
           Tracked numbers can lag a day or two and only cover the basics.{" "}
           <button type="button" onClick={startEdit} className="font-medium text-primary hover:underline">
-            Add saves, watch time and audience
+            Add saves, retention, audience and traffic
           </button>{" "}
           to sharpen what Duct plans next.
         </p>
@@ -447,7 +602,7 @@ function NumberInput({ value, onChange, step = 1, max, suffix = "" }) {
         placeholder="—"
         className="w-full rounded-lg border border-input bg-input/40 px-2 py-1 text-sm tabular-nums outline-none transition-[box-shadow,border-color] focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/25"
       />
-      {suffix && <span className="text-[11px] text-muted-foreground">{suffix}</span>}
+      {suffix && <span className="shrink-0 text-[11px] text-muted-foreground">{suffix}</span>}
     </div>
   );
 }
@@ -486,6 +641,22 @@ function Reveal({ title, icon: Icon, children }) {
   );
 }
 
+// View-mode breakdown (gender, age, traffic, locations, queries) — sorted-desc
+// percent bars. Renders nothing when there's no data.
+function BreakdownView({ title, icon, data }) {
+  const entries = Object.entries(data || {})
+    .filter(([, v]) => typeof v === "number")
+    .sort((a, b) => b[1] - a[1]);
+  if (!entries.length) return null;
+  return (
+    <Reveal title={title} icon={icon}>
+      <div className="space-y-1.5">
+        {entries.map(([k, v]) => <PercentBar key={k} label={k} pct={v} />)}
+      </div>
+    </Reveal>
+  );
+}
+
 function ReadStat({ icon: Icon, label, value }) {
   return (
     <div className="flex items-center gap-2 rounded-lg border border-border/50 bg-background/40 px-2.5 py-1.5">
@@ -498,15 +669,15 @@ function ReadStat({ icon: Icon, label, value }) {
   );
 }
 
-function RetentionBar({ label, pct }) {
+function PercentBar({ label, pct }) {
   const w = pct == null ? 0 : Math.max(0, Math.min(100, pct));
   return (
     <div className="flex items-center gap-2">
-      <span className="w-14 shrink-0 text-[11px] text-muted-foreground">{label}</span>
+      <span className="w-24 shrink-0 truncate text-[11px] text-muted-foreground" title={label}>{label}</span>
       <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
         <div className="h-full rounded-full bg-primary/70" style={{ width: `${w}%` }} />
       </div>
-      <span className="w-10 shrink-0 text-right text-[11px] font-medium tabular-nums">{fmtPct(pct)}</span>
+      <span className="w-11 shrink-0 text-right text-[11px] font-medium tabular-nums">{fmtPct(pct)}</span>
     </div>
   );
 }

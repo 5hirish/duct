@@ -38,8 +38,10 @@ export function extraMetrics(perf = {}) {
     profileViews:   pickNum(perf, "profileViews", "profile_views"),
     newFollowers:   pickNum(perf, "newFollowers", "new_followers", "follows", "follower_count"),
     avgWatchTime:   pickNum(perf, "avgWatchTime", "avg_watch_time"),         // seconds
-    completionRate: pickNum(perf, "completionRate", "completion_rate",       // percent 0–100
+    completionRate: pickNum(perf, "completionRate", "completion_rate",       // percent 0–100 (watched full)
                             "watchFullVideo", "watched_full_video"),
+    retentionRate:  pickNum(perf, "retentionRate", "retention_rate"),        // percent 0–100 (avg watched — video)
+    photosViewed:   pickNum(perf, "photosViewed", "photos_viewed"),          // avg slides viewed (slideshow)
   };
 }
 
@@ -47,7 +49,7 @@ function objOrNull(v) {
   return v && typeof v === "object" && !Array.isArray(v) ? v : null;
 }
 
-// { slide1: 100, slide2: 62, … } — per-slide retention %.
+// { slide1: 100, slide2: 62, … } — per-slide retention % (slide-number based).
 export function retentionOf(perf = {}) {
   return objOrNull(perf?.retention);
 }
@@ -55,6 +57,26 @@ export function retentionOf(perf = {}) {
 // { "18-24": 53, "25-34": 22, … } — audience age split %.
 export function audienceAgeOf(perf = {}) {
   return objOrNull(perf?.audienceAge ?? perf?.audience_age);
+}
+
+// { "Male": 18, "Female": 82, "Other": 0 } — viewer gender split %.
+export function genderOf(perf = {}) {
+  return objOrNull(perf?.gender);
+}
+
+// { "Spain": 50.6, "Nigeria": 11.8, … } — top viewer locations %.
+export function locationsOf(perf = {}) {
+  return objOrNull(perf?.locations);
+}
+
+// { "For You": 59.2, "Search": 40.8, … } — traffic-source mix %.
+export function trafficSourcesOf(perf = {}) {
+  return objOrNull(perf?.trafficSources ?? perf?.traffic_sources);
+}
+
+// { "heart face shape": 47.3, … } — search queries that surfaced the post %.
+export function searchQueriesOf(perf = {}) {
+  return objOrNull(perf?.searchQueries ?? perf?.search_queries);
 }
 
 // Save rate + engagement rate as fractions (0–1). Computed live from the current

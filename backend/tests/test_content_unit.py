@@ -816,6 +816,34 @@ def test_merge_manual_metrics_maps_keys_preserves_postbridge_and_tracks_manual()
     assert "saves" not in perf
 
 
+def test_merge_manual_metrics_maps_new_dimensions():
+    """The expanded manual metrics (video avg-watched, slideshow photos-viewed,
+    and the gender / locations / traffic / search-query breakdowns) map to their
+    canonical camelCase perf keys and are recorded as manual."""
+    from routes.content import _merge_manual_metrics
+
+    provided = {
+        "retention_rate": 29.0,
+        "photos_viewed": 2.3,
+        "gender": {"Male": 18, "Female": 82},
+        "locations": {"Spain": 50.6, "Nigeria": 11.8},
+        "traffic_sources": {"For You": 59.2, "Search": 40.8},
+        "search_queries": {"heart face shape": 47.3},
+    }
+    out = _merge_manual_metrics({}, provided, at="2026-06-29T00:00:00+00:00")
+
+    assert out["retentionRate"] == 29.0
+    assert out["photosViewed"] == 2.3
+    assert out["gender"] == {"Male": 18, "Female": 82}
+    assert out["locations"] == {"Spain": 50.6, "Nigeria": 11.8}
+    assert out["trafficSources"] == {"For You": 59.2, "Search": 40.8}
+    assert out["searchQueries"] == {"heart face shape": 47.3}
+    assert set(out["manual_keys"]) == {
+        "retentionRate", "photosViewed", "gender",
+        "locations", "trafficSources", "searchQueries",
+    }
+
+
 def test_merge_manual_metrics_unions_manual_keys_across_calls():
     """A second manual edit adds to (not replaces) the recorded manual_keys, so
     the set reflects every hand-entered field over time."""

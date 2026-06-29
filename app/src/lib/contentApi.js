@@ -497,11 +497,12 @@ export async function createPost(body) {
   return out;
 }
 
-export async function markPostPosted(postId, { tiktokUrl } = {}) {
+export async function markPostPosted(postId, { tiktokUrl, postedAt } = {}) {
   const url = new URL(
     `${BASE}/api/content/posts/${encodeURIComponent(postId)}/mark-posted`,
   );
   if (tiktokUrl) url.searchParams.set("tiktok_url", tiktokUrl);
+  if (postedAt) url.searchParams.set("posted_at", postedAt);   // ISO 8601 (real publish time)
   const res = await fetch(url.toString(), {
     method: "POST",
     headers: backendApiHeaders(),

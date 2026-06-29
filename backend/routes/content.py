@@ -890,6 +890,7 @@ class PostPatch(BaseModel):
     layout:        str | None = None
     slide_count:   int | None = None
     status:        str | None = None
+    posted_at:     datetime | None = None   # edit the real publish time of a posted post
     slides:        list | None = None
     slides_html:   str | None = None
     caption:       str | None = None
@@ -1095,11 +1096,25 @@ def _resolve_format_id(db: Session, project_id: UUID, format_slug: str) -> UUID 
 
 
 def _post_thumb(post: ContentPost) -> str:
-    """The card thumbnail: the CURRENT first-slide image (the post's cover) —
-    walking slides in order, returning the first slide's (or first collage cell's)
-    image_url. This is what's actually published, NOT whatever image happened to
-    be generated first (which `_thumb_map` returns and is usually a stale, since-
-    replaced asset)."""
+    """The card thumbnail: the post's CURRENT cover image.
+
+    VIDEO posts have no slides — their cover is the first storyboard beat's
+    keyframe still. We MUST return that image (or nothing), never the clip:
+    `video_url`/`video_asset_id` point at a video/mp4 file, which the card renders
+    in an <img> and shows as a broken thumbnail.
+
+    SLIDESHOW posts: walk slides in order, returning the first slide's (or first
+    collage cell's) image_url — what's actually published, NOT whatever image
+    happened to be generated first (which `_thumb_map` returns and is usually a
+    stale, since-replaced asset)."""
+    if (post.post_type or "") == "video":
+        for b in post.video_storyboard or []:
+            if not isinstance(b, dict):
+                continue
+            u = (b.get("image_url") or "").strip() or (b.get("end_image_url") or "").strip()
+            if u:
+                return u
+        return ""   # no keyframe yet — better blank than the raw clip
     for s in post.slides or []:
         if not isinstance(s, dict):
             continue
@@ -1121,16 +1136,19 @@ def _thumb_map(db: Session, post_ids: list[UUID]) -> dict[UUID, str]:
     if not post_ids:
         return {}
     rows = db.execute(
-        select(ContentAsset.post_id, ContentAsset.url, ContentAsset.created_at)
+        select(ContentAsset.post_id, ContentAsset.url, ContentAsset.mime_type)
         .where(ContentAsset.post_id.in_(post_ids))
         .where(ContentAsset.asset_type.in_([AssetType.GENERATED, AssetType.UPLOAD]))
         .where(ContentAsset.url != "")
         .order_by(ContentAsset.created_at.desc())   # latest first
     ).all()
     out: dict[UUID, str] = {}
-    for pid, url, _created in rows:
-        if pid is not None and pid not in out and url:
-            out[pid] = url   # first seen = most recent (desc order)
+    for pid, url, mime in rows:
+        if pid is None or pid in out or not url:
+            continue
+        if (mime or "").startswith("video/"):
+            continue   # a clip can't be an <img> thumbnail — skip to the next asset
+        out[pid] = url   # first non-video seen = most recent (desc order)
     return out
 
 
@@ -1473,16 +1491,18 @@ def mark_post_posted(
     post_id: UUID,
     db: Session = Depends(db_session),
     tiktok_url: str | None = None,
+    posted_at: datetime | None = None,
 ) -> PostOut:
     """Manually mark a draft as already-published (the user posted it elsewhere —
     TikTok Studio, the PostBridge dashboard, etc.). Provenance becomes 'external'
-    so the board badges it as posted-outside-Duct. To pull analytics, link it to a
-    PostBridge post instead (POST .../link-postbridge-post)."""
+    so the board badges it as posted-outside-Duct. `posted_at` lets the caller set
+    the REAL publish time (when it actually went out) rather than now. To pull
+    analytics, link it to a PostBridge post instead (POST .../link-postbridge-post)."""
     post = db.get(ContentPost, post_id)
     if post is None:
         raise HTTPException(404, "Post not found")
     post.status = "posted"
-    post.posted_at = datetime.now(timezone.utc)
+    post.posted_at = posted_at or datetime.now(timezone.utc)
     # Only stamp external provenance when it didn't go out through our own publish
     # flow (which sets published_via='duct' + a post_bridge_post_id).
     if not post.post_bridge_post_id:
@@ -1512,20 +1532,44 @@ class LinkablePostOut(BaseModel):
     is_draft:       bool = False
     created_at:     datetime | None = None
     scheduled_at:   datetime | None = None
+    thumbnail_url:  str = ""                # first media's presigned URL (24h)
+    is_video:       bool = False            # render <video> vs <img> for the thumb
     accounts:       list[SocialAccountOut] = Field(default_factory=list)
     already_linked: bool = False           # already linked to a local card
     linked_label:   str = ""               # which local card, if any
+
+
+async def _resolve_pb_thumb(pb, post, sem) -> tuple[str, bool]:
+    """Resolve a PostBridge post's first media id → (thumbnail_url, is_video).
+    Best-effort: a missing/expired media just yields ("", False). The list
+    payload only carries media *ids*, so each cover needs a GET /v1/media/{id}."""
+    from service.post_bridge import PostBridgeAPIError
+
+    media_ids = [m for m in (post.media or []) if isinstance(m, str)]
+    if not media_ids:
+        return "", False
+    async with sem:
+        try:
+            media = await pb.get_media(media_ids[0])
+        except PostBridgeAPIError:
+            return "", False
+    url = (media.object.url if media.object else "") or ""
+    return url, (media.mime_type or "").startswith("video/")
 
 
 @router.get("/content/postbridge/posts")
 async def list_postbridge_posts(
     project_id: UUID,
     platform: str | None = None,
-    limit: int = 30,
+    limit: int = 50,
     db: Session = Depends(db_session),
 ) -> list[LinkablePostOut]:
     """Recent PostBridge posts on the connected account, so the user can link an
-    already-published post to a Duct card (and pull its analytics)."""
+    already-published post to a Duct card (and pull its analytics). Newest first.
+
+    NOTE: this lists posts published *through* PostBridge only — content posted
+    natively in the app (e.g. TikTok directly) never appears here. For those, the
+    user marks the card posted manually (no analytics)."""
     from service.post_bridge import PostBridgeAPIError, client_for_user
 
     proj = _project_or_404(db, project_id)
@@ -1538,7 +1582,15 @@ async def list_postbridge_posts(
     try:
         async with client as pb:
             posts, _ = await pb.list_posts(platform=platforms, limit=min(max(limit, 1), 50))
+            # Newest first regardless of API order (None-dated last).
+            posts.sort(
+                key=lambda p: p.created_at or datetime.min.replace(tzinfo=timezone.utc),
+                reverse=True,
+            )
             accounts = await pb.list_social_accounts(limit=100)
+            # Resolve cover thumbnails concurrently (bounded — one media GET/post).
+            sem = asyncio.Semaphore(8)
+            thumbs = await asyncio.gather(*[_resolve_pb_thumb(pb, p, sem) for p in posts])
     except PostBridgeAPIError as exc:
         raise HTTPException(exc.status_code or 502, _friendly_pb_error(exc)) from exc
 
@@ -1552,7 +1604,7 @@ async def list_postbridge_posts(
     linked_by_pb = {p.post_bridge_post_id: p for p in linked}
 
     out: list[LinkablePostOut] = []
-    for p in posts:
+    for p, (thumb, is_video) in zip(posts, thumbs):
         accts = [
             SocialAccountOut(id=a.id, platform=a.platform.value, username=a.username)
             for sid in p.social_accounts
@@ -1566,6 +1618,8 @@ async def list_postbridge_posts(
             is_draft=p.is_draft,
             created_at=p.created_at,
             scheduled_at=p.scheduled_at,
+            thumbnail_url=thumb,
+            is_video=is_video,
             accounts=accts,
             already_linked=lp is not None,
             linked_label=(lp.topic or lp.post_dir_slug) if lp is not None else "",
@@ -1696,8 +1750,14 @@ _MANUAL_METRIC_KEYS: dict[str, str] = {
     "new_followers":   "newFollowers",
     "avg_watch_time":  "avgWatchTime",
     "completion_rate": "completionRate",
-    "retention":       "retention",
+    "retention_rate":  "retentionRate",     # VIDEO: avg % of the clip watched
+    "photos_viewed":   "photosViewed",      # SLIDESHOW: avg slides viewed (e.g. 2.3 of 7)
+    "retention":       "retention",         # per-slide % (slideshow) — slide-number based
     "audience_age":    "audienceAge",
+    "gender":          "gender",
+    "locations":       "locations",
+    "traffic_sources": "trafficSources",
+    "search_queries":  "searchQueries",
 }
 
 
@@ -1717,11 +1777,21 @@ class ManualMetrics(BaseModel):
     profile_views:   int | None = Field(default=None, ge=0)
     new_followers:   int | None = Field(default=None, ge=0)
     avg_watch_time:  float | None = Field(default=None, ge=0)   # seconds
-    completion_rate: float | None = Field(default=None, ge=0, le=100)  # percent
-    # {"slide1": 100, "slide2": 62, ...} — per-slide retention %, 0–100
+    completion_rate: float | None = Field(default=None, ge=0, le=100)  # percent (watched full)
+    retention_rate:  float | None = Field(default=None, ge=0, le=100)  # percent (avg watched — video)
+    photos_viewed:   float | None = Field(default=None, ge=0)   # avg slides viewed (slideshow)
+    # {"slide1": 100, "slide2": 62, ...} — per-slide retention %, slide-number based
     retention:       dict[str, float] | None = None
     # {"18-24": 53, "25-34": 22, ...} — audience-age split %, 0–100
     audience_age:    dict[str, float] | None = None
+    # {"Male": 18, "Female": 82, ...} — gender split %
+    gender:          dict[str, float] | None = None
+    # {"Spain": 50.6, "Nigeria": 11.8, ...} — top locations %
+    locations:       dict[str, float] | None = None
+    # {"For You": 59.2, "Search": 40.8, ...} — traffic-source mix %
+    traffic_sources: dict[str, float] | None = None
+    # {"heart face shape": 47.3, ...} — top search queries that surfaced the post %
+    search_queries:  dict[str, float] | None = None
 
 
 def _merge_manual_metrics(perf: dict, provided: dict, *, at: str) -> dict:

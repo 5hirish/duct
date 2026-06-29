@@ -1,11 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { CheckCircle2, ExternalLink, Link2, Loader2 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { CheckCircle2, ExternalLink, Loader2, Play, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { linkPostBridgePost, listPostBridgePosts, markPostPosted } from "@/lib/contentApi";
 import { PlatformGlyph, platformMeta } from "./platformGlyphs";
+import DateTimePicker from "./DateTimePicker";
+
+// Local "YYYY-MM-DDTHH:mm" (wall-clock, not UTC) — seeds the posted-on picker.
+function toLocalInput(d) {
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
 
 /**
  * "Already posted" flow — for a post the user published outside Duct's publish
@@ -13,6 +20,10 @@ import { PlatformGlyph, platformMeta } from "./platformGlyphs";
  *
  *   1. LINK it to an existing PostBridge post → its analytics sync into the card.
  *   2. Just MARK it posted (no PostBridge) → gets it off the draft board, no metrics.
+ *
+ * Only posts published *through* PostBridge appear in the list — content posted
+ * natively (e.g. straight in the TikTok app) is invisible to PostBridge, so for
+ * those the user takes path 2.
  *
  * Self-contained: loads the linkable PostBridge posts itself, owns its success
  * state, and on success calls onPublished(updatedPost) then onClose() after a beat.
@@ -25,28 +36,30 @@ import { PlatformGlyph, platformMeta } from "./platformGlyphs";
 export default function LinkExistingTab({ post, onPublished, onClose }) {
   const [rows, setRows]       = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [listError, setListError] = useState("");
   const [busyId, setBusyId]   = useState("");        // pb post id being linked
   const [marking, setMarking] = useState(false);
+  const [postedAt, setPostedAt] = useState(() => toLocalInput(new Date()));  // when it actually went out
   const [error, setError]     = useState("");
   const [done, setDone]       = useState("");        // success message → celebrate + close
 
-  useEffect(() => {
+  const load = useCallback(async ({ isRefresh = false } = {}) => {
     if (!post?.project_id) return;
-    let cancelled = false;
-    setLoading(true); setListError("");
-    (async () => {
-      try {
-        const list = await listPostBridgePosts(post.project_id);
-        if (!cancelled) setRows(Array.isArray(list) ? list : []);
-      } catch (e) {
-        if (!cancelled) setListError(friendlyError(e));
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
+    isRefresh ? setRefreshing(true) : setLoading(true);
+    setListError("");
+    try {
+      const list = await listPostBridgePosts(post.project_id);
+      setRows(Array.isArray(list) ? list : []);
+    } catch (e) {
+      setListError(friendlyError(e));
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   }, [post?.project_id]);
+
+  useEffect(() => { load(); }, [load]);
 
   function succeed(updated, message) {
     onPublished?.(updated);
@@ -68,7 +81,9 @@ export default function LinkExistingTab({ post, onPublished, onClose }) {
   async function handleMark() {
     setMarking(true); setError("");
     try {
-      const updated = await markPostPosted(post.id);
+      // Convert the wall-clock pick → ISO (UTC) so the real publish time is stored.
+      const iso = postedAt ? new Date(postedAt).toISOString() : undefined;
+      const updated = await markPostPosted(post.id, { postedAt: iso });
       succeed(updated, "Marked as posted.");
     } catch (e) {
       setError(friendlyError(e));
@@ -98,18 +113,35 @@ export default function LinkExistingTab({ post, onPublished, onClose }) {
 
       {/* PostBridge posts to link */}
       <section className="space-y-2">
-        <h3 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-          Link to a PostBridge post
-        </h3>
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            Link to a PostBridge post
+          </h3>
+          <button
+            type="button"
+            onClick={() => load({ isRefresh: true })}
+            disabled={loading || refreshing || busy}
+            title="Refresh the list"
+            className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[11px] text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
+          >
+            <RefreshCw className={`size-3 ${refreshing ? "animate-spin" : ""}`} /> Refresh
+          </button>
+        </div>
+
+        <p className="text-[11px] leading-snug text-muted-foreground/80">
+          Only posts published through Duct/PostBridge appear here. Posted directly in
+          the app (e.g. TikTok)? It won&apos;t show — use <span className="font-medium text-foreground">Mark as posted</span> below.
+        </p>
 
         {loading && (
           <div className="space-y-2">
             {[0, 1, 2].map((i) => (
               <div key={i} className="flex items-center gap-3 rounded-xl border border-border px-3 py-2.5">
-                <Skeleton className="size-9 rounded-lg" />
+                <Skeleton className="h-[72px] w-[54px] rounded-lg" />
                 <div className="flex-1 space-y-1.5">
-                  <Skeleton className="h-3.5 w-40" />
-                  <Skeleton className="h-2.5 w-24" />
+                  <Skeleton className="h-3.5 w-44" />
+                  <Skeleton className="h-3.5 w-28" />
+                  <Skeleton className="h-2.5 w-20" />
                 </div>
               </div>
             ))}
@@ -124,13 +156,13 @@ export default function LinkExistingTab({ post, onPublished, onClose }) {
 
         {!loading && !listError && rows.length === 0 && (
           <div className="rounded-xl border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
-            No PostBridge posts found on the connected account. You can still mark this
-            post as posted below.
+            No PostBridge posts found on the connected account. If you posted it in the
+            app, mark this post as posted below.
           </div>
         )}
 
         {!loading && rows.length > 0 && (
-          <div className="max-h-64 space-y-2 overflow-y-auto pr-0.5">
+          <div className="max-h-[22rem] space-y-2 overflow-y-auto pr-0.5">
             {rows.map((row) => (
               <LinkRow
                 key={row.id}
@@ -155,10 +187,15 @@ export default function LinkExistingTab({ post, onPublished, onClose }) {
         <h3 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
           Or mark it posted
         </h3>
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-xs text-muted-foreground">
-            No PostBridge link — just move it to <span className="font-medium text-foreground">Posted</span>. No analytics.
-          </p>
+        <p className="text-xs text-muted-foreground">
+          No PostBridge link — set when it actually went out and move it to{" "}
+          <span className="font-medium text-foreground">Posted</span>. No analytics.
+        </p>
+        <div className="space-y-1">
+          <label className="text-[11px] font-medium text-muted-foreground">Posted on</label>
+          <DateTimePicker value={postedAt} onChange={setPostedAt} />
+        </div>
+        <div className="flex justify-end pt-1">
           <Button variant="outline" size="sm" onClick={handleMark} disabled={busy}>
             {marking ? <><Loader2 className="size-4 animate-spin" /> Marking…</> : "Mark as posted"}
           </Button>
@@ -170,35 +207,21 @@ export default function LinkExistingTab({ post, onPublished, onClose }) {
 
 function LinkRow({ row, busy, linking, onLink }) {
   const accounts = Array.isArray(row.accounts) ? row.accounts : [];
+  const platform = accounts[0]?.platform || (row.is_video ? "tiktok" : "");
   const preview = (row.caption || "").split("\n")[0].trim() || "(no caption)";
   const when = row.created_at ? new Date(row.created_at).toLocaleDateString() : "";
+  const handle = accounts[0]?.username ? `@${accounts[0].username}` : "";
   return (
     <div className="flex items-center gap-3 rounded-xl border border-border px-3 py-2.5">
-      <div className="flex -space-x-1.5">
-        {accounts.length > 0 ? (
-          accounts.slice(0, 3).map((a) => (
-            <span
-              key={a.id}
-              title={`${platformMeta(a.platform).label} · @${a.username}`}
-              className="flex size-7 items-center justify-center rounded-full border-2 border-card text-white"
-              style={{ backgroundColor: platformMeta(a.platform).color }}
-            >
-              <PlatformGlyph platform={a.platform} className="size-3" />
-            </span>
-          ))
-        ) : (
-          <span className="flex size-7 items-center justify-center rounded-full border-2 border-card bg-muted text-muted-foreground">
-            <Link2 className="size-3" />
-          </span>
-        )}
-      </div>
+      <Thumb url={row.thumbnail_url} isVideo={row.is_video} platform={platform} />
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{preview}</p>
-        <p className="truncate text-[11px] text-muted-foreground">
+        <p className="line-clamp-2 text-sm font-medium leading-snug">{preview}</p>
+        <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
           <span className="capitalize">{row.status || "—"}</span>
           {row.is_draft ? " · draft" : ""}
           {when ? ` · ${when}` : ""}
+          {handle ? ` · ${handle}` : ""}
         </p>
       </div>
 
@@ -215,6 +238,56 @@ function LinkRow({ row, busy, linking, onLink }) {
             ? <><Loader2 className="size-4 animate-spin" /> Linking…</>
             : <><ExternalLink className="size-3.5" /> Link</>}
         </Button>
+      )}
+    </div>
+  );
+}
+
+// Portrait cover thumbnail (9:16-ish). Image posts → <img>; video posts → a
+// muted <video> seeked to the first frame; nothing resolvable → a glyph tile.
+function Thumb({ url, isVideo, platform }) {
+  const [failed, setFailed] = useState(false);
+  const show = url && !failed;
+  return (
+    <div className="relative h-[72px] w-[54px] shrink-0 overflow-hidden rounded-lg border border-border/60 bg-muted">
+      {show ? (
+        isVideo ? (
+          <>
+            <video
+              src={`${url}#t=0.1`}
+              muted
+              playsInline
+              preload="metadata"
+              className="h-full w-full object-cover"
+              onError={() => setFailed(true)}
+            />
+            <span className="absolute inset-0 flex items-center justify-center bg-black/15">
+              <Play className="size-4 fill-white text-white drop-shadow" />
+            </span>
+          </>
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={url}
+            alt=""
+            referrerPolicy="no-referrer"
+            className="h-full w-full object-cover"
+            onError={() => setFailed(true)}
+          />
+        )
+      ) : (
+        <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+          {platform ? <PlatformGlyph platform={platform} className="size-4" /> : null}
+        </div>
+      )}
+      {platform && show && (
+        <span
+          className="absolute bottom-0.5 left-0.5 flex size-4 items-center justify-center rounded text-white"
+          title={platformMeta(platform).label}
+          style={{ backgroundColor: platformMeta(platform).color }}
+        >
+          <PlatformGlyph platform={platform} className="size-2.5" />
+        </span>
       )}
     </div>
   );

@@ -48,8 +48,8 @@ function toLocalInput(d) {
  *                   after the celebration (e.g. route to the published view). Falls
  *                   back to onClose.
  */
-export default function PublishModal({ open, onClose, post, onPublished, onViewPost }) {
-  const [tab, setTab]               = useState("publish");  // "publish" | "link"
+export default function PublishModal({ open, onClose, post, onPublished, onViewPost, initialTab = "publish" }) {
+  const [tab, setTab]               = useState(initialTab);  // "publish" | "link"
   const [accounts, setAccounts]     = useState([]);
   const [selected, setSelected]     = useState(new Set());
   const [scheduledAt, setScheduledAt] = useState("");
@@ -69,7 +69,7 @@ export default function PublishModal({ open, onClose, post, onPublished, onViewP
 
   useEffect(() => {
     if (!open || !post?.project_id) return;
-    setStage("loading"); setError(""); setTab("publish");
+    setStage("loading"); setError(""); setTab(initialTab || "publish");
     let cancelled = false;
     (async () => {
       try {

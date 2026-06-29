@@ -21,7 +21,9 @@ METRIC_ALIASES: dict[str, tuple[str, ...]] = {
     "comments":        ("comment_count", "comments"),
     "shares":          ("share_count", "shares"),
     "saves":           ("save_count", "saves"),
-    "completion_rate": ("completion_rate",),
+    "completion_rate": ("completion_rate", "completionRate"),
+    "retention_rate":  ("retentionRate", "retention_rate"),   # avg % watched (video)
+    "photos_viewed":   ("photosViewed", "photos_viewed"),     # avg slides viewed (slideshow)
     "save_rate":       ("save_rate",),
     "profile_visits":  ("profile_visits",),
     "bio_link_clicks": ("bio_link_clicks",),

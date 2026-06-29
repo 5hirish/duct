@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Check,
+  CheckCircle2,
   ChevronDown,
   Copy,
   Hash,
@@ -26,6 +27,7 @@ import VideoViewport from "./VideoViewport";
 import PostMetrics from "./PostMetrics";
 import PublishReviewPanel from "./PublishReviewPanel";
 import PublishModal from "./PublishModal";
+import PostedAtEditor from "./PostedAtEditor";
 import { Phase } from "./contentPhase";
 import PipelineProgress from "../PipelineProgress";
 
@@ -133,6 +135,7 @@ export default function PostViewport({ payload, assessment = null, phase, steps 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [reviewing, setReviewing] = useState(false);
   const [publishOpen, setPublishOpen] = useState(false);
+  const [publishTab, setPublishTab] = useState("publish");  // which PublishModal tab to open on
   const [cloning, setCloning] = useState(false);
   const reviewedSigRef = useRef(null);
   const router = useRouter();
@@ -258,7 +261,15 @@ export default function PostViewport({ payload, assessment = null, phase, steps 
   // otherwise our own PublishModal (the live drafting / revise session).
   function handlePanelPublish() {
     if (onPublish) onPublish();
-    else setPublishOpen(true);
+    else { setPublishTab("publish"); setPublishOpen(true); }
+  }
+
+  // "Already posted" → open the publish flow straight on its link / mark-posted
+  // tab. Uses our own modal even on the detail page (the parent's Publish button
+  // owns the publish path; this owns the already-posted path).
+  function handleMarkPosted() {
+    setPublishTab("link");
+    setPublishOpen(true);
   }
 
   // Download the composed slides + caption as a .zip (available even once posted).
@@ -302,9 +313,12 @@ export default function PostViewport({ payload, assessment = null, phase, steps 
 
   const status = post.status || "pending";
   const isPosted = status === PostStatus.POSTED;
-  // Two-column on the full-width static view (no live chat): slides on the right,
-  // details on the left. The live editor + mobile stay single-column.
-  const twoCol = !onSendMessage && slides.length > 0;
+  const isVideo = post.post_type === PostType.VIDEO;
+  // Two-column on the full-width static view (no live chat): the post (slides OR
+  // the video clip) on the right, details on the left. A video post has no slides,
+  // so gate on the deliverable, not slides alone. The live editor + mobile stay
+  // single-column.
+  const twoCol = !onSendMessage && (slides.length > 0 || isVideo);
   const meta = statusMeta(status);
   const TypeIcon = TYPE_ICON[post.post_type] || Images;
   const platforms = Array.isArray(post.platforms) ? post.platforms : [];
@@ -336,7 +350,6 @@ export default function PostViewport({ payload, assessment = null, phase, steps 
       onDownload={handleDownloadSlides}
     />
   ) : null;
-  const isVideo = post.post_type === PostType.VIDEO;
   const carouselEl = isVideo ? (
     <VideoViewport post={post} />
   ) : (
@@ -372,7 +385,18 @@ export default function PostViewport({ payload, assessment = null, phase, steps 
                     return parts.length ? <span>· {parts.join(" + ")}</span> : null;
                   })()
                 : typeof post.slide_count === "number" && post.slide_count > 0 && <span>· {post.slide_count} slides</span>}
-              <span>· {dateLabel}</span>
+              {isPosted ? (
+                <span className="inline-flex items-center gap-1">
+                  ·{" "}
+                  <PostedAtEditor
+                    post={post}
+                    label={dateLabel}
+                    onUpdated={(u) => setDraft((d) => ({ ...(d || post), posted_at: u.posted_at }))}
+                  />
+                </span>
+              ) : (
+                <span>· {dateLabel}</span>
+              )}
               {platforms.length > 0 && (
                 <span className="flex items-center gap-1">
                   {platforms.map((p) => {
@@ -407,12 +431,24 @@ export default function PostViewport({ payload, assessment = null, phase, steps 
             ) : (
               <SaveIndicator saving={saving} dirty={dirty} hasError={Boolean(saveError)} onRetry={handleCommit} />
             )}
+            {/* Already posted elsewhere? Mark it / link a PostBridge post. Shown
+                for any not-yet-posted draft, both carousels and videos. */}
+            {!isPosted && (post?.status !== PostStatus.PENDING) && (
+              <button
+                type="button"
+                onClick={handleMarkPosted}
+                title="Already posted it elsewhere? Mark it posted or link a PostBridge post to pull analytics"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium hover:bg-muted/50"
+              >
+                <CheckCircle2 className="size-3.5" /> Already posted
+              </button>
+            )}
             {canPublish && onPublish && (
               <button type="button" onClick={onPublish} className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium hover:bg-muted/50">
                 <Send className="size-3.5" /> Publish
               </button>
             )}
-            {onSendMessage && slides.length > 0 && (
+            {onSendMessage && (slides.length > 0 || isVideo) && (
               <button
                 type="button"
                 onClick={handleReview}
@@ -474,17 +510,18 @@ export default function PostViewport({ payload, assessment = null, phase, steps 
         )}
       </div>
 
-      {/* Fallback publish flow for the live session (the detail page passes its
-          own onPublish + PublishModal, so we only mount ours when it doesn't). */}
-      {!onPublish && (
-        <PublishModal
-          open={publishOpen}
-          onClose={() => setPublishOpen(false)}
-          post={post}
-          onPublished={(updated) => setDraft(updated)}    // update state; modal keeps the success screen up
-          onViewPost={() => router.push(`/content/posts/${post.id}`)}  // → clean published view
-        />
-      )}
+      {/* Publish / already-posted flow. The detail page owns the main Publish
+          button (its own modal), but we still mount ours for the "Already posted"
+          entry (and as the live session's full publish fallback when there's no
+          parent onPublish). initialTab routes it to publish vs. link/mark-posted. */}
+      <PublishModal
+        open={publishOpen}
+        onClose={() => setPublishOpen(false)}
+        post={post}
+        initialTab={publishTab}
+        onPublished={(updated) => setDraft(updated)}    // update state; modal keeps the success screen up
+        onViewPost={() => router.push(`/content/posts/${post.id}`)}  // → clean published view
+      />
     </div>
   );
 }

@@ -29,6 +29,7 @@ from service.post_bridge.schema import (
     PostBridgeAnalyticsDaily,
     PostBridgeCreatePostRequest,
     PostBridgeError,
+    PostBridgeMedia,
     PostBridgePost,
     PostBridgePostResult,
     PostBridgeSocialAccount,
@@ -223,6 +224,13 @@ class PostBridgeClient:
                 status_code=resp.status_code,
                 url=upload_url,
             )
+
+    async def get_media(self, media_id: str) -> PostBridgeMedia:
+        """Resolve a media id (as returned in a post's `media` list) to its
+        record, including `object.url` — a presigned, time-limited download URL
+        usable as a thumbnail."""
+        body = await self._request("GET", f"/v1/media/{media_id}")
+        return PostBridgeMedia.model_validate(body)
 
     # ------------------------------------------------------------------
     # Posts

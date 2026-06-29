@@ -35,7 +35,20 @@ export default function ContentLandingPage() {
     setProjectId(id);
     const p = getActiveProject();
     setProjectName(p?.profile?.company?.name || p?.name || "Project");
+    // Deep-link support: /content?tab=posts opens that tab (the breadcrumb's
+    // "Posts" link + the /content/posts redirect both rely on this).
+    const t = new URLSearchParams(window.location.search).get("tab");
+    if (t && TABS.includes(t)) setTab(t);
   }, []);
+
+  // Keep the URL in sync so the tab is shareable / survives a refresh, without a
+  // full navigation (the page owns its own data per tab).
+  function selectTab(t) {
+    setTab(t);
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", t);
+    window.history.replaceState(null, "", url);
+  }
 
   if (error) {
     return (
@@ -76,7 +89,7 @@ export default function ContentLandingPage() {
             <button
               key={t}
               type="button"
-              onClick={() => setTab(t)}
+              onClick={() => selectTab(t)}
               className={`px-3 py-2 text-sm capitalize transition-colors border-b-2 -mb-px ${
                 tab === t
                   ? "border-primary text-foreground"
