@@ -1445,10 +1445,15 @@ class ClaudeContentRunner:
                     "scraped_post": sp,
                     "media":       reference.get("media") or {},
                     "diagnostic":  reference.get("diagnostic") or {},
-                    # Director-grade Gemini deconstruction of the clip (video refs);
-                    # persisted on the post so the agent reads it while drafting and a
-                    # re-draft never re-watches. media.video carries the stable mp4 URL.
+                    # Director-grade Gemini deconstruction of the clip (video refs),
+                    # now including the Phase-B "why it worked" growth decode; persisted
+                    # on the post so the agent reads it while drafting and a re-draft
+                    # never re-watches. media.video carries the stable mp4 URL. The
+                    # parsed struct (hook_type, structure_pct, beat_map, …) + the sliced
+                    # why-section ride alongside for the UI / future storyboard consumers.
                     "video_analysis": reference.get("video_analysis") or "",
+                    "video_analysis_struct": reference.get("video_analysis_struct") or {},
+                    "why_it_worked": reference.get("why_it_worked") or "",
                     "tiktok_url":  reference.get("tiktok_url") or cs.get("url"),
                     "reference_asset_id": cs.get("reference_asset_id") or reference.get("asset_id"),
                     "ingested_at": datetime.now(timezone.utc).isoformat(),

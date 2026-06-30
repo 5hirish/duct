@@ -98,11 +98,13 @@ export function hasAnyMetric(perf = {}) {
 
 // ---------------------------------------------------------------------------
 // Reference cloning: read "why it worked" from the engagement mix and name the
-// single dominant lever to copy. Mirrors backend service.discovery.diagnose_
-// reference — keep the two in sync. Algorithm signal hierarchy (2025-26):
-// completion/replays > shares > saves > comments > likes. A save_rate >2% is a
-// strong FYP signal; likes are the weakest signal.
-const LEVER_WEIGHTS = { saves: 3.0, shares: 2.5, comments: 1.5, likes: 1.0 };
+// single dominant lever to copy. This is a crude PRIOR — for video refs the Gemini
+// "why it worked" decode is the real diagnosis. Mirrors backend service.discovery.
+// diagnose_reference — keep the two in sync. Algorithm signal hierarchy (2026):
+// watch-time/completion (invisible in public counts) > comment depth ≈ send-to-DM
+// shares > saves > likes. Comments raised to parity with saves (2026: comments now
+// outrank likes); a save_rate >2% is a strong FYP signal; likes are the weakest.
+const LEVER_WEIGHTS = { shares: 3.0, saves: 2.5, comments: 2.5, likes: 1.0 };
 const LEVER_SUMMARY = {
   saves:
     'Won on SAVES (utility) — clone a genuinely save-worthy how-to / list / framework in your niche and add an explicit "save this" CTA.',

@@ -146,6 +146,12 @@ class Configs(BaseSettings):
     # BytePlus ModelArk API key — used for the Seedance 2.0 image-to-video models
     # (a third video-generation provider alongside Veo and Grok).
     byteplus_api_key: str = ""
+    # Which vendor combo the content agent's VIDEO pipeline uses (clip + its keyframe):
+    #   "byteplus" → Seedance 2.0 clip + Seedream 5.0 Lite keyframe (the face-capable combo)
+    #   "google"   → Veo 3.1 clip + Gemini 3 Pro Image keyframe
+    # Carousel/slide images always use Gemini regardless. Resolved by
+    # agents.models.media_vendor_models(); unknown values fall back to byteplus.
+    content_media_vendor: str = "byteplus"
     # Long-lived Claude OAuth token from `claude setup-token` (the operator's own
     # Pro/Max subscription). Detected here only so the engine-status endpoint can
     # report v3 as authenticated; the Claude Agent SDK subprocess reads the real

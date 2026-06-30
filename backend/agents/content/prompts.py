@@ -1046,7 +1046,7 @@ CONTENT-FIRST / SOFT-SELL (default): the clone must stand on its own as genuinel
 
 HOOK = THE WHOLE GAME (first 3 seconds). TikTok's algorithm weights the opening 3s above everything: ~70%+ hook retention earns roughly 2.2× the reach; under ~60% barely gets shown — and the algorithm surfaces a zero-follower post if the hook lands, so this is where reach is won or lost. Whatever you model from the reference, the hook must read INSTANTLY and speak to your SPECIFIC sub-community (niche-first — "for heart-shaped faces" beats "for everyone"). Match the reference's hook TYPE, but write it for your audience. The patterns that reliably hold attention: IDENTITY CALL ("if you have a heart-shaped face, watch this"), CONTRARIAN ("stop picking frames by trend — do this first"), OPEN LOOP ("this one feature changed how I choose glasses"), CONFESSION ("I wore the wrong cut for 5 years"). On-screen text in the first second + a visual pattern-interrupt on the beat cut both lift hook retention.
 
-CHARACTER — clone the creator, not just the format. When the reference is IN your niche, generate a character that MIRRORS its creator's demographic: gender, ethnicity, approximate age, hair, and overall look + energy (the Gemini DECONSTRUCTION above describes them — use it). Authentic cloning means the SAME KIND of person who already resonated with this audience, not a generic stand-in — a clone of a Black creator's video shouldn't become a white creator's, and vice-versa. DEFAULT to mirroring the reference UNLESS (a) the brand context defines a fixed avatar/persona it always uses — then keep that face for consistency but lean its styling/energy toward the reference — or (b) the user asked for someone specific. For an OUT-OF-NICHE reference you only borrowed the structure, so use a creator that fits YOUR niche instead. Either way apply the IMAGE PROMPT DISCIPLINE in full so the character reads as a real, friendly, approachable, relatable creator (attractiveness-first realism, warm natural light, the iPhone-UGC look, real-not-polished) — a person you'd actually follow, never an ad model.
+CHARACTER — clone the creator, not just the format. When the reference is IN your niche, generate a character that MIRRORS its creator's demographic AND energy: gender, ethnicity, approximate age, hair, styling vibe, and overall look + ENERGY (the Gemini DECONSTRUCTION above describes them — mirror the KIND of person + their vibe, but AUTHOR the appearance attractiveness-FIRST). CRITICAL: the DECONSTRUCTION is a LITERAL record of the reference — it may note acne, skin texture, tired/heavy eyes, matte or flat styling, or an unflattering frame. DO NOT copy those into the image prompt. Mirror the demographic + energy + styling INTENT (a glossy, polished, statement-earring it-girl stays glossy + polished; a soft clean-girl stays soft + dewy), then render at the IMAGE PROMPT DISCIPLINE's attractiveness floor — LEAD the SUBJECT block with the striking-but-real features (bright, alive, rested eyes; naturally full lips with a soft sheen; healthy hydrated skin with a natural glow; warm confident energy and a real micro-smile), NEVER the reference's literal flaws or a neutral/blank expression. "Mirror the creator" = same KIND of attractive, magnetic person who already won this audience — not a photocopy of their worst frame. Authentic cloning means the SAME KIND of person who already resonated with this audience, not a generic stand-in — a clone of a Black creator's video shouldn't become a white creator's, and vice-versa. DEFAULT to mirroring the reference UNLESS (a) the brand context defines a fixed avatar/persona it always uses — then keep that face for consistency but lean its styling/energy toward the reference — or (b) the user asked for someone specific. For an OUT-OF-NICHE reference you only borrowed the structure, so use a creator that fits YOUR niche instead. Either way apply the IMAGE PROMPT DISCIPLINE in full so the character reads as a real, friendly, approachable, relatable creator (attractiveness-first realism, warm natural light, the iPhone-UGC look, real-not-polished) — a person you'd actually follow, never an ad model.
 
 CAROUSEL reference → slide 1 is the WHOLE hook + swipe-bait; keep each slide ≤20% text; model the slide count (aim 6–13) and the per-slide open-loop arc.
 VIDEO reference → the clone is ALSO a video (ONE ≤15s 9:16 Higgsfield clip, NOT slides). The reference was already WATCHED at ingest by Gemini video understanding — a director-grade DECONSTRUCTION (beats, transformation arc, on-screen text verbatim, audio, hook) is in the kickoff prompt; rebuild that EXACT structure (if it's a before→after, show both; if the hook is on-screen text, carry an equivalent overlay — never flatten it). Call understand_video to re-watch or analyse another clip. The kickoff gives the flow (study deconstruction → author keyframe+motion → review → keyframe → Higgsfield image-to-video → attach_post_video).
@@ -1096,10 +1096,36 @@ def _channel_directive(channel) -> str:
     )
 
 
+def _media_vendor_directive(vendor: str | None) -> str:
+    """Config-driven directive: which engines the VIDEO pipeline uses (clip + keyframe).
+    Both are auto-selected by the tools, so the agent must NOT pass a `model` for video
+    keyframes or clips. Carousel slides are unaffected (always Gemini)."""
+    from agents.models import VideoModel, media_vendor_models
+
+    video_model, _keyframe = media_vendor_models(vendor)
+    if video_model == VideoModel.SEEDANCE_2_0:
+        return (
+            "MEDIA VENDOR (video posts) = BytePlus. The clip is generated with Seedance 2.0 and the "
+            "keyframe with Seedream 5.0 Lite — BOTH auto-selected, so do NOT pass a `model` to "
+            "generate_video_clip or to generate_image for a beat keyframe. Follow the 'IF TARGETING "
+            "SEEDANCE' clip grammar (name references 'Image 1'/'Image 2'; native audio is allowed; "
+            "≤15s in one generation, no extension chain). Seedance takes MULTIPLE reference images — "
+            "pass 2-4 stills of your model in reference_asset_ids for stronger character consistency. "
+            "(Carousel slides are unaffected — they still use Gemini.)"
+        )
+    return (
+        "MEDIA VENDOR (video posts) = Google. The clip is generated with Veo 3.1 and the keyframe "
+        "with Gemini 3 Pro Image — both auto-selected, so do NOT pass a `model` to generate_video_clip "
+        "or to generate_image for a beat keyframe. Follow the Veo cinematic clip grammar; Veo uses "
+        "only 1-2 reference images."
+    )
+
+
 def build_orchestrator_system_prompt(
     brand: ContentBrandContext,  # noqa: ARG001 — accepted for backwards-compat; brand goes in user msg
     mode: RunMode,
     channel=None,
+    vendor: str | None = None,
 ) -> str:
     """Compose the orchestrator's system prompt.
 
@@ -1107,10 +1133,19 @@ def build_orchestrator_system_prompt(
     all users + sessions; only the mode tail + channel directive vary. Brand
     context lives in the first user message instead of here, so the
     cached prefix doesn't get invalidated by every new project.
+
+    The media-vendor directive is appended last — it's config-stable (one value per
+    deployment), so it doesn't invalidate the cached prefix. Defaults from config.
     """
     from agents.core.persona import with_confidentiality
+
+    if vendor is None:
+        from config import get_configs
+
+        vendor = get_configs().content_media_vendor
     return with_confidentiality(
         f"{ORCHESTRATOR_BASE_PROMPT}\n\n{_channel_directive(channel)}\n\n{_mode_tail(mode)}"
+        f"\n\n{_media_vendor_directive(vendor)}"
     )
 
 
@@ -1281,6 +1316,18 @@ the same bar as a slide image (attractiveness-first realism, warm light, the pro
 skeleton, the expression formula, the iPhone-UGC style line). Compose a clean opening
 pose/expression the motion then continues FROM — not mid-blink, not a peak gesture.
 
+MODEL TIER: generate the KEYFRAME with model="gemini-3-pro-image" (highest fidelity).
+The keyframe sets the creator's entire look and the whole clip animates FROM it — it is
+the video's slide-1 hook, so it earns the pro model (the cost is one frame per clip).
+The attractiveness + identity locked here propagate through every beat; a plain or
+texture-heavy keyframe makes the ENTIRE clip read plain. Don't fall back to the fast
+model for the keyframe.
+VENDOR EXCEPTION: if this clip will be animated with SEEDANCE (not Veo), generate the
+keyframe with model="seedream-5-0-lite-260128" instead — a Gemini (or any other) real
+face is REJECTED by Seedance's input moderation ("may contain real person"), whereas a
+Seedream 5.0 Lite face is a trusted ModelArk output that passes. Seedream is
+text-to-image only (no reference images).
+
 HANDS ARE THE #1 DEFECT. Hands near the face (a finger on the glasses / chin / lips /
 cheek) are where image models break worst — fused, extra, or bent-wrong fingers.
 PREFER a pose with hands AWAY from the face: relaxed at the side, holding the phone,
@@ -1296,7 +1343,18 @@ them. In a selfie-POV beat one hand holds the phone, so only one hand is free �
 never two held objects in selfie POV; a beat needing two free hands is a tripod
 beat with no phone in frame. No third arm, no extra fingers, no mirror/reflection
 doubling. Every POV change lands on a HARD CUT between beats. The character's
-face, hair, body and wardrobe stay identical across every beat."""
+face, hair, body and wardrobe stay identical across every beat.
+
+EYES & GAZE (AI video's #1 facial tell — get this WRONG and the whole clip reads
+fake): direct the eyes EXPLICITLY in every beat's `motion`. Anchor the gaze to ONE
+clear target — the lens for a selfie/talking beat, or the exact prop/point she's
+looking at — with BOTH pupils tracking together and a calm, natural blink cadence.
+NEVER let the eyes dart, wander, drift, jitter, go cross-eyed / divergent / walleyed,
+roll, or stare glassy and dead. Carry emotion through the BROWS, the smile and a
+small HEAD move — NOT through pupil movement. If her look shifts, make it ONE
+deliberate glance that LANDS on the new target and HOLDS — never continuous flicking
+between points. Write the gaze into the prompt every time (e.g. "calm steady eye
+contact with the lens, soft natural blink, pupils still and level")."""
 
 _VIDEO_CLIP_SPEC = """\
 CLIP DIRECTION (author each beat's `motion`, then the overall clip). This text is
@@ -1314,10 +1372,12 @@ not just "it moves". Give each beat a timecoded shot with three layers:
     angle (attractiveness carries from the keyframe — don't let motion break it).
   • EMOTION & ENERGY — the UGC LIFEBLOOD, and the thing AI clips fail most. A beat
     that just HOLDS a pose reads as a dead slideshow. EVERY beat must be ALIVE:
-      - a real micro-expression ARC — name it (e.g. flat/unsure → eyes spark → warm
-        confident smile-BLOOM), not a frozen stare;
+      - a real micro-expression ARC — name it (e.g. flat/unsure → expression
+        brightening → warm confident smile-BLOOM), carried by the brows + smile +
+        head, not a frozen stare AND not darting eyes (see EYES & GAZE);
       - a natural human ACTION carrying the emotion — a hair flick, a head turn into
-        the light, a lean-in, a small laugh, a shoulder drop, eyes flicking to camera;
+        the light, a lean-in, a small laugh, a shoulder drop, ONE steady glance that
+        lands on the lens and holds (never rapid eye-flicking);
       - an ENERGY CURVE that RISES across the clip — start lower, POP on the reveal
         (the J-curve: low "before" → high-energy payoff). Real, relatable, ALIVE.
     Name the EMOTION the beat plays + the micro-action that shows it. When cloning,
@@ -1331,7 +1391,20 @@ not just "it moves". Give each beat a timecoded shot with three layers:
     own generated audio that the user simply replaces; that's fine — plan for it.)
 Cuts land on the beat; beats sum to your planned length. For the FULL clip, beat 1's
 motion is the base motion_prompt and each later beat's motion is an extension_prompt
-(Veo continues the shot — see VIDEO PHASE)."""
+(Veo continues the shot — see VIDEO PHASE).
+
+IF TARGETING SEEDANCE (model="dreamina-seedance-2-0-260128") INSTEAD OF VEO — the
+grammar differs, so adapt the motion_prompt:
+  • REFERENCE BINDING — Seedance binds inputs POSITIONALLY by name. Address each input
+    in the motion_prompt as "Image 1"/"Image 2" (reference images, in the order passed),
+    "Video 1" (reference video) and "Audio 1" (reference audio) — e.g. "the woman in
+    Image 1 turns to the camera…". Never reference an asset by its id.
+  • AUDIO — Seedance GENERATES native audio (timbre / music / dialogue), so unlike the
+    Veo note above you MAY script a spoken line ("Character says: '…'") when the post
+    wants talking UGC. (If the user will drop their own TikTok sound, still keep it silent.)
+  • LENGTH — one Seedance generation runs up to 15s; there is NO extension chain
+    (extension_prompts are Veo-only and ignored).
+  • KEYFRAME — the face keyframe MUST come from Seedream 5.0 Lite (see MODEL TIER)."""
 
 _VIDEO_STANDARDS = (
     f"{_IMAGE_PROMPT_DISCIPLINE_BRIEF}\n\n{_VIDEO_KEYFRAME_NOTE}\n\n"
@@ -1567,10 +1640,37 @@ each keyframe, before you render the clip.
 # Slideshow-clone kickoff tail — deconstruct the cover + slide frames into an
 # ORIGINAL carousel for this brand (no generation yet; images wait for approval).
 _SLIDESHOW_CLONE_INSTRUCTIONS = """\
-Now run the CLONE loop (deconstruct → diagnose → strip → map to brand → regenerate). \
-Author the PostDraft (structured slides + layout, NO images yet), emit it in \
-<duct_artifact>, call submit_post_draft with the EXACT post_dir_slug above, then write \
-the Kept-vs-Changed ledger into strategic_note and summarise it in chat as a \
+You can SEE the attached slides, so deconstruct AND decode them yourself — no separate \
+analyser needed (unlike a video clone, a carousel is static images you read directly). \
+Work two passes before drafting:
+
+PASS 1 — DECONSTRUCT (read the carousel like a director + editor):
+- HOOK (slide 1): what stops the scroll AND baits the swipe in ~1.5s with the sound off? \
+Classify the hook TYPE (question/open-loop · contrarian · specific-number · \
+product/outcome · authority · confession/relatable) and which triggers it stacks \
+(curiosity · pattern-interrupt · self-relevance · emotional-arousal). Note the frame-1 \
+thumb-stop: face? high contrast / complementary palette? bold legible text?
+- PER-SLIDE ARC: slide by slide — composition, the on-screen text VERBATIM + its style, \
+and the OPEN-LOOP seam that pulls to the next slide (why can't they exit here?). Mark the \
+slide count, the SAVE-WORTHY asset slide (the screenshot-worthy self-test / list / \
+framework, usually slide 3-4), the PAYOFF slide, and the CTA slide. Each slide ≤20% text.
+- TEXT + KEYWORDS: transcribe each overlay exactly; pull the niche SEARCHABLE keywords \
+that feed search/FYP. AESTHETIC: style label, palette, texture, and what it deliberately \
+OMITS. TEMPLATE: crystallise the reusable skeleton in one line.
+
+PASS 2 — DECODE WHY IT WORKED (viral-growth-strategist hat), grounded in the metrics + \
+DIAGNOSIS above. The lever prior is crude — TRUST YOUR READ of the slides over it. 2026 \
+benchmarks: photos-viewed / swipe-through is the completion signal; SAVES are especially \
+strong on Photo Mode; share-rate 2-5% = viral-grade; comments now outrank likes. Name the \
+ONE dominant mechanism that drove the result, tied to a SPECIFIC slide (never a \
+platitude); flag creator-size context (small account + big reach = the format is the \
+engine → clone CLOSE); give COPY THIS (the one element to keep) and BEAT THIS (the one \
+weakness to fix). Put this decode at the TOP of strategic_note, above the ledger.
+
+THEN run the CLONE loop (strip → map to the CLOSEST brand pillar → regenerate). Author the \
+PostDraft (structured slides + layout, NO images yet), emit it in <duct_artifact>, call \
+submit_post_draft with the EXACT post_dir_slug above, then write the Kept-vs-Changed \
+ledger into strategic_note (below the decode) and summarise it in chat as a \
 reference↔clone side-by-side. Ask the user to review the copy before you generate images.\
 """
 
@@ -1654,8 +1754,9 @@ REFERENCE
 - hashtags: {", ".join(hashtags[:15]) or "(none)"}
 - sound: {music}
 - metrics: {metrics_line}
-- DIAGNOSIS — dominant lever: {(diag.get('lever') or 'unknown').upper()} ({diag.get('confidence')} confidence)
+- DIAGNOSIS — dominant lever (a crude metrics PRIOR): {(diag.get('lever') or 'unknown').upper()} ({diag.get('confidence')} confidence)
   {diag.get('summary') or '(metrics thin — infer the lever qualitatively)'}
+  {"The full growth decode is in the WHY IT WORKED section of the DECONSTRUCTION below — trust that over this prior." if video_analysis else "Infer the real lever from the cover + caption + metrics, and say you're inferring."}
 
 {attached_line}
 {decon_block}

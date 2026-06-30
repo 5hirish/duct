@@ -749,7 +749,12 @@ def build_content_mcp_server(
         )
         model: ImageModel = Field(
             DEFAULT_IMAGE_MODEL,
-            description=f"Optional image model id; defaults to {DEFAULT_IMAGE_MODEL.value}.",
+            description=(
+                f"Optional image model id; defaults to {DEFAULT_IMAGE_MODEL.value}. "
+                "Use 'seedream-5-0-lite-260128' ONLY for a face keyframe you'll animate with "
+                "Seedance 2.0 — its faces pass Seedance's input moderation where Gemini faces "
+                "are rejected. Seedream is text-to-image only (no reference images)."
+            ),
         )
         aspect_ratio: AspectRatio = Field(
             AspectRatio.PORTRAIT_9_16, description="Optional aspect ratio. Defaults to 9:16 portrait.",
@@ -893,7 +898,11 @@ def build_content_mcp_server(
         )
         reference_asset_ids: list[str] = Field(
             default_factory=list,
-            description="Up to 3 reference stills (character/product) for subject consistency (Veo 3.1).",
+            description=(
+                "Reference stills (character/product) for subject consistency. Seedance accepts "
+                "MULTIPLE — pass 2-4 images of your model for stronger consistency (cap 6); Veo/Grok "
+                "use only 1-2 (cap 3)."
+            ),
         )
         duration_seconds: int = Field(
             8, ge=4, le=15,
@@ -1447,13 +1456,16 @@ def build_content_mcp_server(
             from service.gemini import (
                 GeminiAPIError,
                 GeminiImageClient,
+                GeneratedImage,
                 GenerateImageRequest,
                 persist_generated_image,
             )
             from service.gemini.client import build_multi_reference_prefix
 
+            from agents.models import ImageProvider, image_provider_for, media_vendor_models
+
             cfg = get_configs()
-            if not cfg.gemini_api_key:
+            if not cfg.gemini_api_key and not cfg.byteplus_api_key:
                 return _err("Image generation isn't enabled for this workspace yet.")
 
             payload = {k: v for k, v in args.items() if v not in (None, "")}
@@ -1466,6 +1478,14 @@ def build_content_mcp_server(
             target_item_index = int(_ti) if _ti not in (None, "") else None
             target_beat_id = str(payload.pop("beat_id", "") or "").strip()
             target_frame = "last" if str(payload.pop("frame", "first")).strip().lower() == "last" else "first"
+
+            # A VIDEO keyframe (beat_id set) is deterministically generated with the
+            # config vendor's keyframe model — byteplus→Seedream (trusted by Seedance),
+            # google→Gemini Pro — overriding whatever the agent passed. Carousel slides
+            # (slide_id) are NOT touched: they always use Gemini (their multi-reference
+            # [character, camera] flow is Gemini-class).
+            if target_beat_id and not target_slide_id:
+                payload["model"] = media_vendor_models(cfg.content_media_vendor)[1].value
 
             # Validate the attach target against the live post BEFORE paying for a
             # Gemini call — a bad slide_id/cell/beat_id is a hard error (with the
@@ -1542,6 +1562,20 @@ def build_content_mcp_server(
             # stays comparable to the slide's stored image_prompt for staleness.
             generating_prompt = request.prompt
 
+            # Route by image provider (Gemini default; Seedream = BytePlus ModelArk).
+            provider = image_provider_for(request.model.value)
+            img_source = AssetSource.GEMINI
+            if provider == ImageProvider.SEEDREAM:
+                # Seedream is wired as text-to-image only — references are Gemini-class.
+                if ref_plan:
+                    return _err(
+                        "Seedream models are text-to-image only — they can't take reference "
+                        "images. Drop input_asset_ids, or use a Gemini model for reference-guided gen."
+                    )
+                if not cfg.byteplus_api_key:
+                    return _err("Seedream isn't configured — set BYTEPLUS_API_KEY to use seedream models.")
+                img_source = AssetSource.SEEDREAM
+
             input_bytes_list: list[bytes] = []
             global_refs: list[str] = []
             with _open_db() as db:
@@ -1571,15 +1605,33 @@ def build_content_mcp_server(
                             update={"prompt": f"{prefix}\n\n{request.prompt}"}
                         )
 
-                client = GeminiImageClient(cfg.gemini_api_key)
-                try:
-                    images = await client.generate_image(
-                        request,
-                        input_bytes_list=input_bytes_list or None,
+                if provider == ImageProvider.SEEDREAM:
+                    from service.byteplus.image_gen import (
+                        SeedreamImageClient,
+                        SeedreamImageError,
                     )
-                except GeminiAPIError as exc:
-                    logger.warning("content: image generation failed: %s", exc, exc_info=True)
-                    return _err("Image generation failed — please try again in a moment.")
+
+                    try:
+                        raw_list = await SeedreamImageClient(cfg.byteplus_api_key).generate_image(
+                            prompt=request.prompt,
+                            aspect_ratio=request.aspect_ratio.value,
+                            number_of_images=request.number_of_images,
+                            model=request.model.value,
+                        )
+                    except SeedreamImageError as exc:
+                        logger.warning("content: seedream image generation failed: %s", exc, exc_info=True)
+                        return _err(f"Image generation failed: {exc}")
+                    images = [GeneratedImage(data=b, mime_type="image/png") for b in raw_list]
+                else:
+                    client = GeminiImageClient(cfg.gemini_api_key)
+                    try:
+                        images = await client.generate_image(
+                            request,
+                            input_bytes_list=input_bytes_list or None,
+                        )
+                    except GeminiAPIError as exc:
+                        logger.warning("content: image generation failed: %s", exc, exc_info=True)
+                        return _err("Image generation failed — please try again in a moment.")
 
                 assets = []
                 for img in images:
@@ -1596,7 +1648,7 @@ def build_content_mcp_server(
                             "input_global_refs": global_refs,
                         },
                         post_id=session.post_id,
-                        source=AssetSource.GEMINI,
+                        source=img_source,
                     )
                     assets.append(asset)
 
@@ -2036,20 +2088,20 @@ def build_content_mcp_server(
     @tool(
         name="generate_video_clip",
         description=(
-            "Generate the VIDEO post's clip IN-HOUSE with Veo (no Higgsfield needed). Animates a "
+            "Generate the VIDEO post's clip IN-HOUSE (no Higgsfield needed). The clip engine is set "
+            "by config (don't pass model): byteplus→Seedance 2.0, google→Veo 3.1. Animates a "
             "keyframe still into a clip: pass beat_id to use that storyboard beat's keyframe as the "
             "first frame (and its 'after' frame as the last frame for a transformation), or omit it "
-            "to animate the post's opening keyframe. Pass reference_asset_ids (up to 3) for character/"
-            "product consistency. Generation takes minutes — this polls to completion, stores the mp4 "
-            "as a content asset, sets the post's video_url + video_asset_id, and emits "
-            "POST_DRAFT_UPDATED. Only for post_type='video'."
+            "to animate the post's opening keyframe. Pass reference_asset_ids for character/product "
+            "consistency (Seedance takes several; Veo 1-2). Generation takes minutes — this polls to "
+            "completion, stores the mp4 as a content asset, sets the post's video_url + "
+            "video_asset_id, and emits POST_DRAFT_UPDATED. Only for post_type='video'."
         ),
         input_schema=tool_schema(GenerateVideoClipInput),
     )
     async def generate_video_clip(args: dict) -> dict:
         try:
-            from agents.models import VideoProvider, video_provider_for
-            from service.gemini.video_gen import DEFAULT_VEO_MODEL
+            from agents.models import VideoProvider, media_vendor_models, video_provider_for
             from service.higgsfield.storage import persist_generated_video
 
             cfg = get_configs()
@@ -2062,12 +2114,13 @@ def build_content_mcp_server(
             beat_id = str(args.get("beat_id") or "").strip()
             first_frame_asset_id = str(args.get("first_frame_asset_id") or "").strip()
             last_frame_asset_id = str(args.get("last_frame_asset_id") or "").strip()
-            # Default to Veo 3.1: faces OK + first→last interpolation. Seedance is NOT a
-            # viable default for clones — the 2.0 series REJECTS face keyframes at submit
-            # ("input image may contain real person", verified) and the face-safe 1.5 Pro
-            # isn't available in this region. So Seedance stays opt-in (explicit model=…)
-            # for non-face b-roll only, never the default for face-based content.
-            model = str(args.get("model") or "").strip() or DEFAULT_VEO_MODEL
+            # The clip model is chosen by the content_media_vendor CONFIG, not per call:
+            # byteplus → Seedance 2.0, google → Veo 3.1. (An explicit model= still wins.)
+            # Seedance 2.0 is face-capable ONLY with a Seedream 5.0 Lite keyframe (a trusted
+            # ModelArk output) — generate_image forces that keyframe under byteplus; a
+            # Gemini face is rejected at submit ("may contain real person").
+            vendor_video_model = media_vendor_models(cfg.content_media_vendor)[0].value
+            model = str(args.get("model") or "").strip() or vendor_video_model
             # Route to the provider that serves this model (Veo / Grok / Seedance) + check its key.
             provider = video_provider_for(model)
             if provider == VideoProvider.GROK and not cfg.xai_api_key:
@@ -2134,8 +2187,11 @@ def build_content_mcp_server(
                         except ValueError:
                             kf_id = None
                     lf = _bytes_for(end_id)
+                    # Seedance binds up to 9 reference images (we cap at 6 for character
+                    # consistency); Veo/Grok take only 1–2, so keep their cap at 3.
+                    max_refs = 6 if provider == VideoProvider.SEEDANCE else 3
                     refs = []
-                    for rid in ref_ids[:3]:
+                    for rid in ref_ids[:max_refs]:
                         rb = _bytes_for(rid)
                         if rb:
                             refs.append(rb)
@@ -2175,14 +2231,25 @@ def build_content_mcp_server(
 
                     if ext_prompts:
                         logger.info("content: Seedance ignores extension_prompts (Veo-only).")
+                    # Seedance binds reference images POSITIONALLY ("Image 1"/"Image 2" in the
+                    # order passed). If the motion prompt never names them, prepend a light
+                    # binding nudge so the refs actually stick (grammar lives in prompts.py).
+                    seedance_prompt = motion_prompt
+                    if ref_bytes and "image 1" not in motion_prompt.lower():
+                        names = ", ".join(f"Image {i + 1}" for i in range(len(ref_bytes)))
+                        seedance_prompt = f"Using {names} as the reference subject(s). {motion_prompt}"
+                    # ratio="adaptive" matches the output to the input keyframe's dimensions —
+                    # the documented fix for first/last-frame "abrupt frame jump" artifacts.
+                    # Pure text-to-video (no image) keeps the requested aspect ratio.
+                    seedance_ratio = "adaptive" if (first_frame or last_frame or ref_bytes) else aspect_ratio
                     # Seedance supports first+last (transformation) + reference images natively.
                     data = await SeedanceVideoClient(cfg.byteplus_api_key).generate_video(
-                        prompt=motion_prompt,
+                        prompt=seedance_prompt,
                         first_frame=first_frame,
                         last_frame=last_frame,
                         reference_images=ref_bytes or None,
                         duration_seconds=duration_seconds,   # Seedance 2.0: up to 15s
-                        aspect_ratio=aspect_ratio,
+                        aspect_ratio=seedance_ratio,
                         generate_audio=generate_audio,
                         model=model,
                     )
@@ -2193,7 +2260,10 @@ def build_content_mcp_server(
 
                     # Veo accepts only 4/6/8 — snap anything else to 8.
                     veo_duration = duration_seconds if duration_seconds in (4, 6, 8) else 8
-                    data = await GeminiVeoClient(cfg.gemini_api_key).generate_video(
+                    # Extension is best-effort (Veo can't extend interpolation/non-720p
+                    # bases) — the client returns how many segments actually applied, so
+                    # the stored duration matches the real clip, not the requested length.
+                    data, exts_applied = await GeminiVeoClient(cfg.gemini_api_key).generate_video(
                         prompt=motion_prompt,
                         first_frame=first_frame,
                         last_frame=last_frame,
@@ -2207,7 +2277,13 @@ def build_content_mcp_server(
                         extension_prompts=ext_prompts or None,
                     )
                     clip_source = AssetSource.VEO
-                    total_duration = veo_duration + 7 * len(ext_prompts)
+                    total_duration = veo_duration + 7 * exts_applied
+                    if ext_prompts and exts_applied < len(ext_prompts):
+                        logger.info(
+                            "generate_video_clip: %d/%d extensions applied — clip is ~%ds "
+                            "(Veo couldn't extend this base; the base clip is returned).",
+                            exts_applied, len(ext_prompts), total_duration,
+                        )
             except Exception as exc:
                 logger.warning("generate_video_clip: %s failed", provider.value, exc_info=True)
                 return _err(f"{provider.value.title()} couldn't generate the clip ({exc}). Re-check inputs or retry.")

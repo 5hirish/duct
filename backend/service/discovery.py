@@ -11,7 +11,9 @@ discovery — planning owns it).
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
+import re
 import time
 from datetime import datetime, timezone
 from typing import Awaitable, Callable
@@ -241,11 +243,15 @@ def recapture_missing_media(project_id: UUID, *, limit: int = 50) -> dict:
 # deferred single-URL ingest the clone_post worker runs on first Draft-now.
 # ---------------------------------------------------------------------------
 
-# Algorithm signal hierarchy (2025-26): completion/replays > shares > saves >
-# comments > likes. We can only read the public counts, so we rank by rate ×
-# weight and name the single dominant lever to copy. Mirrored on the frontend in
+# Algorithm signal hierarchy (2026): watch-time/completion (INVISIBLE in public
+# counts) > comment depth ≈ send-to-DM shares > saves > likes. We can only read the
+# public counts, so we rank by rate × weight and name a crude lever PRIOR — the
+# Gemini "why it worked" decode (build_deconstruction_prompt Phase B) is the real
+# diagnosis and overrides this when they conflict. Comments were raised from the old
+# 1.5 to parity with saves (2026: comments now outrank likes; shares-to-DM are the
+# loudest public virality signal). Mirrored on the frontend in
 # app/src/lib/contentMetrics.js::diagnoseReference — keep the two in sync.
-_LEVER_WEIGHTS = {"saves": 3.0, "shares": 2.5, "comments": 1.5, "likes": 1.0}
+_LEVER_WEIGHTS = {"shares": 3.0, "saves": 2.5, "comments": 2.5, "likes": 1.0}
 _LEVER_SUMMARY = {
     "saves":    "Won on SAVES (utility) — clone a genuinely save-worthy how-to / list / framework in your niche and add an explicit \"save this\" CTA.",
     "shares":   "Won on SHARES (identity/emotion) — clone the relatable or aspirational angle and the \"send this to a friend\" trigger.",
@@ -289,6 +295,46 @@ def diagnose_reference(post: dict) -> dict:
         # public counts) — the agent should then infer the lever qualitatively.
         "confidence": "high" if (views and saves) else "low",
     }
+
+
+# The Phase-B decode emits a "## WHY IT WORKED" prose section + a trailing fenced
+# ```json block. These slice them back out: the prose feeds the "Decoding why it
+# worked" UI panel; the json is the structured storyboard (hook_type, structure_pct,
+# loops, beat_map, search_keywords, …). Both are best-effort — a Phase-A-only
+# re-watch has neither, and callers fall back to the deterministic diagnostic.
+_WHY_HEADER_RE = re.compile(r"^#{1,6}\s*WHY IT WORKED.*$", re.IGNORECASE | re.MULTILINE)
+_JSON_FENCE_RE = re.compile(r"```json\s*(\{.*?\})\s*```", re.DOTALL | re.IGNORECASE)
+
+
+def split_why_section(analysis: str) -> str:
+    """Slice the '## WHY IT WORKED' growth decode out of a Phase-B deconstruction,
+    stripping the trailing json fence. '' when absent (Phase-A-only)."""
+    if not analysis:
+        return ""
+    m = _WHY_HEADER_RE.search(analysis)
+    if not m:
+        return ""
+    why = analysis[m.start():]
+    fence = why.find("```json")
+    if fence != -1:
+        why = why[:fence]
+    return why.strip()
+
+
+def parse_analysis_struct(analysis: str) -> dict:
+    """Best-effort parse of the trailing fenced ```json block (hook_type,
+    structure_pct, loops, beat_map, search_keywords, why_it_worked, copy_this,
+    beat_this, …). {} on absence/malformed json — the pipeline never depends on it."""
+    if not analysis:
+        return {}
+    m = _JSON_FENCE_RE.search(analysis)
+    if not m:
+        return {}
+    try:
+        val = json.loads(m.group(1))
+        return val if isinstance(val, dict) else {}
+    except (ValueError, TypeError):
+        return {}
 
 
 async def _scrape_single_post(url: str, *, max_wait_s: float = 120.0) -> dict | None:
@@ -531,12 +577,22 @@ async def ingest_reference(project_id: UUID, clone_source: dict, *, on_step: Ste
             "video":  bool(media.get("video")),
         })
 
+    # The deterministic lever PRIOR — computed up-front so it can be fed INTO the
+    # video decode (the watch + "why it worked" are now ONE merged Gemini pass) and
+    # surfaced as the UI lever badge. The Gemini decode overrides it qualitatively.
+    diagnostic = diagnose_reference(post)
+
     # For a VIDEO reference, deconstruct the clip itself with Gemini video
     # understanding — the agent can't watch an mp4, so this is its eyes (Higgsfield's
     # analyser missed the before→after transformation + on-screen text). Capture the
     # mp4 into our bucket first (a stable URL — Apify CDN links expire), then analyse
-    # the SAME bytes. Best-effort: on any failure the agent falls back to cover+metadata.
+    # the SAME bytes in ONE pass: the enriched craft read PLUS a Phase-B "why it
+    # worked" growth decode grounded in THIS post's metrics + creator size (reasoning
+    # over the actual frames beats a second LLM call over a text summary). Best-effort:
+    # on any failure the agent falls back to cover + metadata + the deterministic lever.
     video_analysis = ""
+    why_text = ""
+    analysis_struct: dict = {}
     if post.get("is_slideshow") is False:
         await _step("watching", "running", "Watching the video frame by frame…")
         data = await asyncio.to_thread(_fetch_reference_video_bytes, post)
@@ -547,7 +603,14 @@ async def ingest_reference(project_id: UUID, clone_source: dict, *, on_step: Ste
                 )
                 if stored:
                     media = {**media, "video": stored}
-            video_analysis = await analyze_video_bytes(data)
+            from service.gemini.video import build_deconstruction_prompt
+
+            prompt = build_deconstruction_prompt(
+                diagnostic=diagnostic, author=post.get("author_meta"),
+            )
+            video_analysis = await analyze_video_bytes(data, prompt=prompt)
+        why_text = split_why_section(video_analysis)
+        analysis_struct = parse_analysis_struct(video_analysis)
         await _step(
             "watching", "ok" if video_analysis else "error",
             "Deconstructed the video." if video_analysis else "Couldn't read the clip — using the cover.",
@@ -556,7 +619,7 @@ async def ingest_reference(project_id: UUID, clone_source: dict, *, on_step: Ste
         # Persist onto the discovered_reference asset so the library entry carries
         # the analysis (a re-clone reuses it; mirrors params.media for cover/slides).
         if asset_id is not None and engine is not None and (video_analysis or media.get("video")):
-            _vid_url, _vid_analysis = media.get("video") or "", video_analysis
+            _vid_url, _vid_analysis, _vid_struct = media.get("video") or "", video_analysis, analysis_struct
 
             def _persist_video_meta() -> None:
                 with Session(engine) as db:
@@ -569,6 +632,8 @@ async def ingest_reference(project_id: UUID, clone_source: dict, *, on_step: Ste
                         m["video"] = _vid_url
                     if _vid_analysis:
                         m["video_analysis"] = _vid_analysis
+                    if _vid_struct:
+                        m["video_analysis_struct"] = _vid_struct
                     params["media"] = m
                     a.params = params  # reassign so SQLAlchemy detects the JSONB change
                     db.add(a)
@@ -582,11 +647,14 @@ async def ingest_reference(project_id: UUID, clone_source: dict, *, on_step: Ste
             except Exception:
                 logger.warning("clone ingest: couldn't mirror video analysis onto the reference asset", exc_info=True)
 
+    # "Decoding why it worked": prefer the Gemini growth decode (video refs); fall
+    # back to the deterministic lever summary (slideshows, or video analysis failed).
     await _step("analyzing", "running", "Decoding why it worked…")
-    diagnostic = diagnose_reference(post)
-    await _step("analyzing", "ok", diagnostic.get("summary", ""), payload={
-        k: diagnostic.get(k)
-        for k in ("lever", "summary", "views", "likes", "comments", "shares", "saves")
+    why_summary = why_text or diagnostic.get("summary", "")
+    await _step("analyzing", "ok", why_summary, payload={
+        **{k: diagnostic.get(k) for k in ("lever", "summary", "views", "likes", "comments", "shares", "saves")},
+        "why_it_worked": why_text or None,
+        "struct": analysis_struct or None,
     })
 
     return {
@@ -596,5 +664,7 @@ async def ingest_reference(project_id: UUID, clone_source: dict, *, on_step: Ste
         "media": media,
         "diagnostic": diagnostic,
         "video_analysis": video_analysis,
+        "video_analysis_struct": analysis_struct,
+        "why_it_worked": why_text,
         "error": None,
     }

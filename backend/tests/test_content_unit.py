@@ -1206,3 +1206,64 @@ def test_higgsfield_token_resolver_falls_back_to_env(monkeypatch):
 
     monkeypatch.setattr(auth, "get_configs", lambda: _Empty())
     assert auth.higgsfield_token_for_user(None, db=None) == ""
+
+
+def test_image_provider_for_routes_gemini_and_seedream():
+    """generate_image dispatch hinges on this: seedream ids → Seedream client,
+    everything else (incl. unknown) → Gemini. Mirrors video_provider_for."""
+    from agents.models import ImageModel, ImageProvider, image_provider_for
+
+    assert image_provider_for(ImageModel.SEEDREAM_5_0_LITE.value) is ImageProvider.SEEDREAM
+    assert image_provider_for("seedream-5-0-260128") is ImageProvider.SEEDREAM
+    assert image_provider_for(ImageModel.GEMINI_3_PRO_IMAGE.value) is ImageProvider.GEMINI
+    assert image_provider_for(ImageModel.GEMINI_3_1_FLASH_IMAGE.value) is ImageProvider.GEMINI
+    assert image_provider_for(None) is ImageProvider.GEMINI
+    assert image_provider_for("") is ImageProvider.GEMINI
+
+
+def test_seedream_aspect_to_size_clears_pixel_floor_and_keeps_ratio():
+    """Seedream rejects images under 3,686,400 px, so aspect_to_size must map each
+    ratio to an even WxH at-or-above the floor with the correct ratio. 9:16 → the
+    canonical 1440x2560 (exactly the floor)."""
+    from service.byteplus.image_gen import aspect_to_size
+
+    FLOOR = 3_686_400
+    assert aspect_to_size("9:16") == "1440x2560"
+    assert aspect_to_size("16:9") == "2560x1440"
+    for ratio, (a, b) in {"9:16": (9, 16), "16:9": (16, 9), "1:1": (1, 1), "3:4": (3, 4)}.items():
+        w, h = (int(x) for x in aspect_to_size(ratio).split("x"))
+        assert w * h >= FLOOR                      # clears the floor
+        assert w % 2 == 0 and h % 2 == 0           # even dims
+        assert abs(w / h - a / b) < 0.01           # ratio preserved
+    # Unparseable ratio falls back to 9:16 portrait.
+    assert aspect_to_size("garbage") == "1440x2560"
+
+
+def test_media_vendor_models_maps_byteplus_and_google():
+    """The config switch hinges on this: byteplus → Seedance+Seedream, google →
+    Veo+Gemini, unknown/None → byteplus (the default combo)."""
+    from agents.models import ImageModel, VideoModel, media_vendor_models
+
+    assert media_vendor_models("byteplus") == (VideoModel.SEEDANCE_2_0, ImageModel.SEEDREAM_5_0_LITE)
+    assert media_vendor_models("google") == (VideoModel.VEO_3_1, ImageModel.GEMINI_3_PRO_IMAGE)
+    assert media_vendor_models("GOOGLE") == (VideoModel.VEO_3_1, ImageModel.GEMINI_3_PRO_IMAGE)
+    # unknown / None / empty all fall back to byteplus
+    for bad in ("nonsense", None, ""):
+        assert media_vendor_models(bad) == (VideoModel.SEEDANCE_2_0, ImageModel.SEEDREAM_5_0_LITE)
+
+
+def test_media_vendor_directive_reflects_configured_vendor():
+    """The system prompt must tell the agent which video engines are active so it
+    doesn't pass a model itself. byteplus → Seedance/Seedream; google → Veo/Gemini."""
+    bp = build_orchestrator_system_prompt(_brand(), "draft_post", vendor="byteplus")
+    assert "MEDIA VENDOR (video posts) = BytePlus" in bp
+    assert "Seedream 5.0 Lite" in bp and "do NOT pass a `model`" in bp
+
+    gg = build_orchestrator_system_prompt(_brand(), "draft_post", vendor="google")
+    assert "MEDIA VENDOR (video posts) = Google" in gg
+    assert "Veo 3.1" in gg and "Gemini 3 Pro Image" in gg
+    # The google prompt must carry the Google directive, not the BytePlus one.
+    assert "MEDIA VENDOR (video posts) = BytePlus" not in gg
+
+    # Default (no vendor arg) follows config, which defaults to byteplus.
+    assert "MEDIA VENDOR (video posts) = BytePlus" in build_orchestrator_system_prompt(_brand(), "draft_post")

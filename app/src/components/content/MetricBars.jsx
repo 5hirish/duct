@@ -1,7 +1,8 @@
 "use client";
 
-import { useId, useRef } from "react";
+import { useRef } from "react";
 import { Plus, Scale, Trash2 } from "lucide-react";
+import ComboInput from "./ComboInput";
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const round1 = (v) => Math.round(v * 10) / 10;
@@ -16,13 +17,12 @@ const round1 = (v) => Math.round(v * 10) / 10;
  *   - onChange     : (items) => void
  *   - editableKeys : true → free-form rows (editable label + add/remove); false → fixed labels
  *   - keyPlaceholder : placeholder for a free-form label ("Country", "Search term")
- *   - keyOptions   : optional string[] — native <datalist> autocomplete for the label
+ *   - keyOptions   : optional string[] — themed ComboInput autocomplete for the label
  *                    (still free-typeable). Used for the country list.
  *   - balance      : show the "Balance to 100%" action (for distributions that sum to 100)
  */
 export default function MetricBars({ items, onChange, editableKeys = false, keyPlaceholder = "", keyOptions, balance = false }) {
   const dragging = useRef(false);
-  const listId = useId();
   const hasOptions = Array.isArray(keyOptions) && keyOptions.length > 0;
 
   const setVal = (i, value) => onChange(items.map((it, j) => (j === i ? { ...it, value } : it)));
@@ -50,19 +50,21 @@ export default function MetricBars({ items, onChange, editableKeys = false, keyP
 
   return (
     <div className="space-y-1.5">
-      {hasOptions && (
-        <datalist id={listId}>
-          {keyOptions.map((opt) => <option key={opt} value={opt} />)}
-        </datalist>
-      )}
       {(items || []).map((it, i) => (
         <div key={i} className="flex items-center gap-2">
-          {editableKeys ? (
+          {editableKeys && hasOptions ? (
+            <ComboInput
+              value={it.key}
+              onChange={(v) => setKey(i, v)}
+              options={keyOptions}
+              placeholder={keyPlaceholder}
+              className="w-24 shrink-0"
+            />
+          ) : editableKeys ? (
             <input
               value={it.key}
               onChange={(e) => setKey(i, e.target.value)}
               placeholder={keyPlaceholder}
-              list={hasOptions ? listId : undefined}
               autoComplete="off"
               className="w-24 shrink-0 rounded-lg border border-input bg-input/40 px-2 py-1 text-xs outline-none transition-[box-shadow,border-color] focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/25"
             />
