@@ -12,6 +12,11 @@ for bring-your-own provider API keys. Design:
 - **Keychain** via the `keyring` crate; commands in `src-tauri/src/lib.rs`
   (`get_provider_key` / `set_provider_key` / `delete_provider_key`). The web app
   calls them through `window.__TAURI__.core.invoke` (`app/src/lib/providerKeys.js`).
+- **macOS distribution** is TestFlight (internal testers) via a sandboxed Mac App
+  Store build — `src-tauri/tauri.appstore.conf.json` +
+  `src-tauri/Entitlements.appstore.plist`, shipped by
+  `.github/workflows/desktop-testflight.yml`. Runbook:
+  `docs/engineering/desktop-testflight-release.md`.
 
 ## Rules
 
@@ -21,4 +26,14 @@ for bring-your-own provider API keys. Design:
   `src-tauri/capabilities/default.json` for `invoke` to work.
 - Building needs platform webview libraries (see `README.md`); it does not build
   in the Claude-on-the-web container — build, sign, and release locally or in CI.
-- `Cargo.lock` is generated on the first local build; commit it once produced.
+- `Cargo.lock` is committed; refresh it with `cargo generate-lockfile` (or a
+  build) when dependencies change, and commit the result.
+- **Never enable `tauri-plugin-updater` for the macOS build.** App Store apps may
+  not self-update; it would be rejected. Auto-update is only an option if macOS
+  moves to Developer ID / DMG distribution.
+- Changes to `src-tauri/Entitlements.appstore.plist` alter what the sandbox
+  allows. Adding an entitlement without a real need invites App Review questions;
+  removing `app-sandbox` breaks the upload outright (CI checks for it).
+- `bundle.macOS` config uses `deny_unknown_fields` — a mistyped key fails the
+  build rather than being ignored. Key names are camelCase
+  (`minimumSystemVersion`, `hardenedRuntime`, `entitlements`).
