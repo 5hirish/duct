@@ -13,7 +13,7 @@ if str(ROOT) not in sys.path:
 TEST_DUCT_API_KEY = "test-duct-api-key"
 
 
-def _load_server_with_env():
+def _load_server_with_env(*, expose_docs=False, docs_password="", docs_user="docs"):
     os.environ["GOOGLE_OAUTH_CLIENT_ID"] = "test-client-id"
     os.environ["GOOGLE_OAUTH_CLIENT_SECRET"] = "test-client-secret"
     os.environ["GOOGLE_OAUTH_REDIRECT_URI"] = (
@@ -23,6 +23,15 @@ def _load_server_with_env():
     os.environ["GOOGLE_ADS_DEVELOPER_TOKEN"] = "test-dev-token"
     os.environ["DUCT_API_KEY"] = TEST_DUCT_API_KEY
     os.environ.pop("GEMINI_API_KEY", None)
+    # Pin the docs config hermetically. A developer's .env.local may set the
+    # docs vars (EXPOSE_OPENAPI_DOCS / DUCT_OPENAPI_DOCS_BASIC_*); setting the
+    # canonical aliases in os.environ (env source out-ranks the dotenv file) and
+    # dropping the DUCT_ ones keeps these tests deterministic regardless of it.
+    os.environ["EXPOSE_OPENAPI_DOCS"] = "true" if expose_docs else "false"
+    os.environ["OPENAPI_DOCS_BASIC_USER"] = docs_user
+    os.environ["OPENAPI_DOCS_BASIC_PASSWORD"] = docs_password
+    os.environ.pop("DUCT_OPENAPI_DOCS_BASIC_USER", None)
+    os.environ.pop("DUCT_OPENAPI_DOCS_BASIC_PASSWORD", None)
     import config
 
     config.get_configs.cache_clear()
@@ -53,26 +62,26 @@ def test_root_ok():
 
 
 def test_root_and_openapi_when_expose_docs_enabled():
-    os.environ["EXPOSE_OPENAPI_DOCS"] = "true"
-    try:
-        server = _load_server_with_env()
-        client = TestClient(server.app)
-        res = client.get("/")
-        assert res.status_code == 200
-        assert res.json()["links"] == {
-            "health": "/health",
-            "openapi": "/openapi.json",
-            "docs": "/docs",
-        }
-        assert client.get("/docs").status_code == 200
-        assert client.get("/openapi.json").status_code == 200
-    finally:
-        os.environ.pop("EXPOSE_OPENAPI_DOCS", None)
+    server = _load_server_with_env(expose_docs=True)
+    client = TestClient(server.app)
+    res = client.get("/")
+    assert res.status_code == 200
+    assert res.json()["links"] == {
+        "health": "/health",
+        "openapi": "/openapi.json",
+        "docs": "/docs",
+    }
+    assert client.get("/docs").status_code == 200
+    assert client.get("/openapi.json").status_code == 200
 
 
 def test_duct_prefixed_openapi_basic_auth_env_names():
     import config
 
+    # This asserts the DUCT_-prefixed aliases resolve, so the canonical aliases
+    # must be absent (a prior _load_server_with_env may have pinned them).
+    os.environ.pop("OPENAPI_DOCS_BASIC_USER", None)
+    os.environ.pop("OPENAPI_DOCS_BASIC_PASSWORD", None)
     os.environ["DUCT_OPENAPI_DOCS_BASIC_USER"] = "shirish"
     os.environ["DUCT_OPENAPI_DOCS_BASIC_PASSWORD"] = "duct-secret"
     try:
@@ -87,22 +96,16 @@ def test_duct_prefixed_openapi_basic_auth_env_names():
 
 
 def test_openapi_docs_require_basic_auth_when_password_set():
-    os.environ["EXPOSE_OPENAPI_DOCS"] = "true"
-    os.environ["OPENAPI_DOCS_BASIC_PASSWORD"] = "secret-docs-pass"
-    try:
-        server = _load_server_with_env()
-        client = TestClient(server.app)
-        assert client.get("/docs").status_code == 401
-        assert client.get("/openapi.json").status_code == 401
-        ok = client.get("/docs", auth=("docs", "secret-docs-pass"))
-        assert ok.status_code == 200
-        assert (
-            client.get("/openapi.json", auth=("docs", "secret-docs-pass")).status_code
-            == 200
-        )
-    finally:
-        os.environ.pop("EXPOSE_OPENAPI_DOCS", None)
-        os.environ.pop("OPENAPI_DOCS_BASIC_PASSWORD", None)
+    server = _load_server_with_env(expose_docs=True, docs_password="secret-docs-pass")
+    client = TestClient(server.app)
+    assert client.get("/docs").status_code == 401
+    assert client.get("/openapi.json").status_code == 401
+    ok = client.get("/docs", auth=("docs", "secret-docs-pass"))
+    assert ok.status_code == 200
+    assert (
+        client.get("/openapi.json", auth=("docs", "secret-docs-pass")).status_code
+        == 200
+    )
 
 
 def test_connector_oauth_authorize_redirects_to_google():

@@ -77,11 +77,23 @@ class Configs(BaseSettings):
     # Generate: python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
     credentials_encryption_key: str = ""
 
-    # Asset uploads (Railway Volume mounted at /app/uploads in prod).
-    # When uploads_enabled=true the server mounts the directory at /uploads as
-    # a StaticFiles route. The content agent writes generated images here.
-    uploads_enabled: bool = False
-    uploads_dir:     str  = "/app/uploads"
+    # Image storage backend: "local" (disk + /uploads StaticFiles, the dev
+    # default) or "r2" (Cloudflare R2 over the S3 API, served from R2's CDN).
+    # "" / "auto" picks "r2" automatically when the R2 settings below are all
+    # present, else "local". See service/storage.py.
+    storage_backend: str = ""
+
+    # Local-backend disk root (dev only — prod uses R2, no volume). Defaults to a
+    # gitignored dir under backend/; only the 'local' backend reads it, and the
+    # server serves it at /uploads. No env needed for local dev.
+    uploads_dir: str = Field(default_factory=lambda: str(_BACKEND_DIR / ".uploads"))
+    r2_account_id:        str = ""
+    r2_access_key_id:     str = ""
+    r2_secret_access_key: str = ""
+    r2_bucket:            str = ""
+    # Public base URL the bucket is served from (R2 public dev URL or a custom
+    # CDN domain), e.g. "https://media.getduct.ai". No trailing slash needed.
+    r2_public_base_url:   str = ""
 
     # PostBridge — server-wide API key (MVP). Used as fallback when no
     # ConnectorCredential row exists for the calling user. Future: drop
@@ -120,6 +132,17 @@ class Configs(BaseSettings):
     gemini_api_key: str = ""
     openai_api_key: str = ""
     anthropic_api_key: str = ""
+    # Long-lived Claude OAuth token from `claude setup-token` (the operator's own
+    # Pro/Max subscription). Detected here only so the engine-status endpoint can
+    # report v3 as authenticated; the Claude Agent SDK subprocess reads the real
+    # CLAUDE_CODE_OAUTH_TOKEN env var itself. Intended for local/self-hosted
+    # individual use — NOT for routing end users' requests through a subscription
+    # (see https://code.claude.com/docs/en/legal-and-compliance). Production
+    # multi-user serving must use ANTHROPIC_API_KEY (Claude Console).
+    claude_code_oauth_token: str = Field(
+        default="",
+        validation_alias=AliasChoices("CLAUDE_CODE_OAUTH_TOKEN"),
+    )
     # Engine selection: "v1" (LangChain), "v2" (Google ADK), "v3" (Claude Agent SDK)
     generate_engine: str = Field(default="v1")
 
@@ -185,6 +208,35 @@ class Configs(BaseSettings):
 @lru_cache
 def get_configs() -> Configs:
     return Configs()
+
+
+def allow_subscription_auth() -> bool:
+    """True when the Claude Agent SDK may authenticate via a local Claude Code
+    OAuth login (subscription credit) instead of an explicit ANTHROPIC_API_KEY.
+
+    Only permitted in local dev — prod must always run on an explicit API key.
+    When this returns True, an empty api_key is allowed to fall through to the
+    SDK, which reuses the `claude` OAuth token in ~/.claude.
+    See https://support.claude.com/en/articles/15036540
+    """
+    return get_configs().app_env == "local"
+
+
+def claude_oauth_available() -> bool:
+    """True when Claude (v3) can authenticate without an explicit ANTHROPIC_API_KEY.
+
+    Two non-API-key paths, both for the operator's *own* ordinary use:
+      - CLAUDE_CODE_OAUTH_TOKEN, a long-lived token from `claude setup-token`
+        (works headless/self-hosted), or
+      - a local `claude` OAuth login in ~/.claude (dev only).
+
+    Per Anthropic's policy, subscription credentials must NOT route end users'
+    requests on a third-party product — production multi-user serving uses an
+    ANTHROPIC_API_KEY from the Claude Console. This helper exists so a single
+    operator running their own instance isn't blocked, not to serve users.
+    See https://code.claude.com/docs/en/legal-and-compliance
+    """
+    return bool(get_configs().claude_code_oauth_token) or allow_subscription_auth()
 
 
 def sentry_otel_env(cfg: Configs) -> dict[str, str]:

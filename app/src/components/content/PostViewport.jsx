@@ -1,7 +1,23 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import {
+  Check,
+  Hash,
+  Image as ImageIcon,
+  Images,
+  RefreshCw,
+  Send,
+  Sparkles,
+  Video,
+  Wand2,
+} from "lucide-react";
 import { patchPost } from "../../lib/contentApi";
+import { extractStyleHead } from "../../lib/slideDoc";
+import { statusMeta } from "../../lib/contentStatus";
+import { PostStatus } from "../../lib/contentEnums";
+import { PlatformGlyph, platformMeta } from "./platformGlyphs";
+import SlidesCarousel from "./SlidesCarousel";
 
 const STREAMING_HINTS = [
   "Picking the hook…",
@@ -10,564 +26,379 @@ const STREAMING_HINTS = [
   "Sketching image prompts…",
 ];
 
+const TYPE_ICON = { slideshow: Images, video: Video, image: ImageIcon };
+
 /**
- * Right-pane viewport for draft_post sessions.
- *
- * Layout: slides iframe on top (sandboxed via srcDoc, no allow-scripts so
- * the model's HTML can never run JS in this origin), editable fields
- * underneath (caption, hashtags, hook, audio note), Commit button at top
- * right to persist staged edits via PATCH /api/content/posts/{id}.
+ * Post viewport — preview-first. The right pane shows what actually ships: the
+ * live slides preview plus the publishable copy (caption + hashtags). Slide
+ * layout, image prompts, hook framing and the creative brief are all edited by
+ * talking to the agent in chat, so the pane stays focused instead of being a
+ * wall of form fields. Those fields still persist (see editedFields) — they're
+ * just no longer surfaced here. Works full-page and inside the revise split-pane.
  *
  * Props:
- *   - payload: { type: "post", id, slides_html, caption, hashtags[], hook_text, ... }
+ *   - payload   : { type:"post", id, slides, slides_html, caption, hashtags[], ... }
+ *   - canPublish, onPublish, onRevise — optional header actions (detail page)
+ *   - onSendMessage(text) — when present (active session), enables the
+ *     "approve & generate images" action, which sends a chat turn to the agent.
+ *     Absent on the read-only detail page.
  */
-export default function PostViewport({ payload }) {
+// Drop transient client-only fields (e.g. _preview_uri, the instant-paint inline
+// data URI) from slides + cells before persisting — the DB stores only real urls.
+function stripTransient(slides) {
+  if (!Array.isArray(slides)) return slides;
+  return slides.map(({ _preview_uri, items, ...s }) => ({
+    ...s,
+    ...(Array.isArray(items)
+      ? { items: items.map(({ _preview_uri: _p, ...it }) => it) }
+      : items !== undefined ? { items } : {}),
+  }));
+}
+
+export default function PostViewport({ payload, canPublish = false, onPublish, onRevise, onSendMessage }) {
   const [draft, setDraft] = useState(null);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Sync from incoming payload — but only when the agent's payload is
-  // strictly newer than our local edits. We detect "strictly newer" by
-  // post id and updated_at if present, otherwise drop staged edits
-  // whenever a new payload arrives if not dirty.
   useEffect(() => {
     if (!payload || payload.type !== "post") return;
-    if (!dirty) {
-      setDraft(payload);
-      return;
-    }
-    // Dirty: keep the user's edits; the agent's payload waits until the
-    // user commits or discards. (MVP behaviour — Phase 6 will add a "the
-    // agent updated this post — merge / keep mine / accept" prompt.)
+    if (!dirty) setDraft(payload);
   }, [payload, dirty]);
 
   const post = draft || payload;
+  // CSS for the live preview comes from the backend-rendered slides_html (it
+  // inlines the full style registry + layout CSS, all content-independent).
+  const headHtml = useMemo(() => extractStyleHead(post?.slides_html || ""), [post?.slides_html]);
 
   function patch(field, value) {
     setDraft((prev) => ({ ...(prev || payload || {}), [field]: value }));
     setDirty(true);
   }
 
-  async function handleCommit() {
+  // The editable fields sent on every save. `slides` is the source of truth —
+  // we never send slides_html (the backend re-renders it from slides + layout).
+  // Caption + hashtags are edited here; the rest are edited via chat but still
+  // round-trip so an agent edit + a manual caption tweak persist together.
+  function editedFields() {
+    return {
+      caption: post.caption, hashtags: post.hashtags,
+      hook_type: post.hook_type, hook_text: post.hook_text, hook_emotion: post.hook_emotion,
+      save_cta: post.save_cta, tiktok_title: post.tiktok_title, audio_note: post.audio_note,
+      bridge_text: post.bridge_text, strategic_note: post.strategic_note,
+      visual_brief: post.visual_brief, emotional_arc: post.emotional_arc,
+      camera_ref_pool: post.camera_ref_pool,
+      layout: post.layout, slides: stripTransient(post.slides),
+      platforms: post.platforms,
+    };
+  }
+
+  async function persist(statusValue) {
     if (!post?.id) return;
     setSaving(true);
     setSaveError("");
     try {
-      const updated = await patchPost(post.id, {
-        caption:      post.caption,
-        hashtags:     post.hashtags,
-        hook_type:    post.hook_type,
-        hook_text:    post.hook_text,
-        hook_emotion: post.hook_emotion,
-        save_cta:     post.save_cta,
-        tiktok_title: post.tiktok_title,
-        audio_note:   post.audio_note,
-        bridge_text:  post.bridge_text,
-        strategic_note: post.strategic_note,
-        visual_brief:  post.visual_brief,
-        emotional_arc: post.emotional_arc,
-        camera_ref_pool: post.camera_ref_pool,
-        slides_html:  post.slides_html,
-        platforms:    post.platforms,
-        status:       post.status,
-      });
+      const updated = await patchPost(post.id, { ...editedFields(), status: statusValue });
       setDraft(updated);
       setDirty(false);
+      return updated;
     } catch (err) {
       setSaveError(err.message || "Failed to save post.");
+      throw err;
     } finally {
       setSaving(false);
     }
   }
 
-  function handleDiscard() {
-    setDraft(payload);
-    setDirty(false);
-    setSaveError("");
+  // Save user edits, status unchanged.
+  function handleCommit() { return persist(post.status); }
+
+  // Keep the post: promote pending → draft (and persist current edits in the
+  // same PATCH). Until this runs, the post is hidden from the board + the agent.
+  function handleSave() { return persist(PostStatus.DRAFT); }
+
+  // Persist any pending edits before asking the agent to act, so the agent
+  // (which reads the saved post) works against the latest copy.
+  async function commitIfDirty() {
+    if (dirty) {
+      try { await handleCommit(); } catch { /* surfaced via saveError */ }
+    }
   }
 
-  if (!post || post.type === undefined || (post.type && post.type !== "post" && !post.id)) {
+  function handleDiscard() { setDraft(payload); setDirty(false); setSaveError(""); }
+
+  if (!post || (post.type && post.type !== "post" && !post.id)) {
     return <DraftingPulse />;
   }
 
+  const slides = Array.isArray(post.slides) ? post.slides : [];
+  const slideIdx = Math.min(currentIndex, Math.max(0, slides.length - 1));
+
+  const status = post.status || "pending";
+  const meta = statusMeta(status);
+  const TypeIcon = TYPE_ICON[post.post_type] || Images;
+  const platforms = Array.isArray(post.platforms) ? post.platforms : [];
+  const dateLabel = post.posted_at
+    ? `Posted ${new Date(post.posted_at).toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" })}`
+    : post.scheduled_at
+    ? `Scheduled ${new Date(post.scheduled_at).toLocaleDateString("en", { month: "short", day: "numeric" })}`
+    : "Not scheduled";
+
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      <div className="border-b border-border/60 px-4 py-2 flex items-center justify-between shrink-0">
-        <div className="min-w-0">
-          <p className="text-sm font-medium truncate">
-            {post.topic || post.post_dir_slug || "Untitled post"}
-          </p>
-          <p className="text-xs text-muted-foreground truncate">
-            {post.pillar ? `pillar: ${post.pillar}` : ""}
-            {post.hook_type ? ` · hook: ${post.hook_type}` : ""}
-            {typeof post.slide_count === "number" ? ` · ${post.slide_count} slides` : ""}
-          </p>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          {dirty && (
-            <button
-              type="button"
-              onClick={handleDiscard}
-              className="text-xs text-muted-foreground hover:text-foreground"
-            >
-              Discard edits
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={handleCommit}
-            disabled={!dirty || saving}
-            className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-40"
-          >
-            {saving ? "Saving…" : dirty ? "Commit edits" : "Saved"}
-          </button>
-        </div>
-      </div>
+    <div className="flex h-full flex-col overflow-hidden">
+      {/* Unified header */}
+      <header className="shrink-0 border-b border-border/60 px-5 py-3">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="truncate text-base font-semibold leading-tight">
+              {post.topic || post.post_dir_slug || "Untitled post"}
+            </h1>
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium ${meta.accentClass}`}>
+                <span className={`size-1.5 rounded-full ${meta.dotClass}`} /> {meta.label}
+              </span>
+              {post.pillar && (
+                <span className="rounded-full bg-primary/10 px-2 py-0.5 font-medium text-primary">{prettify(post.pillar)}</span>
+              )}
+              {post.format_name && (
+                <span className="rounded-full border border-border/70 px-2 py-0.5">{post.format_name}</span>
+              )}
+              <span className="inline-flex items-center gap-1"><TypeIcon className="size-3" /> {post.post_type || "slideshow"}</span>
+              {typeof post.slide_count === "number" && post.slide_count > 0 && <span>· {post.slide_count} slides</span>}
+              <span>· {dateLabel}</span>
+              {platforms.length > 0 && (
+                <span className="flex items-center gap-1">
+                  {platforms.map((p) => {
+                    const pm = platformMeta(p);
+                    return (
+                      <span key={p} title={pm.label} className="flex size-4 items-center justify-center rounded text-white" style={{ backgroundColor: pm.color }}>
+                        <PlatformGlyph platform={p} className="size-2.5" />
+                      </span>
+                    );
+                  })}
+                </span>
+              )}
+            </div>
+          </div>
 
-      {saveError && (
-        <div className="border-b border-destructive/30 bg-destructive/8 px-4 py-2 text-xs text-destructive">
-          {saveError}
+          <div className="flex shrink-0 items-center gap-2">
+            {dirty && (
+              <button type="button" onClick={handleDiscard} className="text-xs text-muted-foreground hover:text-foreground">
+                Discard
+              </button>
+            )}
+            {post?.status === PostStatus.PENDING ? (
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={saving}
+                title="Keep this post — adds it to your board"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
+              >
+                {saving ? "Saving…" : <><Check className="size-3.5" /> Save</>}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleCommit}
+                disabled={!dirty || saving}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-foreground px-3 py-1.5 text-xs font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-40"
+              >
+                {saving ? "Saving…" : dirty ? "Commit edits" : <><Check className="size-3.5" /> Saved</>}
+              </button>
+            )}
+            {canPublish && onPublish && (
+              <button type="button" onClick={onPublish} className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium hover:bg-muted/50">
+                <Send className="size-3.5" /> Publish
+              </button>
+            )}
+            {onRevise && (
+              <button type="button" onClick={onRevise} className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90">
+                <Wand2 className="size-3.5" /> Revise with Duct
+              </button>
+            )}
+          </div>
         </div>
-      )}
+        {saveError && <p className="mt-2 text-xs text-destructive">{saveError}</p>}
+      </header>
 
-      <div className="flex-1 overflow-auto p-4 space-y-4 min-h-0">
-        <SlidesPreview html={post.slides_html} />
-        <CaptionPanel value={post.caption || ""} onChange={(v) => patch("caption", v)} />
-        <HashtagPanel
-          value={Array.isArray(post.hashtags) ? post.hashtags : []}
-          onChange={(v) => patch("hashtags", v)}
-        />
-        <HookEmotionPills value={post.hook_emotion || ""} onChange={(v) => patch("hook_emotion", v)} />
-        <HookPanel
-          hookType={post.hook_type || ""}
-          hookText={post.hook_text || ""}
-          saveCta={post.save_cta || ""}
-          onChange={(field, v) => patch(field, v)}
-        />
-        <AudioPanel value={post.audio_note || ""} onChange={(v) => patch("audio_note", v)} />
-        <BridgeTextPanel value={post.bridge_text || ""} onChange={(v) => patch("bridge_text", v)} />
-        <StrategicNotePanel value={post.strategic_note || ""} onChange={(v) => patch("strategic_note", v)} />
-        <VisualBriefPanel
-          value={post.visual_brief || ""}
-          cameraRefPool={post.camera_ref_pool || ""}
-          onChange={(v) => patch("visual_brief", v)}
-          onPoolChange={(v) => patch("camera_ref_pool", v)}
-        />
-        <EmotionalArcPanel value={post.emotional_arc || ""} onChange={(v) => patch("emotional_arc", v)} />
-        <AssetStrip imagePrompts={post.image_prompts || []} />
+      {/* Body — the slides preview + the publishable copy (caption + hashtags).
+          Slide layout, image prompts, hook and creative-brief edits all happen
+          through the agent chat, so the pane stays focused on what ships. */}
+      <div className="min-h-0 flex-1 overflow-auto">
+        <div className="mx-auto max-w-2xl space-y-4 p-5">
+          <SlidesCarousel slides={slides} headHtml={headHtml} index={slideIdx} onIndexChange={setCurrentIndex} />
+
+          <BulkImageBar slides={slides} onSendMessage={onSendMessage} commitIfDirty={commitIfDirty} currentIndex={slideIdx} />
+
+          <PostCopy post={post} patch={patch} />
+        </div>
       </div>
     </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Subpanels
+// Primitives
+// ---------------------------------------------------------------------------
+
+function prettify(s) {
+  return String(s || "").replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function Labeled({ label, hint, children }) {
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-muted-foreground">{label}</span>
+        {hint && <span className="text-[11px] text-muted-foreground/70">{hint}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+const INPUT_CLS =
+  "w-full rounded-xl border border-input bg-input/40 px-3 py-2 text-sm outline-none transition-[box-shadow,border-color] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/25 placeholder:text-muted-foreground";
+
+function Textarea({ value, onChange, ...props }) {
+  return <textarea value={value} onChange={(e) => onChange(e.target.value)} className={`${INPUT_CLS} resize-y`} {...props} />;
+}
+
+// ---------------------------------------------------------------------------
+// Hashtags
+// ---------------------------------------------------------------------------
+
+function HashtagInput({ value, onChange }) {
+  const [draft, setDraft] = useState("");
+  function add() {
+    const tag = draft.trim().replace(/^#?/, "#");
+    if (tag === "#") { setDraft(""); return; }
+    if (!value.includes(tag)) onChange([...value, tag]);
+    setDraft("");
+  }
+  function onKey(e) {
+    if (e.key === "Enter" || e.key === ",") { e.preventDefault(); add(); }
+    else if (e.key === "Backspace" && !draft && value.length) onChange(value.slice(0, -1));
+  }
+  return (
+    <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-input bg-input/40 px-2.5 py-2">
+      {value.map((tag, i) => (
+        <span key={i} className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
+          {tag}
+          <button type="button" onClick={() => onChange(value.filter((_, j) => j !== i))} className="text-primary/60 hover:text-primary">×</button>
+        </span>
+      ))}
+      <span className="inline-flex min-w-[120px] flex-1 items-center gap-1 text-muted-foreground">
+        <Hash className="size-3" />
+        <input value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={onKey} onBlur={add}
+          placeholder="Add a tag, press Enter…" className="flex-1 bg-transparent text-xs outline-none" />
+      </span>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Publishable copy — caption + hashtags, always visible
+// ---------------------------------------------------------------------------
+
+// The only post-level fields surfaced in the viewport: the caption and hashtags
+// that actually get published. Everything else (hook framing, slide layout,
+// image prompts, creative brief) is edited by asking the agent in chat.
+function PostCopy({ post, patch }) {
+  return (
+    <section className="space-y-4 rounded-2xl border border-border bg-card p-4">
+      <Labeled label="Caption" hint="first line is the hook — 2–3 sentences">
+        <Textarea rows={4} value={post.caption || ""} onChange={(v) => patch("caption", v)} placeholder="First line is the hook. Keep it 2–3 sentences." />
+      </Labeled>
+      <Labeled label="Hashtags">
+        <HashtagInput value={Array.isArray(post.hashtags) ? post.hashtags : []} onChange={(v) => patch("hashtags", v)} />
+      </Labeled>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Slides & images — pending/stale detection drives the batch image action
+// ---------------------------------------------------------------------------
+
+function isTargetStale(t) {
+  return Boolean(t?.image_url) && (t.image_prompt || "").trim() !== (t.image_prompt_used || "").trim();
+}
+
+// Flatten slides into image "units" — one per single-image slide, one per cell
+// of a collage / before-after slide. text slides contribute none.
+function imageUnits(slides) {
+  const units = [];
+  slides.forEach((s, si) => {
+    if (Array.isArray(s.items) && s.items.length) {
+      s.items.forEach((it, ii) => units.push({ s, si, it, ii }));
+    } else if (s.kind !== "text") {
+      units.push({ s, si, it: null, ii: null });
+    }
+  });
+  return units;
+}
+
+// Batch image actions — generate all pending, or regenerate everything stale.
+// Auto-hides when there's nothing to do, so it's invisible most of the time.
+function BulkImageBar({ slides, onSendMessage, commitIfDirty, currentIndex = 0 }) {
+  if (!onSendMessage) return null;
+  const units = imageUnits(slides);
+  const t = (u) => (u.it ? u.it : u.s);
+  const pending = units.filter((u) => (t(u).image_prompt || "").trim() && !t(u).image_url).length;
+  // Regenerate is scoped to the slide the user is viewing — never all of them.
+  // (The per-slide "outdated" badge flags the others as you navigate.)
+  const cur = slides[Math.min(currentIndex, Math.max(0, slides.length - 1))];
+  const curStale =
+    !!cur &&
+    (isTargetStale(cur) ||
+      (Array.isArray(cur.items) && cur.items.some((it) => isTargetStale(it))));
+  if (pending === 0 && !curStale) return null;
+  async function ask(text) { await commitIfDirty?.(); onSendMessage(text); }
+  return (
+    <div className="flex flex-wrap gap-2">
+      {pending > 0 && (
+        <button
+          type="button"
+          onClick={() => ask("The draft looks good — start the images, ONE AT A TIME with me in the loop. Generate the next slide (or cell) that still needs an image, critique it, render the composed slide, then STOP and wait for my feedback before the next one. Don't batch them — apply what I tell you to the following slides.")}
+          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+        >
+          <Sparkles className="size-3.5" /> Approve &amp; generate {pending} image{pending > 1 ? "s" : ""} — one by one
+        </button>
+      )}
+      {curStale && (
+        <button
+          type="button"
+          onClick={() => ask(`Regenerate just the image for ${cur.slide_id} — the slide I'm viewing — to match its updated prompt. Leave every other slide exactly as it is.`)}
+          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-amber-400/50 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-600 transition-colors hover:bg-amber-500/20 dark:text-amber-400"
+        >
+          <RefreshCw className="size-3.5" /> This slide is outdated — regenerate
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Drafting state
 // ---------------------------------------------------------------------------
 
 function DraftingPulse() {
   const [idx, setIdx] = useState(0);
   useEffect(() => {
-    const t = setInterval(() => setIdx(i => (i + 1) % STREAMING_HINTS.length), 1800);
+    const t = setInterval(() => setIdx((i) => (i + 1) % STREAMING_HINTS.length), 1800);
     return () => clearInterval(t);
   }, []);
   return (
-    <div className="flex flex-col items-center justify-center h-full text-center px-6 gap-3">
-      <div className="size-10 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+    <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
+      <div className="size-10 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
       <p className="text-sm font-medium">Drafting the post…</p>
-      <p className="text-xs text-muted-foreground transition-opacity duration-500">
-        {STREAMING_HINTS[idx]}
-      </p>
-      <p className="text-[10px] text-muted-foreground/60 max-w-xs">
-        Slides, caption, and hashtags will appear here as soon as the draft is ready.
-        This usually takes 20–40 seconds.
+      <p className="text-xs text-muted-foreground transition-opacity duration-500">{STREAMING_HINTS[idx]}</p>
+      <p className="max-w-xs text-[10px] text-muted-foreground/60">
+        Slides, caption, and hashtags appear here as soon as the draft is ready. Usually 20–40 seconds.
       </p>
     </div>
-  );
-}
-
-
-function SlidesPreview({ html }) {
-  // Use srcDoc with sandbox — no allow-scripts means inline event handlers
-  // in the model's HTML cannot run. Strip explicit <script> tags as a belt-
-  // and-braces measure in case sandbox attrs are misinterpreted.
-  const safeHtml = useMemo(() => {
-    if (!html) return "";
-    return String(html).replace(/<script\b[\s\S]*?<\/script>/gi, "");
-  }, [html]);
-
-  return (
-    <section className="rounded-lg border border-border bg-muted/20">
-      <header className="flex items-center justify-between px-3 py-1.5 border-b border-border/50">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          Slides preview
-        </span>
-        <span className="text-[10px] text-muted-foreground">sandboxed iframe</span>
-      </header>
-      <div className="bg-black/80">
-        {safeHtml ? (
-          <iframe
-            title="slides preview"
-            sandbox="allow-same-origin"
-            srcDoc={safeHtml}
-            className="w-full h-[600px] bg-white"
-          />
-        ) : (
-          <div className="h-[200px] flex items-center justify-center text-xs text-muted-foreground/70">
-            No slides_html yet.
-          </div>
-        )}
-      </div>
-    </section>
-  );
-}
-
-function CaptionPanel({ value, onChange }) {
-  return (
-    <section className="rounded-lg border border-border bg-background">
-      <header className="px-3 py-1.5 border-b border-border/50">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Caption</span>
-      </header>
-      <textarea
-        rows={4}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="First line is the hook. Keep it 2–3 sentences."
-        className="w-full resize-y rounded-b-lg border-0 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-      />
-    </section>
-  );
-}
-
-function HashtagPanel({ value, onChange }) {
-  const [draft, setDraft] = useState("");
-
-  function addFromInput() {
-    const tag = draft.trim().replace(/^#?/, "#");
-    if (tag === "#") {
-      setDraft("");
-      return;
-    }
-    if (!value.includes(tag)) onChange([...value, tag]);
-    setDraft("");
-  }
-
-  function handleKey(e) {
-    if (e.key === "Enter" || e.key === ",") {
-      e.preventDefault();
-      addFromInput();
-    } else if (e.key === "Backspace" && !draft && value.length) {
-      onChange(value.slice(0, -1));
-    }
-  }
-
-  return (
-    <section className="rounded-lg border border-border bg-background">
-      <header className="px-3 py-1.5 border-b border-border/50">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Hashtags</span>
-      </header>
-      <div className="flex flex-wrap items-center gap-1.5 px-3 py-2">
-        {value.map((tag, i) => (
-          <span key={i} className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs">
-            {tag}
-            <button
-              type="button"
-              onClick={() => onChange(value.filter((_, j) => j !== i))}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              ×
-            </button>
-          </span>
-        ))}
-        <input
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={handleKey}
-          onBlur={addFromInput}
-          placeholder="Add a tag, press Enter…"
-          className="flex-1 min-w-[120px] bg-transparent text-xs focus:outline-none"
-        />
-      </div>
-    </section>
-  );
-}
-
-const HOOK_EMOTIONS = [
-  { value: "frustration", hint: "I did everything right and still…" },
-  { value: "shock",       hint: "A [authority] just told me…" },
-  { value: "disbelief",   hint: "A free app knew more than my $300/hr…" },
-  { value: "anger",       hint: "They're selling you the wrong…" },
-  { value: "sadness",     hint: "I spent [years/money] on…" },
-];
-
-function HookEmotionPills({ value, onChange }) {
-  return (
-    <section className="rounded-lg border border-border bg-background">
-      <header className="px-3 py-1.5 border-b border-border/50 flex items-center justify-between">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          Hook emotion
-        </span>
-        <span className="text-[10px] text-muted-foreground/70">
-          drives slide 1 — pick one
-        </span>
-      </header>
-      <div className="px-3 py-2 flex flex-wrap gap-1.5">
-        {HOOK_EMOTIONS.map(({ value: v, hint }) => {
-          const active = value === v;
-          return (
-            <button
-              key={v}
-              type="button"
-              onClick={() => onChange(active ? "" : v)}
-              title={hint}
-              className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${
-                active
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border text-muted-foreground hover:bg-muted/50"
-              }`}
-            >
-              {v}
-            </button>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
-
-function BridgeTextPanel({ value, onChange }) {
-  // Hidden when empty + not focused — only slide-6 bridges show
-  const [forceShow, setForceShow] = useState(false);
-  const visible = forceShow || (value && value.trim());
-  if (!visible) {
-    return (
-      <button
-        type="button"
-        onClick={() => setForceShow(true)}
-        className="text-xs text-muted-foreground hover:text-foreground transition-colors text-left"
-      >
-        + Add slide-6 bridge (personal discovery beat)
-      </button>
-    );
-  }
-  return (
-    <section className="rounded-lg border border-border bg-background">
-      <header className="px-3 py-1.5 border-b border-border/50 flex items-center justify-between">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          Slide 6 — bridge
-        </span>
-        <span className="text-[10px] text-muted-foreground/70">
-          first-person, slightly self-deprecating
-        </span>
-      </header>
-      <textarea
-        rows={2}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder='"I found a free app for this. one photo. 30 seconds. I kind of wish I hadn’t."'
-        className="w-full resize-y rounded-b-lg border-0 bg-transparent px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
-      />
-    </section>
-  );
-}
-
-
-function HookPanel({ hookType, hookText, saveCta, onChange }) {
-  return (
-    <section className="rounded-lg border border-border bg-background space-y-2">
-      <header className="px-3 py-1.5 border-b border-border/50">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Hook</span>
-      </header>
-      <div className="px-3 pb-2 space-y-2">
-        <input
-          value={hookType}
-          onChange={(e) => onChange("hook_type", e.target.value)}
-          placeholder="hook type (e.g. identity_challenge)"
-          className="w-full rounded-md border border-input bg-background px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
-        />
-        <textarea
-          rows={2}
-          value={hookText}
-          onChange={(e) => onChange("hook_text", e.target.value)}
-          placeholder="hook text — what slide 1 says"
-          className="w-full resize-y rounded-md border border-input bg-background px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
-        />
-        <input
-          value={saveCta}
-          onChange={(e) => onChange("save_cta", e.target.value)}
-          placeholder='save CTA — e.g. "save this — the self-test is on slide 3"'
-          className="w-full rounded-md border border-input bg-background px-2 py-1 text-xs italic text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-        />
-      </div>
-    </section>
-  );
-}
-
-function AudioPanel({ value, onChange }) {
-  return (
-    <section className="rounded-lg border border-border bg-background">
-      <header className="px-3 py-1.5 border-b border-border/50">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Audio note</span>
-      </header>
-      <input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="one line on the trending sound shape that fits"
-        className="w-full rounded-b-lg border-0 bg-transparent px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
-      />
-    </section>
-  );
-}
-
-function StrategicNotePanel({ value, onChange }) {
-  // Hide entirely when empty + user hasn't focused — keeps the viewport
-  // uncluttered for posts that don't carry agent reasoning.
-  const [forceShow, setForceShow] = useState(false);
-  const visible = forceShow || (value && value.trim());
-  if (!visible) {
-    return (
-      <button
-        type="button"
-        onClick={() => setForceShow(true)}
-        className="text-xs text-muted-foreground hover:text-foreground transition-colors text-left"
-      >
-        + Add strategic note (why this post works)
-      </button>
-    );
-  }
-  return (
-    <section className="rounded-lg border border-border bg-muted/20">
-      <header className="px-3 py-1.5 border-b border-border/50 flex items-center justify-between">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          Why this works
-        </span>
-        <span className="text-[10px] text-muted-foreground/70">agent reasoning · editable</span>
-      </header>
-      <textarea
-        rows={2}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="1-2 sentences: which pillar this reinforces, who it targets, why the hook fits."
-        className="w-full resize-y rounded-b-lg border-0 bg-transparent px-3 py-2 text-xs italic focus:outline-none focus:ring-2 focus:ring-ring"
-      />
-    </section>
-  );
-}
-
-
-const CAMERA_REF_POOLS = [
-  { value: "selfie-talking", hint: "default — indoor, person speaking to camera" },
-  { value: "lifestyle",      hint: "outdoor / educational / gentle arc" },
-  { value: "closeup",        hint: "intimate / confessional / sadness" },
-];
-
-function VisualBriefPanel({ value, cameraRefPool, onChange, onPoolChange }) {
-  const [forceShow, setForceShow] = useState(false);
-  const visible = forceShow || (value && value.trim()) || (cameraRefPool && cameraRefPool.trim());
-  if (!visible) {
-    return (
-      <button
-        type="button"
-        onClick={() => setForceShow(true)}
-        className="text-xs text-muted-foreground hover:text-foreground transition-colors text-left"
-      >
-        + Add visual brief (lighting / posture / camera pool)
-      </button>
-    );
-  }
-  return (
-    <section className="rounded-lg border border-border bg-muted/10">
-      <header className="px-3 py-1.5 border-b border-border/50 flex items-center justify-between gap-2">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          Visual brief
-        </span>
-        <div className="flex items-center gap-1">
-          {CAMERA_REF_POOLS.map(({ value: v, hint }) => {
-            const active = cameraRefPool === v;
-            return (
-              <button
-                key={v}
-                type="button"
-                onClick={() => onPoolChange(active ? "" : v)}
-                title={hint}
-                className={`text-[10px] px-1.5 py-0.5 rounded border transition-colors ${
-                  active
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border text-muted-foreground hover:bg-muted/50"
-                }`}
-              >
-                {v}
-              </button>
-            );
-          })}
-        </div>
-      </header>
-      <textarea
-        rows={5}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="Lighting / setting / posture / skin texture / gesture arc / copy voice — drives copy + every image prompt."
-        className="w-full resize-y rounded-b-lg border-0 bg-transparent px-3 py-2 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-ring"
-      />
-    </section>
-  );
-}
-
-
-function EmotionalArcPanel({ value, onChange }) {
-  const [forceShow, setForceShow] = useState(false);
-  const visible = forceShow || (value && value.trim());
-  if (!visible) {
-    return (
-      <button
-        type="button"
-        onClick={() => setForceShow(true)}
-        className="text-xs text-muted-foreground hover:text-foreground transition-colors text-left"
-      >
-        + Add emotional arc (5-slide energy map)
-      </button>
-    );
-  }
-  return (
-    <section className="rounded-lg border border-border bg-muted/10">
-      <header className="px-3 py-1.5 border-b border-border/50 flex items-center justify-between">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          Emotional arc
-        </span>
-        <span className="text-[10px] text-muted-foreground/70">
-          one line per slide — peak at 03, vulnerable at 04, still at 05
-        </span>
-      </header>
-      <textarea
-        rows={5}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={"01: quiet, holding phone at eye level\n02: leaning in, brow tightening\n03: animated, mid-explanation\n04: looks away, hand on collarbone\n05: direct gaze, soft mouth, settled"}
-        className="w-full resize-y rounded-b-lg border-0 bg-transparent px-3 py-2 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-ring"
-      />
-    </section>
-  );
-}
-
-
-function AssetStrip({ imagePrompts }) {
-  if (!Array.isArray(imagePrompts) || imagePrompts.length === 0) return null;
-  return (
-    <section className="rounded-lg border border-border bg-background">
-      <header className="px-3 py-1.5 border-b border-border/50">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          Image prompts ({imagePrompts.length})
-        </span>
-      </header>
-      <ul className="divide-y divide-border/40">
-        {imagePrompts.map((p, i) => (
-          <li key={i} className="px-3 py-2 text-xs">
-            <p className="font-mono text-[10px] text-muted-foreground mb-0.5">{p.slide_id || `slide-${i + 1}`}</p>
-            <p className="line-clamp-3">{p.prompt}</p>
-          </li>
-        ))}
-      </ul>
-    </section>
   );
 }

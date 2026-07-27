@@ -14,6 +14,7 @@ from __future__ import annotations
 from claude_agent_sdk import AgentDefinition
 
 from agents.content.prompts import RESEARCH_PILLAR_PROMPT
+from agents.content.schema import ContentTool
 from agents.models import AgentTool, ModelName
 
 RESEARCH_PILLAR_AGENT = AgentDefinition(
@@ -31,6 +32,6 @@ RESEARCH_PILLAR_AGENT = AgentDefinition(
         # high-performing TikTok posts the user (or a prior discovery
         # run) saved. Strictly cheaper + higher-signal than WebSearch
         # alone — bypasses Google ranking noise.
-        "mcp__duct_content__fetch_discovered_references",
+        ContentTool.FETCH_DISCOVERED_REFERENCES.value,
     ],
 )

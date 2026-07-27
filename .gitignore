@@ -5,6 +5,7 @@ Desktop.ini
 
 # Test output artifacts (locally generated; not committed)
 backend/tests/outputs/
+backend/.uploads/
 
 # Python
 **/__pycache__/

@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 
 /**
- * Chat input for the Content Marketing Agent workspace.
+ * Chat input for the Content Studio agent workspace.
  * Pure clone of AuditInput — content sessions may not need image attachments
  * yet but keeping the same shape means future image-paste features come free.
  */

@@ -255,6 +255,7 @@ class GenerateInsightsAgent:
         all_briefs: dict[str, Any],
         supplementary: dict[str, Any] | None = None,
         business_context: dict[str, Any] | None = None,
+        user_context: dict[str, Any] | None = None,
         mode: str = "paid_ads",
         emit_event: Callable | None = None,
     ) -> SynthesisSchema:
@@ -271,6 +272,7 @@ class GenerateInsightsAgent:
             "all_briefs": all_briefs,
             "supplementary_data": supplementary or {},
             "business_context": business_context,
+            "user_context": user_context,
             "custom_goal": custom_goal or "",
             "context": context or "",
             "messages": [],

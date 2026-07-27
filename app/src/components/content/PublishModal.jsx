@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
+  listLinkedAccounts,
   listSocialAccounts,
   publishPost,
 } from "@/lib/contentApi";
@@ -42,11 +43,21 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
     let cancelled = false;
     (async () => {
       try {
-        const list = await listSocialAccounts(post.project_id);
+        const [list, linked] = await Promise.all([
+          listSocialAccounts(post.project_id),
+          listLinkedAccounts(post.project_id).catch(() => []),
+        ]);
         if (cancelled) return;
         setAccounts(list || []);
-        // Pre-select TikTok accounts if the post targets TikTok by default.
-        if (Array.isArray(post.platforms) && post.platforms.includes("tiktok")) {
+        const availableIds = new Set((list || []).map(a => a.id));
+        const linkedIds = (linked || [])
+          .map(a => Number(a.account_id))
+          .filter(id => availableIds.has(id));
+        if (linkedIds.length > 0) {
+          // Prefer the project's linked accounts.
+          setSelected(new Set(linkedIds));
+        } else if (Array.isArray(post.platforms) && post.platforms.includes("tiktok")) {
+          // Fall back to TikTok accounts when the post targets TikTok.
           const ttIds = (list || []).filter(a => a.platform === "tiktok").map(a => a.id);
           setSelected(new Set(ttIds));
         }

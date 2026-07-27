@@ -4,7 +4,9 @@ Public interface mirrors GenerateInsightsAgent (v1) so routes/generate.py
 can select either engine via a config flag without any other changes.
 
 Key differences from v1:
-- Both phases run inside a single ADK SequentialAgent pipeline.
+- Both phases run inside a single ADK 2.x dynamic-workflow node (the
+  replacement for 1.x's SequentialAgent): an orchestrator node dispatches
+  the two LlmAgent phases via Context.run_node.
 - setup_tools_for_goal() + run_pipeline() replace the separate
   fetch_supplementary_data() / synthesize() calls.
 - fetch_supplementary_data() and synthesize() are kept as no-op stubs for
@@ -30,6 +32,7 @@ from collections.abc import Callable
 from time import perf_counter
 from typing import Any
 
+from google.adk.agents.run_config import RunConfig, StreamingMode
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types as genai_types
@@ -43,8 +46,8 @@ from agents.insights.tools import _register_default_tools
 from agents.engines import Engine, ENGINE_PROVIDER_ENV_VAR as _ENGINE_PROVIDER_ENV_VAR
 from agents.models import ModelName, Provider
 
-from .agents import build_pipeline_agent
-from .schema_compat import parse_synthesis_from_text
+from .agents import SYNTHESIS_AGENT_NAME, build_pipeline_node
+from .schema_compat import extract_json_dict, parse_synthesis_from_text
 from .state_keys import (
     STATE_ALL_BRIEFS,
     STATE_CONNECTED_SRCS,
@@ -67,31 +70,17 @@ logger = logging.getLogger(__name__)
 _APP_NAME = "duct"
 _USER_ID = "system"
 
-# Map (Provider, ModelName) → ADK model string.
-# Gemini: native (google.adk.models.google_llm)
-# Anthropic: native (google.adk.models.anthropic_llm, matches claude-.*-4.* / claude-3-.*)
-# OpenAI: requires google-adk[extensions] (LiteLLM); use openai/<model> prefix if available.
-_ADK_MODEL_MAP: dict[tuple[Provider, ModelName], str] = {
-    # Gemini
-    (Provider.GOOGLE_GENAI, ModelName.GEMINI_2_5_FLASH): "gemini-2.5-flash",
-    (Provider.GOOGLE_GENAI, ModelName.GEMINI_2_5_FLASH_LITE): "gemini-2.5-flash-lite",
-    (Provider.GOOGLE_GENAI, ModelName.GEMINI_3_1_FLASH): "gemini-3.1-flash-preview",
-    (Provider.GOOGLE_GENAI, ModelName.GEMINI_3_1_FLASH_LITE): "gemini-3.1-flash-lite-preview",
-    # Anthropic (model strings match ADK's claude-.*-4.* / claude-3-.* patterns)
-    (Provider.ANTHROPIC, ModelName.CLAUDE_SONNET): "claude-sonnet-4-6",
-    (Provider.ANTHROPIC, ModelName.CLAUDE_HAIKU): "claude-haiku-4-5-20251001",
-    # OpenAI via LiteLLM prefix (requires google-adk[extensions])
-    (Provider.OPENAI, ModelName.GPT_4O): "openai/gpt-4o",
-    (Provider.OPENAI, ModelName.GPT_4O_MINI): "openai/gpt-4o-mini",
-    (Provider.OPENAI, ModelName.GPT_5_MINI): "openai/gpt-5-mini",
-    (Provider.OPENAI, ModelName.GPT_5_4_MINI): "openai/gpt-5.4-mini",
-}
-
 _PROVIDER_ENV_VAR: dict[Provider, str] = _ENGINE_PROVIDER_ENV_VAR[Engine.V2]
 
 
 def _resolve_adk_model_string(provider: Provider, model: ModelName) -> str:
-    return _ADK_MODEL_MAP.get((provider, model), model.value)
+    """ADK model string for a (provider, model). The id is owned by the
+    ModelName enum in agents/models.py; Gemini and Anthropic are native to ADK,
+    while OpenAI routes through LiteLLM and needs an ``openai/`` prefix
+    (requires google-adk[extensions])."""
+    if provider == Provider.OPENAI:
+        return f"openai/{model.value}"
+    return model.value
 
 
 class AdkInsightsRunner:
@@ -191,6 +180,7 @@ class AdkInsightsRunner:
         all_briefs: dict[str, Any],
         supplementary: dict[str, Any] | None = None,
         business_context: dict[str, Any] | None = None,
+        user_context: dict[str, Any] | None = None,
         mode: str = "paid_ads",
     ) -> SynthesisSchema | None:
         """No-op stub — v2 runs both phases together in run_pipeline()."""
@@ -207,6 +197,7 @@ class AdkInsightsRunner:
         context: str,
         all_briefs: dict[str, Any],
         business_context: dict[str, Any] | None = None,
+        user_context: dict[str, Any] | None = None,
         mode: str = "paid_ads",
         customer_id: str = "",
         date_from: str = "",
@@ -225,14 +216,19 @@ class AdkInsightsRunner:
 
         synthesis_system_prompt = get_system_prompt(
             goal=goal,
-            custom_goal=custom_goal,
-            context=context,
-            business_context=business_context,
             mode=mode,
         )
-        all_briefs_text = get_synthesis_user_prompt(all_briefs, mode=mode)
+        all_briefs_text = get_synthesis_user_prompt(
+            all_briefs,
+            mode=mode,
+            business_context=business_context,
+            user_context=user_context,
+            goal=goal,
+            custom_goal=custom_goal,
+            context=context,
+        )
 
-        pipeline = build_pipeline_agent(
+        pipeline = build_pipeline_node(
             model_str=self.model_str,
             adk_tools=adk_tools,
             mode=mode,
@@ -242,7 +238,7 @@ class AdkInsightsRunner:
         session_service = InMemorySessionService()
         session_id = str(uuid.uuid4())
         runner = Runner(
-            agent=pipeline,
+            node=pipeline,
             app_name=_APP_NAME,
             session_service=session_service,
         )
@@ -277,10 +273,24 @@ class AdkInsightsRunner:
             parts=[genai_types.Part(text="Run the insight pipeline.")],
         )
 
+        # Prefer the resolved key: a per-request bring-your-own key already won
+        # over the server key in _resolve_agent_config, so honour it here even if
+        # the server's key is present in the env. ADK reads the provider key from
+        # the environment at run time; we set it here and restore in `finally`.
+        # NOTE: this still mutates the process-global env, so concurrent v2 runs
+        # with *different* keys can race — acceptable for the current low-
+        # concurrency beta; a proper fix passes the key per-model (LiteLlm
+        # api_key) and is tracked as a follow-up.
         env_var = _PROVIDER_ENV_VAR.get(self.provider, "GOOGLE_API_KEY")
         original_env_val = os.environ.get(env_var)
-        if self._api_key and not os.environ.get(env_var):
+        if self._api_key:
             os.environ[env_var] = self._api_key
+
+        # SSE streaming must be requested explicitly in ADK 2.x; without it no
+        # partial events are emitted. We forward only the synthesis agent's
+        # partials so "synthesis_chunk" carries synthesis text (not Phase 1's
+        # tool-result JSON).
+        run_config = RunConfig(streaming_mode=StreamingMode.SSE)
 
         start = perf_counter()
         try:
@@ -288,8 +298,15 @@ class AdkInsightsRunner:
                 user_id=_USER_ID,
                 session_id=session_id,
                 new_message=trigger,
+                run_config=run_config,
             ):
-                if emit_event and event.partial and event.content and event.content.parts:
+                if (
+                    emit_event
+                    and event.partial
+                    and event.author == SYNTHESIS_AGENT_NAME
+                    and event.content
+                    and event.content.parts
+                ):
                     for part in event.content.parts:
                         text = getattr(part, "text", None)
                         if text:
@@ -322,16 +339,10 @@ class AdkInsightsRunner:
 
         state = updated_session.state
 
-        # Parse supplementary data written by DataFetchAgent
-        supplementary_raw = state.get(STATE_SUPPLEMENTARY, "{}")
-        try:
-            if isinstance(supplementary_raw, dict):
-                supplementary = supplementary_raw
-            else:
-                supplementary = json.loads(supplementary_raw)
-        except (json.JSONDecodeError, TypeError):
-            logger.warning("v2: could not parse supplementary_data from state")
-            supplementary = {}
+        # Parse supplementary data written by DataFetchAgent. The agent is asked
+        # for fence-less JSON but models don't always comply, so extraction is
+        # tolerant of markdown fences and surrounding prose.
+        supplementary = extract_json_dict(state.get(STATE_SUPPLEMENTARY, "{}"))
 
         # Parse synthesis written by SynthesisAgent
         synthesis_raw = state.get(STATE_SYNTHESIS_TEXT, "")

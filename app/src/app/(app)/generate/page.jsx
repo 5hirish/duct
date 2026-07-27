@@ -564,7 +564,13 @@ function toPositiveNumber(value) {
 function normalizeIndustryValue(value) {
   const normalized = String(value || "").trim().toLowerCase();
   if (!normalized) return "";
-  if (normalized === "ecommerce" || normalized.includes("retail")) return "ecommerce";
+  if (
+    normalized === "ecommerce" ||
+    normalized.includes("retail") ||
+    normalized.includes("fashion") ||
+    normalized.includes("beauty")
+  )
+    return "ecommerce";
   if (normalized === "saas" || normalized.includes("software")) return "saas";
   if (normalized.includes("lead")) return "lead_gen";
   if (normalized.includes("agency")) return "agency";
@@ -1230,9 +1236,9 @@ function OrganicInsightReport({ synthesis, connectorsUsed }) {
         <div className="generate-alert" role="status" style={{ marginBottom: 20 }}>
           <p style={{ fontWeight: 600, marginBottom: 6 }}>{narrative.verdict}</p>
           {narrative.summary && <p className="app-subtle" style={{ marginBottom: 6 }}>{narrative.summary}</p>}
-          {narrative.operator_takeaway && (
+          {narrative.takeaway && (
             <p style={{ fontSize: 13, fontWeight: 500 }}>
-              <span className="app-subtle">This week: </span>{narrative.operator_takeaway}
+              <span className="app-subtle">This week: </span>{narrative.takeaway}
             </p>
           )}
         </div>

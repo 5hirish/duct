@@ -1,5 +1,5 @@
 /**
- * SSE event names and step IDs for the Content Marketing Agent.
+ * SSE event names and step IDs for the Content Studio agent.
  * Mirror of backend agents/content/events.py — keep in sync.
  */
 
@@ -14,6 +14,7 @@ export const ContentEvent = Object.freeze({
 
   QUESTIONS_REQUIRED:  "questions_required",
   TODO_UPDATE:         "todo_update",
+  SLIDE_RENDER_REQUESTED: "slide_render_requested",
 
   AGENT_MESSAGE_CHUNK: "agent_message_chunk",
   MESSAGE_STOP:        "message_stop",

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { loadPreferences } from "@/lib/userPreferences";
 import { getActiveProject } from "@/lib/projects";
+import { ReportMode, DEFAULT_AUDIT_TEMPLATE_ID } from "@/lib/audit";
 
 const CONTENT_TYPES = [
   { value: "", label: "Select type…" },
@@ -37,19 +38,59 @@ export default function SeoAuditSetupPage() {
   const [loading, setLoading]           = useState(false);
   const [error, setError]               = useState("");
   const [activeProject, setActiveProject] = useState(null);
+  const [useProjectContext, setUseProjectContext] = useState(true);
 
   useEffect(() => {
     const project = getActiveProject();
     if (!project) return;
     setActiveProject(project);
-    if (!businessName && project.company?.name) setBusinessName(project.company.name);
-    if (!description && project.company?.business_model) setDescription(project.company.business_model);
-    if (!goals && project.targets?.north_star_metric) setGoals(project.targets.north_star_metric);
-    if (!keywords && project.competition?.compare_against) setKeywords(project.competition.compare_against);
-    if (!competitors && project.competition?.competitors?.length)
-      setCompetitors(project.competition.competitors.join(", "));
+    applyProjectContext(project);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // The durable competitor field users actually fill in onboarding is
+  // `compare_against` (a comma-joined string). `competitors` is a richer
+  // [{ name, differentiator }] list with no editor yet, so fall back to its
+  // names only when present — never join the raw objects (that prints
+  // "[object Object]").
+  function projectCompetitors(project) {
+    const competition = project.competition || {};
+    if (typeof competition.compare_against === "string" && competition.compare_against.trim()) {
+      return competition.compare_against.trim();
+    }
+    return (Array.isArray(competition.competitors) ? competition.competitors : [])
+      .map((entry) => (typeof entry === "string" ? entry : entry?.name || ""))
+      .filter(Boolean)
+      .join(", ");
+  }
+
+  // Pre-fill the business-context fields from the saved project profile. Only
+  // maps fields with a genuine project equivalent — there's no target-keywords
+  // field in the profile, so keywords stay empty rather than borrowing the
+  // unrelated competitor list.
+  function applyProjectContext(project) {
+    setUrl(project.company?.website_url || "");
+    setBusinessName(project.company?.name || "");
+    setDescription(project.company?.pitch || "");
+    setGoals(project.targets?.north_star_metric || "");
+    setCompetitors(projectCompetitors(project));
+  }
+
+  function toggleProjectContext(next) {
+    setUseProjectContext(next);
+    if (next && activeProject) {
+      applyProjectContext(activeProject);
+    } else {
+      // Auditing a different business / competitor — drop everything sourced
+      // from our own project (including our own site URL) so only what the user
+      // types is used.
+      setUrl("");
+      setBusinessName("");
+      setDescription("");
+      setGoals("");
+      setCompetitors("");
+    }
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -66,17 +107,27 @@ export default function SeoAuditSetupPage() {
           target_keywords:       keywords.split(",").map(k => k.trim()).filter(Boolean),
           competitors:           competitors.split(",").map(c => c.trim()).filter(Boolean),
           primary_content_type:  contentType,
-          // Richer fields from saved project profile
-          industry:              activeProject?.company?.industry || "",
-          business_model:        activeProject?.company?.business_model || "",
-          positioning_statement: activeProject?.competition?.positioning_statement || "",
-          audience_segment:      activeProject?.audience?.primary_segment || "",
-          brand_voice:           activeProject?.brand_channels?.brand_voice || "",
-          growth_stage:          activeProject?.targets?.growth_stage_milestone || "",
+          // Richer fields from the saved project profile — only appended when the
+          // audit is for this project. Skipped when auditing another business so
+          // we don't leak our own context into someone else's report.
+          ...(useProjectContext && activeProject ? {
+            industry:              activeProject.company?.industry || "",
+            business_model:        activeProject.company?.business_model || "",
+            positioning_statement: activeProject.competition?.positioning_statement || "",
+            audience_segment:      activeProject.audience?.primary_segment || "",
+            brand_voice:           activeProject.brand_channels?.brand_voice || "",
+            growth_stage:          activeProject.targets?.growth_stage_milestone || "",
+          } : {}),
         },
         effort,
         adaptive_thinking: adaptiveThinking,
         user_preferences: loadPreferences(),
+        // Structured template report (matches the lead-magnet flow): the agent
+        // calls SubmitAuditReport instead of streaming freeform <duct_report>
+        // HTML. Backend default is "freehand"; this opts the app audit into the
+        // same template the public audit uses.
+        report_mode: ReportMode.TEMPLATE,
+        template_id: DEFAULT_AUDIT_TEMPLATE_ID,
       };
       const sessionId = crypto.randomUUID();
       sessionStorage.setItem(`audit_session_${sessionId}`, JSON.stringify(params));
@@ -114,6 +165,34 @@ export default function SeoAuditSetupPage() {
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
             Optional — improves report quality
           </p>
+
+          {activeProject && (
+            <div className="flex items-start justify-between gap-4 rounded-md bg-muted/30 px-3 py-2.5">
+              <div>
+                <p className="text-sm font-medium">
+                  Use {activeProject.name || "this project"}&apos;s business context
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Turn off to audit a different business or competitor — only the fields below are used.
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={useProjectContext}
+                onClick={() => toggleProjectContext(!useProjectContext)}
+                className={`relative shrink-0 mt-0.5 h-5 w-9 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
+                  useProjectContext ? "bg-primary" : "bg-input"
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 size-4 rounded-full bg-white shadow transition-transform ${
+                    useProjectContext ? "translate-x-4" : "translate-x-0"
+                  }`}
+                />
+              </button>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>

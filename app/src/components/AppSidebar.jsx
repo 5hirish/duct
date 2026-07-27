@@ -53,12 +53,15 @@ import {
   DEFAULT_ENGINE,
   ENGINE_STORAGE_KEY,
   getEngine,
+  engineSupportsAgent,
+  supportingEngines,
 } from "@/lib/engines";
 import {
   getActiveProjectId,
   getProjects,
   setActiveProjectId,
 } from "@/lib/projects";
+import { faviconUrl } from "@/lib/favicon";
 
 // ---------------------------------------------------------------------------
 // Nav structure
@@ -112,8 +115,8 @@ const NAV_SECTIONS = [
     label: "Execute",
     items: [
       {
-        key: "content_marketing",
-        label: "Content Marketing",
+        key: "tiktok_studio",
+        label: "Content Studio",
         icon: PenLine,
         href: "/content",
         available: true,
@@ -126,6 +129,28 @@ const NAV_SECTIONS = [
 // ---------------------------------------------------------------------------
 // Project switcher in sidebar header
 // ---------------------------------------------------------------------------
+
+/** Project avatar: site favicon when a website URL is set, else the name initial. */
+function ProjectAvatar({ project, wrapperClass, imgSize = 16 }) {
+  const favicon = faviconUrl(project?.company?.website_url || "");
+  const initial = (project?.name || "P").charAt(0).toUpperCase();
+  return (
+    <span className={wrapperClass}>
+      {favicon ? (
+        <img
+          src={favicon}
+          alt=""
+          width={imgSize}
+          height={imgSize}
+          className="rounded-sm"
+          style={{ width: imgSize, height: imgSize }}
+        />
+      ) : (
+        initial
+      )}
+    </span>
+  );
+}
 
 function SidebarProjectSwitcher() {
   const router = useRouter();
@@ -152,15 +177,31 @@ function SidebarProjectSwitcher() {
     window.dispatchEvent(new Event("duct:project-changed"));
   }
 
-  if (!active && projects.length === 0) return null;
+  if (!active && projects.length === 0) {
+    return (
+      <button
+        onClick={() => router.push("/projects")}
+        className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+      >
+        <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+          <Plus className="size-4" />
+        </span>
+        <span className="flex-1 truncate font-medium text-sidebar-foreground group-data-[collapsible=icon]:hidden">
+          New project
+        </span>
+      </button>
+    );
+  }
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-          <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary font-semibold text-xs">
-            {(active?.name || "P").charAt(0).toUpperCase()}
-          </span>
+          <ProjectAvatar
+            project={active}
+            wrapperClass="flex size-6 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary font-semibold text-xs"
+            imgSize={16}
+          />
           <span className="flex-1 truncate font-medium text-sidebar-foreground group-data-[collapsible=icon]:hidden">
             {active?.name || "Select project"}
           </span>
@@ -170,9 +211,11 @@ function SidebarProjectSwitcher() {
       <DropdownMenuContent className="w-56" align="start" side="bottom">
         {projects.map((p) => (
           <DropdownMenuItem key={p.id} onClick={() => select(p.id)}>
-            <span className="flex size-5 shrink-0 items-center justify-center rounded bg-muted text-xs font-semibold">
-              {p.name.charAt(0).toUpperCase()}
-            </span>
+            <ProjectAvatar
+              project={p}
+              wrapperClass="flex size-5 shrink-0 items-center justify-center rounded bg-muted text-xs font-semibold"
+              imgSize={14}
+            />
             <span className="ml-2 truncate">{p.name}</span>
             {p.id === activeId && <Check className="ml-auto size-3.5 text-primary" />}
           </DropdownMenuItem>
@@ -272,18 +315,7 @@ function PreferencesDialogMenuItem() {
 function SidebarUserFooter() {
   const { user, signOut } = useAuth();
   const { resolvedTheme, setTheme } = useTheme();
-  const [engineKey, setEngineKey] = useState(DEFAULT_ENGINE);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    setEngineKey(localStorage.getItem(ENGINE_STORAGE_KEY) || DEFAULT_ENGINE);
-    function onStorage(e) {
-      if (e.key === ENGINE_STORAGE_KEY) setEngineKey(e.newValue || DEFAULT_ENGINE);
-    }
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, []);
+  const engineKey = useEngineKey();
 
   const engine = getEngine(engineKey);
   const isDark = resolvedTheme === "dark";
@@ -404,9 +436,27 @@ function useConnectionCount() {
   return count;
 }
 
+// Current inference engine key, synced across tabs and same-tab changes
+// (EngineDialog dispatches a synthetic `storage` event on Apply). Starts at
+// DEFAULT_ENGINE so SSR and the first client render agree, then reconciles with
+// localStorage after mount.
+function useEngineKey() {
+  const [engineKey, setEngineKey] = useState(DEFAULT_ENGINE);
+  useEffect(() => {
+    setEngineKey(localStorage.getItem(ENGINE_STORAGE_KEY) || DEFAULT_ENGINE);
+    function onStorage(e) {
+      if (e.key === ENGINE_STORAGE_KEY) setEngineKey(e.newValue || DEFAULT_ENGINE);
+    }
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+  return engineKey;
+}
+
 export default function AppSidebar() {
   const pathname = usePathname();
   const connectionCount = useConnectionCount();
+  const engineKey = useEngineKey();
 
   function isActive(item) {
     if (!item.matchPrefix || !pathname) return false;
@@ -482,6 +532,37 @@ export default function AppSidebar() {
                             <span>{item.label}</span>
                             <span className="ml-auto rounded-full bg-muted px-1.5 py-px text-[10px] leading-none text-muted-foreground">
                               Soon
+                            </span>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      );
+                    }
+
+                    // Built, but the selected engine has no runner for it.
+                    if (!engineSupportsAgent(engineKey, item.key)) {
+                      const runnable = supportingEngines(item.key);
+                      const badges = runnable.map((e) => e.badge);
+                      // Compact pill names the engine to switch to; the tooltip
+                      // carries the full "not supported by … available on …".
+                      const pill =
+                        badges.length === 1 ? `${badges[0]} only` : badges.join(" / ");
+                      const available = runnable
+                        .map((e) => `${e.label} (${e.badge})`)
+                        .join(", ");
+                      return (
+                        <SidebarMenuItem key={item.key}>
+                          <SidebarMenuButton
+                            className="cursor-default opacity-45 hover:bg-transparent hover:text-sidebar-foreground/45"
+                            tooltip={
+                              available
+                                ? `${item.label} — not supported by the ${getEngine(engineKey).label} engine. Available on ${available}.`
+                                : `${item.label} — not supported by the selected engine.`
+                            }
+                          >
+                            <Icon className="size-4" />
+                            <span>{item.label}</span>
+                            <span className="ml-auto shrink-0 rounded-full bg-amber-500/15 px-1.5 py-px font-mono text-[10px] leading-none text-amber-600 dark:text-amber-400">
+                              {pill}
                             </span>
                           </SidebarMenuButton>
                         </SidebarMenuItem>

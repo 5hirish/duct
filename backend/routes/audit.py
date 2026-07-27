@@ -28,7 +28,7 @@ from agents.audit.schema import (
 from agents.audit.v3.runner import ClaudeAuditRunner, close_session, get_session
 from agents.engines import Engine, resolve_engine, resolve_engine_model, resolve_engine_provider, PROVIDER_CONFIG_ATTR
 from service.crawl.fetcher import SSRFError, validate_public_url
-from config import get_configs
+from config import claude_oauth_available, get_configs
 from service.pipeline import now_iso
 
 logger = logging.getLogger(__name__)
@@ -60,9 +60,8 @@ async def _prune_stale_sessions() -> None:
             _session_created_at.pop(sid, None)
 
 
-@router.on_event("startup")  # type: ignore[attr-defined]
-async def _start_pruner() -> None:
-    asyncio.create_task(_prune_stale_sessions())
+# Launched from the app lifespan in server.py — FastAPI's lifespan disables
+# router-level on_event hooks, so startup tasks are started centrally there.
 
 
 # ---------------------------------------------------------------------------
@@ -109,7 +108,7 @@ async def _run_audit_pipeline(
 ) -> None:
     try:
         api_key, provider, model, _ = _resolve_agent_config(req.engine)
-        if not api_key:
+        if not api_key and not claude_oauth_available():
             raise ValueError("ANTHROPIC_API_KEY is not configured")
 
         await emit_fn({

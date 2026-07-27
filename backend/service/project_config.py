@@ -13,6 +13,7 @@ class ConfigOption:
 
 INDUSTRY_OPTIONS: tuple[ConfigOption, ...] = (
     ConfigOption(value="E-commerce & Retail", label="E-commerce & Retail"),
+    ConfigOption(value="Fashion & Beauty", label="Fashion & Beauty"),
     ConfigOption(value="SaaS & Software", label="SaaS & Software"),
     ConfigOption(value="Financial Services", label="Financial Services"),
     ConfigOption(value="Healthcare", label="Healthcare"),
@@ -84,6 +85,13 @@ def _build_option_subset(
 # 3) broad fallback
 NORTH_STAR_RULES: dict[tuple[str, str], set[str]] = {
     ("e-commerce & retail", "*"): {
+        "Monthly active customers",
+        "Net new revenue",
+        "Retention rate",
+        "Bookings",
+        "Custom",
+    },
+    ("fashion & beauty", "*"): {
         "Monthly active customers",
         "Net new revenue",
         "Retention rate",

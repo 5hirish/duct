@@ -12,6 +12,7 @@ from typing import Any
 from agents.insights.goals import InsightGenerationGoal
 from agents.insights.prompts import get_synthesis_user_prompt, get_system_prompt
 from agents.insights.schema import SynthesisSchema as _SynthesisSchema
+from agents.models import ModelName
 from service.google.schema import (
     AccountSummary,
     ActionPriority,
@@ -366,8 +367,10 @@ def synthesize_with_gemini_dict(
     except ImportError:
         return brief_dict
 
-    system_instruction = get_system_prompt(goal=goal, custom_goal=custom_goal, context=context)
-    user_text = get_synthesis_user_prompt(brief_dict, raw_payload)
+    system_instruction = get_system_prompt(goal=goal)
+    user_text = get_synthesis_user_prompt(
+        brief_dict, raw_payload, goal=goal, custom_goal=custom_goal, context=context,
+    )
 
     try:
         client = genai.Client(api_key=api_key)
@@ -379,7 +382,7 @@ def synthesize_with_gemini_dict(
             temperature=0.3,
         )
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model=ModelName.GEMINI_2_5_FLASH.value,
             contents=user_text,
             config=config,
         )

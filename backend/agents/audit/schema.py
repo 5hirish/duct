@@ -8,8 +8,10 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from agents.core.context import BusinessContext
+from agents.core.session import BaseAgentSession
 from agents.models import AgentEffort
-from agents.user_preferences import UserPreferences
+from agents.preferences import UserPreferences
 
 
 # ---------------------------------------------------------------------------
@@ -34,6 +36,24 @@ class EffortLevel(StrEnum):
     low    = "low"
     medium = "medium"
     high   = "high"
+
+
+class AuditTool(StrEnum):
+    """Fully-namespaced names of the audit MCP tools (server ``duct_crawl``).
+
+    The @tool decorators in agents/audit/tools.py register the *short* names
+    (e.g. "FetchPages"); the SDK namespaces them as ``mcp__duct_crawl__<short>``.
+    This enum holds those namespaced names — the form used in
+    ClaudeAgentOptions.allowed_tools and the can_use_tool dispatch. Mirrors
+    ContentTool (agents/content/schema.py). Keep in sync with the @tool
+    registrations in agents/audit/tools.py.
+    """
+
+    FETCH_PAGES           = "mcp__duct_crawl__FetchPages"          # in-process page fetch
+    SUBMIT_AUDIT_REPORT   = "mcp__duct_crawl__SubmitAuditReport"   # template mode only — chat-revision resubmit
+    START_AUDIT_REPORT    = "mcp__duct_crawl__StartAuditReport"    # template: incremental build, step 1
+    ADD_AUDIT_CATEGORY    = "mcp__duct_crawl__AddAuditCategory"    # template: incremental build, step 2 (×9)
+    FINALIZE_AUDIT_REPORT = "mcp__duct_crawl__FinalizeAuditReport" # template: incremental build, step 3
 
 
 class EffortEstimate(StrEnum):
@@ -165,21 +185,11 @@ class CrawlResult(BaseModel):
     crawl_errors: list[str] = Field(default_factory=list)
 
 
-class AuditBusinessContext(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    business_name: str = ""
-    business_description: str = ""
-    business_goals: str = ""
-    target_keywords: list[str] = Field(default_factory=list)
-    competitors: list[str] = Field(default_factory=list)
-    primary_content_type: ContentType = ContentType.unset
-    industry: str = ""
-    business_model: str = ""
-    positioning_statement: str = ""
-    audience_segment: str = ""
-    brand_voice: str = ""
-    growth_stage: str = ""
+# Business context is now the shared, unified model passed equally to every
+# agent (agents/core/context.py) — a superset of every agent's fields
+# with extra="ignore", so existing audit payloads validate unchanged.
+# AuditBusinessContext is kept as an alias for backwards-compatible imports.
+AuditBusinessContext = BusinessContext
 
 
 # ---------------------------------------------------------------------------
@@ -187,21 +197,44 @@ class AuditBusinessContext(BaseModel):
 # ---------------------------------------------------------------------------
 
 class CompetitorSignals(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    # extra="ignore" (not "forbid") + all-optional fields: this schema is handed
+    # to a Haiku sub-agent via output_format json_schema. "forbid" emits
+    # additionalProperties:false and a required `domain`, which Haiku frequently
+    # fails to satisfy → error_max_structured_output_retries. Lenient schema lets
+    # imperfect-but-useful output validate. See agents/audit/enrichment.py.
+    model_config = ConfigDict(extra="ignore")
 
-    domain: str
+    domain: str = ""
     positioning: str = ""          # value prop / target audience claim
-    content_pillars: list[str] = Field(default_factory=list)
-    differentiators: list[str] = Field(default_factory=list)  # vs the target site
+    content_pillars: str = ""      # comma-separated themes — flat string, not a
+    differentiators: str = ""      # nested list, so Haiku reliably matches the schema
 
 
 class AuditResearchContext(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    # extra="ignore" for the same reason as CompetitorSignals — this is the
+    # Haiku enrichment sub-agent's output schema; keep it forgiving.
+    model_config = ConfigDict(extra="ignore")
 
     brand_content_pillars: list[str] = Field(default_factory=list)
     brand_schema_types: list[str] = Field(default_factory=list)
     competitors: list[CompetitorSignals] = Field(default_factory=list)
     content_gaps: list[str] = Field(default_factory=list)   # topics competitors cover, target doesn't
+    enrichment_notes: list[str] = Field(default_factory=list)
+
+
+class EnrichmentOutput(BaseModel):
+    """The subset the Haiku enrichment sub-agent actually researches and emits.
+
+    Brand signals (pillars, schema types) are computed deterministically from the
+    crawl — the prompt tells Haiku NOT to research them — so they're excluded from
+    its output schema. enrich_context() maps this into a full AuditResearchContext
+    by adding the crawl-derived brand fields.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    competitors: list[CompetitorSignals] = Field(default_factory=list)
+    content_gaps: list[str] = Field(default_factory=list)
     enrichment_notes: list[str] = Field(default_factory=list)
 
 
@@ -227,7 +260,14 @@ class AuditFinding(BaseModel):
     affected_urls: list[AffectedUrl] = Field(default_factory=list)
     recommendation: Annotated[str, Field(max_length=200)] = "" # 1 imperative sentence starting with a verb
     impact: ImpactLevel = ImpactLevel.medium
-    effort: EffortLevel = EffortLevel.medium
+    effort: EffortLevel = Field(
+        default=EffortLevel.medium,
+        description=(
+            "Effort LEVEL to ship this fix — exactly one of: low, medium, high. "
+            "This is a level, NOT a time estimate; never use values like "
+            "'2_to_4hrs' here (those belong to a roadmap task's effort_estimate)."
+        ),
+    )
 
 
 class AuditCategory(BaseModel):
@@ -260,7 +300,13 @@ class RoadmapTask(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     task: str
-    effort_estimate: EffortEstimate = EffortEstimate.one_to_3_days
+    effort_estimate: EffortEstimate = Field(
+        default=EffortEstimate.one_to_3_days,
+        description=(
+            "Time ESTIMATE for this task — exactly one of: under_1hr, 2_to_4hrs, "
+            "1_to_3_days, 1_to_2_wks, ongoing. Not a low/medium/high level."
+        ),
+    )
     note: str = ""   # optional override / exception note
 
 
@@ -307,6 +353,48 @@ class StructuredAuditData(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Incremental report build — small per-call schemas for the template flow.
+# The synthesis agent emits the report in three stages instead of one giant
+# SubmitAuditReport call (which was slow + sometimes produced 0 categories):
+#   StartAuditReport(AuditReportStart) → AddAuditCategory(AuditCategory) × 9
+#   → FinalizeAuditReport(AuditReportFinalize). The runner accumulates the parts
+# and assembles a StructuredAuditData at finalize. Each call is small, so the
+# model fills it reliably, and partial progress survives a mid-build failure.
+# ---------------------------------------------------------------------------
+
+class AuditReportStart(BaseModel):
+    """Header/scorecard fields — emitted first via StartAuditReport.
+
+    url, generated_at and crawl_summary are intentionally excluded: the backend
+    fills the first two authoritatively and recomputes crawl_summary from the raw
+    crawl, so asking the model for them only invites fabrication.
+    """
+    model_config = ConfigDict(extra="forbid")
+
+    overall_score: int                 # weighted average computed from scoring rules
+    score_band: ScoreBand
+    pages_crawled: int
+    total_sitemap_urls: int
+    key_signals: list[str] = Field(default_factory=list)  # exactly 3 short strings — coach's brief
+    total_issues: int = 0
+    total_warnings: int = 0
+    total_opportunities: int = 0
+    headline: str = ""                 # 10–15 word punchy verdict hook
+
+
+class AuditReportFinalize(BaseModel):
+    """Cross-cutting synthesis — emitted last via FinalizeAuditReport, after all
+    categories are added (top_priorities cross-reference category findings, so they
+    naturally come once every category exists)."""
+    model_config = ConfigDict(extra="forbid")
+
+    top_priorities: list[AuditPriority] = Field(default_factory=list)
+    wins: list[str] = Field(default_factory=list)         # 3–5 noun phrases of what's working
+    roadmap: list[RoadmapPhase] = Field(default_factory=list)
+    strategic_narrative: str = ""
+
+
+# ---------------------------------------------------------------------------
 # Report + session containers
 # ---------------------------------------------------------------------------
 
@@ -316,8 +404,10 @@ class AuditReport(BaseModel):
     freehand mode: html_report is a complete self-contained HTML document generated by the
     model inside <duct_report> tags. structured_data is None.
 
-    template mode: structured_data is a StructuredAuditData populated via the SubmitAuditReport
-    MCP tool call. html_report is empty — the frontend template renders the data visually.
+    template mode: structured_data is a StructuredAuditData assembled from the incremental
+    StartAuditReport → AddAuditCategory → FinalizeAuditReport tool calls (SubmitAuditReport
+    re-issues the full object during chat). html_report is empty — the frontend template
+    renders the data visually.
     """
 
     url: str
@@ -354,6 +444,10 @@ class AuditRequest(BaseModel):
     user_preferences: UserPreferences = Field(default_factory=UserPreferences)
     report_mode: ReportMode = ReportMode.freehand
     template_id: str = "seo_v1"
+    # Lightweight lead-magnet (public) audit: forces enrichment off and extended
+    # thinking off, independent of the other tuning params, so the teaser stays
+    # fast. The full app audit leaves this false.
+    lead_magnet: bool = False
 
 
 class AuditAnswerRequest(BaseModel):
@@ -377,15 +471,11 @@ class VersionedReport:
     created_at: str
 
 
-@dataclass
-class AuditSession:
-    session_id: str
-    agent_type: str                       # e.g. "audit_seo"
-    event_queue: object                   # asyncio.Queue — agent → SSE consumer
-    chat_queue: object                    # asyncio.Queue — user messages → agent
-    answer_future: object | None          # asyncio.Future | None — for AskUserQuestion
-    created_at: float = 0.0              # time.monotonic() at creation
+@dataclass(kw_only=True)
+class AuditSession(BaseAgentSession):
+    """Audit session — BaseAgentSession (session_id, agent_type, queues,
+    answer_future, created_at, pipeline_task) plus report versioning."""
+
     report_versions: list[VersionedReport] = field(default_factory=list)
     report_mode: str = "freehand"
     template_id: str = ""
-    pipeline_task: object | None = None  # asyncio.Task — cancelled on DELETE

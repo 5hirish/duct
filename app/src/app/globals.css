@@ -152,9 +152,17 @@
 
 
 .app-main {
-  max-width: 1160px;
+  max-width: 1440px;
   margin: 0 auto;
   padding: 28px 16px 64px;
+}
+
+/* Fluid full-width variant for tool surfaces (e.g. Content) that should use
+   the whole viewport rather than the centered reading column. */
+.app-main-wide {
+  max-width: 100%;
+  margin: 0;
+  padding: 28px 24px 64px;
 }
 
 /* Page title rows — wrap on phones / small tablets */

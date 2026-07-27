@@ -16,28 +16,36 @@ class Provider(str, Enum):
 
 
 class ModelName(str, Enum):
+    
     # OpenAI
+    GPT_5_5 = "gpt-5.5"
     GPT_5_4_MINI = "gpt-5.4-mini"
     GPT_5_MINI = "gpt-5-mini"
     GPT_4O_MINI = "gpt-4o-mini"
     GPT_4O = "gpt-4o"
+    
     # Google
+    GEMINI_3_5_FLASH = "gemini-3.5-flash"
     GEMINI_3_1_FLASH = "gemini-3.1-flash-preview"
-    GEMINI_3_1_FLASH_LITE = "gemini-3.1-flash-lite-preview"
+    GEMINI_3_1_FLASH_LITE = "gemini-3.1-flash-lite"
     GEMINI_2_5_FLASH = "gemini-2.5-flash"
     GEMINI_2_5_FLASH_LITE = "gemini-2.5-flash-lite"
+    
     # Anthropic
     CLAUDE_SONNET = "claude-sonnet-4-6"
-    CLAUDE_HAIKU = "claude-haiku-4-5-20251001"
+    CLAUDE_HAIKU = "claude-haiku-4-5"
 
 
 class AgentTool(StrEnum):
-    """Built-in Claude Agent SDK tool names passed to allowed_tools."""
+    """Built-in Claude Agent SDK tool names passed to allowed_tools.
+
+    Per-agent MCP tool names are NOT here — each agent type owns its own enum
+    next to its tools/schema: see AuditTool (agents/audit/schema.py, server
+    ``duct_crawl``) and ContentTool (agents/content/schema.py, ``duct_content``).
+    """
 
     ASK_USER_QUESTION = "AskUserQuestion"
     TODO_WRITE = "TodoWrite"
-    FETCH_PAGES          = "mcp__duct_crawl__FetchPages"          # in-process MCP tool: use namespaced format
-    SUBMIT_AUDIT_REPORT  = "mcp__duct_crawl__SubmitAuditReport"   # template mode only
     WEB_SEARCH  = "WebSearch"         # SERP research, competitor discovery
     WEB_FETCH   = "WebFetch"          # fetch arbitrary URLs (e.g. competitor pages)
     AGENT = "Agent"
@@ -97,15 +105,20 @@ class AgentEffort(StrEnum):
 class ImageModel(str, Enum):
     """Image generation model IDs (Gemini + Imagen via google-genai SDK)."""
 
-    GEMINI_3_1_FLASH_IMAGE_PREVIEW = "gemini-3.1-flash-image-preview"
-    GEMINI_3_PRO_IMAGE_PREVIEW     = "gemini-3-pro-image-preview"
-    GEMINI_2_5_FLASH_IMAGE         = "gemini-2.5-flash-image"
-    IMAGEN_4_GENERATE_001          = "imagen-4.0-generate-001"
-    IMAGEN_4_ULTRA_GENERATE_001    = "imagen-4.0-ultra-generate-001"
-    IMAGEN_4_FAST_GENERATE_001     = "imagen-4.0-fast-generate-001"
+    # Google Gemini model
+    GEMINI_3_1_FLASH_IMAGE = "gemini-3.1-flash-image"
+    GEMINI_3_PRO_IMAGE     = "gemini-3-pro-image"
+    GEMINI_2_5_FLASH_IMAGE = "gemini-2.5-flash-image"
+    
+    # Google Imagen model
+    IMAGEN_4_GENERATE_001       = "imagen-4.0-generate-001"
+    IMAGEN_4_ULTRA_GENERATE_001 = "imagen-4.0-ultra-generate-001"
+    IMAGEN_4_FAST_GENERATE_001  = "imagen-4.0-fast-generate-001"
 
 
-DEFAULT_IMAGE_MODEL = ImageModel.GEMINI_3_1_FLASH_IMAGE_PREVIEW
+# gemini-3.1-flash-image: the high-efficiency, high-volume flash image model
+# (per the Gemini image-generation docs) — the right default for slide gen.
+DEFAULT_IMAGE_MODEL = ImageModel.GEMINI_3_1_FLASH_IMAGE
 
 
 class Platform(StrEnum):

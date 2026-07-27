@@ -42,6 +42,13 @@ _ALLOWED_SUBTYPES: dict[str, tuple[str, ...]] = {
 
 _IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp"}
 
+_EXT_TO_MIME = {
+    ".jpg":  "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png":  "image/png",
+    ".webp": "image/webp",
+}
+
 # Public URL prefix served by FastAPI StaticFiles in server.py.
 PUBLIC_URL_PREFIX = "/static/references"
 
@@ -147,3 +154,44 @@ def iter_global_references(
                     disk_path = entry.resolve(),
                     public_url= f"{PUBLIC_URL_PREFIX}/{ax}/{sub}/{entry.name}",
                 )
+
+
+# ---------------------------------------------------------------------------
+# Content-asset projection (consumed by the fetch_content_assets @tool)
+# ---------------------------------------------------------------------------
+
+
+def global_reference_asset_dicts(
+    *,
+    axis:    str | None = None,
+    subtype: str | None = None,
+) -> list[dict]:
+    """Shape the shipped global references as content-asset dicts.
+
+    Mirrors the row shape `fetch_content_assets` returns for DB-backed
+    assets so the agent treats globals and per-project assets uniformly.
+    The crucial field is `id`: for a global it is the `/static/references/...`
+    public URL (NOT a DB UUID). The agent passes that id straight back into
+    generate_image's `input_asset_ids`; the tool resolves it from disk via
+    `disk_path_for_public_url` — no DB row, no bucket round-trip.
+
+    `axis` / `subtype` narrow the pool (e.g. camera/selfie-talking) so the
+    picker need not receive the whole library.
+    """
+    out: list[dict] = []
+    for ref in iter_global_references(axis=axis, subtype=subtype):
+        out.append({
+            "id":         ref.public_url,
+            "asset_type": "reference",
+            "source":     "global",
+            "url":        ref.public_url,
+            "mime_type":  _EXT_TO_MIME.get(Path(ref.filename).suffix.lower(), "image/jpeg"),
+            "prompt":     None,
+            "model":      None,
+            "params":     None,
+            "created_at": None,
+            "axis":       ref.axis,
+            "subtype":    ref.subtype,
+            "slug":       ref.slug,
+        })
+    return out

@@ -9,7 +9,7 @@ from collections.abc import Awaitable, Callable
 from functools import partial
 from typing import TYPE_CHECKING, Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 
 from agents.engines import Engine, resolve_engine, resolve_engine_model, resolve_engine_provider, PROVIDER_CONFIG_ATTR
@@ -18,6 +18,8 @@ from agents.insights.agent import GenerateInsightsAgent
 from agents.insights.v2.runner import AdkInsightsRunner
 from agents.insights.v3.runner import ClaudeAgentSdkRunner
 from config import get_configs
+from models.auth import User
+from service.auth import get_current_user_optional, get_user_provider_keys
 from routes.schemas import (
     BusinessContextField,
     BusinessContextFieldOption,
@@ -66,17 +68,24 @@ STEP_LABELS = {
 EmitFn = Callable[[dict[str, Any]], Awaitable[None]]
 
 
-def _resolve_agent_config(request_engine: str = "") -> tuple[str, Provider, "ModelName", Engine]:
+def _resolve_agent_config(
+    request_engine: str = "",
+    user_keys: dict[Provider, str] | None = None,
+) -> tuple[str, Provider, "ModelName", Engine]:
     """Resolve engine/provider/model/API key from config.
 
     Request engine takes precedence over GENERATE_ENGINE env var.
     Provider and model default from the engine definition in agents/engines.py.
+
+    Key precedence is bring-your-own first, backend fallback: a per-request
+    ``user_keys`` value for the resolved provider wins over the server-side
+    config key; when absent we fall back to the backend's own key.
     """
     cfg = get_configs()
     engine = resolve_engine(request_engine or cfg.generate_engine or None)
     provider = resolve_engine_provider(engine, cfg.generate_provider or None)
     model = resolve_engine_model(engine, provider, cfg.generate_model or None)
-    api_key = getattr(cfg, PROVIDER_CONFIG_ATTR[provider], "") or ""
+    api_key = (user_keys or {}).get(provider) or getattr(cfg, PROVIDER_CONFIG_ATTR[provider], "") or ""
     return api_key, provider, model, engine
 
 
@@ -150,7 +159,13 @@ async def _step_finished(
     )
 
 
-async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | None = None) -> dict[str, Any]:
+async def _run_generate_pipeline(
+    req: GenerateRequest,
+    *,
+    emit_event: EmitFn | None = None,
+    user: User | None = None,
+    user_keys: dict[Provider, str] | None = None,
+) -> dict[str, Any]:
     await _emit(
         emit_event,
         event="pipeline_started",
@@ -264,7 +279,7 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
 
     synthesis_dict = None
     mode = req.mode or "paid_ads"
-    api_key, provider, model, engine = _resolve_agent_config(req.engine)
+    api_key, provider, model, engine = _resolve_agent_config(req.engine, user_keys=user_keys)
 
     # Build the all_briefs dict: connector_id → {"brief": ..., "raw": ...}
     all_briefs = {
@@ -313,6 +328,9 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
             )
 
         biz_ctx = req.business_context.model_dump() if req.business_context else None
+        # Identity comes from the authenticated session, never the client — the
+        # name today; add role/etc. here as columns land on the User model.
+        user_ctx = {"name": user.full_name} if user and user.full_name else None
         full_context = req.context
         if req.mode_context:
             full_context = f"{req.mode_context}\n\n{full_context}".strip() if full_context else req.mode_context
@@ -331,6 +349,7 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
                 context=full_context,
                 all_briefs=all_briefs,
                 business_context=biz_ctx,
+                user_context=user_ctx,
                 mode=mode,
                 customer_id=ads_customer_id,
                 date_from=req.date_from,
@@ -368,6 +387,7 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
                 all_briefs=all_briefs,
                 supplementary=supplementary or None,
                 business_context=biz_ctx,
+                user_context=user_ctx,
                 mode=mode,
                 emit_event=emit_event,
             )
@@ -668,13 +688,21 @@ async def list_insight_modes() -> dict:
 
 
 @router.post("/insights/generate")
-async def generate_insight(req: GenerateRequest) -> dict:
+async def generate_insight(
+    req: GenerateRequest,
+    user: User | None = Depends(get_current_user_optional),
+    user_keys: dict[Provider, str] = Depends(get_user_provider_keys),
+) -> dict:
     """Fetch data for selected connections, build briefs, and optional synthesis."""
-    return await _run_generate_pipeline(req)
+    return await _run_generate_pipeline(req, user=user, user_keys=user_keys)
 
 
 @router.post("/insights/generate/stream")
-async def generate_insight_stream(req: GenerateRequest) -> StreamingResponse:
+async def generate_insight_stream(
+    req: GenerateRequest,
+    user: User | None = Depends(get_current_user_optional),
+    user_keys: dict[Provider, str] = Depends(get_user_provider_keys),
+) -> StreamingResponse:
     """Stream real pipeline progress events and final payload over SSE."""
 
     queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
@@ -685,7 +713,7 @@ async def generate_insight_stream(req: GenerateRequest) -> StreamingResponse:
 
     async def worker() -> None:
         try:
-            insight = await _run_generate_pipeline(req, emit_event=emit_event)
+            insight = await _run_generate_pipeline(req, emit_event=emit_event, user=user, user_keys=user_keys)
             await _emit(
                 emit_event,
                 event="pipeline_finished",

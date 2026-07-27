@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Mac App Store / TestFlight entitlements.
+
+  Only used by the App Store build (`tauri.appstore.conf.json`). The plain
+  `tauri build` for DMG/Windows/Linux does not read this file.
+
+  Three team-scoped keys are NOT committed here because the Apple Team ID is not
+  in git. CI injects them into a copy of this file before signing (see
+  `.github/workflows/desktop-testflight.yml`):
+
+    com.apple.application-identifier   TEAMID.ai.getduct.desktop
+    com.apple.developer.team-identifier TEAMID
+    keychain-access-groups             [ TEAMID.ai.getduct.desktop ]
+
+  The keychain group matters: under App Sandbox the `keyring` crate's entries
+  land in the app's own keychain group, so provider keys saved by a DMG build
+  are NOT visible to an App Store build (and vice versa). Testers moving
+  between the two re-enter their keys once.
+-->
+<plist version="1.0">
+<dict>
+    <!-- Required for every Mac App Store app. -->
+    <key>com.apple.security.app-sandbox</key>
+    <true/>
+
+    <!-- The window loads https://app.getduct.ai and the page calls the Railway
+         API, so outbound network access is required. No server entitlement:
+         this app never listens. -->
+    <key>com.apple.security.network.client</key>
+    <true/>
+
+    <!-- Report export (PNG/PDF download from the web app) writes through the
+         sandbox save panel and the Downloads folder. -->
+    <key>com.apple.security.files.user-selected.read-write</key>
+    <true/>
+    <key>com.apple.security.files.downloads.read-write</key>
+    <true/>
+</dict>
+</plist>

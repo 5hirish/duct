@@ -1,4 +1,4 @@
-"""End-to-end tests for the Content Marketing Agent.
+"""End-to-end tests for the Content Studio agent.
 
 The default suite runs offline — only the parser tests that defend
 against real model output quirks (markdown fences, unescaped HTML in
@@ -160,7 +160,7 @@ def test_live_gemini_generate_one_image_real_api():
         client = GeminiImageClient(os.environ["GEMINI_API_KEY"])
         return await client.generate_image(GenerateImageRequest(
             prompt="a single ripe red apple on a white surface, soft daylight",
-            model=ImageModel.GEMINI_3_1_FLASH_IMAGE_PREVIEW,
+            model=ImageModel.GEMINI_3_1_FLASH_IMAGE,
             aspect_ratio=AspectRatio.SQUARE_1_1,
             number_of_images=1,
         ))

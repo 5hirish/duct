@@ -47,6 +47,7 @@ class InsightsGraphState(TypedDict):
     supplementary_data: Annotated[dict[str, Any], operator.or_]  # dict-merge reducer
     all_briefs: dict[str, Any]
     business_context: dict[str, Any] | None
+    user_context: dict[str, Any] | None
     synthesis_result: Any | None
 
 
@@ -112,15 +113,17 @@ async def _synthesize_node(state: InsightsGraphState, *, llm_structured) -> dict
     """Produce structured SynthesisSchema output from briefs + supplementary data."""
     system_prompt = get_system_prompt(
         goal=state["goal"],
-        custom_goal=state.get("custom_goal", ""),
-        context=state.get("context", ""),
-        business_context=state.get("business_context"),
         mode=state.get("mode", "paid_ads"),
     )
     user_prompt = get_synthesis_user_prompt(
         state["all_briefs"],
         supplementary=state.get("supplementary_data") or {},
         mode=state.get("mode", "paid_ads"),
+        business_context=state.get("business_context"),
+        user_context=state.get("user_context"),
+        goal=state["goal"],
+        custom_goal=state.get("custom_goal", ""),
+        context=state.get("context", ""),
     )
     messages = [SystemMessage(content=system_prompt), HumanMessage(content=user_prompt)]
     try:

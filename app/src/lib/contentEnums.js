@@ -1,7 +1,12 @@
 /**
  * Mirrors of backend enums in agents/models.py.
- * Keep in sync — these drive checkbox/radio groups in publish modals,
- * image-gen forms, and plan day editors.
+ * Keep in sync — these drive checkbox/radio groups in publish modals and
+ * plan day editors.
+ *
+ * Model selection is NOT mirrored here: the backend owns it end-to-end (the
+ * image-gen tool defaults to DEFAULT_IMAGE_MODEL server-side and validates any
+ * model string against the ImageModel enum), so the frontend never sends a
+ * model id.
  */
 
 export const Platform = Object.freeze({
@@ -30,9 +35,11 @@ export const PLATFORM_LABELS = Object.freeze({
   [Platform.GOOGLE_BUSINESS]: "Google Business",
 });
 
+// Mirrors ContentStatus in backend/agents/content/schema.py.
 export const PostStatus = Object.freeze({
-  PENDING:   "pending",
-  DRAFT:     "draft",
+  PENDING:   "pending",   // agent-drafted, not yet saved by the user
+  DRAFT:     "draft",     // saved/kept
+  SCHEDULED: "scheduled",
   POSTED:    "posted",
   DISCARDED: "discarded",
 });
@@ -40,6 +47,7 @@ export const PostStatus = Object.freeze({
 export const POST_STATUS_LABELS = Object.freeze({
   [PostStatus.PENDING]:   "Pending",
   [PostStatus.DRAFT]:     "Draft",
+  [PostStatus.SCHEDULED]: "Scheduled",
   [PostStatus.POSTED]:    "Posted",
   [PostStatus.DISCARDED]: "Discarded",
 });
@@ -52,14 +60,3 @@ export const AspectRatio = Object.freeze({
   LANDSCAPE_4_3:  "4:3",
   PORTRAIT_4_5:   "4:5",
 });
-
-export const ImageModel = Object.freeze({
-  GEMINI_3_1_FLASH_IMAGE_PREVIEW: "gemini-3.1-flash-image-preview",
-  GEMINI_3_PRO_IMAGE_PREVIEW:     "gemini-3-pro-image-preview",
-  GEMINI_2_5_FLASH_IMAGE:         "gemini-2.5-flash-image",
-  IMAGEN_4_GENERATE_001:          "imagen-4.0-generate-001",
-  IMAGEN_4_ULTRA_GENERATE_001:    "imagen-4.0-ultra-generate-001",
-  IMAGEN_4_FAST_GENERATE_001:     "imagen-4.0-fast-generate-001",
-});
-
-export const DEFAULT_IMAGE_MODEL = ImageModel.GEMINI_3_1_FLASH_IMAGE_PREVIEW;

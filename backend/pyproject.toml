@@ -1,7 +1,14 @@
-[tool.poetry]
+[project]
 name = "duct-backend"
 version = "0.1.0"
 description = "Duct reporting backend"
+# Minimum 3.12 for project standard; <3.14 keeps supported set to 3.12–3.13 (CI uses 3.12).
+requires-python = ">=3.12,<3.14"
+# Dependencies stay in [tool.poetry.dependencies] (Poetry's caret syntax); declared
+# dynamic so Poetry sources them from there under PEP 621 metadata.
+dynamic = ["dependencies"]
+
+[tool.poetry]
 packages = [
     { include = "agents" },
     { include = "db" },
@@ -12,14 +19,12 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-# Minimum 3.12 for project standard; <3.14 keeps supported set to 3.12–3.13 (CI uses 3.12).
-python = ">=3.12,<3.14"
 fastapi = "^0.135"
-uvicorn = {version = "^0.43", extras = ["standard"]}
+uvicorn = {version = "^0.49", extras = ["standard"]}
 google-ads = "^30.0"
-google-analytics-data = "^0.18.19"
+google-analytics-data = "^0.23"
 google-api-python-client = "^2.179.0"
-google-genai = "^1.0"
+google-genai = "^2.8"
 python-dotenv = "^1.0"
 pydantic = "^2.12"
 pydantic-settings = "^2.12"
@@ -30,12 +35,15 @@ langchain-anthropic = "^1.4"
 langgraph = "^1.1"
 pyjwt = "^2.8"
 httpx = "^0.28"
-sqlmodel = "^0.0.24"
+# Cloudflare R2 image storage over the S3 API (service/storage.py). Only loaded
+# when the 'r2' storage backend is active.
+boto3 = "^1.35"
+sqlmodel = "^0.0.38"
 alembic = "^1.17"
 psycopg = {version = "^3.2", extras = ["binary"]}
 sentry-sdk = "^2.57.0"
 dlt = "^1.17.1"
-google-adk = ">=1.0"
+google-adk = "^2.2"
 claude-agent-sdk = ">=0.2"
 selectolax = ">=0.3"
 extruct = ">=0.16"
@@ -62,5 +70,5 @@ filterwarnings = [
 ]
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core>=2.0"]
 build-backend = "poetry.core.masonry.api"

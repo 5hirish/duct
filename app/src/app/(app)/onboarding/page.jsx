@@ -21,6 +21,7 @@ import {
   createProject,
   getActiveProject,
   getProjectById,
+  pushProjectToBackend,
   saveProject,
   setActiveProjectId,
 } from "../../../lib/projects";
@@ -48,10 +49,11 @@ function hasText(value) {
 
 const STEP_DEFINITIONS = [
   {
-    label: "Company basics",
-    shortLabel: "Company",
+    label: "About your business",
+    shortLabel: "About",
     fields: [
       { weight: 3, check: (profile) => hasText(profile.company?.name) },
+      { weight: 2, check: (profile) => hasText(profile.company?.pitch) },
       { weight: 3, check: (profile) => hasText(profile.company?.industry) },
       { weight: 2, check: (profile) => hasText(profile.company?.business_model) },
       { weight: 1, check: (profile) => hasText(profile.company?.website_url) },
@@ -104,7 +106,7 @@ export default function OnboardingPage() {
   const [projectConfigLoading, setProjectConfigLoading] = useState(false);
   const [projectConfigError, setProjectConfigError] = useState("");
   const [profile, setProfile] = useState({
-    company: { name: "", industry: "", business_model: "", website_url: "" },
+    company: { name: "", pitch: "", industry: "", business_model: "", website_url: "" },
     targets: {
       monthly_budget: "",
       target_cpa: "",
@@ -306,6 +308,41 @@ export default function OnboardingPage() {
     setStep((current) => Math.min(current + 1, TOTAL_STEPS));
   }
 
+  // "Save & Next": the deliberate persistence point. Saves the current profile
+  // locally, then upserts it to the backend (fire-and-forget), then advances.
+  function saveAndNext() {
+    const merged = {
+      ...(projectMeta || {}),
+      ...profile,
+      name: projectMeta?.name || profile.company.name || "Untitled project",
+    };
+    const saved = projectMeta?.id ? saveProject(merged) : createProject(merged);
+    if (saved?.id && saved.id !== projectMeta?.id) {
+      setProjectMeta(saved);
+      setActiveProjectId(saved.id);
+      window.dispatchEvent(new Event("duct:project-changed"));
+    }
+    pushProjectToBackend(saved);
+    goNext();
+  }
+
+  // Final step: persist the project (local + backend). Navigation is handled by
+  // the separate Back button, so this only saves.
+  function saveProjectFinal() {
+    const merged = {
+      ...(projectMeta || {}),
+      ...profile,
+      name: projectMeta?.name || profile.company.name || "Untitled project",
+    };
+    const saved = projectMeta?.id ? saveProject(merged) : createProject(merged);
+    if (saved?.id && saved.id !== projectMeta?.id) {
+      setProjectMeta(saved);
+      setActiveProjectId(saved.id);
+    }
+    window.dispatchEvent(new Event("duct:project-changed"));
+    pushProjectToBackend(saved);
+  }
+
   function goBack() {
     setStep((current) => Math.max(current - 1, 1));
   }
@@ -416,9 +453,12 @@ export default function OnboardingPage() {
         </div>
       </div>
 
-      {/* Step 1: Company */}
+      {/* Step 1: About your business */}
       {step === 1 && (
         <div className="grid gap-4">
+          <p className="text-sm text-muted-foreground">
+            Tell us who you are and what you do. This anchors every audit and report we generate.
+          </p>
           <div className="grid gap-1.5">
             <Label htmlFor="company-name">Company name</Label>
             <Input
@@ -429,6 +469,20 @@ export default function OnboardingPage() {
               }
               placeholder="Acme Inc."
             />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="company-pitch">Your one-line pitch</Label>
+            <Input
+              id="company-pitch"
+              value={profile.company.pitch}
+              onChange={(e) =>
+                setProfile((prev) => ({ ...prev, company: { ...prev.company, pitch: e.target.value } }))
+              }
+              placeholder="e.g. A meal-planning app for busy families."
+            />
+            <p className="text-xs text-muted-foreground">
+              If a stranger asked what you do, what would you say?
+            </p>
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="company-industry">Industry</Label>
@@ -748,14 +802,6 @@ export default function OnboardingPage() {
             />
           </div>
 
-          <div className="mt-2 flex flex-wrap gap-2">
-            <Button type="button" asChild>
-              <Link href="/insights/generate">Go to Generate Insight</Link>
-            </Button>
-            <Button type="button" variant="outline" asChild>
-              <Link href="/insights/organic-growth">Back to Insights</Link>
-            </Button>
-          </div>
         </div>
       )}
 
@@ -765,9 +811,13 @@ export default function OnboardingPage() {
             Back
           </Button>
         )}
-        {step < TOTAL_STEPS && (
-          <Button type="button" onClick={goNext}>
-            Next
+        {step < TOTAL_STEPS ? (
+          <Button type="button" onClick={saveAndNext}>
+            Save & Next
+          </Button>
+        ) : (
+          <Button type="button" onClick={saveProjectFinal}>
+            Save Project
           </Button>
         )}
         {step > 1 && step < TOTAL_STEPS && (

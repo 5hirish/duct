@@ -1,4 +1,4 @@
-"""Pydantic schemas + dataclasses for the Content Marketing Agent.
+"""Pydantic schemas + dataclasses for the Content Studio agent.
 
 Two groups:
   - Domain shapes — ported from nomadapps/marketing/app/src/types.ts
@@ -13,10 +13,13 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass, field
 from datetime import date, datetime
+from enum import StrEnum
 from typing import Any, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
+
+from agents.core.session import BaseAgentSession
 
 from agents.models import AspectRatio, ImageModel, Platform
 
@@ -57,18 +60,25 @@ class Perf(BaseModel):
 
 
 class Day(BaseModel):
-    """One entry in ContentPlan.days[]."""
+    """One entry in ContentPlan.days[] — an ordered content item for the month.
 
-    model_config = ConfigDict(extra="forbid")
+    Items are ordered by their position in the list; there is no day number.
+    The calendar lays them out on sequential dates from the 1st of the month.
 
-    day: int = Field(ge=1, le=31)
-    topic_id: str | None = None
+    extra="ignore": stored/legacy day objects may carry extra planning fields
+    (notes, hook_text, save_cta, a legacy `day` index) that this shape doesn't
+    model — tolerate and drop them rather than failing validation.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    topic_id: int | str | None = None
     topic: str = ""
     pillar: str = ""
     status: Literal["pending", "draft", "posted", "discarded"] = "pending"
     post_type: Literal["slideshow", "video", "image"] = "slideshow"
     post_id: UUID | None = None
-    format_style: str = "D"
+    format_slug: str = ""   # which library format to build with (e.g. "format-d")
     avatar_id: UUID | None = None
     platforms: list[Platform] = Field(default_factory=lambda: [Platform.TIKTOK])
 
@@ -134,8 +144,11 @@ class ContentBrandContext(BaseModel):
     url: str = ""
     audience: str = ""
     brand_voice: str = ""
+    tone: str = ""
     value_prop: str = ""
     content_goal: str = ""
+    do_say: str = ""
+    do_not_say: str = ""
     features: list[AppFeature] = Field(default_factory=list)
     pillars: list[ContentPillar] = Field(default_factory=list)
     visual: ContentVisualAssets = Field(default_factory=ContentVisualAssets)
@@ -164,6 +177,7 @@ class DraftPostRequest(BaseModel):
     day_index: int | None = None
     topic: str | None = None
     pillar: str | None = None
+    channel: str | None = None   # primary platform (platforms[0]); selects the agent playbook
 
 
 class ContentAnswerRequest(BaseModel):
@@ -178,20 +192,31 @@ class ContentChatMessage(BaseModel):
     content: str | list
 
 
-@dataclass
-class ContentSession:
-    """Per-session state — mirrors AuditSession at agents/audit/schema.py."""
+@dataclass(kw_only=True)
+class ContentSession(BaseAgentSession):
+    """Per-session state — BaseAgentSession (session_id, agent_type, queues,
+    answer_future, created_at, pipeline_task) plus content-specific fields."""
 
-    session_id: str
     project_id: UUID
     mode: RunMode
-    event_queue: Any                  # asyncio.Queue — agent → SSE consumer
-    chat_queue: Any                   # asyncio.Queue — user follow-ups → agent
-    answer_future: Any | None = None  # asyncio.Future | None — AskUserQuestion bridge
     plan_id: UUID | None = None
     post_id: UUID | None = None
-    created_at: float = 0.0
+    # Persisted-conversation linkage (session resume / chat history). Set by the
+    # route layer when a session is created; the runner re-primes from the DB when
+    # resume is True. recorder persists each turn (agents/content/persistence.py).
+    conversation_id: UUID | None = None
+    recorder: Any = None
+    resume: bool = False
+    # On resume we don't run a greeting turn; the restored context (resume_primer)
+    # is prepended to the user's FIRST chat message instead. needs_reprime gates
+    # that one-time injection (see routes.agents.send_message).
+    needs_reprime: bool = False
+    resume_primer: str = ""
     todos: list[dict] = field(default_factory=list)
+    # render_id -> asyncio.Future, resolved by the frontend's slide-render POST.
+    # Bridges the agent's render_slide tool to client-side rasterization (same
+    # pattern as answer_future for AskUserQuestion).
+    render_futures: dict = field(default_factory=dict)
 
 
 # ---------------------------------------------------------------------------
@@ -278,7 +303,12 @@ class ContentResearchContext(BaseModel):
 
 
 class ImagePrompt(BaseModel):
-    """One image slot inside a slide. The runner passes `prompt` to Gemini."""
+    """One image slot inside a slide. The runner passes `prompt` to Gemini.
+
+    Legacy/derived shape: with the structured-slides model the orchestrator
+    authors prompts on each Slide; submit_post_draft DERIVES this flat list
+    from slides so the DB column + frontend keep working unchanged.
+    """
 
     model_config = ConfigDict(extra="forbid")
 
@@ -288,11 +318,163 @@ class ImagePrompt(BaseModel):
     model: ImageModel | None = None
 
 
+# ---------------------------------------------------------------------------
+# Structured slide content — the source of truth the orchestrator authors.
+# Python renders slides_html DETERMINISTICALLY from these via templates.py;
+# the model never writes raw HTML. See agents/content/templates.py.
+# ---------------------------------------------------------------------------
+
+
+class SlideLayout(StrEnum):
+    """Overall post layout family — picks the template set + CSS aesthetic.
+
+    Mirrors the reference library's `layouts` axis
+    (data/content/references/README.md). The orchestrator returns one per
+    post; individual slides may still vary their `kind`.
+    """
+
+    FULL_BLEED   = "full-bleed"     # single photo + text overlay — the duct default
+    TEXT_ONLY    = "text-only"      # dark bg, big statement, no photo (use sparingly)
+    COLLAGE      = "collage"        # 2×2 educational grid + serif label
+    BEFORE_AFTER = "before-after"   # do/don't split — two images, ❌/✅
+    EDITORIAL    = "editorial"      # styled shoot, ivory bg, product lineup
+
+
+class ContentStatus(StrEnum):
+    """Lifecycle of a content post — ContentPost.status (and Day.status).
+
+    Stored as a plain String column (values match these members); use this enum
+    in code instead of bare strings. Mirrored on the frontend in
+    app/src/lib/contentStatus.js.
+
+    PENDING   — agent drafted it, but the user hasn't saved/kept it yet.
+                Hidden from the board + the agent's topic-bank/history reads.
+    DRAFT     — user clicked Save; now a real, kept draft.
+    SCHEDULED — queued to publish.
+    POSTED    — published.
+    DISCARDED — rejected.
+    """
+
+    PENDING   = "pending"
+    DRAFT     = "draft"
+    SCHEDULED = "scheduled"
+    POSTED    = "posted"
+    DISCARDED = "discarded"
+
+
+class ContentTool(StrEnum):
+    """Fully-namespaced names of the content MCP tools (server ``duct_content``).
+
+    The @tool decorators in agents/content/tools.py register the *short* names
+    (e.g. "submit_post_draft"); the SDK namespaces them as
+    ``mcp__duct_content__<short>``. This enum holds those namespaced names — the
+    form used in ClaudeAgentOptions.allowed_tools and the can_use_tool dispatch.
+    Mirrors AuditTool (agents/audit/schema.py), which does the same for the
+    audit (``duct_crawl``) MCP tools. Keep in sync with the @tool registrations.
+    """
+
+    SUBMIT_PLAN                = "mcp__duct_content__submit_plan"
+    SUBMIT_POST_DRAFT          = "mcp__duct_content__submit_post_draft"
+    EDIT_SLIDE                 = "mcp__duct_content__edit_slide"
+    FETCH_BRAND_CONTEXT        = "mcp__duct_content__fetch_brand_context"
+    FETCH_TOPIC_BANK           = "mcp__duct_content__fetch_topic_bank"
+    FETCH_FORMAT_LIBRARY       = "mcp__duct_content__fetch_format_library"
+    FETCH_AVATAR_LIBRARY       = "mcp__duct_content__fetch_avatar_library"
+    FETCH_CONTENT_HISTORY      = "mcp__duct_content__fetch_content_history"
+    FETCH_CONTENT_ASSETS       = "mcp__duct_content__fetch_content_assets"
+    FETCH_DISCOVERED_REFERENCES = "mcp__duct_content__fetch_discovered_references"
+    FETCH_POST                 = "mcp__duct_content__fetch_post"
+    FETCH_SLIDE_CONTEXT        = "mcp__duct_content__fetch_slide_context"
+    RENDER_SLIDE               = "mcp__duct_content__render_slide"
+    GENERATE_IMAGE             = "mcp__duct_content__generate_image"
+    EDIT_IMAGE                 = "mcp__duct_content__edit_image"
+    PUBLISH_POST               = "mcp__duct_content__publish_post"
+    MARK_POSTED                = "mcp__duct_content__mark_posted"
+    LOG_METRICS                = "mcp__duct_content__log_metrics"
+
+
+# Per-slide kind — drives which template renders the slide within a layout.
+#   photo / text          — single image (or none) + overlay caption
+#   collage               — 2×2 grid; one image per `items` cell
+#   before-after          — do/don't split; two `items` cells (marker do/dont)
+#   editorial             — single image on an ivory matte, serif typography
+SlideKind = Literal["photo", "text", "collage", "before-after", "editorial"]
+
+# Caption style keys — must match a `key` in agents/content/styles.py STYLES
+# (plus "hook" for the slide-1 headline). The renderer maps these to classes.
+CaptionStyle = Literal[
+    "hook", "cap-stroke", "cap-pill", "cap-raw", "cap-whisper", "body-neutral"
+]
+
+
+class SlideItem(BaseModel):
+    """One image cell inside a multi-image slide (collage grid cell, or one
+    side of a before/after split). Each cell carries its own prompt + image,
+    so cells are generated and go stale independently — same model as a Slide's
+    own image. `image_prompt_used` anchors staleness."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    label: str = ""                                # serif cell label / short caption
+    marker: Literal["", "dont", "do"] = ""         # before-after: ❌ (dont) / ✅ (do)
+    image_prompt: str = ""
+    aspect_ratio: AspectRatio = AspectRatio.PORTRAIT_9_16
+    image_asset_id: UUID | None = None
+    image_url: str = ""
+    image_prompt_used: str = ""
+
+    def is_image_stale(self) -> bool:
+        if not self.image_url:
+            return False
+        return (self.image_prompt or "").strip() != (self.image_prompt_used or "").strip()
+
+
+class Slide(BaseModel):
+    """One structured slide. The orchestrator authors copy + an image prompt;
+    the image itself is filled in later (post-approval, one slide at a time).
+
+    Staleness: `image_url` is bound to the `image_prompt_used` that produced
+    it. When `image_prompt` later differs from `image_prompt_used` AND an
+    image exists, the slide's image is out of date — see `is_image_stale`.
+    Pure caption edits (overlay HTML text) never invalidate the image.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    slide_id: str                                  # "slide-01"
+    kind: SlideKind = "photo"
+    role: str = ""                                 # hook | finding | reveal | bridge | cta | body
+    caption_style: CaptionStyle = "cap-stroke"
+    headline: str = ""                             # main caption / hook line
+    subtext: str = ""                              # optional sub-line
+    # Single-image slides (photo / text / editorial) use these fields directly.
+    image_prompt: str = ""
+    aspect_ratio: AspectRatio = AspectRatio.PORTRAIT_9_16
+    image_asset_id: UUID | None = None             # set after generation
+    image_url: str = ""                            # set after generation
+    image_prompt_used: str = ""                    # prompt that produced image_url (staleness anchor)
+    # Multi-image slides (collage / before-after) use cells instead. collage
+    # aims for 4 cells; before-after uses 2 (first marker="dont", second "do").
+    items: list[SlideItem] = Field(default_factory=list)
+
+    def is_image_stale(self) -> bool:
+        """True when a generated image no longer matches the current prompt."""
+        if not self.image_url:
+            return False
+        return (self.image_prompt or "").strip() != (self.image_prompt_used or "").strip()
+
+
 class PostDraft(BaseModel):
     """One draft post coming back from the draft_post sub-agent or orchestrator.
 
     `type` discriminator keeps PlanDraft and PostDraft distinguishable inside
     the <duct_report> tag.
+
+    The orchestrator authors structured `slides` (copy + image prompts) and a
+    `layout`; it does NOT write `slides_html`. submit_post_draft renders the
+    HTML deterministically from `slides` via templates.py and derives the flat
+    `image_prompts` list. `slides_html` is kept on the schema only so legacy
+    callers / fallbacks still validate.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -304,10 +486,12 @@ class PostDraft(BaseModel):
     topic: str
     topic_id: str | None = None
     post_type: Literal["slideshow", "video", "image"] = "slideshow"
-    format_style: str = "D"
+    format_slug: str = ""   # which library format to build with (e.g. "format-d")
+    layout: SlideLayout = SlideLayout.FULL_BLEED
     avatar_id: UUID | None = None
     slide_count: int = Field(default=7, ge=1, le=20)
-    slides_html: str
+    slides: list[Slide] = Field(default_factory=list)   # source of truth for content + images
+    slides_html: str = ""                               # DERIVED by submit_post_draft (do not author)
     caption: str = ""
     hashtags: list[str] = Field(default_factory=list)
     hook_type: str = ""
@@ -350,6 +534,7 @@ def make_session(
     import time
     return ContentSession(
         session_id=session_id,
+        agent_type="tiktok_studio",
         project_id=project_id,
         mode=mode,
         event_queue=asyncio.Queue(),
@@ -380,6 +565,9 @@ __all__ = [
     "PlanRequest",
     "PostDraft",
     "RunMode",
+    "Slide",
+    "SlideItem",
+    "SlideLayout",
     "TopicCandidate",
     "TopicCandidates",
     "TrendSignal",

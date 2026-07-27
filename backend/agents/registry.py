@@ -21,7 +21,7 @@ from pydantic import BaseModel, Field
 class AgentType(StrEnum):
     SEO_AUDIT = "audit_seo"
     INSIGHTS = "insights"
-    CONTENT_MARKETING = "content_marketing"
+    TIKTOK_STUDIO = "tiktok_studio"
     BLOG_WRITER = "blog-writer"     # future
     RESEARCH = "research"           # future
 
@@ -118,17 +118,17 @@ def _research_spec() -> AgentSpec:
     )
 
 
-def _content_marketing_spec() -> AgentSpec:
-    """Spec for the Content Marketing agent (plan_month + draft_post).
+def _tiktok_studio_spec() -> AgentSpec:
+    """Spec for the Content Studio agent (plan_month + draft_post).
 
-    Routes live under /api/content/* directly — the unified
-    /api/agents endpoint exposes this spec so listing UIs see it,
-    but session creation should call the content-specific endpoints.
+    Session lifecycle runs through the unified /api/agents/tiktok_studio/*
+    endpoints (create → stream → messages). The content-specific CRUD and
+    slide-render routes still live under /api/content/*.
     """
     from agents.content.schema import PlanRequest
     return AgentSpec(
-        type=AgentType.CONTENT_MARKETING,
-        name="Content Marketing",
+        type=AgentType.TIKTOK_STUDIO,
+        name="Content Studio",
         description=(
             "30-day content plans + post drafts for TikTok-style carousels. "
             "Researches pillars, drafts captions and slides, generates images, "
@@ -150,7 +150,7 @@ def _content_marketing_spec() -> AgentSpec:
 AGENT_REGISTRY: dict[str, AgentSpec] = {
     AgentType.SEO_AUDIT:         _seo_audit_spec(),
     AgentType.INSIGHTS:          _insights_spec(),
-    AgentType.CONTENT_MARKETING: _content_marketing_spec(),
+    AgentType.TIKTOK_STUDIO:     _tiktok_studio_spec(),
     AgentType.BLOG_WRITER:       _blog_writer_spec(),
     AgentType.RESEARCH:          _research_spec(),
 }
