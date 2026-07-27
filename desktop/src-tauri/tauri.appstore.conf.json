@@ -1,0 +1,11 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "bundle": {
+    "targets": ["app"],
+    "macOS": {
+      "entitlements": "Entitlements.appstore.plist",
+      "hardenedRuntime": false,
+      "minimumSystemVersion": "12.0"
+    }
+  }
+}

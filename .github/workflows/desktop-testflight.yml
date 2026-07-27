@@ -1,0 +1,291 @@
+name: desktop — TestFlight (macOS)
+
+# Builds the Tauri desktop shell as a sandboxed Mac App Store package and
+# uploads it to TestFlight for INTERNAL testers.
+#
+# Why internal-only: the window loads the hosted web app (app.getduct.ai), and a
+# macOS app whose whole UI is a remote site is a common App Review Guideline 4.2
+# ("minimum functionality") rejection. Internal TestFlight testing skips beta
+# review entirely, so it is safe; adding an EXTERNAL group would put the build
+# through review and expose it to that risk.
+#
+# Two consequences of shipping through the App Store pipeline, both deliberate:
+#   * No auto-update. Mac App Store apps may not self-update, so the Tauri
+#     updater must never be enabled for this build (it is not wired up today).
+#   * Sandboxed keychain. Provider keys stored by a DMG build are not visible
+#     to this build — see desktop/src-tauri/Entitlements.appstore.plist.
+#
+# REQUIRED GitHub secrets (Settings → Secrets and variables → Actions):
+#   DUCT_ASC_API_KEY_ID           App Store Connect API key id
+#   DUCT_ASC_API_ISSUER_ID        App Store Connect issuer id
+#   DUCT_ASC_API_KEY_P8           base64 of AuthKey_XXXX.p8   (base64 -i AuthKey.p8 | pbcopy)
+#   DUCT_APP_STORE_APP_ID         numeric ASC app id (the macOS app record must already exist)
+#   DUCT_APPLE_TEAM_ID            10-char Apple Team ID, e.g. ABCDE12345
+#   DUCT_MAS_APP_CERT_P12         base64 of the "Apple Distribution" .p12 (signs the .app)
+#   DUCT_MAS_APP_CERT_PASSWORD    password for that .p12
+#   DUCT_MAS_APP_IDENTITY         full identity string, e.g. "Apple Distribution: Duct (ABCDE12345)"
+#   DUCT_MAS_INSTALLER_CERT_P12   base64 of the "Mac Installer Distribution" .p12 (signs the .pkg)
+#   DUCT_MAS_INSTALLER_CERT_PASSWORD
+#   DUCT_MAS_INSTALLER_IDENTITY   e.g. "3rd Party Mac Developer Installer: Duct (ABCDE12345)"
+#   DUCT_MAS_PROVISIONING_PROFILE base64 of the Mac App Store .provisionprofile for ai.getduct.desktop
+#
+# OPTIONAL:
+#   DUCT_TESTFLIGHT_INTERNAL_GROUP_ID  internal group id; when set, the uploaded
+#                                      build is assigned to that group automatically.
+#                                      Find it with: asc testflight groups list --app "APP_ID" --internal
+#
+# One-time Apple setup is documented in docs/engineering/desktop-testflight-release.md.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'desktop/**'
+      - '.github/workflows/desktop-testflight.yml'
+  pull_request:
+    paths:
+      - 'desktop/**'
+      - '.github/workflows/desktop-testflight.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: desktop-testflight-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: desktop
+
+env:
+  HOMEBREW_NO_AUTO_UPDATE: "1"
+
+jobs:
+  # PR gate: prove the Rust + Tauri build still compiles on macOS. Unsigned and
+  # native-arch only (no universal cross-build) to keep macOS minutes down —
+  # macOS runners bill at ~10x Linux. Draft PRs are skipped.
+  build:
+    name: Build (unsigned)
+    runs-on: macos-latest
+    if: github.event_name == 'pull_request' && github.event.pull_request.draft == false
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      # Caches ~/.cargo and desktop/src-tauri/target keyed on Cargo.lock, so a
+      # PR that only touches JS or config recompiles almost nothing.
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: desktop/src-tauri
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      # No APPLE_SIGNING_IDENTITY in the environment, so Tauri produces an
+      # unsigned .app — enough to catch compile and bundle errors on a PR.
+      - name: Build app bundle
+        run: npm run tauri -- build --bundles app
+
+  # main only: signed, sandboxed, universal build uploaded to TestFlight.
+  testflight:
+    name: TestFlight (App Store Connect)
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    runs-on: macos-latest
+    timeout-minutes: 60
+    # Job-level env so the optional group-assignment step can test for the
+    # secret: the `secrets` context is not available in a step-level `if`.
+    env:
+      TESTFLIGHT_INTERNAL_GROUP_ID: ${{ secrets.DUCT_TESTFLIGHT_INTERNAL_GROUP_ID }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          # Universal binary: TestFlight serves one build to both Apple Silicon
+          # and Intel testers.
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: desktop/src-tauri
+
+      - name: Install asc
+        run: brew install asc
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      # Both distribution certs go into a throwaway keychain that is unlocked
+      # for the life of the job, mirroring the pensar iOS workflow.
+      - name: Import signing certificates
+        env:
+          APP_CERT_P12: ${{ secrets.DUCT_MAS_APP_CERT_P12 }}
+          APP_CERT_PASSWORD: ${{ secrets.DUCT_MAS_APP_CERT_PASSWORD }}
+          INSTALLER_CERT_P12: ${{ secrets.DUCT_MAS_INSTALLER_CERT_P12 }}
+          INSTALLER_CERT_PASSWORD: ${{ secrets.DUCT_MAS_INSTALLER_CERT_PASSWORD }}
+        run: |
+          set -euo pipefail
+          KEYCHAIN_PATH="$RUNNER_TEMP/app-signing.keychain-db"
+          KEYCHAIN_PASSWORD="$(openssl rand -base64 24)"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          echo "$APP_CERT_P12" | base64 --decode > "$RUNNER_TEMP/app-cert.p12"
+          security import "$RUNNER_TEMP/app-cert.p12" -P "$APP_CERT_PASSWORD" \
+            -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+
+          echo "$INSTALLER_CERT_P12" | base64 --decode > "$RUNNER_TEMP/installer-cert.p12"
+          security import "$RUNNER_TEMP/installer-cert.p12" -P "$INSTALLER_CERT_PASSWORD" \
+            -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH" >/dev/null
+          security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain-db
+
+          rm -f "$RUNNER_TEMP/app-cert.p12" "$RUNNER_TEMP/installer-cert.p12"
+
+      # The three team-scoped entitlements are injected here rather than
+      # committed, so the Apple Team ID stays out of git.
+      - name: Compose App Store entitlements
+        env:
+          TEAM_ID: ${{ secrets.DUCT_APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "$TEAM_ID" ]; then
+            echo "::error::DUCT_APPLE_TEAM_ID secret is not set."
+            exit 1
+          fi
+          ENT="src-tauri/Entitlements.appstore.plist"
+          BUNDLE_ID="$(jq -r '.identifier' src-tauri/tauri.conf.json)"
+
+          # remove-then-insert rather than -replace: -insert alone fails when the
+          # key exists, and -replace is not dependable for creating a missing one.
+          set_key() {
+            plutil -remove "$1" "$ENT" >/dev/null 2>&1 || true
+            plutil -insert "$1" "$2" "$3" "$ENT"
+          }
+          set_key com.apple.application-identifier    -string "$TEAM_ID.$BUNDLE_ID"
+          set_key com.apple.developer.team-identifier -string "$TEAM_ID"
+          set_key keychain-access-groups              -json   "[\"$TEAM_ID.$BUNDLE_ID\"]"
+
+          plutil -lint "$ENT"
+          echo "Entitlements for $BUNDLE_ID:"
+          plutil -p "$ENT"
+
+      # Tauri signs the bundle (including any nested content) during the build
+      # when APPLE_SIGNING_IDENTITY is present. The outer bundle is re-signed
+      # after the Info.plist patch below, because Info.plist is covered by the
+      # code signature seal.
+      - name: Build universal app bundle (signed, sandboxed)
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ secrets.DUCT_MAS_APP_IDENTITY }}
+        run: |
+          npm run tauri -- build \
+            --bundles app \
+            --target universal-apple-darwin \
+            --config src-tauri/tauri.appstore.conf.json
+
+      - name: Stamp build number and embed provisioning profile
+        env:
+          PROVISIONING_PROFILE: ${{ secrets.DUCT_MAS_PROVISIONING_PROFILE }}
+        run: |
+          set -euo pipefail
+          APP="src-tauri/target/universal-apple-darwin/release/bundle/macos/Duct.app"
+          if [ ! -d "$APP" ]; then
+            echo "::error::Expected app bundle not found at $APP"
+            exit 1
+          fi
+
+          # Marketing version comes from tauri.conf.json; the build number is the
+          # run number so every upload to App Store Connect is unique.
+          plutil -replace CFBundleVersion -string "${{ github.run_number }}" "$APP/Contents/Info.plist"
+          plutil -lint "$APP/Contents/Info.plist"
+
+          echo "$PROVISIONING_PROFILE" | base64 --decode > "$APP/Contents/embedded.provisionprofile"
+
+          MARKETING_VERSION="$(jq -r '.version' src-tauri/tauri.conf.json)"
+          echo "APP_PATH=$APP" >> "$GITHUB_ENV"
+          echo "MARKETING_VERSION=$MARKETING_VERSION" >> "$GITHUB_ENV"
+
+      - name: Re-sign bundle with sandbox entitlements
+        env:
+          APP_IDENTITY: ${{ secrets.DUCT_MAS_APP_IDENTITY }}
+        run: |
+          set -euo pipefail
+          codesign --force --timestamp \
+            --sign "$APP_IDENTITY" \
+            --entitlements src-tauri/Entitlements.appstore.plist \
+            "$APP_PATH"
+
+          # Fail loudly here rather than at App Store Connect: the most common
+          # MAS rejection is a bundle missing the app-sandbox entitlement.
+          codesign --verify --strict --verbose=2 "$APP_PATH"
+          codesign --display --entitlements :- "$APP_PATH" | grep -q 'app-sandbox' || {
+            echo "::error::Signed bundle is missing the app-sandbox entitlement."
+            exit 1
+          }
+
+      - name: Build installer package
+        env:
+          INSTALLER_IDENTITY: ${{ secrets.DUCT_MAS_INSTALLER_IDENTITY }}
+        run: |
+          set -euo pipefail
+          xcrun productbuild \
+            --component "$APP_PATH" /Applications \
+            --sign "$INSTALLER_IDENTITY" \
+            "$RUNNER_TEMP/Duct.pkg"
+
+      - name: Upload to TestFlight
+        env:
+          ASC_KEY_ID: ${{ secrets.DUCT_ASC_API_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.DUCT_ASC_API_ISSUER_ID }}
+          ASC_API_KEY_P8: ${{ secrets.DUCT_ASC_API_KEY_P8 }}
+          ASC_APP_ID: ${{ secrets.DUCT_APP_STORE_APP_ID }}
+        run: |
+          set -euo pipefail
+          echo "$ASC_API_KEY_P8" | base64 --decode > "$RUNNER_TEMP/AuthKey.p8"
+          chmod 600 "$RUNNER_TEMP/AuthKey.p8"   # asc rejects a world-readable key file
+          asc auth login --bypass-keychain --local --name ci \
+            --key-id "$ASC_KEY_ID" \
+            --issuer-id "$ASC_ISSUER_ID" \
+            --private-key "$RUNNER_TEMP/AuthKey.p8"
+
+          # --version/--build-number are required for .pkg uploads; unlike an
+          # IPA, they are not read out of the package.
+          asc builds upload \
+            --app "$ASC_APP_ID" \
+            --pkg "$RUNNER_TEMP/Duct.pkg" \
+            --version "$MARKETING_VERSION" \
+            --build-number "${{ github.run_number }}" \
+            --wait
+
+      # Optional: hand the processed build straight to the internal tester group
+      # so testers get it without a manual step in App Store Connect.
+      - name: Assign build to internal TestFlight group
+        if: env.TESTFLIGHT_INTERNAL_GROUP_ID != ''
+        env:
+          ASC_APP_ID: ${{ secrets.DUCT_APP_STORE_APP_ID }}
+          GROUP_ID: ${{ env.TESTFLIGHT_INTERNAL_GROUP_ID }}
+        run: |
+          set -euo pipefail
+          BUILD_ID="$(asc builds list --app "$ASC_APP_ID" \
+            --sort -uploadedDate --limit 1 --output json | jq -r '.[0].id')"
+          if [ -z "$BUILD_ID" ] || [ "$BUILD_ID" = "null" ]; then
+            echo "::error::Could not resolve the uploaded build id."
+            exit 1
+          fi
+          asc builds add-groups --build "$BUILD_ID" --group "$GROUP_ID"
+
+      - name: Clean up signing keychain
+        if: always()
+        run: security delete-keychain "$RUNNER_TEMP/app-signing.keychain-db" || true
