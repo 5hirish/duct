@@ -1,3 +1,5 @@
+import { googleAdsByoCredentials } from "./adsCredentials";
+
 const configuredBase = process.env.NEXT_PUBLIC_API_BASE?.trim();
 const normalizedConfiguredBase = configuredBase?.replace(/\/+$/, "");
 const isProduction = process.env.NODE_ENV === "production";
@@ -19,10 +21,14 @@ function backendApiHeaders(extra = {}) {
   return headers;
 }
 
-export async function fetchConnectorAccounts(connectorId, refreshToken) {
+export async function fetchConnectorAccounts(connectorId, refreshToken, extras = {}) {
   const res = await fetch(
-    `${BASE}/api/connectors/${encodeURIComponent(connectorId)}/accounts?refresh_token=${encodeURIComponent(refreshToken)}`,
-    { headers: backendApiHeaders() }
+    `${BASE}/api/connectors/${encodeURIComponent(connectorId)}/accounts`,
+    {
+      method: "POST",
+      headers: backendApiHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ refresh_token: refreshToken, ...extras }),
+    }
   );
   if (!res.ok) {
     const text = await res.text();
@@ -33,7 +39,7 @@ export async function fetchConnectorAccounts(connectorId, refreshToken) {
 }
 
 export async function fetchGoogleAdsAccounts(refreshToken) {
-  return fetchConnectorAccounts("google_ads", refreshToken);
+  return fetchConnectorAccounts("google_ads", refreshToken, await googleAdsByoCredentials());
 }
 
 export async function fetchGa4Properties(refreshToken) {
@@ -67,6 +73,7 @@ export async function refreshInsightBriefs(routine) {
     date_from: routine?.custom_date_from || "",
     date_to: routine?.custom_date_to || "",
     refresh_token: refreshToken,
+    developer_token: (await googleAdsByoCredentials()).developer_token,
     ga4_refresh_token: ga4RefreshToken,
     gsc_refresh_token: gscRefreshToken,
     targets: routine?.targets || {},

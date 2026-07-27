@@ -125,14 +125,14 @@ class GoogleAdsConnector:
     def list_accounts(self, auth: ConnectorAuthContext) -> list[dict[str, Any]]:
         cfg = get_configs()
         rt = (auth.refresh_token or "").strip() or cfg.google_ads_refresh_token
-        dt = cfg.google_ads_developer_token
+        dt = (auth.extras.get("developer_token") or "").strip() or cfg.google_ads_developer_token
         cid = cfg.google_oauth_client_id or cfg.google_ads_client_id
         secret = cfg.google_oauth_client_secret or cfg.google_ads_client_secret
         gaps: list[str] = []
         if not rt:
             gaps.append("refresh_token (query param or GOOGLE_ADS_REFRESH_TOKEN env)")
         if not dt:
-            gaps.append("GOOGLE_ADS_DEVELOPER_TOKEN")
+            gaps.append("developer_token (your own token from Connections, or GOOGLE_ADS_DEVELOPER_TOKEN env)")
         if not cid:
             gaps.append("GOOGLE_OAUTH_CLIENT_ID or GOOGLE_ADS_CLIENT_ID")
         if not secret:
@@ -143,7 +143,7 @@ class GoogleAdsConnector:
                 + "; ".join(gaps)
                 + ". OAuth alone is not enough — the Ads API requires a developer token."
             )
-        login = cfg.google_ads_login_customer_id
+        login = (auth.extras.get("login_customer_id") or "").strip() or cfg.google_ads_login_customer_id
         return list_accessible_accounts(dt, cid, secret, rt, login_customer_id=login)
 
 

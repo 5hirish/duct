@@ -10,6 +10,7 @@ import {
   fetchGscSites,
   generateReportStream,
 } from "../../../lib/api";
+import { googleAdsByoCredentials } from "../../../lib/adsCredentials";
 import { saveLocalInsight, generateSlug } from "../../../lib/localInsights";
 import { getActiveProject, getActiveProjectId } from "../../../lib/projects";
 import { fetchModes, getModeByKey, FALLBACK_MODES, DEFAULT_MODE_KEY } from "../../../lib/modes";
@@ -1531,7 +1532,7 @@ export default function GeneratePage() {
         setAdsAccounts([]);
         setAdsAccountsLoading(false);
         setSelectedAdsCustomerId("");
-        setAdsAccountsError("Google Ads is selected, but no refresh token is available.");
+        setAdsAccountsError("Google Ads is selected, but it isn't connected. Connect it (and add your developer token) on the Connections page.");
       } else {
         setAdsAccountsLoading(true);
         setAdsAccountsError(null);
@@ -1698,6 +1699,7 @@ export default function GeneratePage() {
     const refreshToken = sessionStorage.getItem("gads_refresh_token") || "";
     const ga4RefreshToken = sessionStorage.getItem("ga4_refresh_token") || "";
     const gscRefreshToken = sessionStorage.getItem("gsc_refresh_token") || "";
+    const adsByo = await googleAdsByoCredentials();
     const cid = normalizeCustomerId(selectedAdsCustomerId);
     const ga4PropertyId = normalizeGa4PropertyId(selectedGa4PropertyId);
     const gscSiteUrl = normalizeGscSiteUrl(selectedGscSiteUrl);
@@ -1713,6 +1715,8 @@ export default function GeneratePage() {
         date_from: dateFrom,
         date_to: dateTo,
         refresh_token: refreshToken,
+        developer_token: adsByo.developer_token,
+        login_customer_id: adsByo.login_customer_id,
         ga4_refresh_token: ga4RefreshToken,
         gsc_refresh_token: gscRefreshToken,
         ga4_property_id: ga4PropertyId,

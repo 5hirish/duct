@@ -199,6 +199,7 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
                 date_to=req.date_to,
                 cfg=cfg,
                 refresh_token=shim.refresh_token,
+                developer_token=req.developer_token,
                 customer_id=shim.customer_id,
                 account_name=req.account_name,
                 currency_code=req.currency_code,
@@ -301,7 +302,10 @@ async def _run_generate_pipeline(req: GenerateRequest, *, emit_event: EmitFn | N
                 fetch_fns["fetch_gsc_page_performance"] = partial(fetch_gsc_page_performance, **gsc_cred_kwargs)
         else:
             ads_customer_id = resolve_customer_id(request_customer_id=shim.customer_id)
-            dt, cid, secret, rt = resolve_ads_credentials(request_refresh_token=shim.refresh_token)
+            dt, cid, secret, rt = resolve_ads_credentials(
+                request_refresh_token=shim.refresh_token,
+                request_developer_token=req.developer_token,
+            )
             fetch_fns = _build_fetch_fns(
                 dt, cid, secret, rt, login_customer_id,
                 set(connections), ga4_property_id, gsc_site_url,

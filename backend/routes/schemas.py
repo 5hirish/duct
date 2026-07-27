@@ -83,6 +83,10 @@ class GenerateRequest(BaseModel):
     date_from: str = ""
     date_to: str = ""
     refresh_token: str = ""
+    developer_token: str = Field(
+        default="",
+        description="User-supplied Google Ads developer token (BYO API access); falls back to server env.",
+    )
     customer_id: str = ""
     ga4_property_id: str = ""
     ga4_refresh_token: str = ""
@@ -147,6 +151,7 @@ class InsightRefreshRequest(BaseModel):
     date_from: str = ""
     date_to: str = ""
     refresh_token: str = ""
+    developer_token: str = ""
     ga4_refresh_token: str = ""
     gsc_refresh_token: str = ""
     targets: dict[str, RefreshRoutineTarget] = Field(default_factory=dict)
