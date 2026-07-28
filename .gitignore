@@ -77,3 +77,6 @@ client_secret_*.json
 backend/tests/outputs/
 
 .vscode/chrome-site-debug/
+
+# Claude Code session file references (dragged-in media)
+.file-refs/
