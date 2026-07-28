@@ -2,17 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  AlertTriangle,
   Check,
-  ChevronDown,
   Hash,
   Image as ImageIcon,
   Images,
-  LayoutTemplate,
   RefreshCw,
   Send,
   Sparkles,
-  Type,
   Video,
   Wand2,
 } from "lucide-react";
@@ -33,17 +29,32 @@ const STREAMING_HINTS = [
 const TYPE_ICON = { slideshow: Images, video: Video, image: ImageIcon };
 
 /**
- * Post viewport — the slides preview + an inline editor for the post's copy,
- * hook, and creative brief. Works full-page (post detail) and inside the
- * revise split-pane (container queries adapt the columns to the pane width).
+ * Post viewport — preview-first. The right pane shows what actually ships: the
+ * live slides preview plus the publishable copy (caption + hashtags). Slide
+ * layout, image prompts, hook framing and the creative brief are all edited by
+ * talking to the agent in chat, so the pane stays focused instead of being a
+ * wall of form fields. Those fields still persist (see editedFields) — they're
+ * just no longer surfaced here. Works full-page and inside the revise split-pane.
  *
  * Props:
  *   - payload   : { type:"post", id, slides, slides_html, caption, hashtags[], ... }
  *   - canPublish, onPublish, onRevise — optional header actions (detail page)
  *   - onSendMessage(text) — when present (active session), enables the
- *     "approve & generate images" + per-slide regenerate actions, which send a
- *     chat turn to the agent. Absent on the read-only detail page.
+ *     "approve & generate images" action, which sends a chat turn to the agent.
+ *     Absent on the read-only detail page.
  */
+// Drop transient client-only fields (e.g. _preview_uri, the instant-paint inline
+// data URI) from slides + cells before persisting — the DB stores only real urls.
+function stripTransient(slides) {
+  if (!Array.isArray(slides)) return slides;
+  return slides.map(({ _preview_uri, items, ...s }) => ({
+    ...s,
+    ...(Array.isArray(items)
+      ? { items: items.map(({ _preview_uri: _p, ...it }) => it) }
+      : items !== undefined ? { items } : {}),
+  }));
+}
+
 export default function PostViewport({ payload, canPublish = false, onPublish, onRevise, onSendMessage }) {
   const [draft, setDraft] = useState(null);
   const [dirty, setDirty] = useState(false);
@@ -68,6 +79,8 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
 
   // The editable fields sent on every save. `slides` is the source of truth —
   // we never send slides_html (the backend re-renders it from slides + layout).
+  // Caption + hashtags are edited here; the rest are edited via chat but still
+  // round-trip so an agent edit + a manual caption tweak persist together.
   function editedFields() {
     return {
       caption: post.caption, hashtags: post.hashtags,
@@ -76,7 +89,7 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
       bridge_text: post.bridge_text, strategic_note: post.strategic_note,
       visual_brief: post.visual_brief, emotional_arc: post.emotional_arc,
       camera_ref_pool: post.camera_ref_pool,
-      layout: post.layout, slides: post.slides,
+      layout: post.layout, slides: stripTransient(post.slides),
       platforms: post.platforms,
     };
   }
@@ -105,8 +118,8 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
   // same PATCH). Until this runs, the post is hidden from the board + the agent.
   function handleSave() { return persist(PostStatus.DRAFT); }
 
-  // Persist any pending edits before asking the agent to act on a slide, so the
-  // agent (which reads the saved post) regenerates against the latest prompt.
+  // Persist any pending edits before asking the agent to act, so the agent
+  // (which reads the saved post) works against the latest copy.
   async function commitIfDirty() {
     if (dirty) {
       try { await handleCommit(); } catch { /* surfaced via saveError */ }
@@ -121,10 +134,6 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
 
   const slides = Array.isArray(post.slides) ? post.slides : [];
   const slideIdx = Math.min(currentIndex, Math.max(0, slides.length - 1));
-  const currentSlide = slides[slideIdx];
-  function patchSlide(i, partial) {
-    patch("slides", slides.map((s, j) => (j === i ? { ...s, ...partial } : s)));
-  }
 
   const status = post.status || "pending";
   const meta = statusMeta(status);
@@ -214,25 +223,16 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
         {saveError && <p className="mt-2 text-xs text-destructive">{saveError}</p>}
       </header>
 
-      {/* Body — slide carousel + focused per-slide editor, post details below */}
+      {/* Body — the slides preview + the publishable copy (caption + hashtags).
+          Slide layout, image prompts, hook and creative-brief edits all happen
+          through the agent chat, so the pane stays focused on what ships. */}
       <div className="min-h-0 flex-1 overflow-auto">
         <div className="mx-auto max-w-2xl space-y-4 p-5">
           <SlidesCarousel slides={slides} headHtml={headHtml} index={slideIdx} onIndexChange={setCurrentIndex} />
 
-          <BulkImageBar slides={slides} onSendMessage={onSendMessage} commitIfDirty={commitIfDirty} />
+          <BulkImageBar slides={slides} onSendMessage={onSendMessage} commitIfDirty={commitIfDirty} currentIndex={slideIdx} />
 
-          <SlideEditor
-            slide={currentSlide}
-            index={slideIdx}
-            total={slides.length}
-            patchSlide={patchSlide}
-            onSendMessage={onSendMessage}
-            commitIfDirty={commitIfDirty}
-          />
-
-          <PostDetails post={post} patch={patch} />
-
-          <CreativeBrief post={post} patch={patch} />
+          <PostCopy post={post} patch={patch} />
         </div>
       </div>
     </div>
@@ -245,20 +245,6 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
 
 function prettify(s) {
   return String(s || "").replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-function Group({ icon: Icon, title, hint, children }) {
-  return (
-    <section className="rounded-2xl border border-border bg-card p-4">
-      <div className="mb-3 flex items-baseline gap-2">
-        <h3 className="flex items-center gap-1.5 text-sm font-semibold">
-          {Icon && <Icon className="size-3.5 text-muted-foreground" />} {title}
-        </h3>
-        {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
-      </div>
-      <div className="space-y-3">{children}</div>
-    </section>
-  );
 }
 
 function Labeled({ label, hint, children }) {
@@ -278,9 +264,6 @@ const INPUT_CLS =
 
 function Textarea({ value, onChange, ...props }) {
   return <textarea value={value} onChange={(e) => onChange(e.target.value)} className={`${INPUT_CLS} resize-y`} {...props} />;
-}
-function TextInput({ value, onChange, mono, italic, ...props }) {
-  return <input value={value} onChange={(e) => onChange(e.target.value)} className={`${INPUT_CLS} ${mono ? "font-mono text-xs" : ""} ${italic ? "italic" : ""}`} {...props} />;
 }
 
 // ---------------------------------------------------------------------------
@@ -316,34 +299,28 @@ function HashtagInput({ value, onChange }) {
   );
 }
 
-const HOOK_EMOTIONS = [
-  { value: "frustration", hint: "I did everything right and still…" },
-  { value: "shock", hint: "A [authority] just told me…" },
-  { value: "disbelief", hint: "A free app knew more than my $300/hr…" },
-  { value: "anger", hint: "They're selling you the wrong…" },
-  { value: "sadness", hint: "I spent [years/money] on…" },
-];
+// ---------------------------------------------------------------------------
+// Publishable copy — caption + hashtags, always visible
+// ---------------------------------------------------------------------------
 
-function HookEmotionPills({ value, onChange }) {
+// The only post-level fields surfaced in the viewport: the caption and hashtags
+// that actually get published. Everything else (hook framing, slide layout,
+// image prompts, creative brief) is edited by asking the agent in chat.
+function PostCopy({ post, patch }) {
   return (
-    <div className="flex flex-wrap gap-1.5">
-      {HOOK_EMOTIONS.map(({ value: v, hint }) => {
-        const active = value === v;
-        return (
-          <button key={v} type="button" onClick={() => onChange(active ? "" : v)} title={hint}
-            className={`rounded-full border px-2.5 py-0.5 text-xs capitalize transition-colors ${
-              active ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:bg-muted/50"
-            }`}>
-            {v}
-          </button>
-        );
-      })}
-    </div>
+    <section className="space-y-4 rounded-2xl border border-border bg-card p-4">
+      <Labeled label="Caption" hint="first line is the hook — 2–3 sentences">
+        <Textarea rows={4} value={post.caption || ""} onChange={(v) => patch("caption", v)} placeholder="First line is the hook. Keep it 2–3 sentences." />
+      </Labeled>
+      <Labeled label="Hashtags">
+        <HashtagInput value={Array.isArray(post.hashtags) ? post.hashtags : []} onChange={(v) => patch("hashtags", v)} />
+      </Labeled>
+    </section>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Slides & images — per-slide image status, editable prompts, gated generation
+// Slides & images — pending/stale detection drives the batch image action
 // ---------------------------------------------------------------------------
 
 function isTargetStale(t) {
@@ -364,370 +341,43 @@ function imageUnits(slides) {
   return units;
 }
 
-function UnitBadge({ target }) {
-  if (isTargetStale(target)) {
-    return (
-      <span className="inline-flex items-center gap-0.5 rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400">
-        <AlertTriangle className="size-2.5" /> outdated
-      </span>
-    );
-  }
-  if (target.image_url) {
-    return (
-      <span className="inline-flex items-center gap-0.5 rounded bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
-        <Check className="size-2.5" /> image
-      </span>
-    );
-  }
-  return <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">prompt only</span>;
-}
-
-function UnitRow({ target, title, onPrompt, onGenerate, canAct }) {
-  return (
-    <div className="rounded-lg border border-border/50 bg-background/60 p-2">
-      <div className="mb-1.5 flex items-start gap-2">
-        {target.image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={target.image_url} alt={title} className="size-10 shrink-0 rounded-md object-cover" />
-        ) : (
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-md border border-dashed border-border bg-background text-muted-foreground/50">
-            <ImageIcon className="size-4" />
-          </div>
-        )}
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-1">
-            {title}
-            <UnitBadge target={target} />
-          </div>
-        </div>
-        {canAct && (
-          <button
-            type="button"
-            onClick={onGenerate}
-            title={target.image_url ? "Regenerate" : "Generate"}
-            className="inline-flex shrink-0 items-center gap-1 rounded-md border border-border bg-background px-2 py-1 text-[11px] font-medium hover:bg-muted/50"
-          >
-            {target.image_url ? <RefreshCw className="size-3" /> : <Sparkles className="size-3" />}
-            {target.image_url ? "Regenerate" : "Generate"}
-          </button>
-        )}
-      </div>
-      <textarea
-        rows={2}
-        value={target.image_prompt || ""}
-        onChange={(e) => onPrompt(e.target.value)}
-        placeholder="Image prompt — the scene to generate."
-        className={`${INPUT_CLS} resize-y font-mono text-[11px]`}
-      />
-    </div>
-  );
-}
-
 // Batch image actions — generate all pending, or regenerate everything stale.
-function BulkImageBar({ slides, onSendMessage, commitIfDirty }) {
+// Auto-hides when there's nothing to do, so it's invisible most of the time.
+function BulkImageBar({ slides, onSendMessage, commitIfDirty, currentIndex = 0 }) {
   if (!onSendMessage) return null;
   const units = imageUnits(slides);
   const t = (u) => (u.it ? u.it : u.s);
   const pending = units.filter((u) => (t(u).image_prompt || "").trim() && !t(u).image_url).length;
-  const staleCount = units.filter((u) => isTargetStale(t(u))).length;
-  if (pending === 0 && staleCount === 0) return null;
+  // Regenerate is scoped to the slide the user is viewing — never all of them.
+  // (The per-slide "outdated" badge flags the others as you navigate.)
+  const cur = slides[Math.min(currentIndex, Math.max(0, slides.length - 1))];
+  const curStale =
+    !!cur &&
+    (isTargetStale(cur) ||
+      (Array.isArray(cur.items) && cur.items.some((it) => isTargetStale(it))));
+  if (pending === 0 && !curStale) return null;
   async function ask(text) { await commitIfDirty?.(); onSendMessage(text); }
   return (
     <div className="flex flex-wrap gap-2">
       {pending > 0 && (
         <button
           type="button"
-          onClick={() => ask("The draft looks good — generate the images now, one at a time, for every slide (and every collage / before-after cell) that has a prompt but no image yet. View and critique each before moving on.")}
+          onClick={() => ask("The draft looks good — start the images, ONE AT A TIME with me in the loop. Generate the next slide (or cell) that still needs an image, critique it, render the composed slide, then STOP and wait for my feedback before the next one. Don't batch them — apply what I tell you to the following slides.")}
           className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90"
         >
-          <Sparkles className="size-3.5" /> Approve &amp; generate {pending} image{pending > 1 ? "s" : ""}
+          <Sparkles className="size-3.5" /> Approve &amp; generate {pending} image{pending > 1 ? "s" : ""} — one by one
         </button>
       )}
-      {staleCount > 0 && (
+      {curStale && (
         <button
           type="button"
-          onClick={() => ask("Regenerate the images whose prompt changed (the outdated ones) so they match the new prompts.")}
+          onClick={() => ask(`Regenerate just the image for ${cur.slide_id} — the slide I'm viewing — to match its updated prompt. Leave every other slide exactly as it is.`)}
           className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-amber-400/50 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-600 transition-colors hover:bg-amber-500/20 dark:text-amber-400"
         >
-          <RefreshCw className="size-3.5" /> {staleCount} outdated — regenerate
+          <RefreshCw className="size-3.5" /> This slide is outdated — regenerate
         </button>
       )}
     </div>
-  );
-}
-
-const SLIDE_KINDS = [
-  { v: "photo", label: "Photo" },
-  { v: "text", label: "Text" },
-  { v: "collage", label: "Collage" },
-  { v: "before-after", label: "Before / After" },
-  { v: "editorial", label: "Editorial" },
-];
-
-const CAPTION_STYLES = [
-  { v: "hook", label: "Hook" },
-  { v: "cap-stroke", label: "Stroke" },
-  { v: "cap-pill", label: "Pill" },
-  { v: "cap-raw", label: "Raw" },
-  { v: "cap-whisper", label: "Whisper" },
-];
-
-function Segmented({ options, value, onChange, small }) {
-  return (
-    <div className="flex flex-wrap gap-1">
-      {options.map((o) => {
-        const active = value === o.v;
-        return (
-          <button
-            key={o.v}
-            type="button"
-            onClick={() => onChange(o.v)}
-            className={`rounded-lg border px-2.5 py-1 ${small ? "text-[11px]" : "text-xs"} transition-colors ${
-              active ? "border-primary bg-primary/10 font-medium text-primary" : "border-border text-muted-foreground hover:bg-muted/50"
-            }`}
-          >
-            {o.label}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-function MarkerToggle({ value, onChange }) {
-  return (
-    <div className="flex overflow-hidden rounded-md border border-border text-[10px] font-bold">
-      <button type="button" onClick={() => onChange("dont")}
-        className={`px-2 py-0.5 ${value === "dont" ? "bg-rose-500 text-white" : "text-rose-500 hover:bg-rose-500/10"}`}>
-        ✕ DON&apos;T
-      </button>
-      <button type="button" onClick={() => onChange("do")}
-        className={`px-2 py-0.5 ${value === "do" ? "bg-emerald-500 text-white" : "text-emerald-500 hover:bg-emerald-500/10"}`}>
-        ✓ DO
-      </button>
-    </div>
-  );
-}
-
-function CellEditor({ item, index, kind, canAct, onChange, onGenerate }) {
-  return (
-    <div className="space-y-2 rounded-xl border border-border/60 bg-muted/20 p-2.5">
-      <div className="flex items-center gap-2">
-        <span className="font-mono text-[10px] text-muted-foreground">cell {index}</span>
-        {kind === "before-after" && (
-          <MarkerToggle value={item.marker || (index === 0 ? "dont" : "do")} onChange={(m) => onChange({ marker: m })} />
-        )}
-        <input
-          value={item.label || ""}
-          onChange={(e) => onChange({ label: e.target.value })}
-          placeholder={kind === "before-after" ? "label (e.g. center part)" : "cell label"}
-          className="flex-1 rounded-md border border-input bg-input/40 px-2 py-1 text-xs outline-none focus-visible:border-ring"
-        />
-      </div>
-      <UnitRow target={item} title={null} canAct={canAct} onPrompt={(v) => onChange({ image_prompt: v })} onGenerate={onGenerate} />
-    </div>
-  );
-}
-
-// The focused editor for the currently-previewed slide: format, caption style,
-// caption text, and the slide's image prompt(s) + generate / regenerate.
-function SlideEditor({ slide, index, total, patchSlide, onSendMessage, commitIfDirty }) {
-  if (!slide) return null;
-  const kind = slide.kind || "photo";
-  const sid = slide.slide_id || `slide-${String(index + 1).padStart(2, "0")}`;
-  const canAct = Boolean(onSendMessage);
-  const set = (partial) => patchSlide(index, partial);
-  const setItem = (ci, partial) =>
-    set({ items: (slide.items || []).map((it, j) => (j === ci ? { ...it, ...partial } : it)) });
-  async function ask(text) {
-    if (!canAct) return;
-    await commitIfDirty?.();
-    onSendMessage(text);
-  }
-  const isMulti = kind === "collage" || kind === "before-after";
-
-  function setKind(v) {
-    const partial = { kind: v };
-    const noItems = !(slide.items || []).length;
-    if (v === "collage" && noItems) {
-      partial.items = [0, 1, 2, 3].map(() => ({ label: "", image_prompt: "", aspect_ratio: "9:16" }));
-    } else if (v === "before-after" && noItems) {
-      partial.items = [
-        { marker: "dont", label: "", image_prompt: "", aspect_ratio: "9:16" },
-        { marker: "do", label: "", image_prompt: "", aspect_ratio: "9:16" },
-      ];
-    }
-    set(partial);
-  }
-
-  return (
-    <Group icon={LayoutTemplate} title={`Slide ${index + 1} of ${total}`} hint={sid}>
-      <Labeled label="Format" hint="how this slide is laid out">
-        <Segmented options={SLIDE_KINDS} value={kind} onChange={setKind} />
-      </Labeled>
-
-      {kind === "photo" && (
-        <Labeled label="Caption style" hint="treatment & weight">
-          <Segmented options={CAPTION_STYLES} value={slide.caption_style || "cap-stroke"} onChange={(v) => set({ caption_style: v })} small />
-        </Labeled>
-      )}
-
-      {!isMulti && (
-        <>
-          <Labeled label={kind === "text" ? "Statement" : kind === "editorial" ? "Serif headline" : "Headline"} hint="overlay caption">
-            <Textarea rows={2} value={slide.headline || ""} onChange={(v) => set({ headline: v })} placeholder="Caption headline…" />
-          </Labeled>
-          <Labeled label="Subtext" hint="optional sub-line">
-            <TextInput value={slide.subtext || ""} onChange={(v) => set({ subtext: v })} placeholder="optional sub-line" />
-          </Labeled>
-        </>
-      )}
-      {kind === "collage" && (
-        <Labeled label="Serif title" hint="optional, above the grid">
-          <TextInput value={slide.headline || ""} onChange={(v) => set({ headline: v })} placeholder="e.g. 4 cuts for a round face" />
-        </Labeled>
-      )}
-
-      {kind === "text" ? (
-        <p className="rounded-lg bg-muted/30 px-3 py-2 text-[11px] text-muted-foreground">Text card — no image.</p>
-      ) : isMulti ? (
-        <Labeled label={`Cells (${(slide.items || []).length})`}>
-          {(slide.items || []).length === 0 ? (
-            <p className="text-[11px] text-muted-foreground">No cells yet — ask Duct to add them, or switch Format to Photo.</p>
-          ) : (
-            <div className="space-y-2">
-              {(slide.items || []).map((it, ci) => (
-                <CellEditor
-                  key={ci}
-                  item={it}
-                  index={ci}
-                  kind={kind}
-                  canAct={canAct}
-                  onChange={(p) => setItem(ci, p)}
-                  onGenerate={() => ask(`${it.image_url ? "Regenerate" : "Generate"} the image for ${sid} item_index ${ci}${it.label ? ` (the "${it.label}" cell)` : ""}.`)}
-                />
-              ))}
-            </div>
-          )}
-        </Labeled>
-      ) : (
-        <Labeled label="Image">
-          <UnitRow
-            target={slide}
-            title={null}
-            canAct={canAct}
-            onPrompt={(v) => set({ image_prompt: v })}
-            onGenerate={() => ask(slide.image_url ? `Regenerate the image for ${sid} to match its current prompt.` : `Generate the image for ${sid} now.`)}
-          />
-        </Labeled>
-      )}
-      <p className="text-[11px] leading-relaxed text-muted-foreground/70">
-        Edits preview live. Hit <span className="font-medium">Commit edits</span> to save. Changing an image prompt marks its image “outdated” until regenerated — captions are overlays and never need a regen.
-      </p>
-    </Group>
-  );
-}
-
-// Post-level copy + hook, collapsed by default so the slide editor leads.
-function PostDetails({ post, patch }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <section className="rounded-2xl border border-border bg-card">
-      <button type="button" onClick={() => setOpen((o) => !o)} className="flex w-full items-center justify-between gap-2 p-4">
-        <h3 className="flex items-center gap-1.5 text-sm font-semibold">
-          <Type className="size-3.5 text-muted-foreground" /> Post details
-          <span className="text-xs font-normal text-muted-foreground">caption · hashtags · hook</span>
-        </h3>
-        <ChevronDown className={`size-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
-      </button>
-      {open && (
-        <div className="space-y-4 border-t border-border/50 p-4">
-          <Labeled label="Caption" hint="first line is the hook — 2–3 sentences">
-            <Textarea rows={4} value={post.caption || ""} onChange={(v) => patch("caption", v)} placeholder="First line is the hook. Keep it 2–3 sentences." />
-          </Labeled>
-          <Labeled label="Hashtags">
-            <HashtagInput value={Array.isArray(post.hashtags) ? post.hashtags : []} onChange={(v) => patch("hashtags", v)} />
-          </Labeled>
-          <Labeled label="Hook emotion" hint="drives slide 1">
-            <HookEmotionPills value={post.hook_emotion || ""} onChange={(v) => patch("hook_emotion", v)} />
-          </Labeled>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Labeled label="Hook type">
-              <TextInput value={post.hook_type || ""} onChange={(v) => patch("hook_type", v)} placeholder="e.g. identity_challenge" mono />
-            </Labeled>
-            <Labeled label="Save CTA">
-              <TextInput value={post.save_cta || ""} onChange={(v) => patch("save_cta", v)} placeholder='"save this — self-test on slide 3"' italic />
-            </Labeled>
-          </div>
-          <Labeled label="Hook text">
-            <Textarea rows={2} value={post.hook_text || ""} onChange={(v) => patch("hook_text", v)} placeholder="hook text — what slide 1 says" />
-          </Labeled>
-        </div>
-      )}
-    </section>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Creative brief — collapsible advanced fields
-// ---------------------------------------------------------------------------
-
-const CAMERA_REF_POOLS = [
-  { value: "selfie-talking", hint: "default — indoor, speaking to camera" },
-  { value: "lifestyle", hint: "outdoor / educational / gentle arc" },
-  { value: "closeup", hint: "intimate / confessional / sadness" },
-];
-
-function CreativeBrief({ post, patch }) {
-  const hasContent = [post.audio_note, post.bridge_text, post.strategic_note, post.visual_brief, post.emotional_arc]
-    .some((v) => v && String(v).trim());
-  const [open, setOpen] = useState(hasContent);
-
-  return (
-    <section className="rounded-2xl border border-border bg-card">
-      <button type="button" onClick={() => setOpen((o) => !o)} className="flex w-full items-center justify-between gap-2 p-4">
-        <h3 className="flex items-center gap-1.5 text-sm font-semibold">
-          <Wand2 className="size-3.5 text-muted-foreground" /> Creative brief
-          <span className="text-xs font-normal text-muted-foreground">production & agent notes</span>
-        </h3>
-        <ChevronDown className={`size-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
-      </button>
-      {open && (
-        <div className="space-y-3 border-t border-border/50 p-4">
-          <Labeled label="Audio note">
-            <TextInput value={post.audio_note || ""} onChange={(v) => patch("audio_note", v)} placeholder="trending sound shape that fits" />
-          </Labeled>
-          <Labeled label="Strategic note" hint="why this works">
-            <Textarea rows={2} value={post.strategic_note || ""} onChange={(v) => patch("strategic_note", v)} placeholder="which pillar this reinforces, who it targets, why the hook fits." />
-          </Labeled>
-          <Labeled label="Slide-6 bridge" hint="first-person, self-deprecating">
-            <Textarea rows={2} value={post.bridge_text || ""} onChange={(v) => patch("bridge_text", v)} placeholder='"I found a free app for this. one photo. 30 seconds."' />
-          </Labeled>
-          <Labeled label="Visual brief" hint="drives copy + image prompts">
-            <div className="mb-1.5 flex flex-wrap gap-1">
-              {CAMERA_REF_POOLS.map(({ value: v, hint }) => {
-                const active = post.camera_ref_pool === v;
-                return (
-                  <button key={v} type="button" onClick={() => patch("camera_ref_pool", active ? "" : v)} title={hint}
-                    className={`rounded border px-1.5 py-0.5 text-[10px] transition-colors ${
-                      active ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:bg-muted/50"
-                    }`}>
-                    {v}
-                  </button>
-                );
-              })}
-            </div>
-            <Textarea rows={4} value={post.visual_brief || ""} onChange={(v) => patch("visual_brief", v)}
-              className={`${INPUT_CLS} resize-y font-mono text-xs`}
-              placeholder="Lighting / setting / posture / gesture arc / copy voice." />
-          </Labeled>
-          <Labeled label="Emotional arc" hint="one line per slide">
-            <Textarea rows={4} value={post.emotional_arc || ""} onChange={(v) => patch("emotional_arc", v)}
-              placeholder={"01: quiet, phone at eye level\n02: leaning in, brow tightening\n03: animated, mid-explanation"} />
-          </Labeled>
-        </div>
-      )}
-    </section>
   );
 }
 

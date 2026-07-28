@@ -14,10 +14,13 @@ original per-agent code when called with that agent's parameters.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 import shutil
 from collections import deque
+from contextlib import suppress
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -165,6 +168,173 @@ def cleanup_session_config_dir(path: str | None, *, log_prefix: str = "agent") -
         shutil.rmtree(path, ignore_errors=True)
     except Exception:  # noqa: BLE001 — cleanup must never break teardown
         logger.debug("%s: could not remove session config dir %s", log_prefix, path, exc_info=True)
+
+
+def build_sdk_env(
+    *,
+    service_name: str,
+    api_key: str,
+    oauth_token: str = "",
+    config_env_var: str,
+    config_suffix: str,
+    log_prefix: str = "agent",
+    session_id: str | None = None,
+    sentry_env: dict[str, str] | None = None,
+    api_key_env_var: str = "ANTHROPIC_API_KEY",
+    enable_tool_search: bool = True,
+    extra: dict[str, str] | None = None,
+) -> tuple[dict[str, str], str | None]:
+    """Build the env for a Claude-SDK subprocess, isolated from any interactive
+    ~/.claude and from an IDE-launched parent. Returns ``(env, config_dir)`` —
+    set ``options.env=env`` and pass ``config_dir`` to
+    ``cleanup_session_config_dir()`` after teardown.
+
+    Consolidates the env hygiene that audit and content had drifted copies of:
+      - clears Claude Code IDE session vars that confuse a child ``claude``
+        (parent session id, IDE binary path, inherited effort/checkpointing,
+        IDE-sandbox temp dirs);
+      - clears a blank ``ANTHROPIC_API_KEY``/``ANTHROPIC_AUTH_TOKEN`` that would
+        otherwise shadow ``CLAUDE_CODE_OAUTH_TOKEN`` (exit 1, no stderr);
+      - clears an IDE debugger's ``NODE_OPTIONS`` / ``CLAUDE_CODE_SSE_PORT``;
+      - per-session ``CLAUDE_CONFIG_DIR`` isolation (see ``isolated_config_dir``);
+      - optional Sentry-OTLP (``sentry_env``) + local OTLP (``OTEL_ENDPOINT``).
+
+    ``enable_tool_search=False`` sets ``ENABLE_TOOL_SEARCH=false`` (eager schema
+    load — faster for a small fixed tool set). ``extra`` is merged in last for
+    any agent-specific keys.
+    """
+    env: dict[str, str] = {
+        "OTEL_SERVICE_NAME": service_name,
+        "ENABLE_PROMPT_CACHING_1H": "1",
+        # Clear inherited Claude Code IDE session vars that confuse child
+        # instances: a parent session id makes the child think it belongs to that
+        # session, EXECPATH points at the IDE's binary not the installed CLI,
+        # CLAUDE_EFFORT overrides the effort we set, and the temp/checkpoint vars
+        # are scoped to the IDE sandbox.
+        "CLAUDE_CODE_SESSION_ID": "",
+        "CLAUDE_CODE_EXECPATH": "",
+        "CLAUDE_EFFORT": "",
+        "CLAUDE_CODE_ENABLE_SDK_FILE_CHECKPOINTING": "false",
+        "CLAUDE_CODE_ENABLE_TASKS": "",
+        "TMPDIR": "/tmp",
+        "CLAUDE_TMPDIR": "/tmp",
+        "CLAUDE_CODE_TMPDIR": "/tmp",
+    }
+    if not enable_tool_search:
+        env["ENABLE_TOOL_SEARCH"] = "false"
+    if sentry_env:
+        env.update(sentry_env)
+
+    # Auth precedence mirrors the CLI's: an explicit key wins; otherwise forward a
+    # CLAUDE_CODE_OAUTH_TOKEN. The SDK merges options.env OVER os.environ but can't
+    # DELETE a key, so a present-but-blank ANTHROPIC_API_KEY / ANTHROPIC_AUTH_TOKEN
+    # inherited from a Claude Desktop/Code launch would outrank the OAuth token and
+    # make the CLI exit 1 during initialize with no stderr — drop the blanks here.
+    if api_key:
+        env[api_key_env_var] = api_key
+    else:
+        for _stale in ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN"):
+            if _stale in os.environ and not os.environ[_stale].strip():
+                del os.environ[_stale]
+        if oauth_token:
+            env["CLAUDE_CODE_OAUTH_TOKEN"] = oauth_token
+
+    # An IDE debugger injects NODE_OPTIONS=--require .../bootloader.js, which the
+    # `claude` Node CLI inherits and which corrupts the stream-json protocol (exit
+    # 1 during initialize). CLAUDE_CODE_SSE_PORT is the IDE bridge port. Blank both
+    # (can't delete; an empty NODE_OPTIONS is ignored by Node).
+    for _ide_var in ("NODE_OPTIONS", "CLAUDE_CODE_SSE_PORT"):
+        if os.environ.get(_ide_var):
+            env[_ide_var] = ""
+
+    config_dir = isolated_config_dir(
+        api_key or oauth_token,
+        env_var=config_env_var,
+        suffix=config_suffix,
+        log_prefix=log_prefix,
+        session_id=session_id,
+    )
+    if config_dir:
+        env["CLAUDE_CONFIG_DIR"] = config_dir
+
+    # Local OTLP collector (e.g. Phoenix) when OTEL_ENDPOINT is set.
+    otel_endpoint = os.environ.get("OTEL_ENDPOINT", "")
+    if otel_endpoint:
+        env.update({
+            "CLAUDE_CODE_ENABLE_TELEMETRY": "1",
+            "CLAUDE_CODE_ENHANCED_TELEMETRY_BETA": "1",
+            "OTEL_TRACES_EXPORTER": "otlp",
+            "OTEL_METRICS_EXPORTER": "otlp",
+            "OTEL_LOGS_EXPORTER": "otlp",
+            "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf",
+            "OTEL_EXPORTER_OTLP_ENDPOINT": otel_endpoint,
+            "OTEL_METRIC_EXPORT_INTERVAL": "5000",
+            "OTEL_LOGS_EXPORT_INTERVAL": "2000",
+            "OTEL_TRACES_EXPORT_INTERVAL": "2000",
+        })
+        logger.info("%s: OTEL traces → %s", log_prefix, otel_endpoint)
+
+    if extra:
+        env.update(extra)
+
+    return env, config_dir
+
+
+async def connect_with_retry(
+    options: Any,
+    *,
+    stderr_buf: deque[str],
+    session_id: str,
+    agent: str,
+    agent_label: str,
+    mode: object = "",
+) -> Any:
+    """Open a connected ``ClaudeSDKClient``, retrying transient startup crashes.
+
+    A fresh client is built per attempt so a half-initialised one is never
+    reused. On the final failure raises ``RuntimeError`` carrying the real
+    subprocess stderr (the SDK's ``ProcessError`` only says "exit code 1") and
+    reports the exhausted failure to Sentry. ``agent`` is the Sentry/log
+    namespace; ``agent_label`` is the human noun phrase for the error message.
+    """
+    from claude_agent_sdk import CLIConnectionError, ClaudeSDKClient, ProcessError
+
+    last_exc: Exception | None = None
+    for attempt in range(1, MAX_CONNECT_ATTEMPTS + 1):
+        stderr_buf.clear()
+        candidate = ClaudeSDKClient(options)
+        try:
+            await candidate.connect()
+            if attempt > 1:
+                logger.info(
+                    "%s: SDK connect recovered on attempt %d/%d for session %s",
+                    agent, attempt, MAX_CONNECT_ATTEMPTS, session_id,
+                )
+            return candidate
+        except (ProcessError, CLIConnectionError) as exc:
+            last_exc = exc
+            with suppress(Exception):
+                await candidate.disconnect()
+            captured = captured_stderr(stderr_buf, exc)
+            logger.warning(
+                "%s: SDK connect attempt %d/%d failed for session %s: %s%s",
+                agent, attempt, MAX_CONNECT_ATTEMPTS, session_id, exc,
+                f"\n  subprocess stderr:\n{captured}" if captured else "",
+            )
+            if attempt < MAX_CONNECT_ATTEMPTS:
+                await asyncio.sleep(CONNECT_BACKOFF_SECS * attempt)
+
+    captured = captured_stderr(stderr_buf, last_exc)
+    exit_code = getattr(last_exc, "exit_code", None)
+    rate_limited = is_rate_limited(captured)
+    report_startup_failure_to_sentry(
+        last_exc, agent=agent, session_id=session_id, mode=mode,
+        attempts=MAX_CONNECT_ATTEMPTS, exit_code=exit_code, stderr=captured,
+        rate_limited=rate_limited,
+    )
+    raise RuntimeError(
+        describe_startup_failure(captured, exit_code, agent_label=agent_label)
+    ) from last_exc
 
 
 def report_startup_failure_to_sentry(

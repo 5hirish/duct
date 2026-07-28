@@ -89,7 +89,9 @@ class GenerateImageRequest(BaseModel):
     input_asset_ids:   list[UUID] = Field(default_factory=list)
 
     aspect_ratio:      AspectRatio = AspectRatio.PORTRAIT_9_16
-    image_size:        ImageSize   = ImageSize.K1
+    # 2K so a 9:16 render (~1152×2048) covers the 1080×1920 TikTok slide without
+    # upscaling; 1K (~768×1376) was soft on the long edge.
+    image_size:        ImageSize   = ImageSize.K2
     number_of_images:  int = Field(default=1, ge=1, le=8)
     seed:              int | None = None
     negative_prompt:   str | None = None

@@ -1,4 +1,8 @@
-"""Shared pytest fixtures for audit agent tests."""
+"""Shared pytest fixtures for backend agent tests.
+
+``tests`` is a package (see tests/__init__.py) so the evaluation harness in
+``tests.eval`` imports cleanly from individual test modules.
+"""
 
 import pytest
 

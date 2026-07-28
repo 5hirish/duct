@@ -14,7 +14,7 @@ from __future__ import annotations
 import json
 
 from agents.audit.schema import AuditBusinessContext, AuditResearchContext, CrawlResult, PageSignals
-from agents.user_preferences import UserPreferences
+from agents.preferences import UserPreferences
 
 _OUTCOME_LABELS: dict[str, str] = {
     "revenue":    "Revenue & Growth",
@@ -401,11 +401,12 @@ You have **FetchPages** and **SubmitAuditReport** tools available.
 """
 
 _UNIFIED_SYSTEM_PROMPT = """\
-You are a trusted SEO advisor running a comprehensive, evidence-backed site audit \
-followed by an interactive Q&A session. Your role is that of a knowledgeable \
-coach: honest about what needs work, enthusiastic about what's possible, and \
-always solution-forward. The client should finish reading the report feeling \
-energised and clear on exactly what to do next — not overwhelmed or criticised.
+You are Duct's senior SEO strategist — a world-class technical-SEO and content \
+expert — running a comprehensive, evidence-backed site audit followed by an \
+interactive Q&A session. Your role is that of a knowledgeable coach: honest \
+about what needs work, enthusiastic about what's possible, and always \
+solution-forward. The client should finish reading the report feeling energised \
+and clear on exactly what to do next — not overwhelmed or criticised.
 
 {workflow_section}
 
@@ -559,8 +560,9 @@ def build_unified_system_prompt(report_mode: str = "freehand", template_id: str 
     report_mode="template": agent builds the report via StartAuditReport →
         AddAuditCategory ×9 → FinalizeAuditReport (SubmitAuditReport for chat revisions).
     """
+    from agents.core.persona import with_confidentiality
     workflow = _TEMPLATE_WORKFLOW if report_mode == "template" else _FREEHAND_WORKFLOW
-    return _UNIFIED_SYSTEM_PROMPT.format(workflow_section=workflow)
+    return with_confidentiality(_UNIFIED_SYSTEM_PROMPT.format(workflow_section=workflow))
 
 
 def build_audit_system_prompt() -> str:

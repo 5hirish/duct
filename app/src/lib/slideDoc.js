@@ -7,6 +7,8 @@
 // placeholder CSS — all static, content-independent), so the preview matches
 // what the server will produce on commit. Keep this in sync with templates.py.
 
+import { mediaUrl } from "./contentApi";
+
 function escAttr(s) {
   return String(s || "")
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
@@ -44,8 +46,16 @@ function isStale(prompt, used) {
 
 function fullImageLayer(slide) {
   const alt = escAttr(slide.image_prompt || slide.headline || slide.slide_id);
-  if (slide.image_url) {
-    let o = `<img class="bg" src="${escAttr(slide.image_url)}" alt="${alt}">`;
+  // _preview_uri is a transient inline data URI for instant first paint after a
+  // generation (no CDN round-trip); it's swapped out for image_url once the CDN
+  // image preloads, and is stripped before any save. See ContentWorkspace.
+  // Normalise the stored image_url (relative /uploads/... on local dev) to an
+  // absolute URL — a relative src can't resolve inside the iframe srcDoc
+  // (origin about:srcdoc) and silently 404s, leaving the prompt placeholder.
+  // _preview_uri is already a data: URI, so it passes straight through.
+  const bg = slide._preview_uri || mediaUrl(slide.image_url);
+  if (bg) {
+    let o = `<img class="bg" src="${escAttr(bg)}" alt="${alt}">`;
     if (isStale(slide.image_prompt, slide.image_prompt_used)) {
       o += `<div class="img-stale-flag">image outdated — regenerate to match the new prompt</div>`;
     }
@@ -53,20 +63,23 @@ function fullImageLayer(slide) {
   }
   let badge = `image · ${escAttr(slide.aspect_ratio || "9:16")}`;
   if (slide.role) badge += ` · ${escAttr(slide.role)}`;
+  // Clamp the prompt to a few lines (CSS in buildSlideDoc) so a long prompt
+  // can't overflow the frame and collide with the caption; full text on hover.
   const prompt = (slide.image_prompt || "").trim()
-    ? `<div class="img-ph-prompt">${escCap(slide.image_prompt)}</div>`
+    ? `<div class="img-ph-prompt" title="${escAttr(slide.image_prompt)}">${escCap(slide.image_prompt)}</div>`
     : `<div class="img-ph-prompt is-empty">no image prompt yet</div>`;
   return `<div class="img-placeholder"><div class="img-placeholder-inner"><div class="img-ph-badge">${badge}</div>${prompt}</div></div>`;
 }
 
 function cellImgOrPh(it) {
-  if (it.image_url) {
-    let o = `<img class="cell-img" src="${escAttr(it.image_url)}" alt="${escAttr(it.image_prompt)}">`;
+  const cellSrc = it._preview_uri || mediaUrl(it.image_url);
+  if (cellSrc) {
+    let o = `<img class="cell-img" src="${escAttr(cellSrc)}" alt="${escAttr(it.image_prompt)}">`;
     if (isStale(it.image_prompt, it.image_prompt_used)) o += `<div class="cell-stale-flag">outdated</div>`;
     return o;
   }
   if ((it.image_prompt || "").trim()) {
-    return `<div class="cell-ph"><div class="cell-ph-text">${escCap(it.image_prompt)}</div></div>`;
+    return `<div class="cell-ph"><div class="cell-ph-text" title="${escAttr(it.image_prompt)}">${escCap(it.image_prompt)}</div></div>`;
   }
   return `<div class="cell-ph"><div class="cell-ph-text is-empty">no prompt yet</div></div>`;
 }
@@ -144,7 +157,11 @@ export function buildSlideDoc(slide, n, headHtml, zoom) {
   return (
     `<!doctype html><html><head><meta charset="utf-8">${headHtml}` +
     `<style>:root{--zoom:${zoom}} html,body{margin:0;padding:0;background:#000} ` +
-    `body{display:block !important;align-items:initial;gap:0}</style>` +
+    `body{display:block !important;align-items:initial;gap:0} ` +
+    // Truncate long image-prompt placeholders to a few lines with an ellipsis so
+    // they stay inside the frame; the full prompt shows on hover (title attr).
+    `.img-ph-prompt{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:7;line-clamp:7;overflow:hidden} ` +
+    `.cell-ph-text{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;line-clamp:4;overflow:hidden}</style>` +
     `</head><body>${renderSlideBody(slide, n)}</body></html>`
   );
 }

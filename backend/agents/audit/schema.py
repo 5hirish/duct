@@ -8,10 +8,10 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from agents.core.business_context import BusinessContext
+from agents.core.context import BusinessContext
 from agents.core.session import BaseAgentSession
 from agents.models import AgentEffort
-from agents.user_preferences import UserPreferences
+from agents.preferences import UserPreferences
 
 
 # ---------------------------------------------------------------------------
@@ -36,6 +36,24 @@ class EffortLevel(StrEnum):
     low    = "low"
     medium = "medium"
     high   = "high"
+
+
+class AuditTool(StrEnum):
+    """Fully-namespaced names of the audit MCP tools (server ``duct_crawl``).
+
+    The @tool decorators in agents/audit/tools.py register the *short* names
+    (e.g. "FetchPages"); the SDK namespaces them as ``mcp__duct_crawl__<short>``.
+    This enum holds those namespaced names — the form used in
+    ClaudeAgentOptions.allowed_tools and the can_use_tool dispatch. Mirrors
+    ContentTool (agents/content/schema.py). Keep in sync with the @tool
+    registrations in agents/audit/tools.py.
+    """
+
+    FETCH_PAGES           = "mcp__duct_crawl__FetchPages"          # in-process page fetch
+    SUBMIT_AUDIT_REPORT   = "mcp__duct_crawl__SubmitAuditReport"   # template mode only — chat-revision resubmit
+    START_AUDIT_REPORT    = "mcp__duct_crawl__StartAuditReport"    # template: incremental build, step 1
+    ADD_AUDIT_CATEGORY    = "mcp__duct_crawl__AddAuditCategory"    # template: incremental build, step 2 (×9)
+    FINALIZE_AUDIT_REPORT = "mcp__duct_crawl__FinalizeAuditReport" # template: incremental build, step 3
 
 
 class EffortEstimate(StrEnum):
@@ -168,7 +186,7 @@ class CrawlResult(BaseModel):
 
 
 # Business context is now the shared, unified model passed equally to every
-# agent (agents/core/business_context.py) — a superset of every agent's fields
+# agent (agents/core/context.py) — a superset of every agent's fields
 # with extra="ignore", so existing audit payloads validate unchanged.
 # AuditBusinessContext is kept as an alias for backwards-compatible imports.
 AuditBusinessContext = BusinessContext

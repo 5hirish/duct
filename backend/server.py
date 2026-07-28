@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import sys
 import time
+from contextlib import asynccontextmanager
 from urllib.parse import urlparse
 
 from fastapi import FastAPI
@@ -106,6 +108,32 @@ def _is_localhost_url(url: str) -> bool:
     return hostname in {"localhost", "127.0.0.1", "::1"}
 
 
+# Secret request headers that must never reach Sentry, even with
+# send_default_pii enabled: the per-request bring-your-own provider keys and the
+# app gate key. Matched case-insensitively in the before_send hook below.
+_SENSITIVE_HEADERS = frozenset({
+    "x-api-key",
+    "x-provider-anthropic",
+    "x-provider-openai",
+    "x-provider-gemini",
+    "authorization",
+})
+
+
+def _scrub_sensitive_headers(event: dict, _hint: dict) -> dict:
+    """Sentry before_send: redact secret request headers so BYO provider keys and
+    the app API key are never captured. Best-effort — never drops the event."""
+    try:
+        headers = event.get("request", {}).get("headers")
+        if isinstance(headers, dict):
+            for name in list(headers):
+                if name.lower() in _SENSITIVE_HEADERS:
+                    headers[name] = "[redacted]"
+    except Exception:  # noqa: BLE001 — scrubbing must never break error reporting
+        pass
+    return event
+
+
 if _cfg.sentry_dsn and (
     _cfg.sentry_enable_localhost or not _is_localhost_url(_cfg.api_public_url)
 ):
@@ -117,8 +145,49 @@ if _cfg.sentry_dsn and (
         traces_sample_rate=_cfg.sentry_traces_sample_rate,
         profile_session_sample_rate=_cfg.sentry_profile_session_sample_rate,
         profile_lifecycle=_cfg.sentry_profile_lifecycle,
+        before_send=_scrub_sensitive_headers,
     )
     logging.getLogger(__name__).info("Sentry SDK initialized for backend.")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Single startup/shutdown owner for the app.
+
+    Replaces the deprecated `@app.on_event("startup")` and the per-router
+    `@router.on_event("startup")` pruner hooks. Per the FastAPI docs, providing
+    a `lifespan` disables ALL `on_event` handlers — including the ones merged in
+    from included routers — so every startup action must live here.
+    """
+    # Optional dev convenience: create tables from SQLModel metadata.
+    if _cfg.init_db_on_startup:
+        init_db()
+
+    # Background session-pruner loops: the shared agent registry plus the two
+    # legacy per-route session maps. Each runs forever; cancel on shutdown.
+    # Imported here (not at module top) to keep startup wiring beside the tasks.
+    from routes.agents import _prune_stale_sessions as _prune_agent_sessions
+    from routes.audit import _prune_stale_sessions as _prune_audit_sessions
+    from routes.content import _prune_stale_sessions as _prune_content_sessions
+
+    pruners = [
+        asyncio.create_task(_prune_agent_sessions(), name="prune-agent-sessions"),
+        asyncio.create_task(_prune_audit_sessions(), name="prune-audit-sessions"),
+        asyncio.create_task(_prune_content_sessions(), name="prune-content-sessions"),
+    ]
+    try:
+        yield
+    finally:
+        # Close active agent sessions FIRST: this sentinels each session's SSE
+        # event queue so the long-lived stream generators exit, letting uvicorn's
+        # graceful shutdown drain connections instead of blocking on them (a
+        # --reload or a deploy would otherwise hang until the chat idle-timeout).
+        from agents.core.session import close_all_sessions
+
+        close_all_sessions()
+        for task in pruners:
+            task.cancel()
+        await asyncio.gather(*pruners, return_exceptions=True)
+
 
 _openapi = "/openapi.json" if _cfg.expose_openapi_docs else None
 app = FastAPI(
@@ -126,6 +195,7 @@ app = FastAPI(
     openapi_url=_openapi,
     docs_url="/docs" if _cfg.expose_openapi_docs else None,
     redoc_url="/redoc" if _cfg.expose_openapi_docs else None,
+    lifespan=lifespan,
 )
 
 _cfg_cors = get_configs()
@@ -148,22 +218,17 @@ app.add_middleware(OpenapiDocsBasicAuthMiddleware)
 app.add_middleware(AccessLogMiddleware)
 
 
-@app.on_event("startup")
-def _startup_init_db() -> None:
-    if _cfg.init_db_on_startup:
-        init_db()
+# Serve /uploads only for the local storage backend (dev). In prod the 'r2'
+# backend serves images straight from R2's CDN, so this mount is skipped.
+from service import storage as _storage  # noqa: E402
 
-
-# Mount the uploads directory as a static-file route when enabled. In
-# production this points at a Railway Volume; in dev it's a local path.
-if _cfg.uploads_enabled:
+if _storage.storage_backend() == "local":
     import os
 
     from fastapi.staticfiles import StaticFiles
 
-    uploads_dir = _cfg.uploads_dir or "/app/uploads"
-    os.makedirs(uploads_dir, exist_ok=True)
-    app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
+    os.makedirs(_cfg.uploads_dir, exist_ok=True)
+    app.mount("/uploads", StaticFiles(directory=_cfg.uploads_dir), name="uploads")
 
 
 # Mount the global content reference library if it exists. These are

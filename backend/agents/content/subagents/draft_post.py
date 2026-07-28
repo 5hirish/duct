@@ -17,6 +17,7 @@ from __future__ import annotations
 from claude_agent_sdk import AgentDefinition
 
 from agents.content.prompts import DRAFT_POST_PROMPT
+from agents.content.schema import ContentTool
 from agents.models import AgentTool, ModelName
 
 DRAFT_POST_AGENT = AgentDefinition(
@@ -29,6 +30,6 @@ DRAFT_POST_AGENT = AgentDefinition(
     model=ModelName.CLAUDE_SONNET.value,
     tools=[
         AgentTool.WEB_SEARCH.value,
-        "mcp__duct_content__fetch_format_library",
+        ContentTool.FETCH_FORMAT_LIBRARY.value,
     ],
 )

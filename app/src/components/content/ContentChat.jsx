@@ -118,20 +118,25 @@ function ChatBubble({ role, text, thinking, streaming }) {
       <div className="w-full space-y-1">
         <ThinkingBlock thinking={thinking} streaming={streaming && !text} />
         {text && (
-          <div className={[
-            "rounded-2xl rounded-bl-sm px-4 py-3 text-sm bg-muted text-foreground",
-            // react-markdown@9+ removed the className prop; the prose styles that
-            // used to sit on <ReactMarkdown> live on this wrapper now.
-            "prose prose-sm dark:prose-invert max-w-none",
-            "prose-p:my-3 prose-p:leading-relaxed prose-p:text-sm",
-            "prose-headings:font-semibold prose-headings:text-foreground prose-headings:mt-5 prose-headings:mb-2",
-            "prose-h1:text-xl prose-h2:text-base prose-h3:text-[15px] prose-h4:text-sm",
-            "prose-ul:my-2.5 prose-ol:my-2.5 prose-li:my-1.5 prose-li:leading-relaxed",
-            "prose-strong:text-foreground prose-strong:font-semibold",
-          ].join(" ")}>
+          <div className="rounded-2xl rounded-bl-sm px-4 py-3 text-sm bg-muted text-foreground max-w-none">
+            {/* Explicit per-element styling — the app has NO @tailwindcss/typography
+                plugin, so `prose` classes are no-ops and Tailwind's preflight strips
+                heading sizes, list bullets and paragraph margins. Style every element
+                directly (same approach as ThinkingBlock) so markdown renders, not blobs. */}
             <ReactMarkdown
               remarkPlugins={[remarkGfm, remarkBreaks]}
               components={{
+                h1: ({ children }) => <h1 className="text-lg font-bold text-foreground mt-4 mb-2 first:mt-0">{children}</h1>,
+                h2: ({ children }) => <h2 className="text-base font-bold text-foreground mt-4 mb-1.5 first:mt-0">{children}</h2>,
+                h3: ({ children }) => <h3 className="text-sm font-semibold text-foreground mt-3 mb-1 first:mt-0">{children}</h3>,
+                h4: ({ children }) => <h4 className="text-sm font-semibold text-foreground/90 mt-2.5 mb-1 first:mt-0">{children}</h4>,
+                p: ({ children }) => <p className="my-2.5 leading-relaxed first:mt-0 last:mb-0">{children}</p>,
+                ul: ({ children }) => <ul className="list-disc pl-5 my-2.5 space-y-1 marker:text-muted-foreground/70 [&_ul]:my-1 [&_ol]:my-1">{children}</ul>,
+                ol: ({ children }) => <ol className="list-decimal pl-5 my-2.5 space-y-1 marker:text-muted-foreground/70 [&_ul]:my-1 [&_ol]:my-1">{children}</ol>,
+                li: ({ children }) => <li className="leading-relaxed pl-0.5">{children}</li>,
+                strong: ({ children }) => <strong className="font-semibold text-foreground">{children}</strong>,
+                em: ({ children }) => <em className="italic">{children}</em>,
+                hr: () => <hr className="border-border my-4" />,
                 code({ className, children }) {
                   const { language, isBlock } = resolveCode(className, children);
                   if (isBlock) return <CodeBlock language={language}>{children}</CodeBlock>;
@@ -148,7 +153,7 @@ function ChatBubble({ role, text, thinking, streaming }) {
                     </a>
                   );
                 },
-                table: ({ children }) => <table className="border-collapse my-3 w-full text-sm">{children}</table>,
+                table: ({ children }) => <div className="overflow-x-auto my-3"><table className="border-collapse w-full text-sm">{children}</table></div>,
                 th: ({ children }) => <th className="border border-border px-3 py-1.5 font-semibold text-left bg-muted/50">{children}</th>,
                 td: ({ children }) => <td className="border border-border px-3 py-1.5">{children}</td>,
                 blockquote: ({ children }) => <blockquote className="border-l-4 border-border pl-4 my-3 text-muted-foreground italic">{children}</blockquote>,
@@ -162,6 +167,48 @@ function ChatBubble({ role, text, thinking, streaming }) {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// A generated-image bubble in the transcript. Shows the inline data URI for an
+// instant thumbnail; clicking opens a full-screen lightbox at the full-res URL.
+function ChatImageBubble({ image, fullUrl, caption }) {
+  const [open, setOpen] = useState(false);
+  const thumb = image || fullUrl;   // inline data: URI first (instant paint)
+  const full = fullUrl || image;    // full-res target for the lightbox
+  useEffect(() => {
+    if (!open) return undefined;
+    const onKey = (e) => { if (e.key === "Escape") setOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+  if (!thumb) return null;
+  return (
+    <div className="flex justify-start mb-4">
+      <div className="max-w-[82%] space-y-1">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          title="View full screen"
+          className="block overflow-hidden rounded-2xl rounded-bl-sm border border-border/60 bg-muted/40 transition-opacity hover:opacity-95"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={thumb} alt={caption || "Generated image"} loading="lazy" className="block w-44 max-w-full object-cover" />
+        </button>
+        {caption && <p className="pl-1 text-[11px] text-muted-foreground">{caption}</p>}
+      </div>
+      {open && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setOpen(false)}
+          className="fixed inset-0 z-50 flex cursor-zoom-out items-center justify-center bg-black/80 p-6"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={full} alt={caption || "Generated image"} className="max-h-full max-w-full rounded-lg object-contain shadow-2xl" />
+        </div>
+      )}
     </div>
   );
 }
@@ -190,11 +237,14 @@ export default function ContentChat({
   errorMsg,
   isAgentTyping,
   isStreaming,
+  reconnecting,
   onAnswerQuestions,
   onSendMessage,
   onRetrySend,
   onRetry,
   onStop,
+  onStartFresh,
+  canStartFresh,
   mobilePostBar,
 }) {
   const scrollRef    = useRef(null);
@@ -232,8 +282,9 @@ export default function ContentChat({
 
   const status = PHASE_STATUS[phase] ?? PHASE_STATUS[Phase.STARTING];
   const isFailed = phase === Phase.FAILED;
-  // Input enabled during READY + CHATTING (post-artifact chat), disabled during pipeline / questions / failed.
-  const inputDisabled = phase === Phase.STARTING || phase === Phase.PIPELINE || phase === Phase.QUESTIONS || isFailed;
+  // Input enabled during READY + CHATTING (post-artifact chat), disabled during
+  // pipeline / questions / failed, and while we're reconnecting a dropped stream.
+  const inputDisabled = phase === Phase.STARTING || phase === Phase.PIPELINE || phase === Phase.QUESTIONS || isFailed || reconnecting;
   const modeLabel = MODE_LABELS[mode] || "Content agent";
 
   return (
@@ -263,6 +314,16 @@ export default function ContentChat({
         >
           — {status.label}
         </span>
+        {onStartFresh && canStartFresh && (
+          <button
+            type="button"
+            onClick={onStartFresh}
+            title="Abandon this conversation and start a new one (the post/plan is kept)"
+            className="ml-auto rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          >
+            ↺ Start fresh
+          </button>
+        )}
       </div>
 
       <ContentTodos todos={todos} />
@@ -293,6 +354,8 @@ export default function ContentChat({
           {messages.map((msg, i) =>
             msg.role === "send_error" ? (
               <SendErrorBubble key={i} text={msg.text} content={msg.content} onRetry={onRetrySend} />
+            ) : msg.image ? (
+              <ChatImageBubble key={i} image={msg.image} fullUrl={msg.fullUrl} caption={msg.caption} />
             ) : (
               <ChatBubble
                 key={i}
@@ -308,6 +371,13 @@ export default function ContentChat({
 
           {phase === Phase.QUESTIONS && pendingQuestions?.length > 0 && (
             <ContentQuestions questions={pendingQuestions} onSubmit={onAnswerQuestions} disabled={false} />
+          )}
+
+          {reconnecting && !isFailed && (
+            <div className="mt-3 flex items-center gap-2 rounded-lg border border-amber-400/30 bg-amber-500/10 px-4 py-2.5 text-xs text-amber-600 dark:text-amber-400">
+              <span className="inline-block size-3 rounded-full border-2 border-current border-t-transparent animate-spin" />
+              Connection dropped — reconnecting…
+            </div>
           )}
 
           {isFailed && (

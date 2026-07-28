@@ -9,7 +9,7 @@ JSON-output / ``<duct_report>`` instructions.
 from __future__ import annotations
 
 # The streaming report tag every Claude-SDK agent wraps its final structured
-# payload in (parsed by agents/core/report_stream.py).
+# payload in (parsed by agents/core/stream.py).
 DUCT_REPORT_OPEN = "<duct_report>"
 DUCT_REPORT_CLOSE = "</duct_report>"
 

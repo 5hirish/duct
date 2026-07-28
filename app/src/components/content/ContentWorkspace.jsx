@@ -6,12 +6,16 @@ import SplitWorkspace from "../workspace/SplitWorkspace";
 import { Phase } from "./contentPhase";
 import {
   answerContentQuestions,
+  archiveContentConversation,
   closeContentSession,
   consumeSseStream,
+  getContentConversation,
   getSlideRenderDoc,
+  mediaUrl,
   openPlanStream,
   openPostStream,
   postSlideRender,
+  reattachContentStream,
   sendContentChat,
 } from "../../lib/contentApi";
 import { ContentEvent } from "../../lib/contentEvents";
@@ -41,10 +45,27 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
   const [sessionId, setSessionId] = useState(null);
   const [channelNote, setChannelNote] = useState(null);
   const [isAgentTyping, setIsAgentTyping] = useState(false);
+  const [conversationId, setConversationId] = useState(null);
+  const [reconnecting, setReconnecting] = useState(false);
+  // When set, overrides `context` for the next session open (used by Start fresh
+  // to reopen with start_fresh instead of resume). null ⇒ use context as-is.
+  const [openOverride, setOpenOverride] = useState(null);
 
   const abortRef = useRef(null);
   const pipelineEndedRef = useRef(false);
   const sessionIdRef     = useRef(null);
+  const conversationIdRef = useRef(null);
+  // Terminal = the run truly ended (PIPELINE_FAILED) — never auto-reconnect then.
+  // A bare stream drop (network blip, server restart) is NOT terminal.
+  const terminalRef = useRef(false);
+  const reconnectAttemptRef = useRef(0);
+  // On a resume the only turn is a one-line greeting; its extended-thinking is
+  // pure noise (and narrates internal state), so we hide thinking until the user
+  // takes their first action. Real work turns show thinking normally.
+  const suppressThinkingRef = useRef(false);
+
+  // The params we actually open with — context, unless Start fresh overrode it.
+  const openContext = openOverride || context;
 
   // ---------------------------------------------------------------------------
   // Retry
@@ -60,8 +81,47 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
     setPayload(null);
     setSessionId(null);
     setIsAgentTyping(false);
+    setReconnecting(false);
     pipelineEndedRef.current = false;
     setRetryCount((c) => c + 1);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Start fresh — abandon the current conversation, keep the artifact.
+  // ---------------------------------------------------------------------------
+
+  async function handleStartFresh() {
+    const convId = conversationIdRef.current;
+    // Archive the old conversation now; start_fresh:true on reopen is the
+    // backstop (it also archives any active conversation for the artifact).
+    if (convId) await archiveContentConversation(convId);
+    abortRef.current?.abort();
+    if (sessionIdRef.current) closeContentSession(sessionIdRef.current).catch(() => {});
+
+    // Bind the new conversation to the same artifact so it stays the post's
+    // active chat. artifact ids come straight off the context.
+    const artifactType = mode === "plan_month" ? "plan" : "post";
+    const artifactId   = mode === "plan_month" ? context.planId : context.postId;
+
+    setMessages([]);
+    setPayload(null);
+    setSessionId(null);
+    setConversationId(null);
+    conversationIdRef.current = null;
+    setPendingQuestions(null);
+    setErrorMsg("");
+    setIsAgentTyping(false);
+    setReconnecting(false);
+    setPhase(Phase.STARTING);
+    pipelineEndedRef.current = false;
+    // Changing openOverride re-triggers the SSE effect (deps include it).
+    setOpenOverride({
+      ...context,
+      conversationId: undefined,
+      resume: false,
+      startFresh: true,
+      ...(artifactType && artifactId ? { artifactType, artifactId } : {}),
+    });
   }
 
   // ---------------------------------------------------------------------------
@@ -72,39 +132,122 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
     const ctrl = new AbortController();
     abortRef.current = ctrl;
     pipelineEndedRef.current = false;
+    terminalRef.current = false;
+    reconnectAttemptRef.current = 0;
     // Per-effect-instance state (closure, not refs) so a StrictMode double-mount
     // never lets one instance clobber or leak the other's backend session.
     let cancelled = false;
     let localSid = null;
 
+    const MAX_RECONNECT = 5;
+
+    const dead = () => cancelled || ctrl.signal.aborted;
+
+    function handleSession({ sessionId: sid, conversationId: cid }) {
+      localSid = sid;
+      // Torn down before the stream opened (StrictMode remount / fast nav):
+      // close the orphan so its worker is cancelled instead of racing the
+      // surviving session on the shared CLI config dir.
+      if (cancelled) {
+        closeContentSession(sid).catch(() => {});
+        return;
+      }
+      sessionIdRef.current = sid;
+      setSessionId(sid);
+      const next = cid || conversationIdRef.current || null;
+      conversationIdRef.current = next;
+      setConversationId(next);
+    }
+
+    // Jittered exponential backoff: ~1s, 2s, 4s, 8s, 15s (±50% jitter).
+    function backoffDelay(attempt) {
+      const base = Math.min(15000, 1000 * 2 ** (attempt - 1));
+      return Math.round(base * (0.5 + Math.random() * 0.5));
+    }
+
+    function sleep(ms) {
+      return new Promise((resolve) => {
+        const t = setTimeout(resolve, ms);
+        ctrl.signal.addEventListener("abort", () => { clearTimeout(t); resolve(); }, { once: true });
+      });
+    }
+
+    // Re-establish a stream after an unexpected drop. Prefer re-attaching to the
+    // SAME live session (within the backend grace window) so the in-flight run
+    // continues gap-free; if it's gone, resume a fresh session from the
+    // persisted conversation. Returns a stream body, or null on failure.
+    async function reconnect() {
+      const sid = sessionIdRef.current;
+      if (sid) {
+        try { return await reattachContentStream(sid, { signal: ctrl.signal }); }
+        catch { /* session past grace → resume-create below */ }
+      }
+      if (dead()) return null;
+      const artifactType = mode === "plan_month" ? "plan" : "post";
+      const artifactId   = mode === "plan_month" ? context.planId : context.postId;
+      const opener = mode === "plan_month" ? openPlanStream : openPostStream;
+      const { body } = await opener(
+        {
+          ...openContext,
+          conversationId: conversationIdRef.current,
+          resume: true,
+          ...(artifactType && artifactId ? { artifactType, artifactId } : {}),
+        },
+        { signal: ctrl.signal, onSession: handleSession },
+      );
+      return body;
+    }
+
     async function start() {
       try {
+        // Resume: rehydrate persisted chat history BEFORE the live stream so the
+        // order is history → new turns (the SSE handler appends to the tail).
+        suppressThinkingRef.current = Boolean(openContext?.conversationId);
+        if (openContext?.conversationId) {
+          try {
+            const { events } = await getContentConversation(openContext.conversationId);
+            if (cancelled) return;
+            const hist = mapEventsToMessages(events);
+            if (hist.length) setMessages(hist);
+          } catch { /* non-fatal: server still resumes; UI just lacks history */ }
+        }
+
         const opener = mode === "plan_month" ? openPlanStream : openPostStream;
-        const { body } = await opener(context, {
-          signal: ctrl.signal,
-          onSession: (sid) => {
-            localSid = sid;
-            // Torn down before the stream opened (StrictMode remount / fast
-            // nav): close the orphan so its agent worker is cancelled instead
-            // of racing the surviving session on the shared CLI config dir.
-            if (cancelled) {
-              closeContentSession(sid).catch(() => {});
-              return;
-            }
-            sessionIdRef.current = sid;
-            setSessionId(sid);
-          },
-        });
+        const { body } = await opener(openContext, { signal: ctrl.signal, onSession: handleSession });
         if (cancelled) return;
 
-        await consumeSseStream(body, handleEvent, ctrl.signal);
+        // Stream → reconnect loop. consumeSseStream returns on a server-side end
+        // and throws on a network error; both are drops unless the run is truly
+        // terminal (PIPELINE_FAILED) or we've been torn down.
+        let stream = body;
+        while (true) {
+          try {
+            await consumeSseStream(stream, handleEvent, ctrl.signal);
+          } catch { /* network drop → reconnect below */ }
+          if (dead() || terminalRef.current) return;
 
-        if (!ctrl.signal.aborted && !pipelineEndedRef.current) {
-          setErrorMsg("Backend closed the stream unexpectedly.");
-          setPhase(Phase.FAILED);
+          reconnectAttemptRef.current += 1;
+          if (reconnectAttemptRef.current > MAX_RECONNECT) {
+            setReconnecting(false);
+            setErrorMsg("We lost the connection and couldn't reconnect. Please retry.");
+            setPhase(Phase.FAILED);
+            return;
+          }
+          setReconnecting(true);
+          setIsAgentTyping(false);
+          await sleep(backoffDelay(reconnectAttemptRef.current));
+          if (dead()) return;
+
+          let next = null;
+          try { next = await reconnect(); } catch { next = null; }
+          if (dead()) return;
+          if (!next) continue;            // open failed → loop backs off again
+          stream = next;
+          setReconnecting(false);          // re-established; handleEvent resets the counter
         }
       } catch (err) {
-        if (!ctrl.signal.aborted) {
+        if (!dead()) {
+          setReconnecting(false);
           setErrorMsg(err.message || "Stream error.");
           setPhase(Phase.FAILED);
         }
@@ -121,13 +264,16 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
         if (sessionIdRef.current === sid) sessionIdRef.current = null;
       }
     };
-  }, [retryCount, mode, JSON.stringify(context)]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [retryCount, mode, JSON.stringify(openContext)]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ---------------------------------------------------------------------------
   // SSE event handler
   // ---------------------------------------------------------------------------
 
   function handleEvent(event) {
+    // Any frame proves the stream is healthy → reset the reconnect backoff so a
+    // single drop later in a long session starts counting from zero again.
+    reconnectAttemptRef.current = 0;
     // PIPELINE_STARTED carries the resolved channel; note when we fell back.
     if (event.channel) {
       setChannelNote(
@@ -137,6 +283,13 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
       );
     }
     switch (event.event) {
+
+      // Leave the "Starting session…" state the instant the backend responds —
+      // before any step arrives — so the right-pane PipelineProgress skeleton
+      // shows immediately instead of waiting on the first STEP_STARTED.
+      case ContentEvent.PIPELINE_STARTED:
+        setPhase((p) => (p === Phase.STARTING ? Phase.PIPELINE : p));
+        break;
 
       case ContentEvent.STEP_STARTED:
         setPhase(Phase.PIPELINE);
@@ -182,6 +335,8 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
         break;
 
       case ContentEvent.THINKING_CHUNK:
+        // Hide the resume greeting's thinking (see suppressThinkingRef).
+        if (suppressThinkingRef.current) break;
         setMessages((prev) => {
           const last = prev[prev.length - 1];
           if (last?.role === "assistant" && last.streaming)
@@ -212,9 +367,45 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
         setPayload({ type: "plan", ...event.payload });
         break;
 
-      case ContentEvent.POST_DRAFT_UPDATED:
-        setPayload({ type: "post", ...event.payload });
+      case ContentEvent.POST_DRAFT_UPDATED: {
+        const base = { type: "post", ...event.payload };
+        const ip = event.inline_preview;
+        if (ip?.data_uri) {
+          // Instant first paint: render the inline data URI now, then preload the
+          // real CDN image and drop the preview so the iframe shows full-res
+          // (cached) — avoids a visible CDN round-trip on the freshly generated slide.
+          setPayload(applyPreview(base, ip.slide_id, ip.item_index, ip.data_uri));
+          const realUrl = findSlideImage(base, ip.slide_id, ip.item_index);
+          if (realUrl && typeof window !== "undefined") {
+            const pre = new window.Image();
+            const drop = () => setPayload((prev) => applyPreview(prev, ip.slide_id, ip.item_index, null));
+            pre.onload = drop;
+            pre.onerror = drop;
+            pre.src = mediaUrl(realUrl);
+          }
+          // Drop a clickable image bubble into the chat (iMessage-style). This
+          // only runs on inline_preview, which the backend attaches solely when
+          // generate_image produced + attached an image — never on copy edits.
+          const slideIdx = (base.slides || []).findIndex(
+            (s) => String(s.slide_id) === String(ip.slide_id),
+          );
+          const cap =
+            (slideIdx >= 0 ? `Slide ${slideIdx + 1}` : "Generated image") +
+            (ip.item_index != null ? ` · image ${ip.item_index + 1}` : "");
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              image: ip.data_uri,
+              fullUrl: realUrl ? mediaUrl(realUrl) : ip.data_uri,
+              caption: cap,
+            },
+          ]);
+        } else {
+          setPayload(base);
+        }
         break;
+      }
 
       case ContentEvent.PIPELINE_FINISHED:
         pipelineEndedRef.current = true;
@@ -223,6 +414,8 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
 
       case ContentEvent.PIPELINE_FAILED:
         pipelineEndedRef.current = true;
+        terminalRef.current = true;  // a real run failure — don't auto-reconnect
+        setReconnecting(false);
         setErrorMsg(friendlyErrorMessage(event.error));
         setPhase(Phase.FAILED);
         break;
@@ -284,6 +477,8 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
   }
 
   async function handleSendMessage(content) {
+    // The user is engaging — show thinking normally from here on.
+    suppressThinkingRef.current = false;
     const text = typeof content === "string" ? content : "[image attached]";
     setMessages((prev) => {
       const cleaned = prev[prev.length - 1]?.role === "send_error" ? prev.slice(0, -1) : prev;
@@ -395,15 +590,93 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
           errorMsg={errorMsg}
           isAgentTyping={isAgentTyping}
           isStreaming={isStreaming}
+          reconnecting={reconnecting}
           onAnswerQuestions={handleAnswerQuestions}
           onSendMessage={handleSendMessage}
           onRetrySend={handleRetrySend}
           onRetry={handleRetry}
           onStop={handleStop}
+          onStartFresh={handleStartFresh}
+          canStartFresh={Boolean(conversationId) && (phase === Phase.READY || phase === Phase.CHATTING)}
         />
       }
     />
   );
+}
+
+
+/** The real (CDN) image_url for a slide or one of its cells, from a post payload. */
+function findSlideImage(payload, slideId, itemIndex) {
+  const slide = (payload?.slides || []).find((s) => String(s.slide_id) === String(slideId));
+  if (!slide) return null;
+  if (itemIndex == null) return slide.image_url || null;
+  return slide.items?.[itemIndex]?.image_url || null;
+}
+
+/** Set (or clear, when uri is null) the transient _preview_uri on a slide/cell —
+ * the instant-paint inline data URI. Returns a new payload; leaves image_url
+ * (the saved value) untouched. */
+function applyPreview(payload, slideId, itemIndex, uri) {
+  if (!payload?.slides) return payload;
+  const apply = (obj) => {
+    const next = { ...obj };
+    if (uri) next._preview_uri = uri; else delete next._preview_uri;
+    return next;
+  };
+  const slides = payload.slides.map((s) => {
+    if (String(s.slide_id) !== String(slideId)) return s;
+    if (itemIndex == null) return apply(s);
+    const items = (s.items || []).map((it, i) => (i === itemIndex ? apply(it) : it));
+    return { ...s, items };
+  });
+  return { ...payload, slides };
+}
+
+/**
+ * Map persisted conversation events (kind + data) to the chat `messages` shape
+ * used by ContentChat. Thinking rows are merged onto the assistant turn that
+ * follows them (matching the live streaming shape); questions/answers render as
+ * readable assistant/user lines.
+ */
+function mapEventsToMessages(events) {
+  const out = [];
+  let pendingThinking = "";
+  const userText = (data) => {
+    const c = data?.content;
+    if (typeof c === "string") return c;
+    if (Array.isArray(c))
+      return c.filter((b) => b?.type === "text").map((b) => b.text).join(" ").trim() || "[image attached]";
+    return "";
+  };
+  for (const e of events || []) {
+    switch (e.kind) {
+      case "user":
+        out.push({ role: "user", text: userText(e.data) });
+        break;
+      case "thinking":
+        pendingThinking = e.data?.text || "";
+        break;
+      case "assistant":
+        out.push({ role: "assistant", text: e.data?.text || "", thinking: pendingThinking || undefined });
+        pendingThinking = "";
+        break;
+      case "question": {
+        const qs = (e.data?.questions || []).map((q) => q?.question).filter(Boolean).join(" · ");
+        if (pendingThinking) { out.push({ role: "assistant", text: "", thinking: pendingThinking }); pendingThinking = ""; }
+        if (qs) out.push({ role: "assistant", text: `**Quick question:** ${qs}` });
+        break;
+      }
+      case "answer": {
+        const ans = Object.values(e.data?.answers || {}).filter(Boolean).join(", ");
+        if (ans) out.push({ role: "user", text: ans });
+        break;
+      }
+      default:
+        break;
+    }
+  }
+  if (pendingThinking) out.push({ role: "assistant", text: "", thinking: pendingThinking });
+  return out;
 }
 
 

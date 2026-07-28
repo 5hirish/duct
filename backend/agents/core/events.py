@@ -50,6 +50,28 @@ class AgentEvent(StrEnum):
     POST_DRAFT_UPDATED = "post_draft_updated"  # content: a post draft
 
 
+class EventKind(StrEnum):
+    """Persisted conversation-event categories — the ``kind`` column on
+    agent_events. Distinct from AgentEvent (the live SSE vocabulary): a small,
+    stable set describing *what a stored turn is*, written by ConversationRecorder
+    and replayed on resume.
+
+    Kept a plain str enum — the DB column stays a free-text String, never a DB
+    enum, so adding a kind needs no migration (see models/content/conversation.py).
+
+    Contract with the frontend chat UI (served via routes/agents.py). Never
+    change an existing value; only add members.
+    """
+
+    USER = "user"
+    ASSISTANT = "assistant"
+    THINKING = "thinking"
+    QUESTION = "question"
+    ANSWER = "answer"
+    TOOL_USE = "tool_use"        # one per tool call: name + full input
+    TOOL_RESULT = "tool_result"  # paired by tool_use_id: output + is_error
+
+
 class StepStatus(StrEnum):
     """Lifecycle status carried on the ``status`` field of STEP_* events.
 

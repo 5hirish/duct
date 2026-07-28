@@ -132,3 +132,49 @@ def format_business_context(
     if include_organic:
         lines += _lines(ctx, _ORGANIC_LABELS)
     return xml_block("business_context", "\n".join(lines))
+
+
+class UserContext(BaseModel):
+    """The human operator a synthesis is for — used to personalise tone/depth.
+
+    Separate from BusinessContext (which describes the company). Extensible:
+    populate ``name`` today; add role/seniority later and the formatter renders
+    only the fields that are set. Per-user data is rendered in the USER message
+    (via get_synthesis_user_prompt), never the system prompt, so the cached
+    system prefix stays byte-identical across users.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    name: str = ""
+    role: str = ""
+    seniority: str = ""
+
+    @classmethod
+    def coerce(cls, data: "UserContext | dict | None") -> "UserContext":
+        """Build from this model, a plain dict, or None (→ empty)."""
+        if data is None:
+            return cls()
+        if isinstance(data, UserContext):
+            return data
+        if isinstance(data, BaseModel):
+            return cls.model_validate(data.model_dump())
+        return cls.model_validate(data)
+
+
+_USER_LABELS: list[tuple[str, str]] = [
+    ("name", "Name"),
+    ("role", "Role"),
+    ("seniority", "Seniority"),
+]
+
+
+def format_user_context(data: UserContext | dict | None) -> str:
+    """Render populated user fields as a standard ``<user_context>`` block.
+
+    Returns '' when nothing is populated, so prompts stay clean when no user
+    context is supplied. Like business context, this belongs in the user
+    message — never the system prompt.
+    """
+    ctx = UserContext.coerce(data)
+    return xml_block("user_context", "\n".join(_lines(ctx, _USER_LABELS)))

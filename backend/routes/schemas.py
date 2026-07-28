@@ -7,7 +7,7 @@ from typing import Annotated, Any, Self
 
 from pydantic import BaseModel, BeforeValidator, Field, model_validator
 
-from agents.core.business_context import BusinessContext
+from agents.core.context import BusinessContext
 from agents.insights.goals import InsightGenerationGoal, parse_goal_value
 from agents.insights.goals.organic_growth import OrganicGrowthGoal, parse_goal_value as parse_organic_goal_value
 
@@ -41,7 +41,7 @@ class ReportRequest(BaseModel):
     use_demo: bool = False
 
 
-# BusinessContext is the shared, unified model (agents/core/business_context.py),
+# BusinessContext is the shared, unified model (agents/core/context.py),
 # passed equally to every agent. It is a superset (identity + paid + organic
 # fields) with extra="ignore", so existing insights form payloads validate
 # unchanged. Imported above; re-exported here for backwards-compatible imports.
@@ -59,6 +59,10 @@ class GenerateRequest(BaseModel):
     date_from: str = ""
     date_to: str = ""
     refresh_token: str = ""
+    developer_token: str = Field(
+        default="",
+        description="User-supplied Google Ads developer token (BYO API access); falls back to server env.",
+    )
     customer_id: str = ""
     ga4_property_id: str = ""
     ga4_refresh_token: str = ""
@@ -123,6 +127,7 @@ class InsightRefreshRequest(BaseModel):
     date_from: str = ""
     date_to: str = ""
     refresh_token: str = ""
+    developer_token: str = ""
     ga4_refresh_token: str = ""
     gsc_refresh_token: str = ""
     targets: dict[str, RefreshRoutineTarget] = Field(default_factory=dict)

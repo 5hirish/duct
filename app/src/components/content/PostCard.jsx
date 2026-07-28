@@ -10,7 +10,7 @@ import {
   MessageCircle,
   Share2,
 } from "lucide-react";
-import { mediaUrl } from "@/lib/contentApi";
+import { cdnImage, mediaUrl } from "@/lib/contentApi";
 import { PlatformGlyph, platformMeta } from "@/components/content/platformGlyphs";
 
 // ---------------------------------------------------------------------------
@@ -66,7 +66,9 @@ function titleCase(s) {
 // ---------------------------------------------------------------------------
 
 export default function PostCard({ post }) {
-  const thumb = mediaUrl(post.thumbnail_url);
+  // Board view only needs a small image — request a width-capped CDN render
+  // when Image Resizing is enabled (full-res stays for the editor).
+  const thumb = cdnImage(mediaUrl(post.thumbnail_url), { width: 480 });
   const platforms = Array.isArray(post.platforms) ? post.platforms : [];
   const m = metricsOf(post.perf);
   const hasMetrics = Object.values(m).some((v) => v != null);

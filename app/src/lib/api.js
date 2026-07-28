@@ -1,3 +1,6 @@
+import { googleAdsByoCredentials } from "./adsCredentials";
+import { providerKeyHeaders } from "./providerKeys";
+
 const configuredBase = process.env.NEXT_PUBLIC_API_BASE?.trim();
 const normalizedConfiguredBase = configuredBase?.replace(/\/+$/, "");
 const isProduction = process.env.NODE_ENV === "production";
@@ -19,10 +22,33 @@ function backendApiHeaders(extra = {}) {
   return headers;
 }
 
-export async function fetchConnectorAccounts(connectorId, refreshToken) {
+// Bearer JWT minted by Google Sign-In (localStorage "duct_auth_token"), same
+// source as projectsApi.js. Optional: signed-out sessions omit it and the
+// backend personalises only when a valid token is present.
+function authToken() {
+  if (typeof window === "undefined") return "";
+  try {
+    return window.localStorage.getItem("duct_auth_token") || "";
+  } catch {
+    return "";
+  }
+}
+
+function backendAuthedHeaders(extra = {}) {
+  const headers = backendApiHeaders(extra);
+  const token = authToken();
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  return headers;
+}
+
+export async function fetchConnectorAccounts(connectorId, refreshToken, extras = {}) {
   const res = await fetch(
-    `${BASE}/api/connectors/${encodeURIComponent(connectorId)}/accounts?refresh_token=${encodeURIComponent(refreshToken)}`,
-    { headers: backendApiHeaders() }
+    `${BASE}/api/connectors/${encodeURIComponent(connectorId)}/accounts`,
+    {
+      method: "POST",
+      headers: backendApiHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ refresh_token: refreshToken, ...extras }),
+    }
   );
   if (!res.ok) {
     const text = await res.text();
@@ -33,7 +59,7 @@ export async function fetchConnectorAccounts(connectorId, refreshToken) {
 }
 
 export async function fetchGoogleAdsAccounts(refreshToken) {
-  return fetchConnectorAccounts("google_ads", refreshToken);
+  return fetchConnectorAccounts("google_ads", refreshToken, await googleAdsByoCredentials());
 }
 
 export async function fetchGa4Properties(refreshToken) {
@@ -70,7 +96,7 @@ export async function fetchEngineStatus() {
 export async function generateReport(params) {
   const res = await fetch(`${BASE}/api/insights/generate`, {
     method: "POST",
-    headers: backendApiHeaders({ "Content-Type": "application/json" }),
+    headers: { ...backendAuthedHeaders({ "Content-Type": "application/json" }), ...(await providerKeyHeaders()) },
     body: JSON.stringify(params),
   });
   if (!res.ok) {
@@ -90,6 +116,7 @@ export async function refreshInsightBriefs(routine) {
     date_from: routine?.custom_date_from || "",
     date_to: routine?.custom_date_to || "",
     refresh_token: refreshToken,
+    developer_token: (await googleAdsByoCredentials()).developer_token,
     ga4_refresh_token: ga4RefreshToken,
     gsc_refresh_token: gscRefreshToken,
     targets: routine?.targets || {},
@@ -199,7 +226,7 @@ function parseSseDataFrame(frame) {
 export async function generateReportStream(params, { onEvent, signal } = {}) {
   const res = await fetch(`${BASE}/api/insights/generate/stream`, {
     method: "POST",
-    headers: backendApiHeaders({ "Content-Type": "application/json" }),
+    headers: { ...backendAuthedHeaders({ "Content-Type": "application/json" }), ...(await providerKeyHeaders()) },
     body: JSON.stringify(params),
     signal,
   });
@@ -310,6 +337,47 @@ export async function closeAgentSession(agentType, sessionId) {
     `${BASE}/api/agents/${encodeURIComponent(agentType)}/sessions/${encodeURIComponent(sessionId)}`,
     { method: "DELETE", headers: backendApiHeaders() }
   );
+}
+
+// ---------------------------------------------------------------------------
+// Persisted conversations (chat history / resume)
+// ---------------------------------------------------------------------------
+
+/** List an agent's conversations (resume lookup / history). Returns an array of
+ * conversation summaries. Pass filters: { projectId, artifactType, artifactId }. */
+export async function listAgentConversations(agentType, { projectId, artifactType, artifactId, includeArchived } = {}) {
+  const qs = new URLSearchParams();
+  if (projectId) qs.set("project_id", projectId);
+  if (artifactType) qs.set("artifact_type", artifactType);
+  if (artifactId) qs.set("artifact_id", artifactId);
+  if (includeArchived) qs.set("include_archived", "true");
+  const res = await fetch(
+    `${BASE}/api/agents/${encodeURIComponent(agentType)}/conversations?${qs.toString()}`,
+    { headers: backendApiHeaders() }
+  );
+  if (!res.ok) throw new Error(`List conversations failed: ${res.status}`);
+  return res.json();
+}
+
+/** Fetch a conversation + its event log for UI rehydration.
+ * Returns { conversation, events: [{ seq, kind, data, created_at }] }. */
+export async function getAgentConversation(agentType, conversationId) {
+  const res = await fetch(
+    `${BASE}/api/agents/${encodeURIComponent(agentType)}/conversations/${encodeURIComponent(conversationId)}`,
+    { headers: backendApiHeaders() }
+  );
+  if (!res.ok) throw new Error(`Get conversation failed: ${res.status}`);
+  return res.json();
+}
+
+/** Archive a conversation (start-fresh support). */
+export async function archiveAgentConversation(agentType, conversationId) {
+  const res = await fetch(
+    `${BASE}/api/agents/${encodeURIComponent(agentType)}/conversations/${encodeURIComponent(conversationId)}/archive`,
+    { method: "POST", headers: backendApiHeaders() }
+  );
+  if (!res.ok) throw new Error(`Archive conversation failed: ${res.status}`);
+  return res.json();
 }
 
 // ---------------------------------------------------------------------------

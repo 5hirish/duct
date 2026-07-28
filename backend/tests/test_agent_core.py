@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 
-from agents.core.business_context import BusinessContext, format_business_context
+from agents.core.context import BusinessContext, format_business_context
 from agents.core.events import AgentEvent, AgentStep
 from agents.core.prompts import DUCT_REPORT_CLOSE, DUCT_REPORT_OPEN, xml_block
 
@@ -66,7 +66,7 @@ def test_format_business_context_section_toggles():
 
 # --- report stream parser ---------------------------------------------------
 
-from agents.core.report_stream import DuctReportStreamParser  # noqa: E402
+from agents.core.stream import DuctReportStreamParser  # noqa: E402
 
 
 class _Rec:
@@ -179,3 +179,92 @@ def test_describe_startup_failure_phrasing():
 
     empty = _sdk.describe_startup_failure("", 1, agent_label="content engine")
     assert "without emitting stderr" in empty and "NODE_OPTIONS" in empty
+
+
+# --- tool_schema (typed model -> @tool input_schema bridge) -----------------
+
+import json  # noqa: E402
+
+from agents.core.tool_schema import tool_schema  # noqa: E402
+
+
+def test_tool_schema_inlines_enums_and_strips_pydantic_noise():
+    """tool_schema() turns a typed Pydantic model into the clean flat JSON Schema
+    the SDK passes verbatim: enums inlined, Optionals collapsed, noise stripped,
+    required + ranges kept. This is also the PYDANTIC-DRIFT GUARD — the
+    no-artifacts assertion fails loudly if a Pydantic upgrade changes the
+    model_json_schema() shape in a way the cleaner doesn't handle."""
+    from enum import StrEnum
+
+    from pydantic import BaseModel, ConfigDict, Field
+
+    class Color(StrEnum):
+        RED = "red"
+        BLUE = "blue"
+
+    class Nested(BaseModel):
+        label: str = Field(description="cell label")
+        shade: Color = Field(Color.RED, description="cell color")
+
+    class Inp(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+        name: str = Field(description="the name")
+        color: Color = Field(Color.RED, description="pick one")
+        opt_color: Color | None = Field(None, description="optional enum")
+        count: int = Field(1, ge=1, le=4, description="how many")
+        note: str | None = Field(None, description="optional note")
+        tags: list[str] = Field(default_factory=list, description="labels")
+        cells: list[Nested] = Field(default_factory=list, description="nested list")
+
+    s = tool_schema(Inp)
+    blob = json.dumps(s)
+
+    # No Pydantic bookkeeping/indirection may reach the model. If a Pydantic
+    # version changes the schema shape (new wrapper key, different Optional
+    # encoding), this catches the leak.
+    for artifact in ("$ref", "$defs", "anyOf", "allOf", "title", "default"):
+        assert artifact not in blob, f"{artifact} leaked into tool_schema output"
+
+    assert s["type"] == "object"
+    assert s["required"] == ["name"]                              # only the no-default field
+    assert s["properties"]["color"]["enum"] == ["red", "blue"]   # enum inlined in place
+    assert s["properties"]["opt_color"]["enum"] == ["red", "blue"]  # optional enum collapsed + inlined
+    assert s["properties"]["color"]["description"] == "pick one"  # field desc wins over the enum def's
+    assert s["properties"]["note"] == {"type": "string", "description": "optional note"}  # Optional -> T
+    assert s["properties"]["count"]["minimum"] == 1 and s["properties"]["count"]["maximum"] == 4
+    assert s["properties"]["tags"] == {"type": "array", "items": {"type": "string"}, "description": "labels"}
+    # nested model inlined recursively (proves it for non-flat inputs other agents may use)
+    cell = s["properties"]["cells"]["items"]
+    assert cell["properties"]["shade"]["enum"] == ["red", "blue"]
+    assert cell["required"] == ["label"]
+
+
+# --- shutdown: close_all_sessions drains SSE streams -------------------------
+
+def test_close_all_sessions_sentinels_sse_and_clears_registry():
+    """On shutdown close_all_sessions must end every SSE stream: it pops each
+    session and puts the None sentinel on its event_queue (what _sse_stream
+    breaks on) AND chat_queue. This is what stops uvicorn's graceful shutdown
+    from hanging on long-lived streams (a --reload or deploy would otherwise
+    block until the chat idle-timeout)."""
+    import asyncio as _asyncio
+
+    from agents.core.session import (
+        BaseAgentSession,
+        close_all_sessions,
+        get_session,
+        register_session,
+    )
+
+    eq, cq = _asyncio.Queue(), _asyncio.Queue()
+    register_session(BaseAgentSession(
+        session_id="shutdown-drain-test", agent_type="content",
+        event_queue=eq, chat_queue=cq,
+    ))
+    assert get_session("shutdown-drain-test") is not None
+
+    close_all_sessions()
+
+    assert get_session("shutdown-drain-test") is None   # popped from the registry
+    assert eq.get_nowait() is None                      # SSE sentinel → _sse_stream exits
+    assert cq.get_nowait() is None                      # chat-loop sentinel

@@ -77,6 +77,7 @@ from models.content import (
     ContentSocialLink,
 )
 from models.project import Project
+from service import storage
 from service.pipeline import now_iso
 
 logger = logging.getLogger(__name__)
@@ -117,9 +118,8 @@ async def _prune_stale_sessions() -> None:
             _session_created_at.pop(sid, None)
 
 
-@router.on_event("startup")  # type: ignore[attr-defined]
-async def _start_pruner() -> None:
-    asyncio.create_task(_prune_stale_sessions())
+# Launched from the app lifespan in server.py — FastAPI's lifespan disables
+# router-level on_event hooks, so startup tasks are started centrally there.
 
 
 # ---------------------------------------------------------------------------
@@ -162,6 +162,25 @@ def _project_or_404(db: Session, project_id: UUID) -> Project:
 # ---------------------------------------------------------------------------
 
 
+def _link_conversation_artifact(session_id: str, kind: str) -> None:
+    """Bind the session's persisted conversation to the artifact it just produced
+    (post/plan) so 'click post → resume' can find it. Best-effort: a brand-new
+    draft creates its conversation before the post exists, so the id is only
+    known once the worker finishes. No-op when the session isn't tracked."""
+    sess = get_session(session_id)
+    conv_id = getattr(sess, "conversation_id", None) if sess else None
+    artifact_id = getattr(sess, "post_id" if kind == "post" else "plan_id", None) if sess else None
+    if not conv_id or not artifact_id:
+        return
+    try:
+        from agents.content.persistence import link_artifact
+        with next(db_session()) as db:
+            link_artifact(db, conv_id, kind, artifact_id)
+    except Exception:
+        logger.warning("content: failed to link conversation %s → %s %s",
+                       conv_id, kind, artifact_id, exc_info=True)
+
+
 async def _run_plan_worker(
     session_id: str,
     project_id: UUID,
@@ -173,6 +192,7 @@ async def _run_plan_worker(
             raise ValueError("ANTHROPIC_API_KEY is not configured")
         runner = ClaudeContentRunner(api_key=api_key)
         await runner.run_plan(session_id, project_id, emit_fn)
+        _link_conversation_artifact(session_id, "plan")
     except Exception as exc:
         logger.exception("content: plan worker error for session %s", session_id)
         await emit_fn({
@@ -290,6 +310,7 @@ async def _run_draft_worker(
                         plan.updated_at = datetime.now(timezone.utc)
                         db.add(plan)
                         db.commit()
+        _link_conversation_artifact(session_id, "post")
     except Exception as exc:
         logger.exception("content: draft worker error for session %s", session_id)
         await emit_fn({
@@ -824,6 +845,9 @@ class PostOut(BaseModel):
     notes:         str
     created_at:    str
     updated_at:    str
+    # The active agent conversation for this post (if any) — drives "click post →
+    # resume the chat" on the detail page. None ⇒ open a fresh session.
+    active_conversation_id: UUID | None = None
 
 
 def _post_out(
@@ -831,9 +855,11 @@ def _post_out(
     *,
     fmt: tuple[str, str] | None = None,
     thumbnail_url: str = "",
+    active_conversation_id: UUID | None = None,
 ) -> PostOut:
     """Serialize a post. `fmt` is an optional (slug, name) for the linked format."""
     return PostOut(
+        active_conversation_id=active_conversation_id,
         id=p.id,
         project_id=p.project_id,
         plan_id=p.plan_id,
@@ -979,7 +1005,25 @@ def get_post(post_id: UUID, db: Session = Depends(db_session)) -> PostOut:
     post = db.get(ContentPost, post_id)
     if post is None:
         raise HTTPException(404, "Post not found")
-    return _enrich_one(db, post)
+    # Best-effort: the active-conversation lookup drives "click post → resume",
+    # but a persistence-table issue (e.g. migration not yet applied) must never
+    # break viewing a post — degrade to "no conversation" instead.
+    active_conversation_id = None
+    try:
+        from agents.content.persistence import find_active_conversation
+        conv = find_active_conversation(db, artifact_type="post", artifact_id=post.id)
+        active_conversation_id = conv.id if conv else None
+    except Exception:
+        db.rollback()
+        logger.warning("content: active-conversation lookup failed for post %s", post_id, exc_info=True)
+    by_id = _format_map(db, post.project_id)
+    thumb = _thumb_map(db, [post.id]).get(post.id, "")
+    return _post_out(
+        post,
+        fmt=_fmt_for(post, by_id),
+        thumbnail_url=thumb,
+        active_conversation_id=active_conversation_id,
+    )
 
 
 @router.post("/content/posts", status_code=201)
@@ -1340,15 +1384,6 @@ def _asset_out(a: ContentAsset) -> ContentAssetOut:
     )
 
 
-def _uploads_dir() -> Path:
-    cfg = get_configs()
-    if not cfg.uploads_enabled:
-        raise HTTPException(503, "Uploads are disabled — set UPLOADS_ENABLED=true.")
-    base = Path(cfg.uploads_dir or "/app/uploads")
-    base.mkdir(parents=True, exist_ok=True)
-    return base
-
-
 @router.post("/content/uploads", status_code=201)
 async def upload_asset(
     project_id: UUID = Form(...),
@@ -1371,20 +1406,15 @@ async def upload_asset(
     if len(body) > _MAX_UPLOAD_BYTES:
         raise HTTPException(413, f"File too large (max {_MAX_UPLOAD_BYTES} bytes).")
 
-    base = _uploads_dir()
-    target_dir = base / "projects" / str(project_id) / asset_type
-    target_dir.mkdir(parents=True, exist_ok=True)
-
     ext = _MIME_TO_EXT.get(mime, "bin")
     safe_name = (file.filename or "upload").rsplit("/", 1)[-1].replace(" ", "-")
     asset_id  = uuid4()
     filename  = f"{asset_id}-{safe_name}"
     if "." not in filename.rsplit("/", 1)[-1]:
         filename = f"{filename}.{ext}"
-    target_path = target_dir / filename
-    target_path.write_bytes(body)
 
-    public_url = f"/uploads/projects/{project_id}/{asset_type}/{filename}"
+    key = f"projects/{project_id}/{asset_type}/{filename}"
+    public_url = storage.put_image(key, body, mime)
     row = ContentAsset(
         id=asset_id,
         project_id=project_id,

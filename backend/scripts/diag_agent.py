@@ -29,7 +29,7 @@ def _resolve_api_key() -> str:
 async def main() -> None:
     from sqlalchemy import select
 
-    from agents.content.schema import make_session
+    from agents.content.schema import ContentTool, make_session
     from agents.content.subagents import (
         BUILD_SLIDES_AGENT,
         DRAFT_POST_AGENT,
@@ -89,7 +89,7 @@ async def main() -> None:
         ("+allowed_tools", {"allowed_tools": [
             AgentTool.ASK_USER_QUESTION, AgentTool.TODO_WRITE, AgentTool.WEB_SEARCH,
             AgentTool.WEB_FETCH, AgentTool.AGENT,
-            "mcp__duct_content__submit_plan", "mcp__duct_content__submit_post_draft",
+            ContentTool.SUBMIT_PLAN, ContentTool.SUBMIT_POST_DRAFT,
         ]}),
         ("+hooks+can_use_tool", {
             "can_use_tool": can_use_tool,

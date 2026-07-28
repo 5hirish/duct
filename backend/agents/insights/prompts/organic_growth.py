@@ -245,4 +245,4 @@ SUPPLEMENTARY_ANALYSIS_GUIDES: dict[str, str] = {
 
 
 # Business context formatting is now shared — see
-# agents/core/business_context.format_business_context (used by get_system_prompt).
+# agents/core/context.format_business_context (used by get_system_prompt).

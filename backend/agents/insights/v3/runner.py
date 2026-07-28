@@ -39,7 +39,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import os
 from collections.abc import Callable
 from time import perf_counter
 from typing import Any
@@ -60,25 +59,22 @@ logger = logging.getLogger(__name__)
 # Model mapping
 # ---------------------------------------------------------------------------
 
-_ANTHROPIC_MODEL_MAP: dict[ModelName, str] = {
-    ModelName.CLAUDE_SONNET: "claude-sonnet-4-6",
-    ModelName.CLAUDE_HAIKU: "claude-haiku-4-5-20251001",
-}
-
-_FALLBACK_MODEL = "claude-sonnet-4-6"
+# Claude Agent SDK runs Anthropic models only; anything else falls back to Sonnet.
+# Model strings come from the ModelName enum in agents/models.py — never hardcoded here.
+_ANTHROPIC_MODELS = (ModelName.CLAUDE_SONNET, ModelName.CLAUDE_HAIKU)
 
 
 def _resolve_model_string(provider: Provider, model: ModelName) -> str:
-    if provider != Provider.ANTHROPIC:
+    if provider != Provider.ANTHROPIC or model not in _ANTHROPIC_MODELS:
         logger.warning(
             "v3: Claude Agent SDK only supports Anthropic models natively; "
             "ignoring provider=%s, model=%s and falling back to %s",
             provider.value,
             model.value,
-            _FALLBACK_MODEL,
+            ModelName.CLAUDE_SONNET.value,
         )
-        return _FALLBACK_MODEL
-    return _ANTHROPIC_MODEL_MAP.get(model, _FALLBACK_MODEL)
+        return ModelName.CLAUDE_SONNET.value
+    return model.value
 
 
 # ---------------------------------------------------------------------------
@@ -187,9 +183,21 @@ async def _run_synthesis(
     from claude_agent_sdk import ResultMessage, StreamEvent
 
     env_var = get_env_var_for_engine_provider(Engine.V3, provider) or "ANTHROPIC_API_KEY"
-    original = os.environ.get(env_var)
-    if api_key and not os.environ.get(env_var):
-        os.environ[env_var] = api_key
+    # Inject the resolved provider key into the per-call SDK env (merged over
+    # os.environ for the subprocess only) instead of mutating the process-global
+    # os.environ. This makes a per-request bring-your-own key always win and keeps
+    # concurrent requests from racing on a shared var. When api_key is empty (e.g.
+    # local subscription-OAuth) we leave it unset so the SDK can fall back to
+    # CLAUDE_CODE_OAUTH_TOKEN / ~/.claude.
+    sdk_env = {
+        "ENABLE_PROMPT_CACHING_1H": "1",
+        # Clear inherited Claude Code IDE session vars that confuse child instances
+        "CLAUDE_CODE_SESSION_ID": "",
+        "CLAUDE_EFFORT": "",
+        "CLAUDE_CODE_ENABLE_SDK_FILE_CHECKPOINTING": "false",
+    }
+    if api_key:
+        sdk_env[env_var] = api_key
 
     try:
         options = ClaudeAgentOptions(
@@ -199,13 +207,7 @@ async def _run_synthesis(
             max_turns=5,
             system_prompt=_SYNTHESIS_ORCHESTRATOR_PROMPT,
             include_partial_messages=True,
-            env={
-                "ENABLE_PROMPT_CACHING_1H": "1",
-                # Clear inherited Claude Code IDE session vars that confuse child instances
-                "CLAUDE_CODE_SESSION_ID": "",
-                "CLAUDE_EFFORT": "",
-                "CLAUDE_CODE_ENABLE_SDK_FILE_CHECKPOINTING": "false",
-            },
+            env=sdk_env,
             agents={
                 "synthesizer": AgentDefinition(
                     description=(
@@ -257,11 +259,6 @@ async def _run_synthesis(
     except Exception:
         logger.exception("v3: synthesis phase failed")
         return None
-    finally:
-        if original is None and env_var in os.environ:
-            del os.environ[env_var]
-        elif original is not None:
-            os.environ[env_var] = original
 
 
 # ---------------------------------------------------------------------------
@@ -353,6 +350,7 @@ class ClaudeAgentSdkRunner:
         all_briefs: dict[str, Any],
         supplementary: dict[str, Any] | None = None,
         business_context: dict[str, Any] | None = None,
+        user_context: dict[str, Any] | None = None,
         mode: str = "paid_ads",
     ) -> SynthesisSchema | None:
         """No-op stub — v3 runs both phases together in run_pipeline()."""
@@ -369,6 +367,7 @@ class ClaudeAgentSdkRunner:
         context: str,
         all_briefs: dict[str, Any],
         business_context: dict[str, Any] | None = None,
+        user_context: dict[str, Any] | None = None,
         mode: str = "paid_ads",
         customer_id: str = "",
         date_from: str = "",
@@ -404,15 +403,17 @@ class ClaudeAgentSdkRunner:
         # Build synthesis prompts
         synthesis_system_prompt = get_system_prompt(
             goal=goal,
-            custom_goal=custom_goal,
-            context=context,
-            business_context=business_context,
             mode=mode,
         )
         synthesis_user_prompt = get_synthesis_user_prompt(
             all_briefs,
             supplementary=supplementary,
             mode=mode,
+            business_context=business_context,
+            user_context=user_context,
+            goal=goal,
+            custom_goal=custom_goal,
+            context=context,
         )
 
         # Phase 2 — Claude Agent SDK synthesis

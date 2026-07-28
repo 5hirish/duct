@@ -20,6 +20,15 @@
       "postDebugTask": "Backend: stop uvicorn (8002)"
     },
     {
+      "name": "Duct: API + Desktop",
+      "configurations": [
+        "Backend: FastAPI (uvicorn)",
+        "Desktop: Tauri dev (local app)"
+      ],
+      "stopAll": true,
+      "postDebugTask": "Backend: stop uvicorn (8002)"
+    },
+    {
       "name": "Duct: Site + API",
       "configurations": [
         "Backend: FastAPI (uvicorn)",
@@ -44,7 +53,7 @@
       "name": "Backend: FastAPI (uvicorn)",
       "type": "node-terminal",
       "request": "launch",
-      "command": "poetry run uvicorn server:app --reload --reload-dir \"${workspaceFolder}/backend\" --reload-exclude \"${workspaceFolder}/backend/.venv\" --reload-exclude \"${workspaceFolder}/backend/data\" --reload-exclude \"${workspaceFolder}/backend/alembic\" --reload-exclude \"${workspaceFolder}/backend/tests\" --reload-delay 1 --host 127.0.0.1 --port 8002",
+      "command": "poetry run uvicorn server:app --reload --reload-dir \"${workspaceFolder}/backend\" --reload-exclude \"${workspaceFolder}/backend/.venv\" --reload-exclude \"${workspaceFolder}/backend/data\" --reload-exclude \"${workspaceFolder}/backend/alembic\" --reload-exclude \"${workspaceFolder}/backend/tests\" --reload-delay 1 --timeout-graceful-shutdown 10 --host 127.0.0.1 --port 8002",
       "cwd": "${workspaceFolder}/backend",
       "env": { "NODE_OPTIONS": "" }
     },
@@ -52,7 +61,7 @@
       "name": "Backend: FastAPI (uvicorn verbose)",
       "type": "node-terminal",
       "request": "launch",
-      "command": "AUDIT_VERBOSE_LOGGING=1 poetry run uvicorn server:app --host 127.0.0.1 --port 8002",
+      "command": "AUDIT_VERBOSE_LOGGING=1 poetry run uvicorn server:app --timeout-graceful-shutdown 10 --host 127.0.0.1 --port 8002",
       "cwd": "${workspaceFolder}/backend",
       "env": { "NODE_OPTIONS": "" }
     },
@@ -77,6 +86,13 @@
       "request": "launch",
       "command": "npm run dev",
       "cwd": "${workspaceFolder}/app"
+    },
+    {
+      "name": "Desktop: Tauri dev (local app)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev:local",
+      "cwd": "${workspaceFolder}/desktop"
     },
     {
       "name": "Site: dev server",

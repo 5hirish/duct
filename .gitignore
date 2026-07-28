@@ -5,6 +5,7 @@ Desktop.ini
 
 # Test output artifacts (locally generated; not committed)
 backend/tests/outputs/
+backend/.uploads/
 
 # Python
 **/__pycache__/
@@ -76,3 +77,6 @@ client_secret_*.json
 backend/tests/outputs/
 
 .vscode/chrome-site-debug/
+
+# Claude Code session file references (dragged-in media)
+.file-refs/

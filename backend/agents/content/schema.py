@@ -14,7 +14,7 @@ import asyncio
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from enum import StrEnum
-from typing import Literal
+from typing import Any, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -201,6 +201,17 @@ class ContentSession(BaseAgentSession):
     mode: RunMode
     plan_id: UUID | None = None
     post_id: UUID | None = None
+    # Persisted-conversation linkage (session resume / chat history). Set by the
+    # route layer when a session is created; the runner re-primes from the DB when
+    # resume is True. recorder persists each turn (agents/content/persistence.py).
+    conversation_id: UUID | None = None
+    recorder: Any = None
+    resume: bool = False
+    # On resume we don't run a greeting turn; the restored context (resume_primer)
+    # is prepended to the user's FIRST chat message instead. needs_reprime gates
+    # that one-time injection (see routes.agents.send_message).
+    needs_reprime: bool = False
+    resume_primer: str = ""
     todos: list[dict] = field(default_factory=list)
     # render_id -> asyncio.Future, resolved by the frontend's slide-render POST.
     # Bridges the agent's render_slide tool to client-side rasterization (same
@@ -349,6 +360,37 @@ class ContentStatus(StrEnum):
     SCHEDULED = "scheduled"
     POSTED    = "posted"
     DISCARDED = "discarded"
+
+
+class ContentTool(StrEnum):
+    """Fully-namespaced names of the content MCP tools (server ``duct_content``).
+
+    The @tool decorators in agents/content/tools.py register the *short* names
+    (e.g. "submit_post_draft"); the SDK namespaces them as
+    ``mcp__duct_content__<short>``. This enum holds those namespaced names — the
+    form used in ClaudeAgentOptions.allowed_tools and the can_use_tool dispatch.
+    Mirrors AuditTool (agents/audit/schema.py), which does the same for the
+    audit (``duct_crawl``) MCP tools. Keep in sync with the @tool registrations.
+    """
+
+    SUBMIT_PLAN                = "mcp__duct_content__submit_plan"
+    SUBMIT_POST_DRAFT          = "mcp__duct_content__submit_post_draft"
+    EDIT_SLIDE                 = "mcp__duct_content__edit_slide"
+    FETCH_BRAND_CONTEXT        = "mcp__duct_content__fetch_brand_context"
+    FETCH_TOPIC_BANK           = "mcp__duct_content__fetch_topic_bank"
+    FETCH_FORMAT_LIBRARY       = "mcp__duct_content__fetch_format_library"
+    FETCH_AVATAR_LIBRARY       = "mcp__duct_content__fetch_avatar_library"
+    FETCH_CONTENT_HISTORY      = "mcp__duct_content__fetch_content_history"
+    FETCH_CONTENT_ASSETS       = "mcp__duct_content__fetch_content_assets"
+    FETCH_DISCOVERED_REFERENCES = "mcp__duct_content__fetch_discovered_references"
+    FETCH_POST                 = "mcp__duct_content__fetch_post"
+    FETCH_SLIDE_CONTEXT        = "mcp__duct_content__fetch_slide_context"
+    RENDER_SLIDE               = "mcp__duct_content__render_slide"
+    GENERATE_IMAGE             = "mcp__duct_content__generate_image"
+    EDIT_IMAGE                 = "mcp__duct_content__edit_image"
+    PUBLISH_POST               = "mcp__duct_content__publish_post"
+    MARK_POSTED                = "mcp__duct_content__mark_posted"
+    LOG_METRICS                = "mcp__duct_content__log_metrics"
 
 
 # Per-slide kind — drives which template renders the slide within a layout.

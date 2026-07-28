@@ -34,6 +34,7 @@ async def refresh_insight(req: InsightRefreshRequest) -> InsightRefreshResponse:
             date_to=date_to,
             cfg=cfg,
             refresh_token=req.refresh_token,
+            developer_token=req.developer_token,
             ga4_refresh_token=req.ga4_refresh_token,
             gsc_refresh_token=req.gsc_refresh_token,
             customer_id=target.customer_id if target else "",

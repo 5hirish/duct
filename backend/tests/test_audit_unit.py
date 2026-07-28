@@ -90,20 +90,18 @@ async def _async_gen(items):
 
 def _make_mock_sdk(stream_messages: list):
     """
-    Return a patched ClaudeSDKClient context manager.
+    Return a mock ClaudeSDKClient for the connect_with_retry flow.
 
-    The mock client's receive_response() yields the given stream_messages in
-    order.  query() is a no-op.  The context manager itself is an async CM.
+    The runner instantiates the client and calls connect()/disconnect()
+    directly (no `async with`), so those are async no-ops here. query() is a
+    no-op; receive_response() yields the given stream_messages in order.
     """
     mock_client = MagicMock()
+    mock_client.connect = AsyncMock()
+    mock_client.disconnect = AsyncMock()
     mock_client.query = AsyncMock()
     mock_client.receive_response = MagicMock(return_value=_async_gen(stream_messages))
-
-    mock_cm = AsyncMock()
-    mock_cm.__aenter__ = AsyncMock(return_value=mock_client)
-    mock_cm.__aexit__ = AsyncMock(return_value=False)
-
-    return mock_cm
+    return mock_client
 
 
 def _make_crawl_result(url: str = _FIXTURE_URL):

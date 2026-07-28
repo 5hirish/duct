@@ -3,26 +3,70 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { BASE } from "../../../lib/api";
+import {
+  clearAdsDeveloperToken,
+  getAdsDeveloperToken,
+  getAdsLoginCustomerId,
+  setAdsDeveloperToken,
+  setAdsLoginCustomerId,
+} from "../../../lib/adsCredentials";
+import { PROVIDERS, getProviderKey, setProviderKey, clearProviderKey } from "../../../lib/providerKeys";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export default function ConnectionsPage() {
   const [ga4Connected, setGa4Connected] = useState(false);
   const [gscConnected, setGscConnected] = useState(false);
+  const [gadsOauthConnected, setGadsOauthConnected] = useState(false);
+  const [gadsDevTokenSaved, setGadsDevTokenSaved] = useState(false);
+  const [devTokenInput, setDevTokenInput] = useState("");
+  const [mccInput, setMccInput] = useState("");
 
   useEffect(() => {
     const hash = window.location.hash;
     if (hash.startsWith("#")) {
       const params = new URLSearchParams(hash.slice(1));
+      const gadsToken = params.get("refresh_token");
       const ga4Token = params.get("ga4_refresh_token");
       const gscToken = params.get("gsc_refresh_token");
+      if (gadsToken) sessionStorage.setItem("gads_refresh_token", decodeURIComponent(gadsToken));
       if (ga4Token) sessionStorage.setItem("ga4_refresh_token", decodeURIComponent(ga4Token));
       if (gscToken) sessionStorage.setItem("gsc_refresh_token", decodeURIComponent(gscToken));
       window.history.replaceState(null, "", window.location.pathname);
     }
 
+    setGadsOauthConnected(!!sessionStorage.getItem("gads_refresh_token"));
+    setMccInput(getAdsLoginCustomerId());
     setGa4Connected(!!sessionStorage.getItem("ga4_refresh_token"));
     setGscConnected(!!sessionStorage.getItem("gsc_refresh_token"));
+    getAdsDeveloperToken().then((token) => setGadsDevTokenSaved(!!token));
   }, []);
+
+  async function saveGadsApiAccess(event) {
+    event.preventDefault();
+    const token = devTokenInput.trim();
+    const mcc = mccInput.replace(/-/g, "").trim();
+    if (token) {
+      await setAdsDeveloperToken(token);
+      setGadsDevTokenSaved(true);
+      setDevTokenInput("");
+    }
+    setAdsLoginCustomerId(mcc);
+    setMccInput(mcc);
+  }
+
+  async function signOutGads() {
+    sessionStorage.removeItem("gads_refresh_token");
+    sessionStorage.removeItem("gads_customer_id");
+    await clearAdsDeveloperToken();
+    setAdsLoginCustomerId("");
+    setGadsOauthConnected(false);
+    setGadsDevTokenSaved(false);
+    setDevTokenInput("");
+    setMccInput("");
+  }
 
   function signOutGa4() {
     sessionStorage.removeItem("ga4_refresh_token");
@@ -33,6 +77,8 @@ export default function ConnectionsPage() {
     sessionStorage.removeItem("gsc_refresh_token");
     setGscConnected(false);
   }
+
+  const gadsConnected = gadsOauthConnected && gadsDevTokenSaved;
 
   return (
     <section>
@@ -58,6 +104,14 @@ export default function ConnectionsPage() {
         </Button>
         <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">Connections</h1>
       </div>
+
+      <Tabs defaultValue="connections">
+        <TabsList>
+          <TabsTrigger value="connections">Data sources</TabsTrigger>
+          <TabsTrigger value="providers">Providers</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="connections">
       <p className="app-subtle" style={{ marginTop: 0, marginBottom: 18 }}>
         Manage data source connections for insights. Choose your Google Ads account when you{" "}
         <Link href="/insights/organic-growth/generate" className="app-link">
@@ -84,11 +138,67 @@ export default function ConnectionsPage() {
               </p>
             </div>
           </div>
+
+          <form onSubmit={saveGadsApiAccess} style={{ display: "grid", gap: 10, marginTop: 12 }}>
+            <p className="app-subtle" style={{ margin: 0, fontSize: 13 }}>
+              Duct&rsquo;s Google Ads API access is pending Google approval — bring your own{" "}
+              <a
+                className="app-link"
+                href="https://developers.google.com/google-ads/api/docs/get-started/dev-token"
+                target="_blank"
+                rel="noreferrer"
+              >
+                developer token
+              </a>{" "}
+              from your manager account. It stays on this device and is only sent with your requests.
+            </p>
+            <div style={{ display: "grid", gap: 4 }}>
+              <Label htmlFor="gads-dev-token">Developer token</Label>
+              <Input
+                id="gads-dev-token"
+                type="password"
+                autoComplete="off"
+                placeholder={gadsDevTokenSaved ? "Saved — paste to replace" : "Paste your developer token"}
+                value={devTokenInput}
+                onChange={(e) => setDevTokenInput(e.target.value)}
+              />
+            </div>
+            <div style={{ display: "grid", gap: 4 }}>
+              <Label htmlFor="gads-mcc">Manager account ID (MCC, optional)</Label>
+              <Input
+                id="gads-mcc"
+                inputMode="numeric"
+                placeholder="e.g. 1234567890"
+                value={mccInput}
+                onChange={(e) => setMccInput(e.target.value)}
+              />
+            </div>
+            <div>
+              <Button type="submit" size="sm" variant="secondary" disabled={!devTokenInput.trim() && !gadsDevTokenSaved}>
+                Save API access
+              </Button>
+            </div>
+          </form>
+
           <div className="connection-status-row">
-            <span className="status-pill yellow">Coming Soon</span>
-            <Button type="button" variant="secondary" size="sm" disabled>
-              Coming Soon
-            </Button>
+            <span className={`status-pill ${gadsConnected ? "green" : gadsOauthConnected || gadsDevTokenSaved ? "yellow" : "grey"}`}>
+              {gadsConnected
+                ? "Connected"
+                : gadsOauthConnected
+                  ? "Add developer token"
+                  : gadsDevTokenSaved
+                    ? "Sign in with Google"
+                    : "Not connected"}
+            </span>
+            {gadsOauthConnected ? (
+              <Button type="button" variant="outline" size="sm" onClick={signOutGads}>
+                Disconnect
+              </Button>
+            ) : (
+              <Button size="sm" asChild>
+                <a href={`${BASE}/auth/connectors/google_ads/oauth/authorize`}>Connect</a>
+              </Button>
+            )}
           </div>
         </article>
 
@@ -233,7 +343,135 @@ export default function ConnectionsPage() {
           </div>
         </article>
       </div>
+        </TabsContent>
+
+        <TabsContent value="providers">
+          <ProvidersPanel />
+        </TabsContent>
+      </Tabs>
 
     </section>
+  );
+}
+
+function ProvidersPanel() {
+  return (
+    <>
+      <p className="app-subtle" style={{ marginTop: 0, marginBottom: 18 }}>
+        Bring your own model-provider API keys. During the beta these power
+        insight generation on your own account. Keys stay in this browser
+        session and are sent securely with each request — never stored on our
+        servers. Tip: use a budget-capped or restricted key.
+      </p>
+      <div className="connection-grid">
+        {PROVIDERS.map((provider) => (
+          <ProviderCard key={provider.id} provider={provider} />
+        ))}
+      </div>
+    </>
+  );
+}
+
+function ProviderCard({ provider }) {
+  const [value, setValue] = useState("");
+  const [saved, setSaved] = useState(false);
+  const [revealed, setRevealed] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    getProviderKey(provider.id).then((stored) => {
+      if (!alive) return;
+      setValue(stored || "");
+      setSaved(Boolean(stored));
+    });
+    return () => {
+      alive = false;
+    };
+  }, [provider.id]);
+
+  const trimmed = value.trim();
+  const looksValid = !provider.prefix || trimmed.startsWith(provider.prefix);
+
+  async function save() {
+    setBusy(true);
+    await setProviderKey(provider.id, trimmed);
+    setSaved(Boolean(trimmed));
+    setBusy(false);
+  }
+
+  async function remove() {
+    setBusy(true);
+    await clearProviderKey(provider.id);
+    setValue("");
+    setSaved(false);
+    setBusy(false);
+  }
+
+  return (
+    <article className="connection-card">
+      <div className="connection-card-head">
+        <div>
+          <h2 className="connection-title">{provider.label}</h2>
+          <p className="connection-description">
+            {provider.description}{" "}
+            <a className="app-link" href={provider.consoleUrl} target="_blank" rel="noreferrer">
+              Get a key
+            </a>
+            .
+          </p>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+        <Input
+          type={revealed ? "text" : "password"}
+          value={value}
+          placeholder={provider.placeholder}
+          onChange={(event) => setValue(event.target.value)}
+          autoComplete="off"
+          autoCapitalize="off"
+          autoCorrect="off"
+          spellCheck={false}
+          aria-label={`${provider.label} API key`}
+        />
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => setRevealed((shown) => !shown)}
+          disabled={!value}
+        >
+          {revealed ? "Hide" : "Show"}
+        </Button>
+      </div>
+
+      {trimmed && !looksValid && (
+        <p className="app-subtle" style={{ marginTop: 6, fontSize: 12 }}>
+          {`Keys usually start with "${provider.prefix}".`}
+        </p>
+      )}
+
+      <div className="connection-status-row">
+        <span className={`status-pill ${saved ? "green" : "grey"}`}>
+          {saved ? "Saved" : "Not set"}
+        </span>
+        <div style={{ display: "flex", gap: 8 }}>
+          {saved && (
+            <Button type="button" variant="outline" size="sm" onClick={remove} disabled={busy}>
+              Remove
+            </Button>
+          )}
+          <Button
+            type="button"
+            size="sm"
+            onClick={save}
+            disabled={busy || !trimmed || !looksValid}
+          >
+            Save
+          </Button>
+        </div>
+      </div>
+    </article>
   );
 }

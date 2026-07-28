@@ -1,0 +1,15 @@
+{
+  "name": "duct-desktop",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "dev:local": "tauri dev --config src-tauri/tauri.local.conf.json",
+    "build": "tauri build"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}
