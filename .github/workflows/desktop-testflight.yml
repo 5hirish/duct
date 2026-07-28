@@ -282,7 +282,7 @@ jobs:
         run: |
           set -euo pipefail
           BUILD_ID="$(asc builds list --app "$ASC_APP_ID" \
-            --sort -uploadedDate --limit 1 --output json | jq -r '.[0].id')"
+            --sort -uploadedDate --limit 1 --output json | jq -r '.data[0].id')"
           if [ -z "$BUILD_ID" ] || [ "$BUILD_ID" = "null" ]; then
             echo "::error::Could not resolve the uploaded build id."
             exit 1
