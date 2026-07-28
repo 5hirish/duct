@@ -168,15 +168,18 @@ jobs:
           ENT="src-tauri/Entitlements.appstore.plist"
           BUNDLE_ID="$(jq -r '.identifier' src-tauri/tauri.conf.json)"
 
-          # remove-then-insert rather than -replace: -insert alone fails when the
-          # key exists, and -replace is not dependable for creating a missing one.
-          set_key() {
-            plutil -remove "$1" "$ENT" >/dev/null 2>&1 || true
-            plutil -insert "$1" "$2" "$3" "$ENT"
-          }
-          set_key com.apple.application-identifier    -string "$TEAM_ID.$BUNDLE_ID"
-          set_key com.apple.developer.team-identifier -string "$TEAM_ID"
-          set_key keychain-access-groups              -json   "[\"$TEAM_ID.$BUNDLE_ID\"]"
+          # PlistBuddy, not plutil: these key names contain literal dots, which
+          # plutil always parses as key-path nesting ("Key path not found").
+          # PlistBuddy only nests on ':', so dots stay literal. Delete-then-add
+          # keeps the step idempotent.
+          PB=/usr/libexec/PlistBuddy
+          "$PB" -c "Delete :com.apple.application-identifier" "$ENT" 2>/dev/null || true
+          "$PB" -c "Add :com.apple.application-identifier string $TEAM_ID.$BUNDLE_ID" "$ENT"
+          "$PB" -c "Delete :com.apple.developer.team-identifier" "$ENT" 2>/dev/null || true
+          "$PB" -c "Add :com.apple.developer.team-identifier string $TEAM_ID" "$ENT"
+          "$PB" -c "Delete :keychain-access-groups" "$ENT" 2>/dev/null || true
+          "$PB" -c "Add :keychain-access-groups array" "$ENT"
+          "$PB" -c "Add :keychain-access-groups:0 string $TEAM_ID.$BUNDLE_ID" "$ENT"
 
           plutil -lint "$ENT"
           echo "Entitlements for $BUNDLE_ID:"
