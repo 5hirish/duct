@@ -13,7 +13,11 @@ from fastapi.responses import RedirectResponse
 from config import get_configs
 from service.auth_exchange import consume_exchange_code, store_exchange_code
 from service.google.oauth import create_google_signin_flow
-from service.oauthstate import cleanup_expired_states, consume_state, save_state
+from service.oauthstate import (
+    cleanup_expired_states,
+    consume_state_for_flows,
+    save_state,
+)
 from service.turnstile import verify_turnstile
 from service.user_store import upsert_google_user
 
@@ -23,6 +27,11 @@ router = APIRouter(tags=["signin"])
 
 OAUTH_STATE_TTL_SECONDS = 300
 SIGNIN_FLOW = "signin_google"
+# Same sign-in flow initiated from the desktop shell: the OAuth dance runs in
+# the user's browser, so the callback must hand the auth code back to the shell
+# (via the app's /desktop-auth relay page) instead of the web login page. The
+# distinct flow name rides in the existing state store — no schema change.
+SIGNIN_DESKTOP_FLOW = "signin_google_desktop"
 
 JWT_EXPIRY_SECONDS = 7 * 24 * 60 * 60  # 7 days
 
@@ -55,8 +64,13 @@ def _create_jwt(email: str, name: str, picture: str) -> str:
 async def signin_google_authorize(
     request: Request,
     turnstile_token: str = Query(default=""),
+    client: str = Query(default=""),
 ) -> RedirectResponse:
-    """Start Google OAuth for user sign-in."""
+    """Start Google OAuth for user sign-in.
+
+    ``client=desktop`` marks the flow as initiated from the desktop shell's
+    system browser; the callback then routes the auth code back to the shell.
+    """
     if turnstile_token:
         client_ip = request.client.host if request.client else ""
         valid = await verify_turnstile(turnstile_token, client_ip)
@@ -77,7 +91,8 @@ async def signin_google_authorize(
         prompt="select_account",
     )
     cleanup_expired_states()
-    save_state(state, flow.code_verifier, SIGNIN_FLOW, OAUTH_STATE_TTL_SECONDS)
+    flow_name = SIGNIN_DESKTOP_FLOW if client == "desktop" else SIGNIN_FLOW
+    save_state(state, flow.code_verifier, flow_name, OAUTH_STATE_TTL_SECONDS)
     return _no_store_redirect(auth_url, status_code=307)
 
 
@@ -89,8 +104,10 @@ def signin_google_callback(
     """Google OAuth callback for user sign-in. Exchanges code, creates JWT, redirects to app."""
     if not code or not state:
         raise HTTPException(status_code=400, detail="Missing OAuth code or state.")
-    ok, code_verifier = consume_state(state, SIGNIN_FLOW, OAUTH_STATE_TTL_SECONDS)
-    if not ok:
+    matched_flow, code_verifier = consume_state_for_flows(
+        state, (SIGNIN_FLOW, SIGNIN_DESKTOP_FLOW), OAUTH_STATE_TTL_SECONDS
+    )
+    if matched_flow is None:
         raise HTTPException(status_code=400, detail="Invalid or expired OAuth state.")
 
     try:
@@ -159,7 +176,13 @@ def signin_google_callback(
     # the URL query string (browser history, server logs, Referer headers).
     auth_code = store_exchange_code(token)
     cfg = get_configs()
-    redirect_url = f"{cfg.frontend_origin}/?auth_code={auth_code}"
+    if matched_flow == SIGNIN_DESKTOP_FLOW:
+        # Desktop flow runs in the system browser; the app's relay page fires
+        # the ai.getduct.desktop:// deep link that returns the code to the
+        # shell (HTML stays in the app — the backend only redirects).
+        redirect_url = f"{cfg.frontend_origin}/desktop-auth?auth_code={auth_code}"
+    else:
+        redirect_url = f"{cfg.frontend_origin}/?auth_code={auth_code}"
     return _no_store_redirect(redirect_url, status_code=307)
 
 
