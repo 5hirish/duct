@@ -46,3 +46,40 @@ for bring-your-own provider API keys. Design:
 - `bundle.macOS` config uses `deny_unknown_fields` — a mistyped key fails the
   build rather than being ignored. Key names are camelCase
   (`minimumSystemVersion`, `hardenedRuntime`, `entitlements`).
+
+## Versioning
+
+The shell is the monorepo's only versioned installable — `app/` and `backend/`
+deploy continuously and have no version ritual. The shell version is
+`MAJOR.MINOR.PATCH`, digits and dots only (Apple rejects suffixes like
+`-beta`), and lives in **two files that must always match**:
+`src-tauri/tauri.conf.json` `version` and `src-tauri/Cargo.toml` `version`.
+Refresh `Cargo.lock` after changing Cargo.toml; `get_shell_info` reports the
+Cargo value to the web app.
+
+SemVer here is measured against the **shell↔web contract**: the invoke
+commands, the `get_shell_info` capability flags, the `ai.getduct.desktop://`
+deep-link scheme, the keychain service/format, and the origins allowed to
+invoke. Bump in the same PR as the change, at most one bump per PR:
+
+- **MAJOR** — a capable web app or existing user data breaks against the new
+  shell: removing or renaming an invoke command or capability flag, changing
+  the deep-link scheme or keychain service name, raising
+  `minimumSystemVersion`. `1.0.0` itself is reserved for the first public
+  (non-TestFlight) release.
+- **MINOR** — new capability, backwards compatible: a new invoke command, a
+  new capability flag, a new deep-link route, a new entitlement.
+- **PATCH** — behaviour fixes with no contract change: bug fixes, security
+  fixes, UI/icon polish, dependency bumps.
+- **No bump** — nothing that ships in the bundle changed: CI workflow edits,
+  docs, comments. Markdown-only changes under `desktop/` are excluded from the
+  TestFlight workflow's path filter for the same reason. Rebuilds of the same
+  version are already distinguished by the CI-stamped build number.
+
+While the version is `0.y.z` (pre-GA), contract-breaking changes bump MINOR
+instead of MAJOR — but must still be called out in the PR description.
+
+Never set the build number by hand — CI stamps the GitHub run number as
+`CFBundleVersion`, which App Store Connect requires to keep increasing — and
+never gate web-app behaviour on the version string; probe
+`get_shell_info().capabilities` instead.

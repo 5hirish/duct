@@ -41,10 +41,12 @@ on:
     branches: [main]
     paths:
       - 'desktop/**'
+      - '!desktop/**.md'
       - '.github/workflows/desktop-testflight.yml'
   pull_request:
     paths:
       - 'desktop/**'
+      - '!desktop/**.md'
       - '.github/workflows/desktop-testflight.yml'
   workflow_dispatch:
 

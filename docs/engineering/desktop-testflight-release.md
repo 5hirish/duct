@@ -97,12 +97,14 @@ team-scoped entitlements (`com.apple.application-identifier`,
 
 ## Versioning
 
-Marketing version comes from `version` in `desktop/src-tauri/tauri.conf.json`
-(currently `0.1.0`) — bump it in a normal commit when you want a new version
-string. The build number is the GitHub Actions run number, so it always
-increases and never collides. Both are passed explicitly to
-`asc builds upload`, which cannot read them out of a `.pkg` the way it can from
-an IPA.
+Marketing version comes from `version` in `desktop/src-tauri/tauri.conf.json`,
+which must stay in lockstep with `desktop/src-tauri/Cargo.toml` — when and how
+to bump which digit (SemVer against the shell↔web contract) is defined in
+[`desktop/CLAUDE.md`](../../desktop/CLAUDE.md). The build number is the GitHub
+Actions run number, so it always increases and never collides; never set it by
+hand. Both are passed explicitly to `asc builds upload`, which cannot read
+them out of a `.pkg` the way it can from an IPA. Markdown-only changes under
+`desktop/` deliberately do not trigger this pipeline.
 
 ## Troubleshooting
 
