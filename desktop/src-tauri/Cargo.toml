@@ -1,6 +1,6 @@
 [package]
 name = "desktop"
-version = "0.1.0"
+version = "0.2.0"
 description = "Duct desktop shell"
 authors = ["Duct"]
 edition = "2021"
@@ -20,6 +20,10 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 tauri = { version = "2", features = [] }
 tauri-plugin-opener = "2"
+# Custom URL scheme (ai.getduct.desktop://) for the browser-based OAuth
+# return leg. Scheme registration lands in the bundle's Info.plist; no
+# extra sandbox entitlements needed (unlike a localhost listener).
+tauri-plugin-deep-link = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 # OS keychain for bring-your-own provider keys: macOS Keychain, Windows
