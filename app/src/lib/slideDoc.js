@@ -7,7 +7,7 @@
 // placeholder CSS — all static, content-independent), so the preview matches
 // what the server will produce on commit. Keep this in sync with templates.py.
 
-import { mediaUrl } from "./contentApi";
+import { mediaUrl } from "./contentApi.js";
 
 function escAttr(s) {
   return String(s || "")
