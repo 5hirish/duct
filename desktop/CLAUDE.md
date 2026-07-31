@@ -12,6 +12,15 @@ for bring-your-own provider API keys. Design:
 - **Keychain** via the `keyring` crate; commands in `src-tauri/src/lib.rs`
   (`get_provider_key` / `set_provider_key` / `delete_provider_key`). The web app
   calls them through `window.__TAURI__.core.invoke` (`app/src/lib/providerKeys.js`).
+- **Browser-based Google sign-in**: the web app probes `get_shell_info` (version +
+  `capabilities.browserAuth`) and calls `open_external` (http/https only) to run
+  OAuth in the system browser; the backend redirects back via the
+  `ai.getduct.desktop://auth?auth_code=...` deep link (tauri-plugin-deep-link),
+  which the shell forwards to the webview as `/?auth_code=`. New shell-dependent
+  web flows must be gated on a `get_shell_info` capability flag, never on version
+  sniffing — old shells keep the legacy path.
+- macOS registers the custom scheme from the built bundle's Info.plist, so the
+  deep-link leg only works from a bundled app (`tauri build`), not `tauri dev`.
 - **macOS distribution** is TestFlight (internal testers) via a sandboxed Mac App
   Store build — `src-tauri/tauri.appstore.conf.json` +
   `src-tauri/Entitlements.appstore.plist`, shipped by
