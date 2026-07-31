@@ -16,8 +16,8 @@ import {
   getAgentConversation,
   listAgentConversations,
   archiveAgentConversation,
-} from "./api";
-import { cached, invalidate } from "./contentCache";
+} from "./api.js";
+import { cached, invalidate } from "./contentCache.js";
 
 /** Unified agent-type id for this workspace (see backend agents/registry.py). */
 const AGENT_TYPE = "tiktok_studio";

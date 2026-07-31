@@ -1,5 +1,5 @@
-import { googleAdsByoCredentials } from "./adsCredentials";
-import { providerKeyHeaders } from "./providerKeys";
+import { googleAdsByoCredentials } from "./adsCredentials.js";
+import { providerKeyHeaders } from "./providerKeys.js";
 
 const configuredBase = process.env.NEXT_PUBLIC_API_BASE?.trim();
 const normalizedConfiguredBase = configuredBase?.replace(/\/+$/, "");
