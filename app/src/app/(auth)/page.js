@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BASE } from "../../lib/api";
+import { isDesktopShell, getShellInfo, openExternal } from "../../lib/shell";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
@@ -51,6 +52,7 @@ function SignInContent() {
   const [turnstileToken, setTurnstileToken] = useState("");
   const [ready, setReady] = useState(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const [awaitingBrowser, setAwaitingBrowser] = useState(false);
   const [turnstileError, setTurnstileError] = useState("");
   const requiresTurnstile = Boolean(TURNSTILE_SITE_KEY);
   const turnstileContainerRef = useRef(null);
@@ -164,7 +166,7 @@ function SignInContent() {
     };
   }, [ready]);
 
-  const handleSignIn = useCallback(() => {
+  const handleSignIn = useCallback(async () => {
     if (isSigningIn) return;
     if (!BASE) {
       window.alert(
@@ -180,11 +182,32 @@ function SignInContent() {
       setTurnstileToken(resolvedTurnstileToken);
     }
     setIsSigningIn(true);
-    let url = `${BASE}/auth/signin/google/authorize`;
+    const params = new URLSearchParams();
     if (resolvedTurnstileToken) {
-      url += `?turnstile_token=${encodeURIComponent(resolvedTurnstileToken)}`;
+      params.set("turnstile_token", resolvedTurnstileToken);
     }
-    window.location.href = url;
+    // Desktop shell: Google disallows OAuth inside embedded webviews, so
+    // capable shells run the flow in the system browser. The backend routes
+    // the auth code back through the shell's deep link, which reloads this
+    // page with ?auth_code=. Shells without the browserAuth capability (and
+    // plain browsers) keep the in-page redirect below.
+    if (isDesktopShell()) {
+      const info = await getShellInfo();
+      if (info?.capabilities?.browserAuth) {
+        params.set("client", "desktop");
+        try {
+          await openExternal(
+            `${BASE}/auth/signin/google/authorize?${params.toString()}`
+          );
+          setAwaitingBrowser(true);
+          return;
+        } catch {
+          params.delete("client"); // shell refused to open — fall back
+        }
+      }
+    }
+    const query = params.toString();
+    window.location.href = `${BASE}/auth/signin/google/authorize${query ? `?${query}` : ""}`;
   }, [
     getTurnstileResponseToken,
     isSigningIn,
@@ -252,7 +275,21 @@ function SignInContent() {
             onClick={handleSignIn}
             disabled={isSigningIn || (requiresTurnstile && !hasTurnstileToken)}
             isLoading={isSigningIn}
+            loadingLabel={awaitingBrowser ? "Continue in your browser…" : "Signing in..."}
           />
+          {awaitingBrowser && (
+            <p className="mt-2 text-center text-xs text-muted-foreground">
+              Finish signing in with Google in your browser — this window will
+              continue automatically.{" "}
+              <button
+                type="button"
+                className="underline underline-offset-2"
+                onClick={() => window.location.reload()}
+              >
+                Start over
+              </button>
+            </p>
+          )}
           {requiresTurnstile && !hasTurnstileToken && (
             <p className="mt-2 text-center text-xs text-muted-foreground">
               Complete security check to continue.
