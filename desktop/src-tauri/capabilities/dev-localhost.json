@@ -1,0 +1,18 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "dev-localhost",
+  "description": "DEV ONLY. Lets a locally served Duct app (Next dev server) call the shell commands from a built dev bundle, where localhost is a remote origin rather than a devUrl. Release builds must exclude this: tauri.conf.json pins app.security.capabilities to [\"default\"], and only tauri.dev.conf.json opts this back in. The port is wildcarded because URLPattern matching on an explicit port does not match reliably.",
+  "windows": ["main"],
+  "remote": {
+    "urls": ["http://localhost:3003", "http://localhost:3003/*"]
+  },
+  "permissions": [
+    "core:default",
+    "opener:default",
+    "allow-get-provider-key",
+    "allow-set-provider-key",
+    "allow-delete-provider-key",
+    "allow-get-shell-info",
+    "allow-open-external"
+  ]
+}
