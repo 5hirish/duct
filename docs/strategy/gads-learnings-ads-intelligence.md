@@ -63,7 +63,32 @@ The Gads SOPs encode battle-tested PPC judgment: the anti-Google-defaults checkl
 
 ---
 
-## 5 · Related docs
+## 5 · Execution roadmap (added 2026-07-31, from Gads round 2)
+
+The second stretch of the Gads engagement (Jul 21–31) produced **zero Google Ads mutations** — all effort went into measurement plumbing (GA4 admin repair, GTM enhanced-conversions fix, a Mixpanel↔GA4 cross-check that caught a `signup`→`sign_up` rename silently dropping 174 conversions/month). That is the measurement-first thesis (L1) playing out: you don't touch bids on a corrupt signal. What it contributes to Duct is execution *patterns and preconditions*, not portable code (no Ads mutate code exists to port; the campaign/negative/audience builders remain prose specs in the playbooks).
+
+### Principles
+
+- **Staged execution (two-phase commit).** The engagement's one real write surface — GTM — demonstrated the model twice: create a named workspace → stage variable/tag mutations → diff → an explicit, separate publish step (one workspace published live, one deliberately held). Generalize this as Duct's execution primitive for every connector: *propose → render diff/preview → human approves → apply → verify → keep a rollback handle*. Google Ads has no workspace concept; the analogue is paused-by-default entity creation.
+- **Gates must be machine-enforced.** In Gads the entire safety layer is prose (`CLAUDE.md` rules, a `# mutation (ask first!)` comment) that the agent happens to read. A SaaS cannot ship that. Dry-run payload rendering, per-entity approval, and per-account **guardrail invariants** (e.g. "never re-enable the paused PMax campaigns — bidding history trained on fake conversions") persisted in the DB are exactly Duct's value over DIY-with-Claude-Code.
+- **Measurement-trust precondition.** Execution on bids/budgets/keywords is locked until the audit's measurement-integrity checks pass. This also gives the funnel its narrative: *the free audit is how an account earns the right to execution*.
+- **A work order is an execution artifact.** A large share of fixes land where no API reaches (product code, consoles). Gads shipped a fully-specced engineering ticket (tasks, acceptance criteria, QA plan) and an action table with owner + minutes-to-fix columns. Duct can generate these today with zero new API surface.
+
+### Phases
+
+1. **Staged-execution framework** on the agent-session chassis: generic change-set model (propose/diff/approve/apply/verify/rollback), approval UI in the workspace right pane, guardrail-invariant storage per account.
+2. **First executors — measurement repair** (low blast radius, real write APIs already proven in Gads): GA4 key-event create/delete + event-name-mismatch repair; GTM workspace/tag fixes; work-order ticket generation for what APIs can't reach.
+3. **Ads executors behind the trust gate** (from playbook specs): universal negatives + search-term sweeps, geo lockdown (presence-only + country exclusions), pausing junk spend, budget changes — every entity created PAUSED, every mutation individually approved.
+
+### Constraints to encode
+
+- Execution needs the `adwords` **write** scope (already requested by our OAuth) plus a **Basic-access** developer token — the BYO token flow is therefore also the execution enabler; detect and surface the token's access tier on the Connections card (Explorer tier can't even use `KeywordPlanIdeaService`).
+- Dev-token↔Cloud-project pairing is permanent on first API call — warn BYO users before their first request.
+- GTM API is ~0.25 QPS (sleep ~5s between calls); GA4 v1alpha endpoints need per-call failure isolation.
+
+---
+
+## 6 · Related docs
 
 - [`product-plan.md`](product-plan.md) — core thesis (§02) and vertical matrix (§04)
 - [`../mvp/google-ads-mvp-plan.md`](../mvp/google-ads-mvp-plan.md) — original data contract & section model
