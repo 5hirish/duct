@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
-import sqlalchemy as sa
 from sqlalchemy import (
     CheckConstraint,
     Column,
@@ -16,7 +15,7 @@ from sqlalchemy import (
     UniqueConstraint,
     text,
 )
-from sqlalchemy.dialects.postgresql import JSONB
+from models.columns import json_column
 from sqlmodel import Field, SQLModel
 
 
@@ -66,7 +65,7 @@ class AuthIdentity(SQLModel, table=True):
     provider_user_id: str = Field(sa_column=Column(String, nullable=False))
     provider_email: str | None = Field(default=None, sa_column=Column(String, nullable=True))
     raw_profile: dict | None = Field(
-        default=None, sa_column=Column(JSONB(astext_type=sa.Text()), nullable=True)
+        default=None, sa_column=Column(json_column(), nullable=True)
     )
     created_at: datetime = Field(
         default_factory=_utcnow,

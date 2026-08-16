@@ -28,6 +28,32 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
 - **Hosting:** Railway — auto-deploys from `main` via GitHub integration; `railway.json` defines Railpack build + uvicorn start.
 - **CI:** GitHub Actions (`backend.yml`) — Ruff lint + pytest on every PR and push to `main`.
 
+### Desktop (local sidecar) mode
+
+The backend runs in two shapes from one codebase. Railway is unchanged; the
+desktop build runs the same FastAPI app as a sidecar on the user's machine —
+see `docs/engineering/agent-engine-consolidation-review.md` §7–8.
+
+- **Entrypoint:** `local_server.py`. Sets `DUCT_LOCAL=1`, resolves the per-user
+  data dir, binds **127.0.0.1** on an OS-assigned port, and prints a single JSON
+  handshake line on stdout before starting uvicorn:
+  `{"duct_sidecar":1,"url":...,"port":...,"api_key":...,"data_dir":...}`.
+  The Tauri shell must read the port from that line — never assume one.
+- **Data dir** (`utils/appdirs.py`): macOS `~/Library/Application Support/ai.getduct.desktop`,
+  Windows `%APPDATA%\Duct`, Linux `$XDG_DATA_HOME/duct`. Created `0700`.
+  Override with `--data-dir` or `DUCT_DATA_DIR`.
+- **Local mode defaults** (`Configs._apply_local_mode_defaults`): SQLite at
+  `<data_dir>/duct.db`, uploads at `<data_dir>/uploads`, `init_db_on_startup=True`
+  (no Alembic on a laptop). Each is only filled when unset, so
+  `DATABASE_URL=postgresql://…` still works for a developer running local mode.
+- **Local API key:** generated once, persisted `0600` at `<data_dir>/local-api-key`,
+  and exported as `DUCT_API_KEY` so the existing `validate_api_key` gate applies
+  unchanged. It only stops other local processes driving the sidecar.
+- **JSON columns must use `models/columns.py::json_column()`**, never
+  `postgresql.JSONB` directly — raw JSONB fails to compile on SQLite. The variant
+  still renders JSONB on Postgres, so it produces no Alembic diff.
+- **Never name a module `models/types.py`** — it shadows the stdlib `types`.
+
 ### Database migrations
 
 Schema changes are applied **manually** with Alembic — a normal local dev step,

@@ -12,6 +12,29 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 _BACKEND_DIR = Path(__file__).resolve().parent
 
 
+def _first(data: dict[str, Any], *keys: str) -> Any:
+    """First present, non-empty value among `keys` — used to read a setting by
+    field name or by any of its env aliases."""
+    for key in keys:
+        value = data.get(key)
+        if value not in (None, ""):
+            return value
+    return None
+
+
+def _truthy(value: Any) -> bool:
+    """Interpret a raw settings value as a bool.
+
+    Values reaching a `mode="before"` validator come straight from the env, so a
+    bool field is still the string "1" / "true" at this point.
+    """
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true", "yes", "on"}
+    return bool(value)
+
+
 def _settings_env_files() -> tuple[Path, ...]:
     """Return dotenv files to load. Always loaded — including under pytest —
     so integration tests can use the same API keys as the running server."""
@@ -35,6 +58,18 @@ class Configs(BaseSettings):
     # Public origin of this API (scheme + host [+ port], no path). Used to build OAuth redirect
     # URIs when GOOGLE_OAUTH_REDIRECT_URI / GOOGLE_SIGNIN_REDIRECT_URI are unset.
     api_public_url: str = Field(default="http://localhost:8002")
+
+    # Desktop (local) mode: the backend runs as a sidecar on the user's own
+    # machine rather than on Railway. Flips the persistence defaults to a
+    # per-user SQLite file and a writable data dir — see the model validator
+    # below, and `local_server.py` for the entrypoint that sets DUCT_LOCAL.
+    duct_local: bool = Field(
+        default=False,
+        validation_alias=AliasChoices("DUCT_LOCAL", "DUCT_DESKTOP"),
+    )
+    # Per-user writable directory (SQLite DB, uploads, agent artifacts). Empty
+    # means "derive the OS-conventional path" — see utils/appdirs.py.
+    duct_data_dir: str = Field(default="", validation_alias=AliasChoices("DUCT_DATA_DIR"))
 
     # Primary relational store for auth-first persistence.
     database_url: str = ""
@@ -212,6 +247,35 @@ class Configs(BaseSettings):
         gsr = out.get("google_signin_redirect_uri")
         if not isinstance(gsr, str) or not gsr:
             out["google_signin_redirect_uri"] = f"{base}/auth/signin/google/callback"
+        return cls._apply_local_mode_defaults(out)
+
+    @classmethod
+    def _apply_local_mode_defaults(cls, out: dict[str, Any]) -> dict[str, Any]:
+        """In desktop mode, point persistence at the per-user data directory.
+
+        Only fills values the operator has not set explicitly, so a developer can
+        still run local mode against Postgres by exporting DATABASE_URL. Nothing
+        here runs for the Railway deployment, where duct_local is false.
+        """
+        # Values reach a before-validator keyed by whatever name the source used:
+        # the field name for kwargs, but the env var name for the settings sources.
+        # Both spellings have to be checked or local mode silently no-ops from env.
+        if not _truthy(_first(out, "duct_local", "DUCT_LOCAL", "DUCT_DESKTOP")):
+            return out
+
+        from utils.appdirs import ensure_data_dir  # local import: leaf module, no cycle
+
+        data_dir = ensure_data_dir(str(_first(out, "duct_data_dir", "DUCT_DATA_DIR") or ""))
+        out["duct_data_dir"] = str(data_dir)
+
+        if not out.get("database_url"):
+            # SQLModel/Alembic are driver-agnostic; sqlite keeps the app single-file.
+            out["database_url"] = f"sqlite:///{data_dir / 'duct.db'}"
+        if not out.get("uploads_dir"):
+            out["uploads_dir"] = str(data_dir / "uploads")
+        if "init_db_on_startup" not in out:
+            # No Alembic step on a user's laptop — create_all owns the schema here.
+            out["init_db_on_startup"] = True
         return out
 
 

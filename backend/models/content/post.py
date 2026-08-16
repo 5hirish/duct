@@ -5,9 +5,8 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
-import sqlalchemy as sa
 from sqlalchemy import Column, DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint
-from sqlalchemy.dialects.postgresql import JSONB
+from models.columns import json_column
 from sqlmodel import Field, SQLModel
 
 
@@ -63,13 +62,13 @@ class ContentPost(SQLModel, table=True):
     # image_prompt_used for staleness. See agents/content/schema.py:Slide.
     slides: list = Field(
         default_factory=list,
-        sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="[]"),
+        sa_column=Column(json_column(), nullable=False, server_default="[]"),
     )
     slides_html: str = Field(default="", sa_column=Column(Text, nullable=False, server_default=""))
     caption: str = Field(default="", sa_column=Column(Text, nullable=False, server_default=""))
     hashtags: list = Field(
         default_factory=list,
-        sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="[]"),
+        sa_column=Column(json_column(), nullable=False, server_default="[]"),
     )
     tiktok_title: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
     hook_type: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
@@ -79,7 +78,7 @@ class ContentPost(SQLModel, table=True):
     bridge_text: str = Field(default="", sa_column=Column(Text, nullable=False, server_default=""))
     image_prompts: list = Field(
         default_factory=list,
-        sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="[]"),
+        sa_column=Column(json_column(), nullable=False, server_default="[]"),
     )
     audio_note: str = Field(default="", sa_column=Column(Text, nullable=False, server_default=""))
     strategic_note: str = Field(default="", sa_column=Column(Text, nullable=False, server_default=""))
@@ -88,7 +87,7 @@ class ContentPost(SQLModel, table=True):
     camera_ref_pool: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
     platforms: list = Field(
         default_factory=list,
-        sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="[]"),
+        sa_column=Column(json_column(), nullable=False, server_default="[]"),
     )
 
     posted_at: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
@@ -105,11 +104,11 @@ class ContentPost(SQLModel, table=True):
 
     perf: dict = Field(
         default_factory=dict,
-        sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="{}"),
+        sa_column=Column(json_column(), nullable=False, server_default="{}"),
     )
     daily_perf: list = Field(
         default_factory=list,
-        sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="[]"),
+        sa_column=Column(json_column(), nullable=False, server_default="[]"),
     )
     notes: str = Field(default="", sa_column=Column(Text, nullable=False, server_default=""))
 

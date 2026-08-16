@@ -7,7 +7,7 @@ from uuid import UUID, uuid4
 
 import sqlalchemy as sa
 from sqlalchemy import Column, DateTime, ForeignKey, String
-from sqlalchemy.dialects.postgresql import JSONB
+from models.columns import json_column
 from sqlmodel import Field, SQLModel
 
 
@@ -35,31 +35,31 @@ class Project(SQLModel, table=True):
     pitch: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
     targets: dict = Field(
         default_factory=dict,
-        sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="{}"),
+        sa_column=Column(json_column(), nullable=False, server_default="{}"),
     )
     audience: dict = Field(
         default_factory=dict,
-        sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="{}"),
+        sa_column=Column(json_column(), nullable=False, server_default="{}"),
     )
     competition: dict = Field(
         default_factory=dict,
-        sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="{}"),
+        sa_column=Column(json_column(), nullable=False, server_default="{}"),
     )
     brand_channels: dict = Field(
         default_factory=dict,
-        sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="{}"),
+        sa_column=Column(json_column(), nullable=False, server_default="{}"),
     )
     content_brand: dict = Field(
         default_factory=dict,
-        sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="{}"),
+        sa_column=Column(json_column(), nullable=False, server_default="{}"),
     )
     content_pillars: dict = Field(
         default_factory=dict,
-        sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="{}"),
+        sa_column=Column(json_column(), nullable=False, server_default="{}"),
     )
     content_visual_assets: dict = Field(
         default_factory=dict,
-        sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="{}"),
+        sa_column=Column(json_column(), nullable=False, server_default="{}"),
     )
     created_at: datetime = Field(
         default_factory=_utcnow,
