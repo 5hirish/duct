@@ -24,13 +24,22 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   agents are moving to one harness — LangChain 1.x / `deepagents` — because customers bring
   their own model (OpenAI / Gemini / Claude / OpenRouter) and the Claude Agent SDK is
   Anthropic-only by design (upstream issue #410, closed `not planned`).
-  - **V1 is the target.** Rebuilt on `create_agent` + structured output; `v1/graph.py` is gone.
-  - **V2 is frozen.** Kept as insurance, not maintained. Do not extend it. When a change to
-    shared code (`agents/engines.py`, `agents/models.py`, `agents/insights/tools.py`,
-    `schema.py`) would require ADK work, leave V2 on the old behaviour and note the divergence
+  Each engine has a different status, and they imply different rules:
+
+  - **V1 — the target, under construction.** Rebuilt on `create_agent` + structured output;
+    `v1/graph.py` is gone. New agent work goes here.
+  - **V2 — frozen.** Kept as insurance, not maintained. Do not extend it. When a change to
+    shared code would require ADK work, leave V2 on the old behaviour and note the divergence
     rather than porting the change.
-  - **V3 is being retired** — audit and content move off it; Claude remains a first-class
-    *model* through V1.
+  - **V3 — maintained, and still the production path** for audit and content. It is *not*
+    being retired yet. Keep it working: shared-code changes (`agents/core/`,
+    `agents/audit/`, `agents/content/`, `schema.py`, `agents/models.py`) must keep V3 at
+    parity, and V1 ports land **alongside** V3 rather than replacing it. Retirement happens
+    only once V1 has earned full confidence — real-provider evals plus a clean audit and
+    content run.
+
+  So a shared change may need doing twice (V1 + V3) but never three times: V2 absorbs nothing.
+  Claude remains a first-class *model* through V1, so retiring V3 later costs no capability.
 - **Ingestion:** Direct Google API clients (`google-ads`, `google-analytics-data`, `google-api-python-client`). Async concurrent fetching in `service/pipeline.py`.
 - **Normalization:** Lightweight Python pipeline — raw API response → typed Pydantic/SQLModel brief models. No query layer or transforms yet.
 - **Database:** PostgreSQL on Railway — SQLModel ORM, Alembic migrations, `psycopg` driver.

@@ -752,6 +752,18 @@ LangChain takes plain Python callables via `@tool`. The crawl and content tools 
 in-process functions and the MCP servers, bootstrap scripts and schema duplication are deleted
 outright. MCP remains available as a *client* for third-party servers if we ever want it.
 
+### 9.4a Migration is additive — V3 stays until V1 earns confidence
+
+The ports land **alongside** V3, not in place of it. V3 remains the production path for audit
+and content and is **maintained**, not frozen; V2 is the frozen one. Concretely:
+
+* `agents/<type>/v1/` is added; `agents/<type>/v3/` keeps working.
+* Shared-code changes must keep V3 at parity (but never V2 — see `backend/CLAUDE.md`).
+* Retiring V3 is gated on: real-provider eval scores, one clean end-to-end audit, and one
+  clean end-to-end content run on V1. Until all three, "delete V3" is not scheduled work.
+
+The effort map below is the *eventual* shape, not a licence to delete early.
+
 ### 9.5 Revised effort map
 
 | Component | LOC | Action |
