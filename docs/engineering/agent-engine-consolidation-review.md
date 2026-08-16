@@ -783,6 +783,75 @@ streaming, and the `<duct_report>` artifact state machine. So run two narrow spi
 
 Spike 2 is the one that can still invalidate the plan, so it should not run last.
 
+## 10. Google ADK vs deepagents — capability comparison
+
+Both shipped on **13 Aug 2026**: `google-adk` **2.7.0**, `deepagents` **0.7.6**. Neither is
+stagnating and neither is a safe "it'll be abandoned" bet.
+
+**Method and its limit:** the ADK column below is introspected from **2.2.0**, the version
+pinned in `pyproject.toml`; deepagents is introspected from 0.7.6. Rows marked *(2.3–2.7)* come
+from release notes, not from running code — ADK's newest work is therefore described more
+generously than it was verified. Read accordingly.
+
+### 10.1 Where ADK is genuinely ahead
+
+| Capability | Detail |
+|---|---|
+| **Live / bidirectional multimodal** | `RunConfig` carries `speech_config`, `response_modalities`, `avatar_config`, input/output `audio_transcription`, `realtime_input_config`, `enable_affective_dialog`, `proactivity`, `save_live_audio`. `StreamingMode.BIDI`. deepagents has **nothing** comparable — this is a real category gap, not a nuance. |
+| **A2A (agent-to-agent)** | A2A 1.x, with production deployments at Microsoft, AWS, Salesforce, SAP, ServiceNow. |
+| **Serve as an MCP server** | ADK can *expose* an agent over MCP. deepagents is MCP **client** only. |
+| **Explicit orchestration graph** | `Workflow`, `Node`, `FunctionNode`, `JoinNode`, `Edge`, `RetryConfig`, `NodeTimeoutError`. Per-node retry and timeout are first-class; in deepagents they are your problem. |
+| **Declarative agents** | `LlmAgentConfig`, `SequentialAgentConfig`, `LoopAgentConfig`, `ParallelAgentConfig` — agents definable as config, not only code. |
+| **Planners** | `BuiltInPlanner`, `PlanReActPlanner` as swappable strategies. |
+| **Native compositional agents** | `SequentialAgent`, `ParallelAgent`, `LoopAgent` as primitives. |
+| **GCP deployment** | Cloud Run / Vertex / Agent Engine, Daytona remote sandboxes *(2.3–2.7)*. |
+| **Context-window compression** | `context_window_compression` in `RunConfig` *(vs deepagents' summarization middleware — comparable, different shape)*. |
+
+### 10.2 Where deepagents is ahead
+
+| Capability | Detail |
+|---|---|
+| **Model-agnostic by default** | `init_chat_model` covers every provider natively. In ADK, non-Gemini goes through **`LiteLlm`, which is an optional extra** — `google.adk.models` raises ImportError until `google-adk[extensions]` is installed. Multi-provider is core in one and an add-on in the other. |
+| **Per-model harness tuning** | `HarnessProfile` / `ProviderProfile` / `register_provider_profile` apply prompt, tool, middleware and subagent overrides automatically when a model is selected. This is precisely the BYO-model problem; ADK has no direct equivalent. |
+| **HITL granularity** | `interrupt_on={tool: config}` with `approve` / `edit` / `reject` / `respond`, a `when` predicate, and inheritance into subagents. ADK's HITL is node/`NodeTool` resumption *(2.3–2.7)* — coarser and newer. **Verified running** (`tests/test_deepagents_harness.py`). |
+| **Filesystem + context offload** | `backends` (state / local / remote), `FilesystemMiddleware`, `FilesystemPermission`, tool-output offload to disk. The "deep agent" pattern is the product here, not an add-on. |
+| **Subagent variety** | Declarative `SubAgent`, `CompiledSubAgent` (pre-built runnable), `AsyncSubAgent` (remote/background). |
+| **Persistence ecosystem** | LangGraph checkpointers — memory, **SQLite**, Postgres — interchangeable. SQLite matters directly for our desktop build (§7.6). |
+| **Middleware composition** | `SubAgentMiddleware`, `MemoryMiddleware`, `RubricMiddleware`, summarization, prompt-caching; provider-specific ones auto-install and no-op elsewhere. |
+| **Harness benchmarked in public** | `deepagents-code` went 52.8 → 66.5 on Terminal-Bench 2.0 with the **model held fixed**. No equivalent public number for ADK's harness. |
+| **Dependency weight** | Relevant to the desktop bundle — see 10.3. |
+
+### 10.3 Packaging note, from installing both
+
+In this repo's environment, ADK 2.2.0 has three import failures out of the box:
+
+```
+google.adk.tools          -> ImportError: cannot import name 'discoveryengine_v1beta'
+google.adk.models         -> ImportError: `LiteLlm` requires an optional dependency
+google.adk.code_executors -> ImportError: ContainerCodeExecutor requires additional dependencies
+```
+
+Not bugs — optional extras. But it means ADK's surface is fragmented across `google.cloud.*`
+packages, which is extra hidden-import work and bundle weight for the PyInstaller desktop
+build (§8.2). deepagents imported and ran with no extras.
+
+### 10.4 Verdict for Duct specifically
+
+ADK is a stronger framework than §2 of this document gave it credit for — that verdict was
+about *our v2 implementation*, which is weak, not about ADK 2.7.
+
+The choice still goes to deepagents, on three axes that happen to be exactly our requirements:
+
+1. **BYO model is core, not an extra.** Customers arriving with OpenAI / Gemini / Chinese /
+   OpenRouter keys are the product (§6.1); `HarnessProfile` addresses per-model tuning directly.
+2. **HITL-over-SSE is verified**, and it is the primitive audit depends on.
+3. **Desktop packaging** favours the lighter, extras-free dependency graph, and LangGraph's
+   SQLite checkpointer lines up with the local data dir.
+
+ADK would win if Duct were GCP-native, needed A2A interop, or built **voice/live multimodal**
+agents. The last is the one capability deepagents cannot match at all — if a talking assistant
+ever becomes a Duct feature, this decision should be revisited rather than worked around.
+
 ## Sources
 
 - [Hermes Agent — NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent)
