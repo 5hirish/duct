@@ -702,6 +702,87 @@ client — no sidecar, no self-update needed (the web app updates server-side) �
 Store fits it cleanly. Revisit then, on its own merits. The current decision does not close
 that door.
 
+## 9. Port map — what actually moves where
+
+"Port v1 to deepagents" is the wrong shape, and acting on it would put the work in the
+cheapest place instead of the riskiest one. Two corrections.
+
+### 9.1 LangChain 1.x is layered — pick a layer per agent, not one for everything
+
+`deepagents` is not *the* LangChain API; it is the top of a stack, and each Duct agent needs a
+different rung:
+
+| Layer | Adds | Duct agent that needs it |
+|---|---|---|
+| `init_chat_model` + `.with_structured_output()` | one typed model call | **insights** |
+| `create_agent` | tool loop, middleware, HITL interrupts, structured output | **audit** |
+| `deepagents` | + subagents, filesystem, skills, compaction, harness profiles | **content** |
+
+Reaching for `deepagents` everywhere would wrap a single synthesis call in a filesystem and a
+subagent runtime it never uses.
+
+### 9.2 Insights needs almost no harness — v3 already proved it
+
+`insights/v1` is two `StateGraph`s: Phase 1 is an LLM tool-calling loop, Phase 2 is a single
+structured-output node whose own docstring admits the graph is ceremony ("wrapping in a
+StateGraph gives checkpointing and streaming parity"). Phase 1's LLM picks tools from
+`GOAL_TOOL_ALLOWLIST`, which has *already* filtered them by goal — so the model is choosing a
+subset of a list that is deterministic anyway. `insights/v3` replaced that whole loop with
+`asyncio.gather()` over the same callables and works.
+
+So insights collapses to: existing goal-filtered `gather()` for fetch, plus
+`init_chat_model(...).with_structured_output(SynthesisSchema)` for synthesis. That is
+**deleting** `v1/graph.py` (179) and most of `v1/agent.py` (390), not porting them.
+
+### 9.3 What survives untouched
+
+The domain layer was never framework-specific and does not move: `insights/goals/`,
+`insights/prompts/`, `insights/schema.py`, `insights/registry.py`, `TOOL_DESCRIPTIONS` and the
+fetch functions in `insights/tools.py`, the audit scoring model, the content templates, and the
+`<duct_report>` contract. Only the `StructuredTool` wrapper in `insights/tools.py` is
+LangChain-shaped — and it is already the *right* shape.
+
+### 9.4 The MCP layer disappears
+
+`agents/audit/tools.py` builds a `create_sdk_mcp_server("duct_crawl", …)`; content does the
+same for `duct_content`; insights has `v3/mcp_server.py` (176 LOC) with hand-written JSON
+Schema. All of it exists only because the Claude Agent SDK consumes tools over MCP.
+
+LangChain takes plain Python callables via `@tool`. The crawl and content tools become
+in-process functions and the MCP servers, bootstrap scripts and schema duplication are deleted
+outright. MCP remains available as a *client* for third-party servers if we ever want it.
+
+### 9.5 Revised effort map
+
+| Component | LOC | Action |
+|---|---:|---|
+| `insights/v2/` (ADK) | 877 | delete |
+| `insights/v1/graph.py` + most of `agent.py` | ~569 | delete — replaced by one structured call |
+| `insights/v3/mcp_server.py` | 176 | delete — tools become `@tool` callables |
+| `audit/v3/runner.py` | 968 | **port** → `create_agent` (HITL + streaming + tools) |
+| `content/v3/runner.py` | 1,298 | **port** → `deepagents` (subagents + HITL + images) |
+| `agents/core/` | 1,284 | partly replaced by LangGraph primitives (see §6.5) |
+
+Net: the insights work is subtraction; the actual porting is **audit and content coming off the
+Claude Agent SDK**.
+
+### 9.6 Consequence for the spike
+
+§6.6 proposed spiking insights first. Keep it — it is a day's work and it proves **model
+portability** and gives per-model eval scores — but be clear that it does **not** prove
+**harness parity**, because insights barely uses a harness.
+
+The real risk lives in audit: mid-run `AskUserQuestion` bridged to SSE, token/thinking
+streaming, and the `<duct_report>` artifact state machine. So run two narrow spikes, not one:
+
+1. **Model spike (insights)** — swap the synthesis call, score Claude / GPT / Gemini / one
+   OpenRouter model through `tests/eval/`.
+2. **Harness spike (audit slice)** — do *not* port all 968 lines. Prove only:
+   `create_agent` + one crawl tool + a LangGraph `interrupt()` surfacing through our existing
+   SSE stream + token streaming. If HITL-over-SSE works, the rest is mechanical.
+
+Spike 2 is the one that can still invalidate the plan, so it should not run last.
+
 ## Sources
 
 - [Hermes Agent — NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent)
