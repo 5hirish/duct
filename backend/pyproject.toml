@@ -48,6 +48,7 @@ claude-agent-sdk = ">=0.2"
 selectolax = ">=0.3"
 extruct = ">=0.16"
 trafilatura = ">=2.0"
+deepagents = "^0.7"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^9"
