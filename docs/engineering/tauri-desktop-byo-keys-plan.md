@@ -4,6 +4,15 @@
 > **Date:** 2026‑06‑18
 > **Branch:** `claude/stoic-volta-2alwt0`
 > **Owner:** @5hirish
+>
+> ⚠️ **§2/§4 under review — see
+> [`agent-engine-consolidation-review.md` §7](agent-engine-consolidation-review.md#7-desktop-first-changes-the-product-shape-more-than-the-engine-choice).**
+> This plan assumes a **thin client** with agents staying on Railway ("❌ no on-device agent
+> execution"). A desktop-first, Hermes-style launch requires the opposite — the agent running
+> on the customer's machine — because the thin-client shape keeps full cloud compute costs at
+> launch. That also puts the App Store / TestFlight track (§ macOS distribution) in question,
+> since App Store apps may not self-update and sandboxing a Python sidecar is hostile.
+> Resolve the channel and execution-locus questions before starting Phases 2–3.
 
 ## 1. Goal
 

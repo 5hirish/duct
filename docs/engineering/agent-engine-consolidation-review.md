@@ -491,6 +491,128 @@ provider through the new harness. `agents/core` maps over rather than dies:
 Unchanged from §5: prompts, tools, schemas, goals and the `<duct_report>` contract are
 framework-neutral and survive all of this. The rewrite is runners and adapters.
 
+## 7. Desktop-first changes the product shape more than the engine choice
+
+**New intent:** ship Duct as a **desktop product like Hermes** first, and add cloud only if the
+desktop sells. §6's engine conclusion survives this — it gets *stronger* — but the desktop
+plan we have on file does not.
+
+### 7.1 The committed desktop plan is the opposite of Hermes
+
+`tauri-desktop-byo-keys-plan.md` §2/§4 is explicit:
+
+> "The desktop app is a *thin client* — it renders our existing Next frontend and calls the
+> existing Railway API." … "❌ **No on-device agent execution.** That would force bundling
+> prompts/runners into the binary, where `strings binary | grep` recovers them. Agents stay
+> on Railway."
+
+Hermes is the inverse — "an autonomous agent that lives on your machine or a server… All data
+stays on your machine. No telemetry, no tracking, no cloud lock-in."
+
+**The decisive problem is not philosophical, it is financial.** The thin-client plan does not
+defer cloud spend at all: every customer's agent run still burns our Railway compute, and
+scales with adoption. "Desktop now, cloud if it makes money" only works if the agent actually
+runs on the customer's machine. As written, the plan gives us desktop *packaging* with cloud
+*economics* — the worst pairing for a pre-revenue launch.
+
+### 7.2 What Hermes actually monetizes — worth knowing before copying it
+
+Hermes Agent is **MIT-licensed and free**: `pip install`, an `install.sh`, or a native
+installer (desktop app shipped 2 Jun 2026). Nous does not sell the desktop app. They sell
+**Nous Portal** (launched 27 Apr 2026) — a subscription bundling 300+ models and built-in
+tools behind one login — while BYO-key users "skip Portal entirely".
+
+So the reference model is *give away the harness, sell the inference bundle*. Selling the app
+**and** having customers BYO keys takes neither margin. That is a viable indie model, but it
+is not the Hermes model, and it should be a deliberate choice rather than an inherited
+assumption. The realistic third path — and probably the right one later — is our own Portal
+equivalent: a hosted key for users who do not want to manage one, priced above cost.
+
+### 7.3 Distribution channel is now the decisive technical call
+
+A local-first agent needs subprocess/sidecar execution, self-update, broad filesystem access
+and arbitrary network egress. All four fight the Mac App Store sandbox, and our own
+`desktop/CLAUDE.md` already records the blocker:
+
+> "**Never enable `tauri-plugin-updater` for the macOS build.** App Store apps may not
+> self-update; it would be rejected. Auto-update is only an option if macOS moves to
+> Developer ID / DMG distribution."
+
+Add the known failure mode that sandboxing a PyInstaller-built binary on macOS crashes with
+illegal-instruction faults, and the current TestFlight/App-Store track is structurally hostile
+to the thing we now want to build. Hermes ships native installers outside the App Store for
+exactly these reasons.
+
+**Recommendation: if we go Hermes-like, leave the App Store track** — Developer ID +
+notarized DMG + `tauri-plugin-updater`. That unblocks sidecars and auto-update in one move.
+Keep TestFlight only if the thin-client shape is what we actually ship.
+
+### 7.4 Correction: the Claude Agent SDK packages fine for desktop
+
+§2 and §6.4 counted the `claude` Node subprocess against v3. For a *server* on a 1 GiB
+container that stands. For *desktop* it is largely wrong and should not be used as an
+argument: both the npm and the Python `claude-agent-sdk` packages **bundle the Claude Code
+binary**, so there is no separate CLI install for end users, and shipping it inside a desktop
+app is a supported pattern under Anthropic's Commercial Terms.
+
+v3 remains disqualified — but on **model lock alone** (issue #410, `not planned`), which is
+the requirement that matters. Packaging is not the reason.
+
+### 7.5 Desktop-first makes the deepagents case stronger
+
+- **BYO keys stop being a security problem.** Local execution means the customer's key never
+  leaves their machine — no per-request key transit, no in-memory server custody, no
+  "encrypted at rest / never logged" burden. The hardest part of the BYO-keys plan disappears.
+- **Local and open-weight models become a real feature.** `deepagents` supports Ollama, vLLM
+  and llama.cpp natively. On a desktop product that is a headline capability — zero-cost,
+  fully-private runs — and it is flatly impossible on v3.
+- **A TypeScript option appears.** `deepagentsjs` (npm `deepagents`, **v1.12.3**) is the same
+  harness for Node: subagents via `task`, filesystem tools, `write_todos`, streaming and
+  LangGraph checkpointing confirmed. HITL, MCP and skills parity with the Python package is
+  **not** confirmed from its README — treat that as a spike question, not a given.
+- **But our domain logic is Python.** Crawling (`selectolax`, `extruct`, `trafilatura`),
+  Google Ads / GA4 / GSC clients, `dlt`, SQLModel. A TS harness means porting or IPC-ing all
+  of that. Python sidecar almost certainly wins despite the packaging friction.
+
+### 7.6 The good news: we are already 90% of the way to local-first
+
+Duct is a FastAPI server plus a web frontend that talks to it over HTTP. "Desktop" is mostly
+*where that server runs*:
+
+| Today | Local-first desktop |
+|---|---|
+| Next app → `api.getduct.ai` (Railway) | Next app → `127.0.0.1:PORT` (sidecar) |
+| FastAPI on Railway | FastAPI as a Tauri sidecar (PyInstaller / uv) |
+| Postgres on Railway | SQLite (SQLModel + Alembic already abstract the driver) |
+| Keys in Railway memory per request | Keys in OS keychain, never leave the device |
+| Prompts server-side only | **Prompts ship in the bundle** — accepted trade |
+
+The same FastAPI app becomes the cloud product later, unchanged. One codebase, two deployment
+targets. The only genuinely new decision is the last row.
+
+**On prompt IP:** this is the reason §4 of the desktop plan forbade local execution, and going
+Hermes-like means reversing it. Worth reversing: Hermes and OpenClaw are fully open source and
+compete fine. Our moat is the domain logic — SEO scoring weights, connector normalization,
+the report contract — plus distribution and UX, none of which are protected by prompt secrecy
+anyway once a user can read the rendered output.
+
+### 7.7 Revised sequencing for desktop-first
+
+1. **Decide the channel.** App Store/TestFlight (thin client, cloud economics) vs Developer ID
+   + DMG (local agent, zero marginal infra). Everything below assumes the latter. This is the
+   one call that cannot be deferred.
+2. **Decide the monetization shape** — paid app + BYO keys, or free app + hosted-key upsell
+   (the Portal model). It determines whether the model picker is a feature or the product.
+3. **Run the §6.6 spike anyway** — port insights to `deepagents` and score it across Claude,
+   GPT, Gemini and an OpenRouter-hosted model. Desktop does not change this step; it raises
+   its value, because on desktop the model picker is customer-facing.
+4. **Prove the sidecar early.** PyInstaller-package the existing FastAPI app, point the Tauri
+   webview at `127.0.0.1`, run one agent end to end. Do this *before* porting the other
+   agents — if Python packaging on macOS proves untenable, that flips us to `deepagentsjs`
+   and the whole plan changes.
+5. **SQLite path** for local persistence; keep Postgres for the eventual cloud deployment.
+6. **Only then** port audit and content off v3.
+
 ## Sources
 
 - [Hermes Agent — NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent)
@@ -515,3 +637,13 @@ Added for §6:
 - [OpenRouter — bring your own API keys](https://openrouter.ai/blog/announcements/bring-your-own-api-keys/)
 - [ChatGPT Plus does not include API access](https://help.openai.com/en/articles/6950777-what-is-chatgpt-plus)
 - [OpenAI-compatible endpoints for DeepSeek, Qwen, Kimi, MiniMax, GLM](https://www.atlascloud.ai/blog/guides/openai-compatible-api-provider-supports-deepseek-qwen-kimi-minimax-glm)
+
+Added for §7:
+
+- [Hermes Agent — installation (pip, install.sh, native installers)](https://hermes-agent.nousresearch.com/docs/getting-started/installation)
+- [Hermes Agent desktop app + Nous Portal subscription](https://www.digitalapplied.com/blog/hermes-agent-desktop-app-complete-guide-2026)
+- [`@anthropic-ai/claude-agent-sdk` — bundles the Claude Code binary](https://www.npmjs.com/package/@anthropic-ai/claude-agent-sdk)
+- [Claude Agent SDK overview — commercial terms and bundled CLI](https://code.claude.com/docs/en/agent-sdk/overview)
+- [langchain-ai/deepagentsjs — the TypeScript harness](https://github.com/langchain-ai/deepagentsjs)
+- [Tauri v2 — embedding external binaries (sidecars)](https://v2.tauri.app/develop/sidecar/)
+- [Tauri v2 + Python sidecar example (PyInstaller)](https://github.com/dieharders/example-tauri-v2-python-server-sidecar)
