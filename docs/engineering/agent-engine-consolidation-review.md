@@ -5,9 +5,21 @@
 > three agent frameworks going forward. Which one survives, what do we lose, and how do
 > projects like [Hermes Agent](https://github.com/NousResearch/hermes-agent) solve the same problem?
 
-**Recommendation in one line:** keep **one harness** (`agents/core` + Claude Agent SDK) and
+> ⚠️ **Superseded in part — read [§6](#6-revision--byo-model-changes-the-answer) first.**
+> Sections 1–5 were written assuming Duct supplies the model and the agentic loop may stay
+> Claude-shaped. It may not: the product intent is **customers bringing their own model**
+> (OpenAI / Gemini / Claude / Chinese APIs, via OpenRouter). That moves the portability
+> requirement *into* the agent loop and changes the recommendation from "consolidate on v3"
+> to "consolidate on a model-agnostic harness". §1–4 (the evidence) stand as written; §5's
+> conclusion is revised by §6.
+
+**Original recommendation:** keep **one harness** (`agents/core` + Claude Agent SDK) and
 move provider portability **down a layer** — to a transport/model seam, the way Hermes does —
 instead of maintaining a whole agent framework per provider.
+
+**Revised recommendation ([§6](#6-revision--byo-model-changes-the-answer)):** one harness
+still — but **`deepagents` (LangChain), not the Claude Agent SDK.** Promote v1 rather than
+retire it; keep Claude as a *model* option, not as the harness.
 
 ---
 
@@ -325,6 +337,160 @@ consolidation deletes runners and adapters, not domain logic.
 
 ---
 
+## 6. Revision — BYO model changes the answer
+
+**New requirement:** Duct is to be offered to other people who already pay for a model —
+OpenAI, Gemini, Claude, or a Chinese API — and use *their* credentials. That is why
+OpenRouter was in the BYO-keys plan.
+
+This is not the requirement §1–5 were answered against. If the customer supplies the model,
+**the agentic loop itself must be provider-portable**, not just the synthesis call. Every
+"the loop can stay Claude-shaped" conclusion in §5 fails.
+
+### 6.1 First, a product correction: subscriptions are not API access
+
+The plan says "folks who have an OpenAI subscription or Gemini or Claude subscription". For
+all three, a consumer subscription does **not** grant programmatic access:
+
+| Vendor | Can a third-party app use the customer's *subscription*? |
+|---|---|
+| OpenAI | **No.** ChatGPT Plus/Pro is the web app; the API is separate billing, separate keys. Not a policy quirk — a different product. |
+| Google | **No.** A consumer Gemini subscription is not an AI Studio / Vertex API credential. |
+| Anthropic | **Unstable.** Banned for third-party agents 4 Apr 2026; reinstated 13 May under a *separate* Agent SDK credit pool (Pro $20 / Max5x $100 / Max20x $200) effective 15 Jun; that change was then paused on 15 Jun. Three reversals in three months. |
+
+**Implication:** in practice every customer hands us an **API key**, and for the long tail
+(Chinese models, open-weight) that key will usually be an **OpenRouter** key — 500+ models,
+60+ providers, one OpenAI-compatible endpoint, with its own BYOK passthrough at 5% of
+upstream cost. DeepSeek, Qwen, Kimi, MiniMax and GLM are all reachable over OpenAI-compatible
+endpoints, directly or via LiteLLM.
+
+This is good news for the architecture: the target surface is "OpenAI-compatible + native
+Anthropic + native Gemini", which is exactly the four-transport shape Hermes settled on. It
+also means the Anthropic subscription question resolves itself — **do not build the business
+on subscription auth**, whatever the policy says this quarter.
+
+### 6.2 Will Anthropic open the Agent SDK to other models? No.
+
+Asked and answered upstream:
+[`anthropics/claude-agent-sdk-python` #410](https://github.com/anthropics/claude-agent-sdk-python/issues/410)
+— *"Is it possible to use Non-Anthropic models with Claude Agent SDK via LiteLLM or
+otherwise?"* — **closed as `not planned`.** Bedrock and Vertex remain hosting options for
+Claude models, not model diversity. The Claude Agent SDK is a provider-native harness by
+design and there is no roadmap to change that.
+
+So v3 cannot be the harness for a BYO-model product. That is now a documented fact, not an
+inference.
+
+### 6.3 Capability parity — both alternatives moved a long way since we wrote v1/v2
+
+Our v1 and v2 runners are frozen snapshots of frameworks that have since shipped most of what
+we went to the Claude Agent SDK for.
+
+**LangChain — `deepagents` 0.7.6 (13 Aug 2026), released on a ~weekly cadence (0.6.0 May →
+0.7.0 Jul → 0.7.6 Aug).** Billed as "the batteries-included agent harness", sitting on
+`create_agent`/LangGraph:
+
+- sub-agents with isolated context windows; skills loaded on demand; built-in todos
+- HITL — approve / edit / reject tool calls before they run, plus an auto-approval classifier
+  with review timeouts, and rejection reasons phrased for the model
+- pluggable filesystem backends (local / sandboxed / remote), shell in a sandbox of choice
+- context compaction, tool-output offload to disk, prompt caching, `DeltaChannel`
+  checkpointing so long threads stay cheap
+- MCP client (any MCP server) plus your own functions
+- streaming, persistence and checkpointing inherited from LangGraph
+- hooks v2 GA + plugin loading; per-session cost thresholds; `CodeInterpreterMiddleware`
+- **harness profiles** — per-provider/per-model bundles (system-prompt tweaks, tool
+  overrides, middleware, subagent defaults) applied automatically when a model is selected.
+  This is precisely the "different models need different harness tuning" problem BYO creates.
+- **model-agnostic by design:** "any LLM that supports tool calling — frontier, open-weight,
+  or local", incl. OpenAI/Anthropic/Google, Baseten/Fireworks, Ollama/vLLM/llama.cpp
+
+The parity evidence that matters: LangChain's own `deepagents-code` CLI went from outside the
+Top 30 to **Top 5 on Terminal-Bench 2.0, 52.8 → 66.5**, with the **model held fixed** — pure
+harness engineering. A model-agnostic harness reaching Claude-Code-class agentic behaviour is
+no longer theoretical.
+
+**Google ADK 2.7.0 (13 Aug 2026)** has also moved well past what our v2 uses: graph-native
+workflows, resumable HITL for standalone nodes and `NodeTool`, state-based resumption, skill
+registries, remote sandboxes (Cloud Run, Daytona), A2A 1.x, exposing an ADK agent *as* an MCP
+server, tools returning media across Gemini/Anthropic/LiteLLM, and native Anthropic thinking +
+effort configuration. Model breadth comes via LiteLLM (100+ providers incl. DeepSeek).
+
+Both are credible. My §2 verdict on v2 was about *our implementation*, which is genuinely
+weak; it was not a fair verdict on ADK 2.7.
+
+### 6.4 Verdict: `deepagents` (LangChain), and for Duct it is not close
+
+| | deepagents / LangGraph | Google ADK 2.7 | Claude Agent SDK |
+|---|---|---|---|
+| Model-agnostic loop | ✅ native, any tool-calling LLM | ✅ via LiteLLM adapter | ❌ `not planned` |
+| OpenRouter / OpenAI-compatible BYO | ✅ first-class | ✅ via LiteLLM | ❌ |
+| Subagents / skills / todos | ✅ | ✅ | ✅ |
+| HITL mid-run | ✅ approve/edit/reject + classifier | ✅ resumable | ✅ `AskUserQuestion` |
+| MCP client | ✅ | ✅ (+ serve as MCP) | ✅ |
+| Streaming + checkpoint/resume | ✅ LangGraph | ✅ | ✅ (JSONL sessions) |
+| Per-model harness tuning | ✅ harness profiles | partial | n/a |
+| Runs in-process | ✅ | ✅ | ❌ Node CLI subprocess |
+| Already a Duct dependency | ✅ `langchain ^1.0`, `langgraph ^1.1` | ✅ `google-adk ^2.2` | ✅ |
+
+Deciding factors, specific to us:
+
+1. **v1 is not legacy — it is the closest thing we have to the destination.** We already ship
+   `langchain ^1.0` + `langgraph ^1.1`; `deepagents` sits directly on `create_agent`. The
+   migration is an upgrade of the engine we were about to delete, not a fourth rewrite.
+   *This reverses §5 Phase 3.*
+2. **Widest model coverage, which is now the product requirement** — and the only option
+   whose harness is itself the product being benchmarked.
+3. **ADK's portability is an adapter (LiteLLM) bolted to a GCP-shaped framework.** Choosing it
+   trades Anthropic's harness for Google's; the complaint that started this review applies
+   again in softer form.
+4. **Losing the `claude` Node subprocess is a bonus** — `core/claude_sdk.py`'s 383 lines of
+   startup-crash handling largely evaporate, which matters on a 1 CPU / 1 GiB container.
+
+Honest caveats: ADK 2.7 is strong and ahead on A2A and resumable HITL — if we were GCP-native
+this would be a real contest. And `deepagents` is 0.x on a weekly cadence; pin exactly and
+budget for churn. (A lighter third option, Pydantic AI, is model-agnostic but is a typed
+agent library, not a harness — we would be back to building `agents/core` ourselves.)
+
+### 6.5 What the migration actually costs
+
+We lose the Claude Agent SDK *harness*, not Claude the *model* — Claude stays a first-class
+provider through the new harness. `agents/core` maps over rather than dies:
+
+| `agents/core` today | deepagents equivalent |
+|---|---|
+| `session.py` registry + `BaseAgentSession` | LangGraph checkpointer + thread ids |
+| `AskUserQuestion` future bridge | `interrupt()` / HITL tool configs |
+| `stream.py` `pump_stream_event` | LangGraph `stream_mode` events |
+| `DuctReportStreamParser` (`<duct_report>`) | **stays ours** — framework-neutral already |
+| `artifacts.py` | filesystem backend |
+| `claude_sdk.py` (subprocess survival) | **deleted** |
+| `AgentDefinition` subagents | `subagents=` |
+| `TodoWrite` | built-in todos |
+| `AgentEffort` | harness profiles / per-model config |
+
+### 6.6 Revised sequencing
+
+1. **Spike first, decide on evidence.** Port **insights** to `deepagents` — it is the cheapest
+   real test (Phase 1 is already `asyncio.gather` over plain callables; only synthesis is
+   LLM-shaped). Run it against Claude, GPT, Gemini and one OpenRouter-hosted Chinese model
+   through the existing eval harness. That produces a scorecard, not an opinion.
+2. **Still delete v2.** Not because ADK 2.7 is bad — because we will not run two
+   model-agnostic harnesses, and v1's family is where we already have code, deps and skills.
+3. **Add `Provider.OPENROUTER`** to `agents/models.py` / `agents/engines.py` and make it the
+   default BYO path. One OpenAI-compatible transport covers the entire Chinese/open-weight
+   long tail.
+4. **Port audit, then content.** Content last — it is the largest runner (1,298 LOC) and its
+   Gemini image tooling already sits outside the harness, so it moves cleanly.
+5. **Gate models with evals, per model.** Tool-calling reliability varies sharply across
+   open-weight and Chinese models. `backend/tests/eval/` already exists; make a per-model
+   scorecard the admission test for the model picker, and only expose models that pass.
+6. **Keep `agents/engines.py`** — it becomes the provider/model/capability registry the BYO
+   picker reads, which is what §5 wanted anyway.
+
+Unchanged from §5: prompts, tools, schemas, goals and the `<duct_report>` contract are
+framework-neutral and survive all of this. The rewrite is runners and adapters.
+
 ## Sources
 
 - [Hermes Agent — NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent)
@@ -335,3 +501,17 @@ consolidation deletes runners and adapters, not domain logic.
 - [AI agent frameworks 2026 — provider-native vs independent SDKs](https://www.morphllm.com/ai-agent-framework)
 - [Google ADK vs LangGraph — ZenML](https://www.zenml.io/blog/google-adk-vs-langgraph)
 - [Anthropic policy on subscription auth for third-party products](https://alternativeto.net/news/2026/2/anthropic-officially-bans-using-subscription-authentication-for-third-party-claude-use)
+
+Added for §6:
+
+- [claude-agent-sdk-python #410 — non-Anthropic models, closed `not planned`](https://github.com/anthropics/claude-agent-sdk-python/issues/410)
+- [Anthropic reinstates third-party agent usage on Claude subscriptions — with a catch](https://venturebeat.com/technology/anthropic-reinstates-openclaw-and-third-party-agent-usage-on-claude-subscriptions-with-a-catch)
+- [langchain-ai/deepagents — the batteries-included agent harness](https://github.com/langchain-ai/deepagents)
+- [deepagents on PyPI — 0.7.6, 13 Aug 2026](https://pypi.org/project/deepagents/)
+- [Deep Agents 0.6 — harness profiles, DeltaChannel, code interpreter](https://www.langchain.com/blog/deep-agents-0-6)
+- [Improving Deep Agents with harness engineering — Terminal-Bench 2.0, 52.8 → 66.5](https://www.langchain.com/blog/improving-deep-agents-with-harness-engineering)
+- [google/adk-python releases — v2.7.0, 13 Aug 2026](https://github.com/google/adk-python/releases)
+- [ADK — LiteLLM model support](https://adk.dev/agents/models/litellm/)
+- [OpenRouter — bring your own API keys](https://openrouter.ai/blog/announcements/bring-your-own-api-keys/)
+- [ChatGPT Plus does not include API access](https://help.openai.com/en/articles/6950777-what-is-chatgpt-plus)
+- [OpenAI-compatible endpoints for DeepSeek, Qwen, Kimi, MiniMax, GLM](https://www.atlascloud.ai/blog/guides/openai-compatible-api-provider-supports-deepseek-qwen-kimi-minimax-glm)
