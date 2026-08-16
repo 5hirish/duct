@@ -282,6 +282,39 @@ Two constraints to design around, both already partly acknowledged in the code:
 - **ADK's A2A support.** ADK has first-class A2A alongside MCP. We use neither today, and MCP
   is available on v3.
 
+### Objection: "if we drop v2 we lose model choice and are married to Anthropic"
+
+This is the first objection the plan gets, and it conflates two separate things. Four facts
+from the code:
+
+**1. Dropping v2 costs zero provider coverage.** `ENGINE_SUPPORTED_PROVIDERS` gives v1 and v2
+the *identical* frozenset — `{OPENAI, GOOGLE_GENAI, ANTHROPIC}`. v2 is a second copy of the
+same portability, and the worse copy: no native structured output, no image input. After
+deleting v2 we still run all three providers, on v1, unchanged. **The multi-provider question
+is entirely about v1** — and nothing is deleted before its replacement exists (v1 stays frozen
+and callable until Phase 3 lands the synthesis transport).
+
+**2. We are already married, for two of three agents.** Audit and content are v3-only today.
+Retaining v2 does not create optionality for them; it only gives insights an escape hatch
+nothing else in the product has.
+
+**3. Insights barely uses the LLM.** In `insights/v3/runner.py`, Phase 1 is `asyncio.gather()`
+over pre-credentialed Python callables (`:135`) — no LLM tool loop; the MCP server is not
+wired into that path. The only LLM-shaped step is Phase 2 synthesis: a single structured-output
+call (`:233`). One structured call is the most portable thing in the codebase, and
+`tests/eval/client.py` already demonstrates the replacement in ~30 lines of `google-genai`.
+
+**4. The pattern being defended is already in production, inside a Claude agent.** The content
+agent is a Claude Agent SDK loop whose `generate_image` tool calls Gemini directly
+(`agents/content/tools.py:1200` → `service/gemini/client.py`). Claude orchestrates, Gemini
+renders — two providers in one agent, with no LangChain and no ADK in the path.
+
+Conclusion: **model diversity does not live in the engine layer. It lives at the model-call
+layer, and we already have it there.** What genuinely stays locked is the agentic loop for
+audit and content — a lock that exists today and that retaining ADK does nothing to loosen.
+The only real hedges are keeping prompts/tools/schemas framework-neutral (they already are)
+or owning the loop ourselves, which is the Hermes trade in full.
+
 ### What we keep
 
 `agents/engines.py` is good work and should survive the consolidation — the resolver
