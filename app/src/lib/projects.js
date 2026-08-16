@@ -98,6 +98,10 @@ function withProjectDefaults(projectInput) {
     name: isNonEmptyString(project.name) ? project.name : profile.company.name || "Untitled project",
     createdAt: isNonEmptyString(project.createdAt) ? project.createdAt : new Date(0).toISOString(),
     updatedAt: isNonEmptyString(project.updatedAt) ? project.updatedAt : new Date(0).toISOString(),
+    // Membership metadata from the backend. A project that has never synced is
+    // owned by whoever created it locally, so "owner" is the right default.
+    role: project.role === "collaborator" ? "collaborator" : "owner",
+    ownerEmail: isNonEmptyString(project.ownerEmail) ? project.ownerEmail : "",
   };
 }
 
@@ -336,8 +340,9 @@ export async function hydrateProjectsFromBackend() {
       byId.set(lp.id, lp);
       toPushUp.push(lp);
     } else if ((lp.updatedAt || "") > (rp.updatedAt || "")) {
-      // Local edits are newer — prefer them and re-upload.
-      byId.set(lp.id, lp);
+      // Local edits are newer — prefer them and re-upload. Membership is the
+      // server's call, though, so role/owner always come from the remote copy.
+      byId.set(lp.id, { ...lp, role: rp.role, ownerEmail: rp.ownerEmail });
       toPushUp.push(lp);
     }
   }

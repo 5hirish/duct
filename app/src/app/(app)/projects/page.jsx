@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Trash2, Globe } from "lucide-react";
+import { Trash2, Globe, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -59,6 +59,12 @@ export default function ProjectsPage() {
     setProjectPendingDelete(project);
   }
 
+  function openMembers(event, projectId) {
+    event.stopPropagation();
+    event.preventDefault();
+    router.push(`/project/${projectId}/members`);
+  }
+
   function confirmDeleteProject() {
     if (!projectPendingDelete?.id) return;
     deleteProject(projectPendingDelete.id);
@@ -97,6 +103,7 @@ export default function ProjectsPage() {
           const url = project.company?.website_url || "";
           const favicon = faviconUrl(url);
           const host = safeHostname(url);
+          const isShared = project.role === "collaborator";
 
           return (
             <div
@@ -133,20 +140,39 @@ export default function ProjectsPage() {
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="size-8 rounded-full text-muted-foreground hover:text-destructive"
-                    aria-label={`Delete ${name}`}
-                    onClick={(event) => requestDeleteProject(event, project)}
+                    className="size-8 rounded-full text-muted-foreground hover:text-foreground"
+                    aria-label={`Members of ${name}`}
+                    onClick={(event) => openMembers(event, project.id)}
                   >
-                    <Trash2 className="size-4" />
+                    <Users className="size-4" />
                   </Button>
+                  {/* Only the owner can delete a project; a collaborator leaves
+                      it from the members screen instead. */}
+                  {!isShared && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="size-8 rounded-full text-muted-foreground hover:text-destructive"
+                      aria-label={`Delete ${name}`}
+                      onClick={(event) => requestDeleteProject(event, project)}
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
 
-              <div className="mt-3 min-h-5 text-xs text-muted-foreground">
+              <div className="mt-3 flex min-h-5 items-center gap-2 text-xs text-muted-foreground">
                 {url ? (
-                  <span className="truncate block">{host || url}</span>
+                  <span className="truncate">{host || url}</span>
                 ) : (
                   <span>No website URL</span>
+                )}
+                {isShared && (
+                  <Badge variant="outline" className="ml-auto shrink-0 font-normal">
+                    Shared by {project.ownerEmail || "another user"}
+                  </Badge>
                 )}
               </div>
             </div>

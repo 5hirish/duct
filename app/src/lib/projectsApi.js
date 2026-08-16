@@ -63,6 +63,11 @@ function fromApi(remote) {
     name: remote.name || "",
     createdAt: remote.created_at || "",
     updatedAt: remote.updated_at || "",
+    // Server-assigned: "owner" or "collaborator". Drives the shared-project
+    // labelling and hides owner-only controls. Local-only projects default to
+    // "owner" in lib/projects.js.
+    role: remote.role || "owner",
+    ownerEmail: remote.owner_email || "",
     company: {
       name: remote.company_name || "",
       pitch: remote.pitch || "",
