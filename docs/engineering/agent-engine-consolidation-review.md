@@ -613,6 +613,95 @@ anyway once a user can read the rendered output.
 5. **SQLite path** for local persistence; keep Postgres for the eventual cloud deployment.
 6. **Only then** port audit and content off v3.
 
+## 8. Channel decision — Developer ID + notarized DMG
+
+**Decided inputs:** BYO keys + paid app now; a cloud product later where Duct supplies the
+model and users need no keys.
+
+**Recommendation: leave the Mac App Store track. Ship Developer ID + notarized DMG with
+`tauri-plugin-updater`, sold direct through a merchant of record.**
+
+### 8.1 The channel is not an independent choice
+
+It is downstream of a decision already made in §7:
+
+| | App Store / TestFlight | Developer ID + DMG |
+|---|---|---|
+| Agent runs | on Railway (thin client) | on the customer's machine |
+| Cloud cost at launch | **full** — scales with customers | **zero** marginal |
+| Self-update | ❌ prohibited | ✅ `tauri-plugin-updater` |
+| Python sidecar | ❌ see 8.2 | ✅ |
+| Platforms | macOS only | macOS, Windows, Linux |
+| Commission | 15% (Small Business Program) | ~5% + 50¢ (MoR) |
+
+The rows move together. "Desktop first, cloud only if it makes money" **requires** the right
+column; picking the App Store silently re-selects the thin client and puts full cloud economics
+back at launch. That is the whole decision.
+
+### 8.2 The App Store cannot host the product we described
+
+Not a preference — three independent walls, any one of which is fatal:
+
+1. **PyInstaller sidecar vs the sandbox.** Onefile executables do not work when signed and
+   notarized with the sandbox enabled, and the sandbox is mandatory for App Store
+   distribution. The onedir workaround (nest the PyInstaller `.app` in Xcode, invoke via
+   `NSTask`) is a documented minefield of code-signing and illegal-instruction failures.
+   PyInstaller's own tracker carries the issue titled *"Deploying Python PyInstaller App to
+   Mac App Store. A lost cause?"*
+2. **Embedded interpreters get rejected.** Apps embedding a Python interpreter have been
+   rejected under App Review, typically over non-public or deprecated API use.
+3. **No self-update.** Already recorded in `desktop/CLAUDE.md`. For a 0.x product sitting on a
+   harness that ships weekly (`deepagents` 0.6.0 May → 0.7.6 Aug), shipping fixes only at
+   App Review's pace is a serious handicap.
+
+Even if all three were solved, the App Store is **macOS-only**. `tauri.conf.json` already sets
+`bundle.targets: "all"` and ships a Windows `.ico`; the moment Windows ships we need the
+direct pipeline — installer, licensing, updater — anyway. Building both is double the
+release surface for no gain.
+
+### 8.3 Commercials favour direct too
+
+- **App Store:** 15% under the Small Business Program (<$1M/yr). Apple handles payment, global
+  tax, refunds.
+- **Direct via merchant of record:** Lemon Squeezy at 5% + 50¢, or Polar/Paddle, all of which
+  are merchants of record — they handle worldwide VAT/sales tax and carry a license-key API.
+  So we do **not** give up tax handling by leaving; that is precisely what a MoR buys.
+
+One thing not to plan around: App Store external-link commissions are actively in flux — US
+link-outs sit at 0% after the Epic ruling, while Apple filed a proposal on **13 Aug 2026** for
+15% (5% for Small Business) on external-link purchases, pending court approval. Do not build
+pricing on that arbitrage in either direction.
+
+### 8.4 What we give up, and why it is acceptable
+
+- **App Store discovery.** Real, but weak for our shape: Duct is B2B growth tooling sold to
+  operators who arrive via the marketing site, blog and SEO — a channel we already own and run
+  (`site/`). We are not competing for casual store browsing.
+- **The trust badge.** Recovered mostly by Developer ID signing + notarization + stapling,
+  which removes Gatekeeper warnings entirely. Hermes ships native macOS and Windows installers
+  outside any store and it has not held them back.
+- **Apple handling billing.** Recovered by the MoR.
+
+### 8.5 The TestFlight work is not wasted
+
+Retire `src-tauri/tauri.appstore.conf.json`, `Entitlements.appstore.plist` and the
+`desktop-testflight.yml` App Store leg. Keep everything else — the Apple developer account,
+signing certificates, the universal-binary build, icons, the deep-link scheme, and the
+`MAJOR.MINOR.PATCH` versioning discipline in `desktop/CLAUDE.md` all carry over. The migration
+is roughly: swap the Developer ID cert in, add notarize + staple, enable
+`tauri-plugin-updater` (now permitted), and publish a signed update manifest.
+
+Also revisit two `desktop/CLAUDE.md` rules that were App-Store-specific: the updater ban
+(lifts) and the version-suffix ban — Apple's rejection of `-beta` no longer applies, so
+prerelease tags become available again.
+
+### 8.6 Where the App Store comes back
+
+If the cloud product ships and we later want a companion app for it, that app *is* a thin
+client — no sidecar, no self-update needed (the web app updates server-side) — and the App
+Store fits it cleanly. Revisit then, on its own merits. The current decision does not close
+that door.
+
 ## Sources
 
 - [Hermes Agent — NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent)
@@ -647,3 +736,13 @@ Added for §7:
 - [langchain-ai/deepagentsjs — the TypeScript harness](https://github.com/langchain-ai/deepagentsjs)
 - [Tauri v2 — embedding external binaries (sidecars)](https://v2.tauri.app/develop/sidecar/)
 - [Tauri v2 + Python sidecar example (PyInstaller)](https://github.com/dieharders/example-tauri-v2-python-server-sidecar)
+
+Added for §8:
+
+- [PyInstaller #7123 — "Deploying Python PyInstaller App to Mac App Store. A lost cause?"](https://github.com/pyinstaller/pyinstaller/issues/7123)
+- [Apple Developer Forums — Mac app embedding a Python interpreter rejected](https://developer.apple.com/forums/thread/758567)
+- [PyInstaller usage — onefile vs signing/sandboxing](https://pyinstaller.org/en/v6.11.0/usage.html)
+- [App Store Small Business Program — 15%](https://developer.apple.com/app-store/small-business-program/)
+- [Apple proposes up to 15% on external-link purchases (13 Aug 2026)](https://techcrunch.com/2026/08/14/apple-proposes-to-take-a-15-cut-of-purchases-made-outside-the-app-store/)
+- [Tauri v2 — macOS code signing](https://v2.tauri.app/distribute/sign/macos/)
+- [Merchant-of-record options for indie desktop licensing](https://www.buildmvpfast.com/blog/lemon-squeezy-vs-polar-paddle-merchant-of-record-2026)
