@@ -222,3 +222,38 @@ def test_split_chunk_handles_provider_variations():
     # Unknown block types are dropped, never leaked as report text
     assert _split_chunk(AIMessage(content=[{"type": "image", "url": "x"}])) == ("", "")
     assert _split_chunk(None) == ("", "")
+
+
+# ---------------------------------------------------------------------------
+# Route wiring — engine selection
+# ---------------------------------------------------------------------------
+
+def test_route_defaults_to_v3_and_opts_in_to_v1():
+    """V3 stays production; V1 is per-request opt-in while it earns confidence."""
+    from agents.audit.v3.runner import ClaudeAuditRunner
+    from agents.engines import Engine
+    from agents.models import ModelName, Provider
+    from routes.audit import _build_runner, _resolve_agent_config
+    from agents.audit.v1.runner import LangChainAuditRunner
+
+    # An unset engine resolves to V3.
+    _key, _provider, _model, engine = _resolve_agent_config("")
+    assert engine == Engine.V3
+
+    v3 = _build_runner("k", Provider.ANTHROPIC, ModelName.CLAUDE_SONNET, Engine.V3)
+    v1 = _build_runner("k", Provider.GOOGLE_GENAI, ModelName.GEMINI_2_5_FLASH, Engine.V1)
+
+    assert isinstance(v3, ClaudeAuditRunner)
+    assert isinstance(v1, LangChainAuditRunner)
+
+
+def test_both_runners_share_the_run_pipeline_signature():
+    """The route calls one signature; swapping engines must change nothing else."""
+    import inspect
+
+    from agents.audit.v1.runner import LangChainAuditRunner
+    from agents.audit.v3.runner import ClaudeAuditRunner
+
+    v1 = inspect.signature(LangChainAuditRunner.run_pipeline).parameters
+    v3 = inspect.signature(ClaudeAuditRunner.run_pipeline).parameters
+    assert list(v1) == list(v3)

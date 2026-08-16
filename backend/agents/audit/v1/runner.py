@@ -204,3 +204,154 @@ def _split_chunk(message: Any) -> tuple[str, str]:
         elif kind in ("thinking", "reasoning"):
             thinking_parts.append(block.get("thinking") or block.get("text", ""))
     return "".join(text_parts), "".join(thinking_parts)
+
+
+# ---------------------------------------------------------------------------
+# Pipeline runner — drop-in for ClaudeAuditRunner
+# ---------------------------------------------------------------------------
+
+class LangChainAuditRunner:
+    """Full SEO audit pipeline on the LangChain stack (V1 engine).
+
+    Mirrors ``ClaudeAuditRunner.run_pipeline``'s signature so ``routes/audit.py``
+    selects an engine and changes nothing else. V3 remains the default.
+
+    Engine-neutral pieces are imported from the V3 module rather than copied:
+    ``run_crawl`` is plain HTTP crawling and ``create_audit_session`` /
+    ``get_session`` are the shared registry. Only synthesis differs.
+    """
+
+    def __init__(
+        self,
+        api_key: str,
+        provider: Provider = Provider.ANTHROPIC,
+        model: ModelName = ModelName.CLAUDE_SONNET,
+        temperature: float = 1.0,
+    ) -> None:
+        self.provider = provider
+        self.model = model
+        self._api_key = api_key
+        self._temperature = temperature
+
+    async def run_pipeline(
+        self,
+        session_id: str,
+        url: str,
+        business_context: Any,
+        emit: Callable,
+        max_blog_posts: int = 5,
+        crawl_depth: str = "deep",
+        chat_idle_timeout: float = 1800.0,
+        user_preferences: Any = None,
+        report_mode: str = "freehand",
+        template_id: str = "seo_v1",
+        lead_magnet: bool = False,
+    ) -> Any:
+        # Imported lazily: the V3 module pulls in claude_agent_sdk, and V1 should
+        # not require it at import time once V3 is eventually retired.
+        from agents.audit.events import AuditEvent as _E, AuditStep, STEP_LABELS
+        from agents.audit.prompts import build_audit_user_prompt, build_unified_system_prompt
+        from agents.audit.schema import AuditReport, CrawlDepth, StructuredAuditData
+        from agents.audit.v3.runner import get_session, run_crawl
+
+        session = get_session(session_id)
+        if session:
+            session.report_mode = report_mode
+            session.template_id = template_id
+
+        await emit({
+            "event": _E.STEP_STARTED,
+            "step_id": AuditStep.FETCH_SITEMAP,
+            "label": STEP_LABELS[AuditStep.FETCH_SITEMAP],
+            "status": "running",
+        })
+        crawl_result = await run_crawl(
+            url,
+            max_blog_posts=max_blog_posts,
+            light=(crawl_depth == CrawlDepth.LIGHT),
+            emit=emit,
+        )
+        await emit({
+            "event": _E.STEP_FINISHED,
+            "step_id": AuditStep.FETCH_SITEMAP,
+            "label": STEP_LABELS[AuditStep.FETCH_SITEMAP],
+            "status": "success",
+        })
+
+        report_holder: dict[str, Any] = {"report": None}
+
+        async def _on_submit(args: dict) -> dict:
+            """Validate and publish a report version.
+
+            A validation failure is returned to the model, not raised — same
+            contract as V3, so a malformed report is retried rather than fatal.
+            """
+            from datetime import datetime, timezone
+            try:
+                structured = StructuredAuditData.model_validate(args)
+            except Exception as exc:  # noqa: BLE001 — reported back to the model
+                return {
+                    "status": "validation_error",
+                    "message": f"Report validation failed — fix these issues and resubmit: {exc}",
+                }
+            version_id = len(getattr(session, "report_versions", []) or []) + 1
+            report = AuditReport(
+                url=crawl_result.plan.root_url,
+                generated_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                update_label="Initial audit" if version_id == 1 else f"Update {version_id}",
+                executive_summary=" · ".join(structured.key_signals) if structured.key_signals else "",
+                report_mode=report_mode,
+                template_id=template_id,
+                structured_data=structured,
+            )
+            report_holder["report"] = report
+            await emit({
+                "event": _E.REPORT_UPDATED,
+                "version_id": version_id,
+                "payload": report.model_dump(),
+            })
+            return {"status": "received", "version_id": version_id}
+
+        llm = resolve_model(self.provider, self.model, self._api_key, self._temperature)
+        agent = build_audit_agent(
+            crawl_result=crawl_result,
+            llm=llm,
+            system_prompt=build_unified_system_prompt(
+                report_mode=report_mode, template_id=template_id
+            ),
+            session=session,
+            session_id=session_id,
+            emit=emit,
+            report_mode=report_mode,
+            on_submit_report=_on_submit,
+        )
+
+        await emit({
+            "event": _E.STEP_STARTED,
+            "step_id": AuditStep.SYNTHESIZE,
+            "label": STEP_LABELS[AuditStep.SYNTHESIZE],
+            "status": "running",
+        })
+
+        async def _on_report_close(raw: str, turn_text: str) -> None:
+            """Freehand mode delivers the report inline rather than via tools."""
+            import json as _json
+            try:
+                await _on_submit(_json.loads(raw))
+            except Exception:  # noqa: BLE001 — a malformed inline payload is not fatal
+                logger.warning("audit-v1: could not parse inline <duct_report> payload", exc_info=True)
+
+        await stream_audit(
+            agent,
+            build_audit_user_prompt(crawl_result, business_context),
+            emit,
+            on_report_close=_on_report_close,
+        )
+
+        await emit({
+            "event": _E.STEP_FINISHED,
+            "step_id": AuditStep.SYNTHESIZE,
+            "label": STEP_LABELS[AuditStep.SYNTHESIZE],
+            "status": "success",
+        })
+        return report_holder["report"]
