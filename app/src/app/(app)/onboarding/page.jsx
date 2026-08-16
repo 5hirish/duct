@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Check, X } from "lucide-react";
+import { Check, Users, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -414,6 +414,16 @@ export default function OnboardingPage() {
         <div className="page-toolbar" style={{ marginBottom: 8 }}>
           <h1 className="page-toolbar-title text-lg font-semibold tracking-tight">Project setup</h1>
           <span className="text-sm text-muted-foreground">{inputProgressPercent}% complete</span>
+          {/* Members live with the project they grant access to. Hidden until
+              the project exists — there is nobody to invite to a draft. */}
+          {projectMeta?.id && (
+            <Button asChild variant="ghost" size="sm" className="ml-auto">
+              <Link href={`/project/${projectMeta.id}/members`}>
+                <Users className="size-4" />
+                Members
+              </Link>
+            </Button>
+          )}
         </div>
 
         <div className="mb-3">

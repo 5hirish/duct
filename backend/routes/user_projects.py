@@ -5,16 +5,22 @@ from __future__ import annotations
 import json
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, field_validator
 from sqlalchemy import select
 from sqlmodel import Session
-from starlette.status import HTTP_404_NOT_FOUND
 
 from db.session import get_session
 from models.auth import User
+from models.membership import ROLE_COLLABORATOR, ROLE_OWNER
 from models.project import Project
 from service.auth import get_current_user
+from service.membership import (
+    accessible_projects,
+    ensure_owner_membership,
+    get_project_for_user,
+    member_role,
+)
 
 router = APIRouter(tags=["user-projects"])
 
@@ -56,9 +62,13 @@ class ProjectOut(BaseModel):
     brand_channels: dict
     created_at: str
     updated_at: str
+    # Caller's relationship to this project. The app uses it to label shared
+    # projects and to hide owner-only controls (invite, remove, delete).
+    role: str = ROLE_OWNER
+    owner_email: str = ""
 
 
-def _to_out(p: Project) -> ProjectOut:
+def _to_out(p: Project, *, role: str = ROLE_OWNER, owner_email: str = "") -> ProjectOut:
     return ProjectOut(
         id=p.id,
         name=p.name,
@@ -73,7 +83,21 @@ def _to_out(p: Project) -> ProjectOut:
         brand_channels=p.brand_channels or {},
         created_at=p.created_at.isoformat(),
         updated_at=p.updated_at.isoformat(),
+        role=role,
+        owner_email=owner_email,
     )
+
+
+def _owner_emails(projects: list[Project], session: Session) -> dict[UUID, str]:
+    """Owner email per project id, in one query rather than N."""
+    owner_ids = {p.user_id for p in projects}
+    if not owner_ids:
+        return {}
+    rows = session.execute(
+        select(User.id, User.email).where(User.id.in_(owner_ids))
+    ).all()
+    by_user = {user_id: email for user_id, email in rows}
+    return {p.id: by_user.get(p.user_id, "") for p in projects}
 
 
 @router.get("")
@@ -81,10 +105,17 @@ def list_projects(
     user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ) -> list[ProjectOut]:
-    rows = session.execute(
-        select(Project).where(Project.user_id == user.id).order_by(Project.created_at)
-    ).scalars().all()
-    return [_to_out(r) for r in rows]
+    """Projects the caller owns plus those they have been invited to."""
+    rows = accessible_projects(user, session)
+    emails = _owner_emails(rows, session)
+    return [
+        _to_out(
+            r,
+            role=ROLE_OWNER if r.user_id == user.id else ROLE_COLLABORATOR,
+            owner_email=emails.get(r.id, ""),
+        )
+        for r in rows
+    ]
 
 
 @router.post("", status_code=201)
@@ -107,9 +138,11 @@ def create_project(
         brand_channels=body.brand_channels,
     )
     session.add(project)
+    session.flush()
+    ensure_owner_membership(project, session)
     session.commit()
     session.refresh(project)
-    return _to_out(project)
+    return _to_out(project, role=ROLE_OWNER, owner_email=user.email)
 
 
 @router.get("/{project_id}")
@@ -118,12 +151,12 @@ def get_project(
     user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ) -> ProjectOut:
-    project = session.execute(
-        select(Project).where(Project.id == project_id, Project.user_id == user.id)
-    ).scalars().first()
-    if project is None:
-        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Project not found")
-    return _to_out(project)
+    project = get_project_for_user(project_id, user, session)
+    return _to_out(
+        project,
+        role=member_role(project_id, user.id, session) or ROLE_COLLABORATOR,
+        owner_email=_owner_emails([project], session).get(project.id, ""),
+    )
 
 
 @router.put("/{project_id}")
@@ -138,15 +171,23 @@ def update_project(
     The frontend generates project UUIDs locally (and already references them
     from content plans / agent contexts), so a missing project is created with
     the supplied id rather than 404'd — keeping those references valid.
+
+    Collaborators may edit an existing project; the create branch only runs for
+    ids that belong to nobody, and the caller becomes its owner.
     """
     from datetime import datetime, timezone
 
-    project = session.execute(
-        select(Project).where(Project.id == project_id, Project.user_id == user.id)
+    existing = session.execute(
+        select(Project).where(Project.id == project_id)
     ).scalars().first()
-    if project is None:
+    is_new = existing is None
+    if is_new:
         project = Project(id=project_id, user_id=user.id)
         session.add(project)
+    else:
+        # Raises 404 when the caller is neither owner nor collaborator, so an
+        # unrelated project can never be overwritten through this upsert.
+        project = get_project_for_user(project_id, user, session)
 
     project.name = body.name
     project.company_name = body.company_name
@@ -160,9 +201,18 @@ def update_project(
     project.brand_channels = body.brand_channels
     project.updated_at = datetime.now(timezone.utc)
     session.add(project)
+    if is_new:
+        # Flush after the NOT NULL columns are populated, so the owner row can
+        # reference a project that actually exists.
+        session.flush()
+        ensure_owner_membership(project, session)
     session.commit()
     session.refresh(project)
-    return _to_out(project)
+    return _to_out(
+        project,
+        role=member_role(project_id, user.id, session) or ROLE_OWNER,
+        owner_email=_owner_emails([project], session).get(project.id, ""),
+    )
 
 
 @router.delete("/{project_id}", status_code=204)
@@ -171,10 +221,8 @@ def delete_project(
     user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ) -> None:
-    project = session.execute(
-        select(Project).where(Project.id == project_id, Project.user_id == user.id)
-    ).scalars().first()
-    if project is None:
-        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Project not found")
+    """Owner-only. A collaborator who wants out leaves via
+    DELETE /api/user/projects/{id}/members/me instead."""
+    project = get_project_for_user(project_id, user, session, require_owner=True)
     session.delete(project)
     session.commit()

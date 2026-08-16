@@ -8,6 +8,26 @@ import GoogleSignInButton from "@/components/GoogleSignInButton";
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
 const TOKEN_KEY = "duct_auth_token";
+const POST_SIGNIN_REDIRECT_KEY = "duct_post_signin_redirect";
+const DEFAULT_LANDING = "/insights/organic-growth";
+
+/**
+ * Where to go once signed in. The invite page parks its own path here before
+ * sending the recipient through Google, so an emailed invitation survives the
+ * OAuth round trip. Only same-origin paths are honoured — an attacker-supplied
+ * value must never turn sign-in into an open redirect.
+ */
+function consumePostSignInRedirect() {
+  let target = "";
+  try {
+    target = sessionStorage.getItem(POST_SIGNIN_REDIRECT_KEY) || "";
+    sessionStorage.removeItem(POST_SIGNIN_REDIRECT_KEY);
+  } catch {
+    return DEFAULT_LANDING;
+  }
+  if (!target.startsWith("/") || target.startsWith("//")) return DEFAULT_LANDING;
+  return target;
+}
 
 function decodeJwtPayload(token) {
   try {
@@ -83,7 +103,7 @@ function SignInContent() {
         .then(({ token }) => {
           if (token) {
             localStorage.setItem(TOKEN_KEY, token);
-            router.replace("/insights/organic-growth");
+            router.replace(consumePostSignInRedirect());
           }
         })
         .catch(() => {});
@@ -93,7 +113,7 @@ function SignInContent() {
     // Already authenticated? Redirect.
     const existing = localStorage.getItem(TOKEN_KEY);
     if (isTokenValid(existing)) {
-      router.replace("/insights/organic-growth");
+      router.replace(consumePostSignInRedirect());
       return;
     }
 

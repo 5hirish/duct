@@ -22,7 +22,8 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
 - **Ingestion:** Direct Google API clients (`google-ads`, `google-analytics-data`, `google-api-python-client`). Async concurrent fetching in `service/pipeline.py`.
 - **Normalization:** Lightweight Python pipeline — raw API response → typed Pydantic/SQLModel brief models. No query layer or transforms yet.
 - **Database:** PostgreSQL on Railway — SQLModel ORM, Alembic migrations, `psycopg` driver.
-- **Auth:** JWT for users; Google OAuth for connector linking (Ads, GA4, GSC, Sign-In).
+- **Auth:** JWT for users; Google OAuth for connector linking (Ads, GA4, GSC, Sign-In). Project access is by membership (`project_members`), not by `projects.user_id` — always go through `service/membership.py`.
+- **Email:** `service/email/` — Resend when `RESEND_API_KEY` is set, otherwise a logging console backend so dev/CI need no vendor account.
 - **Observability:** Sentry error tracking; optional OpenTelemetry tracing (wired via Claude Agent SDK).
 - **Hosting:** Railway — auto-deploys from `main` via GitHub integration; `railway.json` defines Railpack build + uvicorn start.
 - **CI:** GitHub Actions (`backend.yml`) — Ruff lint + pytest on every PR and push to `main`.
@@ -65,6 +66,8 @@ automatically: `railway.json` only starts uvicorn and there is no CI migration j
 - `agents/insights/prompts.py` — synthesis system + user prompts (e.g. Google Ads weekly insight brief)
 - `routes/auth.py` — OAuth by connector (`/auth/connectors/{connector_id}/oauth/...`)
 - `routes/generate.py` — `POST /api/insights/generate` for interactive brief + LangChain synthesis envelope
+- `routes/project_members.py` — project members + email invitations (`docs/engineering/project-collaboration-plan.md`)
+- `service/membership.py` — project access checks (owner vs collaborator) and invite token handling
 - `data/google_ads/` — `google-ads-report.json` (demo brief), `raw/demo_raw_payload.json`
 
 ## Agent-type architecture

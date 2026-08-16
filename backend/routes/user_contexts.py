@@ -18,6 +18,7 @@ from models.agent_context import AgentContext
 from models.auth import User
 from models.project import Project
 from service.auth import get_current_user
+from service.membership import get_project_for_user
 
 router = APIRouter(tags=["user-contexts"])
 
@@ -29,13 +30,10 @@ class ContextOut(BaseModel):
     updated_at: str
 
 
-def _assert_project_owned(project_id: UUID, user: User, session: Session) -> Project:
-    project = session.execute(
-        select(Project).where(Project.id == project_id, Project.user_id == user.id)
-    ).scalars().first()
-    if project is None:
-        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Project not found")
-    return project
+def _assert_project_access(project_id: UUID, user: User, session: Session) -> Project:
+    """Owner or collaborator — agent context is shared working state, so both
+    read and write it."""
+    return get_project_for_user(project_id, user, session)
 
 
 @router.get("/{project_id}/context/{agent_id}")
@@ -47,7 +45,7 @@ def get_context(
 ) -> ContextOut:
     if agent_id not in AGENT_REGISTRY:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=f"Unknown agent: {agent_id!r}")
-    _assert_project_owned(project_id, user, session)
+    _assert_project_access(project_id, user, session)
     ctx = session.execute(
         select(AgentContext).where(
             AgentContext.project_id == project_id,
@@ -74,7 +72,7 @@ def upsert_context(
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=f"Unknown agent: {agent_id!r}")
     if len(json.dumps(body)) > 64_000:
         raise HTTPException(status_code=413, detail="Context payload too large.")
-    _assert_project_owned(project_id, user, session)
+    _assert_project_access(project_id, user, session)
 
     now = datetime.now(timezone.utc)
     ctx = session.execute(

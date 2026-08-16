@@ -106,6 +106,16 @@ class Configs(BaseSettings):
     # demands it.
     apify_api_key: str = ""
 
+    # Transactional email (project invitations). When resend_api_key is empty the
+    # sender falls back to logging the message, so local dev and CI need no vendor
+    # account — see service/email/sender.py. email_from must be an address on a
+    # domain verified in Resend, otherwise sends are rejected.
+    resend_api_key: str = ""
+    email_from: str = Field(default="noreply@getduct.ai")
+    email_from_name: str = Field(default="Duct")
+    # How long a project invitation link stays redeemable.
+    invitation_ttl_days: int = Field(default=7, ge=1, le=90)
+
     # When false (default), FastAPI does not serve /openapi.json, /docs, or /redoc.
     expose_openapi_docs: bool = False
 
