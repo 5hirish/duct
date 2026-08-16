@@ -128,8 +128,14 @@ def main(argv: list[str] | None = None) -> int:
 
     import uvicorn  # imported after bootstrap so logging config sees our env
 
+    # Import the app object rather than passing "server:app". PyInstaller freezes
+    # modules into an archive, so uvicorn's string-based import fails with
+    # "Could not import module 'server'" in a packaged build. Passing the object
+    # also skips uvicorn's reloader, which a desktop sidecar never wants.
+    from server import app
+
     uvicorn.run(
-        "server:app",
+        app,
         host=_HOST,
         port=int(handshake["port"]),
         log_level=_parse_args(argv).log_level,
