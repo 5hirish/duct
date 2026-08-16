@@ -18,7 +18,19 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
 
 ### Current stack
 
-- **AI synthesis:** Three versioned engine implementations under `agents/insights/` — V1 (LangChain), V2 (Google ADK), V3 (Claude Agent SDK). Runtime-switchable via `generate_engine` env var.
+- **AI synthesis:** Three versioned engine implementations under `agents/insights/` — V1 (LangChain / deepagents), V2 (Google ADK), V3 (Claude Agent SDK). Runtime-switchable via `generate_engine` env var.
+
+  **Consolidating on V1.** Per `docs/engineering/agent-engine-consolidation-review.md`, all
+  agents are moving to one harness — LangChain 1.x / `deepagents` — because customers bring
+  their own model (OpenAI / Gemini / Claude / OpenRouter) and the Claude Agent SDK is
+  Anthropic-only by design (upstream issue #410, closed `not planned`).
+  - **V1 is the target.** Rebuilt on `create_agent` + structured output; `v1/graph.py` is gone.
+  - **V2 is frozen.** Kept as insurance, not maintained. Do not extend it. When a change to
+    shared code (`agents/engines.py`, `agents/models.py`, `agents/insights/tools.py`,
+    `schema.py`) would require ADK work, leave V2 on the old behaviour and note the divergence
+    rather than porting the change.
+  - **V3 is being retired** — audit and content move off it; Claude remains a first-class
+    *model* through V1.
 - **Ingestion:** Direct Google API clients (`google-ads`, `google-analytics-data`, `google-api-python-client`). Async concurrent fetching in `service/pipeline.py`.
 - **Normalization:** Lightweight Python pipeline — raw API response → typed Pydantic/SQLModel brief models. No query layer or transforms yet.
 - **Database:** PostgreSQL on Railway — SQLModel ORM, Alembic migrations, `psycopg` driver.
