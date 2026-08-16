@@ -18,7 +18,28 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
 
 ### Current stack
 
-- **AI synthesis:** Three versioned engine implementations under `agents/insights/` — V1 (LangChain), V2 (Google ADK), V3 (Claude Agent SDK). Runtime-switchable via `generate_engine` env var.
+- **AI synthesis:** Three versioned engine implementations under `agents/insights/` — V1 (LangChain / deepagents), V2 (Google ADK), V3 (Claude Agent SDK). Runtime-switchable via `generate_engine` env var.
+
+  **Consolidating on V1.** Per `docs/engineering/agent-engine-consolidation-review.md`, all
+  agents are moving to one harness — LangChain 1.x / `deepagents` — because customers bring
+  their own model (OpenAI / Gemini / Claude / OpenRouter) and the Claude Agent SDK is
+  Anthropic-only by design (upstream issue #410, closed `not planned`).
+  Each engine has a different status, and they imply different rules:
+
+  - **V1 — the target, under construction.** Rebuilt on `create_agent` + structured output;
+    `v1/graph.py` is gone. New agent work goes here.
+  - **V2 — frozen.** Kept as insurance, not maintained. Do not extend it. When a change to
+    shared code would require ADK work, leave V2 on the old behaviour and note the divergence
+    rather than porting the change.
+  - **V3 — maintained, and still the production path** for audit and content. It is *not*
+    being retired yet. Keep it working: shared-code changes (`agents/core/`,
+    `agents/audit/`, `agents/content/`, `schema.py`, `agents/models.py`) must keep V3 at
+    parity, and V1 ports land **alongside** V3 rather than replacing it. Retirement happens
+    only once V1 has earned full confidence — real-provider evals plus a clean audit and
+    content run.
+
+  So a shared change may need doing twice (V1 + V3) but never three times: V2 absorbs nothing.
+  Claude remains a first-class *model* through V1, so retiring V3 later costs no capability.
 - **Ingestion:** Direct Google API clients (`google-ads`, `google-analytics-data`, `google-api-python-client`). Async concurrent fetching in `service/pipeline.py`.
 - **Normalization:** Lightweight Python pipeline — raw API response → typed Pydantic/SQLModel brief models. No query layer or transforms yet.
 - **Database:** PostgreSQL on Railway — SQLModel ORM, Alembic migrations, `psycopg` driver.
@@ -27,6 +48,32 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
 - **Observability:** Sentry error tracking; optional OpenTelemetry tracing (wired via Claude Agent SDK).
 - **Hosting:** Railway — auto-deploys from `main` via GitHub integration; `railway.json` defines Railpack build + uvicorn start.
 - **CI:** GitHub Actions (`backend.yml`) — Ruff lint + pytest on every PR and push to `main`.
+
+### Desktop (local sidecar) mode
+
+The backend runs in two shapes from one codebase. Railway is unchanged; the
+desktop build runs the same FastAPI app as a sidecar on the user's machine —
+see `docs/engineering/agent-engine-consolidation-review.md` §7–8.
+
+- **Entrypoint:** `local_server.py`. Sets `DUCT_LOCAL=1`, resolves the per-user
+  data dir, binds **127.0.0.1** on an OS-assigned port, and prints a single JSON
+  handshake line on stdout before starting uvicorn:
+  `{"duct_sidecar":1,"url":...,"port":...,"api_key":...,"data_dir":...}`.
+  The Tauri shell must read the port from that line — never assume one.
+- **Data dir** (`utils/appdirs.py`): macOS `~/Library/Application Support/ai.getduct.desktop`,
+  Windows `%APPDATA%\Duct`, Linux `$XDG_DATA_HOME/duct`. Created `0700`.
+  Override with `--data-dir` or `DUCT_DATA_DIR`.
+- **Local mode defaults** (`Configs._apply_local_mode_defaults`): SQLite at
+  `<data_dir>/duct.db`, uploads at `<data_dir>/uploads`, `init_db_on_startup=True`
+  (no Alembic on a laptop). Each is only filled when unset, so
+  `DATABASE_URL=postgresql://…` still works for a developer running local mode.
+- **Local API key:** generated once, persisted `0600` at `<data_dir>/local-api-key`,
+  and exported as `DUCT_API_KEY` so the existing `validate_api_key` gate applies
+  unchanged. It only stops other local processes driving the sidecar.
+- **JSON columns must use `models/columns.py::json_column()`**, never
+  `postgresql.JSONB` directly — raw JSONB fails to compile on SQLite. The variant
+  still renders JSONB on Postgres, so it produces no Alembic diff.
+- **Never name a module `models/types.py`** — it shadows the stdlib `types`.
 
 ### Database migrations
 

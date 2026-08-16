@@ -1,43 +1,77 @@
-"""GenerateInsightsAgent — LangGraph-backed insight generation agent.
+"""GenerateInsightsAgent — insight generation on the LangChain 1.x agent stack.
 
-Two-phase architecture:
-  Phase 1: Goal-driven data fetch via LangGraph tool-calling loop (Phase 1 graph)
-  Phase 2: Synthesis via structured output (Phase 2 graph)
+Two phases, same public interface as before so ``routes/generate.py`` is
+unchanged:
 
-Both phases are implemented as LangGraph StateGraphs (see graph.py), which gives:
-  - Parallel tool execution via ToolNode (replaces sequential for-loop)
-  - Per-node checkpointing via InMemorySaver (Phase 2 can retry without re-running Phase 1)
-  - Multi-turn tool calling support (LLM loops back after seeing tool results)
-  - Explicit arg injection node (replaces manual setdefault loop)
+  Phase 1 (data fetch): ``create_agent`` runs the tool-calling loop. The model
+    picks *which* goal-relevant tools to call; it never supplies their
+    arguments — connector identifiers and the date range are baked into each
+    tool's closure at bind time (see ``_bind_tool``). That removes the whole
+    class of hallucinated-identifier bugs the old graph patched around with a
+    dedicated ``_patch_tool_args_node``.
 
-Provider-agnostic via init_chat_model(). Swap models with GENERATE_PROVIDER / GENERATE_MODEL.
-Public API is identical to the previous LangChain implementation.
+  Phase 2 (synthesis): a single structured-output call. The previous version
+    wrapped this one node in a ``StateGraph`` for "checkpointing and streaming
+    parity"; nothing depended on either, so the graph is gone and token
+    streaming comes from ``astream_events`` instead.
+
+Replaces the hand-rolled two-graph implementation (``v1/graph.py``, deleted) as
+part of consolidating on one harness —
+see ``docs/engineering/agent-engine-consolidation-review.md`` §9.
+
+Provider-agnostic via ``init_chat_model``: any provider LangChain supports,
+including OpenAI-compatible gateways such as OpenRouter. Swap with
+GENERATE_PROVIDER / GENERATE_MODEL.
 """
 
 from __future__ import annotations
 
+import asyncio
+import json
 import logging
-import uuid
 from collections.abc import Callable
 from time import perf_counter
 from typing import Any
 
+from langchain.agents import create_agent
 from langchain.chat_models import init_chat_model
-from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_core.runnables import RunnableConfig
+from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
+from langchain_core.tools import StructuredTool
+from pydantic import BaseModel
 
 from agents.models import ModelName, Provider, get_api_key_kwargs
 from agents.insights.goals import InsightGenerationGoal, goal_heading_text
 from agents.insights.goals.organic_growth import OrganicGrowthGoal
+from agents.insights.prompts import get_synthesis_user_prompt, get_system_prompt
 from agents.insights.registry import get_tools_for_request as _registry_get_tools
 from agents.insights.schema import SynthesisSchema
 from agents.insights.tools import (
+    CONNECTOR_BY_TOOL,
+    TOOL_DESCRIPTIONS,
     _register_default_tools,
-    get_tool_creator,
 )
-from agents.insights.v1.graph import InsightsGraphState, build_phase1_graph, build_phase2_graph
 
 logger = logging.getLogger(__name__)
+
+# Ceiling on the Phase 1 tool-calling loop. The model calls each tool at most
+# once, so this only bounds pathological retry loops.
+_MAX_PHASE1_ITERATIONS = 6
+
+_ROLE_BY_MODE = {
+    "organic_growth": (
+        "You are a senior organic growth analyst preparing supplementary data "
+        "for an SEO insight brief."
+    ),
+    "paid_ads": (
+        "You are a senior paid media analyst preparing supplementary data for a "
+        "Google Ads brief."
+    ),
+}
+
+
+class _NoArgs(BaseModel):
+    """Empty tool schema — every fetch argument is pre-bound, so the model
+    chooses the tool and nothing else."""
 
 
 class GenerateInsightsAgent:
@@ -48,12 +82,7 @@ class GenerateInsightsAgent:
         agent = GenerateInsightsAgent(api_key="...", provider=Provider.OPENAI, model=ModelName.GPT_5_MINI)
         agent.setup_tools_for_goal(goal=InsightGenerationGoal.LOWER_CAC, fetch_fns={...})
         supplementary = await agent.fetch_supplementary_data(
-            customer_id,
-            date_from,
-            date_to,
-            goal=InsightGenerationGoal.LOWER_CAC,
-            custom_goal="",
-            context="",
+            customer_id, date_from, date_to, goal=InsightGenerationGoal.LOWER_CAC,
         )
         result = await agent.synthesize(
             goal=InsightGenerationGoal.LOWER_CAC,
@@ -81,14 +110,11 @@ class GenerateInsightsAgent:
             temperature=temperature,
             **api_key_kwargs,
         )
-
-        self.tools: list = []
-        self.tools_by_name: dict[str, Any] = {}
-        self.llm_with_tools = None
         self.llm_structured = self._setup_structured_output()
 
-        # LangGraph Phase 1 graph — rebuilt whenever setup_tools_for_goal is called
-        self._phase1_graph = None
+        # Populated by setup_tools_for_goal; bound to identifiers per fetch call.
+        self._fetch_fns: dict[str, Callable[..., dict[str, Any]]] = {}
+        self._tool_names: list[str] = []
         self._active_mode: str = "paid_ads"
         self._goal_allowlist: set[str] = set()
 
@@ -100,55 +126,100 @@ class GenerateInsightsAgent:
             strict=True,
         )
 
+    # -----------------------------------------------------------------------
+    # Tool setup
+    # -----------------------------------------------------------------------
+
     def setup_tools_for_goal(
         self,
         goal: InsightGenerationGoal | OrganicGrowthGoal,
         fetch_fns: dict[str, Callable[..., dict[str, Any]]],
         mode: str = "paid_ads",
     ) -> list[str]:
-        """Register supplementary tools based on the user's goal.
+        """Select the supplementary tools relevant to the user's goal.
 
         ``fetch_fns`` maps tool name → pre-credentialed fetch function.
-        Returns list of registered tool names.
+        Returns the list of selected tool names. The tools themselves are built
+        per request in ``fetch_supplementary_data``, once the connector
+        identifiers are known.
         """
         if mode == "organic_growth":
             from agents.insights.goals.organic_growth import GOAL_TOOL_ALLOWLIST
-            goal_allowlist = GOAL_TOOL_ALLOWLIST.get(goal, [])
         else:
             from agents.insights.goals.paid_ads import GOAL_TOOL_ALLOWLIST
-            goal_allowlist = GOAL_TOOL_ALLOWLIST.get(goal, [])
+        goal_allowlist = GOAL_TOOL_ALLOWLIST.get(goal, [])
+
         self._active_mode = mode
         self._goal_allowlist = set(goal_allowlist)
+        self._fetch_fns = fetch_fns
 
         _register_default_tools()
-        available_tool_names = list(fetch_fns.keys())
         tool_specs = _registry_get_tools(
             goal=goal.value,
-            available_tool_names=available_tool_names,
+            available_tool_names=list(fetch_fns.keys()),
             allowlist=goal_allowlist,
             max_tools=8,
         )
-        tool_names = [spec.name for spec in tool_specs]
-        self.tools = []
-        self.tools_by_name = {}
+        self._tool_names = [spec.name for spec in tool_specs if spec.name in fetch_fns]
 
-        for name in tool_names:
-            creator = get_tool_creator(name)
-            fn = fetch_fns.get(name)
-            if creator and fn:
-                tool = creator(fn)
-                self.tools.append(tool)
-                self.tools_by_name[tool.name] = tool
+        logger.info(
+            "Selected %d tools for goal '%s': %s",
+            len(self._tool_names), goal.value, self._tool_names,
+        )
+        return list(self._tool_names)
 
-        if self.tools:
-            self.llm_with_tools = self.llm.bind_tools(self.tools)
+    def _bind_tool(
+        self,
+        name: str,
+        *,
+        customer_id: str,
+        date_from: str,
+        date_to: str,
+        ga4_property_id: str,
+        gsc_site_url: str,
+    ) -> StructuredTool | None:
+        """Wrap a fetch function as a zero-argument tool.
 
-        # Invalidate cached Phase 1 graph — it must be rebuilt with the new tools
-        self._phase1_graph = None
+        The connector identifiers come from the request, never from the model —
+        so they are closed over here rather than exposed in the tool schema. The
+        fetch functions are blocking HTTP clients, so they run in a worker
+        thread to keep the event loop free.
+        """
+        fn = self._fetch_fns.get(name)
+        if fn is None:
+            return None
+        connector = CONNECTOR_BY_TOOL.get(name, "google_ads")
 
-        registered = list(self.tools_by_name.keys())
-        logger.info("Registered %d tools for goal '%s': %s", len(registered), goal.value, registered)
-        return registered
+        if connector == "ga4":
+            kwargs = {"property_id": ga4_property_id, "date_from": date_from, "date_to": date_to}
+        elif connector == "gsc":
+            kwargs = {"site_url": gsc_site_url, "date_from": date_from, "date_to": date_to}
+        else:
+            kwargs = {"customer_id": customer_id, "date_from": date_from, "date_to": date_to}
+
+        async def _run() -> str:
+            try:
+                result = await asyncio.to_thread(lambda: fn(**kwargs))
+            except Exception:
+                # One failing connector must not abort the whole brief.
+                logger.exception("Phase 1 tool %s failed", name)
+                return json.dumps({})
+            return json.dumps(result, default=str)
+
+        description = TOOL_DESCRIPTIONS.get(name, f"Fetch {name.replace('_', ' ')}.")
+        if name in self._goal_allowlist:
+            description = f"[PRIORITY] {description}"
+
+        return StructuredTool.from_function(
+            coroutine=_run,
+            name=name,
+            description=description,
+            args_schema=_NoArgs,
+        )
+
+    # -----------------------------------------------------------------------
+    # Phase 1 — supplementary data
+    # -----------------------------------------------------------------------
 
     async def fetch_supplementary_data(
         self,
@@ -162,90 +233,74 @@ class GenerateInsightsAgent:
         context: str = "",
         connected_sources: list[str] | None = None,
     ) -> dict[str, Any]:
-        """Phase 1: LangGraph tool-calling loop to gather supplementary data.
+        """Phase 1: agent tool-calling loop to gather supplementary data.
 
-        The LLM sees which tools are available and decides which to call based
-        on the goal and context. ToolNode executes all requested tools in
-        parallel. Returns {tool_name: result_dict} for every tool that ran.
+        The model decides which of the goal-relevant tools are worth calling.
+        Returns {tool_name: result_dict} for every tool that ran.
         """
-        if not self.llm_with_tools or not self.tools:
+        tools = [
+            tool
+            for name in self._tool_names
+            if (
+                tool := self._bind_tool(
+                    name,
+                    customer_id=customer_id,
+                    date_from=date_from,
+                    date_to=date_to,
+                    ga4_property_id=ga4_property_id,
+                    gsc_site_url=gsc_site_url,
+                )
+            )
+            is not None
+        ]
+        if not tools:
             return {}
 
-        priority_names = self._goal_allowlist
-        tool_lines = []
-        for t in self.tools:
-            tag = " [PRIORITY]" if t.name in priority_names else ""
-            tool_lines.append(f"- {t.name}{tag}: {t.description}")
-        tool_descriptions = "\n".join(tool_lines)
-
-        _role_by_mode = {
-            "organic_growth": "You are a senior organic growth analyst preparing supplementary data for an SEO insight brief.",
-            "paid_ads": "You are a senior paid media analyst preparing supplementary data for a Google Ads brief.",
-        }
-        role_line = _role_by_mode.get(self._active_mode, "You are a data analyst preparing supplementary data for an insight brief.")
-        sources_str = ", ".join(connected_sources) if connected_sources else "the connected data sources"
-
-        system_msg = (
-            f"{role_line} "
-            f"Connected sources: {sources_str}. "
-            "The user's goal and context are provided below. "
-            "You have access to supplementary data tools. Call the tools "
-            "that will provide the most actionable data for this goal. "
-            "Only call tools that materially improve actionability for this goal. "
-            "You do NOT need to call every available tool — only the ones relevant "
-            "to the specific goal and context.\n\n"
-            f"Available tools:\n{tool_descriptions}"
+        sources = ", ".join(connected_sources) if connected_sources else "the connected data sources"
+        role = _ROLE_BY_MODE.get(
+            self._active_mode,
+            "You are a data analyst preparing supplementary data for an insight brief.",
         )
-
-        goal_line = goal_heading_text(goal, custom_goal=custom_goal)
-        user_msg = (
-            f"Goal: {goal_line}\n"
+        system_prompt = (
+            f"{role} Connected sources: {sources}. "
+            "Call the tools that provide the most actionable data for the user's "
+            "goal. Only call tools that materially improve actionability — you do "
+            "NOT need to call every available tool. Tools marked [PRIORITY] are "
+            "the most relevant for this goal. Each tool takes no arguments; the "
+            "account identifiers and date range are already applied. "
+            "When you have gathered enough data, stop and reply with a one-line summary."
+        )
+        user_prompt = (
+            f"Goal: {goal_heading_text(goal, custom_goal=custom_goal)}\n"
             f"Context: {context or 'None provided'}\n"
-            f"Customer ID: {customer_id}\n"
-            f"GA4 Property ID: {ga4_property_id or 'N/A'}\n"
-            f"GSC Site URL: {gsc_site_url or 'N/A'}\n"
             f"Date range: {date_from} to {date_to}\n\n"
             "Call the tools you need to gather supplementary data for this insight."
         )
 
-        messages = [SystemMessage(content=system_msg), HumanMessage(content=user_msg)]
+        agent = create_agent(model=self.llm, tools=tools, system_prompt=system_prompt)
 
-        if self._phase1_graph is None:
-            self._phase1_graph = build_phase1_graph(self.llm_with_tools, self.tools)
-
-        initial_state: InsightsGraphState = {
-            "goal": goal.value,
-            "mode": self._active_mode,
-            "customer_id": customer_id,
-            "date_from": date_from,
-            "date_to": date_to,
-            "ga4_property_id": ga4_property_id or "",
-            "gsc_site_url": gsc_site_url or "",
-            "connected_sources": connected_sources or [],
-            "custom_goal": custom_goal or "",
-            "context": context or "",
-            "messages": messages,
-            "supplementary_data": {},
-            "all_briefs": {},
-            "business_context": None,
-            "synthesis_result": None,
-        }
-
-        config = RunnableConfig(configurable={"thread_id": str(uuid.uuid4())})
         start = perf_counter()
         try:
-            final = await self._phase1_graph.ainvoke(initial_state, config=config)
+            final = await agent.ainvoke(
+                {"messages": [HumanMessage(content=user_prompt)]},
+                {"recursion_limit": _MAX_PHASE1_ITERATIONS * 2},
+            )
         except Exception:
-            logger.exception("Phase 1 graph failed with %s/%s", self.provider.value, self.model.value)
+            logger.exception(
+                "Phase 1 failed with %s/%s", self.provider.value, self.model.value
+            )
             return {}
 
-        supplementary: dict[str, Any] = final.get("supplementary_data", {})
-        elapsed = perf_counter() - start
+        supplementary = _collect_tool_results(final.get("messages", []))
         logger.info(
             "Phase 1 completed in %.1fs — fetched %d supplementary datasets: %s",
-            elapsed, len(supplementary), list(supplementary.keys()),
+            perf_counter() - start, len(supplementary), list(supplementary),
         )
         return supplementary
+
+    # -----------------------------------------------------------------------
+    # Phase 2 — synthesis
+    # -----------------------------------------------------------------------
 
     async def synthesize(
         self,
@@ -258,76 +313,78 @@ class GenerateInsightsAgent:
         user_context: dict[str, Any] | None = None,
         mode: str = "paid_ads",
         emit_event: Callable | None = None,
-    ) -> SynthesisSchema:
-        """Phase 2: Structured output from connector briefs + supplementary data.
+    ) -> SynthesisSchema | None:
+        """Phase 2: structured output from connector briefs + supplementary data.
 
-        `all_briefs` maps connector_id → {"brief": {...}, "raw": {...}}.
-        Returns a validated SynthesisSchema instance.
+        ``all_briefs`` maps connector_id → {"brief": {...}, "raw": {...}}.
+        Returns a validated SynthesisSchema, or None if synthesis failed.
         """
-        phase2_graph = build_phase2_graph(self.llm_structured)
+        messages = [
+            SystemMessage(content=get_system_prompt(goal=goal.value, mode=mode)),
+            HumanMessage(
+                content=get_synthesis_user_prompt(
+                    all_briefs,
+                    supplementary=supplementary or {},
+                    mode=mode,
+                    business_context=business_context,
+                    user_context=user_context,
+                    goal=goal.value,
+                    custom_goal=custom_goal or "",
+                    context=context or "",
+                )
+            ),
+        ]
 
-        initial_state: InsightsGraphState = {
-            "goal": goal.value,
-            "mode": mode,
-            "all_briefs": all_briefs,
-            "supplementary_data": supplementary or {},
-            "business_context": business_context,
-            "user_context": user_context,
-            "custom_goal": custom_goal or "",
-            "context": context or "",
-            "messages": [],
-            "customer_id": "",
-            "date_from": "",
-            "date_to": "",
-            "ga4_property_id": "",
-            "gsc_site_url": "",
-            "connected_sources": [],
-            "synthesis_result": None,
-        }
-
-        config = RunnableConfig(configurable={"thread_id": str(uuid.uuid4())})
         start = perf_counter()
-        result = None
         try:
-            if emit_event:
-                async for mode_key, data in phase2_graph.astream(
-                    initial_state, config, stream_mode=["messages", "updates"]
-                ):
-                    if mode_key == "messages":
-                        chunk, _meta = data
-                        content = getattr(chunk, "content", None)
-                        text = ""
-                        if isinstance(content, str):
-                            text = content
-                        elif isinstance(content, list):
-                            for item in content:
-                                if isinstance(item, dict) and item.get("type") == "text":
-                                    text += item.get("text", "")
-                        if text:
-                            await emit_event({"event": "synthesis_chunk", "text": text})
-                    elif mode_key == "updates" and isinstance(data, dict):
-                        for node_output in data.values():
-                            if isinstance(node_output, dict) and node_output.get("synthesis_result") is not None:
-                                result = node_output["synthesis_result"]
+            if emit_event is not None:
+                result = await self._synthesize_streaming(messages, emit_event)
             else:
-                final = await phase2_graph.ainvoke(initial_state, config=config)
-                result = final.get("synthesis_result")
+                result = await self.llm_structured.ainvoke(messages)
         except Exception:
             logger.exception(
-                "Phase 2 graph failed with %s/%s, returning None",
+                "Phase 2 (synthesis) failed with %s/%s, returning None",
                 self.provider.value,
                 self.model.value,
             )
             return None
 
-        elapsed = perf_counter() - start
         logger.info(
             "Phase 2 (synthesis) completed in %.1fs with %s/%s",
-            elapsed,
-            self.provider.value,
-            self.model.value,
+            perf_counter() - start, self.provider.value, self.model.value,
         )
         return result
+
+    async def _synthesize_streaming(
+        self, messages: list, emit_event: Callable
+    ) -> SynthesisSchema | None:
+        """Structured synthesis that also emits token deltas as they arrive.
+
+        ``with_structured_output`` yields only the parsed object, so the raw
+        token stream is taken from the underlying chat-model events. If no
+        parsed output is seen (provider differences in event shape), fall back
+        to a plain call rather than losing the brief.
+        """
+        result: SynthesisSchema | None = None
+        async for event in self.llm_structured.astream_events(messages):
+            kind = event.get("event")
+            if kind == "on_chat_model_stream":
+                text = _chunk_text(event.get("data", {}).get("chunk"))
+                if text:
+                    await emit_event({"event": "synthesis_chunk", "text": text})
+            elif kind in ("on_chain_end", "on_parser_end"):
+                output = event.get("data", {}).get("output")
+                if isinstance(output, SynthesisSchema):
+                    result = output
+
+        if result is None:
+            logger.warning("Streaming synthesis produced no parsed output; retrying without streaming")
+            result = await self.llm_structured.ainvoke(messages)
+        return result
+
+    # -----------------------------------------------------------------------
+    # Result shaping (unchanged)
+    # -----------------------------------------------------------------------
 
     def apply_classification_overrides(
         self,
@@ -388,3 +445,33 @@ class GenerateInsightsAgent:
 
         self.apply_classification_overrides(brief_dict, synthesis)
         return brief_dict
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _collect_tool_results(messages: list) -> dict[str, Any]:
+    """Gather ToolMessage payloads into {tool_name: result}."""
+    supplementary: dict[str, Any] = {}
+    for msg in messages:
+        if isinstance(msg, ToolMessage) and msg.name:
+            try:
+                supplementary[msg.name] = json.loads(msg.content)
+            except (json.JSONDecodeError, TypeError):
+                supplementary[msg.name] = {"raw": msg.content}
+    return supplementary
+
+
+def _chunk_text(chunk: Any) -> str:
+    """Text out of a chat-model stream chunk, for both string and block content."""
+    content = getattr(chunk, "content", None)
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        return "".join(
+            item.get("text", "")
+            for item in content
+            if isinstance(item, dict) and item.get("type") == "text"
+        )
+    return ""

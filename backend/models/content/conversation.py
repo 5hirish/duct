@@ -33,7 +33,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import JSONB
+from models.columns import json_column
 from sqlmodel import Field, SQLModel
 
 
@@ -96,7 +96,7 @@ class AgentConversation(SQLModel, table=True):
     # Catch-all for forward fields so new agent needs don't always need a migration.
     meta: dict = Field(
         default_factory=dict,
-        sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="{}"),
+        sa_column=Column(json_column(), nullable=False, server_default="{}"),
     )
 
     created_at: datetime = Field(
@@ -135,7 +135,7 @@ class AgentEvent(SQLModel, table=True):
     kind: str = Field(sa_column=Column(String, nullable=False))
     data: dict = Field(
         default_factory=dict,
-        sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="{}"),
+        sa_column=Column(json_column(), nullable=False, server_default="{}"),
     )
     created_at: datetime = Field(
         default_factory=_utcnow,

@@ -25,6 +25,7 @@ from agents.audit.schema import (
     AuditChatMessage,
     AuditRequest,
 )
+from agents.audit.v1.runner import LangChainAuditRunner
 from agents.audit.v3.runner import ClaudeAuditRunner, close_session, get_session
 from agents.engines import Engine, resolve_engine, resolve_engine_model, resolve_engine_provider, PROVIDER_CONFIG_ATTR
 from service.crawl.fetcher import SSRFError, validate_public_url
@@ -97,6 +98,20 @@ async def _stream_queue(
         pass
 
 
+def _build_runner(api_key: str, provider: Any, model: Any, engine: Engine):
+    """Pick the audit engine.
+
+    V3 (Claude Agent SDK) stays the default and the production path. V1
+    (LangChain) is opt-in per request via ``engine: "v1"`` while it earns
+    confidence — see docs/engineering/agent-engine-consolidation-review.md.
+    Both expose the same ``run_pipeline`` signature and emit the same events.
+    """
+    if engine == Engine.V1:
+        logger.info("audit: using V1 (LangChain) engine with %s/%s", provider.value, model.value)
+        return LangChainAuditRunner(api_key=api_key, provider=provider, model=model)
+    return ClaudeAuditRunner(api_key=api_key, provider=provider, model=model)
+
+
 # ---------------------------------------------------------------------------
 # SSE audit stream
 # ---------------------------------------------------------------------------
@@ -107,9 +122,14 @@ async def _run_audit_pipeline(
     emit_fn: Any,
 ) -> None:
     try:
-        api_key, provider, model, _ = _resolve_agent_config(req.engine)
-        if not api_key and not claude_oauth_available():
-            raise ValueError("ANTHROPIC_API_KEY is not configured")
+        api_key, provider, model, engine = _resolve_agent_config(req.engine)
+        if not api_key and not (engine == Engine.V3 and claude_oauth_available()):
+            # The Claude OAuth fallback is V3-only; every other engine/provider
+            # needs its own key, and naming it beats a generic Anthropic message.
+            raise ValueError(
+                f"No API key configured for provider '{provider.value}' "
+                f"(engine {engine.value})."
+            )
 
         await emit_fn({
             "event": AuditEvent.PIPELINE_STARTED,
@@ -141,7 +161,7 @@ async def _run_audit_pipeline(
             "status": "success",
         })
 
-        runner = ClaudeAuditRunner(api_key=api_key, provider=provider, model=model)
+        runner = _build_runner(api_key, provider, model, engine)
         report = await runner.run_pipeline(
             session_id=session_id,
             url=url,
