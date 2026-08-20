@@ -134,17 +134,26 @@ coll = COLLECT(
 
 
 # ---------------------------------------------------------------------------
-# Bundle size — measured on Linux, 2026-08-16
+# Bundle size — Linux 2026-08-16, macOS arm64 2026-08-20
 # ---------------------------------------------------------------------------
-# 757 MB before the excludes above, 441 MB after. Remaining top contributors:
+# Linux: 757 MB before the excludes above, 441 MB after.
+# macOS arm64 (single-arch, Python 3.12.11): 391 MB, entry binary 64 MB.
+#
+# Top contributors on macOS, which track the Linux ones closely:
 #
 #   googleapiclient  95 MB  — discovery documents for EVERY Google API; only
 #                             analyticsdata / searchconsole / ads are used.
 #                             Trimmable with a custom hook if size matters.
-#   google           87 MB  — protobuf + google-ads generated stubs.
+#   google           83 MB  — protobuf + google-ads generated stubs.
 #   babel            32 MB  — locale data pulled in transitively.
-#   zstandard        23 MB
+#   grpc             18 MB
+#   selectolax       13 MB
 #
-# A macOS build differs (universal2 doubles native libs), so re-measure there.
-# If the signed bundle needs to be smaller, trimming googleapiclient's discovery
-# cache is the single biggest win.
+# These numbers are for a single architecture. A universal2 build roughly
+# doubles the native libraries (not the pure-Python parts); budget ~600 MB if
+# Intel Macs need to be supported. If the signed bundle needs to be smaller,
+# trimming googleapiclient's discovery cache is the single biggest win.
+#
+# Cold boot to a serving /health: ~9s from source, ~20s frozen, both on an
+# arm64 Mac. The shell therefore reads the handshake on a background thread
+# rather than blocking window creation — see desktop/src-tauri/src/sidecar.rs.
