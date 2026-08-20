@@ -27,20 +27,47 @@ Full design: [`docs/engineering/tauri-desktop-byo-keys-plan.md`](../docs/enginee
 ## Prerequisites
 
 - Rust (stable) + Node 22+.
+- Python 3.12 + Poetry, to build the sidecar (below).
 - Platform libraries for Tauri — see <https://tauri.app/start/prerequisites/>.
   On Debian/Ubuntu: `libwebkit2gtk-4.1-dev`, `libgtk-3-dev`, `librsvg2-dev`,
   `libsoup-3.0-dev`, and `libdbus-1-dev` (Linux keychain / Secret Service).
+
+## The sidecar
+
+The bundle ships the Duct backend and runs it locally — no Railway round trip.
+Build it before any `tauri dev`/`tauri build`, because `bundle.resources` copies
+the output directory verbatim and a missing build produces an app that opens
+straight to an error screen:
+
+```bash
+cd backend
+poetry install --with dev
+poetry run pyinstaller duct_sidecar.spec --noconfirm   # ~3 min, ~390 MB on arm64
+```
+
+That writes `backend/dist/duct-sidecar/`. The shell spawns the binary inside it,
+reads one JSON handshake line (loopback URL, port, per-install API key, data
+dir) and hands it to the web app, which points its API base there. Rebuild it
+whenever backend code changes — the frozen copy does not pick up edits.
+
+Runtime state lives in `~/Library/Application Support/ai.getduct.desktop/`
+(`duct.db`, `local-api-key`, `uploads/`). Deleting that directory resets the
+install. Set `DUCT_SIDECAR_BIN` to run the shell against a sidecar built
+elsewhere.
 
 ## Develop
 
 ```bash
 cd desktop
 npm install
-npm run dev      # tauri dev — opens the native window
+npm run dev        # tauri dev against the hosted app
+npm run dev:local  # tauri dev against the local Next dev server (localhost:3003)
 ```
 
-To point at a local backend during development, change the window `url` in
-`src-tauri/tauri.conf.json` to your local app (e.g. `http://localhost:3003`).
+`npm run dev:local` starts the app dev server for you. Note that `tauri dev`
+runs an unbundled binary, so macOS has not registered the
+`ai.getduct.desktop://` scheme and the browser sign-in return leg will not come
+back — use a real `tauri build` bundle to exercise that path.
 
 ## Build
 
@@ -51,7 +78,33 @@ npm run build    # tauri build — installers land in src-tauri/target/release/b
 
 ## Releasing
 
-### macOS — TestFlight (internal testers)
+### macOS — Developer ID + notarized DMG (current channel)
+
+Pushes to `main` touching `desktop/**` or `backend/**` build the sidecar, sign
+it and the app with a Developer ID Application certificate, notarize, staple and
+produce a DMG — [`.github/workflows/desktop-release.yml`](../.github/workflows/desktop-release.yml).
+
+This is the channel for the local-first product. The Mac App Store is not an
+option for it: its sandbox cannot host a PyInstaller sidecar and embedded
+interpreters draw rejections
+([review §8.2](../docs/engineering/agent-engine-consolidation-review.md)). The
+practical consequences, all in our favour here:
+
+- **Auto-update is allowed** (`tauri-plugin-updater`), unlike the App Store —
+  though it is not wired up yet; it needs a signing keypair and an endpoint.
+- **Windows and Linux** can ship from the same pipeline later.
+- **Unsandboxed keychain**, so provider keys saved by this build are not shared
+  with any App Store build.
+
+Signing order is the fragile part and is handled explicitly in the workflow: the
+sidecar's hundreds of nested Mach-O files are signed *before* the enclosing
+`.app` is re-sealed. `codesign --deep` is deprecated and does not do this
+reliably.
+
+### macOS — TestFlight (legacy thin client)
+
+Retained for the pre-sidecar thin client only. **Do not add the sidecar to this
+build** — it cannot work under the sandbox.
 
 Pushes to `main` touching `desktop/**` build a sandboxed, universal Mac App
 Store package and upload it to TestFlight via

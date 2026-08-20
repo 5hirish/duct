@@ -1,0 +1,208 @@
+name: desktop — Developer ID DMG (macOS)
+
+# Builds the Tauri desktop shell as a Developer ID-signed, notarized DMG.
+#
+# This is the channel for the local-first product: the bundle ships the FastAPI
+# backend frozen by PyInstaller and runs it on the user's machine. The Mac App
+# Store cannot host that build at all — the sandbox breaks the PyInstaller
+# sidecar and embedded interpreters draw rejections — so the App Store pipeline
+# (desktop-testflight.yml) is limited to the older thin client and must never
+# be given the sidecar. Reasoning: docs/engineering/agent-engine-consolidation-review.md §8.
+#
+# The signing order matters and is the part that most often goes wrong. A
+# PyInstaller onedir tree contains hundreds of Mach-O files (.so extension
+# modules, dylibs, the bootloader). Under the hardened runtime every one must
+# carry a valid signature, and they must be signed *before* the enclosing .app,
+# innermost first — signing the app afterwards seals what is already inside it.
+# `codesign --deep` is deprecated by Apple and does not reliably do this, so the
+# nested pass below is explicit.
+#
+# REQUIRED GitHub secrets:
+#   DUCT_DEVID_CERT_P12          base64 of the "Developer ID Application" .p12
+#                                (base64 -i cert.p12 | pbcopy)
+#   DUCT_DEVID_CERT_PASSWORD     password for that .p12
+#   DUCT_DEVID_IDENTITY          e.g. "Developer ID Application: Duct (ABCDE12345)"
+#   DUCT_APPLE_TEAM_ID           10-char Apple Team ID
+#   DUCT_NOTARY_APPLE_ID         Apple ID email used for notarization
+#   DUCT_NOTARY_PASSWORD         app-specific password for that Apple ID
+#                                (appleid.apple.com → Sign-In and Security →
+#                                 App-Specific Passwords)
+#
+# The Developer ID Application certificate is a different certificate from the
+# Apple Distribution one the TestFlight workflow uses; both can coexist.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'desktop/**'
+      - '!desktop/**.md'
+      - 'backend/**'
+      - '.github/workflows/desktop-release.yml'
+  pull_request:
+    paths:
+      - 'desktop/**'
+      - '!desktop/**.md'
+      - 'backend/**'
+      - '.github/workflows/desktop-release.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: desktop-release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release:
+    name: Build, sign, notarize
+    runs-on: macos-latest
+    # A signed build needs the secrets, which forks and Dependabot never get.
+    # PRs still exercise the unsigned path below to catch build breakage.
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: desktop/src-tauri
+
+      - name: Install Poetry
+        run: pipx install poetry
+
+      # The sidecar is a bundle resource, so it has to exist before the Tauri
+      # build copies it in. A missing build here produces an app that launches
+      # to an error screen rather than failing the CI run, so treat a failure
+      # in this step as fatal.
+      - name: Build the sidecar
+        working-directory: backend
+        run: |
+          set -euo pipefail
+          poetry install --with dev --no-interaction
+          poetry run pyinstaller duct_sidecar.spec --noconfirm
+          test -x dist/duct-sidecar/duct-sidecar
+          du -sh dist/duct-sidecar
+
+      - name: Install npm dependencies
+        working-directory: desktop
+        run: npm ci
+
+      # ---- PR path: unsigned, just prove it builds -------------------------
+      - name: Build app bundle (unsigned)
+        if: github.event_name == 'pull_request'
+        working-directory: desktop
+        run: npm run tauri -- build --bundles app
+
+      # ---- main path: signed + notarized ------------------------------------
+      - name: Import Developer ID certificate
+        if: github.event_name != 'pull_request'
+        env:
+          CERT_P12: ${{ secrets.DUCT_DEVID_CERT_P12 }}
+          CERT_PASSWORD: ${{ secrets.DUCT_DEVID_CERT_PASSWORD }}
+        run: |
+          set -euo pipefail
+          KEYCHAIN_PATH="$RUNNER_TEMP/devid-signing.keychain-db"
+          KEYCHAIN_PASSWORD="$(openssl rand -base64 24)"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          echo "$CERT_P12" | base64 --decode > "$RUNNER_TEMP/devid.p12"
+          security import "$RUNNER_TEMP/devid.p12" -P "$CERT_PASSWORD" \
+            -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH" >/dev/null
+          security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain-db
+
+          rm -f "$RUNNER_TEMP/devid.p12"
+          echo "KEYCHAIN_PASSWORD=$KEYCHAIN_PASSWORD" >> "$GITHUB_ENV"
+
+      # Tauri signs the .app it produces, but it does not walk into a resource
+      # directory full of Mach-O files. Build the .app first, sign the sidecar's
+      # contents, then re-sign the app so the outer seal covers them.
+      - name: Build app bundle (signed)
+        if: github.event_name != 'pull_request'
+        working-directory: desktop
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ secrets.DUCT_DEVID_IDENTITY }}
+          APPLE_TEAM_ID: ${{ secrets.DUCT_APPLE_TEAM_ID }}
+        run: npm run tauri -- build --bundles app
+
+      - name: Sign the sidecar's nested binaries
+        if: github.event_name != 'pull_request'
+        env:
+          IDENTITY: ${{ secrets.DUCT_DEVID_IDENTITY }}
+        run: |
+          set -euo pipefail
+          APP="desktop/src-tauri/target/release/bundle/macos/Duct.app"
+          SIDECAR="$APP/Contents/Resources/duct-sidecar"
+          test -d "$SIDECAR" || { echo "sidecar resource missing from bundle"; exit 1; }
+
+          # Every Mach-O file, innermost first. `find -type f` order is not
+          # guaranteed to be bottom-up, but each file here is a leaf — only the
+          # enclosing .app nests — so a flat pass is correct.
+          find "$SIDECAR" -type f \( -name '*.so' -o -name '*.dylib' -o -perm +111 \) -print0 |
+            while IFS= read -r -d '' f; do
+              if file "$f" | grep -q 'Mach-O'; then
+                codesign --force --timestamp --options runtime \
+                  --entitlements desktop/src-tauri/Entitlements.developerid.plist \
+                  --sign "$IDENTITY" "$f"
+              fi
+            done
+
+          # Re-seal the app now that its contents changed.
+          codesign --force --timestamp --options runtime \
+            --entitlements desktop/src-tauri/Entitlements.developerid.plist \
+            --sign "$IDENTITY" "$APP"
+
+          codesign --verify --deep --strict --verbose=2 "$APP"
+
+      # Notarization is done here rather than through Tauri's bundler because
+      # the app had to be re-signed after Tauri finished with it.
+      - name: Notarize and staple
+        if: github.event_name != 'pull_request'
+        env:
+          APPLE_ID: ${{ secrets.DUCT_NOTARY_APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.DUCT_NOTARY_PASSWORD }}
+          TEAM_ID: ${{ secrets.DUCT_APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          APP="desktop/src-tauri/target/release/bundle/macos/Duct.app"
+          ZIP="$RUNNER_TEMP/Duct.zip"
+
+          ditto -c -k --keepParent "$APP" "$ZIP"
+          xcrun notarytool submit "$ZIP" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_PASSWORD" \
+            --team-id "$TEAM_ID" \
+            --wait
+
+          # Staple so the app validates without a network round trip on launch.
+          xcrun stapler staple "$APP"
+          xcrun stapler validate "$APP"
+
+      - name: Build DMG
+        if: github.event_name != 'pull_request'
+        working-directory: desktop
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ secrets.DUCT_DEVID_IDENTITY }}
+          APPLE_TEAM_ID: ${{ secrets.DUCT_APPLE_TEAM_ID }}
+        run: npm run tauri -- build --bundles dmg --no-bundle-app
+
+      - uses: actions/upload-artifact@v4
+        if: github.event_name != 'pull_request'
+        with:
+          name: duct-macos-dmg
+          path: desktop/src-tauri/target/release/bundle/dmg/*.dmg
+          if-no-files-found: error
+
+      - name: Clean up signing keychain
+        if: always() && github.event_name != 'pull_request'
+        run: security delete-keychain "$RUNNER_TEMP/devid-signing.keychain-db" || true
