@@ -7,7 +7,7 @@
  *   FALLBACK_MODES — used only when the API is unavailable (e.g. SSR with no backend)
  */
 
-import { BASE } from "./api";
+import { BASE, backendApiKey } from "./api";
 
 export const DEFAULT_MODE_KEY = "organic_growth";
 
@@ -18,9 +18,7 @@ export const DEFAULT_MODE_KEY = "organic_growth";
 export async function fetchModes(options = {}) {
   const res = await fetch(`${BASE}/api/insights/modes`, {
     headers: {
-      ...(process.env.NEXT_PUBLIC_DUCT_API_KEY
-        ? { "X-API-Key": process.env.NEXT_PUBLIC_DUCT_API_KEY }
-        : {}),
+      ...(backendApiKey() ? { "X-API-Key": backendApiKey() } : {}),
     },
     ...options,
   });

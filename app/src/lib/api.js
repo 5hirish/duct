@@ -9,13 +9,43 @@ const isProduction = process.env.NODE_ENV === "production";
  * In production, require an explicit API base URL.
  * This prevents silently sending real users to localhost when env vars are missing.
  */
-export const BASE =
-  normalizedConfiguredBase || (isProduction ? "" : "http://localhost:8002");
+const hostedBase = normalizedConfiguredBase || (isProduction ? "" : "http://localhost:8002");
+
+/**
+ * Origin every request is sent to.
+ *
+ * `let`, not `const`, on purpose: the desktop shell bundles its own backend and
+ * only learns its loopback port at runtime, so `useLocalBackend()` repoints this
+ * once at boot (see `localBackend.js`). ES module live bindings mean every
+ * `${BASE}/…` call site picks the new value up with no change of its own —
+ * which is why callers must read `BASE` at call time and never copy it into
+ * their own module-level constant.
+ */
+export let BASE = hostedBase;
 
 /** Must match backend DUCT_API_KEY. Prefer a Next server proxy in production so this is not public. */
+let apiKey = process.env.NEXT_PUBLIC_DUCT_API_KEY || "";
+
+/** The `X-API-Key` for the active backend. Shared so every api module agrees. */
+export function backendApiKey() {
+  return apiKey;
+}
+
+/**
+ * Point the app at the desktop shell's local sidecar instead of the hosted API.
+ *
+ * Called once, before the first request, by the desktop boot gate. The local
+ * key is generated per install and read from the OS-protected data dir, so it
+ * is not a secret shared with anyone else.
+ */
+export function useLocalBackend({ url, apiKey: localKey }) {
+  BASE = String(url || "").replace(/\/+$/, "");
+  apiKey = localKey || "";
+}
+
 function backendApiHeaders(extra = {}) {
   const headers = { ...extra };
-  const key = process.env.NEXT_PUBLIC_DUCT_API_KEY;
+  const key = backendApiKey();
   if (key) {
     headers["X-API-Key"] = key;
   }

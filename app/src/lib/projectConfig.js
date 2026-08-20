@@ -1,8 +1,8 @@
-import { BASE } from "./api";
+import { BASE, backendApiKey } from "./api";
 
 function backendApiHeaders(extra = {}) {
   const headers = { ...extra };
-  const key = process.env.NEXT_PUBLIC_DUCT_API_KEY;
+  const key = backendApiKey();
   if (key) {
     headers["X-API-Key"] = key;
   }
