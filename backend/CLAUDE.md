@@ -86,7 +86,8 @@ automatically: `railway.json` only starts uvicorn and there is no CI migration j
   `backend/.env.local` (the Railway TCP proxy) via `config.get_configs()`.
 - Inspect: `alembic current`, `alembic heads`, `alembic history`.
 - The proxy host is not resolvable inside the command sandbox, so migration
-  commands run with the sandbox disabled (they need network to `*.rlwy.net`).
+  commands run with the sandbox disabled — they need outbound network to the
+  managed database's proxy domain.
 - New models must be imported in `models/__init__.py` so `SQLModel.metadata`
   picks them up for autogenerate.
 - Migrations should be additive/reversible — always provide a working `downgrade`.

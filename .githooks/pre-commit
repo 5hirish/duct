@@ -1,0 +1,4 @@
+#!/bin/sh
+# Refuse commits containing credential shapes or private hostnames.
+# Enable once per clone:  git config core.hooksPath .githooks
+exec python3 scripts/security/leak_scan.py

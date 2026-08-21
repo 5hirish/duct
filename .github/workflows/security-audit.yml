@@ -1,4 +1,4 @@
-name: Security Audit (Advisory)
+name: Security Audit
 
 permissions:
   contents: read
@@ -18,7 +18,12 @@ jobs:
     name: Local policy parity security scan
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    continue-on-error: true
+    # Blocking. scripts/security/audit.py only returns non-zero on CRITICAL
+    # findings — everything lower is reported and passes — so a red run here
+    # means something worth stopping for. Suppress a known-safe critical by
+    # fingerprinting it into .security-audit-baseline.json (`--write-baseline`)
+    # with a note, rather than by making this advisory again.
+    continue-on-error: false
 
     steps:
       - name: Checkout repository
@@ -39,6 +44,12 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install pip-audit bandit checkov
           npm install -g @semgrep/semgrep gitleaks osv-scanner trivy || true
+
+      # Runs over every tracked file, not just the diff: a credential added
+      # before the hook existed is just as public as one added today. Needs no
+      # scanners installed, so it runs even if the step above degrades.
+      - name: Leak scan (credentials, private hostnames)
+        run: python3 scripts/security/leak_scan.py --all
 
       - name: Run security audit (deep)
         run: |
