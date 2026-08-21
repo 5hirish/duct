@@ -1,0 +1,118 @@
+# Betterleaks configuration for Duct.
+#
+# Betterleaks (MIT, Go) is the maintained successor to Gitleaks by its original
+# author, and reads `.gitleaks.toml` natively — so gitleaks can still be pointed
+# at this file if betterleaks is unavailable.
+#
+#   brew install betterleaks      # or: go install github.com/betterleaks/betterleaks@latest
+#   git config core.hooksPath .githooks
+#
+# The built-in ruleset (420 rules) covers the credential shapes worth detecting,
+# which is why nothing generic is defined here. Only rules specific to Duct
+# appear below — things no vendor ruleset can know about.
+#
+# NOTE ON ORDERING: `prefilter` and `filter` are bare top-level keys, so they
+# must appear before EVERY table header — `[extend]` included. TOML assigns a
+# bare key to the most recent table, so putting them under `[extend]` makes them
+# `extend.prefilter` and they are silently ignored (no error, the scan just
+# behaves as though they were never written); putting them under `[[rules]]`
+# turns them into rule-scoped filters and the config fails to compile. Verify
+# with `betterleaks config show` that the resolved prefilter contains these
+# entries. Expr has no comment syntax — keep explanations out here.
+
+# Two categories. First, files that are themselves lists of credential patterns,
+# which match every rule they define. Second, build output and local caches that
+# git ignores but a directory walk does not — notably `.history/`, the VS Code
+# Local History cache, which keeps old copies of `.env` files and accounted for
+# 216 of the 469 hits on the first unfiltered run.
+# IMPORTANT: a `prefilter` here REPLACES the built-in one rather than merging
+# with it, even under `[extend] useDefault = true` (which inherits rules only).
+# The node_modules, lockfile and binary-type entries below are therefore
+# restatements of built-in defaults, not additions — deleting them re-enables
+# scanning of vendored dependencies. Check with `betterleaks config show`.
+prefilter = '''
+matchesAny(attributes["path"], [
+  `(?:^|/)\.betterleaks\.toml$`,
+  `(?:^|/)scripts/security/.*\.py$`,
+  `(?:^|/)\.security-audit-baseline\.json$`,
+  `(?:^|/)\.history(?:/.*)?$`,
+  `(?:^|/)\.venv(?:/.*)?$`,
+  `(?:^|/)\.next(?:/.*)?$`,
+  `(?:^|/)\.open-next(?:/.*)?$`,
+  `(?:^|/)(?:dist|build|target)(?:/.*)?$`,
+  `(?:^|/)\.vscode/chrome-site-debug(?:/.*)?$`,
+  `(?:^|/)node_modules(?:/.*)?$`,
+  `(?:^|/)(?:deno\.lock|npm-shrinkwrap\.json|package-lock\.json|pnpm-lock\.yaml|yarn\.lock)$`,
+  `(?:^|/)(?:Pipfile|poetry|Cargo)\.lock$`,
+  `(?:^|/)\.git(?:/.*)?$`,
+  `(?i)\.(?:bmp|gif|jpe?g|png|svg|tiff?|ico|icns|webp)$`,
+  `(?i)\.(?:eot|[ot]tf|woff2?)$`,
+  `(?i)\.(?:docx?|xlsx?|pdf|bin|dll|pdb|exe|zip)$`,
+])
+'''
+
+# Obvious placeholders. A scanner that fires on `<your-token>` or a fixture
+# password gets bypassed within a week, and a bypassed scanner is worse than
+# none. Each entry corresponds to a real false positive from the first run
+# against this repo: `docs:PASSWORD` in a runbook, `postgres` as a CI service
+# password, `pw` in a Postgres URL fixture, `secret-docs-pass` in a test.
+filter = '''
+containsAny(finding["secret"], [
+  "your-token", "your-key", "your_token", "your_key", "your-api-key",
+  "EXAMPLE", "example.com", "placeholder", "changeme", "REDACTED",
+  "PASSWORD", "user:pw@", "user:pass",
+]) || matchesAny(finding["secret"], [
+  `^(?i:pw|pass|password|postgres|secret|test|dummy|fake|localhost)$`,
+  `^(?i:[a-z]+-)*(?i:docs|test|tests|dummy|fake|example|sample)(?i:-[a-z]+)*$`,
+])
+'''
+
+
+# Inherit the built-in ruleset. Must come AFTER the bare keys above.
+[extend]
+useDefault = true
+
+
+# ── Duct-specific rules ──────────────────────────────────────────────────────
+
+# The managed database is reachable only through its provider's proxy domain.
+# The host is not a credential, but it identifies private infrastructure and has
+# no business in a public repo — it reached backend/CLAUDE.md once already, in
+# prose explaining why migrations need network access.
+[[rules]]
+id = "duct-private-infra-host"
+description = "Private infrastructure hostname (managed database proxy)"
+keywords = ["rlwy.net", "railway.internal"]
+regex = '''\b[A-Za-z0-9-]+\.(?:proxy\.)?(?:rlwy\.net|railway\.internal)\b'''
+confidence = "high"
+
+# Claude Code writes a `Claude-Session:` trailer holding a private session URL.
+# Harmless while the repo is private; in a public one it publishes session
+# identifiers and reads as an internal artifact left behind.
+[[rules]]
+id = "duct-claude-session-url"
+description = "Private Claude Code session URL"
+keywords = ["claude.ai/code/session_", "Claude-Session"]
+regex = '''(?:Claude-Session:\s*\S+|claude\.ai/code/session_[A-Za-z0-9]+)'''
+confidence = "high"
+
+# `.cursor/mcp.json` ships as a template with every credential field blank
+# (`"Bearer "`, `"SENTRY_AUTH_TOKEN": ""`). A populated one is a live credential
+# in a file people edit locally and commit without thinking.
+#
+# The value must have content *after* the scheme: anchoring on `[^"\s]` before
+# `Bearer` instead makes the blank template match on its own "B", which is
+# exactly how the first version of this rule produced four false positives.
+[[rules]]
+id = "duct-populated-bearer-header"
+description = "Populated Authorization: Bearer header in a config file"
+keywords = ["Authorization"]
+regex = '''"Authorization"\s*:\s*"Bearer\s+[^"\s][^"]*"'''
+confidence = "medium"
+
+[[rules]]
+id = "duct-populated-mcp-token"
+description = "Populated *_AUTH_TOKEN / *_API_TOKEN in an MCP server config"
+keywords = ["AUTH_TOKEN", "API_TOKEN"]
+regex = '''"[A-Z_]*(?:AUTH|API)_TOKEN"\s*:\s*"[^"\s][^"]*"'''
+confidence = "medium"

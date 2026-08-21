@@ -39,17 +39,40 @@ jobs:
         with:
           node-version: "20"
 
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      # The previous version of this step installed the scanners with
+      # `npm install -g @semgrep/semgrep gitleaks osv-scanner trivy || true`.
+      # Three of those four are not npm packages — they 404 — and npm resolves
+      # every spec before installing, so the whole command failed and `|| true`
+      # swallowed it. gitleaks never landed either, which meant the only check
+      # in audit.py that raises CRITICAL had never actually run in CI.
+      #
+      # Each tool is now installed from where it is really published, and there
+      # is no `|| true`: a scanner that cannot be installed should fail the job,
+      # not silently downgrade the audit.
       - name: Install security scanners
         run: |
+          set -euxo pipefail
           python -m pip install --upgrade pip
-          python -m pip install pip-audit bandit checkov
-          npm install -g @semgrep/semgrep gitleaks osv-scanner trivy || true
+          python -m pip install pip-audit bandit checkov semgrep
+          # betterleaks is the maintained successor to gitleaks by its original
+          # author, and the only scanner whose findings audit.py treats as
+          # CRITICAL. It reads .betterleaks.toml, which carries Duct's own rules.
+          go install github.com/betterleaks/betterleaks@latest
+          go install github.com/google/osv-scanner/cmd/osv-scanner@latest
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
+            | sh -s -- -b /usr/local/bin
 
       # Runs over every tracked file, not just the diff: a credential added
-      # before the hook existed is just as public as one added today. Needs no
-      # scanners installed, so it runs even if the step above degrades.
-      - name: Leak scan (credentials, private hostnames)
-        run: python3 scripts/security/leak_scan.py --all
+      # before the hook existed is just as public as one added today.
+      # --require so a missing binary fails the job. Locally the same script
+      # warns and passes, so a contributor without betterleaks is not blocked.
+      - name: Leak scan (betterleaks, tracked files)
+        run: python3 scripts/security/leak_scan.py --all --require
 
       - name: Run security audit (deep)
         run: |

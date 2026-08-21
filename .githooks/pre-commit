@@ -1,4 +1,7 @@
 #!/bin/sh
-# Refuse commits containing credential shapes or private hostnames.
+# Secret scan on staged files, via betterleaks and .betterleaks.toml.
 # Enable once per clone:  git config core.hooksPath .githooks
+#
+# Passes without --require: a contributor who has not installed betterleaks gets
+# a warning rather than a blocked commit, and CI enforces it regardless.
 exec python3 scripts/security/leak_scan.py
