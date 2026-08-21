@@ -93,7 +93,10 @@ confidence = "high"
 id = "duct-claude-session-url"
 description = "Private Claude Code session URL"
 keywords = ["claude.ai/code/session_", "Claude-Session"]
-regex = '''(?:Claude-Session:\s*\S+|claude\.ai/code/session_[A-Za-z0-9]+)'''
+# Requires an actual URL after the trailer name. Matching `Claude-Session:\s*\S+`
+# instead also fires on documentation that merely names the trailer — which is
+# how this rule blocked the commit adding open-source-readiness.md.
+regex = '''(?:Claude-Session:\s*https?://\S+|claude\.ai/code/session_[A-Za-z0-9]+)'''
 confidence = "high"
 
 # `.cursor/mcp.json` ships as a template with every credential field blank

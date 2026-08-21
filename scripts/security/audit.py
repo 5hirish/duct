@@ -146,9 +146,25 @@ def gitleaks_scan(targets: list[str]) -> list[Finding]:
 
 
 def semgrep_scan(targets: list[str]) -> list[Finding]:
-    if not command_exists("semgrep"):
-        return [Finding(SEVERITY_MEDIUM, "semgrep missing", "Install semgrep to enable SAST checks.")]
-    cmd = ["semgrep", "--config", "auto", "--json"]
+    """SAST. Prefers Opengrep — the LGPL-2.1 community fork of Semgrep CE.
+
+    Semgrep moved cross-function taint analysis and interprocedural scanning
+    behind its commercial tier in 2025; Opengrep restores them and is governed by
+    a consortium rather than one vendor. It takes the same flags and emits the
+    same JSON schema, so the parsing below is unchanged — only the binary and the
+    `scan` subcommand differ.
+    """
+    binary = "opengrep" if command_exists("opengrep") else "semgrep"
+    if not command_exists(binary):
+        return [
+            Finding(
+                SEVERITY_MEDIUM,
+                "opengrep/semgrep missing",
+                "Install opengrep (https://github.com/opengrep/opengrep) to enable SAST checks.",
+            )
+        ]
+    cmd = [binary, "scan"] if binary == "opengrep" else [binary]
+    cmd += ["--config", "auto", "--json"]
     cmd.extend(targets)
     proc = run_command(cmd)
     findings: list[Finding] = []

@@ -57,7 +57,13 @@ jobs:
         run: |
           set -euxo pipefail
           python -m pip install --upgrade pip
-          python -m pip install pip-audit bandit checkov semgrep
+          python -m pip install pip-audit bandit checkov
+          # Opengrep, not Semgrep: the LGPL-2.1 community fork restores the
+          # taint analysis and interprocedural scanning that Semgrep moved
+          # behind its commercial tier, and is governed by a consortium rather
+          # than a single vendor. Same flags, same JSON schema.
+          curl -fsSL https://raw.githubusercontent.com/opengrep/opengrep/main/install.sh | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           # betterleaks is the maintained successor to gitleaks by its original
           # author, and the only scanner whose findings audit.py treats as
           # CRITICAL. It reads .betterleaks.toml, which carries Duct's own rules.
