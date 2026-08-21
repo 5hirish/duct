@@ -1,3 +1,8 @@
+> **Third-party documentation — OpenAI.**
+> Source: OpenAI Cookbook — <https://cookbook.openai.com/> · Retrieved 2026-04-06
+> Licence: MIT, per the OpenAI Cookbook repository.
+> Reproduced verbatim for reference and not written by Duct. Rights remain with the original author; the Duct repository licence does not cover this file.
+
 # GPT-5 prompting guide
 
 GPT-5, our newest flagship model, represents a substantial leap forward in agentic task performance, coding, raw intelligence, and steerability.
