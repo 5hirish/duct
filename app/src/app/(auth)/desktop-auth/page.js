@@ -9,7 +9,13 @@ import { Button } from "@/components/ui/button";
 // hands the code to the desktop shell via its custom URL scheme and tells the
 // user to head back to the app. It must never call /auth/exchange itself —
 // the code is single-use and belongs to the shell's webview.
-const SHELL_SCHEME = "ai.getduct.desktop";
+//
+// The scheme is build-time config, not user input: a local dev shell built from
+// `src-tauri/tauri.dev.conf.json` registers `ai.getduct.desktop.dev` so it can
+// coexist with an installed TestFlight build. Set NEXT_PUBLIC_SHELL_SCHEME in
+// `app/.env.local` to match; deployed builds leave it unset.
+const SHELL_SCHEME =
+  process.env.NEXT_PUBLIC_SHELL_SCHEME?.trim() || "ai.getduct.desktop";
 
 function DesktopAuthContent() {
   const searchParams = useSearchParams();

@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends
 
 from routes import (
-    agents, audit, auth, chat, connectors, content, engines, generate, health,
+    agents, audit, auth, chat, connectors, content, engines, execution, generate, health,
     lead_magnet, project_members, projects, reports, signin, user_connectors,
     user_contexts, user_projects,
 )
@@ -65,6 +65,7 @@ router.include_router(
 # Lead magnet capture — public endpoints; rely on Cloudflare Turnstile, not API key
 router.include_router(lead_magnet.router, prefix="/api/lead-magnet")
 # User-scoped endpoints — authenticated via Bearer JWT
+router.include_router(execution.router, prefix="/api/execute")
 router.include_router(user_projects.router, prefix="/api/user/projects")
 router.include_router(user_contexts.router, prefix="/api/user/projects")
 router.include_router(project_members.router, prefix="/api/user/projects")

@@ -33,6 +33,18 @@ for bring-your-own provider API keys. Design:
 - Provider keys live only in the OS keychain — never write them to disk or logs.
 - Any origin the webview loads must be listed under `remote.urls` in
   `src-tauri/capabilities/default.json` for `invoke` to work.
+- **A new `#[tauri::command]` needs three edits, not one.** Add it to
+  `generate_handler!` in `src/lib.rs`, to `AppManifest::commands` in `build.rs`,
+  and as `allow-<kebab-command>` in every capability that needs it. App commands
+  are allowed by default only for *local* content — this window loads a remote
+  origin, and a capability can only grant permissions that exist, so skipping
+  `build.rs` makes the command unreachable with
+  `<command> not allowed. Plugin not found`. The JS side swallows that
+  (`getShellInfo()` returns null, `providerKeys.js` degrades), so it fails
+  silently rather than loudly.
+- Local dev origins live in `capabilities/dev-localhost.json`, kept out of
+  release builds by `app.security.capabilities` in `tauri.conf.json` (unset
+  means *all* capability files ship). Only `tauri.dev.conf.json` opts it in.
 - Building needs platform webview libraries (see `README.md`); it does not build
   in the Claude-on-the-web container — build, sign, and release locally or in CI.
 - `Cargo.lock` is committed; refresh it with `cargo generate-lockfile` (or a

@@ -36,11 +36,58 @@ Full design: [`docs/engineering/tauri-desktop-byo-keys-plan.md`](../docs/enginee
 ```bash
 cd desktop
 npm install
-npm run dev      # tauri dev — opens the native window
+npm run dev        # tauri dev — window loads the hosted app.getduct.ai
+npm run dev:local  # tauri dev against a local app + API (see below)
 ```
 
-To point at a local backend during development, change the window `url` in
-`src-tauri/tauri.conf.json` to your local app (e.g. `http://localhost:3003`).
+`dev:local` applies `src-tauri/tauri.local.conf.json`, which starts the Next dev
+server for you (`npm --prefix ../app run dev`, port 3003) and points the window
+at it. Start the API yourself first — with `NEXT_PUBLIC_API_BASE` unset, the web
+app falls back to `http://localhost:8002` outside production:
+
+```bash
+cd backend && poetry run uvicorn server:app --port 8002 --reload
+```
+
+From VS Code, the **`Duct: API + Desktop`** compound in `.vscode/launch.json`
+runs both in one go (uvicorn on 8002 + `dev:local`) and stops uvicorn on exit.
+
+Keychain `invoke` works from the dev server because `http://localhost:3003` is
+already listed under `remote.urls` in `src-tauri/capabilities/default.json`.
+
+### Testing Google sign-in locally
+
+Every leg of the desktop sign-in flow works against a local stack — the backend
+redirects to `{frontend_origin}/desktop-auth` (`routes/signin.py`), which
+defaults to `http://localhost:3003`, and that relay page fires the deep link.
+The one leg that needs more than `tauri dev` is the final browser → app hop:
+macOS registers `ai.getduct.desktop://` from a bundle's Info.plist, and
+`tauri dev` runs a bare binary out of `target/debug/`, not a `.app`.
+
+Build the **dev variant** instead. `src-tauri/tauri.dev.conf.json` gives it its
+own product name, bundle identifier (`ai.getduct.desktop.dev`), and deep-link
+scheme, so it coexists with an installed TestFlight build instead of fighting it
+for the same scheme:
+
+```bash
+npm run build:dev   # tauri build --debug --bundles app --config src-tauri/tauri.dev.conf.json
+open src-tauri/target/debug/bundle/macos/"Duct Dev.app"
+```
+
+Set the matching scheme in `app/.env.local` so the relay page hands the code to
+the dev shell rather than the production one:
+
+```
+NEXT_PUBLIC_SHELL_SCHEME=ai.getduct.desktop.dev
+```
+
+Deployed builds leave that unset and fall back to `ai.getduct.desktop`. The
+window URL still points at the dev server, so the web app keeps hot-reloading —
+only Rust changes need a rebuild.
+
+`--debug` keeps the compile fast while still producing a real `.app` (an
+Info.plist is what registers the scheme); `--bundles app` skips DMG packaging,
+which needs signing config that isn't set up locally.
 
 ## Build
 

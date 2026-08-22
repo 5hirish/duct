@@ -20,7 +20,17 @@
       "postDebugTask": "Backend: stop uvicorn (8002)"
     },
     {
-      "name": "Duct: API + Desktop",
+      "name": "Duct: Desktop + API",
+      "configurations": [
+        "Backend: FastAPI (uvicorn)",
+        "App: dev server",
+        "Desktop: Duct Dev app (build + open)"
+      ],
+      "stopAll": true,
+      "postDebugTask": "Backend: stop uvicorn (8002)"
+    },
+    {
+      "name": "Duct: Desktop (tauri dev — no sign-in) + API",
       "configurations": [
         "Backend: FastAPI (uvicorn)",
         "Desktop: Tauri dev (local app)"
@@ -92,6 +102,14 @@
       "type": "node-terminal",
       "request": "launch",
       "command": "npm run dev:local",
+      "cwd": "${workspaceFolder}/desktop"
+    },
+    {
+      "//": "Builds the dev-variant bundle (own identifier + ai.getduct.desktop.dev scheme, so it coexists with TestFlight), waits for the Next dev server, then opens it. Unlike `tauri dev` this is a registered .app, so the sign-in deep link works. Rebuild is incremental (~15s); web changes still hot-reload.",
+      "name": "Desktop: Duct Dev app (build + open)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run build:dev && until curl -sf http://localhost:3003 >/dev/null 2>&1; do sleep 1; done && open 'src-tauri/target/debug/bundle/macos/Duct Dev.app'",
       "cwd": "${workspaceFolder}/desktop"
     },
     {
