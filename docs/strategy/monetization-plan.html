@@ -1,0 +1,723 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Duct monetization and pricing strategy: value metric, four packaging options, tier ladder, unit economics, and phased rollout.">
+<title>Monetizing Duct</title>
+<style>
+  :root {
+    --bg: #f7f7f6;
+    --surface: #ffffff;
+    --surface-2: #fcfcfb;
+    --ink: #0D0F1A;
+    --ink-2: #2a2d3e;
+    --ink-3: #6b6f82;
+    --border: #ebebea;
+    --border-strong: #dcdcd8;
+    --accent: #FF5C00;
+    --accent-ink: #C43F00;
+    --accent-soft: rgba(255, 92, 0, .09);
+    --ok: #1F7A6B;
+    --ok-soft: rgba(31, 122, 107, .10);
+    --warn: #A16207;
+    --warn-soft: rgba(161, 98, 7, .10);
+    --serif: Georgia, "Times New Roman", Times, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --r: 12px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0D0F1A;
+      --surface: #14172a;
+      --surface-2: #191d33;
+      --ink: #f1f1ef;
+      --ink-2: #c6c8d4;
+      --ink-3: #8b8fa3;
+      --border: #262a42;
+      --border-strong: #343a58;
+      --accent: #FF7A2E;
+      --accent-ink: #FF9A5E;
+      --accent-soft: rgba(255, 122, 46, .13);
+      --ok: #4FBFA8;
+      --ok-soft: rgba(79, 191, 168, .13);
+      --warn: #D9A441;
+      --warn-soft: rgba(217, 164, 65, .13);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0D0F1A;
+    --surface: #14172a;
+    --surface-2: #191d33;
+    --ink: #f1f1ef;
+    --ink-2: #c6c8d4;
+    --ink-3: #8b8fa3;
+    --border: #262a42;
+    --border-strong: #343a58;
+    --accent: #FF7A2E;
+    --accent-ink: #FF9A5E;
+    --accent-soft: rgba(255, 122, 46, .13);
+    --ok: #4FBFA8;
+    --ok-soft: rgba(79, 191, 168, .13);
+    --warn: #D9A441;
+    --warn-soft: rgba(217, 164, 65, .13);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16.5px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 24px 120px;
+  }
+
+  /* ── conduit spine ───────────────────────────────── */
+  .spine {
+    position: relative;
+    padding-left: 44px;
+  }
+  .spine::before {
+    content: "";
+    position: absolute;
+    left: 5px;
+    top: 12px;
+    bottom: 0;
+    width: 1px;
+    background: linear-gradient(to bottom, var(--border-strong), var(--border-strong) 70%, transparent);
+  }
+  @media (max-width: 760px) {
+    .spine { padding-left: 0; }
+    .spine::before { display: none; }
+  }
+
+  section { margin-top: 76px; scroll-margin-top: 24px; }
+
+  h1, h2, h3 { font-family: var(--serif); font-weight: 400; text-wrap: balance; letter-spacing: -.3px; }
+
+  h2 {
+    font-size: clamp(27px, 3.4vw, 36px);
+    line-height: 1.15;
+    margin: 0 0 10px;
+    position: relative;
+  }
+  .spine > section > h2::before {
+    content: "";
+    position: absolute;
+    left: -44px;
+    top: .55em;
+    width: 11px;
+    height: 11px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+  @media (max-width: 760px) {
+    .spine > section > h2::before { display: none; }
+  }
+
+  h3 {
+    font-size: 20px;
+    line-height: 1.3;
+    margin: 34px 0 8px;
+  }
+
+  p, li { color: var(--ink-2); }
+  p { margin: 0 0 16px; max-width: 68ch; }
+  li { margin-bottom: 8px; max-width: 66ch; }
+  ul, ol { padding-left: 20px; margin: 0 0 18px; }
+
+  strong { color: var(--ink); font-weight: 600; }
+  em { color: var(--ink); font-style: italic; }
+
+  a { color: var(--accent-ink); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  code {
+    font-family: var(--mono);
+    font-size: .88em;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 1px 5px;
+    color: var(--ink);
+  }
+
+  a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 12px;
+    display: block;
+  }
+
+  .lede { font-size: 18.5px; color: var(--ink); max-width: 64ch; }
+
+  /* ── masthead ────────────────────────────────────── */
+  header.masthead {
+    padding: 84px 0 34px;
+    border-bottom: 1px solid var(--border-strong);
+    margin-bottom: 8px;
+  }
+  header.masthead h1 {
+    font-size: clamp(42px, 7vw, 68px);
+    line-height: 1.02;
+    margin: 0 0 20px;
+    letter-spacing: -1.4px;
+  }
+  .thesis {
+    font-family: var(--serif);
+    font-size: clamp(19px, 2.3vw, 23px);
+    line-height: 1.45;
+    color: var(--ink);
+    max-width: 30ch;
+    border-left: 3px solid var(--accent);
+    padding-left: 18px;
+    margin: 0 0 30px;
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 26px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .meta span b { color: var(--ink-2); font-weight: 600; }
+
+  /* ── tables ──────────────────────────────────────── */
+  .scroller {
+    overflow-x: auto;
+    margin: 22px 0 26px;
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    background: var(--surface);
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 640px;
+    font-size: 14.5px;
+    font-variant-numeric: tabular-nums;
+  }
+  th, td {
+    text-align: left;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    color: var(--ink-2);
+  }
+  thead th {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 600;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border-strong);
+    white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td:first-child { color: var(--ink); font-weight: 600; }
+  td.num { font-family: var(--mono); white-space: nowrap; color: var(--ink); }
+
+  .pill {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 100px;
+    white-space: nowrap;
+  }
+  .pill.yes { background: var(--ok-soft); color: var(--ok); }
+  .pill.no  { background: var(--warn-soft); color: var(--warn); }
+  .pill.mid { background: var(--border); color: var(--ink-3); }
+  .pill.pick { background: var(--accent-soft); color: var(--accent-ink); }
+
+  /* ── option cards ────────────────────────────────── */
+  .options { display: grid; gap: 16px; margin: 24px 0 8px; }
+  @media (min-width: 900px) { .options { grid-template-columns: 1fr 1fr; } }
+
+  .opt {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 22px 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .opt.chosen { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .opt h3 { margin: 6px 0 6px; font-size: 19px; }
+  .opt p { font-size: 15px; margin-bottom: 12px; }
+  .opt .tag {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 600;
+  }
+  .opt.chosen .tag { color: var(--accent); }
+  .weigh { display: grid; gap: 6px; margin-top: auto; padding-top: 8px; border-top: 1px solid var(--border); }
+  .weigh div { font-size: 14px; display: flex; gap: 9px; align-items: baseline; color: var(--ink-2); }
+  .weigh .k {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    min-width: 34px;
+    flex-shrink: 0;
+    padding-top: 2px;
+  }
+  .weigh .k.up { color: var(--ok); }
+  .weigh .k.dn { color: var(--warn); }
+
+  /* ── callout ─────────────────────────────────────── */
+  .callout {
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    padding: 18px 22px;
+    border-radius: 0 var(--r) var(--r) 0;
+    margin: 26px 0;
+  }
+  .callout p { margin: 0; color: var(--ink); max-width: 66ch; }
+  .callout p + p { margin-top: 10px; }
+
+  .note {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 18px 22px;
+    margin: 24px 0;
+  }
+  .note p:last-child { margin-bottom: 0; }
+  .note .eyebrow { color: var(--ink-3); }
+
+  /* ── phases ──────────────────────────────────────── */
+  .phase {
+    display: grid;
+    grid-template-columns: 66px 1fr;
+    gap: 0 22px;
+    padding: 22px 0;
+    border-top: 1px solid var(--border);
+  }
+  .phase:last-of-type { border-bottom: 1px solid var(--border); }
+  .phase .n {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    color: var(--accent);
+    padding-top: 5px;
+  }
+  .phase h3 { margin: 0 0 6px; font-size: 19px; }
+  .phase p { font-size: 15.5px; margin-bottom: 10px; }
+  .phase ul { margin-bottom: 0; font-size: 15px; }
+  @media (max-width: 620px) {
+    .phase { grid-template-columns: 1fr; gap: 6px; }
+    .phase .n { padding-top: 0; }
+  }
+
+  .kpi {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--ink-3);
+    letter-spacing: .02em;
+  }
+  .kpi b { color: var(--accent-ink); font-weight: 600; }
+
+  footer {
+    margin-top: 88px;
+    padding-top: 26px;
+    border-top: 1px solid var(--border-strong);
+    font-size: 14px;
+    color: var(--ink-3);
+    max-width: 68ch;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <span class="eyebrow">Duct · Revenue Strategy · Draft v0.1</span>
+    <h1>Monetizing Duct</h1>
+    <p class="thesis">Price the work Duct does, not the data it shows.</p>
+    <div class="meta">
+      <span><b>20 Aug 2026</b></span>
+      <span>Status <b>pre-revenue, free beta</b></span>
+      <span>Billing code today <b>none</b></span>
+      <span>Public promise <b>grandfathered beta pricing</b></span>
+    </div>
+  </header>
+
+  <div class="note" style="margin-top:26px;">
+    <span class="eyebrow">Superseded in part — Aug 2026</span>
+    <p>The credit-metered tier ladder in section 04 below is <strong>superseded</strong> by <a href="the-10x-question.html">the-10x-question.html</a>, which replaces it with flat, dollar-denominated pricing. Metered credits hedge against rising input costs; input costs are falling roughly 90% a year, so the hedge runs the wrong way.</p>
+    <p>Everything else here still stands — the value-metric analysis, the revenue lines beyond subscription, the funnel mechanics, the build list, and the sequencing. Read the 10x doc first for the strategic frame, then this one for the tactics.</p>
+  </div>
+
+  <div class="spine">
+
+    <section>
+      <span class="eyebrow">01 · The read</span>
+      <h2>You built something more expensive than your pricing docs assume</h2>
+      <p class="lede">The strategy docs price Duct as a <em>weekly brief</em> — $299 Growth, $499 Pro, benchmarked against SEO dashboards. What actually shipped is an operator: it audits, plans, writes, generates images and video, publishes, and is growing the ability to apply changes in Google Ads and GA4 behind approval gates.</p>
+      <p>Those are two different businesses with two different comparison sets, and the comparison set is what sets the ceiling:</p>
+      <div class="scroller">
+        <table>
+          <thead>
+            <tr><th>What you sell</th><th>Buyer compares against</th><th>Their anchor</th><th>Ceiling</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Insight — briefs, audits, dashboards</td><td>Semrush, Ahrefs, Similarweb, "I'll just ask Claude"</td><td class="num">$99 – $249/mo</td><td><span class="pill no">Compressing</span></td></tr>
+            <tr><td>Work — plans, content, publishing, applied fixes</td><td>Freelancer, content marketer, agency retainer</td><td class="num">$2,000 – $8,000/mo</td><td><span class="pill yes">Expanding</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>The insight half is being commoditized in real time — every frontier model does competent SEO analysis now, and the platforms are shipping their own copilots. The work half is not, because it needs the boring compounding assets you already have: OAuth into GSC/GA4/Ads, a memory of the account, a publishing path, and an approval-gated change model.</p>
+      <div class="callout">
+        <p><strong>The single highest-leverage decision:</strong> position Duct against labour, not against tools. Every packaging choice below follows from that. At $299 you are a cheaper Semrush; at $799–$2,500 you are a cheaper marketer — and the second is both easier to justify and less crowded.</p>
+      </div>
+    </section>
+
+    <section>
+      <span class="eyebrow">02 · Value metric</span>
+      <h2>Choose what the meter measures before you choose the number</h2>
+      <p>Price level is easy to change later. The value metric is nearly impossible to change once customers are on it, so it's the decision worth spending real thought on. Six candidates, judged against Duct's actual shape — agentic, low-headcount, unbounded marginal cost:</p>
+      <div class="scroller">
+        <table>
+          <thead>
+            <tr><th>Metric</th><th>Tracks value</th><th>Expands</th><th>Margin-safe</th><th>Legible to buyer</th><th>Verdict</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Seats</td>
+              <td><span class="pill no">Weak</span></td><td><span class="pill no">Weak</span></td><td><span class="pill no">No</span></td><td><span class="pill yes">High</span></td>
+              <td>Reject — an agent does the work, so a 3-person team buys the same value as a 30-person one, and per-seat taxes collaboration</td>
+            </tr>
+            <tr>
+              <td>Connected sources</td>
+              <td><span class="pill no">Weak</span></td><td><span class="pill mid">Some</span></td><td><span class="pill no">No</span></td><td><span class="pill mid">Medium</span></td>
+              <td>Reject — punishes the integration depth that is your moat</td>
+            </tr>
+            <tr>
+              <td>Projects — site, brand, or client</td>
+              <td><span class="pill yes">Strong</span></td><td><span class="pill yes">Strong</span></td><td><span class="pill mid">Partial</span></td><td><span class="pill yes">High</span></td>
+              <td><span class="pill pick">Primary axis</span> already the account structure in your schema; the natural agency multiplier</td>
+            </tr>
+            <tr>
+              <td>Work credits — completed agent runs</td>
+              <td><span class="pill yes">Strong</span></td><td><span class="pill yes">Strong</span></td><td><span class="pill yes">Yes</span></td><td><span class="pill mid">Medium</span></td>
+              <td><span class="pill pick">Secondary axis</span> the only thing that makes video and long agent sessions safe to sell</td>
+            </tr>
+            <tr>
+              <td>Published outputs — posts, reports</td>
+              <td><span class="pill yes">Strong</span></td><td><span class="pill yes">Strong</span></td><td><span class="pill mid">Partial</span></td><td><span class="pill yes">High</span></td>
+              <td>Use as the <em>human-readable label</em> on credits — sell "40 posts", meter credits underneath</td>
+            </tr>
+            <tr>
+              <td>% of managed ad spend</td>
+              <td><span class="pill yes">Strong</span></td><td><span class="pill yes">Strong</span></td><td><span class="pill yes">Yes</span></td><td><span class="pill mid">Medium</span></td>
+              <td>Hold for phase 3 — needs the execution framework live and audited first</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>Recommendation:</strong> <em>projects × included work credits</em>, with credits always surfaced to the customer in the unit they think in ("28 posts and 4 audits left this month"), never as raw tokens. Tokens are your problem, not theirs.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow">03 · Options</span>
+      <h2>Four packaging architectures</h2>
+      <p>These are genuine alternatives, not a ladder — A and C are defensible choices if you weight the tradeoffs differently than I do.</p>
+
+      <div class="options">
+        <div class="opt">
+          <span class="tag">Option A</span>
+          <h3>Classic tiered SaaS</h3>
+          <p>Three flat tiers, feature-gated, unlimited usage. $99 / $299 / $699. What the current docs implicitly assume.</p>
+          <div class="weigh">
+            <div><span class="k up">For</span><span>Fastest to ship, zero metering infra, easiest to sell and to quote</span></div>
+            <div><span class="k dn">Against</span><span>Unbounded COGS — one agency running 40 audits a day erases the margin on ten customers</span></div>
+            <div><span class="k dn">Against</span><span>You can never include video or long agent sessions at any price</span></div>
+            <div><span class="k">Fit</span><span>Only viable with hard project caps and generation excluded entirely</span></div>
+          </div>
+        </div>
+
+        <div class="opt chosen">
+          <span class="tag">Option B · recommended</span>
+          <h3>Platform fee + work credits</h3>
+          <p>Base subscription per workspace with included credits; extra projects and credit packs are the expansion path. Weight credits by real cost — a video post costs what a video post costs.</p>
+          <div class="weigh">
+            <div><span class="k up">For</span><span>Margin-safe by construction; expansion revenue without a re-sell</span></div>
+            <div><span class="k up">For</span><span>Lets you ship expensive features (video, deep audits) instead of refusing them</span></div>
+            <div><span class="k dn">Against</span><span>Credit anxiety suppresses the very usage that drives retention</span></div>
+            <div><span class="k dn">Against</span><span>Needs a usage ledger and entitlement layer you have not built</span></div>
+          </div>
+        </div>
+
+        <div class="opt">
+          <span class="tag">Option C</span>
+          <h3>Outcome / spend-linked</h3>
+          <p>10–12% of managed ad spend, or a fee per applied change set. Priced the way agencies already price themselves.</p>
+          <div class="weigh">
+            <div><span class="k up">For</span><span>Highest ceiling by far — $2k–$5k ACV without argument, because it's the budget line they already have</span></div>
+            <div><span class="k up">For</span><span>Perfectly aligned incentives; almost impossible to churn while it works</span></div>
+            <div><span class="k dn">Against</span><span>Needs attribution you can defend and a track record you don't have yet</span></div>
+            <div><span class="k dn">Against</span><span>Long sales cycle, and revenue drops when their budget does</span></div>
+          </div>
+        </div>
+
+        <div class="opt">
+          <span class="tag">Option D · complement</span>
+          <h3>BYO keys / local shell</h3>
+          <p>The desktop app with keychain-stored provider keys is already built. Sell it as a deliberately cheap tier where the customer pays their own model bill and you charge only for the platform.</p>
+          <div class="weigh">
+            <div><span class="k up">For</span><span>Near-zero COGS; opens a prosumer and consultant segment below your enterprise price floor</span></div>
+            <div><span class="k up">For</span><span>Answers the security objection outright — data and keys never leave their machine</span></div>
+            <div><span class="k dn">Against</span><span>Cannibalisation if priced too close to Growth; weaker usage telemetry</span></div>
+            <div><span class="k">Fit</span><span>Runs alongside B, not instead of it</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <p><strong>Pick B now, add D immediately, graduate to C for the Ads mode in 2027.</strong> B is the only architecture where your gross margin survives an enthusiastic customer, and it is the shape every comparable AI product has converged on for exactly that reason.</p>
+      </div>
+    </section>
+
+    <section>
+      <span class="eyebrow">04 · The ladder</span>
+      <h2>A concrete tier structure</h2>
+      <p><em>Superseded — see <a href="the-10x-question.html">the-10x-question.html</a> section 08 for the current three-line model.</em> Retained because the reasoning about anchors and weights is still useful. Numbers to argue with, not to adopt. The $299 Growth anchor is kept because the CAC ceiling in <a href="../gtm/paid-growth-plan.md">the paid growth plan</a> is already built on it — everything else moves around it.</p>
+      <div class="scroller">
+        <table>
+          <thead>
+            <tr><th>Plan</th><th>Price</th><th>Projects / seats</th><th>What's included</th><th>Who buys it</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Free tools</td><td class="num">$0</td><td>—</td>
+              <td>Public auditors, 1 SEO audit per month, email gate, no connectors</td>
+              <td>Lead capture — this is a funnel, not a plan</td>
+            </tr>
+            <tr>
+              <td>Solo <span class="pill mid">BYOK</span></td><td class="num">$29/mo<br>$290/yr</td><td>1 / 1</td>
+              <td>Desktop shell, own Anthropic key, unlimited audits and briefs, no hosted generation</td>
+              <td>Indie founders, solo SEO consultants</td>
+            </tr>
+            <tr>
+              <td>Growth</td><td class="num">$299/mo</td><td>2 / 3</td>
+              <td>All intelligence modes, unlimited audits, weekly briefs, content planner, <b>40 credits</b></td>
+              <td>In-house growth or content lead at a 20–200 person SaaS</td>
+            </tr>
+            <tr>
+              <td>Scale</td><td class="num">$799/mo</td><td>5 / 10</td>
+              <td>Everything in Growth, plus video, approval-gated Ads &amp; GA4 execution, API/MCP access, priority models, <b>150 credits</b></td>
+              <td>Funded SaaS with paid spend; boutique agency</td>
+            </tr>
+            <tr>
+              <td>Agency</td><td class="num">from<br>$1,500/mo</td><td>15 clients<br>+$89 each</td>
+              <td>White-label reports, per-client workspaces, cross-client rollups, SSO, shared credit pool</td>
+              <td>The highest-ACV segment and the one that expands on its own</td>
+            </tr>
+            <tr>
+              <td>Overage</td><td class="num">$0.90 / credit</td><td>—</td>
+              <td>Auto-topup packs at a discount; soft cap with a warning, never a hard stop mid-run</td>
+              <td>Everyone, eventually — this is the expansion engine</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Credit weights</h3>
+      <p>Weight by real cost so the expensive things pay for themselves. Publish this table — opaque credits are what customers hate, not credits themselves.</p>
+      <div class="scroller">
+        <table>
+          <thead><tr><th>Job</th><th>Credits</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td>SEO / AIO audit</td><td class="num">1</td><td>Bounded crawl, one synthesis pass, heavily cacheable</td></tr>
+            <tr><td>Weekly intelligence brief</td><td class="num">2</td><td>Multi-source pull, longer context</td></tr>
+            <tr><td>Content plan (7-day)</td><td class="num">3</td><td>Long agent session with research tool calls</td></tr>
+            <tr><td>Image post — drafted &amp; published</td><td class="num">2</td><td>Agent turn plus image generation</td></tr>
+            <tr><td>Video post</td><td class="num">15</td><td>The real COGS bomb — third-party generation, polling, retries</td></tr>
+            <tr><td>Applied change set (Ads / GA4)</td><td class="num">5</td><td>High value, low volume; priced on worth, not cost</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="kpi">Annual: <b>2 months free</b> (~17%) · Setup: <b>$1,500 done-with-you onboarding</b> on Scale and Agency, waived on annual — it funds CAC and it is the single best retention intervention available to you.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow">05 · Beyond subscription</span>
+      <h2>Six revenue lines that don't need a pricing page</h2>
+      <p>Several of these are shippable in days because the machinery already exists, and each one is also a willingness-to-pay probe you can run while the beta stays free.</p>
+
+      <h3>1 · Paid deep audit — $149, one-off</h3>
+      <p>Your <a href="../../backend/routes/lead_magnet.py">lead-magnet audit</a> already runs anonymously with a Turnstile gate and a 24-hour cache. Add a paid tier of the same flow: full depth, competitor comparison, a prioritised fix list, and a 30-day re-check. No login required, credit the $149 against the first subscription month. This is cash this quarter, and more importantly it tells you what a stranger will actually pay before you name a subscription price.</p>
+
+      <h3>2 · White-label audit widget — $99–$299/mo</h3>
+      <p>Agencies want a branded lead magnet on their own site. Sell them the embed. You get distribution into their audience, they get leads, and every report carries a "powered by Duct" line. Near-zero incremental build.</p>
+
+      <h3>3 · Duct as an MCP server / API — metered</h3>
+      <p>You already ship MCP servers. Expose audit and insights as callable tools priced per call. In 2026 the buyer is increasingly another agent, and being the tool that other people's agents reach for is a distribution channel with no CAC.</p>
+
+      <h3>4 · Implementation and migration — $1,500–$2,500</h3>
+      <p>One-time, hand-sold, unglamorous, high margin. Also the mechanism by which you learn what the product should do next.</p>
+
+      <h3>5 · Benchmarks — add-on or content moat</h3>
+      <p>Opt-in, anonymised, aggregated: "your organic CTR versus 400 comparable B2B SaaS sites." Nobody else in your position can produce this, it compounds with every customer, and it makes excellent free content even if you never charge for it. Requires explicit consent and a real aggregation threshold — treat that as a hard constraint, not a checkbox.</p>
+
+      <h3>6 · Referral revenue — small but free</h3>
+      <p>PostBridge, generation providers, hosting. Not a strategy, but it is a few hundred a month for an afternoon of work.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow">06 · Margin</span>
+      <h2>The unit economics work you have to do first</h2>
+      <p>You cannot price an agentic product without knowing what a job costs, and right now nothing in the backend records that. This is the gating work.</p>
+      <ul>
+        <li><strong>Instrument cost per completed job, by type.</strong> One ledger row per finished agent run: job type, input/output/cache tokens, third-party spend, wall time. Everything below depends on this table existing.</li>
+        <li><strong>Price against p90 usage, not p50.</strong> Median users never break your margin; the top decile does. Model the tier against the heavy user and let the median be pleasantly profitable.</li>
+        <li><strong>Bank the prompt-caching win explicitly.</strong> Caching is already working on the custom system prompt — measure the cache-read ratio per job type and treat improving it as a margin project with a number attached, not a nice-to-have.</li>
+        <li><strong>Route models by step.</strong> Cheap extraction and classification to Haiku; synthesis and judgement to Opus. Then sell "priority models" as a Scale feature, which converts a cost decision into a pricing feature.</li>
+        <li><strong>Never bundle video below Scale.</strong> Third-party generation is the one cost that can go non-linear on you. Always metered, always weighted.</li>
+        <li><strong>Offer BYOK at every tier as a discount</strong>, not only on desktop. It converts your worst-margin customers into your best ones and defuses the security objection at the same time.</li>
+        <li><strong>Degrade, don't fail.</strong> At the soft cap: warn at 80%, queue, or drop to a cheaper model. A run that dies halfway because credits ran out is a churn event, and it will be the thing they remember.</li>
+      </ul>
+      <p class="kpi">Target: <b>≥75% gross margin at p90 usage</b> per tier. If a tier can't clear that, the credits are underweighted, not the price.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow">07 · Conversion</span>
+      <h2>Turning the free funnel you already have into revenue</h2>
+      <p>The lead-magnet audit and the planned <a href="../gtm/free-tools-plan.md">free-tool roster</a> are the top of this funnel. Two changes make them monetising rather than merely list-building:</p>
+      <ul>
+        <li><strong>Move the paywall from the diagnosis to the fix.</strong> Show every problem free — the score, the broken pages, the ranking losses. Gate <em>doing something about it</em>. This is the upsell shape your own execution test already validated, and it is the honest one: the diagnosis is a commodity, the fix is the product.</li>
+        <li><strong>Gate on export and share, not on results.</strong> The moment someone wants to send the report to their boss is the moment they'll trade an account for it, and it selects for the buyer rather than the browser.</li>
+        <li><strong>Every free tool needs one specific upgrade line</strong> — "connect Search Console and Duct watches this every week" — not a generic Start Free Trial.</li>
+      </ul>
+      <p class="kpi">Benchmarks to hold yourself to: free audit → account <b>12–18%</b> · account → paid <b>4–8%</b> · paid deep audit → subscription <b>25%+</b></p>
+      <div class="note">
+        <span class="eyebrow">One obligation to honour</span>
+        <p>The <a href="../design/landing-page-faqs.md">landing page FAQs</a> promise, in writing, that beta is free with no card and that early users get grandfathered pricing. Keep that promise exactly — and use it. Announce a beta end date, grandfather the cohort at 50% for 12 months, and you convert an open-ended liability into the most credible urgency you will ever have.</p>
+      </div>
+    </section>
+
+    <section>
+      <span class="eyebrow">08 · Build</span>
+      <h2>What has to exist before you can charge anything</h2>
+      <p>There is currently no Stripe, no plan model, no quota, no entitlement check anywhere in the backend or app. Roughly two focused weeks:</p>
+      <ul>
+        <li><strong>Data model</strong> — <code>plans</code>, <code>subscriptions</code>, <code>entitlements</code>, <code>usage_ledger</code>, hung off the existing project/membership tables</li>
+        <li><strong>Stripe Billing</strong> — checkout, customer portal, webhooks for lifecycle, tax handled by Stripe Tax</li>
+        <li><strong>Entitlement middleware</strong> — one FastAPI dependency (<code>require_entitlement("content.video")</code>) and a matching client-side gate, so features are gated in one place rather than scattered</li>
+        <li><strong>Metering</strong> — a ledger write on every completed agent job, with the credit weight and the true cost side by side</li>
+        <li><strong>Internal cost dashboard</strong> — margin per account per month; this is the instrument you'll steer pricing with for the next two years</li>
+        <li><strong>Customer-facing usage view</strong> — in human units, with a soft-cap warning at 80%</li>
+      </ul>
+      <p>The <a href="../../backend/models/membership.py">membership table</a> already carries <code>owner</code> and <code>collaborator</code>. Agency plans will need a third role — a client-facing <code>viewer</code> who can read reports but not spend credits. Cheaper to add now than to retrofit.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow">09 · Sequence</span>
+      <h2>How to get there without guessing</h2>
+
+      <div class="phase">
+        <span class="n">NOW<br>30 days</span>
+        <div>
+          <h3>Instrument, and probe price without a pricing page</h3>
+          <p>Do not publish tiers yet. You do not know your costs or your usage distribution, and both determine the answer.</p>
+          <ul>
+            <li>Ship the usage ledger and the internal cost dashboard</li>
+            <li>Ship the <strong>$149 paid deep audit</strong> — real revenue, and a clean read on stranger willingness-to-pay</li>
+            <li>Set and announce the beta end date</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="phase">
+        <span class="n">30–90<br>days</span>
+        <div>
+          <h3>Hand-sell annual pilots</h3>
+          <p>Eight to twelve customers at $500–$1,500/mo on annual contracts, negotiated individually. Founder-sold, no self-serve.</p>
+          <ul>
+            <li>Every deal is a price experiment — record what they pushed back on and what they didn't blink at</li>
+            <li>Bundle the $1,500 onboarding; watch whether they pay it without argument, which tells you where your real price floor is</li>
+            <li>Deliberately sell two agencies — they will pull the roadmap toward the highest-ACV segment</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="phase">
+        <span class="n">90–180<br>days</span>
+        <div>
+          <h3>Publish and go self-serve</h3>
+          <ul>
+            <li>Growth / Scale / Agency live with Stripe self-serve and credits</li>
+            <li>Solo BYOK tier ships with the desktop app</li>
+            <li>Grandfather the beta cohort at the promised rate, publicly</li>
+            <li>Free-tool roster live, each with its own upgrade path</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="phase">
+        <span class="n">180+<br>days</span>
+        <div>
+          <h3>Move up the value chain</h3>
+          <ul>
+            <li>Spend-linked pricing for the Ads mode once execution has an auditable track record</li>
+            <li>MCP/API metering and the white-label widget</li>
+            <li>Benchmarks, once the sample is large enough to be worth something</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <span class="eyebrow">10 · Risk</span>
+      <h2>What would make this wrong</h2>
+      <ul>
+        <li><strong>The insight half commoditizes faster than the work half matures.</strong> The most likely failure mode. Mitigation is to accelerate execution and account memory — the parts a general model cannot replicate because they need your OAuth, your history, and your approval gates.</li>
+        <li><strong>Credit anxiety flattens usage.</strong> Real and well documented. Mitigate with generous inclusions, human-unit display, auto-topup, and graceful degradation — never a hard stop mid-run.</li>
+        <li><strong>$299 turns out to be above the self-serve line and below the sales-assisted line.</strong> This is the classic dead zone. The pilot phase exists to find out; if it's real, split into $99 self-serve and $999 sales-assisted and abandon the middle.</li>
+        <li><strong>Platform terms constrain automated changes.</strong> Google Ads and GA4 automation has rules. The approval-gated design already handles this — keep the human in the loop as a product principle, not just a safety feature, and it becomes a selling point.</li>
+        <li><strong>Agency demand doesn't materialise.</strong> If the two pilot agencies churn, the ACV ceiling drops and the whole ladder should compress downward toward a $99–$299 self-serve product with much tighter COGS.</li>
+      </ul>
+    </section>
+
+  </div>
+
+  <footer>
+    Grounded in the current repo: modes and connectors in the backend, the anonymous audit lead magnet, project/membership roles, the Tauri desktop shell with keychain-stored provider keys, and the $299/$499 CAC assumptions in the paid growth plan. No billing, plan, quota, or Stripe code exists yet — every number here is a starting position for argument, not a decision.
+  </footer>
+
+</div>
+</body>
+</html>

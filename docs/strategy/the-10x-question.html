@@ -1,0 +1,793 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Duct defensibility and pricing thesis: the competitive squeeze between Claude Cowork and open-source SEO agents, which moats survive model commoditization, whether open-source giveaways actually pay, how the accountable tier gets staffed, and the flat pricing that follows.">
+<title>The 10x Question</title>
+<style>
+  :root {
+    --bg: #f7f7f6;
+    --surface: #ffffff;
+    --surface-2: #fcfcfb;
+    --ink: #0D0F1A;
+    --ink-2: #2a2d3e;
+    --ink-3: #6b6f82;
+    --border: #ebebea;
+    --border-strong: #dcdcd8;
+    --accent: #FF5C00;
+    --accent-ink: #C43F00;
+    --accent-soft: rgba(255, 92, 0, .09);
+    --ok: #1F7A6B;
+    --ok-soft: rgba(31, 122, 107, .10);
+    --warn: #A16207;
+    --warn-soft: rgba(161, 98, 7, .10);
+    --dead: #8a2f2f;
+    --dead-soft: rgba(138, 47, 47, .09);
+    --serif: Georgia, "Times New Roman", Times, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --r: 12px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0D0F1A;
+      --surface: #14172a;
+      --surface-2: #191d33;
+      --ink: #f1f1ef;
+      --ink-2: #c6c8d4;
+      --ink-3: #8b8fa3;
+      --border: #262a42;
+      --border-strong: #343a58;
+      --accent: #FF7A2E;
+      --accent-ink: #FF9A5E;
+      --accent-soft: rgba(255, 122, 46, .13);
+      --ok: #4FBFA8;
+      --ok-soft: rgba(79, 191, 168, .13);
+      --warn: #D9A441;
+      --warn-soft: rgba(217, 164, 65, .13);
+      --dead: #E07A7A;
+      --dead-soft: rgba(224, 122, 122, .12);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0D0F1A;
+    --surface: #14172a;
+    --surface-2: #191d33;
+    --ink: #f1f1ef;
+    --ink-2: #c6c8d4;
+    --ink-3: #8b8fa3;
+    --border: #262a42;
+    --border-strong: #343a58;
+    --accent: #FF7A2E;
+    --accent-ink: #FF9A5E;
+    --accent-soft: rgba(255, 122, 46, .13);
+    --ok: #4FBFA8;
+    --ok-soft: rgba(79, 191, 168, .13);
+    --warn: #D9A441;
+    --warn-soft: rgba(217, 164, 65, .13);
+    --dead: #E07A7A;
+    --dead-soft: rgba(224, 122, 122, .12);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16.5px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 0 24px 120px; }
+
+  .spine { position: relative; padding-left: 44px; }
+  .spine::before {
+    content: "";
+    position: absolute; left: 5px; top: 12px; bottom: 0;
+    width: 1px;
+    background: linear-gradient(to bottom, var(--border-strong), var(--border-strong) 70%, transparent);
+  }
+  @media (max-width: 760px) {
+    .spine { padding-left: 0; }
+    .spine::before { display: none; }
+  }
+
+  section { margin-top: 76px; scroll-margin-top: 24px; }
+
+  h1, h2, h3 { font-family: var(--serif); font-weight: 400; text-wrap: balance; letter-spacing: -.3px; }
+
+  h2 { font-size: clamp(27px, 3.4vw, 36px); line-height: 1.15; margin: 0 0 10px; position: relative; }
+  .spine > section > h2::before {
+    content: "";
+    position: absolute; left: -44px; top: .55em;
+    width: 11px; height: 11px;
+    background: var(--accent); border-radius: 2px;
+  }
+  @media (max-width: 760px) { .spine > section > h2::before { display: none; } }
+
+  h3 { font-size: 20px; line-height: 1.3; margin: 34px 0 8px; }
+
+  p, li { color: var(--ink-2); }
+  p { margin: 0 0 16px; max-width: 68ch; }
+  li { margin-bottom: 8px; max-width: 66ch; }
+  ul, ol { padding-left: 20px; margin: 0 0 18px; }
+
+  strong { color: var(--ink); font-weight: 600; }
+  em { color: var(--ink); font-style: italic; }
+
+  code {
+    font-family: var(--mono); font-size: .88em;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 5px; padding: 1px 5px; color: var(--ink);
+  }
+
+  a { color: var(--accent-ink); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+
+  .eyebrow {
+    font-family: var(--mono); font-size: 11px; font-weight: 600;
+    letter-spacing: .14em; text-transform: uppercase;
+    color: var(--accent); margin: 0 0 12px; display: block;
+  }
+
+  .lede { font-size: 18.5px; color: var(--ink); max-width: 64ch; }
+
+  header.masthead {
+    padding: 84px 0 34px;
+    border-bottom: 1px solid var(--border-strong);
+    margin-bottom: 8px;
+  }
+  header.masthead h1 {
+    font-size: clamp(42px, 7vw, 68px); line-height: 1.02;
+    margin: 0 0 20px; letter-spacing: -1.4px;
+  }
+  .thesis {
+    font-family: var(--serif); font-size: clamp(19px, 2.3vw, 23px);
+    line-height: 1.45; color: var(--ink); max-width: 34ch;
+    border-left: 3px solid var(--accent); padding-left: 18px; margin: 0 0 30px;
+  }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 8px 26px;
+    font-family: var(--mono); font-size: 11.5px;
+    letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3);
+  }
+  .meta span b { color: var(--ink-2); font-weight: 600; }
+
+  .scroller {
+    overflow-x: auto; margin: 22px 0 26px;
+    border: 1px solid var(--border); border-radius: var(--r); background: var(--surface);
+  }
+  table {
+    border-collapse: collapse; width: 100%; min-width: 640px;
+    font-size: 14.5px; font-variant-numeric: tabular-nums;
+  }
+  th, td {
+    text-align: left; padding: 12px 16px;
+    border-bottom: 1px solid var(--border); vertical-align: top; color: var(--ink-2);
+  }
+  thead th {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--ink-3); font-weight: 600;
+    background: var(--surface-2); border-bottom: 1px solid var(--border-strong); white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td:first-child { color: var(--ink); font-weight: 600; }
+  td.num { font-family: var(--mono); white-space: nowrap; color: var(--ink); }
+
+  .pill {
+    display: inline-block; font-family: var(--mono); font-size: 10.5px;
+    letter-spacing: .06em; text-transform: uppercase; font-weight: 600;
+    padding: 3px 8px; border-radius: 100px; white-space: nowrap;
+  }
+  .pill.yes  { background: var(--ok-soft);   color: var(--ok); }
+  .pill.no   { background: var(--dead-soft); color: var(--dead); }
+  .pill.mid  { background: var(--warn-soft); color: var(--warn); }
+  .pill.pick { background: var(--accent-soft); color: var(--accent-ink); }
+
+  .callout {
+    background: var(--accent-soft); border-left: 3px solid var(--accent);
+    padding: 18px 22px; border-radius: 0 var(--r) var(--r) 0; margin: 26px 0;
+  }
+  .callout p { margin: 0; color: var(--ink); max-width: 66ch; }
+  .callout p + p { margin-top: 10px; }
+
+  .hard {
+    background: var(--dead-soft); border-left: 3px solid var(--dead);
+    padding: 18px 22px; border-radius: 0 var(--r) var(--r) 0; margin: 26px 0;
+  }
+  .hard p { margin: 0; color: var(--ink); max-width: 66ch; }
+  .hard p + p { margin-top: 10px; }
+  .hard .eyebrow { color: var(--dead); }
+
+  .note {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 18px 22px; margin: 24px 0;
+  }
+  .note p:last-child { margin-bottom: 0; }
+  .note .eyebrow { color: var(--ink-3); }
+
+  /* ── price number line ───────────────────────────── */
+  .lineWrap { overflow-x: auto; margin: 30px 0 10px; }
+  .line { min-width: 700px; padding: 0 0 8px; }
+  .lineBar {
+    position: relative; height: 3px; background: var(--border-strong);
+    margin: 74px 8px 0; border-radius: 2px;
+  }
+  .zone {
+    position: absolute; top: -30px; height: 30px;
+    border-radius: 4px 4px 0 0; opacity: .9;
+  }
+  .zone span {
+    position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%);
+    font-family: var(--mono); font-size: 10px; font-weight: 600;
+    letter-spacing: .08em; text-transform: uppercase; white-space: nowrap;
+  }
+  .zone.dead { background: var(--dead-soft); }
+  .zone.dead span { color: var(--dead); }
+  .zone.good { background: var(--ok-soft); }
+  .zone.good span { color: var(--ok); }
+
+  .tick { position: absolute; top: -6px; transform: translateX(-50%); text-align: center; }
+  .tick i {
+    display: block; width: 2px; height: 15px; background: var(--ink-3);
+    margin: 0 auto; border-radius: 1px;
+  }
+  .tick b {
+    display: block; font-family: var(--mono); font-size: 12px; font-weight: 600;
+    color: var(--ink); margin-top: 8px; white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .tick em {
+    display: block; font-style: normal; font-size: 11.5px;
+    color: var(--ink-3); margin-top: 1px; white-space: nowrap; max-width: 15ch;
+  }
+  .tick.up { top: auto; bottom: -6px; }
+  .tick.up i { margin-bottom: 0; }
+  .tick.us i { background: var(--accent); width: 3px; height: 22px; }
+  .tick.us b { color: var(--accent-ink); }
+
+  /* ── squeeze ─────────────────────────────────────── */
+  .squeeze { display: grid; gap: 12px; margin: 26px 0 8px; }
+  .force {
+    display: grid; grid-template-columns: 132px 1fr; gap: 0 20px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 18px 22px;
+  }
+  .force .who {
+    font-family: var(--mono); font-size: 10.5px; font-weight: 600;
+    letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3);
+    padding-top: 4px;
+  }
+  .force.above { border-left: 3px solid var(--warn); }
+  .force.above .who { color: var(--warn); }
+  .force.below { border-left: 3px solid var(--dead); }
+  .force.below .who { color: var(--dead); }
+  .force.side  { border-left: 3px solid var(--ink-3); }
+  .force.tail  { border-left: 3px solid var(--ok); }
+  .force.tail .who { color: var(--ok); }
+  .force h3 { margin: 0 0 4px; font-size: 18px; }
+  .force p { font-size: 15px; margin: 0; }
+  @media (max-width: 620px) {
+    .force { grid-template-columns: 1fr; gap: 6px; }
+    .force .who { padding-top: 0; }
+  }
+
+  /* ── tiers ───────────────────────────────────────── */
+  .tiers { display: grid; gap: 16px; margin: 26px 0 8px; }
+  @media (min-width: 860px) { .tiers { grid-template-columns: repeat(3, 1fr); } }
+  .tier {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 22px 22px 20px;
+    display: flex; flex-direction: column;
+  }
+  .tier.hero { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .tier .name {
+    font-family: var(--mono); font-size: 10.5px; font-weight: 600;
+    letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3);
+  }
+  .tier.hero .name { color: var(--accent); }
+  .tier .price {
+    font-family: var(--serif); font-size: 32px; color: var(--ink);
+    margin: 10px 0 2px; letter-spacing: -.5px; font-variant-numeric: tabular-nums;
+  }
+  .tier .per { font-family: var(--mono); font-size: 11px; color: var(--ink-3); letter-spacing: .05em; }
+  .tier p { font-size: 14.5px; margin: 14px 0 0; }
+  .tier ul { margin: 12px 0 0; padding-left: 18px; font-size: 14.5px; }
+  .tier li { margin-bottom: 5px; }
+  .tier .job {
+    margin-top: auto; padding-top: 14px; border-top: 1px solid var(--border);
+    font-size: 13.5px; color: var(--ink-3);
+  }
+  .tier .job b { color: var(--ink-2); font-weight: 600; }
+
+  .kpi { font-family: var(--mono); font-size: 13px; color: var(--ink-3); letter-spacing: .02em; }
+  .kpi b { color: var(--accent-ink); font-weight: 600; }
+
+  ol.kill { counter-reset: k; list-style: none; padding-left: 0; }
+  ol.kill li {
+    counter-increment: k; position: relative; padding-left: 38px; margin-bottom: 14px; max-width: 68ch;
+  }
+  ol.kill li::before {
+    content: counter(k); position: absolute; left: 0; top: 1px;
+    font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--accent);
+    border: 1px solid var(--border-strong); border-radius: 5px;
+    width: 24px; height: 24px; display: grid; place-items: center;
+  }
+
+  footer {
+    margin-top: 88px; padding-top: 26px; border-top: 1px solid var(--border-strong);
+    font-size: 14px; color: var(--ink-3); max-width: 72ch;
+  }
+  footer h3 { font-size: 16px; margin: 0 0 10px; color: var(--ink-2); }
+  footer ul { padding-left: 18px; }
+  footer li { font-size: 13.5px; color: var(--ink-3); margin-bottom: 5px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <span class="eyebrow">Duct · Defensibility &amp; Pricing · Draft v0.1</span>
+    <h1>The 10x Question</h1>
+    <p class="thesis">We are not going to win by being a better analyst. We win by being the only one accountable for the outcome.</p>
+    <div class="meta">
+      <span><b>20 Aug 2026</b></span>
+      <span>Supersedes the pricing model in <b>monetization-plan</b></span>
+      <span>Horizon <b>2026 – 2028</b></span>
+    </div>
+  </header>
+
+  <div class="spine">
+
+    <section>
+      <span class="eyebrow">01 · The honest scorecard</span>
+      <h2>Where the 1.5x comes from</h2>
+      <p class="lede">The instinct is right, and the number is about right. Duct today is Claude with SEO connectors and a better-looking report. Everything in that sentence is now available to a marketer for $20 a month without us.</p>
+      <p>Claude Cowork shipped in January 2026: a desktop agent with a connector marketplace, skills, and no terminal. Anthropic's <em>own marketing operations team</em> has published how they use it to automate reporting and build campaigns end-to-end. Klaviyo shipped an MCP server into it. Forbes covered the enterprise plugin push in February. That is our demo, running on someone else's distribution, bundled into a subscription the customer already pays for.</p>
+      <p>So the first thing to accept is that these are no longer differentiators, whatever the earlier docs claimed:</p>
+      <div class="scroller">
+        <table>
+          <thead>
+            <tr><th>What we thought was a moat</th><th>Status in Aug 2026</th><th>Why it fell</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Integration depth (OAuth into GSC, GA4, Ads)</td><td><span class="pill no">Gone</span></td><td>MCP commoditized it. Semrush, Ahrefs and Klaviyo all ship their own servers; connecting is a config file now</td></tr>
+            <tr><td>Output schema — "decision-ready briefs"</td><td><span class="pill no">Gone</span></td><td>Artifacts and skills do this natively, and the model got good enough that prompt-level formatting is not defensible</td></tr>
+            <tr><td>Vertical prompt layers per role</td><td><span class="pill no">Gone</span></td><td>A skill file. Anyone can write one; the good ones get copied within a week</td></tr>
+            <tr><td>Cross-tool synthesis</td><td><span class="pill mid">Weak</span></td><td>Was genuinely hard in 2025. Context windows and connectors closed most of it</td></tr>
+            <tr><td>Continuous unattended operation</td><td><span class="pill yes">Holds</span></td><td>Cowork runs when you open it. Nobody has made "it ran on Tuesday whether or not you showed up" a first-class product</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="hard">
+        <span class="eyebrow">Say it plainly</span>
+        <p>Three of the four moats named in the product plan are already gone. Not eroding — gone. Any strategy that depends on them is a strategy for a market that closed some time in the last nine months.</p>
+      </div>
+    </section>
+
+    <section>
+      <span class="eyebrow">02 · The squeeze</span>
+      <h2>We are priced into the worst position on the line</h2>
+      <p>Four forces, and they are not all pushing the same way. Two are compressing the price of what we currently sell; one is a genuine tailwind; one is where the money actually is.</p>
+
+      <div class="squeeze">
+        <div class="force above">
+          <span class="who">From above</span>
+          <div>
+            <h3>Anthropic and OpenAI, moving down into workflows</h3>
+            <p>Cowork, connectors, skills, scheduled runs. Their marginal cost of entering our vertical is one skill file. They will not build governance for someone else's ad account — but they will absolutely build the reporting and the drafting, and they already have.</p>
+          </div>
+        </div>
+        <div class="force below">
+          <span class="who">From below</span>
+          <div>
+            <h3>Open source, at a price we cannot match</h3>
+            <p>OpenSEO — MIT, 4,300+ stars, MCP server plus agent skills, BYO DataForSEO key, self-host free or <strong>$10/month hosted</strong>. It bills itself as the open-source Semrush alternative and it is credible. Our audit product has to be worth 30× that, and it is not.</p>
+          </div>
+        </div>
+        <div class="force side">
+          <span class="who">From the side</span>
+          <div>
+            <h3>Incumbents with real data moats</h3>
+            <p>Semrush and Ahrefs are not dying; they are becoming AI platforms with MCP servers on top of index data we cannot replicate. They own the data layer. Fighting them there is unwinnable and unnecessary.</p>
+          </div>
+        </div>
+        <div class="force tail">
+          <span class="who">Tailwind</span>
+          <div>
+            <h3>The cost of intelligence is collapsing</h3>
+            <p>Cost per unit of capability fell roughly 90–97% across 2025–26; Anthropic cut list prices 67% in a single announcement. DeepSeek V4-Flash runs about $0.14/$0.28 per million tokens — call it 10–30× under Western frontier models for work that does not need frontier reasoning. This is the one force pushing our way, <em>and only if we are model-agnostic.</em></p>
+          </div>
+        </div>
+      </div>
+
+      <h3>Where everyone sits</h3>
+      <p>The number line is the whole argument. Note where our $299 lands.</p>
+      <div class="lineWrap">
+        <div class="line">
+          <div class="lineBar">
+            <div class="zone dead" style="left: 4%; width: 46%;"><span>The crush zone</span></div>
+            <div class="zone good" style="left: 68%; width: 30%;"><span>Where the budget actually is</span></div>
+
+            <div class="tick" style="left: 4%;"><i></i><b>$0</b><em>OpenSEO self-host</em></div>
+            <div class="tick up" style="left: 16%;"><i></i><b>$10</b><em>OpenSEO hosted</em></div>
+            <div class="tick" style="left: 28%;"><i></i><b>$20</b><em>Claude Pro + Cowork</em></div>
+            <div class="tick up" style="left: 42%;"><i></i><b>$99–140</b><em>Surfer, Semrush</em></div>
+            <div class="tick" style="left: 54%;"><i></i><b>$200</b><em>Claude Max</em></div>
+            <div class="tick us up" style="left: 63%;"><i></i><b>$299</b><em>Duct today</em></div>
+            <div class="tick" style="left: 78%;"><i></i><b>$2–3k</b><em>Freelance SEO / content</em></div>
+            <div class="tick up" style="left: 93%;"><i></i><b>$6–8k</b><em>Agency retainer</em></div>
+          </div>
+        </div>
+      </div>
+      <p style="margin-top:34px;">At $299 we are asking someone to pay 30× OpenSEO and 1.5× Claude Max for a tool, in a category where they already own two things that mostly do the job. That is the hardest sale on the entire line — expensive enough to need approval, cheap enough to look like a tool, and adjacent to two free-ish substitutes. Meanwhile the $2,000–8,000 band is where the money has always been, and nothing there is being disrupted by a $20 subscription because <em>a subscription cannot be held responsible for anything.</em></p>
+    </section>
+
+    <section>
+      <span class="eyebrow">03 · What survives</span>
+      <h2>Four things a model vendor structurally will not do</h2>
+      <p>The useful question is not "what are we better at" — it is "what will Anthropic refuse to build, for reasons that are about their business model rather than their capability." Those are the only durable positions, because capability gaps close and incentive gaps do not.</p>
+
+      <div class="scroller">
+        <table>
+          <thead>
+            <tr><th>Position</th><th>Why the model vendors won't take it</th><th>Why OSS won't either</th><th>Durability</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Liability for changes to live revenue systems</td>
+              <td>They sell a tool and disclaim the outcome. Owning a customer's ad spend is a liability model they have actively avoided</td>
+              <td>An MIT repo cannot indemnify anyone</td>
+              <td><span class="pill yes">High</span></td>
+            </tr>
+            <tr>
+              <td>The intervention → outcome dataset</td>
+              <td>They see the conversation, never the 60-day traffic delta. They have no mechanism to observe whether the advice worked</td>
+              <td>Self-hosted installs are data islands; nothing aggregates</td>
+              <td><span class="pill yes">High &amp; compounding</span></td>
+            </tr>
+            <tr>
+              <td>Multi-tenant fan-out for service businesses</td>
+              <td>They build for the seat and the enterprise. An agency running 40 client accounts is not a seat, it is a different product</td>
+              <td>No one maintains white-label client billing for free</td>
+              <td><span class="pill yes">High</span></td>
+            </tr>
+            <tr>
+              <td>Model-agnostic routing</td>
+              <td>Anthropic will never route your job to DeepSeek. This is a conflict of interest, not a missing feature</td>
+              <td>OSS <em>does</em> do this — no advantage here, but no threat either</td>
+              <td><span class="pill yes">Structural</span></td>
+            </tr>
+            <tr>
+              <td>Better analysis, nicer reports, more connectors</td>
+              <td>They are actively building exactly this</td>
+              <td>Already shipped, free</td>
+              <td><span class="pill no">None</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout">
+        <p><strong>The compounding one is the outcome dataset.</strong> Every change Duct applies, with a timestamp, against a metric measured 30 and 90 days later, across every account — that is a corpus nobody else can assemble. Not Anthropic, who never sees the outcome. Not OpenSEO, whose installs are islands. Not even Semrush, who sees rankings but not <em>which deliberate intervention preceded them.</em></p>
+        <p>It converts into the one output a general model provably cannot produce: a calibrated prediction. "Sites like yours that made this fix gained 8–12% organic clicks in 90 days, n=340." That is not a better prompt. It is an empirical asset, and it is worth nothing at ten customers and a great deal at a thousand — which is exactly why starting now matters more than what we charge this quarter.</p>
+      </div>
+    </section>
+
+    <section>
+      <span class="eyebrow">04 · The 10x</span>
+      <h2>Change the unit of purchase, not the quality of the output</h2>
+      <p>There is no 10x available in better analysis. The model does the analysis, the model is a commodity, and it gets better for free every quarter whether we ship anything or not. Chasing quality is chasing a curve that other people are paying for.</p>
+      <p>The 10x is in what the customer thinks they are buying:</p>
+      <div class="scroller">
+        <table>
+          <thead><tr><th>Unit sold</th><th>Compared against</th><th>Our price</th><th>Their perceived multiple</th></tr></thead>
+          <tbody>
+            <tr><td>A tool you operate</td><td>OpenSEO $10, Claude $20</td><td class="num">$299</td><td><span class="pill no">0.3× — worse value</span></td></tr>
+            <tr><td>A workflow you configure</td><td>Cowork skills, free with a seat</td><td class="num">$299</td><td><span class="pill mid">1.5× — the current pitch</span></td></tr>
+            <tr><td><strong>A role you stop hiring for</strong></td><td>Freelancer $2–3k, agency $6–8k</td><td class="num">$1,500–2,500</td><td><span class="pill yes">3–5× — and budgeted</span></td></tr>
+            <tr><td><strong>An outcome you're accountable to</strong></td><td>The traffic or revenue line itself</td><td class="num">Outcome-linked</td><td><span class="pill yes">10×+ — if we can deliver</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Note that nothing in the product has to change for the first jump. The same system, sold as "your content and SEO operator, here is what it did in July and here is the traffic delta," is a different purchase from the same system sold as "an AI SEO tool, $299." One competes with a $10 repo. The other competes with a salary, and loses to nothing.</p>
+      <div class="hard">
+        <span class="eyebrow">The cost of this</span>
+        <p>Selling a role means being accountable when the role underperforms, which means QA, escalation paths, and a human who answers when it goes wrong. That is a services-shaped obligation inside a software company, and it is the reason most AI tool startups refuse it and stay in the crush zone. Taking it on is the whole bet.</p>
+      </div>
+    </section>
+
+    <section>
+      <span class="eyebrow">05 · Inversion</span>
+      <h2>Stop competing with Cowork. Be what Cowork calls.</h2>
+      <p>The reflex is to treat Anthropic as the competitor. The better read is that the marketer is <em>already sitting in Claude</em>, and that is a distribution channel we are currently ignoring in order to build a destination they have to be persuaded to visit.</p>
+      <p>Nobody wants to buy another AI tool. Everybody wants their existing assistant to be able to actually do the thing. So:</p>
+      <ul>
+        <li><strong>Ship Duct as an MCP server and a Cowork skill</strong>, not only as an app. The user stays in Claude; Claude calls Duct to execute, govern, and track. We become infrastructure inside their existing habit instead of a tab they forget.</li>
+        <li><strong>Let the model vendor own the conversation. We own the state.</strong> The account memory, the change log, the outcome history, the approvals — all the things a stateless chat session cannot hold and Anthropic has no reason to build for a third party's ad account.</li>
+        <li><strong>Open-source the client.</strong> The desktop shell, the skills, the connectors. This is the only credible answer to OpenSEO — you cannot be undercut by free if you are free — and it turns our distribution problem into a GitHub repo. Hermes is the usual cited precedent for this — but see section 06 before treating it as proven, because the evidence is thinner than the story, and this is a one-way door.</li>
+      </ul>
+      <div class="note">
+        <span class="eyebrow">Precedent worth copying carefully</span>
+        <p>Nous Research gives Hermes Agent away under MIT — desktop, CLI, persistent memory, subagents, scheduling, on every chat platform — and monetizes the Nous Portal: $20 Plus, $100 Super, $200 Ultra, each bundling slightly more usage credit than the price ($22 / $110 / $220) plus higher rate limits and 300+ models behind one bill. That is the <em>stated</em> model. Whether it is the business is a separate question — section 06.</p>
+      </div>
+    </section>
+
+    <section>
+      <span class="eyebrow">06 · Reality check</span>
+      <h2>Does the giveaway actually pay?</h2>
+      <p class="lede">Short answer: nobody has proved it in this category, and both examples leaned on in section 05 are weaker evidence than the story around them suggests. Worth knowing before walking through a one-way door.</p>
+
+      <div class="scroller">
+        <table>
+          <thead>
+            <tr><th>Project</th><th>Stated model</th><th>What actually funds it</th><th>Evidence</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Nous / Hermes</td>
+              <td>MIT agent given away, monetize the Portal subscription</td>
+              <td><strong>Venture capital.</strong> $145M raised, with a ~$75M round at a $1.5B valuation in talks as of July 2026, led by a crypto-native fund with USV participating. The Portal launched 27 April 2026 — four months old. The only public revenue figure is a third-party <em>estimate</em> of $4.7M at 65% confidence, modelled from comparables, not disclosed</td>
+              <td><span class="pill no">Weak</span></td>
+            </tr>
+            <tr>
+              <td>OpenSEO</td>
+              <td>MIT, self-host free, "$10/mo hosted"</td>
+              <td><strong>A 28% markup on resold DataForSEO calls.</strong> The $10 is usage credit, not an access fee — actions bill individually. It is a reseller margin on somebody else's data API. No disclosed revenue</td>
+              <td><span class="pill mid">Real but thin</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Nous can give Hermes away because the giveaway <em>is</em> the fundraising strategy: an MIT-licensed agent and an open model family are the reputation assets underwriting a $1.5B valuation. That is a financing model, not a business model, and it is not one we can copy without $145M and a token. Treat Hermes as evidence that giving the client away builds distribution — not as evidence that the hosted tier pays for the company.</p>
+
+      <div class="hard">
+        <span class="eyebrow">The irony worth noticing</span>
+        <p>Both precedents cited for "go flat" are in fact <strong>metered pass-through with a markup</strong>. Nous bundles tokens and tool calls at a margin; OpenSEO resells data calls at 28%. Neither runs a flat subscription.</p>
+        <p>But look at <em>why</em>: both are gateways, and for a gateway the metered thing <em>is</em> the product. You cannot sell access to tokens without counting tokens. Duct is not a gateway — tokens are an input to what we sell, not the thing we sell. Copying their metering would be copying their constraint rather than their strategy. Section 08 stands.</p>
+      </div>
+
+      <h3>The base rate</h3>
+      <p>Community-to-paid conversion in open-source SaaS sits at <strong>1–3%</strong> for a healthy project. Confluent converted under 1% of its community and still built a $5B+ business — on enormous volume and enterprise contract sizes. Ordinary freemium self-serve runs 3–5% for good and 8–12% for great, and open source lands below that because self-hosting is the whole point for the people who show up.</p>
+      <p>So the arithmetic is entirely determined by what converts. Assume we do as well as OpenSEO — 4,300 stars is plausibly near the ceiling for SEO tooling, a smaller and less developer-heavy audience than a database or a workflow engine — and call it 10,000 installs over two years at a 2% conversion:</p>
+      <div class="scroller">
+        <table>
+          <thead><tr><th>Converts into</th><th>Paying accounts</th><th>ARR</th><th>Verdict</th></tr></thead>
+          <tbody>
+            <tr><td>Duct Cloud at $99/mo</td><td class="num">200</td><td class="num">~$240k</td><td>A hobby that consumed a revenue line</td></tr>
+            <tr><td>Duct Operator at $1,500/mo</td><td class="num">200</td><td class="num">~$3.6M</td><td>A business</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Same funnel, same conversion rate, fifteen times the outcome. Open source is not a revenue strategy — it is a distribution strategy whose entire payoff is set by the price of the thing on the other side of it.</p>
+
+      <div class="callout">
+        <p><strong>Which changes the sequencing, not the decision.</strong> Open-sourcing the client still does three real things: it neutralizes the OpenSEO price comparison, it buys credibility with a technical buyer, and it is the cheapest distribution available to us. But those are marketing returns, not revenue, and the revenue only appears if what converts is high-ACV.</p>
+        <p><strong>So: prove Operator first, open-source second.</strong> Giving the client away while $99 Cloud is the only paid tier means running a 2% funnel into the worst-priced product we have — and it cannot be undone.</p>
+      </div>
+    </section>
+
+    <section>
+      <span class="eyebrow">07 · Supply</span>
+      <h2>Who does the 15% the agent can&rsquo;t?</h2>
+      <p class="lede">Section 04 conceded that selling a role means a services-shaped obligation, and section 10 makes that the first thing that could kill this. A pool of humans is the obvious answer. But a <em>marketplace</em> is the wrong shape for it, and the reason is the same reason the rest of the strategy works.</p>
+      <p>A marketplace matches and disclaims. The buyer picks, the platform takes a cut, and when the work is bad that is between the buyer and the freelancer. That is precisely the posture section 03 identified as the one model vendors refuse to take &mdash; and their refusing it is what leaves the position open for us. Build an open marketplace and we hand back the only durable moat we have in exchange for a 15% take rate, while competing with Upwork on liquidity. Four shapes, only one of which starts well:</p>
+
+      <div class="scroller">
+        <table>
+          <thead>
+            <tr><th>Shape</th><th>Who picks</th><th>Who is accountable</th><th>Effect on the moat</th><th>Verdict</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Open bid marketplace</td><td>The buyer</td><td>The freelancer</td>
+              <td>Destroys it &mdash; we become a directory with a payment rail</td>
+              <td><span class="pill no">Reject</span></td>
+            </tr>
+            <tr>
+              <td><strong>Managed bench, Duct-fronted</strong></td><td>Duct</td><td><strong>Duct</strong></td>
+              <td>Preserves it &mdash; elastic supply without headcount, buyer never sees the seam</td>
+              <td><span class="pill pick">Start here</span></td>
+            </tr>
+            <tr>
+              <td>Agency partner channel</td><td>The agency owns the client</td><td>The agency</td>
+              <td>Neutral &mdash; different revenue, zero supply ops, and they bring their own demand</td>
+              <td><span class="pill yes">Scale channel</span></td>
+            </tr>
+            <tr>
+              <td>Outcome-graded supply</td><td>Duct, priced by measured lift</td><td>Duct</td>
+              <td>Compounds it &mdash; see below</td>
+              <td><span class="pill yes">Where it gets defensible</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>The managed bench is not a marketplace and should never be described as one. Contractors are invisible supply; the customer&rsquo;s relationship, invoice, and complaint all point at Duct. That is what keeps the accountability sellable &mdash; and it is also the standard answer to marketplace leakage, which would otherwise be fatal here: a monthly retainer is exactly the engagement shape that goes direct after the second invoice.</p>
+
+      <h3>The automation ratio is the business model</h3>
+      <p>Whether any of this works reduces to one number: what fraction of the job the agent actually finishes. At $1,500/month per brand, with contractors around $35/hour:</p>
+      <div class="scroller">
+        <table>
+          <thead><tr><th>Agent completes</th><th>Human hours / mo</th><th>Labour cost</th><th>Gross margin</th><th>What we actually are</th></tr></thead>
+          <tbody>
+            <tr><td>95%</td><td class="num">2</td><td class="num">$70</td><td class="num">~93%</td><td>A software company</td></tr>
+            <tr><td>85%</td><td class="num">6</td><td class="num">$210</td><td class="num">~84%</td><td>A software company with a bench</td></tr>
+            <tr><td>70%</td><td class="num">15</td><td class="num">$525</td><td class="num">~63%</td><td>A productized service</td></tr>
+            <tr><td>50%</td><td class="num">30</td><td class="num">$1,050</td><td class="num">~28%</td><td>An agency with extra steps</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Note what is absent from that table: model costs. At Operator prices one human hour costs 10&ndash;50&times; what the tokens do, so the cost collapse in section 02 &mdash; the tailwind the entire Cloud tier rests on &mdash; is close to irrelevant here. <strong>For Cloud, COGS is inference. For Operator, COGS is labour.</strong> Two different businesses with two different cost curves, and only one of them gets cheaper for free every quarter.</p>
+
+      <div class="callout">
+        <p><strong>The version that is genuinely ours:</strong> because we hold the intervention&nbsp;&rarr;&nbsp;outcome dataset, we can grade operators on <em>measured lift</em> rather than stars, hours, or a portfolio. Not "4.9 stars, 200 jobs" but "changes this operator approved produced +9% median organic clicks at 90 days, n=40."</p>
+        <p>No general marketplace can build that, for the same reason Anthropic cannot &mdash; they never observe the outcome. And it quietly solves supply-side retention: an operator&rsquo;s track record lives in our data and is not portable. That is leakage protection that is earned rather than contractually enforced, and it makes the outcomes dataset do double duty &mdash; pricing interventions on one side, pricing supply on the other.</p>
+      </div>
+
+      <h3>What it costs to be right about this</h3>
+      <ul>
+        <li><strong>Worker classification is real legal exposure</strong>, not a formality. A "managed" contractor who is assigned work, supervised on quality, and kept away from the client relationship starts to look like an employee to a US or EU regulator. Keep them genuinely independent, or use an employer of record and price it in. Cheap to get right early, expensive to unwind.</li>
+        <li><strong>It re-rates the company.</strong> Services revenue prices at roughly 2&ndash;4&times; versus 8&ndash;15&times; for software. If raising is ever on the table, the automation ratio is not only a margin number &mdash; it is the multiple.</li>
+        <li><strong>It is a different company to run.</strong> Supply recruiting, quality management, disputes, coverage when someone disappears. None of that is on the roadmap and all of it competes for the same attention as the product.</li>
+      </ul>
+
+      <h3>Sequencing</h3>
+      <ul>
+        <li><strong>Now, during the pilots:</strong> this is happening anyway &mdash; you plus one or two contractors will be doing the human residue by hand. Treat that as the experiment rather than a stopgap, and <strong>instrument the automation ratio per job type from the first customer.</strong> It is the most decision-relevant number in this document.</li>
+        <li><strong>At ~6 months, if the ratio holds above 80%:</strong> formalize the bench. Ten to twenty vetted contractors, Duct-fronted, buyer never picks, work assigned by us.</li>
+        <li><strong>At 12 months and beyond:</strong> outcome-graded supply, and open the agency partner channel &mdash; agencies bring their own clients, which is the cheapest demand we will ever get.</li>
+        <li><strong>Never:</strong> open bidding. The moment the buyer chooses the human, we are a directory.</li>
+      </ul>
+    </section>
+
+    <section>
+      <span class="eyebrow">08 · Pricing</span>
+      <h2>Three lines, no credits</h2>
+      <p>You were right that credits were too complex, and it turns out the objection was strategic rather than cosmetic. <strong>Metered credits are a hedge against rising input costs, and input costs are falling 90% a year.</strong> Every credit we sell trains the customer to count units that are on their way to being free, and locks our revenue to a shrinking quantity. Flat pricing lets us keep 100% of the deflation — which, given the DeepSeek and Qwen numbers, is the single largest margin lever we have.</p>
+
+      <div class="tiers">
+        <div class="tier">
+          <span class="name">Duct Local</span>
+          <div class="price">Free</div>
+          <span class="per">MIT · BYO keys</span>
+          <p>The desktop app, open source. Your keys, your machine, your model bill. Everything unlimited because none of it costs us anything.</p>
+          <ul>
+            <li>Full agent, skills, connectors</li>
+            <li>Any provider — Anthropic, OpenAI, DeepSeek, local</li>
+            <li>Local memory, no account required</li>
+          </ul>
+          <div class="job"><b>Its job:</b> distribution and credibility. Neutralizes OpenSEO. Not a revenue line.</div>
+        </div>
+
+        <div class="tier hero">
+          <span class="name">Duct Cloud</span>
+          <div class="price">$99<span style="font-size:16px; color:var(--ink-3);">/mo</span></div>
+          <span class="per">includes $110 of model work</span>
+          <p>We run it. Continuously, on schedule, whether or not you open anything. Hosted memory, hosted connectors, we handle the models and route them for cost.</p>
+          <ul>
+            <li>Runs unattended — the actual product</li>
+            <li>Dollar-denominated usage, not points</li>
+            <li>Cheap routing means the $110 goes a long way</li>
+            <li>Higher rate limits at $249 and $499</li>
+          </ul>
+          <div class="job"><b>Its job:</b> self-serve revenue and the top of the operator funnel.</div>
+        </div>
+
+        <div class="tier">
+          <span class="name">Duct Operator</span>
+          <div class="price">$1,500+</div>
+          <span class="per">per brand / month</span>
+          <p>Not a tool. Accountable execution against a named metric, with approval gates, an audit trail, rollback, and a human who answers when it goes wrong.</p>
+          <ul>
+            <li>Monthly outcome report vs. target</li>
+            <li>Approval-gated writes to Ads and GA4</li>
+            <li>Agency: per-client pricing on top</li>
+          </ul>
+          <div class="job"><b>Its job:</b> the actual business. Competes with a salary, not a subscription.</div>
+        </div>
+      </div>
+
+      <p style="margin-top:24px;">The dollar-denominated inclusion is the part worth stealing from Hermes verbatim. "Your $99 includes $110 of model work" is the most legible meter that exists — no one needs a translation table — and it <em>self-adjusts as costs fall</em>: the same $110 buys twice the work next year, so perceived value compounds without us ever repricing or renegotiating. A credit balance does the exact opposite.</p>
+      <p class="kpi">Practical consequence: <b>show the meter to nobody</b> except the top 1% who approach the ceiling. For everyone else it is a flat plan that happens to have a fair-use limit written down honestly.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow">09 · Consequences</span>
+      <h2>What this changes about what we build</h2>
+      <p>If the above is right, several things currently on the roadmap are worth less than they look, and several things not on it are urgent.</p>
+      <div class="scroller">
+        <table>
+          <thead><tr><th>Do more of</th><th>Because</th></tr></thead>
+          <tbody>
+            <tr><td>Outcome tracking — every change stamped, every metric measured at 30/90 days</td><td>It is the only compounding asset available to us, and it is worthless if we start in 2027</td></tr>
+            <tr><td>Write governance — approvals, audit log, rollback, scoped permissions</td><td>It is what makes accountability sellable, and what model vendors won't build</td></tr>
+            <tr><td>Model routing to cheap and open models</td><td>Converts the industry's cost collapse into our margin instead of Anthropic's</td></tr>
+            <tr><td>MCP server + Cowork skill distribution</td><td>Meets the buyer where they already are instead of asking for a new habit</td></tr>
+            <tr><td>Agency multi-tenancy</td><td>The one segment with budget, fan-out economics, and no substitute</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="scroller">
+        <table>
+          <thead><tr><th>Do less of</th><th>Because</th></tr></thead>
+          <tbody>
+            <tr><td>More intelligence modes and more connectors</td><td>Breadth is what the platforms are best at and it is free there</td></tr>
+            <tr><td>Report and brief polish</td><td>Artifacts already do this; nobody switches tools for prettier output</td></tr>
+            <tr><td>Competing on analysis quality</td><td>We are buying that from a vendor whose competitors improve it for free</td></tr>
+            <tr><td>Credit metering infrastructure</td><td>Under flat pricing we need cost telemetry, which is a fraction of the work</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <span class="eyebrow">10 · Kill criteria</span>
+      <h2>What would make this wrong</h2>
+      <p>Written down in advance so they can be checked rather than argued about later.</p>
+      <ol class="kill">
+        <li><strong>Accountability turns out to be undeliverable.</strong> If the first three Operator customers need more human hours than the price supports, this is a services business with a software margin, not the reverse. The measurable is the <strong>automation ratio</strong> (section 07): below roughly 70% and the economics stop being software. Test this before scaling anything — it is the single assumption everything else rests on.</li>
+        <li><strong>Anthropic ships write-governance for third-party accounts.</strong> Unlikely — it is a liability posture, not a feature — but if managed Cowork plugins start carrying approval workflows and audit trails for external systems, the governance moat closes and only the outcome dataset remains.</li>
+        <li><strong>Open-sourcing the client produces no distribution.</strong> Community-to-paid conversion in open-source SaaS runs 1&ndash;3%. A repo nobody stars is a giveaway with no upside and a permanent loss of a revenue line. <strong>Do not walk through this door until Operator is proven</strong> (section 06) &mdash; give it 90 days and a real number to hit.</li>
+        <li><strong>The outcome data proves nothing.</strong> If, after 200 accounts, interventions do not correlate with measurable deltas at any useful confidence, the compounding asset is noise and the whole thesis reduces to "a well-run agency."</li>
+        <li><strong>Cheap models cannot do the work.</strong> The routing margin assumes 90% of jobs are Qwen- or DeepSeek-grade. If quality forces frontier models everywhere, flat pricing breaks and credits come back — so measure the routable fraction early, per job type.</li>
+      </ol>
+      <div class="callout">
+        <p><strong>The one-line version:</strong> we cannot out-build Anthropic and we cannot out-price open source, so we should stop trying to do either. Give the client away, take responsibility for the outcome, and quietly accumulate the one dataset that nobody positioned above or below us is able to collect.</p>
+      </div>
+    </section>
+
+    <section>
+      <span class="eyebrow">11 · Long horizon</span>
+      <h2>The WordPress shape</h2>
+      <p class="lede">Not a plan and not a forecast &mdash; a note on what the pieces in sections 05, 07 and 08 could compound into if they all land.</p>
+      <p>WordPress is the closest working model for the combination we keep arriving at independently: an open core nobody has to pay for, a commercial host that monetizes convenience rather than access, a plugin economy that made the platform worth far more than its authors built, and a services economy substantial enough that "WordPress developer" became a job title. Automattic did not create most of that value. It created the substrate and captured a slice of it.</p>
+
+      <div class="scroller">
+        <table>
+          <thead><tr><th>WordPress</th><th>The Duct equivalent</th><th>Already in this doc</th></tr></thead>
+          <tbody>
+            <tr><td>wordpress.org &mdash; GPL core, self-hosted</td><td>Duct Local &mdash; MIT client, your keys, your machine</td><td>&sect;05, &sect;08</td></tr>
+            <tr><td>wordpress.com &mdash; managed hosting</td><td>Duct Cloud &mdash; we run it continuously</td><td>&sect;08</td></tr>
+            <tr><td>Plugins and themes</td><td>Skills, connectors, playbooks &mdash; third parties extend the agent</td><td>&mdash;</td></tr>
+            <tr><td>Experts directory, VIP partners</td><td>Outcome-graded operators and the agency channel</td><td>&sect;07</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>The appealing part is that each piece makes the next one cheaper: the open client recruits the community, the community writes the skills, the skills make Cloud worth hosting, and the operators who know the system become a supply pool we did not have to recruit. That is a flywheel rather than a funnel, and it is the only version of this business that gets easier over time instead of harder.</p>
+
+      <div class="note">
+        <span class="eyebrow">Keeping it honest</span>
+        <p>Two things stop this from being a plan. WordPress took roughly two decades, and its distribution came from being the default answer in a market of tens of millions of sites &mdash; our addressable community is orders of magnitude smaller, so the ecosystem flywheel may simply never reach ignition, which is the same arithmetic as section 06. And most of the surplus WordPress created accrued to the ecosystem rather than to Automattic: a fine outcome for a vision, a dangerous one to forecast revenue from.</p>
+        <p>Steer toward the shape. Do not plan on it.</p>
+      </div>
+    </section>
+
+  </div>
+
+  <footer>
+    <h3>Sources</h3>
+    <ul>
+      <li><a href="https://www.anthropic.com/product/claude-cowork">Claude Cowork</a> · <a href="https://claude.com/blog/how-anthropics-marketing-operations-team-uses-claude-cowork-to-automate-reporting-and-campaign-builds">Anthropic's marketing ops team on Cowork</a> · <a href="https://www.forbes.com/sites/ronschmelzer/2026/02/25/anthropic-leans-into-enterprise-ai-agents-that-fit-business-workflow/">Forbes, managed Cowork plugins (Feb 2026)</a></li>
+      <li><a href="https://github.com/every-app/open-seo">OpenSEO on GitHub</a> · <a href="https://openseo.so/">openseo.so</a> — MIT, MCP server, $10/mo hosted</li>
+      <li><a href="https://hermes-agent.nousresearch.com/">Hermes Agent</a> · <a href="https://portal.nousresearch.com/">Nous Portal</a> · <a href="https://the-decoder.com/nous-research-releases-hermes-desktop-an-open-source-ai-agent-for-every-platform/">Hermes Desktop release coverage</a></li>
+      <li><a href="https://deepseek.ai/pricing">DeepSeek V4 pricing</a> · <a href="https://www.aimagicx.com/blog/ai-pricing-war-llm-cost-collapse-business-strategy-2026">The 2026 LLM price war</a> · <a href="https://benchlm.ai/anthropic/api-pricing">Anthropic API pricing, Aug 2026</a></li>
+      <li><a href="https://www.frase.io/blog/best-ai-seo-agents-2026">AI SEO agents 2026</a> · <a href="https://victoriaolsina.com/blog/best-ai-seo-tools/">AirOps vs Ahrefs vs Semrush</a></li>
+      <li><a href="https://techcrunch.com/2026/07/13/hermes-agent-maker-nous-research-in-talks-for-new-funding-at-1-5b-valuation/">TechCrunch — Nous in talks at $1.5B</a> · <a href="https://www.startuphub.ai/startups/nous-research">Nous funding total and revenue estimate</a> · <a href="https://github.com/every-app/open-seo/blob/main/README.md">OpenSEO README — 28% hosted markup</a></li>
+      <li><a href="https://www.getmonetizely.com/articles/whats-the-optimal-conversion-rate-from-free-to-paid-in-open-source-saas">Open-source SaaS free-to-paid conversion benchmarks</a> · <a href="https://chartmogul.com/reports/saas-conversion-report/">ChartMogul SaaS conversion report</a></li>
+    </ul>
+    <p style="margin-top:16px;">Companion to <a href="monetization-plan.html">monetization-plan.html</a>, which keeps the still-valid tactics — revenue lines, funnel mechanics, build list, sequencing — but whose credit-based tier ladder is superseded by section 08 above. Written against the repo as of August 2026.</p>
+  </footer>
+
+</div>
+</body>
+</html>
