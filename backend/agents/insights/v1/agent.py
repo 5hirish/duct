@@ -17,7 +17,7 @@ unchanged:
 
 Replaces the hand-rolled two-graph implementation (``v1/graph.py``, deleted) as
 part of consolidating on one harness —
-see ``docs/engineering/agent-engine-consolidation-review.md`` §9.
+see `the engine consolidation review (duct-cloud, private)` §9.
 
 Provider-agnostic via ``init_chat_model``: any provider LangChain supports,
 including OpenAI-compatible gateways such as OpenRouter. Swap with

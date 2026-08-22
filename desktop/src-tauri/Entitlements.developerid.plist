@@ -5,7 +5,7 @@
 
   Deliberately NOT the App Store set: there is no `app-sandbox` key here, and
   that is the point. The bundle ships a PyInstaller backend, which the App Store
-  sandbox cannot host — see docs/engineering/agent-engine-consolidation-review.md
+  sandbox cannot host — see the engine consolidation review (duct-cloud, private)
   §8.2. The App Store variant lives in Entitlements.appstore.plist.
 
   Every key below is required by the embedded CPython interpreter under the

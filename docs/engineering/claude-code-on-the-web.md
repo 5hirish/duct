@@ -58,7 +58,7 @@ Most cloud tasks (refactors, tests, fixes) don't need credentials. If a task gen
 
 ## Deploys stay in CI
 
-Our standing rule holds in cloud sessions: **deploys go through CI/CD only** ([deployment runbook](deployment-cloudflare-railway.md)). A cloud session should open a PR; merging to the watched branch triggers the existing Cloudflare Workers / Railway deploys. **Do not** add `wrangler deploy` (or Railway pushes) to the setup script or ask a session to deploy — that risks double deploys.
+Our standing rule holds in cloud sessions: **deploys go through CI/CD only** (deployment runbook (duct-cloud, private)). A cloud session should open a PR; merging to the watched branch triggers the existing Cloudflare Workers / Railway deploys. **Do not** add `wrangler deploy` (or Railway pushes) to the setup script or ask a session to deploy — that risks double deploys.
 
 ---
 

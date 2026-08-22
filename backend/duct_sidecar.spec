@@ -2,7 +2,7 @@
 """PyInstaller spec for the Duct desktop sidecar.
 
 Packages the FastAPI backend (`local_server.py`) as a binary the Tauri shell
-spawns — see docs/engineering/agent-engine-consolidation-review.md §7.6, §8.2.
+spawns — see the engine consolidation review (duct-cloud, private) §7.6, §8.2.
 
 Build:
     cd backend && poetry run pyinstaller duct_sidecar.spec --noconfirm

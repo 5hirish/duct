@@ -2,11 +2,11 @@
 
 Feature and system implementation plans (living documents until shipped).
 
-- [`deployment-cloudflare-railway.md`](deployment-cloudflare-railway.md) — **runbook:** redeploy, env pushes, verification (Next.js on Cloudflare, API on Railway)
+- the deployment runbook (duct-cloud, private) — **runbook:** redeploy, env pushes, verification (Next.js on Cloudflare, API on Railway)
 - [`claude-code-on-the-web.md`](claude-code-on-the-web.md) — **runbook:** Claude Code cloud sessions on this repo (account connect, setup script, secrets, `--remote`/`--teleport`)
-- [`desktop-testflight-release.md`](desktop-testflight-release.md) — **runbook:** shipping the desktop shell to macOS TestFlight (Apple setup, secrets, App Store constraints)
+- the TestFlight runbook (duct-cloud, private) — **runbook:** shipping the desktop shell to macOS TestFlight (Apple setup, secrets, App Store constraints)
 - [`tauri-desktop-byo-keys-plan.md`](tauri-desktop-byo-keys-plan.md) — Tauri desktop shell + bring-your-own provider keys (design)
-- [`agent-engine-consolidation-review.md`](agent-engine-consolidation-review.md) — review: v1 (LangChain) / v2 (Google ADK) / v3 (Claude Agent SDK) capability comparison and a phased plan to consolidate on one harness
+- the engine consolidation review (duct-cloud, private) — review: v1 (LangChain) / v2 (Google ADK) / v3 (Claude Agent SDK) capability comparison and a phased plan to consolidate on one harness
 - [`agent-evaluation.md`](agent-evaluation.md) — agent output QA: the LLM-as-judge / persona critique harness (`backend/tests/eval/`), judge biases + mitigations, and the eval landscape
 - [`oauth-authentication-plan.md`](oauth-authentication-plan.md) — Google Ads connector OAuth (updated with current routes)
 - [`project-collaboration-plan.md`](project-collaboration-plan.md) — project members + email invitations (owner/collaborator roles, invite tokens, Resend delivery)

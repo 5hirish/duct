@@ -87,7 +87,7 @@ produce a DMG — [`.github/workflows/desktop-release.yml`](../.github/workflows
 This is the channel for the local-first product. The Mac App Store is not an
 option for it: its sandbox cannot host a PyInstaller sidecar and embedded
 interpreters draw rejections
-([review §8.2](../docs/engineering/agent-engine-consolidation-review.md)). The
+(review §8.2 (duct-cloud, private)). The
 practical consequences, all in our favour here:
 
 - **Auto-update is allowed** (`tauri-plugin-updater`), unlike the App Store —
@@ -110,7 +110,7 @@ Pushes to `main` touching `desktop/**` build a sandboxed, universal Mac App
 Store package and upload it to TestFlight via
 [`.github/workflows/desktop-testflight.yml`](../.github/workflows/desktop-testflight.yml).
 Full setup — Apple prerequisites, the GitHub secrets, and troubleshooting — is in
-[`docs/engineering/desktop-testflight-release.md`](../docs/engineering/desktop-testflight-release.md).
+the TestFlight runbook (duct-cloud, private).
 
 The App Store build uses three extra files alongside the normal config:
 

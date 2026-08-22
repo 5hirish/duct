@@ -34,7 +34,7 @@ for bring-your-own provider API keys. Design:
   temp dir at startup and does not survive signing + notarization.
 - **macOS distribution** is Developer ID + a notarized DMG, *not* the App Store.
   The sandbox cannot host a PyInstaller sidecar and embedded interpreters draw
-  rejections — see `docs/engineering/agent-engine-consolidation-review.md` §8.2.
+  rejections — see the engine consolidation review (duct-cloud, private) §8.2.
   Config is `src-tauri/tauri.conf.json` (`bundle.macOS`) +
   `src-tauri/Entitlements.developerid.plist`. The App Store variant
   (`tauri.appstore.conf.json`, `Entitlements.appstore.plist`,

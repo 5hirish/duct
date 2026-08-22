@@ -2,7 +2,7 @@
 
 These pin the primitives the audit and content ports depend on — the ones the
 Claude Agent SDK provides today via `AskUserQuestion`, `can_use_tool` and the
-SSE pump (`docs/engineering/agent-engine-consolidation-review.md` §6.5, §9.6):
+SSE pump (the engine consolidation review (duct-cloud, private) §6.5, §9.6):
 
   * a tool call pauses for human review *before* the tool runs
   * the interrupt payload is serialisable, so it can cross our SSE stream

@@ -34,7 +34,7 @@ name: desktop — TestFlight (macOS)
 #                                      build is assigned to that group automatically.
 #                                      Find it with: asc testflight groups list --app "APP_ID" --internal
 #
-# One-time Apple setup is documented in docs/engineering/desktop-testflight-release.md.
+# One-time Apple setup is documented in the TestFlight runbook (duct-cloud, private).
 
 on:
   push:

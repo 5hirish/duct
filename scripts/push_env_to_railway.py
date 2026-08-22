@@ -6,7 +6,7 @@ then optional `railway redeploy -y`.
 
 Prerequisites: railway login, railway link (from backend/ or use RAILWAY_* env).
 
-See: docs/engineering/deployment-cloudflare-railway.md
+See: the deployment runbook (duct-cloud, private)
 """
 
 from __future__ import annotations

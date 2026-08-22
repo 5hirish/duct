@@ -7,7 +7,7 @@ name: desktop — Developer ID DMG (macOS)
 # Store cannot host that build at all — the sandbox breaks the PyInstaller
 # sidecar and embedded interpreters draw rejections — so the App Store pipeline
 # (desktop-testflight.yml) is limited to the older thin client and must never
-# be given the sidecar. Reasoning: docs/engineering/agent-engine-consolidation-review.md §8.
+# be given the sidecar. Reasoning: the engine consolidation review (duct-cloud, private) §8.
 #
 # The signing order matters and is the part that most often goes wrong. A
 # PyInstaller onedir tree contains hundreds of Mach-O files (.so extension
