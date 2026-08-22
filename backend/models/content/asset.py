@@ -5,9 +5,8 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
-import sqlalchemy as sa
 from sqlalchemy import Column, DateTime, ForeignKey, Index, String, Text
-from sqlalchemy.dialects.postgresql import JSONB
+from models.columns import json_column
 from sqlmodel import Field, SQLModel
 
 
@@ -40,7 +39,7 @@ class ContentAsset(SQLModel, table=True):
     model: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
     params: dict = Field(
         default_factory=dict,
-        sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="{}"),
+        sa_column=Column(json_column(), nullable=False, server_default="{}"),
     )
     created_at: datetime = Field(
         default_factory=_utcnow,

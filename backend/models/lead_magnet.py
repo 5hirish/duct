@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from typing import Any, Optional
 
 import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import JSONB
+from models.columns import json_column
 from sqlmodel import Column, Field, SQLModel
 
 
@@ -27,7 +27,7 @@ class LeadMagnet(SQLModel, table=True):
     # Populated after audit completes — nullable until then
     report_json: Optional[dict[str, Any]] = Field(
         default=None,
-        sa_column=Column(JSONB(astext_type=sa.Text()), nullable=True),
+        sa_column=Column(json_column(), nullable=True),
     )
     report_generated_at: Optional[datetime] = Field(
         default=None,

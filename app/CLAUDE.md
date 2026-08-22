@@ -32,10 +32,14 @@ Two route groups under `app/`:
   - `insights/organic-growth/` + `[slug]/` + `generate/` — organic growth insights
   - `onboarding/` — new user setup
   - `projects/` + `project/[projectId]/` — project management
+  - `project/[projectId]/members/` — project members + invitations (owner/collaborator)
+
+Plus `invite/[token]/` at the top level (outside every route group): the invitation landing page, which must render for signed-out recipients.
 
 ## Key utilities
 
 - `lib/api.js` — fetch wrapper for backend calls
+- `lib/membersApi.js` — project members + invitations (server-only; no localStorage mirror, unlike `lib/projects.js`)
 - `lib/engines.js` — LLM engine/model selection
 - `lib/insightData.js` — insight fetching and management
 - `lib/localInsights.js` — client-side insight storage

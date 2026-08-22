@@ -5,9 +5,8 @@ from __future__ import annotations
 from datetime import date, datetime, timezone
 from uuid import UUID, uuid4
 
-import sqlalchemy as sa
 from sqlalchemy import Column, Date, DateTime, ForeignKey, String
-from sqlalchemy.dialects.postgresql import JSONB
+from models.columns import json_column
 from sqlmodel import Field, SQLModel
 
 
@@ -28,11 +27,11 @@ class ContentPlan(SQLModel, table=True):
     start_date: date | None = Field(default=None, sa_column=Column(Date, nullable=True))
     character: dict = Field(
         default_factory=dict,
-        sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="{}"),
+        sa_column=Column(json_column(), nullable=False, server_default="{}"),
     )
     days: list = Field(
         default_factory=list,
-        sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="[]"),
+        sa_column=Column(json_column(), nullable=False, server_default="[]"),
     )
     status: str = Field(default="draft", sa_column=Column(String, nullable=False, server_default="draft"))
     created_at: datetime = Field(
