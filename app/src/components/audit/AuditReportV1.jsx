@@ -1,7 +1,14 @@
 "use client";
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, Cell, ResponsiveContainer, LabelList } from 'recharts';
-import { AlertTriangle, CheckCircle2, Calendar, Activity, Target, BarChart2, Zap, Clock, TrendingUp } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Calendar, Activity, Target, BarChart2, Zap, Clock, TrendingUp, ChevronDown } from 'lucide-react';
+import {
+  computeExecutionServices,
+  ExecutionOfferBlock,
+  ExecutionClosingLine,
+  ExecutionRequestModal,
+} from './ExecutionOffer';
+import { trackEvent } from '../../lib/analytics-client';
 
 // ---------------------------------------------------------------------------
 // Global styles — tooltips + entrance animations
@@ -163,12 +170,12 @@ function StatsStrip({ data, dateStr, dark }) {
 
   return (
     <div style={{ paddingTop: 12, borderTop: `1px solid ${borderClr}` }}>
-      <div className="flex items-center gap-6 flex-wrap">
+      <div className="grid grid-cols-3 gap-x-4 gap-y-4 sm:flex sm:items-center sm:gap-6 sm:flex-wrap">
         {stats.map(({ value, label, color }) => (
-          <div key={label}>
-            <div className="font-mono text-xl font-bold leading-none tabular-nums"
+          <div key={label} className="min-w-0">
+            <div className="font-mono text-lg font-bold leading-none tabular-nums"
               style={{ ...(color ? { color } : valStyle) }}>{value}</div>
-            <div className="text-xs uppercase tracking-wide mt-0.5" style={lblStyle}>{label}</div>
+            <div className="text-[10px] uppercase tracking-wide mt-0.5 leading-tight" style={lblStyle}>{label}</div>
           </div>
         ))}
       </div>
@@ -296,7 +303,7 @@ function CategoryBarChartCSS({ categories }) {
         const color = scoreBarColor(cat.score);
         return (
           <div key={cat.id} className="flex items-center gap-3" data-tooltip={cat.tooltip}>
-            <span className="text-sm text-right shrink-0 w-44 text-muted-foreground truncate">{cat.label}</span>
+            <span className="text-xs sm:text-sm text-right shrink-0 w-24 sm:w-44 text-[#6b7280] truncate">{cat.label}</span>
             <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.07)' }}>
               <div className="h-full rounded-full"
                 style={{
@@ -401,23 +408,23 @@ function ImpactEffortMatrix({ categories }) {
   return (
     <section className="rise-5 space-y-3">
       <SectionHeader icon={Target}>Impact × Effort</SectionHeader>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {quadrants.map(q => (
-          <div key={q.key} className="rounded-xl p-4 space-y-2.5"
+          <div key={q.key} className="rounded-xl p-3 sm:p-4 space-y-2"
             style={{ background: q.bg, border: `1px solid ${q.border}` }}>
             <div>
               <p className="text-[13px] font-bold" style={{ color: q.textColor }}>{q.label}</p>
-              <p className="text-[10px] text-muted-foreground/70">{q.sub}</p>
+              <p className="text-[10px] text-[#6b7280]/70">{q.sub}</p>
             </div>
             {groups[q.key].length === 0
-              ? <p className="text-[11px] text-muted-foreground/50 italic">Nothing here</p>
+              ? <p className="text-[11px] text-[#6b7280]/50 italic">Nothing here</p>
               : (
                 <ul className="space-y-1.5">
                   {groups[q.key].map(f => (
                     <li key={f.id} className="flex items-start gap-2" data-tooltip={f.description || f.title}>
                       <span className="shrink-0 mt-1.5 size-1.5 rounded-full"
                         style={{ background: SEVERITY_DOT[f.severity] ?? '#94a3b8' }} />
-                      <span className="text-[12px] leading-snug text-foreground/80 line-clamp-2">{f.title}</span>
+                      <span className="text-[11px] sm:text-[12px] leading-snug text-[#1a1a1acc] line-clamp-2">{f.title}</span>
                     </li>
                   ))}
                 </ul>
@@ -439,7 +446,7 @@ function PassRow({ finding }) {
     <div className="flex items-center gap-3 py-2.5 px-4 rounded-lg"
       style={{ background: 'rgba(16,185,129,0.04)', border: '1px solid rgba(16,185,129,0.14)' }}>
       <CheckCircle2 size={13} color="#10b981" strokeWidth={2} className="shrink-0" />
-      <span className="text-[14px] text-foreground/80 leading-snug flex-1 min-w-0">{finding.title}</span>
+      <span className="text-[14px] text-[#1a1a1acc] leading-snug flex-1 min-w-0">{finding.title}</span>
     </div>
   );
 }
@@ -463,7 +470,7 @@ function FindingCard({ finding }) {
       <div style={{ height: 3, background: cfg.accent }} />
 
       {/* Colored header row: badge + title */}
-      <div className={`flex items-start gap-3 px-5 pt-3 pb-3 ${cfg.headerCls}`}>
+      <div className={`flex items-start gap-3 px-3 sm:px-5 pt-3 pb-3 ${cfg.headerCls}`}>
         <span className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-md shrink-0 mt-0.5 ${cfg.pill}`}>
           {cfg.label}
         </span>
@@ -557,11 +564,11 @@ function CategoryAccordion({ category, isLast }) {
             )}
           </div>
         </div>
-        <span className="text-muted-foreground text-xs shrink-0 transition-transform duration-200 group-open:rotate-180">▼</span>
+        <ChevronDown size={15} className="text-[#6b7280] shrink-0 transition-transform duration-200 group-open:rotate-180" />
       </summary>
-      <div className="px-5 pb-4 pt-3 space-y-3" style={{ background: 'rgba(0,0,0,0.02)' }}>
+      <div className="px-3 sm:px-5 pb-4 pt-3 space-y-3" style={{ background: 'rgba(0,0,0,0.02)' }}>
         {ordered.length === 0 && (
-          <p className="text-sm text-muted-foreground py-2">No findings for this category.</p>
+          <p className="text-sm text-[#6b7280] py-2">No findings for this category.</p>
         )}
 
         {/* Non-pass findings rendered as full cards */}
@@ -575,7 +582,7 @@ function CategoryAccordion({ category, isLast }) {
               <span className="text-[13px] text-emerald-700 dark:text-emerald-400 font-medium">
                 {passFindings.length} check{passFindings.length !== 1 ? 's' : ''} passing
               </span>
-              <span className="text-muted-foreground text-[10px] ml-1 transition-transform group-open/pass:rotate-180">▼</span>
+              <ChevronDown size={12} className="text-[#6b7280] ml-0.5 transition-transform group-open/pass:rotate-180" />
             </summary>
             <div className="ml-5 mt-2 space-y-1.5">
               {passFindings.map(f => <PassRow key={f.id} finding={f} />)}
@@ -609,12 +616,12 @@ function PriorityCard({ priority }) {
       onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.1)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
       onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.07)'; e.currentTarget.style.transform = ''; }}>
       <div style={{ height: 3, background: s.accent }} />
-      <div className="flex items-center gap-4 px-5 py-4">
+      <div className="flex items-center gap-3 sm:gap-4 px-3 sm:px-5 py-4">
         <div className="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold tabular-nums"
           style={{ background: s.rankBg, color: s.rankColor }}>
           {String(priority.rank).padStart(2, '0')}
         </div>
-        <p className="flex-1 min-w-0 text-[15px] font-semibold leading-snug text-foreground">
+        <p className="flex-1 min-w-0 text-[15px] font-semibold leading-snug text-[#1a1a1a]">
           {priority.title}
         </p>
         <div className="flex items-center gap-2 shrink-0">
@@ -643,7 +650,7 @@ function statColor(value, thresholds) {
   return { text: 'text-green-600 dark:text-green-400' };
 }
 
-const NEUTRAL_COLOR = { text: 'text-muted-foreground' };
+const NEUTRAL_COLOR = { text: 'text-[#6b7280]' };
 
 const CRAWL_STATS = [
   { key: 'avg_ttfb_ms',          label: 'Avg TTFB',  format: v => `${Math.round(v)}ms`, thresholds: { warn: 800, fail: 2000 }, tooltip: 'Time to first byte. Google de-prioritises slow sites for recrawl.' },
@@ -668,9 +675,9 @@ function CrawlSummaryStrip({ summary }) {
         return (
           <div key={key}
             className="rounded-xl px-4 py-4 flex flex-col gap-1"
-            style={{ background: cellBg, border: `1px solid ${cellBdr ?? 'var(--border)'}`, boxShadow: '0 1px 2px rgba(13,15,26,0.04)' }}
+            style={{ background: cellBg, border: `1px solid ${cellBdr ?? '#e5e7eb'}`, boxShadow: '0 1px 2px rgba(13,15,26,0.04)' }}
             data-tooltip={tooltip}>
-            <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide leading-none">{label}</span>
+            <span className="text-xs text-[#6b7280] font-medium uppercase tracking-wide leading-none">{label}</span>
             <span className={`text-xl font-bold tabular-nums leading-tight ${color.text}`}>{format(value)}</span>
           </div>
         );
@@ -736,7 +743,7 @@ function RoadmapSection({ roadmap }) {
                 </span>
                 <span className="text-base font-semibold" style={{ color: cfg.text }}>{phase.theme}</span>
               </div>
-              <ul className="space-y-0 divide-y divide-border/20">
+              <ul className="space-y-0 divide-y divide-[#e5e7eb]/20">
                 {phase.tasks.map((t, j) => {
                   const effortLabel = t.effort_estimate
                     ? (EFFORT_ESTIMATE_LABEL[t.effort_estimate] ?? t.effort_estimate)
@@ -770,7 +777,18 @@ function RoadmapSection({ roadmap }) {
 // Main component
 // ---------------------------------------------------------------------------
 
-export default function AuditReportV1({ data }) {
+export default function AuditReportV1({ data, leadToken = null, email = null }) {
+  const showExecutionOffer = Boolean(leadToken) && Boolean(data);
+  const execServices = React.useMemo(
+    () => (showExecutionOffer ? computeExecutionServices(data) : []),
+    [showExecutionOffer, data],
+  );
+  const [execOpen, setExecOpen] = React.useState(false);
+  const openExec = React.useCallback((source) => {
+    trackEvent('execution_modal_opened', { source });
+    setExecOpen(true);
+  }, []);
+
   if (!data) return null;
 
   const showCoverageBanner =
@@ -810,14 +828,14 @@ export default function AuditReportV1({ data }) {
         {/* ── Dark hero card ───────────────────────────────────────────── */}
         <div className="rise-0 rounded-2xl overflow-hidden shadow-xl"
           style={{ background: DUCT_NAVY }}>
-          <div className="px-8 pt-8 pb-7 flex items-start justify-between gap-6 flex-wrap">
+          <div className="px-5 pt-6 pb-6 sm:px-8 sm:pt-8 sm:pb-7 flex flex-col-reverse sm:flex-row sm:items-start sm:justify-between gap-5 sm:gap-6">
             <div className="flex-1 min-w-0 space-y-4">
               <p className="text-xs font-medium tracking-wide truncate"
                 style={{ color: DUCT_ORANGE }}>{data.url}</p>
               <h1 style={{
                 fontFamily: 'Georgia, "Times New Roman", serif',
                 color: DUCT_CREAM,
-                fontSize: 'clamp(1.7rem, 4vw, 2.5rem)',
+                fontSize: 'clamp(1.35rem, 5vw, 2.5rem)',
                 fontWeight: 700,
                 lineHeight: 1.2,
                 letterSpacing: '-0.02em',
@@ -827,7 +845,9 @@ export default function AuditReportV1({ data }) {
               </h1>
               <StatsStrip data={data} dateStr={dateStr} dark />
             </div>
-            <ScoreGauge score={data.overall_score} band={data.score_band} dark />
+            <div className="shrink-0 self-start sm:self-auto">
+              <ScoreGauge score={data.overall_score} band={data.score_band} dark />
+            </div>
           </div>
           <div style={{ height: 3, background: 'linear-gradient(90deg, #ff5c00, #ff8c42 60%, transparent)' }} />
         </div>
@@ -868,6 +888,11 @@ export default function AuditReportV1({ data }) {
           </section>
         )}
 
+        {/* ── Execution upsell (public lead reports only) ──────────────── */}
+        {showExecutionOffer && (
+          <ExecutionOfferBlock services={execServices} onOpen={openExec} />
+        )}
+
         {/* ── Impact × Effort matrix ───────────────────────────────────── */}
         {data.categories?.length > 0 && (
           <ImpactEffortMatrix categories={data.categories} />
@@ -904,8 +929,11 @@ export default function AuditReportV1({ data }) {
         {/* ── Action plan roadmap ──────────────────────────────────────── */}
         {data.roadmap?.length > 0 && <RoadmapSection roadmap={data.roadmap} />}
 
+        {/* ── Soft closing execution CTA (public lead reports only) ────── */}
+        {showExecutionOffer && <ExecutionClosingLine onOpen={openExec} />}
+
         {/* ── Footer ───────────────────────────────────────────────────── */}
-        <footer className="text-center text-xs pt-4 border-t border-border/40"
+        <footer className="text-center text-xs pt-4 border-t border-[#e5e7eb]/40"
           style={{ color: 'rgba(13,15,26,0.3)' }}>
           Generated by{' '}
           <span style={{ color: DUCT_ORANGE, fontWeight: 600 }}>Duct</span>
@@ -913,6 +941,16 @@ export default function AuditReportV1({ data }) {
         </footer>
 
       </div>
+
+      {showExecutionOffer && (
+        <ExecutionRequestModal
+          open={execOpen}
+          onClose={() => setExecOpen(false)}
+          services={execServices}
+          leadToken={leadToken}
+          email={email}
+        />
+      )}
     </div>
   );
 }

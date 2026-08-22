@@ -6,7 +6,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <link rel="icon" href="assets/icon.svg" type="image/svg+xml"/>
 <link rel="apple-touch-icon" href="assets/apple-icon.svg"/>
 <title>Free SEO Audit — See exactly what's hurting your rankings | Duct</title>
@@ -128,7 +128,7 @@
   border: none;
   outline: none;
   padding: 16px 12px;
-  font-size: 15px;
+  font-size: 16px; /* ≥16px prevents iOS Safari auto-zoom on focus */
   background: transparent;
   color: var(--navy);
   min-width: 0;
@@ -152,6 +152,44 @@
 }
 .lm-url-btn:hover { background: var(--orange-h); box-shadow: 0 4px 14px rgba(192,84,60,.3); }
 .lm-url-btn svg { flex-shrink: 0; }
+
+/* Mobile: stack button below input */
+@media (max-width: 540px) {
+  .lm-url-form {
+    flex-direction: column;
+    border-radius: 14px;
+    overflow: visible;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    gap: 10px;
+  }
+  .lm-url-form:focus-within {
+    border-color: transparent;
+    box-shadow: none;
+  }
+  .lm-url-form .lm-url-prefix {
+    display: none;
+  }
+  .lm-url-input {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    background: #fff;
+    padding: 16px 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    transition: border-color .15s;
+    box-sizing: border-box;
+  }
+  .lm-url-input:focus { border-color: var(--orange); outline: none; }
+  .lm-url-btn {
+    width: 100%;
+    margin: 0;
+    border-radius: 12px;
+    padding: 16px 20px;
+    justify-content: center;
+  }
+}
 .lm-btn-checking { display: none; opacity: .75; }
 .lm-url-btn.is-checking .lm-btn-idle { display: none; }
 .lm-url-btn.is-checking .lm-btn-checking { display: inline; }
@@ -546,7 +584,7 @@
   border: none;
   outline: none;
   padding: 14px 14px;
-  font-size: 15px;
+  font-size: 16px; /* ≥16px prevents iOS Safari auto-zoom on focus */
   background: transparent;
   color: var(--navy);
   min-width: 0;
@@ -568,6 +606,41 @@
 }
 .lm-email-btn:hover:not(:disabled) { background: var(--orange-h); }
 .lm-email-btn:disabled { opacity: .6; cursor: not-allowed; }
+
+/* Mobile: stack email button below input */
+@media (max-width: 480px) {
+  .lm-email-form {
+    flex-direction: column;
+    border-radius: 14px;
+    overflow: visible;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    gap: 10px;
+    width: 100%;
+    max-width: 100%;
+  }
+  .lm-email-form:focus-within {
+    border-color: transparent;
+  }
+  .lm-email-input {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    background: #fff;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    transition: border-color .15s;
+    box-sizing: border-box;
+  }
+  .lm-email-input:focus { border-color: var(--orange); outline: none; }
+  .lm-email-btn {
+    width: 100%;
+    margin: 0;
+    border-radius: 12px;
+    padding: 16px 20px;
+  }
+}
 
 /* Turnstile widget */
 .lm-turnstile-wrap {
@@ -691,7 +764,7 @@
 /* ── Final CTA ── */
 .lm-cta {
   text-align: center;
-  padding: 64px 24px 80px;
+  padding: 64px 24px max(80px, calc(80px + env(safe-area-inset-bottom, 0px)));
   background: var(--cream);
   border-top: 1px solid var(--border);
 }

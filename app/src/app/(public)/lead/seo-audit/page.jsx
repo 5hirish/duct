@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import AuditWorkspace from "../../../../components/audit/AuditWorkspace";
-import AuditReportV1 from "../../../../components/audit/AuditReportV1";
 import { saveLeadReport, validateLeadToken } from "../../../../lib/api";
 import { ReportMode, DEFAULT_AUDIT_TEMPLATE_ID } from "../../../../lib/audit";
 
@@ -35,6 +34,7 @@ function timeAgo(isoString) {
   return h === 1 ? "1 hour ago" : `${h} hours ago`;
 }
 
+
 function LeadSeoAuditInner() {
   const searchParams = useSearchParams();
 
@@ -42,11 +42,10 @@ function LeadSeoAuditInner() {
   const [token] = useState(() => searchParams.get("token") || "");
   const [url]   = useState(() => searchParams.get("url")   || "");
 
-  const [state, setState]             = useState("validating"); // validating | invalid | cached | ready
+  const [state, setState]             = useState("validating"); // validating | invalid | ready
   const [sessionId]                   = useState(() => crypto.randomUUID());
   const [auditParams, setAuditParams] = useState(null);
-  const [cachedReport, setCachedReport] = useState(null);
-  const [cachedAt, setCachedAt]         = useState(null);
+  const [leadEmail, setLeadEmail]     = useState("");
 
   useEffect(() => {
     if (!url || !token) {
@@ -65,12 +64,7 @@ function LeadSeoAuditInner() {
     validateLeadToken(token)
       .then((data) => {
         if (controller.signal.aborted) return;
-        if (data.cached_report) {
-          setCachedReport(data.cached_report);
-          setCachedAt(data.cached_at);
-          setState("cached");
-          return;
-        }
+        setLeadEmail(data.email || "");
         setAuditParams({
           url: data.website_url || url,
           business_context: {},
@@ -134,38 +128,6 @@ function LeadSeoAuditInner() {
     );
   }
 
-  // ── Cached report ────────────────────────────────────────────────────────
-  if (state === "cached") {
-    return (
-      <div className="flex flex-col flex-1 min-h-0 overflow-y-auto">
-        <div className="shrink-0 flex items-center justify-between gap-4 px-4 py-2 bg-amber-50 border-b border-amber-200 text-sm">
-          <span className="text-amber-800">
-            ⚡ Showing a cached audit from {cachedAt ? timeAgo(cachedAt) : "recently"} —
-            results may not reflect recent changes.
-          </span>
-          <a
-            href={SITE_URL}
-            className="shrink-0 inline-flex items-center gap-1 rounded-md border border-amber-400 bg-white px-3 py-1 text-xs font-semibold text-amber-800 hover:bg-amber-50 transition-colors"
-          >
-            Run fresh audit →
-          </a>
-        </div>
-        <div className="flex-1 overflow-y-auto">
-          <AuditReportV1 report={cachedReport} />
-        </div>
-        <div className="shrink-0 flex items-center justify-between gap-4 px-4 py-2 bg-orange-50 border-t border-orange-200 text-sm">
-          <span className="font-medium text-orange-900">Save and share this report</span>
-          <a
-            href="/"
-            className="inline-flex items-center gap-1 rounded-md bg-orange-600 px-3 py-1 text-xs font-semibold text-white hover:bg-orange-700 transition-colors"
-          >
-            Sign up free →
-          </a>
-        </div>
-      </div>
-    );
-  }
-
   // ── Fresh audit ──────────────────────────────────────────────────────────
   return (
     <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
@@ -174,6 +136,8 @@ function LeadSeoAuditInner() {
         auditParams={auditParams}
         publicMode={true}
         onReportReady={handleReportReady}
+        leadToken={token}
+        leadEmail={leadEmail}
       />
     </div>
   );

@@ -105,6 +105,18 @@ class Configs(BaseSettings):
     turnstile_site_key: str = ""
     turnstile_secret_key: str = ""
 
+    # Cloudflare Email Service (lead report delivery). Distinct from the Resend
+    # settings below: `email_from` there is the transactional sender for project
+    # invitations, and defining it twice in this class would silently collapse
+    # both features onto one address.
+    cloudflare_email_api_token: str = ""
+    cloudflare_account_id: str = ""
+    # Sender for lead audit reports; falls back to `email_from` when unset.
+    lead_email_from: str = ""
+    # Comma-separated internal CC for lead audit reports. Empty by default and
+    # supplied via LEAD_EMAIL_CC — real addresses must not ship in source.
+    lead_email_cc: str = ""
+
     # Protects /api/* routes (header X-API-Key). Same value the Next app sends as X-API-Key.
     duct_api_key: str = ""
 

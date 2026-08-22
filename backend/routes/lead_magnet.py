@@ -8,6 +8,7 @@ Endpoints (no API key required — Turnstile provides abuse prevention):
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -18,7 +19,7 @@ from pydantic import BaseModel, field_validator
 from sqlmodel import Session, select
 
 from db.session import get_session
-from models.lead_magnet import LeadMagnet
+from models.lead_magnet import ExecutionInterest, LeadMagnet
 from service.crawl.fetcher import SSRFError, validate_public_url
 from service.turnstile import verify_turnstile
 
@@ -28,6 +29,9 @@ router = APIRouter(tags=["lead-magnet"])
 
 _TOKEN_TTL_HOURS = 24
 _REPORT_CACHE_TTL_HOURS = 24  # reuse a cached report generated within this window
+
+# Paid execution services a lead can express interest in (demand-validation test).
+_VALID_EXECUTION_SERVICES = {"ai_ready_fixes", "content_rewrites", "translation"}
 
 
 class SubmitLeadRequest(BaseModel):
@@ -62,6 +66,7 @@ class ValidateTokenRequest(BaseModel):
 
 class ValidateTokenResponse(BaseModel):
     website_url: str
+    email: Optional[str] = None
     cached_report: Optional[dict[str, Any]] = None
     cached_at: Optional[datetime] = None
 
@@ -147,13 +152,14 @@ def validate_token(
 
     return ValidateTokenResponse(
         website_url=lead.website_url,
+        email=lead.email,
         cached_report=cached.report_json if cached else None,
         cached_at=cached.report_generated_at if cached else None,
     )
 
 
 @router.post("/report", status_code=200)
-def save_report(
+async def save_report(
     body: SaveReportRequest,
     session: Session = Depends(get_session),
 ) -> dict[str, str]:
@@ -176,7 +182,129 @@ def save_report(
     session.commit()
 
     logger.info("lead_magnet: saved report for email=%s url=%s", lead.email, lead.website_url)
+
+    # Fire email in background with retry + idempotency guard.
+    # Captures all values by reference so the background task has no DB dependency.
+    _lead_id, _email, _url, _report = lead.id, lead.email, lead.website_url, body.report
+
+    async def _send_with_retry() -> None:
+        from service.email_cf import send_lead_report_email
+        from db.session import get_engine
+        from sqlmodel import Session as _Session
+
+        max_attempts = 3
+        for attempt in range(1, max_attempts + 1):
+            try:
+                success = await send_lead_report_email(_email, _url, _report)
+                if success:
+                    # Stamp email_sent_at so we never re-send on future runs
+                    engine = get_engine()
+                    if engine:
+                        with _Session(engine) as s:
+                            m = s.get(LeadMagnet, _lead_id)
+                            if m and m.email_sent_at is None:
+                                m.email_sent_at = datetime.now(timezone.utc)
+                                s.add(m)
+                                s.commit()
+                    logger.info("email: sent (attempt %d) to %s", attempt, _email)
+                    return
+                logger.warning("email: attempt %d returned failure for %s", attempt, _email)
+            except Exception:
+                logger.exception("email: attempt %d raised for %s", attempt, _email)
+
+            if attempt < max_attempts:
+                await asyncio.sleep(5 * (2 ** (attempt - 1)))  # 5s, 10s
+
+        logger.error("email: all %d attempts failed for %s — report not delivered", max_attempts, _email)
+
+    asyncio.create_task(_send_with_retry())
+
     return {"status": "saved"}
+
+
+class ExecutionInterestRequest(BaseModel):
+    token: str
+    services: list[str]
+    finding_ids: Optional[list[str]] = None
+    note: Optional[str] = None
+
+    @field_validator("token")
+    @classmethod
+    def _token_not_empty(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("token must not be empty")
+        return v.strip()
+
+    @field_validator("services")
+    @classmethod
+    def _services_valid(cls, v: list[str]) -> list[str]:
+        cleaned = [s.strip() for s in v if s and s.strip()]
+        if not cleaned:
+            raise ValueError("at least one service must be selected")
+        invalid = [s for s in cleaned if s not in _VALID_EXECUTION_SERVICES]
+        if invalid:
+            raise ValueError(f"unknown service(s): {', '.join(invalid)}")
+        # de-dupe, preserve order
+        return list(dict.fromkeys(cleaned))
+
+    @field_validator("note")
+    @classmethod
+    def _note_trim(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        v = v.strip()
+        return v[:1000] if v else None
+
+
+@router.post("/execution-interest", status_code=200)
+async def record_execution_interest(
+    body: ExecutionInterestRequest,
+    session: Session = Depends(get_session),
+) -> dict[str, str]:
+    """Record a lead's interest in paid execution (demand-validation test).
+
+    Auditing stays free; this captures which execution service(s) a lead wants so
+    we can prioritise what to build. No execution is performed. A background
+    notification is sent to the internal team.
+    """
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=_TOKEN_TTL_HOURS)
+    stmt = select(LeadMagnet).where(
+        LeadMagnet.access_token == body.token,
+        LeadMagnet.created_at >= cutoff,
+    )
+    lead = session.exec(stmt).first()
+    if not lead:
+        raise HTTPException(status_code=404, detail="Invalid or expired access token.")
+
+    interest = ExecutionInterest(
+        lead_magnet_id=lead.id,
+        email=lead.email,
+        website_url=lead.website_url,
+        services=body.services,
+        finding_ids=body.finding_ids,
+        note=body.note,
+    )
+    session.add(interest)
+    session.commit()
+
+    logger.info(
+        "lead_magnet: execution interest email=%s url=%s services=%s",
+        lead.email, lead.website_url, body.services,
+    )
+
+    # Notify the team in the background — never blocks the response.
+    _email, _url, _services, _note = lead.email, lead.website_url, body.services, body.note
+
+    async def _notify() -> None:
+        from service.email_cf import send_execution_interest_notification
+        try:
+            await send_execution_interest_notification(_email, _url, _services, _note)
+        except Exception:
+            logger.exception("email: execution-interest notify task raised for %s", _email)
+
+    asyncio.create_task(_notify())
+
+    return {"status": "received"}
 
 
 @router.get("/check-url")
