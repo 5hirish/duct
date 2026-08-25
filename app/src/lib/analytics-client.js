@@ -48,3 +48,13 @@ export function bootGtmDeferred(gtmId) {
     w.setTimeout(loadGtm, 3000);
   }
 }
+
+/**
+ * Push a custom event to the GTM dataLayer. No-op on the server or before GTM
+ * loads (dataLayer queues events, so calls before load are still captured).
+ */
+export function trackEvent(event, params = {}) {
+  if (typeof window === "undefined") return;
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({ event, ...params });
+}

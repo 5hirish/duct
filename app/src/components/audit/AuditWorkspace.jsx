@@ -64,7 +64,7 @@ async function consumeSseStream(body, onEvent, signal) {
 // AuditWorkspace
 // ---------------------------------------------------------------------------
 
-export default function AuditWorkspace({ sessionId, auditParams, publicMode = false, onReportReady }) {
+export default function AuditWorkspace({ sessionId, auditParams, publicMode = false, onReportReady, leadToken = null, leadEmail = null }) {
   const { setIsAuditRunning } = useAuditNav();
 
   // Core state
@@ -491,6 +491,8 @@ export default function AuditWorkspace({ sessionId, auditParams, publicMode = fa
           streamingHtml={streamingHtml}
           errorMsg={errorMsg}
           onRetry={handleRetry}
+          leadToken={leadToken}
+          leadEmail={leadEmail}
         />
       }
     />

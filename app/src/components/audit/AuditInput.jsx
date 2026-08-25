@@ -64,7 +64,7 @@ export default function AuditInput({ onSend, disabled, isStreaming, onStop }) {
   }
 
   return (
-    <div className="border-t border-border/60 p-3">
+    <div className="border-t border-border/60 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0.75rem))]">
       {attachments.length > 0 && (
         <div className="flex gap-2 mb-2 flex-wrap">
           {attachments.map((att, i) => (
@@ -109,7 +109,7 @@ export default function AuditInput({ onSend, disabled, isStreaming, onStop }) {
           onPaste={handlePaste}
           disabled={disabled || isStreaming}
           placeholder={isStreaming ? "Agent is working…" : disabled ? "Waiting for agent…" : "Ask a follow-up question…"}
-          className="flex-1 resize-none rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 min-h-[38px] max-h-[120px] overflow-y-auto"
+          className="flex-1 resize-none rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 min-h-[38px] max-h-[120px] overflow-y-auto"
           style={{ height: "38px" }}
           onInput={e => {
             e.target.style.height = "38px";

@@ -446,3 +446,18 @@ export async function saveLeadReport(token, report) {
     // Fire-and-forget: network errors shouldn't interrupt the user experience
   }
 }
+
+/**
+ * Record a lead's interest in paid execution (demand-validation test).
+ * `services` is an array of keys: "ai_ready_fixes" | "content_rewrites" | "translation".
+ * Resolves true on success, throws on failure so the modal can show an error state.
+ */
+export async function expressExecutionInterest(token, { services, findingIds = null, note = null }) {
+  const res = await fetch(`${BASE}/api/lead-magnet/execution-interest`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token, services, finding_ids: findingIds, note }),
+  });
+  if (!res.ok) throw new Error("Could not record execution interest");
+  return true;
+}

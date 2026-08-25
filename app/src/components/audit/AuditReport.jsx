@@ -222,6 +222,8 @@ export default function AuditReport({
   streamingHtml,
   errorMsg,
   onRetry,
+  leadToken = null,
+  leadEmail = null,
 }) {
   const iframeRef = useRef(null);
 
@@ -310,7 +312,7 @@ export default function AuditReport({
           <>
             {reportMode === "template" && structuredData ? (
               <div className="h-full overflow-auto">
-                <AuditReportV1 data={structuredData} />
+                <AuditReportV1 data={structuredData} leadToken={leadToken} email={leadEmail} />
               </div>
             ) : (
               <iframe
