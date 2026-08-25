@@ -20,6 +20,15 @@
       "postDebugTask": "Backend: stop uvicorn (8002)"
     },
     {
+      "//": "Local-first desktop: the shell runs its own bundled backend on a loopback port and the web app repoints at it. No uvicorn, no Railway. Build the sidecar first.",
+      "name": "Duct: Desktop (local sidecar)",
+      "configurations": [
+        "Desktop: Tauri dev (sidecar backend)"
+      ],
+      "stopAll": true
+    },
+    {
+      "//": "Dev-variant bundle against a locally-run Railway-shaped API. Registered .app, so the sign-in deep link works.",
       "name": "Duct: Desktop + API",
       "configurations": [
         "Backend: FastAPI (uvicorn)",
@@ -30,6 +39,7 @@
       "postDebugTask": "Backend: stop uvicorn (8002)"
     },
     {
+      "//": "Legacy thin-client shape: unbundled `tauri dev` against a locally-run API on :8002. macOS has not registered the URL scheme for this one, so the browser sign-in return leg will not come back.",
       "name": "Duct: Desktop (tauri dev — no sign-in) + API",
       "configurations": [
         "Backend: FastAPI (uvicorn)",
@@ -99,6 +109,22 @@
     },
     {
       "name": "Desktop: Tauri dev (local app)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev:local",
+      "cwd": "${workspaceFolder}/desktop"
+    },
+    {
+      "//": "Freezes the backend into backend/dist/duct-sidecar. Required before the desktop app can run: bundle.resources copies this directory verbatim, so a missing or stale build ships a broken app. Takes ~3 min.",
+      "name": "Desktop: Build sidecar",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "poetry run pyinstaller duct_sidecar.spec --noconfirm",
+      "cwd": "${workspaceFolder}/backend"
+    },
+    {
+      "//": "Desktop shell against the local Next dev server. The shell spawns the frozen sidecar itself, so no separate uvicorn is needed — run 'Desktop: Build sidecar' first.",
+      "name": "Desktop: Tauri dev (sidecar backend)",
       "type": "node-terminal",
       "request": "launch",
       "command": "npm run dev:local",

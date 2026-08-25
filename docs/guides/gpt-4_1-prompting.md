@@ -1,3 +1,9 @@
+> **Third-party documentation — OpenAI.**
+> Source: OpenAI, "GPT-4.1 Prompting Guide" · Retrieved 2026-04-06
+> Licence: OpenAI Cookbook material is published under MIT; confirm the exact
+> source page before reusing this elsewhere.
+> Reproduced verbatim for reference and not written by Duct. Rights remain with the original author; the Duct repository licence does not cover this file.
+
 # GPT-4.1 Prompting Guide
 
 The GPT-4.1 family of models represents a significant step forward from GPT-4o in capabilities across coding, instruction following, and long context. In this prompting guide, we collate a series of important prompting tips derived from extensive internal testing to help developers fully leverage the improved abilities of this new model family. 

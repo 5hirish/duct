@@ -34,7 +34,7 @@ For OAuth and CORS, set **`API_PUBLIC_URL`** / **`FRONTEND_ORIGIN`** in `backend
 
 ## Production (Cloudflare Workers)
 
-OpenNext + Wrangler live in this directory (`wrangler.jsonc`, `open-next.config.ts`). Full architecture, env vars, and production deploy (Cloudflare **Workers Builds** from Git) are documented in [`docs/engineering/deployment-cloudflare-railway.md`](../docs/engineering/deployment-cloudflare-railway.md).
+OpenNext + Wrangler live in this directory (`wrangler.jsonc`, `open-next.config.ts`). Full architecture, env vars, and production deploy (Cloudflare **Workers Builds** from Git) are documented in the deployment runbook (duct-cloud, private).
 
 Optional: `NEXT_PUBLIC_GTM_ID` for Google Tag Manager (GA4 etc. live in the GTM container). See [`src/lib/analytics-client.js`](src/lib/analytics-client.js).
 

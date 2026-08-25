@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import stat
 import sys
 
@@ -19,7 +20,7 @@ import pytest
 from sqlmodel import Session, SQLModel, select
 
 import local_server
-from config import Configs
+from config import Configs, cors_kwargs
 from utils.appdirs import default_data_dir, resolve_data_dir
 
 
@@ -32,6 +33,13 @@ def clean_env(monkeypatch):
         "DATABASE_URL", "UPLOADS_DIR", "INIT_DB_ON_STARTUP",
     ):
         monkeypatch.delenv(var, raising=False)
+    # Clearing the environment is not enough: Configs also reads backend/.env
+    # and .env.local, deliberately, so integration tests can share the running
+    # server's keys (see config._settings_env_files). A developer with a real
+    # DATABASE_URL there would otherwise see these derivation tests fail — and
+    # the assertion message would print the credential. These are unit tests of
+    # the derivation logic, so cut the dotenv source off for them only.
+    monkeypatch.setitem(Configs.model_config, "env_file", None)
     return monkeypatch
 
 
@@ -211,3 +219,77 @@ def test_sqlite_engine_enables_wal(clean_env, tmp_path, monkeypatch):
     assert str(mode).lower() == "wal"
 
     db_session.get_engine.cache_clear()
+
+
+# ---------------------------------------------------------------------------
+# CORS
+# ---------------------------------------------------------------------------
+#
+# These drive desktop mode through DUCT_LOCAL rather than `Configs(duct_local=True)`.
+# The field carries `validation_alias=AliasChoices("DUCT_LOCAL", "DUCT_DESKTOP")`,
+# so the field *name* is not accepted as an init kwarg: passing it applies the
+# local-mode defaults (which read the raw input dict) but leaves `cfg.duct_local`
+# False, and `cors_kwargs` branches on exactly that attribute. The env var is
+# also how the sidecar really runs — `local_server.bootstrap()` sets it.
+
+def _allows(cfg, origin: str) -> bool:
+    """Mirror how CORSMiddleware decides, for whichever branch cors_kwargs picked."""
+    kwargs = cors_kwargs(cfg)
+    if "allow_origin_regex" in kwargs:
+        return re.search(kwargs["allow_origin_regex"], origin) is not None
+    return origin in kwargs["allow_origins"]
+
+
+def _desktop_cfg(clean_env, tmp_path) -> Configs:
+    clean_env.setenv("DUCT_LOCAL", "1")
+    clean_env.setenv("DUCT_DATA_DIR", str(tmp_path))
+    clean_env.setenv("APP_ENV", "desktop")
+    return Configs()
+
+
+@pytest.mark.parametrize(
+    "origin",
+    [
+        "tauri://localhost",          # bundled frontend (the eventual shape)
+        "https://app.getduct.ai",     # hosted app, during the transition
+        "http://localhost:3003",      # `tauri dev` against the Next dev server
+        "http://127.0.0.1:3003",
+    ],
+)
+def test_desktop_mode_allows_every_origin_the_shell_can_load(clean_env, tmp_path, origin):
+    cfg = _desktop_cfg(clean_env, tmp_path)
+    assert cfg.duct_local is True, "guard: desktop mode did not actually engage"
+    assert _allows(cfg, origin), f"{origin} must be allowed in desktop mode"
+
+
+@pytest.mark.parametrize(
+    "origin",
+    [
+        "https://evil.example",
+        "http://app.getduct.ai.evil.example",
+        "https://app.getduct.ai.evil.example",
+        "tauri://localhost.evil.example",
+    ],
+)
+def test_desktop_mode_rejects_foreign_origins(clean_env, tmp_path, origin):
+    """The regex is anchored — a lookalike host must not slip through."""
+    cfg = _desktop_cfg(clean_env, tmp_path)
+    assert not _allows(cfg, origin)
+
+
+def test_deployed_mode_keeps_an_explicit_allowlist(clean_env):
+    """Railway must not inherit the desktop regex."""
+    clean_env.setenv("APP_ENV", "production")
+    clean_env.setenv("FRONTEND_ORIGIN", "https://app.getduct.ai")
+    clean_env.setenv("SITE_ORIGIN", "https://getduct.ai")
+    cfg = Configs()
+    kwargs = cors_kwargs(cfg)
+    assert "allow_origin_regex" not in kwargs
+    assert kwargs["allow_origins"] == ["https://app.getduct.ai", "https://getduct.ai"]
+
+
+def test_local_dev_mode_allows_any_loopback_port(clean_env):
+    clean_env.setenv("APP_ENV", "local")
+    cfg = Configs()
+    assert _allows(cfg, "http://localhost:6006")
+    assert not _allows(cfg, "https://evil.example")

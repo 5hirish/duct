@@ -129,37 +129,42 @@ def command_exists(name: str) -> bool:
 
 
 def gitleaks_scan(targets: list[str]) -> list[Finding]:
-    if not command_exists("gitleaks"):
-        return [Finding(SEVERITY_MEDIUM, "gitleaks missing", "Install gitleaks to enable secrets scanning.")]
-    cmd = ["gitleaks", "detect", "--no-git", "--redact", "--report-format", "json", "--report-path", "/tmp/gitleaks-report.json"]
-    for target in targets:
-        cmd.extend(["--source", target])
-    proc = run_command(cmd)
-    findings: list[Finding] = []
-    if proc.returncode not in (0, 1):
-        findings.append(Finding(SEVERITY_MEDIUM, "gitleaks execution issue", proc.stderr.strip() or proc.stdout.strip()))
-        return findings
-    report = Path("/tmp/gitleaks-report.json")
-    if report.exists():
-        try:
-            data = json.loads(report.read_text(encoding="utf-8"))
-            for item in data:
-                findings.append(
-                    Finding(
-                        SEVERITY_CRITICAL,
-                        f"Secret detected ({item.get('RuleID', 'unknown-rule')})",
-                        f"{item.get('File', 'unknown-file')}:{item.get('StartLine', '?')}",
-                    )
-                )
-        except json.JSONDecodeError:
-            findings.append(Finding(SEVERITY_MEDIUM, "gitleaks report parse issue", "Could not parse gitleaks JSON output."))
-    return findings
+    """Deliberately a no-op — secret scanning lives in scripts/security/leak_scan.py.
+
+    This used to shell out to gitleaks over the target *directories*, which meant
+    it also read gitignored files: `.env.local`, `.env.prod`, `.venv/`, build
+    output and the VS Code `.history/` cache. Those hold real credentials by
+    design, so the scan reported 163 CRITICAL findings for files that can never
+    be committed — the kind of result that gets a gate switched off.
+
+    leak_scan.py scans *tracked* files only, with Duct's own betterleaks config.
+    A committed `.env` is therefore still caught, while an ignored one is not,
+    which is the behaviour that was wanted here all along. It runs as its own CI
+    step and as the pre-commit hook.
+    """
+    return []
 
 
 def semgrep_scan(targets: list[str]) -> list[Finding]:
-    if not command_exists("semgrep"):
-        return [Finding(SEVERITY_MEDIUM, "semgrep missing", "Install semgrep to enable SAST checks.")]
-    cmd = ["semgrep", "--config", "auto", "--json"]
+    """SAST. Prefers Opengrep — the LGPL-2.1 community fork of Semgrep CE.
+
+    Semgrep moved cross-function taint analysis and interprocedural scanning
+    behind its commercial tier in 2025; Opengrep restores them and is governed by
+    a consortium rather than one vendor. It takes the same flags and emits the
+    same JSON schema, so the parsing below is unchanged — only the binary and the
+    `scan` subcommand differ.
+    """
+    binary = "opengrep" if command_exists("opengrep") else "semgrep"
+    if not command_exists(binary):
+        return [
+            Finding(
+                SEVERITY_MEDIUM,
+                "opengrep/semgrep missing",
+                "Install opengrep (https://github.com/opengrep/opengrep) to enable SAST checks.",
+            )
+        ]
+    cmd = [binary, "scan"] if binary == "opengrep" else [binary]
+    cmd += ["--config", "auto", "--json"]
     cmd.extend(targets)
     proc = run_command(cmd)
     findings: list[Finding] = []

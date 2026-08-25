@@ -4,7 +4,7 @@ Python reporting and synthesis backend for Duct.
 
 ## Product role
 
-Per `docs/mvp/mvp-plan.md`, this backend is the actual product engine:
+Per the MVP plan (duct-cloud, private), this backend is the actual product engine:
 
 - read from client-owned destinations with read-only access
 - normalize data into typed internal models
@@ -20,7 +20,7 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
 
 - **AI synthesis:** Three versioned engine implementations under `agents/insights/` — V1 (LangChain / deepagents), V2 (Google ADK), V3 (Claude Agent SDK). Runtime-switchable via `generate_engine` env var.
 
-  **Consolidating on V1.** Per `docs/engineering/agent-engine-consolidation-review.md`, all
+  **Consolidating on V1.** Per the engine consolidation review (duct-cloud, private), all
   agents are moving to one harness — LangChain 1.x / `deepagents` — because customers bring
   their own model (OpenAI / Gemini / Claude / OpenRouter) and the Claude Agent SDK is
   Anthropic-only by design (upstream issue #410, closed `not planned`).
@@ -53,7 +53,7 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
 
 The backend runs in two shapes from one codebase. Railway is unchanged; the
 desktop build runs the same FastAPI app as a sidecar on the user's machine —
-see `docs/engineering/agent-engine-consolidation-review.md` §7–8.
+see the engine consolidation review (duct-cloud, private) §7–8.
 
 - **Entrypoint:** `local_server.py`. Sets `DUCT_LOCAL=1`, resolves the per-user
   data dir, binds **127.0.0.1** on an OS-assigned port, and prints a single JSON
@@ -86,7 +86,8 @@ automatically: `railway.json` only starts uvicorn and there is no CI migration j
   `backend/.env.local` (the Railway TCP proxy) via `config.get_configs()`.
 - Inspect: `alembic current`, `alembic heads`, `alembic history`.
 - The proxy host is not resolvable inside the command sandbox, so migration
-  commands run with the sandbox disabled (they need network to `*.rlwy.net`).
+  commands run with the sandbox disabled — they need outbound network to the
+  managed database's proxy domain.
 - New models must be imported in `models/__init__.py` so `SQLModel.metadata`
   picks them up for autogenerate.
 - Migrations should be additive/reversible — always provide a working `downgrade`.

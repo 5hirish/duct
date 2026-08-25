@@ -27,7 +27,7 @@ Official reference: [Railway PostgreSQL](https://docs.railway.com/databases/post
 
 ### 1. Use the existing API project
 
-Use the Railway project that already deploys Duct’s API from this monorepo. Confirm the API service has **Root Directory** set to **`backend`** and follows [Part 2 — Railway (API)](./deployment-cloudflare-railway.md#part-2--railway-api) in the deployment runbook.
+Use the Railway project that already deploys Duct’s API from this monorepo. Confirm the API service has **Root Directory** set to **`backend`** and follows Part 2 — Railway (API) (duct-cloud, private) in the deployment runbook.
 
 ### 2. Add PostgreSQL
 
@@ -160,7 +160,7 @@ Pick one style for new DB access and avoid mixing both in the same codebase long
 2. **Dependencies:** Add `sqlmodel`, `alembic`, and a Postgres driver (e.g. `psycopg[binary]` for sync SQLAlchemy URLs).
 3. **Scaffold:** `db/` + `models/` + `alembic init` under `backend/`, wire `env.py` to `SQLModel.metadata`.
 4. **First migration:** Create the first real tables with **autogenerate only** (`alembic revision --autogenerate -m "..."` then review by hand). Do not hand-write revision files.
-5. **CI / deploy:** Run `alembic upgrade head` as part of the Railway release command or a one-off migration job; document in `docs/engineering/deployment-cloudflare-railway.md` when added.
+5. **CI / deploy:** Run `alembic upgrade head` as part of the Railway release command or a one-off migration job; document in the deployment runbook (duct-cloud, private) when added.
 
 ## Migration workflow policy (always)
 
@@ -188,6 +188,6 @@ Encrypt refresh tokens at rest; enforce **application-level** tenant scoping on 
 
 ## Related docs
 
-- [Deployment: Cloudflare + Railway](./deployment-cloudflare-railway.md)
+- Deployment: Cloudflare + Railway (duct-cloud, private)
 - [OAuth authentication plan](./oauth-authentication-plan.md)
-- MVP direction: `docs/mvp/mvp-plan.md` (historical Supabase mention; this doc supersedes the host choice for the current stack)
+- MVP direction: the MVP plan (duct-cloud, private) (historical Supabase mention; this doc supersedes the host choice for the current stack)

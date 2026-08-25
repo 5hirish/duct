@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BASE } from "../../lib/api";
 import { isDesktopShell, getShellInfo, openExternal } from "../../lib/shell";
+import { isLocalBackendActive } from "../../lib/localBackend.js";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
@@ -74,7 +75,13 @@ function SignInContent() {
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [awaitingBrowser, setAwaitingBrowser] = useState(false);
   const [turnstileError, setTurnstileError] = useState("");
-  const requiresTurnstile = Boolean(TURNSTILE_SITE_KEY);
+  // Turnstile site keys are locked to their registered hostnames, so the widget
+  // can never render on the desktop shell's origin (`tauri://localhost`, or a
+  // loopback dev server) — it just fails with "Security check failed to load".
+  // Nothing is lost by skipping it: the sidecar is bound to 127.0.0.1 and gated
+  // by a per-install API key, so there is no bot surface to protect, and
+  // `verify_turnstile` already no-ops when the sidecar has no secret configured.
+  const requiresTurnstile = Boolean(TURNSTILE_SITE_KEY) && !isLocalBackendActive();
   const turnstileContainerRef = useRef(null);
   const turnstileWidgetIdRef = useRef(null);
   const getTurnstileResponseToken = useCallback(() => {
@@ -122,7 +129,7 @@ function SignInContent() {
 
   // Load and render Turnstile explicitly so remounts always work.
   useEffect(() => {
-    if (!TURNSTILE_SITE_KEY || !ready) return;
+    if (!requiresTurnstile || !ready) return;
     let cancelled = false;
 
     const renderWidget = () => {
@@ -184,7 +191,7 @@ function SignInContent() {
         delete window.onTurnstileLoad;
       }
     };
-  }, [ready]);
+  }, [ready, requiresTurnstile]);
 
   const handleSignIn = useCallback(async () => {
     if (isSigningIn) return;
@@ -289,7 +296,7 @@ function SignInContent() {
             Get started with your Google account
           </p>
 
-          {TURNSTILE_SITE_KEY && <div ref={turnstileContainerRef} className="cf-turnstile" aria-label="Security verification" />}
+          {requiresTurnstile && <div ref={turnstileContainerRef} className="cf-turnstile" aria-label="Security verification" />}
 
           <GoogleSignInButton
             onClick={handleSignIn}

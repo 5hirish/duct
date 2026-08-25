@@ -1,3 +1,8 @@
+> **Third-party documentation — OpenAI.**
+> Source: OpenAI GPT-5 developer material; the exact page was not recorded when
+> this was saved · Retrieved 2026-04-06
+> Reproduced verbatim for reference and not written by Duct. Rights remain with the original author; the Duct repository licence does not cover this file.
+
 #  GPT-5 New Params and Tools
 
 We’re introducing new developer controls in the GPT-5 series that give you greater control over model responses—from shaping output length and style to enforcing strict formatting. Below is a quick overview of the latest features:

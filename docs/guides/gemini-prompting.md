@@ -1,3 +1,10 @@
+> **Third-party documentation — Google.**
+> Source: Google AI for Developers — <https://ai.google.dev/> · Retrieved 2026-04-06
+> Licence: Google's developer documentation is published under
+> [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) per
+> <https://developers.google.com/site-policies>; code samples under Apache 2.0.
+> Reproduced verbatim for reference and not written by Duct. Rights remain with the original author; the Duct repository licence does not cover this file.
+
 <br />
 
 *Prompt design*is the process of creating prompts, or natural language requests, that elicit accurate, high quality responses from a language model.

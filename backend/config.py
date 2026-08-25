@@ -346,3 +346,43 @@ def sentry_otel_env(cfg: Configs) -> dict[str, str]:
         "OTEL_EXPORTER_OTLP_HEADERS":          f"sentry sentry_key={public_key}",
         "OTEL_EXPORTER_OTLP_PROTOCOL":         "http/protobuf",
     }
+
+
+# Origins the desktop sidecar accepts. The webview loads from three places
+# during the move to a bundled frontend: `tauri://localhost` once the app ships
+# its own static build, the hosted app until then, and a loopback dev server
+# under `tauri dev`.
+DESKTOP_CORS_ORIGIN_REGEX = (
+    r"^(tauri://localhost"
+    r"|https://app\.getduct\.ai"
+    r"|http://(localhost|127\.0\.0\.1)(:\d+)?)$"
+)
+
+
+def cors_kwargs(cfg: Configs) -> dict[str, Any]:
+    """CORS settings for `CORSMiddleware`, chosen by how the app is deployed.
+
+    Three cases, in precedence order:
+
+    * **local dev** — any loopback port, so the site, app and storybook can all
+      talk to one running server.
+    * **desktop sidecar** — the origins above. Listing only `frontend_origin`
+      would block every origin a shipped build actually loads, and widening it
+      here costs nothing: the sidecar binds 127.0.0.1 and every route worth
+      reaching sits behind the per-install `X-API-Key`.
+    * **deployed** — the explicit frontend/site origins and nothing else.
+    """
+    kwargs: dict[str, Any] = {
+        "allow_credentials": True,
+        "allow_methods": ["*"],
+        "allow_headers": ["*"],
+    }
+    if cfg.app_env == "local":
+        kwargs["allow_origin_regex"] = r"http://(localhost|127\.0\.0\.1)(:\d+)?"
+    elif cfg.duct_local:
+        kwargs["allow_origin_regex"] = DESKTOP_CORS_ORIGIN_REGEX
+    else:
+        kwargs["allow_origins"] = [
+            o for o in [cfg.frontend_origin, cfg.site_origin] if o
+        ]
+    return kwargs

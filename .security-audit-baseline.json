@@ -1,5 +1,11 @@
 {
   "version": 1,
-  "fingerprints": [],
-  "generated_by": "scripts/security/audit.py"
+  "fingerprints": [
+    "c9cdbd13e54920f9"
+  ],
+  "notes": {
+    "c9cdbd13e54920f9": "False positive — app/src/lib/adsCredentials.js. The scanner matches the string literals 'google_ads_developer_token' and 'gads_developer_token', which are a keychain provider id and a sessionStorage key, not secret values. The file reads tokens from the OS keychain or sessionStorage and never embeds one. Verified 2026-08-20; a full-history scan of all 434 revisions found no live credentials anywhere in the repo."
+  },
+  "generated_by": "scripts/security/audit.py",
+  "maintenance": "Only CRITICAL findings block CI, so only verified-false-positive criticals belong here. Add entries by hand with a note rather than running --write-baseline, which overwrites this file with every current finding and would silently suppress real HIGH/MEDIUM issues."
 }

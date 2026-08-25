@@ -103,7 +103,7 @@ def _build_runner(api_key: str, provider: Any, model: Any, engine: Engine):
 
     V3 (Claude Agent SDK) stays the default and the production path. V1
     (LangChain) is opt-in per request via ``engine: "v1"`` while it earns
-    confidence — see docs/engineering/agent-engine-consolidation-review.md.
+    confidence — see the engine consolidation review (duct-cloud, private).
     Both expose the same ``run_pipeline`` signature and emit the same events.
     """
     if engine == Engine.V1:

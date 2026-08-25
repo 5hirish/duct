@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Entitlements for the Developer ID (notarized DMG) build.
+
+  Deliberately NOT the App Store set: there is no `app-sandbox` key here, and
+  that is the point. The bundle ships a PyInstaller backend, which the App Store
+  sandbox cannot host — see the engine consolidation review (duct-cloud, private)
+  §8.2. The App Store variant lives in Entitlements.appstore.plist.
+
+  Every key below is required by the embedded CPython interpreter under the
+  hardened runtime, which notarization requires. Removing one does not tighten
+  security so much as break the sidecar at launch, usually with an opaque
+  crash rather than a clear error.
+-->
+<plist version="1.0">
+<dict>
+    <!-- CPython and its C extensions allocate writable-executable pages (ctypes
+         closures, JIT-style trampolines). Without these two the interpreter is
+         killed on first use of a native extension. -->
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+    <true/>
+
+    <!-- PyInstaller loads ~hundreds of .so extension modules from Resources at
+         runtime. Library validation would refuse any whose team identifier does
+         not match the main binary's. -->
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+
+    <!-- The sidecar reads its own data directory and the bundled Python archive
+         via paths resolved at runtime. -->
+    <key>com.apple.security.cs.allow-dyld-environment-variables</key>
+    <true/>
+</dict>
+</plist>

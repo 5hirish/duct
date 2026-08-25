@@ -8,6 +8,7 @@ import { AuthProvider, AuthGuard } from "../../lib/auth";
 import { hydrateProjectsFromBackend, migrateFromLegacyProfile } from "../../lib/projects";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AuditNavProvider } from "../../lib/auditNavContext";
+import LocalBackendGate from "../../components/LocalBackendGate.jsx";
 
 // Routes whose main content must fill the remaining viewport (no scroll, no padding)
 const FULL_BLEED_PREFIXES = ["/audit/seo/", "/content/sessions/", "/content/posts/", "/content/plan"];
@@ -15,7 +16,17 @@ const FULL_BLEED_PREFIXES = ["/audit/seo/", "/content/sessions/", "/content/post
 // Routes that use the full viewport width (fluid) but still scroll with padding
 const WIDE_PREFIXES = ["/content"];
 
+// The gate must wrap the layout rather than sit inside it: this component's
+// own effects hit the API, so they must not run until the base URL is settled.
 export default function AppLayout({ children }) {
+  return (
+    <LocalBackendGate>
+      <AppLayoutInner>{children}</AppLayoutInner>
+    </LocalBackendGate>
+  );
+}
+
+function AppLayoutInner({ children }) {
   const pathname = usePathname();
   const isFullBleed = FULL_BLEED_PREFIXES.some((p) => pathname?.startsWith(p));
   const isWide = !isFullBleed && WIDE_PREFIXES.some((p) => pathname?.startsWith(p));

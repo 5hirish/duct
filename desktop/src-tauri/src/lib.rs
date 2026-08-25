@@ -14,10 +14,14 @@
 //! `handle_auth_deep_link` below and is forwarded to the webview's existing
 //! `/?auth_code=` exchange path.
 
+mod sidecar;
+
 use keyring::{Entry, Error as KeyringError};
 use tauri::{AppHandle, Manager, Url};
 use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_opener::OpenerExt;
+
+use sidecar::{get_sidecar_info, SidecarState};
 
 /// Keychain service namespace. The `provider` id (e.g. "anthropic") is the account.
 const KEYCHAIN_SERVICE: &str = "ai.getduct.desktop.provider-keys";
@@ -58,7 +62,14 @@ fn delete_provider_key(provider: String) -> Result<(), String> {
 fn get_shell_info() -> serde_json::Value {
     serde_json::json!({
         "version": env!("CARGO_PKG_VERSION"),
-        "capabilities": { "browserAuth": true }
+        "capabilities": {
+            "browserAuth": true,
+            // This shell ships and supervises a local backend; the web app should
+            // resolve its API base from `get_sidecar_info` instead of the
+            // build-time NEXT_PUBLIC_API_BASE. Older shells lack the flag and
+            // keep talking to the hosted API.
+            "localSidecar": true
+        }
     })
 }
 
@@ -122,6 +133,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_deep_link::init())
+        .manage(SidecarState::default())
         .setup(|app| {
             let handle = app.handle().clone();
             app.deep_link().on_open_url(move |event| {
@@ -129,6 +141,13 @@ pub fn run() {
                     handle_auth_deep_link(&handle, &url);
                 }
             });
+
+            // Start the local backend. A failure here is recorded in
+            // SidecarState and reported through `get_sidecar_info` — the window
+            // still opens so the user sees the reason rather than nothing.
+            if let Err(err) = sidecar::spawn(app.handle()) {
+                eprintln!("duct: sidecar failed to start: {err}");
+            }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -136,8 +155,16 @@ pub fn run() {
             set_provider_key,
             delete_provider_key,
             get_shell_info,
+            get_sidecar_info,
             open_external
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app, event| {
+            // The sidecar's lifetime is the app window's: no orphaned Python
+            // process holding a loopback port after the user quits.
+            if matches!(event, tauri::RunEvent::Exit) {
+                sidecar::shutdown(app);
+            }
+        });
 }

@@ -12,7 +12,7 @@ This directory contains the Python reporting and synthesis side of Duct.
 
 ## Product role
 
-This is the product core described in `docs/mvp/mvp-plan.md`.
+This is the product core described in the MVP plan (duct-cloud, private).
 
 - read from client-owned data destinations
 - normalize data into stable internal payloads
@@ -50,7 +50,7 @@ This is the product core described in `docs/mvp/mvp-plan.md`.
 
 ## Production deploy
 
-Railway + Railpack (Poetry) is the intended API host; pairing with the Next app on Cloudflare Workers is documented in [`docs/engineering/deployment-cloudflare-railway.md`](../docs/engineering/deployment-cloudflare-railway.md).
+Railway + Railpack (Poetry) is the intended API host; pairing with the Next app on Cloudflare Workers is documented in the deployment runbook (duct-cloud, private).
 
 Service root in Railway should be **`backend`** so [`railway.json`](railway.json) applies.
 
@@ -63,4 +63,4 @@ Service root in Railway should be **`backend`** so [`railway.json`](railway.json
 - Cursor instructions: `backend/AGENTS.md`
 - Claude Code instructions: `backend/CLAUDE.md`
 
-Deployment and env details: [`docs/engineering/deployment-cloudflare-railway.md`](../docs/engineering/deployment-cloudflare-railway.md) (Railway variables, checklist).
+Deployment and env details: the deployment runbook (duct-cloud, private) (Railway variables, checklist).

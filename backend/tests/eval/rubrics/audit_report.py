@@ -6,7 +6,7 @@ and that structural validation cannot catch: a report can satisfy
 recommending work in the wrong order.
 
 This exists to answer two questions that only a live run can settle
-(`docs/engineering/agent-engine-consolidation-review.md` §6.6):
+(the engine consolidation review (duct-cloud, private) §6.6):
 
 1. **Which models may we offer?** Customers bring their own key, so a weak model
    produces a bad audit that gets blamed on Duct. Score each candidate model on

@@ -1,7 +1,7 @@
 """Live audit eval — score a real audit against the audit rubric, per model.
 
 Answers the two questions that gate the migration
-(`docs/engineering/agent-engine-consolidation-review.md` §6.6, §9.4a):
+(the engine consolidation review (duct-cloud, private) §6.6, §9.4a):
 
   1. **Which models may we offer customers?** BYO-key means a weak model
      produces a bad audit that gets blamed on Duct. Run this per candidate and

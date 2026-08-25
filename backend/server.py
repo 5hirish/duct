@@ -18,7 +18,7 @@ import service.google.ads  # noqa: F401 — registers connectors before routes i
 import service.google.ga4  # noqa: F401 — registers connectors before routes import
 import service.google.gsc  # noqa: F401 — registers connectors before routes import
 
-from config import get_configs
+from config import cors_kwargs, get_configs
 from db.session import init_db
 import models  # noqa: F401 - registers SQLModel metadata
 from routes.namespace import router as api_router
@@ -198,21 +198,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-_cfg_cors = get_configs()
-_cors_origins = [o for o in [_cfg_cors.frontend_origin, _cfg_cors.site_origin] if o]
-
-# In local dev allow any localhost port (static site, app, storybook, etc.)
-_cors_kwargs: dict = dict(
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-if _cfg_cors.app_env == "local":
-    _cors_kwargs["allow_origin_regex"] = r"http://(localhost|127\.0\.0\.1)(:\d+)?"
-else:
-    _cors_kwargs["allow_origins"] = _cors_origins
-
-app.add_middleware(CORSMiddleware, **_cors_kwargs)
+app.add_middleware(CORSMiddleware, **cors_kwargs(get_configs()))
 app.add_middleware(OpenapiDocsBasicAuthMiddleware)
 # Added last → outermost, so the timing spans CORS + auth + handler.
 app.add_middleware(AccessLogMiddleware)

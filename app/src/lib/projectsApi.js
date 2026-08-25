@@ -11,7 +11,7 @@
 // the background. Every call is a no-op (returns null/[]) when no valid token
 // is present, so signed-out or token-less sessions degrade to local-only.
 
-import { BASE } from "./api";
+import { BASE, backendApiKey } from "./api";
 
 const TOKEN_KEY = "duct_auth_token";
 
@@ -26,7 +26,7 @@ function authToken() {
 
 function authHeaders(extra = {}) {
   const headers = { ...extra };
-  const apiKey = process.env.NEXT_PUBLIC_DUCT_API_KEY;
+  const apiKey = backendApiKey();
   if (apiKey) headers["X-API-Key"] = apiKey;
   const token = authToken();
   if (token) headers["Authorization"] = `Bearer ${token}`;
