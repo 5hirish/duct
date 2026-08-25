@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-sidecar-info"
+description = "Enables the get_sidecar_info command without any pre-configured scope."
+commands.allow = ["get_sidecar_info"]
+
+[[permission]]
+identifier = "deny-get-sidecar-info"
+description = "Denies the get_sidecar_info command without any pre-configured scope."
+commands.deny = ["get_sidecar_info"]

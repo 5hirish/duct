@@ -1,13 +1,19 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Lets the hosted Duct web app (and the local dev server) call the keychain commands.",
+  "description": "Lets the hosted Duct web app call the keychain commands. Local dev origins live in the dev-only `dev-localhost` capability, which release builds exclude via app.security.capabilities.",
   "windows": ["main"],
   "remote": {
-    "urls": ["https://app.getduct.ai", "http://localhost:3003"]
+    "urls": ["https://app.getduct.ai", "https://app.getduct.ai/*"]
   },
   "permissions": [
     "core:default",
-    "opener:default"
+    "opener:default",
+    "allow-get-provider-key",
+    "allow-set-provider-key",
+    "allow-delete-provider-key",
+    "allow-get-shell-info",
+    "allow-get-sidecar-info",
+    "allow-open-external"
   ]
 }

@@ -33,6 +33,13 @@ def clean_env(monkeypatch):
         "DATABASE_URL", "UPLOADS_DIR", "INIT_DB_ON_STARTUP",
     ):
         monkeypatch.delenv(var, raising=False)
+    # Clearing the environment is not enough: Configs also reads backend/.env
+    # and .env.local, deliberately, so integration tests can share the running
+    # server's keys (see config._settings_env_files). A developer with a real
+    # DATABASE_URL there would otherwise see these derivation tests fail — and
+    # the assertion message would print the credential. These are unit tests of
+    # the derivation logic, so cut the dotenv source off for them only.
+    monkeypatch.setitem(Configs.model_config, "env_file", None)
     return monkeypatch
 
 
