@@ -39,7 +39,10 @@ for bring-your-own provider API keys. Design:
   `src-tauri/Entitlements.developerid.plist`. The App Store variant
   (`tauri.appstore.conf.json`, `Entitlements.appstore.plist`,
   `.github/workflows/desktop-testflight.yml`) is retained only for the thin
-  client that predates the sidecar; do not add the sidecar to it.
+  client that predates the sidecar; do not add the sidecar to it. That workflow
+  is **manual-only** — `bundle.resources` now always declares the sidecar, which
+  an App Store build cannot host, so it fails on every desktop change until the
+  appstore overlay overrides `bundle.resources`.
 
 ## Rules
 

@@ -153,8 +153,12 @@ reliably.
 Retained for the pre-sidecar thin client only. **Do not add the sidecar to this
 build** — it cannot work under the sandbox.
 
-Pushes to `main` touching `desktop/**` build a sandboxed, universal Mac App
-Store package and upload it to TestFlight via
+**This workflow is manual-only (`workflow_dispatch`).** Now that
+`bundle.resources` always declares the sidecar, an App Store build fails with
+`resource path ../../backend/dist/duct-sidecar doesn't exist` — the sandbox
+cannot host it, so the two are structurally incompatible. Reviving the channel
+means first making `tauri.appstore.conf.json` override `bundle.resources`, and
+verifying the merged config really drops it. Run it from the Actions tab:
 [`.github/workflows/desktop-testflight.yml`](../.github/workflows/desktop-testflight.yml).
 Full setup — Apple prerequisites, the GitHub secrets, and troubleshooting — is in
 the TestFlight runbook (duct-cloud, private).
