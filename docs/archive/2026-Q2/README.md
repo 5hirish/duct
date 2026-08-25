@@ -1,6 +1,6 @@
 # Archived docs (Q2 2026)
 
-Point-in-time plans, superseded recommendations, and completed UX specs. **Do not treat these as current architecture or active design source** — use active paths under [`../../engineering/`](../../engineering/), [`../../mvp/`](../../mvp/), and [`../../strategy/product-plan.md`](../../strategy/product-plan.md).
+Point-in-time plans, superseded recommendations, and completed UX specs. **Do not treat these as current architecture or active design source** — use active paths under [`../../engineering/`](../../engineering/).
 
 | File | Why archived |
 |------|----------------|
@@ -12,7 +12,5 @@ Point-in-time plans, superseded recommendations, and completed UX specs. **Do no
 
 ## Current pointers
 
-- Deploy: [`../../engineering/deployment-cloudflare-railway.md`](../../engineering/deployment-cloudflare-railway.md)
 - OAuth (living plan, updated): [`../../engineering/oauth-authentication-plan.md`](../../engineering/oauth-authentication-plan.md)
 - Google Ads API (token app): [`../../engineering/google-ads-api-tool-design-document.md`](../../engineering/google-ads-api-tool-design-document.md)
-- Google Ads slice (scope updated): [`../../mvp/google-ads-mvp-plan.md`](../../mvp/google-ads-mvp-plan.md)

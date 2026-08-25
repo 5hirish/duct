@@ -21,11 +21,28 @@ for bring-your-own provider API keys. Design:
   sniffing — old shells keep the legacy path.
 - macOS registers the custom scheme from the built bundle's Info.plist, so the
   deep-link leg only works from a bundled app (`tauri build`), not `tauri dev`.
-- **macOS distribution** is TestFlight (internal testers) via a sandboxed Mac App
-  Store build — `src-tauri/tauri.appstore.conf.json` +
-  `src-tauri/Entitlements.appstore.plist`, shipped by
-  `.github/workflows/desktop-testflight.yml`. Runbook:
-  `docs/engineering/desktop-testflight-release.md`.
+- **Local backend ("sidecar")**: the bundle ships the FastAPI backend frozen by
+  PyInstaller (`backend/duct_sidecar.spec`), supervised by
+  `src-tauri/src/sidecar.rs`. It binds a loopback port the OS picks, persists to
+  SQLite in the per-user data dir, and prints one JSON handshake line the shell
+  reads. The web app gets it via `get_sidecar_info` and repoints its API base
+  (`app/src/lib/localBackend.js`), gated on the `localSidecar` capability.
+  Build it before bundling — `cd backend && poetry run pyinstaller
+  duct_sidecar.spec --noconfirm` — because `bundle.resources` copies
+  `backend/dist/duct-sidecar/` verbatim and a stale or missing build ships a
+  broken app. It is **onedir, never onefile**: a onefile binary unpacks to a
+  temp dir at startup and does not survive signing + notarization.
+- **macOS distribution** is Developer ID + a notarized DMG, *not* the App Store.
+  The sandbox cannot host a PyInstaller sidecar and embedded interpreters draw
+  rejections — see the engine consolidation review (duct-cloud, private) §8.2.
+  Config is `src-tauri/tauri.conf.json` (`bundle.macOS`) +
+  `src-tauri/Entitlements.developerid.plist`. The App Store variant
+  (`tauri.appstore.conf.json`, `Entitlements.appstore.plist`,
+  `.github/workflows/desktop-testflight.yml`) is retained only for the thin
+  client that predates the sidecar; do not add the sidecar to it. That workflow
+  is **manual-only** — `bundle.resources` now always declares the sidecar, which
+  an App Store build cannot host, so it fails on every desktop change until the
+  appstore overlay overrides `bundle.resources`.
 
 ## Rules
 
@@ -49,12 +66,17 @@ for bring-your-own provider API keys. Design:
   in the Claude-on-the-web container — build, sign, and release locally or in CI.
 - `Cargo.lock` is committed; refresh it with `cargo generate-lockfile` (or a
   build) when dependencies change, and commit the result.
-- **Never enable `tauri-plugin-updater` for the macOS build.** App Store apps may
-  not self-update; it would be rejected. Auto-update is only an option if macOS
-  moves to Developer ID / DMG distribution.
+- `tauri-plugin-updater` is now *permitted* on macOS (Developer ID allows
+  self-update) but is **not wired up yet** — it needs a signing keypair and an
+  update endpoint. Do not enable it in the App Store variant, where it is still
+  grounds for rejection.
 - Changes to `src-tauri/Entitlements.appstore.plist` alter what the sandbox
   allows. Adding an entitlement without a real need invites App Review questions;
   removing `app-sandbox` breaks the upload outright (CI checks for it).
+- `src-tauri/Entitlements.developerid.plist` is the opposite case: every key in
+  it is load-bearing for the embedded CPython interpreter under the hardened
+  runtime. Removing one does not harden the app, it makes the sidecar crash at
+  launch. It deliberately carries no `app-sandbox` key.
 - `bundle.macOS` config uses `deny_unknown_fields` — a mistyped key fails the
   build rather than being ignored. Key names are camelCase
   (`minimumSystemVersion`, `hardenedRuntime`, `entitlements`).

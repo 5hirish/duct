@@ -3,7 +3,7 @@
 Port of ``agents/audit/tools.py``, which builds the same tools as a
 Claude-Agent-SDK in-process MCP server. LangChain takes plain Python callables,
 so the MCP server, its bootstrap and its hand-written JSON Schema all go away —
-see ``docs/engineering/agent-engine-consolidation-review.md`` §9.4.
+see `the engine consolidation review (duct-cloud, private)` §9.4.
 
 What is deliberately identical to the SDK version:
 

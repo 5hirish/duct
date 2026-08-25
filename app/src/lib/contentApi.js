@@ -9,6 +9,7 @@
 
 import {
   BASE,
+  backendApiKey,
   createAgentSession,
   openAgentStream,
   sendAgentMessage,
@@ -56,7 +57,7 @@ export function cdnImage(u, { width = 480, quality = 80 } = {}) {
 
 function backendApiHeaders(extra = {}) {
   const headers = { ...extra };
-  const key = process.env.NEXT_PUBLIC_DUCT_API_KEY;
+  const key = backendApiKey();
   if (key) headers["X-API-Key"] = key;
   return headers;
 }

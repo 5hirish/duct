@@ -4,7 +4,7 @@ description: Audit a page or blog post for launch readiness across SEO, mobile r
 argument-hint: "<target-path-or-url> [\"<audience/context>\"]"
 ---
 
-Runs a structured launch-readiness audit for one page/post using the Duct GTM audit standard in `docs/gtm/ads-launch-readiness-audit.md`.
+Runs a structured launch-readiness audit for one page/post. The full standard — rubric, weightings and checklists — is contained in this file; nothing external is required.
 
 ## Usage
 

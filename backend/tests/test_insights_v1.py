@@ -1,7 +1,7 @@
 """Insights v1 engine on the LangChain 1.x agent stack.
 
 The engine had no tests before the port (see
-`docs/engineering/agent-engine-consolidation-review.md` §2). These cover the
+the engine consolidation review (duct-cloud, private) §2). These cover the
 behaviour `routes/generate.py` depends on, driven by a fake chat model so they
 need no API key and no network.
 

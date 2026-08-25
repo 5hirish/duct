@@ -1,3 +1,9 @@
+> **Third-party documentation — OpenAI.**
+> Source: OpenAI, "Shaping your agent's personality" · Retrieved 2026-04-06
+> Licence: OpenAI Cookbook material is published under MIT; confirm the exact
+> source page before reusing this elsewhere.
+> Reproduced verbatim for reference and not written by Duct. Rights remain with the original author; the Duct repository licence does not cover this file.
+
 # Shaping your agent’s personality
 
 Similar to ChatGPT’s built-in personality [presets](https://help.openai.com/en/articles/11899719-customizing-your-chatgpt-personality), you can steer your Agent’s behavior by explicitly defining its personality in your prompt instructions. These instructions—sometimes called the “system prompt” or “developer prompt”—guide the agent’s tone, detail level, and style of responses. In this notebook, we’ll refer to them simply as “instructions,” following the term used in the [OpenAI API documentation](https://platform.openai.com/docs/guides/text-generation/introduction) for consistency.

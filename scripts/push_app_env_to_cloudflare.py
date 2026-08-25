@@ -6,7 +6,7 @@ Put **CLOUDFLARE_ACCOUNT_ID** in the same app env file (e.g. `.env.local` / `.en
 your token can access multiple Cloudflare accounts (avoids interactive account selection). Override with
 `--cloudflare-account-id` if needed.
 
-See: docs/engineering/deployment-cloudflare-railway.md
+See: the deployment runbook (duct-cloud, private)
 """
 
 from __future__ import annotations

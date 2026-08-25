@@ -34,20 +34,24 @@ name: desktop — TestFlight (macOS)
 #                                      build is assigned to that group automatically.
 #                                      Find it with: asc testflight groups list --app "APP_ID" --internal
 #
-# One-time Apple setup is documented in docs/engineering/desktop-testflight-release.md.
+# One-time Apple setup is documented in the TestFlight runbook (duct-cloud, private).
 
+# MANUAL ONLY as of the sidecar work (2026-08).
+#
+# The bundle now ships the backend frozen by PyInstaller, declared in
+# `tauri.conf.json` under `bundle.resources`. The App Store sandbox cannot host
+# that sidecar, so this variant deliberately must not include it — which means
+# this build now fails on every desktop change with:
+#
+#     failed to run tauri-build: resource path `../../backend/dist/duct-sidecar`
+#     doesn't exist
+#
+# Developer ID + notarized DMG (desktop-release.yml) is the shipping channel.
+# Everything here is kept so the App Store path can be revived, but it no longer
+# runs automatically. To revive it, `tauri.appstore.conf.json` must first
+# override `bundle.resources` so the overlay drops the sidecar — verify the
+# merged config actually clears it, rather than assuming the override wins.
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'desktop/**'
-      - '!desktop/**.md'
-      - '.github/workflows/desktop-testflight.yml'
-  pull_request:
-    paths:
-      - 'desktop/**'
-      - '!desktop/**.md'
-      - '.github/workflows/desktop-testflight.yml'
   workflow_dispatch:
 
 concurrency:

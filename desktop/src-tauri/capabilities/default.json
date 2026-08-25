@@ -13,6 +13,7 @@
     "allow-set-provider-key",
     "allow-delete-provider-key",
     "allow-get-shell-info",
+    "allow-get-sidecar-info",
     "allow-open-external"
   ]
 }

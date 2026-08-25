@@ -8,7 +8,7 @@
 // throws a plain Error with the server's message so callers can surface it
 // verbatim.
 
-import { BASE } from "./api";
+import { BASE, backendApiKey } from "./api";
 
 const TOKEN_KEY = "duct_auth_token";
 
@@ -23,7 +23,7 @@ function authToken() {
 
 function headers(extra = {}) {
   const out = { ...extra };
-  const apiKey = process.env.NEXT_PUBLIC_DUCT_API_KEY;
+  const apiKey = backendApiKey();
   if (apiKey) out["X-API-Key"] = apiKey;
   const token = authToken();
   if (token) out["Authorization"] = `Bearer ${token}`;

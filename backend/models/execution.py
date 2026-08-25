@@ -14,7 +14,7 @@ from uuid import UUID, uuid4
 
 import sqlalchemy as sa
 from sqlalchemy import Column, DateTime, ForeignKey, String
-from sqlalchemy.dialects.postgresql import JSONB
+from models.columns import json_column
 from sqlmodel import Field, SQLModel
 
 
@@ -61,7 +61,7 @@ class ExecutionChangeSet(SQLModel, table=True):
     #  preview: {...}, status, guardrail_violations: [...], result: {...}, rollback: {...}}
     changes: list = Field(
         default_factory=list,
-        sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="[]"),
+        sa_column=Column(json_column(), nullable=False, server_default="[]"),
     )
     created_at: datetime = Field(
         default_factory=_utcnow, sa_column=Column(DateTime(timezone=True), nullable=False)
@@ -97,7 +97,7 @@ class ExecutionGuardrail(SQLModel, table=True):
     rule: str = Field(sa_column=Column(sa.Text(), nullable=False))
     match: dict = Field(
         default_factory=dict,
-        sa_column=Column(JSONB(astext_type=sa.Text()), nullable=False, server_default="{}"),
+        sa_column=Column(json_column(), nullable=False, server_default="{}"),
     )
     active: bool = Field(default=True, sa_column=Column(sa.Boolean(), nullable=False, server_default=sa.true()))
     created_at: datetime = Field(

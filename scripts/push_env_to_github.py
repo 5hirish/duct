@@ -9,7 +9,7 @@ primary app deploy uses Cloudflare Workers Builds **build variables** in the das
 
 Requires: gh auth login, repo checkout as cwd.
 
-See: docs/engineering/deployment-cloudflare-railway.md
+See: the deployment runbook (duct-cloud, private)
 """
 
 from __future__ import annotations
