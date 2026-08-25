@@ -18,9 +18,9 @@ import logging
 from typing import Any
 
 from reportlab.lib import colors
-from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import mm
 from reportlab.platypus import (
     HRFlowable,
@@ -75,7 +75,6 @@ def _score_color(score: int) -> Any:
 # ---------------------------------------------------------------------------
 
 def _styles() -> dict[str, ParagraphStyle]:
-    base = getSampleStyleSheet()
     return {
         "h1": ParagraphStyle("h1", fontName="Helvetica-Bold", fontSize=22,
                              textColor=NAVY, spaceAfter=4),
