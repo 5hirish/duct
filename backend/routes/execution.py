@@ -9,9 +9,11 @@ Two-phase commit over connector mutations:
   POST /api/execute/{id}/rollback  revert applied changes
   POST /api/execute/{id}/reject    discard without applying
 
-Credentials are per-request (BYO refresh/developer token) exactly like the
-insights pipeline — never persisted here. Guardrails are per-account invariants
-enforced in code at both preview and apply time.
+Credentials resolve per request: BYO fields in the body win, then the user's
+stored (Fernet-encrypted) connector credentials, then server env fallbacks —
+see ``service/execution/creds.py``. Nothing from the body is persisted here.
+Guardrails are per-account invariants enforced in code at both preview and
+apply time.
 """
 
 from __future__ import annotations
@@ -29,11 +31,11 @@ from starlette.status import HTTP_404_NOT_FOUND
 # Imported for their register_executor side effects.
 import service.execution.ga4_exec  # noqa: F401
 import service.execution.google_ads_exec  # noqa: F401
-from config import get_configs
 from db.session import get_session
 from models.auth import User
 from models.execution import ExecutionChangeSet, ExecutionGuardrail
 from service.auth import get_current_user
+from service.execution.creds import resolve_execution_creds
 from service.execution.guardrails import violations_for
 from service.execution.registry import EXECUTOR_REGISTRY, get_executor
 
@@ -80,17 +82,6 @@ class GuardrailIn(BaseModel):
     account_id: str = ""
     rule: str
     match: dict = Field(default_factory=dict)
-
-
-def _resolve_creds(credentials: CredentialsIn) -> dict[str, str]:
-    cfg = get_configs()
-    return {
-        "refresh_token": credentials.refresh_token.strip(),
-        "developer_token": credentials.developer_token.strip() or cfg.google_ads_developer_token,
-        "login_customer_id": credentials.login_customer_id.strip() or cfg.google_ads_login_customer_id,
-        "client_id": cfg.google_oauth_client_id or cfg.google_ads_client_id,
-        "client_secret": cfg.google_oauth_client_secret or cfg.google_ads_client_secret,
-    }
 
 
 def _guardrails_for(
@@ -257,7 +248,13 @@ def propose_change_set(
                 f"not {body.connector_type!r}",
             )
 
-    creds = _resolve_creds(body.credentials)
+    creds = resolve_execution_creds(
+        session,
+        user.id,
+        body.connector_type,
+        body.account_id,
+        override=body.credentials.model_dump(),
+    )
     guardrails = _guardrails_for(session, user.id, body.connector_type, body.account_id.strip())
 
     stored_changes: list[dict[str, Any]] = []
@@ -394,7 +391,13 @@ def apply_change_set(
             detail=f"Change set must be approved before applying (currently {row.status}).",
         )
 
-    creds = _resolve_creds(body.credentials)
+    creds = resolve_execution_creds(
+        session,
+        user.id,
+        row.connector_type,
+        row.account_id,
+        override=body.credentials.model_dump(),
+    )
     guardrails = _guardrails_for(session, user.id, row.connector_type, row.account_id)
 
     row.status = "applying"
@@ -450,7 +453,13 @@ def rollback_change_set(
     if row.status not in ("applied", "partial"):
         raise HTTPException(status_code=409, detail=f"Nothing to roll back on a {row.status} change set.")
 
-    creds = _resolve_creds(body.credentials)
+    creds = resolve_execution_creds(
+        session,
+        user.id,
+        row.connector_type,
+        row.account_id,
+        override=body.credentials.model_dump(),
+    )
 
     reverted = errors = 0
     updated = []

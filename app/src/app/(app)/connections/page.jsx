@@ -11,6 +11,12 @@ import {
   setAdsLoginCustomerId,
 } from "../../../lib/adsCredentials";
 import { PROVIDERS, getProviderKey, setProviderKey, clearProviderKey } from "../../../lib/providerKeys";
+import {
+  deleteServerConnector,
+  hasAuthToken,
+  listServerConnectors,
+  saveServerConnector,
+} from "../../../lib/connectorsApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,21 +25,92 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 export default function ConnectionsPage() {
   const [ga4Connected, setGa4Connected] = useState(false);
   const [gscConnected, setGscConnected] = useState(false);
+  const [gtmConnected, setGtmConnected] = useState(false);
   const [gadsOauthConnected, setGadsOauthConnected] = useState(false);
   const [gadsDevTokenSaved, setGadsDevTokenSaved] = useState(false);
   const [devTokenInput, setDevTokenInput] = useState("");
   const [mccInput, setMccInput] = useState("");
+  const [signedIn, setSignedIn] = useState(false);
+  const [serverRows, setServerRows] = useState({}); // connector_type -> stored row
+
+  async function refreshServerRows() {
+    if (!hasAuthToken()) return;
+    try {
+      const rows = await listServerConnectors();
+      const byType = {};
+      for (const row of rows) byType[row.connector_type] = row;
+      setServerRows(byType);
+    } catch {
+      /* offline / signed-out — session-only mode still works */
+    }
+  }
+
+  // Upserts replace the stored blob whole, so a Google Ads sync must always
+  // carry all three fields (refresh token + developer token + MCC).
+  async function syncGadsToServer() {
+    if (!hasAuthToken()) return;
+    const refreshToken = sessionStorage.getItem("gads_refresh_token") || "";
+    if (!refreshToken) return;
+    const developerToken = (await getAdsDeveloperToken()) || "";
+    const loginCustomerId = getAdsLoginCustomerId() || "";
+    try {
+      await saveServerConnector({
+        connector_type: "google_ads",
+        credentials: {
+          refresh_token: refreshToken,
+          developer_token: developerToken,
+          login_customer_id: loginCustomerId,
+        },
+      });
+      await refreshServerRows();
+    } catch {
+      /* session-only fallback keeps working */
+    }
+  }
+
+  async function syncTokenToServer(connectorType, refreshToken) {
+    if (!hasAuthToken() || !refreshToken) return;
+    try {
+      await saveServerConnector({
+        connector_type: connectorType,
+        credentials: { refresh_token: refreshToken },
+      });
+      await refreshServerRows();
+    } catch {
+      /* session-only fallback keeps working */
+    }
+  }
+
+  async function removeServerRow(connectorType) {
+    const row = serverRows[connectorType];
+    if (!row) return;
+    try {
+      await deleteServerConnector(row.id);
+      await refreshServerRows();
+    } catch {
+      /* best-effort */
+    }
+  }
 
   useEffect(() => {
+    const arrived = {};
     const hash = window.location.hash;
     if (hash.startsWith("#")) {
       const params = new URLSearchParams(hash.slice(1));
-      const gadsToken = params.get("refresh_token");
-      const ga4Token = params.get("ga4_refresh_token");
-      const gscToken = params.get("gsc_refresh_token");
-      if (gadsToken) sessionStorage.setItem("gads_refresh_token", decodeURIComponent(gadsToken));
-      if (ga4Token) sessionStorage.setItem("ga4_refresh_token", decodeURIComponent(ga4Token));
-      if (gscToken) sessionStorage.setItem("gsc_refresh_token", decodeURIComponent(gscToken));
+      const fragmentKeys = {
+        refresh_token: "gads_refresh_token",
+        ga4_refresh_token: "ga4_refresh_token",
+        gsc_refresh_token: "gsc_refresh_token",
+        gtm_refresh_token: "gtm_refresh_token",
+      };
+      for (const [fragmentKey, storageKey] of Object.entries(fragmentKeys)) {
+        const token = params.get(fragmentKey);
+        if (token) {
+          const decoded = decodeURIComponent(token);
+          sessionStorage.setItem(storageKey, decoded);
+          arrived[storageKey] = decoded;
+        }
+      }
       window.history.replaceState(null, "", window.location.pathname);
     }
 
@@ -41,7 +118,21 @@ export default function ConnectionsPage() {
     setMccInput(getAdsLoginCustomerId());
     setGa4Connected(!!sessionStorage.getItem("ga4_refresh_token"));
     setGscConnected(!!sessionStorage.getItem("gsc_refresh_token"));
+    setGtmConnected(!!sessionStorage.getItem("gtm_refresh_token"));
     getAdsDeveloperToken().then((token) => setGadsDevTokenSaved(!!token));
+
+    const authed = hasAuthToken();
+    setSignedIn(authed);
+    if (authed) {
+      refreshServerRows();
+      // Persist newly-arrived OAuth tokens server-side (encrypted) so agent
+      // executions and scheduled pulls can run without this browser tab.
+      if (arrived.gads_refresh_token) syncGadsToServer();
+      if (arrived.ga4_refresh_token) syncTokenToServer("ga4", arrived.ga4_refresh_token);
+      if (arrived.gsc_refresh_token) syncTokenToServer("gsc", arrived.gsc_refresh_token);
+      if (arrived.gtm_refresh_token) syncTokenToServer("gtm", arrived.gtm_refresh_token);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function saveGadsApiAccess(event) {
@@ -55,6 +146,7 @@ export default function ConnectionsPage() {
     }
     setAdsLoginCustomerId(mcc);
     setMccInput(mcc);
+    await syncGadsToServer();
   }
 
   async function signOutGads() {
@@ -66,16 +158,25 @@ export default function ConnectionsPage() {
     setGadsDevTokenSaved(false);
     setDevTokenInput("");
     setMccInput("");
+    await removeServerRow("google_ads");
   }
 
-  function signOutGa4() {
+  async function signOutGa4() {
     sessionStorage.removeItem("ga4_refresh_token");
     setGa4Connected(false);
+    await removeServerRow("ga4");
   }
 
-  function signOutGsc() {
+  async function signOutGsc() {
     sessionStorage.removeItem("gsc_refresh_token");
     setGscConnected(false);
+    await removeServerRow("gsc");
+  }
+
+  async function signOutGtm() {
+    sessionStorage.removeItem("gtm_refresh_token");
+    setGtmConnected(false);
+    await removeServerRow("gtm");
   }
 
   const gadsConnected = gadsOauthConnected && gadsDevTokenSaved;
@@ -200,6 +301,9 @@ export default function ConnectionsPage() {
               </Button>
             )}
           </div>
+          {gadsOauthConnected && (
+            <ServerSyncHint signedIn={signedIn} saved={!!serverRows.google_ads} />
+          )}
         </article>
 
         <article className="connection-card">
@@ -233,6 +337,7 @@ export default function ConnectionsPage() {
               </Button>
             )}
           </div>
+          {gscConnected && <ServerSyncHint signedIn={signedIn} saved={!!serverRows.gsc} />}
         </article>
 
         <article className="connection-card">
@@ -266,6 +371,48 @@ export default function ConnectionsPage() {
               </Button>
             )}
           </div>
+          {ga4Connected && <ServerSyncHint signedIn={signedIn} saved={!!serverRows.ga4} />}
+        </article>
+
+        <article className="connection-card">
+          <div className="connection-card-head">
+            <div className="connection-logo" aria-hidden="true">
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinejoin="round"
+              >
+                <path d="M20.59 10.59 13.4 3.4a2 2 0 0 0-2.83 0l-7.17 7.18a2 2 0 0 0 0 2.83l7.17 7.18a2 2 0 0 0 2.83 0l7.18-7.18a2 2 0 0 0 0-2.83Z" />
+                <circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="connection-title">Google Tag Manager</h2>
+              <p className="connection-description">
+                Tags, variables, and container versions — measurement fixes with staged
+                publishes and one-command rollback.
+              </p>
+            </div>
+          </div>
+          <div className="connection-status-row">
+            <span className={`status-pill ${gtmConnected ? "green" : "grey"}`}>
+              {gtmConnected ? "Connected" : "Not connected"}
+            </span>
+            {gtmConnected ? (
+              <Button type="button" variant="outline" size="sm" onClick={signOutGtm}>
+                Disconnect
+              </Button>
+            ) : (
+              <Button size="sm" asChild>
+                <a href={`${BASE}/auth/connectors/gtm/oauth/authorize`}>Connect</a>
+              </Button>
+            )}
+          </div>
+          {gtmConnected && <ServerSyncHint signedIn={signedIn} saved={!!serverRows.gtm} />}
         </article>
 
         <article className="connection-card">
@@ -351,6 +498,18 @@ export default function ConnectionsPage() {
       </Tabs>
 
     </section>
+  );
+}
+
+function ServerSyncHint({ signedIn, saved }) {
+  return (
+    <p className="app-subtle" style={{ margin: "6px 0 0", fontSize: 12 }}>
+      {saved
+        ? "Synced to your account — available to agents and server-side runs."
+        : signedIn
+          ? "This session only — reconnect to sync to your account."
+          : "This session only — sign in to sync to your account."}
+    </p>
   );
 }
 

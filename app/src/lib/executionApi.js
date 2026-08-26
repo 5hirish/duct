@@ -6,25 +6,16 @@
 //
 // Authenticated with the Bearer JWT (localStorage "duct_auth_token") plus the
 // shared X-API-Key, same as projectsApi.js. Apply/rollback/propose carry the
-// BYO connector credentials per request (sessionStorage / keychain — never
-// persisted server-side), matching the insights pipeline.
+// BYO connector credentials per request (sessionStorage / keychain); when a
+// field is empty the backend falls back to the user's stored encrypted
+// connector credentials (saved from /connections), then server env.
 
 import { BASE } from "./api";
+import { authedHeaders } from "./authFetch";
 import { googleAdsByoCredentials } from "./adsCredentials";
 
-const TOKEN_KEY = "duct_auth_token";
-
 function authHeaders(extra = {}) {
-  const headers = { ...extra };
-  const apiKey = process.env.NEXT_PUBLIC_DUCT_API_KEY;
-  if (apiKey) headers["X-API-Key"] = apiKey;
-  try {
-    const token = window.localStorage.getItem(TOKEN_KEY) || "";
-    if (token) headers["Authorization"] = `Bearer ${token}`;
-  } catch {
-    /* signed-out — backend will 401 */
-  }
-  return headers;
+  return authedHeaders(extra);
 }
 
 async function request(path, { method = "GET", body } = {}) {
@@ -45,10 +36,17 @@ async function request(path, { method = "GET", body } = {}) {
   return res.status === 204 ? null : res.json();
 }
 
-/** BYO credentials for the change set's connector, from session/keychain storage. */
+/**
+ * BYO credentials for the change set's connector, from session/keychain
+ * storage. Empty fields are fine: the backend falls back to the user's stored
+ * (encrypted) connector credentials, then server env.
+ */
 export async function executionCredentials(connectorType) {
   if (connectorType === "ga4") {
     return { refresh_token: sessionStorage.getItem("ga4_refresh_token") || "" };
+  }
+  if (connectorType === "gtm") {
+    return { refresh_token: sessionStorage.getItem("gtm_refresh_token") || "" };
   }
   const ads = await googleAdsByoCredentials();
   return {

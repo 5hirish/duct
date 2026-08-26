@@ -17,6 +17,7 @@ from uvicorn.logging import DefaultFormatter
 import service.google.ads  # noqa: F401 — registers connectors before routes import
 import service.google.ga4  # noqa: F401 — registers connectors before routes import
 import service.google.gsc  # noqa: F401 — registers connectors before routes import
+import service.google.gtm  # noqa: F401 — registers connectors before routes import
 
 from config import cors_kwargs, get_configs
 from db.session import init_db
