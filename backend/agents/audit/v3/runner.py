@@ -65,6 +65,11 @@ _VERBOSE = os.environ.get("AUDIT_VERBOSE_LOGGING", "").lower() in ("1", "true")
 # Anthropic-only engine; model strings are owned by the ModelName enum in agents/models.py.
 _ANTHROPIC_MODELS = (ModelName.CLAUDE_SONNET, ModelName.CLAUDE_HAIKU)
 
+# Connector knowledge packs baked into the audit system prompt. STATIC per
+# configuration — never vary these per request (cached-prefix invariant).
+# google_ads/ga4/gtm join once execution tools mount (Phase 4).
+_AUDIT_KNOWLEDGE_PACKS: tuple[str, ...] = ("gsc",)
+
 EmitFn = Callable[[dict[str, Any]], Awaitable[None]]
 
 # Session registry + close semantics are shared (agents/core/session.py). These
@@ -259,6 +264,7 @@ async def run_synthesis(
     template_id: str = "",
     research_context=None,  # AuditResearchContext | None
     resume: bool = False,
+    extra_context: str = "",
 ) -> tuple[AuditReport | None, bool]:  # (report, had_thinking)
     """Single-session artifact pattern: generation + chat in one ClaudeSDKClient.
 
@@ -290,8 +296,12 @@ async def run_synthesis(
     initial_prompt = build_audit_user_prompt(
         crawl_result, business_context, user_preferences,
         report_mode=report_mode, research_context=research_context,
+        extra_context=extra_context,
     )
-    system_prompt = build_unified_system_prompt(report_mode=report_mode, template_id=template_id)
+    system_prompt = build_unified_system_prompt(
+        report_mode=report_mode, template_id=template_id,
+        knowledge_packs=_AUDIT_KNOWLEDGE_PACKS,
+    )
 
     # ------------------------------------------------------------------
     # Helpers
@@ -521,11 +531,35 @@ async def run_synthesis(
         })
 
     _category_cb = _on_category_added if report_mode == "template" else None
+    # Artifact tools mount only for membership-checked project scope
+    # (routes.agents stamps artifact_project_id after verifying membership).
+    _artifact_project = getattr(session, "artifact_project_id", None)
+
+    async def _on_artifact_card(card: dict) -> None:
+        # In-chat artifact card: rendered by the UI as a compact chip that
+        # opens the artifact viewer.
+        await emit({"event": AuditEvent.ARTIFACT_UPDATED, "artifact": card})
+
     _mcp = build_audit_mcp_server(
         crawl_result,
         report_mode=report_mode,
         on_submit_report=_submit_cb,
         on_category_added=_category_cb,
+        project_id=_artifact_project,
+        artifact_user_id=getattr(session, "user_id", None),
+        artifact_conversation_id=getattr(session, "conversation_id", None),
+        on_artifact=_on_artifact_card,
+    )
+    _artifact_tools = (
+        [
+            AuditTool.LIST_ARTIFACTS,
+            AuditTool.GET_ARTIFACT,
+            AuditTool.CREATE_ARTIFACT,
+            AuditTool.UPDATE_ARTIFACT,
+            AuditTool.REWRITE_ARTIFACT,
+        ]
+        if _artifact_project
+        else []
     )
 
     # Thinking config: template mode applies a rigid 9-category scoring framework, where
@@ -547,6 +581,7 @@ async def run_synthesis(
             AgentTool.WEB_SEARCH,
             AgentTool.WEB_FETCH,
             AuditTool.FETCH_PAGES,  # mcp__duct_crawl__FetchPages — in-process MCP
+            *_artifact_tools,       # ListArtifacts/GetArtifact — project scope only
             *_extra_tools,
         ],
         # Belt-and-suspenders with ENABLE_TOOL_SEARCH=false (the documented control,
@@ -851,6 +886,7 @@ class ClaudeAuditRunner:
         report_mode: str = "freehand",
         template_id: str = "seo_v1",
         lead_magnet: bool = False,
+        extra_context: str = "",
     ) -> AuditReport | None:
         from agents.audit.schema import CrawlDepth
         session = get_session(session_id)
@@ -1014,6 +1050,7 @@ class ClaudeAuditRunner:
             report_mode=report_mode,
             template_id=template_id,
             research_context=research_context,
+            extra_context=extra_context,
         )
 
         await emit({

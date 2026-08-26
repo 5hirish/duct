@@ -11,6 +11,29 @@ import AuditTodos from "./AuditTodos";
 import { Phase } from "./auditPhase";
 import { CodeBlock, resolveCode } from "./CodeBlock";
 
+/** Compact chip for an artifact the agent just created/revised — opens the
+ * artifact viewer. Industry "card-in-stream" convention. */
+function ArtifactCard({ artifact }) {
+  if (!artifact) return null;
+  return (
+    <a
+      href={`/artifacts/${artifact.artifact_id}`}
+      target="_blank"
+      rel="noreferrer"
+      className="flex items-center gap-2.5 my-1.5 px-3 py-2 rounded-lg border border-input bg-muted/30 hover:bg-muted/60 transition-colors max-w-md no-underline"
+    >
+      <span aria-hidden="true" className="text-base">📄</span>
+      <span className="min-w-0">
+        <span className="block text-sm font-medium truncate">{artifact.title || artifact.slug}</span>
+        <span className="block text-xs text-muted-foreground truncate">
+          {artifact.kind} · v{artifact.version}
+          {artifact.label ? ` — ${artifact.label}` : ""}
+        </span>
+      </span>
+    </a>
+  );
+}
+
 function SendErrorBubble({ text, content, onRetry }) {
   return (
     <div className="flex justify-end mb-2">
@@ -317,6 +340,8 @@ export default function AuditChat({
         {messages.map((msg, i) =>
           msg.role === "send_error" ? (
             <SendErrorBubble key={i} text={msg.text} content={msg.content} onRetry={onRetrySend} />
+          ) : msg.role === "artifact_card" ? (
+            <ArtifactCard key={i} artifact={msg.artifact} />
           ) : (
             <ChatBubble key={i} role={msg.role} text={msg.text} thinking={msg.thinking} streaming={msg.streaming} />
           )

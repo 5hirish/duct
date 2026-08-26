@@ -61,6 +61,11 @@ class Artifact(SQLModel, table=True):
         sa_column=Column(sa.dialects.postgresql.UUID(as_uuid=True), nullable=True, index=True),
     )
 
+    # Model-chosen kebab-case identity, unique per project among groups ("" =
+    # unnamed). Shared by every version of the group; app-enforced uniqueness
+    # (ensure_unique_slug) — no DB constraint since version rows repeat it.
+    slug: str = Field(default="", sa_column=Column(String, nullable=False, server_default="", index=True))
+
     agent_type: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
     # Semantic kind: 'report' | 'document' | 'ticket' | 'image' | ...
     kind: str = Field(

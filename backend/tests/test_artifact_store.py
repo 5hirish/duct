@@ -335,6 +335,65 @@ def test_content_404_when_no_stored_file(local_storage, store_db, project, owner
     assert client.get(f"/api/user/artifacts/{row.id}/content").status_code == 404
 
 
+def _seed_text_versions(store_db, project, owner, contents, content_type="text/markdown", kind="memo"):
+    group = uuid4()
+    rows = []
+    for v, text in enumerate(contents, start=1):
+        rows.append(store.persist_artifact_version(
+            project_id=project.id, user_id=owner.id, agent_type="audit_seo",
+            kind=kind, content_type=content_type, title="Memo", filename=f"memo_v{v}.md",
+            group_id=group, version=v, data=text.encode(), slug="memo",
+            meta={"label": f"v{v} label"},
+        ))
+    return rows
+
+
+def test_restore_promotes_snapshot_to_new_head(local_storage, store_db, project, owner, client, db):
+    v1, _v2 = _seed_text_versions(store_db, project, owner, ["alpha", "beta"])
+    resp = client.post(f"/api/user/artifacts/{v1.id}/restore")
+    assert resp.status_code == 201
+    head = resp.json()
+    assert head["version"] == 3
+    assert head["meta"]["label"] == "Restored from v1"
+    restored = client.get(f"/api/user/artifacts/{head['id']}/content")
+    assert restored.content == b"alpha"  # history preserved, head restored
+
+
+def test_diff_between_versions(local_storage, store_db, project, owner, client):
+    _v1, v2 = _seed_text_versions(store_db, project, owner, ["line one\nline two", "line one\nline 2!"])
+    payload = client.get(f"/api/user/artifacts/{v2.id}/diff").json()
+    assert payload["base_version"] == 1 and payload["target_version"] == 2
+    assert "-line two" in payload["diff"] and "+line 2!" in payload["diff"]
+
+
+def test_resolve_by_slug_and_group(local_storage, store_db, project, owner, client):
+    v1, v2 = _seed_text_versions(store_db, project, owner, ["a", "b"])
+    by_slug = client.get(f"/api/user/artifacts/resolve?project_id={project.id}&ref=memo").json()
+    assert by_slug["id"] == str(v2.id)  # latest version wins
+    by_group = client.get(
+        f"/api/user/artifacts/resolve?project_id={project.id}&ref={v1.group_id}"
+    ).json()
+    assert by_group["id"] == str(v2.id)
+    by_url = client.get(
+        f"/api/user/artifacts/resolve?project_id={project.id}&ref=https://app.getduct.ai/artifacts/{v1.id}"
+    ).json()
+    assert by_url["id"] == str(v2.id)
+
+
+def test_export_csv_and_format_gating(local_storage, store_db, project, owner, client):
+    table = '{"columns": ["kw", "vol"], "rows": [["seo audit", 1200], ["ai seo", 480]]}'
+    (row,) = _seed_text_versions(
+        store_db, project, owner, [table],
+        content_type="application/vnd.duct.table+json", kind="dataset",
+    )
+    resp = client.get(f"/api/user/artifacts/{row.id}/export?format=csv")
+    assert resp.status_code == 200
+    assert resp.content.decode().splitlines()[0] == "kw,vol"
+    assert 'attachment; filename="memo_v1.csv"' == resp.headers["content-disposition"]
+    # PDF is for structured reports only.
+    assert client.get(f"/api/user/artifacts/{row.id}/export?format=pdf").status_code == 422
+
+
 def test_delete_removes_all_versions_and_files(local_storage, store_db, project, owner, client, db):
     group = uuid4()
     rows = [

@@ -44,11 +44,19 @@ def build_audit_mcp_server(
     report_mode: str = "freehand",
     on_submit_report=None,    # async (args: dict) -> dict | None
     on_category_added=None,   # async (count: int, category: dict) -> None — live progress
+    project_id=None,          # UUID | None — mounts the artifact tools when set
+    artifact_user_id=None,    # UUID | None — attribution for artifact writes
+    artifact_conversation_id=None,  # UUID | None — chat linkage for artifact writes
+    on_artifact=None,         # async (card: dict) -> None — in-chat artifact card emit
 ) -> McpSdkServerConfig:
     """Build the in-process MCP server scoped to this audit session's site.
 
     The returned config is passed to ClaudeAgentOptions.mcp_servers so the
     agent can call FetchPages during chat without making arbitrary HTTP requests.
+
+    project_id comes from the session's membership-checked artifact scope
+    (routes.agents stamps it only after verifying the caller belongs to the
+    project) — it gates the prior-artifact read tools.
     """
     root_host = urlparse(crawl_result.plan.root_url).netloc.lower().removeprefix("www.")
 
@@ -120,6 +128,13 @@ def build_audit_mcp_server(
         return {"content": [{"type": "text", "text": json.dumps(payload, indent=2)}]}
 
     tools = [fetch_pages]
+    if project_id is not None:
+        tools.extend(_build_artifact_tools(
+            project_id,
+            user_id=artifact_user_id,
+            conversation_id=artifact_conversation_id,
+            on_artifact=on_artifact,
+        ))
 
     if report_mode == "template":
         # Incremental build accumulator — persists across the Start/Add/Finalize
@@ -252,6 +267,310 @@ def build_audit_mcp_server(
         ])
 
     return create_sdk_mcp_server("duct_crawl", tools=tools)
+
+
+def _artifact_card(row) -> dict:
+    """Compact card payload for ARTIFACT_UPDATED SSE events + tool results."""
+    return {
+        "artifact_id": str(row.id),
+        "group_id": str(row.group_id),
+        "slug": row.slug,
+        "kind": row.kind,
+        "content_type": row.content_type,
+        "title": row.title,
+        "version": row.version,
+        "label": (row.meta or {}).get("label", ""),
+    }
+
+
+def _build_artifact_tools(project_id, *, user_id=None, conversation_id=None, on_artifact=None) -> list:
+    """Prior-artifact read tools + generic artifact write tools, scoped to one
+    membership-checked project.
+
+    Write model (industry convention): full-version snapshots in storage;
+    UpdateArtifact's exact-string edits are a token-saving transport with
+    aggressive fallback to RewriteArtifact on any failed/ambiguous match.
+    Reports are excluded from the write tools — they have their own validated
+    revision flow (SubmitAuditReport). DB access runs in a thread (sync
+    SQLModel session) so tool calls never block the streaming event loop.
+    on_artifact: async callback(card: dict) — emits the in-chat artifact card.
+    """
+
+    @tool(
+        name="ListArtifacts",
+        description=(
+            "List stored artifacts for this project (prior audit reports, documents) — "
+            "id, title, kind, version, date, and an AI summary of each. Use it to recall "
+            "what earlier audits found before repeating analysis, or to compare then vs now. "
+            "Pass kind='report' for audit reports only, or an empty kind for everything."
+        ),
+        input_schema={
+            "kind": Annotated[str, "Filter by artifact kind ('report', 'document', …). Empty = all kinds."],
+        },
+    )
+    async def list_artifacts(args: dict) -> dict:
+        kind = (args.get("kind") or "").strip() or None
+
+        def _query() -> list[dict]:
+            from db.session import get_session as db_session
+            from service.artifact_store import recent_artifact_summaries
+
+            with next(db_session()) as db:
+                rows = recent_artifact_summaries(db, project_id, kind=kind, limit=10)
+                return [
+                    {
+                        "artifact_id": str(r.id),
+                        "title": r.title,
+                        "kind": r.kind,
+                        "version": r.version,
+                        "created_at": r.created_at.isoformat() if r.created_at else "",
+                        "summary": r.summary or "(no summary yet)",
+                        "meta": r.meta,
+                    }
+                    for r in rows
+                ]
+
+        try:
+            rows = await asyncio.to_thread(_query)
+        except Exception as exc:  # noqa: BLE001 — tool errors return text, never raise
+            return {"content": [{"type": "text", "text": f"Artifact listing failed: {exc}"}]}
+        return {"content": [{"type": "text", "text": json.dumps({"artifacts": rows}, indent=2)}]}
+
+    @tool(
+        name="GetArtifact",
+        description=(
+            "Fetch one stored artifact's full structured payload by artifact_id (from "
+            "ListArtifacts or the <prior_reports> block). Returns the structured report "
+            "data plus metadata — use it to cite specific prior findings or scores."
+        ),
+        input_schema={
+            "artifact_id": Annotated[str, "The artifact id (UUID) to fetch."],
+        },
+    )
+    async def get_artifact(args: dict) -> dict:
+        raw_id = (args.get("artifact_id") or "").strip()
+
+        def _query() -> dict | None:
+            from uuid import UUID as _UUID
+
+            from db.session import get_session as db_session
+            from models.artifact import Artifact
+
+            with next(db_session()) as db:
+                row = db.get(Artifact, _UUID(raw_id))
+                # Scope check: only artifacts of THIS session's project.
+                if row is None or row.project_id != project_id:
+                    return None
+                return {
+                    "artifact_id": str(row.id),
+                    "title": row.title,
+                    "kind": row.kind,
+                    "version": row.version,
+                    "created_at": row.created_at.isoformat() if row.created_at else "",
+                    "summary": row.summary,
+                    "meta": row.meta,
+                    "structured_json": row.structured_json,
+                }
+
+        try:
+            payload = await asyncio.to_thread(_query)
+        except Exception as exc:  # noqa: BLE001
+            return {"content": [{"type": "text", "text": f"Artifact fetch failed: {exc}"}]}
+        if payload is None:
+            return {"content": [{"type": "text", "text": f"No artifact {raw_id!r} in this project."}]}
+        return {"content": [{"type": "text", "text": json.dumps(payload, indent=2)}]}
+
+    # ------------------------------------------------------------------
+    # Write tools — create / update (patch transport) / rewrite
+    # ------------------------------------------------------------------
+
+    async def _emit_card(row) -> dict:
+        card = _artifact_card(row)
+        if on_artifact is not None:
+            try:
+                await on_artifact(card)
+            except Exception:  # noqa: BLE001 — the card is UI sugar, never fatal
+                logger.debug("artifact card emit failed", exc_info=True)
+        return card
+
+    _TYPES_LINE = (
+        "Allowed content types: text/markdown (memos/plans/briefs), text/html "
+        "(self-contained page), text/csv, text/vnd.mermaid (diagram source), "
+        "application/vnd.duct.table+json ({\"columns\": [...], \"rows\": [[...]]}), "
+        "application/vnd.duct.chart+json (chart spec the app renders), "
+        "application/vnd.duct.diff+json (proposed-change preview)."
+    )
+
+    @tool(
+        name="CreateArtifact",
+        description=(
+            "Create a durable artifact for this project — a memo, dataset, diagram, "
+            "or page the user can open, version, and download from their library. "
+            "Choose a short kebab-case slug you will reuse to reference it later. "
+            + _TYPES_LINE
+            + " Audit reports are NOT created here — they go through the report flow."
+        ),
+        input_schema={
+            "slug": Annotated[str, "Short kebab-case identifier you coin, e.g. 'keyword-gap-plan'. Reused to address this artifact later."],
+            "title": Annotated[str, "Human-readable title shown in the library."],
+            "kind": Annotated[str, "Semantic kind: 'memo' | 'plan' | 'dataset' | 'diagram' | 'document' | 'change_preview'."],
+            "content_type": Annotated[str, "MIME type from the allowed list."],
+            "content": Annotated[str, "The complete artifact source content."],
+        },
+    )
+    async def create_artifact(args: dict) -> dict:
+        from service.artifact_store import AGENT_WRITABLE_TYPES
+
+        content_type = (args.get("content_type") or "").strip()
+        if content_type not in AGENT_WRITABLE_TYPES:
+            return {"content": [{"type": "text", "text": f"Unsupported content_type {content_type!r}. {_TYPES_LINE}"}]}
+        if (args.get("kind") or "") == "report":
+            return {"content": [{"type": "text", "text": "Reports are produced via the report flow, not CreateArtifact."}]}
+
+        def _create():
+            from db.session import get_session as db_session
+            from service.artifact_store import create_artifact_group
+
+            with next(db_session()) as db:
+                return create_artifact_group(
+                    db,
+                    project_id=project_id,
+                    user_id=user_id,
+                    agent_type="audit_seo",
+                    kind=(args.get("kind") or "document").strip() or "document",
+                    content_type=content_type,
+                    title=(args.get("title") or "").strip(),
+                    content=str(args.get("content") or ""),
+                    slug=(args.get("slug") or "").strip(),
+                    conversation_id=conversation_id,
+                )
+
+        try:
+            row = await asyncio.to_thread(_create)
+        except ValueError as exc:
+            return {"content": [{"type": "text", "text": f"Create failed: {exc}"}]}
+        except Exception as exc:  # noqa: BLE001
+            return {"content": [{"type": "text", "text": f"Create failed unexpectedly: {exc}"}]}
+        card = await _emit_card(row)
+        return {"content": [{"type": "text", "text": json.dumps({"created": card}, indent=2)}]}
+
+    def _resolve_writable(db, ref: str):
+        from service.artifact_store import resolve_reference
+
+        head = resolve_reference(db, project_id, ref)
+        if head is None:
+            return None, f"No artifact matching {ref!r} in this project."
+        if head.kind == "report":
+            return None, "Reports are revised through the report flow, not the artifact write tools."
+        return head, None
+
+    @tool(
+        name="UpdateArtifact",
+        description=(
+            "Apply small targeted edits to an existing artifact (NOT reports). Each edit "
+            "replaces one exact, unique old_str with new_str — include enough surrounding "
+            "context to make old_str unique, matching whitespace exactly. Use for changes "
+            "touching a few places; for anything larger, or if edits fail to match, use "
+            "RewriteArtifact instead. Every successful update stores a new full version."
+        ),
+        input_schema={
+            "artifact": Annotated[str, "Slug, artifact id, or artifact URL to update."],
+            "edits": Annotated[list[dict], "List of {old_str, new_str} exact-string replacements."],
+            "label": Annotated[str, "Short human label for this version, e.g. 'tightened intro'."],
+            "expected_version": Annotated[int, "The version you last read (optimistic concurrency; 0 to skip the check)."],
+        },
+    )
+    async def update_artifact(args: dict) -> dict:
+        def _update():
+            from db.session import get_session as db_session
+            from service.artifact_store import (
+                ArtifactConflict,
+                apply_text_edits,
+                artifact_text_content,
+                revise_artifact,
+            )
+
+            with next(db_session()) as db:
+                head, err = _resolve_writable(db, str(args.get("artifact") or ""))
+                if err:
+                    return None, err
+                source = artifact_text_content(head)
+                patched, edit_errors = apply_text_edits(source, args.get("edits") or [])
+                if edit_errors:
+                    return None, (
+                        "Edits not applied:\n- " + "\n- ".join(edit_errors)
+                        + "\nFix the edits or fall back to RewriteArtifact with the full content."
+                    )
+                expected = int(args.get("expected_version") or 0) or None
+                try:
+                    row = revise_artifact(
+                        db, head, content=patched,
+                        label=(args.get("label") or "").strip(),
+                        expected_version=expected,
+                        user_id=user_id, conversation_id=conversation_id,
+                    )
+                except ArtifactConflict as exc:
+                    return None, str(exc)
+                except ValueError as exc:
+                    return None, f"Update rejected: {exc}"
+                return row, None
+
+        try:
+            row, err = await asyncio.to_thread(_update)
+        except Exception as exc:  # noqa: BLE001
+            return {"content": [{"type": "text", "text": f"Update failed unexpectedly: {exc}"}]}
+        if err:
+            return {"content": [{"type": "text", "text": err}]}
+        card = await _emit_card(row)
+        return {"content": [{"type": "text", "text": json.dumps({"updated": card}, indent=2)}]}
+
+    @tool(
+        name="RewriteArtifact",
+        description=(
+            "Replace an existing artifact's entire content with a new full version "
+            "(NOT reports). Use when changes are broad, or when UpdateArtifact edits "
+            "failed to match. Stores a new version; history is preserved."
+        ),
+        input_schema={
+            "artifact": Annotated[str, "Slug, artifact id, or artifact URL to rewrite."],
+            "content": Annotated[str, "The complete replacement content."],
+            "label": Annotated[str, "Short human label for this version."],
+            "expected_version": Annotated[int, "The version you last read (0 to skip the check)."],
+        },
+    )
+    async def rewrite_artifact(args: dict) -> dict:
+        def _rewrite():
+            from db.session import get_session as db_session
+            from service.artifact_store import ArtifactConflict, revise_artifact
+
+            with next(db_session()) as db:
+                head, err = _resolve_writable(db, str(args.get("artifact") or ""))
+                if err:
+                    return None, err
+                expected = int(args.get("expected_version") or 0) or None
+                try:
+                    row = revise_artifact(
+                        db, head, content=str(args.get("content") or ""),
+                        label=(args.get("label") or "").strip(),
+                        expected_version=expected,
+                        user_id=user_id, conversation_id=conversation_id,
+                    )
+                except ArtifactConflict as exc:
+                    return None, str(exc)
+                except ValueError as exc:
+                    return None, f"Rewrite rejected: {exc}"
+                return row, None
+
+        try:
+            row, err = await asyncio.to_thread(_rewrite)
+        except Exception as exc:  # noqa: BLE001
+            return {"content": [{"type": "text", "text": f"Rewrite failed unexpectedly: {exc}"}]}
+        if err:
+            return {"content": [{"type": "text", "text": err}]}
+        card = await _emit_card(row)
+        return {"content": [{"type": "text", "text": json.dumps({"rewritten": card}, indent=2)}]}
+
+    return [list_artifacts, get_artifact, create_artifact, update_artifact, rewrite_artifact]
 
 
 def _compact(s: PageSignals) -> dict:

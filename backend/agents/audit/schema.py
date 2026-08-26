@@ -51,6 +51,11 @@ class AuditTool(StrEnum):
 
     FETCH_PAGES           = "mcp__duct_crawl__FetchPages"          # in-process page fetch
     SUBMIT_AUDIT_REPORT   = "mcp__duct_crawl__SubmitAuditReport"   # template mode only — chat-revision resubmit
+    LIST_ARTIFACTS        = "mcp__duct_crawl__ListArtifacts"       # project-scoped prior-artifact index
+    GET_ARTIFACT          = "mcp__duct_crawl__GetArtifact"         # one prior artifact, full structured payload
+    CREATE_ARTIFACT       = "mcp__duct_crawl__CreateArtifact"      # mint a memo/dataset/diagram artifact
+    UPDATE_ARTIFACT       = "mcp__duct_crawl__UpdateArtifact"      # exact-string patch → new version
+    REWRITE_ARTIFACT      = "mcp__duct_crawl__RewriteArtifact"     # full-content replace → new version
     START_AUDIT_REPORT    = "mcp__duct_crawl__StartAuditReport"    # template: incremental build, step 1
     ADD_AUDIT_CATEGORY    = "mcp__duct_crawl__AddAuditCategory"    # template: incremental build, step 2 (×9)
     FINALIZE_AUDIT_REPORT = "mcp__duct_crawl__FinalizeAuditReport" # template: incremental build, step 3

@@ -1,23 +1,35 @@
 "use client";
 
-// Artifact viewer — renders one artifact version with a per-format renderer:
-// template report → AuditReportV1, freehand HTML → sandboxed iframe, markdown/
-// JSON → simple text views, anything else → download card. Version picker
-// swaps between immutable versions of the same artifact group.
+// Artifact viewer — per-content-type renderers (ArtifactRenderer), linear
+// version picker with labels, "Show changes" diff toggle, restore-as-new-
+// version, derived exports, and "Open chat" resume for audit-produced
+// artifacts. Sharing is deferred: everything here is private, authed API only.
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import AuditReportV1 from "@/components/audit/AuditReportV1";
+import ArtifactRenderer, { CONTENT_TYPES, UnifiedDiffView } from "@/components/artifacts/ArtifactRenderer";
 import { Button } from "@/components/ui/button";
 import {
   deleteArtifact,
+  diffArtifact,
   downloadArtifact,
+  exportArtifact,
   getArtifact,
   getArtifactContent,
   listArtifactVersions,
+  restoreArtifactVersion,
 } from "../../../../lib/artifactsApi";
 import { startAuditResume } from "../../../../lib/auditResume";
+
+function exportFormatsFor(artifact) {
+  if (!artifact) return [];
+  const formats = [];
+  if (artifact.kind === "report" && artifact.structured_json?.structured_data) formats.push("pdf");
+  if ([CONTENT_TYPES.CSV, CONTENT_TYPES.TABLE_JSON].includes(artifact.content_type)) formats.push("csv");
+  if (artifact.content_type === CONTENT_TYPES.MARKDOWN) formats.push("md");
+  return formats;
+}
 
 export default function ArtifactViewerPage() {
   const { artifactId } = useParams();
@@ -27,12 +39,16 @@ export default function ArtifactViewerPage() {
   const [content, setContent] = useState(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showChanges, setShowChanges] = useState(false);
+  const [diff, setDiff] = useState(null); // {diff, base_version, target_version, summary?}
 
   useEffect(() => {
     if (!artifactId) return;
     let alive = true;
     setArtifact(null);
     setContent(null);
+    setDiff(null);
+    setShowChanges(false);
     setError("");
     getArtifact(artifactId)
       .then(async (row) => {
@@ -55,6 +71,32 @@ export default function ArtifactViewerPage() {
     };
   }, [artifactId]);
 
+  const isHead = versions.length === 0 || versions[0]?.id === artifact?.id;
+
+  async function toggleChanges() {
+    if (showChanges) {
+      setShowChanges(false);
+      return;
+    }
+    try {
+      setDiff(await diffArtifact(artifact.id, "prev"));
+      setShowChanges(true);
+    } catch (err) {
+      setError(err.message || "No earlier version to compare.");
+    }
+  }
+
+  async function handleRestore() {
+    setBusy(true);
+    try {
+      const newHead = await restoreArtifactVersion(artifact.id);
+      router.push(`/artifacts/${newHead.id}`);
+    } catch (err) {
+      setError(err.message);
+      setBusy(false);
+    }
+  }
+
   async function handleDelete() {
     if (!window.confirm("Delete this artifact and all of its versions?")) return;
     setBusy(true);
@@ -67,9 +109,7 @@ export default function ArtifactViewerPage() {
     }
   }
 
-  const structuredData = artifact?.structured_json?.structured_data || null;
-  const isHtml = (artifact?.content_type || "").startsWith("text/html");
-  const isMarkdownish = ["text/markdown", "text/plain"].includes(artifact?.content_type);
+  const exportFormats = exportFormatsFor(artifact);
 
   return (
     <section>
@@ -77,10 +117,18 @@ export default function ArtifactViewerPage() {
         <Button variant="ghost" size="sm" asChild>
           <Link href="/artifacts">← Artifacts</Link>
         </Button>
-        <h1 className="page-toolbar-title text-xl font-semibold tracking-tight" style={{ minWidth: 0 }}>
-          {artifact?.title || "Artifact"}
-        </h1>
-        <div style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
+        <div style={{ minWidth: 0 }}>
+          <h1 className="page-toolbar-title text-xl font-semibold tracking-tight truncate">
+            {artifact?.title || "Artifact"}
+          </h1>
+          {artifact?.slug && (
+            <p className="app-subtle" style={{ margin: 0, fontSize: 12 }}>
+              {artifact.slug} · v{artifact.version}
+              {artifact.meta?.label ? ` — ${artifact.meta.label}` : ""}
+            </p>
+          )}
+        </div>
+        <div style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           {versions.length > 1 && (
             <select
               className="app-subtle"
@@ -95,6 +143,16 @@ export default function ArtifactViewerPage() {
                 </option>
               ))}
             </select>
+          )}
+          {versions.length > 1 && (
+            <Button size="sm" variant={showChanges ? "default" : "ghost"} onClick={toggleChanges}>
+              {showChanges ? "Hide changes" : "Show changes"}
+            </Button>
+          )}
+          {!isHead && artifact && (
+            <Button size="sm" variant="secondary" onClick={handleRestore} disabled={busy}>
+              Restore this version
+            </Button>
           )}
           {artifact?.conversation_id && artifact?.agent_type === "audit_seo" && (
             <Button
@@ -112,6 +170,16 @@ export default function ArtifactViewerPage() {
               Open chat
             </Button>
           )}
+          {exportFormats.map((fmt) => (
+            <Button
+              key={fmt}
+              size="sm"
+              variant="secondary"
+              onClick={() => exportArtifact(artifact, fmt).catch((e) => setError(e.message))}
+            >
+              Export {fmt.toUpperCase()}
+            </Button>
+          ))}
           {artifact?.has_content && (
             <Button size="sm" variant="secondary" onClick={() => downloadArtifact(artifact).catch((e) => setError(e.message))}>
               Download
@@ -128,30 +196,32 @@ export default function ArtifactViewerPage() {
       )}
       {!artifact && !error && <p className="app-subtle">Loading…</p>}
 
-      {artifact && structuredData && <AuditReportV1 data={structuredData} />}
-
-      {artifact && !structuredData && isHtml && content != null && (
-        <iframe
-          title={artifact.title || "Artifact"}
-          srcDoc={content}
-          sandbox="allow-modals allow-same-origin"
-          style={{ width: "100%", height: "78vh", border: "1px solid var(--border, #e5e7eb)", borderRadius: 8, background: "#fff" }}
-        />
+      {showChanges && diff && (
+        <div style={{ marginBottom: 14 }}>
+          <p className="app-subtle" style={{ fontSize: 13, marginBottom: 6 }}>
+            Changes v{diff.base_version} → v{diff.target_version}
+            {diff.summary && (
+              <>
+                {" · "}score {diff.summary.score_before ?? "?"} → {diff.summary.score_after ?? "?"}
+                {" · "}{diff.summary.new_findings?.length || 0} new, {diff.summary.resolved_findings?.length || 0} resolved
+              </>
+            )}
+          </p>
+          {diff.summary?.new_findings?.length > 0 && (
+            <p className="app-subtle" style={{ fontSize: 12 }}>
+              New: {diff.summary.new_findings.slice(0, 6).join(" · ")}
+            </p>
+          )}
+          {diff.summary?.resolved_findings?.length > 0 && (
+            <p className="app-subtle" style={{ fontSize: 12 }}>
+              Resolved: {diff.summary.resolved_findings.slice(0, 6).join(" · ")}
+            </p>
+          )}
+          <UnifiedDiffView diff={diff.diff} />
+        </div>
       )}
 
-      {artifact && !structuredData && isMarkdownish && content != null && (
-        <pre style={{ whiteSpace: "pre-wrap", fontSize: 14, lineHeight: 1.5, padding: 16 }}>{content}</pre>
-      )}
-
-      {artifact && !structuredData && !isHtml && !isMarkdownish && content != null && (
-        <pre style={{ whiteSpace: "pre-wrap", fontSize: 13, padding: 16, overflowX: "auto" }}>{content}</pre>
-      )}
-
-      {artifact && !structuredData && !artifact.has_content && (
-        <p className="app-subtle">
-          This artifact has no stored file and no structured payload to render.
-        </p>
-      )}
+      {artifact && !showChanges && <ArtifactRenderer artifact={artifact} content={content} />}
     </section>
   );
 }

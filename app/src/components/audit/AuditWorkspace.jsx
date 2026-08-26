@@ -363,6 +363,12 @@ export default function AuditWorkspace({ sessionId, auditParams, publicMode = fa
         setTodos(event.todos || []);
         break;
 
+      // A durable artifact was created/revised by a tool — render a compact
+      // card in the chat that opens the artifact viewer.
+      case AuditEvent.ARTIFACT_UPDATED:
+        setMessages((prev) => [...prev, { role: "artifact_card", artifact: event.artifact }]);
+        break;
+
       case AuditEvent.AGENT_MESSAGE_CHUNK:
         setIsAgentTyping(false);
         setMessages((prev) => {

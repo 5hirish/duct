@@ -29,6 +29,7 @@ def _serialize(row: Artifact, *, version_count: int | None = None) -> dict:
     out = {
         "id": str(row.id),
         "group_id": str(row.group_id),
+        "slug": row.slug,
         "version": row.version,
         "project_id": str(row.project_id),
         "conversation_id": str(row.conversation_id) if row.conversation_id else None,
@@ -86,6 +87,24 @@ def list_artifacts(
     ]
 
 
+@router.get("/resolve")
+def resolve_artifact(
+    project_id: UUID,
+    ref: str,
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> dict:
+    """Resolve a slug / group id / version id / pasted app URL to the latest
+    version — the cross-session addressing contract."""
+    get_project_for_user(project_id, user, session)
+    from service.artifact_store import resolve_reference
+
+    row = resolve_reference(session, project_id, ref)
+    if row is None:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Artifact not found")
+    return _serialize(row)
+
+
 @router.get("/{artifact_id}")
 def get_artifact(
     artifact_id: UUID,
@@ -96,6 +115,164 @@ def get_artifact(
     out = _serialize(row)
     out["structured_json"] = row.structured_json
     return out
+
+
+@router.post("/{artifact_id}/restore", status_code=201)
+def restore_artifact_version(
+    artifact_id: UUID,
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> dict:
+    """Promote this snapshot to a NEW head version (history is never rewritten)."""
+    row = _get_readable(session, user, artifact_id)
+    from service.artifact_store import restore_version
+
+    new_head = restore_version(session, row, user_id=user.id)
+    return _serialize(new_head)
+
+
+@router.get("/{artifact_id}/diff")
+def diff_artifact_version(
+    artifact_id: UUID,
+    against: str = "prev",
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> dict:
+    """'Show changes': unified diff of this version against another (default:
+    the previous version). Adds a semantic summary for structured reports."""
+    import difflib
+
+    from sqlalchemy import select as _select
+
+    from service.artifact_store import DUCT_REPORT_JSON, artifact_text_content
+
+    row = _get_readable(session, user, artifact_id)
+    if against == "prev":
+        base = (
+            session.execute(
+                _select(Artifact)
+                .where(Artifact.group_id == row.group_id, Artifact.version < row.version)
+                .order_by(Artifact.version.desc())
+                .limit(1)
+            )
+            .scalars()
+            .first()
+        )
+    else:
+        base = _get_readable(session, user, UUID(against))
+        if base.group_id != row.group_id:
+            raise HTTPException(status_code=422, detail="Versions belong to different artifacts")
+    if base is None:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="No earlier version to diff against")
+
+    base_text = artifact_text_content(base)
+    target_text = artifact_text_content(row)
+    diff_text = "\n".join(
+        difflib.unified_diff(
+            base_text.splitlines(),
+            target_text.splitlines(),
+            fromfile=f"v{base.version}",
+            tofile=f"v{row.version}",
+            lineterm="",
+            n=3,
+        )
+    )
+
+    out: dict = {
+        "base_version": base.version,
+        "target_version": row.version,
+        "diff": diff_text,
+    }
+    # Semantic diff for structured reports — where JSON beats HTML.
+    if row.content_type in (DUCT_REPORT_JSON, "application/json") and row.kind == "report":
+        try:
+            def _findings(r):
+                sd = (r.structured_json or {}).get("structured_data") or {}
+                return {
+                    f.get("title", "")
+                    for c in sd.get("categories", [])
+                    for f in c.get("findings", [])
+                }, sd.get("overall_score")
+
+            base_f, base_score = _findings(base)
+            target_f, target_score = _findings(row)
+            out["summary"] = {
+                "score_before": base_score,
+                "score_after": target_score,
+                "new_findings": sorted(target_f - base_f),
+                "resolved_findings": sorted(base_f - target_f),
+            }
+        except Exception:  # noqa: BLE001 — summary is best-effort sugar
+            pass
+    return out
+
+
+_EXPORT_FORMATS = {"pdf", "csv", "md"}
+
+
+@router.get("/{artifact_id}/export")
+def export_artifact(
+    artifact_id: UUID,
+    format: str,
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> Response:
+    """Derived export of one version, generated on demand and cached in object
+    storage keyed by (version, format)."""
+    from service.artifact_store import (
+        DUCT_REPORT_JSON,
+        DUCT_TABLE_JSON,
+        artifact_text_content,
+    )
+    from service.storage import get_private_bytes as _get_bytes
+    from service.storage import put_private as _put_bytes
+
+    fmt = format.lower().strip()
+    if fmt not in _EXPORT_FORMATS:
+        raise HTTPException(status_code=422, detail=f"format must be one of {sorted(_EXPORT_FORMATS)}")
+    row = _get_readable(session, user, artifact_id)
+
+    cache_key = f"projects/{row.project_id}/artifacts/{row.group_id}/exports/v{row.version}.{fmt}"
+    media = {"pdf": "application/pdf", "csv": "text/csv", "md": "text/markdown"}[fmt]
+    stem = (row.filename or "artifact").rsplit(".", 1)[0]
+    headers = {"Content-Disposition": f'attachment; filename="{stem}.{fmt}"'}
+
+    cached = _get_bytes(cache_key)
+    if cached is not None:
+        return Response(content=cached, media_type=media, headers=headers)
+
+    if fmt == "pdf":
+        if row.kind != "report" or row.content_type not in (DUCT_REPORT_JSON, "application/json"):
+            raise HTTPException(status_code=422, detail="PDF export is available for structured reports only")
+        from service.report_pdf import generate_report_pdf
+
+        data = generate_report_pdf(row.structured_json)
+    elif fmt == "csv":
+        if row.content_type == "text/csv":
+            data = artifact_text_content(row).encode("utf-8")
+        elif row.content_type == DUCT_TABLE_JSON:
+            import csv as _csv
+            import io
+            import json as _json
+
+            table = _json.loads(artifact_text_content(row) or "{}")
+            buf = io.StringIO()
+            writer = _csv.writer(buf)
+            writer.writerow(table.get("columns", []))
+            writer.writerows(table.get("rows", []))
+            data = buf.getvalue().encode("utf-8")
+        else:
+            raise HTTPException(status_code=422, detail="CSV export is available for datasets only")
+    else:  # md
+        if row.content_type != "text/markdown":
+            raise HTTPException(status_code=422, detail="Markdown export is available for markdown artifacts only")
+        data = artifact_text_content(row).encode("utf-8")
+
+    try:
+        _put_bytes(cache_key, data, media)
+    except Exception:  # noqa: BLE001 — cache is best-effort
+        pass
+    return Response(content=data, media_type=media, headers=headers)
 
 
 @router.get("/{artifact_id}/versions")

@@ -13,6 +13,7 @@ export const AuditEvent = Object.freeze({
 
   QUESTIONS_REQUIRED:  "questions_required",
   REPORT_UPDATED:      "report_updated",
+  ARTIFACT_UPDATED:    "artifact_updated",
   TODO_UPDATE:         "todo_update",
 
   AGENT_MESSAGE_CHUNK: "agent_message_chunk",

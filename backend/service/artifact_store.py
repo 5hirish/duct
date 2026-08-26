@@ -34,6 +34,97 @@ logger = logging.getLogger(__name__)
 
 _SUMMARY_TIMEOUT = 60.0
 
+# ---------------------------------------------------------------------------
+# Content-type registry — Claude-convention vendor MIME types + primitives.
+# `kind` carries product semantics; `content_type` alone picks the renderer.
+# ---------------------------------------------------------------------------
+
+DUCT_REPORT_JSON = "application/vnd.duct.report+json"   # structured audit report (app-template render)
+DUCT_TABLE_JSON  = "application/vnd.duct.table+json"    # {"columns": [...], "rows": [[...]]}
+DUCT_CHART_JSON  = "application/vnd.duct.chart+json"    # chart spec rendered by app chart components
+DUCT_DIFF_JSON   = "application/vnd.duct.diff+json"     # change-set preview (before/after items)
+MERMAID          = "text/vnd.mermaid"
+MARKDOWN         = "text/markdown"
+HTML             = "text/html"
+CSV              = "text/csv"
+
+# Types agents may author through the generic artifact tools. Reports are
+# excluded on purpose — they have their own validated revision flow
+# (SubmitAuditReport → ArtifactPersister).
+AGENT_WRITABLE_TYPES = {
+    MARKDOWN, HTML, CSV, MERMAID, DUCT_TABLE_JSON, DUCT_CHART_JSON, DUCT_DIFF_JSON,
+}
+# Types whose content must parse as JSON after any edit.
+JSON_TYPES = {DUCT_REPORT_JSON, DUCT_TABLE_JSON, DUCT_CHART_JSON, DUCT_DIFF_JSON, "application/json"}
+
+_EXTENSIONS = {
+    HTML: "html",
+    MARKDOWN: "md",
+    CSV: "csv",
+    MERMAID: "mmd",
+    "application/json": "json",
+    "application/pdf": "pdf",
+    DUCT_REPORT_JSON: "json",
+    DUCT_TABLE_JSON: "json",
+    DUCT_CHART_JSON: "json",
+    DUCT_DIFF_JSON: "json",
+}
+
+
+def extension_for(content_type: str) -> str:
+    return _EXTENSIONS.get(content_type, "bin")
+
+
+def slugify(text: str, max_len: int = 60) -> str:
+    """Kebab-case slug from arbitrary text ('' if nothing survives)."""
+    import re
+
+    slug = re.sub(r"[^a-z0-9]+", "-", (text or "").lower()).strip("-")
+    return slug[:max_len].rstrip("-")
+
+
+class ArtifactConflict(Exception):
+    """Optimistic-concurrency failure: the artifact moved past expected_version.
+
+    Carries the newer head so the caller (agent tool / API) can merge onto it
+    instead of clobbering."""
+
+    def __init__(self, latest: "Artifact") -> None:
+        super().__init__(
+            f"Version conflict: latest is v{latest.version} — re-read and retry on top of it."
+        )
+        self.latest = latest
+
+
+def apply_text_edits(source: str, edits: list[dict]) -> tuple[str, list[str]]:
+    """Exact-string patch transport (Claude convention): each edit is
+    {"old_str", "new_str"}; old_str must appear exactly once.
+
+    Returns (new_source, errors). Any error means the caller should fall back
+    to a full rewrite — patches are a token optimization, never the storage
+    model."""
+    errors: list[str] = []
+    out = source
+    for i, edit in enumerate(edits or []):
+        old = str(edit.get("old_str") or "")
+        new = str(edit.get("new_str") or "")
+        if not old:
+            errors.append(f"edit[{i}]: old_str is required")
+            continue
+        count = out.count(old)
+        if count == 0:
+            errors.append(
+                f"edit[{i}]: old_str not found (must match exactly, including whitespace)"
+            )
+        elif count > 1:
+            errors.append(
+                f"edit[{i}]: old_str matches {count} locations — add surrounding context "
+                "to make it unique, or use a full rewrite"
+            )
+        else:
+            out = out.replace(old, new, 1)
+    return out, errors
+
 
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
@@ -83,6 +174,7 @@ def persist_artifact_version(
     data: bytes | None = None,
     structured_json: dict | None = None,
     meta: dict | None = None,
+    slug: str = "",
 ) -> Artifact:
     """Store one immutable artifact version (bytes to private storage when
     given, row always). Sync — call from a thread in async contexts."""
@@ -90,12 +182,7 @@ def persist_artifact_version(
     size = 0
     checksum = ""
     if data:
-        ext = {
-            "text/html": "html",
-            "application/json": "json",
-            "text/markdown": "md",
-            "application/pdf": "pdf",
-        }.get(content_type, "bin")
+        ext = extension_for(content_type)
         storage_key = put_private(
             f"projects/{project_id}/artifacts/{group_id}/v{version}.{ext}", data, content_type
         )
@@ -103,6 +190,7 @@ def persist_artifact_version(
         checksum = hashlib.sha256(data).hexdigest()
 
     row = Artifact(
+        slug=slug,
         group_id=group_id,
         version=version,
         project_id=project_id,
@@ -172,6 +260,203 @@ def artifacts_for_conversation(db, conversation_id: UUID) -> list[Artifact]:
         ).scalars()
     )
     return rows
+
+
+def latest_of_group(db, group_id: UUID) -> Artifact | None:
+    return (
+        db.execute(
+            select(Artifact)
+            .where(Artifact.group_id == group_id)
+            .order_by(Artifact.version.desc())
+            .limit(1)
+        )
+        .scalars()
+        .first()
+    )
+
+
+def ensure_unique_slug(db, project_id: UUID, wanted: str) -> str:
+    """Slug unique among the project's artifact groups ('' stays '')."""
+    base = slugify(wanted)
+    if not base:
+        return ""
+    existing = {
+        s for (s,) in db.execute(
+            select(Artifact.slug).where(Artifact.project_id == project_id, Artifact.slug != "")
+        )
+    }
+    if base not in existing:
+        return base
+    for n in range(2, 100):
+        candidate = f"{base}-{n}"
+        if candidate not in existing:
+            return candidate
+    return f"{base}-{uuid4().hex[:6]}"
+
+
+def resolve_reference(db, project_id: UUID, ref: str) -> Artifact | None:
+    """Resolve a chat/tool reference to the LATEST version of an artifact.
+
+    Accepts, in order: a version-row UUID, a group UUID, a slug, or an app URL
+    containing any of those (…/artifacts/<id-or-slug>). Always scoped to the
+    project — cross-project refs resolve to None."""
+    token = (ref or "").strip().rstrip("/")
+    if "/" in token:
+        token = token.rsplit("/", 1)[-1]  # accept pasted app URLs
+    token = token.split("?", 1)[0]
+    if not token:
+        return None
+    try:
+        as_uuid = UUID(token)
+    except ValueError:
+        as_uuid = None
+    if as_uuid is not None:
+        row = db.get(Artifact, as_uuid)
+        if row is not None and row.project_id == project_id:
+            return latest_of_group(db, row.group_id)
+        head = latest_of_group(db, as_uuid)
+        if head is not None and head.project_id == project_id:
+            return head
+        return None
+    return (
+        db.execute(
+            select(Artifact)
+            .where(Artifact.project_id == project_id, Artifact.slug == token)
+            .order_by(Artifact.version.desc())
+            .limit(1)
+        )
+        .scalars()
+        .first()
+    )
+
+
+def artifact_text_content(row: Artifact) -> str:
+    """The artifact's authorable source as text (storage bytes, else
+    pretty-printed structured_json, else '')."""
+    if row.storage_key:
+        raw = get_private_bytes(row.storage_key)
+        if raw is not None:
+            return raw.decode("utf-8", errors="replace")
+    if row.structured_json:
+        import json as _json
+
+        return _json.dumps(row.structured_json, indent=2, default=str)
+    return ""
+
+
+def _validate_content(content_type: str, text: str) -> str | None:
+    """Returns an error string when text is invalid for the type, else None."""
+    if content_type in JSON_TYPES:
+        import json as _json
+
+        try:
+            _json.loads(text)
+        except ValueError as exc:
+            return f"content is not valid JSON for {content_type}: {exc}"
+    return None
+
+
+def create_artifact_group(
+    db,
+    *,
+    project_id: UUID,
+    user_id: UUID | None,
+    agent_type: str,
+    kind: str,
+    content_type: str,
+    title: str,
+    content: str,
+    slug: str = "",
+    label: str = "",
+    conversation_id: UUID | None = None,
+) -> Artifact:
+    """Mint a new artifact group at v1 from text content (agent tool path)."""
+    err = _validate_content(content_type, content)
+    if err:
+        raise ValueError(err)
+    final_slug = ensure_unique_slug(db, project_id, slug or title)
+    date = _utcnow().strftime("%Y-%m-%d")
+    ext = extension_for(content_type)
+    row = persist_artifact_version(
+        project_id=project_id,
+        user_id=user_id,
+        agent_type=agent_type,
+        kind=kind,
+        content_type=content_type,
+        title=title or final_slug or kind,
+        filename=f"{date}_{final_slug or kind}_v1.{ext}",
+        group_id=uuid4(),
+        version=1,
+        conversation_id=conversation_id,
+        data=content.encode("utf-8"),
+        meta={"label": label or "Initial version"},
+        slug=final_slug,
+    )
+    return row
+
+
+def revise_artifact(
+    db,
+    head: Artifact,
+    *,
+    content: str,
+    label: str = "",
+    expected_version: int | None = None,
+    user_id: UUID | None = None,
+    conversation_id: UUID | None = None,
+) -> Artifact:
+    """Append a new full-snapshot version to head's group.
+
+    Optimistic concurrency: when expected_version is given and the group has
+    moved past it, raises ArtifactConflict carrying the newer head."""
+    current = latest_of_group(db, head.group_id) or head
+    if expected_version is not None and current.version != expected_version:
+        raise ArtifactConflict(current)
+    err = _validate_content(current.content_type, content)
+    if err:
+        raise ValueError(err)
+    version = current.version + 1
+    date = _utcnow().strftime("%Y-%m-%d")
+    ext = extension_for(current.content_type)
+    stem = current.slug or slugify(current.title) or current.kind
+    return persist_artifact_version(
+        project_id=current.project_id,
+        user_id=user_id or current.user_id,
+        agent_type=current.agent_type,
+        kind=current.kind,
+        content_type=current.content_type,
+        title=current.title,
+        filename=f"{date}_{stem}_v{version}.{ext}",
+        group_id=current.group_id,
+        version=version,
+        conversation_id=conversation_id or current.conversation_id,
+        data=content.encode("utf-8"),
+        structured_json=current.structured_json if not current.storage_key else {},
+        meta={**current.meta, "label": label or f"Version {version}"},
+        slug=current.slug,
+    )
+
+
+def restore_version(db, snapshot: Artifact, *, user_id: UUID | None = None) -> Artifact:
+    """Promote an old snapshot to a NEW head version (never rewrites history)."""
+    current = latest_of_group(db, snapshot.group_id) or snapshot
+    version = current.version + 1
+    return persist_artifact_version(
+        project_id=snapshot.project_id,
+        user_id=user_id or snapshot.user_id,
+        agent_type=snapshot.agent_type,
+        kind=snapshot.kind,
+        content_type=snapshot.content_type,
+        title=snapshot.title,
+        filename=snapshot.filename or f"restored_v{version}.{extension_for(snapshot.content_type)}",
+        group_id=snapshot.group_id,
+        version=version,
+        conversation_id=snapshot.conversation_id,
+        data=get_private_bytes(snapshot.storage_key) if snapshot.storage_key else None,
+        structured_json=snapshot.structured_json,
+        meta={**snapshot.meta, "label": f"Restored from v{snapshot.version}"},
+        slug=snapshot.slug,
+    )
 
 
 def load_report_as_versioned(artifact: Artifact) -> VersionedReport:
@@ -300,6 +585,15 @@ class ArtifactPersister:
         # versions extend the same artifact instead of starting a new one.
         self.group_id: UUID = group_id or uuid4()
         self.last_artifact_id: UUID | None = None
+        self._slug: str | None = None  # minted on first persist (or inherited on resume)
+
+    def _resolve_slug(self, host: str) -> str:
+        """Group slug: inherit from an existing head (resume) or mint fresh."""
+        with next(db_session()) as db:
+            head = latest_of_group(db, self.group_id)
+            if head is not None and head.slug:
+                return head.slug
+            return ensure_unique_slug(db, self.project_id, f"seo-audit-{host}")
 
     def wrap_emit(self, emit_fn):
         async def _emit(body: dict) -> None:
@@ -325,10 +619,15 @@ class ArtifactPersister:
 
         html = report.html_report or ""
         data = html.encode("utf-8") if html else None
-        content_type = "text/html" if html else "application/json"
+        # Vendor MIME: template reports are Duct-native structured objects the
+        # app renders; freehand reports are self-contained HTML bytes.
+        content_type = HTML if html else DUCT_REPORT_JSON
         host = _host(report.url)
         date = _utcnow().strftime("%Y-%m-%d")
         ext = "html" if html else "json"
+
+        if self._slug is None:
+            self._slug = await asyncio.to_thread(self._resolve_slug, host)
 
         row = await asyncio.to_thread(
             persist_artifact_version,
@@ -345,6 +644,7 @@ class ArtifactPersister:
             data=data,
             structured_json=report.model_dump(exclude={"html_report"}),
             meta=_report_meta(report, label),
+            slug=self._slug,
         )
         self.last_artifact_id = row.id
         logger.info(
