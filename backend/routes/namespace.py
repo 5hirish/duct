@@ -5,8 +5,8 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends
 
 from routes import (
-    agents, artifacts, audit, auth, chat, connectors, content, engines, execution, generate,
-    health, lead_magnet, project_members, projects, reports, signin, user_connectors,
+    activity, agents, artifacts, audit, auth, chat, connectors, content, engines, execution,
+    generate, health, lead_magnet, project_members, projects, reports, signin, user_connectors,
     user_contexts, user_projects,
 )
 from service.auth import validate_api_key
@@ -67,6 +67,7 @@ router.include_router(lead_magnet.router, prefix="/api/lead-magnet")
 # User-scoped endpoints — authenticated via Bearer JWT
 router.include_router(execution.router, prefix="/api/execute")
 router.include_router(artifacts.router, prefix="/api/user/artifacts")
+router.include_router(activity.router, prefix="/api/user/activity")
 router.include_router(user_projects.router, prefix="/api/user/projects")
 router.include_router(user_contexts.router, prefix="/api/user/projects")
 router.include_router(project_members.router, prefix="/api/user/projects")

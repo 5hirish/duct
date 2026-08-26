@@ -28,6 +28,7 @@ from agents.audit.schema import AuditReport, VersionedReport
 from agents.core.events import AgentEvent
 from db.session import get_session as db_session
 from models.artifact import Artifact
+from service.activity import log_activity
 from service.storage import delete_private, get_private_bytes, put_private
 
 logger = logging.getLogger(__name__)
@@ -175,9 +176,14 @@ def persist_artifact_version(
     structured_json: dict | None = None,
     meta: dict | None = None,
     slug: str = "",
+    activity_source: str = "agent",
 ) -> Artifact:
     """Store one immutable artifact version (bytes to private storage when
-    given, row always). Sync — call from a thread in async contexts."""
+    given, row always). Sync — call from a thread in async contexts.
+
+    Every artifact write funnels through here (persister, agent tools,
+    restores), so this is also the single activity-log call site for the
+    artifact category; ``activity_source`` says who caused the write."""
     storage_key = ""
     size = 0
     checksum = ""
@@ -211,6 +217,28 @@ def persist_artifact_version(
         db.add(row)
         db.commit()
         db.refresh(row)
+        # The activity commit below must not expire `row` — callers read it
+        # after this session closes.
+        db.expire_on_commit = False
+        label = (row.meta or {}).get("label", "")
+        log_activity(
+            db,
+            category="artifact",
+            action="artifact.created" if version == 1 else "artifact.version_added",
+            source=activity_source,
+            project_id=project_id,
+            user_id=user_id,
+            conversation_id=conversation_id,
+            agent_type=agent_type,
+            target_type="artifact",
+            target_id=str(row.id),
+            summary=(
+                f"Created artifact “{title}” ({kind})"
+                if version == 1
+                else f"New version v{version} of “{title}”" + (f" — {label}" if label else "")
+            ),
+            data={"group_id": str(group_id), "version": version, "kind": kind, "slug": slug},
+        )
     return row
 
 
@@ -456,6 +484,7 @@ def restore_version(db, snapshot: Artifact, *, user_id: UUID | None = None) -> A
         structured_json=snapshot.structured_json,
         meta={**snapshot.meta, "label": f"Restored from v{snapshot.version}"},
         slug=snapshot.slug,
+        activity_source="user",  # restores only happen from the viewer UI
     )
 
 

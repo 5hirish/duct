@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { loadPreferences } from "@/lib/userPreferences";
@@ -350,21 +351,28 @@ export default function SeoAuditSetupPage() {
                     {conv.last_seq ? ` · ${conv.last_seq} events` : ""}
                   </p>
                 </div>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="secondary"
-                  onClick={() =>
-                    startAuditResume(router, {
-                      conversationId: conv.id,
-                      projectId: conv.project_id,
-                      url: conv.meta?.url || "",
-                      reportMode: conv.mode || "",
-                    })
-                  }
-                >
-                  Continue chat
-                </Button>
+                <div className="flex shrink-0 items-center gap-2">
+                  <Button asChild type="button" size="sm" variant="ghost">
+                    {/* Everything this chat did — proposals, auto-applies,
+                        rollbacks, artifact versions — as one timeline. */}
+                    <Link href={`/activity?conversation_id=${conv.id}`}>Activity</Link>
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    onClick={() =>
+                      startAuditResume(router, {
+                        conversationId: conv.id,
+                        projectId: conv.project_id,
+                        url: conv.meta?.url || "",
+                        reportMode: conv.mode || "",
+                      })
+                    }
+                  >
+                    Continue chat
+                  </Button>
+                </div>
               </div>
             ))}
           </div>

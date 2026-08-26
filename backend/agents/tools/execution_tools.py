@@ -222,6 +222,9 @@ def build_execution_mcp_server(
             from service.execution.service import propose_change_set
 
             with next(db_session()) as db:
+                # The row is card-serialized after this session closes; the
+                # activity-log commits inside the service must not expire it.
+                db.expire_on_commit = False
                 creds = resolve_execution_creds(db, user_id, connector_type, args.get("account_id") or "")
                 if not creds.get("refresh_token"):
                     raise ValueError(
@@ -324,11 +327,12 @@ def build_execution_mcp_server(
             from service.execution.service import rollback_change_set as rollback_core
 
             with next(db_session()) as db:
+                db.expire_on_commit = False  # card-serialized after the session closes
                 row = db.get(ExecutionChangeSet, UUID(raw_id))
                 if row is None or row.user_id != user_id:
                     return None
                 creds = resolve_execution_creds(db, user_id, row.connector_type, row.account_id)
-                return rollback_core(db, row, creds)
+                return rollback_core(db, row, creds, actor="agent")
 
         try:
             row = await asyncio.to_thread(_rollback)

@@ -40,6 +40,7 @@ from service.execution.registry import EXECUTOR_REGISTRY
 from service.execution.service import (
     StateError,
     apply_change_set as apply_core,
+    log_change_set_transition,
     propose_change_set as propose_core,
     rollback_change_set as rollback_core,
     serialize_change_set as _serialize,
@@ -301,6 +302,15 @@ def approve_change_set(
     session.add(row)
     session.commit()
     session.refresh(row)
+    approved_count = sum(1 for c in row.changes if c["status"] == "approved")
+    log_change_set_transition(
+        session,
+        row,
+        "change_set.approved",
+        source="user",
+        summary=f"Approved “{row.title}” — {approved_count} change(s)",
+        data={"approved": approved_count, "subset": body.change_ids is not None},
+    )
     return _serialize(row)
 
 
@@ -318,6 +328,13 @@ def reject_change_set(
     session.add(row)
     session.commit()
     session.refresh(row)
+    log_change_set_transition(
+        session,
+        row,
+        "change_set.rejected",
+        source="user",
+        summary=f"Rejected “{row.title}”",
+    )
     return _serialize(row)
 
 

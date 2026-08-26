@@ -24,6 +24,7 @@ import {
   BellRing,
   SlidersHorizontal,
   FileText,
+  History,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import {
@@ -145,6 +146,14 @@ const NAV_SECTIONS = [
         href: "/artifacts",
         available: true,
         matchPrefix: "/artifacts",
+      },
+      {
+        key: "activity",
+        label: "Activity",
+        icon: History,
+        href: "/activity",
+        available: true,
+        matchPrefix: "/activity",
       },
     ],
   },
