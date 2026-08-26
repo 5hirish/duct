@@ -84,6 +84,71 @@ def _r2_put(key: str, data: bytes, content_type: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Private objects (artifacts: report HTML, documents, exports)
+#
+# Unlike put_image these NEVER return a public URL — they return the KEY, and
+# bytes come back only through get_private_bytes, which authed endpoints call
+# after a membership check. R2 writes go to r2_artifacts_bucket when set
+# (recommended in prod: a bucket with no public custom domain), else the main
+# bucket; local writes live under uploads_dir but are NOT reachable via the
+# /uploads static mount URL scheme because callers only ever store the key.
+# ---------------------------------------------------------------------------
+
+def put_private(key: str, data: bytes, content_type: str) -> str:
+    """Persist private bytes under ``key``; returns the key. Raises on failure."""
+    if storage_backend() == "r2":
+        cfg = get_configs()
+        _r2_client().put_object(
+            Bucket=cfg.r2_artifacts_bucket or cfg.r2_bucket,
+            Key=key,
+            Body=data,
+            ContentType=content_type or "application/octet-stream",
+            CacheControl="private, no-store",
+        )
+        logger.info("storage(r2): put %d private bytes at key %s", len(data), key)
+        return key
+    cfg = get_configs()
+    path = Path(cfg.uploads_dir or "/app/uploads") / key
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(data)
+    logger.info("storage(local): wrote %d private bytes to %s", len(data), path)
+    return key
+
+
+def get_private_bytes(key: str) -> bytes | None:
+    """Read private bytes stored by put_private, or None if unavailable."""
+    if not key:
+        return None
+    if storage_backend() == "r2":
+        cfg = get_configs()
+        try:
+            obj = _r2_client().get_object(Bucket=cfg.r2_artifacts_bucket or cfg.r2_bucket, Key=key)
+            return obj["Body"].read()
+        except Exception:
+            logger.warning("storage(r2): failed to read private key %s", key, exc_info=True)
+            return None
+    cfg = get_configs()
+    path = Path(cfg.uploads_dir or "/app/uploads") / key
+    return path.read_bytes() if path.exists() else None
+
+
+def delete_private(key: str) -> None:
+    """Best-effort delete of a private object; never raises."""
+    if not key:
+        return
+    try:
+        if storage_backend() == "r2":
+            cfg = get_configs()
+            _r2_client().delete_object(Bucket=cfg.r2_artifacts_bucket or cfg.r2_bucket, Key=key)
+        else:
+            cfg = get_configs()
+            path = Path(cfg.uploads_dir or "/app/uploads") / key
+            path.unlink(missing_ok=True)
+    except Exception:
+        logger.warning("storage: failed to delete private key %s", key, exc_info=True)
+
+
+# ---------------------------------------------------------------------------
 # Read (resolve a stored URL back to bytes — for reference images)
 # ---------------------------------------------------------------------------
 

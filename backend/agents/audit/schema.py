@@ -435,6 +435,9 @@ class AuditRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     url: str
+    # Project scoping — when set (and not lead_magnet), report versions persist
+    # to the artifact store under this project. None = ephemeral session.
+    project_id: str | None = None
     business_context: AuditBusinessContext = Field(default_factory=AuditBusinessContext)
     engine: str = ""
     max_blog_posts: int = Field(default=5, ge=1, le=10)

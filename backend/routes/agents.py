@@ -28,7 +28,7 @@ import uuid
 from collections.abc import AsyncGenerator
 from typing import Any, Literal
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
@@ -57,7 +57,11 @@ from db.session import get_session as db_session
 from agents.engines import PROVIDER_CONFIG_ATTR, resolve_engine, resolve_engine_model, resolve_engine_provider
 from agents.registry import AgentType, get_spec, list_specs
 from config import claude_oauth_available, get_configs
+from models.auth import User
+from service.artifact_store import ArtifactPersister
+from service.auth import get_current_user_optional
 from service.crawl.fetcher import SSRFError, validate_public_url
+from service.membership import member_role
 from service.pipeline import now_iso
 
 logger = logging.getLogger(__name__)
@@ -170,7 +174,11 @@ async def get_agent(agent_type: str) -> dict:
 # ---------------------------------------------------------------------------
 
 @router.post("/{agent_type}/sessions")
-async def create_session(agent_type: str, request: Request) -> dict:
+async def create_session(
+    agent_type: str,
+    request: Request,
+    user: User | None = Depends(get_current_user_optional),
+) -> dict:
     """Create a session and start the agent pipeline.
 
     Body is agent-specific — validated against each agent's config schema.
@@ -186,6 +194,9 @@ async def create_session(agent_type: str, request: Request) -> dict:
     body = await request.json()
     session_id = str(uuid.uuid4())
     session = _create_session_for(agent_type, session_id, body)
+    # Signed-in creator (optional — API-key-only callers get None). Downstream
+    # features (artifact persistence, execution proposals) key off this.
+    session.user_id = user.id if user else None
 
     async def emit_fn(event_body: dict[str, Any]) -> None:
         event_body["agent_type"] = agent_type
@@ -699,6 +710,38 @@ async def _start_seo_audit(session_id: str, body: dict, emit_fn: Any) -> None:
         # first token fast regardless of what the request asked for.
         adaptive_thinking=req.adaptive_thinking and not req.lead_magnet,
     )
+
+    # Persist report versions to the artifact store when the audit is
+    # project-scoped and the caller is signed in. Membership-checked (the
+    # session route itself is API-key-only), best-effort: any failure here
+    # means the audit simply runs unpersisted.
+    session = get_session(session_id)
+    owner_id = getattr(session, "user_id", None) if session else None
+    if req.project_id and owner_id and not req.lead_magnet:
+        try:
+            project_uuid = UUID(str(req.project_id))
+            with next(db_session()) as db:
+                role = member_role(project_uuid, owner_id, db)
+            if role is None:
+                logger.warning(
+                    "agents: user %s is not a member of project %s — audit runs unpersisted",
+                    owner_id, req.project_id,
+                )
+            else:
+                persister = ArtifactPersister(
+                    project_id=project_uuid,
+                    user_id=owner_id,
+                    agent_type=str(AgentType.SEO_AUDIT),
+                    kind="report",
+                    api_key=api_key if getattr(provider, "value", str(provider)) == "anthropic" else "",
+                )
+                session.artifact_persister = persister
+                emit_fn = persister.wrap_emit(emit_fn)
+        except Exception:
+            logger.warning(
+                "agents: artifact persistence unavailable — audit runs unpersisted",
+                exc_info=True,
+            )
 
     async def pipeline() -> None:
         try:

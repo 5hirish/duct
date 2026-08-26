@@ -23,6 +23,7 @@ import {
   BellOff,
   BellRing,
   SlidersHorizontal,
+  FileText,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import {
@@ -130,6 +131,20 @@ const NAV_SECTIONS = [
         href: "/execute",
         available: true,
         matchPrefix: "/execute",
+      },
+    ],
+  },
+  {
+    key: "library",
+    label: "Library",
+    items: [
+      {
+        key: "artifacts",
+        label: "Artifacts",
+        icon: FileText,
+        href: "/artifacts",
+        available: true,
+        matchPrefix: "/artifacts",
       },
     ],
   },

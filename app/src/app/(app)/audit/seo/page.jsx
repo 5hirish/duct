@@ -100,6 +100,9 @@ export default function SeoAuditSetupPage() {
     try {
       const params = {
         url: url.trim(),
+        // Project scoping: report versions persist to the artifact library when
+        // the audit belongs to the active project and the user is signed in.
+        project_id: useProjectContext && activeProject?.id ? activeProject.id : null,
         business_context: {
           business_name:         businessName.trim(),
           business_description:  description.trim(),
