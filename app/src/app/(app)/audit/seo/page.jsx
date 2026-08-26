@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { loadPreferences } from "@/lib/userPreferences";
 import { getActiveProject } from "@/lib/projects";
 import { ReportMode, DEFAULT_AUDIT_TEMPLATE_ID } from "@/lib/audit";
-import { listAgentConversations } from "@/lib/api";
+import { archiveAgentConversation, listAgentConversations } from "@/lib/api";
 import { hasAuthToken } from "@/lib/authFetch";
 import { startAuditResume } from "@/lib/auditResume";
 
@@ -46,14 +46,27 @@ export default function SeoAuditSetupPage() {
   const [prevAudits, setPrevAudits] = useState([]);
 
   // Previous audits for this project (persisted conversations) — signed-in only.
-  useEffect(() => {
+  const loadPrevAudits = useCallback(() => {
     if (!activeProject?.id || !hasAuthToken()) return;
-    let alive = true;
     listAgentConversations("audit_seo", { projectId: activeProject.id })
-      .then((rows) => alive && setPrevAudits((rows || []).filter((c) => c.last_seq > 0)))
+      .then((rows) => setPrevAudits((rows || []).filter((c) => c.last_seq > 0)))
       .catch(() => {});
-    return () => { alive = false; };
   }, [activeProject]);
+
+  useEffect(() => {
+    loadPrevAudits();
+  }, [loadPrevAudits]);
+
+  // Archive a past audit conversation: it leaves this list (and resume), but
+  // its report artifacts stay in the library untouched.
+  async function archivePrevAudit(conversationId) {
+    setPrevAudits((rows) => rows.filter((c) => c.id !== conversationId)); // optimistic
+    try {
+      await archiveAgentConversation("audit_seo", conversationId);
+    } catch {
+      loadPrevAudits(); // restore on failure
+    }
+  }
 
   useEffect(() => {
     const project = getActiveProject();
@@ -356,6 +369,16 @@ export default function SeoAuditSetupPage() {
                     {/* Everything this chat did — proposals, auto-applies,
                         rollbacks, artifact versions — as one timeline. */}
                     <Link href={`/activity?conversation_id=${conv.id}`}>Activity</Link>
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="text-muted-foreground"
+                    title="Archive this conversation (its report artifacts stay in the library)"
+                    onClick={() => archivePrevAudit(conv.id)}
+                  >
+                    Archive
                   </Button>
                   <Button
                     type="button"
