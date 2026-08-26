@@ -369,6 +369,26 @@ export default function AuditWorkspace({ sessionId, auditParams, publicMode = fa
         setMessages((prev) => [...prev, { role: "artifact_card", artifact: event.artifact }]);
         break;
 
+      // The agent proposed (or updated) a staged change set — inline review
+      // card. Emitted again on state changes (auto-applied, rolled back), so
+      // upsert by change_set_id instead of appending duplicates.
+      case AuditEvent.EXECUTION_PROPOSED: {
+        const incoming = event.change_set;
+        if (!incoming?.change_set_id) break;
+        setMessages((prev) => {
+          const idx = prev.findIndex(
+            (m) => m.role === "change_set_card" && m.changeSet?.change_set_id === incoming.change_set_id
+          );
+          if (idx >= 0) {
+            const next = [...prev];
+            next[idx] = { ...next[idx], changeSet: incoming };
+            return next;
+          }
+          return [...prev, { role: "change_set_card", changeSet: incoming }];
+        });
+        break;
+      }
+
       case AuditEvent.AGENT_MESSAGE_CHUNK:
         setIsAgentTyping(false);
         setMessages((prev) => {

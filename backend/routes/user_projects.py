@@ -12,6 +12,7 @@ from sqlmodel import Session
 
 from db.session import get_session
 from models.auth import User
+from models.execution import AUTONOMY_LEVELS
 from models.membership import ROLE_COLLABORATOR, ROLE_OWNER
 from models.project import Project
 from service.auth import get_current_user
@@ -60,6 +61,7 @@ class ProjectOut(BaseModel):
     audience: dict
     competition: dict
     brand_channels: dict
+    autonomy_level: str = "manual"
     created_at: str
     updated_at: str
     # Caller's relationship to this project. The app uses it to label shared
@@ -81,6 +83,7 @@ def _to_out(p: Project, *, role: str = ROLE_OWNER, owner_email: str = "") -> Pro
         audience=p.audience or {},
         competition=p.competition or {},
         brand_channels=p.brand_channels or {},
+        autonomy_level=p.autonomy_level or "manual",
         created_at=p.created_at.isoformat(),
         updated_at=p.updated_at.isoformat(),
         role=role,
@@ -206,6 +209,44 @@ def update_project(
         # reference a project that actually exists.
         session.flush()
         ensure_owner_membership(project, session)
+    session.commit()
+    session.refresh(project)
+    return _to_out(
+        project,
+        role=member_role(project_id, user.id, session) or ROLE_OWNER,
+        owner_email=_owner_emails([project], session).get(project.id, ""),
+    )
+
+
+class ProjectSettingsIn(BaseModel):
+    autonomy_level: str
+
+
+@router.patch("/{project_id}")
+def patch_project_settings(
+    project_id: UUID,
+    body: ProjectSettingsIn,
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> ProjectOut:
+    """Owner-only safety settings. Autonomy decides whether reversible,
+    guardrail-clean, non-destructive agent-proposed change sets may apply
+    without an approval click ('assisted') or everything waits ('manual').
+    Destructive ops always wait regardless — see service/execution/policy.py."""
+    from datetime import datetime, timezone
+
+    from fastapi import HTTPException
+
+    project = get_project_for_user(project_id, user, session, require_owner=True)
+    level = body.autonomy_level.strip().lower()
+    if level not in AUTONOMY_LEVELS:
+        raise HTTPException(
+            status_code=422,
+            detail=f"autonomy_level must be one of {sorted(AUTONOMY_LEVELS)}",
+        )
+    project.autonomy_level = level
+    project.updated_at = datetime.now(timezone.utc)
+    session.add(project)
     session.commit()
     session.refresh(project)
     return _to_out(

@@ -61,6 +61,13 @@ class Project(SQLModel, table=True):
         default_factory=dict,
         sa_column=Column(json_column(), nullable=False, server_default="{}"),
     )
+    # Execution autonomy: 'manual' (default — every change set needs a human
+    # approval) | 'assisted' (agent-proposed, reversible, guardrail-clean,
+    # non-destructive sets may auto-apply). Destructive/publish ops always wait
+    # regardless — see service/execution/policy.py.
+    autonomy_level: str = Field(
+        default="manual", sa_column=Column(String, nullable=False, server_default="manual")
+    )
     created_at: datetime = Field(
         default_factory=_utcnow,
         sa_column=Column(DateTime(timezone=True), nullable=False),

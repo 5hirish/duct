@@ -19,8 +19,7 @@ apply time.
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -31,13 +30,21 @@ from starlette.status import HTTP_404_NOT_FOUND
 # Imported for their register_executor side effects.
 import service.execution.ga4_exec  # noqa: F401
 import service.execution.google_ads_exec  # noqa: F401
+import service.execution.gtm_exec  # noqa: F401
 from db.session import get_session
 from models.auth import User
 from models.execution import ExecutionChangeSet, ExecutionGuardrail
 from service.auth import get_current_user
 from service.execution.creds import resolve_execution_creds
-from service.execution.guardrails import violations_for
-from service.execution.registry import EXECUTOR_REGISTRY, get_executor
+from service.execution.registry import EXECUTOR_REGISTRY
+from service.execution.service import (
+    StateError,
+    apply_change_set as apply_core,
+    propose_change_set as propose_core,
+    rollback_change_set as rollback_core,
+    serialize_change_set as _serialize,
+)
+from service.membership import get_project_for_user
 
 router = APIRouter(tags=["execution"])
 
@@ -67,6 +74,9 @@ class ChangeSetIn(BaseModel):
     context: str = ""
     changes: list[ChangeIn]
     credentials: CredentialsIn = Field(default_factory=CredentialsIn)
+    # Optional provenance: ties the set to a project the caller belongs to.
+    # Browser proposals are always source="user" and never auto-apply.
+    project_id: UUID | None = None
 
 
 class ApproveIn(BaseModel):
@@ -82,40 +92,6 @@ class GuardrailIn(BaseModel):
     account_id: str = ""
     rule: str
     match: dict = Field(default_factory=dict)
-
-
-def _guardrails_for(
-    session: Session, user_id: UUID, connector_type: str, account_id: str
-) -> list[ExecutionGuardrail]:
-    rows = (
-        session.execute(
-            select(ExecutionGuardrail).where(
-                ExecutionGuardrail.user_id == user_id,
-                ExecutionGuardrail.connector_type == connector_type,
-            )
-        )
-        .scalars()
-        .all()
-    )
-    # Account-scoped rules apply to their account; blank account_id = whole connector.
-    return [g for g in rows if not g.account_id or g.account_id == account_id]
-
-
-def _serialize(cs: ExecutionChangeSet) -> dict[str, Any]:
-    return {
-        "id": str(cs.id),
-        "connector_type": cs.connector_type,
-        "account_id": cs.account_id,
-        "account_name": cs.account_name,
-        "title": cs.title,
-        "context": cs.context,
-        "status": cs.status,
-        "changes": cs.changes,
-        "created_at": cs.created_at.isoformat(),
-        "updated_at": cs.updated_at.isoformat(),
-        "approved_at": cs.approved_at.isoformat() if cs.approved_at else None,
-        "applied_at": cs.applied_at.isoformat() if cs.applied_at else None,
-    }
 
 
 def _get_owned(session: Session, user: User, change_set_id: UUID) -> ExecutionChangeSet:
@@ -233,20 +209,9 @@ def propose_change_set(
     user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ) -> dict:
-    if not body.changes:
-        raise HTTPException(status_code=422, detail="A change set needs at least one change.")
-
-    for change in body.changes:
-        try:
-            spec = get_executor(change.op_type)
-        except KeyError as exc:
-            raise HTTPException(status_code=422, detail=str(exc)) from exc
-        if spec.connector_type != body.connector_type:
-            raise HTTPException(
-                status_code=422,
-                detail=f"{change.op_type} belongs to connector {spec.connector_type!r}, "
-                f"not {body.connector_type!r}",
-            )
+    if body.project_id is not None:
+        # 404 for non-members — never confirm a foreign project id exists.
+        get_project_for_user(body.project_id, user, session)
 
     creds = resolve_execution_creds(
         session,
@@ -255,44 +220,23 @@ def propose_change_set(
         body.account_id,
         override=body.credentials.model_dump(),
     )
-    guardrails = _guardrails_for(session, user.id, body.connector_type, body.account_id.strip())
-
-    stored_changes: list[dict[str, Any]] = []
-    for change in body.changes:
-        record: dict[str, Any] = {
-            "id": str(uuid4()),
-            "op_type": change.op_type,
-            "summary": change.summary,
-            "target": change.target,
-            "payload": change.payload,
-            "status": "proposed",
-        }
-        violations = violations_for(record, guardrails)
-        if violations:
-            record["status"] = "blocked"
-            record["guardrail_violations"] = violations
-        else:
-            spec = get_executor(change.op_type)
-            try:
-                preview = spec.preview(record, creds)
-                record["current"] = preview.pop("current", {})
-                record["preview"] = preview
-            except Exception as exc:  # noqa: BLE001 — any preview failure is recorded, never a 500
-                record["preview"] = {"error": str(exc)}
-        stored_changes.append(record)
-
-    row = ExecutionChangeSet(
-        user_id=user.id,
-        connector_type=body.connector_type,
-        account_id=body.account_id.strip(),
-        account_name=body.account_name,
-        title=body.title,
-        context=body.context,
-        changes=stored_changes,
-    )
-    session.add(row)
-    session.commit()
-    session.refresh(row)
+    try:
+        row = propose_core(
+            session,
+            user_id=user.id,
+            connector_type=body.connector_type,
+            account_id=body.account_id,
+            account_name=body.account_name,
+            title=body.title,
+            context=body.context,
+            changes=[c.model_dump() for c in body.changes],
+            creds=creds,
+            project_id=body.project_id,
+            source="user",
+        )
+    except (KeyError, ValueError) as exc:
+        detail = str(exc.args[0]) if isinstance(exc, KeyError) and exc.args else str(exc)
+        raise HTTPException(status_code=422, detail=detail) from exc
     return _serialize(row)
 
 
@@ -385,12 +329,6 @@ def apply_change_set(
     session: Session = Depends(get_session),
 ) -> dict:
     row = _get_owned(session, user, change_set_id)
-    if row.status != "approved":
-        raise HTTPException(
-            status_code=409,
-            detail=f"Change set must be approved before applying (currently {row.status}).",
-        )
-
     creds = resolve_execution_creds(
         session,
         user.id,
@@ -398,47 +336,10 @@ def apply_change_set(
         row.account_id,
         override=body.credentials.model_dump(),
     )
-    guardrails = _guardrails_for(session, user.id, row.connector_type, row.account_id)
-
-    row.status = "applying"
-    row.updated_at = _utcnow()
-    session.add(row)
-    session.commit()
-
-    applied = failed = 0
-    updated = []
-    for change in row.changes:
-        change = dict(change)
-        if change["status"] != "approved":
-            updated.append(change)
-            continue
-
-        # Defensive re-check: guardrails may have been added since proposal.
-        violations = violations_for(change, guardrails)
-        if violations:
-            change["status"] = "blocked"
-            change["guardrail_violations"] = violations
-            updated.append(change)
-            continue
-
-        spec = get_executor(change["op_type"])
-        try:
-            change["result"] = spec.apply(change, creds)
-            change["status"] = "applied"
-            applied += 1
-        except Exception as exc:  # noqa: BLE001 — record per-change, never lose results to a 500
-            change["result"] = {"error": str(exc)}
-            change["status"] = "failed"
-            failed += 1
-        updated.append(change)
-
-    row.changes = updated
-    row.applied_at = _utcnow()
-    row.updated_at = _utcnow()
-    row.status = "applied" if applied and not failed else ("partial" if applied else "failed")
-    session.add(row)
-    session.commit()
-    session.refresh(row)
+    try:
+        row = apply_core(session, row, creds, applied_by="user")
+    except StateError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     return _serialize(row)
 
 
@@ -450,9 +351,6 @@ def rollback_change_set(
     session: Session = Depends(get_session),
 ) -> dict:
     row = _get_owned(session, user, change_set_id)
-    if row.status not in ("applied", "partial"):
-        raise HTTPException(status_code=409, detail=f"Nothing to roll back on a {row.status} change set.")
-
     creds = resolve_execution_creds(
         session,
         user.id,
@@ -460,34 +358,8 @@ def rollback_change_set(
         row.account_id,
         override=body.credentials.model_dump(),
     )
-
-    reverted = errors = 0
-    updated = []
-    for change in row.changes:
-        change = dict(change)
-        if change["status"] != "applied":
-            updated.append(change)
-            continue
-        spec = get_executor(change["op_type"])
-        if spec.rollback is None:
-            change.setdefault("result", {})["rollback_error"] = "This operation has no rollback."
-            errors += 1
-            updated.append(change)
-            continue
-        try:
-            change["rollback_result"] = spec.rollback(change, creds)
-            change["status"] = "rolled_back"
-            reverted += 1
-        except Exception as exc:  # noqa: BLE001 — record per-change, never lose results to a 500
-            change.setdefault("result", {})["rollback_error"] = str(exc)
-            errors += 1
-        updated.append(change)
-
-    row.changes = updated
-    row.updated_at = _utcnow()
-    if reverted and not errors:
-        row.status = "rolled_back"
-    session.add(row)
-    session.commit()
-    session.refresh(row)
+    try:
+        row = rollback_core(session, row, creds)
+    except StateError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     return _serialize(row)

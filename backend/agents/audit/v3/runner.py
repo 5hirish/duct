@@ -69,6 +69,9 @@ _ANTHROPIC_MODELS = (ModelName.CLAUDE_SONNET, ModelName.CLAUDE_HAIKU)
 # configuration — never vary these per request (cached-prefix invariant).
 # google_ads/ga4/gtm join once execution tools mount (Phase 4).
 _AUDIT_KNOWLEDGE_PACKS: tuple[str, ...] = ("gsc",)
+# Mounted with the execution tools (project-scoped sessions): the connector
+# gotcha corpus the agent needs before proposing writes.
+_EXECUTION_KNOWLEDGE_PACKS: tuple[str, ...] = ("google_ads", "ga4", "gtm")
 
 EmitFn = Callable[[dict[str, Any]], Awaitable[None]]
 
@@ -293,6 +296,15 @@ async def run_synthesis(
         logger.error("run_synthesis: session %s not found; creating fallback", session_id)
         session = create_audit_session(session_id)
 
+    # Project scope gates artifacts AND execution (routes.agents stamps
+    # artifact_project_id only after verifying membership). Computed before the
+    # system prompt: execution knowledge packs mount with the execution tools,
+    # so each session shape (lead-magnet vs project) keeps a byte-stable
+    # system prompt for prompt caching.
+    _artifact_project = getattr(session, "artifact_project_id", None)
+    _session_user = getattr(session, "user_id", None)
+    _execution_enabled = _artifact_project is not None and _session_user is not None
+
     initial_prompt = build_audit_user_prompt(
         crawl_result, business_context, user_preferences,
         report_mode=report_mode, research_context=research_context,
@@ -300,7 +312,11 @@ async def run_synthesis(
     )
     system_prompt = build_unified_system_prompt(
         report_mode=report_mode, template_id=template_id,
-        knowledge_packs=_AUDIT_KNOWLEDGE_PACKS,
+        knowledge_packs=(
+            _AUDIT_KNOWLEDGE_PACKS + _EXECUTION_KNOWLEDGE_PACKS
+            if _execution_enabled
+            else _AUDIT_KNOWLEDGE_PACKS
+        ),
     )
 
     # ------------------------------------------------------------------
@@ -531,9 +547,6 @@ async def run_synthesis(
         })
 
     _category_cb = _on_category_added if report_mode == "template" else None
-    # Artifact tools mount only for membership-checked project scope
-    # (routes.agents stamps artifact_project_id after verifying membership).
-    _artifact_project = getattr(session, "artifact_project_id", None)
 
     async def _on_artifact_card(card: dict) -> None:
         # In-chat artifact card: rendered by the UI as a compact chip that
@@ -546,7 +559,7 @@ async def run_synthesis(
         on_submit_report=_submit_cb,
         on_category_added=_category_cb,
         project_id=_artifact_project,
-        artifact_user_id=getattr(session, "user_id", None),
+        artifact_user_id=_session_user,
         artifact_conversation_id=getattr(session, "conversation_id", None),
         on_artifact=_on_artifact_card,
     )
@@ -561,6 +574,31 @@ async def run_synthesis(
         if _artifact_project
         else []
     )
+
+    # Staged execution: agents propose, humans approve (see
+    # agents/tools/execution_tools.py — no approve/apply tool exists).
+    _execution_mcp = None
+    _execution_tools: list = []
+    if _execution_enabled:
+        from agents.tools.execution_tools import build_execution_mcp_server
+
+        async def _on_change_set_card(card: dict) -> None:
+            # Change-set card in chat; the UI upserts by change_set_id.
+            await emit({"event": AuditEvent.EXECUTION_PROPOSED, "change_set": card})
+
+        _execution_mcp = build_execution_mcp_server(
+            user_id=_session_user,
+            project_id=_artifact_project,
+            conversation_id=getattr(session, "conversation_id", None),
+            agent_type="audit_seo",
+            on_change_set=_on_change_set_card,
+        )
+        _execution_tools = [
+            AuditTool.LIST_EXECUTABLE_OPS,
+            AuditTool.PROPOSE_CHANGES,
+            AuditTool.GET_CHANGE_SET_STATUS,
+            AuditTool.ROLLBACK_CHANGE_SET,
+        ]
 
     # Thinking config: template mode applies a rigid 9-category scoring framework, where
     # unbounded adaptive thinking burns minutes for little gain — cap it with a fixed
@@ -582,6 +620,7 @@ async def run_synthesis(
             AgentTool.WEB_FETCH,
             AuditTool.FETCH_PAGES,  # mcp__duct_crawl__FetchPages — in-process MCP
             *_artifact_tools,       # ListArtifacts/GetArtifact — project scope only
+            *_execution_tools,      # propose/status/rollback — project scope only
             *_extra_tools,
         ],
         # Belt-and-suspenders with ENABLE_TOOL_SEARCH=false (the documented control,
@@ -602,7 +641,11 @@ async def run_synthesis(
         # sandbox intentionally omitted: the audit agent uses no Bash tools, so
         # macOS seatbelt sandboxing adds no security value but causes the subprocess
         # to exit with code 1 when launched from within a uvicorn server process.
-        mcp_servers={"duct_crawl": _mcp},
+        mcp_servers=(
+            {"duct_crawl": _mcp, "duct_execute": _execution_mcp}
+            if _execution_mcp is not None
+            else {"duct_crawl": _mcp}
+        ),
     )
 
     # ------------------------------------------------------------------

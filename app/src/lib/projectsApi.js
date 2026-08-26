@@ -79,6 +79,9 @@ function fromApi(remote) {
     audience: remote.audience || {},
     competition: remote.competition || {},
     brand_channels: remote.brand_channels || {},
+    // Execution autonomy: "manual" (default) | "assisted". Server-owned safety
+    // setting — changed only through setProjectAutonomy, never via the upsert.
+    autonomyLevel: remote.autonomy_level || "manual",
   };
 }
 
@@ -111,6 +114,26 @@ export async function upsertProjectRemote(local) {
   } catch {
     return null;
   }
+}
+
+/** PATCH the project's execution autonomy ("manual" | "assisted"). Owner-only
+ * on the server. Throws on failure so the settings UI can surface it. */
+export async function setProjectAutonomy(id, level) {
+  const res = await fetch(`${BASE}/api/user/projects/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    headers: authHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify({ autonomy_level: level }),
+  });
+  if (!res.ok) {
+    let detail = "";
+    try {
+      detail = (await res.json()).detail || "";
+    } catch {
+      /* non-JSON error body */
+    }
+    throw new Error(detail || `Server error ${res.status}`);
+  }
+  return fromApi(await res.json());
 }
 
 /** DELETE a project by id. Best-effort; never throws. */

@@ -60,6 +60,14 @@ class AuditTool(StrEnum):
     ADD_AUDIT_CATEGORY    = "mcp__duct_crawl__AddAuditCategory"    # template: incremental build, step 2 (×9)
     FINALIZE_AUDIT_REPORT = "mcp__duct_crawl__FinalizeAuditReport" # template: incremental build, step 3
 
+    # Staged execution (server "duct_execute", agents/tools/execution_tools.py) —
+    # project-scoped sessions only. Propose/status/rollback; approval is
+    # deliberately absent (human-only, via the review UI).
+    LIST_EXECUTABLE_OPS   = "mcp__duct_execute__ListExecutableOps"
+    PROPOSE_CHANGES       = "mcp__duct_execute__ProposeChanges"
+    GET_CHANGE_SET_STATUS = "mcp__duct_execute__GetChangeSetStatus"
+    ROLLBACK_CHANGE_SET   = "mcp__duct_execute__RollbackChangeSet"
+
 
 class EffortEstimate(StrEnum):
     under_1hr     = "under_1hr"
