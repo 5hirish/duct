@@ -16,6 +16,11 @@ from service.connectors import (
 from service.google.constants import GA4_CONNECTOR_ID
 
 _GA4_SCOPE = "https://www.googleapis.com/auth/analytics.readonly"
+# Requested on top of readonly at consent time so stored GA4 tokens can also
+# drive the staged-execution GA4 admin executors (key events, audiences —
+# service/execution/ga4_exec.py). Tokens minted before this change stay
+# read-only until the user reconnects.
+_GA4_EDIT_SCOPE = "https://www.googleapis.com/auth/analytics.edit"
 _TOKEN_URI = "https://oauth2.googleapis.com/token"
 
 
@@ -234,7 +239,7 @@ def fetch_ga4_conversion_paths(
 GA4_META = ConnectorMeta(
     id=GA4_CONNECTOR_ID,
     label="Google Analytics 4",
-    oauth_scope=_GA4_SCOPE,
+    oauth_scope=f"{_GA4_SCOPE} {_GA4_EDIT_SCOPE}",
     capabilities=frozenset({CAP_ACCOUNTS}),
 )
 
