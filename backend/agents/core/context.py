@@ -178,3 +178,43 @@ def format_user_context(data: UserContext | dict | None) -> str:
     """
     ctx = UserContext.coerce(data)
     return xml_block("user_context", "\n".join(_lines(ctx, _USER_LABELS)))
+
+
+def format_prior_artifacts(rows) -> str:
+    """Render prior-artifact summaries (models.artifact.Artifact rows, newest
+    first) as a ``<prior_reports>`` block for agent context.
+
+    One line of metadata plus the stored AI summary per artifact — never the
+    full report (token budget). Returns '' when there are no rows. Per-project
+    data: belongs in the user message, never the system prompt.
+    """
+    lines: list[str] = []
+    for row in rows or []:
+        created = row.created_at.strftime("%Y-%m-%d") if row.created_at else ""
+        head = f"[{row.id} · {created} · {row.title or row.kind} v{row.version}]"
+        summary = (row.summary or "").strip()
+        lines.append(f"{head} {summary}" if summary else f"{head} (no summary yet)")
+    if not lines:
+        return ""
+    return xml_block(
+        "prior_reports",
+        "Earlier reports for this project — cite or compare against them when "
+        "relevant (fetch one in full with GetArtifact):\n" + "\n".join(lines),
+    )
+
+
+def format_agent_context(data: dict | None) -> str:
+    """Render a stored per-(project, agent) context blob (agent_contexts table)
+    as an ``<agent_context>`` block. Returns '' when empty."""
+    if not data:
+        return ""
+    import json as _json
+
+    try:
+        body = _json.dumps(data, indent=2, default=str)
+    except (TypeError, ValueError):
+        body = str(data)
+    return xml_block(
+        "agent_context",
+        "Stored working context for this project (maintained across sessions):\n" + body,
+    )

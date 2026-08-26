@@ -46,11 +46,14 @@ async def insight_chat(req: InsightChatRequest) -> StreamingResponse:
         f"- {item.get('name')}: spend={item.get('spend')}, roas={item.get('roas')}, action={item.get('action')}"
         for item in campaigns
     )
+    from agents.knowledge import knowledge_block
+
     system = (
         "You are a marketing analytics assistant helping the user understand and act on "
         "their insight data. Answer questions grounded in the data provided. "
         "Be concise and specific, and cite concrete numbers when relevant. "
         "If you suggest a change, explain which metric should improve and why.\n\n"
+        f"{knowledge_block(('google_ads', 'ga4', 'gsc'))}\n\n"
         f"INSIGHT CONTEXT:\n{cp.get('summary_text', '')}\n\n"
         f"Goal: {cp.get('goal', 'unknown')}\n"
         f"Account: {cp.get('account', {}).get('name', 'unknown')}\n"
