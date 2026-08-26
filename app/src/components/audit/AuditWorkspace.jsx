@@ -7,9 +7,11 @@ import SplitWorkspace from "../workspace/SplitWorkspace";
 import {
   closeAgentSession,
   createAgentSession,
+  getAgentConversation,
   openAgentStream,
   sendAgentMessage,
 } from "../../lib/api";
+import { mapEventsToMessages } from "../../lib/agentHistory";
 import { AuditEvent, AuditStep } from "../../lib/auditEvents";
 import { StepStatus } from "../../lib/agentSteps";
 import { Phase } from "./auditPhase";
@@ -158,6 +160,16 @@ export default function AuditWorkspace({ sessionId, auditParams, publicMode = fa
 
     async function start() {
       try {
+        // Resume: seed the chat with persisted history before the live stream
+        // attaches, so the user sees their prior conversation instantly.
+        if (auditParams.resume && auditParams.conversation_id) {
+          try {
+            const conv = await getAgentConversation("audit_seo", auditParams.conversation_id);
+            if (!cancelled) setMessages(mapEventsToMessages(conv.events));
+          } catch {
+            /* history unavailable — the session still resumes server-side */
+          }
+        }
         const { session_id, agent_type } = await createAgentSession("audit_seo", auditParams);
         localSid = session_id;
         // Torn down before the stream opened (StrictMode remount / fast nav):
@@ -260,6 +272,17 @@ export default function AuditWorkspace({ sessionId, auditParams, publicMode = fa
         break;
 
       case AuditEvent.REPORT_UPDATED:
+        // replay=True: a stored version re-emitted on resume — render it, but
+        // skip the celebration bubble and step-clearing meant for fresh runs.
+        if (event.replay) {
+          reportReceivedRef.current = true;
+          setReportVersions((prev) => [
+            ...prev.filter((v) => v.version_id !== event.version_id),
+            { version_id: event.version_id, label: event.label, report: event.payload },
+          ].sort((a, b) => a.version_id - b.version_id));
+          setSelectedVersionId(event.version_id);
+          break;
+        }
         setStreamingHtml("");
         htmlBatchRef.current = "";
         clearTimeout(htmlBatchTimer.current);

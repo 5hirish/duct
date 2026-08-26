@@ -45,6 +45,7 @@ from agents.audit.v3.runner import (
 from agents.content.persistence import (
     ConversationRecorder,
     archive_conversation,
+    build_reprime_context,
     get_conversation,
     list_conversations,
     load_events,
@@ -58,7 +59,11 @@ from agents.engines import PROVIDER_CONFIG_ATTR, resolve_engine, resolve_engine_
 from agents.registry import AgentType, get_spec, list_specs
 from config import claude_oauth_available, get_configs
 from models.auth import User
-from service.artifact_store import ArtifactPersister
+from service.artifact_store import (
+    ArtifactPersister,
+    artifacts_for_conversation,
+    load_report_as_versioned,
+)
 from service.auth import get_current_user_optional
 from service.crawl.fetcher import SSRFError, validate_public_url
 from service.membership import member_role
@@ -487,6 +492,7 @@ def _conversation_summary(conv) -> dict:
         "title": conv.title,
         "status": conv.status,
         "last_seq": conv.last_seq,
+        "meta": conv.meta or {},
         "created_at": conv.created_at.isoformat() if conv.created_at else None,
         "last_active_at": conv.last_active_at.isoformat() if conv.last_active_at else None,
     }
@@ -547,13 +553,19 @@ async def archive_agent_conversation(agent_type: str, conversation_id: str) -> d
 # Agent-specific pipeline dispatchers
 # ---------------------------------------------------------------------------
 
+def _as_uuid(v):
+    return UUID(str(v)) if v else None
+
+
 def _create_session_for(agent_type: str, session_id: str, body: dict):
     """Create + register the right session type for the agent (one shared
     registry; see agents/core/session.py).
 
-    For tiktok_studio this also resolves-or-creates the persisted conversation
-    (chat history / resume) and stamps it onto the session so the runner can
-    re-prime from the DB and the recorder can persist each turn."""
+    For tiktok_studio and audit_seo this also resolves-or-creates the persisted
+    conversation (chat history / resume) and stamps it onto the session so the
+    runner can re-prime from the DB and the recorder can persist each turn."""
+    if agent_type == AgentType.SEO_AUDIT:
+        return _create_audit_session_with_conversation(agent_type, session_id, body)
     if agent_type == AgentType.TIKTOK_STUDIO:
         try:
             project_id = UUID(str(body["project_id"]))
@@ -563,11 +575,6 @@ def _create_session_for(agent_type: str, session_id: str, body: dict):
         mode = body.get("mode", "plan_month")
         if mode not in ("plan_month", "draft_post"):
             raise HTTPException(422, f"invalid mode {mode!r}")
-
-        # Resume / start-fresh inputs (all optional — omitting them is the
-        # normal first-open path).
-        def _as_uuid(v):
-            return UUID(str(v)) if v else None
 
         # Resolve the conversation inside an open session and read every field we
         # need before the session closes (commit expires the ORM instance).
@@ -615,6 +622,54 @@ def _create_session_for(agent_type: str, session_id: str, body: dict):
         return session
     # audit + insights share the AuditSession shape.
     return create_audit_session(session_id, agent_type)
+
+
+def _create_audit_session_with_conversation(agent_type: str, session_id: str, body: dict):
+    """Audit session with persisted-conversation plumbing.
+
+    Conversation persistence only engages for project-scoped, non-lead-magnet
+    audits — anonymous/teaser audits stay fully ephemeral. Unlike tiktok, no
+    workspace artifact binding is set: an audit conversation can produce many
+    artifacts, and the linkage lives on artifacts.conversation_id instead.
+    Best-effort throughout: a DB failure means the audit runs without history."""
+    session = create_audit_session(session_id, agent_type)
+    if body.get("lead_magnet"):
+        return session
+    try:
+        project_id = _as_uuid(body.get("project_id"))
+    except Exception:
+        project_id = None  # local-only project ids aren't UUIDs — run unpersisted
+    if project_id is None:
+        return session
+
+    try:
+        with next(db_session()) as db:
+            conv, is_resume = resolve_or_create_conversation(
+                db,
+                agent_type=agent_type,
+                project_id=project_id,
+                mode=str(body.get("report_mode", "freehand")),
+                conversation_id=_as_uuid(body.get("conversation_id")),
+                resume=bool(body.get("resume")),
+                start_fresh=bool(body.get("start_fresh")),
+            )
+            # Title + audited URL power the "Previous audits" list and give a
+            # resume enough to rebuild the session without its artifact.
+            url = str(body.get("url") or "").strip()
+            if url and not conv.title:
+                conv.title = f"SEO audit — {url}"
+                conv.meta = {**(conv.meta or {}), "url": url}
+                db.add(conv)
+                db.commit()
+            session.conversation_id = conv.id
+            session.recorder = ConversationRecorder(conv.id)
+            session.resume = is_resume
+    except Exception:
+        logger.warning(
+            "agents: conversation persistence unavailable for audit %s — "
+            "running without history", session_id, exc_info=True,
+        )
+    return session
 
 
 async def _dispatch_start(
@@ -677,20 +732,15 @@ async def _start_tiktok_studio(session_id: str, body: dict, emit_fn: Any) -> Non
 
 
 async def _start_seo_audit(session_id: str, body: dict, emit_fn: Any) -> None:
-    """Validate config and start the SEO audit pipeline as a background task."""
+    """Validate config and start the SEO audit pipeline as a background task.
+
+    Two shapes: a fresh audit (crawl → synthesis → chat) or a resume
+    (req.resume + a persisted conversation) which rehydrates the stored report
+    from the artifact store and goes straight to chat — no re-crawl."""
     try:
         req = AuditRequest.model_validate(body)
     except Exception as exc:
         raise HTTPException(422, f"Invalid seo-audit config: {exc}") from exc
-
-    url = req.url.strip()
-    if not url.startswith("http"):
-        url = f"https://{url}"
-
-    try:
-        validate_public_url(url)
-    except SSRFError as exc:
-        raise HTTPException(422, f"Invalid URL: {exc}") from exc
 
     cfg = get_configs()
     engine = resolve_engine(req.engine or "v3")
@@ -710,14 +760,18 @@ async def _start_seo_audit(session_id: str, body: dict, emit_fn: Any) -> None:
         # first token fast regardless of what the request asked for.
         adaptive_thinking=req.adaptive_thinking and not req.lead_magnet,
     )
+    # The summarizer runs on the Agent SDK, so only an Anthropic key works there.
+    summary_key = api_key if getattr(provider, "value", str(provider)) == "anthropic" else ""
 
-    # Persist report versions to the artifact store when the audit is
-    # project-scoped and the caller is signed in. Membership-checked (the
-    # session route itself is API-key-only), best-effort: any failure here
-    # means the audit simply runs unpersisted.
     session = get_session(session_id)
     owner_id = getattr(session, "user_id", None) if session else None
-    if req.project_id and owner_id and not req.lead_magnet:
+    conv_id = getattr(session, "conversation_id", None) if session else None
+    recorder = getattr(session, "recorder", None) if session else None
+
+    def _attach_persister(emit, *, group_id=None):
+        """Membership-checked, best-effort artifact persistence wrapper."""
+        if not (req.project_id and owner_id and not req.lead_magnet):
+            return emit
         try:
             project_uuid = UUID(str(req.project_id))
             with next(db_session()) as db:
@@ -727,21 +781,103 @@ async def _start_seo_audit(session_id: str, body: dict, emit_fn: Any) -> None:
                     "agents: user %s is not a member of project %s — audit runs unpersisted",
                     owner_id, req.project_id,
                 )
-            else:
-                persister = ArtifactPersister(
-                    project_id=project_uuid,
-                    user_id=owner_id,
-                    agent_type=str(AgentType.SEO_AUDIT),
-                    kind="report",
-                    api_key=api_key if getattr(provider, "value", str(provider)) == "anthropic" else "",
-                )
-                session.artifact_persister = persister
-                emit_fn = persister.wrap_emit(emit_fn)
+                return emit
+            persister = ArtifactPersister(
+                project_id=project_uuid,
+                user_id=owner_id,
+                agent_type=str(AgentType.SEO_AUDIT),
+                kind="report",
+                conversation_id=conv_id,
+                api_key=summary_key,
+                group_id=group_id,
+            )
+            session.artifact_persister = persister
+            return persister.wrap_emit(emit)
         except Exception:
             logger.warning(
                 "agents: artifact persistence unavailable — audit runs unpersisted",
                 exc_info=True,
             )
+            return emit
+
+    # ------------------------------------------------------------------
+    # Resume: rehydrate the stored report, skip crawl + synthesis
+    # ------------------------------------------------------------------
+    if req.resume and conv_id is not None:
+        rehydrated = []
+        group_id = None
+        try:
+            with next(db_session()) as db:
+                rows = [a for a in artifacts_for_conversation(db, conv_id) if a.kind == "report"]
+            if rows:
+                group_id = rows[-1].group_id
+                versions = sorted((a for a in rows if a.group_id == group_id), key=lambda a: a.version)
+                rehydrated = [load_report_as_versioned(a) for a in versions]
+        except Exception:
+            logger.warning("agents: report rehydration failed for %s", conv_id, exc_info=True)
+        if not rehydrated:
+            raise HTTPException(
+                404, "No stored report found for this conversation — start a new audit instead."
+            )
+
+        session.report_versions = rehydrated
+        latest = rehydrated[-1].report
+        url = latest.url or req.url.strip()
+        report_mode = str(latest.report_mode) or str(req.report_mode)
+        template_id = latest.template_id or req.template_id
+
+        session.needs_reprime = True
+        session.resume_primer = await build_reprime_context(
+            session, summary_key,
+            subject="the current audit report (shown in the working_report block)",
+        )
+
+        emit_fn = _attach_persister(emit_fn, group_id=group_id)
+        if recorder is not None:
+            emit_fn = recorder.wrap_emit(emit_fn)
+
+        async def resume_pipeline() -> None:
+            try:
+                await emit_fn({"event": AuditEvent.PIPELINE_STARTED, "status": "running", "url": url})
+                await runner.run_resume(
+                    session_id=session_id,
+                    url=url,
+                    emit=emit_fn,
+                    user_preferences=req.user_preferences,
+                    report_mode=report_mode,
+                    template_id=template_id,
+                )
+            except Exception as exc:
+                logger.exception("seo-audit resume error for session %s", session_id)
+                await emit_fn({"event": AuditEvent.PIPELINE_FAILED, "status": "error", "error": str(exc)})
+
+        task = asyncio.create_task(resume_pipeline())
+        if session:
+            session.pipeline_task = task
+        return
+
+    # ------------------------------------------------------------------
+    # Fresh audit
+    # ------------------------------------------------------------------
+    url = req.url.strip()
+    if not url.startswith("http"):
+        url = f"https://{url}"
+
+    try:
+        validate_public_url(url)
+    except SSRFError as exc:
+        raise HTTPException(422, f"Invalid URL: {exc}") from exc
+
+    emit_fn = _attach_persister(emit_fn)
+    if recorder is not None:
+        emit_fn = recorder.wrap_emit(emit_fn)
+        # Head event: a brand-new conversation opens with what was asked for,
+        # so history rehydrates with a sensible first turn.
+        if not getattr(session, "resume", False):
+            try:
+                await recorder.record_user(f"Run an SEO audit of {url}")
+            except Exception:
+                logger.debug("agents: audit head event failed", exc_info=True)
 
     async def pipeline() -> None:
         try:

@@ -258,8 +258,15 @@ async def run_synthesis(
     report_mode: str = "freehand",
     template_id: str = "",
     research_context=None,  # AuditResearchContext | None
+    resume: bool = False,
 ) -> tuple[AuditReport | None, bool]:  # (report, had_thinking)
     """Single-session artifact pattern: generation + chat in one ClaudeSDKClient.
+
+    resume=True continues a persisted conversation: session.report_versions must
+    be pre-seeded (rehydrated from the artifact store), crawl_result is a stub
+    (root_url only — no crawl happens), the initial synthesis turn is skipped,
+    and the session goes straight to the chat loop. History context arrives via
+    the reprime block on the user's first message (routes.agents.send_message).
 
     The model produces a conversational analysis, then wraps the initial AuditReport
     JSON in <duct_report>…</duct_report> tags. A streaming tag parser buffers the JSON
@@ -332,10 +339,45 @@ async def run_synthesis(
         )
         return PermissionResultAllow(updated_input=updated)
 
-    async def _dummy_hook(input_data: dict, tool_use_id: str, context: Any) -> dict:
+    async def _pre_tool_hook(input_data: dict, tool_use_id: str, context: Any) -> dict:
+        # Forensics: log every tool the agent runs with its full input, paired by
+        # tool_use_id to the tool_result in _record_tool_result_hook. Best-effort —
+        # persistence must never block or fail a tool call. (Content pattern.)
+        _rec = getattr(session, "recorder", None)
+        if _rec is not None:
+            try:
+                await _rec.record_tool_use(
+                    name=input_data.get("tool_name", ""),
+                    tool_input=input_data.get("tool_input", input_data),
+                    tool_use_id=tool_use_id,
+                )
+            except Exception:
+                logger.debug("audit: tool_use persistence failed", exc_info=True)
         return {"continue_": True}
 
-    hooks = {"PreToolUse": [HookMatcher(matcher=None, hooks=[_dummy_hook])]}
+    async def _record_tool_result_hook(input_data: dict, tool_use_id: str, context: Any) -> dict:
+        _rec = getattr(session, "recorder", None)
+        if _rec is not None:
+            try:
+                result = (
+                    input_data.get("tool_response")
+                    or input_data.get("tool_result")
+                    or input_data.get("response")
+                )
+                await _rec.record_tool_result(
+                    name=input_data.get("tool_name", ""),
+                    result=result,
+                    tool_use_id=tool_use_id,
+                    is_error=bool(input_data.get("is_error") or input_data.get("isError")),
+                )
+            except Exception:
+                logger.debug("audit: tool_result persistence failed", exc_info=True)
+        return {"continue_": True}
+
+    hooks = {
+        "PreToolUse": [HookMatcher(matcher=None, hooks=[_pre_tool_hook])],
+        "PostToolUse": [HookMatcher(matcher=None, hooks=[_record_tool_result_hook])],
+    }
 
     async def _emit_report_version(report: AuditReport, version_id: int) -> None:
         if not report.update_label:
@@ -373,6 +415,12 @@ async def run_synthesis(
     def _compute_crawl_summary() -> CrawlSummary:
         pages = crawl_result.pages
         if not pages:
+            # Resume sessions run on a crawl stub — carry the last stored
+            # version's crawl summary forward instead of zeroing it out.
+            for v in reversed(session.report_versions):
+                sd = v.report.structured_data
+                if sd is not None and sd.crawl_summary is not None:
+                    return sd.crawl_summary
             return CrawlSummary()
         ttfbs = [p.ttfb_ms for p in pages if p.ttfb_ms > 0]
         return CrawlSummary(
@@ -535,7 +583,11 @@ async def run_synthesis(
 
     # Report JSON tag — HTML is generated on demand, not during initial synthesis.
     had_thinking = False
-    initial_report: AuditReport | None = None
+    # On resume the rehydrated latest version IS the working report — FetchPages
+    # unlocks immediately and chat edits version on top of it.
+    initial_report: AuditReport | None = (
+        session.report_versions[-1].report if resume and session.report_versions else None
+    )
     _first_token_at: float | None = None   # perf_counter when first text delta arrived
     # Token accumulators — populated from streaming usage events
     _tok_in = 0
@@ -664,12 +716,30 @@ async def run_synthesis(
             agent_label="audit engine",
             mode=report_mode,
         )
-        logger.info("synthesis: subprocess started, sending prompt session=%s", session_id)
-        await client.query(_initial_prompt_gen())
-        logger.info("synthesis: prompt sent, waiting for first response session=%s", session_id)
+        if resume and session.report_versions:
+            # Resumed session: no synthesis turn. Replay the latest stored
+            # version so the UI renders it (replay=True keeps the artifact
+            # persister and celebration logic from treating it as new), then
+            # fall through to the chat loop below.
+            latest = session.report_versions[-1]
+            await emit({
+                "event": AuditEvent.REPORT_UPDATED,
+                "version_id": latest.version_id,
+                "label": latest.label,
+                "payload": latest.report.model_dump(),
+                "replay": True,
+            })
+            logger.info(
+                "audit: resumed session %s with %d stored report version(s)",
+                session_id, len(session.report_versions),
+            )
+        else:
+            logger.info("synthesis: subprocess started, sending prompt session=%s", session_id)
+            await client.query(_initial_prompt_gen())
+            logger.info("synthesis: prompt sent, waiting for first response session=%s", session_id)
 
-        # Turn 1: initial synthesis
-        await _receive_one_turn()
+            # Turn 1: initial synthesis
+            await _receive_one_turn()
 
         # Recovery: with extended thinking on a large crawl, the model
         # sometimes spends the whole turn reasoning and ends WITHOUT emitting
@@ -966,3 +1036,42 @@ class ClaudeAuditRunner:
             session_id,
         )
         return report
+
+    async def run_resume(
+        self,
+        session_id: str,
+        url: str,
+        emit: EmitFn,
+        chat_idle_timeout: float = 1800.0,
+        user_preferences=None,  # UserPreferences | None
+        report_mode: str = "freehand",
+        template_id: str = "seo_v1",
+    ) -> None:
+        """Continue a persisted audit conversation — chat only, no re-crawl.
+
+        The caller (routes.agents) rehydrates session.report_versions from the
+        artifact store and sets the reprime primer before calling this. The
+        crawl stub carries only root_url so FetchPages' same-origin check and
+        the working-report context still resolve."""
+        from agents.audit.schema import CrawlPlan
+        session = get_session(session_id)
+        if session:
+            session.report_mode = report_mode
+            session.template_id = template_id
+        stub = CrawlResult(plan=CrawlPlan(root_url=url))
+        await run_synthesis(
+            session_id=session_id,
+            crawl_result=stub,
+            business_context=AuditBusinessContext(),
+            model_str=self.model_str,
+            api_key=self._api_key,
+            provider=self.provider,
+            emit=emit,
+            effort=self.effort,
+            adaptive_thinking=self.adaptive_thinking,
+            chat_idle_timeout=chat_idle_timeout,
+            user_preferences=user_preferences,
+            report_mode=report_mode,
+            template_id=template_id,
+            resume=True,
+        )

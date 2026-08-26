@@ -180,6 +180,44 @@ async def test_persister_intercepts_report_updated(local_storage, store_db, proj
     assert restored.version_id == 2
 
 
+async def test_persister_skips_replayed_versions(local_storage, store_db, project, owner, db):
+    persister = store.ArtifactPersister(project_id=project.id, user_id=owner.id)
+    wrapped = persister.wrap_emit(lambda body: asyncio.sleep(0))
+    await wrapped({
+        "event": AgentEvent.REPORT_UPDATED,
+        "version_id": 1,
+        "label": "Initial audit",
+        "payload": _freehand_report().model_dump(),
+        "replay": True,  # rehydrated on resume — already stored
+    })
+    from sqlmodel import select
+
+    assert list(db.exec(select(Artifact))) == []
+
+
+async def test_persister_resumes_existing_group(local_storage, store_db, project, owner, db):
+    first = store.ArtifactPersister(project_id=project.id, user_id=owner.id)
+    wrapped = first.wrap_emit(lambda body: asyncio.sleep(0))
+    await wrapped({
+        "event": AgentEvent.REPORT_UPDATED, "version_id": 1, "label": "Initial audit",
+        "payload": _freehand_report().model_dump(),
+    })
+    # A resumed session passes the stored group_id — v2 extends the same artifact.
+    second = store.ArtifactPersister(
+        project_id=project.id, user_id=owner.id, group_id=first.group_id
+    )
+    wrapped2 = second.wrap_emit(lambda body: asyncio.sleep(0))
+    await wrapped2({
+        "event": AgentEvent.REPORT_UPDATED, "version_id": 2, "label": "Update 2",
+        "payload": _freehand_report(html="<html>v2</html>").model_dump(),
+    })
+    await asyncio.sleep(0)
+    from sqlmodel import select
+
+    rows = list(db.exec(select(Artifact).order_by(Artifact.version)))
+    assert [(r.group_id, r.version) for r in rows] == [(first.group_id, 1), (first.group_id, 2)]
+
+
 async def test_persister_never_breaks_the_stream(store_db, project, monkeypatch):
     persister = store.ArtifactPersister(project_id=project.id)
 

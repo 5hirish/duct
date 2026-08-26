@@ -288,6 +288,7 @@ class ArtifactPersister:
         kind: str = "report",
         conversation_id: UUID | None = None,
         api_key: str = "",
+        group_id: UUID | None = None,
     ) -> None:
         self.project_id = project_id
         self.user_id = user_id
@@ -295,14 +296,18 @@ class ArtifactPersister:
         self.kind = kind
         self.conversation_id = conversation_id
         self.api_key = api_key
-        self.group_id: UUID = uuid4()
+        # Pass the existing group_id when resuming a conversation so new
+        # versions extend the same artifact instead of starting a new one.
+        self.group_id: UUID = group_id or uuid4()
         self.last_artifact_id: UUID | None = None
 
     def wrap_emit(self, emit_fn):
         async def _emit(body: dict) -> None:
             await emit_fn(body)  # SSE first — streaming never waits on storage
             try:
-                if body.get("event") == AgentEvent.REPORT_UPDATED:
+                # replay=True marks a rehydrated version re-emitted for the UI
+                # on resume — already stored, never persist it again.
+                if body.get("event") == AgentEvent.REPORT_UPDATED and not body.get("replay"):
                     await self._persist_report(body)
             except Exception:
                 logger.warning(

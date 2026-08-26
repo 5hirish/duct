@@ -438,6 +438,12 @@ class AuditRequest(BaseModel):
     # Project scoping — when set (and not lead_magnet), report versions persist
     # to the artifact store under this project. None = ephemeral session.
     project_id: str | None = None
+    # Persisted-conversation controls (mirror the content agent's semantics).
+    # resume=True + conversation_id continues a stored audit chat WITHOUT
+    # re-crawling: the latest report artifact rehydrates the working report.
+    conversation_id: str | None = None
+    resume: bool = False
+    start_fresh: bool = False
     business_context: AuditBusinessContext = Field(default_factory=AuditBusinessContext)
     engine: str = ""
     max_blog_posts: int = Field(default=5, ge=1, le=10)

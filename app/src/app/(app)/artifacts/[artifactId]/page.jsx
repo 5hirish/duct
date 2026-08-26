@@ -17,6 +17,7 @@ import {
   getArtifactContent,
   listArtifactVersions,
 } from "../../../../lib/artifactsApi";
+import { startAuditResume } from "../../../../lib/auditResume";
 
 export default function ArtifactViewerPage() {
   const { artifactId } = useParams();
@@ -95,8 +96,21 @@ export default function ArtifactViewerPage() {
               ))}
             </select>
           )}
-          {artifact?.conversation_id && (
-            <span className="status-pill grey" title="Produced by an agent conversation">chat-linked</span>
+          {artifact?.conversation_id && artifact?.agent_type === "audit_seo" && (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() =>
+                startAuditResume(router, {
+                  conversationId: artifact.conversation_id,
+                  projectId: artifact.project_id,
+                  url: artifact.meta?.url || "",
+                  reportMode: artifact.meta?.report_mode || "",
+                })
+              }
+            >
+              Open chat
+            </Button>
           )}
           {artifact?.has_content && (
             <Button size="sm" variant="secondary" onClick={() => downloadArtifact(artifact).catch((e) => setError(e.message))}>

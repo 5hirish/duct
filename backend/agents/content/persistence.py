@@ -422,7 +422,12 @@ def save_summary(db: Session, conversation_id: UUID, summary: str, through_seq: 
     db.commit()
 
 
-async def build_reprime_context(session: Any, api_key: str) -> str:
+async def build_reprime_context(
+    session: Any,
+    api_key: str,
+    *,
+    subject: str = "the current post/plan (shown in the working_post / working_plan block)",
+) -> str:
     """Build the restored-context block prepended to the user's FIRST message
     after a resume — NOT a greeting turn. Resuming must never make the agent
     speak on its own (reload/refresh/reconnect just restore state); instead the
@@ -457,8 +462,7 @@ async def build_reprime_context(session: Any, api_key: str) -> str:
         return ""
     return (
         "<resumed_context>\n"
-        "You are continuing an earlier conversation with this user about the "
-        "current post/plan (shown in the working_post / working_plan block). Use "
+        f"You are continuing an earlier conversation with this user about {subject}. Use "
         "this context to answer their next message naturally. Do NOT greet, "
         "recap, or restate it, and do not regenerate anything unless they ask.\n"
         f"{reprime}"
