@@ -66,6 +66,18 @@ def _stored_credentials(
     return {}
 
 
+def stored_connector_credentials(
+    session: Session, user_id: UUID, connector_type: str, account_id: str = ""
+) -> dict:
+    """Public best-effort read of a user's stored credential blob, any shape.
+
+    Used by the manual-credential connectors (apple_ads, meta_ads, stripe,
+    revenuecat, openai_ads) whose credential dicts don't fit the Google-shaped
+    resolve_execution_creds() output. Same guarantees: never raises, {} on any
+    miss."""
+    return _stored_credentials(session, user_id, connector_type, account_id.strip())
+
+
 def resolve_execution_creds(
     session: Session,
     user_id: UUID,

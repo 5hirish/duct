@@ -541,8 +541,8 @@ def build_content_mcp_server(
     # tool input_schema (via tool_schema()) and the field constraints the model
     # sees (enums from StrEnum so an invalid id can't be passed; ranges via
     # Field). Defined here, not at module top, because the gemini enums pull the
-    # google client; service.gemini is imported lazily at session-build time.
-    from service.gemini.schema import EditMode, MaskMode, SubjectType
+    # google client; service.google.gemini is imported lazily at session-build time.
+    from service.google.gemini.schema import EditMode, MaskMode, SubjectType
 
     class GenerateImageInput(BaseModel):
         model_config = ConfigDict(extra="forbid")
@@ -1208,13 +1208,13 @@ def build_content_mcp_server(
     )
     async def generate_image(args: dict) -> dict:
         try:
-            from service.gemini import (
+            from service.google.gemini import (
                 GeminiAPIError,
                 GeminiImageClient,
                 GenerateImageRequest,
                 persist_generated_image,
             )
-            from service.gemini.client import build_multi_reference_prefix
+            from service.google.gemini.client import build_multi_reference_prefix
 
             cfg = get_configs()
             if not cfg.gemini_api_key:
@@ -1427,7 +1427,7 @@ def build_content_mcp_server(
     )
     async def edit_image(args: dict) -> dict:
         try:
-            from service.gemini import (
+            from service.google.gemini import (
                 EditImageRequest,
                 GeminiAPIError,
                 GeminiImageClient,

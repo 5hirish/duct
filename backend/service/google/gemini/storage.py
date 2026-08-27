@@ -11,7 +11,7 @@ from sqlmodel import Session
 
 from models.content import ContentAsset
 from service import storage
-from service.gemini.schema import GeneratedImage, ImageAsset
+from service.google.gemini.schema import GeneratedImage, ImageAsset
 
 logger = logging.getLogger(__name__)
 

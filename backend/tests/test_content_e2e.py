@@ -154,7 +154,7 @@ def test_live_gemini_generate_one_image_real_api():
        - Our extractor missing the inline_data parts
     """
     from agents.models import AspectRatio, ImageModel
-    from service.gemini import GeminiImageClient, GenerateImageRequest
+    from service.google.gemini import GeminiImageClient, GenerateImageRequest
 
     async def _go():
         client = GeminiImageClient(os.environ["GEMINI_API_KEY"])

@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import ManualConnectorCard from "../../../components/connections/ManualConnectorCard";
 
 export default function ConnectionsPage() {
   const [ga4Connected, setGa4Connected] = useState(false);
@@ -415,55 +416,137 @@ export default function ConnectionsPage() {
           {gtmConnected && <ServerSyncHint signedIn={signedIn} saved={!!serverRows.gtm} />}
         </article>
 
-        <article className="connection-card">
-          <div className="connection-card-head">
-            <div className="connection-logo" aria-hidden="true">
-              <img
-                src="/icons/meta-ads.svg"
-                alt="Meta Ads logo"
-                width="28"
-                height="28"
-              />
-            </div>
-            <div>
-              <h2 className="connection-title">Meta Ads</h2>
-              <p className="connection-description">
-                Facebook and Instagram campaign performance including spend, reach, conversions, and CPA.
-              </p>
-            </div>
-          </div>
-          <div className="connection-status-row">
-            <span className="status-pill yellow">Coming soon</span>
-            <Button type="button" variant="secondary" size="sm" disabled>
-              Coming soon
-            </Button>
-          </div>
-        </article>
+        <ManualConnectorCard
+          type="meta_ads"
+          title="Meta Ads"
+          description="Facebook and Instagram campaign performance including spend, reach, conversions, and CPA."
+          logo={<img src="/icons/meta-ads.svg" alt="Meta Ads logo" width="28" height="28" />}
+          fields={[
+            {
+              key: "access_token",
+              label: "System User access token",
+              placeholder: "EAA…",
+              secret: true,
+              hint:
+                "Business settings → Users → System users → Generate token with scope ads_read " +
+                "(+ business_management for account discovery). System User tokens don't expire; regular user tokens die in ~60 days.",
+            },
+            {
+              key: "account_id",
+              label: "Ad account id",
+              placeholder: "act_1234567890",
+              optional: true,
+              hint: "Needed only if the token lacks business_management (no account discovery).",
+            },
+            { key: "app_secret", label: "App secret", placeholder: "Only if 'Require App Secret' is on", secret: true, optional: true },
+          ]}
+          accountField="account_id"
+          docsUrl="https://business.facebook.com/settings/system-users"
+          docsLabel="Create a System User token (Business settings)"
+          signedIn={signedIn}
+          serverRow={serverRows.meta_ads}
+          onSaved={refreshServerRows}
+          onRemove={removeServerRow}
+        />
 
-        <article className="connection-card">
-          <div className="connection-card-head">
-            <div className="connection-logo" aria-hidden="true">
-              <img
-                src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg"
-                alt="Stripe logo"
-                width="28"
-                height="28"
-              />
-            </div>
-            <div>
-              <h2 className="connection-title">Stripe</h2>
-              <p className="connection-description">
-                Revenue, subscriptions, churn, and payment outcomes to connect marketing performance to business impact.
-              </p>
-            </div>
-          </div>
-          <div className="connection-status-row">
-            <span className="status-pill yellow">Coming soon</span>
-            <Button type="button" variant="secondary" size="sm" disabled>
-              Coming soon
-            </Button>
-          </div>
-        </article>
+        <ManualConnectorCard
+          type="stripe"
+          title="Stripe"
+          description="Settled revenue, subscriptions, refunds, and payment outcomes — the money truth your ad platforms get reconciled against."
+          logo={<img src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg" alt="Stripe logo" width="28" height="28" />}
+          fields={[
+            {
+              key: "api_key",
+              label: "Restricted API key",
+              placeholder: "rk_live_…",
+              secret: true,
+              hint:
+                "Create a RESTRICTED key with read access to Subscriptions, Charges, Invoices, " +
+                "Customers, Products and Prices. Duct only ever reads.",
+            },
+          ]}
+          docsUrl="https://dashboard.stripe.com/apikeys"
+          docsLabel="Create a restricted key (Stripe dashboard)"
+          signedIn={signedIn}
+          serverRow={serverRows.stripe}
+          onSaved={refreshServerRows}
+          onRemove={removeServerRow}
+        />
+
+        <ManualConnectorCard
+          type="apple_ads"
+          title="Apple Search Ads"
+          description="App Store search campaign performance — spend, taps, and installs by campaign and search term."
+          logo={<span style={{ fontSize: 22 }}>🍎</span>}
+          fields={[
+            { key: "client_id", label: "Client ID", placeholder: "SEARCHADS.xxxxxxxx-…" },
+            { key: "team_id", label: "Team ID", placeholder: "SEARCHADS.xxxxxxxx-…" },
+            { key: "key_id", label: "Key ID", placeholder: "xxxxxxxx-xxxx-…" },
+            {
+              key: "private_key",
+              label: "EC private key (PEM)",
+              placeholder: "-----BEGIN PRIVATE KEY-----…",
+              multiline: true,
+              hint:
+                "Generate an EC P-256 key pair, upload the PUBLIC half at ads.apple.com → " +
+                "Account Settings → API, then paste the private key here. Apple has no browser sign-in for this — key material is the official method.",
+            },
+          ]}
+          accountField="org_id"
+          docsUrl="https://searchads.apple.com/help/campaigns/0022-use-the-campaign-management-api"
+          docsLabel="Apple's API access guide"
+          signedIn={signedIn}
+          serverRow={serverRows.apple_ads}
+          onSaved={refreshServerRows}
+          onRemove={removeServerRow}
+        />
+
+        <ManualConnectorCard
+          type="revenuecat"
+          title="RevenueCat"
+          description="Mobile subscription truth — trials, renewals, refunds, grace periods, and MRR across the App Store and Play."
+          logo={<span style={{ fontSize: 22 }}>📱</span>}
+          fields={[
+            {
+              key: "api_key",
+              label: "Secret API key (V2)",
+              placeholder: "sk_…",
+              secret: true,
+              hint:
+                "Project settings → API keys → Secret API key (V2) with the read scopes. " +
+                "Public SDK keys (appl_/goog_) cannot read the REST API.",
+            },
+          ]}
+          accountField="project_id"
+          docsUrl="https://www.revenuecat.com/docs/projects/authentication"
+          docsLabel="RevenueCat API keys guide"
+          signedIn={signedIn}
+          serverRow={serverRows.revenuecat}
+          onSaved={refreshServerRows}
+          onRemove={removeServerRow}
+        />
+
+        <ManualConnectorCard
+          type="openai_ads"
+          title="OpenAI Ads"
+          description="ChatGPT Ads campaign delivery — impressions, clicks, and spend (conversions live only in Ads Manager)."
+          logo={<span style={{ fontSize: 22 }}>✳️</span>}
+          fields={[
+            {
+              key: "api_key",
+              label: "Ads API key",
+              placeholder: "From Ads Manager → Settings → API keys",
+              secret: true,
+              hint: "A key is scoped to ONE ad account — make sure it's the right one.",
+            },
+          ]}
+          docsUrl="https://developers.openai.com/ads/api-quickstart"
+          docsLabel="OpenAI Ads API quickstart"
+          signedIn={signedIn}
+          serverRow={serverRows.openai_ads}
+          onSaved={refreshServerRows}
+          onRemove={removeServerRow}
+        />
 
         <article className="connection-card">
           <div className="connection-card-head">

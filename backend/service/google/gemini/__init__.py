@@ -7,8 +7,8 @@ return both the inline image (so the model can see the layout) and the
 stable public URL (so slides_html can reference it).
 """
 
-from service.gemini.client import GeminiAPIError, GeminiImageClient
-from service.gemini.schema import (
+from service.google.gemini.client import GeminiAPIError, GeminiImageClient
+from service.google.gemini.schema import (
     EditImageRequest,
     EditMode,
     GenerateImageRequest,
@@ -20,7 +20,7 @@ from service.gemini.schema import (
     SubjectType,
     ThinkingLevel,
 )
-from service.gemini.storage import persist_generated_image
+from service.google.gemini.storage import persist_generated_image
 
 __all__ = [
     "EditImageRequest",

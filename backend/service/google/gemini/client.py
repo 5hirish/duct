@@ -24,7 +24,7 @@ import logging
 from typing import Any
 
 from agents.models import ImageModel
-from service.gemini.schema import (
+from service.google.gemini.schema import (
     EditImageRequest,
     GenerateImageRequest,
     GeneratedImage,
@@ -337,7 +337,7 @@ def _gemini_image_config(request: Any):
 
 def _collapse_thinking_for_gemini_3_1(model: ImageModel, level):
     """gemini-3.1-flash-image only supports MINIMAL or HIGH; collapse others."""
-    from service.gemini.schema import ThinkingLevel
+    from service.google.gemini.schema import ThinkingLevel
     if model == ImageModel.GEMINI_3_1_FLASH_IMAGE:
         if level in (ThinkingLevel.LOW, ThinkingLevel.MEDIUM):
             return ThinkingLevel.MINIMAL if level == ThinkingLevel.LOW else ThinkingLevel.HIGH

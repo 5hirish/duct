@@ -53,7 +53,10 @@ async def insight_chat(req: InsightChatRequest) -> StreamingResponse:
         "their insight data. Answer questions grounded in the data provided. "
         "Be concise and specific, and cite concrete numbers when relevant. "
         "If you suggest a change, explain which metric should improve and why.\n\n"
-        f"{knowledge_block(('google_ads', 'ga4', 'gsc'))}\n\n"
+        # Static per deployment (prompt-cache safe): the full connector gotcha
+        # corpus plus the cross-platform reconciliation rules — the chat can be
+        # asked about any connected source.
+        f"{knowledge_block(('google_ads', 'ga4', 'gsc', 'apple_ads', 'meta', 'stripe', 'revenuecat', 'openai_ads', 'reconciliation'))}\n\n"
         f"INSIGHT CONTEXT:\n{cp.get('summary_text', '')}\n\n"
         f"Goal: {cp.get('goal', 'unknown')}\n"
         f"Account: {cp.get('account', {}).get('name', 'unknown')}\n"

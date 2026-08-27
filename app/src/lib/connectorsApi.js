@@ -32,3 +32,16 @@ export function saveServerConnector({ connector_type, account_id = "", account_n
 export function deleteServerConnector(id) {
   return authedRequest(`/api/user/connectors/${id}`, { method: "DELETE" });
 }
+
+/**
+ * Verify manual credentials by listing the accounts they can reach
+ * (POST /api/connectors/{id}/accounts). Returns the account rows; throws with
+ * the backend's specific message on bad credentials.
+ */
+export async function listConnectorAccounts(connectorId, credentials) {
+  const res = await authedRequest(`/api/connectors/${connectorId}/accounts`, {
+    method: "POST",
+    body: { credentials },
+  });
+  return res?.accounts || [];
+}

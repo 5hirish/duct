@@ -71,6 +71,10 @@ class GenerateRequest(BaseModel):
     account_name: str = ""
     currency_code: str = "USD"
     login_customer_id: str = ""
+    # Manual-credential connectors (apple_ads, meta_ads, stripe, revenuecat,
+    # openai_ads): per-connector credential dicts. A non-empty request entry
+    # wins; otherwise the signed-in user's stored encrypted row is used.
+    connector_credentials: dict[str, dict[str, str]] = Field(default_factory=dict)
     business_context: BusinessContext = Field(default_factory=BusinessContext)
     mode_context: str = ""  # optional frontend-supplied mode context, appended to system prompt
     engine: str = Field(default="", description="Engine override: 'v1', 'v2', or 'v3'. Falls back to GENERATE_ENGINE env var.")
