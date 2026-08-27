@@ -2,25 +2,9 @@
 
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { AUTH_TOKEN_KEY, decodeJwtPayload, isTokenValid } from "./authFetch";
 
-const TOKEN_KEY = "duct_auth_token";
 const AuthContext = createContext(null);
-
-function decodeJwtPayload(token) {
-  try {
-    const base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
-    return JSON.parse(atob(base64));
-  } catch {
-    return null;
-  }
-}
-
-function isTokenValid(token) {
-  if (!token) return false;
-  const payload = decodeJwtPayload(token);
-  if (!payload || !payload.exp) return false;
-  return payload.exp * 1000 > Date.now();
-}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -29,7 +13,7 @@ export function AuthProvider({ children }) {
   const router = useRouter();
 
   useEffect(() => {
-    const stored = localStorage.getItem(TOKEN_KEY);
+    const stored = localStorage.getItem(AUTH_TOKEN_KEY);
     if (isTokenValid(stored)) {
       const payload = decodeJwtPayload(stored);
       setToken(stored);
@@ -43,7 +27,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const signOut = useCallback(() => {
-    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(AUTH_TOKEN_KEY);
     setUser(null);
     setToken(null);
     router.replace("/");

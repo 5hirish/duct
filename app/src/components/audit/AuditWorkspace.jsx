@@ -16,51 +16,10 @@ import { AuditEvent, AuditStep } from "../../lib/auditEvents";
 import { StepStatus } from "../../lib/agentSteps";
 import { Phase } from "./auditPhase";
 import { useAuditNav } from "../../lib/auditNavContext";
+import { consumeSseStream } from "@/lib/sse";
 
 // Re-export so consumers can import Phase from AuditWorkspace if they prefer
 export { Phase } from "./auditPhase";
-
-// ---------------------------------------------------------------------------
-// SSE helpers
-// ---------------------------------------------------------------------------
-
-function parseSseDataFrame(frame) {
-  const dataLines = frame
-    .split("\n")
-    .filter((l) => l.startsWith("data: "))
-    .map((l) => l.slice(6));
-  if (!dataLines.length) return null;
-  try {
-    return JSON.parse(dataLines.join("\n"));
-  } catch {
-    return null;
-  }
-}
-
-async function consumeSseStream(body, onEvent, signal) {
-  const reader = body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-  try {
-    while (true) {
-      if (signal?.aborted) break;
-      const { value, done } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const frames = buffer.split("\n\n");
-      buffer = frames.pop() ?? "";
-      for (const frame of frames) {
-        if (!frame.trim()) continue;
-        const event = parseSseDataFrame(frame);
-        if (event) onEvent(event);
-      }
-    }
-  } catch (err) {
-    if (!signal?.aborted) throw err;
-  } finally {
-    reader.releaseLock();
-  }
-}
 
 // ---------------------------------------------------------------------------
 // AuditWorkspace

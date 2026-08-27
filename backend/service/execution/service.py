@@ -17,7 +17,7 @@ Contract:
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -30,10 +30,7 @@ from service.activity import log_activity
 from service.execution.guardrails import violations_for
 from service.execution.policy import change_auto_eligible, should_auto_apply
 from service.execution.registry import get_executor
-
-
-def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+from utils.dates import utcnow
 
 
 # Ops whose successful apply/rollback changes the LIVE site — each gets its own
@@ -244,8 +241,8 @@ def propose_change_set(
             approved.append(change)
         row.changes = approved
         row.status = "approved"
-        row.approved_at = _utcnow()
-        row.updated_at = _utcnow()
+        row.approved_at = utcnow()
+        row.updated_at = utcnow()
         db.add(row)
         db.commit()
         db.refresh(row)
@@ -270,7 +267,7 @@ def apply_change_set(
     guardrails = guardrails_for(db, row.user_id, row.connector_type, row.account_id)
 
     row.status = "applying"
-    row.updated_at = _utcnow()
+    row.updated_at = utcnow()
     db.add(row)
     db.commit()
 
@@ -304,8 +301,8 @@ def apply_change_set(
         updated.append(change)
 
     row.changes = updated
-    row.applied_at = _utcnow()
-    row.updated_at = _utcnow()
+    row.applied_at = utcnow()
+    row.updated_at = utcnow()
     row.status = "applied" if applied and not failed else ("partial" if applied else "failed")
     if applied:
         row.applied_by = applied_by
@@ -370,7 +367,7 @@ def rollback_change_set(
         updated.append(change)
 
     row.changes = updated
-    row.updated_at = _utcnow()
+    row.updated_at = utcnow()
     if reverted and not errors:
         row.status = "rolled_back"
     db.add(row)

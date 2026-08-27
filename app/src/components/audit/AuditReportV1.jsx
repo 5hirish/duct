@@ -9,6 +9,7 @@ import {
   ExecutionRequestModal,
 } from './ExecutionOffer';
 import { trackEvent } from '../../lib/analytics-client';
+import { capitalize } from "@/lib/format";
 
 // ---------------------------------------------------------------------------
 // Global styles — tooltips + entrance animations
@@ -267,14 +268,14 @@ function ImpactEffortChips({ impact, effort }) {
         <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md"
           style={{ background: IMPACT_COLOR[impact] + '18', color: IMPACT_COLOR[impact] }}>
           <Zap size={10} strokeWidth={2.5} />
-          {impact.charAt(0).toUpperCase() + impact.slice(1)} impact
+          {capitalize(impact)} impact
         </span>
       )}
       {effort && (
         <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md"
           style={{ background: EFFORT_COLOR[effort] + '18', color: EFFORT_COLOR[effort] }}>
           <Clock size={10} strokeWidth={2.5} />
-          {effort.charAt(0).toUpperCase() + effort.slice(1)} effort
+          {capitalize(effort)} effort
         </span>
       )}
     </div>

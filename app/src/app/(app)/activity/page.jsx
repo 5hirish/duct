@@ -12,6 +12,7 @@ import { useSearchParams } from "next/navigation";
 import { FileText, History, ShieldCheck, Zap } from "lucide-react";
 import { getActiveProject } from "../../../lib/projects";
 import { hasAuthToken } from "../../../lib/authFetch";
+import { relativeTime } from "@/lib/format";
 import { listActivity } from "../../../lib/activityApi";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -27,15 +28,6 @@ const SOURCE_BADGES = {
   agent: { label: "agent", className: "status-pill green" },
   auto: { label: "auto", className: "status-pill yellow" },
 };
-
-function relativeTime(iso) {
-  const then = new Date(iso).getTime();
-  if (!Number.isFinite(then)) return "";
-  const mins = Math.round((Date.now() - then) / 60000);
-  if (mins < 60) return `${Math.max(mins, 1)}m ago`;
-  if (mins < 60 * 24) return `${Math.round(mins / 60)}h ago`;
-  return `${Math.round(mins / (60 * 24))}d ago`;
-}
 
 function rowIcon(row) {
   if (row.category === "artifact") return FileText;

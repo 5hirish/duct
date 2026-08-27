@@ -5,6 +5,7 @@ import { Images, Video, Image as ImageIcon, Clock } from "lucide-react";
 import { mediaUrl } from "@/lib/contentApi";
 import { firstImageSrc, statusMeta } from "@/lib/contentStatus";
 import { PlatformGlyph, platformMeta } from "@/components/content/platformGlyphs";
+import { titleCase } from "@/lib/format";
 
 const TYPE_ICON = { slideshow: Images, video: Video, image: ImageIcon };
 
@@ -15,10 +16,6 @@ const KIND_BADGE = {
 };
 
 const KIND_LABEL = { published: "Published", scheduled: "Scheduled", proposed: "Planned" };
-
-function prettify(s) {
-  return String(s || "").replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
 
 /**
  * One modular post card, shared by every plan view via `variant`:
@@ -43,7 +40,7 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
   const TypeIcon = TYPE_ICON[postType] || Images;
   const title = post?.hook_text || day?.hook_text || day?.topic || post?.topic || "(untitled)";
   const pillar = day?.pillar || post?.pillar || "";
-  const format = post?.format_name || prettify(day?.format_slug || "");
+  const format = post?.format_name || titleCase(day?.format_slug || "");
   const platforms = (Array.isArray(post?.platforms) && post.platforms.length
     ? post.platforms
     : Array.isArray(day?.platforms) ? day.platforms : []);
@@ -136,7 +133,7 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
             {/* meta row — color-coded kind pill carries the state; muted date keeps the title the hero */}
             <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
               <span className={`rounded-md px-1.5 py-0.5 text-[10px] font-medium ${KIND_BADGE[kind]}`}>
-                {KIND_LABEL[kind] || prettify(kind)}
+                {KIND_LABEL[kind] || titleCase(kind)}
               </span>
               {dateText && (
                 <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
@@ -161,7 +158,7 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
             {/* chips */}
             <div className="flex flex-wrap items-center gap-1 pt-0.5">
               {pillar && (
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">{prettify(pillar)}</span>
+                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">{titleCase(pillar)}</span>
               )}
               {format && (
                 <span className="rounded-full border border-border/70 px-2 py-0.5 text-[10px] text-muted-foreground">{format}</span>

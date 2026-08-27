@@ -78,7 +78,7 @@ from models.content import (
 )
 from models.project import Project
 from service import storage
-from service.pipeline import now_iso
+from utils.dates import now_iso
 
 logger = logging.getLogger(__name__)
 

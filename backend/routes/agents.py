@@ -70,7 +70,7 @@ from service.artifact_store import (
 from service.auth import get_current_user_optional
 from service.crawl.fetcher import SSRFError, validate_public_url
 from service.membership import member_role
-from service.pipeline import now_iso
+from utils.dates import now_iso
 
 logger = logging.getLogger(__name__)
 

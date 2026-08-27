@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { cdnImage, mediaUrl } from "@/lib/contentApi";
 import { PlatformGlyph, platformMeta } from "@/components/content/platformGlyphs";
+import { compactNumber, formatDate, titleCase } from "@/lib/format";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -24,13 +25,6 @@ const STATUS_STYLE = {
   discarded: "bg-rose-500/90 text-white",
   pending:   "bg-zinc-500/90 text-white",
 };
-
-function fmtNum(n) {
-  const v = Number(n) || 0;
-  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(v % 1_000_000 ? 1 : 0)}M`;
-  if (v >= 1_000)     return `${(v / 1_000).toFixed(v % 1_000 ? 1 : 0)}k`;
-  return String(v);
-}
 
 function pick(perf, ...keys) {
   for (const k of keys) {
@@ -48,17 +42,6 @@ function metricsOf(perf = {}) {
     shares:   pick(perf, "share_count", "shares"),
     saves:    pick(perf, "save_count", "collect_count", "saves"),
   };
-}
-
-function fmtDate(iso) {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
-}
-
-function titleCase(s) {
-  return (s || "").replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()).trim();
 }
 
 // ---------------------------------------------------------------------------
@@ -169,7 +152,7 @@ export default function PostCard({ post }) {
         {/* Footer */}
         <div className="flex items-center gap-1.5 border-t border-border/40 pt-2 text-[11px] text-muted-foreground">
           <Calendar className="h-3 w-3" />
-          {published ? <span>Published {fmtDate(published)}</span> : <span className="italic">Not published</span>}
+          {published ? <span>Published {formatDate(published)}</span> : <span className="italic">Not published</span>}
         </div>
       </div>
     </Link>
@@ -181,7 +164,7 @@ function Metric({ icon: Icon, value }) {
   return (
     <span className="inline-flex items-center gap-1 tabular-nums">
       <Icon className="h-3.5 w-3.5" />
-      {fmtNum(value)}
+      {compactNumber(value)}
     </span>
   );
 }

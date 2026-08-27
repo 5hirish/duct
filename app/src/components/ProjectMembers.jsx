@@ -5,6 +5,7 @@ import { Loader2, Mail, RotateCw, Trash2, TriangleAlert, UserPlus, X } from "luc
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { initials, relativeDays } from "@/lib/format";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,25 +23,6 @@ import {
   resendInvitation,
   revokeInvitation,
 } from "@/lib/membersApi";
-
-/** "in 6 days" / "today" / "3 days ago" — enough precision for an invite. */
-function relativeDays(iso) {
-  if (!iso) return "";
-  const target = new Date(iso).getTime();
-  if (Number.isNaN(target)) return "";
-  const days = Math.round((target - Date.now()) / 86_400_000);
-  if (days === 0) return "today";
-  if (days > 0) return `in ${days} day${days === 1 ? "" : "s"}`;
-  const past = Math.abs(days);
-  return `${past} day${past === 1 ? "" : "s"} ago`;
-}
-
-function initials(nameOrEmail) {
-  const source = (nameOrEmail || "?").trim();
-  const parts = source.split(/\s+/).filter(Boolean);
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return source.slice(0, 2).toUpperCase();
-}
 
 function Avatar({ member }) {
   const label = member.full_name || member.email;

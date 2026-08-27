@@ -2,16 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 from uuid import UUID, uuid4
 
 from sqlalchemy import Column, DateTime, ForeignKey, Index, String, Text
 from models.columns import json_column
 from sqlmodel import Field, SQLModel
-
-
-def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+from utils.dates import utcnow
 
 
 class ContentAsset(SQLModel, table=True):
@@ -42,6 +39,6 @@ class ContentAsset(SQLModel, table=True):
         sa_column=Column(json_column(), nullable=False, server_default="{}"),
     )
     created_at: datetime = Field(
-        default_factory=_utcnow,
+        default_factory=utcnow,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )

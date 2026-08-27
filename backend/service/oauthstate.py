@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 
 from sqlalchemy import delete, select
 from sqlalchemy.exc import SQLAlchemyError
@@ -12,13 +12,10 @@ from sqlmodel import Session
 
 from db.session import get_engine
 from models.auth import OAuthState
+from utils.dates import utcnow
 
 _memory_states: dict[str, tuple[float, str | None, str]] = {}
 logger = logging.getLogger(__name__)
-
-
-def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
 
 
 def save_state(state: str, code_verifier: str | None, flow: str, ttl_seconds: int) -> None:
@@ -26,7 +23,7 @@ def save_state(state: str, code_verifier: str | None, flow: str, ttl_seconds: in
     if engine is None:
         _memory_states[state] = (time.time(), code_verifier, flow)
         return
-    now = _utcnow()
+    now = utcnow()
     try:
         with Session(engine) as session:
             session.execute(delete(OAuthState).where(OAuthState.state == state))
@@ -76,7 +73,7 @@ def consume_state(state: str, flow: str, ttl_seconds: int) -> tuple[bool, str | 
     if engine is None:
         return _consume_memory_state(state, flow, ttl_seconds)
 
-    now = _utcnow()
+    now = utcnow()
     try:
         with Session(engine) as session:
             stmt = select(OAuthState).where(OAuthState.state == state)
@@ -111,7 +108,7 @@ def consume_state_for_flows(
     if engine is None:
         return _consume_memory_state_for_flows(state, allowed, ttl_seconds)
 
-    now = _utcnow()
+    now = utcnow()
     try:
         with Session(engine) as session:
             stmt = select(OAuthState).where(OAuthState.state == state)
@@ -139,7 +136,7 @@ def cleanup_expired_states() -> int:
     engine = get_engine()
     if engine is None:
         return 0
-    now = _utcnow()
+    now = utcnow()
     try:
         with Session(engine) as session:
             stmt = delete(OAuthState).where(

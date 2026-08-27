@@ -20,7 +20,6 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from datetime import datetime, timezone
 from typing import Any
 from uuid import UUID
 
@@ -31,6 +30,7 @@ from agents.core.events import AgentEvent, EventKind
 from agents.models import AgentPermissionMode, ModelName
 from db.session import get_session as db_session
 from models.content import AgentConversation, AgentEvent as AgentEventRow, ContentPlan, ContentPost
+from utils.dates import utcnow
 
 logger = logging.getLogger(__name__)
 
@@ -71,10 +71,6 @@ _HAIKU_MODEL = ModelName.CLAUDE_HAIKU.value
 _SUMMARY_TIMEOUT = 45.0
 
 
-def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
-
-
 # ---------------------------------------------------------------------------
 # Low-level DB helpers (sync — callers pass a Session)
 # ---------------------------------------------------------------------------
@@ -85,7 +81,7 @@ def _next_seq(db: Session, conversation_id: UUID) -> int:
     row = db.execute(
         update(AgentConversation)
         .where(AgentConversation.id == conversation_id)
-        .values(last_seq=AgentConversation.last_seq + 1, last_active_at=_utcnow())
+        .values(last_seq=AgentConversation.last_seq + 1, last_active_at=utcnow())
         .returning(AgentConversation.last_seq)
     ).first()
     db.commit()
@@ -152,7 +148,7 @@ def archive_conversation(db: Session, conversation_id: UUID) -> None:
     db.execute(
         update(AgentConversation)
         .where(AgentConversation.id == conversation_id)
-        .values(status="archived", last_active_at=_utcnow())
+        .values(status="archived", last_active_at=utcnow())
     )
     db.commit()
 
@@ -165,7 +161,7 @@ def link_artifact(
     db.execute(
         update(AgentConversation)
         .where(AgentConversation.id == conversation_id)
-        .values(artifact_type=artifact_type, artifact_id=artifact_id, last_active_at=_utcnow())
+        .values(artifact_type=artifact_type, artifact_id=artifact_id, last_active_at=utcnow())
     )
     db.commit()
 

@@ -2,17 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
 
 from sqlalchemy import select
 from sqlmodel import Session
 
 from db.session import get_engine
 from models.auth import AuthIdentity, User
-
-
-def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+from utils.dates import utcnow
 
 
 def upsert_google_user(
@@ -29,7 +25,7 @@ def upsert_google_user(
         return
     normalized_email = email.strip().lower()
 
-    now = _utcnow()
+    now = utcnow()
     with Session(engine) as session:
         user = session.execute(select(User).where(User.email == normalized_email)).scalars().first()
         if user is None:

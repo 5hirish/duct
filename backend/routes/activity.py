@@ -9,7 +9,6 @@ timeline. Keyset-paginated on ``created_at`` (``before``).
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any
 from uuid import UUID
 
@@ -22,6 +21,7 @@ from models.activity import ActivityLog
 from models.auth import User
 from service.auth import get_current_user
 from service.membership import get_project_for_user
+from utils.dates import parse_iso
 
 router = APIRouter(tags=["activity"])
 
@@ -65,10 +65,11 @@ def list_activity(
     if category:
         stmt = stmt.where(ActivityLog.category == category)
     if before:
-        try:
-            cutoff = datetime.fromisoformat(before)
-        except ValueError as exc:
-            raise HTTPException(status_code=422, detail="before must be an ISO datetime") from exc
+        # created_at is timezone-aware, so the cursor has to be too — parse_iso
+        # assumes UTC for a bare timestamp rather than letting the DB guess.
+        cutoff = parse_iso(before)
+        if cutoff is None:
+            raise HTTPException(status_code=422, detail="before must be an ISO datetime")
         stmt = stmt.where(ActivityLog.created_at < cutoff)
 
     rows = (

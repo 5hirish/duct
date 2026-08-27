@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { compactNumber, formatDate } from "@/lib/format";
 
 const ACTORS = [
   {
@@ -53,23 +54,10 @@ const SORTS = [
 
 const RUNNING = new Set(["running", "polling", "fetching"]);
 
-function fmtNum(n) {
-  const v = Number(n) || 0;
-  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(v % 1_000_000 ? 1 : 0)}M`;
-  if (v >= 1_000)     return `${(v / 1_000).toFixed(v % 1_000 ? 1 : 0)}k`;
-  return String(v);
-}
-
 function engagement(p) {
   const plays = p.play_count || 0;
   if (!plays) return 0;
   return ((p.digg_count || 0) + (p.comment_count || 0) + (p.share_count || 0) + (p.collect_count || 0)) / plays;
-}
-
-function fmtDate(iso) {
-  if (!iso) return "";
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
 export default function DiscoverPage({ projectId }) {
@@ -316,7 +304,7 @@ function ResultCard({ post, busy, onSave }) {
 
         {/* play count, bottom-left */}
         <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 text-xs font-semibold text-white drop-shadow">
-          <Play className="h-3.5 w-3.5 fill-white" /> {fmtNum(post.play_count)}
+          <Play className="h-3.5 w-3.5 fill-white" /> {compactNumber(post.play_count)}
         </span>
 
         {/* badges top-right */}
@@ -363,7 +351,7 @@ function ResultCard({ post, busy, onSave }) {
             <p className="flex items-center gap-1 truncate text-[11px] text-muted-foreground">
               <span className="truncate font-medium text-foreground/80">@{author}</span>
               {verified && <BadgeCheck className="h-3 w-3 shrink-0 text-sky-500" />}
-              {post.author_meta?.fans ? <span className="shrink-0">· {fmtNum(post.author_meta.fans)} fans</span> : null}
+              {post.author_meta?.fans ? <span className="shrink-0">· {compactNumber(post.author_meta.fans)} fans</span> : null}
             </p>
           )}
           {music && (
@@ -375,7 +363,7 @@ function ResultCard({ post, busy, onSave }) {
 
         {/* footer */}
         <div className="flex items-center justify-between gap-2 border-t border-border/40 pt-2">
-          <span className="text-[10px] text-muted-foreground">{fmtDate(post.create_time_iso)}</span>
+          <span className="text-[10px] text-muted-foreground">{formatDate(post.create_time_iso)}</span>
           <button
             type="button"
             onClick={onSave}
@@ -398,7 +386,7 @@ function ResultCard({ post, busy, onSave }) {
 function Metric({ icon: Icon, value }) {
   return (
     <span className="inline-flex items-center gap-1 tabular-nums">
-      <Icon className="h-3.5 w-3.5" /> {fmtNum(value)}
+      <Icon className="h-3.5 w-3.5" /> {compactNumber(value)}
     </span>
   );
 }

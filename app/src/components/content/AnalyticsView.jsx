@@ -26,12 +26,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { getContentAnalytics } from "@/lib/contentApi";
 import { PlatformGlyph, platformMeta } from "./platformGlyphs";
+import { dayKey, formatDate, formatNumber, titleCase, toDate } from "@/lib/format";
 
-const fmt = (n) => (typeof n === "number" ? n.toLocaleString() : "—");
-const compact = (n) =>
-  typeof n === "number"
-    ? Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(n)
-    : "—";
+/** Axis/cell dates stay pinned to English — the labels around them are. */
+const shortDate = (d) => formatDate(d, { withYear: false, locale: "en", fallback: "—" });
 
 // share_url comes from the third-party Post-Bridge API, so treat it as untrusted:
 // only render it as a link when it resolves to an http(s) URL. Blocks javascript:
@@ -46,17 +44,6 @@ function safeHref(u) {
   }
 }
 
-function parseDate(s) {
-  if (!s) return null;
-  const d = new Date(s);
-  return Number.isNaN(d.getTime()) ? null : d;
-}
-function dayKey(d) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-function shortDate(d) {
-  return d ? d.toLocaleDateString("en", { month: "short", day: "numeric" }) : "—";
-}
 
 export default function AnalyticsView({ projectId }) {
   const [rows, setRows] = useState([]);
@@ -99,7 +86,7 @@ export default function AnalyticsView({ projectId }) {
   const timeline = useMemo(() => {
     const byDay = new Map();
     for (const r of rows) {
-      const d = parseDate(r.platform_created_at);
+      const d = toDate(r.platform_created_at);
       if (!d) continue;
       const k = dayKey(d);
       const cur = byDay.get(k) || { key: k, date: d, views: 0 };
@@ -127,7 +114,7 @@ export default function AnalyticsView({ projectId }) {
   const sortedRows = useMemo(() => {
     const copy = [...rows];
     if (sortKey === "likes") copy.sort((a, b) => (b.like_count || 0) - (a.like_count || 0));
-    else if (sortKey === "date") copy.sort((a, b) => (parseDate(b.platform_created_at)?.getTime() || 0) - (parseDate(a.platform_created_at)?.getTime() || 0));
+    else if (sortKey === "date") copy.sort((a, b) => (toDate(b.platform_created_at)?.getTime() || 0) - (toDate(a.platform_created_at)?.getTime() || 0));
     else copy.sort((a, b) => (b.view_count || 0) - (a.view_count || 0));
     return copy;
   }, [rows, sortKey]);
@@ -166,11 +153,11 @@ export default function AnalyticsView({ projectId }) {
         <>
           {/* Stat cards */}
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-            <StatCard icon={Eye} label="Views" value={fmt(totals.views)} accent="text-sky-500" />
-            <StatCard icon={Heart} label="Likes" value={fmt(totals.likes)} accent="text-rose-500" />
-            <StatCard icon={MessageCircle} label="Comments" value={fmt(totals.comments)} accent="text-violet-500" />
-            <StatCard icon={Share2} label="Shares" value={fmt(totals.shares)} accent="text-emerald-500" />
-            <StatCard icon={TrendingUp} label="Engagement" value={`${engagementRate.toFixed(1)}%`} sub={`${fmt(rows.length)} posts · ${fmt(avgViews)} avg views`} accent="text-amber-500" />
+            <StatCard icon={Eye} label="Views" value={formatNumber(totals.views)} accent="text-sky-500" />
+            <StatCard icon={Heart} label="Likes" value={formatNumber(totals.likes)} accent="text-rose-500" />
+            <StatCard icon={MessageCircle} label="Comments" value={formatNumber(totals.comments)} accent="text-violet-500" />
+            <StatCard icon={Share2} label="Shares" value={formatNumber(totals.shares)} accent="text-emerald-500" />
+            <StatCard icon={TrendingUp} label="Engagement" value={`${engagementRate.toFixed(1)}%`} sub={`${formatNumber(rows.length)} posts · ${formatNumber(avgViews)} avg views`} accent="text-amber-500" />
           </div>
 
           {/* Charts */}
@@ -259,7 +246,7 @@ export default function AnalyticsView({ projectId }) {
                 <tbody>
                   {sortedRows.map((r) => {
                     const meta = platformMeta(r.platform);
-                    const d = parseDate(r.platform_created_at);
+                    const d = toDate(r.platform_created_at);
                     return (
                       <tr key={r.id} className="border-t border-border/60 hover:bg-muted/20">
                         <td className="px-3 py-2">
@@ -280,7 +267,7 @@ export default function AnalyticsView({ projectId }) {
                                   <span className="rounded-full bg-primary/10 px-1.5 py-px text-[9px] font-semibold text-primary">via Duct</span>
                                 )}
                                 {r.pillar && (
-                                  <span className="rounded-full bg-muted px-1.5 py-px text-[9px] font-medium text-muted-foreground">{prettify(r.pillar)}</span>
+                                  <span className="rounded-full bg-muted px-1.5 py-px text-[9px] font-medium text-muted-foreground">{titleCase(r.pillar)}</span>
                                 )}
                               </p>
                               <p className="line-clamp-2 text-xs text-foreground">{r.title || <span className="italic text-muted-foreground">No caption</span>}</p>
@@ -288,10 +275,10 @@ export default function AnalyticsView({ projectId }) {
                           </div>
                         </td>
                         <td className="whitespace-nowrap px-3 py-2 text-xs text-muted-foreground">{shortDate(d)}</td>
-                        <td className="px-3 py-2 text-right font-medium tabular-nums">{fmt(r.view_count)}</td>
-                        <td className="px-3 py-2 text-right tabular-nums">{fmt(r.like_count)}</td>
-                        <td className="px-3 py-2 text-right tabular-nums">{fmt(r.comment_count)}</td>
-                        <td className="px-3 py-2 text-right tabular-nums">{fmt(r.share_count)}</td>
+                        <td className="px-3 py-2 text-right font-medium tabular-nums">{formatNumber(r.view_count)}</td>
+                        <td className="px-3 py-2 text-right tabular-nums">{formatNumber(r.like_count)}</td>
+                        <td className="px-3 py-2 text-right tabular-nums">{formatNumber(r.comment_count)}</td>
+                        <td className="px-3 py-2 text-right tabular-nums">{formatNumber(r.share_count)}</td>
                         <td className="px-2 py-2 text-right">
                           {safeHref(r.share_url) && (
                             <a href={safeHref(r.share_url)} target="_blank" rel="noopener noreferrer" className="inline-flex text-muted-foreground hover:text-foreground" title="Open post">
@@ -323,10 +310,6 @@ function StatCard({ icon: Icon, label, value, sub, accent = "text-foreground" })
       {sub && <p className="mt-0.5 text-[11px] text-muted-foreground">{sub}</p>}
     </div>
   );
-}
-
-function prettify(s) {
-  return String(s || "").replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 /** Sum views grouped by a row key, over attributed rows only. Sorted desc. */
@@ -380,7 +363,7 @@ function ChartTooltip({ active, payload, label, suffix = "" }) {
   return (
     <div className="rounded-lg border border-border bg-popover px-2.5 py-1.5 text-xs shadow-md">
       {name && <p className="mb-0.5 max-w-[220px] truncate font-medium">{name}</p>}
-      <p className="tabular-nums text-muted-foreground">{fmt(p.value)}{suffix}</p>
+      <p className="tabular-nums text-muted-foreground">{formatNumber(p.value)}{suffix}</p>
     </div>
   );
 }

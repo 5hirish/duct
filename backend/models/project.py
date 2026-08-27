@@ -2,17 +2,14 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 from uuid import UUID, uuid4
 
 import sqlalchemy as sa
 from sqlalchemy import Column, DateTime, ForeignKey, String
 from models.columns import json_column
 from sqlmodel import Field, SQLModel
-
-
-def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+from utils.dates import utcnow
 
 
 class Project(SQLModel, table=True):
@@ -69,10 +66,10 @@ class Project(SQLModel, table=True):
         default="manual", sa_column=Column(String, nullable=False, server_default="manual")
     )
     created_at: datetime = Field(
-        default_factory=_utcnow,
+        default_factory=utcnow,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
     updated_at: datetime = Field(
-        default_factory=_utcnow,
+        default_factory=utcnow,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )

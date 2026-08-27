@@ -7,21 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { getLocalInsights, LOCAL_INSIGHTS_STORAGE_KEY } from "../lib/localInsights";
 import { FALLBACK_MODES, getModeByKey } from "../lib/modes";
 import { REPORT_NAV_TRANSITION_TYPES } from "../lib/reportNavTransition";
-
-function formatTimeAgo(iso) {
-  if (!iso) return "";
-  const dt = new Date(iso);
-  if (Number.isNaN(dt.getTime())) return "";
-  const diffMs = dt.getTime() - Date.now();
-  const mins = Math.round(diffMs / 60000);
-  const absMins = Math.abs(mins);
-  const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
-  if (absMins < 60) return rtf.format(mins, "minute");
-  const hours = Math.round(mins / 60);
-  if (Math.abs(hours) < 24) return rtf.format(hours, "hour");
-  const days = Math.round(hours / 24);
-  return rtf.format(days, "day");
-}
+import { formatTitle, relativeTime } from "@/lib/format";
 
 function ConnectionIcons({ connections }) {
   if (!connections?.length) return null;
@@ -38,14 +24,6 @@ function ConnectionIcons({ connections }) {
       )}
     </div>
   );
-}
-
-function formatTitle(slug) {
-  return slug
-    .replace(/^local-/, "")
-    .replace(/[-_]\d+$/, "")
-    .replace(/[-_]/g, " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 function unwrapBrief(payload) {
@@ -193,12 +171,12 @@ export default function InsightsList({
                 {insight.keyInsight || "No key insight available yet."}
               </p>
               <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
-                {formatTimeAgo(insight.generatedAt)}
+                {relativeTime(insight.generatedAt)}
               </span>
             </div>
             {insight.isLocal && insight.lastRefreshedAt && (
               <p className="text-[11px] text-muted-foreground mt-0.5">
-                Refreshed {formatTimeAgo(insight.lastRefreshedAt)}
+                Refreshed {relativeTime(insight.lastRefreshedAt)}
               </p>
             )}
           </div>

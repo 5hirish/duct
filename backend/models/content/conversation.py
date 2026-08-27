@@ -19,7 +19,7 @@ Design notes
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 from uuid import UUID, uuid4
 
 import sqlalchemy as sa
@@ -35,10 +35,7 @@ from sqlalchemy import (
 )
 from models.columns import json_column
 from sqlmodel import Field, SQLModel
-
-
-def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+from utils.dates import utcnow
 
 
 class AgentConversation(SQLModel, table=True):
@@ -100,11 +97,11 @@ class AgentConversation(SQLModel, table=True):
     )
 
     created_at: datetime = Field(
-        default_factory=_utcnow,
+        default_factory=utcnow,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
     last_active_at: datetime = Field(
-        default_factory=_utcnow,
+        default_factory=utcnow,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
 
@@ -138,6 +135,6 @@ class AgentEvent(SQLModel, table=True):
         sa_column=Column(json_column(), nullable=False, server_default="{}"),
     )
     created_at: datetime = Field(
-        default_factory=_utcnow,
+        default_factory=utcnow,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )

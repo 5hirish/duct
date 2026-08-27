@@ -17,7 +17,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import logging
-from datetime import datetime, timezone
+
 from typing import Any
 from urllib.parse import urlparse
 from uuid import UUID, uuid4
@@ -30,6 +30,8 @@ from db.session import get_session as db_session
 from models.artifact import Artifact
 from service.activity import log_activity
 from service.storage import delete_private, get_private_bytes, put_private
+from utils.dates import utcnow
+from utils.strings import slugify
 
 logger = logging.getLogger(__name__)
 
@@ -76,14 +78,6 @@ def extension_for(content_type: str) -> str:
     return _EXTENSIONS.get(content_type, "bin")
 
 
-def slugify(text: str, max_len: int = 60) -> str:
-    """Kebab-case slug from arbitrary text ('' if nothing survives)."""
-    import re
-
-    slug = re.sub(r"[^a-z0-9]+", "-", (text or "").lower()).strip("-")
-    return slug[:max_len].rstrip("-")
-
-
 class ArtifactConflict(Exception):
     """Optimistic-concurrency failure: the artifact moved past expected_version.
 
@@ -125,10 +119,6 @@ def apply_text_edits(source: str, edits: list[dict]) -> tuple[str, list[str]]:
         else:
             out = out.replace(old, new, 1)
     return out, errors
-
-
-def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
 
 
 def _host(url: str) -> str:
@@ -403,7 +393,7 @@ def create_artifact_group(
     if err:
         raise ValueError(err)
     final_slug = ensure_unique_slug(db, project_id, slug or title)
-    date = _utcnow().strftime("%Y-%m-%d")
+    date = utcnow().strftime("%Y-%m-%d")
     ext = extension_for(content_type)
     row = persist_artifact_version(
         project_id=project_id,
@@ -444,7 +434,7 @@ def revise_artifact(
     if err:
         raise ValueError(err)
     version = current.version + 1
-    date = _utcnow().strftime("%Y-%m-%d")
+    date = utcnow().strftime("%Y-%m-%d")
     ext = extension_for(current.content_type)
     stem = current.slug or slugify(current.title) or current.kind
     return persist_artifact_version(
@@ -652,7 +642,7 @@ class ArtifactPersister:
         # app renders; freehand reports are self-contained HTML bytes.
         content_type = HTML if html else DUCT_REPORT_JSON
         host = _host(report.url)
-        date = _utcnow().strftime("%Y-%m-%d")
+        date = utcnow().strftime("%Y-%m-%d")
         ext = "html" if html else "json"
 
         if self._slug is None:

@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { FileText } from "lucide-react";
 import { getActiveProject } from "../../../lib/projects";
 import { hasAuthToken } from "../../../lib/authFetch";
+import { relativeTime } from "@/lib/format";
 import { listArtifacts } from "../../../lib/artifactsApi";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -18,15 +19,6 @@ const KIND_TABS = [
   { value: "report", label: "Reports" },
   { value: "document", label: "Documents" },
 ];
-
-function relativeTime(iso) {
-  const then = new Date(iso).getTime();
-  if (!Number.isFinite(then)) return "";
-  const mins = Math.round((Date.now() - then) / 60000);
-  if (mins < 60) return `${Math.max(mins, 1)}m ago`;
-  if (mins < 60 * 24) return `${Math.round(mins / 60)}h ago`;
-  return `${Math.round(mins / (60 * 24))}d ago`;
-}
 
 export default function ArtifactsPage() {
   const [project, setProject] = useState(null);

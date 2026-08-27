@@ -15,20 +15,14 @@ import { saveLocalInsight, generateSlug } from "../../../lib/localInsights";
 import { getActiveProject, getActiveProjectId } from "../../../lib/projects";
 import { fetchModes, getModeByKey, FALLBACK_MODES, DEFAULT_MODE_KEY } from "../../../lib/modes";
 import { Button } from "@/components/ui/button";
-
-function formatLocalYmd(d) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
+import { dayKey } from "@/lib/format";
 
 /** Rolling window ending today: `daysBack` is subtracted from start (matches prior default: 7 → from = today − 7). */
 function rangeEndingToday(daysBack) {
   const to = new Date();
   const from = new Date();
   from.setDate(from.getDate() - daysBack);
-  return { from: formatLocalYmd(from), to: formatLocalYmd(to) };
+  return { from: dayKey(from), to: dayKey(to) };
 }
 
 function defaultDateRange() {

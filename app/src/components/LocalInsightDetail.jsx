@@ -11,14 +11,7 @@ import {
 } from "../lib/localInsights";
 import { REPORT_NAV_TRANSITION_TYPES } from "../lib/reportNavTransition";
 import { InsightContextProvider } from "./InsightContext";
-
-function formatTitle(slug) {
-  return slug
-    .replace(/^local-/, "")
-    .replace(/[-_]\d+$/, "")
-    .replace(/[-_]/g, " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
-}
+import { formatTitle } from "@/lib/format";
 
 export default function LocalInsightDetail({ slug }) {
   const [entry, setEntry] = useState(null);

@@ -6,9 +6,9 @@ import { BASE } from "../../lib/api";
 import { isDesktopShell, getShellInfo, openExternal } from "../../lib/shell";
 import { isLocalBackendActive } from "../../lib/localBackend.js";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
+import { AUTH_TOKEN_KEY, isTokenValid } from "@/lib/authFetch";
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
-const TOKEN_KEY = "duct_auth_token";
 const POST_SIGNIN_REDIRECT_KEY = "duct_post_signin_redirect";
 const DEFAULT_LANDING = "/insights/organic-growth";
 
@@ -28,22 +28,6 @@ function consumePostSignInRedirect() {
   }
   if (!target.startsWith("/") || target.startsWith("//")) return DEFAULT_LANDING;
   return target;
-}
-
-function decodeJwtPayload(token) {
-  try {
-    const base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
-    return JSON.parse(atob(base64));
-  } catch {
-    return null;
-  }
-}
-
-function isTokenValid(token) {
-  if (!token) return false;
-  const payload = decodeJwtPayload(token);
-  if (!payload || !payload.exp) return false;
-  return payload.exp * 1000 > Date.now();
 }
 
 function SignInSuspenseFallback() {
@@ -109,7 +93,7 @@ function SignInContent() {
         .then((r) => r.json())
         .then(({ token }) => {
           if (token) {
-            localStorage.setItem(TOKEN_KEY, token);
+            localStorage.setItem(AUTH_TOKEN_KEY, token);
             router.replace(consumePostSignInRedirect());
           }
         })
@@ -118,7 +102,7 @@ function SignInContent() {
     }
 
     // Already authenticated? Redirect.
-    const existing = localStorage.getItem(TOKEN_KEY);
+    const existing = localStorage.getItem(AUTH_TOKEN_KEY);
     if (isTokenValid(existing)) {
       router.replace(consumePostSignInRedirect());
       return;

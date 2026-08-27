@@ -33,14 +33,11 @@ from models.membership import (
     ProjectMember,
 )
 from models.project import Project
+from utils.dates import utcnow
 
 # Length of the raw invitation token before URL-safe encoding. 32 bytes gives a
 # 43-character token — far past guessing range for a link that also expires.
 _TOKEN_BYTES = 32
-
-
-def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
 
 
 # --- Token helpers -------------------------------------------------------
@@ -138,7 +135,7 @@ def ensure_owner_membership(project: Project, session: Session) -> ProjectMember
     if existing is not None:
         if existing.role != ROLE_OWNER:
             existing.role = ROLE_OWNER
-            existing.updated_at = _utcnow()
+            existing.updated_at = utcnow()
             session.add(existing)
         return existing
 
@@ -161,7 +158,7 @@ def project_owner(project: Project, session: Session) -> User | None:
 
 
 def invitation_expiry(ttl_days: int) -> datetime:
-    return _utcnow() + timedelta(days=ttl_days)
+    return utcnow() + timedelta(days=ttl_days)
 
 
 def is_invitation_live(invitation: ProjectInvitation) -> bool:
@@ -171,7 +168,7 @@ def is_invitation_live(invitation: ProjectInvitation) -> bool:
     expires_at = invitation.expires_at
     if expires_at.tzinfo is None:
         expires_at = expires_at.replace(tzinfo=timezone.utc)
-    return expires_at > _utcnow()
+    return expires_at > utcnow()
 
 
 def find_live_invitation(token: str, session: Session) -> ProjectInvitation | None:

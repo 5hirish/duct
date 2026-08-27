@@ -12,6 +12,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { useAuditNav } from "../lib/auditNavContext";
+import { titleCase } from "@/lib/format";
 
 // Friendly labels for known path segments. Unknown segments (dynamic ids /
 // slugs) fall back to prettifySegment().
@@ -47,9 +48,7 @@ function prettifySegment(segment) {
     return `#${decoded.slice(0, 6)}`;
   }
   // slug → Title Case
-  return decoded
-    .replace(/[-_]+/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+  return titleCase(decoded);
 }
 
 function buildTrail(pathname) {

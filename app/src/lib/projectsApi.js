@@ -11,32 +11,11 @@
 // the background. Every call is a no-op (returns null/[]) when no valid token
 // is present, so signed-out or token-less sessions degrade to local-only.
 
-import { BASE, backendApiKey } from "./api";
+import { BASE } from "./api";
+import { authedHeaders as authHeaders, hasAuthToken } from "./authFetch";
 
-const TOKEN_KEY = "duct_auth_token";
-
-function authToken() {
-  if (typeof window === "undefined") return "";
-  try {
-    return window.localStorage.getItem(TOKEN_KEY) || "";
-  } catch {
-    return "";
-  }
-}
-
-function authHeaders(extra = {}) {
-  const headers = { ...extra };
-  const apiKey = backendApiKey();
-  if (apiKey) headers["X-API-Key"] = apiKey;
-  const token = authToken();
-  if (token) headers["Authorization"] = `Bearer ${token}`;
-  return headers;
-}
-
-/** True when a Bearer token exists — gate for any remote sync. */
-export function hasAuthToken() {
-  return Boolean(authToken());
-}
+// Re-exported: lib/projects.js gates its remote sync on this.
+export { hasAuthToken };
 
 // --- Shape mapping -------------------------------------------------------
 // Local project (nested) <-> backend project (flat company fields).

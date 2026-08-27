@@ -18,7 +18,7 @@ apply time.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -46,12 +46,9 @@ from service.execution.service import (
     serialize_change_set as _serialize,
 )
 from service.membership import get_project_for_user
+from utils.dates import utcnow
 
 router = APIRouter(tags=["execution"])
-
-
-def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
 
 
 class CredentialsIn(BaseModel):
@@ -297,8 +294,8 @@ def approve_change_set(
 
     row.changes = updated
     row.status = "approved"
-    row.approved_at = _utcnow()
-    row.updated_at = _utcnow()
+    row.approved_at = utcnow()
+    row.updated_at = utcnow()
     session.add(row)
     session.commit()
     session.refresh(row)
@@ -324,7 +321,7 @@ def reject_change_set(
     if row.status in ("applied", "partial", "rolled_back"):
         raise HTTPException(status_code=409, detail=f"Cannot reject a {row.status} change set.")
     row.status = "rejected"
-    row.updated_at = _utcnow()
+    row.updated_at = utcnow()
     session.add(row)
     session.commit()
     session.refresh(row)
