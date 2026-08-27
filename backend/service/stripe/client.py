@@ -21,7 +21,8 @@ import json
 import time
 from typing import Any
 
-import httpx
+from service.rest import Endpoint, RetryPolicy
+from service.rest import ApiError as BaseApiError
 
 API_BASE = "https://api.stripe.com/v1"
 
@@ -31,7 +32,6 @@ API_BASE = "https://api.stripe.com/v1"
 STRIPE_VERSION = "2026-07-29.dahlia"
 
 PAGE_LIMIT = 100  # Stripe's hard maximum per page
-RETRY_STATUSES = {429, 500, 502, 503, 504}
 
 # Subscription statuses that never took money: an abandoned or failed
 # checkout, not a sale. Counting them as acquisition overstates it badly
@@ -39,16 +39,13 @@ RETRY_STATUSES = {429, 500, 502, 503, 504}
 NEVER_PAID = {"incomplete", "incomplete_expired"}
 
 
-class ApiError(Exception):
-    def __init__(self, status: int, body: str):
-        self.status, self.body = status, body
-        detail = body
+class ApiError(BaseApiError):
+    def parse(self, body: str) -> str:
         try:
             err = json.loads(body).get("error", {})
-            detail = f"{err.get('type')}: {err.get('message')}"
+            return f"{err.get('type')}: {err.get('message')}"
         except Exception:  # noqa: BLE001
-            pass
-        super().__init__(f"HTTP {status} — {detail}")
+            return ""
 
 
 def require_credentials(creds: dict[str, str]) -> str:
@@ -84,30 +81,25 @@ def _flatten(params: dict | None, prefix: str = "") -> list[tuple[str, str]]:
     return out
 
 
-def api(path: str, creds: dict[str, str], params: dict | None = None, retries: int = 4) -> dict:
+# Stripe starts its backoff at 1s, not the shared default of 2s.
+_ENDPOINT = Endpoint(
+    base_url=API_BASE,
+    error_cls=ApiError,
+    retry=RetryPolicy(attempts=5, first=1.0, cap=60.0),
+    timeout=120,
+    success=frozenset({200}),
+    encode=_flatten,
+)
+
+
+def api(path: str, creds: dict[str, str], params: dict | None = None) -> dict:
     """GET one Stripe endpoint. Returns parsed JSON, raises ApiError otherwise."""
     key = require_credentials(creds)
-    url = path if path.startswith("http") else f"{API_BASE}/{path.lstrip('/')}"
-    headers = {"Authorization": f"Bearer {key}", "Stripe-Version": STRIPE_VERSION}
-
-    delay = 1.0
-    for attempt in range(retries + 1):
-        try:
-            resp = httpx.get(url, params=_flatten(params), headers=headers, timeout=120)
-        except httpx.HTTPError as exc:
-            if attempt == retries:
-                raise ApiError(0, f"request failed: {exc}") from exc
-            time.sleep(delay)
-            delay *= 2
-            continue
-        if resp.status_code == 200:
-            return resp.json()
-        if resp.status_code in RETRY_STATUSES and attempt < retries:
-            time.sleep(delay)
-            delay *= 2
-            continue
-        raise ApiError(resp.status_code, resp.text)
-    raise ApiError(0, "retries exhausted")
+    return _ENDPOINT.request(
+        path,
+        params=params,
+        headers={"Authorization": f"Bearer {key}", "Stripe-Version": STRIPE_VERSION},
+    )
 
 
 def get_all(path: str, creds: dict[str, str], params: dict | None = None, cap: int | None = None) -> list:

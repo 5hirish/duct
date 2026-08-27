@@ -25,7 +25,8 @@ import json
 import time
 from typing import Any
 
-import httpx
+from service.rest import Endpoint, RetryPolicy
+from service.rest import ApiError as BaseApiError
 from utils.dates import last_n_days
 
 API_VERSION = "v26.0"  # released 2026-07-29; v24.0 expires 2026-10-06
@@ -72,17 +73,14 @@ STRUCTURE_FIELDS = {
 }
 
 
-class ApiError(Exception):
+class ApiError(BaseApiError):
     """Graph API error with the envelope unpacked.
 
     The HTTP status is nearly always 400 regardless of cause, so ``api_code``
     and ``subcode`` — not the status — are what you branch on.
     """
 
-    def __init__(self, status: int, body: str, url: str = ""):
-        self.status = status
-        self.body = body
-        self.url = url
+    def parse(self, body: str) -> str:
         self.api_code: int | None = None
         self.subcode: int | None = None
         self.type = ""
@@ -95,11 +93,12 @@ class ApiError(Exception):
             msg = err.get("error_user_msg") or err.get("message") or ""
         except (ValueError, AttributeError):
             pass
-        head = f"{self.type or 'Error'} {self.api_code if self.api_code is not None else status}"
+        if not msg:
+            return ""
+        head = f"{self.type or 'Error'} {self.api_code if self.api_code is not None else self.status}"
         if self.subcode:
             head += f"/{self.subcode}"
-        self.summary = f"{head}: {msg}" if msg else (body or "")[:300]
-        super().__init__(f"HTTP {status} — {self.summary}")
+        return f"{head}: {msg}"
 
     @property
     def is_throttle(self) -> bool:
@@ -158,45 +157,51 @@ def _appsecret_proof(creds: dict[str, str]) -> str | None:
     return hmac.new(secret.encode(), token.encode(), hashlib.sha256).hexdigest()
 
 
-def api(path: str, creds: dict[str, str], params: dict | None = None, method: str = "GET", retries: int = 5) -> dict:
+def _encode(params: dict | None) -> dict | None:
+    """Graph API takes structured params as JSON *strings* inside the query."""
+    return {
+        k: (json.dumps(v, separators=(",", ":")) if isinstance(v, (dict, list)) else v)
+        for k, v in (params or {}).items()
+    } or None
+
+
+class _Retry(RetryPolicy):
+    """Throttles want minutes, not seconds — Meta's budgets refill on a sliding
+    hour, and the HTTP status is 400 for nearly everything, so the decision has
+    to come off ``api_code``."""
+
+    def delay(self, error: ApiError, attempt: int) -> float | None:
+        if attempt >= self.attempts - 1:
+            return None
+        if error.is_throttle:
+            return min(120.0, 20.0 * (attempt + 1))
+        return super().delay(error, attempt)
+
+
+_ENDPOINT = Endpoint(
+    base_url=API_BASE,
+    error_cls=ApiError,
+    retry=_Retry(attempts=5, statuses={500, 502, 503, 504}),
+    timeout=300,
+    success=frozenset({200, 201}),
+    encode=_encode,
+)
+
+
+def api(path: str, creds: dict[str, str], params: dict | None = None, method: str = "GET") -> dict:
     """One Graph API call. The token rides in the Authorization header, never
     the query string (no shell history / proxy-log leaks)."""
     require_credentials(creds)
-    token = creds["access_token"]
-
-    url = path if path.startswith("http") else f"{API_BASE}/{path.lstrip('/')}"
     query = dict(params or {})
     proof = _appsecret_proof(creds)
     if proof:
         query.setdefault("appsecret_proof", proof)
-    # Graph API takes structured params as JSON *strings* inside the query.
-    flat = {
-        k: (json.dumps(v, separators=(",", ":")) if isinstance(v, (dict, list)) else v)
-        for k, v in query.items()
-    }
-    headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
-
-    for attempt in range(retries):
-        try:
-            resp = httpx.request(method, url, params=flat or None, headers=headers, timeout=300)
-        except httpx.HTTPError as exc:
-            if attempt == retries - 1:
-                raise ApiError(0, f"request failed: {exc}", url) from exc
-            time.sleep(min(30, 2 ** (attempt + 1)))
-            continue
-        if resp.status_code in (200, 201):
-            return resp.json() if resp.text.strip() else {}
-        err = ApiError(resp.status_code, resp.text, url)
-        # Throttles want minutes, not seconds — Meta's budgets refill on a
-        # sliding hour. Transient 5xx wants the usual exponential curve.
-        if err.is_throttle and attempt < retries - 1:
-            time.sleep(min(120, 20 * (attempt + 1)))
-            continue
-        if resp.status_code in (500, 502, 503, 504) and attempt < retries - 1:
-            time.sleep(min(30, 2 ** (attempt + 1)))
-            continue
-        raise err
-    raise ApiError(0, "retries exhausted", url)
+    return _ENDPOINT.request(
+        path,
+        method=method,
+        params=query,
+        headers={"Authorization": f"Bearer {creds['access_token']}", "Accept": "application/json"},
+    )
 
 
 def get_all(path: str, creds: dict[str, str], params: dict | None = None, limit: int = 200, cap: int | None = None) -> list:

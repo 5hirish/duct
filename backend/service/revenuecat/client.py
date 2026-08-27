@@ -19,10 +19,9 @@ Key sharp edges handled here:
 from __future__ import annotations
 
 import json
-import threading
-import time
 
-import httpx
+from service.rest import Endpoint, Pacer, RetryPolicy
+from service.rest import ApiError as BaseApiError
 
 API_BASE = "https://api.revenuecat.com/v2"
 
@@ -48,14 +47,11 @@ READ_SCOPES = [
 _PUBLIC_KEY_PREFIXES = ("appl_", "goog_", "amzn_", "rcb_")
 
 
-class ApiError(Exception):
+class ApiError(BaseApiError):
     """v2 error with the envelope unpacked: {"type","param","message",
     "doc_url","retryable","backoff_ms"}."""
 
-    def __init__(self, code: int, body: str, url: str = ""):
-        self.code = code
-        self.body = body
-        self.url = url
+    def parse(self, body: str) -> str:
         self.type = ""
         self.param = ""
         self.retryable = False
@@ -72,8 +68,7 @@ class ApiError(Exception):
         except (ValueError, AttributeError):
             pass
         bits = [b for b in (self.type, self.param and f"[{self.param}]", msg) if b]
-        self.summary = " ".join(bits) or (body or "")[:300]
-        super().__init__(f"HTTP {code} — {self.summary}")
+        return " ".join(bits)
 
     def hint(self) -> str:
         if self.code == 401:
@@ -104,44 +99,37 @@ def require_credentials(creds: dict[str, str]) -> str:
     return key
 
 
-_last_chart_call = [0.0]
-_chart_lock = threading.Lock()
+class _Retry(RetryPolicy):
+    """Honour the server's own backoff hint when the error carries one."""
+
+    def delay(self, error: ApiError, attempt: int) -> float | None:
+        wait = super().delay(error, attempt)
+        if wait is None:
+            return None
+        return (error.backoff_ms / 1000.0) if error.backoff_ms else wait
+
+
+_ENDPOINT = Endpoint(
+    base_url=API_BASE,
+    error_cls=ApiError,
+    retry=_Retry(attempts=5),
+    success=frozenset({200, 204}),
+)
+
+# Charts and metrics get 25 req/min against 480 elsewhere, so only they pace.
+_CHART_PACER = Pacer(CHART_MIN_INTERVAL)
 
 
 def api(path: str, creds: dict[str, str], params: dict | None = None,
-        retries: int = 5, throttle: bool = False) -> dict:
+        throttle: bool = False) -> dict:
     """One RevenueCat call. ``throttle=True`` self-paces to the charts budget."""
     key = require_credentials(creds)
-    url = path if path.startswith("http") else f"{API_BASE}/{path.lstrip('/')}"
-
-    if throttle:
-        with _chart_lock:
-            wait = CHART_MIN_INTERVAL - (time.time() - _last_chart_call[0])
-            if wait > 0:
-                time.sleep(wait)
-            _last_chart_call[0] = time.time()
-
-    headers = {"Authorization": f"Bearer {key}", "Accept": "application/json"}
-    for attempt in range(retries):
-        try:
-            resp = httpx.get(url, params=params, headers=headers, timeout=180)
-        except httpx.HTTPError as exc:
-            if attempt == retries - 1:
-                raise ApiError(0, f"request failed: {exc}", url) from exc
-            time.sleep(min(16, 2 ** (attempt + 1)))
-            continue
-        if resp.status_code == 200:
-            return resp.json() if resp.text.strip() else {}
-        if resp.status_code == 204:
-            return {}
-        if resp.status_code in (429, 500, 502, 503, 504) and attempt < retries - 1:
-            # Honour the server's own backoff hint when it sends one.
-            err = ApiError(resp.status_code, resp.text, url)
-            delay = (err.backoff_ms / 1000.0) if err.backoff_ms else min(30, 2 ** (attempt + 1))
-            time.sleep(delay)
-            continue
-        raise ApiError(resp.status_code, resp.text, url)
-    raise ApiError(0, "retries exhausted", url)
+    return _ENDPOINT.request(
+        path,
+        params=params,
+        headers={"Authorization": f"Bearer {key}", "Accept": "application/json"},
+        pacer=_CHART_PACER if throttle else None,
+    )
 
 
 def get_all(path: str, creds: dict[str, str], params: dict | None = None,

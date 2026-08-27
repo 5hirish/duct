@@ -25,7 +25,9 @@ import threading
 import time
 from typing import Any
 
-import httpx
+
+from service.rest import Endpoint, RetryPolicy
+from service.rest import ApiError as BaseApiError
 from utils.dates import last_n_days
 
 API_BASE = "https://api.searchads.apple.com/api/v5"
@@ -54,7 +56,7 @@ DEFAULT_ORDER_BY = {
 }
 
 
-class ApiError(Exception):
+class ApiError(BaseApiError):
     """Apple Ads error with the envelope already unpacked.
 
     Apple returns {"data":null,"pagination":null,"error":{"errors":[{...}]}}
@@ -62,27 +64,26 @@ class ApiError(Exception):
     a different shape ({"error":"invalid_client"}). Both are parsed.
     """
 
-    def __init__(self, code: int, body: str):
-        self.code = code
-        self.body = body
-        self.errors = self._parse(body)
-        self.summary = "; ".join(
-            " ".join(p for p in (c, f and f"[{f}]", m) if p) for c, m, f in self.errors
-        ) or (body or "")[:300]
-        super().__init__(f"HTTP {code} — {self.summary}")
-
-    @staticmethod
-    def _parse(body: str):
-        out = []
+    def parse(self, body: str) -> str:
+        self.errors: list[tuple[str, str, str]] = []
         try:
             err = json.loads(body)
-            for e in (err.get("error") or {}).get("errors", []) or []:
-                out.append((e.get("messageCode", "ERROR"), e.get("message", ""), e.get("field", "")))
-            if not out and isinstance(err.get("error"), str):
-                out.append((err["error"], err.get("error_description", ""), ""))
-        except (ValueError, AttributeError):
-            pass
-        return out
+        except (ValueError, TypeError):
+            return ""
+        envelope = err.get("error") if isinstance(err, dict) else None
+        if isinstance(envelope, dict):
+            for e in envelope.get("errors") or []:
+                self.errors.append(
+                    (e.get("messageCode", "ERROR"), e.get("message", ""), e.get("field", ""))
+                )
+        elif isinstance(envelope, str):
+            # appleid.apple.com speaks OAuth, not the Ads envelope: {"error":
+            # "invalid_client"}. Branching on the type is what makes this
+            # reachable — `(err.get("error") or {}).get(...)` raises on a str.
+            self.errors.append((envelope, err.get("error_description", ""), ""))
+        return "; ".join(
+            " ".join(p for p in (c, f and f"[{f}]", m) if p) for c, m, f in self.errors
+        )
 
 
 def require_credentials(creds: dict[str, str]) -> dict[str, str]:
@@ -125,6 +126,18 @@ def client_secret(creds: dict[str, str], ttl: int = 3600) -> str:
     )
 
 
+# The token mint is a different host, and used to be the one Apple call with no
+# retry at all — a transient blip there escaped as a raw httpx error, straight
+# past fetch.py's `except ApiError`, and failed the whole pull.
+_TOKEN_ENDPOINT = Endpoint(
+    base_url=AUDIENCE,
+    error_cls=ApiError,
+    retry=RetryPolicy(attempts=3, cap=16.0),
+    timeout=60,
+    success=frozenset({200}),
+)
+
+
 # In-process token cache — Apple tokens live 3600s and there is no refresh flow.
 _TOKEN_CACHE: dict[tuple[str, str], dict[str, Any]] = {}
 _TOKEN_LOCK = threading.Lock()
@@ -138,8 +151,9 @@ def access_token(creds: dict[str, str], force: bool = False) -> str:
         if not force and cached and cached["expires_at"] > time.time() + 60:
             return cached["access_token"]
 
-    resp = httpx.post(
+    tok = _TOKEN_ENDPOINT.request(
         TOKEN_URL,
+        method="POST",
         data={
             "grant_type": "client_credentials",
             "client_id": creds["client_id"],
@@ -147,17 +161,31 @@ def access_token(creds: dict[str, str], force: bool = False) -> str:
             "scope": SCOPE,
         },
         headers={"Host": "appleid.apple.com"},
-        timeout=60,
     )
-    if resp.status_code != 200:
-        raise ApiError(resp.status_code, resp.text)
-    tok = resp.json()
     with _TOKEN_LOCK:
         _TOKEN_CACHE[cache_key] = {
             "access_token": tok["access_token"],
             "expires_at": time.time() + int(tok.get("expires_in", 3600)),
         }
     return tok["access_token"]
+
+
+# Backoff follows Apple's documented policy: 2s, 4s, 8s, 16s, then hold at 16s.
+_ENDPOINT = Endpoint(
+    base_url=API_BASE,
+    error_cls=ApiError,
+    retry=RetryPolicy(attempts=5, cap=16.0),
+)
+
+
+def _headers(creds: dict[str, str], path: str, token: str) -> dict[str, str]:
+    """/acls is the org-discovery call — the one endpoint that must NOT carry an
+    orgId header, since you call it precisely to find out what your orgId is."""
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+    org = (creds.get("org_id") or "").strip()
+    if org and not path.lstrip("/").startswith("acls"):
+        headers["X-AP-Context"] = f"orgId={org}"
+    return headers
 
 
 def api(
@@ -167,45 +195,25 @@ def api(
     payload: dict | None = None,
     params: dict | None = None,
     token: str | None = None,
-    retries: int = 5,
     _retried_auth: bool = False,
 ) -> dict:
-    """One Apple Ads API call. Returns the parsed body (envelope included).
-
-    Backoff follows Apple's documented policy: 2s, 4s, 8s, 16s, then hold at 16s.
-    /acls is the org-discovery call — the one endpoint that must NOT carry an
-    orgId header, since you call it precisely to find out what your orgId is.
-    """
+    """One Apple Ads API call. Returns the parsed body (envelope included)."""
     token = token or access_token(creds)
-    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-    org = (creds.get("org_id") or "").strip()
-    if org and not path.lstrip("/").startswith("acls"):
-        headers["X-AP-Context"] = f"orgId={org}"
-    url = f"{API_BASE}/{path.lstrip('/')}"
-
-    for attempt in range(retries):
-        try:
-            resp = httpx.request(
-                method, url, params=params, json=payload, headers=headers, timeout=180
-            )
-        except httpx.HTTPError as exc:
-            if attempt == retries - 1:
-                raise ApiError(0, f"request failed: {exc}") from exc
-            time.sleep(min(16, 2 ** (attempt + 1)))
-            continue
-        if resp.status_code in (200, 201):
-            return resp.json() if resp.text.strip() else {}
-        if resp.status_code == 204:
-            return {}
-        if resp.status_code == 401 and not _retried_auth:
-            # cached token expired early (or the org was re-scoped) — mint once more
+    try:
+        return _ENDPOINT.request(
+            path,
+            method=method,
+            params=params,
+            json=payload,
+            headers=_headers(creds, path, token),
+        )
+    except ApiError as exc:
+        # Cached token expired early (or the org was re-scoped) — mint once more.
+        # 401 is not in the retry policy, so it surfaces here on the first try.
+        if exc.status == 401 and not _retried_auth:
             return api(path, creds, method, payload, params,
-                       access_token(creds, force=True), retries, True)
-        if resp.status_code in (429, 500, 502, 503, 504) and attempt < retries - 1:
-            time.sleep(min(16, 2 ** (attempt + 1)))
-            continue
-        raise ApiError(resp.status_code, resp.text)
-    raise ApiError(0, "retries exhausted")
+                       access_token(creds, force=True), True)
+        raise
 
 
 def get_all(path: str, creds: dict[str, str], limit: int = 1000, params: dict | None = None) -> list:

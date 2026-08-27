@@ -20,12 +20,11 @@ units (1499). Same vendor, opposite conventions — see pixel_amount().
 from __future__ import annotations
 
 import json
-import threading
-import time
 from datetime import date, timedelta
 from typing import Any
 
-import httpx
+from service.rest import Endpoint, Pacer, RetryPolicy
+from service.rest import ApiError as BaseApiError
 
 API_BASE = "https://api.ads.openai.com/v1"
 
@@ -37,16 +36,8 @@ INSIGHT_METRICS = ["impressions", "clicks", "spend", "ctr", "cpc", "cpm"]
 AGGREGATION_LEVELS = ["ad_account", "campaign", "ad_group", "ad"]
 
 
-class ApiError(Exception):
-    def __init__(self, code: int, body: str, url: str = ""):
-        self.code = code
-        self.body = body
-        self.url = url
-        self.detail = self._parse(body)
-        super().__init__(f"HTTP {code} — {self.detail or (body or '')[:200]}")
-
-    @staticmethod
-    def _parse(body: str) -> str:
+class ApiError(BaseApiError):
+    def parse(self, body: str) -> str:
         try:
             err = json.loads(body).get("error", {})
             if isinstance(err, str):
@@ -54,6 +45,11 @@ class ApiError(Exception):
             return err.get("message") or err.get("code") or ""
         except (ValueError, AttributeError):
             return ""
+
+    @property
+    def detail(self) -> str:
+        """Alias for ``summary`` — this connector's call sites read ``.detail``."""
+        return self.summary
 
     def hint(self) -> str:
         if self.code == 401:
@@ -96,42 +92,30 @@ def _encode(params: dict | None) -> list[tuple[str, str]]:
     return flat
 
 
-_last_call = [0.0]
-_pace_lock = threading.Lock()
+_ENDPOINT = Endpoint(
+    base_url=API_BASE,
+    error_cls=ApiError,
+    retry=RetryPolicy(attempts=4, statuses={429, 500, 502, 503}, first=1.0),
+    success=frozenset({200}),
+    encode=_encode,
+)
+
+# Well under the documented 600/min per endpoint — just a floor between calls.
+_PACER = Pacer(MIN_INTERVAL)
 
 
 def api(path: str, creds: dict[str, str], params: dict | None = None,
-        retries: int = 4, payload: dict | None = None) -> dict:
+        payload: dict | None = None) -> dict:
     """GET (or POST when ``payload`` is given) against the Ads API."""
     key = require_credentials(creds)
-    url = f"{API_BASE}/{path.lstrip('/')}"
-
-    with _pace_lock:
-        gap = time.time() - _last_call[0]
-        if gap < MIN_INTERVAL:
-            time.sleep(MIN_INTERVAL - gap)
-        _last_call[0] = time.time()
-
-    headers = {"Authorization": f"Bearer {key}", "Accept": "application/json"}
-    for attempt in range(retries):
-        try:
-            if payload is not None:
-                resp = httpx.post(url, params=_encode(params), json=payload,
-                                  headers=headers, timeout=180)
-            else:
-                resp = httpx.get(url, params=_encode(params), headers=headers, timeout=180)
-        except httpx.HTTPError as exc:
-            if attempt == retries - 1:
-                raise ApiError(0, f"request failed: {exc}", url) from exc
-            time.sleep(2 * (attempt + 1))
-            continue
-        if resp.status_code == 200:
-            return resp.json()
-        if resp.status_code in (429, 500, 502, 503) and attempt < retries - 1:
-            time.sleep(2 ** attempt)
-            continue
-        raise ApiError(resp.status_code, resp.text, url)
-    raise ApiError(0, "retries exhausted", url)
+    return _ENDPOINT.request(
+        path,
+        method="POST" if payload is not None else "GET",
+        params=params,
+        json=payload,
+        headers={"Authorization": f"Bearer {key}", "Accept": "application/json"},
+        pacer=_PACER,
+    )
 
 
 def get_all(path: str, creds: dict[str, str], params: dict | None = None,
