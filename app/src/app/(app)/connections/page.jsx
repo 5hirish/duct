@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ManualConnectorCard from "../../../components/connections/ManualConnectorCard";
+import ProjectConnectorMappings from "../../../components/connections/ProjectConnectorMappings";
 
 export default function ConnectionsPage() {
   const [ga4Connected, setGa4Connected] = useState(false);
@@ -32,17 +33,32 @@ export default function ConnectionsPage() {
   const [devTokenInput, setDevTokenInput] = useState("");
   const [mccInput, setMccInput] = useState("");
   const [signedIn, setSignedIn] = useState(false);
-  const [serverRows, setServerRows] = useState({}); // connector_type -> stored row
+  const [serverRows, setServerRows] = useState({}); // connector_type -> first stored row
+  const [serverRowsAll, setServerRowsAll] = useState({}); // connector_type -> [rows]
 
   async function refreshServerRows() {
     if (!hasAuthToken()) return;
     try {
       const rows = await listServerConnectors();
       const byType = {};
-      for (const row of rows) byType[row.connector_type] = row;
+      const byTypeAll = {};
+      for (const row of rows) {
+        if (!byType[row.connector_type]) byType[row.connector_type] = row;
+        (byTypeAll[row.connector_type] ||= []).push(row);
+      }
       setServerRows(byType);
+      setServerRowsAll(byTypeAll);
     } catch {
       /* offline / signed-out — session-only mode still works */
+    }
+  }
+
+  async function removeServerRowById(rowId) {
+    try {
+      await deleteServerConnector(rowId);
+      await refreshServerRows();
+    } catch {
+      /* best-effort */
     }
   }
 
@@ -210,6 +226,7 @@ export default function ConnectionsPage() {
       <Tabs defaultValue="connections">
         <TabsList>
           <TabsTrigger value="connections">Data sources</TabsTrigger>
+          <TabsTrigger value="mappings">Project mappings</TabsTrigger>
           <TabsTrigger value="providers">Providers</TabsTrigger>
         </TabsList>
 
@@ -444,9 +461,9 @@ export default function ConnectionsPage() {
           docsUrl="https://business.facebook.com/settings/system-users"
           docsLabel="Create a System User token (Business settings)"
           signedIn={signedIn}
-          serverRow={serverRows.meta_ads}
+          serverRowList={serverRowsAll.meta_ads || []}
           onSaved={refreshServerRows}
-          onRemove={removeServerRow}
+          onRemoveRow={removeServerRowById}
         />
 
         <ManualConnectorCard
@@ -468,9 +485,9 @@ export default function ConnectionsPage() {
           docsUrl="https://dashboard.stripe.com/apikeys"
           docsLabel="Create a restricted key (Stripe dashboard)"
           signedIn={signedIn}
-          serverRow={serverRows.stripe}
+          serverRowList={serverRowsAll.stripe || []}
           onSaved={refreshServerRows}
-          onRemove={removeServerRow}
+          onRemoveRow={removeServerRowById}
         />
 
         <ManualConnectorCard
@@ -496,9 +513,9 @@ export default function ConnectionsPage() {
           docsUrl="https://searchads.apple.com/help/campaigns/0022-use-the-campaign-management-api"
           docsLabel="Apple's API access guide"
           signedIn={signedIn}
-          serverRow={serverRows.apple_ads}
+          serverRowList={serverRowsAll.apple_ads || []}
           onSaved={refreshServerRows}
-          onRemove={removeServerRow}
+          onRemoveRow={removeServerRowById}
         />
 
         <ManualConnectorCard
@@ -521,9 +538,9 @@ export default function ConnectionsPage() {
           docsUrl="https://www.revenuecat.com/docs/projects/authentication"
           docsLabel="RevenueCat API keys guide"
           signedIn={signedIn}
-          serverRow={serverRows.revenuecat}
+          serverRowList={serverRowsAll.revenuecat || []}
           onSaved={refreshServerRows}
-          onRemove={removeServerRow}
+          onRemoveRow={removeServerRowById}
         />
 
         <ManualConnectorCard
@@ -543,9 +560,9 @@ export default function ConnectionsPage() {
           docsUrl="https://developers.openai.com/ads/api-quickstart"
           docsLabel="OpenAI Ads API quickstart"
           signedIn={signedIn}
-          serverRow={serverRows.openai_ads}
+          serverRowList={serverRowsAll.openai_ads || []}
           onSaved={refreshServerRows}
-          onRemove={removeServerRow}
+          onRemoveRow={removeServerRowById}
         />
 
         <article className="connection-card">
@@ -573,6 +590,10 @@ export default function ConnectionsPage() {
           </div>
         </article>
       </div>
+        </TabsContent>
+
+        <TabsContent value="mappings">
+          <ProjectConnectorMappings signedIn={signedIn} serverRowsAll={serverRowsAll} />
         </TabsContent>
 
         <TabsContent value="providers">

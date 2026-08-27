@@ -1704,6 +1704,11 @@ export default function GeneratePage() {
     const ga4PropertyId = normalizeGa4PropertyId(selectedGa4PropertyId);
     const gscSiteUrl = normalizeGscSiteUrl(selectedGscSiteUrl);
     const account = adsAccounts.find((a) => normalizeCustomerId(a.customer_id) === cid);
+    // Project scope activates the project's connector→account mappings on the
+    // backend. Local project ids are UUIDs; guard anyway — a malformed id
+    // would 422 the whole request.
+    const activeProjectId = getActiveProjectId();
+    const projectId = /^[0-9a-f-]{36}$/i.test(activeProjectId) ? activeProjectId : undefined;
 
     try {
       const data = await generateReportStream({
@@ -1725,6 +1730,7 @@ export default function GeneratePage() {
         account_name: account?.descriptive_name ?? "",
         currency_code: account?.currency_code || "USD",
         business_context: businessContext,
+        project_id: projectId,
         engine,
       }, {
         onEvent: applyPipelineEvent,

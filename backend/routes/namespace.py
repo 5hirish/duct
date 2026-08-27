@@ -6,8 +6,8 @@ from fastapi import APIRouter, Depends
 
 from routes import (
     activity, agents, artifacts, audit, auth, chat, connectors, content, engines, execution,
-    generate, health, lead_magnet, project_members, projects, reports, signin, user_connectors,
-    user_contexts, user_projects,
+    generate, health, lead_magnet, project_connectors, project_members, projects, reports,
+    signin, user_connectors, user_contexts, user_projects,
 )
 from service.auth import validate_api_key
 
@@ -71,6 +71,7 @@ router.include_router(activity.router, prefix="/api/user/activity")
 router.include_router(user_projects.router, prefix="/api/user/projects")
 router.include_router(user_contexts.router, prefix="/api/user/projects")
 router.include_router(project_members.router, prefix="/api/user/projects")
+router.include_router(project_connectors.router, prefix="/api/user/projects")
 router.include_router(user_connectors.router, prefix="/api/user/connectors")
 # Invitation redemption. GET is unauthenticated (the recipient has not signed in
 # yet and the token is the secret); POST /accept requires a Bearer JWT.

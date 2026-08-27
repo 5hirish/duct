@@ -10,6 +10,57 @@ from sqlmodel import Field, SQLModel
 from utils.dates import utcnow
 
 
+class ProjectConnector(SQLModel, table=True):
+    """Per-project connector→account binding.
+
+    Credentials stay per-user in ``connector_credentials`` (deduplicated —
+    two projects sharing one Stripe account share one encrypted row); this
+    table decides WHICH of a user's accounts a project uses. One binding per
+    (project, connector_type). Resolution order lives in
+    ``service/execution/creds.py``: project binding → caller's user rows →
+    env. Binding a credential requires project membership AND owning the
+    credential row; using it requires only membership — that is the point:
+    a collaborator's agent run uses the project's account, not their own.
+    """
+
+    __tablename__ = "project_connectors"
+    __table_args__ = (
+        UniqueConstraint(
+            "project_id", "connector_type",
+            name="uq_project_connectors_project_type",
+        ),
+    )
+
+    id: UUID = Field(default_factory=uuid4, primary_key=True, nullable=False)
+    project_id: UUID = Field(
+        sa_column=Column(
+            ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True
+        )
+    )
+    connector_type: str = Field(sa_column=Column(String, nullable=False))
+    # CASCADE: deleting the credential (user disconnects the account) removes
+    # its bindings, so projects fall back to user-level resolution.
+    connector_credential_id: UUID = Field(
+        sa_column=Column(
+            ForeignKey("connector_credentials.id", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        )
+    )
+    created_by_user_id: UUID | None = Field(
+        default=None,
+        sa_column=Column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+    )
+    created_at: datetime = Field(
+        default_factory=utcnow,
+        sa_column=Column(DateTime(timezone=True), nullable=False),
+    )
+    updated_at: datetime = Field(
+        default_factory=utcnow,
+        sa_column=Column(DateTime(timezone=True), nullable=False),
+    )
+
+
 class ConnectorCredential(SQLModel, table=True):
     __tablename__ = "connector_credentials"
     __table_args__ = (

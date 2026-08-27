@@ -92,6 +92,21 @@ class GuardrailIn(BaseModel):
     match: dict = Field(default_factory=dict)
 
 
+def _project_scope(session: Session, user: User, row: ExecutionChangeSet) -> UUID | None:
+    """The change set's project id, only while the caller is still a member.
+
+    Apply/rollback resolve credentials through the project's connector binding
+    (possibly another member's account). Membership was checked at propose
+    time; re-check here so someone removed from the project since then falls
+    back to their own credentials instead of the project's.
+    """
+    from service.membership import member_role
+
+    if row.project_id is None:
+        return None
+    return row.project_id if member_role(row.project_id, user.id, session) else None
+
+
 def _get_owned(session: Session, user: User, change_set_id: UUID) -> ExecutionChangeSet:
     row = (
         session.execute(
@@ -217,6 +232,7 @@ def propose_change_set(
         body.connector_type,
         body.account_id,
         override=body.credentials.model_dump(),
+        project_id=body.project_id,
     )
     try:
         row = propose_core(
@@ -349,6 +365,7 @@ def apply_change_set(
         row.connector_type,
         row.account_id,
         override=body.credentials.model_dump(),
+        project_id=_project_scope(session, user, row),
     )
     try:
         row = apply_core(session, row, creds, applied_by="user")
@@ -371,6 +388,7 @@ def rollback_change_set(
         row.connector_type,
         row.account_id,
         override=body.credentials.model_dump(),
+        project_id=_project_scope(session, user, row),
     )
     try:
         row = rollback_core(session, row, creds)

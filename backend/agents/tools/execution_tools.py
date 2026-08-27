@@ -14,9 +14,9 @@ sessions. The tool surface is deliberately asymmetric:
 
 DB access runs in ``asyncio.to_thread`` (sync SQLModel sessions) so tool calls
 never block the SSE event loop; executor previews/applies do network I/O and
-run in the same thread. Credentials resolve from the user's stored encrypted
-connector rows → server env (service/execution/creds.py) — agents never see
-or pass credentials.
+run in the same thread. Credentials resolve from the project's connector
+binding → the user's stored encrypted connector rows → server env
+(service/execution/creds.py) — agents never see or pass credentials.
 """
 
 from __future__ import annotations
@@ -225,7 +225,12 @@ def build_execution_mcp_server(
                 # The row is card-serialized after this session closes; the
                 # activity-log commits inside the service must not expire it.
                 db.expire_on_commit = False
-                creds = resolve_execution_creds(db, user_id, connector_type, args.get("account_id") or "")
+                # project_id came membership-checked from the session; the
+                # project's connector binding (if any) wins over user rows.
+                creds = resolve_execution_creds(
+                    db, user_id, connector_type, args.get("account_id") or "",
+                    project_id=project_id,
+                )
                 if not creds.get("refresh_token"):
                     raise ValueError(
                         f"No stored credentials for {connector_type}. Ask the user to "
@@ -331,7 +336,10 @@ def build_execution_mcp_server(
                 row = db.get(ExecutionChangeSet, UUID(raw_id))
                 if row is None or row.user_id != user_id:
                     return None
-                creds = resolve_execution_creds(db, user_id, row.connector_type, row.account_id)
+                creds = resolve_execution_creds(
+                    db, user_id, row.connector_type, row.account_id,
+                    project_id=row.project_id,
+                )
                 return rollback_core(db, row, creds, actor="agent")
 
         try:

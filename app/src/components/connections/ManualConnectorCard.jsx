@@ -32,9 +32,9 @@ export default function ManualConnectorCard({
   docsUrl,
   docsLabel,
   signedIn,
-  serverRow,       // stored row for this connector_type (or undefined)
+  serverRowList = [], // ALL stored rows for this connector_type (one per account)
   onSaved,         // async () => void — refresh the stored-rows map
-  onRemove,        // async (connectorType) => void
+  onRemoveRow,     // async (rowId) => void — remove one stored account row
 }) {
   const [values, setValues] = useState({});
   const [accounts, setAccounts] = useState(null); // null = not verified yet
@@ -42,8 +42,12 @@ export default function ManualConnectorCard({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  // Several projects can use several accounts (per-project mappings), so a
+  // connected card can still open the paste form to add another one.
+  const [adding, setAdding] = useState(false);
 
-  const connected = !!serverRow;
+  const connected = serverRowList.length > 0;
+  const formOpen = !connected || adding;
 
   function setValue(key, v) {
     setValues((prev) => ({ ...prev, [key]: v }));
@@ -108,6 +112,9 @@ export default function ManualConnectorCard({
       credentials: blob,
     });
     setValues({});
+    setAccounts(null);
+    setPickedAccount("");
+    setAdding(false);
     await onSaved?.();
   }
 
@@ -138,7 +145,7 @@ export default function ManualConnectorCard({
         </div>
       </div>
 
-      {!connected && (
+      {formOpen && (
         <form onSubmit={verifyAndSave} style={{ display: "grid", gap: 10, marginTop: 12 }}>
           {docsUrl && (
             <p className="app-subtle" style={{ margin: 0, fontSize: 13 }}>
@@ -192,7 +199,7 @@ export default function ManualConnectorCard({
         </form>
       )}
 
-      {accounts && accounts.length > 1 && !connected && (
+      {accounts && accounts.length > 1 && formOpen && (
         <div style={{ display: "grid", gap: 6, marginTop: 10 }}>
           <p className="app-subtle" style={{ margin: 0, fontSize: 13 }}>Pick the account to use:</p>
           {accounts.map((a) => (
@@ -219,15 +226,40 @@ export default function ManualConnectorCard({
         <p className="app-subtle" style={{ margin: "8px 0 0", fontSize: 13 }}>{notice}</p>
       )}
 
+      {connected && (
+        <div style={{ display: "grid", gap: 6, marginTop: 10 }}>
+          {serverRowList.map((row) => (
+            <div
+              key={row.id}
+              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}
+            >
+              <span style={{ fontSize: 13 }}>
+                {row.account_name || row.account_id || "Default account"}
+              </span>
+              <Button type="button" variant="outline" size="sm" onClick={() => onRemoveRow?.(row.id)}>
+                Remove
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="connection-status-row">
         <span className={`status-pill ${connected ? "green" : "grey"}`}>
           {connected
-            ? `Connected${serverRow.account_name ? ` — ${serverRow.account_name}` : ""}`
+            ? serverRowList.length > 1
+              ? `Connected — ${serverRowList.length} accounts`
+              : `Connected${serverRowList[0].account_name ? ` — ${serverRowList[0].account_name}` : ""}`
             : "Not connected"}
         </span>
         {connected && (
-          <Button type="button" variant="outline" size="sm" onClick={() => onRemove?.(type)}>
-            Disconnect
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => setAdding((open) => !open)}
+          >
+            {adding ? "Cancel" : "Add another account"}
           </Button>
         )}
       </div>

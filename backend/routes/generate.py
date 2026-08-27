@@ -212,6 +212,7 @@ async def _run_generate_pipeline(
     def _resolve_manual_credentials() -> dict[str, dict[str, str]]:
         from db.session import get_session as db_session
         from service.execution.creds import stored_connector_credentials
+        from service.membership import member_role
         from service.pipeline import MANUAL_CREDENTIAL_CONNECTORS
 
         out: dict[str, dict[str, str]] = {}
@@ -221,8 +222,15 @@ async def _run_generate_pipeline(
         stored_by_id: dict[str, dict] = {}
         if user is not None:
             with next(db_session()) as db:
+                # Project bindings apply only for members; a stale/foreign
+                # project id degrades to user-level rows, never an error.
+                pid = req.project_id
+                if pid is not None and member_role(pid, user.id, db) is None:
+                    pid = None
                 for cid in wanted:
-                    stored_by_id[cid] = stored_connector_credentials(db, user.id, cid)
+                    stored_by_id[cid] = stored_connector_credentials(
+                        db, user.id, cid, project_id=pid
+                    )
         for cid in wanted:
             override = {
                 k: v.strip() for k, v in (req.connector_credentials.get(cid) or {}).items()

@@ -33,6 +33,31 @@ export function deleteServerConnector(id) {
   return authedRequest(`/api/user/connectors/${id}`, { method: "DELETE" });
 }
 
+// --- Per-project connector mappings (/api/user/projects/{id}/connectors) ---
+//
+// A mapping points one of the project's connector types at one of your saved
+// credential rows, so different projects can use different Stripe/ads
+// accounts. Without a mapping, agents and reports fall back to your
+// account-level connector.
+
+export function listProjectConnectors(projectId) {
+  return authedRequest(`/api/user/projects/${encodeURIComponent(projectId)}/connectors`);
+}
+
+export function bindProjectConnector(projectId, connectorType, credentialId) {
+  return authedRequest(
+    `/api/user/projects/${encodeURIComponent(projectId)}/connectors/${encodeURIComponent(connectorType)}`,
+    { method: "PUT", body: { connector_credential_id: credentialId } },
+  );
+}
+
+export function unbindProjectConnector(projectId, connectorType) {
+  return authedRequest(
+    `/api/user/projects/${encodeURIComponent(projectId)}/connectors/${encodeURIComponent(connectorType)}`,
+    { method: "DELETE" },
+  );
+}
+
 /**
  * Verify manual credentials by listing the accounts they can reach
  * (POST /api/connectors/{id}/accounts). Returns the account rows; throws with
