@@ -197,47 +197,9 @@ export async function postSlideRender(sessionId, { render_id, image_base64 }) {
   return jsonOrThrow(res);
 }
 
-// ---------------------------------------------------------------------------
-// SSE frame parser
-// ---------------------------------------------------------------------------
-
-function parseSseDataFrame(frame) {
-  const dataLines = frame
-    .split("\n")
-    .filter((l) => l.startsWith("data: "))
-    .map((l) => l.slice(6));
-  if (!dataLines.length) return null;
-  try {
-    return JSON.parse(dataLines.join("\n"));
-  } catch {
-    return null;
-  }
-}
-
-export async function consumeSseStream(body, onEvent, signal) {
-  const reader = body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-  try {
-    while (true) {
-      if (signal?.aborted) break;
-      const { value, done } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const frames = buffer.split("\n\n");
-      buffer = frames.pop() ?? "";
-      for (const frame of frames) {
-        if (!frame.trim()) continue;
-        const ev = parseSseDataFrame(frame);
-        if (ev) onEvent(ev);
-      }
-    }
-  } catch (err) {
-    if (!signal?.aborted) throw err;
-  } finally {
-    reader.releaseLock();
-  }
-}
+// Re-exported so the many `import { consumeSseStream } from "@/lib/contentApi"`
+// call sites keep working; the implementation lives in lib/sse.js.
+export { consumeSseStream, parseSseDataFrame } from "./sse.js";
 
 // ---------------------------------------------------------------------------
 // CRUD — brand, plans, posts, formats, avatars, assets

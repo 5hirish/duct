@@ -30,7 +30,7 @@ from agents.audit.v3.runner import ClaudeAuditRunner, close_session, get_session
 from agents.engines import Engine, resolve_engine, resolve_engine_model, resolve_engine_provider, PROVIDER_CONFIG_ATTR
 from service.crawl.fetcher import SSRFError, validate_public_url
 from config import claude_oauth_available, get_configs
-from service.pipeline import now_iso
+from utils.dates import now_iso
 
 logger = logging.getLogger(__name__)
 

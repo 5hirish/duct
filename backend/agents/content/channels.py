@@ -14,6 +14,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from utils.strings import titleize
+
 # Channels with a dedicated, tuned playbook today.
 SUPPORTED: set[str] = {"tiktok"}
 
@@ -62,7 +64,7 @@ def resolve(channel: str | None) -> Channel:
     supported = cid in SUPPORTED
     return Channel(
         id=cid,
-        label=_LABELS.get(cid, cid.replace("_", " ").title()),
+        label=_LABELS.get(cid, titleize(cid)),
         supported=supported,
         playbook=cid if supported else DEFAULT_CHANNEL,
     )

@@ -553,16 +553,28 @@ Score bands: 85–100 Healthy · 70–84 Good · 55–69 Needs work · <55 Criti
 # Public builders
 # ---------------------------------------------------------------------------
 
-def build_unified_system_prompt(report_mode: str = "freehand", template_id: str = "") -> str:
+def build_unified_system_prompt(
+    report_mode: str = "freehand",
+    template_id: str = "",
+    knowledge_packs: tuple[str, ...] = (),
+) -> str:
     """Unified system prompt — single-session artifact pattern.
 
     report_mode="freehand": agent generates HTML inside <duct_report> tags.
     report_mode="template": agent builds the report via StartAuditReport →
         AddAuditCategory ×9 → FinalizeAuditReport (SubmitAuditReport for chat revisions).
+
+    knowledge_packs: static per agent configuration (NEVER per-request data —
+    that would break the cached system-prefix invariant). See agents/knowledge.
     """
     from agents.core.persona import with_confidentiality
+    from agents.knowledge import knowledge_block
     workflow = _TEMPLATE_WORKFLOW if report_mode == "template" else _FREEHAND_WORKFLOW
-    return with_confidentiality(_UNIFIED_SYSTEM_PROMPT.format(workflow_section=workflow))
+    prompt = _UNIFIED_SYSTEM_PROMPT.format(workflow_section=workflow)
+    packs = knowledge_block(knowledge_packs)
+    if packs:
+        prompt = f"{prompt}\n\n{packs}"
+    return with_confidentiality(prompt)
 
 
 def build_audit_system_prompt() -> str:
@@ -590,6 +602,7 @@ def build_audit_user_prompt(
     user_preferences: UserPreferences | None = None,
     report_mode: str = "freehand",
     research_context: AuditResearchContext | None = None,
+    extra_context: str = "",
 ) -> str:
     parts: list[str] = []
 
@@ -653,6 +666,12 @@ def build_audit_user_prompt(
         for note in research_context.enrichment_notes:
             parts.append(f"  note: {note}")
         parts.append("</research_context>\n")
+
+    # Project memory blocks (prior report summaries, stored agent context) —
+    # per-project data, so it lives here in the user message, never the system
+    # prompt (cached-prefix invariant).
+    if extra_context:
+        parts.append(extra_context.rstrip() + "\n")
 
     # User preferences — personalise communication style, depth, and outcome focus
     if user_preferences and any([

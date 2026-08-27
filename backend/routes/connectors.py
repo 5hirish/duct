@@ -15,6 +15,10 @@ class ConnectorAccountsRequest(BaseModel):
     refresh_token: str = ""
     developer_token: str = ""  # BYO Google Ads API access
     login_customer_id: str = ""  # MCC override
+    # Manual-credential connectors (apple_ads, meta_ads, stripe, revenuecat,
+    # openai_ads): arbitrary key/value credentials the adapter reads from
+    # auth.extras (api_key, access_token, private_key, team_id, …).
+    credentials: dict[str, str] = {}
 
 
 def _list_accounts(connector_id: str, body: ConnectorAccountsRequest) -> dict:
@@ -40,6 +44,8 @@ def _list_accounts(connector_id: str, body: ConnectorAccountsRequest) -> dict:
         )
         if value.strip()
     }
+    # Manual-credential connectors carry their whole credential shape here.
+    extras.update({k: v.strip() for k, v in (body.credentials or {}).items() if v and v.strip()})
     auth = ConnectorAuthContext(
         connector_id=connector_id,
         refresh_token=body.refresh_token.strip() or None,

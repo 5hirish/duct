@@ -14,9 +14,15 @@ from fastapi.middleware.cors import CORSMiddleware
 import sentry_sdk
 from uvicorn.logging import DefaultFormatter
 
+import service.apple.ads.fetch  # noqa: F401 — registers connectors before routes import
 import service.google.ads  # noqa: F401 — registers connectors before routes import
 import service.google.ga4  # noqa: F401 — registers connectors before routes import
 import service.google.gsc  # noqa: F401 — registers connectors before routes import
+import service.google.gtm  # noqa: F401 — registers connectors before routes import
+import service.meta.ads.fetch  # noqa: F401 — registers connectors before routes import
+import service.openai.ads.fetch  # noqa: F401 — registers connectors before routes import
+import service.revenuecat.fetch  # noqa: F401 — registers connectors before routes import
+import service.stripe.fetch  # noqa: F401 — registers connectors before routes import
 
 from config import cors_kwargs, get_configs
 from db.session import init_db

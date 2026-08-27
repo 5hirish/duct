@@ -25,6 +25,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { relativeTime } from "@/lib/format";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -84,17 +85,7 @@ function excerptOf(f) {
   return "";
 }
 
-function relTime(iso) {
-  if (!iso) return "";
-  const then = new Date(iso).getTime();
-  if (Number.isNaN(then)) return "";
-  const s = Math.max(0, (Date.now() - then) / 1000);
-  if (s < 60)     return "just now";
-  if (s < 3600)   return `${Math.floor(s / 60)}m ago`;
-  if (s < 86400)  return `${Math.floor(s / 3600)}h ago`;
-  if (s < 604800) return `${Math.floor(s / 86400)}d ago`;
-  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
-}
+const relTime = (iso) => relativeTime(iso, { fallbackAfterDays: 7 });
 
 const ACCENTS = [
   "from-rose-500/25 to-orange-400/15 text-rose-500 dark:text-rose-300",

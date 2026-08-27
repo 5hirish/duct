@@ -11,24 +11,15 @@ import { Button } from "@/components/ui/button";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
 import { acceptInvitation, fetchInvitation } from "@/lib/membersApi";
 import { hydrateProjectsFromBackend, setActiveProjectId } from "@/lib/projects";
+import { AUTH_TOKEN_KEY, decodeJwtPayload } from "@/lib/authFetch";
 
-const TOKEN_KEY = "duct_auth_token";
 // Read by the sign-in page after the OAuth round trip, so the invite survives
 // the redirect through Google without ever putting the token in an OAuth param.
 const POST_SIGNIN_REDIRECT_KEY = "duct_post_signin_redirect";
 
-function decodeJwtPayload(token) {
-  try {
-    const base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
-    return JSON.parse(atob(base64));
-  } catch {
-    return null;
-  }
-}
-
 function signedInEmail() {
   if (typeof window === "undefined") return "";
-  const payload = decodeJwtPayload(localStorage.getItem(TOKEN_KEY) || "");
+  const payload = decodeJwtPayload(localStorage.getItem(AUTH_TOKEN_KEY) || "");
   if (!payload?.exp || payload.exp * 1000 <= Date.now()) return "";
   return (payload.sub || "").toLowerCase();
 }
@@ -166,7 +157,7 @@ export default function InvitePage({ params }) {
             variant="outline"
             className="w-full"
             onClick={() => {
-              localStorage.removeItem(TOKEN_KEY);
+              localStorage.removeItem(AUTH_TOKEN_KEY);
               goSignIn();
             }}
           >

@@ -13,9 +13,9 @@ from service.pipeline import (
     build_connector_brief,
     fetch_connector_payload,
     normalize_connections,
-    now_iso,
     resolve_date_range,
 )
+from utils.dates import now_iso
 
 router = APIRouter(tags=["insights"])
 

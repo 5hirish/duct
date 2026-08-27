@@ -1,5 +1,9 @@
 import { googleAdsByoCredentials } from "./adsCredentials.js";
 import { providerKeyHeaders } from "./providerKeys.js";
+import { consumeSseStream } from "./sse.js";
+// Bearer JWT minted by Google Sign-In. Optional: signed-out sessions omit it and
+// the backend personalises only when a valid token is present.
+import { authToken } from "./authFetch.js";
 
 const configuredBase = process.env.NEXT_PUBLIC_API_BASE?.trim();
 const normalizedConfiguredBase = configuredBase?.replace(/\/+$/, "");
@@ -50,18 +54,6 @@ function backendApiHeaders(extra = {}) {
     headers["X-API-Key"] = key;
   }
   return headers;
-}
-
-// Bearer JWT minted by Google Sign-In (localStorage "duct_auth_token"), same
-// source as projectsApi.js. Optional: signed-out sessions omit it and the
-// backend personalises only when a valid token is present.
-function authToken() {
-  if (typeof window === "undefined") return "";
-  try {
-    return window.localStorage.getItem("duct_auth_token") || "";
-  } catch {
-    return "";
-  }
 }
 
 function backendAuthedHeaders(extra = {}) {
@@ -226,33 +218,6 @@ export async function streamInsightChat({
   onDone?.();
 }
 
-function parseSseFrames(buffer) {
-  const frames = [];
-  let rest = buffer;
-  let splitIndex = rest.indexOf("\n\n");
-  while (splitIndex !== -1) {
-    const frame = rest.slice(0, splitIndex);
-    rest = rest.slice(splitIndex + 2);
-    frames.push(frame);
-    splitIndex = rest.indexOf("\n\n");
-  }
-  return { frames, rest };
-}
-
-function parseSseDataFrame(frame) {
-  const lines = frame.split("\n");
-  const dataLines = lines
-    .filter((line) => line.startsWith("data:"))
-    .map((line) => line.slice(5).trim())
-    .filter(Boolean);
-  if (!dataLines.length) return null;
-  try {
-    return JSON.parse(dataLines.join("\n"));
-  } catch {
-    return null;
-  }
-}
-
 export async function generateReportStream(params, { onEvent, signal } = {}) {
   const res = await fetch(`${BASE}/api/insights/generate/stream`, {
     method: "POST",
@@ -268,30 +233,17 @@ export async function generateReportStream(params, { onEvent, signal } = {}) {
     throw new Error("Streaming response body is not available.");
   }
 
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
   let finalPayload = null;
   let streamError = null;
 
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const parsed = parseSseFrames(buffer);
-    buffer = parsed.rest;
-
-    for (const frame of parsed.frames) {
-      const event = parseSseDataFrame(frame);
-      if (!event) continue;
-      onEvent?.(event);
-      if (event.event === "pipeline_finished") {
-        finalPayload = event.payload;
-      } else if (event.event === "pipeline_failed") {
-        streamError = event.error || "Report generation failed.";
-      }
+  await consumeSseStream(res.body, (event) => {
+    onEvent?.(event);
+    if (event.event === "pipeline_finished") {
+      finalPayload = event.payload;
+    } else if (event.event === "pipeline_failed") {
+      streamError = event.error || "Report generation failed.";
     }
-  }
+  }, signal);
 
   if (streamError) throw new Error(streamError);
   if (finalPayload) return finalPayload;

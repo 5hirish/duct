@@ -13,6 +13,8 @@ export const AuditEvent = Object.freeze({
 
   QUESTIONS_REQUIRED:  "questions_required",
   REPORT_UPDATED:      "report_updated",
+  ARTIFACT_UPDATED:    "artifact_updated",
+  EXECUTION_PROPOSED:  "execution_proposed",  // change-set card; upsert by change_set_id
   TODO_UPDATE:         "todo_update",
 
   AGENT_MESSAGE_CHUNK: "agent_message_chunk",

@@ -42,7 +42,8 @@ from service.google.fetch import (
 )
 from service.google.ga4 import fetch_ga4_conversion_paths, fetch_ga4_landing_pages
 from service.google.gsc import fetch_gsc_page_performance, fetch_gsc_query_performance
-from service.pipeline import build_connector_brief, fetch_connector_payload, normalize_connections, now_iso, resolve_ga_credentials
+from service.pipeline import build_connector_brief, fetch_connector_payload, normalize_connections, resolve_ga_credentials
+from utils.dates import now_iso
 
 if TYPE_CHECKING:
     from agents.models import ModelName
@@ -205,6 +206,41 @@ async def _run_generate_pipeline(
     )
     login_customer_id = (req.login_customer_id or cfg.google_ads_login_customer_id).strip()
 
+    # Manual-credential connectors: request-supplied dict wins; a signed-in
+    # user's stored encrypted row fills the gaps (agent/scheduled runs have no
+    # browser to paste keys from).
+    def _resolve_manual_credentials() -> dict[str, dict[str, str]]:
+        from db.session import get_session as db_session
+        from service.execution.creds import stored_connector_credentials
+        from service.membership import member_role
+        from service.pipeline import MANUAL_CREDENTIAL_CONNECTORS
+
+        out: dict[str, dict[str, str]] = {}
+        wanted = [c for c in connections if c in MANUAL_CREDENTIAL_CONNECTORS]
+        if not wanted:
+            return out
+        stored_by_id: dict[str, dict] = {}
+        if user is not None:
+            with next(db_session()) as db:
+                # Project bindings apply only for members; a stale/foreign
+                # project id degrades to user-level rows, never an error.
+                pid = req.project_id
+                if pid is not None and member_role(pid, user.id, db) is None:
+                    pid = None
+                for cid in wanted:
+                    stored_by_id[cid] = stored_connector_credentials(
+                        db, user.id, cid, project_id=pid
+                    )
+        for cid in wanted:
+            override = {
+                k: v.strip() for k, v in (req.connector_credentials.get(cid) or {}).items()
+                if v and v.strip()
+            }
+            out[cid] = {**stored_by_id.get(cid, {}), **override}
+        return out
+
+    manual_credentials = await asyncio.to_thread(_resolve_manual_credentials)
+
     async def fetch_connector(connector_id: str) -> tuple[str, dict[str, Any]]:
         await _step_started(emit_event, STEP_COLLECT, connector_id=connector_id)
         try:
@@ -223,6 +259,7 @@ async def _run_generate_pipeline(
                 gsc_site_url=gsc_site_url,
                 ga4_refresh_token=ga4_refresh_token,
                 gsc_refresh_token=gsc_refresh_token,
+                credentials=manual_credentials.get(connector_id),
             )
             await _step_finished(emit_event, STEP_COLLECT, connector_id=connector_id)
             return connector_id, data

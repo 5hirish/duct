@@ -18,11 +18,15 @@ from service.credentials import encrypt_credentials
 
 router = APIRouter(tags=["user-connectors"])
 
-ALLOWED_CONNECTOR_TYPES = {"google_ads", "ga4", "gsc"}
+ALLOWED_CONNECTOR_TYPES = {
+    "google_ads", "ga4", "gsc", "gtm",
+    # Manual-credential connectors (Phase 7) — Fernet JSON blobs fit any shape.
+    "apple_ads", "meta_ads", "stripe", "revenuecat", "openai_ads",
+}
 
 
 class ConnectorIn(BaseModel):
-    connector_type: str          # 'google_ads' | 'ga4' | 'gsc'
+    connector_type: str          # 'google_ads' | 'ga4' | 'gsc' | 'gtm'
     account_id: str = ""         # customer_id / property_id / site_url
     account_name: str = ""
     credentials: dict            # raw dict — will be encrypted at rest

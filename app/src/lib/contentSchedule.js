@@ -5,11 +5,10 @@
 // > proposed (sequential slot = month start + position). Drives Kanban sorting,
 // calendar placement, and the date badge so all three views stay consistent.
 
-export function parseDate(s) {
-  if (!s) return null;
-  const d = s instanceof Date ? s : new Date(s);
-  return Number.isNaN(d.getTime()) ? null : d;
-}
+import { dayKey, formatDate, formatTime, toDate as parseDate } from "./format";
+
+// Re-exported under the board's own names.
+export { parseDate, dayKey };
 
 /** First of the month the plan is anchored to (from plan.start_date). */
 export function monthStartOf(plan) {
@@ -21,12 +20,9 @@ function addDays(date, n) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate() + n);
 }
 
-function fmtDate(d) {
-  return d.toLocaleDateString("en", { month: "short", day: "numeric" });
-}
-function fmtTime(d) {
-  return d.toLocaleTimeString("en", { hour: "numeric", minute: "2-digit" });
-}
+// Board copy is English, so the date badge is pinned to it too.
+const fmtDate = (d) => formatDate(d, { withYear: false, locale: "en" });
+const fmtTime = (d) => formatTime(d, { locale: "en" });
 
 const KIND_LABEL = { published: "Published", scheduled: "Scheduled", proposed: "Planned" };
 
@@ -61,7 +57,3 @@ export function effectiveSchedule(day, post, monthStart, index) {
   return { date, time: hasTime ? fmtTime(date) : null, kind, label, dateLabel, status, hasTime };
 }
 
-/** Stable YYYY-MM-DD key in local time. */
-export function dayKey(d) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}

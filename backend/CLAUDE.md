@@ -161,6 +161,28 @@ Do not write HTML from the backend. Do not reference `themes.json` or HTML templ
 - Separate ingestion, normalization, synthesis, and delivery concerns.
 - Prefer extensible evidence models so future tools can enrich the same findings.
 
+### Shared helpers — check here before writing a local copy
+
+Each of these replaced a family of divergent duplicates (23 private
+`_utcnow()` definitions, five hand-rolled retry loops). A new local copy
+re-opens that drift, so reach for these first and extend them when they
+don't fit.
+
+- `utils/dates.py` — `utcnow()`, `now_iso()`, `parse_iso()`, `last_n_days()`.
+  **Never `datetime.now()` or `datetime.utcnow()`**: every persisted timestamp
+  is UTC-aware, and naive ones compare and serialise inconsistently across
+  SQLite (desktop) and Postgres (Railway). Stdlib-only leaf module, so
+  `models/` can use `default_factory=utcnow` without an import cycle.
+- `utils/strings.py` — `slugify()`, `titleize()`.
+- `utils/formatting.py` — `money()`, `number()`, `percent()`, `multiplier()`,
+  `safe_divide()`.
+- `service/rest.py` — sync HTTP transport for the reporting connectors:
+  retry, backoff, rate-limit pacing, error typing. A new connector declares
+  an `Endpoint` and an `ApiError` subclass and writes no transport code;
+  auth headers, query encoding and pagination stay vendor-side. Not for
+  `service/apify` or `service/post_bridge` — those are async, hold a
+  long-lived client, and need no retry.
+
 ## Sequencing rules from the plans
 
 - Validate the brief/report shape before building heavy automation.

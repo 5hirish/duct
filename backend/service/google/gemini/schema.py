@@ -85,7 +85,7 @@ class GenerateImageRequest(BaseModel):
     # Common pattern: [character_ref, camera_ref] for slides 2-5 — the
     # first locks face/skin/hair, the second imitates TikTok framing.
     # When this list has 2+ entries the agent's @tool wrapper prepends
-    # a role-explanation prefix to the prompt; see service/gemini/client.
+    # a role-explanation prefix to the prompt; see service/google/gemini/client.
     input_asset_ids:   list[UUID] = Field(default_factory=list)
 
     aspect_ratio:      AspectRatio = AspectRatio.PORTRAIT_9_16

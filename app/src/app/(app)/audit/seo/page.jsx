@@ -1,11 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { loadPreferences } from "@/lib/userPreferences";
 import { getActiveProject } from "@/lib/projects";
 import { ReportMode, DEFAULT_AUDIT_TEMPLATE_ID } from "@/lib/audit";
+import { archiveAgentConversation, listAgentConversations } from "@/lib/api";
+import { hasAuthToken } from "@/lib/authFetch";
+import { startAuditResume } from "@/lib/auditResume";
 
 const CONTENT_TYPES = [
   { value: "", label: "Select type…" },
@@ -39,6 +43,30 @@ export default function SeoAuditSetupPage() {
   const [error, setError]               = useState("");
   const [activeProject, setActiveProject] = useState(null);
   const [useProjectContext, setUseProjectContext] = useState(true);
+  const [prevAudits, setPrevAudits] = useState([]);
+
+  // Previous audits for this project (persisted conversations) — signed-in only.
+  const loadPrevAudits = useCallback(() => {
+    if (!activeProject?.id || !hasAuthToken()) return;
+    listAgentConversations("audit_seo", { projectId: activeProject.id })
+      .then((rows) => setPrevAudits((rows || []).filter((c) => c.last_seq > 0)))
+      .catch(() => {});
+  }, [activeProject]);
+
+  useEffect(() => {
+    loadPrevAudits();
+  }, [loadPrevAudits]);
+
+  // Archive a past audit conversation: it leaves this list (and resume), but
+  // its report artifacts stay in the library untouched.
+  async function archivePrevAudit(conversationId) {
+    setPrevAudits((rows) => rows.filter((c) => c.id !== conversationId)); // optimistic
+    try {
+      await archiveAgentConversation("audit_seo", conversationId);
+    } catch {
+      loadPrevAudits(); // restore on failure
+    }
+  }
 
   useEffect(() => {
     const project = getActiveProject();
@@ -100,6 +128,9 @@ export default function SeoAuditSetupPage() {
     try {
       const params = {
         url: url.trim(),
+        // Project scoping: report versions persist to the artifact library when
+        // the audit belongs to the active project and the user is signed in.
+        project_id: useProjectContext && activeProject?.id ? activeProject.id : null,
         business_context: {
           business_name:         businessName.trim(),
           business_description:  description.trim(),
@@ -314,6 +345,62 @@ export default function SeoAuditSetupPage() {
           {loading ? "Starting audit…" : "Run SEO Audit →"}
         </Button>
       </form>
+
+      {prevAudits.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+            Previous audits
+          </h2>
+          <div className="grid gap-2">
+            {prevAudits.slice(0, 5).map((conv) => (
+              <div
+                key={conv.id}
+                className="flex items-center justify-between gap-3 rounded-md border border-input px-3 py-2"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{conv.title || "SEO audit"}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {conv.last_active_at ? new Date(conv.last_active_at).toLocaleString() : ""}
+                    {conv.last_seq ? ` · ${conv.last_seq} events` : ""}
+                  </p>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <Button asChild type="button" size="sm" variant="ghost">
+                    {/* Everything this chat did — proposals, auto-applies,
+                        rollbacks, artifact versions — as one timeline. */}
+                    <Link href={`/activity?conversation_id=${conv.id}`}>Activity</Link>
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="text-muted-foreground"
+                    title="Archive this conversation (its report artifacts stay in the library)"
+                    onClick={() => archivePrevAudit(conv.id)}
+                  >
+                    Archive
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    onClick={() =>
+                      startAuditResume(router, {
+                        conversationId: conv.id,
+                        projectId: conv.project_id,
+                        url: conv.meta?.url || "",
+                        reportMode: conv.mode || "",
+                      })
+                    }
+                  >
+                    Continue chat
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

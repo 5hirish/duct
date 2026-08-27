@@ -369,7 +369,7 @@ def _validate_generate_image(input_data: dict[str, Any]):
     inputs.
     """
     from pydantic import ValidationError
-    from service.gemini.schema import GenerateImageRequest
+    from service.google.gemini.schema import GenerateImageRequest
 
     payload = {k: v for k, v in input_data.items() if v not in (None, "")}
     payload.setdefault("number_of_images", min(int(payload.get("number_of_images", 1) or 1), 4))
@@ -415,7 +415,7 @@ def _validate_generate_image(input_data: dict[str, Any]):
 def _validate_edit_image(input_data: dict[str, Any]):
     """Validate edit_image arguments before paying for a Gemini call."""
     from pydantic import ValidationError
-    from service.gemini.schema import EditImageRequest
+    from service.google.gemini.schema import EditImageRequest
 
     payload = {k: v for k, v in input_data.items() if v not in (None, "")}
     payload.setdefault("number_of_images", min(int(payload.get("number_of_images", 1) or 1), 4))

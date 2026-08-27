@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { resolveTheme } from "../lib/themes";
+import { capitalize } from "@/lib/format";
 
 // ─── Tone helpers ────────────────────────────────────────────────────────────
 
@@ -193,7 +194,7 @@ function SignalBlock({ finding }) {
           <div className="signal-action-cell">
             <span className="signal-action-label">Confidence</span>
             <span className="signal-action-value">
-              {finding.confidence.charAt(0).toUpperCase() + finding.confidence.slice(1)}
+              {capitalize(finding.confidence)}
             </span>
           </div>
         </div>

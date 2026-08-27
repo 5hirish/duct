@@ -31,6 +31,8 @@ from reportlab.platypus import (
     TableStyle,
 )
 
+from utils.strings import titleize
+
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -190,7 +192,7 @@ def generate_report_pdf(report_json: dict[str, Any]) -> bytes:
             Paragraph(f'<font color="{sc.hexval()}" size="36"><b>{score}</b></font>', s["center"]),
             Paragraph(
                 f'<font size="10"><b>/ 100</b></font><br/>'
-                f'<font color="{sc.hexval()}" size="11"><b>{score_band.replace("_", " ").title()}</b></font><br/>'
+                f'<font color="{sc.hexval()}" size="11"><b>{titleize(score_band)}</b></font><br/>'
                 f'<font size="9" color="{GRAY.hexval()}">{headline}</font>',
                 ParagraphStyle("sh", fontName="Helvetica", fontSize=10,
                                textColor=NAVY, leading=16),

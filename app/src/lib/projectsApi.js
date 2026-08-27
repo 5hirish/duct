@@ -11,32 +11,11 @@
 // the background. Every call is a no-op (returns null/[]) when no valid token
 // is present, so signed-out or token-less sessions degrade to local-only.
 
-import { BASE, backendApiKey } from "./api";
+import { BASE } from "./api";
+import { authedHeaders as authHeaders, hasAuthToken } from "./authFetch";
 
-const TOKEN_KEY = "duct_auth_token";
-
-function authToken() {
-  if (typeof window === "undefined") return "";
-  try {
-    return window.localStorage.getItem(TOKEN_KEY) || "";
-  } catch {
-    return "";
-  }
-}
-
-function authHeaders(extra = {}) {
-  const headers = { ...extra };
-  const apiKey = backendApiKey();
-  if (apiKey) headers["X-API-Key"] = apiKey;
-  const token = authToken();
-  if (token) headers["Authorization"] = `Bearer ${token}`;
-  return headers;
-}
-
-/** True when a Bearer token exists — gate for any remote sync. */
-export function hasAuthToken() {
-  return Boolean(authToken());
-}
+// Re-exported: lib/projects.js gates its remote sync on this.
+export { hasAuthToken };
 
 // --- Shape mapping -------------------------------------------------------
 // Local project (nested) <-> backend project (flat company fields).
@@ -79,6 +58,9 @@ function fromApi(remote) {
     audience: remote.audience || {},
     competition: remote.competition || {},
     brand_channels: remote.brand_channels || {},
+    // Execution autonomy: "manual" (default) | "assisted". Server-owned safety
+    // setting — changed only through setProjectAutonomy, never via the upsert.
+    autonomyLevel: remote.autonomy_level || "manual",
   };
 }
 
@@ -111,6 +93,26 @@ export async function upsertProjectRemote(local) {
   } catch {
     return null;
   }
+}
+
+/** PATCH the project's execution autonomy ("manual" | "assisted"). Owner-only
+ * on the server. Throws on failure so the settings UI can surface it. */
+export async function setProjectAutonomy(id, level) {
+  const res = await fetch(`${BASE}/api/user/projects/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    headers: authHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify({ autonomy_level: level }),
+  });
+  if (!res.ok) {
+    let detail = "";
+    try {
+      detail = (await res.json()).detail || "";
+    } catch {
+      /* non-JSON error body */
+    }
+    throw new Error(detail || `Server error ${res.status}`);
+  }
+  return fromApi(await res.json());
 }
 
 /** DELETE a project by id. Best-effort; never throws. */

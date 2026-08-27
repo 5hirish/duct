@@ -246,6 +246,7 @@ class LangChainAuditRunner:
         report_mode: str = "freehand",
         template_id: str = "seo_v1",
         lead_magnet: bool = False,
+        extra_context: str = "",
     ) -> Any:
         # Imported lazily: the V3 module pulls in claude_agent_sdk, and V1 should
         # not require it at import time once V3 is eventually retired.
@@ -343,7 +344,7 @@ class LangChainAuditRunner:
 
         await stream_audit(
             agent,
-            build_audit_user_prompt(crawl_result, business_context),
+            build_audit_user_prompt(crawl_result, business_context, extra_context=extra_context),
             emit,
             on_report_close=_on_report_close,
         )

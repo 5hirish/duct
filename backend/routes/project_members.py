@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import logging
 import re
-from datetime import datetime, timezone
+
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -56,15 +56,12 @@ from service.membership import (
     normalize_email,
     project_owner,
 )
+from utils.dates import utcnow
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["project-members"])
 invitation_router = APIRouter(tags=["project-invitations"])
-
-
-def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
 
 
 # --- Response shapes -----------------------------------------------------
@@ -302,7 +299,7 @@ async def create_invitation(
     ).scalars().first()
 
     token, token_hash = generate_invitation_token()
-    now = _utcnow()
+    now = utcnow()
     if invitation is None:
         invitation = ProjectInvitation(
             project_id=project_id,
@@ -357,8 +354,8 @@ async def resend_invitation(
     token, token_hash = generate_invitation_token()
     invitation.token_hash = token_hash
     invitation.expires_at = invitation_expiry(cfg.invitation_ttl_days)
-    invitation.last_sent_at = _utcnow()
-    invitation.updated_at = _utcnow()
+    invitation.last_sent_at = utcnow()
+    invitation.updated_at = utcnow()
     session.add(invitation)
     session.commit()
     session.refresh(invitation)
@@ -389,7 +386,7 @@ def revoke_invitation(
         return
 
     invitation.status = INVITE_REVOKED
-    invitation.updated_at = _utcnow()
+    invitation.updated_at = utcnow()
     session.add(invitation)
     session.commit()
 
@@ -528,7 +525,7 @@ async def accept_invitation(
         session,
         invited_by_user_id=invitation.invited_by_user_id,
     )
-    now = _utcnow()
+    now = utcnow()
     invitation.status = INVITE_ACCEPTED
     invitation.accepted_at = now
     invitation.accepted_by_user_id = user.id

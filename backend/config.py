@@ -141,6 +141,11 @@ class Configs(BaseSettings):
     # Public base URL the bucket is served from (R2 public dev URL or a custom
     # CDN domain), e.g. "https://media.getduct.ai". No trailing slash needed.
     r2_public_base_url:   str = ""
+    # Private bucket for artifacts (report HTML, documents). Optional — falls
+    # back to r2_bucket. Recommended in prod: a separate bucket with NO public
+    # custom domain, since artifact bytes are served only through the authed
+    # /api/user/artifacts endpoints (service/storage.py put_private).
+    r2_artifacts_bucket:  str = ""
 
     # PostBridge — server-wide API key (MVP). Used as fallback when no
     # ConnectorCredential row exists for the calling user. Future: drop

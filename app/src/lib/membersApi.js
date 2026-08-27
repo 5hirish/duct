@@ -8,27 +8,8 @@
 // throws a plain Error with the server's message so callers can surface it
 // verbatim.
 
-import { BASE, backendApiKey } from "./api";
-
-const TOKEN_KEY = "duct_auth_token";
-
-function authToken() {
-  if (typeof window === "undefined") return "";
-  try {
-    return window.localStorage.getItem(TOKEN_KEY) || "";
-  } catch {
-    return "";
-  }
-}
-
-function headers(extra = {}) {
-  const out = { ...extra };
-  const apiKey = backendApiKey();
-  if (apiKey) out["X-API-Key"] = apiKey;
-  const token = authToken();
-  if (token) out["Authorization"] = `Bearer ${token}`;
-  return out;
-}
+import { BASE } from "./api";
+import { authedHeaders as headers } from "./authFetch";
 
 /** Pull the human-readable reason out of a FastAPI error body. */
 async function errorMessage(res, fallback) {

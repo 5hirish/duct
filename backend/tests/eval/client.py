@@ -11,7 +11,7 @@ We call ``google-genai`` directly rather than Google ADK: in this codebase the
 ADK/v2 path neither accepts image input nor emits native structured output (see
 agents/insights/v2/schema_compat.py), both of which the vision judge needs. The
 call shape mirrors service/google/brief.py (text + JSON) and
-service/gemini/client.py (image parts).
+service/google/gemini/client.py (image parts).
 """
 
 from __future__ import annotations

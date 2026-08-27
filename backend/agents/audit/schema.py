@@ -51,9 +51,22 @@ class AuditTool(StrEnum):
 
     FETCH_PAGES           = "mcp__duct_crawl__FetchPages"          # in-process page fetch
     SUBMIT_AUDIT_REPORT   = "mcp__duct_crawl__SubmitAuditReport"   # template mode only — chat-revision resubmit
+    LIST_ARTIFACTS        = "mcp__duct_crawl__ListArtifacts"       # project-scoped prior-artifact index
+    GET_ARTIFACT          = "mcp__duct_crawl__GetArtifact"         # one prior artifact, full structured payload
+    CREATE_ARTIFACT       = "mcp__duct_crawl__CreateArtifact"      # mint a memo/dataset/diagram artifact
+    UPDATE_ARTIFACT       = "mcp__duct_crawl__UpdateArtifact"      # exact-string patch → new version
+    REWRITE_ARTIFACT      = "mcp__duct_crawl__RewriteArtifact"     # full-content replace → new version
     START_AUDIT_REPORT    = "mcp__duct_crawl__StartAuditReport"    # template: incremental build, step 1
     ADD_AUDIT_CATEGORY    = "mcp__duct_crawl__AddAuditCategory"    # template: incremental build, step 2 (×9)
     FINALIZE_AUDIT_REPORT = "mcp__duct_crawl__FinalizeAuditReport" # template: incremental build, step 3
+
+    # Staged execution (server "duct_execute", agents/tools/execution_tools.py) —
+    # project-scoped sessions only. Propose/status/rollback; approval is
+    # deliberately absent (human-only, via the review UI).
+    LIST_EXECUTABLE_OPS   = "mcp__duct_execute__ListExecutableOps"
+    PROPOSE_CHANGES       = "mcp__duct_execute__ProposeChanges"
+    GET_CHANGE_SET_STATUS = "mcp__duct_execute__GetChangeSetStatus"
+    ROLLBACK_CHANGE_SET   = "mcp__duct_execute__RollbackChangeSet"
 
 
 class EffortEstimate(StrEnum):
@@ -435,6 +448,15 @@ class AuditRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     url: str
+    # Project scoping — when set (and not lead_magnet), report versions persist
+    # to the artifact store under this project. None = ephemeral session.
+    project_id: str | None = None
+    # Persisted-conversation controls (mirror the content agent's semantics).
+    # resume=True + conversation_id continues a stored audit chat WITHOUT
+    # re-crawling: the latest report artifact rehydrates the working report.
+    conversation_id: str | None = None
+    resume: bool = False
+    start_fresh: bool = False
     business_context: AuditBusinessContext = Field(default_factory=AuditBusinessContext)
     engine: str = ""
     max_blog_posts: int = Field(default=5, ge=1, le=10)

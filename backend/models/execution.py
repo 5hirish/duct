@@ -9,17 +9,14 @@ docs/strategy/gads-learnings-ads-intelligence.md §5.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 from uuid import UUID, uuid4
 
 import sqlalchemy as sa
 from sqlalchemy import Column, DateTime, ForeignKey, String
 from models.columns import json_column
 from sqlmodel import Field, SQLModel
-
-
-def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+from utils.dates import utcnow
 
 
 # Change-set lifecycle: proposed → approved → applying → applied | partial | failed
@@ -40,6 +37,17 @@ CHANGE_SET_STATUSES = {
 CHANGE_STATUSES = {"proposed", "blocked", "approved", "applied", "failed", "rolled_back"}
 
 
+# Who proposed the set and who (if anyone) applied it.
+CHANGE_SET_SOURCES = {"user", "agent"}
+APPLIED_BY_VALUES = {"", "user", "auto"}
+
+# Project execution autonomy levels (projects.autonomy_level).
+AUTONOMY_MANUAL = "manual"      # every change set waits for human approval
+AUTONOMY_ASSISTED = "assisted"  # reversible, guardrail-clean, non-destructive
+                                # agent sets may auto-apply; destructive always waits
+AUTONOMY_LEVELS = {AUTONOMY_MANUAL, AUTONOMY_ASSISTED}
+
+
 class ExecutionChangeSet(SQLModel, table=True):
     __tablename__ = "execution_change_sets"
 
@@ -49,7 +57,27 @@ class ExecutionChangeSet(SQLModel, table=True):
             ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
         )
     )
-    connector_type: str = Field(sa_column=Column(String, nullable=False))  # 'google_ads' | 'ga4'
+    # Provenance: which project/conversation/agent proposed this set. Nullable —
+    # browser-proposed sets from /execute predate projects and carry none.
+    project_id: UUID | None = Field(
+        default=None,
+        sa_column=Column(ForeignKey("projects.id", ondelete="SET NULL"), nullable=True, index=True),
+    )
+    # Polymorphic link to agent_conversations — no FK (artifacts convention).
+    conversation_id: UUID | None = Field(
+        default=None,
+        sa_column=Column(sa.dialects.postgresql.UUID(as_uuid=True), nullable=True, index=True),
+    )
+    agent_type: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
+    source: str = Field(default="user", sa_column=Column(String, nullable=False, server_default="user"))
+    # "" until applied; then "user" (explicit approval) or "auto" (assisted autonomy).
+    applied_by: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
+    # Policy verdict computed at propose time: every change reversible,
+    # allowlisted, guardrail-clean, non-destructive, preview-clean.
+    auto_apply_eligible: bool = Field(
+        default=False, sa_column=Column(sa.Boolean(), nullable=False, server_default=sa.false())
+    )
+    connector_type: str = Field(sa_column=Column(String, nullable=False))  # 'google_ads' | 'ga4' | 'gtm'
     account_id: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
     account_name: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
     title: str = Field(sa_column=Column(String, nullable=False))
@@ -64,10 +92,10 @@ class ExecutionChangeSet(SQLModel, table=True):
         sa_column=Column(json_column(), nullable=False, server_default="[]"),
     )
     created_at: datetime = Field(
-        default_factory=_utcnow, sa_column=Column(DateTime(timezone=True), nullable=False)
+        default_factory=utcnow, sa_column=Column(DateTime(timezone=True), nullable=False)
     )
     updated_at: datetime = Field(
-        default_factory=_utcnow, sa_column=Column(DateTime(timezone=True), nullable=False)
+        default_factory=utcnow, sa_column=Column(DateTime(timezone=True), nullable=False)
     )
     approved_at: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
     applied_at: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
@@ -101,5 +129,5 @@ class ExecutionGuardrail(SQLModel, table=True):
     )
     active: bool = Field(default=True, sa_column=Column(sa.Boolean(), nullable=False, server_default=sa.true()))
     created_at: datetime = Field(
-        default_factory=_utcnow, sa_column=Column(DateTime(timezone=True), nullable=False)
+        default_factory=utcnow, sa_column=Column(DateTime(timezone=True), nullable=False)
     )

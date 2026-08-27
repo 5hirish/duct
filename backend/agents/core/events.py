@@ -48,6 +48,11 @@ class AgentEvent(StrEnum):
     REPORT_UPDATED = "report_updated"        # audit: a new versioned report
     PLAN_GENERATED = "plan_generated"        # content: 30-day plan
     POST_DRAFT_UPDATED = "post_draft_updated"  # content: a post draft
+    ARTIFACT_UPDATED = "artifact_updated"    # generic artifact created/revised (card in chat)
+    # Staged execution: a change-set card for the chat UI. Emitted when the
+    # agent proposes a set AND when its state changes (auto-applied, rolled
+    # back) — the UI upserts by change_set_id.
+    EXECUTION_PROPOSED = "execution_proposed"
 
 
 class EventKind(StrEnum):

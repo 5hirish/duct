@@ -18,6 +18,7 @@ import { statusMeta } from "../../lib/contentStatus";
 import { PostStatus } from "../../lib/contentEnums";
 import { PlatformGlyph, platformMeta } from "./platformGlyphs";
 import SlidesCarousel from "./SlidesCarousel";
+import { titleCase } from "@/lib/format";
 
 const STREAMING_HINTS = [
   "Picking the hook…",
@@ -159,7 +160,7 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
                 <span className={`size-1.5 rounded-full ${meta.dotClass}`} /> {meta.label}
               </span>
               {post.pillar && (
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 font-medium text-primary">{prettify(post.pillar)}</span>
+                <span className="rounded-full bg-primary/10 px-2 py-0.5 font-medium text-primary">{titleCase(post.pillar)}</span>
               )}
               {post.format_name && (
                 <span className="rounded-full border border-border/70 px-2 py-0.5">{post.format_name}</span>
@@ -242,10 +243,6 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
 // ---------------------------------------------------------------------------
 // Primitives
 // ---------------------------------------------------------------------------
-
-function prettify(s) {
-  return String(s || "").replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
 
 function Labeled({ label, hint, children }) {
   return (

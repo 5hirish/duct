@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
@@ -17,10 +17,7 @@ from sqlalchemy import (
 )
 from models.columns import json_column
 from sqlmodel import Field, SQLModel
-
-
-def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+from utils.dates import utcnow
 
 
 class User(SQLModel, table=True):
@@ -39,11 +36,11 @@ class User(SQLModel, table=True):
         default=None, sa_column=Column(DateTime(timezone=True), nullable=True)
     )
     created_at: datetime = Field(
-        default_factory=_utcnow,
+        default_factory=utcnow,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
     updated_at: datetime = Field(
-        default_factory=_utcnow,
+        default_factory=utcnow,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
 
@@ -68,11 +65,11 @@ class AuthIdentity(SQLModel, table=True):
         default=None, sa_column=Column(json_column(), nullable=True)
     )
     created_at: datetime = Field(
-        default_factory=_utcnow,
+        default_factory=utcnow,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
     updated_at: datetime = Field(
-        default_factory=_utcnow,
+        default_factory=utcnow,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
 
@@ -92,7 +89,7 @@ class OAuthState(SQLModel, table=True):
     flow: str = Field(sa_column=Column(String, nullable=False, index=True))
     code_verifier: str | None = Field(default=None, sa_column=Column(String, nullable=True))
     issued_at: datetime = Field(
-        default_factory=_utcnow,
+        default_factory=utcnow,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
     expires_at: datetime = Field(sa_column=Column(DateTime(timezone=True), nullable=False))

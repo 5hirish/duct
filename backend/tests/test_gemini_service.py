@@ -1,4 +1,4 @@
-"""Tests for service.gemini.
+"""Tests for service.google.gemini.
 
 Mocked tests cover the two pieces that have real logic worth defending:
   - persist_generated_image: writes bytes to disk + inserts the right
@@ -21,7 +21,7 @@ from uuid import uuid4
 import pytest
 
 from agents.models import ImageModel
-from service.gemini.schema import GeneratedImage, ThinkingLevel
+from service.google.gemini.schema import GeneratedImage, ThinkingLevel
 
 
 # ---------------------------------------------------------------------------
@@ -42,7 +42,7 @@ from service.gemini.schema import GeneratedImage, ThinkingLevel
 def test_thinking_level_collapse_per_model(model, level, expected):
     """gemini-3.1-flash-image only supports MINIMAL/HIGH; other Gemini
     models accept the full set unchanged."""
-    from service.gemini.client import _collapse_thinking_for_gemini_3_1
+    from service.google.gemini.client import _collapse_thinking_for_gemini_3_1
     assert _collapse_thinking_for_gemini_3_1(model, level) == expected
 
 
@@ -63,7 +63,7 @@ def test_persist_generated_image_writes_file_and_inserts_row(mime_type, expected
     """Catches: wrong file extension for mime type, missing intermediate
     dirs, wrong URL prefix, missing ContentAsset fields. These are the
     actual ways persist_generated_image can break."""
-    from service.gemini.storage import persist_generated_image
+    from service.google.gemini.storage import persist_generated_image
 
     with tempfile.TemporaryDirectory() as tmpdir:
         # Persistence now flows through service.storage (local backend → disk).
@@ -114,7 +114,7 @@ def test_multi_reference_prefix_returns_empty_for_zero_or_one_ref():
     """Single-reference and no-reference cases must not get a multi-ref
     prefix — otherwise the prompt lies to the model about what's
     available, and the result drifts. Cheap regression guard."""
-    from service.gemini.client import build_multi_reference_prefix
+    from service.google.gemini.client import build_multi_reference_prefix
     assert build_multi_reference_prefix(0) == ""
     assert build_multi_reference_prefix(1) == ""
 
@@ -124,7 +124,7 @@ def test_multi_reference_prefix_describes_roles_for_two_or_three_refs():
     knows which image is character vs camera vs supplementary. If the
     prefix ever stops naming both roles, character drift returns on
     slides 2-5."""
-    from service.gemini.client import build_multi_reference_prefix
+    from service.google.gemini.client import build_multi_reference_prefix
     two_ref = build_multi_reference_prefix(2)
     assert "character reference" in two_ref
     assert "framing/style reference" in two_ref or "framing/style" in two_ref
@@ -142,7 +142,7 @@ def test_gemini_image_config_carries_aspect_ratio_and_size():
     None when nothing is set (an edit that should keep the source dimensions)."""
     from types import SimpleNamespace
 
-    from service.gemini.client import _gemini_image_config
+    from service.google.gemini.client import _gemini_image_config
 
     cfg = _gemini_image_config(SimpleNamespace(
         aspect_ratio=SimpleNamespace(value="9:16"),

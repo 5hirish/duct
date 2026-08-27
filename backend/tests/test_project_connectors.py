@@ -1,0 +1,323 @@
+"""Per-project connector bindings — resolution order + binding routes.
+
+Covers the agency shape: project A bills through Stripe account X, project B
+through Y. Bindings reference credential rows (never copy secrets), win over
+the caller's user-level rows during resolution, and are membership-gated.
+"""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+import pytest
+from cryptography.fernet import Fernet
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine, select
+from sqlalchemy.pool import StaticPool
+from sqlmodel import Session, SQLModel
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from config import Configs  # noqa: E402
+from db.session import get_session as get_session_dep  # noqa: E402
+from models.activity import ActivityLog  # noqa: E402
+from models.auth import User  # noqa: E402
+from models.connector import ConnectorCredential, ProjectConnector  # noqa: E402
+from models.membership import ProjectMember, ROLE_COLLABORATOR  # noqa: E402
+from models.project import Project  # noqa: E402
+import routes.project_connectors as pc_routes  # noqa: E402
+import service.auth as auth_service  # noqa: E402
+import service.credentials as credentials_service  # noqa: E402
+import service.execution.creds as creds_module  # noqa: E402
+from service.execution.creds import (  # noqa: E402
+    resolve_execution_creds,
+    stored_connector_credentials,
+)
+from service.membership import ROLE_OWNER  # noqa: E402
+
+FERNET_KEY = Fernet.generate_key().decode()
+
+
+@pytest.fixture
+def engine():
+    engine = create_engine(
+        "sqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    SQLModel.metadata.create_all(engine)
+    # SQLAlchemy drops `postgresql_where` on SQLite, leaving a FULL unique
+    # index on project_id that would forbid collaborator rows — same
+    # workaround as test_project_invitations.py.
+    with engine.begin() as conn:
+        conn.exec_driver_sql("DROP INDEX IF EXISTS uq_project_members_single_owner")
+    return engine
+
+
+@pytest.fixture
+def db(engine):
+    with Session(engine) as session:
+        yield session
+
+
+@pytest.fixture
+def cfg(monkeypatch):
+    config = Configs(
+        credentials_encryption_key=FERNET_KEY,
+        google_ads_developer_token="env-dev-token",
+        google_oauth_client_id="env-client-id",
+        google_oauth_client_secret="env-client-secret",
+    )
+    monkeypatch.setattr(creds_module, "get_configs", lambda: config)
+    monkeypatch.setattr(credentials_service, "get_configs", lambda: config)
+    return config
+
+
+@pytest.fixture
+def owner(db):
+    user = User(email="pc-owner@example.com")
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@pytest.fixture
+def collaborator(db):
+    user = User(email="pc-collab@example.com")
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@pytest.fixture
+def project(db, owner, collaborator):
+    row = Project(user_id=owner.id, name="Client A")
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    db.add(ProjectMember(project_id=row.id, user_id=owner.id, role=ROLE_OWNER))
+    db.add(
+        ProjectMember(
+            project_id=row.id, user_id=collaborator.id, role=ROLE_COLLABORATOR
+        )
+    )
+    db.commit()
+    return row
+
+
+def _store(db, user, connector_type, account_id, data, account_name=""):
+    row = ConnectorCredential(
+        user_id=user.id,
+        connector_type=connector_type,
+        account_id=account_id,
+        account_name=account_name,
+        credentials_enc=credentials_service.encrypt_credentials(data),
+    )
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+def _bind(db, project, cred, user):
+    row = ProjectConnector(
+        project_id=project.id,
+        connector_type=cred.connector_type,
+        connector_credential_id=cred.id,
+        created_by_user_id=user.id,
+    )
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+# ---------------------------------------------------------------------------
+# Resolution order
+# ---------------------------------------------------------------------------
+
+def test_binding_wins_over_user_default_row(db, cfg, owner, project):
+    _store(db, owner, "stripe", "", {"api_key": "rk_default"})
+    bound = _store(db, owner, "stripe", "acct_B", {"api_key": "rk_project_b"})
+    _bind(db, project, bound, owner)
+
+    assert stored_connector_credentials(db, owner.id, "stripe") == {"api_key": "rk_default"}
+    assert stored_connector_credentials(
+        db, owner.id, "stripe", project_id=project.id
+    ) == {"api_key": "rk_project_b"}
+
+
+def test_collaborator_uses_projects_bound_account(db, cfg, owner, collaborator, project):
+    # The binding references the OWNER's credential row; a collaborator's
+    # project-scoped run resolves through it — the project's account is the
+    # project's account. (Membership is checked by every caller that passes
+    # project_id.)
+    bound = _store(db, owner, "google_ads", "111", {"refresh_token": "owner-rt"})
+    _bind(db, project, bound, owner)
+
+    creds = resolve_execution_creds(
+        db, collaborator.id, "google_ads", project_id=project.id
+    )
+    assert creds["refresh_token"] == "owner-rt"
+    # Without the project scope the collaborator has nothing.
+    assert resolve_execution_creds(db, collaborator.id, "google_ads")["refresh_token"] == ""
+
+
+def test_explicit_other_account_skips_binding(db, cfg, owner, project):
+    bound = _store(db, owner, "google_ads", "111", {"refresh_token": "bound-rt"})
+    _bind(db, project, bound, owner)
+    _store(db, owner, "google_ads", "222", {"refresh_token": "other-rt"})
+
+    creds = resolve_execution_creds(
+        db, owner.id, "google_ads", account_id="222", project_id=project.id
+    )
+    assert creds["refresh_token"] == "other-rt"
+
+
+def test_unbound_project_falls_back_to_user_rows(db, cfg, owner, project):
+    _store(db, owner, "revenuecat", "", {"api_key": "sk_user"})
+    assert stored_connector_credentials(
+        db, owner.id, "revenuecat", project_id=project.id
+    ) == {"api_key": "sk_user"}
+
+
+def test_account_agnostic_binding_applies_to_any_account(db, cfg, owner, project):
+    # A binding to an account-agnostic row (account_id="") serves whatever
+    # account the change set targets — e.g. one Google login spanning several
+    # customer ids.
+    bound = _store(db, owner, "google_ads", "", {"refresh_token": "generic-rt"})
+    _bind(db, project, bound, owner)
+    creds = resolve_execution_creds(
+        db, owner.id, "google_ads", account_id="999", project_id=project.id
+    )
+    assert creds["refresh_token"] == "generic-rt"
+
+
+# ---------------------------------------------------------------------------
+# Binding routes
+# ---------------------------------------------------------------------------
+
+def _make_client(db, user):
+    app = FastAPI()
+    app.include_router(pc_routes.router, prefix="/api/user/projects")
+    app.dependency_overrides[get_session_dep] = lambda: db
+    app.dependency_overrides[auth_service.get_current_user] = lambda: user
+    return TestClient(app)
+
+
+def test_bind_list_rebind_unbind_roundtrip(db, cfg, owner, project):
+    cred_a = _store(db, owner, "stripe", "acct_A", {"api_key": "rk_a"}, account_name="Client A")
+    cred_b = _store(db, owner, "stripe", "acct_B", {"api_key": "rk_b"}, account_name="Client B")
+    client = _make_client(db, owner)
+
+    res = client.put(
+        f"/api/user/projects/{project.id}/connectors/stripe",
+        json={"connector_credential_id": str(cred_a.id)},
+    )
+    assert res.status_code == 200
+    assert res.json()["account_name"] == "Client A"
+
+    listed = client.get(f"/api/user/projects/{project.id}/connectors").json()
+    assert [r["connector_type"] for r in listed] == ["stripe"]
+
+    # Rebinding the same connector type replaces the mapping, never duplicates.
+    res = client.put(
+        f"/api/user/projects/{project.id}/connectors/stripe",
+        json={"connector_credential_id": str(cred_b.id)},
+    )
+    assert res.status_code == 200
+    assert res.json()["account_name"] == "Client B"
+    rows = db.execute(select(ProjectConnector)).scalars().all()
+    assert len(rows) == 1 and rows[0].connector_credential_id == cred_b.id
+
+    assert client.delete(f"/api/user/projects/{project.id}/connectors/stripe").status_code == 204
+    assert client.delete(f"/api/user/projects/{project.id}/connectors/stripe").status_code == 404
+
+
+def test_binding_requires_membership(db, cfg, owner, project):
+    stranger = User(email="pc-stranger@example.com")
+    db.add(stranger)
+    db.commit()
+    db.refresh(stranger)
+    cred = _store(db, stranger, "stripe", "acct_S", {"api_key": "rk_s"})
+    client = _make_client(db, stranger)
+
+    assert client.get(f"/api/user/projects/{project.id}/connectors").status_code == 404
+    res = client.put(
+        f"/api/user/projects/{project.id}/connectors/stripe",
+        json={"connector_credential_id": str(cred.id)},
+    )
+    assert res.status_code == 404
+
+
+def test_cannot_bind_someone_elses_credential(db, cfg, owner, collaborator, project):
+    owners_cred = _store(db, owner, "stripe", "acct_A", {"api_key": "rk_a"})
+    client = _make_client(db, collaborator)
+    res = client.put(
+        f"/api/user/projects/{project.id}/connectors/stripe",
+        json={"connector_credential_id": str(owners_cred.id)},
+    )
+    assert res.status_code == 404  # foreign credential ids stay unconfirmed
+
+    # Their own credential binds fine — collaborators may offer their accounts.
+    own = _store(db, collaborator, "stripe", "acct_C", {"api_key": "rk_c"})
+    res = client.put(
+        f"/api/user/projects/{project.id}/connectors/stripe",
+        json={"connector_credential_id": str(own.id)},
+    )
+    assert res.status_code == 200
+
+
+def test_connector_type_mismatch_rejected(db, cfg, owner, project):
+    cred = _store(db, owner, "stripe", "acct_A", {"api_key": "rk_a"})
+    client = _make_client(db, owner)
+    res = client.put(
+        f"/api/user/projects/{project.id}/connectors/revenuecat",
+        json={"connector_credential_id": str(cred.id)},
+    )
+    assert res.status_code == 422
+    res = client.put(
+        f"/api/user/projects/{project.id}/connectors/not_a_connector",
+        json={"connector_credential_id": str(cred.id)},
+    )
+    assert res.status_code == 422
+
+
+def test_bind_unbind_write_activity_rows(db, cfg, owner, project):
+    cred = _store(db, owner, "meta_ads", "act_1", {"access_token": "EAA"}, account_name="Meta A")
+    client = _make_client(db, owner)
+    client.put(
+        f"/api/user/projects/{project.id}/connectors/meta_ads",
+        json={"connector_credential_id": str(cred.id)},
+    )
+    client.delete(f"/api/user/projects/{project.id}/connectors/meta_ads")
+    actions = [
+        r.action
+        for r in db.execute(select(ActivityLog).order_by(ActivityLog.created_at)).scalars()
+    ]
+    assert actions == ["project_connector.bound", "project_connector.unbound"]
+    bound_row = db.execute(
+        select(ActivityLog).where(ActivityLog.action == "project_connector.bound")
+    ).scalars().one()
+    assert bound_row.project_id == project.id
+    assert bound_row.connector_type == "meta_ads"
+    assert "Meta A" in bound_row.summary
+
+
+def test_unknown_binding_ids_do_not_break_resolution(db, cfg, owner, project):
+    # A binding whose credential row was deleted (Postgres cascades; SQLite in
+    # tests does not) must degrade to user-level resolution, never raise.
+    cred = _store(db, owner, "stripe", "acct_A", {"api_key": "rk_a"})
+    _bind(db, project, cred, owner)
+    db.delete(cred)
+    db.commit()
+    _store(db, owner, "stripe", "", {"api_key": "rk_fallback"})
+    assert stored_connector_credentials(
+        db, owner.id, "stripe", project_id=project.id
+    ) == {"api_key": "rk_fallback"}

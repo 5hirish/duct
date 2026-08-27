@@ -1,16 +1,11 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { resolveTheme } from "./themes";
+import { titleCase } from "./format";
 
 const REPORTS_DIR =
   process.env.REPORTS_DIR ??
   path.resolve(process.cwd(), "..", "backend", "data", "google_ads");
-
-function formatTitle(slug) {
-  return slug
-    .replace(/[-_]/g, " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
-}
 
 async function readPayload(jsonPath) {
   try {
@@ -61,7 +56,7 @@ export async function listReports() {
 
       return {
         slug,
-        title: formatTitle(slug),
+        title: titleCase(slug),
         themeKey,
         themeLabel: theme.label,
         generatedAt,
@@ -91,5 +86,5 @@ export async function getReportBySlug(slug) {
   const theme = resolveTheme(themeKey);
   const generatedAt = payload.source_metadata?.generated_at ?? null;
 
-  return { slug, title: formatTitle(slug), themeKey, themeLabel: theme.label, generatedAt, payload };
+  return { slug, title: titleCase(slug), themeKey, themeLabel: theme.label, generatedAt, payload };
 }

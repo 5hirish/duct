@@ -7,58 +7,19 @@ import SplitWorkspace from "../workspace/SplitWorkspace";
 import {
   closeAgentSession,
   createAgentSession,
+  getAgentConversation,
   openAgentStream,
   sendAgentMessage,
 } from "../../lib/api";
+import { mapEventsToMessages } from "../../lib/agentHistory";
 import { AuditEvent, AuditStep } from "../../lib/auditEvents";
 import { StepStatus } from "../../lib/agentSteps";
 import { Phase } from "./auditPhase";
 import { useAuditNav } from "../../lib/auditNavContext";
+import { consumeSseStream } from "@/lib/sse";
 
 // Re-export so consumers can import Phase from AuditWorkspace if they prefer
 export { Phase } from "./auditPhase";
-
-// ---------------------------------------------------------------------------
-// SSE helpers
-// ---------------------------------------------------------------------------
-
-function parseSseDataFrame(frame) {
-  const dataLines = frame
-    .split("\n")
-    .filter((l) => l.startsWith("data: "))
-    .map((l) => l.slice(6));
-  if (!dataLines.length) return null;
-  try {
-    return JSON.parse(dataLines.join("\n"));
-  } catch {
-    return null;
-  }
-}
-
-async function consumeSseStream(body, onEvent, signal) {
-  const reader = body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-  try {
-    while (true) {
-      if (signal?.aborted) break;
-      const { value, done } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const frames = buffer.split("\n\n");
-      buffer = frames.pop() ?? "";
-      for (const frame of frames) {
-        if (!frame.trim()) continue;
-        const event = parseSseDataFrame(frame);
-        if (event) onEvent(event);
-      }
-    }
-  } catch (err) {
-    if (!signal?.aborted) throw err;
-  } finally {
-    reader.releaseLock();
-  }
-}
 
 // ---------------------------------------------------------------------------
 // AuditWorkspace
@@ -158,6 +119,16 @@ export default function AuditWorkspace({ sessionId, auditParams, publicMode = fa
 
     async function start() {
       try {
+        // Resume: seed the chat with persisted history before the live stream
+        // attaches, so the user sees their prior conversation instantly.
+        if (auditParams.resume && auditParams.conversation_id) {
+          try {
+            const conv = await getAgentConversation("audit_seo", auditParams.conversation_id);
+            if (!cancelled) setMessages(mapEventsToMessages(conv.events));
+          } catch {
+            /* history unavailable — the session still resumes server-side */
+          }
+        }
         const { session_id, agent_type } = await createAgentSession("audit_seo", auditParams);
         localSid = session_id;
         // Torn down before the stream opened (StrictMode remount / fast nav):
@@ -260,6 +231,17 @@ export default function AuditWorkspace({ sessionId, auditParams, publicMode = fa
         break;
 
       case AuditEvent.REPORT_UPDATED:
+        // replay=True: a stored version re-emitted on resume — render it, but
+        // skip the celebration bubble and step-clearing meant for fresh runs.
+        if (event.replay) {
+          reportReceivedRef.current = true;
+          setReportVersions((prev) => [
+            ...prev.filter((v) => v.version_id !== event.version_id),
+            { version_id: event.version_id, label: event.label, report: event.payload },
+          ].sort((a, b) => a.version_id - b.version_id));
+          setSelectedVersionId(event.version_id);
+          break;
+        }
         setStreamingHtml("");
         htmlBatchRef.current = "";
         clearTimeout(htmlBatchTimer.current);
@@ -339,6 +321,32 @@ export default function AuditWorkspace({ sessionId, auditParams, publicMode = fa
       case AuditEvent.TODO_UPDATE:
         setTodos(event.todos || []);
         break;
+
+      // A durable artifact was created/revised by a tool — render a compact
+      // card in the chat that opens the artifact viewer.
+      case AuditEvent.ARTIFACT_UPDATED:
+        setMessages((prev) => [...prev, { role: "artifact_card", artifact: event.artifact }]);
+        break;
+
+      // The agent proposed (or updated) a staged change set — inline review
+      // card. Emitted again on state changes (auto-applied, rolled back), so
+      // upsert by change_set_id instead of appending duplicates.
+      case AuditEvent.EXECUTION_PROPOSED: {
+        const incoming = event.change_set;
+        if (!incoming?.change_set_id) break;
+        setMessages((prev) => {
+          const idx = prev.findIndex(
+            (m) => m.role === "change_set_card" && m.changeSet?.change_set_id === incoming.change_set_id
+          );
+          if (idx >= 0) {
+            const next = [...prev];
+            next[idx] = { ...next[idx], changeSet: incoming };
+            return next;
+          }
+          return [...prev, { role: "change_set_card", changeSet: incoming }];
+        });
+        break;
+      }
 
       case AuditEvent.AGENT_MESSAGE_CHUNK:
         setIsAgentTyping(false);

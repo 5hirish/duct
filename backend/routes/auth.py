@@ -11,7 +11,12 @@ from starlette.status import HTTP_404_NOT_FOUND, HTTP_501_NOT_IMPLEMENTED
 
 from config import get_configs
 from service.connectors import get_connector, normalize_connector_id
-from service.google.constants import GA4_CONNECTOR_ID, GOOGLE_ADS_CONNECTOR_ID, GSC_CONNECTOR_ID
+from service.google.constants import (
+    GA4_CONNECTOR_ID,
+    GOOGLE_ADS_CONNECTOR_ID,
+    GSC_CONNECTOR_ID,
+    GTM_CONNECTOR_ID,
+)
 from service.google.oauth import create_google_oauth_flow
 from service.oauthstate import (
     cleanup_expired_states,
@@ -26,15 +31,18 @@ OAUTH_STATE_TTL_SECONDS = 300
 CONNECTOR_FLOW_GOOGLE_ADS = "connector_google_ads"
 CONNECTOR_FLOW_GA4 = "connector_ga4"
 CONNECTOR_FLOW_GSC = "connector_gsc"
+CONNECTOR_FLOW_GTM = "connector_gtm"
 GOOGLE_CONNECTOR_FLOWS = (
     CONNECTOR_FLOW_GOOGLE_ADS,
     CONNECTOR_FLOW_GA4,
     CONNECTOR_FLOW_GSC,
+    CONNECTOR_FLOW_GTM,
 )
 FLOW_TO_CALLBACK = {
     CONNECTOR_FLOW_GOOGLE_ADS: (GOOGLE_ADS_CONNECTOR_ID, "refresh_token"),
     CONNECTOR_FLOW_GA4: (GA4_CONNECTOR_ID, "ga4_refresh_token"),
     CONNECTOR_FLOW_GSC: (GSC_CONNECTOR_ID, "gsc_refresh_token"),
+    CONNECTOR_FLOW_GTM: (GTM_CONNECTOR_ID, "gtm_refresh_token"),
 }
 
 
@@ -54,7 +62,8 @@ def _google_connector_authorize(connector_id: str, flow_key: str) -> RedirectRes
         scope = meta.oauth_scope
         if not scope:
             raise ValueError(f"Connector {connector_id!r} is missing oauth scope.")
-        flow = create_google_oauth_flow(state=state, scopes=[scope])
+        # oauth_scope may hold several space-separated scopes (e.g. GTM).
+        flow = create_google_oauth_flow(state=state, scopes=scope.split())
     except KeyError as exc:
         raise HTTPException(
             status_code=HTTP_404_NOT_FOUND,
@@ -110,7 +119,7 @@ def _google_connector_callback_with_state(
         scope = meta.oauth_scope
         if not scope:
             raise ValueError(f"Connector {connector_id!r} is missing oauth scope.")
-        flow = create_google_oauth_flow(state=state, scopes=[scope])
+        flow = create_google_oauth_flow(state=state, scopes=scope.split())
         if code_verifier is not None:
             flow.code_verifier = code_verifier
     except KeyError as exc:
@@ -151,6 +160,10 @@ def _gsc_authorize() -> RedirectResponse:
     return _google_connector_authorize(GSC_CONNECTOR_ID, CONNECTOR_FLOW_GSC)
 
 
+def _gtm_authorize() -> RedirectResponse:
+    return _google_connector_authorize(GTM_CONNECTOR_ID, CONNECTOR_FLOW_GTM)
+
+
 def _google_ads_callback(code: str, state: str) -> RedirectResponse:
     return _google_connector_callback(
         connector_id=GOOGLE_ADS_CONNECTOR_ID,
@@ -181,6 +194,16 @@ def _gsc_callback(code: str, state: str) -> RedirectResponse:
     )
 
 
+def _gtm_callback(code: str, state: str) -> RedirectResponse:
+    return _google_connector_callback(
+        connector_id=GTM_CONNECTOR_ID,
+        code=code,
+        state=state,
+        flow_key=CONNECTOR_FLOW_GTM,
+        token_fragment_key="gtm_refresh_token",
+    )
+
+
 @router.get("/auth/connectors/{connector_id}/oauth/authorize")
 def connector_oauth_authorize(connector_id: str) -> RedirectResponse:
     """Start OAuth for a connector that supports it (e.g. ``google_ads``)."""
@@ -199,6 +222,8 @@ def connector_oauth_authorize(connector_id: str) -> RedirectResponse:
         return _ga4_authorize()
     if cid == GSC_CONNECTOR_ID:
         return _gsc_authorize()
+    if cid == GTM_CONNECTOR_ID:
+        return _gtm_authorize()
 
     if meta.oauth_scope:
         raise HTTPException(
@@ -233,6 +258,8 @@ def connector_oauth_callback(
         return _ga4_callback(code, state)
     if cid == GSC_CONNECTOR_ID:
         return _gsc_callback(code, state)
+    if cid == GTM_CONNECTOR_ID:
+        return _gtm_callback(code, state)
 
     raise HTTPException(
         status_code=HTTP_501_NOT_IMPLEMENTED,
