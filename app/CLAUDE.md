@@ -46,6 +46,16 @@ Plus `invite/[token]/` at the top level (outside every route group): the invitat
 - `lib/reports.js` — report generation helpers
 - `lib/userPreferences.js` — preference persistence
 - `lib/analytics-client.js` — analytics event wrapper
+- `lib/format.js` — dates, numbers and labels: `relativeTime`, `relativeDays`,
+  `formatDate`, `formatTime`, `toDate`, `dayKey`, `compactNumber`,
+  `formatNumber`, `titleCase`, `formatTitle`, `capitalize`, `initials`.
+  Use these instead of a component-local `fmtDate`/`fmtNum`/`prettify` — the
+  per-component copies had drifted apart before they were consolidated.
+- `lib/sse.js` — `consumeSseStream` / `parseSseDataFrame`, shared by every
+  streaming endpoint (audit, content, insights)
+- `lib/authFetch.js` — the one home for the auth token: `AUTH_TOKEN_KEY`,
+  `authToken`, `hasAuthToken`, `authedHeaders`, `authedRequest`, plus
+  `decodeJwtPayload` / `isTokenValid`. Never hardcode `"duct_auth_token"`.
 
 ## What's not here
 

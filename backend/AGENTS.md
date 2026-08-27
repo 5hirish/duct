@@ -14,7 +14,7 @@ This directory contains the Python reporting and synthesis side of Duct.
 
 - `service/` — connectors and Google Ads fetch/brief
 - `data/<connector_id>/` — static demo source payloads per connector
-- `utils/` — formatting and metric helpers
+- `utils/` — shared date, string and formatting helpers (see `backend/CLAUDE.md`)
 - `service/google/schema.py` — Google Ads brief JSON contract (dataclasses)
 - `data/google_ads/` — demo brief at root; `raw/` for fixtures
 
