@@ -199,7 +199,7 @@ export async function postSlideRender(sessionId, { render_id, image_base64 }) {
 
 // Re-exported so the many `import { consumeSseStream } from "@/lib/contentApi"`
 // call sites keep working; the implementation lives in lib/sse.js.
-export { consumeSseStream, parseSseDataFrame } from "./sse";
+export { consumeSseStream, parseSseDataFrame } from "./sse.js";
 
 // ---------------------------------------------------------------------------
 // CRUD — brand, plans, posts, formats, avatars, assets

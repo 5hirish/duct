@@ -4,7 +4,7 @@
 // Reads BASE and the API key at call time — the desktop shell repoints both at
 // boot (lib/localBackend.js), so callers must never copy them into constants.
 
-import { BASE, backendApiKey } from "./api";
+import { BASE, backendApiKey } from "./api.js";
 
 /** localStorage key holding the Google Sign-In JWT. */
 export const AUTH_TOKEN_KEY = "duct_auth_token";

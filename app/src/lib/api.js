@@ -1,9 +1,9 @@
 import { googleAdsByoCredentials } from "./adsCredentials.js";
 import { providerKeyHeaders } from "./providerKeys.js";
-import { consumeSseStream } from "./sse";
+import { consumeSseStream } from "./sse.js";
 // Bearer JWT minted by Google Sign-In. Optional: signed-out sessions omit it and
 // the backend personalises only when a valid token is present.
-import { authToken } from "./authFetch";
+import { authToken } from "./authFetch.js";
 
 const configuredBase = process.env.NEXT_PUBLIC_API_BASE?.trim();
 const normalizedConfiguredBase = configuredBase?.replace(/\/+$/, "");
