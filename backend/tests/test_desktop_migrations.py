@@ -8,6 +8,8 @@ A fresh install was always fine, which is why it survived testing.
 
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 import sqlalchemy as sa
 from sqlalchemy import inspect
 
@@ -111,3 +113,37 @@ def test_server_mode_is_never_migrated(clean_env, tmp_path):
 
     engine = session_module.get_engine()
     assert "alembic_version" not in set(inspect(engine).get_table_names())
+
+
+def test_a_remote_database_is_not_this_installs_to_migrate(monkeypatch):
+    """The sidecar uses whatever DATABASE_URL points at, but only migrates what
+    it owns. A server database is migrated by its deployment — a desktop build
+    reshaping it (possibly *backwards*, if the build is behind) is never right.
+    """
+    from db import migrate
+
+    monkeypatch.setattr("config.get_configs", lambda: SimpleNamespace(duct_local=True))
+    monkeypatch.setattr(
+        "db.session.get_engine",
+        lambda: SimpleNamespace(dialect=SimpleNamespace(name="postgresql")),
+    )
+
+    def _explode(*args, **kwargs):
+        raise AssertionError("migrations must not run against a database we do not own")
+
+    monkeypatch.setattr(migrate.command, "upgrade", _explode)
+    monkeypatch.setattr(migrate.command, "stamp", _explode)
+    # Reaching for the table list would already mean connecting to someone
+    # else's database, so that is a failure too.
+    monkeypatch.setattr(
+        migrate, "inspect", lambda _: (_ for _ in ()).throw(AssertionError("connected"))
+    )
+
+    migrate.ensure_schema()  # returns quietly; any migration attempt raises
+
+
+def test_a_local_sqlite_database_is_ours_to_migrate():
+    from db.migrate import _owns_database
+
+    assert _owns_database(SimpleNamespace(dialect=SimpleNamespace(name="sqlite"))) is True
+    assert _owns_database(SimpleNamespace(dialect=SimpleNamespace(name="postgresql"))) is False

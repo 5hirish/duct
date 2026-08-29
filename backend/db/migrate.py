@@ -8,9 +8,14 @@ migration that adds a *column* to an existing table (see
 silently skipped on every install that already has the table. The user's next
 query then fails with `no such column`.
 
-So the sidecar runs the same migrations as the server. The DB is whatever
-`DATABASE_URL` points at — SQLite by default on a laptop, but a self-hoster
-pointing at Postgres gets the identical path.
+So the sidecar runs the same migrations as the server — but only over a database
+it owns, meaning the SQLite file in its own data directory. `DATABASE_URL` still
+decides *which* database; `_owns_database` decides who is responsible for its
+schema. Point a sidecar at a Postgres and it will use it and leave the schema
+alone, because that database belongs to a deployment which migrates it as a
+deploy step. (A self-hoster running Postgres therefore runs migrations the way
+any operator does — `scripts/migrations.py upgrade head` — rather than having a
+desktop build decide when their shared schema changes.)
 
 Three states, distinguished by what is already in the file:
 
@@ -24,7 +29,8 @@ Three states, distinguished by what is already in the file:
 * **Managed** (`alembic_version` present) — just `upgrade head`.
 
 Never called for the Railway deployment: `ensure_schema` is a no-op unless
-`duct_local` is set. Prod's migrations stay a deliberate deploy step.
+`duct_local` is set, and a second no-op unless the database is local. Prod's
+migrations stay a deliberate deploy step.
 
 **Only migrations after the baseline ever run on SQLite.** Fourteen of the
 earlier revisions declare `postgresql.JSONB` directly (rather than through the
@@ -93,8 +99,29 @@ def alembic_config(database_url: str) -> Config:
     return config
 
 
+def _owns_database(engine) -> bool:  # noqa: ANN001 — sqlalchemy Engine
+    """Whether this install owns the database, and may therefore migrate it.
+
+    A desktop install owns the SQLite file in its own data directory: nothing
+    else writes it, and nothing else will ever bring it to head, so the sidecar
+    has to. A server database is the opposite — it is shared, and its deployment
+    migrates it as a deploy step. A desktop app that migrated it would mean any
+    developer double-clicking a run config could reshape a database other people
+    are using, and a build one commit behind could try to migrate it *backwards*.
+
+    So: SQLite (a file this machine owns) yes, anything reached over a network
+    no. `DATABASE_URL` still decides *which* database — this only decides who is
+    responsible for its schema.
+    """
+    return engine.dialect.name == "sqlite"
+
+
 def ensure_schema() -> None:
-    """Bring the local database to `head`. No-op outside desktop/local mode."""
+    """Bring this install's own database to `head`.
+
+    No-op outside desktop/local mode, and no-op when the sidecar is pointed at a
+    database it does not own — see `_owns_database`.
+    """
     from config import get_configs  # local import: avoids a cycle at module load
 
     cfg = get_configs()
@@ -105,6 +132,16 @@ def ensure_schema() -> None:
 
     engine = get_engine()
     if engine is None:
+        return
+
+    if not _owns_database(engine):
+        # Not ours to migrate. Say so rather than starting silently: an
+        # unmigrated schema surfaces later as a baffling "no such column".
+        log.info(
+            "database is %s, not this install's — leaving migrations to its "
+            "deployment",
+            engine.dialect.name,
+        )
         return
 
     tables = set(inspect(engine).get_table_names())
