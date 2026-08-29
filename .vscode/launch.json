@@ -25,7 +25,7 @@
       "configurations": [
         "Backend: FastAPI (uvicorn)",
         "App: dev server",
-        "Desktop: Duct Dev app (build + open)"
+        "Desktop: Duct Dev app (local env)"
       ],
       "stopAll": true
     },
@@ -100,11 +100,19 @@
       "cwd": "${workspaceFolder}/desktop"
     },
     {
-      "//": "Builds the dev-variant bundle (own identifier + ai.getduct.desktop.dev scheme, so it coexists with TestFlight), waits for the Next dev server, then opens it. Unlike `tauri dev` this is a registered .app, so the sign-in deep link works. Rebuild is incremental (~15s); web changes still hot-reload. NOTE: `open` hands the app to launchd and this session ends immediately, so Stop cannot close it and no postDebugTask can be attached here — quit the app yourself, or run the 'Desktop: stop Duct Dev app' task. Force-quitting skips RunEvent::Exit and orphans its Python sidecar.",
-      "name": "Desktop: Duct Dev app (build + open)",
+      "//": "Builds the dev-variant bundle (own identifier + ai.getduct.desktop.dev scheme, so it coexists with TestFlight), waits for the Next dev server, then opens it against backend/.env.local. Unlike `tauri dev` this is a registered .app, so the sign-in deep link works. Rebuild is incremental (~15s); web changes still hot-reload. `open` hands the app to launchd, which does NOT inherit this shell's environment — hence `--env`, the only way the sidecar learns which env to embody. `--stderr` captures the app's log (including the sidecar's, relayed by sidecar.rs) where you can actually read it. NOTE: this session ends immediately, so Stop cannot close the app and no postDebugTask can be attached — quit it yourself, or run the 'Desktop: stop Duct Dev app' task. Force-quitting skips RunEvent::Exit and orphans its Python sidecar.",
+      "name": "Desktop: Duct Dev app (local env)",
       "type": "node-terminal",
       "request": "launch",
-      "command": "npm run build:dev && until curl -sf http://localhost:3003 >/dev/null 2>&1; do sleep 1; done && open 'src-tauri/target/debug/bundle/macos/Duct Dev.app'",
+      "command": "npm run build:dev && until curl -sf http://localhost:3003 >/dev/null 2>&1; do sleep 1; done && open --env DUCT_ENV_FILE=${workspaceFolder}/backend/.env.local --stderr /tmp/duct-desktop.log 'src-tauri/target/debug/bundle/macos/Duct Dev.app' && echo 'log: tail -f /tmp/duct-desktop.log'",
+      "cwd": "${workspaceFolder}/desktop"
+    },
+    {
+      "//": "Same bundle, same window (localhost:3003), but the sidecar embodies backend/.env.prod — so it reads and WRITES the production database. The frontend stays local on purpose: the deployed app.getduct.ai build registers the `ai.getduct.desktop` scheme, not this bundle's `.dev` one, so pointing the window at it would break the sign-in deep link. Use this to reproduce something that only happens on prod data; prefer the local env for everything else.",
+      "name": "Desktop: Duct Dev app (prod env)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run build:dev && until curl -sf http://localhost:3003 >/dev/null 2>&1; do sleep 1; done && open --env DUCT_ENV_FILE=${workspaceFolder}/backend/.env.prod --stderr /tmp/duct-desktop.log 'src-tauri/target/debug/bundle/macos/Duct Dev.app' && echo 'log: tail -f /tmp/duct-desktop.log'",
       "cwd": "${workspaceFolder}/desktop"
     },
     {

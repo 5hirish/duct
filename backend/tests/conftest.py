@@ -58,7 +58,7 @@ def clean_env(monkeypatch):
     from config import Configs
 
     for var in (
-        "DUCT_LOCAL", "DUCT_DESKTOP", "DUCT_DATA_DIR", "DUCT_API_KEY",
+        "DUCT_LOCAL", "DUCT_DESKTOP", "DUCT_DATA_DIR", "DUCT_API_KEY", "DUCT_ENV_FILE",
         "API_PUBLIC_URL", "FRONTEND_ORIGIN", "APP_ENV", "SENTRY_DSN",
         "DATABASE_URL", "UPLOADS_DIR", "INIT_DB_ON_STARTUP",
     ):

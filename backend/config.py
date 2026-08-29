@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import os
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
 from pydantic import AliasChoices, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -37,11 +39,51 @@ def _truthy(value: Any) -> bool:
 
 def _settings_env_files() -> tuple[Path, ...]:
     """Return dotenv files to load. Always loaded — including under pytest —
-    so integration tests can use the same API keys as the running server."""
-    return (
-        _BACKEND_DIR / ".env",
-        _BACKEND_DIR / ".env.local",
-    )
+    so integration tests can use the same API keys as the running server.
+
+    `DUCT_ENV_FILE` replaces the default pair with an explicit list (separated by
+    `os.pathsep`), so a run can be pinned to a chosen environment — the desktop
+    sidecar embodies whichever env it is started with rather than always the
+    developer's `.env.local`. Duct is configured entirely through the
+    environment, so this is the one knob that decides *which* environment; it
+    never overrides what that file says.
+
+    Relative paths resolve against `backend/`, so `DUCT_ENV_FILE=.env.prod`
+    works from anywhere — including a frozen bundle, whose `_BACKEND_DIR` points
+    inside the app and holds no env files of its own.
+    """
+    override = os.environ.get("DUCT_ENV_FILE", "").strip()
+    if not override:
+        return (
+            _BACKEND_DIR / ".env",
+            _BACKEND_DIR / ".env.local",
+        )
+    paths = []
+    for raw in override.split(os.pathsep):
+        candidate = raw.strip()
+        if not candidate:
+            continue
+        path = Path(candidate).expanduser()
+        paths.append(path if path.is_absolute() else _BACKEND_DIR / path)
+    return tuple(paths)
+
+
+def describe_database(url: str) -> str:
+    """A database URL with its credentials removed, safe to log.
+
+    The sidecar prints this at startup: which database a run ended up on is the
+    single most useful line in the log and the easiest thing to get wrong, but
+    the URL itself carries a password.
+    """
+    if not url:
+        return "(unset)"
+    parsed = urlsplit(url)
+    if parsed.scheme.startswith("sqlite"):
+        return f"sqlite {parsed.path or ':memory:'}"
+    host = parsed.hostname or "?"
+    port = f":{parsed.port}" if parsed.port else ""
+    database = parsed.path.lstrip("/") or "?"
+    return f"{parsed.scheme} {host}{port}/{database}"
 
 
 class Configs(BaseSettings):
