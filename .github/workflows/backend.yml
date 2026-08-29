@@ -44,4 +44,6 @@ jobs:
         run: poetry run ruff check server.py agents routes service tests utils
 
       - name: Pytest
-        run: poetry run pytest -q tests
+        # `live` tests are already deselected by addopts in pyproject.toml; the
+        # explicit -m keeps that visible here and survives an addopts change.
+        run: poetry run pytest -q -m "not live" tests

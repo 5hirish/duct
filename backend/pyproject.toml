@@ -68,6 +68,11 @@ log_cli_date_format = "%H:%M:%S"
 markers = [
     "live: live end-to-end tests requiring API keys (ANTHROPIC_API_KEY + DATABASE_URL).",
 ]
+# `live` tests spend real money (model calls, image generation) and hit real
+# third-party accounts. Deselect them by default so neither CI nor a developer
+# with keys exported in their shell can fire them by typing `pytest`. Opt in
+# explicitly with `pytest -m live` — a command-line -m overrides this one.
+addopts = ["-m", "not live"]
 filterwarnings = [
     # Starlette form parser; third-party until FastAPI/Starlette adopts python_multipart import.
     "ignore:Please use `import python_multipart` instead\\.:PendingDeprecationWarning",

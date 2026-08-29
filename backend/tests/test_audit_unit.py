@@ -17,21 +17,15 @@ from __future__ import annotations
 
 import asyncio
 import json
-import sys
-from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
-# Load backend/.env.local so secrets are available without the server's loader.
-for _env_file in (ROOT / ".env", ROOT / ".env.local"):
-    if _env_file.exists():
-        from dotenv import load_dotenv
-        load_dotenv(_env_file, override=False)
+# NOTE: this module must NOT load .env / .env.local. Doing so at import time
+# writes real secrets into os.environ for the whole pytest session, which flips
+# every other module's `live` skipif gate from "skip" to "run" and fires paid
+# API calls. Nothing here needs a real key: the mocked tests patch the SDK
+# client, and the two SDK-plumbing tests below supply their own env.
 
 
 # ---------------------------------------------------------------------------

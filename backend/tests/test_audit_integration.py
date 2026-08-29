@@ -32,19 +32,15 @@ All tests have a 5-minute (300s) outer timeout.
 """
 
 import logging
-import sys
 import time
 from pathlib import Path
 
 import pytest
 
+from config import get_configs
+
 ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
 logger = logging.getLogger(__name__)
-
-from config import get_configs  # noqa: E402 — path must be set first
 
 _cfg = get_configs()
 _HAS_API_KEY = bool(_cfg.anthropic_api_key)
@@ -209,6 +205,11 @@ def _save_html_preview(data: dict, stem: str) -> Path:
 # Test 1 — Crawl only (no Claude)
 # ---------------------------------------------------------------------------
 
+# `live`: crawls the real production site. The two tests below are already
+# marked, and this one belongs with them — the _HAS_NETWORK probe uses urllib
+# while the crawler uses httpx, so a probe that passes does not guarantee the
+# crawl will (it returned HTTP 0 behind an egress proxy that let the probe through).
+@pytest.mark.live
 @pytest.mark.skipif(not _HAS_NETWORK, reason="getduct.ai unreachable from this environment")
 async def test_crawl_real_page():
     """Crawls getduct.ai and verifies the crawl layer produces sensible output."""

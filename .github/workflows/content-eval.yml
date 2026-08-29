@@ -15,12 +15,6 @@ name: Content Agent Eval
 
 on:
   workflow_dispatch:
-  # TEMP(verify): branch-scoped push trigger so this eval can be exercised from
-  # the feature branch (workflow_dispatch only works once the file is on the
-  # default branch). Remove this `push:` block after verification.
-  push:
-    branches:
-      - claude/sleepy-knuth-vtioc5
 
 permissions:
   contents: read
