@@ -9,6 +9,19 @@ backwards compatibility.
 IMPORTANT: the string values are a contract with the frontend
 (app/src/lib/auditEvents.js, app/src/lib/contentEvents.js). Never change an
 existing value; only add new members.
+
+The one deliberate exception: ``report_chunk`` → ``artifact_chunk`` and
+``report_updated`` → ``artifact_version``. "Report" was audit-specific
+vocabulary sitting on a mechanism every agent uses — content streams plans and
+post drafts through the same tag, and the artifact store versions all of them
+alike. The Python names are gone outright — nothing in the tree referenced them, and
+a deprecated alias nobody uses is just a second name to keep true. Only the
+*frontend* still accepts both strings, which is what makes the migration:
+
+    deploy the app first, then the backend.
+
+An older app meeting a newer backend is the only broken pairing, and that
+ordering removes it. Drop the frontend's legacy branches once both are out.
 """
 
 from __future__ import annotations
@@ -41,11 +54,18 @@ class AgentEvent(StrEnum):
     AGENT_MESSAGE = "agent_message"
     MESSAGE_STOP = "message_stop"
     THINKING_CHUNK = "thinking_chunk"        # model extended-thinking delta
-    REPORT_CHUNK = "report_chunk"            # streaming token inside <duct_report>
+    ARTIFACT_CHUNK = "artifact_chunk"        # streaming token inside <duct_artifact>
     SYNTHESIS_CHUNK = "synthesis_chunk"      # insights synthesis stream; legacy alias on audit
 
     # Terminal payloads
-    REPORT_UPDATED = "report_updated"        # audit: a new versioned report
+    #
+    # Two artifact events, deliberately distinct:
+    #   ARTIFACT_VERSION — a new *version* of the session's primary artifact,
+    #     carrying the full payload + version_id + label. The artifact store
+    #     intercepts it and persists the version (service/artifact_store.py).
+    #   ARTIFACT_UPDATED — a compact *card* for the chat transcript, for any
+    #     artifact. No payload, no version semantics.
+    ARTIFACT_VERSION = "artifact_version"    # new version of the primary artifact
     PLAN_GENERATED = "plan_generated"        # content: 30-day plan
     POST_DRAFT_UPDATED = "post_draft_updated"  # content: a post draft
     ARTIFACT_UPDATED = "artifact_updated"    # generic artifact created/revised (card in chat)
@@ -155,4 +175,77 @@ STEP_LABELS: dict[AgentStep, str] = {
     AgentStep.ASSEMBLE_REPORT: "Assembling report",
     # Shared
     AgentStep.ENRICHING: "Researching competitors",
+}
+
+
+# ---------------------------------------------------------------------------
+# AG-UI alignment (agents/core/ports — the "events out" port)
+# ---------------------------------------------------------------------------
+#
+# AG-UI (https://docs.ag-ui.com) is the emerging standard for agent→frontend
+# event streams: ~30 typed events over SSE/WebSocket. Duct's vocabulary predates
+# it and largely agrees with it — STEP_STARTED/STEP_FINISHED are already
+# name-for-name identical.
+#
+# We map rather than rename, deliberately:
+#
+#   * Renaming `agent_message_chunk` → `text_message_content` would break every
+#     consumer to buy nothing. The wire value is an internal contract; what has
+#     to be portable is the *meaning*, and a mapping carries that exactly.
+#   * Roughly half of Duct's events are domain events (artifacts, memory,
+#     staged execution) that no protocol will ever cover. AG-UI's answer for
+#     those is `Custom` — so "aligning" them would mean flattening real meaning
+#     into a generic envelope. Contorting domain events to fit a standard is the
+#     same mistake as contorting them to fit an SDK.
+#
+# This table is the whole adapter. A future AG-UI endpoint is a ~30-line
+# translation over it, not a refactor. Keep it exhaustive: the boundary test in
+# tests/test_harness_boundaries.py fails if an AgentEvent is missing here.
+
+AG_UI_EVENT: dict[AgentEvent, str] = {
+    # Lifecycle — exact matches
+    AgentEvent.PIPELINE_STARTED:      "RunStarted",
+    AgentEvent.PIPELINE_FINISHED:     "RunFinished",
+    AgentEvent.PIPELINE_FAILED:       "RunError",
+    AgentEvent.STEP_STARTED:          "StepStarted",
+    AgentEvent.STEP_FINISHED:         "StepFinished",
+    # AG-UI has no StepFailed; failure rides in the payload's `status` field
+    # (StepStatus.ERROR), which is how AG-UI models step outcomes too.
+    AgentEvent.STEP_FAILED:           "StepFinished",
+
+    # Streaming text + reasoning
+    AgentEvent.AGENT_MESSAGE_CHUNK:   "TextMessageContent",
+    AgentEvent.AGENT_MESSAGE:         "TextMessageChunk",
+    AgentEvent.MESSAGE_STOP:          "TextMessageEnd",
+    AgentEvent.THINKING_CHUNK:        "ReasoningMessageContent",
+    AgentEvent.SYNTHESIS_CHUNK:       "TextMessageContent",
+
+    # Progress. Todos are an activity feed in AG-UI's model, and TodoWrite
+    # always ships the full list, so the snapshot form is the right one.
+    AgentEvent.TODO_UPDATE:           "ActivitySnapshot",
+
+    # Domain events — Custom is AG-UI's escape hatch and the honest answer.
+    AgentEvent.QUESTIONS_REQUIRED:    "Custom",
+    AgentEvent.SLIDE_RENDER_REQUESTED: "Custom",
+    AgentEvent.ARTIFACT_CHUNK:        "Custom",
+    AgentEvent.ARTIFACT_VERSION:      "Custom",
+    AgentEvent.ARTIFACT_UPDATED:      "Custom",
+    AgentEvent.PLAN_GENERATED:        "Custom",
+    AgentEvent.POST_DRAFT_UPDATED:    "Custom",
+    AgentEvent.EXECUTION_PROPOSED:    "Custom",
+    AgentEvent.MEMORY_WRITTEN:        "Custom",
+    AgentEvent.MEMORY_RECALLED:       "Custom",
+}
+
+# Persisted conversation kinds → AG-UI. Only the tool kinds have real analogues;
+# the rest are message roles AG-UI carries in MessagesSnapshot rather than as
+# their own events.
+AG_UI_EVENT_KIND: dict[EventKind, str] = {
+    EventKind.USER:        "MessagesSnapshot",
+    EventKind.ASSISTANT:   "MessagesSnapshot",
+    EventKind.THINKING:    "ReasoningMessageContent",
+    EventKind.QUESTION:    "Custom",
+    EventKind.ANSWER:      "Custom",
+    EventKind.TOOL_USE:    "ToolCallStart",
+    EventKind.TOOL_RESULT: "ToolCallResult",
 }

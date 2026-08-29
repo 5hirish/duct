@@ -5,7 +5,7 @@ until V1 earns confidence (`backend/CLAUDE.md`). Nothing here modifies V3.
 
 What is reused rather than reimplemented — the reason this file is short:
 
-* ``agents/core/stream.py::DuctReportStreamParser`` — the ``<duct_report>`` tag
+* ``agents/core/stream.py::DuctArtifactStreamParser`` — the ``<duct_artifact>`` tag
   state machine is ours and framework-neutral.
 * ``agents/core/session.py::bridge_ask_user_question`` — already engine-agnostic:
   it emits QUESTIONS_REQUIRED and awaits an asyncio.Future resolved by the
@@ -41,8 +41,15 @@ from agents.core.session import (
     BaseAgentSession,
     bridge_ask_user_question,
 )
-from agents.core.stream import DuctReportStreamParser
-from agents.models import ModelName, Provider, get_api_key_kwargs
+from agents.core.stream import DuctArtifactStreamParser
+from agents.core.telemetry import model_span
+from agents.models import (
+    OPENAI_COMPATIBLE_BASE_URL,
+    ModelName,
+    Provider,
+    get_api_key_kwargs,
+    langchain_provider,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -106,14 +113,39 @@ def build_ask_user_tool(
     )
 
 
-def resolve_model(provider: Provider, model: ModelName, api_key: str, temperature: float = 1.0):
-    """Any LangChain-supported provider — this is the point of the migration."""
+def resolve_model(
+    provider: Provider,
+    model: ModelName | str,
+    api_key: str,
+    temperature: float = 1.0,
+    *,
+    base_url: str = "",
+):
+    """Any LangChain-supported provider — this is the point of the migration.
+
+    ``model`` may be a plain string: OpenRouter slugs are passed through
+    un-enumerated (see agents/engines.resolve_engine_model). ``base_url`` is
+    only consulted by OpenAI-compatible providers.
+    """
     return init_chat_model(
-        model=model.value,
-        model_provider=provider.value,
+        model=getattr(model, "value", model),
+        model_provider=langchain_provider(provider),
         temperature=temperature,
-        **get_api_key_kwargs(provider, api_key),
+        **get_api_key_kwargs(provider, api_key, base_url=base_url or _default_base_url(provider)),
     )
+
+def _default_base_url(provider: Provider) -> str:
+    """Installation-level endpoint override for OpenAI-compatible providers.
+
+    Read here rather than threaded through every route because it is an
+    install-wide setting, not a per-request one — and because agents/models.py
+    stays a config-free leaf module. Native providers never consult it.
+    """
+    if provider not in OPENAI_COMPATIBLE_BASE_URL:
+        return ""
+    from config import get_configs
+    return getattr(get_configs(), "openrouter_base_url", "") or ""
+
 
 
 def build_audit_agent(
@@ -163,37 +195,48 @@ async def stream_audit(
     prompt: str,
     emit: Callable,
     *,
-    on_report_close: Callable,
+    on_artifact_close: Callable,
     log_prefix: str = "audit-v1",
     config: dict | None = None,
+    provider: Provider | None = None,
+    model: ModelName | str = "",
+    conversation_id: str = "",
 ) -> None:
     """Drive the agent and translate its stream into Duct's SSE vocabulary.
 
     Emits the same ``AgentEvent`` values as V3 so the frontend is unchanged:
-    AGENT_MESSAGE_CHUNK for prose, REPORT_CHUNK for tokens inside
-    ``<duct_report>``, THINKING_CHUNK for reasoning deltas, MESSAGE_STOP at the
+    AGENT_MESSAGE_CHUNK for prose, ARTIFACT_CHUNK for tokens inside
+    ``<duct_artifact>``, THINKING_CHUNK for reasoning deltas, MESSAGE_STOP at the
     end of the turn.
     """
-    parser = DuctReportStreamParser(
+    parser = DuctArtifactStreamParser(
         on_text=lambda text: emit({"event": AgentEvent.AGENT_MESSAGE_CHUNK, "text": text}),
-        on_report_chunk=lambda text: emit({"event": AgentEvent.REPORT_CHUNK, "text": text}),
-        on_report_close=on_report_close,
+        on_artifact_chunk=lambda text: emit({"event": AgentEvent.ARTIFACT_CHUNK, "text": text}),
+        on_artifact_close=on_artifact_close,
         log_prefix=log_prefix,
     )
 
-    async for mode, chunk in agent.astream(
-        {"messages": [{"role": "user", "content": prompt}]},
-        config or {},
-        stream_mode=["messages", "updates"],
+    # V3 gets OTel traces free from the Claude Agent SDK; V1 does not, so the
+    # span is emitted here. Same convention either way — see core/telemetry.py.
+    with model_span(
+        provider=(provider or Provider.ANTHROPIC).value,
+        model=getattr(model, "value", model) or "unknown",
+        conversation_id=conversation_id,
+        agent_name=log_prefix,
     ):
-        if mode != "messages":
-            continue
-        message, _meta = chunk
-        text, thinking = _split_chunk(message)
-        if thinking:
-            await emit({"event": AgentEvent.THINKING_CHUNK, "text": thinking})
-        if text:
-            await parser.feed(text)
+        async for mode, chunk in agent.astream(
+            {"messages": [{"role": "user", "content": prompt}]},
+            config or {},
+            stream_mode=["messages", "updates"],
+        ):
+            if mode != "messages":
+                continue
+            message, _meta = chunk
+            text, thinking = _split_chunk(message)
+            if thinking:
+                await emit({"event": AgentEvent.THINKING_CHUNK, "text": thinking})
+            if text:
+                await parser.feed(text)
 
     await emit({"event": AgentEvent.MESSAGE_STOP})
 
@@ -325,7 +368,7 @@ class LangChainAuditRunner:
             )
             report_holder["report"] = report
             await emit({
-                "event": _E.REPORT_UPDATED,
+                "event": _E.ARTIFACT_VERSION,
                 "version_id": version_id,
                 "payload": report.model_dump(),
             })
@@ -352,19 +395,22 @@ class LangChainAuditRunner:
             "status": "running",
         })
 
-        async def _on_report_close(raw: str, turn_text: str) -> None:
+        async def _on_artifact_close(raw: str, turn_text: str) -> None:
             """Freehand mode delivers the report inline rather than via tools."""
             import json as _json
             try:
                 await _on_submit(_json.loads(raw))
             except Exception:  # noqa: BLE001 — a malformed inline payload is not fatal
-                logger.warning("audit-v1: could not parse inline <duct_report> payload", exc_info=True)
+                logger.warning("audit-v1: could not parse inline <duct_artifact> payload", exc_info=True)
 
         await stream_audit(
             agent,
             build_audit_user_prompt(crawl_result, business_context, extra_context=extra_context),
             emit,
-            on_report_close=_on_report_close,
+            on_artifact_close=_on_artifact_close,
+            provider=self.provider,
+            model=self.model,
+            conversation_id=session_id,
         )
 
         await emit({

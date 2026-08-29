@@ -3,15 +3,27 @@
 The actual analysis protocols / quality briefs stay per-agent (and per-engine
 where they legitimately differ) — this module only standardizes the *wrapping*
 conventions every agent already converged on: XML-tagged context blocks and the
-JSON-output / ``<duct_report>`` instructions.
+JSON-output / ``<duct_artifact>`` instructions.
 """
 
 from __future__ import annotations
 
-# The streaming report tag every Claude-SDK agent wraps its final structured
-# payload in (parsed by agents/core/stream.py).
-DUCT_REPORT_OPEN = "<duct_report>"
-DUCT_REPORT_CLOSE = "</duct_report>"
+# The streaming artifact tag every agent wraps its final structured payload in
+# (parsed by agents/core/stream.py). "Artifact" — not "report" — because the
+# payload is a report only for audit; content emits plans and post drafts
+# through the same tag, and the artifact store versions all of them alike.
+DUCT_ARTIFACT_OPEN = "<duct_artifact>"
+DUCT_ARTIFACT_CLOSE = "</duct_artifact>"
+
+# Legacy tag. Still *accepted* by the parser so conversations recorded before
+# the rename replay correctly and a prompt-cached turn mid-flight does not
+# strand its payload. Never emitted in new prompts.
+LEGACY_ARTIFACT_OPEN = "<duct_report>"
+LEGACY_ARTIFACT_CLOSE = "</duct_report>"
+
+# Deprecated aliases — import DUCT_ARTIFACT_* instead.
+DUCT_REPORT_OPEN = DUCT_ARTIFACT_OPEN
+DUCT_REPORT_CLOSE = DUCT_ARTIFACT_CLOSE
 
 
 # Memory discipline — shared by every agent that has the memory tools mounted

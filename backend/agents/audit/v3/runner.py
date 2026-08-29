@@ -49,7 +49,7 @@ from agents.audit.schema import (
 from agents.core import claude_sdk as _sdk
 from agents.core import session as _core_session
 from agents.core.session import bridge_ask_user_question, register_session
-from agents.core.stream import DuctReportStreamParser, pump_stream_event
+from agents.core.stream import DuctArtifactStreamParser, pump_stream_event
 from agents.engines import Engine, get_env_var_for_engine_provider
 from agents.engines import ENGINE_DEFAULT_EFFORT
 from agents.models import AgentEffort, AgentPermissionMode, AgentTool, ModelName, Provider, ThinkingMode
@@ -278,8 +278,8 @@ async def run_synthesis(
     the reprime block on the user's first message (routes.agents.send_message).
 
     The model produces a conversational analysis, then wraps the initial AuditReport
-    JSON in <duct_report>…</duct_report> tags. A streaming tag parser buffers the JSON
-    (keeping it out of the chat UI) and fires REPORT_UPDATED when the closing tag
+    JSON in <duct_artifact>…</duct_artifact> tags. A streaming tag parser buffers the JSON
+    (keeping it out of the chat UI) and fires ARTIFACT_VERSION when the closing tag
     arrives. All non-tag text is forwarded to the frontend as AGENT_MESSAGE_CHUNK.
     Extended thinking tokens are forwarded as THINKING_CHUNK for the collapsible UI.
 
@@ -330,14 +330,14 @@ async def run_synthesis(
     async def _can_use_tool(tool_name: str, input_data: dict, context: Any) -> Any:
         # FetchPages is only useful after the initial report — block it until then
         # to prevent the model from wasting all 60 turns on tool calls before
-        # generating the <duct_report> JSON.
+        # generating the <duct_artifact> JSON.
         # FetchPages: only after the initial report is generated
         if tool_name == AuditTool.FETCH_PAGES:
             if initial_report is None:
                 first_step = (
                     "Finish the report first (StartAuditReport → AddAuditCategory ×9 → FinalizeAuditReport)"
                     if report_mode == "template"
-                    else "Produce the <duct_report> HTML first"
+                    else "Produce the <duct_artifact> HTML first"
                 )
                 return PermissionResultDeny(
                     message=(
@@ -426,7 +426,7 @@ async def run_synthesis(
         else:
             logger.info(
                 "synthesis: report v%d finalised — %d chars HTML, %d chunks",
-                version_id, len(report.html_report), parser.report_chunk_count,
+                version_id, len(report.html_report), parser.artifact_chunk_count,
             )
         versioned = VersionedReport(
             version_id=version_id,
@@ -436,7 +436,7 @@ async def run_synthesis(
         )
         session.report_versions.append(versioned)
         await emit({
-            "event": AuditEvent.REPORT_UPDATED,
+            "event": AuditEvent.ARTIFACT_VERSION,
             "version_id": version_id,
             "label": report.update_label,
             "payload": report.model_dump(),
@@ -691,22 +691,22 @@ async def run_synthesis(
     _tok_cache_read = 0
     _tok_cache_write = 0
 
-    # <duct_report> streaming is handled by the shared parser (core/stream).
+    # <duct_artifact> streaming is handled by the shared parser (core/stream).
     # Audit streams HTML and builds an AuditReport from the closed payload.
     async def _on_text(text: str) -> None:
         await emit({"event": AuditEvent.AGENT_MESSAGE_CHUNK, "text": text})
 
-    async def _on_report_chunk(text: str) -> None:
-        await emit({"event": AuditEvent.REPORT_CHUNK, "text": text})
+    async def _on_artifact_chunk(text: str) -> None:
+        await emit({"event": AuditEvent.ARTIFACT_CHUNK, "text": text})
 
-    async def _on_report_open() -> None:
+    async def _on_artifact_open() -> None:
         elapsed = (perf_counter() - _first_token_at) if _first_token_at else 0.0
         logger.info(
-            "synthesis: <duct_report> opened — HTML streaming started (%.1fs after first token)",
+            "synthesis: <duct_artifact> opened — HTML streaming started (%.1fs after first token)",
             elapsed,
         )
 
-    async def _on_report_close(raw_html: str, turn_text: str) -> None:
+    async def _on_artifact_close(raw_html: str, turn_text: str) -> None:
         nonlocal initial_report
         from datetime import datetime, timezone
         initial_report = AuditReport(
@@ -718,11 +718,11 @@ async def run_synthesis(
         )
         await _emit_report_version(initial_report, 1)
 
-    parser = DuctReportStreamParser(
+    parser = DuctArtifactStreamParser(
         on_text=_on_text,
-        on_report_chunk=_on_report_chunk,
-        on_report_close=_on_report_close,
-        on_open=_on_report_open,
+        on_artifact_chunk=_on_artifact_chunk,
+        on_artifact_close=_on_artifact_close,
+        on_open=_on_artifact_open,
         log_prefix="synthesis",
     )
 
@@ -763,7 +763,7 @@ async def run_synthesis(
         full_text = "".join(parser.turn_text)
         parser.turn_text.clear()
 
-        # Fallback: if report was parsed but REPORT_UPDATED not yet emitted
+        # Fallback: if report was parsed but ARTIFACT_VERSION not yet emitted
         if initial_report is not None and len(session.report_versions) == 0:
             await _emit_report_version(initial_report, 1)
 
@@ -819,7 +819,7 @@ async def run_synthesis(
             # fall through to the chat loop below.
             latest = session.report_versions[-1]
             await emit({
-                "event": AuditEvent.REPORT_UPDATED,
+                "event": AuditEvent.ARTIFACT_VERSION,
                 "version_id": latest.version_id,
                 "label": latest.label,
                 "payload": latest.report.model_dump(),
@@ -839,12 +839,12 @@ async def run_synthesis(
 
         # Recovery: with extended thinking on a large crawl, the model
         # sometimes spends the whole turn reasoning and ends WITHOUT emitting
-        # <duct_report> (surfaces as out=0 / "no report generated"). It has
+        # <duct_artifact> (surfaces as out=0 / "no report generated"). It has
         # the analysis — it just didn't output the report. Nudge it once to
         # produce the report before giving up, which salvages most of these.
         if not session.report_versions:  # type: ignore[attr-defined]
             logger.warning(
-                "synthesis: turn 1 produced no <duct_report> (out=%d) for session %s — "
+                "synthesis: turn 1 produced no <duct_artifact> (out=%d) for session %s — "
                 "sending one recovery nudge", _tok_out, session_id,
             )
             async def _recover_gen():
@@ -852,7 +852,7 @@ async def run_synthesis(
                     "type": "user",
                     "message": (
                         "You analysed the data but did not emit the report. Output the "
-                        "complete <duct_report>…</duct_report> now, in full — do not run "
+                        "complete <duct_artifact>…</duct_artifact> now, in full — do not run "
                         "more tools or add further analysis, just produce the report."
                     ),
                 }
@@ -903,7 +903,7 @@ async def run_synthesis(
     )
     if initial_report is None:
         logger.error(
-            "synthesis: NO REPORT for session %s — model ended without <duct_report> "
+            "synthesis: NO REPORT for session %s — model ended without <duct_artifact> "
             "(out=%d tokens, reasoned=%s) even after the recovery nudge; likely "
             "extended-thinking / max_turns exhaustion. Surfaces as a failed audit; "
             "a retry usually succeeds.",

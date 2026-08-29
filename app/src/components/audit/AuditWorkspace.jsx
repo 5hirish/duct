@@ -222,7 +222,8 @@ export default function AuditWorkspace({ sessionId, auditParams, publicMode = fa
         }
         break;
 
-      case AuditEvent.REPORT_CHUNK:
+      case AuditEvent.ARTIFACT_CHUNK:
+      case AuditEvent.LEGACY_REPORT_CHUNK:
         htmlBatchRef.current += event.text;
         clearTimeout(htmlBatchTimer.current);
         htmlBatchTimer.current = setTimeout(() => {
@@ -230,7 +231,8 @@ export default function AuditWorkspace({ sessionId, auditParams, publicMode = fa
         }, 80);
         break;
 
-      case AuditEvent.REPORT_UPDATED:
+      case AuditEvent.ARTIFACT_VERSION:
+      case AuditEvent.LEGACY_REPORT_UPDATED:
         // replay=True: a stored version re-emitted on resume — render it, but
         // skip the celebration bubble and step-clearing meant for fresh runs.
         if (event.replay) {
@@ -288,7 +290,7 @@ export default function AuditWorkspace({ sessionId, auditParams, publicMode = fa
           setSelectedVersionId(1);
           setPhase(Phase.READY);
         } else if (reportReceivedRef.current) {
-          // Report already arrived via REPORT_UPDATED
+          // Report already arrived via ARTIFACT_VERSION
           setPhase(Phase.READY);
         } else {
           // Pipeline completed but no report was ever produced

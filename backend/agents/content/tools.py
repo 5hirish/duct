@@ -610,7 +610,7 @@ def build_content_mcp_server(
             "Persist a 30-day content plan. Validates the payload against the "
             "PlanDraft schema, upserts a content_plans row scoped to this "
             "project, and emits a PLAN_GENERATED event so the workspace "
-            "renders the plan. Call this AFTER emitting <duct_report>{\"type\":\"plan\",...}</duct_report>."
+            "renders the plan. Call this AFTER emitting <duct_artifact>{\"type\":\"plan\",...}</duct_artifact>."
         ),
         input_schema={
             "plan": Annotated[
@@ -674,7 +674,7 @@ def build_content_mcp_server(
             "Persist a single post draft. Validates against PostDraft schema, "
             "upserts a content_posts row keyed by (project_id, post_dir_slug), "
             "and emits POST_DRAFT_UPDATED. Call AFTER emitting "
-            "<duct_report>{\"type\":\"post\",...}</duct_report>."
+            "<duct_artifact>{\"type\":\"post\",...}</duct_artifact>."
         ),
         input_schema={
             "post": Annotated[

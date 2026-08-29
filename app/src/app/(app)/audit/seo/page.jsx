@@ -158,7 +158,7 @@ export default function SeoAuditSetupPage() {
         remember,
         user_preferences: loadPreferences(),
         // Structured template report (matches the lead-magnet flow): the agent
-        // calls SubmitAuditReport instead of streaming freeform <duct_report>
+        // calls SubmitAuditReport instead of streaming freeform <duct_artifact>
         // HTML. Backend default is "freehand"; this opts the app audit into the
         // same template the public audit uses.
         report_mode: ReportMode.TEMPLATE,

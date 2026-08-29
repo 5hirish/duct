@@ -2,7 +2,7 @@
 
 ``ArtifactPersister`` mirrors ``ConversationRecorder``: it persists by wrapping
 the runner's emit callback (SSE first, DB/storage after, never blocks or breaks
-the stream). It intercepts ``REPORT_UPDATED`` events, so the audit runner needs
+the stream). It intercepts ``ARTIFACT_VERSION`` events, so the audit runner needs
 no knowledge of persistence at all.
 
 Freehand report HTML goes to private object storage (``storage.put_private``,
@@ -592,11 +592,18 @@ async def summarize_report(report: AuditReport, api_key: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Persister — wraps emit, intercepts REPORT_UPDATED
+# Persister — wraps emit, intercepts ARTIFACT_VERSION
 # ---------------------------------------------------------------------------
 
 class ArtifactPersister:
-    """Persists every versioned report a session emits, as one artifact group.
+    """Persists every artifact version a session emits, as one artifact group.
+
+    Note on vocabulary: the *mechanism* is artifact-shaped (it intercepts
+    ARTIFACT_VERSION and writes ``artifacts`` rows), while the payload it
+    validates is still an ``AuditReport`` and its ``kind`` is still ``"report"``.
+    Both are correct — ``kind`` discriminates report / document / ticket / image
+    (see models/artifact.py), so it names what this artifact *is*, not the
+    mechanism carrying it.
 
     Contract mirrors ConversationRecorder.wrap_emit: SSE delivery always comes
     first, persistence is best-effort, and nothing here ever raises into the
@@ -640,7 +647,7 @@ class ArtifactPersister:
             try:
                 # replay=True marks a rehydrated version re-emitted for the UI
                 # on resume — already stored, never persist it again.
-                if body.get("event") == AgentEvent.REPORT_UPDATED and not body.get("replay"):
+                if body.get("event") == AgentEvent.ARTIFACT_VERSION and not body.get("replay"):
                     await self._persist_report(body)
             except Exception:
                 logger.warning(

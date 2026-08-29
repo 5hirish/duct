@@ -39,7 +39,14 @@ from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
 from langchain_core.tools import StructuredTool
 from pydantic import BaseModel
 
-from agents.models import ModelName, Provider, get_api_key_kwargs
+from agents.core.telemetry import model_span
+from agents.models import (
+    OPENAI_COMPATIBLE_BASE_URL,
+    ModelName,
+    Provider,
+    get_api_key_kwargs,
+    langchain_provider,
+)
 from agents.insights.goals import InsightGenerationGoal, goal_heading_text
 from agents.insights.goals.organic_growth import OrganicGrowthGoal
 from agents.insights.prompts import get_synthesis_user_prompt, get_system_prompt
@@ -74,6 +81,20 @@ class _NoArgs(BaseModel):
     chooses the tool and nothing else."""
 
 
+
+def _default_base_url(provider: Provider) -> str:
+    """Installation-level endpoint override for OpenAI-compatible providers.
+
+    Read here rather than threaded through every route because it is an
+    install-wide setting, not a per-request one — and because agents/models.py
+    stays a config-free leaf module. Native providers never consult it.
+    """
+    if provider not in OPENAI_COMPATIBLE_BASE_URL:
+        return ""
+    from config import get_configs
+    return getattr(get_configs(), "openrouter_base_url", "") or ""
+
+
 class GenerateInsightsAgent:
     """Insight generation agent with goal-driven tool use + structured output.
 
@@ -97,16 +118,24 @@ class GenerateInsightsAgent:
         self,
         api_key: str,
         provider: Provider = Provider.GOOGLE_GENAI,
-        model: ModelName = ModelName.GEMINI_2_5_FLASH,
+        model: ModelName | str = ModelName.GEMINI_2_5_FLASH,
         temperature: float = 1.0,
+        base_url: str = "",
     ) -> None:
         self.provider = provider
         self.model = model
+        # May be a ModelName or a passthrough OpenRouter slug — always
+        # format through this, never `self.model.value`.
+        self.model_id = getattr(model, "value", model)
 
-        api_key_kwargs = get_api_key_kwargs(provider, api_key)
+        # base_url is only consulted by OpenAI-compatible providers (OpenRouter
+        # and any gateway it is repointed at); native providers ignore it.
+        api_key_kwargs = get_api_key_kwargs(
+            provider, api_key, base_url=base_url or _default_base_url(provider)
+        )
         self.llm = init_chat_model(
-            model=model.value,
-            model_provider=provider.value,
+            model=getattr(model, "value", model),
+            model_provider=langchain_provider(provider),
             temperature=temperature,
             **api_key_kwargs,
         )
@@ -287,7 +316,7 @@ class GenerateInsightsAgent:
             )
         except Exception:
             logger.exception(
-                "Phase 1 failed with %s/%s", self.provider.value, self.model.value
+                "Phase 1 failed with %s/%s", self.provider.value, self.model_id
             )
             return {}
 
@@ -339,21 +368,28 @@ class GenerateInsightsAgent:
 
         start = perf_counter()
         try:
-            if emit_event is not None:
-                result = await self._synthesize_streaming(messages, emit_event)
-            else:
-                result = await self.llm_structured.ainvoke(messages)
+            # The one LLM-shaped step in insights (Phase 1 is plain
+            # asyncio.gather over callables), so it is the span worth having.
+            with model_span(
+                provider=self.provider.value,
+                model=self.model_id,
+                agent_name="insights-v1",
+            ):
+                if emit_event is not None:
+                    result = await self._synthesize_streaming(messages, emit_event)
+                else:
+                    result = await self.llm_structured.ainvoke(messages)
         except Exception:
             logger.exception(
                 "Phase 2 (synthesis) failed with %s/%s, returning None",
                 self.provider.value,
-                self.model.value,
+                self.model_id,
             )
             return None
 
         logger.info(
             "Phase 2 (synthesis) completed in %.1fs with %s/%s",
-            perf_counter() - start, self.provider.value, self.model.value,
+            perf_counter() - start, self.provider.value, self.model_id,
         )
         return result
 

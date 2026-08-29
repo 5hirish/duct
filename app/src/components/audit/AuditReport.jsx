@@ -233,7 +233,7 @@ export default function AuditReport({
 
   const reportMode = selectedVersion?.report?.report_mode ?? "freehand";
   const structuredData = selectedVersion?.report?.structured_data ?? null;
-  // finalHtml is the complete HTML from REPORT_UPDATED — never the streaming partial chunks.
+  // finalHtml is the complete HTML from ARTIFACT_VERSION — never the streaming partial chunks.
   // We only show the iframe once we have the full document to avoid white-flash reloads on
   // every srcDoc update during the streaming phase.
   const finalHtml = selectedVersion?.report?.html_report || "";

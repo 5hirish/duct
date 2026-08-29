@@ -142,6 +142,38 @@ Route convention: each agent type gets its own route prefix:
 
 Cross-agent invocations are modelled at the frontend level (e.g. audit findings carry an `invoke_insights` action that pre-populates the insights wizard). Backend agents remain decoupled — no direct calls between agent types.
 
+## Agent ports — the harness boundary
+
+We rent an agent harness; we do not marry one. The full declaration (with the
+port table and the external standard behind each) lives in
+`agents/core/ports/__init__.py` — read it before adding anything that touches a
+framework. The rules it implies:
+
+- **Never write an `AgentHarness` interface.** Harnesses differ in capability,
+  not just API shape; the intersection loses the reason to use one and the
+  union means maintaining a framework. The harness stays harness-shaped inside
+  a runner, and only its *boundary* is standardized.
+- **Domain code imports no framework.** Tool bodies, prompts, schemas, goals and
+  scoring are plain Python. `agents/core/memory_tools.py` is the reference
+  shape: `_remember_sync` / `_search_sync` / `_get_sync` hold the logic, and
+  `build_memory_tools_lc` / `build_memory_tools_sdk` are thin binders.
+- **Framework imports live only in adapters** — runners, binders, and the
+  named shims. `tests/test_harness_boundaries.py` enforces this and lists the
+  allowlist; adding a file to that list is a deliberate act, not a fix for a
+  failing test.
+- **Write the adapter on the second implementation, not the first.** One
+  implementation is a guess. Do not abstract the session registry until the
+  LangGraph checkpointer actually lands beside it.
+- **Pick the lowest rung that works.** LangChain 1.x is layered, and the layers
+  carry different stability guarantees: `init_chat_model` and `create_agent` are
+  on the semver-stable 1.x LTS surface (no breaking changes until 2.0), while
+  `deepagents` is 0.x with no stability policy and a weekly cadence. Insights
+  needs the first, audit the second, content the third. Reaching for
+  `deepagents` where `create_agent` suffices buys churn for nothing.
+- **`deepagents` is pinned exactly**, not with a caret — it changes behaviour in
+  minors (task planning became opt-in in 0.7). `tests/test_deepagents_harness.py`
+  is the upgrade gate; run it before moving the pin.
+
 ## Artifact contract
 
 The app lists top-level `*.json` briefs in `data/google_ads/` (e.g. `google-ads-report.json`) for local dev; user-generated insights are returned from `POST /api/insights/generate` and stored client-side (`localStorage`).

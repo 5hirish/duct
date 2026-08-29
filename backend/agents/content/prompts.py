@@ -509,7 +509,7 @@ in_progress / completed as you go. Use the real steps you're actually doing.
    varied hooks, sensible post-type distribution. If topic bank is stale,
    dispatch one research_pillar sub-agent PER PILLAR IN PARALLEL (single
    turn, multiple Agent tool calls). Compose the plan yourself and emit
-   <duct_report>{"type":"plan",...}</duct_report>. Call submit_plan with
+   <duct_artifact>{"type":"plan",...}</duct_artifact>. Call submit_plan with
    the same payload.
 3. Draft mode (draft_post) — WRITE PHASE.
    - Author the post as STRUCTURED SLIDES: pick a `layout`, then write one
@@ -519,7 +519,7 @@ in_progress / completed as you go. Use the real steps you're actually doing.
      yourself.
    - You do NOT write slides_html (the system renders it from the layout
      template) and you do NOT generate images in this phase.
-   - Emit <duct_report>{"type":"post",...}</duct_report> and call
+   - Emit <duct_artifact>{"type":"post",...}</duct_artifact> and call
      submit_post_draft. The viewport renders each slide with its image
      prompt shown as a placeholder, so the user can review + edit the copy
      and the prompts before any image is generated.
@@ -527,7 +527,7 @@ in_progress / completed as you go. Use the real steps you're actually doing.
    - Inline edits ("strengthen the hook on slide 3", "give me 3 alt captions
      for slide 1", "make slide-2's image prompt moodier") — do them yourself.
      For brainstorming, offer options IN CHAT; only emit a fresh
-     <duct_report> + submit_post_draft once the user picks a change to
+     <duct_artifact> + submit_post_draft once the user picks a change to
      commit. Call fetch_post first to ground the edit on the live slides.
    - A caption edit is just overlay text: it re-renders instantly and does
      NOT require regenerating the image. Only the `image_prompt` (the scene)
@@ -535,9 +535,9 @@ in_progress / completed as you go. Use the real steps you're actually doing.
      that slide's image_prompt too and tell the user the image will refresh.
 5. Image phase — only when the user approves the writing (see IMAGE GENERATION).
 
-## ARTIFACT CONTRACT — <duct_report>
+## ARTIFACT CONTRACT — <duct_artifact>
 
-Emit EXACTLY one <duct_report>…</duct_report> per deliverable, wrapping
+Emit EXACTLY one <duct_artifact>…</duct_artifact> per deliverable, wrapping
 ONE JSON object with a "type" discriminator ("plan" or "post"). No
 markdown fences inside the tag. No commentary inside the tag. For posts the
 JSON carries STRUCTURED `slides` — never raw HTML.
@@ -679,7 +679,7 @@ WHEN NOT to dispatch:
   photo yet since this slide sets the character." Bad: "generate slide-01 with
   gemini-3-pro-image, no input_asset_ids." Same action, no leaked internals.
 - Conversational prose → write to chat directly (the user sees it).
-- Deliverables → inside <duct_report>, then writer tool.
+- Deliverables → inside <duct_artifact>, then writer tool.
 - NEVER write slides_html or raw HTML — author structured `slides`; the
   system renders the HTML from the layout template.
 - NEVER call submit_post_draft / submit_plan without first emitting the
@@ -1007,12 +1007,12 @@ def _mode_tail(mode: RunMode) -> str:
         "plan_month": (
             "MODE: plan_month — your deliverable this turn is a full monthly "
             "content plan (an ordered list of posts for the current month, no "
-            "day numbers) as a PlanDraft wrapped in <duct_report>. Call "
+            "day numbers) as a PlanDraft wrapped in <duct_artifact>. Call "
             "submit_plan once after emitting the tag."
         ),
         "draft_post": (
             "MODE: draft_post — your deliverable this turn is ONE PostDraft "
-            "wrapped in <duct_report>, then submit_post_draft once. You author "
+            "wrapped in <duct_artifact>, then submit_post_draft once. You author "
             "STRUCTURED SLIDES (copy + an image_prompt per slide) + a layout — "
             "NOT HTML — and you do NOT generate images yet. Images wait until "
             "the user is happy with the written draft (see IMAGE GENERATION).\n\n"
@@ -1131,7 +1131,7 @@ Now:
    can repeat a pillar across series with different angles (e.g.
    face_shape series A: cuts; face_shape series B: glasses).
 
-4. Emit the plan inside <duct_report>{{ "type": "plan", ... }}</duct_report>
+4. Emit the plan inside <duct_artifact>{{ "type": "plan", ... }}</duct_artifact>
    then call submit_plan with the same payload.
 5. Brief summary in chat: what the plan covers and what comes next.
 """
@@ -1261,7 +1261,7 @@ Now — WRITE PHASE (copy + image prompts only; NO images yet):
    slide_count — each with copy (caption_style + headline + optional subtext)
    and an `image_prompt`. Do NOT write slides_html and do NOT call
    generate_image.
-4. Emit the draft inside <duct_report>{{ "type": "post", ... }}</duct_report>
+4. Emit the draft inside <duct_artifact>{{ "type": "post", ... }}</duct_artifact>
    then call submit_post_draft.
 5. Brief summary in chat: hook used, layout, slide count, what makes this
    different — then ASK the user to review the copy + image prompts, and tell

@@ -169,7 +169,7 @@ async def test_stream_emits_the_shared_event_vocabulary(crawl_result, emitted):
     async def on_close(_raw: str, _turn: str) -> None:
         pass
 
-    await stream_audit(agent, "audit getduct.ai", emitted, on_report_close=on_close)
+    await stream_audit(agent, "audit getduct.ai", emitted, on_artifact_close=on_close)
 
     kinds = [e["event"] for e in emitted.events]
     assert AgentEvent.MESSAGE_STOP in kinds
@@ -179,9 +179,9 @@ async def test_stream_emits_the_shared_event_vocabulary(crawl_result, emitted):
 
 
 async def test_stream_routes_report_payload_to_the_parser(crawl_result, emitted):
-    """Text inside <duct_report> is REPORT_CHUNK, prose outside is a message."""
+    """Text inside <duct_artifact> is ARTIFACT_CHUNK, prose outside is a message."""
     llm = ToolCallingFake(
-        responses=[AIMessage(content="Summary first.<duct_report>{\"a\":1}</duct_report>")]
+        responses=[AIMessage(content="Summary first.<duct_artifact>{\"a\":1}</duct_artifact>")]
     )
     agent = build_audit_agent(crawl_result=crawl_result, llm=llm, system_prompt="audit")
 
@@ -190,7 +190,7 @@ async def test_stream_routes_report_payload_to_the_parser(crawl_result, emitted)
     async def on_close(raw: str, turn: str) -> None:
         closed.append((raw, turn))
 
-    await stream_audit(agent, "audit", emitted, on_report_close=on_close)
+    await stream_audit(agent, "audit", emitted, on_artifact_close=on_close)
 
     assert closed, "the report tag should have closed"
     raw, _turn = closed[0]

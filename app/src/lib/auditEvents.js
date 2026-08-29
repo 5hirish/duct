@@ -12,8 +12,8 @@ export const AuditEvent = Object.freeze({
   STEP_FINISHED:       "step_finished",
 
   QUESTIONS_REQUIRED:  "questions_required",
-  REPORT_UPDATED:      "report_updated",
-  ARTIFACT_UPDATED:    "artifact_updated",
+  ARTIFACT_VERSION:    "artifact_version",   // new version of the primary artifact (full payload)
+  ARTIFACT_UPDATED:    "artifact_updated",   // compact artifact card in the transcript
   EXECUTION_PROPOSED:  "execution_proposed",  // change-set card; upsert by change_set_id
   MEMORY_WRITTEN:      "memory_written",      // the quiet "Remembered: …" line
   MEMORY_RECALLED:     "memory_recalled",     // ids the turn was primed with
@@ -27,7 +27,13 @@ export const AuditEvent = Object.freeze({
 
   THINKING_CHUNK:      "thinking_chunk",    // extended-thinking delta
 
-  REPORT_CHUNK:        "report_chunk",      // streaming HTML token inside <duct_report>
+  ARTIFACT_CHUNK:      "artifact_chunk",    // streaming HTML token inside <duct_artifact>
+
+  // Legacy wire values. The backend no longer emits these; they stay here so an
+  // app deployed ahead of the backend keeps rendering. Deploy order is app then
+  // backend — see backend/agents/core/events.py. Remove once both are out.
+  LEGACY_REPORT_UPDATED: "report_updated",
+  LEGACY_REPORT_CHUNK:   "report_chunk",
 });
 
 export const AuditStep = Object.freeze({

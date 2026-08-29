@@ -20,7 +20,10 @@ export const ContentEvent = Object.freeze({
   MESSAGE_STOP:        "message_stop",
 
   THINKING_CHUNK:      "thinking_chunk",
-  REPORT_CHUNK:        "report_chunk",
+  ARTIFACT_CHUNK:      "artifact_chunk",    // streaming token inside <duct_artifact>
+
+  // Legacy wire value — see auditEvents.js. Remove once app + backend are both out.
+  LEGACY_REPORT_CHUNK: "report_chunk",
 
   PLAN_GENERATED:      "plan_generated",
   POST_DRAFT_UPDATED:  "post_draft_updated",

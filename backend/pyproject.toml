@@ -48,7 +48,12 @@ claude-agent-sdk = ">=0.2"
 selectolax = ">=0.3"
 extruct = ">=0.16"
 trafilatura = ">=2.0"
-deepagents = "^0.7"
+deepagents = "0.7.11"   # exact: 0.x with no stability policy; changes behaviour in minors (task planning became opt-in in 0.7). tests/test_deepagents_harness.py is the upgrade gate.
+# OTel GenAI spans for the LangChain (v1) path — v3 gets tracing from the
+# Claude Agent SDK, v1 does not. The API only; an exporter is configured at
+# runtime (Sentry OTLP today). Was satisfied transitively via google-adk;
+# explicit so dropping the frozen v2 engine cannot silently stop the spans.
+opentelemetry-api = "^1.41"
 reportlab = ">=4.2"
 cloudflare = ">=4.1"
 
@@ -58,6 +63,8 @@ pytest-asyncio = "^1.0"
 ruff = "^0.15"
 arize-phoenix = "^16.3.0"
 pyinstaller = "^6.11"
+# In-memory span exporter for tests/test_telemetry.py.
+opentelemetry-sdk = "^1.41"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

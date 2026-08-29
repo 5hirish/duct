@@ -29,6 +29,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from agents.core.telemetry import tool_span
 from models.memory import SCOPE_PROJECT, SCOPE_USER, SOURCE_AGENT, SOURCE_USER
 from utils.dates import parse_iso
 
@@ -269,13 +270,26 @@ def _get_sync(memory_id: str, *, project_id, user_id) -> dict:
         return {"memory": _entry_payload(row, full=True)}
 
 
+# The tool each DB helper backs. Mapped here rather than passed at every call
+# site so the span lives at the one choke point both binders share — which is
+# the point: one OTel span shape whether LangChain or the Claude Agent SDK
+# invoked the tool.
+_TOOL_NAMES = {
+    "_remember_sync": "RememberFact",
+    "_search_sync": "SearchMemory",
+    "_get_sync": "GetMemory",
+}
+
+
 async def _run(fn, *args, **kwargs) -> dict:
     """Run a sync DB helper off the event loop, turning failures into payloads."""
-    try:
-        return await asyncio.to_thread(fn, *args, **kwargs)
-    except Exception as exc:  # noqa: BLE001 — tools report errors, never raise
-        logger.warning("memory tool failed", exc_info=True)
-        return {"status": "error", "message": str(exc)}
+    name = _TOOL_NAMES.get(getattr(fn, "__name__", ""), "memory")
+    with tool_span(tool_name=name, agent_name=kwargs.get("agent_type", "") or ""):
+        try:
+            return await asyncio.to_thread(fn, *args, **kwargs)
+        except Exception as exc:  # noqa: BLE001 — tools report errors, never raise
+            logger.warning("memory tool failed", exc_info=True)
+            return {"status": "error", "message": str(exc)}
 
 
 async def _notify(on_memory: Callable[[dict], Any] | None, payload: dict) -> None:

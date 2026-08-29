@@ -13,6 +13,13 @@ class Provider(str, Enum):
     OPENAI = "openai"
     GOOGLE_GENAI = "google_genai"
     ANTHROPIC = "anthropic"
+    # OpenRouter is not a fourth SDK — it is the OpenAI-compatible chat
+    # completions shape pointed at a different base URL. That shape is the most
+    # durable interface in this stack (every provider implements it), which is
+    # why the endpoint is a config value: override the base URL and the same
+    # code path reaches Ollama, vLLM, llama.cpp, Together, or a self-hosted
+    # gateway. See agents/core/ports — this is the model-transport port.
+    OPENROUTER = "openrouter"
 
 
 class ModelName(str, Enum):
@@ -34,6 +41,17 @@ class ModelName(str, Enum):
     # Anthropic
     CLAUDE_SONNET = "claude-sonnet-4-6"
     CLAUDE_HAIKU = "claude-haiku-4-5"
+
+    # OpenRouter — vendor/slug form. A *curated default list*, not a whitelist:
+    # OpenRouter fronts 500+ models, so resolve_engine_model passes an unknown
+    # slug through verbatim rather than silently substituting a default. These
+    # are the open-weight / long-tail models worth naming.
+    OR_DEEPSEEK_CHAT = "deepseek/deepseek-chat"
+    OR_QWEN3_235B = "qwen/qwen3-235b-a22b"
+    OR_KIMI_K2 = "moonshotai/kimi-k2"
+    OR_GLM_4_6 = "z-ai/glm-4.6"
+    OR_CLAUDE_SONNET = "anthropic/claude-sonnet-4.6"
+    OR_GPT_5_MINI = "openai/gpt-5-mini"
 
 
 class AgentTool(StrEnum):
@@ -159,11 +177,47 @@ DEFAULT_MODELS = {
     Provider.OPENAI: ModelName.GPT_5_MINI,
     Provider.GOOGLE_GENAI: ModelName.GEMINI_2_5_FLASH,
     Provider.ANTHROPIC: ModelName.CLAUDE_SONNET,
+    Provider.OPENROUTER: ModelName.OR_DEEPSEEK_CHAT,
+}
+
+# Default endpoint for each OpenAI-compatible provider. Overridable per install
+# (config.openrouter_base_url) so the same transport reaches any compatible
+# gateway — a local Ollama or vLLM included.
+OPENAI_COMPATIBLE_BASE_URL: dict[Provider, str] = {
+    Provider.OPENROUTER: "https://openrouter.ai/api/v1",
 }
 
 
-def get_api_key_kwargs(provider: Provider, api_key: str) -> dict:
-    """Return the correct keyword argument for the given provider."""
+def langchain_provider(provider: Provider) -> str:
+    """The ``model_provider`` string LangChain's init_chat_model expects.
+
+    OpenAI-compatible providers resolve to ``"openai"`` — they are the OpenAI
+    chat-completions wire format at a different base URL, not a distinct
+    integration. Keeping the mapping here means call sites never special-case
+    a provider, and adding another compatible gateway is one dict entry.
+    """
+    if provider in OPENAI_COMPATIBLE_BASE_URL:
+        return Provider.OPENAI.value
+    return provider.value
+
+
+def get_api_key_kwargs(
+    provider: Provider,
+    api_key: str,
+    *,
+    base_url: str = "",
+) -> dict:
+    """Credential (and endpoint) kwargs for the given provider.
+
+    Passed as a constructor kwarg, never by mutating ``os.environ`` — a global
+    mutation races across concurrent requests carrying different BYO keys, and
+    lets a server-side key win over the user's.
+    """
+    if provider in OPENAI_COMPATIBLE_BASE_URL:
+        return {
+            "api_key": api_key,
+            "base_url": base_url or OPENAI_COMPATIBLE_BASE_URL[provider],
+        }
     if provider == Provider.OPENAI:
         return {"openai_api_key": api_key}
     if provider == Provider.GOOGLE_GENAI:
