@@ -553,6 +553,10 @@ async def run_synthesis(
         # opens the artifact viewer.
         await emit({"event": AuditEvent.ARTIFACT_UPDATED, "artifact": card})
 
+    async def _on_memory_written(entry: dict) -> None:
+        # The quiet "Remembered: …" line under the turn, with undo.
+        await emit({"event": AuditEvent.MEMORY_WRITTEN, "memory": entry})
+
     _mcp = build_audit_mcp_server(
         crawl_result,
         report_mode=report_mode,
@@ -562,6 +566,7 @@ async def run_synthesis(
         artifact_user_id=_session_user,
         artifact_conversation_id=getattr(session, "conversation_id", None),
         on_artifact=_on_artifact_card,
+        on_memory=_on_memory_written,
     )
     _artifact_tools = (
         [
@@ -570,6 +575,9 @@ async def run_synthesis(
             AuditTool.CREATE_ARTIFACT,
             AuditTool.UPDATE_ARTIFACT,
             AuditTool.REWRITE_ARTIFACT,
+            AuditTool.REMEMBER_FACT,
+            AuditTool.SEARCH_MEMORY,
+            AuditTool.GET_MEMORY,
         ]
         if _artifact_project
         else []

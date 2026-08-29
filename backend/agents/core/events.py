@@ -54,6 +54,13 @@ class AgentEvent(StrEnum):
     # back) — the UI upserts by change_set_id.
     EXECUTION_PROPOSED = "execution_proposed"
 
+    # Memory (project_memories). MEMORY_WRITTEN carries the entries a turn
+    # stored — the quiet "Remembered: …" line, with undo. MEMORY_RECALLED
+    # carries the ids a turn was primed with, which the UI renders as chips
+    # linking back to the source.
+    MEMORY_WRITTEN = "memory_written"
+    MEMORY_RECALLED = "memory_recalled"
+
 
 class EventKind(StrEnum):
     """Persisted conversation-event categories — the ``kind`` column on

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Check, Users, X } from "lucide-react";
+import { Brain, Check, Users, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -417,12 +417,22 @@ export default function OnboardingPage() {
           {/* Members live with the project they grant access to. Hidden until
               the project exists — there is nobody to invite to a draft. */}
           {projectMeta?.id && (
-            <Button asChild variant="ghost" size="sm" className="ml-auto">
-              <Link href={`/project/${projectMeta.id}/members`}>
-                <Users className="size-4" />
-                Members
-              </Link>
-            </Button>
+            <div className="ml-auto flex items-center gap-1">
+              {/* The targets set here become project memory, so the timeline
+                  that shows them belongs next to the form that writes them. */}
+              <Button asChild variant="ghost" size="sm">
+                <Link href={`/project/${projectMeta.id}/memory`}>
+                  <Brain className="size-4" />
+                  Memory
+                </Link>
+              </Button>
+              <Button asChild variant="ghost" size="sm">
+                <Link href={`/project/${projectMeta.id}/members`}>
+                  <Users className="size-4" />
+                  Members
+                </Link>
+              </Button>
+            </div>
           )}
         </div>
 

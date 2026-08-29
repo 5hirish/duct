@@ -8,6 +8,7 @@ import AuditStepProgress from "./AuditStepProgress";
 import AuditQuestions from "./AuditQuestions";
 import AuditInput from "./AuditInput";
 import AuditTodos from "./AuditTodos";
+import { Brain } from "lucide-react";
 import { Phase } from "./auditPhase";
 import { CodeBlock, resolveCode } from "./CodeBlock";
 import {
@@ -16,6 +17,64 @@ import {
   rejectChangeSet,
   rollbackChangeSet,
 } from "@/lib/executionApi";
+import { getActiveProject } from "@/lib/projects";
+
+/** The quiet "Remembered: …" line under a turn that wrote project memory.
+ * Deliberately understated — memory should feel like a side effect the user can
+ * see and undo, not an announcement. Each entry links to its timeline row. */
+function MemoryNote({ memories }) {
+  const projectId = getActiveProject()?.id;
+  if (!memories?.length) return null;
+  return (
+    <div className="my-1.5 flex flex-wrap items-center gap-1.5 px-1 text-xs text-muted-foreground">
+      <Brain size={13} aria-hidden="true" />
+      <span>Remembered:</span>
+      {memories.map((m, i) => (
+        <span key={m.id || i}>
+          {projectId ? (
+            <a
+              href={`/project/${projectId}/memory?q=${encodeURIComponent(m.title || "")}`}
+              className="underline underline-offset-2 hover:text-foreground"
+            >
+              {m.title}
+            </a>
+          ) : (
+            m.title
+          )}
+          {i < memories.length - 1 ? "," : ""}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+/** "Recalled N memories" — what this turn was primed with, listed on demand so
+ * an answer can always be traced back to the facts behind it. */
+function MemoryRecall({ memoryIds }) {
+  const projectId = getActiveProject()?.id;
+  if (!memoryIds?.length) return null;
+  return (
+    <details className="my-1.5 px-1 text-xs text-muted-foreground">
+      <summary className="cursor-pointer select-none hover:text-foreground">
+        <Brain size={13} className="mr-1 inline-block align-[-2px]" aria-hidden="true" />
+        Recalled {memoryIds.length} {memoryIds.length === 1 ? "memory" : "memories"}
+      </summary>
+      <p className="mt-1 flex flex-wrap gap-1.5 font-mono text-[11px]">
+        {memoryIds.map((id) => (
+          <span key={id} className="rounded bg-muted/60 px-1.5 py-0.5">{id}</span>
+        ))}
+      </p>
+      {projectId && (
+        <a
+          href={`/project/${projectId}/memory`}
+          className="mt-1 inline-block underline underline-offset-2 hover:text-foreground"
+        >
+          Open the project timeline
+        </a>
+      )}
+    </details>
+  );
+}
 
 /** Compact chip for an artifact the agent just created/revised — opens the
  * artifact viewer. Industry "card-in-stream" convention. */
@@ -523,6 +582,10 @@ export default function AuditChat({
             <ArtifactCard key={i} artifact={msg.artifact} />
           ) : msg.role === "change_set_card" ? (
             <ChangeSetCard key={msg.changeSet?.change_set_id || i} changeSet={msg.changeSet} />
+          ) : msg.role === "memory_note" ? (
+            <MemoryNote key={i} memories={msg.memories} />
+          ) : msg.role === "memory_recall" ? (
+            <MemoryRecall key={i} memoryIds={msg.memoryIds} />
           ) : (
             <ChatBubble key={i} role={msg.role} text={msg.text} thinking={msg.thinking} streaming={msg.streaming} />
           )

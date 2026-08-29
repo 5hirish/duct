@@ -29,6 +29,7 @@ from agents.core.events import AgentEvent
 from db.session import get_session as db_session
 from models.artifact import Artifact
 from service.activity import log_activity
+from service.memory import record_artifact_memory
 from service.storage import delete_private, get_private_bytes, put_private
 from utils.dates import utcnow
 from utils.strings import slugify
@@ -229,6 +230,10 @@ def persist_artifact_version(
             ),
             data={"group_id": str(group_id), "version": version, "kind": kind, "slug": slug},
         )
+        # Artifact memory: one entry per version, so reports reach the project
+        # timeline and the agent digest without anyone listing them. Best-effort
+        # like the activity row above — never fails the artifact write.
+        record_artifact_memory(db, row)
     return row
 
 

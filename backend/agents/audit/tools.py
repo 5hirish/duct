@@ -30,6 +30,7 @@ from agents.audit.schema import (
     PageSignals,
     StructuredAuditData,
 )
+from agents.core.memory_tools import build_memory_tools_sdk
 from service.crawl.extractor import extract_signals
 from service.crawl.fetcher import SSRFError, fetch, make_client, validate_public_url
 
@@ -44,10 +45,11 @@ def build_audit_mcp_server(
     report_mode: str = "freehand",
     on_submit_report=None,    # async (args: dict) -> dict | None
     on_category_added=None,   # async (count: int, category: dict) -> None — live progress
-    project_id=None,          # UUID | None — mounts the artifact tools when set
+    project_id=None,          # UUID | None — mounts the artifact + memory tools when set
     artifact_user_id=None,    # UUID | None — attribution for artifact writes
     artifact_conversation_id=None,  # UUID | None — chat linkage for artifact writes
     on_artifact=None,         # async (card: dict) -> None — in-chat artifact card emit
+    on_memory=None,           # async (entry: dict) -> None — "Remembered: …" line emit
 ) -> McpSdkServerConfig:
     """Build the in-process MCP server scoped to this audit session's site.
 
@@ -134,6 +136,15 @@ def build_audit_mcp_server(
             user_id=artifact_user_id,
             conversation_id=artifact_conversation_id,
             on_artifact=on_artifact,
+        ))
+        # Memory is cross-agent, so the tools come from agents/core rather than
+        # being redefined per agent type.
+        tools.extend(build_memory_tools_sdk(
+            project_id,
+            user_id=artifact_user_id,
+            conversation_id=artifact_conversation_id,
+            agent_type="audit_seo",
+            on_memory=on_memory,
         ))
 
     if report_mode == "template":

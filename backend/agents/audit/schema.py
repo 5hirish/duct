@@ -56,6 +56,9 @@ class AuditTool(StrEnum):
     CREATE_ARTIFACT       = "mcp__duct_crawl__CreateArtifact"      # mint a memo/dataset/diagram artifact
     UPDATE_ARTIFACT       = "mcp__duct_crawl__UpdateArtifact"      # exact-string patch → new version
     REWRITE_ARTIFACT      = "mcp__duct_crawl__RewriteArtifact"     # full-content replace → new version
+    REMEMBER_FACT         = "mcp__duct_crawl__RememberFact"        # write one durable project memory
+    SEARCH_MEMORY         = "mcp__duct_crawl__SearchMemory"        # recall beyond the injected digest
+    GET_MEMORY            = "mcp__duct_crawl__GetMemory"           # one memory entry, full detail
     START_AUDIT_REPORT    = "mcp__duct_crawl__StartAuditReport"    # template: incremental build, step 1
     ADD_AUDIT_CATEGORY    = "mcp__duct_crawl__AddAuditCategory"    # template: incremental build, step 2 (×9)
     FINALIZE_AUDIT_REPORT = "mcp__duct_crawl__FinalizeAuditReport" # template: incremental build, step 3

@@ -328,6 +328,26 @@ export default function AuditWorkspace({ sessionId, auditParams, publicMode = fa
         setMessages((prev) => [...prev, { role: "artifact_card", artifact: event.artifact }]);
         break;
 
+      // The agent remembered something. Several writes in one turn collapse
+      // into a single quiet line rather than stacking up as separate notes.
+      case AuditEvent.MEMORY_WRITTEN: {
+        if (!event.memory) break;
+        setMessages((prev) => {
+          const last = prev[prev.length - 1];
+          if (last?.role === "memory_note") {
+            return [...prev.slice(0, -1), { ...last, memories: [...last.memories, event.memory] }];
+          }
+          return [...prev, { role: "memory_note", memories: [event.memory] }];
+        });
+        break;
+      }
+
+      // The turn was primed with these memories — the "Recalled N" affordance.
+      case AuditEvent.MEMORY_RECALLED:
+        if (!event.memory_ids?.length) break;
+        setMessages((prev) => [...prev, { role: "memory_recall", memoryIds: event.memory_ids }]);
+        break;
+
       // The agent proposed (or updated) a staged change set — inline review
       // card. Emitted again on state changes (auto-applied, rolled back), so
       // upsert by change_set_id instead of appending duplicates.

@@ -59,17 +59,15 @@ from agents.engines import PROVIDER_CONFIG_ATTR, resolve_engine, resolve_engine_
 from agents.registry import AgentType, get_spec, list_specs
 from config import claude_oauth_available, get_configs
 from models.auth import User
-from agents.core.context import format_agent_context, format_prior_artifacts
-from models.agent_context import AgentContext
 from service.artifact_store import (
     ArtifactPersister,
     artifacts_for_conversation,
     load_report_as_versioned,
-    recent_artifact_summaries,
 )
 from service.auth import get_current_user_optional
 from service.crawl.fetcher import SSRFError, validate_public_url
 from service.membership import member_role
+from service.memory import build_memory_context, short_id, touch_recall
 from utils.dates import now_iso
 
 logger = logging.getLogger(__name__)
@@ -806,37 +804,42 @@ async def _start_seo_audit(session_id: str, body: dict, emit_fn: Any) -> None:
             )
             return emit
 
-    def _project_memory_blocks() -> str:
-        """<prior_reports> + <agent_context> for the session's verified project.
+    async def _project_memory_blocks(query: str = "") -> str:
+        """<project_memory> + <user_memory> + <prior_reports> + <agent_context>.
 
         Per-project data — injected into the USER message (fresh runs) or the
-        resume primer, never the system prompt. Best-effort: returns ""."""
+        resume primer, never the system prompt, so the cached system prefix stays
+        byte-identical across customers. Best-effort: returns "".
+
+        Emits MEMORY_RECALLED with the entries the turn was primed with, which
+        the UI renders as chips linking back to each memory's source.
+        """
         project_uuid = getattr(session, "artifact_project_id", None)
         if project_uuid is None:
             return ""
         try:
-            from sqlalchemy import select as _select
-
             with next(db_session()) as db:
-                prior = recent_artifact_summaries(db, project_uuid, kind="report", limit=5)
-                ctx_row = (
-                    db.execute(
-                        _select(AgentContext).where(
-                            AgentContext.project_id == project_uuid,
-                            AgentContext.agent_id == str(AgentType.SEO_AUDIT),
-                        )
-                    )
-                    .scalars()
-                    .first()
+                context = build_memory_context(
+                    db,
+                    project_id=project_uuid,
+                    user_id=owner_id,
+                    agent_type=str(AgentType.SEO_AUDIT),
+                    query=query,
                 )
-                blocks = [
-                    format_prior_artifacts(prior),
-                    format_agent_context(ctx_row.data if ctx_row else None),
-                ]
-            return "\n".join(b for b in blocks if b)
+                touch_recall(db, context.recalled_ids)
         except Exception:
             logger.warning("agents: project memory blocks unavailable", exc_info=True)
             return ""
+
+        if context.recalled_ids:
+            try:
+                await emit_fn({
+                    "event": AuditEvent.MEMORY_RECALLED,
+                    "memory_ids": [short_id(i) for i in context.recalled_ids],
+                })
+            except Exception:
+                logger.debug("agents: MEMORY_RECALLED emit failed", exc_info=True)
+        return context.text
 
     # ------------------------------------------------------------------
     # Resume: rehydrate the stored report, skip crawl + synthesis
@@ -873,7 +876,7 @@ async def _start_seo_audit(session_id: str, body: dict, emit_fn: Any) -> None:
             session, summary_key,
             subject="the current audit report (shown in the working_report block)",
         )
-        memory = _project_memory_blocks()
+        memory = await _project_memory_blocks(query=url)
         session.resume_primer = f"{primer}{memory}\n\n" if memory else primer
 
         async def resume_pipeline() -> None:
@@ -919,9 +922,10 @@ async def _start_seo_audit(session_id: str, body: dict, emit_fn: Any) -> None:
             except Exception:
                 logger.debug("agents: audit head event failed", exc_info=True)
 
-    # Project memory (prior report summaries + stored agent context) rides in
-    # the initial user prompt — the agent starts knowing what past audits found.
-    extra_context = _project_memory_blocks()
+    # Project memory (digest + prior report summaries + stored agent context)
+    # rides in the initial user prompt — the agent starts knowing what past
+    # audits found, what is currently broken, and what the targets are.
+    extra_context = await _project_memory_blocks(query=url)
 
     async def pipeline() -> None:
         try:

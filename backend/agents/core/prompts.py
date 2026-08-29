@@ -14,14 +14,20 @@ DUCT_REPORT_OPEN = "<duct_report>"
 DUCT_REPORT_CLOSE = "</duct_report>"
 
 
-def xml_block(tag: str, content: str) -> str:
+def xml_block(tag: str, content: str, attrs: dict[str, str] | None = None) -> str:
     """Wrap ``content`` in a labelled XML block, or return '' when empty.
 
     Standardizes the ``<business_context>`` / ``<data>`` / ``<user_preferences>``
     / ``<content_research>`` convention used across agents so blocks render and
-    parse consistently.
+    parse consistently. ``attrs`` adds opening-tag attributes for blocks that
+    carry metadata the model should read — ``<project_memory as_of="…">``.
     """
     body = (content or "").strip()
     if not body:
         return ""
-    return f"<{tag}>\n{body}\n</{tag}>"
+    rendered = "".join(
+        f' {name}="{str(value).replace(chr(34), "")}"'
+        for name, value in (attrs or {}).items()
+        if value
+    )
+    return f"<{tag}{rendered}>\n{body}\n</{tag}>"

@@ -27,6 +27,7 @@ from sqlmodel import Session
 from models.execution import ExecutionChangeSet, ExecutionGuardrail
 from models.project import Project
 from service.activity import log_activity
+from service.memory import record_change_set_memory
 from service.execution.guardrails import violations_for
 from service.execution.policy import change_auto_eligible, should_auto_apply
 from service.execution.registry import get_executor
@@ -328,6 +329,10 @@ def apply_change_set(
         data={"applied": applied, "failed": failed, "applied_by": applied_by},
     )
     _log_gtm_publishes(db, row, newly_applied, source=actor)
+    # What we actually did to the account becomes project memory, keyed on the
+    # change set — a later rollback supersedes this entry rather than
+    # contradicting it. Best-effort: never fails an apply that already ran.
+    record_change_set_memory(db, row, applied=applied, failed=failed)
     return row
 
 
@@ -383,4 +388,7 @@ def rollback_change_set(
         data={"reverted": reverted, "errors": errors},
     )
     _log_gtm_publishes(db, row, newly_rolled_back, source=actor)
+    # Same state key as the apply entry above, so the digest shows "rolled back"
+    # and the timeline keeps both rows with their validity ranges.
+    record_change_set_memory(db, row, applied=reverted, failed=errors)
     return row

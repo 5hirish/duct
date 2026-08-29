@@ -34,6 +34,7 @@ from pydantic import BaseModel, Field
 
 from agents.audit.schema import CrawlResult
 from agents.audit.v1.tools import build_audit_tools
+from agents.core.memory_tools import build_memory_tools_lc
 from agents.core.events import AgentEvent
 from agents.core.session import (
     ASK_USER_TIMEOUT,
@@ -126,6 +127,10 @@ def build_audit_agent(
     report_mode: str = "template",
     on_submit_report: Callable | None = None,
     on_category_added: Callable | None = None,
+    project_id=None,          # UUID | None — mounts the memory tools when set
+    user_id=None,             # UUID | None — attribution for memory writes
+    conversation_id=None,     # UUID | None — provenance for memory writes
+    on_memory: Callable | None = None,  # async (entry: dict) -> None
 ):
     """Assemble the audit agent: crawl/report tools plus optional mid-run questions."""
     tools = build_audit_tools(
@@ -133,6 +138,15 @@ def build_audit_agent(
         report_mode=report_mode,
         on_submit_report=on_submit_report,
         on_category_added=on_category_added,
+    )
+    # project_id arrives already membership-checked (routes/agents.py stamps it
+    # on the session only after verifying the caller belongs to the project).
+    tools += build_memory_tools_lc(
+        project_id,
+        user_id=user_id,
+        conversation_id=conversation_id,
+        agent_type="audit_seo",
+        on_memory=on_memory,
     )
     if session is not None and emit is not None:
         tools.append(build_ask_user_tool(session, session_id, emit))

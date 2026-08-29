@@ -176,6 +176,14 @@ don't fit.
 - `utils/strings.py` — `slugify()`, `titleize()`.
 - `utils/formatting.py` — `money()`, `number()`, `percent()`, `multiplier()`,
   `safe_divide()`.
+- `service/memory.py` — agent memory (`project_memories`): `remember()` is the
+  ONLY write path (it redacts secrets, dedupes, and closes the previous value of
+  a state key), `search()` is the only read path (Postgres FTS, SQLite LIKE),
+  and `build_memory_context()` assembles the prompt blocks. Never write the
+  table directly and never re-render the digest locally — the supersession and
+  never-raise contracts live in that module. Tools for both harnesses are in
+  `agents/core/memory_tools.py`; per-project memory goes in the USER message,
+  never the system prompt.
 - `service/rest.py` — sync HTTP transport for the reporting connectors:
   retry, backoff, rate-limit pacing, error typing. A new connector declares
   an `Endpoint` and an `ApiError` subclass and writes no transport code;
