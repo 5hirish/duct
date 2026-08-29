@@ -131,6 +131,7 @@ def build_audit_agent(
     user_id=None,             # UUID | None — attribution for memory writes
     conversation_id=None,     # UUID | None — provenance for memory writes
     on_memory: Callable | None = None,  # async (entry: dict) -> None
+    remember: bool = True,    # False = a session the user asked not to be remembered
 ):
     """Assemble the audit agent: crawl/report tools plus optional mid-run questions."""
     tools = build_audit_tools(
@@ -141,13 +142,16 @@ def build_audit_agent(
     )
     # project_id arrives already membership-checked (routes/agents.py stamps it
     # on the session only after verifying the caller belongs to the project).
-    tools += build_memory_tools_lc(
-        project_id,
-        user_id=user_id,
-        conversation_id=conversation_id,
-        agent_type="audit_seo",
-        on_memory=on_memory,
-    )
+    # An unremembered session gets no memory tools: the agent cannot write what
+    # it cannot reach.
+    if remember:
+        tools += build_memory_tools_lc(
+            project_id,
+            user_id=user_id,
+            conversation_id=conversation_id,
+            agent_type="audit_seo",
+            on_memory=on_memory,
+        )
     if session is not None and emit is not None:
         tools.append(build_ask_user_tool(session, session_id, emit))
 

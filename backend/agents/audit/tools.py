@@ -50,6 +50,7 @@ def build_audit_mcp_server(
     artifact_conversation_id=None,  # UUID | None — chat linkage for artifact writes
     on_artifact=None,         # async (card: dict) -> None — in-chat artifact card emit
     on_memory=None,           # async (entry: dict) -> None — "Remembered: …" line emit
+    remember: bool = True,    # False = a session the user asked not to be remembered
 ) -> McpSdkServerConfig:
     """Build the in-process MCP server scoped to this audit session's site.
 
@@ -138,14 +139,16 @@ def build_audit_mcp_server(
             on_artifact=on_artifact,
         ))
         # Memory is cross-agent, so the tools come from agents/core rather than
-        # being redefined per agent type.
-        tools.extend(build_memory_tools_sdk(
-            project_id,
-            user_id=artifact_user_id,
-            conversation_id=artifact_conversation_id,
-            agent_type="audit_seo",
-            on_memory=on_memory,
-        ))
+        # being redefined per agent type. An unremembered session gets no memory
+        # tools at all — the agent cannot write what it cannot reach.
+        if remember:
+            tools.extend(build_memory_tools_sdk(
+                project_id,
+                user_id=artifact_user_id,
+                conversation_id=artifact_conversation_id,
+                agent_type="audit_seo",
+                on_memory=on_memory,
+            ))
 
     if report_mode == "template":
         # Incremental build accumulator — persists across the Start/Add/Finalize

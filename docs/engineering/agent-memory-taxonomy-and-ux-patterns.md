@@ -8,6 +8,11 @@ parts worth re-reading on their own — **what the literature converged on** and
 they can be cited from design docs without opening the report. arXiv ids are given
 inline; sources are at the bottom.
 
+Part B is the checklist Duct's memory UI is built against — which of these patterns
+shipped, and which are deliberately deferred, is recorded in
+[`agent-memory-research.html`](agent-memory-research.html) §07 rather than here, so this
+file stays a reference to what other products do.
+
 ---
 
 ## Part A · Synthesis — the taxonomy the field converged on

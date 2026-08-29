@@ -304,6 +304,10 @@ async def run_synthesis(
     _artifact_project = getattr(session, "artifact_project_id", None)
     _session_user = getattr(session, "user_id", None)
     _execution_enabled = _artifact_project is not None and _session_user is not None
+    # "Don't remember this session" (routes/agents.py stamps memory_off from the
+    # request): the report still persists — the user asked not to be learned
+    # from, not to lose their work — but nothing reads or writes memory.
+    _memory_on = _artifact_project is not None and not getattr(session, "memory_off", False)
 
     initial_prompt = build_audit_user_prompt(
         crawl_result, business_context, user_preferences,
@@ -567,6 +571,7 @@ async def run_synthesis(
         artifact_conversation_id=getattr(session, "conversation_id", None),
         on_artifact=_on_artifact_card,
         on_memory=_on_memory_written,
+        remember=_memory_on,
     )
     _artifact_tools = (
         [
@@ -575,11 +580,15 @@ async def run_synthesis(
             AuditTool.CREATE_ARTIFACT,
             AuditTool.UPDATE_ARTIFACT,
             AuditTool.REWRITE_ARTIFACT,
-            AuditTool.REMEMBER_FACT,
-            AuditTool.SEARCH_MEMORY,
-            AuditTool.GET_MEMORY,
         ]
         if _artifact_project
+        else []
+    )
+    # Listed separately: an unremembered session mounts the artifact tools but
+    # not these, so the names must not be allowed either.
+    _memory_tools = (
+        [AuditTool.REMEMBER_FACT, AuditTool.SEARCH_MEMORY, AuditTool.GET_MEMORY]
+        if _memory_on
         else []
     )
 
@@ -628,6 +637,7 @@ async def run_synthesis(
             AgentTool.WEB_FETCH,
             AuditTool.FETCH_PAGES,  # mcp__duct_crawl__FetchPages — in-process MCP
             *_artifact_tools,       # ListArtifacts/GetArtifact — project scope only
+            *_memory_tools,         # RememberFact/SearchMemory/GetMemory — unless off
             *_execution_tools,      # propose/status/rollback — project scope only
             *_extra_tools,
         ],

@@ -604,17 +604,35 @@ def _render_ref(row: ProjectMemory) -> str:
 
 @dataclass
 class MemoryContext:
-    """Rendered memory for one turn, plus the ids it drew on.
+    """Rendered memory for one turn, plus the entries it drew on.
 
-    ``recalled_ids`` is what MEMORY_RECALLED reports to the UI (the chips) and
-    what :func:`touch_recall` reinforces.
+    ``recalled`` is what MEMORY_RECALLED reports to the UI: each entry carries
+    enough to render a chip that says what it remembered and opens the row it
+    came from, which is the whole point of attributing an answer to memory.
+    ``recalled_ids`` derives from it for :func:`touch_recall`.
     """
 
     text: str = ""
-    recalled_ids: list[UUID] = field(default_factory=list)
+    recalled: list[dict] = field(default_factory=list)
 
     def __bool__(self) -> bool:
         return bool(self.text)
+
+    @property
+    def recalled_ids(self) -> list[UUID]:
+        return [e["uuid"] for e in self.recalled]
+
+
+def recalled_entry(row: ProjectMemory) -> dict:
+    """One recalled entry as the UI needs it: a chip that opens its source."""
+    return {
+        "uuid": row.id,
+        "id": short_id(row.id),
+        "memory_id": str(row.id),
+        "kind": row.kind,
+        "title": row.title,
+        "scope": row.scope,
+    }
 
 
 def render_digest(
@@ -693,14 +711,14 @@ def render_digest(
         sections.append(("Relevant to this question", relevant))
 
     lines: list[str] = []
-    used: list[UUID] = []
+    used: list[dict] = []
     for heading, rows in sections:
         if not rows:
             continue
         lines.append(f"## {heading}")
         for row in rows:
             lines.append(render_entry(row))
-            used.append(row.id)
+            used.append(recalled_entry(row))
         lines.append("")
 
     if not used:
@@ -712,7 +730,7 @@ def render_digest(
         f"{body}\n\n{MEMORY_PROMPT_RULES}",
         attrs={"as_of": _date(as_of), "entries": str(len(used))},
     )
-    return MemoryContext(text=block, recalled_ids=used)
+    return MemoryContext(text=block, recalled=used)
 
 
 def render_user_memory(db, *, user_id: UUID, max_entries: int = 12) -> MemoryContext:
@@ -725,7 +743,7 @@ def render_user_memory(db, *, user_id: UUID, max_entries: int = 12) -> MemoryCon
         "user_memory",
         "How this person works — apply it unless they say otherwise:\n" + "\n".join(lines),
     )
-    return MemoryContext(text=block, recalled_ids=[r.id for r in rows])
+    return MemoryContext(text=block, recalled=[recalled_entry(r) for r in rows])
 
 
 MEMORY_PROMPT_RULES = (
@@ -760,18 +778,18 @@ def build_memory_context(
     Per-project and per-user data, so callers put the result in the USER message.
     """
     blocks: list[str] = []
-    recalled: list[UUID] = []
+    recalled: list[dict] = []
     try:
         if project_id is not None:
             digest = render_digest(db, project_id=project_id, query=query)
             if digest:
                 blocks.append(digest.text)
-                recalled += digest.recalled_ids
+                recalled += digest.recalled
         if user_id is not None:
             user_block = render_user_memory(db, user_id=user_id)
             if user_block:
                 blocks.append(user_block.text)
-                recalled += user_block.recalled_ids
+                recalled += user_block.recalled
 
         if project_id is not None and include_artifacts:
             from agents.core.context import format_agent_context, format_prior_artifacts
@@ -793,7 +811,7 @@ def build_memory_context(
     except Exception:  # noqa: BLE001 — a missing digest degrades the turn, never fails it
         logger.warning("memory: context assembly failed for project %s", project_id, exc_info=True)
 
-    return MemoryContext(text="\n".join(b for b in blocks if b), recalled_ids=recalled)
+    return MemoryContext(text="\n".join(b for b in blocks if b), recalled=recalled)
 
 
 # ---------------------------------------------------------------------------

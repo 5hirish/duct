@@ -342,10 +342,11 @@ export default function AuditWorkspace({ sessionId, auditParams, publicMode = fa
         break;
       }
 
-      // The turn was primed with these memories — the "Recalled N" affordance.
+      // The turn was primed with these memories — the "Recalled N" affordance,
+      // which opens to a chip per entry: what it says, and a link to the row.
       case AuditEvent.MEMORY_RECALLED:
-        if (!event.memory_ids?.length) break;
-        setMessages((prev) => [...prev, { role: "memory_recall", memoryIds: event.memory_ids }]);
+        if (!event.memories?.length) break;
+        setMessages((prev) => [...prev, { role: "memory_recall", memories: event.memories }]);
         break;
 
       // The agent proposed (or updated) a staged change set — inline review
@@ -497,6 +498,10 @@ export default function AuditWorkspace({ sessionId, auditParams, publicMode = fa
           steps={steps}
           todos={todos}
           messages={messages}
+          // Ambient state, per the memory UX rules: a session that is not being
+          // remembered should say so while it runs, not only at the point the
+          // switch was flipped.
+          remembering={auditParams?.remember !== false}
           pendingQuestions={pendingQuestions}
           hasReport={reportVersions.length > 0}
           errorMsg={errorMsg}

@@ -89,8 +89,8 @@ function EvidenceLinks({ entry }) {
   );
 }
 
-function MemoryRow({ entry, onPatch, onDelete, busy }) {
-  const [open, setOpen] = useState(false);
+function MemoryRow({ entry, onPatch, onDelete, busy, focused = false }) {
+  const [open, setOpen] = useState(focused);
   const [draft, setDraft] = useState(null);
   const superseded = entry.status === "superseded";
   const archived = entry.status === "archived";
@@ -100,7 +100,7 @@ function MemoryRow({ entry, onPatch, onDelete, busy }) {
     <li
       className={`border-b border-border/40 px-3 py-3 last:border-b-0 ${
         superseded || archived ? "opacity-55" : ""
-      }`}
+      } ${focused ? "bg-muted/40 ring-1 ring-inset ring-border" : ""}`}
     >
       <div className="flex items-start gap-3">
         <span className="mt-0.5 shrink-0 text-base leading-none" aria-hidden="true">
@@ -250,9 +250,12 @@ function RememberForm({ kinds, defaultKind, placeholder, onCreate, busy, onClose
 }
 
 /**
- * @param api  { list, create, patch, remove, setPaused, reset, exportAll } —
- *             promises bound to one scope. Every field is required except
- *             setPaused/reset/exportAll, which hide their controls when absent.
+ * @param api      { list, create, patch, remove, get?, setPaused?, reset?,
+ *                 exportAll? } — promises bound to one scope. The optional ones
+ *                 hide their affordance when absent.
+ * @param focusId  A memory id from a deep link (a chip in the chat). The entry
+ *                 is opened and highlighted, and fetched on its own if the
+ *                 current filters would not have listed it.
  */
 export default function MemoryTimeline({
   api,
@@ -264,6 +267,7 @@ export default function MemoryTimeline({
   exportFilename = "duct-memory.json",
   resetPrompt = "Delete every memory here? This cannot be undone — export first if you want a copy.",
   signedIn = true,
+  focusId = "",
 }) {
   const [items, setItems] = useState(null); // null = loading
   const [kinds, setKinds] = useState([]);
@@ -271,10 +275,13 @@ export default function MemoryTimeline({
   const [paused, setPaused] = useState(false);
   const [q, setQ] = useState("");
   const [query, setQuery] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [showSuperseded, setShowSuperseded] = useState(true);
   const [adding, setAdding] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [linked, setLinked] = useState(null); // deep-linked entry outside the filters
 
   const load = useCallback(() => {
     if (!signedIn) {
@@ -283,7 +290,7 @@ export default function MemoryTimeline({
     }
     setError("");
     api
-      .list({ q: query, kind, includeSuperseded: showSuperseded })
+      .list({ q: query, kind, fromDate, toDate, includeSuperseded: showSuperseded })
       .then((body) => {
         setItems(body.items);
         setPaused(Boolean(body.memory_paused));
@@ -295,12 +302,32 @@ export default function MemoryTimeline({
         setItems([]);
         setError(err.message || "Failed to load memory.");
       });
-  }, [api, query, kind, showSuperseded, signedIn]);
+  }, [api, query, kind, fromDate, toDate, showSuperseded, signedIn]);
 
   useEffect(() => {
     setItems(null);
     load();
   }, [load]);
+
+  // A chip in the chat links straight to one entry. If the list already has it,
+  // the row highlights in place; if a filter or the page limit excluded it, it
+  // is fetched and shown on its own so the link never dead-ends.
+  useEffect(() => {
+    if (!focusId || !signedIn || items === null) return;
+    if (items.some((entry) => entry.id === focusId)) {
+      setLinked(null);
+      return;
+    }
+    if (!api.get) return;
+    let alive = true;
+    api
+      .get({ memoryId: focusId })
+      .then((entry) => alive && setLinked(entry))
+      .catch(() => alive && setLinked(null));
+    return () => {
+      alive = false;
+    };
+  }, [focusId, items, api, signedIn]);
 
   const run = useCallback(
     async (fn, failure) => {
@@ -418,6 +445,41 @@ export default function MemoryTimeline({
           />
         </div>
         <Button type="submit" size="sm" variant="outline">Search</Button>
+        {/* The range is what makes this a timeline rather than a list: "what
+            happened between the redirect and the recovery" is a date question. */}
+        <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          from
+          <input
+            type="date"
+            value={fromDate}
+            max={toDate || undefined}
+            onChange={(e) => setFromDate(e.target.value)}
+            className="rounded-md border border-input bg-transparent px-2 py-1 text-xs"
+          />
+        </label>
+        <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          to
+          <input
+            type="date"
+            value={toDate}
+            min={fromDate || undefined}
+            onChange={(e) => setToDate(e.target.value)}
+            className="rounded-md border border-input bg-transparent px-2 py-1 text-xs"
+          />
+        </label>
+        {(fromDate || toDate) && (
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              setFromDate("");
+              setToDate("");
+            }}
+          >
+            Clear dates
+          </Button>
+        )}
         <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <input
             type="checkbox"
@@ -457,8 +519,52 @@ export default function MemoryTimeline({
       {!signedIn && <p className="app-subtle">Sign in to see this.</p>}
       {signedIn && items === null && <p className="app-subtle">Loading…</p>}
 
+      {linked && (
+        <div className="mb-4 rounded-lg border border-border/60">
+          <p className="border-b border-border/40 bg-muted/30 px-3 py-1.5 text-xs font-medium text-muted-foreground">
+            Linked from chat — outside the filters below
+          </p>
+          <ul>
+            <MemoryRow
+              entry={linked}
+              busy={busy}
+              focused
+              onPatch={(row, patch) =>
+                run(() => api.patch({ memoryId: row.id, ...patch }), "Update failed.").then(() =>
+                  setLinked(null)
+                )
+              }
+              onDelete={(row) =>
+                run(() => api.remove({ memoryId: row.id }), "Delete failed.").then(() =>
+                  setLinked(null)
+                )
+              }
+            />
+          </ul>
+        </div>
+      )}
+
+      {/* A count first: "what do you know about me?" is a number before it is a
+          list, and unconfirmed is the number worth acting on. */}
+      {signedIn && items && items.length > 0 && (
+        <p className="mb-2 text-xs text-muted-foreground">
+          {items.length} {items.length === 1 ? "memory" : "memories"}
+          {(() => {
+            const proposed = items.filter((e) => e.status === "proposed").length;
+            return proposed ? ` · ${proposed} unconfirmed` : "";
+          })()}
+          {fromDate || toDate
+            ? ` · ${fromDate ? formatDate(fromDate) : "the start"} to ${
+                toDate ? formatDate(toDate) : "now"
+              }`
+            : ""}
+        </p>
+      )}
+
       {signedIn && items && items.length === 0 && (
-        <p className="app-subtle">{query || kind ? "Nothing matches that filter." : emptyHint}</p>
+        <p className="app-subtle">
+          {query || kind || fromDate || toDate ? "Nothing matches that filter." : emptyHint}
+        </p>
       )}
 
       {signedIn && groups.length > 0 && (
@@ -474,6 +580,7 @@ export default function MemoryTimeline({
                     key={entry.id}
                     entry={entry}
                     busy={busy}
+                    focused={entry.id === focusId}
                     onPatch={(row, patch) =>
                       run(() => api.patch({ memoryId: row.id, ...patch }), "Update failed.")
                     }

@@ -127,7 +127,7 @@ def list_memory(
     session: Session = Depends(get_session),
 ) -> dict:
     """The project timeline: entries newest first, with the filter set the UI offers."""
-    get_project_for_user(project_id, user, session)
+    project = get_project_for_user(project_id, user, session)
     rows = search(
         session,
         project_id=project_id,
@@ -146,6 +146,10 @@ def list_memory(
         # Kinds actually present, so the UI's filter chips reflect this project
         # rather than the full vocabulary.
         "kinds": sorted({r.kind for r in rows}),
+        # The pause switch reads its state from here, exactly as the user scope
+        # does. Without it the control renders unchecked on every reload and
+        # tells the user memory is on while it is off.
+        "memory_paused": bool(project.memory_paused),
     }
 
 

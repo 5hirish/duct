@@ -70,7 +70,6 @@ from service.membership import member_role
 from service.memory import (
     build_memory_context,
     seed_user_preferences,
-    short_id,
     touch_recall,
 )
 from service.memory_consolidation import schedule_consolidation
@@ -101,6 +100,11 @@ def _close_and_consolidate(session_id: str) -> None:
     """
     session = get_session(session_id)
     conversation_id = getattr(session, "conversation_id", None) if session else None
+    # A session the user asked not to be remembered is not consolidated either —
+    # otherwise the "don't remember this" promise would be broken at close time,
+    # which is exactly when it matters.
+    if session is not None and getattr(session, "memory_off", False):
+        conversation_id = None
     close_session(session_id)
     schedule_consolidation(conversation_id)
 
@@ -817,6 +821,10 @@ async def _start_seo_audit(session_id: str, body: dict, emit_fn: Any) -> None:
             # Membership just verified — this also unlocks the project-scoped
             # prior-artifact tools and memory blocks below.
             session.artifact_project_id = project_uuid
+            # "Don't remember this session": the report still persists, but the
+            # runners mount no memory tools, no digest is injected, and the
+            # consolidation pass is skipped on close.
+            session.memory_off = not req.remember
             return persister.wrap_emit(emit)
         except Exception:
             logger.warning(
@@ -836,7 +844,7 @@ async def _start_seo_audit(session_id: str, body: dict, emit_fn: Any) -> None:
         the UI renders as chips linking back to each memory's source.
         """
         project_uuid = getattr(session, "artifact_project_id", None)
-        if project_uuid is None:
+        if project_uuid is None or getattr(session, "memory_off", False):
             return ""
         try:
             with next(db_session()) as db:
@@ -856,11 +864,17 @@ async def _start_seo_audit(session_id: str, body: dict, emit_fn: Any) -> None:
             logger.warning("agents: project memory blocks unavailable", exc_info=True)
             return ""
 
-        if context.recalled_ids:
+        if context.recalled:
             try:
                 await emit_fn({
                     "event": AuditEvent.MEMORY_RECALLED,
-                    "memory_ids": [short_id(i) for i in context.recalled_ids],
+                    # Each entry carries its title and row id, so the chip can
+                    # say what was recalled and open it — attribution is the
+                    # point here, not a count.
+                    "memories": [
+                        {k: v for k, v in entry.items() if k != "uuid"}
+                        for entry in context.recalled
+                    ],
                 })
             except Exception:
                 logger.debug("agents: MEMORY_RECALLED emit failed", exc_info=True)

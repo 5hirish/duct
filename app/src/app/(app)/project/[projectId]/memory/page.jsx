@@ -7,8 +7,9 @@
 // their affordances live in components/memory/MemoryTimeline; this page only
 // binds them to the project-scoped API and names the place.
 
-import { use, useEffect, useMemo, useState } from "react";
+import { Suspense, use, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import MemoryTimeline from "@/components/memory/MemoryTimeline";
@@ -19,14 +20,16 @@ import {
   createMemory,
   deleteMemory,
   exportMemory,
+  getMemory,
   listMemory,
   resetMemory,
   setMemoryPaused,
   updateMemory,
 } from "@/lib/memoryApi";
 
-export default function ProjectMemoryPage({ params }) {
-  const { projectId } = use(params);
+function ProjectMemory({ projectId }) {
+  // ?m=<id> — a chip in the chat linking to the entry behind an answer.
+  const focusId = useSearchParams().get("m") || "";
   const [projectName, setProjectName] = useState("");
   const [signedIn, setSignedIn] = useState(true);
 
@@ -39,6 +42,7 @@ export default function ProjectMemoryPage({ params }) {
   const api = useMemo(
     () => ({
       list: (opts) => listMemory({ projectId, ...opts }),
+      get: ({ memoryId }) => getMemory({ projectId, memoryId }),
       create: (entry) => createMemory({ projectId, ...entry }),
       patch: (patch) => updateMemory({ projectId, ...patch }),
       remove: ({ memoryId }) => deleteMemory({ projectId, memoryId }),
@@ -78,6 +82,7 @@ export default function ProjectMemoryPage({ params }) {
       <MemoryTimeline
         api={api}
         signedIn={signedIn}
+        focusId={focusId}
         kinds={MEMORY_KINDS.filter((k) => k !== "artifact")}
         defaultKind="decision"
         exportFilename={`duct-memory-${projectName || projectId}.json`}
@@ -85,5 +90,15 @@ export default function ProjectMemoryPage({ params }) {
         emptyHint="Nothing remembered yet. Run an audit, apply a change, or set your targets in project settings — everything an agent concludes lands here with its evidence."
       />
     </section>
+  );
+}
+
+// useSearchParams needs a Suspense boundary in the App Router.
+export default function ProjectMemoryPage({ params }) {
+  const { projectId } = use(params);
+  return (
+    <Suspense fallback={<p className="app-subtle">Loading…</p>}>
+      <ProjectMemory projectId={projectId} />
+    </Suspense>
   );
 }

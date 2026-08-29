@@ -17,54 +17,131 @@ import {
   rejectChangeSet,
   rollbackChangeSet,
 } from "@/lib/executionApi";
-import { createMemory } from "@/lib/memoryApi";
+import { MEMORY_KIND_ICONS, createMemory, deleteMemory } from "@/lib/memoryApi";
 import { getActiveProject } from "@/lib/projects";
+
+/** Deep link to one entry in the project timeline, which fetches and highlights
+ * it regardless of the filters in force there. */
+function memoryHref(projectId, memory) {
+  return `/project/${projectId}/memory?m=${encodeURIComponent(memory.memory_id)}`;
+}
 
 /** The quiet "Remembered: …" line under a turn that wrote project memory.
  * Deliberately understated — memory should feel like a side effect the user can
- * see and undo, not an announcement. Each entry links to its timeline row. */
+ * see and undo, not an announcement. Each entry links to its timeline row, and
+ * Undo deletes what this turn just wrote: the cheapest possible off-ramp, right
+ * where the surprise happens. */
 function MemoryNote({ memories }) {
   const projectId = getActiveProject()?.id;
+  const [undone, setUndone] = useState(() => new Set());
+
+  async function undo(memory) {
+    try {
+      await deleteMemory({ projectId, memoryId: memory.memory_id });
+    } catch {
+      /* Already gone, or offline — either way it should stop claiming it. */
+    }
+    setUndone((prev) => new Set(prev).add(memory.memory_id));
+  }
+
+  const live = (memories || []).filter((m) => !undone.has(m.memory_id));
   if (!memories?.length) return null;
+
   return (
     <div className="my-1.5 flex flex-wrap items-center gap-1.5 px-1 text-xs text-muted-foreground">
       <Brain size={13} aria-hidden="true" />
-      <span>Remembered:</span>
-      {memories.map((m, i) => (
-        <span key={m.id || i}>
-          {projectId ? (
-            <a
-              href={`/project/${projectId}/memory?q=${encodeURIComponent(m.title || "")}`}
+      {live.length === 0 ? (
+        <span>Forgotten.</span>
+      ) : (
+        <>
+          <span>Remembered:</span>
+          {live.map((m, i) => (
+            <span key={m.memory_id || m.id || i} className="inline-flex items-center gap-1">
+              {projectId && m.memory_id ? (
+                <a
+                  href={memoryHref(projectId, m)}
+                  className="underline underline-offset-2 hover:text-foreground"
+                >
+                  {m.title}
+                </a>
+              ) : (
+                m.title
+              )}
+              {i < live.length - 1 ? "," : ""}
+            </span>
+          ))}
+          {projectId && live.some((m) => m.memory_id) && (
+            <button
+              type="button"
+              onClick={() => live.forEach((m) => m.memory_id && undo(m))}
               className="underline underline-offset-2 hover:text-foreground"
             >
-              {m.title}
-            </a>
-          ) : (
-            m.title
+              Undo
+            </button>
           )}
-          {i < memories.length - 1 ? "," : ""}
-        </span>
-      ))}
+        </>
+      )}
     </div>
   );
 }
 
-/** "Recalled N memories" — what this turn was primed with, listed on demand so
- * an answer can always be traced back to the facts behind it. */
-function MemoryRecall({ memoryIds }) {
+/** "Recalled N memories" — what this turn was primed with, opening to a chip per
+ * entry: what it remembered, a link to its row, and Forget. An answer should
+ * always be traceable to the facts behind it, and forgetting one should not
+ * require going looking for it. */
+function MemoryRecall({ memories }) {
   const projectId = getActiveProject()?.id;
-  if (!memoryIds?.length) return null;
+  const [forgotten, setForgotten] = useState(() => new Set());
+  if (!memories?.length) return null;
+
+  async function forget(memory) {
+    if (!window.confirm(`Forget "${memory.title}"? The agents stop seeing it from the next turn.`)) {
+      return;
+    }
+    try {
+      await deleteMemory({ projectId, memoryId: memory.memory_id });
+      setForgotten((prev) => new Set(prev).add(memory.memory_id));
+    } catch {
+      /* Leave the chip in place — a failed delete should not look like one. */
+    }
+  }
+
   return (
     <details className="my-1.5 px-1 text-xs text-muted-foreground">
       <summary className="cursor-pointer select-none hover:text-foreground">
         <Brain size={13} className="mr-1 inline-block align-[-2px]" aria-hidden="true" />
-        Recalled {memoryIds.length} {memoryIds.length === 1 ? "memory" : "memories"}
+        Recalled {memories.length} {memories.length === 1 ? "memory" : "memories"}
       </summary>
-      <p className="mt-1 flex flex-wrap gap-1.5 font-mono text-[11px]">
-        {memoryIds.map((id) => (
-          <span key={id} className="rounded bg-muted/60 px-1.5 py-0.5">{id}</span>
+      <ul className="mt-1 flex flex-col gap-1">
+        {memories.map((m) => (
+          <li
+            key={m.memory_id || m.id}
+            className={`flex items-start gap-1.5 ${forgotten.has(m.memory_id) ? "opacity-50 line-through" : ""}`}
+          >
+            <span aria-hidden="true">{MEMORY_KIND_ICONS[m.kind] || "•"}</span>
+            {projectId && m.memory_id ? (
+              <a
+                href={memoryHref(projectId, m)}
+                className="min-w-0 flex-1 underline underline-offset-2 hover:text-foreground"
+              >
+                {m.title}
+              </a>
+            ) : (
+              <span className="min-w-0 flex-1">{m.title}</span>
+            )}
+            <span className="font-mono text-[11px] opacity-70">{m.id}</span>
+            {projectId && m.memory_id && !forgotten.has(m.memory_id) && (
+              <button
+                type="button"
+                onClick={() => forget(m)}
+                className="shrink-0 underline underline-offset-2 hover:text-foreground"
+              >
+                Forget
+              </button>
+            )}
+          </li>
         ))}
-      </p>
+      </ul>
       {projectId && (
         <a
           href={`/project/${projectId}/memory`}
@@ -529,6 +606,7 @@ export default function AuditChat({
   onRetrySend,
   onRetry,
   onStop,
+  remembering = true,
 }) {
   const scrollRef    = useRef(null);
   const bottomRef    = useRef(null);
@@ -596,6 +674,15 @@ export default function AuditChat({
         >
           — {status.label}
         </span>
+        {!remembering && (
+          <span
+            className="ml-auto inline-flex items-center gap-1 text-xs text-muted-foreground"
+            title="Nothing from project memory is read into this session, and nothing it concludes is written back."
+          >
+            <Brain size={12} aria-hidden="true" />
+            Not remembering
+          </span>
+        )}
       </div>
 
       {/* Sticky todo tracker */}
@@ -639,7 +726,7 @@ export default function AuditChat({
           ) : msg.role === "memory_note" ? (
             <MemoryNote key={i} memories={msg.memories} />
           ) : msg.role === "memory_recall" ? (
-            <MemoryRecall key={i} memoryIds={msg.memoryIds} />
+            <MemoryRecall key={i} memories={msg.memories} />
           ) : (
             <ChatBubble key={i} role={msg.role} text={msg.text} thinking={msg.thinking} streaming={msg.streaming} />
           )

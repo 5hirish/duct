@@ -453,6 +453,23 @@ Not verified (the verification agent was cut off): Hindsight (`vectorize-io`) an
 
 ## 5. What this changes in the phase plan
 
+> **Built 28–29 Aug 2026 — and where it diverged from this section.** Phases 1 and 2
+> shipped on `feat/agent-memory-phase-1` (see `agent-memory-research.html` §07 for the
+> full status). Two deliberate departures from the plan below:
+>
+> - **`GetMemory` was kept, not dropped.** It reads by short id, which is what the
+>   citation contract needs: the model cites `m_a1b2c3d4`, the user clicks the chip, and
+>   both resolve the same way. A file read under `/memories/` would only cover the V1
+>   path and would not give the SDK path an equivalent.
+> - **Neither `DuctMemoryBackend` nor `MemoryMiddleware` is wired yet.** Both harnesses
+>   run the same three plain tools from `agents/core/memory_tools.py` plus user-turn
+>   digest injection — one behaviour, two adapters. That kept V1 and V3 at parity for
+>   free while V3 is still the production path; the projection is worth revisiting when
+>   V1 actually retires V3, not before.
+>
+> The consolidation call did land as planned: `with_structured_output`, no LangMem, and
+> the proposed → confirm flow as the approval mechanism.
+
 Relative to `agent-memory-research.html` §07:
 
 - **Phase 1** adds `DuctMemoryBackend` (the projection) and the `MemoryMiddleware`

@@ -467,6 +467,12 @@ class AuditRequest(BaseModel):
     adaptive_thinking: bool = False
     crawl_depth: CrawlDepth = CrawlDepth.DEEP
     user_preferences: UserPreferences = Field(default_factory=UserPreferences)
+    # False = "don't remember this session": no memory digest is injected, the
+    # memory tools are not mounted, and nothing is consolidated when the session
+    # closes. The report artifact still persists — the user asked not to be
+    # learned from, not to lose their work. Complements the per-project pause,
+    # which is the standing version of the same switch.
+    remember: bool = True
     report_mode: ReportMode = ReportMode.freehand
     template_id: str = "seo_v1"
     # Lightweight lead-magnet (public) audit: forces enrichment off and extended

@@ -614,9 +614,11 @@
       <h2>Wiring it into the code that exists</h2>
       <p>The codebase has an unusually clean skeleton for this. The work is a table, a service, three tools, one background job, an API and a page — not a new subsystem.</p>
       <div class="note">
-        <span class="eyebrow">Status — Phases 1 and 2 built, 29 Aug 2026</span>
+        <span class="eyebrow">Status — Phases 1 and 2 built plus a UX pass, 29 Aug 2026 · branch <code>feat/agent-memory-phase-1</code></span>
         <p><strong>Phase 1</strong> (migration <code>a4e1c7d2b953</code>, applied): the <code>project_memories</code> table (<code>backend/models/memory.py</code>) with a persisted <code>state_key</code> driving supersession; <code>backend/service/memory.py</code> (<code>remember</code>, <code>search</code> over Postgres FTS with a SQLite LIKE fallback, <code>render_digest</code>, <code>build_memory_context</code>, secret redaction, short ids); <code>RememberFact</code> / <code>SearchMemory</code> / <code>GetMemory</code> for both harnesses (<code>backend/agents/core/memory_tools.py</code>) on the audit agent, V1 and V3; the system writers (artifact version, applied/rolled-back change set, project profile seed); <code>MEMORY_WRITTEN</code> / <code>MEMORY_RECALLED</code> with the "Remembered:" line and the recall affordance; the timeline at <code>/project/[projectId]/memory</code>; and the project memory API. One design change against the plan below: the state key is a single stored column rather than the <code>(entity_key, attribute, period)</code> triple, because an event and a state can share an entity and a partial unique index cannot know which is which.</p>
-        <p><strong>Phase 2</strong> (migration <code>b8f3d1e6a274</code>, applied): post-session consolidation in <code>backend/service/memory_consolidation.py</code> — a typed <code>with_structured_output</code> pass over the turns since a per-conversation watermark, behind the same <code>&lt;untrusted_transcript&gt;</code> guard as <code>summarize_conversation</code>, proposing entries with turn ranges and closing or archiving states it shows have ended, all resolved within the project so the model cannot name a row it was never shown; triggered from every session-close path. Also: findings extracted from a report into memory with the section they came from; the content agent on the same tools with the memory stanza shared from <code>agents/core/prompts.py</code>; declared <code>UserPreferences</code> seeded as user-scope memory; the pause / reset / export controls on both scopes; the user-scope surface at <code>/memory</code> and <code>/api/user/memory</code>; and "Remember this" on a chat turn or a highlighted passage of a report. Not yet built (Phase 3+): time-aware query expansion, importance reinforcement, the optional pgvector sidecar, the weekly brief reading memory, and the LongMemEval-style evaluation set.</p>
+        <p><strong>Phase 2</strong> (migration <code>b8f3d1e6a274</code>, applied): post-session consolidation in <code>backend/service/memory_consolidation.py</code> — a typed <code>with_structured_output</code> pass over the turns since a per-conversation watermark, behind the same <code>&lt;untrusted_transcript&gt;</code> guard as <code>summarize_conversation</code>, proposing entries with turn ranges and closing or archiving states it shows have ended, all resolved within the project so the model cannot name a row it was never shown; triggered from every session-close path. Also: findings extracted from a report into memory with the section they came from; the content agent on the same tools with the memory stanza shared from <code>agents/core/prompts.py</code>; declared <code>UserPreferences</code> seeded as user-scope memory; the pause / reset / export controls on both scopes; the user-scope surface at <code>/memory</code> and <code>/api/user/memory</code>; and "Remember this" on a chat turn or a highlighted passage of a report.</p>
+        <p><strong>UX pass</strong> (29 Aug 2026), closing the gaps between the eight rules above and what Phases 1–2 actually shipped: <code>MEMORY_RECALLED</code> now carries each entry's kind, title and row id rather than bare short ids, so the "Recalled N" affordance opens to a chip per memory that links to its timeline row and offers <em>Forget</em> — attribution was the deliberate break with claude.ai and an opaque id is not attribution. The "Remembered:" line gained the <em>Undo</em> the rule table specifies (the row id rides a UI-only block that <code>_notify</code> strips before the payload reaches the model, which keeps citing short ids). The timeline gained the date range that makes it a timeline, a count with the unconfirmed number beside it, and <code>?m=&lt;id&gt;</code> deep links that fetch the entry even when the current filters exclude it. The off-ramp row is now complete: alongside pause / reset / delete there is a per-session <code>remember: false</code> — no digest injected, no memory tools mounted on either harness, and no consolidation at close, while the report artifact still persists, because the user asked not to be learned from rather than to lose their work. One bug went with it: the project listing never returned <code>memory_paused</code>, so the pause switch re-rendered unchecked on every load and told the user memory was on while it was off.</p>
+        <p>Not yet built (Phase 3+): time-aware query expansion, importance reinforcement, the optional pgvector sidecar, the weekly brief reading memory (rule 8's ritual), the LongMemEval-style evaluation set, and "ask about this range" — the range filter exists, but opening a chat pre-loaded with those entries needs a conversation surface that is not tied to a crawl, which the audit flow does not yet have.</p>
       </div>
 
       <div class="note">
@@ -657,7 +659,7 @@
       <div class="phase">
         <span class="n">PHASE 1<br>≈ 2 weeks</span>
         <div>
-          <h3>Store, write, read, show</h3>
+          <h3>Store, write, read, show <span class="pill yes">built · 28 Aug 2026</span></h3>
           <ul>
             <li>Migration + <code>service/memory.py</code> with supersession and the digest renderer</li>
             <li>System writers: artifact version → <code>artifact</code> entry; change set applied → <code>action</code>; target changed → <code>goal</code>; project profile seed</li>
@@ -669,29 +671,42 @@
       <div class="phase">
         <span class="n">PHASE 2<br>≈ 2 weeks</span>
         <div>
-          <h3>Consolidate and control</h3>
+          <h3>Consolidate and control <span class="pill yes">built · 29 Aug 2026</span></h3>
           <ul>
             <li>Post-session consolidation job with the <code>summarize_conversation</code> guard; proposed → confirm flow in the timeline</li>
             <li>"Remember this" in chat and artifacts; user-scope memory replacing localStorage preferences; pause / reset / export per project</li>
-            <li>Content and planner agents get the same tools; findings extracted from reports on <code>summarize_report</code></li>
+            <li>Content <span class="pill mid">planner deferred</span> and planner agents get the same tools; findings extracted from reports on <code>summarize_report</code> — the content planner is on an unmerged branch, so only <code>tiktok_studio</code> has them</li>
+          </ul>
+        </div>
+      </div>
+      <div class="phase">
+        <span class="n">UX PASS</span>
+        <div>
+          <h3>Make the recall answerable-for <span class="pill yes">built · 29 Aug 2026</span></h3>
+          <ul>
+            <li>Recall chips carry kind, title and row id — each opens its timeline entry and can forget it; the "Remembered:" line gained Undo</li>
+            <li>Timeline: date range, entry count with the unconfirmed number, <code>?m=&lt;id&gt;</code> deep links that resolve outside the current filters</li>
+            <li>Per-session <code>remember: false</code> — no digest, no memory tools on either harness, no consolidation at close; the report still persists</li>
+            <li>Fixed: the project listing never returned <code>memory_paused</code>, so the pause switch rendered unchecked while memory was off</li>
           </ul>
         </div>
       </div>
       <div class="phase">
         <span class="n">PHASE 3</span>
         <div>
-          <h3>Retrieve well, speak first</h3>
+          <h3>Retrieve well, speak first <span class="pill mid">next</span></h3>
           <ul>
             <li>Full-text search with time-aware query expansion; importance rating and recall-based reinforcement; optional pgvector sidecar</li>
             <li>Weekly brief reads memory and cites it; session opener mentions open watches when new data touches them</li>
             <li>A 50-question evaluation set from real sessions on the LongMemEval axes (extraction, multi-session, temporal, knowledge update, abstention); track stale-fact rate and chip click-through</li>
+            <li>"Ask about this range" — the timeline's range filter exists, but pre-loading a chat with those entries needs a conversation surface not tied to a crawl</li>
           </ul>
         </div>
       </div>
       <div class="phase">
         <span class="n">PHASE 4</span>
         <div>
-          <h3>Learn across projects, share within teams</h3>
+          <h3>Learn across projects, share within teams <span class="pill mid">later</span></h3>
           <ul>
             <li>User memory learned across projects (method, tooling, process); team-shared entries with author on the source</li>
             <li>Agent working-context write tool over <code>agent_contexts</code>; memory import/export in a Claude-compatible format</li>

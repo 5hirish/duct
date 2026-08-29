@@ -405,6 +405,47 @@ def test_touch_recall_counts_use(db, project):
     assert row.last_recalled_at is not None
 
 
+def test_recalled_entries_carry_what_a_chip_needs(db, project, owner):
+    """MEMORY_RECALLED renders a chip per entry, not a count.
+
+    A chip has to say what was recalled and open the row behind it, so each
+    entry carries its title, kind and row id alongside the cited short id.
+    """
+    row = _write(db, project, kind="incident", title="Organic clicks −23% WoW")
+    context = build_memory_context(db, project_id=project.id, user_id=owner.id)
+
+    entry = next(e for e in context.recalled if e["memory_id"] == str(row.id))
+    assert entry["title"] == "Organic clicks −23% WoW"
+    assert entry["kind"] == "incident"
+    assert entry["id"] == short_id(row.id)
+    # touch_recall still gets plain ids off the same list.
+    assert row.id in context.recalled_ids
+
+
+async def test_write_notification_reaches_the_ui_without_leaking_to_the_model():
+    """The row id is for the browser (link, undo); the model cites short ids.
+
+    Both harnesses serialise the payload to the model immediately after
+    notifying, so the UI-only block must be gone by then — including when
+    nothing is listening.
+    """
+    from agents.core.memory_tools import _notify
+
+    seen: list[dict] = []
+    payload = {
+        "status": "remembered",
+        "memory": {"id": "m_abc12345", "kind": "goal", "title": "Target CPA $45"},
+        "ui": {"id": "m_abc12345", "memory_id": str(uuid4()), "title": "Target CPA $45"},
+    }
+    await _notify(seen.append, payload)
+    assert seen[0]["memory_id"]          # the UI can link to and undo the entry
+    assert "ui" not in payload           # ...and the model never sees the row id
+
+    unheard = {"status": "remembered", "memory": {"id": "m_x"}, "ui": {"memory_id": "x"}}
+    await _notify(None, unheard)
+    assert "ui" not in unheard
+
+
 # ---------------------------------------------------------------------------
 # System writers
 # ---------------------------------------------------------------------------

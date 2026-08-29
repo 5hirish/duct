@@ -214,6 +214,16 @@ def _remember_sync(args: dict, *, project_id, user_id, conversation_id, agent_ty
             "status": "remembered",
             "memory": {"id": short_id(row.id), "kind": row.kind, "title": row.title,
                        "entry_status": row.status},
+            # UI-only, stripped in _notify before the model ever sees it: the
+            # chat's "Remembered:" line needs the row id to link to the entry
+            # and to undo it, and the model must keep citing the short id.
+            "ui": {
+                "id": short_id(row.id),
+                "memory_id": str(row.id),
+                "kind": row.kind,
+                "title": row.title,
+                "entry_status": row.status,
+            },
         }
 
 
@@ -263,11 +273,17 @@ async def _run(fn, *args, **kwargs) -> dict:
 
 
 async def _notify(on_memory: Callable[[dict], Any] | None, payload: dict) -> None:
-    """Emit MEMORY_WRITTEN — the quiet 'Remembered: …' line. UI sugar, never fatal."""
+    """Emit MEMORY_WRITTEN — the quiet 'Remembered: …' line. UI sugar, never fatal.
+
+    Pops the UI-only block first and unconditionally: both harnesses serialise
+    ``payload`` to the model straight after this call, and the row id is for the
+    browser (link, undo), not for the agent, which cites short ids.
+    """
+    ui = payload.pop("ui", None)
     if on_memory is None or payload.get("status") != "remembered":
         return
     try:
-        await on_memory(payload["memory"])
+        await on_memory(ui or payload["memory"])
     except Exception:  # noqa: BLE001
         logger.debug("memory: MEMORY_WRITTEN emit failed", exc_info=True)
 

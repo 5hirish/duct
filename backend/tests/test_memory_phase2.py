@@ -328,6 +328,43 @@ def test_pause_route_toggles_the_project_switch(client, db, project):
     assert project.memory_paused is True
 
 
+def test_timeline_reports_whether_the_project_is_paused(client, project):
+    """The switch reads its state from the listing.
+
+    Without it the control renders unchecked on every reload and tells the user
+    memory is on while it is off.
+    """
+    assert client.get(f"/api/user/projects/{project.id}/memory").json()["memory_paused"] is False
+    client.post(f"/api/user/projects/{project.id}/memory/pause", json={"paused": True})
+    assert client.get(f"/api/user/projects/{project.id}/memory").json()["memory_paused"] is True
+
+
+def test_an_unremembered_session_is_not_consolidated_when_it_closes(monkeypatch):
+    """"Don't remember this session" has to hold at close time.
+
+    Nothing else would catch it: the tools are unmounted and no digest is
+    injected, but consolidation reads the stored transcript afterwards, which is
+    exactly where the promise would break silently.
+    """
+    import routes.agents as agents_routes
+
+    class _Session:
+        conversation_id = uuid4()
+        memory_off = True
+
+    scheduled: list = []
+    monkeypatch.setattr(agents_routes, "get_session", lambda _sid: _Session())
+    monkeypatch.setattr(agents_routes, "close_session", lambda _sid: None)
+    monkeypatch.setattr(agents_routes, "schedule_consolidation", scheduled.append)
+
+    agents_routes._close_and_consolidate("sid")
+    assert scheduled == [None]
+
+    _Session.memory_off = False
+    agents_routes._close_and_consolidate("sid")
+    assert scheduled[-1] == _Session.conversation_id
+
+
 def test_export_returns_everything_including_superseded(client, db, project):
     remember(db, kind="goal", title="Target CPA $60", project_id=project.id,
              entity_key="kpi:cpa", attribute="target", source_refs=[{"source": "t"}])
