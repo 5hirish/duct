@@ -10,6 +10,12 @@ import { Button } from "@/components/ui/button";
 // user to head back to the app. It must never call /auth/exchange itself —
 // the code is single-use and belongs to the shell's webview.
 //
+// It is also where the backend sends *failed* sign-ins (`?error=`). The OAuth
+// dance runs in the system browser, so anything the loopback sidecar returns is
+// rendered raw: without this the user lands on `{"detail": ...}` or a bare
+// "Internal Server Error" after already approving at Google. See
+// `_signin_failure` in `backend/routes/signin.py`.
+//
 // The scheme is build-time config, not user input: a local dev shell built from
 // `src-tauri/tauri.dev.conf.json` registers `ai.getduct.desktop.dev` so it can
 // coexist with an installed TestFlight build. Set NEXT_PUBLIC_SHELL_SCHEME in
@@ -17,15 +23,53 @@ import { Button } from "@/components/ui/button";
 const SHELL_SCHEME =
   process.env.NEXT_PUBLIC_SHELL_SCHEME?.trim() || "ai.getduct.desktop";
 
+// Keyed by the reason codes in `backend/routes/signin.py`. Each one says what
+// happened and what to do about it — "try again" is useless advice when the
+// install is misconfigured, and alarming when the user simply took too long.
+const ERRORS = {
+  expired: {
+    title: "Sign-in link expired",
+    body: "This sign-in didn't complete in time. Go back to the Duct desktop app and start again — it usually works on the second try.",
+    retryable: true,
+  },
+  exchange: {
+    title: "Google didn't complete the sign-in",
+    body: "Google declined to finish the exchange. This is almost always temporary. Go back to the Duct desktop app and try again.",
+    retryable: true,
+  },
+  identity: {
+    title: "Couldn't read your Google account",
+    body: "Google signed you in but didn't return the account details Duct needs. Try again, and if it keeps happening, try a different Google account.",
+    retryable: true,
+  },
+  config: {
+    title: "Sign-in isn't configured",
+    body: "This build of Duct is missing its Google sign-in credentials, so it can't sign anyone in. Trying again won't help — please report this with the version number from the app's About screen.",
+    retryable: false,
+  },
+  server: {
+    title: "Something broke on our side",
+    body: "Duct hit an unexpected error finishing your sign-in. The details were written to the app's log. Try again, and if it keeps happening, please report it.",
+    retryable: true,
+  },
+};
+
+const FALLBACK = ERRORS.server;
+
 function DesktopAuthContent() {
   const searchParams = useSearchParams();
   const [deepLink, setDeepLink] = useState("");
-  const [missingCode, setMissingCode] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
+    const reason = searchParams.get("error") || "";
+    if (reason) {
+      setError(ERRORS[reason] || FALLBACK);
+      return;
+    }
     const authCode = searchParams.get("auth_code") || "";
     if (!authCode) {
-      setMissingCode(true);
+      setError(ERRORS.expired);
       return;
     }
     // Scrub the one-time code from the address bar and history, then fire the
@@ -44,15 +88,17 @@ function DesktopAuthContent() {
       tabIndex={-1}
     >
       <div className="w-full max-w-sm text-center">
-        {missingCode ? (
+        {error ? (
           <>
             <h1 id="desktop-auth-heading" className="text-xl font-semibold">
-              Sign-in link expired
+              {error.title}
             </h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              This link is missing its sign-in code. Go back to the Duct
-              desktop app and sign in again.
-            </p>
+            <p className="mt-2 text-sm text-muted-foreground">{error.body}</p>
+            {error.retryable && (
+              <p className="mt-4 text-xs text-muted-foreground">
+                You can close this tab.
+              </p>
+            )}
           </>
         ) : (
           <>
