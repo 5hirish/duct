@@ -109,9 +109,18 @@ for bring-your-own provider API keys. Design:
   it is load-bearing for the embedded CPython interpreter under the hardened
   runtime. Removing one does not harden the app, it makes the sidecar crash at
   launch. It deliberately carries no `app-sandbox` key.
-- `bundle.macOS` config uses `deny_unknown_fields` — a mistyped key fails the
-  build rather than being ignored. Key names are camelCase
-  (`minimumSystemVersion`, `hardenedRuntime`, `entitlements`).
+- The whole `bundle` config uses `deny_unknown_fields`, not just `bundle.macOS`
+  — a mistyped key fails the build rather than being ignored, and JSON has no
+  comments, so there is nowhere to explain a setting *in* the config. An
+  explanatory `"comment"` key fails with `Additional properties are not allowed`.
+  Explain overlay settings here or in `README.md` instead. Key names are
+  camelCase (`minimumSystemVersion`, `hardenedRuntime`, `entitlements`).
+- `bundle.createUpdaterArtifacts` applies to the macOS `app` target too, so
+  `--bundles app` does not opt out of it. Both overlays that must not produce a
+  signed archive turn it off explicitly: `tauri.dev.conf.json` (a dev build has
+  no signing key, and would otherwise fail *after* writing the `.app`) and
+  `tauri.appstore.conf.json`. On this app that archive is a ~160 MB gzip of the
+  470 MB bundle — about 85 seconds per build.
 
 ## Versioning
 

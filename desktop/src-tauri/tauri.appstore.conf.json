@@ -1,10 +1,10 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "bundle": {
-    "targets": ["app"],
-    "comment2": "Self-update is grounds for App Store rejection. Build this variant with --no-default-features, which drops tauri-plugin-updater and flips get_shell_info's autoUpdate to false so the web app hides the prompt. The two update commands still compile, as inert stubs.",
+    "targets": [
+      "app"
+    ],
     "createUpdaterArtifacts": false,
-    "comment": "`resources` is reset to empty on purpose. The base config ships the PyInstaller sidecar, which the App Store sandbox cannot host at all — and because Tauri merges rather than replaces, leaving this out made every App Store build fail with `resource path ../../backend/dist/duct-sidecar doesn't exist`.",
     "resources": {},
     "macOS": {
       "entitlements": "Entitlements.appstore.plist",

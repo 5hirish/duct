@@ -142,8 +142,11 @@ export TAURI_SIGNING_PRIVATE_KEY_PATH=~/.tauri/duct-updater.key
 export TAURI_SIGNING_PRIVATE_KEY_PASSWORD=      # empty if the key has none
 ```
 
-`npm run build:dev` is unaffected — it passes `--bundles app`, which produces no
-updater artifact.
+`npm run build:dev` needs no key: `tauri.dev.conf.json` sets
+`createUpdaterArtifacts: false`. Passing `--bundles app` is *not* enough on its
+own — on macOS the updater archive is produced for the `app` target too, so a
+dev build would otherwise fail at the very last step, after the `.app` was
+already written.
 
 ## Releasing
 
