@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from tests.eval import (
     Dimension,
     DimensionScore,
@@ -64,29 +66,23 @@ def test_scorecard_passes_when_all_gates_clear():
     assert sc.dimension_scores == {"a": 4, "b": 5}
 
 
-def test_scorecard_fails_on_dimension_min_score():
-    sc = build_scorecard(_rubric(), _verdict(2, 5, must=True, nope=False))
-    assert sc.passed is False
-    assert any("scored 2 < required minimum 3" in f for f in sc.failures)
-
-
-def test_scorecard_fails_on_required_marker_unsatisfied():
-    sc = build_scorecard(_rubric(), _verdict(4, 4, must=False, nope=False))
-    assert sc.passed is False
-    assert any("required marker 'must'" in f for f in sc.failures)
-
-
-def test_scorecard_fails_on_forbidden_marker_present():
-    sc = build_scorecard(_rubric(), _verdict(4, 4, must=True, nope=True))
-    assert sc.passed is False
-    assert any("forbidden marker 'nope'" in f for f in sc.failures)
-
-
-def test_scorecard_fails_below_pass_threshold():
-    # a=3 (clears its min) but b=1 drags the weighted overall to (6+1)/3=2.33
-    sc = build_scorecard(_rubric(), _verdict(3, 1, must=True, nope=False))
-    assert sc.passed is False
-    assert any("pass threshold" in f for f in sc.failures)
+# Four independent gates, each of which alone must fail the scorecard. Every row
+# is otherwise a passing verdict, so the named gate is the only thing under test.
+@pytest.mark.parametrize(
+    ("gate", "scores", "must", "nope", "failure_text"),
+    [
+        ("dimension min score", (2, 5), True, False, "scored 2 < required minimum 3"),
+        ("required marker unsatisfied", (4, 4), False, False, "required marker 'must'"),
+        ("forbidden marker present", (4, 4), True, True, "forbidden marker 'nope'"),
+        # a=3 clears its min, but b=1 drags the weighted overall to (6+1)/3=2.33
+        ("weighted overall below threshold", (3, 1), True, False, "pass threshold"),
+    ],
+    ids=lambda v: v if isinstance(v, str) else "",
+)
+def test_scorecard_fails_on(gate, scores, must, nope, failure_text):
+    sc = build_scorecard(_rubric(), _verdict(*scores, must=must, nope=nope))
+    assert sc.passed is False, gate
+    assert any(failure_text in f for f in sc.failures), (gate, sc.failures)
 
 
 def test_scorecard_flags_missing_dimension():

@@ -3,8 +3,7 @@
 Scope kept tight: only tests that catch real regressions live here.
 Pure Pydantic round-trips, enum shape checks, and constructor smoke
 tests have been removed — Pydantic + Python tests itself. Real-data
-behaviour lives in tests/test_content_e2e.py and
-tests/test_seed_maxaura.py.
+behaviour lives in tests/test_content_e2e.py.
 
 What earns a place here:
   - Cache-stability of the orchestrator system prompt (huge cost lever)

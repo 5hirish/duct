@@ -4,44 +4,33 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
-import sys
-from pathlib import Path
 from uuid import uuid4
 
 import pytest
+
+from tests.conftest import make_sqlite_engine
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.pool import StaticPool
-from sqlmodel import Session, SQLModel
+from sqlmodel import Session
 
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
-from agents.audit.schema import AuditReport, ReportMode  # noqa: E402
-from agents.core.events import AgentEvent  # noqa: E402
-from config import Configs  # noqa: E402
-from db.session import get_session as get_session_dep  # noqa: E402
-from models.artifact import Artifact  # noqa: E402
-from models.auth import User  # noqa: E402
-from models.membership import ProjectMember  # noqa: E402
-from models.project import Project  # noqa: E402
-import routes.artifacts as artifacts_routes  # noqa: E402
-import service.artifact_store as store  # noqa: E402
-import service.auth as auth_service  # noqa: E402
-import service.storage as storage  # noqa: E402
-from service.membership import ROLE_OWNER  # noqa: E402
+from agents.audit.schema import AuditReport, ReportMode
+from agents.core.events import AgentEvent
+from config import Configs
+from db.session import get_session as get_session_dep
+from models.artifact import Artifact
+from models.auth import User
+from models.membership import ProjectMember
+from models.project import Project
+import routes.artifacts as artifacts_routes
+import service.artifact_store as store
+import service.auth as auth_service
+import service.storage as storage
+from service.membership import ROLE_OWNER
 
 
 @pytest.fixture
 def engine():
-    engine = create_engine(
-        "sqlite://",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-    SQLModel.metadata.create_all(engine)
+    engine = make_sqlite_engine()
     return engine
 
 

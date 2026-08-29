@@ -7,54 +7,39 @@ the caller's user-level rows during resolution, and are membership-gated.
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
 
 import pytest
+
+from tests.conftest import make_sqlite_engine
 from cryptography.fernet import Fernet
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, select
-from sqlalchemy.pool import StaticPool
-from sqlmodel import Session, SQLModel
+from sqlalchemy import select
+from sqlmodel import Session
 
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
-from config import Configs  # noqa: E402
-from db.session import get_session as get_session_dep  # noqa: E402
-from models.activity import ActivityLog  # noqa: E402
-from models.auth import User  # noqa: E402
-from models.connector import ConnectorCredential, ProjectConnector  # noqa: E402
-from models.membership import ProjectMember, ROLE_COLLABORATOR  # noqa: E402
-from models.project import Project  # noqa: E402
-import routes.project_connectors as pc_routes  # noqa: E402
-import service.auth as auth_service  # noqa: E402
-import service.credentials as credentials_service  # noqa: E402
-import service.execution.creds as creds_module  # noqa: E402
-from service.execution.creds import (  # noqa: E402
+from config import Configs
+from db.session import get_session as get_session_dep
+from models.activity import ActivityLog
+from models.auth import User
+from models.connector import ConnectorCredential, ProjectConnector
+from models.membership import ProjectMember, ROLE_COLLABORATOR
+from models.project import Project
+import routes.project_connectors as pc_routes
+import service.auth as auth_service
+import service.credentials as credentials_service
+import service.execution.creds as creds_module
+from service.execution.creds import (
     resolve_execution_creds,
     stored_connector_credentials,
 )
-from service.membership import ROLE_OWNER  # noqa: E402
+from service.membership import ROLE_OWNER
 
 FERNET_KEY = Fernet.generate_key().decode()
 
 
 @pytest.fixture
 def engine():
-    engine = create_engine(
-        "sqlite://",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-    SQLModel.metadata.create_all(engine)
-    # SQLAlchemy drops `postgresql_where` on SQLite, leaving a FULL unique
-    # index on project_id that would forbid collaborator rows — same
-    # workaround as test_project_invitations.py.
-    with engine.begin() as conn:
-        conn.exec_driver_sql("DROP INDEX IF EXISTS uq_project_members_single_owner")
+    engine = make_sqlite_engine(drop_partial_indexes=True)
     return engine
 
 

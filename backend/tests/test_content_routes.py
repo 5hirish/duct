@@ -14,17 +14,10 @@ from __future__ import annotations
 
 import importlib
 import os
-import sys
-from pathlib import Path
 from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
-
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
 
 TEST_DUCT_API_KEY = "test-duct-api-key"
 

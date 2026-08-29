@@ -8,37 +8,31 @@ projects, and that the GTM publish executor records its rollback target
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
 
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.pool import StaticPool
-from sqlmodel import Session, SQLModel
 
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+from tests.conftest import make_sqlite_engine
+from sqlmodel import Session
 
-from models.auth import User  # noqa: E402
-from models.execution import AUTONOMY_ASSISTED, AUTONOMY_MANUAL  # noqa: E402
-from models.membership import ProjectMember  # noqa: E402
-from models.project import Project  # noqa: E402
-import service.execution.gtm_exec as gtm_exec  # noqa: E402
-import service.execution.policy as policy  # noqa: E402
-from service.execution.policy import change_auto_eligible, should_auto_apply  # noqa: E402
-from service.execution.registry import (  # noqa: E402
+from models.auth import User
+from models.execution import AUTONOMY_ASSISTED, AUTONOMY_MANUAL
+from models.membership import ProjectMember
+from models.project import Project
+import service.execution.gtm_exec as gtm_exec
+import service.execution.policy as policy
+from service.execution.policy import change_auto_eligible, should_auto_apply
+from service.execution.registry import (
     EXECUTOR_REGISTRY,
     ExecutorSpec,
     register_executor,
 )
-from service.execution.service import (  # noqa: E402
+from service.execution.service import (
     StateError,
     apply_change_set,
     propose_change_set,
     rollback_change_set,
 )
-from service.membership import ROLE_OWNER  # noqa: E402
+from service.membership import ROLE_OWNER
 
 
 # ---------------------------------------------------------------------------
@@ -47,12 +41,7 @@ from service.membership import ROLE_OWNER  # noqa: E402
 
 @pytest.fixture
 def db():
-    engine = create_engine(
-        "sqlite://",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-    SQLModel.metadata.create_all(engine)
+    engine = make_sqlite_engine()
     with Session(engine) as session:
         yield session
 
@@ -141,47 +130,33 @@ def _spec(op_type="google_ads.add_negative_keywords", destructive=False, rollbac
         preview=lambda c, k: {},
         apply=lambda c, k: {},
         rollback=(lambda c, k: {}) if rollback else None,
-    ) if not destructive else ExecutorSpec(
-        op_type=op_type,
-        connector_type=op_type.split(".")[0],
-        label="x",
-        preview=lambda c, k: {},
-        apply=lambda c, k: {},
-        rollback=(lambda c, k: {}) if rollback else None,
-        destructive=True,
+        destructive=destructive,
     )
 
 
-def test_clean_allowlisted_change_is_eligible():
-    change = {"status": "proposed", "preview": {"diff": "x"}}
-    assert change_auto_eligible(_spec(), change) is True
+_CLEAN = {"status": "proposed", "preview": {"diff": "x"}}
 
 
-def test_off_allowlist_op_is_not_eligible():
-    # Budget moves money — deliberately off the allowlist for now.
-    change = {"status": "proposed", "preview": {"diff": "x"}}
-    assert change_auto_eligible(_spec("google_ads.set_campaign_budget"), change) is False
-
-
-def test_destructive_gate_is_absolute():
-    change = {"status": "proposed", "preview": {"diff": "x"}}
-    spec = _spec("google_ads.add_negative_keywords", destructive=True)
-    assert change_auto_eligible(spec, change) is False
-
-
-def test_no_rollback_means_not_eligible():
-    change = {"status": "proposed", "preview": {"diff": "x"}}
-    assert change_auto_eligible(_spec(rollback=False), change) is False
-
-
-def test_guardrail_violation_blocks_eligibility():
-    change = {"status": "blocked", "guardrail_violations": ["Never touch brand"], "preview": {}}
-    assert change_auto_eligible(_spec(), change) is False
-
-
-def test_preview_error_blocks_eligibility():
-    change = {"status": "proposed", "preview": {"error": "API down"}}
-    assert change_auto_eligible(_spec(), change) is False
+@pytest.mark.parametrize(
+    ("why", "spec", "change", "eligible"),
+    [
+        ("clean allowlisted change", _spec(), _CLEAN, True),
+        # Budget moves money — deliberately off the allowlist for now.
+        ("off the allowlist", _spec("google_ads.set_campaign_budget"), _CLEAN, False),
+        ("destructive gate is absolute", _spec(destructive=True), _CLEAN, False),
+        ("no rollback path", _spec(rollback=False), _CLEAN, False),
+        (
+            "guardrail violation",
+            _spec(),
+            {"status": "blocked", "guardrail_violations": ["Never touch brand"], "preview": {}},
+            False,
+        ),
+        ("preview errored", _spec(), {"status": "proposed", "preview": {"error": "API down"}}, False),
+    ],
+    ids=lambda v: v if isinstance(v, str) else "",
+)
+def test_change_auto_eligibility(why, spec, change, eligible):
+    assert change_auto_eligible(spec, change) is eligible, why
 
 
 # ---------------------------------------------------------------------------
@@ -192,30 +167,25 @@ def _proj(level):
     return Project(name="p", user_id=None, autonomy_level=level)  # type: ignore[arg-type]
 
 
-def test_should_auto_apply_requires_all_conditions():
-    eligible = [{"auto_eligible": True}, {"auto_eligible": True}]
-    assert should_auto_apply(_proj(AUTONOMY_ASSISTED), "agent", eligible) is True
+_OK = {"auto_eligible": True}
+_NOT_OK = {"auto_eligible": False}
 
 
-def test_user_source_never_auto_applies():
-    assert should_auto_apply(_proj(AUTONOMY_ASSISTED), "user", [{"auto_eligible": True}]) is False
-
-
-def test_manual_project_never_auto_applies():
-    assert should_auto_apply(_proj(AUTONOMY_MANUAL), "agent", [{"auto_eligible": True}]) is False
-
-
-def test_no_project_never_auto_applies():
-    assert should_auto_apply(None, "agent", [{"auto_eligible": True}]) is False
-
-
-def test_mixed_set_never_auto_applies():
-    mixed = [{"auto_eligible": True}, {"auto_eligible": False}]
-    assert should_auto_apply(_proj(AUTONOMY_ASSISTED), "agent", mixed) is False
-
-
-def test_empty_set_never_auto_applies():
-    assert should_auto_apply(_proj(AUTONOMY_ASSISTED), "agent", []) is False
+@pytest.mark.parametrize(
+    ("why", "autonomy", "source", "changes", "auto"),
+    [
+        ("all conditions met", AUTONOMY_ASSISTED, "agent", [_OK, _OK], True),
+        ("user-sourced set", AUTONOMY_ASSISTED, "user", [_OK], False),
+        ("manual project", AUTONOMY_MANUAL, "agent", [_OK], False),
+        ("no project", None, "agent", [_OK], False),
+        ("one ineligible change taints the set", AUTONOMY_ASSISTED, "agent", [_OK, _NOT_OK], False),
+        ("empty set", AUTONOMY_ASSISTED, "agent", [], False),
+    ],
+    ids=lambda v: v if isinstance(v, str) else "",
+)
+def test_should_auto_apply(why, autonomy, source, changes, auto):
+    project = _proj(autonomy) if autonomy is not None else None
+    assert should_auto_apply(project, source, changes) is auto, why
 
 
 # ---------------------------------------------------------------------------
@@ -598,14 +568,20 @@ def test_gtm_rollback_to_version_records_outgoing_live(fake_gtm):
 
 
 # ---------------------------------------------------------------------------
-# Registry hygiene — new wave-1 executors
+# Registry hygiene — every executor we ship
 # ---------------------------------------------------------------------------
 
-def test_wave1_executors_registered():
+def test_executors_registered():
     import service.execution.ga4_exec  # noqa: F401
     import service.execution.google_ads_exec  # noqa: F401
 
     expected = {
+        # Originals
+        "google_ads.add_negative_keywords",
+        "google_ads.pause_campaign",
+        "ga4.create_key_event",
+        "ga4.delete_key_event",
+        # Wave 1
         "google_ads.set_campaign_budget",
         "google_ads.set_campaign_bidding",
         "google_ads.add_keywords",
@@ -624,11 +600,17 @@ def test_wave1_executors_registered():
     assert expected <= set(EXECUTOR_REGISTRY)
     destructive = {op for op in expected if EXECUTOR_REGISTRY[op].destructive}
     assert destructive == {
+        "ga4.delete_key_event",
         "ga4.archive_audience",
         "ga4.delete_google_ads_link",
         "gtm.publish_version",
         "gtm.rollback_to_version",
     }
+    # Every op we ship must be reversible, destructive or not — an apply with no
+    # rollback path is the one thing the framework cannot undo.
+    for op in expected:
+        assert EXECUTOR_REGISTRY[op].rollback is not None, f"{op} must support rollback"
+
     # Everything on the auto-apply allowlist must be registered, reversible,
     # and non-destructive.
     for op in policy.AUTO_APPLY_ALLOWLIST:

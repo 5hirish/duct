@@ -7,22 +7,16 @@ tests/test_memory_phase2.py and are not repeated here.
 
 from __future__ import annotations
 
-import sys
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.pool import StaticPool
-from sqlmodel import Session, SQLModel
 
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+from tests.conftest import make_sqlite_engine
+from sqlmodel import Session
 
-from models.project import Project  # noqa: E402
-from service.memory import (  # noqa: E402
+from models.project import Project
+from service.memory import (
     build_memory_context,
     default_importance,
     expand_time_range,
@@ -32,22 +26,19 @@ from service.memory import (  # noqa: E402
     search,
     touch_recall,
 )
-from tests.eval.memory_recall import (  # noqa: E402
+from tests.eval.memory_recall import (
     ABSTENTION,
     KNOWLEDGE_UPDATE,
     format_report,
     run_eval,
     seed_corpus,
 )
-from utils.dates import utcnow  # noqa: E402
+from utils.dates import utcnow
 
 
 @pytest.fixture
 def db():
-    engine = create_engine(
-        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
-    )
-    SQLModel.metadata.create_all(engine)
+    engine = make_sqlite_engine()
     with Session(engine) as session:
         yield session
 
@@ -215,10 +206,7 @@ def test_no_subject_means_no_interjection(db, project):
 @pytest.fixture(scope="module")
 def graded():
     """Seed the corpus once and grade all 50 questions."""
-    engine = create_engine(
-        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
-    )
-    SQLModel.metadata.create_all(engine)
+    engine = make_sqlite_engine()
     with Session(engine) as db:
         project = Project(id=uuid4(), user_id=uuid4(), name="Acme")
         db.add(project)

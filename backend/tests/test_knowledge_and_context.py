@@ -4,30 +4,24 @@ prior-artifact MCP tools (Phase 3)."""
 from __future__ import annotations
 
 import json
-import sys
 from datetime import datetime, timezone
-from pathlib import Path
 from types import SimpleNamespace
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.pool import StaticPool
-from sqlmodel import Session, SQLModel
 
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+from tests.conftest import make_sqlite_engine
+from sqlmodel import Session
 
-from agents.audit.prompts import build_audit_user_prompt, build_unified_system_prompt  # noqa: E402
-from agents.audit.schema import AuditBusinessContext, CrawlPlan, CrawlResult  # noqa: E402
-from agents.audit.tools import _build_artifact_tools  # noqa: E402
-from agents.core.context import format_agent_context, format_prior_artifacts  # noqa: E402
-from agents.knowledge import knowledge_block, load_knowledge_pack  # noqa: E402
-import db.session as db_session_module  # noqa: E402
-from models.artifact import Artifact  # noqa: E402
-from models.auth import User  # noqa: E402
-from models.project import Project  # noqa: E402
+from agents.audit.prompts import build_audit_user_prompt, build_unified_system_prompt
+from agents.audit.schema import AuditBusinessContext, CrawlPlan, CrawlResult
+from agents.audit.tools import _build_artifact_tools
+from agents.core.context import format_agent_context, format_prior_artifacts
+from agents.knowledge import knowledge_block, load_knowledge_pack
+import db.session as db_session_module
+from models.artifact import Artifact
+from models.auth import User
+from models.project import Project
 
 
 # ---------------------------------------------------------------------------
@@ -94,10 +88,7 @@ def test_format_agent_context():
 
 @pytest.fixture
 def seeded(monkeypatch, tmp_path):
-    engine = create_engine(
-        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
-    )
-    SQLModel.metadata.create_all(engine)
+    engine = make_sqlite_engine()
 
     def _fake_db():
         yield Session(engine)

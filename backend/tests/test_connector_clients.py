@@ -9,26 +9,20 @@ No network — transport calls are monkeypatched.
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
-import service.apple.ads.client as asa  # noqa: E402
-import service.apple.ads.fetch as asa_fetch  # noqa: E402,F401 — registers connector
-import service.meta.ads.client as meta  # noqa: E402
-import service.meta.ads.fetch as meta_fetch  # noqa: E402,F401
-import service.openai.ads.client as oai  # noqa: E402
-import service.openai.ads.fetch as oai_fetch  # noqa: E402,F401
-import service.revenuecat.client as rc  # noqa: E402
-import service.revenuecat.fetch as rc_fetch  # noqa: E402,F401
-import service.stripe.client as st  # noqa: E402
-import service.stripe.fetch as st_fetch  # noqa: E402
-from service.connectors import CAP_ACCOUNTS, CONNECTOR_REGISTRY  # noqa: E402
+import service.apple.ads.client as asa
+import service.apple.ads.fetch as asa_fetch  # noqa: F401 — registers connector
+import service.meta.ads.client as meta
+import service.meta.ads.fetch as meta_fetch  # noqa: F401
+import service.openai.ads.client as oai
+import service.openai.ads.fetch as oai_fetch  # noqa: F401
+import service.revenuecat.client as rc
+import service.revenuecat.fetch as rc_fetch  # noqa: F401
+import service.stripe.client as st
+import service.stripe.fetch as st_fetch
+from service.connectors import CAP_ACCOUNTS, CONNECTOR_REGISTRY
 
 
 # ---------------------------------------------------------------------------

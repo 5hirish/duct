@@ -2,37 +2,26 @@
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
 
 import pytest
+
+from tests.conftest import make_sqlite_engine
 from cryptography.fernet import Fernet
-from sqlalchemy import create_engine
-from sqlalchemy.pool import StaticPool
-from sqlmodel import Session, SQLModel
+from sqlmodel import Session
 
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
-from config import Configs  # noqa: E402
-from models.auth import User  # noqa: E402
-from models.connector import ConnectorCredential  # noqa: E402
-import service.credentials as credentials_service  # noqa: E402
-import service.execution.creds as creds_module  # noqa: E402
-from service.execution.creds import resolve_execution_creds  # noqa: E402
+from config import Configs
+from models.auth import User
+from models.connector import ConnectorCredential
+import service.credentials as credentials_service
+import service.execution.creds as creds_module
+from service.execution.creds import resolve_execution_creds
 
 FERNET_KEY = Fernet.generate_key().decode()
 
 
 @pytest.fixture
 def db_session():
-    engine = create_engine(
-        "sqlite://",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-    SQLModel.metadata.create_all(engine)
+    engine = make_sqlite_engine()
     with Session(engine) as session:
         yield session
 

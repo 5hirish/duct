@@ -1,12 +1,48 @@
 """Shared pytest fixtures for backend agent tests.
 
 ``tests`` is a package (see tests/__init__.py) so the evaluation harness in
-``tests.eval`` imports cleanly from individual test modules.
+``tests.eval`` and the helpers here import cleanly from individual test modules.
 """
 
 import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.pool import StaticPool
+from sqlmodel import SQLModel
 
 from agents.audit.schema import AuditBusinessContext
+
+
+def make_sqlite_engine(*, drop_partial_indexes: bool = False):
+    """An in-memory SQLite engine with every registered SQLModel table created.
+
+    Eleven test modules were each hand-rolling this same four-line incantation.
+    The two non-obvious parts are worth stating once:
+
+    ``StaticPool`` + ``check_same_thread=False`` share ONE connection across
+    threads. ``TestClient`` runs sync handlers on a worker thread, and without
+    this each thread would open its own empty ``:memory:`` database.
+
+    ``drop_partial_indexes`` handles the Postgres-only partial indexes. SQLAlchemy
+    drops the ``postgresql_where`` clause on other dialects, which turns "one
+    owner per project" and "one pending invite per address" into *unconditional*
+    UNIQUE constraints that reject legitimate rows. Dropping them lets these
+    tests exercise the application logic; Postgres keeps them as the real
+    backstop, and the migration is what enforces them in production.
+    """
+    engine = create_engine(
+        "sqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    SQLModel.metadata.create_all(engine)
+    if drop_partial_indexes:
+        with engine.begin() as conn:
+            for index in (
+                "uq_project_members_single_owner",
+                "uq_project_invitations_pending_email",
+            ):
+                conn.exec_driver_sql(f"DROP INDEX IF EXISTS {index}")
+    return engine
 
 
 @pytest.fixture

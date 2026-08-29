@@ -6,42 +6,37 @@ Phase 1 routes are exercised in tests/test_memory.py and are not repeated here.
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
 from uuid import uuid4
 
 import pytest
+
+from tests.conftest import make_sqlite_engine
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, select
-from sqlalchemy.pool import StaticPool
-from sqlmodel import Session, SQLModel
+from sqlalchemy import select
+from sqlmodel import Session
 
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
-from agents.core.events import EventKind  # noqa: E402
-from agents.preferences import UserPreferences  # noqa: E402
-from db.session import get_session as get_session_dep  # noqa: E402
-from models.auth import User  # noqa: E402
-from models.content.conversation import AgentConversation  # noqa: E402
-from models.content.conversation import AgentEvent as AgentEventRow  # noqa: E402
-from models.membership import ProjectMember  # noqa: E402
-from models.memory import (  # noqa: E402
+from agents.core.events import EventKind
+from agents.preferences import UserPreferences
+from db.session import get_session as get_session_dep
+from models.auth import User
+from models.content.conversation import AgentConversation
+from models.content.conversation import AgentEvent as AgentEventRow
+from models.membership import ProjectMember
+from models.memory import (
     SCOPE_USER,
     SOURCE_USER,
     STATUS_ARCHIVED,
     STATUS_SUPERSEDED,
     ProjectMemory,
 )
-from models.project import Project  # noqa: E402
-import routes.memory as memory_routes  # noqa: E402
-import service.auth as auth_service  # noqa: E402
-import service.memory_consolidation as consolidation  # noqa: E402
-from service.membership import ROLE_OWNER  # noqa: E402
-from service.memory import remember, search, seed_user_preferences, short_id  # noqa: E402
-from service.memory_consolidation import (  # noqa: E402
+from models.project import Project
+import routes.memory as memory_routes
+import service.auth as auth_service
+import service.memory_consolidation as consolidation
+from service.membership import ROLE_OWNER
+from service.memory import remember, search, seed_user_preferences, short_id
+from service.memory_consolidation import (
     Consolidation,
     ExtractedEntry,
     MemoryClose,
@@ -51,10 +46,7 @@ from service.memory_consolidation import (  # noqa: E402
 
 @pytest.fixture
 def engine():
-    engine = create_engine(
-        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
-    )
-    SQLModel.metadata.create_all(engine)
+    engine = make_sqlite_engine()
     return engine
 
 

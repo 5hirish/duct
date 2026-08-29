@@ -1,14 +1,8 @@
 import importlib
 import os
-import sys
-from pathlib import Path
 
+import pytest
 from fastapi.testclient import TestClient
-
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
 
 TEST_DUCT_API_KEY = "test-duct-api-key"
 
@@ -38,6 +32,18 @@ def _load_server_with_env(*, expose_docs=False, docs_password="", docs_user="doc
     import server
 
     return importlib.reload(server)
+
+
+@pytest.fixture(scope="module")
+def server_client():
+    """One default-env server for the tests that do not vary the environment.
+
+    `_load_server_with_env` calls `importlib.reload(server)`, which is the most
+    expensive thing this module does. The tests that *do* vary the env (docs
+    exposure, basic auth) still call it directly.
+    """
+    server = _load_server_with_env()
+    return TestClient(server.app)
 
 
 def test_health_ok():
@@ -108,126 +114,59 @@ def test_openapi_docs_require_basic_auth_when_password_set():
     )
 
 
-def test_connector_oauth_authorize_redirects_to_google():
-    server = _load_server_with_env()
-    client = TestClient(server.app)
-    res = client.get(
-        "/auth/connectors/google_ads/oauth/authorize",
+# Every Google connector shares one OAuth implementation, so these are the same
+# assertion per registered connector id — a table, not three copies. A connector
+# that is missing from the registry fails here with a 404, which is what the old
+# `test_ga4_and_gsc_connectors_registered` proved indirectly.
+GOOGLE_CONNECTORS = ("google_ads", "ga4", "gsc")
+
+
+@pytest.mark.parametrize("connector", GOOGLE_CONNECTORS)
+def test_connector_oauth_authorize_redirects_to_google(server_client, connector):
+    res = server_client.get(
+        f"/auth/connectors/{connector}/oauth/authorize",
         follow_redirects=False,
     )
     assert res.status_code == 307
-    location = res.headers.get("location", "")
-    assert "accounts.google.com" in location
+    assert "accounts.google.com" in res.headers.get("location", "")
 
 
-def test_ga4_connector_oauth_authorize_redirects_to_google():
-    server = _load_server_with_env()
-    client = TestClient(server.app)
-    res = client.get(
-        "/auth/connectors/ga4/oauth/authorize",
-        follow_redirects=False,
-    )
-    assert res.status_code == 307
-    location = res.headers.get("location", "")
-    assert "accounts.google.com" in location
-
-
-def test_gsc_connector_oauth_authorize_redirects_to_google():
-    server = _load_server_with_env()
-    client = TestClient(server.app)
-    res = client.get(
-        "/auth/connectors/gsc/oauth/authorize",
-        follow_redirects=False,
-    )
-    assert res.status_code == 307
-    location = res.headers.get("location", "")
-    assert "accounts.google.com" in location
-
-
-def test_connector_callback_invalid_state_returns_400():
-    server = _load_server_with_env()
-    client = TestClient(server.app)
-    res = client.get(
-        "/auth/connectors/google_ads/oauth/callback",
-        params={"code": "abc", "state": "bad"},
-    )
+@pytest.mark.parametrize(
+    "path",
+    [f"/auth/connectors/{c}/oauth/callback" for c in GOOGLE_CONNECTORS]
+    # The short path is a separate route that must reject the same way.
+    + ["/auth/google/callback"],
+)
+def test_callback_rejects_invalid_state(server_client, path):
+    res = server_client.get(path, params={"code": "abc", "state": "bad"})
     assert res.status_code == 400
     assert "Invalid or expired OAuth state" in res.text
 
 
-def test_ga4_connector_callback_invalid_state_returns_400():
-    server = _load_server_with_env()
-    client = TestClient(server.app)
-    res = client.get(
-        "/auth/connectors/ga4/oauth/callback",
-        params={"code": "abc", "state": "bad"},
+def test_unknown_connector_oauth_authorize_returns_404(server_client):
+    res = server_client.get(
+        "/auth/connectors/unknown/oauth/authorize", follow_redirects=False
     )
-    assert res.status_code == 400
-    assert "Invalid or expired OAuth state" in res.text
-
-
-def test_gsc_connector_callback_invalid_state_returns_400():
-    server = _load_server_with_env()
-    client = TestClient(server.app)
-    res = client.get(
-        "/auth/connectors/gsc/oauth/callback",
-        params={"code": "abc", "state": "bad"},
-    )
-    assert res.status_code == 400
-    assert "Invalid or expired OAuth state" in res.text
-
-
-def test_google_short_callback_path_invalid_state_returns_400():
-    server = _load_server_with_env()
-    client = TestClient(server.app)
-    res = client.get(
-        "/auth/google/callback",
-        params={"code": "abc", "state": "bad"},
-    )
-    assert res.status_code == 400
-    assert "Invalid or expired OAuth state" in res.text
-
-
-def test_unknown_connector_oauth_authorize_returns_404():
-    server = _load_server_with_env()
-    client = TestClient(server.app)
-    res = client.get("/auth/connectors/unknown/oauth/authorize", follow_redirects=False)
     assert res.status_code == 404
     assert res.json().get("detail") == "Unknown connector"
 
 
-def test_ga4_and_gsc_connectors_registered():
-    from service.connectors import get_connector
-
-    _load_server_with_env()
-    ga4_meta, _ = get_connector("ga4")
-    gsc_meta, _ = get_connector("gsc")
-    assert ga4_meta.id == "ga4"
-    assert gsc_meta.id == "gsc"
-
-
-def test_accounts_missing_api_key_returns_403():
-    server = _load_server_with_env()
-    client = TestClient(server.app)
-    res = client.get("/api/connectors/google_ads/accounts")
+def test_accounts_missing_api_key_returns_403(server_client):
+    res = server_client.get("/api/connectors/google_ads/accounts")
     assert res.status_code == 403
     assert "API key is required" in res.json().get("detail", "")
 
 
-def test_accounts_missing_refresh_token_returns_422():
-    server = _load_server_with_env()
-    client = TestClient(server.app)
+def test_accounts_missing_refresh_token_returns_422(server_client):
     headers = {"X-API-Key": TEST_DUCT_API_KEY}
-    res = client.get("/api/connectors/google_ads/accounts", headers=headers)
+    res = server_client.get("/api/connectors/google_ads/accounts", headers=headers)
     assert res.status_code == 422
     detail = res.json().get("detail", "")
     assert "refresh_token" in (detail if isinstance(detail, str) else str(detail)).lower()
 
 
-def test_unknown_connector_accounts_returns_404():
-    server = _load_server_with_env()
-    client = TestClient(server.app)
+def test_unknown_connector_accounts_returns_404(server_client):
     headers = {"X-API-Key": TEST_DUCT_API_KEY}
-    res = client.get("/api/connectors/unknown_source/accounts", headers=headers)
+    res = server_client.get("/api/connectors/unknown_source/accounts", headers=headers)
     assert res.status_code == 404
     assert res.json().get("detail") == "Unknown connector"

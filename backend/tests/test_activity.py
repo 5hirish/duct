@@ -2,41 +2,36 @@
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
 from uuid import uuid4
 
 import pytest
+
+from tests.conftest import make_sqlite_engine
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, select
-from sqlalchemy.pool import StaticPool
-from sqlmodel import Session, SQLModel
+from sqlalchemy import select
+from sqlmodel import Session
 
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
-from config import Configs  # noqa: E402
-from db.session import get_session as get_session_dep  # noqa: E402
-from models.activity import ActivityLog  # noqa: E402
-from models.auth import User  # noqa: E402
-from models.execution import AUTONOMY_ASSISTED, ExecutionChangeSet  # noqa: E402
-from models.membership import ProjectMember  # noqa: E402
-from models.project import Project  # noqa: E402
-import routes.activity as activity_routes  # noqa: E402
-import service.artifact_store as store  # noqa: E402
-import service.auth as auth_service  # noqa: E402
-import service.execution.policy as policy  # noqa: E402
-import service.storage as storage  # noqa: E402
-from service.activity import log_activity  # noqa: E402
-from service.execution.registry import EXECUTOR_REGISTRY, ExecutorSpec, register_executor  # noqa: E402
-from service.execution.service import (  # noqa: E402
+from config import Configs
+from db.session import get_session as get_session_dep
+from models.activity import ActivityLog
+from models.auth import User
+from models.execution import AUTONOMY_ASSISTED, ExecutionChangeSet
+from models.membership import ProjectMember
+from models.project import Project
+import routes.activity as activity_routes
+import service.artifact_store as store
+import service.auth as auth_service
+import service.execution.policy as policy
+import service.storage as storage
+from service.activity import log_activity
+from service.execution.registry import EXECUTOR_REGISTRY, ExecutorSpec, register_executor
+from service.execution.service import (
     _log_gtm_publishes,
     propose_change_set,
     rollback_change_set,
 )
-from service.membership import ROLE_OWNER  # noqa: E402
+from service.membership import ROLE_OWNER
 
 
 # ---------------------------------------------------------------------------
@@ -45,12 +40,7 @@ from service.membership import ROLE_OWNER  # noqa: E402
 
 @pytest.fixture
 def engine():
-    engine = create_engine(
-        "sqlite://",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-    SQLModel.metadata.create_all(engine)
+    engine = make_sqlite_engine()
     return engine
 
 

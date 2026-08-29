@@ -2,36 +2,25 @@
 
 from __future__ import annotations
 
-import sys
 import uuid
-from pathlib import Path
 
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.pool import StaticPool
-from sqlmodel import Session, SQLModel, select
 
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+from tests.conftest import make_sqlite_engine
+from sqlmodel import Session, select
 
-from agents.core.session import close_session  # noqa: E402
-from models.auth import User  # noqa: E402
-from models.content import AgentConversation  # noqa: E402
-from models.membership import ProjectMember  # noqa: E402
-from models.project import Project  # noqa: E402
-import routes.agents as agents_routes  # noqa: E402
-from service.membership import ROLE_OWNER  # noqa: E402
+from agents.core.session import close_session
+from models.auth import User
+from models.content import AgentConversation
+from models.membership import ProjectMember
+from models.project import Project
+import routes.agents as agents_routes
+from service.membership import ROLE_OWNER
 
 
 @pytest.fixture
 def engine():
-    engine = create_engine(
-        "sqlite://",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-    SQLModel.metadata.create_all(engine)
+    engine = make_sqlite_engine()
     return engine
 
 

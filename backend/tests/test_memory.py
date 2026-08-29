@@ -7,27 +7,22 @@ and a small FastAPI app for the route surface.
 
 from __future__ import annotations
 
-import sys
 from datetime import timedelta
-from pathlib import Path
 from uuid import uuid4
 
 import pytest
+
+from tests.conftest import make_sqlite_engine
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, select
-from sqlalchemy.pool import StaticPool
-from sqlmodel import Session, SQLModel
+from sqlalchemy import select
+from sqlmodel import Session
 
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
-from db.session import get_session as get_session_dep  # noqa: E402
-from models.artifact import Artifact  # noqa: E402
-from models.auth import User  # noqa: E402
-from models.membership import ProjectMember  # noqa: E402
-from models.memory import (  # noqa: E402
+from db.session import get_session as get_session_dep
+from models.artifact import Artifact
+from models.auth import User
+from models.membership import ProjectMember
+from models.memory import (
     SCOPE_ARTIFACT,
     SCOPE_PROJECT,
     SCOPE_USER,
@@ -38,11 +33,11 @@ from models.memory import (  # noqa: E402
     STATUS_SUPERSEDED,
     ProjectMemory,
 )
-from models.project import Project  # noqa: E402
-import routes.memory as memory_routes  # noqa: E402
-import service.auth as auth_service  # noqa: E402
-from service.membership import ROLE_OWNER  # noqa: E402
-from service.memory import (  # noqa: E402
+from models.project import Project
+import routes.memory as memory_routes
+import service.auth as auth_service
+from service.membership import ROLE_OWNER
+from service.memory import (
     build_memory_context,
     content_hash,
     record_artifact_memory,
@@ -56,7 +51,7 @@ from service.memory import (  # noqa: E402
     short_id,
     touch_recall,
 )
-from utils.dates import utcnow  # noqa: E402
+from utils.dates import utcnow
 
 
 # ---------------------------------------------------------------------------
@@ -65,12 +60,7 @@ from utils.dates import utcnow  # noqa: E402
 
 @pytest.fixture
 def engine():
-    engine = create_engine(
-        "sqlite://",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-    SQLModel.metadata.create_all(engine)
+    engine = make_sqlite_engine()
     return engine
 
 
