@@ -313,6 +313,7 @@ class GenerateInsightsAgent:
         user_context: dict[str, Any] | None = None,
         mode: str = "paid_ads",
         emit_event: Callable | None = None,
+        memory: str = "",
     ) -> SynthesisSchema | None:
         """Phase 2: structured output from connector briefs + supplementary data.
 
@@ -331,6 +332,7 @@ class GenerateInsightsAgent:
                     goal=goal.value,
                     custom_goal=custom_goal or "",
                     context=context or "",
+                    memory=memory,
                 )
             ),
         ]

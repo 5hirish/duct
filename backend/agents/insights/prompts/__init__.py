@@ -110,6 +110,7 @@ def get_synthesis_user_prompt(
     goal: Any = None,
     custom_goal: str = "",
     context: str = "",
+    memory: str = "",
 ) -> str:
     """User message with per-request context + connector data payloads.
 
@@ -153,6 +154,12 @@ def get_synthesis_user_prompt(
         parts.append(f"<user_goal>\n{_goal_heading(goal, custom_goal, mode)}\n</user_goal>")
     if context:
         parts.append(f"<additional_context>\n{context}\n</additional_context>")
+    # Project memory, pre-rendered by service/memory.py (it carries its own
+    # citation rules). Here rather than in the system prompt for the same reason
+    # as everything else in this function: the cached system prefix must stay
+    # byte-identical across customers.
+    if memory:
+        parts.append(memory)
 
     parts.append("<data>\n")
 

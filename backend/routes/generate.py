@@ -160,6 +160,37 @@ async def _step_finished(
     )
 
 
+def _project_memory(project_id, user: User | None, mode: str) -> str:
+    """The project's memory blocks for a brief, or "" when there is no project.
+
+    Membership is re-checked here rather than trusted from the request: a brief
+    is generated from a client-supplied project id, and project isolation is
+    absolute. Best-effort — a missing digest degrades the brief, never fails it.
+    """
+    if project_id is None or user is None:
+        return ""
+    try:
+        from db.session import get_session as db_session
+        from service.membership import member_role
+        from service.memory import build_memory_context, touch_recall
+
+        with next(db_session()) as db:
+            if member_role(project_id, user.id, db) is None:
+                return ""
+            context = build_memory_context(
+                db,
+                project_id=project_id,
+                user_id=user.id,
+                agent_type=f"insights_{mode}",
+                include_artifacts=False,
+            )
+            touch_recall(db, context.recalled_ids)
+            return context.text
+    except Exception:  # noqa: BLE001 — the brief runs with or without memory
+        logger.warning("generate: project memory unavailable", exc_info=True)
+        return ""
+
+
 async def _run_generate_pipeline(
     req: GenerateRequest,
     *,
@@ -372,6 +403,12 @@ async def _run_generate_pipeline(
         if req.mode_context:
             full_context = f"{req.mode_context}\n\n{full_context}".strip() if full_context else req.mode_context
 
+        # The brief is the ritual the memory design wants proactive recall to
+        # speak through: it reads what the project already knows — open
+        # incidents, targets, past decisions — and cites the ids in its
+        # findings. Membership-checked, best-effort, and in the USER message.
+        memory_block = await asyncio.to_thread(_project_memory, req.project_id, user, mode)
+
         registered = agent.setup_tools_for_goal(goal=req.goal, fetch_fns=fetch_fns, mode=mode)
 
         if isinstance(agent, (AdkInsightsRunner, ClaudeAgentSdkRunner)):
@@ -395,6 +432,7 @@ async def _run_generate_pipeline(
                 gsc_site_url=gsc_site_url,
                 connected_sources=connections,
                 emit_event=emit_event,
+                memory=memory_block,
             )
             await _step_finished(emit_event, STEP_SUPPLEMENTARY)
             await _step_finished(emit_event, STEP_SYNTHESIZE)
@@ -427,6 +465,7 @@ async def _run_generate_pipeline(
                 user_context=user_ctx,
                 mode=mode,
                 emit_event=emit_event,
+                memory=memory_block,
             )
             await _step_finished(emit_event, STEP_SYNTHESIZE)
 

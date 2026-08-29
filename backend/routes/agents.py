@@ -858,6 +858,9 @@ async def _start_seo_audit(session_id: str, body: dict, emit_fn: Any) -> None:
                     user_id=owner_id,
                     agent_type=str(AgentType.SEO_AUDIT),
                     query=query,
+                    # The site under audit: open watches and incidents on it are
+                    # raised in the opening summary instead of waiting to be asked.
+                    subject=query,
                 )
                 touch_recall(db, context.recalled_ids)
         except Exception:

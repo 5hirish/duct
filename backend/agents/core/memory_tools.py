@@ -113,7 +113,9 @@ class RememberFactArgs(BaseModel):
         default="medium", description="How sure you are: low | medium | high."
     )
     importance: int = Field(
-        default=5, description="0–10. 8+ for goals and decisions, 3 for routine observations."
+        # 0 means "unrated": the service then rates by kind rather than parking
+        # every unrated entry on a flat middle value.
+        default=0, description="0–10, 0 to let Duct rate it. 8+ for goals and decisions.",
     )
 
 
@@ -198,7 +200,7 @@ def _remember_sync(args: dict, *, project_id, user_id, conversation_id, agent_ty
             source_type=source_type,
             source_refs=refs,
             confidence=str(args.get("confidence") or "medium"),
-            importance=int(args.get("importance") or 5),
+            importance=int(args["importance"]) if args.get("importance") else None,
             agent_type=agent_type,
             conversation_id=conversation_id,
         )
@@ -245,6 +247,10 @@ def _search_sync(args: dict, *, project_id, user_id, scope) -> dict:
             until=parse_iso(args.get("to_date") or ""),
             include_superseded=bool(args.get("include_superseded")),
             limit=int(args.get("limit") or _SEARCH_LIMIT),
+            # A question, not a filter form: read any date range out of the
+            # words when the model did not pass one, and rank what comes back.
+            time_aware=True,
+            rank=True,
         )
         return {"count": len(rows), "memories": [_entry_payload(r) for r in rows]}
 

@@ -376,6 +376,7 @@ class ClaudeAgentSdkRunner:
         gsc_site_url: str = "",
         connected_sources: list[str] | None = None,
         emit_event: Callable | None = None,
+        memory: str = "",
     ) -> tuple[dict[str, Any], SynthesisSchema | None]:
         """Run the full two-phase pipeline.
 
@@ -414,6 +415,7 @@ class ClaudeAgentSdkRunner:
             goal=goal,
             custom_goal=custom_goal,
             context=context,
+            memory=memory,
         )
 
         # Phase 2 — Claude Agent SDK synthesis

@@ -18,12 +18,20 @@ import {
   rollbackChangeSet,
 } from "@/lib/executionApi";
 import { MEMORY_KIND_ICONS, createMemory, deleteMemory } from "@/lib/memoryApi";
+import { trackEvent } from "../../lib/analytics-client";
 import { getActiveProject } from "@/lib/projects";
 
 /** Deep link to one entry in the project timeline, which fetches and highlights
  * it regardless of the filters in force there. */
 function memoryHref(projectId, memory) {
   return `/project/${projectId}/memory?m=${encodeURIComponent(memory.memory_id)}`;
+}
+
+/** Chip click-through — whether anyone follows a citation back to its source is
+ * the one honest signal that the attribution loop is worth its cost. The id is
+ * the short, non-identifying one; no memory text leaves the page. */
+function trackChip(surface, memory) {
+  trackEvent("memory_chip_opened", { surface, memory_id: memory.id, kind: memory.kind });
 }
 
 /** The quiet "Remembered: …" line under a turn that wrote project memory.
@@ -60,6 +68,7 @@ function MemoryNote({ memories }) {
               {projectId && m.memory_id ? (
                 <a
                   href={memoryHref(projectId, m)}
+                  onClick={() => trackChip("written", m)}
                   className="underline underline-offset-2 hover:text-foreground"
                 >
                   {m.title}
@@ -122,6 +131,7 @@ function MemoryRecall({ memories }) {
             {projectId && m.memory_id ? (
               <a
                 href={memoryHref(projectId, m)}
+                onClick={() => trackChip("recalled", m)}
                 className="min-w-0 flex-1 underline underline-offset-2 hover:text-foreground"
               >
                 {m.title}

@@ -187,6 +187,15 @@ don't fit.
   both harnesses are in `agents/core/memory_tools.py` and the shared prompt
   stanza is `agents/core/prompts.py::MEMORY_DISCIPLINE`. Per-project memory goes
   in the USER message, never the system prompt.
+  `search(time_aware=True, rank=True)` is the question-shaped read — it reads a
+  date range out of the words, treats a named kind as a filter, matches on ANY
+  term and then tightens (all terms → two → one), and ranks by relevance +
+  recency + importance + recall. Leave both off for a filter form like the
+  timeline, whose inputs are the user's explicit instructions. Retrieval makes
+  no model calls, by design. `tests/eval/memory_recall.py` holds the 50-question
+  set (`pytest tests/test_memory_retrieval.py -s` prints the per-axis report);
+  it exists because it caught the AND-everything query bug that made questions
+  retrieve nothing, so extend it before tuning retrieval by feel.
 - `service/rest.py` — sync HTTP transport for the reporting connectors:
   retry, backoff, rate-limit pacing, error typing. A new connector declares
   an `Endpoint` and an `ApiError` subclass and writes no transport code;
