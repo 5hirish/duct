@@ -4,11 +4,15 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "tauri": "tauri",
-    "dev": "tauri dev",
-    "dev:local": "tauri dev --config src-tauri/tauri.local.conf.json",
     "build": "tauri build",
-    "build:dev": "tauri build --debug --bundles app --config src-tauri/tauri.dev.conf.json"
+    "build:dev": "tauri build --debug --bundles app --config src-tauri/tauri.dev.conf.json",
+    "dev": "tauri dev",
+    "predev": "node scripts/check-sidecar-fresh.mjs",
+    "dev:local": "tauri dev --config src-tauri/tauri.local.conf.json",
+    "prebuild": "node scripts/check-sidecar-fresh.mjs",
+    "prebuild:dev": "node scripts/check-sidecar-fresh.mjs",
+    "predev:local": "node scripts/check-sidecar-fresh.mjs",
+    "tauri": "tauri"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2"

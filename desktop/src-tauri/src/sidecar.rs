@@ -170,6 +170,11 @@ fn try_spawn(app: &AppHandle) -> Result<(), String> {
         command.env("FRONTEND_ORIGIN", origin);
     }
 
+    // Python block-buffers stdout when it is a pipe rather than a terminal, so
+    // without this the log we just went to the trouble of relaying arrives in
+    // 8 KB gulps — i.e. never, for the handful of lines that precede a crash.
+    command.env("PYTHONUNBUFFERED", "1");
+
     command.env("GOOGLE_DESKTOP_OAUTH_CLIENT_ID", GOOGLE_DESKTOP_CLIENT_ID);
     if let Some(secret) = GOOGLE_DESKTOP_CLIENT_SECRET.filter(|s| !s.is_empty()) {
         command.env("GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET", secret);
@@ -247,15 +252,21 @@ fn try_spawn(app: &AppHandle) -> Result<(), String> {
             }
         }
 
-        // Keep draining stdout. The pipe has a finite buffer; if the sidecar
-        // ever writes past it with nobody reading, it blocks on write and the
-        // whole backend wedges.
-        let mut sink = String::new();
-        while let Ok(n) = reader.read_line(&mut sink) {
+        // Keep draining stdout, and *forward* what we read. The pipe has a
+        // finite buffer; if the sidecar ever writes past it with nobody
+        // reading, it blocks on write and the whole backend wedges. Dropping
+        // the lines on the floor avoids that too, but it also throws away
+        // uvicorn's access log — which is the only record of which request
+        // failed. Relaying to our own stderr (already inherited, so it reaches
+        // `Console.app` and `tauri dev`) keeps the pipe clear *and* keeps a
+        // shipped build diagnosable.
+        let mut relayed = String::new();
+        while let Ok(n) = reader.read_line(&mut relayed) {
             if n == 0 {
                 break;
             }
-            sink.clear();
+            eprint!("[sidecar] {relayed}");
+            relayed.clear();
         }
     });
 
