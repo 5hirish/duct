@@ -15,6 +15,7 @@
 //! `/?auth_code=` exchange path.
 
 mod sidecar;
+mod telemetry;
 
 use keyring::{Entry, Error as KeyringError};
 use tauri::{AppHandle, Manager, Url};
@@ -183,6 +184,30 @@ async fn install_update(_app: AppHandle) -> Result<(), String> {
     Err("this build does not support self-update".into())
 }
 
+/// Whether crash reporting is on, and whether this build can do it at all.
+///
+/// `available` is false when no DSN was compiled in — the settings UI shows the
+/// toggle as unavailable rather than offering a switch that does nothing.
+#[tauri::command]
+fn get_telemetry_settings() -> serde_json::Value {
+    let enabled = telemetry::default_data_dir()
+        .map(|dir| telemetry::read_prefs(&dir).enabled)
+        .unwrap_or(false);
+    serde_json::json!({
+        "enabled": enabled,
+        "available": telemetry::SENTRY_DSN.filter(|d| !d.is_empty()).is_some(),
+    })
+}
+
+/// Record the user's choice. Takes effect for the sidecar on next launch —
+/// it reads its DSN from the environment the shell hands it at spawn, and this
+/// deliberately does not restart a running backend out from under the user.
+#[tauri::command]
+fn set_telemetry_enabled(enabled: bool) -> Result<(), String> {
+    let dir = telemetry::default_data_dir().ok_or("could not resolve the data directory")?;
+    telemetry::write_prefs(&dir, telemetry::TelemetryPrefs { enabled })
+}
+
 /// Forward `ai.getduct.desktop://auth?auth_code=...` into the webview by
 /// navigating it to `/?auth_code=...` on whatever origin this shell build
 /// loads (hosted app or local dev server). The login page's existing
@@ -225,6 +250,14 @@ fn handle_auth_deep_link(app: &AppHandle, url: &Url) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // Before the builder: a panic during setup is exactly the kind of failure
+    // worth reporting, and the guard has to outlive the whole app — dropping it
+    // stops the transport, so binding it to `_guard` (not `_`) matters.
+    let telemetry_enabled = telemetry::default_data_dir()
+        .map(|dir| telemetry::read_prefs(&dir).enabled)
+        .unwrap_or(false);
+    let _guard = telemetry::init(telemetry_enabled);
+
     let builder = tauri::Builder::default();
 
     // MUST be the first plugin registered (Tauri's own requirement). It only
@@ -279,6 +312,10 @@ pub fn run() {
             // still opens so the user sees the reason rather than nothing.
             if let Err(err) = sidecar::spawn(app.handle()) {
                 eprintln!("duct: sidecar failed to start: {err}");
+                // The webview shows this to the user via `get_sidecar_info`,
+                // but a bundle that cannot start its own backend is broken for
+                // everyone on that platform, not just this person.
+                telemetry::capture_message(&format!("sidecar failed to start: {err}"));
             }
             Ok(())
         })
@@ -290,7 +327,9 @@ pub fn run() {
             get_sidecar_info,
             open_external,
             check_for_update,
-            install_update
+            install_update,
+            get_telemetry_settings,
+            set_telemetry_enabled
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

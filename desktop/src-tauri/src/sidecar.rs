@@ -26,7 +26,7 @@ use std::process::{Child, Command, Stdio};
 use std::sync::Mutex;
 
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Manager, State};
+use tauri::{AppHandle, Manager, State, WebviewUrl};
 
 /// Directory name of the PyInstaller onedir output, both in `backend/dist/`
 /// and inside the bundle's resource dir.
@@ -127,6 +127,18 @@ fn sidecar_path(app: &AppHandle) -> Result<PathBuf, String> {
     ))
 }
 
+/// Origin (`scheme://host[:port]`) of this shell's main window.
+///
+/// `None` for a bundled-frontend window, which has no remote origin to hand a
+/// browser — the sidecar keeps its own default in that case.
+fn frontend_origin(app: &AppHandle) -> Option<String> {
+    let window = app.config().app.windows.first()?;
+    match &window.url {
+        WebviewUrl::External(url) => Some(url.origin().ascii_serialization()),
+        _ => None,
+    }
+}
+
 /// Start the sidecar and read its handshake on a background thread.
 ///
 /// Returns as soon as the process is spawned; `get_sidecar_info` reports `null`
@@ -148,9 +160,36 @@ fn try_spawn(app: &AppHandle) -> Result<(), String> {
     // The frozen bundle deliberately ships no `.env`, so sign-in credentials
     // have to arrive through the environment. Only set what we actually have —
     // an empty value would otherwise shadow a dev's `backend/.env.local`.
+    // Where the sidecar should send a browser after sign-in. Its own default is
+    // `tauri://localhost`, which is right for CORS and useless as a redirect: the
+    // OAuth callback lands in the *system browser*, which cannot follow that
+    // scheme. Every consumer of FRONTEND_ORIGIN builds a URL a browser has to
+    // open — the sign-in relay, invite links, the connections redirect — so it
+    // has to be the origin this shell actually shows.
+    if let Some(origin) = frontend_origin(app) {
+        command.env("FRONTEND_ORIGIN", origin);
+    }
+
     command.env("GOOGLE_DESKTOP_OAUTH_CLIENT_ID", GOOGLE_DESKTOP_CLIENT_ID);
     if let Some(secret) = GOOGLE_DESKTOP_CLIENT_SECRET.filter(|s| !s.is_empty()) {
         command.env("GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET", secret);
+    }
+
+    // Crash reporting for the bundled backend, only with consent. `local_server`
+    // blanks SENTRY_DSN by default on purpose — a laptop is not a deployment —
+    // so passing nothing here leaves that default intact. Passing it explicitly
+    // is the only way the sidecar ever reports, which keeps the decision in one
+    // place the user controls rather than spread across two processes.
+    let consented = crate::telemetry::default_data_dir()
+        .map(|dir| crate::telemetry::read_prefs(&dir).enabled)
+        .unwrap_or(false);
+    if consented {
+        if let Some(dsn) = crate::telemetry::SENTRY_DSN.filter(|d| !d.is_empty()) {
+            command.env("SENTRY_DSN", dsn);
+            // Without this the sidecar's own localhost guard drops every event:
+            // it binds 127.0.0.1, which server.py treats as "not deployed".
+            command.env("SENTRY_ENABLE_LOCALHOST", "1");
+        }
     }
 
     // The sidecar is a console binary — that is deliberate, its stdout carries

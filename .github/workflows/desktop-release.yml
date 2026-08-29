@@ -30,6 +30,13 @@ name: desktop — release (macOS, Windows, Linux)
 #   All platforms (self-update)
 #     TAURI_SIGNING_PRIVATE_KEY    contents of the minisign private key
 #     TAURI_SIGNING_PRIVATE_KEY_PASSWORD
+#   All platforms (crash reporting)
+#     SENTRY_DSN                   same DSN the backend uses. Compiled into the
+#                                  shell by `option_env!`, so like the OAuth
+#                                  secret below it must be on every step that
+#                                  runs `tauri build`. Absent is fine: the shell
+#                                  simply never reports, and the settings toggle
+#                                  hides itself.
 #   All platforms (sign-in)
 #     GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET
 #                                  secret of the Google *Desktop app* OAuth client
@@ -125,6 +132,7 @@ jobs:
         working-directory: desktop
         env:
           GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: npm run tauri -- build --bundles app
 
       # ---- main path: signed + notarized ------------------------------------
@@ -161,6 +169,7 @@ jobs:
           APPLE_SIGNING_IDENTITY: ${{ secrets.DUCT_DEVID_IDENTITY }}
           APPLE_TEAM_ID: ${{ secrets.DUCT_APPLE_TEAM_ID }}
           GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: npm run tauri -- build --bundles app
 
       - name: Sign the sidecar's nested binaries
@@ -228,6 +237,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: npm run tauri -- build --bundles dmg,updater --no-bundle-app
 
       - uses: actions/upload-artifact@v4
@@ -311,6 +321,7 @@ jobs:
           # way around it; installing `fuse` is not enough.
           APPIMAGE_EXTRACT_AND_RUN: '1'
           GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: npm run tauri -- build --bundles deb,appimage,updater
 
       - uses: actions/upload-artifact@v4
@@ -371,6 +382,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: npm run tauri -- build --bundles nsis,updater
 
       - uses: actions/upload-artifact@v4

@@ -68,6 +68,35 @@ for bring-your-own provider API keys. Design:
   an App Store build cannot host, so it fails on every desktop change until the
   appstore overlay overrides `bundle.resources`.
 
+## Crash reporting
+
+Three processes, one consent decision (`src/telemetry.rs`):
+
+- **The shell** initialises `sentry` in-process. Before this, a Rust panic or a
+  sidecar that would not start left no trace anywhere — the webview's Sentry
+  only ever sees JavaScript.
+- **The sidecar** stays silent by default. `local_server.py` blanks
+  `SENTRY_DSN` on purpose ("a user's laptop is not a deployment"), and
+  `sidecar.rs` passes a real DSN through *only* when the user has opted in. It
+  also has to pass `SENTRY_ENABLE_LOCALHOST=1`, because the sidecar binds
+  127.0.0.1 and `server.py` otherwise treats that as "not deployed" and drops
+  every event.
+- **The webview** already reported, but was indistinguishable from a browser
+  session; `instrumentation-client.ts` now tags `shell`, `shell.version` and
+  `shell.localSidecar`.
+
+Consent is opt-IN, stored as `telemetry.json` in the per-user data dir — a
+preference, not a secret, so not the keychain. A missing, unreadable, or
+malformed file all mean *off*: consent is never inferred from a failed read.
+The DSN is compiled in via `SENTRY_DSN` — the same name the backend reads and
+`backend/.env.local` already defines, so there is one spelling across all three
+processes. With no DSN the whole path is inert and the settings card hides
+itself rather than offering a switch that changes nothing.
+
+The data-dir path is duplicated between `telemetry.rs` and `utils/appdirs.py`
+by necessity — the shell must resolve it *before* the sidecar exists to ask.
+Change one, change the other.
+
 ## Rules
 
 - Keep this shell thin: no agent code, prompts, or secrets ever ship here.

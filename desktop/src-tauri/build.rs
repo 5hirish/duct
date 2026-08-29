@@ -3,6 +3,10 @@ fn main() {
     // on its own — without this line, changing the secret leaves a stale binary
     // compiled against the old value.
     println!("cargo:rerun-if-env-changed=GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET");
+    bake_desktop_client_secret();
+    // Same reason: telemetry.rs reads this through `option_env!`. Same spelling
+    // as the backend's own variable, so one value serves both halves.
+    println!("cargo:rerun-if-env-changed=SENTRY_DSN");
 
     // App-defined commands are allowed by default only for *local* content. The
     // window loads a remote origin (app.getduct.ai, or the Next dev server in a
@@ -23,7 +27,47 @@ fn main() {
             "open_external",
             "check_for_update",
             "install_update",
+            "get_telemetry_settings",
+            "set_telemetry_enabled",
         ])),
     )
     .expect("failed to run tauri-build");
+}
+
+/// Supply the Google desktop client secret from `backend/.env.local` when the
+/// build environment does not already carry it.
+///
+/// `option_env!` reads whatever environment happened to start the build, so
+/// without this the value depends on *where* you build from: a terminal that
+/// exported it produces a working app, the IDE run config right next to it
+/// produces one that cannot sign in — and nothing about the build says which
+/// you got. CI never reaches this path: it sets the variable from the repo
+/// secret, and `.env.local` does not exist on a runner.
+///
+/// The emitted `cargo:rustc-env` line lands in `target/**/output`, which is
+/// gitignored and local. The value is an installed-app secret that Google
+/// documents as non-confidential (see the constant in `src/sidecar.rs`).
+fn bake_desktop_client_secret() {
+    const KEY: &str = "GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET";
+
+    let manifest = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_default();
+    let env_path = format!("{manifest}/../../backend/.env.local");
+    println!("cargo:rerun-if-changed={env_path}");
+
+    if std::env::var(KEY).is_ok_and(|v| !v.trim().is_empty()) {
+        return;
+    }
+    let Ok(contents) = std::fs::read_to_string(&env_path) else {
+        return;
+    };
+    for line in contents.lines() {
+        let Some(rest) = line.trim().strip_prefix(&format!("{KEY}=")) else {
+            continue;
+        };
+        let value = rest.trim().trim_matches('"').trim_matches('\'');
+        if !value.is_empty() {
+            println!("cargo:rustc-env={KEY}={value}");
+        }
+        return;
+    }
 }

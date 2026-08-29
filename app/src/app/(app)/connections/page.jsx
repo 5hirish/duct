@@ -11,6 +11,7 @@ import {
   setAdsLoginCustomerId,
 } from "../../../lib/adsCredentials";
 import { PROVIDERS, getProviderKey, setProviderKey, clearProviderKey } from "../../../lib/providerKeys";
+import TelemetryCard from "../../../components/TelemetryCard.jsx";
 import {
   deleteServerConnector,
   hasAuthToken,
@@ -633,6 +634,10 @@ function ProvidersPanel() {
         {PROVIDERS.map((provider) => (
           <ProviderCard key={provider.id} provider={provider} />
         ))}
+        {/* Desktop only, and only in a build that can actually report —
+            renders nothing otherwise. Sits here because this is the page
+            where the other "what leaves my machine" decisions are made. */}
+        <TelemetryCard />
       </div>
     </>
   );

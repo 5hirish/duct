@@ -16,6 +16,8 @@
     "allow-get-sidecar-info",
     "allow-open-external",
     "allow-check-for-update",
-    "allow-install-update"
+    "allow-install-update",
+    "allow-get-telemetry-settings",
+    "allow-set-telemetry-enabled"
   ]
 }
