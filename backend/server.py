@@ -174,6 +174,11 @@ async def lifespan(app: FastAPI):
     elif _cfg.init_db_on_startup:
         init_db()
 
+    # Once per server start, not once per import — see the docstring.
+    from service.pipeline import log_stale_catalog_warnings
+
+    log_stale_catalog_warnings()
+
     # Background session-pruner loops: the shared agent registry plus the two
     # legacy per-route session maps. Each runs forever; cancel on shutdown.
     # Imported here (not at module top) to keep startup wiring beside the tasks.

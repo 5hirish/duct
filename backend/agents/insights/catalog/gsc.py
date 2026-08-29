@@ -5,8 +5,8 @@ from __future__ import annotations
 ENTITY_CATALOG = {
     "connector_id": "gsc",
     "schema_version": "1.0.0",
-    "last_audited": "2026-04-28",
-    "api_version": "webmasters-v3",
+    "last_audited": "2026-08-29",
+    "api_version": "searchconsole-v1",
     "audit_notes": "Aligned with service/google/gsc.py response fields used by insight tools.",
     "entities": [
         {
@@ -19,9 +19,9 @@ ENTITY_CATALOG = {
                 "clicks": {"type": "metric", "unit": "count", "agg": "sum"},
                 "impressions": {"type": "metric", "unit": "count", "agg": "sum"},
                 "ctr": {"type": "metric", "unit": "percent", "agg": "avg"},
-                "position": {"type": "metric", "unit": "rank", "agg": "avg"},
+                "avg_position": {"type": "metric", "unit": "rank", "agg": "avg"},
             },
-            "sortable_by": ["impressions", "clicks", "ctr", "position"],
+            "sortable_by": ["impressions", "clicks", "ctr", "avg_position"],
         },
         {
             "entity_id": "gsc_page_performance",
@@ -33,9 +33,9 @@ ENTITY_CATALOG = {
                 "clicks": {"type": "metric", "unit": "count", "agg": "sum"},
                 "impressions": {"type": "metric", "unit": "count", "agg": "sum"},
                 "ctr": {"type": "metric", "unit": "percent", "agg": "avg"},
-                "position": {"type": "metric", "unit": "rank", "agg": "avg"},
+                "avg_position": {"type": "metric", "unit": "rank", "agg": "avg"},
             },
-            "sortable_by": ["impressions", "clicks", "ctr", "position"],
+            "sortable_by": ["impressions", "clicks", "ctr", "avg_position"],
         },
     ],
 }

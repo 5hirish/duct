@@ -5,9 +5,13 @@ from __future__ import annotations
 ENTITY_CATALOG = {
     "connector_id": "google_ads",
     "schema_version": "1.0.0",
-    "last_audited": "2026-04-28",
-    "api_version": "v18",
-    "audit_notes": "Verified against google-ads v30 client fields used in service/google fetchers.",
+    "last_audited": "2026-08-29",
+    "api_version": "v23",
+    "audit_notes": (
+        "Fields verified against the dicts service/google/fetch.py returns. "
+        "api_version tracks google-ads client _DEFAULT_VERSION, which get_service() "
+        "uses because no version is pinned at the call site."
+    ),
     "entities": [
         {
             "entity_id": "campaign_performance",
