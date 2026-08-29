@@ -78,3 +78,48 @@ def test_projects_config_filters_growth_stage_for_agency():
     assert "0_pre_customer" not in stage_values
     assert "1_first_users" in stage_values
     assert "4_scaling" in stage_values
+
+
+def test_web_and_desktop_oauth_clients_are_selected_by_mode(clean_env, tmp_path):
+    """The desktop pair is only correct for the sidecar's loopback redirect.
+
+    Google accepts a loopback redirect on an OS-picked port for an
+    installed-app client only, so the wrong pair fails at sign-in rather than
+    at startup - worth pinning here instead of discovering it in a bundle.
+    """
+    from config import Configs
+
+    for var in (
+        "GOOGLE_WEB_OAUTH_CLIENT_ID", "GOOGLE_WEB_OAUTH_CLIENT_SECRET",
+        "GOOGLE_DESKTOP_OAUTH_CLIENT_ID", "GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET",
+        "GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_SECRET",
+    ):
+        clean_env.delenv(var, raising=False)
+    clean_env.setenv("GOOGLE_WEB_OAUTH_CLIENT_ID", "web-id")
+    clean_env.setenv("GOOGLE_WEB_OAUTH_CLIENT_SECRET", "web-secret")
+    clean_env.setenv("GOOGLE_DESKTOP_OAUTH_CLIENT_ID", "desktop-id")
+    clean_env.setenv("GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET", "desktop-secret")
+
+    hosted = Configs()
+    assert hosted.google_oauth_client_id == "web-id"
+    assert hosted.google_oauth_client_secret == "web-secret"
+
+    clean_env.setenv("DUCT_LOCAL", "1")
+    clean_env.setenv("DUCT_DATA_DIR", str(tmp_path))
+    desktop = Configs()
+    assert desktop.google_oauth_client_id == "desktop-id"
+    assert desktop.google_oauth_client_secret == "desktop-secret"
+
+
+def test_legacy_unprefixed_oauth_names_still_resolve(clean_env):
+    """Railway and any older .env keep working until they are renamed."""
+    from config import Configs
+
+    clean_env.delenv("GOOGLE_WEB_OAUTH_CLIENT_ID", raising=False)
+    clean_env.delenv("GOOGLE_WEB_OAUTH_CLIENT_SECRET", raising=False)
+    clean_env.setenv("GOOGLE_OAUTH_CLIENT_ID", "legacy-id")
+    clean_env.setenv("GOOGLE_OAUTH_CLIENT_SECRET", "legacy-secret")
+
+    cfg = Configs()
+    assert cfg.google_oauth_client_id == "legacy-id"
+    assert cfg.google_oauth_client_secret == "legacy-secret"

@@ -32,6 +32,10 @@ use tauri::{AppHandle, Manager, State};
 /// and inside the bundle's resource dir.
 const SIDECAR_DIR: &str = "duct-sidecar";
 /// Entry binary inside that directory (`EXE(name=…)` in the spec).
+/// PyInstaller appends `.exe` on Windows.
+#[cfg(windows)]
+const SIDECAR_BIN: &str = "duct-sidecar.exe";
+#[cfg(not(windows))]
 const SIDECAR_BIN: &str = "duct-sidecar";
 /// Escape hatch for `tauri dev` runs against a sidecar built somewhere else.
 const SIDECAR_BIN_ENV: &str = "DUCT_SIDECAR_BIN";
@@ -138,9 +142,20 @@ fn try_spawn(app: &AppHandle) -> Result<(), String> {
     // The frozen bundle deliberately ships no `.env`, so sign-in credentials
     // have to arrive through the environment. Only set what we actually have —
     // an empty value would otherwise shadow a dev's `backend/.env.local`.
-    command.env("GOOGLE_OAUTH_CLIENT_ID", GOOGLE_CLIENT_ID);
+    command.env("GOOGLE_DESKTOP_OAUTH_CLIENT_ID", GOOGLE_CLIENT_ID);
     if let Some(secret) = GOOGLE_CLIENT_SECRET.filter(|s| !s.is_empty()) {
-        command.env("GOOGLE_OAUTH_CLIENT_SECRET", secret);
+        command.env("GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET", secret);
+    }
+
+    // The sidecar is a console binary — that is deliberate, its stdout carries
+    // the handshake. On Windows, spawning a console binary from a GUI app also
+    // pops a visible console window on every launch. CREATE_NO_WINDOW suppresses
+    // the window while leaving the redirected pipes intact.
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        command.creation_flags(CREATE_NO_WINDOW);
     }
 
     let mut child = command

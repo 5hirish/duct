@@ -79,8 +79,31 @@ class Configs(BaseSettings):
 
     # Google OAuth (same app can back Google Ads API). If unset/empty, derived as
     # {api_public_url}/auth/google/callback (alias for the Google Ads connector callback).
-    google_oauth_client_id: str = ""
-    google_oauth_client_secret: str = ""
+    #
+    # Two clients live in the same GCP project and are not interchangeable:
+    #   web     - fixed https redirect, used by the hosted API and local uvicorn
+    #   desktop - loopback redirect on an OS-picked port, which Google accepts
+    #             only for an installed-app client (see desktop/src-tauri/src/sidecar.rs)
+    # The pair below is the *effective* one for this process: the web client
+    # normally, swapped for the desktop pair under DUCT_LOCAL (see the validator
+    # at the bottom of this class). The legacy unprefixed names stay valid so a
+    # deployment can be renamed after the code ships, not before.
+    google_oauth_client_id: str = Field(
+        default="",
+        validation_alias=AliasChoices("GOOGLE_WEB_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_ID"),
+    )
+    google_oauth_client_secret: str = Field(
+        default="",
+        validation_alias=AliasChoices(
+            "GOOGLE_WEB_OAUTH_CLIENT_SECRET", "GOOGLE_OAUTH_CLIENT_SECRET"
+        ),
+    )
+    google_desktop_oauth_client_id: str = Field(
+        default="", validation_alias=AliasChoices("GOOGLE_DESKTOP_OAUTH_CLIENT_ID")
+    )
+    google_desktop_oauth_client_secret: str = Field(
+        default="", validation_alias=AliasChoices("GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET")
+    )
     google_oauth_redirect_uri: str = Field(default="")
 
     # Google Ads API
@@ -244,7 +267,29 @@ class Configs(BaseSettings):
         env_file=_settings_env_files(),
         env_file_encoding="utf-8",
         extra="ignore",
+        # Fields carrying a validation_alias would otherwise ignore their own
+        # name as a kwarg, which every `Configs(google_oauth_client_id=...)`
+        # in the tests relies on.
+        populate_by_name=True,
     )
+
+    @model_validator(mode="after")
+    def _prefer_desktop_oauth_client_in_local_mode(self) -> "Configs":
+        """Desktop sign-in redirects to http://127.0.0.1:<os-picked port>.
+
+        Google accepts a loopback redirect on an arbitrary port only for an
+        installed-app client, so the sidecar cannot use the web client the
+        hosted API runs on. Both pairs ship in the same env file; this picks
+        the right one rather than making every call site ask.
+        """
+        if (
+            self.duct_local
+            and self.google_desktop_oauth_client_id
+            and self.google_desktop_oauth_client_secret
+        ):
+            self.google_oauth_client_id = self.google_desktop_oauth_client_id
+            self.google_oauth_client_secret = self.google_desktop_oauth_client_secret
+        return self
 
     @field_validator("jwt_secret", mode="after")
     @classmethod
@@ -304,8 +349,13 @@ class Configs(BaseSettings):
         if not out.get("uploads_dir"):
             out["uploads_dir"] = str(data_dir / "uploads")
         if "init_db_on_startup" not in out:
-            # No Alembic step on a user's laptop — create_all owns the schema here.
-            out["init_db_on_startup"] = True
+            # Explicitly OFF for desktop. Alembic owns the schema here, same as
+            # the deployment — `db/migrate.py` runs it at startup. Leaving
+            # create_all on would also defeat that module's fresh-vs-legacy
+            # detection: it would build every table before the check ran, so a
+            # first launch would look like a pre-Alembic install and get stamped
+            # at the wrong baseline.
+            out["init_db_on_startup"] = False
         return out
 
 
