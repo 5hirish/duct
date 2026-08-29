@@ -46,11 +46,15 @@ name: desktop — TestFlight (macOS)
 #     failed to run tauri-build: resource path `../../backend/dist/duct-sidecar`
 #     doesn't exist
 #
-# Developer ID + notarized DMG (desktop-release.yml) is the shipping channel.
-# Everything here is kept so the App Store path can be revived, but it no longer
-# runs automatically. To revive it, `tauri.appstore.conf.json` must first
-# override `bundle.resources` so the overlay drops the sidecar — verify the
-# merged config actually clears it, rather than assuming the override wins.
+# Developer ID + notarized DMG (desktop-release.yml) is the shipping channel
+# for macOS, Windows and Linux alike. Everything here is kept so the App Store
+# path can be revived, but it no longer runs automatically.
+#
+# `tauri.appstore.conf.json` now resets `bundle.resources` to `{}` so the merged
+# config drops the sidecar, and this job builds with `--no-default-features` so
+# the updater plugin is absent too. Both are required and neither is verified by
+# anything but this workflow actually running — check the merged config rather
+# than assuming the overrides won.
 on:
   workflow_dispatch:
 
@@ -199,9 +203,16 @@ jobs:
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.DUCT_MAS_APP_IDENTITY }}
         run: |
+          # --no-default-features drops `tauri-plugin-updater`. App Store apps
+          # may not self-update, and shipping the plugin is grounds for
+          # rejection even if it is never called. It also flips
+          # get_shell_info's `autoUpdate` to false, so the web app hides the
+          # update prompt in this build instead of offering an action that
+          # cannot work.
           npm run tauri -- build \
             --bundles app \
             --target universal-apple-darwin \
+            --no-default-features \
             --config src-tauri/tauri.appstore.conf.json
 
       - name: Stamp build number and embed provisioning profile

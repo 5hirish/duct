@@ -32,6 +32,30 @@ for bring-your-own provider API keys. Design:
   `backend/dist/duct-sidecar/` verbatim and a stale or missing build ships a
   broken app. It is **onedir, never onefile**: a onefile binary unpacks to a
   temp dir at startup and does not survive signing + notarization.
+- **Windows and Linux** ship from the same pipeline: NSIS on Windows, deb +
+  AppImage on Linux, each with its own PyInstaller sidecar (a frozen CPython
+  tree is per-OS, never cross-compiled). Two platform differences are load
+  bearing and easy to regress:
+  `tauri-plugin-single-instance` (registered **first**, before every other
+  plugin) — macOS hands a deep link to the running app, but Windows and Linux
+  start a *second* process with the URL in argv, which for this app means a
+  second window and a second sidecar with the auth code in the wrong one; and
+  `CREATE_NO_WINDOW` in `sidecar.rs`, without which every Windows launch pops a
+  console window (the sidecar must stay a console binary — its stdout is the
+  handshake). Windows builds are **not** Authenticode-signed yet, so SmartScreen
+  warns on first run.
+- **Self-update** is wired: `tauri-plugin-updater` behind a default-on `updater`
+  cargo feature, driven from the web app through `check_for_update` /
+  `install_update` (not the plugin's JS bindings — the window loads a remote
+  origin and cannot import them, which is also why no `updater:*` permission is
+  needed: those gate the plugin's JS API, and our commands reach it from Rust).
+  The manifest is `latest.json` on the GitHub release, assembled by
+  `.github/scripts/build-updater-manifest.mjs`. The App Store build drops it with
+  `--no-default-features`, which removes the plugin and flips `get_shell_info`'s
+  `autoUpdate` to false; the two commands stay compiled as inert stubs so the
+  capability files are identical across builds. **The minisign private key is not
+  recoverable** — losing it means no installed copy will ever accept another
+  update.
 - **macOS distribution** is Developer ID + a notarized DMG, *not* the App Store.
   The sandbox cannot host a PyInstaller sidecar and embedded interpreters draw
   rejections — see the engine consolidation review (duct-cloud, private) §8.2.
@@ -62,14 +86,22 @@ for bring-your-own provider API keys. Design:
 - Local dev origins live in `capabilities/dev-localhost.json`, kept out of
   release builds by `app.security.capabilities` in `tauri.conf.json` (unset
   means *all* capability files ship). Only `tauri.dev.conf.json` opts it in.
+- `app.security.capabilities` selects which files are *loaded*, but `tauri-build`
+  **validates every file in `capabilities/`** regardless. So a capability naming
+  a permission from a conditionally-compiled plugin fails the build for
+  configurations that never load that file — which is what a separate `updater`
+  capability did to the `--no-default-features` App Store build. Keep permissions
+  from optional plugins out of `capabilities/` entirely.
 - Building needs platform webview libraries (see `README.md`); it does not build
   in the Claude-on-the-web container — build, sign, and release locally or in CI.
 - `Cargo.lock` is committed; refresh it with `cargo generate-lockfile` (or a
   build) when dependencies change, and commit the result.
-- `tauri-plugin-updater` is now *permitted* on macOS (Developer ID allows
-  self-update) but is **not wired up yet** — it needs a signing keypair and an
-  update endpoint. Do not enable it in the App Store variant, where it is still
-  grounds for rejection.
+- The desktop sidecar runs **Alembic**, not `create_all` (`backend/db/migrate.py`).
+  Every new migration must therefore be SQLite-safe — JSON columns via
+  `sa.JSON().with_variant(JSONB, 'postgresql')`, `alter_column` inside
+  `op.batch_alter_table`. The pre-baseline revisions are Postgres-only and are
+  never replayed; `backend/tests/test_desktop_migrations.py` guards the path
+  that is.
 - Changes to `src-tauri/Entitlements.appstore.plist` alter what the sandbox
   allows. Adding an entitlement without a real need invites App Review questions;
   removing `app-sandbox` breaks the upload outright (CI checks for it).

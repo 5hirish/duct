@@ -21,6 +21,8 @@ fn main() {
             "get_shell_info",
             "get_sidecar_info",
             "open_external",
+            "check_for_update",
+            "install_update",
         ])),
     )
     .expect("failed to run tauri-build");

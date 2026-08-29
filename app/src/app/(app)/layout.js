@@ -9,6 +9,7 @@ import { hydrateProjectsFromBackend, migrateFromLegacyProfile } from "../../lib/
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AuditNavProvider } from "../../lib/auditNavContext";
 import LocalBackendGate from "../../components/LocalBackendGate.jsx";
+import UpdateToast from "../../components/UpdateToast.jsx";
 
 // Routes whose main content must fill the remaining viewport (no scroll, no padding)
 const FULL_BLEED_PREFIXES = ["/audit/seo/", "/content/sessions/", "/content/posts/", "/content/plan"];
@@ -22,6 +23,9 @@ export default function AppLayout({ children }) {
   return (
     <LocalBackendGate>
       <AppLayoutInner>{children}</AppLayoutInner>
+      {/* Outside AppLayoutInner so an update prompt survives route changes and
+          is not clipped by the sidebar's overflow handling. No-op on the web. */}
+      <UpdateToast />
     </LocalBackendGate>
   );
 }
