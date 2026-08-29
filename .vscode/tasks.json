@@ -2,72 +2,6 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Phoenix: start (OTEL traces UI)",
-      "type": "shell",
-      "command": "poetry run python -m phoenix.server.main serve",
-      "options": { "cwd": "${workspaceFolder}/backend" },
-      "isBackground": true,
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated",
-        "group": "duct-observability",
-        "showReuseMessage": false
-      },
-      "problemMatcher": {
-        "owner": "phoenix",
-        "pattern": { "regexp": "^$" },
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": ".",
-          "endsPattern": "Phoenix UI"
-        }
-      }
-    },
-    {
-      "label": "Backend: uvicorn (verbose)",
-      "type": "shell",
-      "command": "AUDIT_VERBOSE_LOGGING=1 poetry run uvicorn server:app --host 127.0.0.1 --port 8002",
-      "options": { "cwd": "${workspaceFolder}/backend" },
-      "isBackground": true,
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated",
-        "group": "duct-stack",
-        "showReuseMessage": false
-      },
-      "problemMatcher": {
-        "owner": "uvicorn",
-        "pattern": { "regexp": "^$" },
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": ".",
-          "endsPattern": "Uvicorn running"
-        }
-      }
-    },
-    {
-      "label": "Backend: uvicorn",
-      "type": "shell",
-      "command": "poetry run uvicorn server:app --reload --reload-dir \"${workspaceFolder}/backend\" --reload-exclude \"${workspaceFolder}/backend/.venv\" --reload-exclude \"${workspaceFolder}/backend/data\" --reload-exclude \"${workspaceFolder}/backend/alembic\" --reload-exclude \"${workspaceFolder}/backend/tests\" --reload-delay 1 --host 127.0.0.1 --port 8002",
-      "options": { "cwd": "${workspaceFolder}/backend" },
-      "isBackground": true,
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated",
-        "group": "duct-stack",
-        "showReuseMessage": false
-      },
-      "problemMatcher": {
-        "owner": "uvicorn",
-        "pattern": { "regexp": "^$" },
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": ".",
-          "endsPattern": "Uvicorn running"
-        }
-      }
-    },
-    {
       "label": "Serve site on :8090",
       "type": "shell",
       "command": "python3 dev_server.py --port 8090",
@@ -89,9 +23,32 @@
       }
     },
     {
-      "label": "Backend: stop ADK web (8003)",
+      "label": "App: stop dev server (3003)",
       "type": "shell",
-      "command": "if command -v lsof >/dev/null 2>&1; then pids=$(lsof -t -i :8003 2>/dev/null || true); if [ -n \"$pids\" ]; then kill -9 $pids >/dev/null 2>&1 || true; fi; fi",
+      "command": "if command -v lsof >/dev/null 2>&1; then pids=$(lsof -t -i :3003 2>/dev/null || true); if [ -n \"$pids\" ]; then kill -9 $pids >/dev/null 2>&1 || true; fi; fi",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "dedicated",
+        "showReuseMessage": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Phoenix: stop (6006)",
+      "type": "shell",
+      "command": "if command -v lsof >/dev/null 2>&1; then pids=$(lsof -t -i :6006 2>/dev/null || true); if [ -n \"$pids\" ]; then kill -9 $pids >/dev/null 2>&1 || true; fi; fi; pkill -f \"phoenix.server.main\" >/dev/null 2>&1 || true",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "dedicated",
+        "showReuseMessage": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "//": "Manual: the dev bundle is launched detached, so no debug session owns it. Kills the shell, which takes its sidecar with it.",
+      "label": "Desktop: stop Duct Dev app",
+      "type": "shell",
+      "command": "pkill -f \"Duct Dev.app\" >/dev/null 2>&1 || true; pkill -f \"duct-sidecar\" >/dev/null 2>&1 || true",
       "presentation": {
         "reveal": "silent",
         "panel": "dedicated",
@@ -126,19 +83,6 @@
       "presentation": {
         "reveal": "silent",
         "panel": "dedicated",
-        "showReuseMessage": false
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Site: Playwright smoke tests",
-      "type": "shell",
-      "command": "npm run test:e2e",
-      "options": { "cwd": "${workspaceFolder}/site" },
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated",
-        "group": "site-qa",
         "showReuseMessage": false
       },
       "problemMatcher": []
