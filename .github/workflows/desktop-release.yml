@@ -30,6 +30,21 @@ name: desktop — release (macOS, Windows, Linux)
 #   All platforms (self-update)
 #     TAURI_SIGNING_PRIVATE_KEY    contents of the minisign private key
 #     TAURI_SIGNING_PRIVATE_KEY_PASSWORD
+#   All platforms (sign-in)
+#     GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET
+#                                  secret of the Google *Desktop app* OAuth client
+#                                  whose id is hardcoded in src/sidecar.rs. Same
+#                                  name the sidecar reads at runtime and the one
+#                                  in backend/.env.local — one value, one spelling.
+#
+# GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET is read by `option_env!` while rustc compiles, not at
+# runtime, so it must be present on every step that invokes `tauri build` — the
+# DMG step included. Leaving it off one step is worse than leaving it off all of
+# them: build.rs declares `rerun-if-env-changed`, so a set-then-unset sequence
+# recompiles the binary with no secret and the bundle silently ships that. When
+# it is absent everywhere, the app builds and installs fine and fails only when a
+# user taps Sign in with Google - no test covers this, on purpose (there is
+# nothing to assert without a live Google round-trip).
 #
 # The updater key is NOT the code-signing certificate. Losing it means shipping
 # an update no installed copy will accept — installs would have to be replaced
@@ -108,6 +123,8 @@ jobs:
       - name: Build app bundle (unsigned)
         if: github.event_name == 'pull_request'
         working-directory: desktop
+        env:
+          GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET }}
         run: npm run tauri -- build --bundles app
 
       # ---- main path: signed + notarized ------------------------------------
@@ -143,6 +160,7 @@ jobs:
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.DUCT_DEVID_IDENTITY }}
           APPLE_TEAM_ID: ${{ secrets.DUCT_APPLE_TEAM_ID }}
+          GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET }}
         run: npm run tauri -- build --bundles app
 
       - name: Sign the sidecar's nested binaries
@@ -209,6 +227,7 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.DUCT_APPLE_TEAM_ID }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET }}
         run: npm run tauri -- build --bundles dmg,updater --no-bundle-app
 
       - uses: actions/upload-artifact@v4
@@ -291,6 +310,7 @@ jobs:
           # FUSE — and a GitHub runner has no /dev/fuse. This is the documented
           # way around it; installing `fuse` is not enough.
           APPIMAGE_EXTRACT_AND_RUN: '1'
+          GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET }}
         run: npm run tauri -- build --bundles deb,appimage,updater
 
       - uses: actions/upload-artifact@v4
@@ -350,6 +370,7 @@ jobs:
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET }}
         run: npm run tauri -- build --bundles nsis,updater
 
       - uses: actions/upload-artifact@v4

@@ -52,14 +52,20 @@ const SIDECAR_BIN_ENV: &str = "DUCT_SIDECAR_BIN";
 /// Embedding the id (and the secret below) is sanctioned — Google documents
 /// installed-app credentials as not confidential, since anyone can extract them
 /// from a shipped binary. They identify the app, they do not authorise it.
-const GOOGLE_CLIENT_ID: &str =
+const GOOGLE_DESKTOP_CLIENT_ID: &str =
     "726839654841-fs8i0kehickma5411jepc6v4d3r26b4g.apps.googleusercontent.com";
 
-/// Set at build time (`DUCT_GOOGLE_CLIENT_SECRET=… cargo build`) so the value
-/// stays out of git. When unset, the sidecar falls back to whatever its own
-/// environment or `backend/.env*` provides, which is how a source-run dev build
-/// already works.
-const GOOGLE_CLIENT_SECRET: Option<&str> = option_env!("DUCT_GOOGLE_CLIENT_SECRET");
+/// Baked in at build time so the value stays out of git:
+/// `GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET=… npm run build`.
+///
+/// Deliberately the same name the sidecar reads at runtime and the same one
+/// `backend/.env.local` uses, so a shell set up for the backend can build a
+/// working shell with no extra step. When unset, the sidecar falls back to
+/// whatever its own environment provides, which is how a source-run dev build
+/// already works — but a bundle launched from Finder inherits nothing, which is
+/// why the release build has to compile it in.
+const GOOGLE_DESKTOP_CLIENT_SECRET: Option<&str> =
+    option_env!("GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET");
 
 /// The handshake line, verbatim. Field names mirror `local_server.py`; the
 /// shell forwards them to the webview rather than interpreting them, so a new
@@ -142,8 +148,8 @@ fn try_spawn(app: &AppHandle) -> Result<(), String> {
     // The frozen bundle deliberately ships no `.env`, so sign-in credentials
     // have to arrive through the environment. Only set what we actually have —
     // an empty value would otherwise shadow a dev's `backend/.env.local`.
-    command.env("GOOGLE_DESKTOP_OAUTH_CLIENT_ID", GOOGLE_CLIENT_ID);
-    if let Some(secret) = GOOGLE_CLIENT_SECRET.filter(|s| !s.is_empty()) {
+    command.env("GOOGLE_DESKTOP_OAUTH_CLIENT_ID", GOOGLE_DESKTOP_CLIENT_ID);
+    if let Some(secret) = GOOGLE_DESKTOP_CLIENT_SECRET.filter(|s| !s.is_empty()) {
         command.env("GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET", secret);
     }
 
