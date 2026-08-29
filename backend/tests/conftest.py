@@ -46,6 +46,28 @@ def make_sqlite_engine(*, drop_partial_indexes: bool = False):
 
 
 @pytest.fixture
+def clean_env(monkeypatch):
+    """Isolate the env vars desktop/local mode reads and writes.
+
+    Clearing the environment is not enough: Configs also reads backend/.env and
+    .env.local, deliberately, so integration tests can share the running
+    server's keys (see config._settings_env_files). A developer with a real
+    DATABASE_URL there would otherwise see these tests try to reach Railway —
+    and the failure message would print the credential.
+    """
+    from config import Configs
+
+    for var in (
+        "DUCT_LOCAL", "DUCT_DESKTOP", "DUCT_DATA_DIR", "DUCT_API_KEY",
+        "API_PUBLIC_URL", "FRONTEND_ORIGIN", "APP_ENV", "SENTRY_DSN",
+        "DATABASE_URL", "UPLOADS_DIR", "INIT_DB_ON_STARTUP",
+    ):
+        monkeypatch.delenv(var, raising=False)
+    monkeypatch.setitem(Configs.model_config, "env_file", None)
+    return monkeypatch
+
+
+@pytest.fixture
 def acme_business_context():
     return AuditBusinessContext(
         business_name="Acme CRM",

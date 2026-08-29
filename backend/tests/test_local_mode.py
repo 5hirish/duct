@@ -24,25 +24,6 @@ from config import Configs, cors_kwargs
 from utils.appdirs import default_data_dir, resolve_data_dir
 
 
-@pytest.fixture
-def clean_env(monkeypatch):
-    """Isolate the env vars local mode reads and writes."""
-    for var in (
-        "DUCT_LOCAL", "DUCT_DESKTOP", "DUCT_DATA_DIR", "DUCT_API_KEY",
-        "API_PUBLIC_URL", "FRONTEND_ORIGIN", "APP_ENV", "SENTRY_DSN",
-        "DATABASE_URL", "UPLOADS_DIR", "INIT_DB_ON_STARTUP",
-    ):
-        monkeypatch.delenv(var, raising=False)
-    # Clearing the environment is not enough: Configs also reads backend/.env
-    # and .env.local, deliberately, so integration tests can share the running
-    # server's keys (see config._settings_env_files). A developer with a real
-    # DATABASE_URL there would otherwise see these derivation tests fail — and
-    # the assertion message would print the credential. These are unit tests of
-    # the derivation logic, so cut the dotenv source off for them only.
-    monkeypatch.setitem(Configs.model_config, "env_file", None)
-    return monkeypatch
-
-
 # ---------------------------------------------------------------------------
 # Data directory
 # ---------------------------------------------------------------------------
@@ -143,8 +124,8 @@ def test_local_mode_derives_sqlite_and_uploads(clean_env, tmp_path):
 
     assert cfg.database_url == f"sqlite:///{tmp_path / 'duct.db'}"
     assert cfg.uploads_dir == str(tmp_path / "uploads")
-    # No Alembic step on a user's laptop.
-    assert cfg.init_db_on_startup is True
+    # Alembic owns the desktop schema too — see db/migrate.py.
+    assert cfg.init_db_on_startup is False
 
 
 def test_local_mode_respects_explicit_database_url(clean_env, tmp_path):

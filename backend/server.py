@@ -25,6 +25,7 @@ import service.revenuecat.fetch  # noqa: F401 — registers connectors before ro
 import service.stripe.fetch  # noqa: F401 — registers connectors before routes import
 
 from config import cors_kwargs, get_configs
+from db.migrate import ensure_schema
 from db.session import init_db
 import models  # noqa: F401 - registers SQLModel metadata
 from routes.namespace import router as api_router
@@ -164,8 +165,13 @@ async def lifespan(app: FastAPI):
     a `lifespan` disables ALL `on_event` handlers — including the ones merged in
     from included routers — so every startup action must live here.
     """
-    # Optional dev convenience: create tables from SQLModel metadata.
-    if _cfg.init_db_on_startup:
+    # Desktop/local mode runs the same Alembic migrations as the deployment,
+    # so an upgraded install picks up new columns instead of silently missing
+    # them (db/migrate.py explains the three cases). `init_db_on_startup` stays
+    # what it always was: the dev bootstrap escape hatch for everywhere else.
+    if _cfg.duct_local:
+        ensure_schema()
+    elif _cfg.init_db_on_startup:
         init_db()
 
     # Background session-pruner loops: the shared agent registry plus the two
