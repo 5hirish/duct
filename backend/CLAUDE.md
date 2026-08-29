@@ -249,3 +249,31 @@ don't fit.
 - no heavyweight job system beyond the planned orchestration layer
 - no broad dashboard experience
 - no complex cross-tool logic before the single-source MVP is producing useful output
+
+## Configuration
+
+`config.py` is the source of truth for what the backend reads; `.env.example`
+is its documentation, and `tests/test_env_example.py` keeps the two honest.
+
+The reason that test exists is worth knowing before adding a setting: **every
+field in `Configs` has a default.** A missing variable therefore never fails —
+the feature it powers silently does nothing. That makes an undocumented setting
+undiscoverable rather than broken, which is how `.env.example` drifted to
+covering about a third of what a running instance sets.
+
+So when you add a setting:
+
+- If it is a credential (matches `api_key|_secret|_token|_dsn|password|client_id|encryption_key|jwt_secret`),
+  the test **requires** it in `.env.example`. That is not bureaucracy; it is the
+  only signal a new contributor gets.
+- If it is read from `os.environ` directly rather than through `Configs`, add it
+  to `NOT_CONFIG_FIELDS` in that test with the reason. A bare exemption is a
+  hole in the check.
+- Renaming a field means renaming it in `.env.example` too — the stale check
+  catches it, because a wrong example is worse than a missing one.
+
+Names are shared across processes deliberately. `SENTRY_DSN` is read by this
+backend, by the desktop sidecar (only on user consent), and compiled into the
+Tauri shell via `option_env!`; `GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET` likewise.
+One value in `.env.local` serves all of them — do not invent a `DUCT_`-prefixed
+variant for the desktop half.
