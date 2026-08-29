@@ -1563,8 +1563,16 @@ def seed_project_profile(db, project: Any, *, user_id: UUID | None = None) -> li
             if row is not None:
                 written.append(row)
 
-        for name in (getattr(project, "competition", None) or {}).get("competitors", [])[:10]:
-            label = str(name).strip()
+        for entry in (getattr(project, "competition", None) or {}).get("competitors", [])[:10]:
+            # Onboarding stores competitors as {name, differentiator}; AI drafts
+            # and older profiles still write plain strings. Reading the dict
+            # whole would put its repr in the title and the state key.
+            if isinstance(entry, dict):
+                label = str(entry.get("name") or "").strip()
+                differentiator = str(entry.get("differentiator") or "").strip()
+            else:
+                label = str(entry).strip()
+                differentiator = ""
             if not label:
                 continue
             row = remember(
@@ -1576,6 +1584,7 @@ def seed_project_profile(db, project: Any, *, user_id: UUID | None = None) -> li
                 title=f"Competitor: {label}",
                 entity_key=f"competitor:{label.lower()}",
                 attribute="tracked",
+                value={"name": label, "differentiator": differentiator} if differentiator else None,
                 observed_at=now,
                 source_type=SOURCE_USER,
                 source_refs=[{"project_profile": "competition.competitors"}],

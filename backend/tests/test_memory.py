@@ -502,6 +502,33 @@ def test_project_profile_seeds_goals_and_competitors(db, project, owner):
     assert all(r.source_type == SOURCE_USER for r in written)
 
 
+def test_competitors_seed_from_the_shape_onboarding_actually_writes(db, project, owner):
+    """Onboarding stores {name, differentiator}, not bare strings. Reading the
+    dict whole put its repr into the title and the state key, so every entity
+    key was unmatchable and no competitor could ever be superseded."""
+    project.competition = {
+        "competitors": [
+            {"name": "Ahrefs", "differentiator": "Owns the backlink index"},
+            {"name": "Semrush", "differentiator": ""},
+            {"name": "", "differentiator": "no name, skipped"},
+        ]
+    }
+    db.add(project)
+    db.commit()
+
+    written = seed_project_profile(db, project, user_id=owner.id)
+    by_title = {r.title: r for r in written}
+    assert set(by_title) == {"Competitor: Ahrefs", "Competitor: Semrush"}
+    assert by_title["Competitor: Ahrefs"].entity_key == "competitor:ahrefs"
+    assert by_title["Competitor: Ahrefs"].value == {
+        "name": "Ahrefs",
+        "differentiator": "Owns the backlink index",
+    }
+    # Nothing to say about it beyond the name. The column is non-nullable, so
+    # an absent payload lands as {} rather than a half-filled record.
+    assert by_title["Competitor: Semrush"].value == {}
+
+
 def test_changing_a_target_supersedes_the_previous_value(db, project, owner):
     project.targets = {"target_cpa": "60"}
     db.add(project)
