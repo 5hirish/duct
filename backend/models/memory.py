@@ -37,10 +37,10 @@ from datetime import datetime
 from uuid import UUID, uuid4
 
 import sqlalchemy as sa
-from sqlalchemy import Column, DateTime, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import Column, ForeignKey, Index, Integer, String, Text
 from sqlmodel import Field, SQLModel
 
-from models.columns import json_column
+from models.columns import json_column, utc_datetime
 from utils.dates import utcnow
 
 # --- Scopes ----------------------------------------------------------------
@@ -180,17 +180,17 @@ class ProjectMemory(SQLModel, table=True):
 
     # --- Bi-temporal ------------------------------------------------------
     observed_at: datetime = Field(
-        default_factory=utcnow, sa_column=Column(DateTime(timezone=True), nullable=False)
+        default_factory=utcnow, sa_column=Column(utc_datetime(), nullable=False)
     )
     valid_from: datetime = Field(
-        default_factory=utcnow, sa_column=Column(DateTime(timezone=True), nullable=False)
+        default_factory=utcnow, sa_column=Column(utc_datetime(), nullable=False)
     )
     # NULL = still true.
     valid_to: datetime | None = Field(
-        default=None, sa_column=Column(DateTime(timezone=True), nullable=True)
+        default=None, sa_column=Column(utc_datetime(), nullable=True)
     )
     recorded_at: datetime = Field(
-        default_factory=utcnow, sa_column=Column(DateTime(timezone=True), nullable=False)
+        default_factory=utcnow, sa_column=Column(utc_datetime(), nullable=False)
     )
     # The entry that closed this one (same table, no FK — a self-FK would block
     # the CASCADE delete ordering on project removal).
@@ -237,7 +237,7 @@ class ProjectMemory(SQLModel, table=True):
         default=0, sa_column=Column(Integer, nullable=False, server_default="0")
     )
     last_recalled_at: datetime | None = Field(
-        default=None, sa_column=Column(DateTime(timezone=True), nullable=True)
+        default=None, sa_column=Column(utc_datetime(), nullable=True)
     )
 
     # Dedupe key over the identity fields — see service/memory.py::content_hash.

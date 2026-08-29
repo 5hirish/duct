@@ -6,8 +6,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Optional
 
-import sqlalchemy as sa
-from models.columns import json_column
+from models.columns import json_column, utc_datetime
 from sqlmodel import Column, Field, SQLModel
 
 
@@ -21,7 +20,7 @@ class LeadMagnet(SQLModel, table=True):
     access_token: str = Field(unique=True, index=True)
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
-        sa_column=Column(sa.DateTime(timezone=True), nullable=False),
+        sa_column=Column(utc_datetime(), nullable=False),
     )
 
     # Populated after audit completes — nullable until then
@@ -31,11 +30,11 @@ class LeadMagnet(SQLModel, table=True):
     )
     report_generated_at: Optional[datetime] = Field(
         default=None,
-        sa_column=Column(sa.DateTime(timezone=True), nullable=True),
+        sa_column=Column(utc_datetime(), nullable=True),
     )
     email_sent_at: Optional[datetime] = Field(
         default=None,
-        sa_column=Column(sa.DateTime(timezone=True), nullable=True),
+        sa_column=Column(utc_datetime(), nullable=True),
     )
 
 
@@ -66,5 +65,5 @@ class ExecutionInterest(SQLModel, table=True):
     note: Optional[str] = Field(default=None)
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
-        sa_column=Column(sa.DateTime(timezone=True), nullable=False),
+        sa_column=Column(utc_datetime(), nullable=False),
     )

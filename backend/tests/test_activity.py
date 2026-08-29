@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from urllib.parse import urlencode
 from uuid import uuid4
 
 import pytest
@@ -336,8 +337,16 @@ def test_feed_keyset_pagination(engine, db, project, owner):
     client = _make_client(engine, db, owner)
     first = client.get(f"/api/user/activity?project_id={project.id}&limit=2").json()
     assert len(first["items"]) == 2 and first["next_before"]
+    # The cursor is an aware ISO timestamp, so it ends in "+00:00" and has to be
+    # percent-encoded — a bare "+" in a query string decodes to a space. The
+    # frontend builds this with URLSearchParams, which does it; a hand-built URL
+    # has to. (This assertion is the point: before timestamps were aware on
+    # SQLite too, the cursor came back naive here and the encoding never
+    # mattered in tests while it always did against Postgres.)
+    assert first["next_before"].endswith("+00:00")
+    cursor = urlencode({"before": first["next_before"]})
     second = client.get(
-        f"/api/user/activity?project_id={project.id}&limit=2&before={first['next_before']}"
+        f"/api/user/activity?project_id={project.id}&limit=2&{cursor}"
     ).json()
     assert len(second["items"]) == 2
     seen = {r["id"] for r in first["items"]} & {r["id"] for r in second["items"]}

@@ -9,14 +9,13 @@ import sqlalchemy as sa
 from sqlalchemy import (
     CheckConstraint,
     Column,
-    DateTime,
     ForeignKey,
     Index,
     String,
     UniqueConstraint,
     text,
 )
-from models.columns import json_column
+from models.columns import json_column, utc_datetime
 from sqlmodel import Field, SQLModel
 from utils.dates import utcnow
 
@@ -34,7 +33,7 @@ class User(SQLModel, table=True):
     full_name: str | None = Field(default=None, sa_column=Column(String, nullable=True))
     avatar_url: str | None = Field(default=None, sa_column=Column(String, nullable=True))
     last_sign_in_at: datetime | None = Field(
-        default=None, sa_column=Column(DateTime(timezone=True), nullable=True)
+        default=None, sa_column=Column(utc_datetime(), nullable=True)
     )
     # User-scope memory off switch: nothing new is inferred or stored about how
     # this person works. Project memory is governed separately (projects.memory_paused).
@@ -43,11 +42,11 @@ class User(SQLModel, table=True):
     )
     created_at: datetime = Field(
         default_factory=utcnow,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
+        sa_column=Column(utc_datetime(), nullable=False),
     )
     updated_at: datetime = Field(
         default_factory=utcnow,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
+        sa_column=Column(utc_datetime(), nullable=False),
     )
 
 
@@ -72,11 +71,11 @@ class AuthIdentity(SQLModel, table=True):
     )
     created_at: datetime = Field(
         default_factory=utcnow,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
+        sa_column=Column(utc_datetime(), nullable=False),
     )
     updated_at: datetime = Field(
         default_factory=utcnow,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
+        sa_column=Column(utc_datetime(), nullable=False),
     )
 
 
@@ -96,10 +95,10 @@ class OAuthState(SQLModel, table=True):
     code_verifier: str | None = Field(default=None, sa_column=Column(String, nullable=True))
     issued_at: datetime = Field(
         default_factory=utcnow,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
+        sa_column=Column(utc_datetime(), nullable=False),
     )
-    expires_at: datetime = Field(sa_column=Column(DateTime(timezone=True), nullable=False))
+    expires_at: datetime = Field(sa_column=Column(utc_datetime(), nullable=False))
     consumed_at: datetime | None = Field(
-        default=None, sa_column=Column(DateTime(timezone=True), nullable=True)
+        default=None, sa_column=Column(utc_datetime(), nullable=True)
     )
 
