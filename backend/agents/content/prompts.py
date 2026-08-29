@@ -1051,8 +1051,10 @@ def build_orchestrator_system_prompt(
     cached prefix doesn't get invalidated by every new project.
     """
     from agents.core.persona import with_confidentiality
+    from agents.core.prompts import MEMORY_DISCIPLINE
     return with_confidentiality(
-        f"{ORCHESTRATOR_BASE_PROMPT}\n\n{_channel_directive(channel)}\n\n{_mode_tail(mode)}"
+        f"{ORCHESTRATOR_BASE_PROMPT}\n\n{MEMORY_DISCIPLINE}\n\n"
+        f"{_channel_directive(channel)}\n\n{_mode_tail(mode)}"
     )
 
 

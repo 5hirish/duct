@@ -21,6 +21,7 @@ import {
   restoreArtifactVersion,
 } from "../../../../lib/artifactsApi";
 import { startAuditResume } from "../../../../lib/auditResume";
+import { createMemory } from "@/lib/memoryApi";
 
 function exportFormatsFor(artifact) {
   if (!artifact) return [];
@@ -29,6 +30,55 @@ function exportFormatsFor(artifact) {
   if ([CONTENT_TYPES.CSV, CONTENT_TYPES.TABLE_JSON].includes(artifact.content_type)) formats.push("csv");
   if (artifact.content_type === CONTENT_TYPES.MARKDOWN) formats.push("md");
   return formats;
+}
+
+/** "Remember this" from a report — the selected claim becomes a project memory
+ * whose evidence points back at this artifact version and, when the reader
+ * highlighted inside a section, that section. The agent extracts findings on
+ * its own; this is where a human says "that one, specifically". */
+function RememberFromArtifact({ artifact }) {
+  const [state, setState] = useState("idle"); // idle | saving | saved | error
+
+  async function save() {
+    const selected = String(window.getSelection?.() || "").replace(/\s+/g, " ").trim();
+    if (!selected) {
+      setState("empty");
+      return;
+    }
+    setState("saving");
+    try {
+      await createMemory({
+        projectId: artifact.project_id,
+        kind: "conclusion",
+        title: selected.slice(0, 200),
+        source_refs: [
+          {
+            artifact_id: artifact.id,
+            slug: artifact.slug,
+            version: artifact.version,
+            source: "user",
+          },
+        ],
+      });
+      setState("saved");
+    } catch {
+      setState("error");
+    }
+  }
+
+  const label = {
+    idle: "Remember selection",
+    empty: "Select some text first",
+    saving: "Remembering…",
+    saved: "Remembered ✓",
+    error: "Could not remember",
+  }[state];
+
+  return (
+    <Button size="sm" variant="ghost" onClick={save} disabled={state === "saving"}>
+      {label}
+    </Button>
+  );
 }
 
 export default function ArtifactViewerPage() {
@@ -154,6 +204,7 @@ export default function ArtifactViewerPage() {
               Restore this version
             </Button>
           )}
+          {artifact && <RememberFromArtifact artifact={artifact} />}
           {artifact?.conversation_id && artifact?.agent_type === "audit_seo" && (
             <Button
               size="sm"

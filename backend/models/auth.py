@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID, uuid4
 
+import sqlalchemy as sa
 from sqlalchemy import (
     CheckConstraint,
     Column,
@@ -34,6 +35,11 @@ class User(SQLModel, table=True):
     avatar_url: str | None = Field(default=None, sa_column=Column(String, nullable=True))
     last_sign_in_at: datetime | None = Field(
         default=None, sa_column=Column(DateTime(timezone=True), nullable=True)
+    )
+    # User-scope memory off switch: nothing new is inferred or stored about how
+    # this person works. Project memory is governed separately (projects.memory_paused).
+    memory_paused: bool = Field(
+        default=False, sa_column=Column(sa.Boolean(), nullable=False, server_default=sa.false())
     )
     created_at: datetime = Field(
         default_factory=utcnow,

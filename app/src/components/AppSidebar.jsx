@@ -23,6 +23,7 @@ import {
   BellOff,
   BellRing,
   SlidersHorizontal,
+  Brain,
   FileText,
   History,
 } from "lucide-react";
@@ -397,6 +398,14 @@ function SidebarUserFooter() {
           <Link href="/projects">
             <Settings className="size-4" />
             <span>Manage projects</span>
+          </Link>
+        </DropdownMenuItem>
+        {/* Beside Preferences on purpose: what you declare and what Duct has
+            learned about you are the same subject, and both are yours to edit. */}
+        <DropdownMenuItem asChild>
+          <Link href="/memory">
+            <Brain className="size-4" />
+            <span>Your memory</span>
           </Link>
         </DropdownMenuItem>
         <EngineDialog>

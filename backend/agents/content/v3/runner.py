@@ -434,6 +434,37 @@ def _validate_edit_image(input_data: dict[str, Any]):
 # ---------------------------------------------------------------------------
 
 
+
+async def _memory_block(session: ContentSession, *, query: str = "") -> str:
+    """The project's memory digest for a content run, as a user-turn block.
+
+    Same contract as the audit path (routes/agents.py): per-project data rides
+    in the USER message so the cached system prefix stays byte-identical, and a
+    missing digest degrades the turn rather than failing it.
+    """
+    def _load() -> str:
+        from db.session import get_session as db_session
+        from service.memory import build_memory_context, touch_recall
+
+        with next(db_session()) as db:
+            context = build_memory_context(
+                db,
+                project_id=session.project_id,
+                user_id=getattr(session, "user_id", None),
+                agent_type="tiktok_studio",
+                query=query,
+                artifact_kind=None,
+            )
+            touch_recall(db, context.recalled_ids)
+            return context.text
+
+    try:
+        return await asyncio.to_thread(_load)
+    except Exception:  # noqa: BLE001
+        logger.warning("content: project memory unavailable", exc_info=True)
+        return ""
+
+
 async def _run(
     session: ContentSession,
     system_prompt: str,
@@ -705,6 +736,9 @@ async def _run(
             AgentTool.WEB_SEARCH,
             AgentTool.WEB_FETCH,
             AgentTool.AGENT,
+            ContentTool.REMEMBER_FACT,
+            ContentTool.SEARCH_MEMORY,
+            ContentTool.GET_MEMORY,
             ContentTool.SUBMIT_PLAN,
             ContentTool.SUBMIT_POST_DRAFT,
             ContentTool.EDIT_SLIDE,
@@ -1115,6 +1149,9 @@ class ClaudeContentRunner:
         initial_prompt = build_plan_user_prompt(
             brand, history=[], formats=[], avatars=[], research=research,
         )
+        memory = await _memory_block(session, query="content plan performance")
+        if memory:
+            initial_prompt = f"{initial_prompt}\n\n{memory}"
 
         try:
             await _run(
@@ -1249,6 +1286,9 @@ class ClaudeContentRunner:
             recent_posts=[],
             channel=ch,
         )
+        memory = await _memory_block(session, query=topic or pillar or "")
+        if memory:
+            initial_prompt = f"{initial_prompt}\n\n{memory}"
 
         try:
             await _run(

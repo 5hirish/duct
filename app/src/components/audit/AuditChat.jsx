@@ -17,6 +17,7 @@ import {
   rejectChangeSet,
   rollbackChangeSet,
 } from "@/lib/executionApi";
+import { createMemory } from "@/lib/memoryApi";
 import { getActiveProject } from "@/lib/projects";
 
 /** The quiet "Remembered: …" line under a turn that wrote project memory.
@@ -445,8 +446,61 @@ function ChatBubble({ role, text, thinking, streaming }) {
             )}
           </div>
         )}
+        {text && !streaming && <RememberThis text={text} />}
       </div>
     </div>
+  );
+}
+
+/** "Remember this" under a finished agent turn — or under a selection inside it.
+ *
+ * The agent decides what to remember on its own; this is the other half, where
+ * the user overrules that judgement. What it writes is a user statement, so it
+ * lands confirmed rather than as a proposal awaiting its own approval. */
+function RememberThis({ text }) {
+  const [state, setState] = useState("idle"); // idle | saving | saved | error
+  const projectId = getActiveProject()?.id;
+  if (!projectId) return null;
+
+  async function save() {
+    // A selection inside this turn beats the whole turn — the user pointing at
+    // one sentence is a much better title than 400 words of analysis.
+    const selected = String(window.getSelection?.() || "").trim();
+    const title = (selected || text).replace(/\s+/g, " ").trim().slice(0, 200);
+    if (!title) return;
+    setState("saving");
+    try {
+      await createMemory({
+        projectId,
+        kind: "conclusion",
+        title,
+        source_refs: [{ source: "user", from: "chat" }],
+      });
+      setState("saved");
+    } catch {
+      setState("error");
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={save}
+      disabled={state === "saving" || state === "saved"}
+      className="mt-1 ml-1 text-[11px] text-muted-foreground hover:text-foreground disabled:hover:text-muted-foreground"
+    >
+      {state === "saved" ? (
+        <a href={`/project/${projectId}/memory`} className="underline underline-offset-2">
+          Remembered — open the timeline
+        </a>
+      ) : state === "error" ? (
+        "Could not remember that"
+      ) : state === "saving" ? (
+        "Remembering…"
+      ) : (
+        "+ Remember this"
+      )}
+    </button>
   );
 }
 

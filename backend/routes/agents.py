@@ -67,7 +67,13 @@ from service.artifact_store import (
 from service.auth import get_current_user_optional
 from service.crawl.fetcher import SSRFError, validate_public_url
 from service.membership import member_role
-from service.memory import build_memory_context, short_id, touch_recall
+from service.memory import (
+    build_memory_context,
+    seed_user_preferences,
+    short_id,
+    touch_recall,
+)
+from service.memory_consolidation import schedule_consolidation
 from utils.dates import now_iso
 
 logger = logging.getLogger(__name__)
@@ -82,6 +88,21 @@ _SESSION_TTL = 1800  # 30 minutes
 # and re-attach to the SAME live session (transient network blips, tab refresh).
 # The inactivity pruner (_SESSION_TTL) is the longer backstop.
 _RECONNECT_GRACE = 60  # seconds
+
+
+def _close_and_consolidate(session_id: str) -> None:
+    """Close a session and fold what it established into project memory.
+
+    The consolidation pass is where a session's durable conclusions get written
+    down — the ones the agent never paused to record with RememberFact. Reading
+    the conversation id *before* closing matters: close_session drops the
+    session from the registry. Fire-and-forget, and a no-op without a
+    conversation to read.
+    """
+    session = get_session(session_id)
+    conversation_id = getattr(session, "conversation_id", None) if session else None
+    close_session(session_id)
+    schedule_consolidation(conversation_id)
 
 
 def _cancel_grace(session) -> None:
@@ -107,7 +128,7 @@ def _schedule_grace_close(session_id: str) -> None:
         if s is not None:
             s.grace_task = None  # past the wait — don't let close_session re-cancel us
             logger.info("agents: reconnect grace elapsed; closing session %s", session_id)
-            close_session(session_id)
+            _close_and_consolidate(session_id)
 
     session.grace_task = asyncio.create_task(_close_after_grace())
 
@@ -129,7 +150,7 @@ async def _prune_stale_sessions() -> None:
         ]
         for sid in stale:
             logger.info("agents: pruning stale session %s", sid)
-            close_session(sid)
+            _close_and_consolidate(sid)
 
 
 # ---------------------------------------------------------------------------
@@ -473,8 +494,8 @@ async def get_session_state(agent_type: str, session_id: str) -> dict:
 
 @router.delete("/{agent_type}/sessions/{session_id}")
 async def delete_session(agent_type: str, session_id: str) -> dict:
-    """Close a session and free all resources."""
-    close_session(session_id)
+    """Close a session, free its resources, and consolidate what it established."""
+    _close_and_consolidate(session_id)
     return {"status": "ok"}
 
 
@@ -819,6 +840,10 @@ async def _start_seo_audit(session_id: str, body: dict, emit_fn: Any) -> None:
             return ""
         try:
             with next(db_session()) as db:
+                # Declared preferences become user-scope memory first, so the
+                # digest below carries them and the agent reads them from one
+                # place instead of a per-request field.
+                seed_user_preferences(db, owner_id, req.user_preferences)
                 context = build_memory_context(
                     db,
                     project_id=project_uuid,

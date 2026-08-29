@@ -65,6 +65,12 @@ class Project(SQLModel, table=True):
     autonomy_level: str = Field(
         default="manual", sa_column=Column(String, nullable=False, server_default="manual")
     )
+    # Memory off switch: agents and system writers stop remembering anything new
+    # about this project. Reads are unaffected — what is already known stays
+    # visible and usable; archive and delete are how you remove it.
+    memory_paused: bool = Field(
+        default=False, sa_column=Column(sa.Boolean(), nullable=False, server_default=sa.false())
+    )
     created_at: datetime = Field(
         default_factory=utcnow,
         sa_column=Column(DateTime(timezone=True), nullable=False),

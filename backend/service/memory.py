@@ -140,6 +140,33 @@ def content_hash(
     return hashlib.sha256("\x1f".join(parts).encode("utf-8")).hexdigest()
 
 
+MEMORY_PAUSE_REASON = "memory is paused for this scope"
+
+
+def is_memory_paused(db, *, project_id: UUID | None = None, user_id: UUID | None = None) -> bool:
+    """Has the owner switched memory off for this scope?
+
+    Pausing stops *writing*, never reading: what is already known stays visible
+    and usable, because a pause is "stop learning about me", not "forget me".
+    Archive and delete are the other verb. Unknown owners are treated as
+    not-paused — a lookup failure must not silently disable memory.
+    """
+    try:
+        if user_id is not None and project_id is None:
+            from models.auth import User
+
+            row = db.get(User, user_id)
+            return bool(row is not None and row.memory_paused)
+        if project_id is not None:
+            from models.project import Project
+
+            row = db.get(Project, project_id)
+            return bool(row is not None and row.memory_paused)
+    except Exception:  # noqa: BLE001
+        logger.debug("memory: pause lookup failed — treating as active", exc_info=True)
+    return False
+
+
 def state_key(kind: str, entity_key: str, attribute: str = "", period: str = "") -> str:
     """The supersession key, or ``""`` when this entry does not supersede anything.
 
@@ -213,6 +240,17 @@ def remember(
         if scope == SCOPE_USER and user_id is None:
             return None
         if scope in (SCOPE_PROJECT, SCOPE_ARTIFACT) and project_id is None:
+            return None
+
+        # The off switch, checked on the one write path so no caller can miss
+        # it. A user statement still lands — the user typing "remember this" is
+        # not the inference they paused.
+        if source_type != SOURCE_USER and is_memory_paused(
+            db,
+            project_id=project_id if scope != SCOPE_USER else None,
+            user_id=user_id if scope == SCOPE_USER else None,
+        ):
+            logger.debug("memory: %s/%s skipped — %s", scope, kind, MEMORY_PAUSE_REASON)
             return None
 
         source_type = source_type if source_type in MEMORY_SOURCES else SOURCE_AGENT
@@ -803,6 +841,38 @@ def record_artifact_memory(db, row: Any) -> ProjectMemory | None:
         return None
 
 
+def backfill_artifact_summary(db, artifact_row: Any, summary: str) -> None:
+    """Fill an artifact entry's body once its AI summary arrives.
+
+    The memory row is written when the version persists; the summary lands
+    seconds later from a background task. Matched on the artifact group's state
+    key — the active row for that key *is* the current version — so no JSON
+    containment query is needed and SQLite stays supported.
+    """
+    if not summary:
+        return
+    try:
+        key = state_key("artifact", f"artifact:{artifact_row.group_id}", "version")
+        row = db.execute(
+            select(ProjectMemory).where(
+                ProjectMemory.project_id == artifact_row.project_id,
+                ProjectMemory.state_key == key,
+                ProjectMemory.status.in_(ACTIVE_STATUSES),
+            )
+        ).scalars().first()
+        if row is None or (row.value or {}).get("version") != artifact_row.version:
+            return
+        row.body = _clean(summary, BODY_MAX)
+        db.add(row)
+        db.commit()
+    except Exception:  # noqa: BLE001
+        logger.debug("memory: artifact summary backfill failed", exc_info=True)
+        try:
+            db.rollback()
+        except Exception:  # noqa: BLE001
+            pass
+
+
 def record_change_set_memory(db, row: Any, *, applied: int, failed: int) -> ProjectMemory | None:
     """An ``action`` entry for an applied change set — what we did, and when.
 
@@ -847,6 +917,61 @@ def record_change_set_memory(db, row: Any, *, applied: int, failed: int) -> Proj
     except Exception:  # noqa: BLE001
         logger.warning("memory: change-set entry failed", exc_info=True)
         return None
+
+
+# Declared user preferences that become user-scope memory:
+# (field, kind, entity_key, attribute, label). Each is a state — changing the
+# communication style supersedes the old one rather than stacking a second.
+_PREFERENCE_FIELDS: tuple[tuple[str, str, str, str, str], ...] = (
+    ("role", "identity", "operator:role", "role", "Role"),
+    ("communication_style", "communication", "operator:style", "communication_style", "Wants answers"),
+    ("report_depth", "communication", "operator:depth", "report_depth", "Report depth"),
+    ("primary_outcome", "method", "operator:outcome", "primary_outcome", "Optimises for"),
+)
+
+
+def seed_user_preferences(db, user_id: UUID, preferences: Any) -> list[ProjectMemory]:
+    """Mirror the declared UserPreferences into user-scope memory.
+
+    The client has been sending these on every request from localStorage; here
+    they become dated, superseding entries the server owns, so an agent reads
+    them from the digest like any other memory and a changed preference leaves a
+    trail instead of silently overwriting.
+
+    Declared, so ``source_type=user`` and confirmed — a preference the person
+    picked is not an inference waiting for approval.
+    """
+    written: list[ProjectMemory] = []
+    if preferences is None or user_id is None:
+        return written
+    try:
+        now = utcnow()
+        for field_name, kind, entity_key, attribute, label in _PREFERENCE_FIELDS:
+            value = getattr(preferences, field_name, "") or ""
+            if not str(value).strip():
+                continue
+            row = remember(
+                db,
+                scope=SCOPE_USER,
+                kind=kind,
+                user_id=user_id,
+                title=f"{label}: {value}",
+                entity_key=entity_key,
+                attribute=attribute,
+                value={"value": str(value), "field": field_name},
+                observed_at=now,
+                source_type=SOURCE_USER,
+                source_refs=[{"user_preferences": field_name}],
+                status=STATUS_CONFIRMED,
+                confidence="high",
+                importance=7,
+                meta={"declared": True},
+            )
+            if row is not None:
+                written.append(row)
+    except Exception:  # noqa: BLE001
+        logger.warning("memory: user preference seed failed", exc_info=True)
+    return written
 
 
 # Project profile fields that become standing memory:
@@ -932,11 +1057,14 @@ def seed_project_profile(db, project: Any, *, user_id: UUID | None = None) -> li
 
 
 __all__ = [
+    "MEMORY_PAUSE_REASON",
     "MEMORY_PROMPT_RULES",
     "MemoryContext",
     "build_memory_context",
     "content_hash",
     "get_memory",
+    "is_memory_paused",
+    "state_key",
     "record_artifact_memory",
     "record_change_set_memory",
     "redact_secrets",
@@ -947,6 +1075,8 @@ __all__ = [
     "resolve_short_id",
     "search",
     "seed_project_profile",
+    "seed_user_preferences",
+    "backfill_artifact_summary",
     "set_status",
     "short_id",
     "touch_recall",
