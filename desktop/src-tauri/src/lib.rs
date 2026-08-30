@@ -248,6 +248,79 @@ fn handle_auth_deep_link(app: &AppHandle, url: &Url) {
     let _ = window.set_focus();
 }
 
+/// Menu ids. Namespaced so a future menu can't collide with these.
+#[cfg(desktop)]
+const MENU_RELOAD: &str = "view:reload";
+#[cfg(all(desktop, any(debug_assertions, feature = "devtools")))]
+const MENU_DEVTOOLS: &str = "view:devtools";
+
+/// A View menu with Reload — the shell has never had one.
+///
+/// The window loads a *remote* origin, so nothing on the page can rescue a bad
+/// load, and the system webview binds no reload key of its own (Tauri's default
+/// menu is App/File/Edit/Window/Help — no View, no Cmd+R). Until this, the only
+/// way to pick up a change, or to recover a window that came up blank because
+/// the dev server wasn't listening yet, was to quit and relaunch: a poor loop
+/// when developing against `localhost:3003` (`npm run dev:local`), and a dead
+/// end for a shipped user whose window failed to load once.
+///
+/// Inserted before Window, where macOS users expect View — located by id rather
+/// than a hardcoded index, since the default menu's shape differs per platform.
+#[cfg(desktop)]
+fn install_view_menu(app: &tauri::AppHandle) -> tauri::Result<()> {
+    use tauri::menu::{Menu, MenuItem, Submenu, WINDOW_SUBMENU_ID};
+
+    let reload = MenuItem::with_id(app, MENU_RELOAD, "Reload", true, Some("CmdOrCtrl+R"))?;
+
+    #[cfg(any(debug_assertions, feature = "devtools"))]
+    let view = {
+        let devtools = MenuItem::with_id(
+            app,
+            MENU_DEVTOOLS,
+            "Toggle Developer Tools",
+            true,
+            Some("CmdOrCtrl+Shift+I"),
+        )?;
+        Submenu::with_items(app, "View", true, &[&reload, &devtools])?
+    };
+    #[cfg(not(any(debug_assertions, feature = "devtools")))]
+    let view = Submenu::with_items(app, "View", true, &[&reload])?;
+
+    let menu = Menu::default(app)?;
+    let before_window = menu
+        .items()?
+        .iter()
+        .position(|item| item.id().as_ref() == WINDOW_SUBMENU_ID);
+    match before_window {
+        Some(index) => menu.insert(&view, index)?,
+        None => menu.append(&view)?,
+    }
+    app.set_menu(menu)?;
+    Ok(())
+}
+
+/// Route a View-menu click to the main window.
+#[cfg(desktop)]
+fn handle_menu_event(app: &tauri::AppHandle, event: tauri::menu::MenuEvent) {
+    let Some(window) = app.get_webview_window("main") else {
+        return;
+    };
+    match event.id().as_ref() {
+        MENU_RELOAD => {
+            let _ = window.reload();
+        }
+        #[cfg(any(debug_assertions, feature = "devtools"))]
+        MENU_DEVTOOLS => {
+            if window.is_devtools_open() {
+                window.close_devtools();
+            } else {
+                window.open_devtools();
+            }
+        }
+        _ => {}
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // Before the builder: a panic during setup is exactly the kind of failure
@@ -285,6 +358,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_deep_link::init())
         .manage(SidecarState::default())
+        .on_menu_event(handle_menu_event)
         .setup(|app| {
             // macOS registers the scheme from the bundle's Info.plist. Linux and
             // Windows register it from the *installer*, so a build that was run
@@ -298,6 +372,13 @@ pub fn run() {
                 if let Err(err) = app.deep_link().register_all() {
                     eprintln!("duct: could not register deep link scheme: {err}");
                 }
+            }
+
+            // A window that cannot be reloaded is a window that can only be
+            // quit — see `install_view_menu`. Not fatal if it fails: the app
+            // is still usable, just without the menu.
+            if let Err(err) = install_view_menu(app.handle()) {
+                eprintln!("duct: could not install the View menu: {err}");
             }
 
             let handle = app.handle().clone();

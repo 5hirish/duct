@@ -24,6 +24,11 @@ updater = ["dep:tauri-plugin-updater"]
 # Crash reporting, on by default and compiled out when the DSN is absent
 # anyway. Separable so a build can drop the dependency entirely.
 crash-reporting = ["dep:sentry"]
+# Webview inspector in a release build. Off by default; debug builds get it
+# regardless. Passed through so `View → Toggle Developer Tools` and Tauri's own
+# `open_devtools` are compiled in together — gating them on different flags is
+# how you get a menu item that does nothing.
+devtools = ["tauri/devtools"]
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
