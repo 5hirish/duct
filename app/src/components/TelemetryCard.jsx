@@ -10,6 +10,7 @@
 // improve Duct" tells someone nothing they can consent to.
 
 import { useCallback, useEffect, useState } from "react";
+import { ShieldAlert } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { getTelemetrySettings, setTelemetryEnabled } from "@/lib/telemetry";
 
@@ -47,35 +48,34 @@ export default function TelemetryCard() {
   if (!state.available) return null;
 
   return (
-    <article className="connection-card">
-      <div className="connection-card-head">
-        <div>
-          <h2 className="connection-title">Crash reports</h2>
-          <p className="connection-description">
-            Off by default. Duct runs its backend on this machine, so nothing
-            leaves it unless you say so.
-          </p>
+    <article className="conn-panel">
+      <span className="conn-tile-logo" aria-hidden="true">
+        <ShieldAlert size={20} strokeWidth={1.7} />
+      </span>
+      <div className="conn-tile-body">
+        <div className="conn-tile-top">
+          <span className="conn-tile-title">Crash reports</span>
+          <Switch
+            checked={state.enabled}
+            onCheckedChange={toggle}
+            disabled={busy}
+            aria-label="Send crash reports"
+          />
         </div>
-        <Switch
-          checked={state.enabled}
-          onCheckedChange={toggle}
-          disabled={busy}
-          aria-label="Send crash reports"
-        />
-      </div>
-
-      <p className="app-subtle" style={{ fontSize: 12, lineHeight: 1.55, marginTop: 8 }}>
-        When on, Duct sends the error and the stack trace that caused a crash.
-        It never sends your provider API keys, your data, or the contents of
-        anything you generate. Takes effect for the bundled backend the next
-        time you open Duct.
-      </p>
-
-      {error && (
-        <p role="alert" className="text-destructive" style={{ marginTop: 6, fontSize: 12 }}>
-          {error}
+        <p className="conn-tile-desc">
+          Off by default. Duct runs its backend on this machine, so nothing
+          leaves it unless you say so. When on, it sends the error and the
+          stack trace that caused a crash — never your provider API keys, your
+          data, or anything you generate. Takes effect for the bundled backend
+          the next time you open Duct.
         </p>
-      )}
+
+        {error && (
+          <p role="alert" className="text-destructive" style={{ marginTop: 6, fontSize: 12 }}>
+            {error}
+          </p>
+        )}
+      </div>
     </article>
   );
 }
