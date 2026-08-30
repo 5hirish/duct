@@ -18,14 +18,14 @@ from langchain_core.language_models.fake_chat_models import FakeMessagesListChat
 from langchain_core.messages import AIMessage
 
 from agents.audit.schema import CrawlPlan, CrawlResult
-from agents.audit.v1.runner import (
-    MAX_QUESTIONS,
-    build_audit_agent,
-    build_ask_user_tool,
-    _split_chunk,
-    stream_audit,
-)
+from agents.audit.v1.runner import build_audit_agent
 from agents.core.events import AgentEvent
+from agents.core.lc import (
+    MAX_QUESTIONS,
+    build_ask_user_tool,
+    split_chunk,
+    stream_agent,
+)
 from agents.core.session import BaseAgentSession, register_session
 
 
@@ -169,7 +169,7 @@ async def test_stream_emits_the_shared_event_vocabulary(crawl_result, emitted):
     async def on_close(_raw: str, _turn: str) -> None:
         pass
 
-    await stream_audit(agent, "audit getduct.ai", emitted, on_artifact_close=on_close)
+    await stream_agent(agent, "audit getduct.ai", emitted, on_artifact_close=on_close)
 
     kinds = [e["event"] for e in emitted.events]
     assert AgentEvent.MESSAGE_STOP in kinds
@@ -190,7 +190,7 @@ async def test_stream_routes_report_payload_to_the_parser(crawl_result, emitted)
     async def on_close(raw: str, turn: str) -> None:
         closed.append((raw, turn))
 
-    await stream_audit(agent, "audit", emitted, on_artifact_close=on_close)
+    await stream_agent(agent, "audit", emitted, on_artifact_close=on_close)
 
     assert closed, "the report tag should have closed"
     raw, _turn = closed[0]
@@ -207,21 +207,21 @@ async def test_stream_routes_report_payload_to_the_parser(crawl_result, emitted)
 # ---------------------------------------------------------------------------
 
 def test_split_chunk_handles_provider_variations():
-    assert _split_chunk(AIMessage(content="plain")) == ("plain", "")
-    assert _split_chunk(
+    assert split_chunk(AIMessage(content="plain")) == ("plain", "")
+    assert split_chunk(
         AIMessage(content=[{"type": "text", "text": "visible"}])
     ) == ("visible", "")
     # Anthropic-style reasoning blocks
-    assert _split_chunk(
+    assert split_chunk(
         AIMessage(content=[{"type": "thinking", "thinking": "hmm"}, {"type": "text", "text": "out"}])
     ) == ("out", "hmm")
     # OpenAI-style reasoning blocks
-    assert _split_chunk(
+    assert split_chunk(
         AIMessage(content=[{"type": "reasoning", "text": "why"}])
     ) == ("", "why")
     # Unknown block types are dropped, never leaked as report text
-    assert _split_chunk(AIMessage(content=[{"type": "image", "url": "x"}])) == ("", "")
-    assert _split_chunk(None) == ("", "")
+    assert split_chunk(AIMessage(content=[{"type": "image", "url": "x"}])) == ("", "")
+    assert split_chunk(None) == ("", "")
 
 
 # ---------------------------------------------------------------------------

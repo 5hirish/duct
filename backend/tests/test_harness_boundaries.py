@@ -47,11 +47,18 @@ ADAPTERS: dict[str, str] = {
     "agents/audit/v3/runner.py":            "Claude Agent SDK runner",
     "agents/content/v3/runner.py":          "Claude Agent SDK runner",
     "agents/insights/v1/agent.py":          "LangChain synthesis (init_chat_model)",
+    "agents/insights/v1/runner.py":         "deepagents runner — autonomous insights session",
     "agents/insights/v3/runner.py":         "Claude Agent SDK runner",
     "agents/insights/v2/agents.py":         "Google ADK runner — frozen engine",
     "agents/insights/v2/runner.py":         "Google ADK runner — frozen engine",
 
+    # -- Shared LangChain adapter: the model-transport + events-out ports for
+    #    every V1 runner. Extracted from agents/audit/v1/runner.py on the second
+    #    consumer (insights), per the ports rule.
+    "agents/core/lc.py":                    "LangChain adapter: resolve_chat_model + stream_agent",
+
     # -- Tool binders. Domain logic stays plain; these wrap it per harness.
+    "agents/core/connector_tools.py":       "LangChain binder: connector discovery tools",
     "agents/core/memory_tools.py":          "binder pair: build_memory_tools_lc / _sdk",
     "agents/audit/v1/tools.py":             "LangChain tool binder",
     "agents/audit/tools.py":                "Claude Agent SDK tool binder (duct_crawl)",
@@ -211,7 +218,11 @@ def test_ag_ui_map_is_exhaustive():
 
 @pytest.mark.parametrize(
     "js_rel",
-    ["app/src/lib/auditEvents.js", "app/src/lib/contentEvents.js"],
+    [
+        "app/src/lib/auditEvents.js",
+        "app/src/lib/contentEvents.js",
+        "app/src/lib/insightsEvents.js",
+    ],
 )
 def test_frontend_event_mirrors_reference_real_backend_values(js_rel: str):
     """Every event string the frontend names must be one the backend can emit.
@@ -235,7 +246,12 @@ def test_frontend_event_mirrors_reference_real_backend_values(js_rel: str):
 
 
 @pytest.mark.parametrize(
-    "js_rel", ["app/src/lib/auditEvents.js", "app/src/lib/contentEvents.js"]
+    "js_rel",
+    [
+        "app/src/lib/auditEvents.js",
+        "app/src/lib/contentEvents.js",
+        "app/src/lib/insightsEvents.js",
+    ],
 )
 def test_legacy_frontend_values_are_genuinely_retired(js_rel: str):
     """A LEGACY_* key must name a value the backend no longer emits.

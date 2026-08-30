@@ -167,9 +167,20 @@ framework. The rules it implies:
 - **Pick the lowest rung that works.** LangChain 1.x is layered, and the layers
   carry different stability guarantees: `init_chat_model` and `create_agent` are
   on the semver-stable 1.x LTS surface (no breaking changes until 2.0), while
-  `deepagents` is 0.x with no stability policy and a weekly cadence. Insights
-  needs the first, audit the second, content the third. Reaching for
+  `deepagents` is 0.x with no stability policy and a weekly cadence. Reaching for
   `deepagents` where `create_agent` suffices buys churn for nothing.
+
+  The rung is a property of the agent, not of the agent *type*, and it can move
+  when the agent's job does. The legacy insights pipeline
+  (`agents/insights/v1/agent.py`: one tool loop, one structured-output call) is
+  a `create_agent` job and stays one. The autonomous insights session
+  (`agents/insights/v1/runner.py`) is on `deepagents` because it needs four
+  things `create_agent` lacks — a planning loop, subagents, skills, and the
+  `interrupt_on` upgrade path — and the phase plan spends all four. Audit's V1
+  runner is still `create_agent`; content is on the SDK.
+
+  Two consumers of the 0.x pin now, so `tests/test_deepagents_harness.py`
+  matters more, not less: run it before moving the pin.
 - **`deepagents` is pinned exactly**, not with a caret — it changes behaviour in
   minors (task planning became opt-in in 0.7). `tests/test_deepagents_harness.py`
   is the upgrade gate; run it before moving the pin.
@@ -228,6 +239,12 @@ don't fit.
   set (`pytest tests/test_memory_retrieval.py -s` prints the per-axis report);
   it exists because it caught the AND-everything query bug that made questions
   retrieve nothing, so extend it before tuning retrieval by feel.
+- `agents/core/lc.py` — the LangChain adapter every V1 runner shares:
+  `resolve_chat_model` (model transport) and `stream_agent` (LangChain stream →
+  the `AgentEvent` vocabulary), plus `build_ask_user_tool`, the LangChain half
+  of the human-in-the-loop port. Extracted from `agents/audit/v1/runner.py` when
+  insights became the second V1 runner. A V1 runner should not talk to
+  `init_chat_model` or drive `astream` itself.
 - `service/rest.py` — sync HTTP transport for the reporting connectors:
   retry, backoff, rate-limit pacing, error typing. A new connector declares
   an `Endpoint` and an `ApiError` subclass and writes no transport code;

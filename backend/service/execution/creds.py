@@ -1,5 +1,10 @@
 """Credential resolution for staged execution.
 
+The executor-shaped specialization of ``service/connector_access.py``: that
+module answers "what are this project's credentials for connector X" for reads
+and writes alike; this one folds in a request override and the server env
+fallback, and returns the exact dict the Google clients expect.
+
 Per-field priority: request override (browser BYO — unchanged behavior) →
 project connector binding (``project_connectors``) → stored
 ``connector_credentials`` row (Fernet-encrypted, saved from the Connections
@@ -24,116 +29,12 @@ import logging
 from collections.abc import Mapping
 from uuid import UUID
 
-from sqlalchemy import select
 from sqlmodel import Session
 
 from config import get_configs
-from models.connector import ConnectorCredential, ProjectConnector
-from service.credentials import decrypt_credentials
+from service.connector_access import _stored_credentials
 
 logger = logging.getLogger(__name__)
-
-
-def bound_credential_row(
-    session: Session, project_id: UUID, connector_type: str
-) -> ConnectorCredential | None:
-    """The credential row a project has bound for one connector type, or None."""
-    return (
-        session.execute(
-            select(ConnectorCredential)
-            .join(
-                ProjectConnector,
-                ProjectConnector.connector_credential_id == ConnectorCredential.id,
-            )
-            .where(
-                ProjectConnector.project_id == project_id,
-                ProjectConnector.connector_type == connector_type,
-            )
-        )
-        .scalars()
-        .first()
-    )
-
-
-def _decrypt_row(row: ConnectorCredential) -> dict:
-    try:
-        data = decrypt_credentials(row.credentials_enc)
-    except Exception as exc:  # noqa: BLE001 — stored creds are optional, never fatal
-        logger.warning(
-            "Could not decrypt stored %s credentials (row %s): %s",
-            row.connector_type,
-            row.id,
-            exc,
-        )
-        return {}
-    return data if isinstance(data, dict) else {}
-
-
-def _stored_credentials(
-    session: Session,
-    user_id: UUID,
-    connector_type: str,
-    account_id: str,
-    project_id: UUID | None = None,
-) -> dict:
-    """Best-effort decrypt of the credentials for a connector.
-
-    Project binding first (when ``project_id`` is given), then the caller's
-    own rows. Never raises: a missing row, a missing
-    CREDENTIALS_ENCRYPTION_KEY, or a corrupt token all degrade to ``{}`` so
-    the env fallback still applies.
-    """
-    if project_id is not None:
-        bound = bound_credential_row(session, project_id, connector_type)
-        # An explicitly-targeted different account skips the binding: the
-        # caller asked for account Y, the project is bound to account X — the
-        # caller's own rows for Y are the honest source, not X's secrets.
-        if bound is not None and not (
-            account_id and bound.account_id and bound.account_id != account_id
-        ):
-            data = _decrypt_row(bound)
-            if data:
-                return data
-    account_ids = [account_id] if account_id else []
-    if "" not in account_ids:
-        account_ids.append("")
-    for acct in account_ids:
-        row = (
-            session.execute(
-                select(ConnectorCredential).where(
-                    ConnectorCredential.user_id == user_id,
-                    ConnectorCredential.connector_type == connector_type,
-                    ConnectorCredential.account_id == acct,
-                )
-            )
-            .scalars()
-            .first()
-        )
-        if row is None:
-            continue
-        data = _decrypt_row(row)
-        if data:
-            return data
-    return {}
-
-
-def stored_connector_credentials(
-    session: Session,
-    user_id: UUID,
-    connector_type: str,
-    account_id: str = "",
-    project_id: UUID | None = None,
-) -> dict:
-    """Public best-effort read of a stored credential blob, any shape.
-
-    Used by the manual-credential connectors (apple_ads, meta_ads, stripe,
-    revenuecat, openai_ads) whose credential dicts don't fit the Google-shaped
-    resolve_execution_creds() output. ``project_id`` (membership-checked by
-    the caller) makes the project's bound account win over the caller's own
-    rows. Same guarantees: never raises, {} on any miss."""
-    return _stored_credentials(
-        session, user_id, connector_type, account_id.strip(), project_id=project_id
-    )
 
 
 def resolve_execution_creds(

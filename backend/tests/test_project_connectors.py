@@ -28,10 +28,8 @@ import routes.project_connectors as pc_routes
 import service.auth as auth_service
 import service.credentials as credentials_service
 import service.execution.creds as creds_module
-from service.execution.creds import (
-    resolve_execution_creds,
-    stored_connector_credentials,
-)
+from service.connector_access import stored_connector_credentials
+from service.execution.creds import resolve_execution_creds
 from service.membership import ROLE_OWNER
 
 FERNET_KEY = Fernet.generate_key().decode()

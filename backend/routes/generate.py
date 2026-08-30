@@ -242,7 +242,7 @@ async def _run_generate_pipeline(
     # browser to paste keys from).
     def _resolve_manual_credentials() -> dict[str, dict[str, str]]:
         from db.session import get_session as db_session
-        from service.execution.creds import stored_connector_credentials
+        from service.connector_access import stored_connector_credentials
         from service.membership import member_role
         from service.pipeline import MANUAL_CREDENTIAL_CONNECTORS
 

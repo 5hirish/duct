@@ -53,7 +53,10 @@ from agents.content.persistence import (
 )
 from agents.content.schema import DraftPostRequest, PlanRequest
 from agents.content.v3.runner import create_draft_session, create_plan_session
+from agents.insights.schema import InsightsRequest, create_insights_session
 from agents.core import session as _core_session
+from agents.core.context import format_business_context
+from agents.core.events import AgentEvent, StepStatus
 from db.session import get_session as db_session
 from agents.engines import PROVIDER_CONFIG_ATTR, resolve_engine, resolve_engine_model, resolve_engine_provider
 from agents.registry import AgentType, get_spec, list_specs
@@ -305,8 +308,15 @@ class AgentMessage(BaseModel):
     content: str | list | None = None
     context_version_id: int | None = None   # which report version to use as context
 
-    # For type="answer" (AskUserQuestion response)
-    answers: dict[str, str] | None = None
+    # For type="answer" — the reply to whatever the session is parked on.
+    # One channel for all three pause kinds (AskUserQuestion, connection
+    # required, account selection); the event told the client which card to
+    # render, and the shape of the answer follows from that:
+    #   questions_required          -> {"<question>": "<answer>", ...}
+    #   connection_required         -> {"connected": true} | {"skipped": true}
+    #   account_selection_required  -> {"account_id": "...", "account_name": "..."}
+    # Values are Any rather than str because two of those carry booleans.
+    answers: dict[str, Any] | None = None
 
 
 @router.post("/{agent_type}/sessions/{session_id}/messages")
@@ -592,6 +602,8 @@ def _create_session_for(agent_type: str, session_id: str, body: dict):
     runner can re-prime from the DB and the recorder can persist each turn."""
     if agent_type == AgentType.SEO_AUDIT:
         return _create_audit_session_with_conversation(agent_type, session_id, body)
+    if agent_type == AgentType.INSIGHTS:
+        return _create_insights_session_with_conversation(agent_type, session_id, body)
     if agent_type == AgentType.TIKTOK_STUDIO:
         try:
             project_id = UUID(str(body["project_id"]))
@@ -646,7 +658,6 @@ def _create_session_for(agent_type: str, session_id: str, body: dict):
             elif conv_artifact_type == "plan" and conv_artifact_id:
                 session.plan_id = conv_artifact_id
         return session
-    # audit + insights share the AuditSession shape.
     return create_audit_session(session_id, agent_type)
 
 
@@ -693,6 +704,53 @@ def _create_audit_session_with_conversation(agent_type: str, session_id: str, bo
     except Exception:
         logger.warning(
             "agents: conversation persistence unavailable for audit %s — "
+            "running without history", session_id, exc_info=True,
+        )
+    return session
+
+
+def _create_insights_session_with_conversation(agent_type: str, session_id: str, body: dict):
+    """Insights session with persisted-conversation plumbing.
+
+    Same contract as the audit variant: conversation persistence engages only
+    for project-scoped sessions, a non-UUID (local-only) project id runs
+    unpersisted, and every failure degrades to "runs without history" rather
+    than failing the session. Insights conversations bind no workspace artifact
+    — one conversation can produce several briefs, and the link lives on
+    ``artifacts.conversation_id``.
+    """
+    session = create_insights_session(session_id, agent_type)
+    try:
+        project_id = _as_uuid(body.get("project_id"))
+    except Exception:
+        project_id = None  # local-only project ids aren't UUIDs — run unpersisted
+    if project_id is None:
+        return session
+
+    try:
+        with next(db_session()) as db:
+            conv, is_resume = resolve_or_create_conversation(
+                db,
+                agent_type=agent_type,
+                project_id=project_id,
+                mode=str(body.get("focus") or "insights"),
+                conversation_id=_as_uuid(body.get("conversation_id")),
+                resume=bool(body.get("resume")),
+                start_fresh=bool(body.get("start_fresh")),
+            )
+            prompt = str(body.get("prompt") or "").strip()
+            if prompt and not conv.title:
+                # First line of what was asked, so the sessions list is readable
+                # without opening each one.
+                conv.title = prompt[:120]
+                db.add(conv)
+                db.commit()
+            session.conversation_id = conv.id
+            session.recorder = ConversationRecorder(conv.id)
+            session.resume = is_resume
+    except Exception:
+        logger.warning(
+            "agents: conversation persistence unavailable for insights %s — "
             "running without history", session_id, exc_info=True,
         )
     return session
@@ -997,5 +1055,145 @@ async def _start_seo_audit(session_id: str, body: dict, emit_fn: Any) -> None:
 
 
 async def _start_insights(session_id: str, body: dict, emit_fn: Any) -> None:
-    """Placeholder — insights agent wired via the legacy /api/insights/generate/stream for now."""
-    raise HTTPException(501, "Insights agent: use /api/insights/generate/stream (legacy) for now.")
+    """Start an autonomous insights session as a background task.
+
+    The counterpart of ``POST /api/insights/generate``, which stays as the
+    non-interactive brief path. The difference is the whole point: that route
+    takes a fully-specified request (connectors, accounts, goal, date range)
+    decided by a wizard; this one takes a project and a sentence, and the agent
+    works out the rest. See
+    ``docs/engineering/autonomous-insights-agent-plan.md``.
+    """
+    from agents.insights.v1.runner import AutonomousInsightsRunner
+
+    try:
+        req = InsightsRequest.model_validate(body)
+    except Exception as exc:
+        raise HTTPException(422, f"Invalid insights config: {exc}") from exc
+
+    cfg = get_configs()
+    # V1 (LangChain/deepagents) is this agent's harness — it is the only engine
+    # that implements the session shape, so an engine override selects the
+    # provider/model within V1 rather than a different runner.
+    engine = resolve_engine(req.engine or cfg.generate_engine or "v1")
+    provider = resolve_engine_provider(engine, cfg.generate_provider or None)
+    model = resolve_engine_model(engine, provider, cfg.generate_model or None)
+    api_key = getattr(cfg, PROVIDER_CONFIG_ATTR[provider], "") or ""
+    if not api_key and not claude_oauth_available():
+        raise HTTPException(
+            500, f"No API key configured for provider {getattr(provider, 'value', provider)!r}."
+        )
+
+    session = get_session(session_id)
+    owner_id = getattr(session, "user_id", None) if session else None
+    conv_id = getattr(session, "conversation_id", None) if session else None
+    recorder = getattr(session, "recorder", None) if session else None
+
+    # Membership gate. artifact_project_id is the id the memory tools key off,
+    # so it is set ONLY after the caller is proven to belong to the project —
+    # everything project-scoped downstream reads it rather than the request.
+    project_uuid = None
+    if req.project_id and owner_id:
+        try:
+            candidate = UUID(str(req.project_id))
+            with next(db_session()) as db:
+                role = member_role(candidate, owner_id, db)
+            if role is None:
+                logger.warning(
+                    "agents: user %s is not a member of project %s — insights runs unscoped",
+                    owner_id, req.project_id,
+                )
+            else:
+                project_uuid = candidate
+        except Exception:
+            logger.warning("agents: project scoping unavailable for insights", exc_info=True)
+    if session is not None:
+        session.artifact_project_id = project_uuid
+        session.memory_off = not req.remember
+
+    async def _project_memory_blocks(query: str = "") -> str:
+        """The ``<project_memory>`` / ``<user_memory>`` blocks for the opening turn.
+
+        Per-project data, so it rides in the USER message and never the system
+        prompt — the cached system prefix must stay byte-identical across
+        customers. Best-effort: a missing digest degrades the session, never
+        fails it. Emits MEMORY_RECALLED so the UI can show what the turn was
+        primed with and link each chip back to its source.
+        """
+        if project_uuid is None or not req.remember:
+            return ""
+        try:
+            with next(db_session()) as db:
+                # Declared preferences become user-scope memory first, so the
+                # digest carries them and the agent reads them from one place.
+                seed_user_preferences(db, owner_id, req.user_preferences)
+                context = build_memory_context(
+                    db,
+                    project_id=project_uuid,
+                    user_id=owner_id,
+                    agent_type=str(AgentType.INSIGHTS),
+                    query=query,
+                    subject=query,
+                )
+                touch_recall(db, context.recalled_ids)
+        except Exception:
+            logger.warning("agents: insights memory blocks unavailable", exc_info=True)
+            return ""
+
+        if context.recalled:
+            try:
+                await emit_fn({
+                    "event": AgentEvent.MEMORY_RECALLED,
+                    "memories": [
+                        {k: v for k, v in entry.items() if k != "uuid"}
+                        for entry in context.recalled
+                    ],
+                })
+            except Exception:
+                logger.debug("agents: MEMORY_RECALLED emit failed", exc_info=True)
+        return context.text
+
+    if recorder is not None:
+        emit_fn = recorder.wrap_emit(emit_fn)
+        if req.prompt and not getattr(session, "resume", False):
+            try:
+                await recorder.record_user(req.prompt)
+            except Exception:
+                logger.debug("agents: insights head event failed", exc_info=True)
+
+    memory = await _project_memory_blocks(query=req.prompt)
+    business_context = format_business_context(req.business_context)
+
+    runner = AutonomousInsightsRunner(
+        api_key=api_key, provider=provider, model=model, temperature=1.0
+    )
+
+    async def pipeline() -> None:
+        try:
+            await emit_fn({"event": AgentEvent.PIPELINE_STARTED, "status": StepStatus.RUNNING})
+            # run_session emits PIPELINE_FINISHED itself once the opening turn
+            # lands, then stays open for follow-ups — so the route must not
+            # emit it again on return (that would be the chat loop ending).
+            await runner.run_session(
+                session_id,
+                emit_fn,
+                session=session,
+                prompt=req.prompt,
+                business_context=business_context,
+                memory=memory,
+                project_id=project_uuid,
+                user_id=owner_id,
+                conversation_id=conv_id,
+                remember=req.remember,
+            )
+        except Exception as exc:
+            logger.exception("insights pipeline error for session %s", session_id)
+            await emit_fn({
+                "event": AgentEvent.PIPELINE_FAILED,
+                "status": StepStatus.ERROR,
+                "error": str(exc),
+            })
+
+    task = asyncio.create_task(pipeline())
+    if session:
+        session.pipeline_task = task
