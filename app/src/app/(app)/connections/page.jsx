@@ -21,6 +21,7 @@ import {
   saveServerConnector,
   unbindProjectConnector,
 } from "../../../lib/connectorsApi";
+import { CONNECTOR_TOKEN_KEYS, exchangeConnectorCode } from "../../../lib/connectorAuth";
 import { getActiveProject } from "../../../lib/projects";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,6 +43,7 @@ export default function ConnectionsPage() {
   const [devTokenInput, setDevTokenInput] = useState("");
   const [mccInput, setMccInput] = useState("");
   const [signedIn, setSignedIn] = useState(false);
+  const [connectError, setConnectError] = useState("");
   const [serverRows, setServerRows] = useState({}); // connector_type -> first stored row
   const [serverRowsAll, setServerRowsAll] = useState({}); // connector_type -> [rows]
 
@@ -113,6 +115,27 @@ export default function ConnectionsPage() {
     }
   }
 
+  // One connector's OAuth arriving from the desktop shell. The browser flow
+  // hands the token over in the URL fragment; the desktop one cannot — a
+  // refresh token must never ride in a deep link — so the shell brings back a
+  // single-use code and the token is fetched here instead. Everything after
+  // that is the fragment path's destination, one round trip later.
+  async function adoptConnectorToken(connectorType, refreshToken) {
+    const storageKey = CONNECTOR_TOKEN_KEYS[connectorType];
+    if (!storageKey || !refreshToken) {
+      setConnectError("That connection came back incomplete — please try again.");
+      return;
+    }
+    sessionStorage.setItem(storageKey, refreshToken);
+    if (connectorType === "google_ads") setGadsOauthConnected(true);
+    if (connectorType === "ga4") setGa4Connected(true);
+    if (connectorType === "gsc") setGscConnected(true);
+    if (connectorType === "gtm") setGtmConnected(true);
+    if (!hasAuthToken()) return;
+    if (connectorType === "google_ads") await syncGadsToServer();
+    else await syncTokenToServer(connectorType, refreshToken);
+  }
+
   async function removeServerRow(connectorType) {
     const row = serverRows[connectorType];
     if (!row) return;
@@ -166,6 +189,29 @@ export default function ConnectionsPage() {
       if (arrived.ga4_refresh_token) syncTokenToServer("ga4", arrived.ga4_refresh_token);
       if (arrived.gsc_refresh_token) syncTokenToServer("gsc", arrived.gsc_refresh_token);
       if (arrived.gtm_refresh_token) syncTokenToServer("gtm", arrived.gtm_refresh_token);
+    }
+
+    // Desktop shell: the OAuth ran in the system browser and came home through
+    // the shell's deep link, which navigates this window to
+    // /connections?connector=&auth_code=. Redeem the code for the token the
+    // fragment path above would have carried directly.
+    const query = new URLSearchParams(window.location.search);
+    const connectorParam = query.get("connector") || "";
+    const codeParam = query.get("auth_code") || "";
+    if (connectorParam && codeParam) {
+      // Single-use and 60-second, but there is no reason to leave it in the
+      // address bar or in history either.
+      window.history.replaceState(null, "", window.location.pathname);
+      setConnectError("");
+      exchangeConnectorCode(codeParam)
+        .then(({ connector_type, refresh_token }) =>
+          adoptConnectorToken(connector_type || connectorParam, refresh_token),
+        )
+        .catch(() =>
+          setConnectError(
+            "That connection didn't finish — the link expires after a minute. Please try again.",
+          ),
+        );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -329,6 +375,16 @@ export default function ConnectionsPage() {
             </strong>{" "}
             reads from.
           </p>
+
+          {connectError && (
+            <p
+              role="alert"
+              className="text-sm text-destructive"
+              style={{ marginTop: -8, marginBottom: 18, maxWidth: 720 }}
+            >
+              {connectError}
+            </p>
+          )}
 
           <div className="conn-grid">
             <OAuthConnectorCard

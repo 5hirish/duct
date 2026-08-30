@@ -7,12 +7,14 @@
 //! Service) — this shell never writes them to disk. No agent code, prompts, or
 //! API keys ship in this bundle; everything proprietary stays on the backend.
 //!
-//! Google sign-in runs in the system browser (Google disallows OAuth in
-//! embedded webviews): the web app calls `open_external` to launch the
-//! authorize URL, and the backend redirects the browser to
-//! `ai.getduct.desktop://auth?auth_code=...`, which lands in
-//! `handle_auth_deep_link` below and is forwarded to the webview's existing
-//! `/?auth_code=` exchange path.
+//! Every OAuth flow runs in the system browser (Google disallows OAuth in
+//! embedded webviews, and a user in one has none of their browser's sessions,
+//! passwords or passkeys): the web app calls `open_external` to launch the
+//! authorize URL, and the backend redirects the browser back to a
+//! `ai.getduct.desktop://` deep link, which lands below and is forwarded into
+//! the webview. Two routes, one shape — `auth` for signing in to Duct,
+//! `connector` for connecting a data source. Neither carries the credential
+//! itself, only a single-use code the webview redeems against the backend.
 
 mod sidecar;
 mod telemetry;
@@ -90,6 +92,10 @@ fn get_shell_info() -> serde_json::Value {
         "version": env!("CARGO_PKG_VERSION"),
         "capabilities": {
             "browserAuth": true,
+            // The `connector` deep-link route exists, so connector OAuth can go
+            // to the system browser too. Older shells lack the route entirely
+            // and the web app keeps navigating them in-window.
+            "browserConnectors": true,
             // This shell ships and supervises a local backend; the web app should
             // resolve its API base from `get_sidecar_info` instead of the
             // build-time NEXT_PUBLIC_API_BASE. Older shells lack the flag and
@@ -208,44 +214,87 @@ fn set_telemetry_enabled(enabled: bool) -> Result<(), String> {
     telemetry::write_prefs(&dir, telemetry::TelemetryPrefs { enabled })
 }
 
-/// Forward `ai.getduct.desktop://auth?auth_code=...` into the webview by
-/// navigating it to `/?auth_code=...` on whatever origin this shell build
-/// loads (hosted app or local dev server). The login page's existing
-/// `/auth/exchange` path takes it from there; the code is single-use and
-/// expires in seconds, so it is safe to carry in the URL.
-fn handle_auth_deep_link(app: &AppHandle, url: &Url) {
-    if url.host_str() != Some("auth") {
-        return;
-    }
-    let Some(code) = url
-        .query_pairs()
-        .find(|(key, _)| key == "auth_code")
-        .map(|(_, value)| value.into_owned())
-    else {
-        return;
-    };
-    // Exchange codes are URL-safe tokens; drop anything else rather than
-    // splicing arbitrary deep-link input into a navigation URL.
-    if code.is_empty()
-        || !code
+/// Whether a deep-link value is safe to splice into a navigation URL.
+///
+/// Anything on this machine can hand the shell a URL on our scheme, so every
+/// value out of one is untrusted input. Exchange codes and connector ids are
+/// both URL-safe tokens; drop anything else rather than reasoning about
+/// escaping.
+fn safe_deep_link_value(value: &str) -> bool {
+    !value.is_empty()
+        && value.len() <= 512
+        && value
             .chars()
             .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
-    {
-        return;
-    }
+}
+
+fn query_param(url: &Url, key: &str) -> Option<String> {
+    url.query_pairs()
+        .find(|(k, _)| k == key)
+        .map(|(_, value)| value.into_owned())
+}
+
+/// Navigate the main window to `path?query` on whatever origin this shell build
+/// loads (hosted app or local dev server), then bring it to the front.
+fn navigate_webview(app: &AppHandle, path: &str, query: &str) {
     let Some(window) = app.get_webview_window("main") else {
         return;
     };
     let Ok(current) = window.url() else {
         return;
     };
-    let Ok(mut target) = current.join("/") else {
+    let Ok(mut target) = current.join(path) else {
         return;
     };
-    target.set_query(Some(&format!("auth_code={code}")));
+    target.set_query(Some(query));
     let _ = window.navigate(target);
     let _ = window.unminimize();
     let _ = window.set_focus();
+}
+
+/// Forward `ai.getduct.desktop://auth?auth_code=...` into the webview by
+/// navigating it to `/?auth_code=...`. The login page's existing
+/// `/auth/exchange` path takes it from there; the code is single-use and
+/// expires in seconds, so it is safe to carry in the URL.
+fn handle_auth_deep_link(app: &AppHandle, url: &Url) {
+    if url.host_str() != Some("auth") {
+        return;
+    }
+    let Some(code) = query_param(url, "auth_code") else {
+        return;
+    };
+    if !safe_deep_link_value(&code) {
+        return;
+    }
+    navigate_webview(app, "/", &format!("auth_code={code}"));
+}
+
+/// Forward `ai.getduct.desktop://connector?connector=...&auth_code=...` into the
+/// webview by navigating it to `/connections?connector=...&auth_code=...`.
+///
+/// The same shape as the sign-in route, for the same reason: connecting a data
+/// source is Google OAuth, which will not run in an embedded webview, so it
+/// happens in the system browser and has to cross back into the app. What
+/// crosses is only a single-use 60-second code — a connector refresh token is
+/// long-lived and never rides in a deep link, which any app claiming the scheme
+/// could read. The connections page redeems it via `/auth/connectors/exchange`.
+fn handle_connector_deep_link(app: &AppHandle, url: &Url) {
+    if url.host_str() != Some("connector") {
+        return;
+    }
+    let (Some(connector), Some(code)) =
+        (query_param(url, "connector"), query_param(url, "auth_code"))
+    else {
+        return;
+    };
+    if !safe_deep_link_value(&connector) || !safe_deep_link_value(&code) {
+        return;
+    }
+    navigate_webview(
+        app,
+        "/connections",
+        &format!("connector={connector}&auth_code={code}"),
+    );
 }
 
 /// Menu ids. Namespaced so a future menu can't collide with these.
@@ -385,6 +434,7 @@ pub fn run() {
             app.deep_link().on_open_url(move |event| {
                 for url in event.urls() {
                     handle_auth_deep_link(&handle, &url);
+                    handle_connector_deep_link(&handle, &url);
                 }
             });
 

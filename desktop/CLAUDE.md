@@ -12,13 +12,39 @@ for bring-your-own provider API keys. Design:
 - **Keychain** via the `keyring` crate; commands in `src-tauri/src/lib.rs`
   (`get_provider_key` / `set_provider_key` / `delete_provider_key`). The web app
   calls them through `window.__TAURI__.core.invoke` (`app/src/lib/providerKeys.js`).
-- **Browser-based Google sign-in**: the web app probes `get_shell_info` (version +
-  `capabilities.browserAuth`) and calls `open_external` (http/https only) to run
-  OAuth in the system browser; the backend redirects back via the
-  `ai.getduct.desktop://auth?auth_code=...` deep link (tauri-plugin-deep-link),
-  which the shell forwards to the webview as `/?auth_code=`. New shell-dependent
-  web flows must be gated on a `get_shell_info` capability flag, never on version
-  sniffing — old shells keep the legacy path.
+- **Browser-based OAuth**: *every* OAuth flow runs in the system browser, because
+  Google refuses it inside an embedded webview and a user in one has none of
+  their browser's sessions, passwords or passkeys. The web app probes
+  `get_shell_info` and calls `open_external` (http/https only) to launch the
+  authorize URL; the backend redirects back via a
+  `ai.getduct.desktop://` deep link (tauri-plugin-deep-link) that the shell
+  forwards into the webview. Two routes, same shape:
+  - `//auth?auth_code=` → `/?auth_code=` — signing in to Duct
+    (`capabilities.browserAuth`, `backend/routes/signin.py`).
+  - `//connector?connector=&auth_code=` → `/connections?connector=&auth_code=`
+    — connecting a data source (`capabilities.browserConnectors`,
+    `backend/routes/auth.py`, started by `app/src/lib/connectorAuth.js`).
+
+  **No credential ever rides in a deep link.** Any app on the machine can claim
+  the scheme, so both routes carry only a single-use 60-second code that the
+  webview redeems against the backend (`/auth/exchange`,
+  `/auth/connectors/exchange`). This matters more for connectors than for
+  sign-in: their payload is a *long-lived* Google refresh token, where the
+  in-browser flow can still use a URL fragment (never sent to a server) because
+  it never leaves the app's own window.
+
+  Both flows also route their failures to the app's `/desktop-auth` relay page
+  rather than raising. The system browser renders whatever the loopback sidecar
+  returns, so an `HTTPException` there is a bare `{"detail": ...}` on a white
+  page — a dead end reached *after* the user already approved at Google.
+
+  New shell-dependent web flows must be gated on a `get_shell_info` capability
+  flag, never on version sniffing — old shells keep the legacy path.
+- **`target="_blank"` links are dead in the webview** (no tabs, no window
+  opening) and are rerouted to the system browser by
+  `installExternalLinkHandler` in `app/src/lib/shell.js`, mounted once by
+  `LocalBackendGate`. It deliberately only touches anchors that already asked
+  for a new tab; a link meant to navigate this window still does.
 - macOS registers the custom scheme from the built bundle's Info.plist, so the
   deep-link leg only works from a bundled app (`tauri build`), not `tauri dev`.
 - **Local backend ("sidecar")**: the bundle ships the FastAPI backend frozen by

@@ -4,6 +4,8 @@
 ``tests.eval`` and the helpers here import cleanly from individual test modules.
 """
 
+import os
+
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.pool import StaticPool
@@ -45,6 +47,15 @@ def make_sqlite_engine(*, drop_partial_indexes: bool = False):
     return engine
 
 
+# Everything desktop/local mode reads or writes. Snapshotted whole by
+# `clean_env`, so any of it a test writes is undone afterwards.
+_LOCAL_MODE_ENV_VARS = (
+    "DUCT_LOCAL", "DUCT_DESKTOP", "DUCT_DATA_DIR", "DUCT_API_KEY", "DUCT_ENV_FILE",
+    "API_PUBLIC_URL", "FRONTEND_ORIGIN", "APP_ENV", "SENTRY_DSN",
+    "DATABASE_URL", "UPLOADS_DIR", "INIT_DB_ON_STARTUP",
+)
+
+
 @pytest.fixture
 def clean_env(monkeypatch):
     """Isolate the env vars desktop/local mode reads and writes.
@@ -54,17 +65,31 @@ def clean_env(monkeypatch):
     server's keys (see config._settings_env_files). A developer with a real
     DATABASE_URL there would otherwise see these tests try to reach Railway —
     and the failure message would print the credential.
-    """
-    from config import Configs
 
-    for var in (
-        "DUCT_LOCAL", "DUCT_DESKTOP", "DUCT_DATA_DIR", "DUCT_API_KEY", "DUCT_ENV_FILE",
-        "API_PUBLIC_URL", "FRONTEND_ORIGIN", "APP_ENV", "SENTRY_DSN",
-        "DATABASE_URL", "UPLOADS_DIR", "INIT_DB_ON_STARTUP",
-    ):
+    The restore is done by hand rather than left to monkeypatch, because
+    `delenv(..., raising=False)` records *nothing* for a variable that was
+    already absent — so anything the code under test then writes straight to
+    `os.environ` survives the test. `local_server.bootstrap()` sets DUCT_LOCAL
+    exactly that way, and a stray `DUCT_LOCAL=1` silently flips every
+    desktop-shaped branch on for the rest of the session.
+    """
+    from config import Configs, get_configs
+
+    saved = {var: os.environ.get(var) for var in _LOCAL_MODE_ENV_VARS}
+    for var in _LOCAL_MODE_ENV_VARS:
         monkeypatch.delenv(var, raising=False)
     monkeypatch.setitem(Configs.model_config, "env_file", None)
-    return monkeypatch
+
+    yield monkeypatch
+
+    for var, value in saved.items():
+        if value is None:
+            os.environ.pop(var, None)
+        else:
+            os.environ[var] = value
+    # Configs is lru_cached: a config built from the environment above would
+    # outlive this test however carefully the environment itself is restored.
+    get_configs.cache_clear()
 
 
 @pytest.fixture
