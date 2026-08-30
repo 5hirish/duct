@@ -244,8 +244,16 @@ def _compose_audience(audience: dict | None) -> str:
 # ---------------------------------------------------------------------------
 
 
+_ANTHROPIC_MODELS = (
+    ModelName.CLAUDE_OPUS,
+    ModelName.CLAUDE_OPUS_1M,   # [1m] is a CLI model string — v3 only, never v1/v2
+    ModelName.CLAUDE_SONNET,
+    ModelName.CLAUDE_HAIKU,
+)
+
+
 def _resolve_anthropic_model(model: ModelName) -> str:
-    if model not in (ModelName.CLAUDE_SONNET, ModelName.CLAUDE_HAIKU):
+    if model not in _ANTHROPIC_MODELS:
         return ModelName.CLAUDE_SONNET.value
     return model.value
 

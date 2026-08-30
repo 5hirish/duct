@@ -32,7 +32,7 @@ API key:
 Provider support:
   The Claude Agent SDK only supports Anthropic models natively. If a non-
   Anthropic provider is configured we log a warning and fall back to
-  claude-sonnet-4-6.
+  claude-sonnet-5.
 """
 
 from __future__ import annotations
@@ -61,7 +61,12 @@ logger = logging.getLogger(__name__)
 
 # Claude Agent SDK runs Anthropic models only; anything else falls back to Sonnet.
 # Model strings come from the ModelName enum in agents/models.py — never hardcoded here.
-_ANTHROPIC_MODELS = (ModelName.CLAUDE_SONNET, ModelName.CLAUDE_HAIKU)
+_ANTHROPIC_MODELS = (
+    ModelName.CLAUDE_OPUS,
+    ModelName.CLAUDE_OPUS_1M,   # [1m] is a CLI model string — v3 only, never v1/v2
+    ModelName.CLAUDE_SONNET,
+    ModelName.CLAUDE_HAIKU,
+)
 
 
 def _resolve_model_string(provider: Provider, model: ModelName) -> str:

@@ -39,8 +39,14 @@ class ModelName(str, Enum):
     GEMINI_2_5_FLASH_LITE = "gemini-2.5-flash-lite"
     
     # Anthropic
-    CLAUDE_SONNET = "claude-sonnet-4-6"
+    CLAUDE_OPUS = "claude-opus-5"
+    CLAUDE_SONNET = "claude-sonnet-5"
     CLAUDE_HAIKU = "claude-haiku-4-5"
+    # v3 only. The [1m] suffix is a Claude Code / Agent SDK model string that
+    # opts the CLI into the 1M-token context window. The Messages API has no
+    # such ID — Opus 5 is natively 1M there — so LangChain (v1) and ADK (v2)
+    # would 404 on it. Enforced by CLI_ONLY_MODELS below.
+    CLAUDE_OPUS_1M = "claude-opus-5[1m]"
 
     # OpenRouter — vendor/slug form. A *curated default list*, not a whitelist:
     # OpenRouter fronts 500+ models, so resolve_engine_model passes an unknown
@@ -50,7 +56,8 @@ class ModelName(str, Enum):
     OR_QWEN3_235B = "qwen/qwen3-235b-a22b"
     OR_KIMI_K2 = "moonshotai/kimi-k2"
     OR_GLM_4_6 = "z-ai/glm-4.6"
-    OR_CLAUDE_SONNET = "anthropic/claude-sonnet-4.6"
+    OR_CLAUDE_OPUS = "anthropic/claude-opus-5"
+    OR_CLAUDE_SONNET = "anthropic/claude-sonnet-5"
     OR_GPT_5_MINI = "openai/gpt-5-mini"
 
 
@@ -109,7 +116,9 @@ class AgentEffort(StrEnum):
     LOW    — fastest, cheapest; good for simple lookups
     MEDIUM — balanced default
     HIGH   — deeper reasoning; recommended for complex analysis (e.g. SEO audit)
-    XHIGH  — Opus 4.7-specific extended effort; falls back to HIGH on other models
+    XHIGH  — between HIGH and MAX; the sweet spot for coding/agentic work on
+             Opus 5, Opus 4.8/4.7, Sonnet 5 and Fable 5. Falls back to HIGH on
+             models that predate it (Opus 4.6, Sonnet 4.6 and earlier).
     MAX    — maximum effort; most expensive
     """
 
@@ -171,6 +180,12 @@ class AspectRatio(StrEnum):
     PORTRAIT_3_5   = "3:5"
     LANDSCAPE_5_3  = "5:3"
 
+
+# Models only the Claude Agent SDK (v3) accepts — see CLAUDE_OPUS_1M above.
+# resolve_engine_model refuses to hand these to any other engine, so a stray
+# GENERATE_MODEL=claude-opus-5[1m] degrades to the engine default instead of
+# becoming a guaranteed upstream 404.
+CLI_ONLY_MODELS: frozenset[ModelName] = frozenset({ModelName.CLAUDE_OPUS_1M})
 
 # Default provider → model mapping
 DEFAULT_MODELS = {

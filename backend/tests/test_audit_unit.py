@@ -420,7 +420,7 @@ def test_sdk_options_build_valid_cli_command():
     from claude_agent_sdk._internal.transport.subprocess_cli import SubprocessCLITransport
 
     opts = ClaudeAgentOptions(
-        model="claude-sonnet-4-6",
+        model="claude-sonnet-5",
         permission_mode="dontAsk",
         allowed_tools=["AskUserQuestion", "TodoWrite"],
         max_turns=60,
@@ -493,7 +493,7 @@ async def test_sdk_subprocess_starts_and_responds():
         "--system-prompt", build_unified_system_prompt(),
         "--allowedTools", "AskUserQuestion,TodoWrite",
         "--max-turns", "60",
-        "--model", "claude-sonnet-4-6",
+        "--model", "claude-sonnet-5",
         "--permission-prompt-tool", "stdio",
         "--permission-mode", "dontAsk",
         "--include-partial-messages",

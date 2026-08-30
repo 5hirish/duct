@@ -104,18 +104,18 @@ def test_pinned_operation_names_are_real_convention_values():
 
 def test_model_span_carries_the_convention_attributes():
     with t.model_span(
-        provider="anthropic", model="claude-sonnet-4-6", temperature=0.7,
+        provider="anthropic", model="claude-sonnet-5", temperature=0.7,
         conversation_id="conv-1", agent_name="audit-v1",
     ) as span:
-        t.record_usage(span, input_tokens=120, output_tokens=45, response_model="claude-sonnet-4-6")
+        t.record_usage(span, input_tokens=120, output_tokens=45, response_model="claude-sonnet-5")
 
     (s,) = _spans()
-    assert s.name == "chat claude-sonnet-4-6", "span name must be '{operation} {model}'"
+    assert s.name == "chat claude-sonnet-5", "span name must be '{operation} {model}'"
     a = s.attributes
     assert a[t.GEN_AI_OPERATION_NAME] == "chat"
     assert a[t.GEN_AI_PROVIDER_NAME] == "anthropic"
     assert a[t.GEN_AI_SYSTEM] == "anthropic"  # emitted too; the rename is mid-flight
-    assert a[t.GEN_AI_REQUEST_MODEL] == "claude-sonnet-4-6"
+    assert a[t.GEN_AI_REQUEST_MODEL] == "claude-sonnet-5"
     assert a[t.GEN_AI_REQUEST_TEMPERATURE] == 0.7
     assert a[t.GEN_AI_CONVERSATION_ID] == "conv-1"
     assert a[t.GEN_AI_USAGE_INPUT_TOKENS] == 120
@@ -152,7 +152,7 @@ def test_tool_span_shape():
 
 def test_empty_attributes_are_omitted_not_blank():
     """A blank attribute is worse than a missing one — it looks like data."""
-    with t.model_span(provider="anthropic", model="claude-sonnet-4-6"):
+    with t.model_span(provider="anthropic", model="claude-sonnet-5"):
         pass
     (s,) = _spans()
     assert t.GEN_AI_CONVERSATION_ID not in s.attributes

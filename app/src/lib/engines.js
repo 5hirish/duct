@@ -25,7 +25,7 @@ export const ENGINES = [
     key: "v3",
     badge: "v3",
     label: "Claude Agent SDK",
-    defaultModel: "Claude Sonnet 4.6",
+    defaultModel: "Claude Sonnet 5",
     description: "Subagents. MCP. Disk-backed sessions.",
     supportsOAuth: true,
   },

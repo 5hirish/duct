@@ -7,7 +7,7 @@ so GENERATE_PROVIDER and GENERATE_MODEL become optional overrides.
 Engine → default provider → default model:
   v1  (LangChain)          → google_genai → gemini-2.5-flash
   v2  (Google ADK)         → google_genai → gemini-2.5-flash
-  v3  (Claude Agent SDK)   → anthropic    → claude-sonnet-4-6
+  v3  (Claude Agent SDK)   → anthropic    → claude-sonnet-5
 
 Supported providers per engine:
   v1  OpenAI, Google, Anthropic (all native in LangChain) + OpenRouter
@@ -25,7 +25,7 @@ from __future__ import annotations
 
 from enum import Enum
 
-from agents.models import AgentEffort, ModelName, Provider
+from agents.models import CLI_ONLY_MODELS, AgentEffort, ModelName, Provider
 
 
 class Engine(str, Enum):
@@ -160,6 +160,11 @@ def resolve_engine_model(
     ``vendor/slug`` is passed through verbatim and the gateway decides whether
     it exists. The slug shape is required so a typo'd bare name still falls back
     instead of becoming a guaranteed upstream 404.
+
+    ``CLI_ONLY_MODELS`` (the ``[1m]`` context variants) are the mirror case:
+    they are Claude Code model strings the Agent SDK understands and the
+    Messages API does not, so v1/v2 fall back to their default rather than
+    forwarding one to LangChain or ADK.
     """
     default = ENGINE_DEFAULT_MODEL.get(
         (engine, provider),
@@ -169,11 +174,14 @@ def resolve_engine_model(
         return default
     candidate = override.strip()
     try:
-        return ModelName(candidate)
+        resolved = ModelName(candidate)
     except ValueError:
         if provider == Provider.OPENROUTER and "/" in candidate:
             return candidate
         return default
+    if resolved in CLI_ONLY_MODELS and engine is not Engine.V3:
+        return default
+    return resolved
 
 
 def get_env_var_for_engine_provider(engine: Engine, provider: Provider) -> str | None:

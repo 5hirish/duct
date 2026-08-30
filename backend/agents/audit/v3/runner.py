@@ -63,7 +63,12 @@ logger = logging.getLogger(__name__)
 _VERBOSE = os.environ.get("AUDIT_VERBOSE_LOGGING", "").lower() in ("1", "true")
 
 # Anthropic-only engine; model strings are owned by the ModelName enum in agents/models.py.
-_ANTHROPIC_MODELS = (ModelName.CLAUDE_SONNET, ModelName.CLAUDE_HAIKU)
+_ANTHROPIC_MODELS = (
+    ModelName.CLAUDE_OPUS,
+    ModelName.CLAUDE_OPUS_1M,   # [1m] is a CLI model string — v3 only, never v1/v2
+    ModelName.CLAUDE_SONNET,
+    ModelName.CLAUDE_HAIKU,
+)
 
 # Connector knowledge packs baked into the audit system prompt. STATIC per
 # configuration — never vary these per request (cached-prefix invariant).
