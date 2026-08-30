@@ -6,14 +6,14 @@ import asyncio
 
 from agents.core.context import BusinessContext, format_business_context
 from agents.core.events import AgentEvent, AgentStep
-from agents.core.prompts import DUCT_REPORT_CLOSE, DUCT_REPORT_OPEN, xml_block
+from agents.core.prompts import DUCT_ARTIFACT_CLOSE, DUCT_ARTIFACT_OPEN, xml_block
 
 
 # --- events -----------------------------------------------------------------
 
 def test_event_values_and_aliases_match_frontend_contract():
     assert AgentEvent.PIPELINE_STARTED == "pipeline_started"
-    assert AgentEvent.REPORT_CHUNK == "report_chunk"
+    assert AgentEvent.ARTIFACT_CHUNK == "artifact_chunk"
     assert AgentEvent.PLAN_GENERATED == "plan_generated"
     assert AgentStep.ENRICHING == "enriching"
     # Per-agent modules re-export the SAME shared enum objects.
@@ -28,7 +28,7 @@ def test_xml_block_wraps_or_empties():
     assert xml_block("data", "  hello  ") == "<data>\nhello\n</data>"
     assert xml_block("data", "") == ""
     assert xml_block("data", "   ") == ""
-    assert DUCT_REPORT_OPEN == "<duct_report>" and DUCT_REPORT_CLOSE == "</duct_report>"
+    assert DUCT_ARTIFACT_OPEN == "<duct_artifact>" and DUCT_ARTIFACT_CLOSE == "</duct_artifact>"
 
 
 # --- business context -------------------------------------------------------
@@ -66,7 +66,7 @@ def test_format_business_context_section_toggles():
 
 # --- report stream parser ---------------------------------------------------
 
-from agents.core.stream import DuctReportStreamParser  # noqa: E402
+from agents.core.stream import DuctArtifactStreamParser  # noqa: E402
 
 
 class _Rec:
@@ -91,10 +91,10 @@ class _Rec:
 
 def _run_parser(chunks: list[str]) -> _Rec:
     rec = _Rec()
-    parser = DuctReportStreamParser(
+    parser = DuctArtifactStreamParser(
         on_text=rec.on_text,
-        on_report_chunk=rec.on_chunk,
-        on_report_close=rec.on_close,
+        on_artifact_chunk=rec.on_chunk,
+        on_artifact_close=rec.on_close,
         on_open=rec.on_open,
         log_prefix="test",
     )
@@ -115,7 +115,7 @@ def test_parser_plain_prose_no_report():
 
 
 def test_parser_full_report_single_chunk():
-    rec = _run_parser(["intro <duct_report>PAYLOAD</duct_report> outro"])
+    rec = _run_parser(["intro <duct_artifact>PAYLOAD</duct_artifact> outro"])
     assert rec.opens == 1
     assert "".join(rec.chunks) == "PAYLOAD"
     assert rec.closes == [("PAYLOAD", "intro")]
@@ -124,21 +124,52 @@ def test_parser_full_report_single_chunk():
 
 def test_parser_split_open_tag_holdback():
     # The open tag is split across chunks — holdback must not miss it.
-    rec = _run_parser(["before <duct_re", "port>PAY</duct_report>"])
+    rec = _run_parser(["before <duct_arti", "fact>PAY</duct_artifact>"])
     assert rec.opens == 1
     assert rec.closes == [("PAY", "before")]
 
 
 def test_parser_split_close_tag():
-    rec = _run_parser(["<duct_report>PAY</duct_", "report>after"])
+    rec = _run_parser(["<duct_artifact>PAY</duct_", "artifact>after"])
     assert [c for c in rec.closes] == [("PAY", "")]
     assert "".join(rec.text) == "after"  # remainder after close streamed as prose
 
 
 def test_parser_payload_streamed_in_pieces():
-    rec = _run_parser(["<duct_report>", "A", "B", "C", "</duct_report>"])
+    rec = _run_parser(["<duct_artifact>", "A", "B", "C", "</duct_artifact>"])
     assert rec.chunks == ["A", "B", "C"]
     assert rec.closes == [("ABC", "")]
+
+
+# --- legacy <duct_report> acceptance ----------------------------------------
+# The tag was renamed report → artifact. The parser still accepts the old pair
+# so conversations recorded before the rename replay, and a turn already in
+# flight against a cached system prompt does not strand its payload.
+
+def test_parser_accepts_legacy_report_tag():
+    rec = _run_parser(["intro <duct_report>PAYLOAD</duct_report> outro"])
+    assert rec.opens == 1
+    assert rec.closes == [("PAYLOAD", "intro")]
+    assert "".join(rec.text) == "intro  outro"
+
+
+def test_parser_accepts_legacy_tag_split_across_chunks():
+    rec = _run_parser(["before <duct_re", "port>PAY</duct_report>"])
+    assert rec.opens == 1
+    assert rec.closes == [("PAY", "before")]
+
+
+def test_parser_does_not_cross_close_mismatched_tags():
+    """A legacy open must not be terminated by the new close tag (or vice
+    versa). Whichever convention opened decides which close ends the payload —
+    otherwise a stream mentioning one tag could truncate the other."""
+    rec = _run_parser(["<duct_report>PAY</duct_artifact>still inside"])
+    assert rec.opens == 1
+    assert rec.closes == []  # never closed — the wrong close tag was ignored
+
+    rec = _run_parser(["<duct_artifact>PAY</duct_report>still inside"])
+    assert rec.opens == 1
+    assert rec.closes == []
 
 
 # --- claude_sdk startup helpers ---------------------------------------------

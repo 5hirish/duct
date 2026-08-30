@@ -1,12 +1,70 @@
 """Shared pytest fixtures for backend agent tests.
 
 ``tests`` is a package (see tests/__init__.py) so the evaluation harness in
-``tests.eval`` imports cleanly from individual test modules.
+``tests.eval`` and the helpers here import cleanly from individual test modules.
 """
 
 import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.pool import StaticPool
+from sqlmodel import SQLModel
 
 from agents.audit.schema import AuditBusinessContext
+
+
+def make_sqlite_engine(*, drop_partial_indexes: bool = False):
+    """An in-memory SQLite engine with every registered SQLModel table created.
+
+    Eleven test modules were each hand-rolling this same four-line incantation.
+    The two non-obvious parts are worth stating once:
+
+    ``StaticPool`` + ``check_same_thread=False`` share ONE connection across
+    threads. ``TestClient`` runs sync handlers on a worker thread, and without
+    this each thread would open its own empty ``:memory:`` database.
+
+    ``drop_partial_indexes`` handles the Postgres-only partial indexes. SQLAlchemy
+    drops the ``postgresql_where`` clause on other dialects, which turns "one
+    owner per project" and "one pending invite per address" into *unconditional*
+    UNIQUE constraints that reject legitimate rows. Dropping them lets these
+    tests exercise the application logic; Postgres keeps them as the real
+    backstop, and the migration is what enforces them in production.
+    """
+    engine = create_engine(
+        "sqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    SQLModel.metadata.create_all(engine)
+    if drop_partial_indexes:
+        with engine.begin() as conn:
+            for index in (
+                "uq_project_members_single_owner",
+                "uq_project_invitations_pending_email",
+            ):
+                conn.exec_driver_sql(f"DROP INDEX IF EXISTS {index}")
+    return engine
+
+
+@pytest.fixture
+def clean_env(monkeypatch):
+    """Isolate the env vars desktop/local mode reads and writes.
+
+    Clearing the environment is not enough: Configs also reads backend/.env and
+    .env.local, deliberately, so integration tests can share the running
+    server's keys (see config._settings_env_files). A developer with a real
+    DATABASE_URL there would otherwise see these tests try to reach Railway —
+    and the failure message would print the credential.
+    """
+    from config import Configs
+
+    for var in (
+        "DUCT_LOCAL", "DUCT_DESKTOP", "DUCT_DATA_DIR", "DUCT_API_KEY", "DUCT_ENV_FILE",
+        "API_PUBLIC_URL", "FRONTEND_ORIGIN", "APP_ENV", "SENTRY_DSN",
+        "DATABASE_URL", "UPLOADS_DIR", "INIT_DB_ON_STARTUP",
+    ):
+        monkeypatch.delenv(var, raising=False)
+    monkeypatch.setitem(Configs.model_config, "env_file", None)
+    return monkeypatch
 
 
 @pytest.fixture

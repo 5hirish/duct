@@ -2,7 +2,7 @@
 // Mirrors ReportMode in backend/agents/audit/schema.py.
 
 export const ReportMode = Object.freeze({
-  FREEHAND: "freehand", // agent streams a <duct_report> of HTML
+  FREEHAND: "freehand", // agent streams a <duct_artifact> of HTML
   TEMPLATE: "template", // agent calls SubmitAuditReport → structured report
 });
 

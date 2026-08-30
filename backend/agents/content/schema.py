@@ -373,6 +373,9 @@ class ContentTool(StrEnum):
     audit (``duct_crawl``) MCP tools. Keep in sync with the @tool registrations.
     """
 
+    REMEMBER_FACT              = "mcp__duct_content__RememberFact"
+    SEARCH_MEMORY              = "mcp__duct_content__SearchMemory"
+    GET_MEMORY                 = "mcp__duct_content__GetMemory"
     SUBMIT_PLAN                = "mcp__duct_content__submit_plan"
     SUBMIT_POST_DRAFT          = "mcp__duct_content__submit_post_draft"
     EDIT_SLIDE                 = "mcp__duct_content__edit_slide"
@@ -468,7 +471,7 @@ class PostDraft(BaseModel):
     """One draft post coming back from the draft_post sub-agent or orchestrator.
 
     `type` discriminator keeps PlanDraft and PostDraft distinguishable inside
-    the <duct_report> tag.
+    the <duct_artifact> tag.
 
     The orchestrator authors structured `slides` (copy + image prompts) and a
     `layout`; it does NOT write `slides_html`. submit_post_draft renders the

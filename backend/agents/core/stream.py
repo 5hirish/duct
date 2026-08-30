@@ -1,18 +1,26 @@
-"""Shared streaming helpers for Claude-SDK agents.
+"""Shared streaming helpers.
 
-Two cohesive pieces both runners share:
+Two pieces that sit on opposite sides of the harness boundary (see
+``agents/core/ports``):
 
-  * ``pump_stream_event`` — decode one SDK message (thinking/text deltas, token
-    usage, ``message_stop``, ``ResultMessage``, ``TodoWrite``) and dispatch to
-    callbacks. The *outer* loop differs per agent (audit drives discrete turns;
-    content runs one streaming-input session with a startup watchdog), so this
-    owns only the per-message decode; the caller keeps its loop and state.
+  * ``pump_stream_event`` — **harness adapter, Claude Agent SDK.** Decodes one
+    SDK message (thinking/text deltas, token usage, ``message_stop``,
+    ``ResultMessage``, ``TodoWrite``) and dispatches to callbacks. The *outer*
+    loop differs per agent (audit drives discrete turns; content runs one
+    streaming-input session with a startup watchdog), so this owns only the
+    per-message decode; the caller keeps its loop and state. A LangChain
+    equivalent lives in ``agents/audit/v1/runner.py``.
 
-  * ``DuctReportStreamParser`` — the ``<duct_report>`` tag state machine. The
-    pump's ``on_text`` feeds it; it forwards prose vs in-tag payload to
-    agent-specific callbacks (audit builds HTML, content parses JSON). The
-    ``<duct_report>`` convention is shared by every Duct agent — not audit-
-    specific — so it belongs here in core.
+  * ``DuctArtifactStreamParser`` — **harness-neutral.** The ``<duct_artifact>``
+    tag state machine, driven by plain text deltas from any harness. The pump's
+    ``on_text`` feeds it on v3; the v1 runner feeds it from LangChain chunks.
+    It forwards prose vs in-tag payload to agent-specific callbacks (audit
+    builds HTML, content parses JSON).
+
+The tag is ``<duct_artifact>``. It used to be ``<duct_report>``, which was
+wrong the moment content started emitting plans and post drafts through it —
+the parser still *accepts* the legacy tag so recorded conversations replay,
+but nothing emits it.
 """
 
 from __future__ import annotations
@@ -21,7 +29,12 @@ import logging
 from collections.abc import Awaitable, Callable
 from typing import Any
 
-from agents.core.prompts import DUCT_REPORT_CLOSE, DUCT_REPORT_OPEN
+from agents.core.prompts import (
+    DUCT_ARTIFACT_CLOSE,
+    DUCT_ARTIFACT_OPEN,
+    LEGACY_ARTIFACT_CLOSE,
+    LEGACY_ARTIFACT_OPEN,
+)
 from agents.models import AgentTool
 
 logger = logging.getLogger(__name__)
@@ -109,50 +122,89 @@ async def pump_stream_event(
 
 
 # ---------------------------------------------------------------------------
-# <duct_report> tag parser (shared convention; not agent-specific)
+# <duct_artifact> tag parser (harness-neutral)
 # ---------------------------------------------------------------------------
 
 TextCallback = Callable[[str], Awaitable[None]]
 CloseCallback = Callable[[str, str], Awaitable[None]]  # (raw_payload, turn_text)
 OpenCallback = Callable[[], Awaitable[None]]
 
+# (open, close) pairs the parser recognises, canonical first. Legacy is accepted
+# on the way in so a conversation recorded before the rename — or a turn already
+# in flight against a cached system prompt — still yields its payload.
+_TAG_PAIRS: tuple[tuple[str, str], ...] = (
+    (DUCT_ARTIFACT_OPEN, DUCT_ARTIFACT_CLOSE),
+    (LEGACY_ARTIFACT_OPEN, LEGACY_ARTIFACT_CLOSE),
+)
 
-class DuctReportStreamParser:
+
+class DuctArtifactStreamParser:
     """Feed streamed text deltas in; callbacks fire as tags open, stream, close.
 
     Callbacks (all async):
-      on_text(text)          — prose outside the tag (emit AGENT_MESSAGE_CHUNK).
-      on_report_chunk(text)  — a token inside the tag (emit REPORT_CHUNK).
-      on_report_close(raw, turn_text) — the tag closed; ``raw`` is the payload
-                               between the tags, ``turn_text`` the accumulated
-                               prose before it (audit uses it as exec summary).
-      on_open()              — optional; the tag just opened (for logging).
+      on_text(text)            — prose outside the tag (emit AGENT_MESSAGE_CHUNK).
+      on_artifact_chunk(text)  — a token inside the tag (emit ARTIFACT_CHUNK).
+      on_artifact_close(raw, turn_text) — the tag closed; ``raw`` is the payload
+                                 between the tags, ``turn_text`` the accumulated
+                                 prose before it (audit uses it as exec summary).
+      on_open()                — optional; the tag just opened (for logging).
+
+    Recognises ``<duct_artifact>`` and the legacy ``<duct_report>``. Whichever
+    opens first decides which close tag ends the payload, so a stream can never
+    be terminated by the other convention's closing tag.
     """
 
     def __init__(
         self,
         *,
         on_text: TextCallback,
-        on_report_chunk: TextCallback,
-        on_report_close: CloseCallback,
+        on_artifact_chunk: TextCallback,
+        on_artifact_close: CloseCallback,
         on_open: OpenCallback | None = None,
         log_prefix: str = "agent",
-        open_tag: str = DUCT_REPORT_OPEN,
-        close_tag: str = DUCT_REPORT_CLOSE,
+        open_tag: str | None = None,
+        close_tag: str | None = None,
     ) -> None:
         self._on_text = on_text
-        self._on_report_chunk = on_report_chunk
-        self._on_report_close = on_report_close
+        self._on_artifact_chunk = on_artifact_chunk
+        self._on_artifact_close = on_artifact_close
         self._on_open = on_open
         self._log_prefix = log_prefix
-        self._open = open_tag
-        self._close = close_tag
+
+        # An explicit pair (used by tests and by any agent with its own tag)
+        # replaces the defaults entirely; otherwise both conventions are live.
+        if open_tag is not None and close_tag is not None:
+            self._pairs = ((open_tag, close_tag),)
+        else:
+            self._pairs = _TAG_PAIRS
+        # Hold back enough trailing characters that the longest open tag can
+        # never be missed when split across chunk boundaries.
+        self._holdback_len = max(len(o) for o, _ in self._pairs) - 1
 
         self.in_tag = False
+        self._close = ""        # close tag matching the open tag that fired
         self._buf = ""          # accumulated payload bytes inside the tag
         self._holdback = ""     # tail held back in case it's a split open tag
         self.turn_text: list[str] = []
-        self.report_chunk_count = 0
+        self.artifact_chunk_count = 0
+
+    @property
+    def report_chunk_count(self) -> int:
+        """Deprecated alias for ``artifact_chunk_count``."""
+        return self.artifact_chunk_count
+
+    def _find_open(self, working: str) -> tuple[int, str, str]:
+        """Earliest open tag in ``working`` → (index, open_tag, close_tag).
+
+        Returns ``(-1, "", "")`` when no convention has opened yet. Earliest
+        wins so that prose mentioning one tag cannot mask a real one later.
+        """
+        best = (-1, "", "")
+        for open_tag, close_tag in self._pairs:
+            idx = working.find(open_tag)
+            if idx != -1 and (best[0] == -1 or idx < best[0]):
+                best = (idx, open_tag, close_tag)
+        return best
 
     async def feed(self, chunk: str) -> None:
         """Process one streamed text delta."""
@@ -161,9 +213,9 @@ class DuctReportStreamParser:
                 # Close tag fully contained in this chunk.
                 safe, _, remainder = chunk.partition(self._close)
                 if safe:
-                    self.report_chunk_count += 1
+                    self.artifact_chunk_count += 1
                     self._buf += safe
-                    await self._on_report_chunk(safe)
+                    await self._on_artifact_chunk(safe)
                 await self._finish()
                 if remainder:
                     await self.feed(remainder)
@@ -177,24 +229,27 @@ class DuctReportStreamParser:
                     if remainder:
                         await self.feed(remainder)
                 elif chunk:
-                    self.report_chunk_count += 1
-                    if self.report_chunk_count % 50 == 0:
+                    self.artifact_chunk_count += 1
+                    if self.artifact_chunk_count % 50 == 0:
                         logger.info(
-                            "%s: <duct_report> streaming — %d chunks, ~%d chars buffered",
-                            self._log_prefix, self.report_chunk_count, len(self._buf),
+                            "%s: %s streaming — %d chunks, ~%d chars buffered",
+                            self._log_prefix, self._close, self.artifact_chunk_count, len(self._buf),
                         )
-                    await self._on_report_chunk(chunk)
+                    await self._on_artifact_chunk(chunk)
             return
 
         working = self._holdback + chunk
         self._holdback = ""
 
-        if self._open in working:
-            before, _, after = working.partition(self._open)
+        idx, open_tag, close_tag = self._find_open(working)
+        if idx != -1:
+            before = working[:idx]
+            after = working[idx + len(open_tag):]
             if before:
                 await self._on_text(before)
                 self.turn_text.append(before)
             self.in_tag = True
+            self._close = close_tag
             self._buf = ""
             if self._on_open is not None:
                 await self._on_open()
@@ -202,10 +257,9 @@ class DuctReportStreamParser:
                 await self.feed(after)
         else:
             # Hold back enough trailing chars that a split open tag isn't missed.
-            holdback_len = len(self._open) - 1
-            if len(working) > holdback_len:
-                safe = working[:-holdback_len]
-                self._holdback = working[-holdback_len:]
+            if len(working) > self._holdback_len:
+                safe = working[:-self._holdback_len]
+                self._holdback = working[-self._holdback_len:]
                 await self._on_text(safe)
                 self.turn_text.append(safe)
             else:
@@ -222,4 +276,8 @@ class DuctReportStreamParser:
         self.in_tag = False
         raw = self._buf
         self._buf = ""
-        await self._on_report_close(raw, "".join(self.turn_text).strip())
+        await self._on_artifact_close(raw, "".join(self.turn_text).strip())
+
+
+# Deprecated alias — import DuctArtifactStreamParser instead.
+DuctReportStreamParser = DuctArtifactStreamParser

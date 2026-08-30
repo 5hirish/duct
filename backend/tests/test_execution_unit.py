@@ -4,19 +4,13 @@ from __future__ import annotations
 
 import importlib
 import os
-import sys
-from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
-from models.execution import ExecutionGuardrail  # noqa: E402
-from service.execution import ga4_exec, google_ads_exec  # noqa: E402,F401  (registers executors)
-from service.execution.guardrails import violations_for  # noqa: E402
-from service.execution.registry import (  # noqa: E402
+from models.execution import ExecutionGuardrail
+from service.execution import ga4_exec, google_ads_exec  # noqa: F401  (registers executors)
+from service.execution.guardrails import violations_for
+from service.execution.registry import (
     EXECUTOR_REGISTRY,
     ExecutorSpec,
     get_executor,
@@ -26,20 +20,12 @@ from service.execution.registry import (  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Registry
+#
+# The "which executors are registered and reversible" assertion lives once, in
+# tests/test_execution_policy.py::test_executors_registered — it covers the same
+# four ops this file used to re-list, plus the rest of the registry and the
+# auto-apply allowlist invariants.
 # ---------------------------------------------------------------------------
-
-def test_builtin_executors_registered_with_rollback():
-    expected = {
-        "google_ads.add_negative_keywords",
-        "google_ads.pause_campaign",
-        "ga4.create_key_event",
-        "ga4.delete_key_event",
-    }
-    assert expected <= set(EXECUTOR_REGISTRY)
-    for op_type in expected:
-        spec = get_executor(op_type)
-        assert spec.rollback is not None, f"{op_type} must support rollback"
-
 
 def test_unknown_op_type_raises():
     with pytest.raises(KeyError, match="Unknown execution op_type"):
@@ -78,35 +64,45 @@ PAUSE_PMAX = {
 }
 
 
-def test_guardrail_blocks_matching_op_type():
-    rails = [_guardrail("Never touch campaign 555", {"op_types": ["google_ads.pause_campaign"], "target_contains": "555"})]
-    assert violations_for(PAUSE_PMAX, rails) == ["Never touch campaign 555"]
-
-
-def test_guardrail_target_contains_must_match():
-    rails = [_guardrail("Never touch campaign 999", {"op_types": ["google_ads.pause_campaign"], "target_contains": "999"})]
-    assert violations_for(PAUSE_PMAX, rails) == []
-
-
-def test_guardrail_op_type_scoping():
-    rails = [_guardrail("No negatives", {"op_types": ["google_ads.add_negative_keywords"]})]
-    assert violations_for(PAUSE_PMAX, rails) == []
-
-
-def test_guardrail_empty_matcher_is_prose_only():
-    rails = [_guardrail("Be careful out there", {})]
-    assert violations_for(PAUSE_PMAX, rails) == []
-
-
-def test_guardrail_inactive_skipped():
-    rails = [
-        _guardrail(
+# One rail, one change (PAUSE_PMAX), one question: does the matcher fire? Each
+# row turns exactly one knob relative to the first.
+@pytest.mark.parametrize(
+    ("case", "rule", "match", "active", "expected"),
+    [
+        (
+            "op_type + target both match",
             "Never touch campaign 555",
             {"op_types": ["google_ads.pause_campaign"], "target_contains": "555"},
-            active=False,
-        )
-    ]
-    assert violations_for(PAUSE_PMAX, rails) == []
+            True,
+            ["Never touch campaign 555"],
+        ),
+        (
+            "target_contains misses",
+            "Never touch campaign 999",
+            {"op_types": ["google_ads.pause_campaign"], "target_contains": "999"},
+            True,
+            [],
+        ),
+        (
+            "op_type out of scope",
+            "No negatives",
+            {"op_types": ["google_ads.add_negative_keywords"]},
+            True,
+            [],
+        ),
+        ("empty matcher is prose only", "Be careful out there", {}, True, []),
+        (
+            "inactive rail is skipped",
+            "Never touch campaign 555",
+            {"op_types": ["google_ads.pause_campaign"], "target_contains": "555"},
+            False,
+            [],
+        ),
+    ],
+    ids=lambda v: v if isinstance(v, str) else "",
+)
+def test_guardrail_matching(case, rule, match, active, expected):
+    assert violations_for(PAUSE_PMAX, [_guardrail(rule, match, active=active)]) == expected, case
 
 
 def test_guardrail_target_contains_without_op_types_blocks_all_ops():

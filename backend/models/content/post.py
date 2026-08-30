@@ -5,8 +5,8 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import Column, DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint
-from models.columns import json_column
+from sqlalchemy import Column, ForeignKey, Index, Integer, String, Text, UniqueConstraint
+from models.columns import json_column, utc_datetime
 from sqlmodel import Field, SQLModel
 from utils.dates import utcnow
 
@@ -87,10 +87,10 @@ class ContentPost(SQLModel, table=True):
         sa_column=Column(json_column(), nullable=False, server_default="[]"),
     )
 
-    posted_at: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
+    posted_at: datetime | None = Field(default=None, sa_column=Column(utc_datetime(), nullable=True))
     # When the post is scheduled to publish (set via the publish flow). Drives
     # the calendar/week placement and the "scheduled" date badge.
-    scheduled_at: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
+    scheduled_at: datetime | None = Field(default=None, sa_column=Column(utc_datetime(), nullable=True))
     tiktok_url: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
     # Provenance: "duct" when the post went out through our system (Duct publish
     # flow or a migrated MaxAura plan); "" / "external" when it appeared on the
@@ -111,9 +111,9 @@ class ContentPost(SQLModel, table=True):
 
     created_at: datetime = Field(
         default_factory=utcnow,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
+        sa_column=Column(utc_datetime(), nullable=False),
     )
     updated_at: datetime = Field(
         default_factory=utcnow,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
+        sa_column=Column(utc_datetime(), nullable=False),
     )

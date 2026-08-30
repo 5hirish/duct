@@ -4,7 +4,7 @@ Planning and reference material for Duct. **Start here** to find the right doc b
 
 | Section | Audience | Contents |
 |--------|----------|----------|
-| [`engineering/`](engineering/) | Engineers | Active implementation plans and ops runbooks ([Claude Code on the web](engineering/claude-code-on-the-web.md), [User storage: Postgres + SQLModel + Alembic](engineering/user-storage-railway-postgres-sqlmodel-alembic.md), [Google Ads API tool design](engineering/google-ads-api-tool-design-document.md)) |
+| [`engineering/`](engineering/) | Engineers | Active implementation plans and ops runbooks ([Claude Code on the web](engineering/claude-code-on-the-web.md), [User storage: Postgres + SQLModel + Alembic](engineering/user-storage-railway-postgres-sqlmodel-alembic.md), [Google Ads API tool design](engineering/google-ads-api-tool-design-document.md), [Agent memory research + design](engineering/agent-memory-research.html)) |
 | [`archive/2026-Q2/`](archive/2026-Q2/) | Reference | Superseded plans and one-off agent runbooks (read [`archive/2026-Q2/README.md`](archive/2026-Q2/README.md) first) |
 | [`design/`](design/) | Design + eng | Design index; historical UX specs live in [`archive/2026-Q2/`](archive/2026-Q2/) |
 | [`agents/`](agents/) | Anyone writing agents | Agent runbooks |

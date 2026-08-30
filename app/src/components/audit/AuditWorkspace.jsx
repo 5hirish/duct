@@ -222,7 +222,8 @@ export default function AuditWorkspace({ sessionId, auditParams, publicMode = fa
         }
         break;
 
-      case AuditEvent.REPORT_CHUNK:
+      case AuditEvent.ARTIFACT_CHUNK:
+      case AuditEvent.LEGACY_REPORT_CHUNK:
         htmlBatchRef.current += event.text;
         clearTimeout(htmlBatchTimer.current);
         htmlBatchTimer.current = setTimeout(() => {
@@ -230,7 +231,8 @@ export default function AuditWorkspace({ sessionId, auditParams, publicMode = fa
         }, 80);
         break;
 
-      case AuditEvent.REPORT_UPDATED:
+      case AuditEvent.ARTIFACT_VERSION:
+      case AuditEvent.LEGACY_REPORT_UPDATED:
         // replay=True: a stored version re-emitted on resume — render it, but
         // skip the celebration bubble and step-clearing meant for fresh runs.
         if (event.replay) {
@@ -288,7 +290,7 @@ export default function AuditWorkspace({ sessionId, auditParams, publicMode = fa
           setSelectedVersionId(1);
           setPhase(Phase.READY);
         } else if (reportReceivedRef.current) {
-          // Report already arrived via REPORT_UPDATED
+          // Report already arrived via ARTIFACT_VERSION
           setPhase(Phase.READY);
         } else {
           // Pipeline completed but no report was ever produced
@@ -326,6 +328,27 @@ export default function AuditWorkspace({ sessionId, auditParams, publicMode = fa
       // card in the chat that opens the artifact viewer.
       case AuditEvent.ARTIFACT_UPDATED:
         setMessages((prev) => [...prev, { role: "artifact_card", artifact: event.artifact }]);
+        break;
+
+      // The agent remembered something. Several writes in one turn collapse
+      // into a single quiet line rather than stacking up as separate notes.
+      case AuditEvent.MEMORY_WRITTEN: {
+        if (!event.memory) break;
+        setMessages((prev) => {
+          const last = prev[prev.length - 1];
+          if (last?.role === "memory_note") {
+            return [...prev.slice(0, -1), { ...last, memories: [...last.memories, event.memory] }];
+          }
+          return [...prev, { role: "memory_note", memories: [event.memory] }];
+        });
+        break;
+      }
+
+      // The turn was primed with these memories — the "Recalled N" affordance,
+      // which opens to a chip per entry: what it says, and a link to the row.
+      case AuditEvent.MEMORY_RECALLED:
+        if (!event.memories?.length) break;
+        setMessages((prev) => [...prev, { role: "memory_recall", memories: event.memories }]);
         break;
 
       // The agent proposed (or updated) a staged change set — inline review
@@ -477,6 +500,10 @@ export default function AuditWorkspace({ sessionId, auditParams, publicMode = fa
           steps={steps}
           todos={todos}
           messages={messages}
+          // Ambient state, per the memory UX rules: a session that is not being
+          // remembered should say so while it runs, not only at the point the
+          // switch was flipped.
+          remembering={auditParams?.remember !== false}
           pendingQuestions={pendingQuestions}
           hasReport={reportVersions.length > 0}
           errorMsg={errorMsg}

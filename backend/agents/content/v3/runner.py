@@ -8,7 +8,7 @@ Architecture mirrors agents/audit/v3/runner.py but with two structural deltas:
      the built-in `Agent` tool. Sub-agent execution is observed through the
      can_use_tool callback (STEP_STARTED) and a PostToolUse hook (STEP_FINISHED).
 
-  2. Discriminated <duct_report> payload.
+  2. Discriminated <duct_artifact> payload.
      The streaming tag parser parses JSON inside the tag and branches on the
      "type" field — emits PLAN_GENERATED or POST_DRAFT_UPDATED accordingly.
      If parsing fails (slides_html with unescaped HTML, same problem as audit),
@@ -59,7 +59,7 @@ from agents.content.tools import build_content_mcp_server
 from agents.core import claude_sdk as _sdk
 from agents.core import session as _core_session
 from agents.core.session import bridge_ask_user_question, register_session
-from agents.core.stream import DuctReportStreamParser, pump_stream_event
+from agents.core.stream import DuctArtifactStreamParser, pump_stream_event
 from agents.models import (
     AgentEffort,
     AgentPermissionMode,
@@ -95,7 +95,7 @@ _STALL_TIMEOUT_SECS = 120.0
 # generous budget here only ever benefits a user who is actively, slowly answering.
 _ASK_USER_TIMEOUT_SECS = 600.0
 
-# One-shot recovery nudge — mirrors the "no <duct_report>" recovery in
+# One-shot recovery nudge — mirrors the "no <duct_artifact>" recovery in
 # agents/audit/v3/runner.py. With adaptive thinking + sub-agent dispatch the
 # model occasionally ends a turn-group having analysed everything but WITHOUT
 # persisting the deliverable (it never calls submit_plan / submit_post_draft).
@@ -105,12 +105,12 @@ _ASK_USER_TIMEOUT_SECS = 600.0
 # types into, so the main loop's chat turn picks it up as the next turn.
 _RECOVERY_NUDGE_PLAN = (
     "You analysed everything but did not persist the plan. Emit the complete "
-    '<duct_report>{"type":"plan", …}</duct_report> now and then call submit_plan '
+    '<duct_artifact>{"type":"plan", …}</duct_artifact> now and then call submit_plan '
     "with the same payload — do not run more research, just produce and save the plan."
 )
 _RECOVERY_NUDGE_POST = (
     "You analysed everything but did not persist the post draft. Emit the complete "
-    '<duct_report>{"type":"post", …}</duct_report> now and then call '
+    '<duct_artifact>{"type":"post", …}</duct_artifact> now and then call '
     "submit_post_draft with the same payload — do not run more research, just "
     "produce and save the draft."
 )
@@ -256,8 +256,8 @@ _HTML_FIELD_RE = re.compile(
 )
 
 
-def _parse_report_json(raw: str) -> dict | None:
-    """Parse the JSON inside <duct_report>. Falls back to stripping slides_html
+def _parse_artifact_json(raw: str) -> dict | None:
+    """Parse the JSON inside <duct_artifact>. Falls back to stripping slides_html
     if the model emitted unescaped HTML quotes (same problem audit has)."""
     candidate = raw.strip()
     fenced = re.search(r"```(?:json)?\s*([\s\S]+?)\s*```", candidate)
@@ -273,7 +273,7 @@ def _parse_report_json(raw: str) -> dict | None:
         payload.setdefault("slides_html", "")
         return payload
     except Exception as exc:
-        logger.warning("content: <duct_report> JSON parse failed: %s", exc)
+        logger.warning("content: <duct_artifact> JSON parse failed: %s", exc)
         return None
 
 
@@ -434,6 +434,37 @@ def _validate_edit_image(input_data: dict[str, Any]):
 # ---------------------------------------------------------------------------
 
 
+
+async def _memory_block(session: ContentSession, *, query: str = "") -> str:
+    """The project's memory digest for a content run, as a user-turn block.
+
+    Same contract as the audit path (routes/agents.py): per-project data rides
+    in the USER message so the cached system prefix stays byte-identical, and a
+    missing digest degrades the turn rather than failing it.
+    """
+    def _load() -> str:
+        from db.session import get_session as db_session
+        from service.memory import build_memory_context, touch_recall
+
+        with next(db_session()) as db:
+            context = build_memory_context(
+                db,
+                project_id=session.project_id,
+                user_id=getattr(session, "user_id", None),
+                agent_type="tiktok_studio",
+                query=query,
+                artifact_kind=None,
+            )
+            touch_recall(db, context.recalled_ids)
+            return context.text
+
+    try:
+        return await asyncio.to_thread(_load)
+    except Exception:  # noqa: BLE001
+        logger.warning("content: project memory unavailable", exc_info=True)
+        return ""
+
+
 async def _run(
     session: ContentSession,
     system_prompt: str,
@@ -454,7 +485,7 @@ async def _run(
       - allowed_tools includes Agent + the duct_content MCP tools
       - can_use_tool has a leading Agent branch that emits STEP_STARTED
       - PostToolUse hook matched on 'Agent' emits STEP_FINISHED
-      - <duct_report> parser branches on the "type" discriminator
+      - <duct_artifact> parser branches on the "type" discriminator
     """
     from claude_agent_sdk import ClaudeAgentOptions, ClaudeSDKClient
     from claude_agent_sdk.types import (
@@ -468,7 +499,7 @@ async def _run(
 
     # Recovery-nudge state. The canonical "deliverable persisted" signal is the
     # writer tool having stashed the id on the session (submit_plan → plan_id,
-    # submit_post_draft → post_id). The <duct_report> tag only drives the live
+    # submit_post_draft → post_id). The <duct_artifact> tag only drives the live
     # preview, so a draft streamed but never written still counts as "not
     # produced". Nudge at most once per session (see ResultMessage handling).
     _is_plan = session.mode == "plan_month"
@@ -705,6 +736,9 @@ async def _run(
             AgentTool.WEB_SEARCH,
             AgentTool.WEB_FETCH,
             AgentTool.AGENT,
+            ContentTool.REMEMBER_FACT,
+            ContentTool.SEARCH_MEMORY,
+            ContentTool.GET_MEMORY,
             ContentTool.SUBMIT_PLAN,
             ContentTool.SUBMIT_POST_DRAFT,
             ContentTool.EDIT_SLIDE,
@@ -765,37 +799,37 @@ async def _run(
         yield {"type": "user", "message": {"role": "user", "content": initial_prompt}}
 
     # ------------------------------------------------------------------
-    # Streaming <duct_report> tag parser
+    # Streaming <duct_artifact> tag parser
     # ------------------------------------------------------------------
 
     _first_token_at: float | None = None
 
-    # <duct_report> streaming is handled by the shared parser (core/stream).
+    # <duct_artifact> streaming is handled by the shared parser (core/stream).
     # Content streams JSON and branches on the payload's "type" in _handle_close.
     async def _on_text(text: str) -> None:
         await emit({"event": ContentEvent.AGENT_MESSAGE_CHUNK, "text": text})
 
-    async def _on_report_chunk(text: str) -> None:
-        await emit({"event": ContentEvent.REPORT_CHUNK, "text": text})
+    async def _on_artifact_chunk(text: str) -> None:
+        await emit({"event": ContentEvent.ARTIFACT_CHUNK, "text": text})
 
-    async def _on_report_open() -> None:
+    async def _on_artifact_open() -> None:
         elapsed = (perf_counter() - _first_token_at) if _first_token_at else 0.0
         logger.info(
-            "content: <duct_report> opened — JSON streaming started (%.1fs after first token)",
+            "content: <duct_artifact> opened — JSON streaming started (%.1fs after first token)",
             elapsed,
         )
 
     async def _handle_close(raw_json: str) -> None:
-        """Parse the JSON inside the closed <duct_report> tag, emit the
+        """Parse the JSON inside the closed <duct_artifact> tag, emit the
         matching event, and validate against PlanDraft / PostDraft.
 
         Validation failures are logged but do NOT raise — the writer @tool
         will revalidate and surface a clear error to the model on the next
         turn, which is the right place for retry logic to live.
         """
-        payload = _parse_report_json(raw_json)
+        payload = _parse_artifact_json(raw_json)
         if payload is None:
-            logger.warning("content: <duct_report> JSON parse failed; nothing emitted")
+            logger.warning("content: <duct_artifact> JSON parse failed; nothing emitted")
             return
         kind = payload.get("type", "")
         if kind == "plan":
@@ -807,7 +841,7 @@ async def _run(
                 "event":       ContentEvent.PLAN_GENERATED,
                 "session_id":  session_id,
                 "payload":     payload,
-                "source":      "duct_report",
+                "source":      "duct_artifact",
             })
         elif kind == "post":
             try:
@@ -818,22 +852,22 @@ async def _run(
                 "event":       ContentEvent.POST_DRAFT_UPDATED,
                 "session_id":  session_id,
                 "payload":     payload,
-                "source":      "duct_report",
+                "source":      "duct_artifact",
             })
         else:
             logger.warning(
-                "content: <duct_report> missing 'type' discriminator (got %r); "
+                "content: <duct_artifact> missing 'type' discriminator (got %r); "
                 "no event emitted", kind,
             )
 
-    async def _on_report_close(raw_json: str, _turn_text: str) -> None:
+    async def _on_artifact_close(raw_json: str, _turn_text: str) -> None:
         await _handle_close(raw_json)
 
-    parser = DuctReportStreamParser(
+    parser = DuctArtifactStreamParser(
         on_text=_on_text,
-        on_report_chunk=_on_report_chunk,
-        on_report_close=_on_report_close,
-        on_open=_on_report_open,
+        on_artifact_chunk=_on_artifact_chunk,
+        on_artifact_close=_on_artifact_close,
+        on_open=_on_artifact_open,
         log_prefix="content",
     )
 
@@ -1115,6 +1149,9 @@ class ClaudeContentRunner:
         initial_prompt = build_plan_user_prompt(
             brand, history=[], formats=[], avatars=[], research=research,
         )
+        memory = await _memory_block(session, query="content plan performance")
+        if memory:
+            initial_prompt = f"{initial_prompt}\n\n{memory}"
 
         try:
             await _run(
@@ -1249,6 +1286,9 @@ class ClaudeContentRunner:
             recent_posts=[],
             channel=ch,
         )
+        memory = await _memory_block(session, query=topic or pillar or "")
+        if memory:
+            initial_prompt = f"{initial_prompt}\n\n{memory}"
 
         try:
             await _run(

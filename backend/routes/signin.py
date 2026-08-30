@@ -45,6 +45,36 @@ def _no_store_redirect(url: str, status_code: int = 307) -> RedirectResponse:
     return response
 
 
+# Reasons the relay page knows how to explain. Deliberately coarse and
+# non-identifying: they end up in a URL the user can see and paste.
+SIGNIN_ERROR_CONFIG = "config"
+SIGNIN_ERROR_EXPIRED = "expired"
+SIGNIN_ERROR_EXCHANGE = "exchange"
+SIGNIN_ERROR_IDENTITY = "identity"
+SIGNIN_ERROR_SERVER = "server"
+
+
+def _signin_failure(reason: str, status_code: int, detail: str) -> RedirectResponse:
+    """Fail a sign-in the way the caller's client can actually render.
+
+    The web app drives this endpoint with fetch and shows its own message, so it
+    keeps the JSON error it has always had. The desktop shell does not: the OAuth
+    dance runs in the *system browser*, which renders whatever the loopback
+    sidecar returns. A raised `HTTPException` there is a bare `{"detail": ...}`
+    on a white page — and an unhandled exception is a bare "Internal Server
+    Error" — landing the user somewhere with no way back, after they have
+    already approved at Google. So on the desktop, hand off to the relay page
+    with a reason it can explain instead.
+
+    `duct_local` is the right test: only the desktop sidecar runs local, and it
+    only ever serves the desktop flow.
+    """
+    cfg = get_configs()
+    if cfg.duct_local:
+        return _no_store_redirect(f"{cfg.frontend_origin}/desktop-auth?error={reason}", 307)
+    raise HTTPException(status_code=status_code, detail=detail)
+
+
 def _create_jwt(email: str, name: str, picture: str) -> str:
     cfg = get_configs()
     if not cfg.jwt_secret:
@@ -71,19 +101,31 @@ async def signin_google_authorize(
     ``client=desktop`` marks the flow as initiated from the desktop shell's
     system browser; the callback then routes the auth code back to the shell.
     """
+    cfg = get_configs()
     if turnstile_token:
         client_ip = request.client.host if request.client else ""
         valid = await verify_turnstile(turnstile_token, client_ip)
         if not valid:
             raise HTTPException(status_code=403, detail="Turnstile verification failed.")
-    elif get_configs().turnstile_secret_key:
+    elif cfg.turnstile_secret_key and not cfg.duct_local:
+        # Turnstile is a widget on the hosted login page, which solves the
+        # challenge and passes the token here. The desktop shell has no such
+        # page — it opens the system browser directly at this endpoint — so it
+        # can never produce a token, and requiring one blocks sign-in outright
+        # the moment a sidecar is pointed at an env that configures Turnstile.
+        # The sidecar binds loopback only, so there is no bot surface to defend.
+        #
+        # Gated on `duct_local` (server-side config), never on `client=desktop`:
+        # that is a caller-supplied query parameter, so keying on it would let
+        # anyone skip the challenge on the hosted API by appending it.
         raise HTTPException(status_code=400, detail="Turnstile token required.")
 
     state = secrets.token_urlsafe(32)
     try:
         flow = create_google_signin_flow(state=state)
     except ValueError as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        logger.error("Google sign-in is not configured: %s", exc)
+        return _signin_failure(SIGNIN_ERROR_CONFIG, 500, str(exc))
 
     auth_url, _ = flow.authorization_url(
         access_type="online",
@@ -101,31 +143,50 @@ def signin_google_callback(
     code: str = Query(default=""),
     state: str = Query(default=""),
 ) -> RedirectResponse:
-    """Google OAuth callback for user sign-in. Exchanges code, creates JWT, redirects to app."""
+    """Google OAuth callback for user sign-in. Exchanges code, creates JWT, redirects to app.
+
+    Nothing here is allowed to escape as an unhandled exception. By the time the
+    browser arrives the user has already approved at Google, so a stack trace
+    rendered as "Internal Server Error" strands them on a dead page with no way
+    back and nothing to report. Every failure becomes a reason the relay page can
+    explain — and, on the way out, a logged traceback.
+    """
+    try:
+        return _signin_google_callback(code=code, state=state)
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Unhandled error in the Google sign-in callback")
+        return _signin_failure(SIGNIN_ERROR_SERVER, 500, "Sign-in failed.")
+
+
+def _signin_google_callback(*, code: str, state: str) -> RedirectResponse:
     if not code or not state:
-        raise HTTPException(status_code=400, detail="Missing OAuth code or state.")
+        return _signin_failure(SIGNIN_ERROR_EXPIRED, 400, "Missing OAuth code or state.")
     matched_flow, code_verifier = consume_state_for_flows(
         state, (SIGNIN_FLOW, SIGNIN_DESKTOP_FLOW), OAUTH_STATE_TTL_SECONDS
     )
     if matched_flow is None:
-        raise HTTPException(status_code=400, detail="Invalid or expired OAuth state.")
+        return _signin_failure(SIGNIN_ERROR_EXPIRED, 400, "Invalid or expired OAuth state.")
 
     try:
         flow = create_google_signin_flow(state=state)
         if code_verifier is not None:
             flow.code_verifier = code_verifier
     except ValueError as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        logger.error("Google sign-in is not configured: %s", exc)
+        return _signin_failure(SIGNIN_ERROR_CONFIG, 500, str(exc))
 
     try:
         flow.fetch_token(code=code)
-    except Exception as exc:
+    except Exception:
         logger.exception("OAuth token exchange failed")
-        raise HTTPException(status_code=502, detail="OAuth token exchange failed.") from exc
+        return _signin_failure(SIGNIN_ERROR_EXCHANGE, 502, "OAuth token exchange failed.")
 
     creds = flow.credentials
     if not creds or not creds.id_token:
-        raise HTTPException(status_code=502, detail="No ID token returned by Google.")
+        logger.error("Google returned no ID token for the sign-in flow")
+        return _signin_failure(SIGNIN_ERROR_IDENTITY, 502, "No ID token returned by Google.")
 
     # id_token is already decoded by google-auth when fetched via the flow
     id_info = creds.id_token if isinstance(creds.id_token, dict) else {}
@@ -138,9 +199,9 @@ def signin_google_callback(
             id_info = google_id_token.verify_oauth2_token(
                 str(creds.id_token), google_requests.Request(), get_configs().google_oauth_client_id
             )
-        except Exception as exc:
+        except Exception:
             logger.exception("Failed to verify Google ID token")
-            raise HTTPException(status_code=502, detail="Failed to verify ID token.") from exc
+            return _signin_failure(SIGNIN_ERROR_IDENTITY, 502, "Failed to verify ID token.")
 
     provider_user_id = id_info.get("sub", "")
     email = id_info.get("email", "")
@@ -148,8 +209,9 @@ def signin_google_callback(
     picture = id_info.get("picture", "")
 
     if not provider_user_id or not email:
-        raise HTTPException(
-            status_code=502, detail="Google ID token missing required identity fields."
+        logger.error("Google ID token was missing sub/email")
+        return _signin_failure(
+            SIGNIN_ERROR_IDENTITY, 502, "Google ID token missing required identity fields."
         )
     normalized_email = email.strip().lower()
 
@@ -168,9 +230,9 @@ def signin_google_callback(
 
     try:
         token = _create_jwt(normalized_email, name, picture)
-    except ValueError as exc:
+    except ValueError:
         logger.exception("JWT creation failed")
-        raise HTTPException(status_code=500, detail="Authentication error.") from exc
+        return _signin_failure(SIGNIN_ERROR_SERVER, 500, "Authentication error.")
 
     # C1 fix: deliver JWT via a short-lived exchange code so it never appears in
     # the URL query string (browser history, server logs, Referer headers).

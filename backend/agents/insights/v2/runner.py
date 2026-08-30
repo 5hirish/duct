@@ -206,6 +206,10 @@ class AdkInsightsRunner:
         gsc_site_url: str = "",
         connected_sources: list[str] | None = None,
         emit_event: Callable[..., Any] | None = None,
+        # V2 is frozen (backend/CLAUDE.md). This is not an ADK change: the
+        # kwarg keeps the one call site in routes/generate.py uniform, and the
+        # block is rendered by the shared prompt builder either way.
+        memory: str = "",
     ) -> tuple[dict[str, Any], SynthesisSchema | None]:
         """Run the full two-phase ADK pipeline.
 
@@ -226,6 +230,7 @@ class AdkInsightsRunner:
             goal=goal,
             custom_goal=custom_goal,
             context=context,
+            memory=memory,
         )
 
         pipeline = build_pipeline_node(

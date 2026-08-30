@@ -2,7 +2,7 @@
 
 ``ArtifactPersister`` mirrors ``ConversationRecorder``: it persists by wrapping
 the runner's emit callback (SSE first, DB/storage after, never blocks or breaks
-the stream). It intercepts ``REPORT_UPDATED`` events, so the audit runner needs
+the stream). It intercepts ``ARTIFACT_VERSION`` events, so the audit runner needs
 no knowledge of persistence at all.
 
 Freehand report HTML goes to private object storage (``storage.put_private``,
@@ -29,6 +29,8 @@ from agents.core.events import AgentEvent
 from db.session import get_session as db_session
 from models.artifact import Artifact
 from service.activity import log_activity
+from service.memory import backfill_artifact_summary, record_artifact_memory
+from service.memory_consolidation import extract_artifact_findings
 from service.storage import delete_private, get_private_bytes, put_private
 from utils.dates import utcnow
 from utils.strings import slugify
@@ -229,6 +231,10 @@ def persist_artifact_version(
             ),
             data={"group_id": str(group_id), "version": version, "kind": kind, "slug": slug},
         )
+        # Artifact memory: one entry per version, so reports reach the project
+        # timeline and the agent digest without anyone listing them. Best-effort
+        # like the activity row above — never fails the artifact write.
+        record_artifact_memory(db, row)
     return row
 
 
@@ -240,6 +246,11 @@ def save_artifact_summary(artifact_id: UUID, summary: str) -> None:
     with next(db_session()) as db:
         db.execute(update(Artifact).where(Artifact.id == artifact_id).values(summary=summary))
         db.commit()
+        # The artifact's memory entry was written when the version persisted,
+        # before this summary existed — fill in its body now.
+        row = db.get(Artifact, artifact_id)
+        if row is not None:
+            backfill_artifact_summary(db, row, summary)
 
 
 # ---------------------------------------------------------------------------
@@ -507,6 +518,29 @@ def delete_artifact_group(db, group_id: UUID) -> int:
 # Summarizer (Haiku, best-effort)
 # ---------------------------------------------------------------------------
 
+def report_source_text(report: AuditReport) -> str:
+    """A report reduced to the lines a model should read.
+
+    Structured reports collapse to score, narrative, per-category findings and
+    priorities — category labels survive, so an extracted finding can name the
+    section it came from. Freehand reports fall back to their HTML.
+    """
+    sd = report.structured_data
+    if sd is None:
+        return report.html_report[:30_000]
+    return (
+        f"overall_score={sd.overall_score} band={sd.score_band}\n"
+        f"strategic_narrative: {sd.strategic_narrative}\n"
+        + "\n".join(
+            f"[{c.label} score={c.score}] "
+            + "; ".join(f"{f.severity}: {f.title}" for f in c.findings[:6])
+            for c in sd.categories
+        )
+        + "\ntop_priorities: "
+        + "; ".join(p.title for p in sd.top_priorities)
+    )
+
+
 async def summarize_report(report: AuditReport, api_key: str) -> str:
     """Context digest of a report for future agent sessions. Returns "" on any
     failure — persistence must never depend on the summarizer."""
@@ -519,21 +553,7 @@ async def summarize_report(report: AuditReport, api_key: str) -> str:
     except ImportError:
         return ""
 
-    if report.structured_data is not None:
-        sd = report.structured_data
-        source = (
-            f"overall_score={sd.overall_score} band={sd.score_band}\n"
-            f"strategic_narrative: {sd.strategic_narrative}\n"
-            + "\n".join(
-                f"[{c.label} score={c.score}] "
-                + "; ".join(f"{f.severity}: {f.title}" for f in c.findings[:6])
-                for c in sd.categories
-            )
-            + "\ntop_priorities: "
-            + "; ".join(p.title for p in sd.top_priorities)
-        )
-    else:
-        source = report.html_report[:30_000]
+    source = report_source_text(report)
 
     prompt = (
         "Summarize this website audit report for a future AI agent working on the "
@@ -572,11 +592,18 @@ async def summarize_report(report: AuditReport, api_key: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Persister — wraps emit, intercepts REPORT_UPDATED
+# Persister — wraps emit, intercepts ARTIFACT_VERSION
 # ---------------------------------------------------------------------------
 
 class ArtifactPersister:
-    """Persists every versioned report a session emits, as one artifact group.
+    """Persists every artifact version a session emits, as one artifact group.
+
+    Note on vocabulary: the *mechanism* is artifact-shaped (it intercepts
+    ARTIFACT_VERSION and writes ``artifacts`` rows), while the payload it
+    validates is still an ``AuditReport`` and its ``kind`` is still ``"report"``.
+    Both are correct — ``kind`` discriminates report / document / ticket / image
+    (see models/artifact.py), so it names what this artifact *is*, not the
+    mechanism carrying it.
 
     Contract mirrors ConversationRecorder.wrap_emit: SSE delivery always comes
     first, persistence is best-effort, and nothing here ever raises into the
@@ -620,7 +647,7 @@ class ArtifactPersister:
             try:
                 # replay=True marks a rehydrated version re-emitted for the UI
                 # on resume — already stored, never persist it again.
-                if body.get("event") == AgentEvent.REPORT_UPDATED and not body.get("replay"):
+                if body.get("event") == AgentEvent.ARTIFACT_VERSION and not body.get("replay"):
                     await self._persist_report(body)
             except Exception:
                 logger.warning(
@@ -679,4 +706,16 @@ class ArtifactPersister:
             except Exception:  # noqa: BLE001
                 logger.warning("artifact_store: summary task failed", exc_info=True)
 
+        async def _extract_findings() -> None:
+            # The report's durable findings become project memory, each carrying
+            # the section it is stated in — so "where is that from?" answers with
+            # the report, the version *and* the section. Reads the structured
+            # source rather than the summary: the summary is prose, the source
+            # still has category ids to point at.
+            try:
+                await extract_artifact_findings(row, report_source_text(report))
+            except Exception:  # noqa: BLE001
+                logger.warning("artifact_store: finding extraction failed", exc_info=True)
+
         asyncio.create_task(_summarize())
+        asyncio.create_task(_extract_findings())

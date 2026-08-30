@@ -43,6 +43,9 @@ export default function SeoAuditSetupPage() {
   const [error, setError]               = useState("");
   const [activeProject, setActiveProject] = useState(null);
   const [useProjectContext, setUseProjectContext] = useState(true);
+  // "Don't remember this session" — the one-off counterpart to the standing
+  // pause switch on /project/[id]/memory.
+  const [remember, setRemember] = useState(true);
   const [prevAudits, setPrevAudits] = useState([]);
 
   // Previous audits for this project (persisted conversations) — signed-in only.
@@ -152,9 +155,10 @@ export default function SeoAuditSetupPage() {
         },
         effort,
         adaptive_thinking: adaptiveThinking,
+        remember,
         user_preferences: loadPreferences(),
         // Structured template report (matches the lead-magnet flow): the agent
-        // calls SubmitAuditReport instead of streaming freeform <duct_report>
+        // calls SubmitAuditReport instead of streaming freeform <duct_artifact>
         // HTML. Backend default is "freehand"; this opts the app audit into the
         // same template the public audit uses.
         report_mode: ReportMode.TEMPLATE,
@@ -219,6 +223,34 @@ export default function SeoAuditSetupPage() {
                 <span
                   className={`absolute top-0.5 left-0.5 size-4 rounded-full bg-white shadow transition-transform ${
                     useProjectContext ? "translate-x-4" : "translate-x-0"
+                  }`}
+                />
+              </button>
+            </div>
+          )}
+
+          {activeProject && useProjectContext && (
+            <div className="flex items-start justify-between gap-4 rounded-md bg-muted/30 px-3 py-2.5">
+              <div>
+                <p className="text-sm font-medium">Remember this session</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Off means a one-off: nothing from project memory is read into the run, and
+                  nothing it concludes is written back. Your report is still saved.
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={remember}
+                aria-label="Remember this session"
+                onClick={() => setRemember(!remember)}
+                className={`relative shrink-0 mt-0.5 h-5 w-9 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
+                  remember ? "bg-primary" : "bg-input"
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 size-4 rounded-full bg-white shadow transition-transform ${
+                    remember ? "translate-x-4" : "translate-x-0"
                   }`}
                 />
               </button>

@@ -24,25 +24,6 @@ from config import Configs, cors_kwargs
 from utils.appdirs import default_data_dir, resolve_data_dir
 
 
-@pytest.fixture
-def clean_env(monkeypatch):
-    """Isolate the env vars local mode reads and writes."""
-    for var in (
-        "DUCT_LOCAL", "DUCT_DESKTOP", "DUCT_DATA_DIR", "DUCT_API_KEY",
-        "API_PUBLIC_URL", "FRONTEND_ORIGIN", "APP_ENV", "SENTRY_DSN",
-        "DATABASE_URL", "UPLOADS_DIR", "INIT_DB_ON_STARTUP",
-    ):
-        monkeypatch.delenv(var, raising=False)
-    # Clearing the environment is not enough: Configs also reads backend/.env
-    # and .env.local, deliberately, so integration tests can share the running
-    # server's keys (see config._settings_env_files). A developer with a real
-    # DATABASE_URL there would otherwise see these derivation tests fail — and
-    # the assertion message would print the credential. These are unit tests of
-    # the derivation logic, so cut the dotenv source off for them only.
-    monkeypatch.setitem(Configs.model_config, "env_file", None)
-    return monkeypatch
-
-
 # ---------------------------------------------------------------------------
 # Data directory
 # ---------------------------------------------------------------------------
@@ -143,8 +124,8 @@ def test_local_mode_derives_sqlite_and_uploads(clean_env, tmp_path):
 
     assert cfg.database_url == f"sqlite:///{tmp_path / 'duct.db'}"
     assert cfg.uploads_dir == str(tmp_path / "uploads")
-    # No Alembic step on a user's laptop.
-    assert cfg.init_db_on_startup is True
+    # Alembic owns the desktop schema too — see db/migrate.py.
+    assert cfg.init_db_on_startup is False
 
 
 def test_local_mode_respects_explicit_database_url(clean_env, tmp_path):
@@ -293,3 +274,85 @@ def test_local_dev_mode_allows_any_loopback_port(clean_env):
     cfg = Configs()
     assert _allows(cfg, "http://localhost:6006")
     assert not _allows(cfg, "https://evil.example")
+
+
+def test_bootstrap_provides_a_jwt_secret(clean_env, tmp_path):
+    """Sign-in mints a session JWT, and a frozen bundle carries no JWT_SECRET.
+
+    Without this the callback fails as a bare 500 *after* the user has already
+    approved at Google - the one failure in the flow that cannot be seen until
+    the round-trip is nearly complete.
+    """
+    import local_server
+
+    clean_env.delenv("JWT_SECRET", raising=False)
+    local_server.bootstrap(["--data-dir", str(tmp_path), "--port", "1"])
+
+    secret = os.environ["JWT_SECRET"]
+    assert len(secret) >= 32, "Configs rejects a JWT_SECRET shorter than 32 chars"
+
+    mode = (tmp_path / local_server._JWT_SECRET_FILE).stat().st_mode
+    assert mode & 0o077 == 0, "the signing key must not be group/other readable"
+
+
+def test_jwt_secret_survives_a_restart(clean_env, tmp_path):
+    """A per-boot key would sign every user out on every relaunch."""
+    import local_server
+
+    clean_env.delenv("JWT_SECRET", raising=False)
+    local_server.bootstrap(["--data-dir", str(tmp_path), "--port", "1"])
+    first = os.environ["JWT_SECRET"]
+
+    clean_env.delenv("JWT_SECRET", raising=False)
+    local_server.bootstrap(["--data-dir", str(tmp_path), "--port", "1"])
+    assert os.environ["JWT_SECRET"] == first
+
+
+# --- Which environment a run embodies -------------------------------------
+#
+# Duct is configured entirely through the environment: a user picks their own
+# database and API URL, and the desktop sidecar is expected to embody whichever
+# env it was started with rather than a hardcoded default. DUCT_ENV_FILE is the
+# knob that selects one, so these pin its resolution rules.
+
+
+def test_env_file_defaults_to_the_developer_pair(clean_env):
+    from config import _settings_env_files
+
+    assert [p.name for p in _settings_env_files()] == [".env", ".env.local"]
+
+
+def test_env_file_override_resolves_against_the_backend_dir(clean_env):
+    """A bare name has to work from any cwd — and from a frozen bundle, whose
+    own directory holds no env files."""
+    from config import _BACKEND_DIR, _settings_env_files
+
+    clean_env.setenv("DUCT_ENV_FILE", ".env.prod")
+
+    assert _settings_env_files() == (_BACKEND_DIR / ".env.prod",)
+
+
+def test_env_file_override_accepts_absolute_paths_and_lists(clean_env, tmp_path):
+    from config import _settings_env_files
+
+    first, second = tmp_path / "base.env", tmp_path / "over.env"
+    clean_env.setenv("DUCT_ENV_FILE", f"{first}{os.pathsep}{second}")
+
+    assert _settings_env_files() == (first, second)
+
+
+@pytest.mark.parametrize(
+    ("url", "expected"),
+    [
+        ("postgresql://u:secret@db.example.com:5432/duct", "postgresql db.example.com:5432/duct"),
+        ("sqlite:////data/duct.db", "sqlite //data/duct.db"),
+        ("", "(unset)"),
+    ],
+)
+def test_describe_database_never_leaks_the_password(url, expected):
+    """This string is printed at startup and pasted into bug reports."""
+    from config import describe_database
+
+    described = describe_database(url)
+    assert described == expected
+    assert "secret" not in described

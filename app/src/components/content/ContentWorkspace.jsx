@@ -357,8 +357,9 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
         }
         break;
 
-      case ContentEvent.REPORT_CHUNK:
-        // Stream tokens are accumulated inside <duct_report>; we don't render
+      case ContentEvent.ARTIFACT_CHUNK:
+      case ContentEvent.LEGACY_REPORT_CHUNK:
+        // Stream tokens are accumulated inside <duct_artifact>; we don't render
         // them live in MVP (the close-tag PLAN_GENERATED / POST_DRAFT_UPDATED
         // gives us the structured payload). Future: render to a "streaming
         // preview" indicator.

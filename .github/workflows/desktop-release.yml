@@ -1,38 +1,67 @@
-name: desktop — Developer ID DMG (macOS)
+name: desktop — release (macOS, Windows, Linux)
 
-# Builds the Tauri desktop shell as a Developer ID-signed, notarized DMG.
+# Builds the Tauri desktop shell for all three desktop platforms and publishes a
+# GitHub Release carrying the updater manifest.
 #
-# This is the channel for the local-first product: the bundle ships the FastAPI
-# backend frozen by PyInstaller and runs it on the user's machine. The Mac App
-# Store cannot host that build at all — the sandbox breaks the PyInstaller
-# sidecar and embedded interpreters draw rejections — so the App Store pipeline
-# (desktop-testflight.yml) is limited to the older thin client and must never
-# be given the sidecar. Reasoning: the engine consolidation review (duct-cloud, private) §8.
+# Each bundle ships the FastAPI backend frozen by PyInstaller, which is why
+# every platform builds its own: a frozen Python tree is per-OS and per-arch,
+# not cross-compilable. The Mac App Store cannot host that build at all — its
+# sandbox breaks the sidecar — so the App Store pipeline
+# (desktop-testflight.yml) stays on the older thin client and must never be
+# given the sidecar. Reasoning: the engine consolidation review (duct-cloud,
+# private) §8.
 #
-# The signing order matters and is the part that most often goes wrong. A
-# PyInstaller onedir tree contains hundreds of Mach-O files (.so extension
-# modules, dylibs, the bootloader). Under the hardened runtime every one must
-# carry a valid signature, and they must be signed *before* the enclosing .app,
-# innermost first — signing the app afterwards seals what is already inside it.
+# macOS signing order is the part that most often goes wrong. A PyInstaller
+# onedir tree contains hundreds of Mach-O files (.so extension modules, dylibs,
+# the bootloader). Under the hardened runtime every one must carry a valid
+# signature, and they must be signed *before* the enclosing .app, innermost
+# first — signing the app afterwards seals what is already inside it.
 # `codesign --deep` is deprecated by Apple and does not reliably do this, so the
 # nested pass below is explicit.
 #
 # REQUIRED GitHub secrets:
-#   DUCT_DEVID_CERT_P12          base64 of the "Developer ID Application" .p12
-#                                (base64 -i cert.p12 | pbcopy)
-#   DUCT_DEVID_CERT_PASSWORD     password for that .p12
-#   DUCT_DEVID_IDENTITY          e.g. "Developer ID Application: Duct (ABCDE12345)"
-#   DUCT_APPLE_TEAM_ID           10-char Apple Team ID
-#   DUCT_NOTARY_APPLE_ID         Apple ID email used for notarization
-#   DUCT_NOTARY_PASSWORD         app-specific password for that Apple ID
-#                                (appleid.apple.com → Sign-In and Security →
-#                                 App-Specific Passwords)
+#   macOS (Developer ID + notarization)
+#     DUCT_DEVID_CERT_P12          base64 of the "Developer ID Application" .p12
+#     DUCT_DEVID_CERT_PASSWORD     password for that .p12
+#     DUCT_DEVID_IDENTITY          e.g. "Developer ID Application: Duct (ABCDE12345)"
+#     DUCT_APPLE_TEAM_ID           10-char Apple Team ID
+#     DUCT_NOTARY_APPLE_ID         Apple ID email used for notarization
+#     DUCT_NOTARY_PASSWORD         app-specific password for that Apple ID
+#   All platforms (self-update)
+#     TAURI_SIGNING_PRIVATE_KEY    contents of the minisign private key
+#     TAURI_SIGNING_PRIVATE_KEY_PASSWORD
+#   All platforms (crash reporting)
+#     SENTRY_DSN                   same DSN the backend uses. Compiled into the
+#                                  shell by `option_env!`, so like the OAuth
+#                                  secret below it must be on every step that
+#                                  runs `tauri build`. Absent is fine: the shell
+#                                  simply never reports, and the settings toggle
+#                                  hides itself.
+#   All platforms (sign-in)
+#     GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET
+#                                  secret of the Google *Desktop app* OAuth client
+#                                  whose id is hardcoded in src/sidecar.rs. Same
+#                                  name the sidecar reads at runtime and the one
+#                                  in backend/.env.local — one value, one spelling.
 #
-# The Developer ID Application certificate is a different certificate from the
-# Apple Distribution one the TestFlight workflow uses; both can coexist.
+# GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET is read by `option_env!` while rustc compiles, not at
+# runtime, so it must be present on every step that invokes `tauri build` — the
+# DMG step included. Leaving it off one step is worse than leaving it off all of
+# them: build.rs declares `rerun-if-env-changed`, so a set-then-unset sequence
+# recompiles the binary with no secret and the bundle silently ships that. When
+# it is absent everywhere, the app builds and installs fine and fails only when a
+# user taps Sign in with Google - no test covers this, on purpose (there is
+# nothing to assert without a live Google round-trip).
+#
+# The updater key is NOT the code-signing certificate. Losing it means shipping
+# an update no installed copy will accept — installs would have to be replaced
+# by hand. Keep it backed up outside CI.
 
 on:
   push:
+    # macOS runners bill at a 10x minute multiplier and the sidecar build is the
+    # slow part, so backend changes only trigger a full release build on main.
+    # Desktop changes still build on PRs, where the risk of breakage lives.
     branches: [main]
     paths:
       - 'desktop/**'
@@ -43,7 +72,6 @@ on:
     paths:
       - 'desktop/**'
       - '!desktop/**.md'
-      - 'backend/**'
       - '.github/workflows/desktop-release.yml'
   workflow_dispatch:
 
@@ -51,12 +79,16 @@ concurrency:
   group: desktop-release-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: write
+
 jobs:
-  release:
-    name: Build, sign, notarize
+  # ---------------------------------------------------------------------------
+  # macOS — Developer ID, notarized, DMG
+  # ---------------------------------------------------------------------------
+  macos:
+    name: macOS (Developer ID DMG)
     runs-on: macos-latest
-    # A signed build needs the secrets, which forks and Dependabot never get.
-    # PRs still exercise the unsigned path below to catch build breakage.
     steps:
       - uses: actions/checkout@v6
 
@@ -98,6 +130,9 @@ jobs:
       - name: Build app bundle (unsigned)
         if: github.event_name == 'pull_request'
         working-directory: desktop
+        env:
+          GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: npm run tauri -- build --bundles app
 
       # ---- main path: signed + notarized ------------------------------------
@@ -133,6 +168,8 @@ jobs:
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.DUCT_DEVID_IDENTITY }}
           APPLE_TEAM_ID: ${{ secrets.DUCT_APPLE_TEAM_ID }}
+          GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: npm run tauri -- build --bundles app
 
       - name: Sign the sidecar's nested binaries
@@ -188,21 +225,240 @@ jobs:
           xcrun stapler staple "$APP"
           xcrun stapler validate "$APP"
 
-      - name: Build DMG
+      # Produces the DMG *and*, because bundle.createUpdaterArtifacts is on, the
+      # Duct.app.tar.gz + .sig pair the updater consumes. The app is signed and
+      # stapled by this point, so the tarball carries the notarized bundle.
+      - name: Build DMG and updater artifacts
         if: github.event_name != 'pull_request'
         working-directory: desktop
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.DUCT_DEVID_IDENTITY }}
           APPLE_TEAM_ID: ${{ secrets.DUCT_APPLE_TEAM_ID }}
-        run: npm run tauri -- build --bundles dmg --no-bundle-app
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        run: npm run tauri -- build --bundles dmg,updater --no-bundle-app
 
       - uses: actions/upload-artifact@v4
         if: github.event_name != 'pull_request'
         with:
-          name: duct-macos-dmg
-          path: desktop/src-tauri/target/release/bundle/dmg/*.dmg
+          name: bundle-macos
+          path: |
+            desktop/src-tauri/target/release/bundle/dmg/*.dmg
+            desktop/src-tauri/target/release/bundle/macos/*.tar.gz
+            desktop/src-tauri/target/release/bundle/macos/*.tar.gz.sig
           if-no-files-found: error
 
       - name: Clean up signing keychain
         if: always() && github.event_name != 'pull_request'
         run: security delete-keychain "$RUNNER_TEMP/devid-signing.keychain-db" || true
+
+  # ---------------------------------------------------------------------------
+  # Linux — deb + AppImage
+  # ---------------------------------------------------------------------------
+  linux:
+    name: Linux (deb + AppImage)
+    # Pinned, not `-latest`: the glibc the runner links against sets the oldest
+    # distro the AppImage will start on, so moving up silently drops users.
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: desktop/src-tauri
+
+      # libwebkit2gtk-4.1 is Tauri v2's webview. libsoup-3.0 comes with it.
+      # libdbus-1 is what the `keyring` crate's secret-service backend talks to,
+      # and is a build-time requirement even though the *daemon* is a runtime one.
+      - name: Install Tauri system dependencies
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev \
+            librsvg2-dev \
+            libsoup-3.0-dev \
+            libdbus-1-dev \
+            libayatana-appindicator3-dev \
+            patchelf
+
+      - name: Install Poetry
+        run: pipx install poetry
+
+      - name: Build the sidecar
+        working-directory: backend
+        run: |
+          set -euo pipefail
+          poetry install --with dev --no-interaction
+          poetry run pyinstaller duct_sidecar.spec --noconfirm
+          test -x dist/duct-sidecar/duct-sidecar
+          du -sh dist/duct-sidecar
+
+      - name: Install npm dependencies
+        working-directory: desktop
+        run: npm ci
+
+      - name: Build bundles
+        working-directory: desktop
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          # The AppImage bundler downloads linuxdeploy and runs it, which needs
+          # FUSE — and a GitHub runner has no /dev/fuse. This is the documented
+          # way around it; installing `fuse` is not enough.
+          APPIMAGE_EXTRACT_AND_RUN: '1'
+          GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        run: npm run tauri -- build --bundles deb,appimage,updater
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bundle-linux
+          path: |
+            desktop/src-tauri/target/release/bundle/deb/*.deb
+            desktop/src-tauri/target/release/bundle/appimage/*.AppImage
+            desktop/src-tauri/target/release/bundle/appimage/*.AppImage.sig
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------------------
+  # Windows — NSIS installer
+  # ---------------------------------------------------------------------------
+  #
+  # NOT code-signed: that needs an Authenticode certificate, which we do not have
+  # yet. Until then SmartScreen shows an "unrecognised app" warning on first run.
+  # Signing slots in here later via Tauri's `windows.signCommand`.
+  windows:
+    name: Windows (NSIS)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: desktop/src-tauri
+
+      - name: Install Poetry
+        run: pipx install poetry
+
+      - name: Build the sidecar
+        working-directory: backend
+        shell: bash
+        run: |
+          set -euo pipefail
+          poetry install --with dev --no-interaction
+          poetry run pyinstaller duct_sidecar.spec --noconfirm
+          test -f dist/duct-sidecar/duct-sidecar.exe
+
+      - name: Install npm dependencies
+        working-directory: desktop
+        run: npm ci
+
+      - name: Build bundles
+        working-directory: desktop
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        run: npm run tauri -- build --bundles nsis,updater
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bundle-windows
+          path: |
+            desktop/src-tauri/target/release/bundle/nsis/*-setup.exe
+            desktop/src-tauri/target/release/bundle/nsis/*-setup.nsis.zip
+            desktop/src-tauri/target/release/bundle/nsis/*-setup.nsis.zip.sig
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------------------
+  # Publish — one release carrying every platform's bundle + latest.json
+  # ---------------------------------------------------------------------------
+  #
+  # `latest.json` is the manifest the updater polls (see the `endpoints` in
+  # tauri.conf.json). It has to be assembled here rather than by any single
+  # platform job, because it names the artifact and signature for all three.
+  publish:
+    name: Publish release
+    needs: [macos, linux, windows]
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Read the shell version
+        id: version
+        run: |
+          set -euo pipefail
+          # tauri.conf.json and Cargo.toml are required to match (desktop/CLAUDE.md).
+          VERSION="$(node -p "require('./desktop/src-tauri/tauri.conf.json').version")"
+          CARGO="$(grep -m1 '^version = ' desktop/src-tauri/Cargo.toml | cut -d'"' -f2)"
+          if [ "$VERSION" != "$CARGO" ]; then
+            echo "version mismatch: tauri.conf.json=$VERSION Cargo.toml=$CARGO" >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Assemble latest.json
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          node .github/scripts/build-updater-manifest.mjs \
+            --version "$VERSION" \
+            --artifacts artifacts \
+            --repo "$REPO" \
+            --out latest.json
+          cat latest.json
+
+      - name: Create or update the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          TAG="desktop-v$VERSION"
+
+          # Collect into an array rather than interpolating `$(find ...)`, which
+          # word-splits on any bundle name containing a space.
+          mapfile -d '' ASSETS < <(find artifacts -type f -print0)
+          ASSETS+=(latest.json)
+
+          # Re-running a build for the same version replaces the assets rather
+          # than failing; the updater reads whatever `latest` points at.
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" --clobber "${ASSETS[@]}"
+          else
+            gh release create "$TAG" \
+              --title "Duct Desktop $VERSION" \
+              --notes "Automated build from ${{ github.sha }}." \
+              "${ASSETS[@]}"
+          fi

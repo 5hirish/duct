@@ -5,13 +5,21 @@
   "plugins": {
     "deep-link": {
       "desktop": {
-        "schemes": ["ai.getduct.desktop.dev"]
+        "schemes": [
+          "ai.getduct.desktop.dev"
+        ]
       }
     }
   },
+  "bundle": {
+    "createUpdaterArtifacts": false
+  },
   "app": {
     "security": {
-      "capabilities": ["default", "dev-localhost"]
+      "capabilities": [
+        "default",
+        "dev-localhost"
+      ]
     },
     "windows": [
       {

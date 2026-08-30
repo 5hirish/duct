@@ -1,6 +1,6 @@
 [package]
 name = "desktop"
-version = "0.2.1"
+version = "0.3.0"
 description = "Duct desktop shell"
 authors = ["Duct"]
 edition = "2021"
@@ -13,6 +13,17 @@ edition = "2021"
 # This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
 name = "desktop_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
+
+[features]
+default = ["updater", "crash-reporting"]
+# Self-update, on everywhere except the Mac App Store — where shipping it is
+# grounds for rejection. That build is produced with `--no-default-features`,
+# which drops the plugin AND the `autoUpdate` capability the web app gates its
+# update UI on, so the two can never disagree.
+updater = ["dep:tauri-plugin-updater"]
+# Crash reporting, on by default and compiled out when the DSN is absent
+# anyway. Separable so a build can drop the dependency entirely.
+crash-reporting = ["dep:sentry"]
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
@@ -29,3 +40,24 @@ serde_json = "1"
 # OS keychain for bring-your-own provider keys: macOS Keychain, Windows
 # Credential Manager, Linux Secret Service (libsecret via D-Bus).
 keyring = { version = "3", features = ["apple-native", "windows-native", "sync-secret-service"] }
+# Self-update for the Developer ID / NSIS / AppImage channels. Allowed here
+# because none of them is the Mac App Store, where self-update is grounds for
+# rejection — the appstore overlay must never enable it.
+tauri-plugin-updater = { version = "2", optional = true }
+# Crash reporting for the shell itself. rustls rather than the default
+# native-tls: the bundle already links rustls through the updater, and adding
+# OpenSSL would mean another library to sign and notarize on macOS.
+sentry = { version = "0.49", default-features = false, features = [
+    "backtrace",
+    "contexts",
+    "panic",
+    "reqwest",
+    "rustls",
+], optional = true }
+
+[target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]
+# macOS routes a deep link to the already-running app; Windows and Linux instead
+# launch a SECOND process with the URL in argv. For this app that would mean a
+# second window and a second sidecar, with the auth code delivered to the wrong
+# one. Single-instance forwards argv to the running instance instead.
+tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }

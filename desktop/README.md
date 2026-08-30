@@ -50,10 +50,19 @@ reads one JSON handshake line (loopback URL, port, per-install API key, data
 dir) and hands it to the web app, which points its API base there. Rebuild it
 whenever backend code changes — the frozen copy does not pick up edits.
 
-Runtime state lives in `~/Library/Application Support/ai.getduct.desktop/`
+Runtime state lives in the per-user data dir — `~/Library/Application Support/ai.getduct.desktop/`
+on macOS, `%APPDATA%\Duct` on Windows, `~/.local/share/duct` on Linux
 (`duct.db`, `local-api-key`, `uploads/`). Deleting that directory resets the
 install. Set `DUCT_SIDECAR_BIN` to run the shell against a sidecar built
 elsewhere.
+
+The schema is owned by **Alembic**, the same migrations the Railway deployment
+runs (`backend/db/migrate.py`). A first launch builds the schema and stamps it;
+later launches migrate forward. This replaced `create_all`, which created
+missing *tables* only and so silently skipped every migration that added a
+column to an existing one — an upgraded install would then fail at query time
+with `no such column`. Consequence for anyone writing a migration: **it has to
+run on SQLite too.**
 
 ## Develop
 
@@ -123,6 +132,22 @@ cd desktop
 npm run build    # tauri build — installers land in src-tauri/target/release/bundle
 ```
 
+`bundle.createUpdaterArtifacts` is on, so a release build also produces the
+update archive and its signature — which means **it needs the updater signing
+key**. Without it the build stops with *"A public key has been found, but no
+private key"*. Point it at your local copy:
+
+```bash
+export TAURI_SIGNING_PRIVATE_KEY_PATH=~/.tauri/duct-updater.key
+export TAURI_SIGNING_PRIVATE_KEY_PASSWORD=      # empty if the key has none
+```
+
+`npm run build:dev` needs no key: `tauri.dev.conf.json` sets
+`createUpdaterArtifacts: false`. Passing `--bundles app` is *not* enough on its
+own — on macOS the updater archive is produced for the `app` target too, so a
+dev build would otherwise fail at the very last step, after the `.app` was
+already written.
+
 ## Releasing
 
 ### macOS — Developer ID + notarized DMG (current channel)
@@ -137,9 +162,9 @@ interpreters draw rejections
 (review §8.2 (duct-cloud, private)). The
 practical consequences, all in our favour here:
 
-- **Auto-update is allowed** (`tauri-plugin-updater`), unlike the App Store —
-  though it is not wired up yet; it needs a signing keypair and an endpoint.
-- **Windows and Linux** can ship from the same pipeline later.
+- **Auto-update is allowed** (`tauri-plugin-updater`), unlike the App Store, and
+  is wired up — see [Auto-update](#auto-update).
+- **Windows and Linux** ship from the same pipeline — see below.
 - **Unsandboxed keychain**, so provider keys saved by this build are not shared
   with any App Store build.
 
@@ -183,12 +208,49 @@ Testing stays **internal-only**: the window loads a remote URL, which is a commo
 App Review Guideline 4.2 rejection. Internal testing skips beta review; an
 external group would not.
 
-### Windows / Linux (later)
+### Windows and Linux
 
-- **Signing:** an Authenticode certificate (Windows). Until signed, users see OS
-  warnings.
-- **Auto-update:** `tauri-plugin-updater` against a manifest (e.g. R2). Not wired
-  yet — and it must remain disabled for the macOS App Store build.
+Built by the same workflow, each on its own runner because the PyInstaller
+sidecar is per-OS and cannot be cross-compiled:
+
+| Platform | Bundles | Signing |
+|---|---|---|
+| Windows | NSIS `-setup.exe` | **None yet** — needs an Authenticode certificate; SmartScreen warns on first run until then |
+| Linux | `.deb`, `.AppImage` | N/A (AppImage is unsigned by convention) |
+
+Linux runtime note: provider keys go to the freedesktop **Secret Service**, so a
+keyring daemon (gnome-keyring, KWallet, KeePassXC) must be running. Without one
+the shell now returns a message saying so rather than failing silently.
+
+The Linux job pins `ubuntu-22.04` rather than `-latest` on purpose: the runner's
+glibc sets the oldest distro the AppImage will start on.
+
+## Auto-update
+
+Every channel except the Mac App Store self-updates via `tauri-plugin-updater`.
+The web app polls through the shell (`check_for_update` / `install_update` in
+`src-tauri/src/lib.rs`) rather than the plugin's JS bindings, because the window
+loads a remote origin that cannot import them — the same reason `providerKeys.js`
+goes through `invoke`. A useful side effect: the page needs no `updater:*`
+permission, since those gate the plugin's JS API and these commands reach it from
+Rust. The UI is a toast in the corner
+(`app/src/components/UpdateToast.jsx`), never a forced restart: agent sessions
+here are long, and losing one to a surprise relaunch is worse than a stale build.
+
+Releases are published as `desktop-v<version>` GitHub Releases carrying every
+platform's bundle plus `latest.json`, the manifest the updater polls. That
+manifest is assembled by
+[`.github/scripts/build-updater-manifest.mjs`](../.github/scripts/build-updater-manifest.mjs),
+which refuses to publish an archive with no signature beside it.
+
+Two things to know:
+
+- **The minisign private key is not recoverable.** Lose it and no installed copy
+  will accept another update — every user would have to reinstall by hand. It
+  lives in `TAURI_SIGNING_PRIVATE_KEY`; keep a backup outside CI.
+- **macOS updates are arm64-only.** A universal2 sidecar roughly doubles its
+  native libraries (~600 MB — see the size notes in `backend/duct_sidecar.spec`),
+  so Intel Macs are offered no update rather than a broken one.
 
 ## Not in this bundle
 

@@ -26,12 +26,16 @@ use std::process::{Child, Command, Stdio};
 use std::sync::Mutex;
 
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Manager, State};
+use tauri::{AppHandle, Manager, State, WebviewUrl};
 
 /// Directory name of the PyInstaller onedir output, both in `backend/dist/`
 /// and inside the bundle's resource dir.
 const SIDECAR_DIR: &str = "duct-sidecar";
 /// Entry binary inside that directory (`EXE(name=…)` in the spec).
+/// PyInstaller appends `.exe` on Windows.
+#[cfg(windows)]
+const SIDECAR_BIN: &str = "duct-sidecar.exe";
+#[cfg(not(windows))]
 const SIDECAR_BIN: &str = "duct-sidecar";
 /// Escape hatch for `tauri dev` runs against a sidecar built somewhere else.
 const SIDECAR_BIN_ENV: &str = "DUCT_SIDECAR_BIN";
@@ -48,14 +52,20 @@ const SIDECAR_BIN_ENV: &str = "DUCT_SIDECAR_BIN";
 /// Embedding the id (and the secret below) is sanctioned — Google documents
 /// installed-app credentials as not confidential, since anyone can extract them
 /// from a shipped binary. They identify the app, they do not authorise it.
-const GOOGLE_CLIENT_ID: &str =
+const GOOGLE_DESKTOP_CLIENT_ID: &str =
     "726839654841-fs8i0kehickma5411jepc6v4d3r26b4g.apps.googleusercontent.com";
 
-/// Set at build time (`DUCT_GOOGLE_CLIENT_SECRET=… cargo build`) so the value
-/// stays out of git. When unset, the sidecar falls back to whatever its own
-/// environment or `backend/.env*` provides, which is how a source-run dev build
-/// already works.
-const GOOGLE_CLIENT_SECRET: Option<&str> = option_env!("DUCT_GOOGLE_CLIENT_SECRET");
+/// Baked in at build time so the value stays out of git:
+/// `GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET=… npm run build`.
+///
+/// Deliberately the same name the sidecar reads at runtime and the same one
+/// `backend/.env.local` uses, so a shell set up for the backend can build a
+/// working shell with no extra step. When unset, the sidecar falls back to
+/// whatever its own environment provides, which is how a source-run dev build
+/// already works — but a bundle launched from Finder inherits nothing, which is
+/// why the release build has to compile it in.
+const GOOGLE_DESKTOP_CLIENT_SECRET: Option<&str> =
+    option_env!("GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET");
 
 /// The handshake line, verbatim. Field names mirror `local_server.py`; the
 /// shell forwards them to the webview rather than interpreting them, so a new
@@ -117,6 +127,18 @@ fn sidecar_path(app: &AppHandle) -> Result<PathBuf, String> {
     ))
 }
 
+/// Origin (`scheme://host[:port]`) of this shell's main window.
+///
+/// `None` for a bundled-frontend window, which has no remote origin to hand a
+/// browser — the sidecar keeps its own default in that case.
+fn frontend_origin(app: &AppHandle) -> Option<String> {
+    let window = app.config().app.windows.first()?;
+    match &window.url {
+        WebviewUrl::External(url) => Some(url.origin().ascii_serialization()),
+        _ => None,
+    }
+}
+
 /// Start the sidecar and read its handshake on a background thread.
 ///
 /// Returns as soon as the process is spawned; `get_sidecar_info` reports `null`
@@ -138,9 +160,52 @@ fn try_spawn(app: &AppHandle) -> Result<(), String> {
     // The frozen bundle deliberately ships no `.env`, so sign-in credentials
     // have to arrive through the environment. Only set what we actually have —
     // an empty value would otherwise shadow a dev's `backend/.env.local`.
-    command.env("GOOGLE_OAUTH_CLIENT_ID", GOOGLE_CLIENT_ID);
-    if let Some(secret) = GOOGLE_CLIENT_SECRET.filter(|s| !s.is_empty()) {
-        command.env("GOOGLE_OAUTH_CLIENT_SECRET", secret);
+    // Where the sidecar should send a browser after sign-in. Its own default is
+    // `tauri://localhost`, which is right for CORS and useless as a redirect: the
+    // OAuth callback lands in the *system browser*, which cannot follow that
+    // scheme. Every consumer of FRONTEND_ORIGIN builds a URL a browser has to
+    // open — the sign-in relay, invite links, the connections redirect — so it
+    // has to be the origin this shell actually shows.
+    if let Some(origin) = frontend_origin(app) {
+        command.env("FRONTEND_ORIGIN", origin);
+    }
+
+    // Python block-buffers stdout when it is a pipe rather than a terminal, so
+    // without this the log we just went to the trouble of relaying arrives in
+    // 8 KB gulps — i.e. never, for the handful of lines that precede a crash.
+    command.env("PYTHONUNBUFFERED", "1");
+
+    command.env("GOOGLE_DESKTOP_OAUTH_CLIENT_ID", GOOGLE_DESKTOP_CLIENT_ID);
+    if let Some(secret) = GOOGLE_DESKTOP_CLIENT_SECRET.filter(|s| !s.is_empty()) {
+        command.env("GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET", secret);
+    }
+
+    // Crash reporting for the bundled backend, only with consent. `local_server`
+    // blanks SENTRY_DSN by default on purpose — a laptop is not a deployment —
+    // so passing nothing here leaves that default intact. Passing it explicitly
+    // is the only way the sidecar ever reports, which keeps the decision in one
+    // place the user controls rather than spread across two processes.
+    let consented = crate::telemetry::default_data_dir()
+        .map(|dir| crate::telemetry::read_prefs(&dir).enabled)
+        .unwrap_or(false);
+    if consented {
+        if let Some(dsn) = crate::telemetry::SENTRY_DSN.filter(|d| !d.is_empty()) {
+            command.env("SENTRY_DSN", dsn);
+            // Without this the sidecar's own localhost guard drops every event:
+            // it binds 127.0.0.1, which server.py treats as "not deployed".
+            command.env("SENTRY_ENABLE_LOCALHOST", "1");
+        }
+    }
+
+    // The sidecar is a console binary — that is deliberate, its stdout carries
+    // the handshake. On Windows, spawning a console binary from a GUI app also
+    // pops a visible console window on every launch. CREATE_NO_WINDOW suppresses
+    // the window while leaving the redirected pipes intact.
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        command.creation_flags(CREATE_NO_WINDOW);
     }
 
     let mut child = command
@@ -187,15 +252,21 @@ fn try_spawn(app: &AppHandle) -> Result<(), String> {
             }
         }
 
-        // Keep draining stdout. The pipe has a finite buffer; if the sidecar
-        // ever writes past it with nobody reading, it blocks on write and the
-        // whole backend wedges.
-        let mut sink = String::new();
-        while let Ok(n) = reader.read_line(&mut sink) {
+        // Keep draining stdout, and *forward* what we read. The pipe has a
+        // finite buffer; if the sidecar ever writes past it with nobody
+        // reading, it blocks on write and the whole backend wedges. Dropping
+        // the lines on the floor avoids that too, but it also throws away
+        // uvicorn's access log — which is the only record of which request
+        // failed. Relaying to our own stderr (already inherited, so it reaches
+        // `Console.app` and `tauri dev`) keeps the pipe clear *and* keeps a
+        // shipped build diagnosable.
+        let mut relayed = String::new();
+        while let Ok(n) = reader.read_line(&mut relayed) {
             if n == 0 {
                 break;
             }
-            sink.clear();
+            eprint!("[sidecar] {relayed}");
+            relayed.clear();
         }
     });
 

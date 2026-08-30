@@ -40,7 +40,18 @@ _CONNECTOR_THEMES = {
 }
 
 
-def _log_stale_catalog_warnings() -> None:
+def log_stale_catalog_warnings() -> None:
+    """Warn about entity catalogs past their re-audit window.
+
+    Called once from the app's startup (`server.lifespan`), not at import.
+    It used to run on import, which meant every uvicorn `--reload` cycle and
+    every test collection reprinted it — noise that trained the reader to skip
+    the line, for something that is a quarterly maintenance reminder.
+
+    `tests/test_insights_catalog_contract.py` is the enforcing half: it fails
+    when a catalog goes stale or its fields stop matching the fetcher. This is
+    just the operator-facing nudge.
+    """
     try:
         from agents.insights.catalog import get_catalog_for_connector, is_catalog_stale
     except Exception:  # noqa: BLE001
@@ -57,8 +68,6 @@ def _log_stale_catalog_warnings() -> None:
                 catalog.get("last_audited", "unknown"),
             )
 
-
-_log_stale_catalog_warnings()
 
 
 def normalize_connections(connections: list[str]) -> list[str]:

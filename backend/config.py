@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import os
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
 from pydantic import AliasChoices, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -37,11 +39,51 @@ def _truthy(value: Any) -> bool:
 
 def _settings_env_files() -> tuple[Path, ...]:
     """Return dotenv files to load. Always loaded — including under pytest —
-    so integration tests can use the same API keys as the running server."""
-    return (
-        _BACKEND_DIR / ".env",
-        _BACKEND_DIR / ".env.local",
-    )
+    so integration tests can use the same API keys as the running server.
+
+    `DUCT_ENV_FILE` replaces the default pair with an explicit list (separated by
+    `os.pathsep`), so a run can be pinned to a chosen environment — the desktop
+    sidecar embodies whichever env it is started with rather than always the
+    developer's `.env.local`. Duct is configured entirely through the
+    environment, so this is the one knob that decides *which* environment; it
+    never overrides what that file says.
+
+    Relative paths resolve against `backend/`, so `DUCT_ENV_FILE=.env.prod`
+    works from anywhere — including a frozen bundle, whose `_BACKEND_DIR` points
+    inside the app and holds no env files of its own.
+    """
+    override = os.environ.get("DUCT_ENV_FILE", "").strip()
+    if not override:
+        return (
+            _BACKEND_DIR / ".env",
+            _BACKEND_DIR / ".env.local",
+        )
+    paths = []
+    for raw in override.split(os.pathsep):
+        candidate = raw.strip()
+        if not candidate:
+            continue
+        path = Path(candidate).expanduser()
+        paths.append(path if path.is_absolute() else _BACKEND_DIR / path)
+    return tuple(paths)
+
+
+def describe_database(url: str) -> str:
+    """A database URL with its credentials removed, safe to log.
+
+    The sidecar prints this at startup: which database a run ended up on is the
+    single most useful line in the log and the easiest thing to get wrong, but
+    the URL itself carries a password.
+    """
+    if not url:
+        return "(unset)"
+    parsed = urlsplit(url)
+    if parsed.scheme.startswith("sqlite"):
+        return f"sqlite {parsed.path or ':memory:'}"
+    host = parsed.hostname or "?"
+    port = f":{parsed.port}" if parsed.port else ""
+    database = parsed.path.lstrip("/") or "?"
+    return f"{parsed.scheme} {host}{port}/{database}"
 
 
 class Configs(BaseSettings):
@@ -79,8 +121,31 @@ class Configs(BaseSettings):
 
     # Google OAuth (same app can back Google Ads API). If unset/empty, derived as
     # {api_public_url}/auth/google/callback (alias for the Google Ads connector callback).
-    google_oauth_client_id: str = ""
-    google_oauth_client_secret: str = ""
+    #
+    # Two clients live in the same GCP project and are not interchangeable:
+    #   web     - fixed https redirect, used by the hosted API and local uvicorn
+    #   desktop - loopback redirect on an OS-picked port, which Google accepts
+    #             only for an installed-app client (see desktop/src-tauri/src/sidecar.rs)
+    # The pair below is the *effective* one for this process: the web client
+    # normally, swapped for the desktop pair under DUCT_LOCAL (see the validator
+    # at the bottom of this class). The legacy unprefixed names stay valid so a
+    # deployment can be renamed after the code ships, not before.
+    google_oauth_client_id: str = Field(
+        default="",
+        validation_alias=AliasChoices("GOOGLE_WEB_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_ID"),
+    )
+    google_oauth_client_secret: str = Field(
+        default="",
+        validation_alias=AliasChoices(
+            "GOOGLE_WEB_OAUTH_CLIENT_SECRET", "GOOGLE_OAUTH_CLIENT_SECRET"
+        ),
+    )
+    google_desktop_oauth_client_id: str = Field(
+        default="", validation_alias=AliasChoices("GOOGLE_DESKTOP_OAUTH_CLIENT_ID")
+    )
+    google_desktop_oauth_client_secret: str = Field(
+        default="", validation_alias=AliasChoices("GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET")
+    )
     google_oauth_redirect_uri: str = Field(default="")
 
     # Google Ads API
@@ -194,6 +259,19 @@ class Configs(BaseSettings):
     gemini_api_key: str = ""
     openai_api_key: str = ""
     anthropic_api_key: str = ""
+    # OpenRouter — the OpenAI-compatible transport (v1 engine only). One key
+    # reaches 500+ models across 60+ providers, which is the practical answer
+    # for bring-your-own-model: consumer subscriptions never grant API access,
+    # so every customer arrives with a key, and for the open-weight/Chinese long
+    # tail that key is usually this one.
+    openrouter_api_key: str = ""
+    # Override to point the same OpenAI-compatible path at any other gateway.
+    # Self-hosted routers: LiteLLM (MIT), Bifrost (Go), Portkey Gateway (MIT),
+    # LLM Gateway (AGPLv3). Local model servers: Ollama
+    # (http://localhost:11434/v1), vLLM, llama.cpp. All are the same code path —
+    # they replace OpenRouter's interface, not its one-key-many-providers
+    # billing. Empty means OpenRouter's own endpoint.
+    openrouter_base_url: str = ""
     # Long-lived Claude OAuth token from `claude setup-token` (the operator's own
     # Pro/Max subscription). Detected here only so the engine-status endpoint can
     # report v3 as authenticated; the Claude Agent SDK subprocess reads the real
@@ -231,7 +309,29 @@ class Configs(BaseSettings):
         env_file=_settings_env_files(),
         env_file_encoding="utf-8",
         extra="ignore",
+        # Fields carrying a validation_alias would otherwise ignore their own
+        # name as a kwarg, which every `Configs(google_oauth_client_id=...)`
+        # in the tests relies on.
+        populate_by_name=True,
     )
+
+    @model_validator(mode="after")
+    def _prefer_desktop_oauth_client_in_local_mode(self) -> "Configs":
+        """Desktop sign-in redirects to http://127.0.0.1:<os-picked port>.
+
+        Google accepts a loopback redirect on an arbitrary port only for an
+        installed-app client, so the sidecar cannot use the web client the
+        hosted API runs on. Both pairs ship in the same env file; this picks
+        the right one rather than making every call site ask.
+        """
+        if (
+            self.duct_local
+            and self.google_desktop_oauth_client_id
+            and self.google_desktop_oauth_client_secret
+        ):
+            self.google_oauth_client_id = self.google_desktop_oauth_client_id
+            self.google_oauth_client_secret = self.google_desktop_oauth_client_secret
+        return self
 
     @field_validator("jwt_secret", mode="after")
     @classmethod
@@ -291,8 +391,13 @@ class Configs(BaseSettings):
         if not out.get("uploads_dir"):
             out["uploads_dir"] = str(data_dir / "uploads")
         if "init_db_on_startup" not in out:
-            # No Alembic step on a user's laptop — create_all owns the schema here.
-            out["init_db_on_startup"] = True
+            # Explicitly OFF for desktop. Alembic owns the schema here, same as
+            # the deployment — `db/migrate.py` runs it at startup. Leaving
+            # create_all on would also defeat that module's fresh-vs-legacy
+            # detection: it would build every table before the check ran, so a
+            # first launch would look like a pre-Alembic install and get stamped
+            # at the wrong baseline.
+            out["init_db_on_startup"] = False
         return out
 
 

@@ -5,8 +5,8 @@ from __future__ import annotations
 from datetime import date, datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import Column, Date, DateTime, ForeignKey, String
-from models.columns import json_column
+from sqlalchemy import Column, Date, ForeignKey, String
+from models.columns import json_column, utc_datetime
 from sqlmodel import Field, SQLModel
 from utils.dates import utcnow
 
@@ -33,9 +33,9 @@ class ContentPlan(SQLModel, table=True):
     status: str = Field(default="draft", sa_column=Column(String, nullable=False, server_default="draft"))
     created_at: datetime = Field(
         default_factory=utcnow,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
+        sa_column=Column(utc_datetime(), nullable=False),
     )
     updated_at: datetime = Field(
         default_factory=utcnow,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
+        sa_column=Column(utc_datetime(), nullable=False),
     )

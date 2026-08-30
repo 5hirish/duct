@@ -22,6 +22,7 @@ from service.membership import (
     get_project_for_user,
     member_role,
 )
+from service.memory import seed_project_profile
 
 router = APIRouter(tags=["user-projects"])
 
@@ -145,6 +146,9 @@ def create_project(
     ensure_owner_membership(project, session)
     session.commit()
     session.refresh(project)
+    # The targets and competitors typed into onboarding become dated project
+    # memory, so agents cite the operator's own numbers instead of re-asking.
+    seed_project_profile(session, project, user_id=user.id)
     return _to_out(project, role=ROLE_OWNER, owner_email=user.email)
 
 
@@ -211,6 +215,9 @@ def update_project(
         ensure_owner_membership(project, session)
     session.commit()
     session.refresh(project)
+    # A changed target supersedes the previous one rather than overwriting it —
+    # that is what makes "target CPA $45 (was $60 until 30 Jun)" possible.
+    seed_project_profile(session, project, user_id=user.id)
     return _to_out(
         project,
         role=member_role(project_id, user.id, session) or ROLE_OWNER,

@@ -28,7 +28,7 @@ from uuid import uuid4
 import pytest
 
 from agents.content.events import ContentEvent
-from agents.content.v3.runner import _parse_report_json
+from agents.content.v3.runner import _parse_artifact_json
 
 
 # ---------------------------------------------------------------------------
@@ -67,19 +67,19 @@ from agents.content.v3.runner import _parse_report_json
         ),
     ],
 )
-def test_duct_report_parser_handles_real_model_output_shapes(name, raw, expect_type):
+def test_duct_artifact_parser_handles_real_model_output_shapes(name, raw, expect_type):
     """The parser is the seam between the LLM's text output and our DB.
     These three shapes cover the patterns we've observed:
        1. clean JSON
        2. properly-escaped HTML inside a string (the common case)
        3. ```json fences (some models love them)
     """
-    payload = _parse_report_json(raw)
+    payload = _parse_artifact_json(raw)
     assert payload is not None, f"parser returned None for {name}"
     assert payload["type"] == expect_type
 
 
-def test_duct_report_parser_recovers_from_unescaped_html_via_strip_fallback():
+def test_duct_artifact_parser_recovers_from_unescaped_html_via_strip_fallback():
     """When the model emits unescaped quotes inside slides_html (which it
     will, occasionally), the standard JSON parser fails. The fallback
     strips slides_html and reparses so the writer @tool still gets a
@@ -92,18 +92,18 @@ def test_duct_report_parser_recovers_from_unescaped_html_via_strip_fallback():
         '"slides_html":"<div class="slide">unescaped</div>",'
         '"caption":"c"}'
     )
-    payload = _parse_report_json(raw)
+    payload = _parse_artifact_json(raw)
     # Either we recover (preferred) or return None (acceptable but worse).
     if payload is not None:
         assert payload.get("type") == "post"
         assert isinstance(payload.get("slides_html", ""), str)
 
 
-def test_duct_report_parser_returns_none_on_total_garbage():
+def test_duct_artifact_parser_returns_none_on_total_garbage():
     """Defensive: if the model emits non-JSON nonsense the parser MUST
     return None (not raise). The runner's _handle_close logs a warning
     and continues — agent stays alive."""
-    assert _parse_report_json("not json at all") is None
+    assert _parse_artifact_json("not json at all") is None
 
 
 # ---------------------------------------------------------------------------

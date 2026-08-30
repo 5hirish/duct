@@ -6,32 +6,26 @@ and verify exactly which SSE events run_synthesis() emits.
 
 Covers:
   - _parse_report()              direct unit test
-  - <duct_report> tag parser     single chunk, split across chunks, text before/after
+  - <duct_artifact> tag parser     single chunk, split across chunks, text before/after
   - THINKING_CHUNK forwarding    adaptive thinking delta → event
   - MESSAGE_STOP emission        after each completed turn
   - session close terminates     close_session() drains chat_queue cleanly
-  - <audit_report_update>        second turn → REPORT_UPDATED version 2
+  - <audit_report_update>        second turn → ARTIFACT_VERSION version 2
 """
 
 from __future__ import annotations
 
 import asyncio
 import json
-import sys
-from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
-# Load backend/.env.local so secrets are available without the server's loader.
-for _env_file in (ROOT / ".env", ROOT / ".env.local"):
-    if _env_file.exists():
-        from dotenv import load_dotenv
-        load_dotenv(_env_file, override=False)
+# NOTE: this module must NOT load .env / .env.local. Doing so at import time
+# writes real secrets into os.environ for the whole pytest session, which flips
+# every other module's `live` skipif gate from "skip" to "run" and fires paid
+# API calls. Nothing here needs a real key: the mocked tests patch the SDK
+# client, and the two SDK-plumbing tests below supply their own env.
 
 
 # ---------------------------------------------------------------------------
@@ -40,7 +34,7 @@ for _env_file in (ROOT / ".env", ROOT / ".env.local"):
 
 _FIXTURE_URL = "https://test.io/"
 
-# The <duct_report> tag now wraps HTML directly (not JSON).
+# The <duct_artifact> tag now wraps HTML directly (not JSON).
 # This is the HTML artifact the model generates.
 _REPORT_HTML = (
     "<!DOCTYPE html><html lang=\"en\"><head>"
@@ -123,7 +117,7 @@ async def _run(stream_messages: list, close_on_report: bool = True):
     Run run_synthesis() with a mocked SDK and return (report, had_thinking, events).
 
     If close_on_report is True (default), the collect callback calls
-    close_session() when REPORT_UPDATED fires, which terminates the
+    close_session() when ARTIFACT_VERSION fires, which terminates the
     message_gen loop so the function returns promptly.
     """
     from agents.audit.schema import AuditBusinessContext
@@ -140,7 +134,7 @@ async def _run(stream_messages: list, close_on_report: bool = True):
 
     async def collect(event: dict) -> None:
         events.append(event)
-        if close_on_report and event.get("event") == "report_updated":
+        if close_on_report and event.get("event") == "artifact_version":
             close_session(session_id)
 
     crawl = _make_crawl_result()
@@ -185,16 +179,16 @@ def test_report_built_from_html():
 # Tag parser: happy path (single chunk contains full tag)
 # ---------------------------------------------------------------------------
 
-async def test_duct_report_tag_single_chunk():
+async def test_duct_artifact_tag_single_chunk():
     stream = [
         _text_delta("I analysed the site. "),
-        _text_delta(f"<duct_report>{_REPORT_HTML}</duct_report>"),
+        _text_delta(f"<duct_artifact>{_REPORT_HTML}</duct_artifact>"),
         _text_delta(" Report is ready."),
         _message_stop(),
     ]
     report, _, events = await _run(stream)
 
-    assert report is not None, "report not extracted from <duct_report> tag"
+    assert report is not None, "report not extracted from <duct_artifact> tag"
     assert report.url == _FIXTURE_URL
 
     # Text outside the tag should be streamed
@@ -206,8 +200,8 @@ async def test_duct_report_tag_single_chunk():
     # HTML inside the tag must NOT appear in chat chunks
     assert "<!DOCTYPE html>" not in combined, "raw HTML leaked into AGENT_MESSAGE_CHUNK"
 
-    # REPORT_UPDATED must fire exactly once with version_id=1
-    updates = [e for e in events if e.get("event") == "report_updated"]
+    # ARTIFACT_VERSION must fire exactly once with version_id=1
+    updates = [e for e in events if e.get("event") == "artifact_version"]
     assert len(updates) == 1
     assert updates[0]["version_id"] == 1
     assert updates[0]["payload"]["url"] == _FIXTURE_URL
@@ -217,16 +211,16 @@ async def test_duct_report_tag_single_chunk():
     assert "<html" in report.html_report.lower()
     assert "</html>" in report.html_report.lower()
     assert updates[0]["payload"]["html_report"] == report.html_report, \
-        "html_report in REPORT_UPDATED payload doesn't match parsed report"
+        "html_report in ARTIFACT_VERSION payload doesn't match parsed report"
 
 
 # ---------------------------------------------------------------------------
 # Tag parser: tag split across chunk boundaries
 # ---------------------------------------------------------------------------
 
-async def test_duct_report_tag_split_across_chunks():
-    # Split "<duct_report>" across three chunks to stress the holdback buffer
-    tag_parts = ["<duct_", "repo", f"rt>{_REPORT_HTML}</duct_report>"]
+async def test_duct_artifact_tag_split_across_chunks():
+    # Split "<duct_artifact>" across three chunks to stress the holdback buffer
+    tag_parts = ["<duct_", "arti", f"fact>{_REPORT_HTML}</duct_artifact>"]
     stream = [
         _text_delta("Pre-tag text. "),
         *[_text_delta(p) for p in tag_parts],
@@ -243,12 +237,12 @@ async def test_duct_report_tag_split_across_chunks():
     assert _REPORT_HTML not in combined, "JSON leaked into chat stream"
 
 
-async def test_duct_report_close_tag_split():
-    # Split "</duct_report>" across two chunks
+async def test_duct_artifact_close_tag_split():
+    # Split "</duct_artifact>" across two chunks
     json_part = _REPORT_HTML
     stream = [
-        _text_delta(f"<duct_report>{json_part}</duct_rep"),
-        _text_delta("ort> Post-tag text."),
+        _text_delta(f"<duct_artifact>{json_part}</duct_arti"),
+        _text_delta("fact> Post-tag text."),
         _message_stop(),
     ]
     report, _, events = await _run(stream)
@@ -266,7 +260,7 @@ async def test_thinking_chunks_forwarded():
     stream = [
         _thinking_delta("Let me think about the SEO issues..."),
         _thinking_delta(" Checking title length."),
-        _text_delta(f"<duct_report>{_REPORT_HTML}</duct_report>"),
+        _text_delta(f"<duct_artifact>{_REPORT_HTML}</duct_artifact>"),
         _message_stop(),
     ]
     report, had_thinking, events = await _run(stream)
@@ -282,7 +276,7 @@ async def test_thinking_chunks_forwarded():
 
 async def test_no_thinking_had_thinking_false():
     stream = [
-        _text_delta(f"<duct_report>{_REPORT_HTML}</duct_report>"),
+        _text_delta(f"<duct_artifact>{_REPORT_HTML}</duct_artifact>"),
         _message_stop(),
     ]
     _, had_thinking, events = await _run(stream)
@@ -297,7 +291,7 @@ async def test_no_thinking_had_thinking_false():
 
 async def test_message_stop_emitted_after_turn():
     stream = [
-        _text_delta(f"<duct_report>{_REPORT_HTML}</duct_report>"),
+        _text_delta(f"<duct_artifact>{_REPORT_HTML}</duct_artifact>"),
         _message_stop(),
     ]
     _, _, events = await _run(stream)
@@ -315,7 +309,7 @@ async def test_text_outside_tag_streamed_not_json():
     suffix = "Review the findings above."
     stream = [
         _text_delta(prefix),
-        _text_delta(f"<duct_report>{_REPORT_HTML}</duct_report>"),
+        _text_delta(f"<duct_artifact>{_REPORT_HTML}</duct_artifact>"),
         _text_delta(suffix),
         _message_stop(),
     ]
@@ -335,7 +329,7 @@ async def test_text_outside_tag_streamed_not_json():
 async def test_session_close_terminates_cleanly():
     """close_session() in the emit callback must allow run_synthesis() to return."""
     stream = [
-        _text_delta(f"<duct_report>{_REPORT_HTML}</duct_report>"),
+        _text_delta(f"<duct_artifact>{_REPORT_HTML}</duct_artifact>"),
         _message_stop(),
     ]
     # close_on_report=True is the default — _run() already tests this
@@ -351,14 +345,14 @@ async def test_session_close_terminates_cleanly():
 async def test_audit_report_update_in_chat_turn():
     """
     The SDK yields a single continuous stream across all turns.
-    Turn 1 produces <duct_report> → REPORT_UPDATED v1.
-    Turn 2 produces <audit_report_update> → REPORT_UPDATED v2.
+    Turn 1 produces <duct_artifact> → ARTIFACT_VERSION v1.
+    Turn 2 produces <audit_report_update> → ARTIFACT_VERSION v2.
     """
     # Combined stream: initial report then, after message_stop, an update block.
     # close_session() is called when v2 fires, which puts None in chat_queue
     # and allows message_gen to exit so run_synthesis() returns.
     stream = [
-        _text_delta(f"<duct_report>{_REPORT_HTML}</duct_report>"),
+        _text_delta(f"<duct_artifact>{_REPORT_HTML}</duct_artifact>"),
         _message_stop(),
         _text_delta(f"Here is the refreshed report. <audit_report_update>{_REPORT_V2_HTML}</audit_report_update>"),
         _message_stop(),
@@ -374,7 +368,7 @@ async def test_audit_report_update_in_chat_turn():
 
     async def collect(event: dict) -> None:
         events.append(event)
-        if event.get("event") == "report_updated" and event.get("version_id") == 2:
+        if event.get("event") == "artifact_version" and event.get("version_id") == 2:
             close_session(session_id)
 
     with patch("claude_agent_sdk.ClaudeSDKClient", return_value=_make_mock_sdk(stream)):
@@ -393,11 +387,11 @@ async def test_audit_report_update_in_chat_turn():
 
     close_session(session_id)
 
-    updates = [e for e in events if e.get("event") == "report_updated"]
-    assert len(updates) >= 2, f"expected at least 2 REPORT_UPDATED, got {len(updates)}"
+    updates = [e for e in events if e.get("event") == "artifact_version"]
+    assert len(updates) >= 2, f"expected at least 2 ARTIFACT_VERSION, got {len(updates)}"
 
     v2 = next((e for e in updates if e.get("version_id") == 2), None)
-    assert v2 is not None, "REPORT_UPDATED version_id=2 never fired"
+    assert v2 is not None, "ARTIFACT_VERSION version_id=2 never fired"
     assert "<html" in v2["payload"]["html_report"], "v2 html_report should be HTML"
     assert "Updated" in v2["payload"]["html_report"]
 

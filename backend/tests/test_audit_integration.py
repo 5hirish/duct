@@ -12,7 +12,7 @@ Three levels of coverage:
     No network crawl. Uses a local HTML fixture with 5 deliberately planted
     SEO issues and calls run_synthesis() with a real ClaudeSDKClient.
     Verifies the synthesis layer catches each known issue via the unified
-    artifact session pattern (<duct_report> tag parse, no output_format).
+    artifact session pattern (<duct_artifact> tag parse, no output_format).
     Requires ANTHROPIC_API_KEY.
 
   test_full_pipeline_real_page
@@ -22,29 +22,25 @@ Three levels of coverage:
 
 Architecture (unified session):
   - Single ClaudeSDKClient session, no output_format.
-  - Initial report extracted from <duct_report> XML tag in the stream.
+  - Initial report extracted from <duct_artifact> XML tag in the stream.
   - SYNTHESIS_CHUNK no longer emitted; model streams AGENT_MESSAGE_CHUNK text.
   - THINKING_CHUNK emitted when adaptive thinking fires.
-  - REPORT_CHUNK emitted per-token while inside <duct_report> for live streaming.
+  - ARTIFACT_CHUNK emitted per-token while inside <duct_artifact> for live streaming.
   - close_session() in the emit callback terminates the message_gen loop.
 
 All tests have a 5-minute (300s) outer timeout.
 """
 
 import logging
-import sys
 import time
 from pathlib import Path
 
 import pytest
 
+from config import get_configs
+
 ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
 logger = logging.getLogger(__name__)
-
-from config import get_configs  # noqa: E402 — path must be set first
 
 _cfg = get_configs()
 _HAS_API_KEY = bool(_cfg.anthropic_api_key)
@@ -209,6 +205,11 @@ def _save_html_preview(data: dict, stem: str) -> Path:
 # Test 1 — Crawl only (no Claude)
 # ---------------------------------------------------------------------------
 
+# `live`: crawls the real production site. The two tests below are already
+# marked, and this one belongs with them — the _HAS_NETWORK probe uses urllib
+# while the crawler uses httpx, so a probe that passes does not guarantee the
+# crawl will (it returned HTTP 0 behind an egress proxy that let the probe through).
+@pytest.mark.live
 @pytest.mark.skipif(not _HAS_NETWORK, reason="getduct.ai unreachable from this environment")
 async def test_crawl_real_page():
     """Crawls getduct.ai and verifies the crawl layer produces sensible output."""
@@ -317,11 +318,11 @@ async def test_run_synthesis_catches_planted_issues(acme_business_context):
     async def collect(event: dict) -> None:
         events.append(event)
         evt = event.get("event")
-        if evt == "report_chunk":
+        if evt == "artifact_chunk":
             pass  # too noisy; counted in summary
         elif evt in ("step_started", "step_finished"):
             logger.info("[event] %s: %s — %s", evt, event.get("step_id"), event.get("status", ""))
-        elif evt == "report_updated":
+        elif evt == "artifact_version":
             html_len = len(event.get("payload", {}).get("html_report", ""))
             logger.info("[event] report_updated v%s (%d chars)", event.get("version_id"), html_len)
             close_session(session_id)
@@ -352,7 +353,7 @@ async def test_run_synthesis_catches_planted_issues(acme_business_context):
     # Core report presence
     # ------------------------------------------------------------------
     assert report is not None, \
-        "run_synthesis returned None — <duct_report> tag not found or parse failed"
+        "run_synthesis returned None — <duct_artifact> tag not found or parse failed"
     assert report.url == _FIXTURE_URL
     assert isinstance(report.executive_summary, str), "executive_summary must be a string"
 
@@ -360,7 +361,7 @@ async def test_run_synthesis_catches_planted_issues(acme_business_context):
     # html_report structural integrity
     # ------------------------------------------------------------------
     html = report.html_report
-    assert html, "html_report is empty — model omitted HTML from <duct_report>"
+    assert html, "html_report is empty — model omitted HTML from <duct_artifact>"
 
     html_lower = html.lower()
     assert "<html" in html_lower,   f"html_report missing <html> (first 200): {html[:200]}"
@@ -380,19 +381,19 @@ async def test_run_synthesis_catches_planted_issues(acme_business_context):
     # ------------------------------------------------------------------
     # SSE event contract
     # ------------------------------------------------------------------
-    assert any(e.get("event") == "report_updated" for e in events), \
-        "REPORT_UPDATED never fired"
-    first_update = next(e for e in events if e.get("event") == "report_updated")
+    assert any(e.get("event") == "artifact_version" for e in events), \
+        "ARTIFACT_VERSION never fired"
+    first_update = next(e for e in events if e.get("event") == "artifact_version")
     assert first_update["version_id"] == 1, "initial report must be version_id=1"
 
     agent_chunks = [e for e in events if e.get("event") == "agent_message_chunk"]
     assert len(agent_chunks) > 0, (
-        "no AGENT_MESSAGE_CHUNK events — model did not stream analysis text before <duct_report>. "
+        "no AGENT_MESSAGE_CHUNK events — model did not stream analysis text before <duct_artifact>. "
         "Check the unified system prompt."
     )
-    report_chunks = [e for e in events if e.get("event") == "report_chunk"]
-    assert len(report_chunks) > 0, \
-        "no REPORT_CHUNK events — HTML not streamed live (streaming regression)"
+    artifact_chunks = [e for e in events if e.get("event") == "artifact_chunk"]
+    assert len(artifact_chunks) > 0, \
+        "no ARTIFACT_CHUNK events — HTML not streamed live (streaming regression)"
     assert not any(e.get("event") == "synthesis_chunk" for e in events), \
         "SYNTHESIS_CHUNK still being emitted — old code path active?"
 
@@ -406,7 +407,7 @@ async def test_run_synthesis_catches_planted_issues(acme_business_context):
     logger.info("html_report length: %d chars", len(html))
     logger.info("executive_summary:  %.120r", report.executive_summary)
     logger.info("agent_msg_chunks:   %d", len(agent_chunks))
-    logger.info("report_chunks:      %d", len(report_chunks))
+    logger.info("artifact_chunks:      %d", len(artifact_chunks))
     logger.info("report saved to:    %s", out)
 
     # ------------------------------------------------------------------
@@ -452,7 +453,7 @@ async def test_full_pipeline_real_page(duct_business_context):
     """End-to-end: crawls getduct.ai then runs Claude synthesis in template mode.
 
     Uses report_mode='template' — the agent calls SubmitAuditReport with structured
-    JSON instead of emitting <duct_report> HTML tags. The React component AuditReportV1
+    JSON instead of emitting <duct_artifact> HTML tags. The React component AuditReportV1
     renders the structured data visually.
     """
     import asyncio
@@ -467,7 +468,7 @@ async def test_full_pipeline_real_page(duct_business_context):
     async def collect(event: dict) -> None:
         events.append(event)
         evt = event.get("event")
-        if evt == "report_chunk":
+        if evt == "artifact_chunk":
             pass  # template mode emits no report_chunk — counted in summary
         elif evt == "step_started":
             logger.info("[step] ▶ %s — %s", event.get("step_id"), event.get("label", ""))
@@ -475,7 +476,7 @@ async def test_full_pipeline_real_page(duct_business_context):
             pages = event.get("payload", {}).get("pages", [])
             suffix = f"({len(pages)} pages)" if pages else ""
             logger.info("[step] ✓ %s %s — %s", event.get("step_id"), suffix, event.get("status", ""))
-        elif evt == "report_updated":
+        elif evt == "artifact_version":
             payload = event.get("payload", {})
             sd = payload.get("structured_data")
             info = (
@@ -601,18 +602,18 @@ async def test_full_pipeline_real_page(duct_business_context):
     # ------------------------------------------------------------------
     # SSE event contract
     # ------------------------------------------------------------------
-    report_events = [e for e in events if e.get("event") == "report_updated"]
-    assert report_events, "REPORT_UPDATED never fired"
+    report_events = [e for e in events if e.get("event") == "artifact_version"]
+    assert report_events, "ARTIFACT_VERSION never fired"
     assert report_events[0]["version_id"] == 1, "initial report must have version_id=1"
 
     agent_chunks = [e for e in events if e.get("event") == "agent_message_chunk"]
     assert len(agent_chunks) > 0, \
         "no AGENT_MESSAGE_CHUNK — model didn't stream analysis text before SubmitAuditReport"
 
-    # template mode: no <duct_report> tag streaming
-    report_chunks = [e for e in events if e.get("event") == "report_chunk"]
-    assert len(report_chunks) == 0, \
-        f"unexpected REPORT_CHUNK events in template mode ({len(report_chunks)} received)"
+    # template mode: no <duct_artifact> tag streaming
+    artifact_chunks = [e for e in events if e.get("event") == "artifact_chunk"]
+    assert len(artifact_chunks) == 0, \
+        f"unexpected ARTIFACT_CHUNK events in template mode ({len(artifact_chunks)} received)"
 
     assert not any(e.get("event") == "synthesis_chunk" for e in events), \
         "legacy SYNTHESIS_CHUNK still being emitted"

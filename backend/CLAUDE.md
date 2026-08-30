@@ -142,6 +142,38 @@ Route convention: each agent type gets its own route prefix:
 
 Cross-agent invocations are modelled at the frontend level (e.g. audit findings carry an `invoke_insights` action that pre-populates the insights wizard). Backend agents remain decoupled — no direct calls between agent types.
 
+## Agent ports — the harness boundary
+
+We rent an agent harness; we do not marry one. The full declaration (with the
+port table and the external standard behind each) lives in
+`agents/core/ports/__init__.py` — read it before adding anything that touches a
+framework. The rules it implies:
+
+- **Never write an `AgentHarness` interface.** Harnesses differ in capability,
+  not just API shape; the intersection loses the reason to use one and the
+  union means maintaining a framework. The harness stays harness-shaped inside
+  a runner, and only its *boundary* is standardized.
+- **Domain code imports no framework.** Tool bodies, prompts, schemas, goals and
+  scoring are plain Python. `agents/core/memory_tools.py` is the reference
+  shape: `_remember_sync` / `_search_sync` / `_get_sync` hold the logic, and
+  `build_memory_tools_lc` / `build_memory_tools_sdk` are thin binders.
+- **Framework imports live only in adapters** — runners, binders, and the
+  named shims. `tests/test_harness_boundaries.py` enforces this and lists the
+  allowlist; adding a file to that list is a deliberate act, not a fix for a
+  failing test.
+- **Write the adapter on the second implementation, not the first.** One
+  implementation is a guess. Do not abstract the session registry until the
+  LangGraph checkpointer actually lands beside it.
+- **Pick the lowest rung that works.** LangChain 1.x is layered, and the layers
+  carry different stability guarantees: `init_chat_model` and `create_agent` are
+  on the semver-stable 1.x LTS surface (no breaking changes until 2.0), while
+  `deepagents` is 0.x with no stability policy and a weekly cadence. Insights
+  needs the first, audit the second, content the third. Reaching for
+  `deepagents` where `create_agent` suffices buys churn for nothing.
+- **`deepagents` is pinned exactly**, not with a caret — it changes behaviour in
+  minors (task planning became opt-in in 0.7). `tests/test_deepagents_harness.py`
+  is the upgrade gate; run it before moving the pin.
+
 ## Artifact contract
 
 The app lists top-level `*.json` briefs in `data/google_ads/` (e.g. `google-ads-report.json`) for local dev; user-generated insights are returned from `POST /api/insights/generate` and stored client-side (`localStorage`).
@@ -176,6 +208,26 @@ don't fit.
 - `utils/strings.py` — `slugify()`, `titleize()`.
 - `utils/formatting.py` — `money()`, `number()`, `percent()`, `multiplier()`,
   `safe_divide()`.
+- `service/memory.py` — agent memory (`project_memories`): `remember()` is the
+  ONLY write path (it redacts secrets, dedupes, honours the pause switch, and
+  closes the previous value of a state key), `search()` is the only read path
+  (Postgres FTS, SQLite LIKE), and `build_memory_context()` assembles the prompt
+  blocks. Never write the table directly and never re-render the digest locally
+  — the supersession and never-raise contracts live in that module.
+  `service/memory_consolidation.py` owns the post-session extraction pass; its
+  model output is a proposal that still goes through `remember()`. Tools for
+  both harnesses are in `agents/core/memory_tools.py` and the shared prompt
+  stanza is `agents/core/prompts.py::MEMORY_DISCIPLINE`. Per-project memory goes
+  in the USER message, never the system prompt.
+  `search(time_aware=True, rank=True)` is the question-shaped read — it reads a
+  date range out of the words, treats a named kind as a filter, matches on ANY
+  term and then tightens (all terms → two → one), and ranks by relevance +
+  recency + importance + recall. Leave both off for a filter form like the
+  timeline, whose inputs are the user's explicit instructions. Retrieval makes
+  no model calls, by design. `tests/eval/memory_recall.py` holds the 50-question
+  set (`pytest tests/test_memory_retrieval.py -s` prints the per-axis report);
+  it exists because it caught the AND-everything query bug that made questions
+  retrieve nothing, so extend it before tuning retrieval by feel.
 - `service/rest.py` — sync HTTP transport for the reporting connectors:
   retry, backoff, rate-limit pacing, error typing. A new connector declares
   an `Endpoint` and an `ApiError` subclass and writes no transport code;
@@ -197,3 +249,31 @@ don't fit.
 - no heavyweight job system beyond the planned orchestration layer
 - no broad dashboard experience
 - no complex cross-tool logic before the single-source MVP is producing useful output
+
+## Configuration
+
+`config.py` is the source of truth for what the backend reads; `.env.example`
+is its documentation, and `tests/test_env_example.py` keeps the two honest.
+
+The reason that test exists is worth knowing before adding a setting: **every
+field in `Configs` has a default.** A missing variable therefore never fails —
+the feature it powers silently does nothing. That makes an undocumented setting
+undiscoverable rather than broken, which is how `.env.example` drifted to
+covering about a third of what a running instance sets.
+
+So when you add a setting:
+
+- If it is a credential (matches `api_key|_secret|_token|_dsn|password|client_id|encryption_key|jwt_secret`),
+  the test **requires** it in `.env.example`. That is not bureaucracy; it is the
+  only signal a new contributor gets.
+- If it is read from `os.environ` directly rather than through `Configs`, add it
+  to `NOT_CONFIG_FIELDS` in that test with the reason. A bare exemption is a
+  hole in the check.
+- Renaming a field means renaming it in `.env.example` too — the stale check
+  catches it, because a wrong example is worse than a missing one.
+
+Names are shared across processes deliberately. `SENTRY_DSN` is read by this
+backend, by the desktop sidecar (only on user consent), and compiled into the
+Tauri shell via `option_env!`; `GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET` likewise.
+One value in `.env.local` serves all of them — do not invent a `DUCT_`-prefixed
+variant for the desktop half.

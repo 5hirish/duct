@@ -11,19 +11,11 @@
       "stopAll": true
     },
     {
+      "//": "Cleanup lives on each configuration, not here: VS Code ignores postDebugTask on a compound (the compound schema accepts only name, presentation, configurations, stopAll, preLaunchTask). stopAll is session-level and fires only on a *manual* stop.",
       "name": "Duct: App + API",
       "configurations": [
         "Backend: FastAPI (uvicorn)",
         "App: dev server"
-      ],
-      "stopAll": true,
-      "postDebugTask": "Backend: stop uvicorn (8002)"
-    },
-    {
-      "//": "Local-first desktop: the shell runs its own bundled backend on a loopback port and the web app repoints at it. No uvicorn, no Railway. Build the sidecar first.",
-      "name": "Duct: Desktop (local sidecar)",
-      "configurations": [
-        "Desktop: Tauri dev (sidecar backend)"
       ],
       "stopAll": true
     },
@@ -33,20 +25,9 @@
       "configurations": [
         "Backend: FastAPI (uvicorn)",
         "App: dev server",
-        "Desktop: Duct Dev app (build + open)"
+        "Desktop: Duct Dev app (local env)"
       ],
-      "stopAll": true,
-      "postDebugTask": "Backend: stop uvicorn (8002)"
-    },
-    {
-      "//": "Legacy thin-client shape: unbundled `tauri dev` against a locally-run API on :8002. macOS has not registered the URL scheme for this one, so the browser sign-in return leg will not come back.",
-      "name": "Duct: Desktop (tauri dev — no sign-in) + API",
-      "configurations": [
-        "Backend: FastAPI (uvicorn)",
-        "Desktop: Tauri dev (local app)"
-      ],
-      "stopAll": true,
-      "postDebugTask": "Backend: stop uvicorn (8002)"
+      "stopAll": true
     },
     {
       "name": "Duct: Site + API",
@@ -54,8 +35,7 @@
         "Backend: FastAPI (uvicorn)",
         "Site: dev server"
       ],
-      "stopAll": true,
-      "postDebugTask": "Duct: stop Site + API (8002, 8090)"
+      "stopAll": true
     },
     {
       "name": "Duct: Site + App + API",
@@ -64,8 +44,7 @@
         "App: dev server",
         "Site: dev server"
       ],
-      "stopAll": true,
-      "postDebugTask": "Duct: stop Site + API (8002, 8090)"
+      "stopAll": true
     }
   ],
   "configurations": [
@@ -75,44 +54,34 @@
       "request": "launch",
       "command": "poetry run uvicorn server:app --reload --reload-dir \"${workspaceFolder}/backend\" --reload-exclude \"${workspaceFolder}/backend/.venv\" --reload-exclude \"${workspaceFolder}/backend/data\" --reload-exclude \"${workspaceFolder}/backend/alembic\" --reload-exclude \"${workspaceFolder}/backend/tests\" --reload-delay 1 --timeout-graceful-shutdown 10 --host 127.0.0.1 --port 8002",
       "cwd": "${workspaceFolder}/backend",
-      "env": { "NODE_OPTIONS": "" }
+      "env": { "NODE_OPTIONS": "" },
+      "postDebugTask": "Backend: stop uvicorn (8002)"
     },
     {
+      "//": "OTEL_ENDPOINT is what turns agent telemetry on (see agents/core/claude_sdk.py). Without it the Phoenix compound starts a trace UI that receives nothing.",
       "name": "Backend: FastAPI (uvicorn verbose)",
       "type": "node-terminal",
       "request": "launch",
       "command": "AUDIT_VERBOSE_LOGGING=1 poetry run uvicorn server:app --timeout-graceful-shutdown 10 --host 127.0.0.1 --port 8002",
       "cwd": "${workspaceFolder}/backend",
-      "env": { "NODE_OPTIONS": "" }
+      "env": { "NODE_OPTIONS": "", "OTEL_ENDPOINT": "http://localhost:6006" },
+      "postDebugTask": "Backend: stop uvicorn (8002)"
     },
     {
       "name": "Phoenix: OTEL traces UI (:6006)",
       "type": "node-terminal",
       "request": "launch",
       "command": "poetry run python -m phoenix.server.main serve",
-      "cwd": "${workspaceFolder}/backend"
-    },
-    {
-      "name": "Backend: ADK web",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "poetry run adk web --host 127.0.0.1 --port 8003 agents",
       "cwd": "${workspaceFolder}/backend",
-      "postDebugTask": "Backend: stop ADK web (8003)"
+      "postDebugTask": "Phoenix: stop (6006)"
     },
     {
       "name": "App: dev server",
       "type": "node-terminal",
       "request": "launch",
       "command": "npm run dev",
-      "cwd": "${workspaceFolder}/app"
-    },
-    {
-      "name": "Desktop: Tauri dev (local app)",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "npm run dev:local",
-      "cwd": "${workspaceFolder}/desktop"
+      "cwd": "${workspaceFolder}/app",
+      "postDebugTask": "App: stop dev server (3003)"
     },
     {
       "//": "Freezes the backend into backend/dist/duct-sidecar. Required before the desktop app can run: bundle.resources copies this directory verbatim, so a missing or stale build ships a broken app. Takes ~3 min.",
@@ -123,7 +92,7 @@
       "cwd": "${workspaceFolder}/backend"
     },
     {
-      "//": "Desktop shell against the local Next dev server. The shell spawns the frozen sidecar itself, so no separate uvicorn is needed — run 'Desktop: Build sidecar' first.",
+      "//": "Local-first desktop: the shell spawns the frozen sidecar on a loopback port and the web app repoints at it, so no uvicorn and no Railway. `dev:local` starts the Next dev server itself via beforeDevCommand. Run 'Desktop: Build sidecar' first — sidecar.rs falls back to backend/dist/duct-sidecar, so a stale build there is what you get.",
       "name": "Desktop: Tauri dev (sidecar backend)",
       "type": "node-terminal",
       "request": "launch",
@@ -131,11 +100,19 @@
       "cwd": "${workspaceFolder}/desktop"
     },
     {
-      "//": "Builds the dev-variant bundle (own identifier + ai.getduct.desktop.dev scheme, so it coexists with TestFlight), waits for the Next dev server, then opens it. Unlike `tauri dev` this is a registered .app, so the sign-in deep link works. Rebuild is incremental (~15s); web changes still hot-reload.",
-      "name": "Desktop: Duct Dev app (build + open)",
+      "//": "Builds the dev-variant bundle (own identifier + ai.getduct.desktop.dev scheme, so it coexists with TestFlight), waits for the Next dev server, then opens it against backend/.env.local. Unlike `tauri dev` this is a registered .app, so the sign-in deep link works. Rebuild is incremental (~15s); web changes still hot-reload. `open` hands the app to launchd, which does NOT inherit this shell's environment — hence `--env`, the only way the sidecar learns which env to embody. `--stderr` captures the app's log (including the sidecar's, relayed by sidecar.rs) where you can actually read it. NOTE: this session ends immediately, so Stop cannot close the app and no postDebugTask can be attached — quit it yourself, or run the 'Desktop: stop Duct Dev app' task. Force-quitting skips RunEvent::Exit and orphans its Python sidecar.",
+      "name": "Desktop: Duct Dev app (local env)",
       "type": "node-terminal",
       "request": "launch",
-      "command": "npm run build:dev && until curl -sf http://localhost:3003 >/dev/null 2>&1; do sleep 1; done && open 'src-tauri/target/debug/bundle/macos/Duct Dev.app'",
+      "command": "npm run build:dev && until curl -sf http://localhost:3003 >/dev/null 2>&1; do sleep 1; done && open --env DUCT_ENV_FILE=${workspaceFolder}/backend/.env.local --stderr /tmp/duct-desktop.log 'src-tauri/target/debug/bundle/macos/Duct Dev.app' && echo 'log: tail -f /tmp/duct-desktop.log'",
+      "cwd": "${workspaceFolder}/desktop"
+    },
+    {
+      "//": "Same bundle, same window (localhost:3003), but the sidecar embodies backend/.env.prod — so it reads and WRITES the production database. The frontend stays local on purpose: the deployed app.getduct.ai build registers the `ai.getduct.desktop` scheme, not this bundle's `.dev` one, so pointing the window at it would break the sign-in deep link. Use this to reproduce something that only happens on prod data; prefer the local env for everything else.",
+      "name": "Desktop: Duct Dev app (prod env)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run build:dev && until curl -sf http://localhost:3003 >/dev/null 2>&1; do sleep 1; done && open --env DUCT_ENV_FILE=${workspaceFolder}/backend/.env.prod --stderr /tmp/duct-desktop.log 'src-tauri/target/debug/bundle/macos/Duct Dev.app' && echo 'log: tail -f /tmp/duct-desktop.log'",
       "cwd": "${workspaceFolder}/desktop"
     },
     {

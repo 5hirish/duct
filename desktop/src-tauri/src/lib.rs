@@ -15,6 +15,7 @@
 //! `/?auth_code=` exchange path.
 
 mod sidecar;
+mod telemetry;
 
 use keyring::{Entry, Error as KeyringError};
 use tauri::{AppHandle, Manager, Url};
@@ -27,7 +28,30 @@ use sidecar::{get_sidecar_info, SidecarState};
 const KEYCHAIN_SERVICE: &str = "ai.getduct.desktop.provider-keys";
 
 fn entry(provider: &str) -> Result<Entry, String> {
-    Entry::new(KEYCHAIN_SERVICE, provider).map_err(|e| e.to_string())
+    Entry::new(KEYCHAIN_SERVICE, provider).map_err(describe_keyring_error)
+}
+
+/// Turn a keyring failure into something a user can act on.
+///
+/// macOS and Windows always have a credential store. Linux does not: the
+/// `secret-service` backend talks to a D-Bus daemon (gnome-keyring, KWallet,
+/// KeePassXC) that a minimal, headless, or tiling-WM install may simply not run.
+/// The raw error for that is a D-Bus transport message with no hint about the
+/// cause, and the web app used to swallow it entirely — a saved key just
+/// silently didn't persist. Name the actual problem instead.
+fn describe_keyring_error(err: KeyringError) -> String {
+    let generic = err.to_string();
+    if !cfg!(target_os = "linux") {
+        return generic;
+    }
+    match err {
+        KeyringError::NoStorageAccess(_) | KeyringError::PlatformFailure(_) => format!(
+            "no OS keyring available ({generic}). Duct stores provider keys in the \
+             freedesktop Secret Service; install and start a keyring daemon such as \
+             gnome-keyring or KeePassXC, then try again."
+        ),
+        other => other.to_string(),
+    }
 }
 
 /// Read a stored provider key. Returns "" when none is set.
@@ -36,14 +60,16 @@ fn get_provider_key(provider: String) -> Result<String, String> {
     match entry(&provider)?.get_password() {
         Ok(secret) => Ok(secret),
         Err(KeyringError::NoEntry) => Ok(String::new()),
-        Err(e) => Err(e.to_string()),
+        Err(e) => Err(describe_keyring_error(e)),
     }
 }
 
 /// Store a provider key in the OS keychain.
 #[tauri::command]
 fn set_provider_key(provider: String, key: String) -> Result<(), String> {
-    entry(&provider)?.set_password(&key).map_err(|e| e.to_string())
+    entry(&provider)?
+        .set_password(&key)
+        .map_err(describe_keyring_error)
 }
 
 /// Remove a stored provider key (no-op if absent).
@@ -51,7 +77,7 @@ fn set_provider_key(provider: String, key: String) -> Result<(), String> {
 fn delete_provider_key(provider: String) -> Result<(), String> {
     match entry(&provider)?.delete_credential() {
         Ok(()) | Err(KeyringError::NoEntry) => Ok(()),
-        Err(e) => Err(e.to_string()),
+        Err(e) => Err(describe_keyring_error(e)),
     }
 }
 
@@ -68,7 +94,12 @@ fn get_shell_info() -> serde_json::Value {
             // resolve its API base from `get_sidecar_info` instead of the
             // build-time NEXT_PUBLIC_API_BASE. Older shells lack the flag and
             // keep talking to the hosted API.
-            "localSidecar": true
+            "localSidecar": true,
+            // `tauri-plugin-updater` is wired and permitted in this build, so
+            // the web app may check for updates and offer to install one. The
+            // App Store variant must never report this true — self-update is
+            // grounds for rejection there.
+            "autoUpdate": cfg!(feature = "updater")
         }
     })
 }
@@ -86,6 +117,95 @@ fn open_external(app: AppHandle, url: String) -> Result<(), String> {
     app.opener()
         .open_url(url, None::<&str>)
         .map_err(|e| e.to_string())
+}
+
+/// Whether a newer release is available, and what it is.
+///
+/// Returns `null` when the app is current. Exposed as a command rather than
+/// letting the page use `@tauri-apps/plugin-updater` directly: the window loads
+/// a *remote* origin, which cannot import the plugin's JS guest bindings the way
+/// a bundled frontend would. Same reason `providerKeys.js` goes through invoke.
+#[cfg(feature = "updater")]
+#[tauri::command]
+async fn check_for_update(app: AppHandle) -> Result<Option<serde_json::Value>, String> {
+    use tauri_plugin_updater::UpdaterExt;
+
+    let updater = app.updater().map_err(|e| e.to_string())?;
+    let update = updater.check().await.map_err(|e| e.to_string())?;
+    Ok(update.map(|u| {
+        serde_json::json!({
+            "version": u.version,
+            "currentVersion": u.current_version,
+            "notes": u.body,
+            "date": u.date.map(|d| d.to_string()),
+        })
+    }))
+}
+
+/// Download and install the pending update, then relaunch into it.
+///
+/// Re-checks rather than caching the `Update` from `check_for_update`: holding
+/// it across two commands would mean parking a non-`Send` handle in app state
+/// for the sake of one request to a static JSON manifest.
+#[cfg(feature = "updater")]
+#[tauri::command]
+async fn install_update(app: AppHandle) -> Result<(), String> {
+    use tauri_plugin_updater::UpdaterExt;
+
+    let updater = app.updater().map_err(|e| e.to_string())?;
+    let update = updater
+        .check()
+        .await
+        .map_err(|e| e.to_string())?
+        .ok_or_else(|| "no update available".to_string())?;
+
+    update
+        .download_and_install(|_downloaded, _total| {}, || {})
+        .await
+        .map_err(|e| e.to_string())?;
+
+    // Replaces the running process. The sidecar is killed by the Exit handler
+    // in `run()` first, so the new instance gets a free port and an unlocked DB.
+    app.restart();
+}
+
+/// Build without the `updater` feature (the App Store variant): the commands
+/// still exist so the capability files and `build.rs` manifest stay identical
+/// across builds, but they report the feature as unavailable.
+#[cfg(not(feature = "updater"))]
+#[tauri::command]
+async fn check_for_update(_app: AppHandle) -> Result<Option<serde_json::Value>, String> {
+    Ok(None)
+}
+
+#[cfg(not(feature = "updater"))]
+#[tauri::command]
+async fn install_update(_app: AppHandle) -> Result<(), String> {
+    Err("this build does not support self-update".into())
+}
+
+/// Whether crash reporting is on, and whether this build can do it at all.
+///
+/// `available` is false when no DSN was compiled in — the settings UI shows the
+/// toggle as unavailable rather than offering a switch that does nothing.
+#[tauri::command]
+fn get_telemetry_settings() -> serde_json::Value {
+    let enabled = telemetry::default_data_dir()
+        .map(|dir| telemetry::read_prefs(&dir).enabled)
+        .unwrap_or(false);
+    serde_json::json!({
+        "enabled": enabled,
+        "available": telemetry::SENTRY_DSN.filter(|d| !d.is_empty()).is_some(),
+    })
+}
+
+/// Record the user's choice. Takes effect for the sidecar on next launch —
+/// it reads its DSN from the environment the shell hands it at spawn, and this
+/// deliberately does not restart a running backend out from under the user.
+#[tauri::command]
+fn set_telemetry_enabled(enabled: bool) -> Result<(), String> {
+    let dir = telemetry::default_data_dir().ok_or("could not resolve the data directory")?;
+    telemetry::write_prefs(&dir, telemetry::TelemetryPrefs { enabled })
 }
 
 /// Forward `ai.getduct.desktop://auth?auth_code=...` into the webview by
@@ -130,11 +250,56 @@ fn handle_auth_deep_link(app: &AppHandle, url: &Url) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    // Before the builder: a panic during setup is exactly the kind of failure
+    // worth reporting, and the guard has to outlive the whole app — dropping it
+    // stops the transport, so binding it to `_guard` (not `_`) matters.
+    let telemetry_enabled = telemetry::default_data_dir()
+        .map(|dir| telemetry::read_prefs(&dir).enabled)
+        .unwrap_or(false);
+    let _guard = telemetry::init(telemetry_enabled);
+
+    let builder = tauri::Builder::default();
+
+    // MUST be the first plugin registered (Tauri's own requirement). It only
+    // matters off macOS: there, the OS hands a deep link to the running app,
+    // whereas Windows and Linux start a new process with the URL in argv. The
+    // `deep-link` feature makes this plugin forward that argv to the running
+    // instance's deep-link handler, so `handle_auth_deep_link` below sees the
+    // auth code no matter which platform delivered it. Without this, a Windows
+    // or Linux sign-in would open a second window with a second sidecar and
+    // leave the original one still logged out.
+    #[cfg(desktop)]
+    let builder = builder.plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+        // The deep link itself is forwarded for us; all that is left is to put
+        // the existing window in front of the user.
+        if let Some(window) = app.get_webview_window("main") {
+            let _ = window.unminimize();
+            let _ = window.set_focus();
+        }
+    }));
+
+    #[cfg(feature = "updater")]
+    let builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
+
+    builder
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_deep_link::init())
         .manage(SidecarState::default())
         .setup(|app| {
+            // macOS registers the scheme from the bundle's Info.plist. Linux and
+            // Windows register it from the *installer*, so a build that was run
+            // rather than installed — `tauri dev`, a CI smoke test, an
+            // extracted AppImage — never receives one. Registering at runtime
+            // covers that; it is a no-op where the installer already did it,
+            // and unsupported on macOS, so the error is deliberately ignored.
+            #[cfg(any(target_os = "linux", windows))]
+            {
+                use tauri_plugin_deep_link::DeepLinkExt as _;
+                if let Err(err) = app.deep_link().register_all() {
+                    eprintln!("duct: could not register deep link scheme: {err}");
+                }
+            }
+
             let handle = app.handle().clone();
             app.deep_link().on_open_url(move |event| {
                 for url in event.urls() {
@@ -147,6 +312,10 @@ pub fn run() {
             // still opens so the user sees the reason rather than nothing.
             if let Err(err) = sidecar::spawn(app.handle()) {
                 eprintln!("duct: sidecar failed to start: {err}");
+                // The webview shows this to the user via `get_sidecar_info`,
+                // but a bundle that cannot start its own backend is broken for
+                // everyone on that platform, not just this person.
+                telemetry::capture_message(&format!("sidecar failed to start: {err}"));
             }
             Ok(())
         })
@@ -156,7 +325,11 @@ pub fn run() {
             delete_provider_key,
             get_shell_info,
             get_sidecar_info,
-            open_external
+            open_external,
+            check_for_update,
+            install_update,
+            get_telemetry_settings,
+            set_telemetry_enabled
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

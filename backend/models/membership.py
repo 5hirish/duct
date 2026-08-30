@@ -23,7 +23,6 @@ from uuid import UUID, uuid4
 from sqlalchemy import (
     CheckConstraint,
     Column,
-    DateTime,
     ForeignKey,
     Index,
     String,
@@ -31,6 +30,7 @@ from sqlalchemy import (
     text,
 )
 from sqlmodel import Field, SQLModel
+from models.columns import utc_datetime
 from utils.dates import utcnow
 
 ROLE_OWNER = "owner"
@@ -82,11 +82,11 @@ class ProjectMember(SQLModel, table=True):
     )
     created_at: datetime = Field(
         default_factory=utcnow,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
+        sa_column=Column(utc_datetime(), nullable=False),
     )
     updated_at: datetime = Field(
         default_factory=utcnow,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
+        sa_column=Column(utc_datetime(), nullable=False),
     )
 
 
@@ -136,22 +136,22 @@ class ProjectInvitation(SQLModel, table=True):
         default=INVITE_PENDING,
         sa_column=Column(String, nullable=False, server_default=INVITE_PENDING),
     )
-    expires_at: datetime = Field(sa_column=Column(DateTime(timezone=True), nullable=False))
+    expires_at: datetime = Field(sa_column=Column(utc_datetime(), nullable=False))
     accepted_at: datetime | None = Field(
-        default=None, sa_column=Column(DateTime(timezone=True), nullable=True)
+        default=None, sa_column=Column(utc_datetime(), nullable=True)
     )
     accepted_by_user_id: UUID | None = Field(
         default=None,
         sa_column=Column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
     )
     last_sent_at: datetime | None = Field(
-        default=None, sa_column=Column(DateTime(timezone=True), nullable=True)
+        default=None, sa_column=Column(utc_datetime(), nullable=True)
     )
     created_at: datetime = Field(
         default_factory=utcnow,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
+        sa_column=Column(utc_datetime(), nullable=False),
     )
     updated_at: datetime = Field(
         default_factory=utcnow,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
+        sa_column=Column(utc_datetime(), nullable=False),
     )

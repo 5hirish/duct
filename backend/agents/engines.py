@@ -10,9 +10,15 @@ Engine → default provider → default model:
   v3  (Claude Agent SDK)   → anthropic    → claude-sonnet-4-6
 
 Supported providers per engine:
-  v1  all three providers (OpenAI, Google, Anthropic — all native in LangChain)
-  v2  all three providers (OpenAI via LiteLLM prefix, Google + Anthropic native)
+  v1  OpenAI, Google, Anthropic (all native in LangChain) + OpenRouter
+      (the OpenAI-compatible transport — one endpoint, 500+ models, and the
+      same code path for any compatible gateway including local Ollama/vLLM)
+  v2  three native providers (OpenAI via LiteLLM prefix, Google + Anthropic)
   v3  anthropic only (Claude Agent SDK does not support other providers natively)
+
+Only v1 gets OpenRouter, and that asymmetry is the point: v3's harness is
+provider-locked by design (anthropics/claude-agent-sdk-python#410, closed
+`not planned`), which is why v1 is the target harness for bring-your-own-model.
 """
 
 from __future__ import annotations
@@ -41,6 +47,7 @@ ENGINE_DEFAULT_MODEL: dict[tuple[Engine, Provider], ModelName] = {
     (Engine.V1, Provider.GOOGLE_GENAI): ModelName.GEMINI_2_5_FLASH,
     (Engine.V1, Provider.ANTHROPIC):    ModelName.CLAUDE_SONNET,
     (Engine.V1, Provider.OPENAI):       ModelName.GPT_5_MINI,
+    (Engine.V1, Provider.OPENROUTER):   ModelName.OR_DEEPSEEK_CHAT,
     # v2 — Google ADK
     (Engine.V2, Provider.GOOGLE_GENAI): ModelName.GEMINI_2_5_FLASH,
     (Engine.V2, Provider.ANTHROPIC):    ModelName.CLAUDE_SONNET,
@@ -51,7 +58,9 @@ ENGINE_DEFAULT_MODEL: dict[tuple[Engine, Provider], ModelName] = {
 
 # Which providers each engine supports
 ENGINE_SUPPORTED_PROVIDERS: dict[Engine, frozenset[Provider]] = {
-    Engine.V1: frozenset({Provider.OPENAI, Provider.GOOGLE_GENAI, Provider.ANTHROPIC}),
+    Engine.V1: frozenset({
+        Provider.OPENAI, Provider.GOOGLE_GENAI, Provider.ANTHROPIC, Provider.OPENROUTER,
+    }),
     Engine.V2: frozenset({Provider.OPENAI, Provider.GOOGLE_GENAI, Provider.ANTHROPIC}),
     Engine.V3: frozenset({Provider.ANTHROPIC}),
 }
@@ -73,6 +82,7 @@ ENGINE_PROVIDER_ENV_VAR: dict[Engine, dict[Provider, str]] = {
         Provider.OPENAI:       "OPENAI_API_KEY",
         Provider.GOOGLE_GENAI: "GOOGLE_API_KEY",
         Provider.ANTHROPIC:    "ANTHROPIC_API_KEY",
+        Provider.OPENROUTER:   "OPENROUTER_API_KEY",
     },
     Engine.V2: {
         # ADK reads standard names — different from the Duct config key GEMINI_API_KEY
@@ -97,6 +107,7 @@ PROVIDER_CONFIG_ATTR: dict[Provider, str] = {
     Provider.OPENAI:       "openai_api_key",
     Provider.GOOGLE_GENAI: "gemini_api_key",
     Provider.ANTHROPIC:    "anthropic_api_key",
+    Provider.OPENROUTER:   "openrouter_api_key",
 }
 
 
@@ -136,11 +147,19 @@ def resolve_engine_model(
     engine: Engine,
     provider: Provider,
     override: str | None = None,
-) -> ModelName:
+) -> ModelName | str:
     """Resolve the model for a given engine + provider.
 
-    Uses override if it's a valid ModelName; otherwise returns the engine's
-    default model for that provider.
+    Uses the override if it names a known ModelName; otherwise returns the
+    engine's default for that provider.
+
+    **OpenRouter is the exception, deliberately.** It fronts 500+ models, so the
+    ModelName enum is a curated default list rather than a whitelist — silently
+    substituting a default would throw away the model a bring-your-own-key
+    customer explicitly asked for, which is the whole feature. An unrecognised
+    ``vendor/slug`` is passed through verbatim and the gateway decides whether
+    it exists. The slug shape is required so a typo'd bare name still falls back
+    instead of becoming a guaranteed upstream 404.
     """
     default = ENGINE_DEFAULT_MODEL.get(
         (engine, provider),
@@ -148,9 +167,12 @@ def resolve_engine_model(
     )
     if not override:
         return default
+    candidate = override.strip()
     try:
-        return ModelName(override.strip())
+        return ModelName(candidate)
     except ValueError:
+        if provider == Provider.OPENROUTER and "/" in candidate:
+            return candidate
         return default
 
 

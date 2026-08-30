@@ -6,8 +6,8 @@ from datetime import datetime
 from uuid import UUID, uuid4
 
 import sqlalchemy as sa
-from sqlalchemy import Column, DateTime, ForeignKey, String
-from models.columns import json_column
+from sqlalchemy import Column, ForeignKey, String
+from models.columns import json_column, utc_datetime
 from sqlmodel import Field, SQLModel
 from utils.dates import utcnow
 
@@ -65,11 +65,17 @@ class Project(SQLModel, table=True):
     autonomy_level: str = Field(
         default="manual", sa_column=Column(String, nullable=False, server_default="manual")
     )
+    # Memory off switch: agents and system writers stop remembering anything new
+    # about this project. Reads are unaffected — what is already known stays
+    # visible and usable; archive and delete are how you remove it.
+    memory_paused: bool = Field(
+        default=False, sa_column=Column(sa.Boolean(), nullable=False, server_default=sa.false())
+    )
     created_at: datetime = Field(
         default_factory=utcnow,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
+        sa_column=Column(utc_datetime(), nullable=False),
     )
     updated_at: datetime = Field(
         default_factory=utcnow,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
+        sa_column=Column(utc_datetime(), nullable=False),
     )

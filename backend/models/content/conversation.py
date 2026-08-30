@@ -25,7 +25,6 @@ from uuid import UUID, uuid4
 import sqlalchemy as sa
 from sqlalchemy import (
     Column,
-    DateTime,
     ForeignKey,
     Index,
     Integer,
@@ -33,7 +32,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
-from models.columns import json_column
+from models.columns import json_column, utc_datetime
 from sqlmodel import Field, SQLModel
 from utils.dates import utcnow
 
@@ -98,11 +97,11 @@ class AgentConversation(SQLModel, table=True):
 
     created_at: datetime = Field(
         default_factory=utcnow,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
+        sa_column=Column(utc_datetime(), nullable=False),
     )
     last_active_at: datetime = Field(
         default_factory=utcnow,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
+        sa_column=Column(utc_datetime(), nullable=False),
     )
 
 
@@ -136,5 +135,5 @@ class AgentEvent(SQLModel, table=True):
     )
     created_at: datetime = Field(
         default_factory=utcnow,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
+        sa_column=Column(utc_datetime(), nullable=False),
     )

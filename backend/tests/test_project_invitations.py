@@ -10,33 +10,22 @@ enforced by the migration and exercised against a real database in staging.
 
 from __future__ import annotations
 
-import sys
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 from uuid import uuid4
 
 import pytest
+
+from tests.conftest import make_sqlite_engine
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.compiler import compiles
-from sqlalchemy.pool import StaticPool
-from sqlmodel import Session, SQLModel, create_engine
+from sqlmodel import Session
 
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
-
-@compiles(JSONB, "sqlite")
-def _jsonb_as_json_on_sqlite(type_, compiler, **kw):  # noqa: ANN001, ARG001
-    return "JSON"
-
-
-from config import Configs, get_configs  # noqa: E402
-from db.session import get_session  # noqa: E402
-from models.auth import User  # noqa: E402
-from models.membership import (  # noqa: E402
+from config import Configs, get_configs
+from db.session import get_session
+from models.auth import User
+from models.membership import (
     INVITE_ACCEPTED,
     INVITE_PENDING,
     INVITE_REVOKED,
@@ -45,15 +34,23 @@ from models.membership import (  # noqa: E402
     ProjectInvitation,
     ProjectMember,
 )
-from models.project import Project  # noqa: E402
-from routes import project_members, user_projects  # noqa: E402
-from service.auth import get_current_user  # noqa: E402
-from service.membership import (  # noqa: E402
+from models.project import Project
+from routes import project_members, user_projects
+from service.auth import get_current_user
+from service.membership import (
     generate_invitation_token,
     hash_invitation_token,
     member_role,
     normalize_email,
 )
+
+
+# Postgres-only JSONB columns must still compile on SQLite. Registered before any
+# fixture calls create_all(), which is the only point where it matters.
+@compiles(JSONB, "sqlite")
+def _jsonb_as_json_on_sqlite(type_, compiler, **kw):  # noqa: ANN001, ARG001
+    return "JSON"
+
 
 TEST_ORIGIN = "http://localhost:3003"
 
@@ -83,20 +80,7 @@ def harness(monkeypatch):
     # StaticPool + check_same_thread=False: TestClient runs sync handlers on a
     # worker thread, and without a shared connection each thread would get its
     # own empty :memory: database.
-    engine = create_engine(
-        "sqlite://",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-    SQLModel.metadata.create_all(engine)
-    # SQLite has no partial indexes here: SQLAlchemy drops the `postgresql_where`
-    # clause for other dialects, turning "one owner per project" and "one pending
-    # invite per address" into unconditional UNIQUE constraints that would reject
-    # legitimate rows. Drop them so these tests exercise the application logic;
-    # Postgres keeps them as the real backstop.
-    with engine.begin() as conn:
-        conn.exec_driver_sql("DROP INDEX IF EXISTS uq_project_members_single_owner")
-        conn.exec_driver_sql("DROP INDEX IF EXISTS uq_project_invitations_pending_email")
+    engine = make_sqlite_engine(drop_partial_indexes=True)
     session = Session(engine)
 
     app = FastAPI()

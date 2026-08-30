@@ -3,7 +3,7 @@
 Prompts:
   _UNIFIED_SYSTEM_PROMPT — Single-session artifact pattern (current).
                             Generation + chat in one context. Initial report is
-                            wrapped in <duct_report>…</duct_report> tags; updates
+                            wrapped in <duct_artifact>…</duct_artifact> tags; updates
                             use <audit_report_update>…</audit_report_update>.
   _AUDIT_SYSTEM_PROMPT   — Legacy Phase 2 only (kept for reference).
   _CHAT_SYSTEM_PROMPT    — Legacy Phase 3 only (kept for reference).
@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 
 from agents.audit.schema import AuditBusinessContext, AuditResearchContext, CrawlResult, PageSignals
+from agents.core.prompts import MEMORY_DISCIPLINE
 from agents.preferences import UserPreferences
 
 _OUTCOME_LABELS: dict[str, str] = {
@@ -270,10 +271,10 @@ When you have finished the analysis:
 1. Write 2–4 conversational sentences: top finding and overall verdict.
 2. Immediately after, output the full HTML audit report wrapped in these tags:
 
-<duct_report>
+<duct_artifact>
 <!DOCTYPE html>
 ...complete self-contained HTML report...
-</duct_report>
+</duct_artifact>
 
 The HTML IS the report — it renders directly in the user's browser. Make it \
 complete and well-structured. Use inline `<style>` only (no external CSS, no JS). \
@@ -400,6 +401,13 @@ You have **FetchPages** and **SubmitAuditReport** tools available.
 - If the user uploads a screenshot or file, analyse it in the context of the site's SEO.
 """
 
+# The shared stanza (agents/core/prompts.py) plus the one audit-specific note:
+# a first audit is where the durable conclusions about a site come from.
+_MEMORY_SECTION = MEMORY_DISCIPLINE + (
+    "\nA first audit of a site is exactly when those durable conclusions get "
+    "written down.\n"
+)
+
 _UNIFIED_SYSTEM_PROMPT = """\
 You are Duct's senior SEO strategist — a world-class technical-SEO and content \
 expert — running a comprehensive, evidence-backed site audit followed by an \
@@ -409,6 +417,10 @@ solution-forward. The client should finish reading the report feeling energised 
 and clear on exactly what to do next — not overwhelmed or criticised.
 
 {workflow_section}
+
+---
+
+{memory_section}
 
 ---
 
@@ -560,7 +572,7 @@ def build_unified_system_prompt(
 ) -> str:
     """Unified system prompt — single-session artifact pattern.
 
-    report_mode="freehand": agent generates HTML inside <duct_report> tags.
+    report_mode="freehand": agent generates HTML inside <duct_artifact> tags.
     report_mode="template": agent builds the report via StartAuditReport →
         AddAuditCategory ×9 → FinalizeAuditReport (SubmitAuditReport for chat revisions).
 
@@ -570,7 +582,9 @@ def build_unified_system_prompt(
     from agents.core.persona import with_confidentiality
     from agents.knowledge import knowledge_block
     workflow = _TEMPLATE_WORKFLOW if report_mode == "template" else _FREEHAND_WORKFLOW
-    prompt = _UNIFIED_SYSTEM_PROMPT.format(workflow_section=workflow)
+    prompt = _UNIFIED_SYSTEM_PROMPT.format(
+        workflow_section=workflow, memory_section=_MEMORY_SECTION
+    )
     packs = knowledge_block(knowledge_packs)
     if packs:
         prompt = f"{prompt}\n\n{packs}"

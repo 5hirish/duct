@@ -11,6 +11,7 @@ import {
   setAdsLoginCustomerId,
 } from "../../../lib/adsCredentials";
 import { PROVIDERS, getProviderKey, setProviderKey, clearProviderKey } from "../../../lib/providerKeys";
+import TelemetryCard from "../../../components/TelemetryCard.jsx";
 import {
   deleteServerConnector,
   hasAuthToken,
@@ -633,6 +634,10 @@ function ProvidersPanel() {
         {PROVIDERS.map((provider) => (
           <ProviderCard key={provider.id} provider={provider} />
         ))}
+        {/* Desktop only, and only in a build that can actually report —
+            renders nothing otherwise. Sits here because this is the page
+            where the other "what leaves my machine" decisions are made. */}
+        <TelemetryCard />
       </div>
     </>
   );
@@ -643,6 +648,7 @@ function ProviderCard({ provider }) {
   const [saved, setSaved] = useState(false);
   const [revealed, setRevealed] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     let alive = true;
@@ -659,19 +665,36 @@ function ProviderCard({ provider }) {
   const trimmed = value.trim();
   const looksValid = !provider.prefix || trimmed.startsWith(provider.prefix);
 
+  // The desktop keychain can genuinely refuse a write — most often on Linux,
+  // where the Secret Service daemon that backs it may not be running at all.
+  // Reporting that matters more than usual here: the value is a secret the user
+  // pasted, and a silent failure looks exactly like success until the next
+  // agent run fails for no visible reason.
   async function save() {
     setBusy(true);
-    await setProviderKey(provider.id, trimmed);
-    setSaved(Boolean(trimmed));
-    setBusy(false);
+    setError("");
+    try {
+      await setProviderKey(provider.id, trimmed);
+      setSaved(Boolean(trimmed));
+    } catch (err) {
+      setError(String(err?.message || err));
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function remove() {
     setBusy(true);
-    await clearProviderKey(provider.id);
-    setValue("");
-    setSaved(false);
-    setBusy(false);
+    setError("");
+    try {
+      await clearProviderKey(provider.id);
+      setValue("");
+      setSaved(false);
+    } catch (err) {
+      setError(String(err?.message || err));
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -715,6 +738,12 @@ function ProviderCard({ provider }) {
       {trimmed && !looksValid && (
         <p className="app-subtle" style={{ marginTop: 6, fontSize: 12 }}>
           {`Keys usually start with "${provider.prefix}".`}
+        </p>
+      )}
+
+      {error && (
+        <p role="alert" className="text-destructive" style={{ marginTop: 6, fontSize: 12 }}>
+          {error}
         </p>
       )}
 

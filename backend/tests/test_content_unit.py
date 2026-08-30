@@ -3,8 +3,7 @@
 Scope kept tight: only tests that catch real regressions live here.
 Pure Pydantic round-trips, enum shape checks, and constructor smoke
 tests have been removed — Pydantic + Python tests itself. Real-data
-behaviour lives in tests/test_content_e2e.py and
-tests/test_seed_maxaura.py.
+behaviour lives in tests/test_content_e2e.py.
 
 What earns a place here:
   - Cache-stability of the orchestrator system prompt (huge cost lever)
@@ -76,7 +75,7 @@ def test_system_prompt_advertises_essential_capabilities():
     accidentally stripped, the model won't know what to do. One coarse
     assertion is enough — the prompt content is reviewed in PR diffs."""
     sys = build_orchestrator_system_prompt(_brand(), "plan_month")
-    for must_have in ("<duct_report>", "submit_plan", "submit_post_draft",
+    for must_have in ("<duct_artifact>", "submit_plan", "submit_post_draft",
                       "research_pillar", "draft_post", "STRUCTURED SLIDES",
                       "MODE: plan_month"):
         assert must_have in sys, f"system prompt missing critical phrase: {must_have!r}"
@@ -355,7 +354,11 @@ def test_frontend_content_events_are_valid_backend_events():
     with open(js_path) as fh:
         js = fh.read()
     valid = {e.value for e in ContentEvent} | {s.value for s in ContentStep}
-    referenced = set(re.findall(r':\s*"([a-z_0-9]+)"', js))
+    # LEGACY_* keys deliberately name wire values the backend no longer emits —
+    # they exist so an app deployed ahead of the backend still renders. Exempt
+    # them; every other key must resolve to a live backend value.
+    pairs = re.findall(r'([A-Z_0-9]+):\s*"([a-z_0-9]+)"', js)
+    referenced = {v for k, v in pairs if not k.startswith("LEGACY_")}
     unknown = referenced - valid
     assert not unknown, f"contentEvents.js references unknown events/steps: {unknown}"
 

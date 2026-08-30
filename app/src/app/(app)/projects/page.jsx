@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Trash2, Globe, Users } from "lucide-react";
+import { Brain, Trash2, Globe, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -63,6 +63,12 @@ export default function ProjectsPage() {
     event.stopPropagation();
     event.preventDefault();
     router.push(`/project/${projectId}/members`);
+  }
+
+  function openMemory(event, projectId) {
+    event.stopPropagation();
+    event.preventDefault();
+    router.push(`/project/${projectId}/memory`);
   }
 
   function confirmDeleteProject() {
@@ -136,6 +142,16 @@ export default function ProjectsPage() {
 
                 <div className="flex items-center gap-2">
                   {project.id === activeId && <Badge variant="secondary">Active</Badge>}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="size-8 rounded-full text-muted-foreground hover:text-foreground"
+                    aria-label={`Memory of ${name}`}
+                    onClick={(event) => openMemory(event, project.id)}
+                  >
+                    <Brain className="size-4" />
+                  </Button>
                   <Button
                     type="button"
                     variant="ghost"

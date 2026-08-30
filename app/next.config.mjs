@@ -6,7 +6,6 @@ const nextConfig = {
   // Source maps are 30-40% of dev memory; skip them locally.
   productionBrowserSourceMaps: false,
   experimental: {
-    viewTransition: true,
     // Smaller initial dev-server footprint on low-RAM machines.
     preloadEntriesOnStart: false,
     serverSourceMaps: false,

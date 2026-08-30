@@ -45,6 +45,7 @@ from agents.content.results import (
 from sqlmodel import Session, select
 
 from agents.models import DEFAULT_IMAGE_MODEL, AspectRatio, ImageModel
+from agents.core.memory_tools import build_memory_tools_sdk
 from agents.core.tool_schema import tool_schema
 from agents.content.events import ContentEvent
 from agents.content.schema import (
@@ -609,7 +610,7 @@ def build_content_mcp_server(
             "Persist a 30-day content plan. Validates the payload against the "
             "PlanDraft schema, upserts a content_plans row scoped to this "
             "project, and emits a PLAN_GENERATED event so the workspace "
-            "renders the plan. Call this AFTER emitting <duct_report>{\"type\":\"plan\",...}</duct_report>."
+            "renders the plan. Call this AFTER emitting <duct_artifact>{\"type\":\"plan\",...}</duct_artifact>."
         ),
         input_schema={
             "plan": Annotated[
@@ -673,7 +674,7 @@ def build_content_mcp_server(
             "Persist a single post draft. Validates against PostDraft schema, "
             "upserts a content_posts row keyed by (project_id, post_dir_slug), "
             "and emits POST_DRAFT_UPDATED. Call AFTER emitting "
-            "<duct_report>{\"type\":\"post\",...}</duct_report>."
+            "<duct_artifact>{\"type\":\"post\",...}</duct_artifact>."
         ),
         input_schema={
             "post": Annotated[
@@ -2043,9 +2044,20 @@ def build_content_mcp_server(
             logger.exception("fetch_slide_context failed")
             return _err(f"fetch_slide_context failed: {exc}")
 
+    # Memory is cross-agent: the content agent remembers the same project the
+    # audit agent does, through the same tools in agents/core.
+    memory_tools = build_memory_tools_sdk(
+        project_id,
+        user_id=getattr(session, "user_id", None),
+        conversation_id=getattr(session, "conversation_id", None),
+        agent_type="tiktok_studio",
+        on_memory=lambda entry: emit({"event": ContentEvent.MEMORY_WRITTEN, "memory": entry}),
+    )
+
     return create_sdk_mcp_server(
         "duct_content",
         tools=[
+            *memory_tools,
             submit_plan,
             submit_post_draft,
             edit_slide,

@@ -64,19 +64,26 @@ export async function getProviderKey(providerId) {
   }
 }
 
-/** Persist (or, when value is blank, remove) a provider key. */
+/**
+ * Persist (or, when value is blank, remove) a provider key.
+ *
+ * **Throws when the desktop keychain rejects the write.** It used to swallow
+ * that, which was wrong in exactly one common case: on Linux the keyring is a
+ * D-Bus Secret Service daemon that a minimal or headless install may not run at
+ * all, so the key silently vanished and the user was left with a settings page
+ * that appeared to have saved. The shell returns a message naming the cause
+ * (`describe_keyring_error` in `desktop/src-tauri/src/lib.rs`); callers should
+ * show it. Reads still degrade quietly — a missing key reads as absent, which
+ * is both true and harmless.
+ */
 export async function setProviderKey(providerId, value) {
   if (typeof window === "undefined") return;
   const trimmed = (value || "").trim();
   if (isTauri()) {
-    try {
-      await window.__TAURI__.core.invoke(trimmed ? "set_provider_key" : "delete_provider_key", {
-        provider: providerId,
-        key: trimmed,
-      });
-    } catch {
-      /* keychain unavailable — ignore for the web/dev path */
-    }
+    await window.__TAURI__.core.invoke(trimmed ? "set_provider_key" : "delete_provider_key", {
+      provider: providerId,
+      key: trimmed,
+    });
     return;
   }
   try {

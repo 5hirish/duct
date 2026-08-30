@@ -13,8 +13,8 @@ from datetime import datetime
 from uuid import UUID, uuid4
 
 import sqlalchemy as sa
-from sqlalchemy import Column, DateTime, ForeignKey, String
-from models.columns import json_column
+from sqlalchemy import Column, ForeignKey, String
+from models.columns import json_column, utc_datetime
 from sqlmodel import Field, SQLModel
 from utils.dates import utcnow
 
@@ -92,13 +92,13 @@ class ExecutionChangeSet(SQLModel, table=True):
         sa_column=Column(json_column(), nullable=False, server_default="[]"),
     )
     created_at: datetime = Field(
-        default_factory=utcnow, sa_column=Column(DateTime(timezone=True), nullable=False)
+        default_factory=utcnow, sa_column=Column(utc_datetime(), nullable=False)
     )
     updated_at: datetime = Field(
-        default_factory=utcnow, sa_column=Column(DateTime(timezone=True), nullable=False)
+        default_factory=utcnow, sa_column=Column(utc_datetime(), nullable=False)
     )
-    approved_at: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
-    applied_at: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
+    approved_at: datetime | None = Field(default=None, sa_column=Column(utc_datetime(), nullable=True))
+    applied_at: datetime | None = Field(default=None, sa_column=Column(utc_datetime(), nullable=True))
 
 
 class ExecutionGuardrail(SQLModel, table=True):
@@ -129,5 +129,5 @@ class ExecutionGuardrail(SQLModel, table=True):
     )
     active: bool = Field(default=True, sa_column=Column(sa.Boolean(), nullable=False, server_default=sa.true()))
     created_at: datetime = Field(
-        default_factory=utcnow, sa_column=Column(DateTime(timezone=True), nullable=False)
+        default_factory=utcnow, sa_column=Column(utc_datetime(), nullable=False)
     )

@@ -58,4 +58,46 @@ if (appEnv !== "local" && process.env.NEXT_PUBLIC_SENTRY_DSN) {
   });
 }
 
+/**
+ * Tell Sentry which shell this session is running in.
+ *
+ * The desktop app loads this same hosted build in a webview, so without this
+ * every desktop crash is indistinguishable from a browser one — same release,
+ * same URL, no way to tell that the user was on a bundled shell talking to a
+ * local sidecar. That matters because the failure modes are different: a
+ * desktop session can lose its backend without losing the network, and vice
+ * versa.
+ *
+ * Fire-and-forget: `get_shell_info` is an IPC round-trip, and a session that
+ * crashes before it lands is still worth reporting untagged.
+ */
+async function tagShellContext() {
+  if (typeof window === "undefined") return;
+  Sentry.setTag("shell", "web");
+  const tauri = (window as { __TAURI__?: { core?: { invoke: (cmd: string) => Promise<unknown> } } })
+    .__TAURI__;
+  if (!tauri?.core?.invoke) return;
+
+  Sentry.setTag("shell", "desktop");
+  try {
+    const info = (await tauri.core.invoke("get_shell_info")) as {
+      version?: string;
+      capabilities?: Record<string, boolean>;
+    };
+    if (info?.version) Sentry.setTag("shell.version", info.version);
+    if (info?.capabilities) {
+      Sentry.setContext("shell", { version: info.version, ...info.capabilities });
+      // Whether requests are going to the bundled backend or the hosted API is
+      // the first thing worth knowing when triaging a desktop report.
+      Sentry.setTag("shell.localSidecar", String(Boolean(info.capabilities.localSidecar)));
+    }
+  } catch {
+    // An older shell without the command still reports as shell:desktop.
+  }
+}
+
+if (appEnv !== "local" && process.env.NEXT_PUBLIC_SENTRY_DSN) {
+  void tagShellContext();
+}
+
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
