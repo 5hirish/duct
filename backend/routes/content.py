@@ -65,7 +65,7 @@ from agents.content.v3.runner import (
     get_session,
 )
 from agents.engines import PROVIDER_CONFIG_ATTR, Engine, resolve_engine_provider
-from agents.models import Platform
+from agents.content.channels import Platform
 from config import claude_oauth_available, get_configs
 from db.session import get_session as db_session
 from models.content import (

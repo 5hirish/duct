@@ -36,10 +36,7 @@ class ModelName(str, Enum):
     # ways (gemini-3.1-flash-lite-preview is still served past its date, while
     # gemini-3.1-flash-preview is already gone and was dropped from here).
     GEMINI_3_7_FLASH = "gemini-3.7-flash"
-    GEMINI_3_6_FLASH = "gemini-3.6-flash"
-    GEMINI_3_5_FLASH = "gemini-3.5-flash"
     GEMINI_3_5_FLASH_LITE = "gemini-3.5-flash-lite"
-    GEMINI_3_1_FLASH_LITE = "gemini-3.1-flash-lite"
     GEMINI_2_5_FLASH = "gemini-2.5-flash"
     GEMINI_2_5_FLASH_LITE = "gemini-2.5-flash-lite"
     
@@ -155,21 +152,6 @@ class ImageModel(str, Enum):
 # gemini-3.1-flash-image: the high-efficiency, high-volume flash image model
 # (per the Gemini image-generation docs) — the right default for slide gen.
 DEFAULT_IMAGE_MODEL = ImageModel.GEMINI_3_1_FLASH_IMAGE
-
-
-class Platform(StrEnum):
-    """Publishing channels — values match the PostBridge v1 API platform names."""
-
-    TIKTOK          = "tiktok"
-    INSTAGRAM       = "instagram"
-    YOUTUBE         = "youtube"
-    LINKEDIN        = "linkedin"
-    TWITTER         = "twitter"
-    FACEBOOK        = "facebook"
-    THREADS         = "threads"
-    BLUESKY         = "bluesky"
-    PINTEREST       = "pinterest"
-    GOOGLE_BUSINESS = "google_business"
 
 
 class AspectRatio(StrEnum):

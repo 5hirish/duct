@@ -21,7 +21,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from agents.core.session import BaseAgentSession
 
-from agents.models import AspectRatio, ImageModel, Platform
+from agents.content.channels import Platform
+from agents.models import AspectRatio, ImageModel
 
 
 # ---------------------------------------------------------------------------
