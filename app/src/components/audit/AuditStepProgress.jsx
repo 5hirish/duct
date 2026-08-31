@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { STEP_LABELS as BACKEND_STEP_LABELS, AuditStep } from "../../lib/auditEvents";
 import { StepStatus } from "../../lib/agentSteps";
+import { Spinner } from "@/components/ui/spinner";
 
 const STEP_LABELS = {
   ...BACKEND_STEP_LABELS,
@@ -338,7 +339,7 @@ function StepRow({ step, expanded, onToggle }) {
       >
         {/* Status icon */}
         {isRunning ? (
-          <span className="inline-block size-3 rounded-full border-2 border-blue-500 border-t-transparent animate-spin shrink-0" />
+          <Spinner className="size-3 text-blue-500" />
         ) : status === StepStatus.SUCCESS ? (
           <span className="text-green-500 text-xs shrink-0">✓</span>
         ) : status === StepStatus.ERROR ? (

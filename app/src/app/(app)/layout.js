@@ -13,7 +13,13 @@ import UpdateToast from "../../components/UpdateToast.jsx";
 import ConnectionBanner from "../../components/ConnectionBanner.jsx";
 
 // Routes whose main content must fill the remaining viewport (no scroll, no padding)
-const FULL_BLEED_PREFIXES = ["/audit/seo/", "/content/sessions/", "/content/posts/", "/content/plan"];
+const FULL_BLEED_PREFIXES = [
+  "/audit/seo/",
+  "/content/sessions/",
+  "/content/posts/",
+  "/content/plan",
+  "/insights/session",
+];
 
 // Routes that use the full viewport width (fluid) but still scroll with padding
 const WIDE_PREFIXES = ["/content"];

@@ -2,6 +2,7 @@
 
 import { STEP_LABELS, ContentStep } from "../../lib/contentEvents";
 import { StepStatus } from "../../lib/agentSteps";
+import { Spinner } from "@/components/ui/spinner";
 
 /**
  * Renders the pipeline step list above the chat — one row per step the
@@ -57,7 +58,7 @@ function StepRow({ step }) {
 
 function StatusDot({ status }) {
   if (status === StepStatus.RUNNING) {
-    return <span className="inline-block size-2 shrink-0 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />;
+    return <Spinner className="size-2 text-blue-500" />;
   }
   if (status === StepStatus.SUCCESS) {
     return <span className="inline-block size-2 shrink-0 rounded-full bg-green-500" />;

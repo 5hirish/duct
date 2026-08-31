@@ -14,12 +14,12 @@ import {
 import { mapEventsToMessages } from "../../lib/agentHistory";
 import { AuditEvent, AuditStep } from "../../lib/auditEvents";
 import { StepStatus } from "../../lib/agentSteps";
-import { Phase } from "./auditPhase";
+import { Phase } from "../workspace/agentPhase";
 import { useAuditNav } from "../../lib/auditNavContext";
 import { consumeSseStream } from "@/lib/sse";
 
 // Re-export so consumers can import Phase from AuditWorkspace if they prefer
-export { Phase } from "./auditPhase";
+export { Phase } from "../workspace/agentPhase";
 
 // ---------------------------------------------------------------------------
 // AuditWorkspace

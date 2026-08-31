@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Spinner } from "@/components/ui/spinner";
 
 const STATUS = {
   completed: {
@@ -78,7 +79,7 @@ export default function AuditTodos({ todos }) {
             return (
               <div key={i} className="flex items-start gap-2 text-xs">
                 {todo.status === "in_progress" ? (
-                  <span className="inline-block size-2.5 shrink-0 mt-0.5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+                  <Spinner className="mt-0.5 size-2.5 text-blue-500" />
                 ) : (
                   <span className={`shrink-0 mt-0.5 ${s.cls}`}>{s.icon}</span>
                 )}

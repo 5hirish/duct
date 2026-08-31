@@ -53,6 +53,7 @@ import {
   rejectChangeSet,
   rollbackChangeSet,
 } from "../../../lib/executionApi";
+import { Spinner } from "@/components/ui/spinner";
 
 const STATUS_PILL = {
   proposed: "yellow",
@@ -329,8 +330,8 @@ function DetailDrawer({ cs, destructiveMap, busy, onClose, onAction, projectName
             )}
             {cs.status === "applying" && (
               <span className="app-subtle" style={{ fontSize: 13 }}>
-                <span
-                  className="inline-block size-3 rounded-full border-2 border-current border-t-transparent animate-spin"
+                <Spinner
+                  className="size-3"
                   style={{ marginRight: 6, verticalAlign: "-2px" }}
                 />
                 Applying changes…

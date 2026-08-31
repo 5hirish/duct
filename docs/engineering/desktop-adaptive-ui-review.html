@@ -1,0 +1,791 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="An audit of Duct's app UI against the desktop shell it actually ships in: viewport-versus-container sizing, absolute-versus-relative units, two unaligned breakpoint systems, and the shared components that were forked instead of reused.">
+<title>The Window Is Not The Container</title>
+<style>
+  :root {
+    --bg: #f7f7f6;
+    --surface: #ffffff;
+    --surface-2: #fcfcfb;
+    --ink: #0D0F1A;
+    --ink-2: #2a2d3e;
+    --ink-3: #6b6f82;
+    --border: #ebebea;
+    --border-strong: #dcdcd8;
+    --accent: #FF5C00;
+    --accent-ink: #C43F00;
+    --accent-soft: rgba(255, 92, 0, .09);
+    --ok: #1F7A6B;
+    --ok-soft: rgba(31, 122, 107, .10);
+    --warn: #A16207;
+    --warn-soft: rgba(161, 98, 7, .10);
+    --serif: Georgia, "Times New Roman", Times, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --r: 12px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0D0F1A;
+      --surface: #14172a;
+      --surface-2: #191d33;
+      --ink: #f1f1ef;
+      --ink-2: #c6c8d4;
+      --ink-3: #8b8fa3;
+      --border: #262a42;
+      --border-strong: #343a58;
+      --accent: #FF7A2E;
+      --accent-ink: #FF9A5E;
+      --accent-soft: rgba(255, 122, 46, .13);
+      --ok: #4FBFA8;
+      --ok-soft: rgba(79, 191, 168, .13);
+      --warn: #D9A441;
+      --warn-soft: rgba(217, 164, 65, .13);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0D0F1A;
+    --surface: #14172a;
+    --surface-2: #191d33;
+    --ink: #f1f1ef;
+    --ink-2: #c6c8d4;
+    --ink-3: #8b8fa3;
+    --border: #262a42;
+    --border-strong: #343a58;
+    --accent: #FF7A2E;
+    --accent-ink: #FF9A5E;
+    --accent-soft: rgba(255, 122, 46, .13);
+    --ok: #4FBFA8;
+    --ok-soft: rgba(79, 191, 168, .13);
+    --warn: #D9A441;
+    --warn-soft: rgba(217, 164, 65, .13);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16.5px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 24px 120px; }
+
+  .spine { position: relative; padding-left: 44px; }
+  .spine::before {
+    content: ""; position: absolute; left: 5px; top: 12px; bottom: 0; width: 1px;
+    background: linear-gradient(to bottom, var(--border-strong), var(--border-strong) 70%, transparent);
+  }
+  @media (max-width: 760px) { .spine { padding-left: 0; } .spine::before { display: none; } }
+
+  section { margin-top: 76px; scroll-margin-top: 24px; }
+
+  h1, h2, h3, h4 { font-family: var(--serif); font-weight: 400; text-wrap: balance; letter-spacing: -.3px; }
+  h2 { font-size: clamp(27px, 3.4vw, 36px); line-height: 1.15; margin: 0 0 10px; position: relative; }
+  .spine > section > h2::before {
+    content: ""; position: absolute; left: -44px; top: .55em; width: 11px; height: 11px;
+    background: var(--accent); border-radius: 2px;
+  }
+  @media (max-width: 760px) { .spine > section > h2::before { display: none; } }
+  h3 { font-size: 20px; line-height: 1.3; margin: 34px 0 8px; }
+  h4 { font-size: 17px; margin: 22px 0 6px; font-family: var(--sans); font-weight: 600; }
+
+  p, li { color: var(--ink-2); }
+  p { margin: 0 0 16px; max-width: 70ch; }
+  li { margin-bottom: 8px; max-width: 70ch; }
+  ul, ol { padding-left: 20px; margin: 0 0 18px; }
+  strong { color: var(--ink); font-weight: 600; }
+  em { color: var(--ink); font-style: italic; }
+  a { color: var(--accent-ink); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  code {
+    font-family: var(--mono); font-size: .88em; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; color: var(--ink);
+  }
+  pre {
+    font-family: var(--mono); font-size: 13px; line-height: 1.5; background: var(--surface);
+    border: 1px solid var(--border); border-radius: var(--r); padding: 16px 18px;
+    overflow-x: auto; margin: 16px 0 22px; color: var(--ink);
+  }
+  pre code { background: none; border: 0; padding: 0; font-size: inherit; }
+
+  .eyebrow {
+    font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--accent); margin: 0 0 12px; display: block;
+  }
+  .lede { font-size: 18.5px; color: var(--ink); max-width: 66ch; }
+
+  header.masthead { padding: 84px 0 34px; border-bottom: 1px solid var(--border-strong); margin-bottom: 8px; }
+  header.masthead h1 { font-size: clamp(42px, 7vw, 68px); line-height: 1.02; margin: 0 0 20px; letter-spacing: -1.4px; }
+  .thesis {
+    font-family: var(--serif); font-size: clamp(19px, 2.3vw, 23px); line-height: 1.45; color: var(--ink);
+    max-width: 34ch; border-left: 3px solid var(--accent); padding-left: 18px; margin: 0 0 30px;
+  }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 8px 26px; font-family: var(--mono); font-size: 11.5px;
+    letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3);
+  }
+  .meta span b { color: var(--ink-2); font-weight: 600; }
+
+  .scroller { overflow-x: auto; margin: 22px 0 26px; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; min-width: 720px; font-size: 14px; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--ink-2); }
+  thead th {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3);
+    font-weight: 600; background: var(--surface-2); border-bottom: 1px solid var(--border-strong); white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td:first-child { color: var(--ink); font-weight: 600; }
+  td.num { font-family: var(--mono); white-space: nowrap; color: var(--ink); }
+
+  .pill {
+    display: inline-block; font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase;
+    font-weight: 600; padding: 3px 8px; border-radius: 100px; white-space: nowrap;
+  }
+  .pill.yes { background: var(--ok-soft); color: var(--ok); }
+  .pill.no  { background: var(--warn-soft); color: var(--warn); }
+  .pill.mid { background: var(--border); color: var(--ink-3); }
+  .pill.pick { background: var(--accent-soft); color: var(--accent-ink); }
+
+  .callout { background: var(--accent-soft); border-left: 3px solid var(--accent); padding: 18px 22px; border-radius: 0 var(--r) var(--r) 0; margin: 26px 0; }
+  .callout p { margin: 0; color: var(--ink); max-width: 68ch; }
+  .callout p + p { margin-top: 10px; }
+  .note { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 18px 22px; margin: 24px 0; }
+  .note p:last-child { margin-bottom: 0; }
+  .note .eyebrow { color: var(--ink-3); }
+
+  .cards { display: grid; gap: 16px; margin: 24px 0 8px; }
+  @media (min-width: 860px) { .cards { grid-template-columns: 1fr 1fr; } .cards.three { grid-template-columns: 1fr 1fr 1fr; } }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 20px 22px 18px; }
+  .card.chosen { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .card h3 { margin: 4px 0 8px; font-size: 19px; }
+  .card p { font-size: 15px; margin-bottom: 10px; }
+  .card ul { font-size: 14.5px; margin-bottom: 4px; }
+  .card li { margin-bottom: 5px; }
+  .card .tag { font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; }
+  .card.chosen .tag { color: var(--accent); }
+
+  .phase { display: grid; grid-template-columns: 76px 1fr; gap: 0 22px; padding: 22px 0; border-top: 1px solid var(--border); }
+  .phase:last-of-type { border-bottom: 1px solid var(--border); }
+  .phase .n { font-family: var(--mono); font-size: 12px; font-weight: 600; letter-spacing: .08em; color: var(--accent); padding-top: 5px; }
+  .phase h3 { margin: 0 0 6px; font-size: 19px; }
+  .phase p { font-size: 15.5px; margin-bottom: 10px; }
+  .phase ul { margin-bottom: 0; font-size: 15px; }
+  @media (max-width: 620px) { .phase { grid-template-columns: 1fr; gap: 6px; } .phase .n { padding-top: 0; } }
+
+  .chip { display: inline-block; font-family: var(--mono); font-size: 11px; padding: 2px 8px; border-radius: 6px; background: var(--accent-soft); color: var(--accent-ink); border: 1px solid transparent; white-space: nowrap; }
+  .chip.ok { background: var(--ok-soft); color: var(--ok); }
+  .chip.mid { background: var(--border); color: var(--ink-2); }
+
+  .kpi { font-family: var(--mono); font-size: 13px; color: var(--ink-3); letter-spacing: .02em; }
+  .kpi b { color: var(--accent-ink); font-weight: 600; }
+
+  /* Measurement strip */
+  .metrics { display: grid; gap: 14px; margin: 26px 0 8px; grid-template-columns: 1fr 1fr; }
+  @media (min-width: 780px) { .metrics { grid-template-columns: repeat(4, 1fr); } }
+  .metric { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 16px 18px; }
+  .metric .n { font-family: var(--mono); font-size: 27px; font-weight: 600; color: var(--accent-ink); line-height: 1.1; display: block; }
+  .metric .l { font-size: 13.5px; color: var(--ink-3); display: block; margin-top: 6px; line-height: 1.4; }
+
+  /* Diagram */
+  figure { margin: 26px 0; }
+  figcaption { font-size: 13.5px; color: var(--ink-3); margin-top: 10px; max-width: 68ch; }
+  .diagram { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 22px; overflow-x: auto; }
+  .diagram svg { display: block; width: 100%; height: auto; min-width: 560px; }
+
+  footer { margin-top: 88px; padding-top: 26px; border-top: 1px solid var(--border-strong); font-size: 14px; color: var(--ink-3); max-width: 72ch; }
+  .sources { font-size: 13.5px; color: var(--ink-3); }
+  .sources li { max-width: none; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <span class="eyebrow">Duct · Engineering · UI review</span>
+    <h1>The window is not the container</h1>
+    <p class="thesis">Our UI is responsive to the browser. It is not yet adaptive to the desktop.</p>
+    <div class="meta">
+      <span><b>1 Sep 2026</b></span>
+      <span>Scope <b>app/src — layout, units, shared components</b></span>
+      <span>Status <b>audited · first fixes shipped</b></span>
+      <span>Branch <b>feat/gads-connectors-wave2</b></span>
+    </div>
+  </header>
+
+  <div class="spine">
+
+  <section id="summary">
+    <h2>The short version</h2>
+
+    <p class="lede">
+      Duct ships the same build to a browser and to a Tauri window. The browser side is
+      handled: there are breakpoints, the sidebar collapses, panes toggle on phones. The
+      desktop side is where the gap is, and it is one specific gap repeated in several
+      places — <strong>components size themselves off the viewport when the thing that
+      actually constrains them is a resizable pane</strong>.
+    </p>
+
+    <div class="metrics">
+      <div class="metric"><span class="n">485</span><span class="l">absolute <code>px</code> values in <code>globals.css</code>, against 19 <code>rem</code></span></div>
+      <div class="metric"><span class="n">13</span><span class="l">distinct breakpoints across two unaligned systems</span></div>
+      <div class="metric"><span class="n">0</span><span class="l">container queries, in an app built on resizable panes</span></div>
+      <div class="metric"><span class="n">12</span><span class="l">hand-rolled spinners in 4 colours and 6 sizes</span></div>
+    </div>
+
+    <p>
+      The desktop shell opens at <strong>1200×800</strong> and can be dragged down to
+      <strong>900×600</strong> (<code>desktop/src-tauri/tauri.conf.json</code>). That
+      matters: 900px is below Tailwind's <code>lg</code> breakpoint and above its
+      <code>md</code>, so the desktop window spends its whole life inside a band the
+      layout treats as "big tablet". Nothing in the app knows it is a desktop app.
+    </p>
+
+    <div class="callout">
+      <p>
+        <strong>The one-sentence finding.</strong> Three agent workspaces put a chat pane
+        and a report pane side by side behind a draggable divider — and every component
+        inside those panes still asks the <em>window</em> how wide it is. At 1440px of
+        window with the divider at halfway, a component sees "1440px, go wide" and renders
+        a four-column board into a 700px pane.
+      </p>
+    </div>
+  </section>
+
+  <section id="what-i-checked">
+    <h2>What I measured</h2>
+
+    <p>
+      Numbers below are counted from <code>app/src</code> at commit <code>c612ad4</code>.
+      "Verified" means I traced the render path to a specific file and line, not that I
+      clicked through a running build.
+    </p>
+
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr><th>Dimension</th><th>Finding</th><th>Evidence</th><th>Verdict</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Container adaptivity</td>
+            <td>Components inside resizable panes use viewport breakpoints</td>
+            <td class="num">PlanKanban.jsx:50</td>
+            <td><span class="pill no">Broken</span></td>
+          </tr>
+          <tr>
+            <td>Pane divider input</td>
+            <td>Mouse events with no pointer capture — drag dies over an <code>&lt;iframe&gt;</code></td>
+            <td class="num">SplitWorkspace.jsx</td>
+            <td><span class="pill no">Broken</span></td>
+          </tr>
+          <tr>
+            <td>Pane divider a11y</td>
+            <td>No role, no ARIA values, no keyboard resize</td>
+            <td class="num">SplitWorkspace.jsx</td>
+            <td><span class="pill no">Missing</span></td>
+          </tr>
+          <tr>
+            <td>Full-height routes</td>
+            <td><code>/insights/session</code> not in the full-bleed list; subtracts 64px for a 52px header</td>
+            <td class="num">(app)/layout.js:16</td>
+            <td><span class="pill no">Broken</span></td>
+          </tr>
+          <tr>
+            <td>Relative units</td>
+            <td>96% of sizing in <code>globals.css</code> is absolute <code>px</code></td>
+            <td class="num">485 px / 19 rem</td>
+            <td><span class="pill no">Weak</span></td>
+          </tr>
+          <tr>
+            <td>Fluid type</td>
+            <td>One <code>clamp()</code> in 2,077 lines</td>
+            <td class="num">globals.css:502</td>
+            <td><span class="pill no">Weak</span></td>
+          </tr>
+          <tr>
+            <td>Breakpoint discipline</td>
+            <td>Tailwind's 640/768/1024/1280 plus nine hand-picked CSS ones</td>
+            <td class="num">480…960</td>
+            <td><span class="pill no">Inconsistent</span></td>
+          </tr>
+          <tr>
+            <td>Shared split shell</td>
+            <td>One <code>SplitWorkspace</code>, three consumers, no forks</td>
+            <td class="num">audit · content · insights</td>
+            <td><span class="pill yes">Good</span></td>
+          </tr>
+          <tr>
+            <td>Shared progress panel</td>
+            <td>One <code>PipelineProgress</code> across agents</td>
+            <td class="num">PipelineProgress.jsx</td>
+            <td><span class="pill yes">Good</span></td>
+          </tr>
+          <tr>
+            <td>Agent primitives</td>
+            <td><code>CodeBlock</code> and the <code>Phase</code> enum forked per agent</td>
+            <td class="num">byte-identical copies</td>
+            <td><span class="pill no">Duplicated</span></td>
+          </tr>
+          <tr>
+            <td>Busy indicator</td>
+            <td>12 inline spinners, 4 border colours, 2 with any ARIA</td>
+            <td class="num">18 files</td>
+            <td><span class="pill no">Duplicated</span></td>
+          </tr>
+          <tr>
+            <td>Theme + motion</td>
+            <td>OS dark mode via next-themes; two <code>prefers-reduced-motion</code> blocks</td>
+            <td class="num">globals.css</td>
+            <td><span class="pill yes">Good</span></td>
+          </tr>
+          <tr>
+            <td>Desktop link handling</td>
+            <td><code>target="_blank"</code> rerouted to the system browser in-shell</td>
+            <td class="num">lib/shell.js</td>
+            <td><span class="pill yes">Good</span></td>
+          </tr>
+          <tr>
+            <td>Keyboard shortcuts</td>
+            <td>Only shadcn's <code>⌘B</code> sidebar toggle; no app-level commands</td>
+            <td class="num">ui/sidebar.tsx:32</td>
+            <td><span class="pill mid">Absent</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="the-core-problem">
+    <h2>Viewport versus container</h2>
+
+    <p>
+      This is the finding worth internalising, because everything else on the list is
+      tidying by comparison.
+    </p>
+
+    <p>
+      <code>SplitWorkspace</code> is a good abstraction — audit, content and insights all
+      compose it rather than re-forking the divider. But it hands each consumer a pane
+      whose width is <em>a user-dragged percentage of the window</em>, clamped between 20%
+      and 80%. A component rendered into that pane has no fixed relationship to the
+      viewport at all. Two panes, one window width, and a divider the user moves whenever
+      they want: viewport media queries cannot describe that.
+    </p>
+
+    <figure>
+      <div class="diagram">
+        <svg viewBox="0 0 720 232" role="img" aria-labelledby="d1t d1d">
+          <title id="d1t">The same window width producing two different pane widths</title>
+          <desc id="d1d">At 1440px of window, a divider at 50% gives a 700px right pane and a divider at 80% gives a 270px right pane. A viewport lg: breakpoint is true in both cases, so a four-column grid renders into both.</desc>
+
+          <text x="0" y="14" font-family="ui-monospace, monospace" font-size="11" fill="#6b6f82">WINDOW 1440px — `lg:` IS TRUE IN BOTH ROWS</text>
+
+          <!-- Row 1 -->
+          <rect x="0" y="30" width="360" height="58" rx="6" fill="none" stroke="#dcdcd8"/>
+          <text x="180" y="64" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" fill="#6b6f82">chat pane</text>
+          <rect x="366" y="30" width="354" height="58" rx="6" fill="rgba(255,92,0,.09)" stroke="#FF5C00"/>
+          <line x1="452" y1="36" x2="452" y2="82" stroke="#FF5C00" stroke-width="1" stroke-dasharray="3 3"/>
+          <line x1="540" y1="36" x2="540" y2="82" stroke="#FF5C00" stroke-width="1" stroke-dasharray="3 3"/>
+          <line x1="628" y1="36" x2="628" y2="82" stroke="#FF5C00" stroke-width="1" stroke-dasharray="3 3"/>
+          <text x="543" y="64" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" fill="#C43F00">4 columns in 700px — fine</text>
+          <text x="0" y="104" font-family="ui-monospace, monospace" font-size="11" fill="#6b6f82">divider at 50%</text>
+
+          <!-- Row 2 -->
+          <rect x="0" y="126" width="576" height="58" rx="6" fill="none" stroke="#dcdcd8"/>
+          <text x="288" y="160" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" fill="#6b6f82">chat pane</text>
+          <rect x="582" y="126" width="138" height="58" rx="6" fill="rgba(255,92,0,.09)" stroke="#FF5C00"/>
+          <line x1="616" y1="132" x2="616" y2="178" stroke="#FF5C00" stroke-width="1" stroke-dasharray="3 3"/>
+          <line x1="651" y1="132" x2="651" y2="178" stroke="#FF5C00" stroke-width="1" stroke-dasharray="3 3"/>
+          <line x1="686" y1="132" x2="686" y2="178" stroke="#FF5C00" stroke-width="1" stroke-dasharray="3 3"/>
+          <text x="651" y="204" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" fill="#C43F00">4 columns in 270px</text>
+          <text x="0" y="200" font-family="ui-monospace, monospace" font-size="11" fill="#6b6f82">divider at 80%</text>
+        </svg>
+      </div>
+      <figcaption>
+        <code>PlanKanban</code> rendered <code>sm:grid-cols-2 lg:grid-cols-4</code>. Both
+        rows are the same 1440px window, so <code>lg:</code> is true in both — and the
+        second row puts four kanban columns into 270px. The same component also renders
+        full-width in the <code>/content</code> plan tab, where four columns is correct.
+        It genuinely needs to answer to its container, not the window.
+      </figcaption>
+    </figure>
+
+    <p>
+      Container queries are the right tool and they are no longer a bet: they reached
+      Baseline widely-available status in August 2025 and sit around 92% support, and
+      Tailwind v4 — which we are already on at 4.2 — ships <code>@container</code> and the
+      <code>@md:</code>-style variants with no plugin. The current guidance is a clean
+      division of labour: <strong>media queries for page structure, container queries for
+      components, <code>clamp()</code> for fluid type and spacing.</strong> We use exactly
+      one of those three.
+    </p>
+
+    <div class="note">
+      <span class="eyebrow">Caveat worth knowing before the refactor</span>
+      <p>
+        Containment is not free. An element cannot query itself — only its children can
+        query it — so the pattern usually needs a wrapper. Flex and grid children need
+        explicit or intrinsic sizing or content collapses, and custom properties are not
+        allowed inside <code>@container</code> conditions. Expect a wrapper div per
+        adapted component rather than a one-line class swap.
+      </p>
+    </div>
+  </section>
+
+  <section id="relative">
+    <h2>On "relative"</h2>
+
+    <p>
+      <code>globals.css</code> carries 485 absolute pixel values against 19 <code>rem</code>,
+      and the JSX adds 230 more as Tailwind arbitrary values like <code>h-[80px]</code> and
+      <code>min-w-[280px]</code>. It is worth being precise about what that does and does
+      not cost, because the usual scare story does not apply cleanly to a desktop webview.
+    </p>
+
+    <p>
+      <strong>What it does not break:</strong> OS display scaling. When Windows runs at
+      150% or a Mac drives a Retina panel, the webview scales the CSS pixel itself, so a
+      <code>52px</code> header comes out physically larger without our help.
+    </p>
+
+    <p>
+      <strong>What it does break:</strong> the user's text-size preference. A reader who
+      raises their default font size, or uses text-only zoom, moves <code>rem</code> and
+      <code>em</code> and nothing else. Every <code>font-size: 13px</code> in our
+      stylesheet — and there are dozens — silently refuses that request. On a desktop app
+      people keep open all day, that is the accessibility cost that actually lands.
+    </p>
+
+    <p>
+      The second cost is coherence. Nine hand-picked CSS breakpoints (480, 520, 540, 740,
+      780, 860, 900, 960) sit alongside Tailwind's four, so a layout can change at 860px in
+      the stylesheet and again at 768px in a class on the same element, and neither author
+      can see the other's decision. Alignment matters more than the specific numbers.
+    </p>
+
+    <div class="callout">
+      <p>
+        Recommended target, in priority order: <strong>type and spacing in <code>rem</code></strong>;
+        <strong>fluid steps via <code>clamp()</code></strong> for the handful of things that
+        should scale with the window; <strong>one breakpoint scale</strong> (Tailwind's) for
+        page structure; <strong><code>@container</code></strong> for anything rendered inside
+        a pane. Borders, hairlines and icon sizes can stay in <code>px</code> — they are
+        genuinely device units.
+      </p>
+    </div>
+  </section>
+
+  <section id="platform">
+    <h2>What the platform asks for that we are not doing</h2>
+
+    <h3>Input: pointer events, not mouse events</h3>
+    <p>
+      The divider listened for <code>mousedown</code> and then tracked <code>mousemove</code>
+      on <code>window</code>. Every consumer of <code>SplitWorkspace</code> renders an
+      <code>&lt;iframe&gt;</code> in the right pane — the audit report
+      (<code>AuditReport.jsx:318</code>), the insights report
+      (<code>InsightsWorkspace.jsx:442</code>), the slide preview
+      (<code>SlidesCarousel.jsx:99</code>). An iframe is a separate event target, so the
+      moment the cursor crossed into one, the move events stopped arriving and the drag
+      died mid-gesture. The Pointer Events API fixes both halves of this: one code path
+      for mouse, trackpad, pen and touch, and <code>setPointerCapture</code> to keep the
+      events coming back to the handle no matter what is underneath.
+    </p>
+
+    <h3>Keyboard: a splitter you can actually move</h3>
+    <p>
+      The W3C window splitter pattern is specific. The handle takes
+      <code>role="separator"</code>, is focusable, and carries
+      <code>aria-valuenow</code> / <code>aria-valuemin</code> / <code>aria-valuemax</code>,
+      an accessible name, and <code>aria-controls</code> pointing at the primary pane.
+      Arrow keys move it, <code>Shift</code> + arrow moves it further, <code>Home</code> and
+      <code>End</code> go to the extremes, and <code>Enter</code> collapses and restores.
+      We had none of it. On the platform where the keyboard is the primary input, a control
+      only a mouse can reach is not really a control.
+    </p>
+
+    <h3>Density and reach on a big screen</h3>
+    <p>
+      The large-screen guidance is consistent across Android/ChromeOS and the older Windows
+      UX material: a desktop can carry higher visual density than a phone because the
+      pointer is precise, but reading measure should still be capped — 50–75 characters is
+      the target, 100 the ceiling. Our <code>.app-main</code> caps at 1440px, which is a
+      reasonable structural cap, but the text inside it is not measure-capped, so prose in
+      a full-width report gets long on a wide monitor. Worth a <code>max-width</code> in
+      <code>ch</code> on the prose blocks specifically.
+    </p>
+
+    <h3>Three webviews, not one browser</h3>
+    <p>
+      The shell renders in WKWebView on macOS, WebView2 on Windows and WebKitGTK on Linux,
+      and they disagree at the edges of newer CSS. We use <code>oklch()</code> throughout
+      the token layer, <code>color-mix()</code> in several places and
+      <code>backdrop-filter</code> on the header. All are well supported now, but none of
+      it is verified on WebKitGTK, which is the laggard of the three and the one none of us
+      runs. That is a testing gap, not a code defect — but it is the gap most likely to
+      produce a bug report we cannot reproduce.
+    </p>
+  </section>
+
+  <section id="modularity">
+    <h2>Modularity: what is shared, what was forked</h2>
+
+    <p>
+      The architecture here is better than the details. <code>SplitWorkspace</code> and
+      <code>PipelineProgress</code> are both real shared abstractions with three consumers
+      each and no forks — the earlier decision to extract them held. The problem is one
+      layer down, in the small pieces nobody thought were worth a shared home.
+    </p>
+
+    <div class="cards">
+      <div class="card">
+        <span class="tag">Was duplicated</span>
+        <h3>The agent primitives</h3>
+        <p>
+          <code>audit/CodeBlock.jsx</code> and <code>content/CodeBlock.jsx</code> differed
+          only in comments. <code>auditPhase.js</code> and <code>contentPhase.js</code> were
+          byte-identical — a six-member enum describing the agent lifecycle, forked so that
+          adding a phase meant editing two files or letting them drift.
+        </p>
+      </div>
+      <div class="card">
+        <span class="tag">Was duplicated</span>
+        <h3>The busy ring</h3>
+        <p>
+          Twelve hand-written spinners across eighteen files, in four border colours
+          (<code>current</code>, <code>primary</code>, <code>blue-500</code>,
+          <code>orange-500</code>) and six sizes. Two of the twelve told a screen reader
+          anything at all. "The app is working" looked like a different thing on every
+          surface.
+        </p>
+      </div>
+      <div class="card">
+        <span class="tag">Still to do</span>
+        <h3>The global stylesheet</h3>
+        <p>
+          2,077 lines, 247 class selectors, and the prefixes give it away:
+          <code>rpt-</code> (33), <code>conn-</code> (28), <code>generate-</code> (27),
+          <code>kpi-</code> (23), <code>signin-</code> (21). This is per-page styling in a
+          global file — the opposite of the component model the rest of the app follows.
+        </p>
+      </div>
+      <div class="card">
+        <span class="tag">Still to do</span>
+        <h3>The long files</h3>
+        <p>
+          <code>AuditReportV1.jsx</code> (957), <code>execute/page.jsx</code> (921),
+          <code>onboarding/page.jsx</code> (851), <code>connections/page.jsx</code> (800).
+          Not wrong on their own, but each is a place where a shared piece gets written
+          inline instead of extracted, because extracting is a bigger edit than inlining.
+        </p>
+      </div>
+    </div>
+
+    <h3>A component that owned a height it could not know</h3>
+    <p>
+      <code>PlanBoard</code> was <code>h-[calc(100vh-15rem)]</code> — a number tuned for
+      one of its two callers. It renders both in the scrolling <code>/content</code> tab
+      and in the full-bleed <code>/content/plan</code> route, where the parent already has
+      a definite height and the viewport maths is simply wrong. A component that hardcodes
+      its own height cannot be reused in a second layout; the caller has to own that.
+    </p>
+  </section>
+
+  <section id="changed">
+    <h2>What I changed</h2>
+
+    <p>
+      All of it is committed on <code>feat/gads-connectors-wave2</code> and the production
+      build passes. Each item below names the file it landed in, so the claims here can be
+      checked against the code rather than taken on trust.
+    </p>
+
+    <div class="phase">
+      <div class="n">01</div>
+      <div>
+        <h3>SplitWorkspace, rewritten for the platform</h3>
+        <p><code>app/src/components/workspace/SplitWorkspace.jsx</code> — one file, three consumers.</p>
+        <ul>
+          <li>Pointer events with <code>setPointerCapture</code>, so the drag survives the iframes in the right pane; <code>touch-action: none</code> on the handle.</li>
+          <li><code>role="separator"</code> with the full ARIA value set, plus arrow / Shift-arrow / Home / End / Enter-to-collapse per the W3C pattern, and a visible focus state.</li>
+          <li>Cursor and <code>user-select</code> pinned to the body for the duration of a drag, so text stops selecting under the gesture.</li>
+          <li>Double-click resets to the default split.</li>
+          <li>A note at the point of temptation explaining why the panes themselves are <em>not</em> containers — see below.</li>
+          <li>The stored ratio now loads in an effect rather than during the first render — reading <code>localStorage</code> in a <code>useState</code> initialiser made the client disagree with the prerendered HTML — and the read is guarded, so a webview with storage disabled falls back instead of throwing.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="n">02</div>
+      <div>
+        <h3>The first container-adaptive component</h3>
+        <p>
+          <code>PlanKanban</code> moved from <code>sm:grid-cols-2 lg:grid-cols-4</code> to
+          <code>@md:grid-cols-2 @4xl:grid-cols-4</code>. It now collapses to one column in
+          a narrow pane and opens to four when it has the room, at any window size —
+          correct in both of its call sites for the first time.
+        </p>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="n">03</div>
+      <div>
+        <h3>The insights session fills the window</h3>
+        <p>
+          <code>/insights/session</code> joined <code>FULL_BLEED_PREFIXES</code>, and its
+          <code>h-[calc(100vh-4rem)]</code> became <code>h-full</code>. It had been
+          subtracting 64px for a 52px header while sitting inside <code>.app-main</code>'s
+          28px top and 64px bottom padding — so the one agent surface that should fill the
+          window was instead taller than it, and scrolled.
+        </p>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="n">04</div>
+      <div>
+        <h3>Height belongs to the caller</h3>
+        <p>
+          <code>PlanBoard</code> is now <code>h-full</code>. The full-bleed route gives it
+          a height directly; the scrolling tab — the one caller that genuinely has no
+          height above it — states its own, in <code>svh</code> to match the rest of the app.
+        </p>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="n">05</div>
+      <div>
+        <h3>Shared primitives, three fewer forks</h3>
+        <ul>
+          <li><code>workspace/CodeBlock.jsx</code> — one copy; the duplicate is deleted and both chats import it.</li>
+          <li><code>workspace/agentPhase.js</code> — the lifecycle enum, shared, with a comment saying why it lives there.</li>
+          <li><code>ui/spinner.jsx</code> — one busy ring. Colour comes from <code>currentColor</code> so callers tint it like text; size and overrides go through <code>className</code> and tailwind-merge replaces rather than fights the defaults. Decorative by default, with an opt-in <code>label</code> that turns it into a live <code>role="status"</code> for the cases where the ring is the only signal. Adopted at all twelve sites.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="note">
+      <span class="eyebrow">A trap worth recording</span>
+      <p>
+        My first pass put <code>container-type: inline-size</code> on both panes, so any
+        descendant could query the pane directly. That is wrong here, for exactly the
+        containment side effect the research flags: <code>container-type</code> implies
+        <code>contain: layout</code>, which makes the element <strong>a containing block for
+        <code>position: fixed</code> descendants</strong>. Three full-screen overlays render
+        inline inside these panes rather than through a portal — audit's
+        <code>ExecutionOffer</code>, content's <code>PublishModal</code> and
+        <code>ContentChat</code>'s image lightbox, all <code>fixed inset-0</code>. A container
+        on the pane would have quietly shrunk all three from full-screen to pane-sized.
+      </p>
+      <p>
+        So containers are declared per component instead, at the component's own root — which
+        measures effectively the same width. Portal those three overlays to
+        <code>&lt;body&gt;</code> and the pane-level container becomes safe; that is on the
+        backlog below, and worth doing on its own merits.
+      </p>
+    </div>
+  </section>
+
+  <section id="next">
+    <h2>What I would do next</h2>
+
+    <div class="scroller">
+      <table>
+        <thead><tr><th>Step</th><th>Why it is next</th><th>Rough size</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Container-query the remaining pane children</td>
+            <td>The pattern is proven in <code>PlanKanban</code> and the panes already declare containers. <code>AnalyticsView</code>, <code>StyleGallery</code>, <code>DiscoverPage</code> are full-width today but are the obvious candidates to move into a pane next, and would break the same way.</td>
+            <td class="num">half a day</td>
+          </tr>
+          <tr>
+            <td>Collapse the breakpoint systems</td>
+            <td>Rewrite the nine ad-hoc CSS breakpoints onto Tailwind's four. Mostly mechanical; removes the class of bug where two rules disagree about when a layout changes.</td>
+            <td class="num">1 day</td>
+          </tr>
+          <tr>
+            <td>Type and spacing to <code>rem</code></td>
+            <td>Restores the user's text-size preference. Best done as a token pass in <code>globals.css</code> rather than file by file.</td>
+            <td class="num">1 day</td>
+          </tr>
+          <tr>
+            <td>Break up <code>globals.css</code></td>
+            <td>Move <code>rpt-</code>, <code>conn-</code>, <code>generate-</code>, <code>signin-</code> into the components that own them. Biggest modularity win available, and the one that stops the file growing.</td>
+            <td class="num">2 days</td>
+          </tr>
+          <tr>
+            <td>A command palette and real shortcuts</td>
+            <td>We have exactly one shortcut. On desktop this is the difference between an app and a bookmarked website — and it is the cheapest "feels native" win available.</td>
+            <td class="num">1–2 days</td>
+          </tr>
+          <tr>
+            <td>Portal the three inline overlays</td>
+            <td>They are <code>fixed inset-0</code> modals rendered inside a pane. They work today only because no ancestor establishes a containing block — which also means they block pane-level containment and will break the first time anyone adds a transform, filter or container above them.</td>
+            <td class="num">an hour</td>
+          </tr>
+          <tr>
+            <td>Cap reading measure on prose blocks</td>
+            <td><code>max-width</code> in <code>ch</code> on report and narrative text. Small, visible on every wide monitor.</td>
+            <td class="num">an hour</td>
+          </tr>
+          <tr>
+            <td>Test the Linux webview</td>
+            <td>WebKitGTK is the one we never see, and we lean on <code>oklch()</code>, <code>color-mix()</code> and <code>backdrop-filter</code>. A single pass in a VM would retire the risk.</td>
+            <td class="num">half a day</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note">
+      <span class="eyebrow">Unrelated, but found on the way</span>
+      <p>
+        There is a stale nested git repository at <code>app/.git</code> — one commit, from
+        April, tracking a different set of files. Any <code>git</code> command run from
+        inside <code>app/</code> silently targets it instead of the <code>duct</code> repo,
+        which is how a <code>git mv</code> during this work failed with "not under version
+        control" for a file that plainly is. Worth deleting.
+      </p>
+    </div>
+  </section>
+
+  <section id="sources">
+    <h2>Sources</h2>
+    <ul class="sources">
+      <li><a href="https://blog.logrocket.com/container-queries-2026/">Container queries in 2026: Powerful, but not a silver bullet</a> — LogRocket. Baseline status, the media/container/clamp division of labour, and the containment gotchas.</li>
+      <li><a href="https://www.w3.org/WAI/ARIA/apg/patterns/windowsplitter/">Window Splitter Pattern</a> — W3C ARIA Authoring Practices. Roles, ARIA values and the full key map.</li>
+      <li><a href="https://developer.android.com/design/ui/large-screens">Desktop experiences</a> and <a href="https://developer.android.com/design/ui/desktop/guides/foundations/get-started">Get started with desktop</a> — Android Developers. Density, multi-pane layouts, pointer precision.</li>
+      <li><a href="https://css-tricks.com/optimizing-large-scale-displays/">Optimizing for Large-Scale Displays</a> — CSS-Tricks. Reading measure on wide screens.</li>
+      <li><a href="https://learn.microsoft.com/en-au/windows/win32/uxguide/top-violations">UX checklist for desktop applications</a> — Microsoft. Still the clearest list of desktop-specific expectations.</li>
+      <li><a href="https://dev.to/ottoaria/tauri-in-2026-build-cross-platform-desktop-apps-with-web-technologies-better-than-electron-11mo">Tauri in 2026</a> and <a href="https://www.buildmvpfast.com/blog/tauri-v2-vs-electron-desktop-apps-2026">Tauri v2 vs Electron 2026</a> — on the three-webview rendering split and why it needs testing on all three.</li>
+      <li><a href="https://www.uxpin.com/studio/blog/best-practices-examples-of-excellent-responsive-design/">Responsive Design: Best Practices</a> — UXPin.</li>
+    </ul>
+  </section>
+
+  </div>
+
+  <footer>
+    <p>
+      Duct · engineering · UI review, 1 September 2026. The counts in <em>What I measured</em>
+      describe <code>app/src</code> at <code>c612ad4</code> — the state <em>before</em> the
+      fixes, so they read as the case for making them rather than as a description of the
+      code today. The seven items in <em>What I would do next</em> are all still open.
+    </p>
+  </footer>
+
+</div>
+
+</body>
+</html>

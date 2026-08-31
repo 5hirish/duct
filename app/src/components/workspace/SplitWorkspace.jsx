@@ -1,12 +1,12 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { MessageSquare, PanelRight } from "lucide-react";
 
 /**
  * SplitWorkspace — the shared chat-left / viewport-right shell for every agent
- * UI (content, audit, …). It owns ONLY layout + responsiveness so those fixes
- * live in one place:
+ * UI (content, audit, insights). It owns ONLY layout + responsiveness so those
+ * fixes live in one place:
  *   - desktop (md+): a draggable divider + split ratio, persisted per `storageKey`
  *   - mobile (<md): a pure CSS-driven pane TOGGLE — one pane at a time, switched
  *     by a built-in segmented control. No overlay/sheet, no portals, no extra
@@ -15,6 +15,33 @@ import { MessageSquare, PanelRight } from "lucide-react";
  * Everything agent-specific (streaming, chat, the viewport) stays in the
  * caller — just pass `left` / `right` as plain nodes. No render-props, no
  * triggers to wire: the responsive behavior is fully self-contained here.
+ *
+ * Three things here exist specifically because this is a desktop app:
+ *
+ *  1. POINTER EVENTS + POINTER CAPTURE, not mouse events. Every consumer of
+ *     this shell renders an <iframe> in the right pane (the audit report, the
+ *     insights report, the slide preview). With window-level mousemove, the
+ *     drag dies the instant the cursor crosses into the iframe, because the
+ *     iframe's document — a separate event target — swallows the move events.
+ *     setPointerCapture routes them back to the handle regardless of what is
+ *     underneath, and pointer events cover mouse, trackpad, pen and touch in
+ *     one path.
+ *  2. KEYBOARD RESIZE + role="separator". A pane divider a keyboard user
+ *     cannot move is a dead control on the platform where keyboards are the
+ *     primary input. Follows the WAI-ARIA window splitter pattern.
+ *  3. Children that must ADAPT TO THE PANE declare their own `@container`.
+ *     The panes are user-resizable, so a child's width has no fixed relation to
+ *     the viewport: at one window size the right pane can be 280px or 1400px,
+ *     and `md:` answers about the wrong box. `PlanKanban` shows the pattern —
+ *     `@container` on its own root, `@md:` / `@4xl:` on the grid inside it.
+ *
+ *     Deliberately NOT declared here on the panes themselves, tempting as that
+ *     is: `container-type` implies `contain: layout`, which makes the element a
+ *     containing block for `position: fixed` descendants. Three overlays inside
+ *     these panes are inline `fixed inset-0` full-screen modals (audit's
+ *     ExecutionOffer, content's PublishModal, ContentChat's image lightbox), and
+ *     a container on the pane would shrink all three to the pane's box. Portal
+ *     those to <body> first and this can be revisited.
  *
  * Props:
  *   - left, right: ReactNode — the two panes
@@ -25,6 +52,14 @@ import { MessageSquare, PanelRight } from "lucide-react";
  *   - rightStatus?: "idle" | "busy" | "ready" — badges the right tab when the
  *     user is on the left pane (a dot when the viewport has something to see)
  */
+
+const MIN_SPLIT = 20;
+const MAX_SPLIT = 80;
+const KEY_STEP = 2;
+const KEY_STEP_LARGE = 10;
+
+const clampSplit = (value) => Math.min(MAX_SPLIT, Math.max(MIN_SPLIT, value));
+
 export default function SplitWorkspace({
   left,
   right,
@@ -35,34 +70,86 @@ export default function SplitWorkspace({
   rightLabel = "Preview",
   rightStatus = "idle",
 }) {
-  const [leftWidth, setLeftWidth] = useState(() => {
-    if (typeof window !== "undefined") {
-      const v = Number(localStorage.getItem(storageKey) || initialSplit);
-      return Number.isFinite(v) ? Math.min(80, Math.max(20, v)) : initialSplit;
-    }
-    return initialSplit;
-  });
+  // Starts at the prop and adopts the stored ratio in an effect rather than in
+  // the initializer: reading localStorage during the first render makes the
+  // client's markup disagree with the prerendered HTML.
+  const [leftWidth, setLeftWidth] = useState(clampSplit(initialSplit));
   const [mobilePane, setMobilePane] = useState("left"); // "left" | "right"
-  const dragging = useRef(false);
   const containerRef = useRef(null);
+  const collapsedFrom = useRef(null); // where Enter should restore to
 
-  function onMouseDownDivider(e) {
+  useEffect(() => {
+    try {
+      const stored = Number(localStorage.getItem(storageKey));
+      if (Number.isFinite(stored) && stored > 0) setLeftWidth(clampSplit(stored));
+    } catch {
+      // storage unavailable (private mode, embedded webview) — keep the default
+    }
+  }, [storageKey]);
+
+  const commit = useCallback(
+    (pct) => {
+      const next = clampSplit(pct);
+      setLeftWidth(next);
+      try {
+        localStorage.setItem(storageKey, String(next));
+      } catch {
+        // ignore storage write errors
+      }
+      return next;
+    },
+    [storageKey]
+  );
+
+  const pctFromClientX = useCallback((clientX) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect || !rect.width) return null;
+    return ((clientX - rect.left) / rect.width) * 100;
+  }, []);
+
+  function onPointerDown(e) {
+    if (e.button !== 0 && e.pointerType === "mouse") return;
     e.preventDefault();
-    dragging.current = true;
-    function onMove(ev) {
-      if (!dragging.current || !containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const pct = Math.min(80, Math.max(20, ((ev.clientX - rect.left) / rect.width) * 100));
-      setLeftWidth(pct);
-      try { localStorage.setItem(storageKey, String(pct)); } catch { /* ignore */ }
-    }
-    function onUp() {
-      dragging.current = false;
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-    }
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
+    // Capture keeps the drag alive over the iframes in the right pane.
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    // The cursor has to persist while the pointer is over other elements, and
+    // text must stop selecting under a drag that started on the handle.
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+  }
+
+  function onPointerMove(e) {
+    if (!e.currentTarget.hasPointerCapture?.(e.pointerId)) return;
+    const pct = pctFromClientX(e.clientX);
+    if (pct !== null) commit(pct);
+  }
+
+  function endDrag(e) {
+    e.currentTarget.releasePointerCapture?.(e.pointerId);
+    document.body.style.cursor = "";
+    document.body.style.userSelect = "";
+  }
+
+  // WAI-ARIA window splitter keys: arrows nudge, Shift+arrow jumps, Home/End
+  // go to the extremes, Enter collapses the primary pane and restores it.
+  function onKeyDown(e) {
+    const step = e.shiftKey ? KEY_STEP_LARGE : KEY_STEP;
+    let next = null;
+    if (e.key === "ArrowLeft") next = leftWidth - step;
+    else if (e.key === "ArrowRight") next = leftWidth + step;
+    else if (e.key === "Home") next = MIN_SPLIT;
+    else if (e.key === "End") next = MAX_SPLIT;
+    else if (e.key === "Enter") {
+      if (collapsedFrom.current !== null) {
+        next = collapsedFrom.current;
+        collapsedFrom.current = null;
+      } else {
+        collapsedFrom.current = leftWidth;
+        next = MIN_SPLIT;
+      }
+    } else return;
+    e.preventDefault();
+    commit(next);
   }
 
   return (
@@ -81,21 +168,39 @@ export default function SplitWorkspace({
         style={{ "--split": `${leftWidth}%` }}
       >
         {/* Left pane — toggled on mobile, split on md+ */}
-        <div className={`${mobilePane === "left" ? "flex" : "hidden"} w-full flex-col overflow-hidden border-r border-border/60 md:flex md:w-[var(--split)] md:min-w-[280px]`}>
+        <div
+          id={`${storageKey}-left`}
+          className={`${mobilePane === "left" ? "flex" : "hidden"} w-full flex-col overflow-hidden border-r border-border/60 md:flex md:w-[var(--split)] md:min-w-[17.5rem]`}
+        >
           {left}
         </div>
 
         {/* Divider — desktop only */}
         <div
-          onMouseDown={onMouseDownDivider}
-          title="Drag to resize"
-          className="group hidden w-3 shrink-0 cursor-col-resize select-none items-center justify-center md:flex"
+          role="separator"
+          tabIndex={0}
+          aria-orientation="vertical"
+          aria-label="Resize panes"
+          aria-controls={`${storageKey}-left`}
+          aria-valuenow={Math.round(leftWidth)}
+          aria-valuemin={MIN_SPLIT}
+          aria-valuemax={MAX_SPLIT}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={endDrag}
+          onPointerCancel={endDrag}
+          onKeyDown={onKeyDown}
+          onDoubleClick={() => commit(initialSplit)}
+          title="Drag to resize — double-click to reset, arrow keys to nudge"
+          className="group hidden w-3 shrink-0 cursor-col-resize touch-none select-none items-center justify-center focus-visible:outline-none md:flex"
         >
-          <div className="h-full w-px bg-border/60 transition-colors group-hover:bg-primary/30" />
+          <div className="h-full w-px bg-border/60 transition-colors group-hover:bg-primary/30 group-focus-visible:bg-primary group-focus-visible:w-0.5" />
         </div>
 
         {/* Right pane — toggled on mobile, split on md+. Single mount. */}
-        <div className={`${mobilePane === "right" ? "flex" : "hidden"} min-w-0 flex-1 flex-col overflow-hidden md:flex md:min-w-[280px]`}>
+        <div
+          className={`${mobilePane === "right" ? "flex" : "hidden"} min-w-0 flex-1 flex-col overflow-hidden md:flex md:min-w-[17.5rem]`}
+        >
           {right}
         </div>
       </div>

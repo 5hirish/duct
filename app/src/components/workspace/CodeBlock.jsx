@@ -28,7 +28,8 @@ SyntaxHighlighter.registerLanguage("ts", typescript);
 
 /**
  * Syntax-highlighted code block with language label and copy button.
- * Used by both ChatBubble and ThinkingBlock.
+ * Used by every agent chat's ChatBubble and ThinkingBlock — audit and content
+ * carried identical copies of this file before it moved here.
  */
 export function CodeBlock({ language, children, compact = false }) {
   const [copied, setCopied] = useState(false);

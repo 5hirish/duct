@@ -18,7 +18,7 @@ function Session() {
   const projectId = params.get("project") || getActiveProjectId() || "";
 
   return (
-    <div className="h-[calc(100vh-4rem)]">
+    <div className="h-full">
       <InsightsWorkspace projectId={projectId} initialPrompt={prompt} />
     </div>
   );

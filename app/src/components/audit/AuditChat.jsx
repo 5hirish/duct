@@ -9,12 +9,13 @@ import AuditQuestions from "./AuditQuestions";
 import AuditInput from "./AuditInput";
 import AuditTodos from "./AuditTodos";
 import { Brain } from "lucide-react";
-import { Phase } from "./auditPhase";
-import { CodeBlock, resolveCode } from "./CodeBlock";
+import { Phase } from "../workspace/agentPhase";
+import { CodeBlock, resolveCode } from "../workspace/CodeBlock";
 import ChangeSetCard from "@/components/execution/ChangeSetCard";
 import { MEMORY_KIND_ICONS, createMemory, deleteMemory } from "@/lib/memoryApi";
 import { trackEvent } from "../../lib/analytics-client";
 import { getActiveProject } from "@/lib/projects";
+import { Spinner } from "@/components/ui/spinner";
 
 /** Deep link to one entry in the project timeline, which fetches and highlights
  * it regardless of the filters in force there. */
@@ -535,7 +536,7 @@ export default function AuditChat({
         {/* Starting: spinner before first step arrives */}
         {phase === Phase.STARTING && (
           <div className="flex items-center gap-2 py-2 text-sm text-muted-foreground">
-            <span className="inline-block size-3 rounded-full border-2 border-current border-t-transparent animate-spin" />
+            <Spinner className="size-3" />
             Starting audit…
           </div>
         )}
