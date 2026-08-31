@@ -40,7 +40,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from typing import Any, Callable
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from deepagents import FilesystemMiddleware, create_deep_agent
 from deepagents.backends import StateBackend
@@ -56,6 +56,8 @@ from agents.insights.brief import DEFAULT_FORMAT, parse_brief
 from agents.insights.data_tools import build_data_tools_lc
 from agents.insights.subagents import build_verify_subagent
 from agents.insights.prompts.autonomous import (
+    CAPABILITIES_PHASE_3,
+    CAPABILITIES_UNATTENDED,
     build_insights_system_prompt,
     build_insights_user_prompt,
 )
@@ -131,6 +133,7 @@ class AutonomousInsightsRunner:
         conversation_id: UUID | None = None,
         remember: bool = True,
         execute: bool = True,
+        interactive: bool = True,
         system_prompt: str = "",
     ) -> Any:
         """Assemble the agent: memory tools, mid-run questions, planning.
@@ -149,6 +152,12 @@ class AutonomousInsightsRunner:
         membership-checked project, so the binder returns nothing without both;
         the flag exists for the caller that has both and still wants a
         read-only session.
+
+        ``interactive=False`` is the unattended shape: no AskUserQuestion, and
+        no connector tool that would pause the run waiting for a human. The
+        system prompt says so in its own words, because an agent that plans
+        around a question it will never get to ask produces a brief with a hole
+        in it rather than a stated assumption.
         """
         if llm is None:
             llm = resolve_chat_model(self.provider, self.model, self._api_key, self._temperature)
@@ -169,10 +178,12 @@ class AutonomousInsightsRunner:
         # Connector discovery. ListDataSources needs only a user; the two that
         # pause or bind need a project and a live session, and the binder mounts
         # only what it can actually serve.
+        # An unattended run gets the read-only half by passing no session: the
+        # binder mounts a pause tool only when there is somebody to pause for.
         tools += build_connector_tools_lc(
             project_id,
             user_id=user_id,
-            session=session,
+            session=session if interactive else None,
             session_id=session_id,
             emit=emit,
             log_prefix="insights-v1",
@@ -226,7 +237,7 @@ class AutonomousInsightsRunner:
             )
             tools += execution_tools
 
-        if session is not None and emit is not None:
+        if interactive and session is not None and emit is not None:
             tools.append(
                 build_ask_user_tool(
                     session,
@@ -246,7 +257,10 @@ class AutonomousInsightsRunner:
             # a word. See agents/insights/subagents/verify.py.
             subagents=[build_verify_subagent(data_tools)],
             system_prompt=system_prompt or build_insights_system_prompt(
-                can_execute=bool(execution_tools)
+                capabilities=(
+                    CAPABILITIES_PHASE_3 if interactive else CAPABILITIES_UNATTENDED
+                ),
+                can_execute=bool(execution_tools),
             ),
             # Planning is opt-in since deepagents 0.7. Mounted here because the
             # todo stream is what makes a long autonomous run legible — the
@@ -341,33 +355,7 @@ class AutonomousInsightsRunner:
         version = {"n": start_version}
 
         async def _on_artifact(raw: str, turn_text: str) -> None:
-            """A closing </duct_artifact>: publish it as the next brief version.
-
-            ``ArtifactPersister`` is wrapped around ``emit`` by the route, so
-            emitting is all it takes to store one — the runner never touches
-            the database.
-            """
-            brief = parse_brief(raw)
-            if not brief.body.strip():
-                logger.warning("insights: empty <duct_artifact> payload — nothing to version")
-                return
-            version["n"] += 1
-            n = version["n"]
-            await emit({
-                "event": AgentEvent.ARTIFACT_VERSION,
-                "version_id": n,
-                "label": brief.label or ("Initial brief" if n == 1 else f"Update {n}"),
-                "payload": {
-                    "title": brief.title,
-                    "format": brief.format,
-                    "content": brief.body,
-                    "declared_format": brief.declared_format,
-                },
-            })
-            logger.info(
-                "insights: brief v%d — %r, %s, %d chars",
-                n, brief.title, brief.format, len(brief.body),
-            )
+            await _publish_brief(raw, emit, version)
 
         async def _turn(text: str) -> None:
             await stream_agent(
@@ -425,9 +413,120 @@ class AutonomousInsightsRunner:
                 })
 
 
+    # -----------------------------------------------------------------------
+    # Unattended
+    # -----------------------------------------------------------------------
+
+    async def run_once(
+        self,
+        emit: Callable,
+        *,
+        llm: Any = None,
+        prompt: str = "",
+        business_context: str = "",
+        user_context: str = "",
+        memory: str = "",
+        project_id: UUID | None = None,
+        user_id: UUID | None = None,
+        conversation_id: UUID | None = None,
+        remember: bool = True,
+        artifact_format: str = DEFAULT_FORMAT,
+        autonomy: str = AUTONOMY_ASK,
+        start_version: int = 0,
+    ) -> dict:
+        """One turn, nobody watching. Returns the brief it wrote.
+
+        The entry point for a scheduled brief. ``backend/CLAUDE.md`` is explicit
+        that the scheduled brief is the product and it can never block on a
+        human, so this shape exists to make blocking *impossible* rather than
+        discouraged: the tools that pause are not mounted, and the system
+        prompt says there is nobody to ask.
+
+        ``emit`` still matters even with no SSE consumer — the caller wraps it
+        with ``ArtifactPersister``, so emitting ARTIFACT_VERSION is what stores
+        the brief. The return value is for the caller's response body; the
+        durable output is the artifact.
+        """
+        agent = self.build_agent(
+            llm=llm,
+            session=None,
+            emit=emit,
+            project_id=project_id,
+            user_id=user_id,
+            conversation_id=conversation_id,
+            remember=remember,
+            interactive=False,
+        )
+        written: list[dict] = []
+        version = {"n": start_version}
+
+        async def _on_artifact(raw: str, turn_text: str) -> None:
+            payload = await _publish_brief(raw, emit, version)
+            if payload is not None:
+                written.append(payload)
+
+        await stream_agent(
+            agent,
+            build_insights_user_prompt(
+                prompt=prompt,
+                business_context=business_context,
+                user_context=user_context,
+                memory=memory,
+                artifact_format=artifact_format,
+                autonomy=autonomy,
+            ),
+            emit,
+            on_artifact_close=_on_artifact,
+            log_prefix="insights-v1",
+            config={
+                "configurable": {"thread_id": str(conversation_id or uuid4())},
+                "recursion_limit": RECURSION_LIMIT,
+            },
+            provider=self.provider,
+            model=self.model,
+            conversation_id=str(conversation_id or ""),
+        )
+        await emit({"event": AgentEvent.PIPELINE_FINISHED, "status": StepStatus.SUCCESS})
+        # A run that reached no conclusion worth keeping is reported as such
+        # rather than dressed up as an empty brief.
+        return written[-1] if written else {}
+
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+async def _publish_brief(raw: str, emit: Callable, version: dict) -> dict | None:
+    """A closing </duct_artifact>: publish it as the next brief version.
+
+    ``ArtifactPersister`` is wrapped around ``emit`` by the caller, so emitting
+    is all it takes to store one — the runner never touches the database.
+    Returns the payload, or None when the payload was empty (an empty version
+    would be a blank brief in the artifacts list forever).
+    """
+    brief = parse_brief(raw)
+    if not brief.body.strip():
+        logger.warning("insights: empty <duct_artifact> payload — nothing to version")
+        return None
+    version["n"] += 1
+    n = version["n"]
+    payload = {
+        "title": brief.title,
+        "format": brief.format,
+        "content": brief.body,
+        "declared_format": brief.declared_format,
+    }
+    await emit({
+        "event": AgentEvent.ARTIFACT_VERSION,
+        "version_id": n,
+        "label": brief.label or ("Initial brief" if n == 1 else f"Update {n}"),
+        "payload": payload,
+    })
+    logger.info(
+        "insights: brief v%d — %r, %s, %d chars", n, brief.title, brief.format, len(brief.body)
+    )
+    return payload
+
 
 def _as_text(chat_msg: Any) -> str:
     """A queued chat message as plain text.

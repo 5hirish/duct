@@ -98,7 +98,7 @@ export default function InsightsModeSelector({ serverReports }) {
         </p>
         {modeConfig?.active && (
           <Button size="default" asChild>
-            <Link href={`/insights/organic-growth/generate?mode=${selectedMode}`}>Generate Insight</Link>
+            <Link href="/insights/session">Start a session</Link>
           </Button>
         )}
       </div>

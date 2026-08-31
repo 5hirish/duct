@@ -1,6 +1,6 @@
 # Autonomous Insights Agent — design plan
 
-**Status:** Phases 1–5 built, 6 open. Supersedes the request-shaped insights pipeline
+**Status:** Built, Phases 1–6. Supersedes the request-shaped insights pipeline
 (`agents/insights/v1/agent.py` + the six-step wizard at `app/src/app/(app)/generate/page.jsx`).
 
 Companion reading, in this order:
@@ -548,6 +548,46 @@ the failure, not about relying on the model to avoid it.
 - **`agents/insights/v2/` (ADK) stays, frozen.** It is not extended, not ported, and
   not deleted — the standing V2 rule in `backend/CLAUDE.md` applies unchanged. Shared
   changes continue to absorb into V1 and V3 only.
+
+> **Built 2026-08-31.** Net −867 lines. The wizard is gone and the agent is the
+> only way in.
+>
+> - **Deleted:** `app/src/app/(app)/generate/page.jsx` (2,132 lines — the plan
+>   under-counted it), its re-export at `/insights/organic-growth/generate`, an
+>   orphaned `InsightsGenerateCta` pointing at a route that never existed,
+>   `_run_generate_pipeline` and its machinery (474 lines of `routes/
+>   generate.py`), and the wizard's request contract in `routes/schemas.py`
+>   (`GenerateRequest`, `ReportRequest`, `UnifiedInsight`, `InsightMetadata`).
+>   A test asserts those four are *absent* rather than merely uncalled —
+>   leaving them importable is how a deleted path grows a second caller.
+> - **Both old URLs redirect** rather than 404: they are in browser history,
+>   in bookmarks, and in links people have already sent each other.
+> - **`POST /api/insights/generate` was rewired, not retired.** Same agent,
+>   same tools, same artifact store, one turn, nothing that can pause:
+>   `run_once` builds the agent with `interactive=False`, which drops
+>   AskUserQuestion *and* the connector tools that pause, and swaps in a
+>   capability stanza that says there is nobody to ask and that a question you
+>   would have asked becomes a stated assumption in the brief. Blocking is made
+>   impossible rather than discouraged, which is what `backend/CLAUDE.md`
+>   requires of the scheduled brief.
+> - **A run that wrote nothing says so** (`status: "no_brief"`). A caller
+>   logging "ok" for an empty result is how a broken schedule stays invisible
+>   for a month.
+> - **`agents/insights/setup.py` was extracted** because both doors now share a
+>   membership gate, and a second copy of a membership gate is the copy that
+>   eventually forgets to check.
+>
+> **A regression caught on the way through, and fixed.** Deleting
+> `_resolve_agent_config` would have silently dropped bring-your-own provider
+> keys — the `X-Provider-*` header path the desktop app uses. It is restored in
+> `resolve_model`, and the *session* route now honours BYO keys too, which it
+> never did. `tests/test_byo_provider_keys.py` follows the logic to its new
+> home rather than being deleted with it.
+>
+> **`agents/insights/v1/agent.py`, `v2/` and `v3/` are left in place and
+> frozen.** They no longer serve a route. Deleting them is a separate cleanup
+> with its own blast radius (`test_insights_v1.py`, and `test_insights_v2.py`
+> is the ADK-migration gate), and V2 is frozen by standing rule either way.
 
 ---
 

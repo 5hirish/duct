@@ -24,6 +24,7 @@ const SEGMENT_LABELS = {
   insights: "Insights",
   "organic-growth": "Organic Growth",
   generate: "Generate Insight",
+  session: "Session",
   audit: "Audit",
   seo: "SEO Audit",
   connections: "Connections",

@@ -3,122 +3,16 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Annotated, Any, Self
-from uuid import UUID
+from typing import Any
 
-from pydantic import BaseModel, BeforeValidator, Field, model_validator
-
-from agents.core.context import BusinessContext
-from agents.insights.goals import InsightGenerationGoal, parse_goal_value
-from agents.insights.goals.organic_growth import OrganicGrowthGoal, parse_goal_value as parse_organic_goal_value
+from pydantic import BaseModel, Field
 
 
-def _parse_any_goal(value: object) -> InsightGenerationGoal | OrganicGrowthGoal:
-    """Coerce goal value — tries paid ads first, then organic growth."""
-    try:
-        return parse_goal_value(value)
-    except ValueError:
-        pass
-    try:
-        return parse_organic_goal_value(value)
-    except ValueError:
-        raise ValueError(
-            f"Unknown goal {value!r}. Not a valid paid ads or organic growth goal."
-        )
-
-
-class ReportRequest(BaseModel):
-    customer_id: str = ""
-    developer_token: str = ""  # deprecated; token now resolves from backend env
-    client_id: str = ""  # deprecated; client id now resolves from backend env
-    client_secret: str = ""  # deprecated; secret now resolves from backend env
-    refresh_token: str = ""
-    date_from: str = ""
-    date_to: str = ""
-    account_name: str = ""
-    currency_code: str = "USD"
-    theme: str = "paid_ads"
-    login_customer_id: str = ""  # optional MCC override
-    use_demo: bool = False
-
-
-# BusinessContext is the shared, unified model (agents/core/context.py),
-# passed equally to every agent. It is a superset (identity + paid + organic
-# fields) with extra="ignore", so existing insights form payloads validate
-# unchanged. Imported above; re-exported here for backwards-compatible imports.
-
-
-class GenerateRequest(BaseModel):
-    connections: list[str] = Field(default_factory=list)
-    mode: str = Field(default="paid_ads", description="Intelligence mode: 'paid_ads' or 'organic_growth'")
-    goal: Annotated[InsightGenerationGoal | OrganicGrowthGoal, BeforeValidator(_parse_any_goal)]
-    custom_goal: str = Field(
-        default="",
-        description='Required when goal is "custom": free-text objective for the report.',
-    )
-    context: str = ""
-    date_from: str = ""
-    date_to: str = ""
-    refresh_token: str = ""
-    developer_token: str = Field(
-        default="",
-        description="User-supplied Google Ads developer token (BYO API access); falls back to server env.",
-    )
-    customer_id: str = ""
-    ga4_property_id: str = ""
-    ga4_refresh_token: str = ""
-    gsc_site_url: str = ""
-    gsc_refresh_token: str = ""
-    account_name: str = ""
-    currency_code: str = "USD"
-    login_customer_id: str = ""
-    # Manual-credential connectors (apple_ads, meta_ads, stripe, revenuecat,
-    # openai_ads): per-connector credential dicts. A non-empty request entry
-    # wins; otherwise the signed-in user's stored encrypted row is used.
-    connector_credentials: dict[str, dict[str, str]] = Field(default_factory=dict)
-    # Optional project scope: when the caller is a member, the project's
-    # connector bindings (project_connectors) pick which stored account each
-    # manual connector reads from. Ignored (never an error) otherwise.
-    project_id: UUID | None = None
-    business_context: BusinessContext = Field(default_factory=BusinessContext)
-    mode_context: str = ""  # optional frontend-supplied mode context, appended to system prompt
-    engine: str = Field(default="", description="Engine override: 'v1', 'v2', or 'v3'. Falls back to GENERATE_ENGINE env var.")
-
-    @model_validator(mode="after")
-    def _custom_goal_required(self) -> Self:
-        from agents.insights.goals.organic_growth import OrganicGrowthGoal as OGGoal
-        is_custom = (
-            self.goal == InsightGenerationGoal.CUSTOM
-            or (isinstance(self.goal, OGGoal) and self.goal == OGGoal.CUSTOM)
-        )
-        if is_custom and not self.custom_goal.strip():
-            raise ValueError('custom_goal is required when goal is "custom"')
-        return self
-
-
-class InsightMetadata(BaseModel):
-    """Envelope-level metadata for a unified insight."""
-
-    generated_at: str = ""
-    goal: str = ""
-    connectors_used: list[str] = Field(default_factory=list)
-
-
-class UnifiedInsight(BaseModel):
-    """Envelope wrapping one or more connector briefs plus a synthesis layer.
-
-    ``briefs`` maps connector_id → connector-specific brief dict.
-    ``synthesis`` holds the LLM-produced analysis (narrative, findings, actions).
-    When no LLM is configured, ``synthesis`` is ``None`` and the frontend
-    falls back to the deterministic narrative/highlights/risks inside each brief.
-    """
-
-    version: str = "3"
-    connectors_used: list[str] = Field(default_factory=list)
-    briefs: dict[str, Any] = Field(default_factory=dict)
-    supplementary: dict[str, Any] = Field(default_factory=dict)
-    synthesis: dict[str, Any] | None = None
-    metadata: InsightMetadata = Field(default_factory=InsightMetadata)
+# The wizard's request/response contract used to live here: ReportRequest,
+# GenerateRequest (connectors + accounts + goal + date range) and the
+# UnifiedInsight envelope they produced. All four went with the six-step form
+# that filled them in — the autonomous session takes a project and a sentence.
+# See docs/engineering/autonomous-insights-agent-plan.md.
 
 
 class RefreshRoutineTarget(BaseModel):

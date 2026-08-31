@@ -54,6 +54,11 @@ from agents.content.persistence import (
 from agents.content.schema import DraftPostRequest, PlanRequest
 from agents.content.v3.runner import create_draft_session, create_plan_session
 from agents.insights.schema import InsightsRequest, create_insights_session
+from agents.insights.setup import (
+    InsightsSetupError,
+    memory_blocks as insights_memory_blocks,
+    resolve_run as resolve_insights_run,
+)
 from agents.core import session as _core_session
 from agents.core.context import format_business_context
 from agents.core.events import AgentEvent, StepStatus
@@ -62,16 +67,13 @@ from agents.engines import PROVIDER_CONFIG_ATTR, resolve_engine, resolve_engine_
 from agents.registry import AgentType, get_spec, list_specs
 from config import claude_oauth_available, get_configs
 from models.auth import User
-from models.execution import AUTONOMY_ASK, normalize_autonomy
-from models.project import Project
 from service.artifact_store import (
     ArtifactPersister,
     artifacts_for_conversation,
     load_report_as_versioned,
 )
-from service.auth import get_current_user_optional
+from service.auth import get_current_user_optional, get_user_provider_keys
 from service.crawl.fetcher import SSRFError, validate_public_url
-from service.execution.policy import effective_autonomy
 from service.membership import member_role
 from service.memory import (
     build_memory_context,
@@ -215,6 +217,7 @@ async def create_session(
     agent_type: str,
     request: Request,
     user: User | None = Depends(get_current_user_optional),
+    user_keys: dict = Depends(get_user_provider_keys),
 ) -> dict:
     """Create a session and start the agent pipeline.
 
@@ -241,7 +244,7 @@ async def create_session(
         await _emit_to_queue(session.event_queue, event_body)  # type: ignore[arg-type]
 
     # Dispatch to the correct pipeline
-    await _dispatch_start(agent_type, session_id, body, emit_fn)
+    await _dispatch_start(agent_type, session_id, body, emit_fn, user_keys=user_keys)
 
     stream_url = f"/api/agents/{agent_type}/sessions/{session_id}/stream"
     conversation_id = getattr(session, "conversation_id", None)
@@ -764,14 +767,21 @@ async def _dispatch_start(
     session_id: str,
     body: dict,
     emit_fn: Any,
+    user_keys: dict | None = None,
 ) -> None:
-    """Route session creation to the correct agent pipeline."""
+    """Route session creation to the correct agent pipeline.
+
+    ``user_keys`` are the caller's bring-your-own provider keys from the
+    ``X-Provider-*`` headers. They are secrets: passed down, never logged, never
+    persisted. Only insights consumes them today; the other pipelines still
+    resolve keys from server config.
+    """
     if agent_type == AgentType.SEO_AUDIT:
         await _start_seo_audit(session_id, body, emit_fn)
     elif agent_type == AgentType.TIKTOK_STUDIO:
         await _start_tiktok_studio(session_id, body, emit_fn)
     elif agent_type == AgentType.INSIGHTS:
-        await _start_insights(session_id, body, emit_fn)
+        await _start_insights(session_id, body, emit_fn, user_keys=user_keys)
     else:
         raise HTTPException(501, f"Agent type {agent_type!r} is not yet implemented.")
 
@@ -1057,7 +1067,9 @@ async def _start_seo_audit(session_id: str, body: dict, emit_fn: Any) -> None:
         session.pipeline_task = task
 
 
-async def _start_insights(session_id: str, body: dict, emit_fn: Any) -> None:
+async def _start_insights(
+    session_id: str, body: dict, emit_fn: Any, *, user_keys: dict | None = None
+) -> None:
     """Start an autonomous insights session as a background task.
 
     The counterpart of ``POST /api/insights/generate``, which stays as the
@@ -1079,103 +1091,32 @@ async def _start_insights(session_id: str, body: dict, emit_fn: Any) -> None:
     except Exception as exc:
         raise HTTPException(422, f"Invalid insights config: {exc}") from exc
 
-    cfg = get_configs()
-    # V1 (LangChain/deepagents) is this agent's harness — it is the only engine
-    # that implements the session shape, so an engine override selects the
-    # provider/model within V1 rather than a different runner.
-    engine = resolve_engine(req.engine or cfg.generate_engine or "v1")
-    provider = resolve_engine_provider(engine, cfg.generate_provider or None)
-    model = resolve_engine_model(engine, provider, cfg.generate_model or None)
-    api_key = getattr(cfg, PROVIDER_CONFIG_ATTR[provider], "") or ""
-    if not api_key and not claude_oauth_available():
-        raise HTTPException(
-            500, f"No API key configured for provider {getattr(provider, 'value', provider)!r}."
-        )
-    # The artifact summarizer runs on the Agent SDK, so only an Anthropic key
-    # works there — a brief on another provider persists without a digest.
-    summary_key = api_key if getattr(provider, "value", str(provider)) == "anthropic" else ""
-
     session = get_session(session_id)
     owner_id = getattr(session, "user_id", None) if session else None
     conv_id = getattr(session, "conversation_id", None) if session else None
     recorder = getattr(session, "recorder", None) if session else None
 
-    # Membership gate. artifact_project_id is the id the memory tools key off,
-    # so it is set ONLY after the caller is proven to belong to the project —
-    # everything project-scoped downstream reads it rather than the request.
-    project_uuid = None
-    configured_autonomy = AUTONOMY_ASK
-    if req.project_id and owner_id:
-        try:
-            candidate = UUID(str(req.project_id))
-            with next(db_session()) as db:
-                role = member_role(candidate, owner_id, db)
-                if role is not None:
-                    row = db.get(Project, candidate)
-                    configured_autonomy = normalize_autonomy(
-                        getattr(row, "autonomy_level", "")
-                    )
-            if role is None:
-                logger.warning(
-                    "agents: user %s is not a member of project %s — insights runs unscoped",
-                    owner_id, req.project_id,
-                )
-            else:
-                project_uuid = candidate
-        except Exception:
-            logger.warning("agents: project scoping unavailable for insights", exc_info=True)
+    # Model, membership gate and autonomy — shared with the unattended entry
+    # point (see agents/insights/setup.py). `run.project_id` is None unless the
+    # caller was proven to belong to the project, and everything project-scoped
+    # downstream reads it rather than the request.
+    try:
+        run = resolve_insights_run(
+            engine_override=req.engine,
+            user_id=owner_id,
+            project_id=req.project_id,
+            user_keys=user_keys,
+        )
+    except InsightsSetupError as exc:
+        raise HTTPException(500, str(exc)) from exc
 
-    # The level this run actually operates at. A model outside the allowlist
-    # runs an `auto` project at `assisted` — it goes back to asking when a
-    # question would change the conclusion. It does NOT change what may
-    # auto-apply: that is identical at both levels and decided in
-    # service/execution/policy.py at propose time, never from this value.
-    autonomy = effective_autonomy(configured_autonomy, getattr(model, "value", str(model)))
+    provider, model = run.provider, run.model
+    project_uuid = run.project_id
+    summary_key = run.summary_key
+
     if session is not None:
         session.artifact_project_id = project_uuid
         session.memory_off = not req.remember
-
-    async def _project_memory_blocks(query: str = "") -> str:
-        """The ``<project_memory>`` / ``<user_memory>`` blocks for the opening turn.
-
-        Per-project data, so it rides in the USER message and never the system
-        prompt — the cached system prefix must stay byte-identical across
-        customers. Best-effort: a missing digest degrades the session, never
-        fails it. Emits MEMORY_RECALLED so the UI can show what the turn was
-        primed with and link each chip back to its source.
-        """
-        if project_uuid is None or not req.remember:
-            return ""
-        try:
-            with next(db_session()) as db:
-                # Declared preferences become user-scope memory first, so the
-                # digest carries them and the agent reads them from one place.
-                seed_user_preferences(db, owner_id, req.user_preferences)
-                context = build_memory_context(
-                    db,
-                    project_id=project_uuid,
-                    user_id=owner_id,
-                    agent_type=str(AgentType.INSIGHTS),
-                    query=query,
-                    subject=query,
-                )
-                touch_recall(db, context.recalled_ids)
-        except Exception:
-            logger.warning("agents: insights memory blocks unavailable", exc_info=True)
-            return ""
-
-        if context.recalled:
-            try:
-                await emit_fn({
-                    "event": AgentEvent.MEMORY_RECALLED,
-                    "memories": [
-                        {k: v for k, v in entry.items() if k != "uuid"}
-                        for entry in context.recalled
-                    ],
-                })
-            except Exception:
-                logger.debug("agents: MEMORY_RECALLED emit failed", exc_info=True)
-        return context.text
 
     # ------------------------------------------------------------------
     # Artifact persistence. Every brief the agent writes becomes a version of
@@ -1230,11 +1171,18 @@ async def _start_insights(session_id: str, body: dict, emit_fn: Any) -> None:
             except Exception:
                 logger.debug("agents: insights head event failed", exc_info=True)
 
-    memory = await _project_memory_blocks(query=req.prompt)
+    memory = await insights_memory_blocks(
+        run,
+        user_id=owner_id,
+        user_preferences=req.user_preferences,
+        query=req.prompt,
+        remember=req.remember,
+        emit=emit_fn,
+    )
     business_context = format_business_context(req.business_context)
 
     runner = AutonomousInsightsRunner(
-        api_key=api_key, provider=provider, model=model, temperature=1.0
+        api_key=run.api_key, provider=provider, model=model, temperature=1.0
     )
 
     async def pipeline() -> None:
@@ -1246,8 +1194,8 @@ async def _start_insights(session_id: str, body: dict, emit_fn: Any) -> None:
             await emit_fn({
                 "event": AgentEvent.PIPELINE_STARTED,
                 "status": StepStatus.RUNNING,
-                "autonomy": autonomy,
-                "autonomy_configured": configured_autonomy,
+                "autonomy": run.autonomy,
+                "autonomy_configured": run.configured_autonomy,
             })
             # run_session emits PIPELINE_FINISHED itself once the opening turn
             # lands, then stays open for follow-ups — so the route must not
@@ -1266,7 +1214,7 @@ async def _start_insights(session_id: str, body: dict, emit_fn: Any) -> None:
                 artifact_format=(
                     req.user_preferences.preferred_artifact_format or DEFAULT_FORMAT
                 ),
-                autonomy=autonomy,
+                autonomy=run.autonomy,
                 start_version=start_version,
             )
         except Exception as exc:

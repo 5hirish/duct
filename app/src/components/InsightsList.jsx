@@ -111,11 +111,12 @@ export default function InsightsList({
       <div className="py-8 text-center">
         <p className="mb-2 text-sm font-medium">No insights yet.</p>
         <p className="mb-5 text-sm text-muted-foreground max-w-sm mx-auto">
-          Generate an intelligence brief from your connected sources. Saved insights appear here.
+          Ask Duct about your growth data and it works out what to look at, what it can
+          reach, and what it cannot verify. Briefs it writes are saved here.
         </p>
         {showGenerateButton && (
           <Button asChild>
-            <Link href={mode ? `/insights/organic-growth/generate?mode=${mode}` : "/insights/organic-growth/generate"}>Generate an insight</Link>
+            <Link href="/insights/session">Start a session</Link>
           </Button>
         )}
       </div>

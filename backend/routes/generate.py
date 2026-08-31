@@ -1,23 +1,28 @@
-"""Interactive insight generation (fetch + goal-driven tools + LLM synthesis)."""
+"""Insight generation over HTTP — the modes catalogue and the unattended brief.
+
+Two endpoints, and what is *not* here matters as much as what is:
+
+  * ``GET  /api/insights/modes``    — the mode/goal catalogue the app renders.
+  * ``POST /api/insights/generate`` — one brief, unattended.
+
+The request-shaped pipeline this module used to hold is gone. It fetched a
+wizard-chosen set of connectors, ran a goal-restricted tool loop and made one
+structured-output call — a shape that only existed because a six-step form had
+already decided every interesting question before the model was invoked. Both
+the form and the pipeline behind it were deleted once the autonomous agent
+could answer those questions itself; see
+``docs/engineering/autonomous-insights-agent-plan.md``.
+
+``agents/insights/v1/agent.py``, ``v2/`` (ADK) and ``v3/`` are left in place
+and frozen. They no longer serve a route.
+"""
 
 from __future__ import annotations
 
-import asyncio
-import json
 import logging
-from collections.abc import Awaitable, Callable
-from functools import partial
-from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import StreamingResponse
 
-from agents.engines import Engine, resolve_engine, resolve_engine_model, resolve_engine_provider, PROVIDER_CONFIG_ATTR
-from agents.models import Provider
-from agents.insights.agent import GenerateInsightsAgent
-from agents.insights.v2.runner import AdkInsightsRunner
-from agents.insights.v3.runner import ClaudeAgentSdkRunner
-from config import get_configs
 from models.auth import User
 from service.auth import get_current_user_optional, get_user_provider_keys
 from routes.schemas import (
@@ -25,522 +30,15 @@ from routes.schemas import (
     BusinessContextFieldOption,
     BusinessContextFieldShowIf,
     BusinessContextFieldType,
-    GenerateRequest,
     InsightGoalDescriptor,
-    InsightMetadata,
     InsightMode,
     InsightModesResponse,
-    ReportRequest,
-    UnifiedInsight,
 )
-from service.google.credentials import resolve_ads_credentials, resolve_customer_id
-from service.google.fetch import (
-    fetch_ad_group_performance,
-    fetch_device_performance,
-    fetch_geo_performance,
-    fetch_search_terms,
-)
-from service.google.ga4 import fetch_ga4_conversion_paths, fetch_ga4_landing_pages
-from service.google.gsc import fetch_gsc_page_performance, fetch_gsc_query_performance
-from service.pipeline import build_connector_brief, fetch_connector_payload, normalize_connections, resolve_ga_credentials
 from utils.dates import now_iso
-
-if TYPE_CHECKING:
-    from agents.models import ModelName
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["insights"])
-
-STEP_COLLECT = "collect_source_data"
-STEP_NORMALIZE = "normalize_connector_outputs"
-STEP_SUPPLEMENTARY = "supplementary_fetch"
-STEP_SYNTHESIZE = "synthesize_report"
-STEP_ASSEMBLE = "assemble_report"
-
-STEP_LABELS = {
-    STEP_COLLECT: "Collecting source data",
-    STEP_NORMALIZE: "Normalizing connector outputs",
-    STEP_SUPPLEMENTARY: "Fetching supplementary insights",
-    STEP_SYNTHESIZE: "Synthesizing recommendations",
-    STEP_ASSEMBLE: "Finalizing insight",
-}
-
-EmitFn = Callable[[dict[str, Any]], Awaitable[None]]
-
-
-def _resolve_agent_config(
-    request_engine: str = "",
-    user_keys: dict[Provider, str] | None = None,
-) -> tuple[str, Provider, "ModelName", Engine]:
-    """Resolve engine/provider/model/API key from config.
-
-    Request engine takes precedence over GENERATE_ENGINE env var.
-    Provider and model default from the engine definition in agents/engines.py.
-
-    Key precedence is bring-your-own first, backend fallback: a per-request
-    ``user_keys`` value for the resolved provider wins over the server-side
-    config key; when absent we fall back to the backend's own key.
-    """
-    cfg = get_configs()
-    engine = resolve_engine(request_engine or cfg.generate_engine or None)
-    provider = resolve_engine_provider(engine, cfg.generate_provider or None)
-    model = resolve_engine_model(engine, provider, cfg.generate_model or None)
-    api_key = (user_keys or {}).get(provider) or getattr(cfg, PROVIDER_CONFIG_ATTR[provider], "") or ""
-    return api_key, provider, model, engine
-
-
-def _build_agent(
-    api_key: str, provider: Provider, model: "ModelName", engine: Engine
-) -> GenerateInsightsAgent | AdkInsightsRunner | ClaudeAgentSdkRunner:
-    """Instantiate the insight engine resolved by _resolve_agent_config."""
-    if engine == Engine.V3:
-        return ClaudeAgentSdkRunner(api_key=api_key, provider=provider, model=model, temperature=1.0)
-    if engine == Engine.V2:
-        return AdkInsightsRunner(api_key=api_key, provider=provider, model=model, temperature=1.0)
-    return GenerateInsightsAgent(api_key=api_key, provider=provider, model=model, temperature=1.0)
-
-
-async def _emit(
-    emit_event: EmitFn | None,
-    *,
-    event: str,
-    step_id: str | None = None,
-    status: str | None = None,
-    label: str | None = None,
-    connector_id: str | None = None,
-    error: str | None = None,
-    payload: dict[str, Any] | None = None,
-) -> None:
-    if emit_event is None:
-        return
-    body: dict[str, Any] = {"event": event, "ts": now_iso()}
-    if step_id is not None:
-        body["step_id"] = step_id
-    if status is not None:
-        body["status"] = status
-    if label is not None:
-        body["label"] = label
-    if connector_id is not None:
-        body["connector_id"] = connector_id
-    if error is not None:
-        body["error"] = error
-    if payload is not None:
-        body["payload"] = payload
-    await emit_event(body)
-
-
-async def _step_started(emit_event: EmitFn | None, step_id: str, *, connector_id: str | None = None) -> None:
-    await _emit(
-        emit_event,
-        event="step_started",
-        step_id=step_id,
-        label=STEP_LABELS[step_id],
-        status="running",
-        connector_id=connector_id,
-    )
-
-
-async def _step_finished(
-    emit_event: EmitFn | None,
-    step_id: str,
-    *,
-    connector_id: str | None = None,
-    status: str = "success",
-    error: str | None = None,
-) -> None:
-    await _emit(
-        emit_event,
-        event="step_finished",
-        step_id=step_id,
-        label=STEP_LABELS[step_id],
-        status=status,
-        connector_id=connector_id,
-        error=error,
-    )
-
-
-def _project_memory(project_id, user: User | None, mode: str) -> str:
-    """The project's memory blocks for a brief, or "" when there is no project.
-
-    Membership is re-checked here rather than trusted from the request: a brief
-    is generated from a client-supplied project id, and project isolation is
-    absolute. Best-effort — a missing digest degrades the brief, never fails it.
-    """
-    if project_id is None or user is None:
-        return ""
-    try:
-        from db.session import get_session as db_session
-        from service.membership import member_role
-        from service.memory import build_memory_context, touch_recall
-
-        with next(db_session()) as db:
-            if member_role(project_id, user.id, db) is None:
-                return ""
-            context = build_memory_context(
-                db,
-                project_id=project_id,
-                user_id=user.id,
-                agent_type=f"insights_{mode}",
-                include_artifacts=False,
-            )
-            touch_recall(db, context.recalled_ids)
-            return context.text
-    except Exception:  # noqa: BLE001 — the brief runs with or without memory
-        logger.warning("generate: project memory unavailable", exc_info=True)
-        return ""
-
-
-async def _run_generate_pipeline(
-    req: GenerateRequest,
-    *,
-    emit_event: EmitFn | None = None,
-    user: User | None = None,
-    user_keys: dict[Provider, str] | None = None,
-) -> dict[str, Any]:
-    await _emit(
-        emit_event,
-        event="pipeline_started",
-        status="running",
-        payload={"connections": req.connections},
-    )
-
-    connections = normalize_connections(req.connections)
-    if not req.date_from or not req.date_to:
-        raise HTTPException(status_code=422, detail="date_from and date_to are required.")
-
-    cfg = get_configs()
-    ga4_property_id = (req.ga4_property_id or cfg.ga4_property_id).strip()
-    gsc_site_url = (req.gsc_site_url or cfg.gsc_site_url).strip()
-    ga4_refresh_token = (req.ga4_refresh_token or req.refresh_token).strip()
-    gsc_refresh_token = (req.gsc_refresh_token or req.refresh_token).strip()
-    ga_client_id, ga_client_secret = resolve_ga_credentials(cfg)
-
-    if "ga4" in connections and not ga4_property_id:
-        raise HTTPException(status_code=422, detail="ga4_property_id is required when GA4 is selected.")
-    if "ga4" in connections and not ga4_refresh_token:
-        raise HTTPException(status_code=422, detail="ga4_refresh_token is required when GA4 is selected.")
-    if "gsc" in connections and not gsc_site_url:
-        raise HTTPException(status_code=422, detail="gsc_site_url is required when GSC is selected.")
-    if "gsc" in connections and not gsc_refresh_token:
-        raise HTTPException(status_code=422, detail="gsc_refresh_token is required when GSC is selected.")
-    if ("ga4" in connections or "gsc" in connections) and (not ga_client_id or not ga_client_secret):
-        raise HTTPException(
-            status_code=422,
-            detail="Google OAuth client credentials are required for GA4/GSC connectors.",
-        )
-
-    shim = ReportRequest(
-        customer_id=req.customer_id,
-        refresh_token=req.refresh_token,
-        login_customer_id=req.login_customer_id,
-    )
-    login_customer_id = (req.login_customer_id or cfg.google_ads_login_customer_id).strip()
-
-    # Manual-credential connectors: request-supplied dict wins; a signed-in
-    # user's stored encrypted row fills the gaps (agent/scheduled runs have no
-    # browser to paste keys from).
-    def _resolve_manual_credentials() -> dict[str, dict[str, str]]:
-        from db.session import get_session as db_session
-        from service.connector_access import stored_connector_credentials
-        from service.membership import member_role
-        from service.pipeline import MANUAL_CREDENTIAL_CONNECTORS
-
-        out: dict[str, dict[str, str]] = {}
-        wanted = [c for c in connections if c in MANUAL_CREDENTIAL_CONNECTORS]
-        if not wanted:
-            return out
-        stored_by_id: dict[str, dict] = {}
-        if user is not None:
-            with next(db_session()) as db:
-                # Project bindings apply only for members; a stale/foreign
-                # project id degrades to user-level rows, never an error.
-                pid = req.project_id
-                if pid is not None and member_role(pid, user.id, db) is None:
-                    pid = None
-                for cid in wanted:
-                    stored_by_id[cid] = stored_connector_credentials(
-                        db, user.id, cid, project_id=pid
-                    )
-        for cid in wanted:
-            override = {
-                k: v.strip() for k, v in (req.connector_credentials.get(cid) or {}).items()
-                if v and v.strip()
-            }
-            out[cid] = {**stored_by_id.get(cid, {}), **override}
-        return out
-
-    manual_credentials = await asyncio.to_thread(_resolve_manual_credentials)
-
-    async def fetch_connector(connector_id: str) -> tuple[str, dict[str, Any]]:
-        await _step_started(emit_event, STEP_COLLECT, connector_id=connector_id)
-        try:
-            data = await fetch_connector_payload(
-                connector_id=connector_id,
-                date_from=req.date_from,
-                date_to=req.date_to,
-                cfg=cfg,
-                refresh_token=shim.refresh_token,
-                developer_token=req.developer_token,
-                customer_id=shim.customer_id,
-                account_name=req.account_name,
-                currency_code=req.currency_code,
-                login_customer_id=login_customer_id,
-                ga4_property_id=ga4_property_id,
-                gsc_site_url=gsc_site_url,
-                ga4_refresh_token=ga4_refresh_token,
-                gsc_refresh_token=gsc_refresh_token,
-                credentials=manual_credentials.get(connector_id),
-            )
-            await _step_finished(emit_event, STEP_COLLECT, connector_id=connector_id)
-            return connector_id, data
-        except Exception as exc:  # noqa: BLE001
-            message = str(exc)
-            await _step_finished(
-                emit_event,
-                STEP_COLLECT,
-                connector_id=connector_id,
-                status="error",
-                error=message,
-            )
-            raise RuntimeError(f"{connector_id}: {message}") from exc
-
-    fetched_rows = await asyncio.gather(*(fetch_connector(c) for c in connections), return_exceptions=True)
-    fetch_failures = [item for item in fetched_rows if isinstance(item, Exception)]
-    if fetch_failures:
-        detail = "; ".join(str(err) for err in fetch_failures)
-        raise HTTPException(status_code=502, detail=detail)
-    raw_by_connector = {cid: payload for cid, payload in fetched_rows}
-
-    async def normalize_connector(connector_id: str, raw_data: dict[str, Any]) -> tuple[str, dict[str, Any]]:
-        await _step_started(emit_event, STEP_NORMALIZE, connector_id=connector_id)
-        try:
-            brief_dict = await asyncio.to_thread(
-                build_connector_brief,
-                connector_id=connector_id,
-                raw_data=raw_data,
-                date_from=req.date_from,
-                date_to=req.date_to,
-            )
-            await _step_finished(emit_event, STEP_NORMALIZE, connector_id=connector_id)
-            return connector_id, brief_dict
-        except Exception as exc:  # noqa: BLE001
-            message = str(exc)
-            await _step_finished(
-                emit_event,
-                STEP_NORMALIZE,
-                connector_id=connector_id,
-                status="error",
-                error=message,
-            )
-            raise RuntimeError(f"{connector_id}: {message}") from exc
-
-    normalized_rows = await asyncio.gather(
-        *(normalize_connector(connector_id, raw_data) for connector_id, raw_data in raw_by_connector.items()),
-        return_exceptions=True,
-    )
-    normalize_failures = [item for item in normalized_rows if isinstance(item, Exception)]
-    if normalize_failures:
-        detail = "; ".join(str(err) for err in normalize_failures)
-        raise HTTPException(status_code=500, detail=detail)
-    briefs = {cid: payload for cid, payload in normalized_rows}
-
-    synthesis_dict = None
-    mode = req.mode or "paid_ads"
-    api_key, provider, model, engine = _resolve_agent_config(req.engine, user_keys=user_keys)
-
-    # Build the all_briefs dict: connector_id → {"brief": ..., "raw": ...}
-    all_briefs = {
-        cid: {"brief": brief, "raw": raw_by_connector.get(cid)}
-        for cid, brief in briefs.items()
-    }
-
-    # Determine primary connector for classification overrides (paid ads only)
-    primary_connector = "google_ads" if mode == "paid_ads" else None
-    supplementary: dict[str, Any] = {}
-
-    if api_key and all_briefs:
-        agent = _build_agent(api_key, provider, model, engine)
-
-        # Build fetch functions only for connectors that are actually available.
-        # For organic_growth, skip Google Ads credential resolution entirely.
-        if mode == "organic_growth":
-            fetch_fns = {}
-            ads_customer_id = ""
-            ga4_cred_kwargs = dict(
-                refresh_token=ga4_refresh_token or "",
-                client_id=ga_client_id,
-                client_secret=ga_client_secret,
-            )
-            gsc_cred_kwargs = dict(
-                refresh_token=gsc_refresh_token or "",
-                client_id=ga_client_id,
-                client_secret=ga_client_secret,
-            )
-            if "ga4" in connections and ga4_property_id:
-                fetch_fns["fetch_ga4_landing_pages"] = partial(fetch_ga4_landing_pages, **ga4_cred_kwargs)
-                fetch_fns["fetch_ga4_conversion_paths"] = partial(fetch_ga4_conversion_paths, **ga4_cred_kwargs)
-            if "gsc" in connections and gsc_site_url:
-                fetch_fns["fetch_gsc_query_performance"] = partial(fetch_gsc_query_performance, **gsc_cred_kwargs)
-                fetch_fns["fetch_gsc_page_performance"] = partial(fetch_gsc_page_performance, **gsc_cred_kwargs)
-        else:
-            ads_customer_id = resolve_customer_id(request_customer_id=shim.customer_id)
-            dt, cid, secret, rt = resolve_ads_credentials(
-                request_refresh_token=shim.refresh_token,
-                request_developer_token=req.developer_token,
-            )
-            fetch_fns = _build_fetch_fns(
-                dt, cid, secret, rt, login_customer_id,
-                set(connections), ga4_property_id, gsc_site_url,
-                ga4_refresh_token, gsc_refresh_token,
-            )
-
-        biz_ctx = req.business_context.model_dump() if req.business_context else None
-        # Identity comes from the authenticated session, never the client — the
-        # name today; add role/etc. here as columns land on the User model.
-        user_ctx = {"name": user.full_name} if user and user.full_name else None
-        full_context = req.context
-        if req.mode_context:
-            full_context = f"{req.mode_context}\n\n{full_context}".strip() if full_context else req.mode_context
-
-        # The brief is the ritual the memory design wants proactive recall to
-        # speak through: it reads what the project already knows — open
-        # incidents, targets, past decisions — and cites the ids in its
-        # findings. Membership-checked, best-effort, and in the USER message.
-        memory_block = await asyncio.to_thread(_project_memory, req.project_id, user, mode)
-
-        registered = agent.setup_tools_for_goal(goal=req.goal, fetch_fns=fetch_fns, mode=mode)
-
-        if isinstance(agent, (AdkInsightsRunner, ClaudeAgentSdkRunner)):
-            # v2/v3: both phases run inside a single pipeline call
-            await _step_started(emit_event, STEP_SUPPLEMENTARY)
-            await _step_started(emit_event, STEP_SYNTHESIZE)
-            engine = "v2" if isinstance(agent, AdkInsightsRunner) else "v3"
-            logger.info("%s: running pipeline for goal '%s' (mode: %s)", engine, req.goal.value, mode)
-            supplementary, synthesis = await agent.run_pipeline(
-                goal=req.goal,
-                custom_goal=req.custom_goal,
-                context=full_context,
-                all_briefs=all_briefs,
-                business_context=biz_ctx,
-                user_context=user_ctx,
-                mode=mode,
-                customer_id=ads_customer_id,
-                date_from=req.date_from,
-                date_to=req.date_to,
-                ga4_property_id=ga4_property_id,
-                gsc_site_url=gsc_site_url,
-                connected_sources=connections,
-                emit_event=emit_event,
-                memory=memory_block,
-            )
-            await _step_finished(emit_event, STEP_SUPPLEMENTARY)
-            await _step_finished(emit_event, STEP_SYNTHESIZE)
-        else:
-            # v1: separate Phase 1 (tool calling) + Phase 2 (synthesis)
-            await _step_started(emit_event, STEP_SUPPLEMENTARY)
-            if registered:
-                logger.info("Phase 1: fetching supplementary data for goal '%s' (mode: %s)", req.goal.value, mode)
-                supplementary = await agent.fetch_supplementary_data(
-                    customer_id=ads_customer_id,
-                    date_from=req.date_from,
-                    date_to=req.date_to,
-                    goal=req.goal,
-                    ga4_property_id=ga4_property_id,
-                    gsc_site_url=gsc_site_url,
-                    custom_goal=req.custom_goal,
-                    context=req.context,
-                    connected_sources=connections,
-                )
-            await _step_finished(emit_event, STEP_SUPPLEMENTARY)
-
-            await _step_started(emit_event, STEP_SYNTHESIZE)
-            synthesis = await agent.synthesize(
-                goal=req.goal,
-                custom_goal=req.custom_goal,
-                context=full_context,
-                all_briefs=all_briefs,
-                supplementary=supplementary or None,
-                business_context=biz_ctx,
-                user_context=user_ctx,
-                mode=mode,
-                emit_event=emit_event,
-                memory=memory_block,
-            )
-            await _step_finished(emit_event, STEP_SYNTHESIZE)
-
-        if primary_connector and primary_connector in briefs:
-            agent.apply_classification_overrides(briefs[primary_connector], synthesis)
-        synthesis_dict = agent.extract_synthesis(synthesis)
-    else:
-        await _step_started(emit_event, STEP_SUPPLEMENTARY)
-        await _step_finished(emit_event, STEP_SUPPLEMENTARY)
-        await _step_started(emit_event, STEP_SYNTHESIZE)
-        await _step_finished(emit_event, STEP_SYNTHESIZE)
-
-    await _step_started(emit_event, STEP_ASSEMBLE)
-    envelope = UnifiedInsight(
-        connectors_used=connections,
-        briefs=briefs,
-        supplementary=supplementary,
-        synthesis=synthesis_dict,
-        metadata=InsightMetadata(
-            generated_at=now_iso(),
-            goal=req.goal.value,
-            connectors_used=connections,
-        ),
-    )
-    await _step_finished(emit_event, STEP_ASSEMBLE)
-    return envelope.model_dump()
-
-
-def _build_fetch_fns(
-    developer_token: str,
-    client_id: str,
-    client_secret: str,
-    refresh_token: str,
-    login_customer_id: str,
-    connections: set[str],
-    ga4_property_id: str,
-    gsc_site_url: str,
-    ga4_refresh_token: str,
-    gsc_refresh_token: str,
-) -> dict[str, Callable[..., dict[str, Any]]]:
-    """Build pre-credentialed fetch functions for each supplementary tool.
-
-    Each function only needs customer_id, date_from, date_to — credentials
-    are baked in via partial.
-    """
-    cred_kwargs = dict(
-        developer_token=developer_token,
-        client_id=client_id,
-        client_secret=client_secret,
-        refresh_token=refresh_token,
-        login_customer_id=login_customer_id,
-    )
-    fetch_fns: dict[str, Callable[..., dict[str, Any]]] = {
-        "fetch_search_terms": partial(fetch_search_terms, **cred_kwargs),
-        "fetch_device_performance": partial(fetch_device_performance, **cred_kwargs),
-        "fetch_geo_performance": partial(fetch_geo_performance, **cred_kwargs),
-        "fetch_ad_group_performance": partial(fetch_ad_group_performance, **cred_kwargs),
-    }
-    if "ga4" in connections and ga4_property_id:
-        ga4_cred_kwargs = dict(
-            refresh_token=ga4_refresh_token or refresh_token,
-            client_id=client_id,
-            client_secret=client_secret,
-        )
-        fetch_fns["fetch_ga4_landing_pages"] = partial(fetch_ga4_landing_pages, **ga4_cred_kwargs)
-        fetch_fns["fetch_ga4_conversion_paths"] = partial(fetch_ga4_conversion_paths, **ga4_cred_kwargs)
-    if "gsc" in connections and gsc_site_url:
-        gsc_cred_kwargs = dict(
-            refresh_token=gsc_refresh_token or refresh_token,
-            client_id=client_id,
-            client_secret=client_secret,
-        )
-        fetch_fns["fetch_gsc_query_performance"] = partial(fetch_gsc_query_performance, **gsc_cred_kwargs)
-        fetch_fns["fetch_gsc_page_performance"] = partial(fetch_gsc_page_performance, **gsc_cred_kwargs)
-    return fetch_fns
 
 
 @router.get("/insights/modes")
@@ -763,78 +261,124 @@ async def list_insight_modes() -> dict:
     return response.model_dump(mode="json")
 
 
+# ---------------------------------------------------------------------------
+# The unattended brief
+# ---------------------------------------------------------------------------
+
 @router.post("/insights/generate")
 async def generate_insight(
-    req: GenerateRequest,
+    body: dict,
     user: User | None = Depends(get_current_user_optional),
-    user_keys: dict[Provider, str] = Depends(get_user_provider_keys),
+    user_keys: dict = Depends(get_user_provider_keys),
 ) -> dict:
-    """Fetch data for selected connections, build briefs, and optional synthesis."""
-    return await _run_generate_pipeline(req, user=user, user_keys=user_keys)
+    """One brief, no human — the scheduled-brief entry point.
 
+    The counterpart of ``POST /api/agents/insights/sessions``: same agent, same
+    tools, same artifact store, but a single turn with nothing that can pause.
+    ``backend/CLAUDE.md`` is explicit that the scheduled brief is the product
+    and can never block on a person, so the unattended shape makes blocking
+    impossible rather than merely discouraged — AskUserQuestion and the
+    connector pause tools are not mounted, and the system prompt says there is
+    nobody to ask. A question that cannot be asked becomes a stated assumption
+    in the brief.
 
-@router.post("/insights/generate/stream")
-async def generate_insight_stream(
-    req: GenerateRequest,
-    user: User | None = Depends(get_current_user_optional),
-    user_keys: dict[Provider, str] = Depends(get_user_provider_keys),
-) -> StreamingResponse:
-    """Stream real pipeline progress events and final payload over SSE."""
+    Takes the same body as a session (a project and a sentence). It used to
+    take a fully-specified wizard request — connectors, accounts, goal, date
+    range — and that request shape went away with the wizard it served.
 
-    queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
-    finished = asyncio.Event()
-
-    async def emit_event(event_payload: dict[str, Any]) -> None:
-        await queue.put(event_payload)
-
-    async def worker() -> None:
-        try:
-            insight = await _run_generate_pipeline(req, emit_event=emit_event, user=user, user_keys=user_keys)
-            await _emit(
-                emit_event,
-                event="pipeline_finished",
-                status="success",
-                payload=insight,
-            )
-        except HTTPException as exc:
-            await _emit(
-                emit_event,
-                event="pipeline_failed",
-                status="error",
-                error=str(exc.detail),
-            )
-        except Exception as exc:  # noqa: BLE001
-            logger.exception("Unhandled generate stream failure")
-            await _emit(
-                emit_event,
-                event="pipeline_failed",
-                status="error",
-                error=str(exc),
-            )
-        finally:
-            finished.set()
-
-    task = asyncio.create_task(worker())
-
-    async def stream() -> Any:
-        try:
-            while not finished.is_set() or not queue.empty():
-                try:
-                    event_payload = await asyncio.wait_for(queue.get(), timeout=15)
-                    yield f"data: {json.dumps(event_payload)}\n\n"
-                except asyncio.TimeoutError:
-                    # Keep connection alive behind proxies.
-                    yield ": ping\n\n"
-        finally:
-            if not task.done():
-                task.cancel()
-
-    return StreamingResponse(
-        stream(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",
-        },
+    The durable output is the artifact; the response body is for the caller's
+    log.
+    """
+    from agents.insights.brief import ARTIFACT_KIND, DEFAULT_FORMAT, brief_artifact_version
+    from agents.insights.schema import InsightsRequest
+    from agents.insights.setup import (
+        InsightsSetupError,
+        memory_blocks,
+        resolve_run,
     )
+    from agents.insights.v1.runner import AutonomousInsightsRunner
+    from agents.core.context import format_business_context
+    from agents.registry import AgentType
+    from service.artifact_store import ArtifactPersister
+
+    try:
+        req = InsightsRequest.model_validate(body)
+    except Exception as exc:
+        raise HTTPException(422, f"Invalid insights config: {exc}") from exc
+    if not req.prompt.strip():
+        raise HTTPException(422, "prompt is required — say what the brief should cover.")
+
+    user_id = getattr(user, "id", None)
+    try:
+        run = resolve_run(
+            engine_override=req.engine,
+            user_id=user_id,
+            project_id=req.project_id,
+            user_keys=user_keys,
+        )
+    except InsightsSetupError as exc:
+        raise HTTPException(500, str(exc)) from exc
+
+    # No SSE consumer here, but emit is still how a brief reaches storage: the
+    # persister wraps it and intercepts ARTIFACT_VERSION.
+    async def emit(_event: dict) -> None:
+        return None
+
+    emit_fn = emit
+    persister = None
+    if run.project_id is not None:
+        try:
+            persister = ArtifactPersister(
+                project_id=run.project_id,
+                user_id=user_id,
+                agent_type=str(AgentType.INSIGHTS),
+                kind=ARTIFACT_KIND,
+                api_key=run.summary_key,
+                adapt=brief_artifact_version,
+            )
+            emit_fn = persister.wrap_emit(emit)
+        except Exception:
+            logger.warning(
+                "insights: artifact persistence unavailable — brief runs unpersisted",
+                exc_info=True,
+            )
+
+    memory = await memory_blocks(
+        run,
+        user_id=user_id,
+        user_preferences=req.user_preferences,
+        query=req.prompt,
+        remember=req.remember,
+    )
+
+    runner = AutonomousInsightsRunner(
+        api_key=run.api_key, provider=run.provider, model=run.model, temperature=1.0
+    )
+    try:
+        brief = await runner.run_once(
+            emit_fn,
+            prompt=req.prompt,
+            business_context=format_business_context(req.business_context),
+            memory=memory,
+            project_id=run.project_id,
+            user_id=user_id,
+            remember=req.remember,
+            artifact_format=(
+                req.user_preferences.preferred_artifact_format or DEFAULT_FORMAT
+            ),
+            autonomy=run.autonomy,
+        )
+    except Exception as exc:
+        logger.exception("insights: unattended brief failed")
+        raise HTTPException(500, f"Brief generation failed: {exc}") from exc
+
+    return {
+        # An unattended run that reached no conclusion worth keeping says so,
+        # rather than returning an empty brief that looks like a real one.
+        "status": "ok" if brief else "no_brief",
+        "artifact_id": str(persister.last_artifact_id) if persister and persister.last_artifact_id else "",
+        "project_id": str(run.project_id) if run.project_id else "",
+        "autonomy": run.autonomy,
+        "generated_at": now_iso(),
+        **brief,
+    }

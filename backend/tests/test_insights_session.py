@@ -421,3 +421,110 @@ def test_agent_spec_advertises_the_session_capabilities():
     # The config schema is what a client validates against — it must be the
     # session request, not an empty dict.
     assert "prompt" in spec.config_schema.get("properties", {})
+
+
+# ---------------------------------------------------------------------------
+# Unattended runs — the scheduled brief, which can never block on a human
+# ---------------------------------------------------------------------------
+
+UNATTENDED_BRIEF = """<duct_artifact>
+---
+title: Weekly paid search
+---
+# Weekly paid search
+
+Spend held. GSC was never connected, so organic overlap is unverified.
+</duct_artifact>"""
+
+
+def test_an_unattended_run_cannot_ask_a_question():
+    """`backend/CLAUDE.md` is explicit that the scheduled brief is the product
+    and can never block on a person. Blocking is made impossible rather than
+    discouraged: the tools that pause are simply not mounted."""
+    interactive = RUNNER.build_agent(
+        llm=_fake("x"), session=create_insights_session("s"), session_id="s",
+        emit=lambda body: None, project_id=uuid.uuid4(), user_id=uuid.uuid4(),
+    )
+    unattended = RUNNER.build_agent(
+        llm=_fake("x"), session=create_insights_session("s"), session_id="s",
+        emit=lambda body: None, project_id=uuid.uuid4(), user_id=uuid.uuid4(),
+        interactive=False,
+    )
+
+    assert "AskUserQuestion" in _tool_names(interactive)
+    assert "AskUserQuestion" not in _tool_names(unattended)
+    # The connector tools that pause go too — but the read-only one stays, or
+    # the agent cannot even tell the reader what it could not reach.
+    for pausing in ("RequestConnection", "SelectAccount"):
+        assert pausing in _tool_names(interactive)
+        assert pausing not in _tool_names(unattended)
+    assert "ListDataSources" in _tool_names(unattended)
+    assert "FetchData" in _tool_names(unattended)
+
+
+def test_an_unattended_run_is_told_there_is_nobody_to_ask():
+    """A prompt that still describes an interactive session would have the
+    agent plan around a question it will never get to ask — which produces a
+    brief with a hole in it instead of a stated assumption."""
+    from agents.insights.prompts.autonomous import (
+        CAPABILITIES_PHASE_3,
+        CAPABILITIES_UNATTENDED,
+    )
+
+    assert "There is nobody to ask" in CAPABILITIES_UNATTENDED
+    assert "state the assumption in the brief" in CAPABILITIES_UNATTENDED
+    assert "AskUserQuestion" not in CAPABILITIES_UNATTENDED
+    # The interactive stanza must NOT say that — it has the tool.
+    assert "There is nobody to ask" not in CAPABILITIES_PHASE_3
+
+
+async def test_run_once_returns_the_brief_it_wrote(emitted):
+    brief = await RUNNER.run_once(emitted, llm=_fake(UNATTENDED_BRIEF), prompt="weekly brief")
+
+    assert brief["title"] == "Weekly paid search"
+    assert brief["format"] == "markdown"
+    assert "Spend held" in brief["content"]
+
+    kinds = [e["event"] for e in emitted.events]
+    assert AgentEvent.ARTIFACT_VERSION in kinds
+    assert AgentEvent.PIPELINE_FINISHED in kinds
+    # No chat loop: one turn, one boundary, and the call returns.
+    assert kinds.count(AgentEvent.MESSAGE_STOP) == 1
+
+
+async def test_a_run_that_wrote_nothing_says_so(emitted):
+    """An unattended run that reached no conclusion worth keeping must be
+    distinguishable from one that produced a brief — a caller logging "ok" for
+    an empty result is how a broken schedule stays invisible for a month."""
+    brief = await RUNNER.run_once(emitted, llm=_fake("I could not reach any data."), prompt="?")
+
+    assert brief == {}
+    assert AgentEvent.ARTIFACT_VERSION not in [e["event"] for e in emitted.events]
+
+
+def test_the_wizards_request_contract_is_gone_not_merely_unused():
+    """Phase 6. `GenerateRequest` was the six-step form's output — connectors,
+    accounts, goal, date range — and `UnifiedInsight` the envelope it produced.
+    Leaving them importable is how a deleted path grows a second caller."""
+    import routes.schemas as schemas
+
+    for name in ("GenerateRequest", "ReportRequest", "UnifiedInsight", "InsightMetadata"):
+        assert not hasattr(schemas, name), f"{name} outlived the wizard"
+
+
+def test_the_unattended_endpoint_takes_a_project_and_a_sentence():
+    """The URL survives; its contract does not. /api/insights/generate now
+    validates the same body as a session."""
+    import inspect
+
+    import routes.generate as generate_routes
+
+    assert hasattr(generate_routes, "generate_insight")
+    # The wizard's streaming twin had no caller once the form went.
+    assert not hasattr(generate_routes, "generate_insight_stream")
+    assert not hasattr(generate_routes, "_run_generate_pipeline")
+    # The modes catalogue stays — the organic-growth page still renders it.
+    assert hasattr(generate_routes, "list_insight_modes")
+
+    params = inspect.signature(generate_routes.generate_insight).parameters
+    assert "user_keys" in params, "bring-your-own provider keys must survive the rewire"
