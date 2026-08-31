@@ -5,7 +5,16 @@ export const PREFS_DEFAULTS = {
   communication_style: "practitioner",
   report_depth: "balanced",
   primary_outcome: "",
+  // What a saved deliverable is written as. Markdown reads in-app, copies into
+  // a doc and diffs cleanly between versions; HTML is for something that gets
+  // forwarded and has to stand on its own.
+  preferred_artifact_format: "markdown",
 };
+
+export const ARTIFACT_FORMAT_OPTIONS = [
+  { value: "markdown", label: "Markdown", description: "Reads in-app, pastes into a doc" },
+  { value: "html", label: "HTML page", description: "Self-contained, for forwarding" },
+];
 
 export const ROLE_OPTIONS = [
   { value: "", label: "Select your role…" },
@@ -37,10 +46,5 @@ export function savePreferences(prefs) {
 }
 
 export function hasNonDefaultPreferences(prefs) {
-  return (
-    prefs.role !== PREFS_DEFAULTS.role ||
-    prefs.communication_style !== PREFS_DEFAULTS.communication_style ||
-    prefs.report_depth !== PREFS_DEFAULTS.report_depth ||
-    prefs.primary_outcome !== PREFS_DEFAULTS.primary_outcome
-  );
+  return Object.keys(PREFS_DEFAULTS).some((key) => prefs[key] !== PREFS_DEFAULTS[key]);
 }

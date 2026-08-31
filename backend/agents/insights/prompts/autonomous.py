@@ -22,7 +22,12 @@ failure mode this agent exists to eliminate.
 from __future__ import annotations
 
 from agents.core.persona import with_confidentiality
-from agents.core.prompts import MEMORY_DISCIPLINE, xml_block
+from agents.core.prompts import (
+    DUCT_ARTIFACT_CLOSE,
+    DUCT_ARTIFACT_OPEN,
+    MEMORY_DISCIPLINE,
+    xml_block,
+)
 
 PERSONA = """\
 You are Duct's growth analyst — a senior paid-media and organic-growth operator \
@@ -129,6 +134,41 @@ Skip the verifier only for a question that carries no recommendation — recalli
 what was decided last month, or explaining what a metric means."""
 
 
+# The deliverable contract. Cache-stable on purpose: it describes the *mechanism*
+# and says nothing about which format this particular user wants — that is
+# per-request and rides in the user turn (build_insights_user_prompt).
+ARTIFACT_CONTRACT = f"""\
+## Writing the brief
+
+Chat is the conversation. A brief is the deliverable — the thing the person \
+re-reads next week, forwards to their team, or checks a decision against. When \
+your answer is one of those, write it as an artifact. Artifacts are versioned, \
+so a later turn can revise one, and they outlive the session; a chat message \
+does not.
+
+Wrap it in `{DUCT_ARTIFACT_OPEN}` … `{DUCT_ARTIFACT_CLOSE}` and open with a \
+front-matter fence carrying the title:
+
+{DUCT_ARTIFACT_OPEN}
+---
+title: A specific title — what this brief concluded, not "Growth Brief"
+format: markdown
+---
+# ...
+{DUCT_ARTIFACT_CLOSE}
+
+- At most one artifact per turn, at the end of it, after you have said in chat \
+what you found. Say in chat what the brief covers — do not paste it twice.
+- **The brief carries the trust protocol in writing.** Every figure names its \
+source and its window, and the brief has a section for what could not be \
+verified, in the verifier's own words. A brief without that section is not \
+finished.
+- Revising means writing the whole document again in a later turn. Versions are \
+whole documents, not patches; say in chat what changed between them.
+- Do not wrap a one-line answer, a clarifying question, or a status update in an \
+artifact. Something that is not worth re-reading is not a brief."""
+
+
 def build_insights_system_prompt(*, capabilities: str = CAPABILITIES_PHASE_3) -> str:
     """The cache-stable system instruction for an insights session.
 
@@ -163,11 +203,27 @@ def build_insights_system_prompt(*, capabilities: str = CAPABILITIES_PHASE_3) ->
                 catalog,
                 notes,
                 VERIFICATION_DIRECTIVE,
+                ARTIFACT_CONTRACT,
                 MEMORY_DISCIPLINE,
                 BOUNDARIES,
             ]
         )
     )
+
+
+# What each format is *for*, so the preference reads as a choice about the
+# reader rather than a file extension. Per-user, so it lives in the user turn.
+_FORMAT_GUIDANCE: dict[str, str] = {
+    "markdown": (
+        "Write briefs in markdown. Headings, short paragraphs and tables; no HTML "
+        "wrapper, no CSS. It renders in the app and pastes cleanly into a doc."
+    ),
+    "html": (
+        "Write briefs as a complete, self-contained HTML document — <!doctype html> "
+        "through </html>, with its styles inline in a <style> block and no external "
+        "assets. This one gets forwarded and has to stand on its own."
+    ),
+}
 
 
 def build_insights_user_prompt(
@@ -176,13 +232,19 @@ def build_insights_user_prompt(
     business_context: str = "",
     user_context: str = "",
     memory: str = "",
+    artifact_format: str = "",
 ) -> str:
     """The USER turn: everything per-project, in context-then-task order.
 
     Kept out of the system prompt so the cached prefix stays byte-identical
     across customers (see ``service/memory.py`` and the module docstring).
+    ``artifact_format`` is the user's declared deliverable preference and
+    belongs here for the same reason — it varies per person.
     """
     parts = [block for block in (business_context, user_context, memory) if block]
+    guidance = _FORMAT_GUIDANCE.get(artifact_format, "")
+    if guidance:
+        parts.append(xml_block("deliverable_format", guidance))
     request = (prompt or "").strip()
     parts.append(
         xml_block(

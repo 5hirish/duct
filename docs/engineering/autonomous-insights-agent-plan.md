@@ -1,6 +1,6 @@
 # Autonomous Insights Agent — design plan
 
-**Status:** design, not built. Supersedes the request-shaped insights pipeline
+**Status:** Phases 1–4 built, 5–6 open. Supersedes the request-shaped insights pipeline
 (`agents/insights/v1/agent.py` + the six-step wizard at `app/src/app/(app)/generate/page.jsx`).
 
 Companion reading, in this order:
@@ -404,6 +404,55 @@ enums survive only to keep saved routines readable.
   `InsightDashboard` selected on `content_type`.
 - Back-compat: keep reading `duct_local_reports` from localStorage; write nothing new
   there.
+
+> **Built 2026-08-31.** `tests/test_insights_artifacts.py` (23 tests) is the
+> gate. The session now produces something that outlives it.
+>
+> - **`ArtifactPersister` grew an adapter seam — the deferral from Phase 1,
+>   paid.** It was audit-shaped: `_persist_report` validated its payload as an
+>   `AuditReport` and hardcoded the audit slug, title and filename. It now
+>   splits in two — the persister owns *storing* a version (group identity,
+>   slug, bytes, activity, summary, findings), an adapter owns *reading* one out
+>   of the event a given agent emits. Audit's adapter is the default, so every
+>   existing call site is unchanged, and
+>   `test_generalising_the_persister_left_audit_where_it_was` pins the slug,
+>   filename and content type it produces — a silent rename of everyone's
+>   stored reports is the one way this refactor could have gone wrong.
+> - **The brief streams; it is not submitted.** It arrives inside
+>   `<duct_artifact>`, so the reader watches it being written in the right
+>   pane. A submit tool would carry the whole document as one JSON string
+>   argument — landing all at once, and losing the lot to a single escaping
+>   mistake in a long markdown document.
+> - **The price of streaming prose is that the payload has no schema**, so the
+>   title travels inside it in a front-matter fence. Nothing trusts the model to
+>   comply: a payload with no fence still becomes a brief, with the title taken
+>   from the first heading and then from a default. Every parse path degrades
+>   rather than raises — losing a brief the model actually wrote is the only
+>   outcome `agents/insights/brief.py` exists to prevent.
+> - **The content decides the format, never the declaration.** `format:` is
+>   recorded as what the model intended and the bytes are believed, because a
+>   markdown document served as `text/html` renders as garbage in an iframe and
+>   the bytes are the only evidence that cannot be wrong. A disagreement lands
+>   in the artifact's `meta` rather than being silently resolved.
+> - **The preference is in the user turn, not the system prompt** — a departure
+>   from the bullet above, and required: per-user text in the cached prefix
+>   gives every customer their own cache. The system prompt carries the
+>   *mechanism* (cache-stable, shared); `<deliverable_format>` carries which
+>   format this person wants.
+>
+> **`dashboard` was cut from the format list, deliberately.** The block
+> renderers under `app/src/components/insight-blocks/` resolve their rows from
+> an assembled source bundle that only the legacy synthesis pipeline produces,
+> so an agent-written dashboard artifact today would render mostly-empty
+> blocks. It returns with that pipeline in Phase 6, which is where the bundle
+> is decided. `preferred_artifact_format` is `markdown | html` until then —
+> two formats that work end to end beats three where one is a facade.
+>
+> Frontend: a Brief/Data tab pair in the right pane, versions accumulating in a
+> picker, `MarkdownView` reused from `ArtifactRenderer`, and `lib/brief.js` for
+> the streaming half (front matter has to come off before the parsed version
+> exists). The format picker is in the profile dialog; `duct_local_insights`
+> stays readable and nothing new is written to it.
 
 ---
 

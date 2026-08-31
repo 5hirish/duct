@@ -52,6 +52,7 @@ from agents.core.connector_tools import build_connector_tools_lc
 from agents.core.lc import build_ask_user_tool, resolve_chat_model, stream_agent
 from agents.core.memory_tools import build_memory_tools_lc
 from agents.core.session import BaseAgentSession
+from agents.insights.brief import DEFAULT_FORMAT, parse_brief
 from agents.insights.data_tools import build_data_tools_lc
 from agents.insights.subagents import build_verify_subagent
 from agents.insights.prompts.autonomous import (
@@ -254,6 +255,8 @@ class AutonomousInsightsRunner:
         user_id: UUID | None = None,
         conversation_id: UUID | None = None,
         remember: bool = True,
+        artifact_format: str = DEFAULT_FORMAT,
+        start_version: int = 0,
         chat_idle_timeout: float = CHAT_IDLE_TIMEOUT,
     ) -> None:
         """Run the opening turn, then stay open for follow-ups until idle.
@@ -261,6 +264,13 @@ class AutonomousInsightsRunner:
         Per-project context (memory digest, business context, the user's actual
         question) is assembled into the USER turn — never the system prompt —
         so the cached system prefix stays byte-identical across customers.
+        ``artifact_format`` is the user's declared preference and rides there
+        for the same reason.
+
+        ``start_version`` is the highest brief version already stored for this
+        conversation, so a resumed session numbers its next brief v(n+1) rather
+        than colliding with v1 — the artifact store's (group_id, version) pair
+        is unique, and a collision would drop the brief.
         """
         agent = self.build_agent(
             llm=llm,
@@ -289,15 +299,46 @@ class AutonomousInsightsRunner:
             if recorder is not None:
                 await recorder.record_tool_result(name, result, tool_use_id, is_error=is_error)
 
+        # Version counter for this session's brief. One artifact group per
+        # session (the route mints or resumes the group id); each closing tag
+        # is the next version of it.
+        version = {"n": start_version}
+
+        async def _on_artifact(raw: str, turn_text: str) -> None:
+            """A closing </duct_artifact>: publish it as the next brief version.
+
+            ``ArtifactPersister`` is wrapped around ``emit`` by the route, so
+            emitting is all it takes to store one — the runner never touches
+            the database.
+            """
+            brief = parse_brief(raw)
+            if not brief.body.strip():
+                logger.warning("insights: empty <duct_artifact> payload — nothing to version")
+                return
+            version["n"] += 1
+            n = version["n"]
+            await emit({
+                "event": AgentEvent.ARTIFACT_VERSION,
+                "version_id": n,
+                "label": brief.label or ("Initial brief" if n == 1 else f"Update {n}"),
+                "payload": {
+                    "title": brief.title,
+                    "format": brief.format,
+                    "content": brief.body,
+                    "declared_format": brief.declared_format,
+                },
+            })
+            logger.info(
+                "insights: brief v%d — %r, %s, %d chars",
+                n, brief.title, brief.format, len(brief.body),
+            )
+
         async def _turn(text: str) -> None:
             await stream_agent(
                 agent,
                 text,
                 emit,
-                # Nothing consumes an inline artifact yet — the markdown artifact
-                # contract is a later phase. Logged rather than dropped silently
-                # so a model that emits one early is visible, not mysterious.
-                on_artifact_close=_log_unexpected_artifact,
+                on_artifact_close=_on_artifact,
                 log_prefix="insights-v1",
                 config=config,
                 provider=self.provider,
@@ -314,6 +355,7 @@ class AutonomousInsightsRunner:
                 business_context=business_context,
                 user_context=user_context,
                 memory=memory,
+                artifact_format=artifact_format,
             )
         )
         # The opening turn is done; the session is now a live chat. Signalling
@@ -349,11 +391,6 @@ class AutonomousInsightsRunner:
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-
-async def _log_unexpected_artifact(raw: str, turn_text: str) -> None:
-    """Placeholder artifact sink until the markdown artifact contract lands."""
-    logger.info("insights: model emitted a <duct_artifact> (%d chars) — not yet persisted", len(raw))
-
 
 def _as_text(chat_msg: Any) -> str:
     """A queued chat message as plain text.

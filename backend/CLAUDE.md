@@ -245,6 +245,13 @@ don't fit.
   of the human-in-the-loop port. Extracted from `agents/audit/v1/runner.py` when
   insights became the second V1 runner. A V1 runner should not talk to
   `init_chat_model` or drive `astream` itself.
+- `service/artifact_store.py` — versioned artifact persistence. `ArtifactPersister`
+  wraps a runner's emit and stores every `ARTIFACT_VERSION` event; an **adapter**
+  (`ArtifactVersion` + a `Callable[[dict], ArtifactVersion]`) reads one version out
+  of whatever payload that agent emits. A new agent writes an adapter — audit's
+  validates an `AuditReport`, insights' reads a written brief — and never a second
+  persistence path. Storing is the store's job; understanding the payload is the
+  adapter's.
 - `service/rest.py` — sync HTTP transport for the reporting connectors:
   retry, backoff, rate-limit pacing, error typing. A new connector declares
   an `Endpoint` and an `ApiError` subclass and writes no transport code;

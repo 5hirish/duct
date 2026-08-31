@@ -1064,6 +1064,11 @@ async def _start_insights(session_id: str, body: dict, emit_fn: Any) -> None:
     works out the rest. See
     ``docs/engineering/autonomous-insights-agent-plan.md``.
     """
+    from agents.insights.brief import (
+        ARTIFACT_KIND as INSIGHTS_ARTIFACT_KIND,
+        DEFAULT_FORMAT,
+        brief_artifact_version,
+    )
     from agents.insights.v1.runner import AutonomousInsightsRunner
 
     try:
@@ -1083,6 +1088,9 @@ async def _start_insights(session_id: str, body: dict, emit_fn: Any) -> None:
         raise HTTPException(
             500, f"No API key configured for provider {getattr(provider, 'value', provider)!r}."
         )
+    # The artifact summarizer runs on the Agent SDK, so only an Anthropic key
+    # works there — a brief on another provider persists without a digest.
+    summary_key = api_key if getattr(provider, "value", str(provider)) == "anthropic" else ""
 
     session = get_session(session_id)
     owner_id = getattr(session, "user_id", None) if session else None
@@ -1153,6 +1161,51 @@ async def _start_insights(session_id: str, body: dict, emit_fn: Any) -> None:
                 logger.debug("agents: MEMORY_RECALLED emit failed", exc_info=True)
         return context.text
 
+    # ------------------------------------------------------------------
+    # Artifact persistence. Every brief the agent writes becomes a version of
+    # one artifact group, which is what buys the artifacts page, version
+    # history, the AI summary digest and artifact-scoped memory — none of which
+    # the old localStorage brief had. Membership is already proven above:
+    # project_uuid is None unless it was.
+    # ------------------------------------------------------------------
+    start_version = 0
+    group_id = None
+    if project_uuid is not None:
+        if req.resume and conv_id is not None:
+            # Resume extends the conversation's existing brief rather than
+            # starting a second one. (group_id, version) is unique, so the
+            # counter has to continue from the stored head or the write drops.
+            try:
+                with next(db_session()) as db:
+                    rows = [
+                        a for a in artifacts_for_conversation(db, conv_id)
+                        if a.kind == INSIGHTS_ARTIFACT_KIND
+                    ]
+                if rows:
+                    group_id = rows[-1].group_id
+                    start_version = max(a.version for a in rows if a.group_id == group_id)
+            except Exception:
+                logger.warning("agents: insights brief rehydration failed", exc_info=True)
+        try:
+            persister = ArtifactPersister(
+                project_id=project_uuid,
+                user_id=owner_id,
+                agent_type=str(AgentType.INSIGHTS),
+                kind=INSIGHTS_ARTIFACT_KIND,
+                conversation_id=conv_id,
+                api_key=summary_key,
+                group_id=group_id,
+                adapt=brief_artifact_version,
+            )
+            if session is not None:
+                session.artifact_persister = persister
+            emit_fn = persister.wrap_emit(emit_fn)
+        except Exception:
+            logger.warning(
+                "agents: artifact persistence unavailable — insights runs unpersisted",
+                exc_info=True,
+            )
+
     if recorder is not None:
         emit_fn = recorder.wrap_emit(emit_fn)
         if req.prompt and not getattr(session, "resume", False):
@@ -1185,6 +1238,10 @@ async def _start_insights(session_id: str, body: dict, emit_fn: Any) -> None:
                 user_id=owner_id,
                 conversation_id=conv_id,
                 remember=req.remember,
+                artifact_format=(
+                    req.user_preferences.preferred_artifact_format or DEFAULT_FORMAT
+                ),
+                start_version=start_version,
             )
         except Exception as exc:
             logger.exception("insights pipeline error for session %s", session_id)
