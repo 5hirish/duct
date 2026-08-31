@@ -1,4 +1,4 @@
-"""Gemini + Imagen image-generation service.
+"""Gemini image-generation service.
 
 Wraps google-genai with typed Pydantic requests/responses. Outputs are
 persisted to the Railway Volume at /app/uploads/projects/{project_id}/

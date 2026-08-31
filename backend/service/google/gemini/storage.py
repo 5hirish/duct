@@ -41,7 +41,7 @@ def persist_generated_image(
     it as an opaque public URL.
 
     `source` is recorded on the row; defaults to 'gemini' for the image
-    service. Pass 'imagen' or 'upload' from the caller when appropriate.
+    service. Pass 'upload' from the caller when appropriate.
     """
     ext = _MIME_TO_EXT.get(image.mime_type, "png")
     asset_id = uuid4()

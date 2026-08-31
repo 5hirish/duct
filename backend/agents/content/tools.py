@@ -572,7 +572,7 @@ def build_content_mcp_server(
             AspectRatio.PORTRAIT_9_16, description="Optional aspect ratio. Defaults to 9:16 portrait.",
         )
         number_of_images: int = Field(1, ge=1, le=4, description="How many images to generate. Default 1, max 4.")
-        negative_prompt: str | None = Field(None, description="Optional negative prompt (Imagen models only).")
+        negative_prompt: str | None = Field(None, description="Accepted but inert — no current image model supports negative prompting. Put the constraint in the prompt instead.")
         input_asset_id: str | None = Field(
             None, description="Single reference asset UUID (legacy; prefer input_asset_ids). Gemini-class models only.",
         )
@@ -592,7 +592,7 @@ def build_content_mcp_server(
         prompt: str = Field(description="Edit instruction.")
         input_asset_id: str = Field(description="UUID of the source asset to edit.")
         model: ImageModel | None = Field(None, description="Optional image model id.")
-        edit_mode: EditMode | None = Field(None, description="Optional edit mode (Imagen only).")
+        edit_mode: EditMode | None = Field(None, description="Accepted but inert — masked/mode-based editing retired with Imagen.")
         mask_asset_id: str | None = Field(None, description="Optional mask asset UUID.")
         mask_mode: MaskMode | None = Field(None, description="Optional mask mode.")
         style_asset_id: str | None = Field(None, description="Optional style reference asset UUID.")
@@ -600,7 +600,7 @@ def build_content_mcp_server(
         subject_type: SubjectType | None = Field(None, description="Optional subject type.")
         aspect_ratio: AspectRatio | None = Field(None, description="Optional aspect ratio override.")
         number_of_images: int = Field(1, ge=1, le=4, description="How many images to generate (1-4).")
-        negative_prompt: str | None = Field(None, description="Optional negative prompt (Imagen only).")
+        negative_prompt: str | None = Field(None, description="Accepted but inert — see generate_image.")
 
     # ----------------------- Writers -----------------------
 
@@ -1351,7 +1351,7 @@ def build_content_mcp_server(
                             "input_global_refs": global_refs,
                         },
                         post_id=session.post_id,
-                        source="imagen" if request.model.value.startswith("imagen-") else "gemini",
+                        source="gemini",
                     )
                     assets.append(asset)
 
@@ -1496,7 +1496,7 @@ def build_content_mcp_server(
                             "negative_prompt":   request.negative_prompt,
                         },
                         post_id=session.post_id,
-                        source="imagen" if request.model.value.startswith("imagen-") else "gemini",
+                        source="gemini",
                     )
                     assets.append(asset)
 

@@ -31,9 +31,14 @@ class ModelName(str, Enum):
     GPT_4O_MINI = "gpt-4o-mini"
     GPT_4O = "gpt-4o"
     
-    # Google
+    # Google. Verified against the live ListModels response, not just the docs
+    # — the published shutdown dates are "earliest possible" and drift both
+    # ways (gemini-3.1-flash-lite-preview is still served past its date, while
+    # gemini-3.1-flash-preview is already gone and was dropped from here).
+    GEMINI_3_7_FLASH = "gemini-3.7-flash"
+    GEMINI_3_6_FLASH = "gemini-3.6-flash"
     GEMINI_3_5_FLASH = "gemini-3.5-flash"
-    GEMINI_3_1_FLASH = "gemini-3.1-flash-preview"
+    GEMINI_3_5_FLASH_LITE = "gemini-3.5-flash-lite"
     GEMINI_3_1_FLASH_LITE = "gemini-3.1-flash-lite"
     GEMINI_2_5_FLASH = "gemini-2.5-flash"
     GEMINI_2_5_FLASH_LITE = "gemini-2.5-flash-lite"
@@ -130,17 +135,21 @@ class AgentEffort(StrEnum):
 
 
 class ImageModel(str, Enum):
-    """Image generation model IDs (Gemini + Imagen via google-genai SDK)."""
+    """Image generation model IDs (Gemini image models via google-genai SDK).
 
-    # Google Gemini model
-    GEMINI_3_1_FLASH_IMAGE = "gemini-3.1-flash-image"
-    GEMINI_3_PRO_IMAGE     = "gemini-3-pro-image"
-    GEMINI_2_5_FLASH_IMAGE = "gemini-2.5-flash-image"
-    
-    # Google Imagen model
-    IMAGEN_4_GENERATE_001       = "imagen-4.0-generate-001"
-    IMAGEN_4_ULTRA_GENERATE_001 = "imagen-4.0-ultra-generate-001"
-    IMAGEN_4_FAST_GENERATE_001  = "imagen-4.0-fast-generate-001"
+    Imagen is gone: imagen-4.0-{generate,ultra-generate,fast-generate}-001 were
+    retired on 2026-08-17 and Google's own replacement is gemini-3.1-flash-image
+    — already the default below, so nothing here lost a capability. Their
+    generate_images/edit_image call path went with them.
+
+    gemini-2.5-flash-image is dropped for the same reason ahead of its
+    2026-10-02 shutdown. Historical ContentAsset rows still carry these strings;
+    that is fine, ImageAsset.model is a plain str and is never re-validated.
+    """
+
+    GEMINI_3_1_FLASH_IMAGE      = "gemini-3.1-flash-image"
+    GEMINI_3_1_FLASH_LITE_IMAGE = "gemini-3.1-flash-lite-image"
+    GEMINI_3_PRO_IMAGE          = "gemini-3-pro-image"
 
 
 # gemini-3.1-flash-image: the high-efficiency, high-volume flash image model
@@ -164,7 +173,7 @@ class Platform(StrEnum):
 
 
 class AspectRatio(StrEnum):
-    """Image aspect ratios accepted by Gemini/Imagen."""
+    """Image aspect ratios accepted by the Gemini image models."""
 
     SQUARE_1_1     = "1:1"
     PORTRAIT_9_16  = "9:16"
