@@ -16,7 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { deleteProject, getActiveProjectId, getProjects, setActiveProjectId } from "../../../lib/projects";
+import { deleteProject, getProjects, resolveActiveProjectId, setActiveProjectId } from "../../../lib/projects";
 import { faviconUrl, safeHostname } from "@/lib/favicon";
 
 export default function ProjectsPage() {
@@ -39,17 +39,23 @@ export default function ProjectsPage() {
 
   useEffect(() => {
     const sync = () => {
-      setProjects(getProjects());
-      setActiveId(getActiveProjectId() || "");
+      const ps = getProjects();
+      setProjects(ps);
+      setActiveId(resolveActiveProjectId(ps));
     };
     sync();
     window.addEventListener("storage", sync);
-    return () => window.removeEventListener("storage", sync);
+    window.addEventListener("duct:project-changed", sync);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("duct:project-changed", sync);
+    };
   }, []);
 
   function handleOpenProject(projectId) {
+    // Opening a project is also picking it: setActiveProjectId remembers it
+    // across reloads and notifies the switcher.
     setActiveProjectId(projectId);
-    window.dispatchEvent(new Event("duct:project-changed"));
     router.push(`/project/${projectId}`);
   }
 
@@ -77,7 +83,7 @@ export default function ProjectsPage() {
     setProjectPendingDelete(null);
     const nextProjects = getProjects();
     setProjects(nextProjects);
-    setActiveId(getActiveProjectId() || "");
+    setActiveId(resolveActiveProjectId(nextProjects));
     window.dispatchEvent(new Event("duct:project-changed"));
   }
 

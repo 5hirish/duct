@@ -11,16 +11,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  getActiveProjectId,
   getProjects,
+  resolveActiveProjectId,
   setActiveProjectId,
 } from "../lib/projects";
 
 function loadProjectsState() {
   const projects = getProjects();
-  const activeId = getActiveProjectId();
-  const active = projects.find((project) => project.id === activeId) || projects[0] || null;
-  return { projects, activeId: active?.id || "" };
+  // Resolving persists the fallback, so the trigger label and the id the rest
+  // of the app reads back never disagree.
+  return { projects, activeId: resolveActiveProjectId(projects) };
 }
 
 export default function ProjectSwitcher() {
@@ -37,15 +37,19 @@ export default function ProjectSwitcher() {
     };
     sync();
     window.addEventListener("storage", sync);
-    return () => window.removeEventListener("storage", sync);
+    window.addEventListener("duct:project-changed", sync);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("duct:project-changed", sync);
+    };
   }, []);
 
   const activeProject = projects.find((project) => project.id === activeId) || null;
 
   function handleProjectSelect(id) {
+    // setActiveProjectId persists the pick and notifies listeners.
     setActiveProjectId(id);
     setActiveId(id);
-    window.dispatchEvent(new Event("duct:project-changed"));
     if (pathname?.startsWith("/insights/organic-growth")) {
       router.refresh();
     }

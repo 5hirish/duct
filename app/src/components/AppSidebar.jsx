@@ -61,8 +61,8 @@ import {
   supportingEngines,
 } from "@/lib/engines";
 import {
-  getActiveProjectId,
   getProjects,
+  resolveActiveProjectId,
   setActiveProjectId,
 } from "@/lib/projects";
 import { faviconUrl } from "@/lib/favicon";
@@ -193,23 +193,28 @@ function SidebarProjectSwitcher() {
   const [activeId, setActiveId] = useState("");
 
   useEffect(() => {
+    // resolveActiveProjectId persists whatever it falls back to, so what the
+    // switcher shows is always what the rest of the app reads back.
     const sync = () => {
       const ps = getProjects();
-      const aid = getActiveProjectId();
       setProjects(ps);
-      setActiveId(ps.find((p) => p.id === aid)?.id || ps[0]?.id || "");
+      setActiveId(resolveActiveProjectId(ps));
     };
     sync();
     window.addEventListener("storage", sync);
-    return () => window.removeEventListener("storage", sync);
+    window.addEventListener("duct:project-changed", sync);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("duct:project-changed", sync);
+    };
   }, []);
 
   const active = projects.find((p) => p.id === activeId) || null;
 
   function select(id) {
+    // setActiveProjectId persists the pick and notifies; sync() picks it up.
     setActiveProjectId(id);
     setActiveId(id);
-    window.dispatchEvent(new Event("duct:project-changed"));
   }
 
   if (!active && projects.length === 0) {
