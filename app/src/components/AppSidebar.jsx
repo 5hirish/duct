@@ -73,8 +73,8 @@ import { faviconUrl } from "@/lib/favicon";
 
 const NAV_SECTIONS = [
   {
-    key: "insights",
-    label: "Insights",
+    key: "growth",
+    label: "Growth",
     items: [
       {
         key: "organic_growth",
@@ -85,11 +85,20 @@ const NAV_SECTIONS = [
         matchPrefix: "/insights/organic-growth",
       },
       {
-        key: "product_intelligence",
-        label: "Product Intelligence",
-        icon: BarChart3,
-        href: null,
-        available: false,
+        key: "seo_audit",
+        label: "SEO Audit",
+        icon: Search,
+        href: "/audit/seo",
+        available: true,
+        matchPrefix: "/audit/seo",
+      },
+      {
+        key: "tiktok_studio",
+        label: "Content Studio",
+        icon: PenLine,
+        href: "/content",
+        available: true,
+        matchPrefix: "/content",
       },
       {
         key: "paid_ads",
@@ -101,16 +110,15 @@ const NAV_SECTIONS = [
     ],
   },
   {
-    key: "audit",
-    label: "Audit",
+    key: "product",
+    label: "Product",
     items: [
       {
-        key: "seo_audit",
-        label: "SEO Audit",
-        icon: Search,
-        href: "/audit/seo",
-        available: true,
-        matchPrefix: "/audit/seo",
+        key: "product_intelligence",
+        label: "Product Intelligence",
+        icon: BarChart3,
+        href: null,
+        available: false,
       },
     ],
   },
@@ -118,14 +126,6 @@ const NAV_SECTIONS = [
     key: "execute",
     label: "Execute",
     items: [
-      {
-        key: "tiktok_studio",
-        label: "Content Studio",
-        icon: PenLine,
-        href: "/content",
-        available: true,
-        matchPrefix: "/content",
-      },
       {
         key: "executions",
         label: "Executions",
