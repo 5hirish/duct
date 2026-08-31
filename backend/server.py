@@ -43,8 +43,25 @@ _cfg = get_configs()
 # stays colourised in a TTY (%(levelprefix)s) — what terminal level-highlighting
 # keys on — while degrading to plain text when piped (prod / log files).
 # The `,%(msecs)` in the default asctime gives millisecond precision for free.
-_LOG_FORMAT = "%(asctime)s %(levelprefix)s %(name)s: %(message)s"
-_log_formatter = DefaultFormatter(fmt=_LOG_FORMAT, use_colors=sys.stderr.isatty())
+_LOG_FORMAT = "%(asctime)s %(levelprefix)s %(logname)s: %(message)s"
+
+# Uvicorn logs *every* server lifecycle line — startup, shutdown, reload — on a
+# logger literally named `uvicorn.error`, so a healthy boot reads like a stack of
+# failures. Display those under `uvicorn`; the level field already says whether a
+# line is an error. `%(logname)s` above (not `%(name)s`) is what gets rewritten,
+# so the record's real logger name stays intact for anything else reading it.
+_LOGGER_DISPLAY_NAMES = {"uvicorn.error": "uvicorn"}
+
+
+class DisplayNameFormatter(DefaultFormatter):
+    """DefaultFormatter that renders `_LOGGER_DISPLAY_NAMES` aliases as `logname`."""
+
+    def formatMessage(self, record: logging.LogRecord) -> str:
+        record.logname = _LOGGER_DISPLAY_NAMES.get(record.name, record.name)
+        return super().formatMessage(record)
+
+
+_log_formatter = DisplayNameFormatter(fmt=_LOG_FORMAT, use_colors=sys.stderr.isatty())
 
 _app_handler = logging.StreamHandler()
 _app_handler.setFormatter(_log_formatter)
