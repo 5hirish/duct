@@ -18,6 +18,7 @@ import {
   hasAuthToken,
   listProjectConnectors,
   listServerConnectors,
+  notifyConnectorsChanged,
   saveServerConnector,
   unbindProjectConnector,
 } from "../../../lib/connectorsApi";
@@ -127,6 +128,9 @@ export default function ConnectionsPage() {
       return;
     }
     sessionStorage.setItem(storageKey, refreshToken);
+    // A signed-out connection never reaches the server, so nothing else would
+    // tell the sidebar badge its count changed.
+    notifyConnectorsChanged();
     if (connectorType === "google_ads") setGadsOauthConnected(true);
     if (connectorType === "ga4") setGa4Connected(true);
     if (connectorType === "gsc") setGscConnected(true);
@@ -166,6 +170,7 @@ export default function ConnectionsPage() {
         if (token) {
           const decoded = decodeURIComponent(token);
           sessionStorage.setItem(storageKey, decoded);
+          notifyConnectorsChanged();
           arrived[storageKey] = decoded;
         }
       }
@@ -306,6 +311,7 @@ export default function ConnectionsPage() {
   async function signOutGads() {
     sessionStorage.removeItem("gads_refresh_token");
     sessionStorage.removeItem("gads_customer_id");
+    notifyConnectorsChanged();
     await clearAdsDeveloperToken();
     setAdsLoginCustomerId("");
     setGadsOauthConnected(false);
@@ -317,18 +323,21 @@ export default function ConnectionsPage() {
 
   async function signOutGa4() {
     sessionStorage.removeItem("ga4_refresh_token");
+    notifyConnectorsChanged();
     setGa4Connected(false);
     await removeServerRow("ga4");
   }
 
   async function signOutGsc() {
     sessionStorage.removeItem("gsc_refresh_token");
+    notifyConnectorsChanged();
     setGscConnected(false);
     await removeServerRow("gsc");
   }
 
   async function signOutGtm() {
     sessionStorage.removeItem("gtm_refresh_token");
+    notifyConnectorsChanged();
     setGtmConnected(false);
     await removeServerRow("gtm");
   }

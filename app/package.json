@@ -10,7 +10,8 @@
     "start": "next start",
     "preview:cf": "opennextjs-cloudflare build && wrangler dev",
     "deploy:cf": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "check:connectors": "node scripts/check-connector-count.mjs"
   },
   "keywords": [],
   "license": "UNLICENSED",

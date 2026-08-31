@@ -66,6 +66,7 @@ import {
   setActiveProjectId,
 } from "@/lib/projects";
 import { faviconUrl } from "@/lib/favicon";
+import { CONNECTORS_CHANGED, connectedConnectorTypes } from "@/lib/connectorsApi";
 
 // ---------------------------------------------------------------------------
 // Nav structure
@@ -462,18 +463,44 @@ function ThemeSidebarItem() {
 // AppSidebar
 // ---------------------------------------------------------------------------
 
+/** How many sources are connected, for the footer badge.
+ *
+ * It used to count two hardcoded sessionStorage keys — GA4 and GSC — so the
+ * badge could never read higher than 2 and never saw Google Ads, GTM, or any
+ * server-stored connector at all. It now asks the same places the Connections
+ * page does (durable server rows ∪ session-only OAuth tokens), counting
+ * distinct connector types so the two screens cannot disagree.
+ *
+ * Refreshed on the connector-changed event, on cross-tab storage writes, and
+ * on focus — the last of which is what catches a connection made in the OAuth
+ * tab that handed control back without either of the other two firing.
+ */
 function useConnectionCount() {
   const [count, setCount] = useState(0);
   useEffect(() => {
+    let alive = true;
+    let inFlight = false;
     const check = () => {
-      let n = 0;
-      if (sessionStorage.getItem("ga4_refresh_token")) n++;
-      if (sessionStorage.getItem("gsc_refresh_token")) n++;
-      setCount(n);
+      if (inFlight) return;   // focus fires in bursts; one answer is enough
+      inFlight = true;
+      connectedConnectorTypes()
+        .then((types) => {
+          if (alive) setCount(types.size);
+        })
+        .finally(() => {
+          inFlight = false;
+        });
     };
     check();
+    window.addEventListener(CONNECTORS_CHANGED, check);
     window.addEventListener("storage", check);
-    return () => window.removeEventListener("storage", check);
+    window.addEventListener("focus", check);
+    return () => {
+      alive = false;
+      window.removeEventListener(CONNECTORS_CHANGED, check);
+      window.removeEventListener("storage", check);
+      window.removeEventListener("focus", check);
+    };
   }, []);
   return count;
 }

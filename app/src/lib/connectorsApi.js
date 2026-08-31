@@ -8,6 +8,7 @@
 // before; this is the durable layer on top.
 
 import { authedRequest, hasAuthToken } from "./authFetch";
+import { SESSION_TOKEN_KEYS, resolveConnectedTypes } from "./connectorCount";
 
 export { hasAuthToken };
 
@@ -22,15 +23,71 @@ export function listServerConnectors() {
  * `{refresh_token, developer_token, login_customer_id}` for Google Ads.
  * Note: the blob replaces the stored one whole — always send every field.
  */
-export function saveServerConnector({ connector_type, account_id = "", account_name = "", credentials }) {
-  return authedRequest("/api/user/connectors", {
+export async function saveServerConnector({ connector_type, account_id = "", account_name = "", credentials }) {
+  const res = await authedRequest("/api/user/connectors", {
     method: "POST",
     body: { connector_type, account_id, account_name, credentials },
   });
+  notifyConnectorsChanged();
+  return res;
 }
 
-export function deleteServerConnector(id) {
-  return authedRequest(`/api/user/connectors/${id}`, { method: "DELETE" });
+export async function deleteServerConnector(id) {
+  const res = await authedRequest(`/api/user/connectors/${id}`, { method: "DELETE" });
+  notifyConnectorsChanged();
+  return res;
+}
+
+// --- "how many sources are live?" ------------------------------------------
+//
+// Asked by the sidebar badge, and answered from the same two places the
+// Connections page reads: the durable server rows, plus the session-only OAuth
+// tokens a signed-out user can still hold. Counting DISTINCT connector types —
+// two Stripe accounts are one connected source, not two, which is what the
+// Connections page shows and therefore what the badge has to agree with.
+
+/** Fired whenever connector state changes, so anything showing a count can
+ *  re-read it. `storage` events do not cover this: sessionStorage is per-tab
+ *  and same-tab writes never fire one. */
+export { resolveConnectedTypes } from "./connectorCount";
+
+export const CONNECTORS_CHANGED = "duct:connectors-changed";
+
+export function notifyConnectorsChanged() {
+  if (typeof window !== "undefined") window.dispatchEvent(new Event(CONNECTORS_CHANGED));
+}
+
+/** Connector types with credentials somewhere, as a Set. Never throws — a
+ *  signed-out or offline caller still gets the session-only answer. */
+export async function connectedConnectorTypes() {
+  const sessionTypes = [];
+  if (typeof window !== "undefined") {
+    for (const [type, key] of Object.entries(SESSION_TOKEN_KEYS)) {
+      try {
+        if (sessionStorage.getItem(key)) sessionTypes.push(type);
+      } catch {
+        /* storage disabled — server rows below still count */
+      }
+    }
+  }
+
+  const serverTypes = [];
+  if (hasAuthToken()) {
+    try {
+      for (const row of (await listServerConnectors()) || []) {
+        if (row?.connector_type) serverTypes.push(row.connector_type);
+      }
+    } catch {
+      /* offline / signed-out — the session-only answer stands */
+    }
+  }
+
+  let hasAdsDevToken = false;
+  if (sessionTypes.includes("google_ads") || serverTypes.includes("google_ads")) {
+    const { getAdsDeveloperToken } = await import("./adsCredentials");
+    hasAdsDevToken = !!(await getAdsDeveloperToken());
+  }
+  return resolveConnectedTypes({ sessionTypes, serverTypes, hasAdsDevToken });
 }
 
 // --- Per-project connector mappings (/api/user/projects/{id}/connectors) ---
