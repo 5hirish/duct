@@ -169,14 +169,54 @@ whole documents, not patches; say in chat what changed between them.
 artifact. Something that is not worth re-reading is not a brief."""
 
 
-def build_insights_system_prompt(*, capabilities: str = CAPABILITIES_PHASE_3) -> str:
+# Mounted only when the session has a membership-checked project and a user,
+# so it is a second fixed capability string rather than a per-request one —
+# two cached prefixes, not one per customer.
+EXECUTION_CAPABILITY = """\
+## Acting on what you find
+
+**ListExecutableOps** is the authoritative list of what you can actually change, \
+per connector, with whether each is destructive and whether it can be rolled \
+back. Read it before you promise the user anything.
+
+**ProposeChanges** stages a change set: every change is dry-run previewed and \
+checked against the account's guardrails before it is stored. Say WHY in \
+`context` — the user reads that sentence in the review card, and it is the \
+difference between a change they approve and one they reject.
+
+**GetChangeSetStatus** and **RollbackChangeSet** close the loop. Rollback is the \
+escape hatch for an applied set that turned out wrong, including one that \
+applied automatically.
+
+What you cannot do, at any autonomy level:
+
+- **You cannot approve or apply a change set.** No such tool exists. A set \
+either auto-applies under the project's autonomy policy or waits for a human.
+- **Destructive operations always wait** — GTM publishes, archives, unlinks. \
+There is no configuration that changes this.
+- Raising autonomy never widens the allowlist. It reduces how often you \
+interrupt, and nothing else.
+
+When a set comes back `proposed`, tell the user what you proposed and why, then \
+carry on with your analysis. Do not poll for their approval."""
+
+
+def build_insights_system_prompt(
+    *, capabilities: str = CAPABILITIES_PHASE_3, can_execute: bool = False
+) -> str:
     """The cache-stable system instruction for an insights session.
 
     ``capabilities`` is a parameter rather than a constant so a caller can
     describe a different tool set (a non-interactive scheduled run has no
     AskUserQuestion, for instance) without forking the whole prompt. It must
     still be one of a small set of fixed strings — a per-request string here
-    would give every customer a distinct cached prefix.
+    would give every customer a distinct cached prefix. ``can_execute`` is a
+    flag for the same reason: two cached prefixes, not one per project.
+
+    Note what is NOT here: the project's autonomy *level*. That is per-project
+    and rides in the user turn, so a session with execution mounted shares its
+    cached prefix with every other one regardless of how much autonomy its
+    owner granted.
     """
     from agents.insights.catalog import get_catalogs_for_connectors
     from agents.insights.catalog.prompt import entity_catalog_prompt_block
@@ -204,12 +244,50 @@ def build_insights_system_prompt(*, capabilities: str = CAPABILITIES_PHASE_3) ->
                 notes,
                 VERIFICATION_DIRECTIVE,
                 ARTIFACT_CONTRACT,
+                *([EXECUTION_CAPABILITY] if can_execute else []),
                 MEMORY_DISCIPLINE,
                 BOUNDARIES,
             ]
         )
     )
 
+
+# The posture each autonomy level asks for. Per-project, so it lives in the
+# user turn — and it governs three things at once: how freely to ask, whether
+# to propose, and what happens when a proposal is eligible.
+#
+# The `auto` entry ends by saying what does NOT change. A model that reads
+# "auto" and infers a wider reach is the exact failure the level's design
+# rules out in code; the prompt should not quietly imply otherwise.
+AUTONOMY_POSTURE: dict[str, str] = {
+    "ask": (
+        "Autonomy for this project is ASK.\n"
+        "- Ask a clarifying question whenever one would sharpen the answer.\n"
+        "- Propose changes freely — nothing you propose applies on its own, so a "
+        "proposal costs the user a glance, not a risk.\n"
+        "- Every change set waits in their review queue."
+    ),
+    "assisted": (
+        "Autonomy for this project is ASSISTED.\n"
+        "- Ask only when two readings of the question lead to different "
+        "conclusions. Otherwise state your assumption and carry on.\n"
+        "- Reversible, guardrail-clean changes on the narrow allowlist apply as "
+        "soon as you propose them — so propose them once you are confident, and "
+        "report what happened.\n"
+        "- Everything else still waits for the user's approval."
+    ),
+    "auto": (
+        "Autonomy for this project is AUTO.\n"
+        "- Ask only when you genuinely cannot proceed. Otherwise state the "
+        "assumption in the brief and continue; an open question belongs in the "
+        "brief as a line the user can correct, not as a stall.\n"
+        "- What does NOT change: the same narrow allowlist applies, destructive "
+        "changes still wait for a human, and you still cannot approve or apply "
+        "anything yourself. AUTO buys fewer interruptions, not a wider reach.\n"
+        "- Because you are interrupting less, be more explicit about what you "
+        "assumed and what you could not verify."
+    ),
+}
 
 # What each format is *for*, so the preference reads as a choice about the
 # reader rather than a file extension. Per-user, so it lives in the user turn.
@@ -233,18 +311,22 @@ def build_insights_user_prompt(
     user_context: str = "",
     memory: str = "",
     artifact_format: str = "",
+    autonomy: str = "",
 ) -> str:
     """The USER turn: everything per-project, in context-then-task order.
 
     Kept out of the system prompt so the cached prefix stays byte-identical
     across customers (see ``service/memory.py`` and the module docstring).
-    ``artifact_format`` is the user's declared deliverable preference and
-    belongs here for the same reason — it varies per person.
+    ``artifact_format`` (per-user) and ``autonomy`` (per-project) belong here
+    for the same reason — both vary, and neither may enter the cached prefix.
     """
     parts = [block for block in (business_context, user_context, memory) if block]
     guidance = _FORMAT_GUIDANCE.get(artifact_format, "")
     if guidance:
         parts.append(xml_block("deliverable_format", guidance))
+    posture = AUTONOMY_POSTURE.get(autonomy, "")
+    if posture:
+        parts.append(xml_block("autonomy", posture))
     request = (prompt or "").strip()
     parts.append(
         xml_block(

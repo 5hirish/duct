@@ -10,7 +10,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -37,7 +36,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { getActiveProject } from "../../../lib/projects";
 import { hasAuthToken } from "../../../lib/authFetch";
-import { fetchProjectsRemote, setProjectAutonomy } from "../../../lib/projectsApi";
+import {
+  AUTONOMY_ASK,
+  AUTONOMY_OPTIONS,
+  fetchProjectsRemote,
+  setProjectAutonomy,
+} from "../../../lib/projectsApi";
 import {
   applyChangeSet,
   approveChangeSet,
@@ -403,27 +407,49 @@ function ConfirmDialog({ confirm, destructiveMap, onCancel, onConfirm }) {
 
 function AutonomyPanel({ project, level, onChange, saving, error }) {
   if (!project || !level) return null;
-  const assisted = level === "assisted";
+  const current = AUTONOMY_OPTIONS.find((o) => o.value === level) || AUTONOMY_OPTIONS[0];
   return (
-    <article className="connection-card" style={{ display: "grid", gap: 6, marginBottom: 16 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
-        <div style={{ minWidth: 0 }}>
-          <h2 className="connection-title" style={{ marginBottom: 2 }}>
-            Assisted autonomy — {project.name}
-          </h2>
-          <p className="app-subtle" style={{ margin: 0, fontSize: 13 }}>
-            {assisted
-              ? "On: reversible, guardrail-clean, non-destructive agent proposals (negative/positive keywords, GA4 key events and audiences, GTM workspace edits) apply without waiting for you. Destructive operations — GTM publishes, archives, unlinks — and anything budget- or status-related ALWAYS wait for your approval here. Every auto-applied set keeps a rollback handle."
-              : "Off: every agent-proposed change set waits in this queue for your explicit approval before anything touches a connected account."}
-          </p>
-        </div>
-        <Switch
-          checked={assisted}
-          disabled={saving}
-          onCheckedChange={(checked) => onChange(checked ? "assisted" : "manual")}
-          aria-label="Assisted autonomy"
-        />
+    <article className="connection-card" style={{ display: "grid", gap: 10, marginBottom: 16 }}>
+      <div>
+        <h2 className="connection-title" style={{ marginBottom: 2 }}>
+          Autonomy — {project.name}
+        </h2>
+        <p className="app-subtle" style={{ margin: 0, fontSize: 13 }}>{current.blurb}</p>
       </div>
+
+      <div role="radiogroup" aria-label="Execution autonomy" style={{ display: "flex", gap: 8 }}>
+        {AUTONOMY_OPTIONS.map((opt) => {
+          const selected = opt.value === level;
+          return (
+            <button
+              key={opt.value}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              disabled={saving || selected}
+              onClick={() => onChange(opt.value)}
+              className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors disabled:cursor-default ${
+                selected
+                  ? "border-primary bg-primary/10 text-foreground"
+                  : "border-border text-muted-foreground hover:text-foreground hover:border-border/80"
+              }`}
+            >
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* The invariant, stated where the dial is turned. It is the reason the
+          top of the ladder is safe to offer at all, and a user who does not
+          know it will read "Auto" as "anything". */}
+      <p className="app-subtle" style={{ margin: 0, fontSize: 12 }}>
+        At every level: destructive operations — GTM publishes, archives, unlinks — and
+        anything budget- or status-related wait for your approval here. Assisted and Auto
+        share one narrow allowlist (negative/positive keywords, GA4 key events and
+        audiences, GTM workspace edits), and every auto-applied set keeps a rollback handle.
+      </p>
+
       {error && (
         <p style={{ margin: 0, fontSize: 12, color: "var(--destructive, #e5484d)" }}>
           {error.includes("404") || error.toLowerCase().includes("owner")
@@ -664,7 +690,7 @@ export default function ExecutePage() {
 
   useEffect(() => {
     const remote = remoteProjects.find((p) => p.id === activeProject?.id);
-    if (remote) setAutonomy(remote.autonomyLevel || "manual");
+    if (remote) setAutonomy(remote.autonomyLevel || AUTONOMY_ASK);
   }, [remoteProjects, activeProject]);
 
   // Auto-refresh: 20s idle, 3s while a set is applying; paused in hidden tabs.

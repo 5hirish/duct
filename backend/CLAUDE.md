@@ -252,6 +252,13 @@ don't fit.
   validates an `AuditReport`, insights' reads a written brief — and never a second
   persistence path. Storing is the store's job; understanding the payload is the
   adapter's.
+- `agents/tools/execution_tools.py` — the staged-execution tool surface, as a
+  binder pair (`build_execution_tools_lc` / `build_execution_mcp_server`) over
+  shared descriptions, arg schemas and domain functions. The surface is
+  deliberately asymmetric: propose, inspect and roll back exist; **approve and
+  apply do not, in either harness.** Autonomy (`ask | assisted | auto`) changes
+  how often an agent interrupts, never what may auto-apply — `service/execution/
+  policy.py` is the one place that decides, and it does not consult the model.
 - `service/rest.py` — sync HTTP transport for the reporting connectors:
   retry, backoff, rate-limit pacing, error typing. A new connector declares
   an `Endpoint` and an `ApiError` subclass and writes no transport code;

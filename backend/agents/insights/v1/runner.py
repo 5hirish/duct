@@ -59,8 +59,10 @@ from agents.insights.prompts.autonomous import (
     build_insights_system_prompt,
     build_insights_user_prompt,
 )
+from agents.tools.execution_tools import build_execution_tools_lc
 from agents.models import ModelName, Provider
 from agents.registry import AgentType
+from models.execution import AUTONOMY_ASK
 
 logger = logging.getLogger(__name__)
 
@@ -128,6 +130,7 @@ class AutonomousInsightsRunner:
         user_id: UUID | None = None,
         conversation_id: UUID | None = None,
         remember: bool = True,
+        execute: bool = True,
         system_prompt: str = "",
     ) -> Any:
         """Assemble the agent: memory tools, mid-run questions, planning.
@@ -141,6 +144,11 @@ class AutonomousInsightsRunner:
         ``llm`` is resolved from the runner's provider/model when omitted; the
         parameter exists so tests can drive the agent with a fake chat model, the
         same seam ``build_audit_agent`` uses.
+
+        ``execute`` mounts the staged-execution tools. They need a user AND a
+        membership-checked project, so the binder returns nothing without both;
+        the flag exists for the caller that has both and still wants a
+        read-only session.
         """
         if llm is None:
             llm = resolve_chat_model(self.provider, self.model, self._api_key, self._temperature)
@@ -199,6 +207,25 @@ class AutonomousInsightsRunner:
         )
         tools += data_tools
 
+        # Acting. The agent proposes; whether a proposal applies without a
+        # click is decided in service/execution/policy.py and never here —
+        # there is deliberately no approve or apply tool to mount.
+        execution_tools: list[Any] = []
+        if execute:
+            async def _on_change_set(card: dict) -> None:
+                if emit is not None:
+                    await emit({"event": AgentEvent.EXECUTION_PROPOSED, "change_set": card})
+
+            execution_tools = build_execution_tools_lc(
+                user_id=user_id,
+                project_id=project_id,
+                conversation_id=conversation_id,
+                agent_type=str(AgentType.INSIGHTS),
+                on_change_set=_on_change_set,
+                log_prefix="insights-v1",
+            )
+            tools += execution_tools
+
         if session is not None and emit is not None:
             tools.append(
                 build_ask_user_tool(
@@ -218,7 +245,9 @@ class AutonomousInsightsRunner:
             # mixing the two costs the analyst its whole window before it writes
             # a word. See agents/insights/subagents/verify.py.
             subagents=[build_verify_subagent(data_tools)],
-            system_prompt=system_prompt or build_insights_system_prompt(),
+            system_prompt=system_prompt or build_insights_system_prompt(
+                can_execute=bool(execution_tools)
+            ),
             # Planning is opt-in since deepagents 0.7. Mounted here because the
             # todo stream is what makes a long autonomous run legible — the
             # frontend already renders it (AuditTodos.jsx).
@@ -256,6 +285,7 @@ class AutonomousInsightsRunner:
         conversation_id: UUID | None = None,
         remember: bool = True,
         artifact_format: str = DEFAULT_FORMAT,
+        autonomy: str = AUTONOMY_ASK,
         start_version: int = 0,
         chat_idle_timeout: float = CHAT_IDLE_TIMEOUT,
     ) -> None:
@@ -271,6 +301,12 @@ class AutonomousInsightsRunner:
         conversation, so a resumed session numbers its next brief v(n+1) rather
         than colliding with v1 — the artifact store's (group_id, version) pair
         is unique, and a collision would drop the brief.
+
+        ``autonomy`` is the level this run *operates at* — the route resolves
+        it through ``effective_autonomy``, so a model outside the allowlist has
+        already been stepped down before it reaches here. It shapes how freely
+        the agent asks; what may auto-apply is decided in
+        ``service/execution/policy.py`` at propose time, not from this string.
         """
         agent = self.build_agent(
             llm=llm,
@@ -356,6 +392,7 @@ class AutonomousInsightsRunner:
                 user_context=user_context,
                 memory=memory,
                 artifact_format=artifact_format,
+                autonomy=autonomy,
             )
         )
         # The opening turn is done; the session is now a live chat. Signalling

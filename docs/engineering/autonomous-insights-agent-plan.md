@@ -1,6 +1,6 @@
 # Autonomous Insights Agent — design plan
 
-**Status:** Phases 1–4 built, 5–6 open. Supersedes the request-shaped insights pipeline
+**Status:** Phases 1–5 built, 6 open. Supersedes the request-shaped insights pipeline
 (`agents/insights/v1/agent.py` + the six-step wizard at `app/src/app/(app)/generate/page.jsx`).
 
 Companion reading, in this order:
@@ -491,6 +491,48 @@ driven by a cheap OpenRouter model is a different risk profile from Sonnet.
 **Decided:** `auto` is gated behind a model allowlist. The code gates in
 `service/execution/policy.py` hold regardless of model — this is about not inviting
 the failure, not about relying on the model to avoid it.
+
+> **Built 2026-08-31.** `tests/test_execution_autonomy.py` (33 tests) is the
+> gate, and most of it exists to hold one sentence: **`auto` does not widen
+> what may auto-apply.**
+>
+> - **`AUTO_APPLY_ALLOWLIST` and the destructive gate are untouched**, and
+>   tested to be identical at `assisted` and at `auto` — including that a
+>   destructive op stays ineligible even when its `op_type` is on the
+>   allowlist. `should_auto_apply` now takes `level in {assisted, auto}` and
+>   nothing else changed in it.
+> - **The model gate lowers the posture and touches nothing else.**
+>   `effective_autonomy(configured, model)` runs an `auto` project at
+>   `assisted` when the model is outside `AUTO_POSTURE_MODEL_PREFIXES` — so it
+>   goes back to asking, which is the actual mitigation. A model can lower the
+>   posture and never raise it, and `should_auto_apply` deliberately does not
+>   take a model argument at all: a test asserts the parameter's absence,
+>   because the honest claim is that the code gates hold regardless of who is
+>   driving.
+> - **No migration was needed, and that is the finding.** The plan called for
+>   "an Alembic migration widening `AUTONOMY_LEVELS`" on the assumption of a DB
+>   constraint. There is none — `projects.autonomy_level` is free-text with an
+>   application-level check — so widening the vocabulary is a code change.
+>   `manual` stays an accepted alias for `ask` through `normalize_autonomy`,
+>   which every read goes through. Rewriting rows to rename a free-text string
+>   is risk for no behaviour change, and on a desktop SQLite install altering
+>   `projects` means a table rebuild with live foreign keys pointed at it.
+> - **`normalize_autonomy` falls back to `ask`, `is_writable_autonomy` does
+>   not.** Reading an unrecognised value as the *least* autonomy is right;
+>   writing one silently is not, so a typo is a 422.
+> - **`build_execution_tools_lc` came with the extraction the ports rule
+>   wanted.** The domain functions moved out of the SDK closures, and both
+>   binders now share one set of tool descriptions and arg schemas — so the two
+>   harnesses cannot describe different contracts to their models. Tests
+>   enumerate the tools from *both* binders (the MCP server is asked, not its
+>   source) and assert no name approves or applies anything.
+>
+> Frontend: `ChangeSetCard` moved out of `AuditChat.jsx` into
+> `components/execution/` on its second consumer — two drifting copies of the
+> human review gate is the drift most worth preventing. `/execute` gets a
+> three-way picker with the invariant stated next to the dial, and the
+> insights session header names the level the run is *actually* at, saying so
+> when a model stepped it down.
 
 ---
 

@@ -41,11 +41,55 @@ CHANGE_STATUSES = {"proposed", "blocked", "approved", "applied", "failed", "roll
 CHANGE_SET_SOURCES = {"user", "agent"}
 APPLIED_BY_VALUES = {"", "user", "auto"}
 
-# Project execution autonomy levels (projects.autonomy_level).
-AUTONOMY_MANUAL = "manual"      # every change set waits for human approval
-AUTONOMY_ASSISTED = "assisted"  # reversible, guardrail-clean, non-destructive
-                                # agent sets may auto-apply; destructive always waits
-AUTONOMY_LEVELS = {AUTONOMY_MANUAL, AUTONOMY_ASSISTED}
+# Project execution autonomy (projects.autonomy_level) — a Claude-Code-shaped
+# ladder governing THREE things together: how freely an agent asks clarifying
+# questions, whether it proposes change sets, and whether any of them apply
+# without a click.
+#
+# The critical property, and the reason this is safe to ship: **`auto` does not
+# widen what may auto-apply.** It reduces interruption, not oversight.
+# AUTO_APPLY_ALLOWLIST and the absolute destructive gate in
+# service/execution/policy.py are identical at `assisted` and at `auto`.
+AUTONOMY_ASK = "ask"            # asks freely; proposes; nothing ever auto-applies
+AUTONOMY_ASSISTED = "assisted"  # asks when it changes the conclusion; reversible,
+                                # guardrail-clean, allowlisted agent sets auto-apply
+AUTONOMY_AUTO = "auto"          # asks minimally, records assumptions instead;
+                                # the SAME allowlist applies, unchanged
+AUTONOMY_LEVELS = {AUTONOMY_ASK, AUTONOMY_ASSISTED, AUTONOMY_AUTO}
+
+# Levels at which an eligible agent-proposed set may apply without a click.
+AUTO_APPLY_LEVELS = {AUTONOMY_ASSISTED, AUTONOMY_AUTO}
+
+# "manual" was the original spelling of `ask`, and it named only the apply
+# half of a level that now also governs questions. Stored rows, the column's
+# server_default and older clients still say it, so it stays an accepted alias
+# rather than a data migration: normalize_autonomy() is the single funnel, and
+# rewriting rows to rename a free-text string would be risk for no behaviour.
+AUTONOMY_MANUAL = "manual"
+_AUTONOMY_ALIASES = {AUTONOMY_MANUAL: AUTONOMY_ASK}
+
+
+def is_writable_autonomy(value: str | None) -> bool:
+    """True when a client-supplied level may be stored.
+
+    Distinct from ``normalize_autonomy``, which falls back to ``ask`` for
+    anything it does not recognise. That is right when *reading* a stored row
+    and wrong when *writing*: a typo must be a 422, not a silent write of a
+    level nobody asked for. Aliases pass, so an older client still works.
+    """
+    level = (value or "").strip().lower()
+    return level in AUTONOMY_LEVELS or level in _AUTONOMY_ALIASES
+
+
+def normalize_autonomy(value: str | None) -> str:
+    """A stored or client-supplied level as one of AUTONOMY_LEVELS.
+
+    Unknown values fall back to `ask` — the level that applies nothing. A
+    typo must never be read as more autonomy than was granted.
+    """
+    level = (value or "").strip().lower()
+    level = _AUTONOMY_ALIASES.get(level, level)
+    return level if level in AUTONOMY_LEVELS else AUTONOMY_ASK
 
 
 class ExecutionChangeSet(SQLModel, table=True):

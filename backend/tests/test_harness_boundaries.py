@@ -65,7 +65,7 @@ ADAPTERS: dict[str, str] = {
     "agents/content/tools.py":              "Claude Agent SDK tool binder (duct_content)",
     "agents/insights/tools.py":             "LangChain StructuredTool binder",
     "agents/insights/data_tools.py":        "LangChain binder: FetchData + connector notes",
-    "agents/tools/execution_tools.py":      "Claude Agent SDK tool binder (staged execution)",
+    "agents/tools/execution_tools.py":      "binder pair: build_execution_tools_lc / _mcp_server",
 
     # -- Named harness shims.
     "agents/core/claude_sdk.py":            "Claude Agent SDK subprocess survival",

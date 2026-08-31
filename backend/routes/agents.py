@@ -62,6 +62,8 @@ from agents.engines import PROVIDER_CONFIG_ATTR, resolve_engine, resolve_engine_
 from agents.registry import AgentType, get_spec, list_specs
 from config import claude_oauth_available, get_configs
 from models.auth import User
+from models.execution import AUTONOMY_ASK, normalize_autonomy
+from models.project import Project
 from service.artifact_store import (
     ArtifactPersister,
     artifacts_for_conversation,
@@ -69,6 +71,7 @@ from service.artifact_store import (
 )
 from service.auth import get_current_user_optional
 from service.crawl.fetcher import SSRFError, validate_public_url
+from service.execution.policy import effective_autonomy
 from service.membership import member_role
 from service.memory import (
     build_memory_context,
@@ -1101,11 +1104,17 @@ async def _start_insights(session_id: str, body: dict, emit_fn: Any) -> None:
     # so it is set ONLY after the caller is proven to belong to the project —
     # everything project-scoped downstream reads it rather than the request.
     project_uuid = None
+    configured_autonomy = AUTONOMY_ASK
     if req.project_id and owner_id:
         try:
             candidate = UUID(str(req.project_id))
             with next(db_session()) as db:
                 role = member_role(candidate, owner_id, db)
+                if role is not None:
+                    row = db.get(Project, candidate)
+                    configured_autonomy = normalize_autonomy(
+                        getattr(row, "autonomy_level", "")
+                    )
             if role is None:
                 logger.warning(
                     "agents: user %s is not a member of project %s — insights runs unscoped",
@@ -1115,6 +1124,13 @@ async def _start_insights(session_id: str, body: dict, emit_fn: Any) -> None:
                 project_uuid = candidate
         except Exception:
             logger.warning("agents: project scoping unavailable for insights", exc_info=True)
+
+    # The level this run actually operates at. A model outside the allowlist
+    # runs an `auto` project at `assisted` — it goes back to asking when a
+    # question would change the conclusion. It does NOT change what may
+    # auto-apply: that is identical at both levels and decided in
+    # service/execution/policy.py at propose time, never from this value.
+    autonomy = effective_autonomy(configured_autonomy, getattr(model, "value", str(model)))
     if session is not None:
         session.artifact_project_id = project_uuid
         session.memory_off = not req.remember
@@ -1223,7 +1239,16 @@ async def _start_insights(session_id: str, body: dict, emit_fn: Any) -> None:
 
     async def pipeline() -> None:
         try:
-            await emit_fn({"event": AgentEvent.PIPELINE_STARTED, "status": StepStatus.RUNNING})
+            # The autonomy fields ride on PIPELINE_STARTED rather than a new
+            # event: the UI has to say which mode a run is in before the first
+            # token, and `configured` vs `autonomy` is what makes a step-down
+            # visible instead of mysterious.
+            await emit_fn({
+                "event": AgentEvent.PIPELINE_STARTED,
+                "status": StepStatus.RUNNING,
+                "autonomy": autonomy,
+                "autonomy_configured": configured_autonomy,
+            })
             # run_session emits PIPELINE_FINISHED itself once the opening turn
             # lands, then stays open for follow-ups — so the route must not
             # emit it again on return (that would be the chat loop ending).
@@ -1241,6 +1266,7 @@ async def _start_insights(session_id: str, body: dict, emit_fn: Any) -> None:
                 artifact_format=(
                     req.user_preferences.preferred_artifact_format or DEFAULT_FORMAT
                 ),
+                autonomy=autonomy,
                 start_version=start_version,
             )
         except Exception as exc:

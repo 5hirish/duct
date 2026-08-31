@@ -12,7 +12,12 @@ from sqlmodel import Session
 
 from db.session import get_session
 from models.auth import User
-from models.execution import AUTONOMY_LEVELS
+from models.execution import (
+    AUTONOMY_ASK,
+    AUTONOMY_LEVELS,
+    is_writable_autonomy,
+    normalize_autonomy,
+)
 from models.membership import ROLE_COLLABORATOR, ROLE_OWNER
 from models.project import Project
 from service.auth import get_current_user
@@ -62,7 +67,9 @@ class ProjectOut(BaseModel):
     audience: dict
     competition: dict
     brand_channels: dict
-    autonomy_level: str = "manual"
+    # Always one of AUTONOMY_LEVELS — legacy "manual" is normalized on the way
+    # out, so no client ever has to know the alias exists.
+    autonomy_level: str = AUTONOMY_ASK
     created_at: str
     updated_at: str
     # Caller's relationship to this project. The app uses it to label shared
@@ -84,7 +91,7 @@ def _to_out(p: Project, *, role: str = ROLE_OWNER, owner_email: str = "") -> Pro
         audience=p.audience or {},
         competition=p.competition or {},
         brand_channels=p.brand_channels or {},
-        autonomy_level=p.autonomy_level or "manual",
+        autonomy_level=normalize_autonomy(p.autonomy_level),
         created_at=p.created_at.isoformat(),
         updated_at=p.updated_at.isoformat(),
         role=role,
@@ -236,22 +243,28 @@ def patch_project_settings(
     user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ) -> ProjectOut:
-    """Owner-only safety settings. Autonomy decides whether reversible,
-    guardrail-clean, non-destructive agent-proposed change sets may apply
-    without an approval click ('assisted') or everything waits ('manual').
-    Destructive ops always wait regardless — see service/execution/policy.py."""
+    """Owner-only safety settings. Autonomy governs how freely the agent asks,
+    and whether reversible, guardrail-clean, non-destructive agent-proposed
+    change sets may apply without an approval click: 'ask' (nothing applies),
+    'assisted' or 'auto' (the same allowlist — `auto` reduces interruption, not
+    oversight). Destructive ops always wait regardless, at every level — see
+    service/execution/policy.py.
+
+    "manual" is accepted as the legacy spelling of "ask" so an older client
+    keeps working; anything else unrecognised is a 422 rather than a silent
+    downgrade, because quietly storing a level the caller did not ask for is
+    how a project ends up more or less autonomous than its owner believes."""
     from datetime import datetime, timezone
 
     from fastapi import HTTPException
 
     project = get_project_for_user(project_id, user, session, require_owner=True)
-    level = body.autonomy_level.strip().lower()
-    if level not in AUTONOMY_LEVELS:
+    if not is_writable_autonomy(body.autonomy_level):
         raise HTTPException(
             status_code=422,
             detail=f"autonomy_level must be one of {sorted(AUTONOMY_LEVELS)}",
         )
-    project.autonomy_level = level
+    project.autonomy_level = normalize_autonomy(body.autonomy_level)
     project.updated_at = datetime.now(timezone.utc)
     session.add(project)
     session.commit()

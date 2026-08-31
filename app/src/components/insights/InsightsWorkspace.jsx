@@ -27,6 +27,7 @@ import AuditQuestions from "@/components/audit/AuditQuestions";
 import AuditTodos from "@/components/audit/AuditTodos";
 import SplitWorkspace from "@/components/workspace/SplitWorkspace";
 import { MarkdownView } from "@/components/artifacts/ArtifactRenderer";
+import ChangeSetCard from "@/components/execution/ChangeSetCard";
 import {
   createAgentSession,
   openAgentStream,
@@ -42,7 +43,10 @@ import ConnectionRequest from "./ConnectionRequest";
 const AGENT_TYPE = "insights";
 
 export default function InsightsWorkspace({ projectId, initialPrompt = "" }) {
-  const [turns, setTurns] = useState([]);        // [{role, text}] — completed turns
+  // Turns are the transcript. A change set is a turn too — it belongs in
+  // reading order beside the sentence that proposed it, not in a side panel
+  // the user has to go looking for.
+  const [turns, setTurns] = useState([]);        // [{role, text} | {role:"change_set", card}]
   const [streaming, setStreaming] = useState(""); // the assistant turn in flight
   const [todos, setTodos] = useState([]);
   const [pending, setPending] = useState(null);   // the pause we are showing, if any
@@ -57,6 +61,9 @@ export default function InsightsWorkspace({ projectId, initialPrompt = "" }) {
   const [selected, setSelected] = useState(-1);   // -1 = follow the latest
   const [writing, setWriting] = useState("");
   const [pane, setPane] = useState("brief");      // brief | data
+  // What the run is actually operating at, and what the project is set to.
+  // They differ when the model is not on the allowlist for `auto`.
+  const [autonomy, setAutonomy] = useState(null);
 
   const sessionRef = useRef(null);
   const abortRef = useRef(null);
@@ -129,6 +136,41 @@ export default function InsightsWorkspace({ projectId, initialPrompt = "" }) {
         break;
       case InsightsEvent.ACCOUNT_SELECTION_REQUIRED:
         setPending({ kind: "account", ...event });
+        break;
+      case InsightsEvent.EXECUTION_PROPOSED: {
+        const card = event.change_set;
+        if (!card) break;
+        // The card lands mid-turn, after the sentence that introduced it and
+        // before the rest. Close the streaming text off first so the two read
+        // in the order they were written, rather than the card jumping above
+        // the prose explaining it.
+        const said = bufferRef.current.trim();
+        if (said) {
+          bufferRef.current = "";
+          setStreaming("");
+        }
+        setTurns((prev) => {
+          // Upsert by id: the same set arrives again when it is rolled back or
+          // its state otherwise changes, and two cards for one change set is a
+          // way to approve something twice.
+          const at = prev.findIndex(
+            (t) => t.role === "change_set" && t.card?.change_set_id === card.change_set_id
+          );
+          if (at !== -1) {
+            const next = [...prev];
+            next[at] = { role: "change_set", card };
+            return next;
+          }
+          const base = said ? [...prev, { role: "assistant", text: said }] : prev;
+          return [...base, { role: "change_set", card }];
+        });
+        break;
+      }
+      case InsightsEvent.PIPELINE_STARTED:
+        setAutonomy({
+          level: event.autonomy || "",
+          configured: event.autonomy_configured || "",
+        });
         break;
       case InsightsEvent.PIPELINE_FINISHED:
         setStatus("ready");
@@ -211,6 +253,7 @@ export default function InsightsWorkspace({ projectId, initialPrompt = "" }) {
 
   const chat = (
     <div className="flex h-full min-h-0 flex-col">
+      <AutonomyBadge autonomy={autonomy} />
       <AuditTodos todos={todos} />
 
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
@@ -221,9 +264,13 @@ export default function InsightsWorkspace({ projectId, initialPrompt = "" }) {
           </p>
         )}
 
-        {turns.map((turn, i) => (
-          <Turn key={i} role={turn.role} text={turn.text} />
-        ))}
+        {turns.map((turn, i) =>
+          turn.role === "change_set" ? (
+            <ChangeSetCard key={turn.card.change_set_id} changeSet={turn.card} />
+          ) : (
+            <Turn key={i} role={turn.role} text={turn.text} />
+          )
+        )}
         {streaming && <Turn role="assistant" text={streaming} />}
 
         {pending?.kind === "questions" && (
@@ -307,6 +354,36 @@ export default function InsightsWorkspace({ projectId, initialPrompt = "" }) {
       rightLabel="Brief"
       rightStatus={writing || status === "running" ? "busy" : hasBrief ? "ready" : "idle"}
     />
+  );
+}
+
+const AUTONOMY_LABELS = {
+  ask: "Asks freely · nothing applies without you",
+  assisted: "Asks when it matters · allowlisted changes apply on their own",
+  auto: "Interrupts rarely · same allowlist as Assisted",
+};
+
+/** Which mode this run is in, said before the first token.
+ *
+ * `configured` is what the project is set to and `level` is what the run got.
+ * They differ when the model driving it is not on the allowlist for `auto`,
+ * and saying so is the difference between a considered step-down and an agent
+ * that mysteriously keeps asking questions. */
+function AutonomyBadge({ autonomy }) {
+  if (!autonomy?.level) return null;
+  const steppedDown = autonomy.configured && autonomy.configured !== autonomy.level;
+  return (
+    <div className="flex shrink-0 flex-wrap items-center gap-x-2 gap-y-1 border-b border-border/60 px-4 py-1.5 text-[11px]">
+      <span className="rounded-full bg-muted px-2 py-0.5 font-medium uppercase tracking-wide">
+        {autonomy.level}
+      </span>
+      <span className="text-muted-foreground">{AUTONOMY_LABELS[autonomy.level] || ""}</span>
+      {steppedDown && (
+        <span className="text-muted-foreground">
+          · set to <strong>{autonomy.configured}</strong>, stepped down for this model
+        </span>
+      )}
+    </div>
   );
 }
 

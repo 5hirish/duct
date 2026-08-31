@@ -17,6 +17,37 @@ import { authedHeaders as authHeaders, hasAuthToken } from "./authFetch";
 // Re-exported: lib/projects.js gates its remote sync on this.
 export { hasAuthToken };
 
+// Execution autonomy levels — mirror of backend models/execution.py. The
+// ladder governs three things together: how freely an agent asks clarifying
+// questions, whether it proposes change sets, and whether an eligible one
+// applies without a click.
+//
+// The property worth stating in the UI, because it is what makes `auto`
+// shippable: raising the level never widens WHAT may apply. Destructive
+// operations wait for a human at every level, and the auto-apply allowlist is
+// identical at "assisted" and "auto".
+export const AUTONOMY_ASK = "ask";
+export const AUTONOMY_ASSISTED = "assisted";
+export const AUTONOMY_AUTO = "auto";
+
+export const AUTONOMY_OPTIONS = [
+  {
+    value: AUTONOMY_ASK,
+    label: "Ask",
+    blurb: "Agents ask freely and propose changes; nothing touches an account until you approve it here.",
+  },
+  {
+    value: AUTONOMY_ASSISTED,
+    label: "Assisted",
+    blurb: "Agents ask only when it changes the answer. Reversible, guardrail-clean changes on the allowlist apply on their own; everything else waits here.",
+  },
+  {
+    value: AUTONOMY_AUTO,
+    label: "Auto",
+    blurb: "Agents interrupt as little as possible and record assumptions in the brief instead. Applies exactly the same allowlist as Assisted — fewer interruptions, not a wider reach.",
+  },
+];
+
 // --- Shape mapping -------------------------------------------------------
 // Local project (nested) <-> backend project (flat company fields).
 
@@ -58,9 +89,11 @@ function fromApi(remote) {
     audience: remote.audience || {},
     competition: remote.competition || {},
     brand_channels: remote.brand_channels || {},
-    // Execution autonomy: "manual" (default) | "assisted". Server-owned safety
-    // setting — changed only through setProjectAutonomy, never via the upsert.
-    autonomyLevel: remote.autonomy_level || "manual",
+    // Execution autonomy: "ask" (default) | "assisted" | "auto". Server-owned
+    // safety setting — changed only through setProjectAutonomy, never via the
+    // upsert. The server normalizes the legacy "manual" spelling to "ask" on
+    // the way out, so nothing here has to know about it.
+    autonomyLevel: remote.autonomy_level || AUTONOMY_ASK,
   };
 }
 
@@ -95,8 +128,8 @@ export async function upsertProjectRemote(local) {
   }
 }
 
-/** PATCH the project's execution autonomy ("manual" | "assisted"). Owner-only
- * on the server. Throws on failure so the settings UI can surface it. */
+/** PATCH the project's execution autonomy ("ask" | "assisted" | "auto").
+ * Owner-only on the server. Throws on failure so the settings UI can surface it. */
 export async function setProjectAutonomy(id, level) {
   const res = await fetch(`${BASE}/api/user/projects/${encodeURIComponent(id)}`, {
     method: "PATCH",
