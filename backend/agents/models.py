@@ -33,6 +33,11 @@ class ModelName(str, Enum):
     GPT_5_6_TERRA = "gpt-5.6-terra"    # balances intelligence and cost
     GPT_5_6_LUNA  = "gpt-5.6-luna"     # cost-sensitive workloads
     GPT_5_MINI    = "gpt-5-mini"
+    # Kept on purpose, not by omission — do not curate these away. They are
+    # generations behind and the catalog lists the GPT-4 line as deprecated,
+    # but both are still served with no announced shutdown.
+    GPT_4O        = "gpt-4o"
+    GPT_4O_MINI   = "gpt-4o-mini"
     
     # Google. Verified against the live ListModels response, not just the docs
     # — the published shutdown dates are "earliest possible" and drift both
