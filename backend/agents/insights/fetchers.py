@@ -27,6 +27,8 @@ LangChain binder over this.
 
 from __future__ import annotations
 
+from datetime import date
+
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -104,6 +106,20 @@ def _google_oauth(fn: Callable) -> Callable[[str, str, str, dict], dict]:
     return _call
 
 
+def _manual(fn: Callable, account_key: str = "") -> Callable[[str, str, str, dict], dict]:
+    """Manual-credential connectors take the stored blob whole plus a window in
+    days; the picked account rides on ``account_key`` when the blob lacks it."""
+
+    def _call(account_id: str, date_from: str, date_to: str, creds: dict) -> dict:
+        blob = dict(creds)
+        if account_key and account_id and not blob.get(account_key):
+            blob[account_key] = account_id
+        days = max(1, (date.fromisoformat(date_to) - date.fromisoformat(date_from)).days + 1)
+        return fn(blob, days)
+
+    return _call
+
+
 def _campaigns(account_id: str, date_from: str, date_to: str, creds: dict) -> dict:
     """fetch_campaigns predates the keyword-only convention the others use."""
     from service.google.fetch import fetch_campaigns
@@ -134,6 +150,9 @@ def _build_specs() -> dict[str, FetchSpec]:
     )
     from service.google.ga4 import fetch_ga4_conversion_paths, fetch_ga4_landing_pages
     from service.google.gsc import fetch_gsc_page_performance, fetch_gsc_query_performance
+    from service.clarity.fetch import fetch_clarity
+    from service.growthbook.fetch import fetch_growthbook
+    from service.mixpanel.fetch import fetch_mixpanel
 
     by_tool: dict[str, Callable[[str, str, str, dict], dict]] = {
         "fetch_campaign_performance": _campaigns,
@@ -145,6 +164,9 @@ def _build_specs() -> dict[str, FetchSpec]:
         "fetch_ga4_conversion_paths": _google_oauth(fetch_ga4_conversion_paths),
         "fetch_gsc_query_performance": _google_oauth(fetch_gsc_query_performance),
         "fetch_gsc_page_performance": _google_oauth(fetch_gsc_page_performance),
+        "fetch_mixpanel": _manual(fetch_mixpanel, "project_id"),
+        "fetch_clarity": _manual(fetch_clarity),
+        "fetch_growthbook": _manual(fetch_growthbook, "project_id"),
     }
 
     specs: dict[str, FetchSpec] = {}
@@ -238,7 +260,12 @@ def fetch_entity(
             account_id=account_id,
         )
 
-    if not creds.get("refresh_token"):
+    # Google-shaped connectors need a refresh token; manual-credential
+    # connectors hand back their own blob, so "anything stored" is the test.
+    from service.connector_access import _GOOGLE_SHAPED
+
+    connected = creds.get("refresh_token") if spec.connector_id in _GOOGLE_SHAPED else bool(creds)
+    if not connected:
         return {
             "status": "not_connected",
             "entity_id": entity_id,

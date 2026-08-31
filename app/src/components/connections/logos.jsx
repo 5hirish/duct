@@ -31,6 +31,9 @@ export const LOGOS = {
   revenuecat: <Img src="/icons/revenuecat.svg" alt="RevenueCat" />,
   openai_ads: OpenAiMark,
   hubspot: <Img src="/icons/hubspot.svg" alt="HubSpot" />,
+  mixpanel: <Img src="/icons/mixpanel.svg" alt="Mixpanel" />,
+  clarity: <Img src="/icons/clarity.svg" alt="Microsoft Clarity" />,
+  growthbook: <Img src="/icons/growthbook.svg" alt="GrowthBook" />,
 
   // Model providers
   anthropic: <Img src="/icons/anthropic.svg" alt="Anthropic" />,

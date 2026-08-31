@@ -22,6 +22,8 @@ ALLOWED_CONNECTOR_TYPES = {
     "google_ads", "ga4", "gsc", "gtm",
     # Manual-credential connectors (Phase 7) — Fernet JSON blobs fit any shape.
     "apple_ads", "meta_ads", "stripe", "revenuecat", "openai_ads",
+    # Gads wave 2 — the cross-check + behaviour sources.
+    "mixpanel", "clarity", "growthbook",
 }
 
 

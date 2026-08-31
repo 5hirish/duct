@@ -51,7 +51,8 @@ def test_every_catalog_entity_can_actually_be_fetched():
 def test_the_old_eight_tool_cap_is_gone():
     """The previous design capped the agent at eight goal-filtered tools chosen
     before it saw anything. Everything catalogued is now reachable."""
-    assert len(known_entities()) == 9
+    # 9 Google entities + the Gads wave-2 trio (mixpanel, clarity, growthbook).
+    assert len(known_entities()) == 12
 
 
 def test_specs_carry_their_connector():

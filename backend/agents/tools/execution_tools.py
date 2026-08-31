@@ -39,7 +39,7 @@ from agents.core.telemetry import tool_span
 
 logger = logging.getLogger(__name__)
 
-_DEFAULT_CONNECTORS = ("google_ads", "ga4", "gtm")
+_DEFAULT_CONNECTORS = ("google_ads", "ga4", "gtm", "mixpanel")
 
 
 # ---------------------------------------------------------------------------
@@ -95,7 +95,7 @@ class ListOpsArgs(BaseModel):
 
     connector_type: str = Field(
         default="",
-        description="Filter by connector ('google_ads', 'ga4', 'gtm'). Empty = all available.",
+        description="Filter by connector ('google_ads', 'ga4', 'gtm', 'mixpanel'). Empty = all available.",
     )
 
 
@@ -103,13 +103,13 @@ class ProposeChangesArgs(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     connector_type: str = Field(
-        description="Connector to execute against: 'google_ads', 'ga4', or 'gtm'."
+        description="Connector to execute against: 'google_ads', 'ga4', 'gtm', or 'mixpanel'."
     )
     account_id: str = Field(
         default="",
         description=(
-            "Account identifier: Google Ads customer id, GA4 property id, or GTM "
-            "account id. May be empty when the target paths carry it."
+            "Account identifier: Google Ads customer id, GA4 property id, GTM "
+            "account id, or Mixpanel project id. May be empty when the target paths carry it."
         ),
     )
     account_name: str = Field(
@@ -192,6 +192,7 @@ def _register_executors() -> None:
     import service.execution.ga4_exec  # noqa: F401
     import service.execution.google_ads_exec  # noqa: F401
     import service.execution.gtm_exec  # noqa: F401
+    import service.execution.mixpanel_exec  # noqa: F401
 
 
 def _list_ops_sync(wanted: str, *, user_id: UUID, connector_types: tuple[str, ...]) -> dict:
@@ -247,7 +248,12 @@ def _propose_sync(
             db, user_id, connector_type, str(args.get("account_id") or ""),
             project_id=project_id,
         )
-        if not creds.get("refresh_token"):
+        # Google-shaped connectors need a refresh token; manual-credential
+        # connectors (Mixpanel …) carry their own blob — anything stored counts.
+        from service.connector_access import _GOOGLE_SHAPED
+
+        connected = creds.get("refresh_token") if connector_type in _GOOGLE_SHAPED else bool(creds)
+        if not connected:
             raise ValueError(
                 f"No stored credentials for {connector_type}. Ask the user to "
                 "connect it (signed in) on the Connections page first."

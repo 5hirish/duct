@@ -23,6 +23,9 @@ import service.meta.ads.fetch  # noqa: F401 — registers connectors before rout
 import service.openai.ads.fetch  # noqa: F401 — registers connectors before routes import
 import service.revenuecat.fetch  # noqa: F401 — registers connectors before routes import
 import service.stripe.fetch  # noqa: F401 — registers connectors before routes import
+import service.mixpanel.fetch  # noqa: F401 — registers connectors before routes import
+import service.clarity.fetch  # noqa: F401 — registers connectors before routes import
+import service.growthbook.fetch  # noqa: F401 — registers connectors before routes import
 
 from config import cors_kwargs, get_configs
 from db.migrate import ensure_schema

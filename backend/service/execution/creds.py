@@ -32,7 +32,7 @@ from uuid import UUID
 from sqlmodel import Session
 
 from config import get_configs
-from service.connector_access import _stored_credentials
+from service.connector_access import _GOOGLE_SHAPED, _stored_credentials
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +58,14 @@ def resolve_execution_creds(
 
     def _pick(key: str, env_fallback: str = "") -> str:
         return _ov(key) or str(stored.get(key) or "").strip() or env_fallback
+
+    if connector_type not in _GOOGLE_SHAPED:
+        # Manual-credential connectors (Mixpanel …) carry their own shape —
+        # stored blob under the request override, no env fallback (there is
+        # no server-wide service account to fall back to).
+        merged = {str(k): str(v).strip() for k, v in stored.items() if v}
+        merged.update({str(k): str(v).strip() for k, v in override.items() if v and str(v).strip()})
+        return merged
 
     return {
         "refresh_token": _pick("refresh_token"),

@@ -59,6 +59,9 @@ _ADAPTER_MODULES: tuple[str, ...] = (
     "service.openai.ads.fetch",
     "service.revenuecat.fetch",
     "service.stripe.fetch",
+    "service.mixpanel.fetch",
+    "service.clarity.fetch",
+    "service.growthbook.fetch",
 )
 
 _loaded = False

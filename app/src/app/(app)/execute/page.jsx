@@ -98,9 +98,10 @@ const CONNECTOR_LABEL = {
   google_ads: "Google Ads",
   ga4: "Google Analytics",
   gtm: "Google Tag Manager",
+  mixpanel: "Mixpanel",
 };
 
-const GUARDRAIL_CONNECTORS = ["google_ads", "ga4", "gtm"];
+const GUARDRAIL_CONNECTORS = ["google_ads", "ga4", "gtm", "mixpanel"];
 
 function Pill({ status }) {
   return (

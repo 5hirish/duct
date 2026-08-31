@@ -50,6 +50,10 @@ AUTO_APPLY_ALLOWLIST: frozenset[str] = frozenset(
         # always-human-approved gtm.publish_version.
         "gtm.upsert_tag",
         "gtm.upsert_variable",
+        # A dated note on the analytics timeline — no data moves, deleting it
+        # is the rollback. The framework annotating its own applied changes
+        # is the point.
+        "mixpanel.create_annotation",
     }
 )
 

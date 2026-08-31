@@ -651,6 +651,112 @@ export default function ConnectionsPage() {
               {...mappingProps("openai_ads")}
             />
 
+            <ManualConnectorCard
+              type="mixpanel"
+              title="Mixpanel"
+              description="Cross-platform event truth — signups, logins, and upgrades under one name across web and app, the reference your ad platforms and GA4 get reconciled against."
+              logo={LOGOS.mixpanel}
+              fields={[
+                { key: "service_account_username", label: "Service account username", placeholder: "duct.xxxxxx.mp-service-account" },
+                {
+                  key: "service_account_secret",
+                  label: "Service account secret",
+                  placeholder: "Shown once when the account is created",
+                  secret: true,
+                  hint:
+                    "Organization settings → Service Accounts → Add. Grant it the project(s) Duct should read. " +
+                    "Project tokens and API secrets cannot read the Query API.",
+                },
+                {
+                  key: "region",
+                  label: "Data residency",
+                  placeholder: "us | eu | in",
+                  optional: true,
+                  hint: "EU and India projects live on their own hosts — a wrong region looks like a bad secret.",
+                },
+                {
+                  key: "internal_patterns",
+                  label: "Internal-traffic patterns",
+                  placeholder: "qa-, @yourcompany.com, test-account",
+                  optional: true,
+                  hint:
+                    "Comma-separated distinct_id substrings to exclude. Mixpanel has no internal-traffic filter — " +
+                    "QA accounts corrupt every funnel until excluded.",
+                },
+              ]}
+              accountField="project_id"
+              docsUrl="https://docs.mixpanel.com/docs/other-bits/service-accounts"
+              docsLabel="Mixpanel service accounts guide"
+              signedIn={signedIn}
+              serverRowList={serverRowsAll.mixpanel || []}
+              onSaved={refreshServerRows}
+              onRemoveRow={removeServerRowById}
+              {...mappingProps("mixpanel")}
+            />
+
+            <ManualConnectorCard
+              type="clarity"
+              title="Microsoft Clarity"
+              description="What paid clicks do after landing — rage clicks, dead clicks, quick-backs, and script errors per page (last 3 days)."
+              logo={LOGOS.clarity}
+              fields={[
+                {
+                  key: "api_token",
+                  label: "Data Export API token",
+                  placeholder: "From Clarity → Settings → Data Export",
+                  secret: true,
+                  hint:
+                    "The token IS the project. Clarity allows 10 API requests per project per day; " +
+                    "verifying spends 1 and each Duct pull spends 2.",
+                },
+                {
+                  key: "project_id",
+                  label: "Project id",
+                  placeholder: "e.g. tbnrkp3gk9 (from the Clarity URL)",
+                  optional: true,
+                  hint: "Label only — the token already selects the project.",
+                },
+              ]}
+              accountField="project_id"
+              docsUrl="https://learn.microsoft.com/en-us/clarity/setup-and-installation/clarity-data-export-api"
+              docsLabel="Clarity Data Export API docs"
+              signedIn={signedIn}
+              serverRowList={serverRowsAll.clarity || []}
+              onSaved={refreshServerRows}
+              onRemoveRow={removeServerRowById}
+              {...mappingProps("clarity")}
+            />
+
+            <ManualConnectorCard
+              type="growthbook"
+              title="GrowthBook"
+              description="Experiment health — which tests are live, whether they are still bucketing users, and per-metric results. Read-only."
+              logo={LOGOS.growthbook}
+              fields={[
+                {
+                  key: "api_key",
+                  label: "API key",
+                  placeholder: "secret_…",
+                  secret: true,
+                  hint: "Settings → API Keys. A read-only key is enough — Duct never flips flags.",
+                },
+                {
+                  key: "base_url",
+                  label: "Self-hosted API URL",
+                  placeholder: "https://growthbook.example.com (leave empty for GrowthBook Cloud)",
+                  optional: true,
+                },
+              ]}
+              accountField="project_id"
+              docsUrl="https://docs.growthbook.io/api"
+              docsLabel="GrowthBook REST API docs"
+              signedIn={signedIn}
+              serverRowList={serverRowsAll.growthbook || []}
+              onSaved={refreshServerRows}
+              onRemoveRow={removeServerRowById}
+              {...mappingProps("growthbook")}
+            />
+
             <ConnectorTile
               logo={LOGOS.hubspot}
               title="HubSpot"

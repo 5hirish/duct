@@ -56,6 +56,9 @@ KNOWLEDGE_INDEX: dict[str, str] = {
     "meta": "Meta Ads — cents vs dollars, one purchase under three action types.",
     "openai_ads": "OpenAI ads — minor-unit amounts against decimal spend.",
     "revenuecat": "RevenueCat — sandbox vs production, and trial accounting.",
+    "mixpanel": "Mixpanel — the cross-platform event truth, no internal-traffic filter, typo events.",
+    "clarity": "Clarity — rage/dead clicks after the click, 10 API calls a day, 3-day window.",
+    "growthbook": "GrowthBook — 'running' is a setting not a signal; identity mismatch; sample minimums.",
     "reconciliation": "Cross-platform reconciliation — comparing numbers that are not comparable.",
 }
 
