@@ -24,12 +24,15 @@ class Provider(str, Enum):
 
 class ModelName(str, Enum):
     
-    # OpenAI
-    GPT_5_5 = "gpt-5.5"
-    GPT_5_4_MINI = "gpt-5.4-mini"
-    GPT_5_MINI = "gpt-5-mini"
-    GPT_4O_MINI = "gpt-4o-mini"
-    GPT_4O = "gpt-4o"
+    # OpenAI. Verified against the live /v1/models response. Unlike the Gemini
+    # list nothing here was retired — every previous entry still serves and none
+    # has an announced API shutdown — so this trim is curation, not repair.
+    # The 5.6 family renamed the tiers: sol/terra/luna, no "mini" rung, which is
+    # why GPT_5_MINI is the one older id kept (it is the engine default).
+    GPT_5_6_SOL   = "gpt-5.6-sol"      # flagship — complex professional work
+    GPT_5_6_TERRA = "gpt-5.6-terra"    # balances intelligence and cost
+    GPT_5_6_LUNA  = "gpt-5.6-luna"     # cost-sensitive workloads
+    GPT_5_MINI    = "gpt-5-mini"
     
     # Google. Verified against the live ListModels response, not just the docs
     # — the published shutdown dates are "earliest possible" and drift both
