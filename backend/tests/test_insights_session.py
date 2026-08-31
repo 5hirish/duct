@@ -123,14 +123,33 @@ def test_system_prompt_is_byte_identical_across_sessions():
     assert build_insights_system_prompt() == build_insights_system_prompt()
 
 
-def test_system_prompt_states_what_it_cannot_reach():
-    """An agent that believes it can fetch data it cannot produces a confident,
-    wrong brief — the exact failure this agent exists to eliminate. The stanza
-    tracks what is actually mounted, phase by phase."""
+def test_system_prompt_describes_the_tools_actually_mounted():
+    """The capability stanza tracks what is really mounted, phase by phase. An
+    agent that believes it can fetch data it cannot produces a confident, wrong
+    brief — the exact failure this agent exists to eliminate."""
     prompt = build_insights_system_prompt()
 
-    assert "cannot yet pull the data itself" in prompt
     assert "Prove the number before you use it" in prompt
+    for tool in ("FetchData", "ReadConnectorNotes", "ListDataSources", "SelectAccount"):
+        assert tool in prompt
+
+
+def test_system_prompt_carries_the_catalog_and_the_notes_index():
+    """Both are identical for every customer, so they belong in the cached
+    prefix — and the agent cannot name an entity it has never been shown."""
+    prompt = build_insights_system_prompt()
+
+    assert "<entity_catalogs>" in prompt
+    assert "search_terms" in prompt          # a catalog entity
+    assert "ReadConnectorNotes" in prompt
+    assert "`stripe`" in prompt              # a notes index entry
+
+
+def test_verification_is_delegated_not_optional():
+    prompt = build_insights_system_prompt()
+
+    assert "Delegate the checking" in prompt
+    assert "could not check" in prompt
 
 
 def test_system_prompt_teaches_the_discovery_order():

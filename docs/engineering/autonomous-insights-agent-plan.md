@@ -342,6 +342,51 @@ silent "green" is the exact failure mode this is here to end.
 standing objective becomes a **memory entry** the agent recalls and may revise; the
 enums survive only to keep saved routines readable.
 
+> **Built 2026-08-31.** `tests/test_insights_data.py` (27 tests) is the gate.
+> The agent can now read live data and knows whether to believe it.
+>
+> - **The catalog is the tool surface.** `FetchData(entity_id, window)` resolves
+>   the connector, the account and the credentials server-side;
+>   `test_every_catalog_entity_can_actually_be_fetched` fails if a catalog entry
+>   has no dispatcher, which is the drift that would otherwise surface as the
+>   agent naming an entity and then failing on it. The eight-tool cap and the
+>   goal allowlist are gone. Identifiers still never come from the model.
+> - **Goals were already demoted in Phase 1** — `InsightsRequest` has no goal
+>   field. Nothing further was needed here.
+> - **Knowledge packs became a tool, not a skill — a deliberate divergence.**
+>   `SkillsMiddleware` requires a `FilesystemBackend`, i.e. a real filesystem
+>   rooted on disk, and mounting one would hand the agent's `read_file` a live
+>   path into the host. `ReadConnectorNotes` gives the same progressive
+>   disclosure (index in the cached prefix, bodies on demand) with no filesystem
+>   at all. Revisit if `deepagents` ships a virtual skills backend.
+> - **The check library is connector-agnostic, and a test enforces it.** Twelve
+>   checks, each declaring the catalog *entities* it needs and never a vendor.
+>   Nine run today; the three money-truth checks are declared but unreachable,
+>   and `test_a_new_connector_lights_up_its_checks_with_no_code_change` proves
+>   they start running the day a billing connector lands. The skipped list is
+>   half the output, not a failure report.
+> - **A `verify` subagent** runs the checks in its own context — the analyst
+>   looks for what matters, the verifier for what is wrong with the data, and
+>   mixing the two costs the analyst its window before it writes a word.
+>
+> **Security finding, fixed.** `deepagents` mounts an `execute` (shell) tool by
+> default — present since Phase 1, not introduced here. It was inert, because
+> `StateBackend` does not implement `SandboxBackendProtocol`, so the tool
+> returned "Execution not available". But *inert because of which backend
+> happens to be configured* is not a guarantee: swapping in a sandbox backend
+> would have handed this agent a shell silently. The runner now names its
+> filesystem tools explicitly, so `execute` never reaches the dispatchable tool
+> node. **Phase 1's isolation test asserted the wrong thing** — it checked for
+> the name `"Bash"` and passed for the whole of Phase 2 while `execute` sat in
+> the tool set. `test_the_agent_has_no_shell` asserts the capability instead.
+>
+> Frontend: the right pane now lists what was pulled and the window each pull
+> covers, driven by one `STEP_FINISHED` per fetch.
+>
+> Still open: the agent answers in the conversation rather than emitting a
+> versioned brief artifact — that is Phase 4, and it is what finally retires
+> `/generate`.
+
 ---
 
 ## 7. Phase 4 — Artifacts, markdown by default

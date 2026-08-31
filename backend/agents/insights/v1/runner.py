@@ -18,11 +18,12 @@ path for human review. So the rung moves up for this agent, deliberately.
 Two safety properties worth stating, because they are the reason an autonomous
 loop is shippable here at all:
 
-* **The filesystem is virtual.** ``deepagents`` mounts ``ls`` / ``read_file`` /
-  ``write_file`` / ``edit_file`` / ``glob`` / ``grep`` over graph state
-  (``StateBackend``), not the disk. No ``FilesystemBackend`` is configured and
-  no ``Bash`` tool exists, so the agent cannot read Duct's source, the host, or
-  anything outside its own scratch space.
+* **The filesystem is virtual and there is no shell.** ``ls`` / ``read_file`` /
+  ``write_file`` / ``edit_file`` / ``glob`` / ``grep`` run over graph state
+  (``StateBackend``), not the disk, so the agent cannot read Duct's source or
+  the host. ``deepagents`` also mounts an ``execute`` (shell) tool by default;
+  it is dropped explicitly here rather than left to be inert — see
+  ``FILESYSTEM_TOOLS``.
 * **Execution stays gated in code.** When the execution tools mount (a later
   phase) the destructive gate and the auto-apply allowlist in
   ``service/execution/policy.py`` still decide what applies. There is no
@@ -41,15 +42,18 @@ import logging
 from typing import Any, Callable
 from uuid import UUID
 
-from deepagents import create_deep_agent
+from deepagents import FilesystemMiddleware, create_deep_agent
+from deepagents.backends import StateBackend
 from langchain.agents.middleware import TodoListMiddleware
 from langgraph.checkpoint.memory import InMemorySaver
 
-from agents.core.events import AgentEvent, StepStatus
+from agents.core.events import AgentEvent, AgentStep, StepStatus
 from agents.core.connector_tools import build_connector_tools_lc
 from agents.core.lc import build_ask_user_tool, resolve_chat_model, stream_agent
 from agents.core.memory_tools import build_memory_tools_lc
 from agents.core.session import BaseAgentSession
+from agents.insights.data_tools import build_data_tools_lc
+from agents.insights.subagents import build_verify_subagent
 from agents.insights.prompts.autonomous import (
     build_insights_system_prompt,
     build_insights_user_prompt,
@@ -63,6 +67,18 @@ logger = logging.getLogger(__name__)
 # plans, recalls, asks and re-plans — but finite, so a pathological loop ends as a
 # failed turn the user can see rather than an unbounded spend.
 RECURSION_LIMIT = 60
+
+# The scratch-space verbs the agent gets, and the one it does not.
+#
+# `deepagents` mounts an `execute` tool alongside these — a shell. It is inert
+# under the default StateBackend (which does not implement
+# SandboxBackendProtocol, so the tool returns "Execution not available"), but
+# "inert because of which backend happens to be configured" is not a guarantee:
+# swapping in a sandbox backend later would silently hand this agent a shell.
+# Naming the tools explicitly omits it from the dispatchable tool node entirely,
+# which makes the isolation structural. `delete` is left out for the same
+# reason of minimal surface — nothing needs it.
+FILESYSTEM_TOOLS = ("ls", "read_file", "write_file", "edit_file", "glob", "grep")
 
 # How long a session waits for a follow-up before closing itself. Matches audit
 # and content; the route's own inactivity pruner is the longer backstop.
@@ -152,6 +168,36 @@ class AutonomousInsightsRunner:
             emit=emit,
             log_prefix="insights-v1",
         )
+        # Data reach. The verifier gets the SAME tool objects, so it inherits
+        # the parent's project scoping and credential closure rather than
+        # resolving its own — there is one place credentials are resolved.
+        async def _on_fetch(entity_id: str, result: dict) -> None:
+            """Surface each pull as a step, so a long run is legible.
+
+            The window is in the label deliberately: a user watching a brief
+            being built should be able to see the period it covers without
+            waiting for the prose to say so.
+            """
+            if emit is None:
+                return
+            ok = result.get("status") == "ok"
+            window = (
+                f" · {result.get('date_from')} → {result.get('date_to')}"
+                if result.get("date_from") else ""
+            )
+            await emit({
+                "event": AgentEvent.STEP_FINISHED,
+                "step_id": AgentStep.COLLECT_SOURCE_DATA,
+                "label": f"{entity_id.replace('_', ' ')}{window}",
+                "status": StepStatus.SUCCESS if ok else StepStatus.ERROR,
+                "connector_id": result.get("connector_id", ""),
+            })
+
+        data_tools = build_data_tools_lc(
+            project_id, user_id=user_id, log_prefix="insights-v1", on_fetch=_on_fetch
+        )
+        tools += data_tools
+
         if session is not None and emit is not None:
             tools.append(
                 build_ask_user_tool(
@@ -166,11 +212,23 @@ class AutonomousInsightsRunner:
         return create_deep_agent(
             model=llm,
             tools=tools,
+            # Integrity checking runs in its own context: the analyst is looking
+            # for what matters, the verifier for what is wrong with the data, and
+            # mixing the two costs the analyst its whole window before it writes
+            # a word. See agents/insights/subagents/verify.py.
+            subagents=[build_verify_subagent(data_tools)],
             system_prompt=system_prompt or build_insights_system_prompt(),
             # Planning is opt-in since deepagents 0.7. Mounted here because the
             # todo stream is what makes a long autonomous run legible — the
             # frontend already renders it (AuditTodos.jsx).
-            middleware=[TodoListMiddleware()],
+            middleware=[
+                TodoListMiddleware(),
+                # Explicit rather than default, to drop the shell tool — see
+                # FILESYSTEM_TOOLS. StateBackend keeps the filesystem virtual:
+                # it lives in graph state, so `read_file` cannot reach Duct's
+                # source, the host, or anything outside this run's scratch space.
+                FilesystemMiddleware(backend=StateBackend(), tools=list(FILESYSTEM_TOOLS)),
+            ],
             # Continuity across turns. In-process only, like the session
             # registry it is keyed on; a durable checkpointer is the upgrade
             # that also unlocks interrupt()-based HITL.

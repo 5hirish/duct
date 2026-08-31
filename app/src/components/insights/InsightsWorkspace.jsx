@@ -28,7 +28,7 @@ import {
   sendAgentMessage,
 } from "../../lib/api";
 import { consumeSseStream } from "../../lib/sse";
-import { InsightsEvent } from "../../lib/insightsEvents";
+import { InsightsEvent, InsightsStep } from "../../lib/insightsEvents";
 import AccountSelect from "./AccountSelect";
 import ConnectionRequest from "./ConnectionRequest";
 
@@ -43,6 +43,8 @@ export default function InsightsWorkspace({ projectId, initialPrompt = "" }) {
   const [error, setError] = useState("");
   const [draft, setDraft] = useState("");
   const [memories, setMemories] = useState([]);
+  // What the agent pulled, in order — the right pane's contents.
+  const [fetched, setFetched] = useState([]);
 
   const sessionRef = useRef(null);
   const abortRef = useRef(null);
@@ -68,6 +70,16 @@ export default function InsightsWorkspace({ projectId, initialPrompt = "" }) {
         break;
       case InsightsEvent.MEMORY_RECALLED:
         setMemories(event.memories || []);
+        break;
+      case InsightsEvent.STEP_FINISHED:
+        // The runner emits one per data pull, labelled with the window it
+        // covers. Anything else with a step_id is ignored rather than guessed at.
+        if (event.step_id === InsightsStep.COLLECT_SOURCE_DATA) {
+          setFetched((prev) => [
+            ...prev,
+            { label: event.label || "", ok: event.status === "success" },
+          ]);
+        }
         break;
       // The three pauses. Each carries what its card needs to render; the
       // `kind` is what tells this component which card that is.
@@ -206,15 +218,33 @@ export default function InsightsWorkspace({ projectId, initialPrompt = "" }) {
     </div>
   );
 
-  // The right pane is the artifact viewport. Insights does not produce one yet
-  // — that is the markdown artifact contract, still to come — so it says so
-  // rather than showing an empty frame that looks broken.
+  // The right pane is the artifact viewport. The agent can read live data now,
+  // but it answers in the conversation — a versioned brief artifact is still to
+  // come, so the pane shows what has been pulled rather than an empty frame.
   const viewport = (
-    <div className="flex h-full items-center justify-center p-8 text-center">
-      <p className="max-w-xs text-xs text-muted-foreground">
-        Briefs will appear here once Duct can pull your data. For now the
-        conversation is on the left.
-      </p>
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="border-b border-border/60 px-4 py-2 text-xs font-medium text-muted-foreground">
+        Data pulled this session
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto p-4">
+        {fetched.length === 0 ? (
+          <p className="text-xs text-muted-foreground">
+            Nothing yet. Duct pulls only what your question needs, and shows each
+            source and the period it covers here.
+          </p>
+        ) : (
+          <ul className="space-y-1.5">
+            {fetched.map((f, i) => (
+              <li key={i} className="flex items-start gap-2 text-xs">
+                <span className={f.ok ? "text-green-500" : "text-destructive"}>
+                  {f.ok ? "✓" : "!"}
+                </span>
+                <span className={f.ok ? "" : "text-muted-foreground"}>{f.label}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 
@@ -224,8 +254,8 @@ export default function InsightsWorkspace({ projectId, initialPrompt = "" }) {
       right={viewport}
       storageKey="insights_split_w"
       leftLabel="Chat"
-      rightLabel="Brief"
-      rightStatus={status === "running" ? "busy" : "idle"}
+      rightLabel="Data"
+      rightStatus={status === "running" ? "busy" : fetched.length ? "ready" : "idle"}
     />
   );
 }

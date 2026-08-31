@@ -15,6 +15,9 @@ export const InsightsEvent = Object.freeze({
   PIPELINE_FAILED:     "pipeline_failed",
 
   STEP_STARTED:        "step_started",
+  // The insights runner emits one STEP_FINISHED per data pull, carrying
+  // step_id "collect_source_data" and a label naming the entity and the window
+  // it covers — which is what the right pane lists.
   STEP_FINISHED:       "step_finished",
   STEP_FAILED:         "step_failed",
 
@@ -42,4 +45,9 @@ export const InsightsEvent = Object.freeze({
 
 /** Answer shapes, by the event that asked. The server resolves one Future for
  *  all three, so the client is what knows which shape belongs to which ask. */
+/** step_id values the insights UI reacts to. Mirror of backend AgentStep. */
+export const InsightsStep = Object.freeze({
+  COLLECT_SOURCE_DATA: "collect_source_data",
+});
+
 export const ANSWER_SKIPPED = Object.freeze({ skipped: true });
