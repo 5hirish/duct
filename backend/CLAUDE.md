@@ -44,6 +44,17 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
 - **Normalization:** Lightweight Python pipeline — raw API response → typed Pydantic/SQLModel brief models. No query layer or transforms yet.
 - **Database:** PostgreSQL on Railway — SQLModel ORM, Alembic migrations, `psycopg` driver.
 - **Auth:** JWT for users; Google OAuth for connector linking (Ads, GA4, GSC, Sign-In). Project access is by membership (`project_members`), not by `projects.user_id` — always go through `service/membership.py`.
+
+  **`validate_api_key` is not an authorization boundary.** `DUCT_API_KEY` ships to
+  the browser as `NEXT_PUBLIC_DUCT_API_KEY`, so it proves "this is the Duct app"
+  and never "this caller owns that row". A router mounted behind it *looks*
+  protected and is not. Any endpoint that reads or writes a project-scoped row
+  therefore needs `get_current_user` **plus** `get_project_for_user` on top —
+  `routes/artifacts.py` is the reference, and `_conversation_for_user` in
+  `routes/agents.py` is the same gate in one helper. 404 (not 403) for a
+  non-member, so the reply is not an oracle for which ids exist. A listing takes
+  its scope from the caller (`accessible_projects`), never from an unfiltered
+  query parameter.
 - **Email:** `service/email/` — Resend when `RESEND_API_KEY` is set, otherwise a logging console backend so dev/CI need no vendor account.
 - **Observability:** Sentry error tracking; optional OpenTelemetry tracing (wired via Claude Agent SDK).
 - **Hosting:** Railway — auto-deploys from `main` via GitHub integration; `railway.json` defines Railpack build + uvicorn start.

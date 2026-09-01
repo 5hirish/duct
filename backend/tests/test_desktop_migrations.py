@@ -67,6 +67,11 @@ def test_legacy_create_all_install_is_adopted_and_upgraded(clean_env, tmp_path):
     revisions declare raw `postgresql.JSONB` and cannot run on SQLite at all
     (see `db/migrate.py`). That is faithful to what shipped: those installs were
     created by `create_all`, never by Alembic.
+
+    The walk-back below is a fixture, not a fact: every post-baseline migration
+    adds one line to it. A new `add_column` that is not dropped here fails with
+    "duplicate column", which is the test doing its job — `create_all` built the
+    column from today's models, so the legacy state has to lose it again.
     """
     import models  # noqa: F401 — registers the tables create_all builds
 
@@ -78,6 +83,8 @@ def test_legacy_create_all_install_is_adopted_and_upgraded(clean_env, tmp_path):
         conn.execute(sa.text("DROP TABLE project_memories"))
         conn.execute(sa.text("ALTER TABLE projects DROP COLUMN memory_paused"))
         conn.execute(sa.text("ALTER TABLE users DROP COLUMN memory_paused"))
+        conn.execute(sa.text("ALTER TABLE artifacts DROP COLUMN pinned"))
+        conn.execute(sa.text("ALTER TABLE agent_conversations DROP COLUMN pinned"))
 
     assert "alembic_version" not in set(inspect(engine).get_table_names())
     assert "memory_paused" not in _columns(engine, "projects")
@@ -88,6 +95,8 @@ def test_legacy_create_all_install_is_adopted_and_upgraded(clean_env, tmp_path):
     assert "project_memories" in set(inspect(engine).get_table_names())
     assert "memory_paused" in _columns(engine, "projects")
     assert "memory_paused" in _columns(engine, "users")
+    assert "pinned" in _columns(engine, "artifacts")
+    assert "pinned" in _columns(engine, "agent_conversations")
     assert _stamped_revision(engine) is not None
 
 

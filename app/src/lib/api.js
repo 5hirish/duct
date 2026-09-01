@@ -324,9 +324,15 @@ export async function closeAgentSession(agentType, sessionId) {
 // ---------------------------------------------------------------------------
 // Persisted conversations (chat history / resume)
 // ---------------------------------------------------------------------------
+//
+// All four send the Bearer token, not just the API key. A conversation belongs
+// to a project, and the backend gates these on project membership — the shared
+// X-API-Key is baked into this bundle and says nothing about who is asking.
+// Every caller is inside the signed-in app shell, so a token is always present.
 
 /** List an agent's conversations (resume lookup / history). Returns an array of
- * conversation summaries. Pass filters: { projectId, artifactType, artifactId }. */
+ * conversation summaries. Pass filters: { projectId, artifactType, artifactId }.
+ * Omitting projectId lists across the caller's own projects. */
 export async function listAgentConversations(agentType, { projectId, artifactType, artifactId, includeArchived } = {}) {
   const qs = new URLSearchParams();
   if (projectId) qs.set("project_id", projectId);
@@ -335,7 +341,7 @@ export async function listAgentConversations(agentType, { projectId, artifactTyp
   if (includeArchived) qs.set("include_archived", "true");
   const res = await fetch(
     `${BASE}/api/agents/${encodeURIComponent(agentType)}/conversations?${qs.toString()}`,
-    { headers: backendApiHeaders() }
+    { headers: backendAuthedHeaders() }
   );
   if (!res.ok) throw new Error(`List conversations failed: ${res.status}`);
   return res.json();
@@ -346,9 +352,23 @@ export async function listAgentConversations(agentType, { projectId, artifactTyp
 export async function getAgentConversation(agentType, conversationId) {
   const res = await fetch(
     `${BASE}/api/agents/${encodeURIComponent(agentType)}/conversations/${encodeURIComponent(conversationId)}`,
-    { headers: backendApiHeaders() }
+    { headers: backendAuthedHeaders() }
   );
   if (!res.ok) throw new Error(`Get conversation failed: ${res.status}`);
+  return res.json();
+}
+
+/** Pin (or rename) a conversation. Pinning only changes list order. */
+export async function patchAgentConversation(agentType, conversationId, patch) {
+  const res = await fetch(
+    `${BASE}/api/agents/${encodeURIComponent(agentType)}/conversations/${encodeURIComponent(conversationId)}`,
+    {
+      method: "PATCH",
+      headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify(patch),
+    }
+  );
+  if (!res.ok) throw new Error(`Patch conversation failed: ${res.status}`);
   return res.json();
 }
 
@@ -356,7 +376,7 @@ export async function getAgentConversation(agentType, conversationId) {
 export async function archiveAgentConversation(agentType, conversationId) {
   const res = await fetch(
     `${BASE}/api/agents/${encodeURIComponent(agentType)}/conversations/${encodeURIComponent(conversationId)}/archive`,
-    { method: "POST", headers: backendApiHeaders() }
+    { method: "POST", headers: backendAuthedHeaders() }
   );
   if (!res.ok) throw new Error(`Archive conversation failed: ${res.status}`);
   return res.json();

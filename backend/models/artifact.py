@@ -83,6 +83,11 @@ class Artifact(SQLModel, table=True):
         default_factory=dict,
         sa_column=Column(json_column(), nullable=False, server_default="{}"),
     )
+    # Kept on the desk. Set on every row of the group, never one version, so the
+    # newest-per-group listing carries the pin whichever version is head.
+    pinned: bool = Field(
+        default=False, sa_column=Column(sa.Boolean(), nullable=False, server_default=sa.false())
+    )
     # AI context digest for future agent sessions ("" until the summarizer lands).
     summary: str = Field(default="", sa_column=Column(Text, nullable=False, server_default=""))
     # Display metadata for list cards: scores, counts, source window.

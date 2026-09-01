@@ -31,6 +31,7 @@ from typing import Any, Literal
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+from sqlmodel import Session
 
 from uuid import UUID
 
@@ -72,9 +73,9 @@ from service.artifact_store import (
     artifacts_for_conversation,
     load_report_as_versioned,
 )
-from service.auth import get_current_user_optional, get_user_provider_keys
+from service.auth import get_current_user, get_current_user_optional, get_user_provider_keys
 from service.crawl.fetcher import SSRFError, validate_public_url
-from service.membership import member_role
+from service.membership import accessible_projects, get_project_for_user, member_role
 from service.memory import (
     build_memory_context,
     seed_user_preferences,
@@ -533,11 +534,39 @@ def _conversation_summary(conv) -> dict:
         "artifact_id": str(conv.artifact_id) if conv.artifact_id else None,
         "title": conv.title,
         "status": conv.status,
+        "pinned": conv.pinned,
         "last_seq": conv.last_seq,
         "meta": conv.meta or {},
         "created_at": conv.created_at.isoformat() if conv.created_at else None,
         "last_active_at": conv.last_active_at.isoformat() if conv.last_active_at else None,
     }
+
+
+# The router is mounted behind `validate_api_key` alone, and that key ships to
+# the browser as NEXT_PUBLIC_DUCT_API_KEY. It proves "this is the Duct app",
+# never "this is that conversation's owner" — so it is not a boundary between
+# tenants and cannot be used as one. Every conversation carries a non-null
+# project_id, and project access is membership, so that is what the endpoints
+# below check. This is the same gate artifacts.py applies to the documents a
+# conversation produces; the transcripts had simply never been given one.
+
+
+def _conversation_for_user(db: Session, user: User, agent_type: str, conversation_id: str):
+    """Load a conversation the caller belongs to, or 404.
+
+    404 rather than 403 for a non-member, matching `get_project_for_user`: a
+    stranger must not be able to tell a real conversation id from a made-up
+    one. A malformed id is the same answer for the same reason.
+    """
+    try:
+        conv_uuid = UUID(conversation_id)
+    except (ValueError, AttributeError, TypeError):
+        raise HTTPException(404, f"Conversation {conversation_id!r} not found.") from None
+    conv = get_conversation(db, conv_uuid)
+    if not conv or conv.agent_type != agent_type:
+        raise HTTPException(404, f"Conversation {conversation_id!r} not found.")
+    get_project_for_user(conv.project_id, user, db)
+    return conv
 
 
 @router.get("/{agent_type}/conversations")
@@ -547,13 +576,28 @@ async def list_agent_conversations(
     artifact_type: str | None = None,
     artifact_id: str | None = None,
     include_archived: bool = False,
+    user: User = Depends(get_current_user),
 ) -> list[dict]:
-    """List conversations for an agent — used for resume lookup and history."""
+    """List conversations for an agent — used for resume lookup and history.
+
+    Scoped to the caller either way: a named project has to be one they belong
+    to, and an unfiltered call spans their own projects instead of every
+    tenant's. The unfiltered shape is what made this the widest hole of the
+    four — it enumerated ids that `GET .../{id}` would then read out in full.
+    """
     with next(db_session()) as db:
+        if project_id:
+            try:
+                scope = [UUID(project_id)]
+            except (ValueError, AttributeError, TypeError):
+                raise HTTPException(422, f"Invalid project_id {project_id!r}.") from None
+            get_project_for_user(scope[0], user, db)  # 404 when not a member
+        else:
+            scope = [p.id for p in accessible_projects(user, db)]
         convs = list_conversations(
             db,
             agent_type=agent_type,
-            project_id=UUID(project_id) if project_id else None,
+            project_ids=scope,
             artifact_type=artifact_type,
             artifact_id=UUID(artifact_id) if artifact_id else None,
             include_archived=include_archived,
@@ -562,12 +606,18 @@ async def list_agent_conversations(
 
 
 @router.get("/{agent_type}/conversations/{conversation_id}")
-async def get_agent_conversation(agent_type: str, conversation_id: str) -> dict:
-    """Conversation + its event log (ordered by seq) for UI rehydration."""
+async def get_agent_conversation(
+    agent_type: str,
+    conversation_id: str,
+    user: User = Depends(get_current_user),
+) -> dict:
+    """Conversation + its event log (ordered by seq) for UI rehydration.
+
+    The event log is the whole transcript — every prompt, answer and tool
+    result — which makes this the most sensitive of the four.
+    """
     with next(db_session()) as db:
-        conv = get_conversation(db, UUID(conversation_id))
-        if not conv or conv.agent_type != agent_type:
-            raise HTTPException(404, f"Conversation {conversation_id!r} not found.")
+        conv = _conversation_for_user(db, user, agent_type, conversation_id)
         events = load_events(db, conv.id)
         return {
             "conversation": _conversation_summary(conv),
@@ -579,14 +629,50 @@ async def get_agent_conversation(agent_type: str, conversation_id: str) -> dict:
         }
 
 
+class ConversationPatch(BaseModel):
+    """What a user may change about a conversation from a list view.
+
+    Deliberately not the transcript: events are append-only, and a title is a
+    label rather than a rewrite of what happened.
+    """
+
+    pinned: bool | None = None
+    title: str | None = None
+
+
+@router.patch("/{agent_type}/conversations/{conversation_id}")
+async def patch_agent_conversation(
+    agent_type: str,
+    conversation_id: str,
+    body: ConversationPatch,
+    user: User = Depends(get_current_user),
+) -> dict:
+    """Pin or rename a conversation. Pinning floats it to the top of its list
+    and does nothing else — see models/artifact.py for the same flag on the
+    documents a conversation produces.
+    """
+    with next(db_session()) as db:
+        conv = _conversation_for_user(db, user, agent_type, conversation_id)
+        if body.pinned is not None:
+            conv.pinned = bool(body.pinned)
+        if body.title is not None:
+            conv.title = body.title.strip()[:200]
+        db.add(conv)
+        db.commit()
+        db.refresh(conv)
+        return _conversation_summary(conv)
+
+
 @router.post("/{agent_type}/conversations/{conversation_id}/archive")
-async def archive_agent_conversation(agent_type: str, conversation_id: str) -> dict:
+async def archive_agent_conversation(
+    agent_type: str,
+    conversation_id: str,
+    user: User = Depends(get_current_user),
+) -> dict:
     """Archive a conversation (start-fresh support) — frees the per-artifact
     active-conversation slot so a new one can be created."""
     with next(db_session()) as db:
-        conv = get_conversation(db, UUID(conversation_id))
-        if not conv or conv.agent_type != agent_type:
-            raise HTTPException(404, f"Conversation {conversation_id!r} not found.")
+        conv = _conversation_for_user(db, user, agent_type, conversation_id)
         archive_conversation(db, conv.id)
     return {"status": "ok"}
 

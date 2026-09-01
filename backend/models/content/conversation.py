@@ -78,6 +78,11 @@ class AgentConversation(SQLModel, table=True):
     # then frees up so a new active conversation can claim the artifact.
     status: str = Field(default="active", sa_column=Column(String, nullable=False, server_default="active"))
 
+    # Kept on the desk — floats to the top of its own list, nothing more.
+    pinned: bool = Field(
+        default=False, sa_column=Column(sa.Boolean(), nullable=False, server_default=sa.false())
+    )
+
     # Running compaction state — summary covers events up to summary_through_seq.
     summary: str = Field(default="", sa_column=Column(Text, nullable=False, server_default=""))
     summary_through_seq: int = Field(default=0, sa_column=Column(Integer, nullable=False, server_default="0"))

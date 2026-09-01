@@ -20,6 +20,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from collections.abc import Sequence
 from typing import Any
 from uuid import UUID
 
@@ -115,14 +116,26 @@ def list_conversations(
     db: Session,
     *,
     agent_type: str,
-    project_id: UUID | None = None,
+    project_ids: Sequence[UUID],
     artifact_type: str | None = None,
     artifact_id: UUID | None = None,
     include_archived: bool = False,
 ) -> list[AgentConversation]:
-    stmt = select(AgentConversation).where(AgentConversation.agent_type == agent_type)
-    if project_id is not None:
-        stmt = stmt.where(AgentConversation.project_id == project_id)
+    """Conversations for an agent, within an explicit set of projects.
+
+    ``project_ids`` is required and has no "all projects" spelling. It used to
+    be a single *optional* ``project_id``, and the route passed whatever the
+    query string held — so omitting it listed every tenant's conversations. The
+    caller now has to say whose data it is asking for, and an empty set is an
+    empty answer rather than the whole table.
+    """
+    if not project_ids:
+        return []
+    stmt = (
+        select(AgentConversation)
+        .where(AgentConversation.agent_type == agent_type)
+        .where(AgentConversation.project_id.in_(list(project_ids)))
+    )
     if artifact_type is not None:
         stmt = stmt.where(AgentConversation.artifact_type == artifact_type)
     if artifact_id is not None:
