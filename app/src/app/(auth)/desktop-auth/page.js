@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
@@ -113,29 +113,46 @@ function DesktopAuthContent() {
   const [deepLink, setDeepLink] = useState("");
   const [error, setError] = useState(null);
   const [connectorName, setConnectorName] = useState("");
+  const [isConnector, setIsConnector] = useState(false);
+  // The handover happens exactly once, and everything it needs is latched into
+  // state below. Without this guard the scrub further down re-runs the effect:
+  // Next keeps `useSearchParams` in sync with `history.replaceState`, so the
+  // second pass sees the emptied query, reads it as a link that arrived with no
+  // code, and replaces the success page with "Sign-in link expired" a beat
+  // after the deep link has already fired — telling the user a connection
+  // failed that in fact succeeded.
+  const handled = useRef(false);
 
   useEffect(() => {
+    if (handled.current) return;
+    handled.current = true;
+
     // `connector` present means this is a data-source connection coming home,
-    // not a sign-in: a different deep-link route, and different copy.
+    // not a sign-in: a different deep-link route, and different copy. Present
+    // and *empty* still means connector: the short-path callback in
+    // `backend/routes/auth.py` fails with `connector=&error=expired` when the
+    // state it would have named the connector from is the very thing that
+    // expired, and "Sign-in link expired" is the wrong sentence for that.
     const connector = searchParams.get("connector") || "";
-    const isConnector = Boolean(connector);
+    const isConnectorFlow = searchParams.has("connector");
+    setIsConnector(isConnectorFlow);
     setConnectorName(CONNECTOR_NAMES[connector] || "");
 
     const reason = searchParams.get("error") || "";
     if (reason) {
-      const table = isConnector ? CONNECTOR_ERRORS : ERRORS;
+      const table = isConnectorFlow ? CONNECTOR_ERRORS : ERRORS;
       setError(table[reason] || table.server || FALLBACK);
       return;
     }
     const authCode = searchParams.get("auth_code") || "";
     if (!authCode) {
-      setError(isConnector ? CONNECTOR_ERRORS.expired : ERRORS.expired);
+      setError(isConnectorFlow ? CONNECTOR_ERRORS.expired : ERRORS.expired);
       return;
     }
     // Scrub the one-time code from the address bar and history, then fire the
     // deep link that returns it to the shell.
     window.history.replaceState({}, "", "/desktop-auth");
-    const link = isConnector
+    const link = isConnectorFlow
       ? `${SHELL_SCHEME}://connector?connector=${encodeURIComponent(connector)}` +
         `&auth_code=${encodeURIComponent(authCode)}`
       : `${SHELL_SCHEME}://auth?auth_code=${encodeURIComponent(authCode)}`;
@@ -143,9 +160,11 @@ function DesktopAuthContent() {
     window.location.href = link;
   }, [searchParams]);
 
+  // Read from state, not the query: by the time this renders the code — and
+  // the `connector` beside it — has been scrubbed out of the address bar.
   const successTitle = connectorName
     ? `${connectorName} connected`
-    : searchParams.get("connector")
+    : isConnector
       ? "Connected"
       : "You’re signed in";
 
