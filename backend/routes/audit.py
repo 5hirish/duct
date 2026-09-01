@@ -71,7 +71,7 @@ async def _prune_stale_sessions() -> None:
 
 def _resolve_agent_config(request_engine: str = "") -> tuple[str, Any, Any, Engine]:
     cfg = get_configs()
-    engine = resolve_engine(request_engine or "v3")  # default v3
+    engine = resolve_engine(request_engine or "v1")  # default v1
     provider = resolve_engine_provider(engine, cfg.generate_provider or None)
     model = resolve_engine_model(engine, provider, cfg.generate_model or None)
     api_key = getattr(cfg, PROVIDER_CONFIG_ATTR[provider], "") or ""
@@ -101,10 +101,16 @@ async def _stream_queue(
 def _build_runner(api_key: str, provider: Any, model: Any, engine: Engine):
     """Pick the audit engine.
 
-    V3 (Claude Agent SDK) stays the default and the production path. V1
-    (LangChain) is opt-in per request via ``engine: "v1"`` while it earns
-    confidence — see the engine consolidation review (duct-cloud, private).
-    Both expose the same ``run_pipeline`` signature and emit the same events.
+    V1 (LangChain) is the default and the production path; V3 (Claude Agent SDK)
+    is opt-in per request via ``engine: "v3"``. Both expose the same
+    ``run_pipeline`` signature and emit the same events, which is why audit is
+    the cheapest place to make the consolidation real — running V1 by default is
+    how it earns the confidence the previous default was waiting for.
+
+    One behaviour change rides along: V3 is the only engine that can
+    authenticate from a Claude subscription (``claude_oauth_available``), so an
+    operator whose only credential is a Claude subscription must now pass
+    ``engine: "v3"`` explicitly. Any provider API key keeps working unchanged.
     """
     if engine == Engine.V1:
         logger.info("audit: using V1 (LangChain) engine with %s/%s", provider.value, model.value)

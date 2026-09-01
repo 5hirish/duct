@@ -18,7 +18,7 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
 
 ### Current stack
 
-- **AI synthesis:** Two versioned engine implementations under `agents/insights/` — V1 (LangChain / deepagents) and V3 (Claude Agent SDK). Runtime-switchable via `generate_engine` env var.
+- **AI synthesis:** Insights runs on V1 (LangChain / deepagents) only. Audit carries both V1 and V3 runners and defaults to V1; content is still V3. Engine selection is per request, defaulting from the `generate_engine` env var.
 
   **Consolidating on V1.** Per the engine consolidation review (duct-cloud, private), all
   agents are moving to one harness — LangChain 1.x / `deepagents` — because customers bring
@@ -28,12 +28,27 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
 
   - **V1 — the target, under construction.** Rebuilt on `create_agent` + structured output;
     `v1/graph.py` is gone. New agent work goes here.
-  - **V3 — maintained, and still the production path** for audit and content. It is *not*
-    being retired yet. Keep it working: shared-code changes (`agents/core/`,
-    `agents/audit/`, `agents/content/`, `schema.py`, `agents/models.py`) must keep V3 at
-    parity, and V1 ports land **alongside** V3 rather than replacing it. Retirement happens
-    only once V1 has earned full confidence — real-provider evals plus a clean audit and
-    content run.
+  - **V3 — maintained, and still the production path for content.** It is *not* being
+    retired yet. Keep it working: shared-code changes (`agents/core/`, `agents/audit/`,
+    `agents/content/`, `schema.py`, `agents/models.py`) must keep V3 at parity, and V1
+    ports land **alongside** V3 rather than replacing it.
+
+    **Audit now defaults to V1** (`routes/audit.py::_resolve_agent_config`), with V3
+    reachable via `engine: "v3"`. Audit was the cheap place to make the consolidation
+    real — both runners already existed with the same `run_pipeline` signature and event
+    vocabulary — and running V1 by default *is* how it earns the confidence retirement
+    waits on. Content is the remaining port, and the expensive one: its runner is ~1350
+    lines with heavy session/resume machinery, so it stays on V3 until audit has soaked.
+
+    One consequence to keep in mind: **V3 is the only engine that can authenticate from a
+    Claude subscription.** The Messages API rejects `sk-ant-oat…` tokens (Anthropic
+    disabled third-party OAuth in Feb 2026), so retiring V3 means Claude requires an
+    ANTHROPIC_API_KEY. Measured cost of that: ~$0.04 per insights synthesis.
+
+    **Insights V3 was removed.** Same reason V2 was: nothing dispatched it. Both live
+    routes (`routes/generate.py`, `routes/agents.py`) drive `AutonomousInsightsRunner`,
+    while the V3 runner still claimed parity with the older `GenerateInsightsAgent`
+    fetch/synthesize pair — an interface the routes had already left behind.
 
   So a shared change may need doing twice (V1 + V3), never more.
   Claude remains a first-class *model* through V1, so retiring V3 later costs no capability.
@@ -151,8 +166,7 @@ agents/
 ├── engines.py          — engine/provider/model registry (shared across all agent types)
 ├── models.py           — Provider, ModelName enums (shared)
 ├── insights/           — Insights agent (paid ads + organic growth intelligence)
-│   ├── v1/             — LangChain runner
-│   ├── v3/             — Claude Agent SDK runner
+│   ├── v1/             — LangChain runner (the only insights engine)
 │   └── goals/, tools/, schema.py, registry.py, prompts/
 ├── audit/              — future: SEO audit agent
 └── content/            — future: Content marketing agent (plans, posts, publishing)

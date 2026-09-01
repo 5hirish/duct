@@ -51,7 +51,6 @@ ADAPTERS: dict[str, str] = {
     "agents/content/v3/runner.py":          "Claude Agent SDK runner",
     "agents/insights/v1/agent.py":          "LangChain synthesis (init_chat_model)",
     "agents/insights/v1/runner.py":         "deepagents runner — autonomous insights session",
-    "agents/insights/v3/runner.py":         "Claude Agent SDK runner",
 
     # -- Shared LangChain adapter: the model-transport + events-out ports for
     #    every V1 runner. Extracted from agents/audit/v1/runner.py on the second

@@ -228,17 +228,27 @@ def test_split_chunk_handles_provider_variations():
 # Route wiring — engine selection
 # ---------------------------------------------------------------------------
 
-def test_route_defaults_to_v3_and_opts_in_to_v1():
-    """V3 stays production; V1 is per-request opt-in while it earns confidence."""
+def test_route_defaults_to_v1_and_opts_in_to_v3():
+    """V1 is production; V3 is per-request opt-in.
+
+    The flip is the first step of consolidating onto one harness. Audit is where
+    it costs nothing — both runners exist with the same ``run_pipeline``
+    signature and event vocabulary (asserted below) — and running V1 by default
+    is how it earns the confidence the old default was waiting for.
+    """
     from agents.audit.v3.runner import ClaudeAuditRunner
     from agents.engines import Engine
     from agents.models import ModelName, Provider
     from routes.audit import _build_runner, _resolve_agent_config
     from agents.audit.v1.runner import LangChainAuditRunner
 
-    # An unset engine resolves to V3.
+    # An unset engine resolves to V1...
     _key, _provider, _model, engine = _resolve_agent_config("")
-    assert engine == Engine.V3
+    assert engine == Engine.V1
+
+    # ...and V3 remains reachable by naming it.
+    _key, _provider, _model, engine_v3 = _resolve_agent_config("v3")
+    assert engine_v3 == Engine.V3
 
     v3 = _build_runner("k", Provider.ANTHROPIC, ModelName.CLAUDE_SONNET, Engine.V3)
     v1 = _build_runner("k", Provider.GOOGLE_GENAI, ModelName.GEMINI_2_5_FLASH, Engine.V1)
