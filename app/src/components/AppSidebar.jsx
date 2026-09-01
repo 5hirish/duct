@@ -42,7 +42,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
-import EngineDialog from "./EngineDialog";
 import PreferencesDialog from "./PreferencesDialog";
 import { loadPreferences, hasNonDefaultPreferences } from "@/lib/userPreferences";
 import {
@@ -314,20 +313,20 @@ function SidebarUserFooter() {
             <span>Your memory</span>
           </Link>
         </DropdownMenuItem>
-        <EngineDialog>
-          <DropdownMenuItem
-            onSelect={(e) => e.preventDefault()}
-            className="flex items-center justify-between"
-          >
+        {/* Was an "Engine" dialog that could only change the harness — it
+            showed a model name it had no power to set. The page it points at
+            now owns all three: which models, whose key, which harness. */}
+        <DropdownMenuItem asChild>
+          <Link href="/settings/models" className="flex items-center justify-between">
             <span className="flex items-center gap-2">
               <Cpu className="size-4" />
-              Engine
+              <span>Models &amp; engine</span>
             </span>
             <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
               {engine.badge}
             </span>
-          </DropdownMenuItem>
-        </EngineDialog>
+          </Link>
+        </DropdownMenuItem>
         <PreferencesDialogMenuItem />
         <NotificationMenuItem />
         <DropdownMenuSeparator />
@@ -411,7 +410,8 @@ function useConnectionCount() {
 }
 
 // Current inference engine key, synced across tabs and same-tab changes
-// (EngineDialog dispatches a synthetic `storage` event on Apply). Starts at
+// (the Runtime tab on /settings/models dispatches a synthetic `storage` event
+// when the engine changes, the way the retired Engine dialog did). Starts at
 // DEFAULT_ENGINE so SSR and the first client render agree, then reconciles with
 // localStorage after mount.
 function useEngineKey() {

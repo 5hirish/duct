@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends
 from routes import (
     activity, agents, artifacts, audit, auth, chat, connectors, content, engines, execution,
     generate, health, lead_magnet, memory, project_connectors, project_members, projects,
+    providers,
     reports, signin, user_connectors, user_contexts, user_projects,
 )
 from service.auth import get_current_user, validate_api_key
@@ -44,6 +45,13 @@ router.include_router(
 )
 router.include_router(
     engines.router,
+    prefix="/api",
+    dependencies=[Depends(validate_api_key)],
+)
+# Reads the caller's own X-Provider-* headers and reports only presence, never
+# a key — the same public-catalogue gate the engine status endpoint uses.
+router.include_router(
+    providers.router,
     prefix="/api",
     dependencies=[Depends(validate_api_key)],
 )

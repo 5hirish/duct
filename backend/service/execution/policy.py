@@ -67,7 +67,14 @@ AUTO_POSTURE_MODEL_PREFIXES: tuple[str, ...] = (
     "claude-opus-",
     "claude-sonnet-",
     "gpt-5",
+    # "gemini-3-pro" matches nothing Google actually serves — the 3.x Pro line
+    # ships as `gemini-3.1-pro-preview`, which does not start with it. Left in
+    # place for whenever a bare `gemini-3-pro` appears; the 3.1 entry is the one
+    # that matches today, and it has to, because that model is now the Heavy
+    # rung of the default triple. Without it every default install would run
+    # `auto` projects at `assisted` and nothing would say why.
     "gemini-3-pro",
+    "gemini-3.1-pro",
 )
 
 

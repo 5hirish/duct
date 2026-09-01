@@ -13,7 +13,7 @@ import {
 } from "@/lib/userPreferences";
 
 // ---------------------------------------------------------------------------
-// Shared Dialog primitives (mirrors EngineDialog pattern)
+// Shared Dialog primitives (the pattern the retired EngineDialog also used)
 // ---------------------------------------------------------------------------
 
 function DialogOverlay({ className, ...props }) {

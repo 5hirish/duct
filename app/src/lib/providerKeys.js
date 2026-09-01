@@ -14,15 +14,19 @@
 export const PROVIDERS = [
   {
     id: "anthropic",
-    label: "Anthropic (Claude)",
+    // What `/api/providers/status` calls the same provider. They differ for
+    // Google only, but a per-entry field beats a special case at every call.
+    statusId: "anthropic",
+    label: "Anthropic",
     header: "X-Provider-Anthropic",
     placeholder: "sk-ant-…",
     prefix: "sk-ant-",
-    description: "Powers the Claude Agent SDK engine (v3).",
+    description: "Claude models. The only provider the Claude Agent SDK (v3) accepts.",
     consoleUrl: "https://console.anthropic.com/settings/keys",
   },
   {
     id: "openai",
+    statusId: "openai",
     label: "OpenAI",
     header: "X-Provider-OpenAI",
     placeholder: "sk-…",
@@ -32,12 +36,26 @@ export const PROVIDERS = [
   },
   {
     id: "gemini",
+    statusId: "google_genai",
     label: "Google Gemini",
     header: "X-Provider-Gemini",
     placeholder: "AIza…",
     prefix: "",
-    description: "Default models for the LangChain (v1) engine.",
+    description: "Gemini models, and every image Duct generates.",
     consoleUrl: "https://aistudio.google.com/app/apikey",
+  },
+  {
+    // The backend has accepted this header since bring-your-own keys shipped;
+    // it was simply never offered here, which made the one provider that
+    // actually solves bring-your-own-model the only one you could not bring.
+    id: "openrouter",
+    statusId: "openrouter",
+    label: "OpenRouter",
+    header: "X-Provider-OpenRouter",
+    placeholder: "sk-or-…",
+    prefix: "sk-or-",
+    description: "One key, 500+ models — and any OpenAI-compatible gateway you point it at.",
+    consoleUrl: "https://openrouter.ai/keys",
   },
 ];
 

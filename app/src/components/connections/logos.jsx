@@ -20,6 +20,22 @@ export const OpenAiMark = (
   </svg>
 );
 
+// Drawn rather than shipped, for the same `currentColor` reason as the OpenAI
+// knot — and because a routing glyph is an honest generic mark. OpenRouter's
+// wordmark is their trademark; an approximation of it in our bundle would be
+// worse than a shape that just says "one input, many models".
+export const OpenRouterMark = (
+  <svg viewBox="0 0 24 24" role="img" aria-label="OpenRouter" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+    <circle cx="4" cy="12" r="2" />
+    <circle cx="20" cy="4.5" r="2" />
+    <circle cx="20" cy="12" r="2" />
+    <circle cx="20" cy="19.5" r="2" />
+    <path d="M6 12h4c2 0 2-7.5 4-7.5h4" />
+    <path d="M6 12h12" />
+    <path d="M6 12h4c2 0 2 7.5 4 7.5h4" />
+  </svg>
+);
+
 export const LOGOS = {
   google_ads: <Img src="/icons/google-ads.svg" alt="Google Ads" />,
   gsc: <Img src="/icons/google-search-console.png" alt="Google Search Console" />,
@@ -39,4 +55,5 @@ export const LOGOS = {
   anthropic: <Img src="/icons/anthropic.svg" alt="Anthropic" />,
   openai: OpenAiMark,
   gemini: <Img src="/icons/gemini.svg" alt="Google Gemini" />,
+  openrouter: OpenRouterMark,
 };

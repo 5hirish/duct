@@ -49,6 +49,11 @@ class ModelName(str, Enum):
     # — the published shutdown dates are "earliest possible" and drift both
     # ways (gemini-3.1-flash-lite-preview is still served past its date, while
     # gemini-3.1-flash-preview is already gone and was dropped from here).
+    # The only current-generation Pro, and the Heavy rung of the shipped
+    # default triple. Still a `-preview` id because Google has published no
+    # stable 3.x Pro; verified against the live ListModels response and a real
+    # generateContent call rather than taken from the docs.
+    GEMINI_3_1_PRO_PREVIEW = "gemini-3.1-pro-preview"
     GEMINI_3_7_FLASH = "gemini-3.7-flash"
     GEMINI_3_5_FLASH_LITE = "gemini-3.5-flash-lite"
     GEMINI_2_5_FLASH = "gemini-2.5-flash"
@@ -241,6 +246,7 @@ MODEL_FALLBACK: dict[ModelName, tuple[ModelName, ...]] = {
     ModelName.CLAUDE_OPUS:           (ModelName.CLAUDE_SONNET,),
     ModelName.CLAUDE_SONNET:         (ModelName.CLAUDE_HAIKU,),
     # Google
+    ModelName.GEMINI_3_1_PRO_PREVIEW: (ModelName.GEMINI_3_7_FLASH,),
     ModelName.GEMINI_3_7_FLASH:      (ModelName.GEMINI_2_5_FLASH,),
     ModelName.GEMINI_3_5_FLASH_LITE: (ModelName.GEMINI_2_5_FLASH_LITE,),
     ModelName.GEMINI_2_5_FLASH:      (ModelName.GEMINI_2_5_FLASH_LITE,),
@@ -332,3 +338,78 @@ def resolve_model(name: str | None, provider: Provider) -> ModelName:
         return ModelName(name.strip())
     except ValueError:
         return DEFAULT_MODELS.get(provider, ModelName.GEMINI_2_5_FLASH)
+
+
+# Which provider serves a model id, by the shape of the id itself.
+#
+# Derived rather than tabulated on purpose. A dict would be a third list to
+# keep in step with ModelName and MODEL_THINKING, and it would have no answer
+# at all for the case that matters most: an OpenRouter slug Duct has never
+# heard of. Vendor prefixes are stable — Anthropic has never shipped a model
+# that is not `claude-*` — so the prefix *is* the fact.
+#
+# Order matters. The `/` test runs first because `anthropic/claude-opus-5` is
+# an OpenRouter slug, not an Anthropic model: it bills through OpenRouter's key
+# and reaches a different endpoint, and reading it as Anthropic would spend the
+# wrong credential.
+_PROVIDER_PREFIXES: tuple[tuple[str, Provider], ...] = (
+    ("claude-", Provider.ANTHROPIC),
+    ("gemini-", Provider.GOOGLE_GENAI),
+    ("gpt-", Provider.OPENAI),
+    ("o1-", Provider.OPENAI),
+    ("o3-", Provider.OPENAI),
+)
+
+
+def provider_of(model: "ModelName | str") -> Provider | None:
+    """The provider that serves this model id, or None when unrecognisable.
+
+    None is a real answer, not a failure to default: a caller choosing a
+    credential must not be handed a guess. ``agents/tiers.resolve_tier_model``
+    treats it as "fall back to this tier's default model" rather than
+    "attempt it against an arbitrary key".
+    """
+    name = str(getattr(model, "value", model) or "").strip().lower()
+    if not name:
+        return None
+    if "/" in name:
+        return Provider.OPENROUTER
+    for prefix, provider in _PROVIDER_PREFIXES:
+        if name.startswith(prefix):
+            return provider
+    return None
+
+
+class Modality(StrEnum):
+    """What a model can *emit*. Input modality is deliberately not modelled.
+
+    The distinction is the whole reason this exists. Every chat model in the
+    catalogue *accepts* images — that is how file upload already works — so an
+    input table would be a column of True and would answer the wrong question.
+    What the settings page needs to know is whether a chosen model can produce
+    an image, because that decides whether the user has to pick a separate
+    image model at all.
+    """
+
+    TEXT = "text"
+    IMAGE = "image"
+    VIDEO = "video"
+
+
+# What each model emits. Absent means text only, which is the honest default:
+# as of this catalogue **no** chat model here generates images — that lives in
+# the disjoint ``ImageModel`` enum, reached through a different SDK call path.
+#
+# The table exists anyway, and is checked anyway, because the resolution it
+# feeds ("does any configured tier already cover images?") is three lines, and
+# writing it now means the day a chat model gains image output the settings
+# page re-resolves itself instead of needing a UI change.
+MODEL_EMITS: dict[str, frozenset[Modality]] = {
+    model.value: frozenset({Modality.TEXT, Modality.IMAGE}) for model in ImageModel
+}
+
+
+def model_emits(model: "ModelName | str", modality: Modality) -> bool:
+    """True when this model can produce ``modality`` itself."""
+    name = str(getattr(model, "value", model) or "").strip()
+    return modality in MODEL_EMITS.get(name, frozenset({Modality.TEXT}))

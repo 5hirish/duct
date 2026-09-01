@@ -176,6 +176,9 @@ MODEL_THINKING: dict[str, ThinkingSupport] = {
 
     # --- Google. thinking_level is Gemini 3 and later; the 2.5 line takes a
     # token budget instead and rejects a level outright.
+    # Promoted from the loose-string block below when it joined the catalogue
+    # as the Heavy rung of the default triple.
+    ModelName.GEMINI_3_1_PRO_PREVIEW: _gemini((LOW, MEDIUM, HIGH), HIGH),
     ModelName.GEMINI_3_7_FLASH: _gemini((LOW, MEDIUM, HIGH), MEDIUM),
     ModelName.GEMINI_3_5_FLASH_LITE: _gemini((MINIMAL, LOW, MEDIUM, HIGH), MINIMAL),
 
@@ -198,7 +201,6 @@ MODEL_THINKING: dict[str, ThinkingSupport] = {
     "claude-opus-4-6": _ANTHROPIC_46,
     "claude-sonnet-4-6": _ANTHROPIC_46,
     "gemini-3.5-flash": _gemini((MINIMAL, LOW, MEDIUM, HIGH), MEDIUM),
-    "gemini-3.1-pro-preview": _gemini((LOW, MEDIUM, HIGH), HIGH),
 }
 
 # Catalogue models with no thinking dial at all, and why. Being on this list is

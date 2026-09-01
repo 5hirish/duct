@@ -1,18 +1,25 @@
 "use client";
 
-// Bring-your-own model provider key — same tile, same dialog as the data
-// sources, so "where do my keys live" and "where do my connectors live" look
-// and behave like one page.
+// Bring-your-own model provider key — same tile, same dialog shape the data
+// sources use, so one card vocabulary covers "what Duct can reach" wherever
+// that question is asked.
+//
+// `status` is the server's answer from `/api/providers/status` and is the half
+// this component cannot know: a provider with no key here may still be
+// reachable through Duct's own key or, for Anthropic, an operator subscription
+// on this machine. Reporting "No key set" in that case would be true about
+// local storage and false about the product.
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { clearProviderKey, getProviderKey, setProviderKey } from "../../lib/providerKeys";
+import { SOURCE_DETAIL, SOURCE_LABELS, SOURCE_TONE } from "../../lib/modelTiers";
 import ConnectorDialog from "./ConnectorDialog";
 import ConnectorTile from "./ConnectorTile";
 
-export default function ProviderCard({ provider, logo }) {
+export default function ProviderCard({ provider, logo, status }) {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
   const [saved, setSaved] = useState(false);
@@ -34,6 +41,20 @@ export default function ProviderCard({ provider, logo }) {
 
   const trimmed = value.trim();
   const looksValid = !provider.prefix || trimmed.startsWith(provider.prefix);
+
+  // Precedence matches the backend's: a supplied key wins over the server's,
+  // which wins over a subscription. Anything else is genuinely unreachable.
+  //
+  // The labels come from `modelTiers` rather than a copy kept here. There was
+  // a copy, and it silently rotted the moment the backend split "server" into
+  // `env` and `cloud`: every tile fell through to "No key set" while the tier
+  // rows two tabs away correctly said "From env".
+  const source = saved ? "user" : status?.source || "none";
+  const tile = {
+    tone: SOURCE_TONE[source] === "warn" ? "off" : source === "cloud" ? "partial" : "on",
+    label: SOURCE_LABELS[source] || SOURCE_LABELS.none,
+    detail: SOURCE_DETAIL[source] || SOURCE_DETAIL.none,
+  };
 
   // The desktop keychain can genuinely refuse a write — most often on Linux,
   // where the Secret Service daemon that backs it may not be running at all.
@@ -74,8 +95,8 @@ export default function ProviderCard({ provider, logo }) {
         logo={logo}
         title={provider.label}
         description={provider.description}
-        tone={saved ? "on" : "off"}
-        status={saved ? "Key saved" : "No key set"}
+        tone={tile.tone}
+        status={tile.label}
         onClick={() => setOpen(true)}
       />
 
@@ -130,8 +151,11 @@ export default function ProviderCard({ provider, logo }) {
           )}
 
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-            <span className={`status-pill ${saved ? "green" : "grey"}`}>
-              {saved ? "Saved" : "Not set"}
+            <span
+              className={`status-pill ${tile.tone === "on" ? "green" : "grey"}`}
+              title={tile.detail}
+            >
+              {tile.label}
             </span>
             <div style={{ display: "flex", gap: 8 }}>
               {saved && (

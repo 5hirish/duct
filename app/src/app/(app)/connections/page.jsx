@@ -10,8 +10,6 @@ import {
   setAdsDeveloperToken,
   setAdsLoginCustomerId,
 } from "../../../lib/adsCredentials";
-import { PROVIDERS } from "../../../lib/providerKeys";
-import TelemetryCard from "../../../components/TelemetryCard.jsx";
 import {
   bindProjectConnector,
   deleteServerConnector,
@@ -27,11 +25,10 @@ import { getActiveProject } from "../../../lib/projects";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import ConnectorTile from "../../../components/connections/ConnectorTile";
 import ManualConnectorCard from "../../../components/connections/ManualConnectorCard";
 import OAuthConnectorCard from "../../../components/connections/OAuthConnectorCard";
-import ProviderCard from "../../../components/connections/ProviderCard";
 import { DEFAULT_VALUE } from "../../../components/connections/ProjectAccountSelect";
 import { LOGOS } from "../../../components/connections/logos";
 
@@ -370,11 +367,6 @@ export default function ConnectionsPage() {
       </div>
 
       <Tabs defaultValue="connections">
-        <TabsList>
-          <TabsTrigger value="connections">Data sources</TabsTrigger>
-          <TabsTrigger value="providers">Providers</TabsTrigger>
-        </TabsList>
-
         <TabsContent value="connections">
           <p className="app-subtle" style={{ marginTop: 0, marginBottom: 18, maxWidth: 720 }}>
             Connect an account once — it&rsquo;s saved for your whole account. Open a card
@@ -777,23 +769,6 @@ export default function ConnectionsPage() {
           </div>
         </TabsContent>
 
-        <TabsContent value="providers">
-          <p className="app-subtle" style={{ marginTop: 0, marginBottom: 18, maxWidth: 720 }}>
-            Bring your own model-provider API keys. During the beta these power insight
-            generation on your own account. Keys stay in this browser session and are sent
-            securely with each request — never stored on our servers. Tip: use a
-            budget-capped or restricted key.
-          </p>
-          <div className="conn-grid">
-            {PROVIDERS.map((provider) => (
-              <ProviderCard key={provider.id} provider={provider} logo={LOGOS[provider.id]} />
-            ))}
-            {/* Desktop only, and only in a build that can actually report —
-                renders nothing otherwise. Sits here because this is the page
-                where the other "what leaves my machine" decisions are made. */}
-            <TelemetryCard />
-          </div>
-        </TabsContent>
       </Tabs>
     </section>
   );
