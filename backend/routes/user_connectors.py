@@ -16,6 +16,7 @@ from models.connector import ConnectorCredential
 from service.auth import get_current_user
 from service.connector_access import list_data_sources
 from service.credentials import encrypt_credentials
+from service.provider_keys import CONNECTOR_TYPE as PROVIDER_KEY_TYPE
 
 router = APIRouter(tags=["user-connectors"])
 
@@ -66,6 +67,11 @@ def list_connectors(
     rows = session.execute(
         select(ConnectorCredential)
         .where(ConnectorCredential.user_id == user.id)
+        # Saved LLM provider keys share this table (service/provider_keys.py)
+        # but are not connectors: no registry entry, no adapter, no account to
+        # bind. Without this they surface here as a phantom row the Connections
+        # page would render as a data source nobody can configure.
+        .where(ConnectorCredential.connector_type != PROVIDER_KEY_TYPE)
         .order_by(ConnectorCredential.connector_type, ConnectorCredential.account_name)
     ).scalars().all()
     return [_to_out(r) for r in rows]

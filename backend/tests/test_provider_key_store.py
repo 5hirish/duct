@@ -136,3 +136,26 @@ def test_an_unreadable_key_degrades_instead_of_raising(db, cfg, user, monkeypatc
     assert stored_provider_keys(db, user.id) == {}
     # Presence still reads, because it never touches the ciphertext.
     assert has_stored_provider_keys(db, user.id) == {Provider.ANTHROPIC}
+
+
+# --- the table is shared; the vocabulary is not -----------------------------
+
+
+def test_a_saved_key_is_not_a_connector(db, cfg, user):
+    """`connector_credentials` is reused for its shape — (user, type, account)
+    unique, Fernet blob, CASCADE on user delete — not because a provider key is
+    a connector. It has no registry entry, no adapter and nothing to bind, so
+    it must not appear anywhere connectors are listed. Without the filter it
+    rendered as a data source nobody could configure."""
+    from routes.user_connectors import list_connectors
+    from service.connector_access import list_data_sources
+
+    save_provider_key(db, user.id, Provider.ANTHROPIC, "sk-ant-mine")
+
+    rows = list_connectors(user=user, session=db)
+    assert [r.connector_type for r in rows] == []
+
+    # The registry-driven inventory is safe by construction — it iterates
+    # connectors, not rows — but assert it, because that is the property.
+    kinds = {s.connector_id for s in list_data_sources(db, user_id=user.id)}
+    assert CONNECTOR_TYPE not in kinds
