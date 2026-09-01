@@ -4,12 +4,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  TrendingUp,
-  BarChart3,
-  Megaphone,
-  Search,
-  PenLine,
-  ShieldCheck,
   Plug,
   Check,
   Plus,
@@ -24,8 +18,6 @@ import {
   BellRing,
   SlidersHorizontal,
   Brain,
-  FileText,
-  History,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import {
@@ -67,99 +59,7 @@ import {
 } from "@/lib/projects";
 import { faviconUrl } from "@/lib/favicon";
 import { CONNECTORS_CHANGED, connectedConnectorTypes } from "@/lib/connectorsApi";
-
-// ---------------------------------------------------------------------------
-// Nav structure
-// ---------------------------------------------------------------------------
-
-const NAV_SECTIONS = [
-  {
-    key: "growth",
-    label: "Growth",
-    items: [
-      {
-        key: "organic_growth",
-        label: "Organic Growth",
-        icon: TrendingUp,
-        href: "/insights/organic-growth",
-        available: true,
-        matchPrefix: "/insights/organic-growth",
-      },
-      {
-        key: "seo_audit",
-        label: "SEO Audit",
-        icon: Search,
-        href: "/audit/seo",
-        available: true,
-        matchPrefix: "/audit/seo",
-      },
-      {
-        key: "tiktok_studio",
-        label: "Content Studio",
-        icon: PenLine,
-        href: "/content",
-        available: true,
-        matchPrefix: "/content",
-      },
-      {
-        key: "paid_ads",
-        label: "Paid Ads Intelligence",
-        icon: Megaphone,
-        href: null,
-        available: false,
-      },
-    ],
-  },
-  {
-    key: "product",
-    label: "Product",
-    items: [
-      {
-        key: "product_intelligence",
-        label: "Product Intelligence",
-        icon: BarChart3,
-        href: null,
-        available: false,
-      },
-    ],
-  },
-  {
-    key: "execute",
-    label: "Execute",
-    items: [
-      {
-        key: "executions",
-        label: "Executions",
-        icon: ShieldCheck,
-        href: "/execute",
-        available: true,
-        matchPrefix: "/execute",
-      },
-    ],
-  },
-  {
-    key: "library",
-    label: "Library",
-    items: [
-      {
-        key: "artifacts",
-        label: "Artifacts",
-        icon: FileText,
-        href: "/artifacts",
-        available: true,
-        matchPrefix: "/artifacts",
-      },
-      {
-        key: "activity",
-        label: "Activity",
-        icon: History,
-        href: "/activity",
-        available: true,
-        matchPrefix: "/activity",
-      },
-    ],
-  },
-];
+import { NAV_SECTIONS } from "@/lib/navigation";
 
 // ---------------------------------------------------------------------------
 // Project switcher in sidebar header

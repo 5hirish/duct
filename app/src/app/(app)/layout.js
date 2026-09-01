@@ -11,6 +11,10 @@ import { AuditNavProvider } from "../../lib/auditNavContext";
 import LocalBackendGate from "../../components/LocalBackendGate.jsx";
 import UpdateToast from "../../components/UpdateToast.jsx";
 import ConnectionBanner from "../../components/ConnectionBanner.jsx";
+import { CommandProvider } from "../../components/commands/CommandRegistry";
+import CommandPalette from "../../components/commands/CommandPalette";
+import AppCommands from "../../components/commands/AppCommands";
+import CommandPaletteTrigger from "../../components/commands/CommandPaletteTrigger";
 
 // Routes whose main content must fill the remaining viewport (no scroll, no padding)
 const FULL_BLEED_PREFIXES = [
@@ -56,6 +60,9 @@ function AppLayoutInner({ children }) {
     <AuthProvider>
       <AuthGuard>
         <AuditNavProvider>
+        {/* CommandProvider wraps the shell so any surface inside it can
+            contribute commands with useRegisterCommands. */}
+        <CommandProvider>
         <SidebarProvider>
           <AppSidebar />
           <SidebarInset
@@ -66,10 +73,11 @@ function AppLayoutInner({ children }) {
             }
           >
             <header className="shrink-0 app-header border-b border-border/70 bg-background/85 shadow-sm ring-1 ring-border/40 backdrop-blur-xl supports-[backdrop-filter]:bg-background/70">
-              <div className="flex h-full items-center gap-3 px-4">
+              <div className="@container flex h-full items-center gap-3 px-4">
                 <SidebarTrigger className="-ml-1 text-muted-foreground hover:text-foreground" />
                 <div className="h-4 w-px bg-border" aria-hidden />
                 <AppNav />
+                <CommandPaletteTrigger className="ml-auto" />
               </div>
             </header>
 
@@ -90,7 +98,10 @@ function AppLayoutInner({ children }) {
               </div>
             )}
           </SidebarInset>
+          <AppCommands />
+          <CommandPalette />
         </SidebarProvider>
+        </CommandProvider>
         </AuditNavProvider>
       </AuthGuard>
     </AuthProvider>

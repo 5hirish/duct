@@ -57,6 +57,51 @@ Plus `invite/[token]/` at the top level (outside every route group): the invitat
   `authToken`, `hasAuthToken`, `authedHeaders`, `authedRequest`, plus
   `decodeJwtPayload` / `isTokenValid`. Never hardcode `"duct_auth_token"`.
 
+## UI conventions
+
+Full reasoning in `docs/engineering/desktop-adaptive-ui-review.html` (in `duct`).
+
+**Sizing: ask the container, not the window.** The viewport is the wrong ruler
+here — the sidebar takes 16rem out of it, and the agent panes are user-resizable,
+so `lg:` can be true while the box you are in is 300px. Each layout REGION
+declares a container (`.app-main`, `.app-main-wide`, the full-bleed wrapper, both
+`SplitWorkspace` panes), so components use `@`-variants and are correct wherever
+they are placed.
+
+- Content: `@container` variants on Tailwind's `@`-scale — `@md` 28rem, `@lg` 32rem,
+  `@xl` 36rem, `@2xl` 42rem, `@4xl` 56rem. Roughly 224px per grid column.
+- Viewport (`sm:`/`md:`/…) only for genuine device concerns: the sign-in page,
+  the sidebar's mobile sheet, the pane toggle, and `md:text-sm` on chat inputs
+  (which exists to stop iOS zooming a sub-16px field).
+- No hand-picked pixel breakpoints. There are currently zero; keep it that way.
+- Before adding `container-type` anywhere new: it implies `contain: layout`, which
+  makes that element the containing block for `position: fixed` descendants.
+  Overlays must be portalled (they are — see below) or they will shrink to it.
+
+**Units.** Type, spacing and sticky offsets in `rem` so they follow the reader's
+text size. Device units stay `px`: borders, outlines, shadows, radii, 1px optical
+nudges. Prose gets `max-width: var(--measure)` (68ch) or the `.measure` utility —
+never tables, code, or column layouts.
+
+**CSS lives in `src/app/styles/`.** `globals.css` is a manifest of imports and
+nothing else; order is load-bearing (see its header). Add a partial for a new
+concern rather than growing an existing one, and put page-specific styling with
+the page.
+
+**Shared UI primitives — use them, don't re-fork.**
+
+- Overlays: `ui/dialog` (Radix — portal, focus trap, Escape, scroll lock) and
+  `ui/lightbox`. Never hand-roll a `fixed inset-0` backdrop.
+- Busy state: `ui/spinner`. Colour comes from `currentColor`.
+- Agent shells: `workspace/SplitWorkspace` (split + responsive), `PipelineProgress`
+  (the working ladder), `workspace/CodeBlock`, `workspace/agentPhase`.
+- Shortcuts: `lib/shortcuts`' `useShortcut("mod+k", fn)` — platform-neutral, owned
+  by the surface that needs it.
+- Commands: `useRegisterCommands` from `components/commands/CommandRegistry`. A
+  route contributes its own commands and they withdraw on unmount.
+- Navigation: `lib/navigation`'s `NAV_SECTIONS` is the single source of truth for
+  the sidebar and the palette.
+
 ## What's not here
 
 - No dedicated auth library (next-auth, Clerk, Supabase)

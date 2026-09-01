@@ -217,7 +217,7 @@
     <div class="meta">
       <span><b>1 Sep 2026</b></span>
       <span>Scope <b>app/src — layout, units, shared components</b></span>
-      <span>Status <b>audited · first fixes shipped</b></span>
+      <span>Status <b>audited · backlog cleared</b></span>
       <span>Branch <b>feat/gads-connectors-wave2</b></span>
     </div>
   </header>
@@ -228,18 +228,20 @@
     <h2>The short version</h2>
 
     <p class="lede">
-      Duct ships the same build to a browser and to a Tauri window. The browser side is
-      handled: there are breakpoints, the sidebar collapses, panes toggle on phones. The
-      desktop side is where the gap is, and it is one specific gap repeated in several
-      places — <strong>components size themselves off the viewport when the thing that
-      actually constrains them is a resizable pane</strong>.
+      Duct ships the same build to a browser and to a Tauri window. The browser side was
+      handled: breakpoints, a collapsing sidebar, panes that toggle on phones. The desktop
+      side was where the gap was, and it was one specific gap repeated in several places —
+      <strong>components sizing themselves off the viewport when the thing that actually
+      constrains them is a resizable pane</strong>. That is now fixed, along with the six
+      other items it turned up; <a href="#changed">What I changed</a> is the record and
+      <a href="#next">What is left</a> is the remainder.
     </p>
 
     <div class="metrics">
-      <div class="metric"><span class="n">485</span><span class="l">absolute <code>px</code> values in <code>globals.css</code>, against 19 <code>rem</code></span></div>
-      <div class="metric"><span class="n">13</span><span class="l">distinct breakpoints across two unaligned systems</span></div>
-      <div class="metric"><span class="n">0</span><span class="l">container queries, in an app built on resizable panes</span></div>
-      <div class="metric"><span class="n">12</span><span class="l">hand-rolled spinners in 4 colours and 6 sizes</span></div>
+      <div class="metric"><span class="n">485 → 2</span><span class="l">absolute <code>px</code> lengths in type and spacing; the two left are deliberate 1px optical nudges</span></div>
+      <div class="metric"><span class="n">13 → 0</span><span class="l">hand-picked pixel breakpoints. Content is on the container scale, chrome on Tailwind's</span></div>
+      <div class="metric"><span class="n">0 → 9</span><span class="l">container queries, on four scale steps: 28 / 32 / 36 / 42rem</span></div>
+      <div class="metric"><span class="n">2087 → 45</span><span class="l">lines in <code>globals.css</code>, now a manifest over 14 partials</span></div>
     </div>
 
     <p>
@@ -486,7 +488,7 @@
   </section>
 
   <section id="platform">
-    <h2>What the platform asks for that we are not doing</h2>
+    <h2>What the platform asks for</h2>
 
     <h3>Input: pointer events, not mouse events</h3>
     <p>
@@ -570,13 +572,17 @@
         </p>
       </div>
       <div class="card">
-        <span class="tag">Still to do</span>
+        <span class="tag">Was a dumping ground</span>
         <h3>The global stylesheet</h3>
         <p>
-          2,077 lines, 247 class selectors, and the prefixes give it away:
+          2,087 lines, 247 class selectors, and the prefixes gave it away:
           <code>rpt-</code> (33), <code>conn-</code> (28), <code>generate-</code> (27),
-          <code>kpi-</code> (23), <code>signin-</code> (21). This is per-page styling in a
-          global file — the opposite of the component model the rest of the app follows.
+          <code>kpi-</code> (23), <code>signin-</code> (21) — per-page styling in a global
+          file, the opposite of the component model the rest of the app follows. Now a
+          45-line manifest over 14 partials, which immediately exposed that
+          <strong>45 of the 59 classes in <code>generate.css</code> are dead</strong>. That
+          is the real cost of a file like this: not its size, but that nobody could tell
+          what was still load-bearing.
         </p>
       </div>
       <div class="card">
@@ -696,68 +702,254 @@
         backlog below, and worth doing on its own merits.
       </p>
     </div>
+
+    <div class="phase">
+      <div class="n">06</div>
+      <div>
+        <h3>One overlay abstraction, not four</h3>
+        <p>
+          The three inline <code>fixed inset-0</code> overlays now go through the
+          Radix dialog that was already in <code>ui/</code> — so they inherit the
+          portal, focus trap, Escape and scroll lock instead of reimplementing a
+          backdrop each. <code>PublishModal</code> keeps its
+          not-dismissable-mid-publish rule through <code>onInteractOutside</code>
+          and <code>onEscapeKeyDown</code> rather than a bare click handler, and
+          the image zoom became <code>ui/lightbox</code>, since that shape recurs.
+          Writing a fourth overlay primitive would have been the easier change and
+          the wrong one.
+        </p>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="n">07</div>
+      <div>
+        <h3>Containers per region, not per component</h3>
+        <p>
+          <code>.app-main</code>, <code>.app-main-wide</code>, the full-bleed
+          wrapper and both panes declare <code>container-type: inline-size</code>.
+          Declaring it per region rather than per component is what makes a
+          component correct in a pane <em>and</em> on a page without knowing where
+          it is. Twenty-nine <code>sm:</code> classes in
+          <code>AuditReportV1</code> — a pane child that had been asking the
+          window about the pane — moved across, along with the grids in
+          <code>DiscoverPage</code>, <code>StyleGallery</code>,
+          <code>AnalyticsView</code>, <code>FormatLibrary</code>,
+          <code>BrandContextForm</code> and <code>AccountsTab</code>.
+        </p>
+        <p>
+          Those page grids mattered more than they looked: the sidebar takes 16rem
+          out of the viewport, so at a 1024px window <code>lg:</code> fired while
+          the content area was ~740px, and every grid that trusted it ran a column
+          over. Two things deliberately stayed on the viewport — the
+          <code>md:text-sm</code> on chat inputs, which exists to stop iOS zooming
+          a sub-16px field, and the sign-in page, which really is viewport-sized.
+        </p>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="n">08</div>
+      <div>
+        <h3>One breakpoint scale</h3>
+        <p>
+          The nine hand-picked CSS breakpoints (480, 520, 540, 740, 780, 860, 900,
+          960) are gone. Content-region rules sit on Tailwind's container scale —
+          28 / 32 / 36 / 42rem — chosen as the nearest step to the <em>content</em>
+          width each old viewport number implied, which is not what any of them
+          actually measured. The sign-in page keeps viewport queries but writes
+          them as Tailwind's own <code>40rem</code> and <code>48rem</code>. Two
+          rulers, one scale, each used where it is correct.
+        </p>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="n">09</div>
+      <div>
+        <h3>Type and spacing in <code>rem</code></h3>
+        <p>
+          288 lengths converted at an exact <code>/16</code>, so nothing moves at
+          the default root size and everything now follows the reader's text
+          setting. Device units were left alone on purpose: borders, outlines,
+          shadows, radii, and the two 1px optical nudges. The single
+          <code>clamp()</code> came along too.
+        </p>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="n">10</div>
+      <div>
+        <h3><code>globals.css</code> is a manifest</h3>
+        <p>
+          2,087 lines became a 45-line import list over 14 partials — tokens, base,
+          app shell, forms, layout grids, chat, connections, ads report, generate,
+          sign-in, typography, theme, mode selector, connector tiles. The split was
+          done as a pure move and <strong>verified</strong>: the slices reconstruct
+          the original byte-for-byte, and the emitted CSS was byte-identical
+          before and after, so the reorganisation could be separated from the
+          changes that followed it.
+        </p>
+        <p>
+          The manifest states what the old file could not: that the order is
+          load-bearing (<code>.app-textarea</code> is defined in
+          <code>forms.css</code> and refined in <code>generate.css</code>), and
+          which ruler applies where.
+        </p>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="n">11</div>
+      <div>
+        <h3>Reading measure as a token</h3>
+        <p>
+          <code>--measure: 68ch</code> and <code>--measure-tight: 56ch</code> join
+          the other tokens; <code>typography.css</code> exposes them as
+          <code>.measure</code> utilities for prose rendered from JSX, and each
+          partial caps its own prose with the token. <code>ch</code> rather than a
+          pixel guess, so the cap follows the font. Tables, code and columns are
+          explicitly excluded — capping those just strands whitespace.
+        </p>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="n">12</div>
+      <div>
+        <h3>A command palette, and a way to add shortcuts</h3>
+        <p>
+          Three layers, because the useful part is not the palette:
+          <code>lib/shortcuts</code> is a <code>useShortcut</code> hook with
+          platform-neutral <code>"mod+k"</code> combos, so a surface owns its
+          binding and drops it on unmount instead of a central table going stale;
+          <code>CommandRegistry</code> lets any component contribute commands with
+          <code>useRegisterCommands</code> and withdraw them automatically, so the
+          palette only ever offers what is currently possible; the palette itself
+          is the shared dialog plus a filtered list.
+        </p>
+        <p>
+          <code>NAV_SECTIONS</code> moved out of <code>AppSidebar</code> to
+          <code>lib/navigation</code>, since the sidebar and the palette now answer
+          the same question and a route in one but not the other is drift nobody
+          notices. Commands cover navigation, project switching — the most repeated
+          action in the app, previously reachable only by aiming at a dropdown —
+          and the theme. Matching is subsequence-based, so "cst" finds Content
+          Studio. The shortcut helpers are covered by 15 assertions across both
+          platforms, including that Ctrl+K must not fire a ⌘K binding on macOS.
+        </p>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="n">13</div>
+      <div>
+        <h3>Written down where it will be read</h3>
+        <p>
+          A conventions section in <code>app/CLAUDE.md</code>: ask the container
+          not the window, the container scale and the four cases that are
+          genuinely viewport-level, <code>rem</code> for type and spacing and
+          which units stay <code>px</code>, where CSS lives, and the list of
+          shared primitives not to re-fork. Including the trap — that
+          <code>container-type</code> implies <code>contain: layout</code>, so
+          overlays must stay portalled.
+        </p>
+        <p>
+          Every fix above is one edit away from being undone by someone adding a
+          reasonable-looking <code>lg:grid-cols-4</code>. The convention is the
+          part that persists; the rest is just the first application of it.
+        </p>
+      </div>
+    </div>
+
   </section>
 
   <section id="next">
-    <h2>What I would do next</h2>
+    <h2>What is left</h2>
+
+    <p>
+      The seven items this document opened with are done. Splitting
+      <code>globals.css</code> did what splitting is for — it made the dead
+      weight visible, one concern at a time — so most of what follows is
+      something the split surfaced rather than something it left behind.
+    </p>
 
     <div class="scroller">
       <table>
         <thead><tr><th>Step</th><th>Why it is next</th><th>Rough size</th></tr></thead>
         <tbody>
           <tr>
-            <td>Container-query the remaining pane children</td>
-            <td>The pattern is proven in <code>PlanKanban</code> and the panes already declare containers. <code>AnalyticsView</code>, <code>StyleGallery</code>, <code>DiscoverPage</code> are full-width today but are the obvious candidates to move into a pane next, and would break the same way.</td>
+            <td>Delete the dead CSS</td>
+            <td>
+              <code>generate.css</code> has <strong>14 live classes out of 59</strong>, and
+              <code>mode-selector.css</code> is entirely dead — leftovers from the insights
+              wizard removed in <code>9c4a57c</code>. <code>app-input</code>,
+              <code>app-textarea</code>, <code>generate-field</code>, <code>app-shell</code>,
+              <code>google-signin-btn</code>, and the whole <code>date-preset-</code>,
+              <code>analyzing-</code>, <code>pipeline-step-</code>, <code>goal-</code> and
+              <code>generate-review-</code> families have no reference anywhere in the repo.
+              Not done here because the evidence is a string search: classes are composed
+              dynamically in places (<code>signal-level-{level}</code>,
+              <code>tone-{tone}</code> both look dead and are not), so this wants a careful
+              pass rather than a bulk delete.
+            </td>
             <td class="num">half a day</td>
           </tr>
           <tr>
-            <td>Collapse the breakpoint systems</td>
-            <td>Rewrite the nine ad-hoc CSS breakpoints onto Tailwind's four. Mostly mechanical; removes the class of bug where two rules disagree about when a layout changes.</td>
+            <td>Fold the last two private dialogs in</td>
+            <td>
+              <code>PreferencesDialog</code> and <code>EngineDialog</code> each declare a
+              private <code>DialogOverlay</code>/<code>DialogContent</code> pair over the same
+              Radix primitives as <code>ui/dialog</code>. They are portalled and correct — so
+              this is duplication, not a bug — but it is ~70 lines restating a shared
+              component, and their styling differs from it slightly, which is the visual drift
+              that duplication produces. <code>AgentDrawer</code> is referenced by nothing at
+              all and should go.
+            </td>
+            <td class="num">2 hours</td>
+          </tr>
+          <tr>
+            <td>Sweep the arbitrary values in JSX</td>
+            <td>
+              The CSS is on <code>rem</code> now, but ~230 Tailwind arbitrary values
+              (<code>h-[80px]</code>, <code>max-w-[220px]</code>, <code>h-[520px]</code>)
+              remain in components and are the same absolute-unit problem in a different
+              file. Mechanical, and now unambiguous — the convention is written down.
+            </td>
+            <td class="num">half a day</td>
+          </tr>
+          <tr>
+            <td>Give the palette contextual commands</td>
+            <td>
+              The registry exists precisely so a route can contribute its own actions, and
+              nothing uses that yet — every command is registered globally by
+              <code>AppCommands</code>. The audit and content workspaces are where it would
+              pay: "re-run this audit", "publish this post", "open the brief".
+            </td>
             <td class="num">1 day</td>
-          </tr>
-          <tr>
-            <td>Type and spacing to <code>rem</code></td>
-            <td>Restores the user's text-size preference. Best done as a token pass in <code>globals.css</code> rather than file by file.</td>
-            <td class="num">1 day</td>
-          </tr>
-          <tr>
-            <td>Break up <code>globals.css</code></td>
-            <td>Move <code>rpt-</code>, <code>conn-</code>, <code>generate-</code>, <code>signin-</code> into the components that own them. Biggest modularity win available, and the one that stops the file growing.</td>
-            <td class="num">2 days</td>
-          </tr>
-          <tr>
-            <td>A command palette and real shortcuts</td>
-            <td>We have exactly one shortcut. On desktop this is the difference between an app and a bookmarked website — and it is the cheapest "feels native" win available.</td>
-            <td class="num">1–2 days</td>
-          </tr>
-          <tr>
-            <td>Portal the three inline overlays</td>
-            <td>They are <code>fixed inset-0</code> modals rendered inside a pane. They work today only because no ancestor establishes a containing block — which also means they block pane-level containment and will break the first time anyone adds a transform, filter or container above them.</td>
-            <td class="num">an hour</td>
-          </tr>
-          <tr>
-            <td>Cap reading measure on prose blocks</td>
-            <td><code>max-width</code> in <code>ch</code> on report and narrative text. Small, visible on every wide monitor.</td>
-            <td class="num">an hour</td>
           </tr>
           <tr>
             <td>Test the Linux webview</td>
-            <td>WebKitGTK is the one we never see, and we lean on <code>oklch()</code>, <code>color-mix()</code> and <code>backdrop-filter</code>. A single pass in a VM would retire the risk.</td>
+            <td>
+              Still open, and now slightly more exposed: we lean on <code>oklch()</code>,
+              <code>color-mix()</code>, <code>backdrop-filter</code> and — as of this pass —
+              container queries. All are well supported on paper; none is verified on
+              WebKitGTK, the one none of us runs.
+            </td>
             <td class="num">half a day</td>
+          </tr>
+          <tr>
+            <td>Break up the long components</td>
+            <td>
+              <code>AuditReportV1.jsx</code> (957), <code>execute/page.jsx</code> (921),
+              <code>onboarding/page.jsx</code> (851). Unchanged by this pass, and still where
+              a shared piece gets written inline because extracting is the bigger edit.
+            </td>
+            <td class="num">2 days</td>
           </tr>
         </tbody>
       </table>
-    </div>
-
-    <div class="note">
-      <span class="eyebrow">Unrelated, but found on the way</span>
-      <p>
-        There is a stale nested git repository at <code>app/.git</code> — one commit, from
-        April, tracking a different set of files. Any <code>git</code> command run from
-        inside <code>app/</code> silently targets it instead of the <code>duct</code> repo,
-        which is how a <code>git mv</code> during this work failed with "not under version
-        control" for a file that plainly is. Worth deleting.
-      </p>
     </div>
   </section>
 
@@ -778,10 +970,12 @@
 
   <footer>
     <p>
-      Duct · engineering · UI review, 1 September 2026. The counts in <em>What I measured</em>
-      describe <code>app/src</code> at <code>c612ad4</code> — the state <em>before</em> the
-      fixes, so they read as the case for making them rather than as a description of the
-      code today. The seven items in <em>What I would do next</em> are all still open.
+      Duct · engineering · UI review, 1 September 2026. The table in <em>What I measured</em>
+      describes <code>app/src</code> at <code>c612ad4</code> — the state <em>before</em> the
+      fixes, so it reads as the case for making them rather than as a description of the code
+      today; the before/after figures at the top and <em>What I changed</em> carry the
+      current state. Every change was made against a passing production build, and the
+      <code>globals.css</code> split was verified by comparing emitted CSS byte-for-byte.
     </p>
   </footer>
 
