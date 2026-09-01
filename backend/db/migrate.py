@@ -70,7 +70,29 @@ LEGACY_BASELINE_REVISION = "b6d2f8a4c1e7"
 
 # Present in every schema since long before the baseline, so its existence is a
 # reliable "this database has been used" signal.
+#
+# Deliberately a named table rather than "are there any tables at all":
+# `agents/core/checkpoint.py` calls LangGraph's `setup()` at startup, which
+# creates its own tables in this same database. A fresh install must still be
+# recognised as fresh after that has happened.
 _SENTINEL_TABLE = "users"
+
+# Tables LangGraph's checkpointer creates and migrates itself
+# (`agents/core/checkpoint.py`). They live in the same database as Duct's own
+# schema but are NOT on `SQLModel.metadata`, so `alembic revision --autogenerate`
+# sees them as orphans and proposes `op.drop_table` for each one. `alembic/env.py`
+# filters them out with this set.
+#
+# Not managed by Alembic on purpose: LangGraph versions its own schema across
+# releases, and a Duct revision pinning their shape would fight that on the next
+# upgrade. Postgres uses the first four; SQLite uses `checkpoints` and `writes`.
+LANGGRAPH_TABLES: frozenset[str] = frozenset({
+    "checkpoints",
+    "checkpoint_blobs",
+    "checkpoint_writes",
+    "checkpoint_migrations",
+    "writes",
+})
 
 
 def _alembic_root() -> Path:

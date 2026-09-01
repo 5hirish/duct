@@ -44,9 +44,15 @@ from uuid import UUID, uuid4
 
 from deepagents import FilesystemMiddleware, create_deep_agent
 from deepagents.backends import StateBackend
-from langchain.agents.middleware import TodoListMiddleware
-from langgraph.checkpoint.memory import InMemorySaver
+from langchain.agents.middleware import (
+    ClearToolUsesEdit,
+    ContextEditingMiddleware,
+    ModelCallLimitMiddleware,
+    TodoListMiddleware,
+    ToolCallLimitMiddleware,
+)
 
+from agents.core.checkpoint import get_checkpointer
 from agents.core.events import AgentEvent, AgentStep, StepStatus
 from agents.core.connector_tools import build_connector_tools_lc
 from agents.core.lc import build_ask_user_tool, resolve_chat_model, stream_agent
@@ -72,6 +78,39 @@ logger = logging.getLogger(__name__)
 # plans, recalls, asks and re-plans — but finite, so a pathological loop ends as a
 # failed turn the user can see rather than an unbounded spend.
 RECURSION_LIMIT = 60
+
+# Runaway guards, not budgets. `RECURSION_LIMIT` caps LangGraph *supersteps*,
+# which is a graph-shape ceiling, not a spend one: a turn can stay well inside
+# it and still make far more model calls than any real analysis needs. These
+# two count the things that actually cost money.
+#
+# `exit_behavior="end"` on the model limit ends the turn with an AI message
+# saying so, which the existing stream renders like any other reply — a
+# truncated brief the user can read and re-ask beats a 500. The tool limit uses
+# "continue": the offending tool is refused with an error the model can react
+# to, while the rest of the turn proceeds.
+#
+# Per *run* means one user turn; per *thread* means the whole conversation,
+# which is what makes these meaningful now that a thread survives a restart.
+MODEL_CALLS_PER_RUN = 60
+MODEL_CALLS_PER_THREAD = 400
+TOOL_CALLS_PER_RUN = 120
+TOOL_CALLS_PER_THREAD = 600
+
+# Prune old tool results at this many tokens, keeping the most recent few.
+#
+# Must stay strictly below deepagents' summarization trigger or the cheap pass
+# stops running — see the ContextEditingMiddleware comment in build_agent for
+# why that is a threshold relationship and not an ordering one. Summarization
+# fires at 0.85 of the model's window, or a flat 170k for a model with no
+# profile, so 170k is the ceiling this has to clear on the smallest window Duct
+# supports. `tests/test_insights_middleware.py` asserts it.
+TOOL_RESULT_PRUNE_TRIGGER = 120_000
+TOOL_RESULTS_KEPT = 5
+
+# The lowest summarization trigger deepagents will pick: its no-profile default,
+# which is also 0.85 × a 200k window. The prune trigger must stay under it.
+SUMMARIZATION_FLOOR_TOKENS = 170_000
 
 # The scratch-space verbs the agent gets, and the one it does not.
 #
@@ -258,9 +297,20 @@ class AutonomousInsightsRunner:
                 )
             )
 
+        # One backend for the whole agent. `create_deep_agent` defaults to its
+        # own `StateBackend()` when none is passed, which left this runner with
+        # two instances — the one below for `FilesystemMiddleware` and an
+        # internal one the summarization middleware offloads evicted history to.
+        # They read the same graph-state key so nothing was broken, but passing
+        # one instance makes it explicit that the offloaded transcript
+        # (`/conversation_history/*.md`) is reachable by the `read_file` tool
+        # this agent actually mounts. Still virtual: state, not disk.
+        backend = StateBackend()
+
         return create_deep_agent(
             model=llm,
             tools=tools,
+            backend=backend,
             # Integrity checking runs in its own context: the analyst is looking
             # for what matters, the verifier for what is wrong with the data, and
             # mixing the two costs the analyst its whole window before it writes
@@ -281,12 +331,56 @@ class AutonomousInsightsRunner:
                 # FILESYSTEM_TOOLS. StateBackend keeps the filesystem virtual:
                 # it lives in graph state, so `read_file` cannot reach Duct's
                 # source, the host, or anything outside this run's scratch space.
-                FilesystemMiddleware(backend=StateBackend(), tools=list(FILESYSTEM_TOOLS)),
+                FilesystemMiddleware(backend=backend, tools=list(FILESYSTEM_TOOLS)),
+                # Prune stale tool results so an LLM compaction is the second
+                # response to a filling window, not the first. This agent's
+                # tools return whole GA4/Ads/Mixpanel payloads, so a long run's
+                # context is mostly *old tool output* — the cheapest thing in it
+                # to drop, and the least missed once a finding has been written
+                # down.
+                #
+                # Ordering here is by threshold, not by position. deepagents
+                # mounts SummarizationMiddleware in its base stack and user
+                # middleware always lands after it, so summarization is the
+                # *outer* wrapper and gets the request first. What keeps it from
+                # pre-empting this is its trigger: 0.85 of the model's context
+                # window (or 170k with no profile). Below that it delegates
+                # straight through, and this sees the untouched request — so a
+                # trigger under 120k means pruning gets first crack on every turn
+                # summarization decides not to touch. Raising it above ~145k
+                # would silently invert that on a 200k model.
+                #
+                # `keep` holds the most recent results intact — the ones the
+                # model is still reasoning over. AskUserQuestion is excluded
+                # because a cleared answer reads as the user never having
+                # replied, and the agent asks again.
+                ContextEditingMiddleware(
+                    edits=[
+                        ClearToolUsesEdit(
+                            trigger=TOOL_RESULT_PRUNE_TRIGGER,
+                            keep=TOOL_RESULTS_KEPT,
+                            clear_tool_inputs=False,
+                            exclude_tools=("AskUserQuestion",),
+                        )
+                    ],
+                ),
+                ModelCallLimitMiddleware(
+                    thread_limit=MODEL_CALLS_PER_THREAD,
+                    run_limit=MODEL_CALLS_PER_RUN,
+                    exit_behavior="end",
+                ),
+                ToolCallLimitMiddleware(
+                    thread_limit=TOOL_CALLS_PER_THREAD,
+                    run_limit=TOOL_CALLS_PER_RUN,
+                    exit_behavior="continue",
+                ),
             ],
-            # Continuity across turns. In-process only, like the session
-            # registry it is keyed on; a durable checkpointer is the upgrade
-            # that also unlocks interrupt()-based HITL.
-            checkpointer=InMemorySaver(),
+            # Continuity across turns, now durable: the saver is opened once by
+            # the app lifespan and follows DATABASE_URL (Postgres on Railway,
+            # SQLite in the sidecar), so a follow-up turn survives the redeploy
+            # or restart that used to reset the thread. Falls back to in-memory
+            # when there is no database — see agents/core/checkpoint.py.
+            checkpointer=get_checkpointer(),
         )
 
     # -----------------------------------------------------------------------

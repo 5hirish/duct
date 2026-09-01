@@ -56,6 +56,14 @@ deepagents = "0.7.11"   # exact: 0.x with no stability policy; changes behaviour
 opentelemetry-api = "^1.41"
 reportlab = ">=4.2"
 cloudflare = ">=4.1"
+# Durable conversation state (agents/core/checkpoint.py). Both, not one: the
+# same app serves Postgres on Railway and SQLite in the desktop sidecar, and the
+# checkpointer follows DATABASE_URL rather than forcing a database of its own.
+# Separate distributions from `langgraph` itself, and MIT like it — unlike
+# `langgraph-api` (the Platform server, Elastic-2.0), which Duct does not use:
+# the library runs in-process inside FastAPI, with our own SSE transport.
+langgraph-checkpoint-postgres = "^3.1"
+langgraph-checkpoint-sqlite = "^3.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^9"

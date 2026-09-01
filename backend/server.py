@@ -6,7 +6,7 @@ import asyncio
 import logging
 import sys
 import time
-from contextlib import asynccontextmanager
+from contextlib import AsyncExitStack, asynccontextmanager
 from urllib.parse import urlparse
 
 from fastapi import FastAPI
@@ -194,6 +194,19 @@ async def lifespan(app: FastAPI):
     elif _cfg.init_db_on_startup:
         init_db()
 
+    # Durable conversation state, opened once for the process. Deliberately
+    # after the schema work above: LangGraph's `setup()` creates its own tables
+    # in this same database, and `db/migrate.py` classifies a fresh install by
+    # looking for `users` rather than "any table at all" so the two cannot be
+    # confused. The saver holds a connection pool, which is why it is owned by
+    # the lifespan and not built per session — see agents/core/checkpoint.py.
+    from agents.core.checkpoint import open_checkpointer, set_checkpointer
+
+    checkpoints = AsyncExitStack()
+    set_checkpointer(
+        await checkpoints.enter_async_context(open_checkpointer(_cfg.database_url))
+    )
+
     # Once per server start, not once per import — see the docstring.
     from service.pipeline import log_stale_catalog_warnings
 
@@ -224,6 +237,10 @@ async def lifespan(app: FastAPI):
         for task in pruners:
             task.cancel()
         await asyncio.gather(*pruners, return_exceptions=True)
+        # Last: a still-draining session may write a final checkpoint, so the
+        # pool outlives everything that could use it.
+        set_checkpointer(None)
+        await checkpoints.aclose()
 
 
 _openapi = "/openapi.json" if _cfg.expose_openapi_docs else None

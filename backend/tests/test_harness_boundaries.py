@@ -57,6 +57,11 @@ ADAPTERS: dict[str, str] = {
     #    consumer (insights), per the ports rule.
     "agents/core/lc.py":                    "LangChain adapter: resolve_chat_model + stream_agent",
 
+    # -- Session/state port, second implementation. The durable half of what
+    #    agents/core/session.py does in memory: a LangGraph checkpointer chosen
+    #    from DATABASE_URL, owned by the app lifespan.
+    "agents/core/checkpoint.py":            "LangGraph checkpointer adapter (postgres/sqlite/in-memory)",
+
     # -- Tool binders. Domain logic stays plain; these wrap it per harness.
     "agents/core/connector_tools.py":       "LangChain binder: connector discovery tools",
     "agents/core/memory_tools.py":          "binder pair: build_memory_tools_lc / _sdk",
