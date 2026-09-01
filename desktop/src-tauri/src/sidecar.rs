@@ -180,6 +180,29 @@ fn try_spawn(app: &AppHandle) -> Result<(), String> {
         command.env("GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET", secret);
     }
 
+    // The key the sidecar encrypts stored connector credentials with, minted
+    // into the OS keychain on first run. Sent under its own name rather than as
+    // CREDENTIALS_ENCRYPTION_KEY so it stays a *fallback*: a developer running
+    // this shell against `backend/.env.local` keeps the key already in that
+    // file, and their existing rows keep decrypting. `config.py` applies it
+    // only when nothing else supplied one.
+    //
+    // Failing is not fatal. A Linux box with no Secret Service daemon loses
+    // stored connector credentials for the session — everything else, including
+    // provider keys held in this same absent keychain, was already degraded in
+    // exactly the same way — so the app starts and says why.
+    match crate::credentials_encryption_key() {
+        Ok(key) => {
+            command.env("DUCT_KEYCHAIN_CREDENTIALS_KEY", key);
+        }
+        Err(err) => {
+            eprintln!(
+                "duct: no keychain for the credentials key ({err}). \
+                 Connecting a data source will not persist this session."
+            );
+        }
+    }
+
     // Crash reporting for the bundled backend, only with consent. `local_server`
     // blanks SENTRY_DSN by default on purpose — a laptop is not a deployment —
     // so passing nothing here leaves that default intact. Passing it explicitly

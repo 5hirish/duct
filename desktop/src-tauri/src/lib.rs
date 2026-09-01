@@ -56,6 +56,49 @@ fn describe_keyring_error(err: KeyringError) -> String {
     }
 }
 
+/// Keychain service for the shell's *own* secrets, kept apart from
+/// `KEYCHAIN_SERVICE` so a secret can never collide with a provider named the
+/// same thing.
+const KEYCHAIN_SIDECAR_SERVICE: &str = "ai.getduct.desktop.sidecar";
+const CREDENTIALS_KEY_ACCOUNT: &str = "credentials-encryption-key";
+
+/// The Fernet key the sidecar encrypts stored connector credentials with,
+/// minted on first run and kept in the OS keychain.
+///
+/// Desktop had no way to get one at all: `CREDENTIALS_ENCRYPTION_KEY` is a
+/// server setting, and the frozen bundle deliberately ships no `.env`, so
+/// `service/credentials.py` raised on every encrypt — connecting Google Ads
+/// could complete its OAuth and then fail to persist the refresh token.
+///
+/// The keychain rather than a file beside the database: a key sitting next to
+/// its own ciphertext stops someone reading the file and nobody holding the
+/// disk, and this machine already has a credential store the provider keys use.
+///
+/// **Losing this key makes existing stored credentials undecryptable.** That is
+/// survivable by design — `connector_access` and `service/provider_keys.py`
+/// both treat a failed decrypt as "absent" and degrade to reconnecting — but it
+/// does mean a user who wipes their keychain reconnects their sources.
+pub(crate) fn credentials_encryption_key() -> Result<String, String> {
+    let entry = Entry::new(KEYCHAIN_SIDECAR_SERVICE, CREDENTIALS_KEY_ACCOUNT)
+        .map_err(describe_keyring_error)?;
+
+    match entry.get_password() {
+        Ok(existing) if !existing.trim().is_empty() => return Ok(existing),
+        // An empty stored value is treated as absent and re-minted: it can only
+        // come from a half-finished write, and returning it would hand the
+        // sidecar a key Fernet rejects.
+        Ok(_) | Err(KeyringError::NoEntry) => {}
+        Err(e) => return Err(describe_keyring_error(e)),
+    }
+
+    let mut bytes = [0u8; 32];
+    getrandom::fill(&mut bytes).map_err(|e| format!("could not gather randomness: {e}"))?;
+    // Fernet keys are url-safe base64 of exactly 32 bytes, padding included.
+    let key = base64::Engine::encode(&base64::engine::general_purpose::URL_SAFE, bytes);
+    entry.set_password(&key).map_err(describe_keyring_error)?;
+    Ok(key)
+}
+
 /// Read a stored provider key. Returns "" when none is set.
 #[tauri::command]
 fn get_provider_key(provider: String) -> Result<String, String> {
