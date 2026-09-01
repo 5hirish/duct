@@ -260,6 +260,16 @@ export async function generateReportStream(params, { onEvent, signal } = {}) {
 // ---------------------------------------------------------------------------
 // Unified agent session API  (/api/agents)
 // ---------------------------------------------------------------------------
+//
+// These send the Bearer token. Create reads the caller off the request and
+// stamps them on the session, which is what everything user-scoped downstream
+// keys off — artifact persistence, project memory, the autonomy level the run
+// operates at. Without it the backend saw an anonymous caller and those
+// features silently did nothing (the checks are all `if user_id`). The
+// remaining three carry it because a session belongs to whoever created it.
+//
+// A signed-out caller still works and still gets None: that is the lead-magnet
+// teaser audit, which owns no project and persists nothing.
 
 /** List all available agent types. */
 export async function listAgents() {
@@ -276,7 +286,7 @@ export async function listAgents() {
 export async function createAgentSession(agentType, params) {
   const res = await fetch(`${BASE}/api/agents/${encodeURIComponent(agentType)}/sessions`, {
     method: "POST",
-    headers: backendApiHeaders({ "Content-Type": "application/json" }),
+    headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify(params),
   });
   if (!res.ok) {
@@ -292,7 +302,7 @@ export async function createAgentSession(agentType, params) {
  */
 export async function openAgentStream(agentType, sessionId, { signal } = {}) {
   const url = `${BASE}/api/agents/${encodeURIComponent(agentType)}/sessions/${encodeURIComponent(sessionId)}/stream`;
-  const res = await fetch(url, { headers: backendApiHeaders(), signal });
+  const res = await fetch(url, { headers: backendAuthedHeaders(), signal });
   if (!res.ok) {
     const text = await res.text();
     throw new Error(text || `Stream error ${res.status}`);
@@ -312,7 +322,7 @@ export async function sendAgentMessage(agentType, sessionId, message) {
     `${BASE}/api/agents/${encodeURIComponent(agentType)}/sessions/${encodeURIComponent(sessionId)}/messages`,
     {
       method: "POST",
-      headers: backendApiHeaders({ "Content-Type": "application/json" }),
+      headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify(message),
     }
   );
@@ -324,7 +334,7 @@ export async function sendAgentMessage(agentType, sessionId, message) {
 export async function closeAgentSession(agentType, sessionId) {
   await fetch(
     `${BASE}/api/agents/${encodeURIComponent(agentType)}/sessions/${encodeURIComponent(sessionId)}`,
-    { method: "DELETE", headers: backendApiHeaders() }
+    { method: "DELETE", headers: backendAuthedHeaders() }
   );
 }
 

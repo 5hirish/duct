@@ -213,6 +213,45 @@ async def get_agent(agent_type: str) -> dict:
 # Session lifecycle
 # ---------------------------------------------------------------------------
 
+def _owned_session(session_id: str, agent_type: str, user: User | None):
+    """The session, if this caller may drive it. 404 otherwise.
+
+    A session is in-memory and not always project-scoped, so this is an
+    ownership check rather than the membership check a conversation gets, and
+    it reads whichever handle the creator left:
+
+    - ``user_id`` — set by ``create_session`` from the Bearer token. Must match.
+    - ``project_id`` — the legacy ``/api/content/*/stream`` entry points create
+      sessions directly and never set ``user_id``, so fall back to membership.
+    - neither — an anonymous lead-magnet audit. Nothing in it belongs to
+      anyone, and there is no signed-in caller to compare against.
+
+    Session ids are unguessable, but unguessable is not a permission: an id
+    reaches a log, a shared URL, a Sentry breadcrumb. It should not also be
+    the only thing standing between a stranger and someone else's live agent.
+    """
+    session = get_session(session_id)
+    if not session:
+        raise HTTPException(404, f"Session {session_id!r} not found.")
+    if session.agent_type != agent_type:
+        raise HTTPException(404, f"Session {session_id!r} is not a {agent_type!r} session.")
+
+    owner_id = getattr(session, "user_id", None)
+    if owner_id is not None:
+        if user is None or user.id != owner_id:
+            raise HTTPException(404, f"Session {session_id!r} not found.")
+        return session
+
+    project_id = getattr(session, "project_id", None)
+    if project_id is not None:
+        if user is None:
+            raise HTTPException(404, f"Session {session_id!r} not found.")
+        with next(db_session()) as db:
+            if member_role(project_id, user.id, db) is None:
+                raise HTTPException(404, f"Session {session_id!r} not found.")
+    return session
+
+
 @router.post("/{agent_type}/sessions")
 async def create_session(
     agent_type: str,
@@ -258,13 +297,13 @@ async def create_session(
 
 
 @router.get("/{agent_type}/sessions/{session_id}/stream")
-async def stream_session(agent_type: str, session_id: str) -> StreamingResponse:
+async def stream_session(
+    agent_type: str,
+    session_id: str,
+    user: User | None = Depends(get_current_user_optional),
+) -> StreamingResponse:
     """SSE stream for an active session. Stays open for the session lifetime."""
-    session = get_session(session_id)
-    if not session:
-        raise HTTPException(404, f"Session {session_id!r} not found.")
-    if session.agent_type != agent_type:
-        raise HTTPException(404, f"Session {session_id!r} is not a {agent_type!r} session.")
+    session = _owned_session(session_id, agent_type, user)
 
     event_queue: asyncio.Queue = session.event_queue  # type: ignore[assignment]
 
@@ -327,17 +366,18 @@ class AgentMessage(BaseModel):
 
 
 @router.post("/{agent_type}/sessions/{session_id}/messages")
-async def send_message(agent_type: str, session_id: str, msg: AgentMessage) -> dict:
+async def send_message(
+    agent_type: str,
+    session_id: str,
+    msg: AgentMessage,
+    user: User | None = Depends(get_current_user_optional),
+) -> dict:
     """Send a message into an active session.
 
     type="chat"   — follow-up question or image; queued to the agent's chat_queue.
     type="answer" — answer to a pending AskUserQuestion; resolves the answer_future.
     """
-    session = get_session(session_id)
-    if not session:
-        raise HTTPException(404, f"Session {session_id!r} not found.")
-    if session.agent_type != agent_type:
-        raise HTTPException(404, f"Session {session_id!r} is not a {agent_type!r} session.")
+    session = _owned_session(session_id, agent_type, user)
 
     # A user message (chat or answer) is unambiguous activity — keep the session
     # off the stale list while a human is interacting with it.
@@ -489,13 +529,13 @@ def _content_context_xml(session: Any) -> str:
 # ---------------------------------------------------------------------------
 
 @router.get("/{agent_type}/sessions/{session_id}")
-async def get_session_state(agent_type: str, session_id: str) -> dict:
+async def get_session_state(
+    agent_type: str,
+    session_id: str,
+    user: User | None = Depends(get_current_user_optional),
+) -> dict:
     """Return session metadata and available report versions."""
-    session = get_session(session_id)
-    if not session:
-        raise HTTPException(404, f"Session {session_id!r} not found.")
-    if session.agent_type != agent_type:
-        raise HTTPException(404, f"Session {session_id!r} is not a {agent_type!r} session.")
+    session = _owned_session(session_id, agent_type, user)
 
     versions = [
         {
@@ -514,8 +554,22 @@ async def get_session_state(agent_type: str, session_id: str) -> dict:
 
 
 @router.delete("/{agent_type}/sessions/{session_id}")
-async def delete_session(agent_type: str, session_id: str) -> dict:
-    """Close a session, free its resources, and consolidate what it established."""
+async def delete_session(
+    agent_type: str,
+    session_id: str,
+    user: User | None = Depends(get_current_user_optional),
+) -> dict:
+    """Close a session, free its resources, and consolidate what it established.
+
+    Idempotent and uniform, like the content route: closing an id that has
+    already gone is not an error, and a session the caller does not own is
+    quietly left alone rather than 404'd — a teardown call should not double as
+    a way to find out whose sessions are live.
+    """
+    try:
+        _owned_session(session_id, agent_type, user)
+    except HTTPException:
+        return {"status": "ok"}
     _close_and_consolidate(session_id)
     return {"status": "ok"}
 
@@ -943,7 +997,12 @@ async def _start_seo_audit(session_id: str, body: dict, emit_fn: Any) -> None:
         # first token fast regardless of what the request asked for.
         adaptive_thinking=req.adaptive_thinking and not req.lead_magnet,
     )
-    # The summarizer runs on the Agent SDK, so only an Anthropic key works there.
+    # Narrower than it looks: this is now only for ArtifactPersister's digest,
+    # which is the last summariser still pinned to the Agent SDK
+    # (service/artifact_store.py). Conversation compaction no longer comes
+    # through here — it takes the run's own provider below, so a Gemini /
+    # OpenAI / OpenRouter customer gets compaction instead of silently getting
+    # none. See agents/content/persistence.summarize_conversation.
     summary_key = api_key if getattr(provider, "value", str(provider)) == "anthropic" else ""
 
     session = get_session(session_id)
