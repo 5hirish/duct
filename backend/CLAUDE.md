@@ -49,12 +49,19 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   the browser as `NEXT_PUBLIC_DUCT_API_KEY`, so it proves "this is the Duct app"
   and never "this caller owns that row". A router mounted behind it *looks*
   protected and is not. Any endpoint that reads or writes a project-scoped row
-  therefore needs `get_current_user` **plus** `get_project_for_user` on top —
-  `routes/artifacts.py` is the reference, and `_conversation_for_user` in
-  `routes/agents.py` is the same gate in one helper. 404 (not 403) for a
-  non-member, so the reply is not an oracle for which ids exist. A listing takes
-  its scope from the caller (`accessible_projects`), never from an unfiltered
-  query parameter.
+  therefore needs `get_current_user` **plus** a membership check on top:
+
+  - a project named in the request → `get_project_for_user`
+  - a row addressed by its own id → `get_project_row_for_user`, which reads the
+    project off the **row**. An endpoint that takes a row id and trusts a
+    `project_id` from the request is letting the caller vouch for themselves.
+  - a listing → scope it to the caller (`accessible_projects`), never to an
+    unfiltered query parameter.
+
+  404, not 403, for a non-member, so the reply is not an oracle for which ids
+  exist. `routes/artifacts.py` is the reference; `routes/content.py` declares
+  `get_current_user` **on the router** so endpoint 45 cannot be written without
+  it, and `tests/test_content_access.py` asserts that property directly.
 - **Email:** `service/email/` — Resend when `RESEND_API_KEY` is set, otherwise a logging console backend so dev/CI need no vendor account.
 - **Observability:** Sentry error tracking; optional OpenTelemetry tracing (wired via Claude Agent SDK).
 - **Hosting:** Railway — auto-deploys from `main` via GitHub integration; `railway.json` defines Railpack build + uvicorn start.

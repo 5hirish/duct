@@ -56,7 +56,14 @@ function backendApiHeaders(extra = {}) {
   return headers;
 }
 
-function backendAuthedHeaders(extra = {}) {
+/**
+ * Headers that prove both halves: the X-API-Key says "this is the Duct app",
+ * the Bearer token says which user is asking. Anything reading or writing
+ * project-scoped data needs the second — the key is public, it ships in this
+ * bundle. Exported so `contentApi` and friends share this one definition
+ * rather than each keeping a key-only copy.
+ */
+export function backendAuthedHeaders(extra = {}) {
   const headers = backendApiHeaders(extra);
   const token = authToken();
   if (token) headers["Authorization"] = `Bearer ${token}`;

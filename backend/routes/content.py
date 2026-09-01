@@ -76,13 +76,24 @@ from models.content import (
     ContentPost,
     ContentSocialLink,
 )
+from models.auth import User
 from models.project import Project
 from service import storage
+from service.auth import get_current_user
+from service.membership import get_project_for_user, get_project_row_for_user
 from utils.dates import now_iso
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(tags=["content"])
+# Authentication is declared on the router, not on 44 individual endpoints —
+# the failure mode being closed off here is an endpoint that simply forgets. It
+# is only half the job: `validate_api_key` upstream says "this is the Duct app"
+# and this says "and a real user is asking", but neither says *which* user, and
+# every row below belongs to a project. The membership gate is what makes that
+# call, via `_project_for_user` (a project named in the request) and
+# `_row_for_user` / `_session_for_user` (a project derived from the thing being
+# touched). See backend/CLAUDE.md.
+router = APIRouter(tags=["content"], dependencies=[Depends(get_current_user)])
 
 
 # ---------------------------------------------------------------------------
@@ -150,11 +161,36 @@ async def _stream_queue(
             yield ": ping\n\n"
 
 
-def _project_or_404(db: Session, project_id: UUID) -> Project:
-    proj = db.get(Project, project_id)
-    if proj is None:
-        raise HTTPException(404, f"Project {project_id} not found")
-    return proj
+def _project_for_user(db: Session, user: User, project_id: UUID) -> Project:
+    """A project the caller belongs to, or 404.
+
+    Replaces a bare existence check. Membership is the access model here (see
+    service/membership.py), and a non-member gets the same 404 a made-up id
+    does so the reply is not an oracle for which projects are real.
+    """
+    return get_project_for_user(project_id, user, db)
+
+
+def _row_for_user(db: Session, user: User, model, row_id: UUID, label: str):
+    """A project-scoped content row the caller may act on, or 404.
+
+    Every table in this module carries a project_id, so one helper covers
+    plans, posts, formats, avatars and assets alike.
+    """
+    return get_project_row_for_user(db, user, model, row_id, label=label)
+
+
+def _session_for_user(db: Session, user: User, session_id: str):
+    """A live drafting session the caller may drive, or 404.
+
+    Session ids are unguessable, but unguessable is not a permission: the
+    session knows its project, so that is what gets checked.
+    """
+    session = get_session(session_id)
+    if not session:
+        raise HTTPException(404, "Session not found or expired")
+    get_project_for_user(session.project_id, user, db)
+    return session
 
 
 # ---------------------------------------------------------------------------
@@ -203,10 +239,15 @@ async def _run_plan_worker(
 
 
 @router.post("/content/plan/stream")
-async def run_plan_stream(req: PlanRequest) -> StreamingResponse:
+async def run_plan_stream(
+    req: PlanRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> StreamingResponse:
     """Start a 30-day plan synthesis session. Returns an SSE stream covering
     the full session lifetime (continues after PIPELINE_FINISHED so the user
     can chat with the agent to refine the plan)."""
+    _project_for_user(db, user, req.project_id)
     session_id = str(uuid.uuid4())
     _session_created_at[session_id] = time.monotonic()
     create_plan_session(session_id, req.project_id)
@@ -321,8 +362,13 @@ async def _run_draft_worker(
 
 
 @router.post("/content/post/stream")
-async def run_post_stream(req: DraftPostRequest) -> StreamingResponse:
+async def run_post_stream(
+    req: DraftPostRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> StreamingResponse:
     """Start a single-post draft session. SSE stream for the lifetime."""
+    _project_for_user(db, user, req.project_id)
     session_id = str(uuid.uuid4())
     _session_created_at[session_id] = time.monotonic()
     create_draft_session(session_id, req.project_id, plan_id=req.plan_id)
@@ -374,7 +420,13 @@ async def run_post_stream(req: DraftPostRequest) -> StreamingResponse:
 
 
 @router.post("/content/answer/{session_id}")
-async def submit_content_answers(session_id: str, req: ContentAnswerRequest) -> dict:
+async def submit_content_answers(
+    session_id: str,
+    req: ContentAnswerRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> dict:
+    _session_for_user(db, user, session_id)
     """Resolve a pending AskUserQuestion in the content session."""
     session = get_session(session_id)
     if not session:
@@ -390,7 +442,13 @@ async def submit_content_answers(session_id: str, req: ContentAnswerRequest) -> 
 
 
 @router.post("/content/chat/{session_id}")
-async def send_content_chat_message(session_id: str, req: ContentChatMessage) -> dict:
+async def send_content_chat_message(
+    session_id: str,
+    req: ContentChatMessage,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> dict:
+    _session_for_user(db, user, session_id)
     """Send a follow-up message into an active content session."""
     session = get_session(session_id)
     if not session:
@@ -407,7 +465,13 @@ class SlideRenderResult(BaseModel):
 
 
 @router.post("/content/slide-render/{session_id}")
-async def submit_slide_render(session_id: str, req: SlideRenderResult) -> dict:
+async def submit_slide_render(
+    session_id: str,
+    req: SlideRenderResult,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> dict:
+    _session_for_user(db, user, session_id)
     """Resolve a pending render_slide request — the browser rasterized the slide
     and POSTs the PNG back here; we hand the bytes to the waiting agent tool.
     An empty image_base64 signals a browser-side failure (resolves to a clean
@@ -465,6 +529,7 @@ def get_slide_render_doc(
     session_id: str,
     post_id: UUID,
     slide_id: str,
+    user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ) -> dict:
     """Self-contained 1080×1920 single-slide HTML (images inlined as base64) for
@@ -473,13 +538,13 @@ def get_slide_render_doc(
     from agents.content.schema import Slide
     from agents.content.templates import render_slides_html
 
-    # Scope to the session's project — a valid session can only rasterize its
-    # own project's posts (defence-in-depth; content routes lack per-user auth).
-    session = get_session(session_id)
-    if not session:
-        raise HTTPException(404, "Session not found or expired")
-    post = db.get(ContentPost, post_id)
-    if post is None or post.project_id != session.project_id:
+    # Two gates, not one. The caller must belong to the session's project, and
+    # the post must belong to that same session — so a member of project A
+    # cannot rasterize project B's slides, and cannot use their own session to
+    # reach a post outside it either.
+    session = _session_for_user(db, user, session_id)
+    post = _row_for_user(db, user, ContentPost, post_id, "Post")
+    if post.project_id != session.project_id:
         raise HTTPException(404, "Post not found")
     raw = next(
         (s for s in (post.slides or []) if isinstance(s, dict) and s.get("slide_id") == slide_id),
@@ -493,8 +558,26 @@ def get_slide_render_doc(
 
 
 @router.delete("/content/session/{session_id}")
-async def close_content_session(session_id: str) -> dict:
-    close_session(session_id)
+async def close_content_session(
+    session_id: str,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> dict:
+    """Close a drafting session. Idempotent, and deliberately uniform.
+
+    Always answers ok. Closing an id that never existed is not an error — a
+    client tearing down should not have to know whether it won the race — and
+    answering differently for "not yours" would hand that same client a way to
+    probe which sessions are live. So a session the caller does not belong to
+    is simply not closed, and its prune timestamp is left alone.
+    """
+    session = get_session(session_id)
+    if session is not None:
+        try:
+            get_project_for_user(session.project_id, user, db)
+        except HTTPException:
+            return {"status": "ok"}
+        close_session(session_id)
     _session_created_at.pop(session_id, None)
     return {"status": "ok"}
 
@@ -556,18 +639,20 @@ def _brand_out(p: Project) -> BrandContextOut:
 @router.get("/content/brand")
 def get_brand_context(
     project_id: UUID,
+    user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ) -> BrandContextOut:
-    return _brand_out(_project_or_404(db, project_id))
+    return _brand_out(_project_for_user(db, user, project_id))
 
 
 @router.put("/content/brand")
 def put_brand_context(
     project_id: UUID,
     body: BrandContextIn,
+    user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ) -> BrandContextOut:
-    proj = _project_or_404(db, project_id)
+    proj = _project_for_user(db, user, project_id)
     if body.content_brand is not None:
         proj.content_brand = body.content_brand
     if body.content_pillars is not None:
@@ -646,7 +731,12 @@ def _plan_out(p: ContentPlan, posts: list[ContentPost] | None = None) -> PlanOut
 
 
 @router.get("/content/plans")
-def list_plans(project_id: UUID, db: Session = Depends(db_session)) -> list[PlanOut]:
+def list_plans(
+    project_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> list[PlanOut]:
+    _project_for_user(db, user, project_id)
     rows = db.execute(
         select(ContentPlan)
         .where(ContentPlan.project_id == project_id)
@@ -656,10 +746,12 @@ def list_plans(project_id: UUID, db: Session = Depends(db_session)) -> list[Plan
 
 
 @router.get("/content/plans/{plan_id}")
-def get_plan(plan_id: UUID, db: Session = Depends(db_session)) -> PlanOut:
-    plan = db.get(ContentPlan, plan_id)
-    if plan is None:
-        raise HTTPException(404, "Plan not found")
+def get_plan(
+    plan_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> PlanOut:
+    plan = _row_for_user(db, user, ContentPlan, plan_id, "Plan")
     posts = db.execute(
         select(ContentPost).where(ContentPost.plan_id == plan_id).order_by(ContentPost.created_at)
     ).scalars().all()
@@ -667,8 +759,12 @@ def get_plan(plan_id: UUID, db: Session = Depends(db_session)) -> PlanOut:
 
 
 @router.post("/content/plans", status_code=201)
-def create_plan(body: PlanIn, db: Session = Depends(db_session)) -> PlanOut:
-    _project_or_404(db, body.project_id)
+def create_plan(
+    body: PlanIn,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> PlanOut:
+    _project_for_user(db, user, body.project_id)
     start = None
     if body.start_date:
         try:
@@ -698,12 +794,11 @@ def patch_plan_day(
     plan_id: UUID,
     index: int,
     body: DayPatch,
+    user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ) -> PlanOut:
     """Shallow-merge a single day's fields by its 0-based position in days[]."""
-    plan = db.get(ContentPlan, plan_id)
-    if plan is None:
-        raise HTTPException(404, "Plan not found")
+    plan = _row_for_user(db, user, ContentPlan, plan_id, "Plan")
     days = list(plan.days or [])
     idx = index
     if idx < 0 or idx >= len(days):
@@ -721,10 +816,12 @@ def patch_plan_day(
 
 
 @router.delete("/content/plans/{plan_id}")
-def delete_plan(plan_id: UUID, db: Session = Depends(db_session)) -> dict:
-    plan = db.get(ContentPlan, plan_id)
-    if plan is None:
-        raise HTTPException(404, "Plan not found")
+def delete_plan(
+    plan_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> dict:
+    plan = _row_for_user(db, user, ContentPlan, plan_id, "Plan")
     db.delete(plan)
     db.commit()
     return {"status": "ok"}
@@ -979,8 +1076,10 @@ def list_posts(
     project_id: UUID,
     plan_id: UUID | None = None,
     status: str | None = None,
+    user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ) -> list[PostOut]:
+    _project_for_user(db, user, project_id)
     stmt = select(ContentPost).where(ContentPost.project_id == project_id)
     if plan_id is not None:
         stmt = stmt.where(ContentPost.plan_id == plan_id)
@@ -1001,10 +1100,12 @@ def list_posts(
 
 
 @router.get("/content/posts/{post_id}")
-def get_post(post_id: UUID, db: Session = Depends(db_session)) -> PostOut:
-    post = db.get(ContentPost, post_id)
-    if post is None:
-        raise HTTPException(404, "Post not found")
+def get_post(
+    post_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> PostOut:
+    post = _row_for_user(db, user, ContentPost, post_id, "Post")
     # Best-effort: the active-conversation lookup drives "click post → resume",
     # but a persistence-table issue (e.g. migration not yet applied) must never
     # break viewing a post — degrade to "no conversation" instead.
@@ -1027,8 +1128,12 @@ def get_post(post_id: UUID, db: Session = Depends(db_session)) -> PostOut:
 
 
 @router.post("/content/posts", status_code=201)
-def create_post(body: PostIn, db: Session = Depends(db_session)) -> PostOut:
-    _project_or_404(db, body.project_id)
+def create_post(
+    body: PostIn,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> PostOut:
+    _project_for_user(db, user, body.project_id)
     # Upsert by (project_id, post_dir_slug) so the route is idempotent.
     existing = db.execute(
         select(ContentPost).where(
@@ -1067,10 +1172,13 @@ def create_post(body: PostIn, db: Session = Depends(db_session)) -> PostOut:
 
 
 @router.patch("/content/posts/{post_id}")
-def patch_post(post_id: UUID, body: PostPatch, db: Session = Depends(db_session)) -> PostOut:
-    post = db.get(ContentPost, post_id)
-    if post is None:
-        raise HTTPException(404, "Post not found")
+def patch_post(
+    post_id: UUID,
+    body: PostPatch,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> PostOut:
+    post = _row_for_user(db, user, ContentPost, post_id, "Post")
     patch = body.model_dump(exclude_unset=True)
     if "platforms" in patch and patch["platforms"] is not None:
         patch["platforms"] = [
@@ -1100,12 +1208,11 @@ def patch_post(post_id: UUID, body: PostPatch, db: Session = Depends(db_session)
 @router.post("/content/posts/{post_id}/mark-posted")
 def mark_post_posted(
     post_id: UUID,
+    user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
     tiktok_url: str | None = None,
 ) -> PostOut:
-    post = db.get(ContentPost, post_id)
-    if post is None:
-        raise HTTPException(404, "Post not found")
+    post = _row_for_user(db, user, ContentPost, post_id, "Post")
     post.status = "posted"
     post.posted_at = datetime.now(timezone.utc)
     if tiktok_url:
@@ -1124,6 +1231,7 @@ class MetricsLog(BaseModel):
 def log_post_metrics(
     post_id: UUID,
     body: MetricsLog,
+    user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ) -> PostOut:
     """Append a snapshot to daily_perf + merge into perf (last-write-wins).
@@ -1131,9 +1239,7 @@ def log_post_metrics(
     Phase 4 will wire this into PostBridge sync jobs. For now it accepts any
     JSON-serialisable body and persists it as-is.
     """
-    post = db.get(ContentPost, post_id)
-    if post is None:
-        raise HTTPException(404, "Post not found")
+    post = _row_for_user(db, user, ContentPost, post_id, "Post")
     metrics = body.model_dump()
     metrics["recorded_at"] = datetime.now(timezone.utc).isoformat()
     post.daily_perf = (post.daily_perf or []) + [metrics]
@@ -1148,10 +1254,12 @@ def log_post_metrics(
 
 
 @router.delete("/content/posts/{post_id}")
-def delete_post(post_id: UUID, db: Session = Depends(db_session)) -> dict:
-    post = db.get(ContentPost, post_id)
-    if post is None:
-        raise HTTPException(404, "Post not found")
+def delete_post(
+    post_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> dict:
+    post = _row_for_user(db, user, ContentPost, post_id, "Post")
     db.delete(post)
     db.commit()
     return {"status": "ok"}
@@ -1207,7 +1315,12 @@ def _format_out(f: ContentFormat) -> FormatOut:
 
 
 @router.get("/content/formats")
-def list_formats(project_id: UUID, db: Session = Depends(db_session)) -> list[FormatOut]:
+def list_formats(
+    project_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> list[FormatOut]:
+    _project_for_user(db, user, project_id)
     rows = db.execute(
         select(ContentFormat).where(ContentFormat.project_id == project_id).order_by(ContentFormat.slug)
     ).scalars().all()
@@ -1215,8 +1328,12 @@ def list_formats(project_id: UUID, db: Session = Depends(db_session)) -> list[Fo
 
 
 @router.post("/content/formats", status_code=201)
-def upsert_format(body: FormatIn, db: Session = Depends(db_session)) -> FormatOut:
-    _project_or_404(db, body.project_id)
+def upsert_format(
+    body: FormatIn,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> FormatOut:
+    _project_for_user(db, user, body.project_id)
     existing = db.execute(
         select(ContentFormat).where(
             ContentFormat.project_id == body.project_id,
@@ -1239,10 +1356,13 @@ def upsert_format(body: FormatIn, db: Session = Depends(db_session)) -> FormatOu
 
 
 @router.patch("/content/formats/{format_id}")
-def patch_format(format_id: UUID, body: FormatIn, db: Session = Depends(db_session)) -> FormatOut:
-    row = db.get(ContentFormat, format_id)
-    if row is None:
-        raise HTTPException(404, "Format not found")
+def patch_format(
+    format_id: UUID,
+    body: FormatIn,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> FormatOut:
+    row = _row_for_user(db, user, ContentFormat, format_id, "Format")
     row.slug = body.slug or row.slug
     row.name = body.name or row.name
     if body.data:
@@ -1255,10 +1375,12 @@ def patch_format(format_id: UUID, body: FormatIn, db: Session = Depends(db_sessi
 
 
 @router.delete("/content/formats/{format_id}")
-def delete_format(format_id: UUID, db: Session = Depends(db_session)) -> dict:
-    row = db.get(ContentFormat, format_id)
-    if row is None:
-        raise HTTPException(404, "Format not found")
+def delete_format(
+    format_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> dict:
+    row = _row_for_user(db, user, ContentFormat, format_id, "Format")
     db.delete(row)
     db.commit()
     return {"status": "ok"}
@@ -1298,7 +1420,12 @@ def _avatar_out(a: ContentAvatar) -> AvatarOut:
 
 
 @router.get("/content/avatars")
-def list_avatars(project_id: UUID, db: Session = Depends(db_session)) -> list[AvatarOut]:
+def list_avatars(
+    project_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> list[AvatarOut]:
+    _project_for_user(db, user, project_id)
     rows = db.execute(
         select(ContentAvatar).where(ContentAvatar.project_id == project_id).order_by(ContentAvatar.name)
     ).scalars().all()
@@ -1306,8 +1433,12 @@ def list_avatars(project_id: UUID, db: Session = Depends(db_session)) -> list[Av
 
 
 @router.post("/content/avatars", status_code=201)
-def create_avatar(body: AvatarIn, db: Session = Depends(db_session)) -> AvatarOut:
-    _project_or_404(db, body.project_id)
+def create_avatar(
+    body: AvatarIn,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> AvatarOut:
+    _project_for_user(db, user, body.project_id)
     row = ContentAvatar(**body.model_dump())
     db.add(row)
     db.commit()
@@ -1316,10 +1447,13 @@ def create_avatar(body: AvatarIn, db: Session = Depends(db_session)) -> AvatarOu
 
 
 @router.patch("/content/avatars/{avatar_id}")
-def patch_avatar(avatar_id: UUID, body: AvatarIn, db: Session = Depends(db_session)) -> AvatarOut:
-    row = db.get(ContentAvatar, avatar_id)
-    if row is None:
-        raise HTTPException(404, "Avatar not found")
+def patch_avatar(
+    avatar_id: UUID,
+    body: AvatarIn,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> AvatarOut:
+    row = _row_for_user(db, user, ContentAvatar, avatar_id, "Avatar")
     if body.name:
         row.name = body.name
     if body.data:
@@ -1332,10 +1466,12 @@ def patch_avatar(avatar_id: UUID, body: AvatarIn, db: Session = Depends(db_sessi
 
 
 @router.delete("/content/avatars/{avatar_id}")
-def delete_avatar(avatar_id: UUID, db: Session = Depends(db_session)) -> dict:
-    row = db.get(ContentAvatar, avatar_id)
-    if row is None:
-        raise HTTPException(404, "Avatar not found")
+def delete_avatar(
+    avatar_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> dict:
+    row = _row_for_user(db, user, ContentAvatar, avatar_id, "Avatar")
     db.delete(row)
     db.commit()
     return {"status": "ok"}
@@ -1389,6 +1525,7 @@ async def upload_asset(
     project_id: UUID = Form(...),
     asset_type: str  = Form(...),
     file: UploadFile = File(...),
+    user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ) -> ContentAssetOut:
     """Upload a logo, background, or reference image. Writes to
@@ -1396,7 +1533,7 @@ async def upload_asset(
     inserts a content_assets row pointing at the public URL."""
     if asset_type not in _ALLOWED_ASSET_TYPES:
         raise HTTPException(400, f"asset_type must be one of {sorted(_ALLOWED_ASSET_TYPES)}")
-    _project_or_404(db, project_id)
+    _project_for_user(db, user, project_id)
 
     mime = (file.content_type or "").lower()
     if mime not in _ALLOWED_MIME:
@@ -1436,8 +1573,10 @@ def list_assets(
     project_id: UUID,
     asset_type: str | None = None,
     post_id:    UUID | None = None,
+    user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ) -> list[ContentAssetOut]:
+    _project_for_user(db, user, project_id)
     stmt = select(ContentAsset).where(ContentAsset.project_id == project_id)
     if asset_type:
         stmt = stmt.where(ContentAsset.asset_type == asset_type)
@@ -1449,10 +1588,12 @@ def list_assets(
 
 
 @router.delete("/content/assets/{asset_id}")
-def delete_asset(asset_id: UUID, db: Session = Depends(db_session)) -> dict:
-    asset = db.get(ContentAsset, asset_id)
-    if asset is None:
-        raise HTTPException(404, "Asset not found")
+def delete_asset(
+    asset_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> dict:
+    asset = _row_for_user(db, user, ContentAsset, asset_id, "Asset")
     if asset.url.startswith("/uploads/"):
         cfg = get_configs()
         base = Path(cfg.uploads_dir or "/app/uploads")
@@ -1494,11 +1635,12 @@ class PublishRequest(BaseModel):
 async def list_social_accounts(
     project_id: UUID,
     platform: str | None = None,
+    user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ) -> list[SocialAccountOut]:
     """List the user's connected PostBridge social accounts."""
     from service.post_bridge import PostBridgeAPIError, client_for_user
-    proj = _project_or_404(db, project_id)
+    proj = _project_for_user(db, user, project_id)
     try:
         client = client_for_user(proj.user_id, db)
     except ValueError as exc:
@@ -1548,10 +1690,11 @@ def _link_out(row: ContentSocialLink) -> LinkedAccountOut:
 @router.get("/content/linked-accounts")
 def list_linked_accounts(
     project_id: UUID,
+    user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ) -> list[LinkedAccountOut]:
     """The social accounts this project has linked."""
-    _project_or_404(db, project_id)
+    _project_for_user(db, user, project_id)
     rows = db.execute(
         select(ContentSocialLink)
         .where(ContentSocialLink.project_id == project_id)
@@ -1563,10 +1706,11 @@ def list_linked_accounts(
 @router.put("/content/linked-accounts")
 def save_linked_accounts(
     body: LinkedAccountsIn,
+    user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ) -> list[LinkedAccountOut]:
     """Replace the project's linked-account set with the supplied list."""
-    _project_or_404(db, body.project_id)
+    _project_for_user(db, user, body.project_id)
     db.execute(
         delete(ContentSocialLink).where(ContentSocialLink.project_id == body.project_id)
     )
@@ -1619,6 +1763,7 @@ class AnalyticsRowOut(BaseModel):
 async def list_content_analytics(
     project_id: UUID,
     refresh: bool = False,
+    user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ) -> list[AnalyticsRowOut]:
     """Per-post analytics for the project, read straight from PostBridge.
@@ -1631,7 +1776,7 @@ async def list_content_analytics(
     """
     from service.post_bridge import PostBridgeAPIError, client_for_user
 
-    proj = _project_or_404(db, project_id)
+    proj = _project_for_user(db, user, project_id)
 
     if not refresh:
         hit = _analytics_cache.get(project_id)
@@ -1730,6 +1875,7 @@ async def list_content_analytics(
 async def publish_post_route(
     post_id: UUID,
     body: PublishRequest,
+    user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ) -> PostOut:
     """Upload each linked asset to PostBridge, then create the post."""
@@ -1739,12 +1885,8 @@ async def publish_post_route(
         client_for_user,
     )
 
-    post = db.get(ContentPost, post_id)
-    if post is None:
-        raise HTTPException(404, "Post not found")
-    proj = db.get(Project, post.project_id)
-    if proj is None:
-        raise HTTPException(404, "Project not found")
+    post = _row_for_user(db, user, ContentPost, post_id, "Post")
+    proj = _project_for_user(db, user, post.project_id)
 
     asset_rows = db.execute(
         select(ContentAsset)
@@ -1817,19 +1959,16 @@ async def publish_post_route(
 @router.post("/content/posts/{post_id}/sync-metrics")
 async def sync_post_metrics(
     post_id: UUID,
+    user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ) -> PostOut:
     """Sync → find post_result → fetch analytics → merge into post.perf."""
     from service.post_bridge import PostBridgeAPIError, client_for_user
 
-    post = db.get(ContentPost, post_id)
-    if post is None:
-        raise HTTPException(404, "Post not found")
+    post = _row_for_user(db, user, ContentPost, post_id, "Post")
     if not post.post_bridge_post_id:
         raise HTTPException(400, "Publish this post first — then we can pull metrics.")
-    proj = db.get(Project, post.project_id)
-    if proj is None:
-        raise HTTPException(404, "Project not found")
+    proj = _project_for_user(db, user, post.project_id)
 
     try:
         client = client_for_user(proj.user_id, db)
@@ -1870,19 +2009,16 @@ async def sync_post_metrics(
 @router.post("/content/posts/{post_id}/sync-daily")
 async def sync_post_daily(
     post_id: UUID,
+    user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ) -> PostOut:
     """Refresh daily_perf snapshots from PostBridge."""
     from service.post_bridge import PostBridgeAPIError, client_for_user
 
-    post = db.get(ContentPost, post_id)
-    if post is None:
-        raise HTTPException(404, "Post not found")
+    post = _row_for_user(db, user, ContentPost, post_id, "Post")
     if not post.post_bridge_post_id:
         raise HTTPException(400, "Publish this post first — then we can pull daily snapshots.")
-    proj = db.get(Project, post.project_id)
-    if proj is None:
-        raise HTTPException(404, "Project not found")
+    proj = _project_for_user(db, user, post.project_id)
 
     try:
         client = client_for_user(proj.user_id, db)
@@ -1986,9 +2122,13 @@ def _apify_client_or_503():
 
 
 @router.post("/content/discover/start")
-async def discover_start(body: DiscoverStartIn, db: Session = Depends(db_session)) -> DiscoverStartOut:
+async def discover_start(
+    body: DiscoverStartIn,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> DiscoverStartOut:
     """Kick off an Apify actor run for TikTok content discovery."""
-    _project_or_404(db, body.project_id)
+    _project_for_user(db, user, body.project_id)
     from service.apify import ApifyAPIError
 
     client = _apify_client_or_503()
@@ -2057,7 +2197,11 @@ async def discover_results(dataset_id: str, limit: int = 200) -> DiscoverResultO
 
 
 @router.post("/content/discover/save", status_code=201)
-def discover_save(body: DiscoverSaveIn, db: Session = Depends(db_session)) -> ContentAssetOut:
+def discover_save(
+    body: DiscoverSaveIn,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> ContentAssetOut:
     """Persist one discovered post as a ContentAsset reference.
 
     No bytes downloaded — we save the metadata + slideshow image URLs in
@@ -2066,7 +2210,7 @@ def discover_save(body: DiscoverSaveIn, db: Session = Depends(db_session)) -> Co
     """
     from service.apify.schema import ScrapedPost
 
-    _project_or_404(db, body.project_id)
+    _project_for_user(db, user, body.project_id)
     try:
         post = ScrapedPost.model_validate(body.post)
     except Exception as exc:  # ValidationError or anything else odd
