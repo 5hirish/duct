@@ -73,7 +73,7 @@ function AppLayoutInner({ children }) {
             }
           >
             <header className="shrink-0 app-header border-b border-border/70 bg-background/85 shadow-sm ring-1 ring-border/40 backdrop-blur-xl supports-[backdrop-filter]:bg-background/70">
-              <div className="@container flex h-full items-center gap-3 px-4">
+              <div className="@container flex h-full w-full items-center gap-3 px-4">
                 <SidebarTrigger className="-ml-1 text-muted-foreground hover:text-foreground" />
                 <div className="h-4 w-px bg-border" aria-hidden />
                 <AppNav />
