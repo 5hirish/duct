@@ -302,6 +302,7 @@ export function ExecutionRequestModal({ open, onClose, services, leadToken, emai
 
             <textarea
               value={note}
+              aria-label="Anything specific (optional)"
               onChange={(e) => setNote(e.target.value)}
               rows={2}
               placeholder="Anything specific? (optional)"

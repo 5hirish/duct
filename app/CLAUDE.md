@@ -102,6 +102,23 @@ the page.
 - Navigation: `lib/navigation`'s `NAV_SECTIONS` is the single source of truth for
   the sidebar and the palette.
 
+**Accessibility.** Desktop keyboard and screen-reader basics, not a full audit.
+
+- Every form control needs an accessible name. A `placeholder` is not one — it
+  disappears on focus and is skipped by some readers. Use a visible `<label>`,
+  or `aria-label` where the design has no room for one.
+- Anything clickable is a `<button>`. A `<div onClick>` cannot be tabbed to or
+  triggered with Enter/Space, and the focus ring comes free with the element.
+  For a whole card, put the button on the title and stretch it with an
+  `after:absolute after:inset-0` pseudo-element — one tab stop, one readable
+  name, and the card stays a container.
+- Live regions are rationed. The agent's phase label (`role="status"`) is the
+  one in each chat shell; streaming tokens and the rotating `PipelineProgress`
+  subtitle are deliberately silent, because announcing them talks over the user.
+- `html { scroll-padding-top: 4rem }` in `styles/base.css` keeps a focused
+  element out from under the sticky header (WCAG 2.2 AA 2.4.11).
+- Decorative icons take `aria-hidden`; an icon-only button takes an `aria-label`.
+
 ## What's not here
 
 - No dedicated auth library (next-auth, Clerk, Supabase)

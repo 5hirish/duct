@@ -320,6 +320,21 @@ const DETAIL_COMPONENTS = {
   [AuditStep.ENRICHING]:     EnrichingDetails,
 };
 
+
+function HeaderRow({ expandable, onToggle, expanded, children }) {
+  const className = `flex w-full items-center gap-2 text-left text-sm ${
+    expandable
+      ? "cursor-pointer rounded-sm transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      : ""
+  }`;
+  if (!expandable) return <div className={className}>{children}</div>;
+  return (
+    <button type="button" onClick={onToggle} aria-expanded={expanded} className={className}>
+      {children}
+    </button>
+  );
+}
+
 function StepRow({ step, expanded, onToggle }) {
   const { step_id, label, status, payload } = step;
   const isRunning    = status === StepStatus.RUNNING;
@@ -330,12 +345,12 @@ function StepRow({ step, expanded, onToggle }) {
 
   return (
     <div>
-      {/* Header row */}
-      <div
-        className={`flex items-center gap-2 text-sm ${canExpand ? "cursor-pointer hover:opacity-80 transition-opacity" : ""}`}
-        onClick={canExpand ? onToggle : undefined}
-        role={canExpand ? "button" : undefined}
-        aria-expanded={canExpand ? expanded : undefined}
+      {/* Header row — a real <button> when it expands, so it is focusable and
+          Enter/Space work; a plain <div> when there is nothing to toggle. */}
+      <HeaderRow
+        expandable={canExpand}
+        onToggle={onToggle}
+        expanded={expanded}
       >
         {/* Status icon */}
         {isRunning ? (
@@ -393,7 +408,7 @@ function StepRow({ step, expanded, onToggle }) {
             ›
           </span>
         )}
-      </div>
+      </HeaderRow>
 
       {/* Progress bar for synthesize */}
       {isSynthesize && isRunning && (

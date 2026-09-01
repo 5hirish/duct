@@ -100,6 +100,7 @@ export default function ContentInput({ onSend, disabled, isStreaming, onStop }) 
           ref={fileRef}
           type="file"
           accept="image/*"
+          aria-label="Attach images"
           multiple
           className="hidden"
           onChange={handleFileChange}
@@ -111,6 +112,7 @@ export default function ContentInput({ onSend, disabled, isStreaming, onStop }) 
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
+          aria-label="Message the content agent"
           disabled={disabled || isStreaming}
           placeholder={
             isStreaming

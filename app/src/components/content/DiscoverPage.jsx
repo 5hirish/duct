@@ -166,6 +166,7 @@ export default function DiscoverPage({ projectId }) {
                   ))}
                   <input
                     value={tagDraft}
+                    aria-label="Add a tag"
                     onChange={(e) => setTagDraft(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addTag(); }

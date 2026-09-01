@@ -134,6 +134,7 @@ export default function PreferencesDialog({ children }) {
             </label>
             <select
               value={draft.role}
+              aria-label="Role"
               onChange={e => set("role", e.target.value)}
               className="w-full rounded-lg border border-input bg-background pl-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             >

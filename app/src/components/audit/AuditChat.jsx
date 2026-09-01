@@ -496,7 +496,15 @@ export default function AuditChat({
             <span className="relative inline-flex rounded-full size-2 bg-amber-500" />
           </span>
         )}
+        {/* role="status" so a screen reader hears the agent change state —
+            "Working…", "Waiting for you", "Ready", "Failed". This is the only
+            live region in the agent shell on purpose: announcing the streaming
+            tokens themselves, or the rotating subtitle in PipelineProgress,
+            would talk over the user continuously. State changes are the signal;
+            the prose is already readable on demand. */}
         <span
+          role="status"
+          aria-live="polite"
           className={`text-xs ${
             phase === Phase.QUESTIONS
               ? "text-amber-600 dark:text-amber-400 font-medium"

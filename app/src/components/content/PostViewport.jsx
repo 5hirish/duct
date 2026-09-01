@@ -291,6 +291,7 @@ function HashtagInput({ value, onChange }) {
       <span className="inline-flex min-w-[120px] flex-1 items-center gap-1 text-muted-foreground">
         <Hash className="size-3" />
         <input value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={onKey} onBlur={add}
+          aria-label="Add a hashtag"
           placeholder="Add a tag, press Enter…" className="flex-1 bg-transparent text-xs outline-none" />
       </span>
     </div>

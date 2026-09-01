@@ -1,5 +1,14 @@
 /* base — Document-level shell, skip link, and the global reduced-motion opt-out.
    Split out of globals.css; see that file for the load order. */
+/* WCAG 2.2 AA 2.4.11 Focus Not Obscured: the app header is sticky, so tabbing
+   to an element just above the fold scrolls it under the header and the focus
+   ring is invisible. scroll-padding reserves the header's height on every
+   scroll-into-view, including the browser's own when focus moves. Kept a
+   little larger than the 3.25rem header so the ring itself clears it too. */
+html {
+  scroll-padding-top: 4rem;
+}
+
 .app-shell {
   min-height: 100vh;
   display: flex;

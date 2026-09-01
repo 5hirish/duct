@@ -116,6 +116,10 @@ export default function PipelineProgress({
             ))}
           </span>
         </div>
+        {/* Deliberately NOT a live region: this subtitle rotates on a timer,
+            so aria-live here would interrupt a screen reader every few seconds
+            with copy that carries no new information. Agent state is announced
+            once, by the phase label in the chat header. */}
         <p className="text-sm text-muted-foreground min-h-[1.25rem] transition-all">{subtitle}</p>
       </div>
 

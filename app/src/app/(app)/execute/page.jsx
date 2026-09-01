@@ -603,6 +603,7 @@ function GuardrailsPanel() {
               </Select>
               <input
                 value={form.account_id}
+                aria-label="Account id"
                 onChange={(e) => setForm((f) => ({ ...f, account_id: e.target.value }))}
                 placeholder="Account id (blank = all)"
                 className="rounded-md border border-input bg-transparent px-2 text-sm"
@@ -611,6 +612,7 @@ function GuardrailsPanel() {
             </div>
             <input
               value={form.rule}
+              aria-label="Guardrail rule"
               onChange={(e) => setForm((f) => ({ ...f, rule: e.target.value }))}
               placeholder="Rule, e.g. “Never pause the Brand campaign”"
               className="rounded-md border border-input bg-transparent px-2 text-sm"
@@ -620,6 +622,7 @@ function GuardrailsPanel() {
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <input
                 value={form.op_types}
+                aria-label="Operation types"
                 onChange={(e) => setForm((f) => ({ ...f, op_types: e.target.value }))}
                 placeholder="Op types to block, comma-separated (optional)"
                 className="rounded-md border border-input bg-transparent px-2 text-sm"
@@ -627,6 +630,7 @@ function GuardrailsPanel() {
               />
               <input
                 value={form.target_contains}
+                aria-label="Target contains"
                 onChange={(e) => setForm((f) => ({ ...f, target_contains: e.target.value }))}
                 placeholder="Target contains (optional)"
                 className="rounded-md border border-input bg-transparent px-2 text-sm"

@@ -122,6 +122,7 @@ function MemoryRow({ entry, onPatch, onDelete, busy, focused = false }) {
               <Input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} />
               <textarea
                 value={draft.body}
+                aria-label="Memory body"
                 onChange={(e) => setDraft({ ...draft, body: e.target.value })}
                 rows={3}
                 className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm"
@@ -220,6 +221,7 @@ function RememberForm({ kinds, defaultKind, placeholder, onCreate, busy, onClose
       <div className="flex flex-wrap gap-2">
         <select
           value={kind}
+          aria-label="Memory kind"
           onChange={(e) => setKind(e.target.value)}
           className="rounded-md border border-input bg-transparent px-2 py-1.5 text-sm"
         >
@@ -236,6 +238,7 @@ function RememberForm({ kinds, defaultKind, placeholder, onCreate, busy, onClose
       </div>
       <textarea
         value={body}
+        aria-label="Why it matters, and how an agent should apply it"
         onChange={(e) => setBody(e.target.value)}
         rows={2}
         placeholder="Why it matters, and how an agent should apply it. Optional."

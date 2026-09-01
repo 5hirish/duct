@@ -96,6 +96,7 @@ export default function AuditInput({ onSend, disabled, isStreaming, onStop }) {
           ref={fileRef}
           type="file"
           accept="image/*,.pdf"
+          aria-label="Attach images or PDFs"
           multiple
           className="hidden"
           onChange={handleFileChange}
@@ -107,6 +108,7 @@ export default function AuditInput({ onSend, disabled, isStreaming, onStop }) {
           onChange={e => setText(e.target.value)}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
+          aria-label="Message the audit agent"
           disabled={disabled || isStreaming}
           placeholder={isStreaming ? "Agent is working…" : disabled ? "Waiting for agent…" : "Ask a follow-up question…"}
           className="flex-1 resize-none rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 min-h-[38px] max-h-[120px] overflow-y-auto"
