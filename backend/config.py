@@ -394,21 +394,6 @@ class Configs(BaseSettings):
             out["database_url"] = f"sqlite:///{data_dir / 'duct.db'}"
         if not out.get("uploads_dir"):
             out["uploads_dir"] = str(data_dir / "uploads")
-        # The desktop shell mints a Fernet key into the OS keychain and hands it
-        # over under its own name (see `credentials_encryption_key` in
-        # desktop/src-tauri/src/lib.rs). Applied only when nothing else supplied
-        # one, which is what keeps it a fallback: a developer running the shell
-        # against `backend/.env.local` keeps that file's key, and the rows they
-        # already encrypted with it keep decrypting.
-        #
-        # Without this, desktop had no key at all — the frozen bundle ships no
-        # `.env`, so `service/credentials.py` raised on every encrypt and
-        # connecting a data source could finish OAuth and then fail to persist.
-        if not _first(out, "credentials_encryption_key", "CREDENTIALS_ENCRYPTION_KEY"):
-            from_keychain = os.environ.get("DUCT_KEYCHAIN_CREDENTIALS_KEY", "").strip()
-            if from_keychain:
-                out["credentials_encryption_key"] = from_keychain
-
         if "init_db_on_startup" not in out:
             # Explicitly OFF for desktop. Alembic owns the schema here, same as
             # the deployment — `db/migrate.py` runs it at startup. Leaving

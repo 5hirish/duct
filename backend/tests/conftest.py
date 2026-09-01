@@ -53,9 +53,6 @@ _LOCAL_MODE_ENV_VARS = (
     "DUCT_LOCAL", "DUCT_DESKTOP", "DUCT_DATA_DIR", "DUCT_API_KEY", "DUCT_ENV_FILE",
     "API_PUBLIC_URL", "FRONTEND_ORIGIN", "APP_ENV", "SENTRY_DSN",
     "DATABASE_URL", "UPLOADS_DIR", "INIT_DB_ON_STARTUP",
-    # Handed to the sidecar by the desktop shell, never set by a person — but a
-    # developer with one exported would otherwise leak it into unrelated tests.
-    "DUCT_KEYCHAIN_CREDENTIALS_KEY",
 )
 
 

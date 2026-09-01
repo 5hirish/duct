@@ -181,25 +181,31 @@ fn try_spawn(app: &AppHandle) -> Result<(), String> {
     }
 
     // The key the sidecar encrypts stored connector credentials with, minted
-    // into the OS keychain on first run. Sent under its own name rather than as
-    // CREDENTIALS_ENCRYPTION_KEY so it stays a *fallback*: a developer running
-    // this shell against `backend/.env.local` keeps the key already in that
-    // file, and their existing rows keep decrypting. `config.py` applies it
-    // only when nothing else supplied one.
+    // into the OS keychain on first run.
+    //
+    // Skipped when one is already exported, which is the same rule the rest of
+    // this block follows: we set what the bundle cannot otherwise have, and
+    // never overwrite what someone chose. It matters more here than for
+    // FRONTEND_ORIGIN — shadowing the wrong key does not misconfigure a run, it
+    // orphans every row already encrypted with the right one. A developer
+    // pinning DUCT_ENV_FILE at an env file with its own key should export that
+    // key too, for the same reason.
     //
     // Failing is not fatal. A Linux box with no Secret Service daemon loses
     // stored connector credentials for the session — everything else, including
     // provider keys held in this same absent keychain, was already degraded in
     // exactly the same way — so the app starts and says why.
-    match crate::credentials_encryption_key() {
-        Ok(key) => {
-            command.env("DUCT_KEYCHAIN_CREDENTIALS_KEY", key);
-        }
-        Err(err) => {
-            eprintln!(
-                "duct: no keychain for the credentials key ({err}). \
-                 Connecting a data source will not persist this session."
-            );
+    if std::env::var_os("CREDENTIALS_ENCRYPTION_KEY").is_none() {
+        match crate::credentials_encryption_key() {
+            Ok(key) => {
+                command.env("CREDENTIALS_ENCRYPTION_KEY", key);
+            }
+            Err(err) => {
+                eprintln!(
+                    "duct: no keychain for the credentials key ({err}). \
+                     Connecting a data source will not persist this session."
+                );
+            }
         }
     }
 

@@ -144,45 +144,21 @@ def test_local_mode_respects_explicit_database_url(clean_env, tmp_path):
 # Desktop had none: CREDENTIALS_ENCRYPTION_KEY is a server setting and the frozen
 # bundle ships no `.env`, so service/credentials.py raised on every encrypt and
 # connecting a data source could finish OAuth and then fail to persist. The
-# shell now keeps a Fernet key in the OS keychain and passes it under its own
-# name, which is what makes it a fallback rather than an override.
+# shell now mints a Fernet key into the OS keychain and exports it under that
+# same name, skipping it when one is already set (desktop/src-tauri/src/sidecar.rs).
+#
+# The handover is plain environment, so there is nothing left for config.py to
+# do and nothing here to test about it. What no single language can check is
+# whether the two halves agree on the key's *shape*:
 # ---------------------------------------------------------------------------
 
 
-def test_local_mode_adopts_the_shells_keychain_key(clean_env, tmp_path, monkeypatch):
-    monkeypatch.setenv("DUCT_KEYCHAIN_CREDENTIALS_KEY", "from-the-keychain")
-    cfg = Configs(duct_local=True, duct_data_dir=str(tmp_path))
-    assert cfg.credentials_encryption_key == "from-the-keychain"
-
-
-def test_an_explicit_credentials_key_is_not_shadowed(clean_env, tmp_path, monkeypatch):
-    """A developer running the shell against backend/.env.local keeps that
-    file's key — otherwise every row they had already encrypted with it would
-    stop decrypting the first time they launched the desktop build."""
-    monkeypatch.setenv("DUCT_KEYCHAIN_CREDENTIALS_KEY", "from-the-keychain")
-    cfg = Configs(
-        duct_local=True,
-        duct_data_dir=str(tmp_path),
-        credentials_encryption_key="from-env-local",
-    )
-    assert cfg.credentials_encryption_key == "from-env-local"
-
-
-def test_the_keychain_key_never_reaches_a_deployment(clean_env, monkeypatch):
-    """It is applied inside the local-mode block, so Railway cannot pick up a
-    stray variable of that name from the environment."""
-    monkeypatch.setenv("DUCT_KEYCHAIN_CREDENTIALS_KEY", "from-the-keychain")
-    assert Configs().credentials_encryption_key == ""
-
-
 def test_a_url_safe_base64_of_32_bytes_is_a_valid_fernet_key():
-    """The contract between the two languages, which nothing else checks.
-
-    `credentials_encryption_key` in desktop/src-tauri/src/lib.rs builds the key
-    as URL_SAFE base64 (with padding) of 32 random bytes. Nothing links the Rust
-    and Python halves at compile time, so pin the shape Fernet actually accepts
-    — dropping the padding, or using standard rather than url-safe base64, would
-    produce a key that only fails at the first encrypt on a user's machine.
+    """`credentials_encryption_key` in desktop/src-tauri/src/lib.rs builds the
+    key as URL_SAFE base64 (with padding) of 32 random bytes, and nothing links
+    the Rust and Python halves at compile time. Standard rather than url-safe
+    base64, or a stripped pad, would compile on one side and fail at the first
+    encrypt on a user's machine.
     """
     import base64 as b64
     import os as _os
