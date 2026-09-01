@@ -1,15 +1,15 @@
 """Judge client construction + credential resolution (Google Gemini).
 
 The judge is the harness's only network dependency: one vision-capable Gemini
-call that scores the deliverable. Gemini — the same stack the v2/ADK engine sits
+call that scores the deliverable. Gemini — a different stack from the one
 on — is used here instead of Claude because (a) the grading call must inspect
 images and return JSON in a single shot, which google-genai does natively, and
 (b) the Gemini key has the rate-limit headroom the raw Anthropic Messages API
 path did not.
 
-We call ``google-genai`` directly rather than Google ADK: in this codebase the
-ADK/v2 path neither accepts image input nor emits native structured output (see
-agents/insights/v2/schema_compat.py), both of which the vision judge needs. The
+We call ``google-genai`` directly rather than through an agent harness: the
+judge is one multimodal call that must accept image input and emit native
+structured output, and needs no tool loop, memory or streaming around it. The
 call shape mirrors service/google/brief.py (text + JSON) and
 service/google/gemini/client.py (image parts).
 """

@@ -31,6 +31,9 @@ BACKEND = pathlib.Path(__file__).resolve().parent.parent
 # Matched on the top-level module, so `langchain_core` and `langchain_openai`
 # count as `langchain` — the distribution split is not a boundary.
 FRAMEWORK_PREFIXES = ("langchain", "langgraph", "deepagents", "claude_agent_sdk")
+# Kept after the ADK engine was removed: this list says what *counts* as an
+# agent framework, not what is installed, so it still catches ADK arriving back
+# in a non-adapter file.
 FRAMEWORK_DOTTED = ("google.adk",)
 
 # Directories that hold first-party application code.
@@ -49,8 +52,6 @@ ADAPTERS: dict[str, str] = {
     "agents/insights/v1/agent.py":          "LangChain synthesis (init_chat_model)",
     "agents/insights/v1/runner.py":         "deepagents runner — autonomous insights session",
     "agents/insights/v3/runner.py":         "Claude Agent SDK runner",
-    "agents/insights/v2/agents.py":         "Google ADK runner — frozen engine",
-    "agents/insights/v2/runner.py":         "Google ADK runner — frozen engine",
 
     # -- Shared LangChain adapter: the model-transport + events-out ports for
     #    every V1 runner. Extracted from agents/audit/v1/runner.py on the second

@@ -18,8 +18,10 @@ from agents.engines import (
     get_env_var_for_engine_provider,
     resolve_engine_model,
     resolve_engine_provider,
+    resolve_fallback_models,
 )
 from agents.models import (
+    MODEL_FALLBACK,
     OPENAI_COMPATIBLE_BASE_URL,
     ModelName,
     Provider,
@@ -141,3 +143,79 @@ def test_openai_compatible_registry_is_the_single_source_of_truth():
     for provider, url in OPENAI_COMPATIBLE_BASE_URL.items():
         assert langchain_provider(provider) == "openai"
         assert url.startswith("http")
+
+
+# ---------------------------------------------------------------------------
+# Model fallback: the registry in agents/models.py and the policy over it in
+# agents/engines.py. Same split as the rest of this file — models.py owns what a
+# model *is*, engines.py owns which engine may use it.
+# ---------------------------------------------------------------------------
+
+def _family(model) -> str:
+    """Provider family implied by a model id.
+
+    Derived from the id rather than looked up, because `agents/models.py` has no
+    provider→models registry — the grouping lives in enum comments, which a test
+    cannot read.
+    """
+    value = getattr(model, "value", str(model))
+    if "/" in value:
+        return "openrouter"
+    for prefix, family in (("claude", "anthropic"), ("gemini", "google"), ("gpt", "openai")):
+        if value.startswith(prefix):
+            return family
+    return "unknown"
+
+
+def test_no_fallback_ever_crosses_a_provider():
+    """The invariant that keeps a run on the key the caller actually supplied.
+
+    A typo here — a Gemini id under an Anthropic key — would not fail at import.
+    It would fail at the worst moment: mid-run, on the retry meant to rescue the
+    run, with an auth error the user cannot act on.
+    """
+    for source, targets in MODEL_FALLBACK.items():
+        for target in targets:
+            assert _family(target) == _family(source), (
+                f"{source.value} falls back to {target.value}, a different provider"
+            )
+
+
+def test_the_fallback_chain_is_one_step_everywhere():
+    """One step bounds the quality downgrade a user did not ask for."""
+    for source, targets in MODEL_FALLBACK.items():
+        assert len(targets) == 1, f"{source.value} has a {len(targets)}-step chain"
+
+
+def test_no_fallback_pair_loops_back():
+    """A → B → A would retry the model that just failed."""
+    for source, targets in MODEL_FALLBACK.items():
+        for target in targets:
+            assert source not in MODEL_FALLBACK.get(target, ()), (
+                f"{source.value} and {target.value} fall back to each other"
+            )
+
+
+@pytest.mark.parametrize(
+    ("provider", "model", "expected"),
+    [
+        (Provider.ANTHROPIC, ModelName.CLAUDE_SONNET, (ModelName.CLAUDE_HAIKU,)),
+        # Bottom of its family — nothing sensible to step down to.
+        (Provider.ANTHROPIC, ModelName.CLAUDE_HAIKU, ()),
+        (Provider.GOOGLE_GENAI, ModelName.GEMINI_2_5_FLASH, (ModelName.GEMINI_2_5_FLASH_LITE,)),
+        # A raw OpenRouter slug: 500+ models behind one key, so there is no basis
+        # for guessing what the caller would accept instead.
+        (Provider.OPENROUTER, "vendor/some-model", ()),
+        # CLI-only ids are unreachable from LangChain at all — same rule as
+        # test_v3_cannot_take_openrouter_and_falls_back above.
+        (Provider.ANTHROPIC, ModelName.CLAUDE_OPUS_1M, ()),
+    ],
+)
+def test_fallback_resolution(provider, model, expected):
+    assert resolve_fallback_models(Engine.V1, provider, model) == expected
+
+
+@pytest.mark.parametrize("engine", [Engine.V3])
+def test_only_v1_gets_a_fallback_chain(engine: Engine):
+    """v3's harness already retries inside the CLI."""
+    assert resolve_fallback_models(engine, Provider.ANTHROPIC, ModelName.CLAUDE_SONNET) == ()

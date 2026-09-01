@@ -31,10 +31,10 @@ as silently wrong telemetry.
 
 Dependency note
 ---------------
-``opentelemetry-api`` is a declared dependency (it used to arrive transitively
-via ``google-adk``, which would have made dropping the frozen v2 engine silently
-stop the spans). The import is still guarded and every entry point degrades to a
-no-op, because telemetry must never be the reason an agent run fails.
+``opentelemetry-api`` is a declared dependency. It used to arrive transitively
+via ``google-adk``; declaring it is what let the v2/ADK engine be removed without
+silently stopping the spans. The import is still guarded and every entry point
+degrades to a no-op, because telemetry must never be the reason a run fails.
 """
 
 from __future__ import annotations

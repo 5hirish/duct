@@ -246,7 +246,7 @@ def _compose_audience(audience: dict | None) -> str:
 
 _ANTHROPIC_MODELS = (
     ModelName.CLAUDE_OPUS,
-    ModelName.CLAUDE_OPUS_1M,   # [1m] is a CLI model string — v3 only, never v1/v2
+    ModelName.CLAUDE_OPUS_1M,   # [1m] is a CLI model string — v3 only, never v1
     ModelName.CLAUDE_SONNET,
     ModelName.CLAUDE_HAIKU,
 )

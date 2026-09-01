@@ -54,8 +54,8 @@ class ModelName(str, Enum):
     CLAUDE_HAIKU = "claude-haiku-4-5"
     # v3 only. The [1m] suffix is a Claude Code / Agent SDK model string that
     # opts the CLI into the 1M-token context window. The Messages API has no
-    # such ID — Opus 5 is natively 1M there — so LangChain (v1) and ADK (v2)
-    # would 404 on it. Enforced by CLI_ONLY_MODELS below.
+    # such ID — Opus 5 is natively 1M there — so LangChain (v1) would 404 on
+    # it. Enforced by CLI_ONLY_MODELS below.
     CLAUDE_OPUS_1M = "claude-opus-5[1m]"
 
     # OpenRouter — vendor/slug form. A *curated default list*, not a whitelist:
@@ -192,6 +192,44 @@ DEFAULT_MODELS = {
     Provider.GOOGLE_GENAI: ModelName.GEMINI_2_5_FLASH,
     Provider.ANTHROPIC: ModelName.CLAUDE_SONNET,
     Provider.OPENROUTER: ModelName.OR_DEEPSEEK_CHAT,
+}
+
+# Where a run goes when its model will not answer — model data, so it lives
+# here beside the enum it is written in. The *policy* over it (which engines get
+# a chain at all, and whether the provider still matches) is the engine
+# dimension and lives in agents/engines.resolve_fallback_models; nothing should
+# read this dict directly.
+#
+# **Same provider, one step.** Two rules, both deliberate:
+#
+# * Same provider, because a fallback has to run on the key the caller handed
+#   us. `service/auth.get_user_provider_keys` returns only the providers the
+#   caller actually supplied a header for — normally exactly one — so a
+#   cross-provider hop would have no credential, and reaching for Duct's own key
+#   would move a customer's spend onto our account without asking.
+# * One step, because a fallback is a quality downgrade the user did not choose.
+#   Sonnet → Haiku still writes the brief. A longer ladder turns a transient 529
+#   into a materially worse deliverable with no signal that it happened.
+#
+# Absent = no fallback, and the middleware is not mounted at all. That is the
+# right answer for a model already at the bottom of its family, and for an
+# unrecognised OpenRouter slug: OpenRouter fronts 500+ models, so there is no
+# basis for guessing what a caller's chosen slug should degrade to, and
+# silently substituting another vendor's model is worse than failing.
+MODEL_FALLBACK: dict[ModelName, tuple[ModelName, ...]] = {
+    # Anthropic
+    ModelName.CLAUDE_OPUS:           (ModelName.CLAUDE_SONNET,),
+    ModelName.CLAUDE_SONNET:         (ModelName.CLAUDE_HAIKU,),
+    # Google
+    ModelName.GEMINI_3_7_FLASH:      (ModelName.GEMINI_2_5_FLASH,),
+    ModelName.GEMINI_3_5_FLASH_LITE: (ModelName.GEMINI_2_5_FLASH_LITE,),
+    ModelName.GEMINI_2_5_FLASH:      (ModelName.GEMINI_2_5_FLASH_LITE,),
+    # OpenAI
+    ModelName.GPT_5_6_SOL:           (ModelName.GPT_5_6_TERRA,),
+    ModelName.GPT_5_6_TERRA:         (ModelName.GPT_5_6_LUNA,),
+    ModelName.GPT_5_6_LUNA:          (ModelName.GPT_5_MINI,),
+    ModelName.GPT_5_MINI:            (ModelName.GPT_4O_MINI,),
+    ModelName.GPT_4O:                (ModelName.GPT_4O_MINI,),
 }
 
 # Default endpoint for each OpenAI-compatible provider. Overridable per install

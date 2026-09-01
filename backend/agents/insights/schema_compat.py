@@ -1,16 +1,23 @@
-"""Structured output compatibility for ADK.
+"""Parse a synthesis out of raw model text, when structured output is not available.
 
-ADK has no with_structured_output() equivalent, and Gemini's response_schema
-(controlled generation) rejects the SynthesisSchema JSON Schema because of its
-``additionalProperties`` nodes — so we cannot use ``LlmAgent(output_schema=...)``
-on Gemini. Instead the SynthesisAgent emits raw JSON text which we parse and
-validate here. ``validate_synthesis`` additionally surfaces the validation error
-so the v2 dynamic workflow can feed it back to a repair pass (see agents.py).
+Not every path can ask the provider for a typed object. Gemini's
+``response_schema`` (controlled generation) rejects ``SynthesisSchema`` outright
+because of its ``additionalProperties`` nodes, and the Claude Agent SDK returns
+a text result rather than a parsed one. Those paths ask the model for JSON and
+hand the answer here.
+
+Models are inconsistent about how they wrap it — a bare object, a ```json fence,
+or an object with prose either side — so parsing is deliberately tolerant of all
+three. That tolerance is not cosmetic: fenced output used to parse as empty and
+lose a whole brief.
+
+Lived under ``v2/`` while the ADK engine was the only caller that needed it. It
+was never ADK-specific — nothing here imports a framework — so it moved up to
+``agents/insights/`` when that engine was removed and v3 was left as the caller.
 """
 
 from __future__ import annotations
 
-import json
 import logging
 
 from agents.insights.schema import SynthesisSchema
@@ -44,8 +51,11 @@ def validate_synthesis(raw_text: str) -> tuple[SynthesisSchema | None, str]:
     """Parse + validate raw LLM text into SynthesisSchema.
 
     Returns ``(schema, "")`` on success or ``(None, error_message)`` on failure.
-    The error message is the Pydantic validation error (or a parse error) and is
-    fed back to the synthesis repair pass so the model can fix the exact fields.
+    The error message is the Pydantic validation error (or a parse error). It is
+    kept separate from the return value rather than raised so a caller can tell
+    "the model wrote nothing" apart from "the model wrote the wrong shape" — the
+    ADK engine used it to drive a repair pass, and ``parse_synthesis_from_text``
+    now logs it, which is what makes a failed brief diagnosable after the fact.
     """
     if not raw_text or not raw_text.strip():
         return None, "empty synthesis output"
@@ -65,23 +75,3 @@ def parse_synthesis_from_text(raw_text: str) -> SynthesisSchema | None:
     if parsed is None:
         logger.error("parse_synthesis_from_text: %s", error[:200] if error else "failed")
     return parsed
-
-
-def extract_json_dict(raw_text: str) -> dict:
-    """Best-effort parse of an LLM JSON-object string into a dict.
-
-    Tolerant of markdown fences and surrounding prose (the data-fetch agent is
-    asked for fence-less JSON but models don't always comply). Returns ``{}`` if
-    nothing parseable is found.
-    """
-    if isinstance(raw_text, dict):
-        return raw_text
-    if not raw_text:
-        return {}
-    candidate = _strip_to_json(raw_text)
-    try:
-        obj = json.loads(candidate)
-        return obj if isinstance(obj, dict) else {}
-    except (json.JSONDecodeError, TypeError):
-        logger.warning("extract_json_dict: could not parse JSON object from text")
-        return {}

@@ -283,7 +283,7 @@ class Configs(BaseSettings):
         default="",
         validation_alias=AliasChoices("CLAUDE_CODE_OAUTH_TOKEN"),
     )
-    # Engine selection: "v1" (LangChain), "v2" (Google ADK), "v3" (Claude Agent SDK)
+    # Engine selection: "v1" (LangChain), "v3" (Claude Agent SDK)
     generate_engine: str = Field(default="v1")
 
     # Sentry observability

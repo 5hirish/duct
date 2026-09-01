@@ -24,6 +24,7 @@ import pytest
 from langchain_core.language_models.fake_chat_models import FakeMessagesListChatModel
 from langchain_core.messages import AIMessage
 
+from agents.models import ModelName, Provider
 from agents.insights.v1.runner import (
     MODEL_CALLS_PER_RUN,
     MODEL_CALLS_PER_THREAD,
@@ -111,3 +112,36 @@ def test_limits_are_ordered_run_below_thread():
     """A run limit above the thread limit would make the thread limit unreachable."""
     assert MODEL_CALLS_PER_RUN < MODEL_CALLS_PER_THREAD
     assert TOOL_CALLS_PER_RUN < TOOL_CALLS_PER_THREAD
+
+
+# ---------------------------------------------------------------------------
+# Model fallback — mounting only. The registry itself (agents/models.py) and the
+# engine policy over it (agents/engines.py) are pinned in test_model_transport.py,
+# beside the other model/engine registries.
+# ---------------------------------------------------------------------------
+
+def test_the_middleware_mounts_when_a_chain_exists(monkeypatch):
+    import deepagents.graph as graph
+
+    captured: list[list[str]] = []
+    original = graph._apply_custom_middleware
+
+    def _spy(base, custom, **kwargs):
+        result = original(base, custom, **kwargs)
+        captured.append([m.name for m in result])
+        return result
+
+    monkeypatch.setattr(graph, "_apply_custom_middleware", _spy)
+    AutonomousInsightsRunner(
+        api_key="unused-no-network",
+        provider=Provider.ANTHROPIC,
+        model=ModelName.CLAUDE_SONNET,
+    ).build_agent()
+
+    assert "ModelFallbackMiddleware" in captured[-1]
+
+
+def test_an_injected_model_is_never_second_guessed(stack):
+    """The `llm=` seam is a deliberate choice; overriding it would fire real
+    provider calls out of a fake-model test."""
+    assert "ModelFallbackMiddleware" not in stack

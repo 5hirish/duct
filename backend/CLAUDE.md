@@ -18,7 +18,7 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
 
 ### Current stack
 
-- **AI synthesis:** Three versioned engine implementations under `agents/insights/` — V1 (LangChain / deepagents), V2 (Google ADK), V3 (Claude Agent SDK). Runtime-switchable via `generate_engine` env var.
+- **AI synthesis:** Two versioned engine implementations under `agents/insights/` — V1 (LangChain / deepagents) and V3 (Claude Agent SDK). Runtime-switchable via `generate_engine` env var.
 
   **Consolidating on V1.** Per the engine consolidation review (duct-cloud, private), all
   agents are moving to one harness — LangChain 1.x / `deepagents` — because customers bring
@@ -28,9 +28,6 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
 
   - **V1 — the target, under construction.** Rebuilt on `create_agent` + structured output;
     `v1/graph.py` is gone. New agent work goes here.
-  - **V2 — frozen.** Kept as insurance, not maintained. Do not extend it. When a change to
-    shared code would require ADK work, leave V2 on the old behaviour and note the divergence
-    rather than porting the change.
   - **V3 — maintained, and still the production path** for audit and content. It is *not*
     being retired yet. Keep it working: shared-code changes (`agents/core/`,
     `agents/audit/`, `agents/content/`, `schema.py`, `agents/models.py`) must keep V3 at
@@ -38,8 +35,17 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
     only once V1 has earned full confidence — real-provider evals plus a clean audit and
     content run.
 
-  So a shared change may need doing twice (V1 + V3) but never three times: V2 absorbs nothing.
+  So a shared change may need doing twice (V1 + V3), never more.
   Claude remains a first-class *model* through V1, so retiring V3 later costs no capability.
+
+  **V2 (Google ADK) was removed.** Not on framework merit — ADK is actively developed and
+  Google-backed — but because nothing dispatched its runner: `routes/generate.py` had been
+  hardcoded to V1, so selecting "v2" in the UI silently served V1 while claiming otherwise.
+  Its differentiators (Vertex Agent Engine deploy, `adk web`, native A2A, built-in evals)
+  do not intersect this stack, and its weakest axis — provider breadth — is exactly what V1
+  exists for. Its defaults were identical to V1's, so `resolve_engine` folding a stored
+  `"v2"` back to V1 changed no behaviour. `agents/insights/schema_compat.py` is the one
+  piece that outlived it; it was never ADK-specific and V3 still uses it.
 - **Ingestion:** Direct Google API clients (`google-ads`, `google-analytics-data`, `google-api-python-client`). Async concurrent fetching in `service/pipeline.py`.
 - **Normalization:** Lightweight Python pipeline — raw API response → typed Pydantic/SQLModel brief models. No query layer or transforms yet.
 - **Database:** PostgreSQL on Railway — SQLModel ORM, Alembic migrations, `psycopg` driver.
@@ -146,7 +152,6 @@ agents/
 ├── models.py           — Provider, ModelName enums (shared)
 ├── insights/           — Insights agent (paid ads + organic growth intelligence)
 │   ├── v1/             — LangChain runner
-│   ├── v2/             — Google ADK runner
 │   ├── v3/             — Claude Agent SDK runner
 │   └── goals/, tools/, schema.py, registry.py, prompts/
 ├── audit/              — future: SEO audit agent

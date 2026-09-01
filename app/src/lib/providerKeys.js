@@ -27,7 +27,7 @@ export const PROVIDERS = [
     header: "X-Provider-OpenAI",
     placeholder: "sk-…",
     prefix: "sk-",
-    description: "GPT models on the LangChain (v1) and ADK (v2) engines.",
+    description: "GPT models on the LangChain (v1) engine.",
     consoleUrl: "https://platform.openai.com/api-keys",
   },
   {
@@ -36,7 +36,7 @@ export const PROVIDERS = [
     header: "X-Provider-Gemini",
     placeholder: "AIza…",
     prefix: "",
-    description: "Default models for the LangChain (v1) and ADK (v2) engines.",
+    description: "Default models for the LangChain (v1) engine.",
     consoleUrl: "https://aistudio.google.com/app/apikey",
   },
 ];

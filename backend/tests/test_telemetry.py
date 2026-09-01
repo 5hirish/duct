@@ -172,7 +172,7 @@ def test_exception_is_recorded_and_re_raised():
 
 
 def test_degrades_to_noop_without_opentelemetry(monkeypatch):
-    """opentelemetry-api is a transitive dependency today (via google-adk).
+    """opentelemetry-api is a declared dependency (it used to arrive via google-adk).
     If that edge disappears, spans must vanish — not the agent run."""
     monkeypatch.setattr(t, "_tracer", lambda: None)
     with t.model_span(provider="anthropic", model="m") as span:

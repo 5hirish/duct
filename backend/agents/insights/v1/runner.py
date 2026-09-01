@@ -48,6 +48,7 @@ from langchain.agents.middleware import (
     ClearToolUsesEdit,
     ContextEditingMiddleware,
     ModelCallLimitMiddleware,
+    ModelFallbackMiddleware,
     TodoListMiddleware,
     ToolCallLimitMiddleware,
 )
@@ -68,6 +69,7 @@ from agents.insights.prompts.autonomous import (
     build_insights_user_prompt,
 )
 from agents.tools.execution_tools import build_execution_tools_lc
+from agents.engines import Engine, resolve_fallback_models
 from agents.models import ModelName, Provider
 from agents.registry import AgentType
 from models.execution import AUTONOMY_ASK
@@ -202,6 +204,10 @@ class AutonomousInsightsRunner:
         around a question it will never get to ask produces a brief with a hole
         in it rather than a stated assumption.
         """
+        # Recorded before the default is filled in: a caller-supplied model is
+        # a deliberate choice (tests, and any caller that already resolved one),
+        # and the fallback chain below must not override it.
+        injected_llm = llm is not None
         if llm is None:
             llm = resolve_chat_model(
                 self.provider,
@@ -307,6 +313,28 @@ class AutonomousInsightsRunner:
         # this agent actually mounts. Still virtual: state, not disk.
         backend = StateBackend()
 
+        # Provider outages and 429/529s end an autonomous run that may already
+        # have spent several minutes fetching. One same-provider step down keeps
+        # it alive on the key the caller supplied — see MODEL_FALLBACK in
+        # agents/engines.py for why the chain is one step and never crosses a
+        # provider.
+        #
+        # Only mounted when a chain exists, so a model at the bottom of its
+        # family (or a raw OpenRouter slug) carries no middleware at all rather
+        # than an empty one. Skipped entirely when the caller injected its own
+        # `llm` — that seam is for tests and for callers that have already
+        # decided which model to use; second-guessing it here would fire real
+        # provider calls out of a fake-model test.
+        fallbacks: list[Any] = []
+        if not injected_llm:
+            fallbacks = [
+                resolve_chat_model(
+                    self.provider, name, self._api_key, self._temperature,
+                    thinking=self._thinking,
+                )
+                for name in resolve_fallback_models(Engine.V1, self.provider, self.model)
+            ]
+
         return create_deep_agent(
             model=llm,
             tools=tools,
@@ -374,6 +402,12 @@ class AutonomousInsightsRunner:
                     run_limit=TOOL_CALLS_PER_RUN,
                     exit_behavior="continue",
                 ),
+                # Last of ours, so it sits closest to the model call and the
+                # limit guards above still count a fallback attempt as the call
+                # it is. `*fallbacks` splats to nothing when there is no chain,
+                # which is how a bottom-tier model ends up with no middleware
+                # rather than an empty one.
+                *([ModelFallbackMiddleware(*fallbacks)] if fallbacks else []),
             ],
             # Continuity across turns, now durable: the saver is opened once by
             # the app lifespan and follows DATABASE_URL (Postgres on Railway,

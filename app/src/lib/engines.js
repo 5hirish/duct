@@ -14,14 +14,6 @@ export const ENGINES = [
     supportsOAuth: false,
   },
   {
-    key: "v2",
-    badge: "v2",
-    label: "Google ADK",
-    defaultModel: "Gemini 2.5 Flash",
-    description: "Sequential subagents. Session state.",
-    supportsOAuth: false,
-  },
-  {
     key: "v3",
     badge: "v3",
     label: "Claude Agent SDK",
@@ -86,15 +78,15 @@ export function getAgentType(key) {
 // Agent ↔ engine support
 //
 // Which inference engines can run each sidebar agent. Mirrors the runner
-// implementations under backend/agents/<agent>/: insights ships v1/v2/v3,
+// implementations under backend/agents/<agent>/: insights ships v1/v3,
 // while SEO audit and Content Studio are Claude Agent SDK (v3) only. Keys
 // are the AppSidebar NAV item keys. Keep in sync when an agent gains a new
 // engine runner.
 // ---------------------------------------------------------------------------
 export const AGENT_ENGINE_SUPPORT = {
-  organic_growth: ["v1", "v2", "v3"],
-  product_intelligence: ["v1", "v2", "v3"],
-  paid_ads: ["v1", "v2", "v3"],
+  organic_growth: ["v1", "v3"],
+  product_intelligence: ["v1", "v3"],
+  paid_ads: ["v1", "v3"],
   seo_audit: ["v3"],
   tiktok_studio: ["v3"],
 };

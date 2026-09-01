@@ -6,15 +6,18 @@ so GENERATE_PROVIDER and GENERATE_MODEL become optional overrides.
 
 Engine → default provider → default model:
   v1  (LangChain)          → google_genai → gemini-2.5-flash
-  v2  (Google ADK)         → google_genai → gemini-2.5-flash
   v3  (Claude Agent SDK)   → anthropic    → claude-sonnet-5
 
 Supported providers per engine:
   v1  OpenAI, Google, Anthropic (all native in LangChain) + OpenRouter
       (the OpenAI-compatible transport — one endpoint, 500+ models, and the
       same code path for any compatible gateway including local Ollama/vLLM)
-  v2  three native providers (OpenAI via LiteLLM prefix, Google + Anthropic)
   v3  anthropic only (Claude Agent SDK does not support other providers natively)
+
+A v2 (Google ADK) engine existed until it was removed: nothing dispatched its
+runner, and the UI offered it while silently serving v1. Its defaults were
+identical to v1's, so `resolve_engine` folding a stored "v2" back to V1 changes
+no behaviour.
 
 Only v1 gets OpenRouter, and that asymmetry is the point: v3's harness is
 provider-locked by design (anthropics/claude-agent-sdk-python#410, closed
@@ -25,19 +28,17 @@ from __future__ import annotations
 
 from enum import Enum
 
-from agents.models import CLI_ONLY_MODELS, AgentEffort, ModelName, Provider
+from agents.models import CLI_ONLY_MODELS, MODEL_FALLBACK, AgentEffort, ModelName, Provider
 
 
 class Engine(str, Enum):
     V1 = "v1"  # LangChain
-    V2 = "v2"  # Google ADK
     V3 = "v3"  # Claude Agent SDK
 
 
 # Default provider for each engine when GENERATE_PROVIDER is unset
 ENGINE_DEFAULT_PROVIDER: dict[Engine, Provider] = {
     Engine.V1: Provider.GOOGLE_GENAI,
-    Engine.V2: Provider.GOOGLE_GENAI,
     Engine.V3: Provider.ANTHROPIC,
 }
 
@@ -48,10 +49,6 @@ ENGINE_DEFAULT_MODEL: dict[tuple[Engine, Provider], ModelName] = {
     (Engine.V1, Provider.ANTHROPIC):    ModelName.CLAUDE_SONNET,
     (Engine.V1, Provider.OPENAI):       ModelName.GPT_5_MINI,
     (Engine.V1, Provider.OPENROUTER):   ModelName.OR_DEEPSEEK_CHAT,
-    # v2 — Google ADK
-    (Engine.V2, Provider.GOOGLE_GENAI): ModelName.GEMINI_2_5_FLASH,
-    (Engine.V2, Provider.ANTHROPIC):    ModelName.CLAUDE_SONNET,
-    (Engine.V2, Provider.OPENAI):       ModelName.GPT_5_MINI,
     # v3 — Claude Agent SDK (Anthropic only)
     (Engine.V3, Provider.ANTHROPIC):    ModelName.CLAUDE_SONNET,
 }
@@ -61,34 +58,26 @@ ENGINE_SUPPORTED_PROVIDERS: dict[Engine, frozenset[Provider]] = {
     Engine.V1: frozenset({
         Provider.OPENAI, Provider.GOOGLE_GENAI, Provider.ANTHROPIC, Provider.OPENROUTER,
     }),
-    Engine.V2: frozenset({Provider.OPENAI, Provider.GOOGLE_GENAI, Provider.ANTHROPIC}),
     Engine.V3: frozenset({Provider.ANTHROPIC}),
 }
 
 # Whether an engine can authenticate without an explicit API key. Only the
-# Claude Agent SDK (v3) supports an OAuth/subscription token fallback; v1/v2
-# (Gemini) require their provider API key. Used by the engine-status endpoint
+# Claude Agent SDK (v3) supports an OAuth/subscription token fallback; v1
+# requires its provider's API key. Used by the engine-status endpoint
 # to decide between "needs_auth" (recoverable) and "inactive".
 ENGINE_SUPPORTS_OAUTH: dict[Engine, bool] = {
     Engine.V1: False,
-    Engine.V2: False,
     Engine.V3: True,
 }
 
 # Env var name that each engine's underlying framework reads for each provider.
-# Used by v2 (ADK) and v3 (Claude Agent SDK) runners when setting env vars.
+# Used by the v3 (Claude Agent SDK) runner when setting env vars.
 ENGINE_PROVIDER_ENV_VAR: dict[Engine, dict[Provider, str]] = {
     Engine.V1: {
         Provider.OPENAI:       "OPENAI_API_KEY",
         Provider.GOOGLE_GENAI: "GOOGLE_API_KEY",
         Provider.ANTHROPIC:    "ANTHROPIC_API_KEY",
         Provider.OPENROUTER:   "OPENROUTER_API_KEY",
-    },
-    Engine.V2: {
-        # ADK reads standard names — different from the Duct config key GEMINI_API_KEY
-        Provider.OPENAI:       "OPENAI_API_KEY",
-        Provider.GOOGLE_GENAI: "GOOGLE_API_KEY",
-        Provider.ANTHROPIC:    "ANTHROPIC_API_KEY",
     },
     Engine.V3: {
         Provider.ANTHROPIC: "ANTHROPIC_API_KEY",
@@ -98,9 +87,40 @@ ENGINE_PROVIDER_ENV_VAR: dict[Engine, dict[Provider, str]] = {
 # Default effort level per engine (only meaningful for v3 / Claude Agent SDK)
 ENGINE_DEFAULT_EFFORT: dict[Engine, AgentEffort | None] = {
     Engine.V1: None,
-    Engine.V2: None,
     Engine.V3: AgentEffort.HIGH,
 }
+
+
+def resolve_fallback_models(
+    engine: Engine,
+    provider: Provider,
+    model: ModelName | str,
+) -> tuple[ModelName, ...]:
+    """Models to try when ``model`` errors, in order. Empty means "do not retry".
+
+    The engine policy over ``agents/models.MODEL_FALLBACK``, which holds the
+    mapping itself — the split is the same one the rest of this module keeps:
+    ``models.py`` owns what a model *is*, ``engines.py`` owns which engine may
+    use it. Call this rather than reading the dict.
+
+    Only v1 gets a chain: v3's harness owns its own retries inside the CLI, so
+    mounting one there would be a second, invisible retry loop layered on the
+    SDK's.
+
+    A raw OpenRouter slug (a ``str``, not a ``ModelName``) resolves to no chain.
+    """
+    if engine is not Engine.V1:
+        return ()
+    if not isinstance(model, ModelName):
+        return ()
+    candidates = MODEL_FALLBACK.get(model, ())
+    supported = ENGINE_SUPPORTED_PROVIDERS.get(engine, frozenset())
+    if provider not in supported:
+        return ()
+    # A CLI-only id can never be a fallback target on v1 — same rule as
+    # resolve_engine_model, which is where that constraint is stated.
+    return tuple(m for m in candidates if m not in CLI_ONLY_MODELS)
+
 
 # Duct config attribute name → API key for each provider
 PROVIDER_CONFIG_ATTR: dict[Provider, str] = {
@@ -163,8 +183,8 @@ def resolve_engine_model(
 
     ``CLI_ONLY_MODELS`` (the ``[1m]`` context variants) are the mirror case:
     they are Claude Code model strings the Agent SDK understands and the
-    Messages API does not, so v1/v2 fall back to their default rather than
-    forwarding one to LangChain or ADK.
+    Messages API does not, so v1 falls back to its default rather than
+    forwarding one to LangChain.
     """
     default = ENGINE_DEFAULT_MODEL.get(
         (engine, provider),

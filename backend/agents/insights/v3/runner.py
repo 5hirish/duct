@@ -1,11 +1,11 @@
 """ClaudeAgentSdkRunner — Claude Agent SDK-based insight pipeline (v3 engine).
 
-Public interface mirrors GenerateInsightsAgent (v1) and AdkInsightsRunner (v2)
+Public interface mirrors GenerateInsightsAgent (v1)
 so routes/generate.py can select any engine via a single config flag.
 
 Architecture — two-phase pipeline:
 
-  Phase 1 (data fetch): The v1/v2 fetch functions are pre-credentialed Python
+  Phase 1 (data fetch): The v1 fetch functions are pre-credentialed Python
     callables. Rather than spawning a subprocess MCP server just to call them,
     we run them in-process via asyncio.gather(), exactly as the v1 agent does
     when it calls all goal-relevant tools. This gives us the same tool-call
@@ -17,7 +17,7 @@ Architecture — two-phase pipeline:
     output valid SynthesisSchema JSON. We parse ResultMessage.result with
     SynthesisSchema.model_validate_json().
 
-Claude Agent SDK features demonstrated vs v1/v2:
+Claude Agent SDK features demonstrated vs v1:
   - AgentDefinition (subagent with custom system prompt + restricted tools)
   - permission_mode="dontAsk"  (no interactive prompts in backend context)
   - Disk-backed session (automatically persisted as JSONL; no manual state svc)
@@ -27,7 +27,7 @@ Claude Agent SDK features demonstrated vs v1/v2:
 API key:
   claude_agent_sdk reads ANTHROPIC_API_KEY from the environment. If the
   caller provides an api_key and the env var is unset we temporarily set it
-  during the run (same pattern as v2).
+  during the run.
 
 Provider support:
   The Claude Agent SDK only supports Anthropic models natively. If a non-
@@ -50,7 +50,7 @@ from agents.insights.registry import get_tools_for_request as _registry_get_tool
 from agents.insights.schema import SynthesisSchema
 from agents.engines import Engine, get_env_var_for_engine_provider
 from agents.insights.tools import CONNECTOR_BY_TOOL, _register_default_tools
-from agents.insights.v2.schema_compat import parse_synthesis_from_text
+from agents.insights.schema_compat import parse_synthesis_from_text
 from agents.models import AgentPermissionMode, AgentTool, ModelName, Provider
 
 logger = logging.getLogger(__name__)
@@ -63,7 +63,7 @@ logger = logging.getLogger(__name__)
 # Model strings come from the ModelName enum in agents/models.py — never hardcoded here.
 _ANTHROPIC_MODELS = (
     ModelName.CLAUDE_OPUS,
-    ModelName.CLAUDE_OPUS_1M,   # [1m] is a CLI model string — v3 only, never v1/v2
+    ModelName.CLAUDE_OPUS_1M,   # [1m] is a CLI model string — v3 only, never v1
     ModelName.CLAUDE_SONNET,
     ModelName.CLAUDE_HAIKU,
 )
@@ -273,7 +273,7 @@ async def _run_synthesis(
 class ClaudeAgentSdkRunner:
     """Claude Agent SDK-powered insight pipeline (v3 engine).
 
-    Drop-in replacement for GenerateInsightsAgent (v1) and AdkInsightsRunner (v2).
+    Drop-in replacement for GenerateInsightsAgent (v1).
     The route layer detects this class with isinstance() and calls run_pipeline()
     instead of the separate fetch_supplementary_data() / synthesize() pair.
     """
@@ -296,7 +296,7 @@ class ClaudeAgentSdkRunner:
         self._active_mode: str = "paid_ads"
 
     # ------------------------------------------------------------------
-    # Interface parity with GenerateInsightsAgent / AdkInsightsRunner
+    # Interface parity with GenerateInsightsAgent
     # ------------------------------------------------------------------
 
     def setup_tools_for_goal(
@@ -443,7 +443,7 @@ class ClaudeAgentSdkRunner:
         return supplementary, synthesis
 
     # ------------------------------------------------------------------
-    # Helper parity with GenerateInsightsAgent / AdkInsightsRunner
+    # Helper parity with GenerateInsightsAgent
     # ------------------------------------------------------------------
 
     def apply_classification_overrides(

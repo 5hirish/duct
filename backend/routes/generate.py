@@ -13,7 +13,7 @@ the form and the pipeline behind it were deleted once the autonomous agent
 could answer those questions itself; see
 ``docs/engineering/autonomous-insights-agent-plan.md``.
 
-``agents/insights/v1/agent.py``, ``v2/`` (ADK) and ``v3/`` are left in place
+``agents/insights/v1/agent.py`` and ``v3/`` are left in place
 and frozen. They no longer serve a route.
 """
 
