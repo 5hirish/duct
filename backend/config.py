@@ -439,6 +439,31 @@ def claude_oauth_available() -> bool:
     return bool(get_configs().claude_code_oauth_token) or allow_subscription_auth()
 
 
+def allow_server_provider_keys() -> bool:
+    """True when a run may fall back to *this instance's* own provider keys.
+
+    The same env field means two opposite things depending on where the process
+    runs, and the difference is the whole of bring-your-own-key:
+
+      - desktop sidecar (``DUCT_LOCAL``) or local dev — the env file IS the
+        user's own key. Falling back to it is BYOK by another route, so it is
+        allowed and nothing is being spent on their behalf.
+      - hosted (Railway) — the env key is Duct's Console account. Spending it
+        on a customer's run is exactly what BYOK exists to prevent, so a run
+        with no caller key of its own must fail closed rather than quietly
+        bill us.
+
+    Deliberate demand-gen exceptions (the lead-magnet teaser audit) pass
+    ``duct_pays=True`` to ``agents.engines.resolve_provider_key`` instead of
+    widening this predicate: "Duct pays for this" is then a decision written at
+    one visible call site rather than a fallback nobody can see.
+
+    Same shape as ``allow_subscription_auth`` above, and for the same reason.
+    """
+    cfg = get_configs()
+    return bool(cfg.duct_local) or cfg.app_env == "local"
+
+
 def sentry_otel_env(cfg: Configs) -> dict[str, str]:
     """Return OTEL env vars that route the Claude Agent SDK's built-in traces to Sentry.
 

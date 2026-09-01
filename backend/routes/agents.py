@@ -64,9 +64,14 @@ from agents.core import session as _core_session
 from agents.core.context import format_business_context
 from agents.core.events import AgentEvent, StepStatus
 from db.session import get_session as db_session
-from agents.engines import PROVIDER_CONFIG_ATTR, resolve_engine, resolve_engine_model, resolve_engine_provider
+from agents.engines import (
+    resolve_engine,
+    resolve_engine_model,
+    resolve_engine_provider,
+    resolve_provider_key,
+)
 from agents.registry import AgentType, get_spec, list_specs
-from config import claude_oauth_available, get_configs
+from config import get_configs
 from models.auth import User
 from service.artifact_store import (
     ArtifactPersister,
@@ -83,6 +88,7 @@ from service.memory import (
     touch_recall,
 )
 from service.memory_consolidation import schedule_consolidation
+from service.provider_keys import stored_provider_keys
 from utils.dates import now_iso
 
 logger = logging.getLogger(__name__)
@@ -1010,20 +1016,22 @@ async def _dispatch_start(
 
     ``user_keys`` are the caller's bring-your-own provider keys from the
     ``X-Provider-*`` headers. They are secrets: passed down, never logged, never
-    persisted. Only insights consumes them today; the other pipelines still
-    resolve keys from server config.
+    persisted. Every pipeline takes them — a pipeline that quietly skipped them
+    was a pipeline running on Duct's own key.
     """
     if agent_type == AgentType.SEO_AUDIT:
-        await _start_seo_audit(session_id, body, emit_fn)
+        await _start_seo_audit(session_id, body, emit_fn, user_keys=user_keys)
     elif agent_type == AgentType.TIKTOK_STUDIO:
-        await _start_tiktok_studio(session_id, body, emit_fn)
+        await _start_tiktok_studio(session_id, body, emit_fn, user_keys=user_keys)
     elif agent_type == AgentType.INSIGHTS:
         await _start_insights(session_id, body, emit_fn, user_keys=user_keys)
     else:
         raise HTTPException(501, f"Agent type {agent_type!r} is not yet implemented.")
 
 
-async def _start_tiktok_studio(session_id: str, body: dict, emit_fn: Any) -> None:
+async def _start_tiktok_studio(
+    session_id: str, body: dict, emit_fn: Any, *, user_keys: dict | None = None
+) -> None:
     """Start the Content Studio pipeline (plan_month or draft_post) as a
     background task, streaming to the shared session.event_queue. Reuses the
     plan/draft workers so the DB logic (Day resolution, post_id linkback) stays
@@ -1049,13 +1057,13 @@ async def _start_tiktok_studio(session_id: str, body: dict, emit_fn: Any) -> Non
             req = DraftPostRequest.model_validate(config)
         except Exception as exc:
             raise HTTPException(422, f"Invalid draft_post config: {exc}") from exc
-        coro = _run_draft_worker(session_id, req, emit_fn)
+        coro = _run_draft_worker(session_id, req, emit_fn, user_keys)
     elif mode == "plan_month":
         try:
             req = PlanRequest.model_validate(config)
         except Exception as exc:
             raise HTTPException(422, f"Invalid plan_month config: {exc}") from exc
-        coro = _run_plan_worker(session_id, req.project_id, emit_fn)
+        coro = _run_plan_worker(session_id, req.project_id, emit_fn, user_keys)
     else:
         raise HTTPException(422, f"mode must be 'plan_month' or 'draft_post', got {mode!r}")
 
@@ -1065,7 +1073,9 @@ async def _start_tiktok_studio(session_id: str, body: dict, emit_fn: Any) -> Non
         session.pipeline_task = task
 
 
-async def _start_seo_audit(session_id: str, body: dict, emit_fn: Any) -> None:
+async def _start_seo_audit(
+    session_id: str, body: dict, emit_fn: Any, *, user_keys: dict | None = None
+) -> None:
     """Validate config and start the SEO audit pipeline as a background task.
 
     Two shapes: a fresh audit (crawl → synthesis → chat) or a resume
@@ -1080,10 +1090,23 @@ async def _start_seo_audit(session_id: str, body: dict, emit_fn: Any) -> None:
     engine = resolve_engine(req.engine or "v3")
     provider = resolve_engine_provider(engine, cfg.generate_provider or None)
     model = resolve_engine_model(engine, provider, cfg.generate_model or None)
-    api_key = getattr(cfg, PROVIDER_CONFIG_ATTR[provider], "") or ""
 
-    if not api_key and not claude_oauth_available():
-        raise HTTPException(500, "ANTHROPIC_API_KEY is not configured.")
+    session = get_session(session_id)
+    owner_id = getattr(session, "user_id", None) if session else None
+    with next(db_session()) as db:
+        stored = stored_provider_keys(db, owner_id)
+    # The lead-magnet teaser is demand gen — Duct funds it deliberately, and
+    # this is the only place in the audit path that may say so. Everything else
+    # fails closed on the hosted deployment without a key of the caller's own.
+    resolved = resolve_provider_key(
+        provider, user_keys, stored_keys=stored, duct_pays=req.lead_magnet
+    )
+    api_key = resolved.key
+    if resolved.billed_to_duct:
+        logger.info(
+            "audit: run billed to Duct (%s/%s, lead_magnet=%s)",
+            provider.value, resolved.source, req.lead_magnet,
+        )
 
     runner = ClaudeAuditRunner(
         api_key=api_key,
@@ -1102,8 +1125,6 @@ async def _start_seo_audit(session_id: str, body: dict, emit_fn: Any) -> None:
     # none. See agents/content/persistence.summarize_conversation.
     summary_key = api_key if getattr(provider, "value", str(provider)) == "anthropic" else ""
 
-    session = get_session(session_id)
-    owner_id = getattr(session, "user_id", None) if session else None
     conv_id = getattr(session, "conversation_id", None) if session else None
     recorder = getattr(session, "recorder", None) if session else None
 

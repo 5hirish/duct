@@ -18,8 +18,9 @@ Serving the list from ``ModelName`` makes that class of drift impossible.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
+from sqlmodel import Session
 
 from agents.engines import ENGINE_SUPPORTED_PROVIDERS, PROVIDER_CONFIG_ATTR, Engine
 from agents.models import ModelName, Provider, provider_of
@@ -34,8 +35,19 @@ from agents.tiers import (
     Tier,
     resolve_tier_model,
 )
-from config import claude_oauth_available, get_configs
-from service.auth import get_user_provider_keys
+from config import allow_server_provider_keys, claude_oauth_available, get_configs
+from db.session import get_session as db_session
+from models.auth import User
+from service.auth import (
+    get_current_user,
+    get_current_user_optional,
+    get_user_provider_keys,
+)
+from service.provider_keys import (
+    delete_provider_key,
+    has_stored_provider_keys,
+    save_provider_key,
+)
 
 router = APIRouter(tags=["providers"])
 
@@ -87,6 +99,8 @@ def _engines_for(provider: Provider) -> list[str]:
 @router.get("/providers/status")
 def providers_status(
     user_keys: dict[Provider, str] = Depends(get_user_provider_keys),
+    user: User | None = Depends(get_current_user_optional),
+    db: Session = Depends(db_session),
 ) -> dict:
     """Per-provider reachability — the union of the caller's keys and ours.
 
@@ -94,17 +108,30 @@ def providers_status(
     hides the thing a customer cares about: whose account pays. One of:
 
     * ``user``         — a key this request supplied via ``X-Provider-*``
+    * ``stored``       — this user's saved key, decrypted per run
     * ``env``          — this instance's own env file (desktop, or local dev)
     * ``cloud``        — Duct's hosted key; our account is paying
     * ``subscription`` — the operator's Claude subscription on this machine
     * ``none``         — nothing; this provider cannot be reached
 
     The env/cloud split matters: they are the same config field and completely
-    different answers to "who is paying for this run".
+    different answers to "who is paying for this run". So does user/stored: only
+    a stored key can serve a scheduled run, which is why the tile says which
+    one it is rather than collapsing both to "your key".
+
+    ``cloud`` is unreachable on the hosted deployment unless the run is one
+    Duct funds deliberately (``allow_server_provider_keys``), so a tile
+    reporting it there is reporting a fallback that will not actually happen.
 
     Never returns a key, a prefix, or a length — only whether one exists.
     """
     cfg = get_configs()
+    saved = has_stored_provider_keys(db, user.id if user else None)
+    # A key in the env is only a way in where the gate would actually let a run
+    # spend it. On the hosted deployment it will not, so reporting the provider
+    # as reachable there would be describing a fallback that no longer happens
+    # — the tile would read green and every run would still 402.
+    server_usable = allow_server_provider_keys()
     # A server-side key means something different depending on where this
     # instance runs, and the difference is the one a customer actually cares
     # about: on a laptop or a self-hosted box it is *their* env file, and on
@@ -116,14 +143,23 @@ def providers_status(
     for provider in Provider:
         label, description = _PROVIDER_LABELS.get(provider, (provider.value, ""))
         has_user = bool(user_keys.get(provider))
-        has_server = bool(getattr(cfg, PROVIDER_CONFIG_ATTR.get(provider, ""), ""))
+        has_stored = provider in saved
+        has_server = server_usable and bool(
+            getattr(cfg, PROVIDER_CONFIG_ATTR.get(provider, ""), "")
+        )
         # Anthropic has a third way in: a subscription token the operator holds
         # on this machine. It authenticates v3 without any API key at all, so
         # reporting Anthropic as unreachable there would be false.
-        oauth = provider is Provider.ANTHROPIC and claude_oauth_available()
+        oauth = (
+            server_usable
+            and provider is Provider.ANTHROPIC
+            and claude_oauth_available()
+        )
 
         if has_user:
             source = "user"
+        elif has_stored:
+            source = "stored"
         elif has_server:
             source = server_source
         elif oauth:
@@ -137,9 +173,72 @@ def providers_status(
             "description": description,
             "reachable": source != "none",
             "source": source,
+            # Distinct from `source`: a header key outranks a saved one, so a
+            # provider can be serving from `user` and still have one saved. The
+            # settings page needs to know to offer "Forget".
+            "stored": has_stored,
             "engines": _engines_for(provider),
         })
     return {"providers": providers}
+
+
+class StoreProviderKeyRequest(BaseModel):
+    """One provider key to remember for this user."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    api_key: str = Field(min_length=1, max_length=512)
+
+
+def _provider_or_404(provider_id: str) -> Provider:
+    try:
+        return Provider(provider_id.strip().lower())
+    except ValueError:
+        raise HTTPException(404, f"Unknown provider {provider_id!r}") from None
+
+
+@router.put("/providers/{provider_id}/key")
+def store_provider_key(
+    provider_id: str,
+    body: StoreProviderKeyRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> dict:
+    """Remember this user's key for one provider, encrypted at rest.
+
+    The opt-in half of bring-your-own-key. Without it a key lives only in
+    ``sessionStorage`` and rides along as a header, which means it is gone on
+    refresh and absent entirely from anything that runs without a browser —
+    scheduled briefs, memory consolidation. Those are exactly the runs that
+    would otherwise fall back to Duct's key, so "remember it" and "your key
+    actually funds your runs" are the same feature.
+
+    Encrypted with CREDENTIALS_ENCRYPTION_KEY (``service/credentials.py``),
+    decrypted only to be spent, and never returned by any endpoint — including
+    this one, which answers with presence and nothing else.
+    """
+    provider = _provider_or_404(provider_id)
+    key = body.api_key.strip()
+    if not key:
+        raise HTTPException(422, "api_key must not be blank")
+    save_provider_key(db, user.id, provider, key)
+    return {"provider": provider.value, "stored": True}
+
+
+@router.delete("/providers/{provider_id}/key")
+def forget_provider_key(
+    provider_id: str,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> dict:
+    """Forget this user's saved key for one provider. Idempotent.
+
+    Deleting the secret, not merely unlinking it — a "removed" key still on
+    disk is the version of this feature nobody wants.
+    """
+    provider = _provider_or_404(provider_id)
+    delete_provider_key(db, user.id, provider)
+    return {"provider": provider.value, "stored": False}
 
 
 @router.get("/models/catalogue")
@@ -198,6 +297,8 @@ class TierPreviewRequest(BaseModel):
 def models_preview(
     body: TierPreviewRequest,
     user_keys: dict[Provider, str] = Depends(get_user_provider_keys),
+    user: User | None = Depends(get_current_user_optional),
+    db: Session = Depends(db_session),
 ) -> dict:
     """What each tier would actually run, resolved by the code that will run it.
 
@@ -212,12 +313,20 @@ def models_preview(
     resolves, it does not persist.
     """
     cfg = get_configs()
+    # Same gate as providers_status, and for the same reason: this endpoint's
+    # output is a promise ("Light jobs run on X"), and a promise that counts a
+    # server key the resolver would refuse to spend is a promise that breaks on
+    # the first run.
+    server_usable = allow_server_provider_keys()
+    stored = has_stored_provider_keys(db, user.id if user else None)
     reachable = {
         provider
         for provider in Provider
-        if user_keys.get(provider) or getattr(cfg, PROVIDER_CONFIG_ATTR.get(provider, ""), "")
+        if user_keys.get(provider)
+        or provider in stored
+        or (server_usable and getattr(cfg, PROVIDER_CONFIG_ATTR.get(provider, ""), ""))
     }
-    if claude_oauth_available():
+    if server_usable and claude_oauth_available():
         reachable.add(Provider.ANTHROPIC)
     reachable = frozenset(reachable)
 

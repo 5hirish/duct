@@ -23,20 +23,21 @@ from uuid import UUID
 from agents.core.events import AgentEvent
 from agents.engines import (
     ENGINE_SUPPORTED_PROVIDERS,
-    PROVIDER_CONFIG_ATTR,
     resolve_engine,
     resolve_engine_model,
     resolve_engine_provider,
+    resolve_provider_key,
 )
 from agents.models import ModelName, Provider
 from agents.registry import AgentType
-from config import claude_oauth_available, get_configs
+from config import get_configs
 from db.session import get_session as db_session
 from models.execution import AUTONOMY_ASK, normalize_autonomy
 from models.project import Project
 from service.execution.policy import effective_autonomy
 from service.membership import member_role
 from service.memory import build_memory_context, seed_user_preferences, touch_recall
+from service.provider_keys import stored_provider_keys
 
 logger = logging.getLogger(__name__)
 
@@ -65,17 +66,24 @@ class InsightsRun:
 
 
 def resolve_model(
-    engine_override: str = "", user_keys: dict[Provider, str] | None = None
+    engine_override: str = "",
+    user_keys: dict[Provider, str] | None = None,
+    stored_keys: dict[Provider, str] | None = None,
 ) -> tuple[Provider, ModelName | str, str, str]:
     """Engine → provider → model → keys. Raises InsightsSetupError with nothing
     configured, because a run that cannot reach a model should fail at the door
     rather than halfway through a brief.
 
     ``user_keys`` are per-request bring-your-own keys from the ``X-Provider-*``
-    headers (see ``service/auth.get_user_provider_keys``). A caller's own key
-    wins over the server's for the *resolved* provider only — an OpenAI key
-    someone supplied must never be spent on a Gemini call. Secrets: never
-    logged, never persisted.
+    headers (see ``service/auth.get_user_provider_keys``); ``stored_keys`` are
+    the same user's saved keys (``service/provider_keys.py``), which is all an
+    unattended brief can have. A caller's own key wins over the server's for
+    the *resolved* provider only — an OpenAI key someone supplied must never be
+    spent on a Gemini call. Secrets: never logged, never persisted.
+
+    Whether the server's own key may be spent at all is not decided here: see
+    ``agents.engines.resolve_provider_key``, which fails closed on the hosted
+    deployment where that key is Duct's rather than the user's.
 
     A caller's key can also *choose* the provider, but only in the one case
     where that is unambiguous: the operator expressed no preference
@@ -93,8 +101,11 @@ def resolve_model(
     engine = resolve_engine(engine_override or cfg.generate_engine or "v1")
     provider = resolve_engine_provider(engine, cfg.generate_provider or None)
     model_override = cfg.generate_model or None
-    if not cfg.generate_provider and len(user_keys or {}) == 1:
-        (candidate,) = (user_keys or {}).keys()
+    # A saved key is as much "the caller asked for this provider" as a header
+    # one — the only difference is that it survived a page refresh.
+    byo = {**(stored_keys or {}), **(user_keys or {})}
+    if not cfg.generate_provider and len(byo) == 1:
+        (candidate,) = byo.keys()
         if candidate in ENGINE_SUPPORTED_PROVIDERS.get(engine, frozenset()):
             # GENERATE_MODEL goes with the provider the operator picked, so it is
             # dropped along with it — a Gemini model id forwarded to OpenRouter is
@@ -104,13 +115,13 @@ def resolve_model(
                 model_override = None
             provider = candidate
     model = resolve_engine_model(engine, provider, model_override)
-    api_key = (user_keys or {}).get(provider, "") or getattr(
-        cfg, PROVIDER_CONFIG_ATTR[provider], ""
-    ) or ""
-    if not api_key and not claude_oauth_available():
-        raise InsightsSetupError(
-            f"No API key configured for provider {getattr(provider, 'value', provider)!r}."
-        )
+    # ProviderKeyRequired deliberately propagates rather than becoming an
+    # InsightsSetupError: "you have not connected a key" is a 402 the browser
+    # can act on, not the 500 every other setup failure earns.
+    resolved = resolve_provider_key(provider, user_keys, stored_keys=stored_keys)
+    if resolved.billed_to_duct:
+        logger.info("insights: run billed to Duct (%s/%s)", provider.value, resolved.source)
+    api_key = resolved.key
     summary_key = api_key if getattr(provider, "value", str(provider)) == "anthropic" else ""
     return provider, model, api_key, summary_key
 
@@ -123,7 +134,13 @@ def resolve_run(
     user_keys: dict[Provider, str] | None = None,
 ) -> InsightsRun:
     """Model + membership-checked project scope + the autonomy the run gets."""
-    provider, model, api_key, summary_key = resolve_model(engine_override, user_keys)
+    # The unattended brief has no headers at all, so without this it would be
+    # the one insights path still reaching for the server key.
+    with next(db_session()) as db:
+        stored = stored_provider_keys(db, user_id)
+    provider, model, api_key, summary_key = resolve_model(
+        engine_override, user_keys, stored
+    )
 
     scoped: UUID | None = None
     configured = AUTONOMY_ASK

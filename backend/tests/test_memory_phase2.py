@@ -200,7 +200,9 @@ def test_consolidate_conversation_runs_once_per_watermark(db, project, service_d
             calls.append(prompt)
             return Consolidation(entries=[ExtractedEntry(kind="goal", title="Target CPA $45")])
 
-    monkeypatch.setattr(consolidation, "_build_model", lambda: _StubModel())
+    # Takes the owner whose saved key funds the run — background work has no
+    # request to carry a provider header (service/provider_keys.py).
+    monkeypatch.setattr(consolidation, "_build_model", lambda owner_id=None: _StubModel())
 
     first = asyncio.run(consolidation.consolidate_conversation(conv.id))
     assert (first.written, first.through_seq) == (1, 8)

@@ -289,9 +289,15 @@ export async function listAgents() {
  * Then connect to openAgentStream(agentType, sessionId) for SSE events.
  */
 export async function createAgentSession(agentType, params) {
+  // The provider headers ride on session creation for every agent, not just
+  // insights: the backend resolves the run's key here, and a request without
+  // them is a request the hosted deployment has no key it is allowed to spend.
   const res = await fetch(`${BASE}/api/agents/${encodeURIComponent(agentType)}/sessions`, {
     method: "POST",
-    headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
+    headers: {
+      ...backendAuthedHeaders({ "Content-Type": "application/json" }),
+      ...(await providerKeyHeaders()),
+    },
     body: JSON.stringify(params),
   });
   if (!res.ok) {

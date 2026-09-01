@@ -16,7 +16,7 @@ import uuid
 from collections.abc import AsyncGenerator
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 
 from agents.audit.events import AuditEvent, AuditStep, STEP_LABELS
@@ -27,9 +27,19 @@ from agents.audit.schema import (
 )
 from agents.audit.v1.runner import LangChainAuditRunner
 from agents.audit.v3.runner import ClaudeAuditRunner, close_session, get_session
-from agents.engines import Engine, resolve_engine, resolve_engine_model, resolve_engine_provider, PROVIDER_CONFIG_ATTR
+from agents.engines import (
+    Engine,
+    resolve_engine,
+    resolve_engine_model,
+    resolve_engine_provider,
+    resolve_provider_key,
+)
+from db.session import get_session as db_session
+from models.auth import User
+from service.auth import get_current_user_optional, get_user_provider_keys
 from service.crawl.fetcher import SSRFError, validate_public_url
-from config import claude_oauth_available, get_configs
+from service.provider_keys import stored_provider_keys
+from config import get_configs
 from utils.dates import now_iso
 
 logger = logging.getLogger(__name__)
@@ -69,13 +79,28 @@ async def _prune_stale_sessions() -> None:
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _resolve_agent_config(request_engine: str = "") -> tuple[str, Any, Any, Engine]:
+def _resolve_agent_config(
+    request_engine: str = "",
+    user_keys: dict | None = None,
+    owner_id: Any = None,
+) -> tuple[str, Any, Any, Engine]:
+    """Engine/provider/model, and the key this run is allowed to spend.
+
+    The key half is not a config read any more — see
+    ``agents.engines.resolve_provider_key``. On the hosted deployment an audit
+    with no key of the caller's own raises ProviderKeyRequired here rather than
+    running on Duct's account.
+    """
     cfg = get_configs()
     engine = resolve_engine(request_engine or "v1")  # default v1
     provider = resolve_engine_provider(engine, cfg.generate_provider or None)
     model = resolve_engine_model(engine, provider, cfg.generate_model or None)
-    api_key = getattr(cfg, PROVIDER_CONFIG_ATTR[provider], "") or ""
-    return api_key, provider, model, engine
+    with next(db_session()) as db:
+        stored = stored_provider_keys(db, owner_id)
+    resolved = resolve_provider_key(provider, user_keys, stored_keys=stored)
+    if resolved.billed_to_duct:
+        logger.info("audit: run billed to Duct (%s/%s)", provider.value, resolved.source)
+    return resolved.key, provider, model, engine
 
 
 async def _emit(queue: asyncio.Queue, body: dict[str, Any]) -> None:
@@ -126,16 +151,15 @@ async def _run_audit_pipeline(
     session_id: str,
     req: AuditRequest,
     emit_fn: Any,
+    user_keys: dict | None = None,
+    owner_id: Any = None,
 ) -> None:
     try:
-        api_key, provider, model, engine = _resolve_agent_config(req.engine)
-        if not api_key and not (engine == Engine.V3 and claude_oauth_available()):
-            # The Claude OAuth fallback is V3-only; every other engine/provider
-            # needs its own key, and naming it beats a generic Anthropic message.
-            raise ValueError(
-                f"No API key configured for provider '{provider.value}' "
-                f"(engine {engine.value})."
-            )
+        api_key, provider, model, engine = _resolve_agent_config(
+            req.engine, user_keys, owner_id
+        )
+        # An empty key past this point is the V3 subscription path, which
+        # resolve_provider_key has already decided is permitted here.
 
         await emit_fn({
             "event": AuditEvent.PIPELINE_STARTED,
@@ -201,7 +225,11 @@ async def _run_audit_pipeline(
 
 
 @router.post("/audit/run/stream")
-async def run_audit_stream(req: AuditRequest) -> StreamingResponse:
+async def run_audit_stream(
+    req: AuditRequest,
+    user: User | None = Depends(get_current_user_optional),
+    user_keys: dict = Depends(get_user_provider_keys),
+) -> StreamingResponse:
     """Start an SEO audit. Returns an SSE stream covering the full session lifetime."""
     import time
     session_id = str(uuid.uuid4())
@@ -215,7 +243,9 @@ async def run_audit_stream(req: AuditRequest) -> StreamingResponse:
 
     async def worker() -> None:
         try:
-            await _run_audit_pipeline(session_id, req, emit_fn)
+            await _run_audit_pipeline(
+                session_id, req, emit_fn, user_keys, user.id if user else None
+            )
         except Exception as exc:
             logger.exception("audit worker error")
             await emit_fn({"event": AuditEvent.PIPELINE_FAILED, "status": "error", "error": str(exc)})

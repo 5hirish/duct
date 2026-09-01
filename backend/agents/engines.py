@@ -27,6 +27,8 @@ provider-locked by design (anthropics/claude-agent-sdk-python#410, closed
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from dataclasses import dataclass
 from enum import Enum
 
 from agents.models import CLI_ONLY_MODELS, MODEL_FALLBACK, AgentEffort, ModelName, Provider
@@ -208,3 +210,111 @@ def resolve_engine_model(
 def get_env_var_for_engine_provider(engine: Engine, provider: Provider) -> str | None:
     """Return the env var name that the engine's framework reads for this provider."""
     return ENGINE_PROVIDER_ENV_VAR.get(engine, {}).get(provider)
+
+
+# ---------------------------------------------------------------------------
+# Whose key pays for a run
+# ---------------------------------------------------------------------------
+#
+# Every LLM credential a run spends comes through resolve_provider_key below.
+# That is the point of putting it here rather than at each call site: a run
+# billed to Duct's own Console account is a policy decision, and a policy that
+# lives in six copies of `getattr(cfg, PROVIDER_CONFIG_ATTR[provider], "")` is
+# one that will be reintroduced by the next agent to need a key.
+#
+# Grepping for that getattr is the standing audit — outside this module it
+# should return nothing but the settings/status readers, which ask whether a
+# key exists and never spend one.
+
+
+class ProviderKeyRequired(RuntimeError):
+    """No credential this run is allowed to spend.
+
+    Carries the provider so the API layer can turn it into a 402 the browser
+    can act on — the Providers dialog for that provider — rather than a 500
+    that reads like an outage.
+    """
+
+    def __init__(self, provider: Provider | str, detail: str = "") -> None:
+        self.provider = getattr(provider, "value", str(provider))
+        super().__init__(
+            detail
+            or f"No {self.provider} API key for this request. Add your own key in Settings → Providers."
+        )
+
+
+@dataclass(frozen=True)
+class ProviderKey:
+    """A resolved credential and, just as importantly, whose account it is."""
+
+    key: str
+    provider: Provider
+    #: ``user``  — an X-Provider-* header on this request
+    #: ``stored``— this user's saved, encrypted key
+    #: ``env``   — this instance's env file (desktop / self-hosted: the user's own)
+    #: ``cloud`` — Duct's hosted key; our account is paying
+    #: ``subscription`` — the operator's Claude subscription on this machine
+    source: str
+
+    @property
+    def billed_to_duct(self) -> bool:
+        """True when this run costs Duct money. Log it; it should be rare."""
+        return self.source in ("cloud", "subscription")
+
+
+def resolve_provider_key(
+    provider: Provider,
+    user_keys: Mapping[Provider, str] | None = None,
+    *,
+    stored_keys: Mapping[Provider, str] | None = None,
+    duct_pays: bool = False,
+) -> ProviderKey:
+    """The key this run may spend, in precedence order, or raise.
+
+    1. ``user_keys``   — the caller's ``X-Provider-*`` header for this request
+    2. ``stored_keys`` — their saved encrypted key (background jobs have no
+       request to carry a header, so this is the only BYOK they can have)
+    3. this instance's env key — **only** when ``allow_server_provider_keys()``
+       says the env file belongs to the user running it, or the call site
+       explicitly declared ``duct_pays``
+    4. the Claude subscription, under the same gate and for the same reason
+
+    ``duct_pays`` is for flows Duct deliberately funds — the lead-magnet teaser
+    audit is demand gen, not a customer's run. Pass it as an expression at the
+    call site (``duct_pays=req.lead_magnet``) so the condition stays readable.
+
+    Kept free of any DB or request import: the caller merges what it has and
+    this decides. ``service/provider_keys.py`` is the piece that loads stored
+    keys, and it is the only thing that needs a session.
+    """
+    from config import allow_server_provider_keys, claude_oauth_available, get_configs
+
+    supplied = (user_keys or {}).get(provider, "")
+    if supplied and supplied.strip():
+        return ProviderKey(supplied.strip(), provider, "user")
+
+    saved = (stored_keys or {}).get(provider, "")
+    if saved and saved.strip():
+        return ProviderKey(saved.strip(), provider, "stored")
+
+    cfg = get_configs()
+    may_use_ours = duct_pays or allow_server_provider_keys()
+    if not may_use_ours:
+        # The whole reason this module exists. There IS a key in the env on the
+        # hosted deployment and we are declining to spend it.
+        raise ProviderKeyRequired(provider)
+
+    server_key = (getattr(cfg, PROVIDER_CONFIG_ATTR.get(provider, ""), "") or "").strip()
+    if server_key:
+        # Same field, two different answers to "who is paying" — see
+        # routes/providers.providers_status, which draws the same distinction.
+        local = bool(cfg.duct_local) or cfg.app_env == "local"
+        return ProviderKey(server_key, provider, "env" if local else "cloud")
+
+    # v3's harness can authenticate with no key at all. That is the operator's
+    # own subscription, so it sits behind the same gate as the env key rather
+    # than being a way around it.
+    if provider is Provider.ANTHROPIC and claude_oauth_available():
+        return ProviderKey("", provider, "subscription")
+
+    raise ProviderKeyRequired(provider)

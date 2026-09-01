@@ -39,6 +39,19 @@ _V3_NEEDS_AUTH_DETAIL = (
 
 
 def _engine_status(engine: Engine, cfg) -> EngineStatus:
+    """Whether this engine has credentials *configured on this instance*.
+
+    Deliberately NOT gated on ``allow_server_provider_keys``, unlike
+    ``/providers/status``. The two answer different questions and only one of
+    them is the customer's: this endpoint takes no provider headers, so it
+    cannot see a caller's own key, and its guidance ("Set ANTHROPIC_API_KEY
+    from the Claude Console") is addressed to whoever runs the instance. Gating
+    it would make it report needs_auth on the hosted deployment forever while
+    telling customers to set a server env var they do not have.
+
+    ``/providers/status`` is the header-aware, gated answer to "can MY runs
+    reach this?" — that is the one the settings page renders.
+    """
     default_provider = ENGINE_DEFAULT_PROVIDER[engine]
     has_api_key = bool(getattr(cfg, PROVIDER_CONFIG_ATTR[default_provider], ""))
     supports_oauth = ENGINE_SUPPORTS_OAUTH[engine]

@@ -56,7 +56,6 @@ from agents.content.schema import (
     Slide,
 )
 from agents.content.templates import derive_image_prompts, render_slides_html
-from config import get_configs
 from service import storage
 from db.session import get_engine
 from models.content import (
@@ -1217,9 +1216,12 @@ def build_content_mcp_server(
             )
             from service.google.gemini.client import build_multi_reference_prefix
 
-            cfg = get_configs()
-            if not cfg.gemini_api_key:
-                return _err("Image generation isn't enabled for this workspace yet.")
+            image_key = session.gemini_api_key
+            if not image_key:
+                return _err(
+                    "Image generation needs a Google Gemini API key. Add one in "
+                    "Settings \u2192 Providers, then try again."
+                )
 
             payload = {k: v for k, v in args.items() if v not in (None, "")}
             payload.setdefault("number_of_images", min(int(payload.get("number_of_images", 1) or 1), 4))
@@ -1325,7 +1327,7 @@ def build_content_mcp_server(
                             update={"prompt": f"{prefix}\n\n{request.prompt}"}
                         )
 
-                client = GeminiImageClient(cfg.gemini_api_key)
+                client = GeminiImageClient(image_key)
                 try:
                     images = await client.generate_image(
                         request,
@@ -1435,9 +1437,12 @@ def build_content_mcp_server(
                 persist_generated_image,
             )
 
-            cfg = get_configs()
-            if not cfg.gemini_api_key:
-                return _err("Image editing isn't enabled for this workspace yet.")
+            image_key = session.gemini_api_key
+            if not image_key:
+                return _err(
+                    "Image editing needs a Google Gemini API key. Add one in "
+                    "Settings \u2192 Providers, then try again."
+                )
 
             payload = {k: v for k, v in args.items() if v not in (None, "")}
             payload.setdefault("number_of_images", min(int(payload.get("number_of_images", 1) or 1), 4))
@@ -1466,7 +1471,7 @@ def build_content_mcp_server(
                 style_bytes   = _load(request.style_asset_id)
                 subject_bytes = _load(request.subject_asset_id)
 
-                client = GeminiImageClient(cfg.gemini_api_key)
+                client = GeminiImageClient(image_key)
                 try:
                     images = await client.edit_image(
                         request,

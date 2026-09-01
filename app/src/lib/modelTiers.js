@@ -96,6 +96,7 @@ export const JOB_LABELS = {
  */
 export const SOURCE_LABELS = {
   user: "Your key",
+  stored: "Your saved key",
   env: "From env",
   cloud: "Duct cloud",
   subscription: "Your subscription",
@@ -105,6 +106,7 @@ export const SOURCE_LABELS = {
 /** Longer form, for the provider tiles where there is room for a clause. */
 export const SOURCE_DETAIL = {
   user: "Using the key you provided",
+  stored: "Using your saved key — also serves scheduled runs",
   env: "Using a key from this instance's environment",
   cloud: "Using Duct's hosted key — our account is paying",
   subscription: "Using your Claude subscription on this machine",
@@ -114,6 +116,7 @@ export const SOURCE_DETAIL = {
 /** A source that costs the user nothing is worth showing differently. */
 export const SOURCE_TONE = {
   user: "ok",
+  stored: "ok",
   env: "ok",
   cloud: "info",
   subscription: "ok",

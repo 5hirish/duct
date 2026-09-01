@@ -11,6 +11,7 @@ from urllib.parse import urlparse
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 import sentry_sdk
 from uvicorn.logging import DefaultFormatter
 
@@ -27,6 +28,7 @@ import service.mixpanel.fetch  # noqa: F401 — registers connectors before rout
 import service.clarity.fetch  # noqa: F401 — registers connectors before routes import
 import service.growthbook.fetch  # noqa: F401 — registers connectors before routes import
 
+from agents.engines import ProviderKeyRequired
 from config import cors_kwargs, get_configs
 from db.migrate import ensure_schema
 from db.session import init_db
@@ -257,6 +259,21 @@ app.add_middleware(CORSMiddleware, **cors_kwargs(get_configs()))
 app.add_middleware(OpenapiDocsBasicAuthMiddleware)
 # Added last → outermost, so the timing spans CORS + auth + handler.
 app.add_middleware(AccessLogMiddleware)
+
+
+@app.exception_handler(ProviderKeyRequired)
+async def _provider_key_required(request, exc: ProviderKeyRequired):
+    """402, not 500 — the caller can fix this by connecting a key.
+
+    Raised wherever a run would otherwise have been billed to Duct's own
+    provider account (agents/engines.resolve_provider_key). The provider is in
+    the body so the browser can open the right tile in Settings → Providers
+    rather than making the user find it.
+    """
+    return JSONResponse(
+        status_code=402,
+        content={"detail": str(exc), "provider": exc.provider, "error": "provider_key_required"},
+    )
 
 
 # Serve /uploads only for the local storage backend (dev). In prod the 'r2'

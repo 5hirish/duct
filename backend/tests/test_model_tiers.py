@@ -253,13 +253,13 @@ def test_image_models_emit_images():
 # tier rows two tabs away correctly said "From env". Pin the vocabulary here.
 # ---------------------------------------------------------------------------
 
-SOURCES = {"user", "env", "cloud", "subscription", "none"}
+SOURCES = {"user", "stored", "env", "cloud", "subscription", "none"}
 
 
 def test_provider_status_emits_only_known_sources(monkeypatch):
     from routes import providers as providers_route
 
-    rows = providers_route.providers_status(user_keys={})["providers"]
+    rows = providers_route.providers_status(user_keys={}, user=None, db=None)["providers"]
     assert {row["source"] for row in rows} <= SOURCES
     assert {row["id"] for row in rows} == {p.value for p in Provider}
     # reachable and source must never disagree.
@@ -270,13 +270,21 @@ def test_provider_status_emits_only_known_sources(monkeypatch):
 def test_a_supplied_key_wins_over_everything_else():
     from routes import providers as providers_route
 
-    rows = providers_route.providers_status(user_keys={Provider.OPENAI: "sk-test"})["providers"]
+    rows = providers_route.providers_status(
+        user_keys={Provider.OPENAI: "sk-test"}, user=None, db=None
+    )["providers"]
     openai = next(row for row in rows if row["id"] == Provider.OPENAI.value)
     assert openai["source"] == "user"
 
 
-def test_a_server_key_reads_as_env_locally_and_cloud_when_deployed(monkeypatch):
-    """Same config field, opposite answers to 'who is paying for this run'."""
+def test_a_server_key_reads_as_env_locally_and_as_nothing_when_deployed(monkeypatch):
+    """Same config field, opposite answers to 'can my runs use this'.
+
+    On a laptop or a self-hosted box that key is the user's own, so it is a real
+    way in. On the hosted deployment it is Duct's, and `resolve_provider_key`
+    will not spend it — so the honest answer to a customer is that this provider
+    is not reachable, and the tile asks for a key. Reporting `cloud` there was
+    accurate about the config and a lie about what would happen next."""
     from routes import providers as providers_route
 
     class _Cfg:
@@ -289,9 +297,13 @@ def test_a_server_key_reads_as_env_locally_and_cloud_when_deployed(monkeypatch):
             self.duct_local = local
             self.app_env = "local" if local else "production"
 
-    for local, expected in ((True, "env"), (False, "cloud")):
+    for local, expected in ((True, "env"), (False, "none")):
         monkeypatch.setattr(providers_route, "get_configs", lambda local=local: _Cfg(local))
         monkeypatch.setattr(providers_route, "claude_oauth_available", lambda: False)
-        rows = providers_route.providers_status(user_keys={})["providers"]
+        monkeypatch.setattr(
+            providers_route, "allow_server_provider_keys", lambda local=local: local
+        )
+        rows = providers_route.providers_status(user_keys={}, user=None, db=None)["providers"]
         google = next(r for r in rows if r["id"] == Provider.GOOGLE_GENAI.value)
         assert google["source"] == expected
+        assert google["reachable"] is (expected != "none")

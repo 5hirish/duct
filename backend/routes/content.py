@@ -64,9 +64,15 @@ from agents.content.v3.runner import (
     create_plan_session,
     get_session,
 )
-from agents.engines import PROVIDER_CONFIG_ATTR, Engine, resolve_engine_provider
+from agents.engines import (
+    Engine,
+    ProviderKeyRequired,
+    resolve_engine_provider,
+    resolve_provider_key,
+)
+from agents.models import Provider
 from agents.content.channels import Platform
-from config import claude_oauth_available, get_configs
+from config import get_configs
 from db.session import get_session as db_session
 from models.content import (
     ContentAsset,
@@ -79,8 +85,9 @@ from models.content import (
 from models.auth import User
 from models.project import Project
 from service import storage
-from service.auth import get_current_user
+from service.auth import get_current_user, get_user_provider_keys
 from service.membership import get_project_for_user, get_project_row_for_user
+from service.provider_keys import stored_provider_keys
 from utils.dates import now_iso
 
 logger = logging.getLogger(__name__)
@@ -138,10 +145,85 @@ async def _prune_stale_sessions() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _resolve_api_key() -> str:
+def _resolve_api_key(
+    session_id: str = "", user_keys: dict | None = None, owner_id=None
+) -> str:
+    """The key a content run may spend.
+
+    Content is the last pipeline still on V3, and it used to read the server
+    key unconditionally — which on the hosted deployment means Duct pays for
+    every plan and every draft. It now goes through the same gate as the rest:
+    the caller's header key, then their saved key, then the env key only where
+    that env file is their own. See agents/engines.resolve_provider_key.
+
+    ``session_id`` is how a background worker finds the owner: the request that
+    created the session is long gone by the time the worker runs.
+    """
     cfg = get_configs()
     provider = resolve_engine_provider(Engine.V3, cfg.generate_provider or None)
-    return getattr(cfg, PROVIDER_CONFIG_ATTR[provider], "") or ""
+    if owner_id is None:
+        owner_id = _session_owner(session_id)
+    resolved = resolve_provider_key(
+        provider, user_keys, stored_keys=_stored_for(owner_id)
+    )
+    if resolved.billed_to_duct:
+        logger.info("content: run billed to Duct (%s/%s)", provider.value, resolved.source)
+    return resolved.key
+
+
+def _session_owner(session_id: str):
+    """Who a background worker is running for.
+
+    The request that created the session is long gone by the time the worker
+    runs, so the session is the only place its owner survives.
+    """
+    if not session_id:
+        return None
+    from agents.core.session import get_session as _get_agent_session
+
+    sess = _get_agent_session(session_id)
+    return getattr(sess, "user_id", None) if sess else None
+
+
+def _stored_for(owner_id):
+    with next(db_session()) as db:
+        return stored_provider_keys(db, owner_id)
+
+
+def _attach_image_key(
+    session_id: str, user_keys: dict | None = None, owner_id=None
+) -> None:
+    """Resolve the run's Gemini key and stash it on the session.
+
+    Images are a second provider inside a content run: the conversation is
+    Anthropic, every generated image is Google. So it gets its own resolution
+    rather than riding on the run's key, and its own failure mode — no key
+    means the image tools decline with a sentence telling the user where to add
+    one, not a dead run. A content session is worth having without images; it
+    is not worth having on our bill.
+
+    Resolved once here rather than per tool call so a run cannot start on the
+    user's key and finish on ours if the store changes underneath it.
+    """
+    from agents.core.session import get_session as _get_agent_session
+
+    sess = _get_agent_session(session_id)
+    if sess is None:
+        return
+    if owner_id is None:
+        owner_id = getattr(sess, "user_id", None)
+    try:
+        resolved = resolve_provider_key(
+            Provider.GOOGLE_GENAI, user_keys, stored_keys=_stored_for(owner_id)
+        )
+    except ProviderKeyRequired:
+        # Expected on the hosted deployment for a user who has connected no
+        # Gemini key. The tools report it in the words the user needs.
+        sess.gemini_api_key = ""
+        return
+    if resolved.billed_to_duct:
+        logger.info("content: images billed to Duct (%s)", resolved.source)
+    sess.gemini_api_key = resolved.key
 
 
 async def _emit(queue: asyncio.Queue, body: dict[str, Any]) -> None:
@@ -221,11 +303,11 @@ async def _run_plan_worker(
     session_id: str,
     project_id: UUID,
     emit_fn: Any,
+    user_keys: dict | None = None,
 ) -> None:
     try:
-        api_key = _resolve_api_key()
-        if not api_key and not claude_oauth_available():
-            raise ValueError("ANTHROPIC_API_KEY is not configured")
+        api_key = _resolve_api_key(session_id, user_keys)
+        _attach_image_key(session_id, user_keys)
         runner = ClaudeContentRunner(api_key=api_key)
         await runner.run_plan(session_id, project_id, emit_fn)
         _link_conversation_artifact(session_id, "plan")
@@ -243,6 +325,7 @@ async def run_plan_stream(
     req: PlanRequest,
     user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
+    user_keys: dict = Depends(get_user_provider_keys),
 ) -> StreamingResponse:
     """Start a 30-day plan synthesis session. Returns an SSE stream covering
     the full session lifetime (continues after PIPELINE_FINISHED so the user
@@ -260,7 +343,7 @@ async def run_plan_stream(
 
     async def worker() -> None:
         try:
-            await _run_plan_worker(session_id, req.project_id, emit_fn)
+            await _run_plan_worker(session_id, req.project_id, emit_fn, user_keys)
         except Exception as exc:
             logger.exception("content: plan worker outer error")
             await emit_fn({
@@ -302,11 +385,11 @@ async def _run_draft_worker(
     session_id: str,
     req: DraftPostRequest,
     emit_fn: Any,
+    user_keys: dict | None = None,
 ) -> None:
     try:
-        api_key = _resolve_api_key()
-        if not api_key and not claude_oauth_available():
-            raise ValueError("ANTHROPIC_API_KEY is not configured")
+        api_key = _resolve_api_key(session_id, user_keys)
+        _attach_image_key(session_id, user_keys)
         runner = ClaudeContentRunner(api_key=api_key)
         # Resolve the Day from the plan if provided; otherwise pass topic/pillar.
         day_obj = None
@@ -366,6 +449,7 @@ async def run_post_stream(
     req: DraftPostRequest,
     user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
+    user_keys: dict = Depends(get_user_provider_keys),
 ) -> StreamingResponse:
     """Start a single-post draft session. SSE stream for the lifetime."""
     _project_for_user(db, user, req.project_id)
@@ -381,7 +465,7 @@ async def run_post_stream(
 
     async def worker() -> None:
         try:
-            await _run_draft_worker(session_id, req, emit_fn)
+            await _run_draft_worker(session_id, req, emit_fn, user_keys)
         except Exception as exc:
             logger.exception("content: draft worker outer error")
             await emit_fn({
