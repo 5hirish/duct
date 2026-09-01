@@ -1,0 +1,107 @@
+/* app-shell — Header, logo, the two content regions, and page toolbars.
+   Split out of globals.css; see that file for the load order. */
+/* ── Top header: layout only — frosted surface comes from Tailwind on <header> (avoids unlayered bg beating utilities) ── */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  min-height: 3.25rem;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  font-family: var(--serif);
+  font-size: 1.375rem;
+  color: var(--foreground);
+  letter-spacing: -0.3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logo-mark {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--orange);
+  animation: pop 2.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pop {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.5);
+  }
+}
+
+
+
+
+/* The two content regions are CONTAINERS, which is what lets page components
+   use `@`-variants (`@lg:grid-cols-2`) instead of viewport ones.
+   The viewport is the wrong ruler here: the sidebar takes 16rem out of it, so
+   at a 1024px window `lg:` fires while the content area is only ~740px wide,
+   and every grid that trusted it came out a column too many. Declaring the
+   container per REGION rather than per component means a component adapts
+   correctly wherever it is placed — the panes in SplitWorkspace declare one
+   too, for exactly that reason. */
+.app-main {
+  container-type: inline-size;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 1.75rem 1rem 4rem;
+}
+
+/* Fluid full-width variant for tool surfaces (e.g. Content) that should use
+   the whole viewport rather than the centered reading column. */
+.app-main-wide {
+  container-type: inline-size;
+  max-width: 100%;
+  margin: 0;
+  padding: 1.75rem 1.5rem 4rem;
+}
+
+/* Page title rows — wrap on phones / small tablets */
+.page-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  row-gap: 0.625rem;
+  margin-bottom: 0.5rem;
+}
+
+.page-toolbar .page-toolbar-title {
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.page-toolbar-back {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  row-gap: 0.625rem;
+  margin-bottom: 0.625rem;
+}
+
+.page-toolbar-back .page-toolbar-title {
+  margin: 0;
+  flex: 1 1 min(100%, 220px);
+  min-width: 0;
+}
+
+.report-detail-title {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+

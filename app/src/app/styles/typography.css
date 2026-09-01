@@ -1,0 +1,17 @@
+/* typography — reading measure utilities.
+   Split out of globals.css; see that file for the load order.
+
+   Imported after the component partials so `.measure` can cap a block whose
+   own rule set a wider max-width. Long-form text gets `.measure`; anything
+   tabular, code, or laid out in columns must NOT — capping those just strands
+   whitespace. */
+
+.measure {
+  max-width: var(--measure);
+}
+
+/* For dense secondary copy — captions, hints — where a shorter line reads
+   better than the full measure. */
+.measure-tight {
+  max-width: var(--measure-tight);
+}

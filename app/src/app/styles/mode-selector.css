@@ -1,0 +1,26 @@
+/* mode-selector — Intelligence mode badge.
+   Split out of globals.css; see that file for the load order. */
+/* ── Intelligence Mode Selector ─────────────────────────────────────────── */
+
+/* Mode badge in generate wizard header */
+.mode-badge-wizard {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
+  padding: 0.1875rem 0.625rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  margin-left: 0.625rem;
+  vertical-align: middle;
+}
+
+/* Mobile bottom sheet — used by ContentWorkspace on small screens. */
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
