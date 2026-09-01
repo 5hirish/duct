@@ -13,12 +13,18 @@ class Provider(str, Enum):
     OPENAI = "openai"
     GOOGLE_GENAI = "google_genai"
     ANTHROPIC = "anthropic"
-    # OpenRouter is not a fourth SDK — it is the OpenAI-compatible chat
-    # completions shape pointed at a different base URL. That shape is the most
-    # durable interface in this stack (every provider implements it), which is
-    # why the endpoint is a config value: override the base URL and the same
-    # code path reaches Ollama, vLLM, llama.cpp, Together, or a self-hosted
-    # gateway. See agents/core/ports — this is the model-transport port.
+    # OpenRouter runs on its own first-party integration (``langchain-openrouter``
+    # → ``ChatOpenRouter``), not on ChatOpenAI-with-a-base-URL. It was the latter
+    # until the native package existed, and the swap buys the things the plain
+    # chat-completions shape has nowhere to put: per-provider routing preferences
+    # (``openrouter_provider``), OpenRouter's unified ``reasoning`` parameter,
+    # data-collection controls, and app-attribution headers.
+    #
+    # The compatible shape is still the port (see agents/core/ports) and still
+    # the way any *other* gateway would arrive — Ollama, vLLM, llama.cpp, a
+    # self-hosted LiteLLM. OpenRouter simply stopped being the thing standing in
+    # for it. ``GATEWAY_BASE_URL`` / ``NATIVE_GATEWAY_PROVIDERS`` below is where
+    # that split is written down.
     OPENROUTER = "openrouter"
 
 
@@ -59,13 +65,27 @@ class ModelName(str, Enum):
     CLAUDE_OPUS_1M = "claude-opus-5[1m]"
 
     # OpenRouter — vendor/slug form. A *curated default list*, not a whitelist:
-    # OpenRouter fronts 500+ models, so resolve_engine_model passes an unknown
+    # OpenRouter fronts 400+ models, so resolve_engine_model passes an unknown
     # slug through verbatim rather than silently substituting a default. These
     # are the open-weight / long-tail models worth naming.
-    OR_DEEPSEEK_CHAT = "deepseek/deepseek-chat"
-    OR_QWEN3_235B = "qwen/qwen3-235b-a22b"
-    OR_KIMI_K2 = "moonshotai/kimi-k2"
-    OR_GLM_4_6 = "z-ai/glm-4.6"
+    #
+    # Refreshed against the live /api/v1/models catalogue. The previous
+    # generation (deepseek-chat, qwen3-235b-a22b, kimi-k2, glm-4.6) all still
+    # serve, so nothing here is repair — but each had been superseded by a
+    # successor that is both cheaper and longer-context by roughly an order of
+    # magnitude, which on this list is the entire point:
+    #
+    #   deepseek-chat      $0.26/$1.03  164k  →  v4-flash    $0.08/$0.16  1.0M
+    #   qwen3-235b-a22b    $0.45/$1.82  131k  →  qwen3.7-flash $0.03/$0.13 1.0M
+    #   glm-4.6            $0.43/$1.75  205k  →  glm-5.3-flash $0.07/$0.25 1.3M
+    #   kimi-k2            $0.57/$2.30  131k  →  kimi-k2.5   $0.45/$2.25  262k
+    #
+    # All four carry `tools` in supported_parameters; a slug that cannot tool-call
+    # has no business here, since every Duct agent is a tool-calling agent.
+    OR_DEEPSEEK_V4_FLASH = "deepseek/deepseek-v4-flash"
+    OR_QWEN3_7_FLASH = "qwen/qwen3.7-flash"
+    OR_KIMI_K2_5 = "moonshotai/kimi-k2.5"
+    OR_GLM_5_3_FLASH = "z-ai/glm-5.3-flash"
     OR_CLAUDE_OPUS = "anthropic/claude-opus-5"
     OR_CLAUDE_SONNET = "anthropic/claude-sonnet-5"
     OR_GPT_5_MINI = "openai/gpt-5-mini"
@@ -191,7 +211,7 @@ DEFAULT_MODELS = {
     Provider.OPENAI: ModelName.GPT_5_MINI,
     Provider.GOOGLE_GENAI: ModelName.GEMINI_2_5_FLASH,
     Provider.ANTHROPIC: ModelName.CLAUDE_SONNET,
-    Provider.OPENROUTER: ModelName.OR_DEEPSEEK_CHAT,
+    Provider.OPENROUTER: ModelName.OR_DEEPSEEK_V4_FLASH,
 }
 
 # Where a run goes when its model will not answer — model data, so it lives
@@ -213,7 +233,7 @@ DEFAULT_MODELS = {
 #
 # Absent = no fallback, and the middleware is not mounted at all. That is the
 # right answer for a model already at the bottom of its family, and for an
-# unrecognised OpenRouter slug: OpenRouter fronts 500+ models, so there is no
+# unrecognised OpenRouter slug: OpenRouter fronts 400+ models, so there is no
 # basis for guessing what a caller's chosen slug should degrade to, and
 # silently substituting another vendor's model is worse than failing.
 MODEL_FALLBACK: dict[ModelName, tuple[ModelName, ...]] = {
@@ -232,23 +252,34 @@ MODEL_FALLBACK: dict[ModelName, tuple[ModelName, ...]] = {
     ModelName.GPT_4O:                (ModelName.GPT_4O_MINI,),
 }
 
-# Default endpoint for each OpenAI-compatible provider. Overridable per install
-# (config.openrouter_base_url) so the same transport reaches any compatible
-# gateway — a local Ollama or vLLM included.
-OPENAI_COMPATIBLE_BASE_URL: dict[Provider, str] = {
+# Gateways — providers that front other vendors' models and whose endpoint is
+# therefore a config value rather than a fixed vendor URL. Overridable per
+# install (config.openrouter_base_url) so the same code path reaches a
+# self-hosted router or a local model server.
+GATEWAY_BASE_URL: dict[Provider, str] = {
     Provider.OPENROUTER: "https://openrouter.ai/api/v1",
 }
+
+# Of those, the ones with a first-party LangChain integration of their own.
+# A gateway NOT listed here is served as the OpenAI chat-completions shape at
+# its own base URL, which is the fallback every gateway supports — that is what
+# a future Ollama / vLLM / LiteLLM entry would get, and it is why
+# ``langchain_provider`` still has two branches with only one gateway in the
+# table. Membership here is a claim that the package exists and is maintained,
+# not a preference: see the ``langchain-openrouter`` note in pyproject.toml.
+NATIVE_GATEWAY_PROVIDERS: frozenset[Provider] = frozenset({Provider.OPENROUTER})
 
 
 def langchain_provider(provider: Provider) -> str:
     """The ``model_provider`` string LangChain's init_chat_model expects.
 
-    OpenAI-compatible providers resolve to ``"openai"`` — they are the OpenAI
-    chat-completions wire format at a different base URL, not a distinct
-    integration. Keeping the mapping here means call sites never special-case
-    a provider, and adding another compatible gateway is one dict entry.
+    A gateway with its own integration passes its own name through — LangChain
+    resolves ``"openrouter"`` to ``langchain-openrouter``. A gateway without one
+    resolves to ``"openai"``: it is the OpenAI chat-completions wire format at a
+    different base URL, not a distinct integration. Keeping the mapping here
+    means call sites never special-case a provider.
     """
-    if provider in OPENAI_COMPATIBLE_BASE_URL:
+    if provider in GATEWAY_BASE_URL and provider not in NATIVE_GATEWAY_PROVIDERS:
         return Provider.OPENAI.value
     return provider.value
 
@@ -265,10 +296,14 @@ def get_api_key_kwargs(
     mutation races across concurrent requests carrying different BYO keys, and
     lets a server-side key win over the user's.
     """
-    if provider in OPENAI_COMPATIBLE_BASE_URL:
+    # Both gateway shapes take the same two kwargs: ChatOpenRouter aliases its
+    # `openrouter_api_key` / `openrouter_api_base` fields to `api_key` /
+    # `base_url`, exactly as ChatOpenAI names them. So this branch does not need
+    # to know which of the two a gateway is.
+    if provider in GATEWAY_BASE_URL:
         return {
             "api_key": api_key,
-            "base_url": base_url or OPENAI_COMPATIBLE_BASE_URL[provider],
+            "base_url": base_url or GATEWAY_BASE_URL[provider],
         }
     if provider == Provider.OPENAI:
         return {"openai_api_key": api_key}

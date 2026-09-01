@@ -259,18 +259,22 @@ class Configs(BaseSettings):
     gemini_api_key: str = ""
     openai_api_key: str = ""
     anthropic_api_key: str = ""
-    # OpenRouter — the OpenAI-compatible transport (v1 engine only). One key
+    # OpenRouter — its own LangChain integration (v1 engine only). One key
     # reaches 500+ models across 60+ providers, which is the practical answer
     # for bring-your-own-model: consumer subscriptions never grant API access,
     # so every customer arrives with a key, and for the open-weight/Chinese long
     # tail that key is usually this one.
     openrouter_api_key: str = ""
-    # Override to point the same OpenAI-compatible path at any other gateway.
-    # Self-hosted routers: LiteLLM (MIT), Bifrost (Go), Portkey Gateway (MIT),
-    # LLM Gateway (AGPLv3). Local model servers: Ollama
-    # (http://localhost:11434/v1), vLLM, llama.cpp. All are the same code path —
-    # they replace OpenRouter's interface, not its one-key-many-providers
-    # billing. Empty means OpenRouter's own endpoint.
+    # Override OpenRouter's endpoint — a regional endpoint, or a self-hosted
+    # proxy that speaks OpenRouter's API. Empty means OpenRouter's own endpoint.
+    #
+    # NOT the way to reach a different gateway any more. This used to double as
+    # that, because the provider was ChatOpenAI aimed elsewhere; it is now
+    # ChatOpenRouter, which speaks OpenRouter's API rather than plain
+    # chat-completions. A self-hosted router (LiteLLM, Bifrost, Portkey) or a
+    # local model server (Ollama http://localhost:11434/v1, vLLM, llama.cpp) is
+    # a new GATEWAY_BASE_URL entry in agents/models.py — which takes the
+    # OpenAI-shape branch — plus its own key field here.
     openrouter_base_url: str = ""
     # Long-lived Claude OAuth token from `claude setup-token` (the operator's own
     # Pro/Max subscription). Detected here only so the engine-status endpoint can

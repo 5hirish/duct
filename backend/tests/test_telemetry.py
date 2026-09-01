@@ -133,11 +133,11 @@ def test_google_provider_maps_to_the_convention_vocabulary():
 def test_openrouter_is_recorded_as_the_gateway_it_is():
     """OpenRouter is not in the convention's vendor enum — it is a gateway.
     Recording it is still what a reader needs to interpret latency and cost."""
-    with t.model_span(provider="openrouter", model="z-ai/glm-4.6"):
+    with t.model_span(provider="openrouter", model="z-ai/glm-5.3-flash"):
         pass
     (s,) = _spans()
     assert s.attributes[t.GEN_AI_PROVIDER_NAME] == "openrouter"
-    assert s.name == "chat z-ai/glm-4.6"
+    assert s.name == "chat z-ai/glm-5.3-flash"
 
 
 def test_tool_span_shape():

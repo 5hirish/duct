@@ -36,7 +36,7 @@ from agents.core.session import ASK_USER_TIMEOUT, BaseAgentSession, bridge_ask_u
 from agents.core.stream import DuctArtifactStreamParser
 from agents.core.telemetry import model_span
 from agents.models import (
-    OPENAI_COMPATIBLE_BASE_URL,
+    GATEWAY_BASE_URL,
     ModelName,
     Provider,
     get_api_key_kwargs,
@@ -117,16 +117,41 @@ def build_ask_user_tool(
 # ---------------------------------------------------------------------------
 
 def default_base_url(provider: Provider) -> str:
-    """Installation-level endpoint override for OpenAI-compatible providers.
+    """Installation-level endpoint override for gateway providers.
 
     Read here rather than threaded through every route because it is an
     install-wide setting, not a per-request one — and because agents/models.py
-    stays a config-free leaf module. Native providers never consult it.
+    stays a config-free leaf module. Direct vendors never consult it.
     """
-    if provider not in OPENAI_COMPATIBLE_BASE_URL:
+    if provider not in GATEWAY_BASE_URL:
         return ""
     from config import get_configs
     return getattr(get_configs(), "openrouter_base_url", "") or ""
+
+
+def _thinking_kwargs_for(provider: Provider, model, thinking: str) -> dict:
+    """``thinking_kwargs`` translated into what this provider's class accepts.
+
+    ``agents/thinking.py`` is deliberately provider-blind: it answers "what does
+    this *model* call this rung" and emits LangChain's standard
+    ``reasoning_effort``. That kwarg is standard across ChatAnthropic, ChatOpenAI
+    and ChatGoogleGenerativeAI — but **not** ChatOpenRouter, which takes
+    OpenRouter's unified ``reasoning={"effort": …}`` object instead.
+
+    The failure mode this exists to prevent is silent: ChatOpenRouter accepts an
+    unknown kwarg, warns, and forwards it inside ``model_kwargs``, so a mistyped
+    dial reaches the API as a junk top-level field and the run appears to work
+    at whatever depth the model defaulted to. Translating at the transport
+    boundary — where the provider is known — keeps thinking.py from growing a
+    provider axis it has no reason to have.
+    """
+    kwargs = thinking_kwargs(model, thinking)
+    effort = kwargs.pop("reasoning_effort", None)
+    if effort and provider is Provider.OPENROUTER:
+        kwargs["reasoning"] = {"effort": effort}
+    elif effort:
+        kwargs["reasoning_effort"] = effort
+    return kwargs
 
 
 def resolve_chat_model(
@@ -142,7 +167,7 @@ def resolve_chat_model(
 
     ``model`` may be a plain string: OpenRouter slugs are passed through
     un-enumerated (see ``agents/engines.resolve_engine_model``). ``base_url`` is
-    only consulted by OpenAI-compatible providers.
+    only consulted by gateway providers.
 
     ``thinking`` is a *Duct* level ("quick" … "exhaustive"), not a provider
     value. It resolves through agents/thinking.py to whatever this model calls
@@ -153,7 +178,7 @@ def resolve_chat_model(
         model=getattr(model, "value", model),
         model_provider=langchain_provider(provider),
         temperature=temperature,
-        **thinking_kwargs(model, thinking),
+        **_thinking_kwargs_for(provider, model, thinking),
         **get_api_key_kwargs(provider, api_key, base_url=base_url or default_base_url(provider)),
     )
 

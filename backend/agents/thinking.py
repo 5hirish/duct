@@ -184,8 +184,8 @@ MODEL_THINKING: dict[str, ThinkingSupport] = {
     # is offered. Vendor-prefixed slugs for models Duct also offers natively
     # (anthropic/claude-opus-5 …) resolve through _strip_vendor to the row
     # above rather than repeating it here.
-    ModelName.OR_DEEPSEEK_CHAT: _OPEN_WEIGHT,
-    ModelName.OR_GLM_4_6: _OPEN_WEIGHT,
+    ModelName.OR_DEEPSEEK_V4_FLASH: _OPEN_WEIGHT,
+    ModelName.OR_GLM_5_3_FLASH: _OPEN_WEIGHT,
 
     # --- Models Duct does not offer yet.
     # Plain strings on purpose: adding one to ModelName is a product decision
@@ -215,10 +215,12 @@ NO_THINKING_DIAL: frozenset[ModelName] = frozenset({
     ModelName.GEMINI_2_5_FLASH_LITE,
     # Absent from Anthropic's effort-supported model list.
     ModelName.CLAUDE_HAIKU,
-    # Open weights behind OpenRouter. It will accept the parameter, but neither
-    # model documents what it does with it, so Duct does not claim a ladder.
-    ModelName.OR_QWEN3_235B,
-    ModelName.OR_KIMI_K2,
+    # Open weights behind OpenRouter. Both list `reasoning` in the catalogue's
+    # supported_parameters but *not* `reasoning_effort` — they reason, they just
+    # take no level. That is the difference from the two rows above, which do
+    # carry `reasoning_effort` and therefore get a ladder.
+    ModelName.OR_QWEN3_7_FLASH,
+    ModelName.OR_KIMI_K2_5,
 })
 
 

@@ -1,9 +1,15 @@
 """The model-transport port (agents/core/ports).
 
-OpenRouter is not a fourth SDK — it is the OpenAI-compatible chat-completions
-shape at a different base URL. These tests pin that framing, because the value
-of adopting the standard shape is that the endpoint becomes a config value:
-the same code path reaches OpenRouter, Ollama, vLLM, or a self-hosted gateway.
+Two shapes live behind one ``Provider`` enum, and these tests pin the seam
+between them. A **gateway** fronts other vendors' models, so its endpoint is a
+config value rather than a fixed vendor URL. A gateway with a first-party
+LangChain integration (OpenRouter) gets it; one without is served as the OpenAI
+chat-completions shape at its own base URL, which is the fallback every gateway
+supports and the branch a future Ollama / vLLM / LiteLLM entry would take.
+
+The pieces that differ between those two shapes are exactly what breaks
+silently, so each has a test here: which ``model_provider`` string LangChain is
+given, and which reasoning kwarg the resulting class actually accepts.
 """
 
 from __future__ import annotations
@@ -22,7 +28,8 @@ from agents.engines import (
 )
 from agents.models import (
     MODEL_FALLBACK,
-    OPENAI_COMPATIBLE_BASE_URL,
+    GATEWAY_BASE_URL,
+    NATIVE_GATEWAY_PROVIDERS,
     ModelName,
     Provider,
     get_api_key_kwargs,
@@ -31,12 +38,13 @@ from agents.models import (
 
 
 # ---------------------------------------------------------------------------
-# The OpenAI-compatible shape
+# Gateways: a native integration where one exists, the OpenAI shape otherwise
 # ---------------------------------------------------------------------------
 
-def test_openrouter_resolves_to_the_openai_wire_format():
-    """It is the OpenAI format, so LangChain must be told 'openai'."""
-    assert langchain_provider(Provider.OPENROUTER) == "openai"
+def test_openrouter_resolves_to_its_own_integration():
+    """`langchain-openrouter` exists, so LangChain is told 'openrouter' and
+    builds a ChatOpenRouter — not a ChatOpenAI aimed at their base URL."""
+    assert langchain_provider(Provider.OPENROUTER) == "openrouter"
 
 
 @pytest.mark.parametrize("provider", [Provider.OPENAI, Provider.GOOGLE_GENAI, Provider.ANTHROPIC])
@@ -52,16 +60,22 @@ def test_openrouter_kwargs_carry_key_and_default_endpoint():
     }
 
 
-def test_base_url_override_repoints_the_same_transport():
-    """The payoff of adopting the standard: a local model is a config change.
+def test_a_gateway_endpoint_is_overridable():
+    """A gateway's endpoint stays a config value — a regional endpoint or a
+    self-hosted OpenRouter-compatible proxy is a setting, not a code change.
 
-    If this ever stops working, OpenRouter has quietly become a dependency
-    rather than one interchangeable endpoint among many.
+    Narrower than it used to be, and deliberately so. This once asserted that
+    the same override reached a local Ollama, which was true while OpenRouter
+    was a ChatOpenAI aimed elsewhere. It is not true of ChatOpenRouter, which
+    speaks OpenRouter's API: pointing it at `localhost:11434` would talk the
+    wrong protocol to Ollama. Reaching a local model server is now a new
+    ``GATEWAY_BASE_URL`` entry — which takes the OpenAI-shape branch — rather
+    than a base-URL override on this one.
     """
     kwargs = get_api_key_kwargs(
-        Provider.OPENROUTER, "ollama", base_url="http://localhost:11434/v1"
+        Provider.OPENROUTER, "k", base_url="https://openrouter.example.internal/api/v1"
     )
-    assert kwargs["base_url"] == "http://localhost:11434/v1"
+    assert kwargs["base_url"] == "https://openrouter.example.internal/api/v1"
 
 
 @pytest.mark.parametrize(
@@ -84,11 +98,11 @@ def test_native_credential_kwargs_are_unchanged(provider: Provider, expected_key
 # ---------------------------------------------------------------------------
 
 def test_known_openrouter_slug_resolves_to_the_enum():
-    assert resolve_engine_model(Engine.V1, Provider.OPENROUTER, "z-ai/glm-4.6") is ModelName.OR_GLM_4_6
+    assert resolve_engine_model(Engine.V1, Provider.OPENROUTER, "z-ai/glm-5.3-flash") is ModelName.OR_GLM_5_3_FLASH
 
 
 def test_unknown_openrouter_slug_passes_through_verbatim():
-    """OpenRouter fronts 500+ models. Substituting a default would discard the
+    """OpenRouter fronts 400+ models. Substituting a default would discard the
     model a bring-your-own-key customer explicitly chose — which is the feature."""
     assert resolve_engine_model(Engine.V1, Provider.OPENROUTER, "minimax/minimax-m2") == "minimax/minimax-m2"
 
@@ -96,7 +110,7 @@ def test_unknown_openrouter_slug_passes_through_verbatim():
 def test_openrouter_model_without_slug_shape_still_falls_back():
     """A bare name is a typo, not a model id — fall back rather than guarantee
     an upstream 404."""
-    assert resolve_engine_model(Engine.V1, Provider.OPENROUTER, "gpt5mini") is ModelName.OR_DEEPSEEK_CHAT
+    assert resolve_engine_model(Engine.V1, Provider.OPENROUTER, "gpt5mini") is ModelName.OR_DEEPSEEK_V4_FLASH
 
 
 def test_native_providers_do_not_pass_unknown_models_through():
@@ -137,12 +151,83 @@ def test_every_provider_supported_by_v1_has_an_env_var(provider: Provider):
     assert provider in ENGINE_PROVIDER_ENV_VAR[Engine.V1]
 
 
-def test_openai_compatible_registry_is_the_single_source_of_truth():
-    """Anything in the compatible map must resolve to the OpenAI format and
-    carry a default endpoint — that pairing is what makes the port work."""
-    for provider, url in OPENAI_COMPATIBLE_BASE_URL.items():
-        assert langchain_provider(provider) == "openai"
+def test_every_gateway_carries_a_default_endpoint():
+    """A gateway's endpoint is a config value, so the registry must supply the
+    default it is overriding. Without it `base_url` resolves to empty and the
+    client silently falls back to whatever its own default is."""
+    for _provider, url in GATEWAY_BASE_URL.items():
         assert url.startswith("http")
+
+
+def test_a_gateway_without_its_own_package_is_served_as_the_openai_shape():
+    """The fallback every gateway supports, and the branch a future Ollama /
+    vLLM / LiteLLM entry would take. Asserted on a stand-in rather than a real
+    member, because OpenRouter — the only gateway today — has a native package
+    and therefore exercises the other branch."""
+    for provider in GATEWAY_BASE_URL:
+        expected = provider.value if provider in NATIVE_GATEWAY_PROVIDERS else "openai"
+        assert langchain_provider(provider) == expected
+
+
+def test_a_native_gateway_is_also_a_gateway():
+    """NATIVE_GATEWAY_PROVIDERS refines GATEWAY_BASE_URL, it does not stand
+    beside it — a member missing from the base map would have no endpoint."""
+    assert NATIVE_GATEWAY_PROVIDERS <= GATEWAY_BASE_URL.keys()
+
+
+# ---------------------------------------------------------------------------
+# The thinking dial, per transport
+#
+# agents/thinking.py is provider-blind by design and emits LangChain's standard
+# `reasoning_effort`. ChatOpenRouter does not accept it — it takes OpenRouter's
+# unified `reasoning={"effort": …}` — and, worse, *accepts the wrong kwarg
+# anyway* by forwarding it inside model_kwargs behind a warning. So the dial
+# would silently stop working rather than fail. agents/core/lc translates at the
+# transport boundary; these pin that.
+# ---------------------------------------------------------------------------
+
+def test_openrouter_gets_the_unified_reasoning_object():
+    from agents.core.lc import _thinking_kwargs_for
+
+    assert _thinking_kwargs_for(
+        Provider.OPENROUTER, ModelName.OR_GLM_5_3_FLASH, "deep"
+    ) == {"reasoning": {"effort": "high"}}
+
+
+@pytest.mark.parametrize(
+    "provider,model",
+    [
+        (Provider.ANTHROPIC, ModelName.CLAUDE_SONNET),
+        (Provider.OPENAI, ModelName.GPT_5_MINI),
+    ],
+)
+def test_direct_vendors_keep_the_standard_kwarg(provider: Provider, model: ModelName):
+    from agents.core.lc import _thinking_kwargs_for
+
+    assert _thinking_kwargs_for(provider, model, "deep") == {"reasoning_effort": "high"}
+
+
+def test_a_model_with_no_dial_says_nothing_on_either_transport():
+    """Absent is a real answer — it must not become `reasoning={"effort": ""}`."""
+    from agents.core.lc import _thinking_kwargs_for
+
+    assert _thinking_kwargs_for(Provider.OPENROUTER, ModelName.OR_KIMI_K2_5, "deep") == {}
+
+
+def test_the_dial_survives_construction_as_a_first_class_field():
+    """The regression guard that matters: `reasoning` must land on the field,
+    not in `model_kwargs`. A shunt there warns and reaches the API as junk."""
+    import warnings
+
+    from agents.core.lc import resolve_chat_model
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")  # a model_kwargs shunt raises here
+        llm = resolve_chat_model(
+            Provider.OPENROUTER, ModelName.OR_GLM_5_3_FLASH, "sk-or-v1-t", thinking="deep"
+        )
+    assert llm.reasoning == {"effort": "high"}
+    assert llm.model_kwargs == {}
 
 
 # ---------------------------------------------------------------------------
@@ -203,7 +288,7 @@ def test_no_fallback_pair_loops_back():
         # Bottom of its family — nothing sensible to step down to.
         (Provider.ANTHROPIC, ModelName.CLAUDE_HAIKU, ()),
         (Provider.GOOGLE_GENAI, ModelName.GEMINI_2_5_FLASH, (ModelName.GEMINI_2_5_FLASH_LITE,)),
-        # A raw OpenRouter slug: 500+ models behind one key, so there is no basis
+        # A raw OpenRouter slug: 400+ models behind one key, so there is no basis
         # for guessing what the caller would accept instead.
         (Provider.OPENROUTER, "vendor/some-model", ()),
         # CLI-only ids are unreachable from LangChain at all — same rule as

@@ -22,6 +22,7 @@ from uuid import UUID
 
 from agents.core.events import AgentEvent
 from agents.engines import (
+    ENGINE_SUPPORTED_PROVIDERS,
     PROVIDER_CONFIG_ATTR,
     resolve_engine,
     resolve_engine_model,
@@ -75,6 +76,15 @@ def resolve_model(
     wins over the server's for the *resolved* provider only — an OpenAI key
     someone supplied must never be spent on a Gemini call. Secrets: never
     logged, never persisted.
+
+    A caller's key can also *choose* the provider, but only in the one case
+    where that is unambiguous: the operator expressed no preference
+    (``GENERATE_PROVIDER`` unset) and the caller supplied exactly one key. Then
+    the key is the request — nobody pastes an OpenRouter key hoping to be
+    billed for Gemini, and before this, that paste resolved to the engine
+    default and failed with "no API key configured for 'google_genai'". Two
+    keys is not a preference, so that case keeps the engine default rather than
+    guessing which one to spend.
     """
     cfg = get_configs()
     # V1 (LangChain/deepagents) is this agent's harness — it is the only engine
@@ -82,7 +92,18 @@ def resolve_model(
     # provider/model within V1 rather than a different runner.
     engine = resolve_engine(engine_override or cfg.generate_engine or "v1")
     provider = resolve_engine_provider(engine, cfg.generate_provider or None)
-    model = resolve_engine_model(engine, provider, cfg.generate_model or None)
+    model_override = cfg.generate_model or None
+    if not cfg.generate_provider and len(user_keys or {}) == 1:
+        (candidate,) = (user_keys or {}).keys()
+        if candidate in ENGINE_SUPPORTED_PROVIDERS.get(engine, frozenset()):
+            # GENERATE_MODEL goes with the provider the operator picked, so it is
+            # dropped along with it — a Gemini model id forwarded to OpenRouter is
+            # a guaranteed 404, and the engine default for the new provider is the
+            # only id known to fit.
+            if candidate is not provider:
+                model_override = None
+            provider = candidate
+    model = resolve_engine_model(engine, provider, model_override)
     api_key = (user_keys or {}).get(provider, "") or getattr(
         cfg, PROVIDER_CONFIG_ATTR[provider], ""
     ) or ""

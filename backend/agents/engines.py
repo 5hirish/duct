@@ -9,9 +9,10 @@ Engine → default provider → default model:
   v3  (Claude Agent SDK)   → anthropic    → claude-sonnet-5
 
 Supported providers per engine:
-  v1  OpenAI, Google, Anthropic (all native in LangChain) + OpenRouter
-      (the OpenAI-compatible transport — one endpoint, 500+ models, and the
-      same code path for any compatible gateway including local Ollama/vLLM)
+  v1  OpenAI, Google, Anthropic + OpenRouter — all four native in LangChain,
+      OpenRouter via `langchain-openrouter` (one key, 400+ models). A gateway
+      with no package of its own is still reachable as the OpenAI shape at its
+      own base URL; see GATEWAY_BASE_URL in agents/models.py
   v3  anthropic only (Claude Agent SDK does not support other providers natively)
 
 A v2 (Google ADK) engine existed until it was removed: nothing dispatched its
@@ -48,7 +49,7 @@ ENGINE_DEFAULT_MODEL: dict[tuple[Engine, Provider], ModelName] = {
     (Engine.V1, Provider.GOOGLE_GENAI): ModelName.GEMINI_2_5_FLASH,
     (Engine.V1, Provider.ANTHROPIC):    ModelName.CLAUDE_SONNET,
     (Engine.V1, Provider.OPENAI):       ModelName.GPT_5_MINI,
-    (Engine.V1, Provider.OPENROUTER):   ModelName.OR_DEEPSEEK_CHAT,
+    (Engine.V1, Provider.OPENROUTER):   ModelName.OR_DEEPSEEK_V4_FLASH,
     # v3 — Claude Agent SDK (Anthropic only)
     (Engine.V3, Provider.ANTHROPIC):    ModelName.CLAUDE_SONNET,
 }
@@ -173,7 +174,7 @@ def resolve_engine_model(
     Uses the override if it names a known ModelName; otherwise returns the
     engine's default for that provider.
 
-    **OpenRouter is the exception, deliberately.** It fronts 500+ models, so the
+    **OpenRouter is the exception, deliberately.** It fronts 400+ models, so the
     ModelName enum is a curated default list rather than a whitelist — silently
     substituting a default would throw away the model a bring-your-own-key
     customer explicitly asked for, which is the whole feature. An unrecognised

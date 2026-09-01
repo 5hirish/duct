@@ -42,7 +42,7 @@ from pydantic import BaseModel
 from agents.core.codex import build_codex_chat, should_use_codex
 from agents.core.telemetry import model_span
 from agents.models import (
-    OPENAI_COMPATIBLE_BASE_URL,
+    GATEWAY_BASE_URL,
     ModelName,
     Provider,
     get_api_key_kwargs,
@@ -84,13 +84,13 @@ class _NoArgs(BaseModel):
 
 
 def _default_base_url(provider: Provider) -> str:
-    """Installation-level endpoint override for OpenAI-compatible providers.
+    """Installation-level endpoint override for gateway providers.
 
     Read here rather than threaded through every route because it is an
     install-wide setting, not a per-request one — and because agents/models.py
-    stays a config-free leaf module. Native providers never consult it.
+    stays a config-free leaf module. Direct vendors never consult it.
     """
-    if provider not in OPENAI_COMPATIBLE_BASE_URL:
+    if provider not in GATEWAY_BASE_URL:
         return ""
     from config import get_configs
     return getattr(get_configs(), "openrouter_base_url", "") or ""

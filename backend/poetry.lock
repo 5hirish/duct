@@ -2450,6 +2450,22 @@ files = [
 ply = "*"
 
 [[package]]
+name = "jsonpath-python"
+version = "1.1.6"
+description = "A lightweight and powerful JSONPath implementation for Python"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+markers = "platform_python_implementation != \"PyPy\" or sys_platform == \"win32\" or sys_platform == \"emscripten\" or sys_platform != \"win32\" and sys_platform != \"emscripten\""
+files = [
+    {file = "jsonpath_python-1.1.6-py3-none-any.whl", hash = "sha256:a1c50afd8d3fbbaf47a4873bc890dcb3c15da96f5c020327977d844d8731a2d4"},
+    {file = "jsonpath_python-1.1.6.tar.gz", hash = "sha256:dded9932b4ec41fb8726e09c83afa4e6be618f938c2db287cc2a81723c639671"},
+]
+
+[package.extras]
+dev = ["poethepoet", "pytest (>=8.0)", "pytest-benchmark[histogram] (>=4.0)", "pytest-cov (>=5.0)", "ruff (>=0.3)"]
+
+[[package]]
 name = "jsonpointer"
 version = "3.1.1"
 description = "Identify specific nodes in a JSON document (RFC 6901) "
@@ -2676,6 +2692,23 @@ files = [
 langchain-core = ">=1.4.7,<2.0.0"
 openai = ">=2.26.0,<3.0.0"
 tiktoken = ">=0.7.0,<1.0.0"
+
+[[package]]
+name = "langchain-openrouter"
+version = "0.2.8"
+description = "An integration package connecting OpenRouter and LangChain"
+optional = false
+python-versions = "<4.0.0,>=3.10.0"
+groups = ["main"]
+markers = "platform_python_implementation != \"PyPy\" or sys_platform == \"win32\" or sys_platform == \"emscripten\" or sys_platform != \"win32\" and sys_platform != \"emscripten\""
+files = [
+    {file = "langchain_openrouter-0.2.8-py3-none-any.whl", hash = "sha256:c2c8d719a3ee6406a69f818b1c8cd0db3313a33d9c3b27dea0a44ba751ba97d0"},
+    {file = "langchain_openrouter-0.2.8.tar.gz", hash = "sha256:97c044fdd71dbba01d8f9418e37a11ae4c17b3d6c34b48e2b272c9d5f2b8f065"},
+]
+
+[package.dependencies]
+langchain-core = ">=1.5.5,<2.0.0"
+openrouter = ">=0.9.2,<1.0.0"
 
 [[package]]
 name = "langchain-protocol"
@@ -3477,6 +3510,25 @@ files = [
     {file = "openinference_semantic_conventions-0.1.30-py3-none-any.whl", hash = "sha256:36d946d3f95f699b7c4b12324ae9c1f02d6c7750df11eece56aa159cff430b3d"},
     {file = "openinference_semantic_conventions-0.1.30.tar.gz", hash = "sha256:81fece76e09c83789e35c393b8b30523481eeabf1008745b955631a53e3221d9"},
 ]
+
+[[package]]
+name = "openrouter"
+version = "0.10.8"
+description = "Official Python Client SDK for OpenRouter."
+optional = false
+python-versions = ">=3.9.2"
+groups = ["main"]
+markers = "platform_python_implementation != \"PyPy\" or sys_platform == \"win32\" or sys_platform == \"emscripten\" or sys_platform != \"win32\" and sys_platform != \"emscripten\""
+files = [
+    {file = "openrouter-0.10.8-py3-none-any.whl", hash = "sha256:ff9b3cd2f55a3f905d21f56517344da9f9556ffbd2cb9d31ddc388c4b930aab6"},
+    {file = "openrouter-0.10.8.tar.gz", hash = "sha256:ac7f4cea1ec1c2a063b0ad9792a8f64dde68ed053279b6c42bee849a50afc47c"},
+]
+
+[package.dependencies]
+httpcore = ">=1.0.9"
+httpx = ">=0.28.1"
+jsonpath-python = ">=1.0.6"
+pydantic = ">=2.11.2"
 
 [[package]]
 name = "opentelemetry-api"
@@ -7513,4 +7565,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<3.14"
-content-hash = "6a0b5197d150e22fc56fe62ea2159dc3a54a6f35331cc83ed9645a7d8fc9e872"
+content-hash = "04fab4ff165eb345b3e9266974eacf6764a8b0b335e40e48bd71df4fef3c2584"

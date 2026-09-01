@@ -63,6 +63,23 @@ cloudflare = ">=4.1"
 # the library runs in-process inside FastAPI, with our own SSE transport.
 langgraph-checkpoint-postgres = "^3.1"
 langgraph-checkpoint-sqlite = "^3.1"
+# OpenRouter's first-party LangChain integration — `init_chat_model(
+# model_provider="openrouter")` resolves to it. Duct never imports it directly;
+# LangChain does, which is why no agents/ file gains a framework import and the
+# harness-boundary allowlist is untouched.
+#
+# It replaced ChatOpenAI-pointed-at-their-base-URL, which worked but had nowhere
+# to put OpenRouter's own surface: `openrouter_provider` routing preferences,
+# the unified `reasoning` object, data-collection controls, app attribution.
+#
+# Two things to know before using more of it. It does NOT depend on
+# langchain-openai — it brings its own `openrouter` SDK, so this is a real
+# second client, not a wrapper. And `route=` / `n>1` are declared fields that
+# raise TypeError before any network I/O, because the underlying SDK's
+# `Chat.send()` has no such parameters (langchain-ai/langchain#39180, closed
+# `not planned`). Express failover through `openrouter_provider` instead, and
+# do not reach for `route`.
+langchain-openrouter = "^0.2.8"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^9"
