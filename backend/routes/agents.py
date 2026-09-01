@@ -75,6 +75,7 @@ from service.artifact_store import (
 )
 from service.auth import get_current_user, get_current_user_optional, get_user_provider_keys
 from service.crawl.fetcher import SSRFError, validate_public_url
+from service.lead_access import lead_token_is_live
 from service.membership import accessible_projects, get_project_for_user, member_role
 from service.memory import (
     build_memory_context,
@@ -252,6 +253,96 @@ def _owned_session(session_id: str, agent_type: str, user: User | None):
     return session
 
 
+def _require_caller(agent_type: str, body: dict, user: User | None) -> None:
+    """Every agent run needs someone it can be charged to. Mutates ``body``.
+
+    Starting a session spends model tokens — a full crawl, enrichment and
+    synthesis for an audit; a plan or a draft for content. The route used to
+    take an optional user, so the only thing between the open internet and an
+    unbounded provider bill was ``X-API-Key``, which ships in the browser
+    bundle. A key everyone has is not a payer.
+
+    One anonymous run survives, because it is the product: the public SEO-audit
+    teaser. That flow is not really anonymous — the marketing site captures an
+    email behind Cloudflare Turnstile and
+    ``POST /api/lead-magnet/submit`` issues a 24-hour token — so it presents
+    that token instead of a session, and the run becomes attributable to a lead
+    row either way.
+
+    The token is consumed here and removed from the body: nothing downstream
+    needs it, ``AuditRequest`` forbids unknown fields, and a credential that
+    stops travelling is one fewer thing to keep out of a log or a Sentry
+    breadcrumb.
+    """
+    token = str(body.pop("lead_token", "") or "")
+    if user is not None:
+        return
+    if agent_type == AgentType.SEO_AUDIT and body.get("lead_magnet"):
+        if lead_token_is_live(token):
+            return
+        raise HTTPException(401, "This audit link has expired — request a new one.")
+    raise HTTPException(401, "Sign in to run an agent.")
+
+
+def _scope_body_to_authorized_project(agent_type: str, body: dict, user: User | None) -> None:
+    """Strip project scope the caller has not proven they may use. Mutates ``body``.
+
+    ``project_id`` arrives in the request body, and the body is not evidence.
+    Every project-scoped capability an agent gets — the content MCP server's
+    brand context, plans, posts, assets and PublishPost; the audit and insights
+    artifact stores; project memory — is keyed off it, so an unchecked id is a
+    cross-tenant read *and* write. Project ids are UUID4 and not enumerable, but
+    they are not secrets either: they sit in app URLs and in the hands of every
+    current and former collaborator.
+
+    The two agents that were already careful check membership downstream
+    (``_start_seo_audit`` via ``member_role``, ``_start_insights`` via
+    ``resolve_insights_run``). The content agent had no such check, and neither
+    did conversation resolution. Doing it here means a fourth agent inherits the
+    gate instead of having to remember it.
+
+    Unauthorized scope is handled two ways, deliberately:
+
+    * **tiktok_studio** — 404. Project scope is mandatory there (the session is
+      built from it), so there is no degraded mode to fall back to. 404 rather
+      than 403 matches ``get_project_for_user``: a stranger must not learn that
+      a project id is real.
+    * **everything else** — drop the scope and carry on unpersisted, which is
+      exactly what an audit or brief already does for a local-only project id.
+      Rejecting instead would break a signed-in user whose freshly created local
+      project has not finished syncing to the backend yet.
+
+    A missing or non-UUID ``project_id`` is left alone: downstream already reads
+    that as "run unscoped", and tiktok_studio still answers 422 for it.
+    """
+    raw = body.get("project_id")
+    if raw in (None, ""):
+        return
+    try:
+        project_id = UUID(str(raw))
+    except (ValueError, AttributeError, TypeError):
+        return  # local-only project ids aren't UUIDs — already treated as unscoped
+
+    if user is not None:
+        with next(db_session()) as db:
+            if member_role(project_id, user.id, db) is not None:
+                return
+
+    if agent_type == AgentType.TIKTOK_STUDIO:
+        raise HTTPException(404, "Project not found")
+
+    logger.warning(
+        "agents: caller %s may not use project %s — %s runs unscoped",
+        user.id if user else "anonymous", project_id, agent_type,
+    )
+    # The conversation controls only mean anything alongside a project, and a
+    # conversation_id is resolved without a project check of its own — so they
+    # go with it rather than being left to address someone else's transcript.
+    for key in ("project_id", "conversation_id", "resume", "start_fresh",
+                "artifact_type", "artifact_id"):
+        body.pop(key, None)
+
+
 @router.post("/{agent_type}/sessions")
 async def create_session(
     agent_type: str,
@@ -272,6 +363,12 @@ async def create_session(
         raise HTTPException(422, f"Agent {agent_type!r} is not yet available.")
 
     body = await request.json()
+    # Two gates, in this order. First: is there anyone to charge this run to?
+    # Then: may they use the project scope they asked for? Both run before
+    # anything reads the body — the session builder, the conversation resolver
+    # and every tool downstream all trust it.
+    _require_caller(agent_type, body, user)
+    _scope_body_to_authorized_project(agent_type, body, user)
     session_id = str(uuid.uuid4())
     session = _create_session_for(agent_type, session_id, body)
     # Signed-in creator (optional — API-key-only callers get None). Downstream

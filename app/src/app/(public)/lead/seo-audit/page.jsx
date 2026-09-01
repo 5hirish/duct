@@ -77,6 +77,10 @@ function LeadSeoAuditInner() {
           max_blog_posts: 2,
           // Teaser tier: backend force-skips enrichment + extended thinking.
           lead_magnet: true,
+          // This flow has no signed-in user, and starting an agent costs model
+          // tokens — so the lead token stands in for one. The backend consumes
+          // it at session create and never passes it further.
+          lead_token: token,
         });
         setState("ready");
       })
