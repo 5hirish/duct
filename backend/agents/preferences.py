@@ -37,6 +37,12 @@ class UserPreferences(BaseModel):
     # risk       — Risk & Compliance
     # quality    — Quality & Standards
 
+    # How hard the model should think, in Duct's words rather than the
+    # provider's. Empty = the model's own default, which is deliberate: the
+    # four providers default differently and normalising them would change the
+    # cost and quality of every existing project. See agents/thinking.py.
+    thinking: Literal["", "quick", "balanced", "deep", "exhaustive"] = ""
+
     preferred_artifact_format: Literal["markdown", "html"] = "markdown"
     # markdown — a written brief (default): renders in-app, copies into a doc,
     #            diffs cleanly between versions

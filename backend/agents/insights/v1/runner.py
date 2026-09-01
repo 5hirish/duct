@@ -111,11 +111,15 @@ class AutonomousInsightsRunner:
         provider: Provider = Provider.ANTHROPIC,
         model: ModelName | str = ModelName.CLAUDE_SONNET,
         temperature: float = 1.0,
+        thinking: str = "",
     ) -> None:
         self.provider = provider
         self.model = model
         self._api_key = api_key
         self._temperature = temperature
+        # A Duct level ("quick" … "exhaustive"), translated per model in
+        # agents/thinking.py. Empty leaves the model on its own default.
+        self._thinking = thinking
 
     # -----------------------------------------------------------------------
     # Assembly
@@ -160,7 +164,13 @@ class AutonomousInsightsRunner:
         in it rather than a stated assumption.
         """
         if llm is None:
-            llm = resolve_chat_model(self.provider, self.model, self._api_key, self._temperature)
+            llm = resolve_chat_model(
+                self.provider,
+                self.model,
+                self._api_key,
+                self._temperature,
+                thinking=self._thinking,
+            )
 
         tools: list[Any] = []
         if remember:

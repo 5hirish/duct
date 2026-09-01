@@ -1268,7 +1268,11 @@ async def _start_insights(
     business_context = format_business_context(req.business_context)
 
     runner = AutonomousInsightsRunner(
-        api_key=run.api_key, provider=provider, model=model, temperature=1.0
+        api_key=run.api_key,
+        provider=provider,
+        model=model,
+        temperature=1.0,
+        thinking=req.user_preferences.thinking,
     )
 
     async def pipeline() -> None:

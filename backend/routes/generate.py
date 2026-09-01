@@ -352,7 +352,11 @@ async def generate_insight(
     )
 
     runner = AutonomousInsightsRunner(
-        api_key=run.api_key, provider=run.provider, model=run.model, temperature=1.0
+        api_key=run.api_key,
+        provider=run.provider,
+        model=run.model,
+        temperature=1.0,
+        thinking=req.user_preferences.thinking,
     )
     try:
         brief = await runner.run_once(

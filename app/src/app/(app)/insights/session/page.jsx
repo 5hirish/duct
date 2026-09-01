@@ -15,11 +15,21 @@ function Session() {
   // ?q= lets another surface hand a question straight in (an audit finding, a
   // saved brief, a link). Absent, the agent opens the conversation itself.
   const prompt = params.get("q") || "";
+  // ?conversation= re-opens a stored thread and ?artifact= puts one of its
+  // documents in the right pane. Both come from the desk, where opening a
+  // brief means opening the thread that argued for it.
+  const conversationId = params.get("conversation") || "";
+  const artifactId = params.get("artifact") || "";
   const projectId = params.get("project") || getActiveProjectId() || "";
 
   return (
     <div className="h-full">
-      <InsightsWorkspace projectId={projectId} initialPrompt={prompt} />
+      <InsightsWorkspace
+        projectId={projectId}
+        initialPrompt={prompt}
+        conversationId={conversationId}
+        artifactId={artifactId}
+      />
     </div>
   );
 }

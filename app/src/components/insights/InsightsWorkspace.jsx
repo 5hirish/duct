@@ -30,9 +30,12 @@ import { MarkdownView } from "@/components/artifacts/ArtifactRenderer";
 import ChangeSetCard from "@/components/execution/ChangeSetCard";
 import {
   createAgentSession,
+  getAgentConversation,
   openAgentStream,
   sendAgentMessage,
 } from "../../lib/api";
+import { mapEventsToMessages } from "../../lib/agentHistory";
+import { getArtifactContent, listArtifactVersions } from "../../lib/artifactsApi";
 import { consumeSseStream } from "../../lib/sse";
 import { InsightsEvent, InsightsStep } from "../../lib/insightsEvents";
 import { frontMatterTitle, sniffFormat, stripFrontMatter } from "../../lib/brief";
@@ -42,7 +45,12 @@ import ConnectionRequest from "./ConnectionRequest";
 
 const AGENT_TYPE = "insights";
 
-export default function InsightsWorkspace({ projectId, initialPrompt = "" }) {
+export default function InsightsWorkspace({
+  projectId,
+  initialPrompt = "",
+  conversationId = "",
+  artifactId = "",
+}) {
   // Turns are the transcript. A change set is a turn too — it belongs in
   // reading order beside the sentence that proposed it, not in a side panel
   // the user has to go looking for.
@@ -67,6 +75,8 @@ export default function InsightsWorkspace({ projectId, initialPrompt = "" }) {
 
   const sessionRef = useRef(null);
   const abortRef = useRef(null);
+  // Set once a resumed thread has been read back, so StrictMode cannot double it.
+  const hydratedRef = useRef(false);
   // Streamed text also lives in refs: the SSE callback is created once and
   // would otherwise close over a stale value on every chunk.
   const bufferRef = useRef("");
@@ -196,6 +206,9 @@ export default function InsightsWorkspace({ projectId, initialPrompt = "" }) {
         const { session_id: sessionId } = await createAgentSession(AGENT_TYPE, {
           project_id: projectId || null,
           prompt,
+          // Resuming extends the stored thread rather than opening a second
+          // one, so the brief keeps versioning up from where it left off.
+          ...(conversationId ? { conversation_id: conversationId, resume: true } : {}),
           // Carries the deliverable format the agent should write in, among
           // the rest of the profile.
           user_preferences: loadPreferences(),
@@ -212,14 +225,63 @@ export default function InsightsWorkspace({ projectId, initialPrompt = "" }) {
         setError(err?.message || "Could not start the session.");
       }
     },
-    [projectId, onEvent]
+    [projectId, conversationId, onEvent]
   );
 
+  // Opening a thread from the desk should show what happened, not start talking
+  // over it: hydration reads the stored transcript and brief and stops there.
+  // The session is created lazily by the first message the user actually sends.
+  const hydrate = useCallback(async () => {
+    setStatus("ready");
+    if (conversationId) {
+      try {
+        const { events } = await getAgentConversation(AGENT_TYPE, conversationId);
+        setTurns(mapEventsToMessages(events));
+      } catch (err) {
+        setError(err?.message || "Could not load that thread.");
+      }
+    }
+    if (!artifactId) return;
+    try {
+      const rows = await listArtifactVersions(artifactId);
+      const ordered = [...rows].sort((a, b) => a.version - b.version);
+      const loaded = await Promise.all(
+        ordered.map(async (row) => {
+          let content = "";
+          try {
+            content = row.has_content ? await getArtifactContent(row.id) : "";
+          } catch {
+            /* a version whose bytes are gone still belongs in the picker */
+          }
+          return {
+            version: row.version,
+            label: `Version ${row.version}`,
+            title: row.title || "Growth brief",
+            // The stored MIME type is authoritative; sniffing is the fallback
+            // for rows written before content_type was recorded.
+            format: (row.content_type || "").includes("html") ? "html" : sniffFormat(content),
+            content,
+          };
+        })
+      );
+      setVersions(loaded);
+      setSelected(-1);
+      setPane("brief");
+    } catch (err) {
+      setError(err?.message || "Could not open that document.");
+    }
+  }, [conversationId, artifactId]);
+
   useEffect(() => {
-    if (sessionRef.current) return;      // StrictMode double-mount guard
+    if (sessionRef.current || hydratedRef.current) return;  // StrictMode guard
+    if (conversationId || artifactId) {
+      hydratedRef.current = true;
+      hydrate();
+      return;
+    }
     start(initialPrompt);
     return () => abortRef.current?.abort();
-  }, [start, initialPrompt]);
+  }, [start, hydrate, initialPrompt, conversationId, artifactId]);
 
   /** Resolve whatever the session is parked on. One endpoint, three shapes. */
   async function answerPending(answers) {
@@ -235,10 +297,17 @@ export default function InsightsWorkspace({ projectId, initialPrompt = "" }) {
 
   async function send() {
     const text = draft.trim();
-    const sessionId = sessionRef.current;
-    if (!text || !sessionId) return;
+    if (!text) return;
     setDraft("");
     setTurns((prev) => [...prev, { role: "user", text }]);
+    // A hydrated thread has no live session yet — the first message is what
+    // starts one, carrying the prompt so the agent does not open with a
+    // greeting it was not asked for.
+    const sessionId = sessionRef.current;
+    if (!sessionId) {
+      await start(text);
+      return;
+    }
     try {
       await sendAgentMessage(AGENT_TYPE, sessionId, { type: "chat", content: text });
     } catch (err) {
@@ -294,6 +363,7 @@ export default function InsightsWorkspace({ projectId, initialPrompt = "" }) {
         <textarea
           rows={2}
           value={draft}
+          aria-label="Message the insights agent"
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
@@ -323,6 +393,7 @@ export default function InsightsWorkspace({ projectId, initialPrompt = "" }) {
         {pane === "brief" && versions.length > 1 && (
           <select
             value={selected < 0 ? versions.length - 1 : selected}
+            aria-label="Brief version"
             onChange={(e) => setSelected(Number(e.target.value))}
             className="ml-auto rounded-md border border-input bg-background px-2 py-1 text-[11px]"
           >

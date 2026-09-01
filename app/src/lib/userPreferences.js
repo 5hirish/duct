@@ -9,6 +9,10 @@ export const PREFS_DEFAULTS = {
   // a doc and diffs cleanly between versions; HTML is for something that gets
   // forwarded and has to stand on its own.
   preferred_artifact_format: "markdown",
+  // How hard the model should think, in Duct's four rungs rather than the
+  // provider's words. "" means the model's own default — see the note in
+  // backend/agents/thinking.py for why that is not normalised away.
+  thinking: "",
 };
 
 export const ARTIFACT_FORMAT_OPTIONS = [

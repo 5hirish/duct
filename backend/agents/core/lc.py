@@ -42,6 +42,7 @@ from agents.models import (
     get_api_key_kwargs,
     langchain_provider,
 )
+from agents.thinking import thinking_kwargs
 
 logger = logging.getLogger(__name__)
 
@@ -135,17 +136,24 @@ def resolve_chat_model(
     temperature: float = 1.0,
     *,
     base_url: str = "",
+    thinking: str = "",
 ):
     """Any LangChain-supported provider — this is the point of the migration.
 
     ``model`` may be a plain string: OpenRouter slugs are passed through
     un-enumerated (see ``agents/engines.resolve_engine_model``). ``base_url`` is
     only consulted by OpenAI-compatible providers.
+
+    ``thinking`` is a *Duct* level ("quick" … "exhaustive"), not a provider
+    value. It resolves through agents/thinking.py to whatever this model calls
+    that rung, and contributes nothing when the model has no such dial — which
+    is why it is safe to pass unconditionally from every call site.
     """
     return init_chat_model(
         model=getattr(model, "value", model),
         model_provider=langchain_provider(provider),
         temperature=temperature,
+        **thinking_kwargs(model, thinking),
         **get_api_key_kwargs(provider, api_key, base_url=base_url or default_base_url(provider)),
     )
 

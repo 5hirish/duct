@@ -159,11 +159,14 @@ function writeProjectsStore(projects) {
 // localStorage edits don't generate a request per keystroke.
 // ---------------------------------------------------------------------------
 
+/** Same-document project-store change — cross-tab writes arrive as "storage". */
+export const PROJECTS_CHANGED = "duct:project-changed";
+
 /** Notify same-document listeners (sidebar, projects page) to re-read the store. */
 function notifyProjectsChanged() {
   if (typeof window === "undefined") return;
   window.dispatchEvent(new Event("storage"));
-  window.dispatchEvent(new Event("duct:project-changed"));
+  window.dispatchEvent(new Event(PROJECTS_CHANGED));
 }
 
 /**
