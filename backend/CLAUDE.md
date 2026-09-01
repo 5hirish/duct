@@ -59,8 +59,10 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   Its differentiators (Vertex Agent Engine deploy, `adk web`, native A2A, built-in evals)
   do not intersect this stack, and its weakest axis — provider breadth — is exactly what V1
   exists for. Its defaults were identical to V1's, so `resolve_engine` folding a stored
-  `"v2"` back to V1 changed no behaviour. `agents/insights/schema_compat.py` is the one
-  piece that outlived it; it was never ADK-specific and V3 still uses it.
+  `"v2"` back to V1 changed no behaviour. `agents/insights/schema_compat.py` outlived it
+  for a while — it was never ADK-specific — but it went with insights V3, its last caller.
+  V1 asks the provider for a typed object via `with_structured_output`, so nothing needs
+  to parse a synthesis out of raw text any more.
 - **Ingestion:** Direct Google API clients (`google-ads`, `google-analytics-data`, `google-api-python-client`). Async concurrent fetching in `service/pipeline.py`.
 - **Normalization:** Lightweight Python pipeline — raw API response → typed Pydantic/SQLModel brief models. No query layer or transforms yet.
 - **Database:** PostgreSQL on Railway — SQLModel ORM, Alembic migrations, `psycopg` driver.

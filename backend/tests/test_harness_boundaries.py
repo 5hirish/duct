@@ -75,7 +75,6 @@ ADAPTERS: dict[str, str] = {
     # -- Named harness shims.
     "agents/core/claude_sdk.py":            "Claude Agent SDK subprocess survival",
     "agents/core/stream.py":                "pump_stream_event — SDK message decode",
-    "agents/sandbox.py":                    "Claude Agent SDK sandbox options",
     "agents/content/subagents/draft_post.py":     "Claude Agent SDK AgentDefinition",
     "agents/content/subagents/research_pillar.py": "Claude Agent SDK AgentDefinition",
 
