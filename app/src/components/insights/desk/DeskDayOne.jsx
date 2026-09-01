@@ -84,8 +84,8 @@ function SampleCard({ label, blurb, rows }) {
   );
 }
 
-export default function DeskDayOne({ hasWebsite, sourceCount, hasThread, onAsk }) {
-  const done = [hasWebsite, sourceCount > 0, hasThread].filter(Boolean).length;
+export default function DeskDayOne({ hasProject, sourceCount, hasThread, onAsk }) {
+  const done = [hasProject, sourceCount > 0, hasThread].filter(Boolean).length;
 
   return (
     <div className="flex flex-col gap-8">
@@ -108,12 +108,17 @@ export default function DeskDayOne({ hasWebsite, sourceCount, hasThread, onAsk }
           </header>
 
           <ol className="flex flex-col gap-4">
-            <Step done={hasWebsite} title="Add your website">
+            {/* A project, not a website: the site URL is optional in onboarding,
+                so anyone who skipped it would have watched a "add your website"
+                step stay unticked forever with nothing telling them it was
+                never required. The project is the thing everything else hangs
+                off — sources, threads and claims are all scoped to one. */}
+            <Step done={hasProject} title="Add a project">
               <p className="mt-1 text-[11.5px] leading-relaxed text-muted-foreground">
-                So I know what the account is for.
+                One site or account. Everything I check hangs off it.
               </p>
               <Button asChild size="sm" className="mt-2.5 h-7 rounded-full text-[12.5px]">
-                <Link href="/projects">Add it</Link>
+                <Link href="/onboarding?new=1">Create a project</Link>
               </Button>
             </Step>
 

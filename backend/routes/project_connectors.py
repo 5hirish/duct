@@ -28,6 +28,7 @@ from models.auth import User
 from models.connector import ConnectorCredential, ProjectConnector
 from routes.user_connectors import ALLOWED_CONNECTOR_TYPES
 from service.activity import log_activity
+from service.connector_access import list_data_sources
 from service.auth import get_current_user
 from service.membership import get_project_for_user
 from utils.dates import utcnow
@@ -68,6 +69,31 @@ def list_bindings(
         .order_by(ProjectConnector.connector_type)
     ).all()
     return [_serialize(binding, cred) for binding, cred in rows]
+
+
+@router.get("/{project_id}/data-sources")
+def list_project_data_sources(
+    project_id: UUID,
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> list[dict]:
+    """Every connector Duct supports, and where THIS project stands on each.
+
+    The binding routes above answer "which account has this project chosen?".
+    This answers the question the UI actually asks first — "can Duct reach any
+    data at all, and if not, what would fix it?" — and it answers it for OAuth
+    and API-key connectors alike, because ``list_data_sources`` walks the whole
+    registry rather than a hardcoded list of Google properties.
+
+    The full registry comes back, ``not_connected`` rows included: "nothing
+    stored" is the answer that turns into an offer to connect, so omitting it
+    would make the useful half of the response invisible.
+    """
+    get_project_for_user(project_id, user, session)
+    return [
+        source.as_dict()
+        for source in list_data_sources(session, user_id=user.id, project_id=project_id)
+    ]
 
 
 @router.put("/{project_id}/connectors/{connector_type}")

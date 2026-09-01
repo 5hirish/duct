@@ -55,12 +55,11 @@ export default function Desk() {
     };
   }, []);
 
+  // Asked even with no project: loadDesk answers the account-level half of the
+  // question (which sources are connected) either way, and the day-one
+  // checklist would otherwise tell someone with three live connectors to go
+  // and connect one.
   const refresh = useCallback(async () => {
-    if (!projectId) {
-      setData(EMPTY);
-      setLoading(false);
-      return;
-    }
     setLoading(true);
     const next = await loadDesk({ projectId });
     setData(next);
@@ -172,7 +171,7 @@ export default function Desk() {
     return (
       <div className="flex min-h-[calc(100svh-160px)] flex-col">
         <DeskDayOne
-          hasWebsite={Boolean(project?.company?.website_url)}
+          hasProject={Boolean(project)}
           sourceCount={data.sourceCount}
           hasThread={data.conversations.length > 0}
           onAsk={ask}

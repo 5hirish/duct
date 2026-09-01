@@ -90,6 +90,30 @@ export async function connectedConnectorTypes() {
   return resolveConnectedTypes({ sessionTypes, serverTypes, hasAdsDevToken });
 }
 
+// --- The inventory: what can this project actually reach? ----------------
+//
+// Server-resolved, so it covers every connector in the registry — OAuth and
+// pasted-API-key alike — and applies the project's bindings. Prefer these over
+// connectedConnectorTypes() wherever a project id is available: that function
+// can only see the four Google session-token keys plus stored rows, and knows
+// nothing about which account a project has chosen.
+//
+// Each row: {connector_id, label, status, account_id, account_name,
+//            auth_kind, has_catalog, catalog_stale, stored_accounts}
+// See lib/dataSources.js for what the statuses mean.
+
+/** Inventory for one project — bindings applied. */
+export function listProjectDataSources(projectId) {
+  return authedRequest(
+    `/api/user/projects/${encodeURIComponent(projectId)}/data-sources`
+  );
+}
+
+/** Inventory for the account, for before a project exists. */
+export function listAccountDataSources() {
+  return authedRequest("/api/user/connectors/data-sources");
+}
+
 // --- Per-project connector mappings (/api/user/projects/{id}/connectors) ---
 //
 // A mapping points one of the project's connector types at one of your saved
