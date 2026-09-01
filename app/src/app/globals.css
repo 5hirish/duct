@@ -151,7 +151,16 @@
 
 
 
+/* The two content regions are CONTAINERS, which is what lets page components
+   use `@`-variants (`@lg:grid-cols-2`) instead of viewport ones.
+   The viewport is the wrong ruler here: the sidebar takes 16rem out of it, so
+   at a 1024px window `lg:` fires while the content area is only ~740px wide,
+   and every grid that trusted it came out a column too many. Declaring the
+   container per REGION rather than per component means a component adapts
+   correctly wherever it is placed — the panes in SplitWorkspace declare one
+   too, for exactly that reason. */
 .app-main {
+  container-type: inline-size;
   max-width: 1440px;
   margin: 0 auto;
   padding: 28px 16px 64px;
@@ -160,6 +169,7 @@
 /* Fluid full-width variant for tool surfaces (e.g. Content) that should use
    the whole viewport rather than the centered reading column. */
 .app-main-wide {
+  container-type: inline-size;
   max-width: 100%;
   margin: 0;
   padding: 28px 24px 64px;

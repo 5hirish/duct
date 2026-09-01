@@ -153,8 +153,8 @@ export default function BrandContextForm({ projectId, onSaved }) {
       )}
 
       {/* Inherited from project context — single source of truth for shared fields */}
-      <section className="rounded-2xl border border-dashed border-border bg-muted/20 p-5 md:p-6">
-        <div className="grid gap-x-8 gap-y-4 md:grid-cols-[240px_1fr]">
+      <section className="rounded-2xl border border-dashed border-border bg-muted/20 p-5 @2xl:p-6">
+        <div className="grid gap-x-8 gap-y-4 @2xl:grid-cols-[240px_1fr]">
           <header className="space-y-2">
             <h3 className="flex items-center gap-2 text-sm font-semibold">
               <Building2 className="size-4 text-muted-foreground" />
@@ -170,12 +170,12 @@ export default function BrandContextForm({ projectId, onSaved }) {
               </Link>
             </Button>
           </header>
-          <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <dl className="grid grid-cols-1 gap-3 @lg:grid-cols-2">
             <ReadOnly label="Company" value={project?.company?.name} />
             <ReadOnly label="Industry" value={project?.company?.industry} />
             <ReadOnly label="Website" value={project?.company?.website_url} />
             <ReadOnly label="Brand voice" value={project?.brand_channels?.brand_voice} />
-            <ReadOnly label="Audience" value={project?.audience?.primary_segment} className="sm:col-span-2" />
+            <ReadOnly label="Audience" value={project?.audience?.primary_segment} className="@lg:col-span-2" />
           </dl>
         </div>
       </section>
@@ -202,7 +202,7 @@ export default function BrandContextForm({ projectId, onSaved }) {
           <Input value={contentGoal} onChange={e => setContentGoal(e.target.value)}
             placeholder="e.g. Drive trial signups via saveable beauty education" />
         </Field>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 @lg:grid-cols-2">
           <Field
             label={<span className="inline-flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-green-500" /> Always say</span>}
           >
@@ -244,7 +244,7 @@ export default function BrandContextForm({ projectId, onSaved }) {
                   <Trash2 className="size-3.5" />
                 </Button>
               </div>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-2 @lg:grid-cols-2">
                 <Input value={p.name || ""}
                   onChange={e => updatePillar(i, { name: e.target.value })}
                   onBlur={() => { if (!p.id && p.name) updatePillar(i, { id: pillarSlug(p.name) }); }}
@@ -273,7 +273,7 @@ export default function BrandContextForm({ projectId, onSaved }) {
       </Section>
 
       <Section icon={Palette} title="Visual identity" hint="Colors and style applied to images and slides.">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 @lg:grid-cols-2">
           <ColorField label="Primary color" value={primaryColor} onChange={setPrimaryColor} placeholder="#8B1A4A" />
           <ColorField label="Secondary color" value={secondaryColor} onChange={setSecondaryColor} placeholder="#C9A96E" />
         </div>
@@ -303,8 +303,8 @@ export default function BrandContextForm({ projectId, onSaved }) {
 /** Two-column settings section: label + description on the left, fields on the right. */
 function Section({ icon: Icon, title, hint, children }) {
   return (
-    <section className="rounded-2xl border border-border bg-card p-5 md:p-6">
-      <div className="grid gap-x-8 gap-y-4 md:grid-cols-[240px_1fr]">
+    <section className="rounded-2xl border border-border bg-card p-5 @2xl:p-6">
+      <div className="grid gap-x-8 gap-y-4 @2xl:grid-cols-[240px_1fr]">
         <header className="space-y-1">
           <h3 className="flex items-center gap-2 text-sm font-semibold">
             {Icon && <Icon className="size-4 text-muted-foreground" />}

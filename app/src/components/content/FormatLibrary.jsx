@@ -176,7 +176,7 @@ export default function FormatLibrary({ projectId }) {
       {error && <p className="mb-3 text-sm text-destructive">{error}</p>}
 
       {loading ? (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 @lg:grid-cols-2 @2xl:grid-cols-3">
           {[0, 1, 2].map((i) => (
             <div key={i} className="h-44 animate-pulse rounded-xl border border-border/50 bg-muted/30" />
           ))}
@@ -184,7 +184,7 @@ export default function FormatLibrary({ projectId }) {
       ) : formats.length === 0 ? (
         <EmptyState onCreate={() => setEditing({})} />
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 @lg:grid-cols-2 @2xl:grid-cols-3">
           {formats.map((f) => (
             <FormatCard
               key={f.id}
@@ -468,7 +468,7 @@ function FormatEditorSheet({ open, onOpenChange, projectId, initial, onSaved }) 
         </SheetHeader>
 
         <div className="min-h-0 flex-1 overflow-y-auto p-5">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 @lg:grid-cols-2">
             <Field label="Name" hint="Human-friendly title">
               <Input value={name} onChange={(e) => setName(e.target.value)} onBlur={() => syncFromName(name)} placeholder="Format D — UGC / Raw Authentic" />
             </Field>

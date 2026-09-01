@@ -3,6 +3,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   listLinkedAccounts,
   listSocialAccounts,
   publishPost,
@@ -105,23 +112,29 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
   const hasAccounts = accounts.length > 0;
   const minDateTime = new Date(Date.now() + 5 * 60_000).toISOString().slice(0, 16);
 
+  // A publish in flight must not be dismissable — hence the guards on
+  // onOpenChange, outside-click and Escape rather than a bare onClose.
+  const dismiss = (next) => {
+    if (!next && !loading) onClose();
+  };
+  const blockWhileLoading = (event) => {
+    if (loading) event.preventDefault();
+  };
+
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-      onClick={(e) => { if (e.target === e.currentTarget && !loading) onClose(); }}
-    >
-      <div className="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-xl bg-background border border-border shadow-xl">
-        <header className="px-5 py-3 border-b border-border/60 flex items-center justify-between">
-          <div className="min-w-0">
-            <h2 className="text-base font-semibold">Publish post</h2>
-            <p className="text-xs text-muted-foreground truncate">{post?.topic || post?.id}</p>
-          </div>
-          {!loading && (
-            <button onClick={onClose} className="text-muted-foreground hover:text-foreground text-xl">
-              ×
-            </button>
-          )}
-        </header>
+    <Dialog open={open} onOpenChange={dismiss}>
+      <DialogContent
+        className="max-w-lg gap-0 p-0"
+        showCloseButton={!loading}
+        onInteractOutside={blockWhileLoading}
+        onEscapeKeyDown={blockWhileLoading}
+      >
+        <DialogHeader className="border-b border-border/60 px-5 py-3">
+          <DialogTitle className="text-base font-semibold">Publish post</DialogTitle>
+          <DialogDescription className="truncate text-xs">
+            {post?.topic || post?.id}
+          </DialogDescription>
+        </DialogHeader>
 
         <div className="px-5 py-4 space-y-4">
           {stage === "loading" && (
@@ -251,8 +264,8 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
             </Button>
           </footer>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

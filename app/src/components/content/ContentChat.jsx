@@ -11,6 +11,7 @@ import ContentTodos from "./ContentTodos";
 import { Phase } from "../workspace/agentPhase";
 import { CodeBlock, resolveCode } from "../workspace/CodeBlock";
 import { Spinner } from "@/components/ui/spinner";
+import { Lightbox } from "@/components/ui/lightbox";
 
 function SendErrorBubble({ text, content, onRetry }) {
   return (
@@ -199,17 +200,12 @@ function ChatImageBubble({ image, fullUrl, caption }) {
         </button>
         {caption && <p className="pl-1 text-[11px] text-muted-foreground">{caption}</p>}
       </div>
-      {open && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          onClick={() => setOpen(false)}
-          className="fixed inset-0 z-50 flex cursor-zoom-out items-center justify-center bg-black/80 p-6"
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={full} alt={caption || "Generated image"} className="max-h-full max-w-full rounded-lg object-contain shadow-2xl" />
-        </div>
-      )}
+      <Lightbox
+        open={open}
+        onOpenChange={setOpen}
+        src={full}
+        alt={caption || "Generated image"}
+      />
     </div>
   );
 }

@@ -125,7 +125,7 @@ export default function PlanBoard({ projectId, initialPlanId = "" }) {
             </span>
           )}
           {Array.isArray(plan?.days) && (
-            <span className="hidden text-xs text-muted-foreground tabular-nums sm:inline">
+            <span className="hidden text-xs text-muted-foreground tabular-nums @md:inline">
               {plan.days.length} posts
             </span>
           )}

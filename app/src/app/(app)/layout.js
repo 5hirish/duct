@@ -73,8 +73,11 @@ function AppLayoutInner({ children }) {
               </div>
             </header>
 
+            {/* @container on both: a full-bleed route skips .app-main, and a
+                component whose `@` variants find no container ancestor silently
+                renders its narrowest layout forever. */}
             {isFullBleed ? (
-              <div id="main-content" className="flex-1 min-h-0 overflow-hidden" tabIndex={-1}>
+              <div id="main-content" className="@container flex-1 min-h-0 overflow-hidden" tabIndex={-1}>
                 {children}
               </div>
             ) : (

@@ -152,7 +152,7 @@ export default function AnalyticsView({ projectId }) {
       ) : (
         <>
           {/* Stat cards */}
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 @4xl:grid-cols-5">
             <StatCard icon={Eye} label="Views" value={formatNumber(totals.views)} accent="text-sky-500" />
             <StatCard icon={Heart} label="Likes" value={formatNumber(totals.likes)} accent="text-rose-500" />
             <StatCard icon={MessageCircle} label="Comments" value={formatNumber(totals.comments)} accent="text-violet-500" />
@@ -161,7 +161,7 @@ export default function AnalyticsView({ projectId }) {
           </div>
 
           {/* Charts */}
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 @2xl:grid-cols-2">
             <ChartCard title="Views over time">
               {timeline.length > 1 ? (
                 <ResponsiveContainer width="100%" height={220}>
@@ -201,7 +201,7 @@ export default function AnalyticsView({ projectId }) {
 
           {/* Breakdown by pillar / format (attributed posts) */}
           {(pillarData.length > 0 || formatData.length > 0) && (
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 @2xl:grid-cols-2">
               <ChartCard title="Views by pillar">
                 {pillarData.length ? <CategoryBars data={pillarData} /> : <EmptyChart label="No pillar-attributed posts yet." />}
               </ChartCard>

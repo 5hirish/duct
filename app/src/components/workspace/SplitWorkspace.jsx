@@ -29,19 +29,20 @@ import { MessageSquare, PanelRight } from "lucide-react";
  *  2. KEYBOARD RESIZE + role="separator". A pane divider a keyboard user
  *     cannot move is a dead control on the platform where keyboards are the
  *     primary input. Follows the WAI-ARIA window splitter pattern.
- *  3. Children that must ADAPT TO THE PANE declare their own `@container`.
- *     The panes are user-resizable, so a child's width has no fixed relation to
- *     the viewport: at one window size the right pane can be 280px or 1400px,
- *     and `md:` answers about the wrong box. `PlanKanban` shows the pattern —
- *     `@container` on its own root, `@md:` / `@4xl:` on the grid inside it.
+ *  3. BOTH PANES ARE CONTAINERS. They are user-resizable, so a child's width
+ *     has no fixed relation to the viewport: at one window size the right pane
+ *     can be 280px or 1400px, and `md:` answers about the wrong box. Children
+ *     use `@`-variants (`@2xl:grid-cols-3`) and get the pane's real width.
  *
- *     Deliberately NOT declared here on the panes themselves, tempting as that
- *     is: `container-type` implies `contain: layout`, which makes the element a
- *     containing block for `position: fixed` descendants. Three overlays inside
- *     these panes are inline `fixed inset-0` full-screen modals (audit's
- *     ExecutionOffer, content's PublishModal, ContentChat's image lightbox), and
- *     a container on the pane would shrink all three to the pane's box. Portal
- *     those to <body> first and this can be revisited.
+ *     This is declared per REGION — here, and on `.app-main`/`.app-main-wide`
+ *     for ordinary pages — rather than per component, so the same component is
+ *     correct in a pane and on a page without knowing where it is.
+ *
+ *     It requires that no descendant relies on `position: fixed` escaping to
+ *     the viewport, because `container-type` implies `contain: layout`, which
+ *     makes this element their containing block. Three overlays here used to
+ *     break that rule; they now go through the portalled Radix dialog
+ *     (ui/dialog, ui/lightbox), which renders at <body> and is unaffected.
  *
  * Props:
  *   - left, right: ReactNode — the two panes
@@ -170,7 +171,7 @@ export default function SplitWorkspace({
         {/* Left pane — toggled on mobile, split on md+ */}
         <div
           id={`${storageKey}-left`}
-          className={`${mobilePane === "left" ? "flex" : "hidden"} w-full flex-col overflow-hidden border-r border-border/60 md:flex md:w-[var(--split)] md:min-w-[17.5rem]`}
+          className={`@container ${mobilePane === "left" ? "flex" : "hidden"} w-full flex-col overflow-hidden border-r border-border/60 md:flex md:w-[var(--split)] md:min-w-[17.5rem]`}
         >
           {left}
         </div>
@@ -199,7 +200,7 @@ export default function SplitWorkspace({
 
         {/* Right pane — toggled on mobile, split on md+. Single mount. */}
         <div
-          className={`${mobilePane === "right" ? "flex" : "hidden"} min-w-0 flex-1 flex-col overflow-hidden md:flex md:min-w-[17.5rem]`}
+          className={`@container ${mobilePane === "right" ? "flex" : "hidden"} min-w-0 flex-1 flex-col overflow-hidden md:flex md:min-w-[17.5rem]`}
         >
           {right}
         </div>

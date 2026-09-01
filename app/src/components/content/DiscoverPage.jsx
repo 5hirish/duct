@@ -129,7 +129,7 @@ export default function DiscoverPage({ projectId }) {
 
       {/* Control panel */}
       <section className="rounded-xl border border-border/70 bg-card p-4">
-        <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
+        <div className="grid gap-4 @2xl:grid-cols-[1fr_auto] @2xl:items-end">
           <div className="space-y-3">
             {/* source segmented control */}
             <div className="inline-flex rounded-lg border border-border/70 bg-muted/40 p-0.5">
@@ -224,7 +224,7 @@ export default function DiscoverPage({ projectId }) {
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
             Scraping on Apify ({elapsed}s) — polling every 3s, results appear as soon as the actor finishes.
           </div>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 @2xl:grid-cols-3 @4xl:grid-cols-4">
             {[0, 1, 2, 3].map((i) => (
               <div key={i} className="aspect-[3/4] animate-pulse rounded-xl border border-border/50 bg-muted/30" />
             ))}
@@ -263,7 +263,7 @@ export default function DiscoverPage({ projectId }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 @2xl:grid-cols-3 @4xl:grid-cols-4">
             {sorted.map((p) => (
               <ResultCard key={p.id} post={p} busy={busy[p.id]} onSave={() => handleSave(p)} />
             ))}
