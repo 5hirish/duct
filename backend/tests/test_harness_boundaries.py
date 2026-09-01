@@ -57,6 +57,11 @@ ADAPTERS: dict[str, str] = {
     #    consumer (insights), per the ports rule.
     "agents/core/lc.py":                    "LangChain adapter: resolve_chat_model + stream_agent",
 
+    # -- The ChatGPT-on-subscription adapter: a ChatOpenAI subclass pointed at
+    #    the Codex backend, so v1's OpenAI slot can run on a subscription.
+    #    Framework-facing by construction — it subclasses a chat model.
+    "agents/core/codex.py":                 "LangChain adapter: _ChatOpenAICodex (ChatGPT subscription auth)",
+
     # -- Session/state port, second implementation. The durable half of what
     #    agents/core/session.py does in memory: a LangGraph checkpointer chosen
     #    from DATABASE_URL, owned by the app lifespan.
