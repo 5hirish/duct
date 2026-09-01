@@ -1131,7 +1131,7 @@ async def _start_seo_audit(session_id: str, body: dict, emit_fn: Any) -> None:
 
         session.needs_reprime = True
         primer = await build_reprime_context(
-            session, summary_key,
+            session, api_key, provider=provider, model=model,
             subject="the current audit report (shown in the working_report block)",
         )
         memory = await _project_memory_blocks(query=url)
