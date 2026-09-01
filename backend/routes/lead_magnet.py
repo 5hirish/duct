@@ -21,13 +21,15 @@ from sqlmodel import Session, select
 from db.session import get_session
 from models.lead_magnet import ExecutionInterest, LeadMagnet
 from service.crawl.fetcher import SSRFError, validate_public_url
+from service.lead_access import find_live_lead
 from service.turnstile import verify_turnstile
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["lead-magnet"])
 
-_TOKEN_TTL_HOURS = 24
+# Token TTL lives in service/lead_access.py — imported above so the three
+# endpoints here and agent session creation cannot drift apart.
 _REPORT_CACHE_TTL_HOURS = 24  # reuse a cached report generated within this window
 
 # Paid execution services a lead can express interest in (demand-validation test).
@@ -128,12 +130,7 @@ def validate_token(
     body: ValidateTokenRequest,
     session: Session = Depends(get_session),
 ) -> ValidateTokenResponse:
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=_TOKEN_TTL_HOURS)
-    stmt = select(LeadMagnet).where(
-        LeadMagnet.access_token == body.token,
-        LeadMagnet.created_at >= cutoff,
-    )
-    lead = session.exec(stmt).first()
+    lead = find_live_lead(session, body.token)
     if not lead:
         raise HTTPException(status_code=404, detail="Invalid or expired access token.")
 
@@ -163,12 +160,7 @@ async def save_report(
     body: SaveReportRequest,
     session: Session = Depends(get_session),
 ) -> dict[str, str]:
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=_TOKEN_TTL_HOURS)
-    stmt = select(LeadMagnet).where(
-        LeadMagnet.access_token == body.token,
-        LeadMagnet.created_at >= cutoff,
-    )
-    lead = session.exec(stmt).first()
+    lead = find_live_lead(session, body.token)
     if not lead:
         raise HTTPException(status_code=404, detail="Invalid or expired access token.")
 
@@ -267,12 +259,7 @@ async def record_execution_interest(
     we can prioritise what to build. No execution is performed. A background
     notification is sent to the internal team.
     """
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=_TOKEN_TTL_HOURS)
-    stmt = select(LeadMagnet).where(
-        LeadMagnet.access_token == body.token,
-        LeadMagnet.created_at >= cutoff,
-    )
-    lead = session.exec(stmt).first()
+    lead = find_live_lead(session, body.token)
     if not lead:
         raise HTTPException(status_code=404, detail="Invalid or expired access token.")
 

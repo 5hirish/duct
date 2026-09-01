@@ -62,6 +62,11 @@ function backendApiHeaders(extra = {}) {
  * project-scoped data needs the second — the key is public, it ships in this
  * bundle. Exported so `contentApi` and friends share this one definition
  * rather than each keeping a key-only copy.
+ *
+ * The rule: if the request spends model tokens, reaches a vendor with anyone's
+ * credentials, or reads project data, use this one. `backendApiHeaders` is for
+ * the handful of routes that are genuinely public catalogue reads — engine
+ * status, insight modes.
  */
 export function backendAuthedHeaders(extra = {}) {
   const headers = backendApiHeaders(extra);
@@ -75,7 +80,7 @@ export async function fetchConnectorAccounts(connectorId, refreshToken, extras =
     `${BASE}/api/connectors/${encodeURIComponent(connectorId)}/accounts`,
     {
       method: "POST",
-      headers: backendApiHeaders({ "Content-Type": "application/json" }),
+      headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({ refresh_token: refreshToken, ...extras }),
     }
   );
@@ -152,7 +157,7 @@ export async function refreshInsightBriefs(routine) {
   };
   const res = await fetch(`${BASE}/api/insights/refresh`, {
     method: "POST",
-    headers: backendApiHeaders({ "Content-Type": "application/json" }),
+    headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify(body),
   });
   if (!res.ok) {
@@ -172,7 +177,7 @@ export async function streamInsightChat({
 }) {
   const res = await fetch(`${BASE}/api/insights/chat`, {
     method: "POST",
-    headers: backendApiHeaders({ "Content-Type": "application/json" }),
+    headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify({
       chat_payload: chatPayload,
       messages,

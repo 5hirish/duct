@@ -24,7 +24,7 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException
 
 from models.auth import User
-from service.auth import get_current_user_optional, get_user_provider_keys
+from service.auth import get_current_user, get_user_provider_keys
 from routes.schemas import (
     BusinessContextField,
     BusinessContextFieldOption,
@@ -268,7 +268,7 @@ async def list_insight_modes() -> dict:
 @router.post("/insights/generate")
 async def generate_insight(
     body: dict,
-    user: User | None = Depends(get_current_user_optional),
+    user: User = Depends(get_current_user),
     user_keys: dict = Depends(get_user_provider_keys),
 ) -> dict:
     """One brief, no human — the scheduled-brief entry point.
@@ -288,6 +288,11 @@ async def generate_insight(
 
     The durable output is the artifact; the response body is for the caller's
     log.
+
+    Signed-in only. It used to take an optional user, which meant an anonymous
+    caller could spend a full agent run on the server's provider key and get
+    nothing persisted for it — cost with no owner. A scheduled brief runs as the
+    user who scheduled it, so it has a token to present.
     """
     from agents.insights.brief import ARTIFACT_KIND, DEFAULT_FORMAT, brief_artifact_version
     from agents.insights.schema import InsightsRequest
