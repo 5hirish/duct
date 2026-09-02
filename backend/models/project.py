@@ -58,12 +58,14 @@ class Project(SQLModel, table=True):
         default_factory=dict,
         sa_column=Column(json_column(), nullable=False, server_default="{}"),
     )
-    # Execution autonomy: 'manual' (default — every change set needs a human
-    # approval) | 'assisted' (agent-proposed, reversible, guardrail-clean,
-    # non-destructive sets may auto-apply). Destructive/publish ops always wait
-    # regardless — see service/execution/policy.py.
+    # Execution autonomy: 'ask' (default — the agent asks freely and every
+    # change set waits for approval) | 'assisted' | 'auto'. Read it through
+    # models.execution.normalize_autonomy, never raw: the server_default below
+    # is still 'manual', the original spelling of 'ask', which that function
+    # accepts as an alias. Destructive/publish ops always wait regardless, at
+    # every level — see service/execution/policy.py.
     autonomy_level: str = Field(
-        default="manual", sa_column=Column(String, nullable=False, server_default="manual")
+        default="ask", sa_column=Column(String, nullable=False, server_default="manual")
     )
     # Memory off switch: agents and system writers stop remembering anything new
     # about this project. Reads are unaffected — what is already known stays

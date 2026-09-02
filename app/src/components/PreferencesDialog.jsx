@@ -5,6 +5,7 @@ import { Dialog as DialogPrimitive } from "radix-ui";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
+  ARTIFACT_FORMAT_OPTIONS,
   PREFS_DEFAULTS,
   ROLE_OPTIONS,
   loadPreferences,
@@ -12,7 +13,7 @@ import {
 } from "@/lib/userPreferences";
 
 // ---------------------------------------------------------------------------
-// Shared Dialog primitives (mirrors EngineDialog pattern)
+// Shared Dialog primitives (the pattern the retired EngineDialog also used)
 // ---------------------------------------------------------------------------
 
 function DialogOverlay({ className, ...props }) {
@@ -90,11 +91,7 @@ export default function PreferencesDialog({ children }) {
     }
   }, [open]);
 
-  const changed =
-    draft.role !== committed.role ||
-    draft.communication_style !== committed.communication_style ||
-    draft.report_depth !== committed.report_depth ||
-    draft.primary_outcome !== committed.primary_outcome;
+  const changed = Object.keys(PREFS_DEFAULTS).some((key) => draft[key] !== committed[key]);
 
   function handleApply() {
     savePreferences(draft);
@@ -137,6 +134,7 @@ export default function PreferencesDialog({ children }) {
             </label>
             <select
               value={draft.role}
+              aria-label="Role"
               onChange={e => set("role", e.target.value)}
               className="w-full rounded-lg border border-input bg-background pl-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             >
@@ -203,6 +201,25 @@ export default function PreferencesDialog({ children }) {
                 label="Detailed"
                 description="All evidence & data"
               />
+            </div>
+          </div>
+
+          {/* Deliverable format */}
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">
+              Saved deliverables
+            </label>
+            <div className="flex gap-2">
+              {ARTIFACT_FORMAT_OPTIONS.map(opt => (
+                <OptionCard
+                  key={opt.value}
+                  value={opt.value}
+                  selected={draft.preferred_artifact_format === opt.value}
+                  onSelect={v => set("preferred_artifact_format", v)}
+                  label={opt.label}
+                  description={opt.description}
+                />
+              ))}
             </div>
           </div>
 

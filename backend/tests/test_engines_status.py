@@ -2,7 +2,7 @@
 
 Verifies the three-state model (active / needs_auth / inactive) and that v3
 (Claude Agent SDK) flips to active via either an ANTHROPIC_API_KEY or a
-CLAUDE_CODE_OAUTH_TOKEN, while v1/v2 (Gemini) depend on the Gemini key.
+CLAUDE_CODE_OAUTH_TOKEN, while v1 (Gemini) depends on the Gemini key.
 """
 
 from __future__ import annotations
@@ -63,21 +63,29 @@ def test_requires_api_key():
 
 def test_no_credentials():
     engines = _status_map(_client_with_env())
-    # v1/v2 have no OAuth fallback → inactive without a Gemini key
+    # v1 has no OAuth fallback → inactive without a Gemini key
     assert engines["v1"]["status"] == "inactive"
-    assert engines["v2"]["status"] == "inactive"
     # v3 supports OAuth → recoverable, with guidance
     assert engines["v3"]["status"] == "needs_auth"
     assert engines["v3"]["supports_oauth"] is True
     assert engines["v3"]["detail"]
 
 
-def test_gemini_key_activates_v1_v2():
+def test_gemini_key_activates_v1():
     engines = _status_map(_client_with_env(GEMINI_API_KEY="g-key"))
     assert engines["v1"]["status"] == "active"
     assert engines["v1"]["auth_method"] == "api_key"
-    assert engines["v2"]["status"] == "active"
     assert engines["v3"]["status"] == "needs_auth"
+
+
+def test_the_removed_adk_engine_is_not_advertised():
+    """The status endpoint is what the UI builds its engine picker from.
+
+    v2 was removed because nothing dispatched its runner while the UI still
+    offered it — a user could pick "Google ADK" and be served v1. Re-adding an
+    engine here without a runner behind it would recreate exactly that.
+    """
+    assert "v2" not in _status_map(_client_with_env(GEMINI_API_KEY="g-key"))
 
 
 def test_anthropic_key_activates_v3_via_api_key():

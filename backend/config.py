@@ -259,18 +259,22 @@ class Configs(BaseSettings):
     gemini_api_key: str = ""
     openai_api_key: str = ""
     anthropic_api_key: str = ""
-    # OpenRouter — the OpenAI-compatible transport (v1 engine only). One key
+    # OpenRouter — its own LangChain integration (v1 engine only). One key
     # reaches 500+ models across 60+ providers, which is the practical answer
     # for bring-your-own-model: consumer subscriptions never grant API access,
     # so every customer arrives with a key, and for the open-weight/Chinese long
     # tail that key is usually this one.
     openrouter_api_key: str = ""
-    # Override to point the same OpenAI-compatible path at any other gateway.
-    # Self-hosted routers: LiteLLM (MIT), Bifrost (Go), Portkey Gateway (MIT),
-    # LLM Gateway (AGPLv3). Local model servers: Ollama
-    # (http://localhost:11434/v1), vLLM, llama.cpp. All are the same code path —
-    # they replace OpenRouter's interface, not its one-key-many-providers
-    # billing. Empty means OpenRouter's own endpoint.
+    # Override OpenRouter's endpoint — a regional endpoint, or a self-hosted
+    # proxy that speaks OpenRouter's API. Empty means OpenRouter's own endpoint.
+    #
+    # NOT the way to reach a different gateway any more. This used to double as
+    # that, because the provider was ChatOpenAI aimed elsewhere; it is now
+    # ChatOpenRouter, which speaks OpenRouter's API rather than plain
+    # chat-completions. A self-hosted router (LiteLLM, Bifrost, Portkey) or a
+    # local model server (Ollama http://localhost:11434/v1, vLLM, llama.cpp) is
+    # a new GATEWAY_BASE_URL entry in agents/models.py — which takes the
+    # OpenAI-shape branch — plus its own key field here.
     openrouter_base_url: str = ""
     # Long-lived Claude OAuth token from `claude setup-token` (the operator's own
     # Pro/Max subscription). Detected here only so the engine-status endpoint can
@@ -283,7 +287,7 @@ class Configs(BaseSettings):
         default="",
         validation_alias=AliasChoices("CLAUDE_CODE_OAUTH_TOKEN"),
     )
-    # Engine selection: "v1" (LangChain), "v2" (Google ADK), "v3" (Claude Agent SDK)
+    # Engine selection: "v1" (LangChain), "v3" (Claude Agent SDK)
     generate_engine: str = Field(default="v1")
 
     # Sentry observability
@@ -433,6 +437,31 @@ def claude_oauth_available() -> bool:
     See https://code.claude.com/docs/en/legal-and-compliance
     """
     return bool(get_configs().claude_code_oauth_token) or allow_subscription_auth()
+
+
+def allow_server_provider_keys() -> bool:
+    """True when a run may fall back to *this instance's* own provider keys.
+
+    The same env field means two opposite things depending on where the process
+    runs, and the difference is the whole of bring-your-own-key:
+
+      - desktop sidecar (``DUCT_LOCAL``) or local dev — the env file IS the
+        user's own key. Falling back to it is BYOK by another route, so it is
+        allowed and nothing is being spent on their behalf.
+      - hosted (Railway) — the env key is Duct's Console account. Spending it
+        on a customer's run is exactly what BYOK exists to prevent, so a run
+        with no caller key of its own must fail closed rather than quietly
+        bill us.
+
+    Deliberate demand-gen exceptions (the lead-magnet teaser audit) pass
+    ``duct_pays=True`` to ``agents.engines.resolve_provider_key`` instead of
+    widening this predicate: "Duct pays for this" is then a decision written at
+    one visible call site rather than a fallback nobody can see.
+
+    Same shape as ``allow_subscription_auth`` above, and for the same reason.
+    """
+    cfg = get_configs()
+    return bool(cfg.duct_local) or cfg.app_env == "local"
 
 
 def sentry_otel_env(cfg: Configs) -> dict[str, str]:

@@ -31,6 +31,9 @@ BACKEND = pathlib.Path(__file__).resolve().parent.parent
 # Matched on the top-level module, so `langchain_core` and `langchain_openai`
 # count as `langchain` — the distribution split is not a boundary.
 FRAMEWORK_PREFIXES = ("langchain", "langgraph", "deepagents", "claude_agent_sdk")
+# Kept after the ADK engine was removed: this list says what *counts* as an
+# agent framework, not what is installed, so it still catches ADK arriving back
+# in a non-adapter file.
 FRAMEWORK_DOTTED = ("google.adk",)
 
 # Directories that hold first-party application code.
@@ -47,22 +50,36 @@ ADAPTERS: dict[str, str] = {
     "agents/audit/v3/runner.py":            "Claude Agent SDK runner",
     "agents/content/v3/runner.py":          "Claude Agent SDK runner",
     "agents/insights/v1/agent.py":          "LangChain synthesis (init_chat_model)",
-    "agents/insights/v3/runner.py":         "Claude Agent SDK runner",
-    "agents/insights/v2/agents.py":         "Google ADK runner — frozen engine",
-    "agents/insights/v2/runner.py":         "Google ADK runner — frozen engine",
+    "agents/insights/v1/runner.py":         "deepagents runner — autonomous insights session",
+
+    # -- Shared LangChain adapter: the model-transport + events-out ports for
+    #    every V1 runner. Extracted from agents/audit/v1/runner.py on the second
+    #    consumer (insights), per the ports rule.
+    "agents/core/lc.py":                    "LangChain adapter: resolve_chat_model + stream_agent",
+
+    # -- The ChatGPT-on-subscription adapter: a ChatOpenAI subclass pointed at
+    #    the Codex backend, so v1's OpenAI slot can run on a subscription.
+    #    Framework-facing by construction — it subclasses a chat model.
+    "agents/core/codex.py":                 "LangChain adapter: _ChatOpenAICodex (ChatGPT subscription auth)",
+
+    # -- Session/state port, second implementation. The durable half of what
+    #    agents/core/session.py does in memory: a LangGraph checkpointer chosen
+    #    from DATABASE_URL, owned by the app lifespan.
+    "agents/core/checkpoint.py":            "LangGraph checkpointer adapter (postgres/sqlite/in-memory)",
 
     # -- Tool binders. Domain logic stays plain; these wrap it per harness.
+    "agents/core/connector_tools.py":       "LangChain binder: connector discovery tools",
     "agents/core/memory_tools.py":          "binder pair: build_memory_tools_lc / _sdk",
     "agents/audit/v1/tools.py":             "LangChain tool binder",
     "agents/audit/tools.py":                "Claude Agent SDK tool binder (duct_crawl)",
     "agents/content/tools.py":              "Claude Agent SDK tool binder (duct_content)",
     "agents/insights/tools.py":             "LangChain StructuredTool binder",
-    "agents/tools/execution_tools.py":      "Claude Agent SDK tool binder (staged execution)",
+    "agents/insights/data_tools.py":        "LangChain binder: FetchData + connector notes",
+    "agents/tools/execution_tools.py":      "binder pair: build_execution_tools_lc / _mcp_server",
 
     # -- Named harness shims.
     "agents/core/claude_sdk.py":            "Claude Agent SDK subprocess survival",
     "agents/core/stream.py":                "pump_stream_event — SDK message decode",
-    "agents/sandbox.py":                    "Claude Agent SDK sandbox options",
     "agents/content/subagents/draft_post.py":     "Claude Agent SDK AgentDefinition",
     "agents/content/subagents/research_pillar.py": "Claude Agent SDK AgentDefinition",
 
@@ -211,7 +228,11 @@ def test_ag_ui_map_is_exhaustive():
 
 @pytest.mark.parametrize(
     "js_rel",
-    ["app/src/lib/auditEvents.js", "app/src/lib/contentEvents.js"],
+    [
+        "app/src/lib/auditEvents.js",
+        "app/src/lib/contentEvents.js",
+        "app/src/lib/insightsEvents.js",
+    ],
 )
 def test_frontend_event_mirrors_reference_real_backend_values(js_rel: str):
     """Every event string the frontend names must be one the backend can emit.
@@ -235,7 +256,12 @@ def test_frontend_event_mirrors_reference_real_backend_values(js_rel: str):
 
 
 @pytest.mark.parametrize(
-    "js_rel", ["app/src/lib/auditEvents.js", "app/src/lib/contentEvents.js"]
+    "js_rel",
+    [
+        "app/src/lib/auditEvents.js",
+        "app/src/lib/contentEvents.js",
+        "app/src/lib/insightsEvents.js",
+    ],
 )
 def test_legacy_frontend_values_are_genuinely_retired(js_rel: str):
     """A LEGACY_* key must name a value the backend no longer emits.

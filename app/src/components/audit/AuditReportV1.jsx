@@ -171,7 +171,7 @@ function StatsStrip({ data, dateStr, dark }) {
 
   return (
     <div style={{ paddingTop: 12, borderTop: `1px solid ${borderClr}` }}>
-      <div className="grid grid-cols-3 gap-x-4 gap-y-4 sm:flex sm:items-center sm:gap-6 sm:flex-wrap">
+      <div className="grid grid-cols-3 gap-x-4 gap-y-4 @xl:flex @xl:items-center @xl:gap-6 @xl:flex-wrap">
         {stats.map(({ value, label, color }) => (
           <div key={label} className="min-w-0">
             <div className="font-mono text-lg font-bold leading-none tabular-nums"
@@ -202,7 +202,7 @@ const SIGNAL_COLORS = [DUCT_ORANGE, '#6366f1', '#10b981'];
 function KeySignals({ signals }) {
   if (!signals?.length) return null;
   return (
-    <div className="rise-1 grid grid-cols-1 sm:grid-cols-3 gap-3">
+    <div className="rise-1 grid grid-cols-1 @xl:grid-cols-3 gap-3">
       {signals.slice(0, 3).map((text, i) => {
         const Icon  = SIGNAL_ICONS[i];
         const color = SIGNAL_COLORS[i];
@@ -304,7 +304,7 @@ function CategoryBarChartCSS({ categories }) {
         const color = scoreBarColor(cat.score);
         return (
           <div key={cat.id} className="flex items-center gap-3" data-tooltip={cat.tooltip}>
-            <span className="text-xs sm:text-sm text-right shrink-0 w-24 sm:w-44 text-[#6b7280] truncate">{cat.label}</span>
+            <span className="text-xs @xl:text-sm text-right shrink-0 w-24 @xl:w-44 text-[#6b7280] truncate">{cat.label}</span>
             <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.07)' }}>
               <div className="h-full rounded-full"
                 style={{
@@ -409,9 +409,9 @@ function ImpactEffortMatrix({ categories }) {
   return (
     <section className="rise-5 space-y-3">
       <SectionHeader icon={Target}>Impact × Effort</SectionHeader>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 @xl:grid-cols-2 gap-3">
         {quadrants.map(q => (
-          <div key={q.key} className="rounded-xl p-3 sm:p-4 space-y-2"
+          <div key={q.key} className="rounded-xl p-3 @xl:p-4 space-y-2"
             style={{ background: q.bg, border: `1px solid ${q.border}` }}>
             <div>
               <p className="text-[13px] font-bold" style={{ color: q.textColor }}>{q.label}</p>
@@ -425,7 +425,7 @@ function ImpactEffortMatrix({ categories }) {
                     <li key={f.id} className="flex items-start gap-2" data-tooltip={f.description || f.title}>
                       <span className="shrink-0 mt-1.5 size-1.5 rounded-full"
                         style={{ background: SEVERITY_DOT[f.severity] ?? '#94a3b8' }} />
-                      <span className="text-[11px] sm:text-[12px] leading-snug text-[#1a1a1acc] line-clamp-2">{f.title}</span>
+                      <span className="text-[11px] @xl:text-[12px] leading-snug text-[#1a1a1acc] line-clamp-2">{f.title}</span>
                     </li>
                   ))}
                 </ul>
@@ -471,7 +471,7 @@ function FindingCard({ finding }) {
       <div style={{ height: 3, background: cfg.accent }} />
 
       {/* Colored header row: badge + title */}
-      <div className={`flex items-start gap-3 px-3 sm:px-5 pt-3 pb-3 ${cfg.headerCls}`}>
+      <div className={`flex items-start gap-3 px-3 @xl:px-5 pt-3 pb-3 ${cfg.headerCls}`}>
         <span className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-md shrink-0 mt-0.5 ${cfg.pill}`}>
           {cfg.label}
         </span>
@@ -559,7 +559,7 @@ function CategoryAccordion({ category, isLast }) {
               </span>
             )}
             {!hasBad && !category.opp_count && (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-500/15 text-green-700 dark:text-green-400 hidden sm:inline">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-500/15 text-green-700 dark:text-green-400 hidden @xl:inline">
                 All clear
               </span>
             )}
@@ -567,7 +567,7 @@ function CategoryAccordion({ category, isLast }) {
         </div>
         <ChevronDown size={15} className="text-[#6b7280] shrink-0 transition-transform duration-200 group-open:rotate-180" />
       </summary>
-      <div className="px-3 sm:px-5 pb-4 pt-3 space-y-3" style={{ background: 'rgba(0,0,0,0.02)' }}>
+      <div className="px-3 @xl:px-5 pb-4 pt-3 space-y-3" style={{ background: 'rgba(0,0,0,0.02)' }}>
         {ordered.length === 0 && (
           <p className="text-sm text-[#6b7280] py-2">No findings for this category.</p>
         )}
@@ -617,7 +617,7 @@ function PriorityCard({ priority }) {
       onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.1)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
       onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.07)'; e.currentTarget.style.transform = ''; }}>
       <div style={{ height: 3, background: s.accent }} />
-      <div className="flex items-center gap-3 sm:gap-4 px-3 sm:px-5 py-4">
+      <div className="flex items-center gap-3 @xl:gap-4 px-3 @xl:px-5 py-4">
         <div className="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold tabular-nums"
           style={{ background: s.rankBg, color: s.rankColor }}>
           {String(priority.rank).padStart(2, '0')}
@@ -664,7 +664,7 @@ const CRAWL_STATS = [
 
 function CrawlSummaryStrip({ summary }) {
   return (
-    <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+    <div className="grid grid-cols-3 @2xl:grid-cols-6 gap-2">
       {CRAWL_STATS.map(({ key, label, format, thresholds, tooltip }) => {
         const value = summary[key] ?? 0;
         const color = thresholds ? statColor(value, thresholds) : NEUTRAL_COLOR;
@@ -695,13 +695,13 @@ function WinsStrip({ wins }) {
   return (
     <section className="rise-4 rounded-xl overflow-hidden"
       style={{ background: 'rgba(16,185,129,0.04)', border: '1px solid rgba(16,185,129,0.18)' }}>
-      <div className="px-5 py-5 sm:px-6 sm:py-5">
+      <div className="px-5 py-5 @xl:px-6 @xl:py-5">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-1 h-6 rounded-full shrink-0" style={{ background: '#16a34a' }} />
           <CheckCircle2 size={16} color="#16a34a" strokeWidth={2} />
           <h2 className="text-xl font-semibold tracking-tight">What&apos;s Going Right</h2>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 @xl:grid-cols-2 gap-2">
           {wins.map((w, i) => (
             <div key={i} className="flex items-center gap-2.5 rounded-lg border border-green-100 bg-card px-4 py-2.5"
               style={{ transition: 'box-shadow 0.15s' }}
@@ -735,7 +735,7 @@ function RoadmapSection({ roadmap }) {
         {roadmap.map((phase, i) => {
           const cfg = PHASE_THEME_COLOR[phase.theme] ?? { text: '#6b7280', bg: 'rgba(107,114,128,0.08)', border: 'rgba(107,114,128,0.2)' };
           return (
-            <div key={i} className="rounded-xl bg-card p-5 sm:p-6 space-y-3"
+            <div key={i} className="rounded-xl bg-card p-5 @xl:p-6 space-y-3"
               style={{ border: '1px solid var(--border)', boxShadow: '0 1px 2px rgba(13,15,26,0.04)' }}>
               <div className="flex items-center gap-3">
                 <span className="text-xs font-mono font-semibold px-2.5 py-1 rounded-full border"
@@ -824,12 +824,12 @@ export default function AuditReportV1({ data, leadToken = null, email = null }) 
     >
       <style>{GLOBAL_STYLE}</style>
 
-      <div className="max-w-4xl mx-auto px-4 py-10 sm:py-14 space-y-8">
+      <div className="max-w-4xl mx-auto px-4 py-10 @xl:py-14 space-y-8">
 
         {/* ── Dark hero card ───────────────────────────────────────────── */}
         <div className="rise-0 rounded-2xl overflow-hidden shadow-xl"
           style={{ background: DUCT_NAVY }}>
-          <div className="px-5 pt-6 pb-6 sm:px-8 sm:pt-8 sm:pb-7 flex flex-col-reverse sm:flex-row sm:items-start sm:justify-between gap-5 sm:gap-6">
+          <div className="px-5 pt-6 pb-6 @xl:px-8 @xl:pt-8 @xl:pb-7 flex flex-col-reverse @xl:flex-row @xl:items-start @xl:justify-between gap-5 @xl:gap-6">
             <div className="flex-1 min-w-0 space-y-4">
               <p className="text-xs font-medium tracking-wide truncate"
                 style={{ color: DUCT_ORANGE }}>{data.url}</p>
@@ -846,7 +846,7 @@ export default function AuditReportV1({ data, leadToken = null, email = null }) 
               </h1>
               <StatsStrip data={data} dateStr={dateStr} dark />
             </div>
-            <div className="shrink-0 self-start sm:self-auto">
+            <div className="shrink-0 self-start @xl:self-auto">
               <ScoreGauge score={data.overall_score} band={data.score_band} dark />
             </div>
           </div>

@@ -129,10 +129,27 @@ Be concise. Each field should be a short string or short list item, not a paragr
     if _config_dir:
         env["CLAUDE_CONFIG_DIR"] = _config_dir
 
+    # `tools` is the availability control; `allowed_tools` is only a permission
+    # allowlist. The SDK emits `--tools` ONLY when `tools is not None`, so
+    # leaving it unset ships the CLI's default set — Bash, Read, Write, Edit —
+    # and `bypassPermissions` would then auto-approve every one of them. That
+    # matters here more than anywhere: the prompt above interpolates
+    # `brand_pillars`, which is H2 text scraped verbatim off the site under
+    # audit, and the WebFetch results are competitor pages. Both are attacker
+    # authored, so an unsandboxed shell one prompt-injection away is a remote
+    # code execution path into `backend/.env*`.
+    #
+    # Two controls, deliberately redundant: `tools` means the CLI never offers
+    # anything else, and DONT_ASK hard-denies anything unmatched if it somehow
+    # does. Same posture as the synthesis runner and `persistence.py`'s
+    # summarizer. No `sandbox=` — with no Bash tool there is nothing for
+    # seatbelt to confine, and it makes the subprocess exit 1 under uvicorn
+    # (see the note in agents/audit/v3/runner.py).
     options = ClaudeAgentOptions(
         model=model,
+        tools=[AgentTool.WEB_SEARCH, AgentTool.WEB_FETCH],
         allowed_tools=[AgentTool.WEB_SEARCH, AgentTool.WEB_FETCH],
-        permission_mode=AgentPermissionMode.BYPASS,
+        permission_mode=AgentPermissionMode.DONT_ASK,
         max_turns=12,  # 3 WebFetches + searches + the final structured-output turn
         env=env,
         setting_sources=[],

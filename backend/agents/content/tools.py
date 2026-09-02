@@ -56,7 +56,6 @@ from agents.content.schema import (
     Slide,
 )
 from agents.content.templates import derive_image_prompts, render_slides_html
-from config import get_configs
 from service import storage
 from db.session import get_engine
 from models.content import (
@@ -572,7 +571,7 @@ def build_content_mcp_server(
             AspectRatio.PORTRAIT_9_16, description="Optional aspect ratio. Defaults to 9:16 portrait.",
         )
         number_of_images: int = Field(1, ge=1, le=4, description="How many images to generate. Default 1, max 4.")
-        negative_prompt: str | None = Field(None, description="Optional negative prompt (Imagen models only).")
+        negative_prompt: str | None = Field(None, description="Accepted but inert — no current image model supports negative prompting. Put the constraint in the prompt instead.")
         input_asset_id: str | None = Field(
             None, description="Single reference asset UUID (legacy; prefer input_asset_ids). Gemini-class models only.",
         )
@@ -592,7 +591,7 @@ def build_content_mcp_server(
         prompt: str = Field(description="Edit instruction.")
         input_asset_id: str = Field(description="UUID of the source asset to edit.")
         model: ImageModel | None = Field(None, description="Optional image model id.")
-        edit_mode: EditMode | None = Field(None, description="Optional edit mode (Imagen only).")
+        edit_mode: EditMode | None = Field(None, description="Accepted but inert — masked/mode-based editing retired with Imagen.")
         mask_asset_id: str | None = Field(None, description="Optional mask asset UUID.")
         mask_mode: MaskMode | None = Field(None, description="Optional mask mode.")
         style_asset_id: str | None = Field(None, description="Optional style reference asset UUID.")
@@ -600,7 +599,7 @@ def build_content_mcp_server(
         subject_type: SubjectType | None = Field(None, description="Optional subject type.")
         aspect_ratio: AspectRatio | None = Field(None, description="Optional aspect ratio override.")
         number_of_images: int = Field(1, ge=1, le=4, description="How many images to generate (1-4).")
-        negative_prompt: str | None = Field(None, description="Optional negative prompt (Imagen only).")
+        negative_prompt: str | None = Field(None, description="Accepted but inert — see generate_image.")
 
     # ----------------------- Writers -----------------------
 
@@ -1217,9 +1216,12 @@ def build_content_mcp_server(
             )
             from service.google.gemini.client import build_multi_reference_prefix
 
-            cfg = get_configs()
-            if not cfg.gemini_api_key:
-                return _err("Image generation isn't enabled for this workspace yet.")
+            image_key = session.gemini_api_key
+            if not image_key:
+                return _err(
+                    "Image generation needs a Google Gemini API key. Add one in "
+                    "Settings \u2192 Providers, then try again."
+                )
 
             payload = {k: v for k, v in args.items() if v not in (None, "")}
             payload.setdefault("number_of_images", min(int(payload.get("number_of_images", 1) or 1), 4))
@@ -1325,7 +1327,7 @@ def build_content_mcp_server(
                             update={"prompt": f"{prefix}\n\n{request.prompt}"}
                         )
 
-                client = GeminiImageClient(cfg.gemini_api_key)
+                client = GeminiImageClient(image_key)
                 try:
                     images = await client.generate_image(
                         request,
@@ -1351,7 +1353,7 @@ def build_content_mcp_server(
                             "input_global_refs": global_refs,
                         },
                         post_id=session.post_id,
-                        source="imagen" if request.model.value.startswith("imagen-") else "gemini",
+                        source="gemini",
                     )
                     assets.append(asset)
 
@@ -1435,9 +1437,12 @@ def build_content_mcp_server(
                 persist_generated_image,
             )
 
-            cfg = get_configs()
-            if not cfg.gemini_api_key:
-                return _err("Image editing isn't enabled for this workspace yet.")
+            image_key = session.gemini_api_key
+            if not image_key:
+                return _err(
+                    "Image editing needs a Google Gemini API key. Add one in "
+                    "Settings \u2192 Providers, then try again."
+                )
 
             payload = {k: v for k, v in args.items() if v not in (None, "")}
             payload.setdefault("number_of_images", min(int(payload.get("number_of_images", 1) or 1), 4))
@@ -1466,7 +1471,7 @@ def build_content_mcp_server(
                 style_bytes   = _load(request.style_asset_id)
                 subject_bytes = _load(request.subject_asset_id)
 
-                client = GeminiImageClient(cfg.gemini_api_key)
+                client = GeminiImageClient(image_key)
                 try:
                     images = await client.edit_image(
                         request,
@@ -1496,7 +1501,7 @@ def build_content_mcp_server(
                             "negative_prompt":   request.negative_prompt,
                         },
                         post_id=session.post_id,
-                        source="imagen" if request.model.value.startswith("imagen-") else "gemini",
+                        source="gemini",
                     )
                     assets.append(asset)
 

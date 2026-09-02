@@ -6,15 +6,19 @@ so GENERATE_PROVIDER and GENERATE_MODEL become optional overrides.
 
 Engine → default provider → default model:
   v1  (LangChain)          → google_genai → gemini-2.5-flash
-  v2  (Google ADK)         → google_genai → gemini-2.5-flash
-  v3  (Claude Agent SDK)   → anthropic    → claude-sonnet-4-6
+  v3  (Claude Agent SDK)   → anthropic    → claude-sonnet-5
 
 Supported providers per engine:
-  v1  OpenAI, Google, Anthropic (all native in LangChain) + OpenRouter
-      (the OpenAI-compatible transport — one endpoint, 500+ models, and the
-      same code path for any compatible gateway including local Ollama/vLLM)
-  v2  three native providers (OpenAI via LiteLLM prefix, Google + Anthropic)
+  v1  OpenAI, Google, Anthropic + OpenRouter — all four native in LangChain,
+      OpenRouter via `langchain-openrouter` (one key, 400+ models). A gateway
+      with no package of its own is still reachable as the OpenAI shape at its
+      own base URL; see GATEWAY_BASE_URL in agents/models.py
   v3  anthropic only (Claude Agent SDK does not support other providers natively)
+
+A v2 (Google ADK) engine existed until it was removed: nothing dispatched its
+runner, and the UI offered it while silently serving v1. Its defaults were
+identical to v1's, so `resolve_engine` folding a stored "v2" back to V1 changes
+no behaviour.
 
 Only v1 gets OpenRouter, and that asymmetry is the point: v3's harness is
 provider-locked by design (anthropics/claude-agent-sdk-python#410, closed
@@ -23,21 +27,21 @@ provider-locked by design (anthropics/claude-agent-sdk-python#410, closed
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from dataclasses import dataclass
 from enum import Enum
 
-from agents.models import AgentEffort, ModelName, Provider
+from agents.models import CLI_ONLY_MODELS, MODEL_FALLBACK, AgentEffort, ModelName, Provider
 
 
 class Engine(str, Enum):
     V1 = "v1"  # LangChain
-    V2 = "v2"  # Google ADK
     V3 = "v3"  # Claude Agent SDK
 
 
 # Default provider for each engine when GENERATE_PROVIDER is unset
 ENGINE_DEFAULT_PROVIDER: dict[Engine, Provider] = {
     Engine.V1: Provider.GOOGLE_GENAI,
-    Engine.V2: Provider.GOOGLE_GENAI,
     Engine.V3: Provider.ANTHROPIC,
 }
 
@@ -47,11 +51,7 @@ ENGINE_DEFAULT_MODEL: dict[tuple[Engine, Provider], ModelName] = {
     (Engine.V1, Provider.GOOGLE_GENAI): ModelName.GEMINI_2_5_FLASH,
     (Engine.V1, Provider.ANTHROPIC):    ModelName.CLAUDE_SONNET,
     (Engine.V1, Provider.OPENAI):       ModelName.GPT_5_MINI,
-    (Engine.V1, Provider.OPENROUTER):   ModelName.OR_DEEPSEEK_CHAT,
-    # v2 — Google ADK
-    (Engine.V2, Provider.GOOGLE_GENAI): ModelName.GEMINI_2_5_FLASH,
-    (Engine.V2, Provider.ANTHROPIC):    ModelName.CLAUDE_SONNET,
-    (Engine.V2, Provider.OPENAI):       ModelName.GPT_5_MINI,
+    (Engine.V1, Provider.OPENROUTER):   ModelName.OR_DEEPSEEK_V4_FLASH,
     # v3 — Claude Agent SDK (Anthropic only)
     (Engine.V3, Provider.ANTHROPIC):    ModelName.CLAUDE_SONNET,
 }
@@ -61,34 +61,26 @@ ENGINE_SUPPORTED_PROVIDERS: dict[Engine, frozenset[Provider]] = {
     Engine.V1: frozenset({
         Provider.OPENAI, Provider.GOOGLE_GENAI, Provider.ANTHROPIC, Provider.OPENROUTER,
     }),
-    Engine.V2: frozenset({Provider.OPENAI, Provider.GOOGLE_GENAI, Provider.ANTHROPIC}),
     Engine.V3: frozenset({Provider.ANTHROPIC}),
 }
 
 # Whether an engine can authenticate without an explicit API key. Only the
-# Claude Agent SDK (v3) supports an OAuth/subscription token fallback; v1/v2
-# (Gemini) require their provider API key. Used by the engine-status endpoint
+# Claude Agent SDK (v3) supports an OAuth/subscription token fallback; v1
+# requires its provider's API key. Used by the engine-status endpoint
 # to decide between "needs_auth" (recoverable) and "inactive".
 ENGINE_SUPPORTS_OAUTH: dict[Engine, bool] = {
     Engine.V1: False,
-    Engine.V2: False,
     Engine.V3: True,
 }
 
 # Env var name that each engine's underlying framework reads for each provider.
-# Used by v2 (ADK) and v3 (Claude Agent SDK) runners when setting env vars.
+# Used by the v3 (Claude Agent SDK) runner when setting env vars.
 ENGINE_PROVIDER_ENV_VAR: dict[Engine, dict[Provider, str]] = {
     Engine.V1: {
         Provider.OPENAI:       "OPENAI_API_KEY",
         Provider.GOOGLE_GENAI: "GOOGLE_API_KEY",
         Provider.ANTHROPIC:    "ANTHROPIC_API_KEY",
         Provider.OPENROUTER:   "OPENROUTER_API_KEY",
-    },
-    Engine.V2: {
-        # ADK reads standard names — different from the Duct config key GEMINI_API_KEY
-        Provider.OPENAI:       "OPENAI_API_KEY",
-        Provider.GOOGLE_GENAI: "GOOGLE_API_KEY",
-        Provider.ANTHROPIC:    "ANTHROPIC_API_KEY",
     },
     Engine.V3: {
         Provider.ANTHROPIC: "ANTHROPIC_API_KEY",
@@ -98,9 +90,40 @@ ENGINE_PROVIDER_ENV_VAR: dict[Engine, dict[Provider, str]] = {
 # Default effort level per engine (only meaningful for v3 / Claude Agent SDK)
 ENGINE_DEFAULT_EFFORT: dict[Engine, AgentEffort | None] = {
     Engine.V1: None,
-    Engine.V2: None,
     Engine.V3: AgentEffort.HIGH,
 }
+
+
+def resolve_fallback_models(
+    engine: Engine,
+    provider: Provider,
+    model: ModelName | str,
+) -> tuple[ModelName, ...]:
+    """Models to try when ``model`` errors, in order. Empty means "do not retry".
+
+    The engine policy over ``agents/models.MODEL_FALLBACK``, which holds the
+    mapping itself — the split is the same one the rest of this module keeps:
+    ``models.py`` owns what a model *is*, ``engines.py`` owns which engine may
+    use it. Call this rather than reading the dict.
+
+    Only v1 gets a chain: v3's harness owns its own retries inside the CLI, so
+    mounting one there would be a second, invisible retry loop layered on the
+    SDK's.
+
+    A raw OpenRouter slug (a ``str``, not a ``ModelName``) resolves to no chain.
+    """
+    if engine is not Engine.V1:
+        return ()
+    if not isinstance(model, ModelName):
+        return ()
+    candidates = MODEL_FALLBACK.get(model, ())
+    supported = ENGINE_SUPPORTED_PROVIDERS.get(engine, frozenset())
+    if provider not in supported:
+        return ()
+    # A CLI-only id can never be a fallback target on v1 — same rule as
+    # resolve_engine_model, which is where that constraint is stated.
+    return tuple(m for m in candidates if m not in CLI_ONLY_MODELS)
+
 
 # Duct config attribute name → API key for each provider
 PROVIDER_CONFIG_ATTR: dict[Provider, str] = {
@@ -153,13 +176,18 @@ def resolve_engine_model(
     Uses the override if it names a known ModelName; otherwise returns the
     engine's default for that provider.
 
-    **OpenRouter is the exception, deliberately.** It fronts 500+ models, so the
+    **OpenRouter is the exception, deliberately.** It fronts 400+ models, so the
     ModelName enum is a curated default list rather than a whitelist — silently
     substituting a default would throw away the model a bring-your-own-key
     customer explicitly asked for, which is the whole feature. An unrecognised
     ``vendor/slug`` is passed through verbatim and the gateway decides whether
     it exists. The slug shape is required so a typo'd bare name still falls back
     instead of becoming a guaranteed upstream 404.
+
+    ``CLI_ONLY_MODELS`` (the ``[1m]`` context variants) are the mirror case:
+    they are Claude Code model strings the Agent SDK understands and the
+    Messages API does not, so v1 falls back to its default rather than
+    forwarding one to LangChain.
     """
     default = ENGINE_DEFAULT_MODEL.get(
         (engine, provider),
@@ -169,13 +197,124 @@ def resolve_engine_model(
         return default
     candidate = override.strip()
     try:
-        return ModelName(candidate)
+        resolved = ModelName(candidate)
     except ValueError:
         if provider == Provider.OPENROUTER and "/" in candidate:
             return candidate
         return default
+    if resolved in CLI_ONLY_MODELS and engine is not Engine.V3:
+        return default
+    return resolved
 
 
 def get_env_var_for_engine_provider(engine: Engine, provider: Provider) -> str | None:
     """Return the env var name that the engine's framework reads for this provider."""
     return ENGINE_PROVIDER_ENV_VAR.get(engine, {}).get(provider)
+
+
+# ---------------------------------------------------------------------------
+# Whose key pays for a run
+# ---------------------------------------------------------------------------
+#
+# Every LLM credential a run spends comes through resolve_provider_key below.
+# That is the point of putting it here rather than at each call site: a run
+# billed to Duct's own Console account is a policy decision, and a policy that
+# lives in six copies of `getattr(cfg, PROVIDER_CONFIG_ATTR[provider], "")` is
+# one that will be reintroduced by the next agent to need a key.
+#
+# Grepping for that getattr is the standing audit — outside this module it
+# should return nothing but the settings/status readers, which ask whether a
+# key exists and never spend one.
+
+
+class ProviderKeyRequired(RuntimeError):
+    """No credential this run is allowed to spend.
+
+    Carries the provider so the API layer can turn it into a 402 the browser
+    can act on — the Providers dialog for that provider — rather than a 500
+    that reads like an outage.
+    """
+
+    def __init__(self, provider: Provider | str, detail: str = "") -> None:
+        self.provider = getattr(provider, "value", str(provider))
+        super().__init__(
+            detail
+            or f"No {self.provider} API key for this request. Add your own key in Settings → Providers."
+        )
+
+
+@dataclass(frozen=True)
+class ProviderKey:
+    """A resolved credential and, just as importantly, whose account it is."""
+
+    key: str
+    provider: Provider
+    #: ``user``  — an X-Provider-* header on this request
+    #: ``stored``— this user's saved, encrypted key
+    #: ``env``   — this instance's env file (desktop / self-hosted: the user's own)
+    #: ``cloud`` — Duct's hosted key; our account is paying
+    #: ``subscription`` — the operator's Claude subscription on this machine
+    source: str
+
+    @property
+    def billed_to_duct(self) -> bool:
+        """True when this run costs Duct money. Log it; it should be rare."""
+        return self.source in ("cloud", "subscription")
+
+
+def resolve_provider_key(
+    provider: Provider,
+    user_keys: Mapping[Provider, str] | None = None,
+    *,
+    stored_keys: Mapping[Provider, str] | None = None,
+    duct_pays: bool = False,
+) -> ProviderKey:
+    """The key this run may spend, in precedence order, or raise.
+
+    1. ``user_keys``   — the caller's ``X-Provider-*`` header for this request
+    2. ``stored_keys`` — their saved encrypted key (background jobs have no
+       request to carry a header, so this is the only BYOK they can have)
+    3. this instance's env key — **only** when ``allow_server_provider_keys()``
+       says the env file belongs to the user running it, or the call site
+       explicitly declared ``duct_pays``
+    4. the Claude subscription, under the same gate and for the same reason
+
+    ``duct_pays`` is for flows Duct deliberately funds — the lead-magnet teaser
+    audit is demand gen, not a customer's run. Pass it as an expression at the
+    call site (``duct_pays=req.lead_magnet``) so the condition stays readable.
+
+    Kept free of any DB or request import: the caller merges what it has and
+    this decides. ``service/provider_keys.py`` is the piece that loads stored
+    keys, and it is the only thing that needs a session.
+    """
+    from config import allow_server_provider_keys, claude_oauth_available, get_configs
+
+    supplied = (user_keys or {}).get(provider, "")
+    if supplied and supplied.strip():
+        return ProviderKey(supplied.strip(), provider, "user")
+
+    saved = (stored_keys or {}).get(provider, "")
+    if saved and saved.strip():
+        return ProviderKey(saved.strip(), provider, "stored")
+
+    cfg = get_configs()
+    may_use_ours = duct_pays or allow_server_provider_keys()
+    if not may_use_ours:
+        # The whole reason this module exists. There IS a key in the env on the
+        # hosted deployment and we are declining to spend it.
+        raise ProviderKeyRequired(provider)
+
+    server_key = (getattr(cfg, PROVIDER_CONFIG_ATTR.get(provider, ""), "") or "").strip()
+    if server_key:
+        # Same field, two different answers to "who is paying" — see
+        # routes/providers.providers_status, which draws the same distinction.
+        local = bool(cfg.duct_local) or cfg.app_env == "local"
+        return ProviderKey(server_key, provider, "env" if local else "cloud")
+
+    # v3's harness can authenticate with no key at all. That is the operator's
+    # own subscription, so it sits behind the same gate as the env key rather
+    # than being a way around it.
+    if provider is Provider.ANTHROPIC and claude_oauth_available():
+        return ProviderKey("", provider, "subscription")
+
+    raise ProviderKeyRequired(provider)

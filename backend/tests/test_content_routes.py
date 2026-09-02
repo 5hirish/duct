@@ -126,8 +126,22 @@ def test_session_lifecycle_is_idempotent_and_404s_for_unknown_ids():
     """DELETE must be idempotent (calling close on a session twice or on
     a session that never existed should NOT error). Answer / chat
     against an unknown session must 404 — silent acceptance would leak
-    "is this session alive?" timing info."""
+    "is this session alive?" timing info.
+
+    The signed-in caller is stubbed rather than signed in: these endpoints now
+    require one, but whose it is only matters for a session that exists, and
+    who may touch one is tested in tests/test_content_access.py. The DB is
+    stubbed for the same reason — nothing here reaches it.
+    """
+    from db.session import get_session as get_session_dep
+    from models.auth import User
+    import service.auth as auth_service
+
     server = _load_server_with_env()
+    server.app.dependency_overrides[auth_service.get_current_user] = (
+        lambda: User(email="lifecycle@example.com")
+    )
+    server.app.dependency_overrides[get_session_dep] = lambda: None
     client = TestClient(server.app)
     h = {"X-API-Key": TEST_DUCT_API_KEY}
     unknown = uuid4()
@@ -141,3 +155,5 @@ def test_session_lifecycle_is_idempotent_and_404s_for_unknown_ids():
 
     res = client.post(f"/api/content/chat/{unknown}", headers=h, json={"content": "x"})
     assert res.status_code == 404
+
+    server.app.dependency_overrides.clear()

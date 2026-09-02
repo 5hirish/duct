@@ -4,12 +4,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  TrendingUp,
-  BarChart3,
-  Megaphone,
-  Search,
-  PenLine,
-  ShieldCheck,
   Plug,
   Check,
   Plus,
@@ -24,8 +18,6 @@ import {
   BellRing,
   SlidersHorizontal,
   Brain,
-  FileText,
-  History,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import {
@@ -50,7 +42,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
-import EngineDialog from "./EngineDialog";
 import PreferencesDialog from "./PreferencesDialog";
 import { loadPreferences, hasNonDefaultPreferences } from "@/lib/userPreferences";
 import {
@@ -61,104 +52,13 @@ import {
   supportingEngines,
 } from "@/lib/engines";
 import {
-  getActiveProjectId,
   getProjects,
+  resolveActiveProjectId,
   setActiveProjectId,
 } from "@/lib/projects";
 import { faviconUrl } from "@/lib/favicon";
-
-// ---------------------------------------------------------------------------
-// Nav structure
-// ---------------------------------------------------------------------------
-
-const NAV_SECTIONS = [
-  {
-    key: "insights",
-    label: "Insights",
-    items: [
-      {
-        key: "organic_growth",
-        label: "Organic Growth",
-        icon: TrendingUp,
-        href: "/insights/organic-growth",
-        available: true,
-        matchPrefix: "/insights/organic-growth",
-      },
-      {
-        key: "product_intelligence",
-        label: "Product Intelligence",
-        icon: BarChart3,
-        href: null,
-        available: false,
-      },
-      {
-        key: "paid_ads",
-        label: "Paid Ads Intelligence",
-        icon: Megaphone,
-        href: null,
-        available: false,
-      },
-    ],
-  },
-  {
-    key: "audit",
-    label: "Audit",
-    items: [
-      {
-        key: "seo_audit",
-        label: "SEO Audit",
-        icon: Search,
-        href: "/audit/seo",
-        available: true,
-        matchPrefix: "/audit/seo",
-      },
-    ],
-  },
-  {
-    key: "execute",
-    label: "Execute",
-    items: [
-      {
-        key: "tiktok_studio",
-        label: "Content Studio",
-        icon: PenLine,
-        href: "/content",
-        available: true,
-        matchPrefix: "/content",
-      },
-      {
-        key: "executions",
-        label: "Executions",
-        icon: ShieldCheck,
-        href: "/execute",
-        available: true,
-        matchPrefix: "/execute",
-      },
-    ],
-  },
-  {
-    key: "library",
-    label: "Library",
-    items: [
-      {
-        key: "artifacts",
-        label: "Artifacts",
-        icon: FileText,
-        href: "/artifacts",
-        available: true,
-        matchPrefix: "/artifacts",
-      },
-      {
-        key: "activity",
-        label: "Activity",
-        icon: History,
-        href: "/activity",
-        available: true,
-        matchPrefix: "/activity",
-      },
-    ],
-  },
-];
+import { CONNECTORS_CHANGED, connectedConnectorTypes } from "@/lib/connectorsApi";
+import { NAV_SECTIONS } from "@/lib/navigation";
 
 // ---------------------------------------------------------------------------
 // Project switcher in sidebar header
@@ -192,23 +92,28 @@ function SidebarProjectSwitcher() {
   const [activeId, setActiveId] = useState("");
 
   useEffect(() => {
+    // resolveActiveProjectId persists whatever it falls back to, so what the
+    // switcher shows is always what the rest of the app reads back.
     const sync = () => {
       const ps = getProjects();
-      const aid = getActiveProjectId();
       setProjects(ps);
-      setActiveId(ps.find((p) => p.id === aid)?.id || ps[0]?.id || "");
+      setActiveId(resolveActiveProjectId(ps));
     };
     sync();
     window.addEventListener("storage", sync);
-    return () => window.removeEventListener("storage", sync);
+    window.addEventListener("duct:project-changed", sync);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("duct:project-changed", sync);
+    };
   }, []);
 
   const active = projects.find((p) => p.id === activeId) || null;
 
   function select(id) {
+    // setActiveProjectId persists the pick and notifies; sync() picks it up.
     setActiveProjectId(id);
     setActiveId(id);
-    window.dispatchEvent(new Event("duct:project-changed"));
   }
 
   if (!active && projects.length === 0) {
@@ -408,20 +313,20 @@ function SidebarUserFooter() {
             <span>Your memory</span>
           </Link>
         </DropdownMenuItem>
-        <EngineDialog>
-          <DropdownMenuItem
-            onSelect={(e) => e.preventDefault()}
-            className="flex items-center justify-between"
-          >
+        {/* Was an "Engine" dialog that could only change the harness — it
+            showed a model name it had no power to set. The page it points at
+            now owns all three: which models, whose key, which harness. */}
+        <DropdownMenuItem asChild>
+          <Link href="/settings/models" className="flex items-center justify-between">
             <span className="flex items-center gap-2">
               <Cpu className="size-4" />
-              Engine
+              <span>Models &amp; engine</span>
             </span>
             <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
               {engine.badge}
             </span>
-          </DropdownMenuItem>
-        </EngineDialog>
+          </Link>
+        </DropdownMenuItem>
         <PreferencesDialogMenuItem />
         <NotificationMenuItem />
         <DropdownMenuSeparator />
@@ -462,24 +367,51 @@ function ThemeSidebarItem() {
 // AppSidebar
 // ---------------------------------------------------------------------------
 
+/** How many sources are connected, for the footer badge.
+ *
+ * It used to count two hardcoded sessionStorage keys — GA4 and GSC — so the
+ * badge could never read higher than 2 and never saw Google Ads, GTM, or any
+ * server-stored connector at all. It now asks the same places the Connections
+ * page does (durable server rows ∪ session-only OAuth tokens), counting
+ * distinct connector types so the two screens cannot disagree.
+ *
+ * Refreshed on the connector-changed event, on cross-tab storage writes, and
+ * on focus — the last of which is what catches a connection made in the OAuth
+ * tab that handed control back without either of the other two firing.
+ */
 function useConnectionCount() {
   const [count, setCount] = useState(0);
   useEffect(() => {
+    let alive = true;
+    let inFlight = false;
     const check = () => {
-      let n = 0;
-      if (sessionStorage.getItem("ga4_refresh_token")) n++;
-      if (sessionStorage.getItem("gsc_refresh_token")) n++;
-      setCount(n);
+      if (inFlight) return;   // focus fires in bursts; one answer is enough
+      inFlight = true;
+      connectedConnectorTypes()
+        .then((types) => {
+          if (alive) setCount(types.size);
+        })
+        .finally(() => {
+          inFlight = false;
+        });
     };
     check();
+    window.addEventListener(CONNECTORS_CHANGED, check);
     window.addEventListener("storage", check);
-    return () => window.removeEventListener("storage", check);
+    window.addEventListener("focus", check);
+    return () => {
+      alive = false;
+      window.removeEventListener(CONNECTORS_CHANGED, check);
+      window.removeEventListener("storage", check);
+      window.removeEventListener("focus", check);
+    };
   }, []);
   return count;
 }
 
 // Current inference engine key, synced across tabs and same-tab changes
-// (EngineDialog dispatches a synthetic `storage` event on Apply). Starts at
+// (the Runtime tab on /settings/models dispatches a synthetic `storage` event
+// when the engine changes, the way the retired Engine dialog did). Starts at
 // DEFAULT_ENGINE so SSR and the first client render agree, then reconciles with
 // localStorage after mount.
 function useEngineKey() {

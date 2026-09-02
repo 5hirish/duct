@@ -116,6 +116,20 @@ function createId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
+/**
+ * Newest first, id as the tie-break. Order has to be a pure function of the
+ * projects themselves: `projects[0]` is the fallback whenever the remembered
+ * selection can't be resolved, and a fallback that depends on write order
+ * (local prepends vs. whatever order the backend returned) reads to the user
+ * as the app forgetting which project they picked.
+ */
+function sortProjects(projects) {
+  return [...projects].sort((a, b) => {
+    const byCreated = (b.createdAt || "").localeCompare(a.createdAt || "");
+    return byCreated !== 0 ? byCreated : (a.id || "").localeCompare(b.id || "");
+  });
+}
+
 function readProjectsStore() {
   if (typeof window === "undefined") return [];
   try {
@@ -123,7 +137,7 @@ function readProjectsStore() {
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    return parsed.map((project) => withProjectDefaults(project)).filter((project) => project.id);
+    return sortProjects(parsed.map((project) => withProjectDefaults(project)).filter((project) => project.id));
   } catch {
     return [];
   }
@@ -145,11 +159,14 @@ function writeProjectsStore(projects) {
 // localStorage edits don't generate a request per keystroke.
 // ---------------------------------------------------------------------------
 
+/** Same-document project-store change — cross-tab writes arrive as "storage". */
+export const PROJECTS_CHANGED = "duct:project-changed";
+
 /** Notify same-document listeners (sidebar, projects page) to re-read the store. */
 function notifyProjectsChanged() {
   if (typeof window === "undefined") return;
   window.dispatchEvent(new Event("storage"));
-  window.dispatchEvent(new Event("duct:project-changed"));
+  window.dispatchEvent(new Event(PROJECTS_CHANGED));
 }
 
 /**
@@ -197,9 +214,12 @@ export function deleteProject(id) {
   if (!isNonEmptyString(id)) return;
   const projects = readProjectsStore();
   const next = projects.filter((project) => project.id !== id);
+  // Read the remembered pick before the store changes under it, so deleting a
+  // project the user wasn't on leaves their selection alone.
+  const wasActive = readStoredActiveProjectId() === id;
   writeProjectsStore(next);
   deleteProjectRemote(id);
-  if (getActiveProjectId() === id) {
+  if (wasActive) {
     setActiveProjectId(next[0]?.id || "");
   }
 }
@@ -218,7 +238,18 @@ export function createProject(partial = {}) {
   return project;
 }
 
-export function getActiveProjectId() {
+// ---------------------------------------------------------------------------
+// Active project
+//
+// The project picked in the sidebar is remembered in localStorage and survives
+// reloads, navigation and restarts. Reads go through resolveActiveProjectId so
+// that the stored id and what the UI shows can never drift apart: a reader that
+// silently falls back to "the first project" without writing that choice back
+// leaves the switcher showing one project while getActiveProjectId() hands the
+// rest of the app an empty string.
+// ---------------------------------------------------------------------------
+
+function readStoredActiveProjectId() {
   if (typeof window === "undefined") return "";
   try {
     return window.localStorage.getItem(ACTIVE_PROJECT_ID_STORAGE_KEY) || "";
@@ -227,7 +258,7 @@ export function getActiveProjectId() {
   }
 }
 
-export function setActiveProjectId(id) {
+function writeStoredActiveProjectId(id) {
   if (typeof window === "undefined") return;
   try {
     if (!id) {
@@ -240,12 +271,47 @@ export function setActiveProjectId(id) {
   }
 }
 
+/**
+ * The remembered selection, resolved against `projects` and repaired in place.
+ *
+ * Returns the stored id when it still names a real project. Otherwise falls
+ * back to the first project and persists that fallback, so every later read
+ * agrees. Repairs deliberately do NOT notify — they are not a user action, and
+ * a listener that re-reads on notify would bounce straight back in here.
+ *
+ * An empty list is treated as "nothing to resolve against yet", not as "the
+ * selection is invalid": the store is empty on first paint of a fresh device,
+ * before hydrateProjectsFromBackend has run, and forgetting the pick there is
+ * exactly the reset this is meant to prevent.
+ */
+export function resolveActiveProjectId(projects = readProjectsStore()) {
+  if (typeof window === "undefined") return "";
+  const stored = readStoredActiveProjectId();
+  if (!projects.length) return "";
+  if (stored && projects.some((project) => project.id === stored)) return stored;
+  const fallback = projects[0]?.id || "";
+  if (fallback !== stored) writeStoredActiveProjectId(fallback);
+  return fallback;
+}
+
+export function getActiveProjectId() {
+  return resolveActiveProjectId();
+}
+
+/** Remember `id` as the active project. No-op (and no event) when unchanged. */
+export function setActiveProjectId(id) {
+  if (typeof window === "undefined") return;
+  const next = isNonEmptyString(id) ? id : "";
+  if (next === readStoredActiveProjectId()) return;
+  writeStoredActiveProjectId(next);
+  notifyProjectsChanged();
+}
+
 export function getActiveProject() {
   const projects = readProjectsStore();
   if (!projects.length) return null;
-  const activeId = getActiveProjectId();
-  const active = projects.find((project) => project.id === activeId);
-  return active || projects[0] || null;
+  const activeId = resolveActiveProjectId(projects);
+  return projects.find((project) => project.id === activeId) || projects[0] || null;
 }
 
 function sectionCompletion(profile) {
@@ -290,9 +356,7 @@ export function migrateFromLegacyProfile() {
 
   const existing = readProjectsStore();
   if (existing.length > 0) {
-    if (!getActiveProjectId() && existing[0]?.id) {
-      setActiveProjectId(existing[0].id);
-    }
+    resolveActiveProjectId(existing);
     return existing[0] || null;
   }
 
@@ -347,16 +411,13 @@ export async function hydrateProjectsFromBackend() {
     }
   }
 
-  const merged = Array.from(byId.values());
+  const merged = sortProjects(Array.from(byId.values()));
   writeProjectsStore(merged);
 
-  // Re-point the active project if it no longer resolves.
-  const activeId = getActiveProjectId();
-  if (activeId && !byId.has(activeId)) {
-    setActiveProjectId(merged[0]?.id || "");
-  } else if (!activeId && merged[0]?.id) {
-    setActiveProjectId(merged[0].id);
-  }
+  // Keep the remembered project. It is only re-pointed when the project it
+  // names is genuinely gone (deleted on another device), never just because
+  // the server handed the list back in a different order.
+  resolveActiveProjectId(merged);
 
   for (const p of toPushUp) upsertProjectRemote(p);
 

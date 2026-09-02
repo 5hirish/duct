@@ -17,6 +17,7 @@ from __future__ import annotations
 import hashlib
 import secrets
 from datetime import datetime, timedelta, timezone
+from typing import TypeVar
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -122,6 +123,39 @@ def get_project_for_user(
             detail="Only the project owner can perform this action.",
         )
     return project
+
+
+T = TypeVar("T")
+
+
+def get_project_row_for_user(
+    session: Session,
+    user: User,
+    model: type[T],
+    row_id: UUID,
+    *,
+    label: str,
+    require_owner: bool = False,
+) -> T:
+    """Load a project-scoped row the caller may act on, or raise.
+
+    Access is decided by the row's *own* ``project_id``. That is the whole
+    point: an endpoint that takes a row id and trusts a ``project_id`` from the
+    request is letting the caller vouch for themselves.
+
+    A missing row and a row in someone else's project both answer 404, and
+    deliberately so — ``get_project_for_user`` already refuses to confirm that a
+    project exists, and a per-row endpoint must not become the oracle that
+    tells you it does.
+
+    ``model`` must have a ``project_id`` column; there is no sensible default
+    for a row that doesn't, and it should not be reaching this helper.
+    """
+    row = session.get(model, row_id)
+    if row is None:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=f"{label} not found")
+    get_project_for_user(getattr(row, "project_id"), user, session, require_owner=require_owner)
+    return row
 
 
 def ensure_owner_membership(project: Project, session: Session) -> ProjectMember:

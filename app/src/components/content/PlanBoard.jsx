@@ -102,7 +102,7 @@ export default function PlanBoard({ projectId, initialPlanId = "" }) {
   }
 
   return (
-    <div className="flex h-[calc(100vh-15rem)] min-h-[28rem] flex-col overflow-hidden rounded-2xl border border-border">
+    <div className="flex h-full min-h-[28rem] flex-col overflow-hidden rounded-2xl border border-border">
       {/* Sub-toolbar */}
       <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border/60 px-4 py-2.5">
         <div className="flex min-w-0 items-center gap-3">
@@ -125,7 +125,7 @@ export default function PlanBoard({ projectId, initialPlanId = "" }) {
             </span>
           )}
           {Array.isArray(plan?.days) && (
-            <span className="hidden text-xs text-muted-foreground tabular-nums sm:inline">
+            <span className="hidden text-xs text-muted-foreground tabular-nums @md:inline">
               {plan.days.length} posts
             </span>
           )}

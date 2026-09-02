@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import ContentChat from "./ContentChat";
 import SplitWorkspace from "../workspace/SplitWorkspace";
-import { Phase } from "./contentPhase";
+import { Phase } from "../workspace/agentPhase";
 import {
   answerContentQuestions,
   archiveContentConversation,

@@ -1,5 +1,6 @@
 import importlib
 import os
+import uuid
 
 import pytest
 from fastapi.testclient import TestClient
@@ -44,6 +45,29 @@ def server_client():
     """
     server = _load_server_with_env()
     return TestClient(server.app)
+
+
+@pytest.fixture(scope="module")
+def signed_in_client():
+    """The same server, with a resolved user.
+
+    `/api/connectors/*` takes both gates: the API key says "this is the Duct
+    app", the Bearer token says who is asking. Reaching a vendor with somebody's
+    refresh token is not something an anonymous caller does, so the tests that
+    exercise what happens *after* those gates need to pass them both.
+    """
+    import service.auth as auth_service
+
+    server = _load_server_with_env()
+
+    class _User:
+        id = uuid.uuid4()
+        email = "server-test@example.com"
+
+    server.app.dependency_overrides[auth_service.get_current_user] = lambda: _User()
+    client = TestClient(server.app)
+    yield client
+    server.app.dependency_overrides.clear()
 
 
 def test_health_ok():
@@ -157,16 +181,28 @@ def test_accounts_missing_api_key_returns_403(server_client):
     assert "API key is required" in res.json().get("detail", "")
 
 
-def test_accounts_missing_refresh_token_returns_422(server_client):
+def test_accounts_with_only_the_api_key_returns_401(server_client):
+    """The key ships in the browser bundle, so it cannot be the whole gate.
+
+    This route lists a vendor's accounts for a refresh token in the request —
+    the caller has to be somebody, not just "the Duct app".
+    """
+    res = server_client.get(
+        "/api/connectors/google_ads/accounts", headers={"X-API-Key": TEST_DUCT_API_KEY}
+    )
+    assert res.status_code == 401
+
+
+def test_accounts_missing_refresh_token_returns_422(signed_in_client):
     headers = {"X-API-Key": TEST_DUCT_API_KEY}
-    res = server_client.get("/api/connectors/google_ads/accounts", headers=headers)
+    res = signed_in_client.get("/api/connectors/google_ads/accounts", headers=headers)
     assert res.status_code == 422
     detail = res.json().get("detail", "")
     assert "refresh_token" in (detail if isinstance(detail, str) else str(detail)).lower()
 
 
-def test_unknown_connector_accounts_returns_404(server_client):
+def test_unknown_connector_accounts_returns_404(signed_in_client):
     headers = {"X-API-Key": TEST_DUCT_API_KEY}
-    res = server_client.get("/api/connectors/unknown_source/accounts", headers=headers)
+    res = signed_in_client.get("/api/connectors/unknown_source/accounts", headers=headers)
     assert res.status_code == 404
     assert res.json().get("detail") == "Unknown connector"

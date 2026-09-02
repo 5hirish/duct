@@ -14,24 +14,19 @@ export const ENGINES = [
     supportsOAuth: false,
   },
   {
-    key: "v2",
-    badge: "v2",
-    label: "Google ADK",
-    defaultModel: "Gemini 2.5 Flash",
-    description: "Sequential subagents. Session state.",
-    supportsOAuth: false,
-  },
-  {
     key: "v3",
     badge: "v3",
     label: "Claude Agent SDK",
-    defaultModel: "Claude Sonnet 4.6",
+    defaultModel: "Claude Sonnet 5",
     description: "Subagents. MCP. Disk-backed sessions.",
     supportsOAuth: true,
   },
 ];
 
-export const DEFAULT_ENGINE = "v3";
+// v1 to match the backend: `generate_engine` defaults to v1 and audit now does
+// too. Content Studio is v3-only until its port lands, so it renders with the
+// "v3 only" pill — which is what that affordance is for.
+export const DEFAULT_ENGINE = "v1";
 export const ENGINE_STORAGE_KEY = "duct_engine";
 
 // Engine availability states reported by GET /api/engines/status.
@@ -86,16 +81,21 @@ export function getAgentType(key) {
 // Agent ↔ engine support
 //
 // Which inference engines can run each sidebar agent. Mirrors the runner
-// implementations under backend/agents/<agent>/: insights ships v1/v2/v3,
-// while SEO audit and Content Studio are Claude Agent SDK (v3) only. Keys
-// are the AppSidebar NAV item keys. Keep in sync when an agent gains a new
-// engine runner.
+// implementations under backend/agents/<agent>/. Keys are the AppSidebar NAV
+// item keys. Keep in sync when an agent gains or loses an engine runner — an
+// entry claiming an engine the backend does not dispatch is the exact bug that
+// retired v2 (the UI offered it while silently serving v1).
+//
+// Current state of the consolidation onto one harness:
+//   - insights   — v1 only; the v3 runner was removed (nothing dispatched it).
+//   - seo_audit  — both, and `routes/audit.py` now defaults to v1.
+//   - tiktok_studio — still v3; its ~1350-line runner is the remaining port.
 // ---------------------------------------------------------------------------
 export const AGENT_ENGINE_SUPPORT = {
-  organic_growth: ["v1", "v2", "v3"],
-  product_intelligence: ["v1", "v2", "v3"],
-  paid_ads: ["v1", "v2", "v3"],
-  seo_audit: ["v3"],
+  organic_growth: ["v1"],
+  product_intelligence: ["v1"],
+  paid_ads: ["v1"],
+  seo_audit: ["v1", "v3"],
   tiktok_studio: ["v3"],
 };
 

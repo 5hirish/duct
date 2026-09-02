@@ -9,7 +9,7 @@
 
 import {
   BASE,
-  backendApiKey,
+  backendAuthedHeaders,
   createAgentSession,
   openAgentStream,
   sendAgentMessage,
@@ -53,13 +53,6 @@ export function cdnImage(u, { width = 480, quality = 80 } = {}) {
   } catch {
     return u;
   }
-}
-
-function backendApiHeaders(extra = {}) {
-  const headers = { ...extra };
-  const key = backendApiKey();
-  if (key) headers["X-API-Key"] = key;
-  return headers;
 }
 
 async function jsonOrThrow(res) {
@@ -180,7 +173,7 @@ export async function getSlideRenderDoc(sessionId, postId, slideId) {
   const url =
     `${BASE}/api/content/slide-doc/${encodeURIComponent(sessionId)}` +
     `?post_id=${encodeURIComponent(postId)}&slide_id=${encodeURIComponent(slideId)}`;
-  const res = await fetch(url, { headers: backendApiHeaders() });
+  const res = await fetch(url, { headers: backendAuthedHeaders() });
   return jsonOrThrow(res);
 }
 
@@ -190,7 +183,7 @@ export async function postSlideRender(sessionId, { render_id, image_base64 }) {
     `${BASE}/api/content/slide-render/${encodeURIComponent(sessionId)}`,
     {
       method: "POST",
-      headers: backendApiHeaders({ "Content-Type": "application/json" }),
+      headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({ render_id, image_base64 }),
     },
   );
@@ -209,7 +202,7 @@ export async function getBrandContext(projectId) {
   return cached(`brand:${projectId}`, TTL_BRAND, async () => {
     const res = await fetch(
       `${BASE}/api/content/brand?project_id=${encodeURIComponent(projectId)}`,
-      { headers: backendApiHeaders() },
+      { headers: backendAuthedHeaders() },
     );
     return jsonOrThrow(res);
   });
@@ -220,7 +213,7 @@ export async function putBrandContext(projectId, body) {
     `${BASE}/api/content/brand?project_id=${encodeURIComponent(projectId)}`,
     {
       method: "PUT",
-      headers: backendApiHeaders({ "Content-Type": "application/json" }),
+      headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify(body),
     },
   );
@@ -232,7 +225,7 @@ export async function putBrandContext(projectId, body) {
 export async function listPlans(projectId) {
   const res = await fetch(
     `${BASE}/api/content/plans?project_id=${encodeURIComponent(projectId)}`,
-    { headers: backendApiHeaders() },
+    { headers: backendAuthedHeaders() },
   );
   return jsonOrThrow(res);
 }
@@ -240,7 +233,7 @@ export async function listPlans(projectId) {
 export async function getPlan(planId) {
   const res = await fetch(
     `${BASE}/api/content/plans/${encodeURIComponent(planId)}`,
-    { headers: backendApiHeaders() },
+    { headers: backendAuthedHeaders() },
   );
   return jsonOrThrow(res);
 }
@@ -250,7 +243,7 @@ export async function patchPlanDay(planId, day, patch) {
     `${BASE}/api/content/plans/${encodeURIComponent(planId)}/days/${day}`,
     {
       method: "PATCH",
-      headers: backendApiHeaders({ "Content-Type": "application/json" }),
+      headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify(patch),
     },
   );
@@ -271,7 +264,7 @@ export async function listPosts(projectId, { planId, status } = {}) {
     if (status) params.set("status", status);
     const res = await fetch(
       `${BASE}/api/content/posts?${params.toString()}`,
-      { headers: backendApiHeaders() },
+      { headers: backendAuthedHeaders() },
     );
     return jsonOrThrow(res);
   });
@@ -280,7 +273,7 @@ export async function listPosts(projectId, { planId, status } = {}) {
 export async function getPost(postId) {
   const res = await fetch(
     `${BASE}/api/content/posts/${encodeURIComponent(postId)}`,
-    { headers: backendApiHeaders() },
+    { headers: backendAuthedHeaders() },
   );
   return jsonOrThrow(res);
 }
@@ -290,7 +283,7 @@ export async function patchPost(postId, patch) {
     `${BASE}/api/content/posts/${encodeURIComponent(postId)}`,
     {
       method: "PATCH",
-      headers: backendApiHeaders({ "Content-Type": "application/json" }),
+      headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify(patch),
     },
   );
@@ -306,7 +299,7 @@ export async function markPostPosted(postId, { tiktokUrl } = {}) {
   if (tiktokUrl) url.searchParams.set("tiktok_url", tiktokUrl);
   const res = await fetch(url.toString(), {
     method: "POST",
-    headers: backendApiHeaders(),
+    headers: backendAuthedHeaders(),
   });
   const out = await jsonOrThrow(res);
   invalidatePosts();
@@ -327,7 +320,7 @@ export async function publishPost(postId, { socialAccountIds, scheduledAt, tikto
     `${BASE}/api/content/posts/${encodeURIComponent(postId)}/publish`,
     {
       method: "POST",
-      headers: backendApiHeaders({ "Content-Type": "application/json" }),
+      headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({
         social_account_ids: socialAccountIds,
         ...(scheduledAt ? { scheduled_at: scheduledAt } : {}),
@@ -343,7 +336,7 @@ export async function publishPost(postId, { socialAccountIds, scheduledAt, tikto
 export async function syncPostDaily(postId) {
   const res = await fetch(
     `${BASE}/api/content/posts/${encodeURIComponent(postId)}/sync-daily`,
-    { method: "POST", headers: backendApiHeaders() },
+    { method: "POST", headers: backendAuthedHeaders() },
   );
   const out = await jsonOrThrow(res);
   invalidatePosts();
@@ -353,7 +346,7 @@ export async function syncPostDaily(postId) {
 export async function syncPostMetrics(postId) {
   const res = await fetch(
     `${BASE}/api/content/posts/${encodeURIComponent(postId)}/sync-metrics`,
-    { method: "POST", headers: backendApiHeaders() },
+    { method: "POST", headers: backendAuthedHeaders() },
   );
   const out = await jsonOrThrow(res);
   invalidatePosts();
@@ -364,7 +357,7 @@ export async function listSocialAccounts(projectId, platform) {
   const url = new URL(`${BASE}/api/content/social-accounts`);
   url.searchParams.set("project_id", projectId);
   if (platform) url.searchParams.set("platform", platform);
-  const res = await fetch(url.toString(), { headers: backendApiHeaders() });
+  const res = await fetch(url.toString(), { headers: backendAuthedHeaders() });
   return jsonOrThrow(res);
 }
 
@@ -377,7 +370,7 @@ export async function getContentAnalytics(projectId, { refresh = false } = {}) {
     const url = new URL(`${BASE}/api/content/analytics`);
     url.searchParams.set("project_id", projectId);
     if (refresh) url.searchParams.set("refresh", "true");
-    const res = await fetch(url.toString(), { headers: backendApiHeaders() });
+    const res = await fetch(url.toString(), { headers: backendAuthedHeaders() });
     return jsonOrThrow(res);
   };
   // Explicit refresh drops the cache first, then fetches live + repopulates.
@@ -389,7 +382,7 @@ export async function getContentAnalytics(projectId, { refresh = false } = {}) {
 export async function listLinkedAccounts(projectId) {
   const url = new URL(`${BASE}/api/content/linked-accounts`);
   url.searchParams.set("project_id", projectId);
-  const res = await fetch(url.toString(), { headers: backendApiHeaders() });
+  const res = await fetch(url.toString(), { headers: backendAuthedHeaders() });
   return jsonOrThrow(res);
 }
 
@@ -400,7 +393,7 @@ export async function listLinkedAccounts(projectId) {
 export async function saveLinkedAccounts(projectId, accounts) {
   const res = await fetch(`${BASE}/api/content/linked-accounts`, {
     method: "PUT",
-    headers: backendApiHeaders({ "Content-Type": "application/json" }),
+    headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify({ project_id: projectId, accounts }),
   });
   const out = await jsonOrThrow(res);
@@ -412,7 +405,7 @@ export async function saveLinkedAccounts(projectId, accounts) {
 /** GET /api/content/styles — shared, read-only style registry (base_css + styles[]). */
 export async function listStyles() {
   return cached("styles:global", TTL_FORMATS, async () => {
-    const res = await fetch(`${BASE}/api/content/styles`, { headers: backendApiHeaders() });
+    const res = await fetch(`${BASE}/api/content/styles`, { headers: backendAuthedHeaders() });
     return jsonOrThrow(res);
   });
 }
@@ -421,7 +414,7 @@ export async function listFormats(projectId) {
   return cached(`formats:${projectId}`, TTL_FORMATS, async () => {
     const res = await fetch(
       `${BASE}/api/content/formats?project_id=${encodeURIComponent(projectId)}`,
-      { headers: backendApiHeaders() },
+      { headers: backendAuthedHeaders() },
     );
     return jsonOrThrow(res);
   });
@@ -434,7 +427,7 @@ export async function listFormats(projectId) {
 export async function upsertFormat({ projectId, slug, name = "", data = {} }) {
   const res = await fetch(`${BASE}/api/content/formats`, {
     method: "POST",
-    headers: backendApiHeaders({ "Content-Type": "application/json" }),
+    headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify({ project_id: projectId, slug, name, data }),
   });
   const out = await jsonOrThrow(res);
@@ -446,7 +439,7 @@ export async function upsertFormat({ projectId, slug, name = "", data = {} }) {
 export async function patchFormat(formatId, { projectId, slug, name = "", data = {} }) {
   const res = await fetch(`${BASE}/api/content/formats/${formatId}`, {
     method: "PATCH",
-    headers: backendApiHeaders({ "Content-Type": "application/json" }),
+    headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify({ project_id: projectId, slug, name, data }),
   });
   const out = await jsonOrThrow(res);
@@ -458,7 +451,7 @@ export async function patchFormat(formatId, { projectId, slug, name = "", data =
 export async function deleteFormat(formatId) {
   const res = await fetch(`${BASE}/api/content/formats/${formatId}`, {
     method: "DELETE",
-    headers: backendApiHeaders(),
+    headers: backendAuthedHeaders(),
   });
   const out = await jsonOrThrow(res);
   invalidateFormats();
@@ -474,7 +467,7 @@ function invalidateFormats() {
 export async function listAvatars(projectId) {
   const res = await fetch(
     `${BASE}/api/content/avatars?project_id=${encodeURIComponent(projectId)}`,
-    { headers: backendApiHeaders() },
+    { headers: backendAuthedHeaders() },
   );
   return jsonOrThrow(res);
 }
@@ -485,7 +478,7 @@ export async function listAssets(projectId, { assetType, postId } = {}) {
   if (postId)    params.set("post_id", postId);
   const res = await fetch(
     `${BASE}/api/content/assets?${params.toString()}`,
-    { headers: backendApiHeaders() },
+    { headers: backendAuthedHeaders() },
   );
   return jsonOrThrow(res);
 }
@@ -497,7 +490,7 @@ export async function uploadAsset(projectId, assetType, file) {
   form.append("file", file);
   const res = await fetch(`${BASE}/api/content/uploads`, {
     method: "POST",
-    headers: backendApiHeaders(),  // do NOT set Content-Type — browser adds boundary
+    headers: backendAuthedHeaders(),  // do NOT set Content-Type — browser adds boundary
     body: form,
   });
   return jsonOrThrow(res);
@@ -511,7 +504,7 @@ export async function uploadAsset(projectId, assetType, file) {
 export async function startDiscoverRun({ projectId, actorId, inputPayload }) {
   const res = await fetch(`${BASE}/api/content/discover/start`, {
     method: "POST",
-    headers: backendApiHeaders({ "Content-Type": "application/json" }),
+    headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify({
       project_id:    projectId,
       actor_id:      actorId,
@@ -524,7 +517,7 @@ export async function startDiscoverRun({ projectId, actorId, inputPayload }) {
 export async function getDiscoverRunStatus(runId) {
   const res = await fetch(
     `${BASE}/api/content/discover/status/${encodeURIComponent(runId)}`,
-    { headers: backendApiHeaders() },
+    { headers: backendAuthedHeaders() },
   );
   return jsonOrThrow(res);
 }
@@ -532,7 +525,7 @@ export async function getDiscoverRunStatus(runId) {
 export async function getDiscoverResults(datasetId, limit = 200) {
   const res = await fetch(
     `${BASE}/api/content/discover/results/${encodeURIComponent(datasetId)}?limit=${limit}`,
-    { headers: backendApiHeaders() },
+    { headers: backendAuthedHeaders() },
   );
   return jsonOrThrow(res);
 }
@@ -540,7 +533,7 @@ export async function getDiscoverResults(datasetId, limit = 200) {
 export async function saveDiscoveredReference({ projectId, actorId, runId, datasetId, request, post }) {
   const res = await fetch(`${BASE}/api/content/discover/save`, {
     method: "POST",
-    headers: backendApiHeaders({ "Content-Type": "application/json" }),
+    headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify({
       project_id: projectId,
       actor_id:   actorId,

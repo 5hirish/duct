@@ -176,7 +176,7 @@ export default function FormatLibrary({ projectId }) {
       {error && <p className="mb-3 text-sm text-destructive">{error}</p>}
 
       {loading ? (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 @lg:grid-cols-2 @2xl:grid-cols-3">
           {[0, 1, 2].map((i) => (
             <div key={i} className="h-44 animate-pulse rounded-xl border border-border/50 bg-muted/30" />
           ))}
@@ -184,7 +184,7 @@ export default function FormatLibrary({ projectId }) {
       ) : formats.length === 0 ? (
         <EmptyState onCreate={() => setEditing({})} />
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 @lg:grid-cols-2 @2xl:grid-cols-3">
           {formats.map((f) => (
             <FormatCard
               key={f.id}
@@ -272,19 +272,26 @@ function FormatCard({ format, onView, onEdit, onDelete }) {
   const excerpt = excerptOf(format);
 
   return (
-    <article
-      onClick={onView}
-      className="group relative flex cursor-pointer flex-col rounded-xl border border-border/70 bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
-    >
+    <article className="group relative flex flex-col rounded-xl border border-border/70 bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-ring/50">
       <div className="flex items-start gap-3">
         <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br text-sm font-bold ${accentFor(format)}`}>
           {glyphFor(format)}
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-sm font-semibold">{format.name || format.slug}</h3>
+          <h3 className="truncate text-sm font-semibold">
+            {/* after:inset-0 stretches the hit area over the whole card, so the
+                mouse keeps its big target and the keyboard gets one real control. */}
+            <button
+              type="button"
+              onClick={onView}
+              className="block w-full cursor-pointer truncate text-left after:absolute after:inset-0 after:rounded-xl after:content-[''] focus:outline-none"
+            >
+              {format.name || format.slug}
+            </button>
+          </h3>
           <p className="truncate text-xs text-muted-foreground">{subtitleOf(format)}</p>
         </div>
-        <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+        <div className="relative z-10 flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
           <button
             type="button"
             title="Edit"
@@ -468,7 +475,7 @@ function FormatEditorSheet({ open, onOpenChange, projectId, initial, onSaved }) 
         </SheetHeader>
 
         <div className="min-h-0 flex-1 overflow-y-auto p-5">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 @lg:grid-cols-2">
             <Field label="Name" hint="Human-friendly title">
               <Input value={name} onChange={(e) => setName(e.target.value)} onBlur={() => syncFromName(name)} placeholder="Format D — UGC / Raw Authentic" />
             </Field>
@@ -489,6 +496,7 @@ function FormatEditorSheet({ open, onOpenChange, projectId, initial, onSaved }) 
               max={SLIDE_MAX}
               step={1}
               value={slideCount}
+              aria-label="Default slides"
               onChange={(e) => setSlideCount(Number(e.target.value))}
               className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-muted accent-primary"
             />
@@ -546,6 +554,7 @@ function FormatEditorSheet({ open, onOpenChange, projectId, initial, onSaved }) 
               <TabsContent value="edit">
                 <textarea
                   value={spec}
+                  aria-label="Format spec"
                   onChange={(e) => setSpec(e.target.value)}
                   spellCheck={false}
                   placeholder={"# My Format\n\n## Slide Structure\n\n| Slide | Type |\n|-------|------|\n| 1 | Hook |"}

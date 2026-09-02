@@ -48,6 +48,11 @@ export async function executionCredentials(connectorType) {
   if (connectorType === "gtm") {
     return { refresh_token: sessionStorage.getItem("gtm_refresh_token") || "" };
   }
+  if (connectorType !== "google_ads") {
+    // Manual-credential connectors (Mixpanel …) have no browser token — the
+    // backend resolves their stored encrypted rows.
+    return {};
+  }
   const ads = await googleAdsByoCredentials();
   return {
     refresh_token: sessionStorage.getItem("gads_refresh_token") || "",

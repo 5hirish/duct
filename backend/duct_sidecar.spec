@@ -28,6 +28,10 @@ _HIDDEN_PACKAGES = [
     "langchain_openai",
     "langchain_google_genai",
     "langchain_anthropic",
+    # ...and its own client SDK, which langchain_openrouter imports but
+    # PyInstaller cannot see through the same string-name resolution.
+    "langchain_openrouter",
+    "openrouter",
     "langgraph",
     "deepagents",
     # Google API clients build service objects from discovery documents.

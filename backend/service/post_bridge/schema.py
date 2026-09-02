@@ -40,11 +40,10 @@ class PostBridgePostStatus(StrEnum):
 class PostBridgePlatform(StrEnum):
     """Platforms PostBridge officially supports.
 
-    Note: PostBridge uses 'twitter' (not 'x') and exposes 'bluesky',
-    'pinterest', 'google_business' which our agents.models.Platform did
-    not previously include. The duct frontend's Platform mirror
-    (app/src/lib/contentEnums.js) is the user-facing list — keep these
-    enum names matching that.
+    Note: PostBridge uses 'twitter' (not 'x'). This is the vendor's wire
+    contract; Duct's own channel list is agents.content.channels.Platform and
+    the user-facing mirror is app/src/lib/contentEnums.js. All three agree
+    today — if PostBridge diverges, this enum is the one that follows them.
     """
 
     BLUESKY         = "bluesky"

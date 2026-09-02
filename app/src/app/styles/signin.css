@@ -1,0 +1,224 @@
+/* signin — The signed-out split hero and Google button.
+   Split out of globals.css; see that file for the load order. */
+/* ── Sign-in page ───────────────────────────────────────────── */
+.signin-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Hero (left) */
+.signin-hero {
+  background: var(--navy);
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3.75rem 3rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.signin-hero::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(to top, color-mix(in oklch, var(--primary) 16%, transparent), transparent);
+  pointer-events: none;
+}
+
+.signin-hero-inner {
+  max-width: 460px;
+  position: relative;
+  z-index: 1;
+}
+
+.signin-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  margin-bottom: 3rem;
+}
+
+.signin-logo .signin-logo-text {
+  font-family: var(--serif);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: -0.5px;
+}
+
+.signin-logo .logo-mark {
+  width: 8px;
+  height: 8px;
+  background: var(--orange);
+  border-radius: 50%;
+  display: inline-block;
+  margin-bottom: -2px;
+}
+
+.signin-hero h1 {
+  font-family: var(--serif);
+  font-size: 2.375rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+  margin-bottom: 1.5rem;
+}
+
+.signin-hero h1 em {
+  color: var(--primary);
+  font-style: normal;
+}
+
+.signin-hero-sub {
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.78);
+  margin-bottom: 2.5rem;
+}
+
+.signin-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.signin-tool-pill {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.3125rem 0.875rem;
+  border-radius: var(--pill);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.signin-trust {
+  font-size: 0.8125rem;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.01em;
+}
+
+/* Form (right) */
+.signin-form-side {
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3.75rem 3rem;
+}
+
+.signin-form {
+  max-width: 380px;
+  width: 100%;
+  text-align: center;
+}
+
+.signin-form h2 {
+  font-family: var(--serif);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.3px;
+}
+
+.signin-form-sub {
+  font-size: 0.9375rem;
+  color: var(--navy-3);
+  margin-bottom: 2.25rem;
+}
+
+.google-signin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  font-family: var(--sans);
+  color: var(--navy);
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.15s;
+}
+
+.google-signin-btn:hover {
+  border-color: #d1d1d0;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.google-signin-btn:active {
+  background: var(--off);
+}
+
+.signin-legal {
+  margin-top: 1.5rem;
+  font-size: 0.75rem;
+  color: var(--navy-3);
+  line-height: 1.6;
+}
+
+.signin-legal a {
+  color: var(--navy);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.signin-legal a:hover {
+  color: var(--primary);
+}
+
+/* Turnstile widget */
+.signin-form .cf-turnstile {
+  margin-bottom: 1.25rem;
+  display: flex;
+  justify-content: center;
+}
+
+/* Responsive */
+@media (width < 48rem) {
+  .signin-split {
+    grid-template-columns: 1fr;
+  }
+  .signin-hero {
+    padding: 3rem 2rem;
+  }
+  .signin-hero h1 {
+    font-size: 1.875rem;
+  }
+  .signin-form-side {
+    padding: 3rem 2rem;
+  }
+}
+
+@media (width < 40rem) {
+  .signin-hero {
+    padding: 2.25rem 1.5rem;
+  }
+  .signin-hero h1 {
+    font-size: 1.625rem;
+  }
+  .signin-hero-sub {
+    font-size: 0.875rem;
+    margin-bottom: 1.75rem;
+  }
+  .signin-tools {
+    margin-bottom: 1.75rem;
+  }
+  .signin-form-side {
+    padding: 2.25rem 1.5rem;
+  }
+}
+

@@ -21,7 +21,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from agents.core.session import BaseAgentSession
 
-from agents.models import AspectRatio, ImageModel, Platform
+from agents.content.channels import Platform
+from agents.models import AspectRatio, ImageModel
 
 
 # ---------------------------------------------------------------------------
@@ -217,6 +218,13 @@ class ContentSession(BaseAgentSession):
     # Bridges the agent's render_slide tool to client-side rasterization (same
     # pattern as answer_future for AskUserQuestion).
     render_futures: dict = field(default_factory=dict)
+    # The Gemini key this run may spend on images — a *different* provider from
+    # the one driving the conversation, so it is resolved separately and can be
+    # absent while the run itself is fine (the image tools then decline).
+    # Empty is not "use the server's": the resolver already decided that, and
+    # the tools must never reach past it to config. See routes/content.py
+    # ::_resolve_image_key and agents/engines.resolve_provider_key.
+    gemini_api_key: str = ""
 
 
 # ---------------------------------------------------------------------------

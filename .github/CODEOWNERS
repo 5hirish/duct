@@ -1,0 +1,41 @@
+# Code owners — who is requested for review, automatically.
+#
+# Last matching pattern wins, so the catch-all comes first and the sensitive
+# paths come last. Pair this with branch protection ("Require review from Code
+# Owners") or it is only a suggestion.
+
+# Everything, by default.
+*                               @5hirish
+
+# ---------------------------------------------------------------------------
+# Paths where a wrong change is expensive, listed last so they always match.
+# These are not "more owned" than the rest — they are the ones worth naming so
+# a reviewer knows why the diff landed in front of them.
+# ---------------------------------------------------------------------------
+
+# Authorization and credentials. `validate_api_key` is not a boundary; project
+# access is by membership. See backend/tests/test_route_auth_boundaries.py.
+/backend/service/auth.py        @5hirish
+/backend/service/membership.py  @5hirish
+/backend/service/credentials.py @5hirish
+/backend/routes/namespace.py    @5hirish
+
+# Schema. Migrations are applied by hand and are not trivially reversible.
+/backend/alembic/               @5hirish
+/backend/models/               @5hirish
+
+# Anything that runs with secrets, signs a release, or gates a merge.
+/.github/workflows/             @5hirish
+/scripts/                       @5hirish
+/.githooks/                     @5hirish
+/.betterleaks.toml              @5hirish
+/.security-audit-baseline.json  @5hirish
+
+# Desktop signing and entitlements.
+/desktop/src-tauri/             @5hirish
+
+# The contract files themselves.
+/LICENSE                        @5hirish
+/SECURITY.md                    @5hirish
+/CODEOWNERS                     @5hirish
+/.github/CODEOWNERS             @5hirish

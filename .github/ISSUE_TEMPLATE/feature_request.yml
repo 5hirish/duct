@@ -1,0 +1,59 @@
+name: Feature request
+description: Propose a change to what Duct does.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Open-ended ideas are better as a
+        [Discussion](https://github.com/5hirish/duct/discussions). Use this when
+        you have a specific change in mind and would like it tracked.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - backend (FastAPI / Python)
+        - app (Next.js)
+        - desktop (Tauri shell / sidecar)
+        - site (static marketing site)
+        - a new connector
+        - CI / tooling
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: >-
+        What you were trying to do and where it broke down. Describe the
+        situation, not the solution — the fix is often not the one first
+        imagined.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you would like to happen
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you tried or considered instead
+      description: >-
+        Including "nothing, I don't know the codebase" — that is useful signal.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contribution
+      options:
+        - label: I would be willing to implement this.
+          required: false

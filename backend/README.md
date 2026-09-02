@@ -61,6 +61,6 @@ Service root in Railway should be **`backend`** so [`railway.json`](railway.json
 - **Migrations policy:** always generate migrations with Alembic autogenerate; do not hand-write revision files.
 - **Migration manager:** use `python scripts/migrations.py revision -m "..."`, `python scripts/migrations.py upgrade`, and `python scripts/migrations.py check-pending`.
 - Cursor instructions: `backend/AGENTS.md`
-- Claude Code instructions: `backend/CLAUDE.md`
+- Agent instructions: `backend/AGENTS.md` (`CLAUDE.md` symlinks to it)
 
 Deployment and env details: the deployment runbook (duct-cloud, private) (Railway variables, checklist).

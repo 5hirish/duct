@@ -1,0 +1,62 @@
+/* base — Document-level shell, skip link, and the global reduced-motion opt-out.
+   Split out of globals.css; see that file for the load order. */
+/* WCAG 2.2 AA 2.4.11 Focus Not Obscured: the app header is sticky, so tabbing
+   to an element just above the fold scrolls it under the header and the focus
+   ring is invisible. scroll-padding reserves the header's height on every
+   scroll-into-view, including the browser's own when focus moves. Kept a
+   little larger than the 3.25rem header so the ring itself clears it too. */
+html {
+  scroll-padding-top: 4rem;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+}
+
+/* Keyboard: first tab stop — jumps to #main-content (app shell or sign-in). */
+.skip-link {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link:focus {
+  position: fixed;
+  left: max(1rem, env(safe-area-inset-left, 0px));
+  top: max(1rem, env(safe-area-inset-top, 0px));
+  z-index: 9999;
+  width: auto;
+  height: auto;
+  margin: 0;
+  clip: auto;
+  overflow: visible;
+  padding: 0.65rem 1rem;
+  border-radius: calc(var(--radius) * 1.25);
+  background: var(--foreground);
+  color: var(--background);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .logo-mark,
+  .signin-logo .logo-mark {
+    animation: none;
+  }
+}
+

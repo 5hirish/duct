@@ -72,19 +72,25 @@ def _seo_audit_spec() -> AgentSpec:
 
 
 def _insights_spec() -> AgentSpec:
+    from agents.insights.schema import InsightsRequest
     return AgentSpec(
         type=AgentType.INSIGHTS,
         name="Growth Insights",
         description=(
-            "Paid ads and organic growth intelligence. Connects to Google Ads, GA4, "
-            "and Search Console to synthesise a weekly brief with findings and "
-            "recommended actions."
+            "Paid ads and organic growth intelligence, as a conversation. Reads the "
+            "project's memory and business context, works out what it needs to look "
+            "at, asks when the answer would change, and says what it could not "
+            "verify. Writes its findings as a versioned brief and continues as an "
+            "interactive chat session."
         ),
         capabilities=[
             AgentCapability.STREAMING,
+            AgentCapability.INTERACTIVE_QUESTIONS,
             AgentCapability.DATA_CONNECTORS,
+            AgentCapability.VERSIONED_OUTPUT,
             AgentCapability.CHAT,
         ],
+        config_schema=InsightsRequest.model_json_schema(),
         active=True,
     )
 

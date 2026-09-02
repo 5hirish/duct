@@ -112,7 +112,7 @@ export default function StyleGallery() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 @lg:grid-cols-2 @2xl:grid-cols-3">
         {[0, 1, 2].map((i) => (
           <div key={i} className="h-[460px] animate-pulse rounded-xl border border-border/50 bg-muted/30" />
         ))}
@@ -138,7 +138,7 @@ export default function StyleGallery() {
           <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {CATEGORY_LABELS[cat] || cat}
           </h3>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 @lg:grid-cols-2 @2xl:grid-cols-3">
             {grouped[cat].map((s) => (
               <article key={s.key} className="flex flex-col overflow-hidden rounded-xl border border-border/70 bg-card">
                 <div className="bg-black/40 p-3">

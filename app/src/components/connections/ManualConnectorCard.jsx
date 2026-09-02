@@ -12,6 +12,9 @@
 // Unlike the Google OAuth cards there is no session-only mode: manual
 // credentials exist to make server-side pulls possible, so saving requires
 // being signed in.
+//
+// The paste form lives in the tile's dialog — a five-field Apple Search Ads
+// form inline would set the height of every card in the grid.
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -21,12 +24,15 @@ import {
   listConnectorAccounts,
   saveServerConnector,
 } from "../../lib/connectorsApi";
+import ConnectorDialog from "./ConnectorDialog";
+import ConnectorTile from "./ConnectorTile";
+import ProjectAccountSelect from "./ProjectAccountSelect";
 
 export default function ManualConnectorCard({
   type,            // connector id: "apple_ads" | "meta_ads" | ...
   title,
   description,
-  logo,            // emoji string
+  logo,
   fields,          // [{key, label, placeholder, secret?, multiline?, optional?, hint?}]
   accountField = "account_id", // credential key the picked account id is saved under
   docsUrl,
@@ -35,7 +41,13 @@ export default function ManualConnectorCard({
   serverRowList = [], // ALL stored rows for this connector_type (one per account)
   onSaved,         // async () => void — refresh the stored-rows map
   onRemoveRow,     // async (rowId) => void — remove one stored account row
+  // Per-project account mapping
+  projectName,
+  binding,
+  onMappingChange,
+  mappingBusy,
 }) {
+  const [open, setOpen] = useState(false);
   const [values, setValues] = useState({});
   const [accounts, setAccounts] = useState(null); // null = not verified yet
   const [pickedAccount, setPickedAccount] = useState("");
@@ -133,136 +145,142 @@ export default function ManualConnectorCard({
     }
   }
 
+  const status = connected
+    ? serverRowList.length > 1
+      ? `Connected — ${serverRowList.length} accounts`
+      : `Connected${serverRowList[0].account_name ? ` — ${serverRowList[0].account_name}` : ""}`
+    : "Not connected";
+
   return (
-    <article className="connection-card">
-      <div className="connection-card-head">
-        <div className="connection-logo" aria-hidden="true" style={{ fontSize: 22 }}>
-          {logo}
-        </div>
-        <div>
-          <h2 className="connection-title">{title}</h2>
-          <p className="connection-description">{description}</p>
-        </div>
-      </div>
+    <>
+      <ConnectorTile
+        logo={logo}
+        title={title}
+        description={description}
+        tone={connected ? "on" : "off"}
+        status={status}
+        onClick={() => setOpen(true)}
+      />
 
-      {formOpen && (
-        <form onSubmit={verifyAndSave} style={{ display: "grid", gap: 10, marginTop: 12 }}>
-          {docsUrl && (
-            <p className="app-subtle" style={{ margin: 0, fontSize: 13 }}>
-              <a className="app-link" href={docsUrl} target="_blank" rel="noreferrer">
-                {docsLabel || "Where to find these credentials"}
-              </a>
-            </p>
-          )}
-          {fields.map((f) => (
-            <div key={f.key} style={{ display: "grid", gap: 4 }}>
-              <Label htmlFor={`${type}-${f.key}`}>
-                {f.label}
-                {f.optional ? " (optional)" : ""}
-              </Label>
-              {f.multiline ? (
-                <textarea
-                  id={`${type}-${f.key}`}
-                  rows={4}
-                  autoComplete="off"
-                  placeholder={f.placeholder}
-                  value={values[f.key] || ""}
-                  onChange={(e) => setValue(f.key, e.target.value)}
-                  className="rounded-md border border-input bg-transparent px-3 py-2 text-sm font-mono"
-                  spellCheck={false}
-                />
-              ) : (
-                <Input
-                  id={`${type}-${f.key}`}
-                  type={f.secret ? "password" : "text"}
-                  autoComplete="off"
-                  placeholder={f.placeholder}
-                  value={values[f.key] || ""}
-                  onChange={(e) => setValue(f.key, e.target.value)}
-                />
-              )}
-              {f.hint && (
-                <p className="app-subtle" style={{ margin: 0, fontSize: 12 }}>{f.hint}</p>
-              )}
-            </div>
-          ))}
-          <div>
-            <Button type="submit" size="sm" disabled={busy || !signedIn}>
-              {busy ? "Verifying…" : "Verify & save"}
-            </Button>
-            {!signedIn && (
-              <span className="app-subtle" style={{ marginLeft: 8, fontSize: 12 }}>
-                Sign in first — credentials are stored encrypted server-side.
-              </span>
-            )}
-          </div>
-        </form>
-      )}
-
-      {accounts && accounts.length > 1 && formOpen && (
-        <div style={{ display: "grid", gap: 6, marginTop: 10 }}>
-          <p className="app-subtle" style={{ margin: 0, fontSize: 13 }}>Pick the account to use:</p>
-          {accounts.map((a) => (
-            <Button
-              key={a.account_id || a.account_name}
-              type="button"
-              size="sm"
-              variant={pickedAccount === a.account_id ? "default" : "outline"}
-              disabled={busy}
-              onClick={() => pickAccount(a.account_id)}
-              style={{ justifyContent: "flex-start" }}
-            >
-              {a.account_name || a.account_id}
-              {a.currency ? ` · ${a.currency}` : ""}
-            </Button>
-          ))}
-        </div>
-      )}
-
-      {error && (
-        <p style={{ margin: "8px 0 0", fontSize: 13, color: "var(--destructive, #e5484d)" }}>{error}</p>
-      )}
-      {notice && !error && (
-        <p className="app-subtle" style={{ margin: "8px 0 0", fontSize: 13 }}>{notice}</p>
-      )}
-
-      {connected && (
-        <div style={{ display: "grid", gap: 6, marginTop: 10 }}>
-          {serverRowList.map((row) => (
-            <div
-              key={row.id}
-              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}
-            >
-              <span style={{ fontSize: 13 }}>
-                {row.account_name || row.account_id || "Default account"}
-              </span>
-              <Button type="button" variant="outline" size="sm" onClick={() => onRemoveRow?.(row.id)}>
-                Remove
+      <ConnectorDialog
+        open={open}
+        onOpenChange={setOpen}
+        logo={logo}
+        title={title}
+        description={description}
+      >
+        {connected && (
+          <div className="conn-dialog-section">
+            {serverRowList.map((row) => (
+              <div key={row.id} className="conn-account-row">
+                <span>{row.account_name || row.account_id || "Default account"}</span>
+                <Button type="button" variant="outline" size="sm" onClick={() => onRemoveRow?.(row.id)}>
+                  Remove
+                </Button>
+              </div>
+            ))}
+            <div>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => setAdding((isOpen) => !isOpen)}
+              >
+                {adding ? "Cancel" : "Add another account"}
               </Button>
             </div>
-          ))}
-        </div>
-      )}
-
-      <div className="connection-status-row">
-        <span className={`status-pill ${connected ? "green" : "grey"}`}>
-          {connected
-            ? serverRowList.length > 1
-              ? `Connected — ${serverRowList.length} accounts`
-              : `Connected${serverRowList[0].account_name ? ` — ${serverRowList[0].account_name}` : ""}`
-            : "Not connected"}
-        </span>
-        {connected && (
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={() => setAdding((open) => !open)}
-          >
-            {adding ? "Cancel" : "Add another account"}
-          </Button>
+          </div>
         )}
-      </div>
-    </article>
+
+        {formOpen && (
+          <form onSubmit={verifyAndSave} className="conn-dialog-section">
+            {docsUrl && (
+              <p className="conn-hint">
+                <a className="app-link" href={docsUrl} target="_blank" rel="noreferrer">
+                  {docsLabel || "Where to find these credentials"}
+                </a>
+              </p>
+            )}
+            {fields.map((f) => (
+              <div key={f.key} className="conn-field">
+                <Label htmlFor={`${type}-${f.key}`}>
+                  {f.label}
+                  {f.optional ? " (optional)" : ""}
+                </Label>
+                {f.multiline ? (
+                  <textarea
+                    id={`${type}-${f.key}`}
+                    rows={4}
+                    autoComplete="off"
+                    placeholder={f.placeholder}
+                    value={values[f.key] || ""}
+                    onChange={(e) => setValue(f.key, e.target.value)}
+                    className="rounded-md border border-input bg-transparent px-3 py-2 text-sm font-mono"
+                    spellCheck={false}
+                  />
+                ) : (
+                  <Input
+                    id={`${type}-${f.key}`}
+                    type={f.secret ? "password" : "text"}
+                    autoComplete="off"
+                    placeholder={f.placeholder}
+                    value={values[f.key] || ""}
+                    onChange={(e) => setValue(f.key, e.target.value)}
+                  />
+                )}
+                {f.hint && <p className="conn-hint">{f.hint}</p>}
+              </div>
+            ))}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <Button type="submit" size="sm" disabled={busy || !signedIn}>
+                {busy ? "Verifying…" : "Verify & save"}
+              </Button>
+              {!signedIn && (
+                <span className="conn-hint">
+                  Sign in first — credentials are stored encrypted server-side.
+                </span>
+              )}
+            </div>
+          </form>
+        )}
+
+        {accounts && accounts.length > 1 && formOpen && (
+          <div className="conn-dialog-section">
+            <p className="conn-hint">Pick the account to use:</p>
+            {accounts.map((a) => (
+              <Button
+                key={a.account_id || a.account_name}
+                type="button"
+                size="sm"
+                variant={pickedAccount === a.account_id ? "default" : "outline"}
+                disabled={busy}
+                onClick={() => pickAccount(a.account_id)}
+                style={{ justifyContent: "flex-start" }}
+              >
+                {a.account_name || a.account_id}
+                {a.currency ? ` · ${a.currency}` : ""}
+              </Button>
+            ))}
+          </div>
+        )}
+
+        {error && (
+          <p role="alert" className="text-destructive" style={{ margin: "12px 0 0", fontSize: 13 }}>
+            {error}
+          </p>
+        )}
+        {notice && !error && (
+          <p className="conn-hint" style={{ marginTop: 12 }}>{notice}</p>
+        )}
+
+        <ProjectAccountSelect
+          projectName={projectName}
+          rows={serverRowList}
+          binding={binding}
+          onChange={onMappingChange}
+          busy={mappingBusy}
+        />
+      </ConnectorDialog>
+    </>
   );
 }

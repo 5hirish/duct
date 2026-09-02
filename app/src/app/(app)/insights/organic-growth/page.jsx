@@ -1,20 +1,10 @@
-import { listReports } from "../../../../lib/reports";
-import InsightsModeSelector from "../InsightsModeSelector";
+import Desk from "@/components/insights/Desk";
 
+// The desk is entirely client-side: everything on it is user-scoped and
+// membership-gated, so there is nothing worth fetching on the server that the
+// browser would not have to re-authenticate for anyway.
 export const dynamic = "force-dynamic";
 
-export default async function OrganicGrowthPage() {
-  const reports = await listReports();
-
-  return (
-    <section>
-      <div className="page-toolbar">
-        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">Organic Growth</h1>
-      </div>
-      <p className="app-subtle" style={{ marginTop: 0, marginBottom: 18 }}>
-        Open an insight brief to explore recommendations, or generate a new insight from your connected data.
-      </p>
-      <InsightsModeSelector serverReports={reports} />
-    </section>
-  );
+export default function OrganicGrowthPage() {
+  return <Desk />;
 }

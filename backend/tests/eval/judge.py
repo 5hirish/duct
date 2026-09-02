@@ -5,8 +5,8 @@
 marker checks as JSON, validates the result against ``JudgeVerdict``, and
 returns a computed ``Scorecard``.
 
-We call google-genai directly (the Gemini stack the v2/ADK engine sits on)
-rather than ADK: the judge is one multimodal call that must see the images and
+We call google-genai directly rather than through an agent harness: the judge
+is one multimodal call that must see the images and
 return a typed verdict, which google-genai does natively. We use the
 structured-output API — ``response_schema=JudgeVerdict`` — so the model is
 constrained to the Pydantic shape and ``response.parsed`` comes back validated

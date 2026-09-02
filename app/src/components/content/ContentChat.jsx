@@ -8,8 +8,10 @@ import ContentInput from "./ContentInput";
 import ContentQuestions from "./ContentQuestions";
 import ContentStepProgress from "./ContentStepProgress";
 import ContentTodos from "./ContentTodos";
-import { Phase } from "./contentPhase";
-import { CodeBlock, resolveCode } from "./CodeBlock";
+import { Phase } from "../workspace/agentPhase";
+import { CodeBlock, resolveCode } from "../workspace/CodeBlock";
+import { Spinner } from "@/components/ui/spinner";
+import { Lightbox } from "@/components/ui/lightbox";
 
 function SendErrorBubble({ text, content, onRetry }) {
   return (
@@ -198,17 +200,12 @@ function ChatImageBubble({ image, fullUrl, caption }) {
         </button>
         {caption && <p className="pl-1 text-[11px] text-muted-foreground">{caption}</p>}
       </div>
-      {open && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          onClick={() => setOpen(false)}
-          className="fixed inset-0 z-50 flex cursor-zoom-out items-center justify-center bg-black/80 p-6"
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={full} alt={caption || "Generated image"} className="max-h-full max-w-full rounded-lg object-contain shadow-2xl" />
-        </div>
-      )}
+      <Lightbox
+        open={open}
+        onOpenChange={setOpen}
+        src={full}
+        alt={caption || "Generated image"}
+      />
     </div>
   );
 }
@@ -303,7 +300,15 @@ export default function ContentChat({
             <span className="relative inline-flex rounded-full size-2 bg-amber-500" />
           </span>
         )}
+        {/* role="status" so a screen reader hears the agent change state —
+            "Working…", "Waiting for you", "Ready", "Failed". This is the only
+            live region in the agent shell on purpose: announcing the streaming
+            tokens themselves, or the rotating subtitle in PipelineProgress,
+            would talk over the user continuously. State changes are the signal;
+            the prose is already readable on demand. */}
         <span
+          role="status"
+          aria-live="polite"
           className={`text-xs ${
             phase === Phase.QUESTIONS
               ? "text-amber-600 dark:text-amber-400 font-medium"
@@ -340,7 +345,7 @@ export default function ContentChat({
         >
           {phase === Phase.STARTING && (
             <div className="flex items-center gap-2 py-2 text-sm text-muted-foreground">
-              <span className="inline-block size-3 rounded-full border-2 border-current border-t-transparent animate-spin" />
+              <Spinner className="size-3" />
               Starting session…
             </div>
           )}
@@ -375,7 +380,7 @@ export default function ContentChat({
 
           {reconnecting && !isFailed && (
             <div className="mt-3 flex items-center gap-2 rounded-lg border border-amber-400/30 bg-amber-500/10 px-4 py-2.5 text-xs text-amber-600 dark:text-amber-400">
-              <span className="inline-block size-3 rounded-full border-2 border-current border-t-transparent animate-spin" />
+              <Spinner className="size-3" />
               Connection dropped — reconnecting…
             </div>
           )}

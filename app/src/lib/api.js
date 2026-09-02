@@ -56,7 +56,19 @@ function backendApiHeaders(extra = {}) {
   return headers;
 }
 
-function backendAuthedHeaders(extra = {}) {
+/**
+ * Headers that prove both halves: the X-API-Key says "this is the Duct app",
+ * the Bearer token says which user is asking. Anything reading or writing
+ * project-scoped data needs the second — the key is public, it ships in this
+ * bundle. Exported so `contentApi` and friends share this one definition
+ * rather than each keeping a key-only copy.
+ *
+ * The rule: if the request spends model tokens, reaches a vendor with anyone's
+ * credentials, or reads project data, use this one. `backendApiHeaders` is for
+ * the handful of routes that are genuinely public catalogue reads — engine
+ * status, insight modes.
+ */
+export function backendAuthedHeaders(extra = {}) {
   const headers = backendApiHeaders(extra);
   const token = authToken();
   if (token) headers["Authorization"] = `Bearer ${token}`;
@@ -68,7 +80,7 @@ export async function fetchConnectorAccounts(connectorId, refreshToken, extras =
     `${BASE}/api/connectors/${encodeURIComponent(connectorId)}/accounts`,
     {
       method: "POST",
-      headers: backendApiHeaders({ "Content-Type": "application/json" }),
+      headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({ refresh_token: refreshToken, ...extras }),
     }
   );
@@ -145,7 +157,7 @@ export async function refreshInsightBriefs(routine) {
   };
   const res = await fetch(`${BASE}/api/insights/refresh`, {
     method: "POST",
-    headers: backendApiHeaders({ "Content-Type": "application/json" }),
+    headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify(body),
   });
   if (!res.ok) {
@@ -165,7 +177,7 @@ export async function streamInsightChat({
 }) {
   const res = await fetch(`${BASE}/api/insights/chat`, {
     method: "POST",
-    headers: backendApiHeaders({ "Content-Type": "application/json" }),
+    headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify({
       chat_payload: chatPayload,
       messages,
@@ -253,6 +265,16 @@ export async function generateReportStream(params, { onEvent, signal } = {}) {
 // ---------------------------------------------------------------------------
 // Unified agent session API  (/api/agents)
 // ---------------------------------------------------------------------------
+//
+// These send the Bearer token. Create reads the caller off the request and
+// stamps them on the session, which is what everything user-scoped downstream
+// keys off — artifact persistence, project memory, the autonomy level the run
+// operates at. Without it the backend saw an anonymous caller and those
+// features silently did nothing (the checks are all `if user_id`). The
+// remaining three carry it because a session belongs to whoever created it.
+//
+// A signed-out caller still works and still gets None: that is the lead-magnet
+// teaser audit, which owns no project and persists nothing.
 
 /** List all available agent types. */
 export async function listAgents() {
@@ -267,9 +289,15 @@ export async function listAgents() {
  * Then connect to openAgentStream(agentType, sessionId) for SSE events.
  */
 export async function createAgentSession(agentType, params) {
+  // The provider headers ride on session creation for every agent, not just
+  // insights: the backend resolves the run's key here, and a request without
+  // them is a request the hosted deployment has no key it is allowed to spend.
   const res = await fetch(`${BASE}/api/agents/${encodeURIComponent(agentType)}/sessions`, {
     method: "POST",
-    headers: backendApiHeaders({ "Content-Type": "application/json" }),
+    headers: {
+      ...backendAuthedHeaders({ "Content-Type": "application/json" }),
+      ...(await providerKeyHeaders()),
+    },
     body: JSON.stringify(params),
   });
   if (!res.ok) {
@@ -285,7 +313,7 @@ export async function createAgentSession(agentType, params) {
  */
 export async function openAgentStream(agentType, sessionId, { signal } = {}) {
   const url = `${BASE}/api/agents/${encodeURIComponent(agentType)}/sessions/${encodeURIComponent(sessionId)}/stream`;
-  const res = await fetch(url, { headers: backendApiHeaders(), signal });
+  const res = await fetch(url, { headers: backendAuthedHeaders(), signal });
   if (!res.ok) {
     const text = await res.text();
     throw new Error(text || `Stream error ${res.status}`);
@@ -305,7 +333,7 @@ export async function sendAgentMessage(agentType, sessionId, message) {
     `${BASE}/api/agents/${encodeURIComponent(agentType)}/sessions/${encodeURIComponent(sessionId)}/messages`,
     {
       method: "POST",
-      headers: backendApiHeaders({ "Content-Type": "application/json" }),
+      headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify(message),
     }
   );
@@ -317,16 +345,22 @@ export async function sendAgentMessage(agentType, sessionId, message) {
 export async function closeAgentSession(agentType, sessionId) {
   await fetch(
     `${BASE}/api/agents/${encodeURIComponent(agentType)}/sessions/${encodeURIComponent(sessionId)}`,
-    { method: "DELETE", headers: backendApiHeaders() }
+    { method: "DELETE", headers: backendAuthedHeaders() }
   );
 }
 
 // ---------------------------------------------------------------------------
 // Persisted conversations (chat history / resume)
 // ---------------------------------------------------------------------------
+//
+// All four send the Bearer token, not just the API key. A conversation belongs
+// to a project, and the backend gates these on project membership — the shared
+// X-API-Key is baked into this bundle and says nothing about who is asking.
+// Every caller is inside the signed-in app shell, so a token is always present.
 
 /** List an agent's conversations (resume lookup / history). Returns an array of
- * conversation summaries. Pass filters: { projectId, artifactType, artifactId }. */
+ * conversation summaries. Pass filters: { projectId, artifactType, artifactId }.
+ * Omitting projectId lists across the caller's own projects. */
 export async function listAgentConversations(agentType, { projectId, artifactType, artifactId, includeArchived } = {}) {
   const qs = new URLSearchParams();
   if (projectId) qs.set("project_id", projectId);
@@ -335,7 +369,7 @@ export async function listAgentConversations(agentType, { projectId, artifactTyp
   if (includeArchived) qs.set("include_archived", "true");
   const res = await fetch(
     `${BASE}/api/agents/${encodeURIComponent(agentType)}/conversations?${qs.toString()}`,
-    { headers: backendApiHeaders() }
+    { headers: backendAuthedHeaders() }
   );
   if (!res.ok) throw new Error(`List conversations failed: ${res.status}`);
   return res.json();
@@ -346,9 +380,23 @@ export async function listAgentConversations(agentType, { projectId, artifactTyp
 export async function getAgentConversation(agentType, conversationId) {
   const res = await fetch(
     `${BASE}/api/agents/${encodeURIComponent(agentType)}/conversations/${encodeURIComponent(conversationId)}`,
-    { headers: backendApiHeaders() }
+    { headers: backendAuthedHeaders() }
   );
   if (!res.ok) throw new Error(`Get conversation failed: ${res.status}`);
+  return res.json();
+}
+
+/** Pin (or rename) a conversation. Pinning only changes list order. */
+export async function patchAgentConversation(agentType, conversationId, patch) {
+  const res = await fetch(
+    `${BASE}/api/agents/${encodeURIComponent(agentType)}/conversations/${encodeURIComponent(conversationId)}`,
+    {
+      method: "PATCH",
+      headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify(patch),
+    }
+  );
+  if (!res.ok) throw new Error(`Patch conversation failed: ${res.status}`);
   return res.json();
 }
 
@@ -356,7 +404,7 @@ export async function getAgentConversation(agentType, conversationId) {
 export async function archiveAgentConversation(agentType, conversationId) {
   const res = await fetch(
     `${BASE}/api/agents/${encodeURIComponent(agentType)}/conversations/${encodeURIComponent(conversationId)}/archive`,
-    { method: "POST", headers: backendApiHeaders() }
+    { method: "POST", headers: backendAuthedHeaders() }
   );
   if (!res.ok) throw new Error(`Archive conversation failed: ${res.status}`);
   return res.json();

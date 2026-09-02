@@ -6,11 +6,12 @@ import asyncio
 import logging
 import sys
 import time
-from contextlib import asynccontextmanager
+from contextlib import AsyncExitStack, asynccontextmanager
 from urllib.parse import urlparse
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 import sentry_sdk
 from uvicorn.logging import DefaultFormatter
 
@@ -23,7 +24,11 @@ import service.meta.ads.fetch  # noqa: F401 — registers connectors before rout
 import service.openai.ads.fetch  # noqa: F401 — registers connectors before routes import
 import service.revenuecat.fetch  # noqa: F401 — registers connectors before routes import
 import service.stripe.fetch  # noqa: F401 — registers connectors before routes import
+import service.mixpanel.fetch  # noqa: F401 — registers connectors before routes import
+import service.clarity.fetch  # noqa: F401 — registers connectors before routes import
+import service.growthbook.fetch  # noqa: F401 — registers connectors before routes import
 
+from agents.engines import ProviderKeyRequired
 from config import cors_kwargs, get_configs
 from db.migrate import ensure_schema
 from db.session import init_db
@@ -43,8 +48,25 @@ _cfg = get_configs()
 # stays colourised in a TTY (%(levelprefix)s) — what terminal level-highlighting
 # keys on — while degrading to plain text when piped (prod / log files).
 # The `,%(msecs)` in the default asctime gives millisecond precision for free.
-_LOG_FORMAT = "%(asctime)s %(levelprefix)s %(name)s: %(message)s"
-_log_formatter = DefaultFormatter(fmt=_LOG_FORMAT, use_colors=sys.stderr.isatty())
+_LOG_FORMAT = "%(asctime)s %(levelprefix)s %(logname)s: %(message)s"
+
+# Uvicorn logs *every* server lifecycle line — startup, shutdown, reload — on a
+# logger literally named `uvicorn.error`, so a healthy boot reads like a stack of
+# failures. Display those under `uvicorn`; the level field already says whether a
+# line is an error. `%(logname)s` above (not `%(name)s`) is what gets rewritten,
+# so the record's real logger name stays intact for anything else reading it.
+_LOGGER_DISPLAY_NAMES = {"uvicorn.error": "uvicorn"}
+
+
+class DisplayNameFormatter(DefaultFormatter):
+    """DefaultFormatter that renders `_LOGGER_DISPLAY_NAMES` aliases as `logname`."""
+
+    def formatMessage(self, record: logging.LogRecord) -> str:
+        record.logname = _LOGGER_DISPLAY_NAMES.get(record.name, record.name)
+        return super().formatMessage(record)
+
+
+_log_formatter = DisplayNameFormatter(fmt=_LOG_FORMAT, use_colors=sys.stderr.isatty())
 
 _app_handler = logging.StreamHandler()
 _app_handler.setFormatter(_log_formatter)
@@ -123,6 +145,7 @@ _SENSITIVE_HEADERS = frozenset({
     "x-provider-anthropic",
     "x-provider-openai",
     "x-provider-gemini",
+    "x-provider-openrouter",
     "authorization",
 })
 
@@ -174,6 +197,19 @@ async def lifespan(app: FastAPI):
     elif _cfg.init_db_on_startup:
         init_db()
 
+    # Durable conversation state, opened once for the process. Deliberately
+    # after the schema work above: LangGraph's `setup()` creates its own tables
+    # in this same database, and `db/migrate.py` classifies a fresh install by
+    # looking for `users` rather than "any table at all" so the two cannot be
+    # confused. The saver holds a connection pool, which is why it is owned by
+    # the lifespan and not built per session — see agents/core/checkpoint.py.
+    from agents.core.checkpoint import open_checkpointer, set_checkpointer
+
+    checkpoints = AsyncExitStack()
+    set_checkpointer(
+        await checkpoints.enter_async_context(open_checkpointer(_cfg.database_url))
+    )
+
     # Once per server start, not once per import — see the docstring.
     from service.pipeline import log_stale_catalog_warnings
 
@@ -204,6 +240,10 @@ async def lifespan(app: FastAPI):
         for task in pruners:
             task.cancel()
         await asyncio.gather(*pruners, return_exceptions=True)
+        # Last: a still-draining session may write a final checkpoint, so the
+        # pool outlives everything that could use it.
+        set_checkpointer(None)
+        await checkpoints.aclose()
 
 
 _openapi = "/openapi.json" if _cfg.expose_openapi_docs else None
@@ -219,6 +259,21 @@ app.add_middleware(CORSMiddleware, **cors_kwargs(get_configs()))
 app.add_middleware(OpenapiDocsBasicAuthMiddleware)
 # Added last → outermost, so the timing spans CORS + auth + handler.
 app.add_middleware(AccessLogMiddleware)
+
+
+@app.exception_handler(ProviderKeyRequired)
+async def _provider_key_required(request, exc: ProviderKeyRequired):
+    """402, not 500 — the caller can fix this by connecting a key.
+
+    Raised wherever a run would otherwise have been billed to Duct's own
+    provider account (agents/engines.resolve_provider_key). The provider is in
+    the body so the browser can open the right tile in Settings → Providers
+    rather than making the user find it.
+    """
+    return JSONResponse(
+        status_code=402,
+        content={"detail": str(exc), "provider": exc.provider, "error": "provider_key_required"},
+    )
 
 
 # Serve /uploads only for the local storage backend (dev). In prod the 'r2'

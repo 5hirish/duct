@@ -10,10 +10,13 @@
     "start": "next start",
     "preview:cf": "opennextjs-cloudflare build && wrangler dev",
     "deploy:cf": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "check:connectors": "node scripts/check-connector-count.mjs",
+    "check:desk": "node scripts/check-desk.mjs",
+    "check:sources": "node scripts/check-data-sources.mjs"
   },
   "keywords": [],
-  "license": "UNLICENSED",
+  "license": "MIT",
   "dependencies": {
     "@nivo/core": "^0.99.0",
     "@nivo/heatmap": "^0.99.0",

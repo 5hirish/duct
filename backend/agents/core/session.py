@@ -103,6 +103,46 @@ def close_all_sessions() -> None:
         close_session(session_id)
 
 
+async def bridge_user_input(
+    session: BaseAgentSession,
+    session_id: str,
+    *,
+    event: str,
+    payload: dict,
+    emit: EmitFn,
+    timeout: float = ASK_USER_TIMEOUT,
+    log_prefix: str = "agent",
+) -> dict:
+    """Park a run until a human responds, then resume it.
+
+    The one suspension primitive. Emit ``event`` carrying ``payload``, await an
+    ``asyncio.Future`` the messages route resolves, and return whatever the user
+    sent back ({} on timeout, which every caller must treat as "carry on
+    without it" rather than as an error).
+
+    Three kinds ride this today — a clarifying question, a request to connect a
+    data source, and an account choice — and they differ only in the event name
+    and what the UI renders. Keeping one Future means the messages route, the
+    reconnect grace and the stale pruner all stay unaware of how many kinds
+    exist.
+
+    LangGraph's ``interrupt()`` is the upgrade path when a parked run must
+    survive a process restart; it plugs in here without the route or the
+    frontend noticing (see ``agents/core/ports``).
+    """
+    loop = asyncio.get_event_loop()
+    fut: asyncio.Future = loop.create_future()
+    session.answer_future = fut
+    await emit({"event": event, "session_id": session_id, **payload})
+    try:
+        return await asyncio.wait_for(asyncio.shield(fut), timeout=timeout)
+    except asyncio.TimeoutError:
+        logger.warning("%s: %s timed out for session %s", log_prefix, event, session_id)
+        return {}
+    finally:
+        session.answer_future = None
+
+
 async def bridge_ask_user_question(
     session: BaseAgentSession,
     session_id: str,
@@ -112,24 +152,18 @@ async def bridge_ask_user_question(
     timeout: float = ASK_USER_TIMEOUT,
     log_prefix: str = "agent",
 ) -> dict:
-    """Pause on AskUserQuestion: emit QUESTIONS_REQUIRED, await the user's answer
-    via an asyncio.Future (resolved by the messages route), and return the
-    updated tool input. Empty answers on timeout. This is the bridge that audit
-    and content previously duplicated verbatim.
+    """AskUserQuestion over :func:`bridge_user_input`, in the SDK's tool-input
+    shape: returns ``{"questions": [...], "answers": {...}}`` with empty answers
+    on timeout, which is what the v3 ``can_use_tool`` hook expects back.
     """
-    loop = asyncio.get_event_loop()
-    fut: asyncio.Future = loop.create_future()
-    session.answer_future = fut
-    await emit({
-        "event": AgentEvent.QUESTIONS_REQUIRED,
-        "session_id": session_id,
-        "questions": input_data.get("questions", []),
-    })
-    try:
-        answers = await asyncio.wait_for(asyncio.shield(fut), timeout=timeout)
-    except asyncio.TimeoutError:
-        logger.warning("%s: AskUserQuestion timed out for session %s", log_prefix, session_id)
-        answers = {}
-    finally:
-        session.answer_future = None
-    return {"questions": input_data.get("questions", []), "answers": answers}
+    questions = input_data.get("questions", [])
+    answers = await bridge_user_input(
+        session,
+        session_id,
+        event=AgentEvent.QUESTIONS_REQUIRED,
+        payload={"questions": questions},
+        emit=emit,
+        timeout=timeout,
+        log_prefix=log_prefix,
+    )
+    return {"questions": questions, "answers": answers}

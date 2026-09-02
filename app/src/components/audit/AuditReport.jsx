@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { Phase } from "./auditPhase";
+import { Phase } from "../workspace/agentPhase";
 import { AuditStep } from "../../lib/auditEvents";
 import { StepStatus } from "../../lib/agentSteps";
 import PipelineProgress from "../PipelineProgress";

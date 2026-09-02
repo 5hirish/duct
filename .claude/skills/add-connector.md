@@ -126,5 +126,5 @@ Close with:
 
 ## Notes
 
-- Detailed backend conventions: `backend/CLAUDE.md`, `backend/AGENTS.md`.
+- Detailed backend conventions: `backend/AGENTS.md`.
 - Google Ads remains the only fully wired connector; use it as the **on-repo shape**, not as a requirement that every connector use OAuth.

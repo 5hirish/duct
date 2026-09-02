@@ -10,7 +10,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -37,7 +36,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { getActiveProject } from "../../../lib/projects";
 import { hasAuthToken } from "../../../lib/authFetch";
-import { fetchProjectsRemote, setProjectAutonomy } from "../../../lib/projectsApi";
+import {
+  AUTONOMY_ASK,
+  AUTONOMY_OPTIONS,
+  fetchProjectsRemote,
+  setProjectAutonomy,
+} from "../../../lib/projectsApi";
 import {
   applyChangeSet,
   approveChangeSet,
@@ -49,6 +53,7 @@ import {
   rejectChangeSet,
   rollbackChangeSet,
 } from "../../../lib/executionApi";
+import { Spinner } from "@/components/ui/spinner";
 
 const STATUS_PILL = {
   proposed: "yellow",
@@ -94,9 +99,10 @@ const CONNECTOR_LABEL = {
   google_ads: "Google Ads",
   ga4: "Google Analytics",
   gtm: "Google Tag Manager",
+  mixpanel: "Mixpanel",
 };
 
-const GUARDRAIL_CONNECTORS = ["google_ads", "ga4", "gtm"];
+const GUARDRAIL_CONNECTORS = ["google_ads", "ga4", "gtm", "mixpanel"];
 
 function Pill({ status }) {
   return (
@@ -324,8 +330,8 @@ function DetailDrawer({ cs, destructiveMap, busy, onClose, onAction, projectName
             )}
             {cs.status === "applying" && (
               <span className="app-subtle" style={{ fontSize: 13 }}>
-                <span
-                  className="inline-block size-3 rounded-full border-2 border-current border-t-transparent animate-spin"
+                <Spinner
+                  className="size-3"
                   style={{ marginRight: 6, verticalAlign: "-2px" }}
                 />
                 Applying changes…
@@ -403,27 +409,49 @@ function ConfirmDialog({ confirm, destructiveMap, onCancel, onConfirm }) {
 
 function AutonomyPanel({ project, level, onChange, saving, error }) {
   if (!project || !level) return null;
-  const assisted = level === "assisted";
+  const current = AUTONOMY_OPTIONS.find((o) => o.value === level) || AUTONOMY_OPTIONS[0];
   return (
-    <article className="connection-card" style={{ display: "grid", gap: 6, marginBottom: 16 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
-        <div style={{ minWidth: 0 }}>
-          <h2 className="connection-title" style={{ marginBottom: 2 }}>
-            Assisted autonomy — {project.name}
-          </h2>
-          <p className="app-subtle" style={{ margin: 0, fontSize: 13 }}>
-            {assisted
-              ? "On: reversible, guardrail-clean, non-destructive agent proposals (negative/positive keywords, GA4 key events and audiences, GTM workspace edits) apply without waiting for you. Destructive operations — GTM publishes, archives, unlinks — and anything budget- or status-related ALWAYS wait for your approval here. Every auto-applied set keeps a rollback handle."
-              : "Off: every agent-proposed change set waits in this queue for your explicit approval before anything touches a connected account."}
-          </p>
-        </div>
-        <Switch
-          checked={assisted}
-          disabled={saving}
-          onCheckedChange={(checked) => onChange(checked ? "assisted" : "manual")}
-          aria-label="Assisted autonomy"
-        />
+    <article className="connection-card" style={{ display: "grid", gap: 10, marginBottom: 16 }}>
+      <div>
+        <h2 className="connection-title" style={{ marginBottom: 2 }}>
+          Autonomy — {project.name}
+        </h2>
+        <p className="app-subtle" style={{ margin: 0, fontSize: 13 }}>{current.blurb}</p>
       </div>
+
+      <div role="radiogroup" aria-label="Execution autonomy" style={{ display: "flex", gap: 8 }}>
+        {AUTONOMY_OPTIONS.map((opt) => {
+          const selected = opt.value === level;
+          return (
+            <button
+              key={opt.value}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              disabled={saving || selected}
+              onClick={() => onChange(opt.value)}
+              className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors disabled:cursor-default ${
+                selected
+                  ? "border-primary bg-primary/10 text-foreground"
+                  : "border-border text-muted-foreground hover:text-foreground hover:border-border/80"
+              }`}
+            >
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* The invariant, stated where the dial is turned. It is the reason the
+          top of the ladder is safe to offer at all, and a user who does not
+          know it will read "Auto" as "anything". */}
+      <p className="app-subtle" style={{ margin: 0, fontSize: 12 }}>
+        At every level: destructive operations — GTM publishes, archives, unlinks — and
+        anything budget- or status-related wait for your approval here. Assisted and Auto
+        share one narrow allowlist (negative/positive keywords, GA4 key events and
+        audiences, GTM workspace edits), and every auto-applied set keeps a rollback handle.
+      </p>
+
       {error && (
         <p style={{ margin: 0, fontSize: 12, color: "var(--destructive, #e5484d)" }}>
           {error.includes("404") || error.toLowerCase().includes("owner")
@@ -575,6 +603,7 @@ function GuardrailsPanel() {
               </Select>
               <input
                 value={form.account_id}
+                aria-label="Account id"
                 onChange={(e) => setForm((f) => ({ ...f, account_id: e.target.value }))}
                 placeholder="Account id (blank = all)"
                 className="rounded-md border border-input bg-transparent px-2 text-sm"
@@ -583,6 +612,7 @@ function GuardrailsPanel() {
             </div>
             <input
               value={form.rule}
+              aria-label="Guardrail rule"
               onChange={(e) => setForm((f) => ({ ...f, rule: e.target.value }))}
               placeholder="Rule, e.g. “Never pause the Brand campaign”"
               className="rounded-md border border-input bg-transparent px-2 text-sm"
@@ -592,6 +622,7 @@ function GuardrailsPanel() {
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <input
                 value={form.op_types}
+                aria-label="Operation types"
                 onChange={(e) => setForm((f) => ({ ...f, op_types: e.target.value }))}
                 placeholder="Op types to block, comma-separated (optional)"
                 className="rounded-md border border-input bg-transparent px-2 text-sm"
@@ -599,6 +630,7 @@ function GuardrailsPanel() {
               />
               <input
                 value={form.target_contains}
+                aria-label="Target contains"
                 onChange={(e) => setForm((f) => ({ ...f, target_contains: e.target.value }))}
                 placeholder="Target contains (optional)"
                 className="rounded-md border border-input bg-transparent px-2 text-sm"
@@ -664,7 +696,7 @@ export default function ExecutePage() {
 
   useEffect(() => {
     const remote = remoteProjects.find((p) => p.id === activeProject?.id);
-    if (remote) setAutonomy(remote.autonomyLevel || "manual");
+    if (remote) setAutonomy(remote.autonomyLevel || AUTONOMY_ASK);
   }, [remoteProjects, activeProject]);
 
   // Auto-refresh: 20s idle, 3s while a set is applying; paused in hidden tabs.

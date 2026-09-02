@@ -5,6 +5,11 @@
 > **Branch:** `claude/stoic-volta-2alwt0`
 > **Owner:** @5hirish
 >
+> 📌 **Historical record.** The insights **V2 and V3 runners referenced below no longer
+> exist** — both were removed once it was clear nothing dispatched them (V3 on 2026‑09‑01).
+> The `os.environ` concurrency hazard called out in §2 died with them; the equivalent
+> per-call env injection now lives in `agents/core/claude_sdk.py::build_sdk_env`.
+>
 > ⚠️ **§2/§4 under review — see
 > the engine consolidation review (duct-cloud, private) §7 (duct-cloud, private).**
 > This plan assumes a **thin client** with agents staying on Railway ("❌ no on-device agent

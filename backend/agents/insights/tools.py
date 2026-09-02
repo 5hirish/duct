@@ -124,7 +124,7 @@ def _make_gsc_tool(
 
 # ---------------------------------------------------------------------------
 # Canonical tool descriptions — single source of truth.
-# v1 factories (below), the v2 ADK wrappers (agents/insights/v2/tools.py), and
+# v1 factories (below) and
 # the registry's description_long all read from here so the LLM sees identical
 # guidance regardless of engine.
 # ---------------------------------------------------------------------------

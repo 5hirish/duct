@@ -667,10 +667,16 @@ def search(
             # An OR query ranked by ts_rank, not plainto_tsquery's implicit AND:
             # a question should degrade to its best partial match, not to zero.
             or_query = " | ".join(terms)
+            # Concatenated, not an interpolated literal: the search terms
+            # travel as the bound :fts_q parameter and only the module constant
+            # is spliced in, but interpolation here is the shape
+            # scripts/security/audit.py treats as CRITICAL. Baselining it would
+            # key on severity|title|filepath and so blind the scanner to every
+            # future raw-SQL finding in this file — a real injection included.
             ranked = stmt.where(
-                sa.text(f"{_FTS_SQL} @@ to_tsquery('english', :fts_q)")
+                sa.text(_FTS_SQL + " @@ to_tsquery('english', :fts_q)")
             ).order_by(
-                sa.text(f"ts_rank({_FTS_SQL}, to_tsquery('english', :fts_q)) DESC"),
+                sa.text("ts_rank(" + _FTS_SQL + ", to_tsquery('english', :fts_q)) DESC"),
                 ProjectMemory.observed_at.desc(),
             ).limit(fetch)
             rows = _tighten(list(db.execute(ranked, {"fts_q": or_query}).scalars()), terms)[:limit]

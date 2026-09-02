@@ -839,3 +839,29 @@ def test_image_tool_schemas_constrain_model_and_required_params():
     # optional-as-required fixes: these take either/neither id, nothing forced
     assert schemas["fetch_post"]["required"] == []
     assert schemas["mark_posted"]["required"] == ["post_id"]
+
+
+# ---------------------------------------------------------------------------
+# Channel labels — _LABELS used to be a hand-kept mirror of a Platform enum
+# that lived in another module, so the two could drift silently. They now sit
+# together; this keeps the map total so a new channel can't ship label-less
+# and fall back to titleize() ("Google_business").
+# ---------------------------------------------------------------------------
+
+
+def test_every_platform_has_a_display_label():
+    from agents.content.channels import Platform, _LABELS, resolve
+
+    assert set(_LABELS) == set(Platform), (
+        "every Platform needs a label in agents/content/channels._LABELS — "
+        f"missing: {set(Platform) - set(_LABELS)}"
+    )
+    # resolve() indexes the map with a bare string, which only works because
+    # Platform is a StrEnum. Guard that, not just the key set.
+    for p in Platform:
+        assert resolve(p.value).label == _LABELS[p]
+    # Unknown channels still degrade to the TikTok playbook, not an error.
+    unknown = resolve("mastodon")
+    assert unknown.label == "Mastodon"
+    assert unknown.supported is False
+    assert unknown.playbook == "tiktok"

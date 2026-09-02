@@ -1,17 +1,29 @@
-"""Structured output schemas for the generate agent.
+"""Structured output schemas for the insights agent, plus its session shapes.
 
-Uses extra='forbid' for OpenAI Structured Outputs compatibility.
-These schemas are shared between the LangChain agent and the
-Gemini synthesis path in service.google.brief.
+The ``Syn*`` / ``SynthesisSchema`` half is the structured output of the legacy
+two-call pipeline (``agents/insights/v1/agent.py``), still used by the
+non-interactive brief path. ``extra='forbid'`` throughout for OpenAI Structured
+Outputs compatibility; also shared with the Gemini synthesis path in
+``service/google/brief.py``.
+
+``InsightsRequest`` / ``InsightsSession`` at the bottom belong to the autonomous
+session agent (``agents/insights/v1/runner.py``) and mirror audit's
+``AuditRequest`` / ``AuditSession``.
 """
 
 from __future__ import annotations
 
-from typing import Literal
+import asyncio
+from dataclasses import dataclass
+from typing import Any, Literal
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from agents.core.artifacts import Finding, Narrative, RecommendedAction
+from agents.core.context import BusinessContext
+from agents.core.session import BaseAgentSession, register_session
+from agents.preferences import UserPreferences
 from agents.insights.entities import (
     SynActionPriority,
     SynActionType,
@@ -147,3 +159,84 @@ class SynthesisSchema(BaseModel):
     classification_overrides: list[SynClassificationOverride] = Field(default_factory=list)
     analysis_notes: str = ""
     dashboard_spec: DashboardSpec = Field(default_factory=DashboardSpec)
+
+
+# ---------------------------------------------------------------------------
+# Autonomous session agent — request + session shapes
+# ---------------------------------------------------------------------------
+
+
+class InsightsRequest(BaseModel):
+    """Body of ``POST /api/agents/insights/sessions``.
+
+    Deliberately almost empty. The old pipeline required the caller to have
+    already decided the connectors, the account/property/site for each, the goal
+    and the date range; the agent now discovers or asks for all of it. What
+    remains is a project to work in and, optionally, a sentence about what the
+    user wants.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    # Local-only projects have non-UUID ids, so this stays a string and is
+    # parsed defensively — same as AuditRequest.
+    project_id: str | None = None
+    prompt: str = ""
+
+    # Persisted-conversation controls (same semantics as audit and content).
+    conversation_id: str | None = None
+    resume: bool = False
+    start_fresh: bool = False
+
+    business_context: BusinessContext = Field(default_factory=BusinessContext)
+    user_preferences: UserPreferences = Field(default_factory=UserPreferences)
+    engine: str = ""
+
+    # Optional steer, not a mode switch: it selects which knowledge packs and
+    # protocol text to prefer when the intent is already obvious from the
+    # request. Empty means the agent decides.
+    focus: Literal["", "paid_ads", "organic_growth"] = ""
+
+    # False = "don't remember this session": no memory digest is injected, the
+    # memory tools are not mounted, and nothing is consolidated on close.
+    remember: bool = True
+
+
+@dataclass(kw_only=True)
+class InsightsSession(BaseAgentSession):
+    """Insights session — ``BaseAgentSession`` plus what the runner and the
+    route stamp on it.
+
+    Declared rather than assigned ad hoc (the way audit grew) so the contract
+    between ``routes/agents.py`` and the runner is readable in one place.
+    """
+
+    # Stamped by routes/agents.py at creation.
+    user_id: UUID | None = None
+    conversation_id: UUID | None = None
+    recorder: Any = None
+    resume: bool = False
+
+    # Set only after membership is verified — the memory tools key off this, so
+    # a value here means "the caller provably belongs to this project".
+    artifact_project_id: UUID | None = None
+    # True when the user asked not to be remembered: no digest, no memory tools,
+    # no consolidation on close.
+    memory_off: bool = False
+
+
+def create_insights_session(session_id: str, agent_type: str = "insights") -> InsightsSession:
+    """Create and register an insights session with both queues.
+
+    Called before the pipeline starts so the SSE stream endpoint can attach to
+    ``event_queue`` independently of when the agent begins work.
+    """
+    return register_session(
+        InsightsSession(
+            session_id=session_id,
+            agent_type=agent_type,
+            event_queue=asyncio.Queue(),  # agent → SSE consumer
+            chat_queue=asyncio.Queue(),   # user messages → agent
+            answer_future=None,
+        )
+    )

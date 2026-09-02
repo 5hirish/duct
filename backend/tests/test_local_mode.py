@@ -138,6 +138,39 @@ def test_local_mode_respects_explicit_database_url(clean_env, tmp_path):
     assert cfg.database_url == "postgresql://user:pw@host/db"
 
 
+# ---------------------------------------------------------------------------
+# The credentials key the desktop shell mints
+#
+# Desktop had none: CREDENTIALS_ENCRYPTION_KEY is a server setting and the frozen
+# bundle ships no `.env`, so service/credentials.py raised on every encrypt and
+# connecting a data source could finish OAuth and then fail to persist. The
+# shell now mints a Fernet key into the OS keychain and exports it under that
+# same name, skipping it when one is already set (desktop/src-tauri/src/sidecar.rs).
+#
+# The handover is plain environment, so there is nothing left for config.py to
+# do and nothing here to test about it. What no single language can check is
+# whether the two halves agree on the key's *shape*:
+# ---------------------------------------------------------------------------
+
+
+def test_a_url_safe_base64_of_32_bytes_is_a_valid_fernet_key():
+    """`credentials_encryption_key` in desktop/src-tauri/src/lib.rs builds the
+    key as URL_SAFE base64 (with padding) of 32 random bytes, and nothing links
+    the Rust and Python halves at compile time. Standard rather than url-safe
+    base64, or a stripped pad, would compile on one side and fail at the first
+    encrypt on a user's machine.
+    """
+    import base64 as b64
+    import os as _os
+
+    from cryptography.fernet import Fernet
+
+    minted = b64.urlsafe_b64encode(_os.urandom(32)).decode()
+    assert len(minted) == 44 and minted.endswith("=")
+    token = Fernet(minted.encode()).encrypt(b"connector refresh token")
+    assert Fernet(minted.encode()).decrypt(token) == b"connector refresh token"
+
+
 def test_server_mode_is_untouched(clean_env):
     """Railway config must not acquire desktop defaults."""
     cfg = Configs()

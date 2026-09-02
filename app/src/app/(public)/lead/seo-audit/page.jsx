@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import AuditWorkspace from "../../../../components/audit/AuditWorkspace";
 import { saveLeadReport, validateLeadToken } from "../../../../lib/api";
 import { ReportMode, DEFAULT_AUDIT_TEMPLATE_ID } from "../../../../lib/audit";
+import { Spinner } from "@/components/ui/spinner";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL
   ? `${process.env.NEXT_PUBLIC_SITE_URL}/seo-audit`
@@ -76,6 +77,10 @@ function LeadSeoAuditInner() {
           max_blog_posts: 2,
           // Teaser tier: backend force-skips enrichment + extended thinking.
           lead_magnet: true,
+          // This flow has no signed-in user, and starting an agent costs model
+          // tokens — so the lead token stands in for one. The backend consumes
+          // it at session create and never passes it further.
+          lead_token: token,
         });
         setState("ready");
       })
@@ -95,7 +100,7 @@ function LeadSeoAuditInner() {
     return (
       <div className="flex flex-1 items-center justify-center">
         <div className="flex flex-col items-center gap-3 text-center">
-          <span className="size-5 rounded-full border-2 border-orange-500 border-t-transparent animate-spin" aria-hidden="true" />
+          <Spinner className="size-5 text-orange-500" />
           <p className="text-sm text-muted-foreground">Verifying your access…</p>
         </div>
       </div>
@@ -147,7 +152,7 @@ export default function LeadSeoAuditPage() {
   return (
     <Suspense fallback={
       <div className="flex flex-1 items-center justify-center">
-        <span className="size-5 rounded-full border-2 border-orange-500 border-t-transparent animate-spin" aria-hidden="true" />
+        <Spinner className="size-5 text-orange-500" />
       </div>
     }>
       <LeadSeoAuditInner />

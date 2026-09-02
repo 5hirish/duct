@@ -46,8 +46,11 @@ export default function PlanKanban({ plan, postsById = {}, onReviseDay }) {
   }
 
   return (
-    <div className="flex-1 overflow-auto p-4">
-      <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    // @container, not viewport breakpoints: this board renders both full-width
+    // on /content and inside SplitWorkspace's user-resizable right pane, where
+    // `lg:` would be true at 1024px of WINDOW while the pane itself is 300px.
+    <div className="@container flex-1 overflow-auto p-4">
+      <div className="grid min-w-0 grid-cols-1 gap-4 @md:grid-cols-2 @4xl:grid-cols-4">
         {COLUMNS.map((col) => {
           const cards = grouped[col.key] || [];
           return (
@@ -58,7 +61,7 @@ export default function PlanKanban({ plan, postsById = {}, onReviseDay }) {
                 </span>
                 <span className="text-xs tabular-nums text-muted-foreground">{cards.length}</span>
               </div>
-              <div className="min-h-[80px] flex-1 space-y-2 p-2">
+              <div className="min-h-20 flex-1 space-y-2 p-2">
                 {cards.length === 0 && (
                   <p className="px-1 py-2 text-xs italic text-muted-foreground/60">Nothing here yet.</p>
                 )}

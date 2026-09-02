@@ -4,7 +4,7 @@ This is the complete content pipeline under one test: the v3 Claude Agent SDK
 runner drafts a real post, then generates a real image for every slide via its
 own ``generate_image`` tool (Gemini), and a *Gemini* judge (vision) scores the
 finished post + images against ``content_post_rubric`` to guard against model-
-output degradation. The judge runs on Gemini (the v2/ADK stack) rather than
+output degradation. The judge runs on Gemini rather than
 Claude so the grading call isn't gated by the Anthropic Messages API rate
 limits. Unlike the offline parser tests, this exercises the real agent, real
 image generation, and a real DB.

@@ -24,10 +24,16 @@ SUPPORTED_CONNECTORS = {
     # Manual-credential connectors (Phase 7): credentials arrive via the
     # `credentials` dict (request override or the user's stored encrypted rows).
     "apple_ads", "meta_ads", "stripe", "revenuecat", "openai_ads",
+    # Gads wave 2: Mixpanel (cross-platform event truth), Clarity (on-page
+    # friction), GrowthBook (experiment health).
+    "mixpanel", "clarity", "growthbook",
 }
 
 # Connectors whose credentials are a pasted-key dict rather than OAuth tokens.
-MANUAL_CREDENTIAL_CONNECTORS = {"apple_ads", "meta_ads", "stripe", "revenuecat", "openai_ads"}
+MANUAL_CREDENTIAL_CONNECTORS = {
+    "apple_ads", "meta_ads", "stripe", "revenuecat", "openai_ads",
+    "mixpanel", "clarity", "growthbook",
+}
 
 _CONNECTOR_THEMES = {
     "apple_ads": "paid_ads",
@@ -37,6 +43,9 @@ _CONNECTOR_THEMES = {
     "revenuecat": "product_intelligence",
     "ga4": "product_intelligence",
     "gsc": "organic_growth",
+    "mixpanel": "product_intelligence",
+    "clarity": "product_intelligence",
+    "growthbook": "product_intelligence",
 }
 
 
@@ -149,6 +158,22 @@ async def fetch_connector_payload(
                 if customer_id and not creds.get("project_id"):
                     creds["project_id"] = customer_id
                 return await asyncio.to_thread(fetch_revenuecat, creds, _window_days(date_from, date_to))
+            if connector_id == "mixpanel":
+                from service.mixpanel.fetch import fetch_mixpanel
+
+                if customer_id and not creds.get("project_id"):
+                    creds["project_id"] = customer_id
+                return await asyncio.to_thread(fetch_mixpanel, creds, _window_days(date_from, date_to))
+            if connector_id == "clarity":
+                from service.clarity.fetch import fetch_clarity
+
+                return await asyncio.to_thread(fetch_clarity, creds, _window_days(date_from, date_to))
+            if connector_id == "growthbook":
+                from service.growthbook.fetch import fetch_growthbook
+
+                if customer_id and not creds.get("project_id"):
+                    creds["project_id"] = customer_id
+                return await asyncio.to_thread(fetch_growthbook, creds, _window_days(date_from, date_to))
             from service.openai.ads.fetch import fetch_openai_ads
 
             return await asyncio.to_thread(fetch_openai_ads, creds, _window_days(date_from, date_to))

@@ -91,14 +91,17 @@ From VS Code, **`Duct: Desktop (local sidecar)`** runs the sidecar shape, and
 Keychain `invoke` works from the dev server because `http://localhost:3003` is
 already listed under `remote.urls` in `src-tauri/capabilities/default.json`.
 
-### Testing Google sign-in locally
+### Testing browser-based OAuth locally
 
-Every leg of the desktop sign-in flow works against a local stack — the backend
-redirects to `{frontend_origin}/desktop-auth` (`routes/signin.py`), which
-defaults to `http://localhost:3003`, and that relay page fires the deep link.
-The one leg that needs more than `tauri dev` is the final browser → app hop:
-macOS registers `ai.getduct.desktop://` from a bundle's Info.plist, and
-`tauri dev` runs a bare binary out of `target/debug/`, not a `.app`.
+Both flows that leave the app for the system browser — signing in
+(`routes/signin.py`) and connecting a data source (`routes/auth.py`) — work
+against a local stack. The backend redirects to `{frontend_origin}/desktop-auth`,
+which defaults to `http://localhost:3003`, and that relay page fires the deep
+link: `//auth?auth_code=` for sign-in, `//connector?connector=&auth_code=` for a
+connector. The one leg that needs more than `tauri dev` is the final
+browser → app hop: macOS registers `ai.getduct.desktop://` from a bundle's
+Info.plist, and `tauri dev` runs a bare binary out of `target/debug/`, not a
+`.app`.
 
 Build the **dev variant** instead. `src-tauri/tauri.dev.conf.json` gives it its
 own product name, bundle identifier (`ai.getduct.desktop.dev`), and deep-link

@@ -20,6 +20,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from collections.abc import Sequence
 from typing import Any
 from uuid import UUID
 
@@ -27,7 +28,7 @@ from sqlalchemy import update
 from sqlmodel import Session, select
 
 from agents.core.events import AgentEvent, EventKind
-from agents.models import AgentPermissionMode, ModelName
+from agents.models import AgentPermissionMode, ModelName, Provider
 from db.session import get_session as db_session
 from models.content import AgentConversation, AgentEvent as AgentEventRow, ContentPlan, ContentPost
 from utils.dates import utcnow
@@ -115,14 +116,26 @@ def list_conversations(
     db: Session,
     *,
     agent_type: str,
-    project_id: UUID | None = None,
+    project_ids: Sequence[UUID],
     artifact_type: str | None = None,
     artifact_id: UUID | None = None,
     include_archived: bool = False,
 ) -> list[AgentConversation]:
-    stmt = select(AgentConversation).where(AgentConversation.agent_type == agent_type)
-    if project_id is not None:
-        stmt = stmt.where(AgentConversation.project_id == project_id)
+    """Conversations for an agent, within an explicit set of projects.
+
+    ``project_ids`` is required and has no "all projects" spelling. It used to
+    be a single *optional* ``project_id``, and the route passed whatever the
+    query string held — so omitting it listed every tenant's conversations. The
+    caller now has to say whose data it is asking for, and an empty set is an
+    empty answer rather than the whole table.
+    """
+    if not project_ids:
+        return []
+    stmt = (
+        select(AgentConversation)
+        .where(AgentConversation.agent_type == agent_type)
+        .where(AgentConversation.project_id.in_(list(project_ids)))
+    )
     if artifact_type is not None:
         stmt = stmt.where(AgentConversation.artifact_type == artifact_type)
     if artifact_id is not None:
@@ -350,26 +363,8 @@ def build_reprime_block(conversation: AgentConversation, recent_events: list[Age
     return ("\n".join(parts) + "\n\n") if parts else ""
 
 
-async def summarize_conversation(
-    conversation: AgentConversation, new_events: list[AgentEventRow], api_key: str
-) -> str:
-    """Fold the prior summary + new turns into a fresh running summary (Haiku).
-
-    Returns the new summary text, or the prior summary on any failure — never
-    raises. Reuses the lightweight query() pattern from enrichment.py.
-    """
-    if not api_key:
-        return conversation.summary
-    try:
-        from claude_agent_sdk import ClaudeAgentOptions, ResultMessage, query
-    except ImportError:
-        return conversation.summary
-
-    transcript = "\n".join(f"{e.kind}: {_event_text(e)}" for e in new_events if _event_text(e))
-    if not transcript.strip():
-        return conversation.summary
-
-    prompt = (
+def _summary_prompt(conversation: AgentConversation, transcript: str) -> str:
+    return (
         "You maintain a running summary of an ongoing chat between a user and a "
         "content-creation agent working on a social post/plan. Update the summary "
         "so a fresh agent could resume seamlessly: keep decisions, the user's "
@@ -380,22 +375,93 @@ async def summarize_conversation(
         f"<untrusted_transcript>\n{transcript}\n</untrusted_transcript>\n\n"
         "Return ONLY the updated summary (a few tight paragraphs, no preamble)."
     )
+
+
+async def _summarize_via_sdk(prompt: str, api_key: str, model: str) -> str | None:
+    """Anthropic: the Claude Agent SDK, because a subscription token has to work.
+
+    This stays on the SDK rather than moving to LangChain with the rest because
+    an OAuth/subscription credential (``sk-ant-oat…``) authenticates through the
+    CLI and is rejected by the Messages API, which is what
+    ``agents/models.get_api_key_kwargs`` would hand ``ChatAnthropic``. Routing
+    Anthropic through LangChain would summarise fine for API-key users and fail
+    silently for subscription ones.
+    """
+    from claude_agent_sdk import ClaudeAgentOptions, ResultMessage, query
+
     # tools=[] disables every built-in tool (nothing for prompt-injected
     # directives to invoke); DONT_ASK hard-denies anything unexpected.
     options = ClaudeAgentOptions(
-        model=_HAIKU_MODEL,
+        model=model,
         tools=[],
         permission_mode=AgentPermissionMode.DONT_ASK,
         max_turns=1,
         env={"ANTHROPIC_API_KEY": api_key},
         setting_sources=[],
     )
+    async for message in query(prompt=prompt, options=options):
+        if isinstance(message, ResultMessage):
+            return (getattr(message, "result", "") or "").strip() or None
+    return None
+
+
+async def _summarize_via_lc(prompt: str, api_key: str, provider: Any, model: Any) -> str | None:
+    """Everyone else: one LangChain call, so the customer's own model summarises.
+
+    No tools are bound and the prompt is a single user turn, so the untrusted
+    transcript has nothing to reach even if it tries.
+    """
+    from agents.core.lc import resolve_chat_model
+
+    llm = resolve_chat_model(provider, model, api_key)
+    reply = await llm.ainvoke(prompt)
+    content = getattr(reply, "content", "")
+    if isinstance(content, list):
+        content = "".join(
+            block.get("text", "")
+            for block in content
+            if isinstance(block, dict) and block.get("type") == "text"
+        )
+    return (content or "").strip() or None
+
+
+async def summarize_conversation(
+    conversation: AgentConversation,
+    new_events: list[AgentEventRow],
+    api_key: str,
+    *,
+    provider: Any = None,
+    model: Any = None,
+) -> str:
+    """Fold the prior summary + new turns into a fresh running summary.
+
+    Returns the new summary text, or the prior summary on any failure — never
+    raises.
+
+    ``provider``/``model`` decide the transport. They default to Anthropic +
+    Haiku, which is what every caller got before they existed, so an omitted
+    provider is exactly the old behaviour. Passing the *run's* provider is what
+    makes compaction work at all for a customer on Gemini, OpenAI or
+    OpenRouter: the caller used to zero the key for them
+    (``summary_key = api_key if provider == "anthropic" else ""``), so
+    ``summarize_conversation`` returned early and their reopened chats grew
+    without bound until the window blew.
+    """
+    if not api_key:
+        return conversation.summary
+
+    transcript = "\n".join(f"{e.kind}: {_event_text(e)}" for e in new_events if _event_text(e))
+    if not transcript.strip():
+        return conversation.summary
+
+    prompt = _summary_prompt(conversation, transcript)
+    resolved_provider = provider or Provider.ANTHROPIC
+    is_anthropic = getattr(resolved_provider, "value", str(resolved_provider)) == "anthropic"
 
     async def _run() -> str | None:
-        async for message in query(prompt=prompt, options=options):
-            if isinstance(message, ResultMessage):
-                return (getattr(message, "result", "") or "").strip() or None
-        return None
+        if is_anthropic:
+            return await _summarize_via_sdk(prompt, api_key, str(model or _HAIKU_MODEL))
+        return await _summarize_via_lc(prompt, api_key, resolved_provider, model)
 
     try:
         result = await asyncio.wait_for(_run(), timeout=_SUMMARY_TIMEOUT)
@@ -422,6 +488,8 @@ async def build_reprime_context(
     session: Any,
     api_key: str,
     *,
+    provider: Any = None,
+    model: Any = None,
     subject: str = "the current post/plan (shown in the working_post / working_plan block)",
 ) -> str:
     """Build the restored-context block prepended to the user's FIRST message
@@ -444,7 +512,9 @@ async def build_reprime_context(
                 return ""
             if should_summarize(conv):
                 new_events = load_events(db, conversation_id, after_seq=conv.summary_through_seq)
-                new_summary = await summarize_conversation(conv, new_events, api_key)
+                new_summary = await summarize_conversation(
+                    conv, new_events, api_key, provider=provider, model=model
+                )
                 if new_summary and new_summary != conv.summary:
                     save_summary(db, conversation_id, new_summary, conv.last_seq)
                     conv = get_conversation(db, conversation_id)

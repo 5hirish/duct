@@ -161,7 +161,7 @@ export default function AccountsTab({ projectId }) {
                 <h3 className="text-sm font-medium">{meta.label}</h3>
                 <span className="text-xs tabular-nums text-muted-foreground">{list.length}</span>
               </div>
-              <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 @lg:grid-cols-2">
                 {list.map((a) => (
                   <AccountCard
                     key={a.id}

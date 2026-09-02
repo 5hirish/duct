@@ -1,0 +1,62 @@
+/* tokens — Brand + shadcn design tokens, and the dark variant they hang off.
+   Split out of globals.css; see that file for the load order. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: light;
+
+  /* Brand tokens (mirrors `site/assets/duct.css`) */
+  --orange: #ff5c00;
+  --orange-h: #e05000;
+  --navy: #0d0f1a;
+  --navy-2: #2a2d3e;
+  --navy-3: #5c6174;
+  --white: #ffffff;
+  --off: #f7f7f6;
+  --serif: Georgia, "Times New Roman", Times, serif;
+  --sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  /* Reading measure. 50–75 characters is the readable band and 100 the
+     ceiling; a full-width report on a wide monitor blows straight past it.
+     `ch` so the cap follows the font, not a guess in pixels. */
+  --measure: 68ch;
+  --measure-tight: 56ch;
+  --pill: 100px;
+  --r: 12px;
+  --r-lg: 20px;
+
+  /* shadcn semantic tokens — Duct brand (see docs/engineering/dashboard-library-evaluation.md) */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.18 0.03 265);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.03 265);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.03 265);
+  --primary: oklch(0.52 0.22 270);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.96 0.005 80);
+  --secondary-foreground: oklch(0.18 0.03 265);
+  --muted: oklch(0.96 0.005 80);
+  --muted-foreground: oklch(0.44 0.022 265);
+  --accent: oklch(0.96 0.005 80);
+  --accent-foreground: oklch(0.18 0.03 265);
+  --destructive: oklch(0.52 0.22 27);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.92 0.005 80);
+  --input: oklch(0.92 0.005 80);
+  --ring: oklch(0.52 0.22 270);
+  --chart-1: oklch(0.52 0.22 270);
+  --chart-2: oklch(0.3 0.05 265);
+  --chart-3: oklch(0.72 0.16 60);
+  --chart-4: oklch(0.55 0.08 265);
+  --chart-5: oklch(0.8 0.12 80);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0.01 80);
+  --sidebar-foreground: oklch(0.18 0.03 265);
+  --sidebar-primary: oklch(0.52 0.22 270);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.96 0.005 80);
+  --sidebar-accent-foreground: oklch(0.18 0.03 265);
+  --sidebar-border: oklch(0.92 0.005 80);
+  --sidebar-ring: oklch(0.52 0.22 270);
+}
+

@@ -6,6 +6,7 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 from config import get_configs
+from db.migrate import LANGGRAPH_TABLES
 from models import auth  # noqa: F401
 from sqlmodel import SQLModel
 
@@ -27,6 +28,20 @@ config.set_main_option("sqlalchemy.url", database_url)
 target_metadata = SQLModel.metadata
 
 
+def include_object(obj, name, type_, reflected, compare_to) -> bool:
+    """Hide LangGraph's checkpointer tables from `--autogenerate`.
+
+    They live in this database but are owned and migrated by LangGraph, so they
+    are absent from `SQLModel.metadata`. Without this filter autogenerate reads
+    that absence as "dropped" and writes an `op.drop_table` for each one — a
+    revision that would delete every in-flight conversation on the next deploy.
+    See `db.migrate.LANGGRAPH_TABLES`.
+    """
+    if type_ == "table" and name in LANGGRAPH_TABLES:
+        return False
+    return True
+
+
 def run_migrations_offline() -> None:
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
@@ -34,6 +49,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        include_object=include_object,
     )
 
     with context.begin_transaction():
@@ -58,6 +74,7 @@ def run_migrations_online() -> None:
             connection=connection,
             target_metadata=target_metadata,
             render_as_batch=is_sqlite,
+            include_object=include_object,
         )
 
         with context.begin_transaction():

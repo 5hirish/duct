@@ -1,6 +1,11 @@
 "use client";
 import React, { useMemo, useState } from 'react';
 import { Sparkles, PenLine, Languages, ArrowRight, X, Check, Loader2 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { expressExecutionInterest } from '../../lib/api';
 import { trackEvent } from '../../lib/analytics-client';
 
@@ -83,7 +88,7 @@ export function ExecutionOfferBlock({ services, onOpen }) {
         className="rounded-2xl overflow-hidden shadow-xl"
         style={{ background: DUCT_NAVY }}
       >
-        <div className="px-5 py-6 sm:px-8 sm:py-7">
+        <div className="px-5 py-6 @xl:px-8 @xl:py-7">
           <div className="flex items-center gap-2 mb-3">
             <span
               className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide"
@@ -109,13 +114,13 @@ export function ExecutionOfferBlock({ services, onOpen }) {
               : <>Want Duct to execute these fixes for you?</>}
           </h2>
 
-          <p className="mt-2.5 text-sm sm:text-[15px]" style={{ color: 'rgba(244,236,226,0.72)', lineHeight: 1.6 }}>
+          <p className="mt-2.5 text-sm @xl:text-[15px]" style={{ color: 'rgba(244,236,226,0.72)', lineHeight: 1.6 }}>
             The audit is on us. Our agents turn these findings into ready-to-ship fixes —
             so you ship the work, not just the to-do list.
           </p>
 
           {/* Service chips */}
-          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          <div className="mt-5 grid gap-3 @xl:grid-cols-3">
             {services.map(({ key, label, blurb, count, Icon }) => (
               <div
                 key={key}
@@ -222,25 +227,20 @@ export function ExecutionRequestModal({ open, onClose, services, leadToken, emai
     }
   };
 
+  // This renders on the public lead page, which is light-only by design, so the
+  // panel keeps its explicit white/navy palette rather than the app's tokens.
   return (
-    <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-      style={{ background: 'rgba(13,15,26,0.6)' }}
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-    >
-      <div
-        className="w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden"
-        style={{ color: '#1a1a1a' }}
-        onClick={(e) => e.stopPropagation()}
+    <Dialog open={open} onOpenChange={(next) => { if (!next) onClose(); }}>
+      <DialogContent
+        showCloseButton={false}
+        className="max-w-md overflow-hidden rounded-2xl border-0 bg-white p-0 text-[#1a1a1a] shadow-2xl"
       >
         {/* Header */}
         <div className="flex items-start justify-between px-5 pt-5 pb-3">
           <div>
-            <h3 className="text-base font-bold" style={{ color: DUCT_NAVY }}>
+            <DialogTitle className="text-base font-bold" style={{ color: DUCT_NAVY }}>
               {status === 'done' ? "You're on the list" : 'Have Duct execute your fixes'}
-            </h3>
+            </DialogTitle>
             {status !== 'done' && (
               <p className="mt-1 text-[13px] text-gray-500">Pick what you&rsquo;d like done. We&rsquo;ll scope it and follow up.</p>
             )}
@@ -302,6 +302,7 @@ export function ExecutionRequestModal({ open, onClose, services, leadToken, emai
 
             <textarea
               value={note}
+              aria-label="Anything specific (optional)"
               onChange={(e) => setNote(e.target.value)}
               rows={2}
               placeholder="Anything specific? (optional)"
@@ -324,7 +325,7 @@ export function ExecutionRequestModal({ open, onClose, services, leadToken, emai
             <p className="mt-2 text-center text-[11px] text-gray-400">No payment now — we&rsquo;ll scope and quote first.</p>
           </div>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

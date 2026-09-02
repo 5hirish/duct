@@ -15,6 +15,7 @@
 import { useEffect, useState } from "react";
 
 import { initLocalBackend } from "../lib/localBackend.js";
+import { installExternalLinkHandler } from "../lib/shell.js";
 
 export default function LocalBackendGate({ children }) {
   // Starts false on both server and client so the first paint matches; the
@@ -29,8 +30,12 @@ export default function LocalBackendGate({ children }) {
       if (result.error) setError(result.error);
       setReady(true);
     });
+    // Same subtrees, same shell: this is where the app's own chrome lives, so
+    // it is where new-tab links have to be taught to reach the system browser.
+    const uninstall = installExternalLinkHandler();
     return () => {
       alive = false;
+      uninstall();
     };
   }, []);
 

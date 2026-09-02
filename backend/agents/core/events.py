@@ -42,8 +42,19 @@ class AgentEvent(StrEnum):
     STEP_FINISHED = "step_finished"
     STEP_FAILED = "step_failed"
 
-    # Human-in-the-loop
+    # Human-in-the-loop. All three park the run on the same asyncio.Future and
+    # resume through the same messages endpoint; they differ only in what the
+    # UI must render to collect the answer — a question, a connect button, or
+    # an account picker.
     QUESTIONS_REQUIRED = "questions_required"
+    # The agent needs a connector the project has not connected. Payload carries
+    # connector_id, label, why, and an authorize_url for OAuth connectors.
+    # Answering with {"skipped": true} is a first-class outcome: the run
+    # continues and says what it could not see.
+    CONNECTION_REQUIRED = "connection_required"
+    # The connector is connected but the project has not chosen WHICH account,
+    # property or site. Payload carries the candidates.
+    ACCOUNT_SELECTION_REQUIRED = "account_selection_required"
     SLIDE_RENDER_REQUESTED = "slide_render_requested"  # agent asks the browser to rasterize a slide
 
     # Progress / todos
@@ -226,6 +237,8 @@ AG_UI_EVENT: dict[AgentEvent, str] = {
 
     # Domain events — Custom is AG-UI's escape hatch and the honest answer.
     AgentEvent.QUESTIONS_REQUIRED:    "Custom",
+    AgentEvent.CONNECTION_REQUIRED:   "Custom",
+    AgentEvent.ACCOUNT_SELECTION_REQUIRED: "Custom",
     AgentEvent.SLIDE_RENDER_REQUESTED: "Custom",
     AgentEvent.ARTIFACT_CHUNK:        "Custom",
     AgentEvent.ARTIFACT_VERSION:      "Custom",

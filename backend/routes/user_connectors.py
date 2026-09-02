@@ -14,7 +14,9 @@ from db.session import get_session
 from models.auth import User
 from models.connector import ConnectorCredential
 from service.auth import get_current_user
+from service.connector_access import list_data_sources
 from service.credentials import encrypt_credentials
+from service.provider_keys import CONNECTOR_TYPE as PROVIDER_KEY_TYPE
 
 router = APIRouter(tags=["user-connectors"])
 
@@ -22,6 +24,8 @@ ALLOWED_CONNECTOR_TYPES = {
     "google_ads", "ga4", "gsc", "gtm",
     # Manual-credential connectors (Phase 7) — Fernet JSON blobs fit any shape.
     "apple_ads", "meta_ads", "stripe", "revenuecat", "openai_ads",
+    # Gads wave 2 — the cross-check + behaviour sources.
+    "mixpanel", "clarity", "growthbook",
 }
 
 
@@ -63,10 +67,34 @@ def list_connectors(
     rows = session.execute(
         select(ConnectorCredential)
         .where(ConnectorCredential.user_id == user.id)
+        # Saved LLM provider keys share this table (service/provider_keys.py)
+        # but are not connectors: no registry entry, no adapter, no account to
+        # bind. Without this they surface here as a phantom row the Connections
+        # page would render as a data source nobody can configure.
+        .where(ConnectorCredential.connector_type != PROVIDER_KEY_TYPE)
         .order_by(ConnectorCredential.connector_type, ConnectorCredential.account_name)
     ).scalars().all()
     return [_to_out(r) for r in rows]
 
+
+
+@router.get("/data-sources")
+def list_account_data_sources(
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> list[dict]:
+    """The same inventory as the project route, with no project in the picture.
+
+    Needed because the first thing the onboarding checklist asks for is a
+    PROJECT: someone who has connected three sources but not yet created one
+    has no project id to ask about, and telling them they have connected
+    nothing is how they end up connecting a fourth.
+
+    Without a project there are no bindings, so every stored connector reports
+    ``available`` rather than ``bound`` — which is the truth: the credential
+    exists, nothing has chosen an account for it yet.
+    """
+    return [source.as_dict() for source in list_data_sources(session, user_id=user.id)]
 
 
 @router.post("", status_code=201)

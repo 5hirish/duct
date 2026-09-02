@@ -49,9 +49,10 @@ Session / state            ``BaseAgentSession`` registry                *one imp
                                                                         LangGraph checkpointer is the
                                                                         natural second; do not abstract
                                                                         before it exists.
-Model transport            ``Provider`` / ``ModelName`` / ``Engine``    OpenAI-compatible (incl.
-                           registries + ``get_api_key_kwargs``          OpenRouter, Ollama, vLLM),
-                                                                        native Anthropic, native Gemini
+Model transport            ``Provider`` / ``ModelName`` / ``Engine``    native Anthropic, native Gemini,
+                           registries + ``get_api_key_kwargs``          native OpenAI, native OpenRouter;
+                                                                        OpenAI-compatible for any gateway
+                                                                        without a package of its own
                                                                         (agents/models.py, engines.py)
 =========================  ==========================================  =================================
 
@@ -64,8 +65,12 @@ Ports point at contracts with multi-vendor backing, not at Duct inventions:
     as plain callables for cost, but keep them MCP-*expressible*: the source of
     truth is a plain function plus a description, never a framework object.
   * **Model transport → OpenAI-compatible chat completions.** The one interface
-    every provider implements. Adopting the shape makes the endpoint a config
-    value, so OpenRouter, Ollama, vLLM and llama.cpp are all the same code path.
+    every provider implements, and therefore the floor this port guarantees:
+    any gateway can be reached by making its endpoint a config value, no new
+    dependency required. A first-party package is taken *over* that floor where
+    one exists — OpenRouter's ``ChatOpenRouter`` carries routing preferences and
+    a reasoning object the bare shape has nowhere to put — but the floor is what
+    makes Ollama, vLLM or llama.cpp a config entry rather than a project.
   * **Events out → AG-UI.** See ``AG_UI_EVENT`` in agents/core/events.py for the
     mapping and for why we map rather than rename.
   * **Observability → OpenTelemetry GenAI semantic conventions.** See

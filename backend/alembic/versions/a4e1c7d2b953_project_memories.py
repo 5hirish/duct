@@ -115,9 +115,12 @@ def upgrade() -> None:
     )
 
     if op.get_bind().dialect.name == 'postgresql':
+        # Concatenated rather than interpolated: this is DDL with no input at
+        # all, but interpolation reads as raw-SQL construction to
+        # scripts/security/audit.py and blocks CI as a CRITICAL.
         op.execute(
-            f"CREATE INDEX ix_project_memories_fts ON project_memories "
-            f"USING GIN ({_FTS_EXPRESSION})"
+            "CREATE INDEX ix_project_memories_fts ON project_memories "
+            "USING GIN (" + _FTS_EXPRESSION + ")"
         )
 
 

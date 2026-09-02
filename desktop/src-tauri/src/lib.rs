@@ -7,12 +7,14 @@
 //! Service) — this shell never writes them to disk. No agent code, prompts, or
 //! API keys ship in this bundle; everything proprietary stays on the backend.
 //!
-//! Google sign-in runs in the system browser (Google disallows OAuth in
-//! embedded webviews): the web app calls `open_external` to launch the
-//! authorize URL, and the backend redirects the browser to
-//! `ai.getduct.desktop://auth?auth_code=...`, which lands in
-//! `handle_auth_deep_link` below and is forwarded to the webview's existing
-//! `/?auth_code=` exchange path.
+//! Every OAuth flow runs in the system browser (Google disallows OAuth in
+//! embedded webviews, and a user in one has none of their browser's sessions,
+//! passwords or passkeys): the web app calls `open_external` to launch the
+//! authorize URL, and the backend redirects the browser back to a
+//! `ai.getduct.desktop://` deep link, which lands below and is forwarded into
+//! the webview. Two routes, one shape — `auth` for signing in to Duct,
+//! `connector` for connecting a data source. Neither carries the credential
+//! itself, only a single-use code the webview redeems against the backend.
 
 mod sidecar;
 mod telemetry;
@@ -54,6 +56,49 @@ fn describe_keyring_error(err: KeyringError) -> String {
     }
 }
 
+/// Keychain service for the shell's *own* secrets, kept apart from
+/// `KEYCHAIN_SERVICE` so a secret can never collide with a provider named the
+/// same thing.
+const KEYCHAIN_SIDECAR_SERVICE: &str = "ai.getduct.desktop.sidecar";
+const CREDENTIALS_KEY_ACCOUNT: &str = "credentials-encryption-key";
+
+/// The Fernet key the sidecar encrypts stored connector credentials with,
+/// minted on first run and kept in the OS keychain.
+///
+/// Desktop had no way to get one at all: `CREDENTIALS_ENCRYPTION_KEY` is a
+/// server setting, and the frozen bundle deliberately ships no `.env`, so
+/// `service/credentials.py` raised on every encrypt — connecting Google Ads
+/// could complete its OAuth and then fail to persist the refresh token.
+///
+/// The keychain rather than a file beside the database: a key sitting next to
+/// its own ciphertext stops someone reading the file and nobody holding the
+/// disk, and this machine already has a credential store the provider keys use.
+///
+/// **Losing this key makes existing stored credentials undecryptable.** That is
+/// survivable by design — `connector_access` and `service/provider_keys.py`
+/// both treat a failed decrypt as "absent" and degrade to reconnecting — but it
+/// does mean a user who wipes their keychain reconnects their sources.
+pub(crate) fn credentials_encryption_key() -> Result<String, String> {
+    let entry = Entry::new(KEYCHAIN_SIDECAR_SERVICE, CREDENTIALS_KEY_ACCOUNT)
+        .map_err(describe_keyring_error)?;
+
+    match entry.get_password() {
+        Ok(existing) if !existing.trim().is_empty() => return Ok(existing),
+        // An empty stored value is treated as absent and re-minted: it can only
+        // come from a half-finished write, and returning it would hand the
+        // sidecar a key Fernet rejects.
+        Ok(_) | Err(KeyringError::NoEntry) => {}
+        Err(e) => return Err(describe_keyring_error(e)),
+    }
+
+    let mut bytes = [0u8; 32];
+    getrandom::fill(&mut bytes).map_err(|e| format!("could not gather randomness: {e}"))?;
+    // Fernet keys are url-safe base64 of exactly 32 bytes, padding included.
+    let key = base64::Engine::encode(&base64::engine::general_purpose::URL_SAFE, bytes);
+    entry.set_password(&key).map_err(describe_keyring_error)?;
+    Ok(key)
+}
+
 /// Read a stored provider key. Returns "" when none is set.
 #[tauri::command]
 fn get_provider_key(provider: String) -> Result<String, String> {
@@ -90,6 +135,10 @@ fn get_shell_info() -> serde_json::Value {
         "version": env!("CARGO_PKG_VERSION"),
         "capabilities": {
             "browserAuth": true,
+            // The `connector` deep-link route exists, so connector OAuth can go
+            // to the system browser too. Older shells lack the route entirely
+            // and the web app keeps navigating them in-window.
+            "browserConnectors": true,
             // This shell ships and supervises a local backend; the web app should
             // resolve its API base from `get_sidecar_info` instead of the
             // build-time NEXT_PUBLIC_API_BASE. Older shells lack the flag and
@@ -208,44 +257,160 @@ fn set_telemetry_enabled(enabled: bool) -> Result<(), String> {
     telemetry::write_prefs(&dir, telemetry::TelemetryPrefs { enabled })
 }
 
-/// Forward `ai.getduct.desktop://auth?auth_code=...` into the webview by
-/// navigating it to `/?auth_code=...` on whatever origin this shell build
-/// loads (hosted app or local dev server). The login page's existing
-/// `/auth/exchange` path takes it from there; the code is single-use and
-/// expires in seconds, so it is safe to carry in the URL.
-fn handle_auth_deep_link(app: &AppHandle, url: &Url) {
-    if url.host_str() != Some("auth") {
-        return;
-    }
-    let Some(code) = url
-        .query_pairs()
-        .find(|(key, _)| key == "auth_code")
-        .map(|(_, value)| value.into_owned())
-    else {
-        return;
-    };
-    // Exchange codes are URL-safe tokens; drop anything else rather than
-    // splicing arbitrary deep-link input into a navigation URL.
-    if code.is_empty()
-        || !code
+/// Whether a deep-link value is safe to splice into a navigation URL.
+///
+/// Anything on this machine can hand the shell a URL on our scheme, so every
+/// value out of one is untrusted input. Exchange codes and connector ids are
+/// both URL-safe tokens; drop anything else rather than reasoning about
+/// escaping.
+fn safe_deep_link_value(value: &str) -> bool {
+    !value.is_empty()
+        && value.len() <= 512
+        && value
             .chars()
             .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
-    {
-        return;
-    }
+}
+
+fn query_param(url: &Url, key: &str) -> Option<String> {
+    url.query_pairs()
+        .find(|(k, _)| k == key)
+        .map(|(_, value)| value.into_owned())
+}
+
+/// Navigate the main window to `path?query` on whatever origin this shell build
+/// loads (hosted app or local dev server), then bring it to the front.
+fn navigate_webview(app: &AppHandle, path: &str, query: &str) {
     let Some(window) = app.get_webview_window("main") else {
         return;
     };
     let Ok(current) = window.url() else {
         return;
     };
-    let Ok(mut target) = current.join("/") else {
+    let Ok(mut target) = current.join(path) else {
         return;
     };
-    target.set_query(Some(&format!("auth_code={code}")));
+    target.set_query(Some(query));
     let _ = window.navigate(target);
     let _ = window.unminimize();
     let _ = window.set_focus();
+}
+
+/// Forward `ai.getduct.desktop://auth?auth_code=...` into the webview by
+/// navigating it to `/?auth_code=...`. The login page's existing
+/// `/auth/exchange` path takes it from there; the code is single-use and
+/// expires in seconds, so it is safe to carry in the URL.
+fn handle_auth_deep_link(app: &AppHandle, url: &Url) {
+    if url.host_str() != Some("auth") {
+        return;
+    }
+    let Some(code) = query_param(url, "auth_code") else {
+        return;
+    };
+    if !safe_deep_link_value(&code) {
+        return;
+    }
+    navigate_webview(app, "/", &format!("auth_code={code}"));
+}
+
+/// Forward `ai.getduct.desktop://connector?connector=...&auth_code=...` into the
+/// webview by navigating it to `/connections?connector=...&auth_code=...`.
+///
+/// The same shape as the sign-in route, for the same reason: connecting a data
+/// source is Google OAuth, which will not run in an embedded webview, so it
+/// happens in the system browser and has to cross back into the app. What
+/// crosses is only a single-use 60-second code — a connector refresh token is
+/// long-lived and never rides in a deep link, which any app claiming the scheme
+/// could read. The connections page redeems it via `/auth/connectors/exchange`.
+fn handle_connector_deep_link(app: &AppHandle, url: &Url) {
+    if url.host_str() != Some("connector") {
+        return;
+    }
+    let (Some(connector), Some(code)) =
+        (query_param(url, "connector"), query_param(url, "auth_code"))
+    else {
+        return;
+    };
+    if !safe_deep_link_value(&connector) || !safe_deep_link_value(&code) {
+        return;
+    }
+    navigate_webview(
+        app,
+        "/connections",
+        &format!("connector={connector}&auth_code={code}"),
+    );
+}
+
+/// Menu ids. Namespaced so a future menu can't collide with these.
+#[cfg(desktop)]
+const MENU_RELOAD: &str = "view:reload";
+#[cfg(all(desktop, any(debug_assertions, feature = "devtools")))]
+const MENU_DEVTOOLS: &str = "view:devtools";
+
+/// A View menu with Reload — the shell has never had one.
+///
+/// The window loads a *remote* origin, so nothing on the page can rescue a bad
+/// load, and the system webview binds no reload key of its own (Tauri's default
+/// menu is App/File/Edit/Window/Help — no View, no Cmd+R). Until this, the only
+/// way to pick up a change, or to recover a window that came up blank because
+/// the dev server wasn't listening yet, was to quit and relaunch: a poor loop
+/// when developing against `localhost:3003` (`npm run dev:local`), and a dead
+/// end for a shipped user whose window failed to load once.
+///
+/// Inserted before Window, where macOS users expect View — located by id rather
+/// than a hardcoded index, since the default menu's shape differs per platform.
+#[cfg(desktop)]
+fn install_view_menu(app: &tauri::AppHandle) -> tauri::Result<()> {
+    use tauri::menu::{Menu, MenuItem, Submenu, WINDOW_SUBMENU_ID};
+
+    let reload = MenuItem::with_id(app, MENU_RELOAD, "Reload", true, Some("CmdOrCtrl+R"))?;
+
+    #[cfg(any(debug_assertions, feature = "devtools"))]
+    let view = {
+        let devtools = MenuItem::with_id(
+            app,
+            MENU_DEVTOOLS,
+            "Toggle Developer Tools",
+            true,
+            Some("CmdOrCtrl+Shift+I"),
+        )?;
+        Submenu::with_items(app, "View", true, &[&reload, &devtools])?
+    };
+    #[cfg(not(any(debug_assertions, feature = "devtools")))]
+    let view = Submenu::with_items(app, "View", true, &[&reload])?;
+
+    let menu = Menu::default(app)?;
+    let before_window = menu
+        .items()?
+        .iter()
+        .position(|item| item.id().as_ref() == WINDOW_SUBMENU_ID);
+    match before_window {
+        Some(index) => menu.insert(&view, index)?,
+        None => menu.append(&view)?,
+    }
+    app.set_menu(menu)?;
+    Ok(())
+}
+
+/// Route a View-menu click to the main window.
+#[cfg(desktop)]
+fn handle_menu_event(app: &tauri::AppHandle, event: tauri::menu::MenuEvent) {
+    let Some(window) = app.get_webview_window("main") else {
+        return;
+    };
+    match event.id().as_ref() {
+        MENU_RELOAD => {
+            let _ = window.reload();
+        }
+        #[cfg(any(debug_assertions, feature = "devtools"))]
+        MENU_DEVTOOLS => {
+            if window.is_devtools_open() {
+                window.close_devtools();
+            } else {
+                window.open_devtools();
+            }
+        }
+        _ => {}
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -285,6 +450,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_deep_link::init())
         .manage(SidecarState::default())
+        .on_menu_event(handle_menu_event)
         .setup(|app| {
             // macOS registers the scheme from the bundle's Info.plist. Linux and
             // Windows register it from the *installer*, so a build that was run
@@ -300,10 +466,18 @@ pub fn run() {
                 }
             }
 
+            // A window that cannot be reloaded is a window that can only be
+            // quit — see `install_view_menu`. Not fatal if it fails: the app
+            // is still usable, just without the menu.
+            if let Err(err) = install_view_menu(app.handle()) {
+                eprintln!("duct: could not install the View menu: {err}");
+            }
+
             let handle = app.handle().clone();
             app.deep_link().on_open_url(move |event| {
                 for url in event.urls() {
                     handle_auth_deep_link(&handle, &url);
+                    handle_connector_deep_link(&handle, &url);
                 }
             });
 

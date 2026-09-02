@@ -1,8 +1,13 @@
 """Pydantic request/response models for the Gemini image service.
 
 Every flag is an enum — no bare strings. Per-model option pruning happens
-inside the client (e.g. IMAGEN_4_FAST drops image_size; GEMINI_3_1 collapses
-LOW/MEDIUM → MINIMAL/HIGH thinking levels).
+inside the client (e.g. GEMINI_3_1_FLASH_IMAGE collapses LOW/MEDIUM →
+MINIMAL/HIGH thinking levels).
+
+Some fields here are inert since Imagen was retired: negative_prompt, seed and
+person_generation on generate, and edit_mode / mask / style / subject refs on
+edit, were all Imagen-only options. They are kept — the @tool surface and
+stored params still carry them — but generate_content ignores them today.
 """
 
 from __future__ import annotations
@@ -73,7 +78,7 @@ class GenerateImageRequest(BaseModel):
 
     # Single-reference legacy field — kept for backward compatibility. Use
     # input_asset_ids (below) for the dual-reference pattern (character +
-    # camera/style). Gemini-class models only; Imagen ignores both.
+    # camera/style).
     input_image_url:   HttpUrl | None = None
 
     # Multiple reference assets — Gemini-class models only. Bytes are

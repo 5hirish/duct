@@ -574,6 +574,7 @@ def test_gtm_rollback_to_version_records_outgoing_live(fake_gtm):
 def test_executors_registered():
     import service.execution.ga4_exec  # noqa: F401
     import service.execution.google_ads_exec  # noqa: F401
+    import service.execution.mixpanel_exec  # noqa: F401
 
     expected = {
         # Originals
@@ -596,6 +597,9 @@ def test_executors_registered():
         "gtm.upsert_variable",
         "gtm.publish_version",
         "gtm.rollback_to_version",
+        # Gads wave 2
+        "mixpanel.create_annotation",
+        "mixpanel.hide_event",
     }
     assert expected <= set(EXECUTOR_REGISTRY)
     destructive = {op for op in expected if EXECUTOR_REGISTRY[op].destructive}

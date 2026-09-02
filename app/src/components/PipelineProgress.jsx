@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { StepStatus } from "../lib/agentSteps";
+import { Spinner } from "@/components/ui/spinner";
 
 /**
  * Shared "Duct is working" progress panel for the right viewport of every
@@ -115,6 +116,10 @@ export default function PipelineProgress({
             ))}
           </span>
         </div>
+        {/* Deliberately NOT a live region: this subtitle rotates on a timer,
+            so aria-live here would interrupt a screen reader every few seconds
+            with copy that carries no new information. Agent state is announced
+            once, by the phase label in the chat header. */}
         <p className="text-sm text-muted-foreground min-h-[1.25rem] transition-all">{subtitle}</p>
       </div>
 
@@ -138,7 +143,7 @@ export default function PipelineProgress({
               }`}
             >
               {running ? (
-                <span className="size-3.5 shrink-0 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                <Spinner className="text-primary" />
               ) : status === StepStatus.SUCCESS ? (
                 <span className="text-green-500 text-sm shrink-0">✓</span>
               ) : (

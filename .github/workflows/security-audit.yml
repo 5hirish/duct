@@ -4,12 +4,16 @@ permissions:
   contents: read
 
 on:
+  # No `paths` filter, deliberately: this one is repo-wide. A committed secret
+  # or an f-string SQL construction can arrive in any directory, and the check
+  # costs minutes rather than the tens of minutes the build jobs do.
+  # `edited` dropped for the same reason as everywhere else — a retitled PR is
+  # not a new security posture.
   pull_request:
     branches:
       - main
     types:
       - opened
-      - edited
       - synchronize
       - reopened
 

@@ -203,10 +203,18 @@ async def enrich_content_context(
 
     prompt = _build_research_prompt(brand)
 
+    # `tools` bounds what the CLI offers; `allowed_tools` only pre-approves.
+    # Without `tools` the SDK ships its default set (Bash, Read, Write, Edit),
+    # which `bypassPermissions` would auto-approve — and this sub-agent's whole
+    # job is to read the open web, so its context is attacker-authored by
+    # design. Both controls together, and DONT_ASK so anything unmatched is
+    # denied rather than queued. Mirrors agents/audit/enrichment.py, which
+    # carries the longer note.
     options = ClaudeAgentOptions(
         model=model,
+        tools=[AgentTool.WEB_SEARCH, AgentTool.WEB_FETCH],
         allowed_tools=[AgentTool.WEB_SEARCH, AgentTool.WEB_FETCH],
-        permission_mode=AgentPermissionMode.BYPASS,
+        permission_mode=AgentPermissionMode.DONT_ASK,
         max_turns=12,
         env={"ANTHROPIC_API_KEY": api_key},
         setting_sources=[],

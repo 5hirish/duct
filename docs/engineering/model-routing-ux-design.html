@@ -1,0 +1,849 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A UX design for per-job model routing in Duct: five task roles instead of one global env var, a settings page that flags what cannot run, and the resolution ladder from per-run override down to the engine default.">
+<title>The Engine Is Not The Model</title>
+<style>
+  :root {
+    --bg: #f7f7f6;
+    --surface: #ffffff;
+    --surface-2: #fcfcfb;
+    --ink: #0D0F1A;
+    --ink-2: #2a2d3e;
+    --ink-3: #6b6f82;
+    --border: #ebebea;
+    --border-strong: #dcdcd8;
+    --accent: #FF5C00;
+    --accent-ink: #C43F00;
+    --accent-soft: rgba(255, 92, 0, .09);
+    --ok: #1F7A6B;
+    --ok-soft: rgba(31, 122, 107, .10);
+    --warn: #A16207;
+    --warn-soft: rgba(161, 98, 7, .10);
+    --serif: Georgia, "Times New Roman", Times, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --r: 12px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0D0F1A; --surface: #14172a; --surface-2: #191d33;
+      --ink: #f1f1ef; --ink-2: #c6c8d4; --ink-3: #8b8fa3;
+      --border: #262a42; --border-strong: #343a58;
+      --accent: #FF7A2E; --accent-ink: #FF9A5E; --accent-soft: rgba(255, 122, 46, .13);
+      --ok: #4FBFA8; --ok-soft: rgba(79, 191, 168, .13);
+      --warn: #D9A441; --warn-soft: rgba(217, 164, 65, .13);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0D0F1A; --surface: #14172a; --surface-2: #191d33;
+    --ink: #f1f1ef; --ink-2: #c6c8d4; --ink-3: #8b8fa3;
+    --border: #262a42; --border-strong: #343a58;
+    --accent: #FF7A2E; --accent-ink: #FF9A5E; --accent-soft: rgba(255, 122, 46, .13);
+    --ok: #4FBFA8; --ok-soft: rgba(79, 191, 168, .13);
+    --warn: #D9A441; --warn-soft: rgba(217, 164, 65, .13);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--sans); font-size: 16.5px; line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 24px 120px; }
+
+  .spine { position: relative; padding-left: 44px; }
+  .spine::before {
+    content: ""; position: absolute; left: 5px; top: 12px; bottom: 0; width: 1px;
+    background: linear-gradient(to bottom, var(--border-strong), var(--border-strong) 70%, transparent);
+  }
+  @media (max-width: 760px) { .spine { padding-left: 0; } .spine::before { display: none; } }
+
+  section { margin-top: 76px; scroll-margin-top: 24px; }
+
+  h1, h2, h3, h4 { font-family: var(--serif); font-weight: 400; text-wrap: balance; letter-spacing: -.3px; }
+  h2 { font-size: clamp(27px, 3.4vw, 36px); line-height: 1.15; margin: 0 0 10px; position: relative; }
+  .spine > section > h2::before {
+    content: ""; position: absolute; left: -44px; top: .55em; width: 11px; height: 11px;
+    background: var(--accent); border-radius: 2px;
+  }
+  @media (max-width: 760px) { .spine > section > h2::before { display: none; } }
+  h3 { font-size: 20px; line-height: 1.3; margin: 34px 0 8px; }
+  h4 { font-size: 17px; margin: 22px 0 6px; font-family: var(--sans); font-weight: 600; }
+
+  p, li { color: var(--ink-2); }
+  p { margin: 0 0 16px; max-width: 70ch; }
+  li { margin-bottom: 8px; max-width: 70ch; }
+  ul, ol { padding-left: 20px; margin: 0 0 18px; }
+  strong { color: var(--ink); font-weight: 600; }
+  em { color: var(--ink); font-style: italic; }
+  a { color: var(--accent-ink); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  code {
+    font-family: var(--mono); font-size: .88em; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; color: var(--ink);
+  }
+  pre {
+    font-family: var(--mono); font-size: 13px; line-height: 1.5; background: var(--surface);
+    border: 1px solid var(--border); border-radius: var(--r); padding: 16px 18px;
+    overflow-x: auto; margin: 16px 0 22px; color: var(--ink);
+  }
+  pre code { background: none; border: 0; padding: 0; font-size: inherit; }
+
+  .eyebrow {
+    font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--accent); margin: 0 0 12px; display: block;
+  }
+  .lede { font-size: 18.5px; color: var(--ink); max-width: 66ch; }
+
+  header.masthead { padding: 84px 0 34px; border-bottom: 1px solid var(--border-strong); margin-bottom: 8px; }
+  header.masthead h1 { font-size: clamp(42px, 7vw, 68px); line-height: 1.02; margin: 0 0 20px; letter-spacing: -1.4px; }
+  .thesis {
+    font-family: var(--serif); font-size: clamp(19px, 2.3vw, 23px); line-height: 1.45; color: var(--ink);
+    max-width: 36ch; border-left: 3px solid var(--accent); padding-left: 18px; margin: 0 0 30px;
+  }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 8px 26px; font-family: var(--mono); font-size: 11.5px;
+    letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3);
+  }
+  .meta span b { color: var(--ink-2); font-weight: 600; }
+
+  .scroller { overflow-x: auto; margin: 22px 0 26px; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; min-width: 720px; font-size: 14px; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--ink-2); }
+  thead th {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3);
+    font-weight: 600; background: var(--surface-2); border-bottom: 1px solid var(--border-strong); white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td:first-child { color: var(--ink); font-weight: 600; }
+  td.num { font-family: var(--mono); white-space: nowrap; color: var(--ink); }
+
+  .pill {
+    display: inline-block; font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase;
+    font-weight: 600; padding: 3px 8px; border-radius: 100px; white-space: nowrap;
+  }
+  .pill.yes { background: var(--ok-soft); color: var(--ok); }
+  .pill.no  { background: var(--warn-soft); color: var(--warn); }
+  .pill.mid { background: var(--border); color: var(--ink-3); }
+  .pill.pick { background: var(--accent-soft); color: var(--accent-ink); }
+
+  .callout { background: var(--accent-soft); border-left: 3px solid var(--accent); padding: 18px 22px; border-radius: 0 var(--r) var(--r) 0; margin: 26px 0; }
+  .callout p { margin: 0; color: var(--ink); max-width: 68ch; }
+  .callout p + p { margin-top: 10px; }
+  .note { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 18px 22px; margin: 24px 0; }
+  .note p:last-child { margin-bottom: 0; }
+  .note .eyebrow { color: var(--ink-3); }
+
+  .cards { display: grid; gap: 16px; margin: 24px 0 8px; }
+  @media (min-width: 860px) { .cards { grid-template-columns: 1fr 1fr; } .cards.three { grid-template-columns: 1fr 1fr 1fr; } }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 20px 22px 18px; }
+  .card.chosen { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .card h3 { margin: 4px 0 8px; font-size: 19px; }
+  .card p { font-size: 15px; margin-bottom: 10px; }
+  .card ul { font-size: 14.5px; margin-bottom: 4px; }
+  .card li { margin-bottom: 5px; }
+  .card .tag { font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; }
+  .card.chosen .tag { color: var(--accent); }
+
+  .phase { display: grid; grid-template-columns: 76px 1fr; gap: 0 22px; padding: 22px 0; border-top: 1px solid var(--border); }
+  .phase:last-of-type { border-bottom: 1px solid var(--border); }
+  .phase .n { font-family: var(--mono); font-size: 12px; font-weight: 600; letter-spacing: .08em; color: var(--accent); padding-top: 5px; }
+  .phase h3 { margin: 0 0 6px; font-size: 19px; }
+  .phase p { font-size: 15.5px; margin-bottom: 10px; }
+  .phase ul { margin-bottom: 0; font-size: 15px; }
+  @media (max-width: 620px) { .phase { grid-template-columns: 1fr; gap: 6px; } .phase .n { padding-top: 0; } }
+
+  .chip { display: inline-block; font-family: var(--mono); font-size: 11px; padding: 2px 8px; border-radius: 6px; background: var(--accent-soft); color: var(--accent-ink); border: 1px solid transparent; white-space: nowrap; }
+  .chip.ok { background: var(--ok-soft); color: var(--ok); }
+  .chip.warn { background: var(--warn-soft); color: var(--warn); }
+  .chip.mid { background: var(--border); color: var(--ink-2); }
+
+  /* ---- UI mock ------------------------------------------------------- */
+  .mock {
+    background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--r);
+    margin: 24px 0 10px; overflow: hidden; font-size: 14px;
+  }
+  .mock-bar {
+    display: flex; align-items: center; gap: 8px; padding: 9px 14px;
+    background: var(--surface-2); border-bottom: 1px solid var(--border);
+    font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3);
+  }
+  .mock-body { padding: 6px 0; }
+  .mock-sec {
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+  }
+  .mock-sec:last-child { border-bottom: 0; }
+  .mock-sec > h5 {
+    font-family: var(--sans); font-size: 12px; font-weight: 700; letter-spacing: .04em;
+    text-transform: uppercase; color: var(--ink-3); margin: 0 0 4px;
+  }
+  .mock-sec > .sub { font-size: 13px; color: var(--ink-3); margin: 0 0 14px; max-width: 62ch; }
+  .row {
+    display: grid; grid-template-columns: 1fr auto; gap: 4px 14px;
+    padding: 11px 0; border-top: 1px solid var(--border);
+    align-items: start;
+  }
+  .row:first-of-type { border-top: 0; }
+  .row .job { color: var(--ink); font-weight: 600; }
+  .row .job small { display: block; font-weight: 400; font-size: 12.5px; color: var(--ink-3); margin-top: 1px; }
+  .row .ctl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+  .row .resolved { grid-column: 1 / -1; font-size: 12.5px; color: var(--ink-3); margin-top: 2px; }
+  .row .resolved b { color: var(--ink-2); font-weight: 600; }
+  .sel {
+    display: inline-flex; align-items: center; gap: 8px;
+    border: 1px solid var(--border-strong); border-radius: 8px; padding: 5px 9px;
+    background: var(--surface-2); color: var(--ink); font-size: 13px; white-space: nowrap;
+  }
+  .sel::after { content: "\25BE"; color: var(--ink-3); font-size: 10px; }
+  .sel.warn { border-color: var(--warn); }
+  .btn {
+    display: inline-block; border: 1px solid var(--border-strong); border-radius: 8px;
+    padding: 4px 10px; font-size: 12.5px; color: var(--ink-2); background: var(--surface-2); white-space: nowrap;
+  }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .seg { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 8px; overflow: hidden; }
+  .seg span { padding: 5px 12px; font-size: 13px; color: var(--ink-2); border-right: 1px solid var(--border); }
+  .seg span:last-child { border-right: 0; }
+  .seg span.on { background: var(--accent-soft); color: var(--accent-ink); font-weight: 600; }
+  .provrow { display: flex; flex-wrap: wrap; gap: 10px; }
+  .prov {
+    display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--border);
+    border-radius: 8px; padding: 7px 11px; background: var(--surface-2); font-size: 13px; color: var(--ink);
+  }
+
+  /* ---- Resolution ladder --------------------------------------------- */
+  .ladder { margin: 26px 0 10px; }
+  .rung {
+    display: grid; grid-template-columns: 26px 1fr; gap: 0 16px; align-items: start;
+    padding: 14px 0 14px 0; border-top: 1px solid var(--border); position: relative;
+  }
+  .rung:last-child { border-bottom: 1px solid var(--border); }
+  .rung .d {
+    width: 11px; height: 11px; border-radius: 3px; background: var(--accent); margin-top: 7px;
+  }
+  .rung.faint .d { background: var(--border-strong); }
+  .rung h4 { margin: 0 0 3px; }
+  .rung p { margin: 0; font-size: 14.5px; max-width: 66ch; }
+
+
+  /* ---- Tier ladder ---------------------------------------------------- */
+  .tiers { display: grid; gap: 14px; margin: 26px 0 10px; }
+  @media (min-width: 820px) { .tiers { grid-template-columns: repeat(3, 1fr); } }
+  .tier {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--r);
+    padding: 18px 20px 16px; position: relative;
+  }
+  .tier .rank {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--ink-3); font-weight: 600; display: block; margin-bottom: 6px;
+  }
+  .tier h3 { margin: 0 0 4px; font-size: 21px; }
+  .tier .model { font-family: var(--mono); font-size: 12.5px; color: var(--accent-ink); display: block; margin-bottom: 10px; }
+  .tier p { font-size: 14.5px; margin: 0 0 10px; }
+  .tier ul { font-size: 14px; margin: 0; padding-left: 18px; }
+  .tier li { margin-bottom: 4px; }
+  .tier.top { border-color: var(--accent); }
+  .arrows { display: none; }
+  @media (min-width: 820px) {
+    .tier + .tier::before {
+      content: "\2193"; position: absolute; left: -20px; top: 50%; transform: translateY(-50%) rotate(-90deg);
+      color: var(--ink-3); font-size: 16px;
+    }
+  }
+  .fallchain {
+    font-family: var(--mono); font-size: 13px; color: var(--ink-2); background: var(--surface);
+    border: 1px solid var(--border); border-radius: var(--r); padding: 14px 18px; margin: 18px 0 24px;
+    overflow-x: auto; white-space: nowrap;
+  }
+  .fallchain b { color: var(--accent-ink); font-weight: 600; }
+  .fallchain .x { color: var(--warn); }
+
+  footer { margin-top: 90px; padding-top: 26px; border-top: 1px solid var(--border-strong); color: var(--ink-3); font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="masthead">
+  <span class="eyebrow">Design + build · app + backend</span>
+  <h1>The Engine Is Not The Model</h1>
+  <p class="thesis">Duct asks which harness to run, then picks the model itself — from an environment variable, once, for every job on the machine.</p>
+  <p class="lede">Now that models come from four providers and two of them can arrive as the customer's own key, one global <code>GENERATE_MODEL</code> is the wrong shape. This is the UX for it: <strong>three tiers the user fills in, a job-to-tier assignment Duct owns, and a fallback ladder that runs down the tiers the user authored.</strong></p>
+  <div class="meta">
+    <span><b>Status</b> P1+P2 built</span>
+    <span><b>Date</b> 2026-09-01</span>
+    <span><b>Surfaces</b> /settings/models · composer · account menu</span>
+    <span><b>Shape</b> 3 tiers + modality rows</span>
+  </div>
+</header>
+
+<div class="spine">
+
+<!-- ================================================================= -->
+<section id="today">
+  <h2>01 · What the user can actually set today</h2>
+
+  <p>Two controls exist, and neither of them is a model.</p>
+
+  <p>The <strong>Engine dialog</strong> (<code>app/src/components/EngineDialog.jsx</code>, reached from the account menu) writes one string — <code>duct_engine</code> — to <code>localStorage</code>. It picks a <em>harness</em>: v1 (LangChain) or v3 (Claude Agent SDK). It displays a model name, but that name is decoration: <code>defaultModel: "Gemini 2.5 Flash"</code> is a hard-coded label in <code>app/src/lib/engines.js</code>, not a setting.</p>
+
+  <p>The <strong>provider key cards</strong> on Connections (<code>ProviderCard.jsx</code> over <code>lib/providerKeys.js</code>) let a customer paste an Anthropic, OpenAI or Gemini key. The key is stored in <code>sessionStorage</code> — or the OS keychain on desktop — and sent per request as <code>X-Provider-*</code>. Pasting a key changes <em>whose account pays</em>. It does not change which model runs.</p>
+
+  <p>Everything else is an environment variable. <code>backend/config.py</code> carries one triple — <code>generate_engine</code>, <code>generate_provider</code>, <code>generate_model</code> — read unchanged at every model-consuming call site in the product:</p>
+
+  <div class="scroller">
+  <table>
+    <thead><tr><th>Where</th><th>What it does</th><th>Model it gets</th></tr></thead>
+    <tbody>
+      <tr><td>agents/insights/setup.py:83</td><td>The insights analyst — the pass that writes the brief</td><td class="num">the triple</td></tr>
+      <tr><td>agents/insights/subagents/verify.py:76</td><td>The verifier — proves a number before the analyst states it</td><td class="num">the parent's</td></tr>
+      <tr><td>agents/insights/v3/runner.py:224</td><td>The synthesizer subagent (<code>AgentDefinition</code>)</td><td class="num">the parent's</td></tr>
+      <tr><td>routes/audit.py:76</td><td>SEO audit — crawl reading and scoring</td><td class="num">the triple</td></tr>
+      <tr><td>routes/content.py:143</td><td>Content Studio — plans, captions, slides</td><td class="num">the triple</td></tr>
+      <tr><td>routes/agents.py:1082</td><td>The generic agent session route</td><td class="num">the triple</td></tr>
+      <tr><td>service/memory_consolidation.py:230, :478</td><td>Background memory consolidation and recap</td><td class="num">the triple</td></tr>
+      <tr><td>routes/chat.py:36</td><td>Follow-up chat</td><td class="num">the triple</td></tr>
+      <tr><td>agents/models.py:162</td><td>Slide and post images</td><td class="num"><code>DEFAULT_IMAGE_MODEL</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout">
+    <p><strong>The seams are already cut.</strong> <code>build_verify_subagent(tools, model=None)</code> takes a model and its docstring says why — <em>"allows a cheaper model for the checking pass than for the analysis"</em>. Nothing has ever passed one. The v3 runner passes <code>model=model_str</code> into <code>AgentDefinition</code> — the same string it gave the parent. Two call sites are already asking the question this design answers.</p>
+  </div>
+</section>
+
+<!-- ================================================================= -->
+<section id="tiers">
+  <h2>02 · Three tiers, not nine dropdowns</h2>
+
+  <p>The user sets <strong>three models</strong>. Duct decides which of the three every internal job deserves. That division is the whole design: the customer knows their budget and their preferred vendor; only Duct knows that the verification subagent is a narrow arithmetic check and the analyst pass is the deliverable's ceiling.</p>
+
+  <p>The alternative — one dropdown per job — makes the user learn Duct's internals to spend their money correctly. The tier abstraction moves that knowledge back where it belongs.</p>
+
+  <div class="note">
+    <span class="eyebrow">The catalogue already thinks in tiers</span>
+    <p><code>agents/models.py</code> annotates OpenAI's line with exactly three rungs, in OpenAI's own words: <code>gpt-5.6-sol</code> — <em>"flagship — complex professional work"</em>; <code>gpt-5.6-terra</code> — <em>"balances intelligence and cost"</em>; <code>gpt-5.6-luna</code> — <em>"cost-sensitive workloads"</em>. Anthropic ships Opus / Sonnet / Haiku. Google ships Pro / Flash / Flash-Lite. Every provider already sells three rungs. Duct is not inventing a ladder, it is naming the one that exists.</p>
+  </div>
+
+  <h3>Naming: not Quick and Balanced</h3>
+
+  <p>"Intelligent · Balanced · Quick" is the right shape with a name collision at its centre. <code>agents/thinking.py</code> already ships a four-rung user-facing dial whose labels are <strong>Quick, Balanced, Deep, Exhaustive</strong>. Two of the three proposed tier names are already taken by a different setting that appears in the same composer.</p>
+
+  <p>The collision is not cosmetic. Tier and thinking are orthogonal — <em>which model</em> versus <em>how hard it works</em> — and you can meaningfully run a Heavy model at Quick thinking or a Light model at Deep. A composer showing "Quick" next to "Quick", meaning two different things, makes an orthogonal pair look like a duplicate.</p>
+
+  <div class="scroller">
+  <table>
+    <thead><tr><th>Option</th><th>Top</th><th>Middle</th><th>Bottom</th><th>Verdict</th></tr></thead>
+    <tbody>
+      <tr><td>Shipped</td><td>Heavy</td><td>Standard</td><td>Light</td><td><span class="pill pick">Chosen</span> Reads as compute weight rather than as a quality verdict, so no rung is an insult. No collision with the thinking dial.</td></tr>
+      <tr><td>As first proposed</td><td>Intelligent</td><td>Balanced</td><td>Quick</td><td><span class="pill no">Collides</span> Two names already taken by the thinking dial. "Intelligent" also implies the others are not.</td></tr>
+      <tr><td>Considered</td><td>Flagship</td><td>Standard</td><td>Light</td><td><span class="pill mid">Fine</span> Industry vocabulary, already in <code>models.py</code>'s own comments — but it names a market position rather than a job.</td></tr>
+      <tr><td>Considered</td><td>Frontier</td><td>Standard</td><td>Light</td><td><span class="pill mid">Fine</span> "Frontier" ages badly — today's frontier is next year's standard.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>Shipped as <strong>Heavy · Standard · Light</strong> — <code>agents/tiers.py</code>'s <code>Tier</code> enum and <code>lib/modelTiers.js</code>'s <code>TIERS</code>.</p>
+
+  <div class="tiers">
+    <div class="tier top">
+      <span class="rank">Tier 1</span>
+      <h3>Heavy</h3>
+      <span class="model">default · gemini-3.1-pro-preview</span>
+      <p>The pass whose output you will act on. Slow and expensive on purpose.</p>
+      <ul>
+        <li>Insights analysis — writes the brief</li>
+        <li>SEO audit analysis and scoring</li>
+      </ul>
+    </div>
+    <div class="tier">
+      <span class="rank">Tier 2 · fallback for Heavy</span>
+      <h3>Standard</h3>
+      <span class="model">default · gemini-3.7-flash</span>
+      <p>Real reasoning, ordinary cost. Most of what runs.</p>
+      <ul>
+        <li>Verification subagent</li>
+        <li>Content drafting — plans, captions, slides</li>
+        <li>Follow-up chat</li>
+      </ul>
+    </div>
+    <div class="tier">
+      <span class="rank">Tier 3 · fallback for Standard</span>
+      <h3>Light</h3>
+      <span class="model">default · gemini-3.5-flash-lite</span>
+      <p>High volume, low judgement. Should be the cheapest thing you own.</p>
+      <ul>
+        <li>Research reading — crawled pages, connector briefs</li>
+        <li>Memory consolidation and recaps</li>
+        <li>Session titles</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Why the shipped default is all-Google</h3>
+
+  <p>The default ships as <strong>Gemini 3.1 Pro → Gemini 3.7 Flash → Gemini 3.5 Flash-Lite</strong>. Three things had to be true for that, and one of them was not, which is why this section is longer than a default deserves.</p>
+
+  <ul>
+    <li><strong>One key must configure all three tiers.</strong> A mixed default leaves a new customer with one key finding two of three tiers broken on arrival. Every triple in <code>PROVIDER_TRIPLES</code> is therefore single-provider, and a test asserts it.</li>
+    <li><strong>It must agree with the default engine.</strong> v1 is the default engine and the consolidation target, and <code>ENGINE_DEFAULT_PROVIDER[V1]</code> is already Google. Before this change the tier map defaulted to Anthropic while the engine defaulted to Google — two defaults disagreeing about the same install. They now name one provider, and a test pins them together.</li>
+    <li><strong>The rungs must actually differ.</strong> Google's catalogue in <code>models.py</code> had no Pro, so Heavy and Standard would both have been <code>gemini-3.7-flash</code> — one model typed twice, not a ladder. <code>gemini-3.1-pro-preview</code> was added to close that, verified against the live <code>ListModels</code> response <em>and</em> a real <code>generateContent</code> call, because a default naming an id Google does not serve 404s on every fresh install.</li>
+  </ul>
+
+  <div class="callout">
+    <p><strong>The thing that was not true.</strong> v3's harness is Anthropic-only (<code>ENGINE_SUPPORTED_PROVIDERS[V3]</code> is <code>{anthropic}</code>) and Content Studio is v3-only, so an all-Google default gives it no tier it can run. The earlier resolver returned <em>nothing</em> in that case — a stock install would have shipped one of three agents broken.</p>
+    <p>The fix is the floor §05 always described and the code had not implemented: when no tier can serve, fall to the <em>engine's own</em> default. Content Studio therefore runs on <code>claude-sonnet-5</code> and the page says so on every tier row — <em>"This engine runs Anthropic models only, so standard jobs run on claude-sonnet-5 — this engine's default."</em> The floor never invents a provider; it uses the engine's declared one, and only when that is reachable.</p>
+  </div>
+
+  <p>Two consequences worth recording. <code>AUTO_POSTURE_MODEL_PREFIXES</code> listed <code>"gemini-3-pro"</code>, which matches nothing Google ships — the 3.x Pro line is <code>gemini-3.1-pro-preview</code> — so without adding that prefix every default install would have silently run <code>auto</code> projects at <code>assisted</code>. And the picker no longer filters models to the current engine: with a Google default on v3 that emptied the list and rendered three blank dropdowns, so it annotates (<em>"· not on v3"</em>) instead of hiding.</p>
+
+  <p>A one-click <strong>Fill from one provider</strong> control offers the same shape in Anthropic, OpenAI or Google form, because "I have one key and it isn't the default one" is the most common real configuration.</p>
+</section>
+
+<!-- ================================================================= -->
+<section id="assignment">
+  <h2>03 · Which job sits on which tier</h2>
+
+  <p>This table is Duct's, not the user's. It ships versioned, it is <em>shown</em> on the settings page behind a disclosure, and it is not editable — editing it is what the five-dropdown design was, and the whole point of tiers is to not ask.</p>
+
+  <div class="scroller">
+  <table>
+    <thead><tr><th>Job</th><th>Tier</th><th>Call site</th><th>Why this tier</th></tr></thead>
+    <tbody>
+      <tr><td>Insights analysis</td><td><span class="chip">Heavy</span></td><td class="num">insights/setup.py:83</td><td>Writes the brief. This is the deliverable.</td></tr>
+      <tr><td>Audit analysis &amp; scoring</td><td><span class="chip">Heavy</span></td><td class="num">routes/audit.py:76</td><td>Nine weighted categories over a whole site — the judgement <em>is</em> the product.</td></tr>
+      <tr><td>Verification</td><td><span class="chip mid">Standard</span></td><td class="num">subagents/verify.py:76</td><td>Re-derives a number from a source. Narrow, checkable, high volume.</td></tr>
+      <tr><td>Synthesis (v3)</td><td><span class="chip mid">Standard</span></td><td class="num">insights/v3/runner.py:224</td><td>Structured JSON from prepared briefs, no tools.</td></tr>
+      <tr><td>Content drafting</td><td><span class="chip mid">Standard</span></td><td class="num">routes/content.py:143</td><td>Voice over reasoning. The tier most people will want to move.</td></tr>
+      <tr><td>Follow-up chat</td><td><span class="chip mid">Standard</span></td><td class="num">routes/chat.py:36</td><td>Conversational, context already assembled.</td></tr>
+      <tr><td>Research reading</td><td><span class="chip mid">Light</span></td><td class="num">crawl · connector briefs</td><td>Enormous context, little judgement. The classic cheap-long-context job.</td></tr>
+      <tr><td>Memory consolidation</td><td><span class="chip mid">Light</span></td><td class="num">memory_consolidation.py:230, :478</td><td>Background, constant, invisible. Fails soft today and should stay cheap.</td></tr>
+      <tr><td>Recaps &amp; titles</td><td><span class="chip mid">Light</span></td><td class="num">chat summaries</td><td>Cosmetic strings.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>The disclosure that renders this on the settings page is labelled <em>"What runs on each tier"</em> and is collapsed by default. It exists so that a user who moves Light to a very cheap model can see they just changed how their crawled pages get read — not so they can argue with the assignment.</p>
+</section>
+
+<!-- ================================================================= -->
+<section id="screen">
+  <h2>04 · The screen</h2>
+
+  <p>A new page at <code>/settings/models</code>. The account menu's <em>Engine</em> item becomes <strong>Models &amp; engine</strong> and links here; the Engine dialog is retired. The three provider key cards move off Connections, which goes back to being about data sources only.</p>
+
+  <div class="mock">
+    <div class="mock-bar"><span>Settings</span> <span style="color:var(--ink-2)">›</span> <span style="color:var(--ink);font-weight:600">Models &amp; engine</span></div>
+    <div class="mock-body">
+
+      <div class="mock-sec">
+        <h5>Tiers</h5>
+        <p class="sub">Three models. Duct picks the right one for each job — and falls down the list when one is unavailable.</p>
+
+        <div class="row">
+          <div class="job">Heavy<small>The analysis you act on</small></div>
+          <div class="ctl"><span class="sel">Claude Opus 5</span> <span class="chip ok">Your key</span></div>
+        </div>
+
+        <div class="row">
+          <div class="job">Standard<small>Most of what runs · fallback for Heavy</small></div>
+          <div class="ctl"><span class="sel">Claude Sonnet 5</span> <span class="chip ok">Your key</span></div>
+        </div>
+
+        <div class="row">
+          <div class="job">Light<small>High volume, low judgement · fallback for Standard</small></div>
+          <div class="ctl warn"><span class="sel warn">GPT-5.6 Luna</span> <span class="chip warn">Needs an OpenAI key</span> <span class="btn">Add key</span></div>
+          <div class="resolved">Light jobs run on <b>Claude Sonnet 5</b> (Standard) until you add one.</div>
+        </div>
+
+        <div class="row">
+          <div class="job" style="color:var(--ink-3);font-weight:400">▸ What runs on each tier</div>
+          <div class="ctl"><span class="btn">Fill from one provider</span></div>
+        </div>
+      </div>
+
+      <div class="mock-sec">
+        <h5>Modality</h5>
+        <p class="sub">Only shown for what your tier models cannot produce themselves.</p>
+
+        <div class="row">
+          <div class="job">Images<small>Slide and post images · Content Studio</small></div>
+          <div class="ctl"><span class="sel">Auto · Gemini 3.1 Flash Image</span> <span class="chip ok">Ready</span></div>
+          <div class="resolved">None of your tier models generate images, so Duct uses a dedicated one.</div>
+        </div>
+
+        <div class="row">
+          <div class="job">Video<small>Short-form video · Content Studio</small></div>
+          <div class="ctl"><span class="chip warn">Not connected</span> <span class="btn">Connect Higgsfield</span></div>
+          <div class="resolved">Video generation is a connected service, not a model you pick here.</div>
+        </div>
+      </div>
+
+      <div class="mock-sec">
+        <h5>Providers</h5>
+        <p class="sub">Your keys. Stored in this browser session — in the OS keychain on desktop — and sent with each request. Never on our servers.</p>
+        <div class="provrow">
+          <span class="prov">Anthropic <span class="chip ok">Your key</span></span>
+          <span class="prov">Google <span class="chip mid">Duct's key</span></span>
+          <span class="prov">OpenAI <span class="chip warn">Not set</span> <span class="btn">Add</span></span>
+          <span class="prov">OpenRouter <span class="chip warn">Not set</span> <span class="btn">Add</span></span>
+        </div>
+      </div>
+
+      <div class="mock-sec">
+        <h5>Runtime</h5>
+        <p class="sub">The harness that runs the agents. Most people never change this — it decides what agents <em>can do</em>, not how good they are.</p>
+        <div class="row">
+          <div class="job">Engine<small>v3 runs Anthropic models only. SEO Audit and Content Studio require it.</small></div>
+          <div class="ctl"><span class="seg"><span class="on">v1 LangChain</span><span>v3 Claude SDK</span></span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <p>Four deliberate choices:</p>
+
+  <ul>
+    <li><strong>Three rows above the fold.</strong> The entire model configuration is visible without scrolling, which is the difference between a setting people tune and a setting people avoid.</li>
+    <li><strong>Each tier states its own fallback role.</strong> <em>"fallback for Heavy"</em> on the Standard row means the ladder is learned by reading the page, not by reading docs.</li>
+    <li><strong>Modality rows are conditional and mostly say "Auto".</strong> A user should never be asked to choose an image model they have never heard of.</li>
+    <li><strong>Engine is demoted to <em>Runtime</em>, at the bottom.</strong> It is a capability switch, not a quality dial, and putting it first is what taught users to look for models in the wrong place.</li>
+  </ul>
+
+  <p>Rows autosave with an undo toast. No Apply button: a modal has to commit or discard, a page does not. The map is read per request, so a change takes effect on the next run and never mid-run.</p>
+</section>
+
+<!-- ================================================================= -->
+<section id="fallback">
+  <h2>05 · Falling down the ladder</h2>
+
+  <p>Heavy → Standard → Light, and never upward. This is the mechanic that makes three tiers better than three unrelated dropdowns: <strong>the user authors their own degradation path once, and every job inherits it.</strong></p>
+
+  <p>It has to be reconciled with the fallback Duct already has, because the two are different in kind and the existing one has a documented rule the new one appears to break.</p>
+
+  <h3>Three levels, not one</h3>
+
+  <div class="fallchain">
+    Heavy <b>gemini-3.1-pro-preview</b> → <span class="x">529</span> → within-tier <b>gemini-3.7-flash</b> → <span class="x">529</span> → Standard tier <b>gemini-3.7-flash</b> → Light tier <b>gemini-3.5-flash-lite</b> → engine default <b>gemini-2.5-flash</b>
+  </div>
+
+  <ul>
+    <li><strong>Within a tier</strong> — the existing <code>resolve_fallback_models</code>: same provider, one step, v1 only. It handles a transient overload without changing whose key pays or which vendor answers. Unchanged by this design.</li>
+    <li><strong>Across tiers</strong> — the new ladder. Fires when a tier is <em>unreachable</em> (no credential for its provider), <em>unsupported</em> by the engine, or has exhausted its within-tier step.</li>
+    <li><strong>Below the tiers</strong> — the engine's own default, which is today's behaviour and the floor everything else stands on. It exists because the shipped default is Google and v3's harness is Anthropic-only: without it Content Studio would have no model at all on a stock install. It never invents a provider — it takes the engine's declared default, and only when that provider is reachable. If it is not, the run fails at the door rather than halfway through a brief.</li>
+  </ul>
+
+  <div class="callout">
+    <p><strong>Why the cross-provider hop is allowed here and not there.</strong> <code>MODEL_FALLBACK</code>'s docstring rules out cross-provider fallback on two grounds: no credential, and <em>"reaching for Duct's own key would move a customer's spend onto our account without asking."</em> The tier ladder answers the second directly — <em>the user chose these three models and this order</em>, so the hop is asked for rather than assumed. The first ground is physical and survives: a tier whose provider has no reachable key is <strong>skipped</strong>, never attempted.</p>
+  </div>
+
+  <h3>The rules</h3>
+
+  <ul>
+    <li><strong>Downward only.</strong> Light never escalates to Heavy. This mirrors <code>effective_autonomy</code>, where "a model can only ever <em>lower</em> the posture, never raise it" — and for the same reason: a silent upgrade is a cost surprise, and cost surprises are how a settings page loses trust.</li>
+    <li><strong>Skip, don't fail.</strong> An unreachable tier is stepped over. Only when <em>every</em> tier is unreachable does the run refuse to start — which is today's behaviour in <code>resolve_model</code>, <em>"a run that cannot reach a model should fail at the door rather than halfway through a brief."</em></li>
+    <li><strong>Whose key pays is never silently changed.</strong> Each tier row shows its credential source — <span class="chip ok">Your key</span> / <span class="chip mid">Duct's key</span> / <span class="chip warn">Not set</span>. A ladder step that moves a run from the customer's key onto Duct's is visible on the page before it ever happens.</li>
+    <li><strong>A step is reported, not buried.</strong> The run record names the tier that actually served it. A brief written by Light when the user configured Heavy is a materially different deliverable and has to say so.</li>
+    <li><strong>Configuration gaps and runtime errors take the same path.</strong> One ladder, two triggers. The settings page previews the config case in words — <em>"Light jobs run on Claude Sonnet 5 until you add one"</em> — which is the same computation the runtime does.</li>
+  </ul>
+
+  <div class="note">
+    <span class="eyebrow">One thing to decide before P2</span>
+    <p>Whether a Heavy failure should descend for the <em>whole run</em> or per call. Per call is more faithful and can produce a brief whose analysis is Heavy and whose verification silently ran two tiers down. Per run is coarser and easier to report honestly. This design assumes <strong>per call, reported per run</strong> — the run record lists every tier that served it — but it is a real fork and the cheaper answer is per run.</p>
+  </div>
+</section>
+
+<!-- ================================================================= -->
+<section id="modality">
+  <h2>06 · Modality, and what "multimodal" has to mean</h2>
+
+  <p>The rule asked for is: a modality row appears <em>unless the tier model can already do it</em>. That is right, and it depends entirely on a distinction the catalogue does not currently make.</p>
+
+  <div class="cards">
+    <div class="card">
+      <span class="tag">Not the question</span>
+      <h3>Multimodal input</h3>
+      <p>Reading an image. Nearly every frontier chat model does this — Claude, GPT and Gemini all accept image input, which is how the file-upload capability already works.</p>
+      <p>If "multimodal" meant this, the Images row would never appear, and the product would have no way to generate a slide.</p>
+    </div>
+    <div class="card chosen">
+      <span class="tag">The question</span>
+      <h3>Multimodal output</h3>
+      <p>Emitting an image or a video. Almost no chat model does this. In Duct's current catalogue, <strong>none</strong> do: image generation lives in a disjoint <code>ImageModel</code> enum (<code>gemini-3.1-flash-image</code> and friends) reached through a different SDK call path.</p>
+      <p>So the "unless" clause is forward-looking, and needs a capability table to become checkable.</p>
+    </div>
+  </div>
+
+  <h3>The capability table</h3>
+
+  <p>A new <code>MODEL_MODALITY</code> in <code>agents/models.py</code>, built exactly like <code>MODEL_THINKING</code> — keyed by <code>ModelName</code> so a catalogue rename breaks the import rather than silently stopping matching, and paired with a test so a new model cannot ship without someone deciding what it can emit.</p>
+
+<pre><code>class Modality(StrEnum):
+    TEXT  = "text"
+    IMAGE = "image"
+    VIDEO = "video"
+
+# What each model can EMIT. Input modality is not modelled: every catalogue
+# chat model accepts images, so it would be a column of True.
+MODEL_EMITS: dict[str, frozenset[Modality]] = { ... }</code></pre>
+
+  <p>With that table the Images row resolves itself:</p>
+
+  <ol>
+    <li>Does any configured tier model emit <code>IMAGE</code>? Use the highest one that does; the row reads <em>"Handled by your Standard model"</em> and offers no dropdown.</li>
+    <li>Otherwise fall to the dedicated modality model. The row reads <em>"Auto · Gemini 3.1 Flash Image"</em> with an expandable override.</li>
+  </ol>
+
+  <p>Today branch 1 is unreachable and branch 2 always wins. That is the correct thing to build anyway: it is three lines of resolution, and it means the day a tier model gains image output the row changes by itself rather than needing a UI change.</p>
+
+  <h3>Video is a connector, not a model</h3>
+
+  <p>Worth stating because it breaks the pattern deliberately. There is <strong>no video model in the backend at all</strong> — no enum, no call path. The planned route is the Higgsfield hosted MCP over bearer auth, which is a <em>connected service</em>: it has an account, a subscription and an OAuth-shaped setup, not a model id in a dropdown.</p>
+
+  <p>So the Video row renders as a connection state — <em>"Not connected · Connect Higgsfield"</em> — and links to Connections. It appears on this page because this is where a user goes to ask "what makes my media", and answering "nowhere, here's how" is better than the row not existing. It ships with the video feature, not before.</p>
+
+  <p>The same shape covers whatever comes next — audio, speech — without a new concept: <strong>a modality is either something a tier model emits, a dedicated model Duct picks, or a service you connect.</strong></p>
+</section>
+
+<!-- ================================================================= -->
+<section id="flag">
+  <h2>07 · Flagging what cannot run</h2>
+
+  <p>Four states. The rule: <strong>a warning always names the consequence, and the consequence is always which tier will actually serve the job instead.</strong></p>
+
+  <div class="scroller">
+  <table>
+    <thead><tr><th>State</th><th>Trigger</th><th>What the row says</th><th>Save</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="chip ok">Ready</span></td>
+        <td>Provider reachable, engine supports it</td>
+        <td>The credential source, named exactly — see below</td>
+        <td class="num">—</td>
+      </tr>
+      <tr>
+        <td><span class="chip warn">Needs a key</span></td>
+        <td>No BYO key and no server key for that provider</td>
+        <td>"Light jobs run on <b>Claude Sonnet 5</b> (Standard) until you add one." + inline <em>Add key</em></td>
+        <td class="num">Saves</td>
+      </tr>
+      <tr>
+        <td><span class="chip warn">Not on this engine</span></td>
+        <td>Provider ∉ <code>ENGINE_SUPPORTED_PROVIDERS[engine]</code></td>
+        <td>"v3 runs Anthropic models only. On v3 this tier falls to <b>Claude Sonnet 5</b>." + <em>Switch to v1</em></td>
+        <td class="num">Saves</td>
+      </tr>
+      <tr>
+        <td><span class="chip mid">Lowers autonomy</span></td>
+        <td>Heavy model outside <code>AUTO_POSTURE_MODEL_PREFIXES</code> on an <code>auto</code> project</td>
+        <td>"This project runs at <b>auto</b>. On this model it will run at <b>assisted</b> — it asks more often."</td>
+        <td class="num">Saves</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>Saving is never blocked. Someone configuring a fresh install picks the models they want and <em>then</em> goes and gets the keys; a form that refuses the first half until the second is done makes the setup order the developer's, not the user's.</p>
+
+  <div class="callout">
+    <p><strong>The fallback claim has to be true.</strong> "Runs on Claude Sonnet 5 (Standard)" must be computed by the same code that will actually pick it — the tier ladder plus <code>resolve_engine_model</code> — not by a UI guess. That is why provider status is a server endpoint rather than a client-side check against which keys the browser happens to hold.</p>
+  </div>
+
+  <h3>Naming the credential, precisely</h3>
+
+  <p>The chip on a ready row answers one question — <em>who is paying for this run</em> — and it has to answer it exactly. "Duct's key" was the first attempt and it covered two opposite situations: a key in the operator's own <code>.env</code> on a laptop or self-hosted box, and Duct's hosted key on the deployment we run. Same config field, and the customer cares enormously which one it is.</p>
+
+  <div class="scroller">
+  <table>
+    <thead><tr><th><code>source</code></th><th>Chip</th><th>Means</th></tr></thead>
+    <tbody>
+      <tr><td>user</td><td>Your key</td><td>An <code>X-Provider-*</code> header this request supplied.</td></tr>
+      <tr><td>env</td><td>From env</td><td>This instance's own environment — desktop, self-hosted, or local dev.</td></tr>
+      <tr><td>cloud</td><td>Duct cloud</td><td>Our hosted key. Our account is paying.</td></tr>
+      <tr><td>subscription</td><td>Your subscription</td><td>The operator's Claude subscription on this machine.</td></tr>
+      <tr><td>none</td><td>Not set</td><td>Unreachable.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>Five values, one definition, and a test that pins them. The reason for the test is that there <em>were</em> two definitions for a while: the provider tiles kept a private copy of the mapping, and when <code>server</code> split into <code>env</code> and <code>cloud</code> every tile silently fell through to "No key set" while the tier rows two tabs away correctly read "From env". The tiles now import the same table the tier rows use.</p>
+
+  <h3>The autonomy state is the one nobody expects</h3>
+
+  <p><code>service/execution/policy.py</code> already downgrades a project: <em>"a model outside <code>AUTO_POSTURE_MODELS</code> runs an <code>auto</code> project at <code>assisted</code>."</em> Today that is invisible. The moment users can point Heavy at a cheap model — and the moment a ladder step can do it for them — that mismatch goes from rare to routine. Surfacing it is the difference between a setting and a trap.</p>
+
+  <p>The copy constraint from the policy docstring holds: this is a <em>posture</em> change, not a permissions change. Say "it asks more often", never "it is less safe" — <code>AUTO_APPLY_ALLOWLIST</code> and the destructive gate are byte-identical at both levels.</p>
+</section>
+
+<!-- ================================================================= -->
+<section id="overrides">
+  <h2>08 · Per-run override, and the one advanced escape hatch</h2>
+
+  <h3>The composer</h3>
+
+  <p>Settings are the steady state. The composer needs the other thing — <em>"this one matters, use the good model"</em> — and with tiers it becomes a three-way pick rather than a model list:</p>
+
+  <div class="mock">
+    <div class="mock-bar"><span>Composer</span></div>
+    <div class="mock-body">
+      <div class="mock-sec" style="border-bottom:0">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span class="sel">Deep</span>
+          <span class="sel">Heavy · this run</span>
+          <span style="flex:1"></span>
+          <span class="btn primary">Run</span>
+        </div>
+        <p class="sub" style="margin:12px 0 0">Runs every job one tier up for this run. Thinking stays at <b>Deep</b>.</p>
+      </div>
+    </div>
+  </div>
+
+  <p>Tiers make this cleaner than the per-job design allowed. "Run this at Heavy" is a single, comprehensible instruction — it lifts the whole run, not one hidden sub-step — and it sits beside the thinking dial as the second of two orthogonal decisions: <strong>which model, and how hard it works.</strong> The two dials having disjoint vocabularies is what makes that pair readable, which is §02's naming argument arriving in the place it matters.</p>
+
+  <p>It does not persist, and it appears on the run record. A sticky override that outlives its reason is how people pay Heavy prices for a month and blame the product.</p>
+
+  <h3>Per-agent tier overrides</h3>
+
+  <p>One collapsed <em>Advanced</em> list, for the single sentence tiers cannot say: <em>"audits deserve Heavy, everything else Standard."</em> Rows pick a <strong>tier</strong>, not a model — <code>SEO Audit · analysis → Heavy</code> — so the override inherits every ladder and modality rule instead of forking them.</p>
+
+  <p>Deliberately a list you add to, not a matrix. It is also the most droppable thing in this document: if P2 ships and nobody asks for it, that is the answer.</p>
+</section>
+
+<!-- ================================================================= -->
+<section id="contract">
+  <h2>09 · The contract behind the screen</h2>
+
+  <p>The layering follows the split the codebase already keeps: <code>models.py</code> owns what a model <em>is</em>, <code>engines.py</code> owns which engine <em>may use</em> it — so the new module owns which tier <em>gets</em> it, and reads the other two rather than duplicating them.</p>
+
+  <h4>backend/agents/tiers.py — new</h4>
+<pre><code>class Tier(StrEnum):
+    HEAVY = "heavy"
+    STANDARD = "standard"
+    LIGHT    = "light"
+
+# Descending. The ladder is this tuple; there is no other ordering anywhere.
+TIER_ORDER: tuple[Tier, ...] = (Tier.HEAVY, Tier.STANDARD, Tier.LIGHT)
+
+# Duct's assignment — §03. Versioned, shown in the UI, not user-editable.
+JOB_TIER: dict[Job, Tier] = { ... }
+
+def resolve_tier_model(
+    job: Job,
+    engine: Engine,
+    *,
+    tier_map: dict | None = None,
+    reachable: frozenset[Provider],
+) -> TierResolution:
+    """The model for this job, the tier it came from, and every tier skipped.
+
+    Walks TIER_ORDER from JOB_TIER[job] downward, skipping tiers whose
+    provider is not in `reachable` or not supported by `engine`. Returns the
+    skips so the caller can log them and the UI can render the same sentence.
+    """</code></pre>
+
+  <p><code>reachable</code> is passed in rather than computed here, for the reason <code>models.get_api_key_kwargs</code> already documents: credentials are per-request, and a module that reaches for global config races across concurrent requests carrying different BYO keys.</p>
+
+  <h4>GET /api/providers/status — new</h4>
+  <p>Per-provider reachability. It must be called <em>with</em> the request's <code>X-Provider-*</code> headers, because the truthful answer is the union of the customer's keys and the server's — and only the server sees both. Returns, per provider: <code>reachable</code>, <code>source</code> (<code>"user"</code> | <code>"server"</code> | <code>"none"</code>), and the engines that accept it. This is what turns the four row states and every credential chip from a client-side guess into a fact.</p>
+
+  <h4>The request payload</h4>
+  <p>The map rides the path <code>UserPreferences</code> already uses — a top-level field on every agent request, stored client-side. Same shape, same lifecycle, no new persistence tier:</p>
+<pre><code>{ "preferences": { ... },
+  "models": {
+    "tiers":     { "heavy": "gemini-3.1-pro-preview",
+                   "standard": "gemini-3.7-flash",
+                   "light":    "gemini-3.5-flash-lite" },
+    "modality":  { "image": "gemini-3.1-flash-image" },
+    "overrides": { "audit_seo": { "analysis": "heavy" } },
+    "run":       { "tier": "heavy" }
+  } }</code></pre>
+
+  <p>Client storage is <code>duct_model_map</code> in <code>localStorage</code>, beside <code>duct_engine</code> and <code>duct_user_preferences</code>. Per-user, not per-project. An absent tier means "unset", which resolves to the engine default — so an empty map is byte-for-byte today's behaviour and the migration is a no-op. That is a requirement, not a nicety: <code>generate_model</code> is set in production env files.</p>
+
+  <div class="note">
+    <span class="eyebrow">Validation</span>
+    <p>Every value is re-resolved server-side through <code>resolve_engine_model</code>. A client that sends <code>claude-opus-5[1m]</code> to v1, or a model whose provider the engine does not support, gets the engine default — the same treatment a bad <code>GENERATE_MODEL</code> gets today. The browser proposes; <code>engines.py</code> disposes. Nothing here widens what a request can make the server do.</p>
+  </div>
+</section>
+
+<!-- ================================================================= -->
+<section id="build">
+  <h2>10 · Build order</h2>
+
+  <div class="callout">
+    <p><strong>Where this stands.</strong> The shipped default is the all-Google triple, with <code>gemini-3.1-pro-preview</code> added to the catalogue for the Heavy rung and the engine-default floor implemented under the ladder. P1 and the settings half of P2 are built: <code>agents/tiers.py</code>, <code>GET /api/providers/status</code>, <code>GET /api/models/catalogue</code>, <code>POST /api/models/preview</code>, the <code>/settings/models</code> page with its three tabs, and <code>MODEL_EMITS</code>. The Engine dialog is retired and the provider cards have moved off Connections.</p>
+    <p><strong>What is not done, and matters:</strong> no agent run reads the saved map yet. <code>resolve_tier_model</code> is exercised by the settings preview and by tests, but <code>insights/setup.py</code>, <code>routes/audit.py</code>, <code>routes/content.py</code> and <code>routes/agents.py</code> still resolve their model from <code>cfg.generate_model</code>. Until that wiring lands, the page configures a preference the runs ignore — which is the exact failure this design was written to end, so it is the next thing to build and nothing else should jump the queue.</p>
+  </div>
+
+  <div class="phase">
+    <span class="n">P1 ✓</span>
+    <div>
+      <h3>Make the truth visible</h3>
+      <p>No new settings. <code>GET /api/providers/status</code>, and <code>/settings/models</code> rendering today's resolved model read-only, with per-provider credential sources and the key cards moved over from Connections.</p>
+      <ul>
+        <li>Ships value alone: "which model am I actually on, and whose key is paying" is currently unanswerable from the UI.</li>
+        <li>De-risks the hard half — resolution and status — before anything is writable.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="phase">
+    <span class="n">P2 ◐</span>
+    <div>
+      <h3>Three tiers and the ladder</h3>
+      <p><strong>Built:</strong> <code>agents/tiers.py</code>, the three writable rows, <em>Fill from one provider</em>, reset, the row states and the server-resolved fallback sentence.</p>
+      <p><strong>Remaining:</strong> the <code>models.tiers</code> request field, and passing the resolved model at each call site — starting with the two seams that already accept one, <code>build_verify_subagent(model=…)</code> and the v3 <code>AgentDefinition</code>, since they are the cheapest proof the plumbing works.</p>
+    </div>
+  </div>
+
+  <div class="phase">
+    <span class="n">P3</span>
+    <div>
+      <h3>Modality and the composer</h3>
+      <p><code>MODEL_EMITS</code>, the self-resolving Images row, and the per-run tier chip. Retire the Engine dialog; the account menu points at the page. The Video row lands with the Higgsfield work, not here.</p>
+    </div>
+  </div>
+
+  <div class="phase">
+    <span class="n">P4</span>
+    <div>
+      <h3>Cost, and only then overrides</h3>
+      <p>Observed cost-per-run per tier from the OpenTelemetry GenAI spans already pinned in <code>agent-ports-and-events.md</code> — the number that makes the whole page make sense. Estimates before that exist would be fiction. Per-agent tier overrides ship here if anyone has asked by then.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================= -->
+<section id="not">
+  <h2>11 · What this deliberately does not do</h2>
+
+  <ul>
+    <li><strong>No per-job model picking.</strong> §03's table is the implementation, not the interface. Exposing it is the design this one replaced.</li>
+    <li><strong>No per-project maps.</strong> Projects are the sharing boundary for members; a per-project tier map means a collaborator's spend is set by someone else's page, and the precedence line grows a fourth layer. Revisit if per-client cost ceilings are actually asked for.</li>
+    <li><strong>No automatic routing.</strong> "Duct picks the cheapest tier that can do this" is a different product. It needs P4's cost telemetry and an eval harness to prove the cheap tier was good enough. Three tiers first; if nobody changes the default, that is the signal to build routing rather than more dropdowns.</li>
+    <li><strong>No upward fallback, ever.</strong> Named in §05 and worth repeating: the ladder only descends.</li>
+    <li><strong>No model catalogue in the browser.</strong> Dropdown options come from the server, derived from <code>ModelName</code> — the same list <code>thinking.py</code> keys its table by. A hard-coded JS list is exactly the drift that made <code>defaultModel: "Gemini 2.5 Flash"</code> a lie in the current dialog.</li>
+  </ul>
+
+  <div class="callout">
+    <p><strong>The one-line test for this design.</strong> A user pastes one Anthropic key and never opens this page. Today: one env-var model does every job, and a cheap background recap costs the same as the brief. After P2: Opus writes the analysis, Sonnet verifies and drafts, Haiku reads crawled pages and consolidates memory — from that single key, with a ladder that degrades gracefully when a tier is missing, and a page that says which tier actually served the run.</p>
+  </div>
+</section>
+
+</div><!-- /spine -->
+
+<footer>
+  <p>Design doc · Duct · references <code>backend/agents/engines.py</code>, <code>agents/models.py</code>, <code>agents/thinking.py</code>, <code>service/execution/policy.py</code>, <code>app/src/lib/engines.js</code>, <code>app/src/components/EngineDialog.jsx</code>.</p>
+</footer>
+
+</div>
+</body>
+</html>

@@ -35,6 +35,9 @@ FETCHER_SOURCES = {
     "google_ads": ["service/google/fetch.py"],
     "ga4": ["service/google/ga4.py"],
     "gsc": ["service/google/gsc.py"],
+    "mixpanel": ["service/mixpanel/fetch.py"],
+    "clarity": ["service/clarity/fetch.py"],
+    "growthbook": ["service/growthbook/fetch.py"],
 }
 
 CONNECTORS = sorted(FETCHER_SOURCES)

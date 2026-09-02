@@ -42,9 +42,10 @@ def test_allowed_types_and_pipeline_support():
     from service.pipeline import MANUAL_CREDENTIAL_CONNECTORS, SUPPORTED_CONNECTORS
 
     five = {"apple_ads", "meta_ads", "stripe", "revenuecat", "openai_ads"}
-    assert five <= ALLOWED_CONNECTOR_TYPES
-    assert five <= SUPPORTED_CONNECTORS
-    assert five == MANUAL_CREDENTIAL_CONNECTORS
+    wave2 = {"mixpanel", "clarity", "growthbook"}
+    assert five | wave2 <= ALLOWED_CONNECTOR_TYPES
+    assert five | wave2 <= SUPPORTED_CONNECTORS
+    assert five | wave2 == MANUAL_CREDENTIAL_CONNECTORS
 
 
 def test_knowledge_packs_exist_and_load():

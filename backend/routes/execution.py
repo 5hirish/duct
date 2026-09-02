@@ -31,6 +31,7 @@ from starlette.status import HTTP_404_NOT_FOUND
 import service.execution.ga4_exec  # noqa: F401
 import service.execution.google_ads_exec  # noqa: F401
 import service.execution.gtm_exec  # noqa: F401
+import service.execution.mixpanel_exec  # noqa: F401
 from db.session import get_session
 from models.auth import User
 from models.execution import ExecutionChangeSet, ExecutionGuardrail

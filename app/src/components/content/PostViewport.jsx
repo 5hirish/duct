@@ -19,6 +19,7 @@ import { PostStatus } from "../../lib/contentEnums";
 import { PlatformGlyph, platformMeta } from "./platformGlyphs";
 import SlidesCarousel from "./SlidesCarousel";
 import { titleCase } from "@/lib/format";
+import { Spinner } from "@/components/ui/spinner";
 
 const STREAMING_HINTS = [
   "Picking the hook…",
@@ -290,6 +291,7 @@ function HashtagInput({ value, onChange }) {
       <span className="inline-flex min-w-[120px] flex-1 items-center gap-1 text-muted-foreground">
         <Hash className="size-3" />
         <input value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={onKey} onBlur={add}
+          aria-label="Add a hashtag"
           placeholder="Add a tag, press Enter…" className="flex-1 bg-transparent text-xs outline-none" />
       </span>
     </div>
@@ -390,7 +392,7 @@ function DraftingPulse() {
   }, []);
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
-      <div className="size-10 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
+      <Spinner className="size-10 border-primary/30 border-t-primary" />
       <p className="text-sm font-medium">Drafting the post…</p>
       <p className="text-xs text-muted-foreground transition-opacity duration-500">{STREAMING_HINTS[idx]}</p>
       <p className="max-w-xs text-[10px] text-muted-foreground/60">

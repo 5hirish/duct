@@ -180,6 +180,35 @@ fn try_spawn(app: &AppHandle) -> Result<(), String> {
         command.env("GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET", secret);
     }
 
+    // The key the sidecar encrypts stored connector credentials with, minted
+    // into the OS keychain on first run.
+    //
+    // Skipped when one is already exported, which is the same rule the rest of
+    // this block follows: we set what the bundle cannot otherwise have, and
+    // never overwrite what someone chose. It matters more here than for
+    // FRONTEND_ORIGIN — shadowing the wrong key does not misconfigure a run, it
+    // orphans every row already encrypted with the right one. A developer
+    // pinning DUCT_ENV_FILE at an env file with its own key should export that
+    // key too, for the same reason.
+    //
+    // Failing is not fatal. A Linux box with no Secret Service daemon loses
+    // stored connector credentials for the session — everything else, including
+    // provider keys held in this same absent keychain, was already degraded in
+    // exactly the same way — so the app starts and says why.
+    if std::env::var_os("CREDENTIALS_ENCRYPTION_KEY").is_none() {
+        match crate::credentials_encryption_key() {
+            Ok(key) => {
+                command.env("CREDENTIALS_ENCRYPTION_KEY", key);
+            }
+            Err(err) => {
+                eprintln!(
+                    "duct: no keychain for the credentials key ({err}). \
+                     Connecting a data source will not persist this session."
+                );
+            }
+        }
+    }
+
     // Crash reporting for the bundled backend, only with consent. `local_server`
     // blanks SENTRY_DSN by default on purpose — a laptop is not a deployment —
     // so passing nothing here leaves that default intact. Passing it explicitly

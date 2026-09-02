@@ -14,9 +14,11 @@ import { listArtifacts } from "../../../lib/artifactsApi";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+// Mirrors models/artifact.py's `kind` — what an artifact *is*, not who made it.
 const KIND_TABS = [
   { value: "", label: "All" },
   { value: "report", label: "Reports" },
+  { value: "brief", label: "Briefs" },
   { value: "document", label: "Documents" },
 ];
 

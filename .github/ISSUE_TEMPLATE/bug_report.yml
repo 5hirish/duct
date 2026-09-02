@@ -1,0 +1,96 @@
+name: Bug report
+description: Something behaves differently than documented or intended.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        **Security issues do not belong here.** If the bug lets someone read or
+        write data they should not, close this and follow
+        [SECURITY.md](https://github.com/5hirish/duct/blob/main/SECURITY.md)
+        instead — a public issue publishes the exploit.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which stack. Pick the one you can reproduce in.
+      options:
+        - backend (FastAPI / Python)
+        - app (Next.js)
+        - desktop (Tauri shell / sidecar)
+        - site (static marketing site)
+        - CI / tooling
+        - not sure
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Commit or version
+      description: >-
+        `git rev-parse --short HEAD`, or the desktop app version from its About
+        window.
+      placeholder: ca8e9ff
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: >-
+        What you expected, what you got instead. Include the error and enough
+        of the traceback or console output to locate it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: >-
+        Numbered steps from a clean checkout. A failing test is the best
+        possible version of this — see CONTRIBUTING.md for how to run them.
+      placeholder: |
+        1. cd backend && poetry install --with dev
+        2. poetry run pytest tests/test_x.py::test_y
+        3. …
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mode
+    attributes:
+      label: How are you running it
+      options:
+        - local dev (uvicorn + npm run dev)
+        - desktop app / local sidecar
+        - self-hosted deployment
+        - hosted Duct Cloud
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS and version, Python version, Node version — whichever apply.
+      placeholder: |
+        macOS 15.3 · Python 3.12.8 · Node 22.14 · Postgres 16
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: >-
+            I searched existing issues and this is not a duplicate.
+          required: true
+        - label: >-
+            I have redacted API keys, tokens, account ids and customer data from
+            everything pasted above.
+          required: true

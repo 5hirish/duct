@@ -10,6 +10,7 @@ from __future__ import annotations
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Response
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlmodel import Session
 from starlette.status import HTTP_404_NOT_FOUND
@@ -41,6 +42,7 @@ def _serialize(row: Artifact, *, version_count: int | None = None) -> dict:
         "has_content": bool(row.storage_key),
         "size_bytes": row.size_bytes,
         "summary": row.summary,
+        "pinned": row.pinned,
         "meta": row.meta,
         "created_at": row.created_at.isoformat(),
     }
@@ -338,3 +340,34 @@ def delete_artifact(
     """Delete the whole artifact group (every version) the row belongs to."""
     row = _get_readable(session, user, artifact_id)
     delete_artifact_group(session, row.group_id)
+
+
+class ArtifactPatch(BaseModel):
+    """The only mutable field on a stored version. Content is immutable by
+    design — a change is a new version, which is what `restore` is for."""
+
+    pinned: bool
+
+
+@router.patch("/{artifact_id}")
+def patch_artifact(
+    artifact_id: UUID,
+    body: ArtifactPatch,
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> dict:
+    """Pin or unpin the artifact — applied to the whole group.
+
+    Per *group*, not per version: the library lists the newest version of each
+    group, so a pin written to one row would disappear the next time the agent
+    wrote one. Same reason delete works on the group.
+    """
+    row = _get_readable(session, user, artifact_id)
+    rows = session.execute(
+        select(Artifact).where(Artifact.group_id == row.group_id)
+    ).scalars().all()
+    for version in rows:
+        version.pinned = body.pinned
+    session.commit()
+    session.refresh(row)
+    return _serialize(row)

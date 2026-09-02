@@ -36,3 +36,20 @@ class UserPreferences(BaseModel):
     # efficiency — Efficiency & Speed
     # risk       — Risk & Compliance
     # quality    — Quality & Standards
+
+    # How hard the model should think, in Duct's words rather than the
+    # provider's. Empty = the model's own default, which is deliberate: the
+    # four providers default differently and normalising them would change the
+    # cost and quality of every existing project. See agents/thinking.py.
+    thinking: Literal["", "quick", "balanced", "deep", "exhaustive"] = ""
+
+    preferred_artifact_format: Literal["markdown", "html"] = "markdown"
+    # markdown — a written brief (default): renders in-app, copies into a doc,
+    #            diffs cleanly between versions
+    # html     — a self-contained styled page, for something that gets forwarded
+    #
+    # "dashboard" (the block renderers under app/src/components/insight-blocks)
+    # is deliberately absent: those blocks resolve their rows from an assembled
+    # source bundle that only the legacy synthesis pipeline produces, so an
+    # agent-written dashboard artifact today would render mostly-empty blocks.
+    # It returns with that pipeline in the phase that retires it.

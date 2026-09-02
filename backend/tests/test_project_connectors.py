@@ -25,13 +25,12 @@ from models.connector import ConnectorCredential, ProjectConnector
 from models.membership import ProjectMember, ROLE_COLLABORATOR
 from models.project import Project
 import routes.project_connectors as pc_routes
+import routes.user_connectors as uc_routes
 import service.auth as auth_service
 import service.credentials as credentials_service
 import service.execution.creds as creds_module
-from service.execution.creds import (
-    resolve_execution_creds,
-    stored_connector_credentials,
-)
+from service.connector_access import stored_connector_credentials
+from service.execution.creds import resolve_execution_creds
 from service.membership import ROLE_OWNER
 
 FERNET_KEY = Fernet.generate_key().decode()
@@ -306,3 +305,100 @@ def test_unknown_binding_ids_do_not_break_resolution(db, cfg, owner, project):
     assert stored_connector_credentials(
         db, owner.id, "stripe", project_id=project.id
     ) == {"api_key": "rk_fallback"}
+
+
+# ---------------------------------------------------------------------------
+# Data-source inventory routes
+#
+# The counting question ("has this account connected anything at all?") is not
+# the binding question ("which account does this project use?"), and the UI asks
+# the first one first. These cover both shapes of connector — OAuth and pasted
+# API key — because a count that quietly knows only about Google is the bug
+# this endpoint exists to end.
+# ---------------------------------------------------------------------------
+
+def _sources_by_id(payload):
+    return {row["connector_id"]: row for row in payload}
+
+
+def test_project_data_sources_reports_bound_available_and_not_connected(
+    db, cfg, owner, project
+):
+    # OAuth-shaped, bound to this project.
+    ga4 = _store(db, owner, "ga4", "properties/1", {"refresh_token": "rt"}, account_name="Main")
+    _bind(db, project, ga4, owner)
+    # API-key-shaped, stored but never bound — usable, not chosen.
+    _store(db, owner, "stripe", "acct_A", {"api_key": "rk_a"}, account_name="Client A")
+
+    client = _make_client(db, owner)
+    res = client.get(f"/api/user/projects/{project.id}/data-sources")
+    assert res.status_code == 200
+    rows = _sources_by_id(res.json())
+
+    assert rows["ga4"]["status"] == "bound"
+    assert rows["ga4"]["account_name"] == "Main"
+    assert rows["stripe"]["status"] == "available"
+    # The whole registry comes back, so "nothing stored" is visible too.
+    assert any(r["status"] == "not_connected" for r in rows.values())
+
+
+def test_data_sources_cover_oauth_and_manual_connectors(db, cfg, owner, project):
+    client = _make_client(db, owner)
+    rows = _sources_by_id(client.get(f"/api/user/projects/{project.id}/data-sources").json())
+
+    kinds = {row["auth_kind"] for row in rows.values()}
+    assert kinds == {"oauth", "manual"}, "both connector shapes must be inventoried"
+    # A representative of each, so a registry regression is loud rather than silent.
+    assert rows["ga4"]["auth_kind"] == "oauth"
+    assert rows["stripe"]["auth_kind"] == "manual"
+
+
+def test_project_data_sources_are_membership_gated(db, cfg, owner, project):
+    outsider = User(email="pc-outsider@example.com")
+    db.add(outsider)
+    db.commit()
+    db.refresh(outsider)
+
+    res = _make_client(db, outsider).get(f"/api/user/projects/{project.id}/data-sources")
+    # 404 rather than 403: a non-member must not learn the project exists.
+    assert res.status_code == 404
+
+
+def test_collaborator_sees_the_projects_data_sources(db, cfg, owner, collaborator, project):
+    cred = _store(db, owner, "stripe", "acct_A", {"api_key": "rk_a"})
+    _bind(db, project, cred, owner)
+
+    rows = _sources_by_id(
+        _make_client(db, collaborator)
+        .get(f"/api/user/projects/{project.id}/data-sources")
+        .json()
+    )
+    # The binding points at the OWNER's credential row; that is the point of a
+    # shared project, so a collaborator sees it as bound rather than missing.
+    assert rows["stripe"]["status"] == "bound"
+
+
+def test_account_data_sources_answer_without_a_project(db, cfg, owner):
+    _store(db, owner, "mixpanel", "proj_1", {"service_account_secret": "s"})
+    _store(db, owner, "ga4", "properties/1", {"refresh_token": "rt"})
+
+    app = FastAPI()
+    app.include_router(uc_routes.router, prefix="/api/user/connectors")
+    app.dependency_overrides[get_session_dep] = lambda: db
+    app.dependency_overrides[auth_service.get_current_user] = lambda: owner
+    rows = _sources_by_id(TestClient(app).get("/api/user/connectors/data-sources").json())
+
+    # No project means no bindings — stored credentials are `available`, which is
+    # what the day-one checklist counts.
+    assert rows["mixpanel"]["status"] == "available"
+    assert rows["ga4"]["status"] == "available"
+    assert rows["stripe"]["status"] == "not_connected"
+
+
+def test_account_data_sources_route_is_not_shadowed_by_the_delete_path(db, cfg, owner):
+    """`/data-sources` must not be read as a connector id by DELETE /{id}."""
+    app = FastAPI()
+    app.include_router(uc_routes.router, prefix="/api/user/connectors")
+    app.dependency_overrides[get_session_dep] = lambda: db
+    app.dependency_overrides[auth_service.get_current_user] = lambda: owner
+    assert TestClient(app).get("/api/user/connectors/data-sources").status_code == 200

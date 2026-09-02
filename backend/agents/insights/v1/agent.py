@@ -39,9 +39,10 @@ from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
 from langchain_core.tools import StructuredTool
 from pydantic import BaseModel
 
+from agents.core.codex import build_codex_chat, should_use_codex
 from agents.core.telemetry import model_span
 from agents.models import (
-    OPENAI_COMPATIBLE_BASE_URL,
+    GATEWAY_BASE_URL,
     ModelName,
     Provider,
     get_api_key_kwargs,
@@ -83,13 +84,13 @@ class _NoArgs(BaseModel):
 
 
 def _default_base_url(provider: Provider) -> str:
-    """Installation-level endpoint override for OpenAI-compatible providers.
+    """Installation-level endpoint override for gateway providers.
 
     Read here rather than threaded through every route because it is an
     install-wide setting, not a per-request one — and because agents/models.py
-    stays a config-free leaf module. Native providers never consult it.
+    stays a config-free leaf module. Direct vendors never consult it.
     """
-    if provider not in OPENAI_COMPATIBLE_BASE_URL:
+    if provider not in GATEWAY_BASE_URL:
         return ""
     from config import get_configs
     return getattr(get_configs(), "openrouter_base_url", "") or ""
@@ -133,12 +134,28 @@ class GenerateInsightsAgent:
         api_key_kwargs = get_api_key_kwargs(
             provider, api_key, base_url=base_url or _default_base_url(provider)
         )
-        self.llm = init_chat_model(
-            model=getattr(model, "value", model),
-            model_provider=langchain_provider(provider),
-            temperature=temperature,
-            **api_key_kwargs,
-        )
+        # A ChatGPT subscription credential reaches the Codex backend, not the
+        # public OpenAI API, so it needs its own chat model rather than an
+        # api_key kwarg. See agents/core/codex.
+        #
+        # There is deliberately no Anthropic equivalent: the Messages API
+        # rejects `sk-ant-oat…`, and the only thing that authenticates one is
+        # the `claude` CLI subprocess — measured at ~125s per synthesis with no
+        # token streaming, against ~$0.04 to run the same call on an API key.
+        # Claude on v1 uses ANTHROPIC_API_KEY; v3 is the subscription path.
+        if provider == Provider.OPENAI and should_use_codex(api_key):
+            self.llm = build_codex_chat(
+                model=self.model_id,
+                api_key=api_key,
+                temperature=temperature,
+            )
+        else:
+            self.llm = init_chat_model(
+                model=getattr(model, "value", model),
+                model_provider=langchain_provider(provider),
+                temperature=temperature,
+                **api_key_kwargs,
+            )
         self.llm_structured = self._setup_structured_output()
 
         # Populated by setup_tools_for_goal; bound to identifiers per fetch call.

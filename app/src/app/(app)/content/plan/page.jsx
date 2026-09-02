@@ -23,7 +23,7 @@ export default function PlanBoardPage() {
   }
 
   return (
-    <div className="p-4">
+    <div className="h-full p-4">
       <PlanBoard projectId={projectId} initialPlanId={requestedPlanId} />
     </div>
   );

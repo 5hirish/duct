@@ -95,7 +95,14 @@ export default function ContentLandingPage() {
 // ---------------------------------------------------------------------------
 
 function PlanTab({ projectId }) {
-  return <PlanBoard projectId={projectId} />;
+  // This tab scrolls inside .app-main-wide, so nothing above gives the board a
+  // height — it is the one caller that has to state one. svh, not vh, to match
+  // the rest of the app's full-height surfaces.
+  return (
+    <div className="h-[calc(100svh-15rem)] min-h-[28rem]">
+      <PlanBoard projectId={projectId} />
+    </div>
+  );
 }
 
 // ---------------------------------------------------------------------------

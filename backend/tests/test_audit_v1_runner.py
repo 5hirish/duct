@@ -18,14 +18,14 @@ from langchain_core.language_models.fake_chat_models import FakeMessagesListChat
 from langchain_core.messages import AIMessage
 
 from agents.audit.schema import CrawlPlan, CrawlResult
-from agents.audit.v1.runner import (
-    MAX_QUESTIONS,
-    build_audit_agent,
-    build_ask_user_tool,
-    _split_chunk,
-    stream_audit,
-)
+from agents.audit.v1.runner import build_audit_agent
 from agents.core.events import AgentEvent
+from agents.core.lc import (
+    MAX_QUESTIONS,
+    build_ask_user_tool,
+    split_chunk,
+    stream_agent,
+)
 from agents.core.session import BaseAgentSession, register_session
 
 
@@ -169,7 +169,7 @@ async def test_stream_emits_the_shared_event_vocabulary(crawl_result, emitted):
     async def on_close(_raw: str, _turn: str) -> None:
         pass
 
-    await stream_audit(agent, "audit getduct.ai", emitted, on_artifact_close=on_close)
+    await stream_agent(agent, "audit getduct.ai", emitted, on_artifact_close=on_close)
 
     kinds = [e["event"] for e in emitted.events]
     assert AgentEvent.MESSAGE_STOP in kinds
@@ -190,7 +190,7 @@ async def test_stream_routes_report_payload_to_the_parser(crawl_result, emitted)
     async def on_close(raw: str, turn: str) -> None:
         closed.append((raw, turn))
 
-    await stream_audit(agent, "audit", emitted, on_artifact_close=on_close)
+    await stream_agent(agent, "audit", emitted, on_artifact_close=on_close)
 
     assert closed, "the report tag should have closed"
     raw, _turn = closed[0]
@@ -207,38 +207,48 @@ async def test_stream_routes_report_payload_to_the_parser(crawl_result, emitted)
 # ---------------------------------------------------------------------------
 
 def test_split_chunk_handles_provider_variations():
-    assert _split_chunk(AIMessage(content="plain")) == ("plain", "")
-    assert _split_chunk(
+    assert split_chunk(AIMessage(content="plain")) == ("plain", "")
+    assert split_chunk(
         AIMessage(content=[{"type": "text", "text": "visible"}])
     ) == ("visible", "")
     # Anthropic-style reasoning blocks
-    assert _split_chunk(
+    assert split_chunk(
         AIMessage(content=[{"type": "thinking", "thinking": "hmm"}, {"type": "text", "text": "out"}])
     ) == ("out", "hmm")
     # OpenAI-style reasoning blocks
-    assert _split_chunk(
+    assert split_chunk(
         AIMessage(content=[{"type": "reasoning", "text": "why"}])
     ) == ("", "why")
     # Unknown block types are dropped, never leaked as report text
-    assert _split_chunk(AIMessage(content=[{"type": "image", "url": "x"}])) == ("", "")
-    assert _split_chunk(None) == ("", "")
+    assert split_chunk(AIMessage(content=[{"type": "image", "url": "x"}])) == ("", "")
+    assert split_chunk(None) == ("", "")
 
 
 # ---------------------------------------------------------------------------
 # Route wiring — engine selection
 # ---------------------------------------------------------------------------
 
-def test_route_defaults_to_v3_and_opts_in_to_v1():
-    """V3 stays production; V1 is per-request opt-in while it earns confidence."""
+def test_route_defaults_to_v1_and_opts_in_to_v3():
+    """V1 is production; V3 is per-request opt-in.
+
+    The flip is the first step of consolidating onto one harness. Audit is where
+    it costs nothing — both runners exist with the same ``run_pipeline``
+    signature and event vocabulary (asserted below) — and running V1 by default
+    is how it earns the confidence the old default was waiting for.
+    """
     from agents.audit.v3.runner import ClaudeAuditRunner
     from agents.engines import Engine
     from agents.models import ModelName, Provider
     from routes.audit import _build_runner, _resolve_agent_config
     from agents.audit.v1.runner import LangChainAuditRunner
 
-    # An unset engine resolves to V3.
-    _key, _provider, _model, engine = _resolve_agent_config("")
-    assert engine == Engine.V3
+    # An unset engine resolves to V1...
+    _provider, _model, engine = _resolve_agent_config("")
+    assert engine == Engine.V1
+
+    # ...and V3 remains reachable by naming it.
+    _provider, _model, engine_v3 = _resolve_agent_config("v3")
+    assert engine_v3 == Engine.V3
 
     v3 = _build_runner("k", Provider.ANTHROPIC, ModelName.CLAUDE_SONNET, Engine.V3)
     v1 = _build_runner("k", Provider.GOOGLE_GENAI, ModelName.GEMINI_2_5_FLASH, Engine.V1)
