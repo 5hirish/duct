@@ -1,30 +1,115 @@
-## Learned User Preferences
+# Duct — monorepo agent instructions
 
-- Prefers modular implementations with shared assets/templates over duplicated inline page logic; keep audience-specific navigation and CTAs in partials (main landing vs `for-*` vs tools shells) instead of editing many standalone HTML files; reuse conversion/beta sections as shared partials with intentional variants where copy differs; on marketing tool pages, primary signup CTAs should anchor to the on-page beta/CTA block (hash/scroll), not a bare homepage URL with accumulated query parameters.
-- Prefers report visuals to be data-driven from actual payload data, not mocked or approximated; for third-party service logos in the app UI, prefers official full-color brand marks where appropriate—vendor product icon assets (e.g. Google `gstatic`) or vetted SVGs with explicit brand-color fills—and files under `app/public/icons` over hotlinked URLs that may break; Simple Icons are useful for monochrome marks but are not a substitute when a full-color product logo is required.
-- For the Next.js app, wants OAuth-based data connections and report viewing/generation flows (not only a no-auth demo shell), with attention to mobile usability and add-to-home-screen behavior; new screens and components should stay consistent with the existing shadcn/theme patterns rather than one-off styling; connector lists may be frontend-driven at first but should move toward a backend API that enumerates available connectors.
-- Prefers Playwright (or similar) for automated smoke QA on the static marketing site so routing and internal-link regressions are caught early.
-- Prefers LangChain reporter prompts kept in `backend/agents/reporter/prompts.py` rather than split across extra template directories, and prefers not repeating structured-output schema in natural-language prompts when the LangChain structured API already defines it.
-- Prefers Railway/Railpack-style backend deployment over Docker-centric container workflows when choosing how to ship the FastAPI API.
-- Wants the static marketing site (`site/`) to use the same favicon as the Next.js app for consistent branding.
-- For Next.js app analytics, prefers Google Tag Manager (`NEXT_PUBLIC_GTM_ID`) with GA4 configured in the container; defers additional in-app analytics SDKs (e.g. Mixpanel) until explicitly requested. No brand Twitter/X account—do not require or fabricate `twitter:site` on marketing pages. For paid acquisition, the primary beta signup signal in GA4/GTM is the `form_submit` dataLayer event pushed from the marketing site (`site/assets/duct.js`)—keep GTM params, GA4 conversion marking, and Google Ads import aligned to that name.
-- For Google Ads report generation, prefers account selection and date range in the generate flow (not duplicated on the connections page), business-context inputs visible upfront, preset ranges (last 7 / 30 / 90 days plus custom), and step actions labeled Next until the final step (Generate only on the last step). Also prefers a responsive two-column desktop layout (instead of forcing all fields on one row), a separate preview step before loading, preserving generate-step progress/inputs across reloads, and optional numeric inputs to stay blank by default (not prefilled with `0`).
-- For durable user data (connectors, tokens, profile, reports), prefers Railway PostgreSQL with Alembic migrations and SQLModel/SQLAlchemy over ad-hoc files or a separate BaaS unless requirements change; implement in phases starting with Google Sign-In user storage using an auth-like schema without overengineering. Prefers Alembic autogenerate-created migrations (not hand-written), with a consistent scripted workflow to reduce operational risk. Keeps observability secrets (e.g. Sentry DSN) in environment files rather than source, prefers a single stage label via `APP_ENV` (backend also accepts `ENVIRONMENT` as an alias) instead of duplicating parallel vendor-specific environment variables for the same purpose, and wants env changes appended without overwriting existing `.env` files.
-- When Cloudflare Turnstile is enabled for sign-in, the Google sign-in control should stay disabled until Turnstile verification succeeds (and show an in-button loading state while redirecting) so `/auth/signin/google/authorize` is not hit without a token. Turnstile widget ids can be `0`; client code must use explicit null/undefined checks on the widget ref (not generic truthy checks) when storing, removing, or reading the widget/token so the button can enable after success.
-- Prefers lightweight profile and business-context capture via a small avatar menu (e.g. `Profile` with completion percent linking to an onboarding-style flow) backed by shared client draft storage, instead of full settings/profile pages in early iterations. For multi-step onboarding UI, prefers larger step tabs without `%` in tab labels, no underline on the selected tab when selection is already shown with a strong outline or fill, no extra microcopy under progress bars, and subtler input corner radius (Luma-like with shadcn) rather than heavily rounded pill-style fields; for onboarding Target/business-context data, prefers use-case-agnostic fields (move use-case-specific KPIs to per-report generate flow), frame top-level goal as a North Star metric, and capture growth stage with measurable milestone-style options plus short context. For onboarding/new-project recommendations, prefers North Star metric and growth-stage suggestions to be backend-driven and mapped from selected business model + industry.
+Monorepo for [getduct.ai](https://getduct.ai). Duct connects a product and
+marketing stack and synthesises cross-tool insights into briefs and alerts.
 
-## Learned Workspace Facts
+**Human contributors: start with [CONTRIBUTING.md](CONTRIBUTING.md).** This file
+is the same information for coding agents, plus the conventions worth knowing
+before writing a line.
 
-- Marketing demos use shared `site/assets/demo.css` and `site/assets/demo.js` plus variant data files. The static marketing site (`site/`) is deployed on Cloudflare Pages; internal navigation should use extensionless paths (e.g. `/blog`, `/for-paid-ads`) rather than hardcoded `.html` URLs so production routing stays consistent. The site also ships `site/llms.txt` (LLM-oriented discovery) and `site/.well-known/brand-facts.json` (structured brand identity for agents/crawlers). CI page checks (`.github/scripts/check-pages.py`) require Twitter Card meta: `twitter:card`, `twitter:title`, `twitter:description`, `twitter:image`; `twitter:site` is not required. Connector and tool brand SVGs for static pages live under `site/assets/icons/` (same set as audience landings); reuse those files instead of emoji placeholders—`site/assets/icon` is not the shared vendor-logo directory.
-- Local preview of the static site often uses `python3 dev_server.py --port 8090` with working directory `site/` (see `.vscode/tasks.json` **Serve site on :8090**); only one process can listen on a port—`OSError: [Errno 48] Address already in use` means another server (usually a leftover `dev_server.py`) is already bound to **8090**; stop that process before starting a second instance. In VS Code/Cursor, **Site: dev server** (`launch.json`) runs `dev_server.py` in a debug terminal (no auto-opened browser) and **Site: stop dev server (8090)** as `postDebugTask` so stopping the debug session tears down the listener on **8090**; compound **Duct: Site + API** mirrors **Duct: App + API** (FastAPI on **8002** + site on **8090**) and each configuration carries its own `postDebugTask`, because VS Code ignores `postDebugTask` on a *compound* — the compound schema accepts only `name`, `presentation`, `configurations`, `stopAll`, `preLaunchTask`. **Duct: stop Site + API (8002, 8090)** survives as a manual task in the task picker.
-- Playwright smoke tests for the marketing site live under `site/tests/e2e/` (see `site/playwright.config.js`). They run in `.github/workflows/site.yml` in the same job as HTML and sitemap validation (one runner for the full Site Checks flow). The home-page smoke asserts visible links including `a[href="/blog/"]`; at narrow widths header nav is hidden (`site/assets/duct.css`), so **`/blog/` must appear in the shared footer** (or another always-visible surface), not only in the header dropdown. Ad-hoc Playwright MCP or manual screenshots may land at the repo root—use `/*.png` in `.gitignore` (not `*.png`) so only root-level dumps are ignored, not PNGs under `app/public/` or `site/assets/`.
-- Local Next.js dev (`app/`) listens on **3003** (`npm run dev`); FastAPI on **8002**; static site preview on **8090** (`site/dev_server.py`). Ports are pinned in `app/package.json`, `backend/config.py` defaults, and `.vscode/` tasks—avoid relying on framework defaults so other local apps (e.g. on 3002 / 5002 / 5003) do not clash.
-- Demo JSON under `backend/data/` is grouped by connector id (e.g. `google_ads/`). Google Ads: raw input `backend/data/google_ads/raw/demo_raw_payload.json`; canonical brief sample `backend/data/google_ads/google-ads-report.json` (what the Next.js report list merges in as a dev/demo). The **/generate** flow uses `POST /api/generate` and **`localStorage`** (`app/src/lib/localInsights.js`) for user-visible persistence; user-generated runs are not kept as checked-in artifacts under `backend/data/` (no legacy server-side generated check-ins). In app flows, Google Analytics and Search Console use connector ids **`ga4`** and **`gsc`** (not `analytics` / `search_console`).
-- The typed Google Ads brief payload (dataclasses / JSON contract and reporting `StrEnum`s) lives in `backend/service/google/schema.py`; `backend/service/google/brief.py` builds it and `backend/service/google/metrics.py` formats comparison metrics.
-- The backend no longer renders HTML or writes themes.json — it embeds `source_metadata.theme` (e.g. `paid_ads`) into the JSON payload. The Next.js App Router viewer resolves accent colors via `app/src/lib/themes.js`; `app/src/components/GoogleAdsReport.js` renders the full report from the payload.
-- Run the FastAPI API from `backend/` with `DUCT_API_KEY` set for `/api/*`. Google connector OAuth authorize endpoints include `GET /auth/connectors/google_ads/oauth/authorize` (also `ga4` and `gsc`); callbacks support both connector-specific paths and shared `/auth/google/callback`, which now routes by stored OAuth flow state for `google_ads` / `ga4` / `gsc` (while Google sign-in remains on `/auth/signin/google/callback`). Set **`API_PUBLIC_URL`** to the public API origin (e.g. `https://api.getduct.ai`); **`GOOGLE_OAUTH_REDIRECT_URI`** / **`GOOGLE_SIGNIN_REDIRECT_URI`** default to `{API_PUBLIC_URL}/auth/google/callback` and `…/auth/signin/google/callback` when unset—override if you need different paths. Google Cloud authorized redirect URIs must list those **full** URLs. `google_auth_oauthlib` enables PKCE by default; the backend stores the PKCE code verifier with OAuth state between authorize and callback so token exchange succeeds.
-- **`GET /`** returns public JSON (`service`, `version`, `links`). **`GET /health`** is unauthenticated. **`/openapi.json`**, **`/docs`**, and **`/redoc`** are not served unless **`EXPOSE_OPENAPI_DOCS=true`**; when they are served, optional **`OPENAPI_DOCS_BASIC_PASSWORD`** / **`OPENAPI_DOCS_BASIC_USER`** (aliases **`DUCT_OPENAPI_DOCS_BASIC_PASSWORD`**, **`DUCT_OPENAPI_DOCS_BASIC_USER`**) require HTTP Basic auth on those paths. Production: keep OpenAPI off unless needed. Local settings load **`backend/.env`** then **`backend/.env.local`**. Application settings resolve through **`backend/config.py`** (`Configs` / `get_configs()`, pydantic-settings). See **the deployment runbook (duct-cloud, private)**.
-- LangChain-based report synthesis lives under `backend/agents/reporter/` (e.g. `generate_agent.py`, `schema.py`, `entities.py`). For Google ADK local agent debugging, run `adk web` from `backend/` with the repo `agents/` tree (Google ADK “Web Interface” / `adk.dev` runtime docs); VS Code **`Backend: ADK web`** uses the repo-pinned port in `.vscode/launch.json` (upstream ADK docs often assume **8000**). ADK Web is dev-only, not for production.
-- Production deployment uses the Next.js app on Cloudflare Workers with the FastAPI API on Railway (Railpack/Poetry; Railway service root `backend`); see the deployment runbook (duct-cloud, private). The app ships via **Cloudflare Workers Builds** (Git-connected); `NEXT_PUBLIC_*` are set as **build variables** there. Prefer `NEXT_PUBLIC_API_BASE` as the frontend API origin variable (replacing `NEXT_PUBLIC_BACKEND_URL`). Worker builds use OpenNext for Cloudflare (`opennextjs-cloudflare build` → `.open-next/` for Wrangler; `npm run build` is plain Next only). `NEXT_PUBLIC_APP_URL` must be a valid absolute URL at build time for `metadataBase` (invalid placeholders break or fall back in root layout). Paths referenced in root `metadata`/`manifest` for icons (e.g. `/icons/icon.svg`, `/apple-icon.svg`) must exist under `app/public/` or the browser will 404; stale tabs/service workers on `localhost` can also request unrelated legacy paths (`/@vite/client`, old manifest icons)—clear site data when debugging odd requests.
-- Server-side report listing in the app must not assume a repo-adjacent `backend/data` tree (or other local `fs` paths) exists or is readable in production Workers; use API/DB-backed lists or guard filesystem access and fail open (e.g. empty list) when the directory is missing.
-- Observability: backend uses **`sentry-sdk`** (Poetry). Configure via env (e.g. `SENTRY_DSN`, `APP_ENV` / `ENVIRONMENT`); Sentry does not initialize when **`API_PUBLIC_URL`** has a localhost-class hostname. The Next.js app uses **`@sentry/nextjs`** with **`NEXT_PUBLIC_SENTRY_DSN`** and **`APP_ENV`** (see `app/src/instrumentation*.ts`, `app/src/sentry.*.config.ts`, `next.config.mjs`).
+## How the instruction files work
+
+`AGENTS.md` is canonical in every directory. `CLAUDE.md` beside it is a symlink
+to the same file — edit `AGENTS.md` and both tools see the change. The same
+pattern already applies to skills: `.cursor/skills/<name>/SKILL.md` symlinks to
+`.claude/skills/<name>.md`.
+
+There was previously a root `AGENTS.md` holding auto-accumulated "learned
+preferences" separate from `CLAUDE.md`. Two files describing one repo drift, and
+that one did — it still named modules that had been deleted. One file per
+directory, written by hand, is the rule now. **Do not append machine-generated
+preference logs to these files.** If a preference is worth keeping it is worth
+writing as a rule, in the directory it applies to.
+
+Instructions are local to the directory they describe. Read the `AGENTS.md` for
+the area you are editing; site conventions do not apply to `backend/`.
+
+## Areas
+
+| Path | Stack | Instructions |
+|------|-------|--------------|
+| `backend/` | Python 3.12, FastAPI, SQLModel, Alembic | [`backend/AGENTS.md`](backend/AGENTS.md) |
+| `app/` | Next.js App Router (JS, not TS), Cloudflare Workers | [`app/AGENTS.md`](app/AGENTS.md) |
+| `desktop/` | Tauri v2 shell; OS-keychain BYO provider keys | [`desktop/AGENTS.md`](desktop/AGENTS.md) |
+| `site/` | Static HTML/CSS/JS, no build step | [`site/AGENTS.md`](site/AGENTS.md) |
+| `docs/` | Engineering plans and reference material | [`docs/README.md`](docs/README.md) |
+| `scripts/` | Deploy/env plumbing and repo hygiene | below |
+
+Product strategy, GTM and deployment runbooks live in a separate private
+repository. Documents here occasionally cite them; those citations state their
+reasoning inline, so a missing link never blocks understanding the code.
+
+## Setup and verification
+
+```bash
+make setup          # dependencies for every area
+make check          # everything CI runs on a PR
+make check-backend  # or just the area you touched
+make test           # backend tests alone — the fastest useful signal
+```
+
+`make check` runs the same commands as `.github/workflows/*.yml`. **Run it
+before proposing a change.** If it disagrees with CI, CI is right and the
+`Makefile` is wrong — fix the `Makefile`.
+
+Dev ports are pinned deliberately, not framework defaults, so they stay clear of
+other local stacks: Next.js **3003**, FastAPI **8002**, static site **8090**.
+Only one process can bind a port — `Address already in use` on 8090 usually
+means a leftover `dev_server.py`.
+
+## Non-negotiables
+
+These are the ones that cost the most to get wrong. Each is enforced by a test,
+so you will find out — the point of listing them is that finding out early is
+cheaper.
+
+- **Authorization is membership, not ownership, and `validate_api_key` is not a
+  boundary.** `DUCT_API_KEY` ships to the browser as
+  `NEXT_PUBLIC_DUCT_API_KEY`; it proves "this is the Duct app", never "this
+  caller owns that row". Any route touching a project-scoped row needs
+  `get_current_user` **plus** a membership check, and returns 404 (not 403) for
+  a non-member so the response is not an oracle.
+  Enforced by `backend/tests/test_route_auth_boundaries.py`.
+- **Domain code imports no agent framework.** Framework imports live only in
+  runners and binders. Enforced by `backend/tests/test_harness_boundaries.py`,
+  which holds the allowlist — adding a file to it is a deliberate act, not the
+  fix for a red test.
+- **A new setting means updating `backend/.env.example`.** Every field in
+  `Configs` has a default, so a missing variable never fails loudly; the feature
+  silently does nothing. Enforced by `backend/tests/test_env_example.py`.
+- **Never commit a credential.** This repository is public and its history is
+  public with it; a force-push does not unpublish, and the only real remedy is
+  rotation. Install the pre-commit scanner once per clone:
+  `git config core.hooksPath .githooks` (plus `brew install betterleaks`).
+
+## Helper scripts (`scripts/`)
+
+Check here before hand-rolling env or secret plumbing:
+
+- `push_env_to_railway.py` — push a dotenv file to the linked Railway service
+  (`--file backend/.env.prod`; default `backend/.env.test`). Sets each var with
+  `--skip-deploys`, then redeploys unless `--no-redeploy`. Needs `railway login`
+  and `railway link`.
+- `push_app_env_to_cloudflare.py` — load an app env file, then OpenNext build +
+  `wrangler deploy`. `NEXT_PUBLIC_*` are baked at build time, so an env change
+  needs this, not just a dashboard edit.
+- `push_env_to_github.py` — push allowlisted keys from gitignored `.env.test`
+  files to GitHub repo secrets/variables.
+- `bootstrap_env_test.sh` — copy local dev env files to the gitignored
+  `.env.test` targets.
+- `envfile.py` — shared dotenv parser used by the above.
+- `security/audit.py`, `security/leak_scan.py` — repo hygiene, both run in CI.
+
+Env file map: `backend/.env.local` = local dev (also the database proxy URL for
+Alembic), `backend/.env.prod` = deployment source of truth, `.env.test` =
+gitignored staging for the push scripts. All are gitignored — never commit one.
+
+## Working style
+
+- One concern per change. Explain *why* in the commit body; the diff shows what.
+- Comments in this codebase carry reasoning, not description. Match that — a
+  comment restating the line below it is noise, one naming the failure that
+  motivated the line is why the code survives.
+- Update the docs next to the code you changed, including the area `AGENTS.md`
+  if you changed a convention.
+- Deployment happens through CI on merge to `main`. Do not deploy from a CLI.
