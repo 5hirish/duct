@@ -1,0 +1,74 @@
+name: desktop — compile check
+
+# The question a pull request can actually answer about the desktop shell:
+# does the Rust compile.
+#
+# `desktop-release.yml` used to run on PRs and asked a different one. Every job
+# there ends in signing and publishing, so a PR without the release secrets saw
+# all three platforms fail whatever the code did — three red checks, one of them
+# twenty-five minutes of Windows runner, none of them about the diff. Releases
+# now happen on main only; this is what stays behind.
+#
+# One platform, not three. The shell is the same Rust either way, and a type
+# error does not respect an OS boundary — the per-platform work is bundling,
+# which is precisely what is deliberately not happening here.
+#
+# `cargo check`, not `cargo build`: it type-checks the crate and its
+# dependencies without linking or codegen, which is most of the signal for a
+# fraction of the time. It also needs no sidecar — the PyInstaller tree is
+# declared under `bundle.resources` in tauri.conf.json and is resolved when a
+# bundle is produced, not when the crate is compiled. Building it here would
+# add ten minutes of PyInstaller to check something it cannot affect.
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+    paths:
+      - 'desktop/**'
+      - '!desktop/**.md'
+      - '.github/workflows/desktop-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: cargo check
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: desktop/src-tauri
+
+      # The same set desktop-release.yml installs, and for the same reasons:
+      # libwebkit2gtk-4.1 is Tauri v2's webview and libsoup-3.0 rides with it,
+      # libdbus-1 is what the `keyring` crate's secret-service backend links
+      # against. `patchelf` and `librsvg2` are bundling-time tools, so they are
+      # not here.
+      - name: Install Tauri system dependencies
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev \
+            libsoup-3.0-dev \
+            libdbus-1-dev \
+            libayatana-appindicator3-dev
+
+      - name: cargo check
+        working-directory: desktop/src-tauri
+        run: cargo check --locked --all-targets

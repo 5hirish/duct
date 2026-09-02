@@ -4,12 +4,21 @@ permissions:
   contents: read
 
 on:
+  # `edited` is deliberately absent: on `pull_request` it fires when the TITLE
+  # or DESCRIPTION changes, so retitling a PR re-ran every job below. `synchronize`
+  # already covers new commits, which is the only edit that can change the answer.
   pull_request:
     types:
       - opened
-      - edited
       - synchronize
       - reopened
+    # Only when this area actually changed. Before this, a backend-only PR still
+    # paid for a full run here. Filtering the PR trigger and not the `push` one
+    # is deliberate — main keeps building and deploying exactly as it does today,
+    # so this can only ever remove work from a PR, never from a release.
+    paths:
+      - 'site/**'
+      - '.github/workflows/site.yml'
   push:
     branches:
       - main

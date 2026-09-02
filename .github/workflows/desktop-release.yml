@@ -58,20 +58,23 @@ name: desktop — release (macOS, Windows, Linux)
 # by hand. Keep it backed up outside CI.
 
 on:
+  # Releases happen on main. Nowhere else.
+  #
+  # This used to run on pull requests too, on the reasoning that desktop changes
+  # should build where the risk lives. In practice it asked a PR a question a PR
+  # cannot answer: every job here ends in signing and publishing, so without the
+  # release secrets all three platforms failed on every PR regardless of whether
+  # the code was sound — twenty-five minutes of Windows runner to learn nothing.
+  # `desktop-check.yml` covers the part a PR *can* answer: does it compile.
+  #
+  # macOS runners bill at a 10x minute multiplier and the sidecar build is the
+  # slow part, which is the other half of why this is main-only.
   push:
-    # macOS runners bill at a 10x minute multiplier and the sidecar build is the
-    # slow part, so backend changes only trigger a full release build on main.
-    # Desktop changes still build on PRs, where the risk of breakage lives.
     branches: [main]
     paths:
       - 'desktop/**'
       - '!desktop/**.md'
       - 'backend/**'
-      - '.github/workflows/desktop-release.yml'
-  pull_request:
-    paths:
-      - 'desktop/**'
-      - '!desktop/**.md'
       - '.github/workflows/desktop-release.yml'
   workflow_dispatch:
 
