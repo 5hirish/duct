@@ -16,7 +16,7 @@
     "check:sources": "node scripts/check-data-sources.mjs"
   },
   "keywords": [],
-  "license": "UNLICENSED",
+  "license": "MIT",
   "dependencies": {
     "@nivo/core": "^0.99.0",
     "@nivo/heatmap": "^0.99.0",
