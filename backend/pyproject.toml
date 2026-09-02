@@ -21,7 +21,7 @@ packages = [
 [tool.poetry.dependencies]
 fastapi = "^0.135"
 uvicorn = {version = "^0.49", extras = ["standard"]}
-google-ads = "^30.0"
+google-ads = "^31.4"
 google-analytics-data = "^0.23"
 google-api-python-client = "^2.179.0"
 google-genai = "^2.8"
