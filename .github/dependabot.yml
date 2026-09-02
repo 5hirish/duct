@@ -1,0 +1,131 @@
+# Dependabot — security and version updates across the four stacks.
+#
+# Grouped deliberately. Ungrouped, this repo produces roughly a dozen PRs a
+# week across npm, Poetry, Cargo and Actions, which is how Dependabot ends up
+# muted. One grouped PR per ecosystem per week is reviewable; twelve are not.
+#
+# Security updates ignore the schedule and the group cap, so a real advisory
+# still arrives immediately as its own PR.
+
+version: 2
+
+updates:
+  # --- app: Next.js on Cloudflare Workers ---------------------------------
+  - package-ecosystem: npm
+    directory: /app
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      # Next + OpenNext + wrangler move together; splitting them produces PRs
+      # that cannot pass CI alone.
+      next-and-cloudflare:
+        patterns:
+          - "next"
+          - "@opennextjs/*"
+          - "wrangler"
+          - "@cloudflare/*"
+      dev-dependencies:
+        dependency-type: development
+      production-minor-and-patch:
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+    labels:
+      - dependencies
+      - app
+
+  # --- site: Playwright smoke tests only ----------------------------------
+  - package-ecosystem: npm
+    directory: /site
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 2
+    groups:
+      site-test-tooling:
+        patterns:
+          - "*"
+    labels:
+      - dependencies
+      - site
+
+  # --- backend: FastAPI + the agent stack ---------------------------------
+  #
+  # `deepagents` is pinned exactly rather than with a caret because it changes
+  # behaviour in minor releases (task planning became opt-in in 0.7).
+  # tests/test_deepagents_harness.py is the upgrade gate — do not merge a bump
+  # here on green CI alone without reading that suite's output.
+  - package-ecosystem: pip
+    directory: /backend
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      langchain-stack:
+        patterns:
+          - "langchain*"
+          - "langgraph*"
+          - "deepagents"
+      google-apis:
+        patterns:
+          - "google-*"
+      dev-dependencies:
+        dependency-type: development
+      production-minor-and-patch:
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+    labels:
+      - dependencies
+      - backend
+
+  # --- desktop: Tauri shell ------------------------------------------------
+  - package-ecosystem: cargo
+    directory: /desktop/src-tauri
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 3
+    groups:
+      tauri:
+        patterns:
+          - "tauri*"
+      rust-dependencies:
+        patterns:
+          - "*"
+    labels:
+      - dependencies
+      - desktop
+
+  - package-ecosystem: npm
+    directory: /desktop
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 2
+    groups:
+      desktop-tooling:
+        patterns:
+          - "*"
+    labels:
+      - dependencies
+      - desktop
+
+  # --- GitHub Actions ------------------------------------------------------
+  #
+  # Worth keeping current: these run with repository secrets, and a stale
+  # third-party action is a supply-chain surface.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 3
+    groups:
+      actions:
+        patterns:
+          - "*"
+    labels:
+      - dependencies
+      - ci

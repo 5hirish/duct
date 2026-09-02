@@ -1,0 +1,12 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/5hirish/duct/security/advisories/new
+    about: >-
+      Do not open a public issue for a security problem. Report it privately
+      here, or email hello@getduct.ai with a SECURITY: subject line.
+  - name: Question or idea
+    url: https://github.com/5hirish/duct/discussions
+    about: >-
+      For usage questions, setup help, and open-ended proposals. Issues are for
+      tracked, actionable work.
