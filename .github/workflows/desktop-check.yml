@@ -15,10 +15,8 @@ name: desktop — compile check
 #
 # `cargo check`, not `cargo build`: it type-checks the crate and its
 # dependencies without linking or codegen, which is most of the signal for a
-# fraction of the time. It also needs no sidecar — the PyInstaller tree is
-# declared under `bundle.resources` in tauri.conf.json and is resolved when a
-# bundle is produced, not when the crate is compiled. Building it here would
-# add ten minutes of PyInstaller to check something it cannot affect.
+# fraction of the time. It does still need the sidecar path to exist, which is
+# not the same as needing a sidecar — see the stub step below.
 
 on:
   pull_request:
@@ -52,6 +50,10 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: desktop/src-tauri
+          # The first green run is what populates this cache, and a red one
+          # still paid the full dependency compile. Keeping it means a failure
+          # costs one contributor thirteen minutes rather than every one after.
+          cache-on-failure: true
 
       # The same set desktop-release.yml installs, and for the same reasons:
       # libwebkit2gtk-4.1 is Tauri v2's webview and libsoup-3.0 rides with it,
@@ -68,6 +70,26 @@ jobs:
             libsoup-3.0-dev \
             libdbus-1-dev \
             libayatana-appindicator3-dev
+
+      # tauri-build validates every `bundle.resources` path from inside
+      # build.rs, so the crate does not type-check unless
+      # backend/dist/duct-sidecar exists: `cargo check` panics with "resource
+      # path `../../backend/dist/duct-sidecar` doesn't exist" before reading a
+      # line of our Rust. The first version of this file asserted the opposite
+      # and passed locally only because a real sidecar happened to be sitting in
+      # backend/dist from an earlier build.
+      #
+      # A stub satisfies it, and a stub is the honest thing to use. What is
+      # inside that directory cannot affect whether the Rust type-checks — only
+      # whether a bundle is usable, and no bundle is produced here. Building the
+      # real one would be ten minutes of PyInstaller spent on something this job
+      # does not look at.
+      - name: Stub the sidecar resource
+        run: |
+          set -euo pipefail
+          mkdir -p backend/dist/duct-sidecar
+          echo 'Placeholder. See .github/workflows/desktop-check.yml.' \
+            > backend/dist/duct-sidecar/PLACEHOLDER
 
       - name: cargo check
         working-directory: desktop/src-tauri
