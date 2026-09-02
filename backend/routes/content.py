@@ -87,7 +87,7 @@ from models.project import Project
 from service import storage
 from service.auth import get_current_user, get_user_provider_keys
 from service.membership import get_project_for_user, get_project_row_for_user
-from service.provider_keys import stored_provider_keys
+from service.provider_keys import stored_keys_for
 from utils.dates import now_iso
 
 logger = logging.getLogger(__name__)
@@ -164,7 +164,7 @@ def _resolve_api_key(
     if owner_id is None:
         owner_id = _session_owner(session_id)
     resolved = resolve_provider_key(
-        provider, user_keys, stored_keys=_stored_for(owner_id)
+        provider, user_keys, stored_keys=stored_keys_for(owner_id)
     )
     if resolved.billed_to_duct:
         logger.info("content: run billed to Duct (%s/%s)", provider.value, resolved.source)
@@ -183,11 +183,6 @@ def _session_owner(session_id: str):
 
     sess = _get_agent_session(session_id)
     return getattr(sess, "user_id", None) if sess else None
-
-
-def _stored_for(owner_id):
-    with next(db_session()) as db:
-        return stored_provider_keys(db, owner_id)
 
 
 def _attach_image_key(
@@ -214,7 +209,7 @@ def _attach_image_key(
         owner_id = getattr(sess, "user_id", None)
     try:
         resolved = resolve_provider_key(
-            Provider.GOOGLE_GENAI, user_keys, stored_keys=_stored_for(owner_id)
+            Provider.GOOGLE_GENAI, user_keys, stored_keys=stored_keys_for(owner_id)
         )
     except ProviderKeyRequired:
         # Expected on the hosted deployment for a user who has connected no

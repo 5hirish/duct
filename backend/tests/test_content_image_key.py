@@ -90,7 +90,7 @@ def test_the_tools_module_cannot_reach_config_at_all():
 def _patch_resolution(monkeypatch, *, stored=None, raises=False):
     from agents.engines import ProviderKey, ProviderKeyRequired
 
-    monkeypatch.setattr(content_routes, "_stored_for", lambda _owner: stored or {})
+    monkeypatch.setattr(content_routes, "stored_keys_for", lambda _owner: stored or {})
 
     def _resolve(provider, user_keys=None, *, stored_keys=None, duct_pays=False):
         assert provider is Provider.GOOGLE_GENAI

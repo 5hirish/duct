@@ -34,11 +34,10 @@ from agents.engines import (
     resolve_engine_provider,
     resolve_provider_key,
 )
-from db.session import get_session as db_session
 from models.auth import User
 from service.auth import get_current_user_optional, get_user_provider_keys
 from service.crawl.fetcher import SSRFError, validate_public_url
-from service.provider_keys import stored_provider_keys
+from service.provider_keys import stored_keys_for
 from config import get_configs
 from utils.dates import now_iso
 
@@ -79,28 +78,36 @@ async def _prune_stale_sessions() -> None:
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _resolve_agent_config(
-    request_engine: str = "",
-    user_keys: dict | None = None,
-    owner_id: Any = None,
-) -> tuple[str, Any, Any, Engine]:
-    """Engine/provider/model, and the key this run is allowed to spend.
+def _resolve_agent_config(request_engine: str = "") -> tuple[Any, Any, Engine]:
+    """Which engine, provider and model this request routes to.
 
-    The key half is not a config read any more — see
-    ``agents.engines.resolve_provider_key``. On the hosted deployment an audit
-    with no key of the caller's own raises ProviderKeyRequired here rather than
-    running on Duct's account.
+    Deliberately *not* the key. Which credential a run may spend is a separate
+    question with separate inputs (the caller's headers, their saved keys, the
+    deployment's policy) and a separate failure mode — resolving it here meant
+    routing could not be answered at all on an instance with no keys
+    configured, which is a strange thing for a function named for the agent's
+    config to insist on.
     """
     cfg = get_configs()
     engine = resolve_engine(request_engine or "v1")  # default v1
     provider = resolve_engine_provider(engine, cfg.generate_provider or None)
     model = resolve_engine_model(engine, provider, cfg.generate_model or None)
-    with next(db_session()) as db:
-        stored = stored_provider_keys(db, owner_id)
-    resolved = resolve_provider_key(provider, user_keys, stored_keys=stored)
+    return provider, model, engine
+
+
+def _resolve_run_key(provider: Any, user_keys: dict | None, owner_id: Any) -> str:
+    """The key this audit may spend, or ProviderKeyRequired.
+
+    See ``agents.engines.resolve_provider_key``: on the hosted deployment an
+    audit with no key of the caller's own fails here rather than running on
+    Duct's account.
+    """
+    resolved = resolve_provider_key(
+        provider, user_keys, stored_keys=stored_keys_for(owner_id)
+    )
     if resolved.billed_to_duct:
         logger.info("audit: run billed to Duct (%s/%s)", provider.value, resolved.source)
-    return resolved.key, provider, model, engine
+    return resolved.key
 
 
 async def _emit(queue: asyncio.Queue, body: dict[str, Any]) -> None:
@@ -155,9 +162,8 @@ async def _run_audit_pipeline(
     owner_id: Any = None,
 ) -> None:
     try:
-        api_key, provider, model, engine = _resolve_agent_config(
-            req.engine, user_keys, owner_id
-        )
+        provider, model, engine = _resolve_agent_config(req.engine)
+        api_key = _resolve_run_key(provider, user_keys, owner_id)
         # An empty key past this point is the V3 subscription path, which
         # resolve_provider_key has already decided is permitted here.
 

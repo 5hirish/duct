@@ -14,7 +14,7 @@ from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN
 
 from agents.models import Provider
 from config import Configs, get_configs
-from db.session import get_session
+from db.session import get_session_optional
 from models.auth import User
 
 logger = logging.getLogger(__name__)
@@ -80,9 +80,17 @@ async def get_user_provider_keys(
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Security(_bearer),
     settings: Configs = Depends(get_configs),
-    session: Session = Depends(get_session),
+    session: Session | None = Depends(get_session_optional),
 ) -> User:
-    """Validate the Bearer JWT and return the authenticated User row."""
+    """Validate the Bearer JWT and return the authenticated User row.
+
+    The session is optional so that *rejecting* a caller never depends on the
+    database. FastAPI resolves the dependency tree before the endpoint runs, so
+    a hard ``Depends(get_session)`` here turned "you sent no token" into
+    "DATABASE_URL is not configured" — a 500 about us in answer to a question
+    about them. A request that gets far enough to need a user row still fails
+    loudly below when there is no database to read it from.
+    """
     if not credentials:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Not authenticated")
     if not settings.jwt_secret:
@@ -102,6 +110,10 @@ async def get_current_user(
     if not email:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Invalid token payload")
 
+    if session is None:
+        # A well-formed token we cannot check. Not the caller's fault and not
+        # an authentication failure, so it must not be dressed up as one.
+        raise RuntimeError("DATABASE_URL is not configured.")
     user = session.execute(select(User).where(User.email == email)).scalars().first()
     if user is None:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="User not found")
@@ -111,7 +123,7 @@ async def get_current_user(
 async def get_current_user_optional(
     credentials: HTTPAuthorizationCredentials | None = Security(_bearer),
     settings: Configs = Depends(get_configs),
-    session: Session = Depends(get_session),
+    session: Session | None = Depends(get_session_optional),
 ) -> User | None:
     """Like ``get_current_user`` but returns ``None`` instead of raising 401 when
     no valid Bearer token is present.
@@ -132,6 +144,6 @@ async def get_current_user_optional(
     except jwt.InvalidTokenError:  # includes ExpiredSignatureError
         return None
     email: str = payload.get("sub", "")
-    if not email:
+    if not email or session is None:
         return None
     return session.execute(select(User).where(User.email == email)).scalars().first()

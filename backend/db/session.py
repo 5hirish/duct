@@ -64,6 +64,28 @@ def get_session() -> Generator[Session, None, None]:
         yield session
 
 
+def get_session_optional() -> Generator[Session | None, None, None]:
+    """A session when one can exist, ``None`` when the app has no database.
+
+    For dependencies that run *before* anyone has been authenticated. FastAPI
+    resolves the whole dependency tree before calling the endpoint, so a hard
+    ``Depends(get_session)`` on the auth dependency means an unauthenticated
+    request raises "DATABASE_URL is not configured" instead of 401 — the caller
+    is told about our configuration rather than about their missing token, and
+    a property that should hold unconditionally ("the API key is not a gate")
+    becomes a property of the environment.
+
+    Consumers must still refuse to proceed on ``None``: this widens *when* the
+    failure is reported, never whether it is.
+    """
+    engine = get_engine()
+    if engine is None:
+        yield None
+        return
+    with Session(engine) as session:
+        yield session
+
+
 def init_db() -> None:
     """Initialize tables for local/test runs when migrations are not applied."""
     engine = get_engine()

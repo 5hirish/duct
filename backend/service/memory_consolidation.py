@@ -61,7 +61,7 @@ from service.memory import (
     render_digest,
     resolve_short_id,
 )
-from service.provider_keys import stored_provider_keys
+from service.provider_keys import stored_keys_for
 from utils.dates import parse_iso, utcnow
 
 logger = logging.getLogger(__name__)
@@ -242,10 +242,10 @@ def _build_model(owner_id: UUID | None = None):
     engine = resolve_engine(cfg.generate_engine or None)
     provider = resolve_engine_provider(engine, cfg.generate_provider or None)
     model = resolve_engine_model(engine, provider, cfg.generate_model or None)
-    with next(db_session()) as db:
-        stored = stored_provider_keys(db, owner_id)
     try:
-        api_key = resolve_provider_key(provider, stored_keys=stored).key
+        api_key = resolve_provider_key(
+            provider, stored_keys=stored_keys_for(owner_id)
+        ).key
     except ProviderKeyRequired:
         return None
     if not api_key:
@@ -500,10 +500,10 @@ def _build_findings_model(owner_id: UUID | None = None):
     engine = resolve_engine(cfg.generate_engine or None)
     provider = resolve_engine_provider(engine, cfg.generate_provider or None)
     model = resolve_engine_model(engine, provider, cfg.generate_model or None)
-    with next(db_session()) as db:
-        stored = stored_provider_keys(db, owner_id)
     try:
-        api_key = resolve_provider_key(provider, stored_keys=stored).key
+        api_key = resolve_provider_key(
+            provider, stored_keys=stored_keys_for(owner_id)
+        ).key
     except ProviderKeyRequired:
         return None
     if not api_key:

@@ -37,7 +37,7 @@ from models.project import Project
 from service.execution.policy import effective_autonomy
 from service.membership import member_role
 from service.memory import build_memory_context, seed_user_preferences, touch_recall
-from service.provider_keys import stored_provider_keys
+from service.provider_keys import stored_keys_for
 
 logger = logging.getLogger(__name__)
 
@@ -136,10 +136,8 @@ def resolve_run(
     """Model + membership-checked project scope + the autonomy the run gets."""
     # The unattended brief has no headers at all, so without this it would be
     # the one insights path still reaching for the server key.
-    with next(db_session()) as db:
-        stored = stored_provider_keys(db, user_id)
     provider, model, api_key, summary_key = resolve_model(
-        engine_override, user_keys, stored
+        engine_override, user_keys, stored_keys_for(user_id)
     )
 
     scoped: UUID | None = None

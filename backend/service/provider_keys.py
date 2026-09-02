@@ -30,6 +30,7 @@ from sqlalchemy import select
 from sqlmodel import Session
 
 from agents.models import Provider
+from db.session import get_session as db_session
 from models.connector import ConnectorCredential
 from service.credentials import decrypt_credentials, encrypt_credentials
 
@@ -88,6 +89,31 @@ def stored_provider_keys(session: Session, user_id: UUID | None) -> dict[Provide
         if key and key.strip():
             out[provider] = key.strip()
     return out
+
+
+def stored_keys_for(user_id: UUID | None) -> dict[Provider, str]:
+    """This user's saved keys, opening a session only if there is one to open.
+
+    The form every *run* wants, as opposed to the request-scoped readers above.
+    Two guarantees it exists for, both learned the hard way:
+
+    * An anonymous caller has no saved keys by definition, so looking them up
+      must not cost a database round trip — and must not fail on a deployment
+      that has no database configured at all. Resolving a provider key used to
+      open a session unconditionally, which turned "who is paying for this run"
+      into a question only a database could answer.
+    * A database that is down should cost a run its *saved* key, not the run.
+      The caller still has a header key, the env key, or a clear
+      ProviderKeyRequired — all better than a 500 from the credential lookup.
+    """
+    if user_id is None:
+        return {}
+    try:
+        with next(db_session()) as db:
+            return stored_provider_keys(db, user_id)
+    except Exception:
+        logger.warning("provider_keys: could not read saved keys", exc_info=True)
+        return {}
 
 
 def has_stored_provider_keys(session: Session, user_id: UUID | None) -> set[Provider]:

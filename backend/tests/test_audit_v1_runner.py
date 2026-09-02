@@ -243,11 +243,11 @@ def test_route_defaults_to_v1_and_opts_in_to_v3():
     from agents.audit.v1.runner import LangChainAuditRunner
 
     # An unset engine resolves to V1...
-    _key, _provider, _model, engine = _resolve_agent_config("")
+    _provider, _model, engine = _resolve_agent_config("")
     assert engine == Engine.V1
 
     # ...and V3 remains reachable by naming it.
-    _key, _provider, _model, engine_v3 = _resolve_agent_config("v3")
+    _provider, _model, engine_v3 = _resolve_agent_config("v3")
     assert engine_v3 == Engine.V3
 
     v3 = _build_runner("k", Provider.ANTHROPIC, ModelName.CLAUDE_SONNET, Engine.V3)

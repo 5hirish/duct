@@ -11,6 +11,8 @@ No network. SQLite in memory, a throwaway Fernet key.
 
 from __future__ import annotations
 
+from uuid import uuid4
+
 import pytest
 from cryptography.fernet import Fernet
 from sqlmodel import Session, select
@@ -159,3 +161,36 @@ def test_a_saved_key_is_not_a_connector(db, cfg, user):
     # connectors, not rows — but assert it, because that is the property.
     kinds = {s.connector_id for s in list_data_sources(db, user_id=user.id)}
     assert CONNECTOR_TYPE not in kinds
+
+
+# --- resolving a key must not require a database ---------------------------
+
+
+def test_an_anonymous_run_opens_no_session(monkeypatch):
+    """Deciding who pays must not depend on the database being reachable.
+
+    Resolving a provider key used to open a session unconditionally, so on CI —
+    which runs the suite with no DATABASE_URL at all — an audit died with
+    "DATABASE_URL is not configured" before it ever reached the question it was
+    asked. An anonymous caller has no saved keys by definition, so there is
+    nothing to look up and no reason to connect.
+    """
+    import service.provider_keys as provider_keys
+
+    def _explode():
+        raise AssertionError("opened a database session for a caller with no user")
+
+    monkeypatch.setattr(provider_keys, "db_session", _explode)
+    assert provider_keys.stored_keys_for(None) == {}
+
+
+def test_an_unreachable_database_costs_the_saved_key_not_the_run(monkeypatch):
+    """A run still has the caller's header key, the env key, or an honest
+    ProviderKeyRequired — all better outcomes than a 500 from the lookup."""
+    import service.provider_keys as provider_keys
+
+    def _down():
+        raise RuntimeError("DATABASE_URL is not configured.")
+
+    monkeypatch.setattr(provider_keys, "db_session", _down)
+    assert provider_keys.stored_keys_for(uuid4()) == {}

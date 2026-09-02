@@ -88,7 +88,7 @@ from service.memory import (
     touch_recall,
 )
 from service.memory_consolidation import schedule_consolidation
-from service.provider_keys import stored_provider_keys
+from service.provider_keys import stored_keys_for
 from utils.dates import now_iso
 
 logger = logging.getLogger(__name__)
@@ -1093,13 +1093,11 @@ async def _start_seo_audit(
 
     session = get_session(session_id)
     owner_id = getattr(session, "user_id", None) if session else None
-    with next(db_session()) as db:
-        stored = stored_provider_keys(db, owner_id)
     # The lead-magnet teaser is demand gen — Duct funds it deliberately, and
     # this is the only place in the audit path that may say so. Everything else
     # fails closed on the hosted deployment without a key of the caller's own.
     resolved = resolve_provider_key(
-        provider, user_keys, stored_keys=stored, duct_pays=req.lead_magnet
+        provider, user_keys, stored_keys=stored_keys_for(owner_id), duct_pays=req.lead_magnet
     )
     api_key = resolved.key
     if resolved.billed_to_duct:
