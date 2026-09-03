@@ -1,66 +1,102 @@
 # Duct Backend
 
-This directory contains the Python reporting and synthesis side of Duct.
+The FastAPI service: connectors, normalization, the agent runners, memory, and
+staged execution. It produces JSON — the app owns rendering.
 
-## What lives here now
+The same codebase runs in two shapes. On a server it is a normal FastAPI app on
+Postgres. On a laptop it is a PyInstaller-frozen sidecar the desktop shell
+spawns, bound to loopback on an OS-assigned port, on SQLite in a per-user data
+directory. `local_server.py` is that second entry point.
 
-- `service/` — connectors, Google Ads fetch/brief pipeline
-- `data/<connector_id>/raw/demo_raw_payload.json` — static raw demo input (Google Ads)
-- `utils/` — shared formatting and metric helpers
-- `service/google/schema.py` — Google Ads brief payload types
-- `data/google_ads/google-ads-report.json` — checked-in demo brief; `raw/` for demo input
+## Layout
 
-## Product role
+| Path | What it holds |
+|---|---|
+| `routes/` | HTTP surface. `namespace.py` assembles every router and documents the auth gates |
+| `service/` | Connectors, credentials, membership, memory, execution, storage |
+| `agents/` | Agent types (`insights`, `audit`, `content`, …), each with its own goals, prompts, schema and versioned runners |
+| `agents/core/ports/` | The harness boundary — read this before touching a framework import |
+| `models/` | SQLModel tables |
+| `alembic/` | Migrations |
+| `utils/` | Shared date, string and formatting helpers |
+| `tests/` | Including the boundary gates listed below |
 
-This is the product core described in the MVP plan (duct-cloud, private).
+## Local run
 
-- read from client-owned data destinations
-- normalize data into stable internal payloads
-- generate typed findings and actions
-- render insights and briefs
-- later deliver email briefs and Slack alerts
+```bash
+poetry install --with dev
+cp .env.example .env.local
+poetry run uvicorn server:app --reload --port 8002
+```
 
-## Intended scope
+Or `make serve-backend` from the repo root.
 
-- data ingestion helpers
-- normalization
-- signal generation
-- synthesis
-- report rendering
-- delivery
-- future orchestration
+**Python 3.12 or 3.13** (`>=3.12,<3.14`). `.python-version` pins 3.12 for pyenv;
+CI uses 3.12.
 
-## Planned stack
+`GET /` returns public API metadata; `GET /health` is the liveness check.
+OpenAPI (`/docs`, `/openapi.json`) is **off** unless `EXPOSE_OPENAPI_DOCS=true`.
+With docs on, `OPENAPI_DOCS_BASIC_PASSWORD` (and optional
+`OPENAPI_DOCS_BASIC_USER`) puts Basic auth in front of them.
 
-- PyAirbyte early, client-managed Airbyte later
-- DuckDB + Ibis
-- dbt
-- Dagster
-- Claude API + Instructor
-- Resend
-- Slack webhooks
-- Supabase for workspace/auth metadata
+## Configuration
 
-## Boundary
+`config.py` is the source of truth for what the backend reads; `.env.example` is
+its documentation, and `tests/test_env_example.py` keeps the two honest.
 
-- Do not put static marketing site files here.
-- Do not put future authenticated web app code here.
-- Marketing lives in `site/`.
-- Future product UI lives in `app/`.
+Worth knowing before adding a setting: **every field in `Configs` has a
+default.** A missing variable therefore never fails — the feature it powers
+silently does nothing, which makes an undocumented setting undiscoverable rather
+than broken. Anything credential-shaped must appear in `.env.example`, and a
+rename has to happen in both places.
 
-## Production deploy
+## Migrations
 
-Railway + Railpack (Poetry) is the intended API host; pairing with the Next app on Cloudflare Workers is documented in the deployment runbook (duct-cloud, private).
+Alembic owns the schema, and migrations are applied deliberately — nothing runs
+them automatically on deploy.
 
-Service root in Railway should be **`backend`** so [`railway.json`](railway.json) applies.
+```bash
+python scripts/migrations.py revision -m "..."   # always autogenerate
+python scripts/migrations.py upgrade
+python scripts/migrations.py check-pending
+```
 
-## Local guidance
+Never hand-write a revision file. Autogenerate diffs the models against the live
+schema, which is the step that catches a column you added to a model and forgot
+to migrate. Review what it produces before applying — it is a good first draft
+and a poor final one, particularly for renames and server defaults. New models
+must be imported in `models/__init__.py` or autogenerate cannot see them. Always
+provide a working `downgrade`.
 
-- **Python:** 3.12 or 3.13 (`>=3.12,<3.14` in `pyproject.toml`). A `backend/.python-version` file pins **3.12** for pyenv; CI uses 3.12.
-- **HTTP:** `GET /` returns public API metadata JSON; `GET /health` is the liveness check. OpenAPI (`/docs`, `/openapi.json`) is **disabled** unless `EXPOSE_OPENAPI_DOCS=true` in `.env`. With docs on, set `OPENAPI_DOCS_BASIC_PASSWORD` (and optional `OPENAPI_DOCS_BASIC_USER`) to require Basic auth on those routes.
-- **Migrations policy:** always generate migrations with Alembic autogenerate; do not hand-write revision files.
-- **Migration manager:** use `python scripts/migrations.py revision -m "..."`, `python scripts/migrations.py upgrade`, and `python scripts/migrations.py check-pending`.
-- Cursor instructions: `backend/AGENTS.md`
-- Agent instructions: `backend/AGENTS.md` (`CLAUDE.md` symlinks to it)
+## Checks
 
-Deployment and env details: the deployment runbook (duct-cloud, private) (Railway variables, checklist).
+```bash
+make check-backend     # ruff + pytest, exactly what CI runs
+make test              # pytest alone
+```
+
+Four gates are worth knowing about, because they fail on properties rather than
+on behaviour and the fix is usually not "edit the test":
+
+- `test_route_auth_boundaries.py` — every project-scoped route resolves a user,
+  and every ungated `/api` route is declared with a reason.
+- `test_harness_boundaries.py` — no agent-framework import outside a declared
+  adapter.
+- `test_env_example.py` — `config.py` and `.env.example` agree.
+- `test_deepagents_harness.py` — the upgrade gate for the exact `deepagents`
+  pin, which changes behaviour in minor releases.
+
+## Boundaries
+
+- **`validate_api_key` is not an authorization boundary.** `DUCT_API_KEY` ships
+  to the browser as `NEXT_PUBLIC_DUCT_API_KEY`. Project access is by membership
+  (`service/membership.py`), and a non-member gets 404, not 403.
+- **This is a data pipeline, not a renderer.** No HTML leaves the backend.
+- **No marketing site files here**, and no frontend code.
+
+## Production
+
+Railway (Railpack + Poetry), with the service root set to `backend` so
+[`railway.json`](railway.json) applies. Deploys run from CI on merge to `main`.
+
+Conventions: [`AGENTS.md`](AGENTS.md) (`CLAUDE.md` symlinks to it).
