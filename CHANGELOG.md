@@ -37,6 +37,10 @@ the commit list and the install instructions, which is worse.
 
 ### Fixed
 
+- The app's typecheck actually runs. `npm run typecheck --if-present` had been
+  pointed at a script that did not exist, and `--if-present` exits 0, so both
+  `make check-app` and App CI reported a green typecheck without ever invoking
+  `tsc`. The script now exists and is invoked by name.
 - Two npm advisories (`browserslist` high, `postcss-selector-parser` low).
 - Three false-positive CRITICAL findings that had the security audit failing on
   every pull request.
