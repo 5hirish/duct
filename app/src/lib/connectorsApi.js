@@ -23,10 +23,19 @@ export function listServerConnectors() {
  * `{refresh_token, developer_token, login_customer_id}` for Google Ads.
  * Note: the blob replaces the stored one whole — always send every field.
  */
-export async function saveServerConnector({ connector_type, account_id = "", account_name = "", credentials }) {
+export async function saveServerConnector({
+  connector_type,
+  account_id = "",
+  account_name = "",
+  credentials,
+  // Space-separated scopes the provider actually granted, straight from the
+  // OAuth round-trip. Omit it and the server keeps whatever it already
+  // recorded — a rename or a manual re-save must not erase the real grant.
+  granted_scopes = "",
+}) {
   const res = await authedRequest("/api/user/connectors", {
     method: "POST",
-    body: { connector_type, account_id, account_name, credentials },
+    body: { connector_type, account_id, account_name, credentials, granted_scopes },
   });
   notifyConnectorsChanged();
   return res;

@@ -23,6 +23,11 @@ export default function OAuthConnectorCard({
   logo,
   connected,          // fully usable (OAuth done + any extra credentials saved)
   oauthConnected,     // browser sign-in done — may still need extra credentials
+  // One row per scope this connector asks for: {scope, label, why, access,
+  // required, granted}. Joined server-side so the browser holds no catalog of
+  // its own and cannot drift from what the backend actually requests.
+  scopes = [],
+  scopeStatus = "",   // "complete" | "partial" | "unknown" | "n/a" | ""
   tone,               // "on" | "partial" | "off"
   status,             // tile status line — phrased as the next action
   pillStatus,         // dialog pill — phrased as state; defaults to `status`
@@ -124,6 +129,64 @@ export default function OAuthConnectorCard({
             </p>
           )}
         </div>
+
+        {scopes.length > 0 && (
+          <div className="conn-dialog-section">
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <span className="text-sm font-medium">Permissions</span>
+              {scopeStatus === "partial" && (
+                <span className="status-pill yellow">Some declined</span>
+              )}
+              {scopeStatus === "unknown" && (
+                <span className="status-pill grey">Not recorded</span>
+              )}
+            </div>
+
+            {scopeStatus === "unknown" ? (
+              <p className="conn-hint" style={{ marginTop: 0 }}>
+                This connection was made before Duct recorded which permissions
+                Google granted. Reconnect to find out — nothing is assumed either way.
+              </p>
+            ) : (
+              <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 10 }}>
+                {scopes.map((row) => (
+                  <li key={row.scope} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                    <span
+                      aria-hidden="true"
+                      style={{ lineHeight: "1.25rem", flexShrink: 0 }}
+                      className={row.granted ? "text-emerald-600" : "text-muted-foreground"}
+                    >
+                      {row.granted ? "✓" : "—"}
+                    </span>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6 }}>
+                        <span className="text-sm">{row.label}</span>
+                        <span className="status-pill grey">{row.access}</span>
+                        {!row.granted && (
+                          <span className={`status-pill ${row.required ? "yellow" : "grey"}`}>
+                            {row.required ? "Not granted" : "Declined (optional)"}
+                          </span>
+                        )}
+                      </div>
+                      {row.why && (
+                        <p className="conn-hint" style={{ marginTop: 2 }}>
+                          {row.why}
+                        </p>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {scopeStatus === "partial" && (
+              <p className="conn-hint">
+                Everything ticked above still works. To grant the rest, choose
+                Reconnect and tick them on Google&rsquo;s consent screen.
+              </p>
+            )}
+          </div>
+        )}
 
         <ProjectAccountSelect
           projectName={projectName}

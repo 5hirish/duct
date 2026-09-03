@@ -93,10 +93,46 @@ export default function ConnectionsPage() {
           developer_token: developerToken,
           login_customer_id: loginCustomerId,
         },
+        granted_scopes: grantedScopesFor("google_ads"),
       });
       await refreshServerRows();
+    } catch (err) {
+      reportSyncFailure(err);
+    }
+  }
+
+  // Saving the token to the account is what makes a connection outlive this
+  // tab; swallowing its failure is how one silently becomes session-only —
+  // the card goes green off the sessionStorage write, no row is ever stored,
+  // and every later open reports "Not connected" with nothing to explain it.
+  function reportSyncFailure(err) {
+    // A 401 is not "you are offline" and telling someone to retry is useless:
+    // the token is well-formed and correctly signed, it just names a user this
+    // backend's database has never seen — a session left over from a different
+    // environment. Only signing in again fixes it.
+    if (err?.status === 401) {
+      setConnectError(
+        "Connected to Google, but your Duct session has expired or belongs to a " +
+          "different environment, so the connection could not be saved to your " +
+          "account. Sign out and sign in again, then reconnect.",
+      );
+      return;
+    }
+    setConnectError(
+      "Signed in with Google, but saving the connection to your account failed, " +
+        "so it will only last this browser session. Try Reconnect once you're back online. " +
+        (err?.message || ""),
+    );
+  }
+
+  /** Scopes stashed alongside the token by whichever leg delivered it. */
+  function grantedScopesFor(connectorType) {
+    const key = CONNECTOR_TOKEN_KEYS[connectorType];
+    if (!key) return "";
+    try {
+      return sessionStorage.getItem(`${key}_scopes`) || "";
     } catch {
-      /* session-only fallback keeps working */
+      return "";
     }
   }
 
@@ -106,10 +142,11 @@ export default function ConnectionsPage() {
       await saveServerConnector({
         connector_type: connectorType,
         credentials: { refresh_token: refreshToken },
+        granted_scopes: grantedScopesFor(connectorType),
       });
       await refreshServerRows();
-    } catch {
-      /* session-only fallback keeps working */
+    } catch (err) {
+      reportSyncFailure(err);
     }
   }
 
@@ -118,13 +155,14 @@ export default function ConnectionsPage() {
   // refresh token must never ride in a deep link — so the shell brings back a
   // single-use code and the token is fetched here instead. Everything after
   // that is the fragment path's destination, one round trip later.
-  async function adoptConnectorToken(connectorType, refreshToken) {
+  async function adoptConnectorToken(connectorType, refreshToken, grantedScopes = "") {
     const storageKey = CONNECTOR_TOKEN_KEYS[connectorType];
     if (!storageKey || !refreshToken) {
       setConnectError("That connection came back incomplete — please try again.");
       return;
     }
     sessionStorage.setItem(storageKey, refreshToken);
+    if (grantedScopes) sessionStorage.setItem(`${storageKey}_scopes`, grantedScopes);
     // A signed-out connection never reaches the server, so nothing else would
     // tell the sidebar badge its count changed.
     notifyConnectorsChanged();
@@ -162,11 +200,15 @@ export default function ConnectionsPage() {
         ["gsc_refresh_token", "gsc_refresh_token"],
         ["gtm_refresh_token", "gtm_refresh_token"],
       ];
+      // One grant per callback — the fragment carries exactly one connector's
+      // result, so a single key serves whichever token arrived with it.
+      const grantedScopes = decodeURIComponent(params.get("granted_scopes") || "");
       for (const [fragmentKey, storageKey] of fragmentKeys) {
         const token = params.get(fragmentKey);
         if (token) {
           const decoded = decodeURIComponent(token);
           sessionStorage.setItem(storageKey, decoded);
+          if (grantedScopes) sessionStorage.setItem(`${storageKey}_scopes`, grantedScopes);
           notifyConnectorsChanged();
           arrived[storageKey] = decoded;
         }
@@ -206,8 +248,8 @@ export default function ConnectionsPage() {
       window.history.replaceState(null, "", window.location.pathname);
       setConnectError("");
       exchangeConnectorCode(codeParam)
-        .then(({ connector_type, refresh_token }) =>
-          adoptConnectorToken(connector_type || connectorParam, refresh_token),
+        .then(({ connector_type, refresh_token, granted_scopes }) =>
+          adoptConnectorToken(connector_type || connectorParam, refresh_token, granted_scopes || ""),
         )
         .catch(() =>
           setConnectError(
@@ -339,7 +381,42 @@ export default function ConnectionsPage() {
     await removeServerRow("gtm");
   }
 
-  const gadsConnected = gadsOauthConnected && gadsDevTokenSaved;
+  // "Connected" has to survive closing the tab, and sessionStorage does not:
+  // it is per-tab and dies with it. A card reading only the session key reports
+  // "Not connected" on every fresh open of a connector that IS connected, while
+  // the project's data-source inventory — which reads the stored rows — says the
+  // opposite about the same connector. The stored row is the durable half of the
+  // answer; the session key still counts on its own, because a signed-out
+  // connect never reaches the server at all. The manual cards below have always
+  // worked this way (`serverRowList.length > 0`); these four were the exception.
+  const gadsAuthorized = gadsOauthConnected || !!serverRows.google_ads;
+  const ga4Authorized = ga4Connected || !!serverRows.ga4;
+  const gscAuthorized = gscConnected || !!serverRows.gsc;
+  const gtmAuthorized = gtmConnected || !!serverRows.gtm;
+
+  const gadsConnected = gadsAuthorized && gadsDevTokenSaved;
+
+  // Authorized is not the same as fully permitted. Google's consent screen has
+  // a tickbox per scope, so a connector can hold a valid token and still be
+  // missing half of what it asked for — GA4 asks for analytics.edit alongside
+  // readonly, GTM asks for three. Green there would claim access we do not
+  // have, and the first sign of it would be a 403 mid-run.
+  function scopeProps(type) {
+    const row = serverRows[type] || {};
+    return { scopes: row.scopes || [], scopeStatus: row.scope_status || "" };
+  }
+
+  function toneFor(authorized, type) {
+    if (!authorized) return "off";
+    return serverRows[type]?.scope_status === "partial" ? "partial" : "on";
+  }
+
+  function connectionStatusFor(authorized, type) {
+    if (!authorized) return "Not connected";
+    const missing = serverRows[type]?.missing_scopes?.length || 0;
+    if (!missing) return "Connected";
+    return `Connected · ${missing} permission${missing === 1 ? "" : "s"} missing`;
+  }
 
   return (
     <section>
@@ -393,12 +470,19 @@ export default function ConnectionsPage() {
               description="Campaign performance including spend, clicks, impressions, conversions, and ROAS."
               logo={LOGOS.google_ads}
               connected={gadsConnected}
-              oauthConnected={gadsOauthConnected}
-              tone={gadsConnected ? "on" : gadsOauthConnected || gadsDevTokenSaved ? "partial" : "off"}
+              oauthConnected={gadsAuthorized}
+              tone={
+                gadsConnected
+                  ? toneFor(true, "google_ads")
+                  : gadsAuthorized || gadsDevTokenSaved
+                    ? "partial"
+                    : "off"
+              }
+              {...scopeProps("google_ads")}
               status={
                 gadsConnected
                   ? "Connected"
-                  : gadsOauthConnected
+                  : gadsAuthorized
                     ? "Add developer token"
                     : gadsDevTokenSaved
                       ? "Sign in with Google"
@@ -407,7 +491,7 @@ export default function ConnectionsPage() {
               pillStatus={
                 gadsConnected
                   ? "Connected"
-                  : gadsOauthConnected
+                  : gadsAuthorized
                     ? "Needs developer token"
                     : gadsDevTokenSaved
                       ? "Needs Google sign-in"
@@ -471,10 +555,11 @@ export default function ConnectionsPage() {
               title="Google Search Console"
               description="Organic search queries, clicks, impressions, and average position data for SEO reporting."
               logo={LOGOS.gsc}
-              connected={gscConnected}
-              oauthConnected={gscConnected}
-              tone={gscConnected ? "on" : "off"}
-              status={gscConnected ? "Connected" : "Not connected"}
+              connected={gscAuthorized}
+              oauthConnected={gscAuthorized}
+              tone={toneFor(gscAuthorized, "gsc")}
+              status={connectionStatusFor(gscAuthorized, "gsc")}
+              {...scopeProps("gsc")}
               authorizeUrl={`${BASE}/auth/connectors/gsc/oauth/authorize`}
               onDisconnect={signOutGsc}
               signedIn={signedIn}
@@ -487,10 +572,11 @@ export default function ConnectionsPage() {
               title="Google Analytics"
               description="Website traffic, sessions, engagement, and conversion trend data for performance reporting."
               logo={LOGOS.ga4}
-              connected={ga4Connected}
-              oauthConnected={ga4Connected}
-              tone={ga4Connected ? "on" : "off"}
-              status={ga4Connected ? "Connected" : "Not connected"}
+              connected={ga4Authorized}
+              oauthConnected={ga4Authorized}
+              tone={toneFor(ga4Authorized, "ga4")}
+              status={connectionStatusFor(ga4Authorized, "ga4")}
+              {...scopeProps("ga4")}
               authorizeUrl={`${BASE}/auth/connectors/ga4/oauth/authorize`}
               onDisconnect={signOutGa4}
               signedIn={signedIn}
@@ -503,10 +589,11 @@ export default function ConnectionsPage() {
               title="Google Tag Manager"
               description="Tags, variables, and container versions — measurement fixes with staged publishes and one-command rollback."
               logo={LOGOS.gtm}
-              connected={gtmConnected}
-              oauthConnected={gtmConnected}
-              tone={gtmConnected ? "on" : "off"}
-              status={gtmConnected ? "Connected" : "Not connected"}
+              connected={gtmAuthorized}
+              oauthConnected={gtmAuthorized}
+              tone={toneFor(gtmAuthorized, "gtm")}
+              status={connectionStatusFor(gtmAuthorized, "gtm")}
+              {...scopeProps("gtm")}
               authorizeUrl={`${BASE}/auth/connectors/gtm/oauth/authorize`}
               onDisconnect={signOutGtm}
               signedIn={signedIn}
