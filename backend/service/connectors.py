@@ -22,6 +22,14 @@ class ConnectorMeta:
     label: str
     oauth_scope: str | None
     capabilities: frozenset[str]
+    #: What this connector can do, for the connectors that cannot be asked.
+    #: An OAuth connector's real answer is derived per credential from the
+    #: scopes it was GRANTED (``service/connector_scopes.access_for``), because
+    #: two users of the same connector can hold different permissions. Manual
+    #: connectors have no scope to derive from — a Stripe restricted key or a
+    #: Meta System User token carries its permissions out of band — so they
+    #: declare it here. Read-only is the default because most of them are.
+    access: frozenset[str] = frozenset({"read"})
 
 
 @dataclass(frozen=True)

@@ -213,6 +213,10 @@ MIXPANEL_META = ConnectorMeta(
     label="Mixpanel",
     oauth_scope=None,  # service account pair — Mixpanel has no third-party OAuth
     capabilities=frozenset({CAP_ACCOUNTS}),
+    # The one manual connector that writes: the annotation and hide-event
+    # executors act on the project. No scope to derive that from — a service
+    # account pair carries its permissions out of band — so it is declared.
+    access=frozenset({"read", "write"}),
 )
 
 register_connector(MIXPANEL_META, MixpanelConnector())

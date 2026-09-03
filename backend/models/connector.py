@@ -84,6 +84,16 @@ class ConnectorCredential(SQLModel, table=True):
     account_name: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
     # AES-encrypted JSON blob — encryption key lives in CREDENTIALS_ENCRYPTION_KEY env var
     credentials_enc: str = Field(sa_column=Column(String, nullable=False))
+    # Space-separated scopes the provider ACTUALLY granted, as OAuth itself
+    # writes them. Its own column rather than a field inside credentials_enc
+    # because it is not a secret and the data-source inventory reads it on every
+    # page load — putting it in the blob would mean decrypting every row to
+    # answer "is this connector fully authorized?". Empty for manual-credential
+    # connectors, and for OAuth rows stored before grants were recorded: empty
+    # means "unknown", never "none".
+    granted_scopes: str = Field(
+        default="", sa_column=Column(String, nullable=False, server_default="")
+    )
     last_validated_at: datetime | None = Field(
         default=None, sa_column=Column(utc_datetime(), nullable=True)
     )

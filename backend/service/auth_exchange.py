@@ -64,13 +64,27 @@ def consume_exchange_code(code: str) -> str | None:
     return payload if isinstance(payload, str) else None
 
 
-def store_connector_code(*, connector_type: str, refresh_token: str) -> str:
-    """Store a connector's OAuth refresh token; return a single-use opaque code."""
-    return _store_code(_NS_CONNECTOR, {"connector_type": connector_type, "refresh_token": refresh_token})
+def store_connector_code(
+    *, connector_type: str, refresh_token: str, granted_scopes: str = ""
+) -> str:
+    """Store a connector's OAuth refresh token; return a single-use opaque code.
+
+    ``granted_scopes`` travels with the token rather than being looked up later:
+    it is a property of this particular consent, and the next reconnect can
+    grant something different.
+    """
+    return _store_code(
+        _NS_CONNECTOR,
+        {
+            "connector_type": connector_type,
+            "refresh_token": refresh_token,
+            "granted_scopes": granted_scopes,
+        },
+    )
 
 
 def consume_connector_code(code: str) -> dict[str, str] | None:
-    """Return `{connector_type, refresh_token}` for a valid code and delete it."""
+    """Return `{connector_type, refresh_token, granted_scopes}` for a valid code."""
     payload = _consume_code(_NS_CONNECTOR, code)
     return payload if isinstance(payload, dict) else None
 

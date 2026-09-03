@@ -11,6 +11,7 @@ than as JSON in a browser tab outside the app.
 from __future__ import annotations
 
 import pytest
+from urllib.parse import parse_qs, urlparse
 from fastapi import HTTPException
 
 # Connectors register themselves on import; the routes resolve them by id.
@@ -36,12 +37,32 @@ class _Credentials:
         self.refresh_token = refresh_token
 
 
+GA4_READ = "https://www.googleapis.com/auth/analytics.readonly"
+
+
+class _Session:
+    """The oauth2 session, which is where the GRANTED scopes actually live.
+
+    Not `flow.credentials.granted_scopes`: the installed google-auth-oauthlib
+    does not populate that, so the token response is the only honest source.
+    """
+
+    def __init__(self, granted: tuple[str, ...]) -> None:
+        self.token = {"scope": list(granted)}
+
+
 class _Flow:
     """Stand-in for the google-auth Flow — the network is not what's under test."""
 
-    def __init__(self, *, refresh_token: str = "rt-live") -> None:
+    def __init__(
+        self,
+        *,
+        refresh_token: str = "rt-live",
+        granted: tuple[str, ...] = ("https://www.googleapis.com/auth/analytics.readonly",),
+    ) -> None:
         self.code_verifier = "verifier"
         self.credentials = _Credentials(refresh_token)
+        self.oauth2session = _Session(granted)
 
     def authorization_url(self, **_):
         return "https://accounts.google.com/o/oauth2/auth?x=1", "state"
@@ -121,6 +142,7 @@ def test_desktop_callback_never_puts_the_refresh_token_in_the_url(monkeypatch, m
     assert auth.exchange_connector_code(code=code) == {
         "connector_type": "gsc",
         "refresh_token": "super-secret-refresh-token",
+        "granted_scopes": "https://www.googleapis.com/auth/analytics.readonly",
     }
 
 
@@ -134,9 +156,52 @@ def test_browser_callback_still_returns_the_token_in_the_fragment(monkeypatch, m
 
     response = auth.google_oauth_callback_short_path(code="oauth-code", state=state)
 
-    assert response.headers["location"] == (
-        "https://app.getduct.ai/connections#ga4_refresh_token=rt-web"
-    )
+    location = response.headers["location"]
+    assert location.startswith("https://app.getduct.ai/connections#ga4_refresh_token=rt-web")
+    # The grant rides beside the token. Not a secret, and the browser needs it
+    # to store what was actually consented to rather than what we asked for.
+    fragment = parse_qs(urlparse(location).fragment)
+    assert fragment["granted_scopes"] == [
+        "https://www.googleapis.com/auth/analytics.readonly"
+    ]
+
+
+def test_a_partial_grant_is_recorded_rather_than_assumed(monkeypatch, memory_state):
+    """GA4 asks for analytics.readonly AND analytics.edit. Someone who grants
+    only the first must still connect — and what they withheld has to survive to
+    the browser, or the card goes green over permissions we do not hold."""
+    monkeypatch.setattr(auth, "get_configs", lambda: _Cfg())
+    _stub_google(monkeypatch, _Flow(refresh_token="rt-partial", granted=(GA4_READ,)))
+
+    auth.connector_oauth_authorize("ga4")
+    state = next(iter(oauthstate._memory_states))
+
+    response = auth.google_oauth_callback_short_path(code="oauth-code", state=state)
+
+    fragment = parse_qs(urlparse(response.headers["location"]).fragment)
+    assert fragment["granted_scopes"] == [GA4_READ]
+    assert "analytics.edit" not in fragment["granted_scopes"][0]
+
+
+def test_an_unreadable_grant_never_fails_the_connect(monkeypatch, memory_state):
+    """A flow object that cannot report its scopes is a degraded answer, not a
+    dead connect: the token is what the user came for."""
+    monkeypatch.setattr(auth, "get_configs", lambda: _Cfg())
+    flow = _Flow(refresh_token="rt-noscope")
+    del flow.oauth2session
+    _stub_google(monkeypatch, flow)
+
+    auth.connector_oauth_authorize("ga4")
+    state = next(iter(oauthstate._memory_states))
+
+    response = auth.google_oauth_callback_short_path(code="oauth-code", state=state)
+
+    location = response.headers["location"]
+    assert "ga4_refresh_token=rt-noscope" in location
+    # keep_blank_values: an empty grant is the whole point of this case, and
+    # parse_qs drops blanks by default.
+    fragment = parse_qs(urlparse(location).fragment, keep_blank_values=True)
+    assert fragment["granted_scopes"] == [""]
 
 
 def test_the_exchange_code_is_single_use(monkeypatch, memory_state):
@@ -164,6 +229,7 @@ def test_a_connector_code_cannot_be_redeemed_as_a_session_token():
     assert auth_exchange.consume_connector_code(code) == {
         "connector_type": "ga4",
         "refresh_token": "rt",
+        "granted_scopes": "",
     }
 
 

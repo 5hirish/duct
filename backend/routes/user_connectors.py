@@ -15,6 +15,15 @@ from models.auth import User
 from models.connector import ConnectorCredential
 from service.auth import get_current_user
 from service.connector_access import list_data_sources
+from service.connector_scopes import (
+    SCOPE_NA,
+    join_scopes,
+    missing_scopes,
+    parse_scopes,
+    scope_rows,
+    scope_status,
+)
+from service.connectors import registry
 from service.credentials import encrypt_credentials
 from service.provider_keys import CONNECTOR_TYPE as PROVIDER_KEY_TYPE
 
@@ -34,6 +43,10 @@ class ConnectorIn(BaseModel):
     account_id: str = ""         # customer_id / property_id / site_url
     account_name: str = ""
     credentials: dict            # raw dict — will be encrypted at rest
+    # What the provider actually consented to, space-separated. Optional: a
+    # manual-credential save has none, and an OAuth save made by an older client
+    # has none either — both correctly land as "unknown" rather than "none".
+    granted_scopes: str = ""
 
 
 class ConnectorOut(BaseModel):
@@ -44,10 +57,21 @@ class ConnectorOut(BaseModel):
     last_validated_at: str | None
     created_at: str
     updated_at: str
+    # The scope picture, joined here so the browser needs no catalog of its own:
+    # `scopes` carries one row per scope this connector asks for, each with the
+    # justification the user is entitled to read before granting it.
+    granted_scopes: list[str] = []
+    missing_scopes: list[str] = []
+    scope_status: str = SCOPE_NA
+    scopes: list[dict] = []
 
 
 
 def _to_out(c: ConnectorCredential) -> ConnectorOut:
+    entry = registry().get(c.connector_type)
+    declared = parse_scopes(entry[0].oauth_scope) if entry else []
+    granted = parse_scopes(c.granted_scopes)
+    is_oauth = bool(entry and entry[0].oauth_scope)
     return ConnectorOut(
         id=c.id,
         connector_type=c.connector_type,
@@ -56,6 +80,10 @@ def _to_out(c: ConnectorCredential) -> ConnectorOut:
         last_validated_at=c.last_validated_at.isoformat() if c.last_validated_at else None,
         created_at=c.created_at.isoformat(),
         updated_at=c.updated_at.isoformat(),
+        granted_scopes=granted,
+        missing_scopes=missing_scopes(declared, granted) if (is_oauth and granted) else [],
+        scope_status=scope_status(is_oauth=is_oauth, declared=declared, granted=granted),
+        scopes=scope_rows(declared, granted) if is_oauth else [],
     )
 
 
@@ -121,9 +149,16 @@ def save_connector(
     now = datetime.now(timezone.utc)
     enc = encrypt_credentials(body.credentials)
 
+    granted = join_scopes(parse_scopes(body.granted_scopes))
+
     if existing:
         existing.account_name = body.account_name
         existing.credentials_enc = enc
+        # Only overwrite when this save actually carries a grant. A later save
+        # that does not know the scopes (an account rename, a manual re-save)
+        # must not erase what the OAuth round-trip recorded.
+        if granted:
+            existing.granted_scopes = granted
         existing.updated_at = now
         session.add(existing)
         session.commit()
@@ -136,6 +171,7 @@ def save_connector(
         account_id=account_id,
         account_name=body.account_name,
         credentials_enc=enc,
+        granted_scopes=granted,
         created_at=now,
         updated_at=now,
     )
