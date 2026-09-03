@@ -27,6 +27,10 @@ the commit list and the install instructions, which is worse.
 - `STYLE.md` — what good code looks like here, separate from the `AGENTS.md`
   rules about what must not break. Every convention in it was measured against
   the tree rather than asserted.
+- PR triage (`.github/workflows/pr-triage.yml`) — an agent summary of inbound
+  pull requests, posted as one sticky comment saying what a PR does and where to
+  look first. It never approves or blocks, and stays inert until the repository
+  has an `ANTHROPIC_API_KEY` secret.
 
 ### Changed
 
