@@ -37,6 +37,13 @@ the commit list and the install instructions, which is worse.
 
 ### Fixed
 
+- One source of truth for `site/` conventions. `.claude/rules/landing-pages.md`
+  and `.claude/skills/add-blog-post.md` both told agents to write a blog
+  canonical and sitemap entry as `/blog/post.html?slug=…`, while the site uses
+  the extensionless `/blog/post?slug=…` everywhere and CI rejects a canonical
+  containing `.html`. The skill is corrected, the rules file is now a pointer to
+  `site/AGENTS.md`, and the canonical form is stated outright there instead of
+  being implied by a table.
 - The app's typecheck actually runs. `npm run typecheck --if-present` had been
   pointed at a script that did not exist, and `--if-present` exits 0, so both
   `make check-app` and App CI reported a green typecheck without ever invoking

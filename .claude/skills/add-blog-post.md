@@ -185,7 +185,7 @@ Gradient and emoji should match the topic mood. Existing reference:
 
 ```xml
 <url>
-  <loc>https://getduct.ai/blog/post.html?slug=<slug></loc>
+  <loc>https://getduct.ai/blog/post?slug=<slug></loc>
   <lastmod><date in YYYY-MM-DD format></lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.7</priority>

@@ -106,6 +106,21 @@ window.DUCT_DEMO_CONFIG = {
 4. `<link demo.css>` in head; `<script demo-for-x.js>` + `<script demo.js>` at body end.
 5. Add to `sitemap.xml`.
 
+## Canonical URLs
+
+**Extensionless, always.** `.github/scripts/check-pages.py` fails any canonical
+containing `.html`, and `site/sitemap.xml` must use the same form or the two
+disagree about what the page's address is.
+
+| Page | Canonical |
+|---|---|
+| Root-level landing page | `https://getduct.ai/for-paid-ads` |
+| Blog index | `https://getduct.ai/blog/` |
+| Blog post | `https://getduct.ai/blog/post?slug=SLUG` |
+
+`blog/post.html` sets its own canonical at runtime from the slug (see its inline
+script) — do not hardcode one there. Every other page hardcodes it in `<head>`.
+
 ## Page `<head>` checklist
 
 Every HTML page must have:
