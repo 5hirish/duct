@@ -63,7 +63,12 @@ export async function authedRequest(path, { method = "GET", body } = {}) {
     } catch {
       /* non-JSON error body */
     }
-    throw new Error(detail || `Server error ${res.status}`);
+    const error = new Error(detail || `Server error ${res.status}`);
+    // Callers need the status, not just the message: a 401 here means the
+    // stored session no longer resolves to a user on THIS backend, which is a
+    // different problem from the request being wrong, and has a different fix.
+    error.status = res.status;
+    throw error;
   }
   return res.status === 204 ? null : res.json();
 }

@@ -132,6 +132,17 @@ async def get_current_user_optional(
     working for signed-out / token-less sessions (the app degrades to local-only
     without a token). Never trusts client-supplied identity — the name comes from
     the JWT-resolved ``User`` row or not at all.
+
+    **No token and a broken token are not the same thing.** Sending nothing is a
+    signed-out visitor and degrades on purpose. Sending a token that does not
+    resolve is a client that believes it is signed in — usually a session left
+    over from another environment, since the JWT secret is not what distinguishes
+    them. Answering that with ``None`` makes the server agree the caller is a
+    stranger, and the damage is silent: an agent run drops every tool built from
+    ``user_id`` (``build_connector_tools_lc`` returns nothing, ``FetchData`` is
+    never mounted) and then answers the question from the prompt alone, with no
+    data and no warning. A 401 is the honest answer and the client already knows
+    how to act on it.
     """
     if not credentials or not settings.jwt_secret:
         return None
@@ -141,9 +152,18 @@ async def get_current_user_optional(
             settings.jwt_secret,
             algorithms=["HS256"],
         )
-    except jwt.InvalidTokenError:  # includes ExpiredSignatureError
-        return None
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Invalid token")
     email: str = payload.get("sub", "")
-    if not email or session is None:
+    if not email:
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Invalid token payload")
+    if session is None:
+        # No database to check against is not the caller's fault, and this route
+        # is allowed to run without a user — degrade rather than blame them.
         return None
-    return session.execute(select(User).where(User.email == email)).scalars().first()
+    user = session.execute(select(User).where(User.email == email)).scalars().first()
+    if user is None:
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="User not found")
+    return user
