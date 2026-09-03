@@ -27,6 +27,13 @@ from typing import Any
 from service.execution.registry import ExecutorSpec, register_executor
 from service.google.gtm import build_gtm_service
 
+# GTM splits editing from publishing, and so does its consent screen. Staging a
+# tag needs edit.containers; putting it live needs publish. Someone who grants
+# only the first can still have Duct prepare the change for them to publish by
+# hand — which is a genuinely useful posture, not a broken one.
+_GTM_EDIT = frozenset({"https://www.googleapis.com/auth/tagmanager.edit.containers"})
+_GTM_PUBLISH = frozenset({"https://www.googleapis.com/auth/tagmanager.publish"})
+
 # Serialize all GTM API work — quota protection (see module docstring).
 _GTM_LOCK = threading.Lock()
 
@@ -404,6 +411,7 @@ register_executor(
     ExecutorSpec(
         op_type="gtm.upsert_tag",
         connector_type="gtm",
+        required_scopes=_GTM_EDIT,
         label="Create/update GTM tag (workspace)",
         preview=_upsert_preview("tag"),
         apply=_upsert_apply("tag"),
@@ -415,6 +423,7 @@ register_executor(
     ExecutorSpec(
         op_type="gtm.upsert_variable",
         connector_type="gtm",
+        required_scopes=_GTM_EDIT,
         label="Create/update GTM variable (workspace)",
         preview=_upsert_preview("variable"),
         apply=_upsert_apply("variable"),
@@ -426,6 +435,7 @@ register_executor(
     ExecutorSpec(
         op_type="gtm.publish_version",
         connector_type="gtm",
+        required_scopes=_GTM_PUBLISH,
         label="Publish GTM container version",
         preview=_publish_preview,
         apply=_publish_apply,
@@ -438,6 +448,7 @@ register_executor(
     ExecutorSpec(
         op_type="gtm.rollback_to_version",
         connector_type="gtm",
+        required_scopes=_GTM_PUBLISH,
         label="Republish an older GTM version",
         preview=_rollback_to_preview,
         apply=_rollback_to_apply,

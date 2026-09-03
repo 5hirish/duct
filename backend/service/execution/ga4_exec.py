@@ -18,6 +18,11 @@ from typing import Any
 
 from service.execution.registry import ExecutorSpec, register_executor
 
+# Every GA4 executor writes through the Admin API. Reading needs only
+# analytics.readonly, which is why someone can connect GA4 successfully and
+# still be unable to run any of these.
+_GA4_WRITE = frozenset({"https://www.googleapis.com/auth/analytics.edit"})
+
 _GA4_EDIT_SCOPE = "https://www.googleapis.com/auth/analytics.edit"
 _VALID_COUNTING = {"ONCE_PER_EVENT", "ONCE_PER_SESSION"}
 _EDIT_HINT = (
@@ -205,6 +210,7 @@ register_executor(
     ExecutorSpec(
         op_type="ga4.create_key_event",
         connector_type="ga4",
+        required_scopes=_GA4_WRITE,
         label="Register GA4 key event",
         preview=_create_preview,
         apply=_create_apply,
@@ -216,6 +222,7 @@ register_executor(
     ExecutorSpec(
         op_type="ga4.delete_key_event",
         connector_type="ga4",
+        required_scopes=_GA4_WRITE,
         label="Remove GA4 key event",
         preview=_delete_preview,
         apply=_delete_apply,
@@ -564,6 +571,7 @@ register_executor(
     ExecutorSpec(
         op_type="ga4.create_audience",
         connector_type="ga4",
+        required_scopes=_GA4_WRITE,
         label="Create GA4 audience",
         preview=_audience_create_preview,
         apply=_audience_create_apply,
@@ -575,6 +583,7 @@ register_executor(
     ExecutorSpec(
         op_type="ga4.archive_audience",
         connector_type="ga4",
+        required_scopes=_GA4_WRITE,
         label="Archive GA4 audience",
         preview=_audience_archive_preview,
         apply=_audience_archive_apply,
@@ -587,6 +596,7 @@ register_executor(
     ExecutorSpec(
         op_type="ga4.create_google_ads_link",
         connector_type="ga4",
+        required_scopes=_GA4_WRITE,
         label="Link Google Ads account to GA4",
         preview=_ads_link_create_preview,
         apply=_ads_link_create_apply,
@@ -598,6 +608,7 @@ register_executor(
     ExecutorSpec(
         op_type="ga4.delete_google_ads_link",
         connector_type="ga4",
+        required_scopes=_GA4_WRITE,
         label="Unlink Google Ads account from GA4",
         preview=_ads_link_delete_preview,
         apply=_ads_link_delete_apply,

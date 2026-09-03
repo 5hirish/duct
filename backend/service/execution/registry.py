@@ -39,6 +39,11 @@ class ExecutorSpec:
     # True when the mutation is destructive/irreversible without the rollback
     # handle — surfaced in the review UI.
     destructive: bool = False
+    #: OAuth scopes this executor needs beyond read access. Declared because
+    #: Google's consent screen is per-scope: a project can hold a working GA4
+    #: connection and still lack `analytics.edit`, and without this the first
+    #: sign of that is a 403 at apply time — after a human approved it.
+    required_scopes: frozenset[str] = frozenset()
 
 
 EXECUTOR_REGISTRY: dict[str, ExecutorSpec] = {}
@@ -46,6 +51,22 @@ EXECUTOR_REGISTRY: dict[str, ExecutorSpec] = {}
 
 def register_executor(spec: ExecutorSpec) -> None:
     EXECUTOR_REGISTRY[spec.op_type] = spec
+
+
+def missing_scopes_for(spec: ExecutorSpec, granted: list[str]) -> list[str]:
+    """Scopes this executor needs that the credential demonstrably lacks.
+
+    An empty ``granted`` means **unknown**, not none: rows stored before Duct
+    recorded grants say nothing about what they hold. Unknown is allowed
+    through — it fails at the provider if the permission really is absent,
+    which is exactly the behaviour that existed before this check, and far
+    better than blocking every connection made before it shipped. Only a
+    recorded grant that is missing a scope blocks anything.
+    """
+    if not spec.required_scopes or not granted:
+        return []
+    held = set(granted)
+    return sorted(s for s in spec.required_scopes if s not in held)
 
 
 def get_executor(op_type: str) -> ExecutorSpec:
