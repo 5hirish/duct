@@ -6,7 +6,7 @@ import { BASE } from "../../lib/api";
 import { isDesktopShell, getShellInfo, openExternal } from "../../lib/shell";
 import { isLocalBackendActive } from "../../lib/localBackend.js";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
-import { AUTH_TOKEN_KEY, isTokenValid } from "@/lib/authFetch";
+import { authToken, isTokenValid, setAuthToken } from "@/lib/authFetch";
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
 const POST_SIGNIN_REDIRECT_KEY = "duct_post_signin_redirect";
@@ -93,7 +93,7 @@ function SignInContent() {
         .then((r) => r.json())
         .then(({ token }) => {
           if (token) {
-            localStorage.setItem(AUTH_TOKEN_KEY, token);
+            setAuthToken(token);
             router.replace(consumePostSignInRedirect());
           }
         })
@@ -102,7 +102,7 @@ function SignInContent() {
     }
 
     // Already authenticated? Redirect.
-    const existing = localStorage.getItem(AUTH_TOKEN_KEY);
+    const existing = authToken();
     if (isTokenValid(existing)) {
       router.replace(consumePostSignInRedirect());
       return;
