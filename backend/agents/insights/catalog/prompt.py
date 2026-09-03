@@ -35,7 +35,6 @@ def entity_catalog_prompt_block(catalogs: list[dict[str, Any]]) -> str:
         )
         for entity in catalog.get("entities", []):
             lines.append(f'- entity_id="{entity.get("entity_id", "")}" label="{entity.get("label", "")}"')
-            lines.append(f'  tool="{entity.get("tool", "")}"')
             lines.append(f'  description="{entity.get("description", "")}"')
             field_desc = ", ".join(
                 _field_descriptor(field_name, field_meta)

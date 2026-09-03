@@ -63,7 +63,9 @@ class FetchSpec:
 
     entity_id: str
     connector_id: str
-    tool: str
+    #: Key into the dispatch table below. An internal name, not something the
+    #: model may call — every entity is reached through FetchData(entity_id=…).
+    fetch_fn: str
     call: Callable[[str, str, str, dict], dict[str, Any]]
 
 
@@ -172,20 +174,22 @@ def _build_specs() -> dict[str, FetchSpec]:
     specs: dict[str, FetchSpec] = {}
     for connector_id, catalog in _CATALOGS.items():
         for entity in catalog.get("entities", []):
-            tool = entity.get("tool", "")
-            call = by_tool.get(tool)
+            fetch_fn = entity.get("fetch_fn", "")
+            call = by_tool.get(fetch_fn)
             if call is None:
                 # A catalog entry with no dispatcher is a real drift bug, but a
                 # loud one at fetch time beats an import-time crash that takes
                 # the whole agent down.
                 logger.warning(
-                    "insights: catalog entity %s names unknown tool %s", entity.get("entity_id"), tool
+                    "insights: catalog entity %s names unknown fetcher %s",
+                    entity.get("entity_id"),
+                    fetch_fn,
                 )
                 continue
             specs[entity["entity_id"]] = FetchSpec(
                 entity_id=entity["entity_id"],
                 connector_id=connector_id,
-                tool=tool,
+                fetch_fn=fetch_fn,
                 call=call,
             )
     return specs

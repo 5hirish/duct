@@ -1,6 +1,6 @@
 """AutonomousInsightsRunner — insights as a session, on ``deepagents`` (V1).
 
-Replaces the shape of ``agents/insights/v1/agent.py``, not yet the file: that
+Replaced the shape of ``agents/insights/v1/agent.py``, and now the file too: that
 two-call pipeline (tool loop → one structured-output call) still serves
 ``POST /api/insights/generate`` and the saved-routine refresh until the phase
 plan retires it. Nothing here touches it.

@@ -12,7 +12,7 @@ ENTITY_CATALOG = {
         {
             "entity_id": "mixpanel_event_counts",
             "label": "Mixpanel Key Event Counts",
-            "tool": "fetch_mixpanel",
+            "fetch_fn": "fetch_mixpanel",
             "description": (
                 "Daily counts of the project's key events (signup/login/upgrade …) with "
                 "internal traffic excluded, plus saved-funnel completion — the cross-platform "

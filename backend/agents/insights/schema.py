@@ -1,7 +1,7 @@
 """Structured output schemas for the insights agent, plus its session shapes.
 
 The ``Syn*`` / ``SynthesisSchema`` half is the structured output of the legacy
-two-call pipeline (``agents/insights/v1/agent.py``), still used by the
+two-call pipeline (since deleted), still used by the
 non-interactive brief path. ``extra='forbid'`` throughout for OpenAI Structured
 Outputs compatibility; also shared with the Gemini synthesis path in
 ``service/google/brief.py``.

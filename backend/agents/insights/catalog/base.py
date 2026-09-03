@@ -30,7 +30,7 @@ def validate_catalog(catalog: dict[str, Any]) -> None:
     if not isinstance(catalog.get("entities"), list):
         raise ValueError("Catalog 'entities' must be a list")
     for entity in catalog["entities"]:
-        for key in ("entity_id", "label", "tool", "description", "fields"):
+        for key in ("entity_id", "label", "fetch_fn", "description", "fields"):
             if key not in entity:
                 raise ValueError(f"Entity missing '{key}' in {catalog.get('connector_id', 'unknown')}")
 

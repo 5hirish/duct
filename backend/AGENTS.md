@@ -50,6 +50,21 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
     while the V3 runner still claimed parity with the older `GenerateInsightsAgent`
     fetch/synthesize pair — an interface the routes had already left behind.
 
+    **`GenerateInsightsAgent` and its tool registry were removed too**, for the third
+    time for the same reason: no route dispatched them. With it went
+    `agents/insights/tools.py` (per-connector `StructuredTool` factories) and
+    `agents/insights/registry.py` (`goal_relevance` scoring that ranked a set of 12
+    entities down to 8 — selection pressure that never existed). The autonomous runner
+    reaches every entity through `FetchData(entity_id=…)` against the catalog, so the
+    catalog's dispatch key was renamed `tool` → `fetch_fn`: it names an internal
+    function, and only looked like a tool reference while those tools existed.
+
+    One consequence, deliberately recorded rather than discovered later: **nothing now
+    wires a ChatGPT subscription into an insights run.** `should_use_codex` /
+    `build_codex_chat` were branched only inside the deleted `agent.py`;
+    `agents/core/codex.py` and its tests remain, but no live path calls them. Re-wiring
+    that belongs in `agents/core/lc.resolve_chat_model`, where every runner would get it.
+
   So a shared change may need doing twice (V1 + V3), never more.
   Claude remains a first-class *model* through V1, so retiring V3 later costs no capability.
 

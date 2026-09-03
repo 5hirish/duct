@@ -12,7 +12,7 @@ ENTITY_CATALOG = {
         {
             "entity_id": "growthbook_experiments",
             "label": "GrowthBook Experiments",
-            "tool": "fetch_growthbook",
+            "fetch_fn": "fetch_growthbook",
             "description": (
                 "Experiments with status, phases, variations, and per-metric results for "
                 "running ones. `stale_running` flags experiments still marked running whose "

@@ -12,7 +12,7 @@ ENTITY_CATALOG = {
         {
             "entity_id": "gsc_query_performance",
             "label": "GSC Query Performance",
-            "tool": "fetch_gsc_query_performance",
+            "fetch_fn": "fetch_gsc_query_performance",
             "description": "Organic query performance with clicks, impressions, CTR, and position.",
             "fields": {
                 "query": {"type": "dimension"},
@@ -26,7 +26,7 @@ ENTITY_CATALOG = {
         {
             "entity_id": "gsc_page_performance",
             "label": "GSC Page Performance",
-            "tool": "fetch_gsc_page_performance",
+            "fetch_fn": "fetch_gsc_page_performance",
             "description": "Organic page-level performance with clicks, impressions, CTR, and position.",
             "fields": {
                 "page": {"type": "dimension"},

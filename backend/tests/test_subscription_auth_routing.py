@@ -1,4 +1,4 @@
-"""Which chat model does v1 build for each OpenAI credential shape?
+"""Which chat model does each OpenAI credential shape call for?
 
 A ChatGPT subscription credential targets ``chatgpt.com/backend-api/codex``, not
 the public OpenAI API, so it needs ``_ChatOpenAICodex`` rather than
@@ -9,8 +9,13 @@ the one with predictable latency.
 There is deliberately no Anthropic equivalent. Anthropic disabled `sk-ant-oat…`
 on the Messages API in Feb 2026, and the only thing that authenticates one is
 the `claude` CLI subprocess — measured at ~125s per synthesis with no token
-streaming, versus ~$0.04 to run the same call on an API key. Claude on v1 uses
-ANTHROPIC_API_KEY; v3 remains the subscription path.
+streaming, versus ~$0.04 to run the same call on an API key. Claude uses ANTHROPIC_API_KEY.
+
+These assert the two live primitives — ``should_use_codex`` classifying the
+credential and ``resolve_chat_model`` building the client — rather than a
+composition of them. The one place that composed them was the frozen
+``v1/agent.py``, deleted with the rest of that pipeline; nothing wires a
+ChatGPT subscription into a live insights run today.
 
 No network and no ChatGPT login required.
 """
@@ -73,20 +78,20 @@ def test_building_a_codex_model_without_a_login_says_how_to_log_in(monkeypatch):
 
 
 def _llm_for(api_key: str, provider: Provider, model: ModelName) -> str:
-    from agents.insights.v1.agent import GenerateInsightsAgent
+    from agents.core.lc import resolve_chat_model
 
-    return type(
-        GenerateInsightsAgent(api_key=api_key, provider=provider, model=model).llm
-    ).__name__
+    return type(resolve_chat_model(provider, model, api_key)).__name__
 
 
-def test_v1_routes_each_credential_to_the_right_chat_model(monkeypatch):
+def test_a_subscription_is_recognised_and_an_api_key_still_wins(monkeypatch):
+    """The invariant, at the level that still exists: classification."""
     monkeypatch.setattr(codex, "codex_available", lambda: True)
 
-    # A subscription takes its own path...
-    assert _llm_for("", Provider.OPENAI, ModelName.GPT_5_MINI) == "_ChatOpenAICodex"
+    assert codex.should_use_codex("") is True
+    assert codex.should_use_codex("sk-proj-x") is False
 
-    # ...and an explicit API key always beats it.
+    # And the client a subscription calls for is the Codex one, not ChatOpenAI.
+    assert type(codex.build_codex_chat(model="gpt-5-mini")).__name__ == "_ChatOpenAICodex"
     assert _llm_for("sk-proj-x", Provider.OPENAI, ModelName.GPT_5_MINI) == "ChatOpenAI"
 
 
