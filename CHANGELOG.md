@@ -24,6 +24,9 @@ the commit list and the install instructions, which is worse.
   signed-in user, and every ungated `/api` route must be declared with a reason.
 - Social preview cards, generated from `scripts/social/template.html`. The site's
   `og:image` had been referenced by 23 pages without the file ever existing.
+- `STYLE.md` — what good code looks like here, separate from the `AGENTS.md`
+  rules about what must not break. Every convention in it was measured against
+  the tree rather than asserted.
 
 ### Changed
 
