@@ -12,7 +12,10 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { STORAGE_NONE, STORAGE_SESSION, serverStorage } from "../../lib/credentialStorage";
+import { isLocalBackendActive } from "../../lib/localBackend";
 import { startConnectorOAuth } from "../../lib/connectorAuth";
+import StorageBadge from "./StorageBadge";
 import ConnectorDialog from "./ConnectorDialog";
 import ConnectorTile from "./ConnectorTile";
 import ProjectAccountSelect from "./ProjectAccountSelect";
@@ -43,6 +46,14 @@ export default function OAuthConnectorCard({
   onMappingChange,
   mappingBusy,
 }) {
+  // A stored row is durable wherever the server happens to be; without one the
+  // token exists only in this tab, which is the case worth naming.
+  const storage = syncedToAccount
+    ? serverStorage({ localSidecar: isLocalBackendActive() })
+    : oauthConnected
+      ? STORAGE_SESSION
+      : STORAGE_NONE;
+
   const [open, setOpen] = useState(false);
   // "" | "starting" | "browser". "browser" is a desktop shell waiting on the
   // system browser: this window stays put, so the state has to be visible or
@@ -74,6 +85,7 @@ export default function OAuthConnectorCard({
         description={description}
         tone={tone}
         status={status}
+        storage={storage}
         onClick={() => setOpen(true)}
       />
 
@@ -120,13 +132,16 @@ export default function OAuthConnectorCard({
             </p>
           )}
           {oauthConnected && (
-            <p className="conn-hint">
-              {syncedToAccount
-                ? "Synced to your account — available to agents and server-side runs."
-                : signedIn
-                  ? "This session only — reconnect to sync to your account."
-                  : "This session only — sign in to sync to your account."}
-            </p>
+            <div style={{ marginTop: 10 }}>
+              <StorageBadge storage={storage} detail />
+              {storage === STORAGE_SESSION && (
+                <p className="conn-hint">
+                  {signedIn
+                    ? "Reconnect to save it to your account."
+                    : "Sign in to save it to your account."}
+                </p>
+              )}
+            </div>
           )}
         </div>
 

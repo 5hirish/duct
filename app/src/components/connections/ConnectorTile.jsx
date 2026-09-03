@@ -8,10 +8,15 @@
 // stays scannable no matter how many fields a given connector needs.
 
 import { ChevronRight } from "lucide-react";
+import StorageBadge from "./StorageBadge";
 
 /**
  * @param tone  "on" | "partial" | "off" — drives the status dot's colour.
  * @param status  Short state line, e.g. "Connected — Acme Ads".
+ * @param storage  STORAGE_* constant — where the credential lives. On the tile
+ *   rather than only in the dialog because "saved to your account" and "living
+ *   in this tab" are indistinguishable from outside, and the difference is the
+ *   whole reason a connection appears to vanish.
  */
 export default function ConnectorTile({
   logo,
@@ -19,6 +24,7 @@ export default function ConnectorTile({
   description,
   tone = "off",
   status,
+  storage,
   onClick,
   disabled = false,
 }) {
@@ -46,6 +52,7 @@ export default function ConnectorTile({
         <span className={`conn-tile-foot${tone === "on" ? " conn-tile-foot--on" : ""}`}>
           <span className={`conn-dot${dotTone}`} />
           <span className="conn-tile-foot-text">{status}</span>
+          <StorageBadge storage={storage} />
         </span>
       </span>
     </button>

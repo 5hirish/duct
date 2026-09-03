@@ -138,6 +138,21 @@
   white-space: nowrap;
 }
 
+/* Where the credential lives, said on the tile itself. A full status pill
+   would dominate a 12px foot, and the shared pill's capitalize rule turns
+   "This session" into "This Session", so the badge gets its own weight. */
+.conn-storage-pill {
+  text-transform: none;
+}
+
+.conn-tile-foot .conn-storage-pill {
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: 0.125rem 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
 .conn-dot {
   width: 7px;
   height: 7px;

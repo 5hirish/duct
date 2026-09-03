@@ -26,12 +26,20 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  STORAGE_KEYCHAIN,
+  STORAGE_NONE,
+  STORAGE_SESSION,
+  serverStorage,
+} from "../../lib/credentialStorage";
+import { isLocalBackendActive } from "../../lib/localBackend";
 import { clearProviderKey, getProviderKey, setProviderKey } from "../../lib/providerKeys";
 import { forgetProviderKey, rememberProviderKey } from "../../lib/providerKeysRemote";
 import { isDesktopShell } from "../../lib/shell";
 import { SOURCE_DETAIL, SOURCE_LABELS, SOURCE_TONE } from "../../lib/modelTiers";
 import ConnectorDialog from "./ConnectorDialog";
 import ConnectorTile from "./ConnectorTile";
+import StorageBadge from "./StorageBadge";
 
 export default function ProviderCard({ provider, logo, status }) {
   const [open, setOpen] = useState(false);
@@ -73,6 +81,19 @@ export default function ProviderCard({ provider, logo, status }) {
   // `env` and `cloud`: every tile fell through to "No key set" while the tier
   // rows two tabs away correctly said "From env".
   const source = saved ? "user" : remembered ? "stored" : status?.source || "none";
+
+  // Where it physically sits, which `source` above does not say. Desktop wins
+  // outright: the shell writes to the OS keychain and never offers the
+  // remember-on-Duct choice, so a key held there is held there.
+  const storage = desktop
+    ? saved
+      ? STORAGE_KEYCHAIN
+      : STORAGE_NONE
+    : remembered
+      ? serverStorage({ localSidecar: isLocalBackendActive() })
+      : saved
+        ? STORAGE_SESSION
+        : STORAGE_NONE;
   const tile = {
     tone: SOURCE_TONE[source] === "warn" ? "off" : source === "cloud" ? "partial" : "on",
     label: SOURCE_LABELS[source] || SOURCE_LABELS.none,
@@ -137,6 +158,7 @@ export default function ProviderCard({ provider, logo, status }) {
         description={provider.description}
         tone={tile.tone}
         status={tile.label}
+        storage={storage}
         onClick={() => setOpen(true)}
       />
 
@@ -172,15 +194,21 @@ export default function ProviderCard({ provider, logo, status }) {
                 {revealed ? "Hide" : "Show"}
               </Button>
             </div>
-            <p className="conn-hint">
-              {trimmed && !looksValid
-                ? `Keys usually start with "${provider.prefix}".`
-                : desktop
-                  ? "Stored in your OS keychain on this machine."
+            {trimmed && !looksValid ? (
+              <p className="conn-hint">Keys usually start with &ldquo;{provider.prefix}&rdquo;.</p>
+            ) : storage !== STORAGE_NONE ? (
+              <StorageBadge storage={storage} detail />
+            ) : (
+              // Nothing saved yet, so this describes where the next save lands
+              // rather than where anything currently is.
+              <p className="conn-hint">
+                {desktop
+                  ? "Will be stored in your OS keychain on this machine."
                   : remember
-                    ? "Encrypted and stored on Duct, so scheduled runs use your key too."
-                    : "Kept in this browser session only — cleared when you close the tab, and unavailable to scheduled runs."}
-            </p>
+                    ? "Will be encrypted and stored on Duct, so scheduled runs use your key too."
+                    : "Will be kept in this browser session only — cleared when you close the tab, and unavailable to scheduled runs."}
+              </p>
+            )}
             {!desktop && (
               <label className="conn-hint" style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <input

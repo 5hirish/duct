@@ -111,10 +111,22 @@ export default function ConnectionsPage() {
     // backend's database has never seen — a session left over from a different
     // environment. Only signing in again fixes it.
     if (err?.status === 401) {
+      // Keep the backend's own words. "Token expired" and "User not found" are
+      // different faults with different causes — one is age, the other is a
+      // session pointing at a database that has never seen this account — and
+      // collapsing them into one friendly sentence throws away the only thing
+      // that tells you which you are looking at.
+      //
+      // Name the backend too. Which server answered is the other half of the
+      // diagnosis and the half nobody can see: the desktop shell and a browser
+      // on the same origin call different backends, so "rejected" without a
+      // destination is unactionable — and reproducing it took three rounds of
+      // asking which one the reporter had been using.
       setConnectError(
-        "Connected to Google, but your Duct session has expired or belongs to a " +
-          "different environment, so the connection could not be saved to your " +
-          "account. Sign out and sign in again, then reconnect.",
+        "Connected to Google, but your Duct session was rejected by " +
+          `${BASE || "the API"}, so the connection could not be saved to your ` +
+          "account. Sign out and sign in again, then reconnect." +
+          (err?.message ? ` (${err.message})` : ""),
       );
       return;
     }

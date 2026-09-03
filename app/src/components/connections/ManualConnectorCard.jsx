@@ -24,8 +24,11 @@ import {
   listConnectorAccounts,
   saveServerConnector,
 } from "../../lib/connectorsApi";
+import { STORAGE_NONE, serverStorage } from "../../lib/credentialStorage";
+import { isLocalBackendActive } from "../../lib/localBackend";
 import ConnectorDialog from "./ConnectorDialog";
 import ConnectorTile from "./ConnectorTile";
+import StorageBadge from "./StorageBadge";
 import ProjectAccountSelect from "./ProjectAccountSelect";
 
 export default function ManualConnectorCard({
@@ -59,6 +62,11 @@ export default function ManualConnectorCard({
   const [adding, setAdding] = useState(false);
 
   const connected = serverRowList.length > 0;
+  // There is no session-only mode here: saving requires being signed in and
+  // writes the row server-side, which is the point of pasting a key at all.
+  const storage = connected
+    ? serverStorage({ localSidecar: isLocalBackendActive() })
+    : STORAGE_NONE;
   const formOpen = !connected || adding;
 
   function setValue(key, v) {
@@ -159,6 +167,7 @@ export default function ManualConnectorCard({
         description={description}
         tone={connected ? "on" : "off"}
         status={status}
+        storage={storage}
         onClick={() => setOpen(true)}
       />
 
