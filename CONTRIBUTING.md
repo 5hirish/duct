@@ -121,6 +121,9 @@ have the rest.
   than description, and commit messages are held to the same bar.
 - Update the docs next to the code you changed, including the relevant
   `AGENTS.md` if you changed a convention.
+- Add a line to `CHANGELOG.md` under `## [Unreleased]` if the change is one a
+  user would notice. `.github/scripts/release-notes.mjs` puts that section
+  straight into the GitHub release, so what you write there is what they read.
 
 ## Reporting security issues
 

@@ -442,6 +442,22 @@ jobs:
             --out latest.json
           cat latest.json
 
+      # The release page is public and indexed, so the notes are worth writing:
+      # this pulls the CHANGELOG.md section for the version, adds the per-platform
+      # install steps (the macOS quarantine flag is the most common "the download
+      # is broken" report), and lists every installer with its SHA-256.
+      - name: Build the release notes
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          node .github/scripts/release-notes.mjs \
+            --version "$VERSION" \
+            --artifacts artifacts \
+            --repo "$REPO" > release-notes.md
+          cat release-notes.md
+
       - name: Create or update the release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -456,12 +472,15 @@ jobs:
           ASSETS+=(latest.json)
 
           # Re-running a build for the same version replaces the assets rather
-          # than failing; the updater reads whatever `latest` points at.
+          # than failing; the updater reads whatever `latest` points at. The
+          # notes are rewritten too — the SHA-256 table describes the assets that
+          # were just replaced, so leaving the old body would make it wrong.
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" --clobber "${ASSETS[@]}"
+            gh release edit "$TAG" --notes-file release-notes.md
           else
             gh release create "$TAG" \
               --title "Duct Desktop $VERSION" \
-              --notes "Automated build from ${{ github.sha }}." \
+              --notes-file release-notes.md \
               "${ASSETS[@]}"
           fi
