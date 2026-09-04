@@ -22,12 +22,7 @@ import {
   STORAGE_SESSION,
   STORAGE_TONE,
 } from "../../lib/credentialStorage";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 /** 16px line icons, one per answer. `currentColor` so tone drives the colour. */
 function StorageIcon({ storage }) {
@@ -90,33 +85,33 @@ export default function StorageBadge({ storage, detail = false }) {
 
   return (
     <>
-      {/* This app mounts no global Tooltip.Provider, and Radix requires one in
-          the ancestry. Wrapping here keeps the component self-contained. */}
-      <TooltipProvider delayDuration={150}>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              className={`conn-storage-icon tone-${STORAGE_TONE[storage] || "grey"}`}
-              // The label is the accessible name, so a screen reader gets "Saved
-              // to your account" rather than "button". The sentence follows in
-              // the tooltip, which Radix wires up as the description.
-              aria-label={label}
-            >
-              <StorageIcon storage={storage} />
-            </button>
-          </TooltipTrigger>
-          {/* `TooltipContent` is an inline-flex ROW with `items-center` — built
-              for one short line plus an optional key chip. Two paragraphs in it
-              became two columns, so "Saved to your account" wrapped into a
-              narrow stack beside its own explanation. Stacking is the fix, not
-              a wider box. */}
-          <TooltipContent side="top" className="flex-col items-start gap-0.5">
-            <span className="font-medium">{label}</span>
-            <span className="opacity-80">{sentence}</span>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      {/* No local Provider: the root layout already wraps the whole app in one
+          (`app/layout.js`). A second one here was not merely redundant — it
+          overrode `delayDuration` for this tooltip alone, so the storage glyph
+          opened on a different beat from every other tooltip in the app. */}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            className={`conn-storage-icon tone-${STORAGE_TONE[storage] || "grey"}`}
+            // The label is the accessible name, so a screen reader gets "Saved
+            // to your account" rather than "button". The sentence follows in
+            // the tooltip, which Radix wires up as the description.
+            aria-label={label}
+          >
+            <StorageIcon storage={storage} />
+          </button>
+        </TooltipTrigger>
+        {/* `TooltipContent` is an inline-flex ROW with `items-center` — built
+            for one short line plus an optional key chip. Two paragraphs in it
+            became two columns, so "Saved to your account" wrapped into a
+            narrow stack beside its own explanation. Stacking is the fix, not
+            a wider box. */}
+        <TooltipContent side="top" className="flex-col items-start gap-0.5">
+          <span className="font-medium">{label}</span>
+          <span className="opacity-80">{sentence}</span>
+        </TooltipContent>
+      </Tooltip>
       {detail && <p className="conn-hint">{sentence}</p>}
     </>
   );

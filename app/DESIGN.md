@@ -63,6 +63,15 @@ component writes its own `.dark` rules, and new code must not start.
 Surfaces are dark grey, not black; elevation lightens; accents desaturate in
 dark (Material dark-theme guidance — the tokens already follow it).
 
+**Lifting a colour for dark means darkening its partner.** `--primary`,
+`--success` and `--warning` each pair a lifted dark-mode colour with a
+darkened `-foreground`; a `-foreground` left out of the `.dark` block does not
+fail loudly, it silently inherits the light-mode value written for a *dark*
+surface. `--destructive` was missing exactly that, so white sat on a lifted
+coral at 2.89:1 while its three neighbours ran 7.8–9.9. Verify a new or
+changed token at `/preview/frame?scene=tokens&theme=dark`, which renders every
+pair with its live ratio — the whole reason it is a screen and not a comment.
+
 The accent rule: **one accent, used semantically.** Status colors are
 reserved for status — green means good movement, amber means waiting, red
 means destructive/failed, and every status color needs a non-color channel
@@ -240,6 +249,8 @@ are the canonical choices; migrate the others when a change touches them.
 | Long-running agent work | `PipelineProgress` (ladder + rotating subtitle) | bare spinners on multi-second waits |
 | Status badge | `ui/badge` with semantic tokens | `.status-pill` (lives in `ads-report.css`, hardcodes hexes, used far outside the report) |
 | Destructive confirm | `ui/alert-dialog`: title quotes the object ("Delete \"Acme\"?"), body states scope + irreversibility, action button is verb + noun ("Delete project") in the *tinted* destructive style | the three `window.confirm` sites; the filled-red `bg-red-600` variant |
+| Destructive action (the button that opens that confirm) | `Button variant="destructive"` — the tinted style above, already shipped: `bg-destructive/10 text-destructive`. Red **at rest**, not on hover: an action worth confirming is worth seeing before the pointer arrives. Pass `buttonVariants({ variant: "destructive" })` to `AlertDialogAction`, which defaults to the primary variant | hand-rolled danger links; pasting the class string inline (`ProjectMembers.jsx`); anything that is only red on `:hover` |
+| Dialog actions | `DialogFooter` — bottom of the dialog, below the content they act on, destructive/secondary left and primary rightmost (it reverses to primary-first when the row stacks). Never mid-body | a hand-rolled right-aligned row anywhere above the content |
 | Empty state (whole surface) | dashed panel: `rounded-xl border-dashed p-10 text-center`, `size-12` icon tile, `text-sm font-medium` title, `text-xs text-muted-foreground` body, verb-first `Button size="sm"` CTA | ad-hoc variants; pick this anatomy every time |
 | Empty state (inside a stable layout) | one muted line in place (`DeskCards`) so the layout doesn't jump | — |
 | First-run | the `DeskDayOne` pattern: labelled example data + a short checklist — "an empty board teaches nothing" | "No X yet" on a first-run surface |
@@ -290,6 +301,17 @@ The container-query system, unit rules and the `@`-scale are in
 - **The desktop shell remembers itself** (Apple HIG): minimum window size
   so nothing overlaps, persisted window bounds and pane-split ratios across
   launches. Tauri does none of this for free.
+- **A conditional wrapper is not free in a `gap` layout.** `{cond && <div>{
+  inner && <p/>}</div>}` renders an empty `div` whenever `inner` is false — and
+  a flex/grid parent still gives that empty box a row and a full `gap` on each
+  side. It reads as "mystery whitespace" and cannot be found by looking at the
+  CSS, because the CSS is correct. Put the condition on the element that has
+  the content, not on a wrapper around it, and measure the gap rather than
+  adding margin until it looks right.
+- **Spacing that arrives from two places is a bug even when each place is
+  right.** A section with its own `padding-top` inside a body with its own
+  `margin-top` sums silently; the first child of a container usually wants
+  neither, because the container's edge already separates it.
 - **Density is a desktop feature with a floor**: interactive targets never
   below 24×24 CSS px (WCAG 2.5.8). Denser than Material's touch defaults is
   fine here — Linear-dense, made tolerable by consistent spacing and muted
@@ -388,10 +410,13 @@ before calling a screen done.
    Enter submits the form.
 7. Prose capped at a measure; tables scroll in their own container; no
    target under 24px.
-8. Drag the pane/window through the 600–1100px band: does the layout adapt
+8. Measure the whitespace you did not intend: any gap you cannot name the
+   source of is two rules stacking or an empty conditional wrapper. Dialog
+   actions in a `DialogFooter`, primary rightmost?
+9. Drag the pane/window through the 600–1100px band: does the layout adapt
    or break?
-9. Any raw hex, arbitrary `text-[Npx]`, or off-scale spacing? Token it.
-10. Which canonical pattern (table above) does each element use — and if
+10. Any raw hex, arbitrary `text-[Npx]`, or off-scale spacing? Token it.
+11. Which canonical pattern (table above) does each element use — and if
     none, why does this job need a new one?
 
 ---
@@ -419,11 +444,27 @@ The tree, measured against this file. Fix each when a change touches it.
 - **`ui/card` has zero importers** while five card shapes coexist — restyle
   it to the canonical shape, then adopt it.
 - **`Loader2` spinners (7 files)** → `ui/spinner`.
-- **`.status-pill` (8 files)** → `ui/badge`; move its colors to tokens.
+- **`.status-pill`** → `ui/badge`; move its colors to tokens. The
+  `components/connections/` surfaces are migrated (they now use `ui/badge` or
+  a glyph); the rest of the 8 files are not.
 - **`window.confirm` (3 sites)** → `ui/alert-dialog`.
-- **~300 arbitrary px type values** (`text-[10px]` ×88, `text-[11px]` ×77…)
-  contradict the rem rule in `AGENTS.md`; also heavy inline `style={{}}`
-  spacing in `execute/page.jsx` and `AuditReportV1.jsx`.
+- **Off-scale type.** `npm run check:type` enforces the two-size rule above:
+  font sizes must land on Tailwind's scale, and files on its clean list can
+  never regress. It runs inside `check:parity`, so CI has it. Currently clean:
+  `base`, `connector-tiles`, `forms`, `layout-grids`, `mode-selector`,
+  `theme`, `tokens`, `typography`. Still owing, and reported on every run:
+  `ads-report` (15), `generate` (14), `model-tiers` (9), `signin` (7),
+  `chat` (5), `connections` (1), `app-shell` (1). Clean a file, add it to
+  `CLEAN` in the script. Separately, ~300 arbitrary px type values in JSX
+  (`text-[10px]` ×88, `text-[11px]` ×77…) contradict the rem rule in
+  `AGENTS.md`, as does heavy inline `style={{}}` spacing in `execute/page.jsx`
+  and `AuditReportV1.jsx` — neither is covered by the script yet.
+
+  The rule needed a guard because prose could not hold it: `connector-tiles.css`
+  grew **six** sizes between 10px and 16px while this file said "do not invent
+  intermediate sizes", and the result was a section heading rendering *smaller*
+  than the field label nested inside it — hierarchy inverted, which reads as
+  visual noise long before anyone can name the cause.
 - **Hardcoded hexes in JSX and CSS**: `AuditReportV1` score ramp,
   `ArtifactRenderer` chart colors (use `--chart-1..5`), `themes.js`, and
   `ads-report.css`, which bypasses the token layer entirely and is

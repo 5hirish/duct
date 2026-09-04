@@ -144,7 +144,7 @@
 
 .conn-tile-desc {
   margin: 0;
-  font-size: 0.78125rem;
+  font-size: 0.75rem;
   line-height: 1.45;
   color: var(--muted-foreground);
   display: -webkit-box;
@@ -172,31 +172,19 @@
      the slack: the row reads "• Connected ......... [where it lives]", one
      group per end, rather than one long stretched sentence. */
   flex: 0 1 auto;
-  min-width: 4.5rem;
-}
-
-.conn-tile-foot {
-  flex-wrap: wrap;
-  row-gap: 0.25rem;
-}
-
-/* Where the credential lives, said on the tile itself. A full status pill
-   would dominate a 12px foot, and the shared pill's capitalize rule turns
-   "This session" into "This Session", so the badge gets its own weight. */
-.conn-storage-pill {
-  text-transform: none;
-}
-
-.conn-tile-foot .conn-storage-pill {
-  flex: 0 1 auto;
+  /* Shrink all the way. A 4.5rem floor kept it from ever getting small enough
+     to sit beside a long name on one line, which is what forced the wrap. */
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  margin-left: auto;
-  padding: 0.125rem 0.375rem;
-  font-size: 0.6875rem;
-  font-weight: 600;
+}
+
+/* One line, always. Wrapping was deliberate — "the two wrap rather than
+   truncate once the tile is genuinely too narrow" — and looked fine for
+   "Connected". A real account name proved it wrong: flex wraps on base size
+   before it shrinks, so a long nowrap status pushed itself to a second line,
+   orphaned the dot on the first and stranded the storage glyph on a third.
+   The text already carries an ellipsis; truncating is what it is for. */
+.conn-tile-foot {
+  flex-wrap: nowrap;
 }
 
 .conn-dot {
@@ -239,9 +227,37 @@
   border-top: 1px solid var(--border);
 }
 
+/* The first section sits under the header, which already provides the
+   separation the rule and its padding exist to draw. Keeping the padding as
+   well put 32px of measured nothing between the description and the first
+   control. */
 .conn-dialog-section:first-child {
   border-top: 0;
   margin-top: 0;
+  padding-top: 0;
+}
+
+/* Dialog body. `DialogContent` is a flex column with no gap of its own, so the
+   distance from the header is set here once rather than as an inline
+   `marginTop` on the wrapper. */
+.conn-dialog-body {
+  margin-top: 1rem;
+}
+
+/* shadcn's DialogFooter already lays the row out (reversed on narrow, right
+   aligned from sm up). This only adds the separation from the body, matching
+   the rule between sections above. */
+.conn-dialog-footer {
+  margin-top: 1.125rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--border);
+}
+
+/* The description was carrying three inline style properties. */
+.conn-dialog-desc {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
 }
 
 .conn-field {
@@ -265,7 +281,7 @@
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--muted);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
 }
 
 /* Non-clickable sibling of .conn-tile — same shell, its own control inline
@@ -288,7 +304,6 @@
 }
 
 
-
 /* Section headings inside a connector dialog.
 
    The dialog was a flat run of controls separated only by rules, so
@@ -296,22 +311,14 @@
    nothing said which parts were about the connection versus this project. */
 .conn-dialog-heading {
   margin: 0;
-  font-size: 0.8125rem;
+  /* text-sm, the same size as the `Label` of the first field under it. The
+     level is carried by weight and colour, not by size: this was 13px against
+     the shadcn Label's 14px, which inverted the hierarchy outright — the field
+     label read as more important than the section it sits inside. */
+  font-size: 0.875rem;
   font-weight: 600;
-  letter-spacing: 0.01em;
+  letter-spacing: -0.006em;
   color: var(--foreground);
-}
-
-/* The status row: state on the left, actions on the right, badge below.
-
-   Previously three items on one flex line, which wrapped unpredictably and put
-   a 2-line explanatory sentence next to two buttons. */
-.conn-dialog-status {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  flex-wrap: wrap;
 }
 
 /* --- entity picker ------------------------------------------------------- */
@@ -448,7 +455,7 @@
   border-radius: 0.25rem;
   background: var(--muted);
   color: var(--muted-foreground);
-  font-size: 0.625rem;
+  font-size: 0.75rem;
   font-weight: 600;
   line-height: 1;
   overflow: hidden;
@@ -478,7 +485,7 @@
   border-radius: 0.25rem;
   background: var(--muted);
   color: var(--muted-foreground);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 500;
   line-height: 1.4;
   white-space: nowrap;
@@ -496,7 +503,7 @@
 .conn-entity-note {
   margin: 0;
   padding: 0.75rem 0.5rem;
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   color: var(--muted-foreground);
 }
 
@@ -527,20 +534,6 @@
   text-decoration: underline;
 }
 
-
-.conn-dialog-badges {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  min-width: 0;
-}
-
-.conn-dialog-actions {
-  display: flex;
-  gap: 0.5rem;
-  flex-shrink: 0;
-}
 
 /* The scope list was a run of paragraphs with no left rail, so the tick, the
    name and the justification all started at different places depending on
@@ -579,35 +572,6 @@
    reassuring green thing on a card that already has a green dot. */
 .conn-storage-icon.tone-yellow {
   color: var(--warning);
-}
-
-.conn-state-text {
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--muted-foreground);
-}
-
-/* Disconnect. Destructive and irreversible, so it does not get a button's box —
-   a bordered control next to Reconnect reads as an equal choice. */
-.conn-danger-link {
-  border: 0;
-  background: transparent;
-  padding: 0 0.25rem;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--muted-foreground);
-  cursor: pointer;
-  border-radius: 0.25rem;
-}
-
-.conn-danger-link:hover {
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.conn-danger-link:focus-visible {
-  outline: 2px solid var(--destructive);
-  outline-offset: 2px;
 }
 
 .conn-tile-foot .conn-storage-icon {
@@ -657,27 +621,6 @@
   flex-shrink: 0;
 }
 
-/* The action row's only job now. */
-.conn-dialog-actions-row {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-/* Recessive until intended. Red at rest made the destructive action the most
-   salient thing in the dialog, which is backwards: it is rare and
-   irreversible, and Reconnect is neither. */
-.conn-danger-link {
-  color: var(--muted-foreground);
-}
-
-.conn-danger-link:hover,
-.conn-danger-link:focus-visible {
-  color: var(--destructive);
-}
-
 /* Same rail as the dot's slot, same 24px floor. */
 .conn-state .conn-storage-icon {
   width: 1.5rem;
@@ -712,7 +655,7 @@
    of these however many scopes a connector adds. */
 .conn-perm-group-label {
   margin: 0;
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -755,7 +698,7 @@
 }
 
 .conn-perm-label {
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-weight: 500;
   line-height: 1.25rem;
   color: var(--foreground);
@@ -773,7 +716,7 @@
 }
 
 .conn-perm-state {
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.01em;
   color: var(--muted-foreground);

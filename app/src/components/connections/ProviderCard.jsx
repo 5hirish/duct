@@ -168,6 +168,34 @@ export default function ProviderCard({ provider, logo, status }) {
         logo={logo}
         title={provider.label}
         description={provider.description}
+        // Where the key stands, said once, beside the title — the same place
+        // every other connector says it. It used to be a `status-pill` down in
+        // the action row, which is both a second answer to a question the
+        // header already answers and the pill DESIGN.md lists to retire.
+        status={
+          <span className="conn-state">
+            <span className="conn-state-glyph" title={tile.detail}>
+              <span
+                className={`conn-dot${tile.tone === "on" ? " conn-dot--on" : tile.tone === "partial" ? " conn-dot--partial" : ""}`}
+                role="img"
+                aria-label={tile.label}
+              />
+            </span>
+            <StorageBadge storage={storage} />
+          </span>
+        }
+        footer={
+          <>
+            {(saved || remembered) && (
+              <Button type="button" variant="destructive" size="sm" onClick={remove} disabled={busy}>
+                Remove
+              </Button>
+            )}
+            <Button type="button" size="sm" onClick={save} disabled={busy || !trimmed || !looksValid}>
+              Save
+            </Button>
+          </>
+        }
       >
         <div className="conn-dialog-section">
           <div className="conn-field">
@@ -239,24 +267,6 @@ export default function ProviderCard({ provider, logo, status }) {
             </p>
           )}
 
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-            <span
-              className={`status-pill ${tile.tone === "on" ? "green" : "grey"}`}
-              title={tile.detail}
-            >
-              {tile.label}
-            </span>
-            <div style={{ display: "flex", gap: 8 }}>
-              {(saved || remembered) && (
-                <Button type="button" variant="outline" size="sm" onClick={remove} disabled={busy}>
-                  Remove
-                </Button>
-              )}
-              <Button type="button" size="sm" onClick={save} disabled={busy || !trimmed || !looksValid}>
-                Save
-              </Button>
-            </div>
-          </div>
         </div>
       </ConnectorDialog>
     </>

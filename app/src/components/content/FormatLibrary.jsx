@@ -13,7 +13,7 @@ import {
   Trash2,
   Type,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -229,7 +229,11 @@ export default function FormatLibrary({ projectId }) {
             <AlertDialogAction
               onClick={(e) => { e.preventDefault(); confirmDelete(); }}
               disabled={busy}
-              className="bg-destructive text-white hover:bg-destructive/90"
+              // Was `bg-destructive text-white`, which is off canon twice: DESIGN.md
+              // makes the destructive action tinted rather than filled, and a
+              // hardcoded white does not follow `--destructive-foreground` into dark,
+              // where it measured 2.89:1 on the lifted coral.
+              className={buttonVariants({ variant: "destructive" })}
             >
               {busy ? "Deleting…" : "Delete format"}
             </AlertDialogAction>

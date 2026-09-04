@@ -64,6 +64,13 @@
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
+  /* Lifting a status colour for dark means darkening its partner, which every
+     other status token here does and this one did not — it fell through to the
+     `:root` white written for a dark red, and white on a light coral measures
+     2.89:1 where text needs 4.5. Its neighbours land at 7.8–9.9, so it was the
+     outlier by a factor of three. Same lightness and chroma as
+     `--success-foreground`, on the destructive hue: 6.9:1. */
+  --destructive-foreground: oklch(0.14 0.03 22);
   --success: oklch(0.72 0.17 149);
   --success-foreground: oklch(0.14 0.03 149);
   --warning: oklch(0.79 0.15 82);

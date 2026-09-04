@@ -4,10 +4,13 @@
 // (logo + name + purpose) so the dialog stands on its own, then hands the rest
 // of the body to whichever connector opened it.
 
+import { useRef } from "react";
+
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -27,10 +30,37 @@ export default function ConnectorDialog({
   // one job.
   status,
   children,
+  // What acts on this connection — Reconnect, Disconnect, Save.
+  //
+  // A footer, because that is where a dialog's actions go: shadcn ships
+  // `DialogFooter` for it and every other confirm in this app already uses
+  // one. These sat at the TOP of the body instead, directly under the
+  // description, which cost twice — a measured 32px of dead space above them
+  // (nothing else was there to fill it) and an action row read before the
+  // permissions and account it acts on.
+  footer,
 }) {
+  const contentRef = useRef(null);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent
+        ref={contentRef}
+        onOpenAutoFocus={(event) => {
+          // Radix focuses the first focusable descendant when a dialog opens.
+          // Here that is the storage glyph in the header — and Radix's tooltip
+          // opens on ANY focus, not just keyboard focus (`onFocus: if
+          // (!isPointerDownRef.current) onOpen()`), so the dialog appeared with
+          // a tooltip already showing, every single time.
+          //
+          // Focus the content box instead. It carries `tabIndex={-1}`, so the
+          // focus trap still holds, Escape still closes, and Tab still reaches
+          // every control in order — the only thing lost is a tooltip nobody
+          // asked for.
+          event.preventDefault();
+          contentRef.current?.focus();
+        }}
+      >
         <DialogHeader>
           <div className="conn-dialog-head">
             <span className="conn-tile-logo" aria-hidden="true">
@@ -41,14 +71,16 @@ export default function ConnectorDialog({
                 <DialogTitle>{title}</DialogTitle>
                 {status}
               </div>
-              <DialogDescription style={{ marginTop: 4, fontSize: 12.5, lineHeight: 1.45 }}>
+              <DialogDescription className="conn-dialog-desc">
                 {description}
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        <div style={{ marginTop: 18 }}>{children}</div>
+        <div className="conn-dialog-body">{children}</div>
+
+        {footer && <DialogFooter className="conn-dialog-footer">{footer}</DialogFooter>}
       </DialogContent>
     </Dialog>
   );

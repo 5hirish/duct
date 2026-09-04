@@ -72,6 +72,13 @@ export default function ProjectEntitySelect({
   binding,
   onChange,
   busy = false,
+  // How to fetch the list. Defaults to the real call; the only other caller is
+  // the preview route, which passes a stub so the loading, empty, error and
+  // populated states can all be looked at without a signed-in session and a
+  // live Google grant behind them. One optional prop with a real default beats
+  // the alternative — reconstructing this component's markup by hand somewhere
+  // else, which is a copy that silently stops matching.
+  loadEntities = listConnectorEntities,
   // Sent with the connector row, so the label is right on first paint. Without
   // it the field read "Account" over a list of Search Console properties until
   // someone opened the dropdown and the lazy listing corrected it.
@@ -91,7 +98,7 @@ export default function ProjectEntitySelect({
     if (!credentialId) return;
     setState((prev) => ({ ...prev, status: "loading" }));
     try {
-      const data = await listConnectorEntities(credentialId);
+      const data = await loadEntities(credentialId);
       setNouns({
         one: data.entity_noun || "account",
         many: data.entity_noun_plural || "accounts",
@@ -107,7 +114,7 @@ export default function ProjectEntitySelect({
       // lookup is not evidence the stored selection is wrong.
       setState({ status: "error", entities: [], error: err?.message || String(err) });
     }
-  }, [credentialId]);
+  }, [credentialId, loadEntities]);
 
   // Load on first open only. Reopening keeps what we have; Refresh re-fetches.
   useEffect(() => {

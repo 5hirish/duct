@@ -60,3 +60,52 @@ html {
   }
 }
 
+
+/* --- preview route overlays (dev only) -----------------------------------
+   Toggled by `window.__preview.overlay()` in src/app/preview/. They live here
+   rather than in the route because the route imports no CSS of its own, and a
+   <style> tag written from JS would not be visible to anyone reading the
+   styles directory for what can paint on the page. */
+
+.preview-outline * {
+  outline: 1px solid color-mix(in oklch, var(--primary) 45%, transparent);
+}
+
+.preview-spacing * {
+  background: color-mix(in oklch, var(--primary) 4%, transparent);
+  outline: 1px dashed color-mix(in oklch, var(--primary) 30%, transparent);
+}
+
+/* The spacing scale, drawn. Tailwind 4 derives every `p-*`/`gap-*` from
+   `--spacing: 0.25rem`, so the ruler is in `rem` too — under the text-size lens
+   the grid grows with the layout, which is the only way the two can be
+   compared. A `px` grid would drift out of phase at 125% and accuse a correct
+   layout of being off the scale. Fine lines every 0.5rem, heavy every 2rem. */
+.preview-grid::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(
+      to right,
+      color-mix(in oklch, var(--primary) 12%, transparent) 0 1px,
+      transparent 1px 0.5rem
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      color-mix(in oklch, var(--primary) 12%, transparent) 0 1px,
+      transparent 1px 0.5rem
+    ),
+    repeating-linear-gradient(
+      to right,
+      color-mix(in oklch, var(--primary) 28%, transparent) 0 1px,
+      transparent 1px 2rem
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      color-mix(in oklch, var(--primary) 28%, transparent) 0 1px,
+      transparent 1px 2rem
+    );
+}

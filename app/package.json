@@ -5,7 +5,8 @@
   "description": "Duct minimal report viewer app shell.",
   "scripts": {
     "dev": "NODE_OPTIONS='--max-old-space-size=2048' next dev -p 3003",
-    "check:parity": "node scripts/check-slide-parity.mjs",
+    "check:parity": "node scripts/check-slide-parity.mjs && node scripts/check-connector-count.mjs && node scripts/check-data-sources.mjs && node scripts/check-desk.mjs && node scripts/check-type-scale.mjs",
+    "check:type": "node scripts/check-type-scale.mjs",
     "build": "next build",
     "typecheck": "tsc --noEmit",
     "start": "next start",
