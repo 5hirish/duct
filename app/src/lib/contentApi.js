@@ -1,19 +1,16 @@
 /**
  * REST + SSE helpers for the Content Studio agent.
  *
- * Session lifecycle (plan/post drafting, chat, answers, close) runs through the
- * unified /api/agents/tiktok_studio/* endpoints — same pattern as the SEO audit
- * workspace. The content-specific CRUD + slide-render routes still live under
- * /api/content/*.
+ * Session lifecycle (create, stream, reconnect, chat, answers, close) is
+ * `useAgentSession` over the unified /api/agents/tiktok_studio/* endpoints —
+ * the same hook every agent workspace runs on. This file supplies the create
+ * body (`contentSessionBody`) and the content-specific CRUD + slide-render
+ * routes under /api/content/*.
  */
 
 import {
   BASE,
   backendAuthedHeaders,
-  createAgentSession,
-  openAgentStream,
-  sendAgentMessage,
-  closeAgentSession,
   getAgentConversation,
   listAgentConversations,
   archiveAgentConversation,
@@ -68,57 +65,10 @@ async function jsonOrThrow(res) {
 // SSE — plan/post stream lifecycle
 // ---------------------------------------------------------------------------
 
-/**
- * Start a 30-day plan session via the unified agent API:
- *   POST /api/agents/tiktok_studio/sessions  body={mode:"plan_month", project_id, start_date?}
- *   GET  /api/agents/tiktok_studio/sessions/{id}/stream
- * Returns { body: ReadableStream, sessionId }. Events emitted between create and
- * stream-open are buffered server-side in the session queue, so none are lost.
- */
-export async function openPlanStream(
-  { projectId, startDate, conversationId, resume, startFresh, artifactType, artifactId } = {},
-  { signal, onSession } = {},
-) {
-  const { session_id, conversation_id } = await createAgentSession(AGENT_TYPE, {
-    mode: "plan_month",
-    project_id: projectId,
-    ...(startDate ? { start_date: startDate } : {}),
-    ...resumeFields({ conversationId, resume, startFresh, artifactType, artifactId }),
-  });
-  // Surface the ids the instant the backend session exists (and its worker is
-  // spawned) — before the abortable stream open — so the caller can close an
-  // orphaned session if it was torn down mid-create (e.g. StrictMode remount).
-  onSession?.({ sessionId: session_id, conversationId: conversation_id });
-  const body = await openAgentStream(AGENT_TYPE, session_id, { signal });
-  return { body, sessionId: session_id, conversationId: conversation_id };
-}
+/** Unified agent-type id for this workspace (see backend agents/registry.py). */
+export const CONTENT_AGENT_TYPE = AGENT_TYPE;
 
-/**
- * Start a single-post draft session via the unified agent API:
- *   POST /api/agents/tiktok_studio/sessions  body={mode:"draft_post", project_id, plan_id?, day_index?, topic?, pillar?, channel?}
- *   GET  /api/agents/tiktok_studio/sessions/{id}/stream
- */
-export async function openPostStream(
-  { projectId, planId, dayIndex, topic, pillar, channel,
-    conversationId, resume, startFresh, artifactType, artifactId } = {},
-  { signal, onSession } = {},
-) {
-  const { session_id, conversation_id } = await createAgentSession(AGENT_TYPE, {
-    mode: "draft_post",
-    project_id: projectId,
-    ...(planId    ? { plan_id:    planId    } : {}),
-    ...(dayIndex !== undefined && dayIndex !== null ? { day_index: dayIndex } : {}),
-    ...(topic     ? { topic     } : {}),
-    ...(pillar    ? { pillar    } : {}),
-    ...(channel   ? { channel   } : {}),
-    ...resumeFields({ conversationId, resume, startFresh, artifactType, artifactId }),
-  });
-  onSession?.({ sessionId: session_id, conversationId: conversation_id });
-  const body = await openAgentStream(AGENT_TYPE, session_id, { signal });
-  return { body, sessionId: session_id, conversationId: conversation_id };
-}
-
-/** Conversation/resume body fields shared by the openers — omitted keys keep
+/** Conversation/resume body fields shared by both modes — omitted keys keep
  * the normal first-open behaviour (server auto-creates a fresh conversation). */
 function resumeFields({ conversationId, resume, startFresh, artifactType, artifactId } = {}) {
   return {
@@ -127,6 +77,42 @@ function resumeFields({ conversationId, resume, startFresh, artifactType, artifa
     ...(startFresh     ? { start_fresh: true } : {}),
     ...(artifactType   ? { artifact_type: artifactType } : {}),
     ...(artifactId     ? { artifact_id: artifactId } : {}),
+  };
+}
+
+/**
+ * The create body for a content session — what `useAgentSession` POSTs to
+ * /api/agents/tiktok_studio/sessions. The hook owns opening the stream,
+ * reconnecting and closing; this only knows the two modes' fields.
+ *
+ *   plan_month: { projectId, startDate? }
+ *   draft_post: { projectId, planId?, dayIndex?, topic?, pillar?, channel? }
+ * plus the resume fields (conversationId, resume, startFresh, artifactType,
+ * artifactId) in either mode.
+ */
+export function contentSessionBody(mode, context = {}) {
+  const {
+    projectId, startDate, planId, dayIndex, topic, pillar, channel,
+    conversationId, resume, startFresh, artifactType, artifactId,
+  } = context;
+  const resumeBody = resumeFields({ conversationId, resume, startFresh, artifactType, artifactId });
+  if (mode === "plan_month") {
+    return {
+      mode,
+      project_id: projectId,
+      ...(startDate ? { start_date: startDate } : {}),
+      ...resumeBody,
+    };
+  }
+  return {
+    mode: "draft_post",
+    project_id: projectId,
+    ...(planId ? { plan_id: planId } : {}),
+    ...(dayIndex !== undefined && dayIndex !== null ? { day_index: dayIndex } : {}),
+    ...(topic ? { topic } : {}),
+    ...(pillar ? { pillar } : {}),
+    ...(channel ? { channel } : {}),
+    ...resumeBody,
   };
 }
 
@@ -144,28 +130,6 @@ export async function listContentConversations(filters) {
 export async function archiveContentConversation(conversationId) {
   if (!conversationId) return;
   await archiveAgentConversation(AGENT_TYPE, conversationId).catch(() => {});
-}
-
-/**
- * Re-attach to an EXISTING session's SSE stream (no new session created). Works
- * while the backend's reconnect grace window is still open; throws if the
- * session is already gone (caller then falls back to a resume-create).
- */
-export async function reattachContentStream(sessionId, { signal } = {}) {
-  return openAgentStream(AGENT_TYPE, sessionId, { signal });
-}
-
-export async function answerContentQuestions(sessionId, answers) {
-  return sendAgentMessage(AGENT_TYPE, sessionId, { type: "answer", answers });
-}
-
-export async function sendContentChat(sessionId, content) {
-  return sendAgentMessage(AGENT_TYPE, sessionId, { type: "chat", content });
-}
-
-export async function closeContentSession(sessionId) {
-  if (!sessionId) return;
-  await closeAgentSession(AGENT_TYPE, sessionId).catch(() => {});
 }
 
 /** GET a self-contained 1080×1920 single-slide doc (images inlined) to rasterize. */

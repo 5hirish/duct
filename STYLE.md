@@ -322,9 +322,15 @@ one is not:
   `json_column()`, `utc_datetime()`, the lazy `_*_spec()` builders in
   `agents/registry.py`, `@lru_cache get_configs()`.
 - **React composition** — `SplitWorkspace` takes `left`/`right` as plain
-  nodes (no render props, no triggers to wire); the `(app)/layout.js`
-  provider stack; `CommandRegistry`'s mount/unmount contribution model so no
-  central file has to import half the app.
+  nodes (no render props, no triggers to wire); `AgentChat` takes the
+  agent-specific parts as slots (`renderSteps`, `headerExtra`, copy) over one
+  shared transcript; the `(app)/layout.js` provider stack; `CommandRegistry`'s
+  mount/unmount contribution model so no central file has to import half the
+  app.
+- **Reducer + hook** — `lib/agentSession.js` is the agent session as a pure
+  reducer (no React, replayable against recorded streams in tests);
+  `hooks/useAgentSession.js` owns only the effects. State transitions that
+  can be tested without a browser should be written so they can be.
 
 When you add an instance, name the pattern in the module docstring — the word
 "registry" or "adapter" in the first line tells the next reader which contract

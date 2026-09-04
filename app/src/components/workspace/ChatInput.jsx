@@ -3,11 +3,21 @@
 import { useRef, useState } from "react";
 
 /**
- * Chat input for the Content Studio agent workspace.
- * Pure clone of AuditInput — content sessions may not need image attachments
- * yet but keeping the same shape means future image-paste features come free.
+ * The chat composer every agent shell uses: text, pasted or attached images,
+ * Enter to send, a Stop button while the agent is producing tokens.
+ *
+ * Images travel as content blocks ({type:"image", source:{base64…}}) beside
+ * the text, which is the Messages API shape both harnesses accept.
  */
-export default function ContentInput({ onSend, disabled, isStreaming, onStop }) {
+export default function ChatInput({
+  onSend,
+  disabled,
+  isStreaming,
+  onStop,
+  placeholder = "Ask a follow-up question…",
+  ariaLabel = "Message the agent",
+  accept = "image/*",
+}) {
   const [text, setText] = useState("");
   const [attachments, setAttachments] = useState([]);
   const fileRef = useRef(null);
@@ -77,6 +87,7 @@ export default function ContentInput({ onSend, disabled, isStreaming, onStop }) 
               <button
                 type="button"
                 onClick={() => setAttachments((prev) => prev.filter((_, j) => j !== i))}
+                aria-label={`Remove ${att.name}`}
                 className="text-muted-foreground hover:text-foreground ml-1"
               >
                 ×
@@ -92,6 +103,7 @@ export default function ContentInput({ onSend, disabled, isStreaming, onStop }) 
           onClick={() => fileRef.current?.click()}
           disabled={disabled}
           title="Attach image"
+          aria-label="Attach image"
           className="shrink-0 text-muted-foreground hover:text-foreground disabled:opacity-40 p-1"
         >
           📎
@@ -99,8 +111,8 @@ export default function ContentInput({ onSend, disabled, isStreaming, onStop }) 
         <input
           ref={fileRef}
           type="file"
-          accept="image/*"
-          aria-label="Attach images"
+          accept={accept}
+          aria-label="Attach files"
           multiple
           className="hidden"
           onChange={handleFileChange}
@@ -112,15 +124,9 @@ export default function ContentInput({ onSend, disabled, isStreaming, onStop }) 
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
-          aria-label="Message the content agent"
+          aria-label={ariaLabel}
           disabled={disabled || isStreaming}
-          placeholder={
-            isStreaming
-              ? "Agent is working…"
-              : disabled
-              ? "Waiting for agent…"
-              : "Ask Duct to refine the plan or post…"
-          }
+          placeholder={isStreaming ? "Agent is working…" : disabled ? "Waiting for agent…" : placeholder}
           className="flex-1 resize-none rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 min-h-[38px] max-h-[120px] overflow-y-auto"
           style={{ height: "38px" }}
           onInput={(e) => {

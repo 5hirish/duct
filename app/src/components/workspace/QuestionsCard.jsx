@@ -3,36 +3,43 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
-export default function AuditQuestions({ questions, onSubmit, disabled }) {
-  const [answers, setAnswers]   = useState({});
+/**
+ * The AskUserQuestion card: one or more questions with option chips, an
+ * "Other" free-text escape, and a skip that lets the agent decide. The copy
+ * is a prop because the same card sits in three agents with three voices.
+ */
+export default function QuestionsCard({
+  questions,
+  onSubmit,
+  disabled,
+  title = "Duct has a quick question",
+  hint = "Your answers sharpen the result. Skip if you'd rather Duct decide.",
+  submitLabel = "Continue →",
+  skipLabel = "Let Duct decide",
+}) {
+  const [answers, setAnswers] = useState({});
   const [freeText, setFreeText] = useState({});
 
   function handleSelect(question, label) {
-    setAnswers(prev => ({ ...prev, [question]: label }));
-    if (label !== "__other__") {
-      setFreeText(prev => ({ ...prev, [question]: "" }));
-    }
+    setAnswers((prev) => ({ ...prev, [question]: label }));
+    if (label !== "__other__") setFreeText((prev) => ({ ...prev, [question]: "" }));
   }
 
   function handleFreeText(question, text) {
-    setFreeText(prev => ({ ...prev, [question]: text }));
-    setAnswers(prev => ({ ...prev, [question]: text }));
+    setFreeText((prev) => ({ ...prev, [question]: text }));
+    setAnswers((prev) => ({ ...prev, [question]: text }));
   }
 
   function handleSubmit() {
     const resolved = {};
-    for (const q of questions) {
-      resolved[q.question] = freeText[q.question] || answers[q.question] || "";
-    }
+    for (const q of questions) resolved[q.question] = freeText[q.question] || answers[q.question] || "";
     onSubmit(resolved);
   }
 
+  // Empty answers: the agent uses its best judgement from context.
   function handleSkip() {
-    // Submit empty answers — Duct will use its best judgment from context
     const resolved = {};
-    for (const q of questions) {
-      resolved[q.question] = "";
-    }
+    for (const q of questions) resolved[q.question] = "";
     onSubmit(resolved);
   }
 
@@ -43,27 +50,24 @@ export default function AuditQuestions({ questions, onSubmit, disabled }) {
 
   return (
     <div className="rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50/60 dark:bg-amber-950/20 p-4 space-y-4 my-3">
-      {/* Header */}
       <div className="space-y-0.5">
-        <p className="text-sm font-semibold">One moment — Duct has a quick question</p>
-        <p className="text-xs text-muted-foreground">
-          Your answers sharpen the findings. Skip if you'd rather Duct decide.
-        </p>
+        <p className="text-sm font-semibold">{title}</p>
+        <p className="text-xs text-muted-foreground">{hint}</p>
       </div>
 
-      {/* Questions */}
       {questions.map((q) => (
         <div key={q.question} className="space-y-2">
           <p className="text-sm font-medium">{q.question}</p>
           <div className="flex flex-wrap gap-2">
             {(q.options || []).map((opt) => {
-              const label    = opt.label || opt;
+              const label = opt.label || opt;
               const selected = answers[q.question] === label;
               return (
                 <button
                   key={label}
                   type="button"
                   onClick={() => handleSelect(q.question, label)}
+                  aria-pressed={selected}
                   className={`rounded-full border px-3 py-1 text-xs transition-colors ${
                     selected
                       ? "border-primary bg-primary text-primary-foreground"
@@ -71,15 +75,14 @@ export default function AuditQuestions({ questions, onSubmit, disabled }) {
                   }`}
                 >
                   {label}
-                  {opt.description && (
-                    <span className="ml-1 opacity-60">— {opt.description}</span>
-                  )}
+                  {opt.description && <span className="ml-1 opacity-60">— {opt.description}</span>}
                 </button>
               );
             })}
             <button
               type="button"
               onClick={() => handleSelect(q.question, "__other__")}
+              aria-pressed={answers[q.question] === "__other__"}
               className={`rounded-full border px-3 py-1 text-xs transition-colors ${
                 answers[q.question] === "__other__"
                   ? "border-primary bg-primary text-primary-foreground"
@@ -103,14 +106,9 @@ export default function AuditQuestions({ questions, onSubmit, disabled }) {
         </div>
       ))}
 
-      {/* Actions */}
       <div className="flex items-center gap-2 pt-1">
-        <Button
-          size="sm"
-          onClick={handleSubmit}
-          disabled={disabled || !allAnswered}
-        >
-          Continue audit →
+        <Button size="sm" onClick={handleSubmit} disabled={disabled || !allAnswered}>
+          {submitLabel}
         </Button>
         <button
           type="button"
@@ -118,7 +116,7 @@ export default function AuditQuestions({ questions, onSubmit, disabled }) {
           disabled={disabled}
           className="text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40"
         >
-          Let Duct decide
+          {skipLabel}
         </button>
       </div>
     </div>

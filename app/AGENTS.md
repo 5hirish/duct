@@ -107,14 +107,62 @@ the page.
 - Overlays: `ui/dialog` (Radix — portal, focus trap, Escape, scroll lock) and
   `ui/lightbox`. Never hand-roll a `fixed inset-0` backdrop.
 - Busy state: `ui/spinner`. Colour comes from `currentColor`.
-- Agent shells: `workspace/SplitWorkspace` (split + responsive), `PipelineProgress`
-  (the working ladder), `workspace/CodeBlock`, `workspace/agentPhase`.
+- Agent shells: `hooks/useAgentSession` (the session lifecycle),
+  `workspace/AgentChat` (the transcript pane), `workspace/SplitWorkspace`
+  (split + responsive), `PipelineProgress` (the working ladder),
+  `workspace/CodeBlock`. See "Agent workspaces" below before touching any of
+  them.
 - Shortcuts: `lib/shortcuts`' `useShortcut("mod+k", fn)` — platform-neutral, owned
   by the surface that needs it.
 - Commands: `useRegisterCommands` from `components/commands/CommandRegistry`. A
   route contributes its own commands and they withdraw on unmount.
 - Navigation: `lib/navigation`'s `NAV_SECTIONS` is the single source of truth for
   the sidebar and the palette.
+
+**Agent workspaces — one lifecycle, one chat pane, agent-specific slots.**
+
+Three agents (content, audit, insights) share a session protocol: create,
+stream, park on a pause, chat, reconnect, resume. That protocol lives in two
+places and nowhere else:
+
+- `lib/agentSession.js` — the pure reducer over the shared `AgentEvent`
+  vocabulary (`lib/agentEvents.js`) and the `Phase` enum (`lib/agentPhase.js`).
+  No React, no network. Tested by replaying recorded streams from
+  `lib/__fixtures__/*.json` (`npm test`).
+- `hooks/useAgentSession.js` — the effects: session creation with orphan
+  cleanup, transcript hydration before the live stream, the reconnect loop
+  (reattach to the live session, then resume the conversation), pause answers
+  by `interrupt_id`, and the per-tab reload handle (`lib/agentSessionHandle.js`)
+  that lets a reloaded tab reattach instead of re-running the prompt.
+
+A workspace composes `useAgentSession` + `workspace/AgentChat` +
+`workspace/SplitWorkspace` and keeps only what its agent owns: the right pane,
+the events the reducer returns unchanged (a plan payload, an artifact version,
+a slide render request) handled in `onEvent`, and the copy. Read
+`components/content/ContentWorkspace.jsx` as the reference — it is the
+shortest of the three.
+
+To see it run without a backend: `npm run mock:agents` replays the fixtures
+over SSE on :8012 (pausing where the real backend would), and
+`scripts/smoke-agent-workspaces.mjs` drives all three workspaces through a
+headless browser against it — pause, reload-and-reattach, answer, follow-up,
+turn failure — and screenshots each state. Run it after touching the shell.
+
+Rules that follow:
+
+- **Do not fork the chat pane or the lifecycle.** A new agent gets a new
+  workspace file of ~150 lines, not a new `*Chat.jsx`. Two forks of the chat
+  had drifted 600 lines apart while rendering the same thing; a third had
+  none of the fixes. That is the failure this structure exists to prevent.
+- **A new pause is one entry in `workspace/PauseCard.jsx`.** The reducer, the
+  hook and the backend route already carry any pause event that arrives with
+  an `interrupt_id`; the card is the only agent-visible part.
+- **A new protocol event goes in the reducer, with a fixture.** Agent-specific
+  payloads stay in the workspace's `onEvent`.
+- **Phases are the protocol, not a UI mood.** Only the reducer moves `phase`;
+  a workspace that needs a different input policy passes `inputDisabled`
+  (audit accepts a follow-up while the crawl runs) rather than inventing a
+  state.
 
 **Accessibility.** Desktop keyboard and screen-reader basics, not a full audit.
 

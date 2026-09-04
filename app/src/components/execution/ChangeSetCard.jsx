@@ -3,7 +3,7 @@
 /**
  * The staged-execution review card — one component, every agent.
  *
- * It was defined inside AuditChat.jsx while audit was the only agent that
+ * It was defined inside the audit chat pane while audit was the only agent that
  * could propose changes. Insights is the second, which is the point at which
  * a shared component is worth writing rather than a copy: the approve/reject/
  * rollback buttons ARE the human review gate, and two drifting copies of a
