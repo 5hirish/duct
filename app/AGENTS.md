@@ -148,6 +148,13 @@ over SSE on :8012 (pausing where the real backend would), and
 headless browser against it — pause, reload-and-reattach, answer, follow-up,
 turn failure — and screenshots each state. Run it after touching the shell.
 
+The shell borrows deliberately from harnesses built in the open.
+[`docs/engineering/agent-harness-references.md`](../docs/engineering/agent-harness-references.md)
+records which ones, at which revision, and the gaps they expose in ours (a
+status row with elapsed time, typed error codes, queued follow-ups, context
+left). Check it before adding a lifecycle feature — the answer is often
+already pinned to a `file:line` there.
+
 Rules that follow:
 
 - **Do not fork the chat pane or the lifecycle.** A new agent gets a new

@@ -241,6 +241,13 @@ framework. The rules it implies:
   `chat_queue`. The route decides; the runner reports `user_input_consumed`
   when it dequeues so the client can drop the "queued" mark. Do not reintroduce
   the 409.
+- **Read the harnesses built in the open before designing a lifecycle
+  feature.** [`docs/engineering/agent-harness-references.md`](../docs/engineering/agent-harness-references.md)
+  is the watch-list — Codex, OpenCode, pi — with the revision each was last
+  read at, findings pinned to `file:line`, and the gaps they expose in ours,
+  sized. Pauses that survive a reconnect, typed error codes, steer-versus-queue
+  input and visible compaction all have a worked answer there. Refresh the
+  table when you read one.
 - **Pick the lowest rung that works.** LangChain 1.x is layered, and the layers
   carry different stability guarantees: `init_chat_model` and `create_agent` are
   on the semver-stable 1.x LTS surface (no breaking changes until 2.0), while
