@@ -52,6 +52,27 @@ class ProjectConnector(SQLModel, table=True):
         default=None,
         sa_column=Column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
     )
+    # Which *entity* inside that account this project reads — a Search Console
+    # property, a GA4 property, a Tag Manager container. One credential reaches
+    # many of them, so the choice cannot live on the credential row: two
+    # projects can share one Google sign-in and still mean different sites.
+    #
+    # Deliberately optional. Empty means "not chosen yet", which is a real and
+    # common state, and the agent asks at the point it needs one rather than
+    # the UI blocking a connection over a decision the user may not be ready to
+    # make. Never infer a default from "there is only one" — that silently
+    # picks for them and is wrong the moment a second appears.
+    #
+    # `entity_name` is denormalised on purpose: it is a display label, and
+    # re-reading it means an API round trip per row on a page that renders
+    # before any of them resolve. It can go stale; a stale label is a smaller
+    # problem than a picker that renders empty.
+    entity_id: str = Field(
+        default="", sa_column=Column(String, nullable=False, server_default="")
+    )
+    entity_name: str = Field(
+        default="", sa_column=Column(String, nullable=False, server_default="")
+    )
     created_at: datetime = Field(
         default_factory=utcnow,
         sa_column=Column(utc_datetime(), nullable=False),
@@ -60,6 +81,21 @@ class ProjectConnector(SQLModel, table=True):
         default_factory=utcnow,
         sa_column=Column(utc_datetime(), nullable=False),
     )
+
+
+# Where a credential is *allowed* to live, which is not the same question as
+# where it currently is.
+#
+# `db.session.storage_location()` answers "where is this row", derived from the
+# database this process is talking to. That is a fact about the deployment and
+# it changes when the same sidecar is pointed somewhere else. This is the
+# user's intent about one credential, it travels with the row, and it is what
+# the write path enforces — otherwise "keep this on my machine" is a label
+# rather than a rule, and a desktop build pointed at a shared database would
+# quietly upload the thing it promised not to.
+RESIDENCY_SERVER = "server"
+RESIDENCY_DEVICE = "device"
+RESIDENCIES = (RESIDENCY_SERVER, RESIDENCY_DEVICE)
 
 
 class ConnectorCredential(SQLModel, table=True):
@@ -80,6 +116,14 @@ class ConnectorCredential(SQLModel, table=True):
     # e.g. 'google_ads' | 'ga4' | 'gsc'
     connector_type: str = Field(sa_column=Column(String, nullable=False))
     # customer_id for Google Ads, property_id for GA4, site_url for GSC
+    # Server by default: a credential that cannot be reached without a browser
+    # open is useless to a scheduled brief, and that is most of what Duct does.
+    # Device is the deliberate exception, and the save path refuses to write one
+    # into a database this machine does not own.
+    residency: str = Field(
+        default=RESIDENCY_SERVER,
+        sa_column=Column(String, nullable=False, server_default=RESIDENCY_SERVER),
+    )
     account_id: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
     account_name: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
     # AES-encrypted JSON blob — encryption key lives in CREDENTIALS_ENCRYPTION_KEY env var

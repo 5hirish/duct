@@ -86,6 +86,9 @@ def test_legacy_create_all_install_is_adopted_and_upgraded(clean_env, tmp_path):
         conn.execute(sa.text("ALTER TABLE artifacts DROP COLUMN pinned"))
         conn.execute(sa.text("ALTER TABLE agent_conversations DROP COLUMN pinned"))
         conn.execute(sa.text("ALTER TABLE connector_credentials DROP COLUMN granted_scopes"))
+        conn.execute(sa.text("ALTER TABLE project_connectors DROP COLUMN entity_id"))
+        conn.execute(sa.text("ALTER TABLE project_connectors DROP COLUMN entity_name"))
+        conn.execute(sa.text("ALTER TABLE connector_credentials DROP COLUMN residency"))
 
     assert "alembic_version" not in set(inspect(engine).get_table_names())
     assert "memory_paused" not in _columns(engine, "projects")
