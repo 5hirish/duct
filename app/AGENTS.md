@@ -61,6 +61,14 @@ Plus `invite/[token]/` at the top level (outside every route group): the invitat
 
 Full reasoning in `docs/engineering/desktop-adaptive-ui-review.html` (in `duct`).
 
+**[`DESIGN.md`](DESIGN.md) is the design & UX companion to this section** —
+the look/feel/voice layer: design tokens as built, the canonical pattern per
+job (cards, spinners, badges, empty/loading/error states, confirmations),
+layout & density principles, microcopy voice, the anti-generated-UI
+checklist, and a close-on-touch gap list. Read it before building or
+restyling any screen. This section stays the home of the mechanical rules
+below (sizing, units, CSS layout, accessibility).
+
 **Sizing: ask the container, not the window.** The viewport is the wrong ruler
 here — the sidebar takes 16rem out of it, and the agent panes are user-resizable,
 so `lg:` can be true while the box you are in is 300px. Each layout REGION
@@ -119,12 +127,40 @@ the page.
   element out from under the sticky header (WCAG 2.2 AA 2.4.11).
 - Decorative icons take `aria-hidden`; an icon-only button takes an `aria-label`.
 
+**Look at it before you call it done.** CSS written and never rendered is a
+guess, and guesses compound: three plausible-sounding rules in a row produce a
+layout nobody would have drawn on purpose. If a change touches layout, spacing,
+alignment or colour, render it and check — do not use the person reviewing the
+PR as your renderer.
+
+The cheapest loop, and the one that does not need a signed-in session:
+
+1. Copy `src/app/styles/<partial>.css` to a scratch dir beside a small HTML page
+   that declares the dark tokens from `styles/theme.css` (`--background`,
+   `--foreground`, `--muted-foreground`, `--border`, `--card`, `--secondary`,
+   `--destructive`) and links the real stylesheet. Stub only the shadcn classes
+   you are not testing.
+2. `python3 -m http.server` it — the browser tool refuses `file:` URLs.
+3. Measure, do not squint. `getBoundingClientRect()` on the elements that should
+   align answers "is this aligned" exactly, and answers questions eyes are bad
+   at: two glyphs can share a vertical centre and still look wrong because their
+   boxes are 7px and 24px with padding on only one of them. Assert the things
+   the guides make checkable — equal slot sizes, the 24×24 target floor,
+   `getComputedStyle` proving the destructive action is recessive at rest.
+
+Render every state the component has, not just the happy one. The partial-scope
+and not-connected variants are where a status row falls apart, and they are the
+ones nobody opens by accident.
+
 ## What's not here
 
 - No dedicated auth library (next-auth, Clerk, Supabase)
 - No form library (React Hook Form, Formik)
 - No global state library (Redux, Zustand, Jotai)
-- No test suite (Jest, Vitest, Playwright) — E2E tests live in `site/`, not `app/`
+- No test suite (Jest, Vitest, Playwright) — E2E tests live in `site/`, not `app/`.
+  This rules out *committed* browser tests; it does not rule out driving a
+  browser to look at what you just built. See "Look at it before you call it
+  done" above — read as a blanket ban, this line is why UI arrives unrendered.
 - No Supabase anywhere in this project
 
 <!-- BEGIN:nextjs-agent-rules -->

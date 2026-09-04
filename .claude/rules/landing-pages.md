@@ -14,6 +14,10 @@ That is the argument against a second copy, so this is a pointer now:
   checklist, asset paths and load order, sitemap entries, Google Forms markup,
   GTM placement, the demo-variant pattern, and how to add a page or a post.
   Everything CI enforces is here.
+- **[`site/DESIGN.md`](../../site/DESIGN.md)** — design & voice: the visual
+  system and its signature moves, the accent-variant rule, contrast rules for
+  the brand orange, the copy voice with its two signature structures, and the
+  review checklist for a new page.
 - **[`STYLE.md`](../../STYLE.md)** — the part CI cannot check: description
   lengths, JSON-LD types, where page-specific CSS goes, and how conservative the
   JavaScript stays.

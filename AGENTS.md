@@ -107,9 +107,11 @@ gitignored staging for the push scripts. All are gitignored — never commit one
 ## Working style
 
 [`STYLE.md`](STYLE.md) is the companion to this file. This one holds the rules
-that must not break; that one holds what good code looks like once it works —
-docstrings, naming, imports, and the self-review pass. Read it before writing in
-an area you have not written in before.
+that must not break; that one holds what good code looks like once it works,
+organised by principle — modularity, reusability, named constants over magic
+strings, error handling, comments, readability, design patterns — plus a
+close-on-touch list of the places the tree currently falls short. Read it
+before writing in an area you have not written in before.
 
 - One concern per change. Explain *why* in the commit body; the diff shows what.
 - Comments in this codebase carry reasoning, not description. Match that — a

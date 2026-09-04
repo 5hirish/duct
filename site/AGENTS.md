@@ -10,6 +10,13 @@ Two content types, two jobs:
 
 When adding either, ask: *what's the hypothesis being tested?* Put it in a `<!-- EXPERIMENT: ... -->` comment near the top of `<body>`.
 
+**[`DESIGN.md`](DESIGN.md) is the design & voice companion to this file** —
+the visual system as built (tokens, signature moves, section rhythm), the
+accent-variant rule, the contrast rules for the brand orange, the copy voice
+codified from the site's best lines, landing-page craft, and a
+close-on-touch gap list. This file stays the home of the mechanical rules CI
+enforces. Read both before building a page.
+
 ## Stack constraints
 
 - **NO build tools.** No npm, Vite, Webpack, Rollup, or package manager setup.
