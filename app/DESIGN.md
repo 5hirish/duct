@@ -140,8 +140,13 @@ for a job one of these already does.
   `spinner`) are ours. Restyle a primitive **at its source** through its
   CVA variants (`button.tsx` is the model — variants and sizes declared
   once, call sites pick by name); a call site that pastes a class string to
-  override a primitive is a fork in disguise (the copy-pasted destructive
-  AlertDialog styling is the standing example). Radix supplies the
+  override a primitive is a fork in disguise. The destructive `AlertDialog`
+  styling was the standing example and is now closed, but it is worth keeping
+  for what the fix found: two of the four call sites had pasted the exact
+  string `buttonVariants({ variant: "destructive" })` returns, and the paste
+  had gone stale — both were missing `dark:focus-visible:ring-destructive/40`,
+  a rule the variant gained and no copy ever received. A fork does not
+  announce itself; it just stops receiving fixes. Radix supplies the
   behavior — portal, focus trap, Escape, scroll lock — so never hand-roll
   an overlay, switch, or menu it already ships. New primitive: generate via
   the shadcn CLI, then re-theme it to the tokens before first use.
@@ -280,7 +285,7 @@ are the canonical choices; migrate the others when a change touches them.
 | Long-running agent work | `PipelineProgress` (ladder + rotating subtitle) | bare spinners on multi-second waits |
 | Status badge | `ui/badge` with semantic tokens | `.status-pill` (lives in `ads-report.css`, hardcodes hexes, used far outside the report) |
 | Destructive confirm | `ui/alert-dialog`: title quotes the object ("Delete \"Acme\"?"), body states scope + irreversibility, action button is verb + noun ("Delete project") in the *tinted* destructive style | the three `window.confirm` sites; the filled-red `bg-red-600` variant |
-| Destructive action (the button that opens that confirm) | `Button variant="destructive"` — the tinted style above, already shipped: `bg-destructive/10 text-destructive`. Red **at rest**, not on hover: an action worth confirming is worth seeing before the pointer arrives. Pass `buttonVariants({ variant: "destructive" })` to `AlertDialogAction`, which defaults to the primary variant | hand-rolled danger links; pasting the class string inline (`ProjectMembers.jsx`); anything that is only red on `:hover` |
+| Destructive action (the button that opens that confirm) | `Button variant="destructive"` — the tinted style above, already shipped: `bg-destructive/10 text-destructive`. Red **at rest**, not on hover: an action worth confirming is worth seeing before the pointer arrives. Pass `buttonVariants({ variant: "destructive" })` to `AlertDialogAction`, which defaults to the primary variant | hand-rolled danger links; pasting the class string inline; raw palette (`bg-red-600 text-white`) instead of the tokens, which cannot follow the theme; anything that is only red on `:hover` |
 | Dialog actions | `DialogFooter` — bottom of the dialog, below the content they act on, destructive/secondary left and primary rightmost (it reverses to primary-first when the row stacks). Never mid-body | a hand-rolled right-aligned row anywhere above the content |
 | Empty state (whole surface) | dashed panel: `rounded-xl border-dashed p-10 text-center`, `size-12` icon tile, `text-sm font-medium` title, `text-xs text-muted-foreground` body, verb-first `Button size="sm"` CTA | ad-hoc variants; pick this anatomy every time |
 | Empty state (inside a stable layout) | one muted line in place (`DeskCards`) so the layout doesn't jump | — |
