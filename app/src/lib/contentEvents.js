@@ -1,33 +1,12 @@
 /**
- * SSE event names and step IDs for the Content Studio agent.
- * Mirror of backend agents/content/events.py — keep in sync.
+ * Step IDs and labels for the Content Studio agent — mirror of backend
+ * agents/content/events.py. The event names are the shared vocabulary in
+ * lib/agentEvents.js; `ContentEvent` is that object.
  */
 
-export const ContentEvent = Object.freeze({
-  PIPELINE_STARTED:    "pipeline_started",
-  PIPELINE_FINISHED:   "pipeline_finished",
-  PIPELINE_FAILED:     "pipeline_failed",
+import { AgentEvent } from "./agentEvents";
 
-  STEP_STARTED:        "step_started",
-  STEP_FINISHED:       "step_finished",
-  STEP_FAILED:         "step_failed",
-
-  QUESTIONS_REQUIRED:  "questions_required",
-  TODO_UPDATE:         "todo_update",
-  SLIDE_RENDER_REQUESTED: "slide_render_requested",
-
-  AGENT_MESSAGE_CHUNK: "agent_message_chunk",
-  MESSAGE_STOP:        "message_stop",
-
-  THINKING_CHUNK:      "thinking_chunk",
-  ARTIFACT_CHUNK:      "artifact_chunk",    // streaming token inside <duct_artifact>
-
-  // Legacy wire value — see auditEvents.js. Remove once app + backend are both out.
-  LEGACY_REPORT_CHUNK: "report_chunk",
-
-  PLAN_GENERATED:      "plan_generated",
-  POST_DRAFT_UPDATED:  "post_draft_updated",
-});
+export const ContentEvent = AgentEvent;
 
 export const ContentStep = Object.freeze({
   LOAD_PROJECT:      "load_project",

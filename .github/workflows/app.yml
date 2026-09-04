@@ -70,6 +70,11 @@ jobs:
       - name: Typecheck (tsc --noEmit)
         run: npm run typecheck
 
+      # The session reducer replayed against recorded agent streams — the
+      # lifecycle every workspace runs on, checked without a browser.
+      - name: Unit tests (vitest)
+        run: npm test
+
       - name: Slide-renderer parity (slideDoc.js vs backend templates.py)
         run: npm run check:parity
 

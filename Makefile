@@ -52,9 +52,10 @@ check-backend: ## Ruff + pytest (mirrors backend.yml)
 # placeholder rather than a gate. `typecheck` was a placeholder too until the
 # script existed — `--if-present` on a missing script exits 0, so the step
 # reported green without ever running tsc. A real gate is invoked by name.
-check-app: ## Typecheck, parity, build (mirrors app.yml)
+check-app: ## Typecheck, unit tests, parity, build (mirrors app.yml)
 	cd app && npm run lint --if-present
 	cd app && npm run typecheck
+	cd app && npm test
 	cd app && npm run check:parity
 	cd app && npm run build
 

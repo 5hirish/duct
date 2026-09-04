@@ -4,3 +4,5 @@ node_modules
 *.log
 *.tsbuildinfo
 
+# screenshots from scripts/smoke-agent-workspaces.mjs
+smoke-shots/
