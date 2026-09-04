@@ -177,6 +177,37 @@ for a job one of these already does.
 
 ---
 
+## Go and look — the reference implementations
+
+We vendor shadcn/ui, so shadcn's own site is the reference build of the
+components in `components/ui/`. When a screen feels off and the words for
+*why* are not coming, open the page below and compare — the answer is
+usually spacing, density or type, and it is faster to see the difference
+than to reason it out from a stylesheet.
+
+**Browse them visually, not as HTML.** These pages are made to be looked at;
+the markdown a fetcher returns drops exactly the part that matters. Open them
+in a real browser, screenshot, and put the screenshot next to your `/preview`
+frame of the same component. The same discipline as the rest of this file:
+measure, do not squint.
+
+| Reference | Open it when |
+|---|---|
+| [Components](https://ui.shadcn.com/docs/components) | Reaching for a primitive — 80+ of them, each with a live preview, the anatomy, props, and its keyboard/ARIA contract. Check here **before building** anything bespoke; the answer is often a primitive we already vendor and forgot. |
+| [Blocks](https://ui.shadcn.com/blocks) | Composing a whole screen — dashboards, sidebars, sign-in, calendars, as full compositions rather than parts. Read them for **how pieces are arranged and spaced at page scale**, which is the judgement a component page cannot teach. Source is viewable and on GitHub. |
+| [Charts](https://ui.shadcn.com/charts/area) | Any Recharts work. Same library we use, so this is the closest thing to a reference implementation: axis/gridline treatment, legends, tooltips, and where colour stops carrying meaning. Swap `area` for `bar`/`line`/`pie`/`radar`/`radial`/`tooltip` in the path. |
+| [Typeset](https://ui.shadcn.com/typeset) | Prose and long-form: reports, briefs, artifact bodies. An interactive specimen for **measure, size, leading and flow** — the four knobs that decide whether a wall of text reads. It exports a `typeset.css`; read it as a second opinion on `--measure` and our leading, do not paste it in. |
+| [Directory](https://ui.shadcn.com/docs/directory) | Before writing a component from scratch. Community registries installable as `npx shadcn add @<registry>/<component>`. **Treat installed code as untrusted** — read every line, and re-theme it to our tokens before first use, the same as a CLI-generated primitive. |
+
+Two standing cautions. shadcn ships **defaults**, not our decisions: their
+palette, radii and fonts are not ours, so copy structure, spacing and
+behaviour, never the tokens — a pasted `bg-zinc-*`/`text-[13px]` is exactly
+the off-system move the Tailwind entry above bans. And a block is a starting
+composition, not a finished screen; it arrives without our empty, loading,
+partial and error states, and this file's canon still governs each of those.
+
+---
+
 ## The small things
 
 Craft is mostly sweating alignment, spacing, and padding until nothing

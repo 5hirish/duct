@@ -69,6 +69,12 @@ checklist, and a close-on-touch gap list. Read it before building or
 restyling any screen. This section stays the home of the mechanical rules
 below (sizing, units, CSS layout, accessibility).
 
+Its **"Go and look"** section lists the reference builds to open in a browser
+when a screen is off and the reason will not come — shadcn's components,
+blocks, charts and typeset pages, which are the reference implementation of
+the primitives we vendor. Compare a screenshot of the real thing against your
+`/preview` frame; that is usually faster than reasoning from a stylesheet.
+
 **Sizing: ask the container, not the window.** The viewport is the wrong ruler
 here — the sidebar takes 16rem out of it, and the agent panes are user-resizable,
 so `lg:` can be true while the box you are in is 300px. Each layout REGION

@@ -123,6 +123,13 @@ lifted coral at 2.89:1, where its three neighbours sat at 7.8–9.9.
    the 24×24 floor, rows that must stay on one line, contrast, and a type
    ladder of three sizes rather than six.
 4. Check the states that are not the happy one, and at least one narrow device.
+5. **If it still looks wrong and you cannot say why**, open the reference build
+   beside it. `app/DESIGN.md` → "Go and look" lists them (shadcn's components,
+   blocks, charts and typeset pages — the reference implementation of the
+   primitives we vendor). Browse them in a real browser and screenshot: these
+   pages are made to be looked at, and the markdown a fetcher returns drops the
+   part that matters. Put that screenshot next to your frame of the same
+   component. Copy structure, spacing and behaviour; never their tokens.
 
 ## Data without a backend
 
