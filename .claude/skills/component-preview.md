@@ -53,6 +53,8 @@ rulers are correct at once.
 | `app/src/app/preview/surfaces.jsx` | in place · dialog · sheet · drawer · alert · notification · page · toolbar |
 | `app/src/app/preview/devices.js` | phone · iPad ↕↔ · desktop-min · desktop · wide |
 | `app/src/app/preview/lenses.jsx` | colour-vision filters · text scales · overlays |
+| `app/src/app/preview/canon.js` | parses DESIGN.md's canon table — **never retype a rule** |
+| `app/src/app/preview/catalogue.jsx` | **one live example per canon row** — add missing ones here |
 | `app/src/app/preview/TokenSheet.jsx` | the `tokens` scene — the palette, live |
 | `app/src/app/preview/inspect.js` | the `window.__preview` API below |
 | `app/src/app/preview/PreviewShell.jsx` · `PreviewFrame.jsx` · `page.jsx` | shell, frame, production guard |
@@ -96,6 +98,21 @@ looking at it, and that is the axis nothing on the machine simulates by default.
   to argue.
 - **`inspect=grid`** — the spacing scale drawn, in `rem`, so it stays in phase
   with the layout when the text lens grows it.
+
+## Canon mode — the design system, rendered
+
+Switch **Mode** to Canon. One entry per rule in DESIGN.md's canon table, each
+showing the rule beside a live example, on every device, theme and lens.
+
+- Rules are **parsed** from DESIGN.md. Never restate one in the route.
+- Examples live in `catalogue.jsx`, keyed by the canon row's job name.
+- A rule with no example shows as a **gap**, and the header counts them.
+
+Use it two ways: to answer "what is the pattern for X" before building, and to
+audit the system as one thing — sweeping `contrast`, `typeScale` and
+`smallTargets` across every canon frame checks the whole design system in one
+pass. That sweep found `DeskDayOne` carrying 18 arbitrary `text-[13.5px]`-style
+sizes, which `check:type` cannot see because it only scans `.css`.
 
 ## The token sheet
 

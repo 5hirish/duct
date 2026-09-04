@@ -193,6 +193,21 @@ Add scenes to `preview/scenes.jsx`; pick a **surface** (in place, dialog, sheet,
 drawer, alert, notification, page, toolbar) and a **device** (phone, iPad either
 way up, desktop-min, desktop, wide), in light, dark, or both at once.
 
+Two modes, because there are two jobs:
+
+- **Working** — the workbench. Scenes for whatever is being built now. Ad hoc
+  and skewed to the last thing touched, which is correct for what it is for.
+- **Canon** — the design system, rendered. One entry per rule in DESIGN.md's
+  canon table, each showing the rule beside a live example. The rules are
+  **parsed from DESIGN.md** (`preview/canon.js`), never retyped, so the screen
+  cannot disagree with the doc; examples live in `preview/catalogue.jsx`, keyed
+  by the row's job name. A rule with no example is listed as a **gap** — the
+  header counts them, so coverage is a number rather than an impression.
+
+Adding a canon row to DESIGN.md therefore adds a gap to the catalogue. Close it
+with an example, or leave it visible; do not remove the row to make the count
+look better.
+
 `/preview/frame?scene=…&surface=…&theme=…` renders one scene alone, so any state
 is reachable by URL with nothing to click, and every frame exposes
 `window.__preview` — `measure`, `contrast`, `aligned`, `smallTargets`,

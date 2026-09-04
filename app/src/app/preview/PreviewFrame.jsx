@@ -3,10 +3,16 @@
 import { useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 
+import { CATALOGUE } from "./catalogue";
 import { install } from "./inspect";
 import { TEXT_SCALES, VISION, VisionFilters, textScalePx, visionFilter } from "./lenses";
 import { SCENES } from "./scenes";
 import { SURFACES } from "./surfaces";
+
+// Working scenes and canon examples resolve through one lookup, so a catalogue
+// entry gets every surface, device, lens and `window.__preview` call without a
+// single special case.
+const ALL_SCENES = [...SCENES, ...CATALOGUE];
 
 /**
  * Force a theme for THIS document only.
@@ -74,7 +80,7 @@ export default function PreviewFrame() {
     window.__preview.scene = sceneId;
     window.__preview.surface = surfaceId;
     window.__preview.lenses = { vision, text, inspect };
-    window.__preview.scenes = SCENES.map((s) => ({
+    window.__preview.scenes = ALL_SCENES.map((s) => ({
       id: s.id,
       group: s.group,
       title: s.title,
@@ -86,14 +92,14 @@ export default function PreviewFrame() {
     window.__preview.ready = true;
   }, [inspect, sceneId, surfaceId, text, vision]);
 
-  const scene = useMemo(() => SCENES.find((s) => s.id === sceneId), [sceneId]);
+  const scene = useMemo(() => ALL_SCENES.find((s) => s.id === sceneId), [sceneId]);
   const surface = SURFACES.find((s) => s.id === surfaceId) || SURFACES[0];
 
   if (!scene) {
     return (
       <div className="p-6 text-sm text-muted-foreground">
         No scene <code className="font-mono">{sceneId || "(none)"}</code>. Known ids:{" "}
-        {SCENES.map((s) => s.id).join(", ")}
+        {ALL_SCENES.map((s) => s.id).join(", ")}
       </div>
     );
   }
@@ -108,7 +114,11 @@ export default function PreviewFrame() {
       style={{ containerType: "inline-size" }}
     >
       <VisionFilters />
-      {surface.host(scene.render(), scene)}
+      {/* Measurable box around the example. The scene wrapper is `min-h-dvh` so
+          the background fills the frame, which means its own height is always
+          the device height and says nothing about the content. The catalogue
+          crops its frames to the specimen, and this is what it measures. */}
+      <div data-preview-content>{surface.host(scene.render(), scene)}</div>
     </div>
   );
 }

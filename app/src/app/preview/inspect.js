@@ -11,18 +11,39 @@
 
 import { OVERLAYS } from "./lenses";
 
-/** sRGB bytes for any CSS colour, via a 1px canvas — `getComputedStyle` hands
- *  back `lab()`/`oklch()` for modern tokens, which no contrast formula eats. */
-function srgb(css) {
+/**
+ * sRGB + alpha for any CSS colour, via a 1px canvas.
+ *
+ * The canvas is the only thing that reliably converts the `lab()`/`oklch()`
+ * `getComputedStyle` hands back for modern tokens, which no contrast formula
+ * eats. It is cleared rather than pre-filled with white so ALPHA SURVIVES —
+ * this used to paint over white and return an opaque colour, which quietly
+ * turned every translucent surface into a light one. In dark mode that invented
+ * a pale backdrop under `bg-destructive/10` and reported the tinted destructive
+ * button at 2.34:1 when it is nothing of the sort. A checker that fails a
+ * correct component is worse than no checker: it costs a real investigation
+ * every time.
+ */
+function rgba(css) {
   const cv = document.createElement("canvas");
   cv.width = cv.height = 1;
   const ctx = cv.getContext("2d", { willReadFrequently: true });
-  ctx.fillStyle = "#fff";
-  ctx.fillRect(0, 0, 1, 1);
+  ctx.clearRect(0, 0, 1, 1);
   ctx.fillStyle = css;
   ctx.fillRect(0, 0, 1, 1);
   const d = ctx.getImageData(0, 0, 1, 1).data;
-  return [d[0], d[1], d[2]];
+  return [d[0], d[1], d[2], d[3] / 255];
+}
+
+/** `src` composited over `dst`, both opaque sRGB triples out. */
+function over([r, g, b, a], dst) {
+  return [r * a + dst[0] * (1 - a), g * a + dst[1] * (1 - a), b * a + dst[2] * (1 - a)];
+}
+
+/** What is actually behind this text: every translucent layer composited down
+ *  to the first opaque one. */
+function srgb(css, behind = [255, 255, 255]) {
+  return over(rgba(css), behind);
 }
 
 function luminance([r, g, b]) {
@@ -43,9 +64,13 @@ const round = (n) => Math.round(n * 100) / 100;
  * formula is a second set of rounding decisions. One ratio, computed one way.
  */
 export function contrastRatio(fgCss, bgCss) {
-  const fg = luminance(srgb(fgCss));
-  const bg = luminance(srgb(bgCss));
-  const [hi, lo] = fg > bg ? [fg, bg] : [bg, fg];
+  // `bgCss` is a CSS string from the token sheet, or an already-composited
+  // triple from `paintedBackground`. Text gets composited over it too: a
+  // `text-foreground/70` is not the colour it names.
+  const bg = typeof bgCss === "string" ? srgb(bgCss) : bgCss;
+  const fgL = luminance(srgb(fgCss, bg));
+  const bgL = luminance(bg);
+  const [hi, lo] = fgL > bgL ? [fgL, bgL] : [bgL, fgL];
   return round((hi + 0.05) / (lo + 0.05));
 }
 
@@ -59,15 +84,30 @@ function rect(el) {
   };
 }
 
-/** The nearest ancestor that actually paints a background, for contrast. */
+/**
+ * The colour actually behind this element, as an opaque sRGB triple.
+ *
+ * Not "the nearest ancestor with a background" — that answer is wrong the
+ * moment the background is translucent, which in this codebase is the common
+ * case: every tinted status surface is a `/10` or `/15` of a token. The layers
+ * are collected up to the first opaque one and composited back down, so a
+ * `bg-destructive/10` on a dark card reports the dark result it actually is.
+ */
 function paintedBackground(el) {
+  const layers = [];
   let node = el;
-  while (node && node !== document.documentElement) {
-    const bg = getComputedStyle(node).backgroundColor;
-    if (bg && bg !== "transparent" && !/rgba\(0, 0, 0, 0\)/.test(bg)) return bg;
+  while (node) {
+    const c = rgba(getComputedStyle(node).backgroundColor);
+    if (c[3] > 0) layers.push(c);
+    if (c[3] >= 1) break;
     node = node.parentElement;
   }
-  return getComputedStyle(document.body).backgroundColor;
+  // Nothing opaque anywhere up the tree: the canvas the browser paints on is
+  // white in a light scheme and near-black in a dark one.
+  const dark = getComputedStyle(document.documentElement).colorScheme === "dark";
+  let base = dark ? [0, 0, 0] : [255, 255, 255];
+  for (let i = layers.length - 1; i >= 0; i--) base = over(layers[i], base);
+  return base;
 }
 
 export function install() {
