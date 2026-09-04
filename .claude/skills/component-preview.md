@@ -99,20 +99,31 @@ looking at it, and that is the axis nothing on the machine simulates by default.
 - **`inspect=grid`** — the spacing scale drawn, in `rem`, so it stays in phase
   with the layout when the text lens grows it.
 
-## Canon mode — the design system, rendered
+## Design system mode
 
-Switch **Mode** to Canon. One entry per rule in DESIGN.md's canon table, each
-showing the rule beside a live example, on every device, theme and lens.
+Switch **Mode** to Design system. Three sections, each entry on every device,
+theme and lens:
 
-- Rules are **parsed** from DESIGN.md. Never restate one in the route.
-- Examples live in `catalogue.jsx`, keyed by the canon row's job name.
-- A rule with no example shows as a **gap**, and the header counts them.
+| Section | Lives in | Holds |
+|---|---|---|
+| **Foundations** | `system.jsx` | colour/type/shape (`TokenSheet`), spacing, icons |
+| **Primitives** | `system.jsx` | every `ui/*` part with its variants |
+| **Patterns** | `catalogue.jsx` | one entry per DESIGN.md canon row |
+
+- Pattern rules are **parsed** from DESIGN.md. Never restate one in the route.
+- A canon row with no example shows as a **gap**, and the header counts them.
+- Frames mount lazily. 27 entries × 2 devices eagerly loaded is
+  `ERR_INSUFFICIENT_RESOURCES`, not slowness — each frame is a whole Next
+  document.
 
 Use it two ways: to answer "what is the pattern for X" before building, and to
 audit the system as one thing — sweeping `contrast`, `typeScale` and
-`smallTargets` across every canon frame checks the whole design system in one
-pass. That sweep found `DeskDayOne` carrying 18 arbitrary `text-[13.5px]`-style
-sizes, which `check:type` cannot see because it only scans `.css`.
+`smallTargets` across every frame checks the whole design system in one pass.
+That sweep found `DeskDayOne` carrying 18 arbitrary `text-[13.5px]`-style sizes,
+which `check:type` cannot see because it only scans `.css`.
+
+**Scroll before you sweep.** Lazy mounting means an unscrolled page has ~6 of
+54 frames; a sweep run too early reports on whatever happened to be loaded.
 
 ## The token sheet
 

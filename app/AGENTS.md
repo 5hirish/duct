@@ -195,18 +195,27 @@ way up, desktop-min, desktop, wide), in light, dark, or both at once.
 
 Two modes, because there are two jobs:
 
-- **Working** — the workbench. Scenes for whatever is being built now. Ad hoc
-  and skewed to the last thing touched, which is correct for what it is for.
-- **Canon** — the design system, rendered. One entry per rule in DESIGN.md's
-  canon table, each showing the rule beside a live example. The rules are
-  **parsed from DESIGN.md** (`preview/canon.js`), never retyped, so the screen
-  cannot disagree with the doc; examples live in `preview/catalogue.jsx`, keyed
-  by the row's job name. A rule with no example is listed as a **gap** — the
-  header counts them, so coverage is a number rather than an impression.
+- **Working** — the workbench. Seed a component by adding a scene to
+  `preview/scenes.jsx`: `{ id, group, title, state, note, render }`, importing
+  the real component and passing real props. That is the whole API. Ad hoc and
+  skewed to the last thing touched, which is correct for what it is for.
+- **Design system** — the durable catalogue, in three sections:
+  **Foundations** (`preview/system.jsx` — colour/type/shape via `TokenSheet`,
+  spacing, icons), **Primitives** (same file — every `ui/*` part with its
+  variants), and **Patterns** (`preview/catalogue.jsx` — one entry per row of
+  DESIGN.md's canon table). Pattern rules are **parsed from DESIGN.md**
+  (`preview/canon.js`), never retyped, so the screen cannot disagree with the
+  doc. A rule with no example is listed as a **gap** and counted in the header,
+  so coverage is a number rather than an impression.
 
-Adding a canon row to DESIGN.md therefore adds a gap to the catalogue. Close it
-with an example, or leave it visible; do not remove the row to make the count
-look better.
+Adding a canon row to DESIGN.md therefore adds a gap. Close it with an example,
+or leave it visible; do not delete the row to make the count look better.
+
+Frames **mount only when scrolled near** and the catalogue crops them to their
+specimen. Both are load-bearing, not polish: each frame is a whole Next document
+(app bundle, Sentry, HMR client), and 27 entries × 2 devices eagerly mounted is
+not slow, it is `ERR_INSUFFICIENT_RESOURCES` and a half-loaded page. Keep the
+lazy mount if you touch `Frame`.
 
 `/preview/frame?scene=…&surface=…&theme=…` renders one scene alone, so any state
 is reachable by URL with nothing to click, and every frame exposes

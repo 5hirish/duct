@@ -34,8 +34,6 @@ import {
   STORAGE_SESSION,
 } from "@/lib/credentialStorage";
 
-import TokenSheet from "./TokenSheet";
-
 const LOGO = (
   <span
     aria-hidden="true"
@@ -137,14 +135,6 @@ function Row({ children }) {
 }
 
 export const SCENES = [
-  {
-    id: "tokens",
-    state: "reference",
-    group: "Design tokens",
-    title: "The palette, as resolved",
-    note: "Read from computed style, so it is the value after the cascade — switch the frame to light to see the other half of every token. Try it under Vision: deuteranopia.",
-    render: () => <TokenSheet />,
-  },
   {
     id: "tile-states",
     state: "all states",

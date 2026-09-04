@@ -8,11 +8,12 @@ import { install } from "./inspect";
 import { TEXT_SCALES, VISION, VisionFilters, textScalePx, visionFilter } from "./lenses";
 import { SCENES } from "./scenes";
 import { SURFACES } from "./surfaces";
+import { FOUNDATIONS, PRIMITIVES } from "./system";
 
-// Working scenes and canon examples resolve through one lookup, so a catalogue
-// entry gets every surface, device, lens and `window.__preview` call without a
-// single special case.
-const ALL_SCENES = [...SCENES, ...CATALOGUE];
+// Working scenes, foundations, primitives and canon examples resolve through
+// one lookup, so a design-system entry gets every surface, device, lens and
+// `window.__preview` call without a single special case.
+const ALL_SCENES = [...SCENES, ...FOUNDATIONS, ...PRIMITIVES, ...CATALOGUE];
 
 /**
  * Force a theme for THIS document only.

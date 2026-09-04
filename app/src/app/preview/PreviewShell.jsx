@@ -39,7 +39,7 @@
 // harness whose job is judging our components was the one screen in the app not
 // using them. Use `ui/*` here, or the tool misrepresents the thing it is for.
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   Select,
@@ -54,10 +54,11 @@ import { DEFAULT_DEVICES, DEVICES } from "./devices";
 import { OVERLAYS, TEXT_SCALES, VISION } from "./lenses";
 import { SCENES } from "./scenes";
 import { SURFACES } from "./surfaces";
+import { FOUNDATIONS, PRIMITIVES } from "./system";
 
 const MODES = [
   { id: "working", label: "Working" },
-  { id: "canon", label: "Canon" },
+  { id: "system", label: "Design system" },
 ];
 
 const THEME_MODES = [
@@ -126,7 +127,38 @@ function Picker({ id, label, value, onChange, options }) {
  */
 function Frame({ src, label, theme, device, fit }) {
   const [contentH, setContentH] = useState(null);
+  const [near, setNear] = useState(false);
+  const boxRef = useRef(null);
   const scale = Math.min(1, 560 / device.w);
+
+  /**
+   * Mount the iframe only once it is near the viewport.
+   *
+   * Each frame is a whole Next document — the app bundle, Sentry, the HMR
+   * client — and the design system is 24 entries. At two devices that is 48 of
+   * them, which is not slow, it is `ERR_INSUFFICIENT_RESOURCES`: the browser
+   * runs out of connections and the page half-loads. Deferring is not a
+   * nicety here, it is what makes a complete catalogue possible at all.
+   *
+   * `rootMargin` is generous so a frame is ready before it is scrolled to, and
+   * the observer disconnects on first hit — a frame never unmounts, so its
+   * measured height and any state inside it survive scrolling past.
+   */
+  useEffect(() => {
+    const el = boxRef.current;
+    if (!el) return undefined;
+    const ob = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setNear(true);
+          ob.disconnect();
+        }
+      },
+      { rootMargin: "800px" },
+    );
+    ob.observe(el);
+    return () => ob.disconnect();
+  }, []);
 
   function measure(event) {
     if (!fit) return;
@@ -148,6 +180,7 @@ function Frame({ src, label, theme, device, fit }) {
           — the iframe's own layout viewport stays the real width, so what is
           measured inside is the device, not the thumbnail. */}
       <div
+        ref={boxRef}
         style={{
           width: Math.min(device.w, 560),
           height: boxH * scale,
@@ -156,14 +189,17 @@ function Frame({ src, label, theme, device, fit }) {
         }}
         className="border"
       >
-        <iframe
-          title={label}
-          src={src}
-          width={device.w}
-          height={device.h}
-          onLoad={measure}
-          style={{ border: 0, transform: `scale(${scale})`, transformOrigin: "top left" }}
-        />
+        {near && (
+          <iframe
+            title={label}
+            src={src}
+            width={device.w}
+            height={device.h}
+            loading="lazy"
+            onLoad={measure}
+            style={{ border: 0, transform: `scale(${scale})`, transformOrigin: "top left" }}
+          />
+        )}
       </div>
     </figure>
   );
@@ -249,11 +285,42 @@ export default function PreviewShell({ canon = [] }) {
   );
   const covered = canonRows.filter((r) => r.example).length;
 
+  // Three sections, in the order a design system is read: what the material is,
+  // what the parts are, then how the parts are assembled for a given job. Only
+  // the last one carries rules, because only the last one has them in
+  // DESIGN.md.
+  const sections = useMemo(
+    () => [
+      {
+        id: "foundations",
+        heading: "Foundations",
+        blurb: "The material. Colour, type, shape, spacing and icons, read from the running app.",
+        entries: FOUNDATIONS,
+      },
+      {
+        id: "primitives",
+        heading: "Primitives",
+        blurb:
+          "The parts, from components/ui. Every variant a call site can choose between, in one place — restyle at source, never at the call site.",
+        entries: PRIMITIVES,
+      },
+      {
+        id: "patterns",
+        heading: "Patterns",
+        blurb:
+          "One canonical pattern per job, with the rule as DESIGN.md states it. Rules are parsed from the doc, so this cannot disagree with it.",
+        entries: canonRows,
+      },
+    ],
+    [canonRows],
+  );
+
   const working = group === "all" ? SCENES : SCENES.filter((s) => s.group === group);
   const devices = DEVICES.filter((d) => deviceIds.includes(d.id));
   const themes = themeMode === "both" ? ["light", "dark"] : [themeMode];
   const lens = { inspect, vision, text };
-  const isCanon = mode === "canon";
+  const isCanon = mode === "system";
+  const systemCount = sections.reduce((n, s) => n + s.entries.length, 0);
 
   function toggleDevice(id) {
     setDeviceIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -298,7 +365,7 @@ export default function PreviewShell({ canon = [] }) {
           <span className="text-sm font-semibold">Preview</span>
           <span className="text-xs text-muted-foreground">
             {isCanon
-              ? `${canonRows.length} rules · ${covered} with examples · ${
+              ? `${systemCount} entries · ${canonRows.length} rules · ${
                   canonRows.length - covered
                 } gaps`
               : `dev only · ${working.length} scenes`}{" "}
@@ -365,35 +432,66 @@ export default function PreviewShell({ canon = [] }) {
         )}
 
         {isCanon
-          ? canonRows.map((row) => (
-              <section key={row.id}>
-                <header className="mb-2 flex flex-wrap items-baseline gap-2">
-                  <h2 className="text-sm font-semibold tracking-tight">{row.job}</h2>
-                  {row.example ? (
-                    <button
-                      type="button"
-                      className="text-xs text-muted-foreground underline underline-offset-2"
-                      onClick={() => copyUrl(row.id)}
-                    >
-                      {copied === row.id ? "copied" : "copy frame URL"}
-                    </button>
-                  ) : (
-                    <span className="rounded-full border border-dashed px-1.5 text-xs text-muted-foreground">
-                      no example yet
-                    </span>
-                  )}
+          ? sections.map((section) => (
+              <section key={section.id} className="flex flex-col gap-8">
+                <header className="border-b pb-2">
+                  <h2 className="text-sm font-semibold tracking-tight">{section.heading}</h2>
+                  <p className="mt-1 max-w-[68ch] text-xs leading-relaxed text-muted-foreground">
+                    {section.blurb}
+                  </p>
                 </header>
 
-                <Rule row={row} />
+                {section.entries.map((entry) => {
+                  // A patterns entry carries the rule and may have no example;
+                  // a foundation or primitive is always its own example.
+                  const isRule = "job" in entry;
+                  const name = isRule ? entry.job : entry.title;
+                  const shown = !isRule || entry.example;
+                  return (
+                    <div key={entry.id}>
+                      <header className="mb-2 flex flex-wrap items-baseline gap-2">
+                        <h3 className="text-sm font-medium tracking-tight">{name}</h3>
+                        {entry.state && (
+                          <span className="rounded-full border px-1.5 text-xs text-muted-foreground">
+                            {entry.state}
+                          </span>
+                        )}
+                        {shown ? (
+                          <button
+                            type="button"
+                            className="text-xs text-muted-foreground underline underline-offset-2"
+                            onClick={() => copyUrl(entry.id)}
+                          >
+                            {copied === entry.id ? "copied" : "copy frame URL"}
+                          </button>
+                        ) : (
+                          <span className="rounded-full border border-dashed px-1.5 text-xs text-muted-foreground">
+                            no example yet
+                          </span>
+                        )}
+                      </header>
 
-                {row.example ? (
-                  <Frames id={row.id} title={row.job} />
-                ) : (
-                  <p className="text-xs text-muted-foreground">
-                    Add one to <code className="font-mono">preview/catalogue.jsx</code>, keyed by
-                    this row&rsquo;s job name.
-                  </p>
-                )}
+                      {isRule ? (
+                        <Rule row={entry} />
+                      ) : (
+                        entry.note && (
+                          <p className="mb-3 max-w-[68ch] text-xs leading-relaxed text-muted-foreground">
+                            {entry.note}
+                          </p>
+                        )
+                      )}
+
+                      {shown ? (
+                        <Frames id={entry.id} title={name} />
+                      ) : (
+                        <p className="text-xs text-muted-foreground">
+                          Add one to <code className="font-mono">preview/catalogue.jsx</code>,
+                          keyed by this row&rsquo;s job name.
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
               </section>
             ))
           : working.map((scene) => (

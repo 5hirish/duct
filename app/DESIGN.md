@@ -41,6 +41,26 @@ promise in its bones:
 
 ## The system as built
 
+**This file has a rendered half.** `/preview` in **Design system** mode (dev
+only, `npm run dev` in `app/`) shows it running, in three sections that mirror
+how a system is read:
+
+| Section | What it shows |
+|---|---|
+| **Foundations** | Colour, type, shape, spacing, icons — read from the running app, so it is the value *after* the cascade, not what a stylesheet claims |
+| **Primitives** | Every `components/ui/` part, with all the variants a call site can pick between |
+| **Patterns** | The canon table below, one entry per row: the rule **parsed from this file**, beside a live example |
+
+Rules are parsed, never retyped, so the screen cannot disagree with the prose.
+Every entry gets the device, theme and lens axes, which makes "does this hold at
+150% text, in dark, under deuteranopia" a dropdown rather than a project.
+
+Two things follow. **Check a token or a variant there before shipping it** —
+that is what caught `--destructive-foreground` missing from the `.dark` block.
+And **do not add a canon row here without an example**: a row with none is
+listed as a gap and counted in the header, which is the point, but it is your
+gap.
+
 Framework: Next.js 16 App Router, React 19, Tailwind CSS 4, shadcn/ui +
 Radix primitives, lucide-react icons, next-themes. Also runs inside the Tauri
 desktop shell — desktop is a first-class surface, not a port.
