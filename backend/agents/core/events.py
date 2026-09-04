@@ -92,6 +92,31 @@ class AgentEvent(StrEnum):
     MEMORY_WRITTEN = "memory_written"
     MEMORY_RECALLED = "memory_recalled"
 
+    # The model call failed and is being retried — status, not an error. The
+    # payload carries attempt / max_attempts / code so the UI can say
+    # "Reconnecting to the model (2/4)" in the status row and go back to
+    # "Working" when the next token arrives. A failure that has run out of
+    # attempts arrives as STEP_FAILED / PIPELINE_FAILED with its ``code``
+    # (agents/core/errors.py).
+    MODEL_RETRYING = "model_retrying"
+
+    # One model call's token bill, emitted as each call completes: input /
+    # output / cached tokens plus the model's context window, so the UI can
+    # show how full the context is and what a turn cost. The UI keeps the
+    # running total; a resumed thread reads its last usage from the state route.
+    TOKEN_USAGE = "token_usage"
+    # The harness is summarising old history to make room, and then did. The
+    # summariser's own tokens never reach the transcript — the first is what
+    # the status row shows instead, the second leaves a quiet note behind.
+    CONTEXT_COMPACTING = "context_compacting"
+    CONTEXT_COMPACTED = "context_compacted"
+
+    # A message the user sent while a turn was running has now been handed to
+    # the model — steered in at a model-call boundary, or dequeued for the next
+    # turn. Carries the client_message_id the client stamped on it, so the
+    # "queued" mark on that row can come off.
+    USER_INPUT_CONSUMED = "user_input_consumed"
+
 
 class EventKind(StrEnum):
     """Persisted conversation-event categories — the ``kind`` column on
@@ -248,6 +273,11 @@ AG_UI_EVENT: dict[AgentEvent, str] = {
     AgentEvent.EXECUTION_PROPOSED:    "Custom",
     AgentEvent.MEMORY_WRITTEN:        "Custom",
     AgentEvent.MEMORY_RECALLED:       "Custom",
+    AgentEvent.MODEL_RETRYING:        "Custom",
+    AgentEvent.TOKEN_USAGE:           "Custom",
+    AgentEvent.CONTEXT_COMPACTING:    "Custom",
+    AgentEvent.CONTEXT_COMPACTED:     "Custom",
+    AgentEvent.USER_INPUT_CONSUMED:   "Custom",
 }
 
 # Persisted conversation kinds → AG-UI. Only the tool kinds have real analogues;

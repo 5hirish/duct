@@ -84,6 +84,32 @@ class BaseAgentSession:
     # so a client that reattaches after the frame went by can put the card
     # back. None once answered.
     parked_on: dict | None = None
+    # Input that arrives while a turn is running. A harness that can inject a
+    # message at its next model call (LangGraph, through SteerMiddleware in
+    # agents/core/lc.py) sets this to a queue; the route steers into it. Left
+    # None, the route falls back to chat_queue and the message waits for the
+    # next turn. Either way the user is never told to wait.
+    steer_queue: Any | None = None
+    # True while the runner is inside a turn — what makes a new message a
+    # steer rather than the start of the next turn.
+    turn_active: bool = False
+
+
+CLIENT_MESSAGE_ID = "client_message_id"
+
+
+def take_client_id(item: Any) -> tuple[Any, str]:
+    """Split a queued message from the id the client stamped on it.
+
+    Queue items are the message the harness will send — the SDK runners pass
+    them straight through as the user turn — so the id rides as a sibling key
+    and must come off before the item is used. Items without one (answers,
+    tests, older clients) pass through unchanged.
+    """
+    if isinstance(item, dict) and CLIENT_MESSAGE_ID in item:
+        item = dict(item)
+        return item, str(item.pop(CLIENT_MESSAGE_ID) or "")
+    return item, ""
 
 
 # Single shared registry across all agent types (UUID keys — no collisions).

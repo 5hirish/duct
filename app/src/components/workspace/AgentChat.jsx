@@ -23,14 +23,17 @@
  */
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { Brain } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { Lightbox } from "@/components/ui/lightbox";
 import ChangeSetCard from "@/components/execution/ChangeSetCard";
 import { Phase } from "../../lib/agentPhase";
-import { Row } from "../../lib/agentSession";
+import { StepStatus } from "../../lib/agentSteps";
+import { ErrorAction, Row, errorAction } from "../../lib/agentSession";
 import { AssistantMarkdown, ThinkingMarkdown } from "./ChatMarkdown";
 import ChatInput from "./ChatInput";
+import ContextRing from "./ContextRing";
 import { MemoryNote, MemoryRecall, RememberThis } from "./MemoryRows";
 import PauseCard from "./PauseCard";
 import StepProgress from "./StepProgress";
@@ -40,15 +43,18 @@ import Todos from "./Todos";
 // Rows
 // ---------------------------------------------------------------------------
 
-function SendErrorBubble({ text, content, onRetry }) {
+/** A turn that failed, or a message that never got out. `content` is set only
+ *  for the latter — it is what a retry resends. A failure whose code says a
+ *  retry cannot help (a rejected key, a full context) gets no retry button. */
+function SendErrorBubble({ text, content, onRetry, retryable = true }) {
   return (
     <div className="flex justify-end mb-2">
       <div className="max-w-[85%] space-y-1">
         <div className="rounded-2xl rounded-br-sm px-3 py-2 text-sm bg-destructive/10 border border-destructive/30 text-destructive">
-          <p className="text-xs font-medium mb-0.5">Failed to send</p>
+          <p className="text-xs font-medium mb-0.5">{content ? "Failed to send" : "That turn failed"}</p>
           <p className="text-xs text-destructive/80">{text}</p>
         </div>
-        {content && onRetry && (
+        {content && onRetry && retryable && (
           <button
             type="button"
             onClick={() => onRetry(content)}
@@ -104,14 +110,23 @@ function TypingIndicator() {
   );
 }
 
-function ChatBubble({ role, text, thinking, streaming, remember }) {
+function ChatBubble({ role, text, thinking, streaming, remember, queued = false }) {
   if (role === Row.USER) {
     return (
       <div className="flex justify-end mb-4">
         <div className="max-w-[82%]">
-          <div className="rounded-2xl rounded-br-sm px-4 py-2.5 text-sm leading-relaxed bg-primary text-primary-foreground">
+          <div
+            className={`rounded-2xl rounded-br-sm px-4 py-2.5 text-sm leading-relaxed bg-primary text-primary-foreground ${
+              queued ? "opacity-70" : ""
+            }`}
+          >
             <p className="whitespace-pre-wrap break-words">{text}</p>
           </div>
+          {queued && (
+            <p className="mt-1 pr-1 text-right text-[11px] text-muted-foreground" title="Sent while the agent was busy; it reads this at its next step.">
+              ↳ Queued · picked up at the next step
+            </p>
+          )}
         </div>
       </div>
     );
@@ -184,7 +199,7 @@ function ArtifactCard({ artifact }) {
 function TranscriptRow({ msg, onRetrySend, remember }) {
   switch (msg.role) {
     case Row.SEND_ERROR:
-      return <SendErrorBubble text={msg.text} content={msg.content} onRetry={onRetrySend} />;
+      return <SendErrorBubble text={msg.text} content={msg.content} onRetry={onRetrySend} retryable={msg.retryable} />;
     case Row.IMAGE:
       return <ImageBubble image={msg.image} fullUrl={msg.fullUrl} caption={msg.caption} />;
     case Row.ARTIFACT_CARD:
@@ -195,14 +210,82 @@ function TranscriptRow({ msg, onRetrySend, remember }) {
       return <MemoryNote memories={msg.memories} />;
     case Row.MEMORY_RECALL:
       return <MemoryRecall memories={msg.memories} />;
+    case Row.NOTICE:
+      return <NoticeRow text={msg.text} />;
     default:
-      return <ChatBubble role={msg.role} text={msg.text} thinking={msg.thinking} streaming={msg.streaming} remember={remember} />;
+      return (
+        <ChatBubble
+          role={msg.role}
+          text={msg.text}
+          thinking={msg.thinking}
+          streaming={msg.streaming}
+          remember={remember}
+          queued={Boolean(msg.queued)}
+        />
+      );
+  }
+}
+
+/** The one thing worth offering under a terminal failure, decided by its
+ *  ErrorCode: a retry only when a retry can work, otherwise the place the fix
+ *  lives. A failure with no code is treated as retryable, which is what every
+ *  failure was before codes existed. */
+function FailedAction({ action, retryable, onRetry, retryLabel, onStartFresh }) {
+  const button = "mt-3 w-full rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive hover:bg-destructive/20 transition-colors text-center";
+  switch (action) {
+    case ErrorAction.SETTINGS:
+      return <Link href="/settings/models" className={button}>Open model settings</Link>;
+    case ErrorAction.CONNECTIONS:
+      return <Link href="/connections" className={button}>Open connections</Link>;
+    case ErrorAction.FRESH:
+      if (onStartFresh) return <button type="button" onClick={onStartFresh} className={button}>Start a fresh conversation</button>;
+      return null;
+    case ErrorAction.NONE:
+      return null;
+    default:
+      if (!onRetry || !retryable) return null;
+      return <button type="button" onClick={onRetry} className={button}>{retryLabel}</button>;
   }
 }
 
 // ---------------------------------------------------------------------------
 // Header status
 // ---------------------------------------------------------------------------
+
+/** Seconds since `active` last became true; 0 while it is false. A clock in
+ *  the status row is what tells a user a four-minute run is alive. */
+function useElapsed(active) {
+  const [seconds, setSeconds] = useState(0);
+  useEffect(() => {
+    if (!active) {
+      setSeconds(0);
+      return undefined;
+    }
+    const startedAt = Date.now();
+    setSeconds(0);
+    const timer = setInterval(() => setSeconds(Math.floor((Date.now() - startedAt) / 1000)), 1000);
+    return () => clearInterval(timer);
+  }, [active]);
+  return seconds;
+}
+
+export function formatElapsed(seconds) {
+  if (seconds < 60) return `${seconds}s`;
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  if (m < 60) return `${m}m ${String(s).padStart(2, "0")}s`;
+  const h = Math.floor(m / 60);
+  return `${h}h ${String(m % 60).padStart(2, "0")}m`;
+}
+
+/** A quiet centred line in the transcript — "Context compacted". */
+function NoticeRow({ text }) {
+  return (
+    <p className="my-3 text-center text-[11px] text-muted-foreground" role="note">
+      {text}
+    </p>
+  );
+}
 
 const PHASE_STATUS = {
   [Phase.STARTING]:  { label: "Connecting…",     pulse: true },
@@ -225,6 +308,16 @@ export default function AgentChat({
   messages = [],
   pending = null,
   errorMsg = "",
+  // The failure's ErrorCode and whether a retry can help (lib/agentEvents.js).
+  errorCode = "",
+  errorRetryable = true,
+  // A model call being waited out: { attempt, max }. Shown in the status row.
+  retrying = null,
+  // Tokens (lib/agentSession.js `usage`): the ring in the header, the figures
+  // in its tooltip. Null until the first model call has been billed.
+  usage = null,
+  // History is being summarised to make room — the status row says so.
+  compacting = false,
   isAgentTyping = false,
   isStreaming = false,
   reconnecting = false,
@@ -289,6 +382,27 @@ export default function AgentChat({
   const status = PHASE_STATUS[phase] ?? PHASE_STATUS[Phase.STARTING];
   const isFailed = phase === Phase.FAILED;
   const waiting = phase === Phase.QUESTIONS && Boolean(pending);
+  const working = phase === Phase.PIPELINE || phase === Phase.CHATTING;
+  const elapsed = useElapsed(working);
+  // What it is doing right now, most specific first. Codex titles this row
+  // with the model's own words; we have the step it is in, which is enough.
+  const runningStep = steps.find((s) => s.status === StepStatus.RUNNING && !s.step_id?.includes(":"));
+  const activity = retrying
+    ? `Reconnecting to the model (${retrying.attempt}/${retrying.max})`
+    : compacting
+      ? "Compacting context"
+      : runningStep?.label || "";
+  const statusLabel = reconnecting && !isFailed
+    ? "Reconnecting…"
+    : working
+      ? [status.label.replace(/…$/, ""), formatElapsed(elapsed), activity].filter(Boolean).join(" · ")
+      : status.label;
+  const contextUsed = usage?.last?.window ? (usage.last.input + usage.last.output) / usage.last.window : 0;
+  // The box stays open while the agent works: say where a message goes.
+  const placeholder = inputPlaceholder
+    || (working ? "Add a thought — it goes in at the next step"
+      : waiting ? "Answer above, or leave a note for after"
+        : undefined);
 
   return (
     <div className="flex flex-col h-full">
@@ -315,12 +429,13 @@ export default function AgentChat({
           aria-live="polite"
           className={`text-xs ${
             waiting ? "text-amber-600 dark:text-amber-400 font-medium" : isFailed ? "text-destructive" : "text-muted-foreground"
-          } ${status.pulse && !waiting ? "animate-pulse" : ""}`}
+          } ${status.pulse && !waiting && !working ? "animate-pulse" : ""}`}
         >
-          — {reconnecting && !isFailed ? "Reconnecting…" : status.label}
+          — {statusLabel}
         </span>
         <span className="ml-auto flex items-center gap-2">
           {headerExtra}
+          {usage?.last && <ContextRing used={contextUsed} details={usage} />}
           {!remembering && (
             <span
               className="inline-flex items-center gap-1 text-xs text-muted-foreground"
@@ -395,15 +510,13 @@ export default function AgentChat({
                   <p className="text-xs text-muted-foreground break-words leading-relaxed">{errorMsg}</p>
                 </div>
               </div>
-              {onRetry && (
-                <button
-                  type="button"
-                  onClick={onRetry}
-                  className="mt-3 w-full rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive hover:bg-destructive/20 transition-colors"
-                >
-                  {retryLabel}
-                </button>
-              )}
+              <FailedAction
+                action={errorAction(errorCode)}
+                retryable={errorRetryable}
+                onRetry={onRetry}
+                retryLabel={retryLabel}
+                onStartFresh={onStartFresh}
+              />
             </div>
           )}
 
@@ -430,7 +543,7 @@ export default function AgentChat({
         disabled={inputDisabled}
         isStreaming={isStreaming}
         onStop={onStop}
-        placeholder={inputPlaceholder}
+        placeholder={placeholder}
         ariaLabel={inputAriaLabel}
         accept={inputAccept}
       />

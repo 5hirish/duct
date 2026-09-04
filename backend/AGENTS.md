@@ -229,6 +229,18 @@ framework. The rules it implies:
   thread — and a pause the thread is parked on comes back as the same SSE
   event, flagged `replay`, when a session resumes it. Never key a thread on
   a session id; that made "resume" a transcript the agent could not see.
+- **A failure is a code before it is a message.** `agents/core/errors.py`
+  classifies an exception once (`classify_error`), and that code decides the
+  retry (`is_retryable`), rides on the failure event (`error_payload`), and
+  picks the copy in the browser. Never emit `str(exc)` to a client, and never
+  add a regex on message text in the frontend — add a code, or a class name to
+  the classifier's table.
+- **Input during a turn is steered or queued, never refused.** A harness that
+  can hand the model a message at its next call sets `steer_queue` on its
+  session (insights does, via `SteerMiddleware`); the rest fall back to
+  `chat_queue`. The route decides; the runner reports `user_input_consumed`
+  when it dequeues so the client can drop the "queued" mark. Do not reintroduce
+  the 409.
 - **Pick the lowest rung that works.** LangChain 1.x is layered, and the layers
   carry different stability guarantees: `init_chat_model` and `create_agent` are
   on the semver-stable 1.x LTS surface (no breaking changes until 2.0), while

@@ -237,6 +237,7 @@ def create_insights_session(session_id: str, agent_type: str = "insights") -> In
             agent_type=agent_type,
             event_queue=asyncio.Queue(),  # agent → SSE consumer
             chat_queue=asyncio.Queue(),   # user messages → agent
+            steer_queue=asyncio.Queue(),  # messages sent mid-turn → next model call
             answer_future=None,
         )
     )

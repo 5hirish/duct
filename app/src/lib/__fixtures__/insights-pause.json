@@ -95,9 +95,32 @@
     "replay": true
   },
   {
+    "event": "token_usage",
+    "input_tokens": 38000,
+    "output_tokens": 700,
+    "cache_read_tokens": 0,
+    "cache_creation_tokens": 0,
+    "total_tokens": 38700,
+    "model": "claude-sonnet-5",
+    "context_window": 200000,
+    "scope": "thread"
+  },
+  {
     "__answer__": {
       "Which goal matters most?": "Signups"
     }
+  },
+  {
+    "event": "model_retrying",
+    "attempt": 1,
+    "max_attempts": 4,
+    "code": "overloaded"
+  },
+  {
+    "event": "context_compacting"
+  },
+  {
+    "event": "context_compacted"
   },
   {
     "event": "agent_message_chunk",
@@ -155,6 +178,17 @@
     "event": "message_stop"
   },
   {
+    "event": "token_usage",
+    "input_tokens": 71000,
+    "output_tokens": 900,
+    "cache_read_tokens": 0,
+    "cache_creation_tokens": 0,
+    "total_tokens": 71900,
+    "model": "claude-sonnet-5",
+    "context_window": 200000,
+    "scope": "thread"
+  },
+  {
     "event": "pipeline_finished",
     "status": "success"
   },
@@ -167,5 +201,16 @@
   },
   {
     "event": "message_stop"
+  },
+  {
+    "event": "token_usage",
+    "input_tokens": 83000,
+    "output_tokens": 900,
+    "cache_read_tokens": 0,
+    "cache_creation_tokens": 0,
+    "total_tokens": 83900,
+    "model": "claude-sonnet-5",
+    "context_window": 200000,
+    "scope": "thread"
   }
 ]

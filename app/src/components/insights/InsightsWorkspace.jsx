@@ -176,6 +176,11 @@ export default function InsightsWorkspace({
       messages={agent.messages}
       pending={agent.pending}
       errorMsg={agent.error}
+      errorCode={agent.errorCode}
+      errorRetryable={agent.errorRetryable}
+      retrying={agent.retrying}
+      usage={agent.usage}
+      compacting={agent.compacting}
       isAgentTyping={agent.isAgentTyping}
       isStreaming={agent.isStreaming}
       reconnecting={agent.reconnecting}

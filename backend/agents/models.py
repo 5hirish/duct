@@ -262,6 +262,53 @@ MODEL_FALLBACK: dict[ModelName, tuple[ModelName, ...]] = {
 # therefore a config value rather than a fixed vendor URL. Overridable per
 # install (config.openrouter_base_url) so the same code path reaches a
 # self-hosted router or a local model server.
+# Context windows, in tokens, as the providers publish them. This feeds the
+# context gauge in the chat shell and nothing else: a stale number here makes
+# the ring slightly wrong, never a request wrong, so it is a table rather than
+# a live lookup. The default is the Claude window, the most common case; a
+# model missing from the table still gets a gauge.
+DEFAULT_CONTEXT_WINDOW = 200_000
+CONTEXT_WINDOW: dict[ModelName, int] = {
+    ModelName.GPT_5_6_SOL: 400_000,
+    ModelName.GPT_5_6_TERRA: 400_000,
+    ModelName.GPT_5_6_LUNA: 400_000,
+    ModelName.GPT_5_MINI: 400_000,
+    ModelName.GPT_4O: 128_000,
+    ModelName.GPT_4O_MINI: 128_000,
+    ModelName.GEMINI_3_1_PRO_PREVIEW: 1_000_000,
+    ModelName.GEMINI_3_7_FLASH: 1_000_000,
+    ModelName.GEMINI_3_5_FLASH_LITE: 1_000_000,
+    ModelName.GEMINI_2_5_FLASH: 1_000_000,
+    ModelName.GEMINI_2_5_FLASH_LITE: 1_000_000,
+    ModelName.CLAUDE_OPUS: 200_000,
+    ModelName.CLAUDE_SONNET: 200_000,
+    ModelName.CLAUDE_HAIKU: 200_000,
+    ModelName.CLAUDE_OPUS_1M: 1_000_000,
+    ModelName.OR_DEEPSEEK_V4_FLASH: 128_000,
+    ModelName.OR_QWEN3_7_FLASH: 128_000,
+    ModelName.OR_KIMI_K2_5: 256_000,
+    ModelName.OR_GLM_5_3_FLASH: 128_000,
+    ModelName.OR_CLAUDE_OPUS: 200_000,
+    ModelName.OR_CLAUDE_SONNET: 200_000,
+    ModelName.OR_GPT_5_MINI: 400_000,
+}
+
+
+def context_window_for(model: "ModelName | str | None") -> int:
+    """The context window for a model id, by enum member or raw string.
+
+    A provider may report the model it actually served (a fallback, a dated
+    alias) rather than the one asked for; a string it does not know falls
+    through to the default rather than failing the gauge.
+    """
+    if isinstance(model, ModelName):
+        return CONTEXT_WINDOW.get(model, DEFAULT_CONTEXT_WINDOW)
+    try:
+        return CONTEXT_WINDOW.get(ModelName(str(model)), DEFAULT_CONTEXT_WINDOW)
+    except ValueError:
+        return DEFAULT_CONTEXT_WINDOW
+
+
 GATEWAY_BASE_URL: dict[Provider, str] = {
     Provider.OPENROUTER: "https://openrouter.ai/api/v1",
 }

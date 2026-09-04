@@ -213,13 +213,18 @@ export default function AuditWorkspace({
           messages={agent.messages}
           pending={agent.pending}
           errorMsg={agent.error}
+          errorCode={agent.errorCode}
+          errorRetryable={agent.errorRetryable}
+          retrying={agent.retrying}
+          usage={agent.usage}
+          compacting={agent.compacting}
           isAgentTyping={agent.isAgentTyping}
           isStreaming={phase === Phase.PIPELINE || (phase === Phase.CHATTING && agent.isAgentTyping)}
           reconnecting={agent.reconnecting}
           // Audit accepts a follow-up while the crawl runs (it is queued
           // server-side); only a pending card, a dropped link or a failure
           // closes the composer.
-          inputDisabled={phase === Phase.QUESTIONS || phase === Phase.FAILED || agent.reconnecting}
+          inputDisabled={agent.inputDisabled}
           answerDisabled={!agent.attached}
           // Ambient state, per the memory UX rules: a session that is not being
           // remembered should say so while it runs, not only at the point the
@@ -257,6 +262,11 @@ export default function AuditWorkspace({
           onSelectVersion={setSelectedVersionId}
           streamingHtml={streamingHtml}
           errorMsg={agent.error}
+          errorCode={agent.errorCode}
+          errorRetryable={agent.errorRetryable}
+          retrying={agent.retrying}
+          usage={agent.usage}
+          compacting={agent.compacting}
           onRetry={handleRetry}
           leadToken={leadToken}
           leadEmail={leadEmail}

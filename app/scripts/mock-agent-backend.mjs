@@ -76,6 +76,9 @@ async function stream(session, res) {
       // boundary; so does this.
       if (session.queued > 0) {
         session.queued -= 1;
+        if (session.waiting === "chat" && session.queuedIds?.length) {
+          send({ event: "user_input_consumed", client_message_id: session.queuedIds.shift() });
+        }
       } else {
         log("waiting for", session.waiting, session.id.slice(0, 8));
         await new Promise((r) => (session.wake = r));
@@ -131,10 +134,17 @@ const server = http.createServer(async (req, res) => {
     if (!session) return json(res, 404, { detail: "Session not found." });
     const body = await readBody(req);
     log("message", body.type, m[2].slice(0, 8), JSON.stringify(body.answers || body.content || "").slice(0, 60), body.interrupt_id ? `interrupt_id=${body.interrupt_id}` : "");
-    if (body.type === "chat" && session.waiting === "answer") return json(res, 409, { detail: "Answer the pending question first" });
+    // A chat while the run is busy (mid-frames, or parked on a card) is
+    // queued, as the real backend does; it is consumed at the next __send__
+    // wait point, which then also releases the row's "queued" mark.
+    if (body.type === "chat" && (session.waiting !== "chat")) {
+      session.queued = (session.queued || 0) + 1;
+      if (body.client_message_id) (session.queuedIds ||= []).push(body.client_message_id);
+      return json(res, 200, { status: "queued", type: body.type, delivery: session.waiting === "answer" ? "steer" : "queue" });
+    }
     if (session.waiting && session.wake) session.wake();
     else session.queued = (session.queued || 0) + 1;
-    return json(res, 200, { status: "queued", type: body.type });
+    return json(res, 200, { status: "queued", type: body.type, delivery: "turn" });
   }
   if ((m = path.match(/^\/api\/agents\/([^/]+)\/sessions\/([^/]+)$/)) && req.method === "GET") {
     const session = sessions.get(m[2]);

@@ -4,7 +4,10 @@ import { useRef, useState } from "react";
 
 /**
  * The chat composer every agent shell uses: text, pasted or attached images,
- * Enter to send, a Stop button while the agent is producing tokens.
+ * Enter to send, a Stop button beside Send while the agent is producing
+ * tokens. The box stays open while it works — a message then is queued for
+ * the model's next step, which the caller's placeholder says — and closes
+ * only when there is nothing to send to (`disabled`).
  *
  * Images travel as content blocks ({type:"image", source:{base64…}}) beside
  * the text, which is the Messages API shape both harnesses accept.
@@ -125,8 +128,8 @@ export default function ChatInput({
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
           aria-label={ariaLabel}
-          disabled={disabled || isStreaming}
-          placeholder={isStreaming ? "Agent is working…" : disabled ? "Waiting for agent…" : placeholder}
+          disabled={disabled}
+          placeholder={disabled ? "Waiting for agent…" : placeholder}
           className="flex-1 resize-none rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 min-h-[38px] max-h-[120px] overflow-y-auto"
           style={{ height: "38px" }}
           onInput={(e) => {
@@ -135,7 +138,7 @@ export default function ChatInput({
           }}
         />
 
-        {isStreaming ? (
+        {isStreaming && (
           <button
             type="button"
             onClick={onStop}
@@ -143,16 +146,15 @@ export default function ChatInput({
           >
             Stop
           </button>
-        ) : (
-          <button
-            type="button"
-            onClick={handleSend}
-            disabled={disabled || (!text.trim() && attachments.length === 0)}
-            className="shrink-0 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-40"
-          >
-            Send
-          </button>
         )}
+        <button
+          type="button"
+          onClick={handleSend}
+          disabled={disabled || (!text.trim() && attachments.length === 0)}
+          className="shrink-0 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-40"
+        >
+          Send
+        </button>
       </div>
     </div>
   );

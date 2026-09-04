@@ -66,17 +66,22 @@ from langgraph.types import Command
 
 from agents.core.checkpoint import get_checkpointer
 from agents.core.events import AgentEvent, AgentStep, StepStatus
+from agents.core.errors import error_payload
 from agents.core.connector_tools import build_connector_tools_lc
 from agents.core.lc import (
+    ReportedRetryMiddleware,
+    SteerMiddleware,
+    drain_steers,
     build_ask_user_tool,
     inspection_chat_model,
     interrupt_pause,
     live_pauses,
     resolve_chat_model,
     stream_agent,
+    usage_from_messages,
 )
 from agents.core.memory_tools import build_memory_tools_lc
-from agents.core.session import BaseAgentSession
+from agents.core.session import BaseAgentSession, take_client_id
 from agents.insights.brief import DEFAULT_FORMAT, parse_brief
 from agents.insights.data_tools import build_data_tools_lc
 from agents.insights.subagents import build_verify_subagent
@@ -448,6 +453,12 @@ class AutonomousInsightsRunner:
                 # which is how a bottom-tier model ends up with no middleware
                 # rather than an empty one.
                 *([ModelFallbackMiddleware(*fallbacks)] if fallbacks else []),
+                # Innermost, so each model in the chain gets its retries before
+                # the fallback moves on, and a transient 429 on the primary
+                # never costs a downgrade. Reports every attempt to the UI.
+                ReportedRetryMiddleware(),
+                # A message typed mid-turn reaches the model at its next call.
+                *([SteerMiddleware(session)] if session is not None else []),
             ],
             # Continuity across turns, now durable: the saver is opened once by
             # the app lifespan and follows DATABASE_URL (Postgres on Railway,
@@ -558,23 +569,46 @@ class AutonomousInsightsRunner:
                 session.pending_pauses = {p["interrupt_id"]: p for p in pauses}
 
         async def _turn(text: str | Command | None) -> list[dict]:
-            pauses = await stream_agent(
-                agent,
-                text,
-                emit,
-                on_artifact_close=_on_artifact,
-                log_prefix="insights-v1",
-                config=config,
-                provider=self.provider,
-                model=self.model,
-                conversation_id=str(conversation_id or session_id),
-                on_todo=_on_todo,
-                on_tool_use=_on_tool_use,
-                on_tool_result=_on_tool_result,
-                on_pause=_on_pause,
-            )
+            if session is not None:
+                session.turn_active = True
+            try:
+                pauses = await stream_agent(
+                    agent,
+                    text,
+                    emit,
+                    on_artifact_close=_on_artifact,
+                    log_prefix="insights-v1",
+                    config=config,
+                    provider=self.provider,
+                    model=self.model,
+                    conversation_id=str(conversation_id or session_id),
+                    on_todo=_on_todo,
+                    on_tool_use=_on_tool_use,
+                    on_tool_result=_on_tool_result,
+                    on_pause=_on_pause,
+                )
+            finally:
+                if session is not None:
+                    session.turn_active = False
             if not pauses:
                 await _on_pause([])  # a turn that ran to completion clears the table
+            return await _leftover_steers(pauses)
+
+        async def _leftover_steers(pauses: list[dict]) -> list[dict]:
+            """A message that arrived after the turn's last model call never
+            met the steer middleware. It becomes the next turn now, not a
+            surprise at the top of whatever the user asks next."""
+            while not pauses and session is not None:
+                items = drain_steers(session.steer_queue)
+                if not items:
+                    return pauses
+                for _, client_id in items:
+                    if client_id:
+                        await emit({"event": AgentEvent.USER_INPUT_CONSUMED, "client_message_id": client_id})
+                text = "\n\n".join(_as_text(item) for item, _ in items if _as_text(item))
+                if not text:
+                    return pauses
+                pauses = await _turn(text)
             return pauses
 
         # The opening turn is what moves the UI out of "working" — PIPELINE_FINISHED
@@ -632,19 +666,24 @@ class AutonomousInsightsRunner:
                 break
             if chat_msg is None:  # sentinel from close_session
                 break
+            chat_msg, client_id = take_client_id(chat_msg)
+            if client_id:
+                await emit({"event": AgentEvent.USER_INPUT_CONSUMED, "client_message_id": client_id})
             try:
                 if isinstance(chat_msg, dict) and "resume" in chat_msg:
                     pauses = await _turn(Command(resume=chat_msg["resume"]))
                 else:
                     pauses = await _turn(_as_text(chat_msg))
                 await _finish_opening(pauses)
-            except Exception:
+            except Exception as exc:
                 # One bad turn must not end the session — the user can rephrase.
+                # The code says what kind of failure it was; the client picks
+                # the copy and whether a retry button makes sense.
                 logger.exception("insights: chat turn failed for session %s", session_id)
                 await emit({
                     "event": AgentEvent.STEP_FAILED,
                     "status": StepStatus.ERROR,
-                    "error": "That turn failed. Try rephrasing, or ask something else.",
+                    **error_payload(exc),
                 })
 
     # -----------------------------------------------------------------------
@@ -678,6 +717,8 @@ class AutonomousInsightsRunner:
             "pauses": pauses,
             "todos": list(values.get("todos") or []),
             "message_count": len(values.get("messages") or []),
+            # What the context gauge shows before any new turn has run.
+            "usage": usage_from_messages(values.get("messages") or [], self.model),
         }
 
 

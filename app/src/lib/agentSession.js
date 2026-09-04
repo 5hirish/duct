@@ -21,7 +21,7 @@
  * lib/__tests__/agentSession.test.js.
  */
 
-import { AgentEvent, PAUSE_EVENTS } from "./agentEvents";
+import { AgentEvent, ErrorCode, PAUSE_EVENTS } from "./agentEvents";
 import { Phase } from "./agentPhase";
 import { StepStatus } from "./agentSteps";
 
@@ -50,6 +50,21 @@ export const initialAgentState = Object.freeze({
   pauses: [],
   // The terminal error (FAILED phase). Per-turn failures are transcript rows.
   error: "",
+  // Its ErrorCode, which picks the action offered (retry, open settings,
+  // reconnect a connector, start fresh) — see `errorAction`.
+  errorCode: "",
+  errorRetryable: true,
+  // A model call being retried: { attempt, max }. Status, not failure; the
+  // next token clears it.
+  retrying: null,
+  // Tokens. `last` is the most recent model call on the thread the user is
+  // talking to — its input size against `window` is how full the context is.
+  // `total` sums every call seen this session (subagents included), which is
+  // what the turn cost. A resumed thread gets both from the state route.
+  usage: { last: null, total: { input: 0, output: 0, cached: 0, calls: 0 } },
+  // The harness is summarising history to make room — shown in the status
+  // row; the transcript gets a quiet note when it is done.
+  compacting: false,
   reconnecting: false,
   isAgentTyping: false,
   // The opening run has finished at least once — after this a pause belongs
@@ -75,6 +90,7 @@ export const Row = Object.freeze({
   MEMORY_NOTE:     "memory_note",
   MEMORY_RECALL:   "memory_recall",
   IMAGE:           "image",
+  NOTICE:          "notice",  // a quiet centred line: "Context compacted"
 });
 
 /** The assistant bubble tokens are flowing into, if one is open. */
@@ -100,6 +116,15 @@ function appendToTail(messages, patch) {
 function withoutTrailingSendError(messages) {
   const last = messages[messages.length - 1];
   return last?.role === Row.SEND_ERROR ? messages.slice(0, -1) : messages;
+}
+
+/** Drop the "queued" mark from the user row with this client id (or from
+ *  every queued row when the event names none). */
+function releaseQueued(messages, clientId) {
+  if (!messages.some((m) => m.role === Row.USER && m.queued)) return messages;
+  return messages.map((m) =>
+    m.role === Row.USER && m.queued && (!clientId || m.clientId === clientId) ? { ...m, queued: false } : m,
+  );
 }
 
 function upsertBy(rows, match, row) {
@@ -177,11 +202,69 @@ function addPause(pauses, pause) {
 }
 
 // ---------------------------------------------------------------------------
+// Usage
+// ---------------------------------------------------------------------------
+
+function usageCall(event) {
+  return {
+    input: event.input_tokens || 0,
+    output: event.output_tokens || 0,
+    cached: event.cache_read_tokens || 0,
+    window: event.context_window || 0,
+    model: event.model || "",
+  };
+}
+
+function addUsage(usage, event) {
+  const call = usageCall(event);
+  const t = usage.total;
+  return {
+    // A subagent's call fills its own context, not the thread's.
+    last: event.scope && event.scope !== "thread" ? usage.last : call,
+    total: { input: t.input + call.input, output: t.output + call.output, cached: t.cached + call.cached, calls: t.calls + 1 },
+  };
+}
+
+/** The state route's shape → the reducer's: last call + running total. */
+function usageFromThread(thread) {
+  if (!thread) return null;
+  const window = thread.context_window || 0;
+  const last = thread.last
+    ? { input: thread.last.input_tokens || 0, output: thread.last.output_tokens || 0, cached: thread.last.cache_read_tokens || 0, window, model: thread.model || "" }
+    : null;
+  const t = thread.total || {};
+  return {
+    last,
+    total: { input: t.input_tokens || 0, output: t.output_tokens || 0, cached: t.cache_read_tokens || 0, calls: t.calls || 0 },
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Events
 // ---------------------------------------------------------------------------
 
 function reduceEvent(state, event) {
   switch (event.event) {
+    case AgentEvent.TOKEN_USAGE:
+      return { ...state, usage: addUsage(state.usage, event) };
+
+    case AgentEvent.CONTEXT_COMPACTING:
+      return { ...state, compacting: true };
+
+    case AgentEvent.CONTEXT_COMPACTED:
+      return {
+        ...state,
+        compacting: false,
+        messages: [
+          ...closeStreaming(state.messages),
+          { role: Row.NOTICE, text: "Context compacted — older history summarised to make room." },
+        ],
+      };
+
+    case AgentEvent.USER_INPUT_CONSUMED:
+      // The model has the message now: the "queued" mark comes off its row.
+      return { ...state, messages: releaseQueued(state.messages, event.client_message_id) };
+
     case AgentEvent.PIPELINE_STARTED:
       return {
         ...state,
@@ -209,10 +292,17 @@ function reduceEvent(state, event) {
       return {
         ...state,
         isAgentTyping: false,
+        retrying: null,
         phase: state.phase === Phase.CHATTING ? Phase.READY : state.phase,
         messages: [
           ...closeStreaming(state.messages),
-          { role: Row.SEND_ERROR, text: event.error || "That turn failed. Try again.", content: null },
+          {
+            role: Row.SEND_ERROR,
+            text: friendlyErrorMessage(event.error || "That turn failed. Try again.", event.code),
+            content: null,
+            code: event.code || "",
+            retryable: event.retryable ?? true,
+          },
         ],
       };
 
@@ -220,6 +310,7 @@ function reduceEvent(state, event) {
       if (state.suppressThinking || !event.text) return state;
       return {
         ...state,
+        retrying: null,
         messages: appendToTail(state.messages, (t) => ({ thinking: (t.thinking || "") + event.text })),
       };
 
@@ -228,7 +319,16 @@ function reduceEvent(state, event) {
       return {
         ...state,
         isAgentTyping: false,
+        retrying: null,
         messages: appendToTail(state.messages, (t) => ({ text: (t.text || "") + event.text })),
+      };
+
+    case AgentEvent.MODEL_RETRYING:
+      // The provider is having a moment and the harness is waiting it out.
+      // Shown in the status row, never as a failure: the turn is still alive.
+      return {
+        ...state,
+        retrying: { attempt: event.attempt || 1, max: event.max_attempts || event.attempt || 1, code: event.code || "" },
       };
 
     case AgentEvent.AGENT_MESSAGE:
@@ -243,6 +343,7 @@ function reduceEvent(state, event) {
       return {
         ...state,
         isAgentTyping: false,
+        retrying: null,
         messages: closeStreaming(state.messages),
         // Only a chat turn ends here. The opening run ends on PIPELINE_FINISHED,
         // and a pause that arrived just before this stays a pause.
@@ -258,6 +359,7 @@ function reduceEvent(state, event) {
       return {
         ...state,
         isAgentTyping: false,
+        retrying: null,
         pauses: addPause(state.pauses, event),
         phase: Phase.QUESTIONS,
         messages: closeStreaming(state.messages),
@@ -269,6 +371,7 @@ function reduceEvent(state, event) {
         opened: true,
         steps: finishRunningSteps(state.steps),
         isAgentTyping: false,
+        retrying: null,
         messages: closeStreaming(state.messages),
         phase: state.pauses.length ? Phase.QUESTIONS : Phase.READY,
       };
@@ -278,7 +381,10 @@ function reduceEvent(state, event) {
         ...state,
         isAgentTyping: false,
         reconnecting: false,
-        error: friendlyErrorMessage(event.error),
+        retrying: null,
+        error: friendlyErrorMessage(event.error, event.code),
+        errorCode: event.code || "",
+        errorRetryable: event.retryable ?? true,
         phase: Phase.FAILED,
         messages: closeStreaming(state.messages),
       };
@@ -347,18 +453,26 @@ export function reduceAgentSession(state, action) {
         ...state,
         pauses,
         todos: action.todos?.length ? action.todos : state.todos,
+        usage: usageFromThread(action.usage) || state.usage,
         phase: pauses.length ? Phase.QUESTIONS : state.phase,
       };
     }
 
-    case Action.USER_SENT:
+    case Action.USER_SENT: {
+      // Sent while the agent is busy — working, thinking, or parked on a
+      // card — the message is queued, not refused: the row carries a mark
+      // until USER_INPUT_CONSUMED says the model has it, and the phase does
+      // not move (a queued note is not a new turn). From READY it is a turn.
+      const busy = state.phase === Phase.PIPELINE || state.phase === Phase.CHATTING || state.phase === Phase.QUESTIONS;
+      const row = { role: Row.USER, text: action.text, clientId: action.clientId || "", queued: busy };
       return {
         ...state,
         suppressThinking: false,
-        isAgentTyping: true,
-        phase: Phase.CHATTING,
-        messages: [...withoutTrailingSendError(state.messages), { role: Row.USER, text: action.text }],
+        isAgentTyping: busy ? state.isAgentTyping : true,
+        phase: busy ? state.phase : Phase.CHATTING,
+        messages: [...withoutTrailingSendError(state.messages), row],
       };
+    }
 
     case Action.SEND_FAILED:
       return {
@@ -366,7 +480,7 @@ export function reduceAgentSession(state, action) {
         isAgentTyping: false,
         phase: state.phase === Phase.CHATTING ? Phase.READY : state.phase,
         messages: [
-          ...state.messages,
+          ...releaseQueued(state.messages, action.clientId),
           { role: Row.SEND_ERROR, text: action.error || "Failed to send message.", content: action.content ?? null },
         ],
       };
@@ -403,15 +517,27 @@ export function reduceAgentSession(state, action) {
         ...state,
         isAgentTyping: false,
         messages: closeStreaming(state.messages),
+        retrying: null,
         phase: action.keepReady ? Phase.READY : Phase.FAILED,
         error: action.keepReady ? state.error : "Stopped.",
+        errorCode: action.keepReady ? state.errorCode : ErrorCode.CANCELLED,
+        errorRetryable: true,
       };
 
     case Action.RECONNECTING:
       return { ...state, reconnecting: action.value, isAgentTyping: action.value ? false : state.isAgentTyping };
 
     case Action.FAILED:
-      return { ...state, reconnecting: false, isAgentTyping: false, error: action.error, phase: Phase.FAILED };
+      return {
+        ...state,
+        reconnecting: false,
+        isAgentTyping: false,
+        retrying: null,
+        error: action.error,
+        errorCode: action.code || "",
+        errorRetryable: true,
+        phase: Phase.FAILED,
+      };
 
     case Action.RESET:
       return { ...initialAgentState, suppressThinking: action.suppressThinking || false };
@@ -431,15 +557,52 @@ export function isPauseEvent(event) {
 }
 
 // ---------------------------------------------------------------------------
-// Friendly errors — hide stack traces and status codes from users
+// Friendly errors — the code picks the copy; the text is a fallback
 // ---------------------------------------------------------------------------
 
+/** What the user can do about a failure — decides the button under it. */
+export const ErrorAction = Object.freeze({
+  RETRY:       "retry",        // try the same thing again
+  SETTINGS:    "settings",     // the model or key is the problem
+  CONNECTIONS: "connections",  // a connector needs attention
+  FRESH:       "fresh",        // this conversation cannot continue; a new one can
+  NONE:        "none",
+});
+
+const ERROR_COPY = Object.freeze({
+  [ErrorCode.RATE_LIMITED]:        { text: "The model provider is rate limiting us. Wait a minute, then try again.", action: ErrorAction.RETRY },
+  [ErrorCode.OVERLOADED]:          { text: "The model provider is overloaded right now. Try again in a moment.", action: ErrorAction.RETRY },
+  [ErrorCode.UPSTREAM_ERROR]:      { text: "The model provider returned an error. Try again.", action: ErrorAction.RETRY },
+  [ErrorCode.TIMEOUT]:             { text: "The model took too long to answer. Try again.", action: ErrorAction.RETRY },
+  [ErrorCode.NETWORK]:             { text: "Couldn't reach the model provider. Check your connection and try again.", action: ErrorAction.RETRY },
+  [ErrorCode.AUTH]:                { text: "The model provider rejected the API key. Check it under Settings → Models.", action: ErrorAction.SETTINGS },
+  [ErrorCode.PERMISSION]:          { text: "This API key isn't allowed to use that model. Pick another under Settings → Models.", action: ErrorAction.SETTINGS },
+  [ErrorCode.MODEL_NOT_FOUND]:     { text: "That model isn't available on this provider. Pick another under Settings → Models.", action: ErrorAction.SETTINGS },
+  [ErrorCode.CONTEXT_WINDOW]:      { text: "This conversation no longer fits the model's context. Start fresh, or pick a model with a bigger window.", action: ErrorAction.FRESH },
+  [ErrorCode.BAD_REQUEST]:         { text: "The model provider rejected the request. Try rephrasing.", action: ErrorAction.NONE },
+  [ErrorCode.CONNECTOR_EXPIRED]:   { text: "A connected account needs reconnecting before the agent can read it.", action: ErrorAction.CONNECTIONS },
+  [ErrorCode.CONNECTOR_FORBIDDEN]: { text: "A connected account doesn't have access to that data. Check its permissions under Connections.", action: ErrorAction.CONNECTIONS },
+  [ErrorCode.CANCELLED]:           { text: "Stopped.", action: ErrorAction.RETRY },
+  [ErrorCode.UNKNOWN]:             { text: "Something went wrong. Try again.", action: ErrorAction.RETRY },
+});
+
+/** The action a failure with this code deserves. No code means the old
+ *  behaviour: offer a retry. */
+export function errorAction(code) {
+  return ERROR_COPY[code]?.action || ErrorAction.RETRY;
+}
+
 /**
- * Translate a raw backend error into something a user can act on. Falls back
- * to a generic line when the input does not pattern-match, and never passes
- * through anything that looks like a traceback or a status code.
+ * Translate a failure into something a user can act on. With an `ErrorCode`
+ * the copy comes from the table above and the text is ignored — that is what
+ * makes it stable across providers. Without one, the raw text is pattern
+ * matched (the backend before typed codes, a stream error from the browser),
+ * and never passes through anything that looks like a traceback or a status
+ * code.
  */
-export function friendlyErrorMessage(raw) {
+export function friendlyErrorMessage(raw, code = "") {
+  const known = ERROR_COPY[code];
+  if (known) return known.text;
   const msg = String(raw || "").trim();
   if (!msg) return "Something went wrong. Please try again.";
 

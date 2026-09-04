@@ -57,6 +57,14 @@ import { clearSessionHandle, readSessionHandle, writeSessionHandle } from "../li
 import { consumeSseStream } from "../lib/sse";
 
 const MAX_RECONNECT = 5;
+function newClientId() {
+  try {
+    return crypto.randomUUID();
+  } catch {
+    return `m_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+  }
+}
+
 const NOT_ATTACHED = "Still connecting to the session — try again in a moment.";
 
 /** Jittered exponential backoff: ~1s, 2s, 4s, 8s, 15s (±50% jitter). */
@@ -161,7 +169,7 @@ export function useAgentSession({
         const thread = await getAgentThreadState(agentType, cid);
         if (dead()) return;
         if (thread?.pauses?.length || thread?.todos?.length) {
-          dispatch({ type: Action.PAUSES, pauses: thread.pauses || [], todos: thread.todos || [] });
+          dispatch({ type: Action.PAUSES, pauses: thread.pauses || [], todos: thread.todos || [], usage: thread.usage });
         }
       } catch {
         /* an agent without a durable thread, or offline — the stream will tell */
@@ -304,15 +312,22 @@ export function useAgentSession({
   const send = useCallback(
     async (content, extra = {}) => {
       const text = typeof content === "string" ? content : "[image attached]";
-      dispatch({ type: Action.USER_SENT, text });
+      // The id is what lets USER_INPUT_CONSUMED release this row and no other.
+      const clientId = newClientId();
+      dispatch({ type: Action.USER_SENT, text, clientId });
       if (!sessionIdRef.current) {
-        dispatch({ type: Action.SEND_FAILED, error: NOT_ATTACHED, content });
+        dispatch({ type: Action.SEND_FAILED, error: NOT_ATTACHED, content, clientId });
         return;
       }
       try {
-        await sendAgentMessage(agentType, sessionIdRef.current, { type: "chat", content, ...extra });
+        await sendAgentMessage(agentType, sessionIdRef.current, {
+          type: "chat",
+          content,
+          client_message_id: clientId,
+          ...extra,
+        });
       } catch (err) {
-        dispatch({ type: Action.SEND_FAILED, error: err?.message, content });
+        dispatch({ type: Action.SEND_FAILED, error: err?.message, content, clientId });
       }
     },
     [agentType],
@@ -404,9 +419,12 @@ export function useAgentSession({
     isRunning,
     // The agent is producing tokens — drives the Stop button.
     isStreaming: isRunning || (phase === Phase.CHATTING && isAgentTyping),
-    // The default input policy: open during READY and CHATTING, closed while
-    // the run works, a card is waiting, the link is down, or it failed.
-    inputDisabled: isRunning || phase === Phase.QUESTIONS || phase === Phase.FAILED || reconnecting,
+    // The default input policy: open whenever there is a session to send to.
+    // A message while the run works or a card waits is queued (the backend
+    // steers it in at the next model call, or holds it for the next turn),
+    // so the box only closes before the session exists, while the link is
+    // down, or after a terminal failure.
+    inputDisabled: phase === Phase.STARTING || phase === Phase.FAILED || reconnecting,
     send,
     answer,
     stop,

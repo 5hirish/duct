@@ -66,16 +66,23 @@ await shot("insights-2-reload-reattached");
 
 await page.getByRole("button", { name: "Signups", exact: true }).click();
 await page.getByRole("button", { name: /Continue/ }).click();
-await page.getByText("I proposed two changes above.").waitFor({ timeout: 30000 });
-await page.locator('[role="status"]', { hasText: "Ready" }).first().waitFor({ timeout: 15000 });
-console.log("insights: brief + change set; status:", await status());
-await shot("insights-3-ready");
 
+// Type the moment the turn resumes, while it is still streaming: the box
+// stays open, the row shows as queued, and the mock hands the message over
+// at its next wait point. (Typing any later races the mock's frame pace.)
 await page.getByLabel("Message the insights agent").fill("and what about mobile?");
 await page.keyboard.press("Enter");
+await page.getByText("↳ Queued").waitFor({ timeout: 5000 });
+console.log("insights: follow-up queued mid-turn; status:", await status());
+await shot("insights-3-queued");
+
+await page.getByText("I proposed two changes above.").waitFor({ timeout: 30000 });
 await page.getByText("Mobile CPA is flat.").waitFor({ timeout: 30000 });
-console.log("insights: follow-up answered; status:", await status());
-await shot("insights-4-followup");
+await page.locator('[role="status"]', { hasText: "Ready" }).first().waitFor({ timeout: 15000 });
+if (await page.getByText("↳ Queued").count()) throw new Error("queued mark was not released");
+if (!(await page.getByText("Context compacted").count())) throw new Error("no compaction note in the transcript");
+console.log("insights: brief, change set, queued follow-up answered; status:", await status());
+await shot("insights-4-ready");
 
 await page.setViewportSize({ width: 390, height: 800 });
 await page.waitForTimeout(400);

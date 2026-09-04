@@ -25,6 +25,8 @@ import pytest
 from langchain_core.language_models.fake_chat_models import FakeMessagesListChatModel
 from langchain_core.messages import AIMessage
 
+from agents.core import lc
+from agents.core.errors import ErrorCode
 from agents.core.events import AgentEvent
 from agents.core.lc import _dispatch_updates
 from routes.agents import AgentMessage, send_message
@@ -55,6 +57,28 @@ class RaisingFake(ToolCallingFake):
         if getattr(self, "_used", False):
             raise RuntimeError("provider blew up")
         self._used = True
+        return super()._generate(messages, stop=stop, run_manager=run_manager, **kwargs)
+
+
+class RateLimitError(Exception):
+    """Named like the provider SDK's, which is how the classifier knows it."""
+
+
+class AuthenticationError(Exception):
+    """Ditto — a rejected key, which must not be retried."""
+
+
+class FlakyFake(ToolCallingFake):
+    """Fails `failures` times with `exc`, then answers — a provider having a moment."""
+
+    failures: int = 2
+    exc: type[Exception] = RateLimitError
+
+    def _generate(self, messages, stop=None, run_manager=None, **kwargs):
+        calls = getattr(self, "_calls", 0)
+        self._calls = calls + 1
+        if calls < self.failures:
+            raise self.exc("429 rate limited")
         return super()._generate(messages, stop=stop, run_manager=run_manager, **kwargs)
 
 
@@ -348,6 +372,62 @@ async def test_a_failed_turn_does_not_end_the_session(session, emitted):
     kinds = [e["event"] for e in emitted.events]
     assert AgentEvent.STEP_FAILED in kinds
     assert AgentEvent.PIPELINE_FAILED not in kinds  # the session survived
+    failed = next(e for e in emitted.events if e["event"] == AgentEvent.STEP_FAILED)
+    # Typed, and never the raw exception text.
+    assert failed["code"] == ErrorCode.UNKNOWN
+    assert "provider blew up" not in failed["error"]
+
+
+@pytest.fixture
+def no_retry_sleep(monkeypatch):
+    waited: list[float] = []
+
+    async def _sleep(seconds: float) -> None:
+        waited.append(seconds)
+
+    monkeypatch.setattr(lc, "_retry_sleep", _sleep)
+    return waited
+
+
+async def test_a_transient_failure_is_retried_and_reported(session, emitted, no_retry_sleep):
+    """A 429 twice, then an answer: the user sees two "reconnecting" events and
+    then the reply — not a failed turn, and not a silent ten-second hang."""
+    await session.chat_queue.put(None)
+
+    await RUNNER.run_session(
+        session.session_id, emitted, llm=_fake("Recovered.", cls=FlakyFake),
+        session=session, prompt="status?", chat_idle_timeout=2.0,
+    )
+
+    retries = [e for e in emitted.events if e["event"] == AgentEvent.MODEL_RETRYING]
+    assert [r["attempt"] for r in retries] == [1, 2]
+    assert all(r["code"] == ErrorCode.RATE_LIMITED for r in retries)
+    assert retries[0]["max_attempts"] == lc.MODEL_RETRY_ATTEMPTS
+    assert len(no_retry_sleep) == 2 and no_retry_sleep[1] > no_retry_sleep[0] * 1.2  # backing off
+    kinds = _kinds(emitted)
+    assert AgentEvent.STEP_FAILED not in kinds
+    assert AgentEvent.PIPELINE_FAILED not in kinds
+    assert AgentEvent.PIPELINE_FINISHED in kinds
+
+
+async def test_a_rejected_key_fails_on_the_first_attempt(session, emitted, no_retry_sleep):
+    """Retrying a bad API key only delays the answer the user needs."""
+    await session.chat_queue.put("follow up")
+    await session.chat_queue.put(None)
+
+    class AuthFlaky(FlakyFake):
+        failures: int = 1
+        exc: type[Exception] = AuthenticationError
+
+    # The opening turn fails (the route reports it); the follow-up answers.
+    with pytest.raises(AuthenticationError):
+        await RUNNER.run_session(
+            session.session_id, emitted, llm=_fake("Recovered.", cls=AuthFlaky),
+            session=session, prompt="status?", chat_idle_timeout=2.0,
+        )
+
+    assert AgentEvent.MODEL_RETRYING not in _kinds(emitted)
+    assert no_retry_sleep == []
 
 
 async def test_short_replies_are_not_truncated(session, emitted):
@@ -505,9 +585,74 @@ async def test_thread_state_reports_a_parked_thread(emitted):
     assert state["pauses"][0]["questions"] == [QUESTION]
 
 
+async def test_token_usage_reaches_the_stream_and_the_thread_state(emitted):
+    """Every model call is billed on the stream, and a thread opened later
+    shows the same figures from its checkpoint — the ring before the run."""
+    conversation_id = uuid.uuid4()
+    usage = {"input_tokens": 1200, "output_tokens": 30, "total_tokens": 1230}
+    llm = ToolCallingFake(responses=[AIMessage(content="Done.", usage_metadata=usage)])
+
+    await RUNNER.run_session(
+        "s-usage", emitted, llm=llm, session=None, prompt="go",
+        conversation_id=conversation_id,
+    )
+
+    billed = [e for e in emitted.events if e["event"] == AgentEvent.TOKEN_USAGE]
+    assert len(billed) == 1
+    assert billed[0]["input_tokens"] == 1200 and billed[0]["output_tokens"] == 30
+    assert billed[0]["context_window"] > 0
+    kinds = _kinds(emitted)
+    assert kinds.index(AgentEvent.TOKEN_USAGE) < kinds.index(AgentEvent.MESSAGE_STOP)
+
+    state = await RUNNER.thread_state(conversation_id)
+    assert state["usage"]["last"]["input_tokens"] == 1200
+    assert state["usage"]["total"]["calls"] == 1
+
+
+async def test_a_message_sent_mid_turn_reaches_the_model_at_its_next_call(session, emitted):
+    """The user types while the agent works. The steer middleware hands the
+    message to the model at its next call, the client is told the row is
+    consumed, and the thread has one more human message than the prompt."""
+    conversation_id = uuid.uuid4()
+    await session.steer_queue.put({"role": "user", "content": "also mobile", "client_message_id": "m1"})
+    await session.chat_queue.put(None)
+
+    await RUNNER.run_session(
+        session.session_id, emitted, llm=_fake("Both, then."),
+        session=session, prompt="why did CPA jump?", conversation_id=conversation_id,
+        chat_idle_timeout=2.0,
+    )
+
+    consumed = [e for e in emitted.events if e["event"] == AgentEvent.USER_INPUT_CONSUMED]
+    assert [c["client_message_id"] for c in consumed] == ["m1"]
+    assert session.steer_queue.empty()
+    assert session.turn_active is False
+    state = await RUNNER.thread_state(conversation_id)
+    assert state["message_count"] == 3  # prompt, the steer, the answer
+
+
+async def test_the_chat_route_steers_while_a_turn_runs_and_queues_otherwise(session):
+    """Never a 409: busy means steer (this harness can), idle means a turn."""
+    session.turn_active = True
+    out = await send_message(
+        "insights", session.session_id,
+        AgentMessage(type="chat", content="also mobile", client_message_id="m1"), user=None,
+    )
+    assert out["delivery"] == "steer"
+    assert session.steer_queue.get_nowait() == {"role": "user", "content": "also mobile", "client_message_id": "m1"}
+
+    session.turn_active = False
+    out = await send_message("insights", session.session_id, AgentMessage(type="chat", content="next"), user=None)
+    assert out["delivery"] == "turn"
+    assert session.chat_queue.get_nowait() == {"role": "user", "content": "next"}
+
+
 async def test_an_unknown_conversation_is_idle_not_an_error():
     state = await RUNNER.thread_state(uuid.uuid4())
-    assert state == {"status": "idle", "pauses": [], "todos": [], "message_count": 0}
+    assert state["status"] == "idle"
+    assert (state["pauses"], state["todos"], state["message_count"]) == ([], [], 0)
+    assert state["usage"]["last"] is None  # nothing billed yet, but the gauge has a window
+    assert state["usage"]["context_window"] > 0
 
 
 async def test_the_answer_route_resumes_a_checkpointed_pause(session):
@@ -563,18 +708,19 @@ async def test_session_state_reports_a_future_bridged_pause_too(session):
     assert state["pending"] == []
 
 
-async def test_chat_while_parked_is_refused(session):
-    """A tool call is waiting for its result; a fresh human turn on top of it
-    is a transcript the provider rejects. The card has to be answered first."""
-    from fastapi import HTTPException
-
+async def test_chat_while_parked_is_steered_not_refused(session):
+    """A tool call is waiting for its result, so a fresh human turn on top of
+    it would be a transcript the provider rejects. It used to be a 409; now
+    the message waits on the steer queue and the model reads it right after
+    the answer, at its next call."""
     session.pending_pauses = {"int_1": {"event": AgentEvent.QUESTIONS_REQUIRED, "interrupt_id": "int_1"}}
 
-    with pytest.raises(HTTPException) as exc:
-        await send_message(
-            "insights", session.session_id, AgentMessage(type="chat", content="also mobile"), user=None
-        )
-    assert exc.value.status_code == 409
+    out = await send_message(
+        "insights", session.session_id, AgentMessage(type="chat", content="also mobile"), user=None
+    )
+    assert out["delivery"] == "steer"
+    assert session.steer_queue.get_nowait() == {"role": "user", "content": "also mobile"}
+    assert session.chat_queue.empty()
 
 
 # ---------------------------------------------------------------------------

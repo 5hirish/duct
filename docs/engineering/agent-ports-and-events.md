@@ -162,6 +162,36 @@ translation over it, not a refactor.
 | `execution_proposed` | `Custom` | staged-execution change set; upsert by `change_set_id` |
 | `memory_written` | `Custom` | entries this turn stored, with undo |
 | `memory_recalled` | `Custom` | entry ids this turn was primed with |
+| `model_retrying` | `Custom` | a model call failed and is being retried: `attempt`, `max_attempts`, `code`. Status, not failure — the next token clears it |
+| `token_usage` | `Custom` | one model call's bill: `input_tokens`, `output_tokens`, `cache_read_tokens`, `context_window`, `model`, `scope` (`thread` or `subagent`) |
+| `context_compacting`, `context_compacted` | `Custom` | the harness is summarising old history to make room, then did. The summariser's own tokens never reach the transcript |
+| `user_input_consumed` | `Custom` | a message sent mid-turn has reached the model; carries the `client_message_id` the client stamped on it |
+
+### Failures carry a code, never the exception
+
+`step_failed` (no `step_id`) and `pipeline_failed` carry `code`, `retryable`
+and a one-sentence `error`. The code is `agents/core/errors.ErrorCode`, decided
+once by `classify_error` from the exception's class names and status codes,
+looking through whatever wraps it. The same classifier is the `retry_on` of
+the model-call retry (`agents/core/lc.ReportedRetryMiddleware`), so a rate
+limit retries with backoff and a rejected key fails on the first attempt; and
+the frontend maps the code — not the message text — to copy and to the action
+it offers (`lib/agentSession.js` `errorAction`: retry, open model settings,
+open connections, start fresh). `str(exc)` never reaches the browser: it has
+carried request ids, and once a URL with a key in it.
+
+### Input while a turn runs: steer or queue, never refuse
+
+The chat route never answers 409 to a message. If the session's harness can
+inject a message at its next model call — `BaseAgentSession.steer_queue` is
+set, which the insights runner does through `agents/core/lc.SteerMiddleware`,
+a `before_model` hook so the injected message is checkpointed with the
+thread — a message that arrives mid-turn or while parked on a card is steered:
+the model reads it right after the tool result it was waiting on. Otherwise it
+waits on `chat_queue` for the next turn. Either way the client marks the row
+"queued" until `user_input_consumed` names it. A steer that lands after the
+turn's last model call becomes the next turn (`_leftover_steers` in the
+insights runner), not a surprise at the top of whatever the user asks next.
 
 ### Persisted conversation kinds
 

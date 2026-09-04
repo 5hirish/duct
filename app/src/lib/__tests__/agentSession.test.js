@@ -3,7 +3,9 @@ import { AgentEvent } from "../agentEvents";
 import { Phase } from "../agentPhase";
 import {
   Action,
+  ErrorAction,
   Row,
+  errorAction,
   friendlyErrorMessage,
   initialAgentState,
   reduceAgentSession,
@@ -231,7 +233,8 @@ describe("sending", () => {
   it("drops a previous send error and opens a chat turn", () => {
     const s0 = reduceAgentSession(initialAgentState, { type: Action.SEND_FAILED, error: "x", content: "hi" });
     const s = reduceAgentSession(s0, { type: Action.USER_SENT, text: "hi again" });
-    expect(s.messages).toEqual([{ role: Row.USER, text: "hi again" }]);
+    expect(s.messages).toHaveLength(1);
+    expect(s.messages[0]).toMatchObject({ role: Row.USER, text: "hi again", queued: false });
     expect(s.phase).toBe(Phase.CHATTING);
     expect(s.suppressThinking).toBe(false);
   });
@@ -275,5 +278,132 @@ describe("friendlyErrorMessage", () => {
     ["That turn failed. Try rephrasing.", "That turn failed. Try rephrasing."],
   ])("%s", (raw, expected) => {
     expect(friendlyErrorMessage(raw)).toBe(expected);
+  });
+});
+
+describe("typed failures", () => {
+  it("a retry is status, not a failure, and the next token clears it", () => {
+    const retrying = replayEvents([
+      { event: AgentEvent.PIPELINE_STARTED },
+      { event: AgentEvent.MODEL_RETRYING, attempt: 2, max_attempts: 4, code: "rate_limited" },
+    ]);
+    expect(retrying.retrying).toEqual({ attempt: 2, max: 4, code: "rate_limited" });
+    expect(retrying.phase).toBe(Phase.PIPELINE);
+    expect(retrying.messages).toEqual([]);
+
+    const streaming = replayEvents([{ event: AgentEvent.AGENT_MESSAGE_CHUNK, text: "Back." }], retrying);
+    expect(streaming.retrying).toBeNull();
+  });
+
+  it("a turn failure's code picks the copy and whether a retry is offered", () => {
+    const ready = replayEvents([{ event: AgentEvent.PIPELINE_STARTED }, { event: AgentEvent.PIPELINE_FINISHED }]);
+    const sent = reduceAgentSession(ready, { type: Action.USER_SENT, text: "again" });
+    const failed = replayEvents(
+      [{ event: AgentEvent.STEP_FAILED, status: "error", code: "auth", retryable: false, error: "The model provider rejected the API key." }],
+      sent,
+    );
+    const row = failed.messages[failed.messages.length - 1];
+    expect(row.role).toBe(Row.SEND_ERROR);
+    expect(row.code).toBe("auth");
+    expect(row.retryable).toBe(false);
+    expect(row.text).toMatch(/Settings → Models/);
+    expect(failed.phase).toBe(Phase.READY);
+  });
+
+  it("a run failure carries its code into the FAILED phase", () => {
+    const s = replayEvents([
+      { event: AgentEvent.PIPELINE_STARTED },
+      { event: AgentEvent.PIPELINE_FAILED, status: "error", code: "connector_expired", retryable: false, error: "x" },
+    ]);
+    expect(s.phase).toBe(Phase.FAILED);
+    expect(s.errorCode).toBe("connector_expired");
+    expect(s.errorRetryable).toBe(false);
+    expect(errorAction(s.errorCode)).toBe(ErrorAction.CONNECTIONS);
+    expect(s.error).toMatch(/reconnecting/);
+  });
+
+  it("without a code the message text is still pattern matched", () => {
+    expect(friendlyErrorMessage("429 Too Many Requests")).toBe("We're hitting a rate limit — wait a minute and try again.");
+    expect(friendlyErrorMessage("anything", "rate_limited")).toMatch(/rate limiting/);
+    expect(errorAction("")).toBe(ErrorAction.RETRY);
+  });
+});
+
+describe("context and cost", () => {
+  const bill = (input, output, extra = {}) => ({
+    event: AgentEvent.TOKEN_USAGE, input_tokens: input, output_tokens: output, cache_read_tokens: 0,
+    context_window: 200000, model: "claude-sonnet-5", scope: "thread", ...extra,
+  });
+
+  it("the gauge follows the thread's last call; the total counts every call", () => {
+    const s = replayEvents([bill(40000, 500), bill(9000, 200, { scope: "subagent" }), bill(61000, 800)]);
+    expect(s.usage.last).toMatchObject({ input: 61000, output: 800, window: 200000, model: "claude-sonnet-5" });
+    expect(s.usage.total).toEqual({ input: 110000, output: 1500, cached: 0, calls: 3 });
+  });
+
+  it("compaction is status while it runs, then a quiet note", () => {
+    const during = replayEvents([{ event: AgentEvent.PIPELINE_STARTED }, { event: AgentEvent.CONTEXT_COMPACTING }]);
+    expect(during.compacting).toBe(true);
+    expect(during.phase).toBe(Phase.PIPELINE);
+    const after = replayEvents([{ event: AgentEvent.CONTEXT_COMPACTED }], during);
+    expect(after.compacting).toBe(false);
+    expect(after.messages[after.messages.length - 1]).toMatchObject({ role: Row.NOTICE });
+  });
+
+  it("a resumed thread reads its usage from the state route", () => {
+    const s = reduceAgentSession(initialAgentState, {
+      type: Action.PAUSES,
+      pauses: [],
+      usage: {
+        last: { input_tokens: 52000, output_tokens: 700, cache_read_tokens: 30000 },
+        total: { input_tokens: 120000, output_tokens: 3000, cache_read_tokens: 60000, calls: 4 },
+        context_window: 200000,
+        model: "claude-sonnet-5",
+      },
+    });
+    expect(s.usage.last).toEqual({ input: 52000, output: 700, cached: 30000, window: 200000, model: "claude-sonnet-5" });
+    expect(s.usage.total.calls).toBe(4);
+    expect(s.phase).toBe(Phase.STARTING);
+  });
+});
+
+describe("input while the agent is busy", () => {
+  const working = replayEvents([{ event: AgentEvent.PIPELINE_STARTED }, { event: AgentEvent.STEP_STARTED, step_id: "collect_source_data" }]);
+
+  it("is queued, not refused, and does not start a turn", () => {
+    const s = reduceAgentSession(working, { type: Action.USER_SENT, text: "also mobile", clientId: "m1" });
+    expect(s.phase).toBe(Phase.PIPELINE);
+    expect(s.messages.at(-1)).toMatchObject({ role: Row.USER, text: "also mobile", clientId: "m1", queued: true });
+  });
+
+  it("is released by USER_INPUT_CONSUMED naming its id", () => {
+    const sent = reduceAgentSession(working, { type: Action.USER_SENT, text: "also mobile", clientId: "m1" });
+    const other = replayEvents([{ event: AgentEvent.USER_INPUT_CONSUMED, client_message_id: "zz" }], sent);
+    expect(other.messages.at(-1).queued).toBe(true);
+    const released = replayEvents([{ event: AgentEvent.USER_INPUT_CONSUMED, client_message_id: "m1" }], sent);
+    expect(released.messages.at(-1).queued).toBe(false);
+  });
+
+  it("can be queued while parked on a card, and the card stays", () => {
+    const parked = replayEvents([{ event: AgentEvent.QUESTIONS_REQUIRED, questions: [{ question: "Goal?" }], interrupt_id: "i1" }], working);
+    const s = reduceAgentSession(parked, { type: Action.USER_SENT, text: "note for after", clientId: "m2" });
+    expect(s.phase).toBe(Phase.QUESTIONS);
+    expect(s.pauses).toHaveLength(1);
+    expect(s.messages.at(-1).queued).toBe(true);
+  });
+
+  it("from READY it is an ordinary turn", () => {
+    const ready = replayEvents([{ event: AgentEvent.PIPELINE_FINISHED }], working);
+    const s = reduceAgentSession(ready, { type: Action.USER_SENT, text: "next", clientId: "m3" });
+    expect(s.phase).toBe(Phase.CHATTING);
+    expect(s.isAgentTyping).toBe(true);
+    expect(s.messages.at(-1).queued).toBe(false);
+  });
+
+  it("a failed send drops the mark and adds the error row", () => {
+    const sent = reduceAgentSession(working, { type: Action.USER_SENT, text: "x", clientId: "m4" });
+    const failed = reduceAgentSession(sent, { type: Action.SEND_FAILED, error: "boom", content: "x", clientId: "m4" });
+    expect(failed.messages.at(-2).queued).toBe(false);
+    expect(failed.messages.at(-1).role).toBe(Row.SEND_ERROR);
   });
 });

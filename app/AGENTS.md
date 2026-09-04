@@ -161,8 +161,21 @@ Rules that follow:
   payloads stay in the workspace's `onEvent`.
 - **Phases are the protocol, not a UI mood.** Only the reducer moves `phase`;
   a workspace that needs a different input policy passes `inputDisabled`
-  (audit accepts a follow-up while the crawl runs) rather than inventing a
-  state.
+  rather than inventing a state. The default policy keeps the box open while
+  the agent works or a card waits: a message then is *queued* (the row carries
+  a mark until `user_input_consumed` releases it), not refused and not a new
+  turn.
+- **Failures are typed; copy comes from the code.** `friendlyErrorMessage(raw,
+  code)` and `errorAction(code)` in `lib/agentSession.js` are the only places
+  a failure becomes words or a button. A new failure kind is a new `ErrorCode`
+  (mirrored from the backend) with a row in `ERROR_COPY`, never a regex on the
+  message.
+- **The status row says what is happening, with a clock.** While the agent
+  works the header reads `Working · 1m 12s · Collecting source data` — phase,
+  elapsed, and the step in progress (or "Reconnecting to the model (2/4)",
+  "Compacting context"). The context ring beside it is `workspace/ContextRing`
+  over the reducer's `usage`; it is the same ring the insights desk shows for
+  a new thread.
 
 **Accessibility.** Desktop keyboard and screen-reader basics, not a full audit.
 

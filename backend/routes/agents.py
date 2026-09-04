@@ -68,6 +68,8 @@ from agents.insights.setup import (
 from agents.core import session as _core_session
 from agents.core.context import format_business_context
 from agents.core.events import AgentEvent, StepStatus
+from agents.core.errors import error_payload
+from agents.core.session import CLIENT_MESSAGE_ID
 from db.session import get_session as db_session
 from agents.engines import (
     resolve_engine,
@@ -477,6 +479,9 @@ class AgentMessage(BaseModel):
     # Omitted, the only pending pause is assumed; a Future-bridged session has
     # no ids at all.
     interrupt_id: str | None = None
+    # Stamped by the client on a chat message so the USER_INPUT_CONSUMED event
+    # can name the row it releases. Optional: older clients send none.
+    client_message_id: str | None = None
 
 
 @router.post("/{agent_type}/sessions/{session_id}/messages")
@@ -532,12 +537,6 @@ async def send_message(
     # type == "chat"
     if msg.content is None:
         raise HTTPException(422, "content field required for type='chat'")
-    if pending:
-        # A parked thread has a tool call waiting for its result. A new human
-        # message now would start a fresh turn on top of it and the provider
-        # would reject the transcript — so the card has to be answered (or
-        # skipped, which every card offers) first.
-        raise HTTPException(409, "Answer the pending question first")
 
     # Persist the raw user text (before the XML working-context wrapper) so chat
     # history rehydrates as the user actually typed it.
@@ -557,8 +556,22 @@ async def send_message(
             content = _prepend_context(content, primer)
         session.needs_reprime = False
 
-    await session.chat_queue.put({"role": "user", "content": content})  # type: ignore[attr-defined]
-    return {"status": "queued", "type": "chat"}
+    item: dict = {"role": "user", "content": content}
+    if msg.client_message_id:
+        item[CLIENT_MESSAGE_ID] = msg.client_message_id
+
+    # A message while the agent is busy — mid-turn, or parked on a card — is
+    # never refused. A harness that can steer takes it at its next model call
+    # (after the tool result a parked thread is waiting on); the others hold it
+    # for the next turn. The client marks the row "queued" until the
+    # USER_INPUT_CONSUMED event clears it.
+    busy = bool(pending) or getattr(session, "turn_active", False)
+    steer_queue = getattr(session, "steer_queue", None)
+    if busy and steer_queue is not None:
+        await steer_queue.put(item)
+        return {"status": "queued", "type": "chat", "delivery": "steer"}
+    await session.chat_queue.put(item)  # type: ignore[attr-defined]
+    return {"status": "queued", "type": "chat", "delivery": "queue" if busy else "turn"}
 
 
 def _inject_working_context(session: Any, content: str | list, version_id: int | None) -> str | list:
@@ -1330,7 +1343,7 @@ async def _start_seo_audit(
                 )
             except Exception as exc:
                 logger.exception("seo-audit resume error for session %s", session_id)
-                await emit_fn({"event": AuditEvent.PIPELINE_FAILED, "status": "error", "error": str(exc)})
+                await emit_fn({"event": AuditEvent.PIPELINE_FAILED, "status": "error", **error_payload(exc)})
 
         task = asyncio.create_task(resume_pipeline())
         if session:
@@ -1384,7 +1397,7 @@ async def _start_seo_audit(
             await emit_fn({"event": AuditEvent.PIPELINE_FINISHED, "status": "success"})
         except Exception as exc:
             logger.exception("seo-audit pipeline error for session %s", session_id)
-            await emit_fn({"event": AuditEvent.PIPELINE_FAILED, "status": "error", "error": str(exc)})
+            await emit_fn({"event": AuditEvent.PIPELINE_FAILED, "status": "error", **error_payload(exc)})
 
     task = asyncio.create_task(pipeline())
     session = get_session(session_id)
@@ -1556,7 +1569,7 @@ async def _start_insights(
             await emit_fn({
                 "event": AgentEvent.PIPELINE_FAILED,
                 "status": StepStatus.ERROR,
-                "error": str(exc),
+                **error_payload(exc),
             })
 
     task = asyncio.create_task(pipeline())

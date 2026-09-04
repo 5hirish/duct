@@ -29,7 +29,7 @@ import { AUTONOMY_OPTIONS, setProjectAutonomy } from "@/lib/projectsApi";
 import { loadPreferences, savePreferences } from "@/lib/userPreferences";
 import { DEFAULT_ENGINE, ENGINE_STORAGE_KEY } from "@/lib/engines";
 import { NO_THINKING, fetchThinking, levelHint } from "@/lib/thinking";
-import ContextRing from "./ContextRing";
+import ContextRing from "../../workspace/ContextRing";
 
 // Both controls read as chips — the same object as the project chip above the
 // box, because they are the same kind of thing: what this message will run with.
