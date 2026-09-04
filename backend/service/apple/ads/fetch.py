@@ -23,6 +23,7 @@ from service.connectors import (
     CAP_ACCOUNTS,
     ConnectorAuthContext,
     ConnectorMeta,
+    entity_facts,
     register_connector,
 )
 
@@ -145,6 +146,10 @@ class AppleAdsConnector:
             {
                 "account_id": str(org.get("orgId", "")),
                 "account_name": org.get("orgName", "") or f"Org {org.get('orgId')}",
+                "entity_meta": entity_facts(
+                    ("Currency", org.get("currency", "")),
+                    ("Billing", org.get("paymentModel", "")),
+                ),
                 "currency": org.get("currency", ""),
                 "payment_model": org.get("paymentModel", ""),
                 "role_names": org.get("roleNames", []),

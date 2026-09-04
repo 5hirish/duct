@@ -11,6 +11,7 @@ from service.connectors import (
     CAP_ACCOUNTS,
     ConnectorAuthContext,
     ConnectorMeta,
+    entity_facts,
     register_connector,
 )
 from service.google.constants import GSC_CONNECTOR_ID
@@ -71,14 +72,64 @@ class GSCConnector:
             site_url = entry.get("siteUrl") or ""
             if not site_url:
                 continue
+            permission = entry.get("permissionLevel", "")
             rows.append(
                 {
+                    # Canonical pair every adapter returns, so one picker can
+                    # render every connector without a per-connector shim.
+                    # Native keys stay alongside for connector-specific UI.
+                    "account_id": site_url,
+                    "account_name": _display_site(site_url),
+                    # The entity here genuinely is a website, which is the case
+                    # the favicon exists for.
+                    "entity_url": _site_href(site_url),
+                    # Not decoration: a user can hold both property kinds for
+                    # one domain, and they display identically without this.
+                    "entity_detail": (
+                        "Domain property" if site_url.startswith("sc-domain:") else "URL prefix"
+                    ),
+                    "entity_meta": entity_facts(("Access", _PERMISSION_LABELS.get(permission, ""))),
                     "site_url": site_url,
-                    "permission_level": entry.get("permissionLevel", ""),
+                    "permission_level": permission,
                 }
             )
         rows.sort(key=lambda row: row["site_url"].lower())
         return rows
+
+
+def _display_site(site_url: str) -> str:
+    """`sc-domain:example.com` reads as noise; `example.com` is the thing itself.
+
+    Domain properties and URL-prefix properties are different objects in Search
+    Console and a user may hold both, so the prefix is dropped for display only
+    — `account_id` keeps the exact string the API needs.
+    """
+    if site_url.startswith("sc-domain:"):
+        return site_url[len("sc-domain:"):]
+    return site_url.rstrip("/")
+
+
+def _site_href(site_url: str) -> str:
+    """A URL a browser can actually fetch, for the row's favicon.
+
+    ``sc-domain:example.com`` is a Search Console identifier, not a location;
+    handing it to an ``<img src>`` as-is loads nothing.
+    """
+    if site_url.startswith("sc-domain:"):
+        return "https://" + site_url[len("sc-domain:"):]
+    return site_url if site_url.startswith(("http://", "https://")) else ""
+
+
+#: Search Console's permission strings, in words. Which of these you hold
+#: decides whether a property is worth mapping at all — a restricted user sees
+#: a subset of the data, so the answer belongs in the picker rather than one
+#: level down in a support article.
+_PERMISSION_LABELS = {
+    "siteOwner": "Owner",
+    "siteFullUser": "Full access",
+    "siteRestrictedUser": "Restricted",
+    "siteUnverifiedUser": "Unverified",
+}
 
 
 def fetch_gsc_query_performance(
@@ -178,6 +229,8 @@ GSC_META = ConnectorMeta(
     label="Google Search Console",
     oauth_scope=_GSC_SCOPE,
     capabilities=frozenset({CAP_ACCOUNTS}),
+    entity_noun="property",
+    entity_noun_plural="properties",
 )
 
 register_connector(GSC_META, GSCConnector())

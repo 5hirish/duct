@@ -30,6 +30,18 @@ class ConnectorMeta:
     #: Meta System User token carries its permissions out of band — so they
     #: declare it here. Read-only is the default because most of them are.
     access: frozenset[str] = frozenset({"read"})
+    #: What this connector calls the thing a project gets mapped to, singular
+    #: and plural. Search Console has *properties*, Tag Manager has
+    #: *containers*, Ads has *accounts* — and a picker that says "Account" over
+    #: a list of domain names reads as a bug, because the word is simply wrong.
+    #:
+    #: Here rather than in the browser because it belongs with the connector it
+    #: describes: a new connector is one registration, not a registration plus
+    #: an edit to a lookup table in the frontend that nothing would fail without.
+    #: "account" is the default because it is the honest generic, and a
+    #: connector with nothing to pick never shows the picker at all.
+    entity_noun: str = "account"
+    entity_noun_plural: str = "accounts"
 
 
 @dataclass(frozen=True)
@@ -46,8 +58,51 @@ class ConnectorAdapter(Protocol):
     """Strategy for connector-specific interactive operations."""
 
     def list_accounts(self, auth: ConnectorAuthContext) -> list[dict[str, Any]]:
-        """Return account rows for UIs; raises ValueError for bad auth, RuntimeError for upstream."""
+        """Return account rows for UIs; raises ValueError for bad auth, RuntimeError for upstream.
+
+        Rows carry two layers, and the split is what lets one picker render
+        every connector:
+
+        * **Canonical.** ``account_id`` (the exact string the API needs) and
+          ``account_name`` (what to call it), plus the optional presentation
+          keys below. The browser reads only these.
+        * **Native.** Whatever else the platform returned — ``site_url``,
+          ``property_id``, ``container_id``. Callers that already know which
+          connector they are holding still use them; the picker never does.
+
+        The optional presentation keys, all safe to omit:
+
+        ``entity_url``
+            A real https URL for the thing, when the thing *is* a place on the
+            web. Drives the favicon in the picker, so it is a Search Console
+            property or a Tag Manager container's site — not a link to the
+            provider's console, which would put the same Google favicon on
+            every row and say nothing.
+        ``entity_detail``
+            One short line under the name, for what the name alone leaves
+            ambiguous. A Search Console domain property and a URL-prefix
+            property for the same site display identically without it.
+        ``entity_meta``
+            Short facts, from :func:`entity_facts`. Rendered as chips, so each
+            value has to survive being read without its label — a currency, a
+            region, an id.
+        """
         ...
+
+
+def entity_facts(*pairs: tuple[str, Any]) -> list[dict[str, str]]:
+    """Label/value facts for one entity row, empties dropped.
+
+    A helper rather than a literal in each adapter because the empties are the
+    point: every one of these fields is optional upstream, and a chip reading
+    "Currency: " is worse than no chip. Written as pairs so an adapter declares
+    what it has in one line and never assembles the shape by hand.
+    """
+    return [
+        {"label": str(label), "value": str(value).strip()}
+        for label, value in pairs
+        if value is not None and str(value).strip()
+    ]
 
 
 CONNECTOR_REGISTRY: dict[str, tuple[ConnectorMeta, ConnectorAdapter]] = {}

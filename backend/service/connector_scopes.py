@@ -36,6 +36,10 @@ SCOPE_NA = "n/a"                 # manual-credential connector; no scopes exist
 class ScopeInfo:
     """One OAuth scope, in the terms a user deciding whether to grant it needs."""
 
+    #: Names the *thing*, never the access level — ``access`` below is that,
+    #: and the dialog groups the list by it. Labels used to end in "— read" /
+    #: "— edit", which put the same word on screen three times in one row.
+    #: Front-loaded, because a list item is judged by its first two words.
     label: str
     #: One or two sentences: what Duct does with this permission. Shown beside
     #: the scope in the connector dialog, so it is written for the person
@@ -49,7 +53,7 @@ class ScopeInfo:
 
 SCOPE_CATALOG: dict[str, ScopeInfo] = {
     "https://www.googleapis.com/auth/adwords": ScopeInfo(
-        label="Google Ads account access",
+        label="Google Ads",
         why=(
             "Reads campaign, ad group, search term and geo performance. Also the "
             "permission behind proposed changes — pausing a campaign, adding a "
@@ -58,7 +62,7 @@ SCOPE_CATALOG: dict[str, ScopeInfo] = {
         access=WRITE,
     ),
     "https://www.googleapis.com/auth/webmasters.readonly": ScopeInfo(
-        label="Search Console — read",
+        label="Search Console",
         why=(
             "Reads queries, pages, clicks, impressions and average position. "
             "Read-only: Duct cannot change anything in Search Console."
@@ -66,7 +70,7 @@ SCOPE_CATALOG: dict[str, ScopeInfo] = {
         access=READ,
     ),
     "https://www.googleapis.com/auth/analytics.readonly": ScopeInfo(
-        label="Analytics — read",
+        label="Analytics",
         why=(
             "Reads sessions, landing pages, conversions and channel data, so "
             "organic numbers can be checked against what visitors actually did."
@@ -74,7 +78,7 @@ SCOPE_CATALOG: dict[str, ScopeInfo] = {
         access=READ,
     ),
     "https://www.googleapis.com/auth/analytics.edit": ScopeInfo(
-        label="Analytics — edit",
+        label="Analytics key events",
         why=(
             "Only used to mark a GA4 event as a key event when you approve that "
             "change. Decline it and every report still works — Duct will just "
@@ -84,12 +88,12 @@ SCOPE_CATALOG: dict[str, ScopeInfo] = {
         required=False,
     ),
     "https://www.googleapis.com/auth/tagmanager.readonly": ScopeInfo(
-        label="Tag Manager — read",
+        label="Tag Manager",
         why="Reads containers, tags, triggers and variables to see how measurement is wired.",
         access=READ,
     ),
     "https://www.googleapis.com/auth/tagmanager.edit.containers": ScopeInfo(
-        label="Tag Manager — edit",
+        label="Tag Manager drafts",
         why=(
             "Stages measurement fixes in a container version. Staged only — "
             "nothing reaches your site until it is published."
@@ -98,7 +102,7 @@ SCOPE_CATALOG: dict[str, ScopeInfo] = {
         required=False,
     ),
     "https://www.googleapis.com/auth/tagmanager.publish": ScopeInfo(
-        label="Tag Manager — publish",
+        label="Tag Manager publishing",
         why=(
             "Publishes a staged container version once you approve it, and is "
             "what makes a one-click rollback possible. Decline it and Duct "

@@ -18,6 +18,7 @@ from service.connectors import (
     CAP_ACCOUNTS,
     ConnectorAuthContext,
     ConnectorMeta,
+    entity_facts,
     register_connector,
 )
 from service.google.constants import GTM_CONNECTOR_ID
@@ -96,6 +97,8 @@ class GTMConnector:
                     {
                         "account_id": account_id,
                         "account_name": account_name,
+                        "entity_detail": f"Containers unavailable — {exc}",
+                        "entity_meta": [],
                         "container_id": "",
                         "public_id": "",
                         "container_name": f"(containers unavailable: {exc})",
@@ -104,18 +107,32 @@ class GTMConnector:
                 )
                 continue
             for container in containers:
+                # e.g. "accounts/123/containers/456" — the executor target.
+                path = container.get("path", "")
+                container_id = container.get("containerId", "")
+                public_id = container.get("publicId", "")
                 rows.append(
                     {
-                        "account_id": account_id,
-                        "account_name": account_name,
-                        "container_id": container.get("containerId", ""),
-                        "public_id": container.get("publicId", ""),
+                        # The canonical pair names the thing being *picked*,
+                        # which for GTM is the container, not its parent
+                        # account — same correction GA4 needed. Keyed on the
+                        # account it produced one row per container all sharing
+                        # one id, so the picker rendered N identical options
+                        # and picking any of them stored the same value.
+                        "account_id": path or container_id or public_id,
+                        "account_name": container.get("name", "") or public_id,
+                        "entity_detail": account_name,
+                        "entity_meta": entity_facts(("Container", public_id)),
+                        # The parent, under a name that says which it is.
+                        "parent_account_id": account_id,
+                        "parent_account_name": account_name,
+                        "container_id": container_id,
+                        "public_id": public_id,
                         "container_name": container.get("name", ""),
-                        # e.g. "accounts/123/containers/456" — the executor target.
-                        "path": container.get("path", ""),
+                        "path": path,
                     }
                 )
-        rows.sort(key=lambda r: (r["account_name"].lower(), r["container_name"].lower()))
+        rows.sort(key=lambda r: (r.get("parent_account_name", "").lower(), r["account_name"].lower()))
         return rows
 
 
@@ -124,6 +141,8 @@ GTM_META = ConnectorMeta(
     label="Google Tag Manager",
     oauth_scope=" ".join(GTM_SCOPES),
     capabilities=frozenset({CAP_ACCOUNTS}),
+    entity_noun="container",
+    entity_noun_plural="containers",
 )
 
 register_connector(GTM_META, GTMConnector())

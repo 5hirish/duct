@@ -313,6 +313,15 @@ don't fit.
   apply do not, in either harness.** Autonomy (`ask | assisted | auto`) changes
   how often an agent interrupts, never what may auto-apply — `service/execution/
   policy.py` is the one place that decides, and it does not consult the model.
+- `service/connectors.py` — the registry and the adapter contract. A
+  `list_accounts` row has a canonical half the browser reads and a native half
+  it never does: `account_id` / `account_name` name the thing being **picked**
+  (the GA4 property, the GTM container — not its parent account, which several
+  rows share), and the optional `entity_url` / `entity_detail` / `entity_meta`
+  (built with `entity_facts`) are what the picker renders as a favicon, a
+  disambiguating line and short chips. Vocabulary is server-side too
+  (`ConnectorMeta.entity_noun`), so adding a connector stays one registration
+  rather than a registration plus an edit to a table in the frontend.
 - `service/rest.py` — sync HTTP transport for the reporting connectors:
   retry, backoff, rate-limit pacing, error typing. A new connector declares
   an `Endpoint` and an `ApiError` subclass and writes no transport code;

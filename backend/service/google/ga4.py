@@ -11,6 +11,7 @@ from service.connectors import (
     CAP_ACCOUNTS,
     ConnectorAuthContext,
     ConnectorMeta,
+    entity_facts,
     register_connector,
 )
 from service.google.constants import GA4_CONNECTOR_ID
@@ -75,12 +76,28 @@ class GA4Connector:
                     continue
                 rows.append(
                     {
+                        # The canonical pair names the thing being *picked* —
+                        # for GA4 that is the property. This used to put the
+                        # parent GA account in `account_name`, which is a
+                        # different object entirely: several properties share
+                        # one, so a picker showing it listed the same label
+                        # repeatedly and gave no way to tell them apart.
+                        "account_id": property_id,
+                        "account_name": prop_name,
+                        # Kept, under a name that says what it is. Useful as a
+                        # subtitle when one user has properties across accounts.
+                        "parent_account_name": account_name,
+                        # Which GA account it hangs off — the thing that tells
+                        # two identically named "Website" properties apart.
+                        "entity_detail": account_name,
+                        # The number you paste into a GA4 URL, and the one
+                        # support threads ask for.
+                        "entity_meta": entity_facts(("Property ID", property_id)),
                         "property_id": property_id,
                         "property_name": prop_name,
-                        "account_name": account_name,
                     }
                 )
-        rows.sort(key=lambda row: (row["account_name"].lower(), row["property_name"].lower()))
+        rows.sort(key=lambda row: (row["parent_account_name"].lower(), row["account_name"].lower()))
         return rows
 
 
@@ -241,6 +258,8 @@ GA4_META = ConnectorMeta(
     label="Google Analytics 4",
     oauth_scope=f"{_GA4_SCOPE} {_GA4_EDIT_SCOPE}",
     capabilities=frozenset({CAP_ACCOUNTS}),
+    entity_noun="property",
+    entity_noun_plural="properties",
 )
 
 register_connector(GA4_META, GA4Connector())

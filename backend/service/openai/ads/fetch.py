@@ -14,6 +14,7 @@ from service.connectors import (
     CAP_ACCOUNTS,
     ConnectorAuthContext,
     ConnectorMeta,
+    entity_facts,
     register_connector,
 )
 from service.openai.ads import client as oai
@@ -103,6 +104,7 @@ class OpenAIAdsConnector:
         return [{
             "account_id": str(acct.get("id", "")),
             "account_name": acct.get("name", "") or f"Ad account {acct.get('id', '')}",
+            "entity_meta": entity_facts(("Currency", acct.get("currency", ""))),
             "currency": acct.get("currency", ""),
         }]
 

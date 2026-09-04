@@ -29,6 +29,7 @@ from service.connectors import (
     CAP_ACCOUNTS,
     ConnectorAuthContext,
     ConnectorMeta,
+    entity_facts,
     register_connector,
 )
 from service.mixpanel import client as mp
@@ -190,6 +191,10 @@ class MixpanelConnector:
                 {
                     "account_id": str(meta.get("id") or pid),
                     "account_name": str(meta.get("name") or f"Project {pid}"),
+                    # Which Mixpanel residency the project lives in. Two
+                    # projects can share a name across regions, and the API
+                    # host differs, so it is identity rather than trivia.
+                    "entity_meta": entity_facts(("Region", mp.region(creds))),
                     "region": mp.region(creds),
                 }
             )
