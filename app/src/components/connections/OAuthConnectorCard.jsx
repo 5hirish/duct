@@ -12,13 +12,14 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { STORAGE_NONE, STORAGE_SESSION, serverStorage } from "../../lib/credentialStorage";
+import { STORAGE_NONE, STORAGE_SESSION, rowStorage } from "../../lib/credentialStorage";
 import { isLocalBackendActive } from "../../lib/localBackend";
 import { startConnectorOAuth } from "../../lib/connectorAuth";
 import StorageBadge from "./StorageBadge";
 import ConnectorDialog from "./ConnectorDialog";
+import ConnectorPermissions from "./ConnectorPermissions";
 import ConnectorTile from "./ConnectorTile";
-import ProjectAccountSelect from "./ProjectAccountSelect";
+import ProjectBinding from "./ProjectBinding";
 
 export default function OAuthConnectorCard({
   title,
@@ -44,12 +45,13 @@ export default function OAuthConnectorCard({
   rows = [],
   binding,
   onMappingChange,
+  onEntityChange,
   mappingBusy,
 }) {
   // A stored row is durable wherever the server happens to be; without one the
   // token exists only in this tab, which is the case worth naming.
   const storage = syncedToAccount
-    ? serverStorage({ localSidecar: isLocalBackendActive() })
+    ? rowStorage(rows[0], { localSidecar: isLocalBackendActive() })
     : oauthConnected
       ? STORAGE_SESSION
       : STORAGE_NONE;
@@ -95,22 +97,40 @@ export default function OAuthConnectorCard({
         logo={logo}
         title={title}
         description={description}
+        status={
+          <span className="conn-state">
+            {/* Equal 20px slots. The dot is a 7px filled circle and the storage
+                glyph a 16px outline in a padded box — centring those two boxes
+                still leaves the shapes looking unaligned, because their widths
+                (7 vs 24) and internal padding differ. Identical slots give them
+                one rail and one optical centre. */}
+            <span className="conn-state-glyph" title={pillStatus || status}>
+              <span
+                className={`conn-dot ${connected ? "conn-dot--on" : tone === "partial" ? "conn-dot--partial" : ""}`}
+                role="img"
+                aria-label={pillStatus || status}
+              />
+            </span>
+            {oauthConnected && <StorageBadge storage={storage} />}
+          </span>
+        }
       >
         {children && <div className="conn-dialog-section">{children}</div>}
 
         <div className="conn-dialog-section">
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-            <span className={`status-pill ${connected ? "green" : tone === "partial" ? "yellow" : "grey"}`}>
-              {pillStatus || status}
-            </span>
+          <div className="conn-dialog-actions-row">
             {oauthConnected ? (
-              <div style={{ display: "flex", gap: 8 }}>
+              <div className="conn-dialog-actions">
                 <Button size="sm" variant="secondary" onClick={connect} disabled={phase === "starting"}>
                   {phase === "browser" ? "Waiting for your browser…" : "Reconnect"}
                 </Button>
-                <Button type="button" variant="outline" size="sm" onClick={onDisconnect}>
+                {/* Destructive, and the only irreversible thing on this card,
+                    so it reads as one rather than as a peer of Reconnect.
+                    Text, not an outlined button: an equal-weight box invites an
+                    equal-weight click. */}
+                <button type="button" className="conn-danger-link" onClick={onDisconnect}>
                   Disconnect
-                </Button>
+                </button>
               </div>
             ) : (
               <Button size="sm" onClick={connect} disabled={phase === "starting"}>
@@ -132,8 +152,11 @@ export default function OAuthConnectorCard({
             </p>
           )}
           {oauthConnected && (
-            <div style={{ marginTop: 10 }}>
-              <StorageBadge storage={storage} detail />
+            <div>
+              {/* The sentence lives in the storage glyph's tooltip; printing it
+                  here as well put the same words on screen twice. Only the
+                  session case keeps prose, because it is a call to action
+                  rather than a description. */}
               {storage === STORAGE_SESSION && (
                 <p className="conn-hint">
                   {signedIn
@@ -145,69 +168,14 @@ export default function OAuthConnectorCard({
           )}
         </div>
 
-        {scopes.length > 0 && (
-          <div className="conn-dialog-section">
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <span className="text-sm font-medium">Permissions</span>
-              {scopeStatus === "partial" && (
-                <span className="status-pill yellow">Some declined</span>
-              )}
-              {scopeStatus === "unknown" && (
-                <span className="status-pill grey">Not recorded</span>
-              )}
-            </div>
+        <ConnectorPermissions scopes={scopes} scopeStatus={scopeStatus} />
 
-            {scopeStatus === "unknown" ? (
-              <p className="conn-hint" style={{ marginTop: 0 }}>
-                This connection was made before Duct recorded which permissions
-                Google granted. Reconnect to find out — nothing is assumed either way.
-              </p>
-            ) : (
-              <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 10 }}>
-                {scopes.map((row) => (
-                  <li key={row.scope} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                    <span
-                      aria-hidden="true"
-                      style={{ lineHeight: "1.25rem", flexShrink: 0 }}
-                      className={row.granted ? "text-emerald-600" : "text-muted-foreground"}
-                    >
-                      {row.granted ? "✓" : "—"}
-                    </span>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6 }}>
-                        <span className="text-sm">{row.label}</span>
-                        <span className="status-pill grey">{row.access}</span>
-                        {!row.granted && (
-                          <span className={`status-pill ${row.required ? "yellow" : "grey"}`}>
-                            {row.required ? "Not granted" : "Declined (optional)"}
-                          </span>
-                        )}
-                      </div>
-                      {row.why && (
-                        <p className="conn-hint" style={{ marginTop: 2 }}>
-                          {row.why}
-                        </p>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {scopeStatus === "partial" && (
-              <p className="conn-hint">
-                Everything ticked above still works. To grant the rest, choose
-                Reconnect and tick them on Google&rsquo;s consent screen.
-              </p>
-            )}
-          </div>
-        )}
-
-        <ProjectAccountSelect
+        <ProjectBinding
           projectName={projectName}
           rows={rows}
           binding={binding}
-          onChange={onMappingChange}
+          onMappingChange={onMappingChange}
+          onEntityChange={onEntityChange}
           busy={mappingBusy}
         />
       </ConnectorDialog>

@@ -134,11 +134,36 @@ export function listProjectConnectors(projectId) {
   return authedRequest(`/api/user/projects/${encodeURIComponent(projectId)}/connectors`);
 }
 
-export function bindProjectConnector(projectId, connectorType, credentialId) {
+export function bindProjectConnector(
+  projectId,
+  connectorType,
+  credentialId,
+  { entityId = "", entityName = "" } = {},
+) {
   return authedRequest(
     `/api/user/projects/${encodeURIComponent(projectId)}/connectors/${encodeURIComponent(connectorType)}`,
-    { method: "PUT", body: { connector_credential_id: credentialId } },
+    {
+      method: "PUT",
+      body: {
+        connector_credential_id: credentialId,
+        entity_id: entityId,
+        entity_name: entityName,
+      },
+    },
   );
+}
+
+/**
+ * What a saved connector can actually read — Search Console properties, GA4
+ * properties, Tag Manager containers.
+ *
+ * Server-side credential resolution on purpose: the browser holds no refresh
+ * token for an OAuth connector and must not be handed one to render a list.
+ * Returns `{ entities, supported, entity_noun, entity_noun_plural }`; the nouns
+ * come back even when nothing is selectable, because the label is still needed.
+ */
+export function listConnectorEntities(rowId) {
+  return authedRequest(`/api/user/connectors/${encodeURIComponent(rowId)}/entities`);
 }
 
 export function unbindProjectConnector(projectId, connectorType) {

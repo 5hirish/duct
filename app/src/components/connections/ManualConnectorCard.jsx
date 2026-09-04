@@ -24,12 +24,12 @@ import {
   listConnectorAccounts,
   saveServerConnector,
 } from "../../lib/connectorsApi";
-import { STORAGE_NONE, serverStorage } from "../../lib/credentialStorage";
+import { STORAGE_NONE, rowStorage } from "../../lib/credentialStorage";
 import { isLocalBackendActive } from "../../lib/localBackend";
 import ConnectorDialog from "./ConnectorDialog";
 import ConnectorTile from "./ConnectorTile";
 import StorageBadge from "./StorageBadge";
-import ProjectAccountSelect from "./ProjectAccountSelect";
+import ProjectBinding from "./ProjectBinding";
 
 export default function ManualConnectorCard({
   type,            // connector id: "apple_ads" | "meta_ads" | ...
@@ -48,6 +48,7 @@ export default function ManualConnectorCard({
   projectName,
   binding,
   onMappingChange,
+  onEntityChange,
   mappingBusy,
 }) {
   const [open, setOpen] = useState(false);
@@ -65,7 +66,7 @@ export default function ManualConnectorCard({
   // There is no session-only mode here: saving requires being signed in and
   // writes the row server-side, which is the point of pasting a key at all.
   const storage = connected
-    ? serverStorage({ localSidecar: isLocalBackendActive() })
+    ? rowStorage(serverRowList[0], { localSidecar: isLocalBackendActive() })
     : STORAGE_NONE;
   const formOpen = !connected || adding;
 
@@ -177,6 +178,22 @@ export default function ManualConnectorCard({
         logo={logo}
         title={title}
         description={description}
+        // The same status row the OAuth dialogs carry. It was missing here —
+        // the import for it had been sitting unused — so a pasted credential
+        // gave no answer to "is this live, and where does it live?" once the
+        // dialog was open, which is the moment the question is being asked.
+        status={
+          <span className="conn-state">
+            <span className="conn-state-glyph" title={status}>
+              <span
+                className={`conn-dot${connected ? " conn-dot--on" : ""}`}
+                role="img"
+                aria-label={status}
+              />
+            </span>
+            {connected && <StorageBadge storage={storage} />}
+          </span>
+        }
       >
         {connected && (
           <div className="conn-dialog-section">
@@ -282,11 +299,12 @@ export default function ManualConnectorCard({
           <p className="conn-hint" style={{ marginTop: 12 }}>{notice}</p>
         )}
 
-        <ProjectAccountSelect
+        <ProjectBinding
           projectName={projectName}
           rows={serverRowList}
           binding={binding}
-          onChange={onMappingChange}
+          onMappingChange={onMappingChange}
+          onEntityChange={onEntityChange}
           busy={mappingBusy}
         />
       </ConnectorDialog>

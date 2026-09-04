@@ -18,6 +18,14 @@ export default function ConnectorDialog({
   logo,
   title,
   description,
+  // Status glyphs, rendered beside the title.
+  //
+  // They used to sit in the action row, which measured 312px of empty space
+  // between them and the buttons — one row, but far enough apart to read as
+  // unrelated. State is a property of the thing, not of the buttons that act
+  // on it, so it belongs with the identity; the action row is then left with
+  // one job.
+  status,
   children,
 }) {
   return (
@@ -29,7 +37,10 @@ export default function ConnectorDialog({
               {logo}
             </span>
             <div style={{ minWidth: 0 }}>
-              <DialogTitle>{title}</DialogTitle>
+              <div className="conn-dialog-title-row">
+                <DialogTitle>{title}</DialogTitle>
+                {status}
+              </div>
               <DialogDescription style={{ marginTop: 4, fontSize: 12.5, lineHeight: 1.45 }}>
                 {description}
               </DialogDescription>

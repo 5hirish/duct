@@ -308,6 +308,29 @@ export default function ConnectionsPage() {
     };
   }, [signedIn, projectId]);
 
+  // Choosing an entity implies a binding: someone picking a Search Console
+  // property has decided which credential this project uses, even if they never
+  // touched the account row. Creating it here is what lets the account picker
+  // stay hidden until a user actually has more than one account.
+  const changeEntity = useCallback(
+    async (connectorType, credentialId, { entityId, entityName }) => {
+      if (!projectId || !credentialId) return;
+      setMappingBusy(connectorType);
+      try {
+        const row = await bindProjectConnector(projectId, connectorType, credentialId, {
+          entityId,
+          entityName,
+        });
+        setBindings((prev) => ({ ...prev, [connectorType]: row }));
+      } catch {
+        /* leave the previous choice showing rather than a half-applied one */
+      } finally {
+        setMappingBusy("");
+      }
+    },
+    [projectId],
+  );
+
   const changeMapping = useCallback(
     async (connectorType, value) => {
       if (!projectId) return;
@@ -324,7 +347,11 @@ export default function ConnectionsPage() {
             return next;
           });
         } else {
-          const row = await bindProjectConnector(projectId, connectorType, value);
+          const kept = bindings[connectorType];
+          const row = await bindProjectConnector(projectId, connectorType, value, {
+            entityId: kept?.entity_id || "",
+            entityName: kept?.entity_name || "",
+          });
           setBindings((prev) => ({ ...prev, [connectorType]: row }));
         }
       } catch {
@@ -341,6 +368,7 @@ export default function ConnectionsPage() {
       projectName: signedIn ? project?.name || "" : "",
       binding: bindings[type],
       onMappingChange: (value) => changeMapping(type, value),
+      onEntityChange: (credentialId, choice) => changeEntity(type, credentialId, choice),
       mappingBusy: mappingBusy === type,
     };
   }

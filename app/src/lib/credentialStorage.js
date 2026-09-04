@@ -28,24 +28,37 @@ export const STORAGE_KEYCHAIN = "keychain";
 export const STORAGE_SESSION = "session";
 export const STORAGE_NONE = "none";
 
+// Named for the consequence, not the mechanism. "Cloud" and "Database" are
+// facts about our infrastructure; what someone deciding whether to connect an
+// account actually needs to know is whether this survives closing the app, and
+// whether it leaves their machine. The mechanism still gets said — in the
+// detail line below, where there is room to say it accurately.
 export const STORAGE_LABELS = {
-  [STORAGE_CLOUD]: "Cloud",
-  [STORAGE_LOCAL]: "This device",
-  [STORAGE_KEYCHAIN]: "Keychain",
-  [STORAGE_SESSION]: "This session",
+  [STORAGE_CLOUD]: "Saved to your account",
+  [STORAGE_LOCAL]: "On this device",
+  [STORAGE_KEYCHAIN]: "In your keychain",
+  [STORAGE_SESSION]: "This session only",
   [STORAGE_NONE]: "Not stored",
 };
 
-/** The clause under the badge, where there is room for one. */
+/**
+ * The clause under the badge — and the second line of its tooltip.
+ *
+ * One sentence each, deliberately. These were two, and the tooltip they feed
+ * is a 15rem box: the first sentence pushed the one that actually answers the
+ * question ("can a scheduled report use this?") onto a fourth line nobody
+ * reads. Where the mechanism still matters it is kept, compressed into a
+ * clause rather than given a sentence of its own.
+ */
 export const STORAGE_DETAIL = {
   [STORAGE_CLOUD]:
-    "Encrypted on Duct's servers. Available to agent runs and scheduled briefs.",
+    "Encrypted on Duct's servers, so any device \u2014 and any report that runs while you are away \u2014 can use it.",
   [STORAGE_LOCAL]:
-    "In Duct's database on this machine. It never leaves the device, and nothing scheduled elsewhere can use it.",
+    "Encrypted on this computer only, so nothing running elsewhere can use it, including scheduled reports.",
   [STORAGE_KEYCHAIN]:
-    "In this machine's OS keychain. Duct's backend cannot read it — the app sends it per request.",
+    "Held by your operating system's keychain on this computer. Duct's servers never see it.",
   [STORAGE_SESSION]:
-    "In this browser tab only. It is gone when you close the tab, and agent runs cannot use it.",
+    "Kept only until you close the app, and reports that run without you cannot use it.",
   [STORAGE_NONE]: "Nothing stored yet.",
 };
 
@@ -71,4 +84,24 @@ export const STORAGE_TONE = {
  */
 export function serverStorage({ localSidecar = false } = {}) {
   return localSidecar ? STORAGE_LOCAL : STORAGE_CLOUD;
+}
+
+/**
+ * Where a stored row lives, preferring what the backend said over what the
+ * browser can infer.
+ *
+ * The inference is wrong in a case we actually run: `isLocalBackendActive()`
+ * only reports that a sidecar answered the request, and a sidecar pointed at a
+ * deployment's Postgres stores nothing on this machine. That labelled a
+ * credential sitting in staging "On this device" — a privacy claim, made
+ * confidently, in the wrong direction.
+ *
+ * So the row's own `storage` wins when the server sent one. The inference
+ * survives only as the fallback for a backend too old to report it, where
+ * "a sidecar is serving" remains the best available guess.
+ */
+export function rowStorage(row, { localSidecar = false } = {}) {
+  const reported = row?.storage;
+  if (reported === STORAGE_CLOUD || reported === STORAGE_LOCAL) return reported;
+  return serverStorage({ localSidecar });
 }
