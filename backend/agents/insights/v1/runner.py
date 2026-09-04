@@ -30,9 +30,18 @@ loop is shippable here at all:
   agent-facing approve tool, so no amount of autonomy talks past review.
 
 Conversation continuity comes from a LangGraph checkpointer keyed on the
-session id, so a follow-up turn continues the same thread instead of replaying
-a message list. That is also the seam ``interrupt()`` plugs into later — see
-``agents/core/ports/__init__.py``.
+**conversation** id, so a follow-up turn continues the same thread instead of
+replaying a message list — and a session opened tomorrow on the same
+conversation continues it too. It was keyed on the session id once, which made
+"resume" a transcript the user could see and the agent could not.
+
+The same checkpoint is where a pause lives. A clarifying question, a connector
+to authorize or an account to choose is a LangGraph ``interrupt()`` raised from
+inside the tool (``agents/core/lc.interrupt_pause``): the thread parks, the
+answer arrives as a ``Command(resume=...)`` through the chat queue, and a
+session that reconnects — or a new one that resumes the conversation — is shown
+the pause it is still waiting on. No timeout, no Future, nothing lost on a
+redeploy. See ``agents/core/session.py`` for the port this implements.
 """
 
 from __future__ import annotations
@@ -53,10 +62,19 @@ from langchain.agents.middleware import (
     ToolCallLimitMiddleware,
 )
 
+from langgraph.types import Command
+
 from agents.core.checkpoint import get_checkpointer
 from agents.core.events import AgentEvent, AgentStep, StepStatus
 from agents.core.connector_tools import build_connector_tools_lc
-from agents.core.lc import build_ask_user_tool, resolve_chat_model, stream_agent
+from agents.core.lc import (
+    build_ask_user_tool,
+    inspection_chat_model,
+    interrupt_pause,
+    live_pauses,
+    resolve_chat_model,
+    stream_agent,
+)
 from agents.core.memory_tools import build_memory_tools_lc
 from agents.core.session import BaseAgentSession
 from agents.insights.brief import DEFAULT_FORMAT, parse_brief
@@ -235,6 +253,9 @@ class AutonomousInsightsRunner:
         # only what it can actually serve.
         # An unattended run gets the read-only half by passing no session: the
         # binder mounts a pause tool only when there is somebody to pause for.
+        # The pause tools park on the checkpoint (interrupt_pause), so the
+        # session is only scoping here; an unattended run passes no pause and
+        # gets the read-only tool alone.
         tools += build_connector_tools_lc(
             project_id,
             user_id=user_id,
@@ -242,34 +263,50 @@ class AutonomousInsightsRunner:
             session_id=session_id,
             emit=emit,
             log_prefix="insights-v1",
+            pause=interrupt_pause if interactive and session is not None else None,
         )
         # Data reach. The verifier gets the SAME tool objects, so it inherits
         # the parent's project scoping and credential closure rather than
         # resolving its own — there is one place credentials are resolved.
-        async def _on_fetch(entity_id: str, result: dict) -> None:
-            """Surface each pull as a step, so a long run is legible.
-
-            The window is in the label deliberately: a user watching a brief
+        def _fetch_label(entity_id: str, date_from: str, date_to: str) -> str:
+            """The window is in the label deliberately: a user watching a brief
             being built should be able to see the period it covers without
-            waiting for the prose to say so.
-            """
+            waiting for the prose to say so."""
+            window = f" · {date_from} → {date_to}" if date_from else ""
+            return f"{entity_id.replace('_', ' ')}{window}"
+
+        async def _on_fetch_start(entity_id: str, date_from: str, date_to: str) -> None:
+            """A pull begins — the ladder shows it running, not just finished."""
+            if emit is None:
+                return
+            await emit({
+                "event": AgentEvent.STEP_STARTED,
+                "step_id": AgentStep.COLLECT_SOURCE_DATA,
+                "label": _fetch_label(entity_id, date_from, date_to),
+                "status": StepStatus.RUNNING,
+            })
+
+        async def _on_fetch(entity_id: str, result: dict) -> None:
+            """Surface each pull as a step, so a long run is legible."""
             if emit is None:
                 return
             ok = result.get("status") == "ok"
-            window = (
-                f" · {result.get('date_from')} → {result.get('date_to')}"
-                if result.get("date_from") else ""
-            )
             await emit({
                 "event": AgentEvent.STEP_FINISHED,
                 "step_id": AgentStep.COLLECT_SOURCE_DATA,
-                "label": f"{entity_id.replace('_', ' ')}{window}",
+                "label": _fetch_label(
+                    entity_id, str(result.get("date_from") or ""), str(result.get("date_to") or "")
+                ),
                 "status": StepStatus.SUCCESS if ok else StepStatus.ERROR,
                 "connector_id": result.get("connector_id", ""),
             })
 
         data_tools = build_data_tools_lc(
-            project_id, user_id=user_id, log_prefix="insights-v1", on_fetch=_on_fetch
+            project_id,
+            user_id=user_id,
+            log_prefix="insights-v1",
+            on_fetch=_on_fetch,
+            on_fetch_start=_on_fetch_start,
         )
         tools += data_tools
 
@@ -298,6 +335,9 @@ class AutonomousInsightsRunner:
                     session,
                     session_id,
                     emit,
+                    # Checkpointed: the question outlives the process that asked
+                    # it. This agent always has a checkpointer (below).
+                    pause=interrupt_pause,
                     log_prefix="insights-v1",
                     description=ASK_USER_DESCRIPTION,
                 )
@@ -440,8 +480,17 @@ class AutonomousInsightsRunner:
         autonomy: str = AUTONOMY_ASK,
         start_version: int = 0,
         chat_idle_timeout: float = CHAT_IDLE_TIMEOUT,
+        resume: bool = False,
     ) -> None:
         """Run the opening turn, then stay open for follow-ups until idle.
+
+        ``resume`` means the conversation already has a thread. What happens
+        first depends on what that thread was doing: a parked one re-raises
+        the pause it is waiting on (so the UI shows the card again, with
+        ``replay`` set so it is not recorded twice), an unfinished one picks up
+        from its last checkpoint, and an idle one runs ``prompt`` as a plain
+        follow-up — or nothing at all when there is no prompt, which is what
+        opening a thread from the desk asks for. Never a greeting.
 
         Per-project context (memory digest, business context, the user's actual
         question) is assembled into the USER turn — never the system prompt —
@@ -471,7 +520,10 @@ class AutonomousInsightsRunner:
             remember=remember,
         )
         config = {
-            "configurable": {"thread_id": session_id},
+            # The conversation is the thread. A session is one process's
+            # window onto it; keying on the session would give every resume
+            # an agent with no memory of the transcript it is shown beside.
+            "configurable": {"thread_id": str(conversation_id or session_id)},
             "recursion_limit": RECURSION_LIMIT,
         }
         recorder = getattr(session, "recorder", None)
@@ -495,8 +547,18 @@ class AutonomousInsightsRunner:
         async def _on_artifact(raw: str, turn_text: str) -> None:
             await _publish_brief(raw, emit, version)
 
-        async def _turn(text: str) -> None:
-            await stream_agent(
+        async def _on_pause(pauses: list[dict]) -> None:
+            # The route resolves an answer against this: it is how a POST with
+            # an interrupt id turns into the Command the next loop iteration
+            # streams. Written before the events go out, so the answer to a
+            # card can never arrive at a route that has not heard of it.
+            # Replaced whole each turn — a pause that was answered is gone,
+            # one that re-raised is back.
+            if session is not None:
+                session.pending_pauses = {p["interrupt_id"]: p for p in pauses}
+
+        async def _turn(text: str | Command | None) -> list[dict]:
+            pauses = await stream_agent(
                 agent,
                 text,
                 emit,
@@ -509,22 +571,53 @@ class AutonomousInsightsRunner:
                 on_todo=_on_todo,
                 on_tool_use=_on_tool_use,
                 on_tool_result=_on_tool_result,
+                on_pause=_on_pause,
             )
+            if not pauses:
+                await _on_pause([])  # a turn that ran to completion clears the table
+            return pauses
 
-        await _turn(
-            build_insights_user_prompt(
-                prompt=prompt,
-                business_context=business_context,
-                user_context=user_context,
-                memory=memory,
-                artifact_format=artifact_format,
-                autonomy=autonomy,
+        # The opening turn is what moves the UI out of "working" — PIPELINE_FINISHED
+        # is held back until a turn ends with nothing parked, however many
+        # answers that takes.
+        opened = False
+
+        async def _finish_opening(pauses: list[dict]) -> None:
+            nonlocal opened
+            if opened or pauses:
+                return
+            opened = True
+            await emit({"event": AgentEvent.PIPELINE_FINISHED, "status": StepStatus.SUCCESS})
+
+        if resume and conversation_id is not None:
+            snapshot = await agent.aget_state(config)
+            parked = live_pauses(snapshot)
+            if parked:
+                # Show the pause again without re-running anything. `replay`
+                # keeps the recorder from writing the question a second time.
+                for pause in parked:
+                    await emit({**pause, "replay": True})
+                if session is not None:
+                    session.pending_pauses = {p["interrupt_id"]: p for p in parked}
+                pauses = parked
+            elif snapshot.next:
+                pauses = await _turn(None)  # cut mid-run: continue from the checkpoint
+            elif prompt:
+                pauses = await _turn(prompt)  # a follow-up on an idle thread
+            else:
+                pauses = []
+        else:
+            pauses = await _turn(
+                build_insights_user_prompt(
+                    prompt=prompt,
+                    business_context=business_context,
+                    user_context=user_context,
+                    memory=memory,
+                    artifact_format=artifact_format,
+                    autonomy=autonomy,
+                )
             )
-        )
-        # The opening turn is done; the session is now a live chat. Signalling
-        # this separately from the run's end is what lets the UI leave "working"
-        # and start accepting input.
-        await emit({"event": AgentEvent.PIPELINE_FINISHED, "status": StepStatus.SUCCESS})
+        await _finish_opening(pauses)
 
         if session is None:
             return
@@ -540,7 +633,11 @@ class AutonomousInsightsRunner:
             if chat_msg is None:  # sentinel from close_session
                 break
             try:
-                await _turn(_as_text(chat_msg))
+                if isinstance(chat_msg, dict) and "resume" in chat_msg:
+                    pauses = await _turn(Command(resume=chat_msg["resume"]))
+                else:
+                    pauses = await _turn(_as_text(chat_msg))
+                await _finish_opening(pauses)
             except Exception:
                 # One bad turn must not end the session — the user can rephrase.
                 logger.exception("insights: chat turn failed for session %s", session_id)
@@ -549,6 +646,39 @@ class AutonomousInsightsRunner:
                     "status": StepStatus.ERROR,
                     "error": "That turn failed. Try rephrasing, or ask something else.",
                 })
+
+    # -----------------------------------------------------------------------
+    # Inspection
+    # -----------------------------------------------------------------------
+
+    async def thread_state(self, conversation_id: UUID) -> dict:
+        """What a conversation's thread is doing, without running it.
+
+        ``paused`` carries the pauses the thread is parked on, ``unfinished``
+        means a run was cut before it ended (a redeploy mid-turn), ``idle`` is
+        a thread waiting for its next message. The UI reads this on open so a
+        parked question is on screen before any session exists; the desk can
+        badge a thread that is waiting on its owner.
+
+        Built on a placeholder model: ``aget_state`` needs a compiled graph to
+        work out ``next``, and no model call is ever made. Only what shapes the
+        graph matters, so the tools that need a session or a project are left
+        out — the checkpoint is read, not extended.
+        """
+        agent = self.build_agent(
+            llm=inspection_chat_model(), remember=False, execute=False, interactive=False
+        )
+        snapshot = await agent.aget_state(
+            {"configurable": {"thread_id": str(conversation_id)}}
+        )
+        pauses = live_pauses(snapshot)
+        values = getattr(snapshot, "values", None) or {}
+        return {
+            "status": "paused" if pauses else "unfinished" if snapshot.next else "idle",
+            "pauses": pauses,
+            "todos": list(values.get("todos") or []),
+            "message_count": len(values.get("messages") or []),
+        }
 
 
     # -----------------------------------------------------------------------

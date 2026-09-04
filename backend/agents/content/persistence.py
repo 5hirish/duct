@@ -259,6 +259,10 @@ class ConversationRecorder:
         return _emit
 
     async def _persist(self, body: dict) -> None:
+        # A resumed session re-emits what its thread is still parked on so the
+        # card comes back; that is the same question, not a second one.
+        if body.get("replay"):
+            return
         event = body.get("event")
         if event == AgentEvent.AGENT_MESSAGE_CHUNK:
             self._assistant_buf.append(body.get("text", ""))

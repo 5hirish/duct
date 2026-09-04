@@ -107,12 +107,18 @@ def build_data_tools_lc(
     user_id: UUID | None = None,
     log_prefix: str = "agent",
     on_fetch: Callable[[str, dict], Any] | None = None,
+    on_fetch_start: Callable[[str, str, str], Any] | None = None,
 ) -> list:
     """FetchData + ReadConnectorNotes as LangChain tools.
 
     Without a user there is nothing to resolve credentials from, so only the
     notes tool is mounted — reading them is still useful, and a fetch tool that
     can only fail is worse than no fetch tool.
+
+    ``on_fetch_start(entity_id, date_from, date_to)`` fires before a pull and
+    ``on_fetch(entity_id, result)`` after it. Both are UI sugar — a pull can
+    take a while, and a step that only ever appears finished gives the user
+    nothing to watch — and neither can fail the fetch.
     """
     from langchain_core.tools import StructuredTool
 
@@ -142,6 +148,11 @@ def build_data_tools_lc(
         import asyncio
 
         with tool_span(tool_name="FetchData", agent_name=log_prefix):
+            if on_fetch_start is not None:
+                try:
+                    await _maybe_await(on_fetch_start(entity_id.strip(), date_from.strip(), date_to.strip()))
+                except Exception:  # noqa: BLE001 — UI sugar, never fatal
+                    logger.debug("insights: on_fetch_start hook failed", exc_info=True)
             try:
                 result = await asyncio.to_thread(
                     fetch_entity,

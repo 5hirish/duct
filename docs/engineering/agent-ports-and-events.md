@@ -69,16 +69,26 @@ API. That asymmetry is the case for this design.
 |---|---|---|
 | **Tools** | plain domain callable + a description single-sourced beside it | `build_memory_tools_lc` / `build_memory_tools_sdk` |
 | **Events out** | `AgentEvent` / `EventKind` + an `Emitter` | v1 LangChain stream, v3 `pump_stream_event` |
-| **Human-in-the-loop** | `bridge_ask_user_question` — emit, await a Future, resume | v1 tool-shaped, v3 SDK-shaped |
+| **Human-in-the-loop** | `PauseFn` — `await pause(event, payload)` returns the user's answer | `make_future_pause` (in-process Future; SDK runners, audit v1), `interrupt_pause` (LangGraph `interrupt()`; insights v1) |
 | **Artifacts** | `<duct_artifact>` + `DuctArtifactStreamParser` + `ArtifactPersister` | harness-neutral by construction |
-| **Session / state** | `BaseAgentSession` registry | *one* implementation — not abstracted yet, by design |
+| **Session / state** | `BaseAgentSession` registry for the live process; the conversation id as the durable thread | in-process registry; LangGraph checkpointer keyed on the conversation (insights v1) |
 | **Model transport** | `Provider` / `ModelName` / `Engine` registries | OpenAI-compatible, native Anthropic, native Gemini |
 
 **The rule for adding one: write the adapter on the second implementation, not
 the first.** A port with one implementation is a guess; with two it is a fact.
-This is why the session registry is listed but not abstracted — the LangGraph
-checkpointer is the natural second implementation, and until it exists any
-interface would be invented rather than observed.
+The pause port is the worked example. `bridge_user_input` was the only way a
+run could park until the insights runner moved its pauses onto LangGraph's
+`interrupt()`; the `PauseFn` protocol was declared at that point, from two
+real implementations, and the tool bodies (`agents/core/connector_tools.py`)
+stopped knowing which one they had been handed.
+
+What the checkpointed implementation buys, and the in-process one cannot: a
+pause lives in the thread's checkpoint, so it survives a redeploy, has no
+timeout, and a session opened later on the same conversation is shown the
+question it is still waiting on (`GET …/conversations/{id}/state`, and the
+`replay` flag on the re-emitted event). The frontend contract is unchanged —
+the same three events, one answer endpoint, plus an `interrupt_id` the client
+passes back so two pauses raised in one turn are resolved separately.
 
 ### The external standard behind each port
 
@@ -140,7 +150,9 @@ translation over it, not a refactor.
 | `thinking_chunk` | `ReasoningMessageContent` | extended-thinking delta |
 | `synthesis_chunk` | `TextMessageContent` | insights synthesis stream (legacy on audit) |
 | `todo_update` | `ActivitySnapshot` | full todo list; snapshot, never a delta |
-| `questions_required` | `Custom` | HITL — the agent needs an answer to continue |
+| `questions_required` | `Custom` | HITL — the agent needs an answer to continue; carries `interrupt_id` on a checkpointed run, `replay: true` when re-emitted on resume |
+| `connection_required` | `Custom` | HITL — a connector the project lacks; answer `{connected}` or `{skipped}` |
+| `account_selection_required` | `Custom` | HITL — which account/property/site; answer `{account_id, account_name}` |
 | `slide_render_requested` | `Custom` | agent asks the browser to rasterize a slide |
 | `artifact_chunk` | `Custom` | token inside `<duct_artifact>` |
 | `artifact_version` | `Custom` | new **version** of the primary artifact, full payload |

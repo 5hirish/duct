@@ -8,6 +8,11 @@ All agent types share the same session lifecycle:
   GET    /api/agents/{type}/sessions/{id}        → session state
   DELETE /api/agents/{type}/sessions/{id}        → close session
 
+Persisted conversations (chat history / resume):
+  GET    /api/agents/{type}/conversations/{id}       → transcript for rehydration
+  GET    /api/agents/{type}/conversations/{id}/state → what its thread is doing:
+                                                        paused (and on what), unfinished, idle
+
 Discovery:
   GET    /api/agents             → list all agent specs
   GET    /api/agents/{type}      → single agent spec
@@ -466,6 +471,12 @@ class AgentMessage(BaseModel):
     #   account_selection_required  -> {"account_id": "...", "account_name": "..."}
     # Values are Any rather than str because two of those carry booleans.
     answers: dict[str, Any] | None = None
+    # Which pause this answers, when the run is parked on a checkpointed
+    # interrupt (the event carried it). Two tools can pause in the same turn —
+    # an account for GA4 and one for GSC — and each is resumed by its own id.
+    # Omitted, the only pending pause is assumed; a Future-bridged session has
+    # no ids at all.
+    interrupt_id: str | None = None
 
 
 @router.post("/{agent_type}/sessions/{session_id}/messages")
@@ -478,7 +489,11 @@ async def send_message(
     """Send a message into an active session.
 
     type="chat"   — follow-up question or image; queued to the agent's chat_queue.
-    type="answer" — answer to a pending AskUserQuestion; resolves the answer_future.
+    type="answer" — the reply to whatever the session is parked on. Two ways a
+                    run parks (agents/core/session.py): a checkpointed pause is
+                    resumed by queueing a ``{"resume": {id: answers}}`` the
+                    runner turns into a LangGraph Command; a Future-bridged one
+                    is resolved in place. The client cannot tell which.
     """
     session = _owned_session(session_id, agent_type, user)
 
@@ -487,10 +502,22 @@ async def send_message(
     _core_session.touch_session(session)
 
     recorder = getattr(session, "recorder", None)
+    pending = getattr(session, "pending_pauses", None) or {}
 
     if msg.type == "answer":
         if msg.answers is None:
             raise HTTPException(422, "answers field required for type='answer'")
+        if pending:
+            interrupt_id = msg.interrupt_id or next(iter(pending))
+            if interrupt_id not in pending:
+                raise HTTPException(409, "That question has already been answered")
+            # Popped here, not when the turn ends: a second POST for the same
+            # id in the gap would otherwise queue a resume for nothing.
+            pending.pop(interrupt_id, None)
+            await session.chat_queue.put({"resume": {interrupt_id: msg.answers}})  # type: ignore[attr-defined]
+            if recorder is not None:
+                await recorder.record_answer(msg.answers)
+            return {"status": "queued", "type": "answer"}
         fut = session.answer_future
         if not fut or getattr(fut, "done", lambda: True)():
             raise HTTPException(400, "No pending question for this session")
@@ -505,6 +532,12 @@ async def send_message(
     # type == "chat"
     if msg.content is None:
         raise HTTPException(422, "content field required for type='chat'")
+    if pending:
+        # A parked thread has a tool call waiting for its result. A new human
+        # message now would start a fresh turn on top of it and the provider
+        # would reject the transcript — so the card has to be answered (or
+        # skipped, which every card offers) first.
+        raise HTTPException(409, "Answer the pending question first")
 
     # Persist the raw user text (before the XML working-context wrapper) so chat
     # history rehydrates as the user actually typed it.
@@ -648,11 +681,18 @@ async def get_session_state(
         }
         for v in getattr(session, "report_versions", [])
     ]
+    pending = list((getattr(session, "pending_pauses", None) or {}).values())
+    parked_on = getattr(session, "parked_on", None)
+    if not pending and parked_on and session.answer_future is not None:
+        pending = [parked_on]
     return {
         "session_id": session_id,
         "agent_type": agent_type,
         "report_versions": versions,
-        "has_pending_question": session.answer_future is not None,
+        "has_pending_question": bool(pending) or session.answer_future is not None,
+        # The pauses the run is parked on, whichever way it parked — what a
+        # client that reattaches needs in order to put the card back on screen.
+        "pending": pending,
     }
 
 
@@ -784,6 +824,30 @@ async def get_agent_conversation(
                 for e in events
             ],
         }
+
+
+@router.get("/{agent_type}/conversations/{conversation_id}/state")
+async def get_agent_conversation_state(
+    agent_type: str,
+    conversation_id: str,
+    user: User = Depends(get_current_user),
+) -> dict:
+    """What the conversation's durable thread is doing right now.
+
+    ``paused`` (with the pauses, so the card can be rendered before any session
+    exists), ``unfinished`` (a run was cut mid-turn and will continue on
+    resume), ``idle``, or ``unsupported`` for an agent whose state lives only in
+    a process — the Claude Agent SDK runners keep no thread to inspect.
+    """
+    with next(db_session()) as db:
+        conv = _conversation_for_user(db, user, agent_type, conversation_id)
+        conv_id = conv.id
+    if agent_type != AgentType.INSIGHTS:
+        return {"status": "unsupported", "pauses": [], "todos": []}
+    from agents.insights.v1.runner import AutonomousInsightsRunner
+
+    # The key is never used: inspection builds the graph on a placeholder model.
+    return await AutonomousInsightsRunner(api_key="").thread_state(conv_id)
 
 
 class ConversationPatch(BaseModel):
@@ -1424,9 +1488,13 @@ async def _start_insights(
                 exc_info=True,
             )
 
+    is_resume = bool(req.resume and conv_id is not None)
     if recorder is not None:
         emit_fn = recorder.wrap_emit(emit_fn)
-        if req.prompt and not getattr(session, "resume", False):
+        # The opening prompt is the first user turn; on a resume it is a
+        # follow-up typed into a thread the user is looking at. Either way it
+        # is a line of the transcript and has to be there when it rehydrates.
+        if req.prompt:
             try:
                 await recorder.record_user(req.prompt)
             except Exception:
@@ -1481,6 +1549,7 @@ async def _start_insights(
                 ),
                 autonomy=run.autonomy,
                 start_version=start_version,
+                resume=is_resume,
             )
         except Exception as exc:
             logger.exception("insights pipeline error for session %s", session_id)

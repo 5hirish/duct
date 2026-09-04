@@ -15,6 +15,10 @@ What lives here and what does not:
 * ``stream_agent`` is the LangChain half of the **events out** port: it drives
   a compiled LangGraph agent and translates its stream into Duct's ``AgentEvent``
   vocabulary, so the frontend cannot tell which harness served a run.
+* ``interrupt_pause`` is the LangGraph half of the **human-in-the-loop** port:
+  a tool calls it, the thread parks in its checkpoint, and ``stream_agent``
+  surfaces the pause as the SSE event the UI already renders. The resume is a
+  ``Command`` driven back through ``stream_agent`` by the runner's chat loop.
 
 Everything agent-specific stays in the runner — what the prompt says, which
 tools are bound, what an artifact payload means. This module knows only how to
@@ -28,11 +32,18 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 from langchain.chat_models import init_chat_model
+from langchain_core.language_models.fake_chat_models import FakeListChatModel
 from langchain_core.tools import StructuredTool
+from langgraph.types import Command, interrupt
 from pydantic import BaseModel, Field
 
-from agents.core.events import AgentEvent
-from agents.core.session import ASK_USER_TIMEOUT, BaseAgentSession, bridge_ask_user_question
+from agents.core.events import AgentEvent, StepStatus
+from agents.core.session import (
+    ASK_USER_TIMEOUT,
+    BaseAgentSession,
+    PauseFn,
+    make_future_pause,
+)
 from agents.core.stream import DuctArtifactStreamParser
 from agents.core.telemetry import model_span
 from agents.models import (
@@ -67,11 +78,32 @@ class AskUserArgs(BaseModel):
     )
 
 
+async def interrupt_pause(event: str, payload: dict, *, timeout: float | None = None) -> dict:
+    """The checkpointed ``PauseFn``: park the thread on a LangGraph interrupt.
+
+    The payload carries the SSE event name so ``stream_agent`` can emit it
+    verbatim when the interrupt surfaces — the tool that paused does not emit
+    anything itself. The run resumes when the runner streams a
+    ``Command(resume={interrupt_id: answer})`` on the same thread, and the answer
+    becomes this call's return value.
+
+    Two properties of ``interrupt()`` matter to callers. It needs a checkpointer,
+    so a binder must only hand this out for an agent that has one. And the task
+    that paused re-runs from its start on resume, so whatever a tool does before
+    calling this happens twice — keep it to idempotent reads. ``timeout`` is
+    ignored: a checkpointed pause waits as long as the thread exists.
+    """
+    del timeout  # the whole point: no clock on a parked thread
+    answer = interrupt({"event": event, **payload})
+    return answer if isinstance(answer, dict) else {}
+
+
 def build_ask_user_tool(
     session: BaseAgentSession,
     session_id: str,
     emit: Callable,
     *,
+    pause: PauseFn | None = None,
     log_prefix: str = "agent-v1",
     timeout: float = ASK_USER_TIMEOUT,
     description: str = (
@@ -80,23 +112,24 @@ def build_ask_user_tool(
         "about information already provided."
     ),
 ) -> StructuredTool:
-    """AskUserQuestion as a LangChain tool, bridged to the SSE consumer.
+    """AskUserQuestion as a LangChain tool, parked on the pause port.
 
-    The tool call blocks until the user answers (or the bridge times out and
-    returns empty answers), which is what keeps the agent loop paused — the same
-    behaviour V3 gets from its ``can_use_tool`` hook.
+    The tool call blocks until the user answers, which is what keeps the agent
+    loop paused — the same behaviour V3 gets from its ``can_use_tool`` hook.
+    ``pause`` defaults to the in-process Future bridge (right for an agent with
+    no checkpointer, like audit v1); a runner with durable threads passes
+    ``interrupt_pause`` so the question outlives the process that asked it.
     """
+    pause = pause or make_future_pause(
+        session, session_id, emit, timeout=timeout, log_prefix=log_prefix
+    )
 
     async def ask_user_question(questions: list[dict]) -> str:
-        result = await bridge_ask_user_question(
-            session,
-            session_id,
+        answers = await pause(
+            AgentEvent.QUESTIONS_REQUIRED,
             {"questions": questions[:MAX_QUESTIONS]},
-            emit,
             timeout=timeout,
-            log_prefix=log_prefix,
         )
-        answers = result.get("answers") or {}
         if not answers:
             return (
                 "The user did not answer in time. Continue using the information "
@@ -253,9 +286,73 @@ async def _dispatch_updates(
                     )
 
 
+def _turn_input(prompt: str | Command | None) -> Any:
+    """What ``astream`` is fed for one turn.
+
+    A string is a fresh user message. ``None`` continues whatever the thread was
+    doing — an unfinished run picks up from its last checkpoint, and a parked
+    one re-raises its live pauses (which is how a resumed session shows the
+    question it is still waiting on). A ``Command`` is a resume with answers.
+    """
+    if isinstance(prompt, str):
+        return {"messages": [{"role": "user", "content": prompt}]}
+    return prompt
+
+
+def pause_from_interrupt(item: Any) -> dict | None:
+    """The SSE payload for one LangGraph ``Interrupt``, or None if it is not ours.
+
+    Every Duct pause is raised through ``interrupt_pause`` and so carries its
+    ``event``. Anything else — a ``interrupt_on`` review from deepagents'
+    middleware, a subagent's ad-hoc interrupt — has no card in the UI and is
+    reported as a failed turn rather than guessed at.
+    """
+    value = getattr(item, "value", None)
+    if not isinstance(value, dict) or not value.get("event"):
+        return None
+    return {**value, "interrupt_id": getattr(item, "id", "") or ""}
+
+
+def live_pauses(snapshot: Any) -> list[dict]:
+    """The pauses a thread is still parked on, from ``aget_state``.
+
+    ``snapshot.interrupts`` is the wrong field: it keeps an interrupt whose task
+    has since completed, because the superstep's other task is still pending
+    and the checkpoint has not advanced. A pause is live only while its task
+    has no result.
+    """
+    out: list[dict] = []
+    for task in getattr(snapshot, "tasks", ()) or ():
+        if getattr(task, "result", None) is not None:
+            continue
+        for item in getattr(task, "interrupts", ()) or ():
+            pause = pause_from_interrupt(item)
+            if pause is not None:
+                out.append(pause)
+    return out
+
+
+class _InspectionModel(FakeListChatModel):
+    """A chat model that is never called.
+
+    ``aget_state`` needs a compiled graph to work out ``next``, and compiling a
+    deepagents graph needs a model object — but reading a thread makes no model
+    call, so a placeholder is the honest choice over resolving a real provider
+    (and a real key) for a lookup.
+    """
+
+    def bind_tools(self, tools, **kwargs):  # noqa: ARG002 - never invoked
+        return self
+
+
+def inspection_chat_model() -> Any:
+    """The placeholder model for building an agent only to read its thread."""
+    return _InspectionModel(responses=[""])
+
+
 async def stream_agent(
     agent: Any,
-    prompt: str,
+    prompt: str | Command | None,
     emit: Callable,
     *,
     on_artifact_chunk_event: str = AgentEvent.ARTIFACT_CHUNK,
@@ -268,13 +365,29 @@ async def stream_agent(
     on_todo: Callable[[list], Awaitable[None]] | None = None,
     on_tool_use: Callable[[str, Any, str], Awaitable[None]] | None = None,
     on_tool_result: Callable[[str, Any, str, bool], Awaitable[None]] | None = None,
-) -> None:
+    on_pause: Callable[[list[dict]], Awaitable[None]] | None = None,
+) -> list[dict]:
     """Drive one agent turn and translate its stream into Duct's SSE vocabulary.
 
     Emits the same ``AgentEvent`` values as the V3 (Claude Agent SDK) runners so
     the frontend is unchanged: AGENT_MESSAGE_CHUNK for prose, ARTIFACT_CHUNK for
     tokens inside ``<duct_artifact>``, THINKING_CHUNK for reasoning deltas,
     MESSAGE_STOP at the end of the turn.
+
+    ``prompt`` is a user message, ``None`` to continue the thread, or a
+    ``Command`` to resume it with answers — see ``_turn_input``.
+
+    Returns the pauses the turn ended on: the run is parked on every one of
+    them and continues only when each is resumed by id. They are emitted as
+    their SSE events *before* MESSAGE_STOP, so the transcript closes the
+    streaming bubble with the card already in place. An empty list means the
+    turn ran to completion. ``on_pause`` receives the same list *before* the
+    events go out — the answer route has to know what the run is parked on by
+    the time a client could possibly reply, and a client replies fast.
+
+    Custom stream chunks — anything a tool writes through LangGraph's stream
+    writer — are forwarded when they carry an ``event``, so progress emitted
+    from inside a tool (or a subagent's tool) reaches the UI on the same wire.
 
     The optional ``on_todo`` / ``on_tool_*`` hooks read the ``updates`` stream.
     They default to ``None``, so a caller that wants only prose gets exactly the
@@ -295,12 +408,25 @@ async def stream_agent(
         conversation_id=conversation_id,
         agent_name=log_prefix,
     ):
+        pauses: list[dict] = []
+        foreign_interrupts = 0
         async for mode, chunk in agent.astream(
-            {"messages": [{"role": "user", "content": prompt}]},
+            _turn_input(prompt),
             config or {},
-            stream_mode=["messages", "updates"],
+            stream_mode=["messages", "updates", "custom"],
         ):
+            if mode == "custom":
+                if isinstance(chunk, dict) and chunk.get("event"):
+                    await emit(dict(chunk))
+                continue
             if mode == "updates":
+                if isinstance(chunk, dict):
+                    for item in chunk.get("__interrupt__") or ():
+                        pause = pause_from_interrupt(item)
+                        if pause is None:
+                            foreign_interrupts += 1
+                        else:
+                            pauses.append(pause)
                 await _dispatch_updates(
                     chunk,
                     on_todo=on_todo,
@@ -323,4 +449,19 @@ async def stream_agent(
     # not, which silently truncated every turn by up to 14 characters — visible
     # as a short chat reply vanishing entirely.
     await parser.flush()
+    if on_pause is not None:
+        await on_pause(list(pauses))
+    for pause in pauses:
+        await emit(dict(pause))
+    if foreign_interrupts:
+        # The thread is parked on something no card can answer. Say so rather
+        # than leave the UI in "working" forever; the next user message starts
+        # a fresh turn on the same thread.
+        logger.warning("%s: %d interrupt(s) without a Duct event", log_prefix, foreign_interrupts)
+        await emit({
+            "event": AgentEvent.STEP_FAILED,
+            "status": StepStatus.ERROR,
+            "error": "The agent paused on something this app cannot answer. Try rephrasing.",
+        })
     await emit({"event": AgentEvent.MESSAGE_STOP})
+    return pauses

@@ -216,8 +216,19 @@ framework. The rules it implies:
   allowlist; adding a file to that list is a deliberate act, not a fix for a
   failing test.
 - **Write the adapter on the second implementation, not the first.** One
-  implementation is a guess. Do not abstract the session registry until the
-  LangGraph checkpointer actually lands beside it.
+  implementation is a guess. The human-in-the-loop port is the worked
+  example: `PauseFn` in `agents/core/session.py` was declared only once the
+  LangGraph `interrupt()` implementation (`agents/core/lc.interrupt_pause`)
+  existed beside the Future bridge. A tool body takes a `PauseFn`; the binder
+  that mounts it decides which one — the Future for an agent with no
+  checkpointer (audit v1, the SDK runners), the interrupt for one with durable
+  threads (insights v1). Same events, same route, and the frontend cannot
+  tell them apart.
+- **A durable thread is the conversation.** The insights runner keys its
+  LangGraph thread on the conversation id, so a resumed session continues the
+  thread — and a pause the thread is parked on comes back as the same SSE
+  event, flagged `replay`, when a session resumes it. Never key a thread on
+  a session id; that made "resume" a transcript the agent could not see.
 - **Pick the lowest rung that works.** LangChain 1.x is layered, and the layers
   carry different stability guarantees: `init_chat_model` and `create_agent` are
   on the semver-stable 1.x LTS surface (no breaking changes until 2.0), while

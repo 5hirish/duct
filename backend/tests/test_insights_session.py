@@ -18,6 +18,7 @@ Fake chat model throughout — no API key, no network.
 
 from __future__ import annotations
 
+import asyncio
 import uuid
 
 import pytest
@@ -26,6 +27,7 @@ from langchain_core.messages import AIMessage
 
 from agents.core.events import AgentEvent
 from agents.core.lc import _dispatch_updates
+from routes.agents import AgentMessage, send_message
 from agents.insights.prompts.autonomous import (
     build_insights_system_prompt,
     build_insights_user_prompt,
@@ -74,6 +76,30 @@ def emitted():
 
 def _fake(*responses: str, cls=ToolCallingFake):
     return cls(responses=[AIMessage(content=r) for r in responses])
+
+
+QUESTION = {"question": "Which goal matters most?", "header": "Goal"}
+
+
+def _asks_then_answers(*replies: str):
+    """A model that asks one clarifying question, then answers with `replies`."""
+    return ToolCallingFake(
+        responses=[
+            AIMessage(
+                content="",
+                tool_calls=[{
+                    "name": "AskUserQuestion",
+                    "args": {"questions": [QUESTION]},
+                    "id": "ask_1",
+                }],
+            ),
+            *[AIMessage(content=r) for r in replies],
+        ]
+    )
+
+
+def _kinds(emitted) -> list[str]:
+    return [e["event"] for e in emitted.events]
 
 
 RUNNER = AutonomousInsightsRunner(api_key="unused-no-network")
@@ -369,6 +395,186 @@ async def test_update_dispatch_survives_unexpected_shapes():
         await _dispatch_updates(chunk, on_todo=on_todo, on_tool_use=None, on_tool_result=None)
 
     assert calls == []  # nothing raised, nothing spurious emitted
+
+
+# ---------------------------------------------------------------------------
+# Pauses — checkpointed, answered by id, shown again on resume
+# ---------------------------------------------------------------------------
+
+async def test_a_question_parks_the_session_and_an_answer_resumes_it(session, emitted):
+    """The whole round trip: the tool interrupts, the pause reaches the stream
+    with its id, PIPELINE_FINISHED is held back, the answer arrives as the
+    route would queue it, and the model gets to finish."""
+    conversation_id = uuid.uuid4()
+
+    async def answer_when_parked():
+        while not session.pending_pauses:
+            await asyncio.sleep(0.01)
+        (interrupt_id,) = session.pending_pauses
+        assert AgentEvent.PIPELINE_FINISHED not in _kinds(emitted), "parked, not finished"
+        await session.chat_queue.put({"resume": {interrupt_id: {QUESTION["question"]: "Signups"}}})
+        await session.chat_queue.put(None)
+
+    answerer = asyncio.create_task(answer_when_parked())
+    await RUNNER.run_session(
+        session.session_id, emitted, llm=_asks_then_answers("Signups it is."),
+        session=session, prompt="what should I fix?", conversation_id=conversation_id,
+        chat_idle_timeout=2.0,
+    )
+    await answerer
+
+    kinds = _kinds(emitted)
+    pause = next(e for e in emitted.events if e["event"] == AgentEvent.QUESTIONS_REQUIRED)
+    assert pause["questions"] == [QUESTION]
+    assert pause["interrupt_id"]
+    # The card lands before the bubble closes, and the run only counts as
+    # opened once a turn ends with nothing parked.
+    assert kinds.index(AgentEvent.QUESTIONS_REQUIRED) < kinds.index(AgentEvent.MESSAGE_STOP)
+    assert kinds.index(AgentEvent.PIPELINE_FINISHED) > kinds.index(AgentEvent.QUESTIONS_REQUIRED)
+    prose = "".join(e["text"] for e in emitted.events if e["event"] == AgentEvent.AGENT_MESSAGE_CHUNK)
+    assert "Signups it is." in prose
+    assert session.pending_pauses == {}
+
+
+async def test_resuming_a_parked_conversation_shows_the_pause_again(emitted):
+    """Yesterday's question is still the question. A new session on the same
+    conversation re-emits it — flagged as a replay so it is not recorded twice —
+    without calling the model, and parks on it."""
+    conversation_id = uuid.uuid4()
+    first = create_insights_session(str(uuid.uuid4()))
+    await RUNNER.run_session(
+        first.session_id, emitted, llm=_asks_then_answers("never reached"),
+        session=first, prompt="what should I fix?", conversation_id=conversation_id,
+        chat_idle_timeout=0.01,
+    )
+    parked_on = next(iter(first.pending_pauses))
+    emitted.events.clear()
+
+    second = create_insights_session(str(uuid.uuid4()))
+    await RUNNER.run_session(
+        second.session_id, emitted, llm=_fake("must not be called", cls=RaisingFake),
+        session=second, prompt="", conversation_id=conversation_id,
+        chat_idle_timeout=0.01, resume=True,
+    )
+
+    kinds = _kinds(emitted)
+    assert AgentEvent.QUESTIONS_REQUIRED in kinds
+    assert AgentEvent.AGENT_MESSAGE_CHUNK not in kinds and AgentEvent.PIPELINE_FINISHED not in kinds
+    replayed = next(e for e in emitted.events if e["event"] == AgentEvent.QUESTIONS_REQUIRED)
+    assert replayed["replay"] is True
+    assert replayed["interrupt_id"] == parked_on
+    assert list(second.pending_pauses) == [parked_on]
+
+
+async def test_the_thread_is_the_conversation_not_the_session(emitted):
+    """Two sessions, one conversation: the second is a continuation, so it
+    opens ready without a greeting and the thread carries both turns."""
+    conversation_id = uuid.uuid4()
+    first = create_insights_session(str(uuid.uuid4()))
+    await RUNNER.run_session(
+        first.session_id, emitted, llm=_fake("CPA is up."),
+        session=first, prompt="cpa?", conversation_id=conversation_id, chat_idle_timeout=0.01,
+    )
+    emitted.events.clear()
+
+    second = create_insights_session(str(uuid.uuid4()))
+    await RUNNER.run_session(
+        second.session_id, emitted, llm=_fake("must not be called", cls=RaisingFake),
+        session=second, prompt="", conversation_id=conversation_id,
+        chat_idle_timeout=0.01, resume=True,
+    )
+    assert _kinds(emitted) == [AgentEvent.PIPELINE_FINISHED]
+
+    state = await RUNNER.thread_state(conversation_id)
+    assert state["status"] == "idle"
+    assert state["message_count"] == 2  # the question and its answer, on one thread
+
+
+async def test_thread_state_reports_a_parked_thread(emitted):
+    conversation_id = uuid.uuid4()
+    session = create_insights_session(str(uuid.uuid4()))
+    await RUNNER.run_session(
+        session.session_id, emitted, llm=_asks_then_answers("never reached"),
+        session=session, prompt="fix?", conversation_id=conversation_id, chat_idle_timeout=0.01,
+    )
+
+    state = await RUNNER.thread_state(conversation_id)
+
+    assert state["status"] == "paused"
+    assert state["pauses"][0]["event"] == AgentEvent.QUESTIONS_REQUIRED
+    assert state["pauses"][0]["questions"] == [QUESTION]
+
+
+async def test_an_unknown_conversation_is_idle_not_an_error():
+    state = await RUNNER.thread_state(uuid.uuid4())
+    assert state == {"status": "idle", "pauses": [], "todos": [], "message_count": 0}
+
+
+async def test_the_answer_route_resumes_a_checkpointed_pause(session):
+    """The route cannot tell a Future from an interrupt and must not need to:
+    with pauses pending it queues a resume for the runner, by id."""
+    session.pending_pauses = {"int_1": {"event": AgentEvent.QUESTIONS_REQUIRED, "interrupt_id": "int_1"}}
+
+    out = await send_message(
+        "insights", session.session_id,
+        AgentMessage(type="answer", answers={"Goal": "Signups"}, interrupt_id="int_1"),
+        user=None,
+    )
+
+    assert out == {"status": "queued", "type": "answer"}
+    assert session.chat_queue.get_nowait() == {"resume": {"int_1": {"Goal": "Signups"}}}
+    assert session.pending_pauses == {}
+
+
+async def test_an_answer_without_an_id_takes_the_only_pending_pause(session):
+    session.pending_pauses = {"int_9": {"event": AgentEvent.CONNECTION_REQUIRED, "interrupt_id": "int_9"}}
+
+    await send_message(
+        "insights", session.session_id, AgentMessage(type="answer", answers={"skipped": True}), user=None
+    )
+
+    assert session.chat_queue.get_nowait() == {"resume": {"int_9": {"skipped": True}}}
+
+
+async def test_session_state_reports_a_future_bridged_pause_too(session):
+    """A reattaching client asks the session what it is parked on. The
+    Future bridge has no interrupt id, but it does have the event it emitted,
+    and that is enough to put the card back."""
+    from agents.core.session import bridge_user_input
+    from routes.agents import get_session_state
+
+    async def emit(_e):
+        pass
+
+    parked = asyncio.create_task(bridge_user_input(
+        session, session.session_id, event=AgentEvent.QUESTIONS_REQUIRED,
+        payload={"questions": [QUESTION]}, emit=emit, timeout=2.0,
+    ))
+    while session.answer_future is None:
+        await asyncio.sleep(0.01)
+
+    state = await get_session_state("insights", session.session_id, user=None)
+    assert state["has_pending_question"] is True
+    assert state["pending"] == [{"event": AgentEvent.QUESTIONS_REQUIRED, "questions": [QUESTION]}]
+
+    session.answer_future.set_result({})
+    await parked
+    state = await get_session_state("insights", session.session_id, user=None)
+    assert state["pending"] == []
+
+
+async def test_chat_while_parked_is_refused(session):
+    """A tool call is waiting for its result; a fresh human turn on top of it
+    is a transcript the provider rejects. The card has to be answered first."""
+    from fastapi import HTTPException
+
+    session.pending_pauses = {"int_1": {"event": AgentEvent.QUESTIONS_REQUIRED, "interrupt_id": "int_1"}}
+
+    with pytest.raises(HTTPException) as exc:
+        await send_message(
+            "insights", session.session_id, AgentMessage(type="chat", content="also mobile"), user=None
+        )
+    assert exc.value.status_code == 409
 
 
 # ---------------------------------------------------------------------------
