@@ -162,8 +162,8 @@ translation over it, not a refactor.
 | `execution_proposed` | `Custom` | staged-execution change set; upsert by `change_set_id` |
 | `memory_written` | `Custom` | entries this turn stored, with undo |
 | `memory_recalled` | `Custom` | entry ids this turn was primed with |
-| `model_retrying` | `Custom` | a model call failed and is being retried: `attempt`, `max_attempts`, `code`. Status, not failure — the next token clears it |
-| `token_usage` | `Custom` | one model call's bill: `input_tokens`, `output_tokens`, `cache_read_tokens`, `context_window`, `model`, `scope` (`thread` or `subagent`) |
+| `model_retrying` | `Custom` | a model call failed and is being retried: `attempt`, `max_attempts`, `code`, `retry_in` (seconds until the next attempt — a duration, so the client anchors it to its own clock and counts down). Status, not failure — the next token clears it |
+| `token_usage` | `Custom` | one model call's bill: `input_tokens`, `output_tokens`, `cache_read_tokens`, `context_window`, `model`, `scope` (`thread` or `subagent`), `cost_usd` (from `agents/models.PRICING`; `null` for an unpriced model, never a guess) |
 | `context_compacting`, `context_compacted` | `Custom` | the harness is summarising old history to make room, then did. The summariser's own tokens never reach the transcript |
 | `user_input_consumed` | `Custom` | a message sent mid-turn has reached the model; carries the `client_message_id` the client stamped on it |
 
@@ -179,6 +179,17 @@ the frontend maps the code — not the message text — to copy and to the actio
 it offers (`lib/agentSession.js` `errorAction`: retry, open model settings,
 open connections, start fresh). `str(exc)` never reaches the browser: it has
 carried request ids, and once a URL with a key in it.
+
+The failure is also durable. `ConversationRecorder` appends a `failure` event
+where the turn died and writes `agent_conversations.run_status` (`RunStatus`:
+idle / running / paused / failed / cancelled) and `run_error` with the same
+`{code, retryable, error}`; a session closed mid-turn is recorded as
+`cancelled`. The conversation list and the state route carry `run_status` and
+`run_error`, so a thread list can badge "Needs you" or "Failed" before anyone
+opens the thread, and a reloaded transcript shows the failure as the same row
+the live client did — with the same action under it. The status is derived
+from the stream in that one place on purpose: a runner that also wrote it
+would be a second opinion about one column.
 
 ### Input while a turn runs: steer or queue, never refuse
 
@@ -202,6 +213,7 @@ insights runner), not a surprise at the top of whatever the user asks next.
 | `tool_use` | `ToolCallStart` |
 | `tool_result` | `ToolCallResult` |
 | `question`, `answer` | `Custom` |
+| `failure` | `RunError` — `{code, retryable, error}` where a turn or run died; `code: cancelled` for a stop |
 
 ---
 

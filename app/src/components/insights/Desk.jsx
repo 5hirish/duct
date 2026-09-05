@@ -24,6 +24,9 @@ import DeskActivity from "./desk/DeskActivity";
 import DeskComposer from "./desk/DeskComposer";
 import DeskDayOne from "./desk/DeskDayOne";
 
+// How often the desk re-reads its lists while a thread is working.
+const DESK_POLL_MS = 30_000;
+
 const EMPTY = {
   memories: [], conversations: [], artifacts: [], activity: [], changeSets: [], sourceCount: 0,
 };
@@ -69,6 +72,22 @@ export default function Desk() {
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  // The list's run badges are read, not pushed: refresh when the user comes
+  // back to the tab, and every half minute while any thread is working, so
+  // "Working…" becomes "Needs you" without a reload. Idle desks stay quiet.
+  const working = data.conversations.some((c) => c.run_status === "running");
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") refresh();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    const timer = working ? setInterval(refresh, DESK_POLL_MS) : null;
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      if (timer) clearInterval(timer);
+    };
+  }, [refresh, working]);
 
   const buckets = useMemo(
     () => buildDesk({

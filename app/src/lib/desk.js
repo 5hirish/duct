@@ -62,7 +62,27 @@ export function routeChangeSet(set) {
 }
 
 export function routeConversation(conv) {
-  return conv?.status === "active" ? IN_PROGRESS : null;
+  if (conv?.status !== "active") return null;
+  // What the run is doing decides the card: parked on the user or stopped on
+  // a failure is theirs to deal with; anything else is simply open.
+  if (conv.run_status === "paused" || conv.run_status === "failed") return NEEDS_YOU;
+  return IN_PROGRESS;
+}
+
+/** The desk card's words for a thread, from its run status. */
+export function conversationCard(conv) {
+  switch (conv?.run_status) {
+    case "paused":
+      return { detail: "Waiting on your answer", tone: "attention" };
+    case "failed":
+      return { detail: conv.run_error?.error || "The last turn failed", tone: "attention" };
+    case "running":
+      return { detail: "Working", tone: "running" };
+    case "cancelled":
+      return { detail: "Stopped — pick up where it left off", tone: "running" };
+    default:
+      return { detail: "Pick up where you left off", tone: "running" };
+  }
 }
 
 /**
@@ -136,15 +156,18 @@ export function buildDesk({ memories = [], changeSets = [], conversations = [] }
   }
 
   for (const conv of conversations) {
-    if (routeConversation(conv) !== IN_PROGRESS) continue;
-    out[IN_PROGRESS].push({
+    const bucket = routeConversation(conv);
+    if (!bucket) continue;
+    const card = conversationCard(conv);
+    out[bucket].push({
       id: `conversation:${conv.id}`,
       type: "conversation",
       title: conv.title || "Untitled thread",
-      detail: "Pick up where you left off",
-      tone: "running",
+      detail: card.detail,
+      tone: card.tone,
       at: conv.last_active_at || conv.created_at || "",
-      weight: conv.pinned ? 9 : 6,
+      // A thread waiting on its owner outranks one merely open.
+      weight: (bucket === NEEDS_YOU ? 10 : 6) + (conv.pinned ? 3 : 0),
       conversationId: conv.id,
     });
   }

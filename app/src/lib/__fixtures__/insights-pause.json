@@ -114,7 +114,8 @@
     "event": "model_retrying",
     "attempt": 1,
     "max_attempts": 4,
-    "code": "overloaded"
+    "code": "overloaded",
+    "retry_in": 2.0
   },
   {
     "event": "context_compacting"

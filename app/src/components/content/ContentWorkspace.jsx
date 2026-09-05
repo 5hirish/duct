@@ -45,6 +45,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
 
   const agent = useAgentSession({
     agentType: CONTENT_AGENT_TYPE,
+    notifyAs: "Content Studio",
     body,
     // Scoped to the artifact so a reload of this post's workspace resumes
     // this post's run and never a different one's.

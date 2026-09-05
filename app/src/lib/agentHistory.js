@@ -4,6 +4,26 @@
 // chat-bubble message objects. Used by ContentWorkspace and AuditWorkspace on
 // resume. Tool events are deliberately dropped — they're forensics, not chat.
 
+import { ErrorCode } from "./agentEvents";
+import { Row, friendlyErrorMessage } from "./agentSession";
+
+/** A stored failure becomes the row the live client showed: the turn-failed
+ *  bubble with its code (so the action under it is the right one), or, for a
+ *  stop, the quiet line the transcript ends on. */
+function failureRow(data) {
+  const code = data?.code || "";
+  if (code === ErrorCode.CANCELLED) {
+    return { role: Row.NOTICE, text: "Stopped here — the turn was interrupted." };
+  }
+  return {
+    role: Row.SEND_ERROR,
+    text: friendlyErrorMessage(data?.error || "That turn failed.", code),
+    content: null,
+    code,
+    retryable: data?.retryable ?? true,
+  };
+}
+
 export function mapEventsToMessages(events) {
   const out = [];
   let pendingThinking = "";
@@ -37,6 +57,10 @@ export function mapEventsToMessages(events) {
         if (ans) out.push({ role: "user", text: ans });
         break;
       }
+      case "failure":
+        if (pendingThinking) { out.push({ role: "assistant", text: "", thinking: pendingThinking }); pendingThinking = ""; }
+        out.push(failureRow(e.data));
+        break;
       default:
         break;
     }

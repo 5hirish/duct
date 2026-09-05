@@ -27,7 +27,8 @@ from uuid import UUID
 from sqlalchemy import update
 from sqlmodel import Session, select
 
-from agents.core.events import AgentEvent, EventKind
+from agents.core.errors import DESCRIPTIONS, ErrorCode
+from agents.core.events import AgentEvent, EventKind, RunStatus
 from agents.models import AgentPermissionMode, ModelName, Provider
 from db.session import get_session as db_session
 from models.content import AgentConversation, AgentEvent as AgentEventRow, ContentPlan, ContentPost
@@ -87,6 +88,20 @@ def _next_seq(db: Session, conversation_id: UUID) -> int:
     ).first()
     db.commit()
     return int(row[0]) if row else 0
+
+
+def set_run_status(
+    db: Session, conversation_id: UUID, status: RunStatus | str, error: dict | None = None
+) -> None:
+    """Record what the run is doing. ``error`` is kept only with a status that
+    refers to one (failed, cancelled); any other status clears it, so a thread
+    that failed and then ran again does not keep advertising the old reason."""
+    db.execute(
+        update(AgentConversation)
+        .where(AgentConversation.id == conversation_id)
+        .values(run_status=str(status), run_error=error, last_active_at=utcnow())
+    )
+    db.commit()
 
 
 def append_event(db: Session, conversation_id: UUID, kind: str | EventKind, data: dict) -> None:
@@ -233,18 +248,50 @@ def resolve_or_create_conversation(
 # Recorder — wraps emit to persist the conversation
 # ---------------------------------------------------------------------------
 
+# The events that park a run on the user. Same set the frontend's PAUSE_EVENTS
+# names; a pause here is what makes a thread "Needs you" in a list.
+_PAUSE_EVENTS = frozenset({
+    AgentEvent.QUESTIONS_REQUIRED,
+    AgentEvent.CONNECTION_REQUIRED,
+    AgentEvent.ACCOUNT_SELECTION_REQUIRED,
+})
+# Anything the agent does mid-turn. Only consulted when the status is not
+# already running, so a stream of chunks costs one dict lookup each and at
+# most one write.
+_ACTIVITY_EVENTS = frozenset({
+    AgentEvent.STEP_STARTED,
+    AgentEvent.THINKING_CHUNK,
+    AgentEvent.AGENT_MESSAGE_CHUNK,
+})
+
+CANCELLED_FAILURE = {
+    "code": ErrorCode.CANCELLED,
+    "retryable": True,
+    "error": DESCRIPTIONS[ErrorCode.CANCELLED],
+}
+
+
 class ConversationRecorder:
     """Persists a conversation by wrapping the runner's emit callback.
 
     Buffers streamed assistant/thinking text and flushes one event of each per
     turn on MESSAGE_STOP. DB writes run in a thread so they never block the
     streaming event loop, and a failed write never breaks the SSE stream.
+
+    Also the one place ``run_status`` is written. The stream already says what
+    the run is doing — started, parked, finished, failed — so deriving the
+    status here means every agent reports it the same way and no runner grew
+    a hook for it. A status is written only when it changes, and a failure is
+    also appended to the log as a FAILURE event so a reloaded transcript shows
+    why the reply is missing at the place it went missing.
     """
 
     def __init__(self, conversation_id: UUID) -> None:
         self.conversation_id = conversation_id
         self._assistant_buf: list[str] = []
         self._thinking_buf: list[str] = []
+        # Unknown until the first event; the first transition always writes.
+        self._status: RunStatus | None = None
 
     def wrap_emit(self, emit_fn):
         async def _emit(body: dict) -> None:
@@ -272,6 +319,63 @@ class ConversationRecorder:
             await self._flush_turn()
         elif event == AgentEvent.QUESTIONS_REQUIRED:
             await self._append(EventKind.QUESTION, {"questions": body.get("questions", [])})
+        await self._track(event, body)
+
+    # -- run status ---------------------------------------------------------
+
+    async def _track(self, event: str | None, body: dict) -> None:
+        if event == AgentEvent.PIPELINE_STARTED:
+            await self._set_status(RunStatus.RUNNING)
+        elif event in _PAUSE_EVENTS:
+            await self._set_status(RunStatus.PAUSED)
+        elif event in (AgentEvent.PIPELINE_FINISHED, AgentEvent.MESSAGE_STOP):
+            # A turn that ended on a card is parked, and the stop marker that
+            # follows the card must not say otherwise.
+            if self._status != RunStatus.PAUSED:
+                await self._set_status(RunStatus.IDLE)
+        elif event == AgentEvent.PIPELINE_FAILED or (
+            event == AgentEvent.STEP_FAILED and not body.get("step_id")
+        ):
+            await self._fail(body)
+        elif event in _ACTIVITY_EVENTS and self._status != RunStatus.RUNNING:
+            await self._set_status(RunStatus.RUNNING)
+
+    async def _fail(self, body: dict) -> None:
+        failure = {
+            "code": str(body.get("code") or ErrorCode.UNKNOWN),
+            "retryable": bool(body.get("retryable", True)),
+            "error": str(body.get("error") or DESCRIPTIONS[ErrorCode.UNKNOWN]),
+        }
+        await self._append(EventKind.FAILURE, failure)
+        await self._set_status(RunStatus.FAILED, failure)
+
+    async def _set_status(self, status: RunStatus, error: dict | None = None) -> None:
+        if status == self._status and error is None:
+            return
+        self._status = status
+        await asyncio.to_thread(self._set_status_sync, status, error)
+
+    def _set_status_sync(self, status: RunStatus, error: dict | None) -> None:
+        with next(db_session()) as db:
+            set_run_status(db, self.conversation_id, status, error)
+
+    def close(self) -> None:
+        """The session is closing. A turn still running at that moment is
+        cancelled — by a Stop, or by a tab that never came back — and the
+        transcript should say so where it stopped rather than trail off.
+        Synchronous because teardown is; one small write."""
+        if self._status != RunStatus.RUNNING:
+            return
+        self._status = RunStatus.CANCELLED
+        try:
+            with next(db_session()) as db:
+                append_event(db, self.conversation_id, EventKind.FAILURE, dict(CANCELLED_FAILURE))
+                set_run_status(db, self.conversation_id, RunStatus.CANCELLED, dict(CANCELLED_FAILURE))
+        except Exception:
+            logger.warning(
+                "persistence: failed to record cancellation for conversation %s",
+                self.conversation_id, exc_info=True,
+            )
 
     async def _flush_turn(self) -> None:
         thinking = "".join(self._thinking_buf).strip()
@@ -285,9 +389,11 @@ class ConversationRecorder:
 
     async def record_user(self, content: Any) -> None:
         await self._append(EventKind.USER, {"content": content})
+        await self._set_status(RunStatus.RUNNING)
 
     async def record_answer(self, answers: dict) -> None:
         await self._append(EventKind.ANSWER, {"answers": answers})
+        await self._set_status(RunStatus.RUNNING)
 
     # Tool-call forensics. Every tool the agent runs is logged with its full
     # input and output, paired by tool_use_id — mirroring the Anthropic messages

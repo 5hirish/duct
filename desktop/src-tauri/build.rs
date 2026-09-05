@@ -26,6 +26,7 @@ fn main() {
             "set_provider_key",
             "delete_provider_key",
             "get_shell_info",
+            "notify",
             "get_sidecar_info",
             "open_external",
             "check_for_update",

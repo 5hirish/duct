@@ -182,7 +182,28 @@ Rules that follow:
   elapsed, and the step in progress (or "Reconnecting to the model (2/4)",
   "Compacting context"). The context ring beside it is `workspace/ContextRing`
   over the reducer's `usage`; it is the same ring the insights desk shows for
-  a new thread.
+  a new thread. A retry counts down (`retrying.until`, anchored on this
+  client's clock at receipt), and the tooltip carries cost beside the tokens
+  when the model is priced.
+- **Notifications come from phase transitions, never from a workspace.** A
+  workspace names itself (`notifyAs`) and `hooks/useAgentNotifications.js`
+  turns done / needs-input / failed into a system notice — only while the
+  window is not focused, never for a stop the user asked for. The transport is
+  `lib/notify.js`: the shell's `notify` command when `getShellInfo()` reports
+  `notifications`, the browser's `Notification` behind the sidebar's permission
+  item otherwise. Do not call `new Notification` from a component.
+- **A stored failure is a row, not a blank.** `agentHistory.js` maps the
+  `failure` event kind to the same send-error row the live client showed (with
+  its code, so the action under it is the right one), and a `cancelled` one to
+  the "Stopped here" notice. Thread lists read `run_status` off the list route
+  for their badge (`DeskLists`, the audit history); the desk routes `paused`
+  and `failed` threads to "Needs you" (`lib/desk.js`).
+- **Streaming markdown is settled plus a healed tail.** `AssistantMarkdown`
+  with `streaming` splits at the last block boundary (`lib/markdownStream.js`):
+  the settled part is memoised and parsed once per closed block; only the tail
+  re-renders per delta, after `healTail` closes an open fence or emphasis and
+  drops a table's partial row. That is what keeps a table's columns still while
+  it streams. Do not reintroduce a per-token parse of the whole reply.
 
 **Accessibility.** Desktop keyboard and screen-reader basics, not a full audit.
 

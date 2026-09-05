@@ -27,6 +27,18 @@ const EFFORT_OPTIONS = [
 
 const INPUT = "w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring";
 
+/** What a past audit's run is doing, from the list route — so one stuck on a
+ *  question or a failure says so before it is opened. Idle says nothing. */
+function auditBadge(conv) {
+  switch (conv.run_status) {
+    case "running": return { label: "Working…", className: "text-primary" };
+    case "paused": return { label: "Needs you", className: "text-amber-600 dark:text-amber-400" };
+    case "failed": return { label: "Failed", className: "text-destructive" };
+    case "cancelled": return { label: "Stopped", className: "text-muted-foreground" };
+    default: return null;
+  }
+}
+
 export default function SeoAuditSetupPage() {
   const router = useRouter();
   const [url, setUrl]                   = useState("");
@@ -390,7 +402,12 @@ export default function SeoAuditSetupPage() {
                 className="flex items-center justify-between gap-3 rounded-md border border-input px-3 py-2"
               >
                 <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{conv.title || "SEO audit"}</p>
+                  <p className="text-sm font-medium truncate">
+                    {conv.title || "SEO audit"}
+                    {auditBadge(conv) && (
+                      <span className={`ml-2 text-[11px] font-medium ${auditBadge(conv).className}`}>{auditBadge(conv).label}</span>
+                    )}
+                  </p>
                   <p className="text-xs text-muted-foreground">
                     {conv.last_active_at ? new Date(conv.last_active_at).toLocaleString() : ""}
                     {conv.last_seq ? ` · ${conv.last_seq} events` : ""}

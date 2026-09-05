@@ -106,6 +106,7 @@ export default function InsightsWorkspace({
 
   const agent = useAgentSession({
     agentType: AGENT_TYPE,
+    notifyAs: "Insights",
     body,
     // A thread by its id, a fresh question by its text: a different question
     // in the same tab is a different run, and a reload of this one is this one.

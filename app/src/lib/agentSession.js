@@ -54,14 +54,16 @@ export const initialAgentState = Object.freeze({
   // reconnect a connector, start fresh) — see `errorAction`.
   errorCode: "",
   errorRetryable: true,
-  // A model call being retried: { attempt, max }. Status, not failure; the
-  // next token clears it.
+  // A model call being retried: { attempt, max, code, until }. Status, not
+  // failure; the next token clears it. `until` is when the next attempt goes
+  // out, on this client's clock, so the status row can count down to it.
   retrying: null,
   // Tokens. `last` is the most recent model call on the thread the user is
   // talking to — its input size against `window` is how full the context is.
   // `total` sums every call seen this session (subagents included), which is
-  // what the turn cost. A resumed thread gets both from the state route.
-  usage: { last: null, total: { input: 0, output: 0, cached: 0, calls: 0 } },
+  // what the turn cost — in tokens and, for a priced model, in dollars. A
+  // resumed thread gets both from the state route.
+  usage: { last: null, total: { input: 0, output: 0, cached: 0, calls: 0, cost: 0 } },
   // The harness is summarising history to make room — shown in the status
   // row; the transcript gets a quiet note when it is done.
   compacting: false,
@@ -212,6 +214,9 @@ function usageCall(event) {
     cached: event.cache_read_tokens || 0,
     window: event.context_window || 0,
     model: event.model || "",
+    // null for a model the backend has no price for; the tooltip then shows
+    // tokens without a dollar figure rather than a made-up one.
+    cost: typeof event.cost_usd === "number" ? event.cost_usd : null,
   };
 }
 
@@ -221,7 +226,13 @@ function addUsage(usage, event) {
   return {
     // A subagent's call fills its own context, not the thread's.
     last: event.scope && event.scope !== "thread" ? usage.last : call,
-    total: { input: t.input + call.input, output: t.output + call.output, cached: t.cached + call.cached, calls: t.calls + 1 },
+    total: {
+      input: t.input + call.input,
+      output: t.output + call.output,
+      cached: t.cached + call.cached,
+      calls: t.calls + 1,
+      cost: (t.cost || 0) + (call.cost || 0),
+    },
   };
 }
 
@@ -230,12 +241,25 @@ function usageFromThread(thread) {
   if (!thread) return null;
   const window = thread.context_window || 0;
   const last = thread.last
-    ? { input: thread.last.input_tokens || 0, output: thread.last.output_tokens || 0, cached: thread.last.cache_read_tokens || 0, window, model: thread.model || "" }
+    ? {
+        input: thread.last.input_tokens || 0,
+        output: thread.last.output_tokens || 0,
+        cached: thread.last.cache_read_tokens || 0,
+        window,
+        model: thread.model || "",
+        cost: typeof thread.last.cost_usd === "number" ? thread.last.cost_usd : null,
+      }
     : null;
   const t = thread.total || {};
   return {
     last,
-    total: { input: t.input_tokens || 0, output: t.output_tokens || 0, cached: t.cache_read_tokens || 0, calls: t.calls || 0 },
+    total: {
+      input: t.input_tokens || 0,
+      output: t.output_tokens || 0,
+      cached: t.cache_read_tokens || 0,
+      calls: t.calls || 0,
+      cost: typeof t.cost_usd === "number" ? t.cost_usd : 0,
+    },
   };
 }
 
@@ -243,7 +267,7 @@ function usageFromThread(thread) {
 // Events
 // ---------------------------------------------------------------------------
 
-function reduceEvent(state, event) {
+function reduceEvent(state, event, at = 0) {
   switch (event.event) {
     case AgentEvent.TOKEN_USAGE:
       return { ...state, usage: addUsage(state.usage, event) };
@@ -326,9 +350,16 @@ function reduceEvent(state, event) {
     case AgentEvent.MODEL_RETRYING:
       // The provider is having a moment and the harness is waiting it out.
       // Shown in the status row, never as a failure: the turn is still alive.
+      // `retry_in` is a duration; anchoring it to the clock the event arrived
+      // on (not the server's) is what keeps the countdown honest.
       return {
         ...state,
-        retrying: { attempt: event.attempt || 1, max: event.max_attempts || event.attempt || 1, code: event.code || "" },
+        retrying: {
+          attempt: event.attempt || 1,
+          max: event.max_attempts || event.attempt || 1,
+          code: event.code || "",
+          until: typeof event.retry_in === "number" ? at + event.retry_in * 1000 : null,
+        },
       };
 
     case AgentEvent.AGENT_MESSAGE:
@@ -438,7 +469,7 @@ function reduceEvent(state, event) {
 export function reduceAgentSession(state, action) {
   switch (action.type) {
     case Action.EVENT:
-      return reduceEvent(state, action.event);
+      return reduceEvent(state, action.event, action.at || 0);
 
     case Action.HYDRATE:
       return {
@@ -548,8 +579,8 @@ export function reduceAgentSession(state, action) {
 }
 
 /** Convenience for tests and callers replaying a recorded stream. */
-export function replayEvents(events, state = initialAgentState) {
-  return events.reduce((s, event) => reduceAgentSession(s, { type: Action.EVENT, event }), state);
+export function replayEvents(events, state = initialAgentState, at = 0) {
+  return events.reduce((s, event) => reduceAgentSession(s, { type: Action.EVENT, event, at }), state);
 }
 
 export function isPauseEvent(event) {

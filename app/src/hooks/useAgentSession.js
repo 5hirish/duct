@@ -25,8 +25,13 @@
  *     agentType: "insights",
  *     body: { project_id, prompt, conversation_id?, resume? },
  *     handleKey: `insights:${projectId}:${conversationId || prompt}`,
+ *     notifyAs: "Insights",
  *     onEvent: (event, { appendMessage }) => { ... },
  *   });
+ *
+ * `notifyAs` turns phase transitions into system notifications while the tab
+ * is not being looked at — done, needs input, failed — through
+ * hooks/useAgentNotifications.js. A workspace never sends its own.
  *
  * `body` is the create payload; the effect reopens when it changes by value.
  * `handleKey` scopes the reload handle — make it specific to what the page
@@ -55,6 +60,7 @@ import {
 } from "../lib/agentSession";
 import { clearSessionHandle, readSessionHandle, writeSessionHandle } from "../lib/agentSessionHandle";
 import { consumeSseStream } from "../lib/sse";
+import { useAgentNotifications } from "./useAgentNotifications";
 
 const MAX_RECONNECT = 5;
 function newClientId() {
@@ -86,9 +92,13 @@ export function useAgentSession({
   handleKey = "",
   enabled = true,
   hydrateThreadState = false,
+  // The agent's name in a system notification ("Insights is done"). Omit it
+  // and the session never notifies.
+  notifyAs = "",
   onEvent,
 }) {
   const [state, dispatch] = useReducer(reduceAgentSession, initialAgentState);
+  useAgentNotifications(state, notifyAs);
   const [sessionId, setSessionId] = useState(null);
   const [conversationId, setConversationId] = useState(null);
   const [attempt, setAttempt] = useState(0);        // retry re-runs the effect
@@ -148,7 +158,9 @@ export function useAgentSession({
         terminal = true;
         clearSessionHandle(handleKey);
       }
-      dispatch({ type: Action.EVENT, event });
+      // `at` is this client's clock at receipt: a retry countdown is anchored
+      // to it, never to the server's clock.
+      dispatch({ type: Action.EVENT, event, at: Date.now() });
       onEventRef.current?.(event, { appendMessage, sessionId: sessionIdRef.current, dispatch });
     }
 

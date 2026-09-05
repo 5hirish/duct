@@ -21,6 +21,16 @@ export function formatTokens(n) {
   return String(v);
 }
 
+/** Dollars at the precision a model call needs: cents for a session, tenths
+ *  of a cent for one call, and "<$0.01" rather than a row of zeros. */
+export function formatUsd(v) {
+  const n = Number(v);
+  if (!n || n <= 0) return "";
+  if (n >= 1) return `$${n.toFixed(2)}`;
+  if (n >= 0.01) return `$${n.toFixed(3).replace(/0$/, "")}`;
+  return "<$0.01";
+}
+
 function Ring({ pct, label }) {
   const tone =
     pct >= 0.9 ? "stroke-destructive"
@@ -52,12 +62,16 @@ function Ring({ pct, label }) {
 
 function UsageDetails({ last, total }) {
   const rows = [];
+  // Cost rides on the same rows as the tokens it explains; a model the backend
+  // has no price for shows tokens alone rather than a guessed figure.
+  const lastCost = formatUsd(last?.cost);
+  const totalCost = formatUsd(total?.cost);
   if (last?.window) {
     rows.push(["Context", `${formatTokens(last.input + last.output)} of ${formatTokens(last.window)}`]);
-    rows.push(["Last call", `${formatTokens(last.input)} in · ${formatTokens(last.output)} out${last.cached ? ` · ${formatTokens(last.cached)} cached` : ""}`]);
+    rows.push(["Last call", `${formatTokens(last.input)} in · ${formatTokens(last.output)} out${last.cached ? ` · ${formatTokens(last.cached)} cached` : ""}${lastCost ? ` · ${lastCost}` : ""}`]);
   }
   if (total?.calls) {
-    rows.push(["This session", `${formatTokens(total.input)} in · ${formatTokens(total.output)} out · ${total.calls} call${total.calls === 1 ? "" : "s"}`]);
+    rows.push(["This session", `${formatTokens(total.input)} in · ${formatTokens(total.output)} out · ${total.calls} call${total.calls === 1 ? "" : "s"}${totalCost ? ` · ${totalCost}` : ""}`]);
   }
   if (last?.model) rows.push(["Model", last.model]);
   return (

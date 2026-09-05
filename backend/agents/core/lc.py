@@ -43,7 +43,7 @@ from langgraph.config import get_stream_writer
 from langgraph.types import Command, interrupt
 from pydantic import BaseModel, Field
 
-from agents.core.errors import classify_error, is_retryable
+from agents.core.errors import classify_error, is_retryable, retry_after_seconds
 from agents.core.events import AgentEvent, StepStatus
 from agents.core.session import (
     take_client_id,
@@ -55,6 +55,7 @@ from agents.core.session import (
 from agents.core.stream import DuctArtifactStreamParser
 from agents.core.telemetry import model_span
 from agents.models import (
+    cost_usd,
     context_window_for,
     GATEWAY_BASE_URL,
     ModelName,
@@ -327,6 +328,15 @@ class UsageTracker:
             "model": str(model),
             "total_tokens": usage["input_tokens"] + usage["output_tokens"],
             "context_window": context_window_for(model),
+            # None for a model the price table does not know: the tooltip then
+            # shows tokens without a dollar figure rather than a made-up one.
+            "cost_usd": cost_usd(
+                model,
+                input_tokens=usage["input_tokens"],
+                output_tokens=usage["output_tokens"],
+                cache_read_tokens=usage["cache_read_tokens"],
+                cache_creation_tokens=usage["cache_creation_tokens"],
+            ),
         }
 
 
@@ -345,21 +355,33 @@ def usage_from_messages(messages: list, model: Any) -> dict:
     which is also what the next call will pay for again.
     """
     last: dict | None = None
-    total = {"input_tokens": 0, "output_tokens": 0, "cache_read_tokens": 0, "calls": 0}
+    total = {"input_tokens": 0, "output_tokens": 0, "cache_read_tokens": 0, "calls": 0, "cost_usd": None}
     for message in messages or []:
         usage = getattr(message, "usage_metadata", None)
         if not usage:
             continue
         details = usage.get("input_token_details") or {}
+        # The message may name the model that actually answered (a fallback);
+        # price by that when it does, else by the thread's configured model.
+        served = (getattr(message, "response_metadata", None) or {}).get("model_name") or model
         last = {
             "input_tokens": int(usage.get("input_tokens") or 0),
             "output_tokens": int(usage.get("output_tokens") or 0),
             "cache_read_tokens": int(details.get("cache_read") or 0),
         }
+        last["cost_usd"] = cost_usd(
+            served,
+            input_tokens=last["input_tokens"],
+            output_tokens=last["output_tokens"],
+            cache_read_tokens=last["cache_read_tokens"],
+            cache_creation_tokens=int(details.get("cache_creation") or 0),
+        )
         total["input_tokens"] += last["input_tokens"]
         total["output_tokens"] += last["output_tokens"]
         total["cache_read_tokens"] += last["cache_read_tokens"]
         total["calls"] += 1
+        if last["cost_usd"] is not None:
+            total["cost_usd"] = round((total["cost_usd"] or 0.0) + last["cost_usd"], 6)
     return {
         "last": last,
         "total": total,
@@ -492,11 +514,23 @@ def inspection_chat_model() -> Any:
 MODEL_RETRY_ATTEMPTS = 4
 MODEL_RETRY_INITIAL_DELAY = 1.0
 MODEL_RETRY_MAX_DELAY = 8.0
+# A provider's own Retry-After wins over the schedule above, up to this long.
+# Past it the user is better served by a failure they can act on than by a
+# status row counting down a minute; the code on that failure says "rate
+# limited", which is the truth.
+MODEL_RETRY_HEADER_MAX_DELAY = 30.0
 _RETRY_JITTER = 0.25
 
 
-def retry_delay(attempt: int) -> float:
-    """Seconds to wait after the ``attempt``-th failure (1-based), jittered."""
+def retry_delay(attempt: int, exc: BaseException | None = None) -> float:
+    """Seconds to wait after the ``attempt``-th failure (1-based).
+
+    What the provider asked for if it said (``Retry-After``), otherwise the
+    jittered exponential schedule.
+    """
+    asked = retry_after_seconds(exc) if exc is not None else None
+    if asked is not None:
+        return min(asked, MODEL_RETRY_HEADER_MAX_DELAY)
     delay = min(MODEL_RETRY_INITIAL_DELAY * 2 ** (attempt - 1), MODEL_RETRY_MAX_DELAY)
     return max(0.0, delay + random.uniform(-delay * _RETRY_JITTER, delay * _RETRY_JITTER))
 
@@ -595,16 +629,20 @@ class ReportedRetryMiddleware(AgentMiddleware):
         super().__init__()
         self.attempts = max(1, attempts)
 
-    def _report(self, exc: Exception, attempt: int) -> None:
+    def _report(self, exc: Exception, attempt: int, delay: float) -> None:
         code = classify_error(exc)
         logger.warning(
-            "model call failed (%s), retrying %d/%d", code, attempt, self.attempts
+            "model call failed (%s), retrying %d/%d in %.1fs", code, attempt, self.attempts, delay
         )
+        # `retry_in` is a duration, not a timestamp: the client anchors it to
+        # its own clock on receipt, so a skewed server clock cannot show a
+        # countdown that is already over.
         emit_custom({
             "event": AgentEvent.MODEL_RETRYING,
             "attempt": attempt,
             "max_attempts": self.attempts,
             "code": code,
+            "retry_in": round(delay, 1),
         })
 
     def _give_up(self, exc: Exception, attempt: int) -> bool:
@@ -617,8 +655,9 @@ class ReportedRetryMiddleware(AgentMiddleware):
             except Exception as exc:
                 if self._give_up(exc, attempt):
                     raise
-                self._report(exc, attempt)
-                await _retry_sleep(retry_delay(attempt))
+                delay = retry_delay(attempt, exc)
+                self._report(exc, attempt, delay)
+                await _retry_sleep(delay)
         raise AssertionError("unreachable")  # pragma: no cover
 
     def wrap_model_call(self, request, handler):  # type: ignore[override]
@@ -628,8 +667,9 @@ class ReportedRetryMiddleware(AgentMiddleware):
             except Exception as exc:
                 if self._give_up(exc, attempt):
                     raise
-                self._report(exc, attempt)
-                time.sleep(retry_delay(attempt))
+                delay = retry_delay(attempt, exc)
+                self._report(exc, attempt, delay)
+                time.sleep(delay)
         raise AssertionError("unreachable")  # pragma: no cover
 
 

@@ -17,6 +17,7 @@ from agents.core.errors import (
     classify_error,
     error_payload,
     is_retryable,
+    retry_after_seconds,
 )
 
 
@@ -115,3 +116,48 @@ def test_the_payload_never_carries_the_raw_message():
 
 def test_every_code_has_a_description():
     assert set(DESCRIPTIONS) == set(ErrorCode)
+
+
+# ---------------------------------------------------------------------------
+# Retry-After
+# ---------------------------------------------------------------------------
+
+class _Response:
+    def __init__(self, headers):
+        self.headers = headers
+
+
+def test_retry_after_prefers_the_millisecond_header():
+    exc = _named("RateLimitError", "429", response=_Response({"retry-after-ms": "2500", "retry-after": "7"}))
+    assert retry_after_seconds(exc) == 2.5
+
+
+def test_retry_after_reads_seconds_case_insensitively():
+    exc = _named("RateLimitError", "429", response=_Response({"Retry-After": "7"}))
+    assert retry_after_seconds(exc) == 7.0
+
+
+def test_retry_after_reads_an_http_date():
+    from datetime import datetime, timedelta, timezone
+    from email.utils import format_datetime
+
+    when = datetime.now(timezone.utc) + timedelta(seconds=40)
+    exc = _named("RateLimitError", "429", response=_Response({"retry-after": format_datetime(when, usegmt=True)}))
+    seconds = retry_after_seconds(exc)
+    assert seconds is not None and 37 <= seconds <= 40
+
+
+def test_retry_after_reads_a_provider_attribute_and_looks_through_a_wrapper():
+    try:
+        try:
+            raise _named("ResourceExhausted", "quota", retry_after=12)
+        except Exception as inner:
+            raise RuntimeError("tool failed") from inner
+    except RuntimeError as outer:
+        assert retry_after_seconds(outer) == 12.0
+
+
+def test_retry_after_is_none_when_the_provider_said_nothing():
+    assert retry_after_seconds(_named("RateLimitError", "429")) is None
+    assert retry_after_seconds(_named("RateLimitError", "429", response=_Response({"retry-after": "soon"}))) is None
+    assert retry_after_seconds(_named("RateLimitError", "429", response=_Response(None))) is None

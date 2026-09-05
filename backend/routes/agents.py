@@ -128,6 +128,14 @@ def _close_and_consolidate(session_id: str) -> None:
     # which is exactly when it matters.
     if session is not None and getattr(session, "memory_off", False):
         conversation_id = None
+    # Before the run is cancelled: a turn still in flight is recorded as
+    # cancelled, so the list says "Stopped" and the transcript ends with why.
+    recorder = getattr(session, "recorder", None) if session else None
+    if recorder is not None:
+        try:
+            recorder.close()
+        except Exception:  # noqa: BLE001 - never let bookkeeping block a close
+            logger.debug("agents: recorder close failed for %s", session_id, exc_info=True)
     close_session(session_id)
     schedule_consolidation(conversation_id)
 
@@ -744,6 +752,10 @@ def _conversation_summary(conv) -> dict:
         "artifact_id": str(conv.artifact_id) if conv.artifact_id else None,
         "title": conv.title,
         "status": conv.status,
+        # What the run is doing (RunStatus) and, when it stopped on a failure,
+        # the same {code, retryable, error} the live client was shown.
+        "run_status": conv.run_status,
+        "run_error": conv.run_error,
         "pinned": conv.pinned,
         "last_seq": conv.last_seq,
         "meta": conv.meta or {},
@@ -855,12 +867,13 @@ async def get_agent_conversation_state(
     with next(db_session()) as db:
         conv = _conversation_for_user(db, user, agent_type, conversation_id)
         conv_id = conv.id
+        run = {"run_status": conv.run_status, "run_error": conv.run_error}
     if agent_type != AgentType.INSIGHTS:
-        return {"status": "unsupported", "pauses": [], "todos": []}
+        return {"status": "unsupported", "pauses": [], "todos": [], **run}
     from agents.insights.v1.runner import AutonomousInsightsRunner
 
     # The key is never used: inspection builds the graph on a placeholder model.
-    return await AutonomousInsightsRunner(api_key="").thread_state(conv_id)
+    return {**(await AutonomousInsightsRunner(api_key="").thread_state(conv_id)), **run}
 
 
 class ConversationPatch(BaseModel):

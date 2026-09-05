@@ -13,13 +13,15 @@ from langgraph.graph.message import REMOVE_ALL_MESSAGES
 
 from agents.core.events import AgentEvent
 from agents.core.lc import (
+    MODEL_RETRY_HEADER_MAX_DELAY,
     UsageTracker,
     _dispatch_updates,
     is_middleware_node,
     is_summarization_node,
+    retry_delay,
     usage_from_messages,
 )
-from agents.models import DEFAULT_CONTEXT_WINDOW, ModelName
+from agents.models import CONTEXT_WINDOW, DEFAULT_CONTEXT_WINDOW, PRICING, ModelName, cost_usd
 
 
 def _usage(inp, out, cached=0):
@@ -57,6 +59,8 @@ def test_a_call_is_billed_once_at_its_stop_marker():
         "scope": "thread",
         "total_tokens": 1240,
         "context_window": 200_000,
+        # 300 uncached in at $2 + 900 cached at $0.20 + 40 out at $10, per million.
+        "cost_usd": round((300 * 2.0 + 900 * 0.2 + 40 * 10.0) / 1_000_000, 6),
     }
     assert tracker.flush() is None  # nothing left over
 
@@ -78,6 +82,7 @@ def test_a_call_without_a_stop_marker_is_billed_at_the_end_of_the_turn():
     billed = tracker.flush()
     assert billed["total_tokens"] == 15
     assert billed["context_window"] == DEFAULT_CONTEXT_WINDOW
+    assert billed["cost_usd"] is None  # unpriced: tokens shown, no dollar figure
 
 
 def test_a_nested_call_is_a_subagents_not_the_threads():
@@ -96,8 +101,13 @@ def test_stored_usage_is_the_last_call_and_the_sum_of_what_survives():
         AIMessage(content="b", usage_metadata=_usage(300, 20, cached=50)),
     ]
     usage = usage_from_messages(messages, ModelName.CLAUDE_OPUS_1M)
-    assert usage["last"] == {"input_tokens": 300, "output_tokens": 20, "cache_read_tokens": 50}
-    assert usage["total"] == {"input_tokens": 400, "output_tokens": 30, "cache_read_tokens": 50, "calls": 2}
+    first = cost_usd(ModelName.CLAUDE_OPUS_1M, input_tokens=100, output_tokens=10)
+    second = cost_usd(ModelName.CLAUDE_OPUS_1M, input_tokens=300, output_tokens=20, cache_read_tokens=50)
+    assert usage["last"] == {"input_tokens": 300, "output_tokens": 20, "cache_read_tokens": 50, "cost_usd": second}
+    assert usage["total"] == {
+        "input_tokens": 400, "output_tokens": 30, "cache_read_tokens": 50, "calls": 2,
+        "cost_usd": round(first + second, 6),
+    }
     assert usage["context_window"] == 1_000_000
     assert usage["model"] == "claude-opus-5[1m]"
     assert usage_from_messages([], ModelName.CLAUDE_SONNET)["last"] is None
@@ -186,3 +196,41 @@ def test_the_steer_middleware_hands_the_model_what_arrived_mid_turn():
     # Nothing waiting: no update, so the graph state is untouched.
     assert SteerMiddleware(session).before_model({}, None) is None
     assert SteerMiddleware(object()).before_model({}, None) is None  # a harness with no queue
+
+
+# ---------------------------------------------------------------------------
+# Cost
+# ---------------------------------------------------------------------------
+
+def test_every_model_with_a_context_window_has_a_price():
+    """The two tables describe the same chat models; a model added to one and
+    not the other shows a gauge with no cost, or a cost with no gauge."""
+    assert set(PRICING) == set(CONTEXT_WINDOW)
+
+
+def test_cached_tokens_are_priced_at_the_cache_rate_not_the_input_rate():
+    # 10 000 in, of which 8 000 were read from cache: only 2 000 at full price.
+    full = cost_usd(ModelName.CLAUDE_SONNET, input_tokens=10_000, output_tokens=0)
+    mostly_cached = cost_usd(ModelName.CLAUDE_SONNET, input_tokens=10_000, output_tokens=0, cache_read_tokens=8_000)
+    assert full == 0.02
+    assert mostly_cached == round((2_000 * 2.0 + 8_000 * 0.2) / 1_000_000, 6)
+    assert cost_usd("a-model-nobody-priced", input_tokens=1, output_tokens=1) is None
+
+
+# ---------------------------------------------------------------------------
+# Retry delay
+# ---------------------------------------------------------------------------
+
+class _Told(Exception):
+    def __init__(self, seconds):
+        super().__init__("429")
+        self.response = type("R", (), {"headers": {"retry-after": str(seconds)}})()
+
+
+def test_the_providers_retry_after_wins_over_the_schedule_up_to_a_cap():
+    assert retry_delay(1, _Told(7)) == 7.0
+    assert retry_delay(3, _Told(0)) == 0.0
+    assert retry_delay(1, _Told(600)) == MODEL_RETRY_HEADER_MAX_DELAY
+    # Nothing said: the jittered schedule, which grows with the attempt.
+    assert 0.7 <= retry_delay(1, Exception("429")) <= 1.3
+    assert 5.9 <= retry_delay(4) <= 10.1

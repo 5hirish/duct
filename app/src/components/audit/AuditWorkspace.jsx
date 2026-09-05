@@ -42,6 +42,7 @@ export default function AuditWorkspace({
 
   const agent = useAgentSession({
     agentType: AGENT_TYPE,
+    notifyAs: "The SEO audit",
     body: auditParams,
     // The page's own session key is unique per audit, so a reload of this
     // page reattaches to this audit's run.
@@ -68,13 +69,6 @@ export default function AuditWorkspace({
     onReportReady(latest.report);
   }, [onReportReady, phase, reportVersions]);
 
-  // Browser notification permission — request once on mount
-  useEffect(() => {
-    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
-      Notification.requestPermission();
-    }
-  }, []);
-
   function upsertVersion(event) {
     setReportVersions((prev) =>
       [
@@ -87,15 +81,6 @@ export default function AuditWorkspace({
 
   function handleEvent(event, { appendMessage }) {
     switch (event.event) {
-      case AuditEvent.QUESTIONS_REQUIRED:
-        if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
-          new Notification("Duct — Your input is needed", {
-            body: "The agent has a question before continuing the audit.",
-            icon: "/favicon.ico",
-          });
-        }
-        break;
-
       case AuditEvent.ARTIFACT_CHUNK:
       case AuditEvent.LEGACY_REPORT_CHUNK:
         htmlBatchRef.current += event.text;

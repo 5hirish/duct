@@ -12,6 +12,7 @@ import {
   replayEvents,
 } from "../agentSession";
 import { StepStatus } from "../agentSteps";
+import { mapEventsToMessages } from "../agentHistory";
 import audit from "../__fixtures__/audit-run.json";
 import content from "../__fixtures__/content-plan.json";
 import insights from "../__fixtures__/insights-pause.json";
@@ -287,12 +288,36 @@ describe("typed failures", () => {
       { event: AgentEvent.PIPELINE_STARTED },
       { event: AgentEvent.MODEL_RETRYING, attempt: 2, max_attempts: 4, code: "rate_limited" },
     ]);
-    expect(retrying.retrying).toEqual({ attempt: 2, max: 4, code: "rate_limited" });
+    expect(retrying.retrying).toEqual({ attempt: 2, max: 4, code: "rate_limited", until: null });
     expect(retrying.phase).toBe(Phase.PIPELINE);
     expect(retrying.messages).toEqual([]);
 
     const streaming = replayEvents([{ event: AgentEvent.AGENT_MESSAGE_CHUNK, text: "Back." }], retrying);
     expect(streaming.retrying).toBeNull();
+  });
+
+  it("a retry with a wait is anchored to the clock it arrived on, so the row can count down", () => {
+    const at = 1_700_000_000_000;
+    const s = replayEvents(
+      [{ event: AgentEvent.MODEL_RETRYING, attempt: 1, max_attempts: 4, code: "rate_limited", retry_in: 7 }],
+      initialAgentState,
+      at,
+    );
+    expect(s.retrying.until).toBe(at + 7000);
+  });
+
+  it("a stored failure rehydrates as the row the live client showed", () => {
+    const rows = mapEventsToMessages([
+      { kind: "user", data: { content: "again" } },
+      { kind: "failure", data: { code: "auth", retryable: false, error: "The model provider rejected the API key." } },
+      { kind: "user", data: { content: "and again" } },
+      { kind: "failure", data: { code: "cancelled", retryable: true, error: "Stopped." } },
+    ]);
+    expect(rows[1]).toMatchObject({ role: Row.SEND_ERROR, code: "auth", retryable: false });
+    expect(rows[1].text).toMatch(/Settings → Models/);
+    expect(errorAction(rows[1].code)).toBe(ErrorAction.SETTINGS);
+    expect(rows[3]).toMatchObject({ role: Row.NOTICE });
+    expect(rows[3].text).toMatch(/interrupted/);
   });
 
   it("a turn failure's code picks the copy and whether a retry is offered", () => {
@@ -338,7 +363,19 @@ describe("context and cost", () => {
   it("the gauge follows the thread's last call; the total counts every call", () => {
     const s = replayEvents([bill(40000, 500), bill(9000, 200, { scope: "subagent" }), bill(61000, 800)]);
     expect(s.usage.last).toMatchObject({ input: 61000, output: 800, window: 200000, model: "claude-sonnet-5" });
-    expect(s.usage.total).toEqual({ input: 110000, output: 1500, cached: 0, calls: 3 });
+    expect(s.usage.total).toEqual({ input: 110000, output: 1500, cached: 0, calls: 3, cost: 0 });
+  });
+
+  it("cost rides with the tokens, and an unpriced model leaves it blank rather than zero", () => {
+    const s = replayEvents([bill(40000, 500, { cost_usd: 0.085 }), bill(9000, 200, { scope: "subagent", cost_usd: 0.02 }), bill(1000, 10, { cost_usd: null })]);
+    expect(s.usage.last.cost).toBeNull();
+    expect(s.usage.total.cost).toBeCloseTo(0.105, 6);
+    const hydrated = reduceAgentSession(initialAgentState, {
+      type: Action.PAUSES, pauses: [],
+      usage: { last: { input_tokens: 1, output_tokens: 1, cost_usd: 0.01 }, total: { calls: 2, cost_usd: 0.3 }, context_window: 1, model: "m" },
+    });
+    expect(hydrated.usage.last.cost).toBe(0.01);
+    expect(hydrated.usage.total.cost).toBe(0.3);
   });
 
   it("compaction is status while it runs, then a quiet note", () => {
@@ -361,7 +398,7 @@ describe("context and cost", () => {
         model: "claude-sonnet-5",
       },
     });
-    expect(s.usage.last).toEqual({ input: 52000, output: 700, cached: 30000, window: 200000, model: "claude-sonnet-5" });
+    expect(s.usage.last).toEqual({ input: 52000, output: 700, cached: 30000, window: 200000, model: "claude-sonnet-5", cost: null });
     expect(s.usage.total.calls).toBe(4);
     expect(s.phase).toBe(Phase.STARTING);
   });

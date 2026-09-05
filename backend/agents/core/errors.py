@@ -24,6 +24,9 @@ from __future__ import annotations
 
 import asyncio
 import re
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
+from typing import Any
 from enum import StrEnum
 
 
@@ -190,6 +193,71 @@ def _chain(exc: BaseException):
             inner = getattr(current, attr, None)
             if isinstance(inner, BaseException):
                 stack.append(inner)
+
+
+_RETRY_AFTER_HEADERS = (("retry-after-ms", 1000.0), ("retry-after", 1.0))
+
+
+def _header(headers: Any, name: str) -> Any:
+    """A header by case-insensitive name from whatever the SDK exposes —
+    ``httpx.Headers``, a dict, ``requests``' structure — without importing any
+    of them."""
+    if headers is None:
+        return None
+    try:
+        value = headers.get(name)
+        if value is None and hasattr(headers, "items"):
+            wanted = name.lower()
+            for key, candidate in headers.items():
+                if str(key).lower() == wanted:
+                    value = candidate
+                    break
+    except Exception:  # noqa: BLE001 - not a mapping after all
+        return None
+    return value
+
+
+def _parse_retry_after(value: Any, divisor: float) -> float | None:
+    """Seconds from a Retry-After value: a number, or an HTTP date."""
+    if value is None:
+        return None
+    text = str(value).strip()
+    if not text:
+        return None
+    try:
+        seconds = float(text) / divisor
+    except ValueError:
+        try:
+            when = parsedate_to_datetime(text)
+        except (TypeError, ValueError):
+            return None
+        if when.tzinfo is None:
+            when = when.replace(tzinfo=timezone.utc)
+        seconds = (when - datetime.now(timezone.utc)).total_seconds()
+    return max(0.0, seconds)
+
+
+def retry_after_seconds(exc: BaseException) -> float | None:
+    """How long the provider asked us to wait before retrying, if it said.
+
+    Anthropic and OpenAI put it on the response (``retry-after-ms`` first,
+    then ``retry-after`` as seconds or an HTTP date); some SDKs surface it as a
+    ``retry_after`` attribute. Backing off on our own schedule when the
+    provider has told us the real one only makes the retry fail again.
+    """
+    for current in _chain(exc):
+        for holder in (current, getattr(current, "response", None)):
+            if holder is None:
+                continue
+            direct = getattr(holder, "retry_after", None)
+            if isinstance(direct, (int, float)) and not isinstance(direct, bool):
+                return max(0.0, float(direct))
+            headers = getattr(holder, "headers", None)
+            for name, divisor in _RETRY_AFTER_HEADERS:
+                parsed = _parse_retry_after(_header(headers, name), divisor)
+                if parsed is not None:
+                    return parsed
+    return None
 
 
 def classify_error(exc: BaseException) -> ErrorCode:

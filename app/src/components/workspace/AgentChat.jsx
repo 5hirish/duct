@@ -45,8 +45,13 @@ import Todos from "./Todos";
 
 /** A turn that failed, or a message that never got out. `content` is set only
  *  for the latter — it is what a retry resends. A failure whose code says a
- *  retry cannot help (a rejected key, a full context) gets no retry button. */
-function SendErrorBubble({ text, content, onRetry, retryable = true }) {
+ *  retry cannot help (a rejected key, a full context) gets no retry button;
+ *  one whose code names where the fix lives gets the link there instead —
+ *  the same action the terminal failure card offers, so a failure reads the
+ *  same live and after a reload. */
+function SendErrorBubble({ text, content, code = "", onRetry, retryable = true }) {
+  const action = code ? errorAction(code) : ErrorAction.RETRY;
+  const link = "block w-full text-xs text-right text-muted-foreground hover:text-foreground transition-colors pr-1";
   return (
     <div className="flex justify-end mb-2">
       <div className="max-w-[85%] space-y-1">
@@ -54,12 +59,10 @@ function SendErrorBubble({ text, content, onRetry, retryable = true }) {
           <p className="text-xs font-medium mb-0.5">{content ? "Failed to send" : "That turn failed"}</p>
           <p className="text-xs text-destructive/80">{text}</p>
         </div>
-        {content && onRetry && retryable && (
-          <button
-            type="button"
-            onClick={() => onRetry(content)}
-            className="w-full text-xs text-right text-muted-foreground hover:text-foreground transition-colors pr-1"
-          >
+        {action === ErrorAction.SETTINGS && <Link href="/settings/models" className={link}>Open model settings →</Link>}
+        {action === ErrorAction.CONNECTIONS && <Link href="/connections" className={link}>Open connections →</Link>}
+        {action === ErrorAction.RETRY && content && onRetry && retryable && (
+          <button type="button" onClick={() => onRetry(content)} className={link}>
             ↺ Retry
           </button>
         )}
@@ -137,7 +140,7 @@ function ChatBubble({ role, text, thinking, streaming, remember, queued = false 
         <ThinkingBlock thinking={thinking} streaming={streaming && !text} />
         {text && (
           <div className="rounded-2xl rounded-bl-sm px-4 py-3 text-sm bg-muted text-foreground max-w-none">
-            <AssistantMarkdown source={text} />
+            <AssistantMarkdown source={text} streaming={streaming} />
             {streaming && <span className="inline-block w-0.5 h-3.5 bg-current ml-0.5 animate-pulse align-middle" />}
           </div>
         )}
@@ -199,7 +202,7 @@ function ArtifactCard({ artifact }) {
 function TranscriptRow({ msg, onRetrySend, remember }) {
   switch (msg.role) {
     case Row.SEND_ERROR:
-      return <SendErrorBubble text={msg.text} content={msg.content} onRetry={onRetrySend} retryable={msg.retryable} />;
+      return <SendErrorBubble text={msg.text} content={msg.content} code={msg.code} onRetry={onRetrySend} retryable={msg.retryable} />;
     case Row.IMAGE:
       return <ImageBubble image={msg.image} fullUrl={msg.fullUrl} caption={msg.caption} />;
     case Row.ARTIFACT_CARD:
@@ -387,8 +390,12 @@ export default function AgentChat({
   // What it is doing right now, most specific first. Codex titles this row
   // with the model's own words; we have the step it is in, which is enough.
   const runningStep = steps.find((s) => s.status === StepStatus.RUNNING && !s.step_id?.includes(":"));
+  // The countdown re-reads the clock on every tick of the elapsed timer, so it
+  // needs no timer of its own. `until` is on this client's clock (the reducer
+  // anchors the backend's duration at receipt), so skew cannot show "in -3s".
+  const retryIn = retrying?.until ? Math.max(0, Math.ceil((retrying.until - Date.now()) / 1000)) : 0;
   const activity = retrying
-    ? `Reconnecting to the model (${retrying.attempt}/${retrying.max})`
+    ? `Reconnecting to the model (${retrying.attempt}/${retrying.max})${retryIn > 0 ? ` · retry in ${retryIn}s` : ""}`
     : compacting
       ? "Compacting context"
       : runningStep?.label || "";

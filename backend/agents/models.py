@@ -7,6 +7,7 @@ model initialization via LangChain's init_chat_model().
 from __future__ import annotations
 
 from enum import Enum, StrEnum
+from typing import NamedTuple
 
 
 class Provider(str, Enum):
@@ -292,6 +293,91 @@ CONTEXT_WINDOW: dict[ModelName, int] = {
     ModelName.OR_CLAUDE_SONNET: 200_000,
     ModelName.OR_GPT_5_MINI: 400_000,
 }
+
+
+class ModelPrice(NamedTuple):
+    """USD per million tokens, as the provider lists them."""
+
+    input: float
+    output: float
+    cache_read: float = 0.0
+    cache_write: float = 0.0
+
+
+# List prices, USD per million tokens, from the providers' pricing pages via
+# models.dev on 2026-09-05. This feeds the cost figure beside the context
+# gauge and nothing else: a stale price makes the figure slightly wrong, never
+# a request wrong, so a table is right and a live lookup is not. A model that
+# is missing here shows tokens without a dollar figure rather than a made-up
+# one — on BYO keys the number is what the user actually pays, so a guess is
+# worse than a blank.
+PRICING: dict[ModelName, ModelPrice] = {
+    ModelName.GPT_5_6_SOL: ModelPrice(4.0, 20.0, 0.4, 5.0),
+    ModelName.GPT_5_6_TERRA: ModelPrice(2.0, 12.0, 0.2, 2.5),
+    ModelName.GPT_5_6_LUNA: ModelPrice(0.2, 1.2, 0.02, 0.25),
+    ModelName.GPT_5_MINI: ModelPrice(0.25, 2.0, 0.025),
+    ModelName.GPT_4O: ModelPrice(2.5, 10.0, 1.25),
+    ModelName.GPT_4O_MINI: ModelPrice(0.15, 0.6, 0.075),
+    ModelName.GEMINI_3_1_PRO_PREVIEW: ModelPrice(2.0, 12.0, 0.2),
+    ModelName.GEMINI_3_7_FLASH: ModelPrice(0.75, 3.75, 0.075),
+    ModelName.GEMINI_3_5_FLASH_LITE: ModelPrice(0.3, 2.5, 0.03),
+    ModelName.GEMINI_2_5_FLASH: ModelPrice(0.3, 2.5, 0.03),
+    ModelName.GEMINI_2_5_FLASH_LITE: ModelPrice(0.1, 0.4, 0.01),
+    ModelName.CLAUDE_OPUS: ModelPrice(5.0, 25.0, 0.5, 6.25),
+    ModelName.CLAUDE_SONNET: ModelPrice(2.0, 10.0, 0.2, 2.5),
+    ModelName.CLAUDE_HAIKU: ModelPrice(1.0, 5.0, 0.1, 1.25),
+    ModelName.CLAUDE_OPUS_1M: ModelPrice(5.0, 25.0, 0.5, 6.25),
+    ModelName.OR_DEEPSEEK_V4_FLASH: ModelPrice(0.08722, 0.17444, 0.017444),
+    ModelName.OR_QWEN3_7_FLASH: ModelPrice(0.03, 0.13, 0.006, 0.038),
+    ModelName.OR_KIMI_K2_5: ModelPrice(0.45, 2.25, 0.07),
+    ModelName.OR_GLM_5_3_FLASH: ModelPrice(0.075, 0.25, 0.015),
+    ModelName.OR_CLAUDE_OPUS: ModelPrice(5.0, 25.0, 0.5, 6.25),
+    ModelName.OR_CLAUDE_SONNET: ModelPrice(2.0, 10.0, 0.2, 2.5),
+    ModelName.OR_GPT_5_MINI: ModelPrice(0.25, 2.0, 0.025),
+}
+
+
+def _model_key(model: "ModelName | str | None") -> "ModelName | None":
+    if isinstance(model, ModelName):
+        return model
+    try:
+        return ModelName(str(model))
+    except ValueError:
+        return None
+
+
+def price_for(model: "ModelName | str | None") -> ModelPrice | None:
+    """The price list for a model id, by enum member or raw string; ``None``
+    for a model the table does not know."""
+    key = _model_key(model)
+    return PRICING.get(key) if key is not None else None
+
+
+def cost_usd(
+    model: "ModelName | str | None",
+    *,
+    input_tokens: int,
+    output_tokens: int,
+    cache_read_tokens: int = 0,
+    cache_creation_tokens: int = 0,
+) -> float | None:
+    """What one model call cost, or ``None`` when the model is not priced.
+
+    ``input_tokens`` is LangChain's count, which *includes* the cached and
+    cache-written tokens; those are billed at their own rates, so they are
+    taken out of the input figure before it is priced.
+    """
+    price = price_for(model)
+    if price is None:
+        return None
+    uncached = max(0, input_tokens - cache_read_tokens - cache_creation_tokens)
+    total = (
+        uncached * price.input
+        + cache_read_tokens * price.cache_read
+        + cache_creation_tokens * price.cache_write
+        + output_tokens * price.output
+    )
+    return round(total / 1_000_000, 6)
 
 
 def context_window_for(model: "ModelName | str | None") -> int:

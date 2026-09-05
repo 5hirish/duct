@@ -1,9 +1,11 @@
 "use client";
 
+import { memo, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks"; // honor single newlines as line breaks (LLMs use them)
 import { CodeBlock, resolveCode } from "./CodeBlock";
+import { healTail, splitSettled } from "../../lib/markdownStream";
 
 // Explicit per-element styling — the app has NO @tailwindcss/typography plugin,
 // so `prose` classes are no-ops and Tailwind's preflight strips heading sizes,
@@ -67,12 +69,46 @@ const THINKING_COMPONENTS = {
   hr: () => <hr className="border-border/40 my-2" />,
 };
 
-/** An assistant turn's markdown, at reading size. */
-export function AssistantMarkdown({ source }) {
+const PLUGINS = [remarkGfm, remarkBreaks];
+
+// Memoised on its source: the settled part of a streaming reply is parsed
+// once per closed block, not once per token.
+const Settled = memo(function Settled({ source }) {
   return (
-    <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]} components={ASSISTANT_COMPONENTS}>
+    <ReactMarkdown remarkPlugins={PLUGINS} components={ASSISTANT_COMPONENTS}>
       {source}
     </ReactMarkdown>
+  );
+});
+
+/**
+ * An assistant turn's markdown, at reading size.
+ *
+ * While `streaming`, the text is split at its last block boundary: what is
+ * settled renders once and stays put, and only the tail re-renders per delta,
+ * healed so an unfinished `**` or fence or table row reads as prose rather
+ * than as markup mid-flight. That is what stops a table reflowing its columns
+ * and a list renumbering as the reply grows. Once the turn ends the whole
+ * reply is parsed in one go, so nothing the split got wrong survives it.
+ */
+export function AssistantMarkdown({ source, streaming = false }) {
+  const parts = useMemo(() => (streaming ? splitSettled(source) : null), [source, streaming]);
+  if (!parts) {
+    return (
+      <ReactMarkdown remarkPlugins={PLUGINS} components={ASSISTANT_COMPONENTS}>
+        {source}
+      </ReactMarkdown>
+    );
+  }
+  return (
+    <>
+      {parts.settled && <Settled source={parts.settled} />}
+      {parts.tail && (
+        <ReactMarkdown remarkPlugins={PLUGINS} components={ASSISTANT_COMPONENTS}>
+          {healTail(parts.tail)}
+        </ReactMarkdown>
+      )}
+    </>
   );
 }
 

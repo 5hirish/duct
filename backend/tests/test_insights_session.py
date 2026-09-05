@@ -404,10 +404,38 @@ async def test_a_transient_failure_is_retried_and_reported(session, emitted, no_
     assert all(r["code"] == ErrorCode.RATE_LIMITED for r in retries)
     assert retries[0]["max_attempts"] == lc.MODEL_RETRY_ATTEMPTS
     assert len(no_retry_sleep) == 2 and no_retry_sleep[1] > no_retry_sleep[0] * 1.2  # backing off
+    # The wait the UI counts down is the wait actually taken.
+    assert [r["retry_in"] for r in retries] == [round(s, 1) for s in no_retry_sleep]
     kinds = _kinds(emitted)
     assert AgentEvent.STEP_FAILED not in kinds
     assert AgentEvent.PIPELINE_FAILED not in kinds
     assert AgentEvent.PIPELINE_FINISHED in kinds
+
+
+class TellsWhenToRetry(RateLimitError):
+    """A 429 that says how long to wait, the way Anthropic's and OpenAI's do."""
+
+    def __init__(self, message):
+        super().__init__(message)
+        self.response = type("Response", (), {"headers": {"retry-after": "7"}})()
+
+
+async def test_the_providers_retry_after_sets_the_wait_and_the_countdown(session, emitted, no_retry_sleep):
+    await session.chat_queue.put(None)
+
+    class Told(FlakyFake):
+        failures: int = 1
+        exc: type[Exception] = TellsWhenToRetry
+
+    await RUNNER.run_session(
+        session.session_id, emitted, llm=_fake("Recovered.", cls=Told),
+        session=session, prompt="status?", chat_idle_timeout=2.0,
+    )
+
+    assert no_retry_sleep == [7.0]
+    retry = next(e for e in emitted.events if e["event"] == AgentEvent.MODEL_RETRYING)
+    assert retry["retry_in"] == 7.0
+    assert AgentEvent.PIPELINE_FINISHED in _kinds(emitted)
 
 
 async def test_a_rejected_key_fails_on_the_first_attempt(session, emitted, no_retry_sleep):

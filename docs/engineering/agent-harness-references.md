@@ -16,7 +16,7 @@ into the area `AGENTS.md`; this file records where they came from.
 | Harness | Repo | Why it matters to us | Last read |
 |---------|------|----------------------|-----------|
 | **Codex** (OpenAI) | `github.com/openai/codex` | The desktop and IDE apps are clients of `codex app-server`, a JSON-RPC server whose thread / turn / item contract is the most fully specified agent-UI protocol in the open. The desktop app itself is closed; the TUI in the same repo is the reference client. | `de78740`, 2026-09-04 — shallow clone at `../codex` |
-| **OpenCode** (sst) | `github.com/sst/opencode` | TypeScript server + clients over a session / message / part model with an SSE event bus; provider-agnostic; closest in shape to our Next.js app talking to a backend. | not yet read |
+| **OpenCode** (Anomaly) | `github.com/anomalyco/opencode` (moved from `sst/opencode`; default branch `dev`) | TypeScript server + clients over a session / message / part model with an SSE event bus, mid-migration to an event-sourced v2; provider-agnostic; closest in shape to our Next.js app talking to a backend. | `5cf9f51`, 2026-09-04 — shallow clone at `../opencode` |
 | **pi** (badlogic) | `github.com/badlogic/pi-mono` | A deliberately small TypeScript agent loop and TUI; the reference for "how little harness do you need". Has explicit steer-vs-follow-up input modes and session trees. | not yet read |
 
 ## How to read one
@@ -214,26 +214,195 @@ column keeps what they replaced so the reason survives.
 | S | **done** — Typed error codes | `codexErrorInfo` enum → copy + offered action | `friendlyErrorMessage` regexes the message text (`agentSession.js:442`) |
 | S | **done** (label + clock; step durations still open) — Elapsed time and activity label while running | status row + `Ran · 1.4s` | "Thinking…" and step chips with no clock; steps carry no timestamps |
 | S | A `pause_resolved` event | `serverRequest/resolved` for every clearing reason | a second tab keeps a stale card; the runner knows when a pause resolves and says nothing |
-| S | Completion notification when the tab is hidden | coalesced desktop notification, suppressed when focused | none; insights pipelines run for minutes |
-| S | Hold back markdown tables until the block closes | `controller.rs:12-20` | `ChatMarkdown` re-renders the tail on every delta, so briefs reflow mid-table |
+| S | **done** (via the OpenCode reading, 2026-09-05) — Completion notification when the tab is hidden | coalesced desktop notification, suppressed when focused | none; insights pipelines run for minutes |
+| S | **done** (settled + healed tail, 2026-09-05) — Hold back markdown tables until the block closes | `controller.rs:12-20` | `ChatMarkdown` re-renders the tail on every delta, so briefs reflow mid-table |
 | S | "Reject, and say what to do instead" | the `No, and tell Codex…` option | `ChangeSetCard` has approve / reject only |
 | S | Thinking folded to a title by default | transcript-only unless titled | `ThinkingMarkdown` shows the whole block inline |
 | M | **done** — Token usage and context left; compaction made visible | `TokenCount` per turn, `N% context left`, "Compacting context" | insights already compacts silently through deepagents' `SummarizationMiddleware` (`backend/agents/insights/v1/runner.py:411`) and reports no usage. On BYO keys the user pays for what they cannot see, and the Heavy/Standard/Light tiers have no "switch to Light" moment |
 | M | **done** (insights steers, content and audit queue) — Queue follow-ups while a turn runs | steer or `thread/queue`, shown as `↳` rows | input disabled while streaming; chat while parked is a 409 |
-| M | One writer per conversation; status on the list route | writer lock + `thread/list` rows carry status | two tabs can each resume the same LangGraph thread; the desk has no badge because the state route is per-conversation only |
+| M | **half** (status on the list route landed 2026-09-05; the writer lock is still open) — One writer per conversation; status on the list route | writer lock + `thread/list` rows carry status | two tabs can each resume the same LangGraph thread; the desk has no badge because the state route is per-conversation only |
 | M | Interrupted marker | `<turn_aborted>` written and flushed before the abort is announced | `stop()` deletes the session; the next resume's model has no idea tools half-ran |
 | L | Item lifecycle instead of an event per kind | `item/started` → deltas → `item/completed` + `kind` | 25 event names; add the next kind as an item, not as three new names |
 | L | Non-blocking questions | `agentMessage { delivery: "async", questions }` | every question parks the pipeline |
 
 ---
 
-## OpenCode and pi — what to look for when they are read
+## OpenCode, at `5cf9f51`
 
-- **OpenCode:** the session / message / part model and which events the SSE
-  bus emits on part updates; how a client resumes a session and whether
-  permissions (their approval prompts) survive a reconnect; the share page,
-  which is a read-only replay of the same events — a test of whether the
-  event stream alone can rebuild a transcript.
+The repository moved from `sst/opencode` to `anomalyco/opencode`; the default
+branch is `dev`. Paths below are relative to `packages/`; `specs/` and
+`CONTEXT.md` sit at the root. The runtime is mid-migration from a v1
+session / message / part model to an event-sourced v2 (`session.next.*`
+events, a durable inbox, Context Epochs). The clients still run on v1, so both
+are read here: v1 for what ships, the v2 spec for where it is going.
+
+### The contract a client is built on
+
+- **Session → messages → parts, and the error is a field of the message.**
+  `Assistant` carries `tokens {input, output, reasoning, cache {read, write}}`,
+  `cost`, `finish`, `error` and `time {created, completed}`
+  (`schema/src/session-message.ts:165-190`); a `Compaction` message
+  `{reason: auto | manual, summary, recent}` sits in the transcript as a
+  message of its own (`:193-199`). An interrupt writes
+  `error = {aborted: true}` plus `time.completed` onto the assistant message
+  (`opencode/src/session/prompt.ts:1203-1210`), which the TUI renders as
+  `· interrupted` after any reload (`tui/src/routes/session/index.tsx:1568`).
+  *Ours: `pipeline_failed` is a stream event; `thread_state` returns
+  `status: unfinished` and no error, so a reloaded failed turn is a user
+  message with no reply and no reason.*
+- **Session status is one pushed, subscribable state:** `idle | busy | retry
+  {attempt, message, action?, next}` (`schema/src/session-status-event.ts:9-32`),
+  published as `session.status` by a single service
+  (`opencode/src/session/status.ts:39-48`); the runner sets `busy` at the top
+  of every loop iteration and `idle` when its runner empties
+  (`session/prompt.ts:1089`, `session/run-state.ts:60-64`). The session list
+  paints a gutter for any busy-or-retrying session
+  (`tui/src/component/dialog-session-list.tsx:238-240`), and a client
+  bootstrap fetches the whole status map, not one session's
+  (`app/src/context/global-sync/bootstrap.ts:390-406`).
+- **Retry is a status with a deadline, not an error.** `next` is an epoch
+  timestamp, so the client counts down — "retrying in 4s, attempt #2" — on a
+  one-second timer (`session-ui/src/components/session-retry.tsx:14-51`; TUI
+  `tui/src/component/prompt/index.tsx:1550-1575`). The optional `action
+  {reason, provider, title, message, label, link}` becomes a modal with one
+  button (`tui/src/component/dialog-retry-action.tsx`, opened from
+  `routes/session/index.tsx:357-366`) — the same slot serves "subscribe" and
+  "switch provider". Policy: 2 s × 2ⁿ with 25 % jitter, five retries,
+  `retry-after-ms` and `retry-after` honoured whether seconds or an HTTP date,
+  30 s cap when the provider says nothing
+  (`opencode/src/session/retry.ts:26-31,47-77`); every 5xx retries whatever
+  the SDK's flag says (`:85-94`). A sub-agent's retry shows under its task row
+  as `↳ retrying… attempt #n` (`routes/session/index.tsx:2249-2305`).
+- **Pending prompts are listable, and every clearing is an event.**
+  `permission.list` and `question.list` return the pending requests across
+  all sessions (`opencode/src/server/routes/instance/httpapi/groups/permission.ts:23-28`,
+  `question.ts:24-29`) and the app fetches them at bootstrap
+  (`app/src/context/global-sync/bootstrap.ts:447-454`). A reply publishes
+  `permission.replied`; a reject cascades to every sibling and an "always"
+  resolves the siblings it matches, each with its own `replied`
+  (`opencode/src/permission/index.ts:109-166`). The waits are process memory
+  though — disposing the instance rejects them all (`:56-59`) — so unlike
+  ours a pause does not survive a restart.
+- **Input during a turn is persisted and picked up at the next model call,
+  on the server.** `prompt()` writes the user message first
+  (`session/prompt.ts:1052-1057`); `ensureRunning` on a running session just
+  awaits the run in flight (`opencode/src/effect/runner.ts:115-138`); the loop
+  re-reads history every iteration (`prompt.ts:1088-1096`), so the message is
+  in the next request. Nothing is refused and there is no queue object. The
+  TUI paints `QUEUED` on any user message newer than the one being answered
+  (`routes/session/index.tsx:1387,1450`). The app's follow-up setting
+  `queue | steer` is being collapsed to `steer`
+  (`app/src/context/settings.tsx:26,187,354-377`). v2 makes the inbox
+  durable: `session.next.prompt.admitted` (with `admittedSeq`) and then
+  `prompted` when the runner promotes it, so queued input replays to a
+  reconnecting client (`specs/v2/session.md:36-40`). *Our
+  `client_message_id` → `user_input_consumed` is their admitted → prompted.*
+- **One lifecycle per kind, one client reducer.** v2's vocabulary is
+  `session.next.step.started | ended | failed`, `text.started | delta | ended`,
+  `reasoning.*`, `tool.input.started | delta | ended`, `tool.called | progress
+  | success | failed`, `retried`, `compaction.started | delta | ended`
+  (`schema/src/session-event.ts:88-421`), reduced in one file
+  (`app/src/context/server-session-v2-reducer.ts:29-390`). Every event gets an
+  ascending id at the bus (`opencode/src/bus/global.ts:14-18`) and durable
+  ones additionally carry `seq` and `aggregateID` (`event-v2-bridge.ts:45-60`).
+  Same shape as Codex's item lifecycle — the L row in the Codex table.
+- **The stream carries no catch-up; resume is refetch-then-listen.** The
+  SSE handler subscribes eagerly, sends `server.connected`, heartbeats every
+  10 s and closes on `server.instance.disposed`
+  (`opencode/src/server/routes/instance/httpapi/handlers/event.ts:29-33,63-71`).
+  On `server.connected` the app re-bootstraps every active directory through
+  a refresh queue (`app/src/context/server-sync.tsx:547-570`,
+  `global-sync/queue.ts`). *Same as ours: hydrate, then stream.*
+- **The share page is a projection of rows, not a replay of events.** Share
+  sync watches `session.updated`, `message.updated`, `part.updated` and
+  `session.diff`, batches per session and POSTs `{type: session | message |
+  part | model | session_diff}` rows (`opencode/src/share/share-next.ts:124-140,179-200,250-266`);
+  the page opens a WebSocket and reconciles rows by key
+  (`web/src/components/Share.tsx:100-135`). That answers the question this
+  file asked: they do not rebuild a transcript from the event stream.
+
+### The loop underneath
+
+- **Overflow is a budget computed before the call.** usable = input limit −
+  reserved, where reserved is `min(20 000, max output)` unless configured;
+  overflow when the last assistant message's total ≥ usable;
+  `compaction.auto: false` opts out (`opencode/src/session/overflow.ts:8-34`).
+  Compaction publishes `session.compacted` (`session/compaction.ts:554`), and
+  a separate **prune** stamps old completed tool outputs `time.compacted` once
+  more than 20k tokens are reclaimable beyond a 40k protected tail, never
+  touching `skill` results (`:28-31,273-315`). A provider overflow rejection
+  gets one compaction and one retry, then fails
+  (`specs/v2/session.md:119-122`); in v2 only the `compaction.ended` event is
+  durable and model-visible — deltas are live-only (`:113-117`).
+- **Context Epochs: the system prompt is a cache baseline.** It is rendered
+  once per epoch; when an environment fact changes (date, an `AGENTS.md`, the
+  agent's skills) the change is appended as a chronological system message
+  instead of re-rendering the prefix, and a completed compaction starts a
+  fresh baseline (`CONTEXT.md:26-35`, `specs/v2/session.md:54-64`). This is
+  the discipline behind our "per-request data goes in the user message"
+  caching rule, written down as a runtime concept.
+- **Interrupt writes the abort into the record** (above), cancels background
+  jobs whose metadata points at the session, transitively
+  (`session/run-state.ts:111-143`), and in v2 fails any tool still `running`
+  from a previous process with "Tool execution interrupted" before the next
+  request (`specs/v2/session.md:47`). Same purpose as Codex's `<turn_aborted>`.
+- **Usage and cost live on the message; the ring reads the last one.**
+  Context % = the last assistant message's `input + output + reasoning +
+  cache.read + cache.write` over the model's context limit
+  (`app/src/components/session/session-context-metrics.ts:28-60`); the TUI
+  sidebar shows tokens, % used and `$ spent`
+  (`tui/src/feature-plugins/sidebar/context.tsx:19-44`); the app's tooltip is
+  three rows — cost, usage, tokens — around a progress circle
+  (`app/src/components/session-context-usage.tsx:104-135`). Ours is the same
+  formula, minus cost and reasoning tokens.
+
+### The UI on top
+
+- **Streaming markdown is projected block by block.** Everything before the
+  last non-space token is committed as `full` blocks; the tail is one `live`
+  block healed with `remend` (closes dangling emphasis and links); an open
+  fence streams as `code` without `complete`
+  (`session-ui/src/components/markdown-stream.ts:53-86`), and `project()`
+  reuses the previous blocks when the text only grew (`:88-100`). A cheaper
+  answer than Codex's chunker to the same reflow problem.
+- **Notifications are a plugin over four events.** `session.status`
+  idle-after-busy → "Session done"; `question.asked` / `permission.asked` →
+  "needs input"; `session.error` → "Model stopped responding" or "Session
+  aborted"; desktop notification only when blurred, sound always, never for
+  a sub-agent (`tui/src/feature-plugins/system/notifications.ts:9-86`); an
+  unknown focus state suppresses rather than guesses
+  (`tui/src/attention.ts:107-133`).
+- **The interrupt hint is two-stage:** `esc interrupt` becomes `esc again to
+  interrupt` after the first press (`tui/src/component/prompt/index.tsx:1587-1590`).
+
+### What this validated in ours
+
+- Steering at the next model call, server-side, with nothing refused — and
+  they are folding their client-side queue mode into it.
+- Resume as hydrate-then-listen with no sequence catch-up on the stream.
+- Usage on the message and a ring over the last call, same formula.
+- Pruning old tool output before compacting: our `ContextEditingMiddleware`
+  (`backend/agents/insights/v1/runner.py:430`) is their `compaction.prune`.
+- One reducer over typed events.
+
+### What it exposes in ours
+
+Rows marked **done** landed on 2026-09-05, the day after the reading; the
+"ours today" column keeps what they replaced so the reason survives.
+
+| Size | Gap | OpenCode | Ours today |
+|------|-----|----------|------------|
+| S | **done** — Retry status carries a deadline and an action | `retry {attempt, message, action?, next}`; the row counts down; `Retry-After` honoured | `model_retrying {attempt, max_attempts, code}`; `retry_delay` is 1 s × 2ⁿ capped at 8 s and ignores `Retry-After`; the row says "(2/4)" and cannot count down |
+| S | **done** — The failure is part of the thread | `Assistant.error`, `aborted: true` on interrupt, `· interrupted` after a reload | `pipeline_failed` is stream-only; `thread_state` says `unfinished` with no error, so a reloaded failed turn shows no reason and no action |
+| S | **done** — Heal the streaming tail instead of re-rendering it | `markdown-stream.ts` commits closed blocks, heals the open one | `ChatMarkdown` re-renders the whole tail per delta — the Codex table's "hold back tables" row; one fix closes both |
+| S | **done** — Notifications keyed on status transitions | idle-after-busy, `*.asked`, `session.error`, blurred-only | parked on 2026-09-04; when built, drive it from the reducer's phase transitions like this, not per workspace |
+| M | **done** — Cost, not only tokens | `cost` on every assistant message, `$ spent` in the sidebar | `usage` carries tokens only; on BYO keys the dollar figure is what the user is paying |
+| M | **done** — Pending pauses across conversations | `permission.list` / `question.list` at bootstrap; status map for every session | state route is per conversation — the Codex table's "status on the list route" row, with the list shape spelled out |
+
+---
+
+## pi — what to look for when it is read
+
 - **pi:** the agent loop's size and what it refuses to own; steer versus
   follow-up input modes and how each is shown; session trees (branching a
   conversation, which maps to Codex's `thread/fork`); how compaction is

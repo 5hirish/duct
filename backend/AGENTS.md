@@ -241,6 +241,26 @@ framework. The rules it implies:
   `chat_queue`. The route decides; the runner reports `user_input_consumed`
   when it dequeues so the client can drop the "queued" mark. Do not reintroduce
   the 409.
+- **Run status is derived from the stream, in one place.** `ConversationRecorder`
+  (`agents/content/persistence.py`) already sees every event, so it is what
+  writes `agent_conversations.run_status` (`RunStatus` in
+  `agents/core/events.py`: idle / running / paused / failed / cancelled) and
+  `run_error`, and appends a `failure` event where a turn died. The list and
+  state routes carry both; a reload shows the failure where it happened, with
+  the same code. Do not set the status from a runner — a second writer is how
+  two agents end up disagreeing about one column. A session closed mid-turn is
+  recorded as `cancelled` by `recorder.close()` in `_close_and_consolidate`.
+- **A retry says how long, and the provider's `Retry-After` wins.**
+  `MODEL_RETRYING` carries `retry_in` (seconds, a duration — the client anchors
+  it to its own clock so skew cannot show a countdown already over), computed by
+  `retry_delay(attempt, exc)`, which reads `retry_after_seconds(exc)` from
+  `agents/core/errors.py` before falling back to the jittered schedule, capped at
+  `MODEL_RETRY_HEADER_MAX_DELAY`.
+- **A model has a price or it has no cost.** `PRICING` in `agents/models.py`
+  mirrors `CONTEXT_WINDOW` (a test holds them equal) and `cost_usd()` prices a
+  call from LangChain's usage, taking cached tokens out of the input figure.
+  `TOKEN_USAGE` and the state route carry `cost_usd`, `None` when unpriced —
+  never a guess, because on BYO keys the figure is what the user pays.
 - **Read the harnesses built in the open before designing a lifecycle
   feature.** [`docs/engineering/agent-harness-references.md`](../docs/engineering/agent-harness-references.md)
   is the watch-list — Codex, OpenCode, pi — with the revision each was last

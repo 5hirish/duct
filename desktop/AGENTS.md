@@ -70,6 +70,13 @@ for bring-your-own provider API keys. Design:
   console window (the sidecar must stay a console binary — its stdout is the
   handshake). Windows builds are **not** Authenticode-signed yet, so SmartScreen
   warns on first run.
+- **System notifications** go through the `notify` command
+  (`tauri-plugin-notification`, registered unconditionally, so no
+  `notification:*` permission is needed — the same "our command reaches the
+  plugin from Rust" shape as the updater, for the same remote-origin reason).
+  The web app decides *when* (`app/src/lib/notify.js`: only while the window is
+  not focused) and gates on the `notifications` flag from `get_shell_info`; the
+  shell only decides *how*.
 - **Self-update** is wired: `tauri-plugin-updater` behind a default-on `updater`
   cargo feature, driven from the web app through `check_for_update` /
   `install_update` (not the plugin's JS bindings — the window loads a remote

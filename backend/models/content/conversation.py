@@ -78,6 +78,14 @@ class AgentConversation(SQLModel, table=True):
     # then frees up so a new active conversation can claim the artifact.
     status: str = Field(default="active", sa_column=Column(String, nullable=False, server_default="active"))
 
+    # What the run is doing — a RunStatus (agents/core/events.py), written by
+    # ConversationRecorder from the event stream. Lists and the desk badge read
+    # it; the live client never does, it has the stream. `run_error` is the
+    # {code, retryable, error} of the failure a "failed"/"cancelled" status
+    # refers to, so a reload can offer the same action the live client did.
+    run_status: str = Field(default="idle", sa_column=Column(String, nullable=False, server_default="idle"))
+    run_error: dict | None = Field(default=None, sa_column=Column(json_column(), nullable=True))
+
     # Kept on the desk — floats to the top of its own list, nothing more.
     pinned: bool = Field(
         default=False, sa_column=Column(sa.Boolean(), nullable=False, server_default=sa.false())
