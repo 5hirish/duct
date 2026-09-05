@@ -144,10 +144,14 @@ def test_vision_follows_the_provider():
 # ---------------------------------------------------------------------------
 
 async def _drive(session, emitted, llm, *, resume=False, chat=None):
-    """One session: opening turn, then optional chat turns, then idle-out."""
+    """One session: opening turn, then optional chat turns, then idle-out.
+
+    A resume carries no opening prompt — that is what `_run_mode` passes, and
+    what makes reload/refresh silent: a prompt on a resumed idle thread would
+    be a follow-up turn."""
     task = asyncio.create_task(RUNNER._run_session(
         session, emitted,
-        system_prompt="sys", opening_prompt="plan it",
+        system_prompt="sys", opening_prompt="" if resume else "plan it",
         llm=llm, chat_idle_timeout=0.2, resume=resume,
     ))
     for message in chat or []:

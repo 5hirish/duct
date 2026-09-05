@@ -45,16 +45,20 @@ SOURCE_ROOTS = ("agents", "routes", "service", "models", "utils")
 
 ADAPTERS: dict[str, str] = {
     # -- Harness runners. The middle of a runner is allowed to be harness-shaped;
-    #    that is the whole point of the ports design.
+    #    that is the whole point of the ports design. The two deepagents session
+    #    runners are NOT here: their harness-shaped middle moved into
+    #    agents/core/deep_session.py, and they are pinned framework-free below.
     "agents/audit/v1/runner.py":            "LangChain runner (create_agent)",
     "agents/audit/v3/runner.py":            "Claude Agent SDK runner",
-    "agents/content/v1/runner.py":          "deepagents runner — Content Studio session",
-    "agents/insights/v1/runner.py":         "deepagents runner — autonomous insights session",
 
     # -- Shared LangChain adapter: the model-transport + events-out ports for
     #    every V1 runner. Extracted from agents/audit/v1/runner.py on the second
     #    consumer (insights), per the ports rule.
     "agents/core/lc.py":                    "LangChain adapter: resolve_chat_model + stream_agent",
+    # -- The deepagents session: assembly + loop, extracted from the insights
+    #    runner on the second consumer (content). The only place deepagents is
+    #    load-bearing.
+    "agents/core/deep_session.py":          "deepagents adapter: the session runners' shared assembly + loop",
 
     # -- The ChatGPT-on-subscription adapter: a ChatOpenAI subclass pointed at
     #    the Codex backend, so v1's OpenAI slot can run on a subscription.
@@ -110,6 +114,11 @@ FRAMEWORK_FREE: tuple[str, ...] = (
     "agents/content/schema.py",
     "agents/content/prompts.py",
     "agents/content/artifacts.py",
+    # The two session runners: what they own is tools, prompts, limits and
+    # hooks, and none of that needs a framework symbol. If one of them grows a
+    # harness import again, the shared session has a gap — fill it there.
+    "agents/content/v1/runner.py",
+    "agents/insights/v1/runner.py",
     "agents/content/subagents/__init__.py",
     "agents/content/subagents/draft_post.py",
     "agents/content/subagents/general_purpose.py",

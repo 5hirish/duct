@@ -74,7 +74,7 @@ That asymmetry is the case for this design.
 | **Events out** | `AgentEvent` / `EventKind` + an `Emitter` | v1 LangChain stream, v3 `pump_stream_event` |
 | **Human-in-the-loop** | `PauseFn` — `await pause(event, payload)` returns the user's answer | `make_future_pause` (in-process Future; audit v3, audit v1, the slide-render bridge), `interrupt_pause` (LangGraph `interrupt()`; insights v1, content v1) |
 | **Artifacts** | `<duct_artifact>` + `DuctArtifactStreamParser` + `ArtifactPersister` | harness-neutral by construction |
-| **Session / state** | `BaseAgentSession` registry for the live process; the conversation id as the durable thread | in-process registry; LangGraph checkpointer keyed on the conversation (insights v1, content v1) |
+| **Session / state** | `BaseAgentSession` registry for the live process; the conversation id as the durable thread | in-process registry; LangGraph checkpointer keyed on the conversation, driven by the shared `DeepSession` loop (`agents/core/deep_session.py`; insights v1, content v1) |
 | **Model transport** | `Provider` / `ModelName` / `Engine` registries | OpenAI-compatible, native Anthropic, native Gemini |
 
 **The rule for adding one: write the adapter on the second implementation, not
