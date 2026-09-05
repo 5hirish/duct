@@ -49,20 +49,9 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections import deque
-from typing import Any, Callable
+from collections.abc import Awaitable, Callable
+from typing import Any
 from uuid import UUID
-
-from deepagents import FilesystemMiddleware, create_deep_agent
-from deepagents.backends import StateBackend
-from langchain.agents.middleware import (
-    ClearToolUsesEdit,
-    ContextEditingMiddleware,
-    ModelCallLimitMiddleware,
-    ModelFallbackMiddleware,
-    TodoListMiddleware,
-    ToolCallLimitMiddleware,
-)
-from langgraph.types import Command
 
 from agents.content.artifacts import (
     ARTIFACT_PLAN,
@@ -100,23 +89,16 @@ from agents.content.subagents import (
 )
 from agents.content.tools import build_content_tools_lc
 from agents.core import session as _core_session
-from agents.core.checkpoint import get_checkpointer
-from agents.core.errors import ErrorCode, classify_error, error_payload
-from agents.core.lc import (
-    ReportedRetryMiddleware,
-    SteerMiddleware,
-    build_ask_user_tool,
-    chat_message_text,
-    compact_thread,
-    drain_steers,
-    inspection_chat_model,
-    interrupt_pause,
-    live_pauses,
-    resolve_chat_model,
-    stream_agent,
-    usage_from_messages,
+from agents.core.deep_session import (
+    DeepSession,
+    RunLimits,
+    build_deep_session_agent,
+    fallback_chain,
+    inspect_thread,
+    recorder_tool_hooks,
 )
-from agents.core.session import register_session, take_client_id
+from agents.core.lc import build_ask_user_tool, inspection_chat_model, interrupt_pause, resolve_chat_model
+from agents.core.session import register_session
 from agents.core.web_tools import WEB_FETCH_TOOL, build_web_fetch_tool_lc, provider_web_search_tool
 from agents.engines import Engine, resolve_fallback_models
 from agents.models import ModelName, Provider
@@ -140,18 +122,22 @@ MODEL_CALLS_PER_THREAD = 600
 TOOL_CALLS_PER_RUN = 160
 TOOL_CALLS_PER_THREAD = 1200
 
-# Prune old tool results at this many tokens, keeping the most recent few.
-# Must stay below deepagents' summarisation trigger (0.85 of the window, or
-# 170k with no profile) so the cheap pass runs first — the insights runner's
-# comment carries the full reasoning. A content thread's bulk is old fetch
-# payloads and image blocks the model has already critiqued; `keep` holds the
-# ones it is still working from.
+# Prune old tool results at this many tokens, keeping the most recent few. A
+# content thread's bulk is old fetch payloads and image blocks the model has
+# already critiqued; `keep` holds the ones it is still working from. RunLimits
+# refuses a trigger above deepagents' summarisation floor.
 TOOL_RESULT_PRUNE_TRIGGER = 120_000
 TOOL_RESULTS_KEPT = 8
 
-# The scratch-space verbs the agent gets, and the one it does not: `execute`
-# (a shell) is omitted by naming these explicitly. See the insights runner.
-FILESYSTEM_TOOLS = ("ls", "read_file", "write_file", "edit_file", "glob", "grep")
+LIMITS = RunLimits(
+    recursion=RECURSION_LIMIT,
+    model_calls_per_run=MODEL_CALLS_PER_RUN,
+    model_calls_per_thread=MODEL_CALLS_PER_THREAD,
+    tool_calls_per_run=TOOL_CALLS_PER_RUN,
+    tool_calls_per_thread=TOOL_CALLS_PER_THREAD,
+    tool_result_prune_trigger=TOOL_RESULT_PRUNE_TRIGGER,
+    tool_results_kept=TOOL_RESULTS_KEPT,
+)
 
 # How long a session waits for a follow-up before closing itself. Matches
 # audit and insights; the route's own inactivity pruner is the longer backstop.
@@ -461,68 +447,24 @@ class ContentRunner:
                 )
             )
 
-        # One backend for the whole agent, virtual: graph state, not disk.
-        backend = StateBackend()
-
         # One same-provider step down keeps a run alive on the key the caller
         # supplied. Skipped with an injected model — that seam is for tests.
         fallbacks: list[Any] = []
         if not injected_llm:
-            fallbacks = [
-                resolve_chat_model(
-                    self.provider, name, self._api_key, self._temperature,
-                    thinking=self._thinking,
-                )
-                for name in resolve_fallback_models(Engine.V1, self.provider, self.model)
-            ]
+            fallbacks = fallback_chain(
+                self.provider, self.model, self._api_key, self._temperature, thinking=self._thinking
+            )
 
-        return create_deep_agent(
-            model=llm,
+        return build_deep_session_agent(
+            llm=llm,
             tools=tools,
-            backend=backend,
             subagents=subagents,
             system_prompt=system_prompt or build_orchestrator_system_prompt(
                 None, mode, channel=channel, vision=self.vision
             ),
-            middleware=[
-                # Planning is opt-in since deepagents 0.7; the todo stream is
-                # what the workspace renders as the agent's checklist.
-                TodoListMiddleware(),
-                # Explicit rather than default, to drop the shell tool.
-                FilesystemMiddleware(backend=backend, tools=list(FILESYSTEM_TOOLS)),
-                # Prune stale tool results before an LLM compaction is needed.
-                # AskUserQuestion is excluded because a cleared answer reads as
-                # the user never having replied.
-                ContextEditingMiddleware(
-                    edits=[
-                        ClearToolUsesEdit(
-                            trigger=TOOL_RESULT_PRUNE_TRIGGER,
-                            keep=TOOL_RESULTS_KEPT,
-                            clear_tool_inputs=False,
-                            exclude_tools=("AskUserQuestion",),
-                        )
-                    ],
-                ),
-                ModelCallLimitMiddleware(
-                    thread_limit=MODEL_CALLS_PER_THREAD,
-                    run_limit=MODEL_CALLS_PER_RUN,
-                    exit_behavior="end",
-                ),
-                ToolCallLimitMiddleware(
-                    thread_limit=TOOL_CALLS_PER_THREAD,
-                    run_limit=TOOL_CALLS_PER_RUN,
-                    exit_behavior="continue",
-                ),
-                *([ModelFallbackMiddleware(*fallbacks)] if fallbacks else []),
-                # Innermost, so each model in the chain gets its retries before
-                # the fallback moves on. Reports every attempt to the UI.
-                ReportedRetryMiddleware(),
-                # A message typed mid-turn reaches the model at its next call.
-                *([SteerMiddleware(session)] if session is not None else []),
-            ],
-            # Durable: the saver follows DATABASE_URL and is opened once by the
-            # app lifespan; in-memory outside a server. See agents/core/checkpoint.py.
-            checkpointer=get_checkpointer(),
+            limits=LIMITS,
+            session=session,
+            fallbacks=fallbacks,
         )
 
     def _sibling_model(self, llm: Any, injected: bool) -> Any:
@@ -589,66 +531,16 @@ class ContentRunner:
         """Run a plan_month session end-to-end: load, enrich, plan, then chat."""
         session = get_session(session_id) or create_plan_session(session_id, project_id)
 
-        # Resume: restore + ready, NEVER a greeting turn. No enrichment, no
-        # pipeline steps — just the system prompt and a thread that continues.
-        if self._is_resume(session):
-            brand = await asyncio.to_thread(_load_brand_context, project_id)
-            await self._run_session(
-                session, emit,
-                system_prompt=build_orchestrator_system_prompt(brand, "plan_month", vision=self.vision),
-                opening_prompt="",
-                llm=llm,
-                chat_idle_timeout=chat_idle_timeout,
-                resume=True,
-            )
-            return
+        async def _opening(brand: ContentBrandContext) -> str:
+            research = await self._enrich_step(brand, emit, llm)
+            return build_plan_user_prompt(brand, history=[], formats=[], avatars=[], research=research)
 
-        # Emit the first events BEFORE loading brand context so the UI leaves
-        # its "Starting session…" state immediately; the load is a sync DB read
-        # and runs off the loop so the SSE stream stays live.
-        await emit({"event": ContentEvent.PIPELINE_STARTED, "session_id": session_id, "mode": "plan_month"})
-        brand = await self._load_project_step(project_id, emit)
-
-        await emit({
-            "event": ContentEvent.STEP_STARTED,
-            "step_id": ContentStep.ENRICHING,
-            "label": STEP_LABELS[ContentStep.ENRICHING],
-            "status": StepStatus.RUNNING,
-        })
-        from agents.content.enrichment import enrich_content_context
-
-        research = await enrich_content_context(
-            brand, self._api_key,
-            provider=self.provider,
-            model=self._research_model_name(),
-            llm=llm,
-        )
-        await emit({
-            "event": ContentEvent.STEP_FINISHED,
-            "step_id": ContentStep.ENRICHING,
-            "label": STEP_LABELS[ContentStep.ENRICHING],
-            "status": StepStatus.SUCCESS,
-            "payload": {
-                "pillar_history": len(research.pillar_history),
-                "trending_sounds": len(research.trending_sounds),
-                "trending_hashtags": len(research.trending_hashtags),
-                "trending_hooks": len(research.trending_hooks),
-                "trending_styles": len(research.trending_styles),
-            },
-        })
-
-        opening = build_plan_user_prompt(brand, history=[], formats=[], avatars=[], research=research)
-        memory = await _memory_block(session, query="content plan performance")
-        if memory:
-            opening = f"{opening}\n\n{memory}"
-
-        await self._run_session(
+        await self._run_mode(
             session, emit,
-            system_prompt=build_orchestrator_system_prompt(brand, "plan_month", vision=self.vision),
-            opening_prompt=opening,
+            opening=_opening,
+            memory_query="content plan performance",
             llm=llm,
             chat_idle_timeout=chat_idle_timeout,
-            resume=False,
         )
 
     async def run_draft(
@@ -671,51 +563,104 @@ class ContentRunner:
         session = get_session(session_id) or create_draft_session(session_id, project_id)
         ch = resolve_channel(channel)  # sync, no DB — safe before the first emit
 
-        if self._is_resume(session):
-            brand = await asyncio.to_thread(_load_brand_context, project_id)
-            await self._run_session(
-                session, emit,
-                system_prompt=build_orchestrator_system_prompt(
-                    brand, "draft_post", channel=ch, vision=self.vision
-                ),
-                opening_prompt="",
-                llm=llm,
-                chat_idle_timeout=chat_idle_timeout,
-                resume=True,
-                channel=ch,
+        async def _opening(brand: ContentBrandContext) -> str:
+            return build_post_user_prompt(
+                brand, day,
+                topic=topic, pillar=pillar, format_slug=format_slug,
+                avatar=None, recent_posts=[], channel=ch,
             )
-            return
 
-        await emit({
-            "event": ContentEvent.PIPELINE_STARTED,
-            "session_id": session_id,
-            "mode": "draft_post",
-            "channel": ch.id,
-            "channel_label": ch.label,
-            "channel_supported": ch.supported,
-        })
-        brand = await self._load_project_step(project_id, emit)
-
-        opening = build_post_user_prompt(
-            brand, day,
-            topic=topic, pillar=pillar, format_slug=format_slug,
-            avatar=None, recent_posts=[], channel=ch,
+        await self._run_mode(
+            session, emit,
+            opening=_opening,
+            memory_query=topic or pillar or "",
+            channel=ch,
+            # PIPELINE_STARTED carries the resolved channel; the UI notes a fallback.
+            started={"channel": ch.id, "channel_label": ch.label, "channel_supported": ch.supported},
+            llm=llm,
+            chat_idle_timeout=chat_idle_timeout,
         )
-        memory = await _memory_block(session, query=topic or pillar or "")
-        if memory:
-            opening = f"{opening}\n\n{memory}"
+
+    async def _run_mode(
+        self,
+        session: ContentSession,
+        emit: EmitFn,
+        *,
+        opening: Callable[[ContentBrandContext], Awaitable[str]],
+        memory_query: str,
+        channel: Any = None,
+        started: dict | None = None,
+        llm: Any,
+        chat_idle_timeout: float,
+    ) -> None:
+        """What both modes share: the resume shape, the lifecycle events, the
+        brand load, the memory block, then the session.
+
+        A resume restores and goes READY — no lifecycle steps, no greeting —
+        because reload/refresh/reconnect must just bring the session back.
+        A fresh run emits its first events BEFORE loading brand context so the
+        UI leaves "Starting session…" immediately; the load is a sync DB read
+        and runs off the loop so the SSE stream stays live.
+        """
+        resume = self._is_resume(session)
+        if not resume:
+            await emit({
+                "event": ContentEvent.PIPELINE_STARTED,
+                "session_id": session.session_id,
+                "mode": session.mode,
+                **(started or {}),
+            })
+            brand = await self._load_project_step(session.project_id, emit)
+            opening_prompt = await opening(brand)
+            memory = await _memory_block(session, query=memory_query)
+            if memory:
+                opening_prompt = f"{opening_prompt}\n\n{memory}"
+        else:
+            brand = await asyncio.to_thread(_load_brand_context, session.project_id)
+            opening_prompt = ""
 
         await self._run_session(
             session, emit,
             system_prompt=build_orchestrator_system_prompt(
-                brand, "draft_post", channel=ch, vision=self.vision
+                brand, session.mode, channel=channel, vision=self.vision
             ),
-            opening_prompt=opening,
+            opening_prompt=opening_prompt,
             llm=llm,
             chat_idle_timeout=chat_idle_timeout,
-            resume=False,
-            channel=ch,
+            resume=resume,
+            channel=channel,
         )
+
+    async def _enrich_step(self, brand: ContentBrandContext, emit: EmitFn, llm: Any) -> Any:
+        """The pre-flight research pass, as a visible step. Plan mode only."""
+        from agents.content.enrichment import enrich_content_context
+
+        await emit({
+            "event": ContentEvent.STEP_STARTED,
+            "step_id": ContentStep.ENRICHING,
+            "label": STEP_LABELS[ContentStep.ENRICHING],
+            "status": StepStatus.RUNNING,
+        })
+        research = await enrich_content_context(
+            brand, self._api_key,
+            provider=self.provider,
+            model=self._research_model_name(),
+            llm=llm,
+        )
+        await emit({
+            "event": ContentEvent.STEP_FINISHED,
+            "step_id": ContentStep.ENRICHING,
+            "label": STEP_LABELS[ContentStep.ENRICHING],
+            "status": StepStatus.SUCCESS,
+            "payload": {
+                "pillar_history": len(research.pillar_history),
+                "trending_sounds": len(research.trending_sounds),
+                "trending_hashtags": len(research.trending_hashtags),
+                "trending_hooks": len(research.trending_hooks),
+                "trending_styles": len(research.trending_styles),
+            },
+        })
+        return research
 
     @staticmethod
     def _is_resume(session: ContentSession) -> bool:
@@ -762,10 +707,11 @@ class ContentRunner:
     ) -> None:
         """Run the opening turn, then stay open for follow-ups until idle.
 
-        Mirrors the insights session loop; what differs is content-shaped:
-        the artifact handler branches on the payload's ``type``, a turn that
-        ends with nothing persisted gets one recovery nudge, and
-        PIPELINE_FINISHED carries the plan or post id the workspace opens.
+        The loop itself is the shared ``DeepSession``; what is content-shaped
+        plugs in as hooks: the artifact handler branches on the payload's
+        ``type``, a turn that ends with nothing persisted gets one recovery
+        nudge, PIPELINE_FINISHED carries the plan or post id the workspace
+        opens, and a pre-checkpoint conversation is re-primed from the DB.
         """
         session_id = session.session_id
         conversation_id = getattr(session, "conversation_id", None)
@@ -780,13 +726,6 @@ class ContentRunner:
             remember=not getattr(session, "memory_off", False),
             system_prompt=system_prompt,
         )
-        config = {
-            # The conversation is the thread; a session is one process's window
-            # onto it. A session with no conversation (persistence unavailable)
-            # gets a thread of its own that lives as long as the session.
-            "configurable": {"thread_id": str(conversation_id or session_id)},
-            "recursion_limit": RECURSION_LIMIT,
-        }
         recorder = getattr(session, "recorder", None)
         is_plan = session.mode == "plan_month"
 
@@ -801,140 +740,64 @@ class ContentRunner:
             session.todos = todos
             await emit({"event": ContentEvent.TODO_UPDATE, "todos": todos})
 
-        async def _on_tool_use(name: str, tool_input: Any, tool_use_id: str) -> None:
-            if recorder is not None:
-                await recorder.record_tool_use(name, tool_input, tool_use_id)
-            if name == TASK_TOOL:
-                args = tool_input if isinstance(tool_input, dict) else {}
-                sub = str(args.get(TASK_SUBAGENT_ARG) or "unknown")
-                await emit({
-                    "event": ContentEvent.STEP_STARTED,
-                    "session_id": session_id,
-                    "step_id": f"{ContentStep.DISPATCH_SUBAGENT.value}:{sub}",
-                    "label": f"Sub-agent · {sub}",
-                    "summary": str(args.get("description") or "")[:_SUMMARY_CHARS],
-                    "status": StepStatus.RUNNING,
-                })
+        record_use, record_result = recorder_tool_hooks(recorder)
 
         # The task tool's result does not repeat which sub-agent ran, so the
         # dispatch order is kept and closed FIFO — parallel dispatches of the
         # same sub-agent share a chip anyway.
         dispatched: deque[str] = deque()
 
-        async def _on_tool_result(name: str, result: Any, tool_use_id: str, is_error: bool) -> None:
-            if recorder is not None:
-                await recorder.record_tool_result(name, result, tool_use_id, is_error=is_error)
-            if name == TASK_TOOL and dispatched:
-                sub = dispatched.popleft()
-                text = result if isinstance(result, str) else str(result)
-                await emit({
-                    "event": ContentEvent.STEP_FINISHED,
-                    "session_id": session_id,
-                    "step_id": f"{ContentStep.DISPATCH_SUBAGENT.value}:{sub}",
-                    "label": f"Sub-agent · {sub}",
-                    "summary": text[:_RESULT_CHARS],
-                    "status": StepStatus.ERROR if is_error else StepStatus.SUCCESS,
-                })
+        async def _on_tool_use(name: str, tool_input: Any, tool_use_id: str) -> None:
+            await record_use(name, tool_input, tool_use_id)
+            if name != TASK_TOOL:
+                return
+            args = tool_input if isinstance(tool_input, dict) else {}
+            sub = str(args.get(TASK_SUBAGENT_ARG) or "unknown")
+            dispatched.append(sub)
+            await emit({
+                "event": ContentEvent.STEP_STARTED,
+                "session_id": session_id,
+                "step_id": f"{ContentStep.DISPATCH_SUBAGENT.value}:{sub}",
+                "label": f"Sub-agent · {sub}",
+                "summary": str(args.get("description") or "")[:_SUMMARY_CHARS],
+                "status": StepStatus.RUNNING,
+            })
 
-        async def _track_dispatch(name: str, tool_input: Any, tool_use_id: str) -> None:
-            if name == TASK_TOOL:
-                args = tool_input if isinstance(tool_input, dict) else {}
-                dispatched.append(str(args.get(TASK_SUBAGENT_ARG) or "unknown"))
-            await _on_tool_use(name, tool_input, tool_use_id)
+        async def _on_tool_result(name: str, result: Any, tool_use_id: str, is_error: bool) -> None:
+            await record_result(name, result, tool_use_id, is_error)
+            if name != TASK_TOOL or not dispatched:
+                return
+            sub = dispatched.popleft()
+            text = result if isinstance(result, str) else str(result)
+            await emit({
+                "event": ContentEvent.STEP_FINISHED,
+                "session_id": session_id,
+                "step_id": f"{ContentStep.DISPATCH_SUBAGENT.value}:{sub}",
+                "label": f"Sub-agent · {sub}",
+                "summary": text[:_RESULT_CHARS],
+                "status": StepStatus.ERROR if is_error else StepStatus.SUCCESS,
+            })
 
         async def _on_artifact(raw: str, turn_text: str) -> None:
             await _publish_artifact(raw, emit, session_id)
 
-        async def _on_pause(pauses: list[dict]) -> None:
-            # The route resolves an answer against this — written before the
-            # events go out, so an answer can never arrive at a route that has
-            # not heard of the card. Replaced whole each turn.
-            session.pending_pauses = {p["interrupt_id"]: p for p in pauses}
-
-        async def _stream(text: str | Command | None) -> list[dict]:
-            return await stream_agent(
-                agent,
-                text,
-                emit,
-                on_artifact_close=_on_artifact,
-                log_prefix="content-v1",
-                config=config,
-                provider=self.provider,
-                model=self.model,
-                conversation_id=str(conversation_id or session_id),
-                on_todo=_on_todo,
-                on_tool_use=_track_dispatch,
-                on_tool_result=_on_tool_result,
-                on_pause=_on_pause,
-            )
-
-        async def _stream_with_room(text: str | Command | None) -> list[dict]:
-            """One turn, with one emergency compaction if the provider says the
-            request is too long; a second overflow is the ordinary failure."""
-            try:
-                return await _stream(text)
-            except Exception as exc:
-                if classify_error(exc) is not ErrorCode.CONTEXT_WINDOW:
-                    raise
-                logger.info("content: request too long for %s; compacting once and retrying", session_id)
-                await emit({"event": ContentEvent.CONTEXT_COMPACTING})
-                if not await compact_thread(agent, config, self._summariser_model(llm)):
-                    raise
-                await emit({"event": ContentEvent.CONTEXT_COMPACTED})
-                return await _stream(None)
-
-        async def _turn(text: str | Command | None) -> list[dict]:
-            session.turn_active = True
-            try:
-                pauses = await _stream_with_room(text)
-            finally:
-                session.turn_active = False
-            if not pauses:
-                await _on_pause([])  # a turn that ran to completion clears the table
-            return await _leftover_steers(pauses)
-
-        async def _leftover_steers(pauses: list[dict]) -> list[dict]:
-            """A message that arrived after the turn's last model call never
-            met the steer middleware. It becomes the next turn now."""
-            while not pauses:
-                items = drain_steers(session.steer_queue)
-                if not items:
-                    return pauses
-                for _, client_id in items:
-                    if client_id:
-                        await emit({"event": ContentEvent.USER_INPUT_CONSUMED, "client_message_id": client_id})
-                text = "\n\n".join(chat_message_text(item) for item, _ in items if chat_message_text(item))
-                if not text:
-                    return pauses
-                pauses = await _turn(text)
-            return pauses
-
-        # The opening turn is what moves the UI out of "working": PIPELINE_FINISHED
-        # is held back until a turn ends with nothing parked.
-        opened = False
-
-        async def _finish_opening(pauses: list[dict]) -> None:
-            nonlocal opened
-            if opened or pauses:
-                return
-            opened = True
-            await emit({
-                "event": ContentEvent.PIPELINE_FINISHED,
+        def _finish_payload() -> dict:
+            """PIPELINE_FINISHED carries the id the workspace opens — None when
+            the opening run persisted nothing, never a hollow success."""
+            artifact_id = session.plan_id if is_plan else session.post_id
+            return {
                 "session_id": session_id,
                 "mode": session.mode,
-                ("plan_id" if is_plan else "post_id"): str(
-                    (session.plan_id if is_plan else session.post_id) or ""
-                ) or None,
-                "status": StepStatus.SUCCESS,
+                ("plan_id" if is_plan else "post_id"): str(artifact_id) if artifact_id else None,
                 **({"resumed": True} if resume else {}),
-            })
+            }
 
         nudged = False
 
         async def _nudge_if_empty(pauses: list[dict]) -> list[dict]:
-            """The opening turn ended with nothing persisted: one nudge to
-            save, then the user takes over. Never on a resume — there the
-            thread already holds whatever it holds."""
+            """A turn ended with nothing persisted: one nudge to save, then the
+            user takes over. Never on a resume — there the thread already holds
+            whatever it holds."""
             nonlocal nudged
             if pauses or nudged or resume or _artifact_produced():
                 return pauses
@@ -943,66 +806,44 @@ class ContentRunner:
                 "content: turn ended with no %s persisted for session %s — sending one recovery nudge",
                 "plan" if is_plan else "post", session_id,
             )
-            pauses = await _turn(RECOVERY_NUDGE_PLAN if is_plan else RECOVERY_NUDGE_POST)
+            pauses = await loop.turn(RECOVERY_NUDGE_PLAN if is_plan else RECOVERY_NUDGE_POST)
             if not pauses and not _artifact_produced():
                 logger.error("content: session %s still has no %s after the nudge", session_id, "plan" if is_plan else "post")
             return pauses
 
-        if resume:
-            snapshot = await agent.aget_state(config)
-            parked = live_pauses(snapshot)
+        async def _reprime_if_no_checkpoint(snapshot: Any) -> None:
+            """A conversation recorded before the thread was durable: the
+            transcript is in the DB and nowhere else, so its summary rides on
+            the user's first message (routes/agents.py prepends it)."""
             values = getattr(snapshot, "values", None) or {}
-            if not values.get("messages"):
-                # A conversation recorded before the thread was durable: the
-                # transcript is in the DB and nowhere else, so the summary rides
-                # on the user's first message (routes/agents.py prepends it).
-                from agents.content.persistence import build_reprime_context
+            if values.get("messages"):
+                return
+            from agents.content.persistence import build_reprime_context
 
-                session.resume_primer = await build_reprime_context(
-                    session, self._api_key, provider=self.provider, model=self.model
-                )
-                session.needs_reprime = True
-            if parked:
-                # Show the pause again without re-running anything. `replay`
-                # keeps the recorder from writing the question a second time.
-                for pause in parked:
-                    await emit({**pause, "replay": True})
-                session.pending_pauses = {p["interrupt_id"]: p for p in parked}
-                pauses = parked
-            elif snapshot.next:
-                pauses = await _turn(None)  # cut mid-run: continue from the checkpoint
-            else:
-                pauses = []  # the user's first message is the next turn
-        else:
-            pauses = await _nudge_if_empty(await _turn(opening_prompt))
-        await _finish_opening(pauses)
+            session.resume_primer = await build_reprime_context(
+                session, self._api_key, provider=self.provider, model=self.model
+            )
+            session.needs_reprime = True
 
-        while True:
-            try:
-                chat_msg = await asyncio.wait_for(session.chat_queue.get(), timeout=chat_idle_timeout)
-            except asyncio.TimeoutError:
-                logger.info("content: session %s chat idle timeout", session_id)
-                break
-            if chat_msg is None:  # sentinel from close_session
-                break
-            chat_msg, client_id = take_client_id(chat_msg)
-            if client_id:
-                await emit({"event": ContentEvent.USER_INPUT_CONSUMED, "client_message_id": client_id})
-            try:
-                if isinstance(chat_msg, dict) and "resume" in chat_msg:
-                    pauses = await _turn(Command(resume=chat_msg["resume"]))
-                else:
-                    pauses = await _turn(chat_message_text(chat_msg))
-                pauses = await _nudge_if_empty(pauses)
-                await _finish_opening(pauses)
-            except Exception as exc:
-                # One bad turn must not end the session — the user can rephrase.
-                logger.exception("content: chat turn failed for session %s", session_id)
-                await emit({
-                    "event": ContentEvent.STEP_FAILED,
-                    "status": StepStatus.ERROR,
-                    **error_payload(exc),
-                })
+        loop = DeepSession(
+            agent,
+            session=session,
+            emit=emit,
+            thread_id=str(conversation_id or session_id),
+            limits=LIMITS,
+            provider=self.provider,
+            model=self.model,
+            log_prefix="content-v1",
+            summariser=self._summariser_model(llm),
+            on_artifact_close=_on_artifact,
+            on_todo=_on_todo,
+            on_tool_use=_on_tool_use,
+            on_tool_result=_on_tool_result,
+            finish_payload=_finish_payload,
+            after_turn=_nudge_if_empty,
+            on_resume=_reprime_if_no_checkpoint,
+        )
+        await loop.run(opening_prompt, resume=resume, chat_idle_timeout=chat_idle_timeout)
 
     def _summariser_model(self, llm: Any) -> Any:
         """The model an emergency compaction summarises with: the injected one
@@ -1027,16 +868,7 @@ class ContentRunner:
         checkpoint is read, not extended.
         """
         agent = self.build_agent(llm=inspection_chat_model(), remember=False, interactive=False)
-        snapshot = await agent.aget_state({"configurable": {"thread_id": str(conversation_id)}})
-        pauses = live_pauses(snapshot)
-        values = getattr(snapshot, "values", None) or {}
-        return {
-            "status": "paused" if pauses else "unfinished" if snapshot.next else "idle",
-            "pauses": pauses,
-            "todos": list(values.get("todos") or []),
-            "message_count": len(values.get("messages") or []),
-            "usage": usage_from_messages(values.get("messages") or [], self.model),
-        }
+        return await inspect_thread(agent, str(conversation_id), self.model)
 
 
 # ---------------------------------------------------------------------------
