@@ -48,7 +48,7 @@ Intended for product managers, growth leads and marketing teams who need cross-t
 
 ## Maintainer
 
-- [Shirish Kadam](https://shirishkadam.com): Product engineer, Valencia, Spain. Writes and records about agent memory, approval gates and running models locally on [YouTube](https://youtube.com/@5hirish) and [X](https://x.com/5hirish).
+- [Shirish Kadam](https://shirishkadam.com): Product manager and engineer in Valencia, Spain. Built and scaled B2B products at fin-tech and ed-tech companies, largely AI/ML systems at scale, and is a long-time open-source contributor. Also runs [Ship with AI](https://youtube.com/@5hirish) on YouTube, a separate channel about building apps with AI coding tools, and posts as [@5hirish](https://x.com/5hirish).
 
 ## Optional
 

@@ -128,12 +128,10 @@ what this project believes and why, each tenet linked to the file that enforces
 it. Start there if you want to know whether you would enjoy contributing before
 you read any code.
 
-I also write and record about the parts of this that generalise — agent memory,
-approval gates, running models locally:
-
-- [youtube.com/@5hirish](https://youtube.com/@5hirish)
-- [shirishkadam.com](https://shirishkadam.com)
-- [@5hirish](https://x.com/5hirish)
+Elsewhere: [shirishkadam.com](https://shirishkadam.com) (product and
+engineering writing), [@5hirish](https://x.com/5hirish), and
+[Ship with AI](https://youtube.com/@5hirish) on YouTube, which is about building
+with AI coding tools rather than about Duct's internals.
 
 ## License
 
