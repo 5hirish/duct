@@ -17,7 +17,7 @@ into the area `AGENTS.md`; this file records where they came from.
 |---------|------|----------------------|-----------|
 | **Codex** (OpenAI) | `github.com/openai/codex` | The desktop and IDE apps are clients of `codex app-server`, a JSON-RPC server whose thread / turn / item contract is the most fully specified agent-UI protocol in the open. The desktop app itself is closed; the TUI in the same repo is the reference client. | `de78740`, 2026-09-04 — shallow clone at `../codex` |
 | **OpenCode** (Anomaly) | `github.com/anomalyco/opencode` (moved from `sst/opencode`; default branch `dev`) | TypeScript server + clients over a session / message / part model with an SSE event bus, mid-migration to an event-sourced v2; provider-agnostic; closest in shape to our Next.js app talking to a backend. | `5cf9f51`, 2026-09-04 — shallow clone at `../opencode` |
-| **pi** (badlogic) | `github.com/badlogic/pi-mono` | A deliberately small TypeScript agent loop and TUI; the reference for "how little harness do you need". Has explicit steer-vs-follow-up input modes and session trees. | not yet read |
+| **pi** (Earendil) | `github.com/earendil-works/pi` (moved from `badlogic/pi-mono`; docs at `pi.dev/docs/latest` are `packages/coding-agent/docs/*.md`) | A deliberately small TypeScript agent loop and TUI; the reference for "how little harness do you need". Explicit steer-vs-follow-up input modes, abortable retry, session trees. | `9841914`, 2026-09-05 — shallow clone at `../pi` |
 
 ## How to read one
 
@@ -401,12 +401,129 @@ Rows marked **done** landed on 2026-09-05, the day after the reading; the
 
 ---
 
-## pi — what to look for when it is read
+## pi, at `9841914`
 
-- **pi:** the agent loop's size and what it refuses to own; steer versus
-  follow-up input modes and how each is shown; session trees (branching a
-  conversation, which maps to Codex's `thread/fork`); how compaction is
-  triggered and what the user sees.
+The repository moved from `badlogic/pi-mono` to `earendil-works/pi`; the docs
+site (`pi.dev/docs/latest`) is rendered from `packages/coding-agent/docs/*.md`,
+so the markdown is the record. Paths below are relative to `packages/`.
 
-Record the revision and the `file:line`s here when done, and move anything
-that became a rule into the area `AGENTS.md`.
+### The loop, and what it refuses to own
+
+- **The loop is one function.** `agent/src/agent-loop.ts:150-268`: drain
+  steering, stream the assistant, run its tool calls, `turn_end`, ask
+  `shouldStopAfterTurn`, poll steering again; when it would stop, poll
+  follow-ups and go round once more. The `Agent` wrapper (`agent/src/agent.ts`)
+  owns the transcript, two `PendingMessageQueue`s (`:125-160`) with
+  `QueueMode = "all" | "one-at-a-time"` (`types.ts:50`), abort and
+  `waitForIdle`. Ten events in the core (`types.ts:431-446`): agent, turn,
+  message and tool_execution, each start/end (+ update for the streaming
+  two). Nothing else lives there: no persistence, no compaction, no retry.
+- **Everything else is the session around it.** `coding-agent/src/core/agent-session.ts`
+  (3.5k lines) plugs in through hooks: compaction runs between turns in
+  `prepareNextTurn` (`agent-loop.ts:176-197`, so steering typed during a
+  long compaction is picked up after it), retry re-runs the loop from the
+  outside (`_willRetryAfterAgentEnd` `:725-735`), and the session adds its
+  own events — `agent_settled`, `auto_retry_start | end`,
+  `summarization_retry_*` (`:149-184`). `agent_end` carries `willRetry`;
+  `agent_settled` means nothing more will happen on its own — no retry, no
+  compaction retry, no queued follow-up (`docs/rpc.md:899-912`). *That is
+  what our READY phase means; worth keeping it that strict.*
+
+### Steer versus follow-up, as the user sees it
+
+- **Two queues, two keys.** Enter steers: delivered after the current
+  assistant turn's tool calls, before the next model call. Alt+Enter
+  follows up: delivered only when the agent would otherwise stop
+  (`docs/usage.md:63-74`, `docs/keybindings.md:159-166`,
+  `docs/rpc.md:80-123`). `one-at-a-time` is the default for both — one
+  message per turn, so a steer never bundles two changes of direction
+  (`docs/rpc.md:361-395`). Messages typed *during compaction* queue
+  separately and flush after it (`modes/interactive/interactive-mode.ts:222,466-467,3390`).
+- **Escape aborts and hands the queue back.** `clear_queue` returns the
+  queued texts and the client puts them in the editor before `abort`
+  (`docs/rpc.md:137-158`, `interactive-mode.ts:1864,4158-4162`); Alt+Up
+  pulls them back without aborting. *Ours dropped a still-queued row on
+  Stop.*
+
+### Retry
+
+- **Session-level, abortable, announced with its delay.**
+  `auto_retry_start {attempt, maxAttempts, delayMs, errorMessage}` then an
+  abortable sleep (`agent-session.ts:2894-2946`, `abortRetry` `:2950`); the
+  failed message is dropped from the model's context but kept in the session
+  file (`:2913-2917`). The TUI counts the delay down
+  (`modes/interactive/components/countdown-timer.ts`).
+- **A Retry-After the harness will not wait for is a failure now.** pi-ai's
+  provider retry honours `retry-after-ms` and `retry-after` (seconds or a
+  date) and throws immediately when the server asks for more than
+  `maxRetryDelayMs` (60 s by default) (`ai/src/utils/provider-retry.ts:36-66,96-104`);
+  the schedule otherwise is 0.5 s × 2ⁿ capped at 8 s with 25 % jitter
+  (`:65-66`). *We capped at 30 s and retried anyway.*
+
+### Compaction and the session tree
+
+- **Threshold and cut rules, written down.** Auto-compaction when
+  `contextTokens > contextWindow − reserveTokens` (16k), checked after a
+  tool batch lands and before a new prompt; keep the most recent 20k tokens;
+  cut only at user, assistant, bash or custom messages, never at a tool
+  result; a single turn bigger than the budget is split and gets two
+  summaries merged (`docs/compaction.md:24-100`). `CompactionEntry
+  {summary, firstKeptEntryId, tokensBefore, usage}` — the summariser's usage
+  is counted in the session total (`:139-160`, `core/usage-totals.ts:38-70`).
+  Context % is `null` after compaction until a fresh response, shown as `?`
+  (`docs/rpc.md:590-596`, `modes/interactive/components/footer.ts:106-111`).
+  *Ours showed the summariser's prompt as the thread's context.*
+- **Sessions are trees.** Every JSONL entry has `id` and `parentId`; the
+  leaf is the position; `/tree` moves it, editing an earlier message and
+  resubmitting starts a branch, `/fork` and `/clone` make new files, labels
+  name points, and leaving a branch can attach a branch summary at the new
+  position (`docs/sessions.md:69-139`, `core/session-manager.ts:846-856`,
+  `docs/compaction.md:160-215`). *Ours is linear; LangGraph checkpoints can
+  fork, which is the Codex table's `thread/fork` row.*
+
+### Cost and cache, in the footer
+
+- `↑in ↓out Rcache Wcache CH92.3% $0.123` plus the context % in the footer
+  (`modes/interactive/components/footer.ts:87-148`): cache hit rate of the
+  latest prompt, cost including summaries, all from the session file.
+- **Cache misses are counted and blamed.** `core/cache-stats.ts` counts a
+  miss per turn as prompt tokens that were in the previous prompt but were
+  not read from cache, prices the waste at the paid rate minus the cache
+  rate, and attributes it to an idle gap longer than the 5-minute TTL or to
+  a model switch (`:1-12,60-92`); a compaction resets the baseline because
+  the prompt legitimately changed (`:119-125`). Cost also breaks down by
+  model with a "Tools/summaries" bucket (`core/usage-totals.ts:38-70`).
+
+### What this validated in ours
+
+- Steer at the next model call as the default, with the queued row released
+  when the model takes it.
+- Retry as a status with a countdown, `Retry-After` honoured.
+- The summariser's calls on the bill: `UsageTracker.feed` runs before the
+  summariser skip in `stream_agent`.
+- A failure kept in history and out of the model's context — our `failure`
+  event kind is their "keep in session, drop from agent state".
+
+### What it exposes in ours
+
+Rows marked **done** landed on 2026-09-05 with the reading.
+
+| Size | Gap | pi | Ours today |
+|------|-----|----|------------|
+| S | **done** — Stop hands queued messages back to the composer | Escape restores the queue to the editor | a row still marked queued was dropped with the run |
+| S | **done** — A Retry-After beyond the cap is not waited for | fails immediately above 60 s | waited 30 s, retried, failed again |
+| S | **done** — The gauge is unknown after compaction | `percent: null`, `?` in the footer | the ring showed the summariser's prompt as the thread's context |
+| S | **done** — Cache hit share beside the cached tokens | `CH92.3%` | cached tokens with no share |
+| S | An explicit "after this turn" send | Enter steers, Alt+Enter follows up, `one-at-a-time` | steer-if-possible only; a note meant for after the run interrupts it |
+| M | Cache-miss attribution | idle > TTL or model switch, dollars wasted | none; on BYO keys a 5-minute pause silently re-bills the prompt |
+| M | Compact once and retry on overflow (OpenCode does this too) | `isRecoverableLength`, one bounded attempt | `context_window` → start fresh |
+| L | Session tree | `/tree`, `/fork`, `/clone`, branch summaries | linear; the Codex table's `thread/fork` row |
+
+---
+
+## Refreshing a reading
+
+All three are read now. `git -C ../<harness> log <rev>..HEAD -- <path>` from
+the table's revision is how a refresh starts; pin new findings to `file:line`,
+update the "Last read" column, and move anything that became a rule into the
+area `AGENTS.md`.

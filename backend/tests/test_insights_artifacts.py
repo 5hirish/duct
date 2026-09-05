@@ -22,8 +22,6 @@ import asyncio
 import uuid
 
 import pytest
-from langchain_core.language_models.fake_chat_models import FakeMessagesListChatModel
-from langchain_core.messages import AIMessage
 from sqlmodel import select
 
 from agents.core.events import AgentEvent
@@ -48,6 +46,7 @@ import service.artifact_store as store
 # Fixtures (engine/db/local_storage/store_db/owner/project) come from the
 # artifact-store suite — the same DB shape, so they are imported rather than
 # re-declared.
+from tests.fakes import fake_llm as _fake
 from tests.test_artifact_store import (  # noqa: F401
     db,
     engine,
@@ -58,29 +57,9 @@ from tests.test_artifact_store import (  # noqa: F401
 )
 
 
-class ToolCallingFake(FakeMessagesListChatModel):
-    def bind_tools(self, tools, **kwargs):  # noqa: ARG002
-        return self
-
-
-def _fake(*responses: str):
-    return ToolCallingFake(responses=[AIMessage(content=r) for r in responses])
-
-
 @pytest.fixture
 def session():
     return create_insights_session(str(uuid.uuid4()))
-
-
-@pytest.fixture
-def emitted():
-    events: list[dict] = []
-
-    async def emit(event: dict) -> None:
-        events.append(event)
-
-    emit.events = events  # type: ignore[attr-defined]
-    return emit
 
 
 RUNNER = AutonomousInsightsRunner(api_key="unused-no-network")

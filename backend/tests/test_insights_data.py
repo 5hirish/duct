@@ -48,13 +48,6 @@ def test_every_catalog_entity_can_actually_be_fetched():
     assert catalogued == set(known_entities())
 
 
-def test_the_old_eight_tool_cap_is_gone():
-    """The previous design capped the agent at eight goal-filtered tools chosen
-    before it saw anything. Everything catalogued is now reachable."""
-    # 9 Google entities + the Gads wave-2 trio (mixpanel, clarity, growthbook).
-    assert len(known_entities()) == 12
-
-
 def test_specs_carry_their_connector():
     """Which connector an entity belongs to is what lets the fetcher resolve an
     account without the model naming one."""

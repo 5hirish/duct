@@ -342,7 +342,12 @@ class UsageTracker:
 
 def _usage_scope(meta: dict | None) -> str:
     """``thread`` for the agent the user is talking to, ``subagent`` for a
-    model call nested inside one of its tool calls."""
+    model call nested inside one of its tool calls, ``compaction`` for the
+    summariser. All three count toward the bill; only the first drives the
+    context gauge — the summariser's prompt is the history being replaced,
+    not the context the next turn will run in."""
+    if is_summarization_node((meta or {}).get("langgraph_node")):
+        return "compaction"
     namespace = str((meta or {}).get("langgraph_checkpoint_ns") or "")
     return "subagent" if "tools:" in namespace or "|" in namespace else "thread"
 
@@ -515,9 +520,9 @@ MODEL_RETRY_ATTEMPTS = 4
 MODEL_RETRY_INITIAL_DELAY = 1.0
 MODEL_RETRY_MAX_DELAY = 8.0
 # A provider's own Retry-After wins over the schedule above, up to this long.
-# Past it the user is better served by a failure they can act on than by a
-# status row counting down a minute; the code on that failure says "rate
-# limited", which is the truth.
+# Past it the call is not retried at all (see ReportedRetryMiddleware): the
+# user is better served by a failure they can act on now than by a status row
+# counting down a minute and then failing anyway.
 MODEL_RETRY_HEADER_MAX_DELAY = 30.0
 _RETRY_JITTER = 0.25
 
@@ -646,7 +651,14 @@ class ReportedRetryMiddleware(AgentMiddleware):
         })
 
     def _give_up(self, exc: Exception, attempt: int) -> bool:
-        return attempt >= self.attempts or not is_retryable(exc)
+        if attempt >= self.attempts or not is_retryable(exc):
+            return True
+        # A provider asking for longer than the cap is not "having a moment";
+        # waiting the cap and retrying only fails again. pi fails immediately
+        # above its limit for the same reason, and the code on the failure
+        # ("rate limited") is the truth the user can act on.
+        asked = retry_after_seconds(exc)
+        return asked is not None and asked > MODEL_RETRY_HEADER_MAX_DELAY
 
     async def awrap_model_call(self, request, handler):  # type: ignore[override]
         for attempt in range(1, self.attempts + 1):

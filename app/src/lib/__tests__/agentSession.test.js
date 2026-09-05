@@ -387,6 +387,16 @@ describe("context and cost", () => {
     expect(after.messages[after.messages.length - 1]).toMatchObject({ role: Row.NOTICE });
   });
 
+  it("the gauge goes stale at compaction and is fresh again at the next call on the thread", () => {
+    const before = replayEvents([bill(150000, 800)]);
+    const summarised = replayEvents([bill(150000, 900, { scope: "compaction" }), { event: AgentEvent.CONTEXT_COMPACTED }], before);
+    expect(summarised.usage.last).toMatchObject({ input: 150000, stale: true });
+    expect(summarised.usage.total.calls).toBe(2);  // the summariser is on the bill
+    const fresh = replayEvents([bill(30000, 100)], summarised);
+    expect(fresh.usage.last).toMatchObject({ input: 30000 });
+    expect(fresh.usage.last.stale).toBeUndefined();
+  });
+
   it("a resumed thread reads its usage from the state route", () => {
     const s = reduceAgentSession(initialAgentState, {
       type: Action.PAUSES,
@@ -427,6 +437,21 @@ describe("input while the agent is busy", () => {
     expect(s.phase).toBe(Phase.QUESTIONS);
     expect(s.pauses).toHaveLength(1);
     expect(s.messages.at(-1).queued).toBe(true);
+  });
+
+  it("stopping hands a still-queued message back to the composer", () => {
+    const sent = reduceAgentSession(working, { type: Action.USER_SENT, text: "also mobile", clientId: "m1" });
+    const two = reduceAgentSession(sent, { type: Action.USER_SENT, text: "and tablets", clientId: "m2" });
+    const stopped = reduceAgentSession(two, { type: Action.STOPPED, keepReady: true });
+    expect(stopped.draft).toEqual({ text: "also mobile\n\nand tablets", key: 1 });
+    expect(stopped.messages.some((m) => m.queued)).toBe(false);
+    // One the model already took stays in the transcript.
+    const consumed = replayEvents([{ event: AgentEvent.USER_INPUT_CONSUMED, client_message_id: "m1" }], two);
+    const stoppedLater = reduceAgentSession(consumed, { type: Action.STOPPED, keepReady: true });
+    expect(stoppedLater.draft.text).toBe("and tablets");
+    expect(stoppedLater.messages.filter((m) => m.role === Row.USER).map((m) => m.text)).toEqual(["also mobile"]);
+    // Nothing queued: nothing handed back.
+    expect(reduceAgentSession(working, { type: Action.STOPPED, keepReady: true }).draft).toBeNull();
   });
 
   it("from READY it is an ordinary turn", () => {

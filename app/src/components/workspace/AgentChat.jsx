@@ -316,6 +316,7 @@ export default function AgentChat({
   errorRetryable = true,
   // A model call being waited out: { attempt, max }. Shown in the status row.
   retrying = null,
+  draft = null,
   // Tokens (lib/agentSession.js `usage`): the ring in the header, the figures
   // in its tooltip. Null until the first model call has been billed.
   usage = null,
@@ -550,6 +551,7 @@ export default function AgentChat({
         disabled={inputDisabled}
         isStreaming={isStreaming}
         onStop={onStop}
+        draft={draft}
         placeholder={placeholder}
         ariaLabel={inputAriaLabel}
         accept={inputAccept}

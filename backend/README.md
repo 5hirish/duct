@@ -84,7 +84,8 @@ on behaviour and the fix is usually not "edit the test":
   adapter.
 - `test_env_example.py` — `config.py` and `.env.example` agree.
 - `test_deepagents_harness.py` — the upgrade gate for the exact `deepagents`
-  pin, which changes behaviour in minor releases.
+  pin, which changes behaviour in minor releases: what `interrupt()` from a
+  tool does, which the insights pause path stands on.
 
 ## Boundaries
 

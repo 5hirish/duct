@@ -85,6 +85,16 @@ def test_a_call_without_a_stop_marker_is_billed_at_the_end_of_the_turn():
     assert billed["cost_usd"] is None  # unpriced: tokens shown, no dollar figure
 
 
+def test_the_summarisers_call_is_billed_but_does_not_drive_the_gauge():
+    tracker = UsageTracker(ModelName.CLAUDE_SONNET)
+    billed = tracker.feed(
+        AIMessageChunk(content="", usage_metadata=_usage(150_000, 900), response_metadata={"stop_reason": "end_turn"}),
+        {"langgraph_node": "_DeepAgentsSummarizationMiddleware.before_model"},
+    )
+    assert billed["scope"] == "compaction"
+    assert billed["input_tokens"] == 150_000  # still on the bill
+
+
 def test_a_nested_call_is_a_subagents_not_the_threads():
     tracker = UsageTracker(ModelName.CLAUDE_SONNET)
     billed = tracker.feed(

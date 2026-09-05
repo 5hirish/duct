@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * The chat composer every agent shell uses: text, pasted or attached images,
@@ -20,10 +20,18 @@ export default function ChatInput({
   placeholder = "Ask a follow-up question…",
   ariaLabel = "Message the agent",
   accept = "image/*",
+  // { text, key }: text handed back by the session (a queued message the
+  // user stopped before it was read). Applied once per `key`.
+  draft = null,
 }) {
   const [text, setText] = useState("");
   const [attachments, setAttachments] = useState([]);
   const fileRef = useRef(null);
+
+  useEffect(() => {
+    if (draft?.text) setText((current) => (current.trim() ? `${current}\n\n${draft.text}` : draft.text));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draft?.key]);
 
   function handleKeyDown(e) {
     if (e.key === "Enter" && !e.shiftKey) {

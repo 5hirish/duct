@@ -104,6 +104,17 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
 - **Observability:** Sentry error tracking; optional OpenTelemetry tracing (wired via Claude Agent SDK).
 - **Hosting:** Railway — auto-deploys from `main` via GitHub integration; `railway.json` defines Railpack build + uvicorn start.
 - **CI:** GitHub Actions (`backend.yml`) — Ruff lint + pytest on every PR and push to `main`.
+- **Tests:** `make test` must stay offline and under two minutes; it is the
+  gate on every merge and the thing an agent runs after every change. Two
+  rules keep it that way. A test that needs a provider key, a network, or a
+  binary on `PATH` is marked `live` — a `skipif` on the key alone is not a
+  gate, because `get_configs()` reads `backend/.env.local`, so a developer with
+  a key there fires a paid, minutes-long call from a plain `pytest`. And the
+  V1 agent loop is driven by the fakes in `tests/fakes.py` (`ToolCallingFake`
+  and its failing variants, `fake_llm`, `tool_names`) plus the `emitted`
+  fixture in `conftest.py`: the real harness runs, only the model is canned.
+  Assert on events, tool names and payloads, not on prompt prose — a wording
+  test fails on every copy edit and catches nothing an eval would not.
 
 ### Desktop (local sidecar) mode
 
@@ -254,8 +265,12 @@ framework. The rules it implies:
   `MODEL_RETRYING` carries `retry_in` (seconds, a duration — the client anchors
   it to its own clock so skew cannot show a countdown already over), computed by
   `retry_delay(attempt, exc)`, which reads `retry_after_seconds(exc)` from
-  `agents/core/errors.py` before falling back to the jittered schedule, capped at
-  `MODEL_RETRY_HEADER_MAX_DELAY`.
+  `agents/core/errors.py` before falling back to the jittered schedule. A
+  provider asking for longer than `MODEL_RETRY_HEADER_MAX_DELAY` is not
+  retried at all — the failure, with its code, is more useful now than after
+  a countdown that fails anyway. The summariser's calls are billed with
+  `scope: compaction`, so they count toward the total and never drive the
+  gauge.
 - **A model has a price or it has no cost.** `PRICING` in `agents/models.py`
   mirrors `CONTEXT_WINDOW` (a test holds them equal) and `cost_usd()` prices a
   call from LangChain's usage, taking cached tokens out of the input figure.

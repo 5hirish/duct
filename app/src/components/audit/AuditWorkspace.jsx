@@ -203,6 +203,7 @@ export default function AuditWorkspace({
           retrying={agent.retrying}
           usage={agent.usage}
           compacting={agent.compacting}
+          draft={agent.draft}
           isAgentTyping={agent.isAgentTyping}
           isStreaming={phase === Phase.PIPELINE || (phase === Phase.CHATTING && agent.isAgentTyping)}
           reconnecting={agent.reconnecting}
@@ -252,6 +253,7 @@ export default function AuditWorkspace({
           retrying={agent.retrying}
           usage={agent.usage}
           compacting={agent.compacting}
+          draft={agent.draft}
           onRetry={handleRetry}
           leadToken={leadToken}
           leadEmail={leadEmail}

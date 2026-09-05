@@ -463,6 +463,11 @@ def test_sdk_options_build_valid_cli_command():
     assert cmd[cmd.index("--permission-mode") + 1] == "dontAsk"
 
 
+# `live`: spawns whatever `claude` is on this machine's PATH. No tokens are
+# spent, but the outcome depends on the installed CLI rather than on the diff,
+# it was the slowest test in the suite, and CI (no CLI) always skipped it. Run
+# it when the SDK pin or the CLI flags change.
+@pytest.mark.live
 async def test_sdk_subprocess_starts_and_responds():
     """The claude CLI subprocess must start cleanly and respond to the initialize handshake.
 

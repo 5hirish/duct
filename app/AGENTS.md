@@ -183,8 +183,13 @@ Rules that follow:
   "Compacting context"). The context ring beside it is `workspace/ContextRing`
   over the reducer's `usage`; it is the same ring the insights desk shows for
   a new thread. A retry counts down (`retrying.until`, anchored on this
-  client's clock at receipt), and the tooltip carries cost beside the tokens
-  when the model is priced.
+  client's clock at receipt), and the tooltip carries cost and the cached
+  share beside the tokens. After a compaction the ring is empty and says so
+  (`usage.last.stale`) until the next call on the thread reports its size.
+- **Stop hands a queued message back.** A user row still marked queued when
+  the run is stopped never reached the model: the reducer takes it out of the
+  transcript and puts its text in `draft`, which `ChatInput` applies once per
+  `draft.key`. Losing a typed message is worse than losing the run.
 - **Notifications come from phase transitions, never from a workspace.** A
   workspace names itself (`notifyAs`) and `hooks/useAgentNotifications.js`
   turns done / needs-input / failed into a system notice — only while the

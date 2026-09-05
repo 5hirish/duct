@@ -205,8 +205,8 @@ class LangChainAuditRunner:
 
         await emit({
             "event": _E.STEP_STARTED,
-            "step_id": AuditStep.SYNTHESIZE,
-            "label": STEP_LABELS[AuditStep.SYNTHESIZE],
+            "step_id": AuditStep.SYNTHESIZE_AUDIT,
+            "label": STEP_LABELS[AuditStep.SYNTHESIZE_AUDIT],
             "status": "running",
         })
 
@@ -231,8 +231,8 @@ class LangChainAuditRunner:
 
         await emit({
             "event": _E.STEP_FINISHED,
-            "step_id": AuditStep.SYNTHESIZE,
-            "label": STEP_LABELS[AuditStep.SYNTHESIZE],
+            "step_id": AuditStep.SYNTHESIZE_AUDIT,
+            "label": STEP_LABELS[AuditStep.SYNTHESIZE_AUDIT],
             "status": "success",
         })
         return report_holder["report"]

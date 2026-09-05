@@ -66,12 +66,19 @@ function UsageDetails({ last, total }) {
   // has no price for shows tokens alone rather than a guessed figure.
   const lastCost = formatUsd(last?.cost);
   const totalCost = formatUsd(total?.cost);
+  // The cached share is the prompt-cache hit rate a person can act on: a low
+  // one after a pause means the cache expired; after a model switch it means
+  // the whole prompt was re-billed.
+  const share = (cached, input) => (cached && input ? ` (${Math.round((cached / input) * 100)}%)` : "");
   if (last?.window) {
-    rows.push(["Context", `${formatTokens(last.input + last.output)} of ${formatTokens(last.window)}`]);
-    rows.push(["Last call", `${formatTokens(last.input)} in · ${formatTokens(last.output)} out${last.cached ? ` · ${formatTokens(last.cached)} cached` : ""}${lastCost ? ` · ${lastCost}` : ""}`]);
+    rows.push([
+      "Context",
+      last.stale ? "recomputed at the next call" : `${formatTokens(last.input + last.output)} of ${formatTokens(last.window)}`,
+    ]);
+    rows.push(["Last call", `${formatTokens(last.input)} in · ${formatTokens(last.output)} out${last.cached ? ` · ${formatTokens(last.cached)} cached${share(last.cached, last.input)}` : ""}${lastCost ? ` · ${lastCost}` : ""}`]);
   }
   if (total?.calls) {
-    rows.push(["This session", `${formatTokens(total.input)} in · ${formatTokens(total.output)} out · ${total.calls} call${total.calls === 1 ? "" : "s"}${totalCost ? ` · ${totalCost}` : ""}`]);
+    rows.push(["This session", `${formatTokens(total.input)} in · ${formatTokens(total.output)} out${total.cached ? ` · ${formatTokens(total.cached)} cached${share(total.cached, total.input)}` : ""} · ${total.calls} call${total.calls === 1 ? "" : "s"}${totalCost ? ` · ${totalCost}` : ""}`]);
   }
   if (last?.model) rows.push(["Model", last.model]);
   return (
@@ -92,8 +99,12 @@ function UsageDetails({ last, total }) {
  * it the ring is decoration, as on a thread that has not started.
  */
 export default function ContextRing({ used = 0, label = "", details = null }) {
-  const pct = Math.max(0, Math.min(1, used));
-  if (!details) return <Ring pct={pct} label={label} />;
+  // Right after a compaction the last reading is of the context that was
+  // replaced: show an empty ring that says so rather than a stale figure.
+  const stale = Boolean(details?.last?.stale);
+  const pct = stale ? 0 : Math.max(0, Math.min(1, used));
+  const text = stale ? "context compacted" : label;
+  if (!details) return <Ring pct={pct} label={text} />;
   return (
     <TooltipProvider delayDuration={150}>
       <Tooltip>
@@ -103,7 +114,7 @@ export default function ContextRing({ used = 0, label = "", details = null }) {
             aria-label={`Context used: ${Math.round(pct * 100)} percent. Show token usage.`}
             className="rounded-md px-1 -mx-1 hover:bg-muted transition-colors"
           >
-            <Ring pct={pct} label={label} />
+            <Ring pct={pct} label={text} />
           </button>
         </TooltipTrigger>
         <TooltipContent side="bottom" align="end" className="max-w-xs">

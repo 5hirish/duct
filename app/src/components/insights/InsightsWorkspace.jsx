@@ -182,6 +182,7 @@ export default function InsightsWorkspace({
       retrying={agent.retrying}
       usage={agent.usage}
       compacting={agent.compacting}
+      draft={agent.draft}
       isAgentTyping={agent.isAgentTyping}
       isStreaming={agent.isStreaming}
       reconnecting={agent.reconnecting}

@@ -67,6 +67,11 @@ export const initialAgentState = Object.freeze({
   // The harness is summarising history to make room — shown in the status
   // row; the transcript gets a quiet note when it is done.
   compacting: false,
+  // Text handed back to the composer: what was queued when the user stopped
+  // the run. `key` changes per hand-back so the same text can be handed back
+  // twice. pi's Escape does this; losing a typed message on Stop is worse
+  // than losing the run.
+  draft: null,
   reconnecting: false,
   isAgentTyping: false,
   // The opening run has finished at least once — after this a pause belongs
@@ -276,9 +281,12 @@ function reduceEvent(state, event, at = 0) {
       return { ...state, compacting: true };
 
     case AgentEvent.CONTEXT_COMPACTED:
+      // The gauge's last reading is of the context that was just replaced;
+      // nothing true can be shown until the next call reports its size.
       return {
         ...state,
         compacting: false,
+        usage: state.usage.last ? { ...state.usage, last: { ...state.usage.last, stale: true } } : state.usage,
         messages: [
           ...closeStreaming(state.messages),
           { role: Row.NOTICE, text: "Context compacted — older history summarised to make room." },
@@ -543,17 +551,26 @@ export function reduceAgentSession(state, action) {
     case Action.APPEND_MESSAGE:
       return { ...state, messages: [...closeStreaming(state.messages), action.message] };
 
-    case Action.STOPPED:
+    case Action.STOPPED: {
+      // A message still marked queued never reached the model: it comes out
+      // of the transcript and back into the composer, not into the void.
+      const queued = state.messages.filter((m) => m.role === Row.USER && m.queued);
+      const kept = queued.length ? state.messages.filter((m) => !(m.role === Row.USER && m.queued)) : state.messages;
+      const draft = queued.length
+        ? { text: queued.map((m) => m.text).filter(Boolean).join("\n\n"), key: (state.draft?.key || 0) + 1 }
+        : state.draft;
       return {
         ...state,
         isAgentTyping: false,
-        messages: closeStreaming(state.messages),
+        messages: closeStreaming(kept),
+        draft,
         retrying: null,
         phase: action.keepReady ? Phase.READY : Phase.FAILED,
         error: action.keepReady ? state.error : "Stopped.",
         errorCode: action.keepReady ? state.errorCode : ErrorCode.CANCELLED,
         errorRetryable: true,
       };
+    }
 
     case Action.RECONNECTING:
       return { ...state, reconnecting: action.value, isAgentTyping: action.value ? false : state.isAgentTyping };

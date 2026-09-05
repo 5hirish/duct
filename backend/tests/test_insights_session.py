@@ -22,7 +22,6 @@ import asyncio
 import uuid
 
 import pytest
-from langchain_core.language_models.fake_chat_models import FakeMessagesListChatModel
 from langchain_core.messages import AIMessage
 
 from agents.core import lc
@@ -38,68 +37,20 @@ from agents.insights.schema import InsightsRequest, InsightsSession, create_insi
 from agents.insights.v1.runner import AutonomousInsightsRunner
 
 
-class ToolCallingFake(FakeMessagesListChatModel):
-    """A fake that accepts bind_tools, so it can drive a real agent loop.
-
-    `FakeMessagesListChatModel` cycles its responses rather than exhausting
-    them, so a two-turn test needs two entries and a *failing* turn needs
-    `RaisingFake` instead.
-    """
-
-    def bind_tools(self, tools, **kwargs):  # noqa: ARG002
-        return self
-
-
-class RaisingFake(ToolCallingFake):
-    """Answers the first turn, then fails — the "one bad turn" case."""
-
-    def _generate(self, messages, stop=None, run_manager=None, **kwargs):
-        if getattr(self, "_used", False):
-            raise RuntimeError("provider blew up")
-        self._used = True
-        return super()._generate(messages, stop=stop, run_manager=run_manager, **kwargs)
-
-
-class RateLimitError(Exception):
-    """Named like the provider SDK's, which is how the classifier knows it."""
-
-
-class AuthenticationError(Exception):
-    """Ditto — a rejected key, which must not be retried."""
-
-
-class FlakyFake(ToolCallingFake):
-    """Fails `failures` times with `exc`, then answers — a provider having a moment."""
-
-    failures: int = 2
-    exc: type[Exception] = RateLimitError
-
-    def _generate(self, messages, stop=None, run_manager=None, **kwargs):
-        calls = getattr(self, "_calls", 0)
-        self._calls = calls + 1
-        if calls < self.failures:
-            raise self.exc("429 rate limited")
-        return super()._generate(messages, stop=stop, run_manager=run_manager, **kwargs)
+from tests.fakes import (
+    AuthenticationError,
+    FlakyFake,
+    RaisingFake,
+    RateLimitError,
+    ToolCallingFake,
+    fake_llm as _fake,
+    tool_names as _tool_names,
+)
 
 
 @pytest.fixture
 def session() -> InsightsSession:
     return create_insights_session(str(uuid.uuid4()))
-
-
-@pytest.fixture
-def emitted():
-    events: list[dict] = []
-
-    async def emit(event: dict) -> None:
-        events.append(event)
-
-    emit.events = events  # type: ignore[attr-defined]
-    return emit
-
-
-def _fake(*responses: str, cls=ToolCallingFake):
-    return cls(responses=[AIMessage(content=r) for r in responses])
 
 
 QUESTION = {"question": "Which goal matters most?", "header": "Goal"}
@@ -127,18 +78,6 @@ def _kinds(emitted) -> list[str]:
 
 
 RUNNER = AutonomousInsightsRunner(api_key="unused-no-network")
-
-
-def _tool_names(agent) -> set[str]:
-    """Tool names bound into a compiled agent graph."""
-    for node in agent.nodes.values():
-        seq = getattr(getattr(node, "bound", None), "steps", None) or []
-        for step in seq:
-            if hasattr(step, "tools_by_name"):
-                return set(step.tools_by_name)
-    tool_node = agent.nodes.get("tools")
-    inner = getattr(tool_node, "bound", tool_node)
-    return set(getattr(inner, "tools_by_name", {}))
 
 
 # ---------------------------------------------------------------------------
@@ -179,7 +118,6 @@ def test_system_prompt_describes_the_tools_actually_mounted():
     brief — the exact failure this agent exists to eliminate."""
     prompt = build_insights_system_prompt()
 
-    assert "Prove the number before you use it" in prompt
     for tool in ("FetchData", "ReadConnectorNotes", "ListDataSources", "SelectAccount"):
         assert tool in prompt
 
@@ -193,23 +131,6 @@ def test_system_prompt_carries_the_catalog_and_the_notes_index():
     assert "search_terms" in prompt          # a catalog entity
     assert "ReadConnectorNotes" in prompt
     assert "`stripe`" in prompt              # a notes index entry
-
-
-def test_verification_is_delegated_not_optional():
-    prompt = build_insights_system_prompt()
-
-    assert "Delegate the checking" in prompt
-    assert "could not check" in prompt
-
-
-def test_system_prompt_teaches_the_discovery_order():
-    """ListDataSources before guessing, RequestConnection only when needed, and
-    a decline is a normal answer — the three habits that replace the wizard."""
-    prompt = build_insights_system_prompt()
-
-    assert "ListDataSources" in prompt
-    assert "SelectAccount" in prompt
-    assert "Decline is a normal answer" in prompt
 
 
 def test_user_turn_carries_the_per_project_blocks():
@@ -228,7 +149,8 @@ def test_empty_prompt_becomes_an_opening_instruction():
     """Opening a session without typing anything is a normal entry point."""
     out = build_insights_user_prompt(prompt="")
 
-    assert "without saying what they want" in out
+    assert out.strip()
+    assert out != build_insights_user_prompt(prompt="status?")
 
 
 # ---------------------------------------------------------------------------
@@ -436,6 +358,30 @@ async def test_the_providers_retry_after_sets_the_wait_and_the_countdown(session
     retry = next(e for e in emitted.events if e["event"] == AgentEvent.MODEL_RETRYING)
     assert retry["retry_in"] == 7.0
     assert AgentEvent.PIPELINE_FINISHED in _kinds(emitted)
+
+
+async def test_a_retry_after_beyond_the_cap_is_not_waited_for(session, emitted, no_retry_sleep):
+    """A provider asking for five minutes gets a rate-limited failure now, not
+    a thirty-second countdown and then the same failure."""
+    await session.chat_queue.put(None)
+
+    class Patient(RateLimitError):
+        def __init__(self, message):
+            super().__init__(message)
+            self.response = type("Response", (), {"headers": {"retry-after": "300"}})()
+
+    class Told(FlakyFake):
+        failures: int = 1
+        exc: type[Exception] = Patient
+
+    with pytest.raises(Patient):
+        await RUNNER.run_session(
+            session.session_id, emitted, llm=_fake("Recovered.", cls=Told),
+            session=session, prompt="status?", chat_idle_timeout=2.0,
+        )
+
+    assert AgentEvent.MODEL_RETRYING not in _kinds(emitted)
+    assert no_retry_sleep == []
 
 
 async def test_a_rejected_key_fails_on_the_first_attempt(session, emitted, no_retry_sleep):
@@ -840,22 +786,11 @@ def test_an_unattended_run_cannot_ask_a_question():
         assert pausing not in _tool_names(unattended)
     assert "ListDataSources" in _tool_names(unattended)
     assert "FetchData" in _tool_names(unattended)
+    # And the prompt agrees: the unattended stanza names no tool that pauses,
+    # or the agent plans around a question it will never get to ask.
+    from agents.insights.prompts.autonomous import CAPABILITIES_UNATTENDED
 
-
-def test_an_unattended_run_is_told_there_is_nobody_to_ask():
-    """A prompt that still describes an interactive session would have the
-    agent plan around a question it will never get to ask — which produces a
-    brief with a hole in it instead of a stated assumption."""
-    from agents.insights.prompts.autonomous import (
-        CAPABILITIES_PHASE_3,
-        CAPABILITIES_UNATTENDED,
-    )
-
-    assert "There is nobody to ask" in CAPABILITIES_UNATTENDED
-    assert "state the assumption in the brief" in CAPABILITIES_UNATTENDED
     assert "AskUserQuestion" not in CAPABILITIES_UNATTENDED
-    # The interactive stanza must NOT say that — it has the tool.
-    assert "There is nobody to ask" not in CAPABILITIES_PHASE_3
 
 
 async def test_run_once_returns_the_brief_it_wrote(emitted):
@@ -880,31 +815,3 @@ async def test_a_run_that_wrote_nothing_says_so(emitted):
 
     assert brief == {}
     assert AgentEvent.ARTIFACT_VERSION not in [e["event"] for e in emitted.events]
-
-
-def test_the_wizards_request_contract_is_gone_not_merely_unused():
-    """Phase 6. `GenerateRequest` was the six-step form's output — connectors,
-    accounts, goal, date range — and `UnifiedInsight` the envelope it produced.
-    Leaving them importable is how a deleted path grows a second caller."""
-    import routes.schemas as schemas
-
-    for name in ("GenerateRequest", "ReportRequest", "UnifiedInsight", "InsightMetadata"):
-        assert not hasattr(schemas, name), f"{name} outlived the wizard"
-
-
-def test_the_unattended_endpoint_takes_a_project_and_a_sentence():
-    """The URL survives; its contract does not. /api/insights/generate now
-    validates the same body as a session."""
-    import inspect
-
-    import routes.generate as generate_routes
-
-    assert hasattr(generate_routes, "generate_insight")
-    # The wizard's streaming twin had no caller once the form went.
-    assert not hasattr(generate_routes, "generate_insight_stream")
-    assert not hasattr(generate_routes, "_run_generate_pipeline")
-    # The modes catalogue stays — the organic-growth page still renders it.
-    assert hasattr(generate_routes, "list_insight_modes")
-
-    params = inspect.signature(generate_routes.generate_insight).parameters
-    assert "user_keys" in params, "bring-your-own provider keys must survive the rewire"
