@@ -50,10 +50,10 @@ jobs:
       - name: Check out the base repository
         # The BASE ref, deliberately — this is where pr_triage.py is read from,
         # so a fork cannot substitute its own version of the script.
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.12'
 
