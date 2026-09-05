@@ -84,8 +84,8 @@ langchain-openrouter = "^0.2.8"
 [tool.poetry.group.dev.dependencies]
 pytest = "^9"
 pytest-asyncio = "^1.0"
-ruff = "^0.15"
-arize-phoenix = "^16.3.0"
+ruff = "^0.16"
+arize-phoenix = "^17.7.0"
 pyinstaller = "^6.11"
 # In-memory span exporter for tests/test_telemetry.py.
 opentelemetry-sdk = "^1.41"
