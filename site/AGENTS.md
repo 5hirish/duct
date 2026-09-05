@@ -114,6 +114,25 @@ window.DUCT_DEMO_CONFIG = {
 4. `<link demo.css>` in head; `<script demo-for-x.js>` + `<script demo.js>` at body end.
 5. Add to `sitemap.xml`.
 
+## Discoverability files
+
+| File | Purpose |
+|---|---|
+| `site/robots.txt` | Crawl policy. Names AI agents explicitly because vendors split training and search into separate bots (`GPTBot` vs `OAI-SearchBot`, `ClaudeBot` vs `Claude-SearchBot`); a bare `User-agent: *` leaves that ambiguous. |
+| `site/sitemap.xml` | Every indexable page. A new page is not done until it is here. Bump `lastmod` only on pages the change actually touched. |
+| `site/blog/feed.xml` | RSS. Hand-maintained: add an `<item>` with every new post. CI fails if it is missing, empty, or carries an off-domain `<link>`. |
+| `site/llms.txt` | Plain-text site map for models. Low crawler uptake in practice, cheap to keep correct, and the place the open-source framing has to be right. |
+| `site/_headers` | `Link:` discovery headers plus the RSS content type Cloudflare would otherwise get wrong. |
+
+JSON-LD is validated by `check-pages.py`: every `application/ld+json` block must
+parse and carry an `@type`. A malformed block is dropped silently by every
+consumer, so the page keeps rendering while its structured data is simply gone.
+
+The home page carries `SoftwareApplication` **and** `SoftwareSourceCode`. The
+second is what tells an answer engine the project is open source; the first
+alone does not. `Organization.sameAs` and `Person.sameAs` are what tie the site,
+the repo and the maintainer into one entity rather than three.
+
 ## Canonical URLs
 
 **Extensionless, always.** `.github/scripts/check-pages.py` fails any canonical

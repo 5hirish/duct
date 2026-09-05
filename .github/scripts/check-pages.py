@@ -9,6 +9,7 @@ Exits non-zero if any required element is missing or out of spec.
 import sys
 import os
 import glob
+import json
 from html.parser import HTMLParser
 
 # ── Configuration ─────────────────────────────────────────────────────────────
@@ -46,6 +47,8 @@ class PageChecker(HTMLParser):
         self.has_gtm_noscript = False
         self._in_noscript = False
         self._saw_body = False
+        self.ld_blocks = []
+        self._in_ld = False
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
@@ -85,6 +88,8 @@ class PageChecker(HTMLParser):
                 self.twitter_props.add(name)
 
         if tag == "script":
+            if attrs.get("type", "").lower() == "application/ld+json":
+                self._in_ld = True
             src = attrs.get("src", "")
             if "config.js" in src:
                 self.has_config_js = True
@@ -92,9 +97,15 @@ class PageChecker(HTMLParser):
                 self.has_duct_js = True
                 self.duct_js_defer = "defer" in attrs
 
+    def handle_data(self, data):
+        if self._in_ld:
+            self.ld_blocks.append(data)
+
     def handle_endtag(self, tag):
         if tag == "noscript":
             self._in_noscript = False
+        if tag == "script":
+            self._in_ld = False
 
     def run_checks(self, rel_path):
         is_dynamic = rel_path in DYNAMIC_META
@@ -125,6 +136,21 @@ class PageChecker(HTMLParser):
         # Robots
         if not self.has_robots:
             self.errors.append("Missing <meta name='robots'>")
+
+        # JSON-LD. A malformed block is silently dropped by every consumer, so a
+        # page keeps rendering while its structured data is simply gone — which
+        # is exactly the failure an answer engine punishes and nobody notices.
+        for i, block in enumerate(self.ld_blocks):
+            try:
+                parsed = json.loads(block)
+            except json.JSONDecodeError as exc:
+                self.errors.append(f"JSON-LD block {i + 1} is not valid JSON: {exc}")
+                continue
+            for obj in parsed if isinstance(parsed, list) else [parsed]:
+                if not isinstance(obj, dict):
+                    self.errors.append(f"JSON-LD block {i + 1} is not an object")
+                elif "@type" not in obj:
+                    self.errors.append(f"JSON-LD block {i + 1} has no @type")
 
         # OG tags
         missing_og = REQUIRED_OG - self.og_props
