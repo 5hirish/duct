@@ -46,7 +46,7 @@ from agents.content.schema import (
     PillarHistorySignal,
     TrendSignal,
 )
-from agents.core.web_tools import build_web_fetch_tool_lc, provider_web_search_tool
+from agents.core.web_tools import build_web_tools_lc, web_search_available
 from agents.models import ModelName, Provider
 from db.session import get_engine
 from models.content import ContentPost
@@ -225,8 +225,17 @@ def _merge(base: ContentResearchContext, found: _RawTrendingResult) -> ContentRe
     )
 
 
-async def _research(prompt: str, llm: Any, web_search: dict) -> _RawTrendingResult | None:
-    """One bounded agent loop: search, fetch, then the structured answer."""
+async def _research(prompt: str, llm: Any, web_tools: list[Any]) -> _RawTrendingResult | None:
+    """One bounded agent loop: search, fetch, then the structured answer.
+
+    ``ToolStrategy`` makes ``create_agent`` force ``tool_choice``, which is
+    why this pass can only carry tools it fully controls. Two providers push
+    back on that and both degrade to local signals through the caller's
+    except: Gemini's built-in search is dropped by langchain-google-genai
+    whenever tool_choice is set, and claude-fable-5-1 rejects a forced
+    tool_choice outright. Duct's own WebSearch has neither problem, which is
+    what ``build_web_tools_lc`` hands back for every non-Anthropic provider.
+    """
     from langchain.agents import create_agent
     from langchain.agents.structured_output import ToolStrategy
 
@@ -235,7 +244,7 @@ async def _research(prompt: str, llm: Any, web_search: dict) -> _RawTrendingResu
         # No session, no keys, no writers: the open web is attacker-authored
         # by construction, and the only thing an injected instruction can
         # reach here is another page.
-        tools=[web_search, build_web_fetch_tool_lc()],
+        tools=list(web_tools),
         response_format=ToolStrategy(_RawTrendingResult),
     )
     result = await agent.ainvoke(
@@ -255,13 +264,18 @@ async def enrich_content_context(
     model: ModelName | str = ModelName.CLAUDE_HAIKU,
     llm: Any = None,
     timeout: float = _DEFAULT_TIMEOUT,
+    gemini_api_key: str = "",
 ) -> ContentResearchContext:
     """Run the research pass, layered on top of the local scan.
 
-    Always returns a ContentResearchContext — on failure, timeout, or a
-    provider with no verified web search, the local signals come through
+    Always returns a ContentResearchContext — on failure, timeout, or a run
+    with no web search available at all, the local signals come through
     unchanged. ``llm`` lets a caller (or a test) hand in the model instead
     of resolving one from ``provider``/``model``/``api_key``.
+
+    ``gemini_api_key`` is what backs Duct's own WebSearch on a non-Anthropic
+    provider; without it that provider researches from local signals only,
+    the same way it would with no key for the model itself.
     """
     base = base_context or _local_content_signals(brand.project_id)
 
@@ -269,13 +283,14 @@ async def enrich_content_context(
         logger.info("enrichment: no api_key; returning local signals only")
         return base
 
-    web_search = provider_web_search_tool(provider)
-    if web_search is None:
+    if not web_search_available(provider, model, gemini_api_key):
         logger.info(
-            "enrichment: no verified web search on %s; returning local signals only",
+            "enrichment: no web search available on %s; returning local signals only",
             getattr(provider, "value", provider),
         )
         return base
+
+    web_tools = build_web_tools_lc(provider, model, gemini_api_key)
 
     if llm is None:
         from agents.core.lc import resolve_chat_model
@@ -283,7 +298,7 @@ async def enrich_content_context(
         llm = resolve_chat_model(provider, model, api_key)
 
     try:
-        found = await asyncio.wait_for(_research(_build_research_prompt(brand), llm, web_search), timeout=timeout)
+        found = await asyncio.wait_for(_research(_build_research_prompt(brand), llm, web_tools), timeout=timeout)
     except asyncio.TimeoutError:
         logger.warning("enrichment: research pass timed out after %.0fs; using local signals only", timeout)
         return base

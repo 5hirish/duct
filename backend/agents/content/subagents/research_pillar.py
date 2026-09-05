@@ -9,7 +9,7 @@ Does NOT write to the DB — the orchestrator persists results via submit_plan.
 Tools: ``fetch_discovered_references`` (read-only: real high-performing posts
 the user or a prior discovery run saved — cheaper and higher-signal than
 search, because it bypasses ranking noise) and ``WebFetch``. Web search
-rides along where the provider offers a native one — the runner appends it.
+rides along too — the runner appends whichever one this provider can use.
 """
 
 from __future__ import annotations

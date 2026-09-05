@@ -99,7 +99,7 @@ from agents.core.deep_session import (
 )
 from agents.core.lc import build_ask_user_tool, inspection_chat_model, interrupt_pause, resolve_chat_model
 from agents.core.session import register_session
-from agents.core.web_tools import WEB_FETCH_TOOL, build_web_fetch_tool_lc, provider_web_search_tool
+from agents.core.web_tools import WEB_FETCH_TOOL, build_web_tools_lc
 from agents.engines import Engine, resolve_fallback_models
 from agents.models import ModelName, Provider
 from agents.registry import AgentType
@@ -164,7 +164,7 @@ TASK_SUBAGENT_ARG = "subagent_type"
 # Cap on what a step chip shows of a dispatch brief or a sub-agent's report.
 _SUMMARY_CHARS = 160
 _RESULT_CHARS = 240
-_URL_CHARS = 140
+_STEP_SUMMARY_CHARS = 140
 
 
 # ---------------------------------------------------------------------------
@@ -394,13 +394,22 @@ class ContentRunner:
                 thinking=self._thinking,
             )
 
-        on_fetch_start, on_fetch = self._fetch_hooks(session, emit or _drop)
-        web_fetch = build_web_fetch_tool_lc(on_fetch_start=on_fetch_start, on_fetch=on_fetch)
-        # Server-side search where the provider offers a verified one. A dict
-        # tool is bound to the model, never to the tool node, so the harness
-        # passes it straight through (langchain's create_agent splits them).
-        web_search = provider_web_search_tool(self.provider)
-        web_tools: list[Any] = [web_fetch] + ([web_search] if web_search else [])
+        # Fetch, plus whichever search this provider/model can actually use —
+        # the provider's built-in where that survives a tool-calling loop, and
+        # Duct's own Gemini-backed tool everywhere else. One call so the
+        # sub-agents below mount the same set the orchestrator does.
+        emit_or_drop = emit or _drop
+        web_tools: list[Any] = build_web_tools_lc(
+            self.provider,
+            self.model,
+            getattr(session, "gemini_api_key", "") or "",
+            fetch_hooks=self._step_hooks(
+                session, emit_or_drop, label="Reading page", prefix="research"
+            ),
+            search_hooks=self._step_hooks(
+                session, emit_or_drop, label="Searching the web", prefix="search"
+            ),
+        )
 
         tools: list[Any] = []
         subagents: list[dict] = []
@@ -480,28 +489,33 @@ class ContentRunner:
         )
 
     @staticmethod
-    def _fetch_hooks(session: ContentSession | None, emit: EmitFn) -> tuple[Any, Any]:
-        """Each WebFetch as a visible step: opened on the call, closed on the
-        result. FIFO pairing is approximate under parallel fetches (a research
-        sub-agent fans out) but accurate enough for the progress display."""
+    def _step_hooks(
+        session: ContentSession | None, emit: EmitFn, *, label: str, prefix: str
+    ) -> tuple[Any, Any]:
+        """One web call as a visible step: opened on the call, closed on the
+        result. FIFO pairing is approximate under parallel calls (a research
+        sub-agent fans out) but accurate enough for the progress display.
+
+        Parameterised by label rather than duplicated per tool: fetch and
+        search render identically and differ only in what they say."""
         pending: deque[str] = deque()
         seq = [0]
         session_id = session.session_id if session is not None else ""
 
-        async def on_start(url: str) -> None:
+        async def on_start(detail: str) -> None:
             seq[0] += 1
-            sid = f"research:{seq[0]}"
+            sid = f"{prefix}:{seq[0]}"
             pending.append(sid)
             await emit({
                 "event": ContentEvent.STEP_STARTED,
                 "session_id": session_id,
                 "step_id": sid,
-                "label": "Reading page",
-                "summary": url[:_URL_CHARS],
+                "label": label,
+                "summary": detail[:_STEP_SUMMARY_CHARS],
                 "status": StepStatus.RUNNING,
             })
 
-        async def on_done(url: str, ok: bool) -> None:
+        async def on_done(_detail: str, ok: bool) -> None:
             if not pending:
                 return
             sid = pending.popleft()
@@ -509,7 +523,7 @@ class ContentRunner:
                 "event": ContentEvent.STEP_FINISHED,
                 "session_id": session_id,
                 "step_id": sid,
-                "label": "Reading page",
+                "label": label,
                 "status": StepStatus.SUCCESS if ok else StepStatus.ERROR,
             })
 
@@ -532,7 +546,7 @@ class ContentRunner:
         session = get_session(session_id) or create_plan_session(session_id, project_id)
 
         async def _opening(brand: ContentBrandContext) -> str:
-            research = await self._enrich_step(brand, emit, llm)
+            research = await self._enrich_step(brand, emit, llm, session)
             return build_plan_user_prompt(brand, history=[], formats=[], avatars=[], research=research)
 
         await self._run_mode(
@@ -631,7 +645,10 @@ class ContentRunner:
             channel=channel,
         )
 
-    async def _enrich_step(self, brand: ContentBrandContext, emit: EmitFn, llm: Any) -> Any:
+    async def _enrich_step(
+        self, brand: ContentBrandContext, emit: EmitFn, llm: Any,
+        session: ContentSession | None = None,
+    ) -> Any:
         """The pre-flight research pass, as a visible step. Plan mode only."""
         from agents.content.enrichment import enrich_content_context
 
@@ -646,6 +663,9 @@ class ContentRunner:
             provider=self.provider,
             model=self._research_model_name(),
             llm=llm,
+            # Backs Duct's own WebSearch where the provider has no usable
+            # built-in; the same key the image tools already run on.
+            gemini_api_key=getattr(session, "gemini_api_key", "") or "",
         )
         await emit({
             "event": ContentEvent.STEP_FINISHED,

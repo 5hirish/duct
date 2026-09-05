@@ -403,10 +403,15 @@ def test_enrich_returns_local_signals_when_no_api_key():
     assert ctx.trending_hashtags == []
 
 
-def test_enrich_skips_research_on_a_provider_with_no_verified_web_search():
+def test_enrich_skips_research_when_no_web_search_is_available():
     """A research pass with no search tool could only invent trends. Local
     signals come through and the model is never called — a fake that
-    explodes is the proof."""
+    explodes is the proof.
+
+    OpenRouter has no built-in Duct can bind, and with no Gemini key there is
+    nothing to back Duct's own WebSearch either, so the run has no search at
+    all. The paired case — same provider, key present — is in
+    tests/test_web_search.py."""
     import asyncio
     from unittest.mock import patch
 
@@ -430,7 +435,7 @@ def test_enrich_skips_research_on_a_provider_with_no_verified_web_search():
     assert ctx.trending_hooks == [] and ctx.total_posts_to_date == 0
 
 
-def test_enrich_layers_the_research_pass_over_local_signals(monkeypatch):
+def test_enrich_layers_the_research_pass_over_local_signals():
     """The pass returns its findings through the structured-output contract;
     they land on the trend fields and the local signals are carried through
     untouched. Driven by a fake that answers the structured tool call."""
@@ -444,7 +449,7 @@ def test_enrich_layers_the_research_pass_over_local_signals(monkeypatch):
     from agents.models import Provider
     from tests.fakes import ToolCallingFake
 
-    monkeypatch.setattr(enrichment, "provider_web_search_tool", lambda _p: {"type": "web_search_fake"})
+    # Anthropic carries a built-in, so the pass runs with no key of its own.
     found = {
         "trending_hooks": [{"kind": "hook", "label": "POV: you found out", "why_it_works": "curiosity"}],
         "audience_insights": ["saves spike on self-tests"],

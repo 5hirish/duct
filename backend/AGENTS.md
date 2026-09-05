@@ -43,9 +43,18 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
     the SDK's `Agent` tool became `deepagents` sub-agents dispatched through `task`
     (`agents/content/subagents/`, now framework-free dicts); the in-process MCP server
     became the LangChain binder `build_content_tools_lc` with the tool bodies
-    unchanged; the CLI's `WebSearch` / `WebFetch` became `agents/core/web_tools.py` —
-    Duct's own `WebFetch` plus the provider's *server-side* search where one is
-    verified (Anthropic today; Gemini and OpenAI have one each, unexercised, so off);
+    unchanged; the CLI's `WebSearch` / `WebFetch` became `agents/core/web_tools.py`
+    — both as Duct tools, on the rule image generation already set: **a capability
+    the running model may not have is a Duct tool, not a provider feature every
+    model must support.** The one exception is a built-in that survives a real
+    tool-calling loop, and Anthropic's is the only one that does, so it is bound
+    there (versioned per model — Opus 5 and Sonnet 5 take `web_search_20260209`,
+    the rest the basic variant). Every other provider gets Duct's own `WebSearch`,
+    an ordinary function tool over an isolated grounded Gemini call
+    (`service/google/gemini/search.py`), because Gemini refuses `google_search`
+    alongside function declarations on 2.5 outright and on 3.x without a
+    `tool_config` flag that langchain-google-genai drops whenever `tool_choice` is
+    set. `tests/test_web_search.py` holds that matrix, measured, as `live` tests;
     `AskUserQuestion` became a checkpointed `interrupt()`, so a question survives a
     redeploy; and the thread is keyed on the conversation, so a resume continues it
     rather than re-priming from the transcript (the DB re-prime remains for

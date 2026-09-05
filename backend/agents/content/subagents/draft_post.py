@@ -10,8 +10,8 @@ submit_post_draft to persist.
 Tools: the ``fetch_format_library`` reader (so the sub-agent can pull the
 exact spec table for the chosen format without depending on the
 orchestrator's brief to inline it) plus ``WebFetch`` for a light fact-check
-of a URL it already has. Web search rides along where the provider offers a
-native one — the runner appends it.
+of a URL it already has. Web search rides along too — the runner appends
+whichever one this provider can use.
 """
 
 from __future__ import annotations
