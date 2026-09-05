@@ -5,15 +5,14 @@ Two pieces that sit on opposite sides of the harness boundary (see
 
   * ``pump_stream_event`` — **harness adapter, Claude Agent SDK.** Decodes one
     SDK message (thinking/text deltas, token usage, ``message_stop``,
-    ``ResultMessage``, ``TodoWrite``) and dispatches to callbacks. The *outer*
-    loop differs per agent (audit drives discrete turns; content runs one
-    streaming-input session with a startup watchdog), so this owns only the
-    per-message decode; the caller keeps its loop and state. A LangChain
-    equivalent lives in ``agents/audit/v1/runner.py``.
+    ``ResultMessage``, ``TodoWrite``) and dispatches to callbacks. The audit v3
+    runner drives discrete turns around it and keeps its own loop and state;
+    this owns only the per-message decode. The LangChain equivalent is
+    ``stream_agent`` in ``agents/core/lc.py``.
 
   * ``DuctArtifactStreamParser`` — **harness-neutral.** The ``<duct_artifact>``
     tag state machine, driven by plain text deltas from any harness. The pump's
-    ``on_text`` feeds it on v3; the v1 runner feeds it from LangChain chunks.
+    ``on_text`` feeds it on v3; ``stream_agent`` feeds it from LangChain chunks.
     It forwards prose vs in-tag payload to agent-specific callbacks (audit
     builds HTML, content parses JSON).
 

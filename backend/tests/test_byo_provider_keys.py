@@ -85,15 +85,14 @@ def _fake_cfg(**overrides):
 
 
 def _patch_cfg(monkeypatch, **overrides):
-    """Patch config for both readers.
+    """Patch the one config reader.
 
-    ``resolve_model`` picks the provider from its own ``get_configs``; the key
-    itself now comes from ``agents.engines.resolve_provider_key``, which reads
-    ``config.get_configs`` directly so no call site can quietly opt out of the
-    policy. Patching one and not the other tests a resolver that does not exist.
+    Both the provider choice (``agents.engines.resolve_run_model``) and the key
+    (``agents.engines.resolve_provider_key``) read ``config.get_configs``
+    directly, so no call site can quietly opt out of the policy — and one
+    patch covers the whole resolver.
     """
     cfg = _fake_cfg(**overrides)
-    monkeypatch.setattr("agents.insights.setup.get_configs", lambda: cfg)
     monkeypatch.setattr("config.get_configs", lambda: cfg)
     # The operator's own Claude login must not decide a test's outcome.
     monkeypatch.setattr("config.claude_oauth_available", lambda: False)

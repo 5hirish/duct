@@ -218,6 +218,10 @@ class ContentSession(BaseAgentSession):
     # Bridges the agent's render_slide tool to client-side rasterization (same
     # pattern as answer_future for AskUserQuestion).
     render_futures: dict = field(default_factory=dict)
+    # Messages typed while a turn is running. The V1 runner mounts
+    # SteerMiddleware over this queue, so a mid-turn message reaches the model
+    # at its next call instead of waiting for the turn to end.
+    steer_queue: Any | None = None
     # The Gemini key this run may spend on images — a *different* provider from
     # the one driving the conversation, so it is resolved separately and can be
     # absent while the run itself is fine (the image tools then decline).
@@ -371,37 +375,36 @@ class ContentStatus(StrEnum):
 
 
 class ContentTool(StrEnum):
-    """Fully-namespaced names of the content MCP tools (server ``duct_content``).
+    """Names of the content tools as the model sees them.
 
-    The @tool decorators in agents/content/tools.py register the *short* names
-    (e.g. "submit_post_draft"); the SDK namespaces them as
-    ``mcp__duct_content__<short>``. This enum holds those namespaced names — the
-    form used in ClaudeAgentOptions.allowed_tools and the can_use_tool dispatch.
-    Mirrors AuditTool (agents/audit/schema.py), which does the same for the
-    audit (``duct_crawl``) MCP tools. Keep in sync with the @tool registrations.
+    ``agents/content/tools.py`` registers each under this name, and the
+    sub-agent specs pick their subsets by it. The values are the *short* names
+    — the ``mcp__duct_content__`` prefix went with the Claude Agent SDK, whose
+    MCP server was the thing that namespaced them. Keep in sync with the
+    ``build_content_tools_lc`` registrations.
     """
 
-    REMEMBER_FACT              = "mcp__duct_content__RememberFact"
-    SEARCH_MEMORY              = "mcp__duct_content__SearchMemory"
-    GET_MEMORY                 = "mcp__duct_content__GetMemory"
-    SUBMIT_PLAN                = "mcp__duct_content__submit_plan"
-    SUBMIT_POST_DRAFT          = "mcp__duct_content__submit_post_draft"
-    EDIT_SLIDE                 = "mcp__duct_content__edit_slide"
-    FETCH_BRAND_CONTEXT        = "mcp__duct_content__fetch_brand_context"
-    FETCH_TOPIC_BANK           = "mcp__duct_content__fetch_topic_bank"
-    FETCH_FORMAT_LIBRARY       = "mcp__duct_content__fetch_format_library"
-    FETCH_AVATAR_LIBRARY       = "mcp__duct_content__fetch_avatar_library"
-    FETCH_CONTENT_HISTORY      = "mcp__duct_content__fetch_content_history"
-    FETCH_CONTENT_ASSETS       = "mcp__duct_content__fetch_content_assets"
-    FETCH_DISCOVERED_REFERENCES = "mcp__duct_content__fetch_discovered_references"
-    FETCH_POST                 = "mcp__duct_content__fetch_post"
-    FETCH_SLIDE_CONTEXT        = "mcp__duct_content__fetch_slide_context"
-    RENDER_SLIDE               = "mcp__duct_content__render_slide"
-    GENERATE_IMAGE             = "mcp__duct_content__generate_image"
-    EDIT_IMAGE                 = "mcp__duct_content__edit_image"
-    PUBLISH_POST               = "mcp__duct_content__publish_post"
-    MARK_POSTED                = "mcp__duct_content__mark_posted"
-    LOG_METRICS                = "mcp__duct_content__log_metrics"
+    REMEMBER_FACT               = "RememberFact"
+    SEARCH_MEMORY               = "SearchMemory"
+    GET_MEMORY                  = "GetMemory"
+    SUBMIT_PLAN                 = "submit_plan"
+    SUBMIT_POST_DRAFT           = "submit_post_draft"
+    EDIT_SLIDE                  = "edit_slide"
+    FETCH_BRAND_CONTEXT         = "fetch_brand_context"
+    FETCH_TOPIC_BANK            = "fetch_topic_bank"
+    FETCH_FORMAT_LIBRARY        = "fetch_format_library"
+    FETCH_AVATAR_LIBRARY        = "fetch_avatar_library"
+    FETCH_CONTENT_HISTORY       = "fetch_content_history"
+    FETCH_CONTENT_ASSETS        = "fetch_content_assets"
+    FETCH_DISCOVERED_REFERENCES = "fetch_discovered_references"
+    FETCH_POST                  = "fetch_post"
+    FETCH_SLIDE_CONTEXT         = "fetch_slide_context"
+    RENDER_SLIDE                = "render_slide"
+    GENERATE_IMAGE              = "generate_image"
+    EDIT_IMAGE                  = "edit_image"
+    PUBLISH_POST                = "publish_post"
+    MARK_POSTED                 = "mark_posted"
+    LOG_METRICS                 = "log_metrics"
 
 
 # Per-slide kind — drives which template renders the slide within a layout.
@@ -550,6 +553,7 @@ def make_session(
         mode=mode,
         event_queue=asyncio.Queue(),
         chat_queue=asyncio.Queue(),
+        steer_queue=asyncio.Queue(),
         answer_future=None,
         created_at=time.monotonic(),
     )

@@ -14,25 +14,6 @@ from sqlmodel import SQLModel
 from agents.audit.schema import AuditBusinessContext
 
 
-def api_routes(app):
-    """Every concrete route ``app`` will actually match, flattened.
-
-    FastAPI >=0.137 stores an ``include_router()`` call as a single lazily
-    matching ``_IncludedRouter`` on ``app.routes`` — with its prefix and any
-    router-level dependencies applied only at match time — instead of copying
-    each child route in. A flat ``app.routes`` walk that assumes every entry
-    carries ``.path``/``.dependant`` (as ours did) silently drops everything
-    mounted through a router, which is nearly the whole API.
-    ``effective_route_contexts()`` is FastAPI's own already-prefixed,
-    already-dependency-merged expansion of that wrapper; entries that are
-    already a plain ``Route``/``APIRoute`` (docs, static mounts, or any
-    FastAPI predating 0.137) have no such method and are yielded as-is.
-    """
-    for route in app.routes:
-        expand = getattr(route, "effective_route_contexts", None)
-        yield from expand() if expand is not None else [route]
-
-
 def make_sqlite_engine(*, drop_partial_indexes: bool = False):
     """An in-memory SQLite engine with every registered SQLModel table created.
 

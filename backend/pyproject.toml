@@ -19,35 +19,35 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-fastapi = "^0.141"
-uvicorn = {version = "^0.52", extras = ["standard"]}
+fastapi = "^0.135"
+uvicorn = {version = "^0.49", extras = ["standard"]}
 google-ads = "^31.4"
 google-analytics-data = "^0.23"
-google-api-python-client = "^2.200.0"
-google-genai = "^2.21"
-python-dotenv = "^1.2"
-pydantic = "^2.13"
-pydantic-settings = "^2.15"
+google-api-python-client = "^2.179.0"
+google-genai = "^2.8"
+python-dotenv = "^1.0"
+pydantic = "^2.12"
+pydantic-settings = "^2.12"
 langchain = "^1.0"
-langchain-openai = "^1.6"
-langchain-google-genai = "^4.4"
+langchain-openai = "^1.0"
+langchain-google-genai = "^4.2"
 langchain-anthropic = "^1.4"
 langgraph = "^1.1"
 pyjwt = "^2.8"
 httpx = "^0.28"
 # Cloudflare R2 image storage over the S3 API (service/storage.py). Only loaded
 # when the 'r2' storage backend is active.
-boto3 = "^1.43"
-sqlmodel = "^0.0.42"
-alembic = "^1.19"
-psycopg = {version = "^3.3", extras = ["binary"]}
-sentry-sdk = "^2.68.1"
-dlt = "^1.30.0"
-claude-agent-sdk = ">=0.2.151"
-selectolax = ">=0.4.11"
+boto3 = "^1.35"
+sqlmodel = "^0.0.38"
+alembic = "^1.17"
+psycopg = {version = "^3.2", extras = ["binary"]}
+sentry-sdk = "^2.57.0"
+dlt = "^1.17.1"
+claude-agent-sdk = ">=0.2"
+selectolax = ">=0.3"
 extruct = ">=0.16"
-trafilatura = ">=2.2.0"
-deepagents = "0.7.12"   # exact: 0.x with no stability policy; changes behaviour in minors (task planning became opt-in in 0.7). tests/test_deepagents_harness.py is the upgrade gate.
+trafilatura = ">=2.0"
+deepagents = "0.7.11"   # exact: 0.x with no stability policy; changes behaviour in minors (task planning became opt-in in 0.7). tests/test_deepagents_harness.py is the upgrade gate.
 # OTel GenAI spans for the LangChain (v1) path — v3 gets tracing from the
 # Claude Agent SDK, v1 does not. The API only; an exporter is configured at
 # runtime (Sentry OTLP today). Declared explicitly because it used to arrive

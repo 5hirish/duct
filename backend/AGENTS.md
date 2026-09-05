@@ -18,7 +18,9 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
 
 ### Current stack
 
-- **AI synthesis:** Insights runs on V1 (LangChain / deepagents) only. Audit carries both V1 and V3 runners and defaults to V1; content is still V3. Engine selection is per request, defaulting from the `generate_engine` env var.
+- **AI synthesis:** Insights and content run on V1 (LangChain 1.x / `deepagents`) only.
+  Audit carries both V1 and V3 runners and defaults to V1. Engine selection is per
+  request, defaulting from the `generate_engine` env var.
 
   **Consolidating on V1.** Per the engine consolidation review (duct-cloud, private), all
   agents are moving to one harness — LangChain 1.x / `deepagents` — because customers bring
@@ -26,29 +28,41 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   Anthropic-only by design (upstream issue #410, closed `not planned`).
   Each engine has a different status, and they imply different rules:
 
-  - **V1 — the target, under construction.** Rebuilt on `create_agent` + structured output;
-    `v1/graph.py` is gone. New agent work goes here.
-  - **V3 — maintained, and still the production path for content.** It is *not* being
-    retired yet. Keep it working: shared-code changes (`agents/core/`, `agents/audit/`,
-    `agents/content/`, `schema.py`, `agents/models.py`) must keep V3 at parity, and V1
-    ports land **alongside** V3 rather than replacing it.
+  - **V1 — the target, and now the only session harness.** Insights
+    (`agents/insights/v1/runner.py`) and content (`agents/content/v1/runner.py`) are
+    `deepagents` sessions; audit's V1 runner is `create_agent`. New agent work goes here.
+  - **V3 — audit only, maintained.** `agents/audit/v3/runner.py` stays reachable via
+    `engine: "v3"` and is the one path that can authenticate from a Claude subscription.
+    Shared-code changes (`agents/core/`, `agents/audit/`, `schema.py`, `agents/models.py`)
+    must keep it at parity; `agents/core/claude_sdk.py` and `pump_stream_event` exist for
+    it. Retiring it means Claude requires an ANTHROPIC_API_KEY everywhere — the Messages
+    API rejects `sk-ant-oat…` tokens (Anthropic disabled third-party OAuth in Feb 2026).
+    Measured cost of that: ~$0.04 per insights synthesis.
 
-    **Audit now defaults to V1** (`routes/audit.py::_resolve_agent_config`), with V3
-    reachable via `engine: "v3"`. Audit was the cheap place to make the consolidation
-    real — both runners already existed with the same `run_pipeline` signature and event
-    vocabulary — and running V1 by default *is* how it earns the confidence retirement
-    waits on. Content is the remaining port, and the expensive one: its runner is ~1350
-    lines with heavy session/resume machinery, so it stays on V3 until audit has soaked.
+    **Content V3 was removed** once the port landed. What moved, and where it went:
+    the SDK's `Agent` tool became `deepagents` sub-agents dispatched through `task`
+    (`agents/content/subagents/`, now framework-free dicts); the in-process MCP server
+    became the LangChain binder `build_content_tools_lc` with the tool bodies
+    unchanged; the CLI's `WebSearch` / `WebFetch` became `agents/core/web_tools.py` —
+    Duct's own `WebFetch` plus the provider's *server-side* search where one is
+    verified (Anthropic today; Gemini and OpenAI have one each, unexercised, so off);
+    `AskUserQuestion` became a checkpointed `interrupt()`, so a question survives a
+    redeploy; and the thread is keyed on the conversation, so a resume continues it
+    rather than re-priming from the transcript (the DB re-prime remains for
+    conversations recorded before the thread was durable).
 
-    One consequence to keep in mind: **V3 is the only engine that can authenticate from a
-    Claude subscription.** The Messages API rejects `sk-ant-oat…` tokens (Anthropic
-    disabled third-party OAuth in Feb 2026), so retiring V3 means Claude requires an
-    ANTHROPIC_API_KEY. Measured cost of that: ~$0.04 per insights synthesis.
+    Two consequences, stated rather than discovered later. **Content on Claude now
+    needs an API key** — `routes/content.py` refuses the subscription credential with
+    the same 402 the browser already handles. And **the model only sees the images it
+    generates on Anthropic**: image blocks inside a tool result are accepted there and
+    rejected by the OpenAI chat API, so `VISION_PROVIDERS` decides whether the tools
+    return pictures or URLs, and the system prompt says which.
 
-    **Insights V3 was removed.** Same reason V2 was: nothing dispatched it. Both live
-    routes (`routes/generate.py`, `routes/agents.py`) drive `AutonomousInsightsRunner`,
-    while the V3 runner still claimed parity with the older `GenerateInsightsAgent`
-    fetch/synthesize pair — an interface the routes had already left behind.
+    **Insights V3 was removed** earlier for a different reason: nothing dispatched it.
+    Both live routes (`routes/generate.py`, `routes/agents.py`) drive
+    `AutonomousInsightsRunner`, while the V3 runner still claimed parity with the older
+    `GenerateInsightsAgent` fetch/synthesize pair — an interface the routes had already
+    left behind.
 
     **`GenerateInsightsAgent` and its tool registry were removed too**, for the third
     time for the same reason: no route dispatched them. With it went
@@ -65,8 +79,14 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
     `agents/core/codex.py` and its tests remain, but no live path calls them. Re-wiring
     that belongs in `agents/core/lc.resolve_chat_model`, where every runner would get it.
 
-  So a shared change may need doing twice (V1 + V3), never more.
+  So a shared change may need doing twice (V1 + audit V3), never more.
   Claude remains a first-class *model* through V1, so retiring V3 later costs no capability.
+
+  **Which model, on whose key, is one function.** `agents/engines.resolve_run_model`
+  is engine → provider → model → key for every V1 runner — including the rule that a
+  lone bring-your-own key chooses its own provider. It lived in
+  `agents/insights/setup.py` until content became the second runner that needed it;
+  a second copy of that rule is the copy that eventually spends the wrong key.
 
   **V2 (Google ADK) was removed.** Not on framework merit — ADK is actively developed and
   Google-backed — but because nothing dispatched its runner: `routes/generate.py` had been
@@ -101,7 +121,7 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   `get_current_user` **on the router** so endpoint 45 cannot be written without
   it, and `tests/test_content_access.py` asserts that property directly.
 - **Email:** `service/email/` — Resend when `RESEND_API_KEY` is set, otherwise a logging console backend so dev/CI need no vendor account.
-- **Observability:** Sentry error tracking; optional OpenTelemetry tracing (wired via Claude Agent SDK).
+- **Observability:** Sentry error tracking; optional OpenTelemetry tracing (V1 emits its own GenAI spans, `agents/core/telemetry.py`; audit V3 gets them from the Claude Agent SDK).
 - **Hosting:** Railway — auto-deploys from `main` via GitHub integration; `railway.json` defines Railpack build + uvicorn start.
 - **CI:** GitHub Actions (`backend.yml`) — Ruff lint + pytest on every PR and push to `main`.
 - **Tests:** `make test` must stay offline and under two minutes; it is the
@@ -191,19 +211,28 @@ The `agents/` directory is organised by agent type. Each type is independent and
 
 ```
 agents/
-├── engines.py          — engine/provider/model registry (shared across all agent types)
+├── engines.py          — engine/provider/model registry + resolve_run_model (shared)
 ├── models.py           — Provider, ModelName enums (shared)
+├── core/               — the ports: session registry, events, LangChain adapter (lc.py),
+│                         checkpointer, memory/connector/web tool binders, SDK shims
 ├── insights/           — Insights agent (paid ads + organic growth intelligence)
-│   ├── v1/             — LangChain runner (the only insights engine)
-│   └── goals/, tools/, schema.py, registry.py, prompts/
-├── audit/              — future: SEO audit agent
-└── content/            — future: Content marketing agent (plans, posts, publishing)
+│   ├── v1/             — deepagents runner (the only insights engine)
+│   └── catalog/, goals/, schema.py, prompts/, subagents/
+├── audit/              — SEO audit agent
+│   ├── v1/             — create_agent runner (default)
+│   └── v3/             — Claude Agent SDK runner (`engine: "v3"`)
+└── content/            — Content Studio (plans, posts, images, publishing)
+    ├── v1/             — deepagents runner (the only content engine)
+    └── tools.py, subagents/, prompts.py, schema.py, artifacts.py, enrichment.py
 ```
 
-Route convention: each agent type gets its own route prefix:
-- `POST /api/insights/generate` — exists
-- `POST /api/audit/run` — future
-- `POST /api/content/plan/stream` / `POST /api/content/post/stream` — future
+Route convention: each agent type gets its own route prefix, and every agent's
+session lifecycle runs through the unified `routes/agents.py`:
+- `POST /api/agents/{type}/sessions` → stream → messages — every session
+- `POST /api/insights/generate` — the unattended brief
+- `POST /api/audit/run` — the audit pipeline
+- `/api/content/*` — content CRUD, brand context, the slide-render bridge; the
+  legacy `plan/stream` and `post/stream` entry points drive the same runner
 
 Cross-agent invocations are modelled at the frontend level (e.g. audit findings carry an `invoke_insights` action that pre-populates the insights wizard). Backend agents remain decoupled — no direct calls between agent types.
 
@@ -232,9 +261,9 @@ framework. The rules it implies:
   LangGraph `interrupt()` implementation (`agents/core/lc.interrupt_pause`)
   existed beside the Future bridge. A tool body takes a `PauseFn`; the binder
   that mounts it decides which one — the Future for an agent with no
-  checkpointer (audit v1, the SDK runners), the interrupt for one with durable
-  threads (insights v1). Same events, same route, and the frontend cannot
-  tell them apart.
+  checkpointer (audit v1, audit v3, the slide-render bridge), the interrupt
+  for one with durable threads (insights v1, content v1). Same events, same
+  route, and the frontend cannot tell them apart.
 - **A durable thread is the conversation.** The insights runner keys its
   LangGraph thread on the conversation id, so a resumed session continues the
   thread — and a pause the thread is parked on comes back as the same SSE
@@ -300,16 +329,20 @@ framework. The rules it implies:
   `deepagents` where `create_agent` suffices buys churn for nothing.
 
   The rung is a property of the agent, not of the agent *type*, and it can move
-  when the agent's job does. The legacy insights pipeline
-  (`agents/insights/v1/agent.py`: one tool loop, one structured-output call) is
-  a `create_agent` job and stays one. The autonomous insights session
+  when the agent's job does. The autonomous insights session
   (`agents/insights/v1/runner.py`) is on `deepagents` because it needs four
   things `create_agent` lacks — a planning loop, subagents, skills, and the
-  `interrupt_on` upgrade path — and the phase plan spends all four. Audit's V1
-  runner is still `create_agent`; content is on the SDK.
+  `interrupt_on` upgrade path — and the phase plan spends all four. The content
+  session (`agents/content/v1/runner.py`) spends three of them from its first
+  turn: `write_todos` is the checklist the workspace renders, `research_pillar`
+  and `draft_post` are sub-agents, and the virtual scratch space holds drafts.
+  Audit's V1 runner is still `create_agent`, and content's enrichment pass
+  (`agents/content/enrichment.py`) is one too — search, fetch, structured
+  answer, no planning.
 
-  Two consumers of the 0.x pin now, so `tests/test_deepagents_harness.py`
-  matters more, not less: run it before moving the pin.
+  Three consumers of the 0.x pin now, so `tests/test_deepagents_harness.py`
+  matters more, not less: run it before moving the pin. `tests/test_content_v1_runner.py`
+  pins the content contract the same way `tests/test_insights_session.py` pins insights.
 - **`deepagents` is pinned exactly**, not with a caret — it changes behaviour in
   minors (task planning became opt-in in 0.7). `tests/test_deepagents_harness.py`
   is the upgrade gate; run it before moving the pin.

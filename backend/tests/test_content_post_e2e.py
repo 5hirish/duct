@@ -1,8 +1,8 @@
-"""Full end-to-end eval for the Content Studio agent (v3 engine) + judge.
+"""Full end-to-end eval for the Content Studio agent (V1 engine) + judge.
 
-This is the complete content pipeline under one test: the v3 Claude Agent SDK
-runner drafts a real post, then generates a real image for every slide via its
-own ``generate_image`` tool (Gemini), and a *Gemini* judge (vision) scores the
+This is the complete content pipeline under one test: the V1 (deepagents)
+runner drafts a real post on Claude, then generates a real image for every
+slide via its own ``generate_image`` tool (Gemini), and a *Gemini* judge (vision) scores the
 finished post + images against ``content_post_rubric`` to guard against model-
 output degradation. The judge runs on Gemini rather than
 Claude so the grading call isn't gated by the Anthropic Messages API rate
@@ -11,14 +11,14 @@ image generation, and a real DB.
 
 It is gated and skips cleanly unless everything it needs is present:
 
-  DATABASE_URL                                 — Postgres for the ephemeral project
-  CLAUDE_CODE_OAUTH_TOKEN or ANTHROPIC_API_KEY — drives the content agent (v3)
-  GEMINI_API_KEY                               — slide image generation AND the judge
-  the ``claude`` CLI on PATH                   — the Agent SDK subprocess
+  DATABASE_URL       — Postgres for the ephemeral project
+  ANTHROPIC_API_KEY  — drives the content agent (V1 needs a real API key; the
+                       Messages API rejects a subscription token)
+  GEMINI_API_KEY     — slide image generation AND the judge
 
 Run it:
 
-  CLAUDE_CODE_OAUTH_TOKEN=… GEMINI_API_KEY=… DATABASE_URL=… \
+  ANTHROPIC_API_KEY=… GEMINI_API_KEY=… DATABASE_URL=… \
     poetry run pytest -m live tests/test_content_post_e2e.py -s
 
 A JSON scorecard is written (DUCT_EVAL_OUTPUT, default ./eval-scorecard.json)
@@ -31,7 +31,6 @@ import asyncio
 import contextlib
 import json
 import os
-import shutil
 import time
 from pathlib import Path
 from uuid import uuid4
@@ -72,12 +71,10 @@ _PILLAR = "jawline"
 def _live_skip_reason() -> str | None:
     if not os.environ.get("DATABASE_URL"):
         return "DATABASE_URL not set"
-    if not (os.environ.get("CLAUDE_CODE_OAUTH_TOKEN") or os.environ.get("ANTHROPIC_API_KEY")):
-        return "no Claude credential (CLAUDE_CODE_OAUTH_TOKEN / ANTHROPIC_API_KEY) set"
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        return "ANTHROPIC_API_KEY not set (V1 cannot authenticate from a subscription token)"
     if not os.environ.get("GEMINI_API_KEY"):
         return "GEMINI_API_KEY not set"
-    if shutil.which("claude") is None:
-        return "the `claude` CLI is not on PATH (Agent SDK subprocess unavailable)"
     if not judge_available():
         return "judge unavailable (anthropic SDK missing or no credential)"
     return None
@@ -280,8 +277,6 @@ async def _drive(runner, session, session_id, project_id) -> list[dict]:
                 topic=_TOPIC,
                 pillar=_PILLAR,
                 channel="tiktok",
-                effort=_effort(),
-                adaptive_thinking=True,
                 chat_idle_timeout=_CHAT_IDLE,
             )
         except Exception as exc:  # captured; re-raised after gather
@@ -321,12 +316,6 @@ async def _drive(runner, session, session_id, project_id) -> list[dict]:
     if state["error"] is not None:
         raise state["error"]
     return events
-
-
-def _effort():
-    from agents.models import AgentEffort
-
-    return AgentEffort.MEDIUM
 
 
 def _judge_skip_reason(exc: Exception) -> str | None:
@@ -371,7 +360,7 @@ def _emit_scorecard(scorecard) -> None:
 
 @pytest.mark.live
 def test_content_draft_post_with_images_passes_judge(maxaura_project, tmp_path, monkeypatch):
-    """Draft a full post with images via the v3 agent, then gate it on the judge.
+    """Draft a full post with images via the V1 agent, then gate it on the judge.
 
     Asserts the machinery ran end-to-end (post persisted, images generated) and
     that the finished deliverable clears the content rubric — the degradation
@@ -390,17 +379,24 @@ def test_content_draft_post_with_images_passes_judge(maxaura_project, tmp_path, 
 
     config.get_configs.cache_clear()
 
-    from agents.content.v3.runner import (
-        ClaudeContentRunner,
+    from agents.content.v1.runner import (
+        ContentRunner,
         close_session,
         create_draft_session,
     )
+    from agents.models import ModelName, Provider
 
     project_id = maxaura_project
     session_id = f"eval-{uuid4()}"
     session = create_draft_session(session_id, project_id)
-    # Empty api_key is fine when a CLAUDE_CODE_OAUTH_TOKEN is configured.
-    runner = ClaudeContentRunner(api_key=os.environ.get("ANTHROPIC_API_KEY", ""))
+    # The image tools spend the session's Gemini key, resolved by the route in
+    # production; the eval stands in for the route here.
+    session.gemini_api_key = os.environ["GEMINI_API_KEY"]
+    runner = ContentRunner(
+        api_key=os.environ["ANTHROPIC_API_KEY"],
+        provider=Provider.ANTHROPIC,
+        model=ModelName.CLAUDE_SONNET,
+    )
 
     try:
         asyncio.run(asyncio.wait_for(_drive(runner, session, session_id, project_id), timeout=_HARD_TIMEOUT))

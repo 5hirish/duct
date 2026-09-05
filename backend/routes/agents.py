@@ -58,7 +58,7 @@ from agents.content.persistence import (
     resolve_or_create_conversation,
 )
 from agents.content.schema import DraftPostRequest, PlanRequest
-from agents.content.v3.runner import create_draft_session, create_plan_session
+from agents.content.v1.runner import create_draft_session, create_plan_session
 from agents.insights.schema import InsightsRequest, create_insights_session
 from agents.insights.setup import (
     InsightsSetupError,
@@ -862,18 +862,22 @@ async def get_agent_conversation_state(
     ``paused`` (with the pauses, so the card can be rendered before any session
     exists), ``unfinished`` (a run was cut mid-turn and will continue on
     resume), ``idle``, or ``unsupported`` for an agent whose state lives only in
-    a process — the Claude Agent SDK runners keep no thread to inspect.
+    a process — the Claude Agent SDK audit runner keeps no thread to inspect.
     """
     with next(db_session()) as db:
         conv = _conversation_for_user(db, user, agent_type, conversation_id)
         conv_id = conv.id
         run = {"run_status": conv.run_status, "run_error": conv.run_error}
-    if agent_type != AgentType.INSIGHTS:
-        return {"status": "unsupported", "pauses": [], "todos": [], **run}
-    from agents.insights.v1.runner import AutonomousInsightsRunner
-
     # The key is never used: inspection builds the graph on a placeholder model.
-    return {**(await AutonomousInsightsRunner(api_key="").thread_state(conv_id)), **run}
+    if agent_type == AgentType.INSIGHTS:
+        from agents.insights.v1.runner import AutonomousInsightsRunner
+
+        return {**(await AutonomousInsightsRunner(api_key="").thread_state(conv_id)), **run}
+    if agent_type == AgentType.TIKTOK_STUDIO:
+        from agents.content.v1.runner import ContentRunner
+
+        return {**(await ContentRunner(api_key="").thread_state(conv_id)), **run}
+    return {"status": "unsupported", "pauses": [], "todos": [], **run}
 
 
 class ConversationPatch(BaseModel):
