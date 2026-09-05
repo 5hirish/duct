@@ -79,3 +79,27 @@ def tool_names(agent) -> set[str]:
     tool_node = agent.nodes.get("tools")
     inner = getattr(tool_node, "bound", tool_node)
     return set(getattr(inner, "tools_by_name", {}))
+
+
+class ContextOverflowError(Exception):
+    """The provider's "prompt is too long" — LangChain's name for it, which is
+    how the classifier knows it."""
+
+
+class OverflowFake(ToolCallingFake):
+    """Rejects the request as too long `overflows` times, the way a provider
+    does when the summariser's estimate ran behind the real count; answers
+    otherwise — including the summary an emergency compaction asks it for.
+    Set `_overflowed = -1` to let one turn through before the overflows start."""
+
+    overflows: int = 1
+
+    def _generate(self, messages, stop=None, run_manager=None, **kwargs):
+        # The summary request carries the summariser's own prompt; it has to
+        # succeed or no compaction can happen.
+        is_summary = any("extract" in str(getattr(m, "content", "")).lower() for m in messages)
+        if not is_summary and getattr(self, "_overflowed", 0) < self.overflows:
+            self._overflowed = getattr(self, "_overflowed", 0) + 1
+            if self._overflowed > 0:
+                raise ContextOverflowError("prompt is too long: 213000 tokens > 200000 maximum")
+        return super()._generate(messages, stop=stop, run_manager=run_manager, **kwargs)

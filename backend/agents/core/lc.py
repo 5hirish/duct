@@ -34,7 +34,7 @@ import time
 from collections.abc import Awaitable, Callable
 from typing import Any
 
-from langchain.agents.middleware import AgentMiddleware
+from langchain.agents.middleware import AgentMiddleware, SummarizationMiddleware
 from langchain.chat_models import init_chat_model
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
 from langchain_core.messages import HumanMessage
@@ -585,6 +585,60 @@ def steer_messages(items: list[tuple[Any, str]]) -> list[HumanMessage]:
         if client_id:
             emit_custom({"event": AgentEvent.USER_INPUT_CONSUMED, "client_message_id": client_id})
     return messages
+
+
+# ---------------------------------------------------------------------------
+# Emergency compaction
+# ---------------------------------------------------------------------------
+
+# How much of the most recent history survives an emergency compaction, in
+# tokens. pi keeps the same 20k; enough for the turn in progress to keep its
+# footing, small enough that the retried request fits with room to answer.
+COMPACT_KEEP_TOKENS = 20_000
+# The node whose successor is the model call. Writing the rewritten history
+# "as" this node makes the graph's next step the request that just failed,
+# now with the smaller context — the same place the loop would have been had
+# a tool batch just finished.
+_RESUME_AS_NODE = "tools"
+
+
+async def compact_thread(agent: Any, config: dict, model: Any, *, keep_tokens: int | None = None) -> bool:
+    """Summarise a thread's history in place so the next model call fits.
+
+    The automatic summariser works from an estimate, and the provider counts
+    for real; when the two disagree the request comes back as "too long" and,
+    before this, the conversation was over — "start fresh" was the only action
+    offered, an hour into an insights thread. OpenCode and pi both make one
+    bounded compact-and-retry attempt at that point; so does this.
+
+    LangChain's own `SummarizationMiddleware` does the cutting (never between
+    a tool call and its result) and the summary, forced by a trigger of one
+    message; the rewrite replaces the thread's messages with the summary plus
+    the most recent ``keep_tokens`` worth. deepagents' summariser keeps its own
+    event with a cutoff *index* into the message list, which the rewrite would
+    leave pointing past the end — and its fallback for that is to send the
+    model the summary alone — so the event is cleared in the same write.
+
+    Returns False when there is nothing to cut, which the caller treats as the
+    ordinary failure.
+    """
+    snapshot = await agent.aget_state(config)
+    values = getattr(snapshot, "values", None) or {}
+    messages = list(values.get("messages") or [])
+    if not messages:
+        return False
+    summariser = SummarizationMiddleware(
+        model=model,
+        trigger=("messages", 1),
+        keep=("tokens", keep_tokens or COMPACT_KEEP_TOKENS),
+    )
+    update = await summariser.abefore_model({"messages": messages}, None)  # type: ignore[arg-type]
+    if not update:
+        return False
+    await agent.aupdate_state(
+        config, {**update, "_summarization_event": None}, as_node=_RESUME_AS_NODE
+    )
+    return True
 
 
 class SteerMiddleware(AgentMiddleware):

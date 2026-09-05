@@ -66,11 +66,12 @@ from langgraph.types import Command
 
 from agents.core.checkpoint import get_checkpointer
 from agents.core.events import AgentEvent, AgentStep, StepStatus
-from agents.core.errors import error_payload
+from agents.core.errors import ErrorCode, classify_error, error_payload
 from agents.core.connector_tools import build_connector_tools_lc
 from agents.core.lc import (
     ReportedRetryMiddleware,
     SteerMiddleware,
+    compact_thread,
     drain_steers,
     build_ask_user_tool,
     inspection_chat_model,
@@ -568,25 +569,45 @@ class AutonomousInsightsRunner:
             if session is not None:
                 session.pending_pauses = {p["interrupt_id"]: p for p in pauses}
 
+        async def _stream(text: str | Command | None) -> list[dict]:
+            return await stream_agent(
+                agent,
+                text,
+                emit,
+                on_artifact_close=_on_artifact,
+                log_prefix="insights-v1",
+                config=config,
+                provider=self.provider,
+                model=self.model,
+                conversation_id=str(conversation_id or session_id),
+                on_todo=_on_todo,
+                on_tool_use=_on_tool_use,
+                on_tool_result=_on_tool_result,
+                on_pause=_on_pause,
+            )
+
+        async def _stream_with_room(text: str | Command | None) -> list[dict]:
+            """One turn, with one emergency compaction if the provider says the
+            request is too long. The failed request is checkpointed with its
+            input, so the retry continues from the checkpoint rather than
+            re-sending the text; a second overflow is the ordinary failure."""
+            try:
+                return await _stream(text)
+            except Exception as exc:
+                if classify_error(exc) is not ErrorCode.CONTEXT_WINDOW:
+                    raise
+                logger.info("insights: request too long for %s; compacting once and retrying", session_id)
+                await emit({"event": AgentEvent.CONTEXT_COMPACTING})
+                if not await compact_thread(agent, config, self._summariser_model(llm)):
+                    raise
+                await emit({"event": AgentEvent.CONTEXT_COMPACTED})
+                return await _stream(None)
+
         async def _turn(text: str | Command | None) -> list[dict]:
             if session is not None:
                 session.turn_active = True
             try:
-                pauses = await stream_agent(
-                    agent,
-                    text,
-                    emit,
-                    on_artifact_close=_on_artifact,
-                    log_prefix="insights-v1",
-                    config=config,
-                    provider=self.provider,
-                    model=self.model,
-                    conversation_id=str(conversation_id or session_id),
-                    on_todo=_on_todo,
-                    on_tool_use=_on_tool_use,
-                    on_tool_result=_on_tool_result,
-                    on_pause=_on_pause,
-                )
+                pauses = await _stream_with_room(text)
             finally:
                 if session is not None:
                     session.turn_active = False
@@ -685,6 +706,16 @@ class AutonomousInsightsRunner:
                     "status": StepStatus.ERROR,
                     **error_payload(exc),
                 })
+
+    def _summariser_model(self, llm: Any) -> Any:
+        """The model an emergency compaction summarises with: the injected one
+        when there is one (a test's fake must not fire a real call), else the
+        runner's own."""
+        if llm is not None:
+            return llm
+        return resolve_chat_model(
+            self.provider, self.model, self._api_key, self._temperature, thinking=self._thinking
+        )
 
     # -----------------------------------------------------------------------
     # Inspection

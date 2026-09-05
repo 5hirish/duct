@@ -516,7 +516,7 @@ Rows marked **done** landed on 2026-09-05 with the reading.
 | S | **done** — Cache hit share beside the cached tokens | `CH92.3%` | cached tokens with no share |
 | S | An explicit "after this turn" send | Enter steers, Alt+Enter follows up, `one-at-a-time` | steer-if-possible only; a note meant for after the run interrupts it |
 | M | Cache-miss attribution | idle > TTL or model switch, dollars wasted | none; on BYO keys a 5-minute pause silently re-bills the prompt |
-| M | Compact once and retry on overflow (OpenCode does this too) | `isRecoverableLength`, one bounded attempt | `context_window` → start fresh |
+| M | **done** (2026-09-05) — Compact once and retry on overflow (OpenCode does this too) | `isRecoverableLength`, one bounded attempt | `context_window` → start fresh |
 | L | Session tree | `/tree`, `/fork`, `/clone`, branch summaries | linear; the Codex table's `thread/fork` row |
 
 ---

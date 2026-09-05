@@ -40,6 +40,7 @@ from agents.insights.v1.runner import AutonomousInsightsRunner
 from tests.fakes import (
     AuthenticationError,
     FlakyFake,
+    OverflowFake,
     RaisingFake,
     RateLimitError,
     ToolCallingFake,
@@ -358,6 +359,58 @@ async def test_the_providers_retry_after_sets_the_wait_and_the_countdown(session
     retry = next(e for e in emitted.events if e["event"] == AgentEvent.MODEL_RETRYING)
     assert retry["retry_in"] == 7.0
     assert AgentEvent.PIPELINE_FINISHED in _kinds(emitted)
+
+
+async def test_a_request_too_long_is_compacted_once_and_retried(session, emitted, monkeypatch):
+    """An hour into a thread the provider says the request is too long. The
+    history is summarised, the same request is retried with room, and the
+    user sees a compaction, not a dead conversation."""
+    monkeypatch.setattr(lc, "COMPACT_KEEP_TOKENS", 12)  # a test transcript is tiny
+    await session.chat_queue.put("and what about mobile?")
+    await session.chat_queue.put(None)
+
+    # The opening turn answers; the follow-up overflows once, then answers.
+    fake = _fake("Answered.", cls=OverflowFake)
+    fake._overflowed = -1
+    await RUNNER.run_session(
+        session.session_id, emitted, llm=fake,
+        session=session, prompt="status?", chat_idle_timeout=2.0,
+    )
+
+    kinds = _kinds(emitted)
+    assert AgentEvent.CONTEXT_COMPACTING in kinds
+    assert AgentEvent.CONTEXT_COMPACTED in kinds
+    assert AgentEvent.STEP_FAILED not in kinds
+    assert AgentEvent.PIPELINE_FAILED not in kinds
+    assert kinds.count(AgentEvent.MESSAGE_STOP) == 2  # both turns finished
+    # The thread now opens with the summary, and the follow-up survived it.
+    snapshot = await RUNNER.build_agent(llm=fake, remember=False, execute=False, interactive=False).aget_state(
+        {"configurable": {"thread_id": session.session_id}}
+    )
+    texts = [str(m.content) for m in snapshot.values["messages"]]
+    assert any("summary of the conversation" in t for t in texts)
+    assert any("mobile" in t for t in texts)
+
+
+async def test_a_second_overflow_is_the_ordinary_failure(session, emitted, monkeypatch):
+    monkeypatch.setattr(lc, "COMPACT_KEEP_TOKENS", 12)
+    await session.chat_queue.put("and what about mobile?")
+    await session.chat_queue.put(None)
+
+    class Overflows(OverflowFake):
+        overflows: int = 2
+
+    fake = _fake("Answered.", cls=Overflows)
+    fake._overflowed = -1
+    await RUNNER.run_session(
+        session.session_id, emitted, llm=fake,
+        session=session, prompt="status?", chat_idle_timeout=2.0,
+    )
+
+    kinds = _kinds(emitted)
+    assert kinds.count(AgentEvent.CONTEXT_COMPACTING) == 1
+    failed = [e for e in emitted.events if e["event"] == AgentEvent.STEP_FAILED]
+    assert len(failed) == 1 and failed[0]["code"] == ErrorCode.CONTEXT_WINDOW
 
 
 async def test_a_retry_after_beyond_the_cap_is_not_waited_for(session, emitted, no_retry_sleep):

@@ -271,6 +271,16 @@ framework. The rules it implies:
   a countdown that fails anyway. The summariser's calls are billed with
   `scope: compaction`, so they count toward the total and never drive the
   gauge.
+- **A request too long gets one compaction and one retry.** The automatic
+  summariser works from an estimate and the provider counts for real; when
+  they disagree the request comes back as `context_window`. The insights
+  runner then calls `compact_thread` (`agents/core/lc.py`) — LangChain's own
+  `SummarizationMiddleware` forced by a one-message trigger, keeping the last
+  `COMPACT_KEEP_TOKENS`, written back "as" the tools node so the graph's next
+  step is the request that failed — emits `context_compacting` /
+  `context_compacted`, and continues from the checkpoint. A second overflow is
+  the ordinary failure. deepagents' own summarisation event is cleared in the
+  same write: it indexes into the message list the rewrite just replaced.
 - **A model has a price or it has no cost.** `PRICING` in `agents/models.py`
   mirrors `CONTEXT_WINDOW` (a test holds them equal) and `cost_usd()` prices a
   call from LangChain's usage, taking cached tokens out of the input figure.

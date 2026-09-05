@@ -626,7 +626,7 @@ const ERROR_COPY = Object.freeze({
   [ErrorCode.AUTH]:                { text: "The model provider rejected the API key. Check it under Settings → Models.", action: ErrorAction.SETTINGS },
   [ErrorCode.PERMISSION]:          { text: "This API key isn't allowed to use that model. Pick another under Settings → Models.", action: ErrorAction.SETTINGS },
   [ErrorCode.MODEL_NOT_FOUND]:     { text: "That model isn't available on this provider. Pick another under Settings → Models.", action: ErrorAction.SETTINGS },
-  [ErrorCode.CONTEXT_WINDOW]:      { text: "This conversation no longer fits the model's context. Start fresh, or pick a model with a bigger window.", action: ErrorAction.FRESH },
+  [ErrorCode.CONTEXT_WINDOW]:      { text: "This conversation no longer fits the model's context, even after summarising it. Start fresh, or pick a model with a bigger window.", action: ErrorAction.FRESH },
   [ErrorCode.BAD_REQUEST]:         { text: "The model provider rejected the request. Try rephrasing.", action: ErrorAction.NONE },
   [ErrorCode.CONNECTOR_EXPIRED]:   { text: "A connected account needs reconnecting before the agent can read it.", action: ErrorAction.CONNECTIONS },
   [ErrorCode.CONNECTOR_FORBIDDEN]: { text: "A connected account doesn't have access to that data. Check its permissions under Connections.", action: ErrorAction.CONNECTIONS },

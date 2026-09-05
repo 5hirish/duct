@@ -164,7 +164,7 @@ translation over it, not a refactor.
 | `memory_recalled` | `Custom` | entry ids this turn was primed with |
 | `model_retrying` | `Custom` | a model call failed and is being retried: `attempt`, `max_attempts`, `code`, `retry_in` (seconds until the next attempt — a duration, so the client anchors it to its own clock and counts down). Status, not failure — the next token clears it |
 | `token_usage` | `Custom` | one model call's bill: `input_tokens`, `output_tokens`, `cache_read_tokens`, `context_window`, `model`, `scope` (`thread`, `subagent`, or `compaction` for the summariser — all three are on the bill, only `thread` drives the gauge), `cost_usd` (from `agents/models.PRICING`; `null` for an unpriced model, never a guess) |
-| `context_compacting`, `context_compacted` | `Custom` | the harness is summarising old history to make room, then did. The summariser's own tokens never reach the transcript |
+| `context_compacting`, `context_compacted` | `Custom` | the harness is summarising old history to make room, then did. The summariser's own tokens never reach the transcript. Also emitted by the insights runner around an emergency compaction: a request the provider rejected as too long is summarised once (`compact_thread`) and retried from its checkpoint; a second rejection is the ordinary `context_window` failure |
 | `user_input_consumed` | `Custom` | a message sent mid-turn has reached the model; carries the `client_message_id` the client stamped on it |
 
 ### Failures carry a code, never the exception
