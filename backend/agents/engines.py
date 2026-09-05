@@ -63,6 +63,7 @@ ENGINE_DEFAULT_MODEL: dict[tuple[Engine, Provider], ModelName] = {
 ENGINE_SUPPORTED_PROVIDERS: dict[Engine, frozenset[Provider]] = {
     Engine.V1: frozenset({
         Provider.OPENAI, Provider.GOOGLE_GENAI, Provider.ANTHROPIC, Provider.OPENROUTER,
+        Provider.XAI,
     }),
     Engine.V3: frozenset({Provider.ANTHROPIC}),
 }
@@ -84,6 +85,7 @@ ENGINE_PROVIDER_ENV_VAR: dict[Engine, dict[Provider, str]] = {
         Provider.GOOGLE_GENAI: "GOOGLE_API_KEY",
         Provider.ANTHROPIC:    "ANTHROPIC_API_KEY",
         Provider.OPENROUTER:   "OPENROUTER_API_KEY",
+        Provider.XAI:          "XAI_API_KEY",
     },
     Engine.V3: {
         Provider.ANTHROPIC: "ANTHROPIC_API_KEY",
@@ -134,6 +136,7 @@ PROVIDER_CONFIG_ATTR: dict[Provider, str] = {
     Provider.GOOGLE_GENAI: "gemini_api_key",
     Provider.ANTHROPIC:    "anthropic_api_key",
     Provider.OPENROUTER:   "openrouter_api_key",
+    Provider.XAI:          "xai_api_key",
 }
 
 

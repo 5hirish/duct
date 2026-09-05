@@ -14,6 +14,8 @@ given, and which reasoning kwarg the resulting class actually accepts.
 
 from __future__ import annotations
 
+import os
+
 import pytest
 
 from agents.engines import (
@@ -193,6 +195,9 @@ def test_openrouter_gets_the_unified_reasoning_object():
     [
         (Provider.ANTHROPIC, ModelName.CLAUDE_SONNET),
         (Provider.OPENAI, ModelName.GPT_5_MINI),
+        # ChatXAI carries reasoning_effort as a real field, so xAI needs no
+        # translation at the transport boundary the way OpenRouter does.
+        (Provider.XAI, ModelName.GROK_4_6),
     ],
 )
 def test_direct_vendors_keep_the_standard_kwarg(provider: Provider, model: ModelName):
@@ -205,7 +210,7 @@ def test_a_model_with_no_dial_says_nothing_on_either_transport():
     """Absent is a real answer — it must not become `reasoning={"effort": ""}`."""
     from agents.core.lc import _thinking_kwargs_for
 
-    assert _thinking_kwargs_for(Provider.OPENROUTER, ModelName.OR_QWEN3_7_FLASH, "deep") == {}
+    assert _thinking_kwargs_for(Provider.OPENROUTER, ModelName.OR_QWEN3_8_FLASH, "deep") == {}
 
 
 def test_the_dial_survives_construction_as_a_first_class_field():
@@ -298,3 +303,24 @@ def test_fallback_resolution(provider, model, expected):
 def test_only_v1_gets_a_fallback_chain(engine: Engine):
     """v3's harness already retries inside the CLI."""
     assert resolve_fallback_models(engine, Provider.ANTHROPIC, ModelName.CLAUDE_SONNET) == ()
+
+
+@pytest.mark.skipif(
+    not os.environ.get("XAI_API_KEY"),
+    reason="XAI_API_KEY not set — live Grok skipped",
+)
+@pytest.mark.live
+def test_live_grok_accepts_the_top_rung_of_the_ladder_we_publish():
+    """Everything Duct claims about Grok came from docs.x.ai, not from a call.
+
+    This is what would catch a wrong model id or an effort value xAI rejects —
+    `xhigh` in particular, which the docs say arrived with 4.6 and which older
+    Groks silently downgrade rather than refuse. Costs a fraction of a cent.
+    """
+    from agents.core.lc import resolve_chat_model
+
+    llm = resolve_chat_model(
+        Provider.XAI, ModelName.GROK_4_6, os.environ["XAI_API_KEY"], thinking="exhaustive"
+    )
+    reply = llm.invoke("Reply with the single word: ok")
+    assert (reply.text or "").strip()

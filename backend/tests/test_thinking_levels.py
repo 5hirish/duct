@@ -42,6 +42,9 @@ from agents.thinking import (
         ("gemini-3.8-flash", ["low", "medium", "high", "high"]),
         # …and the lite model has a rung below low.
         ("gemini-3.5-flash-lite", ["minimal", "medium", "high", "high"]),
+        # xAI publishes the full ladder and cannot turn reasoning off, so all
+        # four rungs are distinct and none of them is an "off".
+        ("grok-4.6", ["low", "medium", "high", "xhigh"]),
     ],
 )
 def test_each_rung_lands_on_a_value_that_model_accepts(model, expected):

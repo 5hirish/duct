@@ -90,6 +90,7 @@ _MODEL_TIER_HINT: dict[str, Tier] = {
     ModelName.GEMINI_3_5_FLASH_LITE.value: Tier.LIGHT,
     ModelName.GEMINI_2_5_FLASH.value: Tier.LIGHT,
     ModelName.GEMINI_2_5_FLASH_LITE.value: Tier.LIGHT,
+    ModelName.GROK_4_6.value: Tier.HEAVY,
 }
 
 

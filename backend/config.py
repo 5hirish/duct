@@ -259,6 +259,9 @@ class Configs(BaseSettings):
     gemini_api_key: str = ""
     openai_api_key: str = ""
     anthropic_api_key: str = ""
+    # xAI (Grok), on its own LangChain integration. v1 only, like OpenRouter:
+    # the Claude Agent SDK is provider-locked.
+    xai_api_key: str = ""
     # OpenRouter — its own LangChain integration (v1 engine only). One key
     # reaches 500+ models across 60+ providers, which is the practical answer
     # for bring-your-own-model: consumer subscriptions never grant API access,

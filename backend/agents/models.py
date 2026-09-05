@@ -27,6 +27,12 @@ class Provider(str, Enum):
     # for it. ``GATEWAY_BASE_URL`` / ``NATIVE_GATEWAY_PROVIDERS`` below is where
     # that split is written down.
     OPENROUTER = "openrouter"
+    # xAI is a first-party vendor, not a gateway: LangChain resolves "xai" to
+    # ``langchain-xai`` → ``ChatXAI``, so it needs no base-URL entry and takes
+    # the native branch in ``langchain_provider``. Reachable as the OpenAI
+    # shape at api.x.ai too, but the native package carries reasoning_effort
+    # and xAI's server-side search as real fields rather than passthrough.
+    XAI = "xai"
 
 
 class ModelName(str, Enum):
@@ -80,6 +86,13 @@ class ModelName(str, Enum):
     # it. Enforced by CLI_ONLY_MODELS below.
     CLAUDE_OPUS_1M = "claude-opus-5[1m]"
 
+    # xAI. Verified against docs.x.ai: 500k context, $2/$6, and
+    # `reasoning_effort` low/medium/high/xhigh — "Reasoning cannot be
+    # disabled", so there is no off rung to offer. No fallback pair below:
+    # it is the only Grok in the catalogue, and MODEL_FALLBACK never guesses
+    # a target it was not given.
+    GROK_4_6 = "grok-4.6"
+
     # OpenRouter — vendor/slug form. A *curated default list*, not a whitelist:
     # OpenRouter fronts 400+ models, so resolve_engine_model passes an unknown
     # slug through verbatim rather than silently substituting a default. These
@@ -92,7 +105,7 @@ class ModelName(str, Enum):
     # magnitude, which on this list is the entire point:
     #
     #   deepseek-chat      $0.26/$1.03  164k  →  v4-flash    $0.08/$0.16  1.0M
-    #   qwen3-235b-a22b    $0.45/$1.82  131k  →  qwen3.7-flash $0.03/$0.13 1.0M
+    #   qwen3-235b-a22b    $0.45/$1.82  131k  →  qwen3.8-flash $0.15/$0.47 1.0M
     #   glm-4.6            $0.43/$1.75  205k  →  glm-5.3-flash $0.07/$0.25 1.3M
     #   kimi-k2            $0.57/$2.30  131k  →  kimi-k3     $3.00/$15.00 1.0M
     #
@@ -108,7 +121,7 @@ class ModelName(str, Enum):
     # has no business here, since every Duct agent is a tool-calling agent.
     OR_DEEPSEEK_V4_FLASH = "deepseek/deepseek-v4-flash"
     OR_DEEPSEEK_V4_PRO = "deepseek/deepseek-v4-pro"
-    OR_QWEN3_7_FLASH = "qwen/qwen3.7-flash"
+    OR_QWEN3_8_FLASH = "qwen/qwen3.8-flash"
     OR_KIMI_K3 = "moonshotai/kimi-k3"
     OR_GLM_5_3_FLASH = "z-ai/glm-5.3-flash"
     OR_CLAUDE_OPUS = "anthropic/claude-opus-5"
@@ -238,6 +251,7 @@ DEFAULT_MODELS = {
     Provider.GOOGLE_GENAI: ModelName.GEMINI_2_5_FLASH,
     Provider.ANTHROPIC: ModelName.CLAUDE_SONNET,
     Provider.OPENROUTER: ModelName.OR_DEEPSEEK_V4_FLASH,
+    Provider.XAI: ModelName.GROK_4_6,
 }
 
 # Where a run goes when its model will not answer — model data, so it lives
@@ -307,9 +321,10 @@ CONTEXT_WINDOW: dict[ModelName, int] = {
     ModelName.CLAUDE_SONNET: 200_000,
     ModelName.CLAUDE_HAIKU: 200_000,
     ModelName.CLAUDE_OPUS_1M: 1_000_000,
+    ModelName.GROK_4_6: 500_000,
     ModelName.OR_DEEPSEEK_V4_FLASH: 1_000_000,
     ModelName.OR_DEEPSEEK_V4_PRO: 1_000_000,
-    ModelName.OR_QWEN3_7_FLASH: 1_000_000,
+    ModelName.OR_QWEN3_8_FLASH: 1_000_000,
     ModelName.OR_KIMI_K3: 1_000_000,
     ModelName.OR_GLM_5_3_FLASH: 1_300_000,
     ModelName.OR_CLAUDE_OPUS: 200_000,
@@ -351,9 +366,12 @@ PRICING: dict[ModelName, ModelPrice] = {
     ModelName.CLAUDE_SONNET: ModelPrice(2.0, 10.0, 0.2, 2.5),
     ModelName.CLAUDE_HAIKU: ModelPrice(1.0, 5.0, 0.1, 1.25),
     ModelName.CLAUDE_OPUS_1M: ModelPrice(5.0, 25.0, 0.5, 6.25),
+    # Base rates. xAI doubles both above a 200k-token prompt; ModelPrice has
+    # no tier for that, so a very long Grok run under-reports.
+    ModelName.GROK_4_6: ModelPrice(2.0, 6.0, 0.5),
     ModelName.OR_DEEPSEEK_V4_FLASH: ModelPrice(0.08722, 0.17444, 0.017444),
     ModelName.OR_DEEPSEEK_V4_PRO: ModelPrice(0.9309, 1.8618, 0.077575),
-    ModelName.OR_QWEN3_7_FLASH: ModelPrice(0.03, 0.13, 0.006, 0.038),
+    ModelName.OR_QWEN3_8_FLASH: ModelPrice(0.15, 0.47, 0.03),
     ModelName.OR_KIMI_K3: ModelPrice(3.0, 15.0, 0.3),
     ModelName.OR_GLM_5_3_FLASH: ModelPrice(0.075, 0.25, 0.015),
     ModelName.OR_CLAUDE_OPUS: ModelPrice(5.0, 25.0, 0.5, 6.25),
@@ -475,6 +493,8 @@ def get_api_key_kwargs(
         return {"google_api_key": api_key}
     if provider == Provider.ANTHROPIC:
         return {"anthropic_api_key": api_key}
+    if provider == Provider.XAI:
+        return {"xai_api_key": api_key}
     return {}
 
 

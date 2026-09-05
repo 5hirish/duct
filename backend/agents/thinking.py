@@ -6,6 +6,7 @@ Every frontier provider now sells the same dial and calls it something else:
   OpenAI      ``reasoning.effort``       none · low · medium · high · xhigh · max
   Google      ``thinking_level``         minimal · low · medium · high
   OpenRouter  ``reasoning.effort``       the union, normalised onto whatever it fronts
+  xAI         ``reasoning_effort``       low · medium · high · xhigh (no off rung)
 
 The words do not line up. ``high`` is Anthropic's *default* and Google's
 *ceiling*; ``minimal`` exists only on Gemini; ``xhigh`` exists only on the newest
@@ -145,6 +146,15 @@ _GPT_5_CONSERVATIVE = ThinkingSupport(
 )
 
 
+# xAI publishes the full ladder per model and says reasoning cannot be
+# disabled, so unlike the GPT-5 family there is nothing to be conservative
+# about — and no `none` rung to offer. xhigh is grok-4.6 and later; grok-4.5
+# silently treats it as high.
+_XAI = ThinkingSupport(
+    native=(LOW, MEDIUM, HIGH, XHIGH), default=HIGH, label="reasoning effort"
+)
+
+
 def _gemini(native: tuple[str, ...], default: str) -> ThinkingSupport:
     return ThinkingSupport(native=native, default=default, label="thinking level")
 
@@ -184,6 +194,9 @@ MODEL_THINKING: dict[str, ThinkingSupport] = {
     ModelName.GEMINI_3_1_PRO_PREVIEW: _gemini((LOW, MEDIUM, HIGH), HIGH),
     ModelName.GEMINI_3_8_FLASH: _gemini((LOW, MEDIUM, HIGH), MEDIUM),
     ModelName.GEMINI_3_5_FLASH_LITE: _gemini((MINIMAL, LOW, MEDIUM, HIGH), MINIMAL),
+
+    # --- xAI
+    ModelName.GROK_4_6: _XAI,
 
     # --- OpenRouter open-weight slugs. It normalises the parameter, but what
     # the upstream model does with it varies, so only the middle of the ladder
@@ -227,7 +240,7 @@ NO_THINKING_DIAL: frozenset[ModelName] = frozenset({
     # takes no level. That is the difference from the rows above, which do
     # carry `reasoning_effort` and therefore get a ladder. kimi-k2.5 was here
     # for the same reason until the k3 that replaced it gained the parameter.
-    ModelName.OR_QWEN3_7_FLASH,
+    ModelName.OR_QWEN3_8_FLASH,
 })
 
 
