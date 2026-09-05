@@ -7,6 +7,10 @@ const cleanRoutes = [
   "/blog/",
 ];
 
+// Content pages that must render but are not required to be linked from the
+// home page's own nav (they live in the footer and the simple nav).
+const contentRoutes = ["/about", "/doctrine"];
+
 test("home page navigation uses clean links", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveTitle(/Duct/i);
@@ -31,7 +35,7 @@ test("home page navigation uses clean links", async ({ page }) => {
 });
 
 test.describe("clean routes render", () => {
-  for (const route of cleanRoutes) {
+  for (const route of [...cleanRoutes, ...contentRoutes]) {
     test(`route ${route} loads`, async ({ page }) => {
       const response = await page.goto(route);
       expect(response && response.ok()).toBeTruthy();

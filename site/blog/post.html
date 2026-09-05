@@ -22,7 +22,7 @@
 <meta property="article:published_time" content=""/>
 <meta property="article:modified_time" content=""/>
 <meta property="article:section" content=""/>
-<meta property="article:author" content="Duct Team"/>
+<meta property="article:author" content="Shirish Kadam"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content=""/>
 <meta name="twitter:description" content=""/>
@@ -40,6 +40,37 @@
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* Author card — a byline is the credential on a one-person project. */
+.post-author {
+  display: flex; gap: 20px; align-items: flex-start;
+  max-width: 700px; margin: 48px auto 0; padding: 28px 24px;
+  border-top: 1px solid var(--border);
+}
+.post-author-avatar {
+  width: 64px; height: 64px; border-radius: 50%;
+  object-fit: cover; flex-shrink: 0; background: var(--off);
+  border: 1px solid var(--border);
+}
+.post-author-name {
+  font-family: var(--serif); font-size: 18px; color: var(--navy);
+  letter-spacing: -.2px; margin-bottom: 6px;
+}
+.post-author-bio {
+  font-size: 14px; font-weight: 300; color: var(--navy-3); line-height: 1.7;
+}
+.post-author-bio a { color: var(--orange); text-decoration: none; }
+.post-author-bio a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.post-author-links { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; }
+.post-author-links a {
+  font-size: 13px; font-weight: 500; color: var(--navy-2); text-decoration: none;
+  border-bottom: 1px solid var(--border); padding-bottom: 1px; transition: border-color .2s;
+}
+.post-author-links a:hover { border-color: var(--navy); }
+
+@media (max-width: 640px) {
+  .post-author { flex-direction: column; gap: 16px; }
+}
 </style>
 </head>
 <body>
@@ -80,6 +111,20 @@
 
 <main>
 <article id="prose" class="prose" style="display:none" aria-labelledby="article-title"></article>
+<aside class="post-author" id="post-author" style="display:none" aria-label="About the author">
+  <img class="post-author-avatar" src="https://github.com/5hirish.png" width="64" height="64" loading="lazy"
+       alt="Shirish Kadam"/>
+  <div>
+    <p class="post-author-name">Shirish Kadam</p>
+    <p class="post-author-bio">I maintain <a href="https://github.com/5hirish/duct" rel="noopener">Duct</a>, an open-source AI agent that reads across your product and growth stack. MIT licensed, runs on your own machine.</p>
+    <div class="post-author-links">
+      <a href="https://github.com/5hirish" rel="noopener">GitHub</a>
+      <a href="https://x.com/5hirish" rel="noopener">X</a>
+      <a href="https://youtube.com/@5hirish" rel="noopener">YouTube</a>
+      <a href="https://shirishkadam.com" rel="noopener">Blog</a>
+    </div>
+  </div>
+</aside>
 <div id="article-nav" style="display:none;max-width:700px;margin:0 auto;padding:0 24px 64px;display:none;justify-content:space-between">
   <a id="prev-article-anchor" href="#" style="font-size:14px;font-weight:500;color:var(--navy-3);text-decoration:none;transition:color .2s;display:none" onmouseover="this.style.color='var(--navy)'" onmouseout="this.style.color='var(--navy-3)'">← Previous article</a>
   <a id="next-article-anchor" href="#" style="font-size:14px;font-weight:500;color:var(--navy-3);text-decoration:none;transition:color .2s;margin-left:auto;display:none" onmouseover="this.style.color='var(--navy)'" onmouseout="this.style.color='var(--navy-3)'">Next article →</a>
@@ -204,7 +249,7 @@
       }
       canonical.href = 'https://getduct.ai/blog/post?slug=' + slug;
       setMeta('og:url', canonical.href);
-      setMeta('article:author', fm.author || 'Duct Team');
+      setMeta('article:author', fm.author || 'Shirish Kadam');
 
       var publishedIso = toIsoDate(fm.date);
       if (publishedIso) {
@@ -226,6 +271,8 @@
 
       // Show content, hide loader
       showContent();
+
+      document.getElementById('post-author').style.display = 'flex';
 
       // Article navigation
       var idx = ALL_POSTS.findIndex(function (p) { return p.slug === slug; });
@@ -255,7 +302,16 @@
         datePublished: publishedIso || fm.date || '',
         dateModified: publishedIso || fm.date || '',
         articleSection: fm.category || '',
-        author: { '@type': 'Organization', name: fm.author || 'Duct Team' },
+        author: {
+          '@type': 'Person',
+          name: fm.author || 'Shirish Kadam',
+          url: 'https://shirishkadam.com',
+          sameAs: [
+            'https://github.com/5hirish',
+            'https://x.com/5hirish',
+            'https://youtube.com/@5hirish'
+          ]
+        },
         publisher: { '@type': 'Organization', name: 'Duct', url: 'https://getduct.ai' },
         image: fm.heroImage || 'https://getduct.ai/assets/og-image.png',
         mainEntityOfPage: canonical.href

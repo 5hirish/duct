@@ -5,19 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <link rel="icon" href="assets/icon.svg" type="image/svg+xml"/>
 <link rel="apple-touch-icon" href="assets/apple-icon.svg"/>
-<title>About Duct — The Intelligence Layer Your Stack Was Missing</title>
+<title>About Duct — Open Source, Built by One Person in Valencia</title>
 <link rel="canonical" href="https://getduct.ai/about"/>
-<meta name="description" content="Duct is built by Alleviate Lab in Valencia, Spain. We connect your tools and deliver the intelligence they were collectively trying to tell you."/>
+<meta name="description" content="Duct is an open-source AI agent for cross-tool product and growth analytics. MIT licensed, built by Shirish Kadam in Valencia, Spain."/>
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
 <meta property="og:type" content="website"/>
 <meta property="og:url" content="https://getduct.ai/about"/>
-<meta property="og:title" content="About Duct — The Intelligence Layer Your Stack Was Missing"/>
-<meta property="og:description" content="Built by Alleviate Lab in Valencia, Spain. We connect your tools and deliver the intelligence they were collectively trying to tell you."/>
+<meta property="og:title" content="About Duct — Open Source, Built by One Person in Valencia"/>
+<meta property="og:description" content="MIT licensed and built in the open by Shirish Kadam, in Valencia, Spain. Read every line of it."/>
 <meta property="og:image" content="https://getduct.ai/assets/og-image.png"/>
 <meta property="og:site_name" content="Duct"/>
 <meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:title" content="About Duct — The Intelligence Layer Your Stack Was Missing"/>
-<meta name="twitter:description" content="Built by Alleviate Lab in Valencia, Spain. We connect your tools and deliver the intelligence they were collectively trying to tell you."/>
+<meta name="twitter:title" content="About Duct — Open Source, Built by One Person in Valencia"/>
+<meta name="twitter:description" content="MIT licensed and built in the open by Shirish Kadam, in Valencia, Spain. Read every line of it."/>
 <meta name="twitter:image" content="https://getduct.ai/assets/og-image.png"/>
 <link rel="stylesheet" href="assets/duct.css"/>
 <script src="assets/config.js" defer></script>
@@ -27,6 +27,23 @@
   "@type": "AboutPage",
   "name": "About Duct",
   "url": "https://getduct.ai/about",
+  "mainEntity": {
+    "@type": "Person",
+    "name": "Shirish Kadam",
+    "url": "https://shirishkadam.com",
+    "jobTitle": "Maintainer, Duct",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Valencia",
+      "addressCountry": "ES"
+    },
+    "sameAs": [
+      "https://github.com/5hirish",
+      "https://x.com/5hirish",
+      "https://youtube.com/@5hirish",
+      "https://shirishkadam.com"
+    ]
+  },
   "publisher": {
     "@type": "Organization",
     "name": "Alleviate Lab",
@@ -139,7 +156,7 @@
 }
 .company-inner {
   max-width: 1160px; margin: 0 auto;
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; text-align: center;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; text-align: center;
 }
 .company-item-label {
   font-size: 11px; font-weight: 600; letter-spacing: .1em;
@@ -150,6 +167,37 @@
 }
 .company-item-value a { color: var(--orange); text-decoration: none; }
 .company-item-value a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* Maker card — the person behind the repo */
+.maker { padding: 100px 52px; max-width: 860px; margin: 0 auto; }
+.maker-inner {
+  display: grid; grid-template-columns: 132px 1fr; gap: 36px; align-items: start;
+  border: 1px solid var(--border); border-radius: var(--r-lg);
+  padding: 40px; background: var(--white);
+}
+.maker-avatar {
+  width: 132px; height: 132px; border-radius: 50%;
+  object-fit: cover; border: 1px solid var(--border); background: var(--off);
+}
+.maker-name {
+  font-family: var(--serif); font-size: 26px; color: var(--navy);
+  letter-spacing: -.3px; margin-bottom: 4px;
+}
+.maker-role {
+  font-size: 11px; font-weight: 600; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--orange); margin-bottom: 18px;
+}
+.maker-bio { font-size: 15px; font-weight: 300; color: var(--navy-3); line-height: 1.78; }
+.maker-bio + .maker-bio { margin-top: 14px; }
+.maker-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+.maker-link {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 15px; border: 1px solid var(--border); border-radius: var(--pill);
+  font-size: 13px; font-weight: 500; color: var(--navy-2); text-decoration: none;
+  transition: border-color .2s, color .2s, background .2s;
+}
+.maker-link:hover { border-color: var(--navy); color: var(--navy); background: var(--off); }
+.maker-link svg { flex-shrink: 0; }
 
 /* CTA */
 .about-cta { padding: 120px 52px; text-align: center; border-top: 1px solid var(--border); }
@@ -167,6 +215,10 @@
   .values { padding: 64px 24px; }
   .val-grid { grid-template-columns: 1fr; background: none; border: none; gap: 16px; }
   .val-card { border: 1px solid var(--border); border-radius: var(--r-lg); }
+  .maker { padding: 64px 24px; }
+  .maker-inner { grid-template-columns: 1fr; gap: 24px; padding: 28px; text-align: center; }
+  .maker-avatar { margin: 0 auto; }
+  .maker-links { justify-content: center; }
   .company-strip { padding: 48px 24px; }
   .company-inner { grid-template-columns: 1fr; gap: 24px; }
   .about-cta { padding: 80px 24px; }
@@ -185,8 +237,8 @@
 
 <!-- HERO -->
 <section class="about-hero">
-  <h1>We built Duct because<br/>your tools won't <em>talk</em></h1>
-  <p class="about-hero-sub">Every SaaS team runs 8&ndash;12 tools. Each one sees a sliver of the picture. Nobody sees the whole thing. We thought that was kind of absurd &mdash; so we&rsquo;re fixing it.</p>
+  <h1>I built Duct because<br/>my tools wouldn't <em>talk</em></h1>
+  <p class="about-hero-sub">Every product team runs 8&ndash;12 tools. Each one sees a sliver. Nobody sees the whole thing. I got tired of being the integration layer between them, so I wrote one and put it on GitHub under MIT.</p>
 </section>
 
 <!-- MANIFESTO -->
@@ -198,22 +250,22 @@
   </div>
   <div class="manifesto-block reveal">
     <span class="manifesto-num">02</span>
-    <h2 class="manifesto-title">We&rsquo;re that someone</h2>
-    <p class="manifesto-body">Duct connects to your existing tools &mdash; read-only, zero config &mdash; and synthesizes the cross-tool intelligence that&rsquo;s been hiding in plain sight. Not another dashboard. Not another data warehouse project you'll abandon in Q3. Just the story your tools are collectively trying to tell you, delivered in plain English, on a schedule that actually works.</p>
+    <h2 class="manifesto-title">So I connected them</h2>
+    <p class="manifesto-body">Duct reads across your existing tools and synthesizes the cross-tool story that has been hiding in plain sight. Not another dashboard. Not another data warehouse project you will abandon in Q3. And when the answer is &ldquo;pause that campaign&rdquo; or &ldquo;mark that GA4 event,&rdquo; Duct can prepare the change and show you a preview. It cannot apply it. Only you can. That boundary lives in code, not in a prompt.</p>
   </div>
   <div class="manifesto-block reveal">
     <span class="manifesto-num">03</span>
-    <h2 class="manifesto-title">Small team, big conviction</h2>
-    <p class="manifesto-body">We&rsquo;re Alleviate Lab, a small product studio based in Valencia, Spain. We believe the best intelligence tools are the ones you forget are running &mdash; they just work, quietly, and surface what matters before you think to ask. Duct is our first product, and we&rsquo;re building it for teams like ours: lean, fast-moving, and allergic to busywork.</p>
+    <h2 class="manifesto-title">Then I open sourced it</h2>
+    <p class="manifesto-body">Duct is MIT licensed. The backend, the agents, the app, the desktop shell: all of it is on GitHub, and you can run the whole thing on your own machine with your own model API keys. No account, nothing leaving your laptop. A hosted version runs at getduct.ai for people who would rather not operate it themselves, and it is the same code. Tools that read your entire business should not be black boxes, and this one is not.</p>
   </div>
 </section>
 
 <!-- WHAT WE BUILD -->
 <section class="what-we-build">
   <div class="what-inner">
-    <span class="tag reveal">What Duct Does</span>
+    <span class="tag reveal">What Duct does</span>
     <h2 class="reveal">Connect everything.<br/><em>Understand</em> everything.</h2>
-    <p class="what-sub reveal">Duct reads data from your advertising, analytics, support, SEO, and project management tools &mdash; then delivers structured intelligence briefs with cross-tool signals and clear next actions.</p>
+    <p class="what-sub reveal">Duct connects 12 sources across advertising, analytics, search and revenue, then runs agents over all of them together to produce briefs with cross-tool signals and clear next actions. Every connector is in the repo, so the list below is the list, not a roadmap.</p>
     <div class="what-grid">
       <div class="what-card reveal">
         <span class="what-card-icon" aria-hidden="true">&#x1F4CA;</span>
@@ -236,28 +288,60 @@
 
 <!-- VALUES -->
 <section class="values">
-  <span class="tag reveal">How We Work</span>
+  <span class="tag reveal">How I work</span>
   <h2 class="reveal">Principles, not <em>platitudes</em></h2>
   <div class="val-grid">
     <div class="val-card reveal">
-      <span class="val-label">Read-only by default</span>
-      <h3 class="val-title">We look, never touch</h3>
-      <p class="val-body">Duct connects to your tools with read-only access. We never create, modify, or delete anything in your accounts. Your data, your control &mdash; always.</p>
+      <span class="val-label">Approval before action</span>
+      <h3 class="val-title">The agent proposes. You decide.</h3>
+      <p class="val-body">Duct reads by default. When it can fix something, it prepares a change set, shows you a preview and a guardrail check, and waits. The agent can propose and inspect; it cannot approve or apply. That decision lives in code the model never sees, and rollback is part of the contract.</p>
     </div>
     <div class="val-card reveal">
       <span class="val-label">Substance over ceremony</span>
       <h3 class="val-title">Ship the insight, skip the noise</h3>
-      <p class="val-body">We don&rsquo;t build features to pad a changelog. Every report, every signal, every alert exists because it saves a real team real time on a real decision.</p>
+      <p class="val-body">I don&rsquo;t build features to pad a changelog. Every report, every signal, every alert exists because it saved me real time on a real decision first.</p>
     </div>
     <div class="val-card reveal">
-      <span class="val-label">Underdog energy</span>
-      <h3 class="val-title">Small enough to care, fast enough to matter</h3>
-      <p class="val-body">We&rsquo;re not backed by a megacorp or staffed by hundreds. We&rsquo;re a tiny crew that builds with urgency, listens obsessively, and ships every single week. That&rsquo;s the advantage.</p>
+      <span class="val-label">One person, in Valencia</span>
+      <h3 class="val-title">Small enough to answer you directly</h3>
+      <p class="val-body">No megacorp behind this and no support queue in front of it. File an issue and you are talking to the person who wrote the line. That is the whole advantage, and it is why the roadmap is public.</p>
     </div>
     <div class="val-card reveal">
-      <span class="val-label">Transparent by design</span>
-      <h3 class="val-title">You see what we see</h3>
-      <p class="val-body">Every data source, every API call, every piece of logic that generates a signal &mdash; it&rsquo;s documented and inspectable. No black boxes, no &ldquo;trust us&rdquo; handwaving.</p>
+      <span class="val-label">MIT licensed</span>
+      <h3 class="val-title">You can read every line</h3>
+      <p class="val-body">Every data source, every API call, every prompt, every piece of logic that generates a signal is <a href="https://github.com/5hirish/duct" rel="noopener" style="color:var(--orange);text-decoration:none">on GitHub</a>. Not documented and inspectable in principle. Actually there, actually readable, actually forkable.</p>
+    </div>
+  </div>
+</section>
+
+<!-- MAKER -->
+<section class="maker">
+  <div class="maker-inner reveal">
+    <img class="maker-avatar" src="https://github.com/5hirish.png" width="132" height="132" loading="lazy"
+         alt="Shirish Kadam, maintainer of Duct"/>
+    <div>
+      <p class="maker-name">Shirish Kadam</p>
+      <p class="maker-role">Maintainer</p>
+      <p class="maker-bio">Product engineer. I spent years building AI and ML products at fin-tech and ed-tech companies, watching the same thing happen every time: the answer to &ldquo;why did that number move&rdquo; was never in one tool, and somebody senior burned a morning every week stitching it together by hand.</p>
+      <p class="maker-bio">Duct is the tool I wanted for that job. I write about the parts of it that are generally interesting, agent memory, approval gates, running models locally, on YouTube and on my blog. If you want to argue with a design decision, GitHub is the best place to find me.</p>
+      <div class="maker-links">
+        <a class="maker-link" href="https://github.com/5hirish" rel="noopener">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          GitHub
+        </a>
+        <a class="maker-link" href="https://x.com/5hirish" rel="noopener">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M12.6 0h2.454l-5.36 6.778L16 16h-4.937l-3.867-5.594L2.771 16H.316l5.733-7.25L0 0h5.063l3.495 5.114L12.6 0Zm-.86 14.376h1.36L4.323 1.539H2.865l8.875 12.837Z"/></svg>
+          @5hirish
+        </a>
+        <a class="maker-link" href="https://youtube.com/@5hirish" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M15.67 4.16a2 2 0 0 0-1.4-1.42C13.03 2.4 8 2.4 8 2.4s-5.03 0-6.27.34a2 2 0 0 0-1.4 1.42A20.9 20.9 0 0 0 0 8a20.9 20.9 0 0 0 .33 3.84 2 2 0 0 0 1.4 1.42c1.24.34 6.27.34 6.27.34s5.03 0 6.27-.34a2 2 0 0 0 1.4-1.42A20.9 20.9 0 0 0 16 8a20.9 20.9 0 0 0-.33-3.84ZM6.4 10.4V5.6L10.53 8 6.4 10.4Z"/></svg>
+          YouTube
+        </a>
+        <a class="maker-link" href="https://shirishkadam.com" rel="noopener">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="8" cy="8" r="6.5"/><path d="M1.5 8h13M8 1.5c1.7 1.9 2.6 4.1 2.6 6.5S9.7 12.6 8 14.5C6.3 12.6 5.4 10.4 5.4 8S6.3 3.4 8 1.5Z"/></svg>
+          shirishkadam.com
+        </a>
+      </div>
     </div>
   </div>
 </section>
@@ -266,8 +350,12 @@
 <section class="company-strip">
   <div class="company-inner">
     <div class="reveal">
-      <p class="company-item-label">Company</p>
-      <p class="company-item-value">Alleviate Lab</p>
+      <p class="company-item-label">License</p>
+      <p class="company-item-value">MIT</p>
+    </div>
+    <div class="reveal">
+      <p class="company-item-label">Maintainer</p>
+      <p class="company-item-value"><a href="https://github.com/5hirish" rel="noopener">Shirish Kadam</a></p>
     </div>
     <div class="reveal">
       <p class="company-item-label">Location</p>
@@ -283,17 +371,14 @@
 <!-- CTA -->
 <section class="about-cta">
   <div class="about-cta-inner">
-    <span class="tag reveal">Join the Beta</span>
-    <h2 class="reveal">Ready to stop <em>tab-switching?</em></h2>
-    <p class="sub reveal">We&rsquo;re onboarding the first teams personally. Free during beta, no credit card required.</p>
-    <div class="hero-form reveal">
-      <input type="email" class="email-in" id="about-email" placeholder="you@company.com" aria-label="Work email"/>
-      <button class="btn btn-orange btn-lg"
-        data-form-url="https://docs.google.com/forms/d/e/1FAIpQLSfCYgfd-XkSRHJdWbzAJCPwBOTCFpWn3HZSX4Akf3MfDLMxzQ/formResponse"
-        data-entry-id="entry.1791572614"
-        onclick="submitForm('about-email', this)">Get early access &rarr;</button>
+    <span class="tag reveal">Open source</span>
+    <h2 class="reveal">Read it, run it, <em>break it.</em></h2>
+    <p class="sub reveal">Duct is MIT licensed and runs on your own machine. Star the repo if it is useful, open an issue if it is not.</p>
+    <div class="reveal" style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:32px">
+      <a class="btn btn-orange btn-lg" href="https://github.com/5hirish/duct" rel="noopener">Star on GitHub →</a>
+      <a class="btn btn-lg" href="https://github.com/5hirish/duct#quickstart" rel="noopener" style="border:1px solid var(--border);color:var(--navy)">Run it yourself →</a>
     </div>
-    <p class="hero-footnote">Free during beta &middot; No credit card &middot; Setup in under 5 minutes</p>
+    <p class="hero-footnote">MIT licensed &middot; Bring your own model keys &middot; No account needed to run it locally</p>
   </div>
 </section>
 

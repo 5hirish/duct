@@ -115,6 +115,26 @@ helped so a reviewer knows where to look hardest, not to penalise it.
 
 Security issues do **not** go in a public issue: see [SECURITY.md](SECURITY.md).
 
+## Community
+
+Questions, ideas and "why is it built this way" go in
+[**Discussions**](https://github.com/5hirish/duct/discussions). Bugs and
+concrete proposals go in [Issues](https://github.com/5hirish/duct/issues).
+There is no Discord yet, deliberately: an empty chat room is a worse signal
+than no chat room, and an answer in Discussions is one anybody can find later.
+
+[**The Duct Doctrine**](https://getduct.ai/doctrine) is the short version of
+what this project believes and why, each tenet linked to the file that enforces
+it. Start there if you want to know whether you would enjoy contributing before
+you read any code.
+
+I also write and record about the parts of this that generalise — agent memory,
+approval gates, running models locally:
+
+- [youtube.com/@5hirish](https://youtube.com/@5hirish)
+- [shirishkadam.com](https://shirishkadam.com)
+- [@5hirish](https://x.com/5hirish)
+
 ## License
 
 MIT — see [LICENSE](LICENSE), including its exceptions for third-party

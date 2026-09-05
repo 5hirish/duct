@@ -45,6 +45,7 @@ another port (the tests assume 8090).
 | `https://getduct.ai/for-product-intelligence` | `site/for-product-intelligence.html` |
 | `https://getduct.ai/for-organic-growth` | `site/for-organic-growth.html` |
 | `https://getduct.ai/for-paid-ads` | `site/for-paid-ads.html` |
+| `https://getduct.ai/doctrine` | `site/doctrine.html` |
 | `https://getduct.ai/blog/` | `site/blog/index.html` |
 | `https://getduct.ai/blog/post?slug=SLUG` | `site/blog/post.html` |
 

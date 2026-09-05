@@ -24,6 +24,8 @@ Duct is designed for product managers, growth leads, and marketing teams at 20â€
 - [For Product Intelligence](https://getduct.ai/for-product-intelligence): How Duct connects Mixpanel, Intercom, Linear, and Salesforce into a daily PM brief with cross-tool correlations and anomaly alerts.
 - [For Organic Growth](https://getduct.ai/for-organic-growth): How Duct surfaces SEO and content performance signals from Search Console, Ahrefs, and GA4 into a weekly action brief.
 - [For Paid Ads](https://getduct.ai/for-paid-ads): How Duct unifies Google Ads, Meta, LinkedIn, and X signals into one paid performance brief with cross-channel recommendations.
+- [Doctrine](https://getduct.ai/doctrine): The seven opinions Duct is built on, each linked to the file that enforces it â€” approval-gated execution, renting rather than marrying an agent harness, membership-based authorization, and why agent-written contributions are welcome.
+- [About](https://getduct.ai/about): Duct is built and maintained by Shirish Kadam in Valencia, Spain. MIT licensed.
 - [Blog](https://getduct.ai/blog/): Articles on product intelligence, SEO strategy, and growth analytics for SaaS teams.
 
 ## Blog posts
