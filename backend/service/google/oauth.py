@@ -2,9 +2,24 @@
 
 from __future__ import annotations
 
-from google_auth_oauthlib.flow import Flow
+import os
 
-from config import get_configs
+# oauthlib raises when the granted scope differs from the requested one, which
+# turns "the user unticked one box on Google's consent screen" into a bare
+# "OAuth token exchange failed" 502 — GA4 asks for analytics.edit alongside
+# readonly, GTM asks for three, and declining any of them is a reasonable thing
+# to do. Relaxing it lets the connection succeed with fewer permissions.
+#
+# This is only safe because the grant is now RECORDED (routes/auth.py reads it
+# off the token response into connector_credentials.granted_scopes) and shown.
+# Relaxing without recording would mean silently accepting a downgrade nobody
+# can see, which is strictly worse than failing. Set before the first flow is
+# built: oauthlib reads the environment at parse time.
+os.environ.setdefault("OAUTHLIB_RELAX_TOKEN_SCOPE", "1")
+
+from google_auth_oauthlib.flow import Flow  # noqa: E402 — must follow the env var
+
+from config import get_configs  # noqa: E402
 
 # Use canonical URLs so token response scopes match (avoids "Scope has changed" from
 # google-auth when Google returns userinfo.* URLs vs short "email"/"profile" names).

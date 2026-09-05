@@ -1,0 +1,217 @@
+[
+  {
+    "event": "pipeline_started",
+    "status": "running",
+    "autonomy": "ask",
+    "autonomy_configured": "assisted"
+  },
+  {
+    "event": "memory_recalled",
+    "memories": [
+      {
+        "id": "m1",
+        "memory_id": "11111111-1111-1111-1111-111111111111",
+        "title": "CPA target is €12",
+        "kind": "target"
+      }
+    ]
+  },
+  {
+    "event": "todo_update",
+    "todos": [
+      {
+        "content": "Pull Ads campaigns",
+        "status": "in_progress"
+      },
+      {
+        "content": "Write the brief",
+        "status": "pending"
+      }
+    ]
+  },
+  {
+    "event": "step_started",
+    "step_id": "collect_source_data",
+    "label": "google ads campaigns · 2026-08-01 → 2026-08-31",
+    "status": "running"
+  },
+  {
+    "event": "step_finished",
+    "step_id": "collect_source_data",
+    "label": "google ads campaigns · 2026-08-01 → 2026-08-31",
+    "status": "success",
+    "connector_id": "google_ads"
+  },
+  {
+    "event": "thinking_chunk",
+    "text": "The user asked about CPA; "
+  },
+  {
+    "event": "thinking_chunk",
+    "text": "I should confirm the goal first."
+  },
+  {
+    "event": "agent_message_chunk",
+    "text": "Before I dig in, one thing: "
+  },
+  {
+    "event": "questions_required",
+    "questions": [
+      {
+        "question": "Which goal matters most?",
+        "header": "Goal",
+        "options": [
+          {
+            "label": "Signups"
+          },
+          {
+            "label": "Revenue"
+          }
+        ]
+      }
+    ],
+    "interrupt_id": "int_a1"
+  },
+  {
+    "event": "message_stop"
+  },
+  {
+    "event": "questions_required",
+    "questions": [
+      {
+        "question": "Which goal matters most?",
+        "header": "Goal",
+        "options": [
+          {
+            "label": "Signups"
+          },
+          {
+            "label": "Revenue"
+          }
+        ]
+      }
+    ],
+    "interrupt_id": "int_a1",
+    "replay": true
+  },
+  {
+    "event": "token_usage",
+    "input_tokens": 38000,
+    "output_tokens": 700,
+    "cache_read_tokens": 0,
+    "cache_creation_tokens": 0,
+    "total_tokens": 38700,
+    "model": "claude-sonnet-5",
+    "context_window": 200000,
+    "scope": "thread"
+  },
+  {
+    "__answer__": {
+      "Which goal matters most?": "Signups"
+    }
+  },
+  {
+    "event": "model_retrying",
+    "attempt": 1,
+    "max_attempts": 4,
+    "code": "overloaded",
+    "retry_in": 2.0
+  },
+  {
+    "event": "context_compacting"
+  },
+  {
+    "event": "context_compacted"
+  },
+  {
+    "event": "agent_message_chunk",
+    "text": "Signups it is. Here is what I found."
+  },
+  {
+    "event": "artifact_chunk",
+    "text": "---\ntitle: Signups brief\n---\n# Signups\n"
+  },
+  {
+    "event": "artifact_version",
+    "version_id": 1,
+    "label": "Version 1",
+    "payload": {
+      "title": "Signups brief",
+      "format": "markdown",
+      "content": "# Signups\n"
+    }
+  },
+  {
+    "event": "execution_proposed",
+    "change_set": {
+      "change_set_id": "cs_1",
+      "id": "cs_1",
+      "title": "Pause two campaigns bleeding CPA",
+      "status": "proposed",
+      "connector_type": "google_ads",
+      "account_id": "123-456-7890",
+      "account_name": "Demo Ads",
+      "source": "insights",
+      "auto_apply_eligible": false,
+      "applied_by": null,
+      "context": "Both campaigns are 3x over the €12 CPA target with no conversions in 14 days.",
+      "changes": [
+        {
+          "id": "c1",
+          "op_type": "pause_campaign",
+          "summary": "Pause campaign · Brand — generic",
+          "destructive": false
+        },
+        {
+          "id": "c2",
+          "op_type": "pause_campaign",
+          "summary": "Pause campaign · Competitors — broad",
+          "destructive": false
+        }
+      ]
+    }
+  },
+  {
+    "event": "agent_message_chunk",
+    "text": " I proposed two changes above."
+  },
+  {
+    "event": "message_stop"
+  },
+  {
+    "event": "token_usage",
+    "input_tokens": 71000,
+    "output_tokens": 900,
+    "cache_read_tokens": 0,
+    "cache_creation_tokens": 0,
+    "total_tokens": 71900,
+    "model": "claude-sonnet-5",
+    "context_window": 200000,
+    "scope": "thread"
+  },
+  {
+    "event": "pipeline_finished",
+    "status": "success"
+  },
+  {
+    "__send__": "and what about mobile?"
+  },
+  {
+    "event": "agent_message_chunk",
+    "text": "Mobile CPA is flat."
+  },
+  {
+    "event": "message_stop"
+  },
+  {
+    "event": "token_usage",
+    "input_tokens": 83000,
+    "output_tokens": 900,
+    "cache_read_tokens": 0,
+    "cache_creation_tokens": 0,
+    "total_tokens": 83900,
+    "model": "claude-sonnet-5",
+    "context_window": 200000,
+    "scope": "thread"
+  }
+]

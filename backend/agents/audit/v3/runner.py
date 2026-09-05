@@ -48,7 +48,7 @@ from agents.audit.schema import (
 )
 from agents.core import claude_sdk as _sdk
 from agents.core import session as _core_session
-from agents.core.session import bridge_ask_user_question, register_session
+from agents.core.session import bridge_ask_user_question, register_session, take_client_id
 from agents.core.stream import DuctArtifactStreamParser, pump_stream_event
 from agents.engines import Engine, get_env_var_for_engine_provider
 from agents.engines import ENGINE_DEFAULT_EFFORT
@@ -885,6 +885,11 @@ async def run_synthesis(
                     break
                 if chat_msg is None:
                     break
+
+                chat_msg, client_id = take_client_id(chat_msg)
+                if client_id:
+                    # Sent while the last turn ran; its row loses the "queued" mark now.
+                    await emit({"event": AuditEvent.USER_INPUT_CONSUMED, "client_message_id": client_id})
 
                 async def _chat_msg_gen(m=chat_msg):
                     yield {"type": "user", "message": m}

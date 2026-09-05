@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { AUTH_TOKEN_KEY, decodeJwtPayload, isTokenValid } from "./authFetch";
+import { authToken, clearAuthToken, decodeJwtPayload, isTokenValid } from "./authFetch";
 
 const AuthContext = createContext(null);
 
@@ -13,7 +13,7 @@ export function AuthProvider({ children }) {
   const router = useRouter();
 
   useEffect(() => {
-    const stored = localStorage.getItem(AUTH_TOKEN_KEY);
+    const stored = authToken();
     if (isTokenValid(stored)) {
       const payload = decodeJwtPayload(stored);
       setToken(stored);
@@ -27,7 +27,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const signOut = useCallback(() => {
-    localStorage.removeItem(AUTH_TOKEN_KEY);
+    clearAuthToken();
     setUser(null);
     setToken(null);
     router.replace("/");

@@ -50,6 +50,18 @@ npm --prefix site run test:e2e:ui
 
 In CI, the `Site Checks` workflow runs these smoke tests and uploads Playwright artifacts on failures.
 
+## Social preview
+
+`assets/og-image.png` is the `og:image` for all 23 pages. It is generated, not
+hand-drawn — edit `scripts/social/template.html` and re-run:
+
+```bash
+node scripts/social/render.mjs
+```
+
+That also writes `.github/social-preview.png`, the GitHub repository card, which
+has to be uploaded by hand at Settings → Social preview.
+
 ## Conventions
 
 - pure HTML/CSS/JS only
@@ -59,5 +71,6 @@ In CI, the `Site Checks` workflow runs these smoke tests and uploads Playwright 
 
 ## Agent guidance
 
-- Cursor subdirectory instructions: `site/AGENTS.md`
-- Claude Code subdirectory instructions: `site/CLAUDE.md`
+Conventions for this directory: [`AGENTS.md`](AGENTS.md) — canonical links,
+shared assets, sitemap entries and GTM handling all have hard rules there.
+`CLAUDE.md` is a symlink to the same file.

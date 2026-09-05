@@ -22,6 +22,12 @@ from typing import Any
 from service.execution.registry import ExecutorSpec, register_executor
 from service.google.fetch import _build_client, _norm_customer_id, _run_query
 
+# Google Ads asks for one scope and it covers both reading and writing, so a
+# connected account can always run these. Declared anyway: the check should
+# read the same way for every connector, and silence here would look like an
+# omission rather than a fact.
+_ADS = frozenset({"https://www.googleapis.com/auth/adwords"})
+
 _MATCH_TYPES = {"BROAD", "PHRASE", "EXACT"}
 # REMOVED is deliberately absent: removal is irreversible in Google Ads.
 _SETTABLE_STATUSES = {"ENABLED", "PAUSED"}
@@ -229,6 +235,7 @@ register_executor(
     ExecutorSpec(
         op_type="google_ads.add_negative_keywords",
         connector_type="google_ads",
+        required_scopes=_ADS,
         label="Add negative keywords",
         preview=_negatives_preview,
         apply=_negatives_apply,
@@ -240,6 +247,7 @@ register_executor(
     ExecutorSpec(
         op_type="google_ads.pause_campaign",
         connector_type="google_ads",
+        required_scopes=_ADS,
         label="Pause campaign",
         preview=_pause_preview,
         apply=_pause_apply,
@@ -862,6 +870,7 @@ register_executor(
     ExecutorSpec(
         op_type="google_ads.set_campaign_status",
         connector_type="google_ads",
+        required_scopes=_ADS,
         label="Set campaign status",
         preview=_campaign_status_preview,
         apply=_campaign_status_apply,
@@ -873,6 +882,7 @@ register_executor(
     ExecutorSpec(
         op_type="google_ads.set_ad_group_status",
         connector_type="google_ads",
+        required_scopes=_ADS,
         label="Set ad group status",
         preview=_ad_group_status_preview,
         apply=_ad_group_status_apply,
@@ -884,6 +894,7 @@ register_executor(
     ExecutorSpec(
         op_type="google_ads.set_keyword_status",
         connector_type="google_ads",
+        required_scopes=_ADS,
         label="Set keyword status",
         preview=_keyword_status_preview,
         apply=_keyword_status_apply,
@@ -895,6 +906,7 @@ register_executor(
     ExecutorSpec(
         op_type="google_ads.add_keywords",
         connector_type="google_ads",
+        required_scopes=_ADS,
         label="Add keywords",
         preview=_add_keywords_preview,
         apply=_add_keywords_apply,
@@ -906,6 +918,7 @@ register_executor(
     ExecutorSpec(
         op_type="google_ads.set_campaign_budget",
         connector_type="google_ads",
+        required_scopes=_ADS,
         label="Set campaign daily budget",
         preview=_budget_preview,
         apply=_budget_apply,
@@ -917,6 +930,7 @@ register_executor(
     ExecutorSpec(
         op_type="google_ads.set_campaign_bidding",
         connector_type="google_ads",
+        required_scopes=_ADS,
         label="Set campaign bidding (tCPA/tROAS)",
         preview=_bidding_preview,
         apply=_bidding_apply,

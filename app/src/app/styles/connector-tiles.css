@@ -12,7 +12,12 @@
   align-items: stretch;
 }
 
+/* A container with one stretched button inside it, not a <button> itself.
+   The tile carries a tooltip trigger in its foot, and a button inside a button
+   is invalid HTML the parser rewrites before React can hydrate it. See
+   AGENTS.md, "Anything clickable is a <button>". */
 .conn-tile {
+  position: relative;
   display: grid;
   grid-template-columns: 40px 1fr;
   gap: 0.875rem;
@@ -23,27 +28,54 @@
   border-radius: 16px;
   background: var(--card);
   color: var(--card-foreground);
-  cursor: pointer;
   transition:
     border-color 0.15s ease,
     box-shadow 0.15s ease,
     transform 0.15s ease;
 }
 
-.conn-tile:hover:not(:disabled) {
+.conn-tile:not(.is-disabled) {
+  cursor: pointer;
+}
+
+.conn-tile:not(.is-disabled):hover {
   border-color: color-mix(in oklch, var(--primary) 45%, var(--border));
   box-shadow: 0 6px 20px -12px oklch(0 0 0 / 0.35);
   transform: translateY(-1px);
 }
 
-.conn-tile:focus-visible {
+/* The ring belongs on the card, not on the six characters of the title that
+   happen to be the focusable element. */
+.conn-tile:has(.conn-tile-open:focus-visible) {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
 
-.conn-tile:disabled {
+.conn-tile.is-disabled {
   cursor: default;
   opacity: 0.6;
+}
+
+/* The title is the button; the card is its hit area. */
+.conn-tile-open {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.conn-tile-open::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.conn-tile-open:focus-visible {
+  outline: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -52,7 +84,7 @@
     transition: none;
   }
 
-  .conn-tile:hover:not(:disabled) {
+  .conn-tile:not(.is-disabled):hover {
     transform: none;
   }
 }
@@ -105,14 +137,14 @@
   transition: transform 0.15s ease;
 }
 
-.conn-tile:hover:not(:disabled) .conn-tile-chevron {
+.conn-tile:not(.is-disabled):hover .conn-tile-chevron {
   transform: translateX(2px);
   color: var(--foreground);
 }
 
 .conn-tile-desc {
   margin: 0;
-  font-size: 0.78125rem;
+  font-size: 0.75rem;
   line-height: 1.45;
   color: var(--muted-foreground);
   display: -webkit-box;
@@ -136,6 +168,23 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  /* Shrinks but never grows, so it stays beside its dot instead of claiming
+     the slack: the row reads "• Connected ......... [where it lives]", one
+     group per end, rather than one long stretched sentence. */
+  flex: 0 1 auto;
+  /* Shrink all the way. A 4.5rem floor kept it from ever getting small enough
+     to sit beside a long name on one line, which is what forced the wrap. */
+  min-width: 0;
+}
+
+/* One line, always. Wrapping was deliberate — "the two wrap rather than
+   truncate once the tile is genuinely too narrow" — and looked fine for
+   "Connected". A real account name proved it wrong: flex wraps on base size
+   before it shrinks, so a long nowrap status pushed itself to a second line,
+   orphaned the dot on the first and stranded the storage glyph on a third.
+   The text already carries an ellipsis; truncating is what it is for. */
+.conn-tile-foot {
+  flex-wrap: nowrap;
 }
 
 .conn-dot {
@@ -147,17 +196,17 @@
 }
 
 .conn-dot--on {
-  background: #16a34a;
-  box-shadow: 0 0 0 3px color-mix(in oklch, #16a34a 20%, transparent);
+  background: var(--success);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--success) 20%, transparent);
 }
 
 .conn-dot--partial {
-  background: #eab308;
-  box-shadow: 0 0 0 3px color-mix(in oklch, #eab308 20%, transparent);
+  background: var(--warning);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--warning) 20%, transparent);
 }
 
 .conn-tile-foot--on {
-  color: color-mix(in oklch, #16a34a 70%, var(--foreground));
+  color: color-mix(in oklch, var(--success) 70%, var(--foreground));
 }
 
 /* Dialog interior — shared by every connector's configure sheet */
@@ -178,9 +227,37 @@
   border-top: 1px solid var(--border);
 }
 
+/* The first section sits under the header, which already provides the
+   separation the rule and its padding exist to draw. Keeping the padding as
+   well put 32px of measured nothing between the description and the first
+   control. */
 .conn-dialog-section:first-child {
   border-top: 0;
   margin-top: 0;
+  padding-top: 0;
+}
+
+/* Dialog body. `DialogContent` is a flex column with no gap of its own, so the
+   distance from the header is set here once rather than as an inline
+   `marginTop` on the wrapper. */
+.conn-dialog-body {
+  margin-top: 1rem;
+}
+
+/* shadcn's DialogFooter already lays the row out (reversed on narrow, right
+   aligned from sm up). This only adds the separation from the body, matching
+   the rule between sections above. */
+.conn-dialog-footer {
+  margin-top: 1.125rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--border);
+}
+
+/* The description was carrying three inline style properties. */
+.conn-dialog-desc {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
 }
 
 .conn-field {
@@ -204,7 +281,7 @@
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--muted);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
 }
 
 /* Non-clickable sibling of .conn-tile — same shell, its own control inline
@@ -226,3 +303,425 @@
   -webkit-line-clamp: unset;
 }
 
+
+/* Section headings inside a connector dialog.
+
+   The dialog was a flat run of controls separated only by rules, so
+   "Permissions" and the account picker read as one undifferentiated column and
+   nothing said which parts were about the connection versus this project. */
+.conn-dialog-heading {
+  margin: 0;
+  /* text-sm, the same size as the `Label` of the first field under it. The
+     level is carried by weight and colour, not by size: this was 13px against
+     the shadcn Label's 14px, which inverted the hierarchy outright — the field
+     label read as more important than the section it sits inside. */
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: -0.006em;
+  color: var(--foreground);
+}
+
+/* --- entity picker ------------------------------------------------------- */
+
+.conn-entity-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 0.875rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.conn-entity-trigger:hover:not(:disabled) {
+  background: color-mix(in oklch, var(--foreground) 4%, var(--background));
+}
+
+.conn-entity-trigger:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.conn-entity-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conn-entity-placeholder {
+  color: var(--muted-foreground);
+}
+
+.conn-entity-panel {
+  z-index: 60;
+  width: var(--radix-popover-trigger-width);
+  /* Not a fixed height: a user with two properties should get a box the size of
+     two properties, and one with sixty should still get a bounded list. */
+  max-height: min(20rem, var(--radix-popover-content-available-height));
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--popover, var(--background));
+  box-shadow: 0 10px 30px -10px rgb(0 0 0 / 0.35);
+  overflow: hidden;
+}
+
+.conn-entity-search {
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.conn-entity-list {
+  overflow-y: auto;
+  padding: 0.25rem;
+}
+
+.conn-entity-option {
+  /* avatar | text | tick. The text column holds up to three stacked rows —
+     name, subtitle, chips — so the avatar and the tick span all of them and
+     the rows stay on one left rail however many a given connector supplies. */
+  display: grid;
+  grid-template-columns: 1.25rem minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.125rem 0.5rem;
+  width: 100%;
+  padding: 0.4375rem 0.5rem;
+  border: 0;
+  border-radius: 0.375rem;
+  background: transparent;
+  color: var(--foreground);
+  font-size: 0.875rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.conn-entity-option:hover,
+.conn-entity-option:focus-visible {
+  background: color-mix(in oklch, var(--foreground) 6%, transparent);
+}
+
+/* Selection is not a status, so it does not take a status colour. A green wash
+   over a three-line row read as "this one is healthy" rather than "this one is
+   picked", and put a second green thing beside the tick that already says it. */
+.conn-entity-option.is-active {
+  background: color-mix(in oklch, var(--foreground) 8%, transparent);
+}
+
+.conn-entity-option-main {
+  grid-column: 2;
+  font-weight: 500;
+  line-height: 1.25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conn-entity-option-sub {
+  grid-column: 2;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--muted-foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conn-entity-check {
+  grid-row: 1;
+  grid-column: 3;
+  align-self: center;
+  color: var(--success);
+}
+
+/* The favicon, or the monogram standing in for one. Square and on the same
+   rail as the tick so a list mixing sites with plain accounts stays aligned
+   rather than ragged. */
+.conn-entity-avatar {
+  grid-column: 1;
+  grid-row: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  border-radius: 0.25rem;
+  background: var(--muted);
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  overflow: hidden;
+}
+
+.conn-entity-avatar img {
+  width: 1rem;
+  height: 1rem;
+  display: block;
+  object-fit: contain;
+}
+
+/* Short facts the connector sent — a currency, a region, an id. Values only:
+   the label is the tooltip, because "USD" reads on its own and
+   "Currency: USD" costs the line the subtitle needs. */
+.conn-entity-option-facts {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.125rem;
+  min-width: 0;
+}
+
+.conn-entity-fact {
+  padding: 0.0625rem 0.3125rem;
+  border-radius: 0.25rem;
+  background: var(--muted);
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+/* The trigger echoes the row it selected, favicon included, so the closed
+   control and the open list read as the same object. */
+.conn-entity-trigger-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.conn-entity-note {
+  margin: 0;
+  padding: 0.75rem 0.5rem;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+.conn-entity-note-error {
+  color: var(--destructive);
+}
+
+.conn-entity-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.conn-entity-link {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+
+.conn-entity-link:hover {
+  color: var(--foreground);
+  text-decoration: underline;
+}
+
+
+/* The scope list was a run of paragraphs with no left rail, so the tick, the
+   name and the justification all started at different places depending on
+   wrapping. */
+.conn-dialog-section .conn-hint {
+  margin: 0;
+}
+
+
+/* --- state, said with as little as possible ------------------------------ */
+
+/* The storage answer as a glyph. Sits in the badge row next to the status dot;
+   the sentence lives in its tooltip, which is where a sentence belongs when
+   the row beside it is a single coloured dot. */
+.conn-storage-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0.375rem;
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: help;
+}
+
+.conn-storage-icon:hover,
+.conn-storage-icon:focus-visible {
+  background: color-mix(in oklch, var(--foreground) 7%, transparent);
+  color: var(--foreground);
+}
+
+/* Only the state that needs attention takes a colour. Green would put a third
+   reassuring green thing on a card that already has a green dot. */
+.conn-storage-icon.tone-yellow {
+  color: var(--warning);
+}
+
+.conn-tile-foot .conn-storage-icon {
+  /* Above the title button's stretched ::after — otherwise the card eats the
+     hover and the tooltip never opens. */
+  position: relative;
+  z-index: 1;
+  width: 1.5rem;
+  height: 1.5rem;
+  /* The other end of the row. It answers a different question from the status
+     beside the dot, and reads as a separate answer when it is not touching it. */
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+
+/* --- status beside the title -------------------------------------------- */
+
+.conn-dialog-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.conn-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+  flex-shrink: 0;
+}
+
+/* Equal square slots for glyphs of unequal size. Measured before this: the dot
+   rendered a 7x7 box and the storage icon a 24x24 one, so they shared a
+   vertical centre and nothing else — no common rail, and uneven optical gaps
+   because only one of them had internal padding. */
+.conn-state-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* 24px, not the 20px this was: the sibling slot holds a focusable button and
+     WCAG 2.5.8 puts the floor for an interactive target at 24x24 CSS px
+     (DESIGN.md, "Density is a desktop feature with a floor"). The glyph inside
+     stays optically small; the target does not. */
+  width: 1.5rem;
+  height: 1.5rem;
+  flex-shrink: 0;
+}
+
+/* Same rail as the dot's slot, same 24px floor. */
+.conn-state .conn-storage-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+
+/* --- permissions --------------------------------------------------------- */
+
+/* The heading and the answer on one line. The answer is the reason the section
+   is open, so it does not wait until after the list. */
+.conn-perm-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.conn-perm-summary {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+}
+
+.conn-perm-group {
+  display: grid;
+  gap: 0.375rem;
+}
+
+/* Access level as structure rather than as a pill repeated on every row. Two
+   of these however many scopes a connector adds. */
+.conn-perm-group-label {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.conn-perm-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.625rem;
+}
+
+.conn-perm {
+  display: grid;
+  grid-template-columns: 1.25rem minmax(0, 1fr);
+  gap: 0.5rem;
+}
+
+/* Same trick as the status row: a fixed square so a 15px glyph and a 20px one
+   share a rail instead of each finding its own centre. */
+.conn-perm-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  /* Matches .conn-perm-label's line box, so the icon centres on the first line
+     of the label and not on the whole wrapped block. */
+  height: 1.25rem;
+  color: var(--muted-foreground);
+}
+
+.conn-perm-text {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 0.5rem;
+}
+
+.conn-perm-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  color: var(--foreground);
+}
+
+.conn-perm-text .conn-hint {
+  flex-basis: 100%;
+}
+
+/* A declined scope is muted *and* labelled — colour is never the only channel
+   (WCAG 1.4.1). */
+.conn-perm.is-declined .conn-perm-label,
+.conn-perm.is-declined .conn-perm-glyph {
+  color: var(--muted-foreground);
+}
+
+.conn-perm-state {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--muted-foreground);
+}
+
+.conn-perm-state.is-required {
+  color: var(--warning);
+}

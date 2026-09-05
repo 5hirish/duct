@@ -1,0 +1,19 @@
+[
+  {"event": "pipeline_started", "status": "running", "channel": "linkedin", "channel_supported": false, "channel_label": "LinkedIn"},
+  {"event": "step_started", "step_id": "load_project", "label": "Loading project", "status": "running"},
+  {"event": "step_finished", "step_id": "load_project", "status": "success"},
+  {"event": "step_started", "step_id": "enriching", "label": "Researching trends + history", "status": "running"},
+  {"event": "step_started", "step_id": "dispatch_subagent:research_pillar", "label": "Sub-agent", "status": "running"},
+  {"event": "step_finished", "step_id": "dispatch_subagent:research_pillar", "status": "success"},
+  {"event": "step_finished", "step_id": "enriching", "status": "success"},
+  {"event": "todo_update", "todos": [{"content": "Map 30 days", "status": "in_progress", "activeForm": "Mapping 30 days"}]},
+  {"event": "thinking_chunk", "text": "Balancing pillars…"},
+  {"event": "agent_message_chunk", "text": "Here is your plan."},
+  {"event": "plan_generated", "payload": {"id": "plan_1", "name": "September", "days": []}},
+  {"event": "message_stop"},
+  {"event": "pipeline_finished", "status": "success", "plan_id": "plan_1"},
+  {"__send__": "make day 3 about pricing"},
+  {"event": "agent_message_chunk", "text": "Done — day 3 is now pricing."},
+  {"event": "post_draft_updated", "payload": {"id": "post_9", "slides": []}},
+  {"event": "message_stop"}
+]

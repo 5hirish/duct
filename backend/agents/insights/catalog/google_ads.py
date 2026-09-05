@@ -16,7 +16,7 @@ ENTITY_CATALOG = {
         {
             "entity_id": "campaign_performance",
             "label": "Campaign Performance",
-            "tool": "fetch_campaign_performance",
+            "fetch_fn": "fetch_campaign_performance",
             "description": (
                 "Per-campaign spend, clicks, impressions, conversions, conversion value, "
                 "ROAS, CPA, and period comparison."
@@ -42,7 +42,7 @@ ENTITY_CATALOG = {
         {
             "entity_id": "search_terms",
             "label": "Search Terms",
-            "tool": "fetch_search_terms",
+            "fetch_fn": "fetch_search_terms",
             "description": "Top search terms by spend with match type and efficiency metrics.",
             "fields": {
                 "search_term": {"type": "dimension", "label": "Search Term"},
@@ -61,7 +61,7 @@ ENTITY_CATALOG = {
         {
             "entity_id": "device_performance",
             "label": "Device Performance",
-            "tool": "fetch_device_performance",
+            "fetch_fn": "fetch_device_performance",
             "description": "Campaign by device segmentation with efficiency signals.",
             "fields": {
                 "campaign_name": {"type": "dimension"},
@@ -75,7 +75,7 @@ ENTITY_CATALOG = {
         {
             "entity_id": "geo_performance",
             "label": "Geographic Performance",
-            "tool": "fetch_geo_performance",
+            "fetch_fn": "fetch_geo_performance",
             "description": "Geographic breakdown by campaign with spend and conversion efficiency.",
             "fields": {
                 "campaign_name": {"type": "dimension"},
@@ -89,7 +89,7 @@ ENTITY_CATALOG = {
         {
             "entity_id": "ad_group_performance",
             "label": "Ad Group Performance",
-            "tool": "fetch_ad_group_performance",
+            "fetch_fn": "fetch_ad_group_performance",
             "description": "Ad group level performance for deeper optimization within campaigns.",
             "fields": {
                 "campaign_name": {"type": "dimension"},

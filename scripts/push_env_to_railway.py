@@ -41,7 +41,32 @@ def main() -> int:
         action="store_true",
         help="After setting variables, do not run railway redeploy",
     )
+    # Which environment a secret lands in must never be implicit.
+    #
+    # Without these the target was whatever `railway link` happened to point at
+    # last, which is invisible at the call site and silently wrong: pushing
+    # `.env.prod` while linked to staging writes production's secrets into
+    # staging, and the two environments already shared a JWT secret precisely
+    # because nothing here ever had to name one. Still optional, so the linked
+    # context keeps working — but the resolved target is printed before the
+    # first write either way, so a mistake is visible before it is made.
+    parser.add_argument(
+        "--environment",
+        default="",
+        help="Railway environment to write to (default: whatever is linked)",
+    )
+    parser.add_argument(
+        "--service",
+        default="",
+        help="Railway service to write to (default: whatever is linked)",
+    )
     args = parser.parse_args()
+
+    target = []
+    if args.environment:
+        target += ["--environment", args.environment]
+    if args.service:
+        target += ["--service", args.service]
 
     path = args.file.resolve()
     if not path.is_file():
@@ -54,12 +79,17 @@ def main() -> int:
         return 1
 
     backend_dir = ROOT / "backend"
+    print(
+        f"target: environment={args.environment or '<linked>'} "
+        f"service={args.service or '<linked>'}  ({len(data)} keys from {path.name})",
+        file=sys.stderr,
+    )
     for key, value in sorted(data.items()):
         if not value.strip():
             print(f"skip empty: {key}", file=sys.stderr)
             continue
         if args.dry_run:
-            print(f"[dry-run] railway variable set {key} --stdin --skip-deploys")
+            print(f"[dry-run] railway variable set {key} --stdin --skip-deploys {' '.join(target)}")
             continue
         subprocess.run(
             [
@@ -69,6 +99,7 @@ def main() -> int:
                 key,
                 "--stdin",
                 "--skip-deploys",
+                *target,
             ],
             input=value.encode("utf-8"),
             cwd=backend_dir,
@@ -78,7 +109,7 @@ def main() -> int:
 
     if not args.dry_run and not args.no_redeploy:
         subprocess.run(
-            ["railway", "redeploy", "-y"],
+            ["railway", "redeploy", "-y", *target],
             cwd=backend_dir,
             check=True,
         )

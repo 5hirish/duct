@@ -8,6 +8,11 @@ All agent types share the same session lifecycle:
   GET    /api/agents/{type}/sessions/{id}        → session state
   DELETE /api/agents/{type}/sessions/{id}        → close session
 
+Persisted conversations (chat history / resume):
+  GET    /api/agents/{type}/conversations/{id}       → transcript for rehydration
+  GET    /api/agents/{type}/conversations/{id}/state → what its thread is doing:
+                                                        paused (and on what), unfinished, idle
+
 Discovery:
   GET    /api/agents             → list all agent specs
   GET    /api/agents/{type}      → single agent spec
@@ -63,6 +68,8 @@ from agents.insights.setup import (
 from agents.core import session as _core_session
 from agents.core.context import format_business_context
 from agents.core.events import AgentEvent, StepStatus
+from agents.core.errors import error_payload
+from agents.core.session import CLIENT_MESSAGE_ID
 from db.session import get_session as db_session
 from agents.engines import (
     resolve_engine,
@@ -121,6 +128,14 @@ def _close_and_consolidate(session_id: str) -> None:
     # which is exactly when it matters.
     if session is not None and getattr(session, "memory_off", False):
         conversation_id = None
+    # Before the run is cancelled: a turn still in flight is recorded as
+    # cancelled, so the list says "Stopped" and the transcript ends with why.
+    recorder = getattr(session, "recorder", None) if session else None
+    if recorder is not None:
+        try:
+            recorder.close()
+        except Exception:  # noqa: BLE001 - never let bookkeeping block a close
+            logger.debug("agents: recorder close failed for %s", session_id, exc_info=True)
     close_session(session_id)
     schedule_consolidation(conversation_id)
 
@@ -466,6 +481,15 @@ class AgentMessage(BaseModel):
     #   account_selection_required  -> {"account_id": "...", "account_name": "..."}
     # Values are Any rather than str because two of those carry booleans.
     answers: dict[str, Any] | None = None
+    # Which pause this answers, when the run is parked on a checkpointed
+    # interrupt (the event carried it). Two tools can pause in the same turn —
+    # an account for GA4 and one for GSC — and each is resumed by its own id.
+    # Omitted, the only pending pause is assumed; a Future-bridged session has
+    # no ids at all.
+    interrupt_id: str | None = None
+    # Stamped by the client on a chat message so the USER_INPUT_CONSUMED event
+    # can name the row it releases. Optional: older clients send none.
+    client_message_id: str | None = None
 
 
 @router.post("/{agent_type}/sessions/{session_id}/messages")
@@ -478,7 +502,11 @@ async def send_message(
     """Send a message into an active session.
 
     type="chat"   — follow-up question or image; queued to the agent's chat_queue.
-    type="answer" — answer to a pending AskUserQuestion; resolves the answer_future.
+    type="answer" — the reply to whatever the session is parked on. Two ways a
+                    run parks (agents/core/session.py): a checkpointed pause is
+                    resumed by queueing a ``{"resume": {id: answers}}`` the
+                    runner turns into a LangGraph Command; a Future-bridged one
+                    is resolved in place. The client cannot tell which.
     """
     session = _owned_session(session_id, agent_type, user)
 
@@ -487,10 +515,22 @@ async def send_message(
     _core_session.touch_session(session)
 
     recorder = getattr(session, "recorder", None)
+    pending = getattr(session, "pending_pauses", None) or {}
 
     if msg.type == "answer":
         if msg.answers is None:
             raise HTTPException(422, "answers field required for type='answer'")
+        if pending:
+            interrupt_id = msg.interrupt_id or next(iter(pending))
+            if interrupt_id not in pending:
+                raise HTTPException(409, "That question has already been answered")
+            # Popped here, not when the turn ends: a second POST for the same
+            # id in the gap would otherwise queue a resume for nothing.
+            pending.pop(interrupt_id, None)
+            await session.chat_queue.put({"resume": {interrupt_id: msg.answers}})  # type: ignore[attr-defined]
+            if recorder is not None:
+                await recorder.record_answer(msg.answers)
+            return {"status": "queued", "type": "answer"}
         fut = session.answer_future
         if not fut or getattr(fut, "done", lambda: True)():
             raise HTTPException(400, "No pending question for this session")
@@ -524,8 +564,22 @@ async def send_message(
             content = _prepend_context(content, primer)
         session.needs_reprime = False
 
-    await session.chat_queue.put({"role": "user", "content": content})  # type: ignore[attr-defined]
-    return {"status": "queued", "type": "chat"}
+    item: dict = {"role": "user", "content": content}
+    if msg.client_message_id:
+        item[CLIENT_MESSAGE_ID] = msg.client_message_id
+
+    # A message while the agent is busy — mid-turn, or parked on a card — is
+    # never refused. A harness that can steer takes it at its next model call
+    # (after the tool result a parked thread is waiting on); the others hold it
+    # for the next turn. The client marks the row "queued" until the
+    # USER_INPUT_CONSUMED event clears it.
+    busy = bool(pending) or getattr(session, "turn_active", False)
+    steer_queue = getattr(session, "steer_queue", None)
+    if busy and steer_queue is not None:
+        await steer_queue.put(item)
+        return {"status": "queued", "type": "chat", "delivery": "steer"}
+    await session.chat_queue.put(item)  # type: ignore[attr-defined]
+    return {"status": "queued", "type": "chat", "delivery": "queue" if busy else "turn"}
 
 
 def _inject_working_context(session: Any, content: str | list, version_id: int | None) -> str | list:
@@ -648,11 +702,18 @@ async def get_session_state(
         }
         for v in getattr(session, "report_versions", [])
     ]
+    pending = list((getattr(session, "pending_pauses", None) or {}).values())
+    parked_on = getattr(session, "parked_on", None)
+    if not pending and parked_on and session.answer_future is not None:
+        pending = [parked_on]
     return {
         "session_id": session_id,
         "agent_type": agent_type,
         "report_versions": versions,
-        "has_pending_question": session.answer_future is not None,
+        "has_pending_question": bool(pending) or session.answer_future is not None,
+        # The pauses the run is parked on, whichever way it parked — what a
+        # client that reattaches needs in order to put the card back on screen.
+        "pending": pending,
     }
 
 
@@ -691,6 +752,10 @@ def _conversation_summary(conv) -> dict:
         "artifact_id": str(conv.artifact_id) if conv.artifact_id else None,
         "title": conv.title,
         "status": conv.status,
+        # What the run is doing (RunStatus) and, when it stopped on a failure,
+        # the same {code, retryable, error} the live client was shown.
+        "run_status": conv.run_status,
+        "run_error": conv.run_error,
         "pinned": conv.pinned,
         "last_seq": conv.last_seq,
         "meta": conv.meta or {},
@@ -784,6 +849,31 @@ async def get_agent_conversation(
                 for e in events
             ],
         }
+
+
+@router.get("/{agent_type}/conversations/{conversation_id}/state")
+async def get_agent_conversation_state(
+    agent_type: str,
+    conversation_id: str,
+    user: User = Depends(get_current_user),
+) -> dict:
+    """What the conversation's durable thread is doing right now.
+
+    ``paused`` (with the pauses, so the card can be rendered before any session
+    exists), ``unfinished`` (a run was cut mid-turn and will continue on
+    resume), ``idle``, or ``unsupported`` for an agent whose state lives only in
+    a process — the Claude Agent SDK runners keep no thread to inspect.
+    """
+    with next(db_session()) as db:
+        conv = _conversation_for_user(db, user, agent_type, conversation_id)
+        conv_id = conv.id
+        run = {"run_status": conv.run_status, "run_error": conv.run_error}
+    if agent_type != AgentType.INSIGHTS:
+        return {"status": "unsupported", "pauses": [], "todos": [], **run}
+    from agents.insights.v1.runner import AutonomousInsightsRunner
+
+    # The key is never used: inspection builds the graph on a placeholder model.
+    return {**(await AutonomousInsightsRunner(api_key="").thread_state(conv_id)), **run}
 
 
 class ConversationPatch(BaseModel):
@@ -1266,7 +1356,7 @@ async def _start_seo_audit(
                 )
             except Exception as exc:
                 logger.exception("seo-audit resume error for session %s", session_id)
-                await emit_fn({"event": AuditEvent.PIPELINE_FAILED, "status": "error", "error": str(exc)})
+                await emit_fn({"event": AuditEvent.PIPELINE_FAILED, "status": "error", **error_payload(exc)})
 
         task = asyncio.create_task(resume_pipeline())
         if session:
@@ -1320,7 +1410,7 @@ async def _start_seo_audit(
             await emit_fn({"event": AuditEvent.PIPELINE_FINISHED, "status": "success"})
         except Exception as exc:
             logger.exception("seo-audit pipeline error for session %s", session_id)
-            await emit_fn({"event": AuditEvent.PIPELINE_FAILED, "status": "error", "error": str(exc)})
+            await emit_fn({"event": AuditEvent.PIPELINE_FAILED, "status": "error", **error_payload(exc)})
 
     task = asyncio.create_task(pipeline())
     session = get_session(session_id)
@@ -1424,9 +1514,13 @@ async def _start_insights(
                 exc_info=True,
             )
 
+    is_resume = bool(req.resume and conv_id is not None)
     if recorder is not None:
         emit_fn = recorder.wrap_emit(emit_fn)
-        if req.prompt and not getattr(session, "resume", False):
+        # The opening prompt is the first user turn; on a resume it is a
+        # follow-up typed into a thread the user is looking at. Either way it
+        # is a line of the transcript and has to be there when it rehydrates.
+        if req.prompt:
             try:
                 await recorder.record_user(req.prompt)
             except Exception:
@@ -1481,13 +1575,14 @@ async def _start_insights(
                 ),
                 autonomy=run.autonomy,
                 start_version=start_version,
+                resume=is_resume,
             )
         except Exception as exc:
             logger.exception("insights pipeline error for session %s", session_id)
             await emit_fn({
                 "event": AgentEvent.PIPELINE_FAILED,
                 "status": StepStatus.ERROR,
-                "error": str(exc),
+                **error_payload(exc),
             })
 
     task = asyncio.create_task(pipeline())

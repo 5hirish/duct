@@ -23,8 +23,13 @@ Design rules, each of which was a decision:
   fetch layer. There is no tool that returns a token.
 * **Never ask a question with one possible answer.** A single stored account is
   bound silently. Being asked to choose from a list of one is how a wizard feels.
-* **A pause is not an error.** Every bridge call can time out or be skipped, and
-  each tool returns a status the model can act on rather than raising.
+* **A pause is not an error.** Every pause can be skipped (or, on the in-process
+  bridge, time out), and each tool returns a status the model can act on
+  rather than raising.
+* **The tool body does not know how it pauses.** It is handed a ``PauseFn``
+  (``agents/core/session.py``) and the binder decides which one: the Future
+  bridge for an agent without a checkpointer, LangGraph's ``interrupt`` for one
+  with durable threads. Same body, same events, either way.
 * **Writes are narrow.** The only state these change is *which account this
   project uses* — a ``project_connectors`` binding, plus the account-specific
   credential row the Connections page would have written anyway. No tool here
@@ -47,7 +52,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 from agents.core.events import AgentEvent
-from agents.core.session import BaseAgentSession, bridge_user_input
+from agents.core.session import BaseAgentSession, PauseFn, make_future_pause
 from agents.core.telemetry import tool_span
 
 logger = logging.getLogger(__name__)
@@ -245,19 +250,28 @@ def build_connector_tools_lc(
     session_id: str = "",
     emit: Callable | None = None,
     log_prefix: str = "agent",
+    pause: PauseFn | None = None,
 ) -> list:
     """ListDataSources / SelectAccount / RequestConnection as LangChain tools.
 
     ``ListDataSources`` needs only a user; the two that write or pause need a
-    project and a live session as well, so a session without them gets the
+    project and a way to pause as well, so a session without them gets the
     read-only tool alone rather than tools that fail when called.
+
+    ``pause`` picks the pause implementation. Omitted, it is the in-process
+    Future bridge over ``session`` + ``emit``; a runner with durable threads
+    passes ``interrupt_pause`` and the session is then only needed for the
+    read-only tool's scoping.
     """
     from langchain_core.tools import StructuredTool
 
     if user_id is None:
         return []
 
-    can_pause = session is not None and emit is not None and project_id is not None
+    if pause is None and session is not None and emit is not None:
+        pause = make_future_pause(session, session_id, emit, log_prefix=log_prefix)
+    can_pause = pause is not None and project_id is not None
+    pause = pause if can_pause else None
 
     async def list_data_sources_tool() -> str:
         with tool_span(tool_name="ListDataSources", agent_name=log_prefix):
@@ -271,9 +285,7 @@ def build_connector_tools_lc(
             return json.dumps(
                 await _select_account(
                     connector_id, account_id,
-                    user_id=user_id, project_id=project_id,
-                    session=session, session_id=session_id, emit=emit,
-                    log_prefix=log_prefix, can_pause=can_pause,
+                    user_id=user_id, project_id=project_id, pause=pause,
                 ),
                 indent=2,
             )
@@ -283,9 +295,7 @@ def build_connector_tools_lc(
             return json.dumps(
                 await _request_connection(
                     connector_id, reason,
-                    user_id=user_id, project_id=project_id,
-                    session=session, session_id=session_id, emit=emit,
-                    log_prefix=log_prefix, can_pause=can_pause,
+                    user_id=user_id, project_id=project_id, pause=pause,
                 ),
                 indent=2,
             )
@@ -330,12 +340,11 @@ async def _select_account(
     *,
     user_id: UUID,
     project_id: UUID | None,
-    session: BaseAgentSession | None,
-    session_id: str,
-    emit: Callable | None,
-    log_prefix: str,
-    can_pause: bool,
+    pause: PauseFn | None,
 ) -> dict:
+    """``pause`` is None when nobody can answer — an unattended run, or a
+    session without a project — and the tool then reports the ambiguity
+    instead of parking."""
     source = await _run(_source_sync, connector_id, user_id=user_id, project_id=project_id)
     if isinstance(source, dict) and source.get("status") == "error":
         return source
@@ -396,20 +405,17 @@ async def _select_account(
                 "Ask the user to finish setting it up on the Connections page."
             ),
         }
-    if not can_pause:
+    if pause is None:
         return {"status": "ambiguous", "connector_id": connector_id, "candidates": candidates}
 
-    answer = await bridge_user_input(
-        session, session_id,
-        event=AgentEvent.ACCOUNT_SELECTION_REQUIRED,
-        payload={
+    answer = await pause(
+        AgentEvent.ACCOUNT_SELECTION_REQUIRED,
+        {
             "connector_id": connector_id,
             "label": source["label"],
             "candidates": candidates,
         },
-        emit=emit,
         timeout=SELECT_TIMEOUT,
-        log_prefix=log_prefix,
     )
     chosen = str(answer.get("account_id") or "").strip()
     if not chosen:
@@ -433,11 +439,7 @@ async def _request_connection(
     *,
     user_id: UUID,
     project_id: UUID | None,
-    session: BaseAgentSession | None,
-    session_id: str,
-    emit: Callable | None,
-    log_prefix: str,
-    can_pause: bool,
+    pause: PauseFn | None,
 ) -> dict:
     source = await _run(_source_sync, connector_id, user_id=user_id, project_id=project_id)
     if isinstance(source, dict) and source.get("status") == "error":
@@ -457,22 +459,19 @@ async def _request_connection(
                 + ("Call SelectAccount to choose an account." if source["status"] == "available" else "")
             ),
         }
-    if not can_pause:
+    if pause is None:
         return {"status": "not_connected", "connector_id": connector_id}
 
-    answer = await bridge_user_input(
-        session, session_id,
-        event=AgentEvent.CONNECTION_REQUIRED,
-        payload={
+    answer = await pause(
+        AgentEvent.CONNECTION_REQUIRED,
+        {
             "connector_id": connector_id,
             "label": source["label"],
             "auth_kind": source["auth_kind"],
             "authorize_path": _authorize_path(connector_id),
             "reason": reason,
         },
-        emit=emit,
         timeout=CONNECT_TIMEOUT,
-        log_prefix=log_prefix,
     )
     if answer.get("skipped") or not answer:
         return {

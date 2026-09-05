@@ -148,9 +148,27 @@ fn get_shell_info() -> serde_json::Value {
             // the web app may check for updates and offer to install one. The
             // App Store variant must never report this true — self-update is
             // grounds for rejection there.
-            "autoUpdate": cfg!(feature = "updater")
+            "autoUpdate": cfg!(feature = "updater"),
+            // The `notify` command exists, so the web app may hand "done" and
+            // "needs you" notices to the OS instead of the webview's missing
+            // Notification API. Older shells lack it and stay silent.
+            "notifications": true
         }
     })
+}
+
+/// Show a system notification. The web app decides *when* (only while the
+/// window is not focused — `app/src/lib/notify.js`); this only decides *how*,
+/// which on a remote origin cannot be the plugin's JS bindings for the same
+/// reason as the updater. Title and body are plain text from our own page.
+#[tauri::command]
+fn notify(app: AppHandle, title: String, body: Option<String>) -> Result<(), String> {
+    use tauri_plugin_notification::NotificationExt;
+    let mut builder = app.notification().builder().title(title);
+    if let Some(body) = body.filter(|b| !b.trim().is_empty()) {
+        builder = builder.body(body);
+    }
+    builder.show().map_err(|e| e.to_string())
 }
 
 /// Open a URL in the system's default browser. Restricted to http(s) so the
@@ -449,6 +467,7 @@ pub fn run() {
     builder
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_deep_link::init())
+        .plugin(tauri_plugin_notification::init())
         .manage(SidecarState::default())
         .on_menu_event(handle_menu_event)
         .setup(|app| {
@@ -498,6 +517,7 @@ pub fn run() {
             set_provider_key,
             delete_provider_key,
             get_shell_info,
+            notify,
             get_sidecar_info,
             open_external,
             check_for_update,

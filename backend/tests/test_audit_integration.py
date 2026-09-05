@@ -1,4 +1,7 @@
-"""Integration tests for the SEO audit pipeline.
+"""Integration tests for the SEO audit pipeline — every one marked ``live``.
+
+Nothing here runs from a plain ``pytest``: each test crawls a real site or
+spends real tokens, for minutes. Opt in with ``pytest -m live``.
 
 Three levels of coverage:
 
@@ -274,6 +277,10 @@ async def test_crawl_real_page():
 # Test 2 — Synthesis only, planted fixture (no network crawl)
 # ---------------------------------------------------------------------------
 
+# `live`: a real synthesis call, minutes long and paid for. The skipif alone was
+# the gate before, and `get_configs()` reads backend/.env.local — so a developer
+# (or an agent) with a key there fired this from `make test`.
+@pytest.mark.live
 @pytest.mark.skipif(not _HAS_API_KEY, reason="ANTHROPIC_API_KEY not set")
 async def test_run_synthesis_catches_planted_issues(acme_business_context):
     """Feeds a known-bad HTML fixture to Claude and asserts it catches each planted issue."""
@@ -445,6 +452,7 @@ async def test_run_synthesis_catches_planted_issues(acme_business_context):
 # Test 3 — Full pipeline: real crawl + real synthesis
 # ---------------------------------------------------------------------------
 
+@pytest.mark.live
 @pytest.mark.skipif(
     not (_HAS_API_KEY and _HAS_NETWORK),
     reason="requires ANTHROPIC_API_KEY and network access to getduct.ai (HTTP 200)",

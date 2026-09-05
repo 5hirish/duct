@@ -38,6 +38,11 @@ router = APIRouter(tags=["project-connectors"])
 
 class BindingIn(BaseModel):
     connector_credential_id: UUID
+    # Which entity inside that account this project reads. Optional, and an
+    # explicit empty string clears it — "not chosen" is a state a user is
+    # allowed to return to, not just one they start in.
+    entity_id: str = ""
+    entity_name: str = ""
 
 
 def _serialize(binding: ProjectConnector, cred: ConnectorCredential | None) -> dict:
@@ -47,6 +52,8 @@ def _serialize(binding: ProjectConnector, cred: ConnectorCredential | None) -> d
         "connector_credential_id": str(binding.connector_credential_id),
         "account_id": cred.account_id if cred else "",
         "account_name": cred.account_name if cred else "",
+        "entity_id": binding.entity_id,
+        "entity_name": binding.entity_name,
         "created_at": binding.created_at.isoformat(),
         "updated_at": binding.updated_at.isoformat(),
     }
@@ -137,6 +144,8 @@ def bind_connector(
 
     if existing is not None:
         existing.connector_credential_id = cred.id
+        existing.entity_id = body.entity_id.strip()
+        existing.entity_name = body.entity_name.strip()
         existing.created_by_user_id = user.id
         existing.updated_at = utcnow()
         binding = existing
@@ -145,6 +154,8 @@ def bind_connector(
             project_id=project_id,
             connector_type=connector_type,
             connector_credential_id=cred.id,
+            entity_id=body.entity_id.strip(),
+            entity_name=body.entity_name.strip(),
             created_by_user_id=user.id,
         )
     session.add(binding)
@@ -163,7 +174,8 @@ def bind_connector(
         target_id=str(binding.id),
         summary=(
             f"Mapped {connector_type} to "
-            f"{cred.account_name or cred.account_id or 'the saved account'} for this project"
+            f"{binding.entity_name or cred.account_name or cred.account_id or 'the saved account'}"
+            " for this project"
         ),
     )
     return _serialize(binding, cred)

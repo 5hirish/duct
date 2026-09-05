@@ -30,7 +30,8 @@ from service.activity import log_activity
 from service.memory import record_change_set_memory
 from service.execution.guardrails import violations_for
 from service.execution.policy import change_auto_eligible, should_auto_apply
-from service.execution.registry import get_executor
+from service.connector_access import granted_scopes_for
+from service.execution.registry import get_executor, missing_scopes_for
 from utils.dates import utcnow
 
 
@@ -171,6 +172,17 @@ def propose_change_set(
 
     account_id = account_id.strip()
     guardrails = guardrails_for(db, user_id, connector_type, account_id)
+    # Read once, from the same credential the apply will use. A change the
+    # account has no permission to make must not reach a human for approval:
+    # approving it would be approving a 403, and the failure would arrive at
+    # the one moment the user has already committed to it.
+    granted = granted_scopes_for(
+        db,
+        user_id=user_id,
+        connector_type=connector_type,
+        account_id=account_id,
+        project_id=project_id,
+    )
 
     stored_changes: list[dict[str, Any]] = []
     for change in changes:
@@ -184,9 +196,14 @@ def propose_change_set(
         }
         spec = get_executor(record["op_type"])
         violations = violations_for(record, guardrails)
+        missing = missing_scopes_for(spec, granted)
         if violations:
             record["status"] = "blocked"
             record["guardrail_violations"] = violations
+        elif missing:
+            # Deliberately not previewed: a preview is an invitation to approve.
+            record["status"] = "blocked"
+            record["scope_violations"] = missing
         else:
             try:
                 preview = spec.preview(record, creds)
@@ -266,6 +283,13 @@ def apply_change_set(
         )
 
     guardrails = guardrails_for(db, row.user_id, row.connector_type, row.account_id)
+    granted = granted_scopes_for(
+        db,
+        user_id=row.user_id,
+        connector_type=row.connector_type,
+        account_id=row.account_id,
+        project_id=row.project_id,
+    )
 
     row.status = "applying"
     row.updated_at = utcnow()
@@ -290,6 +314,14 @@ def apply_change_set(
             continue
 
         spec = get_executor(change["op_type"])
+        # And the same for permissions: a set approved yesterday can be applied
+        # after the user reconnected with a narrower grant.
+        missing = missing_scopes_for(spec, granted)
+        if missing:
+            change["status"] = "blocked"
+            change["scope_violations"] = missing
+            updated.append(change)
+            continue
         try:
             change["result"] = spec.apply(change, creds)
             change["status"] = "applied"

@@ -49,7 +49,6 @@ ADAPTERS: dict[str, str] = {
     "agents/audit/v1/runner.py":            "LangChain runner (create_agent)",
     "agents/audit/v3/runner.py":            "Claude Agent SDK runner",
     "agents/content/v3/runner.py":          "Claude Agent SDK runner",
-    "agents/insights/v1/agent.py":          "LangChain synthesis (init_chat_model)",
     "agents/insights/v1/runner.py":         "deepagents runner — autonomous insights session",
 
     # -- Shared LangChain adapter: the model-transport + events-out ports for
@@ -73,7 +72,6 @@ ADAPTERS: dict[str, str] = {
     "agents/audit/v1/tools.py":             "LangChain tool binder",
     "agents/audit/tools.py":                "Claude Agent SDK tool binder (duct_crawl)",
     "agents/content/tools.py":              "Claude Agent SDK tool binder (duct_content)",
-    "agents/insights/tools.py":             "LangChain StructuredTool binder",
     "agents/insights/data_tools.py":        "LangChain binder: FetchData + connector notes",
     "agents/tools/execution_tools.py":      "binder pair: build_execution_tools_lc / _mcp_server",
 

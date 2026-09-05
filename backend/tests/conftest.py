@@ -123,3 +123,19 @@ def duct_business_context():
         competitors=["semrush.com", "ahrefs.com", "searchatlas.com"],
         industry="SaaS / marketing technology",
     )
+
+
+@pytest.fixture
+def emitted():
+    """An emit callback that records what reached the stream.
+
+    The callback is what a runner takes; ``emitted.events`` is the list it
+    filled. Three agent suites declared this same fixture before it moved here.
+    """
+    events: list[dict] = []
+
+    async def emit(event: dict) -> None:
+        events.append(event)
+
+    emit.events = events  # type: ignore[attr-defined]
+    return emit

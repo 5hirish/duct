@@ -151,28 +151,22 @@ def test_every_provider_supported_by_v1_has_an_env_var(provider: Provider):
     assert provider in ENGINE_PROVIDER_ENV_VAR[Engine.V1]
 
 
-def test_every_gateway_carries_a_default_endpoint():
-    """A gateway's endpoint is a config value, so the registry must supply the
-    default it is overriding. Without it `base_url` resolves to empty and the
-    client silently falls back to whatever its own default is."""
-    for _provider, url in GATEWAY_BASE_URL.items():
+def test_the_gateway_registry_is_consistent():
+    """Three properties of one small table, checked together.
+
+    A gateway's endpoint is a config value, so the registry must supply the
+    default it is overriding — without it `base_url` resolves to empty and the
+    client silently falls back to its own. A gateway with a first-party package
+    is served by it; any other is served as the OpenAI shape, the branch a
+    future Ollama / vLLM / LiteLLM entry takes. And `NATIVE_GATEWAY_PROVIDERS`
+    refines `GATEWAY_BASE_URL` rather than standing beside it — a member missing
+    from the base map would have no endpoint.
+    """
+    assert NATIVE_GATEWAY_PROVIDERS <= GATEWAY_BASE_URL.keys()
+    for provider, url in GATEWAY_BASE_URL.items():
         assert url.startswith("http")
-
-
-def test_a_gateway_without_its_own_package_is_served_as_the_openai_shape():
-    """The fallback every gateway supports, and the branch a future Ollama /
-    vLLM / LiteLLM entry would take. Asserted on a stand-in rather than a real
-    member, because OpenRouter — the only gateway today — has a native package
-    and therefore exercises the other branch."""
-    for provider in GATEWAY_BASE_URL:
         expected = provider.value if provider in NATIVE_GATEWAY_PROVIDERS else "openai"
         assert langchain_provider(provider) == expected
-
-
-def test_a_native_gateway_is_also_a_gateway():
-    """NATIVE_GATEWAY_PROVIDERS refines GATEWAY_BASE_URL, it does not stand
-    beside it — a member missing from the base map would have no endpoint."""
-    assert NATIVE_GATEWAY_PROVIDERS <= GATEWAY_BASE_URL.keys()
 
 
 # ---------------------------------------------------------------------------

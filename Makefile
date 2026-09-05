@@ -48,9 +48,14 @@ check-backend: ## Ruff + pytest (mirrors backend.yml)
 	cd backend && poetry run ruff check server.py agents routes service tests utils
 	cd backend && poetry run pytest -q -m "not live" tests
 
-check-app: ## Lint, typecheck, parity, build (mirrors app.yml)
+# `lint` stays --if-present: app/ has no ESLint config, so that line is a
+# placeholder rather than a gate. `typecheck` was a placeholder too until the
+# script existed — `--if-present` on a missing script exits 0, so the step
+# reported green without ever running tsc. A real gate is invoked by name.
+check-app: ## Typecheck, unit tests, parity, build (mirrors app.yml)
 	cd app && npm run lint --if-present
-	cd app && npm run typecheck --if-present
+	cd app && npm run typecheck
+	cd app && npm test
 	cd app && npm run check:parity
 	cd app && npm run build
 

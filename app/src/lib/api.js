@@ -325,10 +325,12 @@ export async function openAgentStream(agentType, sessionId, { signal } = {}) {
  * Send a message into an active agent session.
  *
  * type="chat"   — follow-up text or content blocks with images
- * type="answer" — answer to a pending AskUserQuestion
+ * type="answer" — the reply to whatever the session is parked on. Pass the
+ *                 pause's `interrupt_id` when it has one, so the right card is
+ *                 resolved when two are pending.
  */
 export async function sendAgentMessage(agentType, sessionId, message) {
-  // message: { type: "chat"|"answer", content?, context_version_id?, answers? }
+  // message: { type: "chat"|"answer", content?, context_version_id?, answers?, interrupt_id? }
   const res = await fetch(
     `${BASE}/api/agents/${encodeURIComponent(agentType)}/sessions/${encodeURIComponent(sessionId)}/messages`,
     {
@@ -338,6 +340,18 @@ export async function sendAgentMessage(agentType, sessionId, message) {
     }
   );
   if (!res.ok) throw new Error(`Message failed: ${res.status}`);
+  return res.json();
+}
+
+/** A live session's state: { pending: [...pauses], has_pending_question, report_versions }.
+ * Read after reattaching to a session whose stream had already delivered the
+ * pause — the card has to be put back from somewhere. */
+export async function getAgentSessionState(agentType, sessionId) {
+  const res = await fetch(
+    `${BASE}/api/agents/${encodeURIComponent(agentType)}/sessions/${encodeURIComponent(sessionId)}`,
+    { headers: backendAuthedHeaders() }
+  );
+  if (!res.ok) throw new Error(`Get session state failed: ${res.status}`);
   return res.json();
 }
 
@@ -383,6 +397,20 @@ export async function getAgentConversation(agentType, conversationId) {
     { headers: backendAuthedHeaders() }
   );
   if (!res.ok) throw new Error(`Get conversation failed: ${res.status}`);
+  return res.json();
+}
+
+/** What a conversation's durable thread is doing: { status, pauses, todos }.
+ * `status` is "paused" (the pauses are the cards to put back on screen),
+ * "unfinished", "idle", or "unsupported" for an agent whose state lives only
+ * in a process. Read on open so a parked question is visible before any
+ * session exists. */
+export async function getAgentThreadState(agentType, conversationId) {
+  const res = await fetch(
+    `${BASE}/api/agents/${encodeURIComponent(agentType)}/conversations/${encodeURIComponent(conversationId)}/state`,
+    { headers: backendAuthedHeaders() }
+  );
+  if (!res.ok) throw new Error(`Get thread state failed: ${res.status}`);
   return res.json();
 }
 

@@ -9,6 +9,7 @@
 
 import { authedRequest, hasAuthToken } from "./authFetch";
 import { SESSION_TOKEN_KEYS, resolveConnectedTypes } from "./connectorCount";
+import { connectedCount } from "./dataSources";
 
 export { hasAuthToken };
 
@@ -23,10 +24,19 @@ export function listServerConnectors() {
  * `{refresh_token, developer_token, login_customer_id}` for Google Ads.
  * Note: the blob replaces the stored one whole — always send every field.
  */
-export async function saveServerConnector({ connector_type, account_id = "", account_name = "", credentials }) {
+export async function saveServerConnector({
+  connector_type,
+  account_id = "",
+  account_name = "",
+  credentials,
+  // Space-separated scopes the provider actually granted, straight from the
+  // OAuth round-trip. Omit it and the server keeps whatever it already
+  // recorded — a rename or a manual re-save must not erase the real grant.
+  granted_scopes = "",
+}) {
   const res = await authedRequest("/api/user/connectors", {
     method: "POST",
-    body: { connector_type, account_id, account_name, credentials },
+    body: { connector_type, account_id, account_name, credentials, granted_scopes },
   });
   notifyConnectorsChanged();
   return res;
@@ -114,6 +124,39 @@ export function listAccountDataSources() {
   return authedRequest("/api/user/connectors/data-sources");
 }
 
+/**
+ * How many data sources are actually reachable — the one answer, for every
+ * surface that shows a count.
+ *
+ * This lived in `deskApi.js` and the sidebar badge had its own, older answer
+ * (`connectedConnectorTypes` alone), so the two contradicted each other on
+ * screen: the badge read "1" from a session-only Google token while the desk
+ * checklist, asking the server, correctly said no source was connected. Both
+ * were reporting honestly about different questions, which is the worst
+ * version of this bug — neither looks broken on its own.
+ *
+ * The server answer wins because it is the one that matches what a run can
+ * actually use: it walks the whole registry, so a pasted API key counts like
+ * an OAuth grant, and it applies the project's bindings. The browser's own
+ * view is kept strictly as a fallback — signed out, offline, or against a
+ * backend without the route, this tab may still hold session-only tokens, and
+ * answering "zero" then is its own lie.
+ */
+export async function countConnectedSources(projectId) {
+  let rows = null;
+  try {
+    rows = await (projectId ? listProjectDataSources(projectId) : listAccountDataSources());
+  } catch {
+    /* fall through to the browser's own view */
+  }
+  if (Array.isArray(rows)) return connectedCount(rows);
+  try {
+    return (await connectedConnectorTypes())?.size ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
 // --- Per-project connector mappings (/api/user/projects/{id}/connectors) ---
 //
 // A mapping points one of the project's connector types at one of your saved
@@ -125,11 +168,36 @@ export function listProjectConnectors(projectId) {
   return authedRequest(`/api/user/projects/${encodeURIComponent(projectId)}/connectors`);
 }
 
-export function bindProjectConnector(projectId, connectorType, credentialId) {
+export function bindProjectConnector(
+  projectId,
+  connectorType,
+  credentialId,
+  { entityId = "", entityName = "" } = {},
+) {
   return authedRequest(
     `/api/user/projects/${encodeURIComponent(projectId)}/connectors/${encodeURIComponent(connectorType)}`,
-    { method: "PUT", body: { connector_credential_id: credentialId } },
+    {
+      method: "PUT",
+      body: {
+        connector_credential_id: credentialId,
+        entity_id: entityId,
+        entity_name: entityName,
+      },
+    },
   );
+}
+
+/**
+ * What a saved connector can actually read — Search Console properties, GA4
+ * properties, Tag Manager containers.
+ *
+ * Server-side credential resolution on purpose: the browser holds no refresh
+ * token for an OAuth connector and must not be handed one to render a list.
+ * Returns `{ entities, supported, entity_noun, entity_noun_plural }`; the nouns
+ * come back even when nothing is selectable, because the label is still needed.
+ */
+export function listConnectorEntities(rowId) {
+  return authedRequest(`/api/user/connectors/${encodeURIComponent(rowId)}/entities`);
 }
 
 export function unbindProjectConnector(projectId, connectorType) {

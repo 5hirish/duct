@@ -69,16 +69,26 @@ API. That asymmetry is the case for this design.
 |---|---|---|
 | **Tools** | plain domain callable + a description single-sourced beside it | `build_memory_tools_lc` / `build_memory_tools_sdk` |
 | **Events out** | `AgentEvent` / `EventKind` + an `Emitter` | v1 LangChain stream, v3 `pump_stream_event` |
-| **Human-in-the-loop** | `bridge_ask_user_question` — emit, await a Future, resume | v1 tool-shaped, v3 SDK-shaped |
+| **Human-in-the-loop** | `PauseFn` — `await pause(event, payload)` returns the user's answer | `make_future_pause` (in-process Future; SDK runners, audit v1), `interrupt_pause` (LangGraph `interrupt()`; insights v1) |
 | **Artifacts** | `<duct_artifact>` + `DuctArtifactStreamParser` + `ArtifactPersister` | harness-neutral by construction |
-| **Session / state** | `BaseAgentSession` registry | *one* implementation — not abstracted yet, by design |
+| **Session / state** | `BaseAgentSession` registry for the live process; the conversation id as the durable thread | in-process registry; LangGraph checkpointer keyed on the conversation (insights v1) |
 | **Model transport** | `Provider` / `ModelName` / `Engine` registries | OpenAI-compatible, native Anthropic, native Gemini |
 
 **The rule for adding one: write the adapter on the second implementation, not
 the first.** A port with one implementation is a guess; with two it is a fact.
-This is why the session registry is listed but not abstracted — the LangGraph
-checkpointer is the natural second implementation, and until it exists any
-interface would be invented rather than observed.
+The pause port is the worked example. `bridge_user_input` was the only way a
+run could park until the insights runner moved its pauses onto LangGraph's
+`interrupt()`; the `PauseFn` protocol was declared at that point, from two
+real implementations, and the tool bodies (`agents/core/connector_tools.py`)
+stopped knowing which one they had been handed.
+
+What the checkpointed implementation buys, and the in-process one cannot: a
+pause lives in the thread's checkpoint, so it survives a redeploy, has no
+timeout, and a session opened later on the same conversation is shown the
+question it is still waiting on (`GET …/conversations/{id}/state`, and the
+`replay` flag on the re-emitted event). The frontend contract is unchanged —
+the same three events, one answer endpoint, plus an `interrupt_id` the client
+passes back so two pauses raised in one turn are resolved separately.
 
 ### The external standard behind each port
 
@@ -140,7 +150,9 @@ translation over it, not a refactor.
 | `thinking_chunk` | `ReasoningMessageContent` | extended-thinking delta |
 | `synthesis_chunk` | `TextMessageContent` | insights synthesis stream (legacy on audit) |
 | `todo_update` | `ActivitySnapshot` | full todo list; snapshot, never a delta |
-| `questions_required` | `Custom` | HITL — the agent needs an answer to continue |
+| `questions_required` | `Custom` | HITL — the agent needs an answer to continue; carries `interrupt_id` on a checkpointed run, `replay: true` when re-emitted on resume |
+| `connection_required` | `Custom` | HITL — a connector the project lacks; answer `{connected}` or `{skipped}` |
+| `account_selection_required` | `Custom` | HITL — which account/property/site; answer `{account_id, account_name}` |
 | `slide_render_requested` | `Custom` | agent asks the browser to rasterize a slide |
 | `artifact_chunk` | `Custom` | token inside `<duct_artifact>` |
 | `artifact_version` | `Custom` | new **version** of the primary artifact, full payload |
@@ -150,6 +162,47 @@ translation over it, not a refactor.
 | `execution_proposed` | `Custom` | staged-execution change set; upsert by `change_set_id` |
 | `memory_written` | `Custom` | entries this turn stored, with undo |
 | `memory_recalled` | `Custom` | entry ids this turn was primed with |
+| `model_retrying` | `Custom` | a model call failed and is being retried: `attempt`, `max_attempts`, `code`, `retry_in` (seconds until the next attempt — a duration, so the client anchors it to its own clock and counts down). Status, not failure — the next token clears it |
+| `token_usage` | `Custom` | one model call's bill: `input_tokens`, `output_tokens`, `cache_read_tokens`, `context_window`, `model`, `scope` (`thread`, `subagent`, or `compaction` for the summariser — all three are on the bill, only `thread` drives the gauge), `cost_usd` (from `agents/models.PRICING`; `null` for an unpriced model, never a guess) |
+| `context_compacting`, `context_compacted` | `Custom` | the harness is summarising old history to make room, then did. The summariser's own tokens never reach the transcript. Also emitted by the insights runner around an emergency compaction: a request the provider rejected as too long is summarised once (`compact_thread`) and retried from its checkpoint; a second rejection is the ordinary `context_window` failure |
+| `user_input_consumed` | `Custom` | a message sent mid-turn has reached the model; carries the `client_message_id` the client stamped on it |
+
+### Failures carry a code, never the exception
+
+`step_failed` (no `step_id`) and `pipeline_failed` carry `code`, `retryable`
+and a one-sentence `error`. The code is `agents/core/errors.ErrorCode`, decided
+once by `classify_error` from the exception's class names and status codes,
+looking through whatever wraps it. The same classifier is the `retry_on` of
+the model-call retry (`agents/core/lc.ReportedRetryMiddleware`), so a rate
+limit retries with backoff and a rejected key fails on the first attempt; and
+the frontend maps the code — not the message text — to copy and to the action
+it offers (`lib/agentSession.js` `errorAction`: retry, open model settings,
+open connections, start fresh). `str(exc)` never reaches the browser: it has
+carried request ids, and once a URL with a key in it.
+
+The failure is also durable. `ConversationRecorder` appends a `failure` event
+where the turn died and writes `agent_conversations.run_status` (`RunStatus`:
+idle / running / paused / failed / cancelled) and `run_error` with the same
+`{code, retryable, error}`; a session closed mid-turn is recorded as
+`cancelled`. The conversation list and the state route carry `run_status` and
+`run_error`, so a thread list can badge "Needs you" or "Failed" before anyone
+opens the thread, and a reloaded transcript shows the failure as the same row
+the live client did — with the same action under it. The status is derived
+from the stream in that one place on purpose: a runner that also wrote it
+would be a second opinion about one column.
+
+### Input while a turn runs: steer or queue, never refuse
+
+The chat route never answers 409 to a message. If the session's harness can
+inject a message at its next model call — `BaseAgentSession.steer_queue` is
+set, which the insights runner does through `agents/core/lc.SteerMiddleware`,
+a `before_model` hook so the injected message is checkpointed with the
+thread — a message that arrives mid-turn or while parked on a card is steered:
+the model reads it right after the tool result it was waiting on. Otherwise it
+waits on `chat_queue` for the next turn. Either way the client marks the row
+"queued" until `user_input_consumed` names it. A steer that lands after the
+turn's last model call becomes the next turn (`_leftover_steers` in the
+insights runner), not a surprise at the top of whatever the user asks next.
 
 ### Persisted conversation kinds
 
@@ -160,6 +213,7 @@ translation over it, not a refactor.
 | `tool_use` | `ToolCallStart` |
 | `tool_result` | `ToolCallResult` |
 | `question`, `answer` | `Custom` |
+| `failure` | `RunError` — `{code, retryable, error}` where a turn or run died; `code: cancelled` for a stop |
 
 ---
 

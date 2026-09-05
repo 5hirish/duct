@@ -23,6 +23,7 @@ from service.connectors import (
     CAP_ACCOUNTS,
     ConnectorAuthContext,
     ConnectorMeta,
+    entity_facts,
     register_connector,
 )
 from service.meta.ads import client as meta
@@ -203,6 +204,11 @@ class MetaAdsConnector:
             {
                 "account_id": a.get("id") or meta.normalize_account_id(str(a.get("account_id") or "")),
                 "account_name": a.get("name", ""),
+                "entity_detail": (a.get("business") or {}).get("name", ""),
+                "entity_meta": entity_facts(
+                    ("Currency", a.get("currency", "")),
+                    ("Timezone", a.get("timezone_name", "")),
+                ),
                 "currency": a.get("currency", ""),
                 "timezone": a.get("timezone_name", ""),
                 "status": a.get("account_status", ""),

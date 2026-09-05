@@ -1,10 +1,27 @@
-"""Shared in-process session registry + AskUserQuestion bridge for streaming agents.
+"""Shared in-process session registry + the human-in-the-loop port.
 
-One registry and one human-in-the-loop bridge for every Claude-SDK agent, so
-audit / content / future agents stop copy-pasting the identical plumbing. Each
-agent's session model subclasses ``BaseAgentSession`` to add its own fields.
+One registry for every streaming agent, so audit / content / insights stop
+copy-pasting the identical plumbing. Each agent's session model subclasses
+``BaseAgentSession`` to add its own fields.
 
-In-process only (not shared across Railway instances) — same as before.
+The pause port
+--------------
+A run that needs a human — a clarifying question, a connector to authorize, an
+account to choose — parks on a ``PauseFn``: ``await pause(event, payload)``
+returns whatever the user sent back. Two implementations exist, and which one a
+tool gets is decided by the binder that mounts it, never by the tool body:
+
+* ``make_future_pause`` (here) — emit the event over SSE and await an
+  ``asyncio.Future`` the messages route resolves. In-process, so it dies with
+  the worker and gives up after ``ASK_USER_TIMEOUT``. This is what the Claude
+  Agent SDK runners use, and what a LangChain agent without a checkpointer
+  (audit v1) uses.
+* ``interrupt_pause`` (``agents/core/lc.py``) — LangGraph's ``interrupt()``.
+  The pause lives in the thread's checkpoint: it survives a redeploy, has no
+  timeout, and the same thread can be resumed from any process. Insights v1
+  uses it; ``stream_agent`` is what turns the interrupt into the SSE event.
+
+The registry itself is in-process only (not shared across Railway instances).
 """
 
 from __future__ import annotations
@@ -13,8 +30,8 @@ import asyncio
 import logging
 import time
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
-from typing import Any
+from dataclasses import dataclass, field
+from typing import Any, Protocol
 
 from agents.core.events import AgentEvent
 
@@ -22,8 +39,23 @@ logger = logging.getLogger(__name__)
 
 EmitFn = Callable[[dict], Awaitable[None]]
 
-# Default wait for an AskUserQuestion answer before giving up.
+# Default wait for an AskUserQuestion answer before giving up. Only the
+# in-process pause has a timeout: a checkpointed interrupt waits indefinitely.
 ASK_USER_TIMEOUT = 120.0
+
+
+class PauseFn(Protocol):
+    """Park the run until a human responds; return what they sent.
+
+    ``event`` is the ``AgentEvent`` the UI renders a card for and ``payload`` is
+    what that card needs. ``timeout`` is a hint the in-process implementation
+    honours and the checkpointed one ignores. An empty dict means "no answer" —
+    every caller treats that as "carry on without it", never as an error.
+    """
+
+    async def __call__(
+        self, event: str, payload: dict, *, timeout: float | None = None
+    ) -> dict: ...
 
 
 @dataclass(kw_only=True)
@@ -43,6 +75,41 @@ class BaseAgentSession:
     last_activity: float = 0.0        # time.monotonic() of last consumer/user activity — drives stale pruning
     pipeline_task: Any | None = None  # asyncio.Task — cancelled on close
     grace_task: Any | None = None     # asyncio.Task — closes the session if no consumer reconnects in time
+    # Checkpointed pauses the run is parked on, keyed by interrupt id — the
+    # LangGraph half of the pause port. Empty for a run on the Future bridge,
+    # which parks on ``answer_future`` instead. The messages route reads this
+    # to decide which of the two an answer resolves.
+    pending_pauses: dict[str, dict] = field(default_factory=dict)
+    # What a Future-bridged run is parked on — the event as it was emitted —
+    # so a client that reattaches after the frame went by can put the card
+    # back. None once answered.
+    parked_on: dict | None = None
+    # Input that arrives while a turn is running. A harness that can inject a
+    # message at its next model call (LangGraph, through SteerMiddleware in
+    # agents/core/lc.py) sets this to a queue; the route steers into it. Left
+    # None, the route falls back to chat_queue and the message waits for the
+    # next turn. Either way the user is never told to wait.
+    steer_queue: Any | None = None
+    # True while the runner is inside a turn — what makes a new message a
+    # steer rather than the start of the next turn.
+    turn_active: bool = False
+
+
+CLIENT_MESSAGE_ID = "client_message_id"
+
+
+def take_client_id(item: Any) -> tuple[Any, str]:
+    """Split a queued message from the id the client stamped on it.
+
+    Queue items are the message the harness will send — the SDK runners pass
+    them straight through as the user turn — so the id rides as a sibling key
+    and must come off before the item is used. Items without one (answers,
+    tests, older clients) pass through unchanged.
+    """
+    if isinstance(item, dict) and CLIENT_MESSAGE_ID in item:
+        item = dict(item)
+        return item, str(item.pop(CLIENT_MESSAGE_ID) or "")
+    return item, ""
 
 
 # Single shared registry across all agent types (UUID keys — no collisions).
@@ -126,13 +193,14 @@ async def bridge_user_input(
     reconnect grace and the stale pruner all stay unaware of how many kinds
     exist.
 
-    LangGraph's ``interrupt()`` is the upgrade path when a parked run must
-    survive a process restart; it plugs in here without the route or the
-    frontend noticing (see ``agents/core/ports``).
+    This is the in-process implementation of ``PauseFn``. The checkpointed one
+    is ``interrupt_pause`` in ``agents/core/lc.py``; the route and the frontend
+    cannot tell them apart, which is the point (see ``agents/core/ports``).
     """
     loop = asyncio.get_event_loop()
     fut: asyncio.Future = loop.create_future()
     session.answer_future = fut
+    session.parked_on = {"event": event, **payload}
     await emit({"event": event, "session_id": session_id, **payload})
     try:
         return await asyncio.wait_for(asyncio.shield(fut), timeout=timeout)
@@ -141,6 +209,36 @@ async def bridge_user_input(
         return {}
     finally:
         session.answer_future = None
+        session.parked_on = None
+
+
+def make_future_pause(
+    session: BaseAgentSession,
+    session_id: str,
+    emit: EmitFn,
+    *,
+    timeout: float = ASK_USER_TIMEOUT,
+    log_prefix: str = "agent",
+) -> PauseFn:
+    """``bridge_user_input`` shaped as a ``PauseFn`` for the tool binders.
+
+    A per-call ``timeout`` overrides the one bound here, so a binder can give a
+    connector sign-in longer than a clarifying question.
+    """
+
+    async def pause(event: str, payload: dict, *, timeout: float | None = None) -> dict:
+        return await bridge_user_input(
+            session,
+            session_id,
+            event=event,
+            payload=payload,
+            emit=emit,
+            timeout=timeout if timeout is not None else timeout_default,
+            log_prefix=log_prefix,
+        )
+
+    timeout_default = timeout
+    return pause
 
 
 async def bridge_ask_user_question(

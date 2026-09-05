@@ -92,6 +92,31 @@ class AgentEvent(StrEnum):
     MEMORY_WRITTEN = "memory_written"
     MEMORY_RECALLED = "memory_recalled"
 
+    # The model call failed and is being retried — status, not an error. The
+    # payload carries attempt / max_attempts / code so the UI can say
+    # "Reconnecting to the model (2/4)" in the status row and go back to
+    # "Working" when the next token arrives. A failure that has run out of
+    # attempts arrives as STEP_FAILED / PIPELINE_FAILED with its ``code``
+    # (agents/core/errors.py).
+    MODEL_RETRYING = "model_retrying"
+
+    # One model call's token bill, emitted as each call completes: input /
+    # output / cached tokens plus the model's context window, so the UI can
+    # show how full the context is and what a turn cost. The UI keeps the
+    # running total; a resumed thread reads its last usage from the state route.
+    TOKEN_USAGE = "token_usage"
+    # The harness is summarising old history to make room, and then did. The
+    # summariser's own tokens never reach the transcript — the first is what
+    # the status row shows instead, the second leaves a quiet note behind.
+    CONTEXT_COMPACTING = "context_compacting"
+    CONTEXT_COMPACTED = "context_compacted"
+
+    # A message the user sent while a turn was running has now been handed to
+    # the model — steered in at a model-call boundary, or dequeued for the next
+    # turn. Carries the client_message_id the client stamped on it, so the
+    # "queued" mark on that row can come off.
+    USER_INPUT_CONSUMED = "user_input_consumed"
+
 
 class EventKind(StrEnum):
     """Persisted conversation-event categories — the ``kind`` column on
@@ -113,6 +138,26 @@ class EventKind(StrEnum):
     ANSWER = "answer"
     TOOL_USE = "tool_use"        # one per tool call: name + full input
     TOOL_RESULT = "tool_result"  # paired by tool_use_id: output + is_error
+    # A turn or run that did not finish: {code, retryable, error}. Stored so a
+    # reloaded transcript shows why the last reply is missing, with the same
+    # code the live client acted on. A stop is a failure with code "cancelled".
+    FAILURE = "failure"
+
+
+class RunStatus(StrEnum):
+    """What a conversation's run is doing — the ``run_status`` column on
+    agent_conversations, derived from the event stream by ConversationRecorder
+    so every agent reports it the same way without a hook in each runner.
+
+    Contract with the frontend (thread lists and the desk badge). Never change
+    an existing value; only add members.
+    """
+
+    IDLE = "idle"            # waiting for the user's next message
+    RUNNING = "running"      # a turn is in flight
+    PAUSED = "paused"        # parked on a question, a connect offer, an account pick
+    FAILED = "failed"        # the last turn ended in a failure (see run_error)
+    CANCELLED = "cancelled"  # the session closed while a turn was running
 
 
 class StepStatus(StrEnum):
@@ -248,6 +293,11 @@ AG_UI_EVENT: dict[AgentEvent, str] = {
     AgentEvent.EXECUTION_PROPOSED:    "Custom",
     AgentEvent.MEMORY_WRITTEN:        "Custom",
     AgentEvent.MEMORY_RECALLED:       "Custom",
+    AgentEvent.MODEL_RETRYING:        "Custom",
+    AgentEvent.TOKEN_USAGE:           "Custom",
+    AgentEvent.CONTEXT_COMPACTING:    "Custom",
+    AgentEvent.CONTEXT_COMPACTED:     "Custom",
+    AgentEvent.USER_INPUT_CONSUMED:   "Custom",
 }
 
 # Persisted conversation kinds → AG-UI. Only the tool kinds have real analogues;
@@ -261,4 +311,5 @@ AG_UI_EVENT_KIND: dict[EventKind, str] = {
     EventKind.ANSWER:      "Custom",
     EventKind.TOOL_USE:    "ToolCallStart",
     EventKind.TOOL_RESULT: "ToolCallResult",
+    EventKind.FAILURE:     "RunError",
 }

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Loader2, Mail, RotateCw, Trash2, TriangleAlert, UserPlus, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { initials, relativeDays } from "@/lib/format";
@@ -330,7 +330,7 @@ export default function ProjectMembers({ projectId, onLeft }) {
             <AlertDialogCancel type="button">Cancel</AlertDialogCancel>
             <AlertDialogAction
               type="button"
-              className="bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30"
+              className={buttonVariants({ variant: "destructive" })}
               onClick={confirmRemoval}
             >
               {pendingRemoval?.is_you ? "Leave project" : "Remove"}

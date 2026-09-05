@@ -38,34 +38,35 @@ export default function ProjectAccountSelect({
   const foreign = binding && !rows.some((row) => row.id === binding.connector_credential_id);
 
   return (
-    <div className="conn-dialog-section">
-      <div className="conn-field">
-        <Label htmlFor={`mapping-${projectName}`}>Account for {projectName}</Label>
-        <Select
-          value={binding && !foreign ? binding.connector_credential_id : DEFAULT_VALUE}
-          onValueChange={onChange}
-          disabled={busy}
-        >
-          <SelectTrigger id={`mapping-${projectName}`}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={DEFAULT_VALUE}>Account default</SelectItem>
-            {rows.map((row) => (
-              <SelectItem key={row.id} value={row.id}>
-                {accountLabel(row)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <p className="conn-hint">
-          {foreign
-            ? `Currently mapped to ${
-                binding.account_name || binding.account_id || "a teammate's account"
-              } — a teammate's connector.`
-            : "Reports and agent runs for this project use this account. Other projects keep their own."}
-        </p>
-      </div>
+    // No section wrapper: `ProjectBinding` owns the "Use for <project>" block
+    // this sits in, and a section inside a section drew a second rule and a
+    // second heading for one decision.
+    <div className="conn-field">
+      <Label htmlFor={`mapping-${projectName}`}>Account</Label>
+      <Select
+        value={binding && !foreign ? binding.connector_credential_id : DEFAULT_VALUE}
+        onValueChange={onChange}
+        disabled={busy}
+      >
+        <SelectTrigger id={`mapping-${projectName}`}>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={DEFAULT_VALUE}>Account default</SelectItem>
+          {rows.map((row) => (
+            <SelectItem key={row.id} value={row.id}>
+              {accountLabel(row)}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <p className="conn-hint">
+        {foreign
+          ? `Currently mapped to ${
+              binding.account_name || binding.account_id || "a teammate's account"
+            } — a teammate's connector.`
+          : "Reports and agent runs for this project use this account. Other projects keep their own."}
+      </p>
     </div>
   );
 }

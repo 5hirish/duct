@@ -93,3 +93,32 @@ def init_db() -> None:
         return
     SQLModel.metadata.create_all(engine)
 
+
+
+# Storage locations reported to the browser. Same two answers the UI badges use.
+STORAGE_LOCAL = "local"
+STORAGE_CLOUD = "cloud"
+
+
+def storage_location() -> str:
+    """Where rows written through this engine physically live.
+
+    The honest test is the database, not the process. `duct_local` is true for
+    every sidecar, and `isLocalBackendActive()` in the browser only says a
+    sidecar answered the request — but a sidecar pointed at a deployment's
+    Postgres (`DUCT_ENV_FILE=…/.env.local`, which is how the desktop build is
+    tested against staging) stores nothing on the machine it runs on. Labelling
+    that "This device" tells the user their credentials never left the laptop
+    when they are in fact in a shared database, which is exactly backwards and
+    the sort of claim they might rely on.
+
+    So this asks the one question with a truthful answer: SQLite is a file this
+    machine owns, anything reached over a network is not. It is the same test
+    `db/migrate._owns_database` uses to decide what this install may migrate,
+    for the same reason — ownership of the data follows the database, never the
+    process that happens to be serving.
+    """
+    engine = get_engine()
+    if engine is None:
+        return STORAGE_LOCAL
+    return STORAGE_LOCAL if engine.dialect.name == "sqlite" else STORAGE_CLOUD

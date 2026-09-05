@@ -41,6 +41,17 @@
   --accent-foreground: oklch(0.18 0.03 265);
   --destructive: oklch(0.52 0.22 27);
   --destructive-foreground: oklch(1 0 0);
+  /* The other two status colours, beside the one that already existed.
+     DESIGN.md ("No semantic success/warning tokens") asks for these: every
+     site was re-picking a green and an amber with a hand-managed dark partner,
+     and the raw #eab308 those hand-picks landed on measures 1.9:1 on a light
+     background — unreadable as label text, however fine it looks as a dot.
+     Darkened here for text contrast; the .dark pair below is lifted instead,
+     which is the direction dark themes need (Material dark-theme guidance). */
+  --success: oklch(0.55 0.15 149);
+  --success-foreground: oklch(1 0 0);
+  --warning: oklch(0.55 0.13 78);
+  --warning-foreground: oklch(1 0 0);
   --border: oklch(0.92 0.005 80);
   --input: oklch(0.92 0.005 80);
   --ring: oklch(0.52 0.22 270);

@@ -25,7 +25,16 @@
     "product_intelligence": "https://getduct.ai/for-product-intelligence",
     "organic_growth": "https://getduct.ai/for-organic-growth",
     "paid_ads": "https://getduct.ai/for-paid-ads",
-    "blog": "https://getduct.ai/blog/"
+    "blog": "https://getduct.ai/blog/",
+    "github": "https://github.com/5hirish/duct"
   },
-  "updated_at": "2026-04-08"
+  "updated_at": "2026-09-03",
+  "open_source": {
+    "repository": "https://github.com/5hirish/duct",
+    "license": "MIT",
+    "self_hostable": true,
+    "desktop_app": true,
+    "bring_your_own_model": true,
+    "description": "The Duct client is open source under MIT. Run the desktop app locally with your own model API keys, or self-host the backend."
+  }
 }

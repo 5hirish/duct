@@ -52,12 +52,14 @@ import {
   supportingEngines,
 } from "@/lib/engines";
 import {
+  PROJECTS_CHANGED,
+  getActiveProjectId,
   getProjects,
   resolveActiveProjectId,
   setActiveProjectId,
 } from "@/lib/projects";
 import { faviconUrl } from "@/lib/favicon";
-import { CONNECTORS_CHANGED, connectedConnectorTypes } from "@/lib/connectorsApi";
+import { CONNECTORS_CHANGED, countConnectedSources } from "@/lib/connectorsApi";
 import { NAV_SECTIONS } from "@/lib/navigation";
 
 // ---------------------------------------------------------------------------
@@ -101,10 +103,10 @@ function SidebarProjectSwitcher() {
     };
     sync();
     window.addEventListener("storage", sync);
-    window.addEventListener("duct:project-changed", sync);
+    window.addEventListener(PROJECTS_CHANGED, sync);
     return () => {
       window.removeEventListener("storage", sync);
-      window.removeEventListener("duct:project-changed", sync);
+      window.removeEventListener(PROJECTS_CHANGED, sync);
     };
   }, []);
 
@@ -371,37 +373,56 @@ function ThemeSidebarItem() {
  *
  * It used to count two hardcoded sessionStorage keys — GA4 and GSC — so the
  * badge could never read higher than 2 and never saw Google Ads, GTM, or any
- * server-stored connector at all. It now asks the same places the Connections
- * page does (durable server rows ∪ session-only OAuth tokens), counting
- * distinct connector types so the two screens cannot disagree.
+ * server-stored connector at all. Replacing that with the browser's union of
+ * server rows and session tokens fixed the ceiling and introduced a subtler
+ * disagreement: the badge read "1" from a Google token living only in this
+ * tab while the desk checklist, asking the server, correctly reported no
+ * source connected. Two honest answers to two different questions, sitting a
+ * few hundred pixels apart.
  *
- * Refreshed on the connector-changed event, on cross-tab storage writes, and
- * on focus — the last of which is what catches a connection made in the OAuth
- * tab that handed control back without either of the other two firing.
+ * So it now asks `countConnectedSources` — the same call the desk makes — and
+ * asks it per project, because which sources a project can reach depends on
+ * its bindings.
+ *
+ * Refreshed on the connector-changed event, on a project switch, on cross-tab
+ * storage writes, and on focus — the last of which is what catches a
+ * connection made in the OAuth tab that handed control back without any of the
+ * others firing.
  */
 function useConnectionCount() {
   const [count, setCount] = useState(0);
   useEffect(() => {
     let alive = true;
-    let inFlight = false;
+    let seq = 0;
+    let inFlightFor = null;
     const check = () => {
-      if (inFlight) return;   // focus fires in bursts; one answer is enough
-      inFlight = true;
-      connectedConnectorTypes()
-        .then((types) => {
-          if (alive) setCount(types.size);
+      // Read at call time rather than from state: a project switch and this
+      // check race, and the id in hand is the one that just won.
+      const forProject = getActiveProjectId() || "";
+      // Focus fires in bursts, and one answer per project is enough — but a
+      // switch to a DIFFERENT project is a different question, and coalescing
+      // it away would leave the badge showing the project you just left.
+      if (inFlightFor === forProject) return;
+      inFlightFor = forProject;
+      const mine = ++seq;
+      countConnectedSources(forProject)
+        .then((n) => {
+          // A later check has been issued since; its answer is the current one.
+          if (alive && mine === seq) setCount(n);
         })
         .finally(() => {
-          inFlight = false;
+          if (inFlightFor === forProject) inFlightFor = null;
         });
     };
     check();
     window.addEventListener(CONNECTORS_CHANGED, check);
+    window.addEventListener(PROJECTS_CHANGED, check);
     window.addEventListener("storage", check);
     window.addEventListener("focus", check);
     return () => {
       alive = false;
       window.removeEventListener(CONNECTORS_CHANGED, check);
+      window.removeEventListener(PROJECTS_CHANGED, check);
       window.removeEventListener("storage", check);
       window.removeEventListener("focus", check);
     };

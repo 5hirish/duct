@@ -1,54 +1,91 @@
 # Duct App
 
-Minimal Next.js app shell for rendering backend-generated reports.
+The Next.js App Router frontend — sign-in, connectors, projects, and the agent
+workspaces. Deploys to Cloudflare Workers via OpenNext, and is also what the
+Tauri desktop shell loads.
 
-## Current scope (no auth)
+Application code is JavaScript (`.js` / `.jsx`), not TypeScript. The exception is
+`src/components/ui/`, the vendored shadcn/ui primitives, which ship as `.tsx` —
+follow the surrounding file's language rather than converting either way.
 
-- app layout shell
-- insights list page (`/insights`)
-- insight detail viewer (`/insights/[slug]`)
-- file-based artifact loading from `../backend/data/google_ads`
+## Surfaces
+
+| Route | What it is |
+|---|---|
+| `/insights` | Insight briefs — list, detail, and the interactive generate flow |
+| `/audit` | SEO audit workspace |
+| `/content` | Content planner and studio |
+| `/connections` | OAuth connector linking and account selection |
+| `/projects`, `/project/[id]` | Projects, members, and per-project memory |
+| `/execute` | Staged change sets — preview, approve, apply, roll back |
+| `/memory` | Agent memory timeline |
+| `/settings/models` | Heavy / Standard / Light model tier assignment |
+| `/onboarding` | Business-context capture |
+
+Agent workspaces share one shell — [`src/components/workspace/SplitWorkspace.jsx`](src/components/workspace/SplitWorkspace.jsx) (chat left, viewport
+right, a CSS pane toggle on mobile). Compose it rather than re-forking the
+split and responsive logic.
 
 ## Local run
 
 ```bash
-cd app
 npm install
-npm run dev
+npm run dev          # http://localhost:3003
 ```
 
-Dev ports are **pinned** (not framework defaults) so they stay clear of other local stacks:
+Or `make serve-app` from the repo root.
 
-| Surface | Port |
-| --- | --- |
-| Next.js (`npm run dev`) | **3003** |
-| FastAPI (`uvicorn` in `.vscode` / README-style commands) | **8002** |
-| ADK Web | **8003** |
-| Static site (`dev_server.py --port …`) | **8090** |
+Dev ports are pinned deliberately, not framework defaults, so they stay clear of
+other local stacks: **Next 3003**, **FastAPI 8002**, **static site 8090**.
 
-Open the app: `http://localhost:3003/insights`
+Against a local backend, set `API_PUBLIC_URL=http://localhost:8002` and
+`FRONTEND_ORIGIN=http://localhost:3003` in `backend/.env.local` so OAuth
+redirects and CORS line up. `NEXT_PUBLIC_API_BASE` should match the API origin;
+`src/lib/api.js` already defaults to `http://localhost:8002` in dev.
 
-If you set `NEXT_PUBLIC_APP_URL` for local builds, use `http://localhost:3003` so `metadataBase` matches the dev origin.
+If you set `NEXT_PUBLIC_APP_URL` for a local build, use `http://localhost:3003`
+so `metadataBase` matches the dev origin.
 
-For OAuth and CORS, set **`API_PUBLIC_URL`** / **`FRONTEND_ORIGIN`** in `backend/.env` or `backend/.env.local` to `http://localhost:8002` and `http://localhost:3003` respectively when developing against this stack (or override only in your local env). `NEXT_PUBLIC_API_BASE` should match the API origin (`http://localhost:8002` when unset in dev is handled in `src/lib/api.js`).
+## Environment
 
-## Production (Cloudflare Workers)
+`NEXT_PUBLIC_*` variables are inlined into the client bundle **at build time**,
+so changing one in a dashboard does nothing until the next build.
 
-OpenNext + Wrangler live in this directory (`wrangler.jsonc`, `open-next.config.ts`). Full architecture, env vars, and production deploy (Cloudflare **Workers Builds** from Git) are documented in the deployment runbook (duct-cloud, private).
+| Variable | Purpose |
+|---|---|
+| `NEXT_PUBLIC_API_BASE` | API origin |
+| `NEXT_PUBLIC_DUCT_API_KEY` | App identity header — **not** an authorization boundary; it ships to the browser |
+| `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_SITE_URL` | Absolute URLs for `metadataBase` |
+| `NEXT_PUBLIC_GTM_ID` | Google Tag Manager container (optional) |
+| `NEXT_PUBLIC_SENTRY_DSN`, `NEXT_PUBLIC_APP_ENV` | Error reporting (optional) |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Cloudflare Turnstile on sign-in (optional) |
+| `NEXT_PUBLIC_SHELL_SCHEME` | Deep-link scheme when running inside the desktop shell |
+| `NEXT_PUBLIC_CDN_IMAGE_RESIZING` | Cloudflare image resizing toggle |
 
-Optional: `NEXT_PUBLIC_GTM_ID` for Google Tag Manager (GA4 etc. live in the GTM container). See [`src/lib/analytics-client.js`](src/lib/analytics-client.js).
+## Checks
 
-- Local prod-like: `npm run preview:cf`
-- Deploy: `npm run deploy:cf` (after `wrangler login`)
+```bash
+make check-app       # lint, typecheck, slide parity, build
+```
 
-## Data source
+`check:parity` guards a real coupling: the slide renderer here and
+`templates.py` in the backend must agree, or a generated post previews
+differently from how it publishes. `check:connectors`, `check:desk` and
+`check:sources` are the other sanity scripts.
 
-**Product path (generate flow):** The interactive wizard calls `POST /api/generate` and persists the returned JSON in the **browser** via [`src/lib/localInsights.js`](src/lib/localInsights.js) (`localStorage`). Do not rely on the API host filesystem for user reports in production; when you add accounts, move persistence to a real backend store.
+## Production
 
-**Dev / demo list:** The reports page also merges in **top-level** JSON files from `backend/data/google_ads/*.json` (e.g. `google-ads-report.json`). The `raw/` subdir is not listed.
+OpenNext + Wrangler live here (`wrangler.jsonc`, `open-next.config.ts`).
+Deployment runs from CI on merge to `main` — do not deploy from a CLI.
 
-## Boundary
+- Local prod-like build: `npm run preview:cf`
+- `npm run build` is plain Next; the Worker build is `opennextjs-cloudflare build`
 
-- Do not move Python synthesis/render logic into this app.
-- Keep report generation in `backend/`.
-- Use this app as a viewing layer while MVP remains report-first.
+## Boundaries
+
+- Rendering lives here; synthesis lives in `backend/`. Do not move Python
+  pipeline logic into this app, and do not render HTML in the backend.
+- Do not assume a repo-adjacent `backend/data` tree exists at runtime. It does
+  not on Workers — guard filesystem access and fail open.
+
+Conventions: [`AGENTS.md`](AGENTS.md) (`CLAUDE.md` symlinks to it).

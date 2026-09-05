@@ -31,6 +31,10 @@ Duct is designed for product managers, growth leads, and marketing teams at 20â€
 - [Why Your SEO Metrics Aren't Telling You the Full Story](https://getduct.ai/blog/post?slug=why-your-seo-metrics-arent-telling-you-the-full-story)
 - [Keyword Gap Analysis Without a Spreadsheet](https://getduct.ai/blog/post?slug=keyword-gap-analysis-without-a-spreadsheet)
 
+## Open source
+
+- [Duct on GitHub](https://github.com/5hirish/duct): The Duct client is open source under the MIT licence â€” the FastAPI backend, the Next.js app, and a Tauri desktop app that runs entirely on your own machine with your own model API keys. Connects Google Ads, Google Analytics 4, Search Console, Tag Manager, Meta Ads, Apple Search Ads, OpenAI Ads, Mixpanel, Microsoft Clarity, GrowthBook, Stripe and RevenueCat. Self-host it, or use the hosted version at getduct.ai.
+
 ## Optional
 
 - [Sitemap](https://getduct.ai/sitemap.xml)

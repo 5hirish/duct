@@ -85,7 +85,9 @@ every future finding of that kind in that file.
 ## Conventions worth knowing before you write code
 
 These are the ones that cost the most to get wrong. The area `AGENTS.md` files
-have the rest.
+have the rest, and [`STYLE.md`](STYLE.md) covers the separate question of what
+good code looks like here once it works — module docstrings, naming, comments
+that carry reasoning, and the self-review pass before you open the PR.
 
 - **Backend: authorization is membership, not ownership.** `DUCT_API_KEY` is
   shipped to the browser and is not an authorization boundary. Any endpoint
@@ -119,8 +121,15 @@ have the rest.
   `fix(connectors): a saved provider key is not a data source`.
 - Explain *why* in the body. The codebase's comments carry reasoning rather
   than description, and commit messages are held to the same bar.
+- Review your own diff before you ask anyone else to. Read it back looking for
+  the reason to reject it, then read it against the code around it — a set of
+  individually reasonable changes that together dissolve a module is the
+  failure mode worth spending the extra minute on.
 - Update the docs next to the code you changed, including the relevant
   `AGENTS.md` if you changed a convention.
+- Add a line to `CHANGELOG.md` under `## [Unreleased]` if the change is one a
+  user would notice. `.github/scripts/release-notes.mjs` puts that section
+  straight into the GitHub release, so what you write there is what they read.
 
 ## Reporting security issues
 

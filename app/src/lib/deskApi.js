@@ -15,12 +15,7 @@ import { listActivity } from "./activityApi";
 import { listArtifacts } from "./artifactsApi";
 import { listChangeSets } from "./executionApi";
 import { listMemory } from "./memoryApi";
-import {
-  connectedConnectorTypes,
-  listAccountDataSources,
-  listProjectDataSources,
-} from "./connectorsApi";
-import { connectedCount } from "./dataSources";
+import { countConnectedSources } from "./connectorsApi";
 
 /** The agent whose threads and documents this desk is for. */
 export const INSIGHTS_AGENT = "insights";
@@ -52,26 +47,6 @@ async function orEmpty(promise, fallback) {
 }
 
 /**
- * How many data sources this desk can actually reach.
- *
- * The server resolves this: it walks the whole connector registry, so an
- * API-key connector counts exactly like an OAuth one, and it applies the
- * project's account bindings. Falling back to the browser's own view matters —
- * signed out, offline, or against a backend without the route, the tab may
- * still hold session-only OAuth tokens, and answering "zero" then is the same
- * lie this function was written to stop telling.
- */
-async function countSources(projectId) {
-  const rows = await orEmpty(
-    projectId ? listProjectDataSources(projectId) : listAccountDataSources(),
-    null
-  );
-  if (Array.isArray(rows)) return connectedCount(rows);
-  const types = await orEmpty(connectedConnectorTypes(), new Set());
-  return types?.size ?? 0;
-}
-
-/**
  * Everything the desk shows, in one await.
  *
  * Change sets come back user-scoped rather than project-scoped, so they are
@@ -83,7 +58,7 @@ export async function loadDesk({ projectId, activityLimit = 12, memoryLimit = 60
   // sources, and the checklist asks them to do those two things in that order —
   // so a hardcoded zero here told the truest possible beginner they had
   // connected nothing.
-  const sources = countSources(projectId);
+  const sources = countConnectedSources(projectId);
 
   if (!projectId) {
     return {

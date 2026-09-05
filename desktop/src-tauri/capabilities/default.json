@@ -13,6 +13,7 @@
     "allow-set-provider-key",
     "allow-delete-provider-key",
     "allow-get-shell-info",
+    "allow-notify",
     "allow-get-sidecar-info",
     "allow-open-external",
     "allow-check-for-update",

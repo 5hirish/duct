@@ -30,7 +30,7 @@ in this repository are not ours to license, and are excluded from it.
 1. Third-party documentation — `docs/guides/`
 
    Every file in that directory except its README is documentation reproduced
-   from OpenAI or Google. Each carries a provenance header naming its source,
+   from OpenAI or Google or Anthropic. Each carries a provenance header naming its source,
    retrieval date and license. Rights remain with the original authors; the
    grant above does not extend to those files. See `docs/guides/README.md`.
 

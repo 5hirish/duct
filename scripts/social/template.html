@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Duct social card</title>
+<style>
+  /* Brand tokens, copied from site/assets/duct.css. Kept literal rather than
+     imported: this file is rendered by a headless browser from disk, and a
+     relative import that silently fails would produce an unstyled card that
+     still screenshots successfully. */
+  :root {
+    --orange: #FF5C00;
+    --navy: #0D0F1A;
+    --white: #ffffff;
+    --serif: Georgia, "Times New Roman", Times, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body { background: var(--navy); }
+
+  .card {
+    position: relative;
+    width: var(--w);
+    height: var(--h);
+    background: var(--navy);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 40px;
+    padding: 68px 80px 64px;
+    font-family: var(--sans);
+    color: var(--white);
+  }
+
+  /* Warm bloom from the lower right, so the dense text at the left stays on
+     flat navy and keeps its contrast. */
+  .card::before {
+    content: "";
+    position: absolute;
+    right: -18%;
+    bottom: -46%;
+    width: 78%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 92, 0, .30) 0%, rgba(255, 92, 0, .10) 42%, transparent 68%);
+  }
+
+  /* The pipe: three concentric arcs reading as flow converging on a point —
+     the product's actual claim, many sources into one answer. */
+  .arcs {
+    position: absolute;
+    right: -170px;
+    bottom: -170px;
+    width: 620px;
+    height: 620px;
+    opacity: .5;
+  }
+  .arcs circle { fill: none; stroke: var(--orange); }
+
+  .row { position: relative; display: flex; align-items: center; gap: 16px; }
+
+  .mark {
+    width: 56px; height: 56px;
+    border-radius: 14px;
+    background: var(--white);
+    position: relative;
+    flex: none;
+  }
+  .mark span {
+    position: absolute;
+    left: 13px; top: 50%;
+    transform: translateY(-52%);
+    font-family: var(--serif);
+    font-size: 38px;
+    color: var(--navy);
+    line-height: 1;
+  }
+  .mark i {
+    position: absolute;
+    right: 9px; top: 50%;
+    transform: translateY(-50%);
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--orange);
+  }
+  .wordmark { font-family: var(--serif); font-size: 34px; letter-spacing: -.3px; }
+
+  .body { position: relative; }
+
+  h1 {
+    font-family: var(--serif);
+    font-size: var(--h1);
+    line-height: 1.06;
+    letter-spacing: -1.2px;
+    font-weight: 500;
+    /* No max-width: the copy carries its own <br>, and a ch-based cap silently
+       re-wraps on top of it — which orphaned "for" onto its own line. */
+    text-wrap: balance;
+  }
+  h1 em { font-style: normal; color: var(--orange); }
+
+  p {
+    margin-top: 24px;
+    font-size: var(--sub);
+    line-height: 1.45;
+    color: rgba(255, 255, 255, .68);
+    max-width: 52ch;
+    text-wrap: pretty;
+  }
+
+  .foot {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  .sources { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .sources b {
+    font-weight: 500;
+    font-size: 17px;
+    color: rgba(255, 255, 255, .58);
+    border: 1px solid rgba(255, 255, 255, .17);
+    border-radius: 100px;
+    padding: 7px 16px;
+    white-space: nowrap;
+  }
+
+  .tag {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--navy);
+    background: var(--orange);
+    border-radius: 100px;
+    padding: 9px 20px;
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+  <div class="card" id="card">
+    <svg class="arcs" viewBox="0 0 620 620" aria-hidden="true">
+      <circle cx="310" cy="310" r="150" stroke-width="1.5" />
+      <circle cx="310" cy="310" r="228" stroke-width="1.5" opacity=".62" />
+      <circle cx="310" cy="310" r="306" stroke-width="1.5" opacity=".34" />
+    </svg>
+
+    <div class="row">
+      <div class="mark"><span>d</span><i></i></div>
+      <div class="wordmark">Duct</div>
+    </div>
+
+    <div class="body">
+      <h1 id="headline"></h1>
+      <p id="sub"></p>
+    </div>
+
+    <div class="foot">
+      <div class="sources" id="sources"></div>
+      <div class="tag" id="tag"></div>
+    </div>
+  </div>
+
+<script>
+  // Rendered by scripts/social/render.mjs, which sets these from the URL.
+  const q = new URLSearchParams(location.search);
+  const card = document.getElementById("card");
+  card.style.setProperty("--w", (q.get("w") || 1200) + "px");
+  card.style.setProperty("--h", (q.get("h") || 630) + "px");
+  card.style.setProperty("--h1", (q.get("h1") || 68) + "px");
+  card.style.setProperty("--sub", (q.get("subsize") || 25) + "px");
+
+  document.getElementById("headline").innerHTML = q.get("headline") || "";
+  document.getElementById("sub").textContent = q.get("sub") || "";
+  document.getElementById("tag").textContent = q.get("tag") || "";
+  document.getElementById("sources").innerHTML = (q.get("sources") || "")
+    .split("|").filter(Boolean).map((s) => "<b>" + s + "</b>").join("");
+</script>
+</body>
+</html>

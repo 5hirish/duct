@@ -12,7 +12,7 @@ ENTITY_CATALOG = {
         {
             "entity_id": "ga4_landing_pages",
             "label": "GA4 Landing Pages",
-            "tool": "fetch_ga4_landing_pages",
+            "fetch_fn": "fetch_ga4_landing_pages",
             "description": "Paid landing page behavior with engagement and conversion context.",
             "fields": {
                 "page_path": {"type": "dimension"},
@@ -28,7 +28,7 @@ ENTITY_CATALOG = {
         {
             "entity_id": "ga4_conversion_paths",
             "label": "GA4 Conversion Paths",
-            "tool": "fetch_ga4_conversion_paths",
+            "fetch_fn": "fetch_ga4_conversion_paths",
             "description": "Source/channel path context for assisted-conversion analysis.",
             "fields": {
                 "session_source_medium": {"type": "dimension"},

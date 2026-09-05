@@ -58,11 +58,22 @@ jobs:
         run: npm ci
 
 
+      # `lint` stays --if-present: there is no ESLint config in app/ yet, so this
+      # is a placeholder, not a gate. `typecheck` was a placeholder too until the
+      # script existed — `--if-present` on a missing script exits 0, so the step
+      # reported green without ever running tsc. Anything that is actually a gate
+      # is invoked by name, so a missing script fails the build instead of
+      # quietly passing.
       - name: Lint (if configured)
         run: npm run lint --if-present
 
-      - name: Typecheck (if configured)
-        run: npm run typecheck --if-present
+      - name: Typecheck (tsc --noEmit)
+        run: npm run typecheck
+
+      # The session reducer replayed against recorded agent streams — the
+      # lifecycle every workspace runs on, checked without a browser.
+      - name: Unit tests (vitest)
+        run: npm test
 
       - name: Slide-renderer parity (slideDoc.js vs backend templates.py)
         run: npm run check:parity

@@ -10,6 +10,13 @@ Two content types, two jobs:
 
 When adding either, ask: *what's the hypothesis being tested?* Put it in a `<!-- EXPERIMENT: ... -->` comment near the top of `<body>`.
 
+**[`DESIGN.md`](DESIGN.md) is the design & voice companion to this file** —
+the visual system as built (tokens, signature moves, section rhythm), the
+accent-variant rule, the contrast rules for the brand orange, the copy voice
+codified from the site's best lines, landing-page craft, and a
+close-on-touch gap list. This file stays the home of the mechanical rules CI
+enforces. Read both before building a page.
+
 ## Stack constraints
 
 - **NO build tools.** No npm, Vite, Webpack, Rollup, or package manager setup.
@@ -105,6 +112,21 @@ window.DUCT_DEMO_CONFIG = {
 3. Swap demo step HTML (plat-grid buttons, metric-grid cards, analyzing lines, KPI chip IDs).
 4. `<link demo.css>` in head; `<script demo-for-x.js>` + `<script demo.js>` at body end.
 5. Add to `sitemap.xml`.
+
+## Canonical URLs
+
+**Extensionless, always.** `.github/scripts/check-pages.py` fails any canonical
+containing `.html`, and `site/sitemap.xml` must use the same form or the two
+disagree about what the page's address is.
+
+| Page | Canonical |
+|---|---|
+| Root-level landing page | `https://getduct.ai/for-paid-ads` |
+| Blog index | `https://getduct.ai/blog/` |
+| Blog post | `https://getduct.ai/blog/post?slug=SLUG` |
+
+`blog/post.html` sets its own canonical at runtime from the slug (see its inline
+script) — do not hardcode one there. Every other page hardcodes it in `<head>`.
 
 ## Page `<head>` checklist
 

@@ -27,6 +27,7 @@ from service.connectors import (
     CAP_ACCOUNTS,
     ConnectorAuthContext,
     ConnectorMeta,
+    entity_facts,
     register_connector,
 )
 from service.stripe import client as st
@@ -179,9 +180,15 @@ class StripeConnector:
             )
         except st.ApiError:
             pass  # account read not granted — the probe already proved the key works
+        readable = sorted(k for k, v in permissions.items() if v == "ok")
         row: dict[str, Any] = {
             "account_id": account_id,
             "account_name": name,
+            # A restricted key is the norm here, so what it can actually read
+            # is the useful fact about it — not that a key exists.
+            "entity_meta": entity_facts(
+                ("Readable", f"{len(readable)} of {len(permissions)} resources"),
+            ),
             "permissions": permissions,
         }
         warning = st.key_warning(key)

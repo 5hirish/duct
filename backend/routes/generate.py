@@ -13,8 +13,9 @@ the form and the pipeline behind it were deleted once the autonomous agent
 could answer those questions itself; see
 ``docs/engineering/autonomous-insights-agent-plan.md``.
 
-``agents/insights/v1/agent.py`` and ``v3/`` are left in place
-and frozen. They no longer serve a route.
+The frozen ``agents/insights/v1/agent.py`` and ``v3/`` that outlived it have
+since been deleted — they served no route, and the goal-ranked tool registry
+behind them looked live enough to keep attracting changes.
 """
 
 from __future__ import annotations

@@ -5,8 +5,12 @@
   "description": "Duct minimal report viewer app shell.",
   "scripts": {
     "dev": "NODE_OPTIONS='--max-old-space-size=2048' next dev -p 3003",
-    "check:parity": "node scripts/check-slide-parity.mjs",
+    "check:parity": "node scripts/check-slide-parity.mjs && node scripts/check-connector-count.mjs && node scripts/check-data-sources.mjs && node scripts/check-desk.mjs && node scripts/check-type-scale.mjs",
+    "check:type": "node scripts/check-type-scale.mjs",
     "build": "next build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "mock:agents": "node scripts/mock-agent-backend.mjs",
     "start": "next start",
     "preview:cf": "opennextjs-cloudflare build && wrangler dev",
     "deploy:cf": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
@@ -53,6 +57,7 @@
     "postcss": "^8.5.8",
     "tailwindcss": "^4.2.2",
     "typescript": "^6.0.2",
+    "vitest": "^5.0.0",
     "wrangler": "^4.80.0"
   }
 }

@@ -29,6 +29,7 @@ from service.connectors import (
     CAP_ACCOUNTS,
     ConnectorAuthContext,
     ConnectorMeta,
+    entity_facts,
     register_connector,
 )
 from service.mixpanel import client as mp
@@ -190,6 +191,10 @@ class MixpanelConnector:
                 {
                     "account_id": str(meta.get("id") or pid),
                     "account_name": str(meta.get("name") or f"Project {pid}"),
+                    # Which Mixpanel residency the project lives in. Two
+                    # projects can share a name across regions, and the API
+                    # host differs, so it is identity rather than trivia.
+                    "entity_meta": entity_facts(("Region", mp.region(creds))),
                     "region": mp.region(creds),
                 }
             )
@@ -213,6 +218,10 @@ MIXPANEL_META = ConnectorMeta(
     label="Mixpanel",
     oauth_scope=None,  # service account pair — Mixpanel has no third-party OAuth
     capabilities=frozenset({CAP_ACCOUNTS}),
+    # The one manual connector that writes: the annotation and hide-event
+    # executors act on the project. No scope to derive that from — a service
+    # account pair carries its permissions out of band — so it is declared.
+    access=frozenset({"read", "write"}),
 )
 
 register_connector(MIXPANEL_META, MixpanelConnector())

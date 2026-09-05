@@ -1,0 +1,19 @@
+[
+  {"event": "pipeline_started", "status": "running", "url": "https://getduct.ai"},
+  {"event": "step_started", "step_id": "resolve_url", "label": "Resolving website", "status": "running"},
+  {"event": "step_finished", "step_id": "resolve_url", "status": "success", "payload": {"final_url": "https://getduct.ai/"}},
+  {"event": "step_started", "step_id": "crawl_pages", "label": "Crawling pages", "status": "running", "payload": {"done": 1, "total": 9}},
+  {"event": "step_started", "step_id": "crawl_pages", "status": "running"},
+  {"event": "step_finished", "step_id": "crawl_pages", "status": "success"},
+  {"event": "step_started", "step_id": "synthesize_audit", "label": "AI synthesis", "status": "running"},
+  {"event": "artifact_chunk", "text": "<html>"},
+  {"event": "artifact_version", "version_id": 1, "label": "Initial audit", "payload": {"url": "https://getduct.ai"}},
+  {"event": "memory_written", "memory": {"memory_id": "22222222-2222-2222-2222-222222222222", "id": "m2", "title": "Homepage title is 71 chars"}},
+  {"event": "memory_written", "memory": {"memory_id": "33333333-3333-3333-3333-333333333333", "id": "m3", "title": "Blog has no sitemap"}},
+  {"event": "message_stop"},
+  {"event": "pipeline_finished", "status": "success"},
+  {"__send__": "why is the score 61?"},
+  {"event": "step_failed", "status": "error", "error": "That turn failed. Try rephrasing, or ask something else."},
+  {"__send__": "explain the title finding"},
+  {"event": "agent_message", "text": "The title runs past 60 characters and gets truncated in results."}
+]

@@ -293,6 +293,7 @@ import uuid  # noqa: E402
 
 from agents.core.connector_tools import _request_connection, _select_account  # noqa: E402
 from agents.core.events import AgentEvent  # noqa: E402
+from agents.core.session import make_future_pause  # noqa: E402
 from agents.insights.schema import create_insights_session  # noqa: E402
 
 
@@ -335,10 +336,13 @@ def bridge(db, monkeypatch):
 
 
 def _kwargs(ctx, user, project):
+    """The tool bodies on the in-process pause — the binder's default, spelled
+    out so the test drives the same Future the messages route resolves."""
     return dict(
         user_id=user.id, project_id=project.id,
-        session=ctx.session, session_id=ctx.session.session_id,
-        emit=ctx.emit, log_prefix="test", can_pause=True,
+        pause=make_future_pause(
+            ctx.session, ctx.session.session_id, ctx.emit, log_prefix="test"
+        ),
     )
 
 

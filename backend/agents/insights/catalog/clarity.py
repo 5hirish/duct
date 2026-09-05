@@ -12,7 +12,7 @@ ENTITY_CATALOG = {
         {
             "entity_id": "clarity_friction",
             "label": "Clarity Landing-Page Friction",
-            "tool": "fetch_clarity",
+            "fetch_fn": "fetch_clarity",
             "description": (
                 "Last 1–3 days of on-page friction — rage clicks, dead clicks, quick-backs, "
                 "script errors — overall and per URL, with traffic and engagement context. "

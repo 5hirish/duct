@@ -23,9 +23,23 @@ const LOOKS = {
   image: { Icon: ImageIcon, className: "bg-muted text-muted-foreground" },
 };
 
-/** A thread's state, in the words someone would use out loud. */
+/** A thread's state, in the words someone would use out loud. The run status
+ *  comes from the list route, so a thread stuck on a question or a rejected
+ *  key says so here, before anyone opens it. */
 function threadState(conv) {
   if (conv.status === "archived") return { label: "Closed", className: "text-muted-foreground" };
+  switch (conv.run_status) {
+    case "running":
+      return { label: "Working…", className: "text-primary animate-pulse" };
+    case "paused":
+      return { label: "Needs you", className: "text-amber-600 dark:text-amber-400 font-medium" };
+    case "failed":
+      return { label: "Failed", className: "text-destructive font-medium" };
+    case "cancelled":
+      return { label: "Stopped", className: "text-muted-foreground" };
+    default:
+      break;
+  }
   if (conv.last_seq === 0) return { label: "Not started", className: "text-muted-foreground" };
   return { label: "Open", className: "text-primary" };
 }

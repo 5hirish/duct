@@ -6,7 +6,7 @@ import remarkGfm from "remark-gfm";
 /**
  * Rich, readable markdown renderer for content-format spec docs.
  *
- * Unlike the compact chat renderer (ContentChat), this is tuned for
+ * Unlike the compact chat renderer (workspace/ChatMarkdown), this is tuned for
  * long-form reading: full-size headings, GFM tables with proper borders,
  * code blocks, and blockquote call-outs. Used by the format detail view
  * and the live editor preview.

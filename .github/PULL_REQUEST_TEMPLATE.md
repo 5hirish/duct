@@ -31,6 +31,8 @@ Closes #
 - [ ] I ran the checks for the areas I touched (see [CONTRIBUTING.md](../CONTRIBUTING.md))
 - [ ] I added or updated tests covering the behaviour that changed
 - [ ] I read the `AGENTS.md` for each directory I edited
+- [ ] I read my own diff back looking for the reason to reject it, and read it
+      against the code around it ([STYLE.md](../STYLE.md))
 
 ## Things that need a second look
 

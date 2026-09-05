@@ -106,10 +106,26 @@ gitignored staging for the push scripts. All are gitignored — never commit one
 
 ## Working style
 
+[`STYLE.md`](STYLE.md) is the companion to this file. This one holds the rules
+that must not break; that one holds what good code looks like once it works,
+organised by principle — modularity, reusability, named constants over magic
+strings, error handling, comments, readability, design patterns — plus a
+close-on-touch list of the places the tree currently falls short. Read it
+before writing in an area you have not written in before.
+
 - One concern per change. Explain *why* in the commit body; the diff shows what.
 - Comments in this codebase carry reasoning, not description. Match that — a
   comment restating the line below it is noise, one naming the failure that
   motivated the line is why the code survives.
+- **Attack your own diff before calling it done.** Read it back as though
+  someone else wrote it and you are looking for the reason to reject it. The
+  author catches most of what a reviewer would, and catches it for free.
+- **Then read the diff against its neighbours.** A set of individually
+  defensible changes that together dissolve an architecture is the specific way
+  agent-accelerated codebases fail: every change argues for itself and nothing
+  argues for the whole. Ask what the third change of this shape would do to the
+  module. If the answer is "we would have to reorganise", do it now, while it is
+  still one file.
 - Update the docs next to the code you changed, including the area `AGENTS.md`
   if you changed a convention.
 - Deployment happens through CI on merge to `main`. Do not deploy from a CLI.

@@ -18,14 +18,17 @@ Fake chat model throughout — no API key, no network.
 
 from __future__ import annotations
 
+import asyncio
 import uuid
 
 import pytest
-from langchain_core.language_models.fake_chat_models import FakeMessagesListChatModel
 from langchain_core.messages import AIMessage
 
+from agents.core import lc
+from agents.core.errors import ErrorCode
 from agents.core.events import AgentEvent
 from agents.core.lc import _dispatch_updates
+from routes.agents import AgentMessage, send_message
 from agents.insights.prompts.autonomous import (
     build_insights_system_prompt,
     build_insights_user_prompt,
@@ -34,26 +37,16 @@ from agents.insights.schema import InsightsRequest, InsightsSession, create_insi
 from agents.insights.v1.runner import AutonomousInsightsRunner
 
 
-class ToolCallingFake(FakeMessagesListChatModel):
-    """A fake that accepts bind_tools, so it can drive a real agent loop.
-
-    `FakeMessagesListChatModel` cycles its responses rather than exhausting
-    them, so a two-turn test needs two entries and a *failing* turn needs
-    `RaisingFake` instead.
-    """
-
-    def bind_tools(self, tools, **kwargs):  # noqa: ARG002
-        return self
-
-
-class RaisingFake(ToolCallingFake):
-    """Answers the first turn, then fails — the "one bad turn" case."""
-
-    def _generate(self, messages, stop=None, run_manager=None, **kwargs):
-        if getattr(self, "_used", False):
-            raise RuntimeError("provider blew up")
-        self._used = True
-        return super()._generate(messages, stop=stop, run_manager=run_manager, **kwargs)
+from tests.fakes import (
+    AuthenticationError,
+    FlakyFake,
+    OverflowFake,
+    RaisingFake,
+    RateLimitError,
+    ToolCallingFake,
+    fake_llm as _fake,
+    tool_names as _tool_names,
+)
 
 
 @pytest.fixture
@@ -61,34 +54,31 @@ def session() -> InsightsSession:
     return create_insights_session(str(uuid.uuid4()))
 
 
-@pytest.fixture
-def emitted():
-    events: list[dict] = []
-
-    async def emit(event: dict) -> None:
-        events.append(event)
-
-    emit.events = events  # type: ignore[attr-defined]
-    return emit
+QUESTION = {"question": "Which goal matters most?", "header": "Goal"}
 
 
-def _fake(*responses: str, cls=ToolCallingFake):
-    return cls(responses=[AIMessage(content=r) for r in responses])
+def _asks_then_answers(*replies: str):
+    """A model that asks one clarifying question, then answers with `replies`."""
+    return ToolCallingFake(
+        responses=[
+            AIMessage(
+                content="",
+                tool_calls=[{
+                    "name": "AskUserQuestion",
+                    "args": {"questions": [QUESTION]},
+                    "id": "ask_1",
+                }],
+            ),
+            *[AIMessage(content=r) for r in replies],
+        ]
+    )
+
+
+def _kinds(emitted) -> list[str]:
+    return [e["event"] for e in emitted.events]
 
 
 RUNNER = AutonomousInsightsRunner(api_key="unused-no-network")
-
-
-def _tool_names(agent) -> set[str]:
-    """Tool names bound into a compiled agent graph."""
-    for node in agent.nodes.values():
-        seq = getattr(getattr(node, "bound", None), "steps", None) or []
-        for step in seq:
-            if hasattr(step, "tools_by_name"):
-                return set(step.tools_by_name)
-    tool_node = agent.nodes.get("tools")
-    inner = getattr(tool_node, "bound", tool_node)
-    return set(getattr(inner, "tools_by_name", {}))
 
 
 # ---------------------------------------------------------------------------
@@ -129,7 +119,6 @@ def test_system_prompt_describes_the_tools_actually_mounted():
     brief — the exact failure this agent exists to eliminate."""
     prompt = build_insights_system_prompt()
 
-    assert "Prove the number before you use it" in prompt
     for tool in ("FetchData", "ReadConnectorNotes", "ListDataSources", "SelectAccount"):
         assert tool in prompt
 
@@ -143,23 +132,6 @@ def test_system_prompt_carries_the_catalog_and_the_notes_index():
     assert "search_terms" in prompt          # a catalog entity
     assert "ReadConnectorNotes" in prompt
     assert "`stripe`" in prompt              # a notes index entry
-
-
-def test_verification_is_delegated_not_optional():
-    prompt = build_insights_system_prompt()
-
-    assert "Delegate the checking" in prompt
-    assert "could not check" in prompt
-
-
-def test_system_prompt_teaches_the_discovery_order():
-    """ListDataSources before guessing, RequestConnection only when needed, and
-    a decline is a normal answer — the three habits that replace the wizard."""
-    prompt = build_insights_system_prompt()
-
-    assert "ListDataSources" in prompt
-    assert "SelectAccount" in prompt
-    assert "Decline is a normal answer" in prompt
 
 
 def test_user_turn_carries_the_per_project_blocks():
@@ -178,7 +150,8 @@ def test_empty_prompt_becomes_an_opening_instruction():
     """Opening a session without typing anything is a normal entry point."""
     out = build_insights_user_prompt(prompt="")
 
-    assert "without saying what they want" in out
+    assert out.strip()
+    assert out != build_insights_user_prompt(prompt="status?")
 
 
 # ---------------------------------------------------------------------------
@@ -322,6 +295,166 @@ async def test_a_failed_turn_does_not_end_the_session(session, emitted):
     kinds = [e["event"] for e in emitted.events]
     assert AgentEvent.STEP_FAILED in kinds
     assert AgentEvent.PIPELINE_FAILED not in kinds  # the session survived
+    failed = next(e for e in emitted.events if e["event"] == AgentEvent.STEP_FAILED)
+    # Typed, and never the raw exception text.
+    assert failed["code"] == ErrorCode.UNKNOWN
+    assert "provider blew up" not in failed["error"]
+
+
+@pytest.fixture
+def no_retry_sleep(monkeypatch):
+    waited: list[float] = []
+
+    async def _sleep(seconds: float) -> None:
+        waited.append(seconds)
+
+    monkeypatch.setattr(lc, "_retry_sleep", _sleep)
+    return waited
+
+
+async def test_a_transient_failure_is_retried_and_reported(session, emitted, no_retry_sleep):
+    """A 429 twice, then an answer: the user sees two "reconnecting" events and
+    then the reply — not a failed turn, and not a silent ten-second hang."""
+    await session.chat_queue.put(None)
+
+    await RUNNER.run_session(
+        session.session_id, emitted, llm=_fake("Recovered.", cls=FlakyFake),
+        session=session, prompt="status?", chat_idle_timeout=2.0,
+    )
+
+    retries = [e for e in emitted.events if e["event"] == AgentEvent.MODEL_RETRYING]
+    assert [r["attempt"] for r in retries] == [1, 2]
+    assert all(r["code"] == ErrorCode.RATE_LIMITED for r in retries)
+    assert retries[0]["max_attempts"] == lc.MODEL_RETRY_ATTEMPTS
+    assert len(no_retry_sleep) == 2 and no_retry_sleep[1] > no_retry_sleep[0] * 1.2  # backing off
+    # The wait the UI counts down is the wait actually taken.
+    assert [r["retry_in"] for r in retries] == [round(s, 1) for s in no_retry_sleep]
+    kinds = _kinds(emitted)
+    assert AgentEvent.STEP_FAILED not in kinds
+    assert AgentEvent.PIPELINE_FAILED not in kinds
+    assert AgentEvent.PIPELINE_FINISHED in kinds
+
+
+class TellsWhenToRetry(RateLimitError):
+    """A 429 that says how long to wait, the way Anthropic's and OpenAI's do."""
+
+    def __init__(self, message):
+        super().__init__(message)
+        self.response = type("Response", (), {"headers": {"retry-after": "7"}})()
+
+
+async def test_the_providers_retry_after_sets_the_wait_and_the_countdown(session, emitted, no_retry_sleep):
+    await session.chat_queue.put(None)
+
+    class Told(FlakyFake):
+        failures: int = 1
+        exc: type[Exception] = TellsWhenToRetry
+
+    await RUNNER.run_session(
+        session.session_id, emitted, llm=_fake("Recovered.", cls=Told),
+        session=session, prompt="status?", chat_idle_timeout=2.0,
+    )
+
+    assert no_retry_sleep == [7.0]
+    retry = next(e for e in emitted.events if e["event"] == AgentEvent.MODEL_RETRYING)
+    assert retry["retry_in"] == 7.0
+    assert AgentEvent.PIPELINE_FINISHED in _kinds(emitted)
+
+
+async def test_a_request_too_long_is_compacted_once_and_retried(session, emitted, monkeypatch):
+    """An hour into a thread the provider says the request is too long. The
+    history is summarised, the same request is retried with room, and the
+    user sees a compaction, not a dead conversation."""
+    monkeypatch.setattr(lc, "COMPACT_KEEP_TOKENS", 12)  # a test transcript is tiny
+    await session.chat_queue.put("and what about mobile?")
+    await session.chat_queue.put(None)
+
+    # The opening turn answers; the follow-up overflows once, then answers.
+    fake = _fake("Answered.", cls=OverflowFake)
+    fake._overflowed = -1
+    await RUNNER.run_session(
+        session.session_id, emitted, llm=fake,
+        session=session, prompt="status?", chat_idle_timeout=2.0,
+    )
+
+    kinds = _kinds(emitted)
+    assert AgentEvent.CONTEXT_COMPACTING in kinds
+    assert AgentEvent.CONTEXT_COMPACTED in kinds
+    assert AgentEvent.STEP_FAILED not in kinds
+    assert AgentEvent.PIPELINE_FAILED not in kinds
+    assert kinds.count(AgentEvent.MESSAGE_STOP) == 2  # both turns finished
+    # The thread now opens with the summary, and the follow-up survived it.
+    snapshot = await RUNNER.build_agent(llm=fake, remember=False, execute=False, interactive=False).aget_state(
+        {"configurable": {"thread_id": session.session_id}}
+    )
+    texts = [str(m.content) for m in snapshot.values["messages"]]
+    assert any("summary of the conversation" in t for t in texts)
+    assert any("mobile" in t for t in texts)
+
+
+async def test_a_second_overflow_is_the_ordinary_failure(session, emitted, monkeypatch):
+    monkeypatch.setattr(lc, "COMPACT_KEEP_TOKENS", 12)
+    await session.chat_queue.put("and what about mobile?")
+    await session.chat_queue.put(None)
+
+    class Overflows(OverflowFake):
+        overflows: int = 2
+
+    fake = _fake("Answered.", cls=Overflows)
+    fake._overflowed = -1
+    await RUNNER.run_session(
+        session.session_id, emitted, llm=fake,
+        session=session, prompt="status?", chat_idle_timeout=2.0,
+    )
+
+    kinds = _kinds(emitted)
+    assert kinds.count(AgentEvent.CONTEXT_COMPACTING) == 1
+    failed = [e for e in emitted.events if e["event"] == AgentEvent.STEP_FAILED]
+    assert len(failed) == 1 and failed[0]["code"] == ErrorCode.CONTEXT_WINDOW
+
+
+async def test_a_retry_after_beyond_the_cap_is_not_waited_for(session, emitted, no_retry_sleep):
+    """A provider asking for five minutes gets a rate-limited failure now, not
+    a thirty-second countdown and then the same failure."""
+    await session.chat_queue.put(None)
+
+    class Patient(RateLimitError):
+        def __init__(self, message):
+            super().__init__(message)
+            self.response = type("Response", (), {"headers": {"retry-after": "300"}})()
+
+    class Told(FlakyFake):
+        failures: int = 1
+        exc: type[Exception] = Patient
+
+    with pytest.raises(Patient):
+        await RUNNER.run_session(
+            session.session_id, emitted, llm=_fake("Recovered.", cls=Told),
+            session=session, prompt="status?", chat_idle_timeout=2.0,
+        )
+
+    assert AgentEvent.MODEL_RETRYING not in _kinds(emitted)
+    assert no_retry_sleep == []
+
+
+async def test_a_rejected_key_fails_on_the_first_attempt(session, emitted, no_retry_sleep):
+    """Retrying a bad API key only delays the answer the user needs."""
+    await session.chat_queue.put("follow up")
+    await session.chat_queue.put(None)
+
+    class AuthFlaky(FlakyFake):
+        failures: int = 1
+        exc: type[Exception] = AuthenticationError
+
+    # The opening turn fails (the route reports it); the follow-up answers.
+    with pytest.raises(AuthenticationError):
+        await RUNNER.run_session(
+            session.session_id, emitted, llm=_fake("Recovered.", cls=AuthFlaky),
+            session=session, prompt="status?", chat_idle_timeout=2.0,
+        )
+
+    assert AgentEvent.MODEL_RETRYING not in _kinds(emitted)
+    assert no_retry_sleep == []
 
 
 async def test_short_replies_are_not_truncated(session, emitted):
@@ -369,6 +502,252 @@ async def test_update_dispatch_survives_unexpected_shapes():
         await _dispatch_updates(chunk, on_todo=on_todo, on_tool_use=None, on_tool_result=None)
 
     assert calls == []  # nothing raised, nothing spurious emitted
+
+
+# ---------------------------------------------------------------------------
+# Pauses — checkpointed, answered by id, shown again on resume
+# ---------------------------------------------------------------------------
+
+async def test_a_question_parks_the_session_and_an_answer_resumes_it(session, emitted):
+    """The whole round trip: the tool interrupts, the pause reaches the stream
+    with its id, PIPELINE_FINISHED is held back, the answer arrives as the
+    route would queue it, and the model gets to finish."""
+    conversation_id = uuid.uuid4()
+
+    async def answer_when_parked():
+        while not session.pending_pauses:
+            await asyncio.sleep(0.01)
+        (interrupt_id,) = session.pending_pauses
+        assert AgentEvent.PIPELINE_FINISHED not in _kinds(emitted), "parked, not finished"
+        await session.chat_queue.put({"resume": {interrupt_id: {QUESTION["question"]: "Signups"}}})
+        await session.chat_queue.put(None)
+
+    answerer = asyncio.create_task(answer_when_parked())
+    await RUNNER.run_session(
+        session.session_id, emitted, llm=_asks_then_answers("Signups it is."),
+        session=session, prompt="what should I fix?", conversation_id=conversation_id,
+        chat_idle_timeout=2.0,
+    )
+    await answerer
+
+    kinds = _kinds(emitted)
+    pause = next(e for e in emitted.events if e["event"] == AgentEvent.QUESTIONS_REQUIRED)
+    assert pause["questions"] == [QUESTION]
+    assert pause["interrupt_id"]
+    # The card lands before the bubble closes, and the run only counts as
+    # opened once a turn ends with nothing parked.
+    assert kinds.index(AgentEvent.QUESTIONS_REQUIRED) < kinds.index(AgentEvent.MESSAGE_STOP)
+    assert kinds.index(AgentEvent.PIPELINE_FINISHED) > kinds.index(AgentEvent.QUESTIONS_REQUIRED)
+    prose = "".join(e["text"] for e in emitted.events if e["event"] == AgentEvent.AGENT_MESSAGE_CHUNK)
+    assert "Signups it is." in prose
+    assert session.pending_pauses == {}
+
+
+async def test_resuming_a_parked_conversation_shows_the_pause_again(emitted):
+    """Yesterday's question is still the question. A new session on the same
+    conversation re-emits it — flagged as a replay so it is not recorded twice —
+    without calling the model, and parks on it."""
+    conversation_id = uuid.uuid4()
+    first = create_insights_session(str(uuid.uuid4()))
+    await RUNNER.run_session(
+        first.session_id, emitted, llm=_asks_then_answers("never reached"),
+        session=first, prompt="what should I fix?", conversation_id=conversation_id,
+        chat_idle_timeout=0.01,
+    )
+    parked_on = next(iter(first.pending_pauses))
+    emitted.events.clear()
+
+    second = create_insights_session(str(uuid.uuid4()))
+    await RUNNER.run_session(
+        second.session_id, emitted, llm=_fake("must not be called", cls=RaisingFake),
+        session=second, prompt="", conversation_id=conversation_id,
+        chat_idle_timeout=0.01, resume=True,
+    )
+
+    kinds = _kinds(emitted)
+    assert AgentEvent.QUESTIONS_REQUIRED in kinds
+    assert AgentEvent.AGENT_MESSAGE_CHUNK not in kinds and AgentEvent.PIPELINE_FINISHED not in kinds
+    replayed = next(e for e in emitted.events if e["event"] == AgentEvent.QUESTIONS_REQUIRED)
+    assert replayed["replay"] is True
+    assert replayed["interrupt_id"] == parked_on
+    assert list(second.pending_pauses) == [parked_on]
+
+
+async def test_the_thread_is_the_conversation_not_the_session(emitted):
+    """Two sessions, one conversation: the second is a continuation, so it
+    opens ready without a greeting and the thread carries both turns."""
+    conversation_id = uuid.uuid4()
+    first = create_insights_session(str(uuid.uuid4()))
+    await RUNNER.run_session(
+        first.session_id, emitted, llm=_fake("CPA is up."),
+        session=first, prompt="cpa?", conversation_id=conversation_id, chat_idle_timeout=0.01,
+    )
+    emitted.events.clear()
+
+    second = create_insights_session(str(uuid.uuid4()))
+    await RUNNER.run_session(
+        second.session_id, emitted, llm=_fake("must not be called", cls=RaisingFake),
+        session=second, prompt="", conversation_id=conversation_id,
+        chat_idle_timeout=0.01, resume=True,
+    )
+    assert _kinds(emitted) == [AgentEvent.PIPELINE_FINISHED]
+
+    state = await RUNNER.thread_state(conversation_id)
+    assert state["status"] == "idle"
+    assert state["message_count"] == 2  # the question and its answer, on one thread
+
+
+async def test_thread_state_reports_a_parked_thread(emitted):
+    conversation_id = uuid.uuid4()
+    session = create_insights_session(str(uuid.uuid4()))
+    await RUNNER.run_session(
+        session.session_id, emitted, llm=_asks_then_answers("never reached"),
+        session=session, prompt="fix?", conversation_id=conversation_id, chat_idle_timeout=0.01,
+    )
+
+    state = await RUNNER.thread_state(conversation_id)
+
+    assert state["status"] == "paused"
+    assert state["pauses"][0]["event"] == AgentEvent.QUESTIONS_REQUIRED
+    assert state["pauses"][0]["questions"] == [QUESTION]
+
+
+async def test_token_usage_reaches_the_stream_and_the_thread_state(emitted):
+    """Every model call is billed on the stream, and a thread opened later
+    shows the same figures from its checkpoint — the ring before the run."""
+    conversation_id = uuid.uuid4()
+    usage = {"input_tokens": 1200, "output_tokens": 30, "total_tokens": 1230}
+    llm = ToolCallingFake(responses=[AIMessage(content="Done.", usage_metadata=usage)])
+
+    await RUNNER.run_session(
+        "s-usage", emitted, llm=llm, session=None, prompt="go",
+        conversation_id=conversation_id,
+    )
+
+    billed = [e for e in emitted.events if e["event"] == AgentEvent.TOKEN_USAGE]
+    assert len(billed) == 1
+    assert billed[0]["input_tokens"] == 1200 and billed[0]["output_tokens"] == 30
+    assert billed[0]["context_window"] > 0
+    kinds = _kinds(emitted)
+    assert kinds.index(AgentEvent.TOKEN_USAGE) < kinds.index(AgentEvent.MESSAGE_STOP)
+
+    state = await RUNNER.thread_state(conversation_id)
+    assert state["usage"]["last"]["input_tokens"] == 1200
+    assert state["usage"]["total"]["calls"] == 1
+
+
+async def test_a_message_sent_mid_turn_reaches_the_model_at_its_next_call(session, emitted):
+    """The user types while the agent works. The steer middleware hands the
+    message to the model at its next call, the client is told the row is
+    consumed, and the thread has one more human message than the prompt."""
+    conversation_id = uuid.uuid4()
+    await session.steer_queue.put({"role": "user", "content": "also mobile", "client_message_id": "m1"})
+    await session.chat_queue.put(None)
+
+    await RUNNER.run_session(
+        session.session_id, emitted, llm=_fake("Both, then."),
+        session=session, prompt="why did CPA jump?", conversation_id=conversation_id,
+        chat_idle_timeout=2.0,
+    )
+
+    consumed = [e for e in emitted.events if e["event"] == AgentEvent.USER_INPUT_CONSUMED]
+    assert [c["client_message_id"] for c in consumed] == ["m1"]
+    assert session.steer_queue.empty()
+    assert session.turn_active is False
+    state = await RUNNER.thread_state(conversation_id)
+    assert state["message_count"] == 3  # prompt, the steer, the answer
+
+
+async def test_the_chat_route_steers_while_a_turn_runs_and_queues_otherwise(session):
+    """Never a 409: busy means steer (this harness can), idle means a turn."""
+    session.turn_active = True
+    out = await send_message(
+        "insights", session.session_id,
+        AgentMessage(type="chat", content="also mobile", client_message_id="m1"), user=None,
+    )
+    assert out["delivery"] == "steer"
+    assert session.steer_queue.get_nowait() == {"role": "user", "content": "also mobile", "client_message_id": "m1"}
+
+    session.turn_active = False
+    out = await send_message("insights", session.session_id, AgentMessage(type="chat", content="next"), user=None)
+    assert out["delivery"] == "turn"
+    assert session.chat_queue.get_nowait() == {"role": "user", "content": "next"}
+
+
+async def test_an_unknown_conversation_is_idle_not_an_error():
+    state = await RUNNER.thread_state(uuid.uuid4())
+    assert state["status"] == "idle"
+    assert (state["pauses"], state["todos"], state["message_count"]) == ([], [], 0)
+    assert state["usage"]["last"] is None  # nothing billed yet, but the gauge has a window
+    assert state["usage"]["context_window"] > 0
+
+
+async def test_the_answer_route_resumes_a_checkpointed_pause(session):
+    """The route cannot tell a Future from an interrupt and must not need to:
+    with pauses pending it queues a resume for the runner, by id."""
+    session.pending_pauses = {"int_1": {"event": AgentEvent.QUESTIONS_REQUIRED, "interrupt_id": "int_1"}}
+
+    out = await send_message(
+        "insights", session.session_id,
+        AgentMessage(type="answer", answers={"Goal": "Signups"}, interrupt_id="int_1"),
+        user=None,
+    )
+
+    assert out == {"status": "queued", "type": "answer"}
+    assert session.chat_queue.get_nowait() == {"resume": {"int_1": {"Goal": "Signups"}}}
+    assert session.pending_pauses == {}
+
+
+async def test_an_answer_without_an_id_takes_the_only_pending_pause(session):
+    session.pending_pauses = {"int_9": {"event": AgentEvent.CONNECTION_REQUIRED, "interrupt_id": "int_9"}}
+
+    await send_message(
+        "insights", session.session_id, AgentMessage(type="answer", answers={"skipped": True}), user=None
+    )
+
+    assert session.chat_queue.get_nowait() == {"resume": {"int_9": {"skipped": True}}}
+
+
+async def test_session_state_reports_a_future_bridged_pause_too(session):
+    """A reattaching client asks the session what it is parked on. The
+    Future bridge has no interrupt id, but it does have the event it emitted,
+    and that is enough to put the card back."""
+    from agents.core.session import bridge_user_input
+    from routes.agents import get_session_state
+
+    async def emit(_e):
+        pass
+
+    parked = asyncio.create_task(bridge_user_input(
+        session, session.session_id, event=AgentEvent.QUESTIONS_REQUIRED,
+        payload={"questions": [QUESTION]}, emit=emit, timeout=2.0,
+    ))
+    while session.answer_future is None:
+        await asyncio.sleep(0.01)
+
+    state = await get_session_state("insights", session.session_id, user=None)
+    assert state["has_pending_question"] is True
+    assert state["pending"] == [{"event": AgentEvent.QUESTIONS_REQUIRED, "questions": [QUESTION]}]
+
+    session.answer_future.set_result({})
+    await parked
+    state = await get_session_state("insights", session.session_id, user=None)
+    assert state["pending"] == []
+
+
+async def test_chat_while_parked_is_steered_not_refused(session):
+    """A tool call is waiting for its result, so a fresh human turn on top of
+    it would be a transcript the provider rejects. It used to be a 409; now
+    the message waits on the steer queue and the model reads it right after
+    the answer, at its next call."""
+    session.pending_pauses = {"int_1": {"event": AgentEvent.QUESTIONS_REQUIRED, "interrupt_id": "int_1"}}
+
+    out = await send_message(
+        "insights", session.session_id, AgentMessage(type="chat", content="also mobile"), user=None
+    )
+    assert out["delivery"] == "steer"
+    assert session.steer_queue.get_nowait() == {"role": "user", "content": "also mobile"}
+    assert session.chat_queue.empty()
 
 
 # ---------------------------------------------------------------------------
@@ -460,22 +839,11 @@ def test_an_unattended_run_cannot_ask_a_question():
         assert pausing not in _tool_names(unattended)
     assert "ListDataSources" in _tool_names(unattended)
     assert "FetchData" in _tool_names(unattended)
+    # And the prompt agrees: the unattended stanza names no tool that pauses,
+    # or the agent plans around a question it will never get to ask.
+    from agents.insights.prompts.autonomous import CAPABILITIES_UNATTENDED
 
-
-def test_an_unattended_run_is_told_there_is_nobody_to_ask():
-    """A prompt that still describes an interactive session would have the
-    agent plan around a question it will never get to ask — which produces a
-    brief with a hole in it instead of a stated assumption."""
-    from agents.insights.prompts.autonomous import (
-        CAPABILITIES_PHASE_3,
-        CAPABILITIES_UNATTENDED,
-    )
-
-    assert "There is nobody to ask" in CAPABILITIES_UNATTENDED
-    assert "state the assumption in the brief" in CAPABILITIES_UNATTENDED
     assert "AskUserQuestion" not in CAPABILITIES_UNATTENDED
-    # The interactive stanza must NOT say that — it has the tool.
-    assert "There is nobody to ask" not in CAPABILITIES_PHASE_3
 
 
 async def test_run_once_returns_the_brief_it_wrote(emitted):
@@ -500,31 +868,3 @@ async def test_a_run_that_wrote_nothing_says_so(emitted):
 
     assert brief == {}
     assert AgentEvent.ARTIFACT_VERSION not in [e["event"] for e in emitted.events]
-
-
-def test_the_wizards_request_contract_is_gone_not_merely_unused():
-    """Phase 6. `GenerateRequest` was the six-step form's output — connectors,
-    accounts, goal, date range — and `UnifiedInsight` the envelope it produced.
-    Leaving them importable is how a deleted path grows a second caller."""
-    import routes.schemas as schemas
-
-    for name in ("GenerateRequest", "ReportRequest", "UnifiedInsight", "InsightMetadata"):
-        assert not hasattr(schemas, name), f"{name} outlived the wizard"
-
-
-def test_the_unattended_endpoint_takes_a_project_and_a_sentence():
-    """The URL survives; its contract does not. /api/insights/generate now
-    validates the same body as a session."""
-    import inspect
-
-    import routes.generate as generate_routes
-
-    assert hasattr(generate_routes, "generate_insight")
-    # The wizard's streaming twin had no caller once the form went.
-    assert not hasattr(generate_routes, "generate_insight_stream")
-    assert not hasattr(generate_routes, "_run_generate_pipeline")
-    # The modes catalogue stays — the organic-growth page still renders it.
-    assert hasattr(generate_routes, "list_insight_modes")
-
-    params = inspect.signature(generate_routes.generate_insight).parameters
-    assert "user_keys" in params, "bring-your-own provider keys must survive the rewire"

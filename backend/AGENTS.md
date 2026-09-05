@@ -50,6 +50,21 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
     while the V3 runner still claimed parity with the older `GenerateInsightsAgent`
     fetch/synthesize pair — an interface the routes had already left behind.
 
+    **`GenerateInsightsAgent` and its tool registry were removed too**, for the third
+    time for the same reason: no route dispatched them. With it went
+    `agents/insights/tools.py` (per-connector `StructuredTool` factories) and
+    `agents/insights/registry.py` (`goal_relevance` scoring that ranked a set of 12
+    entities down to 8 — selection pressure that never existed). The autonomous runner
+    reaches every entity through `FetchData(entity_id=…)` against the catalog, so the
+    catalog's dispatch key was renamed `tool` → `fetch_fn`: it names an internal
+    function, and only looked like a tool reference while those tools existed.
+
+    One consequence, deliberately recorded rather than discovered later: **nothing now
+    wires a ChatGPT subscription into an insights run.** `should_use_codex` /
+    `build_codex_chat` were branched only inside the deleted `agent.py`;
+    `agents/core/codex.py` and its tests remain, but no live path calls them. Re-wiring
+    that belongs in `agents/core/lc.resolve_chat_model`, where every runner would get it.
+
   So a shared change may need doing twice (V1 + V3), never more.
   Claude remains a first-class *model* through V1, so retiring V3 later costs no capability.
 
@@ -89,6 +104,17 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
 - **Observability:** Sentry error tracking; optional OpenTelemetry tracing (wired via Claude Agent SDK).
 - **Hosting:** Railway — auto-deploys from `main` via GitHub integration; `railway.json` defines Railpack build + uvicorn start.
 - **CI:** GitHub Actions (`backend.yml`) — Ruff lint + pytest on every PR and push to `main`.
+- **Tests:** `make test` must stay offline and under two minutes; it is the
+  gate on every merge and the thing an agent runs after every change. Two
+  rules keep it that way. A test that needs a provider key, a network, or a
+  binary on `PATH` is marked `live` — a `skipif` on the key alone is not a
+  gate, because `get_configs()` reads `backend/.env.local`, so a developer with
+  a key there fires a paid, minutes-long call from a plain `pytest`. And the
+  V1 agent loop is driven by the fakes in `tests/fakes.py` (`ToolCallingFake`
+  and its failing variants, `fake_llm`, `tool_names`) plus the `emitted`
+  fixture in `conftest.py`: the real harness runs, only the model is canned.
+  Assert on events, tool names and payloads, not on prompt prose — a wording
+  test fails on every copy edit and catches nothing an eval would not.
 
 ### Desktop (local sidecar) mode
 
@@ -201,8 +227,72 @@ framework. The rules it implies:
   allowlist; adding a file to that list is a deliberate act, not a fix for a
   failing test.
 - **Write the adapter on the second implementation, not the first.** One
-  implementation is a guess. Do not abstract the session registry until the
-  LangGraph checkpointer actually lands beside it.
+  implementation is a guess. The human-in-the-loop port is the worked
+  example: `PauseFn` in `agents/core/session.py` was declared only once the
+  LangGraph `interrupt()` implementation (`agents/core/lc.interrupt_pause`)
+  existed beside the Future bridge. A tool body takes a `PauseFn`; the binder
+  that mounts it decides which one — the Future for an agent with no
+  checkpointer (audit v1, the SDK runners), the interrupt for one with durable
+  threads (insights v1). Same events, same route, and the frontend cannot
+  tell them apart.
+- **A durable thread is the conversation.** The insights runner keys its
+  LangGraph thread on the conversation id, so a resumed session continues the
+  thread — and a pause the thread is parked on comes back as the same SSE
+  event, flagged `replay`, when a session resumes it. Never key a thread on
+  a session id; that made "resume" a transcript the agent could not see.
+- **A failure is a code before it is a message.** `agents/core/errors.py`
+  classifies an exception once (`classify_error`), and that code decides the
+  retry (`is_retryable`), rides on the failure event (`error_payload`), and
+  picks the copy in the browser. Never emit `str(exc)` to a client, and never
+  add a regex on message text in the frontend — add a code, or a class name to
+  the classifier's table.
+- **Input during a turn is steered or queued, never refused.** A harness that
+  can hand the model a message at its next call sets `steer_queue` on its
+  session (insights does, via `SteerMiddleware`); the rest fall back to
+  `chat_queue`. The route decides; the runner reports `user_input_consumed`
+  when it dequeues so the client can drop the "queued" mark. Do not reintroduce
+  the 409.
+- **Run status is derived from the stream, in one place.** `ConversationRecorder`
+  (`agents/content/persistence.py`) already sees every event, so it is what
+  writes `agent_conversations.run_status` (`RunStatus` in
+  `agents/core/events.py`: idle / running / paused / failed / cancelled) and
+  `run_error`, and appends a `failure` event where a turn died. The list and
+  state routes carry both; a reload shows the failure where it happened, with
+  the same code. Do not set the status from a runner — a second writer is how
+  two agents end up disagreeing about one column. A session closed mid-turn is
+  recorded as `cancelled` by `recorder.close()` in `_close_and_consolidate`.
+- **A retry says how long, and the provider's `Retry-After` wins.**
+  `MODEL_RETRYING` carries `retry_in` (seconds, a duration — the client anchors
+  it to its own clock so skew cannot show a countdown already over), computed by
+  `retry_delay(attempt, exc)`, which reads `retry_after_seconds(exc)` from
+  `agents/core/errors.py` before falling back to the jittered schedule. A
+  provider asking for longer than `MODEL_RETRY_HEADER_MAX_DELAY` is not
+  retried at all — the failure, with its code, is more useful now than after
+  a countdown that fails anyway. The summariser's calls are billed with
+  `scope: compaction`, so they count toward the total and never drive the
+  gauge.
+- **A request too long gets one compaction and one retry.** The automatic
+  summariser works from an estimate and the provider counts for real; when
+  they disagree the request comes back as `context_window`. The insights
+  runner then calls `compact_thread` (`agents/core/lc.py`) — LangChain's own
+  `SummarizationMiddleware` forced by a one-message trigger, keeping the last
+  `COMPACT_KEEP_TOKENS`, written back "as" the tools node so the graph's next
+  step is the request that failed — emits `context_compacting` /
+  `context_compacted`, and continues from the checkpoint. A second overflow is
+  the ordinary failure. deepagents' own summarisation event is cleared in the
+  same write: it indexes into the message list the rewrite just replaced.
+- **A model has a price or it has no cost.** `PRICING` in `agents/models.py`
+  mirrors `CONTEXT_WINDOW` (a test holds them equal) and `cost_usd()` prices a
+  call from LangChain's usage, taking cached tokens out of the input figure.
+  `TOKEN_USAGE` and the state route carry `cost_usd`, `None` when unpriced —
+  never a guess, because on BYO keys the figure is what the user pays.
+- **Read the harnesses built in the open before designing a lifecycle
+  feature.** [`docs/engineering/agent-harness-references.md`](../docs/engineering/agent-harness-references.md)
+  is the watch-list — Codex, OpenCode, pi — with the revision each was last
+  read at, findings pinned to `file:line`, and the gaps they expose in ours,
+  sized. Pauses that survive a reconnect, typed error codes, steer-versus-queue
+  input and visible compaction all have a worked answer there. Refresh the
+  table when you read one.
 - **Pick the lowest rung that works.** LangChain 1.x is layered, and the layers
   carry different stability guarantees: `init_chat_model` and `create_agent` are
   on the semver-stable 1.x LTS surface (no breaking changes until 2.0), while
@@ -298,6 +388,15 @@ don't fit.
   apply do not, in either harness.** Autonomy (`ask | assisted | auto`) changes
   how often an agent interrupts, never what may auto-apply — `service/execution/
   policy.py` is the one place that decides, and it does not consult the model.
+- `service/connectors.py` — the registry and the adapter contract. A
+  `list_accounts` row has a canonical half the browser reads and a native half
+  it never does: `account_id` / `account_name` name the thing being **picked**
+  (the GA4 property, the GTM container — not its parent account, which several
+  rows share), and the optional `entity_url` / `entity_detail` / `entity_meta`
+  (built with `entity_facts`) are what the picker renders as a favicon, a
+  disambiguating line and short chips. Vocabulary is server-side too
+  (`ConnectorMeta.entity_noun`), so adding a connector stays one registration
+  rather than a registration plus an edit to a table in the frontend.
 - `service/rest.py` — sync HTTP transport for the reporting connectors:
   retry, backoff, rate-limit pacing, error typing. A new connector declares
   an `Endpoint` and an `ApiError` subclass and writes no transport code;

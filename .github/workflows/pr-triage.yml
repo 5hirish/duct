@@ -1,0 +1,104 @@
+name: PR triage
+
+# A first-pass agent summary on inbound pull requests, posted as one sticky
+# comment. It never approves, blocks, or requests changes — it says what the PR
+# does and where to look first, so a queue of contributions stays readable as it
+# grows. The maintainer still reads the diff; this only decides the order.
+#
+# Why it exists: agent-written contributions are welcome here (see the PR
+# template), and welcoming them means the review side has to scale too.
+#
+# NOT ENABLED UNTIL: the repository has an `ANTHROPIC_API_KEY` secret. Without
+# it every run exits 0 after a one-line notice, so merging this file is inert.
+# Cost is roughly a cent or two per pull request at current Opus pricing.
+#
+# Security note, because this is a public repo and `pull_request_target` is the
+# trigger with a footgun: this workflow NEVER checks out the pull request's
+# code. It reads the diff through the GitHub API as text and hands it to a model
+# that cannot execute anything. Do not add `actions/checkout` with
+# `ref: ${{ github.event.pull_request.head.sha }}` to this file — that is the
+# exact pattern that hands a fork's code the write token below.
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - ready_for_review
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: pr-triage-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  triage:
+    name: Summarise the pull request
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    # Drafts are not asking for review yet, and the maintainer's own PRs do not
+    # need an introduction. Triage is for contributions arriving from outside.
+    if: >-
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.author_association != 'OWNER'
+
+    steps:
+      - name: Check out the base repository
+        # The BASE ref, deliberately — this is where pr_triage.py is read from,
+        # so a fork cannot substitute its own version of the script.
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install the Anthropic SDK
+        run: pip install --quiet 'anthropic>=1,<2'
+
+      - name: Fetch the diff and metadata
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          gh pr diff "$PR" --repo "$GITHUB_REPOSITORY" > diff.patch
+          gh pr view "$PR" --repo "$GITHUB_REPOSITORY" \
+            --json title,body,files > meta.json
+          wc -l diff.patch
+
+      - name: Triage
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          python3 .github/scripts/pr_triage.py --diff-file diff.patch \
+            < meta.json > triage.md
+          cat triage.md
+
+      - name: Post or update the sticky comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          # An empty triage.md means the API key is absent or the model declined.
+          # Say nothing rather than posting an empty comment.
+          if [ ! -s triage.md ]; then
+            echo "No triage produced; not commenting."
+            exit 0
+          fi
+          {
+            echo "### Triage"
+            echo
+            cat triage.md
+            echo
+            echo "---"
+            echo "_Written by an agent that read the diff and ran nothing._"
+            echo "_It orders the review; it does not replace it._"
+          } > comment.md
+          # --edit-last keeps one comment per PR instead of one per push; it only
+          # ever edits a comment made by this same bot identity.
+          gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" \
+            --body-file comment.md --edit-last --create-if-none

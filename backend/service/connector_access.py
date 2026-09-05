@@ -32,6 +32,12 @@ from sqlalchemy import select
 from sqlmodel import Session
 
 from models.connector import ConnectorCredential, ProjectConnector
+from service.connector_scopes import (
+    access_for,
+    missing_scopes,
+    parse_scopes,
+    scope_status,
+)
 from service.credentials import decrypt_credentials
 
 logger = logging.getLogger(__name__)
@@ -62,6 +68,15 @@ class DataSource:
     # "manual" — an API key or key pair they must paste on the Connections page.
     # The agent phrases its ask differently for each, so it needs to know.
     auth_kind: str = "oauth"
+    #: Scopes the provider actually granted, and the ones it did not. Empty
+    #: ``granted_scopes`` with ``scope_status == "unknown"`` means the row
+    #: predates recording them — deliberately not the same as "none".
+    granted_scopes: list[str] = field(default_factory=list)
+    missing_scopes: list[str] = field(default_factory=list)
+    scope_status: str = "n/a"
+    #: "read" / "write", derived from the grant for OAuth connectors and
+    #: declared for manual ones.
+    access: list[str] = field(default_factory=list)
     # Whether the insights entity catalog covers this connector, and whether
     # that catalog is overdue an audit. A stale catalog is surfaced rather than
     # hidden: it is exactly the condition that produces plausible wrong numbers.
@@ -78,6 +93,10 @@ class DataSource:
             "account_name": self.account_name,
             "last_validated_at": self.last_validated_at,
             "auth_kind": self.auth_kind,
+            "granted_scopes": self.granted_scopes,
+            "missing_scopes": self.missing_scopes,
+            "scope_status": self.scope_status,
+            "access": self.access,
             "has_catalog": self.has_catalog,
             "catalog_stale": self.catalog_stale,
             "stored_accounts": self.stored_accounts,
@@ -119,20 +138,23 @@ def _decrypt_row(row: ConnectorCredential) -> dict:
     return data if isinstance(data, dict) else {}
 
 
-def _stored_credentials(
+def _candidate_rows(
     session: Session,
     user_id: UUID,
     connector_type: str,
     account_id: str,
     project_id: UUID | None = None,
-) -> dict:
-    """Best-effort decrypt of the credentials for a connector.
+) -> list[ConnectorCredential]:
+    """The rows this caller would use for one connector, best first.
 
-    Project binding first (when ``project_id`` is given), then the caller's
-    own rows. Never raises: a missing row, a missing
-    CREDENTIALS_ENCRYPTION_KEY, or a corrupt token all degrade to ``{}`` so
-    the env fallback still applies.
+    The resolution ladder itself, extracted so that everything reading a
+    credential agrees on WHICH row it is reading. A second copy of this order
+    would eventually disagree with the first, and the disagreement would be
+    invisible: secrets taken from one row while the scopes describing them came
+    from another is precisely the class of bug that "granted vs requested"
+    exists to end.
     """
+    rows: list[ConnectorCredential] = []
     if project_id is not None:
         bound = bound_credential_row(session, project_id, connector_type)
         # An explicitly-targeted different account skips the binding: the
@@ -141,9 +163,7 @@ def _stored_credentials(
         if bound is not None and not (
             account_id and bound.account_id and bound.account_id != account_id
         ):
-            data = _decrypt_row(bound)
-            if data:
-                return data
+            rows.append(bound)
     account_ids = [account_id] if account_id else []
     if "" not in account_ids:
         account_ids.append("")
@@ -159,12 +179,53 @@ def _stored_credentials(
             .scalars()
             .first()
         )
-        if row is None:
-            continue
+        if row is not None:
+            rows.append(row)
+    return rows
+
+
+def _stored_credentials(
+    session: Session,
+    user_id: UUID,
+    connector_type: str,
+    account_id: str,
+    project_id: UUID | None = None,
+) -> dict:
+    """Best-effort decrypt of the credentials for a connector.
+
+    Project binding first (when ``project_id`` is given), then the caller's
+    own rows. Never raises: a missing row, a missing
+    CREDENTIALS_ENCRYPTION_KEY, or a corrupt token all degrade to ``{}`` so
+    the env fallback still applies.
+    """
+    for row in _candidate_rows(session, user_id, connector_type, account_id, project_id):
         data = _decrypt_row(row)
         if data:
             return data
     return {}
+
+
+def granted_scopes_for(
+    session: Session,
+    *,
+    user_id: UUID,
+    connector_type: str,
+    account_id: str = "",
+    project_id: UUID | None = None,
+) -> list[str]:
+    """Scopes the credential this caller would actually use was granted.
+
+    Reads the same ladder as the secret, so a permission check can never be
+    answered about a different account than the one the call will use. An empty
+    list means **unknown** — the row predates recording grants — never "none".
+    """
+    for row in _candidate_rows(
+        session, user_id, connector_type, account_id.strip(), project_id
+    ):
+        scopes = parse_scopes(row.granted_scopes)
+        if scopes:
+            return scopes
+    return []
 
 
 def stored_connector_credentials(
@@ -313,6 +374,13 @@ def list_data_sources(
         else:
             status, account_id, account_name, validated = STATUS_NOT_CONNECTED, "", "", None
 
+        # The grant belongs to a credential, not to the connector: read it from
+        # the row this project will actually use, which is the bound one when
+        # there is one.
+        scope_source = bound if bound is not None else (rows[0] if rows else None)
+        declared = parse_scopes(meta.oauth_scope)
+        granted = parse_scopes(getattr(scope_source, "granted_scopes", "")) if scope_source else []
+        is_oauth = bool(meta.oauth_scope)
         sources.append(
             DataSource(
                 connector_id=connector_id,
@@ -322,6 +390,10 @@ def list_data_sources(
                 account_name=account_name,
                 last_validated_at=validated.isoformat() if validated else "",
                 auth_kind="oauth" if meta.oauth_scope else "manual",
+                granted_scopes=granted,
+                missing_scopes=missing_scopes(declared, granted) if (is_oauth and granted) else [],
+                scope_status=scope_status(is_oauth=is_oauth, declared=declared, granted=granted),
+                access=access_for(granted) if is_oauth else sorted(meta.access),
                 has_catalog=has_catalog,
                 catalog_stale=catalog_stale,
                 stored_accounts=[

@@ -12,6 +12,7 @@ from starlette.status import HTTP_404_NOT_FOUND, HTTP_501_NOT_IMPLEMENTED
 
 from config import get_configs
 from service.auth_exchange import consume_connector_code, store_connector_code
+from service.connector_scopes import join_scopes, parse_scopes
 from service.connectors import get_connector, normalize_connector_id
 from service.google.constants import (
     GA4_CONNECTOR_ID,
@@ -114,6 +115,7 @@ def _connector_success(
     connector_id: str,
     token_fragment_key: str,
     refresh_token: str,
+    granted_scopes: str,
     desktop: bool,
 ) -> RedirectResponse:
     """Hand the refresh token back to whichever client started the flow.
@@ -129,11 +131,20 @@ def _connector_success(
     """
     cfg = get_configs()
     if desktop:
-        code = store_connector_code(connector_type=connector_id, refresh_token=refresh_token)
+        code = store_connector_code(
+            connector_type=connector_id,
+            refresh_token=refresh_token,
+            granted_scopes=granted_scopes,
+        )
         query = f"connector={quote(connector_id, safe='')}&auth_code={quote(code, safe='')}"
         return _no_store_redirect(f"{cfg.frontend_origin}/desktop-auth?{query}", 307)
+    # The granted scopes ride beside the token in the fragment. They are not a
+    # secret — the point of carrying them is that the browser can store them
+    # with the credential, so the card can say what was actually granted rather
+    # than assuming it got what it asked for.
     redirect_url = (
         f"{cfg.frontend_origin}/connections#{token_fragment_key}={quote(refresh_token, safe='')}"
+        f"&granted_scopes={quote(granted_scopes, safe='')}"
     )
     return _no_store_redirect(redirect_url, status_code=307)
 
@@ -217,6 +228,18 @@ def _google_connector_callback_with_state(
             connector_id=connector_id,
         )
 
+    # What Google actually consented to, which is not necessarily what we asked
+    # for. `flow.credentials.granted_scopes` is always None here — the installed
+    # google-auth-oauthlib does not pass it through — so read the token response,
+    # which is where oauthlib puts the authoritative list.
+    try:
+        granted_scopes = join_scopes(
+            parse_scopes(flow.oauth2session.token.get("scope"))
+        )
+    except Exception:  # noqa: BLE001 — a missing scope must never fail a connect
+        logger.warning("Could not read granted scopes for %r", connector_id, exc_info=True)
+        granted_scopes = ""
+
     refresh_token = (flow.credentials.refresh_token or "").strip()
     if not refresh_token:
         return _connector_failure(
@@ -231,6 +254,7 @@ def _google_connector_callback_with_state(
         connector_id=connector_id,
         token_fragment_key=token_fragment_key,
         refresh_token=refresh_token,
+        granted_scopes=granted_scopes,
         desktop=desktop,
     )
 

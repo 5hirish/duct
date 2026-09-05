@@ -14,9 +14,9 @@ import asyncio
 import uuid
 
 import pytest
-from langchain_core.language_models.fake_chat_models import FakeMessagesListChatModel
 from langchain_core.messages import AIMessage
 
+from agents.audit.events import AuditStep
 from agents.audit.schema import CrawlPlan, CrawlResult
 from agents.audit.v1.runner import build_audit_agent
 from agents.core.events import AgentEvent
@@ -27,11 +27,7 @@ from agents.core.lc import (
     stream_agent,
 )
 from agents.core.session import BaseAgentSession, register_session
-
-
-class ToolCallingFake(FakeMessagesListChatModel):
-    def bind_tools(self, tools, **kwargs):  # noqa: ARG002
-        return self
+from tests.fakes import ToolCallingFake, tool_names as _tool_names
 
 
 @pytest.fixture
@@ -63,17 +59,6 @@ async def _wait_for_event(events: list, timeout: float = 2.0) -> dict:
             raise AssertionError("tool never emitted an event")
         await asyncio.sleep(0.01)
     return events[-1]
-
-
-@pytest.fixture
-def emitted():
-    events: list[dict] = []
-
-    async def emit(event: dict) -> None:
-        events.append(event)
-
-    emit.events = events  # type: ignore[attr-defined]
-    return emit
 
 
 # ---------------------------------------------------------------------------
@@ -145,19 +130,6 @@ def test_ask_user_tool_only_present_with_a_session(crawl_result, session, emitte
     assert "AskUserQuestion" in _tool_names(with_session)
 
 
-def _tool_names(agent) -> set[str]:
-    """Tool names bound into a compiled agent graph."""
-    for node in agent.nodes.values():
-        seq = getattr(getattr(node, "bound", None), "steps", None) or []
-        for step in seq:
-            if hasattr(step, "tools_by_name"):
-                return set(step.tools_by_name)
-    # Fall back to the ToolNode's registry wherever it lives.
-    tool_node = agent.nodes.get("tools")
-    inner = getattr(tool_node, "bound", tool_node)
-    return set(getattr(inner, "tools_by_name", {}))
-
-
 # ---------------------------------------------------------------------------
 # Streaming contract
 # ---------------------------------------------------------------------------
@@ -200,6 +172,62 @@ async def test_stream_routes_report_payload_to_the_parser(crawl_result, emitted)
     )
     assert "Summary first." in prose
     assert "duct_report" not in prose, "the tag must not leak into user-facing prose"
+
+
+# ---------------------------------------------------------------------------
+# The pipeline the route runs by default
+# ---------------------------------------------------------------------------
+
+def _model_that_builds_a_template_report() -> ToolCallingFake:
+    """Start, one category, finalize, then a sentence — the sequence the
+    prompt asks for, as canned tool calls."""
+    header = {"overall_score": 72, "score_band": "good", "pages_crawled": 1, "total_sitemap_urls": 1}
+    category = {"id": "meta", "label": "Meta", "score": 8, "tooltip": "meta health", "findings": []}
+    finalize = {"top_priorities": [], "wins": [], "roadmap": []}
+    return ToolCallingFake(responses=[
+        AIMessage(content="", tool_calls=[{"name": "StartAuditReport", "args": header, "id": "c1"}]),
+        AIMessage(content="", tool_calls=[{"name": "AddAuditCategory", "args": category, "id": "c2"}]),
+        AIMessage(content="", tool_calls=[{"name": "FinalizeAuditReport", "args": finalize, "id": "c3"}]),
+        AIMessage(content="Report published."),
+    ])
+
+
+async def test_run_pipeline_crawls_then_publishes_the_report_the_tools_built(
+    crawl_result, emitted, acme_business_context, monkeypatch
+):
+    """`routes/audit.py` runs this by default, and until now only the live
+    suite exercised it. The crawl and the model are replaced at their seams;
+    everything between them is real: the step events bracket the work, the
+    report the tools assembled reaches the stream as version 1, and the same
+    report is what the route gets back to persist."""
+    import agents.audit.v1.runner as v1
+    import agents.audit.v3.runner as v3
+
+    async def offline_crawl(_url, **_kwargs):
+        return crawl_result
+
+    monkeypatch.setattr(v3, "run_crawl", offline_crawl)
+    monkeypatch.setattr(v1, "resolve_chat_model", lambda *_a, **_k: _model_that_builds_a_template_report())
+
+    report = await v1.LangChainAuditRunner(api_key="unused-no-network").run_pipeline(
+        session_id="offline-audit", url="https://getduct.ai",
+        business_context=acme_business_context, emit=emitted, report_mode="template",
+    )
+
+    steps = [
+        (e["step_id"], e["status"]) for e in emitted.events
+        if e["event"] in (AgentEvent.STEP_STARTED, AgentEvent.STEP_FINISHED)
+    ]
+    assert steps == [
+        (AuditStep.FETCH_SITEMAP, "running"), (AuditStep.FETCH_SITEMAP, "success"),
+        (AuditStep.SYNTHESIZE_AUDIT, "running"), (AuditStep.SYNTHESIZE_AUDIT, "success"),
+    ]
+    version = next(e for e in emitted.events if e["event"] == AgentEvent.ARTIFACT_VERSION)
+    assert version["version_id"] == 1
+    assert version["payload"]["structured_data"]["overall_score"] == 72
+    assert report is not None
+    assert [c.id for c in report.structured_data.categories] == ["meta"]
+    assert set(e["event"] for e in emitted.events) <= set(AgentEvent)
 
 
 # ---------------------------------------------------------------------------

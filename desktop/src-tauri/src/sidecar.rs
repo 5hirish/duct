@@ -67,6 +67,26 @@ const GOOGLE_DESKTOP_CLIENT_ID: &str =
 const GOOGLE_DESKTOP_CLIENT_SECRET: Option<&str> =
     option_env!("GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET");
 
+/// Which env file the bundled sidecar should embody, baked in at build time:
+/// `DUCT_SIDECAR_ENV_FILE=/abs/path/backend/.env.local npm run build:dev`.
+///
+/// The sidecar reads `DUCT_ENV_FILE` at runtime and will happily run against a
+/// deployment's Postgres — `db/migrate.rs`'s counterpart `_owns_database`
+/// declines to migrate anything it did not create, so pointing it at staging
+/// borrows the schema rather than reshaping it. What was missing was any way to
+/// *say so* for an installed bundle: an app launched from Spotlight or the
+/// Finder inherits no shell environment, so the only route in is at compile
+/// time, exactly as for the OAuth secret above.
+///
+/// This is what makes "run the desktop app against staging" possible at all.
+/// Without it the shell always forced its own SQLite, so the desktop build
+/// could never be tested against real data — not a bug in any one place, just
+/// an option nobody had built.
+///
+/// Unset in release builds, where the sidecar's own data directory is the
+/// correct answer and a developer's absolute path would be nonsense.
+const SIDECAR_ENV_FILE: Option<&str> = option_env!("DUCT_SIDECAR_ENV_FILE");
+
 /// The handshake line, verbatim. Field names mirror `local_server.py`; the
 /// shell forwards them to the webview rather than interpreting them, so a new
 /// field there needs no change here beyond adding it below.
@@ -180,6 +200,15 @@ fn try_spawn(app: &AppHandle) -> Result<(), String> {
         command.env("GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET", secret);
     }
 
+    // Same rule as everything else in this block: set what the bundle cannot
+    // otherwise have, and never overwrite what someone chose. A developer who
+    // exports DUCT_ENV_FILE for one run beats whatever was compiled in.
+    if std::env::var_os("DUCT_ENV_FILE").is_none() {
+        if let Some(path) = SIDECAR_ENV_FILE.filter(|s| !s.is_empty()) {
+            command.env("DUCT_ENV_FILE", path);
+        }
+    }
+
     // The key the sidecar encrypts stored connector credentials with, minted
     // into the OS keychain on first run.
     //
@@ -195,7 +224,21 @@ fn try_spawn(app: &AppHandle) -> Result<(), String> {
     // stored connector credentials for the session — everything else, including
     // provider keys held in this same absent keychain, was already degraded in
     // exactly the same way — so the app starts and says why.
-    if std::env::var_os("CREDENTIALS_ENCRYPTION_KEY").is_none() {
+    // ...and skipped entirely when an env file is pinned, which is the case the
+    // comment above anticipated and the shell can now create for itself.
+    //
+    // Two reasons, either sufficient. The env file carries its own
+    // CREDENTIALS_ENCRYPTION_KEY, so minting a machine-local one here would
+    // encrypt rows into that deployment's database which the deployment itself
+    // cannot decrypt — silent corruption, discovered much later by whoever
+    // tries to read them back. And reading the keychain *blocks on a modal
+    // password prompt* whenever the app's code identity changes, which for a
+    // dev build is every rebuild: `try_spawn` then sits on that dialog and
+    // never reaches `spawn()`, so the sidecar simply never starts and the only
+    // symptom is a shell that says its backend stopped responding.
+    let env_file_pinned =
+        std::env::var_os("DUCT_ENV_FILE").is_some() || SIDECAR_ENV_FILE.is_some_and(|s| !s.is_empty());
+    if !env_file_pinned && std::env::var_os("CREDENTIALS_ENCRYPTION_KEY").is_none() {
         match crate::credentials_encryption_key() {
             Ok(key) => {
                 command.env("CREDENTIALS_ENCRYPTION_KEY", key);

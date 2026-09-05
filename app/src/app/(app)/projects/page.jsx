@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Brain, Trash2, Globe, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
@@ -224,7 +224,7 @@ export default function ProjectsPage() {
             <AlertDialogCancel type="button">Cancel</AlertDialogCancel>
             <AlertDialogAction
               type="button"
-              className="bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30"
+              className={buttonVariants({ variant: "destructive" })}
               onClick={confirmDeleteProject}
             >
               Delete project

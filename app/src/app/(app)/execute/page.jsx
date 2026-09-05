@@ -9,7 +9,7 @@
 // applied with an "auto" badge and a rollback handle.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -388,7 +388,7 @@ function ConfirmDialog({ confirm, destructiveMap, onCancel, onConfirm }) {
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
-            className={destructive.length > 0 ? "bg-red-600 text-white hover:bg-red-700" : undefined}
+            className={destructive.length > 0 ? buttonVariants({ variant: "destructive" }) : undefined}
             onClick={onConfirm}
           >
             {action === "apply"
