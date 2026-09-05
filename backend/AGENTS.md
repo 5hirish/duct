@@ -24,7 +24,7 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
 
   **Consolidating on V1.** Per the engine consolidation review (duct-cloud, private), all
   agents are moving to one harness — LangChain 1.x / `deepagents` — because customers bring
-  their own model (OpenAI / Gemini / Claude / OpenRouter) and the Claude Agent SDK is
+  their own model (OpenAI / Gemini / Claude / xAI / OpenRouter) and the Claude Agent SDK is
   Anthropic-only by design (upstream issue #410, closed `not planned`).
   Each engine has a different status, and they imply different rules:
 

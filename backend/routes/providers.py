@@ -68,6 +68,7 @@ _PROVIDER_LABELS: dict[Provider, tuple[str, str]] = {
         "OpenRouter",
         "One key, 500+ models — and any OpenAI-compatible gateway you point it at.",
     ),
+    Provider.XAI: ("xAI", "Grok models on the LangChain (v1) engine."),
 }
 
 # Human-facing tier hint per model, so the picker can group options the way the

@@ -57,6 +57,16 @@ export const PROVIDERS = [
     description: "One key, 500+ models — and any OpenAI-compatible gateway you point it at.",
     consoleUrl: "https://openrouter.ai/keys",
   },
+  {
+    id: "xai",
+    statusId: "xai",
+    label: "xAI",
+    header: "X-Provider-XAI",
+    placeholder: "xai-…",
+    prefix: "xai-",
+    description: "Grok models on the LangChain (v1) engine.",
+    consoleUrl: "https://console.x.ai",
+  },
 ];
 
 const STORAGE_PREFIX = "duct_provider_key_";
