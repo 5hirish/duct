@@ -16,6 +16,23 @@ the commit list and the install instructions, which is worse.
 
 ### Added
 
+- `scripts/build_blog.py` — pre-renders blog posts to static HTML. Measured
+  against production, GPTBot received 49 characters of body text for a
+  6,000-word post, the title "Duct Insights", an empty description and the
+  canonical `/blog/post` shared by every post. Now 5,105 characters, a unique
+  canonical, and `Article` JSON-LD in the served bytes.
+- `site/blog/feed.xml` — the blog's first RSS feed.
+
+- `site/doctrine.html` — the seven positions this project is built on, each
+  linked to the file that enforces it. Written because the reasoning already
+  existed in `STYLE.md`, `agents/core/ports/__init__.py` and
+  `service/execution/policy.py`, where nobody evaluating the project reads it.
+- `.github/FUNDING.yml` — GitHub Sponsors. Not a revenue plan at this stage; a
+  public signal that the project is maintained.
+- A Community section in `README.md` pointing at Discussions rather than a chat
+  server. An empty Discord is a worse signal than no Discord, and a Discussions
+  answer is findable later.
+
 - Open-source project files: `LICENSE` (MIT), `CONTRIBUTING.md`, `SECURITY.md`,
   `CODE_OF_CONDUCT.md`, issue forms, a pull-request template, `CODEOWNERS` and
   grouped Dependabot configuration.

@@ -1,20 +1,75 @@
+# getduct.ai — crawl policy
+#
+# Duct is MIT licensed and its docs are meant to be read, quoted and cited,
+# by people and by models alike. Everything here is open to everything.
+# The explicit allows below exist because several AI vendors split training
+# and search into separate agents, and a bare `User-agent: *` leaves site
+# owners guessing about which half they consented to. This states both.
+
 User-agent: *
 Allow: /
 
-# Allow AI search/inference bots explicitly
+# ── Anthropic ────────────────────────────────────────────────────────────────
+User-agent: ClaudeBot
+Allow: /
+
 User-agent: Claude-SearchBot
 Allow: /
 
 User-agent: Claude-User
 Allow: /
 
+# ── OpenAI ───────────────────────────────────────────────────────────────────
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
 User-agent: ChatGPT-User
 Allow: /
 
+# ── Google ───────────────────────────────────────────────────────────────────
+User-agent: Google-Extended
+Allow: /
+
+User-agent: GoogleOther
+Allow: /
+
+# ── Perplexity ───────────────────────────────────────────────────────────────
 User-agent: PerplexityBot
 Allow: /
 
-User-agent: Google-Extended
+User-agent: Perplexity-User
+Allow: /
+
+# ── Microsoft / Apple / Meta / Amazon ────────────────────────────────────────
+User-agent: Applebot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Meta-ExternalAgent
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+# ── Others ───────────────────────────────────────────────────────────────────
+User-agent: cohere-ai
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+User-agent: DuckAssistBot
+Allow: /
+
+User-agent: MistralAI-User
 Allow: /
 
 Sitemap: https://getduct.ai/sitemap.xml

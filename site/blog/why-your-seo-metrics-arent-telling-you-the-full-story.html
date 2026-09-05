@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="../assets/apple-icon.svg"/>
+<title>Why Your SEO Metrics Aren&#x27;t Telling You the Full Story — Duct Insights</title>
+<link rel="canonical" href="https://getduct.ai/blog/why-your-seo-metrics-arent-telling-you-the-full-story"/>
+<meta name="description" content="Search Console shows impressions up. Ahrefs shows rankings rising. GA4 says signups are flat. Here&#x27;s how to read all three together — and what the gap usually means."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="article"/>
+<meta property="og:url" content="https://getduct.ai/blog/why-your-seo-metrics-arent-telling-you-the-full-story"/>
+<meta property="og:title" content="Why Your SEO Metrics Aren&#x27;t Telling You the Full Story — Duct Insights"/>
+<meta property="og:description" content="Search Console shows impressions up. Ahrefs shows rankings rising. GA4 says signups are flat. Here&#x27;s how to read all three together — and what the gap usually means."/>
+<meta property="og:image" content="https://getduct.ai/assets/og-image.png"/>
+<meta property="og:site_name" content="Duct"/>
+<meta property="article:author" content="Shirish Kadam"/>
+<meta property="article:section" content="SEO"/>
+<meta property="article:published_time" content="2026-03-15T00:00:00+00:00"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Why Your SEO Metrics Aren&#x27;t Telling You the Full Story — Duct Insights"/>
+<meta name="twitter:description" content="Search Console shows impressions up. Ahrefs shows rankings rising. GA4 says signups are flat. Here&#x27;s how to read all three together — and what the gap usually means."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og-image.png"/>
+<link rel="alternate" type="application/rss+xml" title="Duct Blog" href="/blog/feed.xml"/>
+<link rel="stylesheet" href="../assets/duct.css"/>
+<script src="../assets/config.js" defer></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Why Your SEO Metrics Aren't Telling You the Full Story",
+  "description": "Search Console shows impressions up. Ahrefs shows rankings rising. GA4 says signups are flat. Here's how to read all three together — and what the gap usually means.",
+  "datePublished": "2026-03-15T00:00:00+00:00",
+  "dateModified": "2026-03-15T00:00:00+00:00",
+  "articleSection": "SEO",
+  "author": {
+    "@type": "Person",
+    "name": "Shirish Kadam",
+    "url": "https://shirishkadam.com",
+    "sameAs": [
+      "https://github.com/5hirish",
+      "https://x.com/5hirish",
+      "https://youtube.com/@5hirish"
+    ]
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Duct",
+    "url": "https://getduct.ai"
+  },
+  "image": "https://getduct.ai/assets/og-image.png",
+  "mainEntityOfPage": "https://getduct.ai/blog/why-your-seo-metrics-arent-telling-you-the-full-story"
+}
+</script>
+<style>
+#reading-progress {
+  position: fixed; top: 0; left: 0; width: 0%; height: 3px;
+  background: var(--orange); z-index: 200; transition: width .1s linear;
+}
+.post-author {
+  display: flex; gap: 20px; align-items: flex-start;
+  max-width: 700px; margin: 48px auto 0; padding: 28px 24px;
+  border-top: 1px solid var(--border);
+}
+.post-author-avatar {
+  width: 64px; height: 64px; border-radius: 50%;
+  object-fit: cover; flex-shrink: 0; background: var(--off);
+  border: 1px solid var(--border);
+}
+.post-author-name {
+  font-family: var(--serif); font-size: 18px; color: var(--navy);
+  letter-spacing: -.2px; margin-bottom: 6px;
+}
+.post-author-bio { font-size: 14px; font-weight: 300; color: var(--navy-3); line-height: 1.7; }
+.post-author-bio a { color: var(--orange); text-decoration: none; }
+.post-author-bio a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.post-author-links { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; }
+.post-author-links a {
+  font-size: 13px; font-weight: 500; color: var(--navy-2); text-decoration: none;
+  border-bottom: 1px solid var(--border); padding-bottom: 1px; transition: border-color .2s;
+}
+.post-author-links a:hover { border-color: var(--navy); }
+.article-nav {
+  display: flex; justify-content: space-between; gap: 24px;
+  max-width: 700px; margin: 0 auto; padding: 32px 24px 64px;
+}
+.article-nav a {
+  font-size: 14px; font-weight: 500; color: var(--navy-3);
+  text-decoration: none; transition: color .2s; max-width: 46%;
+}
+.article-nav a:hover { color: var(--navy); }
+.article-nav-next { margin-left: auto; text-align: right; }
+@media (max-width: 640px) {
+  .post-author { flex-direction: column; gap: 16px; }
+  .article-nav { flex-direction: column; gap: 16px; }
+  .article-nav a { max-width: 100%; }
+  .article-nav-next { text-align: left; margin-left: 0; }
+}
+</style>
+</head>
+<body>
+
+<a href="#prose" class="skip-link">Skip to content</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<div id="reading-progress" role="progressbar" aria-label="Reading progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+
+<!-- GENERATED FILE — edit blog/posts/why-your-seo-metrics-arent-telling-you-the-full-story.md and run scripts/build_blog.py -->
+<nav id="nav" aria-label="Main navigation">
+<div style="display:flex;align-items:center;gap:10px">
+<a href="/" class="logo">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<span style="font-size:12px;font-weight:500;color:var(--navy-3);letter-spacing:.02em">blog</span>
+</div>
+<div class="nav-links">
+<div class="nav-dropdown">
+  <a href="/#use-cases" class="nav-link">Solutions</a>
+  <div class="dropdown-menu">
+  <div class="dropdown-menu-inner">
+    <a href="/for-product-intelligence" class="dm-item">
+      <span class="dm-icon" aria-hidden="true">📊</span>
+      <span class="dm-text"><strong>Product Intelligence</strong><span>Weekly brief for PMs &amp; growth teams</span></span>
+    </a>
+    <a href="/for-organic-growth" class="dm-item">
+      <span class="dm-icon" aria-hidden="true">🌱</span>
+      <span class="dm-text"><strong>Organic Growth</strong><span>Automated SEO &amp; content intelligence</span></span>
+    </a>
+    <a href="/for-paid-ads" class="dm-item">
+      <span class="dm-icon" aria-hidden="true">📣</span>
+      <span class="dm-text"><strong>Paid Ads Intelligence</strong><span>Cross-platform brief for performance marketers</span></span>
+    </a>
+    <div class="dm-sep" aria-hidden="true"></div>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true">💼</span>
+      <span class="dm-text"><strong>Sales / RevOps</strong><span>Pipeline &amp; revenue intelligence</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true">🛒</span>
+      <span class="dm-text"><strong>E-commerce / DTC</strong><span>ROAS, LTV &amp; retention synthesis</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true">🤝</span>
+      <span class="dm-text"><strong>Customer Success</strong><span>Early churn &amp; health score signals</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+  </div>
+  </div>
+</div>
+<div class="nav-dropdown">
+  <a href="/tools/" class="nav-link">Free Tools</a>
+  <div class="dropdown-menu">
+  <div class="dropdown-menu-inner">
+    <a href="/tools/utm-builder" class="dm-item">
+      <span class="dm-text"><strong>UTM Builder</strong><span>Build GA4-compliant UTM links with live preview</span></span>
+    </a>
+    <a href="/tools/ctr-calculator" class="dm-item">
+      <span class="dm-text"><strong>CTR Calculator</strong><span>Click-through rate from impressions and clicks</span></span>
+    </a>
+    <a href="/tools/cpc-calculator" class="dm-item">
+      <span class="dm-text"><strong>CPC Calculator</strong><span>Cost per click from spend and volume</span></span>
+    </a>
+    <a href="/tools/cpm-calculator" class="dm-item">
+      <span class="dm-text"><strong>CPM Calculator</strong><span>Cost per 1,000 impressions</span></span>
+    </a>
+    <a href="/tools/engagement-rate-calculator" class="dm-item">
+      <span class="dm-text"><strong>Engagement Rate Calculator</strong><span>Engagement vs followers, reach, or impressions</span></span>
+    </a>
+    <a href="/tools/roas-calculator" class="dm-item">
+      <span class="dm-text"><strong>ROAS Calculator</strong><span>Return on ad spend from revenue and spend</span></span>
+    </a>
+    <a href="/tools/marketing-roi-calculator" class="dm-item">
+      <span class="dm-text"><strong>Marketing ROI Calculator</strong><span>ROI and profit from campaign spend vs revenue</span></span>
+    </a>
+    <div class="dm-sep" aria-hidden="true"></div>
+    <a href="/tools/" class="dm-item">
+      <span class="dm-text"><strong>See all tools</strong><span>SaaS metrics, CAC/LTV, CPA, weekly brief, and more</span></span>
+    </a>
+  </div>
+  </div>
+</div>
+<a href="/#how" class="nav-link">How it works</a>
+<a href="/blog/" class="nav-link">Blog</a>
+<a href="#blog-cta" class="btn btn-orange" style="padding:8px 18px;font-size:13px">Get early access →</a>
+</div>
+</nav>
+
+<header class="article-header">
+<p class="tag">SEO</p>
+<h1>Why Your SEO Metrics Aren&#x27;t Telling You the Full Story</h1>
+<div class="article-meta">Mar 15 2026 · 6 min read · By Shirish Kadam</div>
+</header>
+
+<main>
+<article id="prose" class="prose">
+<p>Every growth marketer has been here: you open Search Console on a Monday and see impressions climbing. You check Ahrefs — rankings are up on your target cluster. You feel good about the quarter.</p>
+<p>Then you open GA4. Trial signups from organic: flat.</p>
+<p>The three tools are telling different parts of the same story. The problem is that no one is connecting them.</p>
+<h2>The three layers of organic growth</h2>
+<p>Think of your SEO stack as three distinct layers:</p>
+<p><strong>Visibility</strong> — Are people seeing you? This is Search Console. Impressions, clicks, average position. It tells you whether Google is surfacing your content.</p>
+<p><strong>Authority</strong> — Are you earning trust? This is Ahrefs. Domain rating, backlink profile, keyword difficulty trends. It tells you whether your content is worth ranking.</p>
+<p><strong>Conversion</strong> — Are you growing? This is GA4. Sessions, engagement rate, goal completions. It tells you whether the visitors who arrive are turning into customers.</p>
+<p>Most teams optimise each layer in isolation. That's the core mistake.</p>
+<h2>Why isolated metrics mislead</h2>
+<p>Here's a real pattern that plays out at almost every early-stage SaaS:</p>
+<ol>
+<li>You publish a cluster of blog posts targeting mid-funnel keywords</li>
+<li>Impressions climb (Search Console looks great)</li>
+<li>You rank for the terms (Ahrefs looks great)</li>
+<li>But the posts are attracting top-of-funnel readers who were never going to convert</li>
+</ol>
+<p>The SEO "worked" in the traditional sense. But it didn't move growth.</p>
+<p>The signal that would have caught this: a correlation between <strong>blog traffic source</strong> and <strong>trial conversion rate</strong> in GA4. If your organic sessions are growing but the conversion rate from blog → trial is declining, you're attracting the wrong audience — regardless of what Search Console or Ahrefs say.</p>
+<h2>What to actually look for</h2>
+<p>Instead of checking each tool separately, look for these cross-tool patterns:</p>
+<p><strong>Impressions up, clicks flat</strong> → Your titles and meta descriptions aren't matching search intent. Rewrite the SERP copy, not the content.</p>
+<p><strong>Rankings up, sessions flat</strong> → You're ranking for terms with low search volume or very high bounce rate. Validate the keyword intent before targeting it.</p>
+<p><strong>Sessions up, conversions flat</strong> → Audience mismatch (wrong keywords) or CTA placement issue. Pull the GA4 page-level conversion data for your top organic landing pages.</p>
+<p><strong>Rankings up, conversions up, but position 8–15</strong> → You're in striking distance. These pages deserve a focused content update and internal linking push.</p>
+<h2>The connection no one makes</h2>
+<p>The insight that actually moves organic growth isn't any single metric — it's the narrative that connects all three.</p>
+<p>A rising keyword cluster that has low KD, matches your ICP's search intent, and currently has no content targeting it in your calendar is worth more than any individual metric can tell you.</p>
+<p>That's the gap Duct was built to close: reading across Search Console, Ahrefs, GA4, and your content tools simultaneously — and surfacing the story they're trying to tell you together.</p>
+<p>---</p>
+<p><strong>Want to see how this works in practice?</strong> Join the Duct beta and get a cross-tool brief on your organic growth stack before your next planning cycle.</p>
+</article>
+
+<aside class="post-author" aria-label="About the author">
+  <img class="post-author-avatar" src="https://github.com/5hirish.png" width="64" height="64" loading="lazy" alt="Shirish Kadam"/>
+  <div>
+    <p class="post-author-name">Shirish Kadam</p>
+    <p class="post-author-bio">Product manager and engineer in Valencia. I maintain <a href="https://github.com/5hirish/duct" rel="noopener">Duct</a>, an open-source AI agent that reads across your product and growth stack. MIT licensed, runs on your own machine.</p>
+    <div class="post-author-links">
+      <a href="https://github.com/5hirish" rel="noopener">GitHub</a>
+      <a href="https://x.com/5hirish" rel="noopener">X</a>
+      <a href="https://youtube.com/@5hirish" rel="noopener">Ship with AI</a>
+      <a href="https://shirishkadam.com" rel="noopener">Blog</a>
+    </div>
+  </div>
+</aside>
+
+<nav class="article-nav" aria-label="More articles">
+<a class="article-nav-prev" href="/blog/keyword-gap-analysis-without-a-spreadsheet">← Keyword Gap Analysis Without a Spreadsheet</a>
+</nav>
+</main>
+
+<section class="blog-cta" id="blog-cta">
+<h2>Stop reading tools.<br/><em>Start reading signals.</em></h2>
+<p>Duct connects your tools and surfaces what actually matters — delivered straight to your inbox.</p>
+<div class="cta-form" style="max-width:460px;margin:0 auto">
+<input type="email" id="ctaEmail" class="email-in" placeholder="you@company.com" aria-label="Email address"/>
+<button class="btn btn-orange btn-lg"
+  data-form-url="https://docs.google.com/forms/d/e/1FAIpQLSfm7QgovGGHE38CsOPqj5O_XVBtnjbRhkf16rNJhdvkd-rddg/formResponse"
+  data-entry-id="entry.276669450"
+  onclick="submitForm('ctaEmail', this)">Get early access →</button>
+</div>
+</section>
+
+<footer class="footer-expanded">
+<div class="footer-top">
+<div class="footer-brand">
+<a href="/" class="logo" style="font-size:20px">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<p>Open-source AI agent for cross-tool product and growth analytics. MIT licensed. Run it on your own machine.</p>
+</div>
+<div class="footer-cols" role="navigation" aria-label="Footer navigation">
+<div class="footer-col">
+<h4>Use Cases</h4>
+<a href="/for-product-intelligence">Product Intelligence</a>
+<a href="/for-organic-growth">Organic Growth</a>
+<a href="/for-paid-ads">Paid Ads Intelligence</a>
+</div>
+<div class="footer-col">
+<h4>Free Tools</h4>
+<a href="/tools/utm-builder">UTM Builder</a>
+<a href="/tools/ctr-calculator">CTR Calculator</a>
+<a href="/tools/cpc-calculator">CPC Calculator</a>
+<a href="/tools/cpm-calculator">CPM Calculator</a>
+<a href="/tools/engagement-rate-calculator">Engagement Rate Calculator</a>
+<a href="/tools/roas-calculator">ROAS Calculator</a>
+<a href="/tools/marketing-roi-calculator">Marketing ROI Calculator</a>
+<a href="/tools/">See all free tools →</a>
+</div>
+<div class="footer-col">
+<h4>Community</h4>
+<a href="https://github.com/5hirish/duct" rel="noopener">GitHub repository</a>
+<a href="https://github.com/5hirish/duct/discussions" rel="noopener">Discussions</a>
+<a href="https://github.com/5hirish/duct/blob/main/CONTRIBUTING.md" rel="noopener">Contributing</a>
+<a href="https://github.com/5hirish/duct/blob/main/CHANGELOG.md" rel="noopener">Changelog</a>
+<a href="https://youtube.com/@5hirish" rel="noopener">Ship with AI (YouTube)</a>
+<a href="https://x.com/5hirish" rel="noopener">X / Twitter</a>
+</div>
+<div class="footer-col">
+<h4>Company</h4>
+<a href="/doctrine">Doctrine</a>
+<a href="/blog/">Blog</a>
+<a href="/about">About</a>
+<a href="/privacy">Privacy Policy</a>
+<a href="/terms">Terms of Service</a>
+</div>
+</div>
+</div>
+<div class="footer-bottom-row">
+<span>© 2026 Alleviate Lab · Valencia, Spain · MIT licensed</span>
+<span>Built in the open by <a href="https://github.com/5hirish" rel="noopener" style="color:inherit">Shirish Kadam</a>.</span>
+</div>
+</footer>
+
+<script src="../assets/duct.js" defer></script>
+<script>
+(function () {
+  var bar = document.getElementById('reading-progress');
+  window.addEventListener('scroll', function () {
+    var top = window.scrollY || document.documentElement.scrollTop;
+    var height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    var pct = height > 0 ? Math.round((top / height) * 100) : 0;
+    bar.style.width = pct + '%';
+    bar.setAttribute('aria-valuenow', pct);
+  }, { passive: true });
+})();
+</script>
+
+</body>
+</html>
