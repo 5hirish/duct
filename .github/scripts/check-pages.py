@@ -15,7 +15,9 @@ from html.parser import HTMLParser
 # ── Configuration ─────────────────────────────────────────────────────────────
 
 # Pages where canonical AND meta description are set dynamically by JS.
-DYNAMIC_META = {"blog/post.html"}
+# Empty since blog posts became static (scripts/build_blog.py); kept because
+# the next dynamic page should be declared here rather than special-cased.
+DYNAMIC_META = set()
 
 # Error/utility pages — skip all SEO checks (no canonical, OG, Twitter needed).
 ERROR_PAGES = {"404.html"}

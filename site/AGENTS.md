@@ -47,7 +47,8 @@ another port (the tests assume 8090).
 | `https://getduct.ai/for-paid-ads` | `site/for-paid-ads.html` |
 | `https://getduct.ai/doctrine` | `site/doctrine.html` |
 | `https://getduct.ai/blog/` | `site/blog/index.html` |
-| `https://getduct.ai/blog/post?slug=SLUG` | `site/blog/post.html` |
+| `https://getduct.ai/blog/<slug>` | `site/blog/<slug>.html` (**generated**) |
+| `https://getduct.ai/blog/post?slug=SLUG` | `site/blog/post.html` (redirect shim, noindex) |
 
 ## Shared assets
 
@@ -143,10 +144,9 @@ disagree about what the page's address is.
 |---|---|
 | Root-level landing page | `https://getduct.ai/for-paid-ads` |
 | Blog index | `https://getduct.ai/blog/` |
-| Blog post | `https://getduct.ai/blog/post?slug=SLUG` |
+| Blog post | `https://getduct.ai/blog/<slug>` |
 
-`blog/post.html` sets its own canonical at runtime from the slug (see its inline
-script) — do not hardcode one there. Every other page hardcodes it in `<head>`.
+Every page hardcodes its canonical in `<head>`, generated posts included.
 
 ## Page `<head>` checklist
 
@@ -183,13 +183,26 @@ Follow the **Adding a new demo variant** instructions above.
 
 ## New blog post
 
-Posts live in `site/blog/posts/<slug>.md` with required front matter:
-- `title`
-- `date`
-- `author`
-- `category`
-- `excerpt`
-- `readTime`
+Posts live in `site/blog/posts/<slug>.md` with required front matter: `title`,
+`date`, `author`, `category`, `excerpt`, `readTime`.
+
+**Then run the generator and commit its output:**
+
+```bash
+python3 scripts/build_blog.py          # writes site/blog/<slug>.html
+python3 scripts/build_blog.py --check  # what CI runs; fails if the tree is stale
+```
+
+Posts are pre-rendered, not rendered in the browser. They used to be, and a
+crawler without JavaScript received 49 characters of body text plus a canonical
+of `/blog/post` shared by every post. The generator inlines the nav, CTA and
+footer partials for the same reason: a runtime `fetch` is not a crawlable link.
+
+The Markdown subset is deliberately small — h2, paragraphs, ordered and bullet
+lists, bold, links. Anything else raises rather than rendering wrong. Extend
+`render_markdown()` before using a new construct.
+
+Also add the post to `site/sitemap.xml` and an `<item>` to `site/blog/feed.xml`.
 
 ## Deploy
 

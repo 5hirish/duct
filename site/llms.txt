@@ -35,8 +35,8 @@ Intended for product managers, growth leads and marketing teams who need cross-t
 
 ## Blog posts
 
-- [Why Your SEO Metrics Aren't Telling You the Full Story](https://getduct.ai/blog/post?slug=why-your-seo-metrics-arent-telling-you-the-full-story)
-- [Keyword Gap Analysis Without a Spreadsheet](https://getduct.ai/blog/post?slug=keyword-gap-analysis-without-a-spreadsheet)
+- [Why Your SEO Metrics Aren't Telling You the Full Story](https://getduct.ai/blog/why-your-seo-metrics-arent-telling-you-the-full-story)
+- [Keyword Gap Analysis Without a Spreadsheet](https://getduct.ai/blog/keyword-gap-analysis-without-a-spreadsheet)
 
 ## Open source
 
