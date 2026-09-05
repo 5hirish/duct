@@ -48,7 +48,7 @@ ADAPTERS: dict[str, str] = {
     #    that is the whole point of the ports design.
     "agents/audit/v1/runner.py":            "LangChain runner (create_agent)",
     "agents/audit/v3/runner.py":            "Claude Agent SDK runner",
-    "agents/content/v3/runner.py":          "Claude Agent SDK runner",
+    "agents/content/v1/runner.py":          "deepagents runner — Content Studio session",
     "agents/insights/v1/runner.py":         "deepagents runner — autonomous insights session",
 
     # -- Shared LangChain adapter: the model-transport + events-out ports for
@@ -69,22 +69,20 @@ ADAPTERS: dict[str, str] = {
     # -- Tool binders. Domain logic stays plain; these wrap it per harness.
     "agents/core/connector_tools.py":       "LangChain binder: connector discovery tools",
     "agents/core/memory_tools.py":          "binder pair: build_memory_tools_lc / _sdk",
+    "agents/core/web_tools.py":             "LangChain binder: WebFetch + the provider's native web search spec",
     "agents/audit/v1/tools.py":             "LangChain tool binder",
     "agents/audit/tools.py":                "Claude Agent SDK tool binder (duct_crawl)",
-    "agents/content/tools.py":              "Claude Agent SDK tool binder (duct_content)",
+    "agents/content/tools.py":              "LangChain tool binder (content tools)",
     "agents/insights/data_tools.py":        "LangChain binder: FetchData + connector notes",
     "agents/tools/execution_tools.py":      "binder pair: build_execution_tools_lc / _mcp_server",
 
     # -- Named harness shims.
     "agents/core/claude_sdk.py":            "Claude Agent SDK subprocess survival",
     "agents/core/stream.py":                "pump_stream_event — SDK message decode",
-    "agents/content/subagents/draft_post.py":     "Claude Agent SDK AgentDefinition",
-    "agents/content/subagents/research_pillar.py": "Claude Agent SDK AgentDefinition",
 
-    # -- Content/audit enrichment + persistence run their own one-shot model
-    #    calls through the SDK.
+    # -- Enrichment + persistence run their own bounded model calls.
     "agents/audit/enrichment.py":           "one-shot SDK call",
-    "agents/content/enrichment.py":         "one-shot SDK call",
+    "agents/content/enrichment.py":         "create_agent research pass with structured output",
     "agents/content/persistence.py":        "SDK message shapes on resume",
 
     # -- Boundary debt. Allowed today, but these are the wrong layer: a route is
@@ -111,6 +109,11 @@ FRAMEWORK_FREE: tuple[str, ...] = (
     "agents/audit/prompts.py",
     "agents/content/schema.py",
     "agents/content/prompts.py",
+    "agents/content/artifacts.py",
+    "agents/content/subagents/__init__.py",
+    "agents/content/subagents/draft_post.py",
+    "agents/content/subagents/general_purpose.py",
+    "agents/content/subagents/research_pillar.py",
     "agents/insights/schema.py",
 )
 

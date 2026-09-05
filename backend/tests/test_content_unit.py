@@ -9,7 +9,7 @@ What earns a place here:
   - Cache-stability of the orchestrator system prompt (huge cost lever)
   - Sub-agent JSON output → orchestrator persistence (the only path
     from sub-agent text → DB row, easy to break silently)
-  - In-process MCP server build (single import + construction smoke)
+  - Tool binding (single construction smoke + the schemas the model sees)
   - Session registry lifecycle (in-memory but real concurrency surface)
 """
 
@@ -30,7 +30,7 @@ from agents.content.schema import (
     ContentVisualAssets,
     make_session,
 )
-from agents.content.tools import build_content_mcp_server
+from agents.content.tools import build_content_tools_lc
 
 
 def _brand(name: str = "MaxAura") -> ContentBrandContext:
@@ -82,19 +82,28 @@ def test_system_prompt_advertises_essential_capabilities():
 
 
 # ---------------------------------------------------------------------------
-# In-process MCP server — single smoke test for SDK + tool registration
+# Tool binding — single smoke test for registration + closure capture
 # ---------------------------------------------------------------------------
 
 
-def test_mcp_server_builds_and_exposes_writer_tools():
-    """Catches: SDK version mismatch, @tool decorator misuse, broken
-    closure capture of project_id/emit/session."""
+def test_content_tools_bind_and_expose_writer_tools():
+    """Catches: a harness API change, a binder misuse, broken closure capture
+    of project_id/emit/session, and a tool registered under a name the
+    ContentTool enum (and the prompts) do not know."""
+    from agents.content.schema import ContentTool
+
     session = make_session("t", uuid4(), "plan_month")
-    srv = build_content_mcp_server(session.project_id, _noop, session)
-    assert isinstance(srv, dict)
-    assert srv.get("name") == "duct_content"
-    assert srv.get("type") == "sdk"
-    assert srv.get("instance") is not None
+    tools = build_content_tools_lc(session.project_id, _noop, session)
+    names = {t.name for t in tools}
+    assert {"submit_plan", "submit_post_draft", "edit_slide", "generate_image"} <= names
+    assert names == {t.value for t in ContentTool}
+
+
+def test_unremembered_session_binds_no_memory_tools():
+    """"Don't remember this" is enforced by absence, not by instruction."""
+    session = make_session("t", uuid4(), "plan_month")
+    names = {t.name for t in build_content_tools_lc(session.project_id, _noop, session, remember=False)}
+    assert not names & {"RememberFact", "SearchMemory", "GetMemory"}
 
 
 async def _noop(_event: dict) -> None:
@@ -115,7 +124,7 @@ def test_session_registry_lifecycle_closes_and_drains():
     cleanly terminates when the user navigates away. If close_session
     forgets to push the sentinel, the stream hangs until chat_idle_timeout.
     """
-    from agents.content.v3.runner import (
+    from agents.content.v1.runner import (
         close_session,
         create_draft_session,
         create_plan_session,
@@ -156,7 +165,7 @@ def test_unified_agents_route_creates_contentsession():
     from fastapi import HTTPException
 
     from agents.content.schema import ContentSession
-    from agents.content.v3.runner import close_session, get_session
+    from agents.content.v1.runner import close_session, get_session
     from agents.registry import AgentType
     from routes.agents import _create_session_for
 
@@ -184,151 +193,70 @@ def test_unified_agents_route_creates_contentsession():
 
 
 # ---------------------------------------------------------------------------
-# Sub-agent dispatch name resolution — defensive but covers the SDK's
-# documented-as-fuzzy key naming for the Agent tool input.
+# Writer + image tools validate before they touch anything — the corrective
+# text is what stops the model retrying blindly.
 # ---------------------------------------------------------------------------
 
 
-def test_extract_subagent_name_covers_known_sdk_key_variants():
-    """The Agent tool's input shape isn't pinned in claude_agent_sdk docs;
-    we accept the four plausible keys. If a future SDK release lands a
-    new key name our STEP_STARTED chips silently say 'unknown' until we
-    add it here — this test documents the contract for that update."""
-    from agents.content.v3.runner import _extract_subagent_name
-    for key in ("subagent_type", "agent", "agent_type", "name"):
-        assert _extract_subagent_name({key: "draft_post"}) == "draft_post", key
-    assert _extract_subagent_name({}) == "unknown"
+def _tools_for(session) -> dict:
+    return {t.name: t for t in build_content_tools_lc(session.project_id, _noop, session)}
 
 
-# ---------------------------------------------------------------------------
-# Writer-tool upfront validators — defends the new pattern's value prop
-# ---------------------------------------------------------------------------
+def test_writer_tool_denies_with_corrective_text_before_any_db_work():
+    """Two things Pydantic does not do on its own: the error names the
+    schema that failed so the model knows what to fix, and it arrives
+    BEFORE a DB session is opened — there is no DATABASE_URL here, and the
+    result must still be the validation message, not a connection error.
+    submit_plan shares the path; one test covers the pattern."""
+    import json
+
+    session = make_session("t", uuid4(), "draft_post")
+    tool = _tools_for(session)["submit_post_draft"]
+    result = json.loads(asyncio.run(tool.ainvoke({"post": {"type": "post", "project_id": str(session.project_id)}})))
+    assert result["status"] == "error"
+    assert "PostDraft validation failed" in result["message"]
 
 
-def test_writer_validator_accepts_both_wrapper_shapes_and_denies_with_corrective_text():
-    """The two things this validator must do that aren't already Pydantic's job:
-       1. Unwrap both `{"post": {...}}` and `{...}` directly (the model
-          uses both shapes depending on how it interprets input_schema).
-       2. When it denies, the message must tell the model what to do next
-          ('call submit_post_draft again'). Without that hint the model
-          retries blindly. This is the entire value prop of borrowing the
-          audit branch's validate-and-deny pattern.
+def test_writer_tool_blocks_cross_project_writes():
+    """Multi-tenant safety: a payload carrying someone else's project_id must
+    be rejected. Without this guard the agent could persist a draft into the
+    wrong project's content_posts row."""
+    import json
 
-    Symmetry: submit_plan shares the same code path (just a different
-    schema). One test is enough — if the pattern breaks here, it breaks
-    there too.
-    """
-    from agents.content.v3.runner import _validate_submit_post_draft
-
-    pid = uuid4()
-    valid = {
-        "type": "post",
-        "project_id": str(pid),
-        "post_dir_slug": "2026-06-01-001",
-        "pillar": "face_shape",
-        "topic": "x",
-        "slides_html": "<html/>",
-        "caption": "c",
-    }
-    # Both wrapper shapes pass.
-    assert _validate_submit_post_draft({"post": valid}, pid) is None
-    assert _validate_submit_post_draft(valid, pid)            is None
-
-    # Invalid payload denies with corrective text.
-    deny = _validate_submit_post_draft(
-        {"type": "post", "project_id": str(pid)},  # missing required fields
-        pid,
-    )
-    assert deny is not None
-    assert "call submit_post_draft again" in deny.message
-
-
-def test_writer_validator_blocks_cross_project_writes():
-    """Multi-tenant safety: a payload carrying someone else's project_id
-    must be rejected. Without this guard the agent could persist a draft
-    into the wrong project's content_posts row."""
-    from agents.content.v3.runner import _validate_submit_post_draft
-
-    session_pid = uuid4()
+    session = make_session("t", uuid4(), "draft_post")
     wrong = {
         "type": "post",
-        "project_id": str(uuid4()),  # not session_pid
+        "project_id": str(uuid4()),  # not the session's
         "post_dir_slug": "x",
         "pillar": "p",
         "topic": "t",
         "slides_html": "<html/>",
         "caption": "c",
     }
-    deny = _validate_submit_post_draft(wrong, session_pid)
-    assert deny is not None
-    assert "project_id mismatch" in deny.message
-    assert str(session_pid)      in deny.message
+    result = json.loads(asyncio.run(_tools_for(session)["submit_post_draft"].ainvoke({"post": wrong})))
+    assert result["status"] == "error"
+    assert "project_id mismatch" in result["message"]
+    assert str(session.project_id) in result["message"]
 
 
-def test_generate_image_validator_coalesces_legacy_and_multi_ref_keys():
-    """The @tool accepts BOTH `input_asset_id` (single, legacy) and
-    `input_asset_ids` (list, new). The validator must coalesce them into
-    the Pydantic shape's single list field before validating — otherwise
-    `extra=forbid` rejects the legacy key and the deny-path fires for
-    every existing caller. Catches that regression class."""
-    from agents.content.v3.runner import _validate_generate_image
-    from uuid import uuid4
+def test_generate_image_refuses_more_than_three_references_before_paying():
+    """The legacy single `input_asset_id` and the multi `input_asset_ids` are
+    coalesced (deduplicated) before the cap is checked, and the cap fires
+    before any Gemini call — so a run with a key and four refs gets the
+    corrective text, never a bill."""
+    import json
 
-    # Legacy single-id only — must pass.
-    assert _validate_generate_image({
-        "prompt": "a red apple", "input_asset_id": str(uuid4()),
-    }) is None
-
-    # New list only — must pass.
-    assert _validate_generate_image({
-        "prompt": "a red apple", "input_asset_ids": [str(uuid4()), str(uuid4())],
-    }) is None
-
-    # Both keys with overlap — should not duplicate, should not deny.
+    session = make_session("t", uuid4(), "draft_post")
+    session.gemini_api_key = "AIza-test"
+    tool = _tools_for(session)["generate_image"]
     shared = str(uuid4())
-    assert _validate_generate_image({
-        "prompt": "a red apple", "input_asset_id": shared,
-        "input_asset_ids": [shared, str(uuid4())],
-    }) is None
-
-    # Over the cap of 3 refs — must deny with actionable text.
-    deny = _validate_generate_image({
+    result = json.loads(asyncio.run(tool.ainvoke({
         "prompt": "x",
-        "input_asset_ids": [str(uuid4()) for _ in range(4)],
-    })
-    assert deny is not None
-    assert "max 3" in deny.message
-
-
-def test_generate_image_validator_accepts_global_library_url_refs():
-    """A reference id may be a repo-bundled global library URL
-    ('/static/references/...') instead of a DB UUID — the tool resolves it
-    from disk. The validator must NOT reject it through the UUID-typed
-    request model, but it MUST still count toward the max-3 cap. Catches
-    the regression where every camera-ref call gets denied."""
-    from uuid import uuid4
-
-    from agents.content.v3.runner import _validate_generate_image
-
-    lib = "/static/references/camera/selfie-talking/IMG_5885.jpeg"
-
-    # Single global library ref — must pass.
-    assert _validate_generate_image({
-        "prompt": "p", "input_asset_ids": [lib],
-    }) is None
-
-    # Mixed [character UUID, camera library URL] — the slide 2-5 pattern.
-    assert _validate_generate_image({
-        "prompt": "p", "input_asset_ids": [str(uuid4()), lib],
-    }) is None
-
-    # Globals still count toward the cap: 4 distinct refs (mixed) must deny.
-    deny = _validate_generate_image({
-        "prompt": "p",
-        "input_asset_ids": [str(uuid4()), str(uuid4()), lib, lib + "x"],
-    })
-    assert deny is not None
-    assert "max 3" in deny.message
+        "input_asset_id": shared,
+        "input_asset_ids": [shared, str(uuid4()), str(uuid4()), str(uuid4())],
+    })))
+    assert result["status"] == "error"
+    assert "max 3" in result["message"]
 
 
 # ---------------------------------------------------------------------------
@@ -459,9 +387,9 @@ def test_local_signals_handles_empty_db_gracefully():
 
 
 def test_enrich_returns_local_signals_when_no_api_key():
-    """Graceful degradation: empty api_key skips the sub-agent and
-    returns local signals only. This is the path that fires when
-    ANTHROPIC_API_KEY isn't set (dev / unit env)."""
+    """Graceful degradation: empty api_key skips the research pass and
+    returns local signals only. This is the path that fires when no provider
+    key is configured (dev / unit env)."""
     import asyncio
     from unittest.mock import patch
     from agents.content.enrichment import enrich_content_context
@@ -470,9 +398,71 @@ def test_enrich_returns_local_signals_when_no_api_key():
     brand = ContentBrandContext(project_id=uuid4(), project_name="X")
     with patch("agents.content.enrichment.get_engine", return_value=None):
         ctx = asyncio.run(enrich_content_context(brand, api_key=""))
-    # Empty but well-formed — sub-agent was correctly skipped
+    # Empty but well-formed — the research pass was correctly skipped
     assert ctx.trending_sounds == []
     assert ctx.trending_hashtags == []
+
+
+def test_enrich_skips_research_on_a_provider_with_no_verified_web_search():
+    """A research pass with no search tool could only invent trends. Local
+    signals come through and the model is never called — a fake that
+    explodes is the proof."""
+    import asyncio
+    from unittest.mock import patch
+
+    from langchain_core.messages import AIMessage
+
+    from agents.content.enrichment import enrich_content_context
+    from agents.content.schema import ContentBrandContext
+    from agents.models import ModelName, Provider
+    from tests.fakes import ToolCallingFake
+
+    class _Explodes(ToolCallingFake):
+        def _generate(self, *a, **k):
+            raise AssertionError("no search, no research pass")
+
+    brand = ContentBrandContext(project_id=uuid4(), project_name="X")
+    with patch("agents.content.enrichment.get_engine", return_value=None):
+        ctx = asyncio.run(enrich_content_context(
+            brand, api_key="k", provider=Provider.OPENROUTER, model=ModelName.OR_DEEPSEEK_V4_FLASH,
+            llm=_Explodes(responses=[AIMessage(content="x")]),
+        ))
+    assert ctx.trending_hooks == [] and ctx.total_posts_to_date == 0
+
+
+def test_enrich_layers_the_research_pass_over_local_signals(monkeypatch):
+    """The pass returns its findings through the structured-output contract;
+    they land on the trend fields and the local signals are carried through
+    untouched. Driven by a fake that answers the structured tool call."""
+    import asyncio
+    from unittest.mock import patch
+
+    from langchain_core.messages import AIMessage
+
+    import agents.content.enrichment as enrichment
+    from agents.content.schema import ContentBrandContext, ContentResearchContext, PillarHistorySignal
+    from agents.models import Provider
+    from tests.fakes import ToolCallingFake
+
+    monkeypatch.setattr(enrichment, "provider_web_search_tool", lambda _p: {"type": "web_search_fake"})
+    found = {
+        "trending_hooks": [{"kind": "hook", "label": "POV: you found out", "why_it_works": "curiosity"}],
+        "audience_insights": ["saves spike on self-tests"],
+    }
+    llm = ToolCallingFake(responses=[
+        AIMessage(content="", tool_calls=[{"name": "_RawTrendingResult", "args": found, "id": "s1"}]),
+    ])
+    base = ContentResearchContext(
+        pillar_history=[PillarHistorySignal(pillar="face_shape", posts_count=3)], total_posts_to_date=3,
+    )
+    brand = ContentBrandContext(project_id=uuid4(), project_name="X")
+    with patch("agents.content.enrichment.get_engine", return_value=None):
+        ctx = asyncio.run(enrichment.enrich_content_context(
+            brand, api_key="k", provider=Provider.ANTHROPIC, llm=llm, base_context=base,
+        ))
+    assert [h.label for h in ctx.trending_hooks] == ["POV: you found out"]
+    assert ctx.audience_insights == ["saves spike on self-tests"]
+    assert ctx.total_posts_to_date == 3 and ctx.pillar_history[0].pillar == "face_shape"
 
 
 # ---------------------------------------------------------------------------
@@ -481,19 +471,20 @@ def test_enrich_returns_local_signals_when_no_api_key():
 
 
 # ---------------------------------------------------------------------------
-# CLI startup-failure diagnosis + retry (agents/content/v3/runner.py)
+# CLI startup-failure diagnosis + retry (agents/core/claude_sdk.py)
 #
-# The `claude` subprocess can exit 1 during initialize() — most often a
-# transient subscription usage/rate limit on the OAuth path. The SDK surfaces
-# this opaquely ("Command failed with exit code 1 / Check stderr output for
-# details"). These tests pin the diagnosis helpers that turn that into an
-# actionable, correctly-grouped signal — the bit that's easy to silently break.
+# Written for the content runner when it ran on the Claude Agent SDK; the
+# helpers now serve the audit v3 runner alone. The `claude` subprocess can
+# exit 1 during initialize() — most often a transient subscription usage/rate
+# limit on the OAuth path — and the SDK surfaces this opaquely. These tests
+# pin the diagnosis helpers that turn that into an actionable, correctly-
+# grouped signal — the bit that's easy to silently break.
 # ---------------------------------------------------------------------------
 
 
 # NB: the stderr-capture / failure-message / rate-limit classification logic is
-# tested directly in tests/test_agent_core.py (it now lives in core/claude_sdk.py).
-# Here we only cover the content-specific Sentry wiring (agent="content" tags).
+# tested directly in tests/test_agent_core.py. Here we only cover the per-agent
+# Sentry wiring (agent="content" tags, as the content runner used to pass).
 
 
 def test_sentry_startup_report_fingerprints_by_kind_and_never_raises(monkeypatch):
@@ -738,38 +729,33 @@ def test_arc_line_for_slide_extracts_this_slides_beat():
 def test_image_tool_schemas_constrain_model_and_required_params():
     """The image tools must expose ENUM-constrained model/aspect_ratio (so an
     invalid id like 'gemini-3.1-flash-image-preview' can't be passed) and mark
-    only the truly-required params required. Asserts the schema the model actually
-    receives (via the MCP server's list_tools), guarding both the free-string
-    `model` bug and the dict-form 'every key required' default."""
-    import mcp.types as mt
-    from agents.content.tools import build_content_mcp_server
+    only the truly-required params required. Asserts the argument schema the
+    model actually receives, guarding both the free-string `model` bug and an
+    'every key required' regression."""
     from agents.content.schema import make_session
 
-    async def _emit(_body):
-        return None
+    session = make_session("t", uuid4(), "draft_post")
+    schemas = {t.name: t.args_schema.model_json_schema() for t in build_content_tools_lc(uuid4(), _noop, session)}
 
-    cfg = build_content_mcp_server(uuid4(), _emit, make_session("t", uuid4(), "draft_post"))
-    inst = cfg["instance"]
-
-    async def _list():
-        handler = inst.request_handlers[mt.ListToolsRequest]
-        res = await handler(mt.ListToolsRequest(method="tools/list"))
-        return {t.name: t.inputSchema for t in res.root.tools}
-
-    schemas = asyncio.run(_list())
+    def _enum(schema: dict, field: str) -> list:
+        """Pydantic emits an enum field as a $ref into $defs; follow it."""
+        prop = schema["properties"][field]
+        ref = prop.get("$ref") or next((a["$ref"] for a in prop.get("anyOf", []) if "$ref" in a), None)
+        target = schema["$defs"][ref.rsplit("/", 1)[-1]] if ref else prop
+        return target["enum"]
 
     gi = schemas["generate_image"]
-    assert gi["required"] == ["prompt"]                                  # only prompt required
-    assert "gemini-3.1-flash-image" in gi["properties"]["model"]["enum"]  # valid id offered
-    assert "gemini-3.1-flash-image-preview" not in gi["properties"]["model"]["enum"]  # the bad id can't be passed
-    assert "9:16" in gi["properties"]["aspect_ratio"]["enum"]
+    assert gi["required"] == ["prompt"]                                    # only prompt required
+    assert "gemini-3.1-flash-image" in _enum(gi, "model")                  # valid id offered
+    assert "gemini-3.1-flash-image-preview" not in _enum(gi, "model")      # the bad id can't be passed
+    assert "9:16" in _enum(gi, "aspect_ratio")
 
     ei = schemas["edit_image"]
     assert set(ei["required"]) == {"prompt", "input_asset_id"}
-    assert "enum" in ei["properties"]["edit_mode"]
+    assert _enum(ei, "edit_mode")
 
     # optional-as-required fixes: these take either/neither id, nothing forced
-    assert schemas["fetch_post"]["required"] == []
+    assert schemas["fetch_post"].get("required", []) == []
     assert schemas["mark_posted"]["required"] == ["post_id"]
 
 

@@ -23,9 +23,9 @@ export const ENGINES = [
   },
 ];
 
-// v1 to match the backend: `generate_engine` defaults to v1 and audit now does
-// too. Content Studio is v3-only until its port lands, so it renders with the
-// "v3 only" pill — which is what that affordance is for.
+// v1 to match the backend: `generate_engine` defaults to v1, audit does too,
+// and Content Studio now runs on v1 only. The "v3 only" pill affordance stays
+// for any future agent that lands on one engine first.
 export const DEFAULT_ENGINE = "v1";
 export const ENGINE_STORAGE_KEY = "duct_engine";
 
@@ -89,14 +89,15 @@ export function getAgentType(key) {
 // Current state of the consolidation onto one harness:
 //   - insights   — v1 only; the v3 runner was removed (nothing dispatched it).
 //   - seo_audit  — both, and `routes/audit.py` now defaults to v1.
-//   - tiktok_studio — still v3; its ~1350-line runner is the remaining port.
+//   - tiktok_studio — v1 only; its v3 runner was ported to deepagents and
+//     removed, so Content Studio runs on any provider the user brings a key for.
 // ---------------------------------------------------------------------------
 export const AGENT_ENGINE_SUPPORT = {
   organic_growth: ["v1"],
   product_intelligence: ["v1"],
   paid_ads: ["v1"],
   seo_audit: ["v1", "v3"],
-  tiktok_studio: ["v3"],
+  tiktok_studio: ["v1"],
 };
 
 // True when `engineKey` can run the agent `agentKey`. Fail-open for unknown

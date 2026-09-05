@@ -560,6 +560,28 @@ def emit_custom(payload: dict) -> None:
         writer(payload)
 
 
+def chat_message_text(chat_msg: Any) -> str:
+    """A queued chat message as plain text.
+
+    ``routes/agents.py`` queues ``{"role": "user", "content": ...}`` where the
+    content is a string or a content-block list (image uploads), so unwrap the
+    envelope and flatten the list form rather than handing either to a prompt
+    slot. Plain strings are accepted too — that is what a runner's internal
+    nudges put on the same queue.
+    """
+    if isinstance(chat_msg, dict):
+        chat_msg = chat_msg.get("content", "")
+    if isinstance(chat_msg, str):
+        return chat_msg
+    if isinstance(chat_msg, list):
+        return "\n".join(
+            block.get("text", "")
+            for block in chat_msg
+            if isinstance(block, dict) and block.get("type") == "text"
+        )
+    return str(chat_msg or "")
+
+
 def drain_steers(queue: Any) -> list[tuple[Any, str]]:
     """Everything waiting on a steer queue, as (message, client id), without
     blocking. Empty when there is no queue."""
@@ -845,6 +867,13 @@ async def stream_agent(
                 if not compacting:
                     compacting = True
                     await emit({"event": AgentEvent.CONTEXT_COMPACTING})
+                continue
+            if _usage_scope(meta) == "subagent":
+                # A subagent's tokens are its report to the *agent*, which
+                # relays what matters; they are billed above and nothing
+                # else. Streamed as prose they read as the agent talking —
+                # and a draft_post subagent's report is a whole PostDraft
+                # in JSON, which is how a raw payload landed in the chat.
                 continue
             text, thinking = split_chunk(message)
             if thinking:

@@ -74,6 +74,7 @@ from agents.core.lc import (
     compact_thread,
     drain_steers,
     build_ask_user_tool,
+    chat_message_text,
     inspection_chat_model,
     interrupt_pause,
     live_pauses,
@@ -868,23 +869,6 @@ async def _publish_brief(raw: str, emit: Callable, version: dict) -> dict | None
     return payload
 
 
-def _as_text(chat_msg: Any) -> str:
-    """A queued chat message as plain text.
-
-    ``routes/agents.py`` queues ``{"role": "user", "content": ...}`` where the
-    content is a string or a content-block list (image uploads), so unwrap the
-    envelope and flatten the list form rather than handing either to a prompt
-    slot. Plain strings are accepted too — that is what the content runner's
-    internal nudges put on the same queue.
-    """
-    if isinstance(chat_msg, dict):
-        chat_msg = chat_msg.get("content", "")
-    if isinstance(chat_msg, str):
-        return chat_msg
-    if isinstance(chat_msg, list):
-        return "\n".join(
-            block.get("text", "")
-            for block in chat_msg
-            if isinstance(block, dict) and block.get("type") == "text"
-        )
-    return str(chat_msg or "")
+# ``_as_text`` moved to ``agents/core/lc.chat_message_text`` when content became
+# the second runner with a chat loop; the name stays for the callers above.
+_as_text = chat_message_text

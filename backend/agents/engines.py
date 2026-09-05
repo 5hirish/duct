@@ -27,11 +27,14 @@ provider-locked by design (anthropics/claude-agent-sdk-python#410, closed
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
 
 from agents.models import CLI_ONLY_MODELS, MODEL_FALLBACK, AgentEffort, ModelName, Provider
+
+logger = logging.getLogger(__name__)
 
 
 class Engine(str, Enum):
@@ -318,3 +321,85 @@ def resolve_provider_key(
         return ProviderKey("", provider, "subscription")
 
     raise ProviderKeyRequired(provider)
+
+
+# ---------------------------------------------------------------------------
+# One resolver for "which model, on whose key" — shared by every V1 runner
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class RunModel:
+    """Everything a V1 runner needs to open a model: provider, model, key."""
+
+    provider: Provider
+    model: ModelName | str
+    api_key: str
+    #: The artifact summariser still runs on the Agent SDK, so only an
+    #: Anthropic key works there — a run on another provider persists its
+    #: artifacts without a digest. Empty when that is the case.
+    summary_key: str
+
+
+def resolve_run_model(
+    engine_override: str = "",
+    user_keys: Mapping[Provider, str] | None = None,
+    stored_keys: Mapping[Provider, str] | None = None,
+    *,
+    log_prefix: str = "agent",
+) -> RunModel:
+    """Engine → provider → model → key, for a run on the LangChain harness.
+
+    Lived in ``agents/insights/setup.py`` until content became the second
+    runner that needed it; the membership gate and the memory blocks stayed
+    there because they are insights-shaped, this is not. The rules:
+
+    * ``user_keys`` are per-request bring-your-own keys from the ``X-Provider-*``
+      headers; ``stored_keys`` are the same user's saved keys, which is all a
+      background worker can have. A caller's key wins over the server's for
+      the *resolved* provider only — an OpenAI key someone supplied must never
+      be spent on a Gemini call.
+    * A caller's key can also *choose* the provider, in the one case where that
+      is unambiguous: the operator expressed no preference (``GENERATE_PROVIDER``
+      unset) and the caller supplied exactly one key. Nobody pastes an
+      OpenRouter key hoping to be billed for Gemini. Two keys is not a
+      preference, so that case keeps the engine default rather than guessing.
+    * Whether the server's own key may be spent at all is decided by
+      ``resolve_provider_key``, which fails closed on the hosted deployment.
+      ``ProviderKeyRequired`` propagates deliberately: "you have not connected
+      a key" is a 402 the browser can act on, not a 500.
+
+    The engine override selects a provider/model *within* V1: V1 is the only
+    harness the session runners implement, so a stored ``"v3"`` preference
+    resolves to its Anthropic default rather than a different runner.
+    """
+    from config import get_configs
+
+    cfg = get_configs()
+    engine = resolve_engine(engine_override or cfg.generate_engine or "v1")
+    provider = resolve_engine_provider(engine, cfg.generate_provider or None)
+    model_override = cfg.generate_model or None
+    # A saved key is as much "the caller asked for this provider" as a header
+    # one — the only difference is that it survived a page refresh.
+    byo = {**(stored_keys or {}), **(user_keys or {})}
+    if not cfg.generate_provider and len(byo) == 1:
+        (candidate,) = byo.keys()
+        if candidate in ENGINE_SUPPORTED_PROVIDERS.get(engine, frozenset()):
+            # GENERATE_MODEL goes with the provider the operator picked, so it
+            # is dropped along with it — a Gemini model id forwarded to
+            # OpenRouter is a guaranteed 404, and the engine default for the
+            # new provider is the only id known to fit.
+            if candidate is not provider:
+                model_override = None
+            provider = candidate
+    model = resolve_engine_model(engine, provider, model_override)
+    if isinstance(model, ModelName) and model in CLI_ONLY_MODELS:
+        # A stored "v3" preference resolves its model under V3's rules, which
+        # allow the [1m] CLI id; this run is on LangChain, where that id 404s.
+        model = resolve_engine_model(Engine.V1, provider, None)
+    resolved = resolve_provider_key(provider, user_keys, stored_keys=stored_keys)
+    if resolved.billed_to_duct:
+        logger.info("%s: run billed to Duct (%s/%s)", log_prefix, provider.value, resolved.source)
+    api_key = resolved.key
+    summary_key = api_key if getattr(provider, "value", str(provider)) == "anthropic" else ""
+    return RunModel(provider=provider, model=model, api_key=api_key, summary_key=summary_key)

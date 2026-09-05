@@ -98,11 +98,12 @@ class ModelName(str, Enum):
 
 
 class AgentTool(StrEnum):
-    """Built-in Claude Agent SDK tool names passed to allowed_tools.
+    """Built-in Claude Agent SDK tool names passed to allowed_tools (audit v3).
 
-    Per-agent MCP tool names are NOT here — each agent type owns its own enum
-    next to its tools/schema: see AuditTool (agents/audit/schema.py, server
-    ``duct_crawl``) and ContentTool (agents/content/schema.py, ``duct_content``).
+    Per-agent tool names are NOT here — each agent type owns its own enum next
+    to its tools/schema: see AuditTool (agents/audit/schema.py, the
+    ``duct_crawl`` MCP server) and ContentTool (agents/content/schema.py, the
+    LangChain-bound content tools).
     """
 
     ASK_USER_QUESTION = "AskUserQuestion"
