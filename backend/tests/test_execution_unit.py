@@ -16,6 +16,7 @@ from service.execution.registry import (
     get_executor,
     register_executor,
 )
+from tests.conftest import api_routes
 
 
 # ---------------------------------------------------------------------------
@@ -166,7 +167,7 @@ def test_execution_routes_registered():
     import server
 
     server = importlib.reload(server)
-    paths = {r.path for r in server.app.routes if r.path.startswith("/api/execute")}
+    paths = {r.path for r in api_routes(server.app) if r.path.startswith("/api/execute")}
     expected = {
         "/api/execute",
         "/api/execute/ops",

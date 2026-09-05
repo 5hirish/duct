@@ -41,6 +41,7 @@ import pytest
 os.environ.setdefault("DUCT_API_KEY", "test-api-key")
 
 from server import app  # noqa: E402  — import after the env default above
+from tests.conftest import api_routes  # noqa: E402  — import after the env default above
 
 # ---------------------------------------------------------------------------
 # Routes that resolve no signed-in user, and why each one is allowed to.
@@ -100,7 +101,7 @@ def _dependency_names(dependant) -> set[str]:
 
 def _routes():
     """(method, path, dependency names, is_project_scoped) for every API route."""
-    for route in app.routes:
+    for route in api_routes(app):
         dependant = getattr(route, "dependant", None)
         if dependant is None:  # mounts, static files
             continue
