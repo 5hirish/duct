@@ -84,8 +84,8 @@ langchain-openrouter = "^0.2.8"
 [tool.poetry.group.dev.dependencies]
 pytest = "^9"
 pytest-asyncio = "^1.0"
-ruff = "^0.15"
-arize-phoenix = "^16.3.0"
+ruff = "^0.16"
+arize-phoenix = "^17.7.0"
 pyinstaller = "^6.11"
 # In-memory span exporter for tests/test_telemetry.py.
 opentelemetry-sdk = "^1.41"
@@ -108,6 +108,14 @@ filterwarnings = [
     # Starlette form parser; third-party until FastAPI/Starlette adopts python_multipart import.
     "ignore:Please use `import python_multipart` instead\\.:PendingDeprecationWarning",
 ]
+
+[tool.ruff.lint]
+# ruff 0.16 changed what an unconfigured project lints under: an unpinned
+# `select` went from the historical E4/E7/E9/F baseline to several hundred
+# rules (bandit, flake8-datetimez, pylint, refurb, pyupgrade, ...), which
+# would turn every future ruff bump into a repo-wide lint sweep rather than
+# a version bump. Pin to the baseline this codebase has always run under.
+select = ["E4", "E7", "E9", "F"]
 
 [build-system]
 requires = ["poetry-core>=2.0"]
