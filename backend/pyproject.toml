@@ -109,6 +109,14 @@ filterwarnings = [
     "ignore:Please use `import python_multipart` instead\\.:PendingDeprecationWarning",
 ]
 
+[tool.ruff.lint]
+# ruff 0.16 changed what an unconfigured project lints under: an unpinned
+# `select` went from the historical E4/E7/E9/F baseline to several hundred
+# rules (bandit, flake8-datetimez, pylint, refurb, pyupgrade, ...), which
+# would turn every future ruff bump into a repo-wide lint sweep rather than
+# a version bump. Pin to the baseline this codebase has always run under.
+select = ["E4", "E7", "E9", "F"]
+
 [build-system]
 requires = ["poetry-core>=2.0"]
 build-backend = "poetry.core.masonry.api"
