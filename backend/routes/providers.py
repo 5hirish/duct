@@ -74,6 +74,7 @@ _PROVIDER_LABELS: dict[Provider, tuple[str, str]] = {
 # page is organised. Derived from the catalogue's own comments (`gpt-5.6-sol`
 # is annotated "flagship", `luna` "cost-sensitive") rather than invented here.
 _MODEL_TIER_HINT: dict[str, Tier] = {
+    ModelName.CLAUDE_FABLE.value: Tier.HEAVY,
     ModelName.CLAUDE_OPUS.value: Tier.HEAVY,
     ModelName.CLAUDE_OPUS_1M.value: Tier.HEAVY,
     ModelName.CLAUDE_SONNET.value: Tier.STANDARD,
@@ -85,7 +86,7 @@ _MODEL_TIER_HINT: dict[str, Tier] = {
     ModelName.GPT_4O.value: Tier.STANDARD,
     ModelName.GPT_4O_MINI.value: Tier.LIGHT,
     ModelName.GEMINI_3_1_PRO_PREVIEW.value: Tier.HEAVY,
-    ModelName.GEMINI_3_7_FLASH.value: Tier.STANDARD,
+    ModelName.GEMINI_3_8_FLASH.value: Tier.STANDARD,
     ModelName.GEMINI_3_5_FLASH_LITE.value: Tier.LIGHT,
     ModelName.GEMINI_2_5_FLASH.value: Tier.LIGHT,
     ModelName.GEMINI_2_5_FLASH_LITE.value: Tier.LIGHT,

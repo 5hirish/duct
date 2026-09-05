@@ -205,7 +205,7 @@ def test_a_model_with_no_dial_says_nothing_on_either_transport():
     """Absent is a real answer — it must not become `reasoning={"effort": ""}`."""
     from agents.core.lc import _thinking_kwargs_for
 
-    assert _thinking_kwargs_for(Provider.OPENROUTER, ModelName.OR_KIMI_K2_5, "deep") == {}
+    assert _thinking_kwargs_for(Provider.OPENROUTER, ModelName.OR_QWEN3_7_FLASH, "deep") == {}
 
 
 def test_the_dial_survives_construction_as_a_first_class_field():

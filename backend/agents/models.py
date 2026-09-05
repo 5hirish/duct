@@ -55,12 +55,22 @@ class ModelName(str, Enum):
     # stable 3.x Pro; verified against the live ListModels response and a real
     # generateContent call rather than taken from the docs.
     GEMINI_3_1_PRO_PREVIEW = "gemini-3.1-pro-preview"
-    GEMINI_3_7_FLASH = "gemini-3.7-flash"
+    GEMINI_3_8_FLASH = "gemini-3.8-flash"
     GEMINI_3_5_FLASH_LITE = "gemini-3.5-flash-lite"
     GEMINI_2_5_FLASH = "gemini-2.5-flash"
     GEMINI_2_5_FLASH_LITE = "gemini-2.5-flash-lite"
     
     # Anthropic
+    # Anthropic's most capable widely released model, above the Opus tier and
+    # priced accordingly ($10/$50 against Opus 5's $5/$25) — offered, not
+    # defaulted to. Two behaviours differ from the rest of the family and both
+    # are load-bearing here: thinking is always on (a `budget_tokens` config is
+    # a 400, which is why it maps to the effort ladder like the other 5s), and
+    # forced tool choice is rejected — `tool_choice: any` returns a 400. The
+    # content enrichment pass forces exactly that through LangChain's
+    # ToolStrategy, so on this model that pass degrades to local signals
+    # instead of returning trends. See agents/content/enrichment.py.
+    CLAUDE_FABLE = "claude-fable-5-1"
     CLAUDE_OPUS = "claude-opus-5"
     CLAUDE_SONNET = "claude-sonnet-5"
     CLAUDE_HAIKU = "claude-haiku-4-5"
@@ -84,13 +94,22 @@ class ModelName(str, Enum):
     #   deepseek-chat      $0.26/$1.03  164k  →  v4-flash    $0.08/$0.16  1.0M
     #   qwen3-235b-a22b    $0.45/$1.82  131k  →  qwen3.7-flash $0.03/$0.13 1.0M
     #   glm-4.6            $0.43/$1.75  205k  →  glm-5.3-flash $0.07/$0.25 1.3M
-    #   kimi-k2            $0.57/$2.30  131k  →  kimi-k2.5   $0.45/$2.25  262k
+    #   kimi-k2            $0.57/$2.30  131k  →  kimi-k3     $3.00/$15.00 1.0M
     #
-    # All four carry `tools` in supported_parameters; a slug that cannot tool-call
+    # kimi-k3 is the exception to the "cheaper and longer" pattern above: it is
+    # ~6x the price of the k2.5 it replaces, bought with 4x the context. It is
+    # here as the capable end of the open-weight list, not as a volume model.
+    #
+    # deepseek-v4-pro sits beside v4-flash rather than replacing it — same
+    # vendor, same 1.0M context, ~10x the price for the reasoning tier. Two
+    # rungs of one family is the point.
+    #
+    # All carry `tools` in supported_parameters; a slug that cannot tool-call
     # has no business here, since every Duct agent is a tool-calling agent.
     OR_DEEPSEEK_V4_FLASH = "deepseek/deepseek-v4-flash"
+    OR_DEEPSEEK_V4_PRO = "deepseek/deepseek-v4-pro"
     OR_QWEN3_7_FLASH = "qwen/qwen3.7-flash"
-    OR_KIMI_K2_5 = "moonshotai/kimi-k2.5"
+    OR_KIMI_K3 = "moonshotai/kimi-k3"
     OR_GLM_5_3_FLASH = "z-ai/glm-5.3-flash"
     OR_CLAUDE_OPUS = "anthropic/claude-opus-5"
     OR_CLAUDE_SONNET = "anthropic/claude-sonnet-5"
@@ -245,11 +264,12 @@ DEFAULT_MODELS = {
 # silently substituting another vendor's model is worse than failing.
 MODEL_FALLBACK: dict[ModelName, tuple[ModelName, ...]] = {
     # Anthropic
+    ModelName.CLAUDE_FABLE:          (ModelName.CLAUDE_OPUS,),
     ModelName.CLAUDE_OPUS:           (ModelName.CLAUDE_SONNET,),
     ModelName.CLAUDE_SONNET:         (ModelName.CLAUDE_HAIKU,),
     # Google
-    ModelName.GEMINI_3_1_PRO_PREVIEW: (ModelName.GEMINI_3_7_FLASH,),
-    ModelName.GEMINI_3_7_FLASH:      (ModelName.GEMINI_2_5_FLASH,),
+    ModelName.GEMINI_3_1_PRO_PREVIEW: (ModelName.GEMINI_3_8_FLASH,),
+    ModelName.GEMINI_3_8_FLASH:      (ModelName.GEMINI_2_5_FLASH,),
     ModelName.GEMINI_3_5_FLASH_LITE: (ModelName.GEMINI_2_5_FLASH_LITE,),
     ModelName.GEMINI_2_5_FLASH:      (ModelName.GEMINI_2_5_FLASH_LITE,),
     # OpenAI
@@ -278,18 +298,20 @@ CONTEXT_WINDOW: dict[ModelName, int] = {
     ModelName.GPT_4O: 128_000,
     ModelName.GPT_4O_MINI: 128_000,
     ModelName.GEMINI_3_1_PRO_PREVIEW: 1_000_000,
-    ModelName.GEMINI_3_7_FLASH: 1_000_000,
+    ModelName.GEMINI_3_8_FLASH: 1_000_000,
     ModelName.GEMINI_3_5_FLASH_LITE: 1_000_000,
     ModelName.GEMINI_2_5_FLASH: 1_000_000,
     ModelName.GEMINI_2_5_FLASH_LITE: 1_000_000,
+    ModelName.CLAUDE_FABLE: 1_000_000,
     ModelName.CLAUDE_OPUS: 200_000,
     ModelName.CLAUDE_SONNET: 200_000,
     ModelName.CLAUDE_HAIKU: 200_000,
     ModelName.CLAUDE_OPUS_1M: 1_000_000,
-    ModelName.OR_DEEPSEEK_V4_FLASH: 128_000,
-    ModelName.OR_QWEN3_7_FLASH: 128_000,
-    ModelName.OR_KIMI_K2_5: 256_000,
-    ModelName.OR_GLM_5_3_FLASH: 128_000,
+    ModelName.OR_DEEPSEEK_V4_FLASH: 1_000_000,
+    ModelName.OR_DEEPSEEK_V4_PRO: 1_000_000,
+    ModelName.OR_QWEN3_7_FLASH: 1_000_000,
+    ModelName.OR_KIMI_K3: 1_000_000,
+    ModelName.OR_GLM_5_3_FLASH: 1_300_000,
     ModelName.OR_CLAUDE_OPUS: 200_000,
     ModelName.OR_CLAUDE_SONNET: 200_000,
     ModelName.OR_GPT_5_MINI: 400_000,
@@ -320,17 +342,19 @@ PRICING: dict[ModelName, ModelPrice] = {
     ModelName.GPT_4O: ModelPrice(2.5, 10.0, 1.25),
     ModelName.GPT_4O_MINI: ModelPrice(0.15, 0.6, 0.075),
     ModelName.GEMINI_3_1_PRO_PREVIEW: ModelPrice(2.0, 12.0, 0.2),
-    ModelName.GEMINI_3_7_FLASH: ModelPrice(0.75, 3.75, 0.075),
+    ModelName.GEMINI_3_8_FLASH: ModelPrice(0.75, 3.75, 0.075),
     ModelName.GEMINI_3_5_FLASH_LITE: ModelPrice(0.3, 2.5, 0.03),
     ModelName.GEMINI_2_5_FLASH: ModelPrice(0.3, 2.5, 0.03),
     ModelName.GEMINI_2_5_FLASH_LITE: ModelPrice(0.1, 0.4, 0.01),
+    ModelName.CLAUDE_FABLE: ModelPrice(10.0, 50.0, 0.25, 12.5),
     ModelName.CLAUDE_OPUS: ModelPrice(5.0, 25.0, 0.5, 6.25),
     ModelName.CLAUDE_SONNET: ModelPrice(2.0, 10.0, 0.2, 2.5),
     ModelName.CLAUDE_HAIKU: ModelPrice(1.0, 5.0, 0.1, 1.25),
     ModelName.CLAUDE_OPUS_1M: ModelPrice(5.0, 25.0, 0.5, 6.25),
     ModelName.OR_DEEPSEEK_V4_FLASH: ModelPrice(0.08722, 0.17444, 0.017444),
+    ModelName.OR_DEEPSEEK_V4_PRO: ModelPrice(0.9309, 1.8618, 0.077575),
     ModelName.OR_QWEN3_7_FLASH: ModelPrice(0.03, 0.13, 0.006, 0.038),
-    ModelName.OR_KIMI_K2_5: ModelPrice(0.45, 2.25, 0.07),
+    ModelName.OR_KIMI_K3: ModelPrice(3.0, 15.0, 0.3),
     ModelName.OR_GLM_5_3_FLASH: ModelPrice(0.075, 0.25, 0.015),
     ModelName.OR_CLAUDE_OPUS: ModelPrice(5.0, 25.0, 0.5, 6.25),
     ModelName.OR_CLAUDE_SONNET: ModelPrice(2.0, 10.0, 0.2, 2.5),

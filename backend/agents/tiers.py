@@ -114,7 +114,7 @@ PROVIDER_TRIPLES: dict[Provider, dict[Tier, ModelName]] = {
     # Google does not serve 404s on every fresh install.
     Provider.GOOGLE_GENAI: {
         Tier.HEAVY: ModelName.GEMINI_3_1_PRO_PREVIEW,
-        Tier.STANDARD: ModelName.GEMINI_3_7_FLASH,
+        Tier.STANDARD: ModelName.GEMINI_3_8_FLASH,
         Tier.LIGHT: ModelName.GEMINI_3_5_FLASH_LITE,
     },
     Provider.ANTHROPIC: {

@@ -44,7 +44,7 @@ ANTHROPIC_MAP = {
     "model,expected",
     [
         (ModelName.CLAUDE_OPUS, Provider.ANTHROPIC),
-        (ModelName.GEMINI_3_7_FLASH, Provider.GOOGLE_GENAI),
+        (ModelName.GEMINI_3_8_FLASH, Provider.GOOGLE_GENAI),
         (ModelName.GPT_5_6_SOL, Provider.OPENAI),
         ("deepseek/deepseek-v4-flash", Provider.OPENROUTER),
         # The one that would spend the wrong key if the prefix test ran first:
@@ -98,7 +98,7 @@ def test_unreachable_tier_is_skipped_not_attempted():
 def test_ladder_descends_more_than_one_rung():
     two_missing = {
         "heavy": ModelName.GPT_5_6_SOL.value,
-        "standard": ModelName.GEMINI_3_7_FLASH.value,
+        "standard": ModelName.GEMINI_3_8_FLASH.value,
         "light": ModelName.CLAUDE_HAIKU.value,
     }
     got = resolve_tier_model(Job.ANALYSIS, Engine.V1, tier_map=two_missing, reachable=ANTHROPIC_ONLY)
@@ -108,7 +108,7 @@ def test_ladder_descends_more_than_one_rung():
 
 def test_engine_support_skips_a_tier_even_with_a_key():
     """v3 is Anthropic-only, so a reachable Google model still cannot serve it."""
-    google = {t: ModelName.GEMINI_3_7_FLASH.value for t in ("heavy", "standard", "light")}
+    google = {t: ModelName.GEMINI_3_8_FLASH.value for t in ("heavy", "standard", "light")}
     got = resolve_tier_model(Job.DRAFTING, Engine.V3, tier_map=google, reachable=ALL_PROVIDERS)
     # Every tier the job could use was refused for the engine, not the key...
     assert {reason for _, reason in got.skipped} == {SKIP_ENGINE}
