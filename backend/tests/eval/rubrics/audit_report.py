@@ -65,9 +65,10 @@ def audit_report_rubric() -> Rubric:
                 "score_calibration",
                 "Score calibration",
                 "Category scores and the overall score track the severity and volume of "
-                "the findings underneath them. A category with several critical issues "
-                "scoring 8/10, or a clean category scoring 4/10, is miscalibrated. The "
-                "score band must match the numeric score.",
+                "the findings underneath them. Scores are on a 0–100 scale. A category "
+                "with several critical issues scoring 80/100, or a clean category "
+                "scoring 40/100, is miscalibrated. The score band must match the "
+                "numeric score.",
                 weight=1.0,
                 min_score=2,
             ),
@@ -116,19 +117,19 @@ def audit_report_rubric() -> Rubric:
                 kind="required",
             ),
             Marker(
-                "no_fabricated_metrics",
+                "fabricates_metrics",
                 "The report states traffic, ranking, or backlink numbers that no crawl "
                 "could produce (the audit only has crawl data, not analytics).",
                 kind="forbidden",
             ),
             Marker(
-                "no_ai_self_reference",
+                "refers_to_itself_as_ai",
                 "The report refers to itself as AI-generated, mentions the model, or "
                 "apologises for its limitations.",
                 kind="forbidden",
             ),
             Marker(
-                "no_placeholder_text",
+                "contains_placeholder_text",
                 "The report contains placeholder or template artifacts such as 'TODO', "
                 "'lorem ipsum', 'example.com', or unfilled brackets.",
                 kind="forbidden",
@@ -163,7 +164,7 @@ def render_audit_artifact(report: Any) -> JudgeArtifact:
         "CATEGORIES",
     ]
     for category in getattr(data, "categories", []) or []:
-        lines.append(f"\n[{category.id}] {category.label} — {category.score}/10")
+        lines.append(f"\n[{category.id}] {category.label} — {category.score}/100")
         lines.append(f"  {getattr(category, 'tooltip', '')}")
         for finding in getattr(category, "findings", []) or []:
             severity = getattr(finding, "severity", "") or getattr(finding, "status", "")
