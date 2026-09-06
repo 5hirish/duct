@@ -128,14 +128,6 @@ def test_v1_supports_openrouter():
     assert resolve_engine_provider(Engine.V1, "openrouter") is Provider.OPENROUTER
 
 
-def test_v3_cannot_take_openrouter_and_falls_back():
-    """The Claude Agent SDK is provider-locked by design (upstream #410, closed
-    `not planned`). That is why v1 is the target harness for BYO model — asking
-    v3 for another provider must degrade, never silently appear to work."""
-    assert Provider.OPENROUTER not in ENGINE_SUPPORTED_PROVIDERS[Engine.V3]
-    assert resolve_engine_provider(Engine.V3, "openrouter") is Provider.ANTHROPIC
-
-
 # ---------------------------------------------------------------------------
 # Registry completeness
 # ---------------------------------------------------------------------------
@@ -292,19 +284,10 @@ def test_no_fallback_pair_loops_back():
         # A raw OpenRouter slug: 400+ models behind one key, so there is no basis
         # for guessing what the caller would accept instead.
         (Provider.OPENROUTER, "vendor/some-model", ()),
-        # CLI-only ids are unreachable from LangChain at all — same rule as
-        # test_v3_cannot_take_openrouter_and_falls_back above.
-        (Provider.ANTHROPIC, ModelName.CLAUDE_OPUS_1M, ()),
     ],
 )
 def test_fallback_resolution(provider, model, expected):
     assert resolve_fallback_models(Engine.V1, provider, model) == expected
-
-
-@pytest.mark.parametrize("engine", [Engine.V3])
-def test_only_v1_gets_a_fallback_chain(engine: Engine):
-    """v3's harness already retries inside the CLI."""
-    assert resolve_fallback_models(engine, Provider.ANTHROPIC, ModelName.CLAUDE_SONNET) == ()
 
 
 @pytest.mark.skipif(
@@ -346,9 +329,9 @@ def _catalogue_key(provider: Provider) -> str:
 
 
 def _catalogue_ids(provider: Provider) -> list[ModelName]:
-    from agents.models import CLI_ONLY_MODELS, provider_of
+    from agents.models import provider_of
 
-    return [m for m in ModelName if provider_of(m) is provider and m not in CLI_ONLY_MODELS]
+    return [m for m in ModelName if provider_of(m) is provider]
 
 
 @pytest.mark.live

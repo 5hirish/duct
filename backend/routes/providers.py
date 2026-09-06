@@ -35,7 +35,7 @@ from agents.tiers import (
     Tier,
     resolve_tier_model,
 )
-from config import allow_server_provider_keys, claude_oauth_available, get_configs
+from config import allow_server_provider_keys, get_configs
 from db.session import get_session as db_session
 from models.auth import User
 from service.auth import (
@@ -77,7 +77,6 @@ _PROVIDER_LABELS: dict[Provider, tuple[str, str]] = {
 _MODEL_TIER_HINT: dict[str, Tier] = {
     ModelName.CLAUDE_FABLE.value: Tier.HEAVY,
     ModelName.CLAUDE_OPUS.value: Tier.HEAVY,
-    ModelName.CLAUDE_OPUS_1M.value: Tier.HEAVY,
     ModelName.CLAUDE_SONNET.value: Tier.STANDARD,
     ModelName.CLAUDE_HAIKU.value: Tier.LIGHT,
     ModelName.GPT_5_6_SOL.value: Tier.HEAVY,
@@ -149,23 +148,12 @@ def providers_status(
         has_server = server_usable and bool(
             getattr(cfg, PROVIDER_CONFIG_ATTR.get(provider, ""), "")
         )
-        # Anthropic has a third way in: a subscription token the operator holds
-        # on this machine. It authenticates v3 without any API key at all, so
-        # reporting Anthropic as unreachable there would be false.
-        oauth = (
-            server_usable
-            and provider is Provider.ANTHROPIC
-            and claude_oauth_available()
-        )
-
         if has_user:
             source = "user"
         elif has_stored:
             source = "stored"
         elif has_server:
             source = server_source
-        elif oauth:
-            source = "subscription"
         else:
             source = "none"
 
@@ -328,8 +316,6 @@ def models_preview(
         or provider in stored
         or (server_usable and getattr(cfg, PROVIDER_CONFIG_ATTR.get(provider, ""), ""))
     }
-    if server_usable and claude_oauth_available():
-        reachable.add(Provider.ANTHROPIC)
     reachable = frozenset(reachable)
 
     try:

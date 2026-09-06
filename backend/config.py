@@ -259,10 +259,9 @@ class Configs(BaseSettings):
     gemini_api_key: str = ""
     openai_api_key: str = ""
     anthropic_api_key: str = ""
-    # xAI (Grok), on its own LangChain integration. v1 only, like OpenRouter:
-    # the Claude Agent SDK is provider-locked.
+    # xAI (Grok), on its own LangChain integration.
     xai_api_key: str = ""
-    # OpenRouter — its own LangChain integration (v1 engine only). One key
+    # OpenRouter — its own LangChain integration. One key
     # reaches 500+ models across 60+ providers, which is the practical answer
     # for bring-your-own-model: consumer subscriptions never grant API access,
     # so every customer arrives with a key, and for the open-weight/Chinese long
@@ -279,18 +278,9 @@ class Configs(BaseSettings):
     # a new GATEWAY_BASE_URL entry in agents/models.py — which takes the
     # OpenAI-shape branch — plus its own key field here.
     openrouter_base_url: str = ""
-    # Long-lived Claude OAuth token from `claude setup-token` (the operator's own
-    # Pro/Max subscription). Detected here only so the engine-status endpoint can
-    # report v3 as authenticated; the Claude Agent SDK subprocess reads the real
-    # CLAUDE_CODE_OAUTH_TOKEN env var itself. Intended for local/self-hosted
-    # individual use — NOT for routing end users' requests through a subscription
-    # (see https://code.claude.com/docs/en/legal-and-compliance). Production
-    # multi-user serving must use ANTHROPIC_API_KEY (Claude Console).
-    claude_code_oauth_token: str = Field(
-        default="",
-        validation_alias=AliasChoices("CLAUDE_CODE_OAUTH_TOKEN"),
-    )
-    # Engine selection: "v1" (LangChain), "v3" (Claude Agent SDK)
+    # Engine selection. One engine ("v1") since the Claude Agent SDK was
+    # removed; the field stays because stored preferences and requests still
+    # carry the string.
     generate_engine: str = Field(default="v1")
 
     # Sentry observability
@@ -411,35 +401,6 @@ class Configs(BaseSettings):
 @lru_cache
 def get_configs() -> Configs:
     return Configs()
-
-
-def allow_subscription_auth() -> bool:
-    """True when the Claude Agent SDK may authenticate via a local Claude Code
-    OAuth login (subscription credit) instead of an explicit ANTHROPIC_API_KEY.
-
-    Only permitted in local dev — prod must always run on an explicit API key.
-    When this returns True, an empty api_key is allowed to fall through to the
-    SDK, which reuses the `claude` OAuth token in ~/.claude.
-    See https://support.claude.com/en/articles/15036540
-    """
-    return get_configs().app_env == "local"
-
-
-def claude_oauth_available() -> bool:
-    """True when Claude (v3) can authenticate without an explicit ANTHROPIC_API_KEY.
-
-    Two non-API-key paths, both for the operator's *own* ordinary use:
-      - CLAUDE_CODE_OAUTH_TOKEN, a long-lived token from `claude setup-token`
-        (works headless/self-hosted), or
-      - a local `claude` OAuth login in ~/.claude (dev only).
-
-    Per Anthropic's policy, subscription credentials must NOT route end users'
-    requests on a third-party product — production multi-user serving uses an
-    ANTHROPIC_API_KEY from the Claude Console. This helper exists so a single
-    operator running their own instance isn't blocked, not to serve users.
-    See https://code.claude.com/docs/en/legal-and-compliance
-    """
-    return bool(get_configs().claude_code_oauth_token) or allow_subscription_auth()
 
 
 def allow_server_provider_keys() -> bool:

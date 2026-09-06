@@ -79,12 +79,6 @@ class ModelName(str, Enum):
     CLAUDE_OPUS = "claude-opus-5"
     CLAUDE_SONNET = "claude-sonnet-5"
     CLAUDE_HAIKU = "claude-haiku-4-5"
-    # v3 only. The [1m] suffix is a Claude Code / Agent SDK model string that
-    # opts the CLI into the 1M-token context window. The Messages API has no
-    # such ID — Opus 5 is natively 1M there — so LangChain (v1) would 404 on
-    # it. Enforced by CLI_ONLY_MODELS below.
-    CLAUDE_OPUS_1M = "claude-opus-5[1m]"
-
     # xAI. Verified against docs.x.ai: 500k context, $2/$6, and
     # `reasoning_effort` low/medium/high/xhigh — "Reasoning cannot be
     # disabled", so there is no off rung to offer. No fallback pair below:
@@ -238,11 +232,6 @@ class AspectRatio(StrEnum):
     LANDSCAPE_5_3  = "5:3"
 
 
-# Models only the Claude Agent SDK (v3) accepts — see CLAUDE_OPUS_1M above.
-# resolve_engine_model refuses to hand these to any other engine, so a stray
-# GENERATE_MODEL=claude-opus-5[1m] degrades to the engine default instead of
-# becoming a guaranteed upstream 404.
-CLI_ONLY_MODELS: frozenset[ModelName] = frozenset({ModelName.CLAUDE_OPUS_1M})
 
 # Default provider → model mapping
 DEFAULT_MODELS = {
@@ -321,7 +310,6 @@ CONTEXT_WINDOW: dict[ModelName, int] = {
     ModelName.CLAUDE_OPUS: 200_000,
     ModelName.CLAUDE_SONNET: 200_000,
     ModelName.CLAUDE_HAIKU: 200_000,
-    ModelName.CLAUDE_OPUS_1M: 1_000_000,
     ModelName.GROK_4_6: 500_000,
     ModelName.OR_DEEPSEEK_V4_FLASH: 1_000_000,
     ModelName.OR_DEEPSEEK_V4_PRO: 1_000_000,
@@ -365,7 +353,6 @@ PRICING: dict[ModelName, ModelPrice] = {
     ModelName.CLAUDE_OPUS: ModelPrice(5.0, 25.0, 0.5, 6.25),
     ModelName.CLAUDE_SONNET: ModelPrice(2.0, 10.0, 0.2, 2.5),
     ModelName.CLAUDE_HAIKU: ModelPrice(1.0, 5.0, 0.1, 1.25),
-    ModelName.CLAUDE_OPUS_1M: ModelPrice(5.0, 25.0, 0.5, 6.25),
     # Base rates. xAI doubles both above a 200k-token prompt; ModelPrice has
     # no tier for that, so a very long Grok run under-reports.
     ModelName.GROK_4_6: ModelPrice(2.0, 6.0, 0.5),

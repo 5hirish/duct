@@ -6,17 +6,18 @@ Answers the two questions that gate the migration
   1. **Which models may we offer customers?** BYO-key means a weak model
      produces a bad audit that gets blamed on Duct. Run this per candidate and
      admit only the models that pass.
-  2. **Has V1 earned V3's retirement?** Same rubric, same site, both engines.
+  2. **Is the audit still worth shipping?** Same rubric, same site, run before
+     a change that could move it.
 
 Marked ``live``: it crawls a real site and spends real tokens, so it is excluded
 from the default suite. Run it explicitly:
 
-    # default (V3 + Claude, the current production path)
+    # the default provider
     poetry run pytest tests/test_audit_eval.py -m live
 
-    # a candidate model on the new engine
-    DUCT_EVAL_ENGINE=v1 DUCT_EVAL_PROVIDER=google_genai \\
-    DUCT_EVAL_MODEL=gemini-2.5-flash \\
+    # a candidate model
+    DUCT_EVAL_PROVIDER=google_genai \\
+    DUCT_EVAL_MODEL=gemini-3.8-flash \\
     DUCT_EVAL_OUTPUT=scorecard-gemini.json \\
     poetry run pytest tests/test_audit_eval.py -m live
 
@@ -92,24 +93,6 @@ def _gemini_key() -> str:
     ).strip()
 
 
-def _can_run_without_a_key(engine: Engine, provider) -> bool:
-    """Whether this engine can authenticate with no explicit API key.
-
-    Only v3 on Anthropic can: the Claude Agent SDK reuses the `claude` OAuth
-    login or CLAUDE_CODE_OAUTH_TOKEN, which is the one capability v3 has that
-    v1 does not. Skipping that combination for "no API key" made the engine
-    comparison this file exists to run impossible on the very setup where v3
-    is cheapest to try — the eval was stricter than the runner it drives.
-    """
-    from agents.models import Provider
-
-    if engine != Engine.V3 or provider != Provider.ANTHROPIC:
-        return False
-    from config import claude_oauth_available
-
-    return claude_oauth_available()
-
-
 @pytest.mark.live
 def test_audit_report_passes_rubric():
     """Run one real audit and gate the report on the audit rubric.
@@ -119,16 +102,13 @@ def test_audit_report_passes_rubric():
     scorecards across runs rather than reading any single one in isolation.
     """
     engine, provider, model, api_key = _resolve_run_config()
-    if not api_key and not _can_run_without_a_key(engine, provider):
+    if not api_key:
         pytest.skip(f"no API key configured for provider '{provider.value}'")
 
     url = os.environ.get("DUCT_EVAL_URL", DEFAULT_URL)
     label = f"{engine.value} · {provider.value} · {model.value} · {url}"
 
-    if engine == Engine.V1:
-        from agents.audit.v1.runner import LangChainAuditRunner as Runner
-    else:
-        from agents.audit.v3.runner import ClaudeAuditRunner as Runner
+    from agents.audit.v1.runner import LangChainAuditRunner as Runner
 
     from agents.audit.crawl import create_audit_session
     from agents.core.session import close_session
@@ -141,12 +121,11 @@ def test_audit_report_passes_rubric():
         events.append(event)
 
     async def _run():
-        kwargs = {"api_key": api_key, "provider": provider, "model": model}
-        if engine == Engine.V1:
-            # Backs the research pass's WebSearch off Anthropic; without it the
-            # eval would grade a report that never saw a competitor.
-            kwargs["gemini_api_key"] = _gemini_key()
-        runner = Runner(**kwargs)
+        # gemini_api_key backs the research pass's WebSearch off Anthropic;
+        # without it the eval would grade a report that never saw a competitor.
+        runner = Runner(
+            api_key=api_key, provider=provider, model=model, gemini_api_key=_gemini_key(),
+        )
         return await runner.run_pipeline(
             session_id=session_id,
             url=url,
