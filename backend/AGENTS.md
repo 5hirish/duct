@@ -145,6 +145,20 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
 - **Email:** `service/email/` — Resend when `RESEND_API_KEY` is set, otherwise a logging console backend so dev/CI need no vendor account.
 - **Observability:** Sentry error tracking; optional OpenTelemetry tracing — V1 emits its own GenAI spans (`agents/core/telemetry.py`).
 - **Hosting:** Railway — auto-deploys from `main` via GitHub integration; `railway.json` defines Railpack build + uvicorn start.
+  `railpack.json` sits beside it and configures the **builder**, where
+  `railway.json` configures **Railway**. It exists for one line —
+  `deploy.aptPackages: ["libexpat1"]` — and that line is load bearing. Railpack
+  builds with a mise-installed CPython, then assembles a slim runtime image
+  carrying only the apt packages it inferred from the dependency graph
+  (`libpq5`, from psycopg). That interpreter is dynamically linked against
+  `libexpat.so.1`; nothing in the graph implies it, so without this the ELF
+  loader fails before Python starts and **the container dies on its first
+  line** — `preDeployCommand` and `startCommand` both go through `poetry run`,
+  so both are affected.
+  The trap when this recurs: the build **succeeds** and the image pushes, so
+  Railway reports a failed deployment that looks like a build failure and is
+  not. Read the *deploy* logs (`railway logs --deployment <id>`), not the build
+  logs. JSON has no comments, which is why this note lives here.
 - **CI:** GitHub Actions (`backend.yml`) — Ruff lint + pytest on every PR and push to `main`.
 - **Tests:** `make test` must stay offline and under two minutes; it is the
   gate on every merge and the thing an agent runs after every change. Two
