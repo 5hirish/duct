@@ -11,7 +11,7 @@
     "dev:local": "tauri dev --config src-tauri/tauri.local.conf.json",
     "install:dev-app": "node scripts/install-dev-app.mjs",
     "postbuild:dev": "node scripts/install-dev-app.mjs",
-    "prebuild": "node scripts/check-sidecar-fresh.mjs",
+    "prebuild:selfhost": "node scripts/check-sidecar-fresh.mjs",
     "prebuild:dev": "node scripts/check-sidecar-fresh.mjs",
     "predev": "node scripts/check-sidecar-fresh.mjs",
     "predev:local": "node scripts/check-sidecar-fresh.mjs",

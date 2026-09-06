@@ -2,6 +2,11 @@
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Duct (self-hosted)",
   "identifier": "example.getduct.selfhost",
+  "bundle": {
+    "resources": {
+      "../../backend/dist/duct-sidecar": "duct-sidecar"
+    }
+  },
   "plugins": {
     "deep-link": {
       "desktop": {

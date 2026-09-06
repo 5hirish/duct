@@ -157,6 +157,21 @@ fn sidecar_path(app: &AppHandle) -> Result<PathBuf, String> {
     ))
 }
 
+/// Whether this build has a sidecar to run at all.
+///
+/// The official build ships without one and talks to the hosted API; the
+/// self-host build adds `bundle.resources` back and runs everything locally.
+/// Both come from the same binary, so this is a runtime probe rather than a
+/// cargo feature — a feature would mean two binaries, two capability sets and
+/// two things to keep honest, and the answer is already sitting on disk.
+///
+/// `sidecar_path` also accepts the dev fallback under `backend/dist/`, which is
+/// what makes `npm run dev` exercise the local path on a machine that has
+/// frozen one. On a user's machine that path does not exist.
+pub fn is_available(app: &AppHandle) -> bool {
+    sidecar_path(app).is_ok()
+}
+
 /// Origin (`scheme://host[:port]`) of this shell's main window.
 ///
 /// `None` for a bundled-frontend window, which has no remote origin to hand a

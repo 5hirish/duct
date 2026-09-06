@@ -1,26 +1,35 @@
 # Duct Desktop
 
-A [Tauri v2](https://tauri.app) shell that renders the Duct web app in a native
-window and runs Duct's backend beside it, on the user's own machine:
+A [Tauri v2](https://tauri.app) shell around the Duct web app. Its job is small
+and deliberate:
 
-1. Render the existing Duct frontend in a native window. The UI is *loaded* from
-   a URL (`app.getduct.ai`) rather than bundled — a frontend change ships
-   through the normal Cloudflare deploy, with no desktop release.
-2. Run the whole FastAPI backend locally as a **sidecar** — SQLite in the
-   per-user data dir, loopback-only, no Railway round trip. The web app repoints
-   its API base at it during boot.
-3. Store **bring-your-own provider API keys** in the OS keychain and expose
+1. Render the Duct frontend in a native window. The UI is *loaded* from a URL
+   (`app.getduct.ai`) rather than bundled, so a frontend change ships through the
+   normal Cloudflare deploy with no desktop release.
+2. Store **bring-your-own provider API keys** in the OS keychain and expose
    read/write to the web app via Tauri commands.
+3. Run OAuth in the **system browser** and catch the result on a deep link —
+   Google refuses an embedded webview, and a user inside one has none of their
+   passwords, sessions or passkeys.
 
-So the only thing this build needs from Duct's infrastructure is the page it
-loads. Projects, connector tokens, insights and every model call stay on the
-machine, spent against the user's own provider key.
+**The official build is a thin client.** It ships no backend: it talks to the
+hosted API and signs in with Duct's Google client.
 
-> Earlier versions of this file said the agent and prompts stayed server-side
-> and that nothing proprietary shipped in the bundle. That was true of the thin
-> client this replaced. **The sidecar freezes the entire `backend/` package** —
-> agents, prompts and all — into every installer. Anything you would not ship to
-> a user's disk does not belong in `backend/`.
+**The sidecar is optional and off by default.** The shell can supervise a local
+FastAPI backend frozen by PyInstaller — SQLite in the per-user data dir,
+loopback only, no Railway round trip — and the web app repoints its API base at
+it during boot. That build is ~470 MB and is what a self-hoster or a fork wants;
+see [Build your own](#build-your-own). Which one you get is decided by a single
+`bundle.resources` entry, and the shell probes for it at runtime rather than
+being compiled two ways.
+
+> Two corrections, because this file has asserted both of the wrong things at
+> different times. It once said the agent and prompts stay server-side and
+> nothing proprietary ships — false while the sidecar was default, because
+> PyInstaller freezes the entire `backend/` package into the bundle. It then
+> said the backend always runs locally — false now. **The rule that survives
+> both: if a build ships the sidecar, everything under `backend/` is on the
+> user's disk.**
 
 Full design: [`docs/engineering/tauri-desktop-byo-keys-plan.md`](../docs/engineering/tauri-desktop-byo-keys-plan.md).
 
@@ -41,17 +50,25 @@ Full design: [`docs/engineering/tauri-desktop-byo-keys-plan.md`](../docs/enginee
 ## Prerequisites
 
 - Rust (stable) + Node 22+.
-- Python 3.12 + Poetry, to build the sidecar (below).
+- Python 3.12 + Poetry — only to build the sidecar (below), which the official
+  build does not ship. Skip it if you are just working on the shell.
 - Platform libraries for Tauri — see <https://tauri.app/start/prerequisites/>.
   On Debian/Ubuntu: `libwebkit2gtk-4.1-dev`, `libgtk-3-dev`, `librsvg2-dev`,
   `libsoup-3.0-dev`, and `libdbus-1-dev` (Linux keychain / Secret Service).
 
-## The sidecar
+## The sidecar (optional)
 
-The bundle ships the Duct backend and runs it locally — no Railway round trip.
-Build it before any `tauri dev`/`tauri build`, because `bundle.resources` copies
-the output directory verbatim and a missing build produces an app that opens
-straight to an error screen:
+The shell can run the Duct backend locally instead of calling the hosted API.
+**The official build does not** — `bundle.resources` is empty in
+`tauri.conf.json`, `get_shell_info` reports `localSidecar: false`, and the web
+app keeps talking to Railway. Adding it back is what `tauri.selfhost.conf.json`
+does.
+
+You want it locally when developing against a local backend, and in any build
+meant to run without Duct's infrastructure. Build it before `tauri dev` or a
+`build:selfhost`, because `bundle.resources` copies the output directory
+verbatim and a stale or missing build produces an app that opens straight to an
+error screen:
 
 ```bash
 cd backend
@@ -241,17 +258,27 @@ Two things to know:
 - **The minisign private key is not recoverable.** Lose it and no installed copy
   will accept another update — every user would have to reinstall by hand. It
   lives in `TAURI_SIGNING_PRIVATE_KEY`; keep a backup outside CI.
-- **macOS updates are arm64-only.** A universal2 sidecar roughly doubles its
-  native libraries (~600 MB — see the size notes in `backend/duct_sidecar.spec`),
-  so Intel Macs are offered no update rather than a broken one.
+- **macOS is universal2, so Intel Macs are covered** — installs and updates
+  both. This was arm64-only while the sidecar shipped, because a universal2
+  CPython tree roughly doubles to ~600 MB (see the size notes in
+  `backend/duct_sidecar.spec`) and a broken update is worse than none. The
+  updater matches an exact platform key and knows nothing about fat binaries,
+  so `build-updater-manifest.mjs` lists the one universal archive under **both**
+  `darwin-aarch64` and `darwin-x86_64`. Drop the second key and Intel installs
+  poll forever and are silently never offered anything.
+  A sidecar build has to go back to arm64-only for the size reason above.
 
 ## What is and is not in this bundle
 
-**In it:** the whole `backend/` package, frozen by PyInstaller — routes, models,
-migrations, agent code and prompts. Treat every file under `backend/` as
-shipped, because it is.
+**In the official build:** the Rust shell and nothing else — tens of megabytes, not hundreds. No backend,
+no Python, no prompts.
 
-**Not in it:** any credential. Not a provider key, not a database URL, not a
+**In a sidecar build** (`build:selfhost`, or any build that restores
+`bundle.resources`): the whole `backend/` package frozen by PyInstaller —
+routes, models, migrations, agent code and prompts. If you ship one of those,
+treat every file under `backend/` as being on the user's disk, because it is.
+
+**Not in either:** any credential. Not a provider key, not a database URL, not a
 Railway token — `duct_sidecar.spec` bundles `alembic/` and `alembic.ini` and
 nothing else, and the sidecar generates its own local API key and JWT secret on
 first run, 0600 in the user's data dir. Two values *are* compiled in and neither
@@ -259,17 +286,36 @@ is a production secret: `SENTRY_DSN` (write-only by design, and inert unless the
 user opts in) and the Google **installed-app** OAuth credential, which Google
 documents as non-confidential — it names the app, it does not authorise it.
 
-The user's own provider key never reaches Duct either: it goes to the OS
-keychain and is spent from the local sidecar. `resolve_provider_key` in
-`backend/agents/engines.py` will only fall back to an env key when
+Where the user's provider key goes **differs between the two builds**, and it is
+worth being precise because it is the one privacy claim people will ask about:
+
+- **Sidecar build** — the key leaves the keychain and is spent by a process on
+  the same machine. It never crosses the network to us.
+- **Official thin build** — the key leaves the keychain and rides an
+  `X-Provider-*` header to the hosted API, which spends it against the provider.
+  It is held for the life of the request and never written to our database
+  unless the user explicitly saves it (`service/provider_keys.py`, Fernet
+  encrypted). So it does reach our server. Do not describe the thin build as
+  "your keys never leave your machine" — that sentence belongs to the sidecar.
+
+Either way it stays the user's key. `resolve_provider_key` in
+`backend/agents/engines.py` only falls back to an env key when
 `allow_server_provider_keys()` says the env file belongs to whoever is running
-the process, which on a desktop install means the user themself.
+the process — true on a self-hosted install, false on our deployment.
 
 ## Build your own
 
 The repo is MIT and this shell is meant to be forkable — someone should be able
-to run Duct end to end without touching Duct's infrastructure. Three things are
-Duct-specific, and all three are configuration rather than code:
+to run Duct end to end without touching Duct's infrastructure. Four things are
+Duct-specific, and all four are configuration rather than code. The template
+overlay `tauri.selfhost.conf.json` carries all of them:
+
+**0. Whether a backend ships at all.** The official build has no
+`bundle.resources`, so it calls the hosted API. The overlay restores the
+sidecar entry, which makes the app self-contained — freeze the sidecar first
+(see [The sidecar](#the-sidecar-optional)) or the build fails on a missing
+resource path. Nothing is compiled differently; `get_shell_info` probes for the
+resource at runtime and reports `localSidecar` accordingly.
 
 **1. The page it loads.** `app.getduct.ai` is the default window URL. Point it
 at your own deployment of `app/` with a config overlay — the same mechanism
