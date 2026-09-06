@@ -33,8 +33,13 @@ grader.
   graded on the actual pixels, in the same request as the copy.
 - **`prompts.py`** — the judge's system prompt + persona framing, in one place to
   review and tune.
-- **Live e2e** runs the real agent → generates an image → judges it; **offline
-  tests** (`test_eval_framework.py`) lock the scoring logic and run on every PR.
+- **Live e2e** runs the real agent → generates an image → judges it, on the
+  provider `DUCT_EVAL_PROVIDER` names (Claude by default; the Actions workflow
+  runs a Claude leg and a Gemini leg). A second live test drives plan mode —
+  enrichment, the research sub-agents, WebSearch — and asserts one real plan
+  landed, with no rubric: it is the machinery check for the capabilities the
+  V1 port had to rebuild. **Offline tests** (`test_eval_framework.py`) lock the
+  scoring logic and run on every PR.
 
 ## Best practices we follow (and the biases behind them)
 

@@ -1,24 +1,35 @@
 """Full end-to-end eval for the Content Studio agent (V1 engine) + judge.
 
-This is the complete content pipeline under one test: the V1 (deepagents)
-runner drafts a real post on Claude, then generates a real image for every
-slide via its own ``generate_image`` tool (Gemini), and a *Gemini* judge (vision) scores the
-finished post + images against ``content_post_rubric`` to guard against model-
-output degradation. The judge runs on Gemini rather than
+Two live tests, on whichever provider ``DUCT_EVAL_PROVIDER`` names
+(``anthropic`` by default; ``google_genai``, ``openai``, ``openrouter``,
+``xai`` — the model is that provider's V1 engine default, the key comes from
+the provider's env var or Duct config):
+
+  * draft_post — the V1 (deepagents) runner drafts a real post, then generates
+    a real image for a slide via its own ``generate_image`` tool (Gemini), and a
+    *Gemini* judge (vision) scores the finished post + image against
+    ``content_post_rubric`` to guard against model-output degradation.
+  * plan_month — the mode that spends every ported capability: the enrichment
+    pass, the research sub-agents dispatched through ``task``, and Duct's
+    WebSearch. No rubric; the machinery has to produce one real plan.
+
+The judge runs on Gemini rather than
 Claude so the grading call isn't gated by the Anthropic Messages API rate
 limits. Unlike the offline parser tests, this exercises the real agent, real
 image generation, and a real DB.
 
 It is gated and skips cleanly unless everything it needs is present:
 
-  DATABASE_URL       — Postgres for the ephemeral project
-  ANTHROPIC_API_KEY  — drives the content agent (V1 needs a real API key; the
-                       Messages API rejects a subscription token)
-  GEMINI_API_KEY     — slide image generation AND the judge
+  DATABASE_URL         — Postgres for the ephemeral project
+  a key for the provider under test (ANTHROPIC_API_KEY by default; V1 needs a
+                       real API key — the Messages API rejects a subscription token)
+  GEMINI_API_KEY       — slide image generation, Duct's WebSearch AND the judge
 
 Run it:
 
   ANTHROPIC_API_KEY=… GEMINI_API_KEY=… DATABASE_URL=… \
+    poetry run pytest -m live tests/test_content_post_e2e.py -s
+  DUCT_EVAL_PROVIDER=google_genai GEMINI_API_KEY=… DATABASE_URL=… \
     poetry run pytest -m live tests/test_content_post_e2e.py -s
 
 A JSON scorecard is written (DUCT_EVAL_OUTPUT, default ./eval-scorecard.json)
@@ -68,16 +79,56 @@ _TOPIC = (
 _PILLAR = "jawline"
 
 
+def _provider_under_test():
+    from agents.models import Provider
+
+    return Provider(os.environ.get("DUCT_EVAL_PROVIDER", "anthropic"))
+
+
+def _provider_key(provider) -> str:
+    """The provider's env var, else Duct config (which reads backend/.env*)."""
+    from agents.engines import ENGINE_PROVIDER_ENV_VAR, PROVIDER_CONFIG_ATTR, Engine
+    from config import get_configs
+
+    env_var = ENGINE_PROVIDER_ENV_VAR[Engine.V1].get(provider, "")
+    return os.environ.get(env_var, "") or getattr(get_configs(), PROVIDER_CONFIG_ATTR[provider], "") or ""
+
+
+def _gemini_key() -> str:
+    from config import get_configs
+
+    return os.environ.get("GEMINI_API_KEY", "") or get_configs().gemini_api_key or ""
+
+
+def _database_configured() -> bool:
+    from config import get_configs
+
+    return bool(os.environ.get("DATABASE_URL") or get_configs().database_url)
+
+
 def _live_skip_reason() -> str | None:
-    if not os.environ.get("DATABASE_URL"):
+    if not _database_configured():
         return "DATABASE_URL not set"
-    if not os.environ.get("ANTHROPIC_API_KEY"):
-        return "ANTHROPIC_API_KEY not set (V1 cannot authenticate from a subscription token)"
-    if not os.environ.get("GEMINI_API_KEY"):
-        return "GEMINI_API_KEY not set"
+    provider = _provider_under_test()
+    if not _provider_key(provider):
+        return f"no {provider.value} key (V1 cannot authenticate from a subscription token)"
+    if not _gemini_key():
+        return "GEMINI_API_KEY not set (images, WebSearch and the judge)"
     if not judge_available():
-        return "judge unavailable (anthropic SDK missing or no credential)"
+        return "judge unavailable (google-genai SDK missing or no credential)"
     return None
+
+
+def _runner_under_test():
+    """The runner a route would build for this provider: its V1 engine default
+    model, on the provider's key."""
+    from agents.content.v1.runner import ContentRunner
+    from agents.engines import Engine, resolve_engine_model
+
+    provider = _provider_under_test()
+    model = resolve_engine_model(Engine.V1, provider, None)
+    print(f"\n[content eval] provider={provider.value} model={getattr(model, 'value', model)}")
+    return ContentRunner(api_key=_provider_key(provider), provider=provider, model=model)
 
 
 # ---------------------------------------------------------------------------
@@ -379,24 +430,15 @@ def test_content_draft_post_with_images_passes_judge(maxaura_project, tmp_path, 
 
     config.get_configs.cache_clear()
 
-    from agents.content.v1.runner import (
-        ContentRunner,
-        close_session,
-        create_draft_session,
-    )
-    from agents.models import ModelName, Provider
+    from agents.content.v1.runner import close_session, create_draft_session
 
     project_id = maxaura_project
     session_id = f"eval-{uuid4()}"
     session = create_draft_session(session_id, project_id)
-    # The image tools spend the session's Gemini key, resolved by the route in
-    # production; the eval stands in for the route here.
-    session.gemini_api_key = os.environ["GEMINI_API_KEY"]
-    runner = ContentRunner(
-        api_key=os.environ["ANTHROPIC_API_KEY"],
-        provider=Provider.ANTHROPIC,
-        model=ModelName.CLAUDE_SONNET,
-    )
+    # The image tools and WebSearch spend the session's Gemini key, resolved
+    # by the route in production; the eval stands in for the route here.
+    session.gemini_api_key = _gemini_key()
+    runner = _runner_under_test()
 
     try:
         asyncio.run(asyncio.wait_for(_drive(runner, session, session_id, project_id), timeout=_HARD_TIMEOUT))
@@ -444,3 +486,120 @@ def test_content_draft_post_with_images_passes_judge(maxaura_project, tmp_path, 
 
     _emit_scorecard(scorecard)
     assert_scorecard(scorecard)
+
+
+# ---------------------------------------------------------------------------
+# plan_month — enrichment, sub-agents, WebSearch, one real plan
+# ---------------------------------------------------------------------------
+
+_PLAN_TIMEOUT = 480.0
+_PLAN_MIN_DAYS = 8
+
+
+async def _drive_plan(runner, session, session_id, project_id) -> list[dict]:
+    """Open a plan session and let the opening run finish; close it after."""
+    events: list[dict] = []
+    state = {"done": False, "error": None}
+
+    async def emit(body: dict) -> None:
+        events.append(body)
+
+    async def _run_agent() -> None:
+        try:
+            await runner.run_plan(session_id, project_id, emit, chat_idle_timeout=_CHAT_IDLE)
+        except Exception as exc:  # captured; re-raised after gather
+            state["error"] = exc
+        finally:
+            state["done"] = True
+
+    async def _conduct() -> None:
+        deadline = time.monotonic() + _PLAN_TIMEOUT
+        try:
+            while time.monotonic() < deadline and not state["done"]:
+                if any(e.get("event") in ("pipeline_finished", "pipeline_failed") for e in events):
+                    return
+                await asyncio.sleep(_POLL)
+        finally:
+            await session.chat_queue.put(None)
+
+    await asyncio.gather(_run_agent(), _conduct())
+    if state["error"] is not None:
+        raise state["error"]
+    return events
+
+
+def _plans_for(project_id) -> list:
+    from sqlmodel import Session, select
+
+    from db.session import get_engine
+    from models.content import ContentPlan
+
+    with Session(get_engine()) as db:
+        return list(db.exec(select(ContentPlan).where(ContentPlan.project_id == project_id)).all())
+
+
+@pytest.mark.live
+def test_content_plan_month_persists_one_real_plan(maxaura_project, monkeypatch):
+    """The ported capabilities in one turn: the enrichment pass runs, research
+    sub-agents are dispatched where the prompt requires them, and exactly one
+    plan with planned days lands. A model that probes the writer to learn its
+    shape used to leave junk plans behind — the count is the assertion for
+    that. Dispatch follows the prompt's own rule: a pillar with no topic-bank
+    coverage (this project has none) AND no trend signal must be researched;
+    when enrichment found signals the model may plan from them, so the
+    dispatch count is reported rather than required."""
+    reason = _live_skip_reason()
+    if reason:
+        pytest.skip(reason)
+    import config
+
+    config.get_configs.cache_clear()
+    from agents.content.v1.runner import close_session, create_plan_session
+    from agents.core.events import AgentStep
+
+    project_id = maxaura_project
+    session_id = f"eval-{uuid4()}"
+    session = create_plan_session(session_id, project_id)
+    session.gemini_api_key = _gemini_key()
+    runner = _runner_under_test()
+
+    try:
+        events = asyncio.run(asyncio.wait_for(
+            _drive_plan(runner, session, session_id, project_id), timeout=_PLAN_TIMEOUT + 60,
+        ))
+    except asyncio.TimeoutError:
+        pytest.fail(f"plan run did not finish within {_PLAN_TIMEOUT:.0f}s")
+    finally:
+        with contextlib.suppress(Exception):
+            close_session(session_id)
+        config.get_configs.cache_clear()
+
+    kinds = [e.get("event") for e in events]
+    failed = [e for e in events if e.get("event") in ("pipeline_failed", "step_failed")]
+    assert not failed, f"the run reported a failure: {failed[:2]}"
+    assert "pipeline_finished" in kinds, f"no finish event; saw {sorted(set(kinds))}"
+
+    enriched = [e for e in events if e.get("step_id") == "enriching" and e.get("event") == "step_finished"]
+    assert enriched, "the enrichment step never finished"
+    print(f"[content eval] enrichment: {enriched[0].get('payload')} {enriched[0].get('summary') or ''}")
+
+    plans = _plans_for(project_id)
+    assert len(plans) == 1, f"expected exactly one plan, found {len(plans)} (a probing model leaves junk)"
+    plan = plans[0]
+    finished = next(e for e in events if e.get("event") == "pipeline_finished")
+    assert finished.get("plan_id") == str(plan.id)
+    days = plan.days or []
+    assert len(days) >= _PLAN_MIN_DAYS, f"only {len(days)} days planned"
+    assert all((d.get("topic") or "").strip() and (d.get("pillar") or "").strip() for d in days), days[:3]
+
+    dispatches = [
+        e for e in events
+        if e.get("event") == "step_finished"
+        and str(e.get("step_id", "")).startswith(f"{AgentStep.DISPATCH_SUBAGENT.value}:")
+    ]
+    assert all(e.get("status") == "success" for e in dispatches), dispatches
+    signals = enriched[0].get("payload") or {}
+    found_trends = any(signals.get(k) for k in ("trending_sounds", "trending_hashtags", "trending_hooks", "trending_styles"))
+    if not found_trends:
+        assert dispatches, "no trend signals and no topic bank, yet no research sub-agent was dispatched"
+    print(f"[content eval] plan {plan.id}: {len(days)} days, {len(dispatches)} sub-agent dispatch(es), trends={found_trends}")
