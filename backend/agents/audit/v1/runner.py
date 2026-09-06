@@ -34,11 +34,13 @@ from langchain.agents import create_agent
 from agents.audit.schema import CrawlResult
 from agents.audit.scoring import calibrate
 from agents.audit.v1.tools import build_audit_tools
+from agents.core.artifact_tools import build_artifact_tools_lc
 from agents.core.checkpoint import get_checkpointer
 from agents.core.deep_session import DeepSession, RunLimits
 from agents.core.lc import build_ask_user_tool, resolve_chat_model
 from agents.core.memory_tools import build_memory_tools_lc
 from agents.core.session import BaseAgentSession
+from agents.tools.execution_tools import build_execution_tools_lc
 from agents.models import ModelName, Provider
 from service.crawl.fetcher import SiteUnreachableError
 
@@ -70,7 +72,9 @@ def build_audit_agent(
     project_id=None,          # UUID | None — mounts the memory tools when set
     user_id=None,             # UUID | None — attribution for memory writes
     conversation_id=None,     # UUID | None — provenance for memory writes
-    on_memory: Callable | None = None,  # async (entry: dict) -> None
+    on_memory: Callable | None = None,      # async (entry: dict) -> None
+    on_artifact: Callable | None = None,    # async (card: dict) -> None
+    on_change_set: Callable | None = None,  # async (change_set: dict) -> None
     remember: bool = True,    # False = a session the user asked not to be remembered
 ):
     """Assemble the audit agent: crawl/report tools plus optional mid-run questions."""
@@ -92,6 +96,24 @@ def build_audit_agent(
             agent_type="audit_seo",
             on_memory=on_memory,
         )
+    # The project library and the staged-execution tools: both no-op without a
+    # membership-checked project, so an ephemeral or lead-magnet run mounts
+    # neither and the same call is safe on every path.
+    tools += build_artifact_tools_lc(
+        project_id,
+        user_id=user_id,
+        conversation_id=conversation_id,
+        agent_type="audit_seo",
+        on_artifact=on_artifact,
+    )
+    tools += build_execution_tools_lc(
+        user_id=user_id,
+        project_id=project_id,
+        conversation_id=conversation_id,
+        agent_type="audit_seo",
+        on_change_set=on_change_set,
+        log_prefix="audit-v1",
+    )
     if session is not None and emit is not None:
         tools.append(build_ask_user_tool(session, session_id, emit))
 

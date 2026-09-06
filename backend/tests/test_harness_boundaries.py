@@ -73,6 +73,7 @@ ADAPTERS: dict[str, str] = {
     # -- Tool binders. Domain logic stays plain; these wrap it per harness.
     "agents/core/connector_tools.py":       "LangChain binder: connector discovery tools",
     "agents/core/memory_tools.py":          "binder pair: build_memory_tools_lc / _sdk",
+    "agents/core/artifact_tools.py":        "binder: build_artifact_tools_lc (the SDK half is agents/audit/tools.py)",
     "agents/core/web_tools.py":             "LangChain binder: WebFetch + the provider's native web search spec",
     "agents/audit/v1/tools.py":             "LangChain tool binder",
     "agents/audit/tools.py":                "Claude Agent SDK tool binder (duct_crawl)",
