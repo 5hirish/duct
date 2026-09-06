@@ -51,6 +51,7 @@ from agents.core.errors import ErrorCode, classify_error, error_payload
 from agents.core.events import AgentEvent, StepStatus
 from agents.core.lc import (
     ReportedRetryMiddleware,
+    SeenImagePruneMiddleware,
     SteerMiddleware,
     chat_message_text,
     compact_thread,
@@ -189,13 +190,16 @@ def build_deep_session_agent(
     session: BaseAgentSession | None = None,
     fallbacks: list[Any] | None = None,
     checkpointer: Any = None,
+    prune_seen_images: bool = False,
 ) -> Any:
     """One deep agent, assembled the way every Duct session needs it.
 
     ``fallbacks`` is what ``fallback_chain`` returned, or nothing: a runner
     that was handed its model (a test's fake, a caller that already decided)
     passes none, because second-guessing an injected model here would fire
-    real provider calls out of a fake-model test.
+    real provider calls out of a fake-model test. ``prune_seen_images`` is
+    for a runner whose tools hand the model pictures: the bytes leave the
+    durable thread after the model call that looked at them.
     """
     # One backend for the whole agent. `create_deep_agent` defaults to its
     # own StateBackend when none is passed, which left the first runner with
@@ -231,6 +235,7 @@ def build_deep_session_agent(
                     )
                 ],
             ),
+            *([SeenImagePruneMiddleware()] if prune_seen_images else []),
             ModelCallLimitMiddleware(
                 thread_limit=limits.model_calls_per_thread,
                 run_limit=limits.model_calls_per_run,

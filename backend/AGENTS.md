@@ -65,7 +65,11 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
     the same 402 the browser already handles. And **the model only sees the images it
     generates on Anthropic**: image blocks inside a tool result are accepted there and
     rejected by the OpenAI chat API, so `VISION_PROVIDERS` decides whether the tools
-    return pictures or URLs, and the system prompt says which.
+    return pictures or URLs, and the system prompt says which. Where it does see
+    them, `SeenImagePruneMiddleware` (`agents/core/lc.py`) swaps the base64 for a
+    note after the model call that looked at it: the thread is durable and the
+    Postgres saver writes the whole `messages` channel per superstep, so a
+    picture left in state would be copied into every later checkpoint.
 
     **Insights V3 was removed** earlier for a different reason: nothing dispatched it.
     Both live routes (`routes/generate.py`, `routes/agents.py`) drive

@@ -470,6 +470,9 @@ class ContentRunner:
             limits=LIMITS,
             session=session,
             fallbacks=fallbacks,
+            # The image tools return pictures on a vision provider; the bytes
+            # must not follow the thread into every later checkpoint.
+            prune_seen_images=self.vision,
         )
 
     def _sibling_model(self, llm: Any, injected: bool) -> Any:

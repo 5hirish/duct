@@ -200,3 +200,65 @@ async def test_the_recursion_budget_admits_every_call_the_model_guard_allows():
         pytest.fail(f"the graph gave up before the model-call guard did: {exc}")
     calls = sum(1 for m in result["messages"] if getattr(m, "type", "") == "ai" and getattr(m, "tool_calls", None))
     assert calls == 12, "the model-call guard is what ended the turn"
+
+
+# ---------------------------------------------------------------------------
+# Pictures leave the thread once the model has seen them
+# ---------------------------------------------------------------------------
+
+async def test_a_tool_result_image_is_replaced_after_the_model_call_that_saw_it():
+    """The text block (asset URL, metadata) survives; the base64 does not — a
+    durable Postgres thread would otherwise copy every image into every later
+    checkpoint of the conversation."""
+    from langchain_core.tools import StructuredTool
+
+    from agents.core.lc import SeenImagePruneMiddleware
+
+    async def snap() -> list[dict]:
+        return [
+            {"type": "image", "base64": "QUFBQQ==", "mime_type": "image/png"},
+            {"type": "text", "text": '{"asset_url": "/uploads/x.png"}'},
+        ]
+
+    tool = StructuredTool.from_function(coroutine=snap, name="snap", description="take a picture")
+    llm = ToolCallingFake(responses=[
+        AIMessage(content="", tool_calls=[{"name": "snap", "args": {}, "id": "s1"}]),
+        AIMessage(content="looks good"),
+    ])
+    agent = build_deep_session_agent(
+        llm=llm, tools=[tool], system_prompt="x", limits=_limits(), prune_seen_images=True,
+    )
+    config = {"configurable": {"thread_id": str(uuid.uuid4())}, "recursion_limit": _limits().recursion}
+    await agent.ainvoke({"messages": [{"role": "user", "content": "go"}]}, config)
+
+    snapshot = await agent.aget_state(config)
+    tool_messages = [m for m in snapshot.values["messages"] if getattr(m, "type", "") == "tool"]
+    assert len(tool_messages) == 1
+    kept = tool_messages[0]
+    assert kept.tool_call_id == "s1"
+    assert "QUFBQQ==" not in str(kept.content)
+    texts = [b["text"] for b in kept.content if isinstance(b, dict) and b.get("type") == "text"]
+    assert SeenImagePruneMiddleware.PLACEHOLDER in texts and '{"asset_url": "/uploads/x.png"}' in texts
+
+
+def test_pruning_is_opt_in_and_content_opts_in_only_where_it_sees_pictures():
+    from agents.content.v1.runner import ContentRunner
+
+    seen: list[bool] = []
+    original = build_deep_session_agent
+
+    def _spy(**kwargs):
+        seen.append(kwargs.get("prune_seen_images", False))
+        return original(**kwargs)
+
+    import agents.content.v1.runner as runner_module
+
+    runner_module.build_deep_session_agent, restore = _spy, runner_module.build_deep_session_agent
+    try:
+        ContentRunner(api_key="unused", provider=Provider.ANTHROPIC).build_agent(llm=fake_llm("ok"), interactive=False)
+        ContentRunner(api_key="unused", provider=Provider.OPENAI, model=ModelName.GPT_5_MINI).build_agent(
+            llm=fake_llm("ok"), interactive=False
+        )
+    finally:
+        runner_module.build_deep_session_agent = restore
+    assert seen == [True, False]
