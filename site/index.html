@@ -281,7 +281,7 @@
 {"@context":"https://schema.org","@type":"WebSite","name":"Duct","url":"https://getduct.ai","description":"Automated intelligence across your entire tool stack.","publisher":{"@type":"Organization","name":"Duct","url":"https://getduct.ai","contactPoint":{"@type":"ContactPoint","email":"hello@getduct.ai"}}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is Duct?","acceptedAnswer":{"@type":"Answer","text":"Duct is a cross-tool intelligence platform that connects your product, marketing, and revenue tools into one decision-ready brief. It shows what changed, why it matters, and what to do next without dashboard-hopping."}},{"@type":"Question","name":"How long does setup take?","acceptedAnswer":{"@type":"Answer","text":"Most teams connect their first tools in about 10 minutes. Duct uses OAuth-based connections, so you can start quickly without custom integrations or manual exports."}},{"@type":"Question","name":"Which tools does Duct connect to?","acceptedAnswer":{"@type":"Answer","text":"Duct connects to tools like GA4, Google Ads, Mixpanel, Intercom, HubSpot, Salesforce, Ahrefs, Hotjar, Slack, and more. The platform is built to correlate signals across tools instead of reporting each one in isolation."}},{"@type":"Question","name":"How often do I receive briefs?","acceptedAnswer":{"@type":"Answer","text":"Duct delivers weekly intelligence briefs to your inbox and can send real-time alerts when important metrics spike or break. This gives teams both a strategic weekly view and faster operational visibility."}},{"@type":"Question","name":"Does Duct modify my tools or data?","acceptedAnswer":{"@type":"Answer","text":"No. Duct operates in read-only mode and does not create, edit, or delete data in your connected platforms. It focuses on analysis and recommendations so your team can make faster decisions."}},{"@type":"Question","name":"How is Duct different from dashboards?","acceptedAnswer":{"@type":"Answer","text":"Dashboards show isolated metrics. Duct connects cross-tool signals and ranks actions by business impact, so teams know which decision to make next instead of manually stitching reports."}},{"@type":"Question","name":"Is Duct free during beta?","acceptedAnswer":{"@type":"Answer","text":"Yes. Duct is free during beta with no credit card required. Teams can join early access, connect their stack, and receive intelligence briefs while pricing evolves post-beta."}}]}
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is Duct?","acceptedAnswer":{"@type":"Answer","text":"Duct is a cross-tool intelligence platform that connects your product, marketing, and revenue tools into one decision-ready brief. It shows what changed, why it matters, and what to do next without dashboard-hopping."}},{"@type":"Question","name":"How long does setup take?","acceptedAnswer":{"@type":"Answer","text":"Most teams connect their first tools in about 10 minutes. Duct uses OAuth-based connections, so you can start quickly without custom integrations or manual exports."}},{"@type":"Question","name":"Which tools does Duct connect to?","acceptedAnswer":{"@type":"Answer","text":"Duct connects to Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe, and RevenueCat. The platform is built to correlate signals across tools instead of reporting each one in isolation."}},{"@type":"Question","name":"How often do I receive briefs?","acceptedAnswer":{"@type":"Answer","text":"Duct delivers weekly intelligence briefs to your inbox and can send real-time alerts when important metrics spike or break. This gives teams both a strategic weekly view and faster operational visibility."}},{"@type":"Question","name":"Does Duct modify my tools or data?","acceptedAnswer":{"@type":"Answer","text":"Only with your approval. Duct reads your data to build its briefs, and reporting works with read-only access alone. When it recommends a change to a connected account \u2014 a negative keyword, a paused campaign, a GA4 key event \u2014 it proposes the change, shows you exactly what would happen, and applies it only after you approve it. Nothing is ever written automatically."}},{"@type":"Question","name":"How is Duct different from dashboards?","acceptedAnswer":{"@type":"Answer","text":"Dashboards show isolated metrics. Duct connects cross-tool signals and ranks actions by business impact, so teams know which decision to make next instead of manually stitching reports."}},{"@type":"Question","name":"Is Duct free during beta?","acceptedAnswer":{"@type":"Answer","text":"Yes. Duct is free during beta with no credit card required. Teams can join early access, connect their stack, and receive intelligence briefs while pricing evolves post-beta."}}]}
 </script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Duct - Cross-Tool Intelligence","applicationCategory":"BusinessApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0","priceCurrency":"USD","description":"Free during beta"},"description":"Cross-tool intelligence platform for product, marketing, and sales teams."}
@@ -365,17 +365,17 @@
 <div class="hero-tools">
 <p>Works with tools you already use</p>
 <div class="tool-strip" aria-label="Supported integrations">
-<span class="tool-pill">Mixpanel</span>
-<span class="tool-pill">GA4</span>
 <span class="tool-pill">Google Ads</span>
-<span class="tool-pill">Intercom</span>
+<span class="tool-pill">Meta Ads</span>
+<span class="tool-pill">GA4</span>
+<span class="tool-pill">Search Console</span>
+<span class="tool-pill">Tag Manager</span>
+<span class="tool-pill">Mixpanel</span>
+<span class="tool-pill">Clarity</span>
+<span class="tool-pill">GrowthBook</span>
 <span class="tool-pill">HubSpot</span>
-<span class="tool-pill">Salesforce</span>
-<span class="tool-pill">Linear</span>
-<span class="tool-pill">Ahrefs</span>
-<span class="tool-pill">Hotjar</span>
 <span class="tool-pill">Stripe</span>
-<span class="tool-pill">Slack</span>
+<span class="tool-pill">RevenueCat</span>
 <span class="tool-pill">+ more</span>
 </div>
 </div>
@@ -480,7 +480,7 @@
 </div>
 <div class="finding">
 <span class="sev sev-med">MED</span>
-<p><strong>3 rage-click clusters on upload screen (Hotjar).</strong> Correlates with the activation drop for the same ad cohort. Likely a mobile UX blocker in the acquisition funnel.</p>
+<p><strong>3 rage-click clusters on upload screen (Clarity).</strong> Correlates with the activation drop for the same ad cohort. Likely a mobile UX blocker in the acquisition funnel.</p>
 </div>
 <div class="finding">
 <span class="sev sev-info">INFO</span>
@@ -523,7 +523,7 @@
 <span class="uc-badge live">Live Beta</span>
 </div>
 <h3>Organic Growth &amp; SEO</h3>
-<p>For SEO and content teams: one weekly action brief from GSC, Ahrefs, and GA4.</p>
+<p>For SEO and content teams: one weekly action brief from Search Console, GA4, and Tag Manager.</p>
 <div class="uc-link">See it in action <span class="uc-arrow" aria-hidden="true">→</span></div>
 </a>
 <a href="/for-paid-ads" class="uc-card reveal" style="transition-delay:.15s">
@@ -550,7 +550,7 @@
 <span class="uc-badge soon">Coming Soon</span>
 </div>
 <h3>E-commerce &amp; DTC</h3>
-<p>For DTC teams: expose LTV-vs-ROAS blind spots across Shopify, Meta Ads, and Klaviyo.</p>
+<p>For DTC teams: expose LTV-vs-ROAS blind spots across Meta Ads, Stripe, and RevenueCat.</p>
 <div class="uc-link" style="color:var(--navy-3)">Join waitlist <span class="uc-arrow" aria-hidden="true">→</span></div>
 </div>
 <div class="uc-card disabled reveal" style="transition-delay:.25s" aria-disabled="true">
@@ -606,7 +606,7 @@
 </details>
 <details class="faq-item">
 <summary class="faq-q">Which tools does Duct connect to?</summary>
-<p class="faq-a">Duct connects to tools like GA4, Google Ads, Mixpanel, Intercom, HubSpot, Salesforce, Ahrefs, Hotjar, Slack, and more. The platform is built to correlate signals across tools instead of reporting each one in isolation.</p>
+<p class="faq-a">Duct connects to Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe, and RevenueCat. The platform is built to correlate signals across tools instead of reporting each one in isolation.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">How often do I receive briefs?</summary>
@@ -614,7 +614,7 @@
 </details>
 <details class="faq-item">
 <summary class="faq-q">Does Duct modify my tools or data?</summary>
-<p class="faq-a">No. Duct operates in read-only mode and does not create, edit, or delete data in your connected platforms. It focuses on analysis and recommendations so your team can make faster decisions.</p>
+<p class="faq-a">Only with your approval. Duct reads your data to build its briefs, and reporting works with read-only access alone. When it recommends a change to a connected account &mdash; a negative keyword, a paused campaign, a GA4 key event &mdash; it proposes the change, shows you exactly what would happen, and applies it only after you approve it. Nothing is ever written automatically.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">How is Duct different from dashboards?</summary>
@@ -634,7 +634,7 @@
 </main>
 
 <!-- FOOTER (shared: site/partials/footer-expanded.html) -->
-<div data-duct-partial="/partials/footer-expanded.html"></div>
+<div data-duct-partial="/partials/footer-expanded.html"><div class="legal-fallback"><a href="/">Duct</a><a href="/about">About</a><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a></div></div>
 
 <script src="assets/duct-partials.js"></script>
 <script>
@@ -662,7 +662,7 @@ document.addEventListener('DOMContentLoaded', function () {
         {
           severity: 'MED',
           severityClass: 'sev-med',
-          title: '3 rage-click clusters on upload screen (Hotjar).',
+          title: '3 rage-click clusters on upload screen (Clarity).',
           body: 'Correlates with the activation drop for the same ad cohort.'
         },
         {

@@ -30,7 +30,7 @@
 {"@context":"https://schema.org","@type":"WebPage","name":"Duct for Paid Ads","url":"https://getduct.ai/for-paid-ads","description":"Stop tab-switching between ad platforms. Duct connects Google Ads, Meta, and LinkedIn into one daily brief with cross-platform attribution signals.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is Duct for paid ads?","acceptedAnswer":{"@type":"Answer","text":"Duct is a cross-platform ad intelligence tool that connects Google Ads, Meta, LinkedIn, and Twitter into one daily brief. Instead of pulling CSVs from each platform, you get cross-platform correlations, creative fatigue alerts, and budget reallocation signals delivered every morning. Built for performance marketers at 20\u2013200 person SaaS companies who run multi-platform campaigns without a data team."}},{"@type":"Question","name":"How long does it take to connect my ad platforms to Duct?","acceptedAnswer":{"@type":"Answer","text":"Under five minutes. Duct uses one-click OAuth to connect Google Ads, Meta, LinkedIn, Twitter, GA4, HubSpot, Klaviyo, and TikTok Ads. No API keys to configure and no developer time required. You select your platforms, authorize read-only access, and your first daily ad intelligence brief arrives the next morning."}},{"@type":"Question","name":"Does Duct modify anything in my ad accounts?","acceptedAnswer":{"@type":"Answer","text":"No. Duct operates in strict read-only mode. It connects through official platform APIs to read your performance data but never creates, modifies, or deletes campaigns, budgets, or creatives. OAuth tokens are stored server-side, all data in transit is encrypted via TLS, and no data is stored without your explicit approval."}},{"@type":"Question","name":"How is Duct different from building cross-platform ad reports in spreadsheets or dashboards?","acceptedAnswer":{"@type":"Answer","text":"Spreadsheets and dashboards show you what happened \u2014 Duct tells you what to do about it. Instead of manually pulling CSVs from three platforms and merging them weekly, Duct automatically correlates data across Google Ads, Meta, and LinkedIn to surface creative fatigue, budget reallocation opportunities, and cross-channel attribution gaps that static reports miss entirely."}},{"@type":"Question","name":"How much does Duct for paid ads cost?","acceptedAnswer":{"@type":"Answer","text":"Duct is free during the beta period with no credit card required. We are onboarding the first 25 teams personally, and every team gets a setup call and direct access to the founders. Paid plans will be announced after beta, and beta users will be grandfathered into early pricing."}},{"@type":"Question","name":"What kind of insights does the daily ad intelligence brief surface?","acceptedAnswer":{"@type":"Answer","text":"Each morning, Duct delivers cross-platform attribution analysis, creative fatigue alerts flagging ads losing effectiveness, budget reallocation signals showing where to shift spend, and anomaly detection for unexpected metric changes. It can spot when Google ROAS rises while Meta CPA spikes simultaneously \u2014 a cross-channel pattern no single-platform dashboard reveals."}}]}
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is Duct for paid ads?","acceptedAnswer":{"@type":"Answer","text":"Duct is a cross-platform ad intelligence tool that connects Google Ads, Meta Ads, Apple Search Ads and GA4 into one daily brief. Instead of pulling CSVs from each platform, you get cross-platform correlations, creative fatigue alerts, and budget reallocation signals delivered every morning. Built for performance marketers at 20\u2013200 person SaaS companies who run multi-platform campaigns without a data team."}},{"@type":"Question","name":"How long does it take to connect my ad platforms to Duct?","acceptedAnswer":{"@type":"Answer","text":"Under five minutes. Duct uses one-click OAuth to connect Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, HubSpot, Stripe and RevenueCat. No API keys to configure and no developer time required. You select your platforms, authorize access, and your first daily ad intelligence brief arrives the next morning."}},{"@type":"Question","name":"Does Duct modify anything in my ad accounts?","acceptedAnswer":{"@type":"Answer","text":"Not unless you approve it. Duct reads your performance data to build the brief, and reporting works with read-only access alone. When it finds something worth acting on \u2014 a wasted-spend search term to add as a negative keyword, a campaign to pause \u2014 it proposes the change, shows you every affected item before and after, and applies it only once you approve. Every applied change is logged and reversible where the platform allows it. OAuth tokens are encrypted and stored server-side, and all data in transit is encrypted via TLS."}},{"@type":"Question","name":"How is Duct different from building cross-platform ad reports in spreadsheets or dashboards?","acceptedAnswer":{"@type":"Answer","text":"Spreadsheets and dashboards show you what happened \u2014 Duct tells you what to do about it. Instead of manually pulling CSVs from three platforms and merging them weekly, Duct automatically correlates data across Google Ads, Meta, and LinkedIn to surface creative fatigue, budget reallocation opportunities, and cross-channel attribution gaps that static reports miss entirely."}},{"@type":"Question","name":"How much does Duct for paid ads cost?","acceptedAnswer":{"@type":"Answer","text":"Duct is free during the beta period with no credit card required. We are onboarding the first 25 teams personally, and every team gets a setup call and direct access to the founders. Paid plans will be announced after beta, and beta users will be grandfathered into early pricing."}},{"@type":"Question","name":"What kind of insights does the daily ad intelligence brief surface?","acceptedAnswer":{"@type":"Answer","text":"Each morning, Duct delivers cross-platform attribution analysis, creative fatigue alerts flagging ads losing effectiveness, budget reallocation signals showing where to shift spend, and anomaly detection for unexpected metric changes. It can spot when Google ROAS rises while Meta CPA spikes simultaneously \u2014 a cross-channel pattern no single-platform dashboard reveals."}}]}
 </script>
 <style>
   .skip-link {
@@ -90,10 +90,10 @@
 <div class="strip">
 <p class="strip-label">Connects to the platforms you already run</p>
 <div class="marquee" aria-hidden="true">
-<span>Google Ads</span><span>Meta Ads</span><span>Twitter / X</span><span>GA4</span>
-<span>HubSpot</span><span>LinkedIn Ads</span><span>Klaviyo</span><span>TikTok Ads</span>
-<span>Google Ads</span><span>Meta Ads</span><span>Twitter / X</span><span>GA4</span>
-<span>HubSpot</span><span>LinkedIn Ads</span><span>Klaviyo</span><span>TikTok Ads</span>
+<span>Google Ads</span><span>Meta Ads</span><span>Apple Search Ads</span><span>GA4</span>
+<span>HubSpot</span><span>OpenAI Ads</span><span>Stripe</span><span>RevenueCat</span>
+<span>Google Ads</span><span>Meta Ads</span><span>Apple Search Ads</span><span>GA4</span>
+<span>HubSpot</span><span>OpenAI Ads</span><span>Stripe</span><span>RevenueCat</span>
 </div>
 </div>
 
@@ -129,8 +129,8 @@
 </div>
 <div class="diag-divider" aria-hidden="true">no connection</div>
 <div class="diag-tool dim">
-<span class="diag-chip" style="background:#f0f0f0"><img src="assets/icons/x-twitter.svg" width="18" height="18" alt="X / Twitter"/></span>
-<div class="diag-info"><b>Twitter / X</b><s aria-hidden="true">Top creative CTR dropped 1.4%</s></div>
+<span class="diag-chip" style="background:#f0f0f0"><img src="assets/icons/apple-search-ads.svg" width="18" height="18" alt="Apple Search Ads"/></span>
+<div class="diag-info"><b>Apple Search Ads</b><s aria-hidden="true">Top creative CTR dropped 1.4%</s></div>
 </div>
 <div class="diag-divider" aria-hidden="true">no connection</div>
 <div class="diag-tool dim">
@@ -183,14 +183,14 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
   <span>Meta Ads</span>
   <span class="plat-check" aria-hidden="true">✓</span>
 </button>
-<button class="plat-btn" id="plat-twitter" onclick="wtTogglePlatform('Twitter / X', this)" aria-pressed="false">
-  <img class="plat-icon" src="assets/icons/x-twitter.svg" width="20" height="20" alt="" aria-hidden="true"/>
-  <span>Twitter / X</span>
+<button class="plat-btn" id="plat-apple-ads" onclick="wtTogglePlatform('Apple Search Ads', this)" aria-pressed="false">
+  <img class="plat-icon" src="assets/icons/apple-search-ads.svg" width="20" height="20" alt="" aria-hidden="true"/>
+  <span>Apple Search Ads</span>
   <span class="plat-check" aria-hidden="true">✓</span>
 </button>
-<button class="plat-btn" id="plat-linkedin" onclick="wtTogglePlatform('LinkedIn Ads', this)" aria-pressed="false">
-  <img class="plat-icon" src="assets/icons/linkedin.svg" width="20" height="20" alt="" aria-hidden="true"/>
-  <span>LinkedIn Ads</span>
+<button class="plat-btn" id="plat-openai-ads" onclick="wtTogglePlatform('OpenAI Ads', this)" aria-pressed="false">
+  <img class="plat-icon" src="assets/icons/openai-ads.svg" width="20" height="20" alt="" aria-hidden="true"/>
+  <span>OpenAI Ads</span>
   <span class="plat-check" aria-hidden="true">✓</span>
 </button>
 </div>
@@ -226,7 +226,7 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
   <span class="metric-icon" aria-hidden="true">🚀</span>
   <div>
     <p class="metric-title">More pipeline</p>
-    <p class="metric-desc">Grow qualified deals in CRM — correlate ad signals with HubSpot or Salesforce deal stage.</p>
+    <p class="metric-desc">Grow qualified deals in CRM — correlate ad signals with HubSpot deal stage.</p>
   </div>
   <span class="metric-radio" aria-hidden="true"></span>
 </button>
@@ -413,7 +413,7 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
 <span class="step-num">01</span>
 <span class="step-icon" aria-hidden="true">🔌</span>
 <p class="step-title">Connect your ad stack</p>
-<p class="step-body">One-click OAuth integrations to Google Ads, Meta, Twitter, and your CRM. Duct reads — it never writes or modifies anything. Under 5 minutes to set up.</p>
+<p class="step-body">One-click OAuth integrations to Google Ads, Meta Ads, Apple Search Ads, and your CRM. Duct reads to build your brief and changes nothing unless you approve it. Under 5 minutes to set up.</p>
 </div>
 <div class="step reveal" style="transition-delay:.1s">
 <span class="step-num">02</span>
@@ -458,7 +458,7 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
 <div class="feat reveal" style="transition-delay:.14s">
 <span class="feat-label">🚨 Alerts</span>
 <p class="feat-title">Creative fatigue &amp; anomaly detection</p>
-<p class="feat-body">Get a Slack ping when a campaign suddenly shifts — CTR drops, CPA spikes, or budget pacing goes off-track — before you notice it in a Monday report.</p>
+<p class="feat-body">Get an alert when a campaign suddenly shifts — CTR drops, CPA spikes, or budget pacing goes off-track — before you notice it in a Monday report.</p>
 </div>
 <div class="feat reveal" style="transition-delay:.2s">
 <span class="feat-label">💰 Budget</span>
@@ -525,15 +525,15 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
 <div class="faq-list reveal" style="transition-delay:.1s">
 <details class="faq-item">
 <summary class="faq-q">What is Duct for paid ads?</summary>
-<p class="faq-a">Duct is a cross-platform ad intelligence tool that connects Google Ads, Meta, LinkedIn, and Twitter into one daily brief. Instead of pulling CSVs from each platform, you get cross-platform correlations, creative fatigue alerts, and budget reallocation signals delivered every morning. Built for performance marketers at 20–200 person SaaS companies who run multi-platform campaigns without a data team.</p>
+<p class="faq-a">Duct is a cross-platform ad intelligence tool that connects Google Ads, Meta Ads, Apple Search Ads and GA4 into one daily brief. Instead of pulling CSVs from each platform, you get cross-platform correlations, creative fatigue alerts, and budget reallocation signals delivered every morning. Built for performance marketers at 20–200 person SaaS companies who run multi-platform campaigns without a data team.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">How long does it take to connect my ad platforms to Duct?</summary>
-<p class="faq-a">Under five minutes. Duct uses one-click OAuth to connect Google Ads, Meta, LinkedIn, Twitter, GA4, HubSpot, Klaviyo, and TikTok Ads. No API keys to configure and no developer time required. You select your platforms, authorize read-only access, and your first daily ad intelligence brief arrives the next morning.</p>
+<p class="faq-a">Under five minutes. Duct uses one-click OAuth to connect Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, HubSpot, Stripe and RevenueCat. No API keys to configure and no developer time required. You select your platforms, authorize access, and your first daily ad intelligence brief arrives the next morning.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">Does Duct modify anything in my ad accounts?</summary>
-<p class="faq-a">No. Duct operates in strict read-only mode. It connects through official platform APIs to read your performance data but never creates, modifies, or deletes campaigns, budgets, or creatives. OAuth tokens are stored server-side, all data in transit is encrypted via TLS, and no data is stored without your explicit approval.</p>
+<p class="faq-a">Not unless you approve it. Duct reads your performance data to build the brief, and reporting works with read-only access alone. When it finds something worth acting on &mdash; a wasted-spend search term to add as a negative keyword, a campaign to pause &mdash; it proposes the change, shows you every affected item before and after, and applies it only once you approve. Every applied change is logged and reversible where the platform allows it. OAuth tokens are encrypted and stored server-side, and all data in transit is encrypted via TLS.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">How is Duct different from building cross-platform ad reports in spreadsheets or dashboards?</summary>
@@ -557,7 +557,7 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
 </main>
 
 <!-- FOOTER (shared: site/partials/footer-expanded.html) -->
-<div data-duct-partial="/partials/footer-expanded.html"></div>
+<div data-duct-partial="/partials/footer-expanded.html"><div class="legal-fallback"><a href="/">Duct</a><a href="/about">About</a><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a></div></div>
 
 <!-- REPORT MODAL -->
 <div id="report-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="rpt-meta">
