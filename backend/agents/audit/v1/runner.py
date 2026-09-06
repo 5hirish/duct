@@ -32,6 +32,7 @@ from typing import Any, Callable
 from langchain.agents import create_agent
 
 from agents.audit.schema import CrawlResult
+from agents.audit.scoring import calibrate
 from agents.audit.v1.tools import build_audit_tools
 from agents.core.lc import build_ask_user_tool, resolve_chat_model, stream_agent
 from agents.core.memory_tools import build_memory_tools_lc
@@ -171,6 +172,9 @@ class LangChainAuditRunner:
                     "status": "validation_error",
                     "message": f"Report validation failed — fix these issues and resubmit: {exc}",
                 }
+            # Scores, counts and crawl figures follow from the findings and the
+            # crawl, never from the model's own tally (agents/audit/scoring.py).
+            calibrate(structured, crawl_result)
             version_id = len(getattr(session, "report_versions", []) or []) + 1
             report = AuditReport(
                 url=crawl_result.plan.root_url,

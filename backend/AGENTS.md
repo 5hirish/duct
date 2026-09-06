@@ -233,7 +233,9 @@ agents/
 │   └── catalog/, goals/, schema.py, prompts/, subagents/
 ├── audit/              — SEO audit agent
 │   ├── v1/             — create_agent runner (default)
-│   └── v3/             — Claude Agent SDK runner (`engine: "v3"`)
+│   ├── v3/             — Claude Agent SDK runner (`engine: "v3"`)
+│   └── scoring.py      — the report's scores and counts, computed from its findings on
+│                         every submit (both engines); the prompt's tables render from it
 └── content/            — Content Studio (plans, posts, images, publishing)
     ├── v1/             — deepagents runner (the only content engine)
     └── tools.py, subagents/, prompts.py, schema.py, artifacts.py, enrichment.py

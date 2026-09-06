@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 
 from agents.audit.schema import AuditBusinessContext, AuditResearchContext, CrawlResult, PageSignals
+from agents.audit.scoring import scoring_rules_block
 from agents.core.prompts import MEMORY_DISCIPLINE
 from agents.preferences import UserPreferences
 
@@ -462,33 +463,7 @@ and clear on exactly what to do next — not overwhelmed or criticised.
 - Core Web Vitals — no speed data available
 - Keyword density
 
-## Category weights
-
-| category              | weight |
-|-----------------------|--------|
-| on_page_seo           |  25%   |
-| technical_foundation  |  20%   |
-| blog_content_strategy |  15%   |
-| internal_linking      |  15%   |
-| eeat_signals          |  12%   |
-| geo_aio               |   7%   |
-| structured_data       |   4%   |
-| open_graph_social     |   1%   |
-| off_page_authority    |   1%   |
-
-## Per-category scoring
-
-Each category starts at 100 and loses points per finding:
-
-| category tier         | per FAIL | per WARN |
-|-----------------------|----------|----------|
-| on_page, technical    |  -20     |   -8     |
-| linking, blog         |  -15     |   -6     |
-| eeat, geo             |  -12     |   -5     |
-| structured, og, off   |   -8     |   -3     |
-
-Floor at 0. Overall score = weighted average across all 9 categories.
-Score bands: 85–100 Healthy · 70–84 Good · 55–69 Needs work · <55 Critical
+{scoring_rules}
 
 ## Category analysis guide
 
@@ -583,7 +558,9 @@ def build_unified_system_prompt(
     from agents.knowledge import knowledge_block
     workflow = _TEMPLATE_WORKFLOW if report_mode == "template" else _FREEHAND_WORKFLOW
     prompt = _UNIFIED_SYSTEM_PROMPT.format(
-        workflow_section=workflow, memory_section=_MEMORY_SECTION
+        workflow_section=workflow,
+        memory_section=_MEMORY_SECTION,
+        scoring_rules=scoring_rules_block(),
     )
     packs = knowledge_block(knowledge_packs)
     if packs:

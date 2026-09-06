@@ -46,6 +46,7 @@ from agents.audit.schema import (
     StructuredAuditData,
     VersionedReport,
 )
+from agents.audit.scoring import calibrate
 from agents.core import claude_sdk as _sdk
 from agents.core import session as _core_session
 from agents.core.session import bridge_ask_user_question, register_session, take_client_id
@@ -478,6 +479,10 @@ async def run_synthesis(
             }
         # Always compute crawl_summary from raw page signals — deterministic, not LLM-generated.
         structured.crawl_summary = _compute_crawl_summary()
+        # Same rule for the scores and counts: they follow from the findings
+        # (agents/audit/scoring.py), so the number on the gauge is the number the
+        # findings add up to on either engine.
+        calibrate(structured, crawl_result)
         from datetime import datetime, timezone
         version_id = len(session.report_versions) + 1
         report = AuditReport(

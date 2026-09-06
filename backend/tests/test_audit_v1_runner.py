@@ -182,7 +182,13 @@ def _model_that_builds_a_template_report() -> ToolCallingFake:
     """Start, one category, finalize, then a sentence — the sequence the
     prompt asks for, as canned tool calls."""
     header = {"overall_score": 72, "score_band": "good", "pages_crawled": 1, "total_sitemap_urls": 1}
-    category = {"id": "meta", "label": "Meta", "score": 8, "tooltip": "meta health", "findings": []}
+    category = {
+        "id": "on_page_seo", "label": "On-page SEO", "score": 8, "tooltip": "on-page health",
+        "findings": [{
+            "id": "h1-missing", "severity": "fail", "title": "No H1 on the homepage",
+            "description": "The root page has no H1.", "tooltip": "Headline tag",
+        }],
+    }
     finalize = {"top_priorities": [], "wins": [], "roadmap": []}
     return ToolCallingFake(responses=[
         AIMessage(content="", tool_calls=[{"name": "StartAuditReport", "args": header, "id": "c1"}]),
@@ -224,9 +230,12 @@ async def test_run_pipeline_crawls_then_publishes_the_report_the_tools_built(
     ]
     version = next(e for e in emitted.events if e["event"] == AgentEvent.ARTIFACT_VERSION)
     assert version["version_id"] == 1
-    assert version["payload"]["structured_data"]["overall_score"] == 72
+    # The model claimed 72; one FAIL in the 20-point tier is what the findings support.
+    assert version["payload"]["structured_data"]["overall_score"] == 80
+    assert version["payload"]["structured_data"]["score_band"] == "good"
     assert report is not None
-    assert [c.id for c in report.structured_data.categories] == ["meta"]
+    assert [c.id for c in report.structured_data.categories] == ["on_page_seo"]
+    assert report.structured_data.categories[0].score == 80
     assert set(e["event"] for e in emitted.events) <= set(AgentEvent)
 
 
