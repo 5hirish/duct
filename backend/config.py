@@ -296,12 +296,6 @@ class Configs(BaseSettings):
     sentry_profile_lifecycle: str = "trace"
     sentry_enable_localhost: bool = False
 
-    # Claude Agent SDK built-in OpenTelemetry tracing.
-    # When sentry_dsn is set, OTEL endpoint + headers are derived automatically.
-    # Set sdk_otel_enabled=true to activate SDK-level traces (turns, tool calls,
-    # LLM request latencies) which appear in Sentry → Performance.
-    sdk_otel_enabled: bool = False
-
     model_config = SettingsConfigDict(
         env_file=_settings_env_files(),
         env_file_encoding="utf-8",
@@ -421,46 +415,9 @@ def allow_server_provider_keys() -> bool:
     ``duct_pays=True`` to ``agents.engines.resolve_provider_key`` instead of
     widening this predicate: "Duct pays for this" is then a decision written at
     one visible call site rather than a fallback nobody can see.
-
-    Same shape as ``allow_subscription_auth`` above, and for the same reason.
     """
     cfg = get_configs()
     return bool(cfg.duct_local) or cfg.app_env == "local"
-
-
-def sentry_otel_env(cfg: Configs) -> dict[str, str]:
-    """Return OTEL env vars that route the Claude Agent SDK's built-in traces to Sentry.
-
-    The SDK subprocess inherits these; Sentry receives spans for every turn,
-    tool call, and LLM request with latencies and token counts.
-
-    DSN format:  https://<key>@o<org>.ingest[.region].sentry.io/<project>
-    OTLP format: https://o<org>.ingest[.region].sentry.io/api/<project>/integration/otlp/
-
-    Ref: https://docs.sentry.io/concepts/otlp/
-    """
-    import re
-
-    if not cfg.sdk_otel_enabled or not cfg.sentry_dsn:
-        return {}
-
-    m = re.match(
-        r"https://([^@]+)@(o\d+\.ingest(?:\.[^.]+)?\.sentry\.io)/(\d+)",
-        cfg.sentry_dsn.strip(),
-    )
-    if not m:
-        return {}
-
-    public_key, host, project_id = m.groups()
-    base_endpoint = f"https://{host}/api/{project_id}/integration/otlp/"
-
-    return {
-        "CLAUDE_CODE_ENABLE_TELEMETRY":        "1",
-        "OTEL_SERVICE_NAME":                   cfg.app_env,
-        "OTEL_EXPORTER_OTLP_ENDPOINT":         base_endpoint,
-        "OTEL_EXPORTER_OTLP_HEADERS":          f"sentry sentry_key={public_key}",
-        "OTEL_EXPORTER_OTLP_PROTOCOL":         "http/protobuf",
-    }
 
 
 # Origins the desktop sidecar accepts. The webview loads from three places

@@ -29,7 +29,6 @@ def client_with_env(monkeypatch):
             "GEMINI_API_KEY": "",
             "OPENAI_API_KEY": "",
             "ANTHROPIC_API_KEY": "",
-            "CLAUDE_CODE_OAUTH_TOKEN": "",
             **overrides,
         }
         for var, value in creds.items():

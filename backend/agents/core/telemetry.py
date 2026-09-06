@@ -2,13 +2,12 @@
 
 Why this exists
 ---------------
-V3 already emits OTel traces: the Claude Agent SDK has tracing built in, and
-``config.sentry_otel_env`` points the subprocess at Sentry's OTLP endpoint, so
-every turn, tool call and LLM request already lands with latencies and token
-counts. **V1 has no equivalent** — LangChain's own tracing goes to LangSmith,
-which is a second vendor and a second place to look. Since v1 is the target
-harness, "our observability comes free with the harness" stops being true
-exactly when it matters most.
+**The harness gives us nothing.** LangChain's own tracing goes to LangSmith,
+which is a second vendor and a second place to look. The one harness that did
+carry OTel built in was the Claude Agent SDK — its subprocess inherited Sentry's
+OTLP endpoint from an env var — and it was removed, taking that plumbing with
+it. "Observability comes free with the harness" was never true of the harness we
+kept, which is exactly when it mattered most.
 
 So the port is a vendor-neutral one: emit the OpenTelemetry GenAI semantic
 conventions ourselves, from our side of the boundary. Whatever harness runs

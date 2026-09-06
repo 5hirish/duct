@@ -7,8 +7,9 @@
 >
 > 📌 **Historical record.** The insights **V2 and V3 runners referenced below no longer
 > exist** — both were removed once it was clear nothing dispatched them (V3 on 2026‑09‑01).
-> The `os.environ` concurrency hazard called out in §2 died with them; the equivalent
-> per-call env injection now lives in `agents/core/claude_sdk.py::build_sdk_env`.
+> The `os.environ` concurrency hazard called out in §2 died with them, and the last
+> of that env plumbing went with the Claude Agent SDK itself (2026‑09‑06): v1 hands
+> the key to the model constructor per call, so there is no process env to race.
 >
 > ⚠️ **§2/§4 under review — see
 > the engine consolidation review (duct-cloud, private) §7 (duct-cloud, private).**
@@ -72,8 +73,9 @@ prompts, no agent code, no secrets.
   Railway.
 - ❌ **No subscription‑OAuth proxying.** `CLAUDE_CODE_OAUTH_TOKEN` /
   `claude setup-token` is for a single operator's own use only. The codebase
-  already documents this (`config.py:135‑145`, `claude_oauth_available()` and the
-  link to Anthropic's compliance docs). Multi‑user BYO = **Console API keys** only.
+  documented this as `claude_oauth_available()` in `config.py`, which went with v3
+  on 2026‑09‑06 along with the whole subscription path. Claude now requires a
+  Console key everywhere, so BYO = **Console API keys** only, for one user or many.
 - ❌ **No durable server‑side storage of user keys** for the alpha. Keys live in
   the user's keychain and travel per‑request; the server holds them only in
   memory for the duration of the call.

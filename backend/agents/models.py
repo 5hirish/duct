@@ -123,10 +123,12 @@ class ModelName(str, Enum):
 
 
 class AgentEffort(StrEnum):
-    """Claude Agent SDK effort levels for ClaudeAgentOptions (v3 engine only).
+    """How hard the model works before responding — still the API's request field.
 
-    Controls how hard the model works before responding. Maps to the Claude CLI
-    --effort flag introduced in claude-agent-sdk v0.1.36.
+    Named after the Claude CLI's ``--effort`` flag, where the spelling started,
+    and kept when that engine went: ``agents/thinking.py`` is the portable layer
+    that maps these rungs onto every provider's own dial, and it happens to
+    share Anthropic's spelling because it *is* Anthropic's spelling.
 
     LOW    — fastest, cheapest; good for simple lookups
     MEDIUM — balanced default
