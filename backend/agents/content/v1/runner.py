@@ -8,8 +8,9 @@ here, and the frontend cannot tell which served a run:
   specs dispatched through the harness's ``task`` tool. Their dispatch is
   surfaced as ``dispatch_subagent:<name>`` steps from the tool traffic in the
   stream, the same chips the SDK's ``Agent`` hooks produced.
-* **The open web.** ``WebFetch`` is Duct's own tool; web search is the
-  provider's server-side tool where one is verified (``agents/core/web_tools``).
+* **The open web.** ``WebFetch`` and ``WebSearch`` are Duct's own tools
+  (``agents/core/web_tools``); Anthropic's built-in search rides along there
+  because it is the one that survives a tool-calling loop.
 * **Planning.** ``write_todos`` → ``TODO_UPDATE``, which the workspace already
   renders.
 * **Human-in-the-loop.** ``AskUserQuestion`` parks the thread on a LangGraph
@@ -671,6 +672,10 @@ class ContentRunner:
             "step_id": ContentStep.ENRICHING,
             "label": STEP_LABELS[ContentStep.ENRICHING],
             "status": StepStatus.SUCCESS,
+            # Local signals only is still a finished step; the note says why
+            # the trend counts are zero, so a dead research model does not
+            # read as a quiet week.
+            "summary": research.degraded_reason[:_STEP_SUMMARY_CHARS],
             "payload": {
                 "pillar_history": len(research.pillar_history),
                 "trending_sounds": len(research.trending_sounds),

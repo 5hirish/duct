@@ -218,10 +218,6 @@ class ContentSession(BaseAgentSession):
     # Bridges the agent's render_slide tool to client-side rasterization (same
     # pattern as answer_future for AskUserQuestion).
     render_futures: dict = field(default_factory=dict)
-    # Messages typed while a turn is running. The V1 runner mounts
-    # SteerMiddleware over this queue, so a mid-turn message reaches the model
-    # at its next call instead of waiting for the turn to end.
-    steer_queue: Any | None = None
     # The Gemini key this run may spend on images — a *different* provider from
     # the one driving the conversation, so it is resolved separately and can be
     # absent while the run itself is fine (the image tools then decline).
@@ -312,6 +308,9 @@ class ContentResearchContext(BaseModel):
     trending_styles:          list[TrendSignal] = Field(default_factory=list)
     audience_insights:        list[str] = Field(default_factory=list)
     enrichment_notes:         list[str] = Field(default_factory=list)
+    # Why the research pass did not contribute, when it did not. Shown on the
+    # enrichment step and logged; not rendered into the prompt.
+    degraded_reason:          str = ""
 
 
 class ImagePrompt(BaseModel):

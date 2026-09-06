@@ -465,6 +465,22 @@ def test_enrich_skips_research_when_no_web_search_is_available():
     assert ctx.trending_hooks == [] and ctx.total_posts_to_date == 0
 
 
+def test_a_degraded_enrichment_says_why_on_the_step_and_not_in_the_prompt():
+    """The reason the research pass did not run is for the step chip and the
+    log. `enrichment_notes` is rendered into the plan prompt, and an internal
+    error string there read to one model as 'research is unavailable' — it
+    then skipped the sub-agents that were the way to research."""
+    from agents.content.enrichment import _degraded
+    from agents.content.prompts import _research_stanza
+    from agents.content.schema import ContentResearchContext
+
+    context = _degraded(ContentResearchContext(), "research pass failed: boom")
+    assert context.degraded_reason.startswith("local signals only")
+    assert context.enrichment_notes == []
+    assert "boom" not in _research_stanza(context)
+
+
+
 def test_enrich_layers_the_research_pass_over_local_signals():
     """The pass returns its findings through the structured-output contract;
     they land on the trend fields and the local signals are carried through

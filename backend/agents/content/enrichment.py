@@ -17,11 +17,12 @@ Two stages:
 
 Stage 2 ran on the Claude Agent SDK (Haiku + the CLI's WebSearch) until
 content moved to V1. It now runs on whichever provider the run uses, which
-is the whole reason for the move — with one honest consequence: it needs a
-web search tool, and Duct mounts a provider's native search only where it
-has been verified (``agents/core/web_tools.py``). A provider without one
-gets the local signals alone, and says so in the log, rather than a
-research pass that could only invent trends.
+is the whole reason for the move, with Duct's own ``WebSearch`` (a grounded
+Gemini call) standing in for the CLI's on every provider but Anthropic,
+which keeps its built-in (``agents/core/web_tools.py``). A run with no
+search at all — no Gemini key on a non-Anthropic provider — gets the local
+signals alone and says so in ``enrichment_notes``, which the runner puts on
+the step, rather than a research pass that could only invent trends.
 
 Pattern borrowed from agents/audit/enrichment.py. Differences:
   - Output is content-tuned (TrendSignal records, not competitor data).
@@ -54,11 +55,18 @@ from models.content import ContentPost
 logger = logging.getLogger(__name__)
 
 
-_DEFAULT_TIMEOUT = 90.0
-# The research pass is a bounded loop: a handful of searches, a few fetches,
-# then the structured answer. Supersteps, so roughly half this many model
-# calls; enough for the brief above, finite so a wandering pass ends.
-_RESEARCH_RECURSION_LIMIT = 30
+# Long enough for a model that calls one tool per turn to make the searches
+# the brief asks for through Duct's WebSearch (a grounded Gemini call each);
+# the step is visible while it runs, and a plan turn is minutes anyway.
+_DEFAULT_TIMEOUT = 150.0
+# The research pass is a bounded loop: up to 8 searches and 4 fetches, then
+# the structured answer. The brief's ceiling is 13 model calls if every tool
+# call gets its own turn; this leaves room for a retry or two. Measured on
+# create_agent + ToolStrategy with a fake model: 2 supersteps per call (a
+# hand-picked recursion limit of 30 ended gpt-5-mini's pass at 15 calls).
+_RESEARCH_MAX_MODEL_CALLS = 24
+_RESEARCH_SUPERSTEPS_PER_MODEL_CALL = 2
+_RESEARCH_RECURSION_LIMIT = _RESEARCH_MAX_MODEL_CALLS * _RESEARCH_SUPERSTEPS_PER_MODEL_CALL + 4
 
 
 # ---------------------------------------------------------------------------
@@ -209,6 +217,17 @@ class _RawTrendingResult(BaseModel):
     enrichment_notes:  list[str]         = Field(default_factory=list)
 
 
+def _degraded(base: ContentResearchContext, why: str) -> ContentResearchContext:
+    """The local signals, carrying the reason the research pass did not run.
+
+    A step that reports success with every trend count at zero looks like a
+    quiet week; a retired research model looked exactly like that for a
+    while. The reason goes on ``degraded_reason`` — for the step chip and the
+    log, never the prompt: ``enrichment_notes`` is rendered to the model, and
+    an internal error string there reads as "research is off"."""
+    return base.model_copy(update={"degraded_reason": f"local signals only: {why}"})
+
+
 def _merge(base: ContentResearchContext, found: _RawTrendingResult) -> ContentResearchContext:
     return ContentResearchContext(
         # Carry forward local signals
@@ -288,7 +307,7 @@ async def enrich_content_context(
             "enrichment: no web search available on %s; returning local signals only",
             getattr(provider, "value", provider),
         )
-        return base
+        return _degraded(base, "no web search available for this provider")
 
     web_tools = build_web_tools_lc(provider, model, gemini_api_key)
 
@@ -301,14 +320,14 @@ async def enrich_content_context(
         found = await asyncio.wait_for(_research(_build_research_prompt(brand), llm, web_tools), timeout=timeout)
     except asyncio.TimeoutError:
         logger.warning("enrichment: research pass timed out after %.0fs; using local signals only", timeout)
-        return base
+        return _degraded(base, f"research pass timed out after {timeout:.0f}s")
     except Exception as exc:  # noqa: BLE001 - enrichment must never fail a run
         logger.warning("enrichment: research pass failed (%s); using local signals only", exc)
-        return base
+        return _degraded(base, f"research pass failed: {str(exc)[:160]}")
 
     if found is None:
         logger.warning("enrichment: research pass returned no structured result; local signals only")
-        return base
+        return _degraded(base, "research pass returned no structured result")
     logger.info(
         "enrichment: research returned sounds=%d hashtags=%d hooks=%d styles=%d",
         len(found.trending_sounds), len(found.trending_hashtags),
