@@ -17,7 +17,7 @@ from enum import StrEnum
 from typing import Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from agents.core.session import BaseAgentSession
 
@@ -430,7 +430,18 @@ class SlideItem(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     label: str = ""                                # serif cell label / short caption
-    marker: Literal["", "dont", "do"] = ""         # before-after: ❌ (dont) / ✅ (do)
+    # before-after: ❌ (dont) / ✅ (do); "" everywhere else. A plain str with a
+    # validator rather than Literal["", "dont", "do"]: the writers expose this
+    # model as their argument schema and Gemini rejects an enum with an empty
+    # member ("enum[0]: cannot be empty", 400) — the whole tool set with it.
+    marker: str = Field("", description='"dont" or "do" on a before-after cell; "" otherwise.')
+
+    @field_validator("marker")
+    @classmethod
+    def _marker_is_known(cls, value: str) -> str:
+        if value not in ("", "dont", "do"):
+            raise ValueError('marker must be "dont", "do" or ""')
+        return value
     image_prompt: str = ""
     aspect_ratio: AspectRatio = AspectRatio.PORTRAIT_9_16
     image_asset_id: UUID | None = None
@@ -524,6 +535,14 @@ class PostDraft(BaseModel):
 
 
 class PlanDraft(BaseModel):
+    """What submit_plan accepts — and the argument schema the model is shown.
+
+    ``Day`` itself stays lenient because stored rows are read back through
+    it; the strictness lives here, at the boundary the model writes across.
+    A model probing the tool to learn its shape once persisted ``days: [{}]``
+    as a real plan, which then counted as the deliverable.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     type: Literal["plan"] = "plan"
@@ -531,7 +550,15 @@ class PlanDraft(BaseModel):
     name: str = ""
     start_date: date | None = None
     character: Character = Field(default_factory=Character)
-    days: list[Day]
+    days: list[Day] = Field(min_length=1, description="The posts, in order; each needs a topic and a pillar.")
+
+    @field_validator("days")
+    @classmethod
+    def _every_day_is_planned(cls, days: list[Day]) -> list[Day]:
+        unplanned = [i for i, d in enumerate(days) if not d.topic.strip() or not d.pillar.strip()]
+        if unplanned:
+            raise ValueError(f"every day needs a non-empty topic and pillar; days at index {unplanned} do not")
+        return days
 
 
 # ---------------------------------------------------------------------------

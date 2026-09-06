@@ -644,11 +644,18 @@ def build_content_tools_lc(
     # What the model sees. Descriptions live here rather than beside the
     # bodies so a field's meaning is stated once, next to its type.
 
+    # The writers take the real models, not ``dict``: the argument schema is
+    # then the contract every provider's model sees in the tool definition
+    # and validates against before the body runs. With ``dict`` and a
+    # description that only *named* the schema, a model without Claude's
+    # prior knowledge of it went looking — grep and ls over the scratch
+    # filesystem, then probes at the tool to read the shape off validation
+    # errors, two of which persisted as plans.
     class SubmitPlanArgs(BaseModel):
-        plan: dict = Field(description="JSON object matching the PlanDraft schema (type='plan').")
+        plan: PlanDraft = Field(description="The plan — the same object emitted in <duct_artifact>.")
 
     class SubmitPostDraftArgs(BaseModel):
-        post: dict = Field(description="JSON object matching the PostDraft schema (type='post').")
+        post: PostDraft = Field(description="The post — the same object emitted in <duct_artifact>.")
 
     class EditSlideArgs(BaseModel):
         slide_id: str = Field(description="The slide to edit, e.g. 'slide-03'.")
@@ -708,9 +715,9 @@ def build_content_tools_lc(
 
     # ----------------------- Writers -----------------------
 
-    async def submit_plan(plan: dict) -> str:
+    async def submit_plan(plan: PlanDraft | dict) -> str:
         try:
-            payload = plan
+            payload = plan if isinstance(plan, dict) else plan.model_dump(mode="json")
             try:
                 draft = PlanDraft.model_validate(payload)
             except ValidationError as exc:
@@ -757,9 +764,9 @@ def build_content_tools_lc(
             logger.exception("submit_plan failed")
             return _err(f"submit_plan failed: {exc}")
 
-    async def submit_post_draft(post: dict) -> str:
+    async def submit_post_draft(post: PostDraft | dict) -> str:
         try:
-            payload = post
+            payload = post if isinstance(post, dict) else post.model_dump(mode="json")
             try:
                 draft = PostDraft.model_validate(payload)
             except ValidationError as exc:
@@ -1907,15 +1914,15 @@ def build_content_tools_lc(
         *memory_tools,
         _bind(
             submit_plan, ContentTool.SUBMIT_PLAN,
-            "Persist a 30-day content plan. Validates the payload against the "
-            "PlanDraft schema, upserts a content_plans row scoped to this "
-            "project, and emits a PLAN_GENERATED event so the workspace "
-            "renders the plan. Call this AFTER emitting <duct_artifact>{\"type\":\"plan\",...}</duct_artifact>.",
+            "Persist the monthly content plan. The argument schema is the contract: "
+            "an ordered list of days, each with a topic and a pillar. Inserts a "
+            "content_plans row scoped to this project and emits PLAN_GENERATED so the "
+            "workspace renders it. Call this AFTER emitting <duct_artifact>{\"type\":\"plan\",...}</duct_artifact>.",
             SubmitPlanArgs,
         ),
         _bind(
             submit_post_draft, ContentTool.SUBMIT_POST_DRAFT,
-            "Persist a single post draft. Validates against PostDraft schema, "
+            "Persist a single post draft. The argument schema is the contract; the tool "
             "upserts a content_posts row keyed by (project_id, post_dir_slug), "
             "and emits POST_DRAFT_UPDATED. Call AFTER emitting "
             "<duct_artifact>{\"type\":\"post\",...}</duct_artifact>.",

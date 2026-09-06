@@ -202,19 +202,49 @@ def _tools_for(session) -> dict:
     return {t.name: t for t in build_content_tools_lc(session.project_id, _noop, session)}
 
 
-def test_writer_tool_denies_with_corrective_text_before_any_db_work():
-    """Two things Pydantic does not do on its own: the error names the
-    schema that failed so the model knows what to fix, and it arrives
-    BEFORE a DB session is opened — there is no DATABASE_URL here, and the
-    result must still be the validation message, not a connection error.
-    submit_plan shares the path; one test covers the pattern."""
-    import json
+def test_writer_tool_rejects_a_bad_payload_before_any_db_work():
+    """The writers take the real PostDraft / PlanDraft as their argument
+    schema, so a bad payload is refused by the harness at the tool boundary —
+    naming the fields — BEFORE the body opens a DB session: there is no
+    DATABASE_URL here, and the failure must still be the field error, not a
+    connection error. submit_plan shares the path; one test covers the pattern."""
+    from pydantic import ValidationError
 
     session = make_session("t", uuid4(), "draft_post")
     tool = _tools_for(session)["submit_post_draft"]
-    result = json.loads(asyncio.run(tool.ainvoke({"post": {"type": "post", "project_id": str(session.project_id)}})))
-    assert result["status"] == "error"
-    assert "PostDraft validation failed" in result["message"]
+    with pytest.raises(ValidationError) as caught:
+        asyncio.run(tool.ainvoke({"post": {"type": "post", "project_id": str(session.project_id)}}))
+    assert "post_dir_slug" in str(caught.value)
+
+
+def test_the_writers_argument_schema_is_the_plan_contract_the_model_sees():
+    """A model without Claude's prior knowledge of PlanDraft went looking for
+    it — grep and ls over the scratch filesystem, then probes at the tool.
+    The schema is in the tool definition now, on every provider, and the
+    plan-mode prompt shows the same shape."""
+    from agents.content.prompts import _PLANDRAFT_SHAPE
+
+    session = make_session("t", uuid4(), "plan_month")
+    schema = _tools_for(session)["submit_plan"].args_schema.model_json_schema()
+    rendered = str(schema)
+    assert "days" in rendered and "topic" in rendered and "pillar" in rendered and "character" in rendered
+    tail = build_orchestrator_system_prompt(_brand(), "plan_month")
+    assert _PLANDRAFT_SHAPE in tail and "never search the scratch filesystem" in tail
+
+
+def test_a_plan_with_an_unplanned_day_is_rejected():
+    """`{"days": [{}]}` used to be a valid plan — and was persisted, twice, by a
+    model probing the tool. Day stays lenient for stored rows; the plan is
+    strict where the model writes it."""
+    from pydantic import ValidationError
+
+    from agents.content.schema import PlanDraft
+
+    project = uuid4()
+    PlanDraft.model_validate({"type": "plan", "project_id": str(project), "days": [{"topic": "t", "pillar": "p"}]})
+    for days in ([], [{}], [{"topic": "t"}], [{"topic": "t", "pillar": "p"}, {"pillar": "p"}]):
+        with pytest.raises(ValidationError):
+            PlanDraft.model_validate({"type": "plan", "project_id": str(project), "days": days})
 
 
 def test_writer_tool_blocks_cross_project_writes():
@@ -788,3 +818,24 @@ def test_every_platform_has_a_display_label():
     assert unknown.label == "Mastodon"
     assert unknown.supported is False
     assert unknown.playbook == "tiktok"
+
+
+def test_the_writer_schemas_carry_nothing_gemini_refuses():
+    """The writers' argument schemas are sent to every provider as function
+    declarations. Gemini validates them server-side and rejects the whole tool
+    set for one bad construct — an enum with an empty member did exactly that
+    (`SlideItem.marker`), so the check lives here, offline, for all of them."""
+    from agents.content.schema import PlanDraft, PostDraft
+
+    def _empty_enum_members(node, path=""):
+        if isinstance(node, dict):
+            if "enum" in node and any(v in ("", None) for v in node["enum"]):
+                yield path
+            for key, value in node.items():
+                yield from _empty_enum_members(value, f"{path}.{key}")
+        elif isinstance(node, list):
+            for i, value in enumerate(node):
+                yield from _empty_enum_members(value, f"{path}[{i}]")
+
+    for model in (PlanDraft, PostDraft):
+        assert not list(_empty_enum_members(model.model_json_schema())), model.__name__

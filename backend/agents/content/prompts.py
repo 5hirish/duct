@@ -1007,13 +1007,43 @@ A multi-image slide looks like (inside `slides`):
 """
 
 
+_PLANDRAFT_SHAPE = """\
+EXACT PlanDraft JSON shape — emit these field names EXACTLY (extra fields are
+rejected). It is also submit_plan's argument schema, so there is nothing to
+look up: never search the scratch filesystem for a schema and never call
+submit_plan to see what it accepts.
+
+{"type": "plan", "project_id": "<uuid>",
+ "name": "October 2026 plan",
+ "character": {"name": "...", "age_range": "22-28", "look": "...",
+               "voice": "...", "notes": "..."},
+ "days": [
+   {"topic": "<topic title>", "pillar": "<pillar id>",
+    "topic_id": "<id from research, optional>",
+    "post_type": "slideshow", "format_slug": "format-d",
+    "platforms": ["tiktok"]},
+   {"topic": "...", "pillar": "...", "post_type": "slideshow",
+    "format_slug": "", "platforms": ["tiktok"]}
+ ]}
+
+FIELD RULES:
+- `days` is ordered — one object per post, no day numbers; the calendar lays
+  them on sequential dates. Every day needs a non-empty `topic` AND `pillar`
+  (a pillar id from the brand context); a plan with an empty day is rejected.
+- `post_type` ∈ {slideshow, video, image}; `platforms` from the brand's
+  channels; `format_slug` from the format library or "".
+- `character` is the persona narrating the month; fill what you know.
+"""
+
+
 def _mode_tail(mode: RunMode) -> str:
     return {
         "plan_month": (
             "MODE: plan_month — your deliverable this turn is a full monthly "
             "content plan (an ordered list of posts for the current month, no "
             "day numbers) as a PlanDraft wrapped in <duct_artifact>. Call "
-            "submit_plan once after emitting the tag."
+            "submit_plan once after emitting the tag.\n\n"
+            + _PLANDRAFT_SHAPE
         ),
         "draft_post": (
             "MODE: draft_post — your deliverable this turn is ONE PostDraft "
