@@ -278,186 +278,39 @@ def test_split_chunk_handles_provider_variations():
 # Route wiring — engine selection
 # ---------------------------------------------------------------------------
 
-def test_route_defaults_to_v1_and_opts_in_to_v3():
-    """V1 is production; V3 is per-request opt-in.
-
-    The flip is the first step of consolidating onto one harness. Audit is where
-    it costs nothing — both runners exist with the same ``run_pipeline``
-    signature and event vocabulary (asserted below) — and running V1 by default
-    is how it earns the confidence the old default was waiting for.
-    """
-    from agents.audit.v3.runner import ClaudeAuditRunner
+def test_every_audit_route_builds_the_one_runner():
+    """Both entry points used to pick an engine; the Claude Agent SDK one is
+    gone. The engine parameter survives because `agents/engines.py` is still
+    where a second harness would be declared if there is ever another."""
+    from agents.audit.v1.runner import LangChainAuditRunner
     from agents.engines import Engine
     from agents.models import ModelName, Provider
     from routes.audit import _build_runner, _resolve_agent_config
-    from agents.audit.v1.runner import LangChainAuditRunner
 
-    # An unset engine resolves to V1...
     _provider, _model, engine = _resolve_agent_config("")
     assert engine == Engine.V1
 
-    # ...and V3 remains reachable by naming it.
-    _provider, _model, engine_v3 = _resolve_agent_config("v3")
-    assert engine_v3 == Engine.V3
-
-    v3 = _build_runner("k", Provider.ANTHROPIC, ModelName.CLAUDE_SONNET, Engine.V3)
-    v1 = _build_runner("k", Provider.GOOGLE_GENAI, ModelName.GEMINI_2_5_FLASH, Engine.V1)
-
-    assert isinstance(v3, ClaudeAuditRunner)
-    assert isinstance(v1, LangChainAuditRunner)
+    runner = _build_runner("k", Provider.GOOGLE_GENAI, ModelName.GEMINI_3_8_FLASH, Engine.V1)
+    assert isinstance(runner, LangChainAuditRunner)
 
 
-def test_both_runners_share_the_run_pipeline_signature():
-    """The route calls one signature; swapping engines must change nothing else."""
+def test_the_runner_still_answers_the_call_the_routes_make():
+    """The routes pass these by keyword; a rename here is a 500 at run time."""
     import inspect
 
     from agents.audit.v1.runner import LangChainAuditRunner
-    from agents.audit.v3.runner import ClaudeAuditRunner
 
-    v1 = inspect.signature(LangChainAuditRunner.run_pipeline).parameters
-    v3 = inspect.signature(ClaudeAuditRunner.run_pipeline).parameters
-    assert list(v1) == list(v3)
+    pipeline = inspect.signature(LangChainAuditRunner.run_pipeline).parameters
+    assert {"session_id", "url", "business_context", "emit", "report_mode",
+            "template_id", "chat_idle_timeout", "lead_magnet"} <= set(pipeline)
 
-
-# ---------------------------------------------------------------------------
-# A site that never answers is not audited
-# ---------------------------------------------------------------------------
-
-async def test_an_unreachable_site_closes_the_crawl_step_as_an_error_and_never_reaches_the_model(
-    emitted, acme_business_context, monkeypatch
-):
-    """Two live runs scored a homepage that returned no response 84 "good".
-    The crawl now raises instead; the runner closes the step as an error so the
-    UI stops spinning, and re-raises so the route reports the failure."""
-    import agents.audit.crawl as audit_crawl
-    import agents.audit.v1.runner as v1
-    from service.crawl.fetcher import SiteUnreachableError
-
-    async def dead_site(url, **_kwargs):
-        raise SiteUnreachableError(url)
-
-    def no_model(*_a, **_k):
-        raise AssertionError("synthesis must not start for a site that never answered")
-
-    monkeypatch.setattr(audit_crawl, "run_crawl", dead_site)
-    monkeypatch.setattr(v1, "resolve_chat_model", no_model)
-
-    with pytest.raises(SiteUnreachableError, match="Could not reach https://dead.example"):
-        await v1.LangChainAuditRunner(api_key="unused-no-network").run_pipeline(
-            session_id="offline-audit", url="https://dead.example",
-            business_context=acme_business_context, emit=emitted, report_mode="template",
-        )
-
-    steps = [
-        (e["step_id"], e["status"]) for e in emitted.events
-        if e["event"] in (AgentEvent.STEP_STARTED, AgentEvent.STEP_FINISHED)
-    ]
-    assert steps == [(AuditStep.FETCH_SITEMAP, "running"), (AuditStep.FETCH_SITEMAP, "error")]
-    failed = next(e for e in emitted.events if e.get("status") == "error")
-    assert "no HTTP response" in failed["error"]
-    assert not any(e["event"] == AgentEvent.ARTIFACT_VERSION for e in emitted.events)
+    resume = inspect.signature(LangChainAuditRunner.run_resume).parameters
+    assert {"session_id", "url", "emit", "chat_idle_timeout", "report_mode"} <= set(resume)
 
 
-# ---------------------------------------------------------------------------
-# The session stays open — follow-up chat and resume
-# ---------------------------------------------------------------------------
-
-async def _drain(session, events, *, wait_for: str, timeout: float = 3.0) -> dict:
-    """Wait for one event kind to show up on the emitted list."""
-    deadline = asyncio.get_running_loop().time() + timeout
-    while asyncio.get_running_loop().time() < deadline:
-        for event in events:
-            if event["event"] == wait_for:
-                return event
-        await asyncio.sleep(0.02)
-    raise AssertionError(f"{wait_for} never arrived; got {[e['event'] for e in events]}")
-
-
-async def test_the_audit_answers_a_follow_up_on_the_same_thread(
-    crawl_result, emitted, acme_business_context, monkeypatch
-):
-    """V1 used to stream one turn and return, so every message after the report
-    hit a closed session. The run now stays open until the user goes quiet."""
-    import agents.audit.crawl as audit_crawl
-    import agents.audit.v1.runner as v1
-
-    async def offline_crawl(_url, **_kwargs):
-        return crawl_result
-
-    monkeypatch.setattr(audit_crawl, "run_crawl", offline_crawl)
-    monkeypatch.setattr(
-        v1, "resolve_chat_model", lambda *_a, **_k: _model_that_builds_a_template_report()
-    )
-    session = register_session(BaseAgentSession(
-        session_id="audit-followup", agent_type="audit_seo",
-        event_queue=asyncio.Queue(), chat_queue=asyncio.Queue(),
-    ))
-
-    pipeline = asyncio.create_task(
-        v1.LangChainAuditRunner(api_key="unused-no-network").run_pipeline(
-            session_id="audit-followup", url="https://getduct.ai",
-            business_context=acme_business_context, emit=emitted,
-            report_mode="template", chat_idle_timeout=2.0,
-        )
-    )
-    # The bare PIPELINE_FINISHED is what moves the UI out of "working"; the
-    # chat loop is running behind it.
-    await _drain(session, emitted.events, wait_for=AgentEvent.PIPELINE_FINISHED)
-    await session.chat_queue.put("which page is worst?")
-    report = await asyncio.wait_for(pipeline, timeout=10)
-
-    assert report is not None, "the follow-up must not lose the report"
-    prose = "".join(
-        e.get("text", "") for e in emitted.events
-        if e["event"] == AgentEvent.AGENT_MESSAGE_CHUNK
-    )
-    assert "Report published." in prose
-    close_session("audit-followup")
-
-
-async def test_resume_continues_the_thread_without_crawling_again(
-    emitted, monkeypatch
-):
-    """The project-scoped audit resumes a stored conversation. V1 had no
-    run_resume at all, so this path only ever worked on the Claude Agent SDK."""
-    import agents.audit.crawl as audit_crawl
-    import agents.audit.v1.runner as v1
-
-    async def must_not_crawl(*_a, **_k):
-        raise AssertionError("resume must not re-crawl the site")
-
-    monkeypatch.setattr(audit_crawl, "run_crawl", must_not_crawl)
-    monkeypatch.setattr(
-        v1, "resolve_chat_model",
-        lambda *_a, **_k: ToolCallingFake(responses=[AIMessage(content="Still the pricing page.")]),
-    )
-    session = register_session(BaseAgentSession(
-        session_id="audit-resume", agent_type="audit_seo",
-        event_queue=asyncio.Queue(), chat_queue=asyncio.Queue(),
-    ))
-
-    resumed = asyncio.create_task(
-        v1.LangChainAuditRunner(api_key="unused-no-network").run_resume(
-            session_id="audit-resume", url="https://getduct.ai",
-            emit=emitted, chat_idle_timeout=2.0, report_mode="template",
-        )
-    )
-    await _drain(session, emitted.events, wait_for=AgentEvent.PIPELINE_FINISHED)
-    await session.chat_queue.put("what should I fix first?")
-    await asyncio.wait_for(resumed, timeout=10)
-
-    prose = "".join(
-        e.get("text", "") for e in emitted.events
-        if e["event"] == AgentEvent.AGENT_MESSAGE_CHUNK
-    )
-    assert "Still the pricing page." in prose
-    close_session("audit-resume")
-
-
-def test_the_project_scoped_audit_defaults_to_v1_too():
+def test_the_project_scoped_audit_builds_the_one_runner_too():
     """The session path — artifacts, memory, execution tools, resume — ran V3
-    unconditionally, which is what actually kept the Agent SDK in production.
-    It reads the same engine resolution as every other route now."""
+    unconditionally, which is what actually kept the Agent SDK in production."""
     import inspect
 
     import routes.agents as agents_route
@@ -465,10 +318,8 @@ def test_the_project_scoped_audit_defaults_to_v1_too():
     from agents.engines import Engine, resolve_engine
 
     source = inspect.getsource(agents_route)
-    assert 'resolve_engine(req.engine or "v1")' in source, "the default engine is V1"
+    assert "ClaudeAuditRunner" not in source, "the Agent SDK runner is gone"
     assert resolve_engine("") == Engine.V1
-    # Both runners are reachable from the route, and V1 is the one it builds
-    # without being asked.
     assert agents_route.LangChainAuditRunner is LangChainAuditRunner
 
 

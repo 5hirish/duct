@@ -15,7 +15,7 @@ from sqlmodel import Session
 
 from agents.audit.prompts import build_audit_user_prompt, build_unified_system_prompt
 from agents.audit.schema import AuditBusinessContext, CrawlPlan, CrawlResult
-from agents.audit.tools import _build_artifact_tools
+from agents.core.artifact_tools import build_artifact_tools_lc
 from agents.core.context import format_agent_context, format_prior_artifacts
 from agents.knowledge import knowledge_block, load_knowledge_pack
 import db.session as db_session_module
@@ -132,24 +132,24 @@ def seeded(monkeypatch, tmp_path):
     return SimpleNamespace(mine=mine_id, other=other_id, rows=rows)
 
 
-def _handler(tool_obj):
-    return getattr(tool_obj, "handler", tool_obj)
+async def _call(tool_obj, **kwargs) -> str:
+    """LangChain tools take keyword arguments and return a JSON string."""
+    return await tool_obj.ainvoke(kwargs)
 
 
 async def test_list_artifacts_scoped_to_project(seeded):
-    list_tool = _build_artifact_tools(seeded.mine)[0]
-    result = await _handler(list_tool)({"kind": "report"})
-    payload = json.loads(result["content"][0]["text"])
+    list_tool = build_artifact_tools_lc(seeded.mine)[0]
+    payload = json.loads(await _call(list_tool, kind="report"))
     titles = [a["title"] for a in payload["artifacts"]]
     assert titles == ["my report"]
 
 
 async def test_get_artifact_denies_cross_project(seeded):
-    get_tool = _build_artifact_tools(seeded.mine)[1]
-    ok = await _handler(get_tool)({"artifact_id": str(seeded.rows["my report"].id)})
-    assert "structured_json" in ok["content"][0]["text"]
-    denied = await _handler(get_tool)({"artifact_id": str(seeded.rows["other report"].id)})
-    assert "No artifact" in denied["content"][0]["text"]
+    get_tool = build_artifact_tools_lc(seeded.mine)[1]
+    ok = await _call(get_tool, artifact_id=str(seeded.rows["my report"].id))
+    assert "structured_json" in ok
+    denied = await _call(get_tool, artifact_id=str(seeded.rows["other report"].id))
+    assert "No artifact" in denied
 
 
 # ---------------------------------------------------------------------------
@@ -162,68 +162,57 @@ async def test_create_update_rewrite_flow(seeded):
     async def on_artifact(card):
         cards.append(card)
 
-    _, _, create, update, rewrite = _build_artifact_tools(seeded.mine, on_artifact=on_artifact)
+    _, _, create, update, rewrite = build_artifact_tools_lc(seeded.mine, on_artifact=on_artifact)
 
-    created = await _handler(create)({
-        "slug": "Keyword Gap Plan!",
-        "title": "Keyword gap plan",
-        "kind": "plan",
-        "content_type": "text/markdown",
-        "content": "# Plan\n\nTarget the zero-click long tail first.",
-    })
-    card = json.loads(created["content"][0]["text"])["created"]
+    created = await _call(
+        create, slug="Keyword Gap Plan!", title="Keyword gap plan", kind="plan",
+        content_type="text/markdown",
+        content="# Plan\n\nTarget the zero-click long tail first.",
+    )
+    card = json.loads(created)["created"]
     assert card["slug"] == "keyword-gap-plan"  # slugified
     assert card["version"] == 1
     assert cards[-1]["slug"] == "keyword-gap-plan"  # in-chat card emitted
 
     # Targeted patch by slug — exact-string transport, new full version stored.
-    updated = await _handler(update)({
-        "artifact": "keyword-gap-plan",
-        "edits": [{"old_str": "zero-click long tail", "new_str": "high-intent long tail"}],
-        "label": "sharpened targeting",
-        "expected_version": 1,
-    })
-    card2 = json.loads(updated["content"][0]["text"])["updated"]
+    updated = await _call(
+        update, artifact="keyword-gap-plan",
+        edits=[{"old_str": "zero-click long tail", "new_str": "high-intent long tail"}],
+        label="sharpened targeting", expected_version=1,
+    )
+    card2 = json.loads(updated)["updated"]
     assert card2["version"] == 2 and card2["label"] == "sharpened targeting"
 
     # Failed match → clean retryable error steering to rewrite, no new version.
-    failed = await _handler(update)({
-        "artifact": "keyword-gap-plan",
-        "edits": [{"old_str": "does not exist", "new_str": "x"}],
-        "expected_version": 2,
-    })
-    assert "RewriteArtifact" in failed["content"][0]["text"]
+    failed = await _call(
+        update, artifact="keyword-gap-plan",
+        edits=[{"old_str": "does not exist", "new_str": "x"}], expected_version=2,
+    )
+    assert "RewriteArtifact" in failed
 
     # Optimistic concurrency: stale expected_version conflicts.
-    stale = await _handler(rewrite)({
-        "artifact": "keyword-gap-plan",
-        "content": "# Plan v3",
-        "expected_version": 1,
-    })
-    assert "conflict" in stale["content"][0]["text"].lower()
+    stale = await _call(
+        rewrite, artifact="keyword-gap-plan", content="# Plan v3", expected_version=1,
+    )
+    assert "conflict" in stale.lower()
 
-    ok = await _handler(rewrite)({
-        "artifact": "keyword-gap-plan",
-        "content": "# Plan v3",
-        "expected_version": 2,
-    })
-    assert json.loads(ok["content"][0]["text"])["rewritten"]["version"] == 3
+    ok = await _call(
+        rewrite, artifact="keyword-gap-plan", content="# Plan v3", expected_version=2,
+    )
+    assert json.loads(ok)["rewritten"]["version"] == 3
 
 
 async def test_write_tools_reject_reports_and_bad_json(seeded):
-    _, _, create, update, _ = _build_artifact_tools(seeded.mine)
+    _, _, create, update, _ = build_artifact_tools_lc(seeded.mine)
     # Reports go through the report flow.
-    denied = await _handler(update)({
-        "artifact": str(seeded.rows["my report"].id),
-        "edits": [{"old_str": "a", "new_str": "b"}],
-    })
-    assert "report flow" in denied["content"][0]["text"]
+    denied = await _call(
+        update, artifact=str(seeded.rows["my report"].id),
+        edits=[{"old_str": "a", "new_str": "b"}],
+    )
+    assert "report flow" in denied
     # JSON vendor types must parse after any write.
-    bad = await _handler(create)({
-        "slug": "broken-table",
-        "title": "Broken",
-        "kind": "dataset",
-        "content_type": "application/vnd.duct.table+json",
-        "content": "not json at all",
-    })
-    assert "not valid JSON" in bad["content"][0]["text"]
+    bad = await _call(
+        create, slug="broken-table", title="Broken", kind="dataset",
+        content_type="application/vnd.duct.table+json", content="not json at all",
+    )
+    assert "not valid JSON" in bad

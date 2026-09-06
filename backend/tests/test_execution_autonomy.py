@@ -32,7 +32,6 @@ from agents.insights.prompts.autonomous import (
 )
 from agents.tools import execution_tools
 from agents.tools.execution_tools import (
-    build_execution_mcp_server,
     build_execution_tools_lc,
 )
 from models.execution import (
@@ -200,37 +199,22 @@ EXPECTED_TOOLS = {
 }
 
 
-async def _sdk_tool_names() -> set[str]:
-    """The MCP server's advertised tools — asked of the server, not of the
-    source, so a tool added by any route shows up here."""
-    import mcp.types as mcp_types
-
-    server = build_execution_mcp_server(user_id=uuid.uuid4(), project_id=uuid.uuid4())
-    handler = server["instance"].request_handlers[mcp_types.ListToolsRequest]
-    result = await handler(mcp_types.ListToolsRequest(method="tools/list"))
-    return {tool.name for tool in result.root.tools}
-
-
-async def test_both_binders_mount_the_same_four_tools():
+def test_the_binder_mounts_the_same_four_tools():
     lc = {t.name for t in build_execution_tools_lc(
         user_id=uuid.uuid4(), project_id=uuid.uuid4()
     )}
 
     assert lc == EXPECTED_TOOLS
-    assert await _sdk_tool_names() == EXPECTED_TOOLS
 
 
-async def test_no_binder_offers_a_way_to_approve_or_apply():
+def test_nothing_here_offers_a_way_to_approve_or_apply():
     """The safety property is the *absence* of a tool, which is exactly the kind
-    of thing that gets added back by accident. Asked of both harnesses, because
-    a tool added to one binder and not the other is the likelier accident."""
-    lc = {t.name.lower() for t in build_execution_tools_lc(
-        user_id=uuid.uuid4(), project_id=uuid.uuid4()
-    )}
-
-    for name in lc | {n.lower() for n in await _sdk_tool_names()}:
-        assert "approve" not in name, f"{name} approves a change set"
-        assert not name.startswith("apply"), f"{name} applies one"
+    of thing that gets added back by accident. Approval is human-only, through
+    the review UI."""
+    for tool in build_execution_tools_lc(user_id=uuid.uuid4(), project_id=uuid.uuid4()):
+        name = tool.name.lower()
+        assert "approve" not in name, f"{tool.name} approves a change set"
+        assert not name.startswith("apply"), f"{tool.name} applies one"
 
 
 def test_execution_tools_need_a_membership_checked_project():
@@ -241,9 +225,9 @@ def test_execution_tools_need_a_membership_checked_project():
     assert build_execution_tools_lc() == []
 
 
-def test_both_binders_describe_one_contract():
-    """Two harnesses, one set of descriptions and arg schemas — so the models
-    behind them cannot be told different rules."""
+def test_the_descriptions_are_the_contract():
+    """The rules the model is given live in one place, so they cannot drift
+    from the ones the code enforces."""
     assert "cannot apply them" in execution_tools.PROPOSE_DESCRIPTION
     assert "ALWAYS wait" in execution_tools.PROPOSE_DESCRIPTION
     assert "never widens" in execution_tools.PROPOSE_DESCRIPTION

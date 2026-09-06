@@ -49,7 +49,6 @@ ADAPTERS: dict[str, str] = {
     #    runners are NOT here: their harness-shaped middle moved into
     #    agents/core/deep_session.py, and they are pinned framework-free below.
     "agents/audit/v1/runner.py":            "LangChain runner (create_agent)",
-    "agents/audit/v3/runner.py":            "Claude Agent SDK runner",
 
     # -- Shared LangChain adapter: the model-transport + events-out ports for
     #    every V1 runner. Extracted from agents/audit/v1/runner.py on the second
@@ -76,14 +75,11 @@ ADAPTERS: dict[str, str] = {
     "agents/core/artifact_tools.py":        "binder: build_artifact_tools_lc (the SDK half is agents/audit/tools.py)",
     "agents/core/web_tools.py":             "LangChain binder: WebFetch + the provider's native web search spec",
     "agents/audit/v1/tools.py":             "LangChain tool binder",
-    "agents/audit/tools.py":                "Claude Agent SDK tool binder (duct_crawl)",
     "agents/content/tools.py":              "LangChain tool binder (content tools)",
     "agents/insights/data_tools.py":        "LangChain binder: FetchData + connector notes",
     "agents/tools/execution_tools.py":      "binder pair: build_execution_tools_lc / _mcp_server",
 
     # -- Named harness shims.
-    "agents/core/claude_sdk.py":            "Claude Agent SDK subprocess survival",
-    "agents/core/stream.py":                "pump_stream_event — SDK message decode",
 
     # -- Enrichment + persistence run their own bounded model calls.
     "agents/audit/enrichment.py":           "one-shot SDK call",

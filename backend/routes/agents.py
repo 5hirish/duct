@@ -44,7 +44,6 @@ from agents.audit.events import AuditEvent
 from agents.audit.schema import AuditRequest
 from agents.audit.crawl import create_audit_session
 from agents.audit.v1.runner import LangChainAuditRunner
-from agents.audit.v3.runner import ClaudeAuditRunner
 from agents.core.session import close_session, get_session
 from agents.content.persistence import (
     ConversationRecorder,
@@ -70,7 +69,6 @@ from agents.core.errors import error_payload
 from agents.core.session import CLIENT_MESSAGE_ID
 from db.session import get_session as db_session
 from agents.engines import (
-    Engine,
     resolve_engine,
     resolve_engine_model,
     resolve_engine_provider,
@@ -1180,7 +1178,7 @@ async def _start_seo_audit(
         raise HTTPException(422, f"Invalid seo-audit config: {exc}") from exc
 
     cfg = get_configs()
-    engine = resolve_engine(req.engine or "v1")
+    engine = resolve_engine(req.engine)
     provider = resolve_engine_provider(engine, cfg.generate_provider or None)
     model = resolve_engine_model(engine, provider, cfg.generate_model or None)
 
@@ -1199,23 +1197,12 @@ async def _start_seo_audit(
             provider.value, resolved.source, req.lead_magnet,
         )
 
-    if engine == Engine.V3:
-        runner = ClaudeAuditRunner(
-            api_key=api_key,
-            provider=provider,
-            model=model,
-            effort=req.effort,
-            # Lead-magnet (teaser) audits never use extended thinking — keep the
-            # first token fast regardless of what the request asked for.
-            adaptive_thinking=req.adaptive_thinking and not req.lead_magnet,
-        )
-    else:
-        runner = LangChainAuditRunner(
-            api_key=api_key,
-            provider=provider,
-            model=model,
-            gemini_api_key=cfg.gemini_api_key,
-        )
+    runner = LangChainAuditRunner(
+        api_key=api_key,
+        provider=provider,
+        model=model,
+        gemini_api_key=cfg.gemini_api_key,
+    )
     # The artifact digest runs on the caller's own provider now, so the key no
     # longer has to be zeroed for anyone. It used to be Anthropic-only (the
     # summariser was pinned to the Agent SDK), which meant a Gemini or OpenAI
