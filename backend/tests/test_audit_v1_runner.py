@@ -26,8 +26,13 @@ from agents.core.lc import (
     split_chunk,
     stream_agent,
 )
-from agents.core.session import BaseAgentSession, register_session
+from agents.core.session import BaseAgentSession, close_session, register_session
 from tests.fakes import ToolCallingFake, tool_names as _tool_names
+
+
+def _thread(name: str) -> dict:
+    """The audit agent is checkpointed, so every run needs a thread to write to."""
+    return {"configurable": {"thread_id": f"test-{name}"}}
 
 
 @pytest.fixture
@@ -141,7 +146,9 @@ async def test_stream_emits_the_shared_event_vocabulary(crawl_result, emitted):
     async def on_close(_raw: str, _turn: str) -> None:
         pass
 
-    await stream_agent(agent, "audit getduct.ai", emitted, on_artifact_close=on_close)
+    await stream_agent(
+        agent, "audit getduct.ai", emitted, on_artifact_close=on_close, config=_thread("vocab"),
+    )
 
     kinds = [e["event"] for e in emitted.events]
     assert AgentEvent.MESSAGE_STOP in kinds
@@ -162,7 +169,9 @@ async def test_stream_routes_report_payload_to_the_parser(crawl_result, emitted)
     async def on_close(raw: str, turn: str) -> None:
         closed.append((raw, turn))
 
-    await stream_agent(agent, "audit", emitted, on_artifact_close=on_close)
+    await stream_agent(
+        agent, "audit", emitted, on_artifact_close=on_close, config=_thread("artifact"),
+    )
 
     assert closed, "the report tag should have closed"
     raw, _turn = closed[0]
@@ -343,3 +352,99 @@ async def test_an_unreachable_site_closes_the_crawl_step_as_an_error_and_never_r
     failed = next(e for e in emitted.events if e.get("status") == "error")
     assert "no HTTP response" in failed["error"]
     assert not any(e["event"] == AgentEvent.ARTIFACT_VERSION for e in emitted.events)
+
+
+# ---------------------------------------------------------------------------
+# The session stays open — follow-up chat and resume
+# ---------------------------------------------------------------------------
+
+async def _drain(session, events, *, wait_for: str, timeout: float = 3.0) -> dict:
+    """Wait for one event kind to show up on the emitted list."""
+    deadline = asyncio.get_running_loop().time() + timeout
+    while asyncio.get_running_loop().time() < deadline:
+        for event in events:
+            if event["event"] == wait_for:
+                return event
+        await asyncio.sleep(0.02)
+    raise AssertionError(f"{wait_for} never arrived; got {[e['event'] for e in events]}")
+
+
+async def test_the_audit_answers_a_follow_up_on_the_same_thread(
+    crawl_result, emitted, acme_business_context, monkeypatch
+):
+    """V1 used to stream one turn and return, so every message after the report
+    hit a closed session. The run now stays open until the user goes quiet."""
+    import agents.audit.crawl as audit_crawl
+    import agents.audit.v1.runner as v1
+
+    async def offline_crawl(_url, **_kwargs):
+        return crawl_result
+
+    monkeypatch.setattr(audit_crawl, "run_crawl", offline_crawl)
+    monkeypatch.setattr(
+        v1, "resolve_chat_model", lambda *_a, **_k: _model_that_builds_a_template_report()
+    )
+    session = register_session(BaseAgentSession(
+        session_id="audit-followup", agent_type="audit_seo",
+        event_queue=asyncio.Queue(), chat_queue=asyncio.Queue(),
+    ))
+
+    pipeline = asyncio.create_task(
+        v1.LangChainAuditRunner(api_key="unused-no-network").run_pipeline(
+            session_id="audit-followup", url="https://getduct.ai",
+            business_context=acme_business_context, emit=emitted,
+            report_mode="template", chat_idle_timeout=2.0,
+        )
+    )
+    # The bare PIPELINE_FINISHED is what moves the UI out of "working"; the
+    # chat loop is running behind it.
+    await _drain(session, emitted.events, wait_for=AgentEvent.PIPELINE_FINISHED)
+    await session.chat_queue.put("which page is worst?")
+    report = await asyncio.wait_for(pipeline, timeout=10)
+
+    assert report is not None, "the follow-up must not lose the report"
+    prose = "".join(
+        e.get("text", "") for e in emitted.events
+        if e["event"] == AgentEvent.AGENT_MESSAGE_CHUNK
+    )
+    assert "Report published." in prose
+    close_session("audit-followup")
+
+
+async def test_resume_continues_the_thread_without_crawling_again(
+    emitted, monkeypatch
+):
+    """The project-scoped audit resumes a stored conversation. V1 had no
+    run_resume at all, so this path only ever worked on the Claude Agent SDK."""
+    import agents.audit.crawl as audit_crawl
+    import agents.audit.v1.runner as v1
+
+    async def must_not_crawl(*_a, **_k):
+        raise AssertionError("resume must not re-crawl the site")
+
+    monkeypatch.setattr(audit_crawl, "run_crawl", must_not_crawl)
+    monkeypatch.setattr(
+        v1, "resolve_chat_model",
+        lambda *_a, **_k: ToolCallingFake(responses=[AIMessage(content="Still the pricing page.")]),
+    )
+    session = register_session(BaseAgentSession(
+        session_id="audit-resume", agent_type="audit_seo",
+        event_queue=asyncio.Queue(), chat_queue=asyncio.Queue(),
+    ))
+
+    resumed = asyncio.create_task(
+        v1.LangChainAuditRunner(api_key="unused-no-network").run_resume(
+            session_id="audit-resume", url="https://getduct.ai",
+            emit=emitted, chat_idle_timeout=2.0, report_mode="template",
+        )
+    )
+    await _drain(session, emitted.events, wait_for=AgentEvent.PIPELINE_FINISHED)
+    await session.chat_queue.put("what should I fix first?")
+    await asyncio.wait_for(resumed, timeout=10)
+
+    prose = "".join(
+        e.get("text", "") for e in emitted.events
+        if e["event"] == AgentEvent.AGENT_MESSAGE_CHUNK
+    )
+    assert "Still the pricing page." in prose
+    close_session("audit-resume")

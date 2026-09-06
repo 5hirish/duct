@@ -34,13 +34,27 @@ from langchain.agents import create_agent
 from agents.audit.schema import CrawlResult
 from agents.audit.scoring import calibrate
 from agents.audit.v1.tools import build_audit_tools
-from agents.core.lc import build_ask_user_tool, resolve_chat_model, stream_agent
+from agents.core.checkpoint import get_checkpointer
+from agents.core.deep_session import DeepSession, RunLimits
+from agents.core.lc import build_ask_user_tool, resolve_chat_model
 from agents.core.memory_tools import build_memory_tools_lc
 from agents.core.session import BaseAgentSession
 from agents.models import ModelName, Provider
 from service.crawl.fetcher import SiteUnreachableError
 
 logger = logging.getLogger(__name__)
+
+# One audit is a long single turn (nine categories, a tool call each) followed
+# by short chat turns. The recursion ceiling derives from the model-call guard
+# rather than being picked by hand — see RunLimits.
+LIMITS = RunLimits(
+    model_calls_per_run=40,
+    model_calls_per_thread=200,
+    tool_calls_per_run=60,
+    tool_calls_per_thread=300,
+    tool_result_prune_trigger=40,
+    tool_results_kept=12,
+)
 
 def build_audit_agent(
     *,
@@ -81,7 +95,15 @@ def build_audit_agent(
     if session is not None and emit is not None:
         tools.append(build_ask_user_tool(session, session_id, emit))
 
-    return create_agent(model=llm, tools=tools, system_prompt=system_prompt)
+    # Checkpointed: without a saver the graph has no memory between turns, so
+    # follow-up chat would re-ask the model to audit a site it just audited,
+    # and a resumed conversation would start blank beside its own transcript.
+    return create_agent(
+        model=llm,
+        tools=tools,
+        system_prompt=system_prompt,
+        checkpointer=get_checkpointer(),
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -236,15 +258,16 @@ class LangChainAuditRunner:
             except Exception:  # noqa: BLE001 — a malformed inline payload is not fatal
                 logger.warning("audit-v1: could not parse inline <duct_artifact> payload", exc_info=True)
 
-        await stream_agent(
-            agent,
-            build_audit_user_prompt(crawl_result, business_context, extra_context=extra_context),
-            emit,
+        loop = self._session_loop(
+            agent, llm, session, emit, session_id,
             on_artifact_close=_on_artifact_close,
-            log_prefix="audit-v1",
-            provider=self.provider,
-            model=self.model,
-            conversation_id=session_id,
+            # PIPELINE_FINISHED is the route's to emit once it has the report in
+            # hand; DeepSession would otherwise send it as soon as synthesis
+            # ends, and the UI would leave "working" before the report exists.
+            announce_finish=False,
+        )
+        await loop.turn(
+            build_audit_user_prompt(crawl_result, business_context, extra_context=extra_context)
         )
 
         await emit({
@@ -253,4 +276,131 @@ class LangChainAuditRunner:
             "label": STEP_LABELS[AuditStep.SYNTHESIZE_AUDIT],
             "status": "success",
         })
+        # Synthesis is over; the session stays open for follow-up questions on
+        # the same thread until the user goes quiet. Without this the audit
+        # answered once and every later message hit a closed session.
+        if report_holder["report"] is not None:
+            await emit({"event": _E.PIPELINE_FINISHED, "status": StepStatus.SUCCESS})
+            await loop.chat_loop(chat_idle_timeout)
         return report_holder["report"]
+
+    def _session_loop(
+        self,
+        agent: Any,
+        llm: Any,
+        session: Any,
+        emit: Callable,
+        session_id: str,
+        *,
+        on_artifact_close: Callable,
+        announce_finish: bool,
+    ) -> DeepSession:
+        """The audit's window onto its durable thread.
+
+        Everything multi-turn — the chat loop, a resumed thread's parked
+        question, one emergency compaction when the request outgrows the
+        window — is DeepSession's, shared with content and insights. The audit
+        used to have none of it: its runner streamed one turn and returned.
+        """
+        loop = DeepSession(
+            agent,
+            session=session,
+            emit=emit,
+            thread_id=session_id,
+            limits=LIMITS,
+            provider=self.provider,
+            model=self.model,
+            log_prefix="audit-v1",
+            summariser=llm,
+            on_artifact_close=on_artifact_close,
+        )
+        loop.opened = not announce_finish
+        return loop
+
+    async def run_resume(
+        self,
+        session_id: str,
+        url: str,
+        emit: Callable,
+        chat_idle_timeout: float = 1800.0,
+        user_preferences: Any = None,
+        report_mode: str = "freehand",
+        template_id: str = "seo_v1",
+    ) -> None:
+        """Continue a persisted audit conversation — chat only, no re-crawl.
+
+        The caller (routes/agents.py) rehydrates the report versions from the
+        artifact store and sets the resume primer before calling. The crawl
+        stub carries only root_url, which is all FetchPages' same-origin check
+        and the working-report context need.
+        """
+        from agents.audit.crawl import run_crawl  # noqa: F401 — kept symmetric with run_pipeline
+        from agents.audit.events import AuditEvent as _E, StepStatus
+        from agents.audit.prompts import build_unified_system_prompt
+        from agents.audit.schema import AuditReport, CrawlPlan, StructuredAuditData
+        from agents.core.session import get_session
+
+        session = get_session(session_id)
+        if session:
+            session.report_mode = report_mode
+            session.template_id = template_id
+        crawl_result = CrawlResult(plan=CrawlPlan(root_url=url))
+
+        async def _on_submit(args: dict) -> dict:
+            """A revision published during chat — a new numbered version."""
+            from datetime import datetime, timezone
+            try:
+                structured = StructuredAuditData.model_validate(args)
+            except Exception as exc:  # noqa: BLE001 — reported back to the model
+                return {
+                    "status": "validation_error",
+                    "message": f"Report validation failed — fix these issues and resubmit: {exc}",
+                }
+            calibrate(structured, crawl_result)
+            version_id = len(getattr(session, "report_versions", []) or []) + 1
+            report = AuditReport(
+                url=url,
+                generated_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                update_label=f"Update {version_id}",
+                executive_summary=" · ".join(structured.key_signals) if structured.key_signals else "",
+                report_mode=report_mode,
+                template_id=template_id,
+                structured_data=structured,
+            )
+            await emit({
+                "event": _E.ARTIFACT_VERSION,
+                "version_id": version_id,
+                "payload": report.model_dump(),
+            })
+            return {"status": "received", "version_id": version_id}
+
+        async def _on_artifact_close(raw: str, turn_text: str) -> None:
+            import json as _json
+            try:
+                await _on_submit(_json.loads(raw))
+            except Exception:  # noqa: BLE001 — a malformed inline payload is not fatal
+                logger.warning("audit-v1: could not parse inline <duct_artifact> payload", exc_info=True)
+
+        llm = resolve_chat_model(self.provider, self.model, self._api_key, self._temperature)
+        agent = build_audit_agent(
+            crawl_result=crawl_result,
+            llm=llm,
+            system_prompt=build_unified_system_prompt(
+                report_mode=report_mode, template_id=template_id
+            ),
+            session=session,
+            session_id=session_id,
+            emit=emit,
+            report_mode=report_mode,
+            on_submit_report=_on_submit,
+        )
+        loop = self._session_loop(
+            agent, llm, session, emit, session_id,
+            on_artifact_close=_on_artifact_close,
+            announce_finish=True,
+        )
+        # resume=True: a thread parked on a question re-raises it, one cut
+        # mid-run continues from its checkpoint, an idle one just waits.
+        await loop.open("", resume=True)
+        await emit({"event": _E.PIPELINE_FINISHED, "status": StepStatus.SUCCESS})
+        await loop.chat_loop(chat_idle_timeout)
