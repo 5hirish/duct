@@ -1,7 +1,7 @@
 ---
 title: "Why Your SEO Metrics Aren't Telling You the Full Story"
 date: Mar 15 2026
-author: Shirish Kadam
+author: Duct Team
 category: SEO
 excerpt: "Search Console shows impressions up. Ahrefs shows rankings rising. GA4 says signups are flat. Here's how to read all three together — and what the gap usually means."
 readTime: 6

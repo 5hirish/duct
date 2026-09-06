@@ -176,3 +176,68 @@ def test_build_content_post_artifact_renders_copy_and_flags_missing_images():
     assert "Still no jawline?" in artifact.body
     assert "image=yes" in artifact.body and "image=MISSING" in artifact.body
     assert artifact.title.startswith("jawline mistakes")
+
+
+def test_the_audit_judge_sees_roadmap_tasks_and_why_a_priority_matters():
+    """The judge failed two reports for an "empty" roadmap that had three full
+    phases: the renderer printed only the phase labels. It also read a field no
+    priority has, so the business rationale never reached the judge either."""
+    from agents.audit.schema import (
+        AffectedUrl, AuditCategory, AuditFinding, AuditPriority, AuditReport,
+        RoadmapPhase, RoadmapTask, StructuredAuditData,
+    )
+    from tests.eval.rubrics.audit_report import render_audit_artifact
+
+    data = StructuredAuditData(
+        url="https://getduct.ai", generated_at="now", overall_score=61, score_band="needs_work",
+        pages_crawled=24, total_sitemap_urls=24,
+        categories=[AuditCategory(
+            id="on_page_seo", label="On-page SEO", score=80, tooltip="", fail_count=1,
+            findings=[AuditFinding(
+                id="h1", severity="fail", title="No H1 on /pricing", description="d", tooltip="t",
+                affected_urls=[AffectedUrl(url="https://getduct.ai/pricing", issue_value="0 H1s")],
+            )],
+        )],
+        top_priorities=[AuditPriority(
+            rank=1, title="Add the H1", why_it_matters="Pricing is the money page.",
+            severity="fail", category_id="on_page_seo", finding_id="h1",
+        )],
+        roadmap=[RoadmapPhase(label="0–30 days", theme="Unblock", tasks=[
+            RoadmapTask(task="Add an H1 to /pricing", effort_estimate="under_1hr"),
+        ])],
+    )
+    body = render_audit_artifact(AuditReport(url=data.url, generated_at="now", structured_data=data)).body
+
+    assert "0–30 days — Unblock" in body
+    assert "· Add an H1 to /pricing [under_1hr]" in body
+    assert "why: Pricing is the money page." in body
+    assert "affected: https://getduct.ai/pricing (0 H1s)" in body
+    assert "1 fail · 0 warn" in body
+
+
+def test_a_verdict_cut_off_mid_string_is_retried_once_with_a_doubled_budget():
+    """Two live audit runs lost their scorecard to a verdict truncated at the
+    output cap: the report was fine, the judge's JSON ended mid-rationale."""
+    from tests.eval.judge import JudgeArtifact, evaluate
+    from tests.eval.rubrics.audit_report import audit_report_rubric
+
+    good = (
+        '{"dimensions":[{"key":"evidence_grounding","score":4,"rationale":"r"}],'
+        '"markers":[],"summary":"ok"}'
+    )
+    calls: list[int] = []
+
+    class _Models:
+        def generate_content(self, *, model, contents, config):
+            calls.append(config.max_output_tokens)
+            text = '{"dimensions":[{"key":"evidence_grounding","score":4,"rationale":"cut off he' \
+                if len(calls) == 1 else good
+            return SimpleNamespace(text=text, parsed=None)
+
+    scorecard = evaluate(
+        audit_report_rubric(), JudgeArtifact(title="t", body="b"),
+        client=SimpleNamespace(models=_Models()), model="fake", max_output_tokens=1000,
+    )
+
+    assert calls == [1000, 2000]
+    assert scorecard.dimension_scores["evidence_grounding"] == 4

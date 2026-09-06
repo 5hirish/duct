@@ -68,12 +68,14 @@ _PROVIDER_LABELS: dict[Provider, tuple[str, str]] = {
         "OpenRouter",
         "One key, 500+ models — and any OpenAI-compatible gateway you point it at.",
     ),
+    Provider.XAI: ("xAI", "Grok models on the LangChain (v1) engine."),
 }
 
 # Human-facing tier hint per model, so the picker can group options the way the
 # page is organised. Derived from the catalogue's own comments (`gpt-5.6-sol`
 # is annotated "flagship", `luna` "cost-sensitive") rather than invented here.
 _MODEL_TIER_HINT: dict[str, Tier] = {
+    ModelName.CLAUDE_FABLE.value: Tier.HEAVY,
     ModelName.CLAUDE_OPUS.value: Tier.HEAVY,
     ModelName.CLAUDE_OPUS_1M.value: Tier.HEAVY,
     ModelName.CLAUDE_SONNET.value: Tier.STANDARD,
@@ -85,10 +87,10 @@ _MODEL_TIER_HINT: dict[str, Tier] = {
     ModelName.GPT_4O.value: Tier.STANDARD,
     ModelName.GPT_4O_MINI.value: Tier.LIGHT,
     ModelName.GEMINI_3_1_PRO_PREVIEW.value: Tier.HEAVY,
-    ModelName.GEMINI_3_7_FLASH.value: Tier.STANDARD,
+    ModelName.GEMINI_3_8_FLASH.value: Tier.STANDARD,
     ModelName.GEMINI_3_5_FLASH_LITE.value: Tier.LIGHT,
     ModelName.GEMINI_2_5_FLASH.value: Tier.LIGHT,
-    ModelName.GEMINI_2_5_FLASH_LITE.value: Tier.LIGHT,
+    ModelName.GROK_4_6.value: Tier.HEAVY,
 }
 
 

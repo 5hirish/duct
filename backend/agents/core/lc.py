@@ -560,6 +560,28 @@ def emit_custom(payload: dict) -> None:
         writer(payload)
 
 
+def chat_message_text(chat_msg: Any) -> str:
+    """A queued chat message as plain text.
+
+    ``routes/agents.py`` queues ``{"role": "user", "content": ...}`` where the
+    content is a string or a content-block list (image uploads), so unwrap the
+    envelope and flatten the list form rather than handing either to a prompt
+    slot. Plain strings are accepted too — that is what a runner's internal
+    nudges put on the same queue.
+    """
+    if isinstance(chat_msg, dict):
+        chat_msg = chat_msg.get("content", "")
+    if isinstance(chat_msg, str):
+        return chat_msg
+    if isinstance(chat_msg, list):
+        return "\n".join(
+            block.get("text", "")
+            for block in chat_msg
+            if isinstance(block, dict) and block.get("type") == "text"
+        )
+    return str(chat_msg or "")
+
+
 def drain_steers(queue: Any) -> list[tuple[Any, str]]:
     """Everything waiting on a steer queue, as (message, client id), without
     blocking. Empty when there is no queue."""
@@ -639,6 +661,52 @@ async def compact_thread(agent: Any, config: dict, model: Any, *, keep_tokens: i
         config, {**update, "_summarization_event": None}, as_node=_RESUME_AS_NODE
     )
     return True
+
+
+class SeenImagePruneMiddleware(AgentMiddleware):
+    """Drop image bytes from a tool result once the model has looked at it.
+
+    A content run on Anthropic gets every generated or rendered image back
+    as a base64 block so the model can critique what it made — 50–400 KB a
+    time. The thread is durable: the Postgres saver writes the whole
+    ``messages`` channel on every superstep, so each image would be copied
+    into every later checkpoint of the conversation, and the context pruner
+    (ContextEditingMiddleware) trims only the model *request*, never state.
+
+    ``after_model`` runs after a model call, and a tool result always
+    precedes the call that reads it, so any image block present here has
+    been seen exactly once. The replacement keeps the message id (the
+    reducer swaps in place), the text block with the asset URL, and a note
+    saying where the picture went.
+    """
+
+    PLACEHOLDER = "[image shown once; the file is at the asset_url in this result]"
+
+    def _prune(self, state) -> dict | None:
+        replacements = []
+        for message in state.get("messages") or []:
+            if getattr(message, "type", "") != "tool" or not isinstance(message.content, list):
+                continue
+            if not any(_is_image_block(block) for block in message.content):
+                continue
+            content = [
+                {"type": "text", "text": self.PLACEHOLDER} if _is_image_block(block) else block
+                for block in message.content
+            ]
+            replacements.append(message.model_copy(update={"content": content}))
+        return {"messages": replacements} if replacements else None
+
+    def after_model(self, state, runtime):  # type: ignore[override]
+        del runtime
+        return self._prune(state)
+
+    async def aafter_model(self, state, runtime):  # type: ignore[override]
+        del runtime
+        return self._prune(state)
+
+
+def _is_image_block(block: Any) -> bool:
+    return isinstance(block, dict) and block.get("type") == "image" and bool(block.get("base64"))
 
 
 class SteerMiddleware(AgentMiddleware):
@@ -845,6 +913,13 @@ async def stream_agent(
                 if not compacting:
                     compacting = True
                     await emit({"event": AgentEvent.CONTEXT_COMPACTING})
+                continue
+            if _usage_scope(meta) == "subagent":
+                # A subagent's tokens are its report to the *agent*, which
+                # relays what matters; they are billed above and nothing
+                # else. Streamed as prose they read as the agent talking —
+                # and a draft_post subagent's report is a whole PostDraft
+                # in JSON, which is how a raw payload landed in the chat.
                 continue
             text, thinking = split_chunk(message)
             if thinking:

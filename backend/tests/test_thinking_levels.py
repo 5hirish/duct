@@ -39,9 +39,12 @@ from agents.thinking import (
         # OpenAI names the dial differently and defaults lower.
         ("gpt-5.6-sol", ["low", "medium", "high", "xhigh"]),
         # Gemini stops at high, so the top two rungs collapse.
-        ("gemini-3.7-flash", ["low", "medium", "high", "high"]),
+        ("gemini-3.8-flash", ["low", "medium", "high", "high"]),
         # …and the lite model has a rung below low.
         ("gemini-3.5-flash-lite", ["minimal", "medium", "high", "high"]),
+        # xAI publishes the full ladder and cannot turn reasoning off, so all
+        # four rungs are distinct and none of them is an "off".
+        ("grok-4.6", ["low", "medium", "high", "xhigh"]),
     ],
 )
 def test_each_rung_lands_on_a_value_that_model_accepts(model, expected):
@@ -59,11 +62,11 @@ def test_high_means_different_things_to_different_providers():
     """
     assert describe_model("claude-opus-5")["default_native"] == "high"
     assert describe_model("gpt-5.6-sol")["default_native"] == "medium"
-    assert resolve_native("gemini-3.7-flash", ThinkingLevel.EXHAUSTIVE) == "high"
+    assert resolve_native("gemini-3.8-flash", ThinkingLevel.EXHAUSTIVE) == "high"
 
 
 def test_a_collapsed_rung_says_so_rather_than_offering_a_dead_choice():
-    levels = {row["level"]: row for row in describe_model("gemini-3.7-flash")["levels"]}
+    levels = {row["level"]: row for row in describe_model("gemini-3.8-flash")["levels"]}
     assert levels["exhaustive"]["same_as"] == "deep"
     assert levels["deep"]["same_as"] == "", "the first rung to claim a value owns it"
     # Anthropic has room for all four, so nothing collapses.
@@ -100,7 +103,7 @@ def test_a_modelname_enum_resolves_like_its_string():
 # ---------------------------------------------------------------------------
 
 @pytest.mark.parametrize(
-    "model", ["claude-haiku-4-5", "gpt-4o", "gpt-4o-mini", "gemini-2.5-flash", "gemini-2.5-flash-lite"]
+    "model", ["claude-haiku-4-5", "gpt-4o", "gpt-4o-mini", "gemini-2.5-flash"]
 )
 def test_a_model_with_no_dial_contributes_nothing(model):
     """Gemini 2.5 *rejects* thinking_level outright; 4o has no such parameter.
@@ -185,7 +188,7 @@ def test_the_model_factory_stays_silent_when_the_model_has_no_dial(monkeypatch):
 
 def test_the_model_factory_stays_silent_when_nothing_was_chosen(monkeypatch):
     seen = _captured(monkeypatch)
-    resolve_chat_model(Provider.GOOGLE_GENAI, "gemini-3.7-flash", "k")
+    resolve_chat_model(Provider.GOOGLE_GENAI, "gemini-3.8-flash", "k")
     assert "reasoning_effort" not in seen
 
 

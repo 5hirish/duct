@@ -46,43 +46,31 @@ redeploy. See ``agents/core/session.py`` for the port this implements.
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any, Callable
 from uuid import UUID, uuid4
 
-from deepagents import FilesystemMiddleware, create_deep_agent
-from deepagents.backends import StateBackend
-from langchain.agents.middleware import (
-    ClearToolUsesEdit,
-    ContextEditingMiddleware,
-    ModelCallLimitMiddleware,
-    ModelFallbackMiddleware,
-    TodoListMiddleware,
-    ToolCallLimitMiddleware,
-)
-
-from langgraph.types import Command
-
-from agents.core.checkpoint import get_checkpointer
-from agents.core.events import AgentEvent, AgentStep, StepStatus
-from agents.core.errors import ErrorCode, classify_error, error_payload
 from agents.core.connector_tools import build_connector_tools_lc
+from agents.core.deep_session import (
+    FILESYSTEM_TOOLS,
+    SUMMARIZATION_FLOOR_TOKENS,
+    DeepSession,
+    RunLimits,
+    build_deep_session_agent,
+    fallback_chain,
+    inspect_thread,
+    recorder_tool_hooks,
+)
+from agents.core.events import AgentEvent, AgentStep, StepStatus
 from agents.core.lc import (
-    ReportedRetryMiddleware,
-    SteerMiddleware,
-    compact_thread,
-    drain_steers,
     build_ask_user_tool,
     inspection_chat_model,
     interrupt_pause,
-    live_pauses,
     resolve_chat_model,
     stream_agent,
-    usage_from_messages,
 )
 from agents.core.memory_tools import build_memory_tools_lc
-from agents.core.session import BaseAgentSession, take_client_id
+from agents.core.session import BaseAgentSession
 from agents.insights.brief import DEFAULT_FORMAT, parse_brief
 from agents.insights.data_tools import build_data_tools_lc
 from agents.insights.subagents import build_verify_subagent
@@ -93,22 +81,16 @@ from agents.insights.prompts.autonomous import (
     build_insights_user_prompt,
 )
 from agents.tools.execution_tools import build_execution_tools_lc
-from agents.engines import Engine, resolve_fallback_models
 from agents.models import ModelName, Provider
 from agents.registry import AgentType
 from models.execution import AUTONOMY_ASK
 
 logger = logging.getLogger(__name__)
 
-# Ceiling on one turn's tool-calling loop. Generous — an autonomous run legitimately
-# plans, recalls, asks and re-plans — but finite, so a pathological loop ends as a
-# failed turn the user can see rather than an unbounded spend.
-RECURSION_LIMIT = 60
-
-# Runaway guards, not budgets. `RECURSION_LIMIT` caps LangGraph *supersteps*,
-# which is a graph-shape ceiling, not a spend one: a turn can stay well inside
-# it and still make far more model calls than any real analysis needs. These
-# two count the things that actually cost money.
+# Runaway guards, not budgets. LangGraph's superstep ceiling is a graph-shape
+# limit, not a spend one, and RunLimits derives it from the model-call guard
+# (a hand-picked 60 admitted 8 calls, ending real runs before any guard
+# below could). These count the things that actually cost money.
 #
 # `exit_behavior="end"` on the model limit ends the turn with an AI message
 # saying so, which the existing stream renders like any other reply — a
@@ -125,30 +107,27 @@ TOOL_CALLS_PER_THREAD = 600
 
 # Prune old tool results at this many tokens, keeping the most recent few.
 #
-# Must stay strictly below deepagents' summarization trigger or the cheap pass
-# stops running — see the ContextEditingMiddleware comment in build_agent for
-# why that is a threshold relationship and not an ordering one. Summarization
-# fires at 0.85 of the model's window, or a flat 170k for a model with no
-# profile, so 170k is the ceiling this has to clear on the smallest window Duct
-# supports. `tests/test_insights_middleware.py` asserts it.
+# This agent's tools return whole GA4/Ads/Mixpanel payloads, so a long run's
+# context is mostly *old tool output* — the cheapest thing in it to drop, and
+# the least missed once a finding has been written down. Must stay below
+# deepagents' summarization floor or the cheap pass silently never runs;
+# `RunLimits` refuses to build otherwise, and `tests/test_insights_middleware.py`
+# pins the floor to deepagents' own value.
 TOOL_RESULT_PRUNE_TRIGGER = 120_000
 TOOL_RESULTS_KEPT = 5
 
-# The lowest summarization trigger deepagents will pick: its no-profile default,
-# which is also 0.85 × a 200k window. The prune trigger must stay under it.
-SUMMARIZATION_FLOOR_TOKENS = 170_000
+LIMITS = RunLimits(
+    model_calls_per_run=MODEL_CALLS_PER_RUN,
+    model_calls_per_thread=MODEL_CALLS_PER_THREAD,
+    tool_calls_per_run=TOOL_CALLS_PER_RUN,
+    tool_calls_per_thread=TOOL_CALLS_PER_THREAD,
+    tool_result_prune_trigger=TOOL_RESULT_PRUNE_TRIGGER,
+    tool_results_kept=TOOL_RESULTS_KEPT,
+)
 
-# The scratch-space verbs the agent gets, and the one it does not.
-#
-# `deepagents` mounts an `execute` tool alongside these — a shell. It is inert
-# under the default StateBackend (which does not implement
-# SandboxBackendProtocol, so the tool returns "Execution not available"), but
-# "inert because of which backend happens to be configured" is not a guarantee:
-# swapping in a sandbox backend later would silently hand this agent a shell.
-# Naming the tools explicitly omits it from the dispatchable tool node entirely,
-# which makes the isolation structural. `delete` is left out for the same
-# reason of minimal surface — nothing needs it.
-FILESYSTEM_TOOLS = ("ls", "read_file", "write_file", "edit_file", "glob", "grep")
+# Re-exported: the scratch-space verbs and the summarization floor are the
+# shared session's (agents/core/deep_session.py); tests read them from here.
+__all__ = ["AutonomousInsightsRunner", "FILESYSTEM_TOOLS", "LIMITS", "SUMMARIZATION_FLOOR_TOKENS"]
 
 # How long a session waits for a follow-up before closing itself. Matches audit
 # and content; the route's own inactivity pruner is the longer backstop.
@@ -349,42 +328,20 @@ class AutonomousInsightsRunner:
                 )
             )
 
-        # One backend for the whole agent. `create_deep_agent` defaults to its
-        # own `StateBackend()` when none is passed, which left this runner with
-        # two instances — the one below for `FilesystemMiddleware` and an
-        # internal one the summarization middleware offloads evicted history to.
-        # They read the same graph-state key so nothing was broken, but passing
-        # one instance makes it explicit that the offloaded transcript
-        # (`/conversation_history/*.md`) is reachable by the `read_file` tool
-        # this agent actually mounts. Still virtual: state, not disk.
-        backend = StateBackend()
-
         # Provider outages and 429/529s end an autonomous run that may already
-        # have spent several minutes fetching. One same-provider step down keeps
-        # it alive on the key the caller supplied — see MODEL_FALLBACK in
-        # agents/engines.py for why the chain is one step and never crosses a
-        # provider.
-        #
-        # Only mounted when a chain exists, so a model at the bottom of its
-        # family (or a raw OpenRouter slug) carries no middleware at all rather
-        # than an empty one. Skipped entirely when the caller injected its own
-        # `llm` — that seam is for tests and for callers that have already
-        # decided which model to use; second-guessing it here would fire real
-        # provider calls out of a fake-model test.
+        # have spent several minutes fetching; one same-provider step down
+        # keeps it alive (agents/core/deep_session.fallback_chain). Skipped
+        # entirely when the caller injected its own `llm` — that seam is for
+        # tests and for callers that have already decided which model to use.
         fallbacks: list[Any] = []
         if not injected_llm:
-            fallbacks = [
-                resolve_chat_model(
-                    self.provider, name, self._api_key, self._temperature,
-                    thinking=self._thinking,
-                )
-                for name in resolve_fallback_models(Engine.V1, self.provider, self.model)
-            ]
+            fallbacks = fallback_chain(
+                self.provider, self.model, self._api_key, self._temperature, thinking=self._thinking
+            )
 
-        return create_deep_agent(
-            model=llm,
+        return build_deep_session_agent(
+            llm=llm,
             tools=tools,
-            backend=backend,
             # Integrity checking runs in its own context: the analyst is looking
             # for what matters, the verifier for what is wrong with the data, and
             # mixing the two costs the analyst its whole window before it writes
@@ -396,77 +353,9 @@ class AutonomousInsightsRunner:
                 ),
                 can_execute=bool(execution_tools),
             ),
-            # Planning is opt-in since deepagents 0.7. Mounted here because the
-            # todo stream is what makes a long autonomous run legible — the
-            # frontend already renders it (AuditTodos.jsx).
-            middleware=[
-                TodoListMiddleware(),
-                # Explicit rather than default, to drop the shell tool — see
-                # FILESYSTEM_TOOLS. StateBackend keeps the filesystem virtual:
-                # it lives in graph state, so `read_file` cannot reach Duct's
-                # source, the host, or anything outside this run's scratch space.
-                FilesystemMiddleware(backend=backend, tools=list(FILESYSTEM_TOOLS)),
-                # Prune stale tool results so an LLM compaction is the second
-                # response to a filling window, not the first. This agent's
-                # tools return whole GA4/Ads/Mixpanel payloads, so a long run's
-                # context is mostly *old tool output* — the cheapest thing in it
-                # to drop, and the least missed once a finding has been written
-                # down.
-                #
-                # Ordering here is by threshold, not by position. deepagents
-                # mounts SummarizationMiddleware in its base stack and user
-                # middleware always lands after it, so summarization is the
-                # *outer* wrapper and gets the request first. What keeps it from
-                # pre-empting this is its trigger: 0.85 of the model's context
-                # window (or 170k with no profile). Below that it delegates
-                # straight through, and this sees the untouched request — so a
-                # trigger under 120k means pruning gets first crack on every turn
-                # summarization decides not to touch. Raising it above ~145k
-                # would silently invert that on a 200k model.
-                #
-                # `keep` holds the most recent results intact — the ones the
-                # model is still reasoning over. AskUserQuestion is excluded
-                # because a cleared answer reads as the user never having
-                # replied, and the agent asks again.
-                ContextEditingMiddleware(
-                    edits=[
-                        ClearToolUsesEdit(
-                            trigger=TOOL_RESULT_PRUNE_TRIGGER,
-                            keep=TOOL_RESULTS_KEPT,
-                            clear_tool_inputs=False,
-                            exclude_tools=("AskUserQuestion",),
-                        )
-                    ],
-                ),
-                ModelCallLimitMiddleware(
-                    thread_limit=MODEL_CALLS_PER_THREAD,
-                    run_limit=MODEL_CALLS_PER_RUN,
-                    exit_behavior="end",
-                ),
-                ToolCallLimitMiddleware(
-                    thread_limit=TOOL_CALLS_PER_THREAD,
-                    run_limit=TOOL_CALLS_PER_RUN,
-                    exit_behavior="continue",
-                ),
-                # Last of ours, so it sits closest to the model call and the
-                # limit guards above still count a fallback attempt as the call
-                # it is. `*fallbacks` splats to nothing when there is no chain,
-                # which is how a bottom-tier model ends up with no middleware
-                # rather than an empty one.
-                *([ModelFallbackMiddleware(*fallbacks)] if fallbacks else []),
-                # Innermost, so each model in the chain gets its retries before
-                # the fallback moves on, and a transient 429 on the primary
-                # never costs a downgrade. Reports every attempt to the UI.
-                ReportedRetryMiddleware(),
-                # A message typed mid-turn reaches the model at its next call.
-                *([SteerMiddleware(session)] if session is not None else []),
-            ],
-            # Continuity across turns, now durable: the saver is opened once by
-            # the app lifespan and follows DATABASE_URL (Postgres on Railway,
-            # SQLite in the sidecar), so a follow-up turn survives the redeploy
-            # or restart that used to reset the thread. Falls back to in-memory
-            # when there is no database — see agents/core/checkpoint.py.
-            checkpointer=get_checkpointer(),
+            limits=LIMITS,
+            session=session,
+            fallbacks=fallbacks,
         )
 
     # -----------------------------------------------------------------------
@@ -531,25 +420,11 @@ class AutonomousInsightsRunner:
             conversation_id=conversation_id,
             remember=remember,
         )
-        config = {
-            # The conversation is the thread. A session is one process's
-            # window onto it; keying on the session would give every resume
-            # an agent with no memory of the transcript it is shown beside.
-            "configurable": {"thread_id": str(conversation_id or session_id)},
-            "recursion_limit": RECURSION_LIMIT,
-        }
-        recorder = getattr(session, "recorder", None)
 
         async def _on_todo(todos: list) -> None:
             await emit({"event": AgentEvent.TODO_UPDATE, "todos": todos})
 
-        async def _on_tool_use(name: str, tool_input: Any, tool_use_id: str) -> None:
-            if recorder is not None:
-                await recorder.record_tool_use(name, tool_input, tool_use_id)
-
-        async def _on_tool_result(name: str, result: Any, tool_use_id: str, is_error: bool) -> None:
-            if recorder is not None:
-                await recorder.record_tool_result(name, result, tool_use_id, is_error=is_error)
+        on_tool_use, on_tool_result = recorder_tool_hooks(getattr(session, "recorder", None))
 
         # Version counter for this session's brief. One artifact group per
         # session (the route mints or resumes the group id); each closing tag
@@ -559,153 +434,34 @@ class AutonomousInsightsRunner:
         async def _on_artifact(raw: str, turn_text: str) -> None:
             await _publish_brief(raw, emit, version)
 
-        async def _on_pause(pauses: list[dict]) -> None:
-            # The route resolves an answer against this: it is how a POST with
-            # an interrupt id turns into the Command the next loop iteration
-            # streams. Written before the events go out, so the answer to a
-            # card can never arrive at a route that has not heard of it.
-            # Replaced whole each turn — a pause that was answered is gone,
-            # one that re-raised is back.
-            if session is not None:
-                session.pending_pauses = {p["interrupt_id"]: p for p in pauses}
-
-        async def _stream(text: str | Command | None) -> list[dict]:
-            return await stream_agent(
-                agent,
-                text,
-                emit,
-                on_artifact_close=_on_artifact,
-                log_prefix="insights-v1",
-                config=config,
-                provider=self.provider,
-                model=self.model,
-                conversation_id=str(conversation_id or session_id),
-                on_todo=_on_todo,
-                on_tool_use=_on_tool_use,
-                on_tool_result=_on_tool_result,
-                on_pause=_on_pause,
-            )
-
-        async def _stream_with_room(text: str | Command | None) -> list[dict]:
-            """One turn, with one emergency compaction if the provider says the
-            request is too long. The failed request is checkpointed with its
-            input, so the retry continues from the checkpoint rather than
-            re-sending the text; a second overflow is the ordinary failure."""
-            try:
-                return await _stream(text)
-            except Exception as exc:
-                if classify_error(exc) is not ErrorCode.CONTEXT_WINDOW:
-                    raise
-                logger.info("insights: request too long for %s; compacting once and retrying", session_id)
-                await emit({"event": AgentEvent.CONTEXT_COMPACTING})
-                if not await compact_thread(agent, config, self._summariser_model(llm)):
-                    raise
-                await emit({"event": AgentEvent.CONTEXT_COMPACTED})
-                return await _stream(None)
-
-        async def _turn(text: str | Command | None) -> list[dict]:
-            if session is not None:
-                session.turn_active = True
-            try:
-                pauses = await _stream_with_room(text)
-            finally:
-                if session is not None:
-                    session.turn_active = False
-            if not pauses:
-                await _on_pause([])  # a turn that ran to completion clears the table
-            return await _leftover_steers(pauses)
-
-        async def _leftover_steers(pauses: list[dict]) -> list[dict]:
-            """A message that arrived after the turn's last model call never
-            met the steer middleware. It becomes the next turn now, not a
-            surprise at the top of whatever the user asks next."""
-            while not pauses and session is not None:
-                items = drain_steers(session.steer_queue)
-                if not items:
-                    return pauses
-                for _, client_id in items:
-                    if client_id:
-                        await emit({"event": AgentEvent.USER_INPUT_CONSUMED, "client_message_id": client_id})
-                text = "\n\n".join(_as_text(item) for item, _ in items if _as_text(item))
-                if not text:
-                    return pauses
-                pauses = await _turn(text)
-            return pauses
-
-        # The opening turn is what moves the UI out of "working" — PIPELINE_FINISHED
-        # is held back until a turn ends with nothing parked, however many
-        # answers that takes.
-        opened = False
-
-        async def _finish_opening(pauses: list[dict]) -> None:
-            nonlocal opened
-            if opened or pauses:
-                return
-            opened = True
-            await emit({"event": AgentEvent.PIPELINE_FINISHED, "status": StepStatus.SUCCESS})
-
-        if resume and conversation_id is not None:
-            snapshot = await agent.aget_state(config)
-            parked = live_pauses(snapshot)
-            if parked:
-                # Show the pause again without re-running anything. `replay`
-                # keeps the recorder from writing the question a second time.
-                for pause in parked:
-                    await emit({**pause, "replay": True})
-                if session is not None:
-                    session.pending_pauses = {p["interrupt_id"]: p for p in parked}
-                pauses = parked
-            elif snapshot.next:
-                pauses = await _turn(None)  # cut mid-run: continue from the checkpoint
-            elif prompt:
-                pauses = await _turn(prompt)  # a follow-up on an idle thread
-            else:
-                pauses = []
-        else:
-            pauses = await _turn(
-                build_insights_user_prompt(
-                    prompt=prompt,
-                    business_context=business_context,
-                    user_context=user_context,
-                    memory=memory,
-                    artifact_format=artifact_format,
-                    autonomy=autonomy,
-                )
-            )
-        await _finish_opening(pauses)
-
-        if session is None:
-            return
-
-        while True:
-            try:
-                chat_msg = await asyncio.wait_for(
-                    session.chat_queue.get(), timeout=chat_idle_timeout
-                )
-            except asyncio.TimeoutError:
-                logger.info("insights: session %s chat idle timeout", session_id)
-                break
-            if chat_msg is None:  # sentinel from close_session
-                break
-            chat_msg, client_id = take_client_id(chat_msg)
-            if client_id:
-                await emit({"event": AgentEvent.USER_INPUT_CONSUMED, "client_message_id": client_id})
-            try:
-                if isinstance(chat_msg, dict) and "resume" in chat_msg:
-                    pauses = await _turn(Command(resume=chat_msg["resume"]))
-                else:
-                    pauses = await _turn(_as_text(chat_msg))
-                await _finish_opening(pauses)
-            except Exception as exc:
-                # One bad turn must not end the session — the user can rephrase.
-                # The code says what kind of failure it was; the client picks
-                # the copy and whether a retry button makes sense.
-                logger.exception("insights: chat turn failed for session %s", session_id)
-                await emit({
-                    "event": AgentEvent.STEP_FAILED,
-                    "status": StepStatus.ERROR,
-                    **error_payload(exc),
-                })
+        loop = DeepSession(
+            agent,
+            session=session,
+            emit=emit,
+            thread_id=str(conversation_id or session_id),
+            limits=LIMITS,
+            provider=self.provider,
+            model=self.model,
+            log_prefix="insights-v1",
+            summariser=self._summariser_model(llm),
+            on_artifact_close=_on_artifact,
+            on_todo=_on_todo,
+            on_tool_use=on_tool_use,
+            on_tool_result=on_tool_result,
+        )
+        # A resumed thread takes the raw prompt as a follow-up (or nothing, which
+        # is what opening a thread from the desk asks for); a fresh one takes the
+        # assembled opening turn with the per-project blocks.
+        is_resume = resume and conversation_id is not None
+        opening = prompt if is_resume else build_insights_user_prompt(
+            prompt=prompt,
+            business_context=business_context,
+            user_context=user_context,
+            memory=memory,
+            artifact_format=artifact_format,
+            autonomy=autonomy,
+        )
+        await loop.run(opening, resume=is_resume, chat_idle_timeout=chat_idle_timeout)
 
     def _summariser_model(self, llm: Any) -> Any:
         """The model an emergency compaction summarises with: the injected one
@@ -738,20 +494,7 @@ class AutonomousInsightsRunner:
         agent = self.build_agent(
             llm=inspection_chat_model(), remember=False, execute=False, interactive=False
         )
-        snapshot = await agent.aget_state(
-            {"configurable": {"thread_id": str(conversation_id)}}
-        )
-        pauses = live_pauses(snapshot)
-        values = getattr(snapshot, "values", None) or {}
-        return {
-            "status": "paused" if pauses else "unfinished" if snapshot.next else "idle",
-            "pauses": pauses,
-            "todos": list(values.get("todos") or []),
-            "message_count": len(values.get("messages") or []),
-            # What the context gauge shows before any new turn has run.
-            "usage": usage_from_messages(values.get("messages") or [], self.model),
-        }
-
+        return await inspect_thread(agent, str(conversation_id), self.model)
 
     # -----------------------------------------------------------------------
     # Unattended
@@ -820,7 +563,7 @@ class AutonomousInsightsRunner:
             log_prefix="insights-v1",
             config={
                 "configurable": {"thread_id": str(conversation_id or uuid4())},
-                "recursion_limit": RECURSION_LIMIT,
+                "recursion_limit": LIMITS.recursion,
             },
             provider=self.provider,
             model=self.model,
@@ -868,23 +611,3 @@ async def _publish_brief(raw: str, emit: Callable, version: dict) -> dict | None
     return payload
 
 
-def _as_text(chat_msg: Any) -> str:
-    """A queued chat message as plain text.
-
-    ``routes/agents.py`` queues ``{"role": "user", "content": ...}`` where the
-    content is a string or a content-block list (image uploads), so unwrap the
-    envelope and flatten the list form rather than handing either to a prompt
-    slot. Plain strings are accepted too — that is what the content runner's
-    internal nudges put on the same queue.
-    """
-    if isinstance(chat_msg, dict):
-        chat_msg = chat_msg.get("content", "")
-    if isinstance(chat_msg, str):
-        return chat_msg
-    if isinstance(chat_msg, list):
-        return "\n".join(
-            block.get("text", "")
-            for block in chat_msg
-            if isinstance(block, dict) and block.get("type") == "text"
-        )
-    return str(chat_msg or "")

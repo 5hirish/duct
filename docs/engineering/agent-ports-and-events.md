@@ -48,18 +48,21 @@ convenience one:
 
 | Rung | Stability | Duct agent |
 |---|---|---|
-| `init_chat_model` + `.with_structured_output()` | 1.x LTS, semver | insights |
-| `create_agent` | 1.x LTS, semver | audit |
-| `deepagents` | 0.x, no policy, weekly | content (subagents, filesystem, skills) |
+| `init_chat_model` + `.with_structured_output()` | 1.x LTS, semver | conversation compaction, artifact digests |
+| `create_agent` | 1.x LTS, semver | audit v1, content's enrichment pass |
+| `deepagents` | 0.x, no policy, weekly | insights session, content session (planning, sub-agents, scratch space) |
 
-The whole first-party LangChain surface today is five symbols: `create_agent`,
-`init_chat_model`, `StructuredTool`, and the message classes. All are on the
-LTS tier. `deepagents` has **no** first-party import outside its harness
-contract test — it is pinned and proven, not yet load-bearing.
+The first-party LangChain surface is still small — `create_agent`,
+`init_chat_model`, `StructuredTool`, the middleware classes and the message
+classes, all on the LTS tier. `deepagents` is now load-bearing for the two
+session agents, which is why it is pinned exactly and gated by
+`tests/test_deepagents_harness.py`.
 
 The test that matters: *if `deepagents` were abandoned tomorrow, what breaks?*
-Content's runner, eventually. Everything else falls back a rung onto stable
-API. That asymmetry is the case for this design.
+The two session runners' middle — assembly and the stream loop. Their tools,
+prompts, schemas and events are framework-free and the boundary test keeps
+them so, so the fallback is a rung down onto `create_agent`, not a rewrite.
+That asymmetry is the case for this design.
 
 ---
 
@@ -69,9 +72,9 @@ API. That asymmetry is the case for this design.
 |---|---|---|
 | **Tools** | plain domain callable + a description single-sourced beside it | `build_memory_tools_lc` / `build_memory_tools_sdk` |
 | **Events out** | `AgentEvent` / `EventKind` + an `Emitter` | v1 LangChain stream, v3 `pump_stream_event` |
-| **Human-in-the-loop** | `PauseFn` — `await pause(event, payload)` returns the user's answer | `make_future_pause` (in-process Future; SDK runners, audit v1), `interrupt_pause` (LangGraph `interrupt()`; insights v1) |
+| **Human-in-the-loop** | `PauseFn` — `await pause(event, payload)` returns the user's answer | `make_future_pause` (in-process Future; audit v3, audit v1, the slide-render bridge), `interrupt_pause` (LangGraph `interrupt()`; insights v1, content v1) |
 | **Artifacts** | `<duct_artifact>` + `DuctArtifactStreamParser` + `ArtifactPersister` | harness-neutral by construction |
-| **Session / state** | `BaseAgentSession` registry for the live process; the conversation id as the durable thread | in-process registry; LangGraph checkpointer keyed on the conversation (insights v1) |
+| **Session / state** | `BaseAgentSession` registry for the live process; the conversation id as the durable thread | in-process registry; LangGraph checkpointer keyed on the conversation, driven by the shared `DeepSession` loop (`agents/core/deep_session.py`; insights v1, content v1) |
 | **Model transport** | `Provider` / `ModelName` / `Engine` registries | OpenAI-compatible, native Anthropic, native Gemini |
 
 **The rule for adding one: write the adapter on the second implementation, not

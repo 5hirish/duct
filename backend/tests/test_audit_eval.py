@@ -77,6 +77,24 @@ def _resolve_run_config() -> tuple[Engine, object, object, str]:
     return engine, provider, model, api_key
 
 
+def _can_run_without_a_key(engine: Engine, provider) -> bool:
+    """Whether this engine can authenticate with no explicit API key.
+
+    Only v3 on Anthropic can: the Claude Agent SDK reuses the `claude` OAuth
+    login or CLAUDE_CODE_OAUTH_TOKEN, which is the one capability v3 has that
+    v1 does not. Skipping that combination for "no API key" made the engine
+    comparison this file exists to run impossible on the very setup where v3
+    is cheapest to try — the eval was stricter than the runner it drives.
+    """
+    from agents.models import Provider
+
+    if engine != Engine.V3 or provider != Provider.ANTHROPIC:
+        return False
+    from config import claude_oauth_available
+
+    return claude_oauth_available()
+
+
 @pytest.mark.live
 def test_audit_report_passes_rubric():
     """Run one real audit and gate the report on the audit rubric.
@@ -86,7 +104,7 @@ def test_audit_report_passes_rubric():
     scorecards across runs rather than reading any single one in isolation.
     """
     engine, provider, model, api_key = _resolve_run_config()
-    if not api_key:
+    if not api_key and not _can_run_without_a_key(engine, provider):
         pytest.skip(f"no API key configured for provider '{provider.value}'")
 
     url = os.environ.get("DUCT_EVAL_URL", DEFAULT_URL)

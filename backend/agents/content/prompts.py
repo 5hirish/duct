@@ -7,10 +7,10 @@ Three prompts:
                                 is NOT inlined here; it arrives in the
                                 first user message instead so the cached
                                 prefix is stable.
-  - RESEARCH_PILLAR_PROMPT    — for AgentDefinition.prompt on research_pillar.
+  - RESEARCH_PILLAR_PROMPT    — the research_pillar sub-agent's system prompt.
                                 Trimmed sub-agent prompt — pulls common
                                 rules from the brief, not the prompt.
-  - DRAFT_POST_PROMPT         — for AgentDefinition.prompt on draft_post.
+  - DRAFT_POST_PROMPT         — the draft_post sub-agent's system prompt.
                                 Returns the post as STRUCTURED SLIDES (copy +
                                 an image_prompt per slide). HTML is rendered
                                 deterministically by templates.py; images are
@@ -494,7 +494,7 @@ clearly separated phases:
 ## TODOS — make your workflow visible
 
 At the START of any multi-step task (a draft, a batch, an image run), call
-TodoWrite with the concrete steps so the user can watch progress — e.g.
+write_todos with the concrete steps so the user can watch progress — e.g.
 "study references", "research the topic", "write the hook", "lay out the
 mystery arc", "write per-slide copy", "write image prompts". Mark each
 in_progress / completed as you go. Use the real steps you're actually doing.
@@ -508,7 +508,7 @@ in_progress / completed as you go. Use the real steps you're actually doing.
 2. Plan mode (plan_month). Synthesize the plan: balanced pillar mix,
    varied hooks, sensible post-type distribution. If topic bank is stale,
    dispatch one research_pillar sub-agent PER PILLAR IN PARALLEL (single
-   turn, multiple Agent tool calls). Compose the plan yourself and emit
+   turn, multiple task tool calls). Compose the plan yourself and emit
    <duct_artifact>{"type":"plan",...}</duct_artifact>. Call submit_plan with
    the same payload.
 3. Draft mode (draft_post) — WRITE PHASE.
@@ -635,7 +635,7 @@ Treat it as precious and edit SURGICALLY:
 
 ## SUB-AGENT DISPATCH POLICY
 
-You have two sub-agents available via the Agent tool:
+You have two sub-agents available via the task tool (pass subagent_type):
 
 - research_pillar — Topic discovery for ONE pillar. Returns
   {"pillar_id", "items": [{"topic_id","title","angle","sources",
@@ -646,7 +646,7 @@ You have two sub-agents available via the Agent tool:
   shape (layout + slides, NO slides_html, NO images). Dispatch in parallel
   batches of up to 5 for a fresh plan.
 
-Sub-agents return their result as the Agent tool's tool_result text. You
+Sub-agents return their result as the task tool's result text. You
 read the JSON, then call submit_post_draft (or submit_plan) to persist.
 Sub-agents NEVER write to the DB and NEVER generate images.
 
@@ -684,8 +684,8 @@ WHEN NOT to dispatch:
   system renders the HTML from the layout template.
 - NEVER call submit_post_draft / submit_plan without first emitting the
   matching tag.
-- Writer tools re-validate. If is_error=true, read the message, fix, and
-  call again — do NOT retry blindly.
+- Writer tools re-validate. If a result reports {"status": "error"}, read the
+  message, fix, and call again — do NOT retry blindly.
 
 ## TOOLS
 
@@ -716,10 +716,15 @@ Publishing:
   a render).
 
 Built-ins:
-  TodoWrite       (REQUIRED at the start of multi-step work — see TODOS)
+  write_todos     (REQUIRED at the start of multi-step work — see TODOS)
   AskUserQuestion (≤3 questions, only when blocking decisions)
-  WebSearch / WebFetch (light fact-checking + topic research)
-  Agent           (sub-agent dispatch — see policy above)
+  web_search      (when mounted — light fact-checking + topic research; if it
+                   is not in your tool list, read fetch_discovered_references
+                   and WebFetch the URLs you already know instead)
+  WebFetch        (read one public page you have the URL for)
+  task            (sub-agent dispatch — see policy above)
+  ls / read_file / write_file / edit_file — a private scratch space for notes
+                   and drafts; never a way to reach the user's files
 """
 
 
@@ -745,8 +750,8 @@ METHOD — do these in order:
    - Bump `confidence` above 0.8 for topics directly supported by a
      scraped post
 
-2. WEB SEARCH FOR GAPS. WebSearch + WebFetch only for what the
-   discovered references don't cover. Cross-reference at least one
+2. WEB SEARCH FOR GAPS. web_search (when you have it) + WebFetch only for
+   what the discovered references don't cover. Cross-reference at least one
    authoritative source per topic (industry standard, named
    practitioner, accuracy-bound brand). Vague secondary blogs don't
    count.
@@ -1002,13 +1007,43 @@ A multi-image slide looks like (inside `slides`):
 """
 
 
+_PLANDRAFT_SHAPE = """\
+EXACT PlanDraft JSON shape — emit these field names EXACTLY (extra fields are
+rejected). It is also submit_plan's argument schema, so there is nothing to
+look up: never search the scratch filesystem for a schema and never call
+submit_plan to see what it accepts.
+
+{"type": "plan", "project_id": "<uuid>",
+ "name": "October 2026 plan",
+ "character": {"name": "...", "age_range": "22-28", "look": "...",
+               "voice": "...", "notes": "..."},
+ "days": [
+   {"topic": "<topic title>", "pillar": "<pillar id>",
+    "topic_id": "<id from research, optional>",
+    "post_type": "slideshow", "format_slug": "format-d",
+    "platforms": ["tiktok"]},
+   {"topic": "...", "pillar": "...", "post_type": "slideshow",
+    "format_slug": "", "platforms": ["tiktok"]}
+ ]}
+
+FIELD RULES:
+- `days` is ordered — one object per post, no day numbers; the calendar lays
+  them on sequential dates. Every day needs a non-empty `topic` AND `pillar`
+  (a pillar id from the brand context); a plan with an empty day is rejected.
+- `post_type` ∈ {slideshow, video, image}; `platforms` from the brand's
+  channels; `format_slug` from the format library or "".
+- `character` is the persona narrating the month; fill what you know.
+"""
+
+
 def _mode_tail(mode: RunMode) -> str:
     return {
         "plan_month": (
             "MODE: plan_month — your deliverable this turn is a full monthly "
             "content plan (an ordered list of posts for the current month, no "
             "day numbers) as a PlanDraft wrapped in <duct_artifact>. Call "
-            "submit_plan once after emitting the tag."
+            "submit_plan once after emitting the tag.\n\n"
+            + _PLANDRAFT_SHAPE
         ),
         "draft_post": (
             "MODE: draft_post — your deliverable this turn is ONE PostDraft "
@@ -1038,23 +1073,40 @@ def _channel_directive(channel) -> str:
     )
 
 
+# Said only when it is true: a provider whose API rejects images inside a
+# tool result cannot run the critique loop the IMAGE GENERATION section
+# describes, and an agent that believes it looked at a photo it never saw
+# writes a confident, wrong critique.
+NO_VISION_DIRECTIVE = (
+    "IMAGE TOOLS ON THIS MODEL: generate_image, edit_image and render_slide "
+    "return the asset URL and metadata only — you cannot see the pictures. Skip "
+    "the visual critique step, describe what you asked for, and rely on the "
+    "user's feedback for what they see."
+)
+
+
 def build_orchestrator_system_prompt(
     brand: ContentBrandContext,  # noqa: ARG001 — accepted for backwards-compat; brand goes in user msg
     mode: RunMode,
     channel=None,
+    *,
+    vision: bool = True,
 ) -> str:
     """Compose the orchestrator's system prompt.
 
     Designed for prompt caching: ORCHESTRATOR_BASE_PROMPT is stable across
-    all users + sessions; only the mode tail + channel directive vary. Brand
-    context lives in the first user message instead of here, so the
-    cached prefix doesn't get invalidated by every new project.
+    all users + sessions; only the mode tail, channel directive and the
+    per-provider vision note vary. Brand context lives in the first user
+    message instead of here, so the cached prefix doesn't get invalidated by
+    every new project.
     """
     from agents.core.persona import with_confidentiality
     from agents.core.prompts import MEMORY_DISCIPLINE
+    tail = f"{_channel_directive(channel)}\n\n{_mode_tail(mode)}"
+    if not vision:
+        tail = f"{NO_VISION_DIRECTIVE}\n\n{tail}"
     return with_confidentiality(
-        f"{ORCHESTRATOR_BASE_PROMPT}\n\n{MEMORY_DISCIPLINE}\n\n"
-        f"{_channel_directive(channel)}\n\n{_mode_tail(mode)}"
+        f"{ORCHESTRATOR_BASE_PROMPT}\n\n{MEMORY_DISCIPLINE}\n\n{tail}"
     )
 
 
@@ -1252,10 +1304,11 @@ Avatar reference (for character consistency across slides):
 
 Now — WRITE PHASE (copy + image prompts only; NO images yet):
 
-1. Call TodoWrite with your drafting checklist so the user can watch the
+1. Call write_todos with your drafting checklist so the user can watch the
    workflow (e.g. study references → research topic → write hook → lay out
    the mystery arc → per-slide copy → image prompts). Update it as you go.
-2. If you need a quick fact-check, WebSearch (≤3 queries).
+2. If you need a quick fact-check, web_search (≤3 queries) when you have it,
+   else WebFetch a source you already know.
 3. Pick the `layout`, then apply the quality, hook-emotion, mystery-
    architecture, and emotional-arc rules. Author one structured slide per
    slide_count — each with copy (caption_style + headline + optional subtext)
@@ -1272,6 +1325,7 @@ Now — WRITE PHASE (copy + image prompts only; NO images yet):
 
 __all__ = [
     "DRAFT_POST_PROMPT",
+    "NO_VISION_DIRECTIVE",
     "ORCHESTRATOR_BASE_PROMPT",
     "RESEARCH_PILLAR_PROMPT",
     "build_orchestrator_system_prompt",

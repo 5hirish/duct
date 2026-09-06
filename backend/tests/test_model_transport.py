@@ -14,6 +14,8 @@ given, and which reasoning kwarg the resulting class actually accepts.
 
 from __future__ import annotations
 
+import os
+
 import pytest
 
 from agents.engines import (
@@ -193,6 +195,9 @@ def test_openrouter_gets_the_unified_reasoning_object():
     [
         (Provider.ANTHROPIC, ModelName.CLAUDE_SONNET),
         (Provider.OPENAI, ModelName.GPT_5_MINI),
+        # ChatXAI carries reasoning_effort as a real field, so xAI needs no
+        # translation at the transport boundary the way OpenRouter does.
+        (Provider.XAI, ModelName.GROK_4_6),
     ],
 )
 def test_direct_vendors_keep_the_standard_kwarg(provider: Provider, model: ModelName):
@@ -205,7 +210,7 @@ def test_a_model_with_no_dial_says_nothing_on_either_transport():
     """Absent is a real answer — it must not become `reasoning={"effort": ""}`."""
     from agents.core.lc import _thinking_kwargs_for
 
-    assert _thinking_kwargs_for(Provider.OPENROUTER, ModelName.OR_KIMI_K2_5, "deep") == {}
+    assert _thinking_kwargs_for(Provider.OPENROUTER, ModelName.OR_QWEN3_8_FLASH, "deep") == {}
 
 
 def test_the_dial_survives_construction_as_a_first_class_field():
@@ -281,7 +286,9 @@ def test_no_fallback_pair_loops_back():
         (Provider.ANTHROPIC, ModelName.CLAUDE_SONNET, (ModelName.CLAUDE_HAIKU,)),
         # Bottom of its family — nothing sensible to step down to.
         (Provider.ANTHROPIC, ModelName.CLAUDE_HAIKU, ()),
-        (Provider.GOOGLE_GENAI, ModelName.GEMINI_2_5_FLASH, (ModelName.GEMINI_2_5_FLASH_LITE,)),
+        (Provider.GOOGLE_GENAI, ModelName.GEMINI_3_8_FLASH, (ModelName.GEMINI_3_5_FLASH_LITE,)),
+        # Bottom of the Gemini family since 2.5 Flash-Lite was retired.
+        (Provider.GOOGLE_GENAI, ModelName.GEMINI_3_5_FLASH_LITE, ()),
         # A raw OpenRouter slug: 400+ models behind one key, so there is no basis
         # for guessing what the caller would accept instead.
         (Provider.OPENROUTER, "vendor/some-model", ()),
@@ -298,3 +305,65 @@ def test_fallback_resolution(provider, model, expected):
 def test_only_v1_gets_a_fallback_chain(engine: Engine):
     """v3's harness already retries inside the CLI."""
     assert resolve_fallback_models(engine, Provider.ANTHROPIC, ModelName.CLAUDE_SONNET) == ()
+
+
+@pytest.mark.skipif(
+    not os.environ.get("XAI_API_KEY"),
+    reason="XAI_API_KEY not set — live Grok skipped",
+)
+@pytest.mark.live
+def test_live_grok_accepts_the_top_rung_of_the_ladder_we_publish():
+    """Everything Duct claims about Grok came from docs.x.ai, not from a call.
+
+    This is what would catch a wrong model id or an effort value xAI rejects —
+    `xhigh` in particular, which the docs say arrived with 4.6 and which older
+    Groks silently downgrade rather than refuse. Costs a fraction of a cent.
+    """
+    from agents.core.lc import resolve_chat_model
+
+    llm = resolve_chat_model(
+        Provider.XAI, ModelName.GROK_4_6, os.environ["XAI_API_KEY"], thinking="exhaustive"
+    )
+    reply = llm.invoke("Reply with the single word: ok")
+    assert (reply.text or "").strip()
+
+
+# ---------------------------------------------------------------------------
+# The catalogue is only as true as the last generate call. ListModels kept
+# listing gemini-2.5-flash-lite after generateContent started answering 404
+# "no longer available to new users", and that id was the fallback sibling
+# every Gemini plan run researched on. One tiny call per id, per provider
+# with a key, is what would have caught it.
+# ---------------------------------------------------------------------------
+
+
+def _catalogue_key(provider: Provider) -> str:
+    from config import get_configs
+    from agents.engines import ENGINE_PROVIDER_ENV_VAR, PROVIDER_CONFIG_ATTR
+
+    env_var = ENGINE_PROVIDER_ENV_VAR[Engine.V1].get(provider, "")
+    return os.environ.get(env_var, "") or getattr(get_configs(), PROVIDER_CONFIG_ATTR[provider], "") or ""
+
+
+def _catalogue_ids(provider: Provider) -> list[ModelName]:
+    from agents.models import CLI_ONLY_MODELS, provider_of
+
+    return [m for m in ModelName if provider_of(m) is provider and m not in CLI_ONLY_MODELS]
+
+
+@pytest.mark.live
+@pytest.mark.parametrize("provider", sorted(ENGINE_SUPPORTED_PROVIDERS[Engine.V1], key=lambda p: p.value))
+def test_live_every_catalogue_id_still_answers(provider: Provider):
+    """A retired id fails here, not in a customer's plan run."""
+    from agents.core.lc import resolve_chat_model
+
+    key = _catalogue_key(provider)
+    if not key:
+        pytest.skip(f"no {provider.value} key — catalogue liveness skipped")
+    dead: dict[str, str] = {}
+    for model in _catalogue_ids(provider):
+        try:
+            resolve_chat_model(provider, model, key).invoke("Reply with the single word: ok")
+        except Exception as exc:  # noqa: BLE001 - collected, then reported together
+            dead[model.value] = str(exc)[:160]
+    assert not dead, f"{provider.value} ids the provider no longer serves: {dead}"

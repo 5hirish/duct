@@ -331,7 +331,13 @@ class RoadmapPhase(BaseModel):
 
     label: str       # e.g. "0–30 days"
     theme: str       # e.g. "Unblock"
-    tasks: list[RoadmapTask] = Field(default_factory=list)
+    # A phase is its tasks. Two live runs shipped the three phase headers the
+    # prompt names with nothing under them; validation now hands that back to
+    # the model instead of publishing an empty plan.
+    tasks: list[RoadmapTask] = Field(
+        min_length=1,
+        description="The tasks for this phase, 3–5 of them. A phase with no tasks is rejected.",
+    )
 
 
 class CrawlSummary(BaseModel):

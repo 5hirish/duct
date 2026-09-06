@@ -6,6 +6,7 @@ Every frontier provider now sells the same dial and calls it something else:
   OpenAI      ``reasoning.effort``       none · low · medium · high · xhigh · max
   Google      ``thinking_level``         minimal · low · medium · high
   OpenRouter  ``reasoning.effort``       the union, normalised onto whatever it fronts
+  xAI         ``reasoning_effort``       low · medium · high · xhigh (no off rung)
 
 The words do not line up. ``high`` is Anthropic's *default* and Google's
 *ceiling*; ``minimal`` exists only on Gemini; ``xhigh`` exists only on the newest
@@ -15,8 +16,8 @@ the user carry the vendor's model of the world.
 
 So Duct names four rungs of its own and owns the translation. The user picks
 "Deep"; this module decides that means ``high`` on Opus 5, ``high`` on Gemini
-3.7 Flash, and ``high`` on GPT-5.6 — and that "Exhaustive" means ``xhigh`` on
-Opus 5 but is *the same as Deep* on Gemini 3.7 Flash, which has no rung above
+3.8 Flash, and ``high`` on GPT-5.6 — and that "Exhaustive" means ``xhigh`` on
+Opus 5 but is *the same as Deep* on Gemini 3.8 Flash, which has no rung above
 ``high``. The UI shows the resolved native value beside the Duct name, so the
 abstraction never lies about what was actually sent.
 
@@ -145,6 +146,15 @@ _GPT_5_CONSERVATIVE = ThinkingSupport(
 )
 
 
+# xAI publishes the full ladder per model and says reasoning cannot be
+# disabled, so unlike the GPT-5 family there is nothing to be conservative
+# about — and no `none` rung to offer. xhigh is grok-4.6 and later; grok-4.5
+# silently treats it as high.
+_XAI = ThinkingSupport(
+    native=(LOW, MEDIUM, HIGH, XHIGH), default=HIGH, label="reasoning effort"
+)
+
+
 def _gemini(native: tuple[str, ...], default: str) -> ThinkingSupport:
     return ThinkingSupport(native=native, default=default, label="thinking level")
 
@@ -164,7 +174,10 @@ _OPEN_WEIGHT = ThinkingSupport(
 # deliberately absent, and a test pairs the two so a new model cannot be added
 # without deciding which side it falls on.
 MODEL_THINKING: dict[str, ThinkingSupport] = {
-    # --- Anthropic
+    # --- Anthropic. Fable 5.1 takes the same effort ladder; what differs is
+    # that its thinking cannot be turned off, which is a request-shape concern
+    # (agents/core/lc.py), not a ladder concern.
+    ModelName.CLAUDE_FABLE: _ANTHROPIC_5,
     ModelName.CLAUDE_OPUS: _ANTHROPIC_5,
     ModelName.CLAUDE_SONNET: _ANTHROPIC_5,
 
@@ -179,8 +192,11 @@ MODEL_THINKING: dict[str, ThinkingSupport] = {
     # Promoted from the loose-string block below when it joined the catalogue
     # as the Heavy rung of the default triple.
     ModelName.GEMINI_3_1_PRO_PREVIEW: _gemini((LOW, MEDIUM, HIGH), HIGH),
-    ModelName.GEMINI_3_7_FLASH: _gemini((LOW, MEDIUM, HIGH), MEDIUM),
+    ModelName.GEMINI_3_8_FLASH: _gemini((LOW, MEDIUM, HIGH), MEDIUM),
     ModelName.GEMINI_3_5_FLASH_LITE: _gemini((MINIMAL, LOW, MEDIUM, HIGH), MINIMAL),
+
+    # --- xAI
+    ModelName.GROK_4_6: _XAI,
 
     # --- OpenRouter open-weight slugs. It normalises the parameter, but what
     # the upstream model does with it varies, so only the middle of the ladder
@@ -188,6 +204,8 @@ MODEL_THINKING: dict[str, ThinkingSupport] = {
     # (anthropic/claude-opus-5 …) resolve through _strip_vendor to the row
     # above rather than repeating it here.
     ModelName.OR_DEEPSEEK_V4_FLASH: _OPEN_WEIGHT,
+    ModelName.OR_DEEPSEEK_V4_PRO: _OPEN_WEIGHT,
+    ModelName.OR_KIMI_K3: _OPEN_WEIGHT,
     ModelName.OR_GLM_5_3_FLASH: _OPEN_WEIGHT,
 
     # --- Models Duct does not offer yet.
@@ -214,15 +232,14 @@ NO_THINKING_DIAL: frozenset[ModelName] = frozenset({
     # Pre-Gemini-3: thinking_level is rejected outright, and their control is a
     # token budget rather than a level. Supporting budgets is a separate shape.
     ModelName.GEMINI_2_5_FLASH,
-    ModelName.GEMINI_2_5_FLASH_LITE,
     # Absent from Anthropic's effort-supported model list.
     ModelName.CLAUDE_HAIKU,
-    # Open weights behind OpenRouter. Both list `reasoning` in the catalogue's
-    # supported_parameters but *not* `reasoning_effort` — they reason, they just
-    # take no level. That is the difference from the two rows above, which do
-    # carry `reasoning_effort` and therefore get a ladder.
-    ModelName.OR_QWEN3_7_FLASH,
-    ModelName.OR_KIMI_K2_5,
+    # Open weights behind OpenRouter. It lists `reasoning` in the catalogue's
+    # supported_parameters but *not* `reasoning_effort` — it reasons, it just
+    # takes no level. That is the difference from the rows above, which do
+    # carry `reasoning_effort` and therefore get a ladder. kimi-k2.5 was here
+    # for the same reason until the k3 that replaced it gained the parameter.
+    ModelName.OR_QWEN3_8_FLASH,
 })
 
 

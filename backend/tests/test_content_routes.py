@@ -19,8 +19,6 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 
-from tests.conftest import api_routes
-
 TEST_DUCT_API_KEY = "test-duct-api-key"
 
 
@@ -49,7 +47,7 @@ def test_content_routes_registered():
     """If any of these vanish, a frontend page breaks. One regression test
     covers all 24 endpoints."""
     server = _load_server_with_env()
-    paths = {r.path for r in api_routes(server.app) if r.path.startswith("/api/content")}
+    paths = {r.path for r in server.app.routes if r.path.startswith("/api/content")}
     expected = {
         # SSE
         "/api/content/plan/stream",

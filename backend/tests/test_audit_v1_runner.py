@@ -182,7 +182,13 @@ def _model_that_builds_a_template_report() -> ToolCallingFake:
     """Start, one category, finalize, then a sentence — the sequence the
     prompt asks for, as canned tool calls."""
     header = {"overall_score": 72, "score_band": "good", "pages_crawled": 1, "total_sitemap_urls": 1}
-    category = {"id": "meta", "label": "Meta", "score": 8, "tooltip": "meta health", "findings": []}
+    category = {
+        "id": "on_page_seo", "label": "On-page SEO", "score": 8, "tooltip": "on-page health",
+        "findings": [{
+            "id": "h1-missing", "severity": "fail", "title": "No H1 on the homepage",
+            "description": "The root page has no H1.", "tooltip": "Headline tag",
+        }],
+    }
     finalize = {"top_priorities": [], "wins": [], "roadmap": []}
     return ToolCallingFake(responses=[
         AIMessage(content="", tool_calls=[{"name": "StartAuditReport", "args": header, "id": "c1"}]),
@@ -224,9 +230,12 @@ async def test_run_pipeline_crawls_then_publishes_the_report_the_tools_built(
     ]
     version = next(e for e in emitted.events if e["event"] == AgentEvent.ARTIFACT_VERSION)
     assert version["version_id"] == 1
-    assert version["payload"]["structured_data"]["overall_score"] == 72
+    # The model claimed 72; one FAIL in the 20-point tier is what the findings support.
+    assert version["payload"]["structured_data"]["overall_score"] == 80
+    assert version["payload"]["structured_data"]["score_band"] == "good"
     assert report is not None
-    assert [c.id for c in report.structured_data.categories] == ["meta"]
+    assert [c.id for c in report.structured_data.categories] == ["on_page_seo"]
+    assert report.structured_data.categories[0].score == 80
     assert set(e["event"] for e in emitted.events) <= set(AgentEvent)
 
 
@@ -295,3 +304,42 @@ def test_both_runners_share_the_run_pipeline_signature():
     v1 = inspect.signature(LangChainAuditRunner.run_pipeline).parameters
     v3 = inspect.signature(ClaudeAuditRunner.run_pipeline).parameters
     assert list(v1) == list(v3)
+
+
+# ---------------------------------------------------------------------------
+# A site that never answers is not audited
+# ---------------------------------------------------------------------------
+
+async def test_an_unreachable_site_closes_the_crawl_step_as_an_error_and_never_reaches_the_model(
+    emitted, acme_business_context, monkeypatch
+):
+    """Two live runs scored a homepage that returned no response 84 "good".
+    The crawl now raises instead; the runner closes the step as an error so the
+    UI stops spinning, and re-raises so the route reports the failure."""
+    import agents.audit.v1.runner as v1
+    import agents.audit.v3.runner as v3
+    from service.crawl.fetcher import SiteUnreachableError
+
+    async def dead_site(url, **_kwargs):
+        raise SiteUnreachableError(url)
+
+    def no_model(*_a, **_k):
+        raise AssertionError("synthesis must not start for a site that never answered")
+
+    monkeypatch.setattr(v3, "run_crawl", dead_site)
+    monkeypatch.setattr(v1, "resolve_chat_model", no_model)
+
+    with pytest.raises(SiteUnreachableError, match="Could not reach https://dead.example"):
+        await v1.LangChainAuditRunner(api_key="unused-no-network").run_pipeline(
+            session_id="offline-audit", url="https://dead.example",
+            business_context=acme_business_context, emit=emitted, report_mode="template",
+        )
+
+    steps = [
+        (e["step_id"], e["status"]) for e in emitted.events
+        if e["event"] in (AgentEvent.STEP_STARTED, AgentEvent.STEP_FINISHED)
+    ]
+    assert steps == [(AuditStep.FETCH_SITEMAP, "running"), (AuditStep.FETCH_SITEMAP, "error")]
+    failed = next(e for e in emitted.events if e.get("status") == "error")
+    assert "no HTTP response" in failed["error"]
+    assert not any(e["event"] == AgentEvent.ARTIFACT_VERSION for e in emitted.events)

@@ -1,20 +1,32 @@
-"""In-process MCP tools exposed to the Content Studio agent.
+"""The Content Studio agent's tools, bound for the LangChain (V1) harness.
 
-Two groups of tools:
-  - Writers: submit_plan, submit_post_draft — validate Pydantic, upsert DB,
-    emit SSE events (PLAN_GENERATED / POST_DRAFT_UPDATED).
+Three groups:
+  - Writers: submit_plan, submit_post_draft, edit_slide — validate Pydantic,
+    upsert DB rows, emit SSE events (PLAN_GENERATED / POST_DRAFT_UPDATED).
   - Readers: fetch_brand_context, fetch_topic_bank, fetch_format_library,
-    fetch_avatar_library, fetch_content_history, fetch_content_assets.
-  - Stubs: generate_image, edit_image, publish_post, mark_posted, log_metrics
-    — return is_error=true with "available in Phase 4/4b" until those phases land.
+    fetch_avatar_library, fetch_content_history, fetch_content_assets,
+    fetch_discovered_references, fetch_post, fetch_slide_context.
+  - Media + publishing: render_slide, generate_image, edit_image,
+    publish_post, mark_posted, log_metrics.
+
+This file was the Claude Agent SDK's in-process MCP server until content
+moved to V1. The tool *bodies* are what survived the port unchanged — the
+ownership guards, the per-post write lock, the image-prompt lock, the
+staleness bookkeeping. What changed is only the binding: typed Pydantic
+arguments instead of ``args: dict`` against a hand-written JSON schema, and
+a JSON string (or a list of content blocks, for images) instead of an MCP
+result envelope.
 
 Every handler:
-  1. Opens a short-lived DB session (db.session.get_session generator), never
-     binding a long-lived session to the agent lifetime.
-  2. Wraps the body in try/except — per the SDK custom-tools docs, uncaught
-     exceptions stop the agent loop. Failures return is_error=true with a
-     descriptive text content block so the model can correct course.
+  1. Opens a short-lived DB session, never binding one to the agent lifetime.
+  2. Wraps the body in try/except — an uncaught exception propagates out of
+     the tool node and ends the run, whereas an error *payload* lets the
+     model read the problem and correct course. So failures are returned.
   3. Where appropriate, calls emit(...) to push events into the SSE queue.
+
+``build_content_tools_lc`` is the binder (``agents/core/ports``: a
+``ToolBinder``); ``project_id`` is captured in every closure so a tool call
+can never reach another project's rows.
 """
 
 from __future__ import annotations
@@ -25,11 +37,10 @@ import json
 import logging
 from collections.abc import Awaitable, Callable
 from datetime import datetime, timezone
-from typing import Annotated, Any
+from typing import Any
 from uuid import UUID, uuid4
 
-from claude_agent_sdk import create_sdk_mcp_server, tool
-from claude_agent_sdk.types import McpSdkServerConfig
+from langchain_core.tools import StructuredTool
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from agents.content.results import (
@@ -45,12 +56,12 @@ from agents.content.results import (
 from sqlmodel import Session, select
 
 from agents.models import DEFAULT_IMAGE_MODEL, AspectRatio, ImageModel
-from agents.core.memory_tools import build_memory_tools_sdk
-from agents.core.tool_schema import tool_schema
+from agents.core.memory_tools import build_memory_tools_lc
 from agents.content.events import ContentEvent
 from agents.content.schema import (
     ContentSession,
     ContentStatus,
+    ContentTool,
     PlanDraft,
     PostDraft,
     Slide,
@@ -95,13 +106,19 @@ def _post_lock(key: str) -> asyncio.Lock:
     return lock
 
 
-def _ok(payload: dict | list | str) -> dict:
-    text = payload if isinstance(payload, str) else json.dumps(payload, default=str)
-    return {"content": [{"type": "text", "text": text}]}
+def _ok(payload: dict | list | str) -> str:
+    return payload if isinstance(payload, str) else json.dumps(payload, default=str)
 
 
-def _err(message: str) -> dict:
-    return {"content": [{"type": "text", "text": message}], "is_error": True}
+def _err(message: str) -> str:
+    """Error result the model can react to.
+
+    Returned, not raised: an exception propagates out of the tool node and
+    ends the run, whereas a payload lets the model read the problem and retry.
+    The shape matches the audit tools' so a transcript reads the same across
+    agents.
+    """
+    return json.dumps({"status": "error", "message": message})
 
 
 def _open_db() -> Session:
@@ -115,14 +132,16 @@ def _open_db() -> Session:
 # Tool results the model reads back are modeled (see results.py) instead of
 # hand-built dicts, so field names like `attached_to` / `asset_ids` are typed.
 
-def _ok_model(m: BaseModel) -> dict:
+def _ok_model(m: BaseModel) -> str:
     """Success result from a typed model (text-only)."""
     return _ok(m.model_dump(mode="json"))
 
 
-def _ok_with_images(image_blocks: list[dict], m: BaseModel) -> dict:
-    """Success result carrying image content blocks + a typed model as the text."""
-    return {"content": [*image_blocks, {"type": "text", "text": m.model_dump_json()}]}
+def _image_block(b64: str, mime: str) -> dict:
+    """One image as a LangChain standard content block. ChatAnthropic turns it
+    into a base64 image source inside the tool_result; that is how the model
+    gets to *see* what it generated."""
+    return {"type": "image", "base64": b64, "mime_type": mime}
 
 
 # --- Relational precondition guards -------------------------------------------
@@ -132,7 +151,7 @@ def _ok_with_images(image_blocks: list[dict], m: BaseModel) -> dict:
 # tools (ownership check ×6, "find slide or list valid ids" ×3). Each returns the
 # resolved entity OR an _err-shaped dict; callers use:  x, err = guard(...); if err: return err
 
-def _require_post(db: Session, project_id, post_id) -> tuple[ContentPost | None, dict | None]:
+def _require_post(db: Session, project_id, post_id) -> tuple[ContentPost | None, str | None]:
     """Resolve the current post for this project, or an _err result."""
     if post_id is None:
         return None, _err("No current post in this session.")
@@ -142,7 +161,7 @@ def _require_post(db: Session, project_id, post_id) -> tuple[ContentPost | None,
     return row, None
 
 
-def _require_slide(post: ContentPost, slide_id: str) -> tuple[dict | None, int, dict | None]:
+def _require_slide(post: ContentPost, slide_id: str) -> tuple[dict | None, int, str | None]:
     """Find a slide on the post by id, or an _err listing the valid ids.
 
     Returns (slide_dict, index, None) on hit; (None, -1, err) on miss.
@@ -155,7 +174,7 @@ def _require_slide(post: ContentPost, slide_id: str) -> tuple[dict | None, int, 
     return None, -1, _err(f"slide_id {slide_id!r} isn't on this post. Use one of: {valid}.")
 
 
-def _require_item(slide: dict, item_index: int | None) -> dict | None:
+def _require_item(slide: dict, item_index: int | None) -> str | None:
     """Range-check item_index against a slide's image cells. None = ok, else _err."""
     if item_index is None:
         return None
@@ -525,23 +544,35 @@ def _load_asset_bytes(asset: ContentAsset) -> bytes | None:
 # ---------------------------------------------------------------------------
 
 
-def build_content_mcp_server(
+def build_content_tools_lc(
     project_id: UUID,
     emit: EmitFn,
     session: ContentSession,
-) -> McpSdkServerConfig:
-    """Build the in-process MCP server scoped to this content session.
+    *,
+    vision: bool = True,
+    remember: bool = True,
+) -> list[StructuredTool]:
+    """Build the content tools scoped to this session, for ``create_deep_agent``.
 
     project_id is captured in closures so every tool call is implicitly
     scoped to the user's project — the model cannot leak across projects.
     emit pushes events to the SSE consumer; session lets writers stash IDs
     (e.g. session.plan_id after submit_plan).
+
+    ``vision`` says whether the run's provider accepts image blocks inside a
+    tool result. Anthropic does, and the image phase is built on the model
+    looking at what it generated; a provider that does not gets the asset
+    URL and a note instead of a request its API would reject.
+
+    ``remember=False`` is a session the user asked not to be remembered: it
+    gets no memory tools at all, so the agent cannot write what it cannot
+    reach.
     """
-    # Typed input models for the image tools — the source of truth for both the
-    # tool input_schema (via tool_schema()) and the field constraints the model
-    # sees (enums from StrEnum so an invalid id can't be passed; ranges via
-    # Field). Defined here, not at module top, because the gemini enums pull the
-    # google client; service.google.gemini is imported lazily at session-build time.
+    # Typed input models for the image tools — the tool's argument schema and
+    # the field constraints the model sees in one place (enums from StrEnum so
+    # an invalid id can't be passed; ranges via Field). Defined here, not at
+    # module top, because the gemini enums pull the google client;
+    # service.google.gemini is imported lazily at session-build time.
     from service.google.gemini.schema import EditMode, MaskMode, SubjectType
 
     class GenerateImageInput(BaseModel):
@@ -601,26 +632,92 @@ def build_content_mcp_server(
         number_of_images: int = Field(1, ge=1, le=4, description="How many images to generate (1-4).")
         negative_prompt: str | None = Field(None, description="Accepted but inert — see generate_image.")
 
+    def _image_result(image_blocks: list[dict], m: BaseModel) -> str | list[dict]:
+        """Success result for an image tool: the pictures plus the typed
+        payload where the provider can look, the payload alone where it
+        cannot."""
+        if not vision:
+            return _ok({**m.model_dump(mode="json"), "preview": "not shown — this model cannot view images in tool results"})
+        return [*image_blocks, {"type": "text", "text": m.model_dump_json()}]
+
+    # ----------------------- Argument schemas -----------------------
+    # What the model sees. Descriptions live here rather than beside the
+    # bodies so a field's meaning is stated once, next to its type.
+
+    # The writers take the real models, not ``dict``: the argument schema is
+    # then the contract every provider's model sees in the tool definition
+    # and validates against before the body runs. With ``dict`` and a
+    # description that only *named* the schema, a model without Claude's
+    # prior knowledge of it went looking — grep and ls over the scratch
+    # filesystem, then probes at the tool to read the shape off validation
+    # errors, two of which persisted as plans.
+    class SubmitPlanArgs(BaseModel):
+        plan: PlanDraft = Field(description="The plan — the same object emitted in <duct_artifact>.")
+
+    class SubmitPostDraftArgs(BaseModel):
+        post: PostDraft = Field(description="The post — the same object emitted in <duct_artifact>.")
+
+    class EditSlideArgs(BaseModel):
+        slide_id: str = Field(description="The slide to edit, e.g. 'slide-03'.")
+        patch: dict = Field(description="Partial Slide fields to merge (only what changes).")
+
+    class HistoryArgs(BaseModel):
+        limit: int = Field(30, ge=1, le=100, description="Max rows to return. Default 30, max 100.")
+
+    class DiscoveredReferencesArgs(BaseModel):
+        min_play_count: int = Field(
+            10000, ge=0,
+            description="Skip posts with fewer plays. Default 10000 (filters out outliers).",
+        )
+        limit: int = Field(30, ge=1, le=100, description="Max rows to return. Default 30, max 100.")
+
+    class ContentAssetsArgs(BaseModel):
+        asset_type: str = Field(
+            "",
+            description="Optional asset_type filter (e.g. 'generated', 'reference', 'slide_render'). Omit for all types.",
+        )
+        axis: str = Field(
+            "",
+            description="Optional reference-axis filter: 'camera' | 'layouts' | 'captions'. Only affects global library references.",
+        )
+        subtype: str = Field(
+            "",
+            description="Optional reference-subtype filter (e.g. 'selfie-talking', 'lifestyle', 'closeup'). Only affects global library references.",
+        )
+
+    class PublishPostArgs(BaseModel):
+        post_id: str = Field(description="UUID of the content_posts row to publish.")
+        social_account_ids: list[int] = Field(description="Numeric PostBridge social account IDs (at least one).")
+        scheduled_at: str | None = Field(None, description="Optional ISO 8601 timestamp; omit to post now.")
+        tiktok_draft: bool = Field(False, description="If true, post lands as a TikTok draft instead of scheduling.")
+        allow_uncomposed: bool = Field(
+            False,
+            description=(
+                "Escape hatch: publish single-image slides as their RAW photo when no composed "
+                "render exists (captions won't appear). Multi-image slides still require a render. "
+                "Default false."
+            ),
+        )
+
+    class MarkPostedArgs(BaseModel):
+        post_id: str = Field(description="UUID of the content_posts row.")
+        tiktok_url: str | None = Field(None, description="Optional external URL of the live post.")
+
+    class PostIdArgs(BaseModel):
+        post_id: str = Field(description="UUID of the content_posts row.")
+
+    class SlideIdArgs(BaseModel):
+        slide_id: str = Field(description="The slide, e.g. 'slide-01'.")
+
+    class FetchPostArgs(BaseModel):
+        post_dir_slug: str = Field("", description="Post slug, e.g. '2026-06-08-001'.")
+        post_id: str = Field("", description="Post UUID.")
+
     # ----------------------- Writers -----------------------
 
-    @tool(
-        name="submit_plan",
-        description=(
-            "Persist a 30-day content plan. Validates the payload against the "
-            "PlanDraft schema, upserts a content_plans row scoped to this "
-            "project, and emits a PLAN_GENERATED event so the workspace "
-            "renders the plan. Call this AFTER emitting <duct_artifact>{\"type\":\"plan\",...}</duct_artifact>."
-        ),
-        input_schema={
-            "plan": Annotated[
-                dict,
-                "JSON object matching the PlanDraft schema (type='plan').",
-            ],
-        },
-    )
-    async def submit_plan(args: dict) -> dict:
+    async def submit_plan(plan: PlanDraft | dict) -> str:
         try:
-            payload = args.get("plan") or args
+            payload = plan if isinstance(plan, dict) else plan.model_dump(mode="json")
             try:
                 draft = PlanDraft.model_validate(payload)
             except ValidationError as exc:
@@ -667,24 +764,9 @@ def build_content_mcp_server(
             logger.exception("submit_plan failed")
             return _err(f"submit_plan failed: {exc}")
 
-    @tool(
-        name="submit_post_draft",
-        description=(
-            "Persist a single post draft. Validates against PostDraft schema, "
-            "upserts a content_posts row keyed by (project_id, post_dir_slug), "
-            "and emits POST_DRAFT_UPDATED. Call AFTER emitting "
-            "<duct_artifact>{\"type\":\"post\",...}</duct_artifact>."
-        ),
-        input_schema={
-            "post": Annotated[
-                dict,
-                "JSON object matching the PostDraft schema (type='post').",
-            ],
-        },
-    )
-    async def submit_post_draft(args: dict) -> dict:
+    async def submit_post_draft(post: PostDraft | dict) -> str:
         try:
-            payload = args.get("post") or args
+            payload = post if isinstance(post, dict) else post.model_dump(mode="json")
             try:
                 draft = PostDraft.model_validate(payload)
             except ValidationError as exc:
@@ -808,27 +890,10 @@ def build_content_mcp_server(
             logger.exception("submit_post_draft failed")
             return _err(f"submit_post_draft failed: {exc}")
 
-    @tool(
-        name="edit_slide",
-        description=(
-            "Surgically edit ONE slide of the current post WITHOUT re-sending the "
-            "whole post. Pass slide_id + a `patch` of only the fields that change "
-            "— e.g. {\"caption_style\":\"cap-raw\"}, {\"headline\":\"...\"}, "
-            "{\"kind\":\"text\"}, {\"image_prompt\":\"...\"}, or {\"items\":[...]}. "
-            "The slide is merged + revalidated, the HTML re-rendered, and "
-            "POST_DRAFT_UPDATED emitted. Changing image_prompt marks that image "
-            "stale (regenerate to match). Use submit_post_draft for whole-post or "
-            "multi-slide changes, or to add / remove / reorder slides."
-        ),
-        input_schema={
-            "slide_id": Annotated[str, "The slide to edit, e.g. 'slide-03'."],
-            "patch":    Annotated[dict, "Partial Slide fields to merge (only what changes)."],
-        },
-    )
-    async def edit_slide(args: dict) -> dict:
+    async def edit_slide(slide_id: str, patch: dict) -> str:
         try:
-            slide_id = (args.get("slide_id") or "").strip()
-            patch = args.get("patch") or {}
+            slide_id = (slide_id or "").strip()
+            patch = patch or {}
             if not slide_id:
                 return _err("slide_id is required (e.g. 'slide-03').")
             if not isinstance(patch, dict) or not patch:
@@ -887,16 +952,7 @@ def build_content_mcp_server(
 
     # ----------------------- Readers -----------------------
 
-    @tool(
-        name="fetch_brand_context",
-        description=(
-            "Return the current brand context for this project: identity "
-            "(name/slug/tagline/url), audience, content_brand JSONB, pillars, "
-            "and visual assets. No arguments. Call this FIRST in a new session."
-        ),
-        input_schema={},
-    )
-    async def fetch_brand_context(_args: dict) -> dict:
+    async def fetch_brand_context() -> str:
         try:
             with _open_db() as db:
                 proj = db.get(Project, project_id)
@@ -921,16 +977,7 @@ def build_content_mcp_server(
             logger.exception("fetch_brand_context failed")
             return _err(f"fetch_brand_context failed: {exc}")
 
-    @tool(
-        name="fetch_topic_bank",
-        description=(
-            "Return per-pillar topic usage by scanning content_posts. "
-            "Each entry: pillar -> { topics_used: [...], last_used_at: ISO|None }. "
-            "Use this to decide whether to dispatch research_pillar sub-agents."
-        ),
-        input_schema={},
-    )
-    async def fetch_topic_bank(_args: dict) -> dict:
+    async def fetch_topic_bank() -> str:
         try:
             with _open_db() as db:
                 rows = db.exec(
@@ -957,17 +1004,7 @@ def build_content_mcp_server(
             logger.exception("fetch_topic_bank failed")
             return _err(f"fetch_topic_bank failed: {exc}")
 
-    @tool(
-        name="fetch_format_library",
-        description=(
-            "Return the per-project content formats (name, slug, full JSONB data) "
-            "AND resolved_css — the shared base engine CSS plus the format's linked "
-            "styles, ready to inline verbatim into the slides <style> block. Do not "
-            "write caption/hook/layout CSS yourself; use resolved_css and its classes."
-        ),
-        input_schema={},
-    )
-    async def fetch_format_library(_args: dict) -> dict:
+    async def fetch_format_library() -> str:
         try:
             from agents.content.styles import css_for
             with _open_db() as db:
@@ -990,12 +1027,7 @@ def build_content_mcp_server(
             logger.exception("fetch_format_library failed")
             return _err(f"fetch_format_library failed: {exc}")
 
-    @tool(
-        name="fetch_avatar_library",
-        description="Return the list of per-project avatars (name + full JSONB data including ref images).",
-        input_schema={},
-    )
-    async def fetch_avatar_library(_args: dict) -> dict:
+    async def fetch_avatar_library() -> str:
         try:
             with _open_db() as db:
                 rows = db.exec(
@@ -1015,25 +1047,9 @@ def build_content_mcp_server(
             logger.exception("fetch_avatar_library failed")
             return _err(f"fetch_avatar_library failed: {exc}")
 
-    @tool(
-        name="fetch_content_history",
-        description=(
-            "Return recent posts (default last 30) for de-duplication and "
-            "to inform hook variation. Fields: post_dir_slug, pillar, topic, "
-            "hook_type, status, posted_at, perf."
-        ),
-        input_schema={
-            "type": "object",
-            "properties": {
-                "limit": {"type": "integer", "minimum": 1, "maximum": 100,
-                          "description": "Max rows to return. Default 30, max 100."},
-            },
-            "required": [],
-        },
-    )
-    async def fetch_content_history(args: dict) -> dict:
+    async def fetch_content_history(limit: int = 30) -> str:
         try:
-            limit = min(int(args.get("limit") or 30), 100)
+            limit = min(int(limit or 30), 100)
             with _open_db() as db:
                 rows = db.exec(
                     select(ContentPost)
@@ -1063,34 +1079,10 @@ def build_content_mcp_server(
             logger.exception("fetch_content_history failed")
             return _err(f"fetch_content_history failed: {exc}")
 
-    @tool(
-        name="fetch_discovered_references",
-        description=(
-            "Return TikTok posts the user (or a previous discovery run) saved as "
-            "high-performing references. Use this to ground topic / hook / format "
-            "decisions in real-world signal — what's actually working in the "
-            "target audience's niche right now. Each row carries the post's "
-            "engagement counts (play, digg, share, comment, collect), hashtags, "
-            "music, author, and the TikTok URL. Filter by min_play_count to "
-            "skip the long tail (default 10000)."
-        ),
-        input_schema={
-            "type": "object",
-            "properties": {
-                "min_play_count": {
-                    "type": "integer", "minimum": 0,
-                    "description": "Skip posts with fewer plays. Default 10000 (filters out outliers).",
-                },
-                "limit": {"type": "integer", "minimum": 1, "maximum": 100,
-                          "description": "Max rows to return. Default 30, max 100."},
-            },
-            "required": [],
-        },
-    )
-    async def fetch_discovered_references(args: dict) -> dict:
+    async def fetch_discovered_references(min_play_count: int = 10000, limit: int = 30) -> str:
         try:
-            min_plays = int(args.get("min_play_count") or 10000)
-            limit     = min(int(args.get("limit") or 30), 100)
+            min_plays = int(min_play_count or 10000)
+            limit     = min(int(limit or 30), 100)
             with _open_db() as db:
                 rows = db.exec(
                     select(ContentAsset)
@@ -1128,42 +1120,11 @@ def build_content_mcp_server(
             logger.exception("fetch_discovered_references failed")
             return _err(f"fetch_discovered_references failed: {exc}")
 
-    @tool(
-        name="fetch_content_assets",
-        description=(
-            "Return content assets (generated images, uploads, references) "
-            "for this project. Filter by asset_type if provided "
-            "(e.g. 'generated', 'logo', 'background', 'reference', 'upload'). "
-            "References include the repo-bundled GLOBAL library (camera / "
-            "layouts / captions) served from /static/references — narrow it "
-            "with the optional axis + subtype filters. A global reference's "
-            "`id` is its /static/references/... URL; pass that id straight "
-            "into generate_image's input_asset_ids."
-        ),
-        input_schema={
-            "type": "object",
-            "properties": {
-                "asset_type": {
-                    "type": "string",
-                    "description": "Optional asset_type filter (e.g. 'generated', 'reference', 'slide_render'). Omit for all types.",
-                },
-                "axis": {
-                    "type": "string",
-                    "description": "Optional reference-axis filter: 'camera' | 'layouts' | 'captions'. Only affects global library references.",
-                },
-                "subtype": {
-                    "type": "string",
-                    "description": "Optional reference-subtype filter (e.g. 'selfie-talking', 'lifestyle', 'closeup'). Only affects global library references.",
-                },
-            },
-            "required": [],
-        },
-    )
-    async def fetch_content_assets(args: dict) -> dict:
+    async def fetch_content_assets(asset_type: str = "", axis: str = "", subtype: str = "") -> str:
         try:
-            asset_type = (args.get("asset_type") or "").strip()
-            axis       = (args.get("axis") or "").strip() or None
-            subtype    = (args.get("subtype") or "").strip() or None
+            asset_type = (asset_type or "").strip()
+            axis       = (axis or "").strip() or None
+            subtype    = (subtype or "").strip() or None
             with _open_db() as db:
                 stmt = select(ContentAsset).where(ContentAsset.project_id == project_id)
                 if asset_type:
@@ -1196,17 +1157,7 @@ def build_content_mcp_server(
 
     # ----------------------- Image generation (Phase 4b) -----------------------
 
-    @tool(
-        name="generate_image",
-        description=(
-            "Generate one or more images from a text prompt. "
-            "Returns inline image data (so you can see the result) PLUS a stable "
-            "asset_url you must reference in slides_html. Defaults: 9:16 portrait, "
-            "1 image. Generated images are saved to the project's media library."
-        ),
-        input_schema=tool_schema(GenerateImageInput),
-    )
-    async def generate_image(args: dict) -> dict:
+    async def generate_image(**args: Any) -> str | list[dict]:
         try:
             from service.google.gemini import (
                 GeminiAPIError,
@@ -1407,8 +1358,8 @@ def build_content_mcp_server(
             image_blocks: list[dict] = []
             for img in images:
                 b64, vmime = _downscale_for_vision(img.data, img.mime_type)
-                image_blocks.append({"type": "image", "data": b64, "mimeType": vmime})
-            return _ok_with_images(image_blocks, GenerateImageResult(
+                image_blocks.append(_image_block(b64, vmime))
+            return _image_result(image_blocks, GenerateImageResult(
                 asset_ids=[str(a.asset_id) for a in assets],
                 asset_urls=[a.url for a in assets],
                 model=request.model.value,
@@ -1418,17 +1369,7 @@ def build_content_mcp_server(
             logger.exception("generate_image failed")
             return _err("Image generation hit a snag — please try again.")
 
-    @tool(
-        name="edit_image",
-        description=(
-            "Edit an existing content asset (inpaint, outpaint, bgswap, style transfer, "
-            "or free-form Gemini edit). Returns the edited image inline + a stable "
-            "asset_url. The original asset is preserved — every edit creates a new "
-            "content_assets row."
-        ),
-        input_schema=tool_schema(EditImageInput),
-    )
-    async def edit_image(args: dict) -> dict:
+    async def edit_image(**args: Any) -> str | list[dict]:
         try:
             from service.google.gemini import (
                 EditImageRequest,
@@ -1508,8 +1449,8 @@ def build_content_mcp_server(
             image_blocks: list[dict] = []
             for img in images:
                 b64, vmime = _downscale_for_vision(img.data, img.mime_type)
-                image_blocks.append({"type": "image", "data": b64, "mimeType": vmime})
-            return _ok_with_images(image_blocks, EditImageResult(
+                image_blocks.append(_image_block(b64, vmime))
+            return _image_result(image_blocks, EditImageResult(
                 asset_ids=[str(a.asset_id) for a in assets],
                 asset_urls=[a.url for a in assets],
                 model=request.model.value,
@@ -1520,30 +1461,13 @@ def build_content_mcp_server(
 
     # ----------------------- PostBridge (Phase 4) -----------------------
 
-    @tool(
-        name="publish_post",
-        description=(
-            "Publish a saved post via PostBridge. Uploads each slide's COMPOSED "
-            "render (caption baked in — call render_slide first) to PostBridge, "
-            "creates the post bound to one or more social_account_ids (numeric, "
-            "from list_social_accounts), and stores the resulting PostBridge post "
-            "id on the content_posts row. By default it refuses slides that have "
-            "no render (their captions wouldn't appear)."
-        ),
-        input_schema={
-            "type": "object",
-            "properties": {
-                "post_id":            {"type": "string", "description": "UUID of the content_posts row to publish."},
-                "social_account_ids": {"type": "array", "items": {"type": "integer"},
-                                       "description": "Numeric PostBridge social account IDs (at least one)."},
-                "scheduled_at":       {"type": "string", "description": "Optional ISO 8601 timestamp; omit to post now."},
-                "tiktok_draft":       {"type": "boolean", "description": "If true, post lands as a TikTok draft instead of scheduling."},
-                "allow_uncomposed":   {"type": "boolean", "description": "Escape hatch: publish single-image slides as their RAW photo when no composed render exists (captions won't appear). Multi-image slides still require a render. Default false."},
-            },
-            "required": ["post_id", "social_account_ids"],
-        },
-    )
-    async def publish_post(args: dict) -> dict:
+    async def publish_post(
+        post_id: str,
+        social_account_ids: list[int],
+        scheduled_at: str | None = None,
+        tiktok_draft: bool = False,
+        allow_uncomposed: bool = False,
+    ) -> str:
         try:
             from service.post_bridge import (
                 PostBridgeAPIError,
@@ -1551,11 +1475,11 @@ def build_content_mcp_server(
                 client_for_user,
             )
 
-            post_id_raw = args.get("post_id")
-            raw_ids     = args.get("social_account_ids") or []
-            scheduled_raw  = args.get("scheduled_at")
-            tiktok_draft = bool(args.get("tiktok_draft"))
-            allow_uncomposed = bool(args.get("allow_uncomposed"))
+            post_id_raw = post_id
+            raw_ids     = social_account_ids or []
+            scheduled_raw  = scheduled_at
+            tiktok_draft = bool(tiktok_draft)
+            allow_uncomposed = bool(allow_uncomposed)
             if not post_id_raw:
                 return _err("post_id is required.")
             try:
@@ -1700,24 +1624,9 @@ def build_content_mcp_server(
             logger.exception("publish_post failed")
             return _err(f"publish_post failed: {exc}")
 
-    @tool(
-        name="mark_posted",
-        description=(
-            "Mark a post as posted (manual flag — use when the user posted "
-            "outside of PostBridge). Sets status='posted' and posted_at=now."
-        ),
-        input_schema={
-            "type": "object",
-            "properties": {
-                "post_id":    {"type": "string", "description": "UUID of the content_posts row."},
-                "tiktok_url": {"type": "string", "description": "Optional external URL of the live post."},
-            },
-            "required": ["post_id"],
-        },
-    )
-    async def mark_posted(args: dict) -> dict:
+    async def mark_posted(post_id: str, tiktok_url: str | None = None) -> str:
         try:
-            post_id_raw = args.get("post_id")
+            post_id_raw = post_id
             if not post_id_raw:
                 return _err("post_id is required.")
             post_id = UUID(str(post_id_raw))
@@ -1727,8 +1636,8 @@ def build_content_mcp_server(
                     return err
                 post.status    = "posted"
                 post.posted_at = datetime.now(timezone.utc)
-                if args.get("tiktok_url"):
-                    post.tiktok_url = str(args["tiktok_url"])
+                if tiktok_url:
+                    post.tiktok_url = str(tiktok_url)
                 db.add(post)
                 db.commit()
                 db.refresh(post)
@@ -1737,23 +1646,11 @@ def build_content_mcp_server(
             logger.exception("mark_posted failed")
             return _err(f"mark_posted failed: {exc}")
 
-    @tool(
-        name="log_metrics",
-        description=(
-            "Refresh performance metrics for a post from PostBridge. Looks up "
-            "the post_result for this post, fetches lifetime + daily analytics, "
-            "and merges them into post.perf / post.daily_perf. Requires "
-            "post_bridge_post_id set on the row (i.e. publish_post ran first)."
-        ),
-        input_schema={
-            "post_id": Annotated[str, "UUID of the content_posts row."],
-        },
-    )
-    async def log_metrics(args: dict) -> dict:
+    async def log_metrics(post_id: str) -> str:
         try:
             from service.post_bridge import PostBridgeAPIError, client_for_user
 
-            post_id_raw = args.get("post_id")
+            post_id_raw = post_id
             if not post_id_raw:
                 return _err("post_id is required.")
             post_id = UUID(str(post_id_raw))
@@ -1817,25 +1714,9 @@ def build_content_mcp_server(
             logger.exception("log_metrics failed")
             return _err(f"log_metrics failed: {exc}")
 
-    @tool(
-        name="render_slide",
-        description=(
-            "Rasterize ONE slide to a 1080×1920 (9:16) PNG and SEE it — the "
-            "COMPOSED slide as it will actually look (caption overlay, gradient, "
-            "layout, safe zones), not just the raw photo. Returns the image inline "
-            "so you can critique composition, caption legibility, text/face "
-            "overlap, and safe-zone fit, then fix the structured slide. These "
-            "composed renders are also what publish_post uploads. Needs a "
-            "connected session UI; if none responds it times out — then proceed "
-            "on the raw photo + structured data."
-        ),
-        input_schema={
-            "slide_id": Annotated[str, "The slide to render, e.g. 'slide-01'."],
-        },
-    )
-    async def render_slide(args: dict) -> dict:
+    async def render_slide(slide_id: str) -> str | list[dict]:
         try:
-            slide_id = (args.get("slide_id") or "").strip()
+            slide_id = (slide_id or "").strip()
             if not slide_id:
                 return _err("slide_id is required (e.g. 'slide-01').")
             if session.post_id is None:
@@ -1887,8 +1768,8 @@ def build_content_mcp_server(
                 logger.exception("render_slide: persist failed (returning image anyway)")
 
             # Persist full-res (for publishing); show the agent a lighter copy.
-            return _ok_with_images(
-                [{"type": "image", "data": _downscale_png_b64(png), "mimeType": "image/png"}],
+            return _image_result(
+                [_image_block(_downscale_png_b64(png), "image/png")],
                 RenderSlideResult(
                     slide_id=slide_id, asset_url=asset_url,
                     note="preview downscaled; the full-res render is saved for publishing",
@@ -1898,31 +1779,10 @@ def build_content_mcp_server(
             logger.exception("render_slide failed")
             return _err(f"render_slide failed: {exc}")
 
-    @tool(
-        name="fetch_post",
-        description=(
-            "Return the current persisted state of ONE post — structured slides "
-            "(copy + image prompts + any generated image_url), layout, and "
-            "metadata. Use this to ground an edit on the live post before "
-            "changing a caption/prompt or generating images, especially when "
-            "resuming an earlier draft. Pass post_dir_slug or post_id; with "
-            "neither, returns this session's current post. Each slide includes "
-            "`image_stale` (true = the prompt changed after the image was made, "
-            "so the image should be regenerated)."
-        ),
-        input_schema={
-            "type": "object",
-            "properties": {
-                "post_dir_slug": {"type": "string", "description": "Post slug, e.g. '2026-06-08-001'."},
-                "post_id":       {"type": "string", "description": "Post UUID."},
-            },
-            "required": [],  # pass either, or neither (defaults to the session's current post)
-        },
-    )
-    async def fetch_post(args: dict) -> dict:
+    async def fetch_post(post_dir_slug: str = "", post_id: str = "") -> str:
         try:
-            slug = (args.get("post_dir_slug") or "").strip()
-            pid = (args.get("post_id") or "").strip()
+            slug = (post_dir_slug or "").strip()
+            pid = (post_id or "").strip()
             with _open_db() as db:
                 row = None
                 if pid:
@@ -1976,29 +1836,9 @@ def build_content_mcp_server(
             logger.exception("fetch_post failed")
             return _err(f"fetch_post failed: {exc}")
 
-    @tool(
-        name="fetch_slide_context",
-        description=(
-            "Pre-assembled context for generating ONE slide's image — call this "
-            "right before generate_image for each slide so you never work from "
-            "memory. Returns the slide's current image_prompt, the post's "
-            "visual_brief, THIS slide's emotional_arc line, the camera_ref_pool + "
-            "resolved cameraRef candidates, the locked character asset (slide 1's "
-            "image, for the slides 2-5 reference chain), and the role-ordered "
-            "suggested input_asset_ids + suggested model for this slide. Use these "
-            "so realism, character, and framing stay consistent across the set."
-        ),
-        input_schema={
-            "type": "object",
-            "properties": {
-                "slide_id": {"type": "string", "description": "The slide to fetch context for, e.g. 'slide-03'."},
-            },
-            "required": ["slide_id"],
-        },
-    )
-    async def fetch_slide_context(args: dict) -> dict:
+    async def fetch_slide_context(slide_id: str) -> str:
         try:
-            slide_id = (args.get("slide_id") or "").strip()
+            slide_id = (slide_id or "").strip()
             if not slide_id:
                 return _err("slide_id is required (e.g. 'slide-03').")
             with _open_db() as db:
@@ -2051,35 +1891,182 @@ def build_content_mcp_server(
 
     # Memory is cross-agent: the content agent remembers the same project the
     # audit agent does, through the same tools in agents/core.
-    memory_tools = build_memory_tools_sdk(
+    async def _on_memory(entry: dict) -> None:
+        await emit({"event": ContentEvent.MEMORY_WRITTEN, "memory": entry})
+
+    memory_tools = build_memory_tools_lc(
         project_id,
         user_id=getattr(session, "user_id", None),
         conversation_id=getattr(session, "conversation_id", None),
         agent_type="tiktok_studio",
-        on_memory=lambda entry: emit({"event": ContentEvent.MEMORY_WRITTEN, "memory": entry}),
-    )
+        on_memory=_on_memory,
+    ) if remember else []
 
-    return create_sdk_mcp_server(
-        "duct_content",
-        tools=[
-            *memory_tools,
-            submit_plan,
-            submit_post_draft,
-            edit_slide,
-            fetch_brand_context,
-            fetch_topic_bank,
-            fetch_format_library,
-            fetch_avatar_library,
-            fetch_content_history,
-            fetch_content_assets,
-            fetch_discovered_references,
-            fetch_post,
-            fetch_slide_context,
-            render_slide,
-            generate_image,
-            edit_image,
-            publish_post,
-            mark_posted,
-            log_metrics,
-        ],
-    )
+    def _bind(fn, name: ContentTool, description: str, args_schema=None) -> StructuredTool:
+        return StructuredTool.from_function(
+            coroutine=fn,
+            name=name.value,
+            description=description,
+            args_schema=args_schema,
+        )
+
+    return [
+        *memory_tools,
+        _bind(
+            submit_plan, ContentTool.SUBMIT_PLAN,
+            "Persist the monthly content plan. The argument schema is the contract: "
+            "an ordered list of days, each with a topic and a pillar. Inserts a "
+            "content_plans row scoped to this project and emits PLAN_GENERATED so the "
+            "workspace renders it. Call this AFTER emitting <duct_artifact>{\"type\":\"plan\",...}</duct_artifact>.",
+            SubmitPlanArgs,
+        ),
+        _bind(
+            submit_post_draft, ContentTool.SUBMIT_POST_DRAFT,
+            "Persist a single post draft. The argument schema is the contract; the tool "
+            "upserts a content_posts row keyed by (project_id, post_dir_slug), "
+            "and emits POST_DRAFT_UPDATED. Call AFTER emitting "
+            "<duct_artifact>{\"type\":\"post\",...}</duct_artifact>.",
+            SubmitPostDraftArgs,
+        ),
+        _bind(
+            edit_slide, ContentTool.EDIT_SLIDE,
+            "Surgically edit ONE slide of the current post WITHOUT re-sending the "
+            "whole post. Pass slide_id + a `patch` of only the fields that change "
+            "— e.g. {\"caption_style\":\"cap-raw\"}, {\"headline\":\"...\"}, "
+            "{\"kind\":\"text\"}, {\"image_prompt\":\"...\"}, or {\"items\":[...]}. "
+            "The slide is merged + revalidated, the HTML re-rendered, and "
+            "POST_DRAFT_UPDATED emitted. Changing image_prompt marks that image "
+            "stale (regenerate to match). Use submit_post_draft for whole-post or "
+            "multi-slide changes, or to add / remove / reorder slides.",
+            EditSlideArgs,
+        ),
+        _bind(
+            fetch_brand_context, ContentTool.FETCH_BRAND_CONTEXT,
+            "Return the current brand context for this project: identity "
+            "(name/slug/tagline/url), audience, content_brand JSONB, pillars, "
+            "and visual assets. No arguments. Call this FIRST in a new session.",
+        ),
+        _bind(
+            fetch_topic_bank, ContentTool.FETCH_TOPIC_BANK,
+            "Return per-pillar topic usage by scanning content_posts. "
+            "Each entry: pillar -> { topics_used: [...], last_used_at: ISO|None }. "
+            "Use this to decide whether to dispatch research_pillar sub-agents.",
+        ),
+        _bind(
+            fetch_format_library, ContentTool.FETCH_FORMAT_LIBRARY,
+            "Return the per-project content formats (name, slug, full JSONB data) "
+            "AND resolved_css — the shared base engine CSS plus the format's linked "
+            "styles, ready to inline verbatim into the slides <style> block. Do not "
+            "write caption/hook/layout CSS yourself; use resolved_css and its classes.",
+        ),
+        _bind(
+            fetch_avatar_library, ContentTool.FETCH_AVATAR_LIBRARY,
+            "Return the list of per-project avatars (name + full JSONB data including ref images).",
+        ),
+        _bind(
+            fetch_content_history, ContentTool.FETCH_CONTENT_HISTORY,
+            "Return recent posts (default last 30) for de-duplication and "
+            "to inform hook variation. Fields: post_dir_slug, pillar, topic, "
+            "hook_type, status, posted_at, perf.",
+            HistoryArgs,
+        ),
+        _bind(
+            fetch_content_assets, ContentTool.FETCH_CONTENT_ASSETS,
+            "Return content assets (generated images, uploads, references) "
+            "for this project. Filter by asset_type if provided "
+            "(e.g. 'generated', 'logo', 'background', 'reference', 'upload'). "
+            "References include the repo-bundled GLOBAL library (camera / "
+            "layouts / captions) served from /static/references — narrow it "
+            "with the optional axis + subtype filters. A global reference's "
+            "`id` is its /static/references/... URL; pass that id straight "
+            "into generate_image's input_asset_ids.",
+            ContentAssetsArgs,
+        ),
+        _bind(
+            fetch_discovered_references, ContentTool.FETCH_DISCOVERED_REFERENCES,
+            "Return TikTok posts the user (or a previous discovery run) saved as "
+            "high-performing references. Use this to ground topic / hook / format "
+            "decisions in real-world signal — what's actually working in the "
+            "target audience's niche right now. Each row carries the post's "
+            "engagement counts (play, digg, share, comment, collect), hashtags, "
+            "music, author, and the TikTok URL. Filter by min_play_count to "
+            "skip the long tail (default 10000).",
+            DiscoveredReferencesArgs,
+        ),
+        _bind(
+            fetch_post, ContentTool.FETCH_POST,
+            "Return the current persisted state of ONE post — structured slides "
+            "(copy + image prompts + any generated image_url), layout, and "
+            "metadata. Use this to ground an edit on the live post before "
+            "changing a caption/prompt or generating images, especially when "
+            "resuming an earlier draft. Pass post_dir_slug or post_id; with "
+            "neither, returns this session's current post. Each slide includes "
+            "`image_stale` (true = the prompt changed after the image was made, "
+            "so the image should be regenerated).",
+            FetchPostArgs,
+        ),
+        _bind(
+            fetch_slide_context, ContentTool.FETCH_SLIDE_CONTEXT,
+            "Pre-assembled context for generating ONE slide's image — call this "
+            "right before generate_image for each slide so you never work from "
+            "memory. Returns the slide's current image_prompt, the post's "
+            "visual_brief, THIS slide's emotional_arc line, the camera_ref_pool + "
+            "resolved cameraRef candidates, the locked character asset (slide 1's "
+            "image, for the slides 2-5 reference chain), and the role-ordered "
+            "suggested input_asset_ids + suggested model for this slide. Use these "
+            "so realism, character, and framing stay consistent across the set.",
+            SlideIdArgs,
+        ),
+        _bind(
+            render_slide, ContentTool.RENDER_SLIDE,
+            "Rasterize ONE slide to a 1080×1920 (9:16) PNG and SEE it — the "
+            "COMPOSED slide as it will actually look (caption overlay, gradient, "
+            "layout, safe zones), not just the raw photo. Returns the image inline "
+            "so you can critique composition, caption legibility, text/face "
+            "overlap, and safe-zone fit, then fix the structured slide. These "
+            "composed renders are also what publish_post uploads. Needs a "
+            "connected session UI; if none responds it times out — then proceed "
+            "on the raw photo + structured data.",
+            SlideIdArgs,
+        ),
+        _bind(
+            generate_image, ContentTool.GENERATE_IMAGE,
+            "Generate one or more images from a text prompt. "
+            "Returns inline image data (so you can see the result) PLUS a stable "
+            "asset_url. Defaults: 9:16 portrait, 1 image. Generated images are "
+            "saved to the project's media library.",
+            GenerateImageInput,
+        ),
+        _bind(
+            edit_image, ContentTool.EDIT_IMAGE,
+            "Edit an existing content asset (inpaint, outpaint, bgswap, style transfer, "
+            "or free-form Gemini edit). Returns the edited image inline + a stable "
+            "asset_url. The original asset is preserved — every edit creates a new "
+            "content_assets row.",
+            EditImageInput,
+        ),
+        _bind(
+            publish_post, ContentTool.PUBLISH_POST,
+            "Publish a saved post via PostBridge. Uploads each slide's COMPOSED "
+            "render (caption baked in — call render_slide first) to PostBridge, "
+            "creates the post bound to one or more social_account_ids (numeric, "
+            "from list_social_accounts), and stores the resulting PostBridge post "
+            "id on the content_posts row. By default it refuses slides that have "
+            "no render (their captions wouldn't appear).",
+            PublishPostArgs,
+        ),
+        _bind(
+            mark_posted, ContentTool.MARK_POSTED,
+            "Mark a post as posted (manual flag — use when the user posted "
+            "outside of PostBridge). Sets status='posted' and posted_at=now.",
+            MarkPostedArgs,
+        ),
+        _bind(
+            log_metrics, ContentTool.LOG_METRICS,
+            "Refresh performance metrics for a post from PostBridge. Looks up "
+            "the post_result for this post, fetches lifetime + daily analytics, "
+            "and merges them into post.perf / post.daily_perf. Requires "
+            "post_bridge_post_id set on the row (i.e. publish_post ran first).",
+            PostIdArgs,
+        ),
+    ]

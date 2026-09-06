@@ -1,7 +1,8 @@
 """Which Gemini key a content run spends on images.
 
-Images are a *second* provider inside a content run: the conversation is
-Anthropic, every generated image is Google. The image tools used to read
+Images are a *second* provider inside a content run: the conversation is on
+whichever provider the user brought a key for, every generated image is
+Google. The image tools used to read
 ``cfg.gemini_api_key`` directly, which on the hosted deployment meant every
 image a customer generated was billed to Duct — the one path the provider-key
 gate did not cover.
@@ -20,7 +21,7 @@ import pytest
 
 import routes.content as content_routes
 from agents.content.schema import make_session
-from agents.content.tools import build_content_mcp_server
+from agents.content.tools import build_content_tools_lc
 from agents.models import Provider
 
 
@@ -29,27 +30,13 @@ async def _noop(_event: dict) -> None:
 
 
 def _call(session, tool: str, args: dict) -> str:
-    """Invoke one tool through the MCP server the agent actually talks to.
+    """Invoke one tool as the agent would — through the bound LangChain tool.
 
-    Returns the text block the model would see — `_err` answers in prose, not
-    JSON, and the prose is the part under test here.
+    Returns what the model would read — `_err` answers in prose inside its
+    JSON envelope, and the prose is the part under test here.
     """
-    import mcp.types as mt
-
-    cfg = build_content_mcp_server(session.project_id, _noop, session)
-    inst = cfg["instance"]
-
-    async def _run():
-        handler = inst.request_handlers[mt.CallToolRequest]
-        res = await handler(
-            mt.CallToolRequest(
-                method="tools/call",
-                params=mt.CallToolRequestParams(name=tool, arguments=args),
-            )
-        )
-        return res.root.content[0].text
-
-    return asyncio.run(_run())
+    tools = {t.name: t for t in build_content_tools_lc(session.project_id, _noop, session)}
+    return asyncio.run(tools[tool].ainvoke(args))
 
 
 # --- the tools spend the session's key, never config's ----------------------

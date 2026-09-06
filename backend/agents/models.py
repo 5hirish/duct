@@ -27,6 +27,12 @@ class Provider(str, Enum):
     # for it. ``GATEWAY_BASE_URL`` / ``NATIVE_GATEWAY_PROVIDERS`` below is where
     # that split is written down.
     OPENROUTER = "openrouter"
+    # xAI is a first-party vendor, not a gateway: LangChain resolves "xai" to
+    # ``langchain-xai`` → ``ChatXAI``, so it needs no base-URL entry and takes
+    # the native branch in ``langchain_provider``. Reachable as the OpenAI
+    # shape at api.x.ai too, but the native package carries reasoning_effort
+    # and xAI's server-side search as real fields rather than passthrough.
+    XAI = "xai"
 
 
 class ModelName(str, Enum):
@@ -55,12 +61,21 @@ class ModelName(str, Enum):
     # stable 3.x Pro; verified against the live ListModels response and a real
     # generateContent call rather than taken from the docs.
     GEMINI_3_1_PRO_PREVIEW = "gemini-3.1-pro-preview"
-    GEMINI_3_7_FLASH = "gemini-3.7-flash"
+    GEMINI_3_8_FLASH = "gemini-3.8-flash"
     GEMINI_3_5_FLASH_LITE = "gemini-3.5-flash-lite"
     GEMINI_2_5_FLASH = "gemini-2.5-flash"
-    GEMINI_2_5_FLASH_LITE = "gemini-2.5-flash-lite"
     
     # Anthropic
+    # Anthropic's most capable widely released model, above the Opus tier and
+    # priced accordingly ($10/$50 against Opus 5's $5/$25) — offered, not
+    # defaulted to. Two behaviours differ from the rest of the family and both
+    # are load-bearing here: thinking is always on (a `budget_tokens` config is
+    # a 400, which is why it maps to the effort ladder like the other 5s), and
+    # forced tool choice is rejected — `tool_choice: any` returns a 400. The
+    # content enrichment pass forces exactly that through LangChain's
+    # ToolStrategy, so on this model that pass degrades to local signals
+    # instead of returning trends. See agents/content/enrichment.py.
+    CLAUDE_FABLE = "claude-fable-5-1"
     CLAUDE_OPUS = "claude-opus-5"
     CLAUDE_SONNET = "claude-sonnet-5"
     CLAUDE_HAIKU = "claude-haiku-4-5"
@@ -69,6 +84,13 @@ class ModelName(str, Enum):
     # such ID — Opus 5 is natively 1M there — so LangChain (v1) would 404 on
     # it. Enforced by CLI_ONLY_MODELS below.
     CLAUDE_OPUS_1M = "claude-opus-5[1m]"
+
+    # xAI. Verified against docs.x.ai: 500k context, $2/$6, and
+    # `reasoning_effort` low/medium/high/xhigh — "Reasoning cannot be
+    # disabled", so there is no off rung to offer. No fallback pair below:
+    # it is the only Grok in the catalogue, and MODEL_FALLBACK never guesses
+    # a target it was not given.
+    GROK_4_6 = "grok-4.6"
 
     # OpenRouter — vendor/slug form. A *curated default list*, not a whitelist:
     # OpenRouter fronts 400+ models, so resolve_engine_model passes an unknown
@@ -82,15 +104,24 @@ class ModelName(str, Enum):
     # magnitude, which on this list is the entire point:
     #
     #   deepseek-chat      $0.26/$1.03  164k  →  v4-flash    $0.08/$0.16  1.0M
-    #   qwen3-235b-a22b    $0.45/$1.82  131k  →  qwen3.7-flash $0.03/$0.13 1.0M
+    #   qwen3-235b-a22b    $0.45/$1.82  131k  →  qwen3.8-flash $0.15/$0.47 1.0M
     #   glm-4.6            $0.43/$1.75  205k  →  glm-5.3-flash $0.07/$0.25 1.3M
-    #   kimi-k2            $0.57/$2.30  131k  →  kimi-k2.5   $0.45/$2.25  262k
+    #   kimi-k2            $0.57/$2.30  131k  →  kimi-k3     $3.00/$15.00 1.0M
     #
-    # All four carry `tools` in supported_parameters; a slug that cannot tool-call
+    # kimi-k3 is the exception to the "cheaper and longer" pattern above: it is
+    # ~6x the price of the k2.5 it replaces, bought with 4x the context. It is
+    # here as the capable end of the open-weight list, not as a volume model.
+    #
+    # deepseek-v4-pro sits beside v4-flash rather than replacing it — same
+    # vendor, same 1.0M context, ~10x the price for the reasoning tier. Two
+    # rungs of one family is the point.
+    #
+    # All carry `tools` in supported_parameters; a slug that cannot tool-call
     # has no business here, since every Duct agent is a tool-calling agent.
     OR_DEEPSEEK_V4_FLASH = "deepseek/deepseek-v4-flash"
-    OR_QWEN3_7_FLASH = "qwen/qwen3.7-flash"
-    OR_KIMI_K2_5 = "moonshotai/kimi-k2.5"
+    OR_DEEPSEEK_V4_PRO = "deepseek/deepseek-v4-pro"
+    OR_QWEN3_8_FLASH = "qwen/qwen3.8-flash"
+    OR_KIMI_K3 = "moonshotai/kimi-k3"
     OR_GLM_5_3_FLASH = "z-ai/glm-5.3-flash"
     OR_CLAUDE_OPUS = "anthropic/claude-opus-5"
     OR_CLAUDE_SONNET = "anthropic/claude-sonnet-5"
@@ -98,11 +129,12 @@ class ModelName(str, Enum):
 
 
 class AgentTool(StrEnum):
-    """Built-in Claude Agent SDK tool names passed to allowed_tools.
+    """Built-in Claude Agent SDK tool names passed to allowed_tools (audit v3).
 
-    Per-agent MCP tool names are NOT here — each agent type owns its own enum
-    next to its tools/schema: see AuditTool (agents/audit/schema.py, server
-    ``duct_crawl``) and ContentTool (agents/content/schema.py, ``duct_content``).
+    Per-agent tool names are NOT here — each agent type owns its own enum next
+    to its tools/schema: see AuditTool (agents/audit/schema.py, the
+    ``duct_crawl`` MCP server) and ContentTool (agents/content/schema.py, the
+    LangChain-bound content tools).
     """
 
     ASK_USER_QUESTION = "AskUserQuestion"
@@ -215,9 +247,10 @@ CLI_ONLY_MODELS: frozenset[ModelName] = frozenset({ModelName.CLAUDE_OPUS_1M})
 # Default provider → model mapping
 DEFAULT_MODELS = {
     Provider.OPENAI: ModelName.GPT_5_MINI,
-    Provider.GOOGLE_GENAI: ModelName.GEMINI_2_5_FLASH,
+    Provider.GOOGLE_GENAI: ModelName.GEMINI_3_8_FLASH,
     Provider.ANTHROPIC: ModelName.CLAUDE_SONNET,
     Provider.OPENROUTER: ModelName.OR_DEEPSEEK_V4_FLASH,
+    Provider.XAI: ModelName.GROK_4_6,
 }
 
 # Where a run goes when its model will not answer — model data, so it lives
@@ -244,13 +277,17 @@ DEFAULT_MODELS = {
 # silently substituting another vendor's model is worse than failing.
 MODEL_FALLBACK: dict[ModelName, tuple[ModelName, ...]] = {
     # Anthropic
+    ModelName.CLAUDE_FABLE:          (ModelName.CLAUDE_OPUS,),
     ModelName.CLAUDE_OPUS:           (ModelName.CLAUDE_SONNET,),
     ModelName.CLAUDE_SONNET:         (ModelName.CLAUDE_HAIKU,),
     # Google
-    ModelName.GEMINI_3_1_PRO_PREVIEW: (ModelName.GEMINI_3_7_FLASH,),
-    ModelName.GEMINI_3_7_FLASH:      (ModelName.GEMINI_2_5_FLASH,),
-    ModelName.GEMINI_3_5_FLASH_LITE: (ModelName.GEMINI_2_5_FLASH_LITE,),
-    ModelName.GEMINI_2_5_FLASH:      (ModelName.GEMINI_2_5_FLASH_LITE,),
+    ModelName.GEMINI_3_1_PRO_PREVIEW: (ModelName.GEMINI_3_8_FLASH,),
+    # 3.5 Flash-Lite is the bottom of the family: 2.5 Flash-Lite was retired
+    # (generateContent 404s "no longer available to new users" while
+    # ListModels still lists it — which is why only a generate call counts as
+    # verification; tests/test_model_transport.py makes one per id, live).
+    ModelName.GEMINI_3_8_FLASH:      (ModelName.GEMINI_3_5_FLASH_LITE,),
+    ModelName.GEMINI_2_5_FLASH:      (ModelName.GEMINI_3_5_FLASH_LITE,),
     # OpenAI
     ModelName.GPT_5_6_SOL:           (ModelName.GPT_5_6_TERRA,),
     ModelName.GPT_5_6_TERRA:         (ModelName.GPT_5_6_LUNA,),
@@ -277,18 +314,20 @@ CONTEXT_WINDOW: dict[ModelName, int] = {
     ModelName.GPT_4O: 128_000,
     ModelName.GPT_4O_MINI: 128_000,
     ModelName.GEMINI_3_1_PRO_PREVIEW: 1_000_000,
-    ModelName.GEMINI_3_7_FLASH: 1_000_000,
+    ModelName.GEMINI_3_8_FLASH: 1_000_000,
     ModelName.GEMINI_3_5_FLASH_LITE: 1_000_000,
     ModelName.GEMINI_2_5_FLASH: 1_000_000,
-    ModelName.GEMINI_2_5_FLASH_LITE: 1_000_000,
+    ModelName.CLAUDE_FABLE: 1_000_000,
     ModelName.CLAUDE_OPUS: 200_000,
     ModelName.CLAUDE_SONNET: 200_000,
     ModelName.CLAUDE_HAIKU: 200_000,
     ModelName.CLAUDE_OPUS_1M: 1_000_000,
-    ModelName.OR_DEEPSEEK_V4_FLASH: 128_000,
-    ModelName.OR_QWEN3_7_FLASH: 128_000,
-    ModelName.OR_KIMI_K2_5: 256_000,
-    ModelName.OR_GLM_5_3_FLASH: 128_000,
+    ModelName.GROK_4_6: 500_000,
+    ModelName.OR_DEEPSEEK_V4_FLASH: 1_000_000,
+    ModelName.OR_DEEPSEEK_V4_PRO: 1_000_000,
+    ModelName.OR_QWEN3_8_FLASH: 1_000_000,
+    ModelName.OR_KIMI_K3: 1_000_000,
+    ModelName.OR_GLM_5_3_FLASH: 1_300_000,
     ModelName.OR_CLAUDE_OPUS: 200_000,
     ModelName.OR_CLAUDE_SONNET: 200_000,
     ModelName.OR_GPT_5_MINI: 400_000,
@@ -319,17 +358,21 @@ PRICING: dict[ModelName, ModelPrice] = {
     ModelName.GPT_4O: ModelPrice(2.5, 10.0, 1.25),
     ModelName.GPT_4O_MINI: ModelPrice(0.15, 0.6, 0.075),
     ModelName.GEMINI_3_1_PRO_PREVIEW: ModelPrice(2.0, 12.0, 0.2),
-    ModelName.GEMINI_3_7_FLASH: ModelPrice(0.75, 3.75, 0.075),
+    ModelName.GEMINI_3_8_FLASH: ModelPrice(0.75, 3.75, 0.075),
     ModelName.GEMINI_3_5_FLASH_LITE: ModelPrice(0.3, 2.5, 0.03),
     ModelName.GEMINI_2_5_FLASH: ModelPrice(0.3, 2.5, 0.03),
-    ModelName.GEMINI_2_5_FLASH_LITE: ModelPrice(0.1, 0.4, 0.01),
+    ModelName.CLAUDE_FABLE: ModelPrice(10.0, 50.0, 0.25, 12.5),
     ModelName.CLAUDE_OPUS: ModelPrice(5.0, 25.0, 0.5, 6.25),
     ModelName.CLAUDE_SONNET: ModelPrice(2.0, 10.0, 0.2, 2.5),
     ModelName.CLAUDE_HAIKU: ModelPrice(1.0, 5.0, 0.1, 1.25),
     ModelName.CLAUDE_OPUS_1M: ModelPrice(5.0, 25.0, 0.5, 6.25),
+    # Base rates. xAI doubles both above a 200k-token prompt; ModelPrice has
+    # no tier for that, so a very long Grok run under-reports.
+    ModelName.GROK_4_6: ModelPrice(2.0, 6.0, 0.5),
     ModelName.OR_DEEPSEEK_V4_FLASH: ModelPrice(0.08722, 0.17444, 0.017444),
-    ModelName.OR_QWEN3_7_FLASH: ModelPrice(0.03, 0.13, 0.006, 0.038),
-    ModelName.OR_KIMI_K2_5: ModelPrice(0.45, 2.25, 0.07),
+    ModelName.OR_DEEPSEEK_V4_PRO: ModelPrice(0.9309, 1.8618, 0.077575),
+    ModelName.OR_QWEN3_8_FLASH: ModelPrice(0.15, 0.47, 0.03),
+    ModelName.OR_KIMI_K3: ModelPrice(3.0, 15.0, 0.3),
     ModelName.OR_GLM_5_3_FLASH: ModelPrice(0.075, 0.25, 0.015),
     ModelName.OR_CLAUDE_OPUS: ModelPrice(5.0, 25.0, 0.5, 6.25),
     ModelName.OR_CLAUDE_SONNET: ModelPrice(2.0, 10.0, 0.2, 2.5),
@@ -450,6 +493,8 @@ def get_api_key_kwargs(
         return {"google_api_key": api_key}
     if provider == Provider.ANTHROPIC:
         return {"anthropic_api_key": api_key}
+    if provider == Provider.XAI:
+        return {"xai_api_key": api_key}
     return {}
 
 
@@ -466,11 +511,11 @@ def resolve_provider(name: str | None) -> Provider:
 def resolve_model(name: str | None, provider: Provider) -> ModelName:
     """Resolve a string to a ModelName enum, defaulting per provider."""
     if not name:
-        return DEFAULT_MODELS.get(provider, ModelName.GEMINI_2_5_FLASH)
+        return DEFAULT_MODELS.get(provider, ModelName.GEMINI_3_8_FLASH)
     try:
         return ModelName(name.strip())
     except ValueError:
-        return DEFAULT_MODELS.get(provider, ModelName.GEMINI_2_5_FLASH)
+        return DEFAULT_MODELS.get(provider, ModelName.GEMINI_3_8_FLASH)
 
 
 # Which provider serves a model id, by the shape of the id itself.
