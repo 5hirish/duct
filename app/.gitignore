@@ -1,6 +1,7 @@
 .next
 .open-next
 node_modules
+smoke-shots
 *.log
 *.tsbuildinfo
 
