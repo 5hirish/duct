@@ -43,6 +43,10 @@ from tests.eval.rubrics.audit_report import audit_report_rubric, render_audit_ar
 # Duct's own site by default — safe to crawl, and we know what "good" looks like.
 DEFAULT_URL = "https://getduct.ai"
 
+# Long enough that a slow last tool call still lands, short enough that the
+# eval is not waiting on a conversation nobody is having.
+_CHAT_IDLE_TIMEOUT = 5.0
+
 
 def _emit_scorecard(scorecard, label: str) -> None:
     """Write the scorecard to disk and echo it, mirroring the content eval."""
@@ -154,6 +158,10 @@ def test_audit_report_passes_rubric():
             emit=emit,
             max_blog_posts=3,
             report_mode="template",
+            # The run stays open for follow-up chat once the report lands, and
+            # this harness never sends one. Without a short idle timeout the
+            # eval would sit in the chat loop for the full 30 minutes.
+            chat_idle_timeout=_CHAT_IDLE_TIMEOUT,
         )
 
     try:

@@ -47,6 +47,26 @@ from service.crawl.fetcher import SiteUnreachableError
 
 logger = logging.getLogger(__name__)
 
+
+def _record_version(session: Any, report: Any, version_id: int) -> None:
+    """Keep the session's version list in step with what was published.
+
+    The next version's number is read off this list, so a session that never
+    records one numbers every revision 1 — invisible until V1 could revise a
+    report at all, which it now can. It is also what the route rehydrates on
+    resume and what the UI's version picker reads.
+    """
+    if session is None:
+        return
+    from agents.audit.schema import VersionedReport
+
+    session.report_versions.append(VersionedReport(
+        version_id=version_id,
+        label=report.update_label,
+        report=report,
+        created_at=report.generated_at,
+    ))
+
 # One audit is a long single turn (nine categories, a tool call each) followed
 # by short chat turns. The recursion ceiling derives from the model-call guard
 # rather than being picked by hand — see RunLimits.
@@ -305,6 +325,7 @@ class LangChainAuditRunner:
                 structured_data=structured,
             )
             report_holder["report"] = report
+            _record_version(session, report, version_id)
             await emit({
                 "event": _E.ARTIFACT_VERSION,
                 "version_id": version_id,
@@ -487,6 +508,7 @@ class LangChainAuditRunner:
                 template_id=template_id,
                 structured_data=structured,
             )
+            _record_version(session, report, version_id)
             await emit({
                 "event": _E.ARTIFACT_VERSION,
                 "version_id": version_id,

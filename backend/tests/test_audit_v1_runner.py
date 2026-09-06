@@ -498,3 +498,26 @@ def test_v1_reads_its_project_scope_from_the_session_not_the_caller():
         artifact_project_id=uuid4(), user_id=uuid4(), conversation_id=None, memory_off=True
     )
     assert runner._project_wiring(quiet, emit)["remember"] is False
+
+
+async def test_each_published_report_is_a_new_numbered_version(crawl_result):
+    """The next version number is read off the session's list, so a run that
+    never records one numbers every revision 1. That was invisible until V1
+    could revise a report at all."""
+    from agents.audit.schema import AuditSession
+    from agents.audit.v1.runner import _record_version
+
+    session = AuditSession(
+        session_id="versions", agent_type="audit_seo",
+        event_queue=asyncio.Queue(), chat_queue=asyncio.Queue(),
+    )
+    first = SimpleNamespace(update_label="Initial audit", generated_at="t1")
+    second = SimpleNamespace(update_label="Update 2", generated_at="t2")
+
+    _record_version(session, first, 1)
+    _record_version(session, second, 2)
+
+    assert [v.version_id for v in session.report_versions] == [1, 2]
+    assert [v.label for v in session.report_versions] == ["Initial audit", "Update 2"]
+    # A runner with no session (the eval harness, a script) must not blow up.
+    _record_version(None, first, 1)
