@@ -1,8 +1,13 @@
 # Duct Desktop — agent instructions
 
-Thin Tauri v2 shell around the hosted Duct web app, plus an OS-keychain store
-for bring-your-own provider API keys. Design:
-`docs/engineering/tauri-desktop-byo-keys-plan.md`.
+Tauri v2 shell that loads the hosted Duct web app and runs the backend beside it
+as a local sidecar, plus an OS-keychain store for bring-your-own provider API
+keys. Design: `docs/engineering/tauri-desktop-byo-keys-plan.md`.
+
+**Everything under `backend/` ships to a user's disk.** PyInstaller freezes the
+whole package into every bundle, so "it lives on the server" is no longer a
+place anything can hide. The bundle carries no credential — the sidecar
+generates its own local secrets on first run — but it carries all the code.
 
 ## Stack
 
@@ -83,23 +88,43 @@ for bring-your-own provider API keys. Design:
   origin and cannot import them, which is also why no `updater:*` permission is
   needed: those gate the plugin's JS API, and our commands reach it from Rust).
   The manifest is `latest.json` on the GitHub release, assembled by
-  `.github/scripts/build-updater-manifest.mjs`. The App Store build drops it with
-  `--no-default-features`, which removes the plugin and flips `get_shell_info`'s
-  `autoUpdate` to false; the two commands stay compiled as inert stubs so the
-  capability files are identical across builds. **The minisign private key is not
-  recoverable** — losing it means no installed copy will ever accept another
-  update.
-- **macOS distribution** is Developer ID + a notarized DMG, *not* the App Store.
-  The sandbox cannot host a PyInstaller sidecar and embedded interpreters draw
-  rejections — see the engine consolidation review (duct-cloud, private) §8.2.
-  Config is `src-tauri/tauri.conf.json` (`bundle.macOS`) +
-  `src-tauri/Entitlements.developerid.plist`. The App Store variant
-  (`tauri.appstore.conf.json`, `Entitlements.appstore.plist`,
-  `.github/workflows/desktop-testflight.yml`) is retained only for the thin
-  client that predates the sidecar; do not add the sidecar to it. That workflow
-  is **manual-only** — `bundle.resources` now always declares the sidecar, which
-  an App Store build cannot host, so it fails on every desktop change until the
-  appstore overlay overrides `bundle.resources`.
+  `.github/scripts/build-updater-manifest.mjs`. `--no-default-features` removes
+  the plugin and flips `get_shell_info`'s `autoUpdate` to false; the two commands
+  stay compiled as inert stubs so the capability files are identical across
+  builds. That escape hatch existed for the App Store and now **has no
+  consumer** — either delete the `updater` feature or give it a real one, since
+  a configuration nothing builds is one that silently rots. **The minisign
+  private key is not recoverable** — losing it means no installed copy will ever
+  accept another update.
+- **macOS distribution** is Developer ID + a notarized DMG, and nothing else.
+  The App Store sandbox cannot host a PyInstaller sidecar and embedded
+  interpreters draw rejections — see the engine consolidation review
+  (duct-cloud, private) §8.2 — so that channel could only ship the pre-sidecar
+  thin client. **Retired 2026-09-06**: `tauri.appstore.conf.json`,
+  `Entitlements.appstore.plist` and `desktop-testflight.yml` are deleted. Config
+  is now just `src-tauri/tauri.conf.json` (`bundle.macOS`) +
+  `src-tauri/Entitlements.developerid.plist`. Do not revive it without solving
+  the sandbox problem first — it is not a config gap, it is structural.
+
+## Forkability
+
+Three values identify *Duct's* build rather than the app, and each is
+configuration a fork overrides without editing code. Keep it that way — a new
+Duct-specific constant belongs in one of these three places, not inline:
+
+- **Window URL and bundle identity** — a `--config` overlay
+  (`tauri.selfhost.conf.json` is the template; `dev` and `local` use the same
+  mechanism).
+- **The origin allowed to `invoke`** — `capabilities/selfhost.json`. Changing
+  the window URL without this produces a window that renders and then fails
+  every command with "not allowed. Plugin not found".
+- **The Google desktop OAuth client** — `GOOGLE_DESKTOP_OAUTH_CLIENT_ID` and
+  `…_SECRET`, both `option_env!` in `sidecar.rs` and both baked from
+  `backend/.env.local` by `build.rs`. They are halves of one credential; a
+  change to either without the other fails at the token exchange, not at build.
+
+Code signing is deliberately *not* on that list: those secrets are Duct's legal
+identity and a fork builds unsigned. See "Build your own" in `README.md`.
 
 ## Crash reporting
 
@@ -152,7 +177,7 @@ Change one, change the other.
   **validates every file in `capabilities/`** regardless. So a capability naming
   a permission from a conditionally-compiled plugin fails the build for
   configurations that never load that file — which is what a separate `updater`
-  capability did to the `--no-default-features` App Store build. Keep permissions
+  capability once did to a `--no-default-features` build. Keep permissions
   from optional plugins out of `capabilities/` entirely.
 - Building needs platform webview libraries (see `README.md`); it does not build
   in the Claude-on-the-web container — build, sign, and release locally or in CI.
@@ -164,10 +189,8 @@ Change one, change the other.
   `op.batch_alter_table`. The pre-baseline revisions are Postgres-only and are
   never replayed; `backend/tests/test_desktop_migrations.py` guards the path
   that is.
-- Changes to `src-tauri/Entitlements.appstore.plist` alter what the sandbox
-  allows. Adding an entitlement without a real need invites App Review questions;
-  removing `app-sandbox` breaks the upload outright (CI checks for it).
-- `src-tauri/Entitlements.developerid.plist` is the opposite case: every key in
+- `src-tauri/Entitlements.developerid.plist` is the only entitlements file left
+  (the sandboxed App Store one is gone). Every key in
   it is load-bearing for the embedded CPython interpreter under the hardened
   runtime. Removing one does not harden the app, it makes the sidecar crash at
   launch. It deliberately carries no `app-sandbox` key.
@@ -178,10 +201,9 @@ Change one, change the other.
   Explain overlay settings here or in `README.md` instead. Key names are
   camelCase (`minimumSystemVersion`, `hardenedRuntime`, `entitlements`).
 - `bundle.createUpdaterArtifacts` applies to the macOS `app` target too, so
-  `--bundles app` does not opt out of it. Both overlays that must not produce a
-  signed archive turn it off explicitly: `tauri.dev.conf.json` (a dev build has
-  no signing key, and would otherwise fail *after* writing the `.app`) and
-  `tauri.appstore.conf.json`. On this app that archive is a ~160 MB gzip of the
+  `--bundles app` does not opt out of it. `tauri.dev.conf.json` therefore turns
+  it off explicitly — a dev build has no signing key and would otherwise fail
+  *after* writing the `.app`. On this app that archive is a ~160 MB gzip of the
   470 MB bundle — about 85 seconds per build.
 
 ## Versioning
@@ -203,20 +225,20 @@ invoke. Bump in the same PR as the change, at most one bump per PR:
   shell: removing or renaming an invoke command or capability flag, changing
   the deep-link scheme or keychain service name, raising
   `minimumSystemVersion`. `1.0.0` itself is reserved for the first public
-  (non-TestFlight) release.
+  release.
 - **MINOR** — new capability, backwards compatible: a new invoke command, a
   new capability flag, a new deep-link route, a new entitlement.
 - **PATCH** — behaviour fixes with no contract change: bug fixes, security
   fixes, UI/icon polish, dependency bumps.
 - **No bump** — nothing that ships in the bundle changed: CI workflow edits,
   docs, comments. Markdown-only changes under `desktop/` are excluded from the
-  TestFlight workflow's path filter for the same reason. Rebuilds of the same
+  release workflow's path filter for the same reason. Rebuilds of the same
   version are already distinguished by the CI-stamped build number.
 
 While the version is `0.y.z` (pre-GA), contract-breaking changes bump MINOR
 instead of MAJOR — but must still be called out in the PR description.
 
 Never set the build number by hand — CI stamps the GitHub run number as
-`CFBundleVersion`, which App Store Connect requires to keep increasing — and
+`CFBundleVersion`, which keeps it monotonic across rebuilds of one version — and
 never gate web-app behaviour on the version string; probe
 `get_shell_info().capabilities` instead.
