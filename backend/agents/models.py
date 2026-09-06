@@ -64,7 +64,6 @@ class ModelName(str, Enum):
     GEMINI_3_8_FLASH = "gemini-3.8-flash"
     GEMINI_3_5_FLASH_LITE = "gemini-3.5-flash-lite"
     GEMINI_2_5_FLASH = "gemini-2.5-flash"
-    GEMINI_2_5_FLASH_LITE = "gemini-2.5-flash-lite"
     
     # Anthropic
     # Anthropic's most capable widely released model, above the Opus tier and
@@ -248,7 +247,7 @@ CLI_ONLY_MODELS: frozenset[ModelName] = frozenset({ModelName.CLAUDE_OPUS_1M})
 # Default provider → model mapping
 DEFAULT_MODELS = {
     Provider.OPENAI: ModelName.GPT_5_MINI,
-    Provider.GOOGLE_GENAI: ModelName.GEMINI_2_5_FLASH,
+    Provider.GOOGLE_GENAI: ModelName.GEMINI_3_8_FLASH,
     Provider.ANTHROPIC: ModelName.CLAUDE_SONNET,
     Provider.OPENROUTER: ModelName.OR_DEEPSEEK_V4_FLASH,
     Provider.XAI: ModelName.GROK_4_6,
@@ -283,9 +282,12 @@ MODEL_FALLBACK: dict[ModelName, tuple[ModelName, ...]] = {
     ModelName.CLAUDE_SONNET:         (ModelName.CLAUDE_HAIKU,),
     # Google
     ModelName.GEMINI_3_1_PRO_PREVIEW: (ModelName.GEMINI_3_8_FLASH,),
-    ModelName.GEMINI_3_8_FLASH:      (ModelName.GEMINI_2_5_FLASH,),
-    ModelName.GEMINI_3_5_FLASH_LITE: (ModelName.GEMINI_2_5_FLASH_LITE,),
-    ModelName.GEMINI_2_5_FLASH:      (ModelName.GEMINI_2_5_FLASH_LITE,),
+    # 3.5 Flash-Lite is the bottom of the family: 2.5 Flash-Lite was retired
+    # (generateContent 404s "no longer available to new users" while
+    # ListModels still lists it — which is why only a generate call counts as
+    # verification; tests/test_model_transport.py makes one per id, live).
+    ModelName.GEMINI_3_8_FLASH:      (ModelName.GEMINI_3_5_FLASH_LITE,),
+    ModelName.GEMINI_2_5_FLASH:      (ModelName.GEMINI_3_5_FLASH_LITE,),
     # OpenAI
     ModelName.GPT_5_6_SOL:           (ModelName.GPT_5_6_TERRA,),
     ModelName.GPT_5_6_TERRA:         (ModelName.GPT_5_6_LUNA,),
@@ -315,7 +317,6 @@ CONTEXT_WINDOW: dict[ModelName, int] = {
     ModelName.GEMINI_3_8_FLASH: 1_000_000,
     ModelName.GEMINI_3_5_FLASH_LITE: 1_000_000,
     ModelName.GEMINI_2_5_FLASH: 1_000_000,
-    ModelName.GEMINI_2_5_FLASH_LITE: 1_000_000,
     ModelName.CLAUDE_FABLE: 1_000_000,
     ModelName.CLAUDE_OPUS: 200_000,
     ModelName.CLAUDE_SONNET: 200_000,
@@ -360,7 +361,6 @@ PRICING: dict[ModelName, ModelPrice] = {
     ModelName.GEMINI_3_8_FLASH: ModelPrice(0.75, 3.75, 0.075),
     ModelName.GEMINI_3_5_FLASH_LITE: ModelPrice(0.3, 2.5, 0.03),
     ModelName.GEMINI_2_5_FLASH: ModelPrice(0.3, 2.5, 0.03),
-    ModelName.GEMINI_2_5_FLASH_LITE: ModelPrice(0.1, 0.4, 0.01),
     ModelName.CLAUDE_FABLE: ModelPrice(10.0, 50.0, 0.25, 12.5),
     ModelName.CLAUDE_OPUS: ModelPrice(5.0, 25.0, 0.5, 6.25),
     ModelName.CLAUDE_SONNET: ModelPrice(2.0, 10.0, 0.2, 2.5),
@@ -511,11 +511,11 @@ def resolve_provider(name: str | None) -> Provider:
 def resolve_model(name: str | None, provider: Provider) -> ModelName:
     """Resolve a string to a ModelName enum, defaulting per provider."""
     if not name:
-        return DEFAULT_MODELS.get(provider, ModelName.GEMINI_2_5_FLASH)
+        return DEFAULT_MODELS.get(provider, ModelName.GEMINI_3_8_FLASH)
     try:
         return ModelName(name.strip())
     except ValueError:
-        return DEFAULT_MODELS.get(provider, ModelName.GEMINI_2_5_FLASH)
+        return DEFAULT_MODELS.get(provider, ModelName.GEMINI_3_8_FLASH)
 
 
 # Which provider serves a model id, by the shape of the id itself.

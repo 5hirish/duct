@@ -232,7 +232,6 @@ NO_THINKING_DIAL: frozenset[ModelName] = frozenset({
     # Pre-Gemini-3: thinking_level is rejected outright, and their control is a
     # token budget rather than a level. Supporting budgets is a separate shape.
     ModelName.GEMINI_2_5_FLASH,
-    ModelName.GEMINI_2_5_FLASH_LITE,
     # Absent from Anthropic's effort-supported model list.
     ModelName.CLAUDE_HAIKU,
     # Open weights behind OpenRouter. It lists `reasoning` in the catalogue's

@@ -51,7 +51,7 @@ ENGINE_DEFAULT_PROVIDER: dict[Engine, Provider] = {
 # Default model for each (engine, provider) pair when GENERATE_MODEL is unset
 ENGINE_DEFAULT_MODEL: dict[tuple[Engine, Provider], ModelName] = {
     # v1 — LangChain (all providers native)
-    (Engine.V1, Provider.GOOGLE_GENAI): ModelName.GEMINI_2_5_FLASH,
+    (Engine.V1, Provider.GOOGLE_GENAI): ModelName.GEMINI_3_8_FLASH,
     (Engine.V1, Provider.ANTHROPIC):    ModelName.CLAUDE_SONNET,
     (Engine.V1, Provider.OPENAI):       ModelName.GPT_5_MINI,
     (Engine.V1, Provider.OPENROUTER):   ModelName.OR_DEEPSEEK_V4_FLASH,

@@ -103,7 +103,7 @@ def test_a_modelname_enum_resolves_like_its_string():
 # ---------------------------------------------------------------------------
 
 @pytest.mark.parametrize(
-    "model", ["claude-haiku-4-5", "gpt-4o", "gpt-4o-mini", "gemini-2.5-flash", "gemini-2.5-flash-lite"]
+    "model", ["claude-haiku-4-5", "gpt-4o", "gpt-4o-mini", "gemini-2.5-flash"]
 )
 def test_a_model_with_no_dial_contributes_nothing(model):
     """Gemini 2.5 *rejects* thinking_level outright; 4o has no such parameter.
