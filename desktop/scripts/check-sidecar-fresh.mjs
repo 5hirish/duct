@@ -8,9 +8,19 @@
  * surfaces much later as a running app whose Python is weeks old, which reads
  * as an app bug rather than a stale artifact.
  *
- * CI refreezes on every run (see .github/workflows/desktop-release.yml), so
- * this passes trivially there — it also guards against those steps being
- * reordered.
+ * Since the sidecar became optional — the official build ships without one and
+ * talks to the hosted API — the two failure modes are graded differently:
+ *
+ *   no freeze at all  → a note, exit 0. That is the official build's normal
+ *                       state, and on `dev` it just means the local backend
+ *                       path is not being exercised today.
+ *   a STALE freeze    → still fatal. This is the dangerous one: the bundle
+ *                       copies the directory verbatim, so nothing downstream
+ *                       notices, and the app surfaces weeks-old Python as what
+ *                       looks like an app bug.
+ *
+ * Only the build paths that actually ship a sidecar run this — see the
+ * `pre*` hooks in package.json.
  *
  * Set DUCT_SKIP_SIDECAR_CHECK=1 to bundle a known-stale freeze deliberately.
  */
@@ -60,11 +70,11 @@ if (process.env.DUCT_SKIP_SIDECAR_CHECK === "1") {
 }
 
 if (!existsSync(FROZEN)) {
-  console.error(
-    `\nNo frozen sidecar at backend/dist/duct-sidecar.\n` +
-      `The bundle copies that directory verbatim, so the build would fail or ship a broken app.\n\n  ${REFREEZE}\n`,
+  console.log(
+    `No frozen sidecar at backend/dist/duct-sidecar — this build talks to the hosted API.\n` +
+      `To exercise the local backend instead:\n\n  ${REFREEZE}\n`,
   );
-  process.exit(1);
+  process.exit(0);
 }
 
 const frozenAt = statSync(FROZEN).mtimeMs;

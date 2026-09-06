@@ -130,7 +130,7 @@ fn delete_provider_key(provider: String) -> Result<(), String> {
 /// gate shell-dependent flows on capability, not on shell version — older
 /// shells where this command doesn't exist simply keep the legacy behaviour.
 #[tauri::command]
-fn get_shell_info() -> serde_json::Value {
+fn get_shell_info(app: AppHandle) -> serde_json::Value {
     serde_json::json!({
         "version": env!("CARGO_PKG_VERSION"),
         "capabilities": {
@@ -139,15 +139,21 @@ fn get_shell_info() -> serde_json::Value {
             // to the system browser too. Older shells lack the route entirely
             // and the web app keeps navigating them in-window.
             "browserConnectors": true,
-            // This shell ships and supervises a local backend; the web app should
-            // resolve its API base from `get_sidecar_info` instead of the
-            // build-time NEXT_PUBLIC_API_BASE. Older shells lack the flag and
-            // keep talking to the hosted API.
-            "localSidecar": true,
+            // Whether this build ships a local backend. True means the web app
+            // should resolve its API base from `get_sidecar_info` instead of the
+            // build-time NEXT_PUBLIC_API_BASE; false means keep talking to the
+            // hosted API, which is also what older shells without the flag do.
+            //
+            // Probed rather than hardcoded, so the answer cannot disagree with
+            // what `bundle.resources` actually put in the bundle. The official
+            // build ships no sidecar; the self-host build adds it back.
+            "localSidecar": sidecar::is_available(&app),
             // `tauri-plugin-updater` is wired and permitted in this build, so
-            // the web app may check for updates and offer to install one. The
-            // App Store variant must never report this true — self-update is
-            // grounds for rejection there.
+            // the web app may check for updates and offer to install one. Kept
+            // as a probe rather than a literal `true` so a build that compiles
+            // the plugin out cannot advertise an update path it does not have —
+            // no shipping build does that today (see the `updater` feature in
+            // Cargo.toml), which is why the flag is worth a second look.
             "autoUpdate": cfg!(feature = "updater"),
             // The `notify` command exists, so the web app may hand "done" and
             // "needs you" notices to the OS instead of the webview's missing
@@ -236,9 +242,11 @@ async fn install_update(app: AppHandle) -> Result<(), String> {
     app.restart();
 }
 
-/// Build without the `updater` feature (the App Store variant): the commands
-/// still exist so the capability files and `build.rs` manifest stay identical
-/// across builds, but they report the feature as unavailable.
+/// Build without the `updater` feature: the commands still exist so the
+/// capability files and `build.rs` manifest stay identical across builds, but
+/// they report the feature as unavailable. No shipping channel takes this path
+/// since the App Store one was retired — see the `updater` feature in
+/// `Cargo.toml` before assuming it is exercised.
 #[cfg(not(feature = "updater"))]
 #[tauri::command]
 async fn check_for_update(_app: AppHandle) -> Result<Option<serde_json::Value>, String> {
@@ -500,15 +508,20 @@ pub fn run() {
                 }
             });
 
-            // Start the local backend. A failure here is recorded in
-            // SidecarState and reported through `get_sidecar_info` — the window
-            // still opens so the user sees the reason rather than nothing.
-            if let Err(err) = sidecar::spawn(app.handle()) {
-                eprintln!("duct: sidecar failed to start: {err}");
-                // The webview shows this to the user via `get_sidecar_info`,
-                // but a bundle that cannot start its own backend is broken for
-                // everyone on that platform, not just this person.
-                telemetry::capture_message(&format!("sidecar failed to start: {err}"));
+            // Start the local backend, if this build shipped one. The official
+            // build does not — it talks to the hosted API, and a missing
+            // sidecar there is the design rather than a fault, so it must not
+            // reach the error path below.
+            if sidecar::is_available(app.handle()) {
+                // A failure now is recorded in SidecarState and reported through
+                // `get_sidecar_info` — the window still opens so the user sees
+                // the reason rather than nothing.
+                if let Err(err) = sidecar::spawn(app.handle()) {
+                    eprintln!("duct: sidecar failed to start: {err}");
+                    // A bundle that ships a backend and then cannot start it is
+                    // broken for everyone on that platform, not just this person.
+                    telemetry::capture_message(&format!("sidecar failed to start: {err}"));
+                }
             }
             Ok(())
         })

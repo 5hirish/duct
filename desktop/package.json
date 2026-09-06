@@ -6,11 +6,12 @@
   "scripts": {
     "build": "tauri build",
     "build:dev": "tauri build --debug --bundles app --config src-tauri/tauri.dev.conf.json",
+    "build:selfhost": "tauri build --config src-tauri/tauri.selfhost.conf.json",
     "dev": "tauri dev",
     "dev:local": "tauri dev --config src-tauri/tauri.local.conf.json",
     "install:dev-app": "node scripts/install-dev-app.mjs",
     "postbuild:dev": "node scripts/install-dev-app.mjs",
-    "prebuild": "node scripts/check-sidecar-fresh.mjs",
+    "prebuild:selfhost": "node scripts/check-sidecar-fresh.mjs",
     "prebuild:dev": "node scripts/check-sidecar-fresh.mjs",
     "predev": "node scripts/check-sidecar-fresh.mjs",
     "predev:local": "node scripts/check-sidecar-fresh.mjs",

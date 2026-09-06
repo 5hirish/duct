@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="assets/apple-icon.svg"/>
+<title>Download Duct for Desktop — Mac, Windows and Linux</title>
+<link rel="canonical" href="https://getduct.ai/download"/>
+<meta name="description" content="Duct on your desktop for Mac, Windows and Linux. Signed, notarized, and it keeps itself up to date. Bring your own model keys — they stay in your OS keychain."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/download"/>
+<meta property="og:title" content="Download Duct for Desktop"/>
+<meta property="og:description" content="Duct in a native window on Mac, Windows and Linux. Signed, notarized, and it keeps itself up to date. Your keys stay in your OS keychain."/>
+<meta property="og:image" content="https://getduct.ai/assets/og-image.png"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Download Duct for Desktop"/>
+<meta name="twitter:description" content="Duct in a native window on Mac, Windows and Linux. Signed, notarized, and it keeps itself up to date. Your keys stay in your OS keychain."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og-image.png"/>
+<link rel="stylesheet" href="assets/duct.css"/>
+<script src="assets/config.js" defer></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "Download Duct for Desktop",
+  "url": "https://getduct.ai/download",
+  "description": "Download the Duct desktop app for macOS, Windows and Linux.",
+  "publisher": {
+    "@type": "Organization",
+    "name": "Alleviate Lab",
+    "url": "https://getduct.ai"
+  }
+}
+</script>
+<style>
+/* ── DOWNLOAD-ONLY STYLES ── */
+.dl-hero { text-align: center; padding: 120px 24px 56px; max-width: 780px; margin: 0 auto; }
+.dl-hero h1 { margin-bottom: 18px; }
+.dl-hero .sub { color: var(--navy-3); max-width: 560px; margin: 0 auto; }
+
+.dl-primary { margin-top: 40px; min-height: 116px; }
+.dl-primary .btn { min-width: 280px; }
+.dl-meta { margin-top: 12px; font-size: 13px; color: var(--navy-3); }
+
+/* Reserve the row's height before the fetch resolves so the page does not
+   jump when downloads.json lands — CLS on the one element people aim at. */
+.dl-loading { color: var(--navy-3); font-size: 14px; padding: 24px 0; }
+
+.dl-all { max-width: 720px; margin: 40px auto 0; padding: 0 24px; }
+.dl-all h2 { font-size: 15px; letter-spacing: .08em; text-transform: uppercase; color: var(--navy-3); margin-bottom: 14px; }
+.dl-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 14px 16px; border: 1px solid var(--border); border-radius: 10px;
+  background: var(--white); margin-bottom: 8px; text-align: left;
+}
+.dl-row strong { display: block; font-size: 14px; }
+.dl-row span { font-size: 12px; color: var(--navy-3); }
+.dl-row a { font-size: 13px; font-weight: 600; white-space: nowrap; }
+
+.dl-notes { max-width: 720px; margin: 48px auto 96px; padding: 0 24px; font-size: 13px; color: var(--navy-3); }
+.dl-notes p { margin-bottom: 10px; }
+.dl-notes code { font-size: 12px; }
+
+@media (max-width: 560px) {
+  .dl-hero { padding-top: 96px; }
+  .dl-primary .btn { min-width: 0; width: 100%; }
+  .dl-row { flex-direction: column; align-items: flex-start; gap: 8px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+
+<!-- NAV (shared: site/partials/nav-simple.html) -->
+<div data-duct-partial="/partials/nav-simple.html"></div>
+
+<main id="main-content">
+
+<section class="dl-hero">
+  <h1>Duct, in a window<br/>that stays <em>open</em></h1>
+  <p class="sub">Your brief and your alerts without a browser tab to lose. Sign in
+  with Google, connect your stack, and it keeps itself up to date.</p>
+
+  <div class="dl-primary" id="dl-primary">
+    <p class="dl-loading" id="dl-loading">Finding the right build for you&hellip;</p>
+  </div>
+</section>
+
+<section class="dl-all">
+  <h2 id="dl-all-heading">All platforms</h2>
+  <div id="dl-all-rows"></div>
+</section>
+
+<section class="dl-notes">
+  <p><strong>macOS</strong> &mdash; universal, runs on Apple silicon and Intel. Requires macOS 12 or later. Signed and notarized by Apple, so it opens without a warning.</p>
+  <p><strong>Windows</strong> &mdash; Windows 10 and later. The installer is not yet code-signed, so SmartScreen will say &ldquo;Windows protected your PC&rdquo; on first run: click <em>More info</em> &rarr; <em>Run anyway</em>. We are fixing this.</p>
+  <p><strong>Linux</strong> &mdash; the AppImage runs anywhere (<code>chmod +x</code> it first); the .deb is for Debian and Ubuntu. Provider keys need a keyring daemon running &mdash; GNOME Keyring, KWallet or KeePassXC.</p>
+  <p><strong>Your model keys stay yours.</strong> Duct is bring-your-own-key: paste an Anthropic, OpenAI or Gemini key and the desktop app keeps it in your OS keychain rather than a browser tab. You are billed by the provider, not by us.</p>
+  <p>Duct is open source under the MIT licence. <a href="https://github.com/5hirish/duct">Read the code</a>, or build it yourself &mdash; the desktop shell can also run its own backend entirely on your machine.</p>
+</section>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/partials/footer-expanded.html"></div>
+
+<script src="assets/duct-partials.js"></script>
+<script src="assets/duct.js" defer></script>
+<script>
+(function () {
+  // One fixed URL. GitHub resolves `latest` to the newest release, and the
+  // manifest inside names the versioned installers — so this page never needs
+  // redeploying when a new desktop version ships.
+  var MANIFEST = 'https://github.com/5hirish/duct/releases/latest/download/downloads.json';
+  var RELEASES = 'https://github.com/5hirish/duct/releases';
+
+  // Order is the tie-break when detection is ambiguous, and the order the
+  // "all platforms" list renders in.
+  var SLOTS = [
+    { key: 'macos',          label: 'macOS',            hint: 'Universal · Apple silicon and Intel' },
+    { key: 'windows',        label: 'Windows',          hint: 'Windows 10 and later' },
+    { key: 'linux-appimage', label: 'Linux (AppImage)', hint: 'Runs on any distribution' },
+    { key: 'linux-deb',      label: 'Linux (.deb)',     hint: 'Debian and Ubuntu' }
+  ];
+
+  function detect() {
+    // userAgentData is the only non-deprecated source, but Safari and Firefox
+    // do not ship it — fall back to the UA string rather than guessing macOS,
+    // which would hand a Windows user a .dmg.
+    var p = (navigator.userAgentData && navigator.userAgentData.platform) || '';
+    var ua = p + ' ' + (navigator.platform || '') + ' ' + (navigator.userAgent || '');
+    if (/Win/i.test(ua)) return 'windows';
+    if (/Mac|Darwin/i.test(ua)) return 'macos';
+    if (/Linux|X11/i.test(ua)) return 'linux-appimage';
+    return null;
+  }
+
+  function mb(bytes) {
+    if (!bytes) return '';
+    return ' · ' + Math.round(bytes / 1048576) + ' MB';
+  }
+
+  function fallback(message) {
+    var primary = document.getElementById('dl-primary');
+    primary.innerHTML =
+      '<a class="btn btn-orange btn-lg" href="' + RELEASES + '">All downloads on GitHub &rarr;</a>' +
+      '<p class="dl-meta">' + message + '</p>';
+    document.getElementById('dl-all-heading').style.display = 'none';
+  }
+
+  fetch(MANIFEST, { cache: 'no-store' })
+    .then(function (r) {
+      if (!r.ok) throw new Error(r.status);
+      return r.json();
+    })
+    .then(function (data) {
+      var have = SLOTS.filter(function (s) { return data.platforms && data.platforms[s.key]; });
+      if (have.length === 0) throw new Error('no platforms');
+
+      var mine = detect();
+      var pick = have.filter(function (s) { return s.key === mine; })[0];
+
+      var primary = document.getElementById('dl-primary');
+      if (pick) {
+        var a = data.platforms[pick.key];
+        primary.innerHTML =
+          '<a class="btn btn-orange btn-lg" href="' + a.url + '" download>Download for ' + pick.label + ' &darr;</a>' +
+          '<p class="dl-meta">Version ' + data.version + mb(a.size) + ' · ' + pick.hint + '</p>';
+      } else {
+        // Detection failed, or we have no build for what they are on. Say so
+        // instead of picking one at random — the list below is the answer.
+        primary.innerHTML =
+          '<p class="dl-meta">Pick your platform below — version ' + data.version + '.</p>';
+      }
+
+      document.getElementById('dl-all-rows').innerHTML = have.map(function (s) {
+        var a = data.platforms[s.key];
+        return '<div class="dl-row"><div><strong>' + s.label + '</strong>' +
+               '<span>' + s.hint + mb(a.size) + '</span></div>' +
+               '<a href="' + a.url + '" download>Download &darr;</a></div>';
+      }).join('');
+    })
+    .catch(function () {
+      // No release published yet, offline, or GitHub is having a day. Never
+      // leave the spinner up: send people somewhere that works.
+      fallback('Direct links are unavailable right now — the GitHub releases page has every build.');
+    });
+})();
+</script>
+</body>
+</html>
