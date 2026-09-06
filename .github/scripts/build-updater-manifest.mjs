@@ -9,7 +9,11 @@
  *
  * Usage:
  *   node build-updater-manifest.mjs --version 0.3.0 --artifacts artifacts \
- *     --repo owner/name --out latest.json
+ *     --repo owner/name --notes-file notes.md --out latest.json
+ *
+ * `--notes-file` is what the updater's "a new version is available" dialog
+ * shows. Without it the manifest falls back to the version string, which tells
+ * a user nothing about why they should accept the update.
  *
  * Platform keys are Tauri's own (`darwin-aarch64`, `windows-x86_64`, …). A
  * platform missing from the manifest simply gets no update offered, which is
@@ -32,7 +36,11 @@ function arg(name, fallback = null) {
 const version = arg("version");
 const artifactsDir = arg("artifacts");
 const repo = arg("repo");
+const notesFile = arg("notes-file", "");
 const out = arg("out", "latest.json");
+
+const notes =
+  (notesFile && readFileSync(notesFile, "utf8").trim()) || `Duct Desktop ${version}`;
 
 /** Every file under the artifacts tree, recursively. */
 function walk(dir) {
@@ -93,7 +101,7 @@ writeFileSync(
   `${JSON.stringify(
     {
       version,
-      notes: `Duct Desktop ${version}`,
+      notes,
       pub_date: new Date().toISOString(),
       platforms,
     },

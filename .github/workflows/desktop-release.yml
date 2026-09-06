@@ -5,10 +5,15 @@ name: desktop — release (macOS, Windows, Linux)
 #
 # Each bundle ships the FastAPI backend frozen by PyInstaller, which is why
 # every platform builds its own: a frozen Python tree is per-OS and per-arch,
-# not cross-compilable. The Mac App Store cannot host that build at all — its
-# sandbox breaks the sidecar — so the App Store pipeline
-# (desktop-testflight.yml) stays on the older thin client and must never be
-# given the sidecar. Reasoning: the engine consolidation review (duct-cloud,
+# not cross-compilable. That is also why this runs in CI at all rather than on a
+# laptop — Windows and Linux bundles cannot be produced on a Mac, and standard
+# runners are free on a public repository.
+#
+# This is now the only desktop channel. The Mac App Store one was retired: its
+# sandbox cannot host the sidecar, so it was stuck shipping the pre-sidecar thin
+# client, and keeping it alive cost three config files, a workflow and a cargo
+# feature whose only job was to strip the updater for Apple. Reasoning for why
+# it could never carry the sidecar: the engine consolidation review (duct-cloud,
 # private) §8.
 #
 # macOS signing order is the part that most often goes wrong. A PyInstaller
@@ -37,6 +42,12 @@ name: desktop — release (macOS, Windows, Linux)
 #                                  runs `tauri build`. Absent is fine: the shell
 #                                  simply never reports, and the settings toggle
 #                                  hides itself.
+#   Optional
+#     ANTHROPIC_API_KEY            writes the changelog on the release page and
+#                                  in the updater dialog. Absent is fine: the
+#                                  notes fall back to the list of commit
+#                                  subjects, which is what they were before.
+#                                  Costs a fraction of a cent per release.
 #   All platforms (sign-in)
 #     GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET
 #                                  secret of the Google *Desktop app* OAuth client
@@ -93,19 +104,19 @@ jobs:
     name: macOS (Developer ID DMG)
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: '22'
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: '3.12'
 
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
 
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
         with:
           workspaces: desktop/src-tauri
 
@@ -243,7 +254,7 @@ jobs:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: npm run tauri -- build --bundles dmg,updater --no-bundle-app
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         if: github.event_name != 'pull_request'
         with:
           name: bundle-macos
@@ -266,19 +277,19 @@ jobs:
     # distro the AppImage will start on, so moving up silently drops users.
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: '22'
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: '3.12'
 
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
 
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
         with:
           workspaces: desktop/src-tauri
 
@@ -327,7 +338,7 @@ jobs:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: npm run tauri -- build --bundles deb,appimage,updater
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: bundle-linux
           path: |
@@ -347,19 +358,19 @@ jobs:
     name: Windows (NSIS)
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: '22'
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: '3.12'
 
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
 
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
         with:
           workspaces: desktop/src-tauri
 
@@ -388,7 +399,7 @@ jobs:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: npm run tauri -- build --bundles nsis,updater
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: bundle-windows
           path: |
@@ -410,9 +421,22 @@ jobs:
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          # The changelog is the commit range since the previous `desktop-v*`
+          # tag, so this job needs the tags and the history behind them. The
+          # default single-commit clone has neither, and the failure is silent:
+          # an empty range produces empty notes, not an error.
+          fetch-depth: 0
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+
+      - name: Install the Anthropic SDK
+        run: pip install --quiet 'anthropic>=1,<2'
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           path: artifacts
 
@@ -429,16 +453,93 @@ jobs:
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
+      # Scoped to `desktop` and `backend` because those are the two trees that
+      # end up inside the bundle — and, not by coincidence, the two that trigger
+      # this workflow. A change to `app/` deploys continuously and reaches an
+      # installed copy without an update, so listing it here would credit this
+      # release with something it does not carry.
+      - name: Collect the commits since the last desktop release
+        id: commits
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          # Highest version first, minus the tag this run is about to create or
+          # overwrite — on a re-run of the same version that tag already exists
+          # and would make the range empty.
+          PREV="$(git tag --list 'desktop-v*' --sort=-v:refname \
+                    | grep -vx "desktop-v$VERSION" | head -n1 || true)"
+
+          if [ -n "$PREV" ]; then
+            RANGE="$PREV..HEAD"
+          else
+            # First release: everything, which is the honest answer.
+            RANGE="HEAD"
+          fi
+
+          echo "previous=$PREV" >> "$GITHUB_OUTPUT"
+          echo "range: $RANGE"
+
+          # Subject on a `* ` line, body indented under it — release_notes.py's
+          # fallback path reads that shape to recover the bare subject list.
+          git log --no-merges --format='* %s%n%w(0,2,2)%b' "$RANGE" \
+            -- desktop backend > commits.txt
+          wc -l commits.txt
+
+      - name: Write the changelog
+        env:
+          # Absent is fine. The script falls back to the plain commit list
+          # rather than failing, so a missing key costs prose, never a release.
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/release_notes.py \
+            --version "$VERSION" --log-file commits.txt > notes.md
+          cat notes.md
+
+      # The written part stops at notes.md. Everything below is assembled here,
+      # deterministically, because a download instruction the model got subtly
+      # wrong is worse than no download instruction at all.
+      - name: Assemble the release body
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          PREV: ${{ steps.commits.outputs.previous }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          {
+            cat notes.md
+            echo
+            echo "### Which file do I want"
+            echo
+            echo "- **macOS** — the \`.dmg\`. Apple silicon, signed and notarised."
+            echo "- **Windows** — the \`-setup.exe\`."
+            echo "- **Linux** — the \`.AppImage\` to just run it, or the \`.deb\` to install it."
+            echo
+            echo "The \`.tar.gz\`, \`.nsis.zip\`, \`.sig\` and \`latest.json\` files belong to the"
+            echo "in-app updater. An installed copy finds them on its own — you do not need them."
+            if [ -n "$PREV" ]; then
+              echo
+              echo "**Full changelog**: https://github.com/$REPO/compare/$PREV...desktop-v$VERSION"
+            fi
+          } > body.md
+          cat body.md
+
       - name: Assemble latest.json
         env:
           VERSION: ${{ steps.version.outputs.version }}
           REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
+          # The same notes the release page shows, minus the download section —
+          # the updater's dialog is offering a file, not asking you to pick one.
           node .github/scripts/build-updater-manifest.mjs \
             --version "$VERSION" \
             --artifacts artifacts \
             --repo "$REPO" \
+            --notes-file notes.md \
             --out latest.json
           cat latest.json
 
@@ -456,12 +557,15 @@ jobs:
           ASSETS+=(latest.json)
 
           # Re-running a build for the same version replaces the assets rather
-          # than failing; the updater reads whatever `latest` points at.
+          # than failing; the updater reads whatever `latest` points at. The
+          # notes are rewritten too — a re-run usually means the first attempt
+          # published something wrong, and stale notes are part of that.
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" --clobber "${ASSETS[@]}"
+            gh release edit "$TAG" --notes-file body.md
           else
             gh release create "$TAG" \
               --title "Duct Desktop $VERSION" \
-              --notes "Automated build from ${{ github.sha }}." \
+              --notes-file body.md \
               "${ASSETS[@]}"
           fi
