@@ -35,6 +35,7 @@ from agents.audit.schema import CrawlResult
 from agents.audit.scoring import calibrate
 from agents.audit.v1.tools import build_audit_tools
 from agents.core.artifact_tools import build_artifact_tools_lc
+from agents.core.events import AgentEvent
 from agents.core.checkpoint import get_checkpointer
 from agents.core.deep_session import DeepSession, RunLimits
 from agents.core.lc import build_ask_user_tool, resolve_chat_model
@@ -322,6 +323,7 @@ class LangChainAuditRunner:
             emit=emit,
             report_mode=report_mode,
             on_submit_report=_on_submit,
+            **self._project_wiring(session, emit),
         )
 
         await emit({
@@ -403,6 +405,38 @@ class LangChainAuditRunner:
         loop.opened = not announce_finish
         return loop
 
+    def _project_wiring(self, session: Any, emit: Callable) -> dict:
+        """Project-scoped tool wiring, read off the session.
+
+        routes/agents.py stamps artifact_project_id only after verifying
+        membership, so its presence *is* the authorisation: no project means an
+        ephemeral or lead-magnet run, and every binder below returns nothing.
+        """
+        project_id = getattr(session, "artifact_project_id", None)
+        remember = project_id is not None and not getattr(session, "memory_off", False)
+
+        async def on_memory(entry: dict) -> None:
+            # The quiet "Remembered: …" line under the turn, with undo.
+            await emit({"event": AgentEvent.MEMORY_WRITTEN, "memory": entry})
+
+        async def on_artifact(card: dict) -> None:
+            # A compact chip in chat that opens the artifact viewer.
+            await emit({"event": AgentEvent.ARTIFACT_UPDATED, "artifact": card})
+
+        async def on_change_set(card: dict) -> None:
+            # Change-set card in chat; the UI upserts by change_set_id.
+            await emit({"event": AgentEvent.EXECUTION_PROPOSED, "change_set": card})
+
+        return {
+            "project_id": project_id,
+            "user_id": getattr(session, "user_id", None),
+            "conversation_id": getattr(session, "conversation_id", None),
+            "remember": remember,
+            "on_memory": on_memory,
+            "on_artifact": on_artifact,
+            "on_change_set": on_change_set,
+        }
+
     async def run_resume(
         self,
         session_id: str,
@@ -479,6 +513,7 @@ class LangChainAuditRunner:
             emit=emit,
             report_mode=report_mode,
             on_submit_report=_on_submit,
+            **self._project_wiring(session, emit),
         )
         loop = self._session_loop(
             agent, llm, session, emit, session_id,

@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import uuid
+from types import SimpleNamespace
 
 import pytest
 from langchain_core.messages import AIMessage
@@ -451,3 +452,49 @@ async def test_resume_continues_the_thread_without_crawling_again(
     )
     assert "Still the pricing page." in prose
     close_session("audit-resume")
+
+
+def test_the_project_scoped_audit_defaults_to_v1_too():
+    """The session path — artifacts, memory, execution tools, resume — ran V3
+    unconditionally, which is what actually kept the Agent SDK in production.
+    It reads the same engine resolution as every other route now."""
+    import inspect
+
+    import routes.agents as agents_route
+    from agents.audit.v1.runner import LangChainAuditRunner
+    from agents.engines import Engine, resolve_engine
+
+    source = inspect.getsource(agents_route)
+    assert 'resolve_engine(req.engine or "v1")' in source, "the default engine is V1"
+    assert resolve_engine("") == Engine.V1
+    # Both runners are reachable from the route, and V1 is the one it builds
+    # without being asked.
+    assert agents_route.LangChainAuditRunner is LangChainAuditRunner
+
+
+def test_v1_reads_its_project_scope_from_the_session_not_the_caller():
+    """routes/agents.py stamps artifact_project_id only after checking
+    membership, so its presence is the authorisation. A session without one
+    mounts no library, no memory and no execution tools."""
+    from uuid import uuid4
+
+    from agents.audit.v1.runner import LangChainAuditRunner
+
+    runner = LangChainAuditRunner(api_key="k")
+
+    async def emit(_event: dict) -> None:
+        pass
+
+    scoped = SimpleNamespace(
+        artifact_project_id=uuid4(), user_id=uuid4(), conversation_id=uuid4(), memory_off=False
+    )
+    ephemeral = SimpleNamespace(artifact_project_id=None, user_id=None, conversation_id=None)
+
+    assert runner._project_wiring(scoped, emit)["remember"] is True
+    assert runner._project_wiring(ephemeral, emit)["project_id"] is None
+
+    # "Don't remember this session" keeps the project but drops the memory tools.
+    quiet = SimpleNamespace(
+        artifact_project_id=uuid4(), user_id=uuid4(), conversation_id=None, memory_off=True
+    )
+    assert runner._project_wiring(quiet, emit)["remember"] is False
