@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import uuid
+from types import SimpleNamespace
 
 import pytest
 from langchain_core.messages import AIMessage
@@ -26,8 +27,13 @@ from agents.core.lc import (
     split_chunk,
     stream_agent,
 )
-from agents.core.session import BaseAgentSession, register_session
+from agents.core.session import BaseAgentSession, close_session, register_session
 from tests.fakes import ToolCallingFake, tool_names as _tool_names
+
+
+def _thread(name: str) -> dict:
+    """The audit agent is checkpointed, so every run needs a thread to write to."""
+    return {"configurable": {"thread_id": f"test-{name}"}}
 
 
 @pytest.fixture
@@ -141,7 +147,9 @@ async def test_stream_emits_the_shared_event_vocabulary(crawl_result, emitted):
     async def on_close(_raw: str, _turn: str) -> None:
         pass
 
-    await stream_agent(agent, "audit getduct.ai", emitted, on_artifact_close=on_close)
+    await stream_agent(
+        agent, "audit getduct.ai", emitted, on_artifact_close=on_close, config=_thread("vocab"),
+    )
 
     kinds = [e["event"] for e in emitted.events]
     assert AgentEvent.MESSAGE_STOP in kinds
@@ -162,7 +170,9 @@ async def test_stream_routes_report_payload_to_the_parser(crawl_result, emitted)
     async def on_close(raw: str, turn: str) -> None:
         closed.append((raw, turn))
 
-    await stream_agent(agent, "audit", emitted, on_artifact_close=on_close)
+    await stream_agent(
+        agent, "audit", emitted, on_artifact_close=on_close, config=_thread("artifact"),
+    )
 
     assert closed, "the report tag should have closed"
     raw, _turn = closed[0]
@@ -206,13 +216,13 @@ async def test_run_pipeline_crawls_then_publishes_the_report_the_tools_built(
     everything between them is real: the step events bracket the work, the
     report the tools assembled reaches the stream as version 1, and the same
     report is what the route gets back to persist."""
+    import agents.audit.crawl as audit_crawl
     import agents.audit.v1.runner as v1
-    import agents.audit.v3.runner as v3
 
     async def offline_crawl(_url, **_kwargs):
         return crawl_result
 
-    monkeypatch.setattr(v3, "run_crawl", offline_crawl)
+    monkeypatch.setattr(audit_crawl, "run_crawl", offline_crawl)
     monkeypatch.setattr(v1, "resolve_chat_model", lambda *_a, **_k: _model_that_builds_a_template_report())
 
     report = await v1.LangChainAuditRunner(api_key="unused-no-network").run_pipeline(
@@ -226,6 +236,9 @@ async def test_run_pipeline_crawls_then_publishes_the_report_the_tools_built(
     ]
     assert steps == [
         (AuditStep.FETCH_SITEMAP, "running"), (AuditStep.FETCH_SITEMAP, "success"),
+        # The business context names a company, so the research pass runs. It
+        # degrades to the crawl's own signals here — the fake model has no web.
+        (AuditStep.ENRICHING, "running"), (AuditStep.ENRICHING, "success"),
         (AuditStep.SYNTHESIZE_AUDIT, "running"), (AuditStep.SYNTHESIZE_AUDIT, "success"),
     ]
     version = next(e for e in emitted.events if e["event"] == AgentEvent.ARTIFACT_VERSION)
@@ -265,45 +278,34 @@ def test_split_chunk_handles_provider_variations():
 # Route wiring — engine selection
 # ---------------------------------------------------------------------------
 
-def test_route_defaults_to_v1_and_opts_in_to_v3():
-    """V1 is production; V3 is per-request opt-in.
-
-    The flip is the first step of consolidating onto one harness. Audit is where
-    it costs nothing — both runners exist with the same ``run_pipeline``
-    signature and event vocabulary (asserted below) — and running V1 by default
-    is how it earns the confidence the old default was waiting for.
-    """
-    from agents.audit.v3.runner import ClaudeAuditRunner
+def test_every_audit_route_builds_the_one_runner():
+    """Both entry points used to pick an engine; the Claude Agent SDK one is
+    gone. The engine parameter survives because `agents/engines.py` is still
+    where a second harness would be declared if there is ever another."""
+    from agents.audit.v1.runner import LangChainAuditRunner
     from agents.engines import Engine
     from agents.models import ModelName, Provider
     from routes.audit import _build_runner, _resolve_agent_config
-    from agents.audit.v1.runner import LangChainAuditRunner
 
-    # An unset engine resolves to V1...
     _provider, _model, engine = _resolve_agent_config("")
     assert engine == Engine.V1
 
-    # ...and V3 remains reachable by naming it.
-    _provider, _model, engine_v3 = _resolve_agent_config("v3")
-    assert engine_v3 == Engine.V3
-
-    v3 = _build_runner("k", Provider.ANTHROPIC, ModelName.CLAUDE_SONNET, Engine.V3)
-    v1 = _build_runner("k", Provider.GOOGLE_GENAI, ModelName.GEMINI_2_5_FLASH, Engine.V1)
-
-    assert isinstance(v3, ClaudeAuditRunner)
-    assert isinstance(v1, LangChainAuditRunner)
+    runner = _build_runner("k", Provider.GOOGLE_GENAI, ModelName.GEMINI_3_8_FLASH, Engine.V1)
+    assert isinstance(runner, LangChainAuditRunner)
 
 
-def test_both_runners_share_the_run_pipeline_signature():
-    """The route calls one signature; swapping engines must change nothing else."""
+def test_the_runner_still_answers_the_call_the_routes_make():
+    """The routes pass these by keyword; a rename here is a 500 at run time."""
     import inspect
 
     from agents.audit.v1.runner import LangChainAuditRunner
-    from agents.audit.v3.runner import ClaudeAuditRunner
 
-    v1 = inspect.signature(LangChainAuditRunner.run_pipeline).parameters
-    v3 = inspect.signature(ClaudeAuditRunner.run_pipeline).parameters
-    assert list(v1) == list(v3)
+    pipeline = inspect.signature(LangChainAuditRunner.run_pipeline).parameters
+    assert {"session_id", "url", "business_context", "emit", "report_mode",
+            "template_id", "chat_idle_timeout", "lead_magnet"} <= set(pipeline)
+
+    resume = inspect.signature(LangChainAuditRunner.run_resume).parameters
+    assert {"session_id", "url", "emit", "chat_idle_timeout", "report_mode"} <= set(resume)
 
 
 # ---------------------------------------------------------------------------
@@ -316,8 +318,8 @@ async def test_an_unreachable_site_closes_the_crawl_step_as_an_error_and_never_r
     """Two live runs scored a homepage that returned no response 84 "good".
     The crawl now raises instead; the runner closes the step as an error so the
     UI stops spinning, and re-raises so the route reports the failure."""
+    import agents.audit.crawl as audit_crawl
     import agents.audit.v1.runner as v1
-    import agents.audit.v3.runner as v3
     from service.crawl.fetcher import SiteUnreachableError
 
     async def dead_site(url, **_kwargs):
@@ -326,7 +328,7 @@ async def test_an_unreachable_site_closes_the_crawl_step_as_an_error_and_never_r
     def no_model(*_a, **_k):
         raise AssertionError("synthesis must not start for a site that never answered")
 
-    monkeypatch.setattr(v3, "run_crawl", dead_site)
+    monkeypatch.setattr(audit_crawl, "run_crawl", dead_site)
     monkeypatch.setattr(v1, "resolve_chat_model", no_model)
 
     with pytest.raises(SiteUnreachableError, match="Could not reach https://dead.example"):
@@ -343,3 +345,164 @@ async def test_an_unreachable_site_closes_the_crawl_step_as_an_error_and_never_r
     failed = next(e for e in emitted.events if e.get("status") == "error")
     assert "no HTTP response" in failed["error"]
     assert not any(e["event"] == AgentEvent.ARTIFACT_VERSION for e in emitted.events)
+
+
+# ---------------------------------------------------------------------------
+# The session stays open — follow-up chat and resume
+# ---------------------------------------------------------------------------
+
+async def _drain(session, events, *, wait_for: str, timeout: float = 3.0) -> dict:
+    """Wait for one event kind to show up on the emitted list."""
+    deadline = asyncio.get_running_loop().time() + timeout
+    while asyncio.get_running_loop().time() < deadline:
+        for event in events:
+            if event["event"] == wait_for:
+                return event
+        await asyncio.sleep(0.02)
+    raise AssertionError(f"{wait_for} never arrived; got {[e['event'] for e in events]}")
+
+
+async def test_the_audit_answers_a_follow_up_on_the_same_thread(
+    crawl_result, emitted, acme_business_context, monkeypatch
+):
+    """V1 used to stream one turn and return, so every message after the report
+    hit a closed session. The run now stays open until the user goes quiet."""
+    import agents.audit.crawl as audit_crawl
+    import agents.audit.v1.runner as v1
+
+    async def offline_crawl(_url, **_kwargs):
+        return crawl_result
+
+    monkeypatch.setattr(audit_crawl, "run_crawl", offline_crawl)
+    monkeypatch.setattr(
+        v1, "resolve_chat_model", lambda *_a, **_k: _model_that_builds_a_template_report()
+    )
+    session = register_session(BaseAgentSession(
+        session_id="audit-followup", agent_type="audit_seo",
+        event_queue=asyncio.Queue(), chat_queue=asyncio.Queue(),
+    ))
+
+    pipeline = asyncio.create_task(
+        v1.LangChainAuditRunner(api_key="unused-no-network").run_pipeline(
+            session_id="audit-followup", url="https://getduct.ai",
+            business_context=acme_business_context, emit=emitted,
+            report_mode="template", chat_idle_timeout=2.0,
+        )
+    )
+    # The bare PIPELINE_FINISHED is what moves the UI out of "working"; the
+    # chat loop is running behind it.
+    await _drain(session, emitted.events, wait_for=AgentEvent.PIPELINE_FINISHED)
+    await session.chat_queue.put("which page is worst?")
+    report = await asyncio.wait_for(pipeline, timeout=10)
+
+    assert report is not None, "the follow-up must not lose the report"
+    prose = "".join(
+        e.get("text", "") for e in emitted.events
+        if e["event"] == AgentEvent.AGENT_MESSAGE_CHUNK
+    )
+    assert "Report published." in prose
+    close_session("audit-followup")
+
+
+async def test_resume_continues_the_thread_without_crawling_again(
+    emitted, monkeypatch
+):
+    """The project-scoped audit resumes a stored conversation. V1 had no
+    run_resume at all, so this path only ever worked on the Claude Agent SDK."""
+    import agents.audit.crawl as audit_crawl
+    import agents.audit.v1.runner as v1
+
+    async def must_not_crawl(*_a, **_k):
+        raise AssertionError("resume must not re-crawl the site")
+
+    monkeypatch.setattr(audit_crawl, "run_crawl", must_not_crawl)
+    monkeypatch.setattr(
+        v1, "resolve_chat_model",
+        lambda *_a, **_k: ToolCallingFake(responses=[AIMessage(content="Still the pricing page.")]),
+    )
+    session = register_session(BaseAgentSession(
+        session_id="audit-resume", agent_type="audit_seo",
+        event_queue=asyncio.Queue(), chat_queue=asyncio.Queue(),
+    ))
+
+    resumed = asyncio.create_task(
+        v1.LangChainAuditRunner(api_key="unused-no-network").run_resume(
+            session_id="audit-resume", url="https://getduct.ai",
+            emit=emitted, chat_idle_timeout=2.0, report_mode="template",
+        )
+    )
+    await _drain(session, emitted.events, wait_for=AgentEvent.PIPELINE_FINISHED)
+    await session.chat_queue.put("what should I fix first?")
+    await asyncio.wait_for(resumed, timeout=10)
+
+    prose = "".join(
+        e.get("text", "") for e in emitted.events
+        if e["event"] == AgentEvent.AGENT_MESSAGE_CHUNK
+    )
+    assert "Still the pricing page." in prose
+    close_session("audit-resume")
+
+def test_the_project_scoped_audit_builds_the_one_runner_too():
+    """The session path — artifacts, memory, execution tools, resume — ran V3
+    unconditionally, which is what actually kept the Agent SDK in production."""
+    import inspect
+
+    import routes.agents as agents_route
+    from agents.audit.v1.runner import LangChainAuditRunner
+    from agents.engines import Engine, resolve_engine
+
+    source = inspect.getsource(agents_route)
+    assert "ClaudeAuditRunner" not in source, "the Agent SDK runner is gone"
+    assert resolve_engine("") == Engine.V1
+    assert agents_route.LangChainAuditRunner is LangChainAuditRunner
+
+
+def test_v1_reads_its_project_scope_from_the_session_not_the_caller():
+    """routes/agents.py stamps artifact_project_id only after checking
+    membership, so its presence is the authorisation. A session without one
+    mounts no library, no memory and no execution tools."""
+    from uuid import uuid4
+
+    from agents.audit.v1.runner import LangChainAuditRunner
+
+    runner = LangChainAuditRunner(api_key="k")
+
+    async def emit(_event: dict) -> None:
+        pass
+
+    scoped = SimpleNamespace(
+        artifact_project_id=uuid4(), user_id=uuid4(), conversation_id=uuid4(), memory_off=False
+    )
+    ephemeral = SimpleNamespace(artifact_project_id=None, user_id=None, conversation_id=None)
+
+    assert runner._project_wiring(scoped, emit)["remember"] is True
+    assert runner._project_wiring(ephemeral, emit)["project_id"] is None
+
+    # "Don't remember this session" keeps the project but drops the memory tools.
+    quiet = SimpleNamespace(
+        artifact_project_id=uuid4(), user_id=uuid4(), conversation_id=None, memory_off=True
+    )
+    assert runner._project_wiring(quiet, emit)["remember"] is False
+
+
+async def test_each_published_report_is_a_new_numbered_version(crawl_result):
+    """The next version number is read off the session's list, so a run that
+    never records one numbers every revision 1. That was invisible until V1
+    could revise a report at all."""
+    from agents.audit.schema import AuditSession
+    from agents.audit.v1.runner import _record_version
+
+    session = AuditSession(
+        session_id="versions", agent_type="audit_seo",
+        event_queue=asyncio.Queue(), chat_queue=asyncio.Queue(),
+    )
+    first = SimpleNamespace(update_label="Initial audit", generated_at="t1")
+    second = SimpleNamespace(update_label="Update 2", generated_at="t2")
+
+    _record_version(session, first, 1)
+    _record_version(session, second, 2)
+
+    assert [v.version_id for v in session.report_versions] == [1, 2]
+    assert [v.label for v in session.report_versions] == ["Initial audit", "Update 2"]
+    # A runner with no session (the eval harness, a script) must not blow up.
+    _record_version(None, first, 1)

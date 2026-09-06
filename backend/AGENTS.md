@@ -18,82 +18,91 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
 
 ### Current stack
 
-- **AI synthesis:** Insights and content run on V1 (LangChain 1.x / `deepagents`) only.
-  Audit carries both V1 and V3 runners and defaults to V1. Engine selection is per
-  request, defaulting from the `generate_engine` env var.
+- **AI synthesis:** Every agent runs on V1 (LangChain 1.x / `deepagents`) — the only
+  engine. Engine selection is still per request, defaulting from the
+  `generate_engine` env var, because stored preferences and requests carry the
+  string; `resolve_engine` folds any other value back to `v1`.
 
-  **Consolidating on V1.** Per the engine consolidation review (duct-cloud, private), all
-  agents are moving to one harness — LangChain 1.x / `deepagents` — because customers bring
-  their own model (OpenAI / Gemini / Claude / xAI / OpenRouter) and the Claude Agent SDK is
-  Anthropic-only by design (upstream issue #410, closed `not planned`).
-  Each engine has a different status, and they imply different rules:
+  **The consolidation is finished.** Per the engine consolidation review
+  (duct-cloud, private), every agent moved to one harness — LangChain 1.x /
+  `deepagents` — because customers bring their own model (OpenAI / Gemini /
+  Claude / xAI / OpenRouter) and the Claude Agent SDK was Anthropic-only by
+  design (upstream issue #410, closed `not planned`). Insights
+  (`agents/insights/v1/runner.py`) and content (`agents/content/v1/runner.py`)
+  are `deepagents` sessions; audit's runner is `create_agent` driven by the same
+  shared `DeepSession`.
 
-  - **V1 — the target, and now the only session harness.** Insights
-    (`agents/insights/v1/runner.py`) and content (`agents/content/v1/runner.py`) are
-    `deepagents` sessions; audit's V1 runner is `create_agent`. New agent work goes here.
-  - **V3 — audit only, maintained.** `agents/audit/v3/runner.py` stays reachable via
-    `engine: "v3"` and is the one path that can authenticate from a Claude subscription.
-    Shared-code changes (`agents/core/`, `agents/audit/`, `schema.py`, `agents/models.py`)
-    must keep it at parity; `agents/core/claude_sdk.py` and `pump_stream_event` exist for
-    it. Retiring it means Claude requires an ANTHROPIC_API_KEY everywhere — the Messages
-    API rejects `sk-ant-oat…` tokens (Anthropic disabled third-party OAuth in Feb 2026).
-    Measured cost of that: ~$0.04 per insights synthesis.
+  **V3 (Claude Agent SDK) was removed** last, because it was the hardest: the
+  project-scoped audit ran it unconditionally, and four capabilities existed
+  nowhere else. Each was ported first — a chat loop and `run_resume` (both
+  DeepSession's, which audit now uses), the project artifact library
+  (`agents/core/artifact_tools.py`), and the competitor-research pass
+  (`agents/audit/enrichment.py`, now `create_agent` + web tools on any
+  provider). Verified live on Gemini and OpenAI against the audit rubric before
+  the delete.
 
-    **Content V3 was removed** once the port landed. What moved, and where it went:
-    the SDK's `Agent` tool became `deepagents` sub-agents dispatched through `task`
-    (`agents/content/subagents/`, now framework-free dicts); the in-process MCP server
-    became the LangChain binder `build_content_tools_lc` with the tool bodies
-    unchanged; the CLI's `WebSearch` / `WebFetch` became `agents/core/web_tools.py`
-    — both as Duct tools, on the rule image generation already set: **a capability
-    the running model may not have is a Duct tool, not a provider feature every
-    model must support.** The one exception is a built-in that survives a real
-    tool-calling loop, and Anthropic's is the only one that does, so it is bound
-    there (versioned per model — Opus 5 and Sonnet 5 take `web_search_20260209`,
-    the rest the basic variant). Every other provider gets Duct's own `WebSearch`,
-    an ordinary function tool over an isolated grounded Gemini call
-    (`service/google/gemini/search.py`), because Gemini refuses `google_search`
-    alongside function declarations on 2.5 outright and on 3.x without a
-    `tool_config` flag that langchain-google-genai drops whenever `tool_choice` is
-    set. `tests/test_web_search.py` holds that matrix, measured, as `live` tests;
-    `AskUserQuestion` became a checkpointed `interrupt()`, so a question survives a
-    redeploy; and the thread is keyed on the conversation, so a resume continues it
-    rather than re-priming from the transcript (the DB re-prime remains for
-    conversations recorded before the thread was durable).
+  One capability genuinely went with it, deliberately: a Claude *subscription*
+  (`sk-ant-oat…`) authenticates only through the CLI, and the Messages API
+  rejects it (Anthropic disabled third-party OAuth in Feb 2026). Claude needs an
+  ANTHROPIC_API_KEY everywhere now. `agents/content/persistence.py` detects the
+  token prefix and says so once rather than failing a call per turn.
 
-    Two consequences, stated rather than discovered later. **Content on Claude now
-    needs an API key** — `routes/content.py` refuses the subscription credential with
-    the same 402 the browser already handles. And **the model only sees the images it
-    generates on Anthropic**: image blocks inside a tool result are accepted there and
-    rejected by the OpenAI chat API, so `VISION_PROVIDERS` decides whether the tools
-    return pictures or URLs, and the system prompt says which. Where it does see
-    them, `SeenImagePruneMiddleware` (`agents/core/lc.py`) swaps the base64 for a
-    note after the model call that looked at it: the thread is durable and the
-    Postgres saver writes the whole `messages` channel per superstep, so a
-    picture left in state would be copied into every later checkpoint.
+  **How content and insights got there**, recorded because the moves are the
+  pattern any future port follows. Content V3 was removed once its port landed. What moved, and where it went:
+  the SDK's `Agent` tool became `deepagents` sub-agents dispatched through `task`
+  (`agents/content/subagents/`, now framework-free dicts); the in-process MCP server
+  became the LangChain binder `build_content_tools_lc` with the tool bodies
+  unchanged; the CLI's `WebSearch` / `WebFetch` became `agents/core/web_tools.py`
+  — both as Duct tools, on the rule image generation already set: **a capability
+  the running model may not have is a Duct tool, not a provider feature every
+  model must support.** The one exception is a built-in that survives a real
+  tool-calling loop, and Anthropic's is the only one that does, so it is bound
+  there (versioned per model — Opus 5 and Sonnet 5 take `web_search_20260209`,
+  the rest the basic variant). Every other provider gets Duct's own `WebSearch`,
+  an ordinary function tool over an isolated grounded Gemini call
+  (`service/google/gemini/search.py`), because Gemini refuses `google_search`
+  alongside function declarations on 2.5 outright and on 3.x without a
+  `tool_config` flag that langchain-google-genai drops whenever `tool_choice` is
+  set. `tests/test_web_search.py` holds that matrix, measured, as `live` tests;
+  `AskUserQuestion` became a checkpointed `interrupt()`, so a question survives a
+  redeploy; and the thread is keyed on the conversation, so a resume continues it
+  rather than re-priming from the transcript (the DB re-prime remains for
+  conversations recorded before the thread was durable).
 
-    **Insights V3 was removed** earlier for a different reason: nothing dispatched it.
-    Both live routes (`routes/generate.py`, `routes/agents.py`) drive
-    `AutonomousInsightsRunner`, while the V3 runner still claimed parity with the older
-    `GenerateInsightsAgent` fetch/synthesize pair — an interface the routes had already
-    left behind.
+  Two consequences, stated rather than discovered later. **Content on Claude now
+  needs an API key** — `routes/content.py` refuses the subscription credential with
+  the same 402 the browser already handles. And **the model only sees the images it
+  generates on Anthropic**: image blocks inside a tool result are accepted there and
+  rejected by the OpenAI chat API, so `VISION_PROVIDERS` decides whether the tools
+  return pictures or URLs, and the system prompt says which. Where it does see
+  them, `SeenImagePruneMiddleware` (`agents/core/lc.py`) swaps the base64 for a
+  note after the model call that looked at it: the thread is durable and the
+  Postgres saver writes the whole `messages` channel per superstep, so a
+  picture left in state would be copied into every later checkpoint.
 
-    **`GenerateInsightsAgent` and its tool registry were removed too**, for the third
-    time for the same reason: no route dispatched them. With it went
-    `agents/insights/tools.py` (per-connector `StructuredTool` factories) and
-    `agents/insights/registry.py` (`goal_relevance` scoring that ranked a set of 12
-    entities down to 8 — selection pressure that never existed). The autonomous runner
-    reaches every entity through `FetchData(entity_id=…)` against the catalog, so the
-    catalog's dispatch key was renamed `tool` → `fetch_fn`: it names an internal
-    function, and only looked like a tool reference while those tools existed.
+  **Insights V3 was removed** earlier for a different reason: nothing dispatched it.
+  Both live routes (`routes/generate.py`, `routes/agents.py`) drive
+  `AutonomousInsightsRunner`, while the V3 runner still claimed parity with the older
+  `GenerateInsightsAgent` fetch/synthesize pair — an interface the routes had already
+  left behind.
 
-    One consequence, deliberately recorded rather than discovered later: **nothing now
-    wires a ChatGPT subscription into an insights run.** `should_use_codex` /
-    `build_codex_chat` were branched only inside the deleted `agent.py`;
-    `agents/core/codex.py` and its tests remain, but no live path calls them. Re-wiring
-    that belongs in `agents/core/lc.resolve_chat_model`, where every runner would get it.
+  **`GenerateInsightsAgent` and its tool registry were removed too**, for the third
+  time for the same reason: no route dispatched them. With it went
+  `agents/insights/tools.py` (per-connector `StructuredTool` factories) and
+  `agents/insights/registry.py` (`goal_relevance` scoring that ranked a set of 12
+  entities down to 8 — selection pressure that never existed). The autonomous runner
+  reaches every entity through `FetchData(entity_id=…)` against the catalog, so the
+  catalog's dispatch key was renamed `tool` → `fetch_fn`: it names an internal
+  function, and only looked like a tool reference while those tools existed.
 
-  So a shared change may need doing twice (V1 + audit V3), never more.
-  Claude remains a first-class *model* through V1, so retiring V3 later costs no capability.
+  One consequence, deliberately recorded rather than discovered later: **nothing now
+  wires a ChatGPT subscription into an insights run.** `should_use_codex` /
+  `build_codex_chat` were branched only inside the deleted `agent.py`;
+  `agents/core/codex.py` and its tests remain, but no live path calls them. Re-wiring
+  that belongs in `agents/core/lc.resolve_chat_model`, where every runner would get it.
+
+  So a shared change is made once. Claude remains a first-class *model* through
+  V1, which is why retiring its SDK cost no model coverage.
 
   **Which model, on whose key, is one function.** `agents/engines.resolve_run_model`
   is engine → provider → model → key for every V1 runner — including the rule that a
@@ -134,7 +143,7 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   `get_current_user` **on the router** so endpoint 45 cannot be written without
   it, and `tests/test_content_access.py` asserts that property directly.
 - **Email:** `service/email/` — Resend when `RESEND_API_KEY` is set, otherwise a logging console backend so dev/CI need no vendor account.
-- **Observability:** Sentry error tracking; optional OpenTelemetry tracing (V1 emits its own GenAI spans, `agents/core/telemetry.py`; audit V3 gets them from the Claude Agent SDK).
+- **Observability:** Sentry error tracking; optional OpenTelemetry tracing — V1 emits its own GenAI spans (`agents/core/telemetry.py`).
 - **Hosting:** Railway — auto-deploys from `main` via GitHub integration; `railway.json` defines Railpack build + uvicorn start.
 - **CI:** GitHub Actions (`backend.yml`) — Ruff lint + pytest on every PR and push to `main`.
 - **Tests:** `make test` must stay offline and under two minutes; it is the
@@ -227,13 +236,15 @@ agents/
 ├── engines.py          — engine/provider/model registry + resolve_run_model (shared)
 ├── models.py           — Provider, ModelName enums (shared)
 ├── core/               — the ports: session registry, events, LangChain adapter (lc.py),
-│                         checkpointer, memory/connector/web tool binders, SDK shims
+│                         checkpointer, memory/artifact/connector/web tool binders,
+│                         the shared DeepSession loop, SDK shims
 ├── insights/           — Insights agent (paid ads + organic growth intelligence)
 │   ├── v1/             — deepagents runner (the only insights engine)
 │   └── catalog/, goals/, schema.py, prompts/, subagents/
 ├── audit/              — SEO audit agent
 │   ├── v1/             — create_agent runner (default)
-│   ├── v3/             — Claude Agent SDK runner (`engine: "v3"`)
+│   ├── crawl.py        — engine-neutral: the session, the crawl, report parsing
+│   ├── enrichment.py   — competitor research; create_agent + web tools, any provider
 │   └── scoring.py      — the report's scores and counts, computed from its findings on
 │                         every submit (both engines); the prompt's tables render from it
 └── content/            — Content Studio (plans, posts, images, publishing)
@@ -276,7 +287,7 @@ framework. The rules it implies:
   LangGraph `interrupt()` implementation (`agents/core/lc.interrupt_pause`)
   existed beside the Future bridge. A tool body takes a `PauseFn`; the binder
   that mounts it decides which one — the Future for an agent with no
-  checkpointer (audit v1, audit v3, the slide-render bridge), the interrupt
+  checkpointer (audit, the slide-render bridge), the interrupt
   for one with durable threads (insights v1, content v1). Same events, same
   route, and the frontend cannot tell them apart.
 - **A durable thread is the conversation.** The insights runner keys its

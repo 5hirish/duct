@@ -2,8 +2,8 @@
 
 Duct rents an agent harness; it does not marry one. Harnesses are the
 fastest-churning, least-differentiated layer in this stack — ``deepagents`` is
-0.x on a weekly cadence, ``claude-agent-sdk`` is 0.2.x, and ADK 2.x has already
-forced one breaking migration on us. The durable assets are the domain layer
+0.x on a weekly cadence, and ADK and the Claude Agent SDK have each already
+been rented and returned. The durable assets are the domain layer
 (prompts, tools, schemas, goals, scoring, the artifact contract) and the
 boundaries around the harness. Those boundaries are the ports declared here.
 
@@ -18,15 +18,24 @@ be one. Harnesses differ in *capability*, not just API shape:
     is strictly worse than the three-engine problem this replaced.
 
 So the harness is allowed to be harness-shaped *inside a runner*. What crosses
-its boundary is standardized. That is why ``agents/audit/v1/runner.py`` is 376
-lines against v3's 1,175: the boundaries were already in place, and only the
-middle had to be rewritten.
+its boundary is standardized. That is what made removing an engine a normal
+week rather than a rewrite: when the Claude Agent SDK went, the domain layer
+did not move, and the audit runner it had served kept its prompts, tools,
+schemas and event vocabulary unchanged.
 
 The rule for adding a port
 --------------------------
 **Write the adapter on the second implementation, not the first.** A port with
-one implementation is a guess; a port with two is a fact. Everything below has
-two, except where noted.
+one implementation is a guess; a port with two is a fact.
+
+Every port below now has exactly one adapter, because there is one engine. That
+is not a reason to collapse them into their callers. They were each *earned*
+against a second implementation that has since been retired, and the shape they
+were pulled into is what a third harness would arrive through — the ADK
+migration and the SDK removal both went through these seams. Deleting a proven
+boundary because its second implementation is gone is how the next migration
+becomes a rewrite. What the rule forbids is inventing a *new* port on a single
+implementation.
 
 The ports
 ---------
@@ -34,14 +43,16 @@ The ports
 =========================  ==========================================  =================================
 Port                       Contract                                    Adapters
 =========================  ==========================================  =================================
-Tools                      plain domain callable + a description        ``build_memory_tools_lc`` /
-                           single-sourced next to it                    ``build_memory_tools_sdk``
-                                                                        (agents/core/memory_tools.py)
-Events out                 ``AgentEvent`` / ``EventKind`` vocabulary    v1 runner (LangChain stream),
-                           + an ``Emitter``                             v3 runner (``pump_stream_event``)
-                                                                        (agents/core/events.py, stream.py)
-Human-in-the-loop          ``bridge_ask_user_question`` — emit          v1 tool-shaped, v3 SDK-shaped
-                           QUESTIONS_REQUIRED, await a Future           (agents/core/session.py)
+Tools                      plain domain callable + a description        ``build_memory_tools_lc``,
+                           single-sourced next to it                    ``build_artifact_tools_lc``,
+                                                                        ``build_execution_tools_lc``
+                                                                        (each had an SDK twin)
+Events out                 ``AgentEvent`` / ``EventKind`` vocabulary    ``stream_agent`` (agents/core/lc.py);
+                           + an ``Emitter``                             the SDK's ``pump_stream_event`` was
+                                                                        the second, until V3 went
+                                                                        (agents/core/events.py)
+Human-in-the-loop          ``bridge_ask_user_question`` — emit          tool-shaped on V1; was SDK-shaped
+                           QUESTIONS_REQUIRED, await a Future           on V3 (agents/core/session.py)
 Artifacts                  ``<duct_artifact>`` tag +                    harness-neutral by construction
                            ``DuctArtifactStreamParser`` +               (agents/core/stream.py,
                            ``ArtifactPersister``                        service/artifact_store.py)
@@ -111,11 +122,12 @@ class ToolBinder(Protocol):
 
     The domain logic lives in plain sync/async functions with zero framework
     imports; a binder is the thin shim that wraps them. Returns whatever the
-    target harness accepts (``StructuredTool`` for LangChain, MCP tool dicts
-    for the Claude Agent SDK), hence ``list[Any]`` — the point of the port is
-    that callers never inspect the elements.
+    target harness accepts — ``StructuredTool`` today, MCP tool dicts when the
+    Claude Agent SDK was also a target — hence ``list[Any]``: the point of the
+    port is that callers never inspect the elements.
 
-    Reference pair: ``build_memory_tools_lc`` / ``build_memory_tools_sdk``.
+    Reference: ``build_memory_tools_lc``, whose bodies were shared with an SDK
+    twin for a year and did not change when that twin went.
     """
 
     def __call__(self, *args: Any, **kwargs: Any) -> list[Any]: ...
@@ -128,9 +140,9 @@ class AskUser(Protocol):
     The harness-neutral half is ``bridge_ask_user_question``: emit
     QUESTIONS_REQUIRED, await an ``asyncio.Future`` the messages route
     resolves, return the completed tool input. Each harness only supplies the
-    shape that suspends it — an SDK tool callback on v3, a LangChain tool on
-    v1. LangGraph's ``interrupt()`` is the upgrade path, and it plugs in here
-    without the route or the frontend noticing.
+    shape that suspends it — a LangChain tool today, an SDK tool callback when
+    V3 was also a target. LangGraph's ``interrupt()`` is the upgrade path, and
+    it plugs in here without the route or the frontend noticing.
     """
 
     async def __call__(self, session: Any, session_id: str, input_data: dict, emit: Emitter) -> dict: ...

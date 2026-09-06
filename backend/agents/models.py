@@ -79,12 +79,6 @@ class ModelName(str, Enum):
     CLAUDE_OPUS = "claude-opus-5"
     CLAUDE_SONNET = "claude-sonnet-5"
     CLAUDE_HAIKU = "claude-haiku-4-5"
-    # v3 only. The [1m] suffix is a Claude Code / Agent SDK model string that
-    # opts the CLI into the 1M-token context window. The Messages API has no
-    # such ID — Opus 5 is natively 1M there — so LangChain (v1) would 404 on
-    # it. Enforced by CLI_ONLY_MODELS below.
-    CLAUDE_OPUS_1M = "claude-opus-5[1m]"
-
     # xAI. Verified against docs.x.ai: 500k context, $2/$6, and
     # `reasoning_effort` low/medium/high/xhigh — "Reasoning cannot be
     # disabled", so there is no off rung to offer. No fallback pair below:
@@ -128,58 +122,13 @@ class ModelName(str, Enum):
     OR_GPT_5_MINI = "openai/gpt-5-mini"
 
 
-class AgentTool(StrEnum):
-    """Built-in Claude Agent SDK tool names passed to allowed_tools (audit v3).
-
-    Per-agent tool names are NOT here — each agent type owns its own enum next
-    to its tools/schema: see AuditTool (agents/audit/schema.py, the
-    ``duct_crawl`` MCP server) and ContentTool (agents/content/schema.py, the
-    LangChain-bound content tools).
-    """
-
-    ASK_USER_QUESTION = "AskUserQuestion"
-    TODO_WRITE = "TodoWrite"
-    WEB_SEARCH  = "WebSearch"         # SERP research, competitor discovery
-    WEB_FETCH   = "WebFetch"          # fetch arbitrary URLs (e.g. competitor pages)
-    AGENT = "Agent"
-    READ = "Read"
-    WRITE = "Write"
-    EDIT = "Edit"
-    BASH = "Bash"
-    GREP = "Grep"
-    GLOB = "Glob"
-    NOTEBOOK_EDIT = "NotebookEdit"
-
-
-class AgentPermissionMode(StrEnum):
-    """Claude Agent SDK permission_mode values for ClaudeAgentOptions."""
-
-    DEFAULT = "default"          # unmatched tools fall through to canUseTool
-    DONT_ASK = "dontAsk"         # unmatched tools are hard-denied; canUseTool skipped (except AskUserQuestion)
-    ACCEPT_EDITS = "acceptEdits" # file-edit tools auto-approved; others need canUseTool
-    BYPASS = "bypassPermissions" # all tools approved; use only in fully controlled environments
-    PLAN = "plan"                # read-only tools only; no file writes
-
-
-class ThinkingMode(StrEnum):
-    """Claude Agent SDK thinking type values for ClaudeAgentOptions.thinking.
-
-    Pass as ThinkingConfigAdaptive(type=ThinkingMode.ADAPTIVE) — using the enum
-    avoids bare string literals and ensures the SDK's TypedDict gets the required
-    'type' key (ThinkingConfigAdaptive() with no args produces {} which raises
-    KeyError: 'type' at CLI command build time).
-    """
-
-    ADAPTIVE = "adaptive"   # model decides thinking depth per turn
-    ENABLED  = "enabled"    # fixed budget_tokens; pair with ThinkingConfigEnabled
-    DISABLED = "disabled"   # no extended thinking
-
-
 class AgentEffort(StrEnum):
-    """Claude Agent SDK effort levels for ClaudeAgentOptions (v3 engine only).
+    """How hard the model works before responding — still the API's request field.
 
-    Controls how hard the model works before responding. Maps to the Claude CLI
-    --effort flag introduced in claude-agent-sdk v0.1.36.
+    Named after the Claude CLI's ``--effort`` flag, where the spelling started,
+    and kept when that engine went: ``agents/thinking.py`` is the portable layer
+    that maps these rungs onto every provider's own dial, and it happens to
+    share Anthropic's spelling because it *is* Anthropic's spelling.
 
     LOW    — fastest, cheapest; good for simple lookups
     MEDIUM — balanced default
@@ -237,12 +186,6 @@ class AspectRatio(StrEnum):
     PORTRAIT_3_5   = "3:5"
     LANDSCAPE_5_3  = "5:3"
 
-
-# Models only the Claude Agent SDK (v3) accepts — see CLAUDE_OPUS_1M above.
-# resolve_engine_model refuses to hand these to any other engine, so a stray
-# GENERATE_MODEL=claude-opus-5[1m] degrades to the engine default instead of
-# becoming a guaranteed upstream 404.
-CLI_ONLY_MODELS: frozenset[ModelName] = frozenset({ModelName.CLAUDE_OPUS_1M})
 
 # Default provider → model mapping
 DEFAULT_MODELS = {
@@ -321,7 +264,6 @@ CONTEXT_WINDOW: dict[ModelName, int] = {
     ModelName.CLAUDE_OPUS: 200_000,
     ModelName.CLAUDE_SONNET: 200_000,
     ModelName.CLAUDE_HAIKU: 200_000,
-    ModelName.CLAUDE_OPUS_1M: 1_000_000,
     ModelName.GROK_4_6: 500_000,
     ModelName.OR_DEEPSEEK_V4_FLASH: 1_000_000,
     ModelName.OR_DEEPSEEK_V4_PRO: 1_000_000,
@@ -365,7 +307,6 @@ PRICING: dict[ModelName, ModelPrice] = {
     ModelName.CLAUDE_OPUS: ModelPrice(5.0, 25.0, 0.5, 6.25),
     ModelName.CLAUDE_SONNET: ModelPrice(2.0, 10.0, 0.2, 2.5),
     ModelName.CLAUDE_HAIKU: ModelPrice(1.0, 5.0, 0.1, 1.25),
-    ModelName.CLAUDE_OPUS_1M: ModelPrice(5.0, 25.0, 0.5, 6.25),
     # Base rates. xAI doubles both above a 200k-token prompt; ModelPrice has
     # no tier for that, so a very long Grok run under-reports.
     ModelName.GROK_4_6: ModelPrice(2.0, 6.0, 0.5),

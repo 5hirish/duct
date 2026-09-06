@@ -6,17 +6,18 @@ Answers the two questions that gate the migration
   1. **Which models may we offer customers?** BYO-key means a weak model
      produces a bad audit that gets blamed on Duct. Run this per candidate and
      admit only the models that pass.
-  2. **Has V1 earned V3's retirement?** Same rubric, same site, both engines.
+  2. **Is the audit still worth shipping?** Same rubric, same site, run before
+     a change that could move it.
 
 Marked ``live``: it crawls a real site and spends real tokens, so it is excluded
 from the default suite. Run it explicitly:
 
-    # default (V3 + Claude, the current production path)
+    # the default provider
     poetry run pytest tests/test_audit_eval.py -m live
 
-    # a candidate model on the new engine
-    DUCT_EVAL_ENGINE=v1 DUCT_EVAL_PROVIDER=google_genai \\
-    DUCT_EVAL_MODEL=gemini-2.5-flash \\
+    # a candidate model
+    DUCT_EVAL_PROVIDER=google_genai \\
+    DUCT_EVAL_MODEL=gemini-3.8-flash \\
     DUCT_EVAL_OUTPUT=scorecard-gemini.json \\
     poetry run pytest tests/test_audit_eval.py -m live
 
@@ -43,6 +44,10 @@ from tests.eval.rubrics.audit_report import audit_report_rubric, render_audit_ar
 # Duct's own site by default — safe to crawl, and we know what "good" looks like.
 DEFAULT_URL = "https://getduct.ai"
 
+# Long enough that a slow last tool call still lands, short enough that the
+# eval is not waiting on a conversation nobody is having.
+_CHAT_IDLE_TIMEOUT = 5.0
+
 
 def _emit_scorecard(scorecard, label: str) -> None:
     """Write the scorecard to disk and echo it, mirroring the content eval."""
@@ -68,7 +73,7 @@ def _resolve_run_config() -> tuple[Engine, object, object, str]:
     from config import get_configs
     from agents.engines import PROVIDER_CONFIG_ATTR
 
-    engine = resolve_engine(os.environ.get("DUCT_EVAL_ENGINE") or "v3")
+    engine = resolve_engine(os.environ.get("DUCT_EVAL_ENGINE") or "v1")
     provider = resolve_engine_provider(engine, os.environ.get("DUCT_EVAL_PROVIDER"))
     model = resolve_engine_model(engine, provider, os.environ.get("DUCT_EVAL_MODEL"))
     api_key = os.environ.get("DUCT_EVAL_API_KEY") or getattr(
@@ -77,22 +82,15 @@ def _resolve_run_config() -> tuple[Engine, object, object, str]:
     return engine, provider, model, api_key
 
 
-def _can_run_without_a_key(engine: Engine, provider) -> bool:
-    """Whether this engine can authenticate with no explicit API key.
+def _gemini_key() -> str:
+    """The Gemini key Duct's own WebSearch runs on."""
+    from config import get_configs
 
-    Only v3 on Anthropic can: the Claude Agent SDK reuses the `claude` OAuth
-    login or CLAUDE_CODE_OAUTH_TOKEN, which is the one capability v3 has that
-    v1 does not. Skipping that combination for "no API key" made the engine
-    comparison this file exists to run impossible on the very setup where v3
-    is cheapest to try — the eval was stricter than the runner it drives.
-    """
-    from agents.models import Provider
-
-    if engine != Engine.V3 or provider != Provider.ANTHROPIC:
-        return False
-    from config import claude_oauth_available
-
-    return claude_oauth_available()
+    return (
+        os.environ.get("GEMINI_API_KEY", "")
+        or os.environ.get("GOOGLE_API_KEY", "")
+        or getattr(get_configs(), "gemini_api_key", "")
+    ).strip()
 
 
 @pytest.mark.live
@@ -104,18 +102,16 @@ def test_audit_report_passes_rubric():
     scorecards across runs rather than reading any single one in isolation.
     """
     engine, provider, model, api_key = _resolve_run_config()
-    if not api_key and not _can_run_without_a_key(engine, provider):
+    if not api_key:
         pytest.skip(f"no API key configured for provider '{provider.value}'")
 
     url = os.environ.get("DUCT_EVAL_URL", DEFAULT_URL)
     label = f"{engine.value} · {provider.value} · {model.value} · {url}"
 
-    if engine == Engine.V1:
-        from agents.audit.v1.runner import LangChainAuditRunner as Runner
-    else:
-        from agents.audit.v3.runner import ClaudeAuditRunner as Runner
+    from agents.audit.v1.runner import LangChainAuditRunner as Runner
 
-    from agents.audit.v3.runner import close_session, create_audit_session
+    from agents.audit.crawl import create_audit_session
+    from agents.core.session import close_session
 
     session_id = str(uuid.uuid4())
     create_audit_session(session_id)
@@ -125,7 +121,11 @@ def test_audit_report_passes_rubric():
         events.append(event)
 
     async def _run():
-        runner = Runner(api_key=api_key, provider=provider, model=model)
+        # gemini_api_key backs the research pass's WebSearch off Anthropic;
+        # without it the eval would grade a report that never saw a competitor.
+        runner = Runner(
+            api_key=api_key, provider=provider, model=model, gemini_api_key=_gemini_key(),
+        )
         return await runner.run_pipeline(
             session_id=session_id,
             url=url,
@@ -137,6 +137,10 @@ def test_audit_report_passes_rubric():
             emit=emit,
             max_blog_posts=3,
             report_mode="template",
+            # The run stays open for follow-up chat once the report lands, and
+            # this harness never sends one. Without a short idle timeout the
+            # eval would sit in the chat loop for the full 30 minutes.
+            chat_idle_timeout=_CHAT_IDLE_TIMEOUT,
         )
 
     try:

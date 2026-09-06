@@ -26,7 +26,7 @@ from agents.audit.schema import (
     AuditRequest,
 )
 from agents.audit.v1.runner import LangChainAuditRunner
-from agents.audit.v3.runner import ClaudeAuditRunner, close_session, get_session
+from agents.core.session import close_session, get_session
 from agents.engines import (
     Engine,
     resolve_engine,
@@ -131,23 +131,16 @@ async def _stream_queue(
 
 
 def _build_runner(api_key: str, provider: Any, model: Any, engine: Engine):
-    """Pick the audit engine.
-
-    V1 (LangChain) is the default and the production path; V3 (Claude Agent SDK)
-    is opt-in per request via ``engine: "v3"``. Both expose the same
-    ``run_pipeline`` signature and emit the same events, which is why audit is
-    the cheapest place to make the consolidation real — running V1 by default is
-    how it earns the confidence the previous default was waiting for.
-
-    One behaviour change rides along: V3 is the only engine that can
-    authenticate from a Claude subscription (``claude_oauth_available``), so an
-    operator whose only credential is a Claude subscription must now pass
-    ``engine: "v3"`` explicitly. Any provider API key keeps working unchanged.
-    """
-    if engine == Engine.V1:
-        logger.info("audit: using V1 (LangChain) engine with %s/%s", provider.value, model.value)
-        return LangChainAuditRunner(api_key=api_key, provider=provider, model=model)
-    return ClaudeAuditRunner(api_key=api_key, provider=provider, model=model)
+    """The audit runner. One engine now — the parameter stays because the route
+    still resolves and reports an engine, and `agents/engines.py` is where that
+    would grow again."""
+    logger.info("audit: %s/%s", provider.value, model.value)
+    # gemini_api_key backs Duct's own WebSearch in the research pass when the
+    # run's own provider has no usable built-in one.
+    return LangChainAuditRunner(
+        api_key=api_key, provider=provider, model=model,
+        gemini_api_key=get_configs().gemini_api_key,
+    )
 
 
 # ---------------------------------------------------------------------------

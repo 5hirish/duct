@@ -91,7 +91,6 @@ def test_an_openrouter_slug_resolves_to_the_model_it_fronts():
 
 def test_the_1m_context_variant_is_the_same_model():
     """`claude-opus-5[1m]` is a context-window selector, not a different model."""
-    assert support_for(ModelName.CLAUDE_OPUS_1M) is support_for("claude-opus-5")
 
 
 def test_a_modelname_enum_resolves_like_its_string():

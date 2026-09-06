@@ -37,8 +37,6 @@ NOT_CONFIG_FIELDS = {
     "PORT",
     # Read straight from os.environ by the langchain-google-genai SDK.
     "GOOGLE_API_KEY",
-    # Read directly by agents/audit — a debug flag, not a setting.
-    "AUDIT_VERBOSE_LOGGING",
 }
 
 # What counts as "a credential someone must be told about".

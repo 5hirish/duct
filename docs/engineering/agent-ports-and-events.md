@@ -70,9 +70,9 @@ That asymmetry is the case for this design.
 
 | Port | Contract | Adapters |
 |---|---|---|
-| **Tools** | plain domain callable + a description single-sourced beside it | `build_memory_tools_lc` / `build_memory_tools_sdk` |
-| **Events out** | `AgentEvent` / `EventKind` + an `Emitter` | v1 LangChain stream, v3 `pump_stream_event` |
-| **Human-in-the-loop** | `PauseFn` — `await pause(event, payload)` returns the user's answer | `make_future_pause` (in-process Future; audit v3, audit v1, the slide-render bridge), `interrupt_pause` (LangGraph `interrupt()`; insights v1, content v1) |
+| **Tools** | plain domain callable + a description single-sourced beside it | `build_memory_tools_lc`, `build_artifact_tools_lc`, `build_execution_tools_lc` — each had an SDK twin, retired with v3 |
+| **Events out** | `AgentEvent` / `EventKind` + an `Emitter` | v1 LangChain stream; the SDK's `pump_stream_event` was the second, until v3 went |
+| **Human-in-the-loop** | `PauseFn` — `await pause(event, payload)` returns the user's answer | `make_future_pause` (in-process Future; audit v1, the slide-render bridge), `interrupt_pause` (LangGraph `interrupt()`; insights v1, content v1) |
 | **Artifacts** | `<duct_artifact>` + `DuctArtifactStreamParser` + `ArtifactPersister` | harness-neutral by construction |
 | **Session / state** | `BaseAgentSession` registry for the live process; the conversation id as the durable thread | in-process registry; LangGraph checkpointer keyed on the conversation, driven by the shared `DeepSession` loop (`agents/core/deep_session.py`; insights v1, content v1) |
 | **Model transport** | `Provider` / `ModelName` / `Engine` registries | OpenAI-compatible, native Anthropic, native Gemini |
@@ -323,11 +323,12 @@ implementation of the port, so build it when it exists — not before.
 
 ## 6. Observability
 
-v3 already emits OTel traces — the Claude Agent SDK has tracing built in and
-`config.sentry_otel_env` points the subprocess at Sentry's OTLP endpoint. **v1
-has no equivalent**; LangChain's own tracing goes to LangSmith, a second vendor
-and a second place to look. Since v1 is the target harness, "observability comes
-free with the harness" stops being true exactly when it matters.
+The harness gives us nothing. LangChain's own tracing goes to LangSmith, a
+second vendor and a second place to look. The one harness that carried OTel
+built in was the Claude Agent SDK — its subprocess inherited Sentry's OTLP
+endpoint from an env var — and it went, taking that plumbing with it.
+"Observability comes free with the harness" was never true of the harness we
+kept.
 
 So [`backend/agents/core/telemetry.py`](../../backend/agents/core/telemetry.py)
 emits the OpenTelemetry GenAI conventions from our side of the boundary:

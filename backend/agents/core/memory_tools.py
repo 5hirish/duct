@@ -24,7 +24,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from typing import Annotated, Any, Callable
+from typing import Any, Callable
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -374,58 +374,3 @@ def build_memory_tools_lc(
 # Claude Agent SDK (V3) — maintained until V1 earns full confidence
 # ---------------------------------------------------------------------------
 
-def build_memory_tools_sdk(
-    project_id: UUID | None,
-    *,
-    user_id: UUID | None = None,
-    conversation_id: UUID | None = None,
-    agent_type: str = "",
-    scope: str = SCOPE_PROJECT,
-    on_memory: Callable[[dict], Any] | None = None,
-) -> list:
-    """The same three tools as in-process MCP tools for the Claude Agent SDK."""
-    from claude_agent_sdk import tool
-
-    if project_id is None and scope != SCOPE_USER:
-        return []
-
-    def _text(payload: dict) -> dict:
-        return {"content": [{"type": "text", "text": json.dumps(payload, indent=2)}]}
-
-    @tool(
-        name="RememberFact",
-        description=REMEMBER_DESCRIPTION,
-        input_schema=RememberFactArgs.model_json_schema(),
-    )
-    async def remember_fact(args: dict) -> dict:
-        payload = await _run(
-            _remember_sync, args,
-            project_id=project_id, user_id=user_id, conversation_id=conversation_id,
-            agent_type=agent_type, scope=scope,
-            source_type=SOURCE_USER if scope == SCOPE_USER else SOURCE_AGENT,
-        )
-        await _notify(on_memory, payload)
-        return _text(payload)
-
-    @tool(
-        name="SearchMemory",
-        description=SEARCH_DESCRIPTION,
-        input_schema=SearchMemoryArgs.model_json_schema(),
-    )
-    async def search_memory(args: dict) -> dict:
-        return _text(await _run(_search_sync, args, project_id=project_id, user_id=user_id, scope=scope))
-
-    @tool(
-        name="GetMemory",
-        description=GET_DESCRIPTION,
-        input_schema={"memory_id": Annotated[str, "The entry id, e.g. 'm_a1b2c3d4'."]},
-    )
-    async def get_memory_tool(args: dict) -> dict:
-        return _text(
-            await _run(
-                _get_sync, str(args.get("memory_id") or ""),
-                project_id=project_id, user_id=user_id,
-            )
-        )
-
-    return [remember_fact, search_memory, get_memory_tool]

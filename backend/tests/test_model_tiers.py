@@ -106,21 +106,20 @@ def test_ladder_descends_more_than_one_rung():
     assert [tier for tier, _ in got.skipped] == [Tier.HEAVY, Tier.STANDARD]
 
 
-def test_engine_support_skips_a_tier_even_with_a_key():
-    """v3 is Anthropic-only, so a reachable Google model still cannot serve it."""
+def test_no_tier_is_skipped_for_the_engine_any_more():
+    """SKIP_ENGINE fires when a tier names a provider the engine cannot reach.
+
+    It was V3's whole shape — Anthropic-only — and with V3 gone the one
+    remaining engine reaches every provider in the catalogue, so the reason is
+    dormant. The machinery stays because it is the seam a second engine would
+    arrive on; this pins that nothing hits it today.
+    """
     google = {t: ModelName.GEMINI_3_8_FLASH.value for t in ("heavy", "standard", "light")}
-    got = resolve_tier_model(Job.DRAFTING, Engine.V3, tier_map=google, reachable=ALL_PROVIDERS)
-    # Every tier the job could use was refused for the engine, not the key...
-    assert {reason for _, reason in got.skipped} == {SKIP_ENGINE}
-    # ...and the engine's own default is what caught the fall.
-    assert got.engine_default and got.provider is Provider.ANTHROPIC
+    got = resolve_tier_model(Job.DRAFTING, Engine.V1, tier_map=google, reachable=ALL_PROVIDERS)
 
-
-def test_v3_skips_the_unsupported_tier_and_keeps_going():
-    mixed = {**ANTHROPIC_MAP, "standard": ModelName.GPT_5_6_TERRA.value}
-    got = resolve_tier_model(Job.DRAFTING, Engine.V3, tier_map=mixed, reachable=ALL_PROVIDERS)
-    assert got.tier is Tier.LIGHT
-    assert got.skipped == ((Tier.STANDARD, SKIP_ENGINE),)
+    assert got is not None
+    assert SKIP_ENGINE not in {reason for _, reason in got.skipped}
+    assert got.provider is Provider.GOOGLE_GENAI
 
 
 def test_nothing_reachable_at_all_returns_none():
@@ -200,32 +199,33 @@ def test_google_defaults_run_natively_on_the_default_engine():
         assert not got.degraded and not got.engine_default
 
 
-def test_v3_falls_to_the_engine_default_rather_than_stranding():
-    """Content Studio is v3-only and v3 is Anthropic-only.
+def test_the_floor_catches_a_job_no_tier_can_serve():
+    """The ladder's floor is the engine's own default. Without it a tier map
+    that reaches nothing would strand the job rather than degrade it."""
+    unreachable = {t: ModelName.CLAUDE_SONNET.value for t in ("heavy", "standard", "light")}
+    got = resolve_tier_model(Job.DRAFTING, Engine.V1, tier_map=unreachable, reachable=GOOGLE_ONLY)
 
-    With a Google default triple no tier can serve it, so the ladder's floor —
-    the engine's own default — is what keeps that agent working on a stock
-    install. Without this the page would ship a default that silently breaks
-    one of three shipped agents.
-    """
-    got = resolve_tier_model(Job.DRAFTING, Engine.V3, reachable=ALL_PROVIDERS)
     assert got is not None
     assert got.engine_default and got.tier is None
-    assert got.provider is Provider.ANTHROPIC
+    assert got.provider is Provider.GOOGLE_GENAI
     # Every tier the job could reach was tried and reported, not silently
     # swallowed — and only those: the ladder starts at the job's own tier and
     # never ascends, so a Standard job never reports skipping Heavy.
     assert [t for t, _ in got.skipped] == list(tier_chain(JOB_TIER[Job.DRAFTING]))
-    assert {r for _, r in got.skipped} == {SKIP_ENGINE}
 
 
 def test_the_floor_never_invents_an_unreachable_provider():
-    """No Anthropic credential means v3 genuinely cannot run — say so."""
-    assert resolve_tier_model(Job.DRAFTING, Engine.V3, reachable=GOOGLE_ONLY) is None
+    """No credential for the engine's own default either — say so."""
+    unreachable = {t: ModelName.CLAUDE_SONNET.value for t in ("heavy", "standard", "light")}
+    assert resolve_tier_model(
+        Job.DRAFTING, Engine.V1, tier_map=unreachable, reachable=frozenset()
+    ) is None
 
 
 def test_the_floor_does_not_fire_when_a_tier_can_serve():
-    got = resolve_tier_model(Job.DRAFTING, Engine.V3, tier_map=ANTHROPIC_MAP, reachable=ANTHROPIC_ONLY)
+    got = resolve_tier_model(
+        Job.DRAFTING, Engine.V1, tier_map=ANTHROPIC_MAP, reachable=ANTHROPIC_ONLY
+    )
     assert got is not None and not got.engine_default and got.tier is Tier.STANDARD
 
 
@@ -299,7 +299,6 @@ def test_a_server_key_reads_as_env_locally_and_as_nothing_when_deployed(monkeypa
 
     for local, expected in ((True, "env"), (False, "none")):
         monkeypatch.setattr(providers_route, "get_configs", lambda local=local: _Cfg(local))
-        monkeypatch.setattr(providers_route, "claude_oauth_available", lambda: False)
         monkeypatch.setattr(
             providers_route, "allow_server_provider_keys", lambda local=local: local
         )

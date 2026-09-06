@@ -259,10 +259,9 @@ class Configs(BaseSettings):
     gemini_api_key: str = ""
     openai_api_key: str = ""
     anthropic_api_key: str = ""
-    # xAI (Grok), on its own LangChain integration. v1 only, like OpenRouter:
-    # the Claude Agent SDK is provider-locked.
+    # xAI (Grok), on its own LangChain integration.
     xai_api_key: str = ""
-    # OpenRouter — its own LangChain integration (v1 engine only). One key
+    # OpenRouter — its own LangChain integration. One key
     # reaches 500+ models across 60+ providers, which is the practical answer
     # for bring-your-own-model: consumer subscriptions never grant API access,
     # so every customer arrives with a key, and for the open-weight/Chinese long
@@ -279,18 +278,9 @@ class Configs(BaseSettings):
     # a new GATEWAY_BASE_URL entry in agents/models.py — which takes the
     # OpenAI-shape branch — plus its own key field here.
     openrouter_base_url: str = ""
-    # Long-lived Claude OAuth token from `claude setup-token` (the operator's own
-    # Pro/Max subscription). Detected here only so the engine-status endpoint can
-    # report v3 as authenticated; the Claude Agent SDK subprocess reads the real
-    # CLAUDE_CODE_OAUTH_TOKEN env var itself. Intended for local/self-hosted
-    # individual use — NOT for routing end users' requests through a subscription
-    # (see https://code.claude.com/docs/en/legal-and-compliance). Production
-    # multi-user serving must use ANTHROPIC_API_KEY (Claude Console).
-    claude_code_oauth_token: str = Field(
-        default="",
-        validation_alias=AliasChoices("CLAUDE_CODE_OAUTH_TOKEN"),
-    )
-    # Engine selection: "v1" (LangChain), "v3" (Claude Agent SDK)
+    # Engine selection. One engine ("v1") since the Claude Agent SDK was
+    # removed; the field stays because stored preferences and requests still
+    # carry the string.
     generate_engine: str = Field(default="v1")
 
     # Sentry observability
@@ -305,12 +295,6 @@ class Configs(BaseSettings):
     sentry_profile_session_sample_rate: float = 1.0
     sentry_profile_lifecycle: str = "trace"
     sentry_enable_localhost: bool = False
-
-    # Claude Agent SDK built-in OpenTelemetry tracing.
-    # When sentry_dsn is set, OTEL endpoint + headers are derived automatically.
-    # Set sdk_otel_enabled=true to activate SDK-level traces (turns, tool calls,
-    # LLM request latencies) which appear in Sentry → Performance.
-    sdk_otel_enabled: bool = False
 
     model_config = SettingsConfigDict(
         env_file=_settings_env_files(),
@@ -413,35 +397,6 @@ def get_configs() -> Configs:
     return Configs()
 
 
-def allow_subscription_auth() -> bool:
-    """True when the Claude Agent SDK may authenticate via a local Claude Code
-    OAuth login (subscription credit) instead of an explicit ANTHROPIC_API_KEY.
-
-    Only permitted in local dev — prod must always run on an explicit API key.
-    When this returns True, an empty api_key is allowed to fall through to the
-    SDK, which reuses the `claude` OAuth token in ~/.claude.
-    See https://support.claude.com/en/articles/15036540
-    """
-    return get_configs().app_env == "local"
-
-
-def claude_oauth_available() -> bool:
-    """True when Claude (v3) can authenticate without an explicit ANTHROPIC_API_KEY.
-
-    Two non-API-key paths, both for the operator's *own* ordinary use:
-      - CLAUDE_CODE_OAUTH_TOKEN, a long-lived token from `claude setup-token`
-        (works headless/self-hosted), or
-      - a local `claude` OAuth login in ~/.claude (dev only).
-
-    Per Anthropic's policy, subscription credentials must NOT route end users'
-    requests on a third-party product — production multi-user serving uses an
-    ANTHROPIC_API_KEY from the Claude Console. This helper exists so a single
-    operator running their own instance isn't blocked, not to serve users.
-    See https://code.claude.com/docs/en/legal-and-compliance
-    """
-    return bool(get_configs().claude_code_oauth_token) or allow_subscription_auth()
-
-
 def allow_server_provider_keys() -> bool:
     """True when a run may fall back to *this instance's* own provider keys.
 
@@ -460,46 +415,9 @@ def allow_server_provider_keys() -> bool:
     ``duct_pays=True`` to ``agents.engines.resolve_provider_key`` instead of
     widening this predicate: "Duct pays for this" is then a decision written at
     one visible call site rather than a fallback nobody can see.
-
-    Same shape as ``allow_subscription_auth`` above, and for the same reason.
     """
     cfg = get_configs()
     return bool(cfg.duct_local) or cfg.app_env == "local"
-
-
-def sentry_otel_env(cfg: Configs) -> dict[str, str]:
-    """Return OTEL env vars that route the Claude Agent SDK's built-in traces to Sentry.
-
-    The SDK subprocess inherits these; Sentry receives spans for every turn,
-    tool call, and LLM request with latencies and token counts.
-
-    DSN format:  https://<key>@o<org>.ingest[.region].sentry.io/<project>
-    OTLP format: https://o<org>.ingest[.region].sentry.io/api/<project>/integration/otlp/
-
-    Ref: https://docs.sentry.io/concepts/otlp/
-    """
-    import re
-
-    if not cfg.sdk_otel_enabled or not cfg.sentry_dsn:
-        return {}
-
-    m = re.match(
-        r"https://([^@]+)@(o\d+\.ingest(?:\.[^.]+)?\.sentry\.io)/(\d+)",
-        cfg.sentry_dsn.strip(),
-    )
-    if not m:
-        return {}
-
-    public_key, host, project_id = m.groups()
-    base_endpoint = f"https://{host}/api/{project_id}/integration/otlp/"
-
-    return {
-        "CLAUDE_CODE_ENABLE_TELEMETRY":        "1",
-        "OTEL_SERVICE_NAME":                   cfg.app_env,
-        "OTEL_EXPORTER_OTLP_ENDPOINT":         base_endpoint,
-        "OTEL_EXPORTER_OTLP_HEADERS":          f"sentry sentry_key={public_key}",
-        "OTEL_EXPORTER_OTLP_PROTOCOL":         "http/protobuf",
-    }
 
 
 # Origins the desktop sidecar accepts. The webview loads from three places

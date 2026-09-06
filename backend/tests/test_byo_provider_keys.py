@@ -70,7 +70,7 @@ def test_openrouter_key_is_its_own_provider_not_an_openai_one():
 
 def _fake_cfg(**overrides):
     base = dict(
-        generate_engine="v3",
+        generate_engine="v1",
         generate_provider="",
         generate_model="",
         anthropic_api_key="",
@@ -98,22 +98,23 @@ def _patch_cfg(monkeypatch, **overrides):
     cfg = _fake_cfg(**overrides)
     monkeypatch.setattr("config.get_configs", lambda: cfg)
     # The operator's own Claude login must not decide a test's outcome.
-    monkeypatch.setattr("config.claude_oauth_available", lambda: False)
     return cfg
 
 
 def test_byo_key_overrides_backend_key(monkeypatch):
     _patch_cfg(monkeypatch, anthropic_api_key="sk-ant-backend")
     provider, _model, api_key, _summary = resolve_model(
-        "v3", {Provider.ANTHROPIC: "sk-ant-user"}
+        "v1", {Provider.ANTHROPIC: "sk-ant-user"}
     )
     assert provider == Provider.ANTHROPIC
     assert api_key == "sk-ant-user"  # BYO wins over the backend key
 
 
 def test_falls_back_to_backend_key_when_no_user_key(monkeypatch):
-    _patch_cfg(monkeypatch, anthropic_api_key="sk-ant-backend")
-    provider, _model, api_key, _summary = resolve_model("v3", {})
+    # generate_provider names it: V1's own default is Google, and this test is
+    # about the key that funds a chosen provider, not about the ladder.
+    _patch_cfg(monkeypatch, anthropic_api_key="sk-ant-backend", generate_provider="anthropic")
+    provider, _model, api_key, _summary = resolve_model("v1", {})
     assert provider == Provider.ANTHROPIC
     # Desktop/local only. That env file is the user's own, so spending from it
     # is bring-your-own by another route — see the hosted case below.
@@ -172,15 +173,15 @@ def test_an_operator_pinned_provider_outranks_a_byo_key(monkeypatch):
     assert api_key == "g-backend"
 
 
-def test_v3_never_takes_an_openrouter_key(monkeypatch):
-    """The Claude Agent SDK is provider-locked, so an OpenRouter key cannot move
-    it — the engine's supported set is the gate, not the key."""
+def test_a_lone_openrouter_key_moves_the_provider(monkeypatch):
+    """The engine takes every provider now, so the key decides. This used to
+    assert the opposite for V3, which was Anthropic-locked by design."""
     _patch_cfg(monkeypatch, anthropic_api_key="sk-ant-backend")
     provider, _model, api_key, _summary = resolve_model(
-        "v3", {Provider.OPENROUTER: "sk-or-v1-user"}
+        "v1", {Provider.OPENROUTER: "sk-or-v1-user"}
     )
-    assert provider == Provider.ANTHROPIC
-    assert api_key == "sk-ant-backend"
+    assert provider == Provider.OPENROUTER
+    assert api_key == "sk-or-v1-user"
 
 
 def test_a_stale_generate_model_is_dropped_when_the_key_moves_the_provider(monkeypatch):
@@ -205,9 +206,9 @@ def test_a_stale_generate_model_is_dropped_when_the_key_moves_the_provider(monke
 
 def test_hosted_prod_refuses_to_spend_the_server_key(monkeypatch):
     _patch_cfg(monkeypatch, duct_local=False, app_env="production",
-               anthropic_api_key="sk-ant-ducts-own")
+               generate_provider="anthropic", anthropic_api_key="sk-ant-ducts-own")
     with pytest.raises(ProviderKeyRequired) as exc:
-        resolve_model("v3", {})
+        resolve_model("v1", {})
     assert exc.value.provider == "anthropic"
 
 
@@ -217,7 +218,7 @@ def test_hosted_prod_still_runs_on_the_callers_own_key(monkeypatch):
     _patch_cfg(monkeypatch, duct_local=False, app_env="production",
                anthropic_api_key="sk-ant-ducts-own")
     _provider, _model, api_key, _summary = resolve_model(
-        "v3", {Provider.ANTHROPIC: "sk-ant-user"}
+        "v1", {Provider.ANTHROPIC: "sk-ant-user"}
     )
     assert api_key == "sk-ant-user"
 
@@ -227,7 +228,7 @@ def test_a_saved_key_serves_a_run_with_no_headers(monkeypatch):
     carry an X-Provider-* header, so the stored key is its only BYOK."""
     _patch_cfg(monkeypatch, duct_local=False, app_env="production")
     _provider, _model, api_key, _summary = resolve_model(
-        "v3", {}, {Provider.ANTHROPIC: "sk-ant-saved"}
+        "v1", {}, {Provider.ANTHROPIC: "sk-ant-saved"}
     )
     assert api_key == "sk-ant-saved"
 
@@ -236,7 +237,7 @@ def test_a_header_key_beats_a_saved_one(monkeypatch):
     """The key pasted into this request is the more recent statement of intent."""
     _patch_cfg(monkeypatch, duct_local=False, app_env="production")
     _provider, _model, api_key, _summary = resolve_model(
-        "v3", {Provider.ANTHROPIC: "sk-ant-header"}, {Provider.ANTHROPIC: "sk-ant-saved"}
+        "v1", {Provider.ANTHROPIC: "sk-ant-header"}, {Provider.ANTHROPIC: "sk-ant-saved"}
     )
     assert api_key == "sk-ant-header"
 
@@ -250,19 +251,6 @@ def test_duct_pays_is_the_only_way_back_to_our_key_in_prod(monkeypatch):
     assert resolved.key == "sk-ant-ducts-own"
     assert resolved.source == "cloud"
     assert resolved.billed_to_duct is True
-
-
-def test_the_operators_subscription_is_behind_the_same_gate(monkeypatch):
-    """A Claude subscription is the operator's account too, so it is not a way
-    around the gate — and Anthropic's own policy forbids serving users from it."""
-    _patch_cfg(monkeypatch, duct_local=False, app_env="production")
-    monkeypatch.setattr("config.claude_oauth_available", lambda: True)
-    with pytest.raises(ProviderKeyRequired):
-        resolve_provider_key(Provider.ANTHROPIC, {})
-    # ...and available again once the run is one Duct has chosen to fund.
-    assert resolve_provider_key(
-        Provider.ANTHROPIC, {}, duct_pays=True
-    ).source == "subscription"
 
 
 def test_desktop_labels_its_own_env_key_as_the_users(monkeypatch):

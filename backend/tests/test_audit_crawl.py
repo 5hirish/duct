@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import pytest
 
-import agents.audit.v3.runner as v3
+import agents.audit.crawl as crawl
 from agents.audit.schema import CrawlPlan
 from service.crawl.fetcher import FetchResult, SiteUnreachableError
 
@@ -37,9 +37,9 @@ def offline_http(monkeypatch):
         status = statuses.get(url, 200)
         return FetchResult(text="<html><title>t</title></html>" if status else "", status=status)
 
-    monkeypatch.setattr(v3, "fetch_crawl_plan", plan)
-    monkeypatch.setattr(v3, "fetch_text", text)
-    monkeypatch.setattr(v3, "fetch", page)
+    monkeypatch.setattr(crawl, "fetch_crawl_plan", plan)
+    monkeypatch.setattr(crawl, "fetch_text", text)
+    monkeypatch.setattr(crawl, "fetch", page)
     return statuses
 
 
@@ -47,7 +47,7 @@ async def test_a_root_that_never_answered_stops_the_crawl(offline_http):
     offline_http[ROOT] = 0
 
     with pytest.raises(SiteUnreachableError) as excinfo:
-        await v3.run_crawl(ROOT)
+        await crawl.run_crawl(ROOT)
 
     assert excinfo.value.url == ROOT
     assert "no HTTP response" in str(excinfo.value)
@@ -58,7 +58,7 @@ async def test_a_root_that_answered_badly_is_still_a_crawl(offline_http):
     offline_http[ROOT] = 403
     offline_http[f"{ROOT}/pricing"] = 0
 
-    result = await v3.run_crawl(ROOT)
+    result = await crawl.run_crawl(ROOT)
 
     statuses = {p.url: p.http_status for p in result.pages}
     assert statuses[ROOT] == 403

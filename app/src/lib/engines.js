@@ -9,30 +9,24 @@ export const ENGINES = [
     key: "v1",
     badge: "v1",
     label: "LangChain",
-    defaultModel: "Gemini 2.5 Flash",
-    description: "Stable. Multi-provider tool calling.",
-    supportsOAuth: false,
-  },
-  {
-    key: "v3",
-    badge: "v3",
-    label: "Claude Agent SDK",
-    defaultModel: "Claude Sonnet 5",
-    description: "Subagents. MCP. Disk-backed sessions.",
-    supportsOAuth: true,
+    defaultModel: "Gemini 3.8 Flash",
+    description: "Multi-provider tool calling.",
   },
 ];
 
-// v1 to match the backend: `generate_engine` defaults to v1, audit does too,
-// and Content Studio now runs on v1 only. The "v3 only" pill affordance stays
-// for any future agent that lands on one engine first.
+// One engine since the Claude Agent SDK (v3) was removed. The list, the picker
+// and the per-agent support map are kept rather than inlined: they are what a
+// second engine would arrive through, and the "engine cannot run this agent"
+// affordance is the thing that stops a repeat of v2 (the UI offered an engine
+// the backend silently did not serve).
 export const DEFAULT_ENGINE = "v1";
 export const ENGINE_STORAGE_KEY = "duct_engine";
 
-// Engine availability states reported by GET /api/engines/status.
+// Engine availability states reported by GET /api/engines/status. There is no
+// recoverable "needs auth" any more: without an API key the engine is inactive,
+// because the subscription path went with the Agent SDK.
 export const ENGINE_STATUS = {
   ACTIVE: "active",
-  NEEDS_AUTH: "needs_auth",
   INACTIVE: "inactive",
 };
 
@@ -86,17 +80,15 @@ export function getAgentType(key) {
 // entry claiming an engine the backend does not dispatch is the exact bug that
 // retired v2 (the UI offered it while silently serving v1).
 //
-// Current state of the consolidation onto one harness:
-//   - insights   — v1 only; the v3 runner was removed (nothing dispatched it).
-//   - seo_audit  — both, and `routes/audit.py` now defaults to v1.
-//   - tiktok_studio — v1 only; its v3 runner was ported to deepagents and
-//     removed, so Content Studio runs on any provider the user brings a key for.
+// The consolidation onto one harness is finished: every agent runs on v1, so
+// every entry names it. The map stays because it is what an entry claiming an
+// engine the backend does not dispatch gets checked against.
 // ---------------------------------------------------------------------------
 export const AGENT_ENGINE_SUPPORT = {
   organic_growth: ["v1"],
   product_intelligence: ["v1"],
   paid_ads: ["v1"],
-  seo_audit: ["v1", "v3"],
+  seo_audit: ["v1"],
   tiktok_studio: ["v1"],
 };
 
