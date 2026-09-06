@@ -1,13 +1,21 @@
 # Duct Desktop — agent instructions
 
-Tauri v2 shell that loads the hosted Duct web app and runs the backend beside it
-as a local sidecar, plus an OS-keychain store for bring-your-own provider API
-keys. Design: `docs/engineering/tauri-desktop-byo-keys-plan.md`.
+Tauri v2 shell that loads the hosted Duct web app, plus an OS-keychain store for
+bring-your-own provider API keys. Design:
+`docs/engineering/tauri-desktop-byo-keys-plan.md`.
 
-**Everything under `backend/` ships to a user's disk.** PyInstaller freezes the
-whole package into every bundle, so "it lives on the server" is no longer a
-place anything can hide. The bundle carries no credential — the sidecar
-generates its own local secrets on first run — but it carries all the code.
+**Two build shapes, one binary.** The official build is a thin client
+that talks to the hosted API. A self-host build restores `bundle.resources` and
+ships the FastAPI backend frozen by PyInstaller (~470 MB), which the shell then
+supervises on a loopback port. The difference is one config entry — the Rust is
+identical, and `sidecar::is_available` probes at runtime for what actually
+shipped rather than being compiled two ways. Never gate this on a cargo
+feature: that would mean two binaries and two capability sets to keep honest.
+
+**If a build ships the sidecar, everything under `backend/` is on the user's
+disk** — routes, models, agents, prompts. Neither shape carries a credential
+(the sidecar mints its own local secrets on first run), but a sidecar build
+carries all the code.
 
 ## Stack
 
@@ -52,7 +60,7 @@ generates its own local secrets on first run — but it carries all the code.
   for a new tab; a link meant to navigate this window still does.
 - macOS registers the custom scheme from the built bundle's Info.plist, so the
   deep-link leg only works from a bundled app (`tauri build`), not `tauri dev`.
-- **Local backend ("sidecar")**: the bundle ships the FastAPI backend frozen by
+- **Local backend ("sidecar")** — *not in the official build*: a sidecar build ships the FastAPI backend frozen by
   PyInstaller (`backend/duct_sidecar.spec`), supervised by
   `src-tauri/src/sidecar.rs`. It binds a loopback port the OS picks, persists to
   SQLite in the per-user data dir, and prints one JSON handshake line the shell
@@ -64,8 +72,9 @@ generates its own local secrets on first run — but it carries all the code.
   broken app. It is **onedir, never onefile**: a onefile binary unpacks to a
   temp dir at startup and does not survive signing + notarization.
 - **Windows and Linux** ship from the same pipeline: NSIS on Windows, deb +
-  AppImage on Linux, each with its own PyInstaller sidecar (a frozen CPython
-  tree is per-OS, never cross-compiled). Two platform differences are load
+  AppImage on Linux. They still need their own runners even without the sidecar
+  — Tauri bundles are not cross-compiled — and a *sidecar* build additionally
+  needs its own PyInstaller freeze per OS. Two platform differences are load
   bearing and easy to regress:
   `tauri-plugin-single-instance` (registered **first**, before every other
   plugin) — macOS hands a deep link to the running app, but Windows and Linux
@@ -101,9 +110,13 @@ generates its own local secrets on first run — but it carries all the code.
 
 ## Forkability
 
-Three values identify *Duct's* build rather than the app, and each is
+Four things identify *Duct's* build rather than the app, and each is
 configuration a fork overrides without editing code. Keep it that way — a new
-Duct-specific constant belongs in one of these three places, not inline:
+Duct-specific constant belongs in one of these places, not inline:
+
+- **Whether a backend ships** — `bundle.resources`. Empty in `tauri.conf.json`
+  (thin client, hosted API); restored by `tauri.selfhost.conf.json` (local
+  sidecar). Probed at runtime, never compiled in.
 
 - **Window URL and bundle identity** — a `--config` overlay
   (`tauri.selfhost.conf.json` is the template; `dev` and `local` use the same
@@ -150,7 +163,10 @@ Change one, change the other.
 
 ## Rules
 
-- Keep this shell thin: no agent code, prompts, or secrets ever ship here.
+- Keep this shell thin: no agent code, prompts, or secrets in `desktop/`. The
+  official build ships nothing but the Rust shell; a sidecar build ships
+  `backend/` wholesale, which is a property of that config, not licence to put
+  anything here.
 - Provider keys live only in the OS keychain — never write them to disk or logs.
 - Any origin the webview loads must be listed under `remote.urls` in
   `src-tauri/capabilities/default.json` for `invoke` to work.
@@ -183,10 +199,12 @@ Change one, change the other.
   never replayed; `backend/tests/test_desktop_migrations.py` guards the path
   that is.
 - `src-tauri/Entitlements.developerid.plist` is the only entitlements file left
-  (the sandboxed App Store one is gone). Every key in
-  it is load-bearing for the embedded CPython interpreter under the hardened
-  runtime. Removing one does not harden the app, it makes the sidecar crash at
-  launch. It deliberately carries no `app-sandbox` key.
+  (the sandboxed App Store one is gone). Its keys are load-bearing for the
+  embedded CPython interpreter under the hardened runtime — removing one does
+  not harden the app, it makes the sidecar crash at launch. **The official build
+  has no interpreter and would survive a trimmed file, which is exactly the
+  trap**: strip these and thin builds stay green while every self-host build
+  breaks. Leave it alone. It deliberately carries no `app-sandbox` key.
 - The whole `bundle` config uses `deny_unknown_fields`, not just `bundle.macOS`
   — a mistyped key fails the build rather than being ignored, and JSON has no
   comments, so there is nowhere to explain a setting *in* the config. An

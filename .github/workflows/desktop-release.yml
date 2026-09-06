@@ -3,11 +3,14 @@ name: desktop — release (macOS, Windows, Linux)
 # Builds the Tauri desktop shell for all three desktop platforms and publishes a
 # GitHub Release carrying the updater manifest.
 #
-# Each bundle ships the FastAPI backend frozen by PyInstaller, which is why
-# every platform builds its own: a frozen Python tree is per-OS and per-arch,
-# not cross-compilable. That is also why this runs in CI at all rather than on a
-# laptop — Windows and Linux bundles cannot be produced on a Mac, and standard
-# runners are free on a public repository.
+# The shell is a thin client: it renders app.getduct.ai and talks to the hosted
+# API. It used to ship the FastAPI backend frozen by PyInstaller as a ~400 MB
+# bundled resource; that is gone, along with the per-platform Python freeze, the
+# nested Mach-O signing pass and roughly twenty minutes of every run.
+#
+# This still runs in CI rather than on a laptop because Windows and Linux
+# bundles cannot be produced on a Mac — and standard runners are free on a
+# public repository, so there is nothing to save by moving it.
 #
 # This is now the only desktop channel. The Mac App Store one was retired: its
 # sandbox cannot host the sidecar, so it was stuck shipping the pre-sidecar thin
@@ -51,9 +54,11 @@ name: desktop — release (macOS, Windows, Linux)
 #   All platforms (sign-in)
 #     GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET
 #                                  secret of the Google *Desktop app* OAuth client
-#                                  whose id is hardcoded in src/sidecar.rs. Same
-#                                  name the sidecar reads at runtime and the one
-#                                  in backend/.env.local — one value, one spelling.
+#                                  whose id defaults in src/sidecar.rs and can be
+#                                  overridden by GOOGLE_DESKTOP_OAUTH_CLIENT_ID
+#                                  (a fork sets both). Same names the backend
+#                                  reads and backend/.env.local uses — one value,
+#                                  one spelling.
 #
 # GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET is read by `option_env!` while rustc compiles, not at
 # runtime, so it must be present on every step that invokes `tauri build` — the
@@ -78,16 +83,31 @@ on:
   # the code was sound — twenty-five minutes of Windows runner to learn nothing.
   # `desktop-check.yml` covers the part a PR *can* answer: does it compile.
   #
-  # macOS runners bill at a 10x minute multiplier and the sidecar build is the
-  # slow part, which is the other half of why this is main-only.
+  # Runner cost is not the reason — standard runners are free on a public repo,
+  # macOS included, and dropping the sidecar took a run from ~25 minutes to ~5.
+  # The reason is that a release is a published, signed, immutable artifact, and
+  # a branch has no business minting one.
   push:
     branches: [main]
     paths:
       - 'desktop/**'
       - '!desktop/**.md'
-      - 'backend/**'
       - '.github/workflows/desktop-release.yml'
+      # `backend/**` used to be here, because the bundle shipped the backend
+      # frozen by PyInstaller — a backend fix reached users only through a new
+      # installer. It no longer does: the shell talks to the hosted API, so
+      # backend changes reach every desktop user the moment Railway deploys,
+      # and rebuilding installers for them would republish the same version
+      # with different bytes.
   workflow_dispatch:
+    inputs:
+      allow_overwrite:
+        description: >-
+          Republish over an already-released version. Only for recovering a run
+          that died after creating the release — it replaces assets people may
+          already have downloaded.
+        type: boolean
+        default: false
 
 concurrency:
   group: desktop-release-${{ github.ref }}
@@ -101,7 +121,7 @@ jobs:
   # macOS — Developer ID, notarized, DMG
   # ---------------------------------------------------------------------------
   macos:
-    name: macOS (Developer ID DMG)
+    name: macOS (Developer ID DMG, universal)
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -110,48 +130,23 @@ jobs:
         with:
           node-version: '22'
 
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
-        with:
-          python-version: '3.12'
-
+      # Both arches, because this build is universal2 — which is only affordable
+      # now that the bundle is a small Rust binary. With the PyInstaller sidecar
+      # in it, a universal build meant two full CPython trees (~600 MB) and Intel
+      # Macs were offered nothing at all.
       - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
 
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
         with:
           workspaces: desktop/src-tauri
 
-      - name: Install Poetry
-        run: pipx install poetry
-
-      # The sidecar is a bundle resource, so it has to exist before the Tauri
-      # build copies it in. A missing build here produces an app that launches
-      # to an error screen rather than failing the CI run, so treat a failure
-      # in this step as fatal.
-      - name: Build the sidecar
-        working-directory: backend
-        run: |
-          set -euo pipefail
-          poetry install --with dev --no-interaction
-          poetry run pyinstaller duct_sidecar.spec --noconfirm
-          test -x dist/duct-sidecar/duct-sidecar
-          du -sh dist/duct-sidecar
-
       - name: Install npm dependencies
         working-directory: desktop
         run: npm ci
 
-      # ---- PR path: unsigned, just prove it builds -------------------------
-      - name: Build app bundle (unsigned)
-        if: github.event_name == 'pull_request'
-        working-directory: desktop
-        env:
-          GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET }}
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-        run: npm run tauri -- build --bundles app
-
-      # ---- main path: signed + notarized ------------------------------------
       - name: Import Developer ID certificate
-        if: github.event_name != 'pull_request'
         env:
           CERT_P12: ${{ secrets.DUCT_DEVID_CERT_P12 }}
           CERT_PASSWORD: ${{ secrets.DUCT_DEVID_CERT_PASSWORD }}
@@ -173,99 +168,55 @@ jobs:
           rm -f "$RUNNER_TEMP/devid.p12"
           echo "KEYCHAIN_PASSWORD=$KEYCHAIN_PASSWORD" >> "$GITHUB_ENV"
 
-      # Tauri signs the .app it produces, but it does not walk into a resource
-      # directory full of Mach-O files. Build the .app first, sign the sidecar's
-      # contents, then re-sign the app so the outer seal covers them.
-      - name: Build app bundle (signed)
-        if: github.event_name != 'pull_request'
+      # One pass: sign, notarize, staple, package. This used to be four steps —
+      # build the .app, walk the sidecar signing hundreds of nested Mach-O files
+      # innermost-first, re-seal the app, then notarize by hand with notarytool
+      # because Tauri's own notarization ran before that re-signing. None of it
+      # is needed now that the bundle holds no nested binaries: Tauri signs the
+      # one executable it built and notarizes it itself when APPLE_ID,
+      # APPLE_PASSWORD and APPLE_TEAM_ID are present.
+      #
+      # `--bundles dmg,updater` also produces the Duct.app.tar.gz + .sig pair the
+      # updater consumes, because bundle.createUpdaterArtifacts is on. The .app
+      # is built as part of this (no --no-bundle-app), so the tarball carries the
+      # notarized bundle.
+      - name: Build, sign, notarize and package
         working-directory: desktop
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.DUCT_DEVID_IDENTITY }}
           APPLE_TEAM_ID: ${{ secrets.DUCT_APPLE_TEAM_ID }}
-          GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET }}
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-        run: npm run tauri -- build --bundles app
-
-      - name: Sign the sidecar's nested binaries
-        if: github.event_name != 'pull_request'
-        env:
-          IDENTITY: ${{ secrets.DUCT_DEVID_IDENTITY }}
-        run: |
-          set -euo pipefail
-          APP="desktop/src-tauri/target/release/bundle/macos/Duct.app"
-          SIDECAR="$APP/Contents/Resources/duct-sidecar"
-          test -d "$SIDECAR" || { echo "sidecar resource missing from bundle"; exit 1; }
-
-          # Every Mach-O file, innermost first. `find -type f` order is not
-          # guaranteed to be bottom-up, but each file here is a leaf — only the
-          # enclosing .app nests — so a flat pass is correct.
-          find "$SIDECAR" -type f \( -name '*.so' -o -name '*.dylib' -o -perm +111 \) -print0 |
-            while IFS= read -r -d '' f; do
-              if file "$f" | grep -q 'Mach-O'; then
-                codesign --force --timestamp --options runtime \
-                  --entitlements desktop/src-tauri/Entitlements.developerid.plist \
-                  --sign "$IDENTITY" "$f"
-              fi
-            done
-
-          # Re-seal the app now that its contents changed.
-          codesign --force --timestamp --options runtime \
-            --entitlements desktop/src-tauri/Entitlements.developerid.plist \
-            --sign "$IDENTITY" "$APP"
-
-          codesign --verify --deep --strict --verbose=2 "$APP"
-
-      # Notarization is done here rather than through Tauri's bundler because
-      # the app had to be re-signed after Tauri finished with it.
-      - name: Notarize and staple
-        if: github.event_name != 'pull_request'
-        env:
           APPLE_ID: ${{ secrets.DUCT_NOTARY_APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.DUCT_NOTARY_PASSWORD }}
-          TEAM_ID: ${{ secrets.DUCT_APPLE_TEAM_ID }}
-        run: |
-          set -euo pipefail
-          APP="desktop/src-tauri/target/release/bundle/macos/Duct.app"
-          ZIP="$RUNNER_TEMP/Duct.zip"
-
-          ditto -c -k --keepParent "$APP" "$ZIP"
-          xcrun notarytool submit "$ZIP" \
-            --apple-id "$APPLE_ID" \
-            --password "$APPLE_PASSWORD" \
-            --team-id "$TEAM_ID" \
-            --wait
-
-          # Staple so the app validates without a network round trip on launch.
-          xcrun stapler staple "$APP"
-          xcrun stapler validate "$APP"
-
-      # Produces the DMG *and*, because bundle.createUpdaterArtifacts is on, the
-      # Duct.app.tar.gz + .sig pair the updater consumes. The app is signed and
-      # stapled by this point, so the tarball carries the notarized bundle.
-      - name: Build DMG and updater artifacts
-        if: github.event_name != 'pull_request'
-        working-directory: desktop
-        env:
-          APPLE_SIGNING_IDENTITY: ${{ secrets.DUCT_DEVID_IDENTITY }}
-          APPLE_TEAM_ID: ${{ secrets.DUCT_APPLE_TEAM_ID }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-        run: npm run tauri -- build --bundles dmg,updater --no-bundle-app
+        run: npm run tauri -- build --target universal-apple-darwin --bundles dmg,updater
+
+      # A universal binary that is not actually universal still runs fine on the
+      # runner, so nothing else here would catch it — and the people it fails for
+      # are exactly the Intel users this build exists to reach.
+      - name: Verify the bundle is universal and stapled
+        run: |
+          set -euo pipefail
+          APP="desktop/src-tauri/target/universal-apple-darwin/release/bundle/macos/Duct.app"
+          lipo -archs "$APP/Contents/MacOS/Duct"
+          lipo -archs "$APP/Contents/MacOS/Duct" | grep -q x86_64
+          lipo -archs "$APP/Contents/MacOS/Duct" | grep -q arm64
+          xcrun stapler validate "$APP"
+          codesign --verify --deep --strict --verbose=2 "$APP"
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        if: github.event_name != 'pull_request'
         with:
           name: bundle-macos
           path: |
-            desktop/src-tauri/target/release/bundle/dmg/*.dmg
-            desktop/src-tauri/target/release/bundle/macos/*.tar.gz
-            desktop/src-tauri/target/release/bundle/macos/*.tar.gz.sig
+            desktop/src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+            desktop/src-tauri/target/universal-apple-darwin/release/bundle/macos/*.tar.gz
+            desktop/src-tauri/target/universal-apple-darwin/release/bundle/macos/*.tar.gz.sig
           if-no-files-found: error
 
       - name: Clean up signing keychain
-        if: always() && github.event_name != 'pull_request'
+        if: always()
         run: security delete-keychain "$RUNNER_TEMP/devid-signing.keychain-db" || true
 
   # ---------------------------------------------------------------------------
@@ -282,10 +233,6 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: '22'
-
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
-        with:
-          python-version: '3.12'
 
       - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
 
@@ -308,18 +255,6 @@ jobs:
             libdbus-1-dev \
             libayatana-appindicator3-dev \
             patchelf
-
-      - name: Install Poetry
-        run: pipx install poetry
-
-      - name: Build the sidecar
-        working-directory: backend
-        run: |
-          set -euo pipefail
-          poetry install --with dev --no-interaction
-          poetry run pyinstaller duct_sidecar.spec --noconfirm
-          test -x dist/duct-sidecar/duct-sidecar
-          du -sh dist/duct-sidecar
 
       - name: Install npm dependencies
         working-directory: desktop
@@ -364,27 +299,11 @@ jobs:
         with:
           node-version: '22'
 
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
-        with:
-          python-version: '3.12'
-
       - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
 
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
         with:
           workspaces: desktop/src-tauri
-
-      - name: Install Poetry
-        run: pipx install poetry
-
-      - name: Build the sidecar
-        working-directory: backend
-        shell: bash
-        run: |
-          set -euo pipefail
-          poetry install --with dev --no-interaction
-          poetry run pyinstaller duct_sidecar.spec --noconfirm
-          test -f dist/duct-sidecar/duct-sidecar.exe
 
       - name: Install npm dependencies
         working-directory: desktop
@@ -452,6 +371,34 @@ jobs:
             exit 1
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      # A released version is immutable. Without this, a second push at the same
+      # version re-runs the build and `--clobber`s the assets: the tag still
+      # points at the old commit, the notarized DMG under it is now a different
+      # binary, and no installed copy updates because the version string never
+      # moved. Two people who both "downloaded 0.4.0" would have different apps.
+      #
+      # Failing loudly here is the point — the fix is a version bump, and the
+      # alternative (skipping quietly) trains everyone to ignore a green run
+      # that published nothing.
+      #
+      # The escape hatch is a `workflow_dispatch` input rather than an env flag,
+      # so overwriting a public release is a deliberate click with a name on it.
+      - name: Refuse to overwrite a published version
+        if: inputs.allow_overwrite != true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          TAG="desktop-v$VERSION"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "::error::$TAG is already published. Bump the version in" \
+                 "desktop/src-tauri/tauri.conf.json and Cargo.toml (they must match)," \
+                 "or re-run from the Actions tab with allow_overwrite to recover a" \
+                 "half-finished release." >&2
+            exit 1
+          fi
 
       # Scoped to `desktop` and `backend` because those are the two trees that
       # end up inside the bundle — and, not by coincidence, the two that trigger
@@ -543,6 +490,22 @@ jobs:
             --out latest.json
           cat latest.json
 
+      # What getduct.ai/download reads. Published as a release asset so the site
+      # can link to `releases/latest/download/downloads.json` — one URL that
+      # never changes while the installer filenames behind it do.
+      - name: Assemble downloads.json
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          node .github/scripts/build-downloads-manifest.mjs \
+            --version "$VERSION" \
+            --artifacts artifacts \
+            --repo "$REPO" \
+            --out downloads.json
+          cat downloads.json
+
       - name: Create or update the release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -554,7 +517,7 @@ jobs:
           # Collect into an array rather than interpolating `$(find ...)`, which
           # word-splits on any bundle name containing a space.
           mapfile -d '' ASSETS < <(find artifacts -type f -print0)
-          ASSETS+=(latest.json)
+          ASSETS+=(latest.json downloads.json)
 
           # Re-running a build for the same version replaces the assets rather
           # than failing; the updater reads whatever `latest` points at. The

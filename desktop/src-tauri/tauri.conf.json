@@ -51,9 +51,6 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "resources": {
-      "../../backend/dist/duct-sidecar": "duct-sidecar"
-    },
     "macOS": {
       "minimumSystemVersion": "12.0",
       "hardenedRuntime": true,

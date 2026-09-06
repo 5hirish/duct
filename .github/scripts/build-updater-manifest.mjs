@@ -54,27 +54,32 @@ function walk(dir) {
 }
 
 /**
- * Which Tauri platform key an update archive belongs to.
+ * Which Tauri platform keys an update archive serves.
  *
  * Keyed on the bundle extension rather than the artifact directory name, so it
- * keeps working if the CI job names change. macOS is arm64-only for now: the
- * sidecar is a frozen CPython tree, and a universal2 build roughly doubles its
- * native libraries (~600 MB) — see the size notes in `backend/duct_sidecar.spec`.
- * Intel Macs therefore get no update offered rather than a broken one.
+ * keeps working if the CI job names change.
+ *
+ * macOS returns *two* keys from one archive: the build is universal2, so the
+ * same tarball is the right answer for both arches. The updater matches on an
+ * exact platform key and has no notion of a fat binary, so listing only
+ * `darwin-aarch64` would leave every Intel install polling forever and never
+ * being offered anything — silently, which is the worst version of that bug.
+ * This was genuinely arm64-only while the bundle carried a frozen CPython tree
+ * (universal2 meant ~600 MB); dropping the sidecar is what made it affordable.
  */
-function platformFor(file) {
-  if (file.endsWith(".app.tar.gz")) return "darwin-aarch64";
-  if (file.endsWith(".nsis.zip")) return "windows-x86_64";
-  if (file.endsWith(".AppImage")) return "linux-x86_64";
-  return null;
+function platformsFor(file) {
+  if (file.endsWith(".app.tar.gz")) return ["darwin-aarch64", "darwin-x86_64"];
+  if (file.endsWith(".nsis.zip")) return ["windows-x86_64"];
+  if (file.endsWith(".AppImage")) return ["linux-x86_64"];
+  return [];
 }
 
 const files = walk(artifactsDir);
 const platforms = {};
 
 for (const file of files) {
-  const platform = platformFor(file);
-  if (!platform) continue;
+  const keys = platformsFor(file);
+  if (keys.length === 0) continue;
 
   const sigPath = `${file}.sig`;
   if (!files.includes(sigPath)) {
@@ -85,10 +90,11 @@ for (const file of files) {
   }
 
   const name = file.split("/").pop();
-  platforms[platform] = {
+  const entry = {
     signature: readFileSync(sigPath, "utf8").trim(),
     url: `https://github.com/${repo}/releases/download/desktop-v${version}/${encodeURIComponent(name)}`,
   };
+  for (const key of keys) platforms[key] = entry;
 }
 
 if (Object.keys(platforms).length === 0) {
