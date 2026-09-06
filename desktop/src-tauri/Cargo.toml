@@ -16,10 +16,14 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 
 [features]
 default = ["updater", "crash-reporting"]
-# Self-update, on everywhere except the Mac App Store — where shipping it is
-# grounds for rejection. That build is produced with `--no-default-features`,
-# which drops the plugin AND the `autoUpdate` capability the web app gates its
-# update UI on, so the two can never disagree.
+# Self-update. `--no-default-features` drops the plugin AND the `autoUpdate`
+# capability the web app gates its update UI on, so the two can never disagree.
+#
+# NO BUILD USES THAT ESCAPE HATCH ANY MORE. It existed for the Mac App Store,
+# where shipping a self-updater is grounds for rejection; that channel was
+# retired 2026-09-06. A feature flag nothing exercises stops compiling without
+# anyone noticing — delete this and its `#[cfg]` gates in `src/lib.rs`, or give
+# it a consumer (a distro-packaged .deb would be a real one).
 updater = ["dep:tauri-plugin-updater"]
 # Crash reporting, on by default and compiled out when the DSN is absent
 # anyway. Separable so a build can drop the dependency entirely.
@@ -52,9 +56,9 @@ keyring = { version = "3", features = ["apple-native", "windows-native", "sync-s
 # url-safe base64 of 32 random bytes, which is all these two are for.
 base64 = "0.22"
 getrandom = "0.3"
-# Self-update for the Developer ID / NSIS / AppImage channels. Allowed here
-# because none of them is the Mac App Store, where self-update is grounds for
-# rejection — the appstore overlay must never enable it.
+# Self-update for the Developer ID / NSIS / AppImage channels — every channel
+# there is, now that the Mac App Store one (the only place self-update is
+# grounds for rejection) has been retired.
 tauri-plugin-updater = { version = "2", optional = true }
 # Crash reporting for the shell itself. rustls rather than the default
 # native-tls: the bundle already links rustls through the updater, and adding
