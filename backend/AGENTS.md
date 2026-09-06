@@ -88,6 +88,22 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
 - **Email:** `service/email/` — Resend when `RESEND_API_KEY` is set, otherwise a logging console backend so dev/CI need no vendor account.
 - **Observability:** Sentry error tracking; optional OpenTelemetry tracing (wired via Claude Agent SDK).
 - **Hosting:** Railway — auto-deploys from `main` via GitHub integration; `railway.json` defines Railpack build + uvicorn start.
+  `railpack.json` sits beside it and configures the *builder*, where
+  `railway.json` configures Railway. It exists for one line —
+  `deploy.aptPackages: ["libexpat1"]` — and that line is load bearing: Railpack
+  builds with mise-installed Python and then assembles a slim runtime image
+  carrying only the apt packages it inferred (`libpq5`, from psycopg). That
+  interpreter is dynamically linked against `libexpat.so.1`, which the runtime
+  layer does not have, so **the build succeeds, the image pushes, and the
+  container dies on the first line** with
+  `error while loading shared libraries: libexpat.so.1`. It reads like a build
+  failure in the Railway UI and is not one — check the *deploy* logs, not the
+  build logs. JSON has no comments, which is why this note is here.
+  Related: `startCommand` still goes through `poetry run`, so a build-time tool
+  has to keep working at runtime. Running `.venv/bin/uvicorn` directly would
+  remove that dependency; it is not the cause of the above (the app venv uses
+  the same interpreter) but it is one less thing that must survive a base-image
+  change.
 - **CI:** GitHub Actions (`backend.yml`) — Ruff lint + pytest on every PR and push to `main`.
 
 ### Desktop (local sidecar) mode
