@@ -778,3 +778,10 @@ details[open] > .faq-q::after { transform: rotate(45deg); }
   .faq { padding: 64px 24px; }
   .faq-q { font-size: 16px; }
 }
+
+/* Shown only until duct-partials.js swaps in the real footer — or permanently if
+   that fetch fails or JS is off. Google's OAuth review fetches without JS and
+   requires a privacy policy link on the homepage, so this cannot be JS-only. */
+.legal-fallback { text-align: center; padding: 40px 24px; font-size: 13px; }
+.legal-fallback a { color: inherit; opacity: .7; text-decoration: underline; text-underline-offset: 2px; margin: 0 8px; }
+.legal-fallback a:hover { opacity: 1; }

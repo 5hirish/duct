@@ -6,7 +6,7 @@
 <link rel="icon" href="assets/icon.svg" type="image/svg+xml"/>
 <link rel="apple-touch-icon" href="assets/apple-icon.svg"/>
 <title>Terms of Service — Duct</title>
-<meta name="description" content="Terms of Service for Duct, the automated intelligence platform by Alleviate Lab. Read-only data access, beta terms, and usage guidelines."/>
+<meta name="description" content="Terms of Service for Duct by Alleviate Lab: connected accounts, approval-gated changes, AI output, content publishing, the desktop app, open-source licensing and beta terms."/>
 <meta name="robots" content="index, follow"/>
 <link rel="canonical" href="https://getduct.ai/terms"/>
 <meta property="og:type" content="website"/>
@@ -32,6 +32,8 @@
 .legal-page li { margin-bottom: 6px; }
 .legal-page a { color: var(--orange); text-decoration: underline; text-underline-offset: 2px; }
 .legal-page a:hover { color: var(--orange-h); }
+.legal-callout { border-left: 3px solid var(--orange); background: rgba(255,92,0,.04); padding: 16px 20px; margin: 20px 0; border-radius: 0 6px 6px 0; }
+.legal-callout p { margin: 0; }
 </style>
 
 <script type="application/ld+json">
@@ -60,95 +62,163 @@
 <article class="legal-page">
 
 <h1>Terms of Service</h1>
-<p class="legal-date">Last updated: April 5, 2026</p>
+<p class="legal-date">Last updated: September 6, 2026</p>
 
 <p>These Terms of Service ("Terms") govern your use of Duct (<a href="https://getduct.ai">getduct.ai</a>), a product of Alleviate Lab ("we", "us", "our"). By signing in or using Duct, you agree to these Terms.</p>
 
-<h2>1. Service Description</h2>
-<p>Duct is an automated intelligence platform that connects to your advertising, analytics, and search tools to generate performance reports and actionable insights. The service operates in <strong>read-only mode</strong> — we access your data through official platform APIs but never create, modify, or delete anything in your connected accounts.</p>
+<h2>1. What These Terms Cover</h2>
+<p>These Terms apply to the hosted Duct service we operate at getduct.ai and app.getduct.ai, and to the official Duct desktop app we distribute. Duct's source code is separately available under an open-source licence; running your own copy is governed by that licence and by section 12, not by these Terms.</p>
 
-<h2>2. Eligibility</h2>
+<h2>2. Service Description</h2>
+<p>Duct connects the product, marketing, analytics and revenue tools you authorise, synthesises what changed across them into reports and alerts, and can help you act on what it finds. Acting takes three forms, and each is opt-in:</p>
+<ul>
+<li><strong>Reading and reporting</strong> — the core of the product, and available with read-only access alone</li>
+<li><strong>Applying changes to a connected account</strong> — proposed by Duct, applied only after you explicitly approve them (see section 6)</li>
+<li><strong>Creating and publishing content</strong> — drafts, images and video you review before anything is published (see section 8)</li>
+</ul>
+
+<h2>3. Eligibility</h2>
 <ul>
 <li>You must be at least 18 years old to use Duct</li>
 <li>You must have the authority to connect the accounts you link to Duct</li>
-<li>By connecting a third-party account (e.g., Google Ads), you represent that you have proper authorization to access that account's data</li>
+<li>If you use Duct on behalf of an organisation, you represent that you are authorised to accept these Terms for it</li>
 </ul>
 
-<h2>3. Account Responsibilities</h2>
+<h2>4. Account Responsibilities</h2>
 <ul>
-<li>You are responsible for maintaining the security of your Google account used to sign in</li>
+<li>You are responsible for maintaining the security of the account you use to sign in</li>
 <li>You are responsible for all activity that occurs under your Duct account</li>
 <li>You must notify us immediately if you become aware of unauthorized access</li>
-<li>You may revoke Duct's access to your connected platforms at any time through the respective platform's settings (e.g., Google Account permissions)</li>
+<li>You may revoke Duct's access to any connected platform at any time through that platform's own settings</li>
 </ul>
 
-<h2>4. Acceptable Use</h2>
+<h2>5. Connecting Third-Party Accounts</h2>
+<p>By connecting a third-party account, you represent that you are authorised to grant access to that account's data. Your use of Duct must comply with the terms of service of each connected platform. Duct complies with the Google Ads API Terms of Service, including the Required Minimum Functionality (RMF) requirements, and with the <a href="https://developers.google.com/terms/api-services-user-data-policy" rel="noopener">Google API Services User Data Policy</a>, including its Limited Use requirements.</p>
+<p>Duct requests the narrowest set of permissions that supports the features you choose to use. Where a feature requires write access, you can decline it and continue using Duct for reporting.</p>
+
+<h2>6. Changes Duct Makes to Your Connected Accounts</h2>
+
+<div class="legal-callout">
+<p><strong>Duct never changes a connected account without your explicit approval.</strong> It proposes a change set, shows you every individual change before and after, and applies nothing until you approve it in the app.</p>
+</div>
+
+<p>Because approved changes take effect in live accounts that may be spending money or serving traffic:</p>
+<ul>
+<li><strong>You are responsible for what you approve.</strong> Review each proposed change against your own knowledge of the account before approving it.</li>
+<li><strong>Approval is specific.</strong> Approving one change set does not authorise future ones.</li>
+<li><strong>Effects may not be reversible.</strong> Duct records every applied change and supports rollback where the underlying platform allows it, but some changes cannot be undone through the provider's API, and reversing a change does not undo its consequences — for example, spend already incurred or a period of interrupted measurement.</li>
+<li><strong>We are not liable for the outcome of a change you approved,</strong> including changes in advertising spend, campaign performance, analytics configuration or tracking continuity.</li>
+</ul>
+
+<h2>7. Reports, Insights and AI-Generated Output</h2>
+<p>Duct generates reports, recommendations and content using data from your connected platforms and AI-powered analysis. While we strive for accuracy:</p>
+<ul>
+<li>Output is generated for informational purposes and should not be the sole basis for business decisions</li>
+<li>AI-generated narrative and recommendations reflect automated analysis, not professional consulting, financial, legal or marketing advice</li>
+<li>AI systems can produce confident, plausible output that is wrong. We do not guarantee the accuracy, completeness or timeliness of any output</li>
+<li>You are responsible for verifying output against your source platforms before acting on it</li>
+</ul>
+
+<h2>8. Content Creation and Publishing</h2>
+<p>If you use Duct to draft, generate or publish content:</p>
+<ul>
+<li>You are solely responsible for everything published through your connected accounts, including content Duct generated and you approved</li>
+<li>You must hold the rights to any material you upload, and must not upload material that infringes someone else's rights</li>
+<li>Published content is subject to the terms of the destination platform, and you are responsible for complying with them — including any obligation to disclose AI-generated or AI-assisted media</li>
+<li>You must not use Duct to generate content that impersonates a real person or organisation, or that is deceptive, unlawful, harassing or otherwise prohibited by the destination platform</li>
+<li>Generative AI output is not guaranteed to be unique, and we make no representation that generated media is free of third-party rights</li>
+</ul>
+
+<h2>9. Website Audit Tool</h2>
+<p>Duct's public audit tool retrieves pages from a website you submit. Submit only a website you own or are authorised to audit. Do not use the tool to place load on a site you do not control, or to circumvent access controls.</p>
+
+<h2>10. Bring-Your-Own Provider Keys</h2>
+<p>You may supply your own AI provider API keys. If you do:</p>
+<ul>
+<li>Usage is billed by that provider to your account. We are not responsible for costs you incur, and we do not cap or guarantee your provider spend</li>
+<li>Your use remains subject to that provider's own terms, including its acceptable use policy</li>
+<li><strong>You are responsible for the data-handling settings on your provider account</strong>, including retention and model-training policy. Where a key routes through an aggregator such as OpenRouter, the underlying provider is selected by your routing configuration, and its retention behaviour follows from that</li>
+<li>You are responsible for keeping your keys valid; a revoked, exhausted or rate-limited key will cause Duct features to fail</li>
+<li>We handle keys as described in the <a href="/privacy">Privacy Policy</a>, but you supply them at your own risk</li>
+</ul>
+
+<h2>11. The Desktop App</h2>
+<p>We grant you a personal, non-exclusive, non-transferable, revocable licence to install and use the official Duct desktop app, subject to these Terms.</p>
+<ul>
+<li><strong>Your data lives on your machine.</strong> In desktop mode, Duct stores your data locally rather than on our servers. <strong>Backups are your responsibility</strong> — we cannot recover data we never held</li>
+<li><strong>The app updates itself.</strong> It checks for and can install new versions. You may decline an update, but we do not support outdated versions indefinitely</li>
+<li><strong>Diagnostics are opt-in</strong> and off by default</li>
+<li>The app includes third-party open-source components, each under its own licence</li>
+</ul>
+
+<h2>12. Open Source and Self-Hosting</h2>
+<p>Duct's source code is published under the MIT licence. That licence — not these Terms — governs your rights to copy, modify, and run the code, and it grants those rights without warranty of any kind.</p>
+<ul>
+<li>We provide <strong>no support, uptime commitment, security guarantee or liability</strong> for a deployment we do not operate, whether you run it yourself or use one operated by a third party</li>
+<li>An instance you run is yours to secure, update and administer. You are the data controller for anyone using it</li>
+<li>The MIT licence covers the code. It does not grant rights to the Duct and Alleviate Lab names, logos or brand, which remain ours. Do not present a modified deployment in a way that suggests it is operated or endorsed by us</li>
+<li>Contributions you submit to the public repository are licensed under the same terms as the project</li>
+</ul>
+
+<h2>13. Team Projects</h2>
+<p>Duct projects can be shared with people you invite. Inviting someone grants them access to that project's connected sources, reports and activity, and — depending on their role — the ability to approve changes against connected accounts. You are responsible for who you invite and for removing access when it is no longer appropriate.</p>
+
+<h2>14. Acceptable Use</h2>
 <p>You agree not to:</p>
 <ul>
 <li>Use Duct for any purpose that violates applicable laws or regulations</li>
 <li>Attempt to gain unauthorized access to our systems or other users' data</li>
-<li>Interfere with or disrupt the service or servers</li>
+<li>Interfere with or disrupt the service or servers, including by circumventing rate limits</li>
 <li>Use the service to scrape, resell, or redistribute data from connected platforms in violation of those platforms' terms</li>
-<li>Reverse engineer, decompile, or disassemble any part of the service</li>
-<li>Use automated tools (bots, scrapers) to access the service outside of normal browser usage</li>
+<li>Connect an account you are not authorised to access, or audit a website you do not control</li>
+<li>Use automated tools to access the hosted service outside of normal product usage</li>
 </ul>
+<p>Reverse engineering restrictions do not apply to the parts of Duct released under an open-source licence; for those, the licence governs.</p>
 
-<h2>5. Third-Party Platform Compliance</h2>
-<p>Duct accesses third-party platforms (e.g., Google Ads) via their official APIs. Your use of Duct must comply with the terms of service of each connected platform. Duct complies with the Google Ads API Terms of Service and Required Minimum Functionality (RMF) requirements.</p>
+<h2>15. Data and Privacy</h2>
+<p>Our <a href="/privacy">Privacy Policy</a> describes what we collect, how we use it, who we share it with, and how to delete it. By using Duct, you also agree to that policy.</p>
 
-<h2>6. Data and Privacy</h2>
-<p>Your privacy is important to us. Our <a href="/privacy">Privacy Policy</a> describes how we collect, use, and protect your information. By using Duct, you also agree to our Privacy Policy.</p>
-
-<h2>7. Beta Status</h2>
-<p>Duct is currently offered as a <strong>beta product</strong>. This means:</p>
+<h2>16. Beta Status and Pricing</h2>
 <ul>
 <li>Features may change, be added, or be removed without prior notice</li>
-<li>The service is provided free of charge during the beta period</li>
+<li>The hosted service is provided free of charge during the beta period</li>
 <li>We do not guarantee uptime or availability during beta</li>
-<li>The beta period may end at any time, at which point pricing and terms may change</li>
+<li>The beta period may end at any time, at which point pricing and terms may change. We will give notice before charging you for anything</li>
 </ul>
 
-<h2>8. Report Accuracy</h2>
-<p>Duct generates reports and insights based on data from your connected platforms and AI-powered analysis. While we strive for accuracy:</p>
+<h2>17. Intellectual Property</h2>
 <ul>
-<li>Reports are generated for informational purposes and should not be the sole basis for business decisions</li>
-<li>AI-generated narrative and recommendations reflect automated analysis, not professional consulting advice</li>
-<li>We do not guarantee the accuracy, completeness, or timeliness of any report</li>
-<li>You are responsible for verifying report data against your source platforms before acting on it</li>
+<li>The Duct name, branding and design are the property of Alleviate Lab. Rights in the source code are as stated in section 12</li>
+<li><strong>Your data remains yours.</strong> We claim no ownership over data you connect or over reports and content generated from it</li>
+<li>You grant us a limited licence to access and process your connected platform data solely to provide the service to you</li>
+<li>If you send us feedback or suggestions, we may use them without obligation or compensation to you</li>
 </ul>
 
-<h2>9. Intellectual Property</h2>
-<ul>
-<li>Duct, its design, code, and branding are the property of Alleviate Lab</li>
-<li>Your data remains yours. We claim no ownership over data you import or reports generated from your data</li>
-<li>You grant us a limited license to access and process your connected platform data solely for the purpose of providing the service</li>
-</ul>
-
-<h2>10. Limitation of Liability</h2>
+<h2>18. Limitation of Liability</h2>
 <p>To the maximum extent permitted by law:</p>
 <ul>
 <li>Duct is provided "as is" and "as available" without warranties of any kind</li>
 <li>We are not liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the service</li>
-<li>Our total liability for any claim related to the service shall not exceed the amount you paid us in the 12 months preceding the claim (during beta: $0)</li>
-<li>We are not responsible for actions taken based on report recommendations or AI-generated analysis</li>
+<li>We are not liable for actions taken based on reports, recommendations or AI-generated output, or for the effects of changes you approved</li>
+<li>Our total liability for any claim related to the service shall not exceed the amount you paid us in the 12 months preceding the claim (during beta: nil)</li>
+<li>Nothing in these Terms limits liability that cannot be limited under applicable law, including your statutory rights as a consumer under EU and Spanish law</li>
 </ul>
 
-<h2>11. Termination</h2>
+<h2>19. Termination</h2>
 <ul>
-<li>You may stop using Duct at any time by signing out and revoking access through your Google Account</li>
+<li>You may stop using Duct at any time by signing out and revoking access at your connected platforms</li>
 <li>We may suspend or terminate your access if you violate these Terms</li>
-<li>Upon termination, your right to use the service ceases immediately</li>
+<li>Upon termination, your right to use the hosted service ceases immediately. Your rights under the open-source licence are unaffected</li>
 <li>You may request deletion of your data by contacting us at <a href="mailto:hello@getduct.ai">hello@getduct.ai</a></li>
 </ul>
 
-<h2>12. Changes to These Terms</h2>
+<h2>20. Changes to These Terms</h2>
 <p>We may update these Terms from time to time. Material changes will be communicated via the email associated with your account. Continued use of Duct after changes constitutes acceptance of the updated Terms.</p>
 
-<h2>13. Governing Law</h2>
+<h2>21. Governing Law</h2>
 <p>These Terms are governed by the laws of Spain, without regard to conflict of law principles. Alleviate Lab is based in Valencia, Spain.</p>
 
-<h2>14. Contact</h2>
-<p>For questions about these Terms:</p>
+<h2>22. Contact</h2>
 <ul>
 <li>Email: <a href="mailto:hello@getduct.ai">hello@getduct.ai</a></li>
 <li>Company: Alleviate Lab</li>
@@ -160,7 +230,7 @@
 </main>
 
 <!-- FOOTER (shared: site/partials/footer-expanded.html) -->
-<div data-duct-partial="/partials/footer-expanded.html"></div>
+<div data-duct-partial="/partials/footer-expanded.html"><div class="legal-fallback"><a href="/">Duct</a><a href="/about">About</a><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a></div></div>
 
 <script src="assets/duct-partials.js"></script>
 <script src="assets/duct.js" defer></script>
