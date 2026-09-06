@@ -22,16 +22,26 @@ so an artifact's images are attached as image parts in the same request.
 from __future__ import annotations
 
 import io
+import logging
 import os
 import re
 from dataclasses import dataclass, field
+
+from pydantic import ValidationError
 
 from tests.eval.client import DEFAULT_JUDGE_MODEL, build_judge_client
 from tests.eval.prompts import build_judge_system_prompt, render_rubric
 from tests.eval.rubric import Rubric
 from tests.eval.verdict import JudgeVerdict, Scorecard, build_scorecard
 
+logger = logging.getLogger(__name__)
+
 _MAX_IMAGES = 12
+# A nine-category audit verdict with a rationale per dimension and marker runs
+# well past the 4096 that fits a content post's; the cut-off arrives as
+# "EOF while parsing a string" from pydantic.
+DEFAULT_MAX_OUTPUT_TOKENS = 8192
+_VERDICT_ATTEMPTS = 2
 _MAX_IMAGE_WIDTH = 768  # downscale heavy 9:16 renders to keep the request light
 
 
@@ -59,17 +69,33 @@ def evaluate(
     *,
     model: str | None = None,
     client=None,
-    max_output_tokens: int = 4096,
+    max_output_tokens: int = DEFAULT_MAX_OUTPUT_TOKENS,
 ) -> Scorecard:
     """Grade ``artifact`` against ``rubric`` with the Gemini judge.
 
     ``client`` defaults to one built from the resolved Gemini key. API errors
-    (rate limit, 5xx) propagate so callers can treat them as a skip.
+    (rate limit, 5xx) propagate so callers can treat them as a skip. A verdict
+    that does not parse is retried once with double the output budget: the
+    usual cause is the JSON being cut off mid-rationale, which twice failed an
+    audit run whose report was fine.
     """
     client = client or build_judge_client()
     model = model or os.environ.get("DUCT_JUDGE_MODEL") or DEFAULT_JUDGE_MODEL
-    verdict = _run_judge(client, model, rubric, artifact, max_output_tokens)
-    return build_scorecard(rubric, verdict)
+    budget = max_output_tokens
+    for attempt in range(1, _VERDICT_ATTEMPTS + 1):
+        try:
+            verdict = _run_judge(client, model, rubric, artifact, budget)
+        except ValidationError as exc:
+            if attempt == _VERDICT_ATTEMPTS:
+                raise
+            logger.warning(
+                "judge: verdict did not parse at %d output tokens (%s); retrying with %d",
+                budget, exc.errors()[0].get("type", "?"), budget * 2,
+            )
+            budget *= 2
+            continue
+        return build_scorecard(rubric, verdict)
+    raise AssertionError("unreachable")  # pragma: no cover
 
 
 def _run_judge(client, model: str, rubric: Rubric, artifact: JudgeArtifact, max_output_tokens: int) -> JudgeVerdict:
