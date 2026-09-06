@@ -87,15 +87,10 @@ from models.execution import AUTONOMY_ASK
 
 logger = logging.getLogger(__name__)
 
-# Ceiling on one turn's tool-calling loop. Generous — an autonomous run legitimately
-# plans, recalls, asks and re-plans — but finite, so a pathological loop ends as a
-# failed turn the user can see rather than an unbounded spend.
-RECURSION_LIMIT = 60
-
-# Runaway guards, not budgets. `RECURSION_LIMIT` caps LangGraph *supersteps*,
-# which is a graph-shape ceiling, not a spend one: a turn can stay well inside
-# it and still make far more model calls than any real analysis needs. These
-# two count the things that actually cost money.
+# Runaway guards, not budgets. LangGraph's superstep ceiling is a graph-shape
+# limit, not a spend one, and RunLimits derives it from the model-call guard
+# (a hand-picked 60 admitted 8 calls, ending real runs before any guard
+# below could). These count the things that actually cost money.
 #
 # `exit_behavior="end"` on the model limit ends the turn with an AI message
 # saying so, which the existing stream renders like any other reply — a
@@ -122,7 +117,6 @@ TOOL_RESULT_PRUNE_TRIGGER = 120_000
 TOOL_RESULTS_KEPT = 5
 
 LIMITS = RunLimits(
-    recursion=RECURSION_LIMIT,
     model_calls_per_run=MODEL_CALLS_PER_RUN,
     model_calls_per_thread=MODEL_CALLS_PER_THREAD,
     tool_calls_per_run=TOOL_CALLS_PER_RUN,
@@ -569,7 +563,7 @@ class AutonomousInsightsRunner:
             log_prefix="insights-v1",
             config={
                 "configurable": {"thread_id": str(conversation_id or uuid4())},
-                "recursion_limit": RECURSION_LIMIT,
+                "recursion_limit": LIMITS.recursion,
             },
             provider=self.provider,
             model=self.model,

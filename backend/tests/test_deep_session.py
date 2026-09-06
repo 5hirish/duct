@@ -32,7 +32,7 @@ from tests.fakes import ToolCallingFake, fake_llm, tool_names
 
 def _limits(**overrides) -> RunLimits:
     base = dict(
-        recursion=10, model_calls_per_run=5, model_calls_per_thread=50,
+        model_calls_per_run=5, model_calls_per_thread=50,
         tool_calls_per_run=10, tool_calls_per_thread=100,
         tool_result_prune_trigger=1_000, tool_results_kept=2,
     )
@@ -158,3 +158,45 @@ async def test_after_turn_can_run_more_turns_and_finish_carries_the_payload(emit
     assert kinds.count(AgentEvent.MESSAGE_STOP) == 2
     finished = [e for e in emitted.events if e["event"] == AgentEvent.PIPELINE_FINISHED]
     assert len(finished) == 1 and finished[0]["mode"] == "unit"
+
+
+# ---------------------------------------------------------------------------
+# The superstep budget — derived, and enough
+# ---------------------------------------------------------------------------
+
+async def test_the_recursion_budget_admits_every_call_the_model_guard_allows():
+    """A hand-picked recursion limit of 100 let a plan turn make 14 model calls
+    before LangGraph gave up, while the guard meant to end the run sat at 80.
+    Now the budget follows the guard: a model that never stops calling tools
+    is ended by the model-call limit, never by the graph."""
+    from langgraph.errors import GraphRecursionError
+
+    from agents.core.deep_session import RECURSION_SLACK, SUPERSTEPS_PER_MODEL_CALL
+
+    limits = _limits(model_calls_per_run=12, model_calls_per_thread=13)
+    assert limits.recursion == 12 * SUPERSTEPS_PER_MODEL_CALL + RECURSION_SLACK
+
+    class _Endless(ToolCallingFake):
+        """A fresh tool call every time — the reducer dedupes by message id,
+        so a cycled fake would collapse into one row."""
+        n: int = 0
+
+        def _generate(self, messages, stop=None, run_manager=None, **kwargs):
+            from langchain_core.outputs import ChatGeneration, ChatResult
+
+            self.n += 1
+            message = AIMessage(content="", id=f"ai-{self.n}", tool_calls=[{
+                "name": "write_todos", "args": {"todos": [{"content": "again", "status": "pending"}]},
+                "id": f"t{self.n}",
+            }])
+            return ChatResult(generations=[ChatGeneration(message=message)])
+
+    endless = _Endless(responses=[])
+    agent = build_deep_session_agent(llm=endless, tools=[], system_prompt="x", limits=limits)
+    config = {"configurable": {"thread_id": str(uuid.uuid4())}, "recursion_limit": limits.recursion}
+    try:
+        result = await agent.ainvoke({"messages": [{"role": "user", "content": "go"}]}, config)
+    except GraphRecursionError as exc:
+        pytest.fail(f"the graph gave up before the model-call guard did: {exc}")
+    calls = sum(1 for m in result["messages"] if getattr(m, "type", "") == "ai" and getattr(m, "tool_calls", None))
+    assert calls == 12, "the model-call guard is what ended the turn"

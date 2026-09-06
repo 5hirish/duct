@@ -108,15 +108,12 @@ logger = logging.getLogger(__name__)
 
 EmitFn = Callable[[dict[str, Any]], Any]
 
-# Ceiling on one turn's tool-calling loop, in LangGraph supersteps. A draft
-# turn plans, reads three libraries, dispatches sub-agents, submits and
-# summarises; an image turn reads context, generates, looks, renders, and
-# hands over — each a model call plus a tool batch. Generous, and finite.
-RECURSION_LIMIT = 100
-
 # Runaway guards, not budgets — see the insights runner for the reasoning.
 # Content turns are longer than an analysis turn (an image phase is many small
-# calls), so the per-run figures sit above insights'.
+# calls), so the per-run figures sit above insights'. The superstep ceiling
+# is derived from the model-call guard by RunLimits; a plan turn reads the
+# libraries, dispatches a sub-agent per pillar, composes and submits, and a
+# hand-picked 100 supersteps let it make 14 calls before the graph gave up.
 MODEL_CALLS_PER_RUN = 80
 MODEL_CALLS_PER_THREAD = 600
 TOOL_CALLS_PER_RUN = 160
@@ -130,7 +127,6 @@ TOOL_RESULT_PRUNE_TRIGGER = 120_000
 TOOL_RESULTS_KEPT = 8
 
 LIMITS = RunLimits(
-    recursion=RECURSION_LIMIT,
     model_calls_per_run=MODEL_CALLS_PER_RUN,
     model_calls_per_thread=MODEL_CALLS_PER_THREAD,
     tool_calls_per_run=TOOL_CALLS_PER_RUN,

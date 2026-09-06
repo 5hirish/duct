@@ -86,6 +86,16 @@ SUMMARIZATION_FLOOR_TOKENS = 170_000
 # out for the same reason of minimal surface — nothing needs it.
 FILESYSTEM_TOOLS = ("ls", "read_file", "write_file", "edit_file", "glob", "grep")
 
+# What one model call costs in LangGraph supersteps on this assembly. Every
+# middleware hook is a node — deepagents' own stack plus the six mounted
+# below — so measured against `build_deep_session_agent` with a fake model
+# the minimum recursion_limit is 15 for 2 calls, 29 for 4, 50 for 7: a slope
+# of 7. `tests/test_deep_session.py` pins that the derived budget admits
+# every call the model-call guard allows; re-measure when the stack changes.
+SUPERSTEPS_PER_MODEL_CALL = 7
+# Headroom for the nodes around the final answer and the limit's own exit.
+RECURSION_SLACK = 20
+
 # Tools whose results the context pruner must never clear. A cleared
 # AskUserQuestion answer reads as the user never having replied, and the
 # agent asks again.
@@ -96,10 +106,14 @@ NEVER_PRUNED = ("AskUserQuestion",)
 class RunLimits:
     """Runaway guards for one deep agent, not budgets.
 
-    ``recursion`` caps LangGraph *supersteps* per turn — a graph-shape
-    ceiling. The model and tool counts are what actually cost money: per
-    *run* means one user turn, per *thread* the whole conversation, which is
-    what makes them meaningful now that a thread survives a restart.
+    The model and tool counts are what actually cost money: per *run* means
+    one user turn, per *thread* the whole conversation, which is what makes
+    them meaningful now that a thread survives a restart. ``recursion`` is
+    LangGraph's superstep ceiling for the turn and is *derived* from the
+    model-call guard: it was a hand-picked number once, and at 7 supersteps
+    per call a "generous" 100 admitted 14 model calls — the graph error fired
+    long before the guard that was meant to, and reached the browser as
+    "Something went wrong".
     ``exit_behavior="end"`` on the model limit ends the turn with an AI
     message saying so; the tool limit refuses the offending call with an
     error the model can react to and lets the turn proceed.
@@ -108,7 +122,6 @@ class RunLimits:
     context pass: prune old tool results before an LLM compaction is needed.
     """
 
-    recursion: int
     model_calls_per_run: int
     model_calls_per_thread: int
     tool_calls_per_run: int
@@ -131,6 +144,11 @@ class RunLimits:
             raise ValueError("a run's model-call limit must be below the thread's")
         if self.tool_calls_per_run >= self.tool_calls_per_thread:
             raise ValueError("a run's tool-call limit must be below the thread's")
+
+    @property
+    def recursion(self) -> int:
+        """Supersteps that admit every model call the run guard allows."""
+        return self.model_calls_per_run * SUPERSTEPS_PER_MODEL_CALL + RECURSION_SLACK
 
 
 # ---------------------------------------------------------------------------
@@ -523,6 +541,8 @@ async def _no_artifact(_raw: str, _turn_text: str) -> None:
 __all__ = [
     "FILESYSTEM_TOOLS",
     "NEVER_PRUNED",
+    "RECURSION_SLACK",
+    "SUPERSTEPS_PER_MODEL_CALL",
     "SUMMARIZATION_FLOOR_TOKENS",
     "DeepSession",
     "RunLimits",
