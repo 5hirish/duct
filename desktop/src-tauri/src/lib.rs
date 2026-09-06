@@ -145,9 +145,11 @@ fn get_shell_info() -> serde_json::Value {
             // keep talking to the hosted API.
             "localSidecar": true,
             // `tauri-plugin-updater` is wired and permitted in this build, so
-            // the web app may check for updates and offer to install one. The
-            // App Store variant must never report this true — self-update is
-            // grounds for rejection there.
+            // the web app may check for updates and offer to install one. Kept
+            // as a probe rather than a literal `true` so a build that compiles
+            // the plugin out cannot advertise an update path it does not have —
+            // no shipping build does that today (see the `updater` feature in
+            // Cargo.toml), which is why the flag is worth a second look.
             "autoUpdate": cfg!(feature = "updater"),
             // The `notify` command exists, so the web app may hand "done" and
             // "needs you" notices to the OS instead of the webview's missing
@@ -236,9 +238,11 @@ async fn install_update(app: AppHandle) -> Result<(), String> {
     app.restart();
 }
 
-/// Build without the `updater` feature (the App Store variant): the commands
-/// still exist so the capability files and `build.rs` manifest stay identical
-/// across builds, but they report the feature as unavailable.
+/// Build without the `updater` feature: the commands still exist so the
+/// capability files and `build.rs` manifest stay identical across builds, but
+/// they report the feature as unavailable. No shipping channel takes this path
+/// since the App Store one was retired — see the `updater` feature in
+/// `Cargo.toml` before assuming it is exercised.
 #[cfg(not(feature = "updater"))]
 #[tauri::command]
 async fn check_for_update(_app: AppHandle) -> Result<Option<serde_json::Value>, String> {
