@@ -93,6 +93,17 @@ display: flex; align-items: center; gap: 5px;
 .nav-link:hover { color: var(--navy); }
 .nav-link[aria-current="page"] { color: var(--navy); font-weight: 500; }
 .nav-link.nav-link--active-section { color: var(--navy); font-weight: 500; }
+/* GitHub mark: icon-only in the desktop bar, but the label must stay in the DOM.
+   duct.js clones .nav-links into the mobile drawer using textContent and skips
+   any anchor whose text is empty — an icon-only link would silently disappear
+   below 860px. Visually hidden, not display:none, for the same reason. */
+.nav-gh { display: inline-flex; align-items: center; opacity: .55; transition: opacity .2s; }
+.nav-gh:hover { opacity: 1; }
+.nav-gh img { width: 18px; height: 18px; display: block; }
+.nav-gh-label {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
 .nav-dropdown { position: relative; }
 .nav-dropdown > .nav-link::after { content: ' ↓'; font-size: 10px; opacity: .5; }
 .dropdown-menu {
