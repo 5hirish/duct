@@ -4,9 +4,9 @@
     min: 2,
     src: {
       Mixpanel:  'Mixpanel Events API',
-      Intercom:  'Intercom Conversations API',
-      Linear:    'Linear Issues API',
-      FullStory: 'FullStory Session Replay API'
+      HubSpot:    'HubSpot Conversations API',
+      GrowthBook: 'GrowthBook Experiments API',
+      Clarity:    'Microsoft Clarity Session Replay'
     },
     defs: {
       retention: { hero: 'D30 Retention',           fmt: 'p1', label: 'retention health',            bar: 'Retention by cohort',       ths: ['Segment','Active Users','Adoption','Trend','Action'],        hide: 'retention' },
@@ -14,14 +14,14 @@
       tickets:   { hero: 'Ticket Deflection Rate',  fmt: 'p0', label: 'support-to-product signals',   bar: 'Ticket volume by issue type', ths: ['Issue','Open Tickets','Affected Users','Trend','Action'],  hide: 'tickets'   }
     },
     cross: {
-      retention: { level: 'yellow', pill: 'Cross-tool', title: 'Linear ticket velocity and Intercom escalations spiked before retention dropped.', body: 'Duct stitched the release window, support spike, and cohort decay into one narrative.', ownerName: 'Morgan Lee', assignee: 'Product + Eng', followUp: 'Compare the release window against churned cohorts' },
-      adoption:  { level: 'yellow', pill: 'Cross-tool', title: 'Only 12% of activated users reach the aha moment.',                               body: 'Intercom churn notes and Mixpanel events point to setup-depth failure, not awareness.',                              ownerName: 'Avery Shah',  assignee: 'Growth PM',       followUp: 'Shorten the path from first use to third key event' },
+      retention: { level: 'yellow', pill: 'Cross-tool', title: 'GrowthBook rollout velocity and HubSpot escalations spiked before retention dropped.', body: 'Duct stitched the release window, support spike, and cohort decay into one narrative.', ownerName: 'Morgan Lee', assignee: 'Product + Eng', followUp: 'Compare the release window against churned cohorts' },
+      adoption:  { level: 'yellow', pill: 'Cross-tool', title: 'Only 12% of activated users reach the aha moment.',                               body: 'HubSpot churn notes and Mixpanel events point to setup-depth failure, not awareness.',                              ownerName: 'Avery Shah',  assignee: 'Growth PM',       followUp: 'Shorten the path from first use to third key event' },
       tickets:   { level: 'red',    pill: 'Cross-tool', title: 'Ticket volume spikes 48 hours after each cohort refresh.',                         body: 'The refresh is creating confusion instead of confidence.',                                                            ownerName: 'Jordan Cruz', assignee: 'Support + Product', followUp: 'Rewrite the refresh UX and add guidance before the next rollout' }
     },
     kpiKeys:        ['retention', 'dau', 'adoption', 'tickets'],
     kpiDefs:        { retention: { fmt: 'p1' }, dau: { fmt: 'k', sum: true }, adoption: { fmt: 'p0' }, tickets: { fmt: 'int', sum: true } },
     defaultMetric:  'retention',
-    defaultPlatforms: ['Mixpanel', 'Intercom']
+    defaultPlatforms: ['Mixpanel', 'HubSpot']
   };
 
   var D = {
@@ -51,7 +51,7 @@
         u: ['19%','1.6x','Breakeven',' · 1.6x health score · watch closely']
       }
     },
-    Intercom: {
+    HubSpot: {
       retention: {
         hero: [29.8, 'Support-led churn risk up', 'down', 'red'],
         k: { retention: [29.8,'Support-led churn risk up','down','red'], dau: [9800,'3% WoW','down','yellow'], adoption: [36,'10 pts below target','down','red'], tickets: [74,'16% WoW','up','red'] },
@@ -77,12 +77,12 @@
         u: ['18%','1.5x','Breakeven',' · 1.5x health score · brittle']
       }
     },
-    Linear: {
+    GrowthBook: {
       retention: {
         hero: [33.9, 'Release quality is stabilising', 'up', 'green'],
         k: { retention: [33.9,'Release quality is stabilising','up','green'], dau: [8700,'2% WoW','up','grey'], adoption: [44,'5 pts below target','down','yellow'], tickets: [41,'9% WoW','up','yellow'] },
         r: [['Release 4.2 impacted accounts',27.1,'27.1%','1.9K','31%','Down 9%','Hotfix the role bug'],['Post-hotfix cohorts',39.8,'39.8%','2.6K','47%','Up 4%','Expand rollout']],
-        s: [['yellow','Watch','One release window explains most of the retention dip.','The Linear issue history shows the problem was contained and fixable.','Parker Long','Engineering','Backport the permissions fix']],
+        s: [['yellow','Watch','One release window explains most of the retention dip.','The GrowthBook rollout history shows the problem was contained and fixable.','Parker Long','Engineering','Backport the permissions fix']],
         sp: [0.58,0.56,0.53,0.49,0.50,0.55,0.61],
         u: ['25%','2.0x','Healthy',' · 2.0x health score · improving']
       },
@@ -103,7 +103,7 @@
         u: ['23%','2.0x','Healthy',' · 2.0x health score · steady']
       }
     },
-    FullStory: {
+    Clarity: {
       retention: {
         hero: [28.9, 'Replay friction rising in setup', 'down', 'red'],
         k: { retention: [28.9,'Replay friction rising in setup','down','red'], dau: [7200,'2% WoW','down','grey'], adoption: [37,'10 pts below target','down','red'], tickets: [46,'11% WoW','up','yellow'] },
@@ -124,7 +124,7 @@
         hero: [33, 'Replay confirms support root cause', 'down', 'yellow'],
         k: { retention: [29.7,'5.6 pts vs goal','down','red'], dau: [7000,'3% WoW','down','yellow'], adoption: [36,'11 pts below target','down','red'], tickets: [62,'17% WoW','up','red'] },
         r: [['Role-permission confusion',62,'62','62','2.2K','Up 17%','Add inline invite guidance'],['Empty-state dead ends',38,'38','38','1.5K','Up 10%','Instrument the dead-end path']],
-        s: [['yellow','Watch','Replay confirms that the highest-volume tickets begin in the same two dead-end screens.','Support is seeing the symptom; FullStory shows the exact moment users lose confidence.','Omar Lewis','Support PM','Pair ticket tags with replay segments weekly']],
+        s: [['yellow','Watch','Replay confirms that the highest-volume tickets begin in the same two dead-end screens.','Support is seeing the symptom; Clarity shows the exact moment users lose confidence.','Omar Lewis','Support PM','Pair ticket tags with replay segments weekly']],
         sp: [0.39,0.44,0.48,0.54,0.60,0.66,0.70],
         u: ['19%','1.6x','Breakeven',' · 1.6x health score · evidence-rich']
       }

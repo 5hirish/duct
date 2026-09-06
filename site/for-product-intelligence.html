@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" href="assets/apple-icon.svg"/>
 <title>Duct for Product Intelligence — Cross-tool product intelligence</title>
 <link rel="canonical" href="https://getduct.ai/for-product-intelligence"/>
-<meta name="description" content="Duct connects Mixpanel, Intercom, Linear, and FullStory and surfaces the product story they're collectively trying to tell you. No SQL, no dashboards."/>
+<meta name="description" content="Duct connects Mixpanel, Clarity, GrowthBook, and GA4 and surfaces the product story they're collectively trying to tell you. No SQL, no dashboards."/>
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
 <meta property="og:type" content="website"/>
 <meta property="og:url" content="https://getduct.ai/for-product-intelligence"/>
@@ -18,7 +18,7 @@
 <meta property="og:site_name" content="Duct"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="Duct for Product Intelligence — Cross-tool product intelligence"/>
-<meta name="twitter:description" content="Stop tab-switching. Duct connects Mixpanel, Intercom, Linear, and FullStory into one daily PM brief."/>
+<meta name="twitter:description" content="Stop tab-switching. Duct connects Mixpanel, Clarity, GrowthBook, and GA4 into one daily PM brief."/>
 <meta name="twitter:image" content="https://getduct.ai/assets/og-image.png"/>
 <link rel="stylesheet" href="/assets/duct.css"/>
 <link rel="stylesheet" href="/assets/demo.css"/>
@@ -27,7 +27,7 @@
 {"@context":"https://schema.org","@type":"WebPage","name":"Duct for Product Intelligence","url":"https://getduct.ai/for-product-intelligence","description":"Stop tab-switching. Duct connects your product stack and surfaces the cross-tool insights PMs need — automatically.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is Duct for product intelligence?","acceptedAnswer":{"@type":"Answer","text":"Duct is a cross-tool product intelligence platform that connects Mixpanel, Intercom, Linear, FullStory, and the rest of your stack into one daily PM briefing. It surfaces cross-tool correlations, detects anomalies, and lets you ask plain-English questions like \u201cWhy did DAU drop Thursday?\u201d without writing SQL or building dashboards. Designed for growth PMs at 20\u2013200 person SaaS companies."}},{"@type":"Question","name":"What tools does Duct connect to, and how hard is setup?","acceptedAnswer":{"@type":"Answer","text":"Duct connects to Mixpanel, Amplitude, Intercom, Linear, FullStory, Jira, HubSpot, Segment, and Slack through one-click OAuth. Setup takes under five minutes with no API keys or engineering support needed. Duct reads your data in strict read-only mode, and your first cross-tool PM briefing arrives the next morning, already correlated around your north star metric."}},{"@type":"Question","name":"Is my product data safe with Duct?","acceptedAnswer":{"@type":"Answer","text":"Yes. Duct uses read-only API access through official OAuth integrations \u2014 it never writes to, modifies, or deletes anything in Mixpanel, Intercom, Linear, or any connected tool. All data in transit is encrypted via TLS, OAuth tokens are stored server-side and never exposed to the browser, and no data is stored without your explicit approval."}},{"@type":"Question","name":"How is Duct different from using Mixpanel or Amplitude dashboards directly?","acceptedAnswer":{"@type":"Answer","text":"Single-tool dashboards show you metrics in isolation. Duct connects your analytics, support, engineering, and revenue tools to surface correlations between them. When a feature launch in Linear coincides with a spike in Intercom tickets and a drop in Mixpanel retention, Duct connects those signals automatically \u2014 no dashboard switching, no manual correlation, no SQL."}},{"@type":"Question","name":"Does Duct for product intelligence cost anything?","acceptedAnswer":{"@type":"Answer","text":"Duct is completely free during the beta period. No credit card, no usage limits. We are onboarding the first 25 product teams personally \u2014 each team gets a hands-on setup call where we tune your daily brief around your north star metric. Paid pricing will be published after beta, with early adopters receiving grandfathered rates."}},{"@type":"Question","name":"What does the daily PM briefing actually contain?","acceptedAnswer":{"@type":"Answer","text":"The daily briefing surfaces what changed across your product stack overnight: anomalies in activation or retention from Mixpanel, spikes in support volume from Intercom, blocked tickets in Linear, and session replay patterns from FullStory. Duct cross-correlates these signals and delivers plain-English explanations of what is blocking adoption and what to ship next."}}]}
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is Duct for product intelligence?","acceptedAnswer":{"@type":"Answer","text":"Duct connects Mixpanel, Microsoft Clarity, GrowthBook, GA4 and HubSpot into one daily PM brief. It surfaces cross-tool correlations, detects anomalies, and answers plain-English questions without SQL."}},{"@type":"Question","name":"What tools does Duct connect to, and how hard is setup?","acceptedAnswer":{"@type":"Answer","text":"Duct connects to Mixpanel, GA4, Microsoft Clarity, GrowthBook, HubSpot, Stripe, RevenueCat and Google Ads with one-click OAuth. Setup takes under five minutes and your first daily PM briefing arrives in your inbox after connecting."}},{"@type":"Question","name":"Is my product data safe with Duct?","acceptedAnswer":{"@type":"Answer","text":"Your data is encrypted in transit via TLS, and OAuth tokens are encrypted at rest and never exposed to the browser. Duct reads your tools to build the brief and changes nothing in them unless you approve a specific change first. Access is scoped to the project members you invite, and you can disconnect a source or delete your data at any time."}},{"@type":"Question","name":"How is Duct different from using Mixpanel dashboards directly?","acceptedAnswer":{"@type":"Answer","text":"Single-tool dashboards show isolated metrics. Duct correlates product analytics, session behaviour, experiment results and revenue signals so you can prioritise what to ship next without manual correlation."}},{"@type":"Question","name":"Does Duct for product intelligence cost anything?","acceptedAnswer":{"@type":"Answer","text":"Duct is completely free during the beta period. No credit card, no usage limits. We are onboarding the first 25 product teams personally \u2014 each team gets a hands-on setup call where we tune your daily brief around your north star metric. Paid pricing will be published after beta, with early adopters receiving grandfathered rates."}},{"@type":"Question","name":"What does the daily PM briefing actually contain?","acceptedAnswer":{"@type":"Answer","text":"The daily briefing surfaces what changed across your product stack overnight: anomalies in activation or retention from Mixpanel, spikes in support volume from HubSpot, blocked tickets in GrowthBook, and session replay patterns from Clarity. Duct cross-correlates these signals and delivers plain-English explanations of what is blocking adoption and what to ship next."}}]}
 </script>
 <style>
   .skip-link {
@@ -57,7 +57,7 @@
 <section class="hero">
 <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Early access · Product intelligence beta</div>
 <h1>Stop guessing why adoption drops.<br/>Start shipping what lifts <em>retention.</em></h1>
-<p class="hero-sub">Duct connects Mixpanel, Intercom, Linear, and FullStory into one daily product brief with cross-tool signals and clear next actions.</p>
+<p class="hero-sub">Duct connects Mixpanel, Clarity, GrowthBook, and GA4 into one daily product brief with cross-tool signals and clear next actions.</p>
 <div class="hero-form">
 <input type="email" id="heroEmail" class="email-in" placeholder="you@company.com" aria-label="Email address"/>
 <button class="btn btn-orange btn-lg"
@@ -75,10 +75,10 @@
 <div class="strip">
 <p class="strip-label">Connects to the tools you already use</p>
 <div class="marquee" aria-hidden="true">
-<span>Mixpanel</span><span>Intercom</span><span>Linear</span><span>FullStory</span>
-<span>Amplitude</span><span>Slack</span><span>Jira</span><span>HubSpot</span><span>Segment</span>
-<span>Mixpanel</span><span>Intercom</span><span>Linear</span><span>FullStory</span>
-<span>Amplitude</span><span>Slack</span><span>Jira</span><span>HubSpot</span><span>Segment</span>
+<span>Mixpanel</span><span>Microsoft Clarity</span><span>GrowthBook</span><span>GA4</span>
+<span>HubSpot</span><span>Stripe</span><span>RevenueCat</span><span>Google Ads</span>
+<span>Mixpanel</span><span>Microsoft Clarity</span><span>GrowthBook</span><span>GA4</span>
+<span>HubSpot</span><span>Stripe</span><span>RevenueCat</span><span>Google Ads</span>
 </div>
 </div>
 
@@ -118,19 +118,19 @@
   <span>Mixpanel</span>
   <span class="plat-check" aria-hidden="true">✓</span>
 </button>
-<button class="plat-btn" id="plat-intercom" onclick="wtTogglePlatform('Intercom', this)" aria-pressed="false">
-  <img class="plat-icon" src="assets/icons/intercom.svg" width="20" height="20" alt="" aria-hidden="true"/>
-  <span>Intercom</span>
+<button class="plat-btn" id="plat-hubspot" onclick="wtTogglePlatform('HubSpot', this)" aria-pressed="false">
+  <img class="plat-icon" src="assets/icons/hubspot.svg" width="20" height="20" alt="" aria-hidden="true"/>
+  <span>HubSpot</span>
   <span class="plat-check" aria-hidden="true">✓</span>
 </button>
-<button class="plat-btn" id="plat-linear" onclick="wtTogglePlatform('Linear', this)" aria-pressed="false">
-  <img class="plat-icon" src="assets/icons/linear.svg" width="20" height="20" alt="" aria-hidden="true"/>
-  <span>Linear</span>
+<button class="plat-btn" id="plat-growthbook" onclick="wtTogglePlatform('GrowthBook', this)" aria-pressed="false">
+  <img class="plat-icon" src="assets/icons/growthbook.svg" width="20" height="20" alt="" aria-hidden="true"/>
+  <span>GrowthBook</span>
   <span class="plat-check" aria-hidden="true">✓</span>
 </button>
-<button class="plat-btn" id="plat-fullstory" onclick="wtTogglePlatform('FullStory', this)" aria-pressed="false">
-  <img class="plat-icon" src="assets/icons/fullstory.svg" width="20" height="20" alt="" aria-hidden="true"/>
-  <span>FullStory</span>
+<button class="plat-btn" id="plat-clarity" onclick="wtTogglePlatform('Clarity', this)" aria-pressed="false">
+  <img class="plat-icon" src="assets/icons/clarity.svg" width="20" height="20" alt="" aria-hidden="true"/>
+  <span>Clarity</span>
   <span class="plat-check" aria-hidden="true">✓</span>
 </button>
 </div>
@@ -166,7 +166,7 @@
   <span class="metric-icon" aria-hidden="true">🎧</span>
   <div>
     <p class="metric-title">Support Signals</p>
-    <p class="metric-desc">Surface what Intercom tickets reveal about your product — before they become churn.</p>
+    <p class="metric-desc">Surface what HubSpot tickets reveal about your product — before they become churn.</p>
   </div>
   <span class="metric-radio" aria-hidden="true"></span>
 </button>
@@ -347,8 +347,8 @@
 <p class="tag">The Problem</p>
 <h2>The answer is already in your tools.<br/>But no one is <em>connecting the dots.</em></h2>
 <ul class="pain-list">
-<li class="pain-item"><span class="pi-icon" aria-hidden="true">😵‍💫</span> Mixpanel says feature use is steady. FullStory shows users rage-clicking through setup. You do not know which signal deserves priority.</li>
-<li class="pain-item"><span class="pi-icon" aria-hidden="true">🕳️</span> Linear says the fix shipped. Intercom says confusion continues. FullStory shows users still getting stuck in the same flow.</li>
+<li class="pain-item"><span class="pi-icon" aria-hidden="true">😵‍💫</span> Mixpanel says feature use is steady. Clarity shows users rage-clicking through setup. You do not know which signal deserves priority.</li>
+<li class="pain-item"><span class="pi-icon" aria-hidden="true">🕳️</span> GrowthBook says the rollout hit 100%. HubSpot says confusion continues. Clarity shows users still getting stuck in the same flow.</li>
 <li class="pain-item"><span class="pi-icon" aria-hidden="true">⏱️</span> You spend 3 hours a week manually aggregating data that should take 10 minutes.</li>
 </ul>
 </div>
@@ -365,18 +365,18 @@
 </div>
 <div class="diag-divider" aria-hidden="true">no connection</div>
 <div class="diag-tool dim">
-<span class="diag-chip" style="background:#e6f3fd"><img src="assets/icons/intercom.svg" width="18" height="18" alt="Intercom"/></span>
-<div class="diag-info"><b>Intercom</b><s aria-hidden="true">32 tickets about onboarding friction</s></div>
+<span class="diag-chip" style="background:#e6f3fd"><img src="assets/icons/hubspot.svg" width="18" height="18" alt="HubSpot"/></span>
+<div class="diag-info"><b>HubSpot</b><s aria-hidden="true">32 tickets about onboarding friction</s></div>
 </div>
 <div class="diag-divider" aria-hidden="true">no connection</div>
 <div class="diag-tool dim">
-<span class="diag-chip" style="background:#eeeffe"><img src="assets/icons/linear.svg" width="18" height="18" alt="Linear"/></span>
-<div class="diag-info"><b>Linear</b><s aria-hidden="true">Onboarding bug fix — shipped Tuesday</s></div>
+<span class="diag-chip" style="background:#eeeffe"><img src="assets/icons/growthbook.svg" width="18" height="18" alt="GrowthBook"/></span>
+<div class="diag-info"><b>GrowthBook</b><s aria-hidden="true">Onboarding fix — rolled out Tuesday</s></div>
 </div>
 <div class="diag-divider" aria-hidden="true">no connection</div>
 <div class="diag-tool dim">
-<span class="diag-chip" style="background:#ede8f2"><img src="assets/icons/fullstory.svg" width="18" height="18" alt="FullStory"/></span>
-<div class="diag-info"><b>FullStory</b><s aria-hidden="true">Replay shows 41% of users stall on teammate invite</s></div>
+<span class="diag-chip" style="background:#ede8f2"><img src="assets/icons/clarity.svg" width="18" height="18" alt="Microsoft Clarity"/></span>
+<div class="diag-info"><b>Clarity</b><s aria-hidden="true">Replay shows 41% of users stall on teammate invite</s></div>
 </div>
 <div class="diag-result">
 <strong>✦ After Duct</strong>
@@ -397,7 +397,7 @@ Retention drop → support spike → replay friction → release timing. One sto
 <span class="step-num">01</span>
 <span class="step-icon" aria-hidden="true">🔌</span>
 <p class="step-title">Connect your stack</p>
-<p class="step-body">One-click OAuth integrations to the tools you already use. Duct reads — it never writes or modifies anything. Under 5 minutes to set up.</p>
+<p class="step-body">One-click OAuth integrations to the tools you already use. Duct reads to build your brief and changes nothing unless you approve it. Under 5 minutes to set up.</p>
 </div>
 <div class="step reveal" style="transition-delay:.1s">
 <span class="step-num">02</span>
@@ -432,7 +432,7 @@ Retention drop → support spike → replay friction → release timing. One sto
 <div class="feat reveal">
 <span class="feat-label">🔗 Connect</span>
 <p class="feat-title">Cross-tool correlation</p>
-<p class="feat-body">Link analytics, support, issue history, and replay evidence across Mixpanel, Intercom, Linear, and FullStory in one view.</p>
+<p class="feat-body">Link analytics, support, experiment history, and replay evidence across Mixpanel, HubSpot, GrowthBook, and Clarity in one view.</p>
 </div>
 <div class="feat reveal" style="transition-delay:.08s">
 <span class="feat-label">📬 Digest</span>
@@ -442,7 +442,7 @@ Retention drop → support spike → replay friction → release timing. One sto
 <div class="feat reveal" style="transition-delay:.14s">
 <span class="feat-label">🚨 Alerts</span>
 <p class="feat-title">Anomaly detection</p>
-<p class="feat-body">Get a Slack ping when unusual changes appear, before issues compound into churn or team fire drills.</p>
+<p class="feat-body">Get an alert when unusual changes appear, before issues compound into churn or team fire drills.</p>
 </div>
 <div class="feat reveal" style="transition-delay:.2s">
 <span class="feat-label">🗣️ Ask</span>
@@ -509,19 +509,19 @@ Retention drop → support spike → replay friction → release timing. One sto
 <div class="faq-list reveal" style="transition-delay:.1s">
 <details class="faq-item">
 <summary class="faq-q">What is Duct for product intelligence?</summary>
-<p class="faq-a">Duct connects Mixpanel, Intercom, Linear, FullStory, and your wider stack into one daily PM brief. It surfaces cross-tool correlations, detects anomalies, and answers plain-English questions without SQL.</p>
+<p class="faq-a">Duct connects Mixpanel, Microsoft Clarity, GrowthBook, GA4 and HubSpot into one daily PM brief. It surfaces cross-tool correlations, detects anomalies, and answers plain-English questions without SQL.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">What tools does Duct connect to, and how hard is setup?</summary>
-<p class="faq-a">Duct connects to Mixpanel, Amplitude, Intercom, Linear, FullStory, Jira, HubSpot, Segment, and Slack with one-click OAuth. Setup takes under five minutes and your first daily PM briefing arrives in your inbox after connecting.</p>
+<p class="faq-a">Duct connects to Mixpanel, GA4, Microsoft Clarity, GrowthBook, HubSpot, Stripe, RevenueCat and Google Ads with one-click OAuth. Setup takes under five minutes and your first daily PM briefing arrives in your inbox after connecting.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">Is my product data safe with Duct?</summary>
-<p class="faq-a">Yes. Duct uses official read-only OAuth integrations and never writes to or modifies your tools. Data in transit is encrypted via TLS, and OAuth tokens are stored server-side.</p>
+<p class="faq-a">Your data is encrypted in transit via TLS, and OAuth tokens are encrypted at rest and never exposed to the browser. Duct reads your tools to build the brief and changes nothing in them unless you approve a specific change first. Access is scoped to the project members you invite, and you can disconnect a source or delete your data at any time.</p>
 </details>
 <details class="faq-item">
-<summary class="faq-q">How is Duct different from using Mixpanel or Amplitude dashboards directly?</summary>
-<p class="faq-a">Single-tool dashboards show isolated metrics. Duct correlates analytics, support, engineering, and revenue signals so you can prioritize what to ship next without manual correlation.</p>
+<summary class="faq-q">How is Duct different from using Mixpanel dashboards directly?</summary>
+<p class="faq-a">Single-tool dashboards show isolated metrics. Duct correlates product analytics, session behaviour, experiment results and revenue signals so you can prioritise what to ship next without manual correlation.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">Does Duct for product intelligence cost anything?</summary>
@@ -563,7 +563,7 @@ Retention drop → support spike → replay friction → release timing. One sto
 <!-- END REPORT MODAL -->
 
 <!-- FOOTER (shared: site/partials/footer-expanded.html) -->
-<div data-duct-partial="/partials/footer-expanded.html"></div>
+<div data-duct-partial="/partials/footer-expanded.html"><div class="legal-fallback"><a href="/">Duct</a><a href="/about">About</a><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a></div></div>
 
 <script src="assets/demo-product.js"></script>
 <script src="assets/demo.js"></script>
