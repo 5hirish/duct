@@ -1216,13 +1216,12 @@ async def _start_seo_audit(
             model=model,
             gemini_api_key=cfg.gemini_api_key,
         )
-    # Narrower than it looks: this is now only for ArtifactPersister's digest,
-    # which is the last summariser still pinned to the Agent SDK
-    # (service/artifact_store.py). Conversation compaction no longer comes
-    # through here — it takes the run's own provider below, so a Gemini /
-    # OpenAI / OpenRouter customer gets compaction instead of silently getting
-    # none. See agents/content/persistence.summarize_conversation.
-    summary_key = api_key if getattr(provider, "value", str(provider)) == "anthropic" else ""
+    # The artifact digest runs on the caller's own provider now, so the key no
+    # longer has to be zeroed for anyone. It used to be Anthropic-only (the
+    # summariser was pinned to the Agent SDK), which meant a Gemini or OpenAI
+    # customer's artifacts carried no summary and the next session started
+    # blind to them.
+    summary_key = api_key
 
     conv_id = getattr(session, "conversation_id", None) if session else None
     recorder = getattr(session, "recorder", None) if session else None
@@ -1248,6 +1247,8 @@ async def _start_seo_audit(
                 kind="report",
                 conversation_id=conv_id,
                 api_key=summary_key,
+                provider=provider,
+                model=model,
                 group_id=group_id,
             )
             session.artifact_persister = persister
@@ -1513,6 +1514,8 @@ async def _start_insights(
                 kind=INSIGHTS_ARTIFACT_KIND,
                 conversation_id=conv_id,
                 api_key=summary_key,
+                provider=provider,
+                model=model,
                 group_id=group_id,
                 adapt=brief_artifact_version,
             )

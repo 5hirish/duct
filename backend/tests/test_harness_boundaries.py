@@ -88,14 +88,12 @@ ADAPTERS: dict[str, str] = {
     # -- Enrichment + persistence run their own bounded model calls.
     "agents/audit/enrichment.py":           "one-shot SDK call",
     "agents/content/enrichment.py":         "create_agent research pass with structured output",
-    "agents/content/persistence.py":        "SDK message shapes on resume",
 
     # -- Boundary debt. Allowed today, but these are the wrong layer: a route is
     #    transport and a service is domain, so neither should know a harness.
     #    Moving them behind a binder is the next boundary cleanup; until then
     #    they are listed here honestly rather than silently.
     "routes/chat.py":                       "DEBT — route imports LangChain directly",
-    "service/artifact_store.py":            "DEBT — service imports claude_agent_sdk",
     "service/memory_consolidation.py":      "DEBT — service imports LangChain",
 }
 

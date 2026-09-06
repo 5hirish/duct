@@ -98,39 +98,68 @@ async def test_a_list_content_reply_is_flattened(monkeypatch):
     assert result == "the summary"
 
 
-async def test_anthropic_still_goes_through_the_agent_sdk(monkeypatch):
-    """Parity guard: a subscription token must keep working, so this path stays.
+async def test_anthropic_summarises_on_langchain_like_everyone_else(monkeypatch):
+    """The Agent SDK detour is gone; an Anthropic API key takes the same path
+    every other provider takes."""
+    seen: dict = {}
 
-    Moving Anthropic onto LangChain would summarise fine for API-key users and
-    fail for OAuth ones — the failure mode is invisible, so it gets a test.
-    """
-    called: dict = {}
+    class _Reply:
+        content = "lc summary"
 
-    async def _fake_sdk(prompt, api_key, model):
-        called["model"] = model
-        return "sdk summary"
+    class _LLM:
+        async def ainvoke(self, _prompt):
+            return _Reply()
 
-    def _explode(*args, **kwargs):
-        raise AssertionError("Anthropic must not be routed through LangChain")
+    def _resolve(provider, model, api_key, *a, **k):
+        seen["provider"] = provider
+        return _LLM()
 
-    monkeypatch.setattr("agents.content.persistence._summarize_via_sdk", _fake_sdk)
+    monkeypatch.setattr("agents.core.lc.resolve_chat_model", _resolve)
+
+    result = await summarize_conversation(
+        _conversation(), _events(), "sk-ant-api03-real", provider=Provider.ANTHROPIC
+    )
+
+    assert result == "lc summary"
+    assert seen["provider"] == Provider.ANTHROPIC
+
+
+async def test_a_claude_subscription_token_keeps_the_prior_summary(monkeypatch):
+    """A subscription credential authenticates through the CLI and the Messages
+    API rejects it, so with the SDK gone there is nothing to summarise with.
+    The chat keeps working; its summary simply stops advancing — and it must
+    not burn a doomed call per turn to discover that."""
+    def _explode(*_a, **_k):
+        raise AssertionError("a subscription token must not reach the Messages API")
+
     monkeypatch.setattr("agents.core.lc.resolve_chat_model", _explode)
 
     result = await summarize_conversation(
-        _conversation(), _events(), "sk-ant-oat-whatever", provider=Provider.ANTHROPIC
+        _conversation("kept"), _events(), "sk-ant-oat01-whatever", provider=Provider.ANTHROPIC
     )
-    assert result == "sdk summary"
+    assert result == "kept"
 
 
-async def test_an_omitted_provider_is_the_old_anthropic_behaviour(monkeypatch):
-    """Callers that never learned about providers must not change behaviour."""
-    async def _fake_sdk(prompt, api_key, model):
-        return "sdk summary"
+async def test_an_omitted_provider_still_means_anthropic(monkeypatch):
+    """Callers that never learned about providers keep their default."""
+    seen: dict = {}
 
-    monkeypatch.setattr("agents.content.persistence._summarize_via_sdk", _fake_sdk)
+    class _Reply:
+        content = "lc summary"
+
+    class _LLM:
+        async def ainvoke(self, _prompt):
+            return _Reply()
+
+    monkeypatch.setattr(
+        "agents.core.lc.resolve_chat_model",
+        lambda provider, *a, **k: (seen.setdefault("provider", provider), _LLM())[1],
+    )
 
     result = await summarize_conversation(_conversation(), _events(), "key")
-    assert result == "sdk summary"
+
+    assert result == "lc summary"
+    assert seen["provider"] == Provider.ANTHROPIC
 
 
 async def test_no_key_keeps_the_prior_summary():

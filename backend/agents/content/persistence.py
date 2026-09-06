@@ -29,12 +29,17 @@ from sqlmodel import Session, select
 
 from agents.core.errors import DESCRIPTIONS, ErrorCode
 from agents.core.events import AgentEvent, EventKind, RunStatus
-from agents.models import AgentPermissionMode, ModelName, Provider
+from agents.models import ModelName, Provider
 from db.session import get_session as db_session
 from models.content import AgentConversation, AgentEvent as AgentEventRow, ContentPlan, ContentPost
 from utils.dates import utcnow
 
 logger = logging.getLogger(__name__)
+
+# Claude subscription (OAuth) credentials carry this prefix. Anthropic
+# disabled third-party OAuth on the Messages API in Feb 2026, so one of
+# these can only be used through the CLI.
+_SUBSCRIPTION_TOKEN_PREFIX = "sk-ant-oat"
 
 # (agent_type, artifact_type) → the SQLModel table the polymorphic artifact_id
 # points at. Lets a future agent produce multiple artifact types without a
@@ -487,34 +492,6 @@ def _summary_prompt(conversation: AgentConversation, transcript: str) -> str:
     )
 
 
-async def _summarize_via_sdk(prompt: str, api_key: str, model: str) -> str | None:
-    """Anthropic: the Claude Agent SDK, because a subscription token has to work.
-
-    This stays on the SDK rather than moving to LangChain with the rest because
-    an OAuth/subscription credential (``sk-ant-oat…``) authenticates through the
-    CLI and is rejected by the Messages API, which is what
-    ``agents/models.get_api_key_kwargs`` would hand ``ChatAnthropic``. Routing
-    Anthropic through LangChain would summarise fine for API-key users and fail
-    silently for subscription ones.
-    """
-    from claude_agent_sdk import ClaudeAgentOptions, ResultMessage, query
-
-    # tools=[] disables every built-in tool (nothing for prompt-injected
-    # directives to invoke); DONT_ASK hard-denies anything unexpected.
-    options = ClaudeAgentOptions(
-        model=model,
-        tools=[],
-        permission_mode=AgentPermissionMode.DONT_ASK,
-        max_turns=1,
-        env={"ANTHROPIC_API_KEY": api_key},
-        setting_sources=[],
-    )
-    async for message in query(prompt=prompt, options=options):
-        if isinstance(message, ResultMessage):
-            return (getattr(message, "result", "") or "").strip() or None
-    return None
-
-
 async def _summarize_via_lc(prompt: str, api_key: str, provider: Any, model: Any) -> str | None:
     """Everyone else: one LangChain call, so the customer's own model summarises.
 
@@ -564,17 +541,26 @@ async def summarize_conversation(
     if not transcript.strip():
         return conversation.summary
 
-    prompt = _summary_prompt(conversation, transcript)
     resolved_provider = provider or Provider.ANTHROPIC
-    is_anthropic = getattr(resolved_provider, "value", str(resolved_provider)) == "anthropic"
+    # A Claude subscription token authenticates through the CLI and is rejected
+    # by the Messages API, so there is nothing to summarise with once the Agent
+    # SDK is gone. Say so once, plainly, instead of failing a call per turn: the
+    # chat keeps working, its summary just stops advancing.
+    if api_key.startswith(_SUBSCRIPTION_TOKEN_PREFIX):
+        logger.info(
+            "persistence: %s is a Claude subscription token, which the Messages API "
+            "rejects — conversation summary not advanced. An ANTHROPIC_API_KEY "
+            "summarises normally.", _SUBSCRIPTION_TOKEN_PREFIX,
+        )
+        return conversation.summary
 
-    async def _run() -> str | None:
-        if is_anthropic:
-            return await _summarize_via_sdk(prompt, api_key, str(model or _HAIKU_MODEL))
-        return await _summarize_via_lc(prompt, api_key, resolved_provider, model)
+    prompt = _summary_prompt(conversation, transcript)
 
     try:
-        result = await asyncio.wait_for(_run(), timeout=_SUMMARY_TIMEOUT)
+        result = await asyncio.wait_for(
+            _summarize_via_lc(prompt, api_key, resolved_provider, model),
+            timeout=_SUMMARY_TIMEOUT,
+        )
         return result or conversation.summary
     except Exception as exc:
         logger.warning("persistence: summarize failed (%s); keeping prior summary", exc)
