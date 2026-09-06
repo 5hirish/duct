@@ -121,11 +121,9 @@ async def _run(stream_messages: list, close_on_report: bool = True):
     message_gen loop so the function returns promptly.
     """
     from agents.audit.schema import AuditBusinessContext
-    from agents.audit.v3.runner import (
-        close_session,
-        create_audit_session,
-        run_synthesis,
-    )
+    from agents.audit.crawl import create_audit_session
+    from agents.audit.v3.runner import run_synthesis
+    from agents.core.session import close_session
     from agents.models import Provider
 
     session_id = "unit-test-session"
@@ -359,7 +357,9 @@ async def test_audit_report_update_in_chat_turn():
     ]
 
     from agents.audit.schema import AuditBusinessContext
-    from agents.audit.v3.runner import close_session, create_audit_session, run_synthesis
+    from agents.audit.crawl import create_audit_session
+    from agents.audit.v3.runner import run_synthesis
+    from agents.core.session import close_session
     from agents.models import Provider
 
     session_id = "unit-update-test"

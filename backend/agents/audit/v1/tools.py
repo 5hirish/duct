@@ -40,7 +40,6 @@ from agents.audit.schema import (
     PageSignals,
     StructuredAuditData,
 )
-from agents.audit.tools import _compact
 from service.crawl.extractor import extract_signals
 from service.crawl.fetcher import SSRFError, fetch, make_client, validate_public_url
 
@@ -59,6 +58,44 @@ class FetchPagesArgs(BaseModel):
             f"Maximum {_MAX_URLS_PER_CALL} URLs per call."
         )
     )
+
+
+def _compact(s: PageSignals) -> dict:
+    """Compact signal dict — structured enough for the model, lean on tokens."""
+    d: dict = {
+        "url":                s.url,
+        "http_status":        s.http_status,
+        "ttfb_ms":            s.ttfb_ms,
+        "redirect_chain":     s.redirect_chain,
+        "title":              s.title,
+        "title_len":          len(s.title),
+        "meta_description":   s.meta_description,
+        "meta_desc_len":      len(s.meta_description),
+        "canonical":          s.canonical,
+        "is_noindex":         s.is_noindex,
+        "x_robots_tag":       s.x_robots_tag,
+        "vary_header":        s.vary_header,
+        "h1s":                s.h1s,
+        "h2s":                s.h2s[:10],
+        "word_count":         s.word_count_approx,
+        "body_text":          s.body_text_snippet,
+        "has_schema":         s.has_schema_org,
+        "schema_types":       s.schema_types,
+        "schema_json_ld":     s.schema_json_ld,
+        "microdata_types":    s.microdata_types,
+        "og_image":           s.og_image,
+        "images_missing_alt": s.images_missing_alt,
+        "internal_links":     len(s.internal_links),
+        "external_links":     len(s.external_links),
+        "lastmod":            s.lastmod,
+        "amp_url":            s.amp_url,
+        "preload_hints":      s.preload_hints,
+        "is_spa_suspected":   s.is_spa_suspected,
+        "spa_framework":      s.spa_framework,
+        "noscript_content":   s.noscript_content,
+    }
+    # omit empty/zero values to reduce token use
+    return {k: v for k, v in d.items() if v not in (None, "", [], {}, 0, 0.0, False)}
 
 
 def _ok(payload: dict) -> str:

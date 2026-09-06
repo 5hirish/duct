@@ -26,7 +26,8 @@ from agents.audit.schema import (
     AuditRequest,
 )
 from agents.audit.v1.runner import LangChainAuditRunner
-from agents.audit.v3.runner import ClaudeAuditRunner, close_session, get_session
+from agents.audit.v3.runner import ClaudeAuditRunner
+from agents.core.session import close_session, get_session
 from agents.engines import (
     Engine,
     resolve_engine,

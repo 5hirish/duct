@@ -20,12 +20,9 @@ Note: Uses streaming mode (ClaudeSDKClient) not query() because:
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 import os
-import re
 from collections import deque
-from collections.abc import Awaitable, Callable
 from contextlib import suppress
 from time import perf_counter
 from typing import Any
@@ -39,24 +36,27 @@ from agents.audit.tools import build_audit_mcp_server
 from agents.audit.schema import (
     AuditBusinessContext,
     AuditReport,
-    AuditSession,
     AuditTool,
     CrawlResult,
     CrawlSummary,
     StructuredAuditData,
     VersionedReport,
 )
+from agents.audit.crawl import (
+    EmitFn,
+    create_audit_session,
+    extract_report_update as _extract_report_update,
+    run_crawl,
+)
 from agents.audit.scoring import calibrate
 from agents.core import claude_sdk as _sdk
-from agents.core import session as _core_session
-from agents.core.session import bridge_ask_user_question, register_session, take_client_id
+from agents.core.session import get_session
+from agents.core.session import bridge_ask_user_question, take_client_id
 from agents.core.stream import DuctArtifactStreamParser, pump_stream_event
 from agents.engines import Engine, get_env_var_for_engine_provider
 from agents.engines import ENGINE_DEFAULT_EFFORT
 from agents.models import AgentEffort, AgentPermissionMode, AgentTool, ModelName, Provider, ThinkingMode
-from service.crawl.extractor import extract_signals
-from service.crawl.fetcher import SiteUnreachableError, fetch, fetch_text, make_client
-from service.crawl.sitemap import fetch_crawl_plan
+from service.crawl.fetcher import SiteUnreachableError
 
 logger = logging.getLogger(__name__)
 
@@ -79,103 +79,6 @@ _AUDIT_KNOWLEDGE_PACKS: tuple[str, ...] = ("gsc",)
 # gotcha corpus the agent needs before proposing writes.
 _EXECUTION_KNOWLEDGE_PACKS: tuple[str, ...] = ("google_ads", "ga4", "gtm")
 
-EmitFn = Callable[[dict[str, Any]], Awaitable[None]]
-
-# Session registry + close semantics are shared (agents/core/session.py). These
-# wrappers keep the audit-specific import surface and AuditSession typing.
-get_session = _core_session.get_session
-close_session = _core_session.close_session
-
-
-def create_audit_session(session_id: str, agent_type: str = "audit_seo") -> AuditSession:
-    """Create and register a new AuditSession with both queues.
-
-    Call this before starting run_pipeline so the SSE stream endpoint
-    can connect to event_queue independently of when the pipeline starts.
-    """
-    session = AuditSession(
-        session_id=session_id,
-        agent_type=agent_type,
-        event_queue=asyncio.Queue(),   # agent → SSE consumer
-        chat_queue=asyncio.Queue(),    # user messages → agent (Phase 3)
-        answer_future=None,
-    )
-    return register_session(session)
-
-
-# ---------------------------------------------------------------------------
-# Phase 1 — Crawl
-# ---------------------------------------------------------------------------
-
-async def _fetch_and_extract(
-    client: Any,
-    url: str,
-    page_type: str,
-) -> Any:
-    result = await fetch(client, url)
-    signals = extract_signals(result.text, url, page_type, response_headers=result.headers)
-    signals.http_status = result.status
-    signals.ttfb_ms = result.ttfb_ms
-    signals.redirect_chain = result.redirect_chain
-    return signals
-
-
-async def run_crawl(
-    root_url: str,
-    max_blog_posts: int = 5,
-    light: bool = False,
-    emit: EmitFn | None = None,
-) -> CrawlResult:
-    async with make_client() as client:
-        # Fetch sitemap + build plan
-        plan = await fetch_crawl_plan(client, root_url, max_blog_posts=max_blog_posts, light=light)
-
-        # Fetch robots.txt + llms.txt concurrently.
-        # llms.txt may not exist; SPAs often return a 200 HTML page for unknown
-        # paths, so treat HTML responses as "not found" (empty string).
-        from service.crawl.sitemap import _is_html_body
-        robots_coro = fetch_text(client, plan.robots_txt_url)
-        llms_coro = fetch_text(client, plan.llms_txt_url)
-        (robots_text, _), (llms_raw, _) = await asyncio.gather(robots_coro, llms_coro)
-        llms_text = "" if _is_html_body(llms_raw) else llms_raw
-
-        # Crawl all pages concurrently
-        all_urls = [
-            (url, "landing_page") for url in plan.landing_pages
-        ] + [
-            (url, "blog_post") for url in plan.blog_posts
-        ]
-
-        tasks = [_fetch_and_extract(client, url, ptype) for url, ptype in all_urls]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-
-    pages = []
-    errors = []
-    for idx, result in enumerate(results):
-        if isinstance(result, Exception):
-            url = all_urls[idx][0]
-            logger.warning("crawl: failed to fetch %s: %s", url, result)
-            errors.append(f"{url}: {result}")
-        else:
-            pages.append(result)
-
-    # `fetch` swallows connection failures into status 0 so one dead page
-    # cannot sink a crawl. The root is different: with no response from it
-    # there is no site to audit, and synthesis would score an empty page
-    # (it did — 84 "good" for a homepage that never answered).
-    root = next((p for p in pages if p.url == plan.root_url), None)
-    if root is None or root.http_status == 0:
-        raise SiteUnreachableError(plan.root_url)
-
-    return CrawlResult(
-        plan=plan,
-        robots_txt=robots_text,
-        llms_txt=llms_text,
-        pages=pages,
-        crawl_errors=errors,
-    )
-
-
 # ---------------------------------------------------------------------------
 # Phase 2 — Synthesis via Claude Agent SDK streaming mode
 # ---------------------------------------------------------------------------
@@ -191,78 +94,6 @@ def _resolve_model(provider: Provider, model: ModelName) -> str:
     return model.value
 
 
-def _parse_report(text: str) -> AuditReport | None:
-    """Extract and parse AuditReport JSON from agent output.
-
-    Tries several fallback strategies so partial/mis-escaped JSON still produces
-    a usable report:
-      1. Strip markdown fences and parse directly.
-      2. If parsing fails because html_report contains unescaped HTML (a known
-         model quirk), strip html_report from the JSON string, parse the rest,
-         then re-attach any HTML that was found separately.
-    """
-    stripped = text.strip()
-
-    # Strip markdown fences
-    fenced = re.search(r"```(?:json)?\s*([\s\S]+?)\s*```", stripped, re.DOTALL)
-    if fenced:
-        stripped = fenced.group(1).strip()
-
-    start = stripped.find("{")
-    end = stripped.rfind("}") + 1
-    if start == -1 or end == 0:
-        logger.error("audit: no JSON object found in synthesis output (len=%d)", len(stripped))
-        return None
-
-    candidate = stripped[start:end]
-
-    # Attempt 1: standard parse
-    try:
-        return AuditReport.model_validate_json(candidate)
-    except Exception:
-        pass
-
-    try:
-        return AuditReport.model_validate(json.loads(candidate))
-    except Exception as exc:
-        logger.warning("audit: standard JSON parse failed (%s) — trying html_report strip", exc)
-
-    # Attempt 2: remove html_report field (it may contain unescaped HTML quotes)
-    # and parse the rest, then inject an empty html_report so the report is usable.
-    html_stripped = re.sub(
-        r',?\s*"html_report"\s*:\s*"(?:[^"\\]|\\.)*"',
-        '',
-        candidate,
-        flags=re.DOTALL,
-    )
-    try:
-        raw = json.loads(html_stripped)
-        raw.setdefault("html_report", "")
-        report = AuditReport.model_validate(raw)
-        logger.info("audit: parsed report after stripping html_report field")
-        return report
-    except Exception as exc2:
-        logger.error("audit: all parse attempts failed: %s", exc2)
-        return None
-
-
-def _extract_report_update(text: str, base: AuditReport | None = None) -> AuditReport | None:
-    """Extract updated HTML from <audit_report_update> tags in a chat turn."""
-    match = re.search(
-        r"<audit_report_update>\s*([\s\S]+?)\s*</audit_report_update>",
-        text,
-    )
-    if not match:
-        return None
-    from datetime import datetime, timezone
-    html = match.group(1).strip()
-    return AuditReport(
-        url=base.url if base else "",
-        generated_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        update_label="",
-        executive_summary="",
-        html_report=html,
-    )
 
 
 async def run_synthesis(

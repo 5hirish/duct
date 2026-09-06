@@ -42,12 +42,9 @@ from uuid import UUID
 
 from agents.audit.events import AuditEvent
 from agents.audit.schema import AuditRequest
-from agents.audit.v3.runner import (
-    ClaudeAuditRunner,
-    close_session,
-    create_audit_session,
-    get_session,
-)
+from agents.audit.crawl import create_audit_session
+from agents.audit.v3.runner import ClaudeAuditRunner
+from agents.core.session import close_session, get_session
 from agents.content.persistence import (
     ConversationRecorder,
     archive_conversation,

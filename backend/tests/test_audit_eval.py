@@ -115,7 +115,8 @@ def test_audit_report_passes_rubric():
     else:
         from agents.audit.v3.runner import ClaudeAuditRunner as Runner
 
-    from agents.audit.v3.runner import close_session, create_audit_session
+    from agents.audit.crawl import create_audit_session
+    from agents.core.session import close_session
 
     session_id = str(uuid.uuid4())
     create_audit_session(session_id)

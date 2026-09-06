@@ -217,7 +217,7 @@ def _save_html_preview(data: dict, stem: str) -> Path:
 async def test_crawl_real_page():
     """Crawls getduct.ai and verifies the crawl layer produces sensible output."""
     import asyncio
-    from agents.audit.v3.runner import run_crawl
+    from agents.audit.crawl import run_crawl
 
     logger.info("[crawl] target: %s", _AUDIT_URL)
     t0 = time.perf_counter()
@@ -286,7 +286,9 @@ async def test_run_synthesis_catches_planted_issues(acme_business_context):
     """Feeds a known-bad HTML fixture to Claude and asserts it catches each planted issue."""
     import asyncio
     from agents.audit.schema import CrawlPlan, CrawlResult
-    from agents.audit.v3.runner import close_session, create_audit_session, run_synthesis
+    from agents.audit.crawl import create_audit_session
+    from agents.audit.v3.runner import run_synthesis
+    from agents.core.session import close_session
     from agents.models import Provider
     from service.crawl.extractor import extract_signals
 
@@ -466,7 +468,9 @@ async def test_full_pipeline_real_page(duct_business_context):
     """
     import asyncio
     import json as _json
-    from agents.audit.v3.runner import ClaudeAuditRunner, close_session, create_audit_session
+    from agents.audit.crawl import create_audit_session
+    from agents.audit.v3.runner import ClaudeAuditRunner
+    from agents.core.session import close_session
     from agents.models import ModelName, Provider
 
     session_id = "integration-full-pipeline"

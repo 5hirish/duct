@@ -126,12 +126,13 @@ class LangChainAuditRunner:
         lead_magnet: bool = False,
         extra_context: str = "",
     ) -> Any:
-        # Imported lazily: the V3 module pulls in claude_agent_sdk, and V1 should
-        # not require it at import time once V3 is eventually retired.
+        # Imported lazily only to keep the module import graph shallow; nothing
+        # here pulls in another engine.
         from agents.audit.events import AuditEvent as _E, AuditStep, STEP_LABELS, StepStatus
         from agents.audit.prompts import build_audit_user_prompt, build_unified_system_prompt
         from agents.audit.schema import AuditReport, CrawlDepth, StructuredAuditData
-        from agents.audit.v3.runner import get_session, run_crawl
+        from agents.audit.crawl import run_crawl
+        from agents.core.session import get_session
 
         session = get_session(session_id)
         if session:

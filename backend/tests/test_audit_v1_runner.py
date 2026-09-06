@@ -206,13 +206,13 @@ async def test_run_pipeline_crawls_then_publishes_the_report_the_tools_built(
     everything between them is real: the step events bracket the work, the
     report the tools assembled reaches the stream as version 1, and the same
     report is what the route gets back to persist."""
+    import agents.audit.crawl as audit_crawl
     import agents.audit.v1.runner as v1
-    import agents.audit.v3.runner as v3
 
     async def offline_crawl(_url, **_kwargs):
         return crawl_result
 
-    monkeypatch.setattr(v3, "run_crawl", offline_crawl)
+    monkeypatch.setattr(audit_crawl, "run_crawl", offline_crawl)
     monkeypatch.setattr(v1, "resolve_chat_model", lambda *_a, **_k: _model_that_builds_a_template_report())
 
     report = await v1.LangChainAuditRunner(api_key="unused-no-network").run_pipeline(
@@ -316,8 +316,8 @@ async def test_an_unreachable_site_closes_the_crawl_step_as_an_error_and_never_r
     """Two live runs scored a homepage that returned no response 84 "good".
     The crawl now raises instead; the runner closes the step as an error so the
     UI stops spinning, and re-raises so the route reports the failure."""
+    import agents.audit.crawl as audit_crawl
     import agents.audit.v1.runner as v1
-    import agents.audit.v3.runner as v3
     from service.crawl.fetcher import SiteUnreachableError
 
     async def dead_site(url, **_kwargs):
@@ -326,7 +326,7 @@ async def test_an_unreachable_site_closes_the_crawl_step_as_an_error_and_never_r
     def no_model(*_a, **_k):
         raise AssertionError("synthesis must not start for a site that never answered")
 
-    monkeypatch.setattr(v3, "run_crawl", dead_site)
+    monkeypatch.setattr(audit_crawl, "run_crawl", dead_site)
     monkeypatch.setattr(v1, "resolve_chat_model", no_model)
 
     with pytest.raises(SiteUnreachableError, match="Could not reach https://dead.example"):
