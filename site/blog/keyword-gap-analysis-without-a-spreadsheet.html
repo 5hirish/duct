@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="../assets/apple-icon.svg"/>
+<title>Keyword Gap Analysis Without a Spreadsheet — Duct Insights</title>
+<link rel="canonical" href="https://getduct.ai/blog/keyword-gap-analysis-without-a-spreadsheet"/>
+<meta name="description" content="The old way: export Ahrefs, paste into Sheets, cross-reference with your content calendar. The new way: know the gap before your Monday standup."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="article"/>
+<meta property="og:url" content="https://getduct.ai/blog/keyword-gap-analysis-without-a-spreadsheet"/>
+<meta property="og:title" content="Keyword Gap Analysis Without a Spreadsheet — Duct Insights"/>
+<meta property="og:description" content="The old way: export Ahrefs, paste into Sheets, cross-reference with your content calendar. The new way: know the gap before your Monday standup."/>
+<meta property="og:image" content="https://getduct.ai/assets/og-image.png"/>
+<meta property="og:site_name" content="Duct"/>
+<meta property="article:author" content="Shirish Kadam"/>
+<meta property="article:section" content="Content Strategy"/>
+<meta property="article:published_time" content="2026-03-10T00:00:00+00:00"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Keyword Gap Analysis Without a Spreadsheet — Duct Insights"/>
+<meta name="twitter:description" content="The old way: export Ahrefs, paste into Sheets, cross-reference with your content calendar. The new way: know the gap before your Monday standup."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og-image.png"/>
+<link rel="alternate" type="application/rss+xml" title="Duct Blog" href="/blog/feed.xml"/>
+<link rel="stylesheet" href="../assets/duct.css"/>
+<script src="../assets/config.js" defer></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Keyword Gap Analysis Without a Spreadsheet",
+  "description": "The old way: export Ahrefs, paste into Sheets, cross-reference with your content calendar. The new way: know the gap before your Monday standup.",
+  "datePublished": "2026-03-10T00:00:00+00:00",
+  "dateModified": "2026-03-10T00:00:00+00:00",
+  "articleSection": "Content Strategy",
+  "author": {
+    "@type": "Person",
+    "name": "Shirish Kadam",
+    "url": "https://shirishkadam.com",
+    "sameAs": [
+      "https://github.com/5hirish",
+      "https://x.com/5hirish",
+      "https://youtube.com/@5hirish"
+    ]
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Duct",
+    "url": "https://getduct.ai"
+  },
+  "image": "https://getduct.ai/assets/og-image.png",
+  "mainEntityOfPage": "https://getduct.ai/blog/keyword-gap-analysis-without-a-spreadsheet"
+}
+</script>
+<style>
+#reading-progress {
+  position: fixed; top: 0; left: 0; width: 0%; height: 3px;
+  background: var(--orange); z-index: 200; transition: width .1s linear;
+}
+.post-author {
+  display: flex; gap: 20px; align-items: flex-start;
+  max-width: 700px; margin: 48px auto 0; padding: 28px 24px;
+  border-top: 1px solid var(--border);
+}
+.post-author-avatar {
+  width: 64px; height: 64px; border-radius: 50%;
+  object-fit: cover; flex-shrink: 0; background: var(--off);
+  border: 1px solid var(--border);
+}
+.post-author-name {
+  font-family: var(--serif); font-size: 18px; color: var(--navy);
+  letter-spacing: -.2px; margin-bottom: 6px;
+}
+.post-author-bio { font-size: 14px; font-weight: 300; color: var(--navy-3); line-height: 1.7; }
+.post-author-bio a { color: var(--orange); text-decoration: none; }
+.post-author-bio a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.post-author-links { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; }
+.post-author-links a {
+  font-size: 13px; font-weight: 500; color: var(--navy-2); text-decoration: none;
+  border-bottom: 1px solid var(--border); padding-bottom: 1px; transition: border-color .2s;
+}
+.post-author-links a:hover { border-color: var(--navy); }
+.article-nav {
+  display: flex; justify-content: space-between; gap: 24px;
+  max-width: 700px; margin: 0 auto; padding: 32px 24px 64px;
+}
+.article-nav a {
+  font-size: 14px; font-weight: 500; color: var(--navy-3);
+  text-decoration: none; transition: color .2s; max-width: 46%;
+}
+.article-nav a:hover { color: var(--navy); }
+.article-nav-next { margin-left: auto; text-align: right; }
+@media (max-width: 640px) {
+  .post-author { flex-direction: column; gap: 16px; }
+  .article-nav { flex-direction: column; gap: 16px; }
+  .article-nav a { max-width: 100%; }
+  .article-nav-next { text-align: left; margin-left: 0; }
+}
+</style>
+</head>
+<body>
+
+<a href="#prose" class="skip-link">Skip to content</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<div id="reading-progress" role="progressbar" aria-label="Reading progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+
+<!-- GENERATED FILE — edit blog/posts/keyword-gap-analysis-without-a-spreadsheet.md and run scripts/build_blog.py -->
+<nav id="nav" aria-label="Main navigation">
+<div style="display:flex;align-items:center;gap:10px">
+<a href="/" class="logo">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<span style="font-size:12px;font-weight:500;color:var(--navy-3);letter-spacing:.02em">blog</span>
+</div>
+<div class="nav-links">
+<div class="nav-dropdown">
+  <a href="/#use-cases" class="nav-link">Solutions</a>
+  <div class="dropdown-menu">
+  <div class="dropdown-menu-inner">
+    <a href="/for-product-intelligence" class="dm-item">
+      <span class="dm-icon" aria-hidden="true">📊</span>
+      <span class="dm-text"><strong>Product Intelligence</strong><span>Weekly brief for PMs &amp; growth teams</span></span>
+    </a>
+    <a href="/for-organic-growth" class="dm-item">
+      <span class="dm-icon" aria-hidden="true">🌱</span>
+      <span class="dm-text"><strong>Organic Growth</strong><span>Automated SEO &amp; content intelligence</span></span>
+    </a>
+    <a href="/for-paid-ads" class="dm-item">
+      <span class="dm-icon" aria-hidden="true">📣</span>
+      <span class="dm-text"><strong>Paid Ads Intelligence</strong><span>Cross-platform brief for performance marketers</span></span>
+    </a>
+    <div class="dm-sep" aria-hidden="true"></div>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true">💼</span>
+      <span class="dm-text"><strong>Sales / RevOps</strong><span>Pipeline &amp; revenue intelligence</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true">🛒</span>
+      <span class="dm-text"><strong>E-commerce / DTC</strong><span>ROAS, LTV &amp; retention synthesis</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true">🤝</span>
+      <span class="dm-text"><strong>Customer Success</strong><span>Early churn &amp; health score signals</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+  </div>
+  </div>
+</div>
+<div class="nav-dropdown">
+  <a href="/tools/" class="nav-link">Free Tools</a>
+  <div class="dropdown-menu">
+  <div class="dropdown-menu-inner">
+    <a href="/tools/utm-builder" class="dm-item">
+      <span class="dm-text"><strong>UTM Builder</strong><span>Build GA4-compliant UTM links with live preview</span></span>
+    </a>
+    <a href="/tools/ctr-calculator" class="dm-item">
+      <span class="dm-text"><strong>CTR Calculator</strong><span>Click-through rate from impressions and clicks</span></span>
+    </a>
+    <a href="/tools/cpc-calculator" class="dm-item">
+      <span class="dm-text"><strong>CPC Calculator</strong><span>Cost per click from spend and volume</span></span>
+    </a>
+    <a href="/tools/cpm-calculator" class="dm-item">
+      <span class="dm-text"><strong>CPM Calculator</strong><span>Cost per 1,000 impressions</span></span>
+    </a>
+    <a href="/tools/engagement-rate-calculator" class="dm-item">
+      <span class="dm-text"><strong>Engagement Rate Calculator</strong><span>Engagement vs followers, reach, or impressions</span></span>
+    </a>
+    <a href="/tools/roas-calculator" class="dm-item">
+      <span class="dm-text"><strong>ROAS Calculator</strong><span>Return on ad spend from revenue and spend</span></span>
+    </a>
+    <a href="/tools/marketing-roi-calculator" class="dm-item">
+      <span class="dm-text"><strong>Marketing ROI Calculator</strong><span>ROI and profit from campaign spend vs revenue</span></span>
+    </a>
+    <div class="dm-sep" aria-hidden="true"></div>
+    <a href="/tools/" class="dm-item">
+      <span class="dm-text"><strong>See all tools</strong><span>SaaS metrics, CAC/LTV, CPA, weekly brief, and more</span></span>
+    </a>
+  </div>
+  </div>
+</div>
+<a href="/#how" class="nav-link">How it works</a>
+<a href="/blog/" class="nav-link">Blog</a>
+<a href="/download" class="nav-link">Download</a>
+<a href="https://github.com/5hirish/duct" class="nav-link nav-gh" target="_blank" rel="noopener" title="Duct on GitHub"><img src="/assets/icons/github.svg" width="18" height="18" alt="" aria-hidden="true"/><span class="nav-gh-label">GitHub</span></a>
+<a href="#blog-cta" class="btn btn-orange" style="padding:8px 18px;font-size:13px">Get early access →</a>
+</div>
+</nav>
+
+<header class="article-header">
+<p class="tag">Content Strategy</p>
+<h1>Keyword Gap Analysis Without a Spreadsheet</h1>
+<div class="article-meta">Mar 10 2026 · 5 min read · By Shirish Kadam</div>
+</header>
+
+<main>
+<article id="prose" class="prose">
+<p>Keyword gap analysis is one of the highest-leverage activities in organic growth. It's also one of the most time-consuming — because it involves moving data between tools that don't talk to each other.</p>
+<p>Here's the typical workflow:</p>
+<ol>
+<li>Export keyword rankings from Ahrefs</li>
+<li>Pull your content inventory from Notion or your CMS</li>
+<li>Open a spreadsheet</li>
+<li>Match keywords to existing content manually</li>
+<li>Flag gaps — keywords you're not targeting at all, or topics where you rank below position 15</li>
+<li>Prioritise by search volume, keyword difficulty, and business fit</li>
+<li>Brief the next piece of content</li>
+</ol>
+<p>That process, done properly, takes 2–4 hours. Most growth teams do it monthly at best. Some never get to it.</p>
+<h2>The gap in the gap analysis</h2>
+<p>The deeper problem isn't the time — it's the staleness.</p>
+<p>By the time you've done the analysis, exported it, and put the output into your content calendar, the keyword landscape has shifted. A competitor has published on a term you flagged. A cluster you deprioritised has started trending. Your highest-priority gap from last month is now covered by a post you published two weeks ago.</p>
+<p>Keyword opportunities have a half-life. The best time to act on them is when they're fresh — when you can see a keyword rising in Search Console, cross-reference it against your existing content, and add it to this week's brief, not next month's planning cycle.</p>
+<h2>What a real-time gap analysis looks like</h2>
+<p>The core question is simple: <strong>what are people searching for, in categories I care about, where I either don't rank or rank below position 10?</strong></p>
+<p>To answer it in real time, you need three things connected:</p>
+<ol>
+<li><strong>Your current rankings</strong> — where you sit today on each keyword</li>
+<li><strong>Search trends</strong> — which keywords in your category are gaining velocity</li>
+<li><strong>Your existing content</strong> — what you've already published and what it covers</li>
+</ol>
+<p>When these three data sources are linked, a keyword gap isn't a spreadsheet exercise — it's a notification. "You rank at position 22 for 'product analytics for PMs', KD 31, and your content calendar has nothing targeting it."</p>
+<p>That's the kind of signal that should arrive in your inbox on Monday morning, not three weeks after someone exports a CSV.</p>
+<h2>How to prioritise what you find</h2>
+<p>Not all keyword gaps are worth pursuing. When you're building a content calendar for a small team, every piece of content is expensive. Here's a simple prioritisation frame:</p>
+<p><strong>High priority:</strong> Low KD (under 40) + rising search trend + high business relevance + no existing content <strong>Medium priority:</strong> Medium KD (40–60) + existing content ranks below position 15 + a focused update could push it <strong>Low priority:</strong> High KD (60+) with no existing domain authority in that cluster — build authority first</p>
+<p>The "rising trend" signal is particularly underused. Most growth teams optimise for today's search volume. The teams that compound fastest target what's trending before it's competitive.</p>
+<h2>The Monday brief approach</h2>
+<p>The most practical change a small growth team can make is shifting from monthly keyword audits to a weekly brief.</p>
+<p>A weekly keyword brief doesn't need to be exhaustive. It needs to answer two questions:</p>
+<ul>
+<li>What changed in our ranking positions this week that we should know about?</li>
+<li>What's the single highest-priority keyword gap we should address this sprint?</li>
+</ul>
+<p>That's it. Two answers, every Monday, derived automatically from your connected tools — no spreadsheet required.</p>
+<p>---</p>
+<p><strong>Duct generates this brief automatically</strong> from your Search Console, Ahrefs, and content tools — delivered before your standup. <a href="https://getduct.ai">Join the beta →</a></p>
+</article>
+
+<aside class="post-author" aria-label="About the author">
+  <img class="post-author-avatar" src="https://github.com/5hirish.png" width="64" height="64" loading="lazy" alt="Shirish Kadam"/>
+  <div>
+    <p class="post-author-name">Shirish Kadam</p>
+    <p class="post-author-bio">Product manager and engineer in Valencia. I maintain <a href="https://github.com/5hirish/duct" rel="noopener">Duct</a>, an open-source AI agent that reads across your product and growth stack. MIT licensed, runs on your own machine.</p>
+    <div class="post-author-links">
+      <a href="https://github.com/5hirish" rel="noopener">GitHub</a>
+      <a href="https://x.com/5hirish" rel="noopener">X</a>
+      <a href="https://youtube.com/@5hirish" rel="noopener">Ship with AI</a>
+      <a href="https://shirishkadam.com" rel="noopener">Blog</a>
+    </div>
+  </div>
+</aside>
+
+<nav class="article-nav" aria-label="More articles">
+<a class="article-nav-next" href="/blog/why-your-seo-metrics-arent-telling-you-the-full-story">Why Your SEO Metrics Aren&#x27;t Telling You the Full Story →</a>
+</nav>
+</main>
+
+<section class="blog-cta" id="blog-cta">
+<h2>Stop reading tools.<br/><em>Start reading signals.</em></h2>
+<p>Duct connects your tools and surfaces what actually matters — delivered straight to your inbox.</p>
+<div class="cta-form" style="max-width:460px;margin:0 auto">
+<input type="email" id="ctaEmail" class="email-in" placeholder="you@company.com" aria-label="Email address"/>
+<button class="btn btn-orange btn-lg"
+  data-form-url="https://docs.google.com/forms/d/e/1FAIpQLSfm7QgovGGHE38CsOPqj5O_XVBtnjbRhkf16rNJhdvkd-rddg/formResponse"
+  data-entry-id="entry.276669450"
+  onclick="submitForm('ctaEmail', this)">Get early access →</button>
+</div>
+</section>
+
+<footer class="footer-expanded">
+<div class="footer-top">
+<div class="footer-brand">
+<a href="/" class="logo" style="font-size:20px">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<p>Open-source AI agent for cross-tool product and growth analytics. MIT licensed. Run it on your own machine.</p>
+</div>
+<div class="footer-cols" role="navigation" aria-label="Footer navigation">
+<div class="footer-col">
+<h4>Use Cases</h4>
+<a href="/for-product-intelligence">Product Intelligence</a>
+<a href="/for-organic-growth">Organic Growth</a>
+<a href="/for-paid-ads">Paid Ads Intelligence</a>
+</div>
+<div class="footer-col">
+<h4>Free Tools</h4>
+<a href="/tools/utm-builder">UTM Builder</a>
+<a href="/tools/ctr-calculator">CTR Calculator</a>
+<a href="/tools/cpc-calculator">CPC Calculator</a>
+<a href="/tools/cpm-calculator">CPM Calculator</a>
+<a href="/tools/engagement-rate-calculator">Engagement Rate Calculator</a>
+<a href="/tools/roas-calculator">ROAS Calculator</a>
+<a href="/tools/marketing-roi-calculator">Marketing ROI Calculator</a>
+<a href="/tools/">See all free tools →</a>
+</div>
+<div class="footer-col">
+<h4>Product</h4>
+<a href="/download">Download for Desktop</a>
+<a href="/seo-audit">Free SEO Audit</a>
+</div>
+<div class="footer-col">
+<h4>Community</h4>
+<a href="https://github.com/5hirish/duct" rel="noopener">GitHub repository</a>
+<a href="https://github.com/5hirish/duct/discussions" rel="noopener">Discussions</a>
+<a href="https://github.com/5hirish/duct/blob/main/CONTRIBUTING.md" rel="noopener">Contributing</a>
+<a href="https://github.com/5hirish/duct/blob/main/CHANGELOG.md" rel="noopener">Changelog</a>
+<a href="https://youtube.com/@5hirish" rel="noopener">Ship with AI (YouTube)</a>
+<a href="https://x.com/5hirish" rel="noopener">X / Twitter</a>
+</div>
+<div class="footer-col">
+<h4>Company</h4>
+<a href="/doctrine">Doctrine</a>
+<a href="/blog/">Blog</a>
+<a href="/about">About</a>
+<a href="/privacy">Privacy Policy</a>
+<a href="/terms">Terms of Service</a>
+</div>
+</div>
+</div>
+<div class="footer-bottom-row">
+<span>© 2026 Alleviate Lab · Valencia, Spain · MIT licensed</span>
+<span>Built in the open by <a href="https://github.com/5hirish" rel="noopener" style="color:inherit">Shirish Kadam</a>.</span>
+</div>
+</footer>
+
+<script src="../assets/duct.js" defer></script>
+<script>
+(function () {
+  var bar = document.getElementById('reading-progress');
+  window.addEventListener('scroll', function () {
+    var top = window.scrollY || document.documentElement.scrollTop;
+    var height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    var pct = height > 0 ? Math.round((top / height) * 100) : 0;
+    bar.style.width = pct + '%';
+    bar.setAttribute('aria-valuenow', pct);
+  }, { passive: true });
+})();
+</script>
+
+</body>
+</html>

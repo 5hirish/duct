@@ -45,8 +45,10 @@ another port (the tests assume 8090).
 | `https://getduct.ai/for-product-intelligence` | `site/for-product-intelligence.html` |
 | `https://getduct.ai/for-organic-growth` | `site/for-organic-growth.html` |
 | `https://getduct.ai/for-paid-ads` | `site/for-paid-ads.html` |
+| `https://getduct.ai/doctrine` | `site/doctrine.html` |
 | `https://getduct.ai/blog/` | `site/blog/index.html` |
-| `https://getduct.ai/blog/post?slug=SLUG` | `site/blog/post.html` |
+| `https://getduct.ai/blog/<slug>` | `site/blog/<slug>.html` (**generated**) |
+| `https://getduct.ai/blog/post?slug=SLUG` | `site/blog/post.html` (redirect shim, noindex) |
 
 ## Shared assets
 
@@ -113,6 +115,25 @@ window.DUCT_DEMO_CONFIG = {
 4. `<link demo.css>` in head; `<script demo-for-x.js>` + `<script demo.js>` at body end.
 5. Add to `sitemap.xml`.
 
+## Discoverability files
+
+| File | Purpose |
+|---|---|
+| `site/robots.txt` | Crawl policy. Names AI agents explicitly because vendors split training and search into separate bots (`GPTBot` vs `OAI-SearchBot`, `ClaudeBot` vs `Claude-SearchBot`); a bare `User-agent: *` leaves that ambiguous. |
+| `site/sitemap.xml` | Every indexable page. A new page is not done until it is here. Bump `lastmod` only on pages the change actually touched. |
+| `site/blog/feed.xml` | RSS. Hand-maintained: add an `<item>` with every new post. CI fails if it is missing, empty, or carries an off-domain `<link>`. |
+| `site/llms.txt` | Plain-text site map for models. Low crawler uptake in practice, cheap to keep correct, and the place the open-source framing has to be right. |
+| `site/_headers` | `Link:` discovery headers plus the RSS content type Cloudflare would otherwise get wrong. |
+
+JSON-LD is validated by `check-pages.py`: every `application/ld+json` block must
+parse and carry an `@type`. A malformed block is dropped silently by every
+consumer, so the page keeps rendering while its structured data is simply gone.
+
+The home page carries `SoftwareApplication` **and** `SoftwareSourceCode`. The
+second is what tells an answer engine the project is open source; the first
+alone does not. `Organization.sameAs` and `Person.sameAs` are what tie the site,
+the repo and the maintainer into one entity rather than three.
+
 ## Canonical URLs
 
 **Extensionless, always.** `.github/scripts/check-pages.py` fails any canonical
@@ -123,10 +144,9 @@ disagree about what the page's address is.
 |---|---|
 | Root-level landing page | `https://getduct.ai/for-paid-ads` |
 | Blog index | `https://getduct.ai/blog/` |
-| Blog post | `https://getduct.ai/blog/post?slug=SLUG` |
+| Blog post | `https://getduct.ai/blog/<slug>` |
 
-`blog/post.html` sets its own canonical at runtime from the slug (see its inline
-script) — do not hardcode one there. Every other page hardcodes it in `<head>`.
+Every page hardcodes its canonical in `<head>`, generated posts included.
 
 ## Page `<head>` checklist
 
@@ -163,13 +183,26 @@ Follow the **Adding a new demo variant** instructions above.
 
 ## New blog post
 
-Posts live in `site/blog/posts/<slug>.md` with required front matter:
-- `title`
-- `date`
-- `author`
-- `category`
-- `excerpt`
-- `readTime`
+Posts live in `site/blog/posts/<slug>.md` with required front matter: `title`,
+`date`, `author`, `category`, `excerpt`, `readTime`.
+
+**Then run the generator and commit its output:**
+
+```bash
+python3 scripts/build_blog.py          # writes site/blog/<slug>.html
+python3 scripts/build_blog.py --check  # what CI runs; fails if the tree is stale
+```
+
+Posts are pre-rendered, not rendered in the browser. They used to be, and a
+crawler without JavaScript received 49 characters of body text plus a canonical
+of `/blog/post` shared by every post. The generator inlines the nav, CTA and
+footer partials for the same reason: a runtime `fetch` is not a crawlable link.
+
+The Markdown subset is deliberately small — h2, paragraphs, ordered and bullet
+lists, bold, links. Anything else raises rather than rendering wrong. Extend
+`render_markdown()` before using a new construct.
+
+Also add the post to `site/sitemap.xml` and an `<item>` to `site/blog/feed.xml`.
 
 ## Deploy
 
