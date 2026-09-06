@@ -248,12 +248,7 @@ def models_catalogue() -> dict:
             "id": model.value,
             "provider": provider.value,
             "tier_hint": (_MODEL_TIER_HINT.get(model.value) or Tier.STANDARD).value,
-            # v3's harness is provider-locked, and a CLI-only id 404s on the
-            # Messages API — both facts live in engines.py and are surfaced
-            # here so the picker can disable rather than let a run discover it.
-            "engines": (
-                ["v3"] if model.value.endswith("[1m]") else _engines_for(provider)
-            ),
+            "engines": _engines_for(provider),
         })
 
     return {

@@ -73,7 +73,7 @@ def _resolve_run_config() -> tuple[Engine, object, object, str]:
     from config import get_configs
     from agents.engines import PROVIDER_CONFIG_ATTR
 
-    engine = resolve_engine(os.environ.get("DUCT_EVAL_ENGINE") or "v3")
+    engine = resolve_engine(os.environ.get("DUCT_EVAL_ENGINE") or "v1")
     provider = resolve_engine_provider(engine, os.environ.get("DUCT_EVAL_PROVIDER"))
     model = resolve_engine_model(engine, provider, os.environ.get("DUCT_EVAL_MODEL"))
     api_key = os.environ.get("DUCT_EVAL_API_KEY") or getattr(
