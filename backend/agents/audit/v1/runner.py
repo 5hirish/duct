@@ -149,11 +149,15 @@ class LangChainAuditRunner:
         provider: Provider = Provider.ANTHROPIC,
         model: ModelName = ModelName.CLAUDE_SONNET,
         temperature: float = 1.0,
+        gemini_api_key: str = "",
     ) -> None:
         self.provider = provider
         self.model = model
         self._api_key = api_key
         self._temperature = temperature
+        # Backs Duct's own WebSearch when the run's provider has no usable
+        # built-in one; without it the research pass degrades to local signals.
+        self._gemini_api_key = gemini_api_key
 
     async def run_pipeline(
         self,
@@ -214,6 +218,62 @@ class LangChainAuditRunner:
             "status": "success",
         })
 
+        # Research the competitive landscape before synthesis. Skipped for the
+        # lead-magnet teaser (it must stay fast) and when there is no business
+        # context at all, which leaves the pass nothing to look for.
+        # One model for the whole run: synthesis and the research pass share it,
+        # so a test's fake reaches both and production builds one client.
+        llm = resolve_chat_model(self.provider, self.model, self._api_key, self._temperature)
+
+        research_context = None
+        wants_research = not lead_magnet and bool(
+            business_context.competitors
+            or business_context.industry
+            or business_context.business_description
+            or business_context.business_name
+        )
+        if wants_research:
+            from agents.audit.enrichment import enrich_context
+
+            await emit({
+                "event": _E.STEP_STARTED,
+                "step_id": AuditStep.ENRICHING,
+                "label": STEP_LABELS[AuditStep.ENRICHING],
+                "status": StepStatus.RUNNING,
+            })
+            research_context = await enrich_context(
+                root_url=url,
+                business_context=business_context,
+                crawl_result=crawl_result,
+                api_key=self._api_key,
+                provider=self.provider,
+                model=self.model,
+                llm=llm,
+                gemini_api_key=self._gemini_api_key,
+            )
+            await emit({
+                "event": _E.STEP_FINISHED,
+                "step_id": AuditStep.ENRICHING,
+                "label": STEP_LABELS[AuditStep.ENRICHING],
+                "status": StepStatus.SUCCESS,
+                "payload": {
+                    "competitors": [
+                        {
+                            "domain":          c.domain,
+                            "positioning":     c.positioning,
+                            "content_pillars": c.content_pillars,
+                            "differentiators": c.differentiators,
+                        }
+                        for c in research_context.competitors
+                    ],
+                    "content_gaps":     research_context.content_gaps,
+                    "enrichment_notes": research_context.enrichment_notes,
+                    # Why it found nothing, when it found nothing. On the chip
+                    # and in the log; never in the prompt.
+                    "degraded_reason":  research_context.degraded_reason,
+                },
+            })
+
         report_holder: dict[str, Any] = {"report": None}
 
         async def _on_submit(args: dict) -> dict:
@@ -251,7 +311,6 @@ class LangChainAuditRunner:
             })
             return {"status": "received", "version_id": version_id}
 
-        llm = resolve_chat_model(self.provider, self.model, self._api_key, self._temperature)
         agent = build_audit_agent(
             crawl_result=crawl_result,
             llm=llm,
@@ -289,7 +348,12 @@ class LangChainAuditRunner:
             announce_finish=False,
         )
         await loop.turn(
-            build_audit_user_prompt(crawl_result, business_context, extra_context=extra_context)
+            build_audit_user_prompt(
+                crawl_result,
+                business_context,
+                research_context=research_context,
+                extra_context=extra_context,
+            )
         )
 
         await emit({

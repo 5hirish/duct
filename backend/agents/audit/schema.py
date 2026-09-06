@@ -236,6 +236,10 @@ class AuditResearchContext(BaseModel):
     competitors: list[CompetitorSignals] = Field(default_factory=list)
     content_gaps: list[str] = Field(default_factory=list)   # topics competitors cover, target doesn't
     enrichment_notes: list[str] = Field(default_factory=list)
+    # Why the research pass added nothing, for the step chip and the log. Never
+    # rendered into the prompt: enrichment_notes is, and an error string there
+    # reads to the model as an observation about the site.
+    degraded_reason: str = ""
 
 
 class EnrichmentOutput(BaseModel):

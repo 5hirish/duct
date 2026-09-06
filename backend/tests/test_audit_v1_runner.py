@@ -235,6 +235,9 @@ async def test_run_pipeline_crawls_then_publishes_the_report_the_tools_built(
     ]
     assert steps == [
         (AuditStep.FETCH_SITEMAP, "running"), (AuditStep.FETCH_SITEMAP, "success"),
+        # The business context names a company, so the research pass runs. It
+        # degrades to the crawl's own signals here — the fake model has no web.
+        (AuditStep.ENRICHING, "running"), (AuditStep.ENRICHING, "success"),
         (AuditStep.SYNTHESIZE_AUDIT, "running"), (AuditStep.SYNTHESIZE_AUDIT, "success"),
     ]
     version = next(e for e in emitted.events if e["event"] == AgentEvent.ARTIFACT_VERSION)
