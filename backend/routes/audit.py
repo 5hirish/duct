@@ -147,7 +147,12 @@ def _build_runner(api_key: str, provider: Any, model: Any, engine: Engine):
     """
     if engine == Engine.V1:
         logger.info("audit: using V1 (LangChain) engine with %s/%s", provider.value, model.value)
-        return LangChainAuditRunner(api_key=api_key, provider=provider, model=model)
+        # gemini_api_key backs Duct's own WebSearch in the research pass when the
+        # run's own provider has no usable built-in one.
+        return LangChainAuditRunner(
+            api_key=api_key, provider=provider, model=model,
+            gemini_api_key=get_configs().gemini_api_key,
+        )
     return ClaudeAuditRunner(api_key=api_key, provider=provider, model=model)
 
 

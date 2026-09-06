@@ -77,6 +77,17 @@ def _resolve_run_config() -> tuple[Engine, object, object, str]:
     return engine, provider, model, api_key
 
 
+def _gemini_key() -> str:
+    """The Gemini key Duct's own WebSearch runs on."""
+    from config import get_configs
+
+    return (
+        os.environ.get("GEMINI_API_KEY", "")
+        or os.environ.get("GOOGLE_API_KEY", "")
+        or getattr(get_configs(), "gemini_api_key", "")
+    ).strip()
+
+
 def _can_run_without_a_key(engine: Engine, provider) -> bool:
     """Whether this engine can authenticate with no explicit API key.
 
@@ -126,7 +137,12 @@ def test_audit_report_passes_rubric():
         events.append(event)
 
     async def _run():
-        runner = Runner(api_key=api_key, provider=provider, model=model)
+        kwargs = {"api_key": api_key, "provider": provider, "model": model}
+        if engine == Engine.V1:
+            # Backs the research pass's WebSearch off Anthropic; without it the
+            # eval would grade a report that never saw a competitor.
+            kwargs["gemini_api_key"] = _gemini_key()
+        runner = Runner(**kwargs)
         return await runner.run_pipeline(
             session_id=session_id,
             url=url,
