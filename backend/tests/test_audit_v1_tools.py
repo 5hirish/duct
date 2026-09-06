@@ -213,3 +213,22 @@ async def test_fetch_pages_rejects_off_site_urls(crawl_result):
 
     assert result["pages"] == []
     assert any("not from audited site" in e for e in result["errors"])
+
+
+# ---------------------------------------------------------------------------
+# The roadmap contract
+# ---------------------------------------------------------------------------
+
+async def test_a_roadmap_phase_without_tasks_is_rejected_before_the_report_is_assembled(crawl_result):
+    """Two live runs finalised the three phase headers the prompt names with
+    nothing under them. The schema is the tool contract, so the empty phase is
+    a validation error the agent loop hands back to the model, not a report."""
+    from pydantic import ValidationError
+
+    tools = build_audit_tools(crawl_result, report_mode="template")
+    await _call(tools, "StartAuditReport", **_header())
+    await _call(tools, "AddAuditCategory", **_category("on_page_seo"))
+    empty_phase = {"label": "0–30 days", "theme": "Unblock", "tasks": []}
+
+    with pytest.raises(ValidationError, match="tasks"):
+        await _call(tools, "FinalizeAuditReport", top_priorities=[], wins=[], roadmap=[empty_phase])

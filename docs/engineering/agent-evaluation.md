@@ -21,7 +21,10 @@ grader.
 
 - **`Rubric` / `Dimension` / `Marker`** — weighted 1–5 dimensions, present/absent
   markers, a `pass_threshold`, and a `persona`. Agent-agnostic; each agent ships
-  its own rubric (`rubrics/content_post.py`). Audit/insights can add theirs.
+  its own rubric (`rubrics/content_post.py`, `rubrics/audit_report.py`; insights
+  can add its own). A rubric's renderer must show the judge the whole
+  deliverable: the audit judge once failed two reports for an "empty"
+  roadmap because the renderer printed the phase labels without the tasks.
 - **`JudgeVerdict` (structured output) + a deterministic `Scorecard`** — the
   judge returns scores + rationale; *we* compute the weighted overall, the
   per-dimension floors, and the marker gates. Scoring lives on our side so

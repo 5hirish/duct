@@ -164,15 +164,20 @@ def render_audit_artifact(report: Any) -> JudgeArtifact:
         "CATEGORIES",
     ]
     for category in getattr(data, "categories", []) or []:
-        lines.append(f"\n[{category.id}] {category.label} — {category.score}/100")
+        counts = (
+            f"{category.fail_count} fail · {category.warn_count} warn · "
+            f"{category.pass_count} pass · {category.opp_count} opportunity"
+        )
+        lines.append(f"\n[{category.id}] {category.label} — {category.score}/100 ({counts})")
         lines.append(f"  {getattr(category, 'tooltip', '')}")
         for finding in getattr(category, "findings", []) or []:
             severity = getattr(finding, "severity", "") or getattr(finding, "status", "")
             lines.append(f"  - ({severity}) {getattr(finding, 'title', '')}")
             if detail := getattr(finding, "description", ""):
                 lines.append(f"      {detail}")
-            for url in (getattr(finding, "affected_urls", None) or [])[:5]:
-                lines.append(f"      affected: {getattr(url, 'url', url)}")
+            for affected in (getattr(finding, "affected_urls", None) or [])[:5]:
+                value = getattr(affected, "issue_value", "")
+                lines.append(f"      affected: {getattr(affected, 'url', affected)}" + (f" ({value})" if value else ""))
             if fix := getattr(finding, "recommendation", ""):
                 lines.append(f"      fix: {fix}")
 
@@ -180,16 +185,25 @@ def render_audit_artifact(report: Any) -> JudgeArtifact:
         lines.append("\nTOP PRIORITIES")
         for i, priority in enumerate(priorities, 1):
             lines.append(f"  {i}. {getattr(priority, 'title', priority)}")
-            if rationale := getattr(priority, "rationale", ""):
-                lines.append(f"     why: {rationale}")
+            # The schema field is why_it_matters; a previous draft read
+            # `rationale`, which no priority has, so the judge never saw it.
+            if why := getattr(priority, "why_it_matters", ""):
+                lines.append(f"     why: {why}")
 
     if wins := getattr(data, "wins", None):
         lines.append("\nWINS\n  " + "\n  ".join(str(w) for w in wins))
 
+    # Phases without their tasks read as empty bullets; a judge graded exactly
+    # that as placeholder text while the report underneath had three full phases.
     if roadmap := getattr(data, "roadmap", None):
         lines.append("\nROADMAP")
         for phase in roadmap:
-            lines.append(f"  - {getattr(phase, 'label', phase)}")
+            lines.append(f"  - {getattr(phase, 'label', phase)} — {getattr(phase, 'theme', '')}")
+            for task in getattr(phase, "tasks", None) or []:
+                effort = getattr(task, "effort_estimate", "")
+                lines.append(f"      · {getattr(task, 'task', task)}" + (f" [{effort}]" if effort else ""))
+                if note := getattr(task, "note", ""):
+                    lines.append(f"        note: {note}")
 
     if narrative := getattr(data, "strategic_narrative", ""):
         lines.append(f"\nSTRATEGIC NARRATIVE\n{narrative}")
