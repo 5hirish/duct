@@ -1,0 +1,23 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "selfhost",
+  "description": "Template: lets a fork's own web origin call the shell commands. Replace the URLs with your deployment and build with `npm run build:selfhost`, which selects this capability via tauri.selfhost.conf.json. Additive to `default` rather than a replacement — a capability can only widen the set of origins, so the official origin stays listed and harmless. An origin missing from here loads and renders normally and then fails every invoke with 'not allowed. Plugin not found', which reads like a broken keychain rather than a config gap.",
+  "windows": ["main"],
+  "remote": {
+    "urls": ["https://app.getduct.example", "https://app.getduct.example/*"]
+  },
+  "permissions": [
+    "core:default",
+    "opener:default",
+    "allow-get-provider-key",
+    "allow-set-provider-key",
+    "allow-delete-provider-key",
+    "allow-get-shell-info",
+    "allow-get-sidecar-info",
+    "allow-open-external",
+    "allow-check-for-update",
+    "allow-install-update",
+    "allow-get-telemetry-settings",
+    "allow-set-telemetry-enabled"
+  ]
+}

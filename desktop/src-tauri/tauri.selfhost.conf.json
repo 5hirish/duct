@@ -1,0 +1,33 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Duct (self-hosted)",
+  "identifier": "example.getduct.selfhost",
+  "plugins": {
+    "deep-link": {
+      "desktop": {
+        "schemes": ["example.getduct.selfhost"]
+      }
+    },
+    "updater": {
+      "endpoints": [
+        "https://github.com/YOUR-ORG/YOUR-FORK/releases/latest/download/latest.json"
+      ]
+    }
+  },
+  "app": {
+    "security": {
+      "capabilities": ["default", "selfhost"]
+    },
+    "windows": [
+      {
+        "label": "main",
+        "title": "Duct",
+        "url": "https://app.getduct.example",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 900,
+        "minHeight": 600
+      }
+    ]
+  }
+}
