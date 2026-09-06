@@ -122,53 +122,6 @@ class ModelName(str, Enum):
     OR_GPT_5_MINI = "openai/gpt-5-mini"
 
 
-class AgentTool(StrEnum):
-    """Built-in Claude Agent SDK tool names passed to allowed_tools (audit v3).
-
-    Per-agent tool names are NOT here — each agent type owns its own enum next
-    to its tools/schema: see AuditTool (agents/audit/schema.py, the
-    ``duct_crawl`` MCP server) and ContentTool (agents/content/schema.py, the
-    LangChain-bound content tools).
-    """
-
-    ASK_USER_QUESTION = "AskUserQuestion"
-    TODO_WRITE = "TodoWrite"
-    WEB_SEARCH  = "WebSearch"         # SERP research, competitor discovery
-    WEB_FETCH   = "WebFetch"          # fetch arbitrary URLs (e.g. competitor pages)
-    AGENT = "Agent"
-    READ = "Read"
-    WRITE = "Write"
-    EDIT = "Edit"
-    BASH = "Bash"
-    GREP = "Grep"
-    GLOB = "Glob"
-    NOTEBOOK_EDIT = "NotebookEdit"
-
-
-class AgentPermissionMode(StrEnum):
-    """Claude Agent SDK permission_mode values for ClaudeAgentOptions."""
-
-    DEFAULT = "default"          # unmatched tools fall through to canUseTool
-    DONT_ASK = "dontAsk"         # unmatched tools are hard-denied; canUseTool skipped (except AskUserQuestion)
-    ACCEPT_EDITS = "acceptEdits" # file-edit tools auto-approved; others need canUseTool
-    BYPASS = "bypassPermissions" # all tools approved; use only in fully controlled environments
-    PLAN = "plan"                # read-only tools only; no file writes
-
-
-class ThinkingMode(StrEnum):
-    """Claude Agent SDK thinking type values for ClaudeAgentOptions.thinking.
-
-    Pass as ThinkingConfigAdaptive(type=ThinkingMode.ADAPTIVE) — using the enum
-    avoids bare string literals and ensures the SDK's TypedDict gets the required
-    'type' key (ThinkingConfigAdaptive() with no args produces {} which raises
-    KeyError: 'type' at CLI command build time).
-    """
-
-    ADAPTIVE = "adaptive"   # model decides thinking depth per turn
-    ENABLED  = "enabled"    # fixed budget_tokens; pair with ThinkingConfigEnabled
-    DISABLED = "disabled"   # no extended thinking
-
-
 class AgentEffort(StrEnum):
     """Claude Agent SDK effort levels for ClaudeAgentOptions (v3 engine only).
 
@@ -230,7 +183,6 @@ class AspectRatio(StrEnum):
     LANDSCAPE_21_9 = "21:9"
     PORTRAIT_3_5   = "3:5"
     LANDSCAPE_5_3  = "5:3"
-
 
 
 # Default provider → model mapping

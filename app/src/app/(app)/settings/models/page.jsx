@@ -89,11 +89,10 @@ function ProviderMark({ providerId, className = "mt-mark" }) {
  *
  * Every model is listed, annotated rather than hidden. Filtering the list to
  * what the current engine accepts sounds tidier, and it was what this did
- * first — but the shipped default triple is Google and v3's harness is
- * Anthropic-only, so on v3 the filter emptied the list and every picker
- * rendered blank with nothing to explain why. The row state below already
- * says what will actually run; the group label just has to be honest about
- * why an option is greyed.
+ * first — but an engine whose supported providers did not overlap the shipped
+ * default triple emptied the list, and every picker rendered blank with
+ * nothing to explain why. The row state below already says what will actually
+ * run; the group label just has to be honest about why an option is greyed.
  */
 function ModelPicker({ value, models, providersById, engine, onChange, id, label, loading }) {
   const grouped = useMemo(() => {
@@ -605,7 +604,7 @@ export default function ModelSettingsPage() {
                     <span>{option.description}</span>
                   </span>
                   <StateChip tone={unavailable ? "warn" : "ok"}>
-                    {unavailable ? (status.status === ENGINE_STATUS.NEEDS_AUTH ? "Needs auth" : "Inactive") : "Active"}
+                    {unavailable ? "Inactive" : "Active"}
                   </StateChip>
                 </button>
               );
@@ -613,8 +612,8 @@ export default function ModelSettingsPage() {
           </div>
 
           <p className="app-subtle mt-footnote">
-            <KeyRound size={13} aria-hidden="true" /> v3 runs Anthropic models only, and SEO Audit
-            and Content Studio require it — so a non-Anthropic tier cannot serve them.{" "}
+            <KeyRound size={13} aria-hidden="true" /> Every agent runs on any provider you hold a
+            key for. A tier you have no key for falls through to the next one down.{" "}
             <Link className="app-link" href="/connections">
               Data source connections <ChevronRight size={12} aria-hidden="true" />
             </Link>

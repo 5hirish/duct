@@ -38,11 +38,11 @@ Three rules make this safe to extend:
    model) and quietly normalising them would change cost and quality for every
    existing project.
 
-This module is deliberately separate from ``agents/models.py``. The enums there
-— ``AgentTool``, ``AgentPermissionMode``, ``ThinkingMode``, ``AgentEffort`` — are
-Claude Agent SDK wire values used only by the v3 engine, and they should stay
-that way. This is the portable layer the other engines can use; ``AgentEffort``
-happens to share Anthropic's spelling because it *is* Anthropic's spelling.
+This module is deliberately separate from ``agents/models.py``. That module was
+where the Claude Agent SDK's wire enums lived, and they left with it; the one
+that remains, ``AgentEffort``, is still the API's request field. This is the
+portable layer every provider goes through, and it happens to share Anthropic's
+spelling because it *is* Anthropic's spelling.
 
 It does import ``ModelName``, though, and keys the table by it: the catalogue is
 the list of models Duct actually offers, so a model leaving it should break this

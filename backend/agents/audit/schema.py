@@ -38,40 +38,6 @@ class EffortLevel(StrEnum):
     high   = "high"
 
 
-class AuditTool(StrEnum):
-    """Fully-namespaced names of the audit MCP tools (server ``duct_crawl``).
-
-    The @tool decorators in agents/audit/tools.py register the *short* names
-    (e.g. "FetchPages"); the SDK namespaces them as ``mcp__duct_crawl__<short>``.
-    This enum holds those namespaced names — the form used in
-    ClaudeAgentOptions.allowed_tools and the can_use_tool dispatch. Mirrors
-    ContentTool (agents/content/schema.py). Keep in sync with the @tool
-    registrations in agents/audit/tools.py.
-    """
-
-    FETCH_PAGES           = "mcp__duct_crawl__FetchPages"          # in-process page fetch
-    SUBMIT_AUDIT_REPORT   = "mcp__duct_crawl__SubmitAuditReport"   # template mode only — chat-revision resubmit
-    LIST_ARTIFACTS        = "mcp__duct_crawl__ListArtifacts"       # project-scoped prior-artifact index
-    GET_ARTIFACT          = "mcp__duct_crawl__GetArtifact"         # one prior artifact, full structured payload
-    CREATE_ARTIFACT       = "mcp__duct_crawl__CreateArtifact"      # mint a memo/dataset/diagram artifact
-    UPDATE_ARTIFACT       = "mcp__duct_crawl__UpdateArtifact"      # exact-string patch → new version
-    REWRITE_ARTIFACT      = "mcp__duct_crawl__RewriteArtifact"     # full-content replace → new version
-    REMEMBER_FACT         = "mcp__duct_crawl__RememberFact"        # write one durable project memory
-    SEARCH_MEMORY         = "mcp__duct_crawl__SearchMemory"        # recall beyond the injected digest
-    GET_MEMORY            = "mcp__duct_crawl__GetMemory"           # one memory entry, full detail
-    START_AUDIT_REPORT    = "mcp__duct_crawl__StartAuditReport"    # template: incremental build, step 1
-    ADD_AUDIT_CATEGORY    = "mcp__duct_crawl__AddAuditCategory"    # template: incremental build, step 2 (×9)
-    FINALIZE_AUDIT_REPORT = "mcp__duct_crawl__FinalizeAuditReport" # template: incremental build, step 3
-
-    # Staged execution (server "duct_execute", agents/tools/execution_tools.py) —
-    # project-scoped sessions only. Propose/status/rollback; approval is
-    # deliberately absent (human-only, via the review UI).
-    LIST_EXECUTABLE_OPS   = "mcp__duct_execute__ListExecutableOps"
-    PROPOSE_CHANGES       = "mcp__duct_execute__ProposeChanges"
-    GET_CHANGE_SET_STATUS = "mcp__duct_execute__GetChangeSetStatus"
-    ROLLBACK_CHANGE_SET   = "mcp__duct_execute__RollbackChangeSet"
-
-
 class EffortEstimate(StrEnum):
     under_1hr     = "under_1hr"
     two_to_4hrs   = "2_to_4hrs"
@@ -473,6 +439,9 @@ class AuditRequest(BaseModel):
     business_context: AuditBusinessContext = Field(default_factory=AuditBusinessContext)
     engine: str = ""
     max_blog_posts: int = Field(default=5, ge=1, le=10)
+    # Accepted and ignored since the Claude Agent SDK went: both were its
+    # options. Kept so a client that still sends them is not a 422; the
+    # per-model thinking dial (agents/thinking.py) is what applies now.
     effort: AgentEffort = AgentEffort.MEDIUM
     adaptive_thinking: bool = False
     crawl_depth: CrawlDepth = CrawlDepth.DEEP

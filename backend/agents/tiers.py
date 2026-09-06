@@ -74,7 +74,7 @@ class Job(StrEnum):
     ANALYSIS = "analysis"          # insights: the pass that writes the brief
     AUDIT = "audit"                # SEO audit: category scoring and findings
     VERIFICATION = "verification"  # the subagent that proves a number
-    SYNTHESIS = "synthesis"        # v3: structured JSON from prepared briefs
+    SYNTHESIS = "synthesis"        # structured JSON from prepared briefs
     DRAFTING = "drafting"          # content: plans, captions, slide copy
     CHAT = "chat"                  # follow-up conversation on a finished artifact
     RESEARCH = "research"          # crawled pages, connector briefs
@@ -242,11 +242,10 @@ def resolve_tier_model(
     # No tier could serve. Fall to the engine's own default — today's
     # behaviour, and the floor the whole design stands on.
     #
-    # This exists because the default triple is Google and v3's harness is
-    # Anthropic-only: Content Studio would otherwise have no model at all on a
-    # stock install, which is a worse answer than the one v3 already has. The
-    # floor never invents a provider — it uses the engine's declared default,
-    # and only when that is actually reachable.
+    # It was earned by an engine whose supported providers did not overlap the
+    # shipped default triple, which left an agent with no model at all on a
+    # stock install. The floor never invents a provider — it uses the engine's
+    # declared default, and only when that is actually reachable.
     floor_provider = ENGINE_DEFAULT_PROVIDER[engine]
     if floor_provider in reachable:
         return TierResolution(

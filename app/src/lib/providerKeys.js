@@ -21,7 +21,7 @@ export const PROVIDERS = [
     header: "X-Provider-Anthropic",
     placeholder: "sk-ant-…",
     prefix: "sk-ant-",
-    description: "Claude models. The only provider the Claude Agent SDK (v3) accepts.",
+    description: "Claude models, direct from Anthropic.",
     consoleUrl: "https://console.anthropic.com/settings/keys",
   },
   {
