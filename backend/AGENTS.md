@@ -18,9 +18,10 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
 
 ### Current stack
 
-- **AI synthesis:** Insights and content run on V1 (LangChain 1.x / `deepagents`) only.
-  Audit carries both V1 and V3 runners and defaults to V1. Engine selection is per
-  request, defaulting from the `generate_engine` env var.
+- **AI synthesis:** Every agent runs on V1 (LangChain 1.x / `deepagents`), including
+  the project-scoped audit. Audit still carries a V3 runner, reachable only by
+  naming `engine: "v3"`. Engine selection is per request, defaulting from the
+  `generate_engine` env var.
 
   **Consolidating on V1.** Per the engine consolidation review (duct-cloud, private), all
   agents are moving to one harness — LangChain 1.x / `deepagents` — because customers bring
@@ -31,13 +32,17 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   - **V1 — the target, and now the only session harness.** Insights
     (`agents/insights/v1/runner.py`) and content (`agents/content/v1/runner.py`) are
     `deepagents` sessions; audit's V1 runner is `create_agent`. New agent work goes here.
-  - **V3 — audit only, maintained.** `agents/audit/v3/runner.py` stays reachable via
-    `engine: "v3"` and is the one path that can authenticate from a Claude subscription.
-    Shared-code changes (`agents/core/`, `agents/audit/`, `schema.py`, `agents/models.py`)
-    must keep it at parity; `agents/core/claude_sdk.py` and `pump_stream_event` exist for
-    it. Retiring it means Claude requires an ANTHROPIC_API_KEY everywhere — the Messages
-    API rejects `sk-ant-oat…` tokens (Anthropic disabled third-party OAuth in Feb 2026).
-    Measured cost of that: ~$0.04 per insights synthesis.
+  - **V3 — audit only, on its way out.** `agents/audit/v3/runner.py` stays reachable
+    via `engine: "v3"` and is the one path that can authenticate from a Claude
+    subscription. It no longer serves any default: the project-scoped audit ran it
+    unconditionally until V1 gained the four things it lacked — a chat loop and
+    `run_resume` (both now DeepSession's), the artifact library
+    (`agents/core/artifact_tools.py`), and the enrichment pass. Shared-code changes
+    (`agents/core/`, `agents/audit/`, `schema.py`, `agents/models.py`) must keep it
+    at parity until it goes. Retiring it means Claude requires an ANTHROPIC_API_KEY
+    everywhere — the Messages API rejects `sk-ant-oat…` tokens (Anthropic disabled
+    third-party OAuth in Feb 2026). Measured cost of that: ~$0.04 per insights
+    synthesis.
 
     **Content V3 was removed** once the port landed. What moved, and where it went:
     the SDK's `Agent` tool became `deepagents` sub-agents dispatched through `task`
@@ -227,13 +232,16 @@ agents/
 ├── engines.py          — engine/provider/model registry + resolve_run_model (shared)
 ├── models.py           — Provider, ModelName enums (shared)
 ├── core/               — the ports: session registry, events, LangChain adapter (lc.py),
-│                         checkpointer, memory/connector/web tool binders, SDK shims
+│                         checkpointer, memory/artifact/connector/web tool binders,
+│                         the shared DeepSession loop, SDK shims
 ├── insights/           — Insights agent (paid ads + organic growth intelligence)
 │   ├── v1/             — deepagents runner (the only insights engine)
 │   └── catalog/, goals/, schema.py, prompts/, subagents/
 ├── audit/              — SEO audit agent
 │   ├── v1/             — create_agent runner (default)
-│   ├── v3/             — Claude Agent SDK runner (`engine: "v3"`)
+│   ├── v3/             — Claude Agent SDK runner (`engine: "v3"`, opt-in only)
+│   ├── crawl.py        — engine-neutral: the session, the crawl, report parsing
+│   ├── enrichment.py   — competitor research; create_agent + web tools, any provider
 │   └── scoring.py      — the report's scores and counts, computed from its findings on
 │                         every submit (both engines); the prompt's tables render from it
 └── content/            — Content Studio (plans, posts, images, publishing)
