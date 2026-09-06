@@ -55,7 +55,7 @@ from agents.engines import Engine, get_env_var_for_engine_provider
 from agents.engines import ENGINE_DEFAULT_EFFORT
 from agents.models import AgentEffort, AgentPermissionMode, AgentTool, ModelName, Provider, ThinkingMode
 from service.crawl.extractor import extract_signals
-from service.crawl.fetcher import fetch, fetch_text, make_client
+from service.crawl.fetcher import SiteUnreachableError, fetch, fetch_text, make_client
 from service.crawl.sitemap import fetch_crawl_plan
 
 logger = logging.getLogger(__name__)
@@ -158,6 +158,14 @@ async def run_crawl(
             errors.append(f"{url}: {result}")
         else:
             pages.append(result)
+
+    # `fetch` swallows connection failures into status 0 so one dead page
+    # cannot sink a crawl. The root is different: with no response from it
+    # there is no site to audit, and synthesis would score an empty page
+    # (it did — 84 "good" for a homepage that never answered).
+    root = next((p for p in pages if p.url == plan.root_url), None)
+    if root is None or root.http_status == 0:
+        raise SiteUnreachableError(plan.root_url)
 
     return CrawlResult(
         plan=plan,
@@ -980,7 +988,17 @@ class ClaudeAuditRunner:
         })
         light = (crawl_depth == CrawlDepth.LIGHT)
         t0 = _t()
-        crawl_result = await run_crawl(url, max_blog_posts=max_blog_posts, light=light, emit=emit)
+        try:
+            crawl_result = await run_crawl(url, max_blog_posts=max_blog_posts, light=light, emit=emit)
+        except SiteUnreachableError as exc:
+            await emit({
+                "event": AuditEvent.STEP_FINISHED,
+                "step_id": AuditStep.FETCH_SITEMAP,
+                "label": STEP_LABELS[AuditStep.FETCH_SITEMAP],
+                "status": StepStatus.ERROR,
+                "error": str(exc),
+            })
+            raise
         logger.info("⏱ crawl: %.1fs  pages=%d", _t() - t0, len(crawl_result.pages))
 
         _robots = crawl_result.robots_txt or ""

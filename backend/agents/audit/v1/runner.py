@@ -38,6 +38,7 @@ from agents.core.lc import build_ask_user_tool, resolve_chat_model, stream_agent
 from agents.core.memory_tools import build_memory_tools_lc
 from agents.core.session import BaseAgentSession
 from agents.models import ModelName, Provider
+from service.crawl.fetcher import SiteUnreachableError
 
 logger = logging.getLogger(__name__)
 
@@ -127,7 +128,7 @@ class LangChainAuditRunner:
     ) -> Any:
         # Imported lazily: the V3 module pulls in claude_agent_sdk, and V1 should
         # not require it at import time once V3 is eventually retired.
-        from agents.audit.events import AuditEvent as _E, AuditStep, STEP_LABELS
+        from agents.audit.events import AuditEvent as _E, AuditStep, STEP_LABELS, StepStatus
         from agents.audit.prompts import build_audit_user_prompt, build_unified_system_prompt
         from agents.audit.schema import AuditReport, CrawlDepth, StructuredAuditData
         from agents.audit.v3.runner import get_session, run_crawl
@@ -143,12 +144,24 @@ class LangChainAuditRunner:
             "label": STEP_LABELS[AuditStep.FETCH_SITEMAP],
             "status": "running",
         })
-        crawl_result = await run_crawl(
-            url,
-            max_blog_posts=max_blog_posts,
-            light=(crawl_depth == CrawlDepth.LIGHT),
-            emit=emit,
-        )
+        try:
+            crawl_result = await run_crawl(
+                url,
+                max_blog_posts=max_blog_posts,
+                light=(crawl_depth == CrawlDepth.LIGHT),
+                emit=emit,
+            )
+        except SiteUnreachableError as exc:
+            # The step closes as an error so the UI stops spinning; the route
+            # turns the raise into PIPELINE_FAILED with this message.
+            await emit({
+                "event": _E.STEP_FINISHED,
+                "step_id": AuditStep.FETCH_SITEMAP,
+                "label": STEP_LABELS[AuditStep.FETCH_SITEMAP],
+                "status": StepStatus.ERROR,
+                "error": str(exc),
+            })
+            raise
         await emit({
             "event": _E.STEP_FINISHED,
             "step_id": AuditStep.FETCH_SITEMAP,
