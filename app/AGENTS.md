@@ -40,7 +40,10 @@ Plus `invite/[token]/` at the top level (outside every route group): the invitat
 
 - `lib/api.js` — fetch wrapper for backend calls
 - `lib/membersApi.js` — project members + invitations (server-only; no localStorage mirror, unlike `lib/projects.js`)
-- `lib/engines.js` — LLM engine/model selection
+- `lib/engines.js` — `DEFAULT_ENGINE` and the agent-type list. The engine is
+  no longer a user choice: v3 is gone, every agent runs v1, so the Runtime
+  tab, the `ENGINES` list and the agent↔engine support map went with it.
+  Pass `DEFAULT_ENGINE` where the server wants an engine
 - `lib/insightData.js` — insight fetching and management
 - `lib/localInsights.js` — client-side insight storage
 - `lib/reports.js` — report generation helpers

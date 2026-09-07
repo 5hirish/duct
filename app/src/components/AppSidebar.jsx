@@ -45,13 +45,6 @@ import { useAuth } from "@/lib/auth";
 import PreferencesDialog from "./PreferencesDialog";
 import { loadPreferences, hasNonDefaultPreferences } from "@/lib/userPreferences";
 import {
-  DEFAULT_ENGINE,
-  ENGINE_STORAGE_KEY,
-  getEngine,
-  engineSupportsAgent,
-  supportingEngines,
-} from "@/lib/engines";
-import {
   PROJECTS_CHANGED,
   getActiveProjectId,
   getProjects,
@@ -255,11 +248,6 @@ function PreferencesDialogMenuItem() {
 
 function SidebarUserFooter() {
   const { user, signOut } = useAuth();
-  const { resolvedTheme, setTheme } = useTheme();
-  const engineKey = useEngineKey();
-
-  const engine = getEngine(engineKey);
-  const isDark = resolvedTheme === "dark";
 
   if (!user) return null;
 
@@ -282,12 +270,6 @@ function SidebarUserFooter() {
                 {(user.name || user.email || "U").charAt(0).toUpperCase()}
               </span>
             )}
-            <span
-              aria-hidden
-              className="absolute -bottom-0.5 -right-0.5 rounded-full border border-sidebar bg-muted px-1 py-px font-mono text-[8px] font-semibold leading-none text-muted-foreground"
-            >
-              {engine.badge}
-            </span>
           </span>
           <div className="flex min-w-0 flex-col group-data-[collapsible=icon]:hidden">
             <span className="truncate text-xs font-medium text-sidebar-foreground">
@@ -317,16 +299,11 @@ function SidebarUserFooter() {
         </DropdownMenuItem>
         {/* Was an "Engine" dialog that could only change the harness — it
             showed a model name it had no power to set. The page it points at
-            now owns all three: which models, whose key, which harness. */}
+            owns what is still a choice: which models, and whose key. */}
         <DropdownMenuItem asChild>
-          <Link href="/settings/models" className="flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              <Cpu className="size-4" />
-              <span>Models &amp; engine</span>
-            </span>
-            <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
-              {engine.badge}
-            </span>
+          <Link href="/settings/models">
+            <Cpu className="size-4" />
+            <span>Models</span>
           </Link>
         </DropdownMenuItem>
         <PreferencesDialogMenuItem />
@@ -430,28 +407,9 @@ function useConnectionCount() {
   return count;
 }
 
-// Current inference engine key, synced across tabs and same-tab changes
-// (the Runtime tab on /settings/models dispatches a synthetic `storage` event
-// when the engine changes, the way the retired Engine dialog did). Starts at
-// DEFAULT_ENGINE so SSR and the first client render agree, then reconciles with
-// localStorage after mount.
-function useEngineKey() {
-  const [engineKey, setEngineKey] = useState(DEFAULT_ENGINE);
-  useEffect(() => {
-    setEngineKey(localStorage.getItem(ENGINE_STORAGE_KEY) || DEFAULT_ENGINE);
-    function onStorage(e) {
-      if (e.key === ENGINE_STORAGE_KEY) setEngineKey(e.newValue || DEFAULT_ENGINE);
-    }
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, []);
-  return engineKey;
-}
-
 export default function AppSidebar() {
   const pathname = usePathname();
   const connectionCount = useConnectionCount();
-  const engineKey = useEngineKey();
 
   function isActive(item) {
     if (!item.matchPrefix || !pathname) return false;
@@ -527,37 +485,6 @@ export default function AppSidebar() {
                             <span>{item.label}</span>
                             <span className="ml-auto rounded-full bg-muted px-1.5 py-px text-[10px] leading-none text-muted-foreground">
                               Soon
-                            </span>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      );
-                    }
-
-                    // Built, but the selected engine has no runner for it.
-                    if (!engineSupportsAgent(engineKey, item.key)) {
-                      const runnable = supportingEngines(item.key);
-                      const badges = runnable.map((e) => e.badge);
-                      // Compact pill names the engine to switch to; the tooltip
-                      // carries the full "not supported by … available on …".
-                      const pill =
-                        badges.length === 1 ? `${badges[0]} only` : badges.join(" / ");
-                      const available = runnable
-                        .map((e) => `${e.label} (${e.badge})`)
-                        .join(", ");
-                      return (
-                        <SidebarMenuItem key={item.key}>
-                          <SidebarMenuButton
-                            className="cursor-default opacity-45 hover:bg-transparent hover:text-sidebar-foreground/45"
-                            tooltip={
-                              available
-                                ? `${item.label} — not supported by the ${getEngine(engineKey).label} engine. Available on ${available}.`
-                                : `${item.label} — not supported by the selected engine.`
-                            }
-                          >
-                            <Icon className="size-4" />
-                            <span>{item.label}</span>
-                            <span className="ml-auto shrink-0 rounded-full bg-amber-500/15 px-1.5 py-px font-mono text-[10px] leading-none text-amber-600 dark:text-amber-400">
-                              {pill}
                             </span>
                           </SidebarMenuButton>
                         </SidebarMenuItem>

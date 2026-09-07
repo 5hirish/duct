@@ -27,7 +27,7 @@ import {
 import { faviconUrl } from "@/lib/favicon";
 import { AUTONOMY_OPTIONS, setProjectAutonomy } from "@/lib/projectsApi";
 import { loadPreferences, savePreferences } from "@/lib/userPreferences";
-import { DEFAULT_ENGINE, ENGINE_STORAGE_KEY } from "@/lib/engines";
+import { DEFAULT_ENGINE } from "@/lib/engines";
 import { NO_THINKING, fetchThinking, levelHint } from "@/lib/thinking";
 import ContextRing from "../../workspace/ContextRing";
 
@@ -54,9 +54,7 @@ export default function DeskComposer({ project, autonomy, onAutonomyChange, plac
 
   useEffect(() => {
     let alive = true;
-    const engine =
-      (typeof window !== "undefined" && localStorage.getItem(ENGINE_STORAGE_KEY)) || DEFAULT_ENGINE;
-    fetchThinking(engine).then((d) => alive && setDial(d));
+    fetchThinking(DEFAULT_ENGINE).then((d) => alive && setDial(d));
     return () => {
       alive = false;
     };

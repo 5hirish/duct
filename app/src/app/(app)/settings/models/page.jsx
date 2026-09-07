@@ -1,24 +1,25 @@
 "use client";
 
 /**
- * Models & engine — the one page that answers "which model runs my work, and
- * whose key pays for it".
+ * Models — the one page that answers "which model runs my work, and whose key
+ * pays for it".
  *
- * Three questions used to live on three surfaces: the model came from a server
- * env var nobody could see, the engine came from a dialog in the account menu,
- * and the provider keys sat on the Connections page next to Google Ads. The
- * failure that produced was specific — you could paste an OpenAI key, watch it
- * save, and have every run still go to Claude, with nothing anywhere saying
- * why. Putting the three in one tabbed page is the fix.
+ * Both questions used to live elsewhere: the model came from a server env var
+ * nobody could see, and the provider keys sat on the Connections page next to
+ * Google Ads. The failure that produced was specific — you could paste an
+ * OpenAI key, watch it save, and have every run still go to Claude, with
+ * nothing anywhere saying why.
  *
- * The tabs are ordered by how often they are touched: Tiers is the setting,
- * Providers is the thing you visit when a tier says it needs a key, Runtime is
- * the thing most people never open.
+ * A third tab, Runtime, picked the agent harness. Once v3 was removed it
+ * offered a single engine, always active, already selected — a radio group
+ * with one button. The engine is still a question the server is asked (it
+ * scopes the catalogue and the tier preview), just no longer one to answer
+ * here; DEFAULT_ENGINE is what goes over the wire.
  */
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Anvil, ArrowRight, ChevronRight, Feather, ImageIcon, KeyRound, Scale, Video, Wand2 } from "lucide-react";
+import { Anvil, ArrowRight, Feather, ImageIcon, Scale, Video, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
@@ -49,8 +50,7 @@ import {
   saveModelMap,
   tierPicks,
 } from "@/lib/modelTiers";
-import { ENGINES, DEFAULT_ENGINE, ENGINE_STORAGE_KEY, ENGINE_STATUS } from "@/lib/engines";
-import { fetchEngineStatus } from "@/lib/api";
+import { DEFAULT_ENGINE } from "@/lib/engines";
 
 // ---------------------------------------------------------------------------
 // Small shared pieces
@@ -265,22 +265,14 @@ export default function ModelSettingsPage() {
   const [catalogue, setCatalogue] = useState(null);
   const [providers, setProviders] = useState([]);
   const [preview, setPreview] = useState(null);
-  const [engine, setEngine] = useState(DEFAULT_ENGINE);
-  const [engineStatuses, setEngineStatuses] = useState({});
   const [saved, setSaved] = useState("");
   const savedTimer = useRef(null);
 
   // First paint: everything the page renders is server-owned except the map.
   useEffect(() => {
     setMap(loadModelMap());
-    try {
-      setEngine(localStorage.getItem(ENGINE_STORAGE_KEY) || DEFAULT_ENGINE);
-    } catch {
-      /* storage disabled — the default engine is a fine answer */
-    }
     fetchModelCatalogue().then(setCatalogue);
     fetchProviderStatus().then(setProviders);
-    fetchEngineStatus().then(setEngineStatuses);
   }, []);
 
   const picks = useMemo(() => tierPicks(map), [map]);
@@ -289,17 +281,17 @@ export default function ModelSettingsPage() {
   // otherwise fire a second, identical resolve on every page load.
   const picksKey = JSON.stringify(picks);
 
-  // Re-resolve whenever the draft or the engine changes. The page never
-  // computes what will run — it asks.
+  // Re-resolve whenever the draft changes. The page never computes what will
+  // run — it asks.
   useEffect(() => {
     let alive = true;
-    fetchTierPreview(JSON.parse(picksKey), engine).then((next) => {
+    fetchTierPreview(JSON.parse(picksKey), DEFAULT_ENGINE).then((next) => {
       if (alive) setPreview(next);
     });
     return () => {
       alive = false;
     };
-  }, [picksKey, engine]);
+  }, [picksKey]);
 
   useEffect(() => () => clearTimeout(savedTimer.current), []);
 
@@ -359,25 +351,6 @@ export default function ModelSettingsPage() {
     commit(rest, "Reset to defaults");
   }
 
-  function chooseEngine(key) {
-    setEngine(key);
-    try {
-      localStorage.setItem(ENGINE_STORAGE_KEY, key);
-      // The sidebar badge and the generate page listen for this; the Engine
-      // dialog dispatched the same synthetic event, so nothing downstream
-      // notices that the dialog is gone.
-      window.dispatchEvent(
-        new StorageEvent("storage", {
-          key: ENGINE_STORAGE_KEY,
-          newValue: key,
-          storageArea: localStorage,
-        })
-      );
-    } catch {
-      /* storage disabled — the choice still applies to this session */
-    }
-    flash("Engine changed");
-  }
 
   // Re-read if another tab (or the composer) writes the map.
   useEffect(() => {
@@ -422,7 +395,6 @@ export default function ModelSettingsPage() {
         <TabsList>
           <TabsTrigger value="tiers">Tiers</TabsTrigger>
           <TabsTrigger value="providers">Providers</TabsTrigger>
-          <TabsTrigger value="runtime">Runtime</TabsTrigger>
         </TabsList>
 
         {/* ---------------------------------------------------------------- */}
@@ -445,7 +417,7 @@ export default function ModelSettingsPage() {
                 }
                 models={models}
                 providersById={providersById}
-                engine={engine}
+                engine={DEFAULT_ENGINE}
                 loading={!catalogue}
                 jobs={jobsByTier[tier.key] || []}
                 preview={previewByTier[tier.key]}
@@ -578,48 +550,6 @@ export default function ModelSettingsPage() {
           </div>
         </TabsContent>
 
-        {/* ---------------------------------------------------------------- */}
-        <TabsContent value="runtime">
-          <p className="app-subtle mt-lede">
-            The harness that runs the agents. Most people never change this — it decides what
-            agents <em>can do</em>, not how good they are.
-          </p>
-
-          <div className="mt-engines">
-            {ENGINES.map((option) => {
-              const status = engineStatuses[option.key];
-              const unavailable = status && status.status !== ENGINE_STATUS.ACTIVE;
-              const active = engine === option.key;
-              return (
-                <button
-                  key={option.key}
-                  type="button"
-                  className={`mt-engine${active ? " mt-engine--on" : ""}`}
-                  onClick={() => !unavailable && chooseEngine(option.key)}
-                  disabled={Boolean(unavailable)}
-                  aria-pressed={active}
-                >
-                  <span className="mt-engine-badge">{option.badge}</span>
-                  <span className="mt-engine-body">
-                    <strong>{option.label}</strong>
-                    <span>{option.description}</span>
-                  </span>
-                  <StateChip tone={unavailable ? "warn" : "ok"}>
-                    {unavailable ? "Inactive" : "Active"}
-                  </StateChip>
-                </button>
-              );
-            })}
-          </div>
-
-          <p className="app-subtle mt-footnote">
-            <KeyRound size={13} aria-hidden="true" /> Every agent runs on any provider you hold a
-            key for. A tier you have no key for falls through to the next one down.{" "}
-            <Link className="app-link" href="/connections">
-              Data source connections <ChevronRight size={12} aria-hidden="true" />
-            </Link>
-          </p>
-        </TabsContent>
       </Tabs>
     </section>
   );

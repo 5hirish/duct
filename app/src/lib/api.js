@@ -104,29 +104,6 @@ export async function fetchGscSites(refreshToken) {
   return fetchConnectorAccounts("gsc", refreshToken);
 }
 
-/**
- * Fetch per-engine availability for the engine picker.
- * Returns a map keyed by engine key, e.g. { v1: { status, auth_method, detail } }.
- * On any failure returns {} — callers treat an unknown engine as available so
- * the picker never becomes unusable when the backend is unreachable.
- */
-export async function fetchEngineStatus() {
-  try {
-    const res = await fetch(`${BASE}/api/engines/status`, {
-      headers: backendApiHeaders(),
-    });
-    if (!res.ok) return {};
-    const payload = await res.json();
-    const map = {};
-    for (const engine of payload.engines ?? []) {
-      map[engine.key] = engine;
-    }
-    return map;
-  } catch {
-    return {};
-  }
-}
-
 export async function generateReport(params) {
   const res = await fetch(`${BASE}/api/insights/generate`, {
     method: "POST",

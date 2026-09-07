@@ -32,31 +32,6 @@
   transform: none;
 }
 
-.mt-footnote {
-  margin-top: 1.25rem;
-  font-size: 0.8125rem;
-  max-width: var(--measure);
-}
-
-.mt-footnote svg {
-  display: inline-block;
-  vertical-align: -0.15em;
-  margin-right: 0.25rem;
-}
-
-/* Keep the label and its chevron on one line — a chevron alone on the next
-   line reads as a broken glyph rather than as an affordance. */
-.mt-footnote a {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.15rem;
-  white-space: nowrap;
-}
-
-.mt-footnote a svg {
-  margin-right: 0;
-}
-
 .mt-mono {
   font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
   font-size: 0.75rem;
@@ -478,87 +453,10 @@
   color: var(--muted-foreground);
 }
 
-/* ── Runtime (engine) ──────────────────────────────────── */
-
-.mt-engines {
-  display: grid;
-  gap: 0.5rem;
-  max-width: 40rem;
-}
-
-.mt-engine {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  width: 100%;
-  padding: 0.875rem 1rem;
-  text-align: left;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: var(--card);
-  color: var(--card-foreground);
-  cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease;
-}
-
-.mt-engine:hover:not(:disabled) {
-  border-color: color-mix(in oklch, var(--primary) 38%, var(--border));
-}
-
-.mt-engine:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
-}
-
-.mt-engine:disabled {
-  cursor: default;
-  opacity: 0.55;
-}
-
-.mt-engine--on {
-  border-color: var(--primary);
-  background: color-mix(in oklch, var(--primary) 7%, var(--card));
-}
-
-.mt-engine-badge {
-  flex: none;
-  padding: 0.1875rem 0.4375rem;
-  border-radius: 6px;
-  background: var(--muted);
-  color: var(--muted-foreground);
-  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-}
-
-.mt-engine--on .mt-engine-badge {
-  background: color-mix(in oklch, var(--primary) 16%, transparent);
-  color: color-mix(in oklch, var(--primary) 82%, var(--foreground));
-}
-
-.mt-engine-body {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.mt-engine-body strong {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-
-.mt-engine-body span {
-  display: block;
-  font-size: 0.75rem;
-  color: var(--muted-foreground);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .mt-saved,
   .mt-tier,
-  .mt-tier-mark,
-  .mt-engine {
+  .mt-tier-mark {
     transition: none;
   }
 
