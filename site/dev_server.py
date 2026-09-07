@@ -70,11 +70,9 @@ class CloudflarePagesDevHandler(SimpleHTTPRequestHandler):
         relative asset path happens to resolve — the one URL that hides the bug
         of a 404 rendering unstyled below the site root.
         """
-        # translate_path has already contained the path; anything it could not
-        # contain comes back as MISS, which never exists.
-        translated = Path(self.translate_path(self.path))
-        if translated.exists() or not NOT_FOUND_PAGE.exists():
-            return super().send_head()
+        file_obj = super().send_head()
+        if file_obj is not None or not NOT_FOUND_PAGE.exists():
+            return file_obj
 
         body = NOT_FOUND_PAGE.read_bytes()
         self.send_response(404)
