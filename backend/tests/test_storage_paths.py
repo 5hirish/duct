@@ -30,6 +30,7 @@ TRAVERSALS = [
     "../../etc/passwd",
     "projects/../../escaped.txt",
     "a/b/../../../escaped.txt",
+    "/etc/passwd",              # absolute: os.path.join would honour it whole
 ]
 
 
@@ -52,6 +53,25 @@ def test_get_bytes_refuses_a_traversing_uploads_url(uploads):
 
     with pytest.raises(ValueError, match="escapes the uploads directory"):
         storage.get_bytes("/uploads/../secret.txt")
+
+
+def test_a_symlink_out_of_uploads_is_refused(uploads):
+    """The text of this key is innocent; only resolving it tells the truth."""
+    outside = uploads.parent / "outside"
+    outside.mkdir()
+    (uploads / "link").symlink_to(outside)
+
+    with pytest.raises(ValueError, match="escapes the uploads directory"):
+        storage.put_image("link/escaped.txt", b"x", "image/png")
+
+
+def test_a_sibling_directory_sharing_the_prefix_is_refused(uploads, monkeypatch):
+    """/app/uploads-evil starts with /app/uploads; the separator is the check."""
+    sibling = uploads.parent / f"{uploads.name}-evil"
+    sibling.mkdir()
+
+    with pytest.raises(ValueError, match="escapes the uploads directory"):
+        storage.get_private_bytes(f"../{sibling.name}/secret.txt")
 
 
 def test_delete_never_raises_even_on_a_bad_key(uploads):

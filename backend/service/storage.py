@@ -19,6 +19,7 @@ a prior image is fed back to Gemini as a character/style reference.
 from __future__ import annotations
 
 import logging
+import os
 from functools import lru_cache
 from pathlib import Path
 
@@ -35,12 +36,22 @@ _CACHE_CONTROL = "public, max-age=31536000, immutable"
 # callers, not of this module, and it is one refactor away from not being true:
 # the sink is what has to hold the line.
 def _local_path(key: str) -> Path:
-    """Resolve *key* under ``uploads_dir``, refusing anything that escapes it."""
-    base = Path(get_configs().uploads_dir or "/app/uploads").resolve()
-    candidate = (base / key).resolve()
-    if candidate != base and base not in candidate.parents:
+    """Resolve *key* under ``uploads_dir``, refusing anything that escapes it.
+
+    Two checks doing the same job from different ends. The first reads the key
+    as text and refuses the shapes that have no business in one; the second
+    resolves it and insists the answer is still inside the base, which is what
+    actually holds when a symlink is involved and the text looked innocent.
+    """
+    if os.path.isabs(key) or ".." in Path(key).parts:
         raise ValueError(f"storage key escapes the uploads directory: {key!r}")
-    return candidate
+
+    base = os.path.realpath(get_configs().uploads_dir or "/app/uploads")
+    candidate = os.path.realpath(os.path.join(base, key))
+    # `+ os.sep` matters: a bare startswith also accepts /app/uploads-evil.
+    if candidate != base and not candidate.startswith(base + os.sep):
+        raise ValueError(f"storage key escapes the uploads directory: {key!r}")
+    return Path(candidate)
 
 
 def storage_backend() -> str:
