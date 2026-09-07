@@ -114,6 +114,19 @@ carries all the code.
   is now just `src-tauri/tauri.conf.json` (`bundle.macOS`) +
   `src-tauri/Entitlements.developerid.plist`. Do not revive it without solving
   the sandbox problem first — it is not a config gap, it is structural.
+- **Notarization uses the App Store Connect API key** — the three secrets
+  `DUCT_ASC_API_KEY_ID`, `DUCT_ASC_API_ISSUER_ID` and `DUCT_ASC_API_KEY_P8` —
+  rather than an Apple ID paired with an app-specific credential. The name
+  misleads: that key is Apple's developer API
+  credential, not an App Store submission token, and notarization is what lets
+  Gatekeeper open a download that did *not* come from the store. Duct notarizes
+  because it ships outside the App Store, not despite it.
+- **`TAURI_SIGNING_PRIVATE_KEY_PASSWORD` is intentionally not set.** The
+  updater key was generated with an empty passphrase, and an undefined secret
+  renders as the empty string, which is the correct value. Do not read the
+  key's scrypt KDF bytes as proof of a passphrase — minisign writes those
+  whether or not one was set. The only test that answers it is signing
+  something: `tauri signer sign` with an empty password succeeds on this key.
 - **The App Store certificates cannot sign the DMG.** Worth stating because the
   account holds `MAC_APP_DISTRIBUTION` and `MAC_INSTALLER_DISTRIBUTION` from the
   TestFlight era and they look like the right thing. They are not: Gatekeeper
@@ -220,13 +233,28 @@ Change one, change the other.
   `op.batch_alter_table`. The pre-baseline revisions are Postgres-only and are
   never replayed; `backend/tests/test_desktop_migrations.py` guards the path
   that is.
-- `src-tauri/Entitlements.developerid.plist` is the only entitlements file left
-  (the sandboxed App Store one is gone). Its keys are load-bearing for the
-  embedded CPython interpreter under the hardened runtime — removing one does
-  not harden the app, it makes the sidecar crash at launch. **The official build
-  has no interpreter and would survive a trimmed file, which is exactly the
-  trap**: strip these and thin builds stay green while every self-host build
-  breaks. Leave it alone. It deliberately carries no `app-sandbox` key.
+- **Entitlements are per build, because the two builds need opposite things.**
+  `Entitlements.developerid.plist` (official, thin) is an empty `<dict/>`;
+  `Entitlements.selfhost.plist` carries the four hardened-runtime exceptions the
+  embedded CPython needs, and `tauri.selfhost.conf.json` selects it. Neither
+  file carries an `app-sandbox` key.
+
+  This used to be one file holding all four, and the note here warned against
+  trimming it: the official build has no interpreter and *would* survive a
+  trimmed file, so stripping the keys leaves thin builds green while every
+  self-host build breaks at launch. That trap is real — the resolution is to
+  split the file, never to delete the keys.
+
+  Trimming the official one matters because those keys are not free. The
+  hardened runtime is what notarization buys; each entitlement is a hole back
+  through it, and `disable-library-validation` — which permits any unsigned
+  dylib to load into the process — cancels much of what signing is for. The
+  official build carried all four for an interpreter it stopped shipping when
+  it became a thin client.
+
+  So: an entitlement goes in the official file only alongside a named binary
+  that fails without it. If an official build ever embeds an interpreter again,
+  copy the keys from the self-host file rather than writing them from memory.
 - The whole `bundle` config uses `deny_unknown_fields`, not just `bundle.macOS`
   — a mistyped key fails the build rather than being ignored, and JSON has no
   comments, so there is nowhere to explain a setting *in* the config. An
