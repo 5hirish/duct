@@ -1,0 +1,57 @@
+# PR labels by path — the "where did this land" signal, nothing more.
+#
+# One label per area in the table in CLAUDE.md, so a PR list answers "is this
+# a backend change or a site change" without opening the diff. Deliberately no
+# type labels (bug/feature/chore): the commit prefix already says that, and a
+# labeler cannot infer it from paths without guessing.
+#
+# Consumed by actions/labeler; the config is read from the BASE branch, so a
+# change here only takes effect once merged to main.
+
+backend:
+  - changed-files:
+      - any-glob-to-any-file: 'backend/**'
+
+app:
+  - changed-files:
+      - any-glob-to-any-file: 'app/**'
+
+desktop:
+  - changed-files:
+      - any-glob-to-any-file: 'desktop/**'
+
+site:
+  - changed-files:
+      - any-glob-to-any-file: 'site/**'
+
+mcp:
+  - changed-files:
+      - any-glob-to-any-file: 'mcp/**'
+
+# Reuses GitHub's stock `documentation` label rather than adding a near-synonym.
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'docs/**'
+          - '**/*.md'
+
+# Anything that runs with secrets, signs a release, or gates a merge — the same
+# set CODEOWNERS names last, for the same reason.
+ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.github/**'
+          - 'scripts/**'
+          - '.githooks/**'
+          - 'Makefile'
+
+# Agent instructions and skills. Skills are symlinked into .claude/ and
+# .cursor/, so a single edit shows up under three prefixes.
+agents:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.agents/**'
+          - '.claude/**'
+          - '.cursor/**'
+          - '.codex/**'
+          - '**/AGENTS.md'

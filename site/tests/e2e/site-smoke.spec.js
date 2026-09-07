@@ -9,7 +9,7 @@ const cleanRoutes = [
 
 // Content pages that must render but are not required to be linked from the
 // home page's own nav (they live in the footer and the simple nav).
-const contentRoutes = ["/about", "/doctrine"];
+const contentRoutes = ["/about", "/doctrine", "/changelog/"];
 
 const POST_PATH = "/blog/why-your-seo-metrics-arent-telling-you-the-full-story";
 
@@ -129,4 +129,19 @@ test("404 renders styled from a nested URL", async ({ page }) => {
   // Shared nav and footer arrive via fetch, so they prove duct-partials.js loaded.
   await expect(page.locator("nav#nav")).toBeVisible();
   await expect(page.locator('a[href="/"]').first()).toBeVisible();
+});
+
+test("changelog lists releases with permanent anchors", async ({ page }) => {
+  await page.goto("/changelog/");
+  const releases = page.locator("article.cl-release");
+  expect(await releases.count()).toBeGreaterThan(0);
+
+  // The id is the permalink people share. An entry without one is a dead link,
+  // and renaming one breaks every link already published.
+  const id = await releases.first().getAttribute("id");
+  expect(id).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  await expect(page.locator(`article[id="${id}"] h2.cl-title`)).toContainText(/\S+/);
+
+  const feed = await page.request.get("/changelog/feed.xml");
+  expect(feed.ok()).toBeTruthy();
 });

@@ -29,7 +29,7 @@
         "@sentry/mcp-server@latest"
       ],
       "env": {
-        "SENTRY_AUTH_TOKEN": "${env:SENTRY_AUTH_TOKEN}"
+        "SENTRY_AUTH_TOKEN": "${SENTRY_AUTH_TOKEN}"
       }
     },
     "railway": {
@@ -40,21 +40,27 @@
       ]
     },
     "github": {
+      "type": "http",
       "url": "https://api.githubcopilot.com/mcp/"
     },
     "figma": {
+      "type": "http",
       "url": "https://mcp.figma.com/mcp"
     },
     "cloudflare-docs": {
+      "type": "http",
       "url": "https://docs.mcp.cloudflare.com/mcp"
     },
     "cloudflare-builds": {
+      "type": "http",
       "url": "https://builds.mcp.cloudflare.com/mcp"
     },
     "cloudflare-bindings": {
+      "type": "http",
       "url": "https://bindings.mcp.cloudflare.com/mcp"
     },
     "cloudflare-observability": {
+      "type": "http",
       "url": "https://observability.mcp.cloudflare.com/mcp"
     }
   }
