@@ -15,8 +15,9 @@ activation lives in Mixpanel, rankings live in Search Console, revenue lives in
 Stripe — and the answer to "why did signups drop last week" lives in the gaps
 between them. Duct is the layer that reads all of them together.
 
-Run it as a **desktop app on your own machine** with your own API keys, or
-**self-host** the backend. MIT licensed, no account required for local use.
+Use the **desktop app** and we run the backend for you, with your own model keys
+staying on your machine — or **run every part of it yourself**, either with the
+backend built into the app or hosted on your own server. MIT licensed either way.
 
 The name is Latin: *ductus*, a leading — the same word inside *aquaeductus*.
 Rome's aqueducts never made water, they carried it on gravity alone from where
@@ -78,10 +79,22 @@ and is test-enforced against `config.py`.
 
 ### Desktop app
 
-`desktop/` is a [Tauri v2](https://tauri.app) shell that bundles the backend as
-a local sidecar: SQLite on disk, loopback-only, provider keys in the OS keychain
-(macOS Keychain, Windows Credential Manager, Linux Secret Service). No account,
-no server, no data leaving the machine. See [`desktop/README.md`](desktop/README.md).
+`desktop/` is a [Tauri v2](https://tauri.app) shell, and it ships in two shapes
+from one binary.
+
+**The published build is a thin client.** It carries no backend: you sign in with
+Google and it talks to the hosted API, so projects, connectors and briefs live in
+Duct's cloud and are there on the next machine you sign in from. Model provider
+keys are the exception — they stay in the OS keychain (macOS Keychain, Windows
+Credential Manager, Linux Secret Service), are sent with a request when a job
+runs, and are never stored server-side.
+
+**A self-host build restores `bundle.resources`** and ships the backend frozen
+inside the app: SQLite on disk, loopback-only, no account and no data leaving the
+machine. Same source, same binary — `sidecar::is_available` probes at runtime for
+whether a backend is actually in the bundle. See
+[`desktop/README.md`](desktop/README.md) and
+[`desktop/AGENTS.md`](desktop/AGENTS.md).
 
 ## Repository layout
 

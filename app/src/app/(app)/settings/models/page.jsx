@@ -556,9 +556,10 @@ export default function ModelSettingsPage() {
         {/* ---------------------------------------------------------------- */}
         <TabsContent value="providers">
           <p className="app-subtle mt-lede">
-            Bring your own provider keys. They stay in this browser session — in the OS keychain
-            on desktop — and are sent with each request, never stored on our servers. Tip: use a
-            budget-capped or restricted key.
+            Bring your own provider keys. On desktop they stay in your OS keychain and are never
+            stored by us. In a browser they stay in this session unless you choose to remember one,
+            which saves it encrypted so you do not have to paste it again. Either way it is sent
+            with each request. Tip: use a budget-capped or restricted key.
           </p>
 
           <div className="conn-grid">

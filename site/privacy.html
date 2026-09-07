@@ -67,7 +67,7 @@
 <article class="legal-page">
 
 <h1>Privacy Policy</h1>
-<p class="legal-date">Last updated: September 6, 2026</p>
+<p class="legal-date">Last updated: September 7, 2026</p>
 
 <p>Alleviate Lab ("we", "us", "our") operates Duct (<a href="https://getduct.ai">getduct.ai</a>), a cross-tool intelligence platform that connects your advertising, analytics, product and search tools, synthesises what changed across them, and — only when you approve a specific change — applies that change back to the connected tool. This Privacy Policy explains what we collect, why, who we share it with, how long we keep it, and how to delete it.</p>
 
@@ -165,22 +165,22 @@
 
 <h2>7. The Duct Desktop App</h2>
 
-<p>The desktop app changes where processing happens, and it is worth being explicit about it:</p>
+<p>The desktop app is a native window around the same Duct you would use in a browser. It is worth being precise about what that means, because "desktop app" sounds like "everything stays here" and that is not what we ship:</p>
 <ul>
-<li><strong>Duct's backend runs on your own machine</strong> as a local process bound to your computer's loopback interface. It is not reachable from the network.</li>
-<li><strong>Your data is stored locally</strong> in a database inside your user data directory, not on our servers. Connector credentials obtained in desktop mode are stored on your device.</li>
-<li><strong>Requests go directly from your machine to the provider.</strong> When the desktop app fetches from a connected tool or calls an AI model, that traffic does not pass through our servers.</li>
+<li><strong>The app we distribute talks to our servers.</strong> It does not carry its own copy of Duct's backend. Your projects, briefs, agent memories, activity log, uploads and connector authorisations are stored by us, exactly as they are when you use Duct in a browser &mdash; which is also what lets you sign in on a second computer and find your work there. Sections 12 to 14 cover how we store, share and delete it.</li>
+<li><strong>Your AI provider keys stay on your machine.</strong> They live in your operating system's keychain, and are sent with a request only when a job needs to run. We never store them, and the option to save a key with us that the browser version offers is deliberately switched off in the desktop app.</li>
 <li><strong>Sign-in and connector authorisation open your system browser</strong> rather than an embedded window, so you keep your browser's own protections, and no credential is ever carried in the link that returns you to the app.</li>
-<li><strong>Crash reporting is off by default and opt-in.</strong> If you turn it on, technical crash context from the app, the local backend and the in-app view is sent to our error monitoring provider. A missing or unreadable preference is always treated as "off".</li>
+<li><strong>Crash reporting from the app itself is off by default and opt-in.</strong> A missing or unreadable preference is always treated as "off". The view inside the window is the same web app we serve in a browser, so it carries the product analytics and error reporting described in section 11.</li>
 <li><strong>Update checks</strong> contact our release host to ask whether a newer version exists. This request reveals your IP address and the version you are running.</li>
+<li><strong>You can run the whole thing yourself instead.</strong> The source is public, and it can be built with the backend inside the app or hosted on your own server. Then we hold nothing and this policy has nothing to describe &mdash; see section 16.</li>
 </ul>
 
 <h2>8. Bring-Your-Own AI Provider Keys</h2>
 
 <p>You may supply your own API keys for AI providers instead of using Duct's:</p>
 <ul>
-<li><strong>In the desktop app,</strong> keys are stored in your operating system's keychain and are never transmitted to us.</li>
-<li><strong>In the web app,</strong> a key you choose to save is encrypted at rest, decrypted only to make a request on your behalf, never returned by our API, and never written to logs. You can delete it at any time.</li>
+<li><strong>In the desktop app,</strong> keys are stored in your operating system's keychain. They are sent with a request so that the job you asked for can run, and we never store them; the option to save a key with us is switched off there.</li>
+<li><strong>In the web app,</strong> a key you paste is held for that browser session and sent with each request. If you choose to save it so you do not have to paste it again, it is encrypted at rest, decrypted only to make a request on your behalf, never returned by our API, and never written to logs. You can delete it at any time.</li>
 <li>When you use your own key, your usage is billed by that provider under your account and is subject to that provider's terms and privacy policy.</li>
 <li><strong>The provider's data settings are yours to configure.</strong> Whether a provider retains or trains on what it receives is governed by the policy on your account with that provider, not by us — see the note on routing in section 12.</li>
 </ul>
