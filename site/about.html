@@ -169,6 +169,19 @@
 .company-item-value a { color: var(--orange); text-decoration: none; }
 .company-item-value a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
+/* Origin — where the name comes from */
+.origin { padding: 100px 52px; background: var(--off); border-top: 1px solid var(--border); }
+.origin-inner { max-width: 720px; margin: 0 auto; text-align: center; }
+.origin-inner h2 { margin-bottom: 32px; }
+.origin-arches { width: 100%; max-width: 460px; height: auto; display: block; margin: 0 auto 44px; color: var(--navy); opacity: .32; }
+.origin-body p { font-size: 16px; font-weight: 300; line-height: 1.85; color: var(--navy-3); margin-bottom: 20px; text-align: left; }
+.origin-body p:last-child { margin-bottom: 0; }
+.origin-body em { font-style: italic; color: var(--navy); }
+@media (max-width: 860px) {
+  .origin { padding: 64px 24px; }
+  .origin-arches { margin-bottom: 28px; }
+}
+
 /* Maker card — the person behind the repo */
 .maker { padding: 100px 52px; max-width: 860px; margin: 0 auto; }
 .maker-inner {
@@ -258,6 +271,31 @@
     <span class="manifesto-num">03</span>
     <h2 class="manifesto-title">Then I open sourced it</h2>
     <p class="manifesto-body">Duct is MIT licensed. The backend, the agents, the app, the desktop shell: all of it is on GitHub, and you can run the whole thing on your own machine with your own model API keys. No account, nothing leaving your laptop. A hosted version runs at getduct.ai for people who would rather not operate it themselves, and it is the same code. Tools that read your entire business should not be black boxes, and this one is not.</p>
+  </div>
+</section>
+
+
+<!-- ORIGIN (where the name comes from) -->
+<section class="origin">
+  <div class="origin-inner">
+    <span class="tag reveal">Where the name comes from</span>
+    <h2 class="reveal">A duct is not a source.<br/>It&rsquo;s what <em>carries.</em></h2>
+    <svg class="origin-arches reveal" viewBox="0 0 480 104" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+<path d="M0 8 H480"/>
+<path d="M0 20 H480"/>
+<path d="M8 100 L8 52 A32 32 0 0 1 72 52 L72 100"/>
+<path d="M88 100 L88 52 A32 32 0 0 1 152 52 L152 100"/>
+<path d="M168 100 L168 52 A32 32 0 0 1 232 52 L232 100"/>
+<path d="M248 100 L248 52 A32 32 0 0 1 312 52 L312 100"/>
+<path d="M328 100 L328 52 A32 32 0 0 1 392 52 L392 100"/>
+<path d="M408 100 L408 52 A32 32 0 0 1 472 52 L472 100"/>
+<path d="M0 100 H480" opacity=".45"/>
+</svg>
+    <div class="origin-body">
+      <p class="reveal"><em>Duct</em> is Latin &mdash; <em>ductus</em>, a leading. It is the same word sitting inside <em>aquaeductus</em>: water, led. Rome&rsquo;s aqueducts never made a drop of water. The springs already had it. What Rome built was the channel that carried it, on gravity alone, from where the water happened to be to where people actually lived.</p>
+      <p class="reveal">Most of that engineering was invisible. The aqueducts ran underground and unremarkable for miles, and the arches everyone photographs exist only because a valley got in the way. The N&icirc;mes aqueduct fell about twelve metres across fifty kilometres &mdash; a slope you could not see standing next to it, held steady over every kind of ground in between.</p>
+      <p class="reveal">Your business already has the data. Ads, analytics, search, support, revenue &mdash; the springs are fine. What is missing is the channel: something that crosses a dozen APIs and three operating systems and arrives where the decision actually gets made. When an aqueduct works, nobody thinks about the aqueduct. They just have water.</p>
+    </div>
   </div>
 </section>
 

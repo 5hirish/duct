@@ -30,7 +30,7 @@ Intended for product managers, growth leads and marketing teams who need cross-t
 - [For Paid Ads](https://getduct.ai/for-paid-ads): How Duct unifies Google Ads, Meta, LinkedIn, and X signals into one paid performance brief with cross-channel recommendations.
 - [Free SEO Audit](https://getduct.ai/seo-audit): Runs an AI-powered technical and content SEO audit against a sitemap and returns a scored, prioritised report.
 - [Doctrine](https://getduct.ai/doctrine): The seven opinions Duct is built on, each linked to the file that enforces it — approval-gated execution, renting rather than marrying an agent harness, membership-based authorization, and why agent-written contributions are welcome.
-- [About](https://getduct.ai/about): Duct is built and maintained by Shirish Kadam in Valencia, Spain. MIT licensed.
+- [About](https://getduct.ai/about): Duct is built and maintained by Shirish Kadam in Valencia, Spain. MIT licensed. Also carries the origin of the name: duct is Latin ductus, "a leading", the word inside aquaeductus — Rome's aqueducts carried water they did not make, which is what Duct does with the data already in your stack.
 - [Changelog](https://getduct.ai/changelog/): Release notes for Duct, newest first, covering April 2026 onward — new connectors, agent and model upgrades, execution controls, and desktop builds, each written as what changed and why it matters. RSS at https://getduct.ai/changelog/feed.xml.
 - [Blog](https://getduct.ai/blog/): Articles on product intelligence, SEO strategy, and growth analytics for SaaS teams.
 
