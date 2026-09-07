@@ -266,6 +266,20 @@ Change one, change the other.
   it off explicitly — a dev build has no signing key and would otherwise fail
   *after* writing the `.app`. On this app that archive is a ~160 MB gzip of the
   470 MB bundle — about 85 seconds per build.
+- **`app` must be in `--bundles` on macOS, next to `dmg`.** Updater archives
+  are only emitted for `app`, `appimage`, `msi` and `nsis` — `dmg` is not one of
+  them, and a `.app` the bundler built merely as an input to the DMG is deleted
+  once packaged. So `--bundles dmg,updater` produces a signed, notarized,
+  stapled DMG and *no* `Duct.app.tar.gz`, which is not an error: the build warns
+  and exits 0. The release then publishes with macOS missing from `latest.json`,
+  and every installed Mac polls forever without ever being offered an update.
+  Linux and Windows are immune only because `appimage` and `nsis` are
+  themselves updater-enabled targets.
+- **The macOS executable is named `desktop`, not `Duct`** — Tauri names it for
+  the Cargo package, and `productName` only names the `.app`. Anything reaching
+  into `Contents/MacOS/` should read `CFBundleExecutable` out of `Info.plist`
+  rather than hardcode either name; setting `mainBinaryName` would rename it
+  again and break a hardcoded path silently.
 
 ## Versioning
 
