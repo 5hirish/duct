@@ -147,18 +147,29 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
 - **Hosting:** Railway — auto-deploys from `main` via GitHub integration; `railway.json` defines Railpack build + uvicorn start.
   `railpack.json` sits beside it and configures the **builder**, where
   `railway.json` configures **Railway**. It exists for one line —
-  `deploy.aptPackages: ["libexpat1"]` — and that line is load bearing. Railpack
-  builds with a mise-installed CPython, then assembles a slim runtime image
-  carrying only the apt packages it inferred from the dependency graph
-  (`libpq5`, from psycopg). That interpreter is dynamically linked against
-  `libexpat.so.1`; nothing in the graph implies it, so without this the ELF
-  loader fails before Python starts and **the container dies on its first
-  line** — `preDeployCommand` and `startCommand` both go through `poetry run`,
-  so both are affected.
-  The trap when this recurs: the build **succeeds** and the image pushes, so
-  Railway reports a failed deployment that looks like a build failure and is
-  not. Read the *deploy* logs (`railway logs --deployment <id>`), not the build
-  logs. JSON has no comments, which is why this note lives here.
+  `deploy.aptPackages: ["...", "libexpat1"]` — and every character of it is
+  load bearing, including the `"..."`. Railpack builds with a mise-installed
+  CPython, then assembles a slim runtime image carrying only the apt packages
+  it inferred from the dependency graph (`libpq5`, from psycopg). That
+  interpreter is dynamically linked against `libexpat.so.1`; nothing in the
+  graph implies it, so without this the ELF loader fails before Python starts
+  and **the container dies on its first line** — `preDeployCommand` and
+  `startCommand` both go through `poetry run`, so both are affected.
+  **`"..."` is not decoration.** Railpack arrays *replace* the inferred value
+  rather than extend it; `"..."` is its spread syntax. Writing
+  `["libexpat1"]` therefore drops `libpq5` and everything else Railpack
+  worked out, and the failure that follows names none of that — the runtime
+  image loses the files behind the mise interpreter and the container dies
+  with `Failed to import encodings module` / `No module named 'encodings'`,
+  which reads like a broken Python install rather than a truncated package
+  list. If you ever see that error here, this array is the first place to look.
+  The other trap: the build **succeeds** and the image pushes, so Railway
+  reports a failed deployment that looks like a build failure and is not. Read
+  the *deploy* logs (`railway logs --deployment <id>`), not the build logs.
+  Also check the deployment is not `SKIPPED` — `railway.json`'s
+  `build.watchPatterns` gates whether a push builds at all, so a file it does
+  not list (this one, once) can leave a fix sitting on `main` doing nothing.
+  JSON has no comments, which is why this note lives here.
 - **CI:** GitHub Actions (`backend.yml`) — Ruff lint + pytest on every PR and push to `main`.
 - **Tests:** `make test` must stay offline and under two minutes; it is the
   gate on every merge and the thing an agent runs after every change. Two
