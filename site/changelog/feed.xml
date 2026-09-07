@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Duct Changelog</title>
+    <link>https://getduct.ai/changelog/</link>
+    <atom:link href="https://getduct.ai/changelog/feed.xml" rel="self" type="application/rss+xml"/>
+    <description>What shipped in Duct — new connectors, agent and model upgrades, execution controls, and desktop builds.</description>
+    <language>en</language>
+    <lastBuildDate>Wed, 02 Sep 2026 09:00:00 GMT</lastBuildDate>
+
+    <item>
+      <title>Bring your own models</title>
+      <link>https://getduct.ai/changelog/#2026-09-02</link>
+      <guid isPermaLink="false">duct-changelog-2026-09-02</guid>
+      <pubDate>Wed, 02 Sep 2026 09:00:00 GMT</pubDate>
+      <description>Pick a Heavy, Standard and Light model once and every agent job uses the right tier. OpenRouter becomes a first-class provider, a ChatGPT subscription can drive the OpenAI slot, and hosted runs use your keys rather than Duct's. Plus a command palette, an insights view that opens on what changed, and connector availability answered by the server.</description>
+    </item>
+
+    <item>
+      <title>Duct starts remembering</title>
+      <link>https://getduct.ai/changelog/#2026-08-30</link>
+      <guid isPermaLink="false">duct-changelog-2026-08-30</guid>
+      <pubDate>Sun, 30 Aug 2026 09:00:00 GMT</pubDate>
+      <description>Project memory arrives: Duct carries positioning, competitors and your corrections into the next brief, shows where each recalled fact came from, and lets you switch it off per session. The desktop app reaches Windows and Linux with self-update everywhere, and connects data sources in your own browser.</description>
+    </item>
+
+    <item>
+      <title>From insight to execution</title>
+      <link>https://getduct.ai/changelog/#2026-08-27</link>
+      <guid isPermaLink="false">duct-changelog-2026-08-27</guid>
+      <pubDate>Thu, 27 Aug 2026 09:00:00 GMT</pubDate>
+      <description>Agents now propose change sets you preview, approve and roll back, on a three-rung autonomy ladder with a full activity log. Five Google Ads read connectors land alongside Mixpanel, Microsoft Clarity and GrowthBook, and briefs become versioned artifacts with stable links.</description>
+    </item>
+
+
+    <item>
+      <title>Duct runs on your machine</title>
+      <link>https://getduct.ai/changelog/#2026-08-20</link>
+      <guid isPermaLink="false">duct-changelog-2026-08-20</guid>
+      <pubDate>Thu, 20 Aug 2026 09:00:00 GMT</pubDate>
+      <description>The desktop app now bundles and supervises the whole backend, so a project runs without a cloud account behind it. macOS builds are Developer ID signed and notarized, teammates can be invited to a project, and the security audit and leak scan block a release rather than reporting on one that already shipped.</description>
+    </item>
+
+    <item>
+      <title>Sign in like a desktop app</title>
+      <link>https://getduct.ai/changelog/#2026-07-31</link>
+      <guid isPermaLink="false">duct-changelog-2026-07-31</guid>
+      <pubDate>Fri, 31 Jul 2026 09:00:00 GMT</pubDate>
+      <description>Desktop sign-in moves into your real browser, with a deep link handing you back to the app afterwards. macOS builds reach TestFlight, and Google Ads can be connected with your own developer token.</description>
+    </item>
+
+    <item>
+      <title>Your keys, your machine</title>
+      <link>https://getduct.ai/changelog/#2026-06-19</link>
+      <guid isPermaLink="false">duct-changelog-2026-06-19</guid>
+      <pubDate>Fri, 19 Jun 2026 09:00:00 GMT</pubDate>
+      <description>Bring your own provider API keys, sent with the request rather than stored on a server, and manage them from a Providers tab. The first desktop app arrives with OS-keychain storage, streaming conversations survive a refresh, and content planning gains a calendar, a kanban board and linked social accounts.</description>
+    </item>
+
+    <item>
+      <title>A studio for content</title>
+      <link>https://getduct.ai/changelog/#2026-05-28</link>
+      <guid isPermaLink="false">duct-changelog-2026-05-28</guid>
+      <pubDate>Thu, 28 May 2026 09:00:00 GMT</pubDate>
+      <description>A content agent that plans, drafts and publishes posts, with image generation that takes multiple reference images per prompt, a bundled reference library it studies before writing, and TikTok discovery by keyword and hashtag.</description>
+    </item>
+
+    <item>
+      <title>The first report</title>
+      <link>https://getduct.ai/changelog/#2026-04-06</link>
+      <guid isPermaLink="false">duct-changelog-2026-04-06</guid>
+      <pubDate>Mon, 06 Apr 2026 09:00:00 GMT</pubDate>
+      <description>Where Duct started: connect Google Ads over OAuth, sign in with Google, pick the question you are trying to answer, and get a written report whose every claim ties back to the connector rows behind it.</description>
+    </item>
+  </channel>
+</rss>

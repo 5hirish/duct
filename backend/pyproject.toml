@@ -21,6 +21,13 @@ packages = [
 [tool.poetry.dependencies]
 fastapi = "^0.141"
 uvicorn = {version = "^0.52", extras = ["standard"]}
+# Starlette's form parser. FastAPI needs it at *import* time for any route
+# declaring Form()/File() — routes/content.py:/content/uploads does — so an
+# app missing it does not degrade, it fails to boot. It was only ever present
+# transitively through a dev dependency, and Railway installs --only main,
+# which is why every deploy died on "Form data requires python-multipart".
+# Not a caret: poetry reads ^0.0.31 as <0.0.32, and this is FastAPI's own floor.
+python-multipart = ">=0.0.18"
 google-ads = "^31.4"
 google-analytics-data = "^0.23"
 google-api-python-client = "^2.200.0"
@@ -84,8 +91,8 @@ langchain-xai = "^1.3.0"
 [tool.poetry.group.dev.dependencies]
 pytest = "^9"
 pytest-asyncio = "^1.0"
-ruff = "^0.15"
-arize-phoenix = "^16.3.0"
+ruff = "^0.16"
+arize-phoenix = "^17.7.0"
 pyinstaller = "^6.11"
 # In-memory span exporter for tests/test_telemetry.py.
 opentelemetry-sdk = "^1.41"
@@ -108,6 +115,14 @@ filterwarnings = [
     # Starlette form parser; third-party until FastAPI/Starlette adopts python_multipart import.
     "ignore:Please use `import python_multipart` instead\\.:PendingDeprecationWarning",
 ]
+
+[tool.ruff.lint]
+# ruff 0.16 changed what an unconfigured project lints under: an unpinned
+# `select` went from the historical E4/E7/E9/F baseline to several hundred
+# rules (bandit, flake8-datetimez, pylint, refurb, pyupgrade, ...), which
+# would turn every future ruff bump into a repo-wide lint sweep rather than
+# a version bump. Pin to the baseline this codebase has always run under.
+select = ["E4", "E7", "E9", "F"]
 
 [build-system]
 requires = ["poetry-core>=2.0"]

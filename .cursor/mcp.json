@@ -2,67 +2,60 @@
   "mcpServers": {
     "next-devtools": {
       "command": "npx",
-      "args": ["-y", "next-devtools-mcp@latest"]
+      "args": [
+        "-y",
+        "next-devtools-mcp@latest"
+      ]
     },
     "shadcn": {
       "command": "npx",
-      "args": ["-y", "shadcn@latest", "mcp"]
+      "args": [
+        "-y",
+        "shadcn@latest",
+        "mcp"
+      ]
     },
-    "GitHub": {
-      "url": "https://api.githubcopilot.com/mcp/",
-      "headers": {
-        "Authorization": "Bearer "
-      }
-    },
-    "Playwright": {
+    "playwright": {
       "command": "npx",
-      "args": ["@playwright/mcp@latest"]
+      "args": [
+        "-y",
+        "@playwright/mcp@latest"
+      ]
     },
-    "Sentry": {
+    "sentry": {
       "command": "npx",
-      "args": ["-y", "@sentry/mcp-server@latest"],
+      "args": [
+        "-y",
+        "@sentry/mcp-server@latest"
+      ],
       "env": {
-        "SENTRY_AUTH_TOKEN": ""
+        "SENTRY_AUTH_TOKEN": "${env:SENTRY_AUTH_TOKEN}"
       }
     },
-    "Railway": {
-      "command": "npx -y @railway/mcp-server",
-      "env": {},
-      "args": []
+    "railway": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@railway/mcp-server"
+      ]
     },
-    "Figma": {
-      "url": "https://mcp.figma.com/mcp",
-      "headers": {}
+    "github": {
+      "url": "https://api.githubcopilot.com/mcp/"
     },
-    "Cloudflare": {
-      "command": "npx -y @cloudflare/mcp-server-cloudflare",
-      "env": {
-        "CLOUDFLARE_API_TOKEN": "",
-        "CLOUDFLARE_ACCOUNT_ID": ""
-      },
-      "args": []
+    "figma": {
+      "url": "https://mcp.figma.com/mcp"
     },
-    "Cloudflare Docs": {
-      "url": "https://docs.mcp.cloudflare.com/mcp",
-      "headers": {}
+    "cloudflare-docs": {
+      "url": "https://docs.mcp.cloudflare.com/mcp"
     },
-    "Cloudflare Builds": {
-      "url": "https://builds.mcp.cloudflare.com/mcp",
-      "headers": {
-        "Authorization": "Bearer "
-      }
+    "cloudflare-builds": {
+      "url": "https://builds.mcp.cloudflare.com/mcp"
     },
-    "Cloudflare Bindings": {
-      "url": "https://bindings.mcp.cloudflare.com/mcp",
-      "headers": {
-        "Authorization": "Bearer "
-      }
+    "cloudflare-bindings": {
+      "url": "https://bindings.mcp.cloudflare.com/mcp"
     },
-    "Cloudflare Observability": {
-      "url": "https://observability.mcp.cloudflare.com/mcp",
-      "headers": {
-        "Authorization": "Bearer "
-      }
+    "cloudflare-observability": {
+      "url": "https://observability.mcp.cloudflare.com/mcp"
     }
   }
 }

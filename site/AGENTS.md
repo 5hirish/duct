@@ -4,9 +4,10 @@ Static marketing site for [getduct.ai](https://getduct.ai). Pure HTML/CSS/JS.
 
 ## Site strategy
 
-Two content types, two jobs:
+Three content types, three jobs:
 - **Landing pages** (`for-*.html`) — paid ad experiments. Each page targets a specific audience or solution angle. Fast to create, easy to A/B by URL. Goal: validate conversion before investing in a channel or audience.
 - **Blog** (`blog/posts/`) — organic SEO. Written for keyword clusters, not just announcements. Goal: compound traffic from search.
+- **Changelog** (`changelog/`) — proof the project moves, for the visitor deciding whether to install. Written for people who use Duct, not for the people who built it. Goal: convert that hesitation, and give search and answer engines something current to cite.
 
 When adding either, ask: *what's the hypothesis being tested?* Put it in a `<!-- EXPERIMENT: ... -->` comment near the top of `<body>`.
 
@@ -49,13 +50,16 @@ another port (the tests assume 8090).
 | `https://getduct.ai/blog/` | `site/blog/index.html` |
 | `https://getduct.ai/blog/<slug>` | `site/blog/<slug>.html` (**generated**) |
 | `https://getduct.ai/blog/post?slug=SLUG` | `site/blog/post.html` (redirect shim, noindex) |
+| `https://getduct.ai/changelog/` | `site/changelog/index.html` |
+| `https://getduct.ai/changelog/YYYY` | `site/changelog/YYYY.html` (year archive, created at rollover) |
 
 ## Shared assets
 
 | File | Purpose |
 |---|---|
 | `site/assets/duct.css` | All brand styles |
-| `site/assets/duct.js` | GTM init, scroll reveal, nav shadow, `submitForm()` |
+| `site/assets/duct.js` | GTM init, scroll reveal, nav shadow |
+| `site/assets/duct-download.js` | Resolves the latest release; upgrades `[data-duct-download]` CTAs |
 | `site/assets/config.js` | `DUCT_CONFIG.gtm` only |
 | `site/assets/demo.css` | All shared interactive demo CSS (~800 lines) |
 | `site/assets/demo.js` | Shared demo JS engine (state machine, navigation, modal, hash routing) |
@@ -122,6 +126,7 @@ window.DUCT_DEMO_CONFIG = {
 | `site/robots.txt` | Crawl policy. Names AI agents explicitly because vendors split training and search into separate bots (`GPTBot` vs `OAI-SearchBot`, `ClaudeBot` vs `Claude-SearchBot`); a bare `User-agent: *` leaves that ambiguous. |
 | `site/sitemap.xml` | Every indexable page. A new page is not done until it is here. Bump `lastmod` only on pages the change actually touched. |
 | `site/blog/feed.xml` | RSS. Hand-maintained: add an `<item>` with every new post. CI fails if it is missing, empty, or carries an off-domain `<link>`. |
+| `site/changelog/feed.xml` | RSS for releases. Same hand-maintained rule: an `<item>` per release, `pubDate` in RFC 822. |
 | `site/llms.txt` | Plain-text site map for models. Low crawler uptake in practice, cheap to keep correct, and the place the open-source framing has to be right. |
 | `site/_headers` | `Link:` discovery headers plus the RSS content type Cloudflare would otherwise get wrong. |
 
@@ -145,6 +150,10 @@ disagree about what the page's address is.
 | Root-level landing page | `https://getduct.ai/for-paid-ads` |
 | Blog index | `https://getduct.ai/blog/` |
 | Blog post | `https://getduct.ai/blog/<slug>` |
+| Changelog | `https://getduct.ai/changelog/` (trailing slash) |
+
+Individual releases are `#YYYY-MM-DD` anchors on the changelog page, never their
+own URL. One page accumulates the links; a page per release splits them.
 
 Every page hardcodes its canonical in `<head>`, generated posts included.
 
@@ -160,16 +169,55 @@ Every HTML page must have:
 - `config.js` then `duct.js`
 - GTM noscript iframe immediately after `<body>`
 
-## Google Forms
+## Download CTAs
+
+Downloading the desktop app is the site's only call to action. There is no
+email capture and no waitlist — the Google Forms integration that used to sit
+here was removed once the desktop build became the way in.
+
+Every CTA ships as a plain link to `/download`:
 
 ```html
-<button class="btn btn-orange btn-lg"
-  data-form-url="https://docs.google.com/forms/d/e/FORM_ID/formResponse"
-  data-entry-id="entry.FIELD_ID"
-  onclick="submitForm('INPUT_ID', this)">Get early access →</button>
+<a class="btn btn-orange btn-lg" href="/download" data-duct-download>Download Duct ↓</a>
+<p class="cta-note" data-duct-download-meta>macOS, Windows and Linux · Free · No credit card</p>
 ```
 
-Copy the form attributes from `site/for-product-intelligence.html` unless the page needs a distinct form. Do not add a `<form>` element.
+`assets/duct-download.js` then *upgrades* it in place — naming the visitor's
+platform and pointing straight at the installer. That happens **synchronously,
+with no request**: the installer URLs are constants, because
+`releases/latest/download/<name>` is redirected by GitHub to whichever release
+is newest and the release workflow publishes each installer a second time under
+a fixed, version-free name.
+
+Those four names are a contract with
+`.github/workflows/desktop-release.yml`. Renaming one on either side produces a
+404 that nothing in CI notices:
+
+| slot | asset |
+|---|---|
+| `macos` | `Duct-macOS-universal.dmg` |
+| `windows` | `Duct-Windows-x64-setup.exe` |
+| `linux-appimage` | `Duct-Linux-x86_64.AppImage` |
+| `linux-deb` | `Duct-Linux-amd64.deb` |
+
+So **never hardcode a version or a versioned filename**, and never author a CTA
+whose href depends on the script: what ships must already work with JavaScript
+off. The download page is fully functional that way — every button downloads
+the current build; only the version, size and highlight come from a request,
+and none of those are needed to download.
+
+- `data-duct-download-short` renders "Download ↓" instead of "Download for
+  macOS ↓", for the nav pill where the platform name does not fit.
+- `data-duct-download-meta` is overwritten with version, size and platform.
+  Put it only on logistical notes; a line carrying a *reason* to install (the
+  compare-flow trust hint) should stay as written.
+- `site/download.html` renders the full platform table from the same module.
+  Its inline script waits for `DOMContentLoaded`, because inline scripts run
+  *before* deferred ones and `window.DuctDownload` would not exist yet.
+
+The one email field left on the site is the SEO audit's report unlock in
+`seo-audit.html` (`lmSubmitLead()`). That gates a delivered report and is not
+a marketing capture — it is deliberately untouched.
 
 ## New landing page variant (no demo)
 
@@ -180,6 +228,30 @@ Copy the form attributes from `site/for-product-intelligence.html` unless the pa
 ## New landing page variant (with demo)
 
 Follow the **Adding a new demo variant** instructions above.
+
+## New changelog entry
+
+Run `/add-changelog-entry`. It reads the git range since the last published
+release, keeps only what a user can see, and updates the entry, the JSON-LD
+`ItemList`, `changelog/feed.xml` and the sitemap `lastmod` together.
+
+`CHANGELOG.md` at the repo root stays the engineering record and the source of
+truth for version numbers; this page is its human rendering. A version badge
+names a *released* version — a bump in `tauri.conf.json` with no tag and no
+GitHub release is not one.
+
+Two things that are easy to get wrong by hand:
+
+- Entries are **written into `changelog/index.html` as HTML**, not rendered from
+  Markdown at runtime — for the same reason posts are pre-rendered: a runtime
+  `fetch` is not crawlable, and this page's whole job is to be quotable.
+- The year strip is a `<div role="navigation">`, not a `<nav>`. The bare `nav`
+  rule in `duct.css` is the fixed site header, and a second `<nav>` on the page
+  parks itself on top of the real one.
+
+Layout lives in the `── CHANGELOG ──` block of `assets/duct.css` (`.cl-*`)
+rather than inline, because each year archive is a copy of the index and must
+not fork it.
 
 ## New blog post
 
@@ -207,6 +279,24 @@ Also add the post to `site/sitemap.xml` and an `<item>` to `site/blog/feed.xml`.
 ## Deploy
 
 Publish directory: `site/`.
+
+The `deploy` job in `.github/workflows/site.yml` publishes to Cloudflare Pages
+with `wrangler pages deploy`, on merge to `main`, gated on the checks in the
+same file. **The Pages git integration must stay disabled** — with both active
+every push deploys twice and the two race for the production alias.
+
+That integration is what this replaced, and the reason is worth keeping: it
+decided whether to build from "Build watch paths", a dashboard-only setting
+that is not in this repository, cannot be reviewed in a PR, and silently
+stopped matching `site/**`. A build it skips reports as *skipped*, which reads
+like "nothing to do" rather than "your deploy is broken" — so the site served a
+build from before September while every workflow here stayed green. A path
+filter that gates a deploy belongs next to the code it gates.
+
+The project name comes from the `CLOUDFLARE_PAGES_PROJECT` repo variable
+(default `duct`). It is checked against the account's real projects before
+deploying, because `pages deploy` with an unrecognised name creates a second,
+empty project and exits 0.
 
 ## What not to do
 

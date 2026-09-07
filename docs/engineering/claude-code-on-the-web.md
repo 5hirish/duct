@@ -42,7 +42,7 @@ The default **Trusted** network level already allows PyPI, npm, and the Poetry/C
 | Carries over (committed) | Does **not** carry over |
 |---|---|
 | [`CLAUDE.md`](../../CLAUDE.md) + area files ([`backend/`](../../backend/), [`app/`](../../app/), [`site/`](../../site/)) | Your user `~/.claude/CLAUDE.md`, skills, agents, commands |
-| [`.claude/rules/`](../../.claude/rules/), [`.claude/skills/`](../../.claude/skills/) | `.claude/settings.local.json` (local-only) |
+| [`.claude/rules/`](../../.claude/rules/), [`.agents/skills/`](../../.agents/skills/) | `.claude/settings.local.json` (local-only) |
 | A committed `.mcp.json`, if present | MCP servers added via `claude mcp add` (write to local config) |
 | | **`.env*` files** — see [Secrets](#secrets) |
 

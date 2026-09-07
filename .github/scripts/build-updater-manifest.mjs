@@ -61,7 +61,9 @@ function walk(dir) {
  */
 function platformsFor(file) {
   if (file.endsWith(".app.tar.gz")) return ["darwin-aarch64", "darwin-x86_64"];
-  if (file.endsWith(".nsis.zip")) return ["windows-x86_64"];
+  // Tauri signs the NSIS installer directly now; older versions zipped it
+  // first. Both are the same update, so accept either.
+  if (file.endsWith(".nsis.zip") || file.endsWith("-setup.exe")) return ["windows-x86_64"];
   if (file.endsWith(".AppImage")) return ["linux-x86_64"];
   return [];
 }
