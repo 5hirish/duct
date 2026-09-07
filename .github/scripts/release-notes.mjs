@@ -38,6 +38,11 @@ if (!version) {
   process.exit(1);
 }
 
+/** Quote a string so it matches itself literally inside a RegExp. */
+function escapeRegExp(text) {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 /** The body of the `## [version]` section, up to the next `## ` heading. */
 function changelogSection(v) {
   let text;
@@ -47,7 +52,10 @@ function changelogSection(v) {
     return null;
   }
   // Tolerates "## [0.4.0]", "## 0.4.0", and any trailing date or note.
-  const start = new RegExp(`^## \\[?${v.replace(/\./g, "\\.")}\\]?.*$`, "m");
+  // Escape every metacharacter, not just the dot: the version arrives from the
+  // workflow's tag, and a tag carrying a `[` or `(` used to build a broken
+  // pattern and throw, failing the release rather than the lookup.
+  const start = new RegExp(`^## \\[?${escapeRegExp(v)}\\]?.*$`, "m");
   const from = text.search(start);
   if (from === -1) return null;
   const rest = text.slice(from);
