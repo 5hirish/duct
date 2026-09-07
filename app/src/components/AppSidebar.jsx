@@ -16,6 +16,8 @@ import {
   Bell,
   BellOff,
   BellRing,
+  Bug,
+  Lightbulb,
   SlidersHorizontal,
   Brain,
 } from "lucide-react";
@@ -44,6 +46,17 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import PreferencesDialog from "./PreferencesDialog";
 import { loadPreferences, hasNonDefaultPreferences } from "@/lib/userPreferences";
+import { notificationSurface } from "@/lib/notify";
+
+// Where "this is broken" and "this should exist" go. Two places on purpose,
+// and .github/ISSUE_TEMPLATE/config.yml already draws the line: issues are for
+// tracked, actionable work, discussions for open-ended proposals. Straight to
+// the bug form rather than the chooser — blank issues are disabled, so
+// /issues/new only ever bounces there anyway.
+const GITHUB_ISSUES_URL =
+  "https://github.com/5hirish/duct/issues/new?template=bug_report.yml";
+const GITHUB_DISCUSSIONS_URL =
+  "https://github.com/5hirish/duct/discussions/new?category=ideas";
 import {
   PROJECTS_CHANGED,
   getActiveProjectId,
@@ -168,16 +181,31 @@ function SidebarProjectSwitcher() {
 // User footer
 // ---------------------------------------------------------------------------
 
+/** The notification state to render, once we know which surface we are on.
+ *
+ * Async because the shell answers over IPC (`getShellInfo`). Starts as
+ * "unknown", which renders nothing — better a row that appears a beat late
+ * than one that claims "Off" and corrects itself. */
 function useNotificationPermission() {
-  const supported = typeof window !== "undefined" && "Notification" in window;
-  const [permission, setPermission] = useState(() =>
-    supported ? Notification.permission : "unsupported"
-  );
+  const [permission, setPermission] = useState("unknown");
+
+  useEffect(() => {
+    let alive = true;
+    notificationSurface().then((surface) => {
+      if (!alive) return;
+      // The shell posts through the OS, which owns the switch and has no
+      // permission for the page to request. "system" is that state: on as far
+      // as Duct is concerned, changeable only in System Settings.
+      setPermission(surface === "shell" ? "system" : surface === "browser" ? Notification.permission : "none");
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   async function request() {
-    if (!supported || permission !== "default") return;
-    const result = await Notification.requestPermission();
-    setPermission(result);
+    if (permission !== "default") return;
+    setPermission(await Notification.requestPermission());
   }
 
   return { permission, request };
@@ -186,27 +214,34 @@ function useNotificationPermission() {
 function NotificationMenuItem() {
   const { permission, request } = useNotificationPermission();
 
-  if (permission === "unsupported") return null;
+  if (permission === "unknown" || permission === "none") return null;
 
   const states = {
     default:     { icon: Bell,     badge: "Off",      label: "Enable notifications", clickable: true  },
     granted:     { icon: BellRing, badge: "On",       label: "Notifications",        clickable: false },
     denied:      { icon: BellOff,  badge: "Blocked",  label: "Notifications",        clickable: false },
+    system:      { icon: BellRing, badge: "System",   label: "Notifications",        clickable: false },
   };
   const { icon: Icon, badge, label, clickable } = states[permission] ?? states.default;
+
+  const hint =
+    permission === "denied" ? "Blocked in browser — open Site Settings to re-enable" :
+    permission === "system" ? "Handled by the OS — change it in your system notification settings" :
+    undefined;
 
   return (
     <DropdownMenuItem
       onClick={clickable ? request : undefined}
       className={`flex items-center justify-between ${!clickable ? "cursor-default opacity-60" : ""}`}
-      title={permission === "denied" ? "Blocked in browser — open Site Settings to re-enable" : undefined}
+      title={hint}
     >
       <span className="flex items-center gap-2">
         <Icon className="size-4" />
         {label}
       </span>
       <span className={`rounded px-1.5 py-0.5 font-mono text-[10px] ${
-        permission === "granted"  ? "bg-green-500/15 text-green-600 dark:text-green-400" :
+        permission === "granted" ||
+        permission === "system"   ? "bg-green-500/15 text-green-600 dark:text-green-400" :
         permission === "denied"   ? "bg-destructive/10 text-destructive" :
                                     "bg-muted text-muted-foreground"
       }`}>
@@ -308,6 +343,22 @@ function SidebarUserFooter() {
         </DropdownMenuItem>
         <PreferencesDialogMenuItem />
         <NotificationMenuItem />
+        <DropdownMenuSeparator />
+        {/* Plain new-tab links: installExternalLinkHandler (lib/shell.js)
+            reroutes target="_blank" to the system browser inside the desktop
+            shell, where a new tab would otherwise go nowhere at all. */}
+        <DropdownMenuItem asChild>
+          <a href={GITHUB_ISSUES_URL} target="_blank" rel="noreferrer noopener">
+            <Bug className="size-4" />
+            <span>Report a bug</span>
+          </a>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <a href={GITHUB_DISCUSSIONS_URL} target="_blank" rel="noreferrer noopener">
+            <Lightbulb className="size-4" />
+            <span>Suggest an improvement</span>
+          </a>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={signOut}>
           <LogOut className="size-4" />
