@@ -134,6 +134,23 @@ carries all the code.
   download from getduct.ai has no such provenance, so it needs
   `DEVELOPER_ID_APPLICATION` — which Apple's notary service also requires,
   rejecting anything else outright. Reusing the old certificate fails twice.
+- **Every installer is published twice**, once under Tauri's versioned name and
+  once under a fixed one (`Duct-macOS-universal.dmg`,
+  `Duct-Windows-x64-setup.exe`, `Duct-Linux-x86_64.AppImage`,
+  `Duct-Linux-amd64.deb`). GitHub redirects
+  `releases/latest/download/<name>` to the newest release only when the name
+  does not change, and Tauri puts the version in every filename — so those four
+  are what getduct.ai links to, and the site needs no JavaScript, no API call
+  and no edit when a version ships. Renaming one breaks the site silently: the
+  link 404s and nothing in this repo fails. Add a platform here and it needs a
+  copy in the publish job and a card on the download page.
+- **Windows self-update is easy to lose.** Tauri signs the installer directly
+  (`*-setup.exe.sig`); it used to zip it first (`*-setup.nsis.zip.sig`). v0.4.0
+  shipped with no `windows-x86_64` entry in `latest.json` because the upload
+  still asked for the zip. `if-no-files-found: error` did not catch it — it asks
+  whether *any* pattern matched, and the `.exe` did. The Windows job now checks
+  for a signature explicitly, and `build-updater-manifest.mjs` accepts either
+  name.
 - **Staging the release secrets:** put them in the gitignored
   `desktop/.env.test` (template: `desktop/.env.example`) and run
   `scripts/push_env_to_github.py`. A runner cannot read a dotenv, so these only
