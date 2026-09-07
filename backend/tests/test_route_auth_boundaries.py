@@ -40,6 +40,7 @@ import pytest
 
 os.environ.setdefault("DUCT_API_KEY", "test-api-key")
 
+from fastapi.routing import iter_route_contexts  # noqa: E402
 from server import app  # noqa: E402  — import after the env default above
 
 # ---------------------------------------------------------------------------
@@ -99,19 +100,31 @@ def _dependency_names(dependant) -> set[str]:
 
 
 def _routes():
-    """(method, path, dependency names, is_project_scoped) for every API route."""
-    for route in app.routes:
-        dependant = getattr(route, "dependant", None)
+    """(method, path, dependency names, is_project_scoped) for every API route.
+
+    Walk `iter_route_contexts`, not `app.routes`. From FastAPI 0.141 an
+    `include_router` call leaves an `_IncludedRouter` node in `app.routes`
+    rather than flattening its routes in, so iterating directly sees a
+    handful of routers instead of every endpoint — and this test would go
+    quiet rather than red, which for an authorization boundary is the worst
+    way to fail. The contexts also carry the dependencies attached at
+    `include_router` level, so a router gated as a whole still counts as
+    gated here.
+    """
+    for context in iter_route_contexts(app.routes):
+        dependant = getattr(context, "dependant", None)
         if dependant is None:  # mounts, static files
             continue
-        methods = sorted(route.methods - {"HEAD", "OPTIONS"}) or sorted(route.methods)
+        path = context.path or ""
+        methods = context.methods or set()
+        methods = sorted(methods - {"HEAD", "OPTIONS"}) or sorted(methods)
         params = {
             p.name
             for p in dependant.path_params + dependant.query_params + dependant.body_params
         }
-        scoped = "project_id" in route.path or "project_id" in params
+        scoped = "project_id" in path or "project_id" in params
         for method in methods:
-            yield method, route.path, _dependency_names(dependant), scoped
+            yield method, path, _dependency_names(dependant), scoped
 
 
 def test_every_project_scoped_route_resolves_a_user():

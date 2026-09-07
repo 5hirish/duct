@@ -17,6 +17,7 @@ import os
 from uuid import uuid4
 
 import pytest
+from fastapi.routing import iter_route_contexts
 from fastapi.testclient import TestClient
 
 TEST_DUCT_API_KEY = "test-duct-api-key"
@@ -47,7 +48,14 @@ def test_content_routes_registered():
     """If any of these vanish, a frontend page breaks. One regression test
     covers all 24 endpoints."""
     server = _load_server_with_env()
-    paths = {r.path for r in server.app.routes if r.path.startswith("/api/content")}
+    # FastAPI 0.141 made include_router lazy: app.routes holds _IncludedRouter
+    # nodes, not flattened APIRoutes, so reading .path off them raises.
+    # iter_route_contexts walks them and hands back resolved paths.
+    paths = {
+        rc.path
+        for rc in iter_route_contexts(server.app.routes)
+        if (rc.path or "").startswith("/api/content")
+    }
     expected = {
         # SSE
         "/api/content/plan/stream",
