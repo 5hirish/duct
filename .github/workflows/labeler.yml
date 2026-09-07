@@ -1,0 +1,36 @@
+name: Labeler
+
+# `pull_request_target` and not `pull_request`, deliberately: a PR from a fork
+# gets a read-only token, so labelling would silently fail on exactly the PRs
+# where a label is most useful. This is safe here only because the job checks
+# out no code and runs nothing from the branch — it reads .github/labeler.yml
+# from the base ref through the API. Do not add a checkout step to this file.
+on:
+  pull_request_target:
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  contents: read
+  pull-requests: write
+
+# A PR pushed three times in a minute only needs the last labelling run.
+concurrency:
+  group: labeler-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  label:
+    name: Label by changed path
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: "🏷️ Apply area labels"
+        uses: actions/labeler@v5
+        with:
+          # Labels are additive: a label added by hand stays put, because a
+          # human labelling a PR knows something the paths do not.
+          sync-labels: false
