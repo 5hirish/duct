@@ -114,6 +114,21 @@ carries all the code.
   is now just `src-tauri/tauri.conf.json` (`bundle.macOS`) +
   `src-tauri/Entitlements.developerid.plist`. Do not revive it without solving
   the sandbox problem first — it is not a config gap, it is structural.
+- **The App Store certificates cannot sign the DMG.** Worth stating because the
+  account holds `MAC_APP_DISTRIBUTION` and `MAC_INSTALLER_DISTRIBUTION` from the
+  TestFlight era and they look like the right thing. They are not: Gatekeeper
+  trusts an App Store build because *Apple re-signed it on delivery*, and a
+  download from getduct.ai has no such provenance, so it needs
+  `DEVELOPER_ID_APPLICATION` — which Apple's notary service also requires,
+  rejecting anything else outright. Reusing the old certificate fails twice.
+- **Staging the release secrets:** put them in the gitignored
+  `desktop/.env.test` (template: `desktop/.env.example`) and run
+  `scripts/push_env_to_github.py`. A runner cannot read a dotenv, so these only
+  ever reach a build as GitHub secrets; the file is a staging area, not a source
+  of truth. `TAURI_SIGNING_PRIVATE_KEY` and its password are worth pushing
+  first and alone — Linux and Windows bundle successfully without any Apple
+  credential and fail only on the updater signature, so those two turn two of
+  the three platforms green on their own.
 
 ## Forkability
 
