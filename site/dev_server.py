@@ -23,6 +23,15 @@ class CloudflarePagesDevHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(ROOT), **kwargs)
 
+    def _safe_under_root(self, candidate: Path) -> Path | None:
+        resolved_root = ROOT.resolve()
+        resolved_candidate = candidate.resolve()
+        try:
+            resolved_candidate.relative_to(resolved_root)
+        except ValueError:
+            return None
+        return resolved_candidate
+
     def translate_path(self, path: str) -> str:
         parsed = urlparse(path)
         clean = unquote(parsed.path.lstrip("/"))
@@ -41,10 +50,14 @@ class CloudflarePagesDevHandler(SimpleHTTPRequestHandler):
             candidates.append(base / "index.html")
 
         for candidate in candidates:
-            if candidate.exists():
-                return str(candidate)
+            safe_candidate = self._safe_under_root(candidate)
+            if safe_candidate is not None and safe_candidate.exists():
+                return str(safe_candidate)
 
-        return str(base)
+        safe_base = self._safe_under_root(base)
+        if safe_base is None:
+            return str(ROOT / "__not_found__")
+        return str(safe_base)
 
     def send_head(self):
         """Serve 404.html for unmatched routes, the way Cloudflare Pages does.
@@ -53,8 +66,9 @@ class CloudflarePagesDevHandler(SimpleHTTPRequestHandler):
         relative asset path happens to resolve — the one URL that hides the bug
         of a 404 rendering unstyled below the site root.
         """
-        path = Path(self.translate_path(self.path))
-        if path.exists() or not NOT_FOUND_PAGE.exists():
+        translated = Path(self.translate_path(self.path))
+        safe_path = self._safe_under_root(translated)
+        if (safe_path is not None and safe_path.exists()) or not NOT_FOUND_PAGE.exists():
             return super().send_head()
 
         body = NOT_FOUND_PAGE.read_bytes()
