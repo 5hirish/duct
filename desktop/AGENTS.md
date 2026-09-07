@@ -100,6 +100,32 @@ carries all the code.
   The web app decides *when* (`app/src/lib/notify.js`: only while the window is
   not focused) and gates on the `notifications` flag from `get_shell_info`; the
   shell only decides *how*.
+- **The application menu is built, not defaulted** (`install_app_menu`).
+  `Menu::default` is only a starting point, and two of its choices bite:
+  - Its Help submenu holds a single About item marked
+    `#[cfg(not(target_os = "macos"))]`, so **on macOS Help is empty** — it opens
+    onto nothing and eats the click. Apple expects Help to work and an empty one
+    is a documented App Store rejection (tauri-apps/tauri#9371), which matters
+    because this app is bound for TestFlight. Ours holds the home page, the
+    changelog, the two GitHub destinations the in-app drawer offers, and the
+    privacy policy, and is registered with `set_as_help_menu_for_nsapp` so macOS
+    puts its search field on top.
+  - It also grows a **View submenu of its own** (Toggle Full Screen) — it did
+    not when the reload item was written, and nothing failed when it appeared:
+    the app simply shipped two menus called View. The existing one is removed
+    before ours is inserted, and ours carries Toggle Full Screen so nothing is
+    lost. It is matched by title, because that submenu has no id constant.
+
+  Help items open in the **system browser**, never this webview: the window is
+  the product, and navigating it to a privacy policy strands the user with no
+  back button and no tabs.
+- **The About panel is only as good as `AboutMetadata`.** `Menu::default` fills
+  it from `bundle.copyright` and `bundle.publisher` alone, and `publisher` lands
+  in `authors`, which **macOS does not render** — so the panel was a name, a
+  version and nothing else. `about_metadata()` sets a description twice, from
+  one constant, because the platforms disagree about where it goes: macOS reads
+  `credits` and ignores `comments`, Windows and Linux do the reverse. Setting
+  only one is how a panel ends up blank on half the platforms.
 - **Self-update** is wired: `tauri-plugin-updater` behind a default-on `updater`
   cargo feature, driven from the web app through `check_for_update` /
   `install_update` (not the plugin's JS bindings — the window loads a remote

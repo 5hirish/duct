@@ -16,6 +16,8 @@ import {
   Bell,
   BellOff,
   BellRing,
+  Bug,
+  Lightbulb,
   SlidersHorizontal,
   Brain,
 } from "lucide-react";
@@ -44,13 +46,17 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import PreferencesDialog from "./PreferencesDialog";
 import { loadPreferences, hasNonDefaultPreferences } from "@/lib/userPreferences";
-import {
-  DEFAULT_ENGINE,
-  ENGINE_STORAGE_KEY,
-  getEngine,
-  engineSupportsAgent,
-  supportingEngines,
-} from "@/lib/engines";
+import { notificationSurface } from "@/lib/notify";
+
+// Where "this is broken" and "this should exist" go. Two places on purpose,
+// and .github/ISSUE_TEMPLATE/config.yml already draws the line: issues are for
+// tracked, actionable work, discussions for open-ended proposals. Straight to
+// the bug form rather than the chooser — blank issues are disabled, so
+// /issues/new only ever bounces there anyway.
+const GITHUB_ISSUES_URL =
+  "https://github.com/5hirish/duct/issues/new?template=bug_report.yml";
+const GITHUB_DISCUSSIONS_URL =
+  "https://github.com/5hirish/duct/discussions/new?category=ideas";
 import {
   PROJECTS_CHANGED,
   getActiveProjectId,
@@ -175,16 +181,31 @@ function SidebarProjectSwitcher() {
 // User footer
 // ---------------------------------------------------------------------------
 
+/** The notification state to render, once we know which surface we are on.
+ *
+ * Async because the shell answers over IPC (`getShellInfo`). Starts as
+ * "unknown", which renders nothing — better a row that appears a beat late
+ * than one that claims "Off" and corrects itself. */
 function useNotificationPermission() {
-  const supported = typeof window !== "undefined" && "Notification" in window;
-  const [permission, setPermission] = useState(() =>
-    supported ? Notification.permission : "unsupported"
-  );
+  const [permission, setPermission] = useState("unknown");
+
+  useEffect(() => {
+    let alive = true;
+    notificationSurface().then((surface) => {
+      if (!alive) return;
+      // The shell posts through the OS, which owns the switch and has no
+      // permission for the page to request. "system" is that state: on as far
+      // as Duct is concerned, changeable only in System Settings.
+      setPermission(surface === "shell" ? "system" : surface === "browser" ? Notification.permission : "none");
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   async function request() {
-    if (!supported || permission !== "default") return;
-    const result = await Notification.requestPermission();
-    setPermission(result);
+    if (permission !== "default") return;
+    setPermission(await Notification.requestPermission());
   }
 
   return { permission, request };
@@ -193,27 +214,34 @@ function useNotificationPermission() {
 function NotificationMenuItem() {
   const { permission, request } = useNotificationPermission();
 
-  if (permission === "unsupported") return null;
+  if (permission === "unknown" || permission === "none") return null;
 
   const states = {
     default:     { icon: Bell,     badge: "Off",      label: "Enable notifications", clickable: true  },
     granted:     { icon: BellRing, badge: "On",       label: "Notifications",        clickable: false },
     denied:      { icon: BellOff,  badge: "Blocked",  label: "Notifications",        clickable: false },
+    system:      { icon: BellRing, badge: "System",   label: "Notifications",        clickable: false },
   };
   const { icon: Icon, badge, label, clickable } = states[permission] ?? states.default;
+
+  const hint =
+    permission === "denied" ? "Blocked in browser — open Site Settings to re-enable" :
+    permission === "system" ? "Handled by the OS — change it in your system notification settings" :
+    undefined;
 
   return (
     <DropdownMenuItem
       onClick={clickable ? request : undefined}
       className={`flex items-center justify-between ${!clickable ? "cursor-default opacity-60" : ""}`}
-      title={permission === "denied" ? "Blocked in browser — open Site Settings to re-enable" : undefined}
+      title={hint}
     >
       <span className="flex items-center gap-2">
         <Icon className="size-4" />
         {label}
       </span>
       <span className={`rounded px-1.5 py-0.5 font-mono text-[10px] ${
-        permission === "granted"  ? "bg-green-500/15 text-green-600 dark:text-green-400" :
+        permission === "granted" ||
+        permission === "system"   ? "bg-green-500/15 text-green-600 dark:text-green-400" :
         permission === "denied"   ? "bg-destructive/10 text-destructive" :
                                     "bg-muted text-muted-foreground"
       }`}>
@@ -255,11 +283,6 @@ function PreferencesDialogMenuItem() {
 
 function SidebarUserFooter() {
   const { user, signOut } = useAuth();
-  const { resolvedTheme, setTheme } = useTheme();
-  const engineKey = useEngineKey();
-
-  const engine = getEngine(engineKey);
-  const isDark = resolvedTheme === "dark";
 
   if (!user) return null;
 
@@ -282,12 +305,6 @@ function SidebarUserFooter() {
                 {(user.name || user.email || "U").charAt(0).toUpperCase()}
               </span>
             )}
-            <span
-              aria-hidden
-              className="absolute -bottom-0.5 -right-0.5 rounded-full border border-sidebar bg-muted px-1 py-px font-mono text-[8px] font-semibold leading-none text-muted-foreground"
-            >
-              {engine.badge}
-            </span>
           </span>
           <div className="flex min-w-0 flex-col group-data-[collapsible=icon]:hidden">
             <span className="truncate text-xs font-medium text-sidebar-foreground">
@@ -317,20 +334,31 @@ function SidebarUserFooter() {
         </DropdownMenuItem>
         {/* Was an "Engine" dialog that could only change the harness — it
             showed a model name it had no power to set. The page it points at
-            now owns all three: which models, whose key, which harness. */}
+            owns what is still a choice: which models, and whose key. */}
         <DropdownMenuItem asChild>
-          <Link href="/settings/models" className="flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              <Cpu className="size-4" />
-              <span>Models &amp; engine</span>
-            </span>
-            <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
-              {engine.badge}
-            </span>
+          <Link href="/settings/models">
+            <Cpu className="size-4" />
+            <span>Models</span>
           </Link>
         </DropdownMenuItem>
         <PreferencesDialogMenuItem />
         <NotificationMenuItem />
+        <DropdownMenuSeparator />
+        {/* Plain new-tab links: installExternalLinkHandler (lib/shell.js)
+            reroutes target="_blank" to the system browser inside the desktop
+            shell, where a new tab would otherwise go nowhere at all. */}
+        <DropdownMenuItem asChild>
+          <a href={GITHUB_ISSUES_URL} target="_blank" rel="noreferrer noopener">
+            <Bug className="size-4" />
+            <span>Report a bug</span>
+          </a>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <a href={GITHUB_DISCUSSIONS_URL} target="_blank" rel="noreferrer noopener">
+            <Lightbulb className="size-4" />
+            <span>Suggest an improvement</span>
+          </a>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={signOut}>
           <LogOut className="size-4" />
@@ -430,28 +458,9 @@ function useConnectionCount() {
   return count;
 }
 
-// Current inference engine key, synced across tabs and same-tab changes
-// (the Runtime tab on /settings/models dispatches a synthetic `storage` event
-// when the engine changes, the way the retired Engine dialog did). Starts at
-// DEFAULT_ENGINE so SSR and the first client render agree, then reconciles with
-// localStorage after mount.
-function useEngineKey() {
-  const [engineKey, setEngineKey] = useState(DEFAULT_ENGINE);
-  useEffect(() => {
-    setEngineKey(localStorage.getItem(ENGINE_STORAGE_KEY) || DEFAULT_ENGINE);
-    function onStorage(e) {
-      if (e.key === ENGINE_STORAGE_KEY) setEngineKey(e.newValue || DEFAULT_ENGINE);
-    }
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, []);
-  return engineKey;
-}
-
 export default function AppSidebar() {
   const pathname = usePathname();
   const connectionCount = useConnectionCount();
-  const engineKey = useEngineKey();
 
   function isActive(item) {
     if (!item.matchPrefix || !pathname) return false;
@@ -527,37 +536,6 @@ export default function AppSidebar() {
                             <span>{item.label}</span>
                             <span className="ml-auto rounded-full bg-muted px-1.5 py-px text-[10px] leading-none text-muted-foreground">
                               Soon
-                            </span>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      );
-                    }
-
-                    // Built, but the selected engine has no runner for it.
-                    if (!engineSupportsAgent(engineKey, item.key)) {
-                      const runnable = supportingEngines(item.key);
-                      const badges = runnable.map((e) => e.badge);
-                      // Compact pill names the engine to switch to; the tooltip
-                      // carries the full "not supported by … available on …".
-                      const pill =
-                        badges.length === 1 ? `${badges[0]} only` : badges.join(" / ");
-                      const available = runnable
-                        .map((e) => `${e.label} (${e.badge})`)
-                        .join(", ");
-                      return (
-                        <SidebarMenuItem key={item.key}>
-                          <SidebarMenuButton
-                            className="cursor-default opacity-45 hover:bg-transparent hover:text-sidebar-foreground/45"
-                            tooltip={
-                              available
-                                ? `${item.label} — not supported by the ${getEngine(engineKey).label} engine. Available on ${available}.`
-                                : `${item.label} — not supported by the selected engine.`
-                            }
-                          >
-                            <Icon className="size-4" />
-                            <span>{item.label}</span>
-                            <span className="ml-auto shrink-0 rounded-full bg-amber-500/15 px-1.5 py-px font-mono text-[10px] leading-none text-amber-600 dark:text-amber-400">
-                              {pill}
                             </span>
                           </SidebarMenuButton>
                         </SidebarMenuItem>

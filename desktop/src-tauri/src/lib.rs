@@ -371,8 +371,71 @@ fn handle_connector_deep_link(app: &AppHandle, url: &Url) {
 const MENU_RELOAD: &str = "view:reload";
 #[cfg(all(desktop, any(debug_assertions, feature = "devtools")))]
 const MENU_DEVTOOLS: &str = "view:devtools";
+#[cfg(desktop)]
+const MENU_HOME: &str = "help:home";
+#[cfg(desktop)]
+const MENU_CHANGELOG: &str = "help:changelog";
+#[cfg(desktop)]
+const MENU_REPORT_BUG: &str = "help:report-bug";
+#[cfg(desktop)]
+const MENU_SUGGEST: &str = "help:suggest";
+#[cfg(desktop)]
+const MENU_PRIVACY: &str = "help:privacy";
 
-/// A View menu with Reload — the shell has never had one.
+/// Where the Help menu points. The same two destinations the in-app account
+/// drawer offers, for the same reason: an issue is a defect with a repro, a
+/// discussion is an idea that has not earned a tracker row. Kept in sync with
+/// `app/src/components/AppSidebar.jsx` by hand — two surfaces, one policy.
+#[cfg(desktop)]
+const HELP_LINKS: &[(&str, &str)] = &[
+    (MENU_HOME, "https://getduct.ai"),
+    (MENU_CHANGELOG, "https://getduct.ai/changelog/"),
+    (
+        MENU_REPORT_BUG,
+        "https://github.com/5hirish/duct/issues/new?template=bug_report.yml",
+    ),
+    (
+        MENU_SUGGEST,
+        "https://github.com/5hirish/duct/discussions/new?category=ideas",
+    ),
+    (MENU_PRIVACY, "https://getduct.ai/privacy"),
+];
+
+/// One line saying what this app is, for the About panel.
+///
+/// macOS and the others read different fields — `credits` there, `comments` on
+/// Windows and Linux — so it is set twice from one constant rather than
+/// written twice and left to drift.
+#[cfg(desktop)]
+const ABOUT_BLURB: &str =
+    "Duct connects your product and marketing stack and turns what it finds into briefs, \
+alerts and answers you can act on.";
+
+/// What the About panel shows, beyond the name and version Tauri fills in.
+///
+/// `Menu::default` builds this from `bundle.copyright` and `bundle.publisher`
+/// alone, and `publisher` lands in `authors`, which macOS does not render — so
+/// the panel was the app name, a version, and nothing else. Built by hand here
+/// so there is a sentence in it.
+#[cfg(desktop)]
+fn about_metadata(app: &tauri::AppHandle) -> tauri::menu::AboutMetadata<'static> {
+    let package = app.package_info();
+    tauri::menu::AboutMetadata {
+        name: Some(package.name.clone()),
+        version: Some(package.version.to_string()),
+        copyright: app.config().bundle.copyright.clone(),
+        // macOS renders `credits` and ignores `comments`; Windows and Linux do
+        // the opposite. Both are set, so neither platform gets a blank panel.
+        credits: Some(ABOUT_BLURB.into()),
+        comments: Some(ABOUT_BLURB.into()),
+        website: Some("https://getduct.ai".into()),
+        website_label: Some("getduct.ai".into()),
+        ..Default::default()
+    }
+}
+
+/// The application menu: a View menu with Reload, and a Help menu with anything
+/// in it at all.
 ///
 /// The window loads a *remote* origin, so nothing on the page can rescue a bad
 /// load, and the system webview binds no reload key of its own (Tauri's default
@@ -382,48 +445,178 @@ const MENU_DEVTOOLS: &str = "view:devtools";
 /// when developing against `localhost:3003` (`npm run dev:local`), and a dead
 /// end for a shipped user whose window failed to load once.
 ///
-/// Inserted before Window, where macOS users expect View — located by id rather
-/// than a hardcoded index, since the default menu's shape differs per platform.
+/// View is inserted before Window, where macOS users expect it — located by id
+/// rather than a hardcoded index, since the default menu's shape differs per
+/// platform.
+///
+/// Help is *replaced*, not extended. `Menu::default` builds its Help submenu
+/// with a single About item carrying `#[cfg(not(target_os = "macos"))]`, which
+/// leaves macOS a Help menu containing nothing: it opens onto an empty box and
+/// swallows the click. Apple's guidelines expect Help to work, and an empty one
+/// is a documented App Store rejection (tauri-apps/tauri#9371) — which matters
+/// here, because this app is headed for TestFlight.
+///
+/// The items are links rather than a bundled help book. A help book would be a
+/// second copy of the site to keep current, and the answers people want from
+/// this menu — what changed, where do I report this — live on a site that is
+/// already updated when the thing itself changes.
 #[cfg(desktop)]
-fn install_view_menu(app: &tauri::AppHandle) -> tauri::Result<()> {
-    use tauri::menu::{Menu, MenuItem, Submenu, WINDOW_SUBMENU_ID};
+fn install_app_menu(app: &tauri::AppHandle) -> tauri::Result<()> {
+    use tauri::menu::{
+        Menu, MenuItem, PredefinedMenuItem, Submenu, HELP_SUBMENU_ID, WINDOW_SUBMENU_ID,
+    };
 
     let reload = MenuItem::with_id(app, MENU_RELOAD, "Reload", true, Some("CmdOrCtrl+R"))?;
 
+    // Toggle Full Screen is the one item the default View carries on macOS, and
+    // ours replaces that submenu rather than sitting beside it — so it has to be
+    // carried over, or the menu quietly loses it.
+    let mut view_items: Vec<Box<dyn tauri::menu::IsMenuItem<_>>> = Vec::new();
+    #[cfg(target_os = "macos")]
+    view_items.push(Box::new(PredefinedMenuItem::fullscreen(app, None)?));
+    view_items.push(Box::new(reload));
     #[cfg(any(debug_assertions, feature = "devtools"))]
-    let view = {
-        let devtools = MenuItem::with_id(
-            app,
-            MENU_DEVTOOLS,
-            "Toggle Developer Tools",
-            true,
-            Some("CmdOrCtrl+Shift+I"),
-        )?;
-        Submenu::with_items(app, "View", true, &[&reload, &devtools])?
-    };
-    #[cfg(not(any(debug_assertions, feature = "devtools")))]
-    let view = Submenu::with_items(app, "View", true, &[&reload])?;
+    view_items.push(Box::new(MenuItem::with_id(
+        app,
+        MENU_DEVTOOLS,
+        "Toggle Developer Tools",
+        true,
+        Some("CmdOrCtrl+Shift+I"),
+    )?));
+    let view_refs: Vec<&dyn tauri::menu::IsMenuItem<_>> =
+        view_items.iter().map(|item| item.as_ref()).collect();
+    let view = Submenu::with_items(app, "View", true, &view_refs)?;
+
+    // Ordered by how often a person needs them, with the two that produce work
+    // for us grouped away from the two that only read.
+    let home = MenuItem::with_id(app, MENU_HOME, "Duct Home Page", true, None::<&str>)?;
+    let changelog = MenuItem::with_id(app, MENU_CHANGELOG, "What\u{2019}s New", true, None::<&str>)?;
+    let report_bug = MenuItem::with_id(app, MENU_REPORT_BUG, "Report a Bug\u{2026}", true, None::<&str>)?;
+    let suggest = MenuItem::with_id(
+        app,
+        MENU_SUGGEST,
+        "Suggest an Improvement\u{2026}",
+        true,
+        None::<&str>,
+    )?;
+    let privacy = MenuItem::with_id(app, MENU_PRIVACY, "Privacy Policy", true, None::<&str>)?;
+
+    let help = Submenu::with_id_and_items(
+        app,
+        HELP_SUBMENU_ID,
+        "Help",
+        true,
+        &[
+            &home,
+            &changelog,
+            &PredefinedMenuItem::separator(app)?,
+            &report_bug,
+            &suggest,
+            &PredefinedMenuItem::separator(app)?,
+            &privacy,
+        ],
+    )?;
 
     let menu = Menu::default(app)?;
-    let before_window = menu
+
+    // The About item the default menu built has no description in it, and
+    // AboutMetadata is only settable at construction — so the whole app submenu
+    // is rebuilt rather than patched. macOS only; elsewhere About lives under
+    // Help, which is built above.
+    #[cfg(target_os = "macos")]
+    {
+        let package = app.package_info();
+        let app_menu = Submenu::with_items(
+            app,
+            package.name.clone(),
+            true,
+            &[
+                &PredefinedMenuItem::about(
+                    app,
+                    Some(&format!("About {}", package.name)),
+                    Some(about_metadata(app)),
+                )?,
+                &PredefinedMenuItem::separator(app)?,
+                &PredefinedMenuItem::services(app, None)?,
+                &PredefinedMenuItem::separator(app)?,
+                &PredefinedMenuItem::hide(app, None)?,
+                &PredefinedMenuItem::hide_others(app, None)?,
+                &PredefinedMenuItem::separator(app)?,
+                &PredefinedMenuItem::quit(app, None)?,
+            ],
+        )?;
+        // The app submenu is always first on macOS; replacing in place keeps it
+        // there, where the OS draws it in bold next to the Apple menu.
+        menu.remove_at(0)?;
+        menu.insert(&app_menu, 0)?;
+    }
+
+    // Tauri's default menu grew a View submenu of its own (one item, Toggle
+    // Full Screen) after this code was written, and nothing failed — the app
+    // simply shipped *two* menus called View, ours second. Take the existing one
+    // out before adding ours. Matched on the title because that submenu has no
+    // id constant to match on; if a future Tauri renames it, the fallback is the
+    // old behaviour rather than a crash.
+    if let Some(existing_view) = menu
         .items()?
+        .into_iter()
+        .find(|item| {
+            item.as_submenu()
+                .and_then(|s| s.text().ok())
+                .is_some_and(|title| title == "View")
+        })
+    {
+        menu.remove(&existing_view)?;
+    }
+
+    let items = menu.items()?;
+    match items
         .iter()
-        .position(|item| item.id().as_ref() == WINDOW_SUBMENU_ID);
-    match before_window {
+        .position(|item| item.id().as_ref() == WINDOW_SUBMENU_ID)
+    {
         Some(index) => menu.insert(&view, index)?,
         None => menu.append(&view)?,
     }
+
+    // Drop the default's Help before appending ours, or macOS shows two.
+    if let Some(existing) = menu
+        .items()?
+        .into_iter()
+        .find(|item| item.id().as_ref() == HELP_SUBMENU_ID)
+    {
+        menu.remove(&existing)?;
+    }
+    menu.append(&help)?;
+
     app.set_menu(menu)?;
+
+    // Tells AppKit which submenu is *the* Help menu, which is what puts the
+    // search field at its top. Best-effort: a missing search field is cosmetic,
+    // an install that failed here would not be.
+    #[cfg(target_os = "macos")]
+    let _ = help.set_as_help_menu_for_nsapp();
+
     Ok(())
 }
 
-/// Route a View-menu click to the main window.
+/// Route a menu click: Help opens a page in the system browser, View acts on
+/// the window.
 #[cfg(desktop)]
 fn handle_menu_event(app: &tauri::AppHandle, event: tauri::menu::MenuEvent) {
+    let id = event.id().as_ref();
+
+    // Help items go to the real browser, never the app's own webview: this
+    // window is the product, and navigating it to a privacy policy strands the
+    // user with no back button and no tabs.
+    if let Some((_, url)) = HELP_LINKS.iter().find(|(menu_id, _)| *menu_id == id) {
+        let _ = app.opener().open_url(*url, None::<&str>);
+        return;
+    }
+
     let Some(window) = app.get_webview_window("main") else {
         return;
     };
-    match event.id().as_ref() {
+    match id {
         MENU_RELOAD => {
             let _ = window.reload();
         }
@@ -494,10 +687,11 @@ pub fn run() {
             }
 
             // A window that cannot be reloaded is a window that can only be
-            // quit — see `install_view_menu`. Not fatal if it fails: the app
-            // is still usable, just without the menu.
-            if let Err(err) = install_view_menu(app.handle()) {
-                eprintln!("duct: could not install the View menu: {err}");
+            // quit, and an empty Help menu fails App Store review — see
+            // `install_app_menu`. Not fatal if it fails: the app is still
+            // usable, just with the default menu.
+            if let Err(err) = install_app_menu(app.handle()) {
+                eprintln!("duct: could not install the application menu: {err}");
             }
 
             let handle = app.handle().clone();

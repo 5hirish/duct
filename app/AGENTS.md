@@ -40,7 +40,10 @@ Plus `invite/[token]/` at the top level (outside every route group): the invitat
 
 - `lib/api.js` — fetch wrapper for backend calls
 - `lib/membersApi.js` — project members + invitations (server-only; no localStorage mirror, unlike `lib/projects.js`)
-- `lib/engines.js` — LLM engine/model selection
+- `lib/engines.js` — `DEFAULT_ENGINE` and the agent-type list. The engine is
+  no longer a user choice: v3 is gone, every agent runs v1, so the Runtime
+  tab, the `ENGINES` list and the agent↔engine support map went with it.
+  Pass `DEFAULT_ENGINE` where the server wants an engine
 - `lib/insightData.js` — insight fetching and management
 - `lib/localInsights.js` — client-side insight storage
 - `lib/reports.js` — report generation helpers
@@ -210,7 +213,12 @@ Rules that follow:
   window is not focused, never for a stop the user asked for. The transport is
   `lib/notify.js`: the shell's `notify` command when `getShellInfo()` reports
   `notifications`, the browser's `Notification` behind the sidebar's permission
-  item otherwise. Do not call `new Notification` from a component.
+  item otherwise. Do not call `new Notification` from a component. That sidebar
+  item asks `notificationSurface()` rather than testing `"Notification" in
+  window` — no desktop webview has that constructor, so the test hid the row on
+  desktop and left the one surface that always notifies looking like the one
+  that never did. On the shell it reads "System", because the OS owns the
+  switch and there is nothing for the page to request.
 - **A stored failure is a row, not a blank.** `agentHistory.js` maps the
   `failure` event kind to the same send-error row the live client showed (with
   its code, so the action under it is the right one), and a `cancelled` one to

@@ -44,6 +44,13 @@
     "active": true,
     "targets": "all",
     "createUpdaterArtifacts": true,
+    "publisher": "Duct",
+    "homepage": "https://getduct.ai",
+    "license": "MIT",
+    "copyright": "Copyright © 2026 Duct",
+    "category": "Productivity",
+    "shortDescription": "Cross-tool insights for your product and marketing stack.",
+    "longDescription": "Duct connects your product and marketing stack and turns what it finds into briefs, alerts and answers you can act on.",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

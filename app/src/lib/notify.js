@@ -33,6 +33,21 @@ export function pageIsBeingLookedAt() {
   }
 }
 
+/**
+ * Which transport this session actually has: "shell", "browser" or "none".
+ *
+ * The sidebar's permission item needs this because the two surfaces answer
+ * "are notifications on?" in different places. In the shell the OS owns that
+ * switch and there is nothing for the page to ask for — but the item used to
+ * test `"Notification" in window`, which no desktop webview satisfies, so the
+ * desktop app hid the row entirely and left no sign that notices were on.
+ */
+export async function notificationSurface() {
+  if (await shellCanNotify()) return "shell";
+  if (typeof window !== "undefined" && "Notification" in window) return "browser";
+  return "none";
+}
+
 /** Whether the browser side is able to notify right now. */
 export function browserCanNotify() {
   return typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted";
