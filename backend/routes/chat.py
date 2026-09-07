@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import uuid
 from typing import Any
 
 from fastapi import APIRouter
@@ -104,9 +105,15 @@ async def insight_chat(req: InsightChatRequest) -> StreamingResponse:
                 token = chunk.content
                 if token:
                     yield f"data: {json.dumps({'token': token})}\n\n"
-        except Exception as exc:  # noqa: BLE001
-            logger.exception("Chat stream failed")
-            yield f"data: {json.dumps({'error': str(exc)})}\n\n"
+        except Exception:  # noqa: BLE001
+            # The provider's exception text is not ours to forward: it carries
+            # request URLs, model config and, when a provider echoes the failing
+            # request back, the API key itself. Log it whole, hand the browser a
+            # reference it can quote at support instead.
+            ref = uuid.uuid4().hex[:8]
+            logger.exception("Chat stream failed (ref=%s)", ref)
+            message = f"Something went wrong generating that reply. Reference: {ref}"
+            yield f"data: {json.dumps({'error': message})}\n\n"
         yield "data: [DONE]\n\n"
 
     return StreamingResponse(
