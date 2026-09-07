@@ -1,7 +1,7 @@
 ---
 title: "Keyword Gap Analysis Without a Spreadsheet"
 date: Mar 10 2026
-author: Duct Team
+author: Shirish Kadam
 category: Content Strategy
 excerpt: "The old way: export Ahrefs, paste into Sheets, cross-reference with your content calendar. The new way: know the gap before your Monday standup."
 readTime: 5

@@ -1,3 +1,13 @@
 /*
   Link: </blog/>; rel="alternate"; type="text/html"; title="Blog"
   Link: <https://getduct.ai/sitemap.xml>; rel="sitemap"
+  Link: <https://getduct.ai/blog/feed.xml>; rel="alternate"; type="application/rss+xml"; title="Duct Blog"
+
+# Cloudflare serves .xml as application/xml; readers want the RSS type.
+/blog/feed.xml
+  Content-Type: application/rss+xml; charset=utf-8
+  Cache-Control: public, max-age=3600
+
+/llms.txt
+  Content-Type: text/plain; charset=utf-8
+  Cache-Control: public, max-age=3600

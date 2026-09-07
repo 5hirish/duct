@@ -1,8 +1,12 @@
 # Duct
 
-> Duct is a B2B SaaS tool that synthesizes data across product, marketing, and sales tools into weekly intelligence briefs and real-time alerts — no SQL, no dashboards required.
+> Duct is an open-source (MIT) AI agent that reads across product, marketing and revenue tools together and answers questions a single dashboard cannot. Run it on your own machine with your own model API keys, self-host it, or use the hosted version at getduct.ai.
 
-Duct is designed for product managers, growth leads, and marketing teams at 20–200 person SaaS companies who need cross-tool insights without manual work or data engineering.
+Duct is built and maintained by Shirish Kadam in Valencia, Spain. The full source — FastAPI backend, agents, Next.js app and Tauri desktop shell — is at https://github.com/5hirish/duct under the MIT licence.
+
+It connects 12 sources: Google Ads, Google Analytics 4, Search Console, Tag Manager, Meta Ads, Apple Search Ads, OpenAI Ads, Mixpanel, Microsoft Clarity, GrowthBook, Stripe and RevenueCat. Duct reads by default; when it can fix something it prepares a change set, shows a preview and a guardrail check, and waits for a human to approve. There is no agent-facing approve or apply tool — that boundary is enforced in code, not in a prompt.
+
+Intended for product managers, growth leads and marketing teams who need cross-tool insight without a data team, and for engineers who would rather run the thing themselves than trust a black box.
 
 ## Free Tools
 
@@ -24,16 +28,27 @@ Duct is designed for product managers, growth leads, and marketing teams at 20�
 - [For Product Intelligence](https://getduct.ai/for-product-intelligence): How Duct connects Mixpanel, Intercom, Linear, and Salesforce into a daily PM brief with cross-tool correlations and anomaly alerts.
 - [For Organic Growth](https://getduct.ai/for-organic-growth): How Duct surfaces SEO and content performance signals from Search Console, Ahrefs, and GA4 into a weekly action brief.
 - [For Paid Ads](https://getduct.ai/for-paid-ads): How Duct unifies Google Ads, Meta, LinkedIn, and X signals into one paid performance brief with cross-channel recommendations.
+- [Free SEO Audit](https://getduct.ai/seo-audit): Runs an AI-powered technical and content SEO audit against a sitemap and returns a scored, prioritised report.
+- [Doctrine](https://getduct.ai/doctrine): The seven opinions Duct is built on, each linked to the file that enforces it — approval-gated execution, renting rather than marrying an agent harness, membership-based authorization, and why agent-written contributions are welcome.
+- [About](https://getduct.ai/about): Duct is built and maintained by Shirish Kadam in Valencia, Spain. MIT licensed.
 - [Blog](https://getduct.ai/blog/): Articles on product intelligence, SEO strategy, and growth analytics for SaaS teams.
 
 ## Blog posts
 
-- [Why Your SEO Metrics Aren't Telling You the Full Story](https://getduct.ai/blog/post?slug=why-your-seo-metrics-arent-telling-you-the-full-story)
-- [Keyword Gap Analysis Without a Spreadsheet](https://getduct.ai/blog/post?slug=keyword-gap-analysis-without-a-spreadsheet)
+- [Why Your SEO Metrics Aren't Telling You the Full Story](https://getduct.ai/blog/why-your-seo-metrics-arent-telling-you-the-full-story)
+- [Keyword Gap Analysis Without a Spreadsheet](https://getduct.ai/blog/keyword-gap-analysis-without-a-spreadsheet)
 
 ## Open source
 
-- [Duct on GitHub](https://github.com/5hirish/duct): The Duct client is open source under the MIT licence — the FastAPI backend, the Next.js app, and a Tauri desktop app that runs entirely on your own machine with your own model API keys. Connects Google Ads, Google Analytics 4, Search Console, Tag Manager, Meta Ads, Apple Search Ads, OpenAI Ads, Mixpanel, Microsoft Clarity, GrowthBook, Stripe and RevenueCat. Self-host it, or use the hosted version at getduct.ai.
+- [Duct on GitHub](https://github.com/5hirish/duct): The whole project is MIT licensed — FastAPI backend, five agents, Next.js app and a Tauri v2 desktop shell that bundles the backend as a local sidecar (SQLite on disk, loopback only, provider keys in the OS keychain). No account is needed to run it locally.
+- [The Duct Doctrine](https://getduct.ai/doctrine): The seven positions the project is built on, each linked to the file that enforces it.
+- [Contributing](https://github.com/5hirish/duct/blob/main/CONTRIBUTING.md): Setup, the checks CI runs, and the conventions. Agent-written contributions are explicitly welcome; the PR template asks where an agent helped so a reviewer knows where to look hardest.
+- [Discussions](https://github.com/5hirish/duct/discussions): Questions, ideas and design debate.
+- [Changelog](https://github.com/5hirish/duct/blob/main/CHANGELOG.md)
+
+## Maintainer
+
+- [Shirish Kadam](https://shirishkadam.com): Product manager and engineer in Valencia, Spain. Built and scaled B2B products at fin-tech and ed-tech companies, largely AI/ML systems at scale, and is a long-time open-source contributor. Also runs [Ship with AI](https://youtube.com/@5hirish) on YouTube, a separate channel about building apps with AI coding tools, and posts as [@5hirish](https://x.com/5hirish).
 
 ## Optional
 

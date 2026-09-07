@@ -5,273 +5,62 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <link rel="icon" href="../assets/icon.svg" type="image/svg+xml"/>
 <link rel="apple-touch-icon" href="../assets/apple-icon.svg"/>
-<!-- Title and meta set dynamically by JS from front matter -->
-<title>Duct Insights</title>
-<meta name="description" content=""/>
-<meta name="keywords" content="SaaS growth, SEO, product intelligence, analytics reporting"/>
-<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
-<meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
-<meta property="og:locale" content="en_US"/>
-<meta property="og:type" content="article"/>
-<meta property="og:url" content=""/>
-<meta property="og:title" content=""/>
-<meta property="og:description" content=""/>
+<title>Redirecting — Duct Blog</title>
+<!--
+  Compatibility shim. Posts used to render here in the browser from Markdown,
+  which meant a crawler that does not run JavaScript received 49 characters of
+  body text and a canonical of /blog/post shared by every post. Posts are now
+  pre-rendered to /blog/<slug> by scripts/build_blog.py.
+
+  This file stays only so links published before the change keep working. It is
+  noindex on purpose: the static page is the one that should rank, and the
+  sitemap points there. For a true 301 instead of this client-side hop, add a
+  redirect rule for /blog/post?slug=* in the Cloudflare dashboard.
+-->
+<link rel="canonical" href="https://getduct.ai/blog/"/>
+<meta name="description" content="This post has moved. Redirecting to the Duct blog."/>
+<meta name="robots" content="noindex, follow"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/blog/"/>
+<meta property="og:title" content="Duct Blog"/>
+<meta property="og:description" content="This post has moved. Redirecting to the Duct blog."/>
 <meta property="og:image" content="https://getduct.ai/assets/og-image.png"/>
-<meta property="og:image:alt" content="Duct insights article cover"/>
 <meta property="og:site_name" content="Duct"/>
-<meta property="article:published_time" content=""/>
-<meta property="article:modified_time" content=""/>
-<meta property="article:section" content=""/>
-<meta property="article:author" content="Duct Team"/>
 <meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:title" content=""/>
-<meta name="twitter:description" content=""/>
+<meta name="twitter:title" content="Duct Blog"/>
+<meta name="twitter:description" content="This post has moved. Redirecting to the Duct blog."/>
 <meta name="twitter:image" content="https://getduct.ai/assets/og-image.png"/>
-<meta name="twitter:image:alt" content="Duct insights article cover"/>
-<link rel="canonical" href="https://getduct.ai/blog/post"/>
+<link rel="alternate" type="application/rss+xml" title="Duct Blog" href="/blog/feed.xml"/>
 <link rel="stylesheet" href="../assets/duct.css"/>
 <script src="../assets/config.js" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<style>
-/* Reading progress bar */
-#reading-progress {
-  position: fixed; top: 0; left: 0; width: 0%; height: 3px;
-  background: var(--orange); z-index: 200; transition: width .1s linear;
-}
-
-@keyframes spin { to { transform: rotate(360deg); } }
-</style>
 </head>
 <body>
-
-<a href="#prose" class="skip-link">Skip to content</a>
 
 <!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 
-<!-- READING PROGRESS BAR -->
-<div id="reading-progress" role="progressbar" aria-label="Reading progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-
-<!-- NAV (shared: site/partials/nav-blog.html) -->
-<div data-duct-partial="/partials/nav-blog.html"></div>
-
-<!-- LOADER -->
-
-<div id="post-loader" style="display:flex;align-items:center;justify-content:center;padding:120px 0" aria-label="Loading article" role="status">
-<div style="width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--orange);border-radius:50%;animation:spin .7s linear infinite"></div>
-</div>
-
-<!-- ARTICLE HEADER -->
-
-<header class="article-header" id="post-content" style="display:none">
-<p id="article-category" class="tag"></p>
-<h1 id="article-title"></h1>
-<div id="article-meta" class="article-meta"></div>
-</header>
-
-<!-- HERO IMAGE (hidden if no image) -->
-
-<div id="article-hero-wrap" class="article-hero-img" style="display:none">
-<img id="article-hero-img" src="" alt=""/>
-</div>
-
-<!-- ARTICLE BODY -->
-
-<main>
-<article id="prose" class="prose" style="display:none" aria-labelledby="article-title"></article>
-<div id="article-nav" style="display:none;max-width:700px;margin:0 auto;padding:0 24px 64px;display:none;justify-content:space-between">
-  <a id="prev-article-anchor" href="#" style="font-size:14px;font-weight:500;color:var(--navy-3);text-decoration:none;transition:color .2s;display:none" onmouseover="this.style.color='var(--navy)'" onmouseout="this.style.color='var(--navy-3)'">← Previous article</a>
-  <a id="next-article-anchor" href="#" style="font-size:14px;font-weight:500;color:var(--navy-3);text-decoration:none;transition:color .2s;margin-left:auto;display:none" onmouseover="this.style.color='var(--navy)'" onmouseout="this.style.color='var(--navy-3)'">Next article →</a>
-</div>
+<main id="main-content" style="max-width:640px;margin:0 auto;padding:160px 24px;text-align:center">
+  <h1 style="font-family:var(--serif);font-size:32px;color:var(--navy);margin-bottom:16px">This post has moved</h1>
+  <p style="font-size:16px;font-weight:300;color:var(--navy-3);line-height:1.7">
+    Posts now live at <code>/blog/&lt;slug&gt;</code>.
+    <a id="target" href="/blog/" style="color:var(--orange)">Continue to the blog →</a>
+  </p>
 </main>
 
-<!-- INLINE CTA -->
-<div data-duct-partial="/partials/cta-blog.html"></div>
-
-<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
-<div data-duct-partial="/partials/footer-expanded.html"></div>
-
-<script src="../assets/duct-partials.js"></script>
 <script src="../assets/duct.js" defer></script>
 <script>
-// Reading progress bar
 (function () {
-  var bar = document.getElementById('reading-progress');
-  function updateProgress() {
-    var scrollTop = window.scrollY || document.documentElement.scrollTop;
-    var docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-    var pct = docHeight > 0 ? Math.round((scrollTop / docHeight) * 100) : 0;
-    bar.style.width = pct + '%';
-    bar.setAttribute('aria-valuenow', pct);
-  }
-  window.addEventListener('scroll', updateProgress, { passive: true });
-})();
-
-// Post loader
-(function () {
-  function toIsoDate(input) {
-    if (!input) return '';
-    var parsed = new Date(input);
-    if (isNaN(parsed.getTime())) return '';
-    return parsed.toISOString();
-  }
-
-  function parseFrontMatter(raw) {
-    var match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
-    if (!match) return { body: raw };
-    var meta = {};
-    match[1].split('\n').forEach(function (line) {
-      var idx = line.indexOf(':');
-      if (idx === -1) return;
-      var k = line.slice(0, idx).trim();
-      var v = line.slice(idx + 1).trim().replace(/^"|"$/g, '');
-      if (k) meta[k] = v;
-    });
-    return Object.assign(meta, { body: match[2] });
-  }
-
-  function setMeta(name, content) {
-    var el = document.querySelector('meta[name="' + name + '"]') ||
-             document.querySelector('meta[property="' + name + '"]');
-    if (el && content) el.setAttribute('content', content);
-  }
-
-  // All blog posts — update when adding new posts
-  var ALL_POSTS = [
-    { slug: 'why-your-seo-metrics-arent-telling-you-the-full-story' },
-    { slug: 'keyword-gap-analysis-without-a-spreadsheet' }
+  // The slug is matched against a known list rather than interpolated, so a
+  // crafted ?slug= cannot point this link somewhere off-site.
+  var KNOWN = [
+    'why-your-seo-metrics-arent-telling-you-the-full-story',
+    'keyword-gap-analysis-without-a-spreadsheet'
   ];
-
-  function showContent() {
-    document.getElementById('post-loader').style.display = 'none';
-    document.getElementById('post-content').style.display = '';
-    document.getElementById('prose').style.display = '';
-  }
-
-  var slug = new URLSearchParams(location.search).get('slug');
-  if (!slug) {
-    setMeta('robots', 'noindex, follow');
-    setMeta('googlebot', 'noindex, follow');
-    document.getElementById('prose').innerHTML = '<p>No article specified.</p>';
-    return;
-  }
-
-  fetch('posts/' + slug + '.md')
-    .then(function (r) {
-      if (!r.ok) throw new Error('Not found');
-      return r.text();
-    })
-    .then(function (raw) {
-      var fm = parseFrontMatter(raw);
-
-      // Title
-      if (fm.title) {
-        document.title = fm.title + ' — Duct Insights';
-        document.getElementById('article-title').textContent = fm.title;
-        setMeta('og:title', fm.title + ' — Duct Insights');
-        setMeta('twitter:title', fm.title + ' — Duct Insights');
-        setMeta('og:image:alt', fm.title + ' — Duct insights article');
-        setMeta('twitter:image:alt', fm.title + ' — Duct insights article');
-      }
-
-      // Category
-      if (fm.category) {
-        document.getElementById('article-category').textContent = fm.category;
-        setMeta('article:section', fm.category);
-      }
-
-      // Meta line: date + read time
-      var metaParts = [];
-      if (fm.date) metaParts.push(fm.date);
-      if (fm.readTime) metaParts.push(fm.readTime + ' min read');
-      if (fm.author) metaParts.push('By ' + fm.author);
-      document.getElementById('article-meta').textContent = metaParts.join(' · ');
-
-      // Excerpt → description
-      if (fm.excerpt) {
-        setMeta('description', fm.excerpt);
-        setMeta('og:description', fm.excerpt);
-        setMeta('twitter:description', fm.excerpt);
-      }
-
-      // Canonical URL
-      var canonical = document.querySelector('link[rel="canonical"]');
-      if (!canonical) {
-        canonical = document.createElement('link');
-        canonical.rel = 'canonical';
-        document.head.appendChild(canonical);
-      }
-      canonical.href = 'https://getduct.ai/blog/post?slug=' + slug;
-      setMeta('og:url', canonical.href);
-      setMeta('article:author', fm.author || 'Duct Team');
-
-      var publishedIso = toIsoDate(fm.date);
-      if (publishedIso) {
-        setMeta('article:published_time', publishedIso);
-        setMeta('article:modified_time', publishedIso);
-      }
-
-      // Hero image
-      if (fm.heroImage) {
-        var wrap = document.getElementById('article-hero-wrap');
-        var img = document.getElementById('article-hero-img');
-        img.src = fm.heroImage;
-        img.alt = fm.title || '';
-        wrap.style.display = 'block';
-      }
-
-      // Article body
-      document.getElementById('prose').innerHTML = marked.parse(fm.body || '');
-
-      // Show content, hide loader
-      showContent();
-
-      // Article navigation
-      var idx = ALL_POSTS.findIndex(function (p) { return p.slug === slug; });
-      var hasPrev = idx > 0;
-      var hasNext = idx !== -1 && idx + 1 < ALL_POSTS.length;
-      if (hasPrev || hasNext) {
-        var nav = document.getElementById('article-nav');
-        nav.style.display = 'flex';
-        if (hasPrev) {
-          var prev = document.getElementById('prev-article-anchor');
-          prev.href = '/blog/post?slug=' + ALL_POSTS[idx - 1].slug;
-          prev.style.display = '';
-        }
-        if (hasNext) {
-          var next = document.getElementById('next-article-anchor');
-          next.href = '/blog/post?slug=' + ALL_POSTS[idx + 1].slug;
-          next.style.display = '';
-        }
-      }
-
-      // JSON-LD
-      var ld = {
-        '@context': 'https://schema.org',
-        '@type': 'Article',
-        headline: fm.title || '',
-        description: fm.excerpt || '',
-        datePublished: publishedIso || fm.date || '',
-        dateModified: publishedIso || fm.date || '',
-        articleSection: fm.category || '',
-        author: { '@type': 'Organization', name: fm.author || 'Duct Team' },
-        publisher: { '@type': 'Organization', name: 'Duct', url: 'https://getduct.ai' },
-        image: fm.heroImage || 'https://getduct.ai/assets/og-image.png',
-        mainEntityOfPage: canonical.href
-      };
-      var script = document.createElement('script');
-      script.type = 'application/ld+json';
-      script.textContent = JSON.stringify(ld);
-      document.head.appendChild(script);
-    })
-    .catch(function () {
-      setMeta('robots', 'noindex, follow');
-      setMeta('googlebot', 'noindex, follow');
-      showContent();
-      document.getElementById('article-title').textContent = 'Article not found';
-      document.getElementById('prose').innerHTML = '<p>Sorry, this article could not be loaded.</p>';
-    });
+  var slug = new URLSearchParams(window.location.search).get('slug');
+  var target = KNOWN.indexOf(slug) !== -1 ? '/blog/' + slug : '/blog/';
+  document.getElementById('target').href = target;
+  window.location.replace(target);
 })();
 </script>
 

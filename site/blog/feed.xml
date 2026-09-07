@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Duct Blog</title>
+    <link>https://getduct.ai/blog/</link>
+    <atom:link href="https://getduct.ai/blog/feed.xml" rel="self" type="application/rss+xml"/>
+    <description>Cross-tool insights on product intelligence, organic growth, and building an open-source AI agent for growth analytics.</description>
+    <language>en-us</language>
+    <managingEditor>hello@getduct.ai (Shirish Kadam)</managingEditor>
+    <webMaster>hello@getduct.ai (Shirish Kadam)</webMaster>
+    <copyright>MIT licensed project. Posts © Alleviate Lab.</copyright>
+    <lastBuildDate>Fri, 05 Sep 2026 00:00:00 GMT</lastBuildDate>
+
+    <item>
+      <title>Why Your SEO Metrics Aren't Telling You the Full Story</title>
+      <link>https://getduct.ai/blog/why-your-seo-metrics-arent-telling-you-the-full-story</link>
+      <guid isPermaLink="true">https://getduct.ai/blog/why-your-seo-metrics-arent-telling-you-the-full-story</guid>
+      <pubDate>Sun, 15 Mar 2026 00:00:00 GMT</pubDate>
+      <author>hello@getduct.ai (Shirish Kadam)</author>
+      <category>SEO</category>
+      <description>Search Console shows impressions up. Ahrefs shows rankings rising. GA4 says signups are flat. Here's how to read all three together — and what the gap usually means.</description>
+    </item>
+
+    <item>
+      <title>Keyword Gap Analysis Without a Spreadsheet</title>
+      <link>https://getduct.ai/blog/keyword-gap-analysis-without-a-spreadsheet</link>
+      <guid isPermaLink="true">https://getduct.ai/blog/keyword-gap-analysis-without-a-spreadsheet</guid>
+      <pubDate>Tue, 10 Mar 2026 00:00:00 GMT</pubDate>
+      <author>hello@getduct.ai (Shirish Kadam)</author>
+      <category>Content Strategy</category>
+      <description>The old way: export Ahrefs, paste into Sheets, cross-reference with your content calendar. The new way: know the gap before your Monday standup.</description>
+    </item>
+
+  </channel>
+</rss>
