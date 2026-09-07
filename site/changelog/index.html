@@ -108,7 +108,7 @@
 <div class="cl-group">
 <p class="cl-group-label">Desktop</p>
 <ul class="cl-list">
-<li><strong>Credentials stored on your machine are encrypted with a key the app owns.</strong></li>
+<li><strong>Credentials a self-host build stores on your machine are encrypted with a key the app mints into your OS keychain.</strong></li>
 <li><strong>Connecting through the browser reports success as success</strong> — it had been calling a completed connection expired.</li>
 </ul>
 </div>
@@ -201,12 +201,12 @@
 </div>
 <div class="cl-body">
 <h2 class="cl-title" id="r-2026-08-20">Duct runs on your machine</h2>
-<p class="cl-lede">The whole backend now ships inside the desktop app. Projects, keys and data stay on your machine unless you decide otherwise.</p>
+<p class="cl-lede">The desktop shell learns to carry a backend of its own. The build you download still talks to Duct&rsquo;s cloud &mdash; but the same app, built with the backend inside it, now runs the entire loop on your machine with no account behind it.</p>
 
 <div class="cl-group">
 <p class="cl-group-label">Desktop</p>
 <ul class="cl-list">
-<li><strong>A local backend, bundled and supervised.</strong> The app carries its own server and database, so a project runs without a cloud account behind it.</li>
+<li><strong>A local backend the shell can bundle and supervise.</strong> A self-host build ships the server and database inside the app, so a project runs with nothing behind it. The published build leaves it out and uses the hosted API.</li>
 <li><strong>macOS builds are signed with Developer ID and notarized</strong> — the DMG opens without a fight with Gatekeeper.</li>
 <li><strong>The app finds its own API address at runtime,</strong> so one build works against the local sidecar or a hosted backend.</li>
 </ul>

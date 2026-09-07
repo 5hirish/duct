@@ -18,6 +18,30 @@ codified from the site's best lines, landing-page craft, and a
 close-on-touch gap list. This file stays the home of the mechanical rules CI
 enforces. Read both before building a page.
 
+## What the desktop app actually is (read before writing about it)
+
+**The app people download is a thin shell that talks to the hosted API.** It
+ships no backend: `bundle.externalBin` and `bundle.resources` are empty in
+`desktop/src-tauri/tauri.conf.json`, so `sidecar::is_available` is false, the
+web app never repoints its API base, and projects, connector authorisations and
+uploads live in Duct's cloud. A *self-host* build restores `bundle.resources`,
+bundles the FastAPI backend, and runs everything locally — same binary, runtime
+probe, different bundle. See [`desktop/AGENTS.md`](../desktop/AGENTS.md).
+
+This paragraph exists because the site got it backwards twice: a changelog
+entry and a privacy-policy section both described the self-host build as if it
+were the download. Copy that says "your data stays on your machine" is true of
+a build almost nobody runs, and false of the one on the download page.
+
+What is true of the downloaded app, and safe to write:
+- **Model API keys stay in the OS keychain** and are sent with a request when a
+  job runs. They are never stored server-side — the "remember this key" path is
+  suppressed in the desktop shell (`app/src/components/connections/ProviderCard.jsx`).
+- **Connector authorisations are stored encrypted** in Duct's database, not on
+  the device.
+- **"Nothing leaves your machine" is false** — the shell loads `app.getduct.ai`,
+  which carries analytics and error reporting.
+
 ## Stack constraints
 
 - **NO build tools.** No npm, Vite, Webpack, Rollup, or package manager setup.

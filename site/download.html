@@ -80,6 +80,42 @@
 
 .dl-grid-note { text-align: center; font-size: 13px; color: var(--navy-3); margin-top: 22px; }
 
+/* Two ways to run it */
+.dl-modes { max-width: 1040px; margin: 72px auto 0; padding: 0 24px; }
+.dl-modes-head { text-align: center; max-width: 660px; margin: 0 auto 40px; }
+.dl-modes-head h2 { font-size: clamp(28px, 4vw, 40px); margin-bottom: 14px; }
+.dl-modes-sub { font-size: 15px; font-weight: 300; line-height: 1.75; color: var(--navy-3); }
+.dl-modes-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+.dl-mode { border: 1px solid var(--border); border-radius: var(--r-lg); padding: 32px 30px; background: var(--white); }
+.dl-mode-label { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--orange); }
+.dl-mode-title { font-family: var(--serif); font-size: 22px; color: var(--navy); margin: 10px 0 12px; }
+.dl-mode-body { font-size: 14px; font-weight: 300; line-height: 1.75; color: var(--navy-3); margin-bottom: 18px; }
+.dl-mode-list { list-style: none; padding: 0; margin: 0; }
+.dl-mode-list li { position: relative; padding-left: 18px; font-size: 14px; font-weight: 300; line-height: 1.7; color: var(--navy-3); margin-bottom: 9px; }
+.dl-mode-list li::before { content: ''; position: absolute; left: 2px; top: 10px; width: 5px; height: 5px; border-radius: 50%; background: var(--orange); opacity: .55; }
+.dl-mode-list strong { font-weight: 600; color: var(--navy); }
+.dl-mode-cta { margin-top: 18px; font-size: 14px; }
+.dl-mode-cta a { color: var(--orange); text-decoration: none; font-weight: 500; }
+.dl-mode-cta a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+.dl-where { margin-top: 48px; border: 1px solid var(--border); border-radius: var(--r-lg); padding: 32px 30px; background: var(--off); }
+.dl-where-title { font-family: var(--serif); font-size: 20px; color: var(--navy); margin-bottom: 6px; }
+.dl-where-sub { font-size: 14px; font-weight: 300; color: var(--navy-3); margin-bottom: 20px; }
+.dl-where-scroll { overflow-x: auto; }
+.dl-where-table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 620px; }
+.dl-where-table th, .dl-where-table td { text-align: left; padding: 11px 14px 11px 0; border-bottom: 1px solid var(--border); vertical-align: top; line-height: 1.6; }
+.dl-where-table th { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--navy-3); }
+.dl-where-table td { font-weight: 300; color: var(--navy-3); }
+.dl-where-table tbody td:first-child { font-weight: 500; color: var(--navy); }
+.dl-where-table tbody tr:last-child td { border-bottom: none; }
+.dl-where-note { font-size: 13px; font-weight: 300; color: var(--navy-3); margin-top: 16px; }
+.dl-where-note a { color: var(--orange); text-decoration: none; }
+.dl-where-note a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+@media (max-width: 860px) {
+  .dl-modes-grid { grid-template-columns: 1fr; }
+  .dl-mode, .dl-where { padding: 26px 22px; }
+}
 .dl-notes { max-width: 720px; margin: 56px auto 96px; padding: 0 24px; font-size: 13px; color: var(--navy-3); }
 .dl-notes p { margin-bottom: 10px; }
 .dl-notes code { font-size: 12px; }
@@ -159,12 +195,67 @@
   </p>
 </section>
 
+<!-- TWO WAYS TO RUN IT -->
+<section class="dl-modes">
+  <div class="dl-modes-head">
+    <span class="tag">Two ways to run it</span>
+    <h2>Download it, or <em>build it.</em></h2>
+    <p class="dl-modes-sub">The app is the fast way in: we run the backend, you run nothing. The code is all here if you would rather run every part of it yourself. Same repository, same agents, same connectors.</p>
+  </div>
+
+  <div class="dl-modes-grid">
+    <div class="dl-mode">
+      <span class="dl-mode-label">The desktop app</span>
+      <h3 class="dl-mode-title">Sign in and start</h3>
+      <p class="dl-mode-body">Download, sign in with Google, connect your stack. Your projects and briefs live in Duct&rsquo;s cloud, so they are there on your laptop and your desktop both, and adding a teammate to a project takes one invite. Nothing to host, nothing to keep running.</p>
+      <ul class="dl-mode-list">
+        <li><strong>Free while Duct is in early access.</strong> No card.</li>
+        <li><strong>Your model keys stay in your OS keychain</strong> and are sent with a request when a job runs. We never store them.</li>
+        <li><strong>Invite teammates</strong> to a project and share the same work.</li>
+        <li><strong>Updates itself</strong> on macOS, Windows and Linux.</li>
+      </ul>
+    </div>
+
+    <div class="dl-mode">
+      <span class="dl-mode-label">Run it yourself</span>
+      <h3 class="dl-mode-title">Nothing touches our servers</h3>
+      <p class="dl-mode-body">Duct is MIT licensed, and that includes the backend the app talks to. Host it on your own server, or build the desktop shell with the backend bundled inside it, and every part of the loop runs where you decide. No account with us, no data with us.</p>
+      <ul class="dl-mode-list">
+        <li><strong>Your database, your storage,</strong> your retention rules.</li>
+        <li><strong>The same connectors and agents</strong> &mdash; there is no held-back edition.</li>
+        <li><strong>No sign-up required.</strong></li>
+        <li><strong>You operate it</strong> &mdash; updates, backups and uptime are yours.</li>
+      </ul>
+      <p class="dl-mode-cta"><a href="https://github.com/5hirish/duct#quickstart" rel="noopener">How to run it yourself &rarr;</a></p>
+    </div>
+  </div>
+
+  <div class="dl-where">
+    <h3 class="dl-where-title">Where your things actually live</h3>
+    <p class="dl-where-sub">Worth being precise about, because &ldquo;private&rdquo; is a word everyone uses and few explain.</p>
+    <div class="dl-where-scroll">
+    <table class="dl-where-table">
+      <thead>
+        <tr><th scope="col">Using the desktop app</th><th scope="col">On your device</th><th scope="col">In Duct&rsquo;s cloud</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Model API keys (Anthropic, OpenAI, Gemini, OpenRouter)</td><td>Yes &mdash; your OS keychain</td><td>Never stored. Sent with a request so the job can run</td></tr>
+        <tr><td>Connector authorisations (Google Ads, GA4, Mixpanel&hellip;)</td><td>&mdash;</td><td>Encrypted at rest, decrypted only to make a call you asked for</td></tr>
+        <tr><td>Projects, briefs, memories, activity log</td><td>&mdash;</td><td>Yes &mdash; which is what makes them there on your next device</td></tr>
+        <tr><td>Files you upload</td><td>&mdash;</td><td>Yes</td></tr>
+        <tr><td>Your account</td><td>&mdash;</td><td>Google sign-in: name, email, avatar</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="dl-where-note">Run it yourself and every row moves to your side of the table. The full detail is in the <a href="/privacy">privacy policy</a>.</p>
+  </div>
+</section>
+
 <section class="dl-notes">
   <p><strong>macOS</strong> &mdash; universal, runs on Apple silicon and Intel. Requires macOS 12 or later. Signed and notarized by Apple, so it opens without a warning.</p>
   <p><strong>Windows</strong> &mdash; Windows 10 and later. The installer is not yet code-signed, so SmartScreen will say &ldquo;Windows protected your PC&rdquo; on first run: click <em>More info</em> &rarr; <em>Run anyway</em>. We are fixing this.</p>
   <p><strong>Linux</strong> &mdash; the AppImage runs anywhere (<code>chmod +x</code> it first); the .deb is for Debian and Ubuntu. Provider keys need a keyring daemon running &mdash; GNOME Keyring, KWallet or KeePassXC.</p>
   <p><strong>Your model keys stay yours.</strong> Duct is bring-your-own-key: paste an Anthropic, OpenAI or Gemini key and the desktop app keeps it in your OS keychain rather than a browser tab. You are billed by the provider, not by us.</p>
-  <p>Duct is open source under the MIT licence. <a href="https://github.com/5hirish/duct">Read the code</a>, or build it yourself &mdash; the desktop shell can also run its own backend entirely on your machine.</p>
 </section>
 
 </main>
