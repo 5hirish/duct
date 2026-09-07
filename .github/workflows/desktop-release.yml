@@ -23,8 +23,17 @@ name: desktop — release (macOS, Windows, Linux)
 #     DUCT_DEVID_CERT_PASSWORD     password for that .p12
 #     DUCT_DEVID_IDENTITY          e.g. "Developer ID Application: Duct (ABCDE12345)"
 #     DUCT_APPLE_TEAM_ID           10-char Apple Team ID
-#     DUCT_NOTARY_APPLE_ID         Apple ID email used for notarization
-#     DUCT_NOTARY_PASSWORD         app-specific password for that Apple ID
+#     DUCT_ASC_API_KEY_ID          App Store Connect API key id
+#     DUCT_ASC_API_ISSUER_ID       App Store Connect issuer id
+#     DUCT_ASC_API_KEY_P8          base64 of AuthKey_XXXX.p8
+#
+#     Notarization authenticates with that App Store Connect API key, not with
+#     an Apple ID and app-specific password. Both are supported; the key wins on
+#     every axis that matters here. It is not tied to a person's sign-in, it is
+#     revocable in App Store Connect without touching the account it belongs to,
+#     and these three secrets already existed for the TestFlight channel — so
+#     the alternative meant minting a *new* long-lived credential that grants
+#     notarization under this team, to avoid reusing one that already did.
 #   All platforms (self-update)
 #     TAURI_SIGNING_PRIVATE_KEY    contents of the minisign private key
 #     TAURI_SIGNING_PRIVATE_KEY_PASSWORD
@@ -156,20 +165,46 @@ jobs:
       # innermost-first, re-seal the app, then notarize by hand with notarytool
       # because Tauri's own notarization ran before that re-signing. None of it
       # is needed now that the bundle holds no nested binaries: Tauri signs the
-      # one executable it built and notarizes it itself when APPLE_ID,
-      # APPLE_PASSWORD and APPLE_TEAM_ID are present.
+      # one executable it built and notarizes it itself when the notarization
+      # credentials below are present.
       #
       # `--bundles dmg,updater` also produces the Duct.app.tar.gz + .sig pair the
       # updater consumes, because bundle.createUpdaterArtifacts is on. The .app
       # is built as part of this (no --no-bundle-app), so the tarball carries the
       # notarized bundle.
+
+      # notarytool wants the key as a *file*, so the secret is written out here
+      # rather than passed through. $RUNNER_TEMP dies with the job, and the file
+      # is 0600 in the meantime; the alternative — a long-lived app-specific
+      # password on a human's Apple ID — is the thing this avoids.
+      - name: Stage the App Store Connect API key
+        env:
+          ASC_KEY_P8: ${{ secrets.DUCT_ASC_API_KEY_P8 }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ASC_KEY_P8:-}" ]; then
+            echo "DUCT_ASC_API_KEY_P8 is not set; notarization would fail." >&2
+            exit 1
+          fi
+          KEY_PATH="$RUNNER_TEMP/asc-api-key.p8"
+          umask 077
+          printf '%s' "$ASC_KEY_P8" | base64 --decode > "$KEY_PATH"
+          # A truncated or double-encoded secret decodes to something that is not
+          # a key, and notarytool reports that a long way from here.
+          head -n 1 "$KEY_PATH" | grep -q 'BEGIN PRIVATE KEY' \
+            || { echo "decoded ASC key is not a PEM private key" >&2; exit 1; }
+          echo "APPLE_API_KEY_PATH=$KEY_PATH" >> "$GITHUB_ENV"
+
       - name: Build, sign, notarize and package
         working-directory: desktop
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.DUCT_DEVID_IDENTITY }}
           APPLE_TEAM_ID: ${{ secrets.DUCT_APPLE_TEAM_ID }}
-          APPLE_ID: ${{ secrets.DUCT_NOTARY_APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.DUCT_NOTARY_PASSWORD }}
+          # App Store Connect API key auth. APPLE_API_KEY is the *key id*, not
+          # the key itself — the material is at APPLE_API_KEY_PATH, exported by
+          # the step above.
+          APPLE_API_ISSUER: ${{ secrets.DUCT_ASC_API_ISSUER_ID }}
+          APPLE_API_KEY: ${{ secrets.DUCT_ASC_API_KEY_ID }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET }}

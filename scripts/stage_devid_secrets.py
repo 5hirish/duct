@@ -161,8 +161,10 @@ def main() -> int:
     ENV_PATH.chmod(0o600)
 
     print(f"staged 3 values in {ENV_PATH.relative_to(ROOT)} (0600, gitignored)")
-    print("still needed there: DUCT_NOTARY_APPLE_ID, DUCT_NOTARY_PASSWORD,")
-    print("                    TAURI_SIGNING_PRIVATE_KEY, TAURI_SIGNING_PRIVATE_KEY_PASSWORD")
+    print("still needed there: TAURI_SIGNING_PRIVATE_KEY,")
+    print("                    TAURI_SIGNING_PRIVATE_KEY_PASSWORD")
+    print("notarization needs nothing here — it uses the App Store Connect API")
+    print("key already in GitHub (DUCT_ASC_API_KEY_ID / _ISSUER_ID / _P8).")
     print("then: python3 scripts/push_env_to_github.py --dry-run")
     return 0
 

@@ -56,19 +56,23 @@ GITHUB_SECRETS = frozenset(
         # key". These two alone make a release possible on those platforms.
         "TAURI_SIGNING_PRIVATE_KEY",
         "TAURI_SIGNING_PRIVATE_KEY_PASSWORD",
-        # Developer ID signing + notarization (macOS DMG only).
-        # DUCT_DEVID_CERT_P12 is base64 of the .p12 — the workflow pipes it
-        # through `base64 --decode`, so paste it encoded, not raw.
-        # DUCT_NOTARY_PASSWORD is an app-specific password from
-        # appleid.apple.com, never the account password.
+        # Developer ID signing (macOS DMG only). DUCT_DEVID_CERT_P12 is base64
+        # of the .p12 — the workflow pipes it through `base64 --decode`, so
+        # paste it encoded, not raw.
+        #
         # NOT the App Store certificates (DUCT_MAS_*): Apple's notary service
         # rejects anything not signed with Developer ID, so those cannot stand
         # in here however similar they look.
+        #
+        # Notarization credentials are deliberately absent. It authenticates
+        # with the App Store Connect API key (DUCT_ASC_API_KEY_ID /
+        # _ISSUER_ID / _P8), which has been a repo secret since the TestFlight
+        # channel and needs no staging. The alternative was an app-specific
+        # password on a personal Apple ID — a second long-lived credential
+        # granting the same thing, to avoid reusing one that already existed.
         "DUCT_DEVID_CERT_P12",
         "DUCT_DEVID_CERT_PASSWORD",
         "DUCT_DEVID_IDENTITY",
-        "DUCT_NOTARY_APPLE_ID",
-        "DUCT_NOTARY_PASSWORD",
     }
 )
 
