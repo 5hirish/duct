@@ -91,6 +91,34 @@ def test_a_question_with_no_date_filters_nothing():
     assert not expand_time_range("", now=NOW)
 
 
+@pytest.mark.parametrize(
+    "question,days",
+    [
+        ("last 30 days", 30),
+        ("past two weeks", 14),
+        ("last 30days", 30),      # no space before the unit
+        ("previous month", 30),
+        ("recent 5 years", 5 * 365),
+    ],
+)
+def test_a_relative_window_is_read_however_it_is_spaced(question, days):
+    """Pins the spacings the pattern accepts — the ReDoS fix rewrote it."""
+    window = expand_time_range(question, now=NOW)
+    assert window
+    assert (NOW.date() - window.since.date()).days == days
+
+
+def test_a_query_that_is_mostly_whitespace_returns_promptly():
+    """`\\s+(count)?\\s*` gave the engine two ways to split every run of spaces,
+    so 20k spaces after "last" took ~18s of one worker. Bounded now."""
+    import time
+
+    evil = "last " + " " * 20_000 + "x"
+    started = time.perf_counter()
+    expand_time_range(evil, now=NOW)
+    assert time.perf_counter() - started < 1.0
+
+
 def test_a_bare_month_means_the_most_recent_one():
     """"in October" in August 2026 is last October, not one that has not happened."""
     assert expand_time_range("traffic in October", now=NOW).since.year == 2025
