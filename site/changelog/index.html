@@ -26,7 +26,7 @@
 <meta name="twitter:image:alt" content="Duct changelog — what shipped, release by release"/>
 <link rel="alternate" type="application/rss+xml" title="Duct Changelog" href="/changelog/feed.xml"/>
 <script type="application/ld+json">
-{"@context": "https://schema.org", "@type": "CollectionPage", "name": "Duct Changelog", "url": "https://getduct.ai/changelog/", "description": "Every release of Duct in plain English: new connectors, agent and model upgrades, execution controls, and desktop builds.", "inLanguage": "en", "isPartOf": {"@type": "WebSite", "name": "Duct", "url": "https://getduct.ai"}, "about": {"@type": "SoftwareApplication", "name": "Duct", "applicationCategory": "BusinessApplication", "operatingSystem": "Web, macOS, Windows, Linux", "softwareVersion": "0.4.0", "releaseNotes": "https://getduct.ai/changelog/", "publisher": {"@type": "Organization", "name": "Alleviate Lab", "url": "https://getduct.ai"}}, "mainEntity": {"@type": "ItemList", "itemListOrder": "https://schema.org/ItemListOrderDescending", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Bring your own models", "url": "https://getduct.ai/changelog/#2026-09-02"}, {"@type": "ListItem", "position": 2, "name": "Duct starts remembering", "url": "https://getduct.ai/changelog/#2026-08-30"}, {"@type": "ListItem", "position": 3, "name": "From insight to execution", "url": "https://getduct.ai/changelog/#2026-08-27"}, {"@type": "ListItem", "position": 4, "name": "Duct runs on your machine", "url": "https://getduct.ai/changelog/#2026-08-20"}, {"@type": "ListItem", "position": 5, "name": "Sign in like a desktop app", "url": "https://getduct.ai/changelog/#2026-07-31"}, {"@type": "ListItem", "position": 6, "name": "Your keys, your machine", "url": "https://getduct.ai/changelog/#2026-06-19"}, {"@type": "ListItem", "position": 7, "name": "A studio for content", "url": "https://getduct.ai/changelog/#2026-05-28"}, {"@type": "ListItem", "position": 8, "name": "The first report", "url": "https://getduct.ai/changelog/#2026-04-06"}]}}
+{"@context": "https://schema.org", "@type": "CollectionPage", "name": "Duct Changelog", "url": "https://getduct.ai/changelog/", "description": "Every release of Duct in plain English: new connectors, agent and model upgrades, execution controls, and desktop builds.", "inLanguage": "en", "isPartOf": {"@type": "WebSite", "name": "Duct", "url": "https://getduct.ai"}, "about": {"@type": "SoftwareApplication", "name": "Duct", "applicationCategory": "BusinessApplication", "operatingSystem": "Web, macOS, Windows, Linux", "softwareVersion": "0.4.1", "releaseNotes": "https://getduct.ai/changelog/", "publisher": {"@type": "Organization", "name": "Alleviate Lab", "url": "https://getduct.ai"}}, "mainEntity": {"@type": "ItemList", "itemListOrder": "https://schema.org/ItemListOrderDescending", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "A download that just opens", "url": "https://getduct.ai/changelog/#2026-09-07"}, {"@type": "ListItem", "position": 2, "name": "Bring your own models", "url": "https://getduct.ai/changelog/#2026-09-02"}, {"@type": "ListItem", "position": 3, "name": "Duct starts remembering", "url": "https://getduct.ai/changelog/#2026-08-30"}, {"@type": "ListItem", "position": 4, "name": "From insight to execution", "url": "https://getduct.ai/changelog/#2026-08-27"}, {"@type": "ListItem", "position": 5, "name": "Duct runs on your machine", "url": "https://getduct.ai/changelog/#2026-08-20"}, {"@type": "ListItem", "position": 6, "name": "Sign in like a desktop app", "url": "https://getduct.ai/changelog/#2026-07-31"}, {"@type": "ListItem", "position": 7, "name": "Your keys, your machine", "url": "https://getduct.ai/changelog/#2026-06-19"}, {"@type": "ListItem", "position": 8, "name": "A studio for content", "url": "https://getduct.ai/changelog/#2026-05-28"}, {"@type": "ListItem", "position": 9, "name": "The first report", "url": "https://getduct.ai/changelog/#2026-04-06"}]}}
 </script>
 <link rel="stylesheet" href="../assets/duct.css"/>
 <script src="../assets/config.js" defer></script>
@@ -66,11 +66,61 @@
 
 <div class="cl-wrap">
 
+<!-- RELEASE: 2026-09-07 -->
+<article class="cl-release" id="2026-09-07" aria-labelledby="r-2026-09-07">
+<div class="cl-rail">
+<span class="cl-date">Sep 7, 2026</span>
+<a class="cl-version" href="https://github.com/5hirish/duct/releases/tag/desktop-v0.4.1" rel="noopener">Desktop 0.4.1</a>
+<a class="cl-permalink" href="#2026-09-07" aria-label="Permalink to the September 7, 2026 release"># permalink</a>
+</div>
+<div class="cl-body">
+<h2 class="cl-title" id="r-2026-09-07">A download that just opens</h2>
+<p class="cl-lede">The desktop app is a thin shell now: no 470 MB download, no twenty-second wait while it boots, and sign-in works as soon as the window appears. Intel Macs are covered for the first time.</p>
+
+<div class="cl-group">
+<p class="cl-group-label">Desktop</p>
+<ul class="cl-list">
+<li><strong>A fraction of the download, and it starts straight away.</strong> The app used to carry an entire Python backend inside it. It renders Duct and talks to the hosted API instead, so there is nothing to unpack and nothing to wait for.</li>
+<li><strong>Intel Macs are supported again.</strong> The macOS build is universal, so one download runs on both Apple silicon and Intel.</li>
+<li><strong>Download links that keep working.</strong> The download page has a card per platform — macOS, Windows, Linux, Debian/Ubuntu — each on a permanent link, so a bookmark still resolves after the next release.</li>
+<li><strong>Windows installs receive updates.</strong> They had been checking and being told there was nothing, every time, because the update manifest was missing its Windows entry.</li>
+<li><strong>A sign-in that cannot finish says so</strong> instead of quietly signing you in on the web and leaving the desktop window where it was.</li>
+</ul>
+</div>
+
+<div class="cl-group">
+<p class="cl-group-label">Models &amp; agents</p>
+<ul class="cl-list">
+<li><strong>xAI is a provider in its own right, with Grok 4.6.</strong> Bring your own xAI key and the tier map you already set applies to it.</li>
+<li><strong>More models to assign to a tier:</strong> Gemini 3.8 Flash, Fable 5.1, DeepSeek V4 Pro and Kimi K3.</li>
+<li><strong>Web search works whichever model you brought.</strong> It is Duct&rsquo;s own tool now, rather than a feature only some providers offer.</li>
+<li><strong>A long insights thread no longer dead-ends.</strong> When the provider says the request is too long, Duct compacts the conversation once and retries, instead of offering you &ldquo;start fresh&rdquo; an hour in.</li>
+</ul>
+</div>
+
+<div class="cl-group">
+<p class="cl-group-label">Execution</p>
+<ul class="cl-list">
+<li><strong>A change your account is not allowed to make is refused up front.</strong> Duct used to find that out at apply time — after you had already approved it.</li>
+<li><strong>Duct records the permissions Google actually granted,</strong> so declining one during setup is visible immediately rather than surfacing as a failure later.</li>
+</ul>
+</div>
+
+<div class="cl-group">
+<p class="cl-group-label">Security</p>
+<ul class="cl-list">
+<li><strong>A site that redirects somewhere private is no longer followed.</strong> Duct checks every redirect hop and the address each host resolves to, not only the URL it was given.</li>
+<li><strong>Provider errors stay out of the browser.</strong> A failed model call used to pass the provider&rsquo;s own error text through to the page; you get a short reference that matches the server log instead.</li>
+<li><strong>Uploaded files can only be read from where they were stored,</strong> enforced at the point a file is opened rather than trusted at each call site.</li>
+</ul>
+</div>
+</div>
+</article>
+
 <!-- RELEASE: 2026-09-02 -->
 <article class="cl-release" id="2026-09-02" aria-labelledby="r-2026-09-02">
 <div class="cl-rail">
 <span class="cl-date">Sep 2, 2026</span>
-<a class="cl-version" href="https://github.com/5hirish/duct/releases/tag/desktop-v0.4.0" rel="noopener">Desktop 0.4.0</a>
 <a class="cl-permalink" href="#2026-09-02" aria-label="Permalink to the September 2, 2026 release"># permalink</a>
 </div>
 <div class="cl-body">
