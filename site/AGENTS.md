@@ -118,6 +118,57 @@ Every HTML page must have:
 - `config.js` then `duct.js`
 - GTM noscript iframe immediately after `<body>`
 
+### Canonical URLs
+
+The canonical is the one URL a page is allowed to have. Get the form right and
+the sitemap, `llms.txt`, OG tags and internal links all agree; get it wrong and
+the same content competes with itself in search.
+
+- Root-level pages use the clean URL: `https://getduct.ai/for-organic-growth`,
+  never `.../for-organic-growth.html`.
+- Blog posts use the extensionless query form:
+  `https://getduct.ai/blog/post?slug=SLUG`. `post.html?slug=` resolves too,
+  which is exactly why it must not appear in a canonical, a sitemap entry, or
+  an internal link.
+- The changelog canonical keeps its trailing slash:
+  `https://getduct.ai/changelog/`. Individual releases are `#YYYY-MM-DD`
+  anchors on that page — never their own URL, never their own canonical.
+- `blog/post.html` sets its canonical **dynamically** from the post's front
+  matter (see the inline script). Do not hardcode it.
+
+### SEO floor
+
+- `<meta name="description">`: 140–160 characters. `og:description` and
+  `twitter:description`: 120–140, and not a copy of each other.
+- `og:image` / `twitter:image`: `https://getduct.ai/assets/og-image.png`
+  unless the page has its own image.
+- JSON-LD `@type` by page kind: landing page → `WebPage`; blog index →
+  `CollectionPage`; blog post → `Article` (set dynamically by `post.html`);
+  changelog → `CollectionPage` with an `about` `SoftwareApplication` (carrying
+  `softwareVersion` and `releaseNotes`) and a `mainEntity` `ItemList` of
+  releases, newest first.
+
+### GTM
+
+Read the container ID from `DUCT_CONFIG.gtm`; never hardcode it in page
+JavaScript. The **one exception** is the `<noscript>` iframe, where the ID is
+written inline because `noscript` cannot run JS. That is correct as it stands
+— do not "fix" it.
+
+## `sitemap.xml`
+
+Every new page or post needs a `<url>` entry with the production URL. The
+values are not arbitrary — they are how the crawl budget gets spent:
+
+| Entry | `priority` | `changefreq` |
+|---|---|---|
+| Landing page | 0.9 | weekly |
+| Blog post | 0.7 | monthly |
+| `/changelog/` | 0.8 | weekly |
+| Changelog year archive | 0.5 | yearly |
+
+Release anchors get no entry of their own — they are part of `/changelog/`.
+
 ## Google Forms
 
 ```html

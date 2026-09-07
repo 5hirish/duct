@@ -162,10 +162,12 @@ Front matter rules:
 
 Insert a new `<a class="blog-card reveal">` inside `.blog-grid`. Cards are ordered newest first. Add `style="transition-delay:.Xs"` incrementing by `.08s` per card position.
 
+The href is the extensionless production path (`/blog/post?slug=`), not `post.html?slug=` — the latter works when clicked but is a second URL for the same post, which is what the canonical exists to prevent.
+
 Card template:
 ```html
-<a href="post.html?slug=<slug>" class="blog-card reveal" style="transition-delay:<Ns>">
-  <div class="blog-card-img" style="background:linear-gradient(135deg,#COLOR1,#COLOR2);display:flex;align-items:center;justify-content:center;font-size:48px"><EMOJI></div>
+<a href="/blog/post?slug=<slug>" class="blog-card reveal" style="transition-delay:<Ns>" role="listitem">
+  <div class="blog-card-img" style="background:linear-gradient(135deg,#COLOR1,#COLOR2);display:flex;align-items:center;justify-content:center;font-size:48px" aria-hidden="true"><EMOJI></div>
   <div class="blog-card-body">
     <span class="tag"><category></span>
     <h3 class="blog-card-title"><title></h3>
@@ -185,7 +187,7 @@ Gradient and emoji should match the topic mood. Existing reference:
 
 ```xml
 <url>
-  <loc>https://getduct.ai/blog/post.html?slug=<slug></loc>
+  <loc>https://getduct.ai/blog/post?slug=<slug></loc>
   <lastmod><date in YYYY-MM-DD format></lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.7</priority>

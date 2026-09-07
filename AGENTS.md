@@ -10,19 +10,57 @@ before writing a line.
 ## How the instruction files work
 
 `AGENTS.md` is canonical in every directory. `CLAUDE.md` beside it is a symlink
-to the same file — edit `AGENTS.md` and both tools see the change. The same
-pattern already applies to skills: `.cursor/skills/<name>/SKILL.md` symlinks to
-`.claude/skills/<name>.md`.
+to the same file — edit `AGENTS.md` and both tools see the change.
+
+Skills follow the same one-source rule, against the cross-client Agent Skills
+convention: the skill itself lives at `.agents/skills/<name>/SKILL.md`, and each
+harness's native directory holds a symlink to that folder.
+
+```
+.agents/skills/<name>/SKILL.md   # canonical — edit here
+.claude/skills/<name>  -> ../../.agents/skills/<name>
+.cursor/skills/<name>  -> ../../.agents/skills/<name>
+```
+
+Codex, Copilot and OpenCode read `.agents/skills/` directly and need no
+symlink. Claude Code and Cursor only scan their own directories, but both
+follow a symlinked skill folder. A skill **must** be a directory containing a
+file named exactly `SKILL.md` — a flat `.claude/skills/<name>.md` is silently
+ignored by Claude Code, which is how this repo's whole skill set went
+undiscovered for months. `name` and `description` frontmatter are required;
+`argument-hint` and `disable-model-invocation` are Claude extensions that other
+clients ignore harmlessly.
+
+Adding a skill means creating the directory under `.agents/skills/` and adding
+both symlinks — copies drift, so never copy.
+
+MCP servers get no such shared file. Every harness disagrees on both location
+and shape — `.mcp.json` here, `.cursor/mcp.json`, `.vscode/mcp.json` (which
+names the key `servers`, not `mcpServers`), `~/.codex/config.toml` in TOML — so
+a symlink cannot serve two of them. The project list lives in `.mcp.json`,
+which Claude Code reads and prompts to trust on first use; `.cursor/mcp.json`
+is Cursor's copy of the same set. Credentials are `${VAR}` references that
+expand from the environment. **Never write a real token into either file** —
+this repository is public.
 
 There was previously a root `AGENTS.md` holding auto-accumulated "learned
 preferences" separate from `CLAUDE.md`. Two files describing one repo drift, and
 that one did — it still named modules that had been deleted. One file per
 directory, written by hand, is the rule now. **Do not append machine-generated
 preference logs to these files.** If a preference is worth keeping it is worth
-writing as a rule, in the directory it applies to.
+writing into the `AGENTS.md` of the directory it applies to.
 
 Instructions are local to the directory they describe. Read the `AGENTS.md` for
 the area you are editing; site conventions do not apply to `backend/`.
+
+**There are deliberately no `.claude/rules/` or `.cursor/rules/` directories.**
+Both existed and both drifted: three files described the site's conventions, the
+Cursor copy had gone stale, and the Claude copy stated the blog canonical as
+`post.html?slug=` when the shipped page and the sitemap use `post?slug=`. Rules
+also load into *every* session, so a backend-only task paid for the site's
+recipes. Conventions that must hold in any session live in the area
+`AGENTS.md`; the step-by-step for one task lives in the skill that owns it,
+where it loads only when that task is running. One owner per fact.
 
 ## Areas
 
