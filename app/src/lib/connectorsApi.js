@@ -36,6 +36,11 @@ export async function saveServerConnector({
 }) {
   const res = await authedRequest("/api/user/connectors", {
     method: "POST",
+    // The one caller that keeps its own 401: this lands the instant the user
+    // returns from the provider, and bouncing them to sign-in there would
+    // discard the connection they just approved. The connections page explains
+    // instead — see reportSyncFailure.
+    retireSession: false,
     body: { connector_type, account_id, account_name, credentials, granted_scopes },
   });
   notifyConnectorsChanged();

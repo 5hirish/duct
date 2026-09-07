@@ -8,7 +8,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { FileText } from "lucide-react";
 import { getActiveProject } from "../../../lib/projects";
-import { hasAuthToken } from "../../../lib/authFetch";
+import { hasAuthToken, isSessionExpired } from "../../../lib/authFetch";
+import LoadError from "@/components/LoadError";
 import { relativeTime } from "@/lib/format";
 import { listArtifacts } from "../../../lib/artifactsApi";
 import { Button } from "@/components/ui/button";
@@ -41,12 +42,15 @@ export default function ArtifactsPage() {
     }
     let alive = true;
     setItems(null);
+    setError("");
     listArtifacts({ projectId: project.id, kind })
       .then((rows) => alive && setItems(rows))
       .catch((err) => {
-        if (!alive) return;
+        // A retired session is already redirecting to sign-in; anything shown
+        // here would only flash past on the way out.
+        if (!alive || isSessionExpired(err)) return;
         setItems([]);
-        setError(err.message || "Failed to load artifacts.");
+        setError(err.message || "");
       });
     return () => {
       alive = false;
@@ -85,10 +89,12 @@ export default function ArtifactsPage() {
         <p className="app-subtle" style={{ marginTop: 18 }}>Loading…</p>
       )}
 
-      {signedIn && items && items.length === 0 && (
+      {signedIn && error && <LoadError what="your artifacts" detail={error} />}
+
+      {signedIn && !error && items && items.length === 0 && (
         <div style={{ marginTop: 18 }}>
           <p className="app-subtle">
-            {error || "No artifacts yet. Run an audit with your project selected and its report lands here."}
+            No artifacts yet. Run an audit with your project selected and its report lands here.
           </p>
           <Button asChild size="sm" style={{ marginTop: 8 }}>
             <Link href="/audit/seo">Run an SEO audit</Link>

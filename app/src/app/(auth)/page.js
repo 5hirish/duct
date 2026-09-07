@@ -6,18 +6,48 @@ import { BASE } from "../../lib/api";
 import { isDesktopShell, getShellInfo, openExternal } from "../../lib/shell";
 import { isLocalBackendActive } from "../../lib/localBackend.js";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
-import { authToken, isTokenValid, setAuthToken } from "@/lib/authFetch";
+import {
+  POST_SIGNIN_REDIRECT_KEY,
+  SIGNIN_REASON_EXPIRED,
+  SIGNIN_REASON_KEY,
+  authToken,
+  isTokenValid,
+  setAuthToken,
+} from "@/lib/authFetch";
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
-const POST_SIGNIN_REDIRECT_KEY = "duct_post_signin_redirect";
 const DEFAULT_LANDING = "/insights/organic-growth";
 
 /**
  * Where to go once signed in. The invite page parks its own path here before
  * sending the recipient through Google, so an emailed invitation survives the
- * OAuth round trip. Only same-origin paths are honoured — an attacker-supplied
- * value must never turn sign-in into an open redirect.
+ * OAuth round trip; authFetch parks the page a rejected session was on, so
+ * signing back in returns you to it. Only same-origin paths are honoured — an
+ * attacker-supplied value must never turn sign-in into an open redirect.
  */
+/**
+ * True when the backend refused the last session and bounced the user here.
+ * Read once and cleared: without it they arrive at a login screen with no idea
+ * why they left the page they were on.
+ *
+ * Memoised because it is destructive and effects are not: StrictMode runs the
+ * mount effect twice in dev, and the second read of an already-cleared key
+ * would answer "no" and silently drop the notice.
+ */
+let expiredSessionFlag = null;
+
+function consumeExpiredSessionFlag() {
+  if (expiredSessionFlag !== null) return expiredSessionFlag;
+  try {
+    const reason = sessionStorage.getItem(SIGNIN_REASON_KEY);
+    sessionStorage.removeItem(SIGNIN_REASON_KEY);
+    expiredSessionFlag = reason === SIGNIN_REASON_EXPIRED;
+  } catch {
+    expiredSessionFlag = false;
+  }
+  return expiredSessionFlag;
+}
+
 function consumePostSignInRedirect() {
   let target = "";
   try {
@@ -62,6 +92,10 @@ function SignInContent() {
   // sign-in and the user needs to be told rather than quietly stranded.
   const [shellBlocked, setShellBlocked] = useState("");
   const [turnstileError, setTurnstileError] = useState("");
+  // Read in an effect, not at render: it touches sessionStorage, and clearing
+  // it during render would make the notice vanish on the next paint.
+  const [sessionExpired, setSessionExpired] = useState(false);
+  useEffect(() => setSessionExpired(consumeExpiredSessionFlag()), []);
   // Turnstile site keys are locked to their registered hostnames, so the widget
   // can never render on the desktop shell's origin (`tauri://localhost`, or a
   // loopback dev server) — it just fails with "Security check failed to load".
@@ -301,7 +335,9 @@ function SignInContent() {
         <div className="signin-form">
           <h2 id="signin-heading">Sign in to Duct</h2>
           <p className="signin-form-sub">
-            Get started with your Google account
+            {sessionExpired
+              ? "Your session ended. Sign in again and we'll take you back to where you were."
+              : "Get started with your Google account"}
           </p>
 
           {requiresTurnstile && <div ref={turnstileContainerRef} className="cf-turnstile" aria-label="Security verification" />}

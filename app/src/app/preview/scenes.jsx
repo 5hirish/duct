@@ -19,6 +19,7 @@
 
 import { useState } from "react";
 
+import LoadError from "@/components/LoadError";
 import ConnectorDialog from "@/components/connections/ConnectorDialog";
 import ConnectorPermissions from "@/components/connections/ConnectorPermissions";
 import ConnectorTile from "@/components/connections/ConnectorTile";
@@ -135,6 +136,23 @@ function Row({ children }) {
 }
 
 export const SCENES = [
+  {
+    id: "load-error",
+    state: "failed",
+    group: "LoadError",
+    title: "A panel whose data did not arrive",
+    note: "The state that used to be a red string where the empty state's invitation belongs. Retryable and not: the second has no way back because its caller reloads on its own.",
+    render: () => (
+      <div style={{ display: "grid", gap: 4 }}>
+        <LoadError
+          what="the execution queue"
+          detail="User not found"
+          onRetry={() => {}}
+        />
+        <LoadError what="your artifacts" detail="" />
+      </div>
+    ),
+  },
   {
     id: "tile-states",
     state: "all states",

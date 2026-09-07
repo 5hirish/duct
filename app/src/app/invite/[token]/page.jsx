@@ -11,11 +11,15 @@ import { Button } from "@/components/ui/button";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
 import { acceptInvitation, fetchInvitation } from "@/lib/membersApi";
 import { hydrateProjectsFromBackend, setActiveProjectId } from "@/lib/projects";
-import { authToken, clearAuthToken, decodeJwtPayload } from "@/lib/authFetch";
+import {
+  POST_SIGNIN_REDIRECT_KEY,
+  authToken,
+  clearAuthToken,
+  decodeJwtPayload,
+} from "@/lib/authFetch";
 
 // Read by the sign-in page after the OAuth round trip, so the invite survives
 // the redirect through Google without ever putting the token in an OAuth param.
-const POST_SIGNIN_REDIRECT_KEY = "duct_post_signin_redirect";
 
 function signedInEmail() {
   if (typeof window === "undefined") return "";

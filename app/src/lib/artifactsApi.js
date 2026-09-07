@@ -4,8 +4,7 @@
 // Listing returns the newest version per artifact group; content bytes are
 // served only through these authed endpoints (Bearer JWT), never a public URL.
 
-import { BASE } from "./api";
-import { authedHeaders, authedRequest } from "./authFetch";
+import { authedFetch, authedRequest } from "./authFetch";
 
 export function listArtifacts({ projectId, kind = "", agentType = "", conversationId = "", limit = 50 } = {}) {
   const params = new URLSearchParams({ project_id: projectId });
@@ -47,14 +46,9 @@ export function diffArtifact(artifactId, against = "prev") {
 
 /** Derived export (pdf | csv | md) of one version — triggers a browser download. */
 export async function exportArtifact(artifact, format) {
-  const res = await fetch(`${BASE}/api/user/artifacts/${artifact.id}/export?format=${format}`, {
-    headers: authedHeaders(),
-  });
-  if (!res.ok) {
-    let detail = "";
-    try { detail = (await res.json()).detail || ""; } catch { /* non-JSON */ }
-    throw new Error(detail || `Export failed (${res.status})`);
-  }
+  const res = await authedFetch(
+    `/api/user/artifacts/${artifact.id}/export?format=${format}`
+  );
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -69,19 +63,13 @@ export async function exportArtifact(artifact, format) {
 
 /** Raw stored bytes as text (freehand HTML, markdown, …). Throws on 404. */
 export async function getArtifactContent(artifactId) {
-  const res = await fetch(`${BASE}/api/user/artifacts/${artifactId}/content`, {
-    headers: authedHeaders(),
-  });
-  if (!res.ok) throw new Error(`Content unavailable (${res.status})`);
+  const res = await authedFetch(`/api/user/artifacts/${artifactId}/content`);
   return res.text();
 }
 
 /** Trigger a browser download of the artifact's stored file. */
 export async function downloadArtifact(artifact) {
-  const res = await fetch(`${BASE}/api/user/artifacts/${artifact.id}/download`, {
-    headers: authedHeaders(),
-  });
-  if (!res.ok) throw new Error(`Download failed (${res.status})`);
+  const res = await authedFetch(`/api/user/artifacts/${artifact.id}/download`);
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");

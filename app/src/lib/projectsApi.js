@@ -12,7 +12,12 @@
 // is present, so signed-out or token-less sessions degrade to local-only.
 
 import { BASE } from "./api";
-import { authedHeaders as authHeaders, hasAuthToken } from "./authFetch";
+import {
+  authedFetch,
+  authedHeaders as authHeaders,
+  endSessionIfUnauthorized,
+  hasAuthToken,
+} from "./authFetch";
 
 // Re-exported: lib/projects.js gates its remote sync on this.
 export { hasAuthToken };
@@ -104,7 +109,13 @@ export async function fetchProjectsRemote() {
   if (!hasAuthToken()) return [];
   try {
     const res = await fetch(`${BASE}/api/user/projects`, { headers: authHeaders() });
-    if (!res.ok) return [];
+    // Degrading to the local cache is right for a flaky server, but a 401 is
+    // not flakiness — swallowing it left the sidebar looking signed in while
+    // every user-scoped page failed. Retire the session, then degrade.
+    if (!res.ok) {
+      endSessionIfUnauthorized(res);
+      return [];
+    }
     const rows = await res.json();
     return Array.isArray(rows) ? rows.map(fromApi) : [];
   } catch {
@@ -121,7 +132,10 @@ export async function upsertProjectRemote(local) {
       headers: authHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify(toApi(local)),
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      endSessionIfUnauthorized(res);
+      return null;
+    }
     return fromApi(await res.json());
   } catch {
     return null;
@@ -131,20 +145,10 @@ export async function upsertProjectRemote(local) {
 /** PATCH the project's execution autonomy ("ask" | "assisted" | "auto").
  * Owner-only on the server. Throws on failure so the settings UI can surface it. */
 export async function setProjectAutonomy(id, level) {
-  const res = await fetch(`${BASE}/api/user/projects/${encodeURIComponent(id)}`, {
+  const res = await authedFetch(`/api/user/projects/${encodeURIComponent(id)}`, {
     method: "PATCH",
-    headers: authHeaders({ "Content-Type": "application/json" }),
-    body: JSON.stringify({ autonomy_level: level }),
+    body: { autonomy_level: level },
   });
-  if (!res.ok) {
-    let detail = "";
-    try {
-      detail = (await res.json()).detail || "";
-    } catch {
-      /* non-JSON error body */
-    }
-    throw new Error(detail || `Server error ${res.status}`);
-  }
   return fromApi(await res.json());
 }
 
