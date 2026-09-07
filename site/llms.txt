@@ -31,6 +31,7 @@ Intended for product managers, growth leads and marketing teams who need cross-t
 - [Free SEO Audit](https://getduct.ai/seo-audit): Runs an AI-powered technical and content SEO audit against a sitemap and returns a scored, prioritised report.
 - [Doctrine](https://getduct.ai/doctrine): The seven opinions Duct is built on, each linked to the file that enforces it — approval-gated execution, renting rather than marrying an agent harness, membership-based authorization, and why agent-written contributions are welcome.
 - [About](https://getduct.ai/about): Duct is built and maintained by Shirish Kadam in Valencia, Spain. MIT licensed.
+- [Changelog](https://getduct.ai/changelog/): Release notes for Duct, newest first, covering April 2026 onward — new connectors, agent and model upgrades, execution controls, and desktop builds, each written as what changed and why it matters. RSS at https://getduct.ai/changelog/feed.xml.
 - [Blog](https://getduct.ai/blog/): Articles on product intelligence, SEO strategy, and growth analytics for SaaS teams.
 
 ## Blog posts

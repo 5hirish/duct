@@ -117,9 +117,10 @@ class PageChecker(HTMLParser):
         if is_error:
             return
 
-        # Determine expected asset prefix
-        is_blog = rel_path.startswith("blog/")
-        asset_prefix = "../assets/" if is_blog else "assets/"
+        # Determine expected asset prefix. Any page one directory down — blog,
+        # changelog — reaches the shared assets through "../".
+        is_nested = "/" in rel_path
+        asset_prefix = "../assets/" if is_nested else "assets/"
 
         # Canonical
         if not is_dynamic:
@@ -199,7 +200,8 @@ def main():
     site_root = os.path.join(repo_root, "site")
     html_files = sorted(
         glob.glob(os.path.join(site_root, "*.html")) +
-        glob.glob(os.path.join(site_root, "blog", "*.html"))
+        glob.glob(os.path.join(site_root, "blog", "*.html")) +
+        glob.glob(os.path.join(site_root, "changelog", "*.html"))
     )
 
     total_errors = 0
