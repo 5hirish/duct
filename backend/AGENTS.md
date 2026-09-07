@@ -153,16 +153,26 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   it inferred from the dependency graph (`libpq5`, from psycopg). That
   interpreter is dynamically linked against `libexpat.so.1`; nothing in the
   graph implies it, so without this the ELF loader fails before Python starts
-  and **the container dies on its first line** — `preDeployCommand` and
-  `startCommand` both go through `poetry run`, so both are affected.
+  and **the container dies on its first line**.
   **`"..."` is not decoration.** Railpack arrays *replace* the inferred value
   rather than extend it; `"..."` is its spread syntax. Writing
   `["libexpat1"]` therefore drops `libpq5` and everything else Railpack
-  worked out, and the failure that follows names none of that — the runtime
-  image loses the files behind the mise interpreter and the container dies
-  with `Failed to import encodings module` / `No module named 'encodings'`,
-  which reads like a broken Python install rather than a truncated package
-  list. If you ever see that error here, this array is the first place to look.
+  worked out.
+- **Runtime commands must name the venv binary, never `poetry run`.**
+  `startCommand` and `preDeployCommand` both run in the deploy image, and
+  `poetry` is not a real program there — it is a mise shim onto a private
+  virtualenv that mise built with the *builder* image's system interpreter.
+  Railpack copies `/mise/installs` into the runtime image but the runtime base
+  carries no system Python, so that interpreter is a dangling symlink and the
+  container dies with `Could not find platform independent libraries` /
+  `Failed to import encodings module` before poetry prints a single line.
+  Nothing in the message mentions poetry, which is why this cost three weeks
+  and two wrong fixes. The app's own `/app/.venv` is unaffected — it was built
+  by the mise CPython that *is* copied — so `/app/.venv/bin/uvicorn` and
+  `/app/.venv/bin/python` work where `poetry run` cannot. This surfaced when
+  Railpack's Debian base moved to trixie (2026-08-16); every backend deploy
+  between then and the fix failed identically, and production served a June
+  image for three months because a failed deploy leaves the old one running.
   The other trap: the build **succeeds** and the image pushes, so Railway
   reports a failed deployment that looks like a build failure and is not. Read
   the *deploy* logs (`railway logs --deployment <id>`), not the build logs.
