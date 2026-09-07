@@ -13,7 +13,7 @@ following this file wrote a URL the site does not serve.
 That is the argument against a second copy, so this is a pointer now:
 
 - **[`site/AGENTS.md`](../../site/AGENTS.md)** — canonical URLs, the `<head>`
-  checklist, asset paths and load order, sitemap entries, Google Forms markup,
+  checklist, asset paths and load order, sitemap entries, download CTA markup,
   GTM placement, the demo-variant pattern, and how to add a page or a post.
   Everything CI enforces is here.
 - **[`site/DESIGN.md`](../../site/DESIGN.md)** — design & voice: the visual

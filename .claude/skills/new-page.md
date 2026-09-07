@@ -115,7 +115,9 @@ Must complement the headline — not restate it.
 ### CTA button
 
 2–5 words, names the outcome not the action. Never: "Submit", "Learn more", "Sign up".
-Good: `Get early access →`, `Reserve your spot →`, `Join waitlist →`
+Good: `Download Duct ↓`, `Get the desktop app ↓`
+
+The site has one CTA — downloading the desktop app. There is no email capture or waitlist, so never write `Get early access →`, `Join waitlist →` or a copy that implies one.
 
 Use the same button copy at both hero and final CTA. Changing it between positions creates confusion about what the main action is.
 
@@ -211,7 +213,7 @@ From live pages: "The PM who owns *growth* without a data team" / "The growth le
 
 **Supporting copy:** 2–3 sentences that read like you're inside their head. Describe their constraint and the outcome they want — not aspirationally, but descriptively of their actual situation.
 
-**Inline CTA:** Keep the mid-section button `That's me — get early access →`. This is the page's highest-intent click because it comes from a section explicitly about the reader. Don't change the copy unless the action changes.
+**Inline CTA:** Keep the mid-section button `That's me — download Duct ↓`. This is the page's highest-intent click because it comes from a section explicitly about the reader. Don't change the copy unless the action changes.
 
 **Audience fit cards:** 4 cards total.
 - Card 1 (primary ICP, `hi` class): `Perfect fit` — the exact person this page is for
@@ -302,7 +304,7 @@ Review at 375px width. The hero must be fully legible without horizontal scroll.
 
 **Conversion mechanics**
 - [ ] Hero footnote names role and company size honestly
-- [ ] Inline audience CTA present: `That's me — get early access →`
+- [ ] Inline audience CTA present: `That's me — download Duct ↓`
 - [ ] Hero and final CTA use identical button copy
 - [ ] Trust micro-copy below both CTAs
 
@@ -315,7 +317,7 @@ Review at 375px width. The hero must be fully legible without horizontal scroll.
 - [ ] Canonical URL correct and unique
 - [ ] All `og:` and `twitter:` tags written fresh (not copied from base)
 - [ ] Nav subtitle updated to new audience label
-- [ ] Both form buttons have `data-form-url` and `data-entry-id`
+- [ ] Both CTAs are `<a href="/download" data-duct-download>` — working links before JS runs
 - [ ] Added to `sitemap.xml`
 - [ ] No `<!-- TODO -->` or placeholder text
 - [ ] Mobile check at 375px passed

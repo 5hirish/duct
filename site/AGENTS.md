@@ -55,7 +55,8 @@ another port (the tests assume 8090).
 | File | Purpose |
 |---|---|
 | `site/assets/duct.css` | All brand styles |
-| `site/assets/duct.js` | GTM init, scroll reveal, nav shadow, `submitForm()` |
+| `site/assets/duct.js` | GTM init, scroll reveal, nav shadow |
+| `site/assets/duct-download.js` | Resolves the latest release; upgrades `[data-duct-download]` CTAs |
 | `site/assets/config.js` | `DUCT_CONFIG.gtm` only |
 | `site/assets/demo.css` | All shared interactive demo CSS (~800 lines) |
 | `site/assets/demo.js` | Shared demo JS engine (state machine, navigation, modal, hash routing) |
@@ -160,16 +161,40 @@ Every HTML page must have:
 - `config.js` then `duct.js`
 - GTM noscript iframe immediately after `<body>`
 
-## Google Forms
+## Download CTAs
+
+Downloading the desktop app is the site's only call to action. There is no
+email capture and no waitlist — the Google Forms integration that used to sit
+here was removed once the desktop build became the way in.
+
+Every CTA ships as a plain link to `/download`:
 
 ```html
-<button class="btn btn-orange btn-lg"
-  data-form-url="https://docs.google.com/forms/d/e/FORM_ID/formResponse"
-  data-entry-id="entry.FIELD_ID"
-  onclick="submitForm('INPUT_ID', this)">Get early access →</button>
+<a class="btn btn-orange btn-lg" href="/download" data-duct-download>Download Duct ↓</a>
+<p class="cta-note" data-duct-download-meta>macOS, Windows and Linux · Free · No credit card</p>
 ```
 
-Copy the form attributes from `site/for-product-intelligence.html` unless the page needs a distinct form. Do not add a `<form>` element.
+`assets/duct-download.js` then *upgrades* it in place — naming the visitor's
+platform and pointing straight at the installer. Write the markup so it is
+already correct before that runs: if the manifest 404s (no release yet), the
+fetch fails, or JavaScript is off, what ships is a working link to `/download`,
+which explains the situation itself. **Never author a CTA whose href depends on
+the script**, and never hardcode a version or an installer URL — the manifest
+is resolved from `releases/latest`, so shipping a desktop version needs no site
+change.
+
+- `data-duct-download-short` renders "Download ↓" instead of "Download for
+  macOS ↓", for the nav pill where the platform name does not fit.
+- `data-duct-download-meta` is overwritten with version, size and platform.
+  Put it only on logistical notes; a line carrying a *reason* to install (the
+  compare-flow trust hint) should stay as written.
+- `site/download.html` renders the full platform table from the same module.
+  Its inline script waits for `DOMContentLoaded`, because inline scripts run
+  *before* deferred ones and `window.DuctDownload` would not exist yet.
+
+The one email field left on the site is the SEO audit's report unlock in
+`seo-audit.html` (`lmSubmitLead()`). That gates a delivered report and is not
+a marketing capture — it is deliberately untouched.
 
 ## New landing page variant (no demo)
 

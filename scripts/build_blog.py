@@ -355,6 +355,7 @@ def render_page(slug: str, fm: dict[str, str], body_html: str, siblings: list[di
 {load_partial('footer-expanded.html')}
 
 <script src="../assets/duct.js" defer></script>
+<script src="../assets/duct-download.js" defer></script>
 <script>
 (function () {{
   var bar = document.getElementById('reading-progress');
