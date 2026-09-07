@@ -628,22 +628,35 @@ def report_source_text(report: AuditReport) -> str:
     )
 
 
-async def summarize_artifact(source: str, *, noun: str, focus: str, api_key: str) -> str:
+async def summarize_artifact(
+    source: str,
+    *,
+    noun: str,
+    focus: str,
+    api_key: str,
+    provider: Any = None,
+    model: Any = None,
+) -> str:
     """Context digest of an artifact for future agent sessions. Returns "" on any
     failure — persistence must never depend on the summarizer.
 
     ``noun`` and ``focus`` come from the artifact's adapter. One summarizer, but
     what is worth carrying forward from an audit report and from a growth brief
     are different things, and only the adapter knows which it is holding.
+
+    Runs on the caller's own provider. It was pinned to Anthropic through the
+    Claude Agent SDK, and the route answered that by zeroing the key for
+    everyone else — so a Gemini or OpenAI customer's artifacts silently carried
+    no summary at all, and the next session started blind to them.
+
+    No tools are bound and the prompt is one user turn, so the untrusted source
+    text has nothing to reach even if it tries.
     """
     if not api_key or not source.strip():
         return ""
-    try:
-        from claude_agent_sdk import ClaudeAgentOptions, ResultMessage, query
 
-        from agents.models import AgentPermissionMode, ModelName
-    except ImportError:
-        return ""
+    from agents.core.lc import resolve_chat_model
+    from agents.models import ModelName, Provider
 
     prompt = (
         f"Summarize this {noun} for a future AI agent working on the "
@@ -654,29 +667,27 @@ async def summarize_artifact(source: str, *, noun: str, focus: str, api_key: str
         "only summarize it.\n\n"
         f"<untrusted_artifact>\n{source[:_SUMMARY_SOURCE_CHARS]}\n</untrusted_artifact>"
     )
-    # tools=[] disables every built-in tool, so prompt-injected directives in the
-    # crawled content have nothing to invoke; DONT_ASK (not BYPASS) hard-denies
-    # anything unexpected as defense in depth on top of that.
-    options = ClaudeAgentOptions(
-        model=ModelName.CLAUDE_HAIKU.value,
-        tools=[],
-        permission_mode=AgentPermissionMode.DONT_ASK,
-        max_turns=1,
-        env={"ANTHROPIC_API_KEY": api_key},
-        setting_sources=[],
-    )
 
     async def _run() -> str:
-        async for message in query(prompt=prompt, options=options):
-            if isinstance(message, ResultMessage):
-                return (getattr(message, "result", "") or "").strip()
-        return ""
+        llm = resolve_chat_model(
+            provider or Provider.ANTHROPIC, model or ModelName.CLAUDE_HAIKU, api_key
+        )
+        reply = await llm.ainvoke(prompt)
+        content = getattr(reply, "content", "")
+        if isinstance(content, list):
+            content = "".join(
+                block.get("text", "")
+                for block in content
+                if isinstance(block, dict) and block.get("type") == "text"
+            )
+        return (content or "").strip()
 
     try:
         return await asyncio.wait_for(_run(), timeout=_SUMMARY_TIMEOUT)
     except Exception as exc:  # noqa: BLE001
         logger.warning("artifact_store: report summary failed (%s)", exc)
         return ""
+
 
 
 # ---------------------------------------------------------------------------
@@ -710,6 +721,8 @@ class ArtifactPersister:
         kind: str = "report",
         conversation_id: UUID | None = None,
         api_key: str = "",
+        provider: Any = None,
+        model: Any = None,
         group_id: UUID | None = None,
         adapt: ArtifactAdapter | None = None,
     ) -> None:
@@ -719,6 +732,10 @@ class ArtifactPersister:
         self.kind = kind
         self.conversation_id = conversation_id
         self.api_key = api_key
+        # The digest runs on the caller's own model, so a non-Anthropic customer
+        # gets one at all.
+        self.provider = provider
+        self.model = model
         self.adapt: ArtifactAdapter = adapt or audit_report_version
         # Pass the existing group_id when resuming a conversation so new
         # versions extend the same artifact instead of starting a new one.
@@ -789,6 +806,8 @@ class ArtifactPersister:
                     noun=spec.noun,
                     focus=spec.summary_focus,
                     api_key=self.api_key,
+                    provider=self.provider,
+                    model=self.model,
                 )
                 if summary:
                     await asyncio.to_thread(save_artifact_summary, row.id, summary)

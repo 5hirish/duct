@@ -10,9 +10,33 @@ before writing a line.
 ## How the instruction files work
 
 `AGENTS.md` is canonical in every directory. `CLAUDE.md` beside it is a symlink
-to the same file — edit `AGENTS.md` and both tools see the change. The same
-pattern already applies to skills: `.cursor/skills/<name>/SKILL.md` symlinks to
-`.claude/skills/<name>.md`.
+to the same file — edit `AGENTS.md` and both tools see the change.
+
+Skills follow the same one-source rule, against the cross-client Agent Skills
+convention: the skill lives at `.agents/skills/<name>/SKILL.md` and each
+harness's own directory holds a symlink to that folder.
+
+```
+.agents/skills/<name>/SKILL.md   # canonical — edit here
+.claude/skills/<name>  -> ../../.agents/skills/<name>
+.cursor/skills/<name>  -> ../../.agents/skills/<name>
+```
+
+Codex, Copilot and OpenCode read `.agents/skills/` directly and need no
+symlink. Claude Code and Cursor scan only their own directories, but both
+follow a symlinked skill folder. A skill **must** be a directory holding a file
+named exactly `SKILL.md`: the flat `.claude/skills/<name>.md` layout this
+replaces was not a supported form, so Claude Code discovered none of these
+skills at all. Adding one means creating the directory and both symlinks —
+copies drift, so never copy.
+
+MCP servers get no such shared file, because none can exist: VS Code names the
+key `servers` rather than `mcpServers`, Codex is TOML, and Cursor expands
+`${env:VAR}` where Claude Code expands `${VAR}`. The project list lives in
+`.mcp.json`, which Claude Code prompts to trust on first use; `.cursor/mcp.json`
+is Cursor's generated copy of the same set. Credentials in both are `${VAR}`
+references — **never write a real token into either file**, this repository is
+public.
 
 There was previously a root `AGENTS.md` holding auto-accumulated "learned
 preferences" separate from `CLAUDE.md`. Two files describing one repo drift, and
@@ -94,7 +118,13 @@ Check here before hand-rolling env or secret plumbing:
   `wrangler deploy`. `NEXT_PUBLIC_*` are baked at build time, so an env change
   needs this, not just a dashboard edit.
 - `push_env_to_github.py` — push allowlisted keys from gitignored `.env.test`
-  files to GitHub repo secrets/variables.
+  files to GitHub repo secrets/variables. Reads `backend/`, `app/` and
+  `desktop/` `.env.test`; the desktop release signing keys are on the allowlist
+  because a runner can only ever receive them as GitHub secrets.
+- `stage_devid_secrets.py` — turn a Developer ID `.cer` plus its private key
+  into the three `DUCT_DEVID_*` values, staged in `desktop/.env.test`. Exists
+  because OpenSSL 3 exports a PKCS#12 that Apple's `security(1)` cannot read,
+  and blames the password for it.
 - `bootstrap_env_test.sh` — copy local dev env files to the gitignored
   `.env.test` targets.
 - `envfile.py` — shared dotenv parser used by the above.

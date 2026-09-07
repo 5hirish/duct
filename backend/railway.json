@@ -6,6 +6,7 @@
       "backend/**/*.py",
       "backend/pyproject.toml",
       "backend/poetry.lock",
+      "backend/railpack.json",
       "backend/railway.json"
     ]
   },

@@ -320,7 +320,7 @@ linksHost.querySelectorAll('a[href]').forEach(function(anchor) {
 });
 
 if (!linksHost.querySelector('.btn') && document.getElementById('cta')) {
-  appendLink('#cta', 'Get early access →', 'nav-mobile-link btn btn-orange nav-mobile-link--cta');
+  appendLink('#cta', 'Download Duct ↓', 'nav-mobile-link btn btn-orange nav-mobile-link--cta');
 }
 
 if (!linkList.children.length) return;
@@ -419,44 +419,7 @@ if (Object.keys(utms).length) {
 })();
 
 // Shared submit function — reads form URL and entry ID from data- attributes on the button
-function submitForm(inputId, btn) {
-var input = document.getElementById(inputId);
-var email = input.value.trim();
-if (!email || email.indexOf('@') === -1) {
-input.style.borderColor = 'var(--orange)';
-input.focus();
-setTimeout(function() { input.style.borderColor = ''; }, 2000);
-return;
-}
-btn.textContent = 'Submitting...';
-btn.disabled = true;
 
-var formURL = btn.dataset.formUrl;
-var entryId = btn.dataset.entryId;
-var body = new FormData();
-body.append(entryId, email);
-
-fetch(formURL, { method: 'POST', mode: 'no-cors', body: body })
-.then(function() {
-btn.textContent = 'You are on the list!';
-btn.style.background = '#1a9e5c';
-btn.style.boxShadow = '0 8px 24px rgba(26,158,92,.25)';
-btn.disabled = false;
-input.disabled = true;
-window.dataLayer = window.dataLayer || [];
-window.dataLayer.push({ event: 'form_submit', page: window.location.pathname + window.location.search + (window.location.hash || '') });
-})
-.catch(function() {
-btn.textContent = 'You are on the list!';
-btn.style.background = '#1a9e5c';
-btn.disabled = false;
-input.disabled = true;
-window.dataLayer = window.dataLayer || [];
-window.dataLayer.push({ event: 'form_submit', page: window.location.pathname + window.location.search + (window.location.hash || '') });
-});
-}
-
-window.submitForm = submitForm;
 }
 
 if (window.__DUCT_PARTIALS_READY) {

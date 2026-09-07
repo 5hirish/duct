@@ -17,7 +17,7 @@ from enum import StrEnum
 from typing import Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from agents.core.session import BaseAgentSession
 
@@ -308,6 +308,9 @@ class ContentResearchContext(BaseModel):
     trending_styles:          list[TrendSignal] = Field(default_factory=list)
     audience_insights:        list[str] = Field(default_factory=list)
     enrichment_notes:         list[str] = Field(default_factory=list)
+    # Why the research pass did not contribute, when it did not. Shown on the
+    # enrichment step and logged; not rendered into the prompt.
+    degraded_reason:          str = ""
 
 
 class ImagePrompt(BaseModel):
@@ -371,37 +374,36 @@ class ContentStatus(StrEnum):
 
 
 class ContentTool(StrEnum):
-    """Fully-namespaced names of the content MCP tools (server ``duct_content``).
+    """Names of the content tools as the model sees them.
 
-    The @tool decorators in agents/content/tools.py register the *short* names
-    (e.g. "submit_post_draft"); the SDK namespaces them as
-    ``mcp__duct_content__<short>``. This enum holds those namespaced names — the
-    form used in ClaudeAgentOptions.allowed_tools and the can_use_tool dispatch.
-    Mirrors AuditTool (agents/audit/schema.py), which does the same for the
-    audit (``duct_crawl``) MCP tools. Keep in sync with the @tool registrations.
+    ``agents/content/tools.py`` registers each under this name, and the
+    sub-agent specs pick their subsets by it. The values are the *short* names
+    — the ``mcp__duct_content__`` prefix went with the Claude Agent SDK, whose
+    MCP server was the thing that namespaced them. Keep in sync with the
+    ``build_content_tools_lc`` registrations.
     """
 
-    REMEMBER_FACT              = "mcp__duct_content__RememberFact"
-    SEARCH_MEMORY              = "mcp__duct_content__SearchMemory"
-    GET_MEMORY                 = "mcp__duct_content__GetMemory"
-    SUBMIT_PLAN                = "mcp__duct_content__submit_plan"
-    SUBMIT_POST_DRAFT          = "mcp__duct_content__submit_post_draft"
-    EDIT_SLIDE                 = "mcp__duct_content__edit_slide"
-    FETCH_BRAND_CONTEXT        = "mcp__duct_content__fetch_brand_context"
-    FETCH_TOPIC_BANK           = "mcp__duct_content__fetch_topic_bank"
-    FETCH_FORMAT_LIBRARY       = "mcp__duct_content__fetch_format_library"
-    FETCH_AVATAR_LIBRARY       = "mcp__duct_content__fetch_avatar_library"
-    FETCH_CONTENT_HISTORY      = "mcp__duct_content__fetch_content_history"
-    FETCH_CONTENT_ASSETS       = "mcp__duct_content__fetch_content_assets"
-    FETCH_DISCOVERED_REFERENCES = "mcp__duct_content__fetch_discovered_references"
-    FETCH_POST                 = "mcp__duct_content__fetch_post"
-    FETCH_SLIDE_CONTEXT        = "mcp__duct_content__fetch_slide_context"
-    RENDER_SLIDE               = "mcp__duct_content__render_slide"
-    GENERATE_IMAGE             = "mcp__duct_content__generate_image"
-    EDIT_IMAGE                 = "mcp__duct_content__edit_image"
-    PUBLISH_POST               = "mcp__duct_content__publish_post"
-    MARK_POSTED                = "mcp__duct_content__mark_posted"
-    LOG_METRICS                = "mcp__duct_content__log_metrics"
+    REMEMBER_FACT               = "RememberFact"
+    SEARCH_MEMORY               = "SearchMemory"
+    GET_MEMORY                  = "GetMemory"
+    SUBMIT_PLAN                 = "submit_plan"
+    SUBMIT_POST_DRAFT           = "submit_post_draft"
+    EDIT_SLIDE                  = "edit_slide"
+    FETCH_BRAND_CONTEXT         = "fetch_brand_context"
+    FETCH_TOPIC_BANK            = "fetch_topic_bank"
+    FETCH_FORMAT_LIBRARY        = "fetch_format_library"
+    FETCH_AVATAR_LIBRARY        = "fetch_avatar_library"
+    FETCH_CONTENT_HISTORY       = "fetch_content_history"
+    FETCH_CONTENT_ASSETS        = "fetch_content_assets"
+    FETCH_DISCOVERED_REFERENCES = "fetch_discovered_references"
+    FETCH_POST                  = "fetch_post"
+    FETCH_SLIDE_CONTEXT         = "fetch_slide_context"
+    RENDER_SLIDE                = "render_slide"
+    GENERATE_IMAGE              = "generate_image"
+    EDIT_IMAGE                  = "edit_image"
+    PUBLISH_POST                = "publish_post"
+    MARK_POSTED                 = "mark_posted"
+    LOG_METRICS                 = "log_metrics"
 
 
 # Per-slide kind — drives which template renders the slide within a layout.
@@ -427,7 +429,18 @@ class SlideItem(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     label: str = ""                                # serif cell label / short caption
-    marker: Literal["", "dont", "do"] = ""         # before-after: ❌ (dont) / ✅ (do)
+    # before-after: ❌ (dont) / ✅ (do); "" everywhere else. A plain str with a
+    # validator rather than Literal["", "dont", "do"]: the writers expose this
+    # model as their argument schema and Gemini rejects an enum with an empty
+    # member ("enum[0]: cannot be empty", 400) — the whole tool set with it.
+    marker: str = Field("", description='"dont" or "do" on a before-after cell; "" otherwise.')
+
+    @field_validator("marker")
+    @classmethod
+    def _marker_is_known(cls, value: str) -> str:
+        if value not in ("", "dont", "do"):
+            raise ValueError('marker must be "dont", "do" or ""')
+        return value
     image_prompt: str = ""
     aspect_ratio: AspectRatio = AspectRatio.PORTRAIT_9_16
     image_asset_id: UUID | None = None
@@ -521,6 +534,14 @@ class PostDraft(BaseModel):
 
 
 class PlanDraft(BaseModel):
+    """What submit_plan accepts — and the argument schema the model is shown.
+
+    ``Day`` itself stays lenient because stored rows are read back through
+    it; the strictness lives here, at the boundary the model writes across.
+    A model probing the tool to learn its shape once persisted ``days: [{}]``
+    as a real plan, which then counted as the deliverable.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     type: Literal["plan"] = "plan"
@@ -528,7 +549,15 @@ class PlanDraft(BaseModel):
     name: str = ""
     start_date: date | None = None
     character: Character = Field(default_factory=Character)
-    days: list[Day]
+    days: list[Day] = Field(min_length=1, description="The posts, in order; each needs a topic and a pillar.")
+
+    @field_validator("days")
+    @classmethod
+    def _every_day_is_planned(cls, days: list[Day]) -> list[Day]:
+        unplanned = [i for i, d in enumerate(days) if not d.topic.strip() or not d.pillar.strip()]
+        if unplanned:
+            raise ValueError(f"every day needs a non-empty topic and pillar; days at index {unplanned} do not")
+        return days
 
 
 # ---------------------------------------------------------------------------
@@ -550,6 +579,7 @@ def make_session(
         mode=mode,
         event_queue=asyncio.Queue(),
         chat_queue=asyncio.Queue(),
+        steer_queue=asyncio.Queue(),
         answer_future=None,
         created_at=time.monotonic(),
     )

@@ -95,6 +95,10 @@ _BY_CLASS_NAME: dict[str, ErrorCode] = {
     # Provider SDKs (anthropic, openai share these names).
     "RateLimitError": ErrorCode.RATE_LIMITED,
     "AuthenticationError": ErrorCode.AUTH,
+    # Duct's own: no key this run may spend (agents/engines.py). Raised inside
+    # a background worker, where the 402 handler cannot see it, so it reaches
+    # the browser as a failure event — and "the key" is the thing to fix.
+    "ProviderKeyRequired": ErrorCode.AUTH,
     "PermissionDeniedError": ErrorCode.PERMISSION,
     "NotFoundError": ErrorCode.MODEL_NOT_FOUND,
     "APITimeoutError": ErrorCode.TIMEOUT,

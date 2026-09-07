@@ -52,8 +52,18 @@ const SIDECAR_BIN_ENV: &str = "DUCT_SIDECAR_BIN";
 /// Embedding the id (and the secret below) is sanctioned — Google documents
 /// installed-app credentials as not confidential, since anyone can extract them
 /// from a shipped binary. They identify the app, they do not authorise it.
-const GOOGLE_DESKTOP_CLIENT_ID: &str =
-    "726839654841-fs8i0kehickma5411jepc6v4d3r26b4g.apps.googleusercontent.com";
+///
+/// Duct's own client is the default; a build that sets
+/// `GOOGLE_DESKTOP_OAUTH_CLIENT_ID` replaces it. A fork needs that, because the
+/// consent screen names whoever owns the client — sign-in on someone else's
+/// build should not say "Duct". The id and the secret below are halves of one
+/// credential and must be overridden together: an id from one Google project
+/// with a secret from another fails at the token exchange, several screens
+/// after the user last had a chance to notice.
+const GOOGLE_DESKTOP_CLIENT_ID: &str = match option_env!("GOOGLE_DESKTOP_OAUTH_CLIENT_ID") {
+    Some(id) => id,
+    None => "726839654841-fs8i0kehickma5411jepc6v4d3r26b4g.apps.googleusercontent.com",
+};
 
 /// Baked in at build time so the value stays out of git:
 /// `GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET=… npm run build`.
@@ -145,6 +155,21 @@ fn sidecar_path(app: &AppHandle) -> Result<PathBuf, String> {
         "sidecar binary not found. Build it with `cd backend && poetry run pyinstaller \
          duct_sidecar.spec --noconfirm`, or set {SIDECAR_BIN_ENV}."
     ))
+}
+
+/// Whether this build has a sidecar to run at all.
+///
+/// The official build ships without one and talks to the hosted API; the
+/// self-host build adds `bundle.resources` back and runs everything locally.
+/// Both come from the same binary, so this is a runtime probe rather than a
+/// cargo feature — a feature would mean two binaries, two capability sets and
+/// two things to keep honest, and the answer is already sitting on disk.
+///
+/// `sidecar_path` also accepts the dev fallback under `backend/dist/`, which is
+/// what makes `npm run dev` exercise the local path on a machine that has
+/// frozen one. On a user's machine that path does not exist.
+pub fn is_available(app: &AppHandle) -> bool {
+    sidecar_path(app).is_ok()
 }
 
 /// Origin (`scheme://host[:port]`) of this shell's main window.

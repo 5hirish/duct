@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Duct's status tokens are correct and unreachable: theme.css never maps --color-destructive-foreground, --color-success-foreground or --color-warning-foreground, so three utilities are never generated and the Stop button renders body text on red. Plus measured WCAG contrast for every token pair, the palette classes that fail, and the responsive traps.">
+<title>Black Text On A Red Button</title>
+<style>
+  :root {
+    --bg: #f7f7f6;
+    --surface: #ffffff;
+    --surface-2: #fcfcfb;
+    --ink: #0D0F1A;
+    --ink-2: #2a2d3e;
+    --ink-3: #6b6f82;
+    --border: #ebebea;
+    --border-strong: #dcdcd8;
+    --accent: #FF5C00;
+    --accent-ink: #C43F00;
+    --accent-soft: rgba(255, 92, 0, .09);
+    --ok: #1F7A6B;
+    --ok-soft: rgba(31, 122, 107, .10);
+    --warn: #A16207;
+    --warn-soft: rgba(161, 98, 7, .10);
+    --bad: #B42318;
+    --bad-soft: rgba(180, 35, 24, .10);
+    --serif: Georgia, "Times New Roman", Times, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --r: 12px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0D0F1A;
+      --surface: #14172a;
+      --surface-2: #191d33;
+      --ink: #f1f1ef;
+      --ink-2: #c6c8d4;
+      --ink-3: #8b8fa3;
+      --border: #262a42;
+      --border-strong: #343a58;
+      --accent: #FF7A2E;
+      --accent-ink: #FF9A5E;
+      --accent-soft: rgba(255, 122, 46, .13);
+      --ok: #4FBFA8;
+      --ok-soft: rgba(79, 191, 168, .13);
+      --warn: #D9A441;
+      --warn-soft: rgba(217, 164, 65, .13);
+      --bad: #F08A80;
+      --bad-soft: rgba(240, 138, 128, .13);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0D0F1A;
+    --surface: #14172a;
+    --surface-2: #191d33;
+    --ink: #f1f1ef;
+    --ink-2: #c6c8d4;
+    --ink-3: #8b8fa3;
+    --border: #262a42;
+    --border-strong: #343a58;
+    --accent: #FF7A2E;
+    --accent-ink: #FF9A5E;
+    --accent-soft: rgba(255, 122, 46, .13);
+    --ok: #4FBFA8;
+    --ok-soft: rgba(79, 191, 168, .13);
+    --warn: #D9A441;
+    --warn-soft: rgba(217, 164, 65, .13);
+    --bad: #F08A80;
+    --bad-soft: rgba(240, 138, 128, .13);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16.5px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 24px 120px; }
+
+  .spine { position: relative; padding-left: 44px; }
+  .spine::before {
+    content: ""; position: absolute; left: 5px; top: 12px; bottom: 0; width: 1px;
+    background: linear-gradient(to bottom, var(--border-strong), var(--border-strong) 70%, transparent);
+  }
+  @media (max-width: 760px) { .spine { padding-left: 0; } .spine::before { display: none; } }
+
+  section { margin-top: 76px; scroll-margin-top: 24px; }
+
+  h1, h2, h3, h4 { font-family: var(--serif); font-weight: 400; text-wrap: balance; letter-spacing: -.3px; }
+  h2 { font-size: clamp(27px, 3.4vw, 36px); line-height: 1.15; margin: 0 0 10px; position: relative; }
+  .spine > section > h2::before {
+    content: ""; position: absolute; left: -44px; top: .55em; width: 11px; height: 11px;
+    background: var(--accent); border-radius: 2px;
+  }
+  @media (max-width: 760px) { .spine > section > h2::before { display: none; } }
+  h3 { font-size: 20px; line-height: 1.3; margin: 34px 0 8px; }
+  h4 { font-size: 17px; margin: 22px 0 6px; font-family: var(--sans); font-weight: 600; }
+
+  p, li { color: var(--ink-2); }
+  p { margin: 0 0 16px; max-width: 70ch; }
+  li { margin-bottom: 8px; max-width: 70ch; }
+  ul, ol { padding-left: 20px; margin: 0 0 18px; }
+  strong { color: var(--ink); font-weight: 600; }
+  em { color: var(--ink); font-style: italic; }
+  a { color: var(--accent-ink); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  code {
+    font-family: var(--mono); font-size: .88em; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; color: var(--ink);
+  }
+  pre {
+    font-family: var(--mono); font-size: 13px; line-height: 1.5; background: var(--surface);
+    border: 1px solid var(--border); border-radius: var(--r); padding: 16px 18px;
+    overflow-x: auto; margin: 16px 0 22px; color: var(--ink);
+  }
+  pre code { background: none; border: 0; padding: 0; font-size: inherit; }
+
+  .eyebrow {
+    font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--accent); margin: 0 0 12px; display: block;
+  }
+  .lede { font-size: 18.5px; color: var(--ink); max-width: 66ch; }
+
+  header.masthead { padding: 84px 0 34px; border-bottom: 1px solid var(--border-strong); margin-bottom: 8px; }
+  header.masthead h1 { font-size: clamp(42px, 7vw, 68px); line-height: 1.02; margin: 0 0 20px; letter-spacing: -1.4px; }
+  .thesis {
+    font-family: var(--serif); font-size: clamp(19px, 2.3vw, 23px); line-height: 1.45; color: var(--ink);
+    max-width: 34ch; border-left: 3px solid var(--accent); padding-left: 18px; margin: 0 0 30px;
+  }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 8px 26px; font-family: var(--mono); font-size: 11.5px;
+    letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3);
+  }
+  .meta span b { color: var(--ink-2); font-weight: 600; }
+
+  .scroller { overflow-x: auto; margin: 22px 0 26px; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; min-width: 720px; font-size: 14px; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--ink-2); }
+  thead th {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3);
+    font-weight: 600; background: var(--surface-2); border-bottom: 1px solid var(--border-strong); white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td:first-child { color: var(--ink); font-weight: 600; }
+  td.num { font-family: var(--mono); white-space: nowrap; color: var(--ink); }
+  td code { white-space: nowrap; }
+
+  .pill {
+    display: inline-block; font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase;
+    font-weight: 600; padding: 3px 8px; border-radius: 100px; white-space: nowrap;
+  }
+  .pill.yes { background: var(--ok-soft); color: var(--ok); }
+  .pill.no  { background: var(--bad-soft); color: var(--bad); }
+  .pill.mid { background: var(--warn-soft); color: var(--warn); }
+  .pill.pick { background: var(--accent-soft); color: var(--accent-ink); }
+
+  .callout { background: var(--accent-soft); border-left: 3px solid var(--accent); padding: 18px 22px; border-radius: 0 var(--r) var(--r) 0; margin: 26px 0; }
+  .callout p { margin: 0; color: var(--ink); max-width: 68ch; }
+  .callout p + p { margin-top: 10px; }
+  .note { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 18px 22px; margin: 24px 0; }
+  .note p:last-child { margin-bottom: 0; }
+  .note .eyebrow { color: var(--ink-3); }
+
+  .metrics { display: grid; gap: 14px; margin: 26px 0 8px; grid-template-columns: 1fr 1fr; }
+  @media (min-width: 780px) { .metrics { grid-template-columns: repeat(4, 1fr); } }
+  .metric { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 16px 18px; }
+  .metric .n { font-family: var(--mono); font-size: 27px; font-weight: 600; color: var(--accent-ink); line-height: 1.1; display: block; }
+  .metric .l { font-size: 13.5px; color: var(--ink-3); display: block; margin-top: 6px; line-height: 1.4; }
+
+  .phase { display: grid; grid-template-columns: 76px 1fr; gap: 0 22px; padding: 22px 0; border-top: 1px solid var(--border); }
+  .phase:last-of-type { border-bottom: 1px solid var(--border); }
+  .phase .n { font-family: var(--mono); font-size: 12px; font-weight: 600; letter-spacing: .08em; color: var(--accent); padding-top: 5px; }
+  .phase h3 { margin: 0 0 6px; font-size: 19px; }
+  .phase p { font-size: 15.5px; margin-bottom: 10px; }
+  .phase ul { margin-bottom: 0; font-size: 15px; }
+  @media (max-width: 620px) { .phase { grid-template-columns: 1fr; gap: 6px; } .phase .n { padding-top: 0; } }
+
+  /* Live swatches: the app's real token values, so the reader sees the defect, not a description of it. */
+  .swatches { display: grid; gap: 14px; grid-template-columns: 1fr; margin: 22px 0 8px; }
+  @media (min-width: 700px) { .swatches { grid-template-columns: 1fr 1fr; } }
+  .swatch { border: 1px solid var(--border); border-radius: var(--r); padding: 18px; }
+  .swatch.light { background: oklch(1 0 0); color: oklch(0.18 0.03 265); }
+  .swatch.dark  { background: oklch(0.145 0 0); color: oklch(0.985 0 0); }
+  .swatch .cap { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; opacity: .7; margin: 0 0 12px; }
+  .swatch .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 10px; }
+  .swatch .row:last-child { margin-bottom: 0; }
+  .btn { display: inline-flex; align-items: center; height: 36px; padding: 0 12px; font: 500 14px/1 var(--sans); border: 1px solid transparent; }
+  .btn.md { border-radius: 6px; }
+  .btn.pill { border-radius: 100px; }
+  .swatch .lbl { font-size: 12.5px; opacity: .75; }
+  .swatch.light .stop-actual  { background: oklch(0.52 0.22 27); color: oklch(0.18 0.03 265); }
+  .swatch.light .stop-intent  { background: oklch(0.52 0.22 27); color: oklch(1 0 0); }
+  .swatch.light .stop-variant { background: oklch(0.52 0.22 27 / 10%); color: oklch(0.52 0.22 27); }
+  .swatch.light .send         { background: oklch(0.52 0.22 270); color: oklch(1 0 0); }
+  .swatch.dark .stop-actual   { background: oklch(0.704 0.191 22.216); color: oklch(0.985 0 0); }
+  .swatch.dark .stop-intent   { background: oklch(0.704 0.191 22.216); color: oklch(1 0 0); }
+  .swatch.dark .stop-fixed    { background: oklch(0.704 0.191 22.216); color: oklch(0.14 0.03 22); }
+  .swatch.dark .stop-variant  { background: oklch(0.704 0.191 22.216 / 20%); color: oklch(0.704 0.191 22.216); }
+  .swatch.dark .send          { background: oklch(0.72 0.18 270); color: oklch(0.1 0.02 270); }
+  .chipdemo { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 100px; font: 500 12px/1 var(--sans); }
+  .chipdemo.posted { background: oklch(0.723 0.219 149.579 / 90%); color: #fff; }
+  .chipdemo.draft  { background: oklch(0.769 0.188 70.08 / 90%); color: #fff; }
+  .chipdemo.warn10 { background: oklch(0.769 0.188 70.08 / 15%); color: oklch(0.666 0.179 58.318); font-size: 10px; font-family: var(--mono); }
+  .tiny { font-family: var(--mono); }
+
+  footer { margin-top: 88px; padding-top: 26px; border-top: 1px solid var(--border-strong); font-size: 14px; color: var(--ink-3); max-width: 72ch; }
+  .sources { font-size: 13.5px; color: var(--ink-3); }
+  .sources li { max-width: none; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <span class="eyebrow">Duct · Engineering · Design system review</span>
+    <h1>Black text on a red button</h1>
+    <p class="thesis">The status tokens are correct. Three of them are also unreachable, because the theme never names them — and a token nothing can reference is indistinguishable from one that was never added.</p>
+    <div class="meta">
+      <span><b>Scope</b> app/ (Next.js), main @ db4f295</span>
+      <span><b>Method</b> token math + live probe + grep</span>
+      <span><b>Date</b> 2026-09-06</span>
+      <span><b>Status</b> findings only, nothing changed</span>
+    </div>
+  </header>
+
+  <div class="spine">
+
+  <section id="summary">
+    <h2>The short version</h2>
+    <p class="lede">Duct's token <em>values</em> are sound. Every status pair measures 4.5:1 or better in both themes, including the ones the recent design pass added. What is broken is the wiring and the adoption: three colours the theme defines cannot be referenced from a class at all, and the two newest tokens have two uses in the whole app, both on the preview page. Every failure that reaches a user happens <em>off</em> the tokens.</p>
+
+    <div class="metrics">
+      <div class="metric"><span class="n">3</span><span class="l">status colours whose <code>-foreground</code> is defined but never mapped, so the utility is never generated.</span></div>
+      <div class="metric"><span class="n">2</span><span class="l">uses of <code>--success</code>/<code>--warning</code> in JSX, both in <code>preview/TokenSheet.jsx</code>. In real UI, none.</span></div>
+      <div class="metric"><span class="n">179</span><span class="l">uses of <code>text-[Npx]</code> at 11px or smaller, on top of a two-size type system.</span></div>
+      <div class="metric"><span class="n">332</span><span class="l">raw palette colour classes in JSX; 15 files carry them with no <code>dark:</code> at all.</span></div>
+    </div>
+
+    <div class="callout">
+      <p><strong>The headline, because it is invisible from the code.</strong> The <code>@theme inline</code> block in <code>theme.css</code> maps <code>--color-destructive</code>, <code>--color-success</code> and <code>--color-warning</code>. It maps none of their <code>-foreground</code> partners. Tailwind v4 generates utilities only from what that block names, so <code>.text-destructive-foreground</code>, <code>.text-success-foreground</code> and <code>.text-warning-foreground</code> are never emitted. Ten other <code>-foreground</code> pairs in the same block <em>are</em> mapped, which is exactly why nothing looks wrong when you read the file.</p>
+      <p><strong>What that does to the Stop button.</strong> <code>workspace/ChatInput.jsx:153</code> paints <code>bg-destructive text-destructive-foreground</code>. The background applies, the text colour silently does not, and the label falls back to the page foreground: near-black on red in light (3.13:1), near-white on a light coral in dark (2.77:1). Both fail. The live probe confirms the cause and not just the symptom: <code>.bg-destructive</code> is in the served stylesheet, <code>.text-destructive-foreground</code> is absent from it.</p>
+      <p><strong>Why the earlier fix did not land.</strong> The design pass correctly caught that <code>.dark</code> was inheriting a white <code>--destructive-foreground</code> written for a light-mode red, and darkened it to <code>oklch(0.14 0.03 22)</code>, which measures a clean 6.91:1. That value is right, and it is read by nothing. A token with no mapping is indistinguishable from a token that was never added — which is the argument for the CI check in phase 05.</p>
+    </div>
+
+    <div class="swatches">
+      <div class="swatch light">
+        <p class="cap">Light · real token values</p>
+        <div class="row"><span class="btn md stop-actual">Stop</span><span class="lbl">as shipped · 3.13:1</span></div>
+        <div class="row"><span class="btn md stop-intent">Stop</span><span class="lbl">what the class meant · 6.02:1</span></div>
+        <div class="row"><span class="btn pill stop-variant">Stop</span><span class="btn pill send">Send</span><span class="lbl">what ui/button renders · 5.52:1 / 5.90:1</span></div>
+        <div class="row"><span class="chipdemo posted">posted</span><span class="chipdemo draft">draft</span><span class="chipdemo warn10">WARN</span><span class="lbl">PostCard badges 2.2:1 / 2.1:1 · 10px sidebar pill 2.9:1</span></div>
+      </div>
+      <div class="swatch dark">
+        <p class="cap">Dark · real token values</p>
+        <div class="row"><span class="btn md stop-actual">Stop</span><span class="lbl">as shipped · 2.77:1</span></div>
+        <div class="row"><span class="btn md stop-fixed">Stop</span><span class="lbl">what the token now says, if the class existed · 6.91:1</span></div>
+        <div class="row"><span class="btn pill stop-variant">Stop</span><span class="btn pill send">Send</span><span class="lbl">what ui/button renders · 3.16:1 (large only) / 7.77:1</span></div>
+      </div>
+    </div>
+    <p style="font-size:13.5px;color:var(--ink-3);max-width:68ch">Rendered with the app's oklch values, not screenshots, so the swatches stay honest across theme changes to this page. Numbers are WCAG 2.x contrast ratios computed from the same values.</p>
+  </section>
+
+  <section id="method">
+    <h2>What I measured</h2>
+    <ul>
+      <li><strong>Token pairs.</strong> Every foreground/background pairing the theme defines, in <code>:root</code> and <code>.dark</code>, converted oklch → linear sRGB → WCAG relative luminance. Alpha tints (<code>/10</code>, <code>/15</code>, <code>/70</code>) composited over the real background first.</li>
+      <li><strong>Palette classes.</strong> Every Tailwind colour utility that appears in <code>src/</code>, measured against both theme backgrounds using Tailwind v4's own oklch values from <code>node_modules/tailwindcss/theme.css</code>.</li>
+      <li><strong>Hex in CSS.</strong> The 37 literals in <code>ads-report.css</code> and the handful in <code>generate.css</code>, <code>connector-tiles.css</code>, <code>signin.css</code>.</li>
+      <li><strong>Live probe.</strong> Playwright against the running dev server on :3003: injected the shipped class strings into a page, read computed colours, checked which utilities exist in the served stylesheet, screenshotted light, dark, 375px and 1024px. Screenshots live in the gitignored <code>.playwright-mcp/</code>, so they are described, not embedded.</li>
+      <li><strong>Grep census.</strong> Primitive versus raw element counts, type-size distribution, radius distribution, breakpoint prefixes, fixed widths, focus handling, motion.</li>
+    </ul>
+
+    <h3>Token pairs, both themes</h3>
+    <div class="scroller"><table>
+      <thead><tr><th>Pair</th><th>Light</th><th></th><th>Dark</th><th></th><th>Where it bites</th></tr></thead>
+      <tbody>
+        <tr><td>foreground / background</td><td class="num">18.83</td><td><span class="pill yes">pass</span></td><td class="num">18.96</td><td><span class="pill yes">pass</span></td><td>body text</td></tr>
+        <tr><td>muted-foreground / background</td><td class="num">7.77</td><td><span class="pill yes">pass</span></td><td class="num">7.63</td><td><span class="pill yes">pass</span></td><td>secondary text, placeholders</td></tr>
+        <tr><td>primary-foreground / primary</td><td class="num">5.90</td><td><span class="pill yes">pass</span></td><td class="num">7.77</td><td><span class="pill yes">pass</span></td><td>default Button, Send</td></tr>
+        <tr><td>primary as text / background</td><td class="num">5.90</td><td><span class="pill yes">pass</span></td><td class="num">7.47</td><td><span class="pill yes">pass</span></td><td>links, link variant</td></tr>
+        <tr><td>foreground / destructive</td><td class="num">3.13</td><td><span class="pill no">fail</span></td><td class="num">2.77</td><td><span class="pill no">fail</span></td><td><strong>the Stop button as shipped</strong></td></tr>
+        <tr><td>destructive-foreground / destructive</td><td class="num">6.02</td><td><span class="pill yes">pass</span></td><td class="num">6.91</td><td><span class="pill yes">pass</span></td><td>correct values, unreachable — the utility is never generated</td></tr>
+        <tr><td>success-foreground / success</td><td class="num">4.54</td><td><span class="pill yes">pass</span></td><td class="num">8.55</td><td><span class="pill yes">pass</span></td><td>same: no <code>--color-success-foreground</code> mapping</td></tr>
+        <tr><td>warning-foreground / warning</td><td class="num">4.93</td><td><span class="pill yes">pass</span></td><td class="num">9.92</td><td><span class="pill yes">pass</span></td><td>same: no <code>--color-warning-foreground</code> mapping</td></tr>
+        <tr><td>success, warning as text / background</td><td class="num">4.54 / 4.93</td><td><span class="pill yes">pass</span></td><td class="num">8.53 / 10.10</td><td><span class="pill yes">pass</span></td><td>these two <em>are</em> mapped and usable; 2 uses app-wide</td></tr>
+        <tr><td>destructive / destructive-10% tint</td><td class="num">5.52</td><td><span class="pill yes">pass</span></td><td class="num">4.32</td><td><span class="pill mid">large only</span></td><td>Button + Badge destructive variant</td></tr>
+        <tr><td>destructive-20% tint (dark variant)</td><td class="num">—</td><td></td><td class="num">3.16</td><td><span class="pill mid">large only</span></td><td>dark destructive Button at 14px</td></tr>
+        <tr><td>destructive/70 / background</td><td class="num">2.40</td><td><span class="pill no">fail</span></td><td class="num">5.09</td><td><span class="pill yes">pass</span></td><td><code>AuditStepProgress.jsx:186,193</code></td></tr>
+        <tr><td>border, input / background (3:1 non-text)</td><td class="num">1.27</td><td><span class="pill no">fail</span></td><td class="num">2.88 / 3.82</td><td><span class="pill mid">border fails</span></td><td>input boundaries rely on border alone (WCAG 1.4.11)</td></tr>
+        <tr><td>select chevron #9ca3af / background</td><td class="num">2.54</td><td><span class="pill no">fail</span></td><td class="num">7.80</td><td><span class="pill yes">pass</span></td><td>global <code>select</code> reset in <code>theme.css</code></td></tr>
+        <tr><td>brand orange #ff5c00 as text</td><td class="num">3.10</td><td><span class="pill mid">large only</span></td><td class="num">6.39</td><td><span class="pill yes">pass</span></td><td>AuditReportV1 "Unblock", footer "Duct"</td></tr>
+        <tr><td>chart-3, chart-5 / background</td><td class="num">2.59 / 1.89</td><td><span class="pill no">fail</span></td><td class="num">2.54 / 1.31</td><td><span class="pill no">fail</span></td><td>chart series against the canvas</td></tr>
+        <tr><td>disabled Send (opacity 40%)</td><td class="num">≈1.7</td><td><span class="pill mid">exempt</span></td><td class="num">4.41</td><td><span class="pill mid">large only</span></td><td>reads as broken rather than disabled</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section id="contrast">
+    <h2>Colour contrast</h2>
+    <p>Ordered by how many people see it. The threshold is WCAG 2.2 AA: 4.5:1 for text under 24px (18.66px bold), 3:1 for large text and for UI component boundaries.</p>
+
+    <h3>C1 · The Stop button, and the mapping that is missing</h3>
+    <p>Covered above. Three things are wrong at once and each is worth naming separately, because the branch that already looked at this fixed only one of them:</p>
+    <ol>
+      <li><code>theme.css</code> maps every shadcn colour except <code>--color-destructive-foreground</code>. Nothing in the cascade generates the utility. This is the root cause and a one-line fix.</li>
+      <li><code>.dark</code> never overrides <code>--destructive-foreground</code>. Dark <code>--destructive</code> is a light coral (L 0.704) designed to be read <em>as text</em> on a dark canvas; white on it is 2.89:1 even once the class exists.</li>
+      <li>The two chat inputs hand-roll their buttons (<code>rounded-md</code>, custom padding) instead of using <code>ui/button</code>, so they neither get the primitive's focus ring, active state and disabled treatment nor follow the destructive variant when it changes.</li>
+    </ol>
+
+    <h3>C2 · Solid status chips with white text</h3>
+    <p>This is the "green and yellow shades make the white text hard to read" observation, and it is measurable:</p>
+    <div class="scroller"><table>
+      <thead><tr><th>Where</th><th>Classes</th><th>Ratio</th><th></th></tr></thead>
+      <tbody>
+        <tr><td><code>PostCard.jsx:22</code></td><td><code>bg-green-500/90 text-white</code> · "posted"</td><td class="num">2.22</td><td><span class="pill no">fail</span></td></tr>
+        <tr><td><code>PostCard.jsx:24</code></td><td><code>bg-amber-500/90 text-white</code> · "draft"</td><td class="num">2.15</td><td><span class="pill no">fail</span></td></tr>
+        <tr><td><code>PostCard.jsx:23</code></td><td><code>bg-sky-500/90 text-white</code> · "scheduled"</td><td class="num">2.71</td><td><span class="pill no">fail</span></td></tr>
+        <tr><td><code>PostCard.jsx:25</code></td><td><code>bg-rose-500/90 text-white</code> · "discarded"</td><td class="num">3.76</td><td><span class="pill mid">large only</span></td></tr>
+        <tr><td><code>AuditWorkspace.jsx:484</code>, lead page CTA</td><td><code>bg-orange-600 text-white</code></td><td class="num">3.59</td><td><span class="pill mid">large only</span></td></tr>
+        <tr><td>site buttons (for reference)</td><td>white on brand <code>#ff5c00</code></td><td class="num">3.10</td><td><span class="pill mid">large only</span></td></tr>
+      </tbody>
+    </table></div>
+    <p>Mid-lightness greens and ambers cannot carry white text at 12px. Nothing in the Tailwind 400–600 range of those hues does: white on green-600 is 3.22:1, on amber-600 3.19:1, on yellow-400 1.57:1. The system already has the right answer in the destructive variant: <strong>tint the background, colour the text</strong> (<code>bg-x/15 text-x-700</code>) which passes at 4.5–4.7:1 in light. What it lacks is a success and a warning token to do it with, so every file re-picks a hue.</p>
+
+    <h3>C3 · Palette colours used as text in light mode</h3>
+    <p>Counts are bare uses, not <code>dark:</code>-prefixed ones. The dark-prefixed 400s are fine in dark; the problem is the 500s that are the light-mode value.</p>
+    <div class="scroller"><table>
+      <thead><tr><th>Class</th><th>Light ratio</th><th></th><th>Uses</th><th>Files</th></tr></thead>
+      <tbody>
+        <tr><td><code>text-green-500</code></td><td class="num">2.22</td><td><span class="pill no">fail</span></td><td class="num">11</td><td>AuditStepProgress (HTTP 2xx, canonical ✓), contentStatus, workspace/Todos, PipelineProgress, InsightsWorkspace, AccountsTab, StyleGallery</td></tr>
+        <tr><td><code>text-amber-500</code></td><td class="num">2.15</td><td><span class="pill no">fail</span></td><td class="num">5</td><td>AuditStepProgress (3xx), contentStatus "Draft"</td></tr>
+        <tr><td><code>text-sky-500</code></td><td class="num">2.71</td><td><span class="pill no">fail</span></td><td class="num">3</td><td>AnalyticsView, lead page</td></tr>
+        <tr><td><code>text-orange-500</code> / <code>-400</code></td><td class="num">2.89 / 2.38</td><td><span class="pill no">fail</span></td><td class="num">3 + 3</td><td>InsightsWorkspace, lead page</td></tr>
+        <tr><td><code>text-amber-600</code></td><td class="num">3.19</td><td><span class="pill mid">large only</span></td><td class="num">10</td><td>sidebar "v3 only" pill at 10px, AuditStepProgress warn pill, AppSidebar</td></tr>
+        <tr><td><code>text-green-600</code></td><td class="num">3.22</td><td><span class="pill mid">large only</span></td><td class="num">7</td><td>AppSidebar permission "granted", AuditStepProgress ok pill</td></tr>
+        <tr><td><code>text-blue-500</code>, <code>text-rose-500</code></td><td class="num">3.76</td><td><span class="pill mid">large only</span></td><td class="num">7 + 4</td><td>spinner tint, contentStatus "Discarded"</td></tr>
+        <tr><td><code>text-amber-700</code>, <code>text-green-700</code>, <code>text-red-700</code></td><td class="num">5.05 / 4.94 / 6.42</td><td><span class="pill yes">pass</span></td><td class="num">7 + 3 + 6</td><td>the pill text colours, which are right</td></tr>
+      </tbody>
+    </table></div>
+    <p>The "large only" rows matter because none of these are large text. Most are 10–12px, where the requirement is 4.5:1 and the practical need is higher.</p>
+
+    <h3>C4 · Light-only hex that inverts badly in dark</h3>
+    <div class="scroller"><table>
+      <thead><tr><th>Where</th><th>Value</th><th>Light</th><th>Dark</th><th></th></tr></thead>
+      <tbody>
+        <tr><td><code>AuditReportV1.jsx:418</code></td><td><code>text-[10px] text-[#6b7280]/70</code></td><td class="num">2.26</td><td class="num">—</td><td><span class="pill no">fail at 10px</span></td></tr>
+        <tr><td><code>AuditReportV1.jsx:421</code></td><td><code>text-[11px] text-[#6b7280]/50</code> "Nothing here"</td><td class="num">1.66</td><td class="num">—</td><td><span class="pill no">fail</span></td></tr>
+        <tr><td><code>AuditReportV1.jsx:937</code></td><td>footer <code>rgba(13,15,26,.3)</code></td><td class="num">1.40</td><td class="num">—</td><td><span class="pill no">fail</span></td></tr>
+        <tr><td><code>AuditReportV1.jsx:428,450</code></td><td><code>text-[#1a1a1acc]</code> finding titles</td><td class="num">4.07</td><td class="num">1.11</td><td><span class="pill no">invisible in dark</span></td></tr>
+        <tr><td><code>ExecutionOffer.jsx:236</code></td><td><code>bg-white text-[#1a1a1a]</code> dialog</td><td class="num">ok</td><td class="num">white card in a dark app</td><td><span class="pill mid">light-only</span></td></tr>
+        <tr><td><code>ads-report.css:180</code></td><td><code>.kpi-trend.tone-yellow #ca8a04</code> on white</td><td class="num">2.94</td><td class="num">—</td><td><span class="pill no">fail</span></td></tr>
+        <tr><td><code>ads-report.css:181</code></td><td><code>.kpi-trend.tone-green #16a34a</code> on white</td><td class="num">3.30</td><td class="num">—</td><td><span class="pill mid">large only</span></td></tr>
+        <tr><td><code>generate.css:347</code></td><td><code>#166534</code> on green 22% over <code>--card</code></td><td class="num">6.05</td><td class="num">1.25</td><td><span class="pill no">fail in dark</span></td></tr>
+        <tr><td><code>ads-report.css:33-35, 222-224</code></td><td><code>.rpt-verdict</code>, <code>.signal-pill</code> pastel pills</td><td class="num">5.3–6.5</td><td class="num">pastel islands</td><td><span class="pill mid">light-only</span></td></tr>
+      </tbody>
+    </table></div>
+    <p><code>ads-report.css</code> carries 37 hex literals and hard <code>#fff</code> rows in <code>.camp-table</code> and the KPI chips. It is a light-mode report living inside a themed app. Either it declares <code>color-scheme: light</code> and owns that decision, or it moves to tokens. Half-way is what produces a white table on a dark page.</p>
+
+    <h3>C5 · Non-text contrast</h3>
+    <ul>
+      <li>Light <code>--border</code> and <code>--input</code> are 1.27:1 against the background. Inputs whose only boundary is that border fail WCAG 1.4.11 (3:1). The <code>.app-input</code> rule adds a 50% <code>--input</code> fill, which helps, but that class has no users in JSX any more; the shadcn <code>Input</code> does not fill.</li>
+      <li>The global <code>select</code> chevron is hard-coded <code>#9ca3af</code>: 2.54:1 in light. It should be <code>currentColor</code> or <code>--muted-foreground</code>.</li>
+      <li><code>--chart-3</code> and <code>--chart-5</code> sit at 2.6:1 and 1.9:1 against the canvas in light. Chart marks are exempt from the text rule but adjacent-series separation still wants 3:1.</li>
+    </ul>
+  </section>
+
+  <section id="harmony">
+    <h2>Component harmony</h2>
+    <p>A design system is only the parts people reach for. Here is what they reach for instead.</p>
+
+    <h3>H1 · Two button systems</h3>
+    <p>121 raw <code>&lt;button&gt;</code> in 49 files against 137 <code>&lt;Button&gt;</code> in 42. The raw ones each re-derive shape: <code>rounded-md</code> (Stop, Send, the "That turn failed" retry), <code>rounded-full</code> (scroll-to-bottom), plain text (the memory chips). The primitive is a pill (<code>rounded-4xl</code>). The same viewport shows a pill Send in the sidebar and a rectangular Send in the chat bar. Worst offenders: <code>PostViewport</code> (8), <code>AuditChat</code> (7), <code>ContentChat</code> and <code>ExecutionOffer</code> (6 each), both inputs (4 each).</p>
+    <p>The primitive also has a gap that invites the fork: no solid destructive. If a solid red Stop is wanted, add a variant; if not, the tint is the answer and the call sites should say <code>variant="destructive"</code>. Either way it is a system decision, not a per-file one.</p>
+
+    <h3>H2 · Nine corner radii</h3>
+    <p><code>rounded-full</code> 136, <code>-md</code> 70, <code>-xl</code> 65, <code>-lg</code> 58, bare <code>rounded</code> 44, <code>-2xl</code> 26, <code>-3xl</code> 12, <code>-sm</code> 5, <code>-4xl</code> 4. Button is 4xl, Badge and Input are 3xl, cards are xl, chat bubbles are a hand-written <code>10px 10px 2px 10px</code>, the Stop button is md. Three steps would cover it: control (pill), container (xl), inset (md).</p>
+
+    <h3>H3 · Three vocabularies for one status</h3>
+    <p>"Success" is <code>text-green-500</code>, <code>-600</code>, <code>-700</code>, <code>emerald-400</code>, <code>emerald-600</code>, <code>#16a34a</code>, <code>#166534</code> or <code>#4ade80</code> depending on the file. "Warning" is amber-400 through amber-800, <code>#eab308</code>, <code>#ca8a04</code> or <code>#854d0e</code>. Eight hues for four meanings, 332 palette classes in total.</p>
+    <p>The tokens to end this now exist and are correct. They are used twice, both on the preview page. <code>execute/page.jsx:200</code> is the tell: it writes <code>color: "var(--warning, #b98900)"</code> as an inline style with a hardcoded fallback. The fallback was necessary when it was written and is dead now, but the inline style still bypasses the token layer — and because <code>--color-warning-foreground</code> is unmapped, the author could not have used a class for the paired text colour even if they had wanted to.</p>
+
+    <h3>H4 · Pills</h3>
+    <p><code>.status-pill</code> (28 uses, defined in <code>ads-report.css</code>), <code>&lt;Badge&gt;</code> (19), and ad-hoc <code>inline-flex rounded-full px-1.5 py-px text-[10px]</code> spans in <code>AppSidebar:538</code>, <code>AuditStepProgress:40</code>, <code>ChangeSetCard:139</code>, <code>PostCard:22</code>. Four pill shapes, three text sizes, no shared colour map.</p>
+
+    <h3>H5 · Spinners came back</h3>
+    <p><code>ui/spinner</code>'s own docblock says twelve hand-rolled rings were consolidated into it. Since then <code>Loader2</code> has crept back in 17 places (<code>ProjectMembers</code> ×4, <code>invite</code> ×2, <code>UpdateToast</code>, <code>DiscoverPage</code>) against 12 <code>&lt;Spinner&gt;</code>. Consolidation without a lint rule is a snapshot.</p>
+
+    <h3>H6 · The rest of the forks</h3>
+    <ul>
+      <li><code>window.confirm</code> ×3 and <code>window.alert</code> ×1 (<code>AuditChat.jsx:103</code> among them) beside <code>AlertDialog</code> in 4 files.</li>
+      <li>Three hand-rolled <code>role="switch"</code> toggles with <code>bg-white</code> knobs in <code>audit/seo/page.jsx</code>; <code>ui/switch</code> used once elsewhere.</li>
+      <li>Native <code>&lt;select&gt;</code> ×5 against <code>&lt;Select&gt;</code> ×15; the natives get the hard-coded grey chevron.</li>
+      <li><code>execute/page.jsx</code> has 68 inline <code>style={{}}</code> objects with <code>fontSize: 12</code>/<code>13</code> and hex fallbacks. It is a page written outside the system; <code>GoogleAdsReport.js</code> is the same.</li>
+      <li>61 <code>title=</code> tooltips and 10 <code>data-tooltip</code> attributes versus 19 <code>&lt;Tooltip&gt;</code>. Title tooltips do not exist on touch or keyboard.</li>
+    </ul>
+
+    <h3>H7 · Focus is inconsistent</h3>
+    <p>19 <code>focus:ring</code> (fires on mouse click too) versus 34 <code>focus-visible:ring</code> outside the primitives, and 17 elements with <code>outline-none</code> and no <code>focus-visible</code> replacement at all, 5 of them in <code>audit/seo/page.jsx</code>. Those are keyboard dead spots (WCAG 2.4.7). The primitives get this right; the raw elements are the leak.</p>
+
+    <h3>H8 · Three accents in one viewport</h3>
+    <p>Sidebar logo dot: brand orange. Buttons and links: shadcn violet <code>--primary</code>. Sidebar "v3 only" pill: amber. The 1024px screenshot has all three in the first 300px. This is the open orange-versus-violet decision from the earlier design pass, still open, and it is the one harmony call that a token change cannot make for you.</p>
+  </section>
+
+  <section id="readability">
+    <h2>Text readability</h2>
+
+    <h3>R1 · The unofficial third and fourth type sizes</h3>
+    <p>The system is two sizes: <code>text-sm</code> body (229 uses) and <code>text-xs</code> secondary (271). Beside them: <code>text-[10px]</code> 86, <code>text-[11px]</code> 75, <code>text-[9px]</code> 5, <code>text-[8px]</code> 2, and the rest at fractional pixel sizes (11.5, 12.5, 13.5). 228 arbitrary sizes in total, 179 at or below 11px. Ten-pixel text is as common as the official secondary size. The CSS partials add 17 more <code>font-size</code> declarations at 10–11px.</p>
+    <p>Concentrated in <code>AuditStepProgress</code> (29, including 10px monospace URLs and 10px <code>&lt;pre&gt;</code> blocks), <code>AuditReportV1</code> (27), <code>DeskDayOne</code> (18), <code>FormatLibrary</code> (16), <code>DiscoverPage</code> (15). The sidebar's "v3 only" is 10px mono at 2.9:1, a size failure and a contrast failure on the one label that explains why a nav item is disabled.</p>
+    <p>There is no WCAG minimum font size, but every platform guideline lands in the same place: Apple's floor is 11pt, Material's 11sp, and 12px is the practical floor for anything a user must act on. A <code>text-2xs</code> token at 11px for genuinely decorative labels, and a rule that nothing interactive or informational goes below <code>text-xs</code>, would replace all 232.</p>
+
+    <h3>R2 · Small and faint together</h3>
+    <p>The worst cases stack both: <code>text-[10px] text-[#6b7280]/70</code> (2.26:1), <code>text-[11px] text-[#6b7280]/50</code> (1.66:1), the report footer at 1.40:1. Opacity on already-muted text is the pattern to ban; <code>--muted-foreground</code> is 7.8:1 for a reason and halving it is not a lighter shade, it is illegible.</p>
+
+    <h3>R3 · Measure</h3>
+    <p><code>--measure</code> (68ch) and the <code>.measure</code> utility exist and are used once in JSX. <code>Desk.jsx:190</code> and <code>DeskDayOne.jsx:96</code> use <code>max-w-[640px]</code>/<code>[660px]</code> instead, which stops following the font when the user resizes text. Report bodies inside <code>SplitWorkspace</code> have no cap at all on a wide pane.</p>
+
+    <h3>R4 · Heading scale is ad hoc</h3>
+    <p><code>h1–h3</code> elements carry <code>text-2xl</code> (17), <code>text-xl</code> (7), <code>text-lg</code> (7), <code>text-sm</code> (12), <code>text-xs</code> (6) and <code>text-[13px]</code> (5). A heading at 12px is a label wearing a heading tag, which is bad for screen readers and for the visual hierarchy. Three heading sizes, mapped to the three levels, would end the drift.</p>
+  </section>
+
+  <section id="adaptability">
+    <h2>Theme adaptability</h2>
+
+    <h3>T1 · The dark theme is a different brand</h3>
+    <p>Light is warm and tinted: neutrals at hue 80, foreground a navy at hue 265, sidebar off-white. Dark is stock shadcn: every neutral at zero chroma. The sign-in hero uses the brand navy <code>#0d0f1a</code>; the dark app behind it uses neutral <code>oklch(0.145 0 0)</code>. The two do not read as one product. A dark palette that keeps the light theme's hue (dark navy surfaces, warm-grey text) is a token-only change.</p>
+
+    <h3>T2 · Fifteen files with no dark variant</h3>
+    <p>Files that use palette colours and contain zero <code>dark:</code>: <code>PostCard</code> (14 palette classes), <code>ExecutionOffer</code> (14, and a <code>bg-white</code> dialog), <code>AuditWorkspace</code> (7), the lead-magnet page (7), <code>AnalyticsView</code> (6), <code>SlidesCarousel</code> (5, <code>bg-white</code> slide frame), <code>CodeBlock</code>, <code>workspace/Todos</code>, <code>BrandContextForm</code>, <code>AccountsTab</code>, <code>InsightsWorkspace</code> and five more. <code>InsightsWorkspace.jsx:337</code> and <code>ArtifactRenderer.jsx:255</code> render a 74vh iframe with a hard white background, which is a white flash on every dark-mode report load.</p>
+    <p>The reason this keeps happening: with only <code>destructive</code> as a status token, any success or warning colour <em>must</em> be a palette pick, and a palette pick needs a hand-managed dark partner. Add the tokens and the <code>dark:</code> pairs stop being the author's job.</p>
+
+    <h3>T3 · Motion ignores the OS preference</h3>
+    <p>53 <code>animate-pulse</code>/<code>animate-spin</code>/<code>transition-all</code> utilities, zero <code>motion-reduce:</code> variants. The CSS partials gate only the logo mark, smooth scroll, and three component animations behind <code>prefers-reduced-motion</code>. The two pulsing "you have something to see" dots in <code>SplitWorkspace</code> are exactly what WCAG 2.3.3 is about.</p>
+
+    <h3>T4 · Small things that follow from the above</h3>
+    <ul>
+      <li><code>.dark</code> is missing <code>--destructive-foreground</code> (C1) and would be missing <code>--success-foreground</code>/<code>--warning-foreground</code> if the tokens were added without them.</li>
+      <li><code>CodeBlock.jsx:47</code> paints a fixed <code>#21252b</code> header in both themes. Intentional as a "code is always dark" surface, but it should be a token so it can be revisited.</li>
+      <li><code>GoogleSignInButton</code> hard-codes Google's dark button hexes. That is Google's brand spec and is fine; it is the one legitimate hex island.</li>
+    </ul>
+  </section>
+
+  <section id="responsive">
+    <h2>Responsiveness</h2>
+    <p>The container-query convention from the earlier desktop review is real and mostly honoured: 67 <code>@</code>-variants against 41 viewport prefixes, and almost all of the 41 are the legitimate cases the app guide lists (sign-in, the pane toggle, the sidebar sheet, <code>md:text-sm</code>). What remains:</p>
+
+    <h3>S1 · Fixed two-column grids that never collapse</h3>
+    <p><code>audit/seo/page.jsx:272</code> is <code>grid grid-cols-2</code> with no container variant. At 375px the live probe shows "Business name" and "Primary content type" squeezed side by side and the select's own placeholder truncated to "Select typ". Same pattern in <code>PreferencesDialog.jsx:231</code> and <code>AuditStepProgress.jsx:206</code> (two columns of 10px text).</p>
+
+    <h3>S2 · Viewport prefixes inside container regions</h3>
+    <p><code>DeskLists.jsx</code> uses <code>sm:</code> seven times to add and hide list columns. It renders inside <code>.app-main</code>, which is a container: with the sidebar open at a 1024px window the content region is roughly 740px, so <code>sm:</code> fires at the wrong width. This is the exact trap <code>app/AGENTS.md</code> documents. Smaller leaks: <code>ProjectMembers</code> (2), <code>content/page</code> (2), <code>DeskCards</code>, <code>DeskDayOne</code>, <code>projects/page</code>, <code>execute/page</code> (1 each).</p>
+
+    <h3>S3 · iOS zooms the audit form</h3>
+    <p>The chat textareas carry <code>text-base md:text-sm</code> precisely so iOS Safari does not zoom a sub-16px field on focus. The SEO audit form's inputs (<code>audit/seo/page.jsx:269</code> and siblings) are plain <code>text-sm</code>, so every field on that page triggers the zoom. The shadcn <code>Input</code> primitive already has the fix built in; these are raw <code>&lt;input&gt;</code> elements (27 raw against 31 primitives app-wide).</p>
+
+    <h3>S4 · Fixed heights</h3>
+    <ul>
+      <li><code>.chat-sidebar { height: 520px; position: sticky; top: 5rem }</code> in <code>chat.css</code>. On a 700px-tall laptop viewport the input row sits at the fold; on anything shorter it is below it, and sticky keeps it there.</li>
+      <li><code>h-[48vh]</code> editor panes in <code>FormatLibrary</code> ×2, <code>h-[74vh]</code> report iframes ×2, <code>h-[460px]</code>, <code>h-[220px]</code>, <code>max-h-[520px]</code>. Viewport-fraction heights inside a resizable pane size off the window, not the pane.</li>
+      <li><code>.app-shell { min-height: 100vh }</code> in <code>base.css:13</code> (and <code>signin.css:7</code>) beside the <code>min-h-dvh</code> used elsewhere. On iOS Safari <code>100vh</code> is taller than the visible area; the shell should use <code>dvh</code> like the rest.</li>
+    </ul>
+
+    <h3>S5 · The connection banner covers content</h3>
+    <p><code>ConnectionBanner</code> is <code>fixed bottom-0</code> with no bottom padding reserved on the page. At 375px it covers the last form fields; at 1024px it sits over the sidebar's theme toggle and account row. A <code>padding-bottom</code> on the scroll container while the banner is mounted, or a top-of-page placement, fixes both.</p>
+
+    <h3>S6 · The overflow guard hides regressions</h3>
+    <p><code>body { overflow-x: hidden }</code> in <code>theme.css</code>. Both live probes measured <code>scrollWidth</code> below <code>innerWidth</code>, so nothing overflows today. But the guard means the next component that does will be clipped silently rather than caught in QA. Remove it and let overflow be visible in development.</p>
+
+    <h3>S7 · What passes</h3>
+    <ul>
+      <li>Tap targets: no raw button under 24px; primitive <code>xs</code> and <code>icon-xs</code> are 24px, the WCAG 2.5.8 floor.</li>
+      <li><code>SplitWorkspace</code>: keyboard-resizable divider, pane toggle on mobile, both panes are containers. The 375px insights screenshot from the September 5 smoke run shows the shell behaving.</li>
+      <li>The sidebar sheet, the sign-in split, the page toolbars all wrap correctly at 375px.</li>
+      <li>Tables: 9 <code>&lt;table&gt;</code> elements, 21 <code>overflow-x-auto</code> wrappers.</li>
+    </ul>
+  </section>
+
+  <section id="branch">
+    <h2>What already landed, and what this adds</h2>
+    <p>The September design pass — <code>app/DESIGN.md</code>, the preview shell, the status tokens — is on <code>main</code> now. Its <em>Known gaps</em> section is a real, honest list and it overlaps this review deliberately. What follows is only the part that list does not already carry, so the two documents can sit beside each other without contradicting.</p>
+    <div class="scroller"><table>
+      <thead><tr><th>Item</th><th>State on main</th><th>What this review adds</th></tr></thead>
+      <tbody>
+        <tr><td><code>--success</code> / <code>--warning</code> + foregrounds, both themes</td><td><span class="pill yes">landed</span></td><td>Measured: 4.54:1 and 4.93:1 light, 8.55:1 and 9.92:1 dark. The values are good. Adoption is 2 uses, both in <code>preview/TokenSheet.jsx</code>.</td></tr>
+        <tr><td><code>.dark --destructive-foreground</code> → <code>oklch(0.14 0.03 22)</code></td><td><span class="pill yes">landed</span></td><td>6.91:1, and unreachable. See the next row, which is the finding.</td></tr>
+        <tr><td><code>--color-*-foreground</code> mappings for destructive, success, warning</td><td><span class="pill no">missing, all three</span></td><td><strong>Not on the gaps list.</strong> Without them the three utilities are never generated, so the two rows above are cosmetic. This is the one defect that makes the others unfixable by the intended means.</td></tr>
+        <tr><td><code>check:type</code> guard on CSS font sizes, in <code>check:parity</code></td><td><span class="pill yes">landed</span></td><td>Covers the CSS partials. The 228 JSX <code>text-[Npx]</code> arbitraries are outside it, as the gaps list notes; 179 of them are 11px or below.</td></tr>
+        <tr><td>Four forked destructive AlertDialog call sites</td><td><span class="pill yes">fixed</span></td><td>Four of what is now 121 raw buttons. The pattern is unchanged.</td></tr>
+        <tr><td>Contrast numbers for the new tokens</td><td><span class="pill mid">cited on <code>--card</code></span></td><td>This review measures against <code>--background</code>, so the figures differ slightly from DESIGN.md's and neither is wrong. The full matrix in §What I measured is new.</td></tr>
+        <tr><td>Responsive behaviour</td><td><span class="pill mid">not covered</span></td><td>§Responsiveness is entirely new: the grids that never collapse, the viewport prefixes inside container regions, the iOS zoom on the audit form, the banner that covers content.</td></tr>
+      </tbody>
+    </table></div>
+    <p>The practical consequence: the mapping fix is three lines and it unblocks the migration the gaps list is already asking for. Do it before the per-file colour work, not after.</p>
+  </section>
+
+  <section id="next">
+    <h2>Recommended order</h2>
+    <p>Smallest change with the widest blast radius first. Each phase is independently shippable.</p>
+
+    <div class="phase">
+      <span class="n">01</span>
+      <div>
+        <h3>Close the exits in the theme</h3>
+        <p>One PR, tokens only, no component edits.</p>
+        <ul>
+          <li>Map <code>--color-destructive-foreground</code>, <code>--color-success-foreground</code> and <code>--color-warning-foreground</code> in <code>theme.css</code>'s <code>@theme inline</code> block. Three lines. The values are already correct in both themes; nothing else in this list works until the utilities exist.</li>
+          <li>Give <code>.dark</code> a brand-tinted neutral ramp (hue 265, low chroma) so it is the same product as light (T1).</li>
+          <li>Raise light <code>--border</code>/<code>--input</code> to 3:1 or give <code>Input</code> a fill (C5). Replace the select chevron hex with <code>currentColor</code>.</li>
+          <li>Decide the accent: orange <code>--primary</code> or violet. Whichever, it should be one (H8).</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="phase">
+      <span class="n">02</span>
+      <div>
+        <h3>Fix the visible failures</h3>
+        <p>Now that the tokens exist, the four things a user notices.</p>
+        <ul>
+          <li>Stop button: <code>&lt;Button variant="destructive"&gt;</code> in both inputs (or the merged <code>ChatInput</code>). Decide solid versus tint once, in <code>button.tsx</code>.</li>
+          <li>PostCard status badges and every <code>bg-x-500 text-white</code> chip: tinted background, 700-weight text, via <code>Badge</code> variants <code>success</code>/<code>warning</code>.</li>
+          <li><code>text-green-500</code>/<code>text-amber-500</code> as text: swap to <code>text-success</code>/<code>text-warning</code>. Twelve and five sites.</li>
+          <li><code>AuditReportV1</code> and <code>ExecutionOffer</code>: replace the hex and <code>bg-white</code> with tokens, or wrap in <code>color-scheme: light</code> and own it.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="phase">
+      <span class="n">03</span>
+      <div>
+        <h3>Type floor and primitive adoption</h3>
+        <ul>
+          <li>Add <code>text-2xs</code> (11px) as the only sub-<code>xs</code> size; sweep the 228 arbitraries to <code>xs</code> or <code>2xs</code>. Nothing interactive below <code>xs</code>. Ban opacity on <code>text-muted-foreground</code>.</li>
+          <li>Three heading sizes bound to <code>h1</code>–<code>h3</code> in <code>typography.css</code>.</li>
+          <li>Replace <code>Loader2</code> with <code>Spinner</code>, <code>window.confirm</code> with <code>AlertDialog</code>, the three hand-rolled switches with <code>Switch</code>, raw inputs on the audit form with <code>Input</code> (which also fixes S3).</li>
+          <li>Radius scale to three steps; chat bubbles onto it.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="phase">
+      <span class="n">04</span>
+      <div>
+        <h3>Responsive and motion</h3>
+        <ul>
+          <li>Container variants on the three fixed grids (S1); <code>@sm:</code> instead of <code>sm:</code> in <code>DeskLists</code> and the six smaller leaks (S2).</li>
+          <li>Reserve space for <code>ConnectionBanner</code> (S5); <code>dvh</code> in <code>.app-shell</code>; drop the body overflow guard (S6).</li>
+          <li><code>motion-reduce:</code> on the pulse dots and spinners, or a single global rule in <code>base.css</code> (T3).</li>
+          <li>Focus: <code>focus-visible</code> everywhere <code>focus:</code> or bare <code>outline-none</code> appears (H7).</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="phase">
+      <span class="n">05</span>
+      <div>
+        <h3>Keep it closed</h3>
+        <p>Every one of these findings had been fixed once before somewhere in the tree. What was missing was a check.</p>
+        <ul>
+          <li>An ESLint rule (or a test over the source, like <code>test_harness_boundaries.py</code> on the backend) that fails on <code>text-[Npx]</code>, raw palette colour classes outside an allowlist, <code>Loader2</code>, <code>window.confirm</code>, hex in JSX, <code>sm:</code>/<code>md:</code> outside the allowlisted files.</li>
+          <li>The contrast script from this review, run in CI over <code>tokens.css</code> and <code>theme.css</code>, so a token edit that drops a pair below 4.5:1 fails the build.</li>
+          <li>Move <code>ads-report.css</code>'s hex to tokens or mark the file <code>color-scheme: light</code> so the exception is declared rather than accidental.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="sources">
+    <h2>Sources</h2>
+    <ul class="sources">
+      <li>WCAG 2.2: 1.4.3 Contrast (Minimum), 1.4.11 Non-text Contrast, 2.3.3 Animation from Interactions, 2.4.7 Focus Visible, 2.5.8 Target Size (Minimum). <a href="https://www.w3.org/TR/WCAG22/">w3.org/TR/WCAG22</a></li>
+      <li>WCAG relative luminance and contrast ratio definitions, used verbatim in the measurement script.</li>
+      <li>Tailwind CSS v4 theme variables and the <code>@theme inline</code> namespace rules; the shipped oklch palette in <code>tailwindcss/theme.css</code>.</li>
+      <li>Apple Human Interface Guidelines, Typography (11pt minimum); Material Design 3, Type scale (11sp label small).</li>
+      <li>Material Design dark theme guidance on desaturating and lifting status colours for dark surfaces.</li>
+      <li><a href="desktop-adaptive-ui-review.html">desktop-adaptive-ui-review.html</a> in this folder, for the container-query convention this review checks against.</li>
+      <li><code>app/DESIGN.md</code> on <code>main</code>, in particular its <em>Known gaps — close on touch</em> list, which this review complements rather than restates.</li>
+    </ul>
+  </section>
+
+  </div>
+
+  <footer>
+    Measured 2026-09-06 against <code>main</code> at db4f295 with the dev server on :3003 and no backend. Contrast values come from a small Node script that parses the token files and Tailwind's palette; it lives with the session, and the recommendation in phase 05 is to make it a CI step. Screenshots from the live probe are in the gitignored <code>.playwright-mcp/</code> folder and are described rather than embedded, so this file stays text.
+  </footer>
+
+</div>
+
+</body>
+</html>

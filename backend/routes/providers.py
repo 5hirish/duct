@@ -35,7 +35,7 @@ from agents.tiers import (
     Tier,
     resolve_tier_model,
 )
-from config import allow_server_provider_keys, claude_oauth_available, get_configs
+from config import allow_server_provider_keys, get_configs
 from db.session import get_session as db_session
 from models.auth import User
 from service.auth import (
@@ -68,14 +68,15 @@ _PROVIDER_LABELS: dict[Provider, tuple[str, str]] = {
         "OpenRouter",
         "One key, 500+ models — and any OpenAI-compatible gateway you point it at.",
     ),
+    Provider.XAI: ("xAI", "Grok models on the LangChain (v1) engine."),
 }
 
 # Human-facing tier hint per model, so the picker can group options the way the
 # page is organised. Derived from the catalogue's own comments (`gpt-5.6-sol`
 # is annotated "flagship", `luna` "cost-sensitive") rather than invented here.
 _MODEL_TIER_HINT: dict[str, Tier] = {
+    ModelName.CLAUDE_FABLE.value: Tier.HEAVY,
     ModelName.CLAUDE_OPUS.value: Tier.HEAVY,
-    ModelName.CLAUDE_OPUS_1M.value: Tier.HEAVY,
     ModelName.CLAUDE_SONNET.value: Tier.STANDARD,
     ModelName.CLAUDE_HAIKU.value: Tier.LIGHT,
     ModelName.GPT_5_6_SOL.value: Tier.HEAVY,
@@ -85,10 +86,10 @@ _MODEL_TIER_HINT: dict[str, Tier] = {
     ModelName.GPT_4O.value: Tier.STANDARD,
     ModelName.GPT_4O_MINI.value: Tier.LIGHT,
     ModelName.GEMINI_3_1_PRO_PREVIEW.value: Tier.HEAVY,
-    ModelName.GEMINI_3_7_FLASH.value: Tier.STANDARD,
+    ModelName.GEMINI_3_8_FLASH.value: Tier.STANDARD,
     ModelName.GEMINI_3_5_FLASH_LITE.value: Tier.LIGHT,
     ModelName.GEMINI_2_5_FLASH.value: Tier.LIGHT,
-    ModelName.GEMINI_2_5_FLASH_LITE.value: Tier.LIGHT,
+    ModelName.GROK_4_6.value: Tier.HEAVY,
 }
 
 
@@ -147,23 +148,12 @@ def providers_status(
         has_server = server_usable and bool(
             getattr(cfg, PROVIDER_CONFIG_ATTR.get(provider, ""), "")
         )
-        # Anthropic has a third way in: a subscription token the operator holds
-        # on this machine. It authenticates v3 without any API key at all, so
-        # reporting Anthropic as unreachable there would be false.
-        oauth = (
-            server_usable
-            and provider is Provider.ANTHROPIC
-            and claude_oauth_available()
-        )
-
         if has_user:
             source = "user"
         elif has_stored:
             source = "stored"
         elif has_server:
             source = server_source
-        elif oauth:
-            source = "subscription"
         else:
             source = "none"
 
@@ -258,12 +248,7 @@ def models_catalogue() -> dict:
             "id": model.value,
             "provider": provider.value,
             "tier_hint": (_MODEL_TIER_HINT.get(model.value) or Tier.STANDARD).value,
-            # v3's harness is provider-locked, and a CLI-only id 404s on the
-            # Messages API — both facts live in engines.py and are surfaced
-            # here so the picker can disable rather than let a run discover it.
-            "engines": (
-                ["v3"] if model.value.endswith("[1m]") else _engines_for(provider)
-            ),
+            "engines": _engines_for(provider),
         })
 
     return {
@@ -326,8 +311,6 @@ def models_preview(
         or provider in stored
         or (server_usable and getattr(cfg, PROVIDER_CONFIG_ATTR.get(provider, ""), ""))
     }
-    if server_usable and claude_oauth_available():
-        reachable.add(Provider.ANTHROPIC)
     reachable = frozenset(reachable)
 
     try:

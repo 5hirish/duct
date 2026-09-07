@@ -6,8 +6,8 @@
   var PLATFORM_QUALITY = {
     'Google Ads':   1.0,
     'Meta':         0.8,
-    'Twitter / X':  0.5,
-    'LinkedIn Ads': 1.2
+    'Apple Search Ads':  0.5,
+    'OpenAI Ads': 1.2
   };
 
   var CROSS_PLATFORM_SIGNALS = {
@@ -102,44 +102,44 @@
         spendRaw: 12400, conversions: 96, revenue: 26600, sparkline: [0.52, 0.56, 0.50, 0.54, 0.46, 0.42, 0.38]
       }
     },
-    'LinkedIn Ads': {
+    'OpenAI Ads': {
       cac: {
         campaigns: [
-          { name: 'LinkedIn \u00B7 Sponsored content \u00B7 ABM retargeting',   spend: '$5,200', spendRaw: 5200, cpa: '$187', roas: '1.9x', roasRaw: 1.9, conversions: 28, revenue:  9880, status: 'Monitor', cls: 'camp-status-monitor' },
-          { name: 'LinkedIn \u00B7 Lead gen \u00B7 Decision-maker ICP (NA)',     spend: '$3,800', spendRaw: 3800, cpa: '$228', roas: '1.6x', roasRaw: 1.6, conversions: 17, revenue:  6080, status: 'Monitor', cls: 'camp-status-monitor' }
+          { name: 'OpenAI Ads \u00B7 Sponsored results \u00B7 ABM retargeting',   spend: '$5,200', spendRaw: 5200, cpa: '$187', roas: '1.9x', roasRaw: 1.9, conversions: 28, revenue:  9880, status: 'Monitor', cls: 'camp-status-monitor' },
+          { name: 'OpenAI Ads \u00B7 Lead capture \u00B7 Decision-maker ICP (NA)',     spend: '$3,800', spendRaw: 3800, cpa: '$228', roas: '1.6x', roasRaw: 1.6, conversions: 17, revenue:  6080, status: 'Monitor', cls: 'camp-status-monitor' }
         ],
         signals: [
-          { level: 'yellow', pill: '\uD83D\uDFE1 Watch', title: 'LinkedIn CTR down 38% WoW \u2014 creative fatigue setting in',             body: 'Top 3 LinkedIn ads have been running 6+ weeks. Frequency rising above 4.2. Refresh creative before CTR decline compounds into CPA rise \u2014 lead time is 1\u20132 weeks.',    ownerName: 'Priya Shah', assignee: 'Creative',   followUp: 'Next sprint \u2014 refresh top 3 LinkedIn ad creatives' },
-          { level: 'yellow', pill: '\uD83D\uDFE1 Watch', title: 'Lead Gen CPA $228 \u2014 5% over $218 target, slipping further',           body: 'Adding company revenue ($10M+) and seniority level to ICP targeting could improve CPA to ~$185 within 2 weeks without reducing volume significantly.',                  ownerName: 'Nina Park',  assignee: 'Paid media', followUp: 'Tighten LinkedIn ICP: add company revenue + seniority level filters' }
+          { level: 'yellow', pill: '\uD83D\uDFE1 Watch', title: 'OpenAI Ads CTR down 38% WoW \u2014 creative fatigue setting in',             body: 'Top 3 OpenAI Ads creatives have been running 6+ weeks. Frequency rising above 4.2. Refresh creative before CTR decline compounds into CPA rise \u2014 lead time is 1\u20132 weeks.',    ownerName: 'Priya Shah', assignee: 'Creative',   followUp: 'Next sprint \u2014 refresh top 3 OpenAI Ads creatives' },
+          { level: 'yellow', pill: '\uD83D\uDFE1 Watch', title: 'Lead Gen CPA $228 \u2014 5% over $218 target, slipping further',           body: 'Adding company revenue ($10M+) and intent signals to ICP targeting could improve CPA to ~$185 within 2 weeks without reducing volume significantly.',                  ownerName: 'Nina Park',  assignee: 'Paid media', followUp: 'Tighten OpenAI Ads ICP: add company revenue + intent-signal filters' }
         ],
         spendRaw: 9000, conversions: 45, revenue: 15960, sparkline: [0.50, 0.48, 0.46, 0.44, 0.42, 0.40, 0.38]
       },
       roas: {
         campaigns: [
-          { name: 'LinkedIn \u00B7 Sponsored content \u00B7 Product demo (ABM)', spend: '$5,200', spendRaw: 5200, cpa: '$187', roas: '1.9x', roasRaw: 1.9, conversions: 28, revenue:  9880, status: 'Monitor', cls: 'camp-status-monitor' },
-          { name: 'LinkedIn \u00B7 Conversation ads \u00B7 VP & Director ICP',   spend: '$2,800', spendRaw: 2800, cpa: '$164', roas: '2.1x', roasRaw: 2.1, conversions: 17, revenue:  5880, status: 'Monitor', cls: 'camp-status-monitor' }
+          { name: 'OpenAI Ads \u00B7 Sponsored results \u00B7 Product demo (ABM)', spend: '$5,200', spendRaw: 5200, cpa: '$187', roas: '1.9x', roasRaw: 1.9, conversions: 28, revenue:  9880, status: 'Monitor', cls: 'camp-status-monitor' },
+          { name: 'OpenAI Ads \u00B7 Assistant placements \u00B7 VP & Director ICP',   spend: '$2,800', spendRaw: 2800, cpa: '$164', roas: '2.1x', roasRaw: 2.1, conversions: 17, revenue:  5880, status: 'Monitor', cls: 'camp-status-monitor' }
         ],
         signals: [
-          { level: 'yellow', pill: '\uD83D\uDFE1 Watch', title: 'LinkedIn blended ROAS 1.9x \u2014 positive but below 2.5x target',          body: 'Strong pipeline quality but volume is insufficient to drive blended ROAS above target on its own. Consider tracking LinkedIn primarily by pipeline quality, not ROAS.',          ownerName: 'Daniel Kim',    assignee: 'Paid media + Leadership', followUp: 'Reframe LinkedIn KPI from ROAS to pipeline quality' },
+          { level: 'yellow', pill: '\uD83D\uDFE1 Watch', title: 'OpenAI Ads blended ROAS 1.9x \u2014 positive but below 2.5x target',          body: 'Strong pipeline quality but volume is insufficient to drive blended ROAS above target on its own. Consider tracking OpenAI Ads primarily by pipeline quality, not ROAS.',          ownerName: 'Daniel Kim',    assignee: 'Paid media + Leadership', followUp: 'Reframe OpenAI Ads KPI from ROAS to pipeline quality' },
           { level: 'green',  pill: '\uD83D\uDFE2 Win',   title: 'Conversation Ads ROAS 2.1x \u2014 outperforming Sponsored Content',         body: 'VP/Director-targeted Conversation Ads converting better than broader ABM. Shifting $1K from Sponsored to Conversation would add ~6 conversions at higher ROAS.',              ownerName: 'Sofia Alvarez', assignee: 'Paid media',              followUp: 'Shift $1K from Sponsored Content to Conversation Ads' }
         ],
         spendRaw: 8000, conversions: 45, revenue: 15760, sparkline: [0.52, 0.50, 0.48, 0.47, 0.46, 0.45, 0.44]
       },
       pipeline: {
         campaigns: [
-          { name: 'LinkedIn \u00B7 Lead gen \u00B7 Demo requests (NA English)',   spend: '$11,800', spendRaw: 11800, cpa: '$287', roas: '1.1x', roasRaw: 1.1, conversions: 41, revenue: 12980, status: 'Monitor',       cls: 'camp-status-monitor' },
-          { name: 'LinkedIn \u00B7 Sponsored content \u00B7 Case study (VP/Dir)', spend: '$4,200',  spendRaw:  4200, cpa: '$198', roas: '1.7x', roasRaw: 1.7, conversions: 21, revenue:  7140, status: 'Scale \u2191',   cls: 'camp-status-scale'   }
+          { name: 'OpenAI Ads \u00B7 Lead capture \u00B7 Demo requests (NA English)',   spend: '$11,800', spendRaw: 11800, cpa: '$287', roas: '1.1x', roasRaw: 1.1, conversions: 41, revenue: 12980, status: 'Monitor',       cls: 'camp-status-monitor' },
+          { name: 'OpenAI Ads \u00B7 Sponsored results \u00B7 Case study (VP/Dir)', spend: '$4,200',  spendRaw:  4200, cpa: '$198', roas: '1.7x', roasRaw: 1.7, conversions: 21, revenue:  7140, status: 'Scale \u2191',   cls: 'camp-status-scale'   }
         ],
         signals: [
-          { level: 'red',   pill: '\uD83D\uDD34 Critical', title: 'LinkedIn ad-attributed deals stalled \u2014 0 new deals in 14 days',         body: 'LinkedIn is generating MQLs but none are progressing past the initial call. Review ICP alignment on targeting, check sales follow-up cadence, and confirm offer-to-ICP fit with the sales team.', ownerName: 'Amara Osei', assignee: 'Marketing + Sales', followUp: 'This week \u2014 align ICP, check targeting filters and sales follow-up cadence' },
-          { level: 'green', pill: '\uD83D\uDFE2 Win',      title: 'LinkedIn Case Study ads \u2014 32% deal rate, best paid pipeline channel',    body: 'VP/Director case study content converts MQLs to Opportunity stage 2\u00D7 faster than lead gen forms. Increasing budget $2K would add ~10 high-quality MQLs.',                                    ownerName: 'Nina Park',   assignee: 'Paid media',        followUp: 'Increase Case Study ad budget ~$2K' }
+          { level: 'red',   pill: '\uD83D\uDD34 Critical', title: 'OpenAI Ads ad-attributed deals stalled \u2014 0 new deals in 14 days',         body: 'OpenAI Ads is generating MQLs but none are progressing past the initial call. Review ICP alignment on targeting, check sales follow-up cadence, and confirm offer-to-ICP fit with the sales team.', ownerName: 'Amara Osei', assignee: 'Marketing + Sales', followUp: 'This week \u2014 align ICP, check targeting filters and sales follow-up cadence' },
+          { level: 'green', pill: '\uD83D\uDFE2 Win',      title: 'OpenAI Ads Case Study ads \u2014 32% deal rate, best paid pipeline channel',    body: 'VP/Director case study content converts MQLs to Opportunity stage 2\u00D7 faster than lead capture forms. Increasing budget $2K would add ~10 high-quality MQLs.',                                    ownerName: 'Nina Park',   assignee: 'Paid media',        followUp: 'Increase Case Study ad budget ~$2K' }
         ],
         spendRaw: 16000, conversions: 62, revenue: 20120, sparkline: [0.62, 0.60, 0.57, 0.54, 0.50, 0.47, 0.44]
       }
     },
-    'Twitter / X': {
+    'Apple Search Ads': {
       cac: {
-        campaigns: [{ name: 'X (Twitter) \u00B7 Promoted posts \u00B7 SaaS pain point copy', spend: '$2,800', spendRaw: 2800, cpa: '$342', roas: '0.7x', roasRaw: 0.7, conversions: 8, revenue: 1960, status: 'Pause', cls: 'camp-status-pause' }],
+        campaigns: [{ name: 'Apple Search Ads \u00B7 Search tab \u00B7 SaaS pain point copy', spend: '$2,800', spendRaw: 2800, cpa: '$342', roas: '0.7x', roasRaw: 0.7, conversions: 8, revenue: 1960, status: 'Pause', cls: 'camp-status-pause' }],
         signals: [
           { level: 'red',    pill: '\uD83D\uDD34 Critical', title: 'X Ads CPA $342 \u2014 57% above $218 target, weakest performer in the mix', body: 'Promoted posts are driving clicks but not bottom-funnel action. Pause for 2 weeks, test a new hook-led creative, then re-evaluate. Consider shifting budget to retargeting on higher-intent channels.', ownerName: 'Alex Rivera',  assignee: 'Paid media', followUp: 'Pause X Promoted posts; test new hook-led creative' },
           { level: 'yellow', pill: '\uD83D\uDFE1 Watch',    title: 'X CPM $4.20 \u2014 cheap reach, but no retargeting list built yet',          body: 'Awareness impressions are cost-efficient but without pixel-based retargeting, engaged users are not being re-engaged. Add a retargeting campaign to convert X engagement into pipeline.',   ownerName: 'Marcus Chen', assignee: 'Paid media', followUp: 'Set up X pixel retargeting for engaged users' }
@@ -147,7 +147,7 @@
         spendRaw: 2800, conversions: 8, revenue: 1960, sparkline: [0.44, 0.42, 0.40, 0.38, 0.36, 0.34, 0.32]
       },
       roas: {
-        campaigns: [{ name: 'X (Twitter) \u00B7 Promoted posts \u00B7 B2B SaaS messaging', spend: '$2,800', spendRaw: 2800, cpa: '$342', roas: '0.7x', roasRaw: 0.7, conversions: 8, revenue: 1960, status: 'Pause', cls: 'camp-status-pause' }],
+        campaigns: [{ name: 'Apple Search Ads \u00B7 Search tab \u00B7 B2B SaaS messaging', spend: '$2,800', spendRaw: 2800, cpa: '$342', roas: '0.7x', roasRaw: 0.7, conversions: 8, revenue: 1960, status: 'Pause', cls: 'camp-status-pause' }],
         signals: [
           { level: 'yellow', pill: '\uD83D\uDFE1 Watch', title: 'X Ads ROAS 0.7x \u2014 below breakeven, users arriving with informational intent', body: 'Test shifting the campaign objective to brand awareness and measure assisted conversions via multi-touch attribution over 30 days before cutting budget entirely.',                          ownerName: 'James Okonkwo', assignee: 'Paid media', followUp: 'Switch X objective to brand awareness; measure assisted conversions' },
           { level: 'yellow', pill: '\uD83D\uDFE1 Watch', title: 'X creative CTR 0.21% \u2014 industry average is 0.40%',                           body: 'Plain-text posts with a bold claim are outperforming image ads in A/B data. Refresh creative with a direct hook and a stat-led headline. Test at least 3 variants.',                   ownerName: 'Priya Shah',    assignee: 'Creative',   followUp: 'Refresh X creative: stat-led plain-text variants' }
@@ -155,7 +155,7 @@
         spendRaw: 2800, conversions: 8, revenue: 1960, sparkline: [0.48, 0.45, 0.42, 0.38, 0.34, 0.30, 0.28]
       },
       pipeline: {
-        campaigns: [{ name: 'X (Twitter) \u00B7 Brand awareness \u00B7 B2B thought leadership', spend: '$2,400', spendRaw: 2400, cpa: '$380', roas: '0.6x', roasRaw: 0.6, conversions: 6, revenue: 1440, status: 'Monitor', cls: 'camp-status-monitor' }],
+        campaigns: [{ name: 'Apple Search Ads \u00B7 Discovery \u00B7 B2B thought leadership', spend: '$2,400', spendRaw: 2400, cpa: '$380', roas: '0.6x', roasRaw: 0.6, conversions: 6, revenue: 1440, status: 'Monitor', cls: 'camp-status-monitor' }],
         signals: [
           { level: 'yellow', pill: '\uD83D\uDFE1 Watch', title: 'X Ads MQL rate 4% \u2014 lowest of all selected channels',                            body: 'X drives awareness touchpoints but rarely converts last-click. Attribute correctly in a multi-touch model before cutting budget \u2014 it may be assisting higher-intent conversions downstream.', ownerName: 'Nina Park',  assignee: 'Analytics', followUp: 'Review X contribution in multi-touch attribution model' },
           { level: 'green',  pill: '\uD83D\uDFE2 Win',   title: '340 engaged X users this week not yet retargeted \u2014 missed pipeline opportunity', body: 'Adding pixel-based retargeting to users who engaged with posts (likes, link clicks, video views 50%+) could generate 8\u201312 MQLs at an estimated $85 CPL based on comparable retargeting pools.',   ownerName: 'Alex Rivera', assignee: 'Paid media', followUp: 'Set up X pixel retargeting for engaged users' }
@@ -398,7 +398,7 @@
       var now = new Date(), months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
       return months[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear();
     })();
-    var sourceMap  = { 'Google Ads': 'Google Ads API', 'Meta': 'Meta Ads Manager', 'Twitter / X': 'X Ads API', 'LinkedIn Ads': 'LinkedIn Campaign Manager' };
+    var sourceMap  = { 'Google Ads': 'Google Ads API', 'Meta': 'Meta Ads Manager', 'Apple Search Ads': 'Apple Search Ads API', 'OpenAI Ads': 'OpenAI Ads API' };
     var sourceParts = [];
     for (var si = 0; si < S.platforms.length; si++) { sourceParts.push(sourceMap[S.platforms[si]] || S.platforms[si]); }
     var meta    = dateRange + ' \u00B7 ' + platList;

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="assets/apple-icon.svg"/>
+<title>Download Duct for Desktop — Mac, Windows and Linux</title>
+<link rel="canonical" href="https://getduct.ai/download"/>
+<meta name="description" content="Duct on your desktop for Mac, Windows and Linux. Signed, notarized, and it keeps itself up to date. Bring your own model keys — they stay in your OS keychain."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/download"/>
+<meta property="og:title" content="Download Duct for Desktop"/>
+<meta property="og:description" content="Duct in a native window on Mac, Windows and Linux. Signed, notarized, and it keeps itself up to date. Your keys stay in your OS keychain."/>
+<meta property="og:image" content="https://getduct.ai/assets/og-image.png"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Download Duct for Desktop"/>
+<meta name="twitter:description" content="Duct in a native window on Mac, Windows and Linux. Signed, notarized, and it keeps itself up to date. Your keys stay in your OS keychain."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og-image.png"/>
+<link rel="stylesheet" href="assets/duct.css"/>
+<script src="assets/config.js" defer></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "Download Duct for Desktop",
+  "url": "https://getduct.ai/download",
+  "description": "Download the Duct desktop app for macOS, Windows and Linux.",
+  "publisher": {
+    "@type": "Organization",
+    "name": "Alleviate Lab",
+    "url": "https://getduct.ai"
+  }
+}
+</script>
+<style>
+/* ── DOWNLOAD-ONLY STYLES ── */
+.dl-hero { text-align: center; padding: 120px 24px 40px; max-width: 780px; margin: 0 auto; }
+.dl-hero h1 { margin-bottom: 18px; }
+.dl-hero .sub { color: var(--navy-3); max-width: 560px; margin: 0 auto; }
+.dl-version { margin-top: 20px; font-size: 13px; color: var(--navy-3); }
+
+.dl-grid-wrap { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+.dl-grid {
+  display: grid; gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(226px, 1fr));
+  align-items: stretch;
+}
+
+.dl-card {
+  position: relative; display: flex; flex-direction: column; align-items: center;
+  text-align: center; gap: 8px;
+  padding: 30px 20px 22px;
+  border: 1px solid var(--border); border-radius: var(--r-lg);
+  background: var(--white);
+  transition: border-color .2s, box-shadow .2s, transform .2s;
+}
+.dl-card:hover { border-color: var(--navy-3); transform: translateY(-2px); }
+.dl-card-icon { color: var(--navy); margin-bottom: 2px; }
+.dl-card h2 { font-size: 19px; margin: 0; }
+.dl-card-hint { font-size: 12.5px; color: var(--navy-3); margin: 0; min-height: 32px; }
+.dl-card-btn { margin-top: 8px; width: 100%; }
+.dl-card-meta { font-size: 12px; color: var(--navy-3); margin: 0; }
+
+/* The detected platform. Border plus badge plus weight — never colour alone,
+   which is invisible to anyone who cannot separate orange from grey. */
+.dl-card.is-detected {
+  border-color: var(--orange); border-width: 2px;
+  box-shadow: 0 10px 30px rgba(255, 107, 53, .12);
+  padding: 29px 19px 21px; /* keep the 2px border from resizing the card */
+}
+.dl-card-badge {
+  position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+  background: var(--orange); color: #fff;
+  font-size: 11px; font-weight: 700; letter-spacing: .04em;
+  padding: 4px 12px; border-radius: var(--pill); white-space: nowrap;
+}
+
+.dl-grid-note { text-align: center; font-size: 13px; color: var(--navy-3); margin-top: 22px; }
+
+.dl-notes { max-width: 720px; margin: 56px auto 96px; padding: 0 24px; font-size: 13px; color: var(--navy-3); }
+.dl-notes p { margin-bottom: 10px; }
+.dl-notes code { font-size: 12px; }
+
+@media (max-width: 560px) {
+  .dl-hero { padding-top: 96px; }
+  .dl-card-hint { min-height: 0; }
+}
+</style>
+</head>
+<body>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+
+<!-- NAV (shared: site/partials/nav-simple.html) -->
+<div data-duct-partial="/partials/nav-simple.html"></div>
+
+<main id="main-content">
+
+<section class="dl-hero">
+  <h1>Duct, in a window<br/>that stays <em>open</em></h1>
+  <p class="sub">Your brief and your alerts without a browser tab to lose. Sign in
+  with Google, connect your stack, and it keeps itself up to date.</p>
+  <p class="dl-version" id="dl-version" hidden></p>
+</section>
+
+<!-- Each href is a permanent URL: GitHub redirects releases/latest/download/
+     to whichever release is newest, and the workflow publishes these four
+     fixed names for exactly this. So the page is fully functional with
+     JavaScript disabled — every button downloads the current build. The
+     script only adds the version, the size and the highlight, none of which
+     anyone needs in order to download. Cards are never rendered from
+     JavaScript. -->
+<section class="dl-grid-wrap">
+  <div class="dl-grid" id="dl-grid">
+
+    <article class="dl-card" data-dl-card="macos">
+      <span class="dl-card-badge" hidden>Your platform</span>
+      <img class="dl-card-icon" src="assets/icons/apple.svg" width="30" height="30" alt="" aria-hidden="true"/>
+      <h2>macOS</h2>
+      <p class="dl-card-hint">Universal &middot; Apple silicon and Intel</p>
+      <a class="btn btn-orange dl-card-btn" href="https://github.com/5hirish/duct/releases/latest/download/Duct-macOS-universal.dmg" download>Download &darr;</a>
+      <p class="dl-card-meta">.dmg</p>
+    </article>
+
+    <article class="dl-card" data-dl-card="windows">
+      <span class="dl-card-badge" hidden>Your platform</span>
+      <img class="dl-card-icon" src="assets/icons/windows.svg" width="30" height="30" alt="" aria-hidden="true"/>
+      <h2>Windows</h2>
+      <p class="dl-card-hint">Windows 10 and later</p>
+      <a class="btn btn-orange dl-card-btn" href="https://github.com/5hirish/duct/releases/latest/download/Duct-Windows-x64-setup.exe" download>Download &darr;</a>
+      <p class="dl-card-meta">.exe installer</p>
+    </article>
+
+    <article class="dl-card" data-dl-card="linux-appimage">
+      <span class="dl-card-badge" hidden>Your platform</span>
+      <img class="dl-card-icon" src="assets/icons/linux.svg" width="30" height="30" alt="" aria-hidden="true"/>
+      <h2>Linux</h2>
+      <p class="dl-card-hint">Runs on any distribution</p>
+      <a class="btn btn-orange dl-card-btn" href="https://github.com/5hirish/duct/releases/latest/download/Duct-Linux-x86_64.AppImage" download>Download &darr;</a>
+      <p class="dl-card-meta">.AppImage</p>
+    </article>
+
+    <article class="dl-card" data-dl-card="linux-deb">
+      <span class="dl-card-badge" hidden>Your platform</span>
+      <img class="dl-card-icon" src="assets/icons/linux.svg" width="30" height="30" alt="" aria-hidden="true"/>
+      <h2>Debian / Ubuntu</h2>
+      <p class="dl-card-hint">apt-based distributions</p>
+      <a class="btn btn-orange dl-card-btn" href="https://github.com/5hirish/duct/releases/latest/download/Duct-Linux-amd64.deb" download>Download &darr;</a>
+      <p class="dl-card-meta">.deb</p>
+    </article>
+
+  </div>
+  <p class="dl-grid-note" id="dl-grid-note">
+    Every build is on <a href="https://github.com/5hirish/duct/releases">the releases page</a>, with SHA-256 checksums.
+  </p>
+</section>
+
+<section class="dl-notes">
+  <p><strong>macOS</strong> &mdash; universal, runs on Apple silicon and Intel. Requires macOS 12 or later. Signed and notarized by Apple, so it opens without a warning.</p>
+  <p><strong>Windows</strong> &mdash; Windows 10 and later. The installer is not yet code-signed, so SmartScreen will say &ldquo;Windows protected your PC&rdquo; on first run: click <em>More info</em> &rarr; <em>Run anyway</em>. We are fixing this.</p>
+  <p><strong>Linux</strong> &mdash; the AppImage runs anywhere (<code>chmod +x</code> it first); the .deb is for Debian and Ubuntu. Provider keys need a keyring daemon running &mdash; GNOME Keyring, KWallet or KeePassXC.</p>
+  <p><strong>Your model keys stay yours.</strong> Duct is bring-your-own-key: paste an Anthropic, OpenAI or Gemini key and the desktop app keeps it in your OS keychain rather than a browser tab. You are billed by the provider, not by us.</p>
+  <p>Duct is open source under the MIT licence. <a href="https://github.com/5hirish/duct">Read the code</a>, or build it yourself &mdash; the desktop shell can also run its own backend entirely on your machine.</p>
+</section>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/partials/footer-expanded.html"></div>
+
+<script src="assets/duct-partials.js"></script>
+<script src="assets/duct.js" defer></script>
+<script src="assets/duct-download.js" defer></script>
+<script>
+// Deferred scripts run before DOMContentLoaded, so DuctDownload is ready by
+// the time this fires — an inline script would otherwise run first and find
+// nothing. Detection, the fixed installer names and the platform list all live
+// in assets/duct-download.js; duplicating them here is how the two drift.
+document.addEventListener('DOMContentLoaded', function () {
+  var DD = window.DuctDownload;
+
+  // Highlighting needs no network — the visitor's platform is knowable here.
+  // Do it first so the page never shows an unmarked grid and then jumps.
+  var mine = DD.detect();
+  DD.SLOTS.forEach(function (slot) {
+    var card = document.querySelector('[data-dl-card="' + slot.key + '"]');
+    if (!card) return;
+    // Both Linux cards match a Linux visitor: nothing in the user agent
+    // distinguishes apt from the rest, and offering both is the honest answer.
+    var isMine = slot.key === mine ||
+      (mine === 'linux-appimage' && slot.key.indexOf('linux-') === 0);
+    if (isMine) {
+      card.classList.add('is-detected');
+      card.querySelector('.dl-card-badge').hidden = false;
+    }
+  });
+
+  // Everything below is decoration. The buttons already work.
+  DD.load()
+    .then(function (data) {
+      DD.SLOTS.forEach(function (slot) {
+        var card = document.querySelector('[data-dl-card="' + slot.key + '"]');
+        var asset = card && data.platforms[slot.key];
+        if (!asset) return;
+        card.querySelector('.dl-card-meta').textContent =
+          'v' + data.version + DD.mb(asset.size) + ' · ' + slot.ext;
+      });
+      var v = document.getElementById('dl-version');
+      if (data.version) {
+        v.textContent = 'Latest release: v' + data.version;
+        v.hidden = false;
+      }
+    })
+    .catch(function () {
+      // Rate-limited, offline, or no release yet. The cards keep the file type
+      // they were authored with and every link still resolves, so there is
+      // nothing to say and nothing to undo.
+    });
+});
+</script>
+</body>
+</html>

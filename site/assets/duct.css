@@ -62,16 +62,6 @@ cursor: pointer; text-decoration: none; border: none; transition: all .2s;
 .btn-ghost:hover { border-color: var(--navy); }
 .btn-lg { padding: 15px 34px; font-size: 15px; }
 
-/* ── EMAIL INPUT ── */
-.email-in {
-padding: 15px 22px; border: 1.5px solid var(--border);
-border-radius: var(--pill); font-family: var(--sans);
-font-size: 15px; color: var(--navy); outline: none;
-transition: border-color .2s; background: var(--white);
-}
-.email-in:focus { border-color: var(--orange); }
-.email-in::placeholder { color: var(--navy-3); }
-
 /* ── NAV ── */
 nav {
 position: fixed; top: 0; left: 0; right: 0; z-index: 100;
@@ -93,6 +83,17 @@ display: flex; align-items: center; gap: 5px;
 .nav-link:hover { color: var(--navy); }
 .nav-link[aria-current="page"] { color: var(--navy); font-weight: 500; }
 .nav-link.nav-link--active-section { color: var(--navy); font-weight: 500; }
+/* GitHub mark: icon-only in the desktop bar, but the label must stay in the DOM.
+   duct.js clones .nav-links into the mobile drawer using textContent and skips
+   any anchor whose text is empty — an icon-only link would silently disappear
+   below 860px. Visually hidden, not display:none, for the same reason. */
+.nav-gh { display: inline-flex; align-items: center; opacity: .55; transition: opacity .2s; }
+.nav-gh:hover { opacity: 1; }
+.nav-gh img { width: 18px; height: 18px; display: block; }
+.nav-gh-label {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
 .nav-dropdown { position: relative; }
 .nav-dropdown > .nav-link::after { content: ' ↓'; font-size: 10px; opacity: .5; }
 .dropdown-menu {
@@ -218,7 +219,6 @@ display: flex; align-items: center; justify-content: center;
 gap: 10px; flex-wrap: wrap;
 animation: fadeUp .5s .24s ease both;
 }
-.hero-form .email-in { width: 280px; }
 .hero-footnote { font-size: 12px; color: var(--navy-3); margin-top: 16px; animation: fadeUp .5s .32s ease both; }
 
 /* ── STRIP ── */
@@ -465,10 +465,6 @@ border: 1px solid var(--border); border-radius: var(--r); font-size: 13px;
   gap: 10px;
   align-items: center;
 }
-.flow-compare-cta .email-in {
-  flex: 1;
-  min-width: 160px;
-}
 /* Full-width CTA below the grid */
 .flow-compare-bottom {
   margin-top: 32px;
@@ -485,10 +481,6 @@ border: 1px solid var(--border); border-radius: var(--r); font-size: 13px;
   justify-content: center;
   width: 100%;
   max-width: 520px;
-}
-.flow-compare-bottom-cta .email-in {
-  flex: 1;
-  min-width: 200px;
 }
 .flow-compare-bottom-hint {
   font-size: 12px;
@@ -576,8 +568,8 @@ border: 1px solid var(--border); border-radius: var(--r); font-size: 13px;
 .cta-inner { max-width: 560px; margin: 0 auto; }
 .cta h2 { font-size: clamp(38px, 6vw, 62px); margin-bottom: 18px; }
 .cta .sub { max-width: 400px; margin: 0 auto 44px; }
-.cta-form { display: flex; gap: 10px; max-width: 420px; margin: 0 auto; }
-.cta-form .email-in { flex: 1; }
+/* One download button now, not an input plus a button — so it has to centre itself. */
+.cta-form { display: flex; gap: 10px; max-width: 420px; margin: 0 auto; justify-content: center; }
 .cta-note { font-size: 12px; color: var(--navy-3); margin-top: 16px; }
 
 /* ── FOOTER ── */
@@ -609,7 +601,6 @@ nav { padding: 0 24px; }
 .nav-toggle { display: inline-flex; }
 .hero { padding: 100px 24px 60px; }
 .hero-form { flex-direction: column; align-items: stretch; max-width: 320px; margin: 0 auto; }
-.hero-form .email-in { width: 100%; }
 .problem { grid-template-columns: 1fr; gap: 48px; padding: 64px 24px; }
 .steps { grid-template-columns: 1fr; }
 .step { border-right: none; border-bottom: 1px solid rgba(255,255,255,.08); }
@@ -777,4 +768,76 @@ details[open] > .faq-q::after { transform: rotate(45deg); }
   .blog-cta { padding: 60px 24px; }
   .faq { padding: 64px 24px; }
   .faq-q { font-size: 16px; }
+}
+
+/* Shown only until duct-partials.js swaps in the real footer — or permanently if
+   that fetch fails or JS is off. Google's OAuth review fetches without JS and
+   requires a privacy policy link on the homepage, so this cannot be JS-only. */
+.legal-fallback { text-align: center; padding: 40px 24px; font-size: 13px; }
+.legal-fallback a { color: inherit; opacity: .7; text-decoration: underline; text-underline-offset: 2px; margin: 0 8px; }
+.legal-fallback a:hover { opacity: 1; }
+
+/* ── CHANGELOG ── */
+/* Shared by /changelog/ and every /changelog/<year> archive page, so these live
+   here rather than inline: a year archive is a copy of the index and must not
+   carry its own fork of the layout. */
+
+.cl-hero { padding: 120px 52px 40px; text-align: center; }
+.cl-hero h1 { font-family: var(--serif); font-size: clamp(36px, 5vw, 56px); color: var(--navy); line-height: 1.1; letter-spacing: -1px; max-width: 760px; margin: 0 auto 12px; }
+.cl-hero h1 em { font-style: italic; color: var(--orange); }
+.cl-hero p { font-size: 16px; font-weight: 300; color: var(--navy-3); max-width: 560px; margin: 0 auto; line-height: 1.7; }
+
+/* Year strip: the archive switcher. It is a div with role="navigation", not a
+   <nav>: the bare `nav` rule in this stylesheet is the fixed site header, and a
+   second <nav> here parks itself on top of the real one. It stays on the page
+   with a single year so the layout does not shift the January a second appears. */
+.cl-years { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; padding: 0 52px; }
+.cl-year { font-size: 13px; font-weight: 500; color: var(--navy-3); text-decoration: none; padding: 7px 16px; border: 1px solid var(--border); border-radius: var(--pill); background: var(--white); transition: border-color .15s, color .15s, background .15s; }
+.cl-year:hover { border-color: var(--navy); color: var(--navy); }
+.cl-year[aria-current="page"] { background: var(--navy); border-color: var(--navy); color: #fff; }
+.cl-year-feed { color: var(--orange); }
+.cl-year-feed:hover { border-color: var(--orange); color: var(--orange); }
+
+.cl-source { max-width: 620px; margin: 20px auto 0; text-align: center; font-size: 13px; font-weight: 300; color: var(--navy-3); line-height: 1.7; }
+.cl-source a { color: var(--orange); text-decoration: none; border-bottom: 1px solid rgba(255, 92, 0, .3); }
+.cl-source a:hover { border-bottom-color: var(--orange); }
+
+.cl-wrap { max-width: 940px; margin: 32px auto 0; padding: 0 52px 96px; border-top: 1px solid var(--border); }
+
+.cl-release { display: grid; grid-template-columns: 190px 1fr; gap: 48px; padding: 56px 0; border-bottom: 1px solid var(--border); }
+.cl-release:last-child { border-bottom: none; }
+
+.cl-rail { position: sticky; top: 92px; align-self: start; }
+.cl-date { display: block; font-size: 14px; font-weight: 500; color: var(--navy); margin-bottom: 8px; }
+.cl-version { display: inline-flex; align-items: center; font-family: ui-monospace, monospace; font-size: 12px; font-weight: 500; color: var(--orange); background: rgba(255, 92, 0, .07); border: 1px solid rgba(255, 92, 0, .22); border-radius: var(--pill); padding: 3px 10px; text-decoration: none; }
+a.cl-version:hover { background: rgba(255, 92, 0, .14); }
+.cl-permalink { display: inline-block; margin-top: 12px; font-size: 12px; color: var(--navy-3); text-decoration: none; opacity: 0; transition: opacity .15s, color .15s; }
+.cl-release:hover .cl-permalink, .cl-permalink:focus { opacity: 1; }
+.cl-permalink:hover { color: var(--orange); }
+
+.cl-title { font-family: var(--serif); font-size: clamp(24px, 3vw, 30px); line-height: 1.2; color: var(--navy); margin-bottom: 14px; letter-spacing: -.3px; }
+.cl-lede { font-size: 16px; font-weight: 300; line-height: 1.75; color: var(--navy-3); margin-bottom: 8px; max-width: 60ch; }
+.cl-lede strong { font-weight: 600; color: var(--navy); }
+
+.cl-group { margin-top: 30px; }
+.cl-group-label { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); margin-bottom: 12px; }
+.cl-list { list-style: none; padding: 0; margin: 0; }
+.cl-list li { position: relative; padding-left: 20px; font-size: 15px; font-weight: 300; line-height: 1.7; color: var(--navy-3); margin-bottom: 10px; max-width: 62ch; }
+.cl-list li::before { content: ''; position: absolute; left: 2px; top: 11px; width: 5px; height: 5px; border-radius: 50%; background: var(--orange); opacity: .55; }
+.cl-list li strong { font-weight: 600; color: var(--navy); }
+.cl-list li a { color: var(--orange); text-decoration: none; border-bottom: 1px solid rgba(255, 92, 0, .3); }
+.cl-list li a:hover { border-bottom-color: var(--orange); }
+
+/* Scroll-margin so a #permalink lands below the fixed nav. */
+.cl-release[id] { scroll-margin-top: 84px; }
+
+@media (max-width: 860px) {
+  .cl-hero { padding: 96px 24px 32px; }
+  .cl-years { padding: 0 24px; }
+  .cl-source { padding: 0 24px; margin-top: 16px; }
+  .cl-wrap { padding: 0 24px 64px; }
+  .cl-release { grid-template-columns: 1fr; gap: 18px; padding: 40px 0; }
+  .cl-rail { position: static; display: flex; align-items: center; gap: 12px; }
+  .cl-date { margin-bottom: 0; }
+  .cl-permalink { display: none; }
 }

@@ -84,6 +84,22 @@ class SSRFError(ValueError):
     """Raised when a URL targets a private/internal network address."""
 
 
+class SiteUnreachableError(RuntimeError):
+    """The audited URL produced no HTTP response at all.
+
+    Distinct from a 4xx/5xx, which is an observation worth auditing ("your site
+    blocks Googlebot"). No response means there is nothing to audit, and a
+    report built on it is fiction: the pipeline stops here instead.
+    """
+
+    def __init__(self, url: str) -> None:
+        super().__init__(
+            f"Could not reach {url}: no HTTP response (DNS, TLS, a timeout or a "
+            "network block). Check the address and try again."
+        )
+        self.url = url
+
+
 def validate_public_url(url: str) -> None:
     """Raise SSRFError if *url* resolves to a private or reserved network range.
 

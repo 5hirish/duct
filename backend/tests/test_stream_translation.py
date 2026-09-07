@@ -110,16 +110,16 @@ def test_stored_usage_is_the_last_call_and_the_sum_of_what_survives():
         ToolMessage(content="x", tool_call_id="1"),
         AIMessage(content="b", usage_metadata=_usage(300, 20, cached=50)),
     ]
-    usage = usage_from_messages(messages, ModelName.CLAUDE_OPUS_1M)
-    first = cost_usd(ModelName.CLAUDE_OPUS_1M, input_tokens=100, output_tokens=10)
-    second = cost_usd(ModelName.CLAUDE_OPUS_1M, input_tokens=300, output_tokens=20, cache_read_tokens=50)
+    usage = usage_from_messages(messages, ModelName.CLAUDE_OPUS)
+    first = cost_usd(ModelName.CLAUDE_OPUS, input_tokens=100, output_tokens=10)
+    second = cost_usd(ModelName.CLAUDE_OPUS, input_tokens=300, output_tokens=20, cache_read_tokens=50)
     assert usage["last"] == {"input_tokens": 300, "output_tokens": 20, "cache_read_tokens": 50, "cost_usd": second}
     assert usage["total"] == {
         "input_tokens": 400, "output_tokens": 30, "cache_read_tokens": 50, "calls": 2,
         "cost_usd": round(first + second, 6),
     }
-    assert usage["context_window"] == 1_000_000
-    assert usage["model"] == "claude-opus-5[1m]"
+    assert usage["context_window"] == CONTEXT_WINDOW[ModelName.CLAUDE_OPUS]
+    assert usage["model"] == "claude-opus-5"
     assert usage_from_messages([], ModelName.CLAUDE_SONNET)["last"] is None
 
 

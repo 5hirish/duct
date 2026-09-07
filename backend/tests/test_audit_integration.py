@@ -3,33 +3,30 @@
 Nothing here runs from a plain ``pytest``: each test crawls a real site or
 spends real tokens, for minutes. Opt in with ``pytest -m live``.
 
-Three levels of coverage:
+Two levels of coverage:
 
   test_crawl_real_page
-    Crawls a real public URL (getduct.ai) with no Claude involved.
+    Crawls a real public URL (getduct.ai) with no model involved.
     Verifies the crawl layer works end-to-end: HTTP fetch, sitemap discovery,
     HTML parsing, PageSignals extraction.
     Skipped when network is unavailable.
 
-  test_run_synthesis_catches_planted_issues
-    No network crawl. Uses a local HTML fixture with 5 deliberately planted
-    SEO issues and calls run_synthesis() with a real ClaudeSDKClient.
-    Verifies the synthesis layer catches each known issue via the unified
-    artifact session pattern (<duct_artifact> tag parse, no output_format).
-    Requires ANTHROPIC_API_KEY.
-
   test_full_pipeline_real_page
-    Full end-to-end: real crawl of getduct.ai + real Claude synthesis.
+    Full end-to-end: real crawl of getduct.ai + real synthesis.
     The only test that exercises both layers together.
     Requires ANTHROPIC_API_KEY and network access to getduct.ai.
 
-Architecture (unified session):
-  - Single ClaudeSDKClient session, no output_format.
-  - Initial report extracted from <duct_artifact> XML tag in the stream.
-  - SYNTHESIS_CHUNK no longer emitted; model streams AGENT_MESSAGE_CHUNK text.
-  - THINKING_CHUNK emitted when adaptive thinking fires.
-  - ARTIFACT_CHUNK emitted per-token while inside <duct_artifact> for live streaming.
-  - close_session() in the emit callback terminates the message_gen loop.
+A third test drove ``run_synthesis`` against a mocked-transport SDK client on a
+planted-issue fixture. It went with V3, and is not replaced here: what it
+covered — the model finding known issues in known HTML — is what the audit eval
+grades against a rubric, on a real site, on every provider.
+
+Notes on the shape:
+  - The report is assembled from StartAuditReport / AddAuditCategory /
+    FinalizeAuditReport tool calls in template mode.
+  - ARTIFACT_CHUNK is emitted per-token inside <duct_artifact> in freehand mode.
+  - The run stays open for follow-up chat, so a driver passes a short
+    ``chat_idle_timeout`` or closes the session.
 
 All tests have a 5-minute (300s) outer timeout.
 """
@@ -217,7 +214,7 @@ def _save_html_preview(data: dict, stem: str) -> Path:
 async def test_crawl_real_page():
     """Crawls getduct.ai and verifies the crawl layer produces sensible output."""
     import asyncio
-    from agents.audit.v3.runner import run_crawl
+    from agents.audit.crawl import run_crawl
 
     logger.info("[crawl] target: %s", _AUDIT_URL)
     t0 = time.perf_counter()
@@ -281,178 +278,6 @@ async def test_crawl_real_page():
 # the gate before, and `get_configs()` reads backend/.env.local — so a developer
 # (or an agent) with a key there fired this from `make test`.
 @pytest.mark.live
-@pytest.mark.skipif(not _HAS_API_KEY, reason="ANTHROPIC_API_KEY not set")
-async def test_run_synthesis_catches_planted_issues(acme_business_context):
-    """Feeds a known-bad HTML fixture to Claude and asserts it catches each planted issue."""
-    import asyncio
-    from agents.audit.schema import CrawlPlan, CrawlResult
-    from agents.audit.v3.runner import close_session, create_audit_session, run_synthesis
-    from agents.models import Provider
-    from service.crawl.extractor import extract_signals
-
-    page = extract_signals(_FIXTURE_HTML, _FIXTURE_URL, "landing_page")
-
-    # Verify fixture signals are correct before calling Claude
-    assert len(page.title) > 60,         "planted: title too long"
-    assert page.meta_description == "",  "planted: meta description absent"
-    assert page.has_schema_org is False, "planted: no structured data"
-    assert page.og_image == "",          "planted: missing og:image"
-    assert page.images_missing_alt == 3, "planted: 3 images without alt"
-
-    logger.info("[fixture] signals OK — title %d chars, %d images missing alt",
-                len(page.title), page.images_missing_alt)
-    logger.info("  title:              %r", page.title)
-    logger.info("  meta_description:   %r", page.meta_description)
-    logger.info("  has_schema_org:     %s", page.has_schema_org)
-    logger.info("  og_image:           %r", page.og_image)
-
-    plan = CrawlPlan(
-        root_url=_FIXTURE_URL,
-        sitemap_url="",
-        robots_txt_url=f"{_FIXTURE_URL}robots.txt",
-        llms_txt_url=f"{_FIXTURE_URL}llms.txt",
-        landing_pages=[_FIXTURE_URL],
-        blog_posts=[],
-        total_sitemap_urls=1,
-    )
-    crawl_result = CrawlResult(plan=plan, pages=[page])
-    business_context = acme_business_context
-
-    session_id = "integration-fixture-test"
-    create_audit_session(session_id)
-    events: list[dict] = []
-
-    async def collect(event: dict) -> None:
-        events.append(event)
-        evt = event.get("event")
-        if evt == "artifact_chunk":
-            pass  # too noisy; counted in summary
-        elif evt in ("step_started", "step_finished"):
-            logger.info("[event] %s: %s — %s", evt, event.get("step_id"), event.get("status", ""))
-        elif evt == "artifact_version":
-            html_len = len(event.get("payload", {}).get("html_report", ""))
-            logger.info("[event] report_updated v%s (%d chars)", event.get("version_id"), html_len)
-            close_session(session_id)
-        elif evt == "message_stop":
-            logger.info("[event] message_stop")
-
-    logger.info("[synthesis] starting — model: claude-haiku-4-5-20251001")
-    t0 = time.perf_counter()
-
-    report, had_thinking = await asyncio.wait_for(
-        run_synthesis(
-            session_id=session_id,
-            crawl_result=crawl_result,
-            business_context=business_context,
-            model_str="claude-haiku-4-5-20251001",  # haiku: fast enough for fixture, saves cost
-            api_key=_cfg.anthropic_api_key,
-            provider=Provider.ANTHROPIC,
-            emit=collect,
-            chat_idle_timeout=5.0,  # exit 5 s after report is emitted
-        ),
-        timeout=_TIMEOUT,
-    )
-
-    elapsed = time.perf_counter() - t0
-    logger.info("[synthesis] done in %.1fs", elapsed)
-
-    # ------------------------------------------------------------------
-    # Core report presence
-    # ------------------------------------------------------------------
-    assert report is not None, \
-        "run_synthesis returned None — <duct_artifact> tag not found or parse failed"
-    assert report.url == _FIXTURE_URL
-    assert isinstance(report.executive_summary, str), "executive_summary must be a string"
-
-    # ------------------------------------------------------------------
-    # html_report structural integrity
-    # ------------------------------------------------------------------
-    html = report.html_report
-    assert html, "html_report is empty — model omitted HTML from <duct_artifact>"
-
-    html_lower = html.lower()
-    assert "<html" in html_lower,   f"html_report missing <html> (first 200): {html[:200]}"
-    assert "</html>" in html_lower, "html_report missing </html> — likely truncated"
-    assert "<head" in html_lower,   "html_report missing <head>"
-    assert "<body" in html_lower,   "html_report missing <body>"
-    assert "<style" in html_lower,  "html_report missing <style> — renders unstyled"
-    assert "<script" not in html_lower, \
-        "html_report contains <script> — prompt says no JavaScript"
-    assert "acme-test-fixture.io" in html, \
-        "html_report doesn't mention the audited URL"
-    assert "duct" in html_lower, \
-        "html_report footer missing 'Duct' branding"
-    assert len(html) >= 2000, \
-        f"html_report suspiciously short ({len(html)} chars)"
-
-    # ------------------------------------------------------------------
-    # SSE event contract
-    # ------------------------------------------------------------------
-    assert any(e.get("event") == "artifact_version" for e in events), \
-        "ARTIFACT_VERSION never fired"
-    first_update = next(e for e in events if e.get("event") == "artifact_version")
-    assert first_update["version_id"] == 1, "initial report must be version_id=1"
-
-    agent_chunks = [e for e in events if e.get("event") == "agent_message_chunk"]
-    assert len(agent_chunks) > 0, (
-        "no AGENT_MESSAGE_CHUNK events — model did not stream analysis text before <duct_artifact>. "
-        "Check the unified system prompt."
-    )
-    artifact_chunks = [e for e in events if e.get("event") == "artifact_chunk"]
-    assert len(artifact_chunks) > 0, \
-        "no ARTIFACT_CHUNK events — HTML not streamed live (streaming regression)"
-    assert not any(e.get("event") == "synthesis_chunk" for e in events), \
-        "SYNTHESIS_CHUNK still being emitted — old code path active?"
-
-    # ------------------------------------------------------------------
-    # Dump for visual inspection
-    # ------------------------------------------------------------------
-    out = _save_report("fixture_report", html)
-
-    _log_event_summary(events)
-    logger.info("had_thinking:       %s", had_thinking)
-    logger.info("html_report length: %d chars", len(html))
-    logger.info("executive_summary:  %.120r", report.executive_summary)
-    logger.info("agent_msg_chunks:   %d", len(agent_chunks))
-    logger.info("artifact_chunks:      %d", len(artifact_chunks))
-    logger.info("report saved to:    %s", out)
-
-    # ------------------------------------------------------------------
-    # Planted issues — verify the HTML report discusses each issue.
-    # Checks the rendered HTML for expected keywords since the model
-    # generates prose, not structured JSON fields.
-    # ------------------------------------------------------------------
-
-    # A. Title too long (83 chars)
-    assert "title" in html_lower, \
-        "A: title issue not mentioned in HTML report"
-    assert any(w in html_lower for w in ("long", "length", "character", "exceed", "60", "70")), \
-        "A: no length guidance for title in HTML report"
-
-    # B. Missing meta description
-    assert "description" in html_lower, \
-        "B: meta description not mentioned in HTML report"
-    assert any(w in html_lower for w in ("missing", "absent", "no meta", "not found", "empty", "lacking")), \
-        "B: no 'missing' indicator for meta description in HTML report"
-
-    # C. No structured data / JSON-LD
-    assert any(w in html_lower for w in ("schema", "structured data", "json-ld", "markup")), \
-        "C: structured data not mentioned in HTML report"
-
-    # D. Missing og:image
-    assert any(w in html_lower for w in ("og:image", "og image", "open graph")), \
-        "D: og:image not mentioned in HTML report"
-
-    # E. Images missing alt text
-    assert "alt" in html_lower, \
-        "E: alt text not mentioned in HTML report"
-
-
-# ---------------------------------------------------------------------------
-# Test 3 — Full pipeline: real crawl + real synthesis
-# ---------------------------------------------------------------------------
-
-@pytest.mark.live
 @pytest.mark.skipif(
     not (_HAS_API_KEY and _HAS_NETWORK),
     reason="requires ANTHROPIC_API_KEY and network access to getduct.ai (HTTP 200)",
@@ -466,7 +291,9 @@ async def test_full_pipeline_real_page(duct_business_context):
     """
     import asyncio
     import json as _json
-    from agents.audit.v3.runner import ClaudeAuditRunner, close_session, create_audit_session
+    from agents.audit.crawl import create_audit_session
+    from agents.audit.v1.runner import LangChainAuditRunner
+    from agents.core.session import close_session
     from agents.models import ModelName, Provider
 
     session_id = "integration-full-pipeline"
@@ -502,10 +329,11 @@ async def test_full_pipeline_real_page(duct_business_context):
         elif evt == "thinking_chunk":
             pass  # noisy; counted in summary
 
-    runner = ClaudeAuditRunner(
+    runner = LangChainAuditRunner(
         api_key=_cfg.anthropic_api_key,
         provider=Provider.ANTHROPIC,
         model=ModelName.CLAUDE_SONNET,
+        gemini_api_key=_cfg.gemini_api_key,
     )
     business_context = duct_business_context
 

@@ -1,0 +1,1 @@
+../../../.claude/skills/add-changelog-entry.md

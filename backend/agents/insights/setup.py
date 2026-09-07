@@ -21,16 +21,9 @@ from typing import Any, Callable
 from uuid import UUID
 
 from agents.core.events import AgentEvent
-from agents.engines import (
-    ENGINE_SUPPORTED_PROVIDERS,
-    resolve_engine,
-    resolve_engine_model,
-    resolve_engine_provider,
-    resolve_provider_key,
-)
+from agents.engines import resolve_run_model
 from agents.models import ModelName, Provider
 from agents.registry import AgentType
-from config import get_configs
 from db.session import get_session as db_session
 from models.execution import AUTONOMY_ASK, normalize_autonomy
 from models.project import Project
@@ -70,60 +63,15 @@ def resolve_model(
     user_keys: dict[Provider, str] | None = None,
     stored_keys: dict[Provider, str] | None = None,
 ) -> tuple[Provider, ModelName | str, str, str]:
-    """Engine → provider → model → keys. Raises InsightsSetupError with nothing
-    configured, because a run that cannot reach a model should fail at the door
-    rather than halfway through a brief.
+    """Engine → provider → model → keys, as a tuple.
 
-    ``user_keys`` are per-request bring-your-own keys from the ``X-Provider-*``
-    headers (see ``service/auth.get_user_provider_keys``); ``stored_keys`` are
-    the same user's saved keys (``service/provider_keys.py``), which is all an
-    unattended brief can have. A caller's own key wins over the server's for
-    the *resolved* provider only — an OpenAI key someone supplied must never be
-    spent on a Gemini call. Secrets: never logged, never persisted.
-
-    Whether the server's own key may be spent at all is not decided here: see
-    ``agents.engines.resolve_provider_key``, which fails closed on the hosted
-    deployment where that key is Duct's rather than the user's.
-
-    A caller's key can also *choose* the provider, but only in the one case
-    where that is unambiguous: the operator expressed no preference
-    (``GENERATE_PROVIDER`` unset) and the caller supplied exactly one key. Then
-    the key is the request — nobody pastes an OpenRouter key hoping to be
-    billed for Gemini, and before this, that paste resolved to the engine
-    default and failed with "no API key configured for 'google_genai'". Two
-    keys is not a preference, so that case keeps the engine default rather than
-    guessing which one to spend.
+    The logic moved to ``agents.engines.resolve_run_model`` when content became
+    the second V1 runner that needed it (a lone bring-your-own key choosing its
+    own provider is what makes BYO work for every agent, not just this one).
+    This wrapper keeps the tuple shape the insights routes and tests use.
     """
-    cfg = get_configs()
-    # V1 (LangChain/deepagents) is this agent's harness — it is the only engine
-    # that implements the autonomous shape, so an engine override selects the
-    # provider/model within V1 rather than a different runner.
-    engine = resolve_engine(engine_override or cfg.generate_engine or "v1")
-    provider = resolve_engine_provider(engine, cfg.generate_provider or None)
-    model_override = cfg.generate_model or None
-    # A saved key is as much "the caller asked for this provider" as a header
-    # one — the only difference is that it survived a page refresh.
-    byo = {**(stored_keys or {}), **(user_keys or {})}
-    if not cfg.generate_provider and len(byo) == 1:
-        (candidate,) = byo.keys()
-        if candidate in ENGINE_SUPPORTED_PROVIDERS.get(engine, frozenset()):
-            # GENERATE_MODEL goes with the provider the operator picked, so it is
-            # dropped along with it — a Gemini model id forwarded to OpenRouter is
-            # a guaranteed 404, and the engine default for the new provider is the
-            # only id known to fit.
-            if candidate is not provider:
-                model_override = None
-            provider = candidate
-    model = resolve_engine_model(engine, provider, model_override)
-    # ProviderKeyRequired deliberately propagates rather than becoming an
-    # InsightsSetupError: "you have not connected a key" is a 402 the browser
-    # can act on, not the 500 every other setup failure earns.
-    resolved = resolve_provider_key(provider, user_keys, stored_keys=stored_keys)
-    if resolved.billed_to_duct:
-        logger.info("insights: run billed to Duct (%s/%s)", provider.value, resolved.source)
-    api_key = resolved.key
-    summary_key = api_key if getattr(provider, "value", str(provider)) == "anthropic" else ""
-    return provider, model, api_key, summary_key
+    run = resolve_run_model(engine_override, user_keys, stored_keys, log_prefix="insights")
+    return run.provider, run.model, run.api_key, run.summary_key
 
 
 def resolve_run(

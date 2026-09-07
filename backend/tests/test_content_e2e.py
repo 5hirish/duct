@@ -7,7 +7,7 @@ slides_html) and a frontend↔backend enum-mirror check.
 The LIVE suite (marked @pytest.mark.live) hits real APIs against real
 accounts. Run when you want to validate contract correctness end-to-end:
 
-  ANTHROPIC_API_KEY=sk-…   — drives a real plan_month session
+  ANTHROPIC_API_KEY=sk-…   — drives a real plan_month session (V1, on Claude)
   GEMINI_API_KEY=ai-…      — generates one real image
   POSTBRIDGE_API_KEY=sk-…  — read-only list_social_accounts smoke
   DATABASE_URL=postgresql://…  — for the seed + plan e2e
@@ -27,8 +27,8 @@ from uuid import uuid4
 
 import pytest
 
+from agents.content.artifacts import parse_artifact_json as _parse_artifact_json
 from agents.content.events import ContentEvent
-from agents.content.v3.runner import _parse_artifact_json
 
 
 # ---------------------------------------------------------------------------
@@ -191,8 +191,8 @@ def test_live_run_plan_against_seeded_maxaura_project():
     from sqlalchemy import select
     from sqlmodel import Session
 
-    from agents.content.v3.runner import ClaudeContentRunner, create_plan_session
-    from agents.models import AgentEffort
+    from agents.content.v1.runner import ContentRunner, create_plan_session
+    from agents.models import ModelName, Provider
     from db.session import get_engine
     from models.auth import User
     from models.content import ContentPlan
@@ -219,14 +219,14 @@ def test_live_run_plan_against_seeded_maxaura_project():
     create_plan_session(session_id, project_id)
 
     async def _drive():
-        runner = ClaudeContentRunner(api_key=os.environ["ANTHROPIC_API_KEY"])
+        runner = ContentRunner(
+            api_key=os.environ["ANTHROPIC_API_KEY"],
+            provider=Provider.ANTHROPIC,
+            model=ModelName.CLAUDE_SONNET,
+        )
         try:
             await asyncio.wait_for(
-                runner.run_plan(
-                    session_id, project_id, _emit,
-                    effort=AgentEffort.MEDIUM,
-                    chat_idle_timeout=10.0,
-                ),
+                runner.run_plan(session_id, project_id, _emit, chat_idle_timeout=10.0),
                 timeout=420.0,
             )
         except asyncio.TimeoutError:

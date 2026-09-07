@@ -1,8 +1,21 @@
 # Duct Desktop — agent instructions
 
-Thin Tauri v2 shell around the hosted Duct web app, plus an OS-keychain store
-for bring-your-own provider API keys. Design:
+Tauri v2 shell that loads the hosted Duct web app, plus an OS-keychain store for
+bring-your-own provider API keys. Design:
 `docs/engineering/tauri-desktop-byo-keys-plan.md`.
+
+**Two build shapes, one binary.** The official build is a thin client
+that talks to the hosted API. A self-host build restores `bundle.resources` and
+ships the FastAPI backend frozen by PyInstaller (~470 MB), which the shell then
+supervises on a loopback port. The difference is one config entry — the Rust is
+identical, and `sidecar::is_available` probes at runtime for what actually
+shipped rather than being compiled two ways. Never gate this on a cargo
+feature: that would mean two binaries and two capability sets to keep honest.
+
+**If a build ships the sidecar, everything under `backend/` is on the user's
+disk** — routes, models, agents, prompts. Neither shape carries a credential
+(the sidecar mints its own local secrets on first run), but a sidecar build
+carries all the code.
 
 ## Stack
 
@@ -47,7 +60,7 @@ for bring-your-own provider API keys. Design:
   for a new tab; a link meant to navigate this window still does.
 - macOS registers the custom scheme from the built bundle's Info.plist, so the
   deep-link leg only works from a bundled app (`tauri build`), not `tauri dev`.
-- **Local backend ("sidecar")**: the bundle ships the FastAPI backend frozen by
+- **Local backend ("sidecar")** — *not in the official build*: a sidecar build ships the FastAPI backend frozen by
   PyInstaller (`backend/duct_sidecar.spec`), supervised by
   `src-tauri/src/sidecar.rs`. It binds a loopback port the OS picks, persists to
   SQLite in the per-user data dir, and prints one JSON handshake line the shell
@@ -59,8 +72,9 @@ for bring-your-own provider API keys. Design:
   broken app. It is **onedir, never onefile**: a onefile binary unpacks to a
   temp dir at startup and does not survive signing + notarization.
 - **Windows and Linux** ship from the same pipeline: NSIS on Windows, deb +
-  AppImage on Linux, each with its own PyInstaller sidecar (a frozen CPython
-  tree is per-OS, never cross-compiled). Two platform differences are load
+  AppImage on Linux. They still need their own runners even without the sidecar
+  — Tauri bundles are not cross-compiled — and a *sidecar* build additionally
+  needs its own PyInstaller freeze per OS. Two platform differences are load
   bearing and easy to regress:
   `tauri-plugin-single-instance` (registered **first**, before every other
   plugin) — macOS hands a deep link to the running app, but Windows and Linux
@@ -83,23 +97,92 @@ for bring-your-own provider API keys. Design:
   origin and cannot import them, which is also why no `updater:*` permission is
   needed: those gate the plugin's JS API, and our commands reach it from Rust).
   The manifest is `latest.json` on the GitHub release, assembled by
-  `.github/scripts/build-updater-manifest.mjs`. The App Store build drops it with
-  `--no-default-features`, which removes the plugin and flips `get_shell_info`'s
-  `autoUpdate` to false; the two commands stay compiled as inert stubs so the
-  capability files are identical across builds. **The minisign private key is not
-  recoverable** — losing it means no installed copy will ever accept another
-  update.
-- **macOS distribution** is Developer ID + a notarized DMG, *not* the App Store.
-  The sandbox cannot host a PyInstaller sidecar and embedded interpreters draw
-  rejections — see the engine consolidation review (duct-cloud, private) §8.2.
-  Config is `src-tauri/tauri.conf.json` (`bundle.macOS`) +
-  `src-tauri/Entitlements.developerid.plist`. The App Store variant
-  (`tauri.appstore.conf.json`, `Entitlements.appstore.plist`,
-  `.github/workflows/desktop-testflight.yml`) is retained only for the thin
-  client that predates the sidecar; do not add the sidecar to it. That workflow
-  is **manual-only** — `bundle.resources` now always declares the sidecar, which
-  an App Store build cannot host, so it fails on every desktop change until the
-  appstore overlay overrides `bundle.resources`.
+  `.github/scripts/build-updater-manifest.mjs`. `--no-default-features` removes
+  the plugin and flips `get_shell_info`'s `autoUpdate` to false; the two commands
+  stay compiled as inert stubs so the capability files are identical across
+  builds. That escape hatch existed for the App Store and now **has no
+  consumer** — either delete the `updater` feature or give it a real one, since
+  a configuration nothing builds is one that silently rots. **The minisign
+  private key is not recoverable** — losing it means no installed copy will ever
+  accept another update.
+- **macOS distribution** is Developer ID + a notarized DMG, and nothing else.
+  The App Store sandbox cannot host a PyInstaller sidecar and embedded
+  interpreters draw rejections — see the engine consolidation review
+  (duct-cloud, private) §8.2 — so that channel could only ship the pre-sidecar
+  thin client. **Retired 2026-09-06**: `tauri.appstore.conf.json`,
+  `Entitlements.appstore.plist` and `desktop-testflight.yml` are deleted. Config
+  is now just `src-tauri/tauri.conf.json` (`bundle.macOS`) +
+  `src-tauri/Entitlements.developerid.plist`. Do not revive it without solving
+  the sandbox problem first — it is not a config gap, it is structural.
+- **Notarization uses the App Store Connect API key** — the three secrets
+  `DUCT_ASC_API_KEY_ID`, `DUCT_ASC_API_ISSUER_ID` and `DUCT_ASC_API_KEY_P8` —
+  rather than an Apple ID paired with an app-specific credential. The name
+  misleads: that key is Apple's developer API
+  credential, not an App Store submission token, and notarization is what lets
+  Gatekeeper open a download that did *not* come from the store. Duct notarizes
+  because it ships outside the App Store, not despite it.
+- **`TAURI_SIGNING_PRIVATE_KEY_PASSWORD` is intentionally not set.** The
+  updater key was generated with an empty passphrase, and an undefined secret
+  renders as the empty string, which is the correct value. Do not read the
+  key's scrypt KDF bytes as proof of a passphrase — minisign writes those
+  whether or not one was set. The only test that answers it is signing
+  something: `tauri signer sign` with an empty password succeeds on this key.
+- **The App Store certificates cannot sign the DMG.** Worth stating because the
+  account holds `MAC_APP_DISTRIBUTION` and `MAC_INSTALLER_DISTRIBUTION` from the
+  TestFlight era and they look like the right thing. They are not: Gatekeeper
+  trusts an App Store build because *Apple re-signed it on delivery*, and a
+  download from getduct.ai has no such provenance, so it needs
+  `DEVELOPER_ID_APPLICATION` — which Apple's notary service also requires,
+  rejecting anything else outright. Reusing the old certificate fails twice.
+- **Every installer is published twice**, once under Tauri's versioned name and
+  once under a fixed one (`Duct-macOS-universal.dmg`,
+  `Duct-Windows-x64-setup.exe`, `Duct-Linux-x86_64.AppImage`,
+  `Duct-Linux-amd64.deb`). GitHub redirects
+  `releases/latest/download/<name>` to the newest release only when the name
+  does not change, and Tauri puts the version in every filename — so those four
+  are what getduct.ai links to, and the site needs no JavaScript, no API call
+  and no edit when a version ships. Renaming one breaks the site silently: the
+  link 404s and nothing in this repo fails. Add a platform here and it needs a
+  copy in the publish job and a card on the download page.
+- **Windows self-update is easy to lose.** Tauri signs the installer directly
+  (`*-setup.exe.sig`); it used to zip it first (`*-setup.nsis.zip.sig`). v0.4.0
+  shipped with no `windows-x86_64` entry in `latest.json` because the upload
+  still asked for the zip. `if-no-files-found: error` did not catch it — it asks
+  whether *any* pattern matched, and the `.exe` did. The Windows job now checks
+  for a signature explicitly, and `build-updater-manifest.mjs` accepts either
+  name.
+- **Staging the release secrets:** put them in the gitignored
+  `desktop/.env.test` (template: `desktop/.env.example`) and run
+  `scripts/push_env_to_github.py`. A runner cannot read a dotenv, so these only
+  ever reach a build as GitHub secrets; the file is a staging area, not a source
+  of truth. `TAURI_SIGNING_PRIVATE_KEY` and its password are worth pushing
+  first and alone — Linux and Windows bundle successfully without any Apple
+  credential and fail only on the updater signature, so those two turn two of
+  the three platforms green on their own.
+
+## Forkability
+
+Four things identify *Duct's* build rather than the app, and each is
+configuration a fork overrides without editing code. Keep it that way — a new
+Duct-specific constant belongs in one of these places, not inline:
+
+- **Whether a backend ships** — `bundle.resources`. Empty in `tauri.conf.json`
+  (thin client, hosted API); restored by `tauri.selfhost.conf.json` (local
+  sidecar). Probed at runtime, never compiled in.
+
+- **Window URL and bundle identity** — a `--config` overlay
+  (`tauri.selfhost.conf.json` is the template; `dev` and `local` use the same
+  mechanism).
+- **The origin allowed to `invoke`** — `capabilities/selfhost.json`. Changing
+  the window URL without this produces a window that renders and then fails
+  every command with "not allowed. Plugin not found".
+- **The Google desktop OAuth client** — `GOOGLE_DESKTOP_OAUTH_CLIENT_ID` and
+  `…_SECRET`, both `option_env!` in `sidecar.rs` and both baked from
+  `backend/.env.local` by `build.rs`. They are halves of one credential; a
+  change to either without the other fails at the token exchange, not at build.
+
+Code signing is deliberately *not* on that list: those secrets are Duct's legal
+identity and a fork builds unsigned. See "Build your own" in `README.md`.
 
 ## Crash reporting
 
@@ -132,7 +215,10 @@ Change one, change the other.
 
 ## Rules
 
-- Keep this shell thin: no agent code, prompts, or secrets ever ship here.
+- Keep this shell thin: no agent code, prompts, or secrets in `desktop/`. The
+  official build ships nothing but the Rust shell; a sidecar build ships
+  `backend/` wholesale, which is a property of that config, not licence to put
+  anything here.
 - Provider keys live only in the OS keychain — never write them to disk or logs.
 - Any origin the webview loads must be listed under `remote.urls` in
   `src-tauri/capabilities/default.json` for `invoke` to work.
@@ -152,7 +238,7 @@ Change one, change the other.
   **validates every file in `capabilities/`** regardless. So a capability naming
   a permission from a conditionally-compiled plugin fails the build for
   configurations that never load that file — which is what a separate `updater`
-  capability did to the `--no-default-features` App Store build. Keep permissions
+  capability once did to a `--no-default-features` build. Keep permissions
   from optional plugins out of `capabilities/` entirely.
 - Building needs platform webview libraries (see `README.md`); it does not build
   in the Claude-on-the-web container — build, sign, and release locally or in CI.
@@ -164,13 +250,28 @@ Change one, change the other.
   `op.batch_alter_table`. The pre-baseline revisions are Postgres-only and are
   never replayed; `backend/tests/test_desktop_migrations.py` guards the path
   that is.
-- Changes to `src-tauri/Entitlements.appstore.plist` alter what the sandbox
-  allows. Adding an entitlement without a real need invites App Review questions;
-  removing `app-sandbox` breaks the upload outright (CI checks for it).
-- `src-tauri/Entitlements.developerid.plist` is the opposite case: every key in
-  it is load-bearing for the embedded CPython interpreter under the hardened
-  runtime. Removing one does not harden the app, it makes the sidecar crash at
-  launch. It deliberately carries no `app-sandbox` key.
+- **Entitlements are per build, because the two builds need opposite things.**
+  `Entitlements.developerid.plist` (official, thin) is an empty `<dict/>`;
+  `Entitlements.selfhost.plist` carries the four hardened-runtime exceptions the
+  embedded CPython needs, and `tauri.selfhost.conf.json` selects it. Neither
+  file carries an `app-sandbox` key.
+
+  This used to be one file holding all four, and the note here warned against
+  trimming it: the official build has no interpreter and *would* survive a
+  trimmed file, so stripping the keys leaves thin builds green while every
+  self-host build breaks at launch. That trap is real — the resolution is to
+  split the file, never to delete the keys.
+
+  Trimming the official one matters because those keys are not free. The
+  hardened runtime is what notarization buys; each entitlement is a hole back
+  through it, and `disable-library-validation` — which permits any unsigned
+  dylib to load into the process — cancels much of what signing is for. The
+  official build carried all four for an interpreter it stopped shipping when
+  it became a thin client.
+
+  So: an entitlement goes in the official file only alongside a named binary
+  that fails without it. If an official build ever embeds an interpreter again,
+  copy the keys from the self-host file rather than writing them from memory.
 - The whole `bundle` config uses `deny_unknown_fields`, not just `bundle.macOS`
   — a mistyped key fails the build rather than being ignored, and JSON has no
   comments, so there is nowhere to explain a setting *in* the config. An
@@ -178,11 +279,24 @@ Change one, change the other.
   Explain overlay settings here or in `README.md` instead. Key names are
   camelCase (`minimumSystemVersion`, `hardenedRuntime`, `entitlements`).
 - `bundle.createUpdaterArtifacts` applies to the macOS `app` target too, so
-  `--bundles app` does not opt out of it. Both overlays that must not produce a
-  signed archive turn it off explicitly: `tauri.dev.conf.json` (a dev build has
-  no signing key, and would otherwise fail *after* writing the `.app`) and
-  `tauri.appstore.conf.json`. On this app that archive is a ~160 MB gzip of the
+  `--bundles app` does not opt out of it. `tauri.dev.conf.json` therefore turns
+  it off explicitly — a dev build has no signing key and would otherwise fail
+  *after* writing the `.app`. On this app that archive is a ~160 MB gzip of the
   470 MB bundle — about 85 seconds per build.
+- **`app` must be in `--bundles` on macOS, next to `dmg`.** Updater archives
+  are only emitted for `app`, `appimage`, `msi` and `nsis` — `dmg` is not one of
+  them, and a `.app` the bundler built merely as an input to the DMG is deleted
+  once packaged. So `--bundles dmg,updater` produces a signed, notarized,
+  stapled DMG and *no* `Duct.app.tar.gz`, which is not an error: the build warns
+  and exits 0. The release then publishes with macOS missing from `latest.json`,
+  and every installed Mac polls forever without ever being offered an update.
+  Linux and Windows are immune only because `appimage` and `nsis` are
+  themselves updater-enabled targets.
+- **The macOS executable is named `desktop`, not `Duct`** — Tauri names it for
+  the Cargo package, and `productName` only names the `.app`. Anything reaching
+  into `Contents/MacOS/` should read `CFBundleExecutable` out of `Info.plist`
+  rather than hardcode either name; setting `mainBinaryName` would rename it
+  again and break a hardcoded path silently.
 
 ## Versioning
 
@@ -203,20 +317,20 @@ invoke. Bump in the same PR as the change, at most one bump per PR:
   shell: removing or renaming an invoke command or capability flag, changing
   the deep-link scheme or keychain service name, raising
   `minimumSystemVersion`. `1.0.0` itself is reserved for the first public
-  (non-TestFlight) release.
+  release.
 - **MINOR** — new capability, backwards compatible: a new invoke command, a
   new capability flag, a new deep-link route, a new entitlement.
 - **PATCH** — behaviour fixes with no contract change: bug fixes, security
   fixes, UI/icon polish, dependency bumps.
 - **No bump** — nothing that ships in the bundle changed: CI workflow edits,
   docs, comments. Markdown-only changes under `desktop/` are excluded from the
-  TestFlight workflow's path filter for the same reason. Rebuilds of the same
+  release workflow's path filter for the same reason. Rebuilds of the same
   version are already distinguished by the CI-stamped build number.
 
 While the version is `0.y.z` (pre-GA), contract-breaking changes bump MINOR
 instead of MAJOR — but must still be called out in the PR description.
 
 Never set the build number by hand — CI stamps the GitHub run number as
-`CFBundleVersion`, which App Store Connect requires to keep increasing — and
+`CFBundleVersion`, which keeps it monotonic across rebuilds of one version — and
 never gate web-app behaviour on the version string; probe
 `get_shell_info().capabilities` instead.

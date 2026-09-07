@@ -106,7 +106,7 @@ export async function fetchGscSites(refreshToken) {
 
 /**
  * Fetch per-engine availability for the engine picker.
- * Returns a map keyed by engine key, e.g. { v3: { status, auth_method, supports_oauth, detail } }.
+ * Returns a map keyed by engine key, e.g. { v1: { status, auth_method, detail } }.
  * On any failure returns {} — callers treat an unknown engine as available so
  * the picker never becomes unusable when the backend is unreachable.
  */

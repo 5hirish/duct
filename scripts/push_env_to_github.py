@@ -1,11 +1,24 @@
 #!/usr/bin/env python3
 """Push allowlisted keys from gitignored .env.test files to GitHub repo secrets/variables.
 
-Reads: backend/.env.test, app/.env.test (later file wins on duplicate keys).
+Reads: backend/.env.test, app/.env.test, desktop/.env.test (later file wins on
+duplicate keys). All three are gitignored by `**/.env.*`.
 
 Does NOT bulk-upload backend secrets (DUCT_API_KEY, Google, LLM, etc.). Pushes optional
 `NEXT_PUBLIC_*` variables and `CLOUDFLARE_*` secrets for tooling or legacy workflows — the
 primary app deploy uses Cloudflare Workers Builds **build variables** in the dashboard, not GitHub.
+
+It also pushes the desktop signing keys, which exist for a reason worth stating:
+`desktop-release.yml` can only read GitHub secrets, so there is no way to hand a
+runner a signing key except through `gh secret set`. Doing that by hand means
+pasting seven secrets into a terminal, which is both tedious and the kind of
+thing that ends up in shell history. This keeps them in one gitignored file.
+
+Secret values go to `gh` on **stdin**, never as an argument, so they do not
+appear in the process list — and `--dry-run` prints `(hidden)` in place of
+every one. Repo *variables* are a different matter: `--dry-run` prints those
+values in full, which is fine only because the allowlist admits `NEXT_PUBLIC_*`
+alone and those already ship to the browser.
 
 Requires: gh auth login, repo checkout as cwd.
 
@@ -26,11 +39,40 @@ sys.path.insert(0, str(SCRIPTS))
 from envfile import merge_dotenv_files  # noqa: E402
 
 # Secrets vs repo variables (optional mirror; Workers Builds uses Cloudflare build vars).
+#
+# The desktop signing keys are here because `desktop-release.yml` can only read
+# GitHub secrets — a runner never sees a local dotenv — and because these are
+# the values nobody should paste into a terminal or a chat window twice. Put
+# them in the gitignored `desktop/.env.test` once and let this push them.
 GITHUB_SECRETS = frozenset(
     {
         "CLOUDFLARE_API_TOKEN",
         "CLOUDFLARE_ACCOUNT_ID",
         "NEXT_PUBLIC_DUCT_API_KEY",  # browser-exposed but treat as sensitive in GH
+        # Updater signing (minisign). Without these the Linux and Windows jobs
+        # build their bundles and then die on the last line — `--bundles …,
+        # updater` signs the update artifact, and an empty key reads as a
+        # corrupt one: "failed to decode secret key: Missing comment in secret
+        # key". These two alone make a release possible on those platforms.
+        "TAURI_SIGNING_PRIVATE_KEY",
+        "TAURI_SIGNING_PRIVATE_KEY_PASSWORD",
+        # Developer ID signing (macOS DMG only). DUCT_DEVID_CERT_P12 is base64
+        # of the .p12 — the workflow pipes it through `base64 --decode`, so
+        # paste it encoded, not raw.
+        #
+        # NOT the App Store certificates (DUCT_MAS_*): Apple's notary service
+        # rejects anything not signed with Developer ID, so those cannot stand
+        # in here however similar they look.
+        #
+        # Notarization credentials are deliberately absent. It authenticates
+        # with the App Store Connect API key (DUCT_ASC_API_KEY_ID /
+        # _ISSUER_ID / _P8), which has been a repo secret since the TestFlight
+        # channel and needs no staging. The alternative was an app-specific
+        # password on a personal Apple ID — a second long-lived credential
+        # granting the same thing, to avoid reusing one that already existed.
+        "DUCT_DEVID_CERT_P12",
+        "DUCT_DEVID_CERT_PASSWORD",
+        "DUCT_DEVID_IDENTITY",
     }
 )
 
@@ -75,7 +117,11 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    paths = [ROOT / "backend" / ".env.test", ROOT / "app" / ".env.test"]
+    paths = [
+        ROOT / "backend" / ".env.test",
+        ROOT / "app" / ".env.test",
+        ROOT / "desktop" / ".env.test",
+    ]
     merged = merge_dotenv_files(paths)
     if not merged:
         print("error: no values found (create backend/.env.test and/or app/.env.test)", file=sys.stderr)

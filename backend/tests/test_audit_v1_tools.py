@@ -1,10 +1,10 @@
 """Audit tools on the LangChain stack — parity with the Claude-SDK originals.
 
-The port swaps the transport (in-process MCP server → plain callables) and the
-argument style (`args: dict` → typed Pydantic), so these check that everything
-the *model* and the *runner* observe is unchanged: tool names, the incremental
-report state machine, the status strings, the callbacks, and the rule that a bad
-call returns an error payload instead of raising.
+These check what the *model* and the *runner* observe: the tool names, the
+incremental report state machine, the status strings, the callbacks, and the
+rule that a bad call returns an error payload instead of raising. They were
+written against the Claude-Agent-SDK originals, which is why the names are what
+they are; the originals are gone and these are now the definition.
 
 No network: the report tools are pure, and FetchPages is exercised only for its
 host-scoping guard, which rejects before any fetch.
@@ -16,7 +16,6 @@ import json
 
 import pytest
 
-from agents.audit.tools import build_audit_mcp_server
 from agents.audit.v1.tools import build_audit_tools
 
 
@@ -67,22 +66,6 @@ def test_template_mode_exposes_the_report_builders(crawl_result):
         "FinalizeAuditReport",
         "SubmitAuditReport",
     ]
-
-
-def test_tool_names_match_the_claude_sdk_version(crawl_result):
-    """The model sees the same tool names on either engine.
-
-    Pinned literally: the SDK server exposes its tools through MCP internals that
-    differ across versions, and this list is the actual contract with the prompt
-    in agents/audit/prompts.py.
-    """
-    ported = {t.name for t in build_audit_tools(crawl_result, report_mode="template")}
-    assert ported == {
-        "FetchPages", "StartAuditReport", "AddAuditCategory",
-        "FinalizeAuditReport", "SubmitAuditReport",
-    }
-    # The SDK builder still constructs without error (v2/v3 remain importable).
-    assert build_audit_mcp_server(crawl_result, report_mode="template") is not None
 
 
 def test_report_tools_reuse_the_existing_pydantic_schemas(crawl_result):
@@ -213,3 +196,22 @@ async def test_fetch_pages_rejects_off_site_urls(crawl_result):
 
     assert result["pages"] == []
     assert any("not from audited site" in e for e in result["errors"])
+
+
+# ---------------------------------------------------------------------------
+# The roadmap contract
+# ---------------------------------------------------------------------------
+
+async def test_a_roadmap_phase_without_tasks_is_rejected_before_the_report_is_assembled(crawl_result):
+    """Two live runs finalised the three phase headers the prompt names with
+    nothing under them. The schema is the tool contract, so the empty phase is
+    a validation error the agent loop hands back to the model, not a report."""
+    from pydantic import ValidationError
+
+    tools = build_audit_tools(crawl_result, report_mode="template")
+    await _call(tools, "StartAuditReport", **_header())
+    await _call(tools, "AddAuditCategory", **_category("on_page_seo"))
+    empty_phase = {"label": "0–30 days", "theme": "Unblock", "tasks": []}
+
+    with pytest.raises(ValidationError, match="tasks"):
+        await _call(tools, "FinalizeAuditReport", top_priorities=[], wins=[], roadmap=[empty_phase])

@@ -43,11 +43,11 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
 
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
         with:
           workspaces: desktop/src-tauri
           # The first green run is what populates this cache, and a red one
@@ -71,26 +71,14 @@ jobs:
             libdbus-1-dev \
             libayatana-appindicator3-dev
 
-      # tauri-build validates every `bundle.resources` path from inside
-      # build.rs, so the crate does not type-check unless
-      # backend/dist/duct-sidecar exists: `cargo check` panics with "resource
-      # path `../../backend/dist/duct-sidecar` doesn't exist" before reading a
-      # line of our Rust. The first version of this file asserted the opposite
-      # and passed locally only because a real sidecar happened to be sitting in
-      # backend/dist from an earlier build.
-      #
-      # A stub satisfies it, and a stub is the honest thing to use. What is
-      # inside that directory cannot affect whether the Rust type-checks — only
-      # whether a bundle is usable, and no bundle is produced here. Building the
-      # real one would be ten minutes of PyInstaller spent on something this job
-      # does not look at.
-      - name: Stub the sidecar resource
-        run: |
-          set -euo pipefail
-          mkdir -p backend/dist/duct-sidecar
-          echo 'Placeholder. See .github/workflows/desktop-check.yml.' \
-            > backend/dist/duct-sidecar/PLACEHOLDER
-
+      # This job used to stub backend/dist/duct-sidecar before checking, because
+      # tauri-build validates every `bundle.resources` path from inside build.rs
+      # and the crate would not type-check without it — `cargo check` panicked
+      # with "resource path doesn't exist" before reading a line of our Rust.
+      # The default config declares no resources any more, so there is nothing
+      # to stub. If a `bundle.resources` entry ever comes back to
+      # tauri.conf.json, this job breaks in that confusing way again and the
+      # stub is the fix.
       - name: cargo check
         working-directory: desktop/src-tauri
         run: cargo check --locked --all-targets

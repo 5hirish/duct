@@ -21,7 +21,10 @@ grader.
 
 - **`Rubric` / `Dimension` / `Marker`** — weighted 1–5 dimensions, present/absent
   markers, a `pass_threshold`, and a `persona`. Agent-agnostic; each agent ships
-  its own rubric (`rubrics/content_post.py`). Audit/insights can add theirs.
+  its own rubric (`rubrics/content_post.py`, `rubrics/audit_report.py`; insights
+  can add its own). A rubric's renderer must show the judge the whole
+  deliverable: the audit judge once failed two reports for an "empty"
+  roadmap because the renderer printed the phase labels without the tasks.
 - **`JudgeVerdict` (structured output) + a deterministic `Scorecard`** — the
   judge returns scores + rationale; *we* compute the weighted overall, the
   per-dimension floors, and the marker gates. Scoring lives on our side so
@@ -33,8 +36,13 @@ grader.
   graded on the actual pixels, in the same request as the copy.
 - **`prompts.py`** — the judge's system prompt + persona framing, in one place to
   review and tune.
-- **Live e2e** runs the real agent → generates an image → judges it; **offline
-  tests** (`test_eval_framework.py`) lock the scoring logic and run on every PR.
+- **Live e2e** runs the real agent → generates an image → judges it, on the
+  provider `DUCT_EVAL_PROVIDER` names (Claude by default; the Actions workflow
+  runs a Claude leg and a Gemini leg). A second live test drives plan mode —
+  enrichment, the research sub-agents, WebSearch — and asserts one real plan
+  landed, with no rubric: it is the machinery check for the capabilities the
+  V1 port had to rebuild. **Offline tests** (`test_eval_framework.py`) lock the
+  scoring logic and run on every PR.
 
 ## Best practices we follow (and the biases behind them)
 

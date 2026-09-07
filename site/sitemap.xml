@@ -2,13 +2,19 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://getduct.ai/</loc>
-    <lastmod>2026-03-14</lastmod>
+    <lastmod>2026-09-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://getduct.ai/for-product-intelligence</loc>
     <lastmod>2026-03-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://getduct.ai/download</loc>
+    <lastmod>2026-09-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -31,26 +37,32 @@
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>https://getduct.ai/doctrine</loc>
+    <lastmod>2026-09-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://getduct.ai/about</loc>
-    <lastmod>2026-04-08</lastmod>
+    <lastmod>2026-09-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://getduct.ai/privacy</loc>
-    <lastmod>2026-04-05</lastmod>
+    <lastmod>2026-09-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
     <loc>https://getduct.ai/terms</loc>
-    <lastmod>2026-04-05</lastmod>
+    <lastmod>2026-09-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
     <loc>https://getduct.ai/blog/</loc>
-    <lastmod>2026-03-14</lastmod>
+    <lastmod>2026-09-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -133,13 +145,19 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://getduct.ai/blog/post?slug=why-your-seo-metrics-arent-telling-you-the-full-story</loc>
+    <loc>https://getduct.ai/changelog/</loc>
+    <lastmod>2026-09-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://getduct.ai/blog/why-your-seo-metrics-arent-telling-you-the-full-story</loc>
     <lastmod>2026-03-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://getduct.ai/blog/post?slug=keyword-gap-analysis-without-a-spreadsheet</loc>
+    <loc>https://getduct.ai/blog/keyword-gap-analysis-without-a-spreadsheet</loc>
     <lastmod>2026-03-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>

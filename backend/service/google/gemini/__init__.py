@@ -1,4 +1,8 @@
-"""Gemini image-generation service.
+"""Gemini services — image generation and grounded web search.
+
+Two capabilities Duct supplies as its own tools, backed by Gemini, so a model
+that lacks them natively still has them. See search.py for why search in
+particular cannot be the provider built-in.
 
 Wraps google-genai with typed Pydantic requests/responses. Outputs are
 persisted to the Railway Volume at /app/uploads/projects/{project_id}/
@@ -8,6 +12,7 @@ stable public URL (so slides_html can reference it).
 """
 
 from service.google.gemini.client import GeminiAPIError, GeminiImageClient
+from service.google.gemini.search import SEARCH_MODEL, search_web
 from service.google.gemini.schema import (
     EditImageRequest,
     EditMode,
@@ -35,5 +40,7 @@ __all__ = [
     "PersonGeneration",
     "SubjectType",
     "ThinkingLevel",
+    "SEARCH_MODEL",
     "persist_generated_image",
+    "search_web",
 ]

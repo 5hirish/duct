@@ -42,12 +42,9 @@ from uuid import UUID
 
 from agents.audit.events import AuditEvent
 from agents.audit.schema import AuditRequest
-from agents.audit.v3.runner import (
-    ClaudeAuditRunner,
-    close_session,
-    create_audit_session,
-    get_session,
-)
+from agents.audit.crawl import create_audit_session
+from agents.audit.v1.runner import LangChainAuditRunner
+from agents.core.session import close_session, get_session
 from agents.content.persistence import (
     ConversationRecorder,
     archive_conversation,
@@ -58,7 +55,7 @@ from agents.content.persistence import (
     resolve_or_create_conversation,
 )
 from agents.content.schema import DraftPostRequest, PlanRequest
-from agents.content.v3.runner import create_draft_session, create_plan_session
+from agents.content.v1.runner import create_draft_session, create_plan_session
 from agents.insights.schema import InsightsRequest, create_insights_session
 from agents.insights.setup import (
     InsightsSetupError,
@@ -862,18 +859,22 @@ async def get_agent_conversation_state(
     ``paused`` (with the pauses, so the card can be rendered before any session
     exists), ``unfinished`` (a run was cut mid-turn and will continue on
     resume), ``idle``, or ``unsupported`` for an agent whose state lives only in
-    a process — the Claude Agent SDK runners keep no thread to inspect.
+    a process — the Claude Agent SDK audit runner keeps no thread to inspect.
     """
     with next(db_session()) as db:
         conv = _conversation_for_user(db, user, agent_type, conversation_id)
         conv_id = conv.id
         run = {"run_status": conv.run_status, "run_error": conv.run_error}
-    if agent_type != AgentType.INSIGHTS:
-        return {"status": "unsupported", "pauses": [], "todos": [], **run}
-    from agents.insights.v1.runner import AutonomousInsightsRunner
-
     # The key is never used: inspection builds the graph on a placeholder model.
-    return {**(await AutonomousInsightsRunner(api_key="").thread_state(conv_id)), **run}
+    if agent_type == AgentType.INSIGHTS:
+        from agents.insights.v1.runner import AutonomousInsightsRunner
+
+        return {**(await AutonomousInsightsRunner(api_key="").thread_state(conv_id)), **run}
+    if agent_type == AgentType.TIKTOK_STUDIO:
+        from agents.content.v1.runner import ContentRunner
+
+        return {**(await ContentRunner(api_key="").thread_state(conv_id)), **run}
+    return {"status": "unsupported", "pauses": [], "todos": [], **run}
 
 
 class ConversationPatch(BaseModel):
@@ -1177,7 +1178,7 @@ async def _start_seo_audit(
         raise HTTPException(422, f"Invalid seo-audit config: {exc}") from exc
 
     cfg = get_configs()
-    engine = resolve_engine(req.engine or "v3")
+    engine = resolve_engine(req.engine)
     provider = resolve_engine_provider(engine, cfg.generate_provider or None)
     model = resolve_engine_model(engine, provider, cfg.generate_model or None)
 
@@ -1196,22 +1197,18 @@ async def _start_seo_audit(
             provider.value, resolved.source, req.lead_magnet,
         )
 
-    runner = ClaudeAuditRunner(
+    runner = LangChainAuditRunner(
         api_key=api_key,
         provider=provider,
         model=model,
-        effort=req.effort,
-        # Lead-magnet (teaser) audits never use extended thinking — keep the
-        # first token fast regardless of what the request asked for.
-        adaptive_thinking=req.adaptive_thinking and not req.lead_magnet,
+        gemini_api_key=cfg.gemini_api_key,
     )
-    # Narrower than it looks: this is now only for ArtifactPersister's digest,
-    # which is the last summariser still pinned to the Agent SDK
-    # (service/artifact_store.py). Conversation compaction no longer comes
-    # through here — it takes the run's own provider below, so a Gemini /
-    # OpenAI / OpenRouter customer gets compaction instead of silently getting
-    # none. See agents/content/persistence.summarize_conversation.
-    summary_key = api_key if getattr(provider, "value", str(provider)) == "anthropic" else ""
+    # The artifact digest runs on the caller's own provider now, so the key no
+    # longer has to be zeroed for anyone. It used to be Anthropic-only (the
+    # summariser was pinned to the Agent SDK), which meant a Gemini or OpenAI
+    # customer's artifacts carried no summary and the next session started
+    # blind to them.
+    summary_key = api_key
 
     conv_id = getattr(session, "conversation_id", None) if session else None
     recorder = getattr(session, "recorder", None) if session else None
@@ -1237,6 +1234,8 @@ async def _start_seo_audit(
                 kind="report",
                 conversation_id=conv_id,
                 api_key=summary_key,
+                provider=provider,
+                model=model,
                 group_id=group_id,
             )
             session.artifact_persister = persister
@@ -1502,6 +1501,8 @@ async def _start_insights(
                 kind=INSIGHTS_ARTIFACT_KIND,
                 conversation_id=conv_id,
                 api_key=summary_key,
+                provider=provider,
+                model=model,
                 group_id=group_id,
                 adapt=brief_artifact_version,
             )

@@ -83,7 +83,9 @@ async def test_a_tool_interrupt_surfaces_in_the_stream_with_an_id():
 
     found = await _pauses_in(agent, {"messages": [{"role": "user", "content": "go"}]}, cfg)
 
-    assert [e for _, e in found] == ["questions_required", "account_selection_required"]
+    # Two tool calls in one turn run concurrently, so the order their
+    # interrupts land in the chunk is the scheduler's, not the model's.
+    assert {e for _, e in found} == {"questions_required", "account_selection_required"}
     assert all(i for i, _ in found)
 
 
@@ -92,7 +94,8 @@ async def test_resuming_one_pause_by_id_re_raises_the_other():
     and bring the other back, rather than dropping it or answering both."""
     agent, cfg = _two_pauses()
     first = await _pauses_in(agent, {"messages": [{"role": "user", "content": "go"}]}, cfg)
-    goal_id, account_id = first[0][0], first[1][0]
+    by_event = {e: i for i, e in first}
+    goal_id, account_id = by_event["questions_required"], by_event["account_selection_required"]
 
     again = await _pauses_in(agent, Command(resume={goal_id: {"goal": "demo"}}), cfg)
     assert again == [(account_id, "account_selection_required")]
@@ -111,14 +114,14 @@ async def test_streaming_none_re_raises_the_live_pauses():
     `snapshot.interrupts` keeps both."""
     agent, cfg = _two_pauses()
     first = await _pauses_in(agent, {"messages": [{"role": "user", "content": "go"}]}, cfg)
+    by_event = {e: i for i, e in first}
 
-    assert await _pauses_in(agent, None, cfg) == first
+    assert set(await _pauses_in(agent, None, cfg)) == set(first)
 
-    goal_id = first[0][0]
-    await _pauses_in(agent, Command(resume={goal_id: {"goal": "demo"}}), cfg)
+    await _pauses_in(agent, Command(resume={by_event["questions_required"]: {"goal": "demo"}}), cfg)
     state = await agent.aget_state(cfg)
     assert len(state.interrupts) == 2, "the snapshot keeps the settled one"
     assert [p["event"] for p in live_pauses(state)] == ["account_selection_required"]
 
-    await _pauses_in(agent, Command(resume={first[1][0]: {"account_id": "1"}}), cfg)
+    await _pauses_in(agent, Command(resume={by_event["account_selection_required"]: {"account_id": "1"}}), cfg)
     assert await _pauses_in(agent, None, cfg) == []  # idle: nothing to re-raise

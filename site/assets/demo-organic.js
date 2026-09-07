@@ -5,9 +5,9 @@
     sparkColor: '#16a34a',
     src: {
       GSC:     'Google Search Console',
-      Ahrefs:  'Ahrefs',
+      Clarity: 'Microsoft Clarity',
       GA4:     'GA4',
-      Semrush: 'Semrush'
+      Mixpanel: 'Mixpanel Events API'
     },
     defs: {
       rankings: { hero: 'Avg Position',              fmt: 'n1', label: 'ranking growth',         bar: 'Traffic by keyword cluster',   ths: ['Cluster','Position','Sessions','Action','Priority'],  hide: 'position' },
@@ -56,7 +56,7 @@
         ['$166','2.9x','Healthy',' · 2.9x ROI · expanding']
       )
     },
-    Ahrefs: {
+    Clarity: {
       rankings: mk(
         [13.4, 'Keyword difficulty mix improved', 'up', 'green'],
         { sessions: [9600,'5% WoW','up','grey'], signups: [21,'Flat','flat','grey'], position: [13.4,'Keyword mix improved','up','green'], keywords: [132,'8 net new','up','green'] },
@@ -108,7 +108,7 @@
         ['$159','2.7x','Healthy',' · 2.7x ROI · room to improve']
       )
     },
-    Semrush: {
+    Mixpanel: {
       rankings: mk(
         [14.2, 'Competitor pressure still visible', 'down', 'yellow'],
         { sessions: [7900,'3% WoW','up','grey'], signups: [15,'Flat','flat','grey'], position: [14.2,'Competitor pressure still visible','down','yellow'], keywords: [104,'4 net new','up','grey'] },

@@ -113,9 +113,23 @@ keywords = ["Authorization"]
 regex = '''"Authorization"\s*:\s*"Bearer\s+[^"\s][^"]*"'''
 confidence = "medium"
 
+# `${VAR}` (Claude Code) and `${env:VAR}` (Cursor) are environment-variable
+# references, not credentials — and they are the form these files are required
+# to use, so matching them makes the correct pattern unshippable.
+[rules.allowlist]
+regexTarget = "match"
+regexes = ['''\$\{(?:env:)?[A-Za-z_][A-Za-z0-9_]*\}''']
+
 [[rules]]
 id = "duct-populated-mcp-token"
 description = "Populated *_AUTH_TOKEN / *_API_TOKEN in an MCP server config"
 keywords = ["AUTH_TOKEN", "API_TOKEN"]
 regex = '''"[A-Z_]*(?:AUTH|API)_TOKEN"\s*:\s*"[^"\s][^"]*"'''
 confidence = "medium"
+
+# `${VAR}` (Claude Code) and `${env:VAR}` (Cursor) are environment-variable
+# references, not credentials — and they are the form these files are required
+# to use, so matching them makes the correct pattern unshippable.
+[rules.allowlist]
+regexTarget = "match"
+regexes = ['''\$\{(?:env:)?[A-Za-z_][A-Za-z0-9_]*\}''']

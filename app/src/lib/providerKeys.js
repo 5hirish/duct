@@ -21,7 +21,7 @@ export const PROVIDERS = [
     header: "X-Provider-Anthropic",
     placeholder: "sk-ant-…",
     prefix: "sk-ant-",
-    description: "Claude models. The only provider the Claude Agent SDK (v3) accepts.",
+    description: "Claude models, direct from Anthropic.",
     consoleUrl: "https://console.anthropic.com/settings/keys",
   },
   {
@@ -56,6 +56,16 @@ export const PROVIDERS = [
     prefix: "sk-or-",
     description: "One key, 500+ models — and any OpenAI-compatible gateway you point it at.",
     consoleUrl: "https://openrouter.ai/keys",
+  },
+  {
+    id: "xai",
+    statusId: "xai",
+    label: "xAI",
+    header: "X-Provider-XAI",
+    placeholder: "xai-…",
+    prefix: "xai-",
+    description: "Grok models on the LangChain (v1) engine.",
+    consoleUrl: "https://console.x.ai",
   },
 ];
 

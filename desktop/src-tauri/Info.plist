@@ -2,23 +2,20 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
   Extra Info.plist keys merged into the generated macOS bundle by Tauri.
-  Applies to every macOS build (DMG and App Store alike) — both keys below are
-  wanted in either case.
+
+  This used to also carry ITSAppUsesNonExemptEncryption, which only ever meant
+  anything to App Store Connect (it skipped the per-build export-compliance
+  prompt on a TestFlight upload). That channel is gone; the key did nothing for
+  a Developer ID DMG and is not worth carrying for a submission we will not make.
 
   CFBundleVersion is NOT set here: Tauri derives it from `version` in
-  tauri.conf.json, and CI overwrites it with the workflow run number so every
-  TestFlight upload carries a unique build number.
+  tauri.conf.json.
 -->
 <plist version="1.0">
 <dict>
-    <!-- Required by App Store Connect for Mac App Store submissions. -->
+    <!-- How Finder and Launchpad file the app. Apple recommends it for every
+         macOS app, App Store or not. -->
     <key>LSApplicationCategoryType</key>
     <string>public.app-category.business</string>
-
-    <!-- Standard TLS only (HTTPS to app.getduct.ai and the Railway API), which
-         is exempt from export compliance. Declaring it here means TestFlight
-         uploads skip the per-build encryption prompt. -->
-    <key>ITSAppUsesNonExemptEncryption</key>
-    <false/>
 </dict>
 </plist>

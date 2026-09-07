@@ -57,18 +57,19 @@ from agents.content.schema import (
     DraftPostRequest,
     PlanRequest,
 )
-from agents.content.v3.runner import (
-    ClaudeContentRunner,
+from agents.content.v1.runner import (
+    ContentRunner,
     close_session,
     create_draft_session,
     create_plan_session,
     get_session,
 )
+from agents.core.errors import error_payload
 from agents.engines import (
-    Engine,
     ProviderKeyRequired,
-    resolve_engine_provider,
+    RunModel,
     resolve_provider_key,
+    resolve_run_model,
 )
 from agents.models import Provider
 from agents.content.channels import Platform
@@ -145,30 +146,38 @@ async def _prune_stale_sessions() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _resolve_api_key(
+def _resolve_run_model(
     session_id: str = "", user_keys: dict | None = None, owner_id=None
-) -> str:
-    """The key a content run may spend.
+) -> RunModel:
+    """Which model a content run drives, on whose key.
 
-    Content is the last pipeline still on V3, and it used to read the server
-    key unconditionally — which on the hosted deployment means Duct pays for
-    every plan and every draft. It now goes through the same gate as the rest:
-    the caller's header key, then their saved key, then the env key only where
-    that env file is their own. See agents/engines.resolve_provider_key.
+    The same resolver every V1 runner uses (``agents.engines.resolve_run_model``):
+    engine default → provider → model, with a lone bring-your-own key choosing
+    its own provider, and the key through the same gate as the rest — the
+    caller's header key, then their saved key, then the env key only where that
+    env file is their own. Content used to read the server key unconditionally,
+    which on the hosted deployment meant Duct paid for every plan and draft.
 
     ``session_id`` is how a background worker finds the owner: the request that
     created the session is long gone by the time the worker runs.
+
+    V1 needs a real API key — the LangChain transport cannot authenticate from
+    a Claude subscription — so the one credential the gate can return without
+    a key (the operator's ``claude`` login) is refused here with the same 402
+    the browser already handles.
     """
-    cfg = get_configs()
-    provider = resolve_engine_provider(Engine.V3, cfg.generate_provider or None)
     if owner_id is None:
         owner_id = _session_owner(session_id)
-    resolved = resolve_provider_key(
-        provider, user_keys, stored_keys=stored_keys_for(owner_id)
+    run = resolve_run_model(
+        user_keys=user_keys, stored_keys=stored_keys_for(owner_id), log_prefix="content"
     )
-    if resolved.billed_to_duct:
-        logger.info("content: run billed to Duct (%s/%s)", provider.value, resolved.source)
-    return resolved.key
+    if not run.api_key:
+        raise ProviderKeyRequired(
+            run.provider,
+            f"Content Studio needs a {run.provider.value} API key — a Claude subscription "
+            "login is not enough here. Add your key in Settings → Providers.",
+        )
+    return run
 
 
 def _session_owner(session_id: str):
@@ -294,6 +303,12 @@ def _link_conversation_artifact(session_id: str, kind: str) -> None:
                        conv_id, kind, artifact_id, exc_info=True)
 
 
+def _runner_for(session_id: str, user_keys: dict | None) -> ContentRunner:
+    run = _resolve_run_model(session_id, user_keys)
+    _attach_image_key(session_id, user_keys)
+    return ContentRunner(api_key=run.api_key, provider=run.provider, model=run.model)
+
+
 async def _run_plan_worker(
     session_id: str,
     project_id: UUID,
@@ -301,17 +316,17 @@ async def _run_plan_worker(
     user_keys: dict | None = None,
 ) -> None:
     try:
-        api_key = _resolve_api_key(session_id, user_keys)
-        _attach_image_key(session_id, user_keys)
-        runner = ClaudeContentRunner(api_key=api_key)
+        runner = _runner_for(session_id, user_keys)
         await runner.run_plan(session_id, project_id, emit_fn)
         _link_conversation_artifact(session_id, "plan")
     except Exception as exc:
+        # A code before a message: the client picks the copy from the code
+        # and never sees str(exc) (agents/core/errors.py).
         logger.exception("content: plan worker error for session %s", session_id)
         await emit_fn({
             "event":      ContentEvent.PIPELINE_FAILED,
             "session_id": session_id,
-            "error":      str(exc),
+            **error_payload(exc),
         })
 
 
@@ -344,7 +359,7 @@ async def run_plan_stream(
             await emit_fn({
                 "event":      ContentEvent.PIPELINE_FAILED,
                 "session_id": session_id,
-                "error":      str(exc),
+                **error_payload(exc),
             })
 
     asyncio.create_task(worker())
@@ -383,9 +398,7 @@ async def _run_draft_worker(
     user_keys: dict | None = None,
 ) -> None:
     try:
-        api_key = _resolve_api_key(session_id, user_keys)
-        _attach_image_key(session_id, user_keys)
-        runner = ClaudeContentRunner(api_key=api_key)
+        runner = _runner_for(session_id, user_keys)
         # Resolve the Day from the plan if provided; otherwise pass topic/pillar.
         day_obj = None
         if req.plan_id is not None and req.day_index is not None:
@@ -435,7 +448,7 @@ async def _run_draft_worker(
         await emit_fn({
             "event":      ContentEvent.PIPELINE_FAILED,
             "session_id": session_id,
-            "error":      str(exc),
+            **error_payload(exc),
         })
 
 
@@ -466,7 +479,7 @@ async def run_post_stream(
             await emit_fn({
                 "event":      ContentEvent.PIPELINE_FAILED,
                 "session_id": session_id,
-                "error":      str(exc),
+                **error_payload(exc),
             })
 
     asyncio.create_task(worker())
@@ -505,11 +518,20 @@ async def submit_content_answers(
     user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ) -> dict:
-    _session_for_user(db, user, session_id)
-    """Resolve a pending AskUserQuestion in the content session."""
-    session = get_session(session_id)
-    if not session:
-        raise HTTPException(404, "Session not found")
+    """Resolve a pending AskUserQuestion in the content session.
+
+    The V1 runner parks a question on the thread's checkpoint, so an answer is
+    a resume queued for the next loop iteration — the same shape the unified
+    messages route uses. The Future path stays for the slide-render bridge
+    and any in-process pause; the client cannot tell which it hit.
+    """
+    session = _session_for_user(db, user, session_id)
+    pending = getattr(session, "pending_pauses", None) or {}
+    if pending:
+        interrupt_id = next(iter(pending))
+        pending.pop(interrupt_id, None)
+        await session.chat_queue.put({"resume": {interrupt_id: req.answers}})
+        return {"status": "queued"}
     fut = session.answer_future
     if not fut or getattr(fut, "done", lambda: True)():
         raise HTTPException(400, "No pending question for this session")

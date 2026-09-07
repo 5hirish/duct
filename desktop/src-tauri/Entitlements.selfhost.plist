@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Entitlements for the SELF-HOST build — the one that bundles the PyInstaller
+  sidecar (`tauri.selfhost.conf.json`).
+
+  Not for the official build. That one ships no sidecar and takes the empty
+  `Entitlements.developerid.plist`; these four exceptions were written for an
+  embedded CPython and weaken a bundle that no longer contains one.
+
+  Every key below is required by that interpreter under the hardened runtime,
+  which notarization requires. Removing one does not tighten security so much
+  as break the sidecar at launch, usually with an opaque crash rather than a
+  clear error.
+
+  There is no `app-sandbox` key and that is deliberate: the App Store sandbox
+  cannot host a PyInstaller sidecar — see the engine consolidation review
+  (duct-cloud, private) §8.2 — and that channel was retired 2026-09-06.
+-->
+<plist version="1.0">
+<dict>
+    <!-- CPython and its C extensions allocate writable-executable pages (ctypes
+         closures, JIT-style trampolines). Without these two the interpreter is
+         killed on first use of a native extension. -->
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+    <true/>
+
+    <!-- PyInstaller loads ~hundreds of .so extension modules from Resources at
+         runtime. Library validation would refuse any whose team identifier does
+         not match the main binary's. -->
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+
+    <!-- The sidecar reads its own data directory and the bundled Python archive
+         via paths resolved at runtime. -->
+    <key>com.apple.security.cs.allow-dyld-environment-variables</key>
+    <true/>
+</dict>
+</plist>

@@ -50,8 +50,8 @@ Buttons are one `.btn` pill base + `-orange`/`-dark`/`-ghost` variants and
 
 **What the site deliberately does not have**: dark mode, photography,
 testimonials (the `.quotes` CSS is dead until real quotes exist — never
-fake them), a `<form>` element (the Google Forms data-attribute contract in
-`AGENTS.md`), or any runtime dependency beyond `marked` on the blog.
+fake them), a `<form>` element or any email capture at all (the download CTA
+contract in `AGENTS.md`), or any runtime dependency beyond `marked` on the blog.
 
 ---
 
@@ -202,7 +202,7 @@ Rules, checkable in review:
   acquire churners." · "3–5 hours gone before the week starts." Write that,
   not "actionable insights".
 - **The founder test**: would you say it out loud? "Join growth
-  intelligence beta" fails it; "That's me — get early access →" (the
+  intelligence beta" fails it; "That's me — download Duct ↓" (the
   site's best CTA — canonical for audience-fit sections) passes.
 - **Don't reuse a headline template thrice.** The three `for-*` pages run
   "Built for X who *move fast*" with a swapped noun — the third copy of a
@@ -341,11 +341,7 @@ the *landing-page* tells:
 - **Contrast fixes**: `.stats` band labels, accent-colored body links,
   `.tag-soon`/amber badges, `.sev-high` at 10px.
 - **Focus-visible styles exist only in `demo.css`** — `.btn`, nav links,
-  `.faq-q`, cards all ride the UA default, which is invisible on orange;
-  `.email-in` sets `outline: none` with only a border-color swap behind it.
-- **Hero email validation is a 2s color flash** — no message, no
-  `role="alert"`; the calculators already do this right
-  (`assets/tool-validation.js`), apply the same pattern.
+  `.faq-q`, cards all ride the UA default, which is invisible on orange.
 - **`.reveal` has no no-JS fallback** — content is invisible if `duct.js`
   fails; nav/footer/CTAs also all arrive via `duct-partials.js` fetch.
 - **`prefers-reduced-motion`** covers 3 demo transitions; extend to

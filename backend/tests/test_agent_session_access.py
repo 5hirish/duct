@@ -21,7 +21,8 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 
-from agents.audit.v3.runner import close_session, create_audit_session
+from agents.audit.crawl import create_audit_session
+from agents.core.session import close_session
 from agents.core.session import get_session
 from models.auth import User
 from models.membership import ProjectMember
