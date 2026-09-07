@@ -4,9 +4,10 @@ Static marketing site for [getduct.ai](https://getduct.ai). Pure HTML/CSS/JS.
 
 ## Site strategy
 
-Two content types, two jobs:
+Three content types, three jobs:
 - **Landing pages** (`for-*.html`) — paid ad experiments. Each page targets a specific audience or solution angle. Fast to create, easy to A/B by URL. Goal: validate conversion before investing in a channel or audience.
 - **Blog** (`blog/posts/`) — organic SEO. Written for keyword clusters, not just announcements. Goal: compound traffic from search.
+- **Changelog** (`changelog/`) — proof the project moves, for the visitor deciding whether to install. Written for people who use Duct, not for the people who built it. Goal: convert that hesitation, and give search and answer engines something current to cite.
 
 When adding either, ask: *what's the hypothesis being tested?* Put it in a `<!-- EXPERIMENT: ... -->` comment near the top of `<body>`.
 
@@ -49,6 +50,8 @@ another port (the tests assume 8090).
 | `https://getduct.ai/blog/` | `site/blog/index.html` |
 | `https://getduct.ai/blog/<slug>` | `site/blog/<slug>.html` (**generated**) |
 | `https://getduct.ai/blog/post?slug=SLUG` | `site/blog/post.html` (redirect shim, noindex) |
+| `https://getduct.ai/changelog/` | `site/changelog/index.html` |
+| `https://getduct.ai/changelog/YYYY` | `site/changelog/YYYY.html` (year archive, created at rollover) |
 
 ## Shared assets
 
@@ -123,6 +126,7 @@ window.DUCT_DEMO_CONFIG = {
 | `site/robots.txt` | Crawl policy. Names AI agents explicitly because vendors split training and search into separate bots (`GPTBot` vs `OAI-SearchBot`, `ClaudeBot` vs `Claude-SearchBot`); a bare `User-agent: *` leaves that ambiguous. |
 | `site/sitemap.xml` | Every indexable page. A new page is not done until it is here. Bump `lastmod` only on pages the change actually touched. |
 | `site/blog/feed.xml` | RSS. Hand-maintained: add an `<item>` with every new post. CI fails if it is missing, empty, or carries an off-domain `<link>`. |
+| `site/changelog/feed.xml` | RSS for releases. Same hand-maintained rule: an `<item>` per release, `pubDate` in RFC 822. |
 | `site/llms.txt` | Plain-text site map for models. Low crawler uptake in practice, cheap to keep correct, and the place the open-source framing has to be right. |
 | `site/_headers` | `Link:` discovery headers plus the RSS content type Cloudflare would otherwise get wrong. |
 
@@ -146,6 +150,10 @@ disagree about what the page's address is.
 | Root-level landing page | `https://getduct.ai/for-paid-ads` |
 | Blog index | `https://getduct.ai/blog/` |
 | Blog post | `https://getduct.ai/blog/<slug>` |
+| Changelog | `https://getduct.ai/changelog/` (trailing slash) |
+
+Individual releases are `#YYYY-MM-DD` anchors on the changelog page, never their
+own URL. One page accumulates the links; a page per release splits them.
 
 Every page hardcodes its canonical in `<head>`, generated posts included.
 
@@ -205,6 +213,25 @@ a marketing capture — it is deliberately untouched.
 ## New landing page variant (with demo)
 
 Follow the **Adding a new demo variant** instructions above.
+
+## New changelog entry
+
+Run `/add-changelog-entry`. It reads the git range since the last published
+release, keeps only what a user can see, and updates the entry, the JSON-LD
+`ItemList`, `changelog/feed.xml` and the sitemap `lastmod` together.
+
+Two things that are easy to get wrong by hand:
+
+- Entries are **written into `changelog/index.html` as HTML**, not rendered from
+  Markdown at runtime — for the same reason posts are pre-rendered: a runtime
+  `fetch` is not crawlable, and this page's whole job is to be quotable.
+- The year strip is a `<div role="navigation">`, not a `<nav>`. The bare `nav`
+  rule in `duct.css` is the fixed site header, and a second `<nav>` on the page
+  parks itself on top of the real one.
+
+Layout lives in the `── CHANGELOG ──` block of `assets/duct.css` (`.cl-*`)
+rather than inline, because each year archive is a copy of the index and must
+not fork it.
 
 ## New blog post
 

@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="../assets/apple-icon.svg"/>
+<title>Duct Changelog — New Features, Connectors &amp; Releases</title>
+<link rel="canonical" href="https://getduct.ai/changelog/"/>
+<meta name="description" content="Every release of Duct, in plain English: new connectors, agent and model upgrades, execution controls and desktop builds — written for the people who use it."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta name="keywords" content="Duct changelog, Duct releases, product updates, new features, release notes, marketing intelligence tool updates"/>
+<meta property="og:type" content="website"/>
+<meta property="og:locale" content="en_US"/>
+<meta property="og:url" content="https://getduct.ai/changelog/"/>
+<meta property="og:title" content="Duct Changelog — New Features, Connectors &amp; Releases"/>
+<meta property="og:description" content="Every release of Duct in plain English: new connectors, agent and model upgrades, execution controls, and desktop builds."/>
+<meta property="og:image" content="https://getduct.ai/assets/og-image.png"/>
+<meta property="og:image:alt" content="Duct changelog — what shipped, release by release"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Duct Changelog — New Features, Connectors &amp; Releases"/>
+<meta name="twitter:description" content="Every release of Duct in plain English: new connectors, agent and model upgrades, execution controls, and desktop builds."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og-image.png"/>
+<meta name="twitter:image:alt" content="Duct changelog — what shipped, release by release"/>
+<link rel="alternate" type="application/rss+xml" title="Duct Changelog" href="/changelog/feed.xml"/>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "CollectionPage", "name": "Duct Changelog", "url": "https://getduct.ai/changelog/", "description": "Every release of Duct in plain English: new connectors, agent and model upgrades, execution controls, and desktop builds.", "inLanguage": "en", "isPartOf": {"@type": "WebSite", "name": "Duct", "url": "https://getduct.ai"}, "about": {"@type": "SoftwareApplication", "name": "Duct", "applicationCategory": "BusinessApplication", "operatingSystem": "Web, macOS, Windows, Linux", "softwareVersion": "0.4.0", "releaseNotes": "https://getduct.ai/changelog/", "publisher": {"@type": "Organization", "name": "Alleviate Lab", "url": "https://getduct.ai"}}, "mainEntity": {"@type": "ItemList", "itemListOrder": "https://schema.org/ItemListOrderDescending", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Bring your own models", "url": "https://getduct.ai/changelog/#2026-09-02"}, {"@type": "ListItem", "position": 2, "name": "Duct starts remembering", "url": "https://getduct.ai/changelog/#2026-08-30"}, {"@type": "ListItem", "position": 3, "name": "From insight to execution", "url": "https://getduct.ai/changelog/#2026-08-27"}, {"@type": "ListItem", "position": 4, "name": "Duct runs on your machine", "url": "https://getduct.ai/changelog/#2026-08-20"}, {"@type": "ListItem", "position": 5, "name": "Sign in like a desktop app", "url": "https://getduct.ai/changelog/#2026-07-31"}, {"@type": "ListItem", "position": 6, "name": "Your keys, your machine", "url": "https://getduct.ai/changelog/#2026-06-19"}, {"@type": "ListItem", "position": 7, "name": "A studio for content", "url": "https://getduct.ai/changelog/#2026-05-28"}, {"@type": "ListItem", "position": 8, "name": "The first report", "url": "https://getduct.ai/changelog/#2026-04-06"}]}}
+</script>
+<link rel="stylesheet" href="../assets/duct.css"/>
+<script src="../assets/config.js" defer></script>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">Skip to content</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- EXPERIMENT: does a public, human-readable changelog convert the visitor who
+     needs proof the project is actually moving before installing anything? Watch
+     /changelog/ → /download, against the blog as the baseline. -->
+
+<!-- NAV (shared: site/partials/nav-changelog.html) -->
+<div data-duct-partial="/partials/nav-changelog.html"></div>
+
+<main id="main-content">
+
+<!-- HERO -->
+
+<section class="cl-hero">
+<h1>What&rsquo;s new <em>in Duct.</em></h1>
+<p>We ship most weeks. Every release that changes something you can see is written up here — no commit hashes, no ticket numbers, just what changed and why it matters.</p>
+</section>
+
+<!-- YEAR STRIP (archive switcher; add a year here when releases roll over) -->
+
+<div class="cl-years" role="navigation" aria-label="Changelog archive">
+<a class="cl-year" href="/changelog/" aria-current="page">2026</a>
+<a class="cl-year cl-year-feed" href="/changelog/feed.xml">RSS feed</a>
+</div>
+
+<div class="cl-wrap">
+
+<!-- RELEASE: 2026-09-02 -->
+<article class="cl-release" id="2026-09-02" aria-labelledby="r-2026-09-02">
+<div class="cl-rail">
+<span class="cl-date">Sep 2, 2026</span>
+<span class="cl-version">Desktop 0.4.0</span>
+<a class="cl-permalink" href="#2026-09-02" aria-label="Permalink to the September 2, 2026 release"># permalink</a>
+</div>
+<div class="cl-body">
+<h2 class="cl-title" id="r-2026-09-02">Bring your own models</h2>
+<p class="cl-lede">Duct no longer decides which model runs your work. Pick a tier once, plug in OpenRouter, or point the OpenAI slot at the subscription you already pay for.</p>
+
+<div class="cl-group">
+<p class="cl-group-label">Models &amp; agents</p>
+<ul class="cl-list">
+<li><strong>Three tiers, one job map.</strong> Choose a Heavy, Standard and Light model in settings. Every agent job picks the tier it needs, so you are not selecting a model feature by feature.</li>
+<li><strong>OpenRouter is a first-class provider.</strong> One key, and the tier map you already set applies to everything behind it.</li>
+<li><strong>A ChatGPT subscription can drive the OpenAI slot</strong> — useful if you pay for the seat but not the API.</li>
+<li><strong>Hosted runs use your keys, not ours.</strong> The hosted deployment stopped quietly falling back to Duct&rsquo;s own provider credentials.</li>
+</ul>
+</div>
+
+<div class="cl-group">
+<p class="cl-group-label">Workspace</p>
+<ul class="cl-list">
+<li><strong>A command palette.</strong> One shortcut to jump between projects, connectors and agents — and you can bind your own shortcuts to the actions you repeat.</li>
+<li><strong>Insights opens on what changed</strong> instead of an empty prompt box waiting for you to think of a question.</li>
+<li><strong>Duct remembers the project you were in</strong> instead of resetting to the first one on every visit.</li>
+<li><strong>Named controls, announced states, visible focus</strong> across the app, for anyone driving Duct by keyboard or screen reader.</li>
+</ul>
+</div>
+
+<div class="cl-group">
+<p class="cl-group-label">Connectors</p>
+<ul class="cl-list">
+<li><strong>The connector list now matches what a project can actually reach.</strong> Duct asks the server, rather than inferring availability from whichever keys happen to be saved.</li>
+<li><strong>Every connected source is counted</strong> — the &ldquo;sources connected&rdquo; figure had been counting two of them.</li>
+</ul>
+</div>
+
+<div class="cl-group">
+<p class="cl-group-label">Desktop</p>
+<ul class="cl-list">
+<li><strong>Credentials stored on your machine are encrypted with a key the app owns.</strong></li>
+<li><strong>Connecting through the browser reports success as success</strong> — it had been calling a completed connection expired.</li>
+</ul>
+</div>
+</div>
+</article>
+
+<!-- RELEASE: 2026-08-30 -->
+<article class="cl-release" id="2026-08-30" aria-labelledby="r-2026-08-30">
+<div class="cl-rail">
+<span class="cl-date">Aug 30, 2026</span>
+<span class="cl-version">Desktop 0.3.0</span>
+<a class="cl-permalink" href="#2026-08-30" aria-label="Permalink to the August 30, 2026 release"># permalink</a>
+</div>
+<div class="cl-body">
+<h2 class="cl-title" id="r-2026-08-30">Duct starts remembering</h2>
+<p class="cl-lede">Project memory lands, so you stop re-explaining your business to every agent. The desktop app reaches Windows and Linux, and updates itself on all three.</p>
+
+<div class="cl-group">
+<p class="cl-group-label">Memory</p>
+<ul class="cl-list">
+<li><strong>Duct remembers per project.</strong> Positioning, competitors, what you corrected last week — carried into the next brief instead of pasted in again.</li>
+<li><strong>Every recalled fact shows where it came from,</strong> as a chip you can dismiss when it is wrong.</li>
+<li><strong>An off-switch per session</strong> for the times you want the agent working from a blank slate.</li>
+<li><strong>Consolidation</strong> keeps memory from growing into noise, and a timeline shows what Duct learned and when.</li>
+<li><strong>Seed a project from a file</strong> — drop in a positioning doc or competitor list and skip the cold start.</li>
+</ul>
+</div>
+
+<div class="cl-group">
+<p class="cl-group-label">Desktop</p>
+<ul class="cl-list">
+<li><strong>Windows and Linux builds,</strong> with self-update on all three platforms.</li>
+<li><strong>Connect a data source in your own browser,</strong> where your password manager and existing Google session already are — not in a stripped-down app window.</li>
+<li><strong>Sign-in failures explain themselves</strong> rather than returning a blank server error.</li>
+</ul>
+</div>
+
+<div class="cl-group">
+<p class="cl-group-label">Reliability</p>
+<ul class="cl-list">
+<li><strong>Crash capture, and outage explanations per platform,</strong> so &ldquo;the brief is late&rdquo; comes with a reason attached.</li>
+</ul>
+</div>
+</div>
+</article>
+
+<!-- RELEASE: 2026-08-27 -->
+<article class="cl-release" id="2026-08-27" aria-labelledby="r-2026-08-27">
+<div class="cl-rail">
+<span class="cl-date">Aug 27, 2026</span>
+<a class="cl-permalink" href="#2026-08-27" aria-label="Permalink to the August 27, 2026 release"># permalink</a>
+</div>
+<div class="cl-body">
+<h2 class="cl-title" id="r-2026-08-27">From insight to execution</h2>
+<p class="cl-lede">A brief that tells you what to fix is half a product. Duct now proposes the change, shows you exactly what it would do, and applies it only at the autonomy level you set.</p>
+
+<div class="cl-group">
+<p class="cl-group-label">Execution</p>
+<ul class="cl-list">
+<li><strong>Agent-proposed change sets.</strong> Propose, preview against a guardrail, approve, apply, roll back — every step visible before anything touches a live account.</li>
+<li><strong>A three-rung autonomy ladder.</strong> Suggest only, approve each change, or let a narrow class apply itself. Raising a rung never widens what a proposal is allowed to touch.</li>
+<li><strong>A review queue you can work through,</strong> with a detail drawer and approval of part of a change set rather than all of it.</li>
+<li><strong>A structured activity log</strong> — the per-project audit trail of what was proposed, by whom it was approved, and what actually applied.</li>
+</ul>
+</div>
+
+<div class="cl-group">
+<p class="cl-group-label">Connectors</p>
+<ul class="cl-list">
+<li><strong>Google Ads, across five read connectors,</strong> plus executors for the changes teams make most often.</li>
+<li><strong>Mixpanel, Microsoft Clarity and GrowthBook</strong> joined the catalogue.</li>
+<li><strong>Per-project connector-to-account mapping,</strong> so one workspace can point each connector at the right ad account or property.</li>
+<li><strong>Server-side connector credentials, and a Google Tag Manager connector</strong> for teams who would rather not hand out keys.</li>
+</ul>
+</div>
+
+<div class="cl-group">
+<p class="cl-group-label">Artifacts</p>
+<ul class="cl-list">
+<li><strong>Briefs and reports that outlive the session.</strong> A versioned store with stable links, agent edits, version history and exports — so a report you liked is still there next month.</li>
+</ul>
+</div>
+</div>
+</article>
+
+<!-- RELEASE: 2026-08-20 -->
+<article class="cl-release" id="2026-08-20" aria-labelledby="r-2026-08-20">
+<div class="cl-rail">
+<span class="cl-date">Aug 20, 2026</span>
+<a class="cl-permalink" href="#2026-08-20" aria-label="Permalink to the August 20, 2026 release"># permalink</a>
+</div>
+<div class="cl-body">
+<h2 class="cl-title" id="r-2026-08-20">Duct runs on your machine</h2>
+<p class="cl-lede">The whole backend now ships inside the desktop app. Projects, keys and data stay on your machine unless you decide otherwise.</p>
+
+<div class="cl-group">
+<p class="cl-group-label">Desktop</p>
+<ul class="cl-list">
+<li><strong>A local backend, bundled and supervised.</strong> The app carries its own server and database, so a project runs without a cloud account behind it.</li>
+<li><strong>macOS builds are signed with Developer ID and notarized</strong> — the DMG opens without a fight with Gatekeeper.</li>
+<li><strong>The app finds its own API address at runtime,</strong> so one build works against the local sidecar or a hosted backend.</li>
+</ul>
+</div>
+
+<div class="cl-group">
+<p class="cl-group-label">Insights</p>
+<ul class="cl-list">
+<li><strong>A second audit engine you can select per request,</strong> with the existing one still the default — useful on the day a provider is having a bad time.</li>
+</ul>
+</div>
+
+<div class="cl-group">
+<p class="cl-group-label">Workspace</p>
+<ul class="cl-list">
+<li><strong>Invite teammates to a project as collaborators.</strong></li>
+</ul>
+</div>
+
+<div class="cl-group">
+<p class="cl-group-label">Security</p>
+<ul class="cl-list">
+<li><strong>The security audit and secret-leak scan now block a release</strong> instead of reporting on one that already shipped.</li>
+<li><strong>Every open dependency advisory in the app cleared.</strong></li>
+</ul>
+</div>
+</div>
+</article>
+
+<!-- RELEASE: 2026-07-31 -->
+<article class="cl-release" id="2026-07-31" aria-labelledby="r-2026-07-31">
+<div class="cl-rail">
+<span class="cl-date">Jul 31, 2026</span>
+<a class="cl-permalink" href="#2026-07-31" aria-label="Permalink to the July 31, 2026 release"># permalink</a>
+</div>
+<div class="cl-body">
+<h2 class="cl-title" id="r-2026-07-31">Sign in like a desktop app</h2>
+<p class="cl-lede">Signing in moves out of an embedded window and into your real browser, where your password manager and Google session already live.</p>
+
+<div class="cl-group">
+<p class="cl-group-label">Desktop</p>
+<ul class="cl-list">
+<li><strong>Sign in through the system browser,</strong> with a deep link that hands you back to the app when you are done.</li>
+<li><strong>macOS builds reach TestFlight</strong> for internal testers.</li>
+</ul>
+</div>
+
+<div class="cl-group">
+<p class="cl-group-label">Connectors</p>
+<ul class="cl-list">
+<li><strong>Google Ads with your own developer token.</strong> Bring one and connect today rather than waiting on ours to clear review.</li>
+</ul>
+</div>
+</div>
+</article>
+
+<!-- RELEASE: 2026-06-19 -->
+<article class="cl-release" id="2026-06-19" aria-labelledby="r-2026-06-19">
+<div class="cl-rail">
+<span class="cl-date">Jun 19, 2026</span>
+<a class="cl-permalink" href="#2026-06-19" aria-label="Permalink to the June 19, 2026 release"># permalink</a>
+</div>
+<div class="cl-body">
+<h2 class="cl-title" id="r-2026-06-19">Your keys, your machine</h2>
+<p class="cl-lede">Duct stops being a service that holds your credentials. Bring your own provider keys — and run the whole thing from a desktop app that keeps them in the OS keychain.</p>
+
+<div class="cl-group">
+<p class="cl-group-label">Models &amp; agents</p>
+<ul class="cl-list">
+<li><strong>Bring your own provider API keys,</strong> sent with the request rather than parked on a server.</li>
+<li><strong>A Providers tab</strong> that keeps them in one place instead of scattered through settings.</li>
+</ul>
+</div>
+
+<div class="cl-group">
+<p class="cl-group-label">Desktop</p>
+<ul class="cl-list">
+<li><strong>The first desktop app,</strong> storing your keys in the macOS keychain instead of a browser.</li>
+</ul>
+</div>
+
+<div class="cl-group">
+<p class="cl-group-label">Insights</p>
+<ul class="cl-list">
+<li><strong>Conversations survive the page.</strong> A streaming session is saved as it runs, so a refresh no longer costs you the thread.</li>
+</ul>
+</div>
+
+<div class="cl-group">
+<p class="cl-group-label">Workspace</p>
+<ul class="cl-list">
+<li><strong>Plan a month at a time</strong> — a calendar, a kanban board and an inline plan board over the same set of posts.</li>
+<li><strong>Channels and linked social accounts,</strong> so a post knows where it is going before you approve it.</li>
+</ul>
+</div>
+</div>
+</article>
+
+<!-- RELEASE: 2026-05-28 -->
+<article class="cl-release" id="2026-05-28" aria-labelledby="r-2026-05-28">
+<div class="cl-rail">
+<span class="cl-date">May 28, 2026</span>
+<a class="cl-permalink" href="#2026-05-28" aria-label="Permalink to the May 28, 2026 release"># permalink</a>
+</div>
+<div class="cl-body">
+<h2 class="cl-title" id="r-2026-05-28">A studio for content</h2>
+<p class="cl-lede">A content agent that plans, drafts and ships posts — with image generation and a reference library it studies before it writes.</p>
+
+<div class="cl-group">
+<p class="cl-group-label">Workspace</p>
+<ul class="cl-list">
+<li><strong>A content agent, end to end.</strong> Plan the week, draft the posts, publish them through your connected accounts.</li>
+<li><strong>Image generation with multiple reference images per prompt,</strong> so a brand&rsquo;s look carries from one post to the next instead of drifting.</li>
+<li><strong>A bundled reference library</strong> the agent reads before drafting, rather than inventing a house style each time.</li>
+<li><strong>TikTok discovery by keyword and hashtag,</strong> for seeing what already works before planning around it.</li>
+</ul>
+</div>
+</div>
+</article>
+
+<!-- RELEASE: 2026-04-06 -->
+<article class="cl-release" id="2026-04-06" aria-labelledby="r-2026-04-06">
+<div class="cl-rail">
+<span class="cl-date">Apr 6, 2026</span>
+<a class="cl-permalink" href="#2026-04-06" aria-label="Permalink to the April 6, 2026 release"># permalink</a>
+</div>
+<div class="cl-body">
+<h2 class="cl-title" id="r-2026-04-06">The first report</h2>
+<p class="cl-lede">Where this started: connect Google Ads, say what you are trying to learn, and get a written report back instead of another dashboard.</p>
+
+<div class="cl-group">
+<p class="cl-group-label">Connectors</p>
+<ul class="cl-list">
+<li><strong>Connect Google Ads over OAuth</strong> and choose which account Duct reads.</li>
+<li><strong>Sign in with Google,</strong> with privacy policy and terms in place from day one.</li>
+</ul>
+</div>
+
+<div class="cl-group">
+<p class="cl-group-label">Insights</p>
+<ul class="cl-list">
+<li><strong>A goal-driven flow.</strong> Pick the question you are trying to answer and Duct assembles the queries for it, instead of asking you to build them.</li>
+<li><strong>Reports carry their evidence.</strong> Every claim ties back to the connector rows behind it, so you can check the working rather than trust it.</li>
+</ul>
+</div>
+</div>
+</article>
+
+</div>
+
+</main>
+
+<!-- INLINE CTA -->
+<div data-duct-partial="/partials/cta-blog.html"></div>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/partials/footer-expanded.html"></div>
+
+<script src="../assets/duct-partials.js"></script>
+<script src="../assets/duct.js" defer></script>
+<script src="../assets/duct-download.js" defer></script>
+
+</body>
+</html>
