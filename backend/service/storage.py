@@ -30,6 +30,19 @@ logger = logging.getLogger(__name__)
 _CACHE_CONTROL = "public, max-age=31536000, immutable"
 
 
+# Every caller today builds its own key from a project id, a uuid and an
+# allowlisted extension, so none of them can traverse. That is a property of the
+# callers, not of this module, and it is one refactor away from not being true:
+# the sink is what has to hold the line.
+def _local_path(key: str) -> Path:
+    """Resolve *key* under ``uploads_dir``, refusing anything that escapes it."""
+    base = Path(get_configs().uploads_dir or "/app/uploads").resolve()
+    candidate = (base / key).resolve()
+    if candidate != base and base not in candidate.parents:
+        raise ValueError(f"storage key escapes the uploads directory: {key!r}")
+    return candidate
+
+
 def storage_backend() -> str:
     """'r2' when explicitly selected or fully configured, else 'local'."""
     cfg = get_configs()
@@ -60,9 +73,7 @@ def put_image(key: str, data: bytes, content_type: str) -> str:
 
 
 def _local_put(key: str, data: bytes) -> str:
-    cfg = get_configs()
-    base = Path(cfg.uploads_dir or "/app/uploads")
-    path = base / key
+    path = _local_path(key)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(data)
     logger.info("storage(local): wrote %d bytes to %s", len(data), path)
@@ -107,8 +118,7 @@ def put_private(key: str, data: bytes, content_type: str) -> str:
         )
         logger.info("storage(r2): put %d private bytes at key %s", len(data), key)
         return key
-    cfg = get_configs()
-    path = Path(cfg.uploads_dir or "/app/uploads") / key
+    path = _local_path(key)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(data)
     logger.info("storage(local): wrote %d private bytes to %s", len(data), path)
@@ -127,8 +137,7 @@ def get_private_bytes(key: str) -> bytes | None:
         except Exception:
             logger.warning("storage(r2): failed to read private key %s", key, exc_info=True)
             return None
-    cfg = get_configs()
-    path = Path(cfg.uploads_dir or "/app/uploads") / key
+    path = _local_path(key)
     return path.read_bytes() if path.exists() else None
 
 
@@ -141,8 +150,7 @@ def delete_private(key: str) -> None:
             cfg = get_configs()
             _r2_client().delete_object(Bucket=cfg.r2_artifacts_bucket or cfg.r2_bucket, Key=key)
         else:
-            cfg = get_configs()
-            path = Path(cfg.uploads_dir or "/app/uploads") / key
+            path = _local_path(key)
             path.unlink(missing_ok=True)
     except Exception:
         logger.warning("storage: failed to delete private key %s", key, exc_info=True)
@@ -163,8 +171,7 @@ def get_bytes(url: str) -> bytes | None:
     if url.startswith(("http://", "https://")):
         return _http_get(url)
     if url.startswith("/uploads/"):
-        cfg = get_configs()
-        path = Path(cfg.uploads_dir or "/app/uploads") / url[len("/uploads/"):]
+        path = _local_path(url[len("/uploads/"):])
         return path.read_bytes() if path.exists() else None
     # Repo-bundled global reference library — no bucket round-trip.
     from service.content_references import disk_path_for_public_url
