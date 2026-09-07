@@ -1,1 +1,0 @@
-../../../.claude/skills/component-preview.md

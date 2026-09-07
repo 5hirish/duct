@@ -14,8 +14,9 @@ Policy:
 
 ## Files
 
-- Skill source: `.claude/skills/security-audit.md`
-- Cursor skill entrypoint: `.cursor/skills/security-audit/SKILL.md`
+- Skill source: `.agents/skills/security-audit/SKILL.md`
+- Harness entrypoints: `.claude/skills/security-audit` and
+  `.cursor/skills/security-audit`, both symlinks to the directory above
 - Audit runner: `scripts/security/audit.py`
 - Baseline file: `.security-audit-baseline.json`
 - CI advisory parity workflow: `.github/workflows/security-audit.yml`

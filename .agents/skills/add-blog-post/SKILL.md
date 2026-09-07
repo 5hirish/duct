@@ -164,7 +164,7 @@ Insert a new `<a class="blog-card reveal">` inside `.blog-grid`. Cards are order
 
 Card template:
 ```html
-<a href="post.html?slug=<slug>" class="blog-card reveal" style="transition-delay:<Ns>">
+<a href="/blog/<slug>" class="blog-card reveal" style="transition-delay:<Ns>">
   <div class="blog-card-img" style="background:linear-gradient(135deg,#COLOR1,#COLOR2);display:flex;align-items:center;justify-content:center;font-size:48px"><EMOJI></div>
   <div class="blog-card-body">
     <span class="tag"><category></span>
