@@ -208,6 +208,24 @@ Also add the post to `site/sitemap.xml` and an `<item>` to `site/blog/feed.xml`.
 
 Publish directory: `site/`.
 
+The `deploy` job in `.github/workflows/site.yml` publishes to Cloudflare Pages
+with `wrangler pages deploy`, on merge to `main`, gated on the checks in the
+same file. **The Pages git integration must stay disabled** — with both active
+every push deploys twice and the two race for the production alias.
+
+That integration is what this replaced, and the reason is worth keeping: it
+decided whether to build from "Build watch paths", a dashboard-only setting
+that is not in this repository, cannot be reviewed in a PR, and silently
+stopped matching `site/**`. A build it skips reports as *skipped*, which reads
+like "nothing to do" rather than "your deploy is broken" — so the site served a
+build from before September while every workflow here stayed green. A path
+filter that gates a deploy belongs next to the code it gates.
+
+The project name comes from the `CLOUDFLARE_PAGES_PROJECT` repo variable
+(default `duct`). It is checked against the account's real projects before
+deploying, because `pages deploy` with an unrecognised name creates a second,
+empty project and exits 0.
+
 ## What not to do
 
 - Do not add npm tooling.
