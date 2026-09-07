@@ -94,7 +94,13 @@ Check here before hand-rolling env or secret plumbing:
   `wrangler deploy`. `NEXT_PUBLIC_*` are baked at build time, so an env change
   needs this, not just a dashboard edit.
 - `push_env_to_github.py` — push allowlisted keys from gitignored `.env.test`
-  files to GitHub repo secrets/variables.
+  files to GitHub repo secrets/variables. Reads `backend/`, `app/` and
+  `desktop/` `.env.test`; the desktop release signing keys are on the allowlist
+  because a runner can only ever receive them as GitHub secrets.
+- `stage_devid_secrets.py` — turn a Developer ID `.cer` plus its private key
+  into the three `DUCT_DEVID_*` values, staged in `desktop/.env.test`. Exists
+  because OpenSSL 3 exports a PKCS#12 that Apple's `security(1)` cannot read,
+  and blames the password for it.
 - `bootstrap_env_test.sh` — copy local dev env files to the gitignored
   `.env.test` targets.
 - `envfile.py` — shared dotenv parser used by the above.
