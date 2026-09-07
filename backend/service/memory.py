@@ -813,8 +813,13 @@ def expand_time_range(query: str, *, now: datetime | None = None) -> TimeRange:
             return span(None, end + timedelta(days=1) - timedelta(microseconds=1), one.group(0))
 
     # "last 30 days", "past two weeks"
+    # The count sits inside the optional group with its own trailing space, so
+    # the two whitespace runs can never both be optional at once. Written as
+    # `\s+(count)?\s*` the engine had two ways to split every run of spaces,
+    # which is quadratic on a query that is mostly spaces and matches nothing.
     rel = re.search(
-        r"\b(?:last|past|previous|recent)\s+(\d{1,3}|a|one|two|three|four|five|six)?\s*"
+        r"\b(?:last|past|previous|recent)\s+"
+        r"(?:(\d{1,3}|a|one|two|three|four|five|six)\s*)?"
         r"(day|week|fortnight|month|quarter|year)s?\b",
         text,
     )

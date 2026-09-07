@@ -20,7 +20,7 @@ from sqlmodel import Session, select
 
 from db.session import get_session
 from models.lead_magnet import ExecutionInterest, LeadMagnet
-from service.crawl.fetcher import SSRFError, validate_public_url
+from service.crawl.fetcher import SSRFError, assert_public_url, validate_public_url
 from service.lead_access import find_live_lead
 from service.turnstile import verify_turnstile
 
@@ -306,8 +306,11 @@ async def check_url(url: str) -> dict:
     import httpx
 
     try:
-        validate_public_url(url)
-    except (SSRFError, Exception):
+        # Resolves the hostname too: this endpoint is unauthenticated, and a
+        # reachability boolean for an address the caller picked is an internal
+        # port scanner if the address is allowed to be an internal one.
+        await assert_public_url(url)
+    except Exception:
         return {"ok": False, "reason": "That doesn't look like a valid public URL."}
 
     try:

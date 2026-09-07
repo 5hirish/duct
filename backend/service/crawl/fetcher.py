@@ -6,8 +6,10 @@ what Google actually receives rather than a generic bot identity.
 
 from __future__ import annotations
 
+import asyncio
 import ipaddress
 import logging
+import socket
 import time
 from dataclasses import dataclass, field
 from urllib.parse import urlparse
@@ -100,12 +102,38 @@ class SiteUnreachableError(RuntimeError):
         self.url = url
 
 
-def validate_public_url(url: str) -> None:
-    """Raise SSRFError if *url* resolves to a private or reserved network range.
+def _blocked_reason(addr: ipaddress.IPv4Address | ipaddress.IPv6Address) -> str:
+    """Why *addr* is off-limits, or "" when it is a public internet address.
 
-    Checks the URL hostname as an IP address (if it already is one). DNS-based
-    SSRF (where a public hostname resolves to a private IP) is a separate concern
-    handled at the network level by Railway's egress rules.
+    Two rules, deliberately overlapping. The explicit network list names the
+    ranges we care about so the reason a range is here stays readable. The
+    ``is_global`` fallback catches everything the list forgets — 0.0.0.0/8,
+    TEST-NET, multicast, and the IPv6 ranges nobody thinks about — because the
+    thing we actually want is "refuse anything that is not the public
+    internet", and enumerating the complement of that is a losing game.
+    """
+    # ::ffff:127.0.0.1 is loopback wearing an IPv6 costume; judge the real one.
+    mapped = getattr(addr, "ipv4_mapped", None)
+    if mapped is not None:
+        addr = mapped
+
+    for network in _BLOCKED_NETWORKS:
+        if addr in network:
+            return f"{addr} is in the private/reserved range {network}"
+    if not addr.is_global:
+        return f"{addr} is not a public internet address"
+    return ""
+
+
+def validate_public_url(url: str) -> None:
+    """Raise SSRFError if *url* is obviously not a public http(s) address.
+
+    Scheme, hostname denylist and bare-IP checks only — this does no DNS, so it
+    is safe to call from sync code and cheap enough to run on user input before
+    a client is even opened. It is NOT sufficient on its own: a hostname that
+    resolves to a private address passes here. Every actual request goes through
+    ``make_client``, whose request hook re-runs these checks against the
+    resolved address, on the first request and on every redirect hop.
     """
     parsed = urlparse(url)
     scheme = parsed.scheme.lower()
@@ -122,19 +150,74 @@ def validate_public_url(url: str) -> None:
         raise SSRFError(f"URL hostname {host!r} is not allowed (internal/reserved).")
 
     # Block bare IP addresses that are private/reserved.
-    addr = None
     try:
         addr = ipaddress.ip_address(host)
     except ValueError:
+        return
+
+    reason = _blocked_reason(addr)
+    if reason:
+        raise SSRFError(
+            f"URL targets a private/reserved address ({reason}). "
+            "Only public internet addresses are allowed."
+        )
+
+
+async def assert_public_url(url: str) -> None:
+    """``validate_public_url`` plus a DNS check on the resolved addresses.
+
+    The name-based checks cannot see the attack that matters: a hostname the
+    attacker controls, pointed at 169.254.169.254 or a Railway 100.64/10
+    neighbour. Resolving here and rejecting every non-public answer closes that,
+    and closes it for redirect targets too because ``make_client`` runs this on
+    every hop rather than only on the URL the caller passed in.
+
+    A residual DNS-rebinding window remains — we resolve, then httpx resolves
+    again to connect, and a hostile resolver can answer differently the second
+    time. Closing that needs the connection pinned to the address we checked;
+    the egress rules are the backstop until then.
+    """
+    validate_public_url(url)
+
+    host = urlparse(url).hostname or ""
+    try:
+        ipaddress.ip_address(host)
+        return  # a bare IP was already judged by validate_public_url
+    except ValueError:
         pass
 
-    if addr is not None:
-        for network in _BLOCKED_NETWORKS:
-            if addr in network:
-                raise SSRFError(
-                    f"URL targets a private/reserved IP address ({addr}). "
-                    "Only public internet addresses are allowed."
-                )
+    loop = asyncio.get_running_loop()
+    try:
+        infos = await loop.getaddrinfo(host, None, proto=socket.IPPROTO_TCP)
+    except socket.gaierror as exc:
+        raise SSRFError(f"Could not resolve hostname {host!r}.") from exc
+
+    if not infos:
+        raise SSRFError(f"Hostname {host!r} resolved to no addresses.")
+
+    for info in infos:
+        addr = ipaddress.ip_address(info[4][0])
+        reason = _blocked_reason(addr)
+        if reason:
+            raise SSRFError(
+                f"Hostname {host!r} resolves to a private/reserved address "
+                f"({reason}). Only public internet addresses are allowed."
+            )
+
+
+async def _guard_request(request: httpx.Request) -> None:
+    """httpx request hook: refuse a request to a non-public address.
+
+    Mounted on every client from ``make_client``. httpx fires this for each
+    request it makes, redirects included, which is the point: validating only
+    the caller's URL let a 302 to http://169.254.169.254/ through, and the
+    response body came back to the caller.
+    """
+    try:
+        await assert_public_url(str(request.url))
+    except SSRFError:
+        logger.warning("fetch: refused request to non-public address %s", request.url)
+        raise
 
 
 def make_client() -> httpx.AsyncClient:
@@ -144,6 +227,7 @@ def make_client() -> httpx.AsyncClient:
         follow_redirects=True,
         max_redirects=5,
         trust_env=False,
+        event_hooks={"request": [_guard_request]},
     )
 
 
