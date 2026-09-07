@@ -18,6 +18,10 @@ between them. Duct is the layer that reads all of them together.
 Run it as a **desktop app on your own machine** with your own API keys, or
 **self-host** the backend. MIT licensed, no account required for local use.
 
+The name is Latin: *ductus*, a leading — the same word inside *aquaeductus*.
+Rome's aqueducts never made water, they carried it on gravity alone from where
+it was to where people lived, and that is the entire job description here.
+
 ---
 
 ## What it does
