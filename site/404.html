@@ -3,78 +3,150 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<link rel="icon" href="assets/icon.svg" type="image/svg+xml"/>
-<link rel="apple-touch-icon" href="assets/apple-icon.svg"/>
-<title>404 — Duct</title>
-<meta name="robots" content="noindex"/>
-<link rel="stylesheet" href="assets/duct.css"/>
-<script src="assets/config.js" defer></script>
+<!-- Every asset reference here is root-absolute on purpose. Cloudflare Pages serves
+     this file at the URL that missed, so a relative "assets/duct.css" resolves to
+     /blog/assets/duct.css on /blog/anything and the page renders unstyled. -->
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>Page not found — Duct</title>
+<meta name="robots" content="noindex, follow"/>
+<meta name="description" content="Nothing on getduct.ai matches that URL. Head back to the homepage, or jump straight to the Duct blog, the free marketing tools, or the product changelog."/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<script src="/assets/config.js" defer></script>
 <style>
+/* Local to this page: the "we looked and found nothing" red. Not a brand token —
+   nothing else on the site reports a miss. */
+:root { --miss: #c0392b; }
+
+/* Scope every rule under .error-page and give the numeral its own class rather
+   than styling a bare element. A page-wide `.error-page p` used to outrank
+   `.error-code`, which rendered "404" at 16px with -5px tracking — three digits
+   collapsed into an unreadable smudge. */
 .error-page {
-  min-height: 100vh;
+  min-height: calc(100vh - 62px);
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  text-align: center;
-  padding: 52px 24px;
+  padding: 118px 24px 88px;
 }
-.error-code {
+.error-inner {
+  width: 100%;
+  max-width: 620px;
+  text-align: center;
+}
+.error-page .error-code {
   font-family: var(--serif);
-  font-size: clamp(96px, 18vw, 180px);
-  line-height: 1;
-  letter-spacing: -6px;
+  font-size: clamp(76px, 15vw, 132px);
+  line-height: .9;
+  letter-spacing: -5px;
   color: var(--border);
-  margin-bottom: 0;
   user-select: none;
 }
 .error-page h1 {
   font-family: var(--serif);
-  font-size: clamp(28px, 4vw, 44px);
+  font-size: clamp(28px, 4.4vw, 42px);
+  line-height: 1.14;
   letter-spacing: -1px;
   color: var(--navy);
-  margin: 8px 0 16px;
+  margin: 18px 0 14px;
   animation: none;
 }
-.error-page p {
+.error-page .error-lede {
   font-size: 16px;
   font-weight: 300;
   color: var(--navy-3);
-  max-width: 380px;
-  line-height: 1.72;
-  margin-bottom: 36px;
+  line-height: 1.7;
+  max-width: 420px;
+  margin: 0 auto 32px;
 }
-.error-diag {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin: 0 auto 40px;
-  max-width: 320px;
-  font-size: 12px;
-  color: var(--navy-3);
+
+/* The diagnostic card reads as a miniature Duct report: a scan that ran,
+   found nothing, and still ends with a recommendation. */
+.error-report {
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  text-align: left;
+  margin-bottom: 32px;
+  background: var(--white);
 }
-.error-diag-row {
+.error-report-head {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 9px 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--r);
+  gap: 8px;
+  padding: 12px 18px;
   background: var(--off);
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  color: var(--navy-3);
 }
-.error-diag-row span:first-child { opacity: .4; }
-.error-diag-row .label { flex: 1; text-align: left; }
-.error-diag-row .val { color: #c94040; font-weight: 500; }
-.error-diag-result {
-  padding: 10px 14px;
+.error-report-head .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--miss); flex: none;
+}
+.error-report-row {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 13px 18px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.error-report-row .label { flex: 1; color: var(--navy-2); }
+.error-report-row .val {
+  font-size: 13px;
+  color: var(--miss);
+  font-variant-numeric: tabular-nums;
+}
+.error-report-foot {
+  display: flex;
+  gap: 12px;
+  padding: 15px 18px;
   background: var(--orange);
-  border-radius: var(--r);
-  font-size: 12px;
   color: #fff;
-  text-align: left;
-  line-height: 1.5;
 }
-.error-diag-result strong { display: block; margin-bottom: 2px; font-weight: 600; }
+.error-report-foot .mark { flex: none; line-height: 1.5; }
+.error-report-foot strong {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  opacity: .85;
+  margin-bottom: 3px;
+}
+.error-report-foot p { font-size: 14px; line-height: 1.5; }
+
+.error-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 26px;
+}
+/* A 404 should route people somewhere, not just bounce them home. */
+.error-elsewhere {
+  font-size: 13px;
+  color: var(--navy-3);
+}
+.error-elsewhere a {
+  color: var(--navy-3);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 1px;
+  transition: color .15s, border-color .15s;
+}
+.error-elsewhere a:hover { color: var(--navy); border-color: var(--navy); }
+.error-elsewhere .sep { padding: 0 8px; opacity: .45; }
+
+@media (max-width: 600px) {
+  .error-page { padding: 96px 20px 64px; }
+  .error-actions .btn { width: 100%; }
+  .error-elsewhere .sep { padding: 0 5px; }
+}
 </style>
 </head>
 <body>
@@ -83,45 +155,58 @@
 <div data-duct-partial="/partials/nav-simple.html"></div>
 
 <main class="error-page">
+ <div class="error-inner">
 
-  <p class="error-code" aria-hidden="true">404</p>
+  <div class="error-code" aria-hidden="true">404</div>
 
   <h1>Your tools have the answer.<br/><em>This page doesn't.</em></h1>
 
-  <p>We checked across all connected sources. Zero results. The URL you're looking for hasn't been indexed, shipped, or synthesised — yet.</p>
+  <p class="error-lede">We checked every connected source. Zero results. The URL you're after hasn't been indexed, shipped, or synthesised — yet.</p>
 
-  <div class="error-diag" aria-hidden="true">
-    <div class="error-diag-row">
-      <span>🔍</span>
+  <div class="error-report" aria-hidden="true">
+    <div class="error-report-head">
+      <span class="dot"></span>
+      <span>Lookup complete · 3 sources</span>
+    </div>
+    <div class="error-report-row">
       <span class="label">URL lookup</span>
       <span class="val">not found</span>
     </div>
-    <div class="error-diag-row">
-      <span>📊</span>
+    <div class="error-report-row">
       <span class="label">Cross-tool search</span>
       <span class="val">0 results</span>
     </div>
-    <div class="error-diag-row">
-      <span>🤖</span>
+    <div class="error-report-row">
       <span class="label">Duct intelligence</span>
       <span class="val">no signal</span>
     </div>
-    <div class="error-diag-result">
-      <strong>✦ Recommended action</strong>
-      Head back home. We'll surface what actually matters.
+    <div class="error-report-foot">
+      <span class="mark">✦</span>
+      <div>
+        <strong>Recommended action</strong>
+        <p>Head back home. We'll surface what actually matters.</p>
+      </div>
     </div>
   </div>
 
-  <a href="/" class="btn btn-orange btn-lg">Back to home →</a>
+  <div class="error-actions">
+    <a href="/" class="btn btn-orange btn-lg">Back to home &rarr;</a>
+    <a href="/blog/" class="btn btn-ghost btn-lg">Read the blog</a>
+  </div>
 
+  <p class="error-elsewhere">
+    <a href="/tools/">Free tools</a><span class="sep">·</span><a href="/changelog/">Changelog</a><span class="sep">·</span><a href="/about">About Duct</a>
+  </p>
+
+ </div>
 </main>
 
 <!-- FOOTER (shared: site/partials/footer-expanded.html) -->
 <div data-duct-partial="/partials/footer-expanded.html"><div class="legal-fallback"><a href="/">Duct</a><a href="/about">About</a><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a></div></div>
 
-<script src="assets/duct-partials.js"></script>
-<script src="assets/duct.js" defer></script>
-<script src="assets/duct-download.js" defer></script>
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
 
 </body>
 </html>

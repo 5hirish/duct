@@ -9,12 +9,14 @@ Examples:
 from __future__ import annotations
 
 import argparse
+from io import BytesIO
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
 
 ROOT = Path(__file__).resolve().parent
+NOT_FOUND_PAGE = ROOT / "404.html"
 
 
 class CloudflarePagesDevHandler(SimpleHTTPRequestHandler):
@@ -43,6 +45,24 @@ class CloudflarePagesDevHandler(SimpleHTTPRequestHandler):
                 return str(candidate)
 
         return str(base)
+
+    def send_head(self):
+        """Serve 404.html for unmatched routes, the way Cloudflare Pages does.
+
+        Without this the page can only ever be viewed at /404.html, where every
+        relative asset path happens to resolve — the one URL that hides the bug
+        of a 404 rendering unstyled below the site root.
+        """
+        path = Path(self.translate_path(self.path))
+        if path.exists() or not NOT_FOUND_PAGE.exists():
+            return super().send_head()
+
+        body = NOT_FOUND_PAGE.read_bytes()
+        self.send_response(404)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        return BytesIO(body)
 
 
 def parse_args() -> argparse.Namespace:
