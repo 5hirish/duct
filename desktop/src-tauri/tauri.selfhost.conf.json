@@ -5,6 +5,9 @@
   "bundle": {
     "resources": {
       "../../backend/dist/duct-sidecar": "duct-sidecar"
+    },
+    "macOS": {
+      "entitlements": "Entitlements.selfhost.plist"
     }
   },
   "plugins": {
