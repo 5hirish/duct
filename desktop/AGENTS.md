@@ -239,7 +239,12 @@ Change one, change the other.
   `build.rs` makes the command unreachable with
   `<command> not allowed. Plugin not found`. The JS side swallows that
   (`getShellInfo()` returns null, `providerKeys.js` degrades), so it fails
-  silently rather than loudly.
+  silently rather than loudly. An installed build was found in exactly that
+  state — the string literals from inside `get_shell_info` were in the binary
+  while the command name appeared nowhere in the bundle, so every capability
+  probe returned null and the web app treated a current shell as an ancient one.
+  `.github/scripts/check-shell-contract.py` now fails CI on a command missing any
+  of the three, and also guards the version rules below.
 - Local dev origins live in `capabilities/dev-localhost.json`, kept out of
   release builds by `app.security.capabilities` in `tauri.conf.json` (unset
   means *all* capability files ship). Only `tauri.dev.conf.json` opts it in.

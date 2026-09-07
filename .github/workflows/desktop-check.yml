@@ -28,6 +28,7 @@ on:
       - 'desktop/**'
       - '!desktop/**.md'
       - '.github/workflows/desktop-check.yml'
+      - '.github/scripts/check-shell-contract.py'
   workflow_dispatch:
 
 permissions:
@@ -44,6 +45,20 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      # The contract check diffs capabilities against the base branch, which a
+      # depth-1 checkout does not have. Shallow is enough: it only ever reads
+      # files at the tip.
+      - name: Fetch base branch
+        run: git fetch --depth=1 origin "${{ github.base_ref || 'main' }}"
+
+      # Seconds, and it catches what `cargo check` structurally cannot: a command
+      # that compiles fine but was never registered, so it is absent from the
+      # shipped binary. `invoke` then rejects it, the web app's probe swallows the
+      # rejection, and the shell silently behaves like an older build. One install
+      # shipped in exactly that state.
+      - name: Shell contract
+        run: python3 .github/scripts/check-shell-contract.py "origin/${{ github.base_ref || 'main' }}"
 
       - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
 
