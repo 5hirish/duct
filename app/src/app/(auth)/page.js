@@ -58,6 +58,9 @@ function SignInContent() {
   const [ready, setReady] = useState(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [awaitingBrowser, setAwaitingBrowser] = useState(false);
+  // "" when fine; "outdated" or "browser" when the shell cannot carry a
+  // sign-in and the user needs to be told rather than quietly stranded.
+  const [shellBlocked, setShellBlocked] = useState("");
   const [turnstileError, setTurnstileError] = useState("");
   // Turnstile site keys are locked to their registered hostnames, so the widget
   // can never render on the desktop shell's origin (`tauri://localhost`, or a
@@ -193,6 +196,7 @@ function SignInContent() {
       setTurnstileToken(resolvedTurnstileToken);
     }
     setIsSigningIn(true);
+    setShellBlocked("");
     const params = new URLSearchParams();
     if (resolvedTurnstileToken) {
       params.set("turnstile_token", resolvedTurnstileToken);
@@ -213,9 +217,29 @@ function SignInContent() {
           setAwaitingBrowser(true);
           return;
         } catch {
-          params.delete("client"); // shell refused to open — fall back
+          // The shell can do browser auth but would not open one. Retrying is
+          // the only useful advice; falling through is not, for the reason below.
+          setShellBlocked("browser");
+          setIsSigningIn(false);
+          return;
         }
       }
+      // No `browserAuth`. Either an old shell, or one where `get_shell_info` is
+      // not reachable at all — an unregistered command makes `getShellInfo()`
+      // return null, which is indistinguishable from a build that predates the
+      // flag, and means the same thing either way.
+      //
+      // The in-window redirect below is not a fallback for this. It runs Google's
+      // consent inside the embedded webview, which Google refuses outright on
+      // some platforms; where it does load, the request carries no
+      // `client=desktop`, so `signin.py` records the plain web flow and the
+      // callback hands the session to the *web* app. The shell never receives a
+      // token and the user lands on the hosted app wondering why the desktop
+      // window did nothing. Diagnosing that once meant reading strings out of an
+      // installed binary. Say what is wrong instead.
+      setShellBlocked("outdated");
+      setIsSigningIn(false);
+      return;
     }
     const query = params.toString();
     window.location.href = `${BASE}/auth/signin/google/authorize${query ? `?${query}` : ""}`;
@@ -308,6 +332,27 @@ function SignInContent() {
           )}
           {turnstileError && (
             <p className="mt-2 text-center text-xs text-destructive">{turnstileError}</p>
+          )}
+          {shellBlocked === "outdated" && (
+            <p className="mt-2 text-center text-xs text-destructive">
+              This version of Duct can&rsquo;t complete sign-in. Update the app
+              from{" "}
+              <a
+                className="underline underline-offset-2"
+                href="https://getduct.ai/download"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                getduct.ai/download
+              </a>{" "}
+              and try again.
+            </p>
+          )}
+          {shellBlocked === "browser" && (
+            <p className="mt-2 text-center text-xs text-destructive">
+              Duct couldn&rsquo;t open your browser to finish signing in. Check
+              that you have a default browser set, then try again.
+            </p>
           )}
 
           <p className="signin-legal">
