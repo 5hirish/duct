@@ -168,10 +168,14 @@ jobs:
       # one executable it built and notarizes it itself when the notarization
       # credentials below are present.
       #
-      # `--bundles dmg,updater` also produces the Duct.app.tar.gz + .sig pair the
-      # updater consumes, because bundle.createUpdaterArtifacts is on. The .app
-      # is built as part of this (no --no-bundle-app), so the tarball carries the
-      # notarized bundle.
+      # `app` has to be listed explicitly even though the DMG is built from it.
+      # Without it the bundler treats the .app as an intermediate, deletes it
+      # after packaging, and — because updater archives are only produced for
+      # app/appimage/msi/nsis — emits no Duct.app.tar.gz + .sig at all, warning
+      # about it rather than failing. The release still publishes, and macOS is
+      # simply absent from latest.json, so every installed Mac polls forever and
+      # is never offered an update. Listing `app` keeps the notarized bundle on
+      # disk for the tarball and for the verification step below.
 
       # notarytool wants the key as a *file*, so the secret is written out here
       # rather than passed through. $RUNNER_TEMP dies with the job, and the file
@@ -209,7 +213,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-        run: npm run tauri -- build --target universal-apple-darwin --bundles dmg,updater
+        run: npm run tauri -- build --target universal-apple-darwin --bundles app,dmg,updater
 
       # A universal binary that is not actually universal still runs fine on the
       # runner, so nothing else here would catch it — and the people it fails for
@@ -218,9 +222,13 @@ jobs:
         run: |
           set -euo pipefail
           APP="desktop/src-tauri/target/universal-apple-darwin/release/bundle/macos/Duct.app"
-          lipo -archs "$APP/Contents/MacOS/Duct"
-          lipo -archs "$APP/Contents/MacOS/Duct" | grep -q x86_64
-          lipo -archs "$APP/Contents/MacOS/Duct" | grep -q arm64
+          # The executable is named for the Cargo package (`desktop`), not for
+          # productName, and setting mainBinaryName would silently rename it.
+          # Read it out of Info.plist so this step tracks whichever it is.
+          BIN="$APP/Contents/MacOS/$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$APP/Contents/Info.plist")"
+          lipo -archs "$BIN"
+          lipo -archs "$BIN" | grep -q x86_64
+          lipo -archs "$BIN" | grep -q arm64
           xcrun stapler validate "$APP"
           codesign --verify --deep --strict --verbose=2 "$APP"
 
