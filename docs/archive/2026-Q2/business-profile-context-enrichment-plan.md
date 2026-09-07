@@ -1,5 +1,12 @@
 # Improve Duct Report Context — Implementation Plan
 
+> **Archived (September 2026).** Written when business context was a localStorage
+> blob filled in by an onboarding wizard. The wizard was deleted in
+> `feat(insights): delete the wizard, and let the agent answer its own questions`;
+> context is now a Postgres `agent_context` row per (project, agent), served by
+> `backend/routes/user_contexts.py`, and the agent asks for what it needs in chat.
+> The industry taxonomy is the part still worth reading. See [`README.md`](README.md).
+
 ## Context
 
 Duct's report generation currently uses a minimal `BusinessContext` (industry, budget, CPA, ROAS, notes) that is ephemeral and entered per-report. This means:

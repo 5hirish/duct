@@ -1,5 +1,10 @@
 # shadcn/ui + Luma Implementation Plan for Duct App
 
+> **Archived (September 2026).** The evaluation was decided and executed —
+> shadcn/ui shipped. Living design docs are [`app/DESIGN.md`](../../../app/DESIGN.md)
+> and [`design-system-contrast-review.html`](../../engineering/design-system-contrast-review.html);
+> the token values here predate both. See [`README.md`](README.md).
+
 ## Context
 
 Duct's Next.js 16 app needs a component library for reports, account management, and settings pages. After evaluating shadcn/ui, daisyUI, Mantine, Tremor, and Refine, **shadcn/ui** was selected for its copy-paste ownership model, Radix accessibility primitives, full coverage of all 3 needs, and alignment with Duct's minimal-dependency philosophy.

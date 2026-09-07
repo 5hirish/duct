@@ -1,5 +1,11 @@
 # Plan: Persistent Insights with Live Data Refresh and Chat-Ready Context
 
+> **Archived (September 2026).** Its premise — "everything is localStorage-only
+> (no backend DB)" — is no longer true. Insights persist in Postgres against a
+> project, and the chat sidebar this planned for became the artifact store plus the
+> insights session. `POST /api/insights/refresh` still exists
+> (`backend/routes/reports.py`); the storage half does not. See [`README.md`](README.md).
+
 > This plan supersedes `persistent-reports-live-data-chat-context-plan.md`. "Reports" is now "Insights" everywhere — in routes, schemas, component names, and localStorage keys.
 
 ## Context

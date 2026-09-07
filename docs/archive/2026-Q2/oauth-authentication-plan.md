@@ -1,5 +1,12 @@
 # OAuth Authentication for Google Ads — Implementation Plan
 
+> **Archived (September 2026).** Superseded on both of its load-bearing decisions:
+> tokens live in the `connector_credentials` table, not `sessionStorage`, and the
+> Google Ads developer token is now supplied by the user (Duct's own application is
+> unapproved) rather than held server-side. The routes generalised to
+> `/auth/connectors/{connector_id}/oauth/{authorize,callback}` for every connector.
+> Kept for the PyAirbyte-defer reasoning. See [`README.md`](README.md).
+
 ## Current implementation (April 2026)
 
 Shipped behavior (differs from the original sketch below in URLs and app surface):

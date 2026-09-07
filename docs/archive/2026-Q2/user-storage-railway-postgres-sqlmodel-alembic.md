@@ -1,5 +1,11 @@
 # User storage: Railway Postgres + SQLModel + Alembic
 
+> **Archived (September 2026).** The setup it plans is done — Railway Postgres,
+> SQLModel, Alembic from day one — and its unchecked boxes are stale, not pending.
+> The parts that stayed live moved into [`backend/AGENTS.md`](../../../backend/AGENTS.md):
+> the migration workflow, the `.env.local` proxy URL Alembic resolves through, and the
+> additive/reversible policy. See [`README.md`](README.md).
+
 **Summary:** Persist only authenticated users (Google sign-in) in Railway Postgres for now. Implement with SQLModel (SQLAlchemy 2 + Pydantic) and Alembic migrations from day one so schema evolution stays explicit and safe. Cloudflare remains for edge and R2; FastAPI on Railway owns the database connection and migrations.
 
 ## Checklist (implementation)
@@ -79,7 +85,7 @@ Railway’s `DATABASE_URL` typically starts with `postgresql://`. That works wit
 When FastAPI and Alembic are wired up:
 
 - Run **`alembic upgrade head`** against production (or a release-phase command on Railway) as described in **Implementation sequence** below—do not rely on `create_all()` alone in production.
-- If you use [`scripts/push_env_to_railway.py`](../../scripts/push_env_to_railway.py) to sync `backend/.env.test` → Railway, remember it pushes **every** non-empty key from that file—avoid storing production **`DATABASE_URL`** in a file you sync; prefer **variable references** in the Railway UI for the deployed API, and keep real URLs only in gitignored local env files.
+- If you use [`scripts/push_env_to_railway.py`](../../../scripts/push_env_to_railway.py) to sync `backend/.env.test` → Railway, remember it pushes **every** non-empty key from that file—avoid storing production **`DATABASE_URL`** in a file you sync; prefer **variable references** in the Railway UI for the deployed API, and keep real URLs only in gitignored local env files.
 
 ## Why this stack for “future in perspective”
 

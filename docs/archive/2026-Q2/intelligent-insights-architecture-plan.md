@@ -1,5 +1,13 @@
 # Intelligent Insights Architecture — Design Plan
 
+> **Archived (September 2026).** The two ideas here shipped — the per-connector
+> `ENTITY_CATALOG` (`backend/agents/insights/catalog/`) and the agent-authored
+> `dashboard_spec` (`backend/agents/insights/schema.py`) — but the surrounding
+> architecture did not survive: the fixed wizard and two-call pipeline it assumes were
+> replaced by a session-shaped autonomous agent. Current design:
+> [`autonomous-insights-agent-plan.md`](../../engineering/autonomous-insights-agent-plan.md).
+> See [`README.md`](README.md).
+
 ## The Core Idea
 
 Instead of a fixed hardcoded report layout (header + KPI strip + ROAS bars + campaign table), the agent decides what to visualize and how. The backend emits a **dashboard spec** — an ordered list of blocks with typed shapes — and the frontend renders whatever blocks the agent specified. Like lego.

@@ -1,5 +1,11 @@
 # Plan: Add GA4 and Google Search Console Connectors
 
+> **Archived (September 2026).** Both connectors shipped
+> (`backend/service/google/ga4.py`, `gsc.py`) and the connector set has since grown
+> well past two — Meta, HubSpot, Mixpanel, Clarity, GrowthBook, Stripe, RevenueCat and
+> more, each registered through the generic registry. Adding one now follows the
+> `add-connector` skill, not this file. See [`README.md`](README.md).
+
 ## Context
 
 The Duct backend has a Google Ads connector that powers the paid ads report. The user wants two additional **supplementary connectors** — GA4 and Google Search Console — to enrich the Google Ads report with post-click behavior (GA4) and organic search overlap (GSC) data. These don't produce their own briefs; they add supplementary tool data that the LLM synthesis agent cross-references with Google Ads campaigns.

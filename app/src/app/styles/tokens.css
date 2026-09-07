@@ -24,7 +24,7 @@
   --r: 12px;
   --r-lg: 20px;
 
-  /* shadcn semantic tokens — Duct brand (see docs/engineering/dashboard-library-evaluation.md) */
+  /* shadcn semantic tokens — Duct brand (see docs/archive/2026-Q2/dashboard-library-evaluation.md) */
   --background: oklch(1 0 0);
   --foreground: oklch(0.18 0.03 265);
   --card: oklch(1 0 0);

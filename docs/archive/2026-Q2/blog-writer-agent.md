@@ -1,5 +1,15 @@
 # Blog Writer Agent — Product & Engineering Plan
 
+> **Archived (September 2026).** Never implemented, and no longer implementable as
+> written: every engineering half of this plan is built on the Claude Agent SDK — the
+> session-wide `output_format`, `allowed_tools`, `ClaudeBlogRunner`, and
+> `backend/agents/audit/v3/runner.py` as "direct structural template" — and that harness
+> was removed with the v3 engine. `AgentType.BLOG_WRITER` is still registered as
+> *Coming soon*, so §1–§2 (the product narrative, the three-phase research → outline →
+> write shape, the human-in-the-loop outline approval) remain the starting point; rebuild
+> §3 onward on LangChain (`create_deep_agent`), the way `backend/agents/content/` did.
+> See [`README.md`](README.md).
+
 **Status:** Draft — pre-implementation
 **Last updated:** 2026-05-12
 
@@ -641,11 +651,11 @@ Register `GET /blog-writer/sessions/{id}/download` before the generic `GET /{typ
 
 ## Critical reference files
 
-- [backend/agents/audit/v3/runner.py](../../backend/agents/audit/v3/runner.py) — direct structural template; every phase function and session lifecycle pattern mirrors this
-- [backend/agents/audit/schema.py](../../backend/agents/audit/schema.py) — `AuditSession`/`VersionedReport` dataclass pattern to replicate
-- [backend/routes/agents.py](../../backend/routes/agents.py) — `_dispatch_start()` and session wiring
-- [app/src/components/audit/AuditWorkspace.jsx](../../app/src/components/audit/AuditWorkspace.jsx) — split-panel + SSE event handling pattern
-- [backend/agents/registry.py](../../backend/agents/registry.py) — activate the existing `BLOG_WRITER` spec
+- `backend/agents/audit/v3/runner.py` (removed with the v3 engine) — direct structural template; every phase function and session lifecycle pattern mirrors this
+- [backend/agents/audit/schema.py](../../../backend/agents/audit/schema.py) — `AuditSession`/`VersionedReport` dataclass pattern to replicate
+- [backend/routes/agents.py](../../../backend/routes/agents.py) — `_dispatch_start()` and session wiring
+- [app/src/components/audit/AuditWorkspace.jsx](../../../app/src/components/audit/AuditWorkspace.jsx) — split-panel + SSE event handling pattern
+- [backend/agents/registry.py](../../../backend/agents/registry.py) — activate the existing `BLOG_WRITER` spec
 
 ## Verification
 
