@@ -9,6 +9,7 @@ Examples:
 from __future__ import annotations
 
 import argparse
+import os
 from io import BytesIO
 from pathlib import Path
 from urllib.parse import unquote, urlparse
@@ -16,48 +17,51 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
 
 ROOT = Path(__file__).resolve().parent
+ROOT_PREFIX = str(ROOT) + os.sep
 NOT_FOUND_PAGE = ROOT / "404.html"
+MISS = str(ROOT / "__not_found__")
+
+
+def _under_root(relative: str) -> Path | None:
+    """Join a URL path onto ROOT, or None if the result escapes it.
+
+    Joined as strings and normalised before it is trusted, because
+    `ROOT / relative` is not safe here: pathlib discards the left operand
+    when the right one is absolute, and a request for "/%2Fetc/passwd"
+    unquotes to exactly that. normpath also collapses any ".." lexically,
+    so one prefix check covers both traversal and the absolute case.
+    """
+    candidate = os.path.normpath(os.path.join(str(ROOT), relative))
+    if candidate != str(ROOT) and not candidate.startswith(ROOT_PREFIX):
+        return None
+    return Path(candidate)
 
 
 class CloudflarePagesDevHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(ROOT), **kwargs)
 
-    def _safe_under_root(self, candidate: Path) -> Path | None:
-        resolved_root = ROOT.resolve()
-        resolved_candidate = candidate.resolve()
-        try:
-            resolved_candidate.relative_to(resolved_root)
-        except ValueError:
-            return None
-        return resolved_candidate
-
     def translate_path(self, path: str) -> str:
-        parsed = urlparse(path)
-        clean = unquote(parsed.path.lstrip("/"))
+        # Unquote before stripping the leading slashes, not after: "%2Fetc/..."
+        # is still one harmless-looking segment until it is decoded.
+        clean = unquote(urlparse(path).path).lstrip("/")
 
         if not clean:
             return str(ROOT / "index.html")
 
-        # Block path traversal attempts.
-        if ".." in Path(clean).parts:
-            return str(ROOT / "__not_found__")
+        base = _under_root(clean)
+        if base is None:
+            return MISS
 
-        base = ROOT / clean
         candidates = [base]
         if base.suffix == "":
             candidates.append(base.with_suffix(".html"))
             candidates.append(base / "index.html")
 
         for candidate in candidates:
-            safe_candidate = self._safe_under_root(candidate)
-            if safe_candidate is not None and safe_candidate.exists():
-                return str(safe_candidate)
-
-        safe_base = self._safe_under_root(base)
-        if safe_base is None:
-            return str(ROOT / "__not_found__")
-        return str(safe_base)
+            if candidate.exists():
+                return str(candidate)
+        return str(base)
 
     def send_head(self):
         """Serve 404.html for unmatched routes, the way Cloudflare Pages does.
@@ -66,9 +70,10 @@ class CloudflarePagesDevHandler(SimpleHTTPRequestHandler):
         relative asset path happens to resolve — the one URL that hides the bug
         of a 404 rendering unstyled below the site root.
         """
+        # translate_path has already contained the path; anything it could not
+        # contain comes back as MISS, which never exists.
         translated = Path(self.translate_path(self.path))
-        safe_path = self._safe_under_root(translated)
-        if (safe_path is not None and safe_path.exists()) or not NOT_FOUND_PAGE.exists():
+        if translated.exists() or not NOT_FOUND_PAGE.exists():
             return super().send_head()
 
         body = NOT_FOUND_PAGE.read_bytes()
