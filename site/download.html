@@ -111,58 +111,31 @@
 
 <script src="assets/duct-partials.js"></script>
 <script src="assets/duct.js" defer></script>
+<script src="assets/duct-download.js" defer></script>
 <script>
-(function () {
-  // One fixed URL. GitHub resolves `latest` to the newest release, and the
-  // manifest inside names the versioned installers — so this page never needs
-  // redeploying when a new desktop version ships.
-  var MANIFEST = 'https://github.com/5hirish/duct/releases/latest/download/downloads.json';
-  var RELEASES = 'https://github.com/5hirish/duct/releases';
+// Deferred scripts run before DOMContentLoaded, so DuctDownload is ready by
+// the time this fires — an inline script would otherwise run first and find
+// nothing. Detection, the manifest URL and the platform list all live in
+// assets/duct-download.js; duplicating them here is how the two drift.
+document.addEventListener('DOMContentLoaded', function () {
+  var DD = window.DuctDownload;
 
-  // Order is the tie-break when detection is ambiguous, and the order the
-  // "all platforms" list renders in.
-  var SLOTS = [
-    { key: 'macos',          label: 'macOS',            hint: 'Universal · Apple silicon and Intel' },
-    { key: 'windows',        label: 'Windows',          hint: 'Windows 10 and later' },
-    { key: 'linux-appimage', label: 'Linux (AppImage)', hint: 'Runs on any distribution' },
-    { key: 'linux-deb',      label: 'Linux (.deb)',     hint: 'Debian and Ubuntu' }
-  ];
-
-  function detect() {
-    // userAgentData is the only non-deprecated source, but Safari and Firefox
-    // do not ship it — fall back to the UA string rather than guessing macOS,
-    // which would hand a Windows user a .dmg.
-    var p = (navigator.userAgentData && navigator.userAgentData.platform) || '';
-    var ua = p + ' ' + (navigator.platform || '') + ' ' + (navigator.userAgent || '');
-    if (/Win/i.test(ua)) return 'windows';
-    if (/Mac|Darwin/i.test(ua)) return 'macos';
-    if (/Linux|X11/i.test(ua)) return 'linux-appimage';
-    return null;
-  }
-
-  function mb(bytes) {
-    if (!bytes) return '';
-    return ' · ' + Math.round(bytes / 1048576) + ' MB';
-  }
+  function mb(bytes) { return DD.mb(bytes); }
 
   function fallback(message) {
     var primary = document.getElementById('dl-primary');
     primary.innerHTML =
-      '<a class="btn btn-orange btn-lg" href="' + RELEASES + '">All downloads on GitHub &rarr;</a>' +
+      '<a class="btn btn-orange btn-lg" href="' + DD.RELEASES + '">All downloads on GitHub &rarr;</a>' +
       '<p class="dl-meta">' + message + '</p>';
     document.getElementById('dl-all-heading').style.display = 'none';
   }
 
-  fetch(MANIFEST, { cache: 'no-store' })
-    .then(function (r) {
-      if (!r.ok) throw new Error(r.status);
-      return r.json();
-    })
+  DD.load()
     .then(function (data) {
-      var have = SLOTS.filter(function (s) { return data.platforms && data.platforms[s.key]; });
+      var have = DD.SLOTS.filter(function (s) { return data.platforms && data.platforms[s.key]; });
       if (have.length === 0) throw new Error('no platforms');
 
-      var mine = detect();
+      var mine = DD.detect();
       var pick = have.filter(function (s) { return s.key === mine; })[0];
 
       var primary = document.getElementById('dl-primary');
@@ -170,12 +143,12 @@
         var a = data.platforms[pick.key];
         primary.innerHTML =
           '<a class="btn btn-orange btn-lg" href="' + a.url + '" download>Download for ' + pick.label + ' &darr;</a>' +
-          '<p class="dl-meta">Version ' + data.version + mb(a.size) + ' · ' + pick.hint + '</p>';
+          '<p class="dl-meta">Version ' + data.version + mb(a.size) + ' &middot; ' + pick.hint + '</p>';
       } else {
         // Detection failed, or we have no build for what they are on. Say so
         // instead of picking one at random — the list below is the answer.
         primary.innerHTML =
-          '<p class="dl-meta">Pick your platform below — version ' + data.version + '.</p>';
+          '<p class="dl-meta">Pick your platform below &mdash; version ' + data.version + '.</p>';
       }
 
       document.getElementById('dl-all-rows').innerHTML = have.map(function (s) {
@@ -188,9 +161,9 @@
     .catch(function () {
       // No release published yet, offline, or GitHub is having a day. Never
       // leave the spinner up: send people somewhere that works.
-      fallback('Direct links are unavailable right now — the GitHub releases page has every build.');
+      fallback('Direct links are unavailable right now \u2014 the GitHub releases page has every build.');
     });
-})();
+});
 </script>
 </body>
 </html>

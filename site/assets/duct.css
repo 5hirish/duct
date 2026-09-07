@@ -62,16 +62,6 @@ cursor: pointer; text-decoration: none; border: none; transition: all .2s;
 .btn-ghost:hover { border-color: var(--navy); }
 .btn-lg { padding: 15px 34px; font-size: 15px; }
 
-/* ── EMAIL INPUT ── */
-.email-in {
-padding: 15px 22px; border: 1.5px solid var(--border);
-border-radius: var(--pill); font-family: var(--sans);
-font-size: 15px; color: var(--navy); outline: none;
-transition: border-color .2s; background: var(--white);
-}
-.email-in:focus { border-color: var(--orange); }
-.email-in::placeholder { color: var(--navy-3); }
-
 /* ── NAV ── */
 nav {
 position: fixed; top: 0; left: 0; right: 0; z-index: 100;
@@ -229,7 +219,6 @@ display: flex; align-items: center; justify-content: center;
 gap: 10px; flex-wrap: wrap;
 animation: fadeUp .5s .24s ease both;
 }
-.hero-form .email-in { width: 280px; }
 .hero-footnote { font-size: 12px; color: var(--navy-3); margin-top: 16px; animation: fadeUp .5s .32s ease both; }
 
 /* ── STRIP ── */
@@ -476,10 +465,6 @@ border: 1px solid var(--border); border-radius: var(--r); font-size: 13px;
   gap: 10px;
   align-items: center;
 }
-.flow-compare-cta .email-in {
-  flex: 1;
-  min-width: 160px;
-}
 /* Full-width CTA below the grid */
 .flow-compare-bottom {
   margin-top: 32px;
@@ -496,10 +481,6 @@ border: 1px solid var(--border); border-radius: var(--r); font-size: 13px;
   justify-content: center;
   width: 100%;
   max-width: 520px;
-}
-.flow-compare-bottom-cta .email-in {
-  flex: 1;
-  min-width: 200px;
 }
 .flow-compare-bottom-hint {
   font-size: 12px;
@@ -587,8 +568,8 @@ border: 1px solid var(--border); border-radius: var(--r); font-size: 13px;
 .cta-inner { max-width: 560px; margin: 0 auto; }
 .cta h2 { font-size: clamp(38px, 6vw, 62px); margin-bottom: 18px; }
 .cta .sub { max-width: 400px; margin: 0 auto 44px; }
-.cta-form { display: flex; gap: 10px; max-width: 420px; margin: 0 auto; }
-.cta-form .email-in { flex: 1; }
+/* One download button now, not an input plus a button — so it has to centre itself. */
+.cta-form { display: flex; gap: 10px; max-width: 420px; margin: 0 auto; justify-content: center; }
 .cta-note { font-size: 12px; color: var(--navy-3); margin-top: 16px; }
 
 /* ── FOOTER ── */
@@ -620,7 +601,6 @@ nav { padding: 0 24px; }
 .nav-toggle { display: inline-flex; }
 .hero { padding: 100px 24px 60px; }
 .hero-form { flex-direction: column; align-items: stretch; max-width: 320px; margin: 0 auto; }
-.hero-form .email-in { width: 100%; }
 .problem { grid-template-columns: 1fr; gap: 48px; padding: 64px 24px; }
 .steps { grid-template-columns: 1fr; }
 .step { border-right: none; border-bottom: 1px solid rgba(255,255,255,.08); }
