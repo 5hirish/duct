@@ -6,6 +6,7 @@ import importlib
 import os
 
 import pytest
+from fastapi.routing import iter_route_contexts
 
 from models.execution import ExecutionGuardrail
 from service.execution import ga4_exec, google_ads_exec  # noqa: F401  (registers executors)
@@ -166,7 +167,12 @@ def test_execution_routes_registered():
     import server
 
     server = importlib.reload(server)
-    paths = {r.path for r in server.app.routes if r.path.startswith("/api/execute")}
+    # See test_content_routes: include_router is lazy from FastAPI 0.141 on.
+    paths = {
+        rc.path
+        for rc in iter_route_contexts(server.app.routes)
+        if (rc.path or "").startswith("/api/execute")
+    }
     expected = {
         "/api/execute",
         "/api/execute/ops",
