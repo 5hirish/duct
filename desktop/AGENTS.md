@@ -53,6 +53,15 @@ carries all the code.
 
   New shell-dependent web flows must be gated on a `get_shell_info` capability
   flag, never on version sniffing — old shells keep the legacy path.
+
+  **Sign-in is the one exception, and deliberately so.** A shell without
+  `browserAuth` has no legacy path worth keeping: navigating the webview to
+  Google is refused outright on some platforms, and where it loads, the request
+  carries no `client=desktop`, so `signin.py` records the plain web flow and the
+  callback hands the session to the hosted app. The shell never gets a token and
+  the user is left staring at the web app inside their desktop window. The sign-in
+  page therefore stops and says the app needs updating rather than degrading into
+  a flow that cannot complete.
 - **`target="_blank"` links are dead in the webview** (no tabs, no window
   opening) and are rerouted to the system browser by
   `installExternalLinkHandler` in `app/src/lib/shell.js`, mounted once by
