@@ -69,6 +69,11 @@ another port (the tests assume 8090).
 
 - Inside `site/` HTML files, root-level pages use `assets/`.
 - Blog files under `site/blog/` use `../assets/`.
+- **`404.html` is the exception: every path in it is root-absolute** (`/assets/…`).
+  Cloudflare Pages serves that one file at whatever URL missed, so a relative
+  `assets/duct.css` resolves to `/blog/assets/duct.css` on `/blog/anything` and
+  the page renders as unstyled black-on-white text. `tests/e2e/site-smoke.spec.js`
+  fetches a nested miss and fails if any subresource 404s.
 - `config.js` must load before `duct.js`.
 
 ## Interactive demo pattern

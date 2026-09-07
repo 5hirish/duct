@@ -9,12 +9,32 @@ Examples:
 from __future__ import annotations
 
 import argparse
+import os
+from io import BytesIO
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
 
 ROOT = Path(__file__).resolve().parent
+ROOT_PREFIX = str(ROOT) + os.sep
+NOT_FOUND_PAGE = ROOT / "404.html"
+MISS = str(ROOT / "__not_found__")
+
+
+def _under_root(relative: str) -> Path | None:
+    """Join a URL path onto ROOT, or None if the result escapes it.
+
+    Joined as strings and normalised before it is trusted, because
+    `ROOT / relative` is not safe here: pathlib discards the left operand
+    when the right one is absolute, and a request for "/%2Fetc/passwd"
+    unquotes to exactly that. normpath also collapses any ".." lexically,
+    so one prefix check covers both traversal and the absolute case.
+    """
+    candidate = os.path.normpath(os.path.join(str(ROOT), relative))
+    if candidate != str(ROOT) and not candidate.startswith(ROOT_PREFIX):
+        return None
+    return Path(candidate)
 
 
 class CloudflarePagesDevHandler(SimpleHTTPRequestHandler):
@@ -22,17 +42,17 @@ class CloudflarePagesDevHandler(SimpleHTTPRequestHandler):
         super().__init__(*args, directory=str(ROOT), **kwargs)
 
     def translate_path(self, path: str) -> str:
-        parsed = urlparse(path)
-        clean = unquote(parsed.path.lstrip("/"))
+        # Unquote before stripping the leading slashes, not after: "%2Fetc/..."
+        # is still one harmless-looking segment until it is decoded.
+        clean = unquote(urlparse(path).path).lstrip("/")
 
         if not clean:
             return str(ROOT / "index.html")
 
-        # Block path traversal attempts.
-        if ".." in Path(clean).parts:
-            return str(ROOT / "__not_found__")
+        base = _under_root(clean)
+        if base is None:
+            return MISS
 
-        base = ROOT / clean
         candidates = [base]
         if base.suffix == "":
             candidates.append(base.with_suffix(".html"))
@@ -41,8 +61,25 @@ class CloudflarePagesDevHandler(SimpleHTTPRequestHandler):
         for candidate in candidates:
             if candidate.exists():
                 return str(candidate)
-
         return str(base)
+
+    def send_head(self):
+        """Serve 404.html for unmatched routes, the way Cloudflare Pages does.
+
+        Without this the page can only ever be viewed at /404.html, where every
+        relative asset path happens to resolve — the one URL that hides the bug
+        of a 404 rendering unstyled below the site root.
+        """
+        file_obj = super().send_head()
+        if file_obj is not None or not NOT_FOUND_PAGE.exists():
+            return file_obj
+
+        body = NOT_FOUND_PAGE.read_bytes()
+        self.send_response(404)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        return BytesIO(body)
 
 
 def parse_args() -> argparse.Namespace:

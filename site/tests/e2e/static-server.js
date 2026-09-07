@@ -64,7 +64,16 @@ const server = http.createServer((req, res) => {
     filePath = path.join(filePath, "index.html");
   }
 
+  // Cloudflare Pages serves 404.html at the URL that missed, so the test server
+  // must too — a plain-text 404 would never catch an asset path that only
+  // resolves when the page is fetched from the site root.
   if (!fs.existsSync(filePath)) {
+    const notFoundPage = toSafePath("404.html");
+    if (fs.existsSync(notFoundPage)) {
+      res.writeHead(404, { "Content-Type": "text/html; charset=utf-8" });
+      fs.createReadStream(notFoundPage).pipe(res);
+      return;
+    }
     res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
     res.end("Not found");
     return;

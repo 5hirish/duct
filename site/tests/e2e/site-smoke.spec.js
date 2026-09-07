@@ -104,6 +104,33 @@ test("legacy link with a missing or unknown slug falls back to the index", async
   }
 });
 
+// The 404 page is the only page served from a URL it does not live at, so it is
+// the only page whose asset paths must be root-absolute. A relative
+// "assets/duct.css" resolves fine at /404.html and 404s everywhere else, which
+// is how it shipped unstyled for every miss below the site root.
+test("404 renders styled from a nested URL", async ({ page }) => {
+  const broken = [];
+  page.on("response", (res) => {
+    if (res.status() >= 400 && !res.url().endsWith("/blog/no-such-page")) {
+      broken.push(`${res.status()} ${res.url()}`);
+    }
+  });
+
+  const response = await page.goto("/blog/no-such-page");
+  expect(response && response.status()).toBe(404);
+  expect(broken).toEqual([]);
+
+  // Proves duct.css actually applied: the numeral is styled, not body text.
+  const codeSize = await page
+    .locator(".error-code")
+    .evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+  expect(codeSize).toBeGreaterThan(60);
+
+  // Shared nav and footer arrive via fetch, so they prove duct-partials.js loaded.
+  await expect(page.locator("nav#nav")).toBeVisible();
+  await expect(page.locator('a[href="/"]').first()).toBeVisible();
+});
+
 test("changelog lists releases with permanent anchors", async ({ page }) => {
   await page.goto("/changelog/");
   const releases = page.locator("article.cl-release");
