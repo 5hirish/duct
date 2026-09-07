@@ -1,18 +1,29 @@
 /* Resolves the current desktop release and upgrades download CTAs in place.
  *
- * Every download CTA on the site ships as a plain link to /download. This file
- * only ever *improves* one — naming the visitor's platform and pointing at the
- * installer itself. If the manifest 404s (no release published yet), the fetch
- * fails, or JavaScript never runs, the link still works and /download states
- * the situation. No CTA on the site can become a dead end, which matters more
- * now that downloading is the only call to action.
+ * Every download CTA on the site ships as a plain link (to /download, or to the
+ * releases page). This file only ever *improves* one — naming the visitor's
+ * platform and pointing at the installer itself. If the request fails, the
+ * repo has no release yet, or JavaScript never runs, the link still works. No
+ * CTA on the site can become a dead end, which matters more now that
+ * downloading is the only call to action.
  *
- * The manifest URL is fixed: GitHub resolves `latest` to the newest release and
- * the release carries downloads.json, so shipping a new desktop version never
- * requires touching the site. See .github/scripts/build-downloads-manifest.mjs.
+ * Why the API and not the release asset
+ * -------------------------------------
+ * The release carries a `downloads.json` built for exactly this, and the
+ * obvious URL is `releases/latest/download/downloads.json`. A browser cannot
+ * read it: that redirects to release-assets.githubusercontent.com, which sends
+ * no `Access-Control-Allow-Origin`, so the fetch dies in CORS. It looked fine
+ * for as long as the repo had no release — the 404 and the CORS failure both
+ * land in the same `catch`, so the page fell back and nothing said why.
+ *
+ * `api.github.com` sends `Access-Control-Allow-Origin: *`, so the release is
+ * read from there and the installers are matched by filename. Unauthenticated
+ * requests are limited to 60/hour per visitor IP, which is far above what one
+ * page view costs. `downloads.json` is still published — it is the same data
+ * for anything server-side that wants it without a rate limit.
  */
 (function () {
-  var MANIFEST = 'https://github.com/5hirish/duct/releases/latest/download/downloads.json';
+  var API = 'https://api.github.com/repos/5hirish/duct/releases/latest';
   var RELEASES = 'https://github.com/5hirish/duct/releases';
 
   // Order is the tie-break when detection is ambiguous, and the order the
@@ -23,6 +34,17 @@
     { key: 'linux-appimage', label: 'Linux (AppImage)', hint: 'Runs on any distribution' },
     { key: 'linux-deb',      label: 'Linux (.deb)',     hint: 'Debian and Ubuntu' }
   ];
+
+  // Same mapping as .github/scripts/build-downloads-manifest.mjs. Assets that
+  // match nothing here (updater archives, .sig files, the manifests) are not
+  // installers and are skipped.
+  function slotFor(name) {
+    if (/\.dmg$/i.test(name)) return 'macos';
+    if (/-setup\.exe$/i.test(name)) return 'windows';
+    if (/\.AppImage$/i.test(name)) return 'linux-appimage';
+    if (/\.deb$/i.test(name)) return 'linux-deb';
+    return null;
+  }
 
   function detect() {
     // userAgentData is the only non-deprecated source, but Safari and Firefox
@@ -46,9 +68,26 @@
   var pending = null;
   function load() {
     if (!pending) {
-      pending = fetch(MANIFEST, { cache: 'no-store' }).then(function (r) {
+      pending = fetch(API, {
+        cache: 'no-store',
+        headers: { 'Accept': 'application/vnd.github+json' }
+      }).then(function (r) {
         if (!r.ok) throw new Error(r.status);
         return r.json();
+      }).then(function (rel) {
+        var platforms = {};
+        (rel.assets || []).forEach(function (a) {
+          var key = slotFor(a.name);
+          if (key && !platforms[key]) {
+            platforms[key] = { filename: a.name, size: a.size, url: a.browser_download_url };
+          }
+        });
+        return {
+          // Tags are `desktop-v0.4.0`; the version is what people read.
+          version: String(rel.tag_name || '').replace(/^desktop-v/, ''),
+          release_url: rel.html_url,
+          platforms: platforms
+        };
       });
     }
     return pending;
@@ -89,7 +128,7 @@
     });
   }
 
-  window.DuctDownload = { load: load, detect: detect, mb: mb, SLOTS: SLOTS, RELEASES: RELEASES };
+  window.DuctDownload = { load: load, detect: detect, mb: mb, SLOTS: SLOTS, RELEASES: RELEASES, API: API };
 
   // Partials inject CTAs after DOMContentLoaded, so wait for them when present.
   if (window.__DUCT_PARTIALS_READY) wire();
