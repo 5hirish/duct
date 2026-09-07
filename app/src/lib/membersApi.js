@@ -9,7 +9,11 @@
 // verbatim.
 
 import { BASE } from "./api";
-import { authedHeaders as headers } from "./authFetch";
+import {
+  SessionExpiredError,
+  authedHeaders as headers,
+  endSessionIfUnauthorized,
+} from "./authFetch";
 
 /** Pull the human-readable reason out of a FastAPI error body. */
 async function errorMessage(res, fallback) {
@@ -33,7 +37,11 @@ async function request(path, { method = "GET", body, fallbackError } = {}) {
     body: body ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {
-    throw new Error(await errorMessage(res, fallbackError || "Something went wrong."));
+    const message = await errorMessage(res, fallbackError || "Something went wrong.");
+    // Keep this route's kinder wording for real failures, but a 401 is a dead
+    // session, not a member-list problem — see authFetch's endSession.
+    if (endSessionIfUnauthorized(res)) throw new SessionExpiredError(message, res.status);
+    throw new Error(message);
   }
   if (res.status === 204) return null;
   return res.json();

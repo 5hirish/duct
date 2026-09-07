@@ -18,6 +18,8 @@ import Link from "next/link";
 import { Check, Download, Pin, Plus, Search, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import LoadError from "@/components/LoadError";
+import { isSessionExpired } from "@/lib/authFetch";
 import { formatDate, relativeTime } from "@/lib/format";
 import { MEMORY_KIND_ICONS, downloadJson } from "@/lib/memoryApi";
 
@@ -267,6 +269,8 @@ export default function MemoryTimeline({
   addLabel = "Remember something",
   titlePlaceholder = "The fact in one line — with its number or date if it has one.",
   emptyHint,
+  // Completes "We couldn't load …" on the error panel.
+  errorSubject = "your memory",
   exportFilename = "duct-memory.json",
   resetPrompt = "Delete every memory here? This cannot be undone — export first if you want a copy.",
   signedIn = true,
@@ -283,7 +287,12 @@ export default function MemoryTimeline({
   const [showSuperseded, setShowSuperseded] = useState(true);
   const [adding, setAdding] = useState(false);
   const [busy, setBusy] = useState(false);
+  // Two kinds of failure, kept apart on purpose: `error` is a mutation that
+  // did not take (shown inline, the list is still trustworthy), `loadError` is
+  // a list that never arrived — which must replace the empty state rather than
+  // sit above it, because "nothing yet" is a claim we cannot make.
   const [error, setError] = useState("");
+  const [loadError, setLoadError] = useState("");
   const [linked, setLinked] = useState(null); // deep-linked entry outside the filters
 
   const load = useCallback(() => {
@@ -292,6 +301,7 @@ export default function MemoryTimeline({
       return;
     }
     setError("");
+    setLoadError("");
     api
       .list({ q: query, kind, fromDate, toDate, includeSuperseded: showSuperseded })
       .then((body) => {
@@ -302,8 +312,10 @@ export default function MemoryTimeline({
         setKinds((prev) => Array.from(new Set([...prev, ...body.kinds])).sort());
       })
       .catch((err) => {
-        setItems([]);
-        setError(err.message || "Failed to load memory.");
+        // A retired session is already redirecting to sign-in.
+        if (isSessionExpired(err)) return;
+        setItems(null);
+        setLoadError(err.message || "");
       });
   }, [api, query, kind, fromDate, toDate, showSuperseded, signedIn]);
 
@@ -340,7 +352,7 @@ export default function MemoryTimeline({
         load();
         return out;
       } catch (err) {
-        setError(err.message || failure);
+        if (!isSessionExpired(err)) setError(err.message || failure);
       } finally {
         setBusy(false);
       }
@@ -519,8 +531,12 @@ export default function MemoryTimeline({
 
       {error && <p className="mb-3 text-sm text-destructive">{error}</p>}
 
+      {signedIn && loadError && (
+        <LoadError what={errorSubject} detail={loadError} onRetry={load} />
+      )}
+
       {!signedIn && <p className="app-subtle">Sign in to see this.</p>}
-      {signedIn && items === null && <p className="app-subtle">Loading…</p>}
+      {signedIn && !loadError && items === null && <p className="app-subtle">Loading…</p>}
 
       {linked && (
         <div className="mb-4 rounded-lg border border-border/60">
@@ -564,7 +580,7 @@ export default function MemoryTimeline({
         </p>
       )}
 
-      {signedIn && items && items.length === 0 && (
+      {signedIn && !loadError && items && items.length === 0 && (
         <p className="app-subtle">
           {query || kind || fromDate || toDate ? "Nothing matches that filter." : emptyHint}
         </p>
