@@ -175,13 +175,28 @@ Every CTA ships as a plain link to `/download`:
 ```
 
 `assets/duct-download.js` then *upgrades* it in place — naming the visitor's
-platform and pointing straight at the installer. Write the markup so it is
-already correct before that runs: if the manifest 404s (no release yet), the
-fetch fails, or JavaScript is off, what ships is a working link to `/download`,
-which explains the situation itself. **Never author a CTA whose href depends on
-the script**, and never hardcode a version or an installer URL — the manifest
-is resolved from `releases/latest`, so shipping a desktop version needs no site
-change.
+platform and pointing straight at the installer. That happens **synchronously,
+with no request**: the installer URLs are constants, because
+`releases/latest/download/<name>` is redirected by GitHub to whichever release
+is newest and the release workflow publishes each installer a second time under
+a fixed, version-free name.
+
+Those four names are a contract with
+`.github/workflows/desktop-release.yml`. Renaming one on either side produces a
+404 that nothing in CI notices:
+
+| slot | asset |
+|---|---|
+| `macos` | `Duct-macOS-universal.dmg` |
+| `windows` | `Duct-Windows-x64-setup.exe` |
+| `linux-appimage` | `Duct-Linux-x86_64.AppImage` |
+| `linux-deb` | `Duct-Linux-amd64.deb` |
+
+So **never hardcode a version or a versioned filename**, and never author a CTA
+whose href depends on the script: what ships must already work with JavaScript
+off. The download page is fully functional that way — every button downloads
+the current build; only the version, size and highlight come from a request,
+and none of those are needed to download.
 
 - `data-duct-download-short` renders "Download ↓" instead of "Download for
   macOS ↓", for the nav pill where the platform name does not fit.
