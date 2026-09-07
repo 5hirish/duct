@@ -18,8 +18,37 @@ sitemap.
 All three arguments are optional:
 - **release name** — omit it and you write one (see *Naming the release*).
 - **date** — defaults to today, format `Mon D YYYY`.
-- **version badge** — only pass one if a real version actually shipped. Omit it
-  otherwise; an invented version number is worse than no badge.
+- **version badge** — only pass one if that version was actually **released**.
+  See *Where versions come from* below; an invented version number is worse
+  than no badge.
+
+## Where versions come from
+
+`CHANGELOG.md` at the repo root is the engineering record — Keep a Changelog
+format, versioned against the desktop shell (`desktop/src-tauri/tauri.conf.json`),
+and read by `.github/scripts/release-notes.mjs` when a release is cut. This page
+is its human rendering, aimed at someone deciding whether to install rather than
+someone reading a diff. **They must not disagree about what shipped.**
+
+A version badge is only truthful when three things line up:
+
+```bash
+gh release list                     # the release exists
+git ls-remote --tags origin         # the tag exists
+grep -n '^## \[' CHANGELOG.md       # the section is dated, not "unreleased"
+```
+
+A bump in `tauri.conf.json` is not a release — 0.3.0 was bumped in-tree and no
+one could ever install it, so it carries no badge here. Badge the newest entry
+with the version a reader can install today and leave the older entries bare;
+they are inside that release too, and repeating it down the page implies
+releases that never happened.
+
+When the badge is real, link it to its release:
+
+```html
+<a class="cl-version" href="https://github.com/5hirish/duct/releases/tag/desktop-vX.Y.Z" rel="noopener">Desktop X.Y.Z</a>
+```
 
 ---
 
@@ -140,7 +169,8 @@ Insert as the **first** `<article>` inside `.cl-wrap`, above the previous newest
 
 - The `id` is the ISO date and is permanent — it is the shareable link. Never
   renumber or reuse one.
-- Drop the `<span class="cl-version">` line entirely when no version shipped.
+- Drop the version line entirely when no version was released — most entries
+  have none. When one was, it is the `<a class="cl-version">` form above.
 - Escape `&` as `&amp;` and use `&rsquo;` / `&ldquo;` / `&rdquo;` for quotes and
   apostrophes, matching the existing entries.
 - The year strip is a `<div role="navigation">`, not a `<nav>` — the bare `nav`
@@ -230,5 +260,6 @@ cd site && python3 dev_server.py --port 8090
 - [ ] No `.html` in any link you added — this site uses clean URLs, and a smoke
       test asserts it
 - [ ] Every bullet traces to a commit in the range
+- [ ] Any version badge names a released version, and links to its release
 - [ ] Nothing internal leaked: no hashes, PR numbers, file paths, module names
 - [ ] Mobile at 390px: date and version chip sit on one row above the title

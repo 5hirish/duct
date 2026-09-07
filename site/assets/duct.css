@@ -791,14 +791,18 @@ details[open] > .faq-q::after { transform: rotate(45deg); }
    <nav>: the bare `nav` rule in this stylesheet is the fixed site header, and a
    second <nav> here parks itself on top of the real one. It stays on the page
    with a single year so the layout does not shift the January a second appears. */
-.cl-years { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; padding: 0 52px 32px; border-bottom: 1px solid var(--border); }
+.cl-years { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; padding: 0 52px; }
 .cl-year { font-size: 13px; font-weight: 500; color: var(--navy-3); text-decoration: none; padding: 7px 16px; border: 1px solid var(--border); border-radius: var(--pill); background: var(--white); transition: border-color .15s, color .15s, background .15s; }
 .cl-year:hover { border-color: var(--navy); color: var(--navy); }
 .cl-year[aria-current="page"] { background: var(--navy); border-color: var(--navy); color: #fff; }
 .cl-year-feed { color: var(--orange); }
 .cl-year-feed:hover { border-color: var(--orange); color: var(--orange); }
 
-.cl-wrap { max-width: 940px; margin: 0 auto; padding: 0 52px 96px; }
+.cl-source { max-width: 620px; margin: 20px auto 0; text-align: center; font-size: 13px; font-weight: 300; color: var(--navy-3); line-height: 1.7; }
+.cl-source a { color: var(--orange); text-decoration: none; border-bottom: 1px solid rgba(255, 92, 0, .3); }
+.cl-source a:hover { border-bottom-color: var(--orange); }
+
+.cl-wrap { max-width: 940px; margin: 32px auto 0; padding: 0 52px 96px; border-top: 1px solid var(--border); }
 
 .cl-release { display: grid; grid-template-columns: 190px 1fr; gap: 48px; padding: 56px 0; border-bottom: 1px solid var(--border); }
 .cl-release:last-child { border-bottom: none; }
@@ -829,7 +833,8 @@ a.cl-version:hover { background: rgba(255, 92, 0, .14); }
 
 @media (max-width: 860px) {
   .cl-hero { padding: 96px 24px 32px; }
-  .cl-years { padding: 0 24px 24px; }
+  .cl-years { padding: 0 24px; }
+  .cl-source { padding: 0 24px; margin-top: 16px; }
   .cl-wrap { padding: 0 24px 64px; }
   .cl-release { grid-template-columns: 1fr; gap: 18px; padding: 40px 0; }
   .cl-rail { position: static; display: flex; align-items: center; gap: 12px; }

@@ -220,6 +220,11 @@ Run `/add-changelog-entry`. It reads the git range since the last published
 release, keeps only what a user can see, and updates the entry, the JSON-LD
 `ItemList`, `changelog/feed.xml` and the sitemap `lastmod` together.
 
+`CHANGELOG.md` at the repo root stays the engineering record and the source of
+truth for version numbers; this page is its human rendering. A version badge
+names a *released* version — a bump in `tauri.conf.json` with no tag and no
+GitHub release is not one.
+
 Two things that are easy to get wrong by hand:
 
 - Entries are **written into `changelog/index.html` as HTML**, not rendered from
