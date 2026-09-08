@@ -445,6 +445,19 @@ class JobRun:
     #: The tier that served, or "" when the vendor's own ladder or the engine
     #: floor did.
     tier: str = ""
+    #: The tier the job was assigned before anything was stepped over.
+    tier_requested: str = ""
+    #: ``(tier, reason)`` for every tier stepped over, in the order it happened.
+    #: ``agents/tiers.describe_skip`` turns one into a sentence.
+    tier_skipped: tuple[tuple[str, str], ...] = ()
+    #: Seconds until the requested tier's provider is out of cooldown, when it
+    #: is the thing that stepped the run down. A duration, not a timestamp —
+    #: the client anchors it to its own clock, the rule ``MODEL_RETRYING``
+    #: already follows.
+    tier_retry_in: float = 0.0
+    #: Hash of the key this run spends, for ``agents/core/quota.py``. Never the
+    #: key itself: this travels into middleware and into logs.
+    identity: str = ""
 
 
 def resolve_job_run(
@@ -454,6 +467,7 @@ def resolve_job_run(
     user_keys: Mapping[Provider, str] | None = None,
     stored_keys: Mapping[Provider, str] | None = None,
     tier_map: Mapping[str, str] | None = None,
+    auto_fallback: bool = True,
     duct_pays: bool = False,
     log_prefix: str = "agent",
 ) -> JobRun:
@@ -472,7 +486,14 @@ def resolve_job_run(
     header keys before saved ones. Only with nothing at all does it raise
     ``ProviderKeyRequired``, the 402 the browser knows how to act on.
     """
-    from agents.tiers import JOB_TIER, PROVIDER_TRIPLES, resolve_tier_model
+    from agents.core import quota
+    from agents.tiers import (
+        JOB_TIER,
+        PROVIDER_TRIPLES,
+        SKIP_COOLED_DOWN,
+        resolve_tier_model,
+        tier_pick,
+    )
     from config import allow_server_provider_keys, get_configs
 
     cfg = get_configs()
@@ -489,12 +510,51 @@ def resolve_job_run(
             if (getattr(cfg, PROVIDER_CONFIG_ATTR.get(p, ""), "") or "").strip()
         }
 
+    # Which of those a provider has already told us are out of quota. Resolved
+    # per provider because the identity *is* the key, and a caller holding an
+    # Anthropic key and an OpenAI one has two of them — a single lookup would
+    # ask the wrong account's question.
+    # ``auto_fallback`` off means the user would rather see the rate limit than
+    # a quieter model. Skipping the lookup, not just the ladder check, is what
+    # makes that literal: with no cooling set the resolution is identical to
+    # the one that shipped before any of this existed.
+    cooling: set[Provider] = set()
+    retry_in: dict[Provider, float] = {}
+    for candidate in reachable if auto_fallback else ():
+        try:
+            key = resolve_provider_key(
+                candidate, user_keys, stored_keys=stored_keys, duct_pays=duct_pays
+            ).key
+        except ProviderKeyRequired:
+            continue
+        left = quota.cooling_seconds(quota.credential_identity(key)).get(candidate)
+        if left is not None:
+            cooling.add(candidate)
+            retry_in[candidate] = left
+
     resolution = resolve_tier_model(
-        job, engine, tier_map=dict(tier_map or {}) or None, reachable=frozenset(reachable)
+        job,
+        engine,
+        tier_map=dict(tier_map or {}) or None,
+        reachable=frozenset(reachable),
+        cooling=frozenset(cooling),
     )
+    skipped: tuple[tuple[str, str], ...] = ()
+    requested = ""
+    cooled_wait = 0.0
     if resolution is not None:
         provider, model = resolution.provider, resolution.model
         tier = resolution.tier.value if resolution.tier else ""
+        requested = resolution.requested.value
+        skipped = tuple((t.value, reason) for t, reason in resolution.skipped)
+        # The wait the user is actually waiting on is the first tier quota took
+        # away — the one they picked, not whichever later rung also happened to
+        # be cooled.
+        for stepped, reason in resolution.skipped:
+            if reason == SKIP_COOLED_DOWN:
+                _, cooled = tier_pick(stepped, dict(tier_map or {}))
+                cooled_wait = retry_in.get(cooled, 0.0)
+                break
         # The operator's GENERATE_MODEL still applies to the operator's own
         # provider when the caller sent no map of their own — the same
         # precedence ``resolve_run_model`` gives it.
@@ -512,8 +572,19 @@ def resolve_job_run(
         picked = PROVIDER_TRIPLES.get(provider, {}).get(wanted) if wanted else None
         model = resolve_engine_model(engine, provider, picked.value if picked else None)
         tier = wanted.value if (picked and wanted) else ""
+        requested = wanted.value if wanted else ""
 
     resolved = resolve_provider_key(provider, user_keys, stored_keys=stored_keys, duct_pays=duct_pays)
     if resolved.billed_to_duct:
         logger.info("%s: run billed to Duct (%s/%s)", log_prefix, provider.value, resolved.source)
-    return JobRun(provider=provider, model=model, api_key=resolved.key, source=resolved.source, tier=tier)
+    return JobRun(
+        provider=provider,
+        model=model,
+        api_key=resolved.key,
+        source=resolved.source,
+        tier=tier,
+        tier_requested=requested,
+        tier_skipped=skipped,
+        tier_retry_in=round(max(0.0, cooled_wait), 1),
+        identity=quota.credential_identity(resolved.key),
+    )

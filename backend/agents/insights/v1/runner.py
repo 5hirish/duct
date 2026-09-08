@@ -70,6 +70,7 @@ from agents.core.lc import (
     stream_agent,
 )
 from agents.core.memory_tools import build_memory_tools_lc
+from agents.core.quota import credential_identity
 from agents.core.session import BaseAgentSession
 from agents.insights.brief import DEFAULT_FORMAT, parse_brief
 from agents.insights.data_tools import build_data_tools_lc
@@ -358,6 +359,11 @@ class AutonomousInsightsRunner:
             limits=LIMITS,
             session=session,
             fallbacks=fallbacks,
+            # Same condition as the fallback chain, for the same reason: a
+            # caller that handed us its own model handed us no credential, so
+            # there is nobody to cool down when the provider says no.
+            identity="" if injected_llm else credential_identity(self._api_key),
+            provider=None if injected_llm else self.provider,
         )
 
     # -----------------------------------------------------------------------

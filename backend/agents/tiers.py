@@ -31,6 +31,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import Any
 
 from agents.engines import (
     ENGINE_DEFAULT_PROVIDER,
@@ -148,6 +149,10 @@ DEFAULT_TIER_MODELS: dict[Tier, ModelName] = PROVIDER_TRIPLES[DEFAULT_PROVIDER]
 # preview a user reads and the reason a run logs are the same string.
 SKIP_NO_CREDENTIAL = "no_credential"
 SKIP_ENGINE = "engine_unsupported"
+# Reachable, and out of quota right now. Kept distinct from SKIP_NO_CREDENTIAL
+# because "you have no key for this" and "your key is out of quota for the next
+# few minutes" are different sentences, and the user gets shown the difference.
+SKIP_COOLED_DOWN = "quota_exhausted"
 
 
 @dataclass(frozen=True)
@@ -181,12 +186,34 @@ def tier_chain(start: Tier) -> tuple[Tier, ...]:
     return TIER_ORDER[index:]
 
 
+def tier_pick(tier: Tier, tier_map: dict[str, str] | None = None) -> tuple[str, Provider]:
+    """The model and provider a tier resolves to, before anything is skipped.
+
+    Shared with ``engines.resolve_job_run``, which needs to know *whose* quota
+    stepped a tier over. Two copies of the fallback rule below would drift, and
+    the drift would be silent — a wrong provider here names the wrong vendor in
+    a message the user is meant to act on.
+    """
+    raw = str((tier_map or {}).get(tier.value) or "").strip()
+    # An unusable pick degrades to the tier's default rather than skipping the
+    # tier — the user asked for this rung, only the model was wrong.
+    candidate = raw or DEFAULT_TIER_MODELS[tier].value
+    provider = provider_of(candidate)
+    if provider is None:
+        return (
+            DEFAULT_TIER_MODELS[tier].value,
+            provider_of(DEFAULT_TIER_MODELS[tier].value) or Provider.ANTHROPIC,
+        )
+    return candidate, provider
+
+
 def resolve_tier_model(
     job: Job,
     engine: Engine,
     *,
     tier_map: dict[str, str] | None = None,
     reachable: frozenset[Provider] = frozenset(),
+    cooling: frozenset[Provider] = frozenset(),
     override_tier: Tier | None = None,
 ) -> TierResolution | None:
     """The model for ``job``, walking down from its tier until one can run.
@@ -198,6 +225,13 @@ def resolve_tier_model(
     and a module that reaches for globals races across concurrent callers
     carrying different bring-your-own keys (the rule
     ``models.get_api_key_kwargs`` already states).
+
+    ``cooling`` is the subset of ``reachable`` whose provider told us, minutes
+    ago, that this caller's account is out of quota (``agents/core/quota.py``).
+    It is a separate set rather than a subtraction from ``reachable`` so the
+    skip reason stays honest — and the engine floor below deliberately ignores
+    it: when every tier is cooled, a 429 the user can retry beats a 402 they
+    cannot act on. The floor is the floor.
 
     ``override_tier`` is the composer's per-run lift: it moves the starting
     rung, so a run "at Heavy" still descends normally if Heavy cannot run.
@@ -212,20 +246,16 @@ def resolve_tier_model(
     skipped: list[tuple[Tier, str]] = []
 
     for tier in tier_chain(start):
-        raw = str(picks.get(tier.value) or "").strip()
-        # An unusable pick degrades to the tier's default rather than skipping
-        # the tier — the user asked for this rung, only the model was wrong.
-        candidate = raw or DEFAULT_TIER_MODELS[tier].value
-        provider = provider_of(candidate)
-        if provider is None:
-            provider = provider_of(DEFAULT_TIER_MODELS[tier].value) or Provider.ANTHROPIC
-            candidate = DEFAULT_TIER_MODELS[tier].value
+        candidate, provider = tier_pick(tier, picks)
 
         if provider not in supported:
             skipped.append((tier, SKIP_ENGINE))
             continue
         if provider not in reachable:
             skipped.append((tier, SKIP_NO_CREDENTIAL))
+            continue
+        if provider in cooling:
+            skipped.append((tier, SKIP_COOLED_DOWN))
             continue
 
         # engines.py has the final word on whether this engine may serve this
@@ -261,10 +291,40 @@ def resolve_tier_model(
     return None
 
 
+def tier_fields(run: Any) -> dict[str, Any]:
+    """The tier provenance for a run-start event, or nothing at all.
+
+    Nothing at all is the point. When no tier was stepped over there is no chip
+    to render and no fact to carry, and transparency that speaks when nothing
+    happened is the noise that teaches people to ignore it. So the happy path
+    emits exactly the payload it emitted before this existed.
+
+    Takes anything carrying the four fields — ``engines.JobRun`` and
+    ``insights.setup.InsightsRun`` both do — because the alternative is each
+    route assembling the same dict slightly differently.
+    """
+    skipped = tuple(getattr(run, "tier_skipped", ()) or ())
+    if not skipped:
+        return {}
+    return {
+        "tier": getattr(run, "tier", "") or "",
+        "tier_requested": getattr(run, "tier_requested", "") or "",
+        "tier_skipped": [
+            {"tier": tier, "reason": reason, "detail": describe_skip(Tier(tier), reason)}
+            for tier, reason in skipped
+        ],
+        # Seconds, not a timestamp — the client anchors it to its own clock, the
+        # rule MODEL_RETRYING's `retry_in` already follows.
+        "tier_retry_in": round(float(getattr(run, "tier_retry_in", 0.0) or 0.0), 1),
+    }
+
+
 def describe_skip(tier: Tier, reason: str) -> str:
     """One sentence for a skipped tier, for logs and for the settings page."""
     if reason == SKIP_NO_CREDENTIAL:
         return f"{tier.value} has no API key for its provider"
     if reason == SKIP_ENGINE:
         return f"{tier.value}'s provider is not supported by this engine"
+    if reason == SKIP_COOLED_DOWN:
+        return f"{tier.value}'s provider is out of quota right now"
     return f"{tier.value} was unavailable"

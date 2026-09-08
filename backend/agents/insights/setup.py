@@ -21,7 +21,8 @@ from typing import Any, Callable
 from uuid import UUID
 
 from agents.core.events import AgentEvent
-from agents.engines import resolve_run_model
+from agents.engines import resolve_job_run, resolve_run_model
+from agents.tiers import Job
 from agents.models import ModelName, Provider
 from agents.registry import AgentType
 from db.session import get_session as db_session
@@ -29,6 +30,7 @@ from models.execution import AUTONOMY_ASK, normalize_autonomy
 from models.project import Project
 from service.execution.policy import effective_autonomy
 from service.membership import member_role
+from service.model_settings import get_model_settings
 from service.memory import build_memory_context, seed_user_preferences, touch_recall
 from service.provider_keys import stored_keys_for
 
@@ -57,6 +59,15 @@ class InsightsRun:
     # `auto` project at `assisted`. See service/execution/policy.py.
     autonomy: str
 
+    # The rung this run landed on, what it asked for, and what it stepped over
+    # on the way. Carried so both entry points can put it on PIPELINE_STARTED
+    # without resolving anything twice. Defaulted, so a caller that builds an
+    # InsightsRun by hand (the tests do) is unaffected.
+    tier: str = ""
+    tier_requested: str = ""
+    tier_skipped: tuple[tuple[str, str], ...] = ()
+    tier_retry_in: float = 0.0
+
 
 def resolve_model(
     engine_override: str = "",
@@ -84,9 +95,27 @@ def resolve_run(
     """Model + membership-checked project scope + the autonomy the run gets."""
     # The unattended brief has no headers at all, so without this it would be
     # the one insights path still reaching for the server key.
-    provider, model, api_key, summary_key = resolve_model(
-        engine_override, user_keys, stored_keys_for(user_id)
+    stored = stored_keys_for(user_id)
+    # The user's saved map, not a request field: this function serves both
+    # insights doors, and the scheduled brief behind one of them has no browser
+    # to send anything. Reading it here is what makes the tier map mean the
+    # same thing on the run nobody is watching.
+    settings = get_model_settings(user_id)
+    # ProviderKeyRequired propagates deliberately — see resolve_job_run: "you
+    # have not connected a key" is a 402 the browser can act on, not a 500.
+    job = resolve_job_run(
+        Job.ANALYSIS,
+        engine_override=engine_override or settings.engine,
+        user_keys=user_keys,
+        stored_keys=stored,
+        tier_map=settings.tiers,
+        auto_fallback=settings.auto_fallback,
+        log_prefix="insights",
     )
+    provider, model, api_key = job.provider, job.model, job.api_key
+    # Only an Anthropic key drives the artifact summariser; on any other
+    # provider a brief persists without a digest rather than with a broken one.
+    summary_key = api_key if provider is Provider.ANTHROPIC else ""
 
     scoped: UUID | None = None
     configured = AUTONOMY_ASK
@@ -115,6 +144,10 @@ def resolve_run(
         project_id=scoped,
         configured_autonomy=configured,
         autonomy=effective_autonomy(configured, getattr(model, "value", str(model))),
+        tier=job.tier,
+        tier_requested=job.tier_requested,
+        tier_skipped=job.tier_skipped,
+        tier_retry_in=job.tier_retry_in,
     )
 
 

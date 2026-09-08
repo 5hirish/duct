@@ -34,6 +34,7 @@ import {
 import ChatGPTCard from "@/components/connections/ChatGPTCard";
 import ProviderCard from "@/components/connections/ProviderCard";
 import ContextCompressionCard from "@/components/ContextCompressionCard.jsx";
+import AutoFallbackCard from "@/components/AutoFallbackCard";
 import TelemetryCard from "@/components/TelemetryCard.jsx";
 import { LOGOS } from "@/components/connections/logos";
 import { PROVIDERS } from "@/lib/providerKeys";
@@ -52,6 +53,7 @@ import {
   saveModelMap,
   tierPicks,
 } from "@/lib/modelTiers";
+import { fetchModelSettings, saveModelSettings } from "@/lib/modelSettings";
 import { DEFAULT_ENGINE } from "@/lib/engines";
 
 // ---------------------------------------------------------------------------
@@ -350,6 +352,18 @@ export default function ModelSettingsPage() {
   // First paint: everything the page renders is server-owned except the map.
   useEffect(() => {
     setMap(loadModelMap());
+    // The server's copy is the one every run reads — including the scheduled
+    // brief, which has no browser. localStorage paints first so the page is
+    // never blank; this corrects it a moment later, and a stale tab loses.
+    fetchModelSettings().then((settings) => {
+      if (Object.keys(settings.tiers || {}).length) {
+        setMap((current) => {
+          const next = { ...current, tiers: settings.tiers };
+          saveModelMap(next);
+          return next;
+        });
+      }
+    });
     fetchModelCatalogue().then(setCatalogue);
     fetchProviderStatus().then((status) => {
       setProviders(status.providers);
@@ -410,6 +424,10 @@ export default function ModelSettingsPage() {
     (next, message) => {
       setMap(next);
       saveModelMap(next);
+      // Written to both: localStorage so this tab and the composer see it at
+      // once, the server so every run does — including the ones with nobody
+      // watching. Fire-and-forget; the local copy is what this page renders.
+      saveModelSettings({ tiers: tierPicks(next) });
       flash(message);
     },
     [flash]
@@ -536,6 +554,12 @@ export default function ModelSettingsPage() {
             Each tier falls through to the next when its model has no key, and to the
             engine&rsquo;s own default when none of them can run.
           </p>
+
+          {/* Sits directly under the ladder because it is a question about the
+              ladder: the fallback order is the three models above, in the order
+              they are already in. Asking for a second order here is what would
+              have made this page a maze. */}
+          <AutoFallbackCard ladder={TIERS.map((tier) => tier.label)} />
 
           <div className="mt-actions">
             <span className="mt-actions-label">

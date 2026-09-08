@@ -305,6 +305,7 @@ async def generate_insight(
     from agents.insights.v1.runner import AutonomousInsightsRunner
     from agents.core.context import format_business_context
     from agents.registry import AgentType
+    from agents.tiers import tier_fields
     from service.artifact_store import ArtifactPersister
 
     try:
@@ -390,6 +391,10 @@ async def generate_insight(
         "artifact_id": str(persister.last_artifact_id) if persister and persister.last_artifact_id else "",
         "project_id": str(run.project_id) if run.project_id else "",
         "autonomy": run.autonomy,
+        # Which rung actually wrote it. The scheduled brief is exactly the run
+        # whose owner is not watching, so "why is this week's thinner?" has to
+        # be answerable from the response weeks later. Absent on the happy path.
+        **tier_fields(run),
         "generated_at": now_iso(),
         **brief,
     }

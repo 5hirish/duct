@@ -272,6 +272,7 @@ export default function AuditWorkspace({
           errorCode={agent.errorCode}
           errorRetryable={agent.errorRetryable}
           retrying={agent.retrying}
+          tierStepDown={agent.tierStepDown}
           usage={agent.usage}
           compacting={agent.compacting}
           draft={agent.draft}
@@ -332,6 +333,7 @@ export default function AuditWorkspace({
           errorCode={agent.errorCode}
           errorRetryable={agent.errorRetryable}
           retrying={agent.retrying}
+          tierStepDown={agent.tierStepDown}
           usage={agent.usage}
           compacting={agent.compacting}
           draft={agent.draft}

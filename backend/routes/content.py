@@ -66,15 +66,17 @@ from agents.content.v1.runner import (
 )
 from agents.core.errors import error_payload
 from agents.engines import (
+    JobRun,
     ProviderKeyRequired,
-    RunModel,
     resolve_image_run,
-    resolve_run_model,
+    resolve_job_run,
 )
 from agents.models import Provider
+from agents.tiers import Job
 from agents.content.channels import Platform
 from config import get_configs
 from db.session import get_session as db_session
+from service.model_settings import get_model_settings
 from models.content import (
     ContentAsset,
     ContentAvatar,
@@ -148,15 +150,22 @@ async def _prune_stale_sessions() -> None:
 
 def _resolve_run_model(
     session_id: str = "", user_keys: dict | None = None, owner_id=None
-) -> RunModel:
+) -> JobRun:
     """Which model a content run drives, on whose key.
 
-    The same resolver every V1 runner uses (``agents.engines.resolve_run_model``):
-    engine default → provider → model, with a lone bring-your-own key choosing
-    its own provider, and the key through the same gate as the rest — the
-    caller's header key, then their saved key, then the env key only where that
-    env file is their own. Content used to read the server key unconditionally,
-    which on the hosted deployment meant Duct paid for every plan and draft.
+    The tier ladder decides it (``agents.engines.resolve_job_run``), from the
+    user's saved map: drafting is a Standard job, so a content run lands on the
+    Standard model they picked and steps down to Light when that provider has
+    no key or is out of quota. The key goes through the same gate as the rest —
+    the caller's header key, then their saved key, then the env key only where
+    that env file is their own. Content used to read the server key
+    unconditionally, which on the hosted deployment meant Duct paid for every
+    plan and draft.
+
+    Before this it resolved through ``resolve_run_model``, which knows nothing
+    about tiers — so a user who set three models watched Content Studio ignore
+    all three. A tier map that governs one agent out of three is worse than no
+    tier map, because it is a control that appears to work.
 
     ``session_id`` is how a background worker finds the owner: the request that
     created the session is long gone by the time the worker runs.
@@ -168,8 +177,15 @@ def _resolve_run_model(
     """
     if owner_id is None:
         owner_id = _session_owner(session_id)
-    run = resolve_run_model(
-        user_keys=user_keys, stored_keys=stored_keys_for(owner_id), log_prefix="content"
+    settings = get_model_settings(owner_id)
+    run = resolve_job_run(
+        Job.DRAFTING,
+        engine_override=settings.engine,
+        user_keys=user_keys,
+        stored_keys=stored_keys_for(owner_id),
+        tier_map=settings.tiers,
+        auto_fallback=settings.auto_fallback,
+        log_prefix="content",
     )
     if not run.api_key:
         raise ProviderKeyRequired(

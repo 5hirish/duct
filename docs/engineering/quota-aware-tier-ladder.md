@@ -1,6 +1,28 @@
 # Quota-aware tier ladder
 
-*Status: spec, not built. Sept 2026.*
+*Status: built, Sept 2026. This file is now a record of why, not a plan.*
+
+Shipped as specified, with four departures worth naming:
+
+* **The tier map moved to the server** (`models/settings.py`,
+  `service/model_settings.py`). It lived in `localStorage` and rode on each
+  request, so the scheduled brief — the run this whole design exists to
+  rescue — could not read the preference its owner had set. Nothing else here
+  works without that.
+* **A user-facing switch**, `auto_fallback`, defaulting on. Stepping down is a
+  choice about someone's own bill, so it is theirs to decline; off resolves
+  exactly as the code did before any of this existed.
+* **The model is not recorded** with a cooldown. `ModelFallbackMiddleware` sits
+  outside the retry middleware, so the model being served when a limit turns
+  final is not always the one the middleware was built for. The provider is
+  right for every model in the chain; the model is not, and a wrong diagnostic
+  is worse than none.
+* **`tier_pick` was extracted** in `agents/tiers.py`, because the resolver has
+  to know *whose* quota stepped a tier over and a second copy of the fallback
+  rule would drift silently.
+
+The open question below — three mechanisms interleaving on one 429 — is still
+open. Nobody has watched it end to end against a real rate-limited key.
 
 Make provider exhaustion a routing input instead of a terminal error, so a run
 that could have finished on the user's Standard model stops failing on their

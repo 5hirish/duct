@@ -365,6 +365,18 @@
   max-width: var(--measure);
 }
 
+/* A preference that did not save. Not an error state — the switch still works
+   for this browser — but the user has to know it will not follow them to the
+   scheduled brief, which is the run this setting exists for.
+
+   Weight rather than colour: `--warning-foreground` is the token for text ON a
+   warning fill, and using it as body text on the card ground is the contrast
+   defect DESIGN.md's "Known gaps" already records. */
+.mt-warn {
+  color: var(--foreground);
+  font-weight: 500;
+}
+
 /* ── Actions row ───────────────────────────────────────── */
 
 .mt-actions {

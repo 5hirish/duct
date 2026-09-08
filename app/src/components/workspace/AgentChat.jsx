@@ -24,7 +24,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Brain } from "lucide-react";
+import { ArrowDownRight, Brain } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { Lightbox } from "@/components/ui/lightbox";
 import ChangeSetCard from "@/components/execution/ChangeSetCard";
@@ -34,6 +34,7 @@ import { ErrorAction, Row, errorAction } from "../../lib/agentSession";
 import { AssistantMarkdown, ThinkingMarkdown } from "./ChatMarkdown";
 import ChatInput from "./ChatInput";
 import ContextRing from "./ContextRing";
+import { TIERS } from "@/lib/modelTiers";
 import { MemoryNote, MemoryRecall, RememberThis } from "./MemoryRows";
 import PauseCard from "./PauseCard";
 import StepProgress from "./StepProgress";
@@ -303,6 +304,18 @@ const PHASE_STATUS = {
 // The pane
 // ---------------------------------------------------------------------------
 
+/**
+ * "Standard", not "standard" — and never a model id.
+ *
+ * The chip is about which of the user's own three choices ran, so it uses the
+ * word the settings page uses. `modelTiers.TIERS` is that one source; an
+ * unrecognised key falls back to itself rather than to a wrong label, because
+ * a chip that confidently names the wrong tier is worse than a scruffy one.
+ */
+function tierLabel(key) {
+  return TIERS.find((tier) => tier.key === key)?.label || key || "a fallback model";
+}
+
 export default function AgentChat({
   title = "Agent Chat",
   phase,
@@ -316,6 +329,11 @@ export default function AgentChat({
   errorRetryable = true,
   // A model call being waited out: { attempt, max }. Shown in the status row.
   retrying = null,
+  // The run is not on the tier its owner picked, because that tier's provider
+  // is out of quota: { ran, requested, detail, until }. A persistent chip, not
+  // part of `activity` — a step-down is true for the whole run and for what it
+  // produced, so it must not flicker away on the next token the way a retry does.
+  tierStepDown = null,
   draft = null,
   // Tokens (lib/agentSession.js `usage`): the ring in the header, the figures
   // in its tooltip. Null until the first model call has been billed.
@@ -398,6 +416,11 @@ export default function AgentChat({
   // needs no timer of its own. `until` is on this client's clock (the reducer
   // anchors the backend's duration at receipt), so skew cannot show "in -3s".
   const retryIn = retrying?.until ? Math.max(0, Math.ceil((retrying.until - Date.now()) / 1000)) : 0;
+  // Same anchoring as `retryIn`: the reducer put the backend's duration on this
+  // client's clock, so this is a countdown the user's own machine agrees with.
+  const stepDownIn = tierStepDown?.until
+    ? Math.max(0, Math.ceil((tierStepDown.until - Date.now()) / 1000))
+    : 0;
   const activity = retrying
     ? `Reconnecting to the model (${retrying.attempt}/${retrying.max})${retryIn > 0 ? ` · retry in ${retryIn}s` : ""}`
     : compacting
@@ -446,6 +469,19 @@ export default function AgentChat({
         </span>
         <span className="ml-auto flex items-center gap-2">
           {headerExtra}
+          {tierStepDown && (
+            <span
+              className="inline-flex items-center gap-1 text-xs text-muted-foreground"
+              title={
+                tierStepDown.detail
+                  + (stepDownIn > 0 ? ` — back in about ${Math.ceil(stepDownIn / 60)} min` : "")
+                  + ". Set which model runs each job in Settings → Models."
+              }
+            >
+              <ArrowDownRight size={12} aria-hidden="true" />
+              {tierLabel(tierStepDown.ran)} · {tierLabel(tierStepDown.requested)} is rate limited
+            </span>
+          )}
           {usage?.last && <ContextRing used={contextUsed} details={usage} />}
           {!remembering && (
             <span

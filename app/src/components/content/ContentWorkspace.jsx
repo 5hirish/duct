@@ -205,6 +205,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
           errorCode={agent.errorCode}
           errorRetryable={agent.errorRetryable}
           retrying={agent.retrying}
+          tierStepDown={agent.tierStepDown}
           usage={agent.usage}
           compacting={agent.compacting}
           draft={agent.draft}

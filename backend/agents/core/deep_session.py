@@ -191,6 +191,8 @@ def build_deep_session_agent(
     fallbacks: list[Any] | None = None,
     checkpointer: Any = None,
     prune_seen_images: bool = False,
+    identity: str = "",
+    provider: Provider | None = None,
 ) -> Any:
     """One deep agent, assembled the way every Duct session needs it.
 
@@ -200,6 +202,12 @@ def build_deep_session_agent(
     real provider calls out of a fake-model test. ``prune_seen_images`` is
     for a runner whose tools hand the model pictures: the bytes leave the
     durable thread after the model call that looked at them.
+
+    ``identity`` and ``provider`` are how a final rate limit gets recorded
+    against the credential that hit it (``agents/core/quota.py``), so the next
+    run resolves to a tier that can actually serve. A runner that injected its
+    own model passes neither: there is no credential of ours to attribute the
+    limit to.
     """
     # One backend for the whole agent. `create_deep_agent` defaults to its
     # own StateBackend when none is passed, which left the first runner with
@@ -252,7 +260,7 @@ def build_deep_session_agent(
             # Innermost, so each model in the chain gets its retries before
             # the fallback moves on, and a transient 429 on the primary never
             # costs a downgrade. Reports every attempt to the UI.
-            ReportedRetryMiddleware(),
+            ReportedRetryMiddleware(identity=identity, provider=provider),
             # A message typed mid-turn reaches the model at its next call.
             *([SteerMiddleware(session)] if session is not None else []),
         ],

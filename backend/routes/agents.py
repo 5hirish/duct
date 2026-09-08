@@ -87,7 +87,8 @@ from service.memory import (
 )
 from service.memory_consolidation import schedule_consolidation
 from agents.engines import resolve_job_run
-from agents.tiers import Job
+from agents.tiers import Job, tier_fields
+from service.model_settings import get_model_settings
 from service.provider_keys import stored_keys_for
 from utils.dates import now_iso
 
@@ -1202,12 +1203,18 @@ async def _start_seo_audit(
     # The lead-magnet teaser is demand gen — Duct funds it deliberately, and
     # this is the only place in the audit path that may say so. Everything else
     # fails closed on the hosted deployment without a key of the caller's own.
+    settings = get_model_settings(owner_id)
     run = resolve_job_run(
         Job.AUDIT,
-        engine_override=req.engine,
+        engine_override=req.engine or settings.engine,
         user_keys=user_keys,
         stored_keys=stored_keys_for(owner_id),
-        tier_map=req.tiers,
+        # The request field wins where it is set, because the lead-magnet and
+        # guest doors have no signed-in user to have saved anything. For
+        # everyone else the saved map is the answer, and it is the same one the
+        # scheduled brief reads.
+        tier_map=req.tiers or settings.tiers,
+        auto_fallback=settings.auto_fallback,
         duct_pays=req.lead_magnet,
         log_prefix="audit",
     )
@@ -1585,6 +1592,12 @@ async def _start_insights(
                 "status": StepStatus.RUNNING,
                 "autonomy": run.autonomy,
                 "autonomy_configured": run.configured_autonomy,
+                # A tier step-down is the same shape of fact and gets the same
+                # treatment. It is true for the whole run and for the artifact
+                # the run produced, so it cannot be a transient toast — and the
+                # scheduled brief has no browser at all, so it has to be in the
+                # transcript to be readable tomorrow.
+                **tier_fields(run),
             })
             # run_session emits PIPELINE_FINISHED itself once the opening turn
             # lands, then stays open for follow-ups — so the route must not
