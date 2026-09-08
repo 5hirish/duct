@@ -49,6 +49,7 @@ import {
   openAgentStream,
   sendAgentMessage,
 } from "../lib/api";
+import { trackEvent, AnalyticsEvent } from "../lib/analytics";
 import { AgentEvent } from "../lib/agentEvents";
 import { mapEventsToMessages } from "../lib/agentHistory";
 import { Phase } from "../lib/agentPhase";
@@ -110,6 +111,44 @@ export function useAgentSession({
   // Latest props/state for callbacks created once per effect.
   const onEventRef = useRef(onEvent);
   onEventRef.current = onEvent;
+
+  // Artifacts announce themselves twice on the versioned agents — a
+  // `artifact_version` while it streams and an `artifact_updated` when the card
+  // lands — and a resumed session replays both. Activation is "the product made
+  // something", once, so identity is remembered for the life of the hook.
+  const countedArtifacts = useRef(new Set());
+
+  const trackArtifact = useCallback(
+    (event) => {
+      let identity = "";
+      let agent = agentType || "";
+      let kind = "";
+
+      if (event.event === AgentEvent.ARTIFACT_UPDATED) {
+        // Carries the row itself, so it can say which agent and what kind
+        // without being told.
+        const artifact = event.artifact || {};
+        identity = artifact.group_id || artifact.id || artifact.slug || "";
+        agent = artifact.agent_type || agent;
+        kind = artifact.kind || "";
+      } else if (event.event === AgentEvent.ARTIFACT_VERSION) {
+        // The versioned agents (audit, insights) announce a version instead,
+        // and its shape is nothing like the other: `version_id` and `payload`,
+        // no artifact row. Keying on `artifact` here counted none of them —
+        // which would have been the two agents that matter most.
+        if (event.replay) return; // a resumed session re-emitting what it stored
+        if (!event.version_id) return;
+        identity = `version:${event.version_id}`;
+      } else {
+        return;
+      }
+
+      if (!identity || countedArtifacts.current.has(identity)) return;
+      countedArtifacts.current.add(identity);
+      trackEvent(AnalyticsEvent.ArtifactGenerated, { agent, kind });
+    },
+    [agentType],
+  );
   const stateRef = useRef(state);
   stateRef.current = state;
   const bodyRef = useRef(body);
@@ -161,6 +200,7 @@ export function useAgentSession({
       // `at` is this client's clock at receipt: a retry countdown is anchored
       // to it, never to the server's clock.
       dispatch({ type: Action.EVENT, event, at: Date.now() });
+      trackArtifact(event);
       onEventRef.current?.(event, { appendMessage, sessionId: sessionIdRef.current, dispatch });
     }
 

@@ -12,6 +12,7 @@
 
 import { BASE } from "./api";
 import { authedHeaders } from "./authFetch";
+import { trackEvent, AnalyticsEvent } from "./analytics";
 import { googleAdsByoCredentials } from "./adsCredentials";
 
 function authHeaders(extra = {}) {
@@ -78,8 +79,13 @@ export async function proposeChangeSet(changeSet) {
   return request("", { method: "POST", body: { ...changeSet, credentials } });
 }
 
-export function approveChangeSet(id, changeIds = null) {
-  return request(`/${id}/approve`, { method: "POST", body: { change_ids: changeIds } });
+export async function approveChangeSet(id, changeIds = null) {
+  const result = await request(`/${id}/approve`, { method: "POST", body: { change_ids: changeIds } });
+  // Here rather than at the two call sites, so approving from the change-set
+  // card and from the execute page are one event — and only after the server
+  // took it, because an approval that failed is not an approval.
+  trackEvent(AnalyticsEvent.ExecutionApproved, { kind: result?.connector_type || "" });
+  return result;
 }
 
 export function rejectChangeSet(id) {

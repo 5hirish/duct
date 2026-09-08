@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { CookieConsent } from "./CookieConsent";
-import { analytics } from "../lib/analytics";
+import { analytics, AnalyticsEvent } from "../lib/analytics";
 import {
   CONSENT_DENIED,
   CONSENT_GRANTED,
@@ -21,6 +21,24 @@ import { isDesktopShell } from "../lib/shell";
  * The provider behind `lib/analytics` decides how, and is the only thing here
  * that names a vendor — swap it, or select `none`, and this file is unchanged.
  */
+const SESSION_OPENED_KEY = "duct_app_opened";
+
+/**
+ * Once per browser session, and only once measurement is actually allowed —
+ * firing it at mount would count sessions we are not permitted to count.
+ */
+function trackAppOpened() {
+  try {
+    if (window.sessionStorage.getItem(SESSION_OPENED_KEY)) return;
+    window.sessionStorage.setItem(SESSION_OPENED_KEY, "1");
+  } catch {
+    // Private mode: better a repeated open than a silent one.
+  }
+  analytics.track(AnalyticsEvent.AppOpened, {
+    shell: isDesktopShell() ? "desktop" : "browser",
+  });
+}
+
 export function ProductAnalytics() {
   const [asking, setAsking] = useState(false);
 
@@ -29,6 +47,7 @@ export function ProductAnalytics() {
     analytics.setConsent(true);
     setAsking(false);
     analytics.start();
+    trackAppOpened();
   }, []);
 
   const decline = useCallback(() => {
@@ -63,10 +82,10 @@ export function ProductAnalytics() {
       getTelemetrySettings().then((settings) => {
         if (cancelled || !settings.enabled) return;
         analytics.setDefaults({ cookieless: true });
-        // So the desktop is distinguishable from a browser tab, which it never
-        // was: same URL, same container.
-        analytics.track("duct_shell_ready", { duct_shell: "desktop" });
         analytics.start({ deferred: true });
+        // Carries shell: "desktop", which is what finally distinguishes an
+        // install from a browser tab — they share a URL and a container.
+        trackAppOpened();
       });
       return () => {
         cancelled = true;
@@ -79,6 +98,7 @@ export function ProductAnalytics() {
     if (choice === CONSENT_GRANTED) {
       analytics.setConsent(true);
       analytics.start({ deferred: true });
+      trackAppOpened();
       return undefined;
     }
     if (choice === CONSENT_DENIED) return undefined;
@@ -95,6 +115,7 @@ export function ProductAnalytics() {
       // nobody made should not follow them to a country that would have asked.
       analytics.setConsent(true);
       analytics.start({ deferred: true });
+      trackAppOpened();
     });
 
     return () => {

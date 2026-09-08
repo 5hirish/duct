@@ -8,7 +8,6 @@ import {
   ExecutionClosingLine,
   ExecutionRequestModal,
 } from './ExecutionOffer';
-import { trackEvent } from '../../lib/analytics';
 import { capitalize } from "@/lib/format";
 
 // ---------------------------------------------------------------------------
@@ -786,7 +785,6 @@ export default function AuditReportV1({ data, leadToken = null, email = null }) 
   );
   const [execOpen, setExecOpen] = React.useState(false);
   const openExec = React.useCallback((source) => {
-    trackEvent('execution_modal_opened', { source });
     setExecOpen(true);
   }, []);
 

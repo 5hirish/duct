@@ -18,16 +18,26 @@ def upsert_google_user(
     name: str,
     picture: str,
     raw_profile: dict,
-) -> None:
-    """Upsert user + Google identity. No-op when DB is unconfigured."""
+) -> bool:
+    """Upsert user + Google identity. No-op when DB is unconfigured.
+
+    Returns True when this call created the user row — the one moment a sign-in
+    is a sign-up. Nothing downstream can work that out later: the JWT is issued
+    on every sign-in and lives for a week, so `created_at` on a row read at
+    render time would report a signup every day for seven days.
+
+    False when the database is unconfigured. We do not know, and a metric that
+    invents activations is worse than one that misses them.
+    """
     engine = get_engine()
     if engine is None:
-        return
+        return False
     normalized_email = email.strip().lower()
 
     now = utcnow()
     with Session(engine) as session:
         user = session.execute(select(User).where(User.email == normalized_email)).scalars().first()
+        created = user is None
         if user is None:
             user = User(
                 email=normalized_email,
@@ -69,4 +79,6 @@ def upsert_google_user(
             identity.updated_at = now
         session.add(identity)
         session.commit()
+
+    return created
 

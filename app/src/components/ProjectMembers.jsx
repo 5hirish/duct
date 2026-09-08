@@ -23,6 +23,7 @@ import {
   resendInvitation,
   revokeInvitation,
 } from "@/lib/membersApi";
+import { trackEvent, AnalyticsEvent } from "@/lib/analytics";
 
 function Avatar({ member }) {
   const label = member.full_name || member.email;
@@ -92,6 +93,9 @@ export default function ProjectMembers({ projectId, onLeft }) {
     setNotice("");
     try {
       await inviteMember(projectId, address);
+      // After the await: an invite that failed is not an invite. No email or
+      // address in the params — who was invited is not ours to send to GA4.
+      trackEvent(AnalyticsEvent.TeamMemberInvited);
       setEmail("");
       setNotice(`Invitation sent to ${address.toLowerCase()}.`);
       await load();

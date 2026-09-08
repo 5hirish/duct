@@ -21,7 +21,14 @@ import {
   unbindProjectConnector,
 } from "../../../lib/connectorsApi";
 import { CONNECTOR_TOKEN_KEYS, exchangeConnectorCode } from "../../../lib/connectorAuth";
+import { trackEvent, AnalyticsEvent } from "../../../lib/analytics";
 import { getActiveProject } from "../../../lib/projects";
+
+/** Storage key back to the connector it belongs to. */
+function connectorTypeForStorageKey(storageKey) {
+  const hit = Object.entries(CONNECTOR_TOKEN_KEYS).find(([, key]) => key === storageKey);
+  return hit ? hit[0] : "";
+}
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -178,6 +185,11 @@ export default function ConnectionsPage() {
     // A signed-out connection never reaches the server, so nothing else would
     // tell the sidebar badge its count changed.
     notifyConnectorsChanged();
+    // Activation. Deliberately here and not inside notifyConnectorsChanged(),
+    // which the four signOut* handlers also call — that would count a
+    // disconnect as an activation. A partial scope grant still counts: the
+    // tool is connected, which is the thing being measured.
+    trackEvent(AnalyticsEvent.ConnectorConnected, { provider: connectorType });
     if (connectorType === "google_ads") setGadsOauthConnected(true);
     if (connectorType === "ga4") setGa4Connected(true);
     if (connectorType === "gsc") setGscConnected(true);
@@ -222,6 +234,9 @@ export default function ConnectionsPage() {
           sessionStorage.setItem(storageKey, decoded);
           if (grantedScopes) sessionStorage.setItem(`${storageKey}_scopes`, grantedScopes);
           notifyConnectorsChanged();
+          trackEvent(AnalyticsEvent.ConnectorConnected, {
+            provider: connectorTypeForStorageKey(storageKey),
+          });
           arrived[storageKey] = decoded;
         }
       }

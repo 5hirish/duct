@@ -30,6 +30,7 @@ import ConnectorDialog from "./ConnectorDialog";
 import ConnectorTile from "./ConnectorTile";
 import StorageBadge from "./StorageBadge";
 import ProjectBinding from "./ProjectBinding";
+import { trackEvent, AnalyticsEvent } from "@/lib/analytics";
 
 export default function ManualConnectorCard({
   type,            // connector id: "apple_ads" | "meta_ads" | ...
@@ -136,6 +137,9 @@ export default function ManualConnectorCard({
     setAccounts(null);
     setPickedAccount("");
     setAdding(false);
+    // After saveServerConnector resolved — a credential the server rejected is
+    // not a connection.
+    trackEvent(AnalyticsEvent.ConnectorConnected, { provider: type });
     await onSaved?.();
   }
 

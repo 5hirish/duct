@@ -75,7 +75,7 @@ def _signin_failure(reason: str, status_code: int, detail: str) -> RedirectRespo
     raise HTTPException(status_code=status_code, detail=detail)
 
 
-def _create_jwt(email: str, name: str, picture: str) -> str:
+def _create_jwt(email: str, name: str, picture: str, *, new_user: bool = False) -> str:
     cfg = get_configs()
     if not cfg.jwt_secret:
         raise ValueError("JWT_SECRET is not configured.")
@@ -84,6 +84,10 @@ def _create_jwt(email: str, name: str, picture: str) -> str:
         "sub": email,
         "name": name,
         "picture": picture,
+        # True only on the sign-in that created the account, so the app can tell
+        # a signup from a login. The claim rides a token that lives for a week,
+        # so the app must fire on receiving it, never on decoding it.
+        "new_user": new_user,
         "iat": int(now.timestamp()),
         "exp": int(now.timestamp()) + JWT_EXPIRY_SECONDS,
     }
@@ -215,7 +219,7 @@ def _signin_google_callback(*, code: str, state: str) -> RedirectResponse:
         )
     normalized_email = email.strip().lower()
 
-    upsert_google_user(
+    new_user = upsert_google_user(
         provider_user_id=provider_user_id,
         email=normalized_email,
         name=name,
@@ -229,7 +233,7 @@ def _signin_google_callback(*, code: str, state: str) -> RedirectResponse:
     )
 
     try:
-        token = _create_jwt(normalized_email, name, picture)
+        token = _create_jwt(normalized_email, name, picture, new_user=new_user)
     except ValueError:
         logger.exception("JWT creation failed")
         return _signin_failure(SIGNIN_ERROR_SERVER, 500, "Authentication error.")

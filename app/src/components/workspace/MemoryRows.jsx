@@ -8,7 +8,6 @@
 import { useState } from "react";
 import { Brain } from "lucide-react";
 import { MEMORY_KIND_ICONS, createMemory, deleteMemory } from "@/lib/memoryApi";
-import { trackEvent } from "../../lib/analytics";
 import { getActiveProject } from "@/lib/projects";
 
 /** Deep link to one entry in the project timeline, which fetches and highlights
@@ -21,7 +20,6 @@ function memoryHref(projectId, memory) {
  * the one honest signal that the attribution loop is worth its cost. The id is
  * the short, non-identifying one; no memory text leaves the page. */
 function trackChip(surface, memory) {
-  trackEvent("memory_chip_opened", { surface, memory_id: memory.id, kind: memory.kind });
 }
 
 /** The quiet "Remembered: …" line under a turn that wrote project memory.

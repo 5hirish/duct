@@ -38,16 +38,11 @@
     flat: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5 12h14"/></svg>'
   };
 
-  /* -- URL / GTM helpers -- */
+  /* -- URL helpers -- */
   function base() { return location.pathname + location.search; }
-  function push(f) {
-    window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push({ event: 'demo_fragment_view', demo_fragment: f, page_location: base() + '#' + f });
-  }
   function frag(f) {
     if (location.hash === '#' + f) { return; }
     history.replaceState(null, '', base() + '#' + f);
-    push(f);
   }
 
   /* -- Report DOM mount / modal helpers -- */
@@ -158,7 +153,7 @@
   /* -- Hash routing -- */
   function onHash() {
     var raw = location.hash.replace(/^#/, '');
-    if (raw === 'demo-report') { gotoStep(4, true); showModal(); push('demo-report'); return; }
+    if (raw === 'demo-report') { gotoStep(4, true); showModal(); return; }
     hideModal();
     var n = parseHash(raw);
     if (n !== null) { gotoStep(n, true); }
@@ -168,7 +163,7 @@
     if (!raw) { return; }
     skip = true;
     try {
-      if (raw === 'demo-report') { gotoStep(4, true); showModal(); push('demo-report'); return; }
+      if (raw === 'demo-report') { gotoStep(4, true); showModal(); return; }
       var n = parseHash(raw);
       if (n !== null) { gotoStep(n, true); }
     } finally { skip = false; }
@@ -495,7 +490,7 @@
   /* -- Modal open / close -- */
   window.openReportModal = function () {
     if (location.hash !== '#demo-report') { location.hash = 'demo-report'; }
-    else { gotoStep(4, true); showModal(); push('demo-report'); }
+    else { gotoStep(4, true); showModal(); }
   };
   window.closeReportModal = function () {
     hideModal();

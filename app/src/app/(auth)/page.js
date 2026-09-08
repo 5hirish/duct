@@ -6,7 +6,8 @@ import { BASE } from "../../lib/api";
 import { isDesktopShell, getShellInfo, openExternal } from "../../lib/shell";
 import { isLocalBackendActive } from "../../lib/localBackend.js";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
-import { authToken, isTokenValid, setAuthToken } from "@/lib/authFetch";
+import { authToken, decodeJwtPayload, isTokenValid, setAuthToken } from "@/lib/authFetch";
+import { trackEvent, AnalyticsEvent } from "@/lib/analytics";
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
 const POST_SIGNIN_REDIRECT_KEY = "duct_post_signin_redirect";
@@ -97,6 +98,12 @@ function SignInContent() {
         .then(({ token }) => {
           if (token) {
             setAuthToken(token);
+            // `new_user` is true only on the sign-in that created the account
+            // (routes/signin.py). Fired here rather than wherever the token is
+            // read, because it is read on every load for a week.
+            if (decodeJwtPayload(token)?.new_user) {
+              trackEvent(AnalyticsEvent.SignUp, { method: "google" });
+            }
             router.replace(consumePostSignInRedirect());
           }
         })
