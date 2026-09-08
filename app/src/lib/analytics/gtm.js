@@ -122,6 +122,36 @@ export const gtm = {
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push({ event, ...params });
   },
+
+  /**
+   * Name the person behind the events, so the same human on the desktop app and
+   * in a browser is one user rather than two — which is the difference between
+   * an activation rate that means something and one that does not.
+   *
+   * `userId` is the account UUID from the JWT's `uid`, never the email: `sub`
+   * is an email address and GA4 must not receive personal data.
+   *
+   * The GA4 configuration tag reads `user_id` off the dataLayer, so this is a
+   * plain variable push rather than an event.
+   */
+  identify(userId, properties = {}) {
+    if (!userId) return;
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ user_id: userId, user_properties: properties });
+  },
+
+  /**
+   * Forget them on sign-out.
+   *
+   * dataLayer variables persist for the life of the page, so without this the
+   * previous user's id rides every hit afterwards — and on a shared machine it
+   * attributes one person's session to another. Undefined rather than deleted,
+   * because a push is the only way to change what is already in there.
+   */
+  reset() {
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ user_id: undefined, user_properties: {} });
+  },
 };
 
 function load() {

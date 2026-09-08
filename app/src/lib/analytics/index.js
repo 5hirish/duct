@@ -14,7 +14,7 @@
  * its behaviour, and a self-host build that sets neither variable measures
  * nothing without having to opt out of anything.
  *
- * Adding a provider is one file exporting the eight members below, plus a line
+ * Adding a provider is one file exporting the ten members below, plus a line
  * in `PROVIDERS`. No other file should need to change.
  */
 

@@ -17,4 +17,6 @@ export const none = {
   start: () => {},
   isRunning: () => false,
   track: () => {},
+  identify: () => {},
+  reset: () => {},
 };

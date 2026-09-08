@@ -7,7 +7,7 @@ import { isDesktopShell, getShellInfo, openExternal } from "../../lib/shell";
 import { isLocalBackendActive } from "../../lib/localBackend.js";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
 import { authToken, decodeJwtPayload, isTokenValid, setAuthToken } from "@/lib/authFetch";
-import { trackEvent, AnalyticsEvent } from "@/lib/analytics";
+import { analytics, trackEvent, AnalyticsEvent } from "@/lib/analytics";
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
 const POST_SIGNIN_REDIRECT_KEY = "duct_post_signin_redirect";
@@ -98,6 +98,7 @@ function SignInContent() {
         .then(({ token }) => {
           if (token) {
             setAuthToken(token);
+            analytics.identify(decodeJwtPayload(token)?.uid);
             // `new_user` is true only on the sign-in that created the account
             // (routes/signin.py). Fired here rather than wherever the token is
             // read, because it is read on every load for a week.

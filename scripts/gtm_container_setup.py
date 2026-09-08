@@ -75,7 +75,19 @@ PARAMS = [
     "utm_campaign",
     "utm_term",
     "utm_content",
+    # Set as a persistent dataLayer variable by lib/analytics on sign-in, not as
+    # an event parameter — the configuration tag below reads it so every hit
+    # carries it. The account UUID, never the email.
+    "user_id",
 ]
+
+# `{{Event}}` on the catch-all tag resolves to the current dataLayer event name
+# only when GTM's built-in Event variable is enabled, and it is NOT on by
+# default in a web container. Miss this and every forwarded event arrives at GA4
+# named after an unresolved template — the tag fires, the data is useless, and
+# nothing anywhere reports an error. Enabled here rather than left as a manual
+# step, which is how it gets forgotten.
+BUILT_IN_VARIABLES = ["event", "pageUrl", "pagePath", "referrer"]
 
 TRIGGER_NAME = "Custom Event - Duct events"
 TAG_NAME = "GA4 Event - Duct events"
@@ -147,6 +159,19 @@ def main() -> int:
     }
     existing_tags = {t["name"] for t in tags_api.list(parent=ws_path).execute().get("tag", [])}
 
+    log("\n-- Built-in variables -----------------------------------------")
+    built_ins_api = gtm.accounts().containers().workspaces().built_in_variables()
+    enabled = {
+        v.get("type")
+        for v in built_ins_api.list(parent=ws_path).execute().get("builtInVariable", [])
+    }
+    missing = [t for t in BUILT_IN_VARIABLES if t not in enabled]
+    if missing:
+        built_ins_api.create(parent=ws_path, type=missing).execute()
+        log("  enabled " + ", ".join(missing))
+    else:
+        log("  skip    all already enabled")
+
     log("\n-- Data layer variables ---------------------------------------")
     for name in PARAMS:
         display = f"DLV - {name}"
@@ -183,7 +208,10 @@ def main() -> int:
                             _param("arg0", "{{_event}}"),
                             # A union, not `.*`: RE2 cannot express "not gtm.*",
                             # and a wildcard would forward GTM's own internals.
-                            _param("arg1", "|".join(EVENTS)),
+                            # Anchored, because GTM's matchRegex is a search
+                            # rather than a full match — unanchored, a later
+                            # `app_opened_v2` would fire the tag as `app_opened`.
+                            _param("arg1", "^(?:" + "|".join(EVENTS) + ")$"),
                         ],
                     }
                 ],
@@ -201,7 +229,26 @@ def main() -> int:
             body={
                 "name": CONFIG_TAG_NAME,
                 "type": "googtag",
-                "parameter": [_param("tagId", GA4_MEASUREMENT_ID)],
+                "parameter": [
+                    _param("tagId", GA4_MEASUREMENT_ID),
+                    # user_id as a configuration parameter, so GA4 stitches the
+                    # desktop app and a browser into one person instead of two.
+                    # Without it every metric per user is inflated on exactly
+                    # the users who use both, which is the ones who stuck.
+                    {
+                        "type": "list",
+                        "key": "configSettingsTable",
+                        "list": [
+                            {
+                                "type": "map",
+                                "map": [
+                                    _param("parameter", "user_id"),
+                                    _param("parameterValue", _dlv_ref("user_id")),
+                                ],
+                            }
+                        ],
+                    },
+                ],
                 "firingTriggerId": ["2147479553"],  # built-in All Pages
             },
         ).execute()

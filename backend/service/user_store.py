@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import NamedTuple
+
 
 from sqlalchemy import select
 from sqlmodel import Session
@@ -11,6 +13,13 @@ from models.auth import AuthIdentity, User
 from utils.dates import utcnow
 
 
+class GoogleUpsert(NamedTuple):
+    """What the caller needs from an upsert: was this a signup, and who is it."""
+
+    created: bool
+    user_id: str
+
+
 def upsert_google_user(
     *,
     provider_user_id: str,
@@ -18,20 +27,24 @@ def upsert_google_user(
     name: str,
     picture: str,
     raw_profile: dict,
-) -> bool:
+) -> GoogleUpsert:
     """Upsert user + Google identity. No-op when DB is unconfigured.
 
-    Returns True when this call created the user row — the one moment a sign-in
-    is a sign-up. Nothing downstream can work that out later: the JWT is issued
-    on every sign-in and lives for a week, so `created_at` on a row read at
-    render time would report a signup every day for seven days.
+    `created` is True only when this call made the row — the one moment a
+    sign-in is a sign-up. Nothing downstream can work that out later: the JWT is
+    issued on every sign-in and lives for a week, so `created_at` read at render
+    time would report a signup every day for seven days.
 
-    False when the database is unconfigured. We do not know, and a metric that
-    invents activations is worse than one that misses them.
+    `user_id` is the row's UUID, which is what analytics identifies people by.
+    Deliberately not the email, even though the JWT's `sub` is: an email is
+    personal data and GA4 forbids receiving it.
+
+    Both are empty when the database is unconfigured. We do not know, and a
+    metric that invents activations is worse than one that misses them.
     """
     engine = get_engine()
     if engine is None:
-        return False
+        return GoogleUpsert(created=False, user_id="")
     normalized_email = email.strip().lower()
 
     now = utcnow()
@@ -78,7 +91,10 @@ def upsert_google_user(
             identity.raw_profile = raw_profile
             identity.updated_at = now
         session.add(identity)
+        # Read inside the session: the instance is expired on commit, and
+        # touching `user.id` afterwards would re-query a closed session.
+        user_id = str(user.id)
         session.commit()
 
-    return created
+    return GoogleUpsert(created=created, user_id=user_id)
 
