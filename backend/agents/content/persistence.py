@@ -297,6 +297,59 @@ class ConversationRecorder:
         self._thinking_buf: list[str] = []
         # Unknown until the first event; the first transition always writes.
         self._status: RunStatus | None = None
+        # Whose bill this run lands on, filled in by the route once the caller
+        # is known. Absent means the run is not attributed and no usage row is
+        # written — there is nobody to attribute it to, and a row with a null
+        # owner cannot be shown to anyone.
+        self._usage_user_id: UUID | None = None
+        self._usage_project_id: UUID | None = None
+        self._usage_agent_type: str = ""
+
+    def set_usage_context(
+        self,
+        *,
+        user_id: UUID | None,
+        project_id: UUID | None = None,
+        agent_type: str = "",
+    ) -> None:
+        """Attribute this conversation's model calls to a user.
+
+        Called from the one place that creates a session for every agent type,
+        so a new agent is covered by existing code rather than by remembering
+        to add a line.
+        """
+        self._usage_user_id = user_id
+        self._usage_project_id = project_id
+        self._usage_agent_type = agent_type
+
+    async def _record_usage(self, body: dict) -> None:
+        """Store one model call's tokens and cost.
+
+        The provider is derived from the model the provider itself named rather
+        than threaded down from the route, and that is deliberate: after a
+        fallback step the model that answered is not the one asked for, and the
+        bill follows what answered.
+
+        Never raises. Losing an accounting row is bad; dropping someone's agent
+        run because the accounting write failed is worse — `wrap_emit` already
+        swallows, and this is the second belt because a usage row is the least
+        important thing in the stream.
+        """
+        if self._usage_user_id is None:
+            return
+        from agents.models import provider_of
+        from service.usage import record_usage_event
+
+        provider = provider_of(str(body.get("model") or ""))
+        await asyncio.to_thread(
+            record_usage_event,
+            body,
+            user_id=self._usage_user_id,
+            project_id=self._usage_project_id,
+            conversation_id=self.conversation_id,
+            agent_type=self._usage_agent_type,
+            provider=getattr(provider, "value", "") if provider else "",
+        )
 
     def wrap_emit(self, emit_fn):
         async def _emit(body: dict) -> None:
@@ -316,6 +369,9 @@ class ConversationRecorder:
         if body.get("replay"):
             return
         event = body.get("event")
+        if event == AgentEvent.TOKEN_USAGE:
+            await self._record_usage(body)
+            return
         if event == AgentEvent.AGENT_MESSAGE_CHUNK:
             self._assistant_buf.append(body.get("text", ""))
         elif event == AgentEvent.THINKING_CHUNK:

@@ -397,6 +397,17 @@ async def create_session(
     # Signed-in creator (optional — API-key-only callers get None). Downstream
     # features (artifact persistence, execution proposals) key off this.
     session.user_id = user.id if user else None
+    # Whose bill this run's model calls land on. Set here rather than at each
+    # agent's start, because this is the one function that builds a session for
+    # every agent type — so a fourth agent is covered without remembering to add
+    # a line, which is the only way "usage across the whole product" survives.
+    _recorder = getattr(session, "recorder", None)
+    if _recorder is not None:
+        _recorder.set_usage_context(
+            user_id=session.user_id,
+            project_id=getattr(session, "artifact_project_id", None) or getattr(session, "project_id", None),
+            agent_type=agent_type,
+        )
 
     async def emit_fn(event_body: dict[str, Any]) -> None:
         event_body["agent_type"] = agent_type

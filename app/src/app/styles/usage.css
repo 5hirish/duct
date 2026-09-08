@@ -1,0 +1,166 @@
+/* Usage — what the runs cost.
+ *
+ * A money page, so the type ladder is deliberately short: one big figure per
+ * stat, one label above it, one hint below. Three sizes total. The bars carry
+ * the proportion so the numbers do not have to be compared by reading them.
+ *
+ * Sizes off the CONTAINER, not the viewport — this renders inside `.app-main`,
+ * which is ~16rem narrower than the window whenever the sidebar is open.
+ */
+
+.usage-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.usage-windows {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* --- the headline figures ------------------------------------------------ */
+
+.usage-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(11rem, 100%), 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.usage-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+}
+
+.usage-stat-label {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+.usage-stat-value {
+  /* The one place on the page that gets a large size. Tabular figures so a
+     changing window does not make the row jitter as digit widths change. */
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+  color: var(--foreground);
+}
+
+.usage-stat-hint {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+/* --- the three breakdowns ------------------------------------------------ */
+
+.usage-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(17rem, 100%), 1fr));
+  gap: 0.75rem;
+}
+
+.usage-panel {
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+}
+
+.usage-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.usage-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.usage-row-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.usage-row-name {
+  /* A model id can be long and must not push the cost off the row. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  color: var(--foreground);
+}
+
+.usage-row-cost {
+  flex-shrink: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--foreground);
+}
+
+.usage-bar {
+  display: block;
+  height: 4px;
+  margin: 0.375rem 0 0.25rem;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--muted-foreground) 18%, transparent);
+  overflow: hidden;
+}
+
+.usage-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--primary);
+  /* A row that rounds to zero should still be visibly present — "almost
+     nothing" and "nothing" are different answers on a spending page. */
+  min-width: 2px;
+}
+
+.usage-row-foot {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- the states that are not a full page -------------------------------- */
+
+.usage-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1.5rem 0;
+}
+
+.usage-foot {
+  margin-top: 1.5rem;
+  font-size: 0.75rem;
+}
+
+.usage-foot a {
+  color: var(--foreground);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

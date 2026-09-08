@@ -9,7 +9,7 @@ from routes import (
     execution,
     generate, health, lead_magnet, memory, project_connectors, project_members, projects,
     providers,
-    reports, signin, user_connectors, user_contexts, user_projects,
+    reports, signin, usage, user_connectors, user_contexts, user_projects,
 )
 from service.auth import get_current_user, validate_api_key
 
@@ -104,6 +104,7 @@ router.include_router(lead_magnet.router, prefix="/api/lead-magnet")
 router.include_router(execution.router, prefix="/api/execute")
 router.include_router(artifacts.router, prefix="/api/user/artifacts")
 router.include_router(activity.router, prefix="/api/user/activity")
+router.include_router(usage.router, prefix="/api/user/usage")
 router.include_router(user_projects.router, prefix="/api/user/projects")
 router.include_router(user_contexts.router, prefix="/api/user/projects")
 router.include_router(memory.router, prefix="/api/user/projects")

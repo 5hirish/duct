@@ -7,6 +7,7 @@ import {
   ShieldCheck,
   FileText,
   History,
+  Gauge,
 } from "lucide-react";
 
 /**
@@ -105,6 +106,14 @@ export const NAV_SECTIONS = [
         href: "/activity",
         available: true,
         matchPrefix: "/activity",
+      },
+      {
+        key: "usage",
+        label: "Usage",
+        icon: Gauge,
+        href: "/usage",
+        available: true,
+        matchPrefix: "/usage",
       },
     ],
   },
