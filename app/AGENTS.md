@@ -163,6 +163,20 @@ bag and is spent once).
 - `lib/authFetch.js` — the one home for the auth token: `AUTH_TOKEN_KEY`,
   `authToken`, `hasAuthToken`, `authedHeaders`, `authedRequest`, plus
   `decodeJwtPayload` / `isTokenValid`. Never hardcode `"duct_auth_token"`.
+  It also owns **what a 401 means**, and that is not a per-page decision. The
+  shared `X-API-Key` fails with 403, so a 401 is always the *user* half of the
+  credential: missing, expired, or well-formed and correctly signed but naming
+  someone the answering backend's database has never seen ("User not found").
+  `AuthGuard` cannot see any of that — it reads `exp` on a token it never
+  verifies — so `throwForStatus` retires the session instead: clears the right
+  key for this shell, parks the current path, and fires `SESSION_EXPIRED_EVENT`
+  for `AuthProvider` to sign out on. New user-scoped clients go through
+  `authedRequest` / `authedFetch`, or call `throwForStatus` /
+  `endSessionIfUnauthorized` if they parse errors themselves; a client that
+  hand-rolls `if (!res.ok) throw` puts the backend's 401 prose on the page and
+  leaves the app believing it is signed in. Opt out with `retireSession: false`
+  only where signing out costs the user something they just did — the connector
+  save does, because its 401 lands on the way back from the provider.
 
 ## UI conventions
 

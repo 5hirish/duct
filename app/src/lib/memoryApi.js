@@ -10,8 +10,7 @@
 // Authenticated with the Bearer JWT + shared X-API-Key like the other
 // user-scoped APIs (see authFetch.js).
 
-import { BASE } from "./api";
-import { authedHeaders } from "./authFetch";
+import { authedRequest } from "./authFetch";
 
 // Mirror of backend models/memory.py — the vocabulary the UI filters on.
 export const MEMORY_KINDS = Object.freeze([
@@ -44,23 +43,7 @@ export const MEMORY_KIND_ICONS = Object.freeze({
   artifact: "📄",
 });
 
-async function request(path, { method = "GET", body } = {}) {
-  const res = await fetch(`${BASE}${path}`, {
-    method,
-    headers: { ...authedHeaders(), ...(body ? { "Content-Type": "application/json" } : {}) },
-    ...(body ? { body: JSON.stringify(body) } : {}),
-  });
-  if (!res.ok) {
-    let detail = "";
-    try {
-      detail = (await res.json()).detail || "";
-    } catch {
-      /* non-JSON error body */
-    }
-    throw new Error(detail || `Server error ${res.status}`);
-  }
-  return res.status === 204 ? null : res.json();
-}
+const request = authedRequest;
 
 /**
  * List a project's memory, newest first.

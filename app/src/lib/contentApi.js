@@ -15,6 +15,7 @@ import {
   listAgentConversations,
   archiveAgentConversation,
 } from "./api.js";
+import { throwForStatus } from "./authFetch.js";
 import { cached, invalidate } from "./contentCache.js";
 
 /** Unified agent-type id for this workspace (see backend agents/registry.py). */
@@ -54,8 +55,9 @@ export function cdnImage(u, { width = 480, quality = 80 } = {}) {
 
 async function jsonOrThrow(res) {
   if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(text || `Request failed: ${res.status}`);
+    // A 401 has to retire the session rather than reach a chat panel as prose
+    // — see authFetch's endSession.
+    await throwForStatus(res);
   }
   if (res.status === 204) return null;
   return res.json();

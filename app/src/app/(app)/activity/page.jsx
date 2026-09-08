@@ -11,7 +11,8 @@ import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { FileText, History, ShieldCheck, Zap } from "lucide-react";
 import { getActiveProject } from "../../../lib/projects";
-import { hasAuthToken } from "../../../lib/authFetch";
+import { hasAuthToken, isSessionExpired } from "../../../lib/authFetch";
+import LoadError from "@/components/LoadError";
 import { relativeTime } from "@/lib/format";
 import { listActivity } from "../../../lib/activityApi";
 import { Button } from "@/components/ui/button";
@@ -97,6 +98,11 @@ function ActivityFeed() {
     setSignedIn(hasAuthToken());
   }, []);
 
+  // Bumped by the error panel's retry — the load lives in an effect, so a
+  // dependency is how you ask it to run again.
+  const [reloadKey, setReloadKey] = useState(0);
+  const reload = useCallback(() => setReloadKey((n) => n + 1), []);
+
   useEffect(() => {
     if (!project?.id || !signedIn) {
       if (project !== null) setItems([]);
@@ -112,14 +118,16 @@ function ActivityFeed() {
         setNextBefore(body.next_before);
       })
       .catch((err) => {
-        if (!alive) return;
+        // A retired session is already redirecting to sign-in; anything shown
+        // here would only flash past on the way out.
+        if (!alive || isSessionExpired(err)) return;
         setItems([]);
-        setError(err.message || "Failed to load activity.");
+        setError(err.message || "");
       });
     return () => {
       alive = false;
     };
-  }, [project, signedIn, conversationId, category]);
+  }, [project, signedIn, conversationId, category, reloadKey]);
 
   const loadMore = useCallback(() => {
     if (!nextBefore || !project?.id) return;
@@ -129,7 +137,10 @@ function ActivityFeed() {
         setItems((prev) => [...(prev || []), ...body.items]);
         setNextBefore(body.next_before);
       })
-      .catch((err) => setError(err.message || "Failed to load more."))
+      .catch((err) => {
+        if (isSessionExpired(err)) return;
+        setError(err.message || "");
+      })
       .finally(() => setLoadingMore(false));
   }, [nextBefore, project, conversationId, category]);
 
@@ -173,11 +184,15 @@ function ActivityFeed() {
         <p className="app-subtle" style={{ marginTop: 18 }}>Loading…</p>
       )}
 
-      {signedIn && items && items.length === 0 && (
+      {signedIn && error && (
+        <LoadError what="this project's activity" detail={error} onRetry={reload} />
+      )}
+
+      {signedIn && !error && items && items.length === 0 && (
         <div style={{ marginTop: 18 }}>
           <p className="app-subtle">
-            {error ||
-              "No activity yet. When an agent proposes changes or writes artifacts for this project, every transition lands here."}
+            No activity yet. When an agent proposes changes or writes artifacts for
+            this project, every transition lands here.
           </p>
         </div>
       )}

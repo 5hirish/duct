@@ -10,31 +10,12 @@
 // field is empty the backend falls back to the user's stored encrypted
 // connector credentials (saved from /connections), then server env.
 
-import { BASE } from "./api";
-import { authedHeaders } from "./authFetch";
+import { authedRequest } from "./authFetch";
 import { trackEvent, AnalyticsEvent } from "./analytics";
 import { googleAdsByoCredentials } from "./adsCredentials";
 
-function authHeaders(extra = {}) {
-  return authedHeaders(extra);
-}
-
-async function request(path, { method = "GET", body } = {}) {
-  const res = await fetch(`${BASE}/api/execute${path}`, {
-    method,
-    headers: authHeaders(body !== undefined ? { "Content-Type": "application/json" } : {}),
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
-  if (!res.ok) {
-    let detail = "";
-    try {
-      detail = (await res.json()).detail || "";
-    } catch {
-      /* non-JSON error body */
-    }
-    throw new Error(detail || `Server error ${res.status}`);
-  }
-  return res.status === 204 ? null : res.json();
+function request(path, options) {
+  return authedRequest(`/api/execute${path}`, options);
 }
 
 /**

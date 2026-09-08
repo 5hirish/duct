@@ -6,7 +6,15 @@
     <atom:link href="https://getduct.ai/changelog/feed.xml" rel="self" type="application/rss+xml"/>
     <description>What shipped in Duct — new connectors, agent and model upgrades, execution controls, and desktop builds.</description>
     <language>en</language>
-    <lastBuildDate>Wed, 02 Sep 2026 09:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 07 Sep 2026 09:00:00 GMT</lastBuildDate>
+
+    <item>
+      <title>A download that just opens</title>
+      <link>https://getduct.ai/changelog/#2026-09-07</link>
+      <guid isPermaLink="false">duct-changelog-2026-09-07</guid>
+      <pubDate>Mon, 07 Sep 2026 09:00:00 GMT</pubDate>
+      <description>The desktop app is a thin shell: no 470 MB download, no wait while it boots, and sign-in works as soon as the window appears. Intel Macs are covered for the first time, every platform has a permanent download link, and Windows installs finally receive updates. Also xAI and Grok 4.6, four more models to assign to a tier, web search on whichever model you brought, and an execution guardrail that refuses a change your account was never allowed to make.</description>
+    </item>
 
     <item>
       <title>Bring your own models</title>

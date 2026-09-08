@@ -2,7 +2,13 @@
 
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { authToken, clearAuthToken, decodeJwtPayload, isTokenValid } from "./authFetch";
+import {
+  SESSION_EXPIRED_EVENT,
+  authToken,
+  clearAuthToken,
+  decodeJwtPayload,
+  isTokenValid,
+} from "./authFetch";
 import { analytics } from "./analytics";
 
 const AuthContext = createContext(null);
@@ -45,6 +51,14 @@ export function AuthProvider({ children }) {
     setToken(null);
     router.replace("/");
   }, [router]);
+
+  // A token can pass `isTokenValid` and still be refused by the backend — it is
+  // never verified here, only read. authFetch retires such a session and fires
+  // this; without listening, the app keeps rendering as though signed in.
+  useEffect(() => {
+    window.addEventListener(SESSION_EXPIRED_EVENT, signOut);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, signOut);
+  }, [signOut]);
 
   return (
     <AuthContext.Provider value={{ user, token, loading, signOut }}>

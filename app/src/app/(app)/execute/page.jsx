@@ -35,7 +35,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { getActiveProject } from "../../../lib/projects";
-import { hasAuthToken } from "../../../lib/authFetch";
+import { hasAuthToken, isSessionExpired } from "../../../lib/authFetch";
+import LoadError from "@/components/LoadError";
 import {
   AUTONOMY_ASK,
   AUTONOMY_OPTIONS,
@@ -676,8 +677,13 @@ export default function ExecutePage() {
       setChangeSets(await listChangeSets());
       setError(null);
     } catch (err) {
+      // A retired session is already redirecting to sign-in; anything shown
+      // here would only flash past on the way out.
+      if (isSessionExpired(err)) return;
       setError(err instanceof Error ? err.message : String(err));
-      setChangeSets([]);
+      // Deliberately NOT []: an empty array is the claim "nothing has been
+      // proposed yet", and a request that failed has no standing to make it.
+      setChangeSets(null);
     }
   }, []);
 
@@ -788,7 +794,7 @@ export default function ExecutePage() {
         error={autonomyError}
       />
 
-      {error && <p style={{ color: "var(--destructive, #e5484d)", marginBottom: 12 }}>{error}</p>}
+      {error && <LoadError what="the execution queue" detail={error} onRetry={load} />}
 
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
         <Select value={statusFilter || "all"} onValueChange={(v) => setStatusFilter(v === "all" ? "" : v)}>
@@ -836,7 +842,7 @@ export default function ExecutePage() {
         )}
       </div>
 
-      {changeSets === null ? (
+      {error ? null : changeSets === null ? (
         <p className="app-subtle">Loading…</p>
       ) : filtered.length === 0 ? (
         <p className="app-subtle">

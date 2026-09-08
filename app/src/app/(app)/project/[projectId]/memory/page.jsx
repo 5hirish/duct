@@ -80,6 +80,7 @@ function ProjectMemory({ projectId }) {
       </p>
 
       <MemoryTimeline
+        errorSubject="this project's memory"
         api={api}
         signedIn={signedIn}
         focusId={focusId}

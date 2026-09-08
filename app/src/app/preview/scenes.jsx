@@ -23,6 +23,7 @@ import ContextCompressionCard from "@/components/ContextCompressionCard.jsx";
 import { CornerNotice } from "@/components/ui/corner-notice";
 import { FolderOpen, RefreshCw } from "lucide-react";
 import { CookieConsent } from "@/components/CookieConsent";
+import LoadError from "@/components/LoadError";
 import ConnectorDialog from "@/components/connections/ConnectorDialog";
 import ConnectorPermissions from "@/components/connections/ConnectorPermissions";
 import ConnectorTile from "@/components/connections/ConnectorTile";
@@ -202,6 +203,23 @@ export const SCENES = [
     title: "The consent question",
     note: "Decline and Accept are the same control at the same size — a Decline styled as a text link is the specific thing the AEPD treats as no consent at all. Check the mobile width: the two buttons stay side by side and equal, they do not stack with Accept on top.",
     render: () => <CookieConsent onAccept={() => {}} onDecline={() => {}} />,
+  },
+  {
+    id: "load-error",
+    state: "failed",
+    group: "LoadError",
+    title: "A panel whose data did not arrive",
+    note: "The state that used to be a red string where the empty state's invitation belongs. Retryable and not: the second has no way back because its caller reloads on its own.",
+    render: () => (
+      <div style={{ display: "grid", gap: 4 }}>
+        <LoadError
+          what="the execution queue"
+          detail="User not found"
+          onRetry={() => {}}
+        />
+        <LoadError what="your artifacts" detail="" />
+      </div>
+    ),
   },
   {
     id: "tile-states",
