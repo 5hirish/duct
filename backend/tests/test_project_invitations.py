@@ -13,6 +13,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
+
 import pytest
 
 from tests.conftest import make_sqlite_engine
@@ -90,7 +91,7 @@ def harness(monkeypatch):
 
     cfg = Configs(
         frontend_origin=TEST_ORIGIN,
-        resend_api_key="",  # console backend — nothing leaves the process
+        email_provider="console",  # nothing leaves the process, whatever is configured
         invitation_ttl_days=7,
     )
 
@@ -114,7 +115,7 @@ def harness(monkeypatch):
     # rendered message (and on the invite URL, which carries the only copy of
     # the plaintext token).
     async def _capture(message, config=None):  # noqa: ANN001, ARG001
-        from service.email.sender import EmailResult
+        from service.email import EmailResult
 
         state.sent.append(message)
         return EmailResult(delivered=True, backend="console")
@@ -208,7 +209,7 @@ def test_owner_invites_and_collaborator_accepts(harness):
 
     # The invite email carries the only copy of the plaintext token.
     token = token_from_last_email(harness)
-    assert harness.sent[-1].to == "ana@acme.com"
+    assert harness.sent[-1].to == ("ana@acme.com",)
     assert "Owner Person invited you" in harness.sent[-1].subject
 
     # Preview works before the invitee has signed in.
@@ -227,7 +228,7 @@ def test_owner_invites_and_collaborator_accepts(harness):
     assert member_role(project.id, ana.id, harness.session) == ROLE_COLLABORATOR
 
     # The owner is told someone joined.
-    assert harness.sent[-1].to == "owner@acme.com"
+    assert harness.sent[-1].to == ("owner@acme.com",)
     assert "Ana joined" in harness.sent[-1].subject
 
     # The project now shows up in the collaborator's project list, flagged as shared.
@@ -595,23 +596,3 @@ def test_invitation_template_says_one_day_for_a_one_day_ttl():
     assert "expires in 1 day " in message.text
     # Falls back to the inviter's email when they have no display name.
     assert message.subject.startswith("owner@acme.com invited you")
-
-
-@pytest.mark.asyncio
-async def test_console_backend_reports_delivery_without_a_provider():
-    from service.email import active_backend, send_email
-    from service.email.sender import EmailMessage
-
-    cfg = Configs(resend_api_key="")
-    assert active_backend(cfg) == "console"
-    result = await send_email(
-        EmailMessage(to="ana@acme.com", subject="s", html="<p>h</p>", text="t"), cfg
-    )
-    assert result.delivered is True
-    assert result.backend == "console"
-
-
-def test_resend_backend_is_selected_when_a_key_is_present():
-    from service.email import active_backend
-
-    assert active_backend(Configs(resend_api_key="re_test")) == "resend"

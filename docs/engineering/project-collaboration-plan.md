@@ -106,19 +106,33 @@ collaborator leaves via `DELETE …/members/me`.
 
 ## Email
 
-`service/email/` is one seam (`send_email`) over two backends:
+`service/email/` is one seam (`send_email`) over swappable providers, each a
+single file in `service/email/providers/` — the only place in the backend that
+names a mail vendor:
 
-- **resend** when `RESEND_API_KEY` is set.
-- **console** otherwise — the message is logged and reported as delivered, so
-  local dev and CI need no vendor account. The members screen surfaces a banner
-  when this backend is active so nobody assumes mail is going out.
+- **cloudflare** — Cloudflare Email Service, the default for our own deploys
+  because the sending domain, DKIM and reputation are managed alongside the
+  Workers app, R2 and Turnstile.
+- **resend** — the original backend, kept because a seam with one real
+  implementation is a seam nobody can trust.
+- **console** — logs the message and reports it delivered, so local dev, CI and
+  a self-hosted install run every flow with no vendor account. The members
+  screen banners this backend so nobody assumes mail is going out.
 
-Templates in `service/email/templates.py` are table-based HTML with inline
-styles plus a plain-text alternative. Two today: the invitation, and a note to
-the owner when someone joins.
+`EMAIL_PROVIDER` names one explicitly; unset takes the first with credentials in
+that order, and `console` when none have any. Adding a provider is one file
+plus a line in `sender.PROVIDERS` — no template, route or test changes.
 
-Config: `RESEND_API_KEY`, `EMAIL_FROM` (must be on a Resend-verified domain),
-`EMAIL_FROM_NAME`, `INVITATION_TTL_DAYS` (default 7).
+Templates in `service/email/templates/` are table-based HTML with inline styles
+plus a plain-text alternative, grouped by audience: `invitations.py` (the invite
+and the note to the owner when someone joins) on the shared `shell.py`, and
+`lead.py` (the free audit report and its internal alert) deliberately off it.
+`notifications.py` composes the lead flows, which need config the templates
+must not see.
+
+Config: `EMAIL_PROVIDER`, `EMAIL_FROM` (must be on a domain verified with the
+active provider), `EMAIL_FROM_NAME`, `INVITATION_TTL_DAYS` (default 7), plus
+whichever provider's credentials are in use.
 
 ## Sign-in round trip
 

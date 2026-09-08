@@ -171,7 +171,11 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   exist. `routes/artifacts.py` is the reference; `routes/content.py` declares
   `get_current_user` **on the router** so endpoint 45 cannot be written without
   it, and `tests/test_content_access.py` asserts that property directly.
-- **Email:** `service/email/` — Resend when `RESEND_API_KEY` is set, otherwise a logging console backend so dev/CI need no vendor account.
+- **Email:** `service/email/` — one seam (`send_email`) over swappable providers in
+  `service/email/providers/`, the only place a mail vendor is named. `EMAIL_PROVIDER`
+  picks one; unset takes the first with credentials (Cloudflare, then Resend) and
+  falls back to `console`, which logs, so dev/CI/self-host need no vendor account.
+  Same shape as the app's analytics seam, for the same reason: a fork swaps one file.
 - **Observability:** Sentry error tracking; optional OpenTelemetry tracing — V1 emits its own GenAI spans (`agents/core/telemetry.py`).
 - **Hosting:** Railway — auto-deploys from `main` via GitHub integration; `railway.json` defines Railpack build + uvicorn start.
   `railpack.json` sits beside it and configures the **builder**, where
@@ -221,6 +225,32 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   fixture in `conftest.py`: the real harness runs, only the model is canned.
   Assert on events, tool names and payloads, not on prompt prose — a wording
   test fails on every copy edit and catches nothing an eval would not.
+- **The offline suite cannot open a socket.** `conftest.py`'s autouse
+  `no_network` fixture raises on `socket.connect` for anything not marked
+  `live`, so a test that forgets to fake its transport fails naming the seam it
+  forgot rather than passing on the author's machine and nowhere else. It
+  blocks loopback too, deliberately: an agent sandbox or a corporate runner
+  exports `HTTPS_PROXY=http://localhost:<port>`, so a guard that waves loopback
+  through waves the whole internet through, silently, in exactly the
+  environments most likely to be holding a key.
+- **Fake at the seam the vendor gives you, and put the fake in
+  `tests/fakes.py`.** For the sync reporting connectors that is the vendor's own
+  `api()` wrapper; for the retry loop underneath them it is `service/rest.py`,
+  covered directly by `tests/test_rest_transport.py` because five connectors
+  share it and a regression there lands on all of them at once. For Google Ads
+  it is `FakeAdsClient`, which keeps the library's local machinery — `get_type`,
+  `enums`, `copy_from`, the GAPIC path helpers — and replaces only
+  `get_service`. That distinction is the point: a stub made of attribute bags
+  passes while the field is misspelled and the enum is not a member, which is
+  the whole class of bug worth catching in code that changes what a customer
+  spends. Building a real `GoogleAdsClient` refreshes OAuth against Google at
+  construction time, so `FakeAdsClient` is also the only offline way into those
+  executors at all. GA4 has the same problem for the same reason —
+  `discovery.build()` fetches the discovery document before it returns a client
+  — and `FakeDiscoveryService` answers the fluent chain by dotted call path
+  (`"properties.keyEvents.list"`). The GTM fake in `test_execution_policy.py`
+  stays where it is on purpose: it keeps container state so it can answer a read
+  that follows a write, which is a different job from replaying canned answers.
 
 ### Desktop (local sidecar) mode
 

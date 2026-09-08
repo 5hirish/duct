@@ -1,30 +1,31 @@
-"""Cloudflare Email Service — lead report delivery.
+"""Lead-magnet mail: the free SEO audit report, and the execution-interest alert.
 
-Sends a warm, Duct-branded email with the SEO audit PDF attached.
-Uses the Cloudflare Email Service REST API (httpx, already installed).
+Deliberately not built on ``shell.py``. The audit report is a cold-audience
+marketing email — it opens on a score, not a sentence — and the internal alert
+is a plain internal note. Bending one shell around all three would cost each of
+them the thing that makes it work.
 """
 
 from __future__ import annotations
 
-import base64
-import logging
-from html import escape as _esc
+from html import escape
 from typing import Any
 from urllib.parse import urlparse
 
-import httpx
+from service.email.message import Attachment, EmailMessage
 
-from config import get_configs
-from service.report_pdf import generate_report_pdf
+_SERVICE_LABELS = {
+    "ai_ready_fixes": "AI-ready fixes (schema, meta, llms.txt, FAQ)",
+    "content_rewrites": "On-page content rewrites",
+    "translation": "Translation / localization",
+}
 
-logger = logging.getLogger(__name__)
 
-
-def _domain(url: str) -> str:
-    """Extract bare hostname from a URL string."""
+def domain_of(url: str) -> str:
+    """Bare hostname from a URL string, falling back to the string itself."""
     try:
         return urlparse(url).hostname or url
-    except Exception:
+    except ValueError:
         return url
 
 
@@ -77,10 +78,10 @@ def _build_html(domain: str, score: int, structured: dict[str, Any]) -> str:
         title = p.get("title", "")
         priority_rows += f"""
         <tr>
-          <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;font-size:14px;color:#0d0f1a;line-height:1.4">{_esc(title)}</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;font-size:14px;color:#0d0f1a;line-height:1.4">{escape(title)}</td>
           <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;text-align:center;white-space:nowrap">
             <span style="background:{sev_c}18;color:{sev_c};font-weight:700;font-size:10px;
-                         padding:2px 8px;border-radius:20px;letter-spacing:.04em">{_esc(sev_l)}</span>
+                         padding:2px 8px;border-radius:20px;letter-spacing:.04em">{escape(sev_l)}</span>
           </td>
         </tr>"""
 
@@ -90,7 +91,7 @@ def _build_html(domain: str, score: int, structured: dict[str, Any]) -> str:
         win_rows += f"""
         <tr>
           <td style="padding:7px 12px;font-size:13px;color:#065f46;border-bottom:1px solid #d1fae5">
-            <span style="margin-right:6px">✓</span>{_esc(w)}
+            <span style="margin-right:6px">✓</span>{escape(w)}
           </td>
         </tr>"""
 
@@ -98,7 +99,7 @@ def _build_html(domain: str, score: int, structured: dict[str, Any]) -> str:
     signals_html = ""
     if key_signals:
         signals_html = "<br>".join(
-            f'<span style="color:#6b7280">→</span> {_esc(sig)}' for sig in key_signals
+            f'<span style="color:#6b7280">→</span> {escape(sig)}' for sig in key_signals
         )
         signals_html = f"""
         <p style="margin:16px 0 0;font-size:13px;color:#374151;line-height:1.7;
@@ -143,7 +144,7 @@ def _build_html(domain: str, score: int, structured: dict[str, Any]) -> str:
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Your SEO audit for {_esc(domain)}</title></head>
+<title>Your SEO audit for {escape(domain)}</title></head>
 <body style="margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
 
   <!-- Outer wrapper -->
@@ -178,7 +179,7 @@ def _build_html(domain: str, score: int, structured: dict[str, Any]) -> str:
             <p style="margin:0 0 16px;font-size:16px;color:#0d0f1a">Hi there 👋</p>
 
             <p style="margin:0 0 8px;font-size:15px;color:#374151;line-height:1.6">
-              Here's what we found on <strong style="color:#0d0f1a">{_esc(domain)}</strong>.
+              Here's what we found on <strong style="color:#0d0f1a">{escape(domain)}</strong>.
             </p>
             {signals_html}
 
@@ -195,7 +196,7 @@ def _build_html(domain: str, score: int, structured: dict[str, Any]) -> str:
                 </td>
                 <td style="padding:20px 24px">
                   <div style="font-size:16px;font-weight:700;color:{sc_color};
-                               margin-bottom:4px">{_esc(sc_label)}</div>
+                               margin-bottom:4px">{escape(sc_label)}</div>
                   <div style="font-size:13px;color:#6b7280;line-height:1.5">
                     The full breakdown — 9 SEO categories, a prioritised action plan,
                     and specific fixes — is attached as a PDF.
@@ -276,151 +277,78 @@ Duct · hello@getduct.ai
 Free SEO audit · getduct.ai/seo-audit
 """
 
-
-async def send_lead_report_email(
-    to_email: str,
+def lead_report(
+    *,
+    recipient_email: str,
     site_url: str,
     report_json: dict[str, Any],
-) -> bool:
-    """Send the branded audit email with PDF attachment via Cloudflare Email Service.
-
-    Returns True on success, False on failure. Never raises — errors are logged.
-    """
-    cfg = get_configs()
-    if not cfg.cloudflare_email_api_token or not cfg.cloudflare_account_id:
-        logger.warning("email: CLOUDFLARE_EMAIL_API_TOKEN or CLOUDFLARE_ACCOUNT_ID not set — skipping")
-        return False
-
-    domain = _domain(site_url)
+    pdf: bytes = b"",
+    cc: tuple[str, ...] = (),
+    sender: str = "",
+) -> EmailMessage:
+    """The free audit report, with the full PDF breakdown attached."""
+    domain = domain_of(site_url)
     structured: dict[str, Any] = report_json.get("structured_data") or report_json or {}
     score = int(structured.get("overall_score", 0))
 
-    try:
-        pdf_bytes = generate_report_pdf(report_json)
-    except Exception:
-        logger.exception("email: PDF generation failed for %s", site_url)
-        pdf_bytes = b""
-
-    cc_list = [a.strip() for a in cfg.lead_email_cc.split(",") if a.strip()]
-
-    payload: dict[str, Any] = {
-        "from": cfg.lead_email_from or cfg.email_from,
-        "to": [to_email],
-        "subject": f"Your free SEO audit for {domain} — {score}/100",
-        "html": _build_html(domain, score, structured),
-        "text": _build_text(domain, score, structured),
-    }
-    if cc_list:
-        payload["cc"] = cc_list
-    if pdf_bytes:
+    attachments = []
+    if pdf:
+        # A filename is a path component to some mail clients; keep it flat.
         safe_domain = domain.replace("/", "_").replace(":", "")
-        payload["attachments"] = [{
-            "filename": f"seo-audit-{safe_domain}.pdf",
-            "content": base64.b64encode(pdf_bytes).decode(),
-            "type": "application/pdf",
-        }]
-
-    url = (
-        f"https://api.cloudflare.com/client/v4/accounts"
-        f"/{cfg.cloudflare_account_id}/email-service/send"
-    )
-    headers = {
-        "Authorization": f"Bearer {cfg.cloudflare_email_api_token}",
-        "Content-Type": "application/json",
-    }
-
-    try:
-        async with httpx.AsyncClient(timeout=30) as client:
-            resp = await client.post(url, json=payload, headers=headers)
-        if resp.status_code in (200, 201, 202):
-            logger.info("email: sent to %s (cc %s) — %s", to_email, cc_list, site_url)
-            return True
-        logger.warning(
-            "email: Cloudflare returned %d for %s — %s",
-            resp.status_code, to_email, resp.text[:300],
+        attachments.append(
+            Attachment(
+                filename=f"seo-audit-{safe_domain}.pdf",
+                content=pdf,
+                content_type="application/pdf",
+            )
         )
-        return False
-    except Exception:
-        logger.exception("email: failed to send to %s", to_email)
-        return False
+
+    return EmailMessage(
+        to=recipient_email,
+        cc=cc,
+        sender=sender,
+        subject=f"Your free SEO audit for {domain} \u2014 {score}/100",
+        html=_build_html(domain, score, structured),
+        text=_build_text(domain, score, structured),
+        attachments=attachments,
+    )
 
 
-_SERVICE_LABELS = {
-    "ai_ready_fixes": "AI-ready fixes (schema, meta, llms.txt, FAQ)",
-    "content_rewrites": "On-page content rewrites",
-    "translation": "Translation / localization",
-}
-
-
-async def send_execution_interest_notification(
+def execution_interest(
+    *,
+    team: tuple[str, ...],
     lead_email: str,
     site_url: str,
     services: list[str],
     note: str | None = None,
-) -> bool:
-    """Notify the internal team that a lead requested paid execution.
-
-    Plain internal alert sent to ``lead_email_cc`` (the team). No PDF, no lead-facing copy.
-    Returns True on success, False on failure. Never raises — errors are logged.
-    """
-    cfg = get_configs()
-    if not cfg.cloudflare_email_api_token or not cfg.cloudflare_account_id:
-        logger.warning("email: execution-interest notify skipped — Cloudflare email not configured")
-        return False
-
-    team = [a.strip() for a in cfg.lead_email_cc.split(",") if a.strip()]
-    if not team:
-        logger.warning("email: execution-interest notify skipped — no team recipients (LEAD_EMAIL_CC empty)")
-        return False
-
-    domain = _domain(site_url)
-    service_lines = "".join(
-        f"<li>{_esc(_SERVICE_LABELS.get(s, s))}</li>" for s in services
-    ) or "<li>(none specified)</li>"
-    service_text = "\n".join(f"  - {_SERVICE_LABELS.get(s, s)}" for s in services) or "  - (none specified)"
-    note_html = f"<p><strong>Note:</strong> {_esc(note)}</p>" if note else ""
+    sender: str = "",
+) -> EmailMessage:
+    """Internal alert that a lead asked for paid execution. No lead-facing copy."""
+    domain = domain_of(site_url)
+    service_lines = (
+        "".join(f"<li>{escape(_SERVICE_LABELS.get(s, s))}</li>" for s in services)
+        or "<li>(none specified)</li>"
+    )
+    service_text = (
+        "\n".join(f"  - {_SERVICE_LABELS.get(s, s)}" for s in services)
+        or "  - (none specified)"
+    )
+    note_html = f"<p><strong>Note:</strong> {escape(note)}</p>" if note else ""
     note_text = f"\nNote: {note}\n" if note else ""
 
-    html = (
-        f"<h2>🚀 Execution interest — {_esc(domain)}</h2>"
-        f"<p><strong>Lead:</strong> {_esc(lead_email)}<br>"
-        f"<strong>Site:</strong> {_esc(site_url)}</p>"
-        f"<p><strong>Wants:</strong></p><ul>{service_lines}</ul>"
-        f"{note_html}"
+    return EmailMessage(
+        to=team,
+        sender=sender,
+        subject=f"\U0001F680 Execution interest: {domain} ({lead_email})",
+        html=(
+            f"<h2>\U0001F680 Execution interest \u2014 {escape(domain)}</h2>"
+            f"<p><strong>Lead:</strong> {escape(lead_email)}<br>"
+            f"<strong>Site:</strong> {escape(site_url)}</p>"
+            f"<p><strong>Wants:</strong></p><ul>{service_lines}</ul>"
+            f"{note_html}"
+        ),
+        text=(
+            f"Execution interest \u2014 {domain}\n\n"
+            f"Lead: {lead_email}\nSite: {site_url}\n\nWants:\n{service_text}\n{note_text}"
+        ),
     )
-    text = (
-        f"Execution interest — {domain}\n\n"
-        f"Lead: {lead_email}\nSite: {site_url}\n\nWants:\n{service_text}\n{note_text}"
-    )
-
-    payload: dict[str, Any] = {
-        "from": cfg.lead_email_from or cfg.email_from,
-        "to": team,
-        "subject": f"🚀 Execution interest: {domain} ({lead_email})",
-        "html": html,
-        "text": text,
-    }
-
-    url = (
-        f"https://api.cloudflare.com/client/v4/accounts"
-        f"/{cfg.cloudflare_account_id}/email-service/send"
-    )
-    headers = {
-        "Authorization": f"Bearer {cfg.cloudflare_email_api_token}",
-        "Content-Type": "application/json",
-    }
-
-    try:
-        async with httpx.AsyncClient(timeout=30) as client:
-            resp = await client.post(url, json=payload, headers=headers)
-        if resp.status_code in (200, 201, 202):
-            logger.info("email: execution-interest notify sent to team for %s (%s)", lead_email, domain)
-            return True
-        logger.warning(
-            "email: execution-interest notify returned %d — %s",
-            resp.status_code, resp.text[:300],
-        )
-        return False
-    except Exception:
-        logger.exception("email: execution-interest notify failed for %s", lead_email)
-        return False

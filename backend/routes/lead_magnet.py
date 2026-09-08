@@ -180,7 +180,7 @@ async def save_report(
     _lead_id, _email, _url, _report = lead.id, lead.email, lead.website_url, body.report
 
     async def _send_with_retry() -> None:
-        from service.email_cf import send_lead_report_email
+        from service.email.notifications import send_lead_report_email
         from db.session import get_engine
         from sqlmodel import Session as _Session
 
@@ -283,7 +283,7 @@ async def record_execution_interest(
     _email, _url, _services, _note = lead.email, lead.website_url, body.services, body.note
 
     async def _notify() -> None:
-        from service.email_cf import send_execution_interest_notification
+        from service.email.notifications import send_execution_interest_notification
         try:
             await send_execution_interest_notification(_email, _url, _services, _note)
         except Exception:
