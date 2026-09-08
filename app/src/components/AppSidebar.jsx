@@ -18,6 +18,7 @@ import {
   BellRing,
   Bug,
   Lightbulb,
+  Star,
   SlidersHorizontal,
   Brain,
 } from "lucide-react";
@@ -47,6 +48,7 @@ import { useAuth } from "@/lib/auth";
 import PreferencesDialog from "./PreferencesDialog";
 import { loadPreferences, hasNonDefaultPreferences } from "@/lib/userPreferences";
 import { notificationSurface } from "@/lib/notify";
+import { trackEvent } from "@/lib/analytics-client";
 
 // Where "this is broken" and "this should exist" go. Two places on purpose,
 // and .github/ISSUE_TEMPLATE/config.yml already draws the line: issues are for
@@ -57,6 +59,10 @@ const GITHUB_ISSUES_URL =
   "https://github.com/5hirish/duct/issues/new?template=bug_report.yml";
 const GITHUB_DISCUSSIONS_URL =
   "https://github.com/5hirish/duct/discussions/new?category=ideas";
+// The repo itself. No tracking parameters: GitHub's traffic view aggregates by
+// path and drops the query, so a utm tag would tell us nothing it does not
+// already tell us. The click is measured on our side instead, below.
+const GITHUB_REPO_URL = "https://github.com/5hirish/duct";
 import {
   PROJECTS_CHANGED,
   getActiveProjectId,
@@ -347,6 +353,21 @@ function SidebarUserFooter() {
         {/* Plain new-tab links: installExternalLinkHandler (lib/shell.js)
             reroutes target="_blank" to the system browser inside the desktop
             shell, where a new tab would otherwise go nowhere at all. */}
+        {/* First of the three: the two below are chores someone already came
+            here to do, this is the only thing the group asks for. Outline star
+            rather than a filled one — filled is GitHub's own "you have starred
+            this", and we cannot know that from here. */}
+        <DropdownMenuItem asChild>
+          <a
+            href={GITHUB_REPO_URL}
+            target="_blank"
+            rel="noreferrer noopener"
+            onClick={() => trackEvent("github_star_clicked", { surface: "sidebar_drawer" })}
+          >
+            <Star className="size-4 text-amber-500" />
+            <span>Star us on GitHub</span>
+          </a>
+        </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <a href={GITHUB_ISSUES_URL} target="_blank" rel="noreferrer noopener">
             <Bug className="size-4" />

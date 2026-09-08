@@ -376,20 +376,24 @@ const MENU_HOME: &str = "help:home";
 #[cfg(desktop)]
 const MENU_CHANGELOG: &str = "help:changelog";
 #[cfg(desktop)]
+const MENU_STAR: &str = "help:star";
+#[cfg(desktop)]
 const MENU_REPORT_BUG: &str = "help:report-bug";
 #[cfg(desktop)]
 const MENU_SUGGEST: &str = "help:suggest";
 #[cfg(desktop)]
 const MENU_PRIVACY: &str = "help:privacy";
 
-/// Where the Help menu points. The same two destinations the in-app account
-/// drawer offers, for the same reason: an issue is a defect with a repro, a
-/// discussion is an idea that has not earned a tracker row. Kept in sync with
+/// Where the Help menu points. The same destinations the in-app account drawer
+/// offers, for the same reasons: an issue is a defect with a repro, a
+/// discussion is an idea that has not earned a tracker row, and the repo link
+/// is the one thing this menu asks for rather than answers. Kept in sync with
 /// `app/src/components/AppSidebar.jsx` by hand — two surfaces, one policy.
 #[cfg(desktop)]
 const HELP_LINKS: &[(&str, &str)] = &[
     (MENU_HOME, "https://getduct.ai"),
     (MENU_CHANGELOG, "https://getduct.ai/changelog/"),
+    (MENU_STAR, "https://github.com/5hirish/duct"),
     (
         MENU_REPORT_BUG,
         "https://github.com/5hirish/duct/issues/new?template=bug_report.yml",
@@ -487,10 +491,11 @@ fn install_app_menu(app: &tauri::AppHandle) -> tauri::Result<()> {
         view_items.iter().map(|item| item.as_ref()).collect();
     let view = Submenu::with_items(app, "View", true, &view_refs)?;
 
-    // Ordered by how often a person needs them, with the two that produce work
-    // for us grouped away from the two that only read.
+    // Ordered by how often a person needs them, with the three that lead to
+    // GitHub grouped away from the two that only read.
     let home = MenuItem::with_id(app, MENU_HOME, "Duct Home Page", true, None::<&str>)?;
     let changelog = MenuItem::with_id(app, MENU_CHANGELOG, "What\u{2019}s New", true, None::<&str>)?;
+    let star = MenuItem::with_id(app, MENU_STAR, "Star Duct on GitHub", true, None::<&str>)?;
     let report_bug = MenuItem::with_id(app, MENU_REPORT_BUG, "Report a Bug\u{2026}", true, None::<&str>)?;
     let suggest = MenuItem::with_id(
         app,
@@ -510,6 +515,7 @@ fn install_app_menu(app: &tauri::AppHandle) -> tauri::Result<()> {
             &home,
             &changelog,
             &PredefinedMenuItem::separator(app)?,
+            &star,
             &report_bug,
             &suggest,
             &PredefinedMenuItem::separator(app)?,
