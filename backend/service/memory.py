@@ -667,12 +667,21 @@ def search(
             # An OR query ranked by ts_rank, not plainto_tsquery's implicit AND:
             # a question should degrade to its best partial match, not to zero.
             or_query = " | ".join(terms)
-            # Concatenated, not an interpolated literal: the search terms
-            # travel as the bound :fts_q parameter and only the module constant
-            # is spliced in, but interpolation here is the shape
-            # scripts/security/audit.py treats as CRITICAL. Baselining it would
-            # key on severity|title|filepath and so blind the scanner to every
-            # future raw-SQL finding in this file — a real injection included.
+            # The search terms travel as the bound :fts_q parameter below;
+            # what is spliced in is _FTS_SQL, a module constant. sa.text() is
+            # needed at all because Postgres only uses the functional GIN index
+            # when the tsvector expression appears inline, which the ORM cannot
+            # express.
+            #
+            # scripts/security/audit.py still reads this as raw-SQL
+            # construction and blocks CI on it, so both lines are baselined in
+            # .security-audit-baseline.json with the reasoning above. An
+            # earlier version of this comment argued against baselining because
+            # it "would key on severity|title|filepath"; that was wrong.
+            # `finding_fingerprint` hashes severity|title|detail, and detail
+            # carries the file *and line*, so an entry suppresses these two
+            # lines and nothing else — a new raw-SQL finding anywhere in this
+            # file, or on a shifted line, still fires.
             ranked = stmt.where(
                 sa.text(_FTS_SQL + " @@ to_tsquery('english', :fts_q)")
             ).order_by(
