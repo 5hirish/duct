@@ -35,7 +35,7 @@ export default function Todos({ todos }) {
       >
         <div className="flex items-center gap-2">
           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Progress</span>
-          <span className="text-xs tabular-nums text-muted-foreground">{completed}/{total}</span>
+          <span className="text-xs numeric text-muted-foreground">{completed}/{total}</span>
           {inProgress > 0 && <span className="text-xs text-blue-500 animate-pulse">working…</span>}
         </div>
         <div className="flex items-center gap-2">

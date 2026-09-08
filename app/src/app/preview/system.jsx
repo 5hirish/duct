@@ -309,7 +309,7 @@ export const PRIMITIVES = [
     group: "Primitives",
     title: "Table",
     state: "with numerics",
-    note: "Numbers right-aligned and tabular-nums, so digits line up column-wise and a total can be scanned.",
+    note: "Numbers right-aligned and `.numeric`, so digits line up column-wise and a total can be scanned. Plain tabular-nums cannot do this — DM Sans has no tabular figures.",
     render: () => (
       <Table>
         <TableHeader>
@@ -328,7 +328,7 @@ export const PRIMITIVES = [
             <TableRow key={source}>
               <TableCell className="font-medium">{source}</TableCell>
               <TableCell className="text-muted-foreground">{status}</TableCell>
-              <TableCell className="text-right tabular-nums">{n}</TableCell>
+              <TableCell className="text-right numeric">{n}</TableCell>
             </TableRow>
           ))}
         </TableBody>

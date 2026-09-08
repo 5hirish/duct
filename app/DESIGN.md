@@ -76,6 +76,15 @@ arbitraries (see Known gaps). Hierarchy comes from weight and color, not a
 parade of sizes (Refactoring UI: 2–3 weights, 2–3 text colors; de-emphasize
 the secondary rather than enlarging the primary).
 
+**Figures.** DM Sans ships **no tabular-figure feature**, and its digits run
+from 312 units for `1` to 684 for `0` — so `tabular-nums` on its own does
+nothing, however much it looks like it should. Anything that must line up (a
+numeric table column) or must not jump as it changes (a live counter) takes
+**`.numeric`**, which switches the digits to `--font-numeric` — JetBrains
+Mono, already loaded for code, so it costs nothing. A number inside a sentence
+("12 linked") does *not*: proportional figures are right in running text, and
+mono digits there read as code.
+
 **Color.** Two systems in `src/app/styles/tokens.css`: raw brand hexes
 (`--orange #ff5c00`, the navys) and the shadcn oklch semantic set. Dark mode
 is next-themes class-attribute with **pure token substitution** — no

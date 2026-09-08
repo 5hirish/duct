@@ -312,7 +312,7 @@ function CategoryBarChartCSS({ categories }) {
                   transition: `width 0.9s cubic-bezier(0.4,0,0.2,1) ${i * 55}ms`,
                 }} />
             </div>
-            <span className="text-xs font-semibold tabular-nums shrink-0 w-6 text-right"
+            <span className="text-xs font-semibold numeric shrink-0 w-6 text-right"
               style={{ color }}>{cat.score}</span>
           </div>
         );

@@ -275,10 +275,10 @@ export default function AnalyticsView({ projectId }) {
                           </div>
                         </td>
                         <td className="whitespace-nowrap px-3 py-2 text-xs text-muted-foreground">{shortDate(d)}</td>
-                        <td className="px-3 py-2 text-right font-medium tabular-nums">{formatNumber(r.view_count)}</td>
-                        <td className="px-3 py-2 text-right tabular-nums">{formatNumber(r.like_count)}</td>
-                        <td className="px-3 py-2 text-right tabular-nums">{formatNumber(r.comment_count)}</td>
-                        <td className="px-3 py-2 text-right tabular-nums">{formatNumber(r.share_count)}</td>
+                        <td className="px-3 py-2 text-right font-medium numeric">{formatNumber(r.view_count)}</td>
+                        <td className="px-3 py-2 text-right numeric">{formatNumber(r.like_count)}</td>
+                        <td className="px-3 py-2 text-right numeric">{formatNumber(r.comment_count)}</td>
+                        <td className="px-3 py-2 text-right numeric">{formatNumber(r.share_count)}</td>
                         <td className="px-2 py-2 text-right">
                           {safeHref(r.share_url) && (
                             <a href={safeHref(r.share_url)} target="_blank" rel="noopener noreferrer" className="inline-flex text-muted-foreground hover:text-foreground" title="Open post">
