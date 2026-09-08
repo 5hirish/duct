@@ -490,6 +490,17 @@ don't fit.
   of the human-in-the-loop port. Extracted from `agents/audit/v1/runner.py` when
   insights became the second V1 runner. A V1 runner should not talk to
   `init_chat_model` or drive `astream` itself.
+- `agents/core/compaction.py` — lossless payload compaction, applied to a
+  connector result before it reaches the model. Folds a homogeneous row array
+  to typed CSV; **verifies the result structurally and discards a fold that
+  lost anything**, because `lossless_only` does not gate every path in the
+  library underneath (an array of identical strings is still collapsed). Off
+  is not "the model sees everything" — off is the mid-structure cut in
+  `agents/insights/data_tools.py`, which on a 900-row pull drops about two
+  thirds of the numbers. Absent dependency degrades to plain JSON, so a
+  self-host build without the Rust extension still runs. Reached from a
+  `UserPreferences` flag (`context_compression`, default on) threaded through
+  the runner the same way `artifact_format` is.
 - `service/artifact_store.py` — versioned artifact persistence. `ArtifactPersister`
   wraps a runner's emit and stores every `ARTIFACT_VERSION` event; an **adapter**
   (`ArtifactVersion` + a `Callable[[dict], ArtifactVersion]`) reads one version out

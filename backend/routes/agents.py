@@ -1575,6 +1575,7 @@ async def _start_insights(
                     req.user_preferences.preferred_artifact_format or DEFAULT_FORMAT
                 ),
                 autonomy=run.autonomy,
+                compress=req.user_preferences.context_compression,
                 start_version=start_version,
                 resume=is_resume,
             )

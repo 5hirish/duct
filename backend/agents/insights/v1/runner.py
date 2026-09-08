@@ -182,6 +182,7 @@ class AutonomousInsightsRunner:
         remember: bool = True,
         execute: bool = True,
         interactive: bool = True,
+        compress: bool = True,
         system_prompt: str = "",
     ) -> Any:
         """Assemble the agent: memory tools, mid-run questions, planning.
@@ -289,6 +290,7 @@ class AutonomousInsightsRunner:
         data_tools = build_data_tools_lc(
             project_id,
             user_id=user_id,
+            compress=compress,
             log_prefix="insights-v1",
             on_fetch=_on_fetch,
             on_fetch_start=_on_fetch_start,
@@ -382,6 +384,7 @@ class AutonomousInsightsRunner:
         start_version: int = 0,
         chat_idle_timeout: float = CHAT_IDLE_TIMEOUT,
         resume: bool = False,
+        compress: bool = True,
     ) -> None:
         """Run the opening turn, then stay open for follow-ups until idle.
 
@@ -419,6 +422,7 @@ class AutonomousInsightsRunner:
             user_id=user_id,
             conversation_id=conversation_id,
             remember=remember,
+            compress=compress,
         )
 
         async def _on_todo(todos: list) -> None:
@@ -516,6 +520,7 @@ class AutonomousInsightsRunner:
         artifact_format: str = DEFAULT_FORMAT,
         autonomy: str = AUTONOMY_ASK,
         start_version: int = 0,
+        compress: bool = True,
     ) -> dict:
         """One turn, nobody watching. Returns the brief it wrote.
 
@@ -539,6 +544,7 @@ class AutonomousInsightsRunner:
             conversation_id=conversation_id,
             remember=remember,
             interactive=False,
+            compress=compress,
         )
         written: list[dict] = []
         version = {"n": start_version}

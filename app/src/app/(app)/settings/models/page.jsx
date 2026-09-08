@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import ProviderCard from "@/components/connections/ProviderCard";
+import ContextCompressionCard from "@/components/ContextCompressionCard.jsx";
 import TelemetryCard from "@/components/TelemetryCard.jsx";
 import { LOGOS } from "@/components/connections/logos";
 import { PROVIDERS } from "@/lib/providerKeys";
@@ -553,6 +554,16 @@ export default function ModelSettingsPage() {
               </Button>
             )}
           </div>
+
+          {/* How the data those models read is written on the way in. Sits with
+              the tiers rather than with the provider keys because it is a
+              question about a run, not about a credential. */}
+          <h2 className="mt-section-title">Context</h2>
+          <p className="app-subtle mt-lede">
+            What your connectors return can be larger than a model can hold in one go.
+          </p>
+
+          <ContextCompressionCard />
 
           {/* Modality — only what the tier models cannot produce themselves. */}
           <h2 className="mt-section-title">Images &amp; video</h2>

@@ -377,6 +377,7 @@ async def generate_insight(
                 req.user_preferences.preferred_artifact_format or DEFAULT_FORMAT
             ),
             autonomy=run.autonomy,
+            compress=req.user_preferences.context_compression,
         )
     except Exception as exc:
         logger.exception("insights: unattended brief failed")

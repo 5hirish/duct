@@ -19,6 +19,7 @@
 
 import { useState } from "react";
 
+import ContextCompressionCard from "@/components/ContextCompressionCard.jsx";
 import { CookieConsent } from "@/components/CookieConsent";
 import ConnectorDialog from "@/components/connections/ConnectorDialog";
 import ConnectorPermissions from "@/components/connections/ConnectorPermissions";
@@ -136,6 +137,14 @@ function Row({ children }) {
 }
 
 export const SCENES = [
+  {
+    id: "context-compression",
+    state: "on (default) — toggle for off",
+    group: "ContextCompressionCard",
+    title: "Context compression",
+    note: "Both descriptions have to read as a real choice, so click the switch: off must say what the user loses, not just that a feature is off. Watch the card height across the two — the off copy is a line longer, and a card that jumps as you toggle it reads as a glitch. It is the only card in its section, so it takes the content width rather than a conn-grid track — a lone 288px card on a wide page reads as a leftover.",
+    render: () => <ContextCompressionCard />,
+  },
   {
     id: "cookie-consent",
     state: "asking",

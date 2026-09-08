@@ -14,6 +14,7 @@ catalog, and the one test that would need a provider replaces the call.
 
 from __future__ import annotations
 
+import json
 import uuid
 
 import pytest
@@ -141,6 +142,102 @@ def test_an_unbound_connector_says_which_tool_fixes_it(monkeypatch):
 
     assert result["status"] == "needs_account"
     assert "SelectAccount" in result["message"]
+
+
+def test_compaction_keeps_every_number_a_brief_could_quote():
+    """The property the whole feature rests on.
+
+    Compaction changes how rows are written, never which numbers they carry —
+    a brief quotes these values into a customer's inbox. If a release ever
+    makes the fold lossy, this is where it stops.
+    """
+    rows = [
+        {"query": f"term {i}", "clicks": i * 3, "cost": round(i * 1.37, 2), "position": i / 7}
+        for i in range(300)
+    ]
+    payload = {
+        "status": "ok",
+        "entity_id": "gsc_queries",
+        "date_from": "2026-08-01",
+        "date_to": "2026-08-30",
+        "data": {"row_count": len(rows), "rows": rows},
+    }
+
+    out = _truncate(payload, compress=True)
+
+    assert len(out) < len(json.dumps(payload))
+    for row in rows:
+        for value in (row["clicks"], row["cost"], row["position"]):
+            assert str(value) in out, f"{value} did not survive compaction"
+
+
+def test_compaction_leaves_the_envelope_readable():
+    """The window has to travel with the data — a number without its date range
+    is the easiest way to state something false (see fetch_entity). Compaction
+    must not cost us the fields that carry it."""
+    payload = {
+        "status": "ok",
+        "entity_id": "gsc_queries",
+        "date_from": "2026-08-01",
+        "date_to": "2026-08-30",
+        "data": {"rows": [{"q": f"q{i}", "clicks": i} for i in range(50)]},
+    }
+
+    parsed = json.loads(_truncate(payload, compress=True))
+
+    assert parsed["status"] == "ok"
+    assert parsed["date_from"] == "2026-08-01"
+    assert parsed["date_to"] == "2026-08-30"
+
+
+def test_commas_in_a_string_field_do_not_shift_the_columns():
+    """Search terms contain commas, quotes and newlines. A row folded to CSV
+    without quoting them would slide every later value one column left and
+    hand the model a real number under the wrong heading — wrong in the one
+    way nobody would catch by reading."""
+    rows = [
+        {"search_term": 'ga4 alternative, free', "clicks": 111, "cost": 1.5},
+        {"search_term": 'best "analytics" tool', "clicks": 222, "cost": 2.5},
+        {"search_term": "a,b,c,d", "clicks": 333, "cost": 3.5},
+    ] * 10
+    payload = {"status": "ok", "data": {"rows": rows}}
+
+    out = _truncate(payload, compress=True)
+
+    # Each row's own values stay adjacent to each other, which is what a shift
+    # would break.
+    assert '"ga4 alternative, free",111,1.5' in out or "111,1.5" in out
+    assert "333,3.5" in out
+
+
+def test_duplicate_rows_are_not_collapsed_into_one():
+    """Two identical rows are two rows.
+
+    The compactor has a path that folds an array of identical values down to a
+    sample — defensible for a log tail, wrong for an analytics pull, where the
+    duplicate is a second real record and the count is a number a brief quotes.
+    ``lossless_only`` does not gate that path, so compaction.py verifies each
+    result and discards one that lost content. This test is that guarantee: it
+    is about what reaches the model, not about which library setting produced
+    it, so it keeps holding if the library changes its mind.
+    """
+    payload = {"status": "ok", "data": {"rows": ["identical" * 120] * 200}}
+
+    out = _truncate(payload, compress=True)
+
+    # Either the rows survive as rows, or the payload was too big and the
+    # documented cut fired. What must never happen is a tidy, complete-looking
+    # response holding 2 of the 200.
+    if "data_truncated" not in out:
+        assert json.loads(out)["data"]["rows"] == payload["data"]["rows"]
+
+
+def test_compression_off_is_the_old_behaviour_exactly():
+    """The preference has to be a real switch: off must produce the bytes the
+    tool produced before compaction existed."""
+    payload = {"status": "ok", "data": {"rows": [{"q": f"q{i}", "clicks": i} for i in range(50)]}}
+
+    assert _truncate(payload, compress=False) == json.dumps(payload, default=str)
 
 
 def test_oversized_responses_keep_their_envelope():

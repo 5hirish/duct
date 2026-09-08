@@ -43,6 +43,15 @@ class UserPreferences(BaseModel):
     # cost and quality of every existing project. See agents/thinking.py.
     thinking: Literal["", "quick", "balanced", "deep", "exhaustive"] = ""
 
+    context_compression: bool = True
+    # Whether a connector payload is folded to typed CSV before it is handed to
+    # the model. On by default because off is not "the model sees everything" —
+    # off is the mid-structure cut in agents/insights/data_tools.py, which on a
+    # large pull drops rows the brief then reasons without. The fold is
+    # lossless, so this changes how the rows are written, never which numbers
+    # they carry. It stays a preference rather than a constant only so someone
+    # who suspects the shape can rule it out in one click.
+
     preferred_artifact_format: Literal["markdown", "html"] = "markdown"
     # markdown — a written brief (default): renders in-app, copies into a doc,
     #            diffs cleanly between versions
