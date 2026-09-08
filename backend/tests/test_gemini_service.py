@@ -21,7 +21,7 @@ from uuid import uuid4
 import pytest
 
 from agents.models import ImageModel
-from service.google.gemini.schema import GeneratedImage, ThinkingLevel
+from service.images.schema import GeneratedImage, ThinkingLevel
 
 
 # ---------------------------------------------------------------------------
@@ -63,7 +63,7 @@ def test_persist_generated_image_writes_file_and_inserts_row(mime_type, expected
     """Catches: wrong file extension for mime type, missing intermediate
     dirs, wrong URL prefix, missing ContentAsset fields. These are the
     actual ways persist_generated_image can break."""
-    from service.google.gemini.storage import persist_generated_image
+    from service.images.storage import persist_generated_image
 
     with tempfile.TemporaryDirectory() as tmpdir:
         # Persistence now flows through service.storage (local backend → disk).

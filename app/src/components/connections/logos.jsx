@@ -36,6 +36,16 @@ export const OpenRouterMark = (
   </svg>
 );
 
+// xAI's wordmark is a trademark too; a stylised X in `currentColor` says
+// which provider without borrowing their letterforms.
+export const XaiMark = (
+  <svg viewBox="0 0 24 24" role="img" aria-label="xAI" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
+    <path d="M5 5l14 14" />
+    <path d="M19 5l-5.5 5.5" />
+    <path d="M10.5 13.5L5 19" />
+  </svg>
+);
+
 export const LOGOS = {
   google_ads: <Img src="/icons/google-ads.svg" alt="Google Ads" />,
   gsc: <Img src="/icons/google-search-console.png" alt="Google Search Console" />,
@@ -56,4 +66,5 @@ export const LOGOS = {
   openai: OpenAiMark,
   gemini: <Img src="/icons/gemini.svg" alt="Google Gemini" />,
   openrouter: OpenRouterMark,
+  xai: XaiMark,
 };

@@ -135,6 +135,7 @@ export const PROVIDER_LOGO_KEY = {
   openai: "openai",
   google_genai: "gemini",
   openrouter: "openrouter",
+  xai: "xai",
 };
 
 // ---------------------------------------------------------------------------
@@ -194,24 +195,31 @@ export function modelPayload(map = loadModelMap()) {
 // Server reads
 // ---------------------------------------------------------------------------
 
+/** What `fetchProviderStatus` answers when the server cannot be asked. */
+const NO_PROVIDER_STATUS = Object.freeze({ providers: [], images: null });
+
 /**
- * Which providers this browser can actually reach.
+ * Which providers this browser can actually reach, and which one would draw.
  *
  * Sends the `X-Provider-*` headers deliberately: the honest answer is the
  * union of the customer's keys and the server's, and only the server sees
- * both. On failure returns `[]`, and the page degrades to showing models
- * without credential chips rather than claiming everything is broken.
+ * both. `images` is the server's pick for the image tools — provider, model,
+ * source — computed from the same tiles by the same preference order the
+ * run uses, so the Images row never claims a backend the run would not.
+ * On failure returns no providers and no image pick, and the page degrades
+ * to showing models without credential chips rather than claiming
+ * everything is broken.
  */
 export async function fetchProviderStatus() {
   try {
     const res = await fetch(`${BASE}/api/providers/status`, {
       headers: { ...backendAuthedHeaders(), ...(await providerKeyHeaders()) },
     });
-    if (!res.ok) return [];
+    if (!res.ok) return NO_PROVIDER_STATUS;
     const payload = await res.json();
-    return payload.providers ?? [];
+    return { providers: payload.providers ?? [], images: payload.images ?? null };
   } catch {
-    return [];
+    return NO_PROVIDER_STATUS;
   }
 }
 

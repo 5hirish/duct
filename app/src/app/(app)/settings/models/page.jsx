@@ -256,6 +256,79 @@ function TierCard({ tier, index, value, models, providersById, engine, jobs, pre
   );
 }
 
+/**
+ * The Images row: which key draws, resolved by the server.
+ *
+ * Used to print `gemini-3.1-flash-image` as a literal beside the Gemini mark,
+ * which read as a rule — and sent people on an OpenAI or xAI key to Google
+ * for something their own key already does. The server now answers with its
+ * pick (same preference order the run uses: Gemini, then OpenAI, then xAI),
+ * and this renders whatever came back. `catalogue.image_models` lists the
+ * providers that can draw at all, for the empty state and the hint.
+ */
+function ImagesRow({ images, catalogue, providersById }) {
+  const imageProviders = useMemo(() => {
+    const order = catalogue?.image_provider_order ?? [];
+    const seen = new Set((catalogue?.image_models ?? []).map((model) => model.provider));
+    return order.filter((id) => seen.has(id));
+  }, [catalogue]);
+  // Before the catalogue answers there is nothing to list; the three names
+  // are the ones the server would send, not a second copy of the rule.
+  const providerNames = (imageProviders.length
+    ? imageProviders.map((id) => providersById[id]?.label || id)
+    : ["Google Gemini", "OpenAI", "xAI"]
+  )
+    .join(", ")
+    .replace(/, ([^,]*)$/, " or $1");
+  const picked = images?.provider ? images : null;
+  const pickedLabel = picked ? providersById[picked.provider]?.label || picked.provider : "";
+  const others = imageProviders.filter((id) => id !== picked?.provider && providersById[id]?.reachable);
+
+  let note;
+  if (!images) {
+    note = "Checking which of your keys can draw…";
+  } else if (!picked) {
+    note = `None of your tier models generate images. Add a ${providerNames} key and Duct will draw with it.`;
+  } else if (others.length) {
+    note = `Drawing with your ${pickedLabel} key. Your ${others
+      .map((id) => providersById[id]?.label || id)
+      .join(" and ")} key${others.length > 1 ? "s" : ""} can draw too; ${pickedLabel} comes first when more than one is set.`;
+  } else {
+    note = `None of your tier models generate images, so Duct draws with your ${pickedLabel} key.`;
+  }
+
+  return (
+    <div className="mt-mod-row">
+      <div className="mt-mod-name">
+        <span className="mt-mod-mark" aria-hidden="true">
+          <ImageIcon size={15} strokeWidth={1.75} />
+        </span>
+        <div>
+          <strong>Images</strong>
+          <span>Slides and post images · Content Studio</span>
+        </div>
+      </div>
+      <div className="mt-mod-ctl">
+        {picked ? (
+          <>
+            <ProviderMark providerId={picked.provider} />
+            <code className="mt-mono">{picked.model}</code>
+            <StateChip
+              tone={SOURCE_TONE[picked.source] || "ok"}
+              title={`${SOURCE_DETAIL[picked.source] || ""} — chosen for you, no tier model can generate images`}
+            >
+              {SOURCE_LABELS[picked.source] || "Auto"}
+            </StateChip>
+          </>
+        ) : (
+          <StateChip tone={images ? "warn" : "neutral"}>{images ? "Needs a key" : "Checking"}</StateChip>
+        )}
+      </div>
+      <p className="mt-mod-note">{note}</p>
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
@@ -264,6 +337,8 @@ export default function ModelSettingsPage() {
   const [map, setMap] = useState({});
   const [catalogue, setCatalogue] = useState(null);
   const [providers, setProviders] = useState([]);
+  // The server's pick for the image tools, or null until it answers.
+  const [images, setImages] = useState(null);
   const [preview, setPreview] = useState(null);
   const [saved, setSaved] = useState("");
   const savedTimer = useRef(null);
@@ -272,7 +347,10 @@ export default function ModelSettingsPage() {
   useEffect(() => {
     setMap(loadModelMap());
     fetchModelCatalogue().then(setCatalogue);
-    fetchProviderStatus().then(setProviders);
+    fetchProviderStatus().then((status) => {
+      setProviders(status.providers);
+      setImages(status.images);
+    });
   }, []);
 
   const picks = useMemo(() => tierPicks(map), [map]);
@@ -483,27 +561,7 @@ export default function ModelSettingsPage() {
           </p>
 
           <div className="mt-modality">
-            <div className="mt-mod-row">
-              <div className="mt-mod-name">
-                <span className="mt-mod-mark" aria-hidden="true">
-                  <ImageIcon size={15} strokeWidth={1.75} />
-                </span>
-                <div>
-                  <strong>Images</strong>
-                  <span>Slides and post images · Content Studio</span>
-                </div>
-              </div>
-              <div className="mt-mod-ctl">
-                <ProviderMark providerId="google_genai" />
-                <code className="mt-mono">gemini-3.1-flash-image</code>
-                <StateChip tone="ok" title="Chosen for you — no tier model can generate images">
-                  Auto
-                </StateChip>
-              </div>
-              <p className="mt-mod-note">
-                None of your tier models generate images, so Duct uses a dedicated one.
-              </p>
-            </div>
+            <ImagesRow images={images} catalogue={catalogue} providersById={providersById} />
 
             <div className="mt-mod-row">
               <div className="mt-mod-name">

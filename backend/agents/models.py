@@ -147,26 +147,73 @@ class AgentEffort(StrEnum):
 
 
 class ImageModel(str, Enum):
-    """Image generation model IDs (Gemini image models via google-genai SDK).
+    """Image generation model IDs, across the three providers that have one.
 
-    Imagen is gone: imagen-4.0-{generate,ultra-generate,fast-generate}-001 were
-    retired on 2026-08-17 and Google's own replacement is gemini-3.1-flash-image
-    — already the default below, so nothing here lost a capability. Their
-    generate_images/edit_image call path went with them.
+    ``provider_of`` places each by prefix, the same way it does chat models,
+    and ``service/images/client.py`` turns the provider into a backend.
 
-    gemini-2.5-flash-image is dropped for the same reason ahead of its
-    2026-10-02 shutdown. Historical ContentAsset rows still carry these strings;
-    that is fine, ImageAsset.model is a plain str and is never re-validated.
+    Google. Imagen is gone: imagen-4.0-{generate,ultra-generate,fast-generate}-001
+    were retired on 2026-08-17 and Google's own replacement is
+    gemini-3.1-flash-image — already the default below, so nothing here lost a
+    capability. gemini-2.5-flash-image is dropped for the same reason ahead of
+    its 2026-10-02 shutdown. Historical ContentAsset rows still carry these
+    strings; that is fine, ImageAsset.model is a plain str and is never
+    re-validated.
+
+    OpenAI. gpt-image-2 only: gpt-image-1.5, gpt-image-1-mini and
+    chatgpt-image-latest shut down on 2026-12-01 (announced 2026-06-02), so
+    listing them would be listing a deadline. Needs API Organization
+    Verification on some accounts, and Tier 1 is capped at 5 images/minute.
+
+    xAI. grok-imagine-image-2.0 is the id the generation and edit endpoints
+    document; the plain ``grok-imagine-image`` alias is the older standard tier.
     """
 
     GEMINI_3_1_FLASH_IMAGE      = "gemini-3.1-flash-image"
     GEMINI_3_1_FLASH_LITE_IMAGE = "gemini-3.1-flash-lite-image"
     GEMINI_3_PRO_IMAGE          = "gemini-3-pro-image"
+    GPT_IMAGE_2                 = "gpt-image-2"
+    GROK_IMAGINE_IMAGE_2        = "grok-imagine-image-2.0"
 
 
 # gemini-3.1-flash-image: the high-efficiency, high-volume flash image model
-# (per the Gemini image-generation docs) — the right default for slide gen.
+# (per the Gemini image-generation docs) — the right default for slide gen,
+# and what the tool schema advertises before a run has resolved a provider.
 DEFAULT_IMAGE_MODEL = ImageModel.GEMINI_3_1_FLASH_IMAGE
+
+# The model a run uses on each image-capable provider when the agent did not
+# name one, or named one the resolved provider cannot serve.
+DEFAULT_IMAGE_MODELS: dict[Provider, ImageModel] = {
+    Provider.GOOGLE_GENAI: ImageModel.GEMINI_3_1_FLASH_IMAGE,
+    Provider.OPENAI:       ImageModel.GPT_IMAGE_2,
+    Provider.XAI:          ImageModel.GROK_IMAGINE_IMAGE_2,
+}
+
+# Which key a run spends on images, when the user brought more than one.
+# Gemini leads because it is the cheapest per slide and the only backend that
+# takes several references in one call — the pattern the slide prompts are
+# written for. The order is a preference, not a capability ranking: any of
+# the three serves a run on its own.
+IMAGE_PROVIDER_ORDER: tuple[Provider, ...] = (
+    Provider.GOOGLE_GENAI,
+    Provider.OPENAI,
+    Provider.XAI,
+)
+
+
+def image_model_for(provider: Provider, requested: "ImageModel | str | None" = None) -> ImageModel:
+    """The image model a run on ``provider`` should use.
+
+    The agent's tool schema defaults to the Gemini model, so on any other
+    backend the request arrives naming a model the key cannot reach. That is
+    corrected here rather than refused: the agent chose "an image", not "a
+    Google image".
+    """
+    if requested is not None:
+        name = str(getattr(requested, "value", requested) or "").strip()
+        if name and provider_of(name) is provider:
+            return ImageModel(name)
+    return DEFAULT_IMAGE_MODELS[provider]
 
 
 class AspectRatio(StrEnum):
@@ -477,6 +524,10 @@ _PROVIDER_PREFIXES: tuple[tuple[str, Provider], ...] = (
     ("gpt-", Provider.OPENAI),
     ("o1-", Provider.OPENAI),
     ("o3-", Provider.OPENAI),
+    # Absent until the image models arrived, which is why the catalogue never
+    # listed grok-4.6 under xAI: provider_of returned None and the endpoint
+    # skipped it.
+    ("grok-", Provider.XAI),
 )
 
 

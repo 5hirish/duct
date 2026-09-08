@@ -31,7 +31,7 @@ export const PROVIDERS = [
     header: "X-Provider-OpenAI",
     placeholder: "sk-…",
     prefix: "sk-",
-    description: "GPT models on the LangChain (v1) engine.",
+    description: "GPT models on the LangChain (v1) engine, and gpt-image-2 for images.",
     consoleUrl: "https://platform.openai.com/api-keys",
   },
   {
@@ -41,7 +41,7 @@ export const PROVIDERS = [
     header: "X-Provider-Gemini",
     placeholder: "AIza…",
     prefix: "",
-    description: "Gemini models, and every image Duct generates.",
+    description: "Gemini models, and Duct's first choice for images.",
     consoleUrl: "https://aistudio.google.com/app/apikey",
   },
   {
@@ -64,7 +64,7 @@ export const PROVIDERS = [
     header: "X-Provider-XAI",
     placeholder: "xai-…",
     prefix: "xai-",
-    description: "Grok models on the LangChain (v1) engine.",
+    description: "Grok models on the LangChain (v1) engine, and Grok Imagine for images.",
     consoleUrl: "https://console.x.ai",
   },
 ];

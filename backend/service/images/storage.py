@@ -11,9 +11,21 @@ from sqlmodel import Session
 
 from models.content import ContentAsset
 from service import storage
-from service.google.gemini.schema import GeneratedImage, ImageAsset
+from agents.models import Provider
+from service.images.schema import GeneratedImage, ImageAsset
 
 logger = logging.getLogger(__name__)
+
+
+# What ``content_assets.source`` records for a generated image. Gemini rows
+# have said "gemini" since the column existed and the value is a plain string
+# nothing re-validates, so the historical spelling stays; the other backends
+# use their provider id.
+_ASSET_SOURCE: dict[Provider, str] = {Provider.GOOGLE_GENAI: "gemini"}
+
+
+def asset_source_for(provider: Provider) -> str:
+    return _ASSET_SOURCE.get(provider, provider.value)
 
 
 _MIME_TO_EXT = {
@@ -32,7 +44,7 @@ def persist_generated_image(
     model:  str,
     params: dict,
     post_id: UUID | None = None,
-    source:  str = "gemini",
+    source:  str,
 ) -> ImageAsset:
     """Persist image bytes to object storage under
     projects/{project_id}/generated/<uuid>.<ext>, insert a ContentAsset row, and
@@ -40,8 +52,8 @@ def persist_generated_image(
     relative (/uploads/... for the local backend) — the rest of the app treats
     it as an opaque public URL.
 
-    `source` is recorded on the row; defaults to 'gemini' for the image
-    service. Pass 'upload' from the caller when appropriate.
+    `source` is recorded on the row: ``asset_source_for(provider)`` for a
+    generated image, ``"upload"`` from the upload route.
     """
     ext = _MIME_TO_EXT.get(image.mime_type, "png")
     asset_id = uuid4()

@@ -1,13 +1,19 @@
-"""Pydantic request/response models for the Gemini image service.
+"""Pydantic request/response models shared by every image backend.
 
-Every flag is an enum — no bare strings. Per-model option pruning happens
-inside the client (e.g. GEMINI_3_1_FLASH_IMAGE collapses LOW/MEDIUM →
-MINIMAL/HIGH thinking levels).
+One request shape for Gemini, OpenAI and xAI: the content tools build a
+``GenerateImageRequest`` / ``EditImageRequest`` once and hand it to whichever
+client the run resolved (see ``service/images/client.py``). Each client maps
+the provider-neutral fields — aspect ratio, size, count — onto its own wire
+format, and prunes what its model cannot take (e.g. GEMINI_3_1_FLASH_IMAGE
+collapses LOW/MEDIUM → MINIMAL/HIGH thinking levels; OpenAI wants a pixel
+size, not a ratio). ``service/images/sizing.py`` holds those translations.
+
+Every flag is an enum — no bare strings.
 
 Some fields here are inert since Imagen was retired: negative_prompt, seed and
 person_generation on generate, and edit_mode / mask / style / subject refs on
 edit, were all Imagen-only options. They are kept — the @tool surface and
-stored params still carry them — but generate_content ignores them today.
+stored params still carry them — but no current backend honours them.
 """
 
 from __future__ import annotations
@@ -69,7 +75,7 @@ class SubjectType(StrEnum):
 
 
 class GenerateImageRequest(BaseModel):
-    """Inputs for GeminiImageClient.generate_image()."""
+    """Inputs for ``ImageClient.generate_image()`` on any backend."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -81,11 +87,12 @@ class GenerateImageRequest(BaseModel):
     # camera/style).
     input_image_url:   HttpUrl | None = None
 
-    # Multiple reference assets — Gemini-class models only. Bytes are
-    # resolved by the @tool layer and passed in order to the SDK as
-    # separate inline_data parts. Max 3 recommended in practice; the
-    # Gemini 3.x spec accepts up to 14 (10 object + 4 character) but
-    # passing >3 routinely is a code smell.
+    # Multiple reference assets. Bytes are resolved by the @tool layer and
+    # passed in order: Gemini takes them as inline parts, OpenAI as the
+    # ``image`` list of an edits call, xAI takes the first only (its edits
+    # endpoint is single-image). Max 3 recommended in practice; the Gemini
+    # 3.x spec accepts up to 14 (10 object + 4 character) but passing >3
+    # routinely is a code smell.
     #
     # Common pattern: [character_ref, camera_ref] for slides 2-5 — the
     # first locks face/skin/hair, the second imitates TikTok framing.
@@ -107,7 +114,7 @@ class GenerateImageRequest(BaseModel):
 
 
 class EditImageRequest(BaseModel):
-    """Inputs for GeminiImageClient.edit_image()."""
+    """Inputs for ``ImageClient.edit_image()`` on any backend."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -134,7 +141,7 @@ class EditImageRequest(BaseModel):
 
 
 class GeneratedImage(BaseModel):
-    """One image returned by the Gemini SDK. data is raw bytes (not base64)."""
+    """One image returned by a backend. data is raw bytes (not base64)."""
 
     model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
 

@@ -23,7 +23,14 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlmodel import Session
 
 from agents.engines import ENGINE_SUPPORTED_PROVIDERS, PROVIDER_CONFIG_ATTR, Engine
-from agents.models import ModelName, Provider, provider_of
+from agents.models import (
+    DEFAULT_IMAGE_MODELS,
+    IMAGE_PROVIDER_ORDER,
+    ImageModel,
+    ModelName,
+    Provider,
+    provider_of,
+)
 from agents.tiers import (
     DEFAULT_TIER_MODELS,
     JOB_TIER,
@@ -59,16 +66,22 @@ _PROVIDER_LABELS: dict[Provider, tuple[str, str]] = {
         "Anthropic",
         "Claude models. The only provider the Claude Agent SDK (v3) accepts.",
     ),
-    Provider.OPENAI: ("OpenAI", "GPT models on the LangChain (v1) engine."),
+    Provider.OPENAI: (
+        "OpenAI",
+        "GPT models on the LangChain (v1) engine, and gpt-image-2 for images.",
+    ),
     Provider.GOOGLE_GENAI: (
         "Google Gemini",
-        "Gemini models, and every image Duct generates.",
+        "Gemini models, and Duct's first choice for images.",
     ),
     Provider.OPENROUTER: (
         "OpenRouter",
         "One key, 500+ models — and any OpenAI-compatible gateway you point it at.",
     ),
-    Provider.XAI: ("xAI", "Grok models on the LangChain (v1) engine."),
+    Provider.XAI: (
+        "xAI",
+        "Grok models on the LangChain (v1) engine, and Grok Imagine for images.",
+    ),
 }
 
 # Human-facing tier hint per model, so the picker can group options the way the
@@ -169,7 +182,28 @@ def providers_status(
             "stored": has_stored,
             "engines": _engines_for(provider),
         })
-    return {"providers": providers}
+    return {"providers": providers, "images": _images_status(providers)}
+
+
+def _images_status(providers: list[dict]) -> dict:
+    """Which provider the image tools would spend, given the tiles above.
+
+    Same preference order as ``resolve_image_run`` and the same reachability
+    the tiles already computed, so the Images row on the settings page and
+    the run agree by construction. ``source`` is ``none`` when no image-capable
+    provider is reachable — the row then asks for a key rather than naming a
+    model nothing can run.
+    """
+    by_id = {row["id"]: row for row in providers}
+    for provider in IMAGE_PROVIDER_ORDER:
+        row = by_id.get(provider.value)
+        if row and row["reachable"]:
+            return {
+                "provider": provider.value,
+                "model": DEFAULT_IMAGE_MODELS[provider].value,
+                "source": row["source"],
+            }
+    return {"provider": None, "model": None, "source": "none"}
 
 
 class StoreProviderKeyRequest(BaseModel):
@@ -266,6 +300,18 @@ def models_catalogue() -> dict:
             for provider, triple in PROVIDER_TRIPLES.items()
         },
         "jobs": [{"id": job.value, "tier": JOB_TIER[job].value} for job in Job],
+        # Image models are not tier picks — a run takes its provider's default
+        # — but the page lists them so "which providers can draw" is read
+        # from the same source as everything else on it.
+        "image_models": [
+            {
+                "id": model.value,
+                "provider": provider_of(model).value,
+                "default": DEFAULT_IMAGE_MODELS.get(provider_of(model)) is model,
+            }
+            for model in ImageModel
+        ],
+        "image_provider_order": [provider.value for provider in IMAGE_PROVIDER_ORDER],
     }
 
 

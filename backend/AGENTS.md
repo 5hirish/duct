@@ -69,6 +69,28 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   rather than re-priming from the transcript (the DB re-prime remains for
   conversations recorded before the thread was durable).
 
+  **Images are a second provider inside a content run, and not a fixed one.**
+  The conversation runs on whatever key the user brought for chat; the pictures
+  run on whatever *image-capable* key they brought — Gemini, OpenAI or xAI, in
+  that order of preference (`agents/models.IMAGE_PROVIDER_ORDER`). The seam is
+  `service/images/`: one request shape, one `ImageAPIError`, one factory
+  (`image_client_for`), three backends (`service/google/gemini/client.py`,
+  `service/openai/images.py`, `service/xai/images.py`). `routes/content.py`
+  resolves the image run once per session (`agents/engines.resolve_image_run`)
+  and stashes provider + key on it; the tools spend that or decline, and the
+  decline names all three providers. The agent's tool schema still defaults to
+  the Gemini model id, so `image_model_for` swaps in the resolved provider's
+  default rather than refusing — the agent asked for an image, not a Google
+  image. Adding a backend means a client module, an `ImageModel` entry whose
+  prefix `provider_of` recognises, a `DEFAULT_IMAGE_MODELS` row, and a branch in
+  the factory; `/providers/status` and `/models/catalogue` derive the settings
+  page's Images row from those same tables, so nothing in the browser lists a
+  model. The ChatGPT-subscription route (`agents/core/codex.py`) is deliberately
+  not an image backend: it can draw through Codex's hosted tool, but OpenAI's
+  own docs scope subscription sign-in to Codex products and it is Plus-and-up,
+  per-minute-quota'd, and unofficial — the wrong thing to put a customer's slide
+  deck on.
+
   Two consequences, stated rather than discovered later. **Content on Claude now
   needs an API key** — `routes/content.py` refuses the subscription credential with
   the same 402 the browser already handles. And **the model only sees the images it

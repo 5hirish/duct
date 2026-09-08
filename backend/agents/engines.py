@@ -32,7 +32,14 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
 
-from agents.models import MODEL_FALLBACK, ModelName, Provider
+from agents.models import (
+    DEFAULT_IMAGE_MODELS,
+    IMAGE_PROVIDER_ORDER,
+    MODEL_FALLBACK,
+    ImageModel,
+    ModelName,
+    Provider,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -313,6 +320,45 @@ class RunModel:
     #: Anthropic key works there — a run on another provider persists its
     #: artifacts without a digest. Empty when that is the case.
     summary_key: str
+
+
+@dataclass(frozen=True)
+class ImageRun:
+    """The provider, model and key a run spends on images."""
+
+    provider: Provider
+    model: ImageModel
+    api_key: str
+    #: Same vocabulary as ``ProviderKey.source``.
+    source: str
+
+
+def resolve_image_run(
+    user_keys: Mapping[Provider, str] | None = None,
+    stored_keys: Mapping[Provider, str] | None = None,
+) -> ImageRun | None:
+    """Which image-capable provider this run may spend, or None for none.
+
+    Images are a second provider inside a content run and get their own
+    resolution: the conversation's key is whatever the user brought for chat,
+    and it need not be an image-capable one. Providers are tried in
+    ``IMAGE_PROVIDER_ORDER`` under the same credential rules as every other
+    call (``resolve_provider_key``), and the first one with a spendable key
+    wins. None is a normal answer — the image tools decline politely — not an
+    error, because a content session is worth having without pictures.
+    """
+    for provider in IMAGE_PROVIDER_ORDER:
+        try:
+            resolved = resolve_provider_key(provider, user_keys, stored_keys=stored_keys)
+        except ProviderKeyRequired:
+            continue
+        return ImageRun(
+            provider=provider,
+            model=DEFAULT_IMAGE_MODELS[provider],
+            api_key=resolved.key,
+            source=resolved.source,
+        )
+    return None
 
 
 def resolve_run_model(
