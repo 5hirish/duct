@@ -109,7 +109,7 @@ export const SOURCE_DETAIL = {
   stored: "Using your saved key — also serves scheduled runs",
   env: "Using a key from this instance's environment",
   cloud: "Using Duct's hosted key — our account is paying",
-  subscription: "Using your Claude subscription on this machine",
+  subscription: "Using your ChatGPT plan, signed in on this desktop",
   none: "No key set",
 };
 
@@ -196,7 +196,7 @@ export function modelPayload(map = loadModelMap()) {
 // ---------------------------------------------------------------------------
 
 /** What `fetchProviderStatus` answers when the server cannot be asked. */
-const NO_PROVIDER_STATUS = Object.freeze({ providers: [], images: null });
+const NO_PROVIDER_STATUS = Object.freeze({ providers: [], images: null, chatgptAuthEnabled: false });
 
 /**
  * Which providers this browser can actually reach, and which one would draw.
@@ -217,7 +217,13 @@ export async function fetchProviderStatus() {
     });
     if (!res.ok) return NO_PROVIDER_STATUS;
     const payload = await res.json();
-    return { providers: payload.providers ?? [], images: payload.images ?? null };
+    return {
+      providers: payload.providers ?? [],
+      images: payload.images ?? null,
+      // The backend's kill switch for "Continue with ChatGPT". Absent on an
+      // older backend, which never offered the path, so absent means off.
+      chatgptAuthEnabled: payload.chatgpt_auth_enabled === true,
+    };
   } catch {
     return NO_PROVIDER_STATUS;
   }

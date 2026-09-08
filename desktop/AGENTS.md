@@ -54,6 +54,21 @@ carries all the code.
   New shell-dependent web flows must be gated on a `get_shell_info` capability
   flag, never on version sniffing — old shells keep the legacy path.
 
+- **"Continue with ChatGPT"** (`src-tauri/src/chatgpt.rs`,
+  `capabilities.chatgptAuth`) is the one OAuth the shell runs *itself* rather
+  than relaying to the backend: OpenAI's ChatGPT client accepts exactly one
+  redirect, `http://localhost:1455/auth/callback`, which only a process on the
+  user's machine can serve. PKCE in the system browser, a hand-rolled
+  one-request loopback listener, the token exchange over reqwest, and the whole
+  bundle in the keychain under its own service (`ai.getduct.desktop.chatgpt`).
+  **The refresh token never leaves the machine.** `chatgpt_credential` hands
+  the web app an hour-long access token plus the account id, refreshing first
+  when needed; the web app sends those as the OpenAI request headers
+  (`app/src/lib/chatgpt.js`, `backend/agents/core/codex.py`). It is not
+  `~/.codex/auth.json` on purpose — rotating a refresh token there signs the
+  user out of the Codex CLI. Whether the path is *allowed* is the backend's
+  `CHATGPT_AUTH_ENABLED`; the shell only says whether it *can*.
+
   **Sign-in is the one exception, and deliberately so.** A shell without
   `browserAuth` has no legacy path worth keeping: navigating the webview to
   Google is refused outright on some platforms, and where it loads, the request

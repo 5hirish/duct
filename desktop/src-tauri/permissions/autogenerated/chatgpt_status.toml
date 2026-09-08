@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-chatgpt-status"
+description = "Enables the chatgpt_status command without any pre-configured scope."
+commands.allow = ["chatgpt_status"]
+
+[[permission]]
+identifier = "deny-chatgpt-status"
+description = "Denies the chatgpt_status command without any pre-configured scope."
+commands.deny = ["chatgpt_status"]

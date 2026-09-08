@@ -16,6 +16,7 @@
 //! `connector` for connecting a data source. Neither carries the credential
 //! itself, only a single-use code the webview redeems against the backend.
 
+mod chatgpt;
 mod sidecar;
 mod telemetry;
 
@@ -41,7 +42,7 @@ fn entry(provider: &str) -> Result<Entry, String> {
 /// The raw error for that is a D-Bus transport message with no hint about the
 /// cause, and the web app used to swallow it entirely — a saved key just
 /// silently didn't persist. Name the actual problem instead.
-fn describe_keyring_error(err: KeyringError) -> String {
+pub(crate) fn describe_keyring_error(err: KeyringError) -> String {
     let generic = err.to_string();
     if !cfg!(target_os = "linux") {
         return generic;
@@ -158,7 +159,13 @@ fn get_shell_info(app: AppHandle) -> serde_json::Value {
             // The `notify` command exists, so the web app may hand "done" and
             // "needs you" notices to the OS instead of the webview's missing
             // Notification API. Older shells lack it and stay silent.
-            "notifications": true
+            "notifications": true,
+            // The `chatgpt_*` commands exist: the web app may offer "Continue
+            // with ChatGPT" and send the access token they mint as the OpenAI
+            // credential. Older shells lack them and show the API-key path
+            // alone. Whether the path is *allowed* is the backend's
+            // CHATGPT_AUTH_ENABLED, read from /api/providers/status.
+            "chatgptAuth": true
         }
     })
 }
@@ -742,7 +749,11 @@ pub fn run() {
             check_for_update,
             install_update,
             get_telemetry_settings,
-            set_telemetry_enabled
+            set_telemetry_enabled,
+            chatgpt::chatgpt_status,
+            chatgpt::chatgpt_login,
+            chatgpt::chatgpt_credential,
+            chatgpt::chatgpt_logout
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

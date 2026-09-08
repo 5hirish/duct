@@ -259,6 +259,11 @@ class Configs(BaseSettings):
     gemini_api_key: str = ""
     openai_api_key: str = ""
     anthropic_api_key: str = ""
+    # Kill switch for "Continue with ChatGPT" — the desktop shell's sign-in to
+    # the user's own ChatGPT plan, which runs on an undocumented backend that
+    # can change without notice. False hides the path in the app; the API-key
+    # path is untouched. Read by /api/providers/status.
+    chatgpt_auth_enabled: bool = True
     # xAI (Grok), on its own LangChain integration.
     xai_api_key: str = ""
     # OpenRouter — its own LangChain integration. One key

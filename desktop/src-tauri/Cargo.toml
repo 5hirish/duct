@@ -1,6 +1,6 @@
 [package]
 name = "desktop"
-version = "0.4.1"
+version = "0.5.0"
 description = "Duct desktop shell"
 authors = ["Duct"]
 edition = "2021"
@@ -68,6 +68,11 @@ keyring = { version = "3", features = ["apple-native", "windows-native", "sync-s
 # url-safe base64 of 32 random bytes, which is all these two are for.
 base64 = "0.23"
 getrandom = "0.4"
+# "Continue with ChatGPT" (src/chatgpt.rs): PKCE needs SHA-256, the token
+# exchange needs an HTTPS client. reqwest is already in the tree through the
+# updater, on rustls for the same signing-and-notarisation reason as sentry.
+sha2 = "0.10"
+reqwest = { version = "0.13", default-features = false, features = ["rustls", "json", "form"] }
 # Self-update for the Developer ID / NSIS / AppImage channels — every channel
 # there is, now that the Mac App Store one (the only place self-update is
 # grounds for rejection) has been retired.

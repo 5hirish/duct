@@ -292,6 +292,7 @@ def test_a_server_key_reads_as_env_locally_and_as_nothing_when_deployed(monkeypa
         openai_api_key = ""
         anthropic_api_key = ""
         openrouter_api_key = ""
+        chatgpt_auth_enabled = True
 
         def __init__(self, local):
             self.duct_local = local

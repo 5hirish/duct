@@ -43,6 +43,7 @@ from langgraph.config import get_stream_writer
 from langgraph.types import Command, interrupt
 from pydantic import BaseModel, Field
 
+from agents.core.codex import build_codex_chat, is_subscription_credential
 from agents.core.errors import classify_error, is_retryable, retry_after_seconds
 from agents.core.events import AgentEvent, StepStatus
 from agents.core.session import (
@@ -217,6 +218,16 @@ def resolve_chat_model(
     that rung, and contributes nothing when the model has no such dial — which
     is why it is safe to pass unconditionally from every call site.
     """
+    # A ChatGPT access token is not an API key and does not go to the public
+    # API: the credential's own shape sends it to the Codex backend. Decided
+    # here, at the one seam every run passes through, so no runner knows.
+    if provider is Provider.OPENAI and is_subscription_credential(api_key):
+        return build_codex_chat(
+            model,
+            api_key=api_key,
+            temperature=temperature,
+            **_thinking_kwargs_for(provider, model, thinking),
+        )
     return init_chat_model(
         model=getattr(model, "value", model),
         model_provider=langchain_provider(provider),

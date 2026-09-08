@@ -11,6 +11,8 @@
  * prefers a supplied key over its own and uses it only for that request.
  */
 
+import { chatgptCredential } from "./chatgpt.js";
+
 export const PROVIDERS = [
   {
     id: "anthropic",
@@ -70,6 +72,7 @@ export const PROVIDERS = [
 ];
 
 const STORAGE_PREFIX = "duct_provider_key_";
+const OPENAI_HEADER = PROVIDERS.find((p) => p.id === "openai").header;
 
 function isTauri() {
   return typeof window !== "undefined" && Boolean(window.__TAURI__);
@@ -127,9 +130,17 @@ export async function clearProviderKey(providerId) {
   return setProviderKey(providerId, "");
 }
 
+/** The account id that rides beside a ChatGPT access token in the OpenAI slot. */
+export const OPENAI_ACCOUNT_HEADER = "X-OpenAI-Account-Id";
+
 /**
  * Build the `X-Provider-*` request headers for whichever keys are set.
  * Returns `{}` server-side or when no keys are stored.
+ *
+ * A pasted OpenAI key wins over a ChatGPT sign-in: the key is the supported
+ * path with predictable limits, and the backend applies the same rule.
+ * Without one, a desktop sign-in fills the OpenAI slot with the plan's access
+ * token — the backend tells the two apart by shape, not by header name.
  */
 export async function providerKeyHeaders() {
   const headers = {};
@@ -137,6 +148,13 @@ export async function providerKeyHeaders() {
   for (const provider of PROVIDERS) {
     const key = await getProviderKey(provider.id);
     if (key) headers[provider.header] = key;
+  }
+  if (!headers[OPENAI_HEADER]) {
+    const cred = await chatgptCredential().catch(() => null);
+    if (cred?.accessToken) {
+      headers[OPENAI_HEADER] = cred.accessToken;
+      if (cred.accountId) headers[OPENAI_ACCOUNT_HEADER] = cred.accountId;
+    }
   }
   return headers;
 }

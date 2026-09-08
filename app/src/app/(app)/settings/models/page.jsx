@@ -31,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import ChatGPTCard from "@/components/connections/ChatGPTCard";
 import ProviderCard from "@/components/connections/ProviderCard";
 import ContextCompressionCard from "@/components/ContextCompressionCard.jsx";
 import TelemetryCard from "@/components/TelemetryCard.jsx";
@@ -340,6 +341,8 @@ export default function ModelSettingsPage() {
   const [providers, setProviders] = useState([]);
   // The server's pick for the image tools, or null until it answers.
   const [images, setImages] = useState(null);
+  // The backend's kill switch for the ChatGPT tile; off until it answers.
+  const [chatgptAuthEnabled, setChatgptAuthEnabled] = useState(false);
   const [preview, setPreview] = useState(null);
   const [saved, setSaved] = useState("");
   const savedTimer = useRef(null);
@@ -351,6 +354,7 @@ export default function ModelSettingsPage() {
     fetchProviderStatus().then((status) => {
       setProviders(status.providers);
       setImages(status.images);
+      setChatgptAuthEnabled(Boolean(status.chatgptAuthEnabled));
     });
   }, []);
 
@@ -604,6 +608,10 @@ export default function ModelSettingsPage() {
           </p>
 
           <div className="conn-grid">
+            {/* Desktop only, and only while the backend allows the path —
+                renders nothing otherwise. First because it is the one
+                provider that costs nothing extra. */}
+            <ChatGPTCard enabled={chatgptAuthEnabled} />
             {PROVIDERS.map((provider) => (
               <ProviderCard
                 key={provider.id}
