@@ -91,7 +91,7 @@ export default function SeoAuditSetupPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // The durable competitor field users actually fill in onboarding is
+  // The durable competitor field users actually fill in project context is
   // `compare_against` (a comma-joined string). `competitors` is a richer
   // [{ name, differentiator }] list with no editor yet, so fall back to its
   // names only when present — never join the raw objects (that prints

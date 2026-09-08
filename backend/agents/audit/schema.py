@@ -109,6 +109,10 @@ class PageSignals(BaseModel):
     og_type: str = ""                                          # "website" | "article" | …
     twitter_card: str = ""
     twitter_image: str = ""
+    # What the site says it is called, and its icon — the two things a project
+    # can be drafted from before any model has run.
+    og_site_name: str = ""
+    favicon: str = ""                                          # absolute URL of the first <link rel~=icon>
 
     # Content
     word_count_approx: int = 0
@@ -202,10 +206,24 @@ class AuditResearchContext(BaseModel):
     competitors: list[CompetitorSignals] = Field(default_factory=list)
     content_gaps: list[str] = Field(default_factory=list)   # topics competitors cover, target doesn't
     enrichment_notes: list[str] = Field(default_factory=list)
+    # Read off the target's own copy during the same pass; onboarding's draft
+    # project takes them with provenance "inferred".
+    personas: list["DraftPersona"] = Field(default_factory=list)
+    brand_voice: str = ""
     # Why the research pass added nothing, for the step chip and the log. Never
     # rendered into the prompt: enrichment_notes is, and an error string there
     # reads to the model as an observation about the site.
     degraded_reason: str = ""
+
+
+class DraftPersona(BaseModel):
+    """A buyer persona as the site's own copy implies it. Flat strings, so a
+    small model matches the schema reliably."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    name: str = ""          # a role or segment: "Marketing lead at a Series A SaaS"
+    description: str = ""   # one sentence of goals and pains
 
 
 class EnrichmentOutput(BaseModel):
@@ -222,6 +240,11 @@ class EnrichmentOutput(BaseModel):
     competitors: list[CompetitorSignals] = Field(default_factory=list)
     content_gaps: list[str] = Field(default_factory=list)
     enrichment_notes: list[str] = Field(default_factory=list)
+    personas: list[DraftPersona] = Field(default_factory=list)
+    brand_voice: str = ""
+
+
+AuditResearchContext.model_rebuild()
 
 
 # ---------------------------------------------------------------------------
@@ -458,6 +481,16 @@ class AuditRequest(BaseModel):
     # thinking off, independent of the other tuning params, so the teaser stays
     # fast. The full app audit leaves this false.
     lead_magnet: bool = False
+    # Onboarding. ``crawl_id`` names a crawl ``/api/audit/prefetch`` already ran
+    # while the user was connecting a provider; present and live, the pipeline
+    # starts at enrichment instead of crawling again. ``draft_project`` asks the
+    # runner to emit what it learned about the site as PROJECT_DRAFT events —
+    # the project the app builds instead of a form. ``tiers`` is the caller's
+    # saved Heavy/Standard/Light map, so the run resolves onto a provider the
+    # caller actually holds a key for.
+    crawl_id: str | None = None
+    draft_project: bool = False
+    tiers: dict[str, str] | None = None
 
 
 class AuditAnswerRequest(BaseModel):

@@ -32,9 +32,9 @@ export default function ProjectMembersPage({ params }) {
         </h1>
         <div className="ml-auto flex items-center gap-2">
           <Button asChild variant="ghost" size="sm">
-            <Link href={`/onboarding?project_id=${encodeURIComponent(projectId)}`}>
+            <Link href={`/project/${encodeURIComponent(projectId)}`}>
               <SlidersHorizontal className="size-4" />
-              Project settings
+              Project context
             </Link>
           </Button>
           <Button asChild variant="ghost" size="sm">

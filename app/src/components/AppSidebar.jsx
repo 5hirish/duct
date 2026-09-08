@@ -8,6 +8,7 @@ import {
   Check,
   Plus,
   ChevronsUpDown,
+  LogIn,
   LogOut,
   Settings,
   Cpu,
@@ -311,16 +312,31 @@ function SidebarUserFooter() {
           </span>
           <div className="flex min-w-0 flex-col group-data-[collapsible=icon]:hidden">
             <span className="truncate text-xs font-medium text-sidebar-foreground">
-              {user.name || user.email}
+              {user.guest ? "Guest" : user.name || user.email}
             </span>
+            {/* A guest's email is a synthetic install id; the useful second
+                line is what an account would do for them. */}
             <span className="truncate text-[11px] text-sidebar-foreground/50">
-              {user.email}
+              {user.guest ? "Sign in to save your work" : user.email}
             </span>
           </div>
           <ChevronsUpDown className="ml-auto size-3.5 shrink-0 text-sidebar-foreground/40 group-data-[collapsible=icon]:hidden" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="start" side="top">
+        {user.guest && (
+          <>
+            {/* The one thing a guest cannot do yet. Sign-in links this guest's
+                work to the account it creates (lib/guest.js). */}
+            <DropdownMenuItem asChild>
+              <Link href="/">
+                <LogIn className="size-4" />
+                <span>Sign in to keep this</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
         <DropdownMenuItem asChild>
           <Link href="/projects">
             <Settings className="size-4" />

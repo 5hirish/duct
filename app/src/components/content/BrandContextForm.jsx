@@ -23,7 +23,7 @@ import { slugify } from "@/lib/slug";
  * Structured form for editing a project's content brand context.
  *
  * Replaces the placeholder JSON editor on the Brand tab. Mirrors the
- * onboarding flow's Field/Input/Label pattern.
+ * project-context page's Field/Input/Label pattern.
  *
  * Sections:
  *   - Identity (tagline, url, description)
@@ -165,8 +165,8 @@ export default function BrandContextForm({ projectId, onSaved }) {
               stay consistent across audit, insights, and content.
             </p>
             <Button variant="outline" size="sm" asChild>
-              <Link href={`/onboarding?project_id=${projectId}`}>
-                <Pencil className="size-3.5" /> Edit in project setup
+              <Link href={`/project/${projectId}#brand`}>
+                <Pencil className="size-3.5" /> Edit project context
               </Link>
             </Button>
           </header>

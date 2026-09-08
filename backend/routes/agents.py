@@ -68,12 +68,6 @@ from agents.core.events import AgentEvent, StepStatus
 from agents.core.errors import error_payload
 from agents.core.session import CLIENT_MESSAGE_ID
 from db.session import get_session as db_session
-from agents.engines import (
-    resolve_engine,
-    resolve_engine_model,
-    resolve_engine_provider,
-    resolve_provider_key,
-)
 from agents.registry import AgentType, get_spec, list_specs
 from config import get_configs
 from models.auth import User
@@ -92,10 +86,21 @@ from service.memory import (
     touch_recall,
 )
 from service.memory_consolidation import schedule_consolidation
+from agents.engines import resolve_job_run
+from agents.tiers import Job
 from service.provider_keys import stored_keys_for
 from utils.dates import now_iso
 
 logger = logging.getLogger(__name__)
+
+# Appended to the first audit's user prompt when onboarding drafted the project
+# (``draft_project``). The system prompt holds the rule; this is the trigger.
+_ONBOARDING_SOURCES_NOTE = (
+    "<onboarding>\nThis is the user's first audit and the project was just drafted "
+    "from the crawl. After FinalizeAuditReport, call ListDataSources; if Search Console "
+    "(`gsc`) is not connected, call RequestConnection for it with a reason tied to one "
+    "finding in this report that click and impression data would confirm.\n</onboarding>"
+)
 
 router = APIRouter(tags=["agents"])
 
@@ -1178,23 +1183,28 @@ async def _start_seo_audit(
         raise HTTPException(422, f"Invalid seo-audit config: {exc}") from exc
 
     cfg = get_configs()
-    engine = resolve_engine(req.engine)
-    provider = resolve_engine_provider(engine, cfg.generate_provider or None)
-    model = resolve_engine_model(engine, provider, cfg.generate_model or None)
-
     session = get_session(session_id)
     owner_id = getattr(session, "user_id", None) if session else None
+    # The tier map decides the provider, over the keys this caller can spend
+    # (agents/engines.resolve_job_run) — so a user holding only an OpenAI key
+    # runs on OpenAI instead of being asked for the instance default's key.
     # The lead-magnet teaser is demand gen — Duct funds it deliberately, and
     # this is the only place in the audit path that may say so. Everything else
     # fails closed on the hosted deployment without a key of the caller's own.
-    resolved = resolve_provider_key(
-        provider, user_keys, stored_keys=stored_keys_for(owner_id), duct_pays=req.lead_magnet
+    run = resolve_job_run(
+        Job.AUDIT,
+        engine_override=req.engine,
+        user_keys=user_keys,
+        stored_keys=stored_keys_for(owner_id),
+        tier_map=req.tiers,
+        duct_pays=req.lead_magnet,
+        log_prefix="audit",
     )
-    api_key = resolved.key
-    if resolved.billed_to_duct:
+    provider, model, api_key = run.provider, run.model, run.api_key
+    if run.source in ("cloud", "subscription"):
         logger.info(
             "audit: run billed to Duct (%s/%s, lead_magnet=%s)",
-            provider.value, resolved.source, req.lead_magnet,
+            provider.value, run.source, req.lead_magnet,
         )
 
     runner = LangChainAuditRunner(
@@ -1389,6 +1399,12 @@ async def _start_seo_audit(
     # rides in the initial user prompt — the agent starts knowing what past
     # audits found, what is currently broken, and what the targets are.
     extra_context = await _project_memory_blocks(query=url)
+    if req.draft_project:
+        # The onboarding audit is the one run where asking for Search Console
+        # has a reason the user can see: the report they just read. Said in
+        # the user turn, not the system prompt, so the cached prefix stays
+        # identical across every other audit.
+        extra_context = f"{extra_context}\n{_ONBOARDING_SOURCES_NOTE}".strip()
 
     async def pipeline() -> None:
         try:
@@ -1405,6 +1421,8 @@ async def _start_seo_audit(
                 template_id=req.template_id,
                 lead_magnet=req.lead_magnet,
                 extra_context=extra_context,
+                crawl_id=req.crawl_id,
+                draft_project=req.draft_project,
             )
             await emit_fn({"event": AuditEvent.PIPELINE_FINISHED, "status": "success"})
         except Exception as exc:

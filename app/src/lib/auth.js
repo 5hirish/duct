@@ -22,6 +22,10 @@ export function AuthProvider({ children }) {
         email: payload.sub,
         name: payload.name,
         picture: payload.picture,
+        // A guest holds a real token for a real row (lib/guest.js); this is
+        // what lets the shell say "save your work" instead of an email
+        // nobody chose.
+        guest: payload.guest === true,
       });
       // The account UUID, not `sub` — that is the email, and it must not reach
       // an analytics provider. Safe before consent resolves: nothing drains the

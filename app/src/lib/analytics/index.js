@@ -71,6 +71,23 @@ export const AnalyticsEvent = {
 
   // Demand for the paid thing.
   ExecutionInterestSubmitted: "execution_interest_submitted",
+
+  // Onboarding: the steps between first launch and the first finding, so a
+  // drop-off has a place. `code` on a failed verify is the one to read first —
+  // if `no_billing` dominates, the provider step's copy leads with it.
+  OnboardingStarted: "onboarding_started",
+  OnboardingSiteFound: "onboarding_site_found",
+  OnboardingSiteFailed: "onboarding_site_failed",
+  ProviderVerified: "provider_verified",
+  ProviderSkipped: "provider_skipped",
+  OnboardingAuditStarted: "onboarding_audit_started",
+  // The report reached someone: `method` is "link" (copied) or "invite".
+  AuditShared: "audit_shared",
+  // A guest took the sign-in that also connects Search Console + Analytics,
+  // from the connector prompt on the onboarding audit. Fired at the click,
+  // before Google; whether the scopes were granted shows up as
+  // connector_connected rows on the account, not here.
+  SignInToConnect: "signin_to_connect",
 };
 
 /**
@@ -86,6 +103,9 @@ export const AnalyticsParam = {
   Shell: "shell",         // "desktop" | "browser"
   Services: "services",   // execution services someone asked for
   Os: "os",               // marketing-site download target
+  Reason: "reason",       // why a site could not be read: invalid_url | unreachable
+  Code: "code",           // why a key failed to verify: invalid_key | no_billing | …
+  Ok: "ok",               // "true" | "false" on a verify
 };
 
 /**

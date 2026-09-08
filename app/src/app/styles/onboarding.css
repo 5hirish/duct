@@ -1,0 +1,573 @@
+/* onboarding — /start: the threshold split, the aqueduct strip, the choice
+   cards and the tessera burst. Split out per concern; see globals.css for the
+   load order. Outside `.app-main`, so viewport breakpoints (Tailwind's rem
+   scale) are the right ruler here, as on the sign-in page. */
+
+/* ── The six stones ─────────────────────────────────────────── */
+/* Fixed jobs, the same rule as the mosaic panels: blue is water and water is
+   data, terracotta is consequence, everything else is stone. */
+:root {
+  --tessera-cream: oklch(0.93 0.02 85);
+  --tessera-grey: oklch(0.78 0.01 80);
+  --tessera-ochre: oklch(0.72 0.11 75);
+  --tessera-basalt: oklch(0.3 0.01 260);
+  --tessera-glass: oklch(0.7 0.09 200);
+  --tessera-terracotta: var(--orange, oklch(0.68 0.2 45));
+  /* the threshold's ground: travertine, one shade off the page */
+  --start-ground: oklch(0.975 0.008 80);
+}
+
+.dark {
+  --tessera-cream: oklch(0.82 0.02 85);
+  --tessera-grey: oklch(0.6 0.01 80);
+  --tessera-ochre: oklch(0.68 0.1 75);
+  --tessera-basalt: oklch(0.2 0.01 260);
+  --tessera-glass: oklch(0.72 0.1 200);
+  --start-ground: oklch(0.2 0.008 80);
+}
+
+/* ── Layout ──────────────────────────────────────────────────── */
+.start-frame {
+  flex: 1;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 0;
+}
+
+@media (min-width: 64rem) {
+  .start-frame {
+    grid-template-rows: none;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  }
+}
+
+.start-threshold {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.25rem 1.25rem 1rem;
+  background: var(--start-ground);
+  border-bottom: 1px solid var(--border);
+}
+
+@media (min-width: 64rem) {
+  /* Sticky, one viewport tall: the aqueduct is the state, and state that
+     scrolls off the bottom while the provider list grows is state nobody
+     sees. 3.5rem is the (start) layout's header. */
+  .start-threshold {
+    position: sticky;
+    top: 3.5rem;
+    height: calc(100dvh - 3.5rem);
+    padding: 3rem 3rem 2.5rem;
+    border-bottom: 0;
+    border-right: 1px solid var(--border);
+    overflow: hidden;
+  }
+}
+
+.start-threshold-inner {
+  display: none;
+}
+
+@media (min-width: 64rem) {
+  .start-threshold-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 26rem;
+  }
+}
+
+.start-mosaic {
+  margin-bottom: 0.5rem;
+  box-shadow: 0 1px 2px oklch(0.2 0.03 265 / 0.06), 0 18px 40px -28px oklch(0.25 0.04 265 / 0.35);
+}
+
+.start-headline {
+  font-size: 1.5rem;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.start-lede {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--muted-foreground);
+  max-width: var(--measure-tight);
+}
+
+.start-promises {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0.25rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8125rem;
+  color: var(--muted-foreground);
+}
+
+.start-promises li {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.start-promises svg {
+  color: var(--tessera-ochre);
+  flex-shrink: 0;
+}
+
+.start-aqueduct {
+  width: 100%;
+  max-width: 30rem;
+}
+
+.start-stage {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 2rem 1.25rem 4rem;
+}
+
+@media (min-width: 64rem) {
+  .start-stage {
+    padding: 3rem;
+  }
+}
+
+.start-stage-inner {
+  width: 100%;
+  max-width: 30rem;
+  margin-inline: auto;
+}
+
+/* ── Type on the stage ───────────────────────────────────────── */
+.start-eyebrow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tessera-ochre);
+  margin-bottom: 0.5rem;
+}
+
+.start-title {
+  font-size: 1.5rem;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.start-sub {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--muted-foreground);
+}
+
+/* ── The URL field ───────────────────────────────────────────── */
+.start-url {
+  position: relative;
+}
+
+.start-url-icon {
+  position: absolute;
+  left: 0.875rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
+
+.start-url-input {
+  height: 2.75rem;
+  padding-left: 2.5rem;
+  font-size: 1rem;
+}
+
+/* ── The "found it" confirmation ─────────────────────────────── */
+.start-site {
+  display: grid;
+  grid-template-columns: 2.75rem minmax(0, 1fr);
+  gap: 0.875rem;
+  align-items: start;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) * 1.5);
+  background: var(--card);
+  animation: start-rise 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.start-site-icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.625rem;
+  border: 1px solid var(--border);
+  background: var(--start-ground);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.start-site-icon img {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.start-site-pages {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+.start-warn {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid color-mix(in oklch, var(--warning) 40%, transparent);
+  border-radius: var(--radius);
+  background: color-mix(in oklch, var(--warning) 6%, transparent);
+  font-size: 0.875rem;
+}
+
+@keyframes start-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ── The ChatGPT path ────────────────────────────────────────── */
+.start-plan {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  padding: 1rem;
+  border: 1px solid color-mix(in oklch, var(--primary) 30%, var(--border));
+  border-radius: calc(var(--radius) * 1.5);
+  background: color-mix(in oklch, var(--primary) 5%, var(--card));
+}
+
+.start-plan-text {
+  min-width: 0;
+  flex: 1 1 14rem;
+}
+
+.start-or {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+.start-or::before,
+.start-or::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── Choice cards ────────────────────────────────────────────── */
+.start-choices {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.start-choice {
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) * 1.5);
+  background: var(--card);
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.start-choice.is-active {
+  border-color: color-mix(in oklch, var(--primary) 45%, var(--border));
+  background: color-mix(in oklch, var(--primary) 3%, var(--card));
+}
+
+.start-choice-head {
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 0.875rem;
+  text-align: left;
+  border-radius: inherit;
+  cursor: pointer;
+}
+
+.start-choice-head:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+.start-choice-mark {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.625rem;
+  background: var(--start-ground);
+  border: 1px solid var(--border);
+  color: var(--foreground);
+}
+
+.start-choice-mark svg,
+.start-choice-mark img {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.start-choice-text {
+  display: grid;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.start-choice-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.start-choice-tag {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.start-choice-desc {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+.start-choice-radio {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--background);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.is-active .start-choice-radio {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 4px var(--primary);
+}
+
+.start-choice-body {
+  padding: 0 0.875rem 0.875rem 3.875rem;
+  animation: start-rise 220ms ease-out both;
+}
+
+@media (max-width: 40rem) {
+  .start-choice-body {
+    padding-left: 0.875rem;
+  }
+}
+
+/* ── Aqueduct ────────────────────────────────────────────────── */
+.aqueduct {
+  --aq-stone: var(--tessera-cream);
+  --aq-joint: color-mix(in oklch, var(--tessera-grey) 55%, transparent);
+  --aq-void: var(--start-ground);
+  --aq-bed: color-mix(in oklch, var(--tessera-grey) 40%, var(--tessera-cream));
+  --aq-line: var(--tessera-ochre);
+  --aq-line-active: color-mix(in oklch, var(--tessera-ochre) 70%, var(--tessera-basalt));
+  --aq-water: var(--tessera-glass);
+  --aq-dry: var(--tessera-terracotta);
+  --aq-ground: var(--tessera-grey);
+  width: 100%;
+  margin-inline: auto;
+}
+
+/* On a dark ground the masonry has to be stone in shadow, not a cream
+   slab: the strip goes near the page's own surface and the ochre arches
+   and the water carry the contrast instead. */
+.dark .aqueduct {
+  --aq-stone: oklch(0.3 0.012 80);
+  --aq-joint: oklch(0.4 0.012 80 / 0.7);
+  --aq-bed: oklch(0.36 0.012 80);
+  --aq-ground: oklch(0.42 0.012 80);
+}
+
+.aqueduct-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.aqueduct-stone {
+  fill: var(--aq-stone);
+}
+
+.aqueduct-joint {
+  fill: none;
+  stroke: var(--aq-joint);
+  stroke-width: 1;
+}
+
+.aqueduct-void {
+  fill: var(--aq-void);
+}
+
+.aqueduct-bed {
+  fill: var(--aq-bed);
+}
+
+.aqueduct-ground {
+  fill: var(--aq-ground);
+}
+
+.aqueduct-water {
+  fill: var(--aq-water);
+  transition: width 900ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.aqueduct-glint {
+  fill: oklch(1 0 0 / 0.35);
+  transition: width 900ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* While water is mid-channel the surface drifts: the one loop on the page,
+   and only while the crawl is genuinely moving. */
+.aqueduct-flowing .aqueduct-glint {
+  animation: aqueduct-drift 2.4s linear infinite;
+}
+
+@keyframes aqueduct-drift {
+  from {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 0.55;
+  }
+  to {
+    opacity: 0.25;
+  }
+}
+
+.aqueduct-dry {
+  fill: var(--aq-dry);
+}
+
+.aqueduct-arch {
+  fill: none;
+  stroke: var(--aq-line);
+  stroke-width: 9;
+  stroke-linejoin: round;
+  opacity: 0.55;
+  transition: stroke 300ms ease, opacity 300ms ease;
+}
+
+.aqueduct-arch-active,
+.aqueduct-arch-done {
+  opacity: 1;
+}
+
+.aqueduct-arch-active {
+  stroke: var(--aq-line-active);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aqueduct-water,
+  .aqueduct-glint,
+  .aqueduct-arch,
+  .start-site,
+  .start-choice-body {
+    transition: none;
+    animation: none;
+  }
+}
+
+.aqueduct-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 0.375rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.aqueduct-step {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+.aqueduct-step-index {
+  font-family: var(--serif);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
+}
+
+.aqueduct-step-active {
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+.aqueduct-step-done {
+  color: var(--foreground);
+}
+
+.aqueduct-step-dry .aqueduct-step-label {
+  text-decoration: line-through;
+}
+
+/* ── Tessera burst ───────────────────────────────────────────── */
+.tessera-burst {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 1;
+}
+
+.tessera {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 1px;
+  opacity: 0;
+  animation: tessera-throw var(--dur) cubic-bezier(0.2, 0.7, 0.3, 1) var(--delay) both;
+}
+
+@keyframes tessera-throw {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) rotate(0deg) scale(0.6);
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--tx), calc(var(--ty) + 70px)) rotate(var(--rot)) scale(1);
+  }
+}

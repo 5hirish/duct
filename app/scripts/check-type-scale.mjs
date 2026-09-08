@@ -32,6 +32,9 @@ const CLEAN = new Set([
   "forms.css",
   "layout-grids.css",
   "mode-selector.css",
+  // Split out of generate.css when the wizard became the Project context
+  // page; it came out clean, so it goes straight onto the ratchet.
+  "project.css",
   "theme.css",
   "tokens.css",
   "typography.css",

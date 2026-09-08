@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import AgentChat from "../workspace/AgentChat";
 import AuditReport from "./AuditReport";
+import ShareReport from "./ShareReport";
 import AuditStepProgress from "./AuditStepProgress";
 import SplitWorkspace from "../workspace/SplitWorkspace";
 import { useAgentSession } from "../../hooks/useAgentSession";
@@ -10,11 +11,23 @@ import { Action, Row } from "../../lib/agentSession";
 import { AuditEvent, STEP_LABELS } from "../../lib/auditEvents";
 import { Phase } from "../../lib/agentPhase";
 import { useAuditNav } from "../../lib/auditNavContext";
+import { applyProjectDraft } from "../../lib/projectDraft";
+import { KICKOFF_SOURCES } from "../../lib/signInSources";
 
 // Re-export so consumers can import Phase from AuditWorkspace if they prefer
 export { Phase } from "../../lib/agentPhase";
 
 const AGENT_TYPE = "audit_seo";
+
+// What a resumed conversation is asked on the user's behalf, by kickoff name.
+// The audit agent holds no Search Console reader of its own, so the honest
+// ask after the bundled sign-in is "confirm and bind", not "re-run": it can
+// list the sources, pick the property, and say what the next run gains.
+const KICKOFF_MESSAGES = {
+  [KICKOFF_SOURCES]:
+    "I've just signed in with Google. Check which data sources this project can reach now. " +
+    "If Search Console or Analytics is connected, select the right property for this site and tell me what that unlocks for the next check.",
+};
 
 /**
  * The SEO audit workspace. The session lifecycle is `useAgentSession`; what is
@@ -28,6 +41,8 @@ export default function AuditWorkspace({
   onReportReady,
   leadToken = null,
   leadEmail = null,
+  // A message to send once the resumed conversation is ready (lib/auditResume.js).
+  kickoff = "",
 }) {
   const { setIsAuditRunning } = useAuditNav();
 
@@ -50,6 +65,28 @@ export default function AuditWorkspace({
     onEvent: handleEvent,
   });
   const { phase, dispatch } = agent;
+
+  // The kickoff fires once, the first time the resume is ready to talk.
+  const kickoffSentRef = useRef(false);
+  useEffect(() => {
+    const text = KICKOFF_MESSAGES[kickoff];
+    if (!text || kickoffSentRef.current || phase !== Phase.READY || !agent.attached) return;
+    kickoffSentRef.current = true;
+    agent.send(text);
+  }, [kickoff, phase, agent]);
+
+  // Onboarding audit, before sign-in: the connector prompt can send a guest
+  // through the Google sign-in that also connects the source, then bring them
+  // back to this conversation. Only this run — every other audit's prompt
+  // connects the ordinary way (lib/signInSources.js says why).
+  const signInToConnect =
+    auditParams?.draft_project && agent.conversationId
+      ? {
+          conversationId: agent.conversationId,
+          projectId: auditParams?.project_id || null,
+          siteUrl: auditParams?.url || "",
+        }
+      : null;
 
   // Tell the nav bar whether to lock the back button
   useEffect(() => {
@@ -107,6 +144,13 @@ export default function AuditWorkspace({
             text: "✓ Your SEO report is ready! Review the score and findings in the panel on the right. Ask me anything about the results — I can explain findings, suggest fixes, or update the report.",
           });
         }
+        break;
+
+      case AuditEvent.PROJECT_DRAFT:
+        // Onboarding: the run learned something about the site. It lands on
+        // the project this audit belongs to, provenance and all; the rules
+        // for what may overwrite what live in lib/projectDraft.js.
+        applyProjectDraft(event, { projectId: auditParams?.project_id || null });
         break;
 
       case AuditEvent.PIPELINE_FINISHED:
@@ -198,6 +242,15 @@ export default function AuditWorkspace({
           messages={agent.messages}
           pending={agent.pending}
           errorMsg={agent.error}
+          actions={
+            !publicMode && (
+              <ShareReport
+                conversationId={agent.conversationId}
+                projectId={auditParams?.project_id || null}
+                siteUrl={auditParams?.url || ""}
+              />
+            )
+          }
           errorCode={agent.errorCode}
           errorRetryable={agent.errorRetryable}
           retrying={agent.retrying}
@@ -224,6 +277,7 @@ export default function AuditWorkspace({
           renderSteps={(steps) => <AuditStepProgress steps={steps} />}
           stepLabels={STEP_LABELS}
           questionsCopy={QUESTIONS_COPY}
+          signInToConnect={signInToConnect}
           inputPlaceholder="Ask a follow-up question…"
           inputAriaLabel="Message the audit agent"
           inputAccept="image/*,.pdf"
@@ -248,6 +302,15 @@ export default function AuditWorkspace({
           onSelectVersion={setSelectedVersionId}
           streamingHtml={streamingHtml}
           errorMsg={agent.error}
+          actions={
+            !publicMode && (
+              <ShareReport
+                conversationId={agent.conversationId}
+                projectId={auditParams?.project_id || null}
+                siteUrl={auditParams?.url || ""}
+              />
+            )
+          }
           errorCode={agent.errorCode}
           errorRetryable={agent.errorRetryable}
           retrying={agent.retrying}

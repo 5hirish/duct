@@ -7,7 +7,16 @@
 import { DEFAULT_AUDIT_TEMPLATE_ID, ReportMode } from "./audit";
 import { loadPreferences } from "./userPreferences";
 
-export function startAuditResume(router, { conversationId, projectId, url = "", reportMode = "", templateId = "" }) {
+// A message the workspace sends on the user's behalf once the resume is
+// ready. Not part of the request — the backend forbids unknown fields — so
+// the session page lifts it off before the params go on the wire, the same
+// way it lifts `pending_provider`.
+export const KICKOFF_KEY = "kickoff";
+
+export function startAuditResume(
+  router,
+  { conversationId, projectId, url = "", reportMode = "", templateId = "", kickoff = "" },
+) {
   const params = {
     url: url || "",
     project_id: projectId || null,
@@ -16,6 +25,7 @@ export function startAuditResume(router, { conversationId, projectId, url = "", 
     report_mode: reportMode || ReportMode.TEMPLATE,
     template_id: templateId || DEFAULT_AUDIT_TEMPLATE_ID,
     user_preferences: loadPreferences(),
+    ...(kickoff ? { [KICKOFF_KEY]: kickoff } : {}),
   };
   const sessionId = crypto.randomUUID();
   sessionStorage.setItem(`audit_session_${sessionId}`, JSON.stringify(params));

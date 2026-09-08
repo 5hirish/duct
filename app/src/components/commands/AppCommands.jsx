@@ -88,11 +88,11 @@ export default function AppCommands() {
         })),
       {
         id: "project:new",
-        label: "New project",
+        label: "New project — audit a site",
         group: "Projects",
-        keywords: ["create", "add", "onboarding"],
+        keywords: ["create", "add", "start", "audit"],
         icon: Plus,
-        run: () => router.push("/onboarding?new=1"),
+        run: () => router.push("/start"),
       },
 
       {

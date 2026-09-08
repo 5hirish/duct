@@ -37,6 +37,7 @@ export const AgentEvent = Object.freeze({
   PLAN_GENERATED:      "plan_generated",
   POST_DRAFT_UPDATED:  "post_draft_updated",
   ARTIFACT_UPDATED:    "artifact_updated",
+  PROJECT_DRAFT:       "project_draft",
   EXECUTION_PROPOSED:  "execution_proposed",
 
   MEMORY_WRITTEN:      "memory_written",

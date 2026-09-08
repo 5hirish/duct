@@ -117,11 +117,18 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   catalog's dispatch key was renamed `tool` → `fetch_fn`: it names an internal
   function, and only looked like a tool reference while those tools existed.
 
-  One consequence, deliberately recorded rather than discovered later: **nothing now
-  wires a ChatGPT subscription into an insights run.** `should_use_codex` /
-  `build_codex_chat` were branched only inside the deleted `agent.py`;
-  `agents/core/codex.py` and its tests remain, but no live path calls them. Re-wiring
-  that belongs in `agents/core/lc.resolve_chat_model`, where every runner would get it.
+  **A ChatGPT plan is now a live OpenAI credential**, wired where the note above
+  said it should be: `agents/core/lc.resolve_chat_model` sends a subscription
+  credential to `_ChatOpenAICodex` (`agents/core/codex.py`), so every runner gets
+  it. The credential is the *access token* the desktop shell minted — it arrives
+  in `X-Provider-OpenAI` beside `X-OpenAI-Account-Id`, `service/auth.py` packs the
+  two into one string, and the shape (a JWT, not `sk-…`) is what routes it.
+  `ProviderKey.source` is `subscription`; it is the user's own plan, never billed
+  to Duct. The refresh token never reaches the backend, `PUT /providers/openai/key`
+  refuses to store a token, and background jobs (no request, no header) still
+  need an API key. `CHATGPT_AUTH_ENABLED=false` is the kill switch the app reads
+  from `/api/providers/status` — the Codex backend is undocumented and the path
+  can stop working without notice.
 
   So a shared change is made once. Claude remains a first-class *model* through
   V1, which is why retiring its SDK cost no model coverage.
@@ -279,6 +286,47 @@ automatically: `railway.json` only starts uvicorn and there is no CI migration j
 - `service/google/schema.py` — typed Google Ads brief payload (dataclasses / JSON contract)
 - `agents/insights/prompts.py` — synthesis system + user prompts (e.g. Google Ads weekly insight brief)
 - `routes/auth.py` — OAuth by connector (`/auth/connectors/{connector_id}/oauth/...`)
+- `routes/signin.py` — Google sign-in, and the **guest**: `POST /auth/guest`
+  mints a real `users` row keyed on an install id so an audit can run before
+  anyone signs in; `/auth/guest/link-code` + `?link=` on authorize lets the
+  Google callback link the account to that guest or merge the guest into an
+  existing one (`service/user_store.py::absorb_guest`, which walks the schema
+  for owner columns rather than keeping a list). Never make an owner column
+  nullable for this — a guest is why they need not be.
+  `?sources=onboarding` on authorize is the **onboarding bundle**: the same
+  sign-in also asking for the Search Console and Analytics *read* scopes,
+  offline grant, consent forced; the callback stores one
+  `connector_credentials` row per scope Google actually granted
+  (`service/signin_sources.py`, through the same upsert the Connections page
+  uses, `service/connector_store.py`). It exists for exactly one surface —
+  the connector prompt on the onboarding audit, for a guest — and every other
+  sign-in and every connector flow stays as it was. Never add a write scope to
+  the bundle; a connector asks for those itself, with its justification on
+  screen (`service/connector_scopes.py`).
+- `routes/audit_prefetch.py` — the crawl onboarding starts the moment a URL
+  validates (`agents/audit/prefetch.py`): root page now, the rest in the
+  background, handed to `run_pipeline` by `crawl_id`. Duct's bandwidth only;
+  inference never runs here.
+- `agents/audit/draft.py` — the project drafted from the crawl, two layers
+  (`crawl` deterministic, `inferred` one structured call), emitted as
+  `PROJECT_DRAFT` when a run sets `draft_project`. Never infers the North
+  Star; the agent asks for it in chat.
+- `agents/engines.resolve_job_run` — the first agent run to read the tier
+  map: provider and model over the keys *this caller* can spend, so a user
+  holding only an OpenAI key runs on OpenAI instead of a 402 for the
+  instance default. The audit route uses it; the others still use
+  `resolve_run_model` and should move.
+- `POST /api/providers/{id}/verify` — one real completion on the provider's
+  Light model, classified into `invalid_key` / `no_billing` / `model_access`
+  / `rate_limited` / `unreachable`, or for a ChatGPT credential
+  `subscription_quota` / `subscription_revoked` / `subscription_blocked`. The
+  only endpoint that can tell a pasted key from a working one.
+- The audit agent mounts the insights agent's connector tools
+  (`agents/core/connector_tools.py`): `ListDataSources` always, `SelectAccount`
+  and `RequestConnection` when the run has a project. The system prompt holds
+  the rule (Search Console only, after the report, once); the onboarding
+  audit's user turn (`draft_project`) is the trigger, so the cached prefix is
+  identical across every other audit.
 - `routes/generate.py` — `POST /api/insights/generate` for interactive brief + LangChain synthesis envelope
 - `routes/project_members.py` — project members + email invitations (`docs/engineering/project-collaboration-plan.md`)
 - `service/membership.py` — project access checks (owner vs collaborator) and invite token handling

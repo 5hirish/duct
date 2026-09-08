@@ -102,6 +102,10 @@ function withProjectDefaults(projectInput) {
     // owned by whoever created it locally, so "owner" is the right default.
     role: project.role === "collaborator" ? "collaborator" : "owner",
     ownerEmail: isNonEmptyString(project.ownerEmail) ? project.ownerEmail : "",
+    // Where each drafted field came from — "crawl", "inferred", or "user"
+    // once confirmed — so the project-context surface can show a chip and
+    // a draft never overwrites what a person typed (lib/projectDraft.js).
+    provenance: toObject(project.provenance),
   };
 }
 
@@ -155,7 +159,8 @@ function writeProjectsStore(projects) {
 // ---------------------------------------------------------------------------
 // Backend sync (hybrid: localStorage is the always-current cache, the backend
 // is the durable store). Writes to the backend are explicit — callers persist
-// at deliberate save points (e.g. the onboarding "Save & Next" button) — so
+// at deliberate save points (the project-context "Save & Next" button, the
+// audit's project draft) — so
 // localStorage edits don't generate a request per keystroke.
 // ---------------------------------------------------------------------------
 
@@ -408,6 +413,11 @@ export async function hydrateProjectsFromBackend() {
       // server's call, though, so role/owner always come from the remote copy.
       byId.set(lp.id, { ...lp, role: rp.role, ownerEmail: rp.ownerEmail });
       toPushUp.push(lp);
+    } else if (Object.keys(lp.provenance || {}).length && !Object.keys(rp.provenance || {}).length) {
+      // The server wins the values but knows nothing of where they came
+      // from — `toApi` does not send provenance — so a hydrate would strip
+      // the chips off a project drafted a minute ago on this very device.
+      byId.set(lp.id, { ...rp, provenance: lp.provenance });
     }
   }
 

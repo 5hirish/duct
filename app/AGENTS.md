@@ -20,9 +20,32 @@ Next.js App Router report viewer and agent interface.
 
 ## Route structure
 
-Two route groups under `app/`:
+Three route groups under `app/`:
 
-- `(auth)/` — login page
+- `(start)/start` — onboarding: the audit *is* the onboarding. One field
+  (URL — the root page read back in a second, crawl continuing in the
+  background via `/api/audit/prefetch`) → a model (an API key verified by
+  spending it, or on desktop "Continue with ChatGPT", or skipped) → the
+  session at `/audit/seo/[sessionId]` with `crawl_id` and `draft_project`
+  set. Submitting the URL mints a **guest** (`lib/guest.js`): a real account
+  with a synthetic email, so everything the audit makes has an owner before
+  anyone signs in; Google sign-in later links or merges it. No `AuthGuard`
+  and none of the app shell. Layout is the threshold split: the `salve`
+  mosaic and the aqueduct strip (`components/onboarding/Aqueduct.jsx`) on
+  the left, the step on the right. The aqueduct is the progress indicator —
+  water reaches an arch when that step's data does; blue is water and
+  nothing else on the page is blue; the six-stone palette lives as
+  `--tessera-*` tokens in `styles/onboarding.css` and the one celebration
+  (`TesseraBurst`) is made of them. Provider choice is a radio-card list
+  (`ProviderStep.jsx`), OpenAI first. Design and phases:
+  `docs/engineering/smart-onboarding-plan.md`.
+- `(auth)/` — login page; links to `/start` for first-timers, and passes a
+  guest's link code to the authorize URL so the account keeps their work.
+  When `lib/signInSources.js` has armed the onboarding bundle it also passes
+  `sources=onboarding` (Search Console + Analytics read scopes in the same
+  consent) and says so under the button. Only the connector prompt on the
+  onboarding audit arms it, and the arming expires; the Share dialog, an
+  invitation and a plain visit here stay identity-only.
 - `(app)/` — authenticated app shell:
   - `audit/` + `audit/[sessionId]/` — general audit reports
   - `audit/seo/` + `audit/seo/[sessionId]/` — SEO audit variant
@@ -30,15 +53,48 @@ Two route groups under `app/`:
   - `generate/` — report generation workflow
   - `insights/` + `insights/[slug]/` + `insights/generate/` — insights hub
   - `insights/organic-growth/` + `[slug]/` + `generate/` — organic growth insights
-  - `onboarding/` — new user setup
-  - `projects/` + `project/[projectId]/` — project management
+  - `projects/` — project management
+  - `project/[projectId]/` — **Project context**, the editor for one
+    project: the wizard's five sections, kept, minus creation (a project
+    starts at `/start`). Drafted fields carry a provenance chip ("From your
+    site" / "Duct's guess") with a one-click confirm; typing confirms too.
+    Deep-link a section with `#about` / `#targets` / `#audience` /
+    `#competition` / `#brand`. There is no `/onboarding` route any more —
+    "new project" everywhere means `/start`.
   - `project/[projectId]/members/` — project members + invitations (owner/collaborator)
 
-Plus `invite/[token]/` at the top level (outside every route group): the invitation landing page, which must render for signed-out recipients.
+Plus two top-level routes outside every group, because their visitor is
+usually signed out and the app shell's guard would lose where they were going:
+`invite/[token]/` (the invitation landing page) and `open/audit/[conversationId]/`
+(the share link for a report — parks the destination, sends through sign-in,
+then resumes the conversation; the backend hands it only to project members).
+`?kickoff=sources` on that link makes the resumed workspace open by asking
+the agent to check what the bundled sign-in connected and bind the property
+(`KICKOFF_MESSAGES` in `AuditWorkspace.jsx`; the session page lifts the key
+off the params like `pending_provider`, and sends it once).
 
 ## Key utilities
 
 - `lib/api.js` — fetch wrapper for backend calls
+- `lib/signInSources.js` — the onboarding sign-in bundle: `armSignInSources()`
+  (one caller: `ConnectionRequest` on the onboarding audit), `consume…` on the
+  sign-in page, `resumeAuditPath()` for the way back into the conversation
+- `lib/guest.js` — the guest account: `ensureGuest()` mints one on first use,
+  `isGuestToken()` / `isSignedInUser()` read the `guest` claim. A guest is a
+  real user everywhere else in the app; only the sidebar footer and the
+  sign-in page treat it specially.
+- `lib/onboardingApi.js` — prefetch, verify, link code: the three calls only
+  `/start` makes. Errors carry the backend's `reason`.
+- `lib/chatgpt.js` — "Continue with ChatGPT", desktop only: the shell runs
+  the OAuth and holds the refresh token; this module gets an hour-long access
+  token and account id from it, and `providerKeyHeaders()` sends them as the
+  OpenAI credential when no API key is pasted (`X-Provider-OpenAI` +
+  `X-OpenAI-Account-Id`). Gated on `capabilities.chatgptAuth` from the shell
+  and `chatgpt_auth_enabled` from `/api/providers/status` — both, always.
+- `lib/projectDraft.js` — merges `PROJECT_DRAFT` events into the project
+  with provenance (`crawl` / `inferred` / `user`); a user value is never
+  overwritten and a crawl value beats an inferred one. `AuditWorkspace`
+  applies them; nothing else writes drafts.
 - `lib/membersApi.js` — project members + invitations (server-only; no localStorage mirror, unlike `lib/projects.js`)
 - `lib/engines.js` — `DEFAULT_ENGINE` and the agent-type list. The engine is
   no longer a user choice: v3 is gone, every agent runs v1, so the Runtime

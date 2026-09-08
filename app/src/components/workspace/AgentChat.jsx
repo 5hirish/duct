@@ -340,6 +340,9 @@ export default function AgentChat({
   renderSteps,
   stepLabels,
   questionsCopy,
+  // Onboarding only: what a guest's connector prompt needs to route through
+  // sign-in instead (see PauseCard). Null everywhere else.
+  signInToConnect = null,
   inputPlaceholder,
   inputAriaLabel,
   inputAccept,
@@ -500,7 +503,7 @@ export default function AgentChat({
 
           {isAgentTyping && <TypingIndicator />}
 
-          {waiting && <PauseCard pause={pending} onAnswer={onAnswer} disabled={answerDisabled} questionsCopy={questionsCopy} />}
+          {waiting && <PauseCard pause={pending} onAnswer={onAnswer} disabled={answerDisabled} questionsCopy={questionsCopy} signInToConnect={signInToConnect} />}
 
           {reconnecting && !isFailed && (
             <div className="mt-3 flex items-center gap-2 rounded-lg border border-amber-400/30 bg-amber-500/10 px-4 py-2.5 text-xs text-amber-600 dark:text-amber-400">
