@@ -234,13 +234,17 @@ def test_xai_references_go_to_the_edits_endpoint_as_a_data_url():
     assert image["url"] == "data:image/png;base64," + base64.b64encode(PNG).decode()
 
 
-def test_xai_honours_a_url_answer_by_fetching_it():
+def test_xai_honours_a_url_answer_by_fetching_it_without_the_key():
     """The edits endpoint is documented against ``url``; asking for base64
-    is a preference, not something to fail on."""
+    is a preference, not something to fail on. But the download must not
+    carry the bearer token: it is for api.x.ai, and the URL came from a
+    response body."""
+    seen: dict = {}
 
     def handler(request: httpx.Request) -> httpx.Response:
         if request.url.path.endswith("/images/generations"):
             return _ok({"data": [{"url": "https://imgen.x.ai/out.png"}]})
+        seen["auth"] = request.headers.get("authorization")
         return httpx.Response(200, content=b"fetched", headers={"content-type": "image/jpeg"})
 
     client = _xai_client(handler)
@@ -248,6 +252,30 @@ def test_xai_honours_a_url_answer_by_fetching_it():
         GenerateImageRequest(prompt="x", model=ImageModel.GROK_IMAGINE_IMAGE_2)
     ))
     assert images[0].data == b"fetched" and images[0].mime_type == "image/jpeg"
+    assert seen["auth"] is None
+
+
+@pytest.mark.parametrize("url", [
+    "https://evil.example/out.png",        # another host
+    "https://x.ai.evil.example/out.png",   # a lookalike
+    "http://imgen.x.ai/out.png",           # xAI, but off TLS
+    "https://127.0.0.1/out.png",           # loopback
+])
+def test_xai_refuses_a_result_url_off_its_domain(url):
+    fetched: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/images/generations"):
+            return _ok({"data": [{"url": url}]})
+        fetched.append(str(request.url))
+        return httpx.Response(200, content=b"should not be reached")
+
+    client = _xai_client(handler)
+    with pytest.raises(ImageAPIError):
+        asyncio.run(client.generate_image(
+            GenerateImageRequest(prompt="x", model=ImageModel.GROK_IMAGINE_IMAGE_2)
+        ))
+    assert fetched == []
 
 
 def test_xai_failures_surface_as_the_shared_error_with_the_status():

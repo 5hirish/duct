@@ -18,6 +18,7 @@ from __future__ import annotations
 import base64
 import logging
 from typing import Any
+from urllib.parse import urlparse
 
 import httpx
 
@@ -34,6 +35,11 @@ _RESPONSE_FORMAT = "b64_json"
 _INPUT_MIME = "image/png"
 # Image calls are slow by chat standards; a 2K render can take most of a minute.
 _TIMEOUT_SECONDS = 180.0
+# Where a result URL may point. The API's own host is api.x.ai; a URL answer
+# is honoured only on xAI's domain, over TLS, and fetched with no credential —
+# the bearer token is for api.x.ai and must not follow a URL the response body
+# chose.
+_RESULT_HOST_SUFFIX = ".x.ai"
 
 
 class XAIAPIError(ImageAPIError):
@@ -56,6 +62,7 @@ class XAIImageClient:
     ) -> None:
         if not api_key:
             raise ValueError("XAIImageClient: api_key is required")
+        self._transport = transport
         self._client = httpx.AsyncClient(
             base_url=base_url,
             headers={"Authorization": f"Bearer {api_key}"},
@@ -143,10 +150,29 @@ class XAIImageClient:
             # URL answer rather than fail on the format we asked for.
             url = item.get("url")
             if url:
-                fetched = await self._client.get(url)
-                if fetched.status_code < 400 and fetched.content:
-                    mime = fetched.headers.get("content-type", _INPUT_MIME).split(";")[0]
-                    out.append(GeneratedImage(data=fetched.content, mime_type=mime or _INPUT_MIME))
+                image = await self._fetch_result(url, model=model)
+                if image is not None:
+                    out.append(image)
         if not out:
             raise XAIAPIError("No images returned", model=model)
         return out
+
+    async def _fetch_result(self, url: str, *, model: str) -> GeneratedImage | None:
+        """Download a result URL — anonymously, and only from xAI's own host.
+
+        ``self._client`` carries the user's bearer token, and httpx sends a
+        client's headers to any absolute URL it is handed. Following a URL from
+        the response body with that client would hand the key to whatever host
+        the body named. So the fetch goes through a bare client, and a URL off
+        xAI's domain or off TLS is refused rather than fetched.
+        """
+        parsed = urlparse(url)
+        host = (parsed.hostname or "").rstrip(".").lower()
+        if parsed.scheme != "https" or not (host == _RESULT_HOST_SUFFIX[1:] or host.endswith(_RESULT_HOST_SUFFIX)):
+            raise XAIAPIError(f"refusing result URL off xAI's domain: {url[:120]}", model=model)
+        async with httpx.AsyncClient(timeout=_TIMEOUT_SECONDS, transport=self._transport) as anon:
+            fetched = await anon.get(url)
+        if fetched.status_code >= 400 or not fetched.content:
+            return None
+        mime = fetched.headers.get("content-type", _INPUT_MIME).split(";")[0]
+        return GeneratedImage(data=fetched.content, mime_type=mime or _INPUT_MIME)
