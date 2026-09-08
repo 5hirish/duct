@@ -278,20 +278,18 @@ fn try_spawn(app: &AppHandle) -> Result<(), String> {
     }
 
     // Crash reporting for the bundled backend, only with consent. `local_server`
-    // blanks SENTRY_DSN by default on purpose — a laptop is not a deployment —
+    // blanks its own DSN by default on purpose — a laptop is not a deployment —
     // so passing nothing here leaves that default intact. Passing it explicitly
     // is the only way the sidecar ever reports, which keeps the decision in one
     // place the user controls rather than spread across two processes.
+    //
+    // Which variables that takes is the reporter's business, not this file's: a
+    // build with no reporter compiled in returns none and the loop does nothing.
     let consented = crate::telemetry::default_data_dir()
-        .map(|dir| crate::telemetry::read_prefs(&dir).enabled)
+        .map(|dir| crate::telemetry::is_enabled(&dir))
         .unwrap_or(false);
-    if consented {
-        if let Some(dsn) = crate::telemetry::SENTRY_DSN.filter(|d| !d.is_empty()) {
-            command.env("SENTRY_DSN", dsn);
-            // Without this the sidecar's own localhost guard drops every event:
-            // it binds 127.0.0.1, which server.py treats as "not deployed".
-            command.env("SENTRY_ENABLE_LOCALHOST", "1");
-        }
+    for (key, value) in crate::telemetry::sidecar_env(consented) {
+        command.env(key, value);
     }
 
     // The sidecar is a console binary — that is deliberate, its stdout carries

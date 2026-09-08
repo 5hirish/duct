@@ -4,6 +4,33 @@ const appEnv = process.env.NEXT_PUBLIC_APP_ENV ?? process.env.NODE_ENV;
 
 const _SENSITIVE_FIELDS = /token|code|refresh_token|api_key|secret|password|authorization/i;
 
+/**
+ * The desktop shell honours the Preferences switch, and this file is the reason
+ * it can claim to.
+ *
+ * Sentry initialises synchronously; the preference lives in a file the Rust side
+ * reads over an async command. So events are dropped until that resolves, and
+ * dropped forever if it resolves to "off" or fails. Erring toward silence is the
+ * only defensible direction: the alternative is reporting for somebody who
+ * turned reporting off, which is exactly what the switch promises not to do.
+ *
+ * In a browser this is inert — `inDesktopShell` is false and nothing changes.
+ */
+const inDesktopShell =
+  typeof window !== "undefined" && Boolean((window as unknown as { __TAURI__?: unknown }).__TAURI__);
+let desktopReportingAllowed: boolean | null = null;
+
+if (inDesktopShell) {
+  import("./lib/telemetry.js")
+    .then(({ getTelemetrySettings }) => getTelemetrySettings())
+    .then((settings: { enabled?: boolean }) => {
+      desktopReportingAllowed = Boolean(settings?.enabled);
+    })
+    .catch(() => {
+      desktopReportingAllowed = false;
+    });
+}
+
 function _scrubUrl(u?: string): string | undefined {
   if (!u) return u;
   const idx = u.indexOf("?");
@@ -20,6 +47,9 @@ if (appEnv !== "local" && process.env.NEXT_PUBLIC_SENTRY_DSN) {
     profileSessionSampleRate: 1.0,
     profileLifecycle: "trace",
     beforeSend(event) {
+      // Before anything else: the user may have said no.
+      if (inDesktopShell && desktopReportingAllowed !== true) return null;
+
       if (event.request) {
         // Scrub full URL (query string may contain tokens)
         if (event.request.url) {

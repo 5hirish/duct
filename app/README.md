@@ -57,6 +57,7 @@ so changing one in a dashboard does nothing until the next build.
 | `NEXT_PUBLIC_DUCT_API_KEY` | App identity header — **not** an authorization boundary; it ships to the browser |
 | `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_SITE_URL` | Absolute URLs for `metadataBase` |
 | `NEXT_PUBLIC_GTM_ID` | Google Tag Manager container (optional) |
+| `NEXT_PUBLIC_ANALYTICS_PROVIDER` | `gtm` or `none` (optional). Unset picks `gtm` when a container is set, `none` otherwise — so a self-host build measures nothing by default |
 | `NEXT_PUBLIC_SENTRY_DSN`, `NEXT_PUBLIC_APP_ENV` | Error reporting (optional) |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Cloudflare Turnstile on sign-in (optional) |
 | `NEXT_PUBLIC_SHELL_SCHEME` | Deep-link scheme when running inside the desktop shell |

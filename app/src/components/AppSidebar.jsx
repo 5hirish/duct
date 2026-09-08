@@ -20,6 +20,7 @@ import {
   Lightbulb,
   SlidersHorizontal,
   Brain,
+  Cookie,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import {
@@ -47,6 +48,8 @@ import { useAuth } from "@/lib/auth";
 import PreferencesDialog from "./PreferencesDialog";
 import { loadPreferences, hasNonDefaultPreferences } from "@/lib/userPreferences";
 import { notificationSurface } from "@/lib/notify";
+import { CONSENT_SETTINGS_EVENT } from "@/lib/consent";
+import { isDesktopShell } from "@/lib/shell";
 
 // Where "this is broken" and "this should exist" go. Two places on purpose,
 // and .github/ISSUE_TEMPLATE/config.yml already draws the line: issues are for
@@ -359,6 +362,15 @@ function SidebarUserFooter() {
             <span>Suggest an improvement</span>
           </a>
         </DropdownMenuItem>
+        {/* No cookies to settle in the desktop shell — it loads no tags. */}
+        {isDesktopShell() ? null : (
+          <DropdownMenuItem
+            onClick={() => window.dispatchEvent(new Event(CONSENT_SETTINGS_EVENT))}
+          >
+            <Cookie className="size-4" />
+            <span>Cookie settings</span>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={signOut}>
           <LogOut className="size-4" />

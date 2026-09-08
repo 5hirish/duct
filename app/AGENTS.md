@@ -10,7 +10,7 @@ Next.js App Router report viewer and agent interface.
 - **State:** React Context (`InsightContext.js`) + component-level state only. No Redux/Zustand.
 - **HTTP:** Native `fetch` wrapped in `lib/api.js`. No type-safe client or OpenAPI generation.
 - **Auth:** Custom API key (`NEXT_PUBLIC_DUCT_API_KEY`) sent to backend + Google Sign-In (`GoogleSignInButton.jsx`). No next-auth/Clerk/Supabase.
-- **Observability:** Sentry (`@sentry/nextjs` — server, edge, client), Google Tag Manager (`NEXT_PUBLIC_GTM_ID`), Cloudflare Turnstile bot protection.
+- **Observability:** Sentry (`@sentry/nextjs` — server, edge, client), analytics behind a swappable provider (`lib/analytics/`, GTM by default via `NEXT_PUBLIC_GTM_ID`, gated on consent), Cloudflare Turnstile bot protection.
 
 ## Deployment
 
@@ -48,7 +48,19 @@ Plus `invite/[token]/` at the top level (outside every route group): the invitat
 - `lib/localInsights.js` — client-side insight storage
 - `lib/reports.js` — report generation helpers
 - `lib/userPreferences.js` — preference persistence
-- `lib/analytics-client.js` — analytics event wrapper
+- `lib/analytics-client.js` — how to load GTM and push events (never whether)
+- `lib/consent.js` — the consent *rule* and the stored decision. Names no vendor.
+- `lib/analytics/` — the seam. `index.js` selects a provider from
+  `NEXT_PUBLIC_ANALYTICS_PROVIDER` (unset → `gtm` when a container is
+  configured, else `none`); `gtm.js` is the only file that knows Google exists;
+  `none.js` is a complete implementation, not a stub. Adding a provider is one
+  file plus a line in `PROVIDERS`. **Nothing outside this directory may
+  reference a tag vendor** — that is what lets a self-host build measure nothing
+  without editing our consent logic, and it mirrors
+  `desktop/src-tauri/src/telemetry/` on the Rust side.
+- `ProductAnalytics` owns the flow, and exempts the desktop shell from ever
+  asking: it measures with storage permanently off, gated on the Preferences
+  switch in `lib/telemetry.js`.
 - `lib/format.js` — dates, numbers and labels: `relativeTime`, `relativeDays`,
   `formatDate`, `formatTime`, `toDate`, `dayKey`, `compactNumber`,
   `formatNumber`, `titleCase`, `formatTitle`, `capitalize`, `initials`.

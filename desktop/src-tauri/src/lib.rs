@@ -261,16 +261,20 @@ async fn install_update(_app: AppHandle) -> Result<(), String> {
 
 /// Whether crash reporting is on, and whether this build can do it at all.
 ///
-/// `available` is false when no DSN was compiled in — the settings UI shows the
-/// toggle as unavailable rather than offering a switch that does nothing.
+/// `available` is false when no reporter was compiled in, or one was but has no
+/// destination configured — the settings UI hides the toggle rather than
+/// offering a switch that changes nothing.
 #[tauri::command]
 fn get_telemetry_settings() -> serde_json::Value {
     let enabled = telemetry::default_data_dir()
-        .map(|dir| telemetry::read_prefs(&dir).enabled)
+        .map(|dir| telemetry::is_enabled(&dir))
         .unwrap_or(false);
     serde_json::json!({
         "enabled": enabled,
-        "available": telemetry::SENTRY_DSN.filter(|d| !d.is_empty()).is_some(),
+        "available": telemetry::is_available(),
+        // So the settings copy can say "on by default" or "off by default" and
+        // be telling the truth about the build in front of the user.
+        "default_on": telemetry::default_enabled(),
     })
 }
 
@@ -280,7 +284,12 @@ fn get_telemetry_settings() -> serde_json::Value {
 #[tauri::command]
 fn set_telemetry_enabled(enabled: bool) -> Result<(), String> {
     let dir = telemetry::default_data_dir().ok_or("could not resolve the data directory")?;
-    telemetry::write_prefs(&dir, telemetry::TelemetryPrefs { enabled })
+    telemetry::write_prefs(
+        &dir,
+        telemetry::TelemetryPrefs {
+            enabled: Some(enabled),
+        },
+    )
 }
 
 /// Whether a deep-link value is safe to splice into a navigation URL.
@@ -638,9 +647,12 @@ pub fn run() {
     // worth reporting, and the guard has to outlive the whole app — dropping it
     // stops the transport, so binding it to `_guard` (not `_`) matters.
     let telemetry_enabled = telemetry::default_data_dir()
-        .map(|dir| telemetry::read_prefs(&dir).enabled)
+        .map(|dir| telemetry::is_enabled(&dir))
         .unwrap_or(false);
-    let _guard = telemetry::init(telemetry_enabled);
+    // Named, not inferred: the type is the contract — whatever the compiled-in
+    // reporter needs held for the process's life. Dropping it stops the
+    // transport, so binding to `_guard` (not `_`) is load-bearing.
+    let _guard: telemetry::Guard = telemetry::init(telemetry_enabled);
 
     let builder = tauri::Builder::default();
 

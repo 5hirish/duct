@@ -19,6 +19,7 @@
 
 import { useState } from "react";
 
+import { CookieConsent } from "@/components/CookieConsent";
 import ConnectorDialog from "@/components/connections/ConnectorDialog";
 import ConnectorPermissions from "@/components/connections/ConnectorPermissions";
 import ConnectorTile from "@/components/connections/ConnectorTile";
@@ -135,6 +136,14 @@ function Row({ children }) {
 }
 
 export const SCENES = [
+  {
+    id: "cookie-consent",
+    state: "asking",
+    group: "CookieConsent",
+    title: "The consent question",
+    note: "Decline and Accept are the same control at the same size — a Decline styled as a text link is the specific thing the AEPD treats as no consent at all. Check the mobile width: the two buttons stay side by side and equal, they do not stack with Accept on top.",
+    render: () => <CookieConsent onAccept={() => {}} onDecline={() => {}} />,
+  },
   {
     id: "tile-states",
     state: "all states",

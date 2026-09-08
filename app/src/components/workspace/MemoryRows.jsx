@@ -8,7 +8,7 @@
 import { useState } from "react";
 import { Brain } from "lucide-react";
 import { MEMORY_KIND_ICONS, createMemory, deleteMemory } from "@/lib/memoryApi";
-import { trackEvent } from "../../lib/analytics-client";
+import { trackEvent } from "../../lib/analytics";
 import { getActiveProject } from "@/lib/projects";
 
 /** Deep link to one entry in the project timeline, which fetches and highlights

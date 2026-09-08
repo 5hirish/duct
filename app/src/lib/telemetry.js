@@ -14,13 +14,19 @@
 
 import { isDesktopShell } from "./shell.js";
 
-const UNAVAILABLE = { available: false, enabled: false };
+const UNAVAILABLE = { available: false, enabled: false, defaultOn: false };
 
 export async function getTelemetrySettings() {
   if (!isDesktopShell()) return UNAVAILABLE;
   try {
     const info = await window.__TAURI__.core.invoke("get_telemetry_settings");
-    return { available: Boolean(info?.available), enabled: Boolean(info?.enabled) };
+    return {
+      available: Boolean(info?.available),
+      enabled: Boolean(info?.enabled),
+      // Builds we distribute report by default; a self-host build does not. The
+      // card says which, rather than asserting one and being wrong in the other.
+      defaultOn: Boolean(info?.default_on),
+    };
   } catch {
     // A shell predating these commands. Absence of the switch is the honest
     // answer; it cannot report either way.

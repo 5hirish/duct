@@ -18,8 +18,6 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
-const gtmId = process.env.NEXT_PUBLIC_GTM_ID;
-const shouldRenderNoScriptGtm = Boolean(gtmId) && process.env.NODE_ENV === "production";
 
 /** CI must not use placeholder hosts (e.g. `<subdomain>`); `new URL()` throws and breaks `next build`. */
 function metadataBaseUrl() {
@@ -94,17 +92,10 @@ export default function RootLayout({ children }) {
             <a href="#main-content" className="skip-link">
               Skip to main content
             </a>
-            {shouldRenderNoScriptGtm ? (
-              <noscript>
-                <iframe
-                  src={`https://www.googletagmanager.com/ns.html?id=${gtmId}`}
-                  height="0"
-                  width="0"
-                  style={{ display: "none", visibility: "hidden" }}
-                  title="Google Tag Manager"
-                />
-              </noscript>
-            ) : null}
+            {/* No GTM <noscript> iframe. It was the one thing that loaded a tag
+                without asking, and it bought nothing: GA4 needs JavaScript, so
+                with JS off the frame measures a visitor it cannot report on.
+                The seam in lib/analytics is the only path in now. */}
             <ProductAnalytics />
             {children}
           </TooltipProvider>

@@ -15,7 +15,7 @@ name = "desktop_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [features]
-default = ["updater", "crash-reporting"]
+default = ["updater"]
 # Self-update. `--no-default-features` drops the plugin AND the `autoUpdate`
 # capability the web app gates its update UI on, so the two can never disagree.
 #
@@ -25,8 +25,16 @@ default = ["updater", "crash-reporting"]
 # anyone noticing — delete this and its `#[cfg]` gates in `src/lib.rs`, or give
 # it a consumer (a distro-packaged .deb would be a real one).
 updater = ["dep:tauri-plugin-updater"]
-# Crash reporting, on by default and compiled out when the DSN is absent
-# anyway. Separable so a build can drop the dependency entirely.
+# Crash reporting. Deliberately NOT a default feature: the builds we distribute
+# pass `--features crash-reporting` (see .github/workflows/desktop-release.yml),
+# and everyone else gets a shell with no reporting dependency compiled in at
+# all. Someone self-hosting Duct did not sign up to run our observability, and
+# a default they have to discover in order to remove is not a real choice.
+#
+# The vendor lives behind `src/telemetry/reporter.rs`, which has a complete
+# no-op arm — so building without this is a supported configuration, not a
+# degraded one. Swapping Sentry for something else means a third arm there and
+# nothing anywhere else.
 crash-reporting = ["dep:sentry"]
 # Webview inspector in a release build. Off by default; debug builds get it
 # regardless. Passed through so `View → Toggle Developer Tools` and Tauri's own

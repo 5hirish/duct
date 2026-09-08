@@ -8,7 +8,7 @@ import {
   ExecutionClosingLine,
   ExecutionRequestModal,
 } from './ExecutionOffer';
-import { trackEvent } from '../../lib/analytics-client';
+import { trackEvent } from '../../lib/analytics';
 import { capitalize } from "@/lib/format";
 
 // ---------------------------------------------------------------------------

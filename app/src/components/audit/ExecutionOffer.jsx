@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { expressExecutionInterest } from '../../lib/api';
-import { trackEvent } from '../../lib/analytics-client';
+import { trackEvent } from '../../lib/analytics';
 
 const DUCT_ORANGE = '#ff5c00';
 const DUCT_NAVY = '#0d0f1a';

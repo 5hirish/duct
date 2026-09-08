@@ -170,7 +170,8 @@
 <li><strong>The app we distribute talks to our servers.</strong> It does not carry its own copy of Duct's backend. Your projects, briefs, agent memories, activity log, uploads and connector authorisations are stored by us, exactly as they are when you use Duct in a browser &mdash; which is also what lets you sign in on a second computer and find your work there. Sections 12 to 14 cover how we store, share and delete it.</li>
 <li><strong>Your AI provider keys stay on your machine.</strong> They live in your operating system's keychain, and are sent with a request only when a job needs to run. We never store them, and the option to save a key with us that the browser version offers is deliberately switched off in the desktop app.</li>
 <li><strong>Sign-in and connector authorisation open your system browser</strong> rather than an embedded window, so you keep your browser's own protections, and no credential is ever carried in the link that returns you to the app.</li>
-<li><strong>Crash reporting from the app itself is off by default and opt-in.</strong> A missing or unreadable preference is always treated as "off". The view inside the window is the same web app we serve in a browser, so it carries the product analytics and error reporting described in section 11.</li>
+<li><strong>The desktop app sets no cookies, and is never going to ask you about them.</strong> It reports usage through the same Google Tag Manager container as the rest of Duct, but with storage switched off permanently: Google Analytics receives the event and writes nothing to your machine, so none of the cookies in section 11 exist there and there is nothing to consent to. A consent bar in front of an application you just opened is not a question worth interrupting anyone for.</li>
+<li><strong>Crash reports and usage data are on by default in the app we distribute, and one switch in Preferences turns both off.</strong> Once you touch it your answer is kept and no default applies again. A crash report contains the error and the stack trace that caused it; usage data is which screens and features you open &mdash; never your provider API keys, your data, or anything you generate. If you build Duct yourself both are off by default instead, because then we are not the ones running it.</li>
 <li><strong>Update checks</strong> contact our release host to ask whether a newer version exists. This request reveals your IP address and the version you are running.</li>
 <li><strong>You can run the whole thing yourself instead.</strong> The source is public, and it can be built with the backend inside the app or hosted on your own server. Then we hold nothing and this policy has nothing to describe &mdash; see section 16.</li>
 </ul>
@@ -196,7 +197,26 @@
 <h2>11. Other Information We Collect</h2>
 
 <h3>Usage data</h3>
-<p>We collect basic product analytics — pages visited, features used, general interaction patterns — to understand how Duct is used. On our marketing site this runs through Google Tag Manager. We do not record keystrokes or form contents.</p>
+<p>We collect basic product analytics — pages visited, features used, general interaction patterns — to understand how Duct is used. This runs through Google Tag Manager, which loads Google Analytics 4. We do not record keystrokes or form contents.</p>
+
+<h3>Cookies and similar technologies</h3>
+
+<p>Analytics cookies are set only after you accept them. If you are in the EEA, the UK or Switzerland we ask before anything is set, and nothing but the strictly necessary entries below exists until you choose. Elsewhere analytics is on by default and you can turn it off at any time — the <strong>Cookie settings</strong> link in our footer, and in the account menu inside the app, reopens the choice on every page.</p>
+
+<p>Declining means Google Tag Manager is never loaded at all, rather than loaded in a restricted mode. If you decline after previously accepting, we delete the cookies below and reload the page.</p>
+
+<table>
+<thead><tr><th>Cookie</th><th>Set by</th><th>Purpose</th><th>Expires</th></tr></thead>
+<tbody>
+<tr><td><code>_ga</code></td><td>Google Analytics 4</td><td>Distinguishes one visitor from another so a returning visit is not counted twice</td><td>2 years</td></tr>
+<tr><td><code>_ga_SXH5LYVTJ8</code></td><td>Google Analytics 4</td><td>Holds the state of the current session for our specific property</td><td>2 years</td></tr>
+<tr><td><code>_gcl_au</code></td><td>Google Tag Manager (Conversion Linker)</td><td>Attributes a signup to the ad or link that led to it</td><td>90 days</td></tr>
+<tr><td><code>duct_consent</code></td><td>Duct</td><td>Remembers your choice, so you are not asked on every page. Set on <code>getduct.ai</code> and all its subdomains, so answering once in your browser also answers for the app. The desktop app never sets it, because it loads no analytics at all. Strictly necessary — it exists whether you accept or decline</td><td>6 months, then we ask again</td></tr>
+<tr><td><code>duct_consent_region</code></td><td>Duct (session storage)</td><td>Caches the country your request arrived from, so we ask the right question without repeating the lookup. Strictly necessary</td><td>End of session</td></tr>
+</tbody>
+</table>
+
+<p>The authentication token described under <em>Locally stored data</em> below is also strictly necessary: without it you cannot stay signed in.</p>
 
 <h3>Diagnostics</h3>
 <p>When something breaks, we collect error reports containing the technical context of the failure (stack trace, browser, the operation attempted). We configure our error monitoring to avoid capturing Google user data, but a report may incidentally contain an identifier such as a property ID.</p>
