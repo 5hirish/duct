@@ -20,6 +20,8 @@
 import { useState } from "react";
 
 import ContextCompressionCard from "@/components/ContextCompressionCard.jsx";
+import { CornerNotice } from "@/components/ui/corner-notice";
+import { RefreshCw } from "lucide-react";
 import { CookieConsent } from "@/components/CookieConsent";
 import ConnectorDialog from "@/components/connections/ConnectorDialog";
 import ConnectorPermissions from "@/components/connections/ConnectorPermissions";
@@ -137,6 +139,31 @@ function Row({ children }) {
 }
 
 export const SCENES = [
+  {
+    id: "reload-notice",
+    state: "new build available",
+    group: "ReloadToast",
+    title: "A new web build is ready",
+    note: "ReloadToast mounts itself off a version poll, so it is unreachable in dev (no baked build id) — this is its body in the real primitive. Check that the copy names what a reload costs: this app holds long agent runs and unsent input, so 'refresh for the latest' would be true and would still lose someone's work. The `notification` surface positions it; here it is inline so the text can be measured.",
+    render: () => (
+      <CornerNotice
+        icon={RefreshCw}
+        title="A new version of Duct is ready"
+        onDismiss={() => {}}
+        actions={
+          <>
+            <Button size="sm">Reload</Button>
+            <Button size="sm" variant="ghost">Later</Button>
+          </>
+        }
+      >
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          This tab is running an older build. Reloading picks up the new one — finish anything
+          you have in progress first, it will not wait for you.
+        </p>
+      </CornerNotice>
+    ),
+  },
   {
     id: "context-compression",
     state: "on (default) — toggle for off",

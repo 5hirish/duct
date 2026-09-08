@@ -10,6 +10,7 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/s
 import { AuditNavProvider } from "../../lib/auditNavContext";
 import LocalBackendGate from "../../components/LocalBackendGate.jsx";
 import UpdateToast from "../../components/UpdateToast.jsx";
+import ReloadToast from "../../components/ReloadToast.jsx";
 import ConnectionBanner from "../../components/ConnectionBanner.jsx";
 import { CommandProvider } from "../../components/commands/CommandRegistry";
 import CommandPalette from "../../components/commands/CommandPalette";
@@ -38,6 +39,9 @@ export default function AppLayout({ children }) {
           clipped by the sidebar's overflow handling. Both render nothing until
           they have something to say. */}
       <UpdateToast />
+      {/* Desktop and web never both speak: UpdateToast is shell-only,
+          ReloadToast browser-only. */}
+      <ReloadToast />
       <ConnectionBanner />
     </LocalBackendGate>
   );

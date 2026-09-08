@@ -132,6 +132,11 @@ jobs:
         run: npx opennextjs-cloudflare build
         env:
           NEXT_TELEMETRY_DISABLED: "1"
+          # Identifies this deployment to a tab that loaded an older one, so
+          # ReloadToast can offer a refresh instead of letting the tab break on
+          # a chunk that no longer exists. Baked in, so it must be set here
+          # rather than in the Cloudflare dashboard.
+          NEXT_PUBLIC_BUILD_ID: ${{ github.sha }}
           NEXT_PUBLIC_API_BASE: ${{ secrets.NEXT_PUBLIC_API_BASE }}
           NEXT_PUBLIC_DUCT_API_KEY: ${{ secrets.NEXT_PUBLIC_DUCT_API_KEY }}
           NEXT_PUBLIC_GTM_ID: ${{ secrets.NEXT_PUBLIC_GTM_ID }}

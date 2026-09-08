@@ -47,6 +47,14 @@ Plus `invite/[token]/` at the top level (outside every route group): the invitat
 - `lib/insightData.js` — insight fetching and management
 - `lib/localInsights.js` — client-side insight storage
 - `lib/reports.js` — report generation helpers
+- `lib/appVersion.js` — is this tab running the build that is currently
+  deployed. `NEXT_PUBLIC_BUILD_ID` is baked at build time (CI sets it to
+  `github.sha`; see `.github/workflows/app.yml`) and compared against
+  `/api/version`. Everything in it is written to stay quiet on doubt: an
+  unknown deployed build, a failed poll and a build with no baked id all read
+  as "no new version", because a reload prompt nobody needed is what teaches
+  people to ignore the one they do. **Never reload for the user** — this app
+  holds long agent runs and unsent input.
 - `lib/userPreferences.js` — preference persistence
 - `lib/analytics-client.js` — how to load GTM and push events (never whether)
 - `lib/consent.js` — the consent *rule* and the stored decision. Names no vendor.
@@ -122,6 +130,15 @@ the page.
 - Overlays: `ui/dialog` (Radix — portal, focus trap, Escape, scroll lock) and
   `ui/lightbox`. Never hand-roll a `fixed inset-0` backdrop.
 - Busy state: `ui/spinner`. Colour comes from `currentColor`.
+- Corner notices: `ui/corner-notice`. The bottom-right card that tells you
+  something without interrupting you — `UpdateToast` (desktop build available)
+  and `ReloadToast` (new web build) are both built from it. Extracted at the
+  third copy of the anatomy, not after it. It is **not** a toast system: no
+  queue, no timers, no imperative `notify()`, because every notice here is a
+  persistent condition its owner already tracks in state. `ConnectionBanner`
+  deliberately takes the opposite corner (`sm:left-4`) so the two never fight;
+  below `sm` it is a full-width bar and wins on DOM order, which is correct —
+  a lost backend outranks a pending refresh.
 - Agent shells: `hooks/useAgentSession` (the session lifecycle),
   `workspace/AgentChat` (the transcript pane), `workspace/SplitWorkspace`
   (split + responsive), `PipelineProgress` (the working ladder),
