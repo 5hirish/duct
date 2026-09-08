@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { FolderOpen } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import AgentChat from "../workspace/AgentChat";
 import AuditReport from "./AuditReport";
 import ShareReport from "./ShareReport";
@@ -12,7 +15,9 @@ import { AuditEvent, STEP_LABELS } from "../../lib/auditEvents";
 import { Phase } from "../../lib/agentPhase";
 import { useAuditNav } from "../../lib/auditNavContext";
 import { applyProjectDraft } from "../../lib/projectDraft";
+import { PROJECT_EXISTING } from "../../lib/auditSession";
 import { KICKOFF_SOURCES } from "../../lib/signInSources";
+import { CornerNotice } from "../ui/corner-notice";
 
 // Re-export so consumers can import Phase from AuditWorkspace if they prefer
 export { Phase } from "../../lib/agentPhase";
@@ -43,12 +48,18 @@ export default function AuditWorkspace({
   leadEmail = null,
   // A message to send once the resumed conversation is ready (lib/auditResume.js).
   kickoff = "",
+  // "existing" when this run is drafting into a project the user already had.
+  // The write happens in the background while they read the report, so it is
+  // the one thing here they have to be told about.
+  projectMode = "",
 }) {
   const { setIsAuditRunning } = useAuditNav();
 
   const [reportVersions, setReportVersions] = useState([]);
   const [selectedVersionId, setSelectedVersionId] = useState(null);
   const [streamingHtml, setStreamingHtml] = useState("");
+  // { id, name } once a draft has landed on a pre-existing project, until dismissed.
+  const [drafted, setDrafted] = useState(null);
 
   const htmlBatchRef = useRef("");
   const htmlBatchTimer = useRef(null);
@@ -146,12 +157,18 @@ export default function AuditWorkspace({
         }
         break;
 
-      case AuditEvent.PROJECT_DRAFT:
+      case AuditEvent.PROJECT_DRAFT: {
         // Onboarding: the run learned something about the site. It lands on
         // the project this audit belongs to, provenance and all; the rules
         // for what may overwrite what live in lib/projectDraft.js.
-        applyProjectDraft(event, { projectId: auditParams?.project_id || null });
+        const saved = applyProjectDraft(event, { projectId: auditParams?.project_id || null });
+        // Changing a project someone already had is not something to do
+        // quietly, even when every rule says the change was safe.
+        if (projectMode === PROJECT_EXISTING && saved?.id) {
+          setDrafted({ id: saved.id, name: saved.name });
+        }
         break;
+      }
 
       case AuditEvent.PIPELINE_FINISHED:
         if (event.payload) {
@@ -228,6 +245,7 @@ export default function AuditWorkspace({
   ) : null;
 
   return (
+    <>
     <SplitWorkspace
       storageKey="audit_split_w"
       rightLabel="Report"
@@ -323,6 +341,25 @@ export default function AuditWorkspace({
         />
       }
     />
+    {drafted && (
+      <CornerNotice
+        icon={FolderOpen}
+        title={`Added to your ${drafted.name} project`}
+        onDismiss={() => setDrafted(null)}
+        dismissLabel="Dismiss project update"
+        actions={
+          <Button asChild size="sm" variant="outline">
+            <Link href={`/project/${encodeURIComponent(drafted.id)}`}>Review what changed</Link>
+          </Button>
+        }
+      >
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          Duct filled in what it learned from your site. Anything you had entered yourself was left
+          alone, and every drafted field is marked.
+        </p>
+      </CornerNotice>
+    )}
+    </>
   );
 }
 

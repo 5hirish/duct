@@ -38,6 +38,9 @@ const CLEAN = new Set([
   "theme.css",
   "tokens.css",
   "typography.css",
+  // Written against the scale from the start, so it goes on the ratchet
+  // rather than onto the debt list it would otherwise have joined.
+  "usage.css",
 ]);
 
 const DECL = /font-size:\s*([^;}]+)[;}]/g;

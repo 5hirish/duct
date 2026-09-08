@@ -21,7 +21,7 @@ import { useState } from "react";
 
 import ContextCompressionCard from "@/components/ContextCompressionCard.jsx";
 import { CornerNotice } from "@/components/ui/corner-notice";
-import { RefreshCw } from "lucide-react";
+import { FolderOpen, RefreshCw } from "lucide-react";
 import { CookieConsent } from "@/components/CookieConsent";
 import ConnectorDialog from "@/components/connections/ConnectorDialog";
 import ConnectorPermissions from "@/components/connections/ConnectorPermissions";
@@ -139,6 +139,29 @@ function Row({ children }) {
 }
 
 export const SCENES = [
+  {
+    id: "project-drafted-notice",
+    state: "an audit added to a project that already existed",
+    group: "AuditWorkspace",
+    title: "Duct changed a project you already had",
+    note: "Onboarding writes what the crawl learned into a project, and when that project is one the user already had, the write happens in the background while they read the report. This is the only thing telling them. Check that the copy leads with reassurance rather than alarm — nothing has gone wrong, and the merge rules mean nothing they typed was touched — and that a long project name still leaves the title on two lines at most.",
+    render: () => (
+      <CornerNotice
+        icon={FolderOpen}
+        title="Added to your Northwind Trading — EMEA marketing site project"
+        onDismiss={() => {}}
+        dismissLabel="Dismiss project update"
+        actions={
+          <Button size="sm" variant="outline">Review what changed</Button>
+        }
+      >
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          Duct filled in what it learned from your site. Anything you had entered yourself was left
+          alone, and every drafted field is marked.
+        </p>
+      </CornerNotice>
+    ),
+  },
   {
     id: "reload-notice",
     state: "new build available",

@@ -5,13 +5,8 @@
 // rehydrates the stored report for the conversation — no re-crawl.
 
 import { DEFAULT_AUDIT_TEMPLATE_ID, ReportMode } from "./audit";
+import { openAuditSession } from "./auditSession";
 import { loadPreferences } from "./userPreferences";
-
-// A message the workspace sends on the user's behalf once the resume is
-// ready. Not part of the request — the backend forbids unknown fields — so
-// the session page lifts it off before the params go on the wire, the same
-// way it lifts `pending_provider`.
-export const KICKOFF_KEY = "kickoff";
 
 export function startAuditResume(
   router,
@@ -25,9 +20,10 @@ export function startAuditResume(
     report_mode: reportMode || ReportMode.TEMPLATE,
     template_id: templateId || DEFAULT_AUDIT_TEMPLATE_ID,
     user_preferences: loadPreferences(),
-    ...(kickoff ? { [KICKOFF_KEY]: kickoff } : {}),
   };
-  const sessionId = crypto.randomUUID();
-  sessionStorage.setItem(`audit_session_${sessionId}`, JSON.stringify(params));
+  // `kickoff` is client-only — a message the workspace sends on the user's
+  // behalf once the resume is ready. It must never reach the request body,
+  // where an unknown field is a 422.
+  const sessionId = openAuditSession(params, { kickoff });
   router.push(`/audit/seo/${sessionId}`);
 }

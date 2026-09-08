@@ -1,9 +1,11 @@
-// The two rules that make a drafted project safe to merge, pinned:
-// a value the user set is never overwritten, and what the site says (crawl)
-// beats what a model guessed (inferred). Everything else is plumbing.
+// The three rules that make a drafted project safe to merge, pinned:
+// a value the user set is never overwritten, what the site says (crawl) beats
+// what a model guessed (inferred), and a filled field with no recorded
+// provenance belongs to the user. Everything else is plumbing.
 
 import { describe, expect, it } from "vitest";
 import { mergeDraft, markConfirmed, PROVENANCE_CRAWL, PROVENANCE_INFERRED, PROVENANCE_USER } from "../projectDraft";
+import { UNTITLED_PROJECT } from "../projects";
 
 const empty = { id: "p1", name: "", company: { name: "", pitch: "" }, audience: { personas: [] }, provenance: {} };
 
@@ -48,6 +50,39 @@ describe("mergeDraft", () => {
     expect(out.company.pitch).toBe("Weeknight dinners, planned.");
     expect(out.company.industry).toBe("SaaS & Software");
     expect(out.provenance.industry).toBe(PROVENANCE_INFERRED);
+  });
+
+  // The regression this rule exists for. Every project made before drafts
+  // existed has an empty provenance map, so without rule 3 the first crawl to
+  // reach one replaced its name, pitch and industry with facts about whatever
+  // site was being audited — and `/start` used to hand the draft to whichever
+  // project happened to be active.
+  it("leaves a pre-draft project's fields alone", () => {
+    const legacy = {
+      id: "p2",
+      name: "Acme (mine)",
+      company: { name: "Acme Corporation", pitch: "What I wrote myself" },
+      audience: { personas: [] },
+      // No provenance key at all — the shape every older project is in.
+    };
+    const out = mergeDraft(legacy, crawl);
+    expect(out.name).toBe("Acme (mine)");
+    expect(out.company.name).toBe("Acme Corporation");
+    expect(out.company.pitch).toBe("What I wrote myself");
+  });
+
+  it("still fills the gaps in a pre-draft project", () => {
+    const legacy = { id: "p3", name: "Mine", company: { name: "", pitch: "" }, audience: { personas: [] } };
+    const out = mergeDraft(legacy, crawl);
+    expect(out.name).toBe("Mine");
+    expect(out.company.pitch).toBe("Weeknight dinners, planned.");
+  });
+
+  // The placeholder is not content: a project the store just made carries it,
+  // and treating it as typed would leave every new project called "Untitled".
+  it("writes over the placeholder name", () => {
+    const fresh = { id: "p4", name: UNTITLED_PROJECT, company: { name: "", pitch: "" }, audience: { personas: [] } };
+    expect(mergeDraft(fresh, crawl).name).toBe("Acme");
   });
 
   it("ignores fields it has no home for", () => {

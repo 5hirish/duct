@@ -39,6 +39,12 @@ Three route groups under `app/`:
   (`TesseraBurst`) is made of them. Provider choice is a radio-card list
   (`ProviderStep.jsx`), OpenAI first. Design and phases:
   `docs/engineering/smart-onboarding-plan.md`.
+  Nothing is **written** until the user confirms the site card: for someone
+  already signed in, the crawl's draft would otherwise land in whichever
+  project happened to be active and overwrite it. The card says which
+  project this becomes, offers a separate one, and asks when two projects
+  share the site. The audit that follows says so again from the workspace,
+  because that write happens while the user is reading the report.
 - `(auth)/` — login page; links to `/start` for first-timers, and passes a
   guest's link code to the authorize URL so the account keeps their work.
   When `lib/signInSources.js` has armed the onboarding bundle it also passes
@@ -70,8 +76,8 @@ usually signed out and the app shell's guard would lose where they were going:
 then resumes the conversation; the backend hands it only to project members).
 `?kickoff=sources` on that link makes the resumed workspace open by asking
 the agent to check what the bundled sign-in connected and bind the property
-(`KICKOFF_MESSAGES` in `AuditWorkspace.jsx`; the session page lifts the key
-off the params like `pending_provider`, and sends it once).
+(`KICKOFF_MESSAGES` in `AuditWorkspace.jsx`; it rides the session's `client`
+bag and is spent once).
 
 ## Key utilities
 
@@ -92,9 +98,24 @@ off the params like `pending_provider`, and sends it once).
   `X-OpenAI-Account-Id`). Gated on `capabilities.chatgptAuth` from the shell
   and `chatgpt_auth_enabled` from `/api/providers/status` — both, always.
 - `lib/projectDraft.js` — merges `PROJECT_DRAFT` events into the project
-  with provenance (`crawl` / `inferred` / `user`); a user value is never
-  overwritten and a crawl value beats an inferred one. `AuditWorkspace`
-  applies them; nothing else writes drafts.
+  with provenance (`crawl` / `inferred` / `user`). Three rules: a user value
+  is never overwritten, a crawl value beats an inferred one, and **a
+  non-empty field with no recorded provenance counts as the user's** —
+  every project made before drafts existed is in that state, and without
+  that rule the first draft to reach one replaced a human's name, pitch and
+  industry with guesses. Which project a draft lands on is the caller's
+  `projectId`; without one it resolves by the drafted site and creates,
+  never "whatever is active". `AuditWorkspace` applies them; nothing else
+  writes drafts.
+- `lib/projects.js` — `siteKey()` / `projectsForSite()` are how a site
+  address finds its project: lowercase host, no leading `www.`, subdomains
+  kept distinct. `projectsForSite` returns every match, because two is a
+  question for the user and not a thing to guess at.
+- `lib/auditSession.js` — the `sessionStorage` hand-off into
+  `/audit/seo/[sessionId]`. The request goes to the backend verbatim (an
+  unknown field is a 422), so client-only state — the "connect a model"
+  card, a kickoff message, which project this run writes to — is nested
+  under one `client` key rather than stripped by name on arrival.
 - `lib/membersApi.js` — project members + invitations (server-only; no localStorage mirror, unlike `lib/projects.js`)
 - `lib/engines.js` — `DEFAULT_ENGINE` and the agent-type list. The engine is
   no longer a user choice: v3 is gone, every agent runs v1, so the Runtime

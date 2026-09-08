@@ -526,6 +526,30 @@ reader, so the gain shows on the next insight run. Every other sign-in
 Connections page is untouched, and the bundle can never carry a write scope
 (`tests/test_signin_sources.py` guards both).
 
+**Fixed (fourth pass) — the returning user's project.** `/start` merged the
+crawl's draft into `getActiveProject()`, so a signed-in user auditing any
+site rewrote whichever project they had open: name, pitch, industry,
+personas, competitors. The provenance guards did not stop it, because they
+only protect a field whose provenance is recorded and every project made
+before drafts existed has none. Three changes, and the first matters most
+because it protects the *right* project too:
+
+  1. `mergeDraft` treats a non-empty field with no recorded provenance as the
+     user's. The placeholder name is excluded, or a new project would keep it
+     forever.
+  2. `projectsForSite()` resolves by website — lowercase host, `www.`
+     stripped, subdomains kept apart — and `applyProjectDraft` uses it
+     instead of the active project when no caller names one.
+  3. `/start` writes nothing until the site card is confirmed. It hydrates
+     first (a signed-in user on a new machine has an empty local store and
+     would match nothing), then says which project this becomes, offers a
+     separate one, and asks when two projects share the site. A guest sees
+     none of it, having no projects.
+
+The audit that follows says so again from the workspace, because that write
+lands while the user is reading the report — `CornerNotice`, dismissible,
+linking to the project.
+
 **Not built:** the prompt state machine, Phase 6 (tray, intros, day-2
 nudge), GTM triggers for every onboarding event. Provenance is kept
 client-side only — `toApi` in `lib/projectsApi.js` does not send it — so a

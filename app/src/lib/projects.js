@@ -1,5 +1,6 @@
 "use client";
 
+import { safeHostname } from "./favicon";
 import {
   deleteProjectRemote,
   fetchProjectsRemote,
@@ -10,6 +11,13 @@ import {
 const PROJECTS_STORAGE_KEY = "duct_projects";
 const ACTIVE_PROJECT_ID_STORAGE_KEY = "duct_active_project_id";
 const LEGACY_PROFILE_STORAGE_KEY = "duct_business_profile";
+
+/**
+ * The name a project carries until it has a real one. Exported because it is
+ * not content: code that decides whether a field was filled in by a human has
+ * to be able to tell this placeholder from something someone typed.
+ */
+export const UNTITLED_PROJECT = "Untitled project";
 
 export const DEFAULT_PROJECT_PROFILE = {
   company: {
@@ -95,7 +103,7 @@ function withProjectDefaults(projectInput) {
   return {
     ...profile,
     id: isNonEmptyString(project.id) ? project.id : "",
-    name: isNonEmptyString(project.name) ? project.name : profile.company.name || "Untitled project",
+    name: isNonEmptyString(project.name) ? project.name : profile.company.name || UNTITLED_PROJECT,
     createdAt: isNonEmptyString(project.createdAt) ? project.createdAt : new Date(0).toISOString(),
     updatedAt: isNonEmptyString(project.updatedAt) ? project.updatedAt : new Date(0).toISOString(),
     // Membership metadata from the backend. A project that has never synced is
@@ -201,7 +209,7 @@ export function saveProject(projectInput) {
     createdAt: isNonEmptyString(project.createdAt) && project.createdAt !== new Date(0).toISOString()
       ? project.createdAt
       : timestamp,
-    name: isNonEmptyString(project.name) ? project.name : project.company.name || "Untitled project",
+    name: isNonEmptyString(project.name) ? project.name : project.company.name || UNTITLED_PROJECT,
   };
 
   if (!base.id) {
@@ -236,7 +244,7 @@ export function createProject(partial = {}) {
   const project = saveProject({
     ...merged,
     id: createId(),
-    name: partialObj.name || merged.company.name || "Untitled project",
+    name: partialObj.name || merged.company.name || UNTITLED_PROJECT,
     createdAt: timestamp,
     updatedAt: timestamp,
   });
@@ -310,6 +318,36 @@ export function setActiveProjectId(id) {
   if (next === readStoredActiveProjectId()) return;
   writeStoredActiveProjectId(next);
   notifyProjectsChanged();
+}
+
+/**
+ * The comparable form of a site address: lowercase host, no leading `www.`.
+ *
+ * Host and not registrable domain, deliberately. `blog.acme.com` and
+ * `acme.com` are two legitimate audit targets with different findings, and
+ * folding them together would silently write one site's report into the
+ * other's project. Returns "" for anything unparseable, and "" never matches.
+ */
+export function siteKey(url) {
+  const host = safeHostname(url).toLowerCase();
+  return host.startsWith("www.") ? host.slice(4) : host;
+}
+
+/**
+ * Every project whose website is `url`, newest first.
+ *
+ * Returns a list rather than a best guess: none means there is nothing to
+ * update, one is the answer, and more than one is a question only the user
+ * can settle. A caller that silently took the first would be the bug this
+ * function exists to remove — `/start` used to merge a crawl into whatever
+ * project happened to be active, which overwrote real work.
+ */
+export function projectsForSite(url) {
+  const key = siteKey(url);
+  if (!key) return [];
+  return readProjectsStore().filter(
+    (project) => siteKey(project?.company?.website_url) === key,
+  );
 }
 
 export function getActiveProject() {
