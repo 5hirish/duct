@@ -53,6 +53,12 @@ def create_google_oauth_flow(*, state: str | None, scopes: list[str]) -> Flow:
     return flow
 
 
+def signin_scopes() -> list[str]:
+    """The identity scopes a sign-in always asks for. Public so the onboarding
+    bundle can add its read scopes *to* them rather than restate them."""
+    return list(_GOOGLE_SIGNIN_SCOPES_DEFAULT)
+
+
 def create_google_signin_flow(*, state: str | None, scopes: list[str] | None = None) -> Flow:
     """Build a Google OAuth web flow for user sign-in (identity, not data access)."""
     cfg = get_configs()
@@ -69,7 +75,7 @@ def create_google_signin_flow(*, state: str | None, scopes: list[str] | None = N
                 "token_uri": "https://oauth2.googleapis.com/token",
             }
         },
-        scopes=scopes or list(_GOOGLE_SIGNIN_SCOPES_DEFAULT),
+        scopes=scopes or signin_scopes(),
         state=state,
     )
     flow.redirect_uri = cfg.google_signin_redirect_uri

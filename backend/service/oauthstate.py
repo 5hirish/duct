@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import time
 from datetime import timedelta
+from typing import NamedTuple
 
 from sqlalchemy import delete, select
 from sqlalchemy.exc import SQLAlchemyError
@@ -14,14 +15,34 @@ from db.session import get_engine
 from models.auth import OAuthState
 from utils.dates import utcnow
 
-_memory_states: dict[str, tuple[float, str | None, str]] = {}
+# state → (issued_at, code_verifier, flow, link_user_id)
+_memory_states: dict[str, tuple[float, str | None, str, str | None]] = {}
 logger = logging.getLogger(__name__)
 
 
-def save_state(state: str, code_verifier: str | None, flow: str, ttl_seconds: int) -> None:
+class ConsumedState(NamedTuple):
+    """What a consumed state row carried: the flow it belonged to, the PKCE
+    verifier, and — for a sign-in a guest started — which guest to link."""
+
+    flow: str | None
+    code_verifier: str | None
+    link_user_id: str | None
+
+
+_NOTHING = ConsumedState(None, None, None)
+
+
+def save_state(
+    state: str,
+    code_verifier: str | None,
+    flow: str,
+    ttl_seconds: int,
+    *,
+    link_user_id: str | None = None,
+) -> None:
     engine = get_engine()
     if engine is None:
-        _memory_states[state] = (time.time(), code_verifier, flow)
+        _memory_states[state] = (time.time(), code_verifier, flow, link_user_id)
         return
     now = utcnow()
     try:
@@ -32,6 +53,7 @@ def save_state(state: str, code_verifier: str | None, flow: str, ttl_seconds: in
                     state=state,
                     flow=flow,
                     code_verifier=code_verifier,
+                    link_user_id=link_user_id,
                     issued_at=now,
                     expires_at=now + timedelta(seconds=ttl_seconds),
                 )
@@ -39,70 +61,45 @@ def save_state(state: str, code_verifier: str | None, flow: str, ttl_seconds: in
             session.commit()
     except SQLAlchemyError:
         logger.warning("OAuth state DB unavailable; falling back to in-memory state store.")
-        _memory_states[state] = (time.time(), code_verifier, flow)
-
-
-def _consume_memory_state(
-    state: str, flow: str, ttl_seconds: int
-) -> tuple[bool, str | None]:
-    entry = _memory_states.get(state)
-    if entry is None:
-        return False, None
-    issued_at, code_verifier, stored_flow = entry
-    if stored_flow != flow or (time.time() - issued_at) > ttl_seconds:
-        return False, None
-    _memory_states.pop(state, None)
-    return True, code_verifier
+        _memory_states[state] = (time.time(), code_verifier, flow, link_user_id)
 
 
 def _consume_memory_state_for_flows(
     state: str, flows: set[str], ttl_seconds: int
-) -> tuple[str | None, str | None]:
+) -> ConsumedState:
     entry = _memory_states.get(state)
     if entry is None:
-        return None, None
-    issued_at, code_verifier, stored_flow = entry
+        return _NOTHING
+    issued_at, code_verifier, stored_flow, link_user_id = entry
     if stored_flow not in flows or (time.time() - issued_at) > ttl_seconds:
-        return None, None
+        return _NOTHING
     _memory_states.pop(state, None)
-    return stored_flow, code_verifier
+    return ConsumedState(stored_flow, code_verifier, link_user_id)
 
 
 def consume_state(state: str, flow: str, ttl_seconds: int) -> tuple[bool, str | None]:
-    engine = get_engine()
-    if engine is None:
-        return _consume_memory_state(state, flow, ttl_seconds)
-
-    now = utcnow()
-    try:
-        with Session(engine) as session:
-            stmt = select(OAuthState).where(OAuthState.state == state)
-            oauth_state = session.execute(stmt).scalars().first()
-            if oauth_state is None:
-                return False, None
-            if oauth_state.flow != flow:
-                return False, None
-            if oauth_state.consumed_at is not None:
-                return False, None
-            if oauth_state.expires_at <= now:
-                return False, None
-
-            code_verifier = oauth_state.code_verifier
-            oauth_state.consumed_at = now
-            session.add(oauth_state)
-            session.commit()
-            return True, code_verifier
-    except SQLAlchemyError:
-        logger.warning("OAuth state DB unavailable while consuming state.")
-        return _consume_memory_state(state, flow, ttl_seconds)
+    consumed = consume_state_full(state, (flow,), ttl_seconds)
+    return consumed.flow is not None, consumed.code_verifier
 
 
 def consume_state_for_flows(
     state: str, allowed_flows: tuple[str, ...], ttl_seconds: int
 ) -> tuple[str | None, str | None]:
+    consumed = consume_state_full(state, allowed_flows, ttl_seconds)
+    return consumed.flow, consumed.code_verifier
+
+
+def consume_state_full(
+    state: str, allowed_flows: tuple[str, ...], ttl_seconds: int
+) -> ConsumedState:
+    """Consume ``state`` if it belongs to one of ``allowed_flows`` and is live.
+
+    The two older shapes above delegate here; this is the one the sign-in
+    callback reads, because it is the only caller that needs ``link_user_id``.
+    """
     allowed = set(allowed_flows)
     if not allowed:
-        return None, None
+        return _NOTHING
 
     engine = get_engine()
     if engine is None:
@@ -114,19 +111,21 @@ def consume_state_for_flows(
             stmt = select(OAuthState).where(OAuthState.state == state)
             oauth_state = session.execute(stmt).scalars().first()
             if oauth_state is None:
-                return None, None
+                return _NOTHING
             if oauth_state.flow not in allowed:
-                return None, None
+                return _NOTHING
             if oauth_state.consumed_at is not None:
-                return None, None
+                return _NOTHING
             if oauth_state.expires_at <= now:
-                return None, None
+                return _NOTHING
 
-            code_verifier = oauth_state.code_verifier
+            consumed = ConsumedState(
+                oauth_state.flow, oauth_state.code_verifier, oauth_state.link_user_id
+            )
             oauth_state.consumed_at = now
             session.add(oauth_state)
             session.commit()
-            return oauth_state.flow, code_verifier
+            return consumed
     except SQLAlchemyError:
         logger.warning("OAuth state DB unavailable while consuming state for allowed flows.")
         return _consume_memory_state_for_flows(state, allowed, ttl_seconds)
