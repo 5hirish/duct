@@ -117,6 +117,13 @@ bag and is spent once).
   card, a kickoff message, which project this run writes to — is nested
   under one `client` key rather than stripped by name on arrival.
 - `lib/membersApi.js` — project members + invitations (server-only; no localStorage mirror, unlike `lib/projects.js`)
+- `lib/modelSettings.js` — the tier map and the fallback switch, on the server.
+  `lib/modelTiers.js` still owns the vocabulary and the `localStorage` copy;
+  the two coexist because the local copy paints the page before the network
+  answers and is what a signed-out install runs on, while the server copy is
+  what every run reads — including the scheduled brief, which has no browser.
+  On disagreement the server wins, and every write is a partial so a stale tab
+  cannot put back a control it never saw.
 - `lib/engines.js` — `DEFAULT_ENGINE` and the agent-type list. The engine is
   no longer a user choice: v3 is gone, every agent runs v1, so the Runtime
   tab, the `ENGINES` list and the agent↔engine support map went with it.

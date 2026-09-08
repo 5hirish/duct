@@ -341,11 +341,29 @@ automatically: `railway.json` only starts uvicorn and there is no CI migration j
   (`crawl` deterministic, `inferred` one structured call), emitted as
   `PROJECT_DRAFT` when a run sets `draft_project`. Never infers the North
   Star; the agent asks for it in chat.
-- `agents/engines.resolve_job_run` — the first agent run to read the tier
-  map: provider and model over the keys *this caller* can spend, so a user
-  holding only an OpenAI key runs on OpenAI instead of a 402 for the
-  instance default. The audit route uses it; the others still use
-  `resolve_run_model` and should move.
+- `agents/engines.resolve_job_run` — provider and model over the keys *this
+  caller* can spend, so a user holding only an OpenAI key runs on OpenAI
+  instead of a 402 for the instance default. All three agents route through
+  it now: audit directly, insights via `agents/insights/setup.resolve_run`
+  (which serves both the live session and the scheduled brief), content via
+  `routes/content._resolve_run_model`. `resolve_run_model` remains for callers
+  that have no job to name.
+- `models/settings.py` + `service/model_settings.py` — the tier map and the
+  fallback switch, keyed by user. They used to live in `localStorage` and ride
+  on each request, which meant the scheduled brief — the run whose owner is
+  definitely not watching — could not read the preference its owner had set.
+  The browser's copy is now a cache of this, and on disagreement the server
+  wins.
+- `agents/core/quota.py` — a 429 the retry loop gave up on, remembered for a
+  few minutes so the next run resolves to a tier that can serve. Keyed by
+  `(sha256(key)[:16], provider)` and **never by provider alone**: Duct is
+  multi-tenant with bring-your-own keys, so one customer's rate limit says
+  nothing about another's. In-process and deliberately not durable — a
+  cooldown is a hint, and the worst case on a fresh worker is one wasted 429.
+  Recorded in `ReportedRetryMiddleware._give_up`, consumed by
+  `agents/tiers.resolve_tier_model`'s `cooling` set, reported to the browser
+  as `tier_skipped` on `PIPELINE_STARTED`. See
+  `docs/engineering/quota-aware-tier-ladder.md`.
 - `POST /api/providers/{id}/verify` — one real completion on the provider's
   Light model, classified into `invalid_key` / `no_billing` / `model_access`
   / `rate_limited` / `unreachable`, or for a ChatGPT credential
