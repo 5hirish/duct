@@ -139,6 +139,30 @@ labels raise interaction cost). Never put a themed pictogram next to a KPI —
 superfluous icons measurably slow visual search (NN/g dashboards research).
 Never use emoji as icons.
 
+**Illustration.** One system: square Roman mosaic threshold panels, in
+`app/public/art/mosaic/`. A threshold mosaic greets whoever arrives, so panels
+go **where someone arrives** — first run, a break, a dead end — and never
+mid-flow. That is the delight-scales-inversely-with-frequency rule above,
+applied to art: the rarer the surface, the more it can afford.
+
+Three rules decide whether a surface gets one. **Below 240px, don't** — the
+tesserae stop reading as tesserae and you have a smudge, so small inline empty
+states take a `size-8`–`12` lucide icon instead. **One per screen**, never a
+panel and a large icon in the same surface. And **the panel is always
+`aria-hidden`** — its Latin inscription is decoration, so the real heading is
+real HTML text beside it (`CDIV` in the tiles, "That page doesn't exist" in the
+markup).
+
+The strongest empty state in the app has no art at all: `DeskDayOne` replaced
+"No insights yet" with what Duct already knows, and information beat a picture.
+Reach for a panel when there is genuinely nothing useful to say, not to decorate
+a screen that has something.
+
+How to make one — palette, the three-zone construction, the letterform rules and
+the generation pipeline — is the [`mosaic-panel`](../.agents/skills/mosaic-panel/SKILL.md)
+skill. Never hand-edit a file in `app/public/art/mosaic/`; it is generated from
+the masters by `scripts/build_mosaic_assets.py`.
+
 ---
 
 ## The libraries, and how we hold them

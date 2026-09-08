@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import MosaicPanel, { MOSAIC } from "@/components/MosaicPanel";
 import { isDesktopShell } from "@/lib/shell";
 
 export default function NotFound() {
@@ -20,6 +21,11 @@ export default function NotFound() {
 
   return (
     <main className="mx-auto flex min-h-[70vh] w-full max-w-2xl flex-col items-center justify-center px-6 py-12 text-center">
+      {/* A road that ends at a milestone. The stone reads CDIV — 404 in a
+          numeral system you cannot parse at a glance, which is the joke, and
+          which is why the eyebrow below still says 404 in real text. */}
+      <MosaicPanel name={MOSAIC.cdiv} size={280} className="mb-7" />
+
       <p className="mb-2 text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
         404
       </p>
