@@ -63,10 +63,18 @@ class TestTheKeyNeverLands:
         quota.note_exhausted(_id(ALICE), Provider.ANTHROPIC, seconds=60)
         assert ALICE not in repr(quota._entries)
 
-    def test_identity_is_stable_and_not_reversible_by_length(self):
+    def test_identity_is_stable_within_a_process_and_distinct_per_key(self):
         assert _id(ALICE) == _id(ALICE)
         assert _id(ALICE) != _id(BOB)
         assert len(_id(ALICE)) == 16
+
+    def test_the_identity_is_not_a_bare_digest_of_the_key(self):
+        """A plain hash is an oracle: anyone holding an identity can confirm a
+        guessed key by hashing it. Keyed hashing is what makes the "safe to
+        log" in the docstring true without a footnote."""
+        from hashlib import sha256
+
+        assert _id(ALICE) != sha256(ALICE.encode()).hexdigest()[:16]
 
     def test_an_empty_key_has_no_identity(self):
         """Otherwise every keyless caller shares one bucket."""

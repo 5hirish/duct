@@ -33,7 +33,9 @@ implementation can replace the storage without touching either caller.
 
 from __future__ import annotations
 
+import hmac
 import logging
+import secrets
 import threading
 import time
 from hashlib import sha256
@@ -58,6 +60,19 @@ MAX_COOLDOWN_SECONDS = 3600.0
 MAX_ENTRIES = 2048
 
 
+#: Salt for the identity below, drawn once per process.
+#:
+#: A bare digest of a key is reversible by anyone who can guess the key and run
+#: the same hash — so an identity that escaped into a log would confirm a guess
+#: rather than resist it. Keyed hashing removes that oracle and makes the
+#: docstring's "safe to log" true without a footnote.
+#:
+#: Per-process, and regenerated on restart, which costs exactly nothing: the
+#: store it keys is in-process and deliberately not durable, so an identity has
+#: never needed to mean the same thing in two processes or across a restart.
+_SALT = secrets.token_bytes(32)
+
+
 def credential_identity(api_key: str) -> str:
     """A correlation handle for a key, safe to hold in memory and to log.
 
@@ -67,7 +82,7 @@ def credential_identity(api_key: str) -> str:
     key = (api_key or "").strip()
     if not key:
         return ""
-    return sha256(key.encode()).hexdigest()[:16]
+    return hmac.new(_SALT, key.encode(), sha256).hexdigest()[:16]
 
 
 _lock = threading.Lock()

@@ -17,6 +17,12 @@ Shipped as specified, with four departures worth naming:
   final is not always the one the middleware was built for. The provider is
   right for every model in the chain; the model is not, and a wrong diagnostic
   is worse than none.
+* **The identity is keyed, not a bare digest.** `sha256(api_key)` as specified
+  below is reversible by anyone who can guess the key and run the same hash, so
+  an identity in a log would confirm a guess rather than resist it. It is
+  `hmac.new(per-process salt, key, sha256)` instead — free, because the store it
+  keys is in-process and non-durable, so an identity never needed to survive a
+  restart.
 * **`tier_pick` was extracted** in `agents/tiers.py`, because the resolver has
   to know *whose* quota stepped a tier over and a second copy of the fallback
   rule would drift silently.

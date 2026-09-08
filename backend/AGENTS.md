@@ -356,7 +356,8 @@ automatically: `railway.json` only starts uvicorn and there is no CI migration j
   wins.
 - `agents/core/quota.py` — a 429 the retry loop gave up on, remembered for a
   few minutes so the next run resolves to a tier that can serve. Keyed by
-  `(sha256(key)[:16], provider)` and **never by provider alone**: Duct is
+  `(HMAC-SHA256(process salt, key)[:16], provider)` and **never by provider
+  alone**: Duct is
   multi-tenant with bring-your-own keys, so one customer's rate limit says
   nothing about another's. In-process and deliberately not durable — a
   cooldown is a hint, and the worst case on a fresh worker is one wasted 429.
