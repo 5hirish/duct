@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 """Re-encode the mosaic panel masters into the WebP files the app ships.
 
-Masters live in `docs/design/mosaic/masters/` at 1024px because a generated
-panel cannot be reproduced byte-for-byte — the image models take no seed, so a
+Masters live in `app/art-src/mosaic/` at 1024px because a generated panel
+cannot be reproduced byte-for-byte — the image models take no seed, so a
 regenerated panel is a *different* panel, not the same one re-rendered. The
 master is therefore the source of truth and this script is the only thing that
-writes `app/public/art/mosaic/`; never hand-edit a file in there.
+writes `app/public/art/mosaic/`; never hand-edit a file in there. They sit
+beside the app rather than under `docs/` because they are a build input, not a
+design document: `docs/design/` is flows and copy guidance, and a reader
+opening it should not find six JPEGs and no spec.
 
-Panels render at 320px at most (see docs/design/mosaic-system.md), so 640px is
-the 2x asset and no srcset is needed at that size.
+Panels render at 320px at most (the "Illustration" rules in `app/DESIGN.md`),
+so 640px is the 2x asset and no srcset is needed at that size.
 
     python3 scripts/build_mosaic_assets.py [--check]
 
@@ -29,7 +32,7 @@ except ImportError:  # pragma: no cover - dependency hint is the whole point
     sys.exit("Pillow is required: pip install Pillow")
 
 REPO = Path(__file__).resolve().parent.parent
-MASTERS = REPO / "docs" / "design" / "mosaic" / "masters"
+MASTERS = REPO / "app" / "art-src" / "mosaic"
 OUTPUT = REPO / "app" / "public" / "art" / "mosaic"
 
 # 320px is the largest a panel renders; 2x covers every display we support.

@@ -161,7 +161,7 @@ a screen that has something.
 How to make one — palette, the three-zone construction, the letterform rules and
 the generation pipeline — is the [`mosaic-panel`](../.agents/skills/mosaic-panel/SKILL.md)
 skill. Never hand-edit a file in `app/public/art/mosaic/`; it is generated from
-the masters by `scripts/build_mosaic_assets.py`.
+the 1024px masters in `app/art-src/mosaic/` by `scripts/build_mosaic_assets.py`.
 
 ---
 

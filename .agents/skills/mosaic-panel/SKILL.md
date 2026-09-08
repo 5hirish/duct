@@ -30,7 +30,7 @@ panel — reuse an existing one.
 
 ## What already exists
 
-Do not duplicate these. Masters in `docs/design/mosaic/masters/`, shipped WebP
+Do not duplicate these. Masters in `app/art-src/mosaic/`, shipped WebP
 in `app/public/art/mosaic/`.
 
 | Slug | State | Subject | Inscription |
@@ -150,7 +150,7 @@ one more pass; everything else is usually right first time.
 python3 - <<'PY'
 from PIL import Image
 Image.open("<generated>.jpeg").convert("RGB").resize((1024, 1024), Image.LANCZOS) \
-     .save("docs/design/mosaic/masters/<slug>.jpg", "JPEG", quality=88, optimize=True)
+     .save("app/art-src/mosaic/<slug>.jpg", "JPEG", quality=88, optimize=True)
 PY
 
 # 2. Re-encode every master into the WebP the app loads
