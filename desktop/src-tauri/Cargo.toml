@@ -80,10 +80,21 @@ tauri-plugin-updater = { version = "2", optional = true }
 # Crash reporting for the shell itself. rustls rather than the default
 # native-tls: the bundle already links rustls through the updater, and adding
 # OpenSSL would mean another library to sign and notarize on macOS.
+# "release-health" is what turns crash counts into a crash-FREE rate: without a
+# session per launch, ten reports from one broken install and ten from ten
+# installs are the same number. For a shipped desktop binary that ratio is the
+# only number that says whether a release is worse than the one before it.
+#
+# It adds ~300 lines to Cargo.lock, actix-web among them, because the feature is
+# declared as `sentry-actix?/release-health` upstream and the lockfile records
+# optional deps it can never activate. Verified with `cargo tree -e normal`:
+# nothing actix reaches the compiled graph. Do not "clean this up" by dropping
+# the feature — the lock entries are the cost of a crash-free rate, not a bug.
 sentry = { version = "0.49", default-features = false, features = [
     "backtrace",
     "contexts",
     "panic",
+    "release-health",
     "reqwest",
     "rustls",
 ], optional = true }

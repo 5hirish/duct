@@ -142,6 +142,12 @@ jobs:
           NEXT_PUBLIC_GTM_ID: ${{ secrets.NEXT_PUBLIC_GTM_ID }}
           NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ secrets.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
           NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}
+          # Without this the Sentry build plugin cannot upload source maps, and
+          # every production stack trace and profile frame in Sentry names a
+          # minified chunk instead of a file. The plugin skips the upload and
+          # carries on when it is absent, which is why this went unnoticed —
+          # nothing failed, the reports were just unreadable.
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
       - name: Deploy to Cloudflare Workers
         run: npx wrangler deploy

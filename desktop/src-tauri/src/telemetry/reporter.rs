@@ -49,6 +49,19 @@ mod backend {
         // Nothing here should ever carry them, but the default is off
         // regardless — this is a crash reporter, not an analytics pipe.
         options.send_default_pii = false;
+        // A session per launch, ended when the guard drops. This is what makes
+        // a crash-free rate possible: raw crash counts cannot tell ten reports
+        // from one wedged install apart from ten installs crashing once each,
+        // and the second is a release worth pulling. Costs one envelope per run.
+        options.auto_session_tracking = true;
+        options.session_mode = sentry::SessionMode::Application;
+        // No `traces_sample_rate` here, and that is a decision rather than an
+        // omission. The Rust SDK ships no profiler, Tauri auto-instruments
+        // nothing, and the one span worth having — cold start through to the
+        // sidecar answering — cannot be closed from this process: readiness is
+        // discovered by the webview polling `get_sidecar_info`, not by anything
+        // Rust observes. Turning sampling on before that span exists would buy
+        // an empty Performance tab and a bill for it.
         Some(sentry::init((dsn, options)))
     }
 

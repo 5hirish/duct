@@ -42,10 +42,25 @@ if (appEnv !== "local" && process.env.NEXT_PUBLIC_SENTRY_DSN) {
     dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
     environment: appEnv,
     sendDefaultPii: false,
-    tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
+    tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.5,
     enableLogs: process.env.NODE_ENV !== "production",
+    /**
+     * Profiling only happens if all three of these agree, and two of them are
+     * not in this file.
+     *
+     * `profileLifecycle: "trace"` ties a profile to a sampled transaction, so
+     * the effective profile rate is `tracesSampleRate x this` — 0.5, not 1.0.
+     * The integration below is what actually starts the profiler, and the
+     * `Document-Policy: js-profiling` header in `next.config.mjs` is what lets
+     * it. Remove any one and the other two go quiet without complaining.
+     */
     profileSessionSampleRate: 1.0,
     profileLifecycle: "trace",
+    integrations: [
+      // Not a default integration — the sample rates above did nothing at all
+      // until this was added.
+      Sentry.browserProfilingIntegration(),
+    ],
     beforeSend(event) {
       // Before anything else: the user may have said no.
       if (inDesktopShell && desktopReportingAllowed !== true) return null;
