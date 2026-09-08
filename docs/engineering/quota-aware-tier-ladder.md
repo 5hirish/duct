@@ -175,15 +175,81 @@ through to a provider that is also cooled is still better than raising
 `ProviderKeyRequired` — a 429 the user can retry beats a 402 they cannot act
 on. The floor is the floor.
 
-### 4. Say so
+### 4. Tell the user, on `PIPELINE_STARTED`
 
-`describe_skip` gains a line, and the existing `skipped` tuple carries it to
-the composer and the models page for free:
+A brief that quietly ran on a cheaper model than the one its owner picked, with
+no explanation, is a support ticket. Worse, it is a support ticket that arrives
+weeks later as *"the quality dropped"* with nothing to correlate it against.
 
-> Heavy is out of quota until 14:32 — running on Standard.
+**There is already a precedent for exactly this, and the reasoning is written
+down.** `routes/agents.py` puts autonomy on the run-start event rather than
+inventing an event for it:
 
-This is most of the user-visible value. A brief that quietly ran on a cheaper
-model than asked, with no explanation, is a support ticket.
+> The autonomy fields ride on `PIPELINE_STARTED` rather than a new event: the
+> UI has to say which mode a run is in before the first token, and `configured`
+> vs `autonomy` is what makes a step-down visible instead of mysterious.
+
+A tier step-down is the same shape of fact and gets the same treatment — three
+more fields beside the two that are already there:
+
+```python
+await emit_fn({
+    "event": AgentEvent.PIPELINE_STARTED,
+    "status": StepStatus.RUNNING,
+    "autonomy": run.autonomy,
+    "autonomy_configured": run.configured_autonomy,
+    "tier": run.tier,                      # what it will actually run on
+    "tier_requested": run.tier_requested,   # what the job asked for
+    "tier_skipped": run.tier_skipped,       # ((tier, reason), …) from TierResolution
+})
+```
+
+`TierResolution.skipped` already carries the `(tier, reason)` pairs and
+`describe_skip` already turns one into a sentence, so the backend work is
+plumbing the value that exists onto the event that exists.
+
+**Why run-start and not a mid-run toast.** In the Level 1 scope the switch is
+decided at resolution, before the first token — so there is nothing to
+interrupt, and a notification that fires later would be lying about when the
+decision was made. It also has to be visible on a run nobody watched: the
+scheduled brief has no browser attached, and `PIPELINE_STARTED` is recorded in
+the transcript, so it rehydrates when someone opens the thread tomorrow.
+
+**Why not `MODEL_RETRYING`'s treatment.** That event feeds `state.retrying`,
+which `AgentChat` renders as a transient `activity` string in the status row
+and clears on the next event. Correct for "the provider is having a moment" and
+wrong here: a tier step-down is true for the entire run and for the artifact it
+produced. It has to be sticky, not a flicker.
+
+#### Frontend
+
+- **Reducer** (`lib/agentSession.js`) — `PIPELINE_STARTED` sets a run-scoped
+  `tierStepDown: { ran, requested, reason }`, cleared only when a new run
+  starts. It is not part of `retrying` and must not borrow its clearing rules.
+- **Status row** (`workspace/AgentChat.jsx`) — a persistent chip beside the
+  phase label, not inside the `activity` string:
+  > **Standard** · Heavy is rate limited until 14:32
+- **Artifact** — the brief is the durable output and outlives the session, so
+  the step-down belongs on the stored version too. Without it, "why is this
+  week's brief thinner?" has no answer three weeks later.
+- **Copy rule** — name the tier the user chose, the tier that ran, and when the
+  first one comes back. "Using a fallback model" tells someone nothing they can
+  act on. `describe_skip` is the single source for the sentence; do not write a
+  second copy of it in JSX.
+
+#### What must not happen
+
+- **No modal, no interruption.** The run is proceeding and is still useful. The
+  `UpdateToast` comment already states this house rule for a different feature:
+  an interruption is for something the user must decide, and this is something
+  they must *know*.
+- **No system notification.** `hooks/useAgentNotifications.js` fires only on
+  done / needs-input / failed, and deliberately only when the window is not
+  focused. A step-down is none of those and must not join them — a notification
+  for something that did not need a decision is how a product teaches people to
+  mute it.
+- **Silence on the happy path.** When no tier was skipped, no chip, no field
+  worth rendering. Transparency that speaks when nothing happened is noise.
 
 ## Scope
 
@@ -211,7 +277,11 @@ mid-run still hurts.
 | `backend/agents/core/lc.py` | record in `_give_up`; thread identity into the middleware |
 | `backend/agents/core/deep_session.py` | pass identity through to the middleware |
 | `backend/agents/tiers.py` | `SKIP_COOLED_DOWN`, `cooling` param, one check, one `describe_skip` line |
-| `backend/agents/engines.py` | `resolve_job_run` computes identity + fills `cooling` |
+| `backend/agents/engines.py` | `resolve_job_run` computes identity + fills `cooling`; `JobRun` carries `tier_requested` / `tier_skipped` |
+| `backend/routes/agents.py` | three more fields on `PIPELINE_STARTED`, beside autonomy's two |
+| `backend/routes/generate.py` | same, for the unattended brief |
+| `app/src/lib/agentSession.js` | `tierStepDown` on the reducer, run-scoped |
+| `app/src/components/workspace/AgentChat.jsx` | the persistent chip |
 | `backend/tests/test_model_tiers.py` | ladder behaviour |
 | `backend/tests/test_quota_cooldown.py` | new — the store's boundaries |
 
@@ -233,6 +303,11 @@ The ones that would catch a real regression:
 - **The ladder skips a cooled tier and names why**, distinct from
   `no_credential`.
 - **All tiers cooled still resolves** via the engine floor rather than raising.
+- **A clean run emits no step-down fields**, so the chip cannot appear on the
+  happy path.
+- **The reducer keeps `tierStepDown` across a whole run** — the bug this
+  prevents is copying `retrying`'s clearing rules and having the chip vanish on
+  the next token.
 
 ## What this must not do
 
