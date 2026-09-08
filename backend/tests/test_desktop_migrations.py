@@ -81,6 +81,8 @@ def test_legacy_create_all_install_is_adopted_and_upgraded(clean_env, tmp_path):
     init_db()
     with engine.begin() as conn:
         conn.execute(sa.text("DROP TABLE project_memories"))
+        conn.execute(sa.text("DROP TABLE model_usage"))
+        conn.execute(sa.text("DROP TABLE user_model_settings"))
         conn.execute(sa.text("ALTER TABLE projects DROP COLUMN memory_paused"))
         conn.execute(sa.text("ALTER TABLE users DROP COLUMN memory_paused"))
         conn.execute(sa.text("ALTER TABLE artifacts DROP COLUMN pinned"))
@@ -100,6 +102,8 @@ def test_legacy_create_all_install_is_adopted_and_upgraded(clean_env, tmp_path):
 
     # Every post-baseline migration ran: the new table and the new columns.
     assert "project_memories" in set(inspect(engine).get_table_names())
+    assert "model_usage" in set(inspect(engine).get_table_names())
+    assert "user_model_settings" in set(inspect(engine).get_table_names())
     assert "memory_paused" in _columns(engine, "projects")
     assert "memory_paused" in _columns(engine, "users")
     assert "pinned" in _columns(engine, "artifacts")
