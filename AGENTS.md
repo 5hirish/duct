@@ -63,6 +63,31 @@ Product strategy, GTM and deployment runbooks live in a separate private
 repository. Documents here occasionally cite them; those citations state their
 reasoning inline, so a missing link never blocks understanding the code.
 
+## Scope and prioritization
+
+Development here is 100% agent-executed, which flips the usual constraint:
+implementation was never the scarce resource, so a wrong feature costs almost
+nothing to build and a permanent maintenance surface to carry afterward —
+another line in `.env.example`, another test, another thing `STYLE.md`'s
+review pass has to hold up against everything else. Before starting anything
+beyond a small fix — a new endpoint, connector, setting, or UI surface — run
+it through the **`prioritize`** skill (`.agents/skills/prioritize/`). It's a
+four-question bar (whose problem specifically, what it costs forever, is
+there a cheaper way to test it, does it match what Duct actually is) that
+ends in a scoped GitHub issue with a written spec, or an explicit "not now,
+because" recorded in a closed issue — either is a finished outcome, not just
+the first one.
+
+- The live roadmap is the GitHub Project
+  ([5hirish/projects/10](https://github.com/users/5hirish/projects/10)), not
+  a document in this repo. Its `Priority` field (`P0`/`P1`/`P2`) and title
+  (which carries the current release window) are the source of truth for
+  what's next — check it rather than inferring priority from the conversation
+  alone.
+- Scope proposed on an agent's own initiative — not asked for by name — goes
+  through `prioritize` before code, not after. A well-argued feature nobody
+  asked for is still scope creep, however clean the diff.
+
 ## Setup and verification
 
 ```bash
