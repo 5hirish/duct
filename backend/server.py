@@ -28,6 +28,7 @@ import service.mixpanel.fetch  # noqa: F401 — registers connectors before rout
 import service.clarity.fetch  # noqa: F401 — registers connectors before routes import
 import service.growthbook.fetch  # noqa: F401 — registers connectors before routes import
 
+from agents.core.errors import classify_error
 from agents.engines import ProviderKeyRequired
 from config import cors_kwargs, get_configs
 from db.migrate import ensure_schema
@@ -270,11 +271,19 @@ async def _provider_key_required(request, exc: ProviderKeyRequired):
     Raised wherever a run would otherwise have been billed to Duct's own
     provider account (agents/engines.resolve_provider_key). The provider is in
     the body so the browser can open the right tile in Settings → Providers
-    rather than making the user find it.
+    rather than making the user find it. ``code`` is the same ``ErrorCode`` a
+    pipeline failure carries (agents/core/errors.py — this exception classifies
+    to AUTH there too), so the browser routes this through the one error→copy
+    table instead of showing the raw body.
     """
     return JSONResponse(
         status_code=402,
-        content={"detail": str(exc), "provider": exc.provider, "error": "provider_key_required"},
+        content={
+            "detail": str(exc),
+            "provider": exc.provider,
+            "error": "provider_key_required",
+            "code": classify_error(exc),
+        },
     )
 
 

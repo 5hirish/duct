@@ -278,10 +278,33 @@ export async function createAgentSession(agentType, params) {
     body: JSON.stringify(params),
   });
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || `Server error ${res.status}`);
+    throw await sessionCreateError(res);
   }
   return res.json(); // { session_id, stream_url, agent_type }
+}
+
+/**
+ * A structured failure (e.g. ProviderKeyRequired's 402, `{detail, code, ...}`)
+ * carries its `code` on the thrown Error so the caller can route it through
+ * the same ErrorCode → copy table a pipeline failure uses, instead of
+ * dumping the raw JSON body as the message.
+ */
+async function sessionCreateError(res) {
+  const text = await res.text();
+  let message = text || `Server error ${res.status}`;
+  let code = "";
+  try {
+    const body = JSON.parse(text);
+    if (body && typeof body === "object") {
+      message = body.detail || message;
+      code = body.code || "";
+    }
+  } catch {
+    /* not JSON — plain text error, message stands */
+  }
+  const err = new Error(message);
+  if (code) err.code = code;
+  return err;
 }
 
 /**

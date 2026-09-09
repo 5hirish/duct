@@ -338,7 +338,9 @@ export function useAgentSession({
     }
 
     start().catch((err) => {
-      if (!dead()) dispatch({ type: Action.FAILED, error: friendlyErrorMessage(err?.message || "Stream error.") });
+      if (dead()) return;
+      const code = err?.code || "";
+      dispatch({ type: Action.FAILED, error: friendlyErrorMessage(err?.message || "Stream error.", code), code });
     });
 
     return () => {
