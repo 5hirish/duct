@@ -1,7 +1,8 @@
 // Drives the three agent workspaces in a headless browser against the
-// fixture-replaying mock, and screenshots each state. Not a CI gate — the
-// reducer tests are that — but the cheapest way to *look* at a change to the
-// agent shell before calling it done, which app/AGENTS.md asks for.
+// fixture-replaying mock, and screenshots each state. Still not a CI gate —
+// see below — but the checkpoints it visits are asserted now, not just
+// logged, so a broken pause card or a reattach that loses its card fails
+// loudly (exit 1) instead of leaving a screenshot nobody was looking at.
 //
 //   npm run mock:agents                       # terminal 1, on :8012
 //   npm run dev                               # terminal 2, on :3003 (its backend calls are rerouted below)
@@ -9,6 +10,14 @@
 //
 // Playwright comes from site/ (the only workspace that installs it); the
 // browser needs `npx --prefix ../site playwright install chromium` once.
+//
+// Deliberately still not wired into app.yml. The reducer tests
+// (agentSession.test.js) are the real regression gate for this state
+// machine and run in milliseconds with no server to boot; this script needs
+// two long-lived processes and drives real SSE timing, which is exactly the
+// shape of flaky. Run it by hand after touching the agent shell, the way
+// app/AGENTS.md already asks — promoting it to CI is a separate call, made
+// once it has actually proven flake-free over real use, not before.
 import { chromium } from "../../site/node_modules/playwright/index.mjs";
 import { randomUUID } from "node:crypto";
 import { mkdirSync } from "node:fs";
@@ -50,6 +59,7 @@ await page.evaluate(() => {
   sessionStorage.clear();
 });
 
+let ok = true;
 try {
 // ---------------------------------------------------------------- insights
 await page.goto(`${APP}/insights/session?q=${encodeURIComponent("why did CPA jump?")}&project=p1`);
@@ -120,8 +130,20 @@ await page.getByText("truncated in results").waitFor({ timeout: 30000 });
 await shot("audit-3-recovered");
 
 } catch (err) {
+  ok = false;
   console.log("FAILED:", String(err).split("\n")[0]);
   await shot("failure");
 }
-console.log("console errors:", errors.length ? errors : "none");
+
+// A console error, a page error, or a 4xx/5xx from any call along the way is
+// a real failure even when every `waitFor` above was satisfied — the flow can
+// render the right text and still have thrown on the way there.
+if (errors.length) {
+  ok = false;
+  console.log("console/page/http errors:", errors);
+} else {
+  console.log("console errors: none");
+}
+
 await browser.close();
+process.exit(ok ? 0 : 1);
