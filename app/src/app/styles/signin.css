@@ -1,26 +1,31 @@
-/* signin — The signed-out split hero and Google button.
+/* signin — The signed-out landing split: the app's front door.
+   Right (wide, light) is the audit — no account needed, the real growth
+   funnel. Left (narrow, dark) is sign-in, for someone who already has an
+   account. On mobile the audit renders first: it is the higher-conversion
+   half, and first impression order should match that — unless the visitor
+   was bounced here by an expired session, in which case sign-in leads.
    Split out of globals.css; see that file for the load order. */
-/* ── Sign-in page ───────────────────────────────────────────── */
-.signin-split {
+
+.landing-split {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(21rem, 32%) 1fr;
   min-height: 100vh;
   min-height: 100dvh;
 }
 
-/* Hero (left) */
-.signin-hero {
+/* ── Sign in (left, narrow, dark — the returning-user path) ─────────── */
+.landing-auth {
   background: var(--navy);
   color: var(--white);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 3.75rem 3rem;
+  padding: 3.75rem 2.5rem;
   position: relative;
   overflow: hidden;
 }
 
-.signin-hero::after {
+.landing-auth::after {
   content: "";
   position: absolute;
   bottom: 0;
@@ -31,109 +36,45 @@
   pointer-events: none;
 }
 
-.signin-hero-inner {
-  max-width: 460px;
+.landing-auth-inner {
+  max-width: 320px;
+  width: 100%;
   position: relative;
   z-index: 1;
-}
-
-.signin-logo {
-  display: flex;
-  align-items: center;
-  gap: 0.125rem;
-  margin-bottom: 3rem;
-}
-
-.signin-logo .signin-logo-text {
-  font-family: var(--serif);
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--white);
-  letter-spacing: -0.5px;
-}
-
-.signin-logo .logo-mark {
-  width: 8px;
-  height: 8px;
-  background: var(--orange);
-  border-radius: 50%;
-  display: inline-block;
-  margin-bottom: -2px;
-}
-
-.signin-hero h1 {
-  font-family: var(--serif);
-  font-size: 2.375rem;
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: -0.5px;
-  margin-bottom: 1.5rem;
-}
-
-.signin-hero h1 em {
-  color: var(--primary);
-  font-style: normal;
-}
-
-.signin-hero-sub {
-  font-size: 1rem;
-  font-weight: 400;
-  line-height: 1.7;
-  color: rgba(255, 255, 255, 0.78);
-  margin-bottom: 2.5rem;
-}
-
-.signin-tools {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 2.5rem;
-}
-
-.signin-tool-pill {
-  font-size: 0.75rem;
-  font-weight: 500;
-  padding: 0.3125rem 0.875rem;
-  border-radius: var(--pill);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: rgba(255, 255, 255, 0.7);
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.signin-trust {
-  font-size: 0.8125rem;
-  color: rgba(255, 255, 255, 0.45);
-  letter-spacing: 0.01em;
-}
-
-/* Form (right) */
-.signin-form-side {
-  background: var(--white);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 3.75rem 3rem;
-}
-
-.signin-form {
-  max-width: 380px;
-  width: 100%;
   text-align: center;
 }
 
-.signin-form h2 {
+.landing-auth-kicker {
+  font-size: 0.8125rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 0.5rem;
+}
+
+.landing-auth-inner h2 {
   font-family: var(--serif);
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  color: var(--navy);
+  color: var(--white);
   margin-bottom: 0.5rem;
   letter-spacing: -0.3px;
 }
 
 .signin-form-sub {
-  font-size: 0.9375rem;
-  color: var(--navy-3);
-  margin-bottom: 2.25rem;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.68);
+  margin-bottom: 1.75rem;
+  line-height: 1.6;
+}
+
+.landing-remember {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.8125rem;
+  color: rgba(255, 255, 255, 0.68);
+  cursor: pointer;
 }
 
 .google-signin-btn {
@@ -148,77 +89,193 @@
   font-family: var(--sans);
   color: var(--navy);
   background: var(--white);
-  border: 1.5px solid var(--border);
+  border: 1.5px solid transparent;
   border-radius: var(--r);
   cursor: pointer;
-  transition: border-color 0.2s, box-shadow 0.2s, background 0.15s;
+  transition: box-shadow 0.2s, transform 0.15s;
 }
 
 .google-signin-btn:hover {
-  border-color: #d1d1d0;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
 }
 
 .google-signin-btn:active {
-  background: var(--off);
+  transform: scale(0.99);
 }
 
 .signin-legal {
   margin-top: 1.5rem;
   font-size: 0.75rem;
-  color: var(--navy-3);
+  color: rgba(255, 255, 255, 0.45);
   line-height: 1.6;
 }
 
 .signin-legal a {
-  color: var(--navy);
+  color: rgba(255, 255, 255, 0.75);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 
 .signin-legal a:hover {
-  color: var(--primary);
+  color: var(--white);
 }
 
-/* Turnstile widget */
-.signin-form .cf-turnstile {
+/* Turnstile renders its own light widget; a light card reads as an
+   intentional inset on the dark panel, not a mismatch. */
+.landing-auth .cf-turnstile {
   margin-bottom: 1.25rem;
   display: flex;
   justify-content: center;
 }
 
-/* Responsive */
-@media (width < 48rem) {
-  .signin-split {
+.landing-auth-note {
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.landing-auth-note-error {
+  color: oklch(0.75 0.15 25);
+}
+
+/* ── Start the audit (right, wide, light — the first impression) ────── */
+.landing-start {
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3.75rem 3.5rem;
+}
+
+.landing-start-inner {
+  max-width: 30rem;
+  width: 100%;
+}
+
+.landing-start-inner .signin-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  margin-bottom: 2rem;
+}
+
+.landing-start-inner .signin-logo-text {
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--navy);
+  letter-spacing: -0.5px;
+}
+
+.landing-start-inner .logo-mark {
+  width: 7px;
+  height: 7px;
+  background: var(--orange);
+  border-radius: 50%;
+  display: inline-block;
+  margin-bottom: -1px;
+}
+
+.landing-start-headline {
+  font-family: var(--serif);
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+  color: var(--navy);
+  margin-bottom: 1rem;
+}
+
+.landing-start-headline em {
+  color: var(--primary);
+  font-style: normal;
+}
+
+.landing-start-sub {
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--navy-3);
+  margin-bottom: 1.5rem;
+  max-width: 34ch;
+}
+
+.landing-start-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+.landing-tool-pill {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.3125rem 0.875rem;
+  border-radius: var(--pill);
+  border: 1px solid var(--border);
+  color: var(--navy-3);
+  background: var(--off);
+}
+
+.landing-start-form {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 26rem;
+}
+
+.landing-start-form .start-url-input {
+  width: 100%;
+}
+
+.landing-start-hint {
+  font-size: 0.8125rem;
+  color: var(--navy-3);
+}
+
+.landing-start-hint-error {
+  color: var(--destructive);
+}
+
+.landing-start-trust {
+  margin-top: 1.25rem;
+  font-size: 0.8125rem;
+  color: var(--navy-3);
+  opacity: 0.8;
+}
+
+/* ── Responsive: the audit leads on a phone, sign-in follows ────────── */
+@media (width < 64rem) {
+  .landing-split {
     grid-template-columns: 1fr;
   }
-  .signin-hero {
+  .landing-start {
+    order: -1;
+  }
+  /* A bounced-back session needs sign-in first, not the pitch. */
+  .landing-split--auth-first .landing-start {
+    order: 0;
+  }
+  .landing-auth {
     padding: 3rem 2rem;
   }
-  .signin-hero h1 {
-    font-size: 1.875rem;
-  }
-  .signin-form-side {
+  .landing-start {
     padding: 3rem 2rem;
   }
 }
 
 @media (width < 40rem) {
-  .signin-hero {
+  .landing-auth {
     padding: 2.25rem 1.5rem;
   }
-  .signin-hero h1 {
-    font-size: 1.625rem;
+  .landing-start {
+    padding: 2.5rem 1.5rem 2.25rem;
   }
-  .signin-hero-sub {
-    font-size: 0.875rem;
-    margin-bottom: 1.75rem;
+  .landing-start-headline {
+    font-size: 1.75rem;
   }
-  .signin-tools {
-    margin-bottom: 1.75rem;
+  .landing-start-sub {
+    font-size: 0.9375rem;
   }
-  .signin-form-side {
-    padding: 2.25rem 1.5rem;
+  .landing-start-tools {
+    margin-bottom: 1.5rem;
   }
 }
-

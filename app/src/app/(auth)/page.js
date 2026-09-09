@@ -1,12 +1,16 @@
 "use client";
 
 import { Suspense, useEffect, useState, useCallback, useRef } from "react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowRight, Globe } from "lucide-react";
 import { BASE } from "../../lib/api";
 import { isDesktopShell, getShellInfo, openExternal } from "../../lib/shell";
 import { isLocalBackendActive } from "../../lib/localBackend.js";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   POST_SIGNIN_REDIRECT_KEY,
   SIGNIN_REASON_EXPIRED,
@@ -16,7 +20,7 @@ import {
   isTokenValid,
   setAuthToken,
 } from "@/lib/authFetch";
-import { analytics, trackEvent, AnalyticsEvent } from "@/lib/analytics";
+import { analytics, trackEvent, AnalyticsEvent, AnalyticsParam } from "@/lib/analytics";
 import { isGuestToken } from "@/lib/guest";
 import { guestLinkCode } from "@/lib/onboardingApi";
 import { consumeSignInSources, peekSignInSources } from "@/lib/signInSources";
@@ -106,6 +110,27 @@ function SignInContent() {
   // it during render would make the notice vanish on the next paint.
   const [sessionExpired, setSessionExpired] = useState(false);
   useEffect(() => setSessionExpired(consumeExpiredSessionFlag()), []);
+  // Checked by default: the whole point of the box is fewer forced re-logins,
+  // so someone who wants the shorter session has to opt out, not in.
+  const [rememberMe, setRememberMe] = useState(true);
+  // The audit entry, front and centre on this page: a website, nothing more.
+  // Submitting hands off to /start, which does the actual work (mints a
+  // guest, reads the site) — this page only decides where a visitor lands.
+  const [startUrl, setStartUrl] = useState("");
+  const [startError, setStartError] = useState("");
+  const handleStartSubmit = useCallback(
+    (event) => {
+      event.preventDefault();
+      const site = startUrl.trim();
+      if (!site) {
+        setStartError("Enter your website address.");
+        return;
+      }
+      trackEvent(AnalyticsEvent.OnboardingStarted, { [AnalyticsParam.Method]: "landing" });
+      router.push(`/start?url=${encodeURIComponent(site)}`);
+    },
+    [router, startUrl]
+  );
   // Turnstile site keys are locked to their registered hostnames, so the widget
   // can never render on the desktop shell's origin (`tauri://localhost`, or a
   // loopback dev server) — it just fails with "Security check failed to load".
@@ -269,6 +294,7 @@ function SignInContent() {
     // armed for a prompt that was abandoned never rides a later sign-in.
     const sources = consumeSignInSources();
     if (sources) params.set("sources", sources);
+    if (rememberMe) params.set("remember", "1");
     // Desktop shell: Google disallows OAuth inside embedded webviews, so
     // capable shells run the flow in the system browser. The backend routes
     // the auth code back through the shell's deep link, which reloads this
@@ -314,6 +340,7 @@ function SignInContent() {
   }, [
     getTurnstileResponseToken,
     isSigningIn,
+    rememberMe,
     requiresTurnstile,
     turnstileToken,
   ]);
@@ -334,55 +361,34 @@ function SignInContent() {
   }
 
   return (
-    <main id="main-content" className="signin-split" aria-labelledby="signin-heading" tabIndex={-1}>
-      {/* ── Left: Hero ── */}
-      <div className="signin-hero">
-        <div className="signin-hero-inner">
-          <div className="signin-logo">
-            <span className="signin-logo-text">duct</span>
-            <span className="logo-mark" aria-hidden="true" />
-          </div>
-
-          <h1>Your tools have the answers.<br /><em>Duct connects them.</em></h1>
-
-          <p className="signin-hero-sub">
-            Automated intelligence across your ad platforms, analytics, and
-            search data. Stop guessing what&rsquo;s working&mdash;start knowing.
-          </p>
-
-          <div className="signin-tools">
-            <span className="signin-tool-pill">Google Ads</span>
-            <span className="signin-tool-pill">GA4</span>
-            <span className="signin-tool-pill">Search Console</span>
-            <span className="signin-tool-pill">Meta Ads</span>
-          </div>
-
-          <p className="signin-trust">
-            Free during beta &middot; No credit card &middot; 10 minutes to
-            first insight
-          </p>
-        </div>
-      </div>
-
-      {/* ── Right: Sign-In Form ── */}
-      <div className="signin-form-side">
-        <div className="signin-form">
-          <h2 id="signin-heading">Sign in to Duct</h2>
+    <main
+      id="main-content"
+      className={`landing-split${sessionExpired ? " landing-split--auth-first" : ""}`}
+      tabIndex={-1}
+    >
+      {/* ── Sign in: the returning-user path, narrow and secondary ── */}
+      <div className="landing-auth">
+        <div className="landing-auth-inner">
+          <p className="landing-auth-kicker">Already using Duct?</p>
+          <h2 id="signin-heading">Sign in</h2>
           <p className="signin-form-sub">
             {sessionExpired
               ? "Your session ended. Sign in again and we'll take you back to where you were."
-              : "Get started with your Google account"}
-          </p>
-          {/* New here? The account can wait — the audit is the onboarding. */}
-          <p className="mb-4 text-center text-sm text-muted-foreground">
-            First time?{" "}
-            <Link href="/start" className="font-medium text-foreground underline underline-offset-2">
-              Audit your site first
-            </Link>
-            {" "}— no account needed.
+              : "Continue with your Google account"}
           </p>
 
           {requiresTurnstile && <div ref={turnstileContainerRef} className="cf-turnstile" aria-label="Security verification" />}
+
+          <label htmlFor="signin-remember-me" className="landing-remember">
+            <Switch
+              id="signin-remember-me"
+              size="sm"
+              checked={rememberMe}
+              onCheckedChange={setRememberMe}
+              disabled={isSigningIn}
+            />
+            Keep me signed in for 30 days
+          </label>
 
           <GoogleSignInButton
             onClick={handleSignIn}
@@ -391,13 +397,13 @@ function SignInContent() {
             loadingLabel={awaitingBrowser ? "Continue in your browser…" : "Signing in..."}
           />
           {sourcesArmed && !awaitingBrowser && (
-            <p className="mt-2 text-center text-xs text-muted-foreground">
+            <p className="landing-auth-note">
               Google will also ask to share Search Console and Analytics with
               Duct &mdash; read-only, and either box can be left unticked.
             </p>
           )}
           {awaitingBrowser && (
-            <p className="mt-2 text-center text-xs text-muted-foreground">
+            <p className="landing-auth-note">
               Finish signing in with Google in your browser — this window will
               continue automatically.{" "}
               <button
@@ -410,15 +416,13 @@ function SignInContent() {
             </p>
           )}
           {requiresTurnstile && !hasTurnstileToken && (
-            <p className="mt-2 text-center text-xs text-muted-foreground">
-              Complete security check to continue.
-            </p>
+            <p className="landing-auth-note">Complete security check to continue.</p>
           )}
           {turnstileError && (
-            <p className="mt-2 text-center text-xs text-destructive">{turnstileError}</p>
+            <p className="landing-auth-note landing-auth-note-error">{turnstileError}</p>
           )}
           {shellBlocked === "outdated" && (
-            <p className="mt-2 text-center text-xs text-destructive">
+            <p className="landing-auth-note landing-auth-note-error">
               This version of Duct can&rsquo;t complete sign-in. Update the app
               from{" "}
               <a
@@ -433,7 +437,7 @@ function SignInContent() {
             </p>
           )}
           {shellBlocked === "browser" && (
-            <p className="mt-2 text-center text-xs text-destructive">
+            <p className="landing-auth-note landing-auth-note-error">
               Duct couldn&rsquo;t open your browser to finish signing in. Check
               that you have a default browser set, then try again.
             </p>
@@ -448,6 +452,65 @@ function SignInContent() {
             <a href="https://getduct.ai/privacy" target="_blank" rel="noopener noreferrer">
               Privacy Policy
             </a>
+          </p>
+        </div>
+      </div>
+
+      {/* ── Start the audit: no account needed, the real first impression ── */}
+      <div className="landing-start">
+        <div className="landing-start-inner">
+          <div className="signin-logo">
+            <span className="signin-logo-text">duct</span>
+            <span className="logo-mark" aria-hidden="true" />
+          </div>
+
+          <h1 className="landing-start-headline">
+            Your tools have the answers.<br /><em>Duct connects them.</em>
+          </h1>
+
+          <p className="landing-start-sub">
+            Point Duct at your site and it reads it, audits it, and drafts
+            your project from what it finds &mdash; before you sign in.
+          </p>
+
+          <div className="landing-start-tools">
+            <span className="landing-tool-pill">Google Ads</span>
+            <span className="landing-tool-pill">GA4</span>
+            <span className="landing-tool-pill">Search Console</span>
+            <span className="landing-tool-pill">Meta Ads</span>
+          </div>
+
+          <form onSubmit={handleStartSubmit} className="landing-start-form">
+            <Label htmlFor="landing-site-url" className="sr-only">
+              Your website
+            </Label>
+            <div className="start-url">
+              <Globe className="start-url-icon size-4" aria-hidden />
+              <Input
+                id="landing-site-url"
+                inputMode="url"
+                autoComplete="url"
+                placeholder="acme.com"
+                value={startUrl}
+                onChange={(e) => {
+                  setStartUrl(e.target.value);
+                  if (startError) setStartError("");
+                }}
+                aria-invalid={startError ? true : undefined}
+                aria-describedby={startError ? "landing-site-url-error" : undefined}
+                className="start-url-input"
+              />
+            </div>
+            <Button type="submit" size="lg">
+              Read my site <ArrowRight className="size-4" aria-hidden />
+            </Button>
+          </form>
+          <p
+            id={startError ? "landing-site-url-error" : undefined}
+            className={`landing-start-hint${startError ? " landing-start-hint-error" : ""}`}
+            role={startError ? "alert" : undefined}
+          >
+            {startError || "No account needed — free during beta."}
           </p>
         </div>
       </div>

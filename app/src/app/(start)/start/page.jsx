@@ -13,9 +13,9 @@
 // The water in the aqueduct strip is the state: it reaches an arch when that
 // step's data does.
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AlertTriangle, ArrowRight, Check, ClipboardCheck, FolderOpen, Globe, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,7 +52,16 @@ function Eyebrow({ children }) {
 }
 
 export default function StartPage() {
+  return (
+    <Suspense fallback={null}>
+      <StartPageContent />
+    </Suspense>
+  );
+}
+
+function StartPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState(STEP.URL);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -68,10 +77,27 @@ export default function StartPage() {
   const [verified, setVerified] = useState(null); // provider verdict, or { skipped: true }
   const [signedIn, setSignedIn] = useState(false);
   const pollRef = useRef(null);
+  // StrictMode double-invokes mount effects in dev; without this a `?url=`
+  // hand-off from the landing page would mint two guests and prefetch twice.
+  const autoStartedRef = useRef(false);
 
   useEffect(() => {
     setSignedIn(isSignedInUser());
   }, []);
+
+  // The landing page's own URL field hands off here instead of duplicating
+  // the guest+crawl logic — prefill and continue exactly as if the visitor
+  // had typed it on this page.
+  useEffect(() => {
+    const prefill = searchParams.get("url");
+    if (!prefill || autoStartedRef.current) return;
+    autoStartedRef.current = true;
+    setUrl(prefill);
+    readSite(undefined, prefill);
+    // Intentionally run once on mount, off the raw param — not `readSite`,
+    // which is recreated whenever `url` changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   // ── Background crawl: keep the status fresh until it settles ───────────
   useEffect(() => {
@@ -97,10 +123,13 @@ export default function StartPage() {
   }, [crawl?.crawl_id, crawl?.state, project?.id]);
 
   // ── Step I: read the site ──────────────────────────────────────────────
+  // `rawSite` lets the landing page's own URL field hand off straight into
+  // this step (via `?url=`, read below) without waiting on a state update —
+  // the manual submit path still just reads `url`.
   const readSite = useCallback(
-    async (event) => {
+    async (event, rawSite) => {
       event?.preventDefault();
-      const site = normaliseUrl(url);
+      const site = normaliseUrl(rawSite ?? url);
       if (!site) {
         setError("Enter your website address.");
         return;
