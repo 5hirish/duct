@@ -92,5 +92,26 @@ def test_a_vendor_failure_comes_back_as_a_code_and_a_bounded_detail(client, monk
     assert "sk-bad" not in body["detail"]
 
 
+def test_a_vendor_echoing_the_key_back_does_not_leak_it(client, monkeypatch):
+    """The real risk the bounded-detail design carries.
+
+    A provider that quotes an invalid key back in its own error text ("Invalid
+    API key: sk-real-secret") would otherwise put a live credential straight
+    into the JSON response and onto the onboarding screen — the same shape of
+    bug ``error_payload``'s docstring says has happened once already, just in
+    a route where `str(exc)` is deliberately shown rather than always hidden.
+    """
+    monkeypatch.setattr(
+        lc,
+        "resolve_chat_model",
+        lambda *_a, **_k: _Raising(AuthenticationError("Invalid API key: sk-real-secret")),
+    )
+    body = client.post(
+        "/providers/openai/verify", headers={"X-Provider-OpenAI": "sk-real-secret"}
+    ).json()
+    assert "sk-real-secret" not in body["detail"]
+    assert "[key]" in body["detail"]
+
+
 def test_an_unknown_provider_is_a_404(client):
     assert client.post("/providers/nope/verify").status_code == 404

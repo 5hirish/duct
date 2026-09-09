@@ -325,6 +325,10 @@ _VERIFY_TIMEOUT_SECONDS = 25.0
 
 
 def _verify_code(exc: BaseException, *, subscription: bool = False) -> str:
+    """A code from the VERIFY_* taxonomy above — always a literal, never
+    ``exc`` itself. That is load-bearing: this return value is logged
+    unredacted a few lines below the call site, and every branch here has to
+    stay a hardcoded string for that to be safe."""
     from agents.core.errors import ErrorCode, classify_error
 
     text = str(exc).lower()
@@ -400,8 +404,14 @@ async def verify_provider_key(
             "ok": False,
             "code": code,
             "model": str(getattr(model, "value", model)),
-            # Bounded and vendor-authored; the frontend prints it under its own sentence.
-            "detail": str(exc)[:240],
+            # Bounded and vendor-authored; the frontend prints it under its own
+            # sentence — but "vendor-authored" cuts both ways: the key being
+            # tested is live in scope, and a provider that echoes an invalid
+            # key back in its own error text ("Invalid API key: sk-…") would
+            # otherwise put it on screen. error_payload's docstring already
+            # names this exact failure mode ("once a URL with a key in it").
+            # Redact the literal key rather than trust vendor phrasing.
+            "detail": str(exc)[:240].replace(key, "[key]") if key else str(exc)[:240],
         }
     return {
         "ok": True,
