@@ -80,10 +80,10 @@ the first one.
 
 - The live roadmap is the GitHub Project
   ([5hirish/projects/10](https://github.com/users/5hirish/projects/10)), not
-  a document in this repo. Its `Priority` field (`P0`/`P1`/`P2`) and title
-  (which carries the current release window) are the source of truth for
-  what's next — check it rather than inferring priority from the conversation
-  alone.
+  a document in this repo. Its `Priority` field (`P0`/`P1`/`P2`) and each
+  issue's milestone (the actual dated deadline, not the Project's title) are
+  the source of truth for what's next — check it rather than inferring
+  priority from the conversation alone.
 - Scope proposed on an agent's own initiative — not asked for by name — goes
   through `prioritize` before code, not after. A well-argued feature nobody
   asked for is still scope creep, however clean the diff.
