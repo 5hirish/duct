@@ -475,12 +475,23 @@ for it every time is why "look at it" gets skipped.
 - No dedicated auth library (next-auth, Clerk, Supabase)
 - No form library (React Hook Form, Formik)
 - No global state library (Redux, Zustand, Jotai)
-- No test suite (Jest, Vitest, Playwright) — E2E tests live in `site/`, not `app/`.
-  This rules out *committed* browser tests; it does not rule out driving a
-  browser to look at what you just built. See "Look at it before you call it
-  done" above — read as a blanket ban, this line is why UI arrives unrendered.
-  `src/app/preview/` is not a test suite either: it is a route that renders
-  components, with no runner, no assertions and no dependency.
+- **Vitest** (`npm test`) covers the pure-logic layer only:
+  `src/lib/__tests__/*.test.js`. No jsdom, no component tests, no E2E — the
+  config pins `environment: "node"` deliberately ("the hook and the
+  components are checked by `next build` and by looking at them"), and E2E
+  tests live in `site/`, not `app/`. A module that touches `window` or
+  `document` is still testable this way if it's plain functions, not
+  components: stub the pieces it reads (`localStorage`, `document.cookie`,
+  `fetch`) on `globalThis` in a `beforeEach` — see `authFetch.test.js` and
+  `consent.test.js` for the pattern. A module whose surface *is* a React
+  component (`AuthProvider`, `AuthGuard`) needs `@testing-library/react` and a
+  `jsdom` environment, neither of which is set up yet — that's a real
+  infrastructure step, not just another test file, so treat adding it as its
+  own change. This rules out *committed* browser tests; it does not rule out
+  driving a browser to look at what you just built. See "Look at it before you
+  call it done" above — read as a blanket ban, this line is why UI arrives
+  unrendered. `src/app/preview/` is not a test suite either: it is a route
+  that renders components, with no runner, no assertions and no dependency.
 - No Supabase anywhere in this project
 
 <!-- BEGIN:nextjs-agent-rules -->
