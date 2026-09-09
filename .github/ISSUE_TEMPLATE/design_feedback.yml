@@ -1,0 +1,77 @@
+name: Design / UX feedback
+description: Something looks off, is hard to use, or breaks visual consistency — on the app, the site, or the desktop shell. No code setup required to file this.
+labels: ["design"]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        You don't need to run the backend to look at this. Site pages need one
+        command (`python3 -m http.server 8090 --directory site`, no build
+        step); app components render in isolation at `/preview` with no
+        sign-in. See [CONTRIBUTOR-PLAYBOOK.md](https://github.com/5hirish/duct/blob/main/CONTRIBUTOR-PLAYBOOK.md#youre-a-designer)
+        for the two-minute version.
+
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      options:
+        - app (the product UI)
+        - site (getduct.ai marketing pages, blog, changelog)
+        - desktop (the downloaded app's shell/chrome)
+        - not sure
+    validations:
+      required: true
+
+  - type: input
+    id: location
+    attributes:
+      label: Page, screen, or component
+      description: >-
+        A URL (site or a getduct.ai path), a component name if you know it, or
+        a plain description of where in the product this is ("the connectors
+        list when a connection fails").
+      placeholder: e.g. site/for-marketers.html, or "ContextRing on the desk view"
+    validations:
+      required: true
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What you're seeing
+      description: >-
+        Describe it, and attach a screenshot if you have one (drag an image
+        into this box). Include the viewport size or device if it's a
+        responsiveness issue.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you'd expect instead
+      description: >-
+        The fix if you have one in mind — a spacing value, a copy change, a
+        different state to show. If you're not sure of the fix, say what feels
+        wrong and why; that's useful on its own.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contribution
+      options:
+        - label: >-
+            I'd like to try fixing this myself (with an AI coding agent's
+            help, if useful) rather than waiting for someone else to pick it
+            up.
+          required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and this is not a duplicate.
+          required: true

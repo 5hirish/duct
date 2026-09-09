@@ -1,0 +1,75 @@
+name: Content idea (blog, landing page, changelog copy)
+description: Propose or draft a blog post, landing page, or changelog/copy fix. No backend or app changes required.
+labels: ["content"]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        This lands through a skill, not hand-authored HTML — `add-blog-post`,
+        `new-page`, or `add-changelog-entry` do the mechanical part (file,
+        index card, sitemap) once the idea and the copy are right. See
+        [CONTRIBUTOR-PLAYBOOK.md](https://github.com/5hirish/duct/blob/main/CONTRIBUTOR-PLAYBOOK.md#youre-doing-marketing-or-content)
+        for the two-minute version, and
+        [`site/DESIGN.md`](https://github.com/5hirish/duct/blob/main/site/DESIGN.md)
+        for the copy voice.
+
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type
+      options:
+        - Blog post (site/blog)
+        - Landing page for a specific audience (site/for-*.html)
+        - Changelog entry
+        - Copy fix on an existing page
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea, or what's wrong with the existing copy
+      description: >-
+        For a new post or page: the angle, and who it's for. For a copy fix:
+        quote the current line and say what reads wrong about it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: draft
+    attributes:
+      label: Draft, outline, or supporting research
+      description: >-
+        Paste whatever you already have — a rough draft is more useful here
+        than a polished one-liner. A keyword cluster, competitor examples, or
+        a Google Doc link all count.
+    validations:
+      required: false
+
+  - type: input
+    id: audience
+    attributes:
+      label: Who this is for
+      description: The audience segment or search intent this targets, if you know it.
+      placeholder: e.g. "PMs evaluating Duct vs. a BI tool", "marketers searching 'GA4 alerting'"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contribution
+      options:
+        - label: >-
+            I'd like to draft this myself (with an AI coding agent's help, if
+            useful) rather than waiting for someone else to pick it up.
+          required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and this is not a duplicate.
+          required: true

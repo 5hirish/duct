@@ -15,6 +15,12 @@ there (`CLAUDE.md` beside it is a symlink to the same file). **Read the one for
 the directory you are editing** — backend conventions do not apply to `site/`,
 and vice versa.
 
+**Not touching backend/app/desktop code?** This file is written for someone
+about to run `poetry install` or `npm install`. If you're filing design
+feedback, drafting a blog post or landing page, or proposing something as a
+PM, start at [CONTRIBUTOR-PLAYBOOK.md](CONTRIBUTOR-PLAYBOOK.md) instead — it
+skips straight to the parts of the stack that need no backend and no auth.
+
 ## Before your first commit
 
 Enable the secret-scanning pre-commit hook. This repository is public; a
@@ -60,6 +66,11 @@ static site on **8090**.
 ```bash
 python3 -m http.server 8090 --directory site
 ```
+
+This is also the fastest way to look at a design or copy change — no build
+step, no backend, no auth. For a single `app/` component in isolation
+(every state, without signing in or loading the real screen), see the
+`component-preview` skill and the `/preview` route.
 
 ## Checks your PR has to pass
 
@@ -130,6 +141,8 @@ that carry reasoning, and the self-review pass before you open the PR.
 - Add a line to `CHANGELOG.md` under `## [Unreleased]` if the change is one a
   user would notice. `.github/scripts/release-notes.mjs` puts that section
   straight into the GitHub release, so what you write there is what they read.
+- Add yourself to [`CONTRIBUTORS.md`](CONTRIBUTORS.md) — code, design, or
+  content, all in the same file.
 
 ## Reporting security issues
 

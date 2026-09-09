@@ -129,6 +129,11 @@ The design decisions with real reasoning behind them, rather than a diagram:
 Start with [CONTRIBUTING.md](CONTRIBUTING.md). Setup, the checks CI runs
 (`make check`), and the conventions that cost the most to get wrong.
 
+Not touching backend/app/desktop code? [CONTRIBUTOR-PLAYBOOK.md](CONTRIBUTOR-PLAYBOOK.md)
+is for design feedback, blog and landing-page drafts, and PM proposals — no
+build step, no backend, no auth required for most of it. Contributors of every
+kind are credited in [CONTRIBUTORS.md](CONTRIBUTORS.md).
+
 Agent-written contributions are welcome — the PR template asks where an agent
 helped so a reviewer knows where to look hardest, not to penalise it.
 
