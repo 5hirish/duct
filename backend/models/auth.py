@@ -105,6 +105,12 @@ class OAuthState(SQLModel, table=True):
     # the state through Google because the authorize step is a bare browser
     # navigation and carries no bearer token of its own.
     link_user_id: str | None = Field(default=None, sa_column=Column(String, nullable=True))
+    # "Keep me signed in" from the login page, ridden the same way as
+    # link_user_id — the callback needs it to pick the JWT's lifetime, and the
+    # authorize step is a bare navigation with nowhere else to carry it.
+    remember: bool = Field(
+        default=False, sa_column=Column(sa.Boolean(), nullable=False, server_default=sa.false())
+    )
     issued_at: datetime = Field(
         default_factory=utcnow,
         sa_column=Column(utc_datetime(), nullable=False),
