@@ -99,10 +99,10 @@ export default function ProjectsPage() {
 
       {!hasProjects && (
         <div className="rounded-3xl border border-border bg-card p-6">
-          <p className="text-sm text-muted-foreground">No projects yet. Start by completing onboarding.</p>
+          <p className="text-sm text-muted-foreground">No projects yet. A project starts from a site: Duct reads it and drafts the rest.</p>
           <div className="mt-3">
             <Button asChild>
-              <Link href="/onboarding?new=1">Create a new project</Link>
+              <Link href="/start">Audit a site</Link>
             </Button>
           </div>
         </div>

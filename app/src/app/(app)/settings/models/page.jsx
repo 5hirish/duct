@@ -31,7 +31,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import ChatGPTCard from "@/components/connections/ChatGPTCard";
 import ProviderCard from "@/components/connections/ProviderCard";
+import ContextCompressionCard from "@/components/ContextCompressionCard.jsx";
+import AutoFallbackCard from "@/components/AutoFallbackCard";
 import TelemetryCard from "@/components/TelemetryCard.jsx";
 import { LOGOS } from "@/components/connections/logos";
 import { PROVIDERS } from "@/lib/providerKeys";
@@ -50,6 +53,7 @@ import {
   saveModelMap,
   tierPicks,
 } from "@/lib/modelTiers";
+import { fetchModelSettings, saveModelSettings } from "@/lib/modelSettings";
 import { DEFAULT_ENGINE } from "@/lib/engines";
 
 // ---------------------------------------------------------------------------
@@ -256,6 +260,79 @@ function TierCard({ tier, index, value, models, providersById, engine, jobs, pre
   );
 }
 
+/**
+ * The Images row: which key draws, resolved by the server.
+ *
+ * Used to print `gemini-3.1-flash-image` as a literal beside the Gemini mark,
+ * which read as a rule — and sent people on an OpenAI or xAI key to Google
+ * for something their own key already does. The server now answers with its
+ * pick (same preference order the run uses: Gemini, then OpenAI, then xAI),
+ * and this renders whatever came back. `catalogue.image_models` lists the
+ * providers that can draw at all, for the empty state and the hint.
+ */
+function ImagesRow({ images, catalogue, providersById }) {
+  const imageProviders = useMemo(() => {
+    const order = catalogue?.image_provider_order ?? [];
+    const seen = new Set((catalogue?.image_models ?? []).map((model) => model.provider));
+    return order.filter((id) => seen.has(id));
+  }, [catalogue]);
+  // Before the catalogue answers there is nothing to list; the three names
+  // are the ones the server would send, not a second copy of the rule.
+  const providerNames = (imageProviders.length
+    ? imageProviders.map((id) => providersById[id]?.label || id)
+    : ["Google Gemini", "OpenAI", "xAI"]
+  )
+    .join(", ")
+    .replace(/, ([^,]*)$/, " or $1");
+  const picked = images?.provider ? images : null;
+  const pickedLabel = picked ? providersById[picked.provider]?.label || picked.provider : "";
+  const others = imageProviders.filter((id) => id !== picked?.provider && providersById[id]?.reachable);
+
+  let note;
+  if (!images) {
+    note = "Checking which of your keys can draw…";
+  } else if (!picked) {
+    note = `None of your tier models generate images. Add a ${providerNames} key and Duct will draw with it.`;
+  } else if (others.length) {
+    note = `Drawing with your ${pickedLabel} key. Your ${others
+      .map((id) => providersById[id]?.label || id)
+      .join(" and ")} key${others.length > 1 ? "s" : ""} can draw too; ${pickedLabel} comes first when more than one is set.`;
+  } else {
+    note = `None of your tier models generate images, so Duct draws with your ${pickedLabel} key.`;
+  }
+
+  return (
+    <div className="mt-mod-row">
+      <div className="mt-mod-name">
+        <span className="mt-mod-mark" aria-hidden="true">
+          <ImageIcon size={15} strokeWidth={1.75} />
+        </span>
+        <div>
+          <strong>Images</strong>
+          <span>Slides and post images · Content Studio</span>
+        </div>
+      </div>
+      <div className="mt-mod-ctl">
+        {picked ? (
+          <>
+            <ProviderMark providerId={picked.provider} />
+            <code className="mt-mono">{picked.model}</code>
+            <StateChip
+              tone={SOURCE_TONE[picked.source] || "ok"}
+              title={`${SOURCE_DETAIL[picked.source] || ""} — chosen for you, no tier model can generate images`}
+            >
+              {SOURCE_LABELS[picked.source] || "Auto"}
+            </StateChip>
+          </>
+        ) : (
+          <StateChip tone={images ? "warn" : "neutral"}>{images ? "Needs a key" : "Checking"}</StateChip>
+        )}
+      </div>
+      <p className="mt-mod-note">{note}</p>
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
@@ -264,6 +341,10 @@ export default function ModelSettingsPage() {
   const [map, setMap] = useState({});
   const [catalogue, setCatalogue] = useState(null);
   const [providers, setProviders] = useState([]);
+  // The server's pick for the image tools, or null until it answers.
+  const [images, setImages] = useState(null);
+  // The backend's kill switch for the ChatGPT tile; off until it answers.
+  const [chatgptAuthEnabled, setChatgptAuthEnabled] = useState(false);
   const [preview, setPreview] = useState(null);
   const [saved, setSaved] = useState("");
   const savedTimer = useRef(null);
@@ -271,8 +352,24 @@ export default function ModelSettingsPage() {
   // First paint: everything the page renders is server-owned except the map.
   useEffect(() => {
     setMap(loadModelMap());
+    // The server's copy is the one every run reads — including the scheduled
+    // brief, which has no browser. localStorage paints first so the page is
+    // never blank; this corrects it a moment later, and a stale tab loses.
+    fetchModelSettings().then((settings) => {
+      if (Object.keys(settings.tiers || {}).length) {
+        setMap((current) => {
+          const next = { ...current, tiers: settings.tiers };
+          saveModelMap(next);
+          return next;
+        });
+      }
+    });
     fetchModelCatalogue().then(setCatalogue);
-    fetchProviderStatus().then(setProviders);
+    fetchProviderStatus().then((status) => {
+      setProviders(status.providers);
+      setImages(status.images);
+      setChatgptAuthEnabled(Boolean(status.chatgptAuthEnabled));
+    });
   }, []);
 
   const picks = useMemo(() => tierPicks(map), [map]);
@@ -327,6 +424,10 @@ export default function ModelSettingsPage() {
     (next, message) => {
       setMap(next);
       saveModelMap(next);
+      // Written to both: localStorage so this tab and the composer see it at
+      // once, the server so every run does — including the ones with nobody
+      // watching. Fire-and-forget; the local copy is what this page renders.
+      saveModelSettings({ tiers: tierPicks(next) });
       flash(message);
     },
     [flash]
@@ -454,6 +555,12 @@ export default function ModelSettingsPage() {
             engine&rsquo;s own default when none of them can run.
           </p>
 
+          {/* Sits directly under the ladder because it is a question about the
+              ladder: the fallback order is the three models above, in the order
+              they are already in. Asking for a second order here is what would
+              have made this page a maze. */}
+          <AutoFallbackCard ladder={TIERS.map((tier) => tier.label)} />
+
           <div className="mt-actions">
             <span className="mt-actions-label">
               <Wand2 size={14} aria-hidden="true" /> Only have one key?
@@ -476,6 +583,16 @@ export default function ModelSettingsPage() {
             )}
           </div>
 
+          {/* How the data those models read is written on the way in. Sits with
+              the tiers rather than with the provider keys because it is a
+              question about a run, not about a credential. */}
+          <h2 className="mt-section-title">Context</h2>
+          <p className="app-subtle mt-lede">
+            What your connectors return can be larger than a model can hold in one go.
+          </p>
+
+          <ContextCompressionCard />
+
           {/* Modality — only what the tier models cannot produce themselves. */}
           <h2 className="mt-section-title">Images &amp; video</h2>
           <p className="app-subtle mt-lede">
@@ -483,27 +600,7 @@ export default function ModelSettingsPage() {
           </p>
 
           <div className="mt-modality">
-            <div className="mt-mod-row">
-              <div className="mt-mod-name">
-                <span className="mt-mod-mark" aria-hidden="true">
-                  <ImageIcon size={15} strokeWidth={1.75} />
-                </span>
-                <div>
-                  <strong>Images</strong>
-                  <span>Slides and post images · Content Studio</span>
-                </div>
-              </div>
-              <div className="mt-mod-ctl">
-                <ProviderMark providerId="google_genai" />
-                <code className="mt-mono">gemini-3.1-flash-image</code>
-                <StateChip tone="ok" title="Chosen for you — no tier model can generate images">
-                  Auto
-                </StateChip>
-              </div>
-              <p className="mt-mod-note">
-                None of your tier models generate images, so Duct uses a dedicated one.
-              </p>
-            </div>
+            <ImagesRow images={images} catalogue={catalogue} providersById={providersById} />
 
             <div className="mt-mod-row">
               <div className="mt-mod-name">
@@ -535,6 +632,10 @@ export default function ModelSettingsPage() {
           </p>
 
           <div className="conn-grid">
+            {/* Desktop only, and only while the backend allows the path —
+                renders nothing otherwise. First because it is the one
+                provider that costs nothing extra. */}
+            <ChatGPTCard enabled={chatgptAuthEnabled} />
             {PROVIDERS.map((provider) => (
               <ProviderCard
                 key={provider.id}

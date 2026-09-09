@@ -55,7 +55,7 @@ from agents.content.results import (
 )
 from sqlmodel import Session, select
 
-from agents.models import DEFAULT_IMAGE_MODEL, AspectRatio, ImageModel
+from agents.models import DEFAULT_IMAGE_MODEL, AspectRatio, ImageModel, image_model_for
 from agents.core.memory_tools import build_memory_tools_lc
 from agents.content.events import ContentEvent
 from agents.content.schema import (
@@ -95,6 +95,14 @@ EmitFn = Callable[[dict[str, Any]], Awaitable[None]]
 # tool calls within one worker; a multi-worker deploy would also want a DB guard.
 _POST_LOCKS: dict[str, asyncio.Lock] = {}
 
+
+# The image tools' one refusal. Names every provider that would unblock the
+# user, because "get a Gemini key" was the old answer and it sent people on an
+# OpenAI key to Google for something their own key already does.
+_NO_IMAGE_KEY = (
+    "Image {verb} needs an API key from a provider with an image model \u2014 "
+    "Google Gemini, OpenAI or xAI. Add one in Settings \u2192 Providers, then try again."
+)
 
 def _post_lock(key: str) -> asyncio.Lock:
     """Get-or-create the lock for a post key. Safe under single-threaded asyncio
@@ -571,9 +579,9 @@ def build_content_tools_lc(
     # Typed input models for the image tools — the tool's argument schema and
     # the field constraints the model sees in one place (enums from StrEnum so
     # an invalid id can't be passed; ranges via Field). Defined here, not at
-    # module top, because the gemini enums pull the google client;
-    # service.google.gemini is imported lazily at session-build time.
-    from service.google.gemini.schema import EditMode, MaskMode, SubjectType
+    # module top, to keep the image package off the import path of every
+    # other tool; service.images is imported lazily at session-build time.
+    from service.images.schema import EditMode, MaskMode, SubjectType
 
     class GenerateImageInput(BaseModel):
         model_config = ConfigDict(extra="forbid")
@@ -596,7 +604,11 @@ def build_content_tools_lc(
         )
         model: ImageModel = Field(
             DEFAULT_IMAGE_MODEL,
-            description=f"Optional image model id; defaults to {DEFAULT_IMAGE_MODEL.value}.",
+            description=(
+                "Optional image model id. The run uses its own provider's image "
+                "model when this names one it cannot reach, so leaving the default "
+                "is always safe."
+            ),
         )
         aspect_ratio: AspectRatio = Field(
             AspectRatio.PORTRAIT_9_16, description="Optional aspect ratio. Defaults to 9:16 portrait.",
@@ -604,12 +616,12 @@ def build_content_tools_lc(
         number_of_images: int = Field(1, ge=1, le=4, description="How many images to generate. Default 1, max 4.")
         negative_prompt: str | None = Field(None, description="Accepted but inert — no current image model supports negative prompting. Put the constraint in the prompt instead.")
         input_asset_id: str | None = Field(
-            None, description="Single reference asset UUID (legacy; prefer input_asset_ids). Gemini-class models only.",
+            None, description="Single reference asset UUID (legacy; prefer input_asset_ids).",
         )
         input_asset_ids: list[str] = Field(
             default_factory=list,
             description=(
-                "Multiple reference assets (Gemini-class only). Up to 3 UUIDs in role-order: "
+                "Multiple reference assets. Up to 3 UUIDs in role-order (xAI uses the first only): "
                 "[character_ref, camera_or_style_ref, optional_third]. For slides 2-5 the common "
                 "pattern is [slide-01 character image, cameraRef from the reference library] — "
                 "first image locks face/skin/hair, second imitates TikTok framing. A role-explanation "
@@ -1159,31 +1171,30 @@ def build_content_tools_lc(
 
     async def generate_image(**args: Any) -> str | list[dict]:
         try:
-            from service.google.gemini import (
-                GeminiAPIError,
-                GeminiImageClient,
+            from service.images import (
                 GenerateImageRequest,
+                ImageAPIError,
+                asset_source_for,
+                image_client_for,
                 persist_generated_image,
             )
             from service.google.gemini.client import build_multi_reference_prefix
 
-            image_key = session.gemini_api_key
-            if not image_key:
-                return _err(
-                    "Image generation needs a Google Gemini API key. Add one in "
-                    "Settings \u2192 Providers, then try again."
-                )
+            image_provider, image_key = session.image_provider, session.image_api_key
+            if image_provider is None or not image_key:
+                return _err(_NO_IMAGE_KEY.format(verb="generation"))
 
             payload = {k: v for k, v in args.items() if v not in (None, "")}
             payload.setdefault("number_of_images", min(int(payload.get("number_of_images", 1) or 1), 4))
+            payload["model"] = image_model_for(image_provider, payload.get("model"))
             # slide_id / item_index steer where the result is attached; they're
-            # not Gemini params, so pull them out before building the request.
+            # not image params, so pull them out before building the request.
             target_slide_id = str(payload.pop("slide_id", "") or "").strip()
             _ti = payload.pop("item_index", None)
             target_item_index = int(_ti) if _ti not in (None, "") else None
 
-            # Validate the attach target against the live post BEFORE paying for a
-            # Gemini call — a bad slide_id/cell is a hard error (with the valid
+            # Validate the attach target against the live post BEFORE paying for an
+            # image call — a bad slide_id/cell is a hard error (with the valid
             # ids), not a silent attached_to:null. Shared guards; see _require_*.
             if target_slide_id:
                 with _open_db() as db0:
@@ -1278,13 +1289,13 @@ def build_content_tools_lc(
                             update={"prompt": f"{prefix}\n\n{request.prompt}"}
                         )
 
-                client = GeminiImageClient(image_key)
+                client = image_client_for(image_provider, image_key)
                 try:
                     images = await client.generate_image(
                         request,
                         input_bytes_list=input_bytes_list or None,
                     )
-                except GeminiAPIError as exc:
+                except ImageAPIError as exc:
                     logger.warning("content: image generation failed: %s", exc, exc_info=True)
                     return _err("Image generation failed — please try again in a moment.")
 
@@ -1304,7 +1315,7 @@ def build_content_tools_lc(
                             "input_global_refs": global_refs,
                         },
                         post_id=session.post_id,
-                        source="gemini",
+                        source=asset_source_for(image_provider),
                     )
                     assets.append(asset)
 
@@ -1371,22 +1382,21 @@ def build_content_tools_lc(
 
     async def edit_image(**args: Any) -> str | list[dict]:
         try:
-            from service.google.gemini import (
+            from service.images import (
                 EditImageRequest,
-                GeminiAPIError,
-                GeminiImageClient,
+                ImageAPIError,
+                asset_source_for,
+                image_client_for,
                 persist_generated_image,
             )
 
-            image_key = session.gemini_api_key
-            if not image_key:
-                return _err(
-                    "Image editing needs a Google Gemini API key. Add one in "
-                    "Settings \u2192 Providers, then try again."
-                )
+            image_provider, image_key = session.image_provider, session.image_api_key
+            if image_provider is None or not image_key:
+                return _err(_NO_IMAGE_KEY.format(verb="editing"))
 
             payload = {k: v for k, v in args.items() if v not in (None, "")}
             payload.setdefault("number_of_images", min(int(payload.get("number_of_images", 1) or 1), 4))
+            payload["model"] = image_model_for(image_provider, payload.get("model"))
             try:
                 request = EditImageRequest.model_validate(payload)
             except ValidationError as exc:
@@ -1412,7 +1422,7 @@ def build_content_tools_lc(
                 style_bytes   = _load(request.style_asset_id)
                 subject_bytes = _load(request.subject_asset_id)
 
-                client = GeminiImageClient(image_key)
+                client = image_client_for(image_provider, image_key)
                 try:
                     images = await client.edit_image(
                         request,
@@ -1421,7 +1431,7 @@ def build_content_tools_lc(
                         style_bytes=style_bytes,
                         subject_bytes=subject_bytes,
                     )
-                except GeminiAPIError as exc:
+                except ImageAPIError as exc:
                     logger.warning("content: image edit failed: %s", exc, exc_info=True)
                     return _err("Image editing failed — please try again in a moment.")
 
@@ -1442,7 +1452,7 @@ def build_content_tools_lc(
                             "negative_prompt":   request.negative_prompt,
                         },
                         post_id=session.post_id,
-                        source="gemini",
+                        source=asset_source_for(image_provider),
                     )
                     assets.append(asset)
 

@@ -34,6 +34,12 @@ _gemini_key_header = APIKeyHeader(name="X-Provider-Gemini", auto_error=False)
 # header rather than riding on X-Provider-OpenAI.
 _openrouter_key_header = APIKeyHeader(name="X-Provider-OpenRouter", auto_error=False)
 _xai_key_header = APIKeyHeader(name="X-Provider-XAI", auto_error=False)
+# Rides beside X-Provider-OpenAI when that header carries a ChatGPT access
+# token rather than an API key. The desktop shell signs the user in to their
+# own ChatGPT plan and holds the refresh token in the OS keychain; what reaches
+# here is a one-hour access token plus the account it belongs to, and the Codex
+# backend needs both on every request (agents/core/codex.py).
+_openai_account_header = APIKeyHeader(name="X-OpenAI-Account-Id", auto_error=False)
 
 
 async def validate_api_key(
@@ -57,6 +63,7 @@ async def get_user_provider_keys(
     gemini_key: str | None = Security(_gemini_key_header),
     openrouter_key: str | None = Security(_openrouter_key_header),
     xai_key: str | None = Security(_xai_key_header),
+    openai_account_id: str | None = Security(_openai_account_header),
 ) -> dict[Provider, str]:
     """Per-request bring-your-own provider API keys from the X-Provider-* headers.
 
@@ -65,7 +72,16 @@ async def get_user_provider_keys(
     to the backend's own key when a provider is absent. These values are secrets:
     never log them and never persist them (see the Sentry header scrub in
     server.py).
+
+    An OpenAI value that is a ChatGPT access token is packed together with its
+    account id, so the pair travels the same road an API key does — through
+    ``resolve_job_run``, ``ProviderKey`` and ``resolve_chat_model`` — with no
+    caller between here and the client having to know there are two halves.
     """
+    from agents.core.codex import is_subscription_credential, pack_subscription_credential
+
+    if openai_key and is_subscription_credential(openai_key):
+        openai_key = pack_subscription_credential(openai_key, openai_account_id or "")
     supplied = {
         Provider.ANTHROPIC: anthropic_key,
         Provider.OPENAI: openai_key,

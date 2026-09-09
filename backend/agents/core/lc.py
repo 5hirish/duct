@@ -43,7 +43,9 @@ from langgraph.config import get_stream_writer
 from langgraph.types import Command, interrupt
 from pydantic import BaseModel, Field
 
-from agents.core.errors import classify_error, is_retryable, retry_after_seconds
+from agents.core.codex import build_codex_chat, is_subscription_credential
+from agents.core.errors import ErrorCode, classify_error, is_retryable, retry_after_seconds
+from agents.core.quota import note_exhausted
 from agents.core.events import AgentEvent, StepStatus
 from agents.core.session import (
     take_client_id,
@@ -217,6 +219,16 @@ def resolve_chat_model(
     that rung, and contributes nothing when the model has no such dial — which
     is why it is safe to pass unconditionally from every call site.
     """
+    # A ChatGPT access token is not an API key and does not go to the public
+    # API: the credential's own shape sends it to the Codex backend. Decided
+    # here, at the one seam every run passes through, so no runner knows.
+    if provider is Provider.OPENAI and is_subscription_credential(api_key):
+        return build_codex_chat(
+            model,
+            api_key=api_key,
+            temperature=temperature,
+            **_thinking_kwargs_for(provider, model, thinking),
+        )
     return init_chat_model(
         model=getattr(model, "value", model),
         model_provider=langchain_provider(provider),
@@ -752,9 +764,21 @@ class ReportedRetryMiddleware(AgentMiddleware):
     so a rate limit retries and a rejected API key fails on the first try.
     """
 
-    def __init__(self, *, attempts: int = MODEL_RETRY_ATTEMPTS) -> None:
+    def __init__(
+        self,
+        *,
+        attempts: int = MODEL_RETRY_ATTEMPTS,
+        identity: str = "",
+        provider: Provider | None = None,
+    ) -> None:
         super().__init__()
         self.attempts = max(1, attempts)
+        # Who to cool down when the retries were not enough. Both empty for a
+        # caller that injected its own model — there is no credential of ours
+        # to attribute the limit to, and guessing one would bench a tier for
+        # somebody else.
+        self.identity = identity
+        self.provider = provider
 
     def _report(self, exc: Exception, attempt: int, delay: float) -> None:
         code = classify_error(exc)
@@ -774,13 +798,29 @@ class ReportedRetryMiddleware(AgentMiddleware):
 
     def _give_up(self, exc: Exception, attempt: int) -> bool:
         if attempt >= self.attempts or not is_retryable(exc):
-            return True
+            return self._done(exc)
         # A provider asking for longer than the cap is not "having a moment";
         # waiting the cap and retrying only fails again. pi fails immediately
         # above its limit for the same reason, and the code on the failure
         # ("rate limited") is the truth the user can act on.
         asked = retry_after_seconds(exc)
-        return asked is not None and asked > MODEL_RETRY_HEADER_MAX_DELAY
+        if asked is not None and asked > MODEL_RETRY_HEADER_MAX_DELAY:
+            return self._done(exc)
+        return False
+
+    def _done(self, exc: Exception) -> bool:
+        """Always gives up. Records a rate limit on the way out.
+
+        This is the one place that knows the difference between a provider
+        having a moment and a provider genuinely out of quota — everything
+        above it is still retrying. Only RATE_LIMITED is recorded: a rejected
+        key must keep failing loudly rather than quietly demoting a tier for
+        five minutes.
+        """
+        if self.identity and self.provider is not None:
+            if classify_error(exc) is ErrorCode.RATE_LIMITED:
+                note_exhausted(self.identity, self.provider, seconds=retry_after_seconds(exc))
+        return True
 
     async def awrap_model_call(self, request, handler):  # type: ignore[override]
         for attempt in range(1, self.attempts + 1):

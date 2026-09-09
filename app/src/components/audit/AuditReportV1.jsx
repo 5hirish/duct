@@ -8,7 +8,6 @@ import {
   ExecutionClosingLine,
   ExecutionRequestModal,
 } from './ExecutionOffer';
-import { trackEvent } from '../../lib/analytics-client';
 import { capitalize } from "@/lib/format";
 
 // ---------------------------------------------------------------------------
@@ -313,7 +312,7 @@ function CategoryBarChartCSS({ categories }) {
                   transition: `width 0.9s cubic-bezier(0.4,0,0.2,1) ${i * 55}ms`,
                 }} />
             </div>
-            <span className="text-xs font-semibold tabular-nums shrink-0 w-6 text-right"
+            <span className="text-xs font-semibold numeric shrink-0 w-6 text-right"
               style={{ color }}>{cat.score}</span>
           </div>
         );
@@ -786,7 +785,6 @@ export default function AuditReportV1({ data, leadToken = null, email = null }) 
   );
   const [execOpen, setExecOpen] = React.useState(false);
   const openExec = React.useCallback((source) => {
-    trackEvent('execution_modal_opened', { source });
     setExecOpen(true);
   }, []);
 

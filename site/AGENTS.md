@@ -82,7 +82,7 @@ another port (the tests assume 8090).
 | File | Purpose |
 |---|---|
 | `site/assets/duct.css` | All brand styles |
-| `site/assets/duct.js` | GTM init, scroll reveal, nav shadow |
+| `site/assets/duct.js` | Consent gate + GTM init, scroll reveal, nav shadow |
 | `site/assets/duct-download.js` | Resolves the latest release; upgrades `[data-duct-download]` CTAs |
 | `site/assets/config.js` | `DUCT_CONFIG.gtm` only |
 | `site/assets/demo.css` | All shared interactive demo CSS (~800 lines) |
@@ -332,4 +332,11 @@ empty project and exits 0.
 - Do not add npm tooling.
 - Do not create `.env` files.
 - Do not hardcode the GTM ID in page JavaScript.
+- **Do not load a tag outside the consent gate.** `duct.js` declares Consent
+  Mode defaults as denied, then loads GTM only after a stored choice — or,
+  outside the EEA/UK/CH, after `/cdn-cgi/trace` says the visitor is somewhere
+  the default may be measurement. A script tag added straight to a page bypasses
+  all of it. Anything new goes in the container, behind the same gate.
+  `tests/e2e/consent.spec.js` covers this; it runs against `localtest.me`
+  because the gate deliberately does nothing on localhost.
 - Do not put page-specific styles into `site/assets/duct.css`; use an inline `<style>` block when needed.

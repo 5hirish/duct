@@ -30,7 +30,7 @@ const SEGMENT_LABELS = {
   connections: "Connections",
   projects: "Projects",
   project: "Project",
-  onboarding: "Onboarding",
+  start: "Get started",
   new: "New",
 };
 

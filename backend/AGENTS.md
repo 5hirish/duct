@@ -69,6 +69,28 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   rather than re-priming from the transcript (the DB re-prime remains for
   conversations recorded before the thread was durable).
 
+  **Images are a second provider inside a content run, and not a fixed one.**
+  The conversation runs on whatever key the user brought for chat; the pictures
+  run on whatever *image-capable* key they brought — Gemini, OpenAI or xAI, in
+  that order of preference (`agents/models.IMAGE_PROVIDER_ORDER`). The seam is
+  `service/images/`: one request shape, one `ImageAPIError`, one factory
+  (`image_client_for`), three backends (`service/google/gemini/client.py`,
+  `service/openai/images.py`, `service/xai/images.py`). `routes/content.py`
+  resolves the image run once per session (`agents/engines.resolve_image_run`)
+  and stashes provider + key on it; the tools spend that or decline, and the
+  decline names all three providers. The agent's tool schema still defaults to
+  the Gemini model id, so `image_model_for` swaps in the resolved provider's
+  default rather than refusing — the agent asked for an image, not a Google
+  image. Adding a backend means a client module, an `ImageModel` entry whose
+  prefix `provider_of` recognises, a `DEFAULT_IMAGE_MODELS` row, and a branch in
+  the factory; `/providers/status` and `/models/catalogue` derive the settings
+  page's Images row from those same tables, so nothing in the browser lists a
+  model. The ChatGPT-subscription route (`agents/core/codex.py`) is deliberately
+  not an image backend: it can draw through Codex's hosted tool, but OpenAI's
+  own docs scope subscription sign-in to Codex products and it is Plus-and-up,
+  per-minute-quota'd, and unofficial — the wrong thing to put a customer's slide
+  deck on.
+
   Two consequences, stated rather than discovered later. **Content on Claude now
   needs an API key** — `routes/content.py` refuses the subscription credential with
   the same 402 the browser already handles. And **the model only sees the images it
@@ -95,11 +117,18 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   catalog's dispatch key was renamed `tool` → `fetch_fn`: it names an internal
   function, and only looked like a tool reference while those tools existed.
 
-  One consequence, deliberately recorded rather than discovered later: **nothing now
-  wires a ChatGPT subscription into an insights run.** `should_use_codex` /
-  `build_codex_chat` were branched only inside the deleted `agent.py`;
-  `agents/core/codex.py` and its tests remain, but no live path calls them. Re-wiring
-  that belongs in `agents/core/lc.resolve_chat_model`, where every runner would get it.
+  **A ChatGPT plan is now a live OpenAI credential**, wired where the note above
+  said it should be: `agents/core/lc.resolve_chat_model` sends a subscription
+  credential to `_ChatOpenAICodex` (`agents/core/codex.py`), so every runner gets
+  it. The credential is the *access token* the desktop shell minted — it arrives
+  in `X-Provider-OpenAI` beside `X-OpenAI-Account-Id`, `service/auth.py` packs the
+  two into one string, and the shape (a JWT, not `sk-…`) is what routes it.
+  `ProviderKey.source` is `subscription`; it is the user's own plan, never billed
+  to Duct. The refresh token never reaches the backend, `PUT /providers/openai/key`
+  refuses to store a token, and background jobs (no request, no header) still
+  need an API key. `CHATGPT_AUTH_ENABLED=false` is the kill switch the app reads
+  from `/api/providers/status` — the Codex backend is undocumented and the path
+  can stop working without notice.
 
   So a shared change is made once. Claude remains a first-class *model* through
   V1, which is why retiring its SDK cost no model coverage.
@@ -142,7 +171,11 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   exist. `routes/artifacts.py` is the reference; `routes/content.py` declares
   `get_current_user` **on the router** so endpoint 45 cannot be written without
   it, and `tests/test_content_access.py` asserts that property directly.
-- **Email:** `service/email/` — Resend when `RESEND_API_KEY` is set, otherwise a logging console backend so dev/CI need no vendor account.
+- **Email:** `service/email/` — one seam (`send_email`) over swappable providers in
+  `service/email/providers/`, the only place a mail vendor is named. `EMAIL_PROVIDER`
+  picks one; unset takes the first with credentials (Cloudflare, then Resend) and
+  falls back to `console`, which logs, so dev/CI/self-host need no vendor account.
+  Same shape as the app's analytics seam, for the same reason: a fork swaps one file.
 - **Observability:** Sentry error tracking; optional OpenTelemetry tracing — V1 emits its own GenAI spans (`agents/core/telemetry.py`).
 - **Hosting:** Railway — auto-deploys from `main` via GitHub integration; `railway.json` defines Railpack build + uvicorn start.
   `railpack.json` sits beside it and configures the **builder**, where
@@ -192,6 +225,32 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   fixture in `conftest.py`: the real harness runs, only the model is canned.
   Assert on events, tool names and payloads, not on prompt prose — a wording
   test fails on every copy edit and catches nothing an eval would not.
+- **The offline suite cannot open a socket.** `conftest.py`'s autouse
+  `no_network` fixture raises on `socket.connect` for anything not marked
+  `live`, so a test that forgets to fake its transport fails naming the seam it
+  forgot rather than passing on the author's machine and nowhere else. It
+  blocks loopback too, deliberately: an agent sandbox or a corporate runner
+  exports `HTTPS_PROXY=http://localhost:<port>`, so a guard that waves loopback
+  through waves the whole internet through, silently, in exactly the
+  environments most likely to be holding a key.
+- **Fake at the seam the vendor gives you, and put the fake in
+  `tests/fakes.py`.** For the sync reporting connectors that is the vendor's own
+  `api()` wrapper; for the retry loop underneath them it is `service/rest.py`,
+  covered directly by `tests/test_rest_transport.py` because five connectors
+  share it and a regression there lands on all of them at once. For Google Ads
+  it is `FakeAdsClient`, which keeps the library's local machinery — `get_type`,
+  `enums`, `copy_from`, the GAPIC path helpers — and replaces only
+  `get_service`. That distinction is the point: a stub made of attribute bags
+  passes while the field is misspelled and the enum is not a member, which is
+  the whole class of bug worth catching in code that changes what a customer
+  spends. Building a real `GoogleAdsClient` refreshes OAuth against Google at
+  construction time, so `FakeAdsClient` is also the only offline way into those
+  executors at all. GA4 has the same problem for the same reason —
+  `discovery.build()` fetches the discovery document before it returns a client
+  — and `FakeDiscoveryService` answers the fluent chain by dotted call path
+  (`"properties.keyEvents.list"`). The GTM fake in `test_execution_policy.py`
+  stays where it is on purpose: it keeps container state so it can answer a read
+  that follows a write, which is a different job from replaying canned answers.
 
 ### Desktop (local sidecar) mode
 
@@ -257,6 +316,66 @@ automatically: `railway.json` only starts uvicorn and there is no CI migration j
 - `service/google/schema.py` — typed Google Ads brief payload (dataclasses / JSON contract)
 - `agents/insights/prompts.py` — synthesis system + user prompts (e.g. Google Ads weekly insight brief)
 - `routes/auth.py` — OAuth by connector (`/auth/connectors/{connector_id}/oauth/...`)
+- `routes/signin.py` — Google sign-in, and the **guest**: `POST /auth/guest`
+  mints a real `users` row keyed on an install id so an audit can run before
+  anyone signs in; `/auth/guest/link-code` + `?link=` on authorize lets the
+  Google callback link the account to that guest or merge the guest into an
+  existing one (`service/user_store.py::absorb_guest`, which walks the schema
+  for owner columns rather than keeping a list). Never make an owner column
+  nullable for this — a guest is why they need not be.
+  `?sources=onboarding` on authorize is the **onboarding bundle**: the same
+  sign-in also asking for the Search Console and Analytics *read* scopes,
+  offline grant, consent forced; the callback stores one
+  `connector_credentials` row per scope Google actually granted
+  (`service/signin_sources.py`, through the same upsert the Connections page
+  uses, `service/connector_store.py`). It exists for exactly one surface —
+  the connector prompt on the onboarding audit, for a guest — and every other
+  sign-in and every connector flow stays as it was. Never add a write scope to
+  the bundle; a connector asks for those itself, with its justification on
+  screen (`service/connector_scopes.py`).
+- `routes/audit_prefetch.py` — the crawl onboarding starts the moment a URL
+  validates (`agents/audit/prefetch.py`): root page now, the rest in the
+  background, handed to `run_pipeline` by `crawl_id`. Duct's bandwidth only;
+  inference never runs here.
+- `agents/audit/draft.py` — the project drafted from the crawl, two layers
+  (`crawl` deterministic, `inferred` one structured call), emitted as
+  `PROJECT_DRAFT` when a run sets `draft_project`. Never infers the North
+  Star; the agent asks for it in chat.
+- `agents/engines.resolve_job_run` — provider and model over the keys *this
+  caller* can spend, so a user holding only an OpenAI key runs on OpenAI
+  instead of a 402 for the instance default. All three agents route through
+  it now: audit directly, insights via `agents/insights/setup.resolve_run`
+  (which serves both the live session and the scheduled brief), content via
+  `routes/content._resolve_run_model`. `resolve_run_model` remains for callers
+  that have no job to name.
+- `models/settings.py` + `service/model_settings.py` — the tier map and the
+  fallback switch, keyed by user. They used to live in `localStorage` and ride
+  on each request, which meant the scheduled brief — the run whose owner is
+  definitely not watching — could not read the preference its owner had set.
+  The browser's copy is now a cache of this, and on disagreement the server
+  wins.
+- `agents/core/quota.py` — a 429 the retry loop gave up on, remembered for a
+  few minutes so the next run resolves to a tier that can serve. Keyed by
+  `(HMAC-SHA256(process salt, key)[:16], provider)` and **never by provider
+  alone**: Duct is
+  multi-tenant with bring-your-own keys, so one customer's rate limit says
+  nothing about another's. In-process and deliberately not durable — a
+  cooldown is a hint, and the worst case on a fresh worker is one wasted 429.
+  Recorded in `ReportedRetryMiddleware._give_up`, consumed by
+  `agents/tiers.resolve_tier_model`'s `cooling` set, reported to the browser
+  as `tier_skipped` on `PIPELINE_STARTED`. See
+  `docs/engineering/quota-aware-tier-ladder.md`.
+- `POST /api/providers/{id}/verify` — one real completion on the provider's
+  Light model, classified into `invalid_key` / `no_billing` / `model_access`
+  / `rate_limited` / `unreachable`, or for a ChatGPT credential
+  `subscription_quota` / `subscription_revoked` / `subscription_blocked`. The
+  only endpoint that can tell a pasted key from a working one.
+- The audit agent mounts the insights agent's connector tools
+  (`agents/core/connector_tools.py`): `ListDataSources` always, `SelectAccount`
+  and `RequestConnection` when the run has a project. The system prompt holds
+  the rule (Search Console only, after the report, once); the onboarding
+  audit's user turn (`draft_project`) is the trigger, so the cached prefix is
+  identical across every other audit.
 - `routes/generate.py` — `POST /api/insights/generate` for interactive brief + LangChain synthesis envelope
 - `routes/project_members.py` — project members + email invitations (`docs/engineering/project-collaboration-plan.md`)
 - `service/membership.py` — project access checks (owner vs collaborator) and invite token handling
@@ -468,6 +587,17 @@ don't fit.
   of the human-in-the-loop port. Extracted from `agents/audit/v1/runner.py` when
   insights became the second V1 runner. A V1 runner should not talk to
   `init_chat_model` or drive `astream` itself.
+- `agents/core/compaction.py` — lossless payload compaction, applied to a
+  connector result before it reaches the model. Folds a homogeneous row array
+  to typed CSV; **verifies the result structurally and discards a fold that
+  lost anything**, because `lossless_only` does not gate every path in the
+  library underneath (an array of identical strings is still collapsed). Off
+  is not "the model sees everything" — off is the mid-structure cut in
+  `agents/insights/data_tools.py`, which on a 900-row pull drops about two
+  thirds of the numbers. Absent dependency degrades to plain JSON, so a
+  self-host build without the Rust extension still runs. Reached from a
+  `UserPreferences` flag (`context_compression`, default on) threaded through
+  the runner the same way `artifact_format` is.
 - `service/artifact_store.py` — versioned artifact persistence. `ArtifactPersister`
   wraps a runner's emit and stores every `ARTIFACT_VERSION` event; an **adapter**
   (`ArtifactVersion` + a `Callable[[dict], ArtifactVersion]`) reads one version out

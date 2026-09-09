@@ -1,4 +1,4 @@
-/* connections — Connection cards on the connections and onboarding surfaces.
+/* connections — Connection cards on the connections surface.
    Split out of globals.css; see that file for the load order. */
 .connection-grid {
   display: grid;

@@ -130,9 +130,11 @@ def test_web_failures_keep_their_json_contract(monkeypatch):
 def test_an_unexpected_crash_is_still_an_explainable_page(monkeypatch):
     """The catch-all: whatever breaks next, the user does not get a dead page."""
     monkeypatch.setattr(signin, "get_configs", lambda: _Cfg(duct_local=True))
+    # The callback consumes state through `consume_state_full` (it needs the
+    # guest link id the older shape does not carry); break that one.
     monkeypatch.setattr(
         signin,
-        "consume_state_for_flows",
+        "consume_state_full",
         lambda *a, **k: (_ for _ in ()).throw(RuntimeError("boom")),
     )
 
@@ -152,7 +154,11 @@ def test_an_unexpected_crash_is_still_an_explainable_page(monkeypatch):
 
 async def _authorize(client: str = "") -> object:
     request = SimpleNamespace(client=SimpleNamespace(host="127.0.0.1"))
-    return await signin.signin_google_authorize(request, turnstile_token="", client=client)
+    # Called directly, so FastAPI's `Query` defaults are not applied — every
+    # query parameter has to be spelled out or it arrives as a `Query` object.
+    return await signin.signin_google_authorize(
+        request, turnstile_token="", client=client, link="", sources=""
+    )
 
 
 @pytest.mark.asyncio

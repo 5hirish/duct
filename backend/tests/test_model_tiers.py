@@ -16,6 +16,7 @@ from agents.tiers import (
     DEFAULT_TIER_MODELS,
     JOB_TIER,
     PROVIDER_TRIPLES,
+    SKIP_COOLED_DOWN,
     SKIP_ENGINE,
     SKIP_NO_CREDENTIAL,
     TIER_ORDER,
@@ -292,6 +293,7 @@ def test_a_server_key_reads_as_env_locally_and_as_nothing_when_deployed(monkeypa
         openai_api_key = ""
         anthropic_api_key = ""
         openrouter_api_key = ""
+        chatgpt_auth_enabled = True
 
         def __init__(self, local):
             self.duct_local = local
@@ -306,3 +308,69 @@ def test_a_server_key_reads_as_env_locally_and_as_nothing_when_deployed(monkeypa
         google = next(r for r in rows if r["id"] == Provider.GOOGLE_GENAI.value)
         assert google["source"] == expected
         assert google["reachable"] is (expected != "none")
+
+
+# ---------------------------------------------------------------------------
+# Quota cooldown — a tier the caller has a key for, that is out of quota now
+# ---------------------------------------------------------------------------
+
+
+def test_a_cooled_tier_is_skipped_and_says_so():
+    """Distinct from `no_credential`, which is what makes the message useful.
+
+    "You have no key for this" and "your key is out of quota for the next few
+    minutes" call for different actions from the user, so they cannot collapse
+    into one reason.
+    """
+    mixed = {**ANTHROPIC_MAP, "standard": ModelName.GPT_5_6_TERRA.value}
+    got = resolve_tier_model(
+        Job.ANALYSIS,
+        Engine.V1,
+        tier_map=mixed,
+        reachable=ALL_PROVIDERS,
+        cooling=frozenset({Provider.ANTHROPIC}),
+    )
+    # Heavy is Anthropic and cooled; Standard is OpenAI and fine.
+    assert got.tier is Tier.STANDARD
+    assert got.model is ModelName.GPT_5_6_TERRA
+    assert got.skipped == ((Tier.HEAVY, SKIP_COOLED_DOWN),)
+
+
+def test_a_cooled_tier_is_not_a_missing_credential():
+    got = resolve_tier_model(
+        Job.ANALYSIS,
+        Engine.V1,
+        tier_map={**ANTHROPIC_MAP, "standard": ModelName.GPT_5_6_TERRA.value},
+        reachable=ALL_PROVIDERS,
+        cooling=frozenset({Provider.ANTHROPIC}),
+    )
+    assert SKIP_NO_CREDENTIAL not in {reason for _, reason in got.skipped}
+
+
+def test_the_floor_ignores_cooling():
+    """When every tier is cooled, run anyway.
+
+    A 429 the user can retry beats a 402 they cannot act on, and a run that
+    refuses to start is strictly worse than one that starts and might succeed —
+    the window may have reset since we last heard from the provider. The floor
+    is the floor.
+    """
+    got = resolve_tier_model(
+        Job.ANALYSIS,
+        Engine.V1,
+        tier_map=ANTHROPIC_MAP,
+        reachable=ALL_PROVIDERS,
+        cooling=ALL_PROVIDERS,
+    )
+    assert got is not None
+    assert got.engine_default
+    assert got.tier is None
+
+
+def test_cooling_nobody_changes_nothing():
+    """The happy path must be untouched by the parameter existing."""
+    plain = resolve_tier_model(Job.ANALYSIS, Engine.V1, tier_map=ANTHROPIC_MAP, reachable=ALL_PROVIDERS)
+    with_empty = resolve_tier_model(
+        Job.ANALYSIS, Engine.V1, tier_map=ANTHROPIC_MAP, reachable=ALL_PROVIDERS, cooling=frozenset()
+    )
+    assert plain == with_empty

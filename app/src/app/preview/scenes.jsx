@@ -19,6 +19,10 @@
 
 import { useState } from "react";
 
+import ContextCompressionCard from "@/components/ContextCompressionCard.jsx";
+import { CornerNotice } from "@/components/ui/corner-notice";
+import { FolderOpen, RefreshCw } from "lucide-react";
+import { CookieConsent } from "@/components/CookieConsent";
 import LoadError from "@/components/LoadError";
 import ConnectorDialog from "@/components/connections/ConnectorDialog";
 import ConnectorPermissions from "@/components/connections/ConnectorPermissions";
@@ -136,6 +140,70 @@ function Row({ children }) {
 }
 
 export const SCENES = [
+  {
+    id: "project-drafted-notice",
+    state: "an audit added to a project that already existed",
+    group: "AuditWorkspace",
+    title: "Duct changed a project you already had",
+    note: "Onboarding writes what the crawl learned into a project, and when that project is one the user already had, the write happens in the background while they read the report. This is the only thing telling them. Check that the copy leads with reassurance rather than alarm — nothing has gone wrong, and the merge rules mean nothing they typed was touched — and that a long project name still leaves the title on two lines at most.",
+    render: () => (
+      <CornerNotice
+        icon={FolderOpen}
+        title="Added to your Northwind Trading — EMEA marketing site project"
+        onDismiss={() => {}}
+        dismissLabel="Dismiss project update"
+        actions={
+          <Button size="sm" variant="outline">Review what changed</Button>
+        }
+      >
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          Duct filled in what it learned from your site. Anything you had entered yourself was left
+          alone, and every drafted field is marked.
+        </p>
+      </CornerNotice>
+    ),
+  },
+  {
+    id: "reload-notice",
+    state: "new build available",
+    group: "ReloadToast",
+    title: "A new web build is ready",
+    note: "ReloadToast mounts itself off a version poll, so it is unreachable in dev (no baked build id) — this is its body in the real primitive. Check that the copy names what a reload costs: this app holds long agent runs and unsent input, so 'refresh for the latest' would be true and would still lose someone's work. The `notification` surface positions it; here it is inline so the text can be measured.",
+    render: () => (
+      <CornerNotice
+        icon={RefreshCw}
+        title="A new version of Duct is ready"
+        onDismiss={() => {}}
+        actions={
+          <>
+            <Button size="sm">Reload</Button>
+            <Button size="sm" variant="ghost">Later</Button>
+          </>
+        }
+      >
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          This tab is running an older build. Reloading picks up the new one — finish anything
+          you have in progress first, it will not wait for you.
+        </p>
+      </CornerNotice>
+    ),
+  },
+  {
+    id: "context-compression",
+    state: "on (default) — toggle for off",
+    group: "ContextCompressionCard",
+    title: "Context compression",
+    note: "Both descriptions have to read as a real choice, so click the switch: off must say what the user loses, not just that a feature is off. Watch the card height across the two — the off copy is a line longer, and a card that jumps as you toggle it reads as a glitch. It is the only card in its section, so it takes the content width rather than a conn-grid track — a lone 288px card on a wide page reads as a leftover.",
+    render: () => <ContextCompressionCard />,
+  },
+  {
+    id: "cookie-consent",
+    state: "asking",
+    group: "CookieConsent",
+    title: "The consent question",
+    note: "Decline and Accept are the same control at the same size — a Decline styled as a text link is the specific thing the AEPD treats as no consent at all. Check the mobile width: the two buttons stay side by side and equal, they do not stack with Accept on top.",
+    render: () => <CookieConsent onAccept={() => {}} onDecline={() => {}} />,
+  },
   {
     id: "load-error",
     state: "failed",

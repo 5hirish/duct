@@ -9,6 +9,7 @@ import {
   decodeJwtPayload,
   isTokenValid,
 } from "./authFetch";
+import { analytics } from "./analytics";
 
 const AuthContext = createContext(null);
 
@@ -27,12 +28,24 @@ export function AuthProvider({ children }) {
         email: payload.sub,
         name: payload.name,
         picture: payload.picture,
+        // A guest holds a real token for a real row (lib/guest.js); this is
+        // what lets the shell say "save your work" instead of an email
+        // nobody chose.
+        guest: payload.guest === true,
       });
+      // The account UUID, not `sub` — that is the email, and it must not reach
+      // an analytics provider. Safe before consent resolves: nothing drains the
+      // dataLayer until a provider actually loads, and if the answer is no it
+      // never does.
+      analytics.identify(payload.uid);
     }
     setLoading(false);
   }, []);
 
   const signOut = useCallback(() => {
+    // Before the state clears: whoever signs in next on this machine should not
+    // inherit the last person's id.
+    analytics.reset();
     clearAuthToken();
     setUser(null);
     setToken(null);

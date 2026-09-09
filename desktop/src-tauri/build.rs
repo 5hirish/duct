@@ -39,6 +39,10 @@ fn main() {
             "install_update",
             "get_telemetry_settings",
             "set_telemetry_enabled",
+            "chatgpt_status",
+            "chatgpt_login",
+            "chatgpt_credential",
+            "chatgpt_logout",
         ])),
     )
     .expect("failed to run tauri-build");

@@ -213,7 +213,10 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-        run: npm run tauri -- build --target universal-apple-darwin --bundles app,dmg,updater
+          # Ships crash reporting on by default. Set only here, so a
+          # self-host build stays opt-in — see src-tauri/src/telemetry.rs.
+          DUCT_TELEMETRY_DEFAULT_ON: "1"
+        run: npm run tauri -- build --features crash-reporting --target universal-apple-darwin --bundles app,dmg,updater
 
       # A universal binary that is not actually universal still runs fine on the
       # runner, so nothing else here would catch it — and the people it fails for
@@ -297,7 +300,10 @@ jobs:
           APPIMAGE_EXTRACT_AND_RUN: '1'
           GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-        run: npm run tauri -- build --bundles deb,appimage,updater
+          # Ships crash reporting on by default. Set only here, so a
+          # self-host build stays opt-in — see src-tauri/src/telemetry.rs.
+          DUCT_TELEMETRY_DEFAULT_ON: "1"
+        run: npm run tauri -- build --features crash-reporting --bundles deb,appimage,updater
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
@@ -342,7 +348,10 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-        run: npm run tauri -- build --bundles nsis,updater
+          # Ships crash reporting on by default. Set only here, so a
+          # self-host build stays opt-in — see src-tauri/src/telemetry.rs.
+          DUCT_TELEMETRY_DEFAULT_ON: "1"
+        run: npm run tauri -- build --features crash-reporting --bundles nsis,updater
 
       # v0.4.0 shipped with no Windows entry in latest.json, so every Windows
       # install polls forever and is never offered an update. Tauri signs the

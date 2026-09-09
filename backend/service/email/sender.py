@@ -1,109 +1,86 @@
-"""Provider-agnostic transactional email sending."""
+"""The email seam.
+
+Everything above this line decides *what* to say — the templates, and the
+routes that choose to say it. Everything below it decides *how*, and names a
+vendor. Mirrors `app/src/lib/analytics/index.js` and
+`desktop/src-tauri/src/telemetry/`, for the same reason: the builds we
+distribute send mail through an account we hold, and a fork should be able to
+point that at its own provider, or at nothing, without reading our routes.
+
+Selected by ``EMAIL_PROVIDER``. Unset picks the first provider that has
+credentials, in ``_AUTO_ORDER``, and ``console`` when none do — so an existing
+deploy keeps its behaviour, and a self-hosted install that configures no vendor
+still runs every flow, logging what it would have sent.
+"""
 
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
-
-import httpx
 
 from config import Configs, get_configs
+from service.email.message import Attachment, EmailMessage, EmailResult
+from service.email.providers import EmailProvider, cloudflare, console, resend
 
 logger = logging.getLogger(__name__)
 
-_RESEND_ENDPOINT = "https://api.resend.com/emails"
-_TIMEOUT_SECONDS = 10.0
+PROVIDERS: dict[str, EmailProvider] = {
+    cloudflare.NAME: cloudflare,
+    resend.NAME: resend,
+    console.NAME: console,
+}
 
-
-@dataclass(frozen=True)
-class EmailMessage:
-    """A rendered message, ready to hand to a provider."""
-
-    to: str
-    subject: str
-    html: str
-    text: str
-    reply_to: str | None = None
-
-
-@dataclass(frozen=True)
-class EmailResult:
-    """Outcome of one send. ``delivered`` is False only on a real failure —
-    the console backend reports True so callers can't accidentally treat a
-    provider-less environment as broken."""
-
-    delivered: bool
-    backend: str
-    provider_id: str = ""
-    error: str = ""
+# Which configured provider wins when EMAIL_PROVIDER is unset. Cloudflare leads
+# because the rest of the stack is already there; console is not a candidate
+# here — it is what you get when nothing else answers.
+_AUTO_ORDER = (cloudflare.NAME, resend.NAME)
 
 
 def active_backend(cfg: Configs | None = None) -> str:
-    """``"resend"`` when an API key is configured, else ``"console"``."""
+    """Name of the provider that would handle the next send."""
     settings = cfg or get_configs()
-    return "resend" if settings.resend_api_key else "console"
 
+    requested = settings.email_provider.strip().lower()
+    if requested:
+        if requested in PROVIDERS:
+            return requested
+        # A typo here would otherwise send nothing and say nothing, which is the
+        # failure you discover a month later from a user who never got invited.
+        logger.warning(
+            'Unknown EMAIL_PROVIDER "%s" — falling back to console. Known providers: %s.',
+            requested,
+            ", ".join(PROVIDERS),
+        )
+        return console.NAME
 
-def _from_header(cfg: Configs) -> str:
-    name = cfg.email_from_name.strip()
-    address = cfg.email_from.strip()
-    return f"{name} <{address}>" if name else address
+    for name in _AUTO_ORDER:
+        if PROVIDERS[name].configured(settings):
+            return name
+    return console.NAME
 
 
 async def send_email(message: EmailMessage, cfg: Configs | None = None) -> EmailResult:
-    """Send one message through the configured backend. Never raises —
-    delivery is best-effort and the caller decides how loudly to fail."""
+    """Send one message through the active provider. Never raises — delivery is
+    best-effort and the caller decides how loudly to fail."""
     settings = cfg or get_configs()
-    backend = active_backend(settings)
+    provider = PROVIDERS[active_backend(settings)]
 
-    if backend == "console":
-        logger.info(
-            "[email:console] to=%s subject=%s\n%s",
-            message.to,
-            message.subject,
-            message.text,
-        )
-        return EmailResult(delivered=True, backend="console")
+    if not message.to:
+        # Reaches here from a config-derived recipient list that turned out
+        # empty; a provider would answer with an opaque 400.
+        logger.warning("Refusing to send %r with no recipients", message.subject)
+        return EmailResult(delivered=False, backend=provider.NAME, error="no recipients")
 
-    payload: dict[str, object] = {
-        "from": _from_header(settings),
-        "to": [message.to],
-        "subject": message.subject,
-        "html": message.html,
-        "text": message.text,
-    }
-    if message.reply_to:
-        payload["reply_to"] = message.reply_to
-
-    try:
-        async with httpx.AsyncClient(timeout=_TIMEOUT_SECONDS) as client:
-            response = await client.post(
-                _RESEND_ENDPOINT,
-                json=payload,
-                headers={"Authorization": f"Bearer {settings.resend_api_key}"},
-            )
-    except httpx.HTTPError as exc:
-        logger.warning("Resend request failed for %s: %s", message.to, exc)
-        return EmailResult(delivered=False, backend="resend", error=str(exc))
-
-    if response.status_code >= 400:
-        # Resend echoes the recipient in error bodies; log the status and a
-        # short excerpt rather than the whole payload.
+    if provider is not console and not provider.configured(settings):
+        # Only reachable when EMAIL_PROVIDER names a provider whose credentials
+        # are missing. Explicit beats silent: this is a deployment mistake.
         logger.warning(
-            "Resend rejected message to %s: %s %s",
-            message.to,
-            response.status_code,
-            response.text[:200],
+            "EMAIL_PROVIDER=%s but it is not configured — not sending %r",
+            provider.NAME,
+            message.subject,
         )
-        return EmailResult(
-            delivered=False,
-            backend="resend",
-            error=f"resend responded {response.status_code}",
-        )
+        return EmailResult(delivered=False, backend=provider.NAME, error="not configured")
 
-    provider_id = ""
-    try:
-        provider_id = str(response.json().get("id", ""))
-    except ValueError:
-        pass
-    return EmailResult(delivered=True, backend="resend", provider_id=provider_id)
+    return await provider.send(message, settings)
+
+
+__all__ = ["Attachment", "EmailMessage", "EmailResult", "active_backend", "send_email"]

@@ -115,9 +115,10 @@ def upgrade() -> None:
     )
 
     if op.get_bind().dialect.name == 'postgresql':
-        # Concatenated rather than interpolated: this is DDL with no input at
-        # all, but interpolation reads as raw-SQL construction to
-        # scripts/security/audit.py and blocks CI as a CRITICAL.
+        # DDL with no input at all — _FTS_EXPRESSION is a module literal and
+        # this body runs once under alembic. scripts/security/audit.py reads it
+        # as raw-SQL construction regardless, so it is baselined by line in
+        # .security-audit-baseline.json.
         op.execute(
             "CREATE INDEX ix_project_memories_fts ON project_memories "
             "USING GIN (" + _FTS_EXPRESSION + ")"

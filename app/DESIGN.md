@@ -76,6 +76,15 @@ arbitraries (see Known gaps). Hierarchy comes from weight and color, not a
 parade of sizes (Refactoring UI: 2–3 weights, 2–3 text colors; de-emphasize
 the secondary rather than enlarging the primary).
 
+**Figures.** DM Sans ships **no tabular-figure feature**, and its digits run
+from 312 units for `1` to 684 for `0` — so `tabular-nums` on its own does
+nothing, however much it looks like it should. Anything that must line up (a
+numeric table column) or must not jump as it changes (a live counter) takes
+**`.numeric`**, which switches the digits to `--font-numeric` — JetBrains
+Mono, already loaded for code, so it costs nothing. A number inside a sentence
+("12 linked") does *not*: proportional figures are right in running text, and
+mono digits there read as code.
+
 **Color.** Two systems in `src/app/styles/tokens.css`: raw brand hexes
 (`--orange #ff5c00`, the navys) and the shadcn oklch semantic set. Dark mode
 is next-themes class-attribute with **pure token substitution** — no
@@ -138,6 +147,30 @@ visible text labels (NN/g: almost no icons are universal; hover-revealed
 labels raise interaction cost). Never put a themed pictogram next to a KPI —
 superfluous icons measurably slow visual search (NN/g dashboards research).
 Never use emoji as icons.
+
+**Illustration.** One system: square Roman mosaic threshold panels, in
+`app/public/art/mosaic/`. A threshold mosaic greets whoever arrives, so panels
+go **where someone arrives** — first run, a break, a dead end — and never
+mid-flow. That is the delight-scales-inversely-with-frequency rule above,
+applied to art: the rarer the surface, the more it can afford.
+
+Three rules decide whether a surface gets one. **Below 240px, don't** — the
+tesserae stop reading as tesserae and you have a smudge, so small inline empty
+states take a `size-8`–`12` lucide icon instead. **One per screen**, never a
+panel and a large icon in the same surface. And **the panel is always
+`aria-hidden`** — its Latin inscription is decoration, so the real heading is
+real HTML text beside it (`CDIV` in the tiles, "That page doesn't exist" in the
+markup).
+
+The strongest empty state in the app has no art at all: `DeskDayOne` replaced
+"No insights yet" with what Duct already knows, and information beat a picture.
+Reach for a panel when there is genuinely nothing useful to say, not to decorate
+a screen that has something.
+
+How to make one — palette, the three-zone construction, the letterform rules and
+the generation pipeline — is the [`mosaic-panel`](../.agents/skills/mosaic-panel/SKILL.md)
+skill. Never hand-edit a file in `app/public/art/mosaic/`; it is generated from
+the 1024px masters in `app/art-src/mosaic/` by `scripts/build_mosaic_assets.py`.
 
 ---
 

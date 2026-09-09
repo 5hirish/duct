@@ -14,9 +14,9 @@ from service.connectors import (
     entity_facts,
     register_connector,
 )
-from service.google.constants import GSC_CONNECTOR_ID
+from service.google.constants import GSC_CONNECTOR_ID, GSC_READ_SCOPE
 
-_GSC_SCOPE = "https://www.googleapis.com/auth/webmasters.readonly"
+_GSC_SCOPE = GSC_READ_SCOPE
 _TOKEN_URI = "https://oauth2.googleapis.com/token"
 
 

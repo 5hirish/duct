@@ -1,11 +1,17 @@
 {
   "version": 1,
   "fingerprints": [
-    "c9cdbd13e54920f9"
+    "42085a951c40603d",
+    "b4d4a134359bf1d2",
+    "c9cdbd13e54920f9",
+    "da1a55f2b9a7523b"
   ],
   "notes": {
-    "c9cdbd13e54920f9": "False positive — app/src/lib/adsCredentials.js. The scanner matches the string literals 'google_ads_developer_token' and 'gads_developer_token', which are a keychain provider id and a sessionStorage key, not secret values. The file reads tokens from the OS keychain or sessionStorage and never embeds one. Verified 2026-08-20; a full-history scan of all 434 revisions found no live credentials anywhere in the repo."
+    "c9cdbd13e54920f9": "False positive \u2014 app/src/lib/adsCredentials.js. The scanner matches the string literals 'google_ads_developer_token' and 'gads_developer_token', which are a keychain provider id and a sessionStorage key, not secret values. The file reads tokens from the OS keychain or sessionStorage and never embeds one. Verified 2026-08-20; a full-history scan of all 434 revisions found no live credentials anywhere in the repo.",
+    "42085a951c40603d": "False positive \u2014 backend/alembic/versions/a4e1c7d2b953_project_memories.py:122. semgrep sqlalchemy-execute-raw-query on the GIN index DDL. The statement concatenates _FTS_EXPRESSION (line 38), a module-level literal: a to_tsvector() over three coalesce()d column names, no interpolation. The body runs once under alembic with no parameters and no reachable caller input. Verified 2026-09-08.",
+    "b4d4a134359bf1d2": "False positive \u2014 backend/service/memory.py:686. semgrep avoid-sqlalchemy-text on the full-text WHERE clause. The only variable is the search string, and it travels as the bound parameter :fts_q in the db.execute(ranked, {'fts_q': ...}) below \u2014 never into the SQL text. What is concatenated is _FTS_SQL (line 439), a module-level literal. sa.text() is required because Postgres only uses the functional GIN index when the tsvector expression appears inline. Verified 2026-09-08.",
+    "da1a55f2b9a7523b": "False positive \u2014 backend/service/memory.py:688. The ts_rank ORDER BY half of the same query as b4d4a134359bf1d2; identical reasoning, same bound :fts_q. Verified 2026-09-08."
   },
   "generated_by": "scripts/security/audit.py",
-  "maintenance": "Only CRITICAL findings block CI, so only verified-false-positive criticals belong here. Add entries by hand with a note rather than running --write-baseline, which overwrites this file with every current finding and would silently suppress real HIGH/MEDIUM issues."
+  "maintenance": "Only CRITICAL findings block CI, so only verified-false-positive criticals belong here. Add entries by hand with a note rather than running --write-baseline, which overwrites this file with every current finding and would silently suppress real HIGH/MEDIUM issues. A fingerprint is sha256(severity|title|detail), and detail carries the file AND line \u2014 so an entry suppresses one line, not a file. Moving the code re-raises the finding, which is the intended behaviour: the note above it has to be re-earned."
 }

@@ -179,9 +179,10 @@ export const SURFACES = [
   {
     id: "toast",
     label: "Notification",
-    // The `UpdateToast` anatomy, which DESIGN.md makes canon and which is
-    // deliberately not a library. Reproduced as a position, not as a
-    // component, because there is no shared primitive to import.
+    // The corner-notice position. `ui/corner-notice` is the component (both
+    // UpdateToast and ReloadToast are built from it); this host reproduces
+    // only where it sits, so a scene can put *any* node in that corner —
+    // including one that is not a notice.
     host: (node) => (
       <div className="pointer-events-none fixed right-4 bottom-4 z-50 w-[min(24rem,calc(100vw-2rem))]">
         <div

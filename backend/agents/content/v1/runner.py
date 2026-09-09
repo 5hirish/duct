@@ -99,6 +99,7 @@ from agents.core.deep_session import (
     recorder_tool_hooks,
 )
 from agents.core.lc import build_ask_user_tool, inspection_chat_model, interrupt_pause, resolve_chat_model
+from agents.core.quota import credential_identity
 from agents.core.session import register_session
 from agents.core.web_tools import WEB_FETCH_TOOL, build_web_tools_lc
 from agents.engines import Engine, resolve_fallback_models
@@ -471,6 +472,11 @@ class ContentRunner:
             limits=LIMITS,
             session=session,
             fallbacks=fallbacks,
+            # Same condition as the fallback chain, for the same reason: a
+            # caller that handed us its own model handed us no credential, so
+            # there is nobody to cool down when the provider says no.
+            identity="" if injected_llm else credential_identity(self._api_key),
+            provider=None if injected_llm else self.provider,
             # The image tools return pictures on a vision provider; the bytes
             # must not follow the thread into every later checkpoint.
             prune_seen_images=self.vision,

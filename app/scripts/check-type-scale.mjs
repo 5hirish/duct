@@ -32,9 +32,15 @@ const CLEAN = new Set([
   "forms.css",
   "layout-grids.css",
   "mode-selector.css",
+  // Split out of generate.css when the wizard became the Project context
+  // page; it came out clean, so it goes straight onto the ratchet.
+  "project.css",
   "theme.css",
   "tokens.css",
   "typography.css",
+  // Written against the scale from the start, so it goes on the ratchet
+  // rather than onto the debt list it would otherwise have joined.
+  "usage.css",
 ]);
 
 const DECL = /font-size:\s*([^;}]+)[;}]/g;

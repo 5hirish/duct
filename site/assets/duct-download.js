@@ -128,6 +128,29 @@
     }
   }
 
+  /* The download click, which is the top of the desktop funnel and was the one
+   * conversion on this site nobody was counting.
+   *
+   * Delegated, because `wire()` rewrites these anchors and the /download page
+   * lists every installer directly — one listener covers both, and anchors that
+   * appear later. Matching on the release prefix as well as the attribute means
+   * a per-platform link on /download counts even though it never needed
+   * upgrading.
+   *
+   * Queued on dataLayer whether or not GTM has loaded; if the visitor declined
+   * cookies it never loads and the array is simply never drained. */
+  function osForHref(href) {
+    var slot = SLOTS.filter(function (s) { return href && href.indexOf(s.file) !== -1; })[0];
+    return (slot && slot.key) || detect() || '';
+  }
+
+  document.addEventListener('click', function (ev) {
+    var el = ev.target && ev.target.closest && ev.target.closest('a[data-duct-download], a[href*="' + LATEST + '"]');
+    if (!el) return;
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ event: 'download_started', os: osForHref(el.getAttribute('href') || '') });
+  }, true);
+
   window.DuctDownload = { load: load, detect: detect, mb: mb, urlFor: urlFor,
                           SLOTS: SLOTS, RELEASES: RELEASES, LATEST: LATEST, API: API };
 

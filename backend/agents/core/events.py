@@ -80,6 +80,7 @@ class AgentEvent(StrEnum):
     PLAN_GENERATED = "plan_generated"        # content: 30-day plan
     POST_DRAFT_UPDATED = "post_draft_updated"  # content: a post draft
     ARTIFACT_UPDATED = "artifact_updated"    # generic artifact created/revised (card in chat)
+    PROJECT_DRAFT = "project_draft"          # onboarding: fields learned about the site, each with provenance
     # Staged execution: a change-set card for the chat UI. Emitted when the
     # agent proposes a set AND when its state changes (auto-applied, rolled
     # back) — the UI upserts by change_set_id.
@@ -288,6 +289,7 @@ AG_UI_EVENT: dict[AgentEvent, str] = {
     AgentEvent.ARTIFACT_CHUNK:        "Custom",
     AgentEvent.ARTIFACT_VERSION:      "Custom",
     AgentEvent.ARTIFACT_UPDATED:      "Custom",
+    AgentEvent.PROJECT_DRAFT:         "Custom",
     AgentEvent.PLAN_GENERATED:        "Custom",
     AgentEvent.POST_DRAFT_UPDATED:    "Custom",
     AgentEvent.EXECUTION_PROPOSED:    "Custom",

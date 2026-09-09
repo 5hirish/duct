@@ -224,6 +224,9 @@ export default function AuditReport({
   onRetry,
   leadToken = null,
   leadEmail = null,
+  // Rendered in the header once there is a report — the share control, which
+  // the workspace owns because it knows the conversation and the project.
+  actions = null,
 }) {
   const iframeRef = useRef(null);
 
@@ -288,6 +291,7 @@ export default function AuditReport({
         </div>
         {hasReport && (
           <div className="flex items-center gap-1 shrink-0">
+            {actions}
             <button
               onClick={handleDownload}
               title="Download HTML report"

@@ -31,6 +31,7 @@ from agents.audit.schema import (
 )
 from agents.core.web_tools import build_web_tools_lc, web_search_available
 from agents.models import ModelName, Provider
+from service.project_config import BRAND_VOICE_OPTIONS
 
 logger = logging.getLogger(__name__)
 
@@ -113,6 +114,11 @@ Then identify 3–5 content gap topics: subjects competitors clearly cover that 
 {root_url} likely does not.
 
 Write 2–3 enrichment notes: short, coach-style observations about competitive opportunity.
+
+From the target site's OWN copy (not the competitors'), also fill:
+- personas: up to 2 buyer personas the copy is written for — name is a role or \
+segment, description one sentence of their goals and pains
+- brand_voice: exactly one of {[o.value for o in BRAND_VOICE_OPTIONS]}, judged from the tone
 
 Brand signals already extracted from the target site's crawl (do NOT re-research these):
 - content_pillars: {base.brand_content_pillars}
@@ -217,6 +223,8 @@ async def enrich_context(
         competitors=found.competitors,
         content_gaps=found.content_gaps,
         enrichment_notes=found.enrichment_notes,
+        personas=found.personas,
+        brand_voice=found.brand_voice,
     )
 
 

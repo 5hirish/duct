@@ -120,7 +120,9 @@ The design decisions with real reasoning behind them, rather than a diagram:
   and the bi-temporal model behind `project_memories`.
 - **[Staged execution](backend/service/execution/policy.py)** — why autonomy
   changes how often an agent interrupts, never what may auto-apply.
-- **[Insights architecture](docs/engineering/intelligent-insights-architecture-plan.md)**
+- **[Insights architecture](docs/engineering/autonomous-insights-agent-plan.md)** — the
+  insights agent as a session, not a wizard: connector autonomy, a verification
+  subagent that proves the number, and artifacts as markdown by default.
 
 ## Contributing
 

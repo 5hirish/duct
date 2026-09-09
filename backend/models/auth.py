@@ -54,7 +54,15 @@ class AuthIdentity(SQLModel, table=True):
     __tablename__ = "auth_identities"
     __table_args__ = (
         UniqueConstraint("provider", "provider_user_id", name="uq_auth_identity_provider_user"),
-        CheckConstraint("provider IN ('google')", name="ck_auth_identities_provider_allowed"),
+        # ``guest`` is an install, not a person: the row that lets an audit run
+        # before anyone signs in own its project (see service/user_store.py).
+        # ``openai`` is the ChatGPT account a subscription sign-in reveals —
+        # kept as a link key so a later Google sign-in with the same email
+        # merges automatically, never accepted as a login by itself.
+        CheckConstraint(
+            "provider IN ('google', 'guest', 'openai')",
+            name="ck_auth_identities_provider_allowed",
+        ),
     )
 
     id: UUID = Field(default_factory=uuid4, primary_key=True, nullable=False)
@@ -93,6 +101,10 @@ class OAuthState(SQLModel, table=True):
     state: str = Field(sa_column=Column(String, primary_key=True, nullable=False))
     flow: str = Field(sa_column=Column(String, nullable=False, index=True))
     code_verifier: str | None = Field(default=None, sa_column=Column(String, nullable=True))
+    # The guest this sign-in should link to, when it was started by one. Rides
+    # the state through Google because the authorize step is a bare browser
+    # navigation and carries no bearer token of its own.
+    link_user_id: str | None = Field(default=None, sa_column=Column(String, nullable=True))
     issued_at: datetime = Field(
         default_factory=utcnow,
         sa_column=Column(utc_datetime(), nullable=False),

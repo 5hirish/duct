@@ -1,8 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { FolderOpen } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import AgentChat from "../workspace/AgentChat";
 import AuditReport from "./AuditReport";
+import ShareReport from "./ShareReport";
 import AuditStepProgress from "./AuditStepProgress";
 import SplitWorkspace from "../workspace/SplitWorkspace";
 import { useAgentSession } from "../../hooks/useAgentSession";
@@ -10,11 +14,25 @@ import { Action, Row } from "../../lib/agentSession";
 import { AuditEvent, STEP_LABELS } from "../../lib/auditEvents";
 import { Phase } from "../../lib/agentPhase";
 import { useAuditNav } from "../../lib/auditNavContext";
+import { applyProjectDraft } from "../../lib/projectDraft";
+import { PROJECT_EXISTING } from "../../lib/auditSession";
+import { KICKOFF_SOURCES } from "../../lib/signInSources";
+import { CornerNotice } from "../ui/corner-notice";
 
 // Re-export so consumers can import Phase from AuditWorkspace if they prefer
 export { Phase } from "../../lib/agentPhase";
 
 const AGENT_TYPE = "audit_seo";
+
+// What a resumed conversation is asked on the user's behalf, by kickoff name.
+// The audit agent holds no Search Console reader of its own, so the honest
+// ask after the bundled sign-in is "confirm and bind", not "re-run": it can
+// list the sources, pick the property, and say what the next run gains.
+const KICKOFF_MESSAGES = {
+  [KICKOFF_SOURCES]:
+    "I've just signed in with Google. Check which data sources this project can reach now. " +
+    "If Search Console or Analytics is connected, select the right property for this site and tell me what that unlocks for the next check.",
+};
 
 /**
  * The SEO audit workspace. The session lifecycle is `useAgentSession`; what is
@@ -28,12 +46,20 @@ export default function AuditWorkspace({
   onReportReady,
   leadToken = null,
   leadEmail = null,
+  // A message to send once the resumed conversation is ready (lib/auditResume.js).
+  kickoff = "",
+  // "existing" when this run is drafting into a project the user already had.
+  // The write happens in the background while they read the report, so it is
+  // the one thing here they have to be told about.
+  projectMode = "",
 }) {
   const { setIsAuditRunning } = useAuditNav();
 
   const [reportVersions, setReportVersions] = useState([]);
   const [selectedVersionId, setSelectedVersionId] = useState(null);
   const [streamingHtml, setStreamingHtml] = useState("");
+  // { id, name } once a draft has landed on a pre-existing project, until dismissed.
+  const [drafted, setDrafted] = useState(null);
 
   const htmlBatchRef = useRef("");
   const htmlBatchTimer = useRef(null);
@@ -50,6 +76,28 @@ export default function AuditWorkspace({
     onEvent: handleEvent,
   });
   const { phase, dispatch } = agent;
+
+  // The kickoff fires once, the first time the resume is ready to talk.
+  const kickoffSentRef = useRef(false);
+  useEffect(() => {
+    const text = KICKOFF_MESSAGES[kickoff];
+    if (!text || kickoffSentRef.current || phase !== Phase.READY || !agent.attached) return;
+    kickoffSentRef.current = true;
+    agent.send(text);
+  }, [kickoff, phase, agent]);
+
+  // Onboarding audit, before sign-in: the connector prompt can send a guest
+  // through the Google sign-in that also connects the source, then bring them
+  // back to this conversation. Only this run — every other audit's prompt
+  // connects the ordinary way (lib/signInSources.js says why).
+  const signInToConnect =
+    auditParams?.draft_project && agent.conversationId
+      ? {
+          conversationId: agent.conversationId,
+          projectId: auditParams?.project_id || null,
+          siteUrl: auditParams?.url || "",
+        }
+      : null;
 
   // Tell the nav bar whether to lock the back button
   useEffect(() => {
@@ -108,6 +156,19 @@ export default function AuditWorkspace({
           });
         }
         break;
+
+      case AuditEvent.PROJECT_DRAFT: {
+        // Onboarding: the run learned something about the site. It lands on
+        // the project this audit belongs to, provenance and all; the rules
+        // for what may overwrite what live in lib/projectDraft.js.
+        const saved = applyProjectDraft(event, { projectId: auditParams?.project_id || null });
+        // Changing a project someone already had is not something to do
+        // quietly, even when every rule says the change was safe.
+        if (projectMode === PROJECT_EXISTING && saved?.id) {
+          setDrafted({ id: saved.id, name: saved.name });
+        }
+        break;
+      }
 
       case AuditEvent.PIPELINE_FINISHED:
         if (event.payload) {
@@ -184,6 +245,7 @@ export default function AuditWorkspace({
   ) : null;
 
   return (
+    <>
     <SplitWorkspace
       storageKey="audit_split_w"
       rightLabel="Report"
@@ -198,9 +260,19 @@ export default function AuditWorkspace({
           messages={agent.messages}
           pending={agent.pending}
           errorMsg={agent.error}
+          actions={
+            !publicMode && (
+              <ShareReport
+                conversationId={agent.conversationId}
+                projectId={auditParams?.project_id || null}
+                siteUrl={auditParams?.url || ""}
+              />
+            )
+          }
           errorCode={agent.errorCode}
           errorRetryable={agent.errorRetryable}
           retrying={agent.retrying}
+          tierStepDown={agent.tierStepDown}
           usage={agent.usage}
           compacting={agent.compacting}
           draft={agent.draft}
@@ -224,6 +296,7 @@ export default function AuditWorkspace({
           renderSteps={(steps) => <AuditStepProgress steps={steps} />}
           stepLabels={STEP_LABELS}
           questionsCopy={QUESTIONS_COPY}
+          signInToConnect={signInToConnect}
           inputPlaceholder="Ask a follow-up question…"
           inputAriaLabel="Message the audit agent"
           inputAccept="image/*,.pdf"
@@ -248,9 +321,19 @@ export default function AuditWorkspace({
           onSelectVersion={setSelectedVersionId}
           streamingHtml={streamingHtml}
           errorMsg={agent.error}
+          actions={
+            !publicMode && (
+              <ShareReport
+                conversationId={agent.conversationId}
+                projectId={auditParams?.project_id || null}
+                siteUrl={auditParams?.url || ""}
+              />
+            )
+          }
           errorCode={agent.errorCode}
           errorRetryable={agent.errorRetryable}
           retrying={agent.retrying}
+          tierStepDown={agent.tierStepDown}
           usage={agent.usage}
           compacting={agent.compacting}
           draft={agent.draft}
@@ -260,6 +343,25 @@ export default function AuditWorkspace({
         />
       }
     />
+    {drafted && (
+      <CornerNotice
+        icon={FolderOpen}
+        title={`Added to your ${drafted.name} project`}
+        onDismiss={() => setDrafted(null)}
+        dismissLabel="Dismiss project update"
+        actions={
+          <Button asChild size="sm" variant="outline">
+            <Link href={`/project/${encodeURIComponent(drafted.id)}`}>Review what changed</Link>
+          </Button>
+        }
+      >
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          Duct filled in what it learned from your site. Anything you had entered yourself was left
+          alone, and every drafted field is marked.
+        </p>
+      </CornerNotice>
+    )}
+    </>
   );
 }
 

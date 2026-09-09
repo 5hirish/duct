@@ -147,6 +147,7 @@ _SENSITIVE_HEADERS = frozenset({
     "x-provider-gemini",
     "x-provider-openrouter",
     "x-provider-xai",
+    "x-openai-account-id",
     "authorization",
 })
 

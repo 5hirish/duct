@@ -10,7 +10,7 @@ Next.js App Router report viewer and agent interface.
 - **State:** React Context (`InsightContext.js`) + component-level state only. No Redux/Zustand.
 - **HTTP:** Native `fetch` wrapped in `lib/api.js`. No type-safe client or OpenAPI generation.
 - **Auth:** Custom API key (`NEXT_PUBLIC_DUCT_API_KEY`) sent to backend + Google Sign-In (`GoogleSignInButton.jsx`). No next-auth/Clerk/Supabase.
-- **Observability:** Sentry (`@sentry/nextjs` — server, edge, client), Google Tag Manager (`NEXT_PUBLIC_GTM_ID`), Cloudflare Turnstile bot protection.
+- **Observability:** Sentry (`@sentry/nextjs` — server, edge, client), analytics behind a swappable provider (`lib/analytics/`, GTM by default via `NEXT_PUBLIC_GTM_ID`, gated on consent), Cloudflare Turnstile bot protection.
 
 ## Deployment
 
@@ -20,9 +20,38 @@ Next.js App Router report viewer and agent interface.
 
 ## Route structure
 
-Two route groups under `app/`:
+Three route groups under `app/`:
 
-- `(auth)/` — login page
+- `(start)/start` — onboarding: the audit *is* the onboarding. One field
+  (URL — the root page read back in a second, crawl continuing in the
+  background via `/api/audit/prefetch`) → a model (an API key verified by
+  spending it, or on desktop "Continue with ChatGPT", or skipped) → the
+  session at `/audit/seo/[sessionId]` with `crawl_id` and `draft_project`
+  set. Submitting the URL mints a **guest** (`lib/guest.js`): a real account
+  with a synthetic email, so everything the audit makes has an owner before
+  anyone signs in; Google sign-in later links or merges it. No `AuthGuard`
+  and none of the app shell. Layout is the threshold split: the `salve`
+  mosaic and the aqueduct strip (`components/onboarding/Aqueduct.jsx`) on
+  the left, the step on the right. The aqueduct is the progress indicator —
+  water reaches an arch when that step's data does; blue is water and
+  nothing else on the page is blue; the six-stone palette lives as
+  `--tessera-*` tokens in `styles/onboarding.css` and the one celebration
+  (`TesseraBurst`) is made of them. Provider choice is a radio-card list
+  (`ProviderStep.jsx`), OpenAI first. Design and phases:
+  `docs/engineering/smart-onboarding-plan.md`.
+  Nothing is **written** until the user confirms the site card: for someone
+  already signed in, the crawl's draft would otherwise land in whichever
+  project happened to be active and overwrite it. The card says which
+  project this becomes, offers a separate one, and asks when two projects
+  share the site. The audit that follows says so again from the workspace,
+  because that write happens while the user is reading the report.
+- `(auth)/` — login page; links to `/start` for first-timers, and passes a
+  guest's link code to the authorize URL so the account keeps their work.
+  When `lib/signInSources.js` has armed the onboarding bundle it also passes
+  `sources=onboarding` (Search Console + Analytics read scopes in the same
+  consent) and says so under the button. Only the connector prompt on the
+  onboarding audit arms it, and the arming expires; the Share dialog, an
+  invitation and a plain visit here stay identity-only.
 - `(app)/` — authenticated app shell:
   - `audit/` + `audit/[sessionId]/` — general audit reports
   - `audit/seo/` + `audit/seo/[sessionId]/` — SEO audit variant
@@ -30,16 +59,71 @@ Two route groups under `app/`:
   - `generate/` — report generation workflow
   - `insights/` + `insights/[slug]/` + `insights/generate/` — insights hub
   - `insights/organic-growth/` + `[slug]/` + `generate/` — organic growth insights
-  - `onboarding/` — new user setup
-  - `projects/` + `project/[projectId]/` — project management
+  - `projects/` — project management
+  - `project/[projectId]/` — **Project context**, the editor for one
+    project: the wizard's five sections, kept, minus creation (a project
+    starts at `/start`). Drafted fields carry a provenance chip ("From your
+    site" / "Duct's guess") with a one-click confirm; typing confirms too.
+    Deep-link a section with `#about` / `#targets` / `#audience` /
+    `#competition` / `#brand`. There is no `/onboarding` route any more —
+    "new project" everywhere means `/start`.
   - `project/[projectId]/members/` — project members + invitations (owner/collaborator)
 
-Plus `invite/[token]/` at the top level (outside every route group): the invitation landing page, which must render for signed-out recipients.
+Plus two top-level routes outside every group, because their visitor is
+usually signed out and the app shell's guard would lose where they were going:
+`invite/[token]/` (the invitation landing page) and `open/audit/[conversationId]/`
+(the share link for a report — parks the destination, sends through sign-in,
+then resumes the conversation; the backend hands it only to project members).
+`?kickoff=sources` on that link makes the resumed workspace open by asking
+the agent to check what the bundled sign-in connected and bind the property
+(`KICKOFF_MESSAGES` in `AuditWorkspace.jsx`; it rides the session's `client`
+bag and is spent once).
 
 ## Key utilities
 
 - `lib/api.js` — fetch wrapper for backend calls
+- `lib/signInSources.js` — the onboarding sign-in bundle: `armSignInSources()`
+  (one caller: `ConnectionRequest` on the onboarding audit), `consume…` on the
+  sign-in page, `resumeAuditPath()` for the way back into the conversation
+- `lib/guest.js` — the guest account: `ensureGuest()` mints one on first use,
+  `isGuestToken()` / `isSignedInUser()` read the `guest` claim. A guest is a
+  real user everywhere else in the app; only the sidebar footer and the
+  sign-in page treat it specially.
+- `lib/onboardingApi.js` — prefetch, verify, link code: the three calls only
+  `/start` makes. Errors carry the backend's `reason`.
+- `lib/chatgpt.js` — "Continue with ChatGPT", desktop only: the shell runs
+  the OAuth and holds the refresh token; this module gets an hour-long access
+  token and account id from it, and `providerKeyHeaders()` sends them as the
+  OpenAI credential when no API key is pasted (`X-Provider-OpenAI` +
+  `X-OpenAI-Account-Id`). Gated on `capabilities.chatgptAuth` from the shell
+  and `chatgpt_auth_enabled` from `/api/providers/status` — both, always.
+- `lib/projectDraft.js` — merges `PROJECT_DRAFT` events into the project
+  with provenance (`crawl` / `inferred` / `user`). Three rules: a user value
+  is never overwritten, a crawl value beats an inferred one, and **a
+  non-empty field with no recorded provenance counts as the user's** —
+  every project made before drafts existed is in that state, and without
+  that rule the first draft to reach one replaced a human's name, pitch and
+  industry with guesses. Which project a draft lands on is the caller's
+  `projectId`; without one it resolves by the drafted site and creates,
+  never "whatever is active". `AuditWorkspace` applies them; nothing else
+  writes drafts.
+- `lib/projects.js` — `siteKey()` / `projectsForSite()` are how a site
+  address finds its project: lowercase host, no leading `www.`, subdomains
+  kept distinct. `projectsForSite` returns every match, because two is a
+  question for the user and not a thing to guess at.
+- `lib/auditSession.js` — the `sessionStorage` hand-off into
+  `/audit/seo/[sessionId]`. The request goes to the backend verbatim (an
+  unknown field is a 422), so client-only state — the "connect a model"
+  card, a kickoff message, which project this run writes to — is nested
+  under one `client` key rather than stripped by name on arrival.
 - `lib/membersApi.js` — project members + invitations (server-only; no localStorage mirror, unlike `lib/projects.js`)
+- `lib/modelSettings.js` — the tier map and the fallback switch, on the server.
+  `lib/modelTiers.js` still owns the vocabulary and the `localStorage` copy;
+  the two coexist because the local copy paints the page before the network
+  answers and is what a signed-out install runs on, while the server copy is
+  what every run reads — including the scheduled brief, which has no browser.
+  On disagreement the server wins, and every write is a partial so a stale tab
+  cannot put back a control it never saw.
 - `lib/engines.js` — `DEFAULT_ENGINE` and the agent-type list. The engine is
   no longer a user choice: v3 is gone, every agent runs v1, so the Runtime
   tab, the `ENGINES` list and the agent↔engine support map went with it.
@@ -47,8 +131,28 @@ Plus `invite/[token]/` at the top level (outside every route group): the invitat
 - `lib/insightData.js` — insight fetching and management
 - `lib/localInsights.js` — client-side insight storage
 - `lib/reports.js` — report generation helpers
+- `lib/appVersion.js` — is this tab running the build that is currently
+  deployed. `NEXT_PUBLIC_BUILD_ID` is baked at build time (CI sets it to
+  `github.sha`; see `.github/workflows/app.yml`) and compared against
+  `/api/version`. Everything in it is written to stay quiet on doubt: an
+  unknown deployed build, a failed poll and a build with no baked id all read
+  as "no new version", because a reload prompt nobody needed is what teaches
+  people to ignore the one they do. **Never reload for the user** — this app
+  holds long agent runs and unsent input.
 - `lib/userPreferences.js` — preference persistence
-- `lib/analytics-client.js` — analytics event wrapper
+- `lib/analytics-client.js` — how to load GTM and push events (never whether)
+- `lib/consent.js` — the consent *rule* and the stored decision. Names no vendor.
+- `lib/analytics/` — the seam. `index.js` selects a provider from
+  `NEXT_PUBLIC_ANALYTICS_PROVIDER` (unset → `gtm` when a container is
+  configured, else `none`); `gtm.js` is the only file that knows Google exists;
+  `none.js` is a complete implementation, not a stub. Adding a provider is one
+  file plus a line in `PROVIDERS`. **Nothing outside this directory may
+  reference a tag vendor** — that is what lets a self-host build measure nothing
+  without editing our consent logic, and it mirrors
+  `desktop/src-tauri/src/telemetry/` on the Rust side.
+- `ProductAnalytics` owns the flow, and exempts the desktop shell from ever
+  asking: it measures with storage permanently off, gated on the Preferences
+  switch in `lib/telemetry.js`.
 - `lib/format.js` — dates, numbers and labels: `relativeTime`, `relativeDays`,
   `formatDate`, `formatTime`, `toDate`, `dayKey`, `compactNumber`,
   `formatNumber`, `titleCase`, `formatTitle`, `capitalize`, `initials`.
@@ -124,6 +228,15 @@ the page.
 - Overlays: `ui/dialog` (Radix — portal, focus trap, Escape, scroll lock) and
   `ui/lightbox`. Never hand-roll a `fixed inset-0` backdrop.
 - Busy state: `ui/spinner`. Colour comes from `currentColor`.
+- Corner notices: `ui/corner-notice`. The bottom-right card that tells you
+  something without interrupting you — `UpdateToast` (desktop build available)
+  and `ReloadToast` (new web build) are both built from it. Extracted at the
+  third copy of the anatomy, not after it. It is **not** a toast system: no
+  queue, no timers, no imperative `notify()`, because every notice here is a
+  persistent condition its owner already tracks in state. `ConnectionBanner`
+  deliberately takes the opposite corner (`sm:left-4`) so the two never fight;
+  below `sm` it is a full-width bar and wins on DOM order, which is correct —
+  a lost backend outranks a pending refresh.
 - Agent shells: `hooks/useAgentSession` (the session lifecycle),
   `workspace/AgentChat` (the transcript pane), `workspace/SplitWorkspace`
   (split + responsive), `PipelineProgress` (the working ladder),

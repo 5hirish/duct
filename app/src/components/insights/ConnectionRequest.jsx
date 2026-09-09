@@ -8,13 +8,31 @@
 // Declining is a real button, not a dismissal. The agent is told the user
 // skipped, continues with what it has, and says in its output what that left
 // unverified — so "Skip" has to look like a choice, not an escape.
+//
+// One variant: on the onboarding audit a guest is asked for Search Console.
+// A guest has no account for a connection to live on, so the button there is
+// the Google sign-in that also asks for the Search Console and Analytics read
+// scopes — one consent, back into this conversation signed in and connected.
+// That route exists only on that prompt (lib/signInSources.js); every other
+// prompt, and every other sign-in, is unchanged.
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AnalyticsEvent, AnalyticsParam, trackEvent } from "@/lib/analytics";
+import {
+  KICKOFF_SOURCES,
+  armSignInSources,
+  canSignInToConnect,
+  parkPostSignInRedirect,
+  resumeAuditPath,
+} from "@/lib/signInSources";
 import { BASE } from "../../lib/api";
 import { startConnectorOAuth } from "../../lib/connectorAuth";
 
-export default function ConnectionRequest({ request, onAnswer, disabled }) {
+export default function ConnectionRequest({ request, onAnswer, disabled, signInToConnect = null }) {
+  const router = useRouter();
   // "" | "starting" | "browser" — "browser" is the desktop shell waiting on the
   // system browser, where this window never navigates and the state is the only
   // thing telling the user anything happened. Mirrors OAuthConnectorCard.
@@ -22,6 +40,7 @@ export default function ConnectionRequest({ request, onAnswer, disabled }) {
 
   const { connector_id: connectorId, label, reason, auth_kind: authKind, authorize_path: authorizePath } = request;
   const isManual = authKind === "manual" || !authorizePath;
+  const viaSignIn = Boolean(signInToConnect?.conversationId) && !isManual && canSignInToConnect(connectorId);
 
   async function connect() {
     if (phase === "starting") return;
@@ -32,6 +51,17 @@ export default function ConnectionRequest({ request, onAnswer, disabled }) {
     } catch {
       setPhase("");
     }
+  }
+
+  function signInAndConnect() {
+    if (phase === "starting") return;
+    setPhase("starting");
+    trackEvent(AnalyticsEvent.SignInToConnect, { [AnalyticsParam.Provider]: connectorId });
+    // Back to this conversation afterwards, opening with a check of what the
+    // consent actually connected — the resume, not a new run.
+    parkPostSignInRedirect(resumeAuditPath({ ...signInToConnect, kickoff: KICKOFF_SOURCES }));
+    armSignInSources();
+    router.push("/");
   }
 
   return (
@@ -51,16 +81,31 @@ export default function ConnectionRequest({ request, onAnswer, disabled }) {
         </p>
       ) : null}
 
+      {viaSignIn && (
+        <p className="text-xs text-muted-foreground">
+          One Google sign-in does both: it saves this project to an account and lets Duct read
+          Search Console and Analytics. Read-only, and you can untick either at Google.
+        </p>
+      )}
+
       <div className="flex flex-wrap items-center gap-2">
-        {!isManual && (
-          <Button size="sm" onClick={connect} disabled={disabled || phase === "starting"}>
-            {phase === "starting" ? "Opening…" : `Connect ${label}`}
+        {viaSignIn ? (
+          <Button size="sm" onClick={signInAndConnect} disabled={disabled || phase === "starting"}>
+            <LogIn className="size-4" aria-hidden />
+            {phase === "starting" ? "Opening…" : "Sign in with Google to connect"}
           </Button>
+        ) : (
+          !isManual && (
+            <Button size="sm" onClick={connect} disabled={disabled || phase === "starting"}>
+              {phase === "starting" ? "Opening…" : `Connect ${label}`}
+            </Button>
+          )
         )}
         {/* Once the sign-in is done the agent is still parked: it re-reads the
             database rather than trusting the browser, so the user has to say
-            they finished. */}
-        {(phase === "browser" || phase === "starting") && (
+            they finished. Not offered on the sign-in route — that one leaves
+            the page and comes back through a resume. */}
+        {!viaSignIn && (phase === "browser" || phase === "starting") && (
           <Button size="sm" variant="secondary" onClick={() => onAnswer({ connected: true })} disabled={disabled}>
             I've connected it
           </Button>

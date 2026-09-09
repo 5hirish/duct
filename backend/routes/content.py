@@ -66,15 +66,17 @@ from agents.content.v1.runner import (
 )
 from agents.core.errors import error_payload
 from agents.engines import (
+    JobRun,
     ProviderKeyRequired,
-    RunModel,
-    resolve_provider_key,
-    resolve_run_model,
+    resolve_image_run,
+    resolve_job_run,
 )
 from agents.models import Provider
+from agents.tiers import Job
 from agents.content.channels import Platform
 from config import get_configs
 from db.session import get_session as db_session
+from service.model_settings import get_model_settings
 from models.content import (
     ContentAsset,
     ContentAvatar,
@@ -148,15 +150,22 @@ async def _prune_stale_sessions() -> None:
 
 def _resolve_run_model(
     session_id: str = "", user_keys: dict | None = None, owner_id=None
-) -> RunModel:
+) -> JobRun:
     """Which model a content run drives, on whose key.
 
-    The same resolver every V1 runner uses (``agents.engines.resolve_run_model``):
-    engine default → provider → model, with a lone bring-your-own key choosing
-    its own provider, and the key through the same gate as the rest — the
-    caller's header key, then their saved key, then the env key only where that
-    env file is their own. Content used to read the server key unconditionally,
-    which on the hosted deployment meant Duct paid for every plan and draft.
+    The tier ladder decides it (``agents.engines.resolve_job_run``), from the
+    user's saved map: drafting is a Standard job, so a content run lands on the
+    Standard model they picked and steps down to Light when that provider has
+    no key or is out of quota. The key goes through the same gate as the rest —
+    the caller's header key, then their saved key, then the env key only where
+    that env file is their own. Content used to read the server key
+    unconditionally, which on the hosted deployment meant Duct paid for every
+    plan and draft.
+
+    Before this it resolved through ``resolve_run_model``, which knows nothing
+    about tiers — so a user who set three models watched Content Studio ignore
+    all three. A tier map that governs one agent out of three is worse than no
+    tier map, because it is a control that appears to work.
 
     ``session_id`` is how a background worker finds the owner: the request that
     created the session is long gone by the time the worker runs.
@@ -168,8 +177,15 @@ def _resolve_run_model(
     """
     if owner_id is None:
         owner_id = _session_owner(session_id)
-    run = resolve_run_model(
-        user_keys=user_keys, stored_keys=stored_keys_for(owner_id), log_prefix="content"
+    settings = get_model_settings(owner_id)
+    run = resolve_job_run(
+        Job.DRAFTING,
+        engine_override=settings.engine,
+        user_keys=user_keys,
+        stored_keys=stored_keys_for(owner_id),
+        tier_map=settings.tiers,
+        auto_fallback=settings.auto_fallback,
+        log_prefix="content",
     )
     if not run.api_key:
         raise ProviderKeyRequired(
@@ -194,17 +210,18 @@ def _session_owner(session_id: str):
     return getattr(sess, "user_id", None) if sess else None
 
 
-def _attach_image_key(
+def _attach_image_run(
     session_id: str, user_keys: dict | None = None, owner_id=None
 ) -> None:
-    """Resolve the run's Gemini key and stash it on the session.
+    """Resolve what the run may spend on images and stash it on the session.
 
-    Images are a second provider inside a content run: the conversation is
-    Anthropic, every generated image is Google. So it gets its own resolution
-    rather than riding on the run's key, and its own failure mode — no key
-    means the image tools decline with a sentence telling the user where to add
-    one, not a dead run. A content session is worth having without images; it
-    is not worth having on our bill.
+    Images are a second provider inside a content run: the conversation is on
+    whichever key the user brought for chat, the pictures on whichever
+    image-capable key they brought — Gemini, OpenAI or xAI, in that order of
+    preference. So it gets its own resolution rather than riding on the run's
+    key, and its own failure mode — no key means the image tools decline with
+    a sentence telling the user where to add one, not a dead run. A content
+    session is worth having without images; it is not worth having on our bill.
 
     Resolved once here rather than per tool call so a run cannot start on the
     user's key and finish on ours if the store changes underneath it.
@@ -216,18 +233,19 @@ def _attach_image_key(
         return
     if owner_id is None:
         owner_id = getattr(sess, "user_id", None)
-    try:
-        resolved = resolve_provider_key(
-            Provider.GOOGLE_GENAI, user_keys, stored_keys=stored_keys_for(owner_id)
-        )
-    except ProviderKeyRequired:
+    run = resolve_image_run(user_keys, stored_keys_for(owner_id))
+    if run is None:
         # Expected on the hosted deployment for a user who has connected no
-        # Gemini key. The tools report it in the words the user needs.
+        # image-capable key. The tools report it in the words the user needs.
+        sess.image_provider = None
+        sess.image_api_key = ""
         sess.gemini_api_key = ""
         return
-    if resolved.billed_to_duct:
-        logger.info("content: images billed to Duct (%s)", resolved.source)
-    sess.gemini_api_key = resolved.key
+    if run.source in ("cloud", "subscription"):
+        logger.info("content: images billed to Duct (%s/%s)", run.provider.value, run.source)
+    sess.image_provider = run.provider
+    sess.image_api_key = run.api_key
+    sess.gemini_api_key = run.api_key if run.provider is Provider.GOOGLE_GENAI else ""
 
 
 async def _emit(queue: asyncio.Queue, body: dict[str, Any]) -> None:
@@ -305,7 +323,7 @@ def _link_conversation_artifact(session_id: str, kind: str) -> None:
 
 def _runner_for(session_id: str, user_keys: dict | None) -> ContentRunner:
     run = _resolve_run_model(session_id, user_keys)
-    _attach_image_key(session_id, user_keys)
+    _attach_image_run(session_id, user_keys)
     return ContentRunner(api_key=run.api_key, provider=run.provider, model=run.model)
 
 

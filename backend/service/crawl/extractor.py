@@ -210,6 +210,16 @@ def extract_signals(
     og_type = _og("type")
     twitter_card = _twitter("card")
     twitter_image = _twitter("image")
+    og_site_name = _og("site_name")
+
+    # The first icon link, made absolute. `rel` is a token list — "icon",
+    # "shortcut icon", "apple-touch-icon" — hence the substring match rather
+    # than an exact selector.
+    favicon = ""
+    for node in tree.css("link[rel]"):
+        if "icon" in _attr(node, "rel").lower() and _attr(node, "href"):
+            favicon = urljoin(url, _attr(node, "href"))
+            break
 
     # ------------------------------------------------------------------
     # Headings
@@ -329,6 +339,8 @@ def extract_signals(
         og_type=og_type,
         twitter_card=twitter_card,
         twitter_image=twitter_image,
+        og_site_name=og_site_name,
+        favicon=favicon,
         word_count_approx=word_count_approx,
         body_text_snippet=body_text_snippet,
         internal_links=internal_links,

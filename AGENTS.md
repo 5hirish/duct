@@ -76,6 +76,11 @@ make test           # backend tests alone — the fastest useful signal
 before proposing a change.** If it disagrees with CI, CI is right and the
 `Makefile` is wrong — fix the `Makefile`.
 
+Codex Desktop worktrees use `.codex/environments/environment.toml`. It runs
+`make setup` once and exposes the same checks, tests, and development commands
+as actions in the app. It contains no credentials; local secrets stay outside
+the repository.
+
 Dev ports are pinned deliberately, not framework defaults, so they stay clear of
 other local stacks: Next.js **3003**, FastAPI **8002**, static site **8090**.
 Only one process can bind a port — `Address already in use` on 8090 usually

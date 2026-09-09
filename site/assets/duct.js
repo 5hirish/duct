@@ -1,37 +1,260 @@
-// ─── Google Tag Manager (deferred) ───────────────────────────────────────────
-(function(w, d, s, l, i) {
-  var loaded = false;
-  if (!i) return;
+// ─── Consent, then Google Tag Manager ────────────────────────────────────────
+// The container fires GA4 and a Conversion Linker, which set _ga, _ga_* and
+// _gcl_*. None of those are exempt under ePrivacy Art 5(3), or Spain's LSSI
+// Art 22.2. The loader this replaces deferred the tag until first interaction,
+// which was a performance trick and never consent — the cookie still landed,
+// three seconds later, unasked.
+//
+// Consent Mode defaults are declared here rather than in a Consent
+// Initialization tag, because the denial has to exist before gtm.js parses, and
+// a tag inside the container cannot beat the container's own loader.
+//
+// A rejection stops GTM loading at all rather than running it in cookieless
+// ping mode. Advanced mode is defensible; "we sent nothing" needs no defending.
+(function (w, d, s, l, containerId) {
+  var CHOICE_KEY = 'duct_consent';
+  // Six months, then ask again. Consent does not last forever, and the CNIL's
+  // six is the shorter of the two numbers we are answerable to.
+  var CONSENT_TTL_DAYS = 180;
+  var REGION_KEY = 'duct_consent_region';
+  var GRANTED = 'granted';
+  var DENIED = 'denied';
+
+  // EEA + UK + Switzerland. Switzerland is not EEA, but the revised FADP asks
+  // the same question and the answer costs one array entry.
+  var CONSENT_REGIONS = ('AT BE BG HR CY CZ DK EE FI FR DE GR HU IS IE IT LV LI LT ' +
+    'LU MT NL NO PL PT RO SK SI ES SE GB CH').split(' ');
+
+  // What the tags actually write. Withdrawing consent has to remove what was
+  // already set, or "decline" only ever means "stop counting from here".
+  var COOKIE_PREFIXES = ['_ga', '_gid', '_gcl', '_gac'];
+
   var host = (w.location && w.location.hostname) || '';
-  var isLocalhost = host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0' || host.slice(-6) === '.local';
-  if (isLocalhost) return;
+  var isLocalhost = host === 'localhost' || host === '127.0.0.1' ||
+    host === '0.0.0.0' || host.slice(-6) === '.local';
+  var gtmLoaded = false;
+  var banner = null;
+
+  w[l] = w[l] || [];
+  function gtag() { w[l].push(arguments); }
+
+  function readStore(store, key) {
+    try { return w[store].getItem(key); } catch (e) { return null; }
+  }
+  function writeStore(store, key, value) {
+    // Safari's private mode throws on write. A lost preference means we ask
+    // again, which is the safe direction to fail in.
+    try { w[store].setItem(key, value); } catch (e) { /* no-op */ }
+  }
+
+  /**
+   * The choice is a cookie on the registrable domain, not localStorage, because
+   * localStorage is per-origin: getduct.ai and app.getduct.ai would each ask the
+   * same person the same question, and the desktop shell — which loads
+   * app.getduct.ai — would ask a third time. One journey, one answer.
+   *
+   * The cookie is strictly necessary and needs no consent of its own: it exists
+   * to record a refusal just as much as an acceptance.
+   */
+  function consentDomain() {
+    var labels = host.split('.');
+    return labels.length >= 2 ? '.' + labels.slice(-2).join('.') : host;
+  }
+
+  function readChoice() {
+    var match = new RegExp('(?:^|; )' + CHOICE_KEY + '=([^;]*)').exec(d.cookie || '');
+    return match ? decodeURIComponent(match[1]) : null;
+  }
+
+  function writeChoice(value) {
+    var expires = new Date(Date.now() + CONSENT_TTL_DAYS * 864e5).toUTCString();
+    d.cookie = CHOICE_KEY + '=' + value +
+      '; expires=' + expires +
+      '; path=/; domain=' + consentDomain() +
+      '; SameSite=Lax' +
+      (w.location.protocol === 'https:' ? '; Secure' : '');
+  }
+
+  function setConsent(state) {
+    gtag('consent', 'update', {
+      ad_storage: state,
+      ad_user_data: state,
+      ad_personalization: state,
+      analytics_storage: state
+    });
+  }
 
   function loadGtm() {
-    if (loaded) return;
-    loaded = true;
-    w[l] = w[l] || [];
+    if (gtmLoaded || !containerId || isLocalhost) return;
+    gtmLoaded = true;
     w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
     var f = d.getElementsByTagName(s)[0];
     var j = d.createElement(s);
     var dl = l !== 'dataLayer' ? '&l=' + l : '';
     j.async = true;
-    j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+    j.src = 'https://www.googletagmanager.com/gtm.js?id=' + containerId + dl;
     f.parentNode.insertBefore(j, f);
   }
 
-  // Load GTM after first interaction or when browser is idle.
-  function bindInteractionTriggers() {
-    ['pointerdown', 'keydown', 'scroll', 'touchstart'].forEach(function(evt) {
+  // Load on first interaction or idle, as before — the deferral was always a
+  // performance win, it just was never the consent story.
+  function loadGtmDeferred() {
+    if (gtmLoaded || !containerId || isLocalhost) return;
+    ['pointerdown', 'keydown', 'scroll', 'touchstart'].forEach(function (evt) {
       w.addEventListener(evt, loadGtm, { once: true, passive: true });
     });
+    if ('requestIdleCallback' in w) {
+      w.requestIdleCallback(loadGtm, { timeout: 3000 });
+    } else {
+      w.setTimeout(loadGtm, 3000);
+    }
   }
 
-  bindInteractionTriggers();
+  function clearAnalyticsCookies() {
+    var domains = ['', host, '.' + host];
+    var bare = host.replace(/^www\./, '');
+    if (bare !== host) { domains.push(bare, '.' + bare); }
+    var jar = d.cookie ? d.cookie.split(';') : [];
+    for (var i = 0; i < jar.length; i++) {
+      var name = jar[i].split('=')[0].replace(/^\s+/, '');
+      var matched = false;
+      for (var p = 0; p < COOKIE_PREFIXES.length; p++) {
+        if (name.indexOf(COOKIE_PREFIXES[p]) === 0) { matched = true; break; }
+      }
+      if (!matched) continue;
+      for (var k = 0; k < domains.length; k++) {
+        d.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/' +
+          (domains[k] ? '; domain=' + domains[k] : '');
+      }
+    }
+  }
 
-  if ('requestIdleCallback' in w) {
-    w.requestIdleCallback(loadGtm, { timeout: 3000 });
-  } else {
-    w.setTimeout(loadGtm, 3000);
+  function accept() {
+    writeChoice(GRANTED);
+    setConsent(GRANTED);
+    closeBanner();
+    loadGtm();
+  }
+
+  function decline() {
+    var wasRunning = gtmLoaded;
+    writeChoice(DENIED);
+    setConsent(DENIED);
+    clearAnalyticsCookies();
+    closeBanner();
+    // GTM cannot be unloaded once it is in the page. If it was already running
+    // under an earlier "accept", a reload is the only honest way to make the
+    // withdrawal real rather than cosmetic.
+    if (wasRunning) w.location.reload();
+  }
+
+  // Cloudflare serves /cdn-cgi/trace on every proxied zone, so the visitor's
+  // country costs one cached request and no third-party geo service. Anything
+  // that fails — no fetch, no network, an unparseable body — is treated as
+  // "consent required", because guessing wrong the other way is the one that
+  // sets a cookie it had no right to.
+  function needsConsent(done) {
+    var cached = readStore('sessionStorage', REGION_KEY);
+    if (cached) { done(CONSENT_REGIONS.indexOf(cached) !== -1); return; }
+    if (!w.fetch) { done(true); return; }
+    w.fetch('/cdn-cgi/trace', { credentials: 'omit' })
+      .then(function (r) { return r.ok ? r.text() : ''; })
+      .then(function (text) {
+        var match = /(?:^|\n)loc=([A-Z]{2})/.exec(text || '');
+        if (!match) { done(true); return; }
+        writeStore('sessionStorage', REGION_KEY, match[1]);
+        done(CONSENT_REGIONS.indexOf(match[1]) !== -1);
+      })
+      .catch(function () { done(true); });
+  }
+
+  function closeBanner() {
+    if (!banner) return;
+    banner.parentNode.removeChild(banner);
+    banner = null;
+  }
+
+  function button(label, className, onClick) {
+    var el = d.createElement('button');
+    el.type = 'button';
+    el.className = 'btn ' + className;
+    el.textContent = label;
+    el.addEventListener('click', onClick);
+    return el;
+  }
+
+  function showBanner() {
+    if (banner) return;
+    banner = d.createElement('section');
+    banner.className = 'consent-bar';
+    banner.setAttribute('role', 'dialog');
+    banner.setAttribute('aria-modal', 'false');
+    banner.setAttribute('aria-labelledby', 'consent-title');
+
+    var copy = d.createElement('div');
+    copy.className = 'consent-copy';
+    var title = d.createElement('h2');
+    title.id = 'consent-title';
+    title.textContent = 'Cookies, honestly';
+    var body = d.createElement('p');
+    body.innerHTML = 'We use Google Analytics to see which pages earn a signup. ' +
+      'That is the whole use — no ad targeting, no profiles, nothing sold. ' +
+      'Decline and the site behaves exactly the same. ' +
+      '<a href="/privacy">Privacy Policy</a>';
+    copy.appendChild(title);
+    copy.appendChild(body);
+
+    var actions = d.createElement('div');
+    actions.className = 'consent-actions';
+    actions.appendChild(button('Decline', 'btn-ghost', decline));
+    actions.appendChild(button('Accept', 'btn-orange', accept));
+
+    banner.appendChild(copy);
+    banner.appendChild(actions);
+    d.body.appendChild(banner);
+    title.setAttribute('tabindex', '-1');
+    title.focus();
+  }
+
+  // Withdrawal has to be as reachable as the original question, so the footer
+  // link works on every page. Delegated because the footer arrives as a partial.
+  d.addEventListener('click', function (ev) {
+    var trigger = ev.target.closest && ev.target.closest('[data-consent-settings]');
+    if (!trigger) return;
+    ev.preventDefault();
+    showBanner();
+  });
+
+  w.ductConsent = {
+    open: showBanner,
+    status: function () { return readChoice() || 'unset'; }
+  };
+
+  if (!containerId || isLocalhost) return;
+
+  gtag('consent', 'default', {
+    ad_storage: DENIED,
+    ad_user_data: DENIED,
+    ad_personalization: DENIED,
+    analytics_storage: DENIED,
+    functionality_storage: GRANTED,
+    security_storage: GRANTED,
+    wait_for_update: 500
+  });
+
+  var choice = readChoice();
+  if (choice === GRANTED) {
+    setConsent(GRANTED);
+    loadGtmDeferred();
+  } else if (choice !== DENIED) {
+    needsConsent(function (required) {
+      if (required) { showBanner(); return; }
+      // Outside the EEA, UK and Switzerland the default is measurement, with
+      // the footer link as the way out. Deliberately not stored: a choice
+      // nobody made should not follow them to a country that would have asked.
+      setConsent(GRANTED);
+      loadGtmDeferred();
+    });
   }
 })(window, document, 'script', 'dataLayer', (window.DUCT_CONFIG || {}).gtm || '');
 // ─────────────────────────────────────────────────────────────────────────────

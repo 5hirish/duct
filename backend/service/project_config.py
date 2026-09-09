@@ -59,6 +59,16 @@ GROWTH_STAGE_OPTIONS: tuple[ConfigOption, ...] = (
     ),
 )
 
+# Mirrors BRAND_VOICES in the app's project-context surface. Listed here so the
+# onboarding draft can classify a site's copy into a value the select accepts.
+BRAND_VOICE_OPTIONS: tuple[ConfigOption, ...] = (
+    ConfigOption(value="Professional", label="Professional"),
+    ConfigOption(value="Friendly", label="Friendly"),
+    ConfigOption(value="Bold", label="Bold"),
+    ConfigOption(value="Technical", label="Technical"),
+    ConfigOption(value="Playful", label="Playful"),
+)
+
 
 def _normalize_key(value: str) -> str:
     return value.strip().lower()

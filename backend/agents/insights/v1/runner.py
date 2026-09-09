@@ -70,6 +70,7 @@ from agents.core.lc import (
     stream_agent,
 )
 from agents.core.memory_tools import build_memory_tools_lc
+from agents.core.quota import credential_identity
 from agents.core.session import BaseAgentSession
 from agents.insights.brief import DEFAULT_FORMAT, parse_brief
 from agents.insights.data_tools import build_data_tools_lc
@@ -182,6 +183,7 @@ class AutonomousInsightsRunner:
         remember: bool = True,
         execute: bool = True,
         interactive: bool = True,
+        compress: bool = True,
         system_prompt: str = "",
     ) -> Any:
         """Assemble the agent: memory tools, mid-run questions, planning.
@@ -289,6 +291,7 @@ class AutonomousInsightsRunner:
         data_tools = build_data_tools_lc(
             project_id,
             user_id=user_id,
+            compress=compress,
             log_prefix="insights-v1",
             on_fetch=_on_fetch,
             on_fetch_start=_on_fetch_start,
@@ -356,6 +359,11 @@ class AutonomousInsightsRunner:
             limits=LIMITS,
             session=session,
             fallbacks=fallbacks,
+            # Same condition as the fallback chain, for the same reason: a
+            # caller that handed us its own model handed us no credential, so
+            # there is nobody to cool down when the provider says no.
+            identity="" if injected_llm else credential_identity(self._api_key),
+            provider=None if injected_llm else self.provider,
         )
 
     # -----------------------------------------------------------------------
@@ -382,6 +390,7 @@ class AutonomousInsightsRunner:
         start_version: int = 0,
         chat_idle_timeout: float = CHAT_IDLE_TIMEOUT,
         resume: bool = False,
+        compress: bool = True,
     ) -> None:
         """Run the opening turn, then stay open for follow-ups until idle.
 
@@ -419,6 +428,7 @@ class AutonomousInsightsRunner:
             user_id=user_id,
             conversation_id=conversation_id,
             remember=remember,
+            compress=compress,
         )
 
         async def _on_todo(todos: list) -> None:
@@ -516,6 +526,7 @@ class AutonomousInsightsRunner:
         artifact_format: str = DEFAULT_FORMAT,
         autonomy: str = AUTONOMY_ASK,
         start_version: int = 0,
+        compress: bool = True,
     ) -> dict:
         """One turn, nobody watching. Returns the brief it wrote.
 
@@ -539,6 +550,7 @@ class AutonomousInsightsRunner:
             conversation_id=conversation_id,
             remember=remember,
             interactive=False,
+            compress=compress,
         )
         written: list[dict] = []
         version = {"n": start_version}

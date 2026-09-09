@@ -15,19 +15,28 @@ const CARDS = {
   [AgentEvent.QUESTIONS_REQUIRED]: ({ pause, onAnswer, disabled, questionsCopy }) => (
     <QuestionsCard questions={pause.questions || []} onSubmit={onAnswer} disabled={disabled} {...questionsCopy} />
   ),
-  [AgentEvent.CONNECTION_REQUIRED]: ({ pause, onAnswer, disabled }) => (
-    <ConnectionRequest request={pause} onAnswer={onAnswer} disabled={disabled} />
+  [AgentEvent.CONNECTION_REQUIRED]: ({ pause, onAnswer, disabled, signInToConnect }) => (
+    <ConnectionRequest request={pause} onAnswer={onAnswer} disabled={disabled} signInToConnect={signInToConnect} />
   ),
   [AgentEvent.ACCOUNT_SELECTION_REQUIRED]: ({ pause, onAnswer, disabled }) => (
     <AccountSelect request={pause} onAnswer={onAnswer} disabled={disabled} />
   ),
 };
 
-export default function PauseCard({ pause, onAnswer, disabled = false, questionsCopy }) {
+export default function PauseCard({ pause, onAnswer, disabled = false, questionsCopy, signInToConnect = null }) {
   if (!pause) return null;
   const Card = CARDS[pause.event];
   if (!Card) return null;
   // Keyed on the pause identity so a second question gets fresh local state
   // rather than the previous card's half-filled answers.
-  return <Card key={pause.interrupt_id || pause.event} pause={pause} onAnswer={onAnswer} disabled={disabled} questionsCopy={questionsCopy} />;
+  return (
+    <Card
+      key={pause.interrupt_id || pause.event}
+      pause={pause}
+      onAnswer={onAnswer}
+      disabled={disabled}
+      questionsCopy={questionsCopy}
+      signInToConnect={signInToConnect}
+    />
+  );
 }

@@ -15,3 +15,27 @@
 .measure-tight {
   max-width: var(--measure-tight);
 }
+
+/* Figures that must line up: a column of numbers, or any number that updates
+   in place.
+
+   `tabular-nums` on its own cannot do this here. DM Sans ships no `tnum`
+   feature — verified against the unsubsetted upstream, not just Google's
+   subset — and its digits run from 312 units for `1` to 684 for `0`, a 2.19x
+   spread. So `font-variant-numeric: tabular-nums` had nothing to act on:
+   analytics columns stepped raggedly and the live token counter slid sideways
+   as it counted, while the class sat there looking like it worked.
+
+   Fixing that needs a different face for the digits, not another property, so
+   this switches to the one already loaded. `font-variant-numeric` rides along
+   anyway, to keep the rule true if `--font-numeric` is ever repointed at a
+   proportional face that does carry `tnum`.
+
+   NOT for a number inside a sentence ("12 linked", "3 posts found") —
+   proportional figures are correct in running text, and mono digits there read
+   as code. Those keep plain `tabular-nums`, which is inert but says the intent
+   and becomes true the day the text face gains the feature. */
+.numeric {
+  font-family: var(--font-numeric);
+  font-variant-numeric: tabular-nums;
+}

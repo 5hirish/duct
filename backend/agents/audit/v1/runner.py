@@ -37,6 +37,7 @@ from agents.audit.v1.tools import build_audit_tools
 from agents.core.artifact_tools import build_artifact_tools_lc
 from agents.core.events import AgentEvent
 from agents.core.checkpoint import get_checkpointer
+from agents.core.connector_tools import build_connector_tools_lc
 from agents.core.deep_session import DeepSession, RunLimits
 from agents.core.lc import build_ask_user_tool, resolve_chat_model
 from agents.core.memory_tools import build_memory_tools_lc
@@ -137,6 +138,19 @@ def build_audit_agent(
     )
     if session is not None and emit is not None:
         tools.append(build_ask_user_tool(session, session_id, emit))
+    # The same ListDataSources / RequestConnection the insights agent has, so
+    # the audit can ask for Search Console at the one moment the request has
+    # a reason attached — a finding it could verify with real clicks. A run
+    # with no membership-checked project gets the read-only tool or nothing;
+    # the binder already makes that call.
+    tools += build_connector_tools_lc(
+        project_id,
+        user_id=user_id,
+        session=session,
+        session_id=session_id,
+        emit=emit,
+        log_prefix="audit-v1",
+    )
 
     # Checkpointed: without a saver the graph has no memory between turns, so
     # follow-up chat would re-ask the model to audit a site it just audited,
@@ -194,6 +208,8 @@ class LangChainAuditRunner:
         template_id: str = "seo_v1",
         lead_magnet: bool = False,
         extra_context: str = "",
+        crawl_id: str | None = None,
+        draft_project: bool = False,
     ) -> Any:
         # Imported lazily only to keep the module import graph shallow; nothing
         # here pulls in another engine.
@@ -214,13 +230,21 @@ class LangChainAuditRunner:
             "label": STEP_LABELS[AuditStep.FETCH_SITEMAP],
             "status": "running",
         })
+        # Onboarding crawls while the user is still connecting a provider
+        # (agents/audit/prefetch.py). A live prefetch skips the fetch here; the
+        # step still opens and closes so the ladder in the UI reads the same.
+        from agents.audit.prefetch import take_crawl
+
+        owner_id = str(getattr(session, "user_id", "") or "") or None
+        crawl_result = await take_crawl(crawl_id, owner_id=owner_id) if crawl_id else None
         try:
-            crawl_result = await run_crawl(
-                url,
-                max_blog_posts=max_blog_posts,
-                light=(crawl_depth == CrawlDepth.LIGHT),
-                emit=emit,
-            )
+            if crawl_result is None:
+                crawl_result = await run_crawl(
+                    url,
+                    max_blog_posts=max_blog_posts,
+                    light=(crawl_depth == CrawlDepth.LIGHT),
+                    emit=emit,
+                )
         except SiteUnreachableError as exc:
             # The step closes as an error so the UI stops spinning; the route
             # turns the raise into PIPELINE_FAILED with this message.
@@ -239,20 +263,32 @@ class LangChainAuditRunner:
             "status": "success",
         })
 
+        if draft_project:
+            # Layer 1 of the project draft: what the crawl says with no model
+            # in the loop. Emitted now so the app has a project before
+            # synthesis, and seeded into the business context so the research
+            # pass has a name to look for when the user typed none.
+            from agents.audit.draft import crawl_draft, seed_business_context
+
+            await emit({"event": _E.PROJECT_DRAFT, **crawl_draft(crawl_result)})
+            business_context = seed_business_context(business_context, crawl_result)
+
         # Research the competitive landscape before synthesis. Skipped for the
         # lead-magnet teaser (it must stay fast) and when there is no business
-        # context at all, which leaves the pass nothing to look for.
+        # context at all, which leaves the pass nothing to look for — unless
+        # the run is drafting a project, which is exactly the case with no
+        # context yet and the one that needs the competitors most.
         # One model for the whole run: synthesis and the research pass share it,
         # so a test's fake reaches both and production builds one client.
         llm = resolve_chat_model(self.provider, self.model, self._api_key, self._temperature)
 
         research_context = None
-        wants_research = not lead_magnet and bool(
+        wants_research = not lead_magnet and (draft_project or bool(
             business_context.competitors
             or business_context.industry
             or business_context.business_description
             or business_context.business_name
-        )
+        ))
         if wants_research:
             from agents.audit.enrichment import enrich_context
 
@@ -294,6 +330,16 @@ class LangChainAuditRunner:
                     "degraded_reason":  research_context.degraded_reason,
                 },
             })
+
+        if draft_project:
+            # Layer 2: classified into the option lists on the run's own
+            # model, competitors from the pass above. Best-effort — a draft
+            # that fails is a form the user fills later, never a failed audit.
+            from agents.audit.draft import infer_project_draft
+
+            inferred = await infer_project_draft(llm, crawl_result, research_context)
+            if inferred:
+                await emit({"event": _E.PROJECT_DRAFT, **inferred})
 
         report_holder: dict[str, Any] = {"report": None}
 

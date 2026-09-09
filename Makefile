@@ -3,7 +3,7 @@
 # The point of this file is that `make check` and the pull-request workflows run
 # the same commands. If they drift, CI is right and this is wrong — fix it here.
 #
-#   make check        everything CI runs on a PR (backend, app, site, security)
+#   make check        everything CI runs on a PR (backend, app, site, desktop, security)
 #   make check-<area> just that area, while you are working in it
 #   make setup        install dependencies for every area
 #
@@ -11,9 +11,9 @@
 # is no `cd` leaking between recipe lines.
 
 .DEFAULT_GOAL := help
-.PHONY: help setup setup-backend setup-app setup-site \
-        check check-backend check-app check-site check-security \
-        fmt test serve-backend serve-app serve-site clean
+.PHONY: help setup setup-backend setup-app setup-site setup-desktop \
+        check check-backend check-app check-site check-desktop check-security \
+        fmt test serve-backend serve-app serve-app-api serve-site serve-desktop serve-desktop-local serve-desktop-api clean
 
 # ---------------------------------------------------------------------------
 
@@ -25,7 +25,7 @@ help: ## Show this help
 # Setup
 # ---------------------------------------------------------------------------
 
-setup: setup-backend setup-app setup-site ## Install dependencies everywhere
+setup: setup-backend setup-app setup-site setup-desktop ## Install dependencies everywhere
 
 setup-backend: ## Install backend dependencies (Poetry)
 	cd backend && poetry install --with dev
@@ -37,11 +37,15 @@ setup-site: ## Install site test dependencies (Playwright)
 	npm --prefix site ci
 	npx --prefix site playwright install --with-deps chromium
 
+setup-desktop: ## Install desktop dependencies (npm + Cargo)
+	cd desktop && npm ci
+	cd desktop/src-tauri && cargo fetch --locked
+
 # ---------------------------------------------------------------------------
 # Checks — these mirror .github/workflows/*.yml
 # ---------------------------------------------------------------------------
 
-check: check-backend check-app check-site check-security ## Run every check CI runs
+check: check-backend check-app check-site check-desktop check-security ## Run every check CI runs
 	@echo "\n✅ all checks passed"
 
 check-backend: ## Ruff + pytest (mirrors backend.yml)
@@ -64,6 +68,10 @@ check-site: ## Page requirements, sitemap, smoke tests (mirrors site.yml)
 	python3 -c "import xml.dom.minidom as m; m.parse('site/sitemap.xml'); print('sitemap.xml is well-formed')"
 	npm --prefix site run test:e2e
 
+check-desktop: ## Check the Tauri contract and compile the shell
+	python3 .github/scripts/check-shell-contract.py
+	cd desktop/src-tauri && cargo check --locked --all-targets
+
 check-security: ## Secret scan + deep audit (mirrors security-audit.yml)
 	python3 scripts/security/leak_scan.py --all
 	python3 scripts/security/audit.py --mode deep
@@ -84,8 +92,20 @@ serve-backend: ## FastAPI on :8002
 serve-app: ## Next.js on :3003
 	cd app && npm run dev
 
+serve-app-api: ## Run the local Next.js app and FastAPI API together
+	$(MAKE) -j2 serve-backend serve-app
+
 serve-site: ## Static site on :8090
 	python3 -m http.server 8090 --directory site
+
+serve-desktop: ## Run the Tauri desktop app against the hosted web app
+	cd desktop && npm run dev
+
+serve-desktop-local: ## Run Tauri against the local Next.js app
+	cd desktop && npm run dev:local
+
+serve-desktop-api: ## Run local Tauri, Next.js, and FastAPI together
+	$(MAKE) -j2 serve-backend serve-desktop-local
 
 clean: ## Remove build output and caches
 	rm -rf app/.next app/.open-next

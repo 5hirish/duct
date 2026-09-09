@@ -33,6 +33,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from agents.core.compaction import compact
 from agents.core.telemetry import tool_span
 from agents.insights.fetchers import (
     MAX_RESPONSE_CHARS,
@@ -105,6 +106,7 @@ def build_data_tools_lc(
     project_id: UUID | None,
     *,
     user_id: UUID | None = None,
+    compress: bool = True,
     log_prefix: str = "agent",
     on_fetch: Callable[[str, dict], Any] | None = None,
     on_fetch_start: Callable[[str, str, str], Any] | None = None,
@@ -114,6 +116,11 @@ def build_data_tools_lc(
     Without a user there is nothing to resolve credentials from, so only the
     notes tool is mounted — reading them is still useful, and a fetch tool that
     can only fail is worse than no fetch tool.
+
+    ``compress`` folds a payload's row arrays to typed CSV before the size
+    check — lossless, so it changes how the rows are written and never which
+    numbers they carry. Off sends raw JSON and reaches the mid-structure cut
+    sooner; see ``agents/core/compaction.py`` for why on is the default.
 
     ``on_fetch_start(entity_id, date_from, date_to)`` fires before a pull and
     ``on_fetch(entity_id, result)`` after it. Both are UI sugar — a pull can
@@ -172,7 +179,10 @@ def build_data_tools_lc(
                 except Exception:  # noqa: BLE001 — UI sugar, never fatal
                     logger.debug("insights: on_fetch hook failed", exc_info=True)
 
-            return _truncate(result)
+            # Off the loop: compaction is CPU-bound Rust, tens of ms on the
+            # largest payloads, and this runs inside a server holding other
+            # customers' streams open.
+            return await asyncio.to_thread(_truncate, result, compress=compress)
 
     tools.append(
         StructuredTool.from_function(
@@ -201,14 +211,38 @@ async def _maybe_await(value: Any) -> Any:
     return await value if inspect.isawaitable(value) else value
 
 
-def _truncate(result: dict[str, Any]) -> str:
+def _compacted(result: dict[str, Any]) -> dict[str, Any]:
+    """``result`` with its row arrays folded to typed CSV, or ``result`` as-is.
+
+    Round-trips through the compactor's own output because that output is still
+    a JSON document — the envelope survives, only the arrays inside it change
+    shape — so the cut below keeps working on whichever version it is handed.
+    Any payload that does not come back as a mapping is not one we understand
+    well enough to cut, so the original stands.
+    """
+    compacted = compact(json.dumps(result, default=str))
+    try:
+        parsed = json.loads(compacted)
+    except ValueError:
+        return result
+    return parsed if isinstance(parsed, dict) else result
+
+
+def _truncate(result: dict[str, Any], *, compress: bool = True) -> str:
     """Serialise, and cut the payload rather than the envelope when it is large.
 
     Dropping rows off the end of a JSON blob would corrupt it, so an oversized
     response keeps its status/window fields and replaces the data with a
     truncated string plus a note — the agent can then narrow the window instead
     of wondering why the numbers stopped.
+
+    Compaction runs first because the cut is the lossy step: folding the rows
+    to CSV gets most payloads under the limit with every number intact, so the
+    cut stops being reached rather than being made kinder. When it is still
+    reached, it behaves exactly as it did before.
     """
+    if compress:
+        result = _compacted(result)
     body = json.dumps(result, default=str)
     if len(body) <= MAX_RESPONSE_CHARS:
         return body

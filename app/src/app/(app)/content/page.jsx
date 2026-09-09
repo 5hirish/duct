@@ -106,7 +106,7 @@ function PlanTab({ projectId }) {
 }
 
 // ---------------------------------------------------------------------------
-// Brand tab — structured form (mirrors the project-context onboarding pattern)
+// Brand tab — structured form (mirrors the project-context page's pattern)
 // ---------------------------------------------------------------------------
 
 function BrandTab({ projectId }) {

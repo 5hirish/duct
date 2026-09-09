@@ -1,5 +1,6 @@
 "use client";
 
+import { safeHostname } from "./favicon";
 import {
   deleteProjectRemote,
   fetchProjectsRemote,
@@ -10,6 +11,13 @@ import {
 const PROJECTS_STORAGE_KEY = "duct_projects";
 const ACTIVE_PROJECT_ID_STORAGE_KEY = "duct_active_project_id";
 const LEGACY_PROFILE_STORAGE_KEY = "duct_business_profile";
+
+/**
+ * The name a project carries until it has a real one. Exported because it is
+ * not content: code that decides whether a field was filled in by a human has
+ * to be able to tell this placeholder from something someone typed.
+ */
+export const UNTITLED_PROJECT = "Untitled project";
 
 export const DEFAULT_PROJECT_PROFILE = {
   company: {
@@ -95,13 +103,17 @@ function withProjectDefaults(projectInput) {
   return {
     ...profile,
     id: isNonEmptyString(project.id) ? project.id : "",
-    name: isNonEmptyString(project.name) ? project.name : profile.company.name || "Untitled project",
+    name: isNonEmptyString(project.name) ? project.name : profile.company.name || UNTITLED_PROJECT,
     createdAt: isNonEmptyString(project.createdAt) ? project.createdAt : new Date(0).toISOString(),
     updatedAt: isNonEmptyString(project.updatedAt) ? project.updatedAt : new Date(0).toISOString(),
     // Membership metadata from the backend. A project that has never synced is
     // owned by whoever created it locally, so "owner" is the right default.
     role: project.role === "collaborator" ? "collaborator" : "owner",
     ownerEmail: isNonEmptyString(project.ownerEmail) ? project.ownerEmail : "",
+    // Where each drafted field came from — "crawl", "inferred", or "user"
+    // once confirmed — so the project-context surface can show a chip and
+    // a draft never overwrites what a person typed (lib/projectDraft.js).
+    provenance: toObject(project.provenance),
   };
 }
 
@@ -155,7 +167,8 @@ function writeProjectsStore(projects) {
 // ---------------------------------------------------------------------------
 // Backend sync (hybrid: localStorage is the always-current cache, the backend
 // is the durable store). Writes to the backend are explicit — callers persist
-// at deliberate save points (e.g. the onboarding "Save & Next" button) — so
+// at deliberate save points (the project-context "Save & Next" button, the
+// audit's project draft) — so
 // localStorage edits don't generate a request per keystroke.
 // ---------------------------------------------------------------------------
 
@@ -196,7 +209,7 @@ export function saveProject(projectInput) {
     createdAt: isNonEmptyString(project.createdAt) && project.createdAt !== new Date(0).toISOString()
       ? project.createdAt
       : timestamp,
-    name: isNonEmptyString(project.name) ? project.name : project.company.name || "Untitled project",
+    name: isNonEmptyString(project.name) ? project.name : project.company.name || UNTITLED_PROJECT,
   };
 
   if (!base.id) {
@@ -231,7 +244,7 @@ export function createProject(partial = {}) {
   const project = saveProject({
     ...merged,
     id: createId(),
-    name: partialObj.name || merged.company.name || "Untitled project",
+    name: partialObj.name || merged.company.name || UNTITLED_PROJECT,
     createdAt: timestamp,
     updatedAt: timestamp,
   });
@@ -305,6 +318,36 @@ export function setActiveProjectId(id) {
   if (next === readStoredActiveProjectId()) return;
   writeStoredActiveProjectId(next);
   notifyProjectsChanged();
+}
+
+/**
+ * The comparable form of a site address: lowercase host, no leading `www.`.
+ *
+ * Host and not registrable domain, deliberately. `blog.acme.com` and
+ * `acme.com` are two legitimate audit targets with different findings, and
+ * folding them together would silently write one site's report into the
+ * other's project. Returns "" for anything unparseable, and "" never matches.
+ */
+export function siteKey(url) {
+  const host = safeHostname(url).toLowerCase();
+  return host.startsWith("www.") ? host.slice(4) : host;
+}
+
+/**
+ * Every project whose website is `url`, newest first.
+ *
+ * Returns a list rather than a best guess: none means there is nothing to
+ * update, one is the answer, and more than one is a question only the user
+ * can settle. A caller that silently took the first would be the bug this
+ * function exists to remove — `/start` used to merge a crawl into whatever
+ * project happened to be active, which overwrote real work.
+ */
+export function projectsForSite(url) {
+  const key = siteKey(url);
+  if (!key) return [];
+  return readProjectsStore().filter(
+    (project) => siteKey(project?.company?.website_url) === key,
+  );
 }
 
 export function getActiveProject() {
@@ -408,6 +451,11 @@ export async function hydrateProjectsFromBackend() {
       // server's call, though, so role/owner always come from the remote copy.
       byId.set(lp.id, { ...lp, role: rp.role, ownerEmail: rp.ownerEmail });
       toPushUp.push(lp);
+    } else if (Object.keys(lp.provenance || {}).length && !Object.keys(rp.provenance || {}).length) {
+      // The server wins the values but knows nothing of where they came
+      // from — `toApi` does not send provenance — so a hydrate would strip
+      // the chips off a project drafted a minute ago on this very device.
+      byId.set(lp.id, { ...rp, provenance: lp.provenance });
     }
   }
 

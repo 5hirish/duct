@@ -7,7 +7,7 @@ Companion reading, in this order:
 [`agent-ports-and-events.md`](agent-ports-and-events.md) (the boundary this must not break),
 [`agent-memory-research.html`](agent-memory-research.html) §07 (memory, Phases 1–3 shipped),
 [`agent-memory-on-deepagents.md`](agent-memory-on-deepagents.md) (the harness),
-[`intelligent-insights-architecture-plan.md`](intelligent-insights-architecture-plan.md)
+[`intelligent-insights-architecture-plan.md`](../archive/2026-Q2/intelligent-insights-architecture-plan.md)
 (the entity catalog + dashboard blocks, partially built).
 
 ---

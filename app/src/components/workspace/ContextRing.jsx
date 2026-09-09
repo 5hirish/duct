@@ -86,7 +86,7 @@ function UsageDetails({ last, total }) {
       {rows.map(([k, v]) => (
         <div key={k} className="contents">
           <dt className="text-muted-foreground">{k}</dt>
-          <dd className="tabular-nums">{v}</dd>
+          <dd className="numeric">{v}</dd>
         </div>
       ))}
     </dl>

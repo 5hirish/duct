@@ -5,10 +5,12 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends
 
 from routes import (
-    activity, agents, artifacts, audit, auth, chat, connectors, content, engines, execution,
-    generate, health, lead_magnet, memory, project_connectors, project_members, projects,
+    activity, agents, artifacts, audit, audit_prefetch, auth, chat, connectors, content, engines,
+    execution,
+    generate, health, lead_magnet, memory, model_settings, project_connectors,
+    project_members, projects,
     providers,
-    reports, signin, user_connectors, user_contexts, user_projects,
+    reports, signin, usage, user_connectors, user_contexts, user_projects,
 )
 from service.auth import get_current_user, validate_api_key
 
@@ -31,6 +33,13 @@ APP_AND_USER = [Depends(validate_api_key), Depends(get_current_user)]
 router.include_router(health.router)
 router.include_router(auth.router)
 router.include_router(signin.router)
+# Crawls a site the caller names, on Duct's bandwidth, before any sign-in — a
+# guest's token is a user here, and the route rate-limits per user on top.
+router.include_router(
+    audit_prefetch.router,
+    prefix="/api",
+    dependencies=APP_AND_USER,
+)
 # Lists a vendor's accounts for a refresh token the caller supplies. Reaching
 # Google Ads on someone's behalf is not something an anonymous caller does.
 router.include_router(
@@ -96,6 +105,8 @@ router.include_router(lead_magnet.router, prefix="/api/lead-magnet")
 router.include_router(execution.router, prefix="/api/execute")
 router.include_router(artifacts.router, prefix="/api/user/artifacts")
 router.include_router(activity.router, prefix="/api/user/activity")
+router.include_router(usage.router, prefix="/api/user/usage")
+router.include_router(model_settings.router, prefix="/api/user/model-settings")
 router.include_router(user_projects.router, prefix="/api/user/projects")
 router.include_router(user_contexts.router, prefix="/api/user/projects")
 router.include_router(memory.router, prefix="/api/user/projects")

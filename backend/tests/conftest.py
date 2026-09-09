@@ -139,3 +139,54 @@ def emitted():
 
     emit.events = events  # type: ignore[attr-defined]
     return emit
+
+
+# ---------------------------------------------------------------------------
+# The offline suite stays offline
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture(autouse=True)
+def no_network(request, monkeypatch):
+    """Fail any un-``live`` test that opens a socket at all.
+
+    The whole suite already ran clean under this — it is not repairing a leak,
+    it is keeping one from arriving. This repository is public and takes
+    drive-by contributions, so the alternative to a hard rule is that some
+    future test quietly depends on a key the author happened to have exported.
+    That test passes for them, fails for everyone else, and the failure reads as
+    "the API is down" rather than "this test was never hermetic". Worse, an
+    agent handed a key would keep it green and never notice.
+
+    Every vendor path bottoms out here: httpx, requests, aiohttp, grpc and
+    google-auth all reach the network through ``socket.connect``. So a test that
+    forgets to fake its transport fails on the seam it forgot, naming it.
+
+    Loopback is blocked too, and that is the whole point rather than an
+    oversight. An agent sandbox or a corporate CI runner exports ``HTTPS_PROXY=
+    http://localhost:<port>``, which makes every call to a vendor arrive at the
+    socket layer as a connection to 127.0.0.1 — a guard that waves loopback
+    through waves everything through, and does it silently, in exactly the
+    environments most likely to be holding a key. Nothing in the suite needs a
+    socket of any kind; if something ever does, it wants a fixture that says so
+    out loud, not a hole punched here.
+
+    ``live`` tests are exempt — reaching the real API is their entire job.
+    """
+    if request.node.get_closest_marker("live"):
+        yield
+        return
+
+    import socket
+
+    def guard(sock, address, *args, **kwargs):
+        raise RuntimeError(
+            f"{request.node.nodeid} tried to open a socket to {address!r}. Offline "
+            "tests must fake their transport — patch the vendor's `api()` wrapper, "
+            "or use the fakes in tests/fakes.py. If this test genuinely needs the "
+            "real API, mark it @pytest.mark.live."
+        )
+
+    monkeypatch.setattr(socket.socket, "connect", guard)
+    monkeypatch.setattr(socket.socket, "connect_ex", guard)
+    yield

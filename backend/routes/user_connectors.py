@@ -22,14 +22,14 @@ from service.auth import get_current_user
 from service.connector_access import list_data_sources
 from service.connector_scopes import (
     SCOPE_NA,
-    join_scopes,
     missing_scopes,
     parse_scopes,
     scope_rows,
     scope_status,
 )
+from service.connector_store import upsert_credential
 from service.connectors import CAP_ACCOUNTS, ConnectorAuthContext, get_connector, registry
-from service.credentials import decrypt_credentials, encrypt_credentials
+from service.credentials import decrypt_credentials
 from service.provider_keys import CONNECTOR_TYPE as PROVIDER_KEY_TYPE
 
 router = APIRouter(tags=["user-connectors"])
@@ -262,50 +262,19 @@ def save_connector(
     if body.connector_type not in ALLOWED_CONNECTOR_TYPES:
         raise HTTPException(status_code=422, detail=f"Unknown connector type: {body.connector_type!r}")
 
-    account_id = body.account_id.strip()
     residency = _check_residency(body.residency)
-
-    # Upsert by (user_id, connector_type, account_id)
-    existing = session.execute(
-        select(ConnectorCredential).where(
-            ConnectorCredential.user_id == user.id,
-            ConnectorCredential.connector_type == body.connector_type,
-            ConnectorCredential.account_id == account_id,
-        )
-    ).scalars().first()
-
-    from datetime import datetime, timezone
-    now = datetime.now(timezone.utc)
-    enc = encrypt_credentials(body.credentials)
-
-    granted = join_scopes(parse_scopes(body.granted_scopes))
-
-    if existing:
-        existing.account_name = body.account_name
-        existing.credentials_enc = enc
-        existing.residency = residency
-        # Only overwrite when this save actually carries a grant. A later save
-        # that does not know the scopes (an account rename, a manual re-save)
-        # must not erase what the OAuth round-trip recorded.
-        if granted:
-            existing.granted_scopes = granted
-        existing.updated_at = now
-        session.add(existing)
-        session.commit()
-        session.refresh(existing)
-        return _to_out(existing)
-
-    row = ConnectorCredential(
+    # The same upsert the onboarding sign-in bundle writes through, so what a
+    # reconnect keeps is decided in one place (service/connector_store.py).
+    row = upsert_credential(
+        session,
         user_id=user.id,
         connector_type=body.connector_type,
-        account_id=account_id,
+        credentials=body.credentials,
+        granted_scopes=body.granted_scopes,
+        account_id=body.account_id,
         account_name=body.account_name,
-        credentials_enc=enc,
-        granted_scopes=granted,
-        created_at=now,
-        updated_at=now,
+        residency=residency,
     )
-    session.add(row)
     session.commit()
     session.refresh(row)
     return _to_out(row)

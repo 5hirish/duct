@@ -1,6 +1,10 @@
 "use client";
 
-// Crash-reporting consent, desktop only.
+// The desktop shell's one data switch: crash reports and usage analytics.
+//
+// Deliberately one switch rather than two. Both answer the same question —
+// "does Duct learn anything from my running it" — and splitting them buys a
+// distinction nobody asked for at the cost of a settings screen nobody reads.
 //
 // Renders nothing anywhere else — and nothing in a desktop build compiled
 // without a DSN, where the switch would change a preference that no code reads.
@@ -15,7 +19,7 @@ import { Switch } from "@/components/ui/switch";
 import { getTelemetrySettings, setTelemetryEnabled } from "@/lib/telemetry";
 
 export default function TelemetryCard() {
-  const [state, setState] = useState({ available: false, enabled: false });
+  const [state, setState] = useState({ available: false, enabled: false, defaultOn: false });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -54,20 +58,19 @@ export default function TelemetryCard() {
       </span>
       <div className="conn-tile-body">
         <div className="conn-tile-top">
-          <span className="conn-tile-title">Crash reports</span>
+          <span className="conn-tile-title">Crash reports &amp; usage</span>
           <Switch
             checked={state.enabled}
             onCheckedChange={toggle}
             disabled={busy}
-            aria-label="Send crash reports"
+            aria-label="Send crash reports and usage data"
           />
         </div>
         <p className="conn-tile-desc">
-          Off by default. Duct runs its backend on this machine, so nothing
-          leaves it unless you say so. When on, it sends the error and the
-          stack trace that caused a crash — never your provider API keys, your
-          data, or anything you generate. Takes effect for the bundled backend
-          the next time you open Duct.
+          {state.defaultOn
+            ? "On by default, so a crash tells us something without you having to report it, and we can see which parts of Duct actually get used. Crash reports carry the error and the stack trace that caused it; usage is which screens and features you open. Never your provider API keys, your data, or anything you generate — and nothing is stored on this machine. Turn it off here and it stays off."
+            : "Off by default. Duct runs its backend on this machine, so nothing leaves it unless you say so. When on, it sends the error and the stack trace that caused a crash, and which screens and features you open — never your provider API keys, your data, or anything you generate."}{" "}
+          Takes effect for the bundled backend the next time you open Duct.
         </p>
 
         {error && (

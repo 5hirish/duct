@@ -22,7 +22,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from agents.core.session import BaseAgentSession
 
 from agents.content.channels import Platform
-from agents.models import AspectRatio, ImageModel
+from agents.models import AspectRatio, ImageModel, Provider
 
 
 # ---------------------------------------------------------------------------
@@ -218,12 +218,18 @@ class ContentSession(BaseAgentSession):
     # Bridges the agent's render_slide tool to client-side rasterization (same
     # pattern as answer_future for AskUserQuestion).
     render_futures: dict = field(default_factory=dict)
-    # The Gemini key this run may spend on images — a *different* provider from
-    # the one driving the conversation, so it is resolved separately and can be
-    # absent while the run itself is fine (the image tools then decline).
-    # Empty is not "use the server's": the resolver already decided that, and
-    # the tools must never reach past it to config. See routes/content.py
-    # ::_resolve_image_key and agents/engines.resolve_provider_key.
+    # What this run may spend on images — a *different* provider from the one
+    # driving the conversation, so it is resolved separately and can be absent
+    # while the run itself is fine (the image tools then decline). Empty is not
+    # "use the server's": the resolver already decided that, and the tools must
+    # never reach past it to config. See routes/content.py::_attach_image_run
+    # and agents/engines.resolve_image_run.
+    image_provider: Provider | None = None
+    image_api_key: str = ""
+    # The Gemini key, when the image run resolved to Google: it also backs
+    # Duct's own WebSearch on providers with no usable built-in. Empty on any
+    # other image provider, so a run on an OpenAI key gets OpenAI pictures and
+    # no Gemini-grounded search — the same as before images went multi-provider.
     gemini_api_key: str = ""
 
 

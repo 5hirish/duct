@@ -13,6 +13,13 @@ export const PREFS_DEFAULTS = {
   // provider's words. "" means the model's own default — see the note in
   // backend/agents/thinking.py for why that is not normalised away.
   thinking: "",
+  // Whether connector rows reach the model folded to a compact table instead
+  // of raw JSON. On by default because off is not "the model sees everything":
+  // off is the mid-structure cut in backend/agents/insights/data_tools.py,
+  // which drops rows from a large pull. The fold is lossless and verified per
+  // payload, so this changes how rows are written, never which numbers they
+  // carry.
+  context_compression: true,
 };
 
 export const ARTIFACT_FORMAT_OPTIONS = [

@@ -170,13 +170,13 @@ class Configs(BaseSettings):
     turnstile_site_key: str = ""
     turnstile_secret_key: str = ""
 
-    # Cloudflare Email Service (lead report delivery). Distinct from the Resend
-    # settings below: `email_from` there is the transactional sender for project
-    # invitations, and defining it twice in this class would silently collapse
-    # both features onto one address.
+    # Cloudflare Email Service credentials — one of the providers behind the
+    # email seam (service/email/providers/). See `email_provider` below.
     cloudflare_email_api_token: str = ""
     cloudflare_account_id: str = ""
     # Sender for lead audit reports; falls back to `email_from` when unset.
+    # Kept separate so a reply to a cold marketing email does not land wherever
+    # project invitations reply to.
     lead_email_from: str = ""
     # Comma-separated internal CC for lead audit reports. Empty by default and
     # supplied via LEAD_EMAIL_CC — real addresses must not ship in source.
@@ -223,11 +223,15 @@ class Configs(BaseSettings):
     # demands it.
     apify_api_key: str = ""
 
-    # Transactional email (project invitations). When resend_api_key is empty the
-    # sender falls back to logging the message, so local dev and CI need no vendor
-    # account — see service/email/sender.py. email_from must be an address on a
-    # domain verified in Resend, otherwise sends are rejected.
+    # Which email provider delivers everything: "cloudflare", "resend" or
+    # "console". Empty picks the first one whose credentials are present, and
+    # "console" when none are — so local dev, CI and a self-hosted install run
+    # every mail flow with no vendor account, logging what they would have sent.
+    # See service/email/sender.py; adding a provider does not touch this file.
+    email_provider: str = ""
     resend_api_key: str = ""
+    # Default From address. Must be on a domain verified with the active
+    # provider, otherwise sends are rejected.
     email_from: str = Field(default="noreply@getduct.ai")
     email_from_name: str = Field(default="Duct")
     # How long a project invitation link stays redeemable.
@@ -259,6 +263,11 @@ class Configs(BaseSettings):
     gemini_api_key: str = ""
     openai_api_key: str = ""
     anthropic_api_key: str = ""
+    # Kill switch for "Continue with ChatGPT" — the desktop shell's sign-in to
+    # the user's own ChatGPT plan, which runs on an undocumented backend that
+    # can change without notice. False hides the path in the app; the API-key
+    # path is untouched. Read by /api/providers/status.
+    chatgpt_auth_enabled: bool = True
     # xAI (Grok), on its own LangChain integration.
     xai_api_key: str = ""
     # OpenRouter — its own LangChain integration. One key

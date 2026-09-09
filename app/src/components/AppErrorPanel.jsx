@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
+import MosaicPanel, { MOSAIC } from "./MosaicPanel";
+
 function buildIncidentId(error) {
   if (error?.digest) return `digest:${error.digest}`;
   return `client:${Date.now().toString(36)}`;
@@ -89,6 +91,10 @@ export default function AppErrorPanel({ error, reset, showHtmlShell = false }) {
   const panel = (
     <main id="main-content" className="app-main" tabIndex={-1}>
       <section className="connection-card" style={{ maxWidth: 760, margin: "48px auto" }}>
+        {/* An aqueduct with one arch gone: the water arrives and stops at the
+            gap. The break is the only orange in the panel, so the eye lands on
+            the failure before it reads a word of the copy. */}
+        <MosaicPanel name={MOSAIC.fractum} className="mb-6" />
         <p className="app-subtle" style={{ marginBottom: 10 }}>
           This page could not be loaded.
         </p>

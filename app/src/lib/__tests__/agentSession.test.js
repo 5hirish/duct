@@ -469,3 +469,84 @@ describe("input while the agent is busy", () => {
     expect(failed.messages.at(-1).role).toBe(Row.SEND_ERROR);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Tier step-down — the run is not on the model its owner picked
+// ---------------------------------------------------------------------------
+
+const STEP_DOWN = {
+  event: AgentEvent.PIPELINE_STARTED,
+  status: StepStatus.RUNNING,
+  tier: "standard",
+  tier_requested: "heavy",
+  tier_skipped: [
+    { tier: "heavy", reason: "quota_exhausted", detail: "heavy's provider is out of quota right now" },
+  ],
+  tier_retry_in: 240,
+};
+
+// `at` is the dispatcher's clock, the way useAgentSession supplies it — the
+// reducer anchors the backend's durations to it.
+function feed(events, state = initialAgentState) {
+  return events.reduce(
+    (s, event) => reduceAgentSession(s, { type: Action.EVENT, event, at: Date.now() }),
+    state
+  );
+}
+
+describe("tier step-down", () => {
+  it("says nothing when the run got the tier it asked for", () => {
+    // Silence on the happy path. A chip that appears when nothing happened is
+    // the noise that teaches people to stop reading the status row.
+    const state = feed([{ event: AgentEvent.PIPELINE_STARTED, status: StepStatus.RUNNING }]);
+    expect(state.tierStepDown).toBe(null);
+  });
+
+  it("names the tier that ran and the one that was asked for", () => {
+    const state = feed([STEP_DOWN]);
+    expect(state.tierStepDown.ran).toBe("standard");
+    expect(state.tierStepDown.requested).toBe("heavy");
+  });
+
+  it("carries the backend's sentence rather than one written here", () => {
+    // `describe_skip` is the single source: the settings page prints the same
+    // string, and two wordings of one fact drift the first time a reason is added.
+    expect(feed([STEP_DOWN]).tierStepDown.detail).toBe(
+      "heavy's provider is out of quota right now"
+    );
+  });
+
+  it("anchors the wait to this client's clock", () => {
+    // A duration on the wire, a timestamp in state — a skewed server clock
+    // must not produce a countdown that is already over.
+    const before = Date.now();
+    const { until } = feed([STEP_DOWN]).tierStepDown;
+    expect(until).toBeGreaterThanOrEqual(before + 240 * 1000);
+  });
+
+  it("survives the whole run, where a retry does not", () => {
+    // The bug this exists to prevent: copying `retrying`'s clearing rules, so
+    // the chip vanishes on the next token. A retry is "the provider is having
+    // a moment" and is over when the next token arrives; a step-down is true
+    // for the entire run and for the artifact it produced.
+    const state = feed([
+      STEP_DOWN,
+      { event: AgentEvent.STEP_STARTED, step_id: "collect", label: "Collecting" },
+      { event: AgentEvent.MODEL_RETRYING, attempt: 1, max_attempts: 4, retry_in: 2 },
+      { event: AgentEvent.AGENT_MESSAGE_CHUNK, text: "your data" },
+      { event: AgentEvent.STEP_FINISHED, step_id: "collect" },
+    ]);
+    expect(state.retrying).toBe(null);
+    expect(state.tierStepDown?.ran).toBe("standard");
+  });
+
+  it("clears when the next run starts clean", () => {
+    // Run-scoped: a new PIPELINE_STARTED either reports its own step-down or
+    // clears the last one. A chip left over from yesterday's run is a lie.
+    const state = feed(
+      [{ event: AgentEvent.PIPELINE_STARTED, status: StepStatus.RUNNING }],
+      feed([STEP_DOWN])
+    );
+    expect(state.tierStepDown).toBe(null);
+  });
+});

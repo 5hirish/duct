@@ -282,9 +282,11 @@ treat every file under `backend/` as being on the user's disk, because it is.
 Railway token — `duct_sidecar.spec` bundles `alembic/` and `alembic.ini` and
 nothing else, and the sidecar generates its own local API key and JWT secret on
 first run, 0600 in the user's data dir. Two values *are* compiled in and neither
-is a production secret: `SENTRY_DSN` (write-only by design, and inert unless the
-user opts in) and the Google **installed-app** OAuth credential, which Google
-documents as non-confidential — it names the app, it does not authorise it.
+is a production secret: `SENTRY_DSN` (write-only by design, and present only in
+builds compiled with `--features crash-reporting` — see
+[Telemetry](#telemetry)) and the Google **installed-app** OAuth credential,
+which Google documents as non-confidential — it names the app, it does not
+authorise it.
 
 Where the user's provider key goes **differs between the two builds**, and it is
 worth being precise because it is the one privacy claim people will ask about:
@@ -303,11 +305,56 @@ Either way it stays the user's key. `resolve_provider_key` in
 `allow_server_provider_keys()` says the env file belongs to whoever is running
 the process — true on a self-hosted install, false on our deployment.
 
+## Telemetry
+
+Two builds of this app exist and they behave differently on purpose. The short
+version: **if you built it, it reports nothing.**
+
+| | App downloaded from getduct.ai | Anything you build yourself |
+|---|---|---|
+| Crash reporting compiled in | yes (`--features crash-reporting`) | **no — the dependency is not even linked** |
+| Analytics provider | GTM (`NEXT_PUBLIC_GTM_ID` baked at build) | `none` unless you set one |
+| Default state | on | off |
+| Switch in Preferences | yes | yes, but there is nothing to switch |
+
+`crash-reporting` is deliberately not a default Cargo feature, and
+`DUCT_TELEMETRY_DEFAULT_ON=1` is set only in `desktop-release.yml`. A
+`git clone && npm run tauri build` produces a binary with no Sentry crates in
+its dependency tree at all — verifiable with `cargo tree | grep sentry`, which
+prints nothing. That is the difference between "disabled" and "absent", and it
+is the one worth insisting on.
+
+**What the downloaded app sends, when the switch is on:**
+
+- **Crashes** — the error and the stack trace, from the Rust shell and from the
+  web view. `send_default_pii` is off, and query strings, sensitive headers and
+  cookies are scrubbed before an event leaves (`instrumentation-client.ts`).
+- **Usage** — which screens and features get opened, through the same Google Tag
+  Manager container as the website, with storage switched off permanently. No
+  cookies are written on your machine, which is also why the app never shows a
+  consent bar: there is nothing stored to consent to.
+- **Never** — your provider API keys, your connected-tool data, your uploads, or
+  anything an agent generates for you.
+
+**Turning it off:** the account menu → Preferences → *Crash reports & usage*.
+One switch governs the shell, the bundled backend if you are running one, the
+web view's error reporting, and analytics. Once you touch it your answer is
+recorded and no default applies to you again. An unreadable or malformed
+preference file is treated as *off*, so a corrupt file can never silently
+re-enable it.
+
+**Swapping it:** `src/telemetry/reporter.rs` is the only file that names a
+reporting vendor, behind four functions. Point `SENTRY_DSN` at self-hosted
+Sentry or GlitchTip and nothing needs changing at all; use something else
+entirely and it is one more arm in that file. Analytics is the same shape in
+`app/src/lib/analytics/` — one file per provider, selected by
+`NEXT_PUBLIC_ANALYTICS_PROVIDER`.
+
 ## Build your own
 
 The repo is MIT and this shell is meant to be forkable — someone should be able
-to run Duct end to end without touching Duct's infrastructure. Four things are
-Duct-specific, and all four are configuration rather than code. The template
+to run Duct end to end without touching Duct's infrastructure. Five things are
+Duct-specific, and none of them are code you have to edit. The template
 overlay `tauri.selfhost.conf.json` carries all of them:
 
 **0. Whether a backend ships at all.** The official build has no
@@ -355,6 +402,10 @@ GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET=…
 runtime and the shell at compile time. Override them together — an id from one
 Google project beside a secret from another fails at the token exchange, several
 screens after the user last had a chance to notice.
+
+**4. Telemetry.** Nothing here reports unless you compile it in. See
+[Telemetry](#telemetry) above for exactly what the builds we distribute do
+differently, and why a `git clone && npm run tauri build` collects nothing.
 
 Not configuration, and not shareable: **code signing**. The Developer ID
 certificate, notarization password and updater signing key in

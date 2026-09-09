@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { expressExecutionInterest } from '../../lib/api';
-import { trackEvent } from '../../lib/analytics-client';
+import { trackEvent, AnalyticsEvent } from '../../lib/analytics';
 
 const DUCT_ORANGE = '#ff5c00';
 const DUCT_NAVY = '#0d0f1a';
@@ -79,7 +79,6 @@ export function ExecutionOfferBlock({ services, onOpen }) {
     .reduce((n, s) => n + s.count, 0);
 
   React.useEffect(() => {
-    trackEvent('execution_cta_viewed', { total_fixes: totalFixes });
   }, [totalFixes]);
 
   return (
@@ -218,7 +217,7 @@ export function ExecutionRequestModal({ open, onClose, services, leadToken, emai
   const submit = async () => {
     if (!selected.length || status === 'submitting') return;
     setStatus('submitting');
-    trackEvent('execution_interest_submitted', { services: selected.join(',') });
+    trackEvent(AnalyticsEvent.ExecutionInterestSubmitted, { services: selected.join(',') });
     try {
       await expressExecutionInterest(leadToken, { services: selected, note: note.trim() || null });
       setStatus('done');

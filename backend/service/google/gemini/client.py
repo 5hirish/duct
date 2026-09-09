@@ -14,7 +14,9 @@ which is a generate_content model.
                             warning in edit_image.
 
 The route / @tool layer reads input asset bytes from disk and passes them
-in, so the client stays pure (no DB/filesystem coupling).
+in, so the client stays pure (no DB/filesystem coupling). One of three
+backends behind ``service/images/client.py``; the request models it takes are
+the shared ones there.
 """
 
 from __future__ import annotations
@@ -24,7 +26,8 @@ import logging
 from typing import Any
 
 from agents.models import ImageModel
-from service.google.gemini.schema import (
+from service.images.client import ImageAPIError
+from service.images.schema import (
     EditImageRequest,
     GenerateImageRequest,
     GeneratedImage,
@@ -33,14 +36,10 @@ from service.google.gemini.schema import (
 logger = logging.getLogger(__name__)
 
 
-
-class GeminiAPIError(RuntimeError):
+class GeminiAPIError(ImageAPIError):
     """Raised on any Gemini SDK failure. Carries model + http_status when known."""
 
-    def __init__(self, message: str, *, model: str, http_status: int | None = None):
-        self.model       = model
-        self.http_status = http_status
-        super().__init__(f"Gemini ({model}): {message}")
+    label = "Gemini"
 
 
 class GeminiImageClient:
@@ -229,7 +228,7 @@ def _gemini_image_config(request: Any):
 
 def _collapse_thinking_for_gemini_3_1(model: ImageModel, level):
     """gemini-3.1-flash-image only supports MINIMAL or HIGH; collapse others."""
-    from service.google.gemini.schema import ThinkingLevel
+    from service.images.schema import ThinkingLevel
     if model == ImageModel.GEMINI_3_1_FLASH_IMAGE:
         if level in (ThinkingLevel.LOW, ThinkingLevel.MEDIUM):
             return ThinkingLevel.MINIMAL if level == ThinkingLevel.LOW else ThinkingLevel.HIGH

@@ -53,6 +53,13 @@ dlt = "^1.30.0"
 selectolax = ">=0.4.11"
 extruct = ">=0.16"
 trafilatura = ">=2.2.0"
+# Lossless payload compaction before a connector result reaches the model
+# (agents/core/compaction.py). Pinned to a minor: 0.x, and the knob this
+# depends on is `lossless_only` — a release that changed its meaning would
+# change what numbers a brief quotes. Ships an abi3 Rust extension with
+# manylinux_2_28 and macOS wheels, so no toolchain is needed to build it, and
+# agents/core/compaction.py degrades to plain JSON wherever it is absent.
+headroom-ai = "~0.37"
 deepagents = "0.7.13"   # exact: 0.x with no stability policy; changes behaviour in minors (task planning became opt-in in 0.7). tests/test_deepagents_harness.py is the upgrade gate.
 # OTel GenAI spans for the LangChain (v1) path — v3 gets tracing from the
 # Claude Agent SDK, v1 does not. The API only; an exporter is configured at

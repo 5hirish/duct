@@ -82,6 +82,14 @@ export const initialAgentState = Object.freeze({
   suppressThinking: false,
   // What PIPELINE_STARTED carried (channel, autonomy…), for the workspace.
   started: null,
+  // The run is not on the tier its owner picked, because that tier's provider
+  // is out of quota: { ran, requested, detail, until }. Deliberately NOT part
+  // of `retrying` and it must not borrow its clearing rules — a retry is "the
+  // provider is having a moment" and clears on the next token, while this is
+  // true for the whole run and for the artifact the run produces. Set on every
+  // PIPELINE_STARTED, which is what makes it run-scoped: a new run either
+  // reports its own step-down or clears this to null.
+  tierStepDown: null,
 });
 
 // ---------------------------------------------------------------------------
@@ -212,6 +220,35 @@ function addPause(pauses, pause) {
 // Usage
 // ---------------------------------------------------------------------------
 
+/**
+ * A tier step-down off PIPELINE_STARTED, or null when the run got what it asked
+ * for.
+ *
+ * Null on the happy path is the contract the chip is gated on: transparency
+ * that speaks when nothing happened is the noise that teaches people to stop
+ * reading the status row.
+ *
+ * `detail` is the backend's own sentence (`agents/tiers.describe_skip`) rather
+ * than one written here — the settings page prints the same string, and two
+ * wordings of one fact drift the first time a reason is added.
+ *
+ * `tier_retry_in` is a duration, anchored to the clock the event arrived on,
+ * for the reason MODEL_RETRYING's `retry_in` already gives: a skewed server
+ * clock must not produce a countdown that is already over.
+ */
+function readStepDown(event, at) {
+  const skipped = Array.isArray(event?.tier_skipped) ? event.tier_skipped : [];
+  if (!skipped.length) return null;
+  const wait = typeof event.tier_retry_in === "number" ? event.tier_retry_in : 0;
+  return {
+    ran: String(event.tier || ""),
+    requested: String(event.tier_requested || ""),
+    detail: String(skipped[0]?.detail || ""),
+    until: wait > 0 ? at + wait * 1000 : null,
+  };
+}
+
+
 function usageCall(event) {
   return {
     input: event.input_tokens || 0,
@@ -301,6 +338,7 @@ function reduceEvent(state, event, at = 0) {
       return {
         ...state,
         started: event,
+        tierStepDown: readStepDown(event, at),
         // Leave "Starting…" the instant the backend responds, before any step
         // arrives, so the working state shows immediately.
         phase: state.phase === Phase.STARTING ? Phase.PIPELINE : state.phase,

@@ -31,6 +31,7 @@ from agents.content.schema import (
     make_session,
 )
 from agents.content.tools import build_content_tools_lc
+from agents.models import Provider
 
 
 def _brand(name: str = "MaxAura") -> ContentBrandContext:
@@ -277,7 +278,8 @@ def test_generate_image_refuses_more_than_three_references_before_paying():
     import json
 
     session = make_session("t", uuid4(), "draft_post")
-    session.gemini_api_key = "AIza-test"
+    session.image_provider = Provider.GOOGLE_GENAI
+    session.image_api_key = "AIza-test"
     tool = _tools_for(session)["generate_image"]
     shared = str(uuid4())
     result = json.loads(asyncio.run(tool.ainvoke({

@@ -252,6 +252,90 @@ async def test_run_pipeline_crawls_then_publishes_the_report_the_tools_built(
     assert set(e["event"] for e in emitted.events) <= set(AgentEvent)
 
 
+class _DraftingFake(ToolCallingFake):
+    """The report-building fake, plus the structured answer the draft
+    classifier asks the same model for."""
+
+    def with_structured_output(self, _schema, **_kwargs):
+        from agents.audit.draft import DraftInference
+        from agents.audit.schema import DraftPersona
+
+        class _Once:
+            async def ainvoke(self, _prompt):
+                return DraftInference(
+                    industry="SaaS & Software",
+                    business_model="B2B",
+                    brand_voice="Technical",
+                    personas=[DraftPersona(name="Marketing lead", description="wants signups")],
+                )
+
+        return _Once()
+
+
+async def test_a_drafting_run_uses_the_prefetched_crawl_and_emits_two_draft_layers(
+    emitted, monkeypatch
+):
+    """Onboarding: the crawl ran while the user connected a provider, the run
+    picks it up instead of crawling again, and the project arrives as two
+    PROJECT_DRAFT events — the crawl's own facts before enrichment, the
+    classified fields after — with provenance on every field."""
+    import agents.audit.crawl as audit_crawl
+    import agents.audit.prefetch as prefetch
+    import agents.audit.v1.runner as v1
+    from agents.audit.schema import PageSignals
+    from agents.core.context import BusinessContext
+
+    # An audit session, not the bare base one: the report tools write
+    # versions onto it, and a draft run publishes a report like any other.
+    session = audit_crawl.create_audit_session(str(uuid.uuid4()))
+
+    root = PageSignals(
+        url="https://getduct.ai", page_type="landing_page", title="Duct | The channel for your data",
+        meta_description="Duct checks a number before it trusts it.", favicon="https://getduct.ai/favicon.ico",
+    )
+    crawled = CrawlResult(plan=CrawlPlan(root_url="https://getduct.ai", landing_pages=[root.url]), pages=[root])
+
+    async def must_not_crawl(_url, **_kwargs):
+        raise AssertionError("the prefetched crawl should have been used")
+
+    async def prefetched(_crawl_id, **_kwargs):
+        return crawled
+
+    monkeypatch.setattr(audit_crawl, "run_crawl", must_not_crawl)
+    monkeypatch.setattr(prefetch, "take_crawl", prefetched)
+    monkeypatch.setattr(
+        v1, "resolve_chat_model",
+        lambda *_a, **_k: _DraftingFake(responses=_model_that_builds_a_template_report().responses),
+    )
+
+    await v1.LangChainAuditRunner(api_key="unused-no-network").run_pipeline(
+        session_id=session.session_id, url="https://getduct.ai",
+        business_context=BusinessContext(), emit=emitted, report_mode="template",
+        crawl_id="prefetched-1", draft_project=True,
+        # A registered session stays open for follow-ups after the report;
+        # nobody is going to ask one here.
+        chat_idle_timeout=0.1,
+    )
+
+    drafts = [e for e in emitted.events if e["event"] == AgentEvent.PROJECT_DRAFT]
+    assert [d["layer"] for d in drafts] == ["crawl", "inferred"]
+    crawl_fields = drafts[0]["fields"]
+    assert crawl_fields["name"] == {"value": "Duct", "provenance": "crawl"}
+    assert crawl_fields["pitch"]["value"] == "Duct checks a number before it trusts it."
+    inferred_fields = drafts[1]["fields"]
+    assert inferred_fields["industry"] == {"value": "SaaS & Software", "provenance": "inferred"}
+    assert inferred_fields["personas"]["value"][0]["name"] == "Marketing lead"
+
+    steps = [(e["step_id"], e["status"]) for e in emitted.events if e["event"] == AgentEvent.STEP_FINISHED]
+    assert (AuditStep.FETCH_SITEMAP, "success") in steps, "the ladder reads the same with a prefetched crawl"
+    # An empty business context would have skipped research; drafting turns it on.
+    assert (AuditStep.ENRICHING, "success") in steps
+    # The draft is emitted before synthesis starts, so the app has a project
+    # while the report is still being written.
+    order = [e["event"] for e in emitted.events]
+    assert order.index(AgentEvent.PROJECT_DRAFT) < order.index(AgentEvent.ARTIFACT_VERSION)
+
+
 # ---------------------------------------------------------------------------
 # Provider content shapes
 # ---------------------------------------------------------------------------

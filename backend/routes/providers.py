@@ -18,12 +18,26 @@ Serving the list from ``ModelName`` makes that class of drift impossible.
 
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 from sqlmodel import Session
 
-from agents.engines import ENGINE_SUPPORTED_PROVIDERS, PROVIDER_CONFIG_ATTR, Engine
-from agents.models import ModelName, Provider, provider_of
+from agents.engines import (
+    ENGINE_SUPPORTED_PROVIDERS,
+    PROVIDER_CONFIG_ATTR,
+    Engine,
+    resolve_engine_model,
+)
+from agents.models import (
+    DEFAULT_IMAGE_MODELS,
+    IMAGE_PROVIDER_ORDER,
+    ImageModel,
+    ModelName,
+    Provider,
+    provider_of,
+)
 from agents.tiers import (
     DEFAULT_TIER_MODELS,
     JOB_TIER,
@@ -35,6 +49,7 @@ from agents.tiers import (
     Tier,
     resolve_tier_model,
 )
+from agents.core.codex import is_subscription_credential
 from config import allow_server_provider_keys, get_configs
 from db.session import get_session as db_session
 from models.auth import User
@@ -49,6 +64,8 @@ from service.provider_keys import (
     save_provider_key,
 )
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(tags=["providers"])
 
 
@@ -59,16 +76,22 @@ _PROVIDER_LABELS: dict[Provider, tuple[str, str]] = {
         "Anthropic",
         "Claude models. The only provider the Claude Agent SDK (v3) accepts.",
     ),
-    Provider.OPENAI: ("OpenAI", "GPT models on the LangChain (v1) engine."),
+    Provider.OPENAI: (
+        "OpenAI",
+        "GPT models on the LangChain (v1) engine, and gpt-image-2 for images.",
+    ),
     Provider.GOOGLE_GENAI: (
         "Google Gemini",
-        "Gemini models, and every image Duct generates.",
+        "Gemini models, and Duct's first choice for images.",
     ),
     Provider.OPENROUTER: (
         "OpenRouter",
         "One key, 500+ models — and any OpenAI-compatible gateway you point it at.",
     ),
-    Provider.XAI: ("xAI", "Grok models on the LangChain (v1) engine."),
+    Provider.XAI: (
+        "xAI",
+        "Grok models on the LangChain (v1) engine, and Grok Imagine for images.",
+    ),
 }
 
 # Human-facing tier hint per model, so the picker can group options the way the
@@ -148,7 +171,9 @@ def providers_status(
         has_server = server_usable and bool(
             getattr(cfg, PROVIDER_CONFIG_ATTR.get(provider, ""), "")
         )
-        if has_user:
+        if has_user and is_subscription_credential(user_keys[provider]):
+            source = "subscription"
+        elif has_user:
             source = "user"
         elif has_stored:
             source = "stored"
@@ -169,7 +194,35 @@ def providers_status(
             "stored": has_stored,
             "engines": _engines_for(provider),
         })
-    return {"providers": providers}
+    return {
+        "providers": providers,
+        "images": _images_status(providers),
+        # The desktop shell decides whether it *can* offer "Continue with
+        # ChatGPT"; this decides whether it *may*. An undocumented backend
+        # needs a switch that does not wait for an app release.
+        "chatgpt_auth_enabled": cfg.chatgpt_auth_enabled,
+    }
+
+
+def _images_status(providers: list[dict]) -> dict:
+    """Which provider the image tools would spend, given the tiles above.
+
+    Same preference order as ``resolve_image_run`` and the same reachability
+    the tiles already computed, so the Images row on the settings page and
+    the run agree by construction. ``source`` is ``none`` when no image-capable
+    provider is reachable — the row then asks for a key rather than naming a
+    model nothing can run.
+    """
+    by_id = {row["id"]: row for row in providers}
+    for provider in IMAGE_PROVIDER_ORDER:
+        row = by_id.get(provider.value)
+        if row and row["reachable"]:
+            return {
+                "provider": provider.value,
+                "model": DEFAULT_IMAGE_MODELS[provider].value,
+                "source": row["source"],
+            }
+    return {"provider": None, "model": None, "source": "none"}
 
 
 class StoreProviderKeyRequest(BaseModel):
@@ -211,6 +264,16 @@ def store_provider_key(
     key = body.api_key.strip()
     if not key:
         raise HTTPException(422, "api_key must not be blank")
+    if is_subscription_credential(key):
+        # A ChatGPT access token is an hour of someone's account, not a key.
+        # Storing it would be pointless (it expires) and storing the refresh
+        # token it came from would be exactly the credential pooling the plan's
+        # terms forbid — which is why the shell never sends that one.
+        raise HTTPException(
+            422,
+            "A ChatGPT sign-in can't be remembered on Duct. It stays in your desktop keychain; "
+            "paste an OpenAI API key to fund runs that happen without the app open.",
+        )
     save_provider_key(db, user.id, provider, key)
     return {"provider": provider.value, "stored": True}
 
@@ -229,6 +292,132 @@ def forget_provider_key(
     provider = _provider_or_404(provider_id)
     delete_provider_key(db, user.id, provider)
     return {"provider": provider.value, "stored": False}
+
+
+# ---------------------------------------------------------------------------
+# Verify — a real call, or it is not a verification
+# ---------------------------------------------------------------------------
+
+# Why a key did not work, in terms the user can act on. The frontend owns the
+# sentence for each; this owns the classification.
+VERIFY_INVALID_KEY = "invalid_key"
+VERIFY_NO_BILLING = "no_billing"
+VERIFY_MODEL_ACCESS = "model_access"
+VERIFY_RATE_LIMITED = "rate_limited"
+VERIFY_UNREACHABLE = "unreachable"
+VERIFY_MISSING_KEY = "missing_key"
+VERIFY_UNKNOWN = "unknown"
+# The same failures on a ChatGPT plan mean different things and need different
+# fixes: a 429 is the plan's usage window, not a key limit; a 401 is a sign-in
+# that lapsed, not a typo; a refusal is OpenAI changing the rules for third
+# parties, and the only answer is an API key.
+VERIFY_SUBSCRIPTION_QUOTA = "subscription_quota"
+VERIFY_SUBSCRIPTION_REVOKED = "subscription_revoked"
+VERIFY_SUBSCRIPTION_BLOCKED = "subscription_blocked"
+
+# A fresh OpenAI account has no credit and fails with a 429 whose body says
+# `insufficient_quota`; Anthropic says "credit balance is too low". Both
+# classify as rate-limited by status alone, and "try again in a moment" is
+# the wrong advice for either — the fix is a billing page.
+_NO_BILLING_MARKERS = ("insufficient_quota", "credit balance", "billing", "purchase credits", "exceeded your current quota")
+
+_VERIFY_TIMEOUT_SECONDS = 25.0
+
+
+def _verify_code(exc: BaseException, *, subscription: bool = False) -> str:
+    """A code from the VERIFY_* taxonomy above — always a literal, never
+    ``exc`` itself. That is load-bearing: this return value is logged
+    unredacted a few lines below the call site, and every branch here has to
+    stay a hardcoded string for that to be safe."""
+    from agents.core.errors import ErrorCode, classify_error
+
+    text = str(exc).lower()
+    code = classify_error(exc)
+    if subscription:
+        if code is ErrorCode.AUTH:
+            return VERIFY_SUBSCRIPTION_REVOKED
+        if code is ErrorCode.RATE_LIMITED:
+            return VERIFY_SUBSCRIPTION_QUOTA
+        if code is ErrorCode.PERMISSION or "originator" in text or "plan" in text:
+            return VERIFY_SUBSCRIPTION_BLOCKED
+    if any(marker in text for marker in _NO_BILLING_MARKERS):
+        return VERIFY_NO_BILLING
+    if code is ErrorCode.AUTH:
+        return VERIFY_INVALID_KEY
+    if code in (ErrorCode.PERMISSION, ErrorCode.MODEL_NOT_FOUND):
+        return VERIFY_MODEL_ACCESS
+    if code in (ErrorCode.RATE_LIMITED, ErrorCode.OVERLOADED):
+        return VERIFY_RATE_LIMITED
+    if code in (ErrorCode.NETWORK, ErrorCode.TIMEOUT):
+        return VERIFY_UNREACHABLE
+    return VERIFY_UNKNOWN
+
+
+@router.post("/providers/{provider_id}/verify")
+async def verify_provider_key(
+    provider_id: str,
+    user_keys: dict[Provider, str] = Depends(get_user_provider_keys),
+    # A user, not an optional one: this makes a vendor call with whatever key
+    # arrives in the header, and an anonymous caller must not get to relay
+    # through us. Onboarding holds a guest token by this step.
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> dict:
+    """One minimal completion on the provider's cheapest tier model.
+
+    ``/providers/status`` and ``/models/preview`` resolve; neither calls the
+    vendor, so neither can tell a pasted key from a working one. Onboarding
+    needs the difference: the common failure on a fresh account is not a
+    wrong key but an unfunded one, and the user is about to wait three
+    minutes for an audit that would end in that error. Cost is a fraction of
+    a cent, on the key being verified.
+
+    Never returns the key. Returns ``ok`` with the model and latency, or a
+    ``code`` from the taxonomy above plus a short vendor detail.
+    """
+    import asyncio
+    import time
+
+    from agents.core.lc import resolve_chat_model
+    from service.provider_keys import stored_provider_keys
+
+    provider = _provider_or_404(provider_id)
+    key = (user_keys.get(provider) or "").strip()
+    if not key:
+        key = (stored_provider_keys(db, user.id).get(provider) or "").strip()
+    if not key:
+        return {"ok": False, "code": VERIFY_MISSING_KEY, "detail": "No key supplied for this provider."}
+
+    picked = PROVIDER_TRIPLES.get(provider, {}).get(Tier.LIGHT)
+    model = resolve_engine_model(Engine.V1, provider, picked.value if picked else None)
+
+    started = time.monotonic()
+    try:
+        llm = resolve_chat_model(provider, model, key, temperature=0.0)
+        await asyncio.wait_for(llm.ainvoke("Reply with the single word: ok"), timeout=_VERIFY_TIMEOUT_SECONDS)
+    except asyncio.TimeoutError:
+        return {"ok": False, "code": VERIFY_UNREACHABLE, "model": str(getattr(model, "value", model)), "detail": "The provider did not answer in time."}
+    except Exception as exc:  # noqa: BLE001 — every failure is an answer here
+        code = _verify_code(exc, subscription=is_subscription_credential(key))
+        logger.info("verify: %s on %s failed as %s", provider.value, getattr(model, "value", model), code)
+        return {
+            "ok": False,
+            "code": code,
+            "model": str(getattr(model, "value", model)),
+            # Bounded and vendor-authored; the frontend prints it under its own
+            # sentence — but "vendor-authored" cuts both ways: the key being
+            # tested is live in scope, and a provider that echoes an invalid
+            # key back in its own error text ("Invalid API key: sk-…") would
+            # otherwise put it on screen. error_payload's docstring already
+            # names this exact failure mode ("once a URL with a key in it").
+            # Redact the literal key rather than trust vendor phrasing.
+            "detail": str(exc)[:240].replace(key, "[key]") if key else str(exc)[:240],
+        }
+    return {
+        "ok": True,
+        "model": str(getattr(model, "value", model)),
+        "latency_ms": int((time.monotonic() - started) * 1000),
+    }
 
 
 @router.get("/models/catalogue")
@@ -266,6 +455,18 @@ def models_catalogue() -> dict:
             for provider, triple in PROVIDER_TRIPLES.items()
         },
         "jobs": [{"id": job.value, "tier": JOB_TIER[job].value} for job in Job],
+        # Image models are not tier picks — a run takes its provider's default
+        # — but the page lists them so "which providers can draw" is read
+        # from the same source as everything else on it.
+        "image_models": [
+            {
+                "id": model.value,
+                "provider": provider_of(model).value,
+                "default": DEFAULT_IMAGE_MODELS.get(provider_of(model)) is model,
+            }
+            for model in ImageModel
+        ],
+        "image_provider_order": [provider.value for provider in IMAGE_PROVIDER_ORDER],
     }
 
 

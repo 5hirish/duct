@@ -48,6 +48,7 @@ from uuid import uuid4
 
 import pytest
 
+from agents.models import Provider
 from tests.eval import JudgeImage, assert_scorecard, evaluate, judge_available
 from tests.eval.rubrics.content_post import build_content_post_artifact, content_post_rubric
 
@@ -437,7 +438,8 @@ def test_content_draft_post_with_images_passes_judge(maxaura_project, tmp_path, 
     session = create_draft_session(session_id, project_id)
     # The image tools and WebSearch spend the session's Gemini key, resolved
     # by the route in production; the eval stands in for the route here.
-    session.gemini_api_key = _gemini_key()
+    session.image_provider = Provider.GOOGLE_GENAI
+    session.image_api_key = session.gemini_api_key = _gemini_key()
     runner = _runner_under_test()
 
     try:
@@ -560,7 +562,8 @@ def test_content_plan_month_persists_one_real_plan(maxaura_project, monkeypatch)
     project_id = maxaura_project
     session_id = f"eval-{uuid4()}"
     session = create_plan_session(session_id, project_id)
-    session.gemini_api_key = _gemini_key()
+    session.image_provider = Provider.GOOGLE_GENAI
+    session.image_api_key = session.gemini_api_key = _gemini_key()
     runner = _runner_under_test()
 
     try:

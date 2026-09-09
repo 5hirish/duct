@@ -31,8 +31,23 @@ import logging
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
+from typing import TYPE_CHECKING
 
-from agents.models import MODEL_FALLBACK, ModelName, Provider
+from agents.core.codex import is_subscription_credential
+from agents.models import (
+    DEFAULT_IMAGE_MODELS,
+    IMAGE_PROVIDER_ORDER,
+    MODEL_FALLBACK,
+    ImageModel,
+    ModelName,
+    Provider,
+    provider_of,
+)
+
+if TYPE_CHECKING:
+    # tiers.py imports this module; the runtime import in resolve_job_run is
+    # deferred for the same reason.
+    from agents.tiers import Job
 
 logger = logging.getLogger(__name__)
 
@@ -236,13 +251,14 @@ class ProviderKey:
     #: ``stored``— this user's saved, encrypted key
     #: ``env``   — this instance's env file (desktop / self-hosted: the user's own)
     #: ``cloud`` — Duct's hosted key; our account is paying
-    #: ``subscription`` — the operator's Claude subscription on this machine
+    #: ``subscription`` — the user's own ChatGPT plan: an access token the
+    #: desktop shell minted for this request (agents/core/codex.py)
     source: str
 
     @property
     def billed_to_duct(self) -> bool:
         """True when this run costs Duct money. Log it; it should be rare."""
-        return self.source in ("cloud", "subscription")
+        return self.source == "cloud"
 
 
 def resolve_provider_key(
@@ -260,7 +276,6 @@ def resolve_provider_key(
     3. this instance's env key — **only** when ``allow_server_provider_keys()``
        says the env file belongs to the user running it, or the call site
        explicitly declared ``duct_pays``
-    4. the Claude subscription, under the same gate and for the same reason
 
     ``duct_pays`` is for flows Duct deliberately funds — the lead-magnet teaser
     audit is demand gen, not a customer's run. Pass it as an expression at the
@@ -274,7 +289,11 @@ def resolve_provider_key(
 
     supplied = (user_keys or {}).get(provider, "")
     if supplied and supplied.strip():
-        return ProviderKey(supplied.strip(), provider, "user")
+        # The header's own shape says whose account this is: a ChatGPT access
+        # token is the user's plan, not a key they pasted, and the settings
+        # page words the two differently.
+        source = "subscription" if is_subscription_credential(supplied) else "user"
+        return ProviderKey(supplied.strip(), provider, source)
 
     saved = (stored_keys or {}).get(provider, "")
     if saved and saved.strip():
@@ -313,6 +332,45 @@ class RunModel:
     #: Anthropic key works there — a run on another provider persists its
     #: artifacts without a digest. Empty when that is the case.
     summary_key: str
+
+
+@dataclass(frozen=True)
+class ImageRun:
+    """The provider, model and key a run spends on images."""
+
+    provider: Provider
+    model: ImageModel
+    api_key: str
+    #: Same vocabulary as ``ProviderKey.source``.
+    source: str
+
+
+def resolve_image_run(
+    user_keys: Mapping[Provider, str] | None = None,
+    stored_keys: Mapping[Provider, str] | None = None,
+) -> ImageRun | None:
+    """Which image-capable provider this run may spend, or None for none.
+
+    Images are a second provider inside a content run and get their own
+    resolution: the conversation's key is whatever the user brought for chat,
+    and it need not be an image-capable one. Providers are tried in
+    ``IMAGE_PROVIDER_ORDER`` under the same credential rules as every other
+    call (``resolve_provider_key``), and the first one with a spendable key
+    wins. None is a normal answer — the image tools decline politely — not an
+    error, because a content session is worth having without pictures.
+    """
+    for provider in IMAGE_PROVIDER_ORDER:
+        try:
+            resolved = resolve_provider_key(provider, user_keys, stored_keys=stored_keys)
+        except ProviderKeyRequired:
+            continue
+        return ImageRun(
+            provider=provider,
+            model=DEFAULT_IMAGE_MODELS[provider],
+            api_key=resolved.key,
+            source=resolved.source,
+        )
+    return None
 
 
 def resolve_run_model(
@@ -373,3 +431,160 @@ def resolve_run_model(
     api_key = resolved.key
     summary_key = api_key if getattr(provider, "value", str(provider)) == "anthropic" else ""
     return RunModel(provider=provider, model=model, api_key=api_key, summary_key=summary_key)
+
+
+@dataclass(frozen=True)
+class JobRun:
+    """A run resolved through the tier map: what it runs on, and whose key."""
+
+    provider: Provider
+    model: ModelName | str
+    api_key: str
+    #: Same vocabulary as ``ProviderKey.source``.
+    source: str
+    #: The tier that served, or "" when the vendor's own ladder or the engine
+    #: floor did.
+    tier: str = ""
+    #: The tier the job was assigned before anything was stepped over.
+    tier_requested: str = ""
+    #: ``(tier, reason)`` for every tier stepped over, in the order it happened.
+    #: ``agents/tiers.describe_skip`` turns one into a sentence.
+    tier_skipped: tuple[tuple[str, str], ...] = ()
+    #: Seconds until the requested tier's provider is out of cooldown, when it
+    #: is the thing that stepped the run down. A duration, not a timestamp —
+    #: the client anchors it to its own clock, the rule ``MODEL_RETRYING``
+    #: already follows.
+    tier_retry_in: float = 0.0
+    #: Hash of the key this run spends, for ``agents/core/quota.py``. Never the
+    #: key itself: this travels into middleware and into logs.
+    identity: str = ""
+
+
+def resolve_job_run(
+    job: "Job",
+    *,
+    engine_override: str = "",
+    user_keys: Mapping[Provider, str] | None = None,
+    stored_keys: Mapping[Provider, str] | None = None,
+    tier_map: Mapping[str, str] | None = None,
+    auto_fallback: bool = True,
+    duct_pays: bool = False,
+    log_prefix: str = "agent",
+) -> JobRun:
+    """Provider, model and key for ``job`` — the first agent run to read the
+    tier map, and the rule that a run lands on a provider the caller can pay.
+
+    ``resolve_run_model`` above lets a lone bring-your-own key choose the
+    provider only when the operator set no ``GENERATE_PROVIDER``. On the
+    hosted deployment one is always set, so a user holding only an OpenAI key
+    was asked for a Google one and got a 402. This resolves the other way
+    round: which providers are *reachable* for this request (the caller's
+    keys, plus the server's where a run may spend them), then the job's tier
+    walked down over that set (``agents/tiers.resolve_tier_model``). When the
+    map names nobody reachable — the default map is all one vendor — the run
+    takes the caller's own provider at the job's tier on that vendor's ladder,
+    header keys before saved ones. Only with nothing at all does it raise
+    ``ProviderKeyRequired``, the 402 the browser knows how to act on.
+    """
+    from agents.core import quota
+    from agents.tiers import (
+        JOB_TIER,
+        PROVIDER_TRIPLES,
+        SKIP_COOLED_DOWN,
+        resolve_tier_model,
+        tier_pick,
+    )
+    from config import allow_server_provider_keys, get_configs
+
+    cfg = get_configs()
+    engine = resolve_engine(engine_override or cfg.generate_engine or "v1")
+    supported = ENGINE_SUPPORTED_PROVIDERS.get(engine, frozenset())
+
+    def _has(keys: Mapping[Provider, str] | None, provider: Provider) -> bool:
+        return bool((keys or {}).get(provider, "").strip())
+
+    reachable = {p for p in Provider if _has(user_keys, p) or _has(stored_keys, p)}
+    if duct_pays or allow_server_provider_keys():
+        reachable |= {
+            p for p in Provider
+            if (getattr(cfg, PROVIDER_CONFIG_ATTR.get(p, ""), "") or "").strip()
+        }
+
+    # Which of those a provider has already told us are out of quota. Resolved
+    # per provider because the identity *is* the key, and a caller holding an
+    # Anthropic key and an OpenAI one has two of them — a single lookup would
+    # ask the wrong account's question.
+    # ``auto_fallback`` off means the user would rather see the rate limit than
+    # a quieter model. Skipping the lookup, not just the ladder check, is what
+    # makes that literal: with no cooling set the resolution is identical to
+    # the one that shipped before any of this existed.
+    cooling: set[Provider] = set()
+    retry_in: dict[Provider, float] = {}
+    for candidate in reachable if auto_fallback else ():
+        try:
+            key = resolve_provider_key(
+                candidate, user_keys, stored_keys=stored_keys, duct_pays=duct_pays
+            ).key
+        except ProviderKeyRequired:
+            continue
+        left = quota.cooling_seconds(quota.credential_identity(key)).get(candidate)
+        if left is not None:
+            cooling.add(candidate)
+            retry_in[candidate] = left
+
+    resolution = resolve_tier_model(
+        job,
+        engine,
+        tier_map=dict(tier_map or {}) or None,
+        reachable=frozenset(reachable),
+        cooling=frozenset(cooling),
+    )
+    skipped: tuple[tuple[str, str], ...] = ()
+    requested = ""
+    cooled_wait = 0.0
+    if resolution is not None:
+        provider, model = resolution.provider, resolution.model
+        tier = resolution.tier.value if resolution.tier else ""
+        requested = resolution.requested.value
+        skipped = tuple((t.value, reason) for t, reason in resolution.skipped)
+        # The wait the user is actually waiting on is the first tier quota took
+        # away — the one they picked, not whichever later rung also happened to
+        # be cooled.
+        for stepped, reason in resolution.skipped:
+            if reason == SKIP_COOLED_DOWN:
+                _, cooled = tier_pick(stepped, dict(tier_map or {}))
+                cooled_wait = retry_in.get(cooled, 0.0)
+                break
+        # The operator's GENERATE_MODEL still applies to the operator's own
+        # provider when the caller sent no map of their own — the same
+        # precedence ``resolve_run_model`` gives it.
+        if not tier_map and cfg.generate_model and provider_of(cfg.generate_model) is provider:
+            model = resolve_engine_model(engine, provider, cfg.generate_model)
+    else:
+        ordered = [
+            p for p in [*(user_keys or {}).keys(), *(stored_keys or {}).keys()]
+            if p in reachable and p in supported
+        ]
+        if not ordered:
+            raise ProviderKeyRequired(ENGINE_DEFAULT_PROVIDER[engine])
+        provider = ordered[0]
+        wanted = JOB_TIER.get(job)
+        picked = PROVIDER_TRIPLES.get(provider, {}).get(wanted) if wanted else None
+        model = resolve_engine_model(engine, provider, picked.value if picked else None)
+        tier = wanted.value if (picked and wanted) else ""
+        requested = wanted.value if wanted else ""
+
+    resolved = resolve_provider_key(provider, user_keys, stored_keys=stored_keys, duct_pays=duct_pays)
+    if resolved.billed_to_duct:
+        logger.info("%s: run billed to Duct (%s/%s)", log_prefix, provider.value, resolved.source)
+    return JobRun(
+        provider=provider,
+        model=model,
+        api_key=resolved.key,
+        source=resolved.source,
+        tier=tier,
+        tier_requested=requested,
+        tier_skipped=skipped,
+        tier_retry_in=round(max(0.0, cooled_wait), 1),
+        identity=quota.credential_identity(resolved.key),
+    )

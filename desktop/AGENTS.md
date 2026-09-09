@@ -54,6 +54,21 @@ carries all the code.
   New shell-dependent web flows must be gated on a `get_shell_info` capability
   flag, never on version sniffing — old shells keep the legacy path.
 
+- **"Continue with ChatGPT"** (`src-tauri/src/chatgpt.rs`,
+  `capabilities.chatgptAuth`) is the one OAuth the shell runs *itself* rather
+  than relaying to the backend: OpenAI's ChatGPT client accepts exactly one
+  redirect, `http://localhost:1455/auth/callback`, which only a process on the
+  user's machine can serve. PKCE in the system browser, a hand-rolled
+  one-request loopback listener, the token exchange over reqwest, and the whole
+  bundle in the keychain under its own service (`ai.getduct.desktop.chatgpt`).
+  **The refresh token never leaves the machine.** `chatgpt_credential` hands
+  the web app an hour-long access token plus the account id, refreshing first
+  when needed; the web app sends those as the OpenAI request headers
+  (`app/src/lib/chatgpt.js`, `backend/agents/core/codex.py`). It is not
+  `~/.codex/auth.json` on purpose — rotating a refresh token there signs the
+  user out of the Codex CLI. Whether the path is *allowed* is the backend's
+  `CHATGPT_AUTH_ENABLED`; the shell only says whether it *can*.
+
   **Sign-in is the one exception, and deliberately so.** A shell without
   `browserAuth` has no legacy path worth keeping: navigating the webview to
   Google is refused outright on some platforms, and where it loads, the request
@@ -221,7 +236,21 @@ identity and a fork builds unsigned. See "Build your own" in `README.md`.
 
 ## Crash reporting
 
-Three processes, one consent decision (`src/telemetry.rs`):
+`src/telemetry/` is split on purpose: `mod.rs` holds the policy — the
+preference file, the build default, who is allowed to report — and names no
+vendor. `reporter.rs` holds the vendor, behind the `crash-reporting` Cargo
+feature, with a complete no-op arm for builds without it.
+
+**`crash-reporting` is not a default feature.** The builds we distribute pass
+`--features crash-reporting`; everyone else gets a shell with no reporting
+dependency compiled in at all. Someone self-hosting Duct did not sign up to run
+our observability, and a default they have to discover in order to remove is not
+a real choice. Swapping Sentry for something else means a third arm in
+`reporter.rs` against its four functions — `is_available`, `init`,
+`capture_message`, `sidecar_env` — and no change anywhere else. Pointing
+`SENTRY_DSN` at a self-hosted Sentry or GlitchTip needs no code change at all.
+
+Three processes, one consent decision:
 
 - **The shell** initialises `sentry` in-process. Before this, a Rust panic or a
   sidecar that would not start left no trace anywhere — the webview's Sentry
@@ -236,15 +265,20 @@ Three processes, one consent decision (`src/telemetry.rs`):
   session; `instrumentation-client.ts` now tags `shell`, `shell.version` and
   `shell.localSidecar`.
 
-Consent is opt-IN, stored as `telemetry.json` in the per-user data dir — a
-preference, not a secret, so not the keychain. A missing, unreadable, or
-malformed file all mean *off*: consent is never inferred from a failed read.
+The preference is `telemetry.json` in the per-user data dir — a preference, not
+a secret, so not the keychain. The builds we distribute set
+`DUCT_TELEMETRY_DEFAULT_ON=1` at build time and report unless the user turns it
+off; a self-host build sets nothing and stays opt-in. *Absent* file means nobody
+chose, so the build default applies; an *unreadable or malformed* file means
+off, because it may be an explicit refusal we are one step from overriding.
+Once the user touches the switch their answer is recorded and no default applies
+again.
 The DSN is compiled in via `SENTRY_DSN` — the same name the backend reads and
 `backend/.env.local` already defines, so there is one spelling across all three
 processes. With no DSN the whole path is inert and the settings card hides
 itself rather than offering a switch that changes nothing.
 
-The data-dir path is duplicated between `telemetry.rs` and `utils/appdirs.py`
+The data-dir path is duplicated between `telemetry/mod.rs` and `utils/appdirs.py`
 by necessity — the shell must resolve it *before* the sidecar exists to ask.
 Change one, change the other.
 

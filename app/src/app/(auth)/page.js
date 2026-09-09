@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState, useCallback, useRef } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BASE } from "../../lib/api";
 import { isDesktopShell, getShellInfo, openExternal } from "../../lib/shell";
@@ -11,9 +12,14 @@ import {
   SIGNIN_REASON_EXPIRED,
   SIGNIN_REASON_KEY,
   authToken,
+  decodeJwtPayload,
   isTokenValid,
   setAuthToken,
 } from "@/lib/authFetch";
+import { analytics, trackEvent, AnalyticsEvent } from "@/lib/analytics";
+import { isGuestToken } from "@/lib/guest";
+import { guestLinkCode } from "@/lib/onboardingApi";
+import { consumeSignInSources, peekSignInSources } from "@/lib/signInSources";
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
 const DEFAULT_LANDING = "/insights/organic-growth";
@@ -92,6 +98,10 @@ function SignInContent() {
   // sign-in and the user needs to be told rather than quietly stranded.
   const [shellBlocked, setShellBlocked] = useState("");
   const [turnstileError, setTurnstileError] = useState("");
+  // The onboarding connector prompt armed the sign-in to also ask for Search
+  // Console + Analytics (lib/signInSources.js). Shown so the extra consent
+  // boxes at Google are expected, not a surprise.
+  const [sourcesArmed, setSourcesArmed] = useState(false);
   // Read in an effect, not at render: it touches sessionStorage, and clearing
   // it during render would make the notice vanish on the next paint.
   const [sessionExpired, setSessionExpired] = useState(false);
@@ -131,6 +141,13 @@ function SignInContent() {
         .then(({ token }) => {
           if (token) {
             setAuthToken(token);
+            analytics.identify(decodeJwtPayload(token)?.uid);
+            // `new_user` is true only on the sign-in that created the account
+            // (routes/signin.py). Fired here rather than wherever the token is
+            // read, because it is read on every load for a week.
+            if (decodeJwtPayload(token)?.new_user) {
+              trackEvent(AnalyticsEvent.SignUp, { method: "google" });
+            }
             router.replace(consumePostSignInRedirect());
           }
         })
@@ -138,13 +155,15 @@ function SignInContent() {
       return;
     }
 
-    // Already authenticated? Redirect.
+    // Already authenticated? Redirect. A guest is not: this page is where a
+    // guest comes to become an account, so their token must not bounce them.
     const existing = authToken();
-    if (isTokenValid(existing)) {
+    if (isTokenValid(existing) && !isGuestToken(existing)) {
       router.replace(consumePostSignInRedirect());
       return;
     }
 
+    setSourcesArmed(Boolean(peekSignInSources()));
     setReady(true);
   }, [searchParams, router]);
 
@@ -232,9 +251,24 @@ function SignInContent() {
     setIsSigningIn(true);
     setShellBlocked("");
     const params = new URLSearchParams();
+    // A guest signing in keeps their work: the callback links the account it
+    // creates to this guest, or merges the guest into an existing one. The
+    // code travels in the URL instead of the token (lib/onboardingApi.js); a
+    // code that fails to mint means an unlinked sign-in, never a blocked one.
+    if (isGuestToken()) {
+      try {
+        params.set("link", await guestLinkCode());
+      } catch {
+        /* proceed unlinked */
+      }
+    }
     if (resolvedTurnstileToken) {
       params.set("turnstile_token", resolvedTurnstileToken);
     }
+    // Consumed here, at the one point a sign-in actually starts, so a bundle
+    // armed for a prompt that was abandoned never rides a later sign-in.
+    const sources = consumeSignInSources();
+    if (sources) params.set("sources", sources);
     // Desktop shell: Google disallows OAuth inside embedded webviews, so
     // capable shells run the flow in the system browser. The backend routes
     // the auth code back through the shell's deep link, which reloads this
@@ -339,6 +373,14 @@ function SignInContent() {
               ? "Your session ended. Sign in again and we'll take you back to where you were."
               : "Get started with your Google account"}
           </p>
+          {/* New here? The account can wait — the audit is the onboarding. */}
+          <p className="mb-4 text-center text-sm text-muted-foreground">
+            First time?{" "}
+            <Link href="/start" className="font-medium text-foreground underline underline-offset-2">
+              Audit your site first
+            </Link>
+            {" "}— no account needed.
+          </p>
 
           {requiresTurnstile && <div ref={turnstileContainerRef} className="cf-turnstile" aria-label="Security verification" />}
 
@@ -348,6 +390,12 @@ function SignInContent() {
             isLoading={isSigningIn}
             loadingLabel={awaitingBrowser ? "Continue in your browser…" : "Signing in..."}
           />
+          {sourcesArmed && !awaitingBrowser && (
+            <p className="mt-2 text-center text-xs text-muted-foreground">
+              Google will also ask to share Search Console and Analytics with
+              Duct &mdash; read-only, and either box can be left unticked.
+            </p>
+          )}
           {awaitingBrowser && (
             <p className="mt-2 text-center text-xs text-muted-foreground">
               Finish signing in with Google in your browser — this window will

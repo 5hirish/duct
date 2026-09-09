@@ -4,6 +4,33 @@ const appEnv = process.env.NEXT_PUBLIC_APP_ENV ?? process.env.NODE_ENV;
 
 const _SENSITIVE_FIELDS = /token|code|refresh_token|api_key|secret|password|authorization/i;
 
+/**
+ * The desktop shell honours the Preferences switch, and this file is the reason
+ * it can claim to.
+ *
+ * Sentry initialises synchronously; the preference lives in a file the Rust side
+ * reads over an async command. So events are dropped until that resolves, and
+ * dropped forever if it resolves to "off" or fails. Erring toward silence is the
+ * only defensible direction: the alternative is reporting for somebody who
+ * turned reporting off, which is exactly what the switch promises not to do.
+ *
+ * In a browser this is inert — `inDesktopShell` is false and nothing changes.
+ */
+const inDesktopShell =
+  typeof window !== "undefined" && Boolean((window as unknown as { __TAURI__?: unknown }).__TAURI__);
+let desktopReportingAllowed: boolean | null = null;
+
+if (inDesktopShell) {
+  import("./lib/telemetry.js")
+    .then(({ getTelemetrySettings }) => getTelemetrySettings())
+    .then((settings: { enabled?: boolean }) => {
+      desktopReportingAllowed = Boolean(settings?.enabled);
+    })
+    .catch(() => {
+      desktopReportingAllowed = false;
+    });
+}
+
 function _scrubUrl(u?: string): string | undefined {
   if (!u) return u;
   const idx = u.indexOf("?");
@@ -15,11 +42,29 @@ if (appEnv !== "local" && process.env.NEXT_PUBLIC_SENTRY_DSN) {
     dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
     environment: appEnv,
     sendDefaultPii: false,
-    tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
+    tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.5,
     enableLogs: process.env.NODE_ENV !== "production",
+    /**
+     * Profiling only happens if all three of these agree, and two of them are
+     * not in this file.
+     *
+     * `profileLifecycle: "trace"` ties a profile to a sampled transaction, so
+     * the effective profile rate is `tracesSampleRate x this` — 0.5, not 1.0.
+     * The integration below is what actually starts the profiler, and the
+     * `Document-Policy: js-profiling` header in `next.config.mjs` is what lets
+     * it. Remove any one and the other two go quiet without complaining.
+     */
     profileSessionSampleRate: 1.0,
     profileLifecycle: "trace",
+    integrations: [
+      // Not a default integration — the sample rates above did nothing at all
+      // until this was added.
+      Sentry.browserProfilingIntegration(),
+    ],
     beforeSend(event) {
+      // Before anything else: the user may have said no.
+      if (inDesktopShell && desktopReportingAllowed !== true) return null;
+
       if (event.request) {
         // Scrub full URL (query string may contain tokens)
         if (event.request.url) {

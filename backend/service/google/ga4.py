@@ -14,9 +14,9 @@ from service.connectors import (
     entity_facts,
     register_connector,
 )
-from service.google.constants import GA4_CONNECTOR_ID
+from service.google.constants import GA4_CONNECTOR_ID, GA4_READ_SCOPE
 
-_GA4_SCOPE = "https://www.googleapis.com/auth/analytics.readonly"
+_GA4_SCOPE = GA4_READ_SCOPE
 # Requested on top of readonly at consent time so stored GA4 tokens can also
 # drive the staged-execution GA4 admin executors (key events, audiences —
 # service/execution/ga4_exec.py). Tokens minted before this change stay

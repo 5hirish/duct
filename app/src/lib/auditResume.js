@@ -5,9 +5,13 @@
 // rehydrates the stored report for the conversation — no re-crawl.
 
 import { DEFAULT_AUDIT_TEMPLATE_ID, ReportMode } from "./audit";
+import { openAuditSession } from "./auditSession";
 import { loadPreferences } from "./userPreferences";
 
-export function startAuditResume(router, { conversationId, projectId, url = "", reportMode = "", templateId = "" }) {
+export function startAuditResume(
+  router,
+  { conversationId, projectId, url = "", reportMode = "", templateId = "", kickoff = "" },
+) {
   const params = {
     url: url || "",
     project_id: projectId || null,
@@ -17,7 +21,9 @@ export function startAuditResume(router, { conversationId, projectId, url = "", 
     template_id: templateId || DEFAULT_AUDIT_TEMPLATE_ID,
     user_preferences: loadPreferences(),
   };
-  const sessionId = crypto.randomUUID();
-  sessionStorage.setItem(`audit_session_${sessionId}`, JSON.stringify(params));
+  // `kickoff` is client-only — a message the workspace sends on the user's
+  // behalf once the resume is ready. It must never reach the request body,
+  // where an unknown field is a 422.
+  const sessionId = openAuditSession(params, { kickoff });
   router.push(`/audit/seo/${sessionId}`);
 }
