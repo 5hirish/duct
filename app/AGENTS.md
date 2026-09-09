@@ -228,6 +228,10 @@ the page.
 - Overlays: `ui/dialog` (Radix — portal, focus trap, Escape, scroll lock) and
   `ui/lightbox`. Never hand-roll a `fixed inset-0` backdrop.
 - Busy state: `ui/spinner`. Colour comes from `currentColor`.
+- Truncated text (2+ lines): `ui/clamp-text`'s `ClampText` — `line-clamp-N`
+  plus a Radix tooltip carrying the full string, capped separately. Full
+  reasoning (including why a bare `line-clamp` or a native `title` isn't
+  enough) is in `DESIGN.md`'s canon table.
 - Corner notices: `ui/corner-notice`. The bottom-right card that tells you
   something without interrupting you — `UpdateToast` (desktop build available)
   and `ReloadToast` (new web build) are both built from it. Extracted at the
@@ -373,6 +377,19 @@ no auth, no backend) that mounts one component at a time in the real app's CSS.
 Add scenes to `preview/scenes.jsx`; pick a **surface** (in place, dialog, sheet,
 drawer, alert, notification, page, toolbar) and a **device** (phone, iPad either
 way up, desktop-min, desktop, wide), in light, dark, or both at once.
+
+**A new component gets a preview entry in the same change, not a follow-up.**
+This project is open source, so `/preview` is not only a working tool — it is
+the component library's documentation, the one place a contributor or a future
+agent can see what exists and how it is meant to look without reading every
+call site. Ship one of: a `PRIMITIVES` entry in `preview/system.jsx` for a new
+`components/ui/*` part that has a variant to choose between (the narrow
+exception — a single-appearance part like `separator`, folded into the
+specimens that use it instead of standing alone — is explained at the top of
+that file); a canon row in `DESIGN.md` plus its matching example in
+`preview/catalogue.jsx` for a new canonical pattern; or, short of either, a
+`preview/scenes.jsx` entry so the component can at least be seen in isolation.
+A component with none of these is undocumented, whatever comment describes it.
 
 Two modes, because there are two jobs:
 

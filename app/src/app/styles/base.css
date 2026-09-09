@@ -10,7 +10,12 @@ html {
 }
 
 .app-shell {
+  /* Fallback, then the real thing — `100vh` alone pins to Safari's large
+     (toolbar-hidden) viewport and overshoots the visible window whenever the
+     address bar is showing; `dvh` tracks it. See DESIGN.md "Apple
+     platforms". */
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
 }
 
@@ -57,6 +62,18 @@ html {
   .logo-mark,
   .signin-logo .logo-mark {
     animation: none;
+  }
+
+  /* tw-animate-css's enter/exit system (`animate-in`/`animate-out` — every
+     Radix overlay's open/close, and Reveal's content-load fade) was never
+     gated: only the logo and Tailwind's own animate-pulse/ping/bounce sites
+     were (DESIGN.md "Known gaps"). `!important` on the longhand wins over the
+     unqualified shorthand `animation` property the utility sets, whichever
+     order the cascade puts them in, without touching duration-* overrides
+     that still apply at full motion. */
+  .animate-in,
+  .animate-out {
+    animation-duration: 0.01ms !important;
   }
 }
 

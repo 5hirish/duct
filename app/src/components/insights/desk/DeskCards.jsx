@@ -8,6 +8,8 @@
 
 import Link from "next/link";
 import { CARD_LIMIT, NEEDS_YOU, FOUND, IN_PROGRESS, relativeTime } from "@/lib/desk";
+import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
+import { ClampTooltipContent, clampClass } from "@/components/ui/clamp-text";
 import { cn } from "@/lib/utils";
 
 const CARDS = [
@@ -54,18 +56,27 @@ export function itemHref(item) {
   return "/insights/session";
 }
 
+// A finding's title can run to a full sentence (an agent wrote it, not a
+// human picking a label). Two lines, with the rest on hover/focus — the
+// trigger is the row itself, not a second focusable span, so tabbing the
+// card still lands on one stop per item (AGENTS.md accessibility rule).
 function Item({ item }) {
   return (
-    <Link
-      href={itemHref(item)}
-      className="group block rounded-md -mx-2 px-2 py-1.5 transition-colors hover:bg-accent/60"
-    >
-      <p className="text-[13.5px] font-medium leading-snug">{item.title}</p>
-      <p className="mt-1 text-[11.5px] text-muted-foreground">
-        <span className={cn(TONE_CLASS[item.tone] || "text-muted-foreground")}>{item.detail}</span>
-        {item.at && <span> · {relativeTime(item.at)}</span>}
-      </p>
-    </Link>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Link
+          href={itemHref(item)}
+          className="group block rounded-md -mx-2 px-2 py-1.5 transition-colors hover:bg-accent/60"
+        >
+          <p className={cn(clampClass(2), "text-[13.5px] font-medium leading-snug")}>{item.title}</p>
+          <p className="mt-1 text-[11.5px] text-muted-foreground">
+            <span className={cn(TONE_CLASS[item.tone] || "text-muted-foreground")}>{item.detail}</span>
+            {item.at && <span> · {relativeTime(item.at)}</span>}
+          </p>
+        </Link>
+      </TooltipTrigger>
+      <ClampTooltipContent text={item.title} />
+    </Tooltip>
   );
 }
 
@@ -77,7 +88,7 @@ export default function DeskCards({ buckets }) {
   };
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 @lg:grid-cols-2 @3xl:grid-cols-3">
       {CARDS.map((card) => {
         const items = byKey[card.key] || [];
         const shown = items.slice(0, CARD_LIMIT);

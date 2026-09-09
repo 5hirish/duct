@@ -135,8 +135,13 @@ values (`p-[13px]`); if the scale doesn't fit, the layout is wrong.
   generated: yes. Anything on the daily path: no.
 - State changes prefer opacity to movement — `PipelineProgress` dims done
   steps rather than moving them; keep that temperament.
-- Everything that loops respects `prefers-reduced-motion` (today only the
-  logo is gated — Known gaps).
+- `prefers-reduced-motion` strips every one-shot `animate-in`/`animate-out`
+  (`base.css`) — every Radix overlay's open/close and `ui/reveal`'s
+  content-load fade go through this, so nothing new needs its own gate.
+  What's still ungated is anything that **loops** — `animate-pulse`/`ping`/
+  `bounce` sites, today only the logo is handled (Known gaps) — because a
+  loop left running is the more serious failure (HIG *Motion*: make it
+  optional) and needs its own audit, not a duration override.
 
 **Icons.** lucide only, one set, default stroke. `size-4` default (the
 Button auto-sizes), `size-3.5`/`size-3` in dense rows, `size-5` for
@@ -345,7 +350,9 @@ are the canonical choices; migrate the others when a change touches them.
 | First-run | the `DeskDayOne` pattern: labelled example data + a short checklist — "an empty board teaches nothing" | "No X yet" on a first-run surface |
 | Inline error | `text-sm text-destructive` line with `role="alert"`, or the boxed `border-destructive/30 bg-destructive/5` variant for section-level failures | unlabelled error text (only 4 of 31 sites set `role="alert"` today) |
 | Corner notification | the `UpdateToast` anatomy (fixed corner card, `role="status"`, renders null until it has something to say) — there is deliberately **no toast library**; don't add one | — |
-| Loading a page | skeleton mirroring the loaded layout (the Desk pattern) when the shape is known; `Loading…` line for sub-second fetches | anonymous spinners for named work |
+| Loading a page | skeleton mirroring the loaded layout (the Desk pattern) when the shape is known; `Loading…` line for sub-second fetches — `(app)/loading.jsx` is this for any route Next suspends on (a cold navigation, an RSC payload fetch) that doesn't have a more specific fallback of its own | anonymous spinners for named work |
+| Content reveal after a load | `ui/reveal`'s `Reveal` — fade + slight rise (`animate-in fade-in slide-in-from-bottom-1 duration-200`), the motion budget's enter treatment applied to a plain mount instead of a Radix `data-state` open. Wrap the swap from a loading/skeleton branch to the loaded one (Desk pattern) | a skeleton or fetch result popping straight in; a bespoke fade hand-rolled per screen |
+| Truncated text (2+ lines) | `ui/clamp-text`'s `ClampText` — `line-clamp-N` (2 by default) with a Radix tooltip on hover/focus carrying the full string, itself capped (`line-clamp-4`) rather than left to grow forever. `line-clamp` alone is a safe crop — it's paint-only, so screen readers already read the full, untruncated string (CSS Overflow spec) — but gives a sighted mouse or keyboard user no way to read past it; the tooltip is what WCAG SC 1.4.13 (Content on Hover or Focus) is asking for, and it's why this reaches for Radix's tooltip rather than a native `title` (not dismissible, not hoverable, invisible to touch). Where the clamped text already sits inside a `<Link>`/`<button>`, attach `Tooltip`/`TooltipTrigger asChild` to that element instead of nesting a second focusable span in it — one tab stop per row (see `DeskCards.jsx`'s `Item`) | an unbounded block that can push the rest of a fixed-height card or rail off-screen (the failure mode: one long agent-written finding title turning a 3-card row into a 9-line one); a bare `line-clamp-2` with no way to read the rest |
 
 Empty states are onboarding surfaces (NN/g): show what the filled state will
 look like or say exactly what to do, CTA verb-first ("Connect GA4", never
@@ -374,6 +381,16 @@ The container-query system, unit rules and the `@`-scale are in
   every card shows the same four metrics is a table wearing cards. Tables
   get sticky headers *inside their own scroll container*, tabular figures,
   and hover row-highlighting; one vertical scroll container per pane.
+- **Horizontal scroll is for genuinely two-dimensional content only** —
+  a data table, a code block, a wide diagram — each in its own
+  `overflow-x-auto` wrapper so the scrollbar sits under the thing that
+  needs it, not the page (`ChatMarkdown`'s table wrapper, `ArtifactRenderer`'s
+  `<pre>`s). It is never a substitute for a layout that doesn't fit: ordinary
+  content (cards, lists, a row of stats) drops columns or stacks via
+  `@container` instead. WCAG 1.4.10 (Reflow) is the reason — content must
+  work at a 320px-equivalent width without needing scroll in *both*
+  directions, and the exemption is explicitly for content whose meaning
+  depends on a fixed 2-D layout, not for content someone chose not to reflow.
 - **Every number carries a comparison.** A bare total is meaningless
   without a delta, benchmark, or trend beside it (Tufte: "a number is
   meaningless without a trend line"; Few's context mistake). Word-sized
@@ -405,6 +422,102 @@ The container-query system, unit rules and the `@`-scale are in
   below 24×24 CSS px (WCAG 2.5.8). Denser than Material's touch defaults is
   fine here — Linear-dense, made tolerable by consistent spacing and muted
   color — but the floor is the floor.
+
+---
+
+## Apple platforms — web, desktop (Tauri), Safari
+
+We reach people through Safari (the web app, iOS/iPadOS included) and a
+Tauri shell — a native window with a WebKit-family webview on Mac. Apple's
+own guidance targets AppKit/UIKit, not CSS, so this translates the
+principles rather than pointing at APIs nothing here calls.
+
+- **Adapt to the window a person is actually looking at, not the device
+  class** (HIG, *Layout* — "different device screen sizes... orientations...
+  multitasking modes... external display support"). That's the same claim
+  AGENTS.md's `@container` rule makes about the sidebar and the resizable
+  panes; Apple's list is longer only because they also ship the device.
+- **`svh`/`dvh` track Safari's collapsing toolbar; they don't know about the
+  notch.** Dynamic viewport units resize as the address bar hides on scroll,
+  but they carry no safe-area information — on a non-rectangular screen
+  (Dynamic Island, a rounded corner, an iPad in a case) they still have to be
+  paired with `env(safe-area-inset-*)` wherever content can reach an edge.
+  Most of the app already does this (`ChatInput`, `project.css`, the skip
+  link). `.app-shell`'s `min-height: 100vh` in `base.css` is the one shell
+  dimension that isn't tracking Safari's real visible viewport at all —
+  `signin.css`'s two-line `min-height: 100vh; min-height: 100dvh;` fallback
+  (old browsers get the first, everything else overrides it) is the pattern
+  to copy (Known gaps).
+- **Hover is a bonus channel, and this app has never tested that it is.**
+  iOS Safari fires a synthetic hover-then-click on tap, so an untested
+  hover-only affordance doesn't fail loudly on a touchscreen — it just costs
+  a dead first tap nobody notices in a demo. The `@media (hover: hover)`
+  rule under "Tablet / touch" above is exactly this, and the codebase has
+  zero occurrences of that media query today: every `group-hover`-revealed
+  action (the pin buttons in `DeskLists`, row actions app-wide) is unverified
+  on touch (Known gaps).
+- **Removing the tap flash is opt-out, not off.**
+  `-webkit-tap-highlight-color: transparent` — the standard fix for iOS
+  Safari's blue tap rectangle — removes *all* touch feedback if nothing
+  replaces it. Pair it with a real `:active` style; never ship it alone.
+- **Apple's own touch-target floor is 44×44pt, stricter than the WCAG
+  24×24 CSS px floor a few lines up.** Keep 24px as the desktop-density
+  floor — that's a deliberate call already made here — but a touch-primary
+  surface (the phone-width onboarding flow, anything effectively under
+  `@media (hover: none)`) should reach for 44px on its primary actions, not
+  the desktop minimum.
+- **Dynamic Type has a web analogue we already built.** HIG's Dynamic Type —
+  the OS-level text-size preference every well-behaved view has to honor —
+  is what the `rem` unit rule and `/preview`'s `text=125|150|200` lens exist
+  to simulate for a page that has no OS setting to read. A layout that
+  breaks under that lens is a layout that would reject Dynamic Type.
+- **The large-display idiom.** Mac guidance expects people to see more at
+  once on a big display, not the same phone layout stretched wide — it's why
+  `.app-main` caps at 1440px and grows into multi-column at `@4xl` rather
+  than staying a single centered column at every width.
+- **Motion, Apple's three rules.** HIG *Motion*: make it optional (Reduce
+  Motion — the macOS/iOS setting `prefers-reduced-motion` exists to read,
+  which is why it's a system accessibility preference and not a per-app
+  toggle), strive for realism (fake physics reads worse than no motion — a
+  slide that overshoots and settles is doing more work than a linear one to
+  say less), and prefer quick, precise animations over showy ones. That
+  last one is already this file's motion budget (below, "Motion" —
+  `<300ms`, ease-out) arrived at independently.
+- **Materials — we already have one, undocumented as such.** HIG
+  *Materials*: translucency + blur to show there's real content behind an
+  overlay without letting it compete for attention; thicker material (more
+  opaque, more blur) where fine text sits on it, thinner where it's mostly
+  decorative. `corner-notice` and `ConnectionBanner` already do exactly this
+  (`bg-background/95 backdrop-blur-xl`) — name it when adding a new
+  overlay-over-content surface rather than re-deriving the opacity/blur pair
+  from scratch.
+- **Vector for anything that scales, raster only for what can't be.**
+  HIG *Images*: prefer a vector format for interface graphics — the system
+  scales it for free at any resolution — and reserve raster for imagery with
+  photographic detail or baked-in effects, at 2x/3x source so it isn't soft
+  on a Retina/ProMotion display. lucide's SVGs already get this right for
+  free. `MosaicPanel` doesn't: it serves one `.webp` resolution (`width`/
+  `height` from the `size` prop, no `srcset`) scaled up on any 2x+ display —
+  the mosaic art is the one raster asset in the app and the one place this
+  isn't followed (Known gaps).
+- **Page-to-page transitions: investigated, deliberately not wired up yet.**
+  React's `<ViewTransition>` (the zero-dependency way to do HIG-style
+  navigation — crossfades, shared-element morphs, directional slides that
+  match the platform's own push/pop convention) only exists in React's
+  *experimental* release channel. Checked directly against this repo's
+  installed packages: `node_modules/next/dist/compiled/react/` (the stable
+  channel this app builds with) has no `ViewTransition` export; only
+  `react-experimental` does, and Next only switches the whole app onto that
+  channel via one of four `next.config` flags (`blockingSSR`, `taint`,
+  `transitionIndicator`, `gestureTransition` — `needs-experimental-react.js`
+  in the Next source is the ground truth). None are set. That's a
+  production-stability call for the whole app, not a styling one, so it's
+  parked rather than silently flipped — see the vendored
+  `node_modules/next/dist/docs/01-app/02-guides/view-transitions.md` for the
+  full pattern set (morph/reveal/directional-slide/crossfade) whenever it's
+  worth revisiting. Until then: content-level reveals (`ui/reveal`, Canon
+  table) and `(app)/loading.jsx` are the delight budget for loading and
+  navigation, both on the stable channel.
 
 ---
 
@@ -568,6 +681,16 @@ The tree, measured against this file. Fix each when a change touches it.
   minimum size (HIG expectation; pane ratios are already persisted).
 - **`.app-subtle` (~55 uses)** → `text-sm text-muted-foreground` as files
   are touched; note it silently applies a measure.
+- **`@media (hover: hover)` has zero occurrences in the tree** despite being
+  prescribed twice in this file (above, and "Apple platforms"). Every
+  `group-hover`/`:hover`-revealed action — the pin buttons in `DeskLists`,
+  row actions app-wide — is unverified on a touchscreen; iOS Safari's
+  synthetic hover-then-click on tap means this fails quietly, not loudly.
+- **`MosaicPanel` ships one image resolution.** The mosaic art
+  (`public/art/mosaic/*.webp`) is the only raster interface graphic in the
+  app — everything else is lucide SVG — and it has no 2x/3x source or
+  `srcset`, so it's soft on any Retina/ProMotion display. Regenerate at 2x
+  and add `srcset` when next touched; see "Apple platforms" above.
 
 ---
 
@@ -576,11 +699,17 @@ The tree, measured against this file. Fix each when a change touches it.
 NN/g (delight theory, empty states, skeletons, progressive disclosure,
 complex apps, dashboards & preattentive processing, data tables, sticky
 headers, icon usability, F-pattern & succinct writing) · Apple HIG (windows,
-layout) · Material 3 (window size classes, dark theme) · WCAG 2.2
-(1.4.1, 1.4.3, 1.4.11, 2.5.8) · Refactoring UI · Emil Kowalski, "Great
-Animations" · Rauno Freiberg, interfaces.rauno.me · Linear Method · Family
-values (benji.org) · Slack, Mailchimp, Microsoft voice guides · Dan Saffer,
-*Microinteractions* · Tufte on sparklines · Shneiderman, "The Eyes Have It"
-· Every Layout · Josh Comeau on pixels & accessibility · Ahmad Shadeed on
-container queries · mania.design "Spot the Slop" and related 2025–26
-writing on generated-looking UI.
+layout, adaptivity, Dynamic Type, 44×44pt touch targets, motion, materials,
+images/SF Symbols —
+developer.apple.com/design/human-interface-guidelines/{layout,windows,
+foundations/motion,foundations/materials,foundations/images}) ·
+WebKit blog & bugs.webkit.org on dynamic viewport units and why `vh` pins to
+the large viewport · Apple Developer docs on the safe-area layout guide ·
+Material 3 (window size classes, dark theme) · WCAG 2.2
+(1.4.1, 1.4.3, 1.4.10, 1.4.11, 1.4.13, 2.4.11, 2.5.8) · Refactoring UI ·
+Emil Kowalski, "Great Animations" · Rauno Freiberg, interfaces.rauno.me ·
+Linear Method · Family values (benji.org) · Slack, Mailchimp, Microsoft
+voice guides · Dan Saffer, *Microinteractions* · Tufte on sparklines ·
+Shneiderman, "The Eyes Have It" · Every Layout · Josh Comeau on pixels &
+accessibility · Ahmad Shadeed on container queries · mania.design "Spot the
+Slop" and related 2025–26 writing on generated-looking UI.

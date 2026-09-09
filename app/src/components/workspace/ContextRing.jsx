@@ -8,7 +8,7 @@
 // live in the tooltip, for the person who wants to know what a turn cost.
 
 import { cn } from "@/lib/utils";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const R = 8;
 const CIRCUMFERENCE = 2 * Math.PI * R;
@@ -105,22 +105,24 @@ export default function ContextRing({ used = 0, label = "", details = null }) {
   const pct = stale ? 0 : Math.max(0, Math.min(1, used));
   const text = stale ? "context compacted" : label;
   if (!details) return <Ring pct={pct} label={text} />;
+  // No local Provider — see ui/tooltip.tsx: a second one here would only
+  // override delayDuration for this tooltip and desync it from the rest of
+  // the app, which is exactly what used to happen (it wrapped its own at
+  // 150ms).
   return (
-    <TooltipProvider delayDuration={150}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            type="button"
-            aria-label={`Context used: ${Math.round(pct * 100)} percent. Show token usage.`}
-            className="rounded-md px-1 -mx-1 hover:bg-muted transition-colors"
-          >
-            <Ring pct={pct} label={text} />
-          </button>
-        </TooltipTrigger>
-        <TooltipContent side="bottom" align="end" className="max-w-xs">
-          <UsageDetails last={details.last} total={details.total} />
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          aria-label={`Context used: ${Math.round(pct * 100)} percent. Show token usage.`}
+          className="rounded-md px-1 -mx-1 hover:bg-muted transition-colors"
+        >
+          <Ring pct={pct} label={text} />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom" align="end" className="max-w-xs">
+        <UsageDetails last={details.last} total={details.total} />
+      </TooltipContent>
+    </Tooltip>
   );
 }

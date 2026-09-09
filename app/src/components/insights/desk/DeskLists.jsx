@@ -79,7 +79,7 @@ function Row({ children, onClick }) {
           onClick();
         }
       }}
-      className="group grid cursor-pointer grid-cols-[20px_minmax(0,1fr)_auto] items-center gap-3 border-b border-border/60 py-3 last:border-0 hover:bg-accent/40 sm:grid-cols-[20px_minmax(0,1fr)_130px_110px_150px]"
+      className="group grid cursor-pointer grid-cols-[20px_minmax(0,1fr)_auto] items-center gap-3 border-b border-border/60 py-3 last:border-0 hover:bg-accent/40 @lg:grid-cols-[20px_minmax(0,1fr)_130px_110px_150px]"
     >
       {children}
     </div>
@@ -119,16 +119,16 @@ export default function DeskLists({ conversations, artifacts, onPinThread, onPin
                     label={conv.title || "thread"}
                     onToggle={() => onPinThread(conv)}
                   />
-                  <span className="truncate text-[13.5px] font-medium">
+                  <span className="truncate text-[13.5px] font-medium" title={conv.title || "Untitled thread"}>
                     {conv.title || "Untitled thread"}
                   </span>
-                  <span className={cn("hidden text-[12px] sm:block", state.className)}>
+                  <span className={cn("hidden text-[12px] @lg:block", state.className)}>
                     {state.label}
                   </span>
-                  <span className="hidden text-[12px] text-muted-foreground sm:block">
+                  <span className="hidden text-[12px] text-muted-foreground @lg:block">
                     {relativeTime(conv.last_active_at || conv.created_at)}
                   </span>
-                  <span className="hidden text-[12px] text-muted-foreground sm:block">
+                  <span className="hidden text-[12px] text-muted-foreground @lg:block">
                     {conv.last_seq ? `${conv.last_seq} messages` : "—"}
                   </span>
                 </Row>
@@ -171,17 +171,20 @@ export default function DeskLists({ conversations, artifacts, onPinThread, onPin
                     >
                       <Icon className="size-3.5" />
                     </span>
-                    <span className="truncate text-[13.5px] font-medium">
+                    <span
+                      className="truncate text-[13.5px] font-medium"
+                      title={doc.title || doc.filename || "Untitled"}
+                    >
                       {doc.title || doc.filename || "Untitled"}
                     </span>
                   </span>
-                  <span className="hidden text-[12px] text-muted-foreground sm:block">
+                  <span className="hidden text-[12px] text-muted-foreground @lg:block">
                     {look.label}
                   </span>
-                  <span className="hidden text-[12px] text-muted-foreground sm:block">
+                  <span className="hidden text-[12px] text-muted-foreground @lg:block">
                     {doc.version_count > 1 ? `v${doc.version} of ${doc.version_count}` : `v${doc.version}`}
                   </span>
-                  <span className="hidden text-[12px] text-muted-foreground sm:block">
+                  <span className="hidden text-[12px] text-muted-foreground @lg:block">
                     {relativeTime(doc.created_at)}
                   </span>
                 </Row>

@@ -5,8 +5,20 @@ import { Tooltip as TooltipPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 
+// The app-wide beat: one `TooltipProvider` mounted once in `app/layout.js`,
+// nowhere else. A second one anywhere else in the tree doesn't just add a
+// redundant wrapper — it overrides `delayDuration` for whatever it wraps,
+// so that one tooltip pops on its own timing instead of the app's (this is
+// what happened to `ContextRing` before it was pulled out). If a surface
+// genuinely needs a different feel, that is a conversation about the
+// standard, not a local prop.
+//
+// 400ms: long enough that moving the pointer across a row of icons doesn't
+// fire a tooltip per icon, short enough not to read as unresponsive. Radix's
+// own un-configured default is 700ms; shadcn's generator template (what this
+// file started as) sets 0, which is instant and was the actual bug reported.
 function TooltipProvider({
-  delayDuration = 0,
+  delayDuration = 400,
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Provider>) {
   return (

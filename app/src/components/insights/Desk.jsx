@@ -18,6 +18,7 @@ import { loadDesk, pinArtifact, pinConversation } from "@/lib/deskApi";
 import { getActiveProjectId, getProjectById, PROJECTS_CHANGED } from "@/lib/projects";
 import { AUTONOMY_ASK } from "@/lib/projectsApi";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Reveal } from "@/components/ui/reveal";
 import DeskCards from "./desk/DeskCards";
 import DeskLists from "./desk/DeskLists";
 import DeskActivity from "./desk/DeskActivity";
@@ -201,9 +202,18 @@ export default function Desk() {
   }
 
   return (
-    <div className="flex min-h-[calc(100svh-160px)] flex-col">
-      <div className="grid gap-x-11 gap-y-8 lg:grid-cols-[minmax(0,1fr)_288px]">
-        <div className="flex min-w-0 flex-col gap-8">
+    // The skeleton above is a different subtree, not this one crossfading
+    // with itself — Reveal just eases the swap in rather than popping.
+    <Reveal className="flex min-h-[calc(100svh-160px)] flex-col">
+      {/* Sized off this region's own box, not the viewport (AGENTS.md) — the
+          sidebar and the Activity rail itself both eat into the window
+          without moving a `lg:` breakpoint, so viewport-based collapse was
+          firing far later than the space actually ran out. */}
+      <div className="grid gap-x-11 gap-y-8 @3xl:grid-cols-[minmax(0,1fr)_288px]">
+        {/* Its own container: once split, this column is narrower than
+            `.app-main`, and DeskCards/DeskLists need to size off that, not
+            the ancestor the row-vs-stacked decision above just used. */}
+        <div className="@container flex min-w-0 flex-col gap-8">
           <div>
             <h1 className="text-[28px] font-bold leading-tight tracking-tight">{head.title}</h1>
             <p className="mt-2.5 max-w-[640px] text-sm leading-relaxed text-muted-foreground">
@@ -229,6 +239,6 @@ export default function Desk() {
       </div>
 
       <div className="mt-auto">{composer}</div>
-    </div>
+    </Reveal>
   );
 }

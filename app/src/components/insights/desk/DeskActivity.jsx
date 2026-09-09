@@ -9,6 +9,7 @@
 
 import { History } from "lucide-react";
 import { relativeTime } from "@/lib/desk";
+import { ClampText } from "@/components/ui/clamp-text";
 import { cn } from "@/lib/utils";
 
 // Colour marks the exception, never the routine.
@@ -56,7 +57,11 @@ export default function DeskActivity({ items }) {
                 )}
                 aria-hidden
               />
-              <p className="text-[12.5px] leading-snug">{actionLabel(entry)}</p>
+              <ClampText
+                as="p"
+                text={actionLabel(entry)}
+                className="rounded-sm text-[12.5px] leading-snug focus-visible:ring-2 focus-visible:ring-ring"
+              />
               <p className="mt-0.5 text-[11px] text-muted-foreground">
                 {relativeTime(entry.created_at)}
                 {entry.source === "auto" && " · ran on its own"}
