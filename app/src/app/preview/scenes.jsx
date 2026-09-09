@@ -30,6 +30,7 @@ import ConnectorTile from "@/components/connections/ConnectorTile";
 import EntityAvatar from "@/components/connections/EntityAvatar";
 import ProjectEntitySelect from "@/components/connections/ProjectEntitySelect";
 import StorageBadge from "@/components/connections/StorageBadge";
+import ContextRing from "@/components/workspace/ContextRing";
 import { Button } from "@/components/ui/button";
 import {
   STORAGE_CLOUD,
@@ -427,6 +428,48 @@ export const SCENES = [
           />
         </div>
       </DialogScene>
+    ),
+  },
+  {
+    id: "context-ring-tones",
+    state: "neutral · amber · destructive, each with usage details",
+    group: "ContextRing",
+    title: "Context ring, the three tones",
+    note: "The gauge beside every agent workspace's status row. Tab or hover each ring for the tooltip's per-call and per-session usage — this is also where a stray local TooltipProvider used to show up as a delay that didn't match the rest of the app.",
+    render: () => (
+      <Row>
+        {[
+          { used: 0.32, tag: "neutral", cached: 41000 },
+          { used: 0.79, tag: "amber", cached: 9000 },
+          { used: 0.95, tag: "destructive", cached: 0 },
+        ].map(({ used, tag, cached }) => (
+          <ContextRing
+            key={tag}
+            used={used}
+            details={{
+              last: { window: 200000, input: Math.round(used * 200000 * 0.8), output: Math.round(used * 200000 * 0.2), cached, model: "claude-sonnet-5" },
+              total: { input: 512000, output: 48000, cached: 180000, calls: 14, cost: 1.86 },
+            }}
+          />
+        ))}
+      </Row>
+    ),
+  },
+  {
+    id: "context-ring-stale",
+    state: "just compacted — no live figure yet",
+    group: "ContextRing",
+    title: "Context ring, right after a compaction",
+    note: "The last reading describes context that no longer exists. The ring reads empty and says so rather than showing a stale percentage; it fills again once the next call on the thread reports a real size.",
+    render: () => (
+      <Row>
+        <ContextRing
+          used={0.87}
+          details={{ last: { window: 200000, input: 174000, output: 8200, stale: true, model: "claude-sonnet-5" }, total: { input: 512000, output: 48000, calls: 14 } }}
+        />
+        <span className="text-xs text-muted-foreground">No details prop — decorative only, as on a thread that hasn&rsquo;t started</span>
+        <ContextRing used={0} />
+      </Row>
     ),
   },
 ];

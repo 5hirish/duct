@@ -31,9 +31,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { ClampText, ClampTooltipContent, clampClass } from "@/components/ui/clamp-text";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
+import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
 import { StepStatus } from "@/lib/agentSteps";
 
 import { canonId } from "./canon";
@@ -242,6 +244,33 @@ const EXAMPLES = {
           <FileText className="size-3.5" aria-hidden="true" />
           Loading…
         </p>
+      </Specimen>
+    </div>
+  ),
+
+  "Truncated text (2+ lines)": () => (
+    // The case the rule exists for: an agent-written finding title long
+    // enough to run a fixed-height card or rail off-screen if it isn't capped.
+    <div className="flex max-w-sm flex-col gap-6">
+      <Specimen label="Self-contained — its own tab stop, clamp and tooltip trigger">
+        <ClampText
+          text="North-star window: Next 90 days: get net new MRR positive and keep it there. Measured 30-day position — $219.95 of new MRR against $297.86 lost to failed payments plus $209.88 sitting past-due, so the window is still net negative."
+          className="text-sm"
+        />
+      </Specimen>
+      <Specimen label="Inside an existing Link — clampClass + ClampTooltipContent on that element, no second tab stop">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <a href="#" className="text-sm font-medium underline-offset-2 hover:underline">
+              <span className={clampClass(2)}>
+                Checked Search Console: organic clicks up 18% week over week, led by
+                three pages that moved onto page one after last month&rsquo;s content
+                refresh landed in the index.
+              </span>
+            </a>
+          </TooltipTrigger>
+          <ClampTooltipContent text="Checked Search Console: organic clicks up 18% week over week, led by three pages that moved onto page one after last month's content refresh landed in the index." />
+        </Tooltip>
       </Specimen>
     </div>
   ),
