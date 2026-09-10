@@ -7,10 +7,11 @@ import { BASE } from "../../lib/api";
 import { isDesktopShell, getShellInfo, openExternal } from "../../lib/shell";
 import { isLocalBackendActive } from "../../lib/localBackend.js";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
+import Aqueduct, { STEP_TODO } from "@/components/onboarding/Aqueduct";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import {
   POST_SIGNIN_REDIRECT_KEY,
   SIGNIN_REASON_EXPIRED,
@@ -27,6 +28,20 @@ import { consumeSignInSources, peekSignInSources } from "@/lib/signInSources";
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
 const DEFAULT_LANDING = "/insights/organic-growth";
+
+/**
+ * The same three steps `/start` runs, by the same names — rendered dry, before
+ * anything has happened. Submitting the field walks into that page, where this
+ * aqueduct is already on screen and the water starts moving. One picture across
+ * the threshold beats two that merely coordinate.
+ */
+const ROUTE_AHEAD = [
+  { key: "site", label: "Your site", state: STEP_TODO },
+  { key: "model", label: "Your model", state: STEP_TODO },
+  { key: "audit", label: "The audit", state: STEP_TODO },
+];
+
+const READS_FROM = ["Google Ads", "GA4", "Search Console", "Meta Ads"];
 
 /**
  * Where to go once signed in. The invite page parks its own path here before
@@ -380,9 +395,8 @@ function SignInContent() {
           {requiresTurnstile && <div ref={turnstileContainerRef} className="cf-turnstile" aria-label="Security verification" />}
 
           <label htmlFor="signin-remember-me" className="landing-remember">
-            <Switch
+            <Checkbox
               id="signin-remember-me"
-              size="sm"
               checked={rememberMe}
               onCheckedChange={setRememberMe}
               disabled={isSigningIn}
@@ -465,20 +479,13 @@ function SignInContent() {
           </div>
 
           <h1 className="landing-start-headline">
-            Your tools have the answers.<br /><em>Duct connects them.</em>
+            Your tools have the answers. <em>Duct connects them.</em>
           </h1>
 
           <p className="landing-start-sub">
             Point Duct at your site and it reads it, audits it, and drafts
             your project from what it finds &mdash; before you sign in.
           </p>
-
-          <div className="landing-start-tools">
-            <span className="landing-tool-pill">Google Ads</span>
-            <span className="landing-tool-pill">GA4</span>
-            <span className="landing-tool-pill">Search Console</span>
-            <span className="landing-tool-pill">Meta Ads</span>
-          </div>
 
           <form onSubmit={handleStartSubmit} className="landing-start-form">
             <Label htmlFor="landing-site-url" className="sr-only">
@@ -512,6 +519,19 @@ function SignInContent() {
           >
             {startError || "No account needed — free during beta."}
           </p>
+
+          <div className="landing-reads">
+            <span className="landing-reads-label">Reads from</span>
+            <ul className="landing-start-tools">
+              {READS_FROM.map((tool) => (
+                <li key={tool} className="landing-tool-pill">
+                  {tool}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <Aqueduct steps={ROUTE_AHEAD} water={0} className="landing-aqueduct" />
         </div>
       </div>
     </main>

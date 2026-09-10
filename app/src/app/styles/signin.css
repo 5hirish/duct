@@ -25,14 +25,18 @@
   overflow: hidden;
 }
 
+/* A neutral lift off the floor, no hue: the violet wash this replaces tinted the
+   panel with the one accent the page is not allowed to spend decoratively, and
+   at 16% it read as a rendering fault rather than a choice. */
 .landing-auth::after {
   content: "";
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 40%;
-  background: linear-gradient(to top, color-mix(in oklch, var(--primary) 16%, transparent), transparent);
+  inset: 0;
+  background: radial-gradient(
+    120% 60% at 50% 100%,
+    color-mix(in oklch, var(--white) 7%, transparent),
+    transparent 70%
+  );
   pointer-events: none;
 }
 
@@ -139,8 +143,10 @@
 }
 
 /* ── Start the audit (right, wide, light — the first impression) ────── */
+/* Travertine, not white: the same ground `/start` stands on, so submitting the
+   field does not change the floor under the visitor. */
 .landing-start {
-  background: var(--white);
+  background: var(--start-ground);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -148,7 +154,7 @@
 }
 
 .landing-start-inner {
-  max-width: 30rem;
+  max-width: 36rem;
   width: 100%;
 }
 
@@ -176,34 +182,65 @@
   margin-bottom: -1px;
 }
 
+/* `balance` rather than a hand-placed <br>: the break that reads well at 36rem
+   orphans a word at 28rem, and this page is read at both. The claim still gets
+   its own line — as a block, not a <br>, so it survives every width. */
 .landing-start-headline {
   font-family: var(--serif);
-  font-size: 2.25rem;
+  font-size: clamp(2.125rem, 1.4rem + 1.8vw, 2.75rem);
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.15;
   letter-spacing: -0.5px;
   color: var(--navy);
   margin-bottom: 1rem;
+  max-width: 20ch;
+  text-wrap: balance;
 }
 
 .landing-start-headline em {
+  display: block;
   color: var(--primary);
   font-style: normal;
 }
 
 .landing-start-sub {
-  font-size: 1rem;
-  line-height: 1.65;
+  font-size: 1.125rem;
+  line-height: 1.6;
   color: var(--navy-3);
-  margin-bottom: 1.5rem;
-  max-width: 34ch;
+  margin-bottom: 1.75rem;
+  max-width: 46ch;
+}
+
+.landing-start-form {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 28rem;
+}
+
+/* ── Proof, below the CTA: what it reads, then the route ahead ───────── */
+.landing-reads {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.landing-reads-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tessera-ochre);
 }
 
 .landing-start-tools {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-bottom: 2rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .landing-tool-pill {
@@ -213,13 +250,18 @@
   border-radius: var(--pill);
   border: 1px solid var(--border);
   color: var(--navy-3);
-  background: var(--off);
+  background: color-mix(in oklch, var(--white) 60%, transparent);
 }
 
-.landing-start-form {
-  display: grid;
-  gap: 0.75rem;
-  max-width: 26rem;
+/* Spans the column to anchor it — that is what stops the stack reading as a card
+   adrift in the panel — but held back from the hero's weight: here it is a map
+   of the route, not the progress bar it becomes on `/start`.
+   `margin-inline: 0` undoes the centring `.aqueduct` carries for that page; this
+   column is left-aligned and the strip has to share its rail. */
+.landing-aqueduct {
+  margin-top: 1.75rem;
+  margin-inline: 0;
+  opacity: 0.85;
 }
 
 .landing-start-form .start-url-input {
