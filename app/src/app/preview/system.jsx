@@ -44,6 +44,7 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -298,6 +299,29 @@ export const PRIMITIVES = [
         <div className="flex items-center gap-2.5">
           <Switch id="pv-sw-dis" disabled />
           <Label htmlFor="pv-sw-dis">Slack delivery (connect Slack first)</Label>
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: "ui-checkbox",
+    group: "Primitives",
+    title: "Checkbox",
+    state: "checked · unchecked · disabled",
+    note: "The other half of the Switch rule: a choice that is submitted with a form, not applied the moment it is touched. Sign-in's \"keep me signed in\" is the canonical one — it does nothing until the form goes.",
+    render: () => (
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-2.5">
+          <Checkbox id="pv-cb-on" defaultChecked />
+          <Label htmlFor="pv-cb-on">Keep me signed in for 30 days</Label>
+        </div>
+        <div className="flex items-center gap-2.5">
+          <Checkbox id="pv-cb-off" />
+          <Label htmlFor="pv-cb-off">Include draft pages in the crawl</Label>
+        </div>
+        <div className="flex items-center gap-2.5">
+          <Checkbox id="pv-cb-dis" disabled />
+          <Label htmlFor="pv-cb-dis">Compare to last quarter (needs 90 days of data)</Label>
         </div>
       </div>
     ),
