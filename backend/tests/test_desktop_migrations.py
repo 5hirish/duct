@@ -94,6 +94,7 @@ def test_legacy_create_all_install_is_adopted_and_upgraded(clean_env, tmp_path):
         conn.execute(sa.text("ALTER TABLE agent_conversations DROP COLUMN run_status"))
         conn.execute(sa.text("ALTER TABLE agent_conversations DROP COLUMN run_error"))
         conn.execute(sa.text("ALTER TABLE oauth_states DROP COLUMN link_user_id"))
+        conn.execute(sa.text("ALTER TABLE oauth_states DROP COLUMN remember"))
 
     assert "alembic_version" not in set(inspect(engine).get_table_names())
     assert "memory_paused" not in _columns(engine, "projects")
@@ -111,6 +112,7 @@ def test_legacy_create_all_install_is_adopted_and_upgraded(clean_env, tmp_path):
     assert "run_status" in _columns(engine, "agent_conversations")
     assert "run_error" in _columns(engine, "agent_conversations")
     assert "link_user_id" in _columns(engine, "oauth_states")
+    assert "remember" in _columns(engine, "oauth_states")
     assert _stamped_revision(engine) is not None
 
 
