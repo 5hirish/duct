@@ -93,31 +93,44 @@ export const JOB_LABELS = {
  * "Duct's key" used to cover both a self-hosted env file and our hosted
  * account, which are the same config field and opposite answers to the only
  * question the chip exists to answer. The backend now splits them.
+ *
+ * Two rules these labels have to keep, both learned the hard way:
+ *
+ * 1. **Say the vendor, not the category.** `subscription` read "Your
+ *    subscription", which is true of whichever tile it lands on — so when a
+ *    bug put it on Anthropic, the chip was still grammatical and nobody could
+ *    see it was lying. "Your ChatGPT plan" is wrong out loud on any other
+ *    tile, which is the point.
+ * 2. **Only `user` and `stored` are green.** Those are the two the reader did
+ *    something to get. `env` is a key that happens to be on the machine and
+ *    `cloud` is ours; both make a run possible, neither is an answer to "have
+ *    I set this up", and four green ticks under a heading that says "bring
+ *    your own keys" reads as done when nothing has been brought.
  */
 export const SOURCE_LABELS = {
   user: "Your key",
   stored: "Your saved key",
-  env: "From env",
-  cloud: "Duct cloud",
-  subscription: "Your subscription",
+  env: "This computer's key",
+  cloud: "Duct's key",
+  subscription: "Your ChatGPT plan",
   none: "Not set",
 };
 
 /** Longer form, for the provider tiles where there is room for a clause. */
 export const SOURCE_DETAIL = {
-  user: "Using the key you provided",
-  stored: "Using your saved key — also serves scheduled runs",
-  env: "Using a key from this instance's environment",
-  cloud: "Using Duct's hosted key — our account is paying",
-  subscription: "Using your ChatGPT plan, signed in on this desktop",
+  user: "Using the key you pasted — this browser session only",
+  stored: "Using your saved key — the one that also funds scheduled runs",
+  env: "Using a key already on the machine running Duct, not one you added here",
+  cloud: "Using Duct's own key — we're paying for this run",
+  subscription: "Using the ChatGPT plan you signed in with on this desktop",
   none: "No key set",
 };
 
-/** A source that costs the user nothing is worth showing differently. */
+/** Green is reserved for a key the reader put there themselves. */
 export const SOURCE_TONE = {
   user: "ok",
   stored: "ok",
-  env: "ok",
+  env: "info",
   cloud: "info",
   subscription: "ok",
   none: "warn",

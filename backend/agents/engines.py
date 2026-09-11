@@ -33,7 +33,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import TYPE_CHECKING
 
-from agents.core.codex import is_subscription_credential
+from agents.core.codex import is_plan_credential
 from agents.models import (
     DEFAULT_IMAGE_MODELS,
     IMAGE_PROVIDER_ORDER,
@@ -291,8 +291,10 @@ def resolve_provider_key(
     if supplied and supplied.strip():
         # The header's own shape says whose account this is: a ChatGPT access
         # token is the user's plan, not a key they pasted, and the settings
-        # page words the two differently.
-        source = "subscription" if is_subscription_credential(supplied) else "user"
+        # page words the two differently. Shape alone is not enough — only
+        # OpenAI has a plan path at all, so a JWT in any other slot is a
+        # mis-paste and billing it to "their subscription" would be fiction.
+        source = "subscription" if is_plan_credential(provider, supplied) else "user"
         return ProviderKey(supplied.strip(), provider, source)
 
     saved = (stored_keys or {}).get(provider, "")

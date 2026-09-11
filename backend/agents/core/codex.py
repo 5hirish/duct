@@ -60,6 +60,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
+from agents.models import Provider
+
 logger = logging.getLogger(__name__)
 
 # OpenAI API keys start with this; a ChatGPT OAuth access token does not.
@@ -113,6 +115,24 @@ def is_subscription_credential(value: str) -> bool:
     if not token.startswith(_JWT_PREFIX) or token.count(".") != 2:
         return False
     return bool(decode_jwt_claims(token, segment=0))
+
+
+# The only provider Duct can reach through a consumer plan.
+#
+# Anthropic disabled third-party OAuth on the Messages API in Feb 2026 and its
+# terms forbid routing a Claude plan through another application at all, so
+# there is no second entry to add here later. That matters because the shape
+# test above answers only "is this a JWT" — it cannot tell a ChatGPT token from
+# any other JWT a user might paste into the wrong box, and every caller that
+# *renders* or *bills* a source has to ask both questions. Asking only the
+# first is how the settings page came to promise an Anthropic subscription
+# that cannot exist.
+SUBSCRIPTION_PROVIDERS = frozenset({Provider.OPENAI})
+
+
+def is_plan_credential(provider: Provider, value: str) -> bool:
+    """True when ``value`` is a plan token *and* ``provider`` has a plan path."""
+    return provider in SUBSCRIPTION_PROVIDERS and is_subscription_credential(value)
 
 
 def pack_subscription_credential(access_token: str, account_id: str = "") -> str:

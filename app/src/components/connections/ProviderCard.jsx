@@ -94,8 +94,12 @@ export default function ProviderCard({ provider, logo, status }) {
       : saved
         ? STORAGE_SESSION
         : STORAGE_NONE;
+  // The dot follows the tone the labels already declare, rather than naming
+  // `cloud` as the one special case — which is how `env` stayed green after
+  // the backend split the two apart. A key the reader did not put there is
+  // "partial": reachable, but not the answer this page is asking for.
   const tile = {
-    tone: SOURCE_TONE[source] === "warn" ? "off" : source === "cloud" ? "partial" : "on",
+    tone: SOURCE_TONE[source] === "warn" ? "off" : SOURCE_TONE[source] === "info" ? "partial" : "on",
     label: SOURCE_LABELS[source] || SOURCE_LABELS.none,
     detail: SOURCE_DETAIL[source] || SOURCE_DETAIL.none,
   };

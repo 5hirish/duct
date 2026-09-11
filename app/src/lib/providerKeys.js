@@ -13,6 +13,18 @@
 
 import { chatgptCredential } from "./chatgpt.js";
 
+/**
+ * The tiles, in the order they are drawn.
+ *
+ * `description` is what the user reads, so it names what the key buys them and
+ * nothing about how Duct spends it: no engine names, no SDK names, no model
+ * ids. The previous set said "on the LangChain (v1) engine" on two tiles and
+ * "gpt-image-2" on a third — three implementation details on a settings page
+ * whose reader is deciding which vendor to open an account with.
+ *
+ * `backend/routes/providers.py` holds the same sentences for the same tiles
+ * (it answers `/providers/status`, which repaints them). Change both.
+ */
 export const PROVIDERS = [
   {
     id: "anthropic",
@@ -23,7 +35,7 @@ export const PROVIDERS = [
     header: "X-Provider-Anthropic",
     placeholder: "sk-ant-…",
     prefix: "sk-ant-",
-    description: "Claude models, direct from Anthropic.",
+    description: "Claude models. Needs an API key — a Claude Pro or Max plan can't be used here.",
     consoleUrl: "https://console.anthropic.com/settings/keys",
   },
   {
@@ -33,7 +45,7 @@ export const PROVIDERS = [
     header: "X-Provider-OpenAI",
     placeholder: "sk-…",
     prefix: "sk-",
-    description: "GPT models on the LangChain (v1) engine, and gpt-image-2 for images.",
+    description: "GPT models, and image generation for slides and posts.",
     consoleUrl: "https://platform.openai.com/api-keys",
   },
   {
@@ -43,7 +55,7 @@ export const PROVIDERS = [
     header: "X-Provider-Gemini",
     placeholder: "AIza…",
     prefix: "",
-    description: "Gemini models, and Duct's first choice for images.",
+    description: "Gemini models. Duct's first pick for drawing images.",
     consoleUrl: "https://aistudio.google.com/app/apikey",
   },
   {
@@ -56,7 +68,7 @@ export const PROVIDERS = [
     header: "X-Provider-OpenRouter",
     placeholder: "sk-or-…",
     prefix: "sk-or-",
-    description: "One key, 500+ models — and any OpenAI-compatible gateway you point it at.",
+    description: "One key, 500+ models — and any OpenAI-compatible service you point it at.",
     consoleUrl: "https://openrouter.ai/keys",
   },
   {
@@ -66,7 +78,7 @@ export const PROVIDERS = [
     header: "X-Provider-XAI",
     placeholder: "xai-…",
     prefix: "xai-",
-    description: "Grok models on the LangChain (v1) engine, and Grok Imagine for images.",
+    description: "Grok models, and Grok's own image generation.",
     consoleUrl: "https://console.x.ai",
   },
 ];

@@ -105,3 +105,36 @@ def test_other_providers_are_untouched_by_the_subscription_path(monkeypatch):
     """Gemini and OpenRouter must not acquire a ChatGPT dependency."""
     monkeypatch.setattr(codex, "codex_available", lambda: True)
     assert _llm_for("k", Provider.GOOGLE_GENAI, ModelName.GEMINI_2_5_FLASH) == "ChatGoogleGenerativeAI"
+
+
+# ---------------------------------------------------------------------------
+# Which providers may claim a plan at all
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "provider",
+    [p for p in Provider if p is not Provider.OPENAI],
+)
+def test_only_openai_can_claim_a_plan(provider):
+    """A JWT in any other provider's slot is a mis-paste, never a subscription.
+
+    The regression this exists for: ``/providers/status`` asked only whether a
+    credential *looked* like a plan token, so a JWT anywhere lit the tile as
+    "Your subscription" — and on Anthropic it did, above a tooltip reading
+    "Using your ChatGPT plan". Anthropic forbids third-party use of a Claude
+    plan and rejects the token at the API, so that tile was advertising a
+    purchase that cannot be made. The label is only as honest as the provider
+    guard in front of it.
+    """
+    # Header + empty payload + a signature segment spelled so the secret
+    # scanner can see it is not one. Only the shape is under test.
+    token = "eyJhbGciOiJSUzI1NiJ9.e30.EXAMPLE"
+    assert codex.is_subscription_credential(token) is True
+    assert codex.is_plan_credential(provider, token) is False
+    assert codex.is_plan_credential(Provider.OPENAI, token) is True
+
+
+def test_an_api_key_is_never_a_plan_even_on_openai():
+    assert codex.is_plan_credential(Provider.OPENAI, "sk-proj-abc") is False
+    assert codex.is_plan_credential(Provider.OPENAI, "") is False

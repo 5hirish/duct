@@ -625,10 +625,10 @@ export default function ModelSettingsPage() {
         {/* ---------------------------------------------------------------- */}
         <TabsContent value="providers">
           <p className="app-subtle mt-lede">
-            Bring your own provider keys. On desktop they stay in your OS keychain and are never
-            stored by us. In a browser they stay in this session unless you choose to remember one,
-            which saves it encrypted so you do not have to paste it again. Either way it is sent
-            with each request. Tip: use a budget-capped or restricted key.
+            Duct runs on your own provider keys &mdash; paste one below and it&rsquo;s sent with
+            each request. On desktop they live in your OS keychain; in a browser they stay in this
+            session unless you ask Duct to remember one, which saves it encrypted so scheduled runs
+            can use it too. Use a budget-capped or restricted key where your provider offers one.
           </p>
 
           <div className="conn-grid">

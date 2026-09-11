@@ -49,7 +49,7 @@ from agents.tiers import (
     Tier,
     resolve_tier_model,
 )
-from agents.core.codex import is_subscription_credential
+from agents.core.codex import is_plan_credential, is_subscription_credential
 from config import allow_server_provider_keys, get_configs
 from db.session import get_session as db_session
 from models.auth import User
@@ -71,26 +71,33 @@ router = APIRouter(tags=["providers"])
 
 # Shown on the tile. Kept here rather than in the browser bundle for the same
 # reason as the model list: one source, and it is the side that knows.
+#
+# Written for someone buying an API key, not for someone reading this file: no
+# engine names, no SDK names, no model ids. The last set said "the Claude Agent
+# SDK (v3)" — an engine deleted months earlier — which is what a string nobody
+# reads as copy decays into. `app/src/lib/providerKeys.js` carries the same
+# sentences for the tiles the browser paints before this answers; they have to
+# match, so change both.
 _PROVIDER_LABELS: dict[Provider, tuple[str, str]] = {
     Provider.ANTHROPIC: (
         "Anthropic",
-        "Claude models. The only provider the Claude Agent SDK (v3) accepts.",
+        "Claude models. Needs an API key — a Claude Pro or Max plan can't be used here.",
     ),
     Provider.OPENAI: (
         "OpenAI",
-        "GPT models on the LangChain (v1) engine, and gpt-image-2 for images.",
+        "GPT models, and image generation for slides and posts.",
     ),
     Provider.GOOGLE_GENAI: (
         "Google Gemini",
-        "Gemini models, and Duct's first choice for images.",
+        "Gemini models. Duct's first pick for drawing images.",
     ),
     Provider.OPENROUTER: (
         "OpenRouter",
-        "One key, 500+ models — and any OpenAI-compatible gateway you point it at.",
+        "One key, 500+ models — and any OpenAI-compatible service you point it at.",
     ),
     Provider.XAI: (
         "xAI",
-        "Grok models on the LangChain (v1) engine, and Grok Imagine for images.",
+        "Grok models, and Grok's own image generation.",
     ),
 }
 
@@ -135,7 +142,7 @@ def providers_status(
     * ``stored``       — this user's saved key, decrypted per run
     * ``env``          — this instance's own env file (desktop, or local dev)
     * ``cloud``        — Duct's hosted key; our account is paying
-    * ``subscription`` — the operator's Claude subscription on this machine
+    * ``subscription`` — the user's own ChatGPT plan, signed in on this desktop
     * ``none``         — nothing; this provider cannot be reached
 
     The env/cloud split matters: they are the same config field and completely
@@ -171,7 +178,7 @@ def providers_status(
         has_server = server_usable and bool(
             getattr(cfg, PROVIDER_CONFIG_ATTR.get(provider, ""), "")
         )
-        if has_user and is_subscription_credential(user_keys[provider]):
+        if has_user and is_plan_credential(provider, user_keys[provider]):
             source = "subscription"
         elif has_user:
             source = "user"
@@ -398,7 +405,7 @@ async def verify_provider_key(
     except asyncio.TimeoutError:
         return {"ok": False, "code": VERIFY_UNREACHABLE, "model": str(getattr(model, "value", model)), "detail": "The provider did not answer in time."}
     except Exception as exc:  # noqa: BLE001 — every failure is an answer here
-        code = _verify_code(exc, subscription=is_subscription_credential(key))
+        code = _verify_code(exc, subscription=is_plan_credential(provider, key))
         logger.info("verify: %s on %s failed as %s", provider.value, getattr(model, "value", model), code)
         return {
             "ok": False,
