@@ -11,7 +11,7 @@
 // rule (lib/desk.js). A single GET /projects/{id}/desk is the right end state
 // once the shape settles.
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { buildDesk, headline } from "@/lib/desk";
 import { loadDesk, pinArtifact, pinConversation } from "@/lib/deskApi";
@@ -32,9 +32,13 @@ const EMPTY = {
   memories: [], conversations: [], artifacts: [], activity: [], changeSets: [], sourceCount: 0,
 };
 
-export default function Desk() {
+export default function Desk({ loadDeskFn = loadDesk, projectIdOverride = null }) {
   const router = useRouter();
-  const [projectId, setProjectId] = useState("");
+  // `null` until the active project has been read, which is not the same as
+  // "" — signed in with no project at all, which the desk still has an answer
+  // for. Without the distinction, mount fires an account-level load and then a
+  // second one the moment the id arrives, and the two race.
+  const [projectId, setProjectId] = useState(null);
   const [project, setProject] = useState(null);
   const [data, setData] = useState(EMPTY);
   const [loading, setLoading] = useState(true);
@@ -44,39 +48,63 @@ export default function Desk() {
   // navigation, so this listens rather than reading once.
   useEffect(() => {
     const sync = () => {
-      const id = getActiveProjectId() || "";
+      const id = projectIdOverride ?? (getActiveProjectId() || "");
       setProjectId(id);
       const p = id ? getProjectById(id) : null;
       setProject(p);
       setAutonomy(p?.autonomyLevel || AUTONOMY_ASK);
     };
     sync();
+    if (projectIdOverride !== null) return undefined;
     window.addEventListener(PROJECTS_CHANGED, sync);
     window.addEventListener("storage", sync);
     return () => {
       window.removeEventListener(PROJECTS_CHANGED, sync);
       window.removeEventListener("storage", sync);
     };
-  }, []);
+  }, [projectIdOverride]);
+
+  // Loads overlap — a focus refresh, the status poll and a project switch can
+  // all be in flight at once — and they do not answer in the order they were
+  // asked. Only the newest answer may be shown; a slow one that started
+  // earlier, against the project you have since left, would otherwise land on
+  // top of it.
+  const latest = useRef(0);
 
   // Asked even with no project: loadDesk answers the account-level half of the
   // question (which sources are connected) either way, and the day-one
   // checklist would otherwise tell someone with three live connectors to go
   // and connect one.
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    const next = await loadDesk({ projectId });
-    setData(next);
-    setLoading(false);
-  }, [projectId]);
+  const refresh = useCallback(async ({ replaceContent = false } = {}) => {
+    const mine = ++latest.current;
+    // The first load and a project change have no trustworthy content to keep
+    // on screen. Focus and status polling do: hiding it on every re-read makes
+    // the desk look as though the app window has reloaded.
+    if (replaceContent) setLoading(true);
+    try {
+      const next = await loadDeskFn({ projectId });
+      if (mine !== latest.current) return;
+      setData(next);
+    } finally {
+      // The newest load lowers the skeleton, not whichever load raised it: a
+      // background refresh can overtake the first load, and the first load is
+      // then the one that must not declare the desk ready.
+      if (mine === latest.current) setLoading(false);
+    }
+  }, [loadDeskFn, projectId]);
 
   useEffect(() => {
-    refresh();
-  }, [refresh]);
+    // Nothing to ask for until the active project has been read once.
+    if (projectId === null) return;
+    // A project switch is an identity boundary, so do not briefly show the
+    // previous project's desk while its replacement loads.
+    refresh({ replaceContent: true });
+  }, [refresh, projectId]);
 
   // The list's run badges are read, not pushed: refresh when the user comes
-  // back to the tab, and every half minute while any thread is working, so
-  // "Working…" becomes "Needs you" without a reload. Idle desks stay quiet.
+  // back to the tab, and every half minute while any thread is working. These
+  // updates keep the current desk visible, so "Working…" becomes "Needs you"
+  // without looking like a reload. Idle desks stay quiet.
   const working = data.conversations.some((c) => c.run_status === "running");
   useEffect(() => {
     const onVisible = () => {

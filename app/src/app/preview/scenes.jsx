@@ -17,13 +17,19 @@
 // scene covers, so "did anyone look at the error case" is answerable by
 // reading the list.
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import ContextCompressionCard from "@/components/ContextCompressionCard.jsx";
+import Desk from "@/components/insights/Desk";
+import DeskComposer from "@/components/insights/desk/DeskComposer";
+import { AUTONOMY_ASK } from "@/lib/projectsApi";
 import { CornerNotice } from "@/components/ui/corner-notice";
 import { FolderOpen, RefreshCw } from "lucide-react";
 import { CookieConsent } from "@/components/CookieConsent";
 import LoadError from "@/components/LoadError";
+import DeskCards from "@/components/insights/desk/DeskCards";
+import DeskActivity from "@/components/insights/desk/DeskActivity";
+import { NEEDS_YOU, FOUND, IN_PROGRESS } from "@/lib/desk";
 import ConnectorDialog from "@/components/connections/ConnectorDialog";
 import ConnectorPermissions from "@/components/connections/ConnectorPermissions";
 import ConnectorTile from "@/components/connections/ConnectorTile";
@@ -140,7 +146,119 @@ function Row({ children }) {
   return <div className="flex flex-wrap items-center gap-4">{children}</div>;
 }
 
+/** Autonomy is controlled from the parent in the real Desk — stub that here
+ *  so picking an option actually round-trips back into the trigger's label. */
+function DeskComposerScene(props) {
+  const [autonomy, setAutonomy] = useState(AUTONOMY_ASK);
+  return <DeskComposer {...props} autonomy={autonomy} onAutonomyChange={setAutonomy} />;
+}
+
+// Long titles on purpose — an agent wrote these, not someone picking a label
+// short enough to fit. This is the case that revealed DeskCards had no
+// line-clamp: a single item could run the card to nine lines and shove its
+// siblings off the bottom.
+const LONG_TITLE =
+  "North-star window: Next 90 days: get net new MRR positive and keep it there. Measured 30-day position — $219.95 of new MRR against $297.86 lost to failed payments plus $209.88 sitting past-due, so the window is still net negative.";
+
+const DESK_BUCKETS = {
+  [NEEDS_YOU]: [
+    { id: "n1", title: "Audit our Google Search performance please.", detail: "Pick up where you left off", tone: "attention", at: "2026-09-09T06:00:00Z" },
+  ],
+  [FOUND]: [
+    { id: "f1", title: "Next growth milestone: 3_repeatable_growth", detail: "Checked", tone: "sure", at: "2026-09-08T09:00:00Z" },
+    { id: "f2", title: LONG_TITLE, detail: "Checked", tone: "sure", at: "2026-09-08T09:00:00Z" },
+    { id: "f3", title: "North-star metric: Net new revenue", detail: "Checked", tone: "sure", at: "2026-09-08T09:00:00Z" },
+  ],
+  [IN_PROGRESS]: [
+    { id: "p1", title: "Audit our Google Search performance please.", detail: "Working", tone: "running", at: "2026-09-09T06:00:00Z" },
+    { id: "p2", title: "Audit our Google Search performance please.", detail: "Working", tone: "running", at: "2026-09-09T06:00:00Z" },
+  ],
+};
+const DESK_BUCKETS_SHAPED = { needsYou: DESK_BUCKETS[NEEDS_YOU], found: DESK_BUCKETS[FOUND], inProgress: DESK_BUCKETS[IN_PROGRESS] };
+
+const DESK_ACTIVITY = [
+  { id: "a1", category: "check", action: "checked_search_console", summary: LONG_TITLE, source: "auto", created_at: "2026-09-09T05:57:00Z" },
+  { id: "a2", category: "sync", action: "synced_ga4", summary: "", source: "agent", created_at: "2026-09-09T05:40:00Z" },
+  { id: "a3", category: "change", action: "applied_change", summary: "Applied: pause 3 underperforming ad groups", source: "agent", created_at: "2026-09-08T18:12:00Z" },
+];
+
+// Delayed on purpose: after the first paint, dispatch `visibilitychange` in
+// the frame and confirm the desk stays visible while this re-read is pending.
+const PREVIEW_DESK_DATA = {
+  memories: [],
+  conversations: [
+    {
+      id: "preview-thread",
+      status: "active",
+      run_status: "running",
+      title: "Check our Google Search performance",
+      created_at: "2026-09-09T06:00:00Z",
+      last_active_at: "2026-09-09T06:00:00Z",
+      last_seq: 4,
+    },
+  ],
+  artifacts: [],
+  activity: DESK_ACTIVITY,
+  changeSets: [],
+  sourceCount: 2,
+};
+const loadPreviewDesk = stubLoader(PREVIEW_DESK_DATA, { delayMs: 500 });
+
+// The same desk as it was a moment ago, which is what an overtaken load is
+// carrying: a thread that has since finished, still saying "Working…".
+const PREVIEW_DESK_STALE = {
+  ...PREVIEW_DESK_DATA,
+  activity: [],
+  conversations: [
+    { ...PREVIEW_DESK_DATA.conversations[0], title: "Stale answer — the desk must never show this" },
+  ],
+};
+
+/** Answers out of order on purpose: slow first, fast afterwards. */
+function racingLoader() {
+  let asked = 0;
+  return async function load() {
+    asked += 1;
+    const first = asked === 1;
+    await new Promise((r) => setTimeout(r, first ? 1500 : 150));
+    return first ? PREVIEW_DESK_STALE : PREVIEW_DESK_DATA;
+  };
+}
+
+/**
+ * The race, driven for you.
+ *
+ * The overtaking refresh has to be issued while the first load is still in
+ * flight, and a second and a half is not a window anyone hits from a console —
+ * so the scene fires it rather than asking for it. `useMemo` rather than module
+ * scope: the loader must keep one identity for as long as the desk is mounted
+ * (it is a dependency of the desk's refresh, and a new one every render would
+ * restart the load forever), and must start over on the next mount, or the
+ * scene works once per page load and shows a finished desk ever after.
+ */
+function DeskRaceScene() {
+  const load = useMemo(racingLoader, []);
+  useEffect(() => {
+    const t = setTimeout(() => document.dispatchEvent(new Event("visibilitychange")), 300);
+    return () => clearTimeout(t);
+  }, []);
+  return <Desk projectIdOverride="preview" loadDeskFn={load} />;
+}
+
 export const SCENES = [
+  {
+    id: "desk-composer",
+    state: "default — a project with a favicon, no thread yet",
+    group: "DeskComposer",
+    title: "The insights composer",
+    note: "Both Selects here use a custom chip as the trigger's content instead of SelectValue, which is why they're pinned to position=\"popper\" rather than the shadcn default (\"item-aligned\"): item-aligned aligns the selected SelectItem over the trigger by locating it through SelectValue, and silently renders off-screen with nothing to find. Check that both open in place and that picking an option updates the chip's label. Also check the send button's loading spinner and the amber \"no provider connected\" notice (type something, then use the browser's devtools to force a 401 on /api/providers/status) — the notice must not clear the draft.",
+    render: () => (
+      <DeskComposerScene
+        project={{ id: "p1", name: "Sictec Infotech, Inc.", company: { name: "Sictec Infotech, Inc.", website_url: "https://sictec.example" } }}
+        placeholder="Ask about &ldquo;Next growth milestone&rdquo; — or anything else"
+      />
+    ),
+  },
   {
     id: "project-drafted-notice",
     state: "an audit added to a project that already existed",
@@ -428,6 +546,42 @@ export const SCENES = [
           />
         </div>
       </DialogScene>
+    ),
+  },
+  {
+    id: "desk-cards-long-title",
+    state: "content",
+    group: "Desk",
+    title: "Cards, an agent-length finding title",
+    note: "Drag the frame through the 448–768px band: three columns to two to one. The long title in “What I found” clamps to two lines instead of pushing its siblings out — hover or tab to it for the rest.",
+    render: () => <DeskCards buckets={DESK_BUCKETS_SHAPED} />,
+  },
+  {
+    id: "desk-background-refresh",
+    state: "a working thread, then a focus refresh",
+    group: "Desk",
+    title: "Desk stays put while it re-reads",
+    note: "Wait for the desk to load, then dispatch a visible `visibilitychange` event. The five-hundred-millisecond stub mimics the refresh: the existing desk must remain on screen rather than returning to its loading skeleton.",
+    render: () => <Desk projectIdOverride="preview" loadDeskFn={loadPreviewDesk} />,
+  },
+  {
+    id: "desk-stale-answer-dropped",
+    state: "two loads in flight, the older one answering last",
+    group: "Desk",
+    title: "Desk drops an answer it has outrun",
+    note: "Nothing to click — watch the first two seconds. The scene issues a background refresh 300ms in, while the first load is still out, and that refresh answers ten times faster: the desk paints from the newer answer, and the skeleton comes down with it even though the load that raised it is still pending. Then keep watching. The older answer lands at a second and a half carrying a desk marked stale, and must change nothing on screen. If “Stale answer” ever appears, ordering has stopped being enforced and the desk can be overwritten by whatever it was told a moment ago. React's dev double-mount replays the race, so the first paint can beat the 300ms mark — the ending is what this is for.",
+    render: () => <DeskRaceScene />,
+  },
+  {
+    id: "desk-activity-long-summary",
+    state: "content",
+    group: "Desk",
+    title: "Activity rail, a long entry",
+    note: "The right rail from the Organic Growth desk. It sizes off its own column, not the window — this scene is deliberately narrow to prove that.",
+    render: () => (
+      <div className="max-w-[288px]">
+        <DeskActivity items={DESK_ACTIVITY} />
+      </div>
     ),
   },
   {
